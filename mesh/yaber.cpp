@@ -183,7 +183,7 @@ void mesh::yaber(FLT tolsize) {
 	return;
 }
 
-void mesh::checkintegrity() {
+void mesh::checkintegrity() const {
    int i,j,sind,dir;
    
    for(i=0;i<ntri;++i) {
@@ -242,7 +242,7 @@ void mesh::checkintegrity() {
    return;
 }
 
-void mesh::checkintwk() {
+void mesh::checkintwk() const {
    int i;
    
    for(i=0;i<maxvst;++i)
