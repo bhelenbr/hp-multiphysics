@@ -3,7 +3,13 @@
 
 #include<math.h>
 
+#ifdef SINGLE
+#define FLT float
+#define EPSILON FLT_EPSILON
+#else
 #define FLT double
+#define EPSILON DBL_EPSILON
+#endif
 
 #define ND 2
 #define MAXSB 8
@@ -32,12 +38,6 @@
 #define YDIR_MP (COMY_MASK +IFCE_MASK)
 #define ALLD_MP (XDIR_MP +YDIR_MP)
                              
-#if (FLT == double)
-#define EPSILON DBL_EPSILON
-#else
-#define EPSILON FLT_EPSILON
-#endif
-
 #include<quadtree.h>
 
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};

@@ -1,6 +1,7 @@
 #! /bin/csh
+
 cp -f quadtree.h ~/Codes/include
-
-cd build/intermediates/quadtree.build/Objects/ppc/
-cp -f quad.o ~/Codes/lib
-
+#cd build/intermediates/quadtree.build/Objects/ppc/
+cd build/quadtree.build/quadtree.build/Objects-normal/ppc
+libtool -o libquad.a quad.o
+mv -f libquad.a ~/Codes/lib

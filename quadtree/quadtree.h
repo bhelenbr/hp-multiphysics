@@ -11,14 +11,12 @@
 #ifndef _quadtree_h_
 #define _quadtree_h_
 
-#ifndef FLT
-#define FLT double
-#endif
-
-#if (FLT == double)
-#define EPSILON DBL_EPSILON
-#else
+#ifdef SINGLE
 #define EPSILON FLT_EPSILON
+#define FLT float
+#else
+#define EPSILON DBL_EPSILON
+#define FLT double
 #endif
 
 #ifndef ND
