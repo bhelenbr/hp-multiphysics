@@ -149,7 +149,6 @@ SEARCH:
    delt = (l0 > l1 ? 0 : 1);
 
 DELETE:
-   sinfo[sind] = -3;
    
 /*	UPDATE TVRTX & SVRTX */
    v0 = svrtx[sind][1-delt];
@@ -161,18 +160,23 @@ DELETE:
          if (tvrtx[tind][j] == v1) {
             tvrtx[tind][j] = v0;
             sd = tside[tind].side[(j+1)%3];
+            sinfo[sd] = -2;
             pt = (1 +tside[tind].sign[(j+1)%3])/2;
             assert(svrtx[sd][pt] == v1 || svrtx[sd][pt] == v0);
             svrtx[sd][pt] = v0;
             sd = tside[tind].side[(j+2)%3];
+            sinfo[sd] = -2;
             pt = (1 -tside[tind].sign[(j+2)%3])/2;
             assert(svrtx[sd][pt] == v1 || svrtx[sd][pt] == v0);
-            svrtx[sd][pt] = v0;           
+            svrtx[sd][pt] = v0;
             break;
          }
       }
       assert(j != 3);
    }
+
+/*	MARK SIDE AS DELETED */      
+   sinfo[sind] = -3;
 
 /*	CLOSE THE GAP */
    for(i=0;i<2;++i) {
@@ -241,10 +245,6 @@ DELETE:
    ntdel = ntsrnd[delt];
    for(i=0;i<ntsrnd[delt];++i)
       tdel[i] = tsrnd[delt][i];
-
-/* MARK AFFECTED SIDES AS TOUCHED */
-   for(i=0;i<nssrnd[delt];++i)
-      sinfo[ssrnd[delt][i]] = -2;
       
 /*	SWAP AFFECTED SIDES */      
    swap(nssrnd[delt],ssrnd[delt]);
