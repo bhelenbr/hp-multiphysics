@@ -1,4 +1,5 @@
 #include"hp_mgrid.h"
+#include <utilities.h>
 
 /* THIS IS A SEQUENCE OF RMESHES & STATIC STORAGE FOR A SIGNLE MULTIGRID BLOCK */
 class block {
@@ -30,7 +31,7 @@ class blocks {
       class block *blk;
 
       int ntstep,out_intrvl,rstrt_intrvl,readin; // TIME STEP STUFF
-      int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
+      int mglvls,mgrids,vwcycle,ncycle,nup,ndown;  //MULTIGRID PARAMETERS
       int adapt; //FLAG FOR ADAPTATION
 
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
@@ -54,10 +55,10 @@ class blocks {
 
       /* MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);
-      void endcycle(); // PRINTS DIAGNOSTIC INFO & MOVES SURFACES
+      FLT printerror(); // PRINTS DIAGNOSTIC INFO
 
       /* OUTPUT FINE MESH SOLUTION */
-      void output(int number, FILETYPE filetype = text);
+      void output(int number, FILETYPE filetype = text, int verbose = 0);
 
       /* MESH REFINEMENT */
       void adaptation();
@@ -71,15 +72,18 @@ class blocks {
       void r_ksrc();
       /* PRINT MAGNITUDE OF RESIDUAL */
       /* PRINT ERRORS */
-      inline void r_maxres() {
+      FLT r_printerror() {
          int n;
-         FLT mxr[ND];
+         FLT mxr[ND],biggest = 0.0;
          
          for(int i=0;i<nblocks;++i) {
-            blk[i].grd[0].maxres(mxr);
-            for(n=0;n<ND;++n)
+            blk[i].grd[0].r_mesh::maxres(mxr);
+            for(n=0;n<ND;++n) {
                printf("%.3e  ",mxr[n]);
+               biggest = MAX(mxr[n],biggest);
+            }
          }
+         return(biggest);
       }
       
 #ifdef PV3
