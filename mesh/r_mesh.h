@@ -18,7 +18,7 @@ struct r_mesh_glbls {
 
 class r_mesh :public mesh {
    /* MESH DEFORMATION VARIABLES */
-      protected:
+      private:
 /*			THINGS SHARED BY ALL BLOCKS */
          static FLT vnn, fadd;
          static int fixx_mask, fixy_mask, fix2x_mask, fix2y_mask;
@@ -32,7 +32,7 @@ class r_mesh :public mesh {
          FLT *kvol;
          FLT (*vrtx_frst)[ND];
          bool isfrst;
-                  
+         
 /*			SETUP FUNCTION */
          void gbl_alloc(struct r_mesh_glbls *store);
 

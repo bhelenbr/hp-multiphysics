@@ -480,11 +480,11 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
          if (intwk1[tind] == 0) continue;
          intwk1[tind] = 0;
          tdel[ntdel++] = tind;         
-         if (intri(tind,x,y) < FLT_EPSILON) goto FOUND;
+         if (intri(tind,x,y) < EPSILON) goto FOUND;
       }
       if (i >= maxsrch) break;
    }
-/*	printf("error couldn't find triangle for point %f %f\n",x,y) */
+	printf("Warning: couldn't find triangle for point %f %f\n",x,y);
    tind = -1;
    
 FOUND:

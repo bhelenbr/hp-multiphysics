@@ -92,7 +92,7 @@ void mesh::yaber(FLT tolsize) {
          if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
          
       if (nfail) {
-         printf("side collapse failed %d\n",sind);
+         printf("#Warning: side collapse failed %d\n",sind);
 /*			MARK SIDE AS ACCEPTED AND MOVE ON */
          for(i=0;i<2;++i) {
             tind = stri[sind][i];

@@ -167,7 +167,7 @@ INSRT:
          }
          else {
 /*				REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
-            printf("skipping insert\n");
+            printf("#Warning: skipping insert\n");
             qtree.dltpt(nvrtx);
             --nvrtx;
             nsdel = 1;

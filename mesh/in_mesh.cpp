@@ -374,7 +374,7 @@ next1:      continue;
 /*	ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
    if (maxvst > gblmaxvst) {
       if (gblmaxvst > 0) {
-         printf("better to allocate from largest mesh to smallest\n");
+         printf("#Warning: better to allocate from largest mesh to smallest\n");
       }
       fltwk = new FLT[maxvst];
       intwk1 = new int[maxvst];
