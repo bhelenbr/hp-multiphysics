@@ -11,6 +11,7 @@
 #include<cstring>
 #include<assert.h>
 #include<stdlib.h>
+#include <utilities.h>
 
 void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ) {
    char fnmapp[100];
@@ -218,7 +219,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 }
 
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
-   int i,j,k,m,n,pin,indx;
+   int i,j,k,m,n,pin,pmin,indx;
    int bnum,innum,intyp,v0;
    FILE *in;
    char buffer[200];
@@ -237,7 +238,8 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          /* HEADER INFORMATION */
          /* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
          fscanf(in,"p0 = %d\n",&pin);
-         
+         pmin = MIN(p0,pin);
+
          do {
             fscanf(in,"%[^\n]",buffer);
             fscanf(in,"\n");
@@ -251,26 +253,46 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          
          indx = 0;
          for(i=0;i<nside;++i) {
-            for(m=0;m<(pin-1);++m) {
+            for(m=0;m<(pmin-1);++m) {
                for(n=0;n<NV;++n)
                   fscanf(in,"%le ",&g.s[indx][n]);
                fscanf(in,"\n");
                ++indx;
             }
-            indx += p0 -pin;
+            indx += p0 -pmin;
+
+            for(m=0;m<(pin-p0);++m) {
+               for(n=0;n<NV;++n)
+                  fscanf(in,"%*e ");
+               fscanf(in,"\n");
+            }           
          }
          
          indx = 0;
          for(i=0;i<ntri;++i) {
-            for(m=1;m<pin-1;++m) {
-               for(k=0;k<pin-1-m;++k) {
+            for(m=1;m<pmin-1;++m) {
+               for(k=0;k<pmin-1-m;++k) {
                   for(n=0;n<NV;++n) 
                      fscanf(in,"%le ",&g.i[indx][n]);
                   fscanf(in,"\n");
                   ++indx;
                }
-               indx += p0 -pin;
+               indx += p0 -pmin;
+               
+               for(k=0;k<pin-p0;++k) {
+                  for(n=0;n<NV;++n) 
+                     fscanf(in,"%*e ");
+                  fscanf(in,"\n");
+               }
             }
+            
+            for(m=pmin-1;m<pin-1;++m) {
+               for(k=0;k<pin-1-m;++k) {
+                  for(n=0;n<NV;++n) 
+                     fscanf(in,"%*e ");
+                  fscanf(in,"\n");
+               }
+            }           
          }
          
 
@@ -289,11 +311,14 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
 
             indx = 0;
             for(j=0;j<sbdry[bnum].num;++j) {
-               for(m=0;m<pin -1;++m) {
+               for(m=0;m<pmin -1;++m) {
                   fscanf(in,"%le %le\n",&bin[bnum][indx].curv[0],&bin[bnum][indx].curv[1]);
                   ++indx;
-               }
-               indx += p0 -pin;
+               }               
+               indx += p0 -pmin;
+
+               for(m=0;m<(pin-p0);++m) 
+                  fscanf(in,"%*e %*e\n");
             }
          }
          fclose(in);
