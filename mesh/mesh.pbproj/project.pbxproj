@@ -296,7 +296,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /Volumes/work/helenbrk/Codes/lib";
+				LIBRARY_SEARCH_PATHS = ../lib;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";

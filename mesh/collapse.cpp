@@ -125,7 +125,7 @@ int mesh::collapse(int sind) {
          l1 = dx*dx +dy*dy;
          delt = (l0 < l1 ? 1 : 0);
 
-         if (fabs(l0 - l1) < EPSILON) {
+         if (fabs(l0 - l1)/(l0 +l1) < 10.*EPSILON) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
             bnum = (-stri[sind][1]>>16) -1;
             delt = sbdry[bnum].isfrst;

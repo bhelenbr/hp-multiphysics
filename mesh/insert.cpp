@@ -43,7 +43,10 @@ int mesh::insert(int tind, int vnum, FLT theta = 0.0) {
    int sct, nskeep, skeep[MAXLST+1];
    int sind, sind1;
    
-   if (tind < 0) return(1);
+   if (tind < 0) {
+      printf("Warning: trying to insert point outside domain\n");
+      return(1);
+   }
    
    /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
