@@ -6,6 +6,8 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
+ 
+ #define NODEBUG
 
 #include<math.h>
 #include<utilities.h>
@@ -347,6 +349,9 @@ void hpbasis::initialize_values(void)
       for (i =0;i<gpx;++i) {
          gx[n][i] *= norm[n];
          dgx[n][i] *= norm[n];
+#ifdef DEBUG
+         printf("IV1: %d %d %e %e\n",i,n,gx[n][i],dgx[n][i]);
+#endif
       }
       for (j=0;j<gpn;++j) {
          /* SIDE 2 & 3 MUST BE RENORMALIZED BY SAME CONSTANT TO MATCH */
@@ -354,6 +359,9 @@ void hpbasis::initialize_values(void)
          dgn[n+sm][j] *= norm[n];
          gn[n +2*sm][j] *= norm[n];
          dgn[n +2*sm][j] *= norm[n];
+#ifdef DEBUG
+         printf("IV2: %d %d %e %e\n",j,n,gn[n][j],dgx[n][j]);
+#endif
       }
    }
 
@@ -361,6 +369,9 @@ void hpbasis::initialize_values(void)
       for(i = 0; i < gpn; ++i) {
          gn[m][i] = gn[m][i]*norm[m];
          dgn[m][i] = dgn[m][i]*norm[m];
+#ifdef DEBUG
+         printf("IV3: %d %d %e %e\n",i,m,gn[m][i],dgn[m][i]);
+#endif
       }
    }
 
@@ -555,8 +566,7 @@ void hpbasis::lumpinv(void) {
          mm[m][i] = l[i];      
    }
 
-#define NO_OUTMASS
-#ifdef OUTMASS
+#ifdef DEBUG
    FILE *fp;
    fp = fopen("mass","w");
    if (fp == NULL)
@@ -840,8 +850,7 @@ void hpbasis::lumpinv(void) {
 #endif
 
 
-#define NO_CHECK1
-#ifdef CHECK1
+#ifdef DEBUG
 
    /* CHECK TO MAKE SURE PREVIOUS RESULTS ARE RIGHT */
    for(i=0;i<3;++i) {
@@ -933,7 +942,7 @@ void hpbasis::lumpinv(void) {
             mwk[bm+k][j] -= bfmi[i][k]*mwk[i][j];
                      
    for(m=0;m<tm;++m) {
-      printf("%2d:",m);
+      printf("LI1: %2d:",m);
       for(j=0;j<tm;++j) {
          if (fabs(mwk[m][j]) > 1.0e-12)
             printf("%+.2e  ",mwk[m][j]);
@@ -959,10 +968,10 @@ void hpbasis::lumpinv(void) {
       }
    }
 
-#ifdef SKIP
+#ifdef DEBUG
    printf("\n mm MATRIX (sm+2) = %d\n",(sm+2));
    for(i=0;i<sm+2;++i) {
-      printf("%2d:",i);
+      printf("LI2: %2d:",i);
       for(j=0;j<sm+2;++j)
          printf("%+.4lf ",mm[i][j]);
       printf("\n");
@@ -1031,8 +1040,9 @@ void hpbasis::lumpinv(void) {
          vdiag1d = mm[0][0];
    }
 
-#ifdef SKIP
+#ifdef DEBUG
    /* CHECK TO MAKE SURE PREVIOUS 1D RESULTS ARE RIGHT */
+   double uht[MXTM];
    for(k=0;k<2;++k) {
       u[k] = 1.0;
       u[(k+1)%2] = 0.0;
@@ -1040,19 +1050,19 @@ void hpbasis::lumpinv(void) {
          u[m+2] = -sfmv1d[k][m];
 
       for(i=0;i<sm+2;++i) {
-         uht[1][i] = u[0]*gx[0][i];
-         uht[1][i] += u[1]*gx[1][i];
+         uht[i] = u[0]*gx[0][i];
+         uht[i] += u[1]*gx[1][i];
          for(m=0;m<sm;++m)
-            uht[1][i] += u[m+2]*gx[3+m][i];
+            uht[i] += u[m+2]*gx[3+m][i];
       }
 
       for(m=1;m<sm+3;++m) {
          l[m] = 0.0;
          for(i=0;i<gpx;++i) {
-            l[m] += wtx[i]*gx[m][i]*uht[1][i];
+            l[m] += wtx[i]*gx[m][i]*uht[i];
          }
       }
-      printf("%2d:",k);
+      printf("LI3 %2d:",k);
       for(j=0;j<sm+2;++j)
          printf("%+.4le  ",l[j]);
       printf("%+.4le  ",vdiag1d);

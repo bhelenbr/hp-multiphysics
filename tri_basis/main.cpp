@@ -2,16 +2,49 @@
 #include<stdio.h>
 #include<myblas.h>
 #include<utilities.h>
+#include <time.h>
 
-#define ROTATE
+#define NOROTATE
+#define NODEBUG
 
 #define P 4
 
 int main (int argc, const char * argv[]) {
+   clock_t cpu_time;
    hpbasis b;
    
    b.initialize(P);
-   return 0;
+   
+#ifdef DEBUG
+   double uht[MXTM];
+   double **u,**dx,**dy;
+   mat_alloc(u,P+1,P+1,double);
+   mat_alloc(dx,P+1,P+1,double);
+   mat_alloc(dy,P+1,P+1,double);
+   
+   clock();
+
+   for(int i=0;i<b.tm;++i) {
+      for(int j=0;j<b.tm;++j)
+         uht[j] = 0.0;
+      uht[i] = 1.0;
+      
+      //b.proj(uht,u);
+      //b.intgrt(u,uht);
+      //for(int j=0;j<b.tm;++j)
+         //printf("%d %e\n",j,uht[j]);
+      
+      b.proj(uht,u,dx,dy);
+      b.intgrtrs(dx,dy,uht);
+      for(int j=0;j<b.tm;++j)
+         printf("%d %e\n",j,uht[j]);
+   }
+   
+   cpu_time = clock();
+   printf("#that took %ld cpu time\n",cpu_time);
+   return(0);
+#endif
+
    
 #ifdef ROTATE
    FLT *uht[2],**rot;
