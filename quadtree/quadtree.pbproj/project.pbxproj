@@ -230,7 +230,7 @@
 			neededFileNames = (
 			);
 			shellPath = /bin/csh;
-			shellScript = "~helenbrk/Codes/quadtree/createlib";
+			shellScript = "~/Codes/quadtree/createlib";
 		};
 		F5440D5102465FF801990B20 = {
 			children = (
