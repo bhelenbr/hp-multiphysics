@@ -15,12 +15,12 @@
 #include<stdlib.h>
 
 /* INITIAL CONDITIONS */
-/* KOVASZNAY TEST CYLINDER FREESTREAM */
-#define TWOLAYER
+/* KOVASZNAY TEST CYLINDER FREESTREAM TWOLAYER CONV_DIFF UNSTEADY_DROP*/
+#define UNSTEADY_DROP
 
 /*	CURVED SURFACES */
-/* CIRCLE SIN COS */
-#define SIN
+/* CIRCLE SIN COS NACA */
+#define CIRCLE
 
 /* FOR A CIRCLE */
 FLT rad = 0.5;
@@ -32,6 +32,7 @@ FLT centery = 0.0;
 FLT amp = 0.375;
 #else
 FLT amp = 0.01;
+FLT lam = 6.0;
 #endif
 
 
@@ -79,12 +80,32 @@ FLT f1(int n, FLT x, FLT y) {
    
    switch(n) {
       case(0):
+         return(0.0);
+      case(1):
          if (r < 0.55) 
             return(0.0);
          else
             return(1.0);
-      case(1):
+      case(2):
          return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef UNSTEADY_DROP
+extern FLT outertime;
+
+FLT f1(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
+         return(0.0);
+      case(1):
+         return(0.0+0.0*sin(2.*M_PI*outertime/100.0));
       case(2):
          return(0.0);
    }
@@ -145,11 +166,11 @@ double df1d(int n, double x, double y, int dir) {
 
 #ifdef CONVDIFF
 
-// FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
-FLT forcing(FLT x,FLT y) {return(0.0);}
+FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
+// FLT forcing(FLT x,FLT y) {return(0.0);}
 FLT blayer = 0.0;
-FLT axext = 0.0*cos(M_PI*10.0/180.0), ayext = 0.0*sin(M_PI*10.0/180.0);
-FLT nuext = 1.0;
+FLT axext = 1.0*cos(M_PI*10.0/180.0), ayext = 1.0*sin(M_PI*10.0/180.0);
+FLT nuext = 0.0;
 
 FLT f1(int n, FLT x, FLT y) {
    FLT nux = nuext*4.*M_PI*M_PI;
@@ -157,13 +178,13 @@ FLT f1(int n, FLT x, FLT y) {
    FLT xx = x*2.*M_PI;
    FLT yx = y*2.*M_PI;
    switch(n) {
-      case(1):
+      case(0):
          return(axx*sin(xx)/(axx*axx +nux*nux)
            +nux*cos(xx)/(axx*axx +nux*nux)
            +(nux > 0.0 ? blayer*exp(axx/nux*xx) : 0.0)
            +startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
-      case(0):
-         return(startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
+      case(1):
+         return(startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));        
    }
    return(0.0);
 }
@@ -189,14 +210,15 @@ FLT df1d(int n, FLT x, FLT y) {
 #ifdef TWOLAYER
 
 FLT body[2];
-static FLT h = 1.75;
+static FLT h = 2.0;
+FLT mux[2];
+FLT rhox[2];
+FLT theta;
+
 
 double f1(int n, double x, double y) { 
    FLT bf,re,g1,g2,n1,n2,q1,q2;
-   FLT mux[2] = {1.0,2.5};
-   FLT rhox[2] = {1.0,1.0};
-   FLT theta = 0.2;
-
+   
    /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
    /* THETA DEFINED + CLOCKWISE */
    bf = mux[0]/(rhox[0]*(0.5 +(h-1)*rhox[1]/rhox[0])*sin(theta));
@@ -211,11 +233,6 @@ double f1(int n, double x, double y) {
    n2 = mux[1]/mux[0];
    q2 = rhox[1]/rhox[0];
    
-/*   bf = 1.0;
-   body[0] = 0.0;
-   body[1] = -1.0;
-   theta = 0.0; */
-
    if (y < 1) {
       switch (n) {
          case(0):
@@ -278,14 +295,14 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 #ifdef SIN
 FLT hgt(int type, FLT x, FLT y) {   
    if (type&(CURV_MASK)) {
-      return(y -amp*sin(2.*M_PI*x));
+      return(y -amp*sin(2.*M_PI*x/lam));
    }
    return(0.0);
 }
 
 FLT dhgtdx(int type, FLT x, FLT y) {   
    if (type&(CURV_MASK)) {
-      return(-2.*amp*M_PI*cos(2.*M_PI*x));
+      return(-2.*amp*M_PI/lam*cos(2.*M_PI*x/lam));
    }
    return(0.0);
 }
@@ -321,6 +338,39 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 }
 #endif
 
+#ifdef NACA
+FLT hgt(int type, FLT x, FLT y) { 
+   double thickness = 0.12;
+   if (type&(CURV_MASK)) {
+      if (x < 0.0) return(x);
+      
+      return(thickness*(1.4845*sqrt(x) -0.63*x -1.758*pow(x,2) +1.4215*pow(x,3) -0.5180*pow(x,4)) - fabs(y));
+      // return(thickness*(1.4845*sqrt(x) -0.63*x -1.758*pow(x,2) +1.4215*pow(x,3) -0.5075*pow(x,4)) - fabs(y));
+   }
+   
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {
+   double thickness = 0.12;
+   
+   if (type&(CURV_MASK)) {
+   
+      if (x <= 0.0) return(1.0);
+      return(thickness*(0.5*1.4845/sqrt(x) -0.63 -2*1.758*x +3*1.4215*pow(x,2) -4*0.5180*pow(x,3)));
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return((y > 0 ? -1 : 1));
+   }
+   return(0.0);
+}
+#endif
+
+
 /* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
 class spectral_hp *tgt;
 
@@ -336,8 +386,9 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
          x += delt_dist*dhgtdx(typ,x,y);
          y += delt_dist*dhgtdy(typ,x,y);
          if (++iter > 100) {
-            printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
-            exit(1);
+            printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
+            break;
+            //exit(1);
          }
       } while (fabs(delt_dist) > 10.*EPSILON);
       
@@ -367,17 +418,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
 
    if (typ == 1025) {
       if (startup) {
-         iter = 0;
-         do {
-            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-            delt_dist = -(hgt(typ,x,y)-h)/mag;
-            x += delt_dist*dhgtdx(typ,x,y);
-            y += delt_dist*dhgtdy(typ,x,y);
-            if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
-               exit(1);
-            }
-         } while (fabs(delt_dist) > 10.*EPSILON);
+         return;
       }
       else
          tgt->findbdrypt(typ,x,y,psi);
@@ -386,26 +427,6 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    }
    
 #endif
-   
-   if (typ == 66562) {
-       if (startup) {
-         iter = 0;
-         do {
-            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-            delt_dist = -(hgt(typ,x,y)-0.5)/mag;
-            x += delt_dist*dhgtdx(typ,x,y);
-            y += delt_dist*dhgtdy(typ,x,y);
-            if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
-               exit(1);
-            }
-         } while (fabs(delt_dist) > 10.*EPSILON);
-      }
-      else 
-         tgt->findbdrypt(typ,x,y,psi);
-      
-      return;
-   }
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {
       if (startup) {
