@@ -16,7 +16,7 @@
 
 /* TEST OR FINDUNIQUE */
 
-#define FINDUNIQUE
+#define TEST
 
 int main() {
    int i,j,n,pt;
@@ -37,7 +37,7 @@ int main() {
    if (vrts == NULL) printf("shit\n");
 
    dups.allocate(vrts,nvrts);
-   scanf("%lf %lf %Lf\n",&vrts[0][0],&vrts[0][1],&vrts[0][2]);
+   scanf("%lf %lf %lf\n",&vrts[0][0],&vrts[0][1],&vrts[0][2]);
    
    for(n=0;n<3;++n) {
       xmax[n] = vrts[0][n];

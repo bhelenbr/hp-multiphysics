@@ -1,5 +1,5 @@
 /*
- *  quad_impl.h
+ *  box_impl.h
  *  quadtree
  *
  *  Created by Brian Helenbrook on Fri Sep 13 2002.
@@ -15,7 +15,7 @@
 #include<math.h>
 
 /* STATIC VARIABLES FOR SEARCHING */ 
-// class quad<ND> **quadtree<ND>::srchlst;
+// class box<ND> **quadtree<ND>::srchlst;
 // int quadtree<ND>::maxsrch = 0;
   
 template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
@@ -28,11 +28,11 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
       delete [] indx;
    }
    
-/*	TAKES APPROXIMATELY 1:1 QUADS TO VERTICES WITH 4 NODES / QUAD */
+/*	TAKES APPROXIMATELY 1:1 boxS TO VERTICES WITH 4 NODES / box */
 /*	+10 IS FACTOR OF SAFETY FOR SMALL mxv */
    size = (int) 1.1*mxv +10; 
-   base = new class quad<ND>[size];
-   indx = new class quad<ND>*[maxvrtx];
+   base = new class box<ND>[size];
+   indx = new class box<ND>*[maxvrtx];
    for(i=0;i<maxvrtx;++i)
       indx[i] = NULL;
 
@@ -41,18 +41,18 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
       x1[i] = 0.0;
       x2[i] = 1.0;
    }
-   base[0] = quad<ND>(NULL,0,x1,x2);
+   base[0] = box<ND>(NULL,0,x1,x2);
    current = 1;
    
    if (maxsrch == 0) {
-      srchlst = new class quad<ND>*[size];
+      srchlst = new class box<ND>*[size];
       maxsrch = size;
    }
    else {
       if (size > maxsrch) { 
          printf("#Warning: Better to allocate largest quadtree to smallest\n");
          delete []srchlst;
-         srchlst = new class quad<ND>*[size];
+         srchlst = new class box<ND>*[size];
          maxsrch = size;
       }
    }
@@ -70,7 +70,7 @@ template<int ND> void quadtree<ND>::init(FLT x1[ND], FLT x2[ND]) {
    
    
 
-   base[0] = quad<ND>(NULL,0,x1,x2);
+   base[0] = box<ND>(NULL,0,x1,x2);
 
    for(i = 0; i<maxvrtx; ++i)
       indx[i] = NULL;
@@ -80,7 +80,7 @@ template<int ND> void quadtree<ND>::init(FLT x1[ND], FLT x2[ND]) {
 
 template<int ND> void quadtree<ND>::init() {
 
-   base[0] = quad<ND>(NULL,0,base[0].xmin,base[0].xmax);
+   base[0] = box<ND>(NULL,0,base[0].xmin,base[0].xmax);
    for(int i = 0; i<maxvrtx; ++i)
       indx[i] = NULL;
       
@@ -94,8 +94,8 @@ template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
    if (size == 0) {
       maxvrtx = tgt.maxvrtx;
       size = tgt.size;
-      base = new class quad<ND>[size];
-      indx = new class quad<ND>*[maxvrtx];
+      base = new class box<ND>[size];
+      indx = new class box<ND>*[maxvrtx];
    }
    else {
       assert(size >= tgt.current);
@@ -162,9 +162,9 @@ template<int ND> void quadtree<ND>::reinit() {
    return;
 }
 
-template<int ND> void quadtree<ND>::addpt(int v0, class quad<ND>* start) {
+template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
    int i,j,n;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
-   class quad<ND> *qpt;  // SAME
+   class box<ND> *qpt;  // SAME
    int store[(1<<ND) +1];
    FLT avoid0,xshift,x1[ND],x2[ND],dx[ND];
    
@@ -185,13 +185,13 @@ template<int ND> void quadtree<ND>::addpt(int v0, class quad<ND>* start) {
    }
    
    if (qpt->num < (1<<ND)) {
-/*		QUAD CAN ACCEPT NEW POINT */
+/*		box CAN ACCEPT NEW POINT */
       qpt->node[qpt->num++] = v0;
       indx[v0] = qpt;
       return;
    }
 
-/*	QUAD IS FULL SUBDIVIDE */
+/*	box IS FULL SUBDIVIDE */
    if (current +(1<<ND) >= size) {
       printf("Need to allocate bigger quadtree %d\n",size);
       output("quad_error",quadtree::text);
@@ -211,7 +211,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class quad<ND>* start) {
          x1[n] = qpt->xmin[n] +dx[n]*j;
          x2[n] = x1[n] +dx[n];
       }
-      base[current] = quad<ND>(qpt,i,x1,x2);
+      base[current] = box<ND>(qpt,i,x1,x2);
       qpt->dghtr[i] = base +current;
       ++current;
    }
@@ -225,9 +225,9 @@ template<int ND> void quadtree<ND>::addpt(int v0, class quad<ND>* start) {
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
 template<int ND> FLT quadtree<ND>::nearpt(int v0, int& pt) const {
    int i,n,nsrch,exclude;
-   class quad<ND> *topbox;
+   class box<ND> *topbox;
    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
 
    mindist = 0.0;
    for(n=0;n<ND;++n) {
@@ -299,9 +299,9 @@ template<int ND> FLT quadtree<ND>::nearpt(int v0, int& pt) const {
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
 template<int ND> FLT quadtree<ND>::nearpt(FLT x[ND], int& pt) const {
    int i,n,nsrch,exclude;
-   class quad<ND> *topbox;
+   class box<ND> *topbox;
    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
 
    mindist = 0.0;
    for(n=0;n<ND;++n) {
@@ -367,7 +367,7 @@ template<int ND> FLT quadtree<ND>::nearpt(FLT x[ND], int& pt) const {
 
 template<int ND> void quadtree<ND>::dltpt(int v0) {
    int ind, i;
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
    
    qpt = indx[v0];
    
@@ -402,7 +402,7 @@ template<int ND> void quadtree<ND>::dltpt(int v0) {
 template<int ND> void quadtree<ND>::output(char *filename, FILETYPE type) {
    int i,j,n,nsrch;
    char fnmapp[100],etype[20],order[20];
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
    FILE *out;
    
    strcpy(fnmapp,filename);
@@ -498,7 +498,7 @@ template<int ND> void quadtree<ND>::output(char *filename, FILETYPE type) {
 
 template<int ND> void quadtree<ND>::movept(int from, int to) {
    int i;
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
    
    qpt = indx[from];
    
@@ -528,7 +528,7 @@ template<int ND> void quadtree<ND>::movept(int from, int to) {
 
 template<int ND> void quadtree<ND>::update(int bgn, int end) {
    int i,n;
-   class quad<ND> *qpt;
+   class box<ND> *qpt;
    
    for(i=bgn;i<end;++i) {
       qpt = indx[i];
@@ -547,8 +547,8 @@ template<int ND> void quadtree<ND>::update(int bgn, int end) {
 template<int ND> void quadtree<ND>::update(int v0) {
    int i,n,nsrch,exclude;
    FLT x[ND];
-   class quad<ND> *topbox;
-   class quad<ND> *qpt;
+   class box<ND> *topbox;
+   class box<ND> *qpt;
 
    for(n=0;n<ND;++n)
       x[n] = vrtx[v0][n];
