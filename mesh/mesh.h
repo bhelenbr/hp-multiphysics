@@ -135,6 +135,7 @@ class mesh {
       int insert(int tind, int vnum, FLT theta = 0.0);
       void bdry_insert(int tind, int snum, int vnum);
       int findtri(FLT x, FLT y, int vnear) const;
+      int findbdrytri(FLT *x, int vnear) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
@@ -162,6 +163,7 @@ class mesh {
          return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
       }     
       FLT incircle(int tind, double *a) const;
+      FLT mesh::insidecircle(int sind, FLT *a) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
       FLT area(int tind) const;

@@ -33,6 +33,18 @@ FLT mesh::incircle(int tind, FLT *a) const {
    return(determ);
 }
 
+FLT mesh::insidecircle(int sind, FLT *a) const {
+   int v0,v1;
+   FLT ctr[2],dist2;
+   
+   v0 = svrtx[sind][0];
+   v1 = svrtx[sind][1];
+   ctr[0] = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
+   ctr[1] = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+   dist2 = (a[0]-ctr[0])*(a[0]-ctr[0]) +(a[1]-ctr[1])*(a[1]-ctr[1]);
+   return(0.5*distance2(v0,v1) -dist2);
+}
+
 
 FLT mesh::area(int v0, int v1, int v2) const {
    FLT dx1,dy1,dx2,dy2;
