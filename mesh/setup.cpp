@@ -115,24 +115,25 @@ void mesh::createttri(void) {
 }
 
 void mesh::treeinit() {
-   int i,j,v0;
+   int i,j,sind,v0;
    FLT x1,y1,x2,y2;
    
    x1 = vrtx[0][0];
    y1 = vrtx[0][1];
    x2 = x1;
-   y2 = y1;
+   y2 = y1;   
    
    for (i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {
-         v0 = sbdry[i].el[j];
+         sind = sbdry[i].el[j];
+         v0 = svrtx[sind][0];
          x1 = MIN(x1,vrtx[v0][0]);
          y1 = MIN(y1,vrtx[v0][1]);
          x2 = MAX(x2,vrtx[v0][0]);
          y2 = MAX(y2,vrtx[v0][1]);
       }
    }
-   
+
    qtree.init(vrtx,maxvst,x1-EPSILON,y1-EPSILON,x2+EPSILON,y2+EPSILON);
    
    for(i=0;i<nvrtx;++i) 
