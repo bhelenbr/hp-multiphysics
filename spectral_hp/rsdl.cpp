@@ -10,6 +10,8 @@
 #include "hp_mgrid.h"
 
 #define NO_TWOLAYER
+#define NO_INERTIALESS
+
 #ifdef TWOLAYER
 extern FLT body[2];
 #endif
@@ -18,32 +20,45 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    int i,j,n,tind;
    FLT fluxx,fluxy;
    FLT visc[ND][ND][ND][ND], tres[NV];
+   FLT *ftemp;
+   int ntemp;
+   int v[3];
    
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.v[i][n] = 0.0;
+   
+   ntemp = nvrtx*NV;
+   ftemp = &gbl->res.v[0][0];
+   for(i=0;i<ntemp;++i)
+      ftemp[i] = 0.0;
 
-    for(i=0;i<nside*b.sm;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.s[i][n] = 0.0;
+   ntemp = nside*b.sm*NV;
+   ftemp = &gbl->res.s[0][0];
+   for(i=0;i<ntemp;++i)
+   	ftemp[i] = 0.0;
                  
-    for(i=0;i<ntri*b.im;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.i[i][n] = 0.0;  
+   ftemp = &gbl->res.i[0][0];
+   ntemp = ntri*b.im*NV;
+   for(i=0;i<ntemp;++i)
+      ftemp[i] = 0.0;  
          
-    for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         gbl->vf.v[i][n] *= (1. -beta[stage]);
+   FLT oneminusbeta = 1. -beta[stage];
+   ntemp = nvrtx*NV;
+   ftemp = &gbl->vf.v[0][0];
+   for(i=0;i<ntemp;++i)
+      ftemp[i] *= oneminusbeta;
 
-    for(i=0;i<nside*b.sm;++i)
-      for(n=0;n<NV;++n)
-         gbl->vf.s[i][n]  *= (1. -beta[stage]);
-                 
-    for(i=0;i<ntri*b.im;++i)
-      for(n=0;n<NV;++n)
-         gbl->vf.i[i][n]  *= (1. -beta[stage]);          
+   ntemp = nside*b.sm*NV;
+   ftemp = &gbl->vf.s[0][0];
+   for(i=0;i<ntemp;++i)
+      ftemp[i] *= oneminusbeta;
+               
+   ntemp = ntri*b.im*NV;
+   ftemp = &gbl->vf.i[0][0];
+   for(i=0;i<ntemp;++i)
+         ftemp[i]  *= oneminusbeta;          
 
    for(tind = 0; tind<ntri;++tind) {
+      for(n=0;n<3;++n)
+         v[n] = tvrtx[tind][n];
    
       if (tinfo[tind] > -1) {
          crdtocht(tind);
@@ -56,16 +71,16 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
    	else {
          for(n=0;n<ND;++n)
-            b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+            b.proj(vrtx[v[0]][n],vrtx[v[1]][n],vrtx[v[2]][n],crd[n]);
             
          for(n=0;n<ND;++n)
-            b.proj(dvrtdt[tvrtx[tind][0]][n],dvrtdt[tvrtx[tind][1]][n],dvrtdt[tvrtx[tind][2]][n],u[n]);
+            b.proj(dvrtdt[v[0]][n],dvrtdt[v[1]][n],dvrtdt[v[2]][n],u[n]);
             
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][1]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][0]][n] -vrtx[tvrtx[tind][1]][n]);
+                  dcrd[n][0][i][j] = 0.5*(vrtx[v[2]][n] -vrtx[v[1]][n]);
+                  dcrd[n][1][i][j] = 0.5*(vrtx[v[0]][n] -vrtx[v[1]][n]);
                }
             }
          }
@@ -99,14 +114,20 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
             fluxx = gbl->rho*RAD(i,j)*(u[0][i][j] -mvel[0][i][j]);
             fluxy = gbl->rho*RAD(i,j)*(u[1][i][j] -mvel[1][i][j]);
-
+            
             du[2][0][i][j] = +dcrd[1][1][i][j]*fluxx -dcrd[0][1][i][j]*fluxy;
             du[2][1][i][j] = -dcrd[1][0][i][j]*fluxx +dcrd[0][0][i][j]*fluxy;
-
+#ifndef INERTIALESS
             cv00[i][j] =  u[0][i][j]*du[2][0][i][j] +dcrd[1][1][i][j]*RAD(i,j)*u[2][i][j];
             cv01[i][j] =  u[0][i][j]*du[2][1][i][j] -dcrd[1][0][i][j]*RAD(i,j)*u[2][i][j];
             cv10[i][j] =  u[1][i][j]*du[2][0][i][j] -dcrd[0][1][i][j]*RAD(i,j)*u[2][i][j];
             cv11[i][j] =  u[1][i][j]*du[2][1][i][j] +dcrd[0][0][i][j]*RAD(i,j)*u[2][i][j];
+#else
+            cv00[i][j] =  +dcrd[1][1][i][j]*RAD(i,j)*u[2][i][j];
+            cv01[i][j] =  -dcrd[1][0][i][j]*RAD(i,j)*u[2][i][j];
+            cv10[i][j] =  -dcrd[0][1][i][j]*RAD(i,j)*u[2][i][j];
+            cv11[i][j] =  +dcrd[0][0][i][j]*RAD(i,j)*u[2][i][j];
+#endif
          }
       }
       b.intgrtrs(cv00,cv01,lf[0]);
@@ -135,6 +156,12 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 #ifdef TWOLAYER
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+
+                  /* TEMPORARY FOR INERTIALESS FLOW */
+#ifdef INERTIALESS
+                  res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+                  res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+#endif
 #endif
                }
             }
@@ -148,6 +175,17 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[2][i][j] = gbl->rho*RAD(i,j)*bd[0]*cjcb[i][j];
 #ifdef AXISYMMETRIC
                   res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
+#endif
+
+#ifdef TWOLAYER
+                  res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+                  res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+
+                  /* TEMPORARY FOR INERTIALESS FLOW */
+#ifdef INERTIALESS
+                  res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+                  res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+#endif
 #endif
                }
             }
@@ -222,6 +260,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                tres[1] = gbl->tau[tind]*res[1][i][j];
                tres[2] = gbl->delt[tind]*res[2][i][j];
 
+#ifndef INERTIALESS
                e00[i][j] -= (dcrd[1][1][i][j]*(2*u[0][i][j]-mvel[0][i][j])
                            -dcrd[0][1][i][j]*(u[1][i][j]-mvel[1][i][j]))*tres[0]
                            -dcrd[0][1][i][j]*u[0][i][j]*tres[1]
@@ -238,7 +277,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                            +(-dcrd[1][0][i][j]*(u[0][i][j]-mvel[0][i][j])
                            +dcrd[0][0][i][j]*(2.*u[1][i][j]-mvel[1][i][j]))*tres[1]
                            +dcrd[0][0][i][j]*tres[2];
-
+#endif
                            
                du[2][0][i][j] = -(dcrd[1][1][i][j]*tres[0] -dcrd[0][1][i][j]*tres[1]);
                du[2][1][i][j] = -(-dcrd[1][0][i][j]*tres[0] +dcrd[0][0][i][j]*tres[1]);
