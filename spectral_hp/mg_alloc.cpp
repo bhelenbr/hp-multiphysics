@@ -19,10 +19,10 @@ FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 FLT hp_mgrid::trncerr, hp_mgrid::invbdryerr, hp_mgrid::vlngth_tol, hp_mgrid::adapt_tol;
 int hp_mgrid::changed = 1; //FLAG FOR PV3 TO INDICATE STRUCTURE CHANGED
-struct vsi hp_mgrid::ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
-FLT (*hp_mgrid::vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
-struct bistruct *hp_mgrid::binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
-FLT **hp_mgrid::bdwk[MXSTEPM1][NV]; // WORK FOR ADAPTATION
+struct vsi hp_mgrid::ugwk[TMADAPT]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
+FLT (*hp_mgrid::vrtxwk[TMADAPT])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
+struct bistruct *hp_mgrid::binfowk[TMADAPT][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
+FLT **hp_mgrid::bdwk[TMADAPT][NV]; // WORK FOR ADAPTATION
 int hp_mgrid::size;
 
 
@@ -31,8 +31,6 @@ const FLT hp_mgrid::alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0};
 const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
 //const FLT hp_mgrid::alpha[NSTAGE+1] = {1.0, 1.0};  // 1 JACOBI SWEEP
 //const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 1.0};  // 1 JACOBI SWEEP
-int hp_mgrid::extrap=0;
-FLT hp_mgrid::bd[MXSTEP+1];
 FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
 
 
@@ -40,9 +38,9 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    int i,j,n,onfmesh;
    
 #if (defined(DROP) || defined(UNSTEADY_DROP))
-   r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK;
-#else
    r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK -INFL_MASK;
+#else
+   r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK;
 #endif
    
    if (spectral_hp::size == 0 || mesh::initialized == 0) {
@@ -66,14 +64,14 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
          mat_alloc(mvel[n],b.gpx,b.gpn,FLT);
       
       /* ALLOCATE UNSTEADY ADAPTATION STORAGE */
-      for(i=0;i<MXSTEPM1;++i) {
-         ugstr[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-         ugstr[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
-         ugstr[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
+      for(i=0;i<TMADAPT;++i) {
+         ugwk[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+         ugwk[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+         ugwk[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
          
-         vrtxstr[i] = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+         vrtxwk[i] = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
          for(j=0;j<nsbd;++j)
-            binfostr[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+            binfowk[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
                
          for(n=0;n<NV;++n)
             mat_alloc(bdwk[i][n],b.gpx,b.gpn,FLT);
@@ -159,7 +157,7 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    vect_alloc(store->delt,maxvst,FLT);
 
    /* UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
-   for(i=0;i<MXSTEPM1;++i) {
+   for(i=0;i<TMSTORE;++i) {
       store->ugbd[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       store->ugbd[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
       store->ugbd[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
@@ -192,35 +190,6 @@ FLT hp_mgrid::maxres(FLT *mxr) {
       emax = MAX(emax,mxr[n]);
       
    return(emax);
-}
-
-void hp_mgrid::setbd(int nsteps) {
-   int i;
-   
-   for(i=0;i<MXSTEP+1;++i)
-      hp_mgrid::bd[i] = 0.0;
-      
-   switch(nsteps) {
-      case(1):
-         hp_mgrid::bd[0] =  hp_mgrid::dti;
-         hp_mgrid::bd[1] = -hp_mgrid::dti;
-         break;
-      case(2):
-         hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-         break;
-      case(3):
-         hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
-         hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
-         hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
-         break;
-   }
-   hp_mgrid::extrap = 1;
-   
-   return;
-}
-   
+}   
    
 
