@@ -41,10 +41,10 @@
 		};
 		0249A662FF388D9811CA2CEA = {
 			children = (
-				F512111A01904F8901990B20,
+				F52FE4D902180CBB01990B20,
+				F52FE4D802180CBB01990B20,
+				F52FE4DC02180FA201990B20,
 				F58209B601808CC201990B20,
-				F58209B701808CC201990B20,
-				F569AE4F019726EB01990B20,
 				0249A663FF388D9811CA2CEA,
 				F58BA0FB01762F8301990B20,
 				F58BA0F901762F8301990B20,
@@ -93,6 +93,7 @@
 		08FB7794FE84155DC02AAC07 = {
 			children = (
 				08FB7795FE84155DC02AAC07,
+				F52FE4CF0214251601990B20,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
 			);
@@ -131,15 +132,14 @@
 				F52FC80E01BE791F01990B20,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
+				F52FE4D2021459BA01990B20,
+				F52FE4D0021429E601990B20,
 				F581CD2901989D4B01990B20,
 				F581CD240198731301990B20,
 				F505FF0F0192F1EB01990B20,
 				F505FF100192F1EB01990B20,
 				F505FF110192F1EB01990B20,
 				F54BE4D201E1038D01990B20,
-				F5ACCDA501BFCB8401990B20,
-				F5C7542701B9E9E501115962,
-				F5CA0FBF01E5DB2201990B20,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -155,7 +155,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib";
+				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/lib";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -225,16 +225,16 @@
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F512111B01904F8901990B20,
+				F52FE4DA02180CBB01990B20,
 				F58209B901808CC201990B20,
-				F58209BA01808CC201990B20,
+				F52FE4DB02180CBB01990B20,
+				F52FE4DD02180FA201990B20,
 				0249A664FF388D9811CA2CEA,
 				F58BA0FF01762F8301990B20,
 				F58BA0FD01762F8301990B20,
 				F58BA0FE01762F8301990B20,
 				F58BA0FC01762F8301990B20,
 				F58BA10101762FBE01990B20,
-				F569AE50019726EB01990B20,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -319,18 +319,6 @@
 		};
 		F50AF9B00188AC3601990B20 = {
 			fileRef = F50AF9AF0188AC3601990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F512111A01904F8901990B20 = {
-			isa = PBXFileReference;
-			name = myblas.o;
-			path = ../lib/myblas.o;
-			refType = 4;
-		};
-		F512111B01904F8901990B20 = {
-			fileRef = F512111A01904F8901990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -445,6 +433,62 @@
 			settings = {
 			};
 		};
+		F52FE4CF0214251601990B20 = {
+			children = (
+				F5ACCDA501BFCB8401990B20,
+				F5C7542701B9E9E501115962,
+				F5CA0FBF01E5DB2201990B20,
+			);
+			isa = PBXGroup;
+			name = Inputs;
+			refType = 4;
+		};
+		F52FE4D0021429E601990B20 = {
+			isa = PBXFileReference;
+			path = pv3routines.cpp;
+			refType = 4;
+		};
+		F52FE4D2021459BA01990B20 = {
+			isa = PBXFileReference;
+			path = osdepend.h;
+			refType = 4;
+		};
+		F52FE4D802180CBB01990B20 = {
+			isa = PBXFileReference;
+			name = libmyblas.a;
+			path = /Volumes/work/helenbrk/Codes/lib/libmyblas.a;
+			refType = 0;
+		};
+		F52FE4D902180CBB01990B20 = {
+			isa = PBXFileReference;
+			name = libquad.a;
+			path = /Volumes/work/helenbrk/Codes/lib/libquad.a;
+			refType = 0;
+		};
+		F52FE4DA02180CBB01990B20 = {
+			fileRef = F52FE4D802180CBB01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52FE4DB02180CBB01990B20 = {
+			fileRef = F52FE4D902180CBB01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52FE4DC02180FA201990B20 = {
+			isa = PBXFileReference;
+			name = libutil.a;
+			path = /Volumes/work/helenbrk/Codes/lib/libutil.a;
+			refType = 0;
+		};
+		F52FE4DD02180FA201990B20 = {
+			fileRef = F52FE4DC02180FA201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F533C5CF01938985017C3E7F = {
 			isa = PBXFileReference;
 			path = bdry.cpp;
@@ -500,18 +544,6 @@
 			path = adapt.cpp;
 			refType = 4;
 		};
-		F569AE4F019726EB01990B20 = {
-			isa = PBXFileReference;
-			name = utilities.o;
-			path = ../lib/utilities.o;
-			refType = 2;
-		};
-		F569AE50019726EB01990B20 = {
-			fileRef = F569AE4F019726EB01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F571E77A018104EE01C86C07 = {
 			fileRef = F525D079017F69D201990B20;
 			isa = PBXBuildFile;
@@ -546,20 +578,8 @@
 			path = ../lib/libmesh.a;
 			refType = 2;
 		};
-		F58209B701808CC201990B20 = {
-			isa = PBXFileReference;
-			name = quad.o;
-			path = ../lib/quad.o;
-			refType = 2;
-		};
 		F58209B901808CC201990B20 = {
 			fileRef = F58209B601808CC201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58209BA01808CC201990B20 = {
-			fileRef = F58209B701808CC201990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
