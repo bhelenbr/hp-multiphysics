@@ -29,7 +29,7 @@ class blocks {
       int nblocks;  // NUMBER OF BLOCKS
       class block *blk;
 
-      int ntstep,out_intrvl,readin; // TIME STEP STUFF
+      int ntstep,out_intrvl,rstrt_intrvl,readin; // TIME STEP STUFF
       int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
       int adapt; //FLAG FOR ADAPTATION
 
