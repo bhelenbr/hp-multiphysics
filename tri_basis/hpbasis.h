@@ -170,6 +170,11 @@ class hpbasis {
          ptprobe1d(nv,lin,f);
       }
       void ptprobe1d(int nv, FLT **lin, FLT *f);  // REUSES OLD VALUES OF X
+      inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx, FLT x) {    
+         ptvalues1d_deriv(x);
+         ptprobe1d(nv,lin,f,dx);
+      }
+      void ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx);
       
    /* LOCAL STORAGE/WORK */
    private:

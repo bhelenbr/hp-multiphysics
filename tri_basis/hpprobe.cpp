@@ -192,4 +192,20 @@ void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f) {
    
    return;
 }
+
+void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx) {
+   int k,n;
+
+   for(n=0;n<nv;++n) {
+      f[n]   = 0.0;
+      dx[n]  = 0.0;
+
+      for(k=0; k < p+1; ++k )  {
+         f[n]   += lin[n][k]*pgx[k];
+         dx[n]  += lin[n][k]*dpgx[k];
+      }
+   }
+   
+   return;
+}
    
