@@ -27,6 +27,19 @@ int main(int argc, char *argv[]) {
    char outname[100];
    char *inname[2];
    char *out2[2];
+   mesh x,y;
+   
+   x.in_mesh("/Users/helenbrk/Codes/grids/SQUARE/square1",easymesh);
+   for(i=0;i<x.nvrtx;++i) {
+      x.vrtx[i][1] *= +(1.0+ 0.5*x.vrtx[i][0]);
+   }
+   x.swap();
+   for(i=0;i<x.nvrtx;++i) {
+      x.vrtx[i][1] /= +(1.0+ 0.5*x.vrtx[i][0]);
+   }
+   x.setbcinfo();
+   x.out_mesh("/Users/helenbrk/Codes/grids/SQUARE/square1a",easymesh);
+   return(0);
  
    /* START CLOCK TIMER */
    clock();
@@ -34,8 +47,8 @@ int main(int argc, char *argv[]) {
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
 //   inname[0] = "/Volumes/work/helenbrk/shelob/codes/grids2/CYLINDER/fine";
-   inname[0] = "/Users/helenbrk/Codes/grids/KOVA/kova4";
-   z.init(1,3,inname,easymesh,10.0);
+   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
+   z.init(1,5,inname,easymesh,10.0);
    
    for(step = 1; step<=1;++step) {
       center += step/FLT(10);  // FOR THE MOVING CYLINDER PROBLEM
@@ -43,23 +56,21 @@ int main(int argc, char *argv[]) {
       z.ksrc();
       z.perturb();
       
-      for(i=0;i<20;++i) {
+      for(i=0;i<50;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();
          printf("\n");
       }
       z.out_mesh("deformed",grid);
-      return(0);
-
       z.restructure(0.66);
       number_str(outname, "fourth", step, 2);
       z.out_mesh(outname,grid);
    }
    
-   out2[0] = "bamp0.375";
-   out2[1] = "tamp0.375";
-   z.out_mesh(out2,easymesh);
+//   out2[0] = "bamp0.375";
+//   out2[1] = "tamp0.375";
+//   z.out_mesh(out2,easymesh);
    
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);

@@ -17,7 +17,7 @@ void r_mesh::perturb() {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            vrtx[v0][0] -= 1.9;
+            vrtx[v0][0] -= 0.9;
          }
       }
        if (sbdry[i].type  == FSRF_MASK) {

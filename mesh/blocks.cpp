@@ -3,7 +3,7 @@
 #include<cstdio>
 #include<utilities.h>
 
-void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+void blocks::init(int n, int mg, char **filename, FILETYPE filetype, FLT grwfac) {
    int i,j,k,match;
 
    nblocks = n;
@@ -33,7 +33,7 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, 
    return;
 }
 
-void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
+void blocks::out_mesh(char *filename, FILETYPE filetype) {
    int i;   
    char fnmcat[80],outname[80];
 
@@ -56,7 +56,7 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
    return;
 }
 
-void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
+void blocks::out_mesh(char **filename, FILETYPE filetype) {
    int i;   
 
    /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
@@ -116,7 +116,7 @@ void blocks::jacobi(int niter, int lvl) {
    return;
 }
 
-void blocks::cycle(int vw, int lvl = 0) {
+void blocks::cycle(int vw, int lvl) {
    int i,j;  // DON'T MAKE THESE SCREWS UP RECURSION
    
    for (i=0;i<vw;++i) {

@@ -25,7 +25,7 @@ extern int nslst;
 void putinlst(int sind);
 void tkoutlst(int sind);
 
-void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0) {
+void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
    
    /* SET UP FLTWK */

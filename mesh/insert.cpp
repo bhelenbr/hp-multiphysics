@@ -38,7 +38,7 @@ int mesh::insert(FLT x, FLT y) {
    return(err);
 }
 
-int mesh::insert(int tind, int vnum, FLT theta = 0.0) {
+int mesh::insert(int tind, int vnum, FLT theta) {
    int i,j,tin,v0,dir;
    int sct, nskeep, skeep[MAXLST+1];
    int sind, sind1;
@@ -512,7 +512,7 @@ FOUND:
 }
 
 
-int mesh::findbdryside(FLT *x, int vnear, int type, int typemask = 0xFFFFFFFF) const {
+int mesh::findbdryside(FLT *x, int vnear, int type, int typemask) const {
    int i,j,tin,tind,sind,typ1;
    
    /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */

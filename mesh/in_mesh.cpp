@@ -8,7 +8,7 @@ FLT *mesh::fltwk;
 int *mesh::intwk1, *mesh::intwk2, *mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
-int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype, FLT grwfac) {
     int i,j,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
@@ -549,7 +549,7 @@ next1:      continue;
 #define PDY2_OLD 8192
 #define OUT2_OLD 513
 
-void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
+void mesh::convertbtypes(const int (*old)[2], int nold) {
 
    int oldbtype[NOLDBTYPE][2] = 
                              {{FSRF_OLD,FSRF_MASK+CURV_MASK},

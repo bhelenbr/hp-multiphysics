@@ -20,7 +20,7 @@
 /* THIS OBVIOUSLY NEEDS TO BE CLEANED UP A BIT */
 /* BUT IT DOESN'T INTERFERE WITH ANYTHING */
 
-void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
+void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
    int i,j,nv;
    int lp, sd;
    int sind,dir,sindnxt,dirnxt;

@@ -1,7 +1,7 @@
 #include"blocks.h"
 #include"utilities.h"
 
-void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+void block::init(int n, char *filename, FILETYPE filetype, FLT grwfac) {
    int i;
    
    ngrid = n;
