@@ -23,7 +23,7 @@ void number_str(char *out, const char *in, int n, int dgts) {
    int i,denom;
    char temp[100];
    
-   strcpy(out,in);
+   if (out != in) strcpy(out,in);
    
    denom = 1;
    for(i=0;i<dgts-1;++i) denom*=10;
