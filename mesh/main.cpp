@@ -15,7 +15,7 @@
 using namespace std;
 
 /* GENERATE CONVERT MAXMIN HEIGHT */
-#define HEIGHT
+#define GENERATE
 
 #ifdef CAPRI
 CAPRI_MAIN(int argc, char *argv[]) {
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     int count,sind;
     class mesh<2> zx;
     
-    zx.in_mesh(argv[1],tecplot);
+    zx.in_mesh(argv[1],ftype::tecplot);
     sscanf(argv[1],"data%d",&count);
     
     double xmax = -1.0e16;
@@ -111,26 +111,25 @@ int main(int argc, char *argv[]) {
 #ifdef CONVERT
    class mesh<2> zx;
 
-   zx.in_mesh(argv[1],grid);
-   zx.out_mesh(argv[1],tecplot);
+   zx.in_mesh(argv[1],ftype::grid);
+   zx.out_mesh(argv[1],ftype::tecplot);
    
    return(0);
 #endif
 
 
+class blocks z;
+
 #ifdef GENERATE
-   class mesh<2> x;
-   
-   x.triangulate(argv[1],100.0);
-   x.rebay(0.66);
-   x.out_mesh(argv[1],grid);
+   z.init(argv[1]);
+   z.restructure();
+   z.restructure();
+   z.output(argv[1],ftype::grid);
    
    return 0;
 #endif
 
 
-
-   class blocks z;
    
 #ifdef MPISRC
    int myid;
