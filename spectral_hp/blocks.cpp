@@ -7,7 +7,10 @@
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
-
+#define NOTWOLAYER
+#ifdef TWOLAYER
+extern FLT amp,lam,theta; // TEMPORARY USED FOR TWOLAYER
+#endif
 static int iter;
 
 void blocks::init(char *file, int start_sim) {
@@ -74,7 +77,14 @@ void blocks::init(char *file, int start_sim) {
    /* READ IN INITIALIZATION PARAMETER */
    fscanf(fp,"%*[^\n]%d\n",&readin);
    printf("#READ FILE #\n#%d\n",readin);
-   
+
+#define NOTWOLAYER
+#ifdef TWOLAYER
+   /* READ IN AMPLITUDE / WAVELENGTH / THETA */
+   fscanf(fp,"%*[^\n]%lf%lf%lf\n",&amp,&lam,&theta);
+   printf("#AMP WAVELENGTH THETA #\n#%e\t%e\t%e\n",amp,lam,theta);
+#endif
+
    /* READ IN NUMBER OF BLOCKS */
    fscanf(fp,"%*[^\n]%d\n",&nblocks);  
    printf("#NBLOCKS\n#%d\n",nblocks);
@@ -166,6 +176,7 @@ void blocks::init(char *file, int start_sim) {
    else {
       for(i=0;i<nblocks;++i) {
          blk[i].grd[0].curvinit();
+   //      blk[i].grd[0].smooth_cofa(2);   //TEMPORARY
          blk[i].grd[0].tobasis(&f1);
       }
       startup = 0;
@@ -300,6 +311,13 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
       for(i=0;i<nblocks;++i) 
          blk[i].grd[grdnum].nstage2(stage);
    }
+   
+   
+   for(i=0;i<nblocks;++i) 
+      blk[i].grd[grdnum].surfugtovrt1();
+
+   for (i=0;i<nblocks;++i)
+      blk[i].grd[grdnum].surfugtovrt2();
          
    return;
 }
@@ -354,11 +372,12 @@ void blocks::cycle(int vw, int lvl) {
             emax = blk[i].grd[grid].maxres(mxr);
          
          if (vcount == 0) einit = emax;
-         else if (emax/einit > 1.0e-3 && emax > 1.0e-14) --vcount;
-         // printf("%%second level %e\n",emax);
+         else if (emax/einit > 1.0e-5 && emax > 1.0e-10) --vcount;
+         
+         printf("%%second level %e %e\n",emax,einit);
       }
 #endif
-      
+
       if (lvl == mglvls-1) return;
             
       for(j=0;j<nblocks;++j)
@@ -400,13 +419,8 @@ void blocks::endcycle() {
          printf("%.3e  ",mxr[n]);
    }
       
-   for(i=0;i<nblocks;++i) {
+   for(i=0;i<nblocks;++i)
       blk[i].grd[0].surfmaxres();
-      blk[i].grd[0].surfugtovrt1();
-   }
-   
-   for (i=0;i<nblocks;++i)
-      blk[i].grd[0].surfugtovrt2();
 }
 
 
@@ -427,19 +441,17 @@ void blocks::go() {
        	endcycle();
 #define DEFORM
 #ifdef DEFORM
-       	r_cycle(vwcycle);
-      	r_maxres();
+      	r_cycle(vwcycle);
+         r_maxres();
 #endif
 #endif
          printf("\n");
       }
-      
-      hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
-      
+
       blk[0].grd[0].drag(1028);
 
       if (!(tstep%out_intrvl)) {
-         output(tstep+1,tecplot);
+         output(tstep+1,tecplot); 
          if (!(tstep%(rstrt_intrvl*out_intrvl))) {
             output(tstep+1,text);
          }
@@ -499,11 +511,12 @@ void blocks::go() {
          }
       }
 #endif
-
       
       if (adapt && tstep != ntstep-1)  adaptation();
+      
+      hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
    }
-   
+      
    return;
 }
    
@@ -520,9 +533,18 @@ void blocks::adaptation() {
       blk[i].grd[0].matchboundaries2();
 
    /* SET-UP LENGTH FUNCTION */
+#ifdef energy
+   FLT e = 0.0, a = 0.0;
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].length1();
-      
+      blk[i].grd[0].energy(e,a);
+   e /= a;
+#else
+   FLT e = 1.0;
+#endif
+
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].length1(e);
+
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].length_mp();
       
