@@ -26,6 +26,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       nvbd = inmesh.nvbd;
       for(i=0;i<nvbd;++i) {
          getnewvrtxobject(i,inmesh.vbdry[i]->idnty());
+         vbdry[i]->alloc(1);
       }
       qtree.allocate(vrtx,maxvst);
       initialized = 1;

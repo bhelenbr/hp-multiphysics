@@ -119,7 +119,8 @@ next1:      continue;
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
                   /* NEW VRTX B.C. */
-                  getnewvrtxobject(vinfo[i],nvbd);
+                  getnewvrtxobject(nvbd,vinfo[i]);
+                  vbdry[nvbd]->alloc(1);
                   vbdry[nvbd]->v() = i;
                   ++nvbd;
                   if (nvbd >= MAXVB) {
@@ -335,6 +336,7 @@ next1:      continue;
             for(i=0;i<nvbd;++i) {
                fscanf(grd,"idnty: %d\n",&temp);
                getnewvrtxobject(i,temp);
+               vbdry[i]->alloc(1);
                vbdry[i]->input(grd);
             }
             

@@ -1,5 +1,4 @@
 #include"blocks.h"
-#include"rblock.h"
 #include<utilities.h>
 #include<time.h>
 #include<stdio.h>
@@ -7,39 +6,64 @@
 #include<map>
 #include<string>
 
-using namespace std;
+#ifdef MPISRC
+#include <mpi.h>
+#endif
 
-block * blocks::getnewblock(int type) {
-   return(new rblock<r_mesh>);
-}
+using namespace std;
 
 int main(int argc, char *argv[]) {
    clock_t cpu_time;
    class blocks z;
 
+#ifdef MPISRC
+   int myid;
+   MPI_Init(&argc,&argv);
+   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
    /* START CLOCK TIMER */
    clock();
 
-   map<string,string> input[2];
+   map<string,string> input[3];
    
    input[0]["nblock"] = "1";
-   input[0]["mglvls"] = "5";
-   input[0]["ngrid"] = "5";
+   input[0]["mglvls"] = "1";
+   input[0]["ngrid"] = "1";
    input[0]["ntstep"] = "1";
    input[0]["fadd"] = "1.0";
    input[0]["vnn"] = "0.5";
    input[0]["itercrsn"] = "1";
    input[0]["iterrfne"] = "0";
    input[0]["njacobi"] = "1";
-   input[0]["ncycle"] = "50";
+   input[0]["ncycle"] = "10000";
    input[0]["tolerance"] = "0.66";
    
-   input[1]["blktype"] = "0";
-   input[1]["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
-   input[1]["growth factor"] = "10.0";
-   input[1]["filetype"] = "0";
+#ifdef MPISRC
+   if (myid == 0) {
+      input[1]["blktype"] = "0";
+      input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top8";
+      input[1]["growth factor"] = "4.0";
+      input[1]["filetype"] = "0";
+   }
+   else {
+      input[1]["blktype"] = "0";
+      input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot8";
+      input[1]["growth factor"] = "4.0";
+      input[1]["filetype"] = "0";
+   }
+#else
+      input[0]["nblock"] = "2";
+      input[1]["blktype"] = "0";
+      input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top8";
+      input[1]["growth factor"] = "4.0";
+      input[1]["filetype"] = "0";
+      input[2]["blktype"] = "0";
+      input[2]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot8";
+      input[2]["growth factor"] = "4.0";
+      input[2]["filetype"] = "0";
+#endif
 
    z.load_constants(input);
    z.init(input);
@@ -47,6 +71,10 @@ int main(int argc, char *argv[]) {
    
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
+   
+#ifdef MPISRC
+   MPI_Finalize();
+#endif
 
    return(0);
 }

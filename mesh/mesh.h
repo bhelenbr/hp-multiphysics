@@ -14,8 +14,8 @@
 #define EPSILON DBL_EPSILON
 #endif
 
-class side_boundary;
-class vrtx_boundary;
+template<class T> class side_template;
+template<class T> class vrtx_template;
 
 class mesh {
 
@@ -40,7 +40,7 @@ class mesh {
       /* VERTEX BOUNDARY INFO */
       static const int MAXVB = 8;
       int nvbd;
-      vrtx_boundary *vbdry[MAXVB];
+      vrtx_template<mesh> *vbdry[MAXVB];
       virtual void getnewvrtxobject(int bnum, int type);
      
       /* SIDE DATA */      
@@ -52,7 +52,7 @@ class mesh {
       /* SIDE BOUNDARY INFO */
       static const int MAXSB = 8;
       int nsbd;
-      side_boundary *sbdry[MAXSB]; 
+      side_template<mesh> *sbdry[MAXSB]; 
       virtual void getnewsideobject(int bnum, int type);
 
       /* TRIANGLE DATA */      
@@ -102,10 +102,9 @@ class mesh {
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      virtual void setlength() {printf("here\n");}
+      virtual void setlength() {printf("in generic setlength\n");}
       void length1();
-      int length_mp(int phase);
-      void length2(int phase); 
+      void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
       void refineby2(const class mesh& xmesh);
@@ -128,11 +127,11 @@ class mesh {
       int smooth_cofa(int niter);
 
       /* FIND MATCHING MESH BOUNDARIES */
-      void findmatch(class mesh& tgt);
-      FLT *vbuff[MAXSB];
+      int comm_entity_size();
+      int comm_entity_list(int *list);
+      int msgpass(int phase);
       void matchboundaries1();
-      int matchboundaries_mp(int phase);
-      void matchboundaries2(int phase);
+      void matchboundaries2();
 
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
       void setfine(class mesh& tgt);
@@ -219,30 +218,6 @@ class mesh {
 };
 
 #include "boundary.h"
-
-/*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
-void inline mesh::matchboundaries1() {
-   for(int i=0;i<nsbd;++i) 
-      sbdry[i]->sendpositions(0);
-}
-
-int inline mesh::matchboundaries_mp(int phase) {
-   int stop;
-   
-   for(int i=0;i<nsbd;++i) 
-      sbdry[i]->rcvpositions(phase);
-   
-   stop = 1;
-   for(int i=0;i<nsbd;++i) 
-      stop &= sbdry[i]->sendpositions(phase+1);
-   
-   return(stop);
-}
-
-void inline mesh::matchboundaries2(int phase) {
-   for(int i=0;i<nsbd;++i)
-      sbdry[i]->rcvpositions(phase);
-}
 
 /* SOME CONVENIENT BOUNDARY TYPES */
 #define FSRF_MASK (1<<0)

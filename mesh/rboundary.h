@@ -24,12 +24,12 @@ class rbdry_interface {
 /* GENERIC PROTOCALS FOR MOVING BOUNDARIES */
 class no_rfix {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {}
+      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {}
 };
 
 class rfixx {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {
+      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -43,7 +43,7 @@ class rfixx {
 
 class rfixy {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {
+      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -64,7 +64,7 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
       FIXY yfix;
       
    public:
-      rgeneric(class r_mesh& xin, int type) : BASE(xin,type), x(xin) {}
+      rgeneric(int type, class r_mesh& xin) : BASE(type,xin), x(xin) {}
       inline r_mesh& b() {return(x);}
       void dirichlet(FLT (*res)[mesh::ND]) {
          xfix.dirichlet(this,res);
@@ -73,11 +73,12 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
       void tadvance() {}
 };
 
-typedef rgeneric<prdx_boundary,rfixx,no_rfix> rprdx;
-typedef rgeneric<prdy_boundary,no_rfix,rfixy> rprdy;
-typedef rgeneric<comm_boundary,no_rfix,no_rfix> rcomm;
-typedef rgeneric<side_boundary,rfixx,rfixy> rfixd;
-typedef rgeneric<curv_boundary,rfixx,rfixy> rfixd_curved;
-typedef rgeneric<ifce_boundary,rfixx,rfixy> rifce;
-typedef rgeneric<side_boundary,rfixx,no_rfix> rsymm;
+
+typedef rgeneric<prdc_template<scomm<mesh>,mesh>,rfixx,no_rfix> rprdx;
+typedef rgeneric<prdc_template<scomm<mesh>,mesh>,no_rfix,rfixx> rprdy;
+typedef rgeneric<scomm<mesh>,no_rfix,no_rfix> rcomm;
+typedef rgeneric<side_template<mesh>,rfixx,rfixy> rfixd;
+typedef rgeneric<curv_template<side_template<mesh>,mesh>,rfixx,rfixy> rfixd_curved;
+typedef rgeneric<scomm<mesh>,rfixx,rfixy> rifce;
+typedef rgeneric<side_template<mesh>,rfixx,no_rfix> rsymm;
 

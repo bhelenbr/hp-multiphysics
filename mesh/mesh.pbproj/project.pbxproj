@@ -59,6 +59,8 @@
 				F52FE4D402180BEC01990B20,
 				F52FE4D502180BEC01990B20,
 				0249A663FF388D9811CA2CEA,
+				F54F699803873C3D0122D507,
+				F54F699A03873C7C0122D507,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -183,6 +185,8 @@
 		08FB7795FE84155DC02AAC07 = {
 			children = (
 				08FB7796FE84155DC02AAC07,
+				F5384601038AF13D01990B69,
+				F5AF3BF901879D4B0131A0B3,
 				07F2E95000974D3D80990B20,
 				07F2E94600974D3D80990B20,
 				F5BE6B500162B73801000001,
@@ -204,7 +208,7 @@
 				07F2E94D00974D3D80990B20,
 				07F2E94A00974D3D80990B20,
 				F51A5D6802B541FB012A8EDA,
-				F5AF3BF901879D4B0131A0B3,
+				F573B1BB0379A61301990B69,
 				F5C9C262032CCEAF01990B69,
 				07F2E94E00974D3D80990B20,
 				F53FC7D10343C82E01E186A8,
@@ -228,13 +232,14 @@
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = ../lib;
+				HEADER_SEARCH_PATHS = "../include \"~/Codes/packages/mpich-1.2.3/include\"";
+				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/packages/mpich-1.2.3/lib";
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
+				OTHER_CFLAGS = "-DMPISRC";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = mblock;
+				PROFILING_CODE = YES;
 				REZ_EXECUTABLE = YES;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
@@ -256,6 +261,7 @@
 				F5C9C1AD0327AC9C01990B69,
 				F5C9C1AF0327AC9D01990B69,
 				F5C9C263032CCEAF01990B69,
+				F573B1BC0379A61301990B69,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -279,7 +285,6 @@
 				F5C9C19703253B8701990B69,
 				F5C9C19803253B8801990B69,
 				F5C9C19903253B8801990B69,
-				F5C9C19B03253B8901990B69,
 				F5C9C1A90326737201990B69,
 				F5C9C1AE0327AC9D01990B69,
 				F53FC7D20343C82E01E186A8,
@@ -293,6 +298,8 @@
 				F52FE4D602180BEC01990B20,
 				F52FE4D702180BEC01990B20,
 				0249A664FF388D9811CA2CEA,
+				F54F699903873C3D0122D507,
+				F54F699B03873C7C0122D507,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,6 +399,13 @@
 			settings = {
 			};
 		};
+		F5384601038AF13D01990B69 = {
+			indentWidth = 3;
+			isa = PBXFileReference;
+			path = rboundary.cpp;
+			refType = 4;
+			usesTabs = 0;
+		};
 		F53FC7D10343C82E01E186A8 = {
 			isa = PBXFileReference;
 			path = blocks.cpp;
@@ -408,6 +422,30 @@
 			path = rebay.cpp;
 			refType = 4;
 		};
+		F54F699803873C3D0122D507 = {
+			isa = PBXFileReference;
+			name = libmpich.a;
+			path = "/Users/helenbrk/Codes/packages/mpich-1.2.3/lib/libmpich.a";
+			refType = 0;
+		};
+		F54F699903873C3D0122D507 = {
+			fileRef = F54F699803873C3D0122D507;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F54F699A03873C7C0122D507 = {
+			isa = PBXFileReference;
+			name = libpmpich.a;
+			path = "/Users/helenbrk/Codes/packages/mpich-1.2.3/lib/libpmpich.a";
+			refType = 0;
+		};
+		F54F699B03873C7C0122D507 = {
+			fileRef = F54F699A03873C7C0122D507;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F556D7CB0226C8DC01990B20 = {
 			children = (
 				F50AF9AC0188A63E01990B20,
@@ -423,6 +461,17 @@
 			path = makefile;
 			refType = 4;
 		};
+		F573B1BB0379A61301990B69 = {
+			isa = PBXFileReference;
+			path = rblock.h;
+			refType = 4;
+		};
+		F573B1BC0379A61301990B69 = {
+			fileRef = F573B1BB0379A61301990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5AECAC802E2155601F7FB4B = {
 			fileRef = 08FB7796FE84155DC02AAC07;
 			isa = PBXBuildFile;
@@ -431,7 +480,7 @@
 		};
 		F5AF3BF901879D4B0131A0B3 = {
 			isa = PBXFileReference;
-			path = rboundary.cpp;
+			path = locals.cpp;
 			refType = 4;
 		};
 		F5BDAB54014068AC01000001 = {
@@ -530,12 +579,6 @@
 		};
 		F5C9C19A03253B8801990B69 = {
 			fileRef = F528820602B1545D012A8EDA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19B03253B8901990B69 = {
-			fileRef = F528820502B1545D012A8EDA;
 			isa = PBXBuildFile;
 			settings = {
 			};

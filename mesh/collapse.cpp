@@ -128,7 +128,7 @@ int mesh::collapse(int sind) {
          if (fabs(l0 - l1)/(l0 +l1) < 10.*EPSILON) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
             bnum = (-stri[sind][1]>>16) -1;
-            delt = sbdry[bnum]->isfrst();
+            delt = sbdry[bnum]->is_frst();
                printf("#Warning: degenerate case in edge collapse for bdry %d,%d, picking %d, (%f %f)\n"
                   ,bnum,sbdry[bnum]->idnty(),delt,vrtx[svrtx[sind][delt]][0],vrtx[svrtx[sind][delt]][1]);
          }

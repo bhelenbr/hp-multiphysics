@@ -1,9 +1,10 @@
 #include"r_mesh.h"
 #include"block.h"
 
-#include<map>
-#include<string>
-#include<sstream>
+#include <map>
+#include <string>
+#include <sstream>
+#include <iostream>
 
 #ifndef _r_block_h_
 #define _r_block_h_
@@ -38,9 +39,11 @@ template<class GRD> class rblock : public block {
       control_state tadvance(int lvl, int excpt);
       control_state adapt(int excpt);
       control_state matchboundaries(int lvl, int excpt);
-      void findmatch(int grdlvl, block *match);
-      void vmatch(int lvl, class vrtx_boundary *vin);
-      void smatch(int lvl, class side_boundary *sin);
+      int comm_entity_size(int grdlvl);
+      int comm_entity_list(int grdlvl, int *list);
+      boundary* vbdry(int grdlvl, int num);
+      boundary* sbdry(int grdlvl, int num);
+      boundary* fbdry(int grdlvl, int num);
 };
 
 template<class GRD> void rblock<GRD>::init(std::map <std::string,std::string>& input) {
@@ -108,6 +111,25 @@ template<class GRD> void rblock<GRD>::alloc(std::map<std::string,std::string>& i
    return;
 }
 
+template<class GRD> int rblock<GRD>::comm_entity_size(int grdlvl) {
+   return(grd[grdlvl].comm_entity_size());
+}
+
+template<class GRD> int rblock<GRD>::comm_entity_list(int grdlvl, int *list) {
+   return(grd[grdlvl].comm_entity_list(list));
+}
+
+template<class GRD> boundary* rblock<GRD>::vbdry(int grdlvl, int num) {
+   return(grd[grdlvl].vbdry[num]);
+}
+
+template<class GRD> boundary* rblock<GRD>::sbdry(int grdlvl, int num) {
+   return(grd[grdlvl].sbdry[num]);
+}
+
+template<class GRD> boundary* rblock<GRD>::fbdry(int grdlvl, int num) {
+   return(0);
+}
 
 template<class GRD> block::control_state rblock<GRD>::reconnect(int grdnum, int phase) {
 #define OLDRECONNECT
@@ -148,39 +170,35 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
             
          case (1):
-            return(static_cast<control_state>(grd[0].kvol_mp(mp_phase++)));
+            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
             
          case (2):
-            grd[0].kvoli(mp_phase);
+            grd[0].kvoli();
+            return(advance);
+
+#ifdef FOURTH
+#define P2 2
+         case (3):
+            grd[0].rsdl1();
+            mp_phase = 0;
             return(advance);
             
-         case (3):
+         case (4):
+            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
+#else
+#define P2 0
+#endif            
+         case (3+P2):
             mp_phase = 0;
             grd[0].zero_source();
             grd[0].rsdl();
-            grd[0].rsdl_snd(mp_phase);
             return(advance);
-         
-#ifdef FOURTH
-#define P2 2
-         case (4):
-            grd[0].rsdl_rcv(mp_phase++);
-            return(grd[0].rsdl1_snd(mp_phase));
-            
-         case (5):
-            grd[0].rsdl1(mp_phase);
-            mp_phase = 0;
-            return(advance);
-#else
-#define P2 0
-#endif
 
          case (4+P2):
-            grd[0].rsdl_rcv(mp_phase++);
-            return(static_cast<control_state>(grd[0].rsdl_snd(mp_phase)));
+            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
          
          case (5+P2):
-            grd[0].rsdl_rcv(mp_phase);
+            grd[0].rsdl_finalrcv();
             grd[0].sumsrc();
             grd[0].tadvance();
             return(stop);
@@ -200,10 +218,10 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
             
          case (1):
-            return(static_cast<control_state>(grd[lvl].kvol_mp(mp_phase++)));
+            return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
             
          case (2):
-            grd[lvl].kvoli(mp_phase);
+            grd[lvl].kvoli();
             return(stop);
          
          default:
@@ -221,9 +239,9 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             grd[lvl].rkmgrid();
             return(advance);
          case(1):
-            return(grd[lvl].rkmgrid_mp(mp_phase++));
+            return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
          case(2):
-            grd[lvl].rkmgridi(lastphase);
+            grd[lvl].kvoli();
             return(stop);
       }
    }
@@ -240,9 +258,9 @@ template<class GRD> block::control_state rblock<GRD>::adapt(int excpt) {
          grd[0].length1();
          return(advance);
       case(1):
-         return(static_cast<control_state>(grd[0].length_mp(mp_phase++)));
+         return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
       case(2):
-         grd[0].length2(mp_phase);
+         grd[0].length2();
          return(advance);
       case(3):
          grd[0].adapt(tolerance);
@@ -264,20 +282,18 @@ template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
          grd[lvl].rsdl1();
          return(advance);
       case(1):
-         return(grd[lvl].rsdl1_mp(mp_phase++));
+         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;
          grd[lvl].rsdl();
-         grd[lvl].rsdl_snd(mp_phase);
          return(advance);
          
       case(1+P2):
-         grd[lvl].rsdl_rcv(mp_phase++);
-         return(static_cast<control_state>(grd[lvl].rsdl_snd(mp_phase)));
+         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
          
       case(2+P2):
-         grd[lvl].rsdl_rcv(mp_phase);
+         grd[lvl].rsdl_finalrcv();
          return(stop);
          
       default:
@@ -297,7 +313,7 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
          grd[lvl].vddt1();
          return(advance);
       case(1):
-         return(grd[lvl].vddt1_mp(mp_phase++));
+         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;
@@ -305,10 +321,10 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
          return(advance);
          
       case(1+P2):
-         return(static_cast<control_state>(grd[lvl].vddt_mp(mp_phase++)));
+         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
          
       case(2+P2):
-         grd[lvl].vddti(mp_phase);
+         grd[lvl].vddti();
          return(stop);
    }
    
@@ -333,54 +349,6 @@ template<class GRD> block::control_state rblock<GRD>::mg_getcchng(int lvl, int e
    return(stop);
 }
 
-
-template<class GRD> void rblock<GRD>::findmatch(int lvl, block *match) {
-   int i,j;
-   
-   if (match != this) {
-      for(i=0;i<grd[lvl].nvbd;++i)
-         match->vmatch(lvl,grd[lvl].vbdry[i]);
-         
-      for(i=0;i<grd[lvl].nsbd;++i)
-         match->smatch(lvl,grd[lvl].sbdry[i]);
-   }
-   else {
-      for(i=0;i<grd[lvl].nvbd;++i) {
-         for(j=0;j<grd[lvl].nvbd;++j) {
-            if (i == j) continue;  // CAN'T MATCH VERTEX TO ITSELF */
-            grd[lvl].vbdry[i]->match(grd[lvl].vbdry[j]);
-         }
-      }
-      
-      for(i=0;i<grd[lvl].nsbd;++i) {
-         for(j=0;j<grd[lvl].nsbd;++j) {
-            if (i == j) continue;  // CAN'T MATCH SIDE TO ITSELF */
-            if (grd[lvl].sbdry[i]->match(grd[lvl].sbdry[j])) break;
-         }
-      }
-   }
-   
-   return;
-}
-
-template<class GRD> void rblock<GRD>::vmatch(int lvl, class vrtx_boundary *vin) {
-   int i;
-   
-   for(i=0;i<grd[lvl].nvbd;++i) 
-      vin->match(grd[lvl].vbdry[i]);
-   
-   return;
-}
-
-template<class GRD> void rblock<GRD>::smatch(int lvl, class side_boundary *sin) {
-   int i;
-   
-   for(i=0;i<grd[lvl].nsbd;++i) 
-      sin->match(grd[lvl].sbdry[i]);
-   
-   return;
-}
-
 template<class GRD> block::control_state rblock<GRD>::matchboundaries(int lvl, int excpt) {
    
    switch (excpt) {
@@ -389,9 +357,9 @@ template<class GRD> block::control_state rblock<GRD>::matchboundaries(int lvl, i
          grd[lvl].matchboundaries1();
          return(advance);
       case(1):
-         return(static_cast<control_state>(grd[lvl].matchboundaries_mp(mp_phase++)));
+         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
       case(2):
-         grd[lvl].matchboundaries2(mp_phase);
+         grd[lvl].matchboundaries2();
          return(stop);
    }
    

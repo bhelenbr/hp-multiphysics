@@ -3,6 +3,7 @@
 /* THIS IS A MULTIBLOCK MESH */
 class blocks {
    private:
+      int nproc, myid;  // MPI INFO
       int nblock, mglvls, ngrid;
       int ncycle, njacobi, itercrsn, iterrfne;
       int ntstep;
@@ -10,6 +11,7 @@ class blocks {
       
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
+      blocks() : nproc(1), myid(0) {}
       block * getnewblock(int type);  // THIS MUST BE INSTANTIATED FOR PARTICULAR PROBLEM
       void load_constants(std::map<std::string,std::string> input[]);
       void init(std::map<std::string,std::string> input[]);

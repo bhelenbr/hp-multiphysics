@@ -8,7 +8,6 @@ FLT r_mesh::fadd, r_mesh::vnn;
 
 void r_mesh::allocate(bool coarse, r_mesh::gbl *rginit) {
 
-
    /* global mgrid arrays */
    rg = rginit;
    if (!coarse) gbl_alloc(rginit);
@@ -27,7 +26,7 @@ void r_mesh::gbl_alloc(r_mesh::gbl *store) {
    store->diag = new FLT[maxvst];
 }
 
-void r_mesh::rklaplace(void) {
+void r_mesh::rklaplace() {
    int sind,tind,v0,v1,k;
    FLT dx,dy,l;
    
@@ -60,7 +59,7 @@ void r_mesh::rklaplace(void) {
 }
 
 
-void r_mesh::rksprg(void) {
+void r_mesh::rksprg() {
    int sind,v0,v1;
    double dx,dy;
 
@@ -89,36 +88,32 @@ void r_mesh::calc_kvol() {
          kvol[tvrtx[tind][i]] += area(tind);
                   
    /* SEND COMMUNICATION PACKETS IN XFIRST */
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff(kvol,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff(kvol,0,0,1);
+      
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->send(0,(FLT *) kvol,0,0,1);
-   
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
+           
    return;
 }
 
-int r_mesh::kvol_mp(int phase) {
-   int i,stop;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) kvol,0,0,1);
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
-
-   return(stop);
-}
-
-void r_mesh::kvoli(int phase) {
+void r_mesh::kvoli() {
    int i;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase, (FLT *) kvol,0,0,1);
+
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->finalrcv(kvol,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv(kvol,0,0,1);  
    
    for(i=0;i<nvrtx;++i)
       kvol[i] = 1./kvol[i];
 }
 
-void r_mesh::rkmgrid(void) {
+void r_mesh::rkmgrid() {
    int i,j,sind,tind,tind0,tind1,v0,v1;
    class r_mesh *fmesh;
    
@@ -202,37 +197,19 @@ void r_mesh::rkmgrid(void) {
       }
    }
 
-   /* SEND COMMUNICATION PACKETS IN XFIRST */ 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) kvol,0,0,1);
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff(kvol,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff(kvol,0,0,1);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
 
    return;
 }
-
-int r_mesh::rkmgrid_mp(int phase) {
-   int i,stop;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) kvol,0,0,1);
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
-
-   return(stop);
-}
-
-void r_mesh::rkmgridi(int phase) {
-   int i;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) kvol,0,0,1);
-   
-   for(i=0;i<nvrtx;++i)
-      kvol[i] = 1./kvol[i];
-   
-   return;
-}   
 
 /*************************************/ 
 /* SECOND ORDER MESH MOVEMENT SCHEME */
@@ -277,10 +254,34 @@ void r_mesh::rsdl() {
    /* APPLY DIRICHLET BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       rbdry[i]->dirichlet(rg->res);
+      
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff((FLT *) rg->res,0,1,2);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff((FLT *) rg->res,0,1,2);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
    
    return;
 }
+#endif
 
+void r_mesh::rsdl_finalrcv() {
+   int i;
+   
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->finalrcv((FLT *) rg->res,0,1,2);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv((FLT *) rg->res,0,1,2);  
+
+	return;
+}
+
+#ifndef FOURTH
 void r_mesh::vddt(void)
 {
    int i,v0,v1,sind;
@@ -299,255 +300,28 @@ void r_mesh::vddt(void)
       rg->diag[v1] += fabs(ksprg[sind]);
    }
 
-   /* SEND COMMUNICATION PACKETS */
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->diag,0,0,1);
-   
-   return;
-}
-
-#else
-/*************************************/ 
-/* FOURTH ORDER MESH MOVEMENT SCHEME */
-/* THIS HAS TO BE DONE IN TWO PARTS  */
-/* TO CACLUATE LAPLACIAN              */
-/*************************************/
-void r_mesh::rsdl() {
-   int i,j,n,v0,v1,sind;
-   FLT dx,dy;
-   
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n)
-         rg->work[i][n] = 0.0;
-
-   for (sind = 0; sind < nside; ++sind) {
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
-
-      dx = ksprg[sind]*(vrtx[v1][0]-vrtx[v0][0]);
-      dy = ksprg[sind]*(vrtx[v1][1]-vrtx[v0][1]);
-
-      rg->work[v0][0] -= dx;
-      rg->work[v0][1] -= dy;
-
-      rg->work[v1][0] += dx;
-      rg->work[v1][1] += dy;      
-   }
-   
-   /* APPLY DIRICHLET BOUNDARY CONDITIONS */
+   /* SEND COMMUNICATION PACKETS  */ 
    for(i=0;i<nsbd;++i)
-      rbdry[i]->fixdx2(rg->work);
-
-   /* SEND COMMUNICATION PACKETS */ 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->work,0,1,2);
-   
-
-#ifdef SKIP
-   /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i]->idnty() & fixdx_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->work[svrtx[sind][0]][0] = 0.0;
-            rg->work[svrtx[sind][1]][0] = 0.0;
-         }
-      }
-      if (sbdry[i]->idnty() & fixdy_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->work[svrtx[sind][0]][1] = 0.0;
-            rg->work[svrtx[sind][1]][1] = 0.0;
-         }
-      }
-   }
-#endif
-
-   return;
-}
-
-int r_mesh::rsdl1_mp(int phase) {
-   int i,stop;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->work,0,1,2);
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase+1,(FLT *) rg->work,0,1,2);
-
-   return(stop);
-}
-
-void r_mesh::rsdl1(int phase) {
-   int i,j,n,v0,v1,sind;
-   FLT dx,dy;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->work,0,1,2);
-
-   /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n) 
-         rg->work[i][n] *= kvol[i];
-   
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n)
-         rg->res[i][n] = 0.0;
-
-   for (sind = 0; sind < nside; ++sind) {
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
-
-      dx = ksprg[sind]*(rg->work[v1][0]-rg->work[v0][0]);
-      dy = ksprg[sind]*(rg->work[v1][1]-rg->work[v0][1]);
-
-      rg->res[v0][0] -= dx;
-      rg->res[v0][1] -= dy;
-
-      rg->res[v1][0] += dx;
-      rg->res[v1][1] += dy;      
-   }
-
-   /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-   if (isfrst) {
-      for(i=0;i<nvrtx;++i) 
-         for(n=0;n<ND;++n)
-            src[i][n] -= rg->res[i][n];
-
-      isfrst = false;
-   }
-   
-   /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
-   for(i=0;i<nvrtx;++i) 
-      for(n=0;n<ND;++n)
-         rg->res[i][n] += src[i][n];  
-
-   /* APPLY BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i]->idnty() & fixx_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->res[svrtx[sind][0]][0] = 0.0;
-            rg->res[svrtx[sind][1]][0] = 0.0;
-         }
-      }
-      if (sbdry[i]->idnty() & fixy_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->res[svrtx[sind][0]][1] = 0.0;
-            rg->res[svrtx[sind][1]][1] = 0.0;
-         }
-      }
-   }
-   
-   /* SEND COMMUNICATION PACKETS */ 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->res,0,1,2);
- 
-   return;
-}
-
-void r_mesh::vddt(void)
-{
-   int i,v0,v1,sind;
-
-   /**************************************************/
-   /* DETERMINE MESH MOVEMENT TIME STEP           */
-   /**************************************************/
-   for(i=0;i<nvrtx;++i)
-      rg->diag[i] = 0.0;
+      sbdry[i]->loadbuff(rg->diag,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff(rg->diag,0,0,1);
       
-   for(sind=0;sind<nside;++sind) {
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
-      rg->diag[v0] += fabs(ksprg[sind]);
-      rg->diag[v1] += fabs(ksprg[sind]);
-   }
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
    
-   /* SEND COMMUNICATION PACKETS */ 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->diag,0,0,1);
-   
-   return;
-}
-
-int r_mesh::vddt1_mp(int phase) {
-   int i,stop;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
-
-   return(stop);
-}
-
-void r_mesh::vddt1(int phase) {
-   int i,v0,v1,sind;
-
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
-   
-   for(i=0;i<nvrtx;++i)
-      rg->work[i][0] = rg->diag[i]*kvol[i];
-      
-   for(i=0;i<nvrtx;++i)
-      rg->diag[i] = 0.0;
-   
-   for(sind=0;sind<nside;++sind) {
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
-      rg->diag[v0] += fabs(ksprg[sind])*(rg->work[v0][0] +fabs(ksprg[sind])*kvol[v1]);
-      rg->diag[v1] += fabs(ksprg[sind])*(rg->work[v1][0] +fabs(ksprg[sind])*kvol[v0]);
-   }
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->diag,0,0,1);
-
    return;
 }
 #endif
 
-int r_mesh::rsdl_snd(int phase) {
-   int i,stop;
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase,(FLT *) rg->res,0,1,2);
-
-   return(stop);
-}
-
-void r_mesh::rsdl_rcv(int phase) {
+void r_mesh::vddti() {
    int i;
    
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->res,0,1,2);
-
-	return;
-}
-
-int r_mesh::vddt_mp(int phase) {
-   int i,stop;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
-
-   stop = 1;
-   for(i=0;i<nsbd;++i)   
-      stop &= sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
-
-   return(stop);
-}
-
-void r_mesh::vddti(int phase) {
-   int i;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->finalrcv(rg->diag,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv(rg->diag,0,0,1);
    
    for(i=0;i<nvrtx;++i)
       rg->diag[i] = vnn/rg->diag[i];
@@ -675,4 +449,208 @@ void r_mesh::maxres() {
          
    return;
 }
+
+
+#ifdef FOURTH
+/*************************************/ 
+/* FOURTH ORDER MESH MOVEMENT SCHEME */
+/* THIS HAS TO BE DONE IN TWO PARTS  */
+/* TO CACLUATE LAPLACIAN              */
+/*************************************/
+void r_mesh::rsdl1() {
+   int i,j,n,v0,v1,sind;
+   FLT dx,dy;
+   
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n)
+         rg->work[i][n] = 0.0;
+
+   for (sind = 0; sind < nside; ++sind) {
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+
+      dx = ksprg[sind]*(vrtx[v1][0]-vrtx[v0][0]);
+      dy = ksprg[sind]*(vrtx[v1][1]-vrtx[v0][1]);
+
+      rg->work[v0][0] -= dx;
+      rg->work[v0][1] -= dy;
+
+      rg->work[v1][0] += dx;
+      rg->work[v1][1] += dy;      
+   }
+   
+   /* APPLY DIRICHLET BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i)
+      rbdry[i]->fixdx2(rg->work);
+
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff((FLT *) rg->work,0,1,2);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff((FLT *) rg->work,0,1,2);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);   
+
+#ifdef SKIP
+   /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i]->idnty() & fixdx_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
+            rg->work[svrtx[sind][0]][0] = 0.0;
+            rg->work[svrtx[sind][1]][0] = 0.0;
+         }
+      }
+      if (sbdry[i]->idnty() & fixdy_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
+            rg->work[svrtx[sind][0]][1] = 0.0;
+            rg->work[svrtx[sind][1]][1] = 0.0;
+         }
+      }
+   }
+#endif
+
+   return;
+}
+
+void r_mesh::rsdl() {
+   int i,j,n,v0,v1,sind;
+   FLT dx,dy;
+   
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->finalrcv((FLT *) rg->work,0,1,2);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv((FLT *) rg->work,0,1,2);  
+  
+   /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n) 
+         rg->work[i][n] *= kvol[i];
+   
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n)
+         rg->res[i][n] = 0.0;
+
+   for (sind = 0; sind < nside; ++sind) {
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+
+      dx = ksprg[sind]*(rg->work[v1][0]-rg->work[v0][0]);
+      dy = ksprg[sind]*(rg->work[v1][1]-rg->work[v0][1]);
+
+      rg->res[v0][0] -= dx;
+      rg->res[v0][1] -= dy;
+
+      rg->res[v1][0] += dx;
+      rg->res[v1][1] += dy;      
+   }
+
+   /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+   if (isfrst) {
+      for(i=0;i<nvrtx;++i) 
+         for(n=0;n<ND;++n)
+            src[i][n] -= rg->res[i][n];
+
+      isfrst = false;
+   }
+   
+   /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
+   for(i=0;i<nvrtx;++i) 
+      for(n=0;n<ND;++n)
+         rg->res[i][n] += src[i][n];  
+
+   /* APPLY BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i]->idnty() & fixx_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
+            rg->res[svrtx[sind][0]][0] = 0.0;
+            rg->res[svrtx[sind][1]][0] = 0.0;
+         }
+      }
+      if (sbdry[i]->idnty() & fixy_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
+            rg->res[svrtx[sind][0]][1] = 0.0;
+            rg->res[svrtx[sind][1]][1] = 0.0;
+         }
+      }
+   }
+   
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff((FLT *) rg->res,0,1,2);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff((FLT *) rg->res,0,1,2);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
+   
+   return;
+}
+
+void r_mesh::vddt(void)
+{
+   int i,v0,v1,sind;
+
+   /**************************************************/
+   /* DETERMINE MESH MOVEMENT TIME STEP           */
+   /**************************************************/
+   for(i=0;i<nvrtx;++i)
+      rg->diag[i] = 0.0;
+      
+   for(sind=0;sind<nside;++sind) {
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+      rg->diag[v0] += fabs(ksprg[sind]);
+      rg->diag[v1] += fabs(ksprg[sind]);
+   }
+   
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff(rg->diag,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff(rg->diag,0,0,1);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
+   
+   return;
+}
+
+void r_mesh::vddt1() {
+   int i,v0,v1,sind;
+
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->finalrcv(rg->diag,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv(rg->diag,0,0,1);
+   
+   for(i=0;i<nvrtx;++i)
+      rg->work[i][0] = rg->diag[i]*kvol[i];
+      
+   for(i=0;i<nvrtx;++i)
+      rg->diag[i] = 0.0;
+   
+   for(sind=0;sind<nside;++sind) {
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+      rg->diag[v0] += fabs(ksprg[sind])*(rg->work[v0][0] +fabs(ksprg[sind])*kvol[v1]);
+      rg->diag[v1] += fabs(ksprg[sind])*(rg->work[v1][0] +fabs(ksprg[sind])*kvol[v0]);
+   }
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->send(0,(FLT *) rg->diag,0,0,1);
+
+   return;
+}
+#endif
 

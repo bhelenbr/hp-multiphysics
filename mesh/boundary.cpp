@@ -1,115 +1,234 @@
-/*
- *  boundary.cpp
- *  mesh
- *
- *  Created by Brian Helenbrook on Fri Jun 07 2002.
- *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
- *
- */
-#include <float.h>
+#include "boundary.h"
 #include <assert.h>
-#include <utilities.h>
-#include "mesh.h"
+#include <float.h>
 
-/* FUNCTION TO CREATE BOUNDARY OBJECTS */
-void mesh::getnewvrtxobject(int i, int type) {
-   if (type & (PRDX_MASK +PRDY_MASK +COMX_MASK +COMY_MASK) ) {
-      vbdry[i] = new vcom_boundary(*this,type);
-      return;
-   }
-   vbdry[i] = new vrtx_boundary(*this,type);
+#ifdef MPISRC
+#include <mpi.h>
+#endif
 
-   return;
+/**************************************/
+/* GENERIC FUNCTION FOR COMMUNICATION */
+/**************************************/
+
+template<class BASE, class MESH> void comm_boundary<BASE,MESH>::alloc(int size) {
+   buffsize = size; 
+   sndbuff = xmalloc(buffsize*sizeof(FLT)); 
+   isndalias = static_cast<int *>(sndbuff);
+   fsndalias = static_cast<FLT *>(sndbuff);        
 }
 
-
-/* FUNCTION TO CREATE BOUNDARY OBJECTS */
-void mesh::getnewsideobject(int i, int type) {
-   if (type & PRDX_MASK) {
-      sbdry[i] = new prdx_boundary(*this,type);
-      return;
-   }
-   if (type & PRDY_MASK) {
-      sbdry[i] = new prdy_boundary(*this,type);
-      return;
-   }
-   if (type & (COMX_MASK+COMY_MASK)) {
-      sbdry[i] = new comm_boundary(*this,type); 
-      return;
-   }
-   sbdry[i] = new side_boundary(*this,type);
-
-   return;
-}
-
-
-void side_boundary::mvpttobdry(int indx, FLT psi, FLT pt[2]) {
-   /* FOR A LINEAR SIDE */
-   pt[0] = (1. -psi)*x.vrtx[x.svrtx[sd(indx)][0]][0] +psi*x.vrtx[x.svrtx[sd(indx)][1]][0];
-   pt[1] = (1. -psi)*x.vrtx[x.svrtx[sd(indx)][0]][1] +psi*x.vrtx[x.svrtx[sd(indx)][1]][1];
-   
-   return;
-}
-
-void side_boundary::getgeometryfrommesh() {
-   FLT length,xn,yn,x0,y0;
+template<class BASE, class MESH> void comm_boundary<BASE,MESH>::setphase(int phase, int msg_tag) {
    int i;
+   for(i=0;i<nlocal_match;++i) {
+      if (local_tags[i] == msg_tag) {
+         local_phase[i] = phase;
+         maxphase = MAX(maxphase,phase);
+      }
+   }
+
+#ifdef MPISRC
+   for(i=0;i<nmpi_match;++i) {
+      if (mpi_tags[i] == msg_tag) {
+         mpi_phase[i] = phase;
+         maxphase = MAX(maxphase,phase);
+      }
+   }
+#endif
+
+   return;
+}
+
+/* MATCH BOUNDARIES */
+template<class BASE, class MESH> int comm_boundary<BASE,MESH>::local_cnnct(boundary *bin, int msg_tag) {
+   if (bin->idnty() == idnty()) {
+      local_match[nlocal_match] = dynamic_cast<comm_boundary<BASE,MESH> *>(bin);
+      local_tags[nlocal_match] = msg_tag;
+      local_phase[nlocal_match] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
+      local_rcv_buf[nlocal_match] = xmalloc(buffsize*sizeof(FLT));
+      ++nlocal_match;
+      return(0);
+   }
+   printf("error: not local match %d %d\n",idnty(),bin->idnty());
+   return(1);
+}
+
+#ifdef MPISRC
+template<class BASE, class MESH> int comm_boundary<BASE,MESH>::mpi_cnnct(int nproc, int msg_tag) {
+   mpi_match[nmpi_match] = nproc;
+   mpi_tags[nmpi_match] = msg_tag;
+   mpi_phase[nmpi_match] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
+   mpi_rcv_buf[nmpi_match] = xmalloc(buffsize*sizeof(FLT));
+   ++nmpi_match;
+   return(0);
+}
+#endif
+
+/* GENERIC MECHANISM FOR SENDING */
+template<class BASE, class MESH> int comm_boundary<BASE,MESH>::rcv(int phase) {
+   int i,m;
    
-   x0 = x.vrtx[x.svrtx[sd(0)][0]][0];
-   y0 = x.vrtx[x.svrtx[sd(0)][0]][1];
-   length = 0;
+   switch(msgtype) {
+      case(boundary::flt_msg):
+         /* LOCAL PASSES */
+         for(m=0;m<nlocal_match;++m) {
+            if (phase != local_phase[m]) continue;
+            
+            for(i=0;i<msgsize;++i)
+               static_cast<FLT *>(local_rcv_buf[m])[i] = local_match[m]->fsndbuf(i);
+         }
+
+#ifdef MPISRC
+         /* MPI PASSES */
+         for(m=0;m<nmpi_match;++m) {
+            if (phase != mpi_phase[m]) continue;
+#ifdef SINGLE
+            MPI_Isend(fsndalias, msgsize, MPI_FLOAT, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+#else
+            MPI_Isend(fsndalias, msgsize, MPI_DOUBLE, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);             
+#endif
+         }
+#endif
+         break;
+         
+      case(boundary::int_msg):
+         /* LOCAL PASSES */
+         for(m=0;m<nlocal_match;++m) {
+            if (phase != local_phase[m]) continue;
+            
+            for(i=0;i<msgsize;++i)
+               static_cast<int *>(local_rcv_buf[m])[i] = local_match[m]->isndbuf(i);
+         }
+
+#ifdef MPISRC
+         /* MPI PASSES */
+         for(m=0;m<nmpi_match;++m) {
+            if (phase != mpi_phase[m]) continue;
+            
+            MPI_Isend(isndalias, msgsize, MPI_INT, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+         }
+#endif
+
+         break;              
+   }
    
+   /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
+   return((phase-maxphase >= 0 ? 1 : 0));
+}
+
+template<class BASE, class MESH> void comm_boundary<BASE,MESH>::snd(int phase) {
+#ifdef MPISRC
+   int m;
+#endif
+   /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
+
+#ifdef MPISRC
+   switch(msgtype) {
+      case(flt_msg):
+         /* MPI POST RECEIVES FIRST */
+         for(m=0;m<nmpi_match;++m) {
+            if (phase != mpi_phase[m]) continue;
+#ifdef SINGLE
+            MPI_Irecv(static_cast<FLT *>(mpi_rcv_buf[m]), msgsize, MPI_FLOAT, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+#else
+            MPI_Irecv(static_cast<FLT *>(mpi_rcv_buf[m]), msgsize, MPI_DOUBLE, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);             
+#endif
+         }
+         break;
+         
+      case(int_msg):
+         /* MPI POST RECEIVES FIRST */
+         for(m=0;m<nmpi_match;++m) {
+            if (phase != mpi_phase[m]) continue;
+            
+            MPI_Irecv(static_cast<int *>(mpi_rcv_buf[m]), msgsize, MPI_INT, 
+               mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+         }
+         break;              
+   }
+#endif
+
+}
+
+
+/**************************************/
+/* GENERIC FUNCTIONS FOR SIDES        */
+/**************************************/
+
+template<class MESH> void side_template<MESH>::mvpttobdry(int indx, FLT psi, FLT pt[MESH::ND]) {
+   /* FOR A LINEAR SIDE */
+   int n;
+   
+   for (n=0;n<MESH::ND;++n)
+      pt[n] = (1. -psi)*b().vrtx[b().svrtx[sd(indx)][0]][n] +psi*b().vrtx[b().svrtx[sd(indx)][1]][n];
+   
+   return;
+}
+
+template<class MESH> void side_template<MESH>::getgeometryfrommesh() {
+   int i,n;
+   FLT length,x1[MESH::ND],x0[MESH::ND];
+   
+   for(n=0;n<MESH::ND;++n)
+      x0[n] = b().vrtx[b().svrtx[sd(0)][0]][n];
+   
+   s[0] = 0.0;
    for(i=0;i<nsd();++i) {
-      s[i][0] = length;
-      xn = b().vrtx[b().svrtx[sd(i)][1]][0];
-      yn = b().vrtx[b().svrtx[sd(i)][1]][1];
-      length += sqrt(pow(xn-x0,2) +pow(yn-y0,2));
-      s[i][1] = length;
-      x0 = xn;
-      y0 = yn;
+      length = 0.0;
+      for(n=0;n<MESH::ND;++n) {
+         x1[n] = b().vrtx[b().svrtx[sd(i)][1]][n];
+         length += pow(x1[n]-x0[n],2);
+         x0[n] = x1[n];
+      }
+      s[i+1] = s[0] +sqrt(length);
    }
    
    return;
 }
 
-void side_boundary::alloc(int n) {
+template<class MESH> void side_template<MESH>::alloc(int n) {
    maxel = n;
-   vect_alloc(el,n,int);
-   s = (FLT (*)[2]) xmalloc(2*n*sizeof(FLT));
+   el = new int[n];
+   s = new FLT[maxel+1];
 }
 
      
-void side_boundary::copy(const side_boundary &bin) {
-   int i,n;
+template<class MESH> void side_template<MESH>::copy(const boundary& bin) {
+   int i;
    
-   if (!maxel) alloc(bin.maxel);
-	else assert(bin.nel < maxel);
-   assert(idnum == bin.idnum);
+   const side_template<MESH>& temp = dynamic_cast<const side_template<MESH>&>(bin);
    
-   nel = bin.nel;
+   if (!maxel) alloc(temp.maxel);
+	else assert(temp.nel < maxel);
+   
+   nel = temp.nel;
    
    for(i=0;i<nel;++i)
-      el[i] = bin.el[i];
+      el[i] = temp.el[i];
       
-   for(i=0;i<nel;++i)
-      for(n=0;n<2;++n)
-         s[i][n] = bin.s[i][n];
+   for(i=0;i<nel+1;++i)
+      s[i] = temp.s[i];
       
    return;
 }
 
-void side_boundary::output(FILE *out) {
+template<class MESH> void side_template<MESH>::output(FILE *out) {
 	int i;
 	
-	fprintf(out,"idnty: %d\nnumber: %d\n",idnum,nel);
-	
+   boundary::output(out);
+   
+	fprintf(out,"number: %d\n",nel);
 	for(i=0;i<nel;++i)
-		fprintf(out,"%d %17.10e %17.10e\n",el[i],s[i][0],s[i][1]);
+		fprintf(out,"%d %17.10e %17.10e\n",el[i],s[i],s[i+1]);
 		
 	return;
 }
 
-void side_boundary::input(FILE *in, FLT grwfac) {
+template<class MESH> void side_template<MESH>::input(FILE *in, FLT grwfac) {
 	int i;
 	
 	fscanf(in,"number: %d\n",&nel);
@@ -118,23 +237,24 @@ void side_boundary::input(FILE *in, FLT grwfac) {
 	else assert(nel < maxel);
 	
 	for(i=0;i<nel;++i)
-		fscanf(in,"%d %lf %lf\n",&el[i],&s[i][0],&s[i][1]);
+		fscanf(in,"%d %lf %lf\n",&el[i],&s[i],&s[i+1]);
 		
 	return;
 }
 
-void side_boundary::findbdrypt(const class side_boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout) {
+template<class MESH> void side_template<MESH>::findbdrypt(const boundary *bin,int ntgt,FLT psitgt,int *nout, FLT *psiout) {
    int top,bot;
    FLT s0;
 
-   s0 = psitgt*tgt->s[ntgt][1] +(1.-psitgt)*tgt->s[ntgt][0];
+   const side_template<MESH> *tgt = dynamic_cast<const side_template<MESH> *>(bin);
+   s0 = psitgt*tgt->s[ntgt+1] +(1.-psitgt)*tgt->s[ntgt];
    
    /* SEARCH BOUNDARY */
    bot = 0;
    top = nel-1;
    do {
       *nout = (top +bot)/2;
-      *psiout = (s0-s[*nout][0])/(s[*nout][1] -s[*nout][0]);
+      *psiout = (s0-s[*nout])/(s[*nout +1] -s[*nout]);
       if (*psiout > 1.0 +10.*EPSILON)
          bot = *nout+1;
       else if (*psiout < 0.0 -10.*EPSILON)
@@ -147,17 +267,10 @@ void side_boundary::findbdrypt(const class side_boundary *tgt,int ntgt,FLT psitg
 }
 
 /* SWAP ELEMENTS IN LIST */
-void side_boundary::swap(int s1, int s2) {
-   FLT temp[2];
+template<class MESH> void side_template<MESH>::swap(int s1, int s2) {
    int ind;
    
-   temp[0] = s[s1][0];
-   temp[1] = s[s1][1];
-   s[s1][0] = s[s2][0];
-   s[s1][1] = s[s2][1];
-   s[s2][0] = temp[0];
-   s[s2][1] = temp[1];
-   
+   /* TEMPORARY NOT SURE HOW TO SWAP S VALUES */   
    ind = el[s1];
    el[s1] = el[s2];
    el[s2] = ind;
@@ -169,7 +282,7 @@ void side_boundary::swap(int s1, int s2) {
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL */
 /* USES INTWK1 & INTWK2 AS WORK ARRAYS */
-void side_boundary::reorder() {
+template<class MESH> void side_template<MESH>::reorder() {
    int i,count,total,sind,minv,first;
 
    total = nsd();
@@ -177,15 +290,15 @@ void side_boundary::reorder() {
    /* STORE SIDE INDICES BY VERTEX NUMBER */
    for(i=0; i < nsd(); ++i) {
       sind = sd(i);
-      x.intwk1[x.svrtx[sind][1]] = i;
-      x.intwk2[x.svrtx[sind][0]] = i;
+      b().intwk1[b().svrtx[sind][1]] = i;
+      b().intwk2[b().svrtx[sind][0]] = i;
    }
 
    /* FIND FIRST SIDE */   
    first = -1;
    for(i=0;i<nsd();++i) {
       sind = sd(i);
-      if (x.intwk1[x.svrtx[sind][0]] == -1) {
+      if (b().intwk1[b().svrtx[sind][0]] == -1) {
          first = i;
          break;
       }
@@ -194,12 +307,12 @@ void side_boundary::reorder() {
    /* SPECIAL CONSTRAINT IF LOOP */
    /* THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
    if (first < 0) {
-      minv = x.nvrtx;
+      minv = b().nvrtx;
       for(i=0;i<nsd();++i) {
          sind = sd(i);
-         if (x.svrtx[sind][1] < minv) {
+         if (b().svrtx[sind][1] < minv) {
             first = i;
-            minv = x.svrtx[sind][1];
+            minv = b().svrtx[sind][1];
          }
       }
    }
@@ -207,179 +320,39 @@ void side_boundary::reorder() {
    /* SWAP FIRST SIDE */
    count = 0;
    swap(count,first);
-   x.intwk1[x.svrtx[sd(first)][1]] = first;
-   x.intwk2[x.svrtx[sd(first)][0]] = first;
-   x.intwk1[x.svrtx[sd(count)][1]] = count;
-   x.intwk2[x.svrtx[sd(count)][0]] = -1;  // TO MAKE SURE LOOP STOPS
+   b().intwk1[b().svrtx[sd(first)][1]] = first;
+   b().intwk2[b().svrtx[sd(first)][0]] = first;
+   b().intwk1[b().svrtx[sd(count)][1]] = count;
+   b().intwk2[b().svrtx[sd(count)][0]] = -1;  // TO MAKE SURE LOOP STOPS
 
    /* REORDER LIST */
-   while ((first = x.intwk2[x.svrtx[sd(count++)][1]]) >= 0) {
+   while ((first = b().intwk2[b().svrtx[sd(count++)][1]]) >= 0) {
       swap(count,first);
-      x.intwk1[x.svrtx[sd(first)][1]] = first;
-      x.intwk2[x.svrtx[sd(first)][0]] = first;
-      x.intwk1[x.svrtx[sd(count)][1]] = count;
-      x.intwk2[x.svrtx[sd(count)][0]] = count;
+      b().intwk1[b().svrtx[sd(first)][1]] = first;
+      b().intwk2[b().svrtx[sd(first)][0]] = first;
+      b().intwk1[b().svrtx[sd(count)][1]] = count;
+      b().intwk2[b().svrtx[sd(count)][0]] = count;
    }
    
    /* RESET INTWK TO -1 */
    for(i=0; i <total; ++i) {
       sind = sd(i);
-      x.intwk1[x.svrtx[sind][1]] = -1;
-      x.intwk2[x.svrtx[sind][0]] = -1;
+      b().intwk1[b().svrtx[sind][1]] = -1;
+      b().intwk2[b().svrtx[sind][0]] = -1;
    }
    
    if (count < total) {
 
-      x.getnewsideobject(x.nsbd,idnty());
-      ++x.nsbd;
-      x.sbdry[x.nsbd-1]->copy(*this);
+      b().getnewsideobject(b().nsbd,idnty());
+      ++b().nsbd;
+      b().sbdry[b().nsbd-1]->copy(*this);
       nsd() = count;
 
       for(i=0;i<total-nsd();++i)
-         x.sbdry[x.nsbd-1]->swap(i,i+nsd());
-      x.sbdry[x.nsbd-1]->nsd() = total-nsd();
-      printf("#creating new boundary: %d num: %d\n",idnty(),x.sbdry[x.nsbd-1]->nsd());
+         b().sbdry[b().nsbd-1]->swap(i,i+nsd());
+      b().sbdry[b().nsbd-1]->nsd() = total-nsd();
+      printf("#creating new boundary: %d num: %d\n",idnty(),b().sbdry[b().nsbd-1]->nsd());
       return;
-   }
-   
-   return;
-}
-
-
-/* GENERIC VERTEX COMMUNICATIONS */
-int comm_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
-   int j,k,sind,count,offset;
-   
-   if (phase == myphase || phase < 0) {
-      count = 0;
-      for(j=0;j<nsd();++j) {
-         sind = sd(j);
-         offset = b().svrtx[sind][0]*stride;
-         for (k=bgn;k<=end;++k) 
-            bdrymatch->sbuff[count++] = base[offset+k];
-      }
-      offset = b().svrtx[sind][1]*stride;
-      for (k=bgn;k<=end;++k) 
-         bdrymatch->sbuff[count++] = base[offset+k]; 
-         
-      bdrymatch->msgsize = nsd();
-   }
-      
-   return((phase >= myphase ? 1 : 0));
-}
-
-void comm_boundary::rcv (int phase, FLT *base,int bgn,int end, int stride) {
-   int j,k,sind,count,offset;
-   
-   if (phase == myphase || phase < 0) {
-      /*	RECV NUMBER */
-      if (nsd() != msgsize) {
-         printf("non matching number of comm boundaries %d: %d %d\n",idnty(),nsd(),msgsize);
-         exit(1);
-      }
-      
-      count = 0;
-      for(j=nsd()-1;j>=0;--j) {
-         sind = sd(j);
-         offset = b().svrtx[sind][1]*stride;
-         for (k=bgn;k<=end;++k) 
-            base[offset+k] = 0.5*(base[offset+k] +sbuff[count++]);
-      }
-      offset = b().svrtx[sind][0]*stride;
-      for (k=bgn;k<=end;++k) 
-            base[offset+k] = 0.5*(base[offset+k] +sbuff[count++]);
-   }
-}
-
-void curv_boundary::mvpttobdry(int indx, FLT psi, FLT pt[2]) {
-   int iter,n;
-   FLT mag, delt_dist;
-      
-   /* FOR AN ANALYTIC DEFINED SIDE */
-   for (n=0;n<mesh::ND;++n)
-      pt[n] = (1. -psi)*b().vrtx[b().svrtx[sd(indx)][0]][n] +psi*b().vrtx[b().svrtx[sd(indx)][1]][n];
-
-   iter = 0;
-   do {
-      mag = 0.0;
-      for(n=0;n<mesh::ND;++n)
-         mag += pow(dhgt(n,pt),2);
-      mag = sqrt(mag);
-      delt_dist = -hgt(pt)/mag;
-      for(n=0;n<mesh::ND;++n)
-         pt[n] += delt_dist*dhgt(n,pt)/mag;
-      if (++iter > 100) {
-         printf("iterations exceeded curved boundary %d %f %f\n",idnty(),pt[0],pt[1]);
-         exit(1);
-      }
-   } while (fabs(delt_dist) > 10.*EPSILON);
-   
-   return;
-}
-
-void mesh::length1() {
-   int i;
-   
-   setlength();
-   
-   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->send(0,vlngth,0,0,1);
-
-   return;
-   
-}
-
-int mesh::length_mp(int phase) {
-   int i,stop;
-   
-   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->rcv(phase,vlngth,0,0,1);
-  
-   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   stop = 1;
-   for(i=0;i<nsbd;++i) 
-      stop &= sbdry[i]->send(phase+1,vlngth,0,0,1);
-      
-   return(stop);
-}
-
-
-void mesh::length2(int phase) {
-   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(int i=0;i<nsbd;++i) 
-      sbdry[i]->rcv(phase,vlngth,0,0,1);
-   
-   return;
-}
-
-/* GENERIC VERTEX COMMUNICATIONS */
-int vcom_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
-   int i,k,count,offset;
-   
-   for(i=0;i<nmatch;++i) {
-      if (phase == myphase[i]) {
-         offset = v()*stride;
-         count = 0;
-         for (k=bgn;k<=end;++k) 
-            vmatch[i]->vbuff[count++] = base[offset+k];
-      }
-   }
-      
-   return((phase >= maxphase ? 1 : 0));
-}
-
-void vcom_boundary::rcv (int phase, FLT *base,int bgn,int end, int stride) {
-   int i,k,count,offset;
-   
-   for(i=0;i<nmatch;++i) {
-      if (phase == myphase[i]) {
-         offset = v()*stride;
-         count = 0;
-         for (k=bgn;k<=end;++k) 
-            base[offset+k] = 0.5*(base[offset+k] +vbuff[count++]);
-      }
    }
    
    return;
