@@ -1,5 +1,4 @@
 #include"mesh.h"
-#include<cstdio>
 #include<cfloat>
 #include<iostream>
 #include<stdlib.h>
@@ -42,7 +41,7 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
    
       /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
       if(sbdry[bnum]->idnty() != tgt.sbdry[bnum]->idnty()) {
-         printf("error: sides are not numbered the same\n");
+         *log << "error: sides are not numbered the same" << std::endl;
          exit(1);
       }
          
@@ -57,7 +56,7 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
             sind = tgt.sbdry[bnum]->sd(i);
             tind = tgt.stri[sind][0];
             if (tind < 0) {
-               printf("boundary side in wrong direction %d %d\n",sind,tind);
+               *log << "boundary side in wrong direction" << sind << tind << std::endl;
                exit(1);
             }
             neg_count = 0;

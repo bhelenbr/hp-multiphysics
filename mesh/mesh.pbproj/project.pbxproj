@@ -58,6 +58,7 @@
 			children = (
 				F52FE4D402180BEC01990B20,
 				F52FE4D502180BEC01990B20,
+				F5DD976F03A7AAC701990B69,
 				0249A663FF388D9811CA2CEA,
 				F54F699803873C3D0122D507,
 				F54F699A03873C7C0122D507,
@@ -174,6 +175,7 @@
 		08FB7794FE84155DC02AAC07 = {
 			children = (
 				08FB7795FE84155DC02AAC07,
+				F5DD976E03A78D2301990B69,
 				F556D7CB0226C8DC01990B20,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
@@ -185,7 +187,6 @@
 		08FB7795FE84155DC02AAC07 = {
 			children = (
 				08FB7796FE84155DC02AAC07,
-				F5384601038AF13D01990B69,
 				F5AF3BF901879D4B0131A0B3,
 				07F2E95000974D3D80990B20,
 				07F2E94600974D3D80990B20,
@@ -233,7 +234,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../include \"~/Codes/packages/mpich-1.2.3/include\"";
-				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/packages/mpich-1.2.3/lib";
+				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/packages/mpich-1.2.3/lib /Users/helenbrk/Codes/lib";
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "-DMPISRC";
 				OTHER_LDFLAGS = "";
@@ -297,6 +298,7 @@
 			files = (
 				F52FE4D602180BEC01990B20,
 				F52FE4D702180BEC01990B20,
+				F5DD977003A7AAC701990B69,
 				0249A664FF388D9811CA2CEA,
 				F54F699903873C3D0122D507,
 				F54F699B03873C7C0122D507,
@@ -398,13 +400,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F5384601038AF13D01990B69 = {
-			indentWidth = 3;
-			isa = PBXFileReference;
-			path = rboundary.cpp;
-			refType = 4;
-			usesTabs = 0;
 		};
 		F53FC7D10343C82E01E186A8 = {
 			isa = PBXFileReference;
@@ -627,6 +622,44 @@
 		F5CED4AF015630AA01000001 = {
 			isa = PBXFileReference;
 			path = swap.cpp;
+			refType = 4;
+		};
+		F5DD976E03A78D2301990B69 = {
+			children = (
+				F5DD977303A7C78201990B69,
+				F5DD977403A7C89401990B69,
+				F5DD977503A7CB2801990B69,
+			);
+			isa = PBXGroup;
+			name = Inputs;
+			path = "";
+			refType = 4;
+		};
+		F5DD976F03A7AAC701990B69 = {
+			isa = PBXFileReference;
+			name = libinput_map.a;
+			path = /Users/helenbrk/Codes/lib/libinput_map.a;
+			refType = 0;
+		};
+		F5DD977003A7AAC701990B69 = {
+			fileRef = F5DD976F03A7AAC701990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DD977303A7C78201990B69 = {
+			isa = PBXFileReference;
+			path = blocks.inpt;
+			refType = 4;
+		};
+		F5DD977403A7C89401990B69 = {
+			isa = PBXFileReference;
+			path = blk.0.inpt;
+			refType = 4;
+		};
+		F5DD977503A7CB2801990B69 = {
+			isa = PBXFileReference;
+			path = blk.1.inpt;
 			refType = 4;
 		};
 		F5F501A201A008E201990B20 = {

@@ -1,6 +1,5 @@
 #include"mesh.h"
 #include<cmath>
-#include<cstdio>
 
 FLT mesh::incircle(int tind, FLT *a) const {
    int i,i1,i2,i3;

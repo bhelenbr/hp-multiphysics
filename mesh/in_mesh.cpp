@@ -1,6 +1,5 @@
 #include"mesh.h"
 #include"utilities.h"
-#include<cstdio>
 #include<cstdlib>
 #include<cstring>
 
@@ -22,12 +21,12 @@ int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwf
             strcat(grd_app,".s");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    printf("couldn't open file: %s\n",grd_app);
+                    *log << "error: couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
             ierr = fscanf(grd,"%d\n",&nside);
             if(ierr != 1) {
-                    printf("error in side file: %s\n",grd_app);
+                    *log << "error: in side file: " << grd_app << std::endl;
                     exit(1);
             }
            
@@ -36,7 +35,7 @@ int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwf
                vin = vrtx;
             }
             else if (nside > maxvst) {
-               printf("mesh is too large\n");
+               *log << "error: mesh is too large" << std::endl;
                exit(1);
             }
            
@@ -45,7 +44,7 @@ int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwf
                ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
                ,&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
                if(ierr != 3) {
-                  printf("error in side file %s\n",grd_app);
+                  *log << "error: in side file " << grd_app << std::endl;
                   exit(1);
                }
                if (sinfo[i]) ++count;
@@ -73,7 +72,7 @@ int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwf
                   sbdry[nsbd]->nsd() = 1;
                   sbdry[nsbd++]->sd(0)= i;
                   if (nsbd > MAXSB) {
-                     printf("too many different side boundaries: increase MAXSB\n");
+                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
                      exit(1);
                   }
                }
@@ -84,11 +83,11 @@ next1:      continue;
             strcpy(grd_app,filename);
             strcat(grd_app,".n");
             grd = fopen(grd_app,"r");
-            if (!grd) {printf("trouble opening grid %s\n",grd_app); exit(1);}
+            if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             ierr = fscanf(grd,"%d\n",&nvrtx);
             if(ierr != 1) {
-               printf("1: error in grid %s\n",grd_app);
+               *log << "1: error in grid: " << grd_app << std::endl;
                exit(1);
             }
             
@@ -100,7 +99,7 @@ next1:      continue;
                ierr = sscanf(grd_app,"%lf%lf%lf%d",&vin[i][0],&vin[i][1],&vin[i][2],&vinfo[i]);
                if (ierr != ND+1) {
                   ierr = sscanf(grd_app,"%lf%lf%d",&vin[i][0],&vin[i][1],&vinfo[i]);
-                  if (ierr != ND) { printf("2: error in grid\n"); exit(1); }
+                  if (ierr != ND) { *log << "2: error in grid" << std::endl; exit(1); }
                }
 #else
                ierr = 0;
@@ -108,7 +107,7 @@ next1:      continue;
                   ierr += fscanf(grd,"%lf",&vin[i][n]);
                }
                ierr += fscanf(grd,"%d",&vinfo[i]);
-               if (ierr != ND+1)  { printf("2: error in grid\n"); exit(1); }
+               if (ierr != ND+1)  { *log << "2: error in grid" << std::endl; exit(1); }
 #endif
 
             }
@@ -124,7 +123,7 @@ next1:      continue;
                   vbdry[nvbd]->v() = i;
                   ++nvbd;
                   if (nvbd >= MAXVB) {
-                     printf("Too many vertex boundary conditions: increase MAXSB %d\n",nvbd);
+                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
                      exit(1);
                   }
                }
@@ -135,12 +134,12 @@ next1:      continue;
             strcat(grd_app,".e");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-               printf("trouble opening %s\n",grd_app);
+               *log << "trouble opening " << grd_app << std::endl;
                exit(1);
             }
             ierr = fscanf(grd,"%d\n",&ntri);
             if(ierr != 1) {
-               printf("error in file %s\n",grd_app);
+               *log << "error in file " << grd_app << std::endl;
                exit(1);
             }
     
@@ -171,7 +170,7 @@ next1:      continue;
             strcat(grd_app,".FDNEUT");
             grd = fopen(grd_app,"r");
             if (grd == NULL) {
-                    printf("trouble opening %s\n",filename);
+                    *log << "trouble opening " << filename << std::endl;
                     exit(1);
             }
             
@@ -189,7 +188,7 @@ next1:      continue;
                vin = vrtx;
             }
             else if ((3*i)/2 > maxvst) {
-               printf("mesh is too large\n");
+               *log << "mesh is too large" << std::endl;
                exit(1);
             }
     
@@ -262,7 +261,7 @@ next1:      continue;
                for(j=0;j<sbdry[i]->nsd();++j) {
                   sind = vinfo[svrtxbtemp[i][j][0]];
                   if (sind < 0) {
-                     printf("error in boundary information %d %d\n",i,j);
+                     *log << "error in boundary information " << i << j << std::endl;
                      exit(1);
                   }
                   if (svrtx[sind][1] == svrtxbtemp[i][j][1]) {
@@ -271,8 +270,8 @@ next1:      continue;
                      vinfo[svrtx[sind][0]] = 0;
                   }
                   else {
-                     printf("Error: boundary sides are not counterclockwise %d %d\n",
-                        svrtxbtemp[i][j][0],svrtxbtemp[i][j][1]);
+                     *log << "Error: boundary sides are not counterclockwise " << 
+                     svrtxbtemp[i][j][0] << svrtxbtemp[i][j][1] << std::endl;
                      exit(1);
                   }
                }
@@ -288,7 +287,7 @@ next1:      continue;
             strcat(grd_app,".grd");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    printf("couldn't open file: %s\n",grd_app);
+                    *log << "couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
             /* HEADER LINES */
@@ -299,7 +298,7 @@ next1:      continue;
                vin = vrtx;
             }
             else if (nside > maxvst) {
-               printf("mesh is too large\n");
+               *log << "mesh is too large" << std::endl;
                exit(1);
             }
    
@@ -347,7 +346,7 @@ next1:      continue;
             strcat(grd_app,".mvp");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    printf("couldn't open file: %s\n",grd_app);
+                    *log << "couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
               
@@ -357,7 +356,7 @@ next1:      continue;
 
             ierr = fscanf(grd,"%d%d%d%*d%*d%d\n",&nsbd,&nvrtx,&nside,&ntri);
             if (ierr != 4) {
-               printf("trouble with mavriplis format\n");
+               *log << "trouble with mavriplis format" << std::endl;
                exit(1);
             }
             
@@ -366,7 +365,7 @@ next1:      continue;
                vin = vrtx;
             }
             else if (nside > maxvst) {
-               printf("mesh is too large\n");
+               *log << "mesh is too large" << std::endl;
                exit(1);
             }
             
@@ -458,7 +457,7 @@ next1:      continue;
             
          case(text):
             if (!initialized) {
-               printf("to read in vertex positions only must first load mesh structure\n");
+               *log << "to read in vertex positions only must first load mesh structure" << std::endl;
                exit(1);
             }
 
@@ -466,15 +465,15 @@ next1:      continue;
             strcpy(grd_app,filename);
             strcat(grd_app,".txt");
             grd = fopen(grd_app,"r");
-            if (!grd) {printf("trouble opening grid %s\n",grd_app); exit(1);}
+            if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             ierr = fscanf(grd,"%d\n",&temp);
             if(ierr != 1) {
-               printf("1: error in grid %s\n",grd_app);
+               *log << "1: error in grid " << grd_app << std::endl;
                exit(1);
             }
             if (temp != nvrtx) {
-               printf("grid doesn't match vertex list\n");
+               *log << "grid doesn't match vertex list" << std::endl;
                exit(1);
             }
     
@@ -485,7 +484,7 @@ next1:      continue;
                for(n=0;n<ND;++n)
                   ierr = fscanf(grd,"%lf",&vin[i][n]);
                fscanf(grd,"\n");
-               if (ierr != ND) { printf("2: error in grid\n"); exit(1); }
+               if (ierr != ND) { *log << "2: error in grid" << std::endl; exit(1); }
             }
             fclose(grd);
             
@@ -494,7 +493,7 @@ next1:      continue;
             return(1);
 
          default:
-            printf("That filetype is not supported\n");
+            *log << "That filetype is not supported" << std::endl;
             exit(1);
    }
 
@@ -502,7 +501,7 @@ next1:      continue;
    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
    if (maxvst > gblmaxvst) {
       if (gblmaxvst > 0) {
-         printf("#Warning: better to allocate from largest mesh to smallest\n");
+         *log << "#Warning: better to allocate from largest mesh to smallest" << std::endl;
       }
       fltwk = new FLT[maxvst];
       intwk1 = new int[maxvst];
@@ -527,9 +526,9 @@ next1:      continue;
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
-   printf("#Boundaries\n");
+   *log << "#Boundaries" << std::endl;
    for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize();
+      sbdry[i]->summarize(*log);
 
    createttri();
    createvtri();

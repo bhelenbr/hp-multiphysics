@@ -89,7 +89,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
          if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
          
       if (nfail) {
-         printf("#Warning: side collapse failed %d\n",sind);
+         *log << "#Warning: side collapse failed" << sind << std::endl;
          /* MARK SIDE AS ACCEPTED AND MOVE ON */
          for(i=0;i<2;++i) {
             tind = stri[sind][i];
@@ -174,7 +174,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
       }
    }
    
-   printf("#Yaber finished: %d sides coarsened\n",cnt);
+   *log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
 
    return;
 }
@@ -185,14 +185,14 @@ void mesh::checkintegrity() const {
    for(i=0;i<ntri;++i) {
       if (tinfo[i] < 0) continue;
       
-      if (area(i) < 0.0) printf("negative area %d\n",i);
+      if (area(i) < 0.0) *log << "negative area" << i << std::endl;
       
       for(j=0;j<3;++j) {
          sind = tside[i].side[j];
          dir = -(tside[i].sign[j] -1)/2;
          
          if (sinfo[sind] == -3) {
-            printf("references deleted side %d %d\n",i,sind);
+            *log << "references deleted side" <<  i << sind << std::endl;
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error");
@@ -200,7 +200,7 @@ void mesh::checkintegrity() const {
          }
 
          if (svrtx[sind][dir] != tvrtx[i][(j+1)%3] && svrtx[sind][1-dir] != tvrtx[i][(j+2)%3]) {
-            printf("failed vrtx check tind %d sind %d\n",i,sind);
+            *log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
@@ -208,7 +208,7 @@ void mesh::checkintegrity() const {
          }    
          
          if (stri[sind][dir] != i) {
-            printf("failed side check tind %d sind %d\n",i,sind);
+            *log << "failed side check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
@@ -216,7 +216,7 @@ void mesh::checkintegrity() const {
          }
          
          if (ttri[i][j] != stri[sind][1-dir]) {
-            printf("failed ttri check tind %d sind %d\n",i,sind);
+            *log << "failed ttri check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
@@ -225,7 +225,7 @@ void mesh::checkintegrity() const {
          
          if (ttri[i][j] > 0) {
             if(tinfo[ttri[i][j]] < 0) {
-               printf("references deleted tri\n");
+               *log << "references deleted tri" << std::endl;
                for(i=0;i<nside;++i)
                   sinfo[i] += 2;
                out_mesh("error"); 
@@ -242,13 +242,13 @@ void mesh::checkintwk() const {
    int i;
    
    for(i=0;i<maxvst;++i)
-      if (intwk1[i] != -1) printf("failed intwk1 check %d: %d\n",i,intwk1[i]);
+      if (intwk1[i] != -1) *log << "failed intwk1 check" << i << intwk1[i] << std::endl;
       
    for(i=0;i<maxvst;++i)
-      if (intwk2[i] != -1) printf("failed intwk2 check %d: %d\n",i,intwk2[i]);
+      if (intwk2[i] != -1) *log << "failed intwk2 check" << i << intwk2[i] << std::endl;
    
    for(i=0;i<maxvst;++i)
-      if (intwk3[i] != -1) printf("failed intwk3 check %d: %d\n",i,intwk3[i]);
+      if (intwk3[i] != -1) *log << "failed intwk3 check" << i << intwk3[i] << std::endl;
    
    return;
 }

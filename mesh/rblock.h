@@ -12,13 +12,14 @@
 /* THIS IS A SEQUENCE OF MESHES & STORAGE FOR A DEFORMABLE BLOCK */
 template<class GRD> class rblock : public block {
    protected:
+      std::ostream *log;
       int ngrid, mp_phase;
       typename GRD::gbl gbl_store;
       GRD *grd;
       FLT tolerance;
       
    public:
-      void init(std::map <std::string,std::string>& input);
+      void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0);
       void load_const(std::map <std::string,std::string>& input);
       void alloc(std::map <std::string,std::string>& input);
       void input(char *filename) {
@@ -46,32 +47,43 @@ template<class GRD> class rblock : public block {
       boundary* fbdry(int grdlvl, int num);
 };
 
-template<class GRD> void rblock<GRD>::init(std::map <std::string,std::string>& input) {
 
+template<class GRD> void rblock<GRD>::init(std::map <std::string,std::string>& input, std::ostream *inlog) {
+
+   if (inlog) {
+      log = inlog;
+   } 
+   else {
+      log = &std::cout;
+   }
+   
    /* LOAD NUMBER OF GRIDS */
    std::istringstream data(input["ngrid"]);
    data >> ngrid;
-   std::cout << "#ngrid: " << ngrid << std::endl;
+   *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
 
    grd = new GRD[ngrid];
+   for(int i = 0; i<ngrid;++i)
+      grd[i].log = log;
+      
 }
 
 template<class GRD> void rblock<GRD>::load_const(std::map <std::string,std::string>& input) {
 
    std::istringstream data(input["tolerance"]);
    data >> tolerance; 
-   std::cout << "#tolerance: " << tolerance << std::endl;
+   *log << "#tolerance: " << tolerance << std::endl;
    data.clear();
    
    data.str(input["fadd"]);
    data >> GRD::fadd;
-   std::cout << "#fadd: " << GRD::fadd << std::endl;
+   *log << "#fadd: " << GRD::fadd << std::endl;
    data.clear();
 
    data.str(input["vnn"]);
    data >> GRD::vnn; 
-   std::cout << "#vnn: " << GRD::vnn << std::endl;
+   *log << "#vnn: " << GRD::vnn << std::endl;
    data.clear();
       
    return;
@@ -83,19 +95,19 @@ template<class GRD> void rblock<GRD>::alloc(std::map<std::string,std::string>& i
 	FLT grwfac;
    std::istringstream data(input["growth factor"]);
    data >> grwfac;
-   std::cout << "#growth factor: " << grwfac << std::endl;
+   *log << "#growth factor: " << grwfac << std::endl;
    data.clear();
 	
 	int filetype;
    data.str(input["filetype"]);
    data >> filetype;
-   std::cout << "#filetype: " << filetype << std::endl;
+   *log << "#filetype: " << filetype << std::endl;
    data.clear();
 	
    std::string filename;
    data.str(input["mesh"]);
    data >> filename;
-   std::cout << "#mesh: " << filename << std::endl;
+   *log << "#mesh: " << filename << std::endl;
    data.clear();
    
    grd[0].in_mesh(filename.c_str(),static_cast<FTYPE>(filetype),grwfac);
@@ -204,7 +216,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(stop);
 
          default:
-            printf("error in control flow tadvance 1\n");
+            *log << "error in control flow tadvance 1" << std::endl;
             exit(1);
       }
    }
@@ -225,7 +237,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(stop);
          
          default:
-            printf("error in control flow tadvance 2\n");
+            *log << "error in control flow tadvance 2" << std::endl;
             exit(1);
       }
    }
@@ -267,7 +279,7 @@ template<class GRD> block::control_state rblock<GRD>::adapt(int excpt) {
          return(stop);
    }
    
-   printf("control flow error: adapt\n");
+   *log << "control flow error: adapt" << std::endl;
    exit(1);
    
    return(stop);
@@ -297,7 +309,7 @@ template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
          return(stop);
          
       default:
-         printf("flow control error, rsdl\n");
+         *log << "flow control error, rsdl" << std::endl;
          exit(1);
    }
    
@@ -328,7 +340,7 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
          return(stop);
    }
    
-   printf("flow control error: vddt\n");
+   *log << "flow control error: vddt" << std::endl;
    exit(1);
    
    return(stop);
@@ -363,7 +375,7 @@ template<class GRD> block::control_state rblock<GRD>::matchboundaries(int lvl, i
          return(stop);
    }
    
-	printf("control flow error matchboundaries\n");
+   *log << "control flow error matchboundaries\n";
    exit(1);
    
    return(stop);

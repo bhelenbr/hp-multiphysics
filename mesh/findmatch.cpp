@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include <cstdio>
 #include <stdlib.h>
 
 int mesh::comm_entity_size() {

@@ -82,7 +82,7 @@ void mesh::rebay(FLT tolsize) {
       v2 = tvrtx[tind][snum];
       
       if (nvrtx > maxvst -2) {
-         printf("too many vertices\n");
+         *log << "too many vertices" << std::endl;
          exit(1);
       }
       
@@ -201,7 +201,7 @@ INSRT:
          }
          else {
             /* REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN OR CLOSE TO BOUNDARY SKIP SIDE FOR NOW? */
-            printf("#Warning: skipping insert\n");
+            *log << "#Warning: skipping insert" << std::endl;
             qtree.dltpt(nvrtx);
             --nvrtx;
             nsdel = 1;
@@ -241,7 +241,7 @@ INSRT:
       
    cnt_nbor();
    
-   printf("#Rebay finished: new interior points %d, new boundary points %d\n",intrcnt,bdrycnt);
+   *log << "#Rebay finished: new interior points " << intrcnt << " new boundary points " << bdrycnt << std::endl;
 
    return;
 }

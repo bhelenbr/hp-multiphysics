@@ -1,6 +1,5 @@
 #include"mesh.h"
 #include"utilities.h"
-#include<cstdio>
 #include<float.h>
 
 /* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
@@ -34,8 +33,7 @@ void mesh::createsideinfo(void) {
          while (sind >= 0) {
             if (maxv == svrtx[sind][order]) {
                if (stri[sind][1] >= 0) {
-                  printf("Error: side %d has been matched with Triangle %d 3 times\n",sind,tind);
-                  exit(1);
+                  *log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                  exit(1);
                }
                else {
                   stri[sind][1] = tind;
@@ -128,7 +126,7 @@ void mesh::createtsidestri(void) {
             }
             sind = sinfo[sind];
          }
-         printf("didn't match side %d %d\n",v1,v2);
+         *log << "didn't match side: " << v1 << v2 << std::endl;
          exit(1);
          
 NEXTTRISIDE:

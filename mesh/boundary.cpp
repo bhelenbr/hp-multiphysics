@@ -48,7 +48,7 @@ template<class BASE, class MESH> int comm_boundary<BASE,MESH>::local_cnnct(bound
       ++nlocal_match;
       return(0);
    }
-   printf("error: not local match %d %d\n",idnty(),bin->idnty());
+   *b().log << "error: not local match" << idnty() << bin->idnty() << std::endl;
    return(1);
 }
 
@@ -216,14 +216,14 @@ template<class MESH> void side_template<MESH>::copy(const boundary& bin) {
    return;
 }
 
-template<class MESH> void side_template<MESH>::output(FILE *out) {
+template<class MESH> void side_template<MESH>::output(std::ostream& out) {
 	int i;
 	
    boundary::output(out);
    
-	fprintf(out,"number: %d\n",nel);
+	out << "number: " << nel << '\n';
 	for(i=0;i<nel;++i)
-		fprintf(out,"%d %17.10e %17.10e\n",el[i],s[i],s[i+1]);
+		out << el[i] << ' ' << s[i] << ' ' << s[i+1] << '\n';
 		
 	return;
 }
@@ -351,7 +351,7 @@ template<class MESH> void side_template<MESH>::reorder() {
       for(i=0;i<total-nsd();++i)
          b().sbdry[b().nsbd-1]->swap(i,i+nsd());
       b().sbdry[b().nsbd-1]->nsd() = total-nsd();
-      printf("#creating new boundary: %d num: %d\n",idnty(),b().sbdry[b().nsbd-1]->nsd());
+      *b().log << "#creating new boundary: " << idnty() << " num: " << b().sbdry[b().nsbd-1]->nsd() << std::endl;
       return;
    }
    

@@ -9,66 +9,151 @@
 
 #include "blocks.h"
 #include "boundary.h"
+#include<time.h>
+#include <input_map.h>
 #include <utilities.h>
-#include<iostream>
-#include<map>
-#include<string>
-#include<sstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
 
 #ifdef MPISRC
 #include <mpi.h>
 #endif
 
+void blocks::init(const char *infile, const char *outfile) {
+   int i,nb,total;
+   char ctemp[100],fname[100];
+   std::map<std::string,std::string> maptemp;
+   std::map<std::string,std::string> *input;
+   
+#ifdef MPISRC
+   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
+	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
 
-void blocks::load_constants(std::map<std::string,std::string> input[0]) {
+   input_map(maptemp,infile);
+   
+   /* EXTRACT NBLOCKS FOR MYID */
+   /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
+   total = 0;
+   std::istringstream data(maptemp["nblock"]);
+   for (i=0;i<myid;++i) {
+      data >> nb;  
+      total += nb;
+   }
+   data >> ctemp;
+   maptemp["nblock"] = ctemp;  // NUMBER OF BLOCKS FOR THIS PROCESSOR */
+   data.clear();
 
+   data.str(maptemp["nblock"]);
+   data >> nblock;  
+   data.clear();   
+   
+   /* ALLOCATE MAP ARRAY */
+   input = new std::map<std::string,std::string>[nblock+1];
+   input[0] = maptemp;
+   
+   /* LOAD BLOCK FILE PREFIX */
+   data.str(maptemp["blockfile"]);
+   data >> ctemp;  
+   data.clear();
+   
+   strcat(ctemp,".");   
+   /* READ IN MAPS FOR THIS PROCESSOR */
+   for(i=0;i<nblock;++i) {
+      strcpy(fname,ctemp);
+      number_str(fname,ctemp,total+i,1);
+      strcat(fname,".inpt");
+      input_map(input[i+1],fname);
+   }
+   
+   if (outfile) {
+      input[0]["logfile"] = outfile;
+   }
+
+   init(input);
+   
+   return;
+}
+   
+
+
+void blocks::init(std::map<std::string,std::string> input[]) {
+   int i,type;
+   char outfile[100];
+   std::map<std::string,std::string>::const_iterator mi;
+   std::map<std::string,std::string> merge;
+   
+#ifdef MPISRC
+   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
+	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+   
+   /* OPEN LOGFILES FOR EACH BLOCK */
+   mi = input[0].find("logfile");
+   if (mi != input[0].end()) {
+      std::istringstream data(mi->second);
+      data >> outfile;
+      strcat(outfile,".");
+      number_str(outfile,outfile,myid,1);
+      strcat(outfile,".log");
+      filelog.setf(std::ios_base::scientific, std::ios_base::floatfield);
+      filelog.precision(3);
+      filelog.open(outfile);
+      log = &filelog;
+   }
+   else {
+      std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+      std::cout.precision(3);
+      log = &std::cout;
+   }
+     
+   /* LOAD BASIC CONSTANTS FOR MULTIGRID */
    std::istringstream data(input[0]["itercrsn"]);   
    data >> itercrsn;
-   std::cout << "#itercrsn:" << itercrsn << std::endl;
+   *log << "#itercrsn: " << itercrsn << std::endl;
    data.clear();
    
    data.str(input[0]["iterrfne"]);   
    data >> iterrfne;
-   std::cout << "#iterrfne:" << iterrfne << std::endl;
+   *log << "#iterrfne: " << iterrfne << std::endl;
    data.clear();
    
    data.str(input[0]["njacobi"]);   
    data >> njacobi;
-   std::cout << "#njacobi:" << njacobi << std::endl;
+   *log << "#njacobi: " << njacobi << std::endl;
    data.clear();
    
    data.str(input[0]["ncycle"]);   
    data >> ncycle;
-   std::cout << "#ncycle:" << ncycle << std::endl;
+   *log << "#ncycle: " << ncycle << std::endl;
+   data.clear();
+   
+   data.str(input[0]["vwcycle"]);   
+   data >> vw;
+   *log << "#vwcycle: " << vw << std::endl;
    data.clear();
    
    data.str(input[0]["ntstep"]);   
    data >> ntstep;
-   std::cout << "#ntstep:" << ntstep << std::endl;
+   *log << "#ntstep: " << ntstep << std::endl;
    data.clear(); 
    
-   return;
-}
-
-void blocks::init(std::map<std::string,std::string> input[]) {
-   int i,type;
-   std::map<std::string,std::string>::const_iterator mi;
-   std::map<std::string,std::string> merge;
-   
    /* LOAD NUMBER OF GRIDS */
-   std::istringstream data(input[0]["nblock"]);
+   data.str(input[0]["nblock"]);
    data >> nblock;
-   std::cout << "#nblock:" << nblock << std::endl;
+   *log << "#nblock: " << nblock << std::endl;
    data.clear();
    
    data.str(input[0]["ngrid"]);   
    data >> ngrid;
-   std::cout << "#ngrid:" << ngrid << std::endl;
+   *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
    data.str(input[0]["mglvls"]);   
    data >> mglvls;
-   std::cout << "#mglvls:" << mglvls << std::endl;
+   *log << "#mglvls: " << mglvls << std::endl;
    data.clear();
 
    blk = new block *[nblock];
@@ -80,25 +165,52 @@ void blocks::init(std::map<std::string,std::string> input[]) {
       
       data.str(input[i+1]["blktype"]);   
       data >> type;
-      std::cout << "#blktype:" << type << std::endl;
+      *log << "#blktype: " << type << std::endl;
       data.clear();
       blk[i] = getnewblock(type);
-      blk[i]->init(merge);
+      blk[i]->init(merge,log);
       blk[i]->load_const(merge);
       blk[i]->alloc(merge);
    }
 
-#ifdef MPISRC
-   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
-	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif
-
    findmatch();
    matchboundaries();
-   output("test",easymesh);
 
    return;
 }
+
+void blocks::localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,int j) {
+   if (v2 < v1) {
+      /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
+      v1->local_cnnct(v2,v1->idnty() +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
+      *log << "#second lmatch id: " << v1->idnty() << " vsf: " << vsf 
+           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
+      v1->setfrst(false);
+   }
+   else {
+      v1->local_cnnct(v2,v1->idnty() +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
+      *log << "#first lmatch id: " << v1->idnty() << " vsf: " << vsf 
+           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
+   }
+   return;
+}
+
+#ifdef MPISRC
+void blocks::mpimatch(int vsf,boundary *v1,int p,int b1,int b2,int i,int j) {
+  if (p < myid) {
+      v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
+      *log << "#second lmatch id: " << v1->idnty() << " vsf: " << vsf 
+           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
+      v1->setfrst(false);
+   }
+   else {
+      v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
+      *log << "#first lmatch id: " << v1->idnty() << " vsf: " << vsf 
+           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
+   }
+   return;
+}
+#endif
 
 void blocks::findmatch() {
    int b,b1,b2,i,j,k,grdlvl,p,count,tsize;
@@ -230,30 +342,12 @@ void blocks::findmatch() {
                            if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
                            boundary *v2 = blk[b2]->vbdry(grdlvl,bp2->vcomm[j].nvbd);
-                           
-                           if (v2 < v1) {
-                              /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
-                              v1->local_cnnct(v2,v1->idnty() +(1<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              printf("#second lmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),1,b1,b2,i,j);
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->local_cnnct(v2,v1->idnty() +(1<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                              printf("#first lmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),1,b1,b2,i,j);
-                           }
+                           localmatch(1,v1,v2,b1,b2,i,j);
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
-                           if (p < myid) {
-                              v1->mpi_cnnct(p,v1->idnty() +(1<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              printf("#second rmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),1,b1,b2,i,j);
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->mpi_cnnct(p,v1->idnty() +(1<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                              printf("#first rmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),1,b1,b2,i,j);
-                           }
+                           mpimatch(1,v1,p,b1,b2,i,j);
                         }
 #endif
                      }
@@ -268,29 +362,12 @@ void blocks::findmatch() {
                            if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
                            boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
                            boundary *v2 = blk[b2]->sbdry(grdlvl,bp2->scomm[j].nsbd);
-                           if (v2 < v1) {
-                              /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
-                              v1->local_cnnct(v2,v1->idnty() +(1<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              printf("#second lmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),2,b1,b2,i,j);
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->local_cnnct(v2,v1->idnty() +(1<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                              printf("#first lmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),2,b1,b2,i,j);
-                           }
+                           localmatch(2,v1,v2,b1,b2,i,j);
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
-                           if (p < myid) {
-                              v1->mpi_cnnct(p,v1->idnty() +(1<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              printf("#second rmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),2,b1,b2,i,j);
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->mpi_cnnct(p,v1->idnty() +(1<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                              printf("#first rmatch id:%d vsf:%d b1:%d b2:%d i:%d j:%d\n" ,v1->idnty(),2,b1,b2,i,j);
-                           }
+                           mpimatch(2,v1,p,b1,b2,i,j);
                         }
 #endif
                      }
@@ -305,25 +382,12 @@ void blocks::findmatch() {
                            if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
                            boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
                            boundary *v2 = blk[b2]->fbdry(grdlvl,bp2->fcomm[j].nfbd);
-                           if (v2 < v1) {
-                              /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
-                              v1->local_cnnct(v2,v1->idnty() +(3<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->local_cnnct(v2,v1->idnty() +(3<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                           }
+                           localmatch(3,v1,v2,b1,b2,i,j);
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
-                           if (p < myid) {
-                              v1->mpi_cnnct(p,v1->idnty() +(3<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-                              v1->setfrst(false);
-                           }
-                           else {
-                              v1->mpi_cnnct(p,v1->idnty() +(3<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-                           }
+                           mpimatch(3,v1,p,b1,b2,i,j);
                         }
 #endif
                      }
@@ -353,6 +417,9 @@ void blocks::findmatch() {
 
    return;
 }
+
+
+
             
             
             
@@ -375,7 +442,7 @@ void blocks::matchboundaries() {
 
 void blocks::output(char *filename, FTYPE filetype) {
    int i;   
-   char fnmcat[80];
+   char fnmcat[80], fnmcat1[80];
    
    strcpy(fnmcat,filename);
 #ifdef MPISRC
@@ -386,10 +453,10 @@ void blocks::output(char *filename, FTYPE filetype) {
    /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
    /* I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    if (nblock > 1) {
+      strcat(fnmcat,".");
       for (i=0;i<nblock;++i) {
-         strcat(fnmcat,".");
-         number_str(fnmcat, fnmcat, i, 1);
-         blk[i]->output(fnmcat,filetype);
+         number_str(fnmcat1, fnmcat, i, 1);
+         blk[i]->output(fnmcat1,filetype);
       }
    }
    else {
@@ -488,20 +555,26 @@ void blocks::cycle(int vw, int lvl) {
 void blocks::go() {
    int i,step;
    char outname[100];
-   
+   clock_t cpu_time;
+
+   clock();
    for(step = 1;step<=ntstep;++step) {
       tadvance();
       for(i=0;i<ncycle;++i) {
-         cycle(2);
-         printf("%d ",i);
+         cycle(vw);
+         *log << i << ' ';
          maxres();
-         printf("\n");
+         *log << '\n';
       }
-      output("deformed",easymesh);
+      output("deformed",grid);
+      output("deformed",tecplot);
       restructure();
       number_str(outname, "end", step, 2);
       output(outname,easymesh);
    }
+   cpu_time = clock();
+   *log << "that took " << cpu_time << " cpu time" << std::endl;
+   
    return;
 }
 

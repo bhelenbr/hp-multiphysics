@@ -1,7 +1,6 @@
 #include"r_mesh.h"
 #include"utilities.h"
 #include<iostream>
-#include<cstdio>
 #include<cmath>
 
 FLT r_mesh::fadd, r_mesh::vnn;
@@ -445,7 +444,7 @@ void r_mesh::maxres() {
          mxr[n] = MAX(mxr[n],fabs(rg->res[i][n]));
          
    for(n=0;n<ND;++n)
-      printf("%.3e  ",mxr[n]);
+      *log << ' ' << mxr[n] << ' ';
          
    return;
 }

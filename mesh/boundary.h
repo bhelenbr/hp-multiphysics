@@ -6,7 +6,6 @@
  *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
  *
  */
-#include <stdio.h>
 #include <utilities.h>
 
 #ifdef MPISRC
@@ -35,10 +34,10 @@ class boundary {
       inline int idnty() const {return(idnum);}
       virtual void alloc(int size) {}
       virtual void copy(const boundary& bin) {} 
-      virtual void output(FILE *fout) {fprintf(fout,"idnum: %d\n",idnty());}
+      virtual void output(std::ostream& fout) {fout << "idnum: " << idnty() << '\n';}
       virtual void input(FILE *fin, FLT grwfac = 1.0) {}
       virtual void getgeometryfrommesh() {}
-      virtual void summarize() {printf("idnum: %d\n",idnty());}
+      virtual void summarize(std::ostream& fout) {fout << "idnum: " << idnty() << '\n';}
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
       virtual bool is_comm() {return(false);}
@@ -134,12 +133,12 @@ template <class MESH> class vrtx_template : public boundary {
          for(int n=0;n<MESH::ND;++n)
             pt[n] = temp.pt[n];
       }
-      void output(FILE *fout) {
+      void output(std::ostream& fout) {
          boundary::output(fout);
-         std::fprintf(fout,"point: %d\n",v0);
+         fout << "point: " << v0 << '\n';
          for(int n=0;n<MESH::ND;++n)
-            std::fprintf(fout,"%f ",pt[n]);
-         std::fprintf(fout,"\n");
+            fout << pt[n] << ' ';
+         fout << "\n";
       }
       void input(FILE *fin, FLT grwfac=1.0) {
          boundary::input(fin);
@@ -148,8 +147,8 @@ template <class MESH> class vrtx_template : public boundary {
             std::fscanf(fin,"%lf ",&pt[n]);
          fscanf(fin,"\n");
       } 
-      void summarize() {
-         std::printf("#VBDRY %d VRTX %d\n",idnty(),v());
+      void summarize(std::ostream& fout) {
+         fout << "#VBDRY "<< idnty() << " VRTX " << v() << '\n';
       }
       
       void getgeometryfrommesh() {
@@ -235,7 +234,7 @@ template <class MESH> class side_template : public boundary {
       /* BASIC B.C. STUFF */
       void alloc(int n);
       void copy(const boundary& bin);
-      void output(FILE *fout);
+      void output(std::ostream& fout);
       void input(FILE *fin, FLT grwfac=1.0);
       void getgeometryfrommesh();
       
@@ -244,8 +243,8 @@ template <class MESH> class side_template : public boundary {
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, FLT pt[MESH::ND]);
       virtual void findbdrypt(const boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout);
-      virtual void summarize() {
-         std::printf("#BDRY %d MAX %d SIDES %d\n",idnty(),mxsz(),nsd());
+      virtual void summarize(std::ostream& fout) {
+         fout << "#BDRY " << idnty() << " MAX " << mxsz() << " SIDES " << nsd() << '\n';
       }
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
@@ -389,7 +388,7 @@ template<class BASE, class MESH> class curv_template : public BASE {
             for(n=0;n<MESH::ND;++n)
                pt[n] += delt_dist*dhgt(n,pt)/mag;
             if (++iter > 100) {
-               printf("iterations exceeded curved boundary %d %f %f\n",idnty(),pt[0],pt[1]);
+               *b().log << "iterations exceeded curved boundary " << idnty() << ' ' << pt[0] << ' ' << pt[1] << '\n';
                exit(1);
             }
          } while (fabs(delt_dist) > 10.*EPSILON);

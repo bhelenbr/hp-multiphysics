@@ -30,7 +30,7 @@ int mesh::insert(FLT x[ND]) {
    tind = findtri(x,vnear);
    assert(tind > -1);  
    if (nvrtx >= maxvst) {
-      printf("need to use larger growth factor: too many vertices\n");
+      *log << "need to use larger growth factor: too many vertices" << std::endl;
       exit(1);
    }
    err = insert(tind,nvrtx);
@@ -45,7 +45,7 @@ int mesh::insert(int tind, int vnum, FLT theta) {
    int sind, sind1;
    
    if (tind < 0) {
-      printf("Warning: trying to insert point outside domain\n");
+      *log << "Warning: trying to insert point outside domain" << std::endl;
       return(1);
    }
    
@@ -103,7 +103,7 @@ int mesh::insert(int tind, int vnum, FLT theta) {
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
       if(fabs(minangle(vnum, svrtx[sind][0] , svrtx[sind][1])) < theta*M_PI/180.0) {
-         printf("#Warning: inserting too close to boundary\n");
+         *log << "#Warning: inserting too close to boundary" << std::endl;
          return(1);
       }
    }
@@ -119,7 +119,7 @@ int mesh::insert(int tind, int vnum, FLT theta) {
    nside += 3;
    
    if (ntri > maxvst || nside > maxvst) {
-      printf("need to use bigger growth factor: too many sides/tris %d/%d\n",nside,ntri);
+      *log << "need to use bigger growth factor: too many sides/tris" << nside << ntri << std::endl;
       exit(1);
    }
    
@@ -301,7 +301,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    stri[nside][1] = -(((i+1)<<16) +sbdry[i]->nsd());
    sbdry[i]->sd(sbdry[i]->nsd()++) = nside;
    if (sbdry[i]->nsd() > sbdry[i]->mxsz()) {
-      printf("too many boundary elements %d %d\n",sbdry[i]->idnty(),sbdry[i]->mxsz());
+      *log << "too many boundary elements" <<  sbdry[i]->idnty()  << sbdry[i]->mxsz() << std::endl;
       exit(1);
    }
    ++nside;
@@ -333,7 +333,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    nside += 1;  
    
    if (ntri > maxvst || nside > maxvst) {
-      printf("need to use bigger growth factor: too many sides/tris %d/%d\n",nside,ntri);
+      *log << "need to use bigger growth factor: too many sides/tris:" << nside << ntri << std::endl;
       exit(1);
    }
 

@@ -1,6 +1,5 @@
 #include "mesh.h"
 #include "utilities.h"
-#include<stdio.h>
 #include<assert.h>
 #include<float.h>
 
@@ -129,8 +128,8 @@ int mesh::collapse(int sind) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
             bnum = (-stri[sind][1]>>16) -1;
             delt = sbdry[bnum]->is_frst();
-               printf("#Warning: degenerate case in edge collapse for bdry %d,%d, picking %d, (%f %f)\n"
-                  ,bnum,sbdry[bnum]->idnty(),delt,vrtx[svrtx[sind][delt]][0],vrtx[svrtx[sind][delt]][1]);
+               *log << "#Warning: degenerate case in edge collapse for bdry" << bnum << sbdry[bnum]->idnty() << "picking "
+                << delt << "(" << vrtx[svrtx[sind][delt]][0] << "," << vrtx[svrtx[sind][delt]][1] << ")" << std::endl;
          }
       }
    }

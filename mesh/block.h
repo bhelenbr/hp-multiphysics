@@ -10,7 +10,7 @@ class boundary;
 class block {
    public:
       enum control_state {stay = 0, advance = 1, stop = 3};
-      virtual void init(std::map <std::string,std::string>& input) = 0;
+      virtual void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0) = 0;
       virtual void load_const(std::map <std::string,std::string>& input) = 0;
       virtual void alloc(std::map <std::string,std::string>& input) = 0;
       virtual void input(char *filename) = 0;

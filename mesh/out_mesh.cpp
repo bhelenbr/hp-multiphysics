@@ -1,89 +1,103 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include"mesh.h"
+#include <string.h>
+#include <stdlib.h>
+#include <fstream>
+#include <iomanip>
+#include "mesh.h"
+
+using namespace std;
 
 int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
    char fnmapp[100];
-   FILE *out;
    int i,j,n,tind,count;
+   ofstream out;
    
+   out << scientific;
+   out.precision(10);
+         
    switch (filetype) {
    
       case (easymesh):
          /* CREATE EASYMESH OUTPUT FILES */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".n");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open output file %s for output\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
-         fprintf(out,"%d\n",nvrtx);
+         
+         out << nvrtx << endl;
          for(i=0;i<nvrtx;++i) {
-            fprintf(out,"\t%d: ",i);
+            out << i << ": ";
             for(n=0;n<ND;++n)
-               fprintf(out,"%17.10e ",vin[i][n]);
-            fprintf(out,"%d\n",vinfo[i]);
+               out << vin[i][n] << ' ';
+            out << vinfo[i] << endl;
          }            
-         fclose(out);
+         out.close();
 
          /* SIDE FILE */      
          strcpy(fnmapp,filename);
          strcat(fnmapp,".s");
-         out = fopen(fnmapp,"w");   
-         fprintf(out,"%d\n",nside);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         out << nside << endl;   
          for(i=0;i<nside;++i) {
-            fprintf(out,"%d: %d %d %d %d %d\n",i,svrtx[i][0],svrtx[i][1],
-            stri[i][0],stri[i][1],sinfo[i]);
-         }   
-         fclose(out);
-      
+            out << i << ": " << svrtx[i][0] << ' ' << svrtx[i][1] << ' ';
+            out << stri[i][0] << ' ' << stri[i][1] << ' ' << sinfo[i] <<endl;
+         }
+         out.close();
+   
          strcpy(fnmapp,filename);
          strcat(fnmapp,".e");
-         out = fopen(fnmapp,"w");
-         fprintf(out,"%d\n",ntri);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         out << ntri << endl;
          for(i=0;i<ntri;++i) {
-            fprintf(out,"%d: %d %d %d %d %d %d %d %d %d 0.0 0.0 %d\n",
-            i,tvrtx[i][0],tvrtx[i][1],tvrtx[i][2],
-            ttri[i][0],ttri[i][1],ttri[i][2],
-            tside[i].side[0],tside[i].side[1],tside[i].side[2],tinfo[i]); 
+            out << i << ": " << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2];
+            out << ' ' << ttri[i][0] << ' ' << ttri[i][1] << ' ' << ttri[i][2];
+            out << ' ' << tside[i].side[0] << ' ' << tside[i].side[1] << ' ' << tside[i].side[2];
+            out << " 0.0 0.0 " << tinfo[i] << endl;
          }   
-      
-         fclose(out);
+         out.close();
          break;
       
       case (tecplot):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".dat");
-         out = fopen(fnmapp,"w");
+         out.open(fnmapp);
          if (out == NULL ) {
-            printf("couldn't open output file %s for output\n",fnmapp);
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
 
-         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
+         out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << " E = " << ntri << endl;
          
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               fprintf(out,"%e  ",vin[i][n]);
-            fprintf(out,"\n");
+               out << vin[i][n] << ' ';
+            out << endl;
          }
 
-           fprintf(out,"\n#CONNECTION DATA#\n");
+         out << "\n#CONNECTION DATA#\n";
          
          for(i=0;i<ntri;++i)
-            fprintf(out,"%d %d %d\n",tvrtx[i][0]+1,tvrtx[i][1]+1,tvrtx[i][2]+1);
+            out << tvrtx[i][0]+1 << ' ' << tvrtx[i][1]+1 << ' ' << tvrtx[i][2]+1 << endl;
             
-         fclose(out);
+         out.close();
          break;
 
       case (gambit):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".FDNEUT");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open output file %s for output\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
 
@@ -91,113 +105,129 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
          for(i=0;i<nsbd;++i)
             count += sbdry[i]->nsd();
    
-         fprintf(out,"** FIDAP NEUTRAL FILE\n");
-         fprintf(out,"%s\n",filename);
-         fprintf(out,"VERSION    8.01\n");
-         fprintf(out,"29 Nov 1999    13:23:58\n");
-         fprintf(out,"   NO. OF NODES   NO. ELEMENTS NO. ELT GROUPS          NDFCD          NDFVL\n");
-         fprintf(out,"%15d%15d%15d%15d%15d\n",nvrtx,count,nsbd+1,ND,ND);
-         fprintf(out,"   STEADY/TRANS     TURB. FLAG FREE SURF FLAG    COMPR. FLAG   RESULTS ONLY\n");
-         fprintf(out,"%12d%12d%12d%12d%12d\n",0,0,0,0,0);
-         fprintf(out,"TEMPERATURE/SPECIES FLAGS\n");
-         fprintf(out," 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n");
-         fprintf(out,"PRESSURE FLAGS - IDCTS, IPENY MPDF\n");
-         fprintf(out,"         1         1         0\n");
-         fprintf(out,"NODAL COORDINATES\n");
+         out << "** FIDAP NEUTRAL FILE\n";
+         out << filename << "\n";
+         out << "VERSION    8.01\n";
+         out << "29 Nov 1999    13:23:58\n";
+         out << "   NO. OF NODES   NO. ELEMENTS NO. ELT GROUPS          NDFCD          NDFVL\n";
+         
+         out << setw(15) << nvrtx << setw(15) << count << setw(15) << nsbd+1 << setw(15) << ND << setw(15) << ND << endl;
+         out << "   STEADY/TRANS     TURB. FLAG FREE SURF FLAG    COMPR. FLAG   RESULTS ONLY\n";
+         out << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << endl;
+         out << "TEMPERATURE/SPECIES FLAGS\n";
+         out << " 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n";
+         out << "PRESSURE FLAGS - IDCTS, IPENY MPDF\n";
+         out << "         1         1         0\n";
+         out << "NODAL COORDINATES\n";
          
          for(i=0;i<nvrtx;++i) {
-            fprintf(out,"%10d",i+1);
+            out << setw(10) << i+1;
             for(n=0;n<ND;++n)
-               fprintf(out,"%20.10e",vin[i][n]);
-            fprintf(out,"\n");
+               out << setw(20) << vin[i][n];
+            out << '\n';
          }
             
-         fprintf(out,"BOUNDARY CONDITIONS\n");
-         fprintf(out,"         0         0         0     0.0\n");
-         fprintf(out,"ELEMENT GROUPS\n");
-         fprintf(out,"GROUP:%9d ELEMENTS:%10d NODES:%13d GEOMETRY:%5d TYPE:%4d\n",
-         1,ntri,3,2,2);
-         fprintf(out,"ENTITY NAME:   fluid\n");
+         out << "BOUNDARY CONDITIONS\n";
+         out << "         0         0         0     0.0\n";
+         out << "ELEMENT GROUPS\n";
+         out << "GROUP:" << setw(9) << 1;
+         out << " ELEMENTS:" << setw(10) << ntri;
+         out << " NODES:" << setw(13) << 3;
+         out << " GEOMETRY:" << setw(5) << 2;
+         out << " TYPE:" << setw(4) << 2 << endl;
+         out << "ENTITY NAME:   fluid\n";
          
          for(tind=0;tind<ntri;++tind) {
-            fprintf(out,"%8d%8d%8d%8d\n",tind+1,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
+            out << setw(8) << tind+1;
+            out << setw(8) << tvrtx[tind][0]+1;
+            out << setw(8) << tvrtx[tind][1]+1;
+            out << setw(8) << tvrtx[tind][2]+1;
+            out << endl;
          }
         
          count = ntri+1;
         
          for(i=0;i<nsbd;++i) {
-            fprintf(out,"GROUP:%9d ELEMENTS:%10d NODES:%13d GEOMETRY:%5d TYPE:%4d\n",i+2,sbdry[i]->nsd(),2,0,sbdry[i]->idnty());
-            fprintf(out,"ENTITY NAME:   surface.1\n");
-            for(j=0;j<sbdry[i]->nsd();++j) 
-                  fprintf(out,"%8d%8d%8d\n",count++,svrtx[sbdry[i]->sd(j)][0]+1,svrtx[sbdry[i]->sd(j)][1]+1);
+            out << "GROUP:" << setw(9) << i+2;
+            out << " ELEMENTS:" << setw(10) << sbdry[i]->nsd();
+            out << " NODES:" << setw(13) << 2;
+            out << " GEOMETRY:" << setw(5) << 0;
+            out << " TYPE:" << setw(4) << sbdry[i]->idnty() << endl;
+            out << "ENTITY NAME:   surface.1\n";
+            for(j=0;j<sbdry[i]->nsd();++j) {
+               out << setw(8) << count++;
+               out << setw(8) << svrtx[sbdry[i]->sd(j)][0]+1;
+               out << setw(8) << svrtx[sbdry[i]->sd(j)][1]+1 << endl;
+            }
          }
-         fclose(out);
+         out.close();
          break;
 
       case(text):
          /* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".txt");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open output file %s for output\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
          }
-         fprintf(out,"%d\n",nvrtx);
+         out << nvrtx << endl;
          for(i=0;i<nvrtx;++i) {
-            fprintf(out,"\t%d:",i);
+            out << i << ":";
             for(n=0;n<ND;++n)
-               fprintf(out," %17.10e",vin[i][n]); 
-            fprintf(out,"\n");
+               out << vin[i][n] << ' '; 
+            out << "\n";
          }
             
-         fclose(out);
+         out.close();
          break;
          
       case(grid):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".grd");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open output file %s for output\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
          }
          
          /* HEADER LINES */
-         fprintf(out,"nvrtx: %d\t nside: %d\t ntri: %d\n",nvrtx,nside,ntri);
+         out << "nvrtx: " << nvrtx;
+         out << " nside: " << nside;
+         out << " ntri: " << ntri << endl;
 
          /* VRTX INFO */                        
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               fprintf(out,"%17.10e ",vin[i][n]);
-            fprintf(out,"\n");
+               out << vin[i][n] << ' ';
+            out << "\n";
          }
                     
          /* SIDE INFO */
          for(i=0;i<nside;++i)
-            fprintf(out,"%d %d\n",svrtx[i][0],svrtx[i][1]);
+            out << svrtx[i][0] << ' ' << svrtx[i][1] << endl;
 
          /* THEN TRI INFO */
          for(i=0;i<ntri;++i)
-            fprintf(out,"%d %d %d\n",tvrtx[i][0],tvrtx[i][1],tvrtx[i][2]);
+            out << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2] << endl;
 
          /* SIDE BOUNDARY INFO HEADER */
-         fprintf(out,"nsbd: %d\n",nsbd);
+         out << "nsbd: " << nsbd << endl;
          for(i=0;i<nsbd;++i)
             sbdry[i]->output(out);
 
-               
          /* VERTEX BOUNDARY INFO HEADER */
-         fprintf(out,"nvbd: %d\n",nvbd);
+         out << "nvbd: " << nvbd << endl;
          for(i=0;i<nvbd;++i)
             vbdry[i]->output(out);
          
-         fclose(out);
+         out.close();
          
          break;
 
       default:
-         printf("That filetype is not supported yet\n");
+         *log << "That filetype is not supported yet" << endl;
          break;
    }
 

@@ -302,7 +302,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          if (maxv == svrtx[sind1][order]) {
             /* SIDE IN SAME DIRECTION */
             if (stri[sind1][0] >= 0) {
-               printf("1:side already matched?%d %d %d\n",sind1,v1,v2);
+               *log << "1:side already matched?" << sind1 << v1 << v2 << std::endl;
                out_mesh("error");
                exit(1);
             }
@@ -324,7 +324,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          else if(maxv == svrtx[sind1][1-order]) {
             /* SIDE IN OPPOSITE DIRECTION */
             if (stri[sind1][1] >= 0) {
-               printf("2:side already matched? %d %d %d\n",sind1,v1,v2);
+               *log << "2:side already matched?" << sind1 << v1 << v2 << std::endl;
                out_mesh("error");
                exit(1);
             }

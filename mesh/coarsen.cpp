@@ -1,6 +1,5 @@
 #include"mesh.h"
 #include"utilities.h"
-#include<cstdio>
 #include<cstdlib>
 #include<cstring>
 #include<cmath>
@@ -32,6 +31,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       initialized = 1;
    }
    
+   log = inmesh.log;
+   
    /* PREPARE FOR COARSENING */
    /* USE GLOBAL INTWK2 TO KEEP TRACK OF WHETHER VERTICES ARE IN */   
    for(i=0;i<inmesh.nvrtx;++i)
@@ -55,7 +56,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    for(i=0;i<nsbd;++i) {
       sbdry[i]->nsd() = 0;
       if (sbdry[i]->idnty() != inmesh.sbdry[i]->idnty()) {
-         printf("can't coarsen into object with different boundaries\n");
+         *log << "can't coarsen into object with different boundaries" << std::endl;
          exit(1);
       }
 
@@ -217,7 +218,7 @@ FINDNEXT:
    }
 
    if (nloop == 0) {
-      printf("Problem with boundaries nloop: %d\n",nloop);
+      *log << "Problem with boundaries nloop:" << nloop << std::endl;
       exit(1);
    }
    
@@ -262,12 +263,11 @@ FINDNEXT:
    initvlngth();
    
    /* PRINT SOME GENERAL DEBUGGING INFO */
-   printf("#\n#\n#COARSE MESH\n");
-   printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d\n",maxvst,nvrtx,nside,ntri);
-   
+   *log << "#" << std::endl << "#COARSE MESH " << std::endl;
+   *log << "#MAXVST" << maxvst << "VERTICES" << nvrtx << "SIDES" << nside << "ELEMENTS" << ntri << std::endl;   
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize();
+      sbdry[i]->summarize(*log);
 
    return(1);
 }

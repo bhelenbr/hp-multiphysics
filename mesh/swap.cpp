@@ -9,7 +9,6 @@
 
 #include "mesh.h"
 #include "utilities.h"
-#include<stdio.h>
 #include<assert.h>
 #include<float.h>
 
@@ -117,7 +116,7 @@ void mesh::swap(FLT tol) {
       nswap = 0;
       for(i=0;i<nside;++i)
          nswap += swap(i,tol);
-      printf("#Swap cycle finished: %d sides swapped\n",nswap);
+      *log << "#Swap cycle finished: " << nswap << " sides swapped" << std::endl;
    } while(nswap > 0);
    
    return;

@@ -3,8 +3,8 @@
 
 #include <math.h>
 #include <quadtree.h>
-#include <cstdio>
 #include <ftype.h>
+#include <iostream>
 
 #ifdef SINGLE
 #define FLT float
@@ -27,7 +27,8 @@ class mesh {
 
    public:
       static const int ND = 2;
-      
+      std::ostream *log;
+
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];
@@ -86,7 +87,7 @@ class mesh {
       /*  INTERFACE */
       /**************/
       /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), fmpt(NULL), cmpt(NULL), fine(NULL), coarse(NULL) {}
+      mesh() : initialized(0), log(&std::cout), fmpt(NULL), cmpt(NULL), fine(NULL), coarse(NULL) {}
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
@@ -102,7 +103,7 @@ class mesh {
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      virtual void setlength() {printf("in generic setlength\n");}
+      virtual void setlength() {*log << "in generic setlength" << std::endl;}
       void length1();
       void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
