@@ -19,27 +19,33 @@ FLT *hpbasis::pgx, *hpbasis::dpgx, *hpbasis::pgn, *hpbasis::dpgn;
 
 
 void hpbasis::initialize(int pdegree, int gpoints) {
-
+   int maxwk;
+   
+#ifdef VERTEX
    if (pdegree < 1) {
-      printf("error can't use 0th order basis\n");
+      printf("error can't use 0th order basis with vertex based modes\n");
       exit(1);
    }
+#endif
    
    p = pdegree;
-   sm = p -1;
-   im = (p-2)*(p-1)/2;
-   bm = 3*p;
+   vm = (p > 0 ? 3 : 1);
+   sm = MAX(p -1,0);
+   im = (p > 0 ? (p-2)*(p-1)/2 : 0);
+   bm = MAX(3*p,1);
    tm = bm + im;
    ibwth = (2*(sm-1) < im -1? 2*(sm-1) : im-1);
    ibwth = (ibwth > 0 ? ibwth : 0);
    
-   nmodx = p+2;
+   (p > 0 ? nmodx = p+2 : nmodx = 1);
    nmodn = tm;
    gpx = gpoints;
    gpn = gpoints;
-   
+  
+   maxwk = MAX(nmodx,gpx);
+ 
    /* WORK VARIABLES */   
-   if (p > wkpmax) {
+   if (maxwk > wkpmax) {
       if (wkpmax != 0) {
          free(wk0);
          free(wk1);
@@ -51,16 +57,16 @@ void hpbasis::initialize(int pdegree, int gpoints) {
          free(dpgn);  
          printf("#Warning: better to allocate hpbasis from largest to smallest\n");
       }
-      mat_alloc(wk0,nmodx,gpn,FLT);
-      mat_alloc(wk1,nmodx,gpn,FLT);
-      mat_alloc(wk2,nmodx,gpn,FLT);
-      mat_alloc(wk3,nmodx,gpn,FLT);
+      mat_alloc(wk0,maxwk,gpn,FLT);
+      mat_alloc(wk1,maxwk,gpn,FLT);
+      mat_alloc(wk2,maxwk,gpn,FLT);
+      mat_alloc(wk3,maxwk,gpn,FLT);
       vect_alloc(pgx,nmodx,FLT);
       vect_alloc(dpgx,nmodx,FLT);
       vect_alloc(pgn,tm,FLT);      
       vect_alloc(dpgn,tm,FLT);
       
-      wkpmax = p;
+      wkpmax = maxwk;
    }
    
    /*****************************/
@@ -193,20 +199,11 @@ void hpbasis::initialize_values(void)
       x = x0[i];
       x0[i] = 0.5*(1+x);
       
-      ptvalues1d_deriv(x);
-      
-      gx[0][i] = pgx[0];
-      dgx[0][i] = dpgx[0];
-      
-      gx[1][i] = pgx[1];
-      dgx[1][i] = dpgx[1];
-      
-      gx[2][i] = 1;
-      dgx[2][i] = 0;
+      ptvalues_deriv(x,0.0);
 
-      for (m = 2;m < sm+2;++m) {
-         gx[m+1][i] = pgx[m];
-         dgx[m+1][i] = dpgx[m];
+      for (m = 0;m < nmodx;++m) {
+         gx[m][i] = pgx[m];
+         dgx[m][i] = dpgx[m];
       }
    }
 
@@ -394,6 +391,14 @@ void hpbasis::sideinfoinit() {
 
    for(i=0;i<3;++i)
       mat_alloc(dgnorm[i],tm,gpx,FLT);
+      
+   if (p == 0) {
+      for(ind=0;ind<3;++ind)
+         for(i=0;i<gpx;++i)
+            dgnorm[ind][0][i] = 0.0;
+      
+      return;
+   }
    
    /*	CALCULATE NORMAL DERIVATIVE VALUES ALONG SIDES */
    /*	SIDE 0 */
@@ -404,16 +409,15 @@ void hpbasis::sideinfoinit() {
       xp1oeta = x0[i]*2.0/(1-eta);
       
       /* CALCULATE POLYNOMIALS */
-      /* VERTEX A   */
+      /* VERTEX 0   */
       dgnorm[0][0][i] = dpgn[0]*pgx[0] +xp1oeta*pgn[0]*dpgx[0];
 
-      /* VERTEX B  */
+      /* VERTEX 1  */
       dgnorm[0][1][i] = dpgn[1]*pgx[1] +xp1oeta*pgn[1]*dpgx[1];
 
-      /* VERTEX C    */   
+      /* VERTEX 2    */   
       dgnorm[0][2][i] = dpgn[2]*pgx[2] +xp1oeta*pgn[2]*dpgx[2];
 
-      /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
          dgnorm[0][m][i] = dpgn[m]*pgx[m] +xp1oeta*pgn[m]*dpgx[m];
          
@@ -441,16 +445,15 @@ void hpbasis::sideinfoinit() {
       oeta = 2.0/(1-eta);
 
       /* CALCULATE POLYNOMIALS */
-      /* VERTEX A   */
+      /* VERTEX 0   */
       dgnorm[1][0][i] = -oeta*pgn[0]*dpgx[0];
 
-      /* VERTEX B  */
+      /* VERTEX 1  */
       dgnorm[1][1][i] = -oeta*pgn[1]*dpgx[1];
 
-      /* VERTEX C    */   
+      /* VERTEX 2    */   
       dgnorm[1][2][i] = -oeta*pgn[2]*dpgx[2];
 
-      /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
          dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[m];
          
@@ -479,16 +482,15 @@ void hpbasis::sideinfoinit() {
       xp1 = (x+1)/2.0;
 
       /* CALCULATE POLYNOMIALS */
-      /* VERTEX A   */
+      /* VERTEX 0   */
       dgnorm[2][0][i] = -(dpgn[0]*pgx[0] +(xp1 -1)*oeta*pgn[0]*dpgx[0]);
 
-      /* VERTEX B  */
+      /* VERTEX 1  */
       dgnorm[2][1][i] = -(dpgn[1]*pgx[1] +(xp1 -1)*oeta*pgn[1]*dpgx[1]);
 
-      /* VERTEX C    */   
+      /* VERTEX 2    */   
       dgnorm[2][2][i] = -(dpgn[2]*pgx[2] +(xp1 -1)*oeta*pgn[2]*dpgx[2]);
 
-      /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
          dgnorm[2][m][i] = -(dpgn[m]*pgx[m] +(xp1 -1)*oeta*pgn[m]*dpgx[m]);
          
@@ -550,14 +552,20 @@ void hpbasis::lumpinv(void) {
          mm[m][i] = l[i];      
    }
 
-#ifdef SKIP
-   printf("\n mm MATRIX SM = %d\n",(sm+2));
+#define NO_OUTMASS
+#ifdef OUTMASS
+   FILE *fp;
+   fp = fopen("mass","w");
+   if (fp == NULL)
+      printf("trouble\n");
+   
    for(i=0;i<tm;++i) {
-      printf("%2d:",i);
-      for(j=0;j<tm;++j)
-         printf("%+.8lf ",mm[i][j]);
-      printf("\n");
+      for(j=0;j<tm;++j) {
+         fprintf(fp,"%+18.15e ",mm[i][j]);
+      }
+      fprintf(fp,"\n");
    }
+   fclose(fp);
 #endif
 
    /*******************************************************/      
@@ -573,7 +581,7 @@ void hpbasis::lumpinv(void) {
             ind = (i+1+k)%3;
             vwk[k] = mm[ind][i];
             for(j=0;j<sm;++j) {
-               mwk[k][j] = mm[ind][3+j+i*sm];
+               mwk[k][j] = mm[ind][3+j+i1*sm];
                mwk[k][j+sm] = mm[ind][3+j+i2*sm];
             }
             for(j=0;j<im;++j)
@@ -585,7 +593,7 @@ void hpbasis::lumpinv(void) {
             for(m=0;m<sm-1;++m) {   
                vwk[m+2+k*(sm-1)] = mm[3+m+k*sm][i];
                for(j=0;j<sm;++j) {
-                  mwk[m+2+k*(sm-1)][j] = mm[3+m+k*sm][3+j+i*sm];
+                  mwk[m+2+k*(sm-1)][j] = mm[3+m+k*sm][3+j+i1*sm];
                   mwk[m+2+k*(sm-1)][j+sm] = mm[3+m+k*sm][3+j+i2*sm];
                }
                for(j=0;j<im;++j)
@@ -600,7 +608,7 @@ void hpbasis::lumpinv(void) {
             for(n = 1; n < sm+1-m;++n) {
                vwk[ind] = mm[ind1+bm][i];
                for(j=0;j<sm;++j) {
-                  mwk[ind][j] = mm[ind1+bm][3+j+i*sm];
+                  mwk[ind][j] = mm[ind1+bm][3+j+i1*sm];
                   mwk[ind][j+sm] = mm[ind1+bm][3+j+i2*sm];
                }
                for(j=0;j<im;++j)
@@ -622,25 +630,29 @@ void hpbasis::lumpinv(void) {
          for(k=0;k<im;++k)
             ifmb[i][k] = vwk[k+2*sm];         
       }
-      
+   
       /* STORE SIDE VALUES */
       for(k=0;k<sm;++k) {
-         sfmv[0][k] = vwk[k];
-         sfmv[1][k] = vwk[k+sm];
+         sfmv[0][k] = vwk[k+sm];
+         sfmv[1][k] = vwk[k];
+         
       }
 
       /* FIND VERTEX DIAGANOL ELEMENT */
       vdiag = mm[2][2];
       for(k=0;k<sm;++k) {
-         vdiag -= sfmv[0][k]*mm[2][3+k+2*sm];
-         vdiag -= sfmv[1][k]*mm[2][3+k+sm];
+         vdiag -= sfmv[0][k]*mm[2][3+k+1*sm];
+         vdiag -= sfmv[1][k]*mm[2][3+k];
       }
 
       for(k=0;k<im;++k)
-         vdiag -= ifmb[2][k]*mm[i][k+bm];
+         vdiag -= ifmb[2][k]*mm[2][k+bm];
    }
    else {
-      vdiag = mm[0][0] + mm[0][1] + mm[0][2];
+      if (p > 0)
+         vdiag = mm[0][0] + mm[0][1] + mm[0][2];
+      else
+         vdiag = mm[0][0];
    }
 
 
@@ -696,7 +708,7 @@ void hpbasis::lumpinv(void) {
          }
 
          /* FOR HIGHEST ORDER MODE - STATIC INVERT ALL INTERIOR MODES */
-         for(j=0;j<tm;++j) {
+         for(j=0;j<im;++j) {
             vwk[j] = mm[i*sm +sm +2][j+bm];
             for(k=0;k<im;++k)
                mwk[j][k] = mm[k+bm][j+bm];
@@ -758,7 +770,7 @@ void hpbasis::lumpinv(void) {
       
       PBTRF(uplo,im,ibwth,idiag[0],ibwth+1,info);
       if (info != 0) {
-         printf("PBTRF FAILED info: %d\n", info);
+         printf("1:PBTRF FAILED info: %d\n", info);
          exit(1);
       }
                
@@ -809,7 +821,7 @@ void hpbasis::lumpinv(void) {
    }
    PBTRF(uplo,bm,bm-1,msi[0],bm,info);
    if (info != 0) {
-      printf("PBTRF FAILED info: %d\n", info);
+      printf("2:PBTRF FAILED info: %d\n", info);
       exit(1);
    }
 #else
@@ -824,21 +836,9 @@ void hpbasis::lumpinv(void) {
    }
 #endif
 
-   
-#ifdef SKIP
-   for(i=0;i<bm;++i) {
-      for(j=0;j<bm;++j) 
-         mwk[i][j] = 0.0;
-      mwk[i][i] = 1.0;
-   }
-         
-   /* CHECK INVERSE */
-   for(i=0;i<bm;++i) {
-      DPBTRS(uplo,bm,bm-1,1,msi[0],bm,mwk[i],bm,info);
-      for(j=0;j<bm;++j)
-         printf("%e ",mwk[i][j]);
-      printf("\n");
-   }
+
+#define NO_CHECK1
+#ifdef CHECK1
 
    /* CHECK TO MAKE SURE PREVIOUS RESULTS ARE RIGHT */
    for(i=0;i<3;++i) {
@@ -850,19 +850,19 @@ void hpbasis::lumpinv(void) {
       u[i2] = 0.0;
       
       for(j=0;j<sm;++j) {
-         u[3+j+i*sm] = -sfmv[0][j];
-         u[3+j+i1*sm] = 0.0;
-         u[3+j+i2*sm] = -sfmv[1][j];
+         u[3+j+i*sm] = 0.0;
+         u[3+j+i1*sm] = -sfmv[1][j];
+         u[3+j+i2*sm] = -sfmv[0][j];
       }
       
       for(j=0;j<im;++j)
          u[bm+j] = -ifmb[i][j];
          
       proj(u,wk1);
-      intgrt(wk1,l);
+      intgrt(wk1,mwk[i]);
       printf("%2d:",i);
       for(j=0;j<tm;++j)
-         printf("%+.4le  ",l[j]);
+         printf("%+.4le  ",mwk[i][j]);
       printf("\n");
    }
    
@@ -876,27 +876,83 @@ void hpbasis::lumpinv(void) {
          }
 
          proj(u,wk1);
-         intgrt(wk1,l);
+         intgrt(wk1,mwk[i*sm+k+3]);
          
          printf("%2d:",3+i*sm+k);
          for(j=0;j<tm;++j)
-            printf("%+.4le  ",l[j]);
+            printf("%+.4le  ",mwk[i*sm+k+3][j]);
          printf("\n");
       }         
    }
+   
+   for(i=0;i<im;++i) {
+      for(j=0;j<tm;++j)
+         u[j] = 0.0;
+      u[i +bm] = 1.0;  
+      proj(u,wk1);
+      intgrt(wk1,mwk[i+bm]);
+   }
+   
+   for(i=0;i<3;++i)
+      for(m=0;m<tm;++m)
+         mwk[i][m] /= vdiag;
+         
+   for(i=0;i<3;++i) {
+      for(j=0;j<3;++j) {
+         i1 = (i+j)%3;
+         for(k=0;k<sm;++k) {
+            for(m=0;m<tm;++m)
+               mwk[i*sm+k+3][m] -= vfms[j][k]*mwk[i1][m];
+         }
+      }
+   }
+   
+   /* REMOVE MODES J,K FROM MODE I,M */
+   int mode;
+   for(mode = 0; mode <sm;++mode) {
+      for(i=0;i<3;++i)
+         for(k=0;k<tm;++k)
+            mwk[3+i*sm+mode][k] *= sdiag[mode];
+      for(i=0;i<3;++i) {
+         for(m=mode+1;m<sm;++m) {
+            for(j=0;j<3;++j) {
+               i1 = (i+j)%3;
+               for(k=0;k<tm;++k)
+                  mwk[3+i*sm+m][k] -= sfms[mode][m][j]*mwk[3+i1*sm+mode][k];
+            }
+         }
+      }
+   }
+   DPBTRSNU(idiag,im,ibwth,&mwk[bm][0],MXTM);
+   for(k=0;k<im;++k)
+      for(i=0;i<bm;++i)
+         for(j=0;j<tm;++j)
+            mwk[bm+k][j] -= bfmi[i][k]*mwk[i][j];
+                     
+   for(m=0;m<tm;++m) {
+      printf("%2d:",m);
+      for(j=0;j<tm;++j) {
+         if (fabs(mwk[m][j]) > 1.0e-12)
+            printf("%+.2e  ",mwk[m][j]);
+         else
+            printf("%+.2e  ",0.0);
+      }
+      printf("\n");
+   }
+   
+   
+   
 #endif   
 
    /********************************************************************/   
    /* NOW SETUP SIMILAR THING FOR 1-D MATRICES                            */
    /********************************************************************/   
    /* CALCULATE 1-D MASS MATRIX */   
-   for(m=0;m<sm+2;++m) {
-      ind = m + (m > 1 ? 1 : 0);
-      for(k=0;k<sm+2;++k) {
-         ind1 = k + (k > 1 ? 1 : 0);
-         mm[m][k]= 0.0;
+   for(m=1;m<p+2;++m) {
+      for(k=1;k<p+2;++k) {
+         mm[m-1][k-1]= 0.0;
          for(i=0;i<gpx;++i)
-            mm[m][k] += wtx[i]*gx[ind][i]*gx[ind1][i];
+            mm[m-1][k-1] += wtx[i]*gx[m][i]*gx[k][i];
       }
    }
 
@@ -966,7 +1022,10 @@ void hpbasis::lumpinv(void) {
          vdiag1d -= sfmv1d[0][k]*mm[0][2+k];
    }
    else {
-      vdiag1d = mm[0][0]+mm[0][1];
+      if (p > 0) 
+         vdiag1d = mm[0][0]+mm[0][1];
+      else
+         vdiag1d = mm[0][0];
    }
 
 #ifdef SKIP
@@ -984,11 +1043,10 @@ void hpbasis::lumpinv(void) {
             uht[1][i] += u[m+2]*gx[3+m][i];
       }
 
-      for(m=0;m<sm+2;++m) {
-         indm = m + (m > 1 ? 1 : 0);
+      for(m=1;m<sm+3;++m) {
          l[m] = 0.0;
          for(i=0;i<gpx;++i) {
-            l[m] += wtx[i]*gx[indm][i]*uht[1][i];
+            l[m] += wtx[i]*gx[m][i]*uht[1][i];
          }
       }
       printf("%2d:",k);
@@ -1038,10 +1096,10 @@ void hpbasis::legpt()
             lgrnge[m][i][j] = pgn[m]*pgx[m];
             
          for(m=sm+3;m<2*sm+3;++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[1];
+            lgrnge[m][i][j] = pgn[m]*pgx[2];
 
          for(m=2*sm+3;m<bm;++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[0];
+            lgrnge[m][i][j] = pgn[m]*pgx[1];
 
          /*  INTERIOR MODES   */
          ind = bm;
@@ -1058,11 +1116,7 @@ void hpbasis::legpt()
    for (i=1;i<sm+1;++i) {
       x = 2.0*(FLT) i/(FLT)(sm+1) -1.0;
       ptvalues1d(x);
-      lgrnge1d[0][i] = pgx[0];
-      lgrnge1d[1][i] = pgx[1];
-
-      /* SIDE 1   */
-      for (m = 2;m < sm+2;++m)
+      for(m=0;m<p+1;++m)
          lgrnge1d[m][i] = pgx[m];
    }
    

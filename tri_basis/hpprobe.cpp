@@ -18,29 +18,31 @@ void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
    for(n=0;n<nv;++n) {
    
       /* SUM ALL S MODE CONTRIBUTIONS */
-      /* VERTEX A         */
+      /* VERTEX 0         */
       wk0[0][0] = lin[n][0]*pgn[0];
+      
+#ifndef VERTEX
+      if (p) {
+#endif
 
-      /* SIDE 3      */
-      for(m = 2*sm+3; m < bm; ++m )
-         wk0[0][0] += lin[n][m]*pgn[m];
-  
-      /* SUM FOR N=2      */
-      /* VERTEX B         */
+      /* VERTEX 1         */
       wk0[1][0] = lin[n][1]*pgn[1];
 
       /* SIDE 2      */
-      for (m = sm+3; m < 2*sm+3; ++m)
+      for(m = 2*sm+3; m < bm; ++m )
          wk0[1][0] += lin[n][m]*pgn[m];
-
-      /* SUM FOR N=3      */
-      /* VERTEX C         */
+  
+      /* VERTEX 2         */
       wk0[2][0] = lin[n][2]*pgn[2];
+
+      /* SIDE 1      */
+      for (m = sm+3; m < 2*sm+3; ++m)
+         wk0[2][0] += lin[n][m]*pgn[m];
 
       /* LOOP FOR INTERIOR MODES      */
       ind = bm;
       for(m = 3; m < sm+3; ++m) {
-         /* SIDE 1      */
+         /* SIDE 0      */
          wk0[m][0] = lin[n][m]*pgn[m];
       
          /* INTERIOR MODES      */
@@ -49,6 +51,9 @@ void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
             ++ind;
          }
       }
+#ifndef VERTEX
+      }
+#endif
        
    /* SUM OVER N X MODES   */     
       f[n]   = 0.0;
@@ -60,37 +65,38 @@ void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
 }
 
 void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f) {
-   int k,m,n,ind;
+   int k,m,n;
    
    for(n=0;n<nv;++n) {
    
       /* SUM ALL S MODE CONTRIBUTIONS */
-      /* VERTEX A         */
+      /* VERTEX 0         */
       wk0[0][0] = lin[n][0]*pgn[0];
+      
+#ifndef VERTEX
+      if (p) {
+#endif
 
-      /* SIDE 3      */
-      for(m = 2*sm+3; m < bm; ++m )
-         wk0[0][0] += lin[n][m]*pgn[m];
-  
-      /* SUM FOR N=2      */
-      /* VERTEX B         */
+      /* VERTEX 1         */
       wk0[1][0] = lin[n][1]*pgn[1];
 
       /* SIDE 2      */
-      for (m = sm+3; m < 2*sm+3; ++m)
+      for(m = 2*sm+3; m < bm; ++m )
          wk0[1][0] += lin[n][m]*pgn[m];
-
-      /* SUM FOR N=3      */
-      /* VERTEX C         */
+  
+      /* VERTEX 2         */
       wk0[2][0] = lin[n][2]*pgn[2];
 
-      /* LOOP FOR INTERIOR MODES      */
-      ind = bm;
-      for(m = 3; m < sm+3; ++m) {
-         /* SIDE 1      */
+      /* SIDE 1      */
+      for (m = sm+3; m < 2*sm+3; ++m)
+         wk0[2][0] += lin[n][m]*pgn[m];
+
+      /* SIDE 0      */
+      for(m = 3; m < sm+3; ++m) 
          wk0[m][0] = lin[n][m]*pgn[m];
+#ifndef VERTEX
       }
-       
+#endif       
    /* SUM OVER N X MODES   */     
       f[n]   = 0.0;
 
@@ -115,43 +121,47 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
       /* PART I - sum u*g_mn for each n, s_j   */
       n0 = 2./(1 -eta);
       
-      /* SUM FOR N=1      */
-      /* VERTEX A         */
+      /* VERTEX 0         */
       wk0[0][0] = lin[n][0]*pgn[0];
       wk1[0][0] = lin[n][0]*dpgn[0];
-
-      /* SIDE 3      */
-      for(m = 2*sm+3; m < bm; ++m ) {
-         wk0[0][0] += lin[n][m]*pgn[m];
-         wk1[0][0] += lin[n][m]*dpgn[m];
-      }         
       wk2[0][0] = wk0[0][0]*n0;
-         
-  
-      /* SUM FOR N=2      */
-      /* VERTEX B         */
+      
+#ifndef VERTEX
+      if (p) {
+#endif
+
+      /* VERTEX 1         */
       wk0[1][0] = lin[n][1]*pgn[1];
       wk1[1][0] = lin[n][1]*dpgn[1];
 
       /* SIDE 2      */
-      for (m = sm+3; m < 2*sm+3; ++m) {
+      for(m = 2*sm+3; m < bm; ++m ) {
          wk0[1][0] += lin[n][m]*pgn[m];
          wk1[1][0] += lin[n][m]*dpgn[m];
       }         
-       wk2[1][0] = wk0[1][0]*n0;
-
-      /* SUM FOR N=3      */
-      /* VERTEX C         */
+      wk2[1][0] = wk0[1][0]*n0;
+         
+  
+      /* VERTEX 2         */
       wk0[2][0] = lin[n][2]*pgn[2];
       wk1[2][0] = lin[n][2]*dpgn[2];
-      wk2[2][0] = wk0[2][0]*n0;
+
+      /* SIDE 1      */
+      for (m = sm+3; m < 2*sm+3; ++m) {
+         wk0[2][0] += lin[n][m]*pgn[m];
+         wk1[2][0] += lin[n][m]*dpgn[m];
+      }         
+       wk2[2][0] = wk0[2][0]*n0;
 
       for(m = 3; m < sm+3; ++m) {
-         /* SIDE 1      */
+         /* SIDE 0      */
          wk0[m][0] = lin[n][m]*pgn[m];
          wk1[m][0] = lin[n][m]*dpgn[m];
-          wk2[m][0] = wk0[m][0]*n0;
+         wk2[m][0] = wk0[m][0]*n0;
       }
+#ifndef VERTEX
+      }
+#endif
 
       /* SUM OVER N AT EACH I,J POINT   */     
       x0 = 0.5*(1+x);
@@ -175,8 +185,9 @@ void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f) {
    for(n=0;n<nv;++n) {
       f[n]   = 0.0;
 
-      for(k=0; k < sm+2; ++k )  
+      for(k=0; k < p+1; ++k )  
          f[n]   += lin[n][k]*pgx[k];
+
    }
    
    return;

@@ -11,12 +11,26 @@
 
 void hpbasis::proj1d(FLT *lin, FLT *f, FLT *dx) {
    int i,n;
+
+#ifdef VERTEX   
+   for(i=0;i<gpx;++i) {
+      f[i] = lin[0]*gx[1][i] +lin[1]*gx[2][i];
+      dx[i] = lin[0]*dgx[1][i] +lin[1]*dgx[2][i];
+   }
+#else
+   for(i=0;i<gpx;++i) {
+      f[i] = lin[0]*gx[0][i];
+      dx[i] = lin[0]*dgx[0][i];
+   }
+   
+   if (!p) return;
    
    for(i=0;i<gpx;++i) {
-      f[i] = lin[0]*gx[0][i] +lin[1]*gx[1][i];
-      dx[i] = lin[0]*dgx[0][i] +lin[1]*dgx[1][i];
-   }
-  
+      f[i] += lin[1]*(gx[2][i] -gx[1][i]);
+      dx[i] += lin[1]*(dgx[2][i] -dgx[1][i]);
+   }   
+#endif
+
    for(n=2;n<sm+2;++n) {
       for(i=0;i<gpx;++i) {
          f[i] += lin[n]*gx[n+1][i];
@@ -29,10 +43,20 @@ void hpbasis::proj1d(FLT *lin, FLT *f, FLT *dx) {
 
 void hpbasis::proj1d(FLT *lin, FLT *f) {
    int i,n;
-   
+
+#ifdef VERTEX   
    for(i=0;i<gpx;++i)
-      f[i] = lin[0]*gx[0][i] +lin[1]*gx[1][i];
-  
+      f[i] = lin[0]*gx[1][i] +lin[1]*gx[2][i];
+#else
+   for(i=0;i<gpx;++i)
+      f[i] = lin[0]*gx[0][i];
+   
+   if (!p) return;
+   
+   for(i=0;i<gpx;++i) 
+      f[i] += lin[1]*(gx[2][i] -gx[1][i]);
+#endif
+
    for(n=2;n<sm+2;++n)
       for(i=0;i<gpx;++i)
          f[i] += lin[n]*gx[n+1][i];
@@ -42,9 +66,9 @@ void hpbasis::proj1d(FLT *lin, FLT *f) {
 
 void hpbasis::proj1d(FLT u1, FLT u2, FLT *f) {
    int i;
-   
+
    for(i=0;i<gpx;++i)
-      f[i] = u1*gx[0][i] +u2*gx[1][i];
+      f[i] = u1*gx[1][i] +u2*gx[2][i];
       
    return;
 }
@@ -71,7 +95,7 @@ void hpbasis::proj1d_leg(FLT *lin, FLT *f) {
 
    for (i=1;i<sm+1;++i)
       f[i] = lin[0]*lgrnge1d[0][i]+lin[1]*lgrnge1d[1][i];
-      
+   
    for(m=2;m<sm+2;++m)
       for(i=1;i<sm+1;++i)
          f[i] += lin[m]*lgrnge1d[m][i];

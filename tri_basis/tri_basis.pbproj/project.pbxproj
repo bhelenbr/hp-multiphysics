@@ -42,11 +42,7 @@
 		0249A662FF388D9811CA2CEA = {
 			children = (
 				F52E4E5D02C2799701C226C8,
-				F52E4E3B02C2702401C226C8,
-				F52E4E3902C2702401C226C8,
-				F52E4E3A02C2702401C226C8,
-				F52E4E3802C2702401C226C8,
-				F52E4E4F02C2757401C226C8,
+				F512920B0336087901990B69,
 				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
@@ -89,8 +85,8 @@
 		};
 		08FB7794FE84155DC02AAC07 = {
 			children = (
-				F5EACF6502C2B31E015D0A1B,
 				08FB7795FE84155DC02AAC07,
+				F5EACF6502C2B31E015D0A1B,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
 			);
@@ -130,7 +126,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = /Users/helenbrk/Codes/include;
-				LIBRARY_SEARCH_PATHS = "/Users/helenbrk/Codes/lib /sw/lib /usr/lib/gcc/darwin/2.95.2";
+				LIBRARY_SEARCH_PATHS = "/Users/helenbrk/Codes/lib /usr/lib/gcc/darwin/3.1";
 				OTHER_CFLAGS = "-Df2cFortran";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tri_basis;
@@ -152,20 +148,22 @@
 				F52E4E2E02C26DDD01C226C8,
 			);
 			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 				08FB77A2FE84155DC02AAC07,
 				F52E4E2F02C26DDD01C226C8,
-				F52E4E3002C26DDD01C226C8,
 				F52E4E3102C26DDD01C226C8,
 				F52E4E3202C26DDD01C226C8,
 				F52E4E3302C26DDD01C226C8,
 				F52E4E3402C26DDD01C226C8,
 				F52E4E3502C26DDD01C226C8,
+				F51D3BCF02C8AE5D012A8EDA,
 			);
 			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A2FE84155DC02AAC07 = {
 			fileRef = 08FB7796FE84155DC02AAC07;
@@ -179,20 +177,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				F52E4E5E02C2799701C226C8,
-				F52E4E3F02C2702401C226C8,
-				F52E4E3D02C2702401C226C8,
-				F52E4E3E02C2702401C226C8,
-				F52E4E3C02C2702401C226C8,
-				F52E4E5002C2757401C226C8,
+				F512920C0336087901990B69,
 				0249A664FF388D9811CA2CEA,
 			);
 			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A5FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 //080
 //081
@@ -222,6 +218,24 @@
 //F52
 //F53
 //F54
+		F512920B0336087901990B69 = {
+			isa = PBXFrameworkReference;
+			name = vecLib.framework;
+			path = /System/Library/Frameworks/vecLib.framework;
+			refType = 0;
+		};
+		F512920C0336087901990B69 = {
+			fileRef = F512920B0336087901990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D3BCF02C8AE5D012A8EDA = {
+			fileRef = F52E4E2802C26DDD01C226C8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F52E4E2602C26DDD01C226C8 = {
 			isa = PBXFileReference;
 			path = hpbasis.h;
@@ -274,12 +288,6 @@
 			settings = {
 			};
 		};
-		F52E4E3002C26DDD01C226C8 = {
-			fileRef = F52E4E2802C26DDD01C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F52E4E3102C26DDD01C226C8 = {
 			fileRef = F52E4E2902C26DDD01C226C8;
 			isa = PBXBuildFile;
@@ -306,66 +314,6 @@
 		};
 		F52E4E3502C26DDD01C226C8 = {
 			fileRef = F52E4E2D02C26DDD01C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52E4E3802C2702401C226C8 = {
-			isa = PBXFileReference;
-			name = libatlas.a;
-			path = /sw/lib/libatlas.a;
-			refType = 0;
-		};
-		F52E4E3902C2702401C226C8 = {
-			isa = PBXFileReference;
-			name = libcblas.a;
-			path = /sw/lib/libcblas.a;
-			refType = 0;
-		};
-		F52E4E3A02C2702401C226C8 = {
-			isa = PBXFileReference;
-			name = libf77blas.a;
-			path = /sw/lib/libf77blas.a;
-			refType = 0;
-		};
-		F52E4E3B02C2702401C226C8 = {
-			isa = PBXFileReference;
-			name = liblapack.a;
-			path = /sw/lib/liblapack.a;
-			refType = 0;
-		};
-		F52E4E3C02C2702401C226C8 = {
-			fileRef = F52E4E3802C2702401C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52E4E3D02C2702401C226C8 = {
-			fileRef = F52E4E3902C2702401C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52E4E3E02C2702401C226C8 = {
-			fileRef = F52E4E3A02C2702401C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52E4E3F02C2702401C226C8 = {
-			fileRef = F52E4E3B02C2702401C226C8;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52E4E4F02C2757401C226C8 = {
-			isa = PBXFileReference;
-			name = libg2c.a;
-			path = /usr/lib/gcc/darwin/2.95.2/libg2c.a;
-			refType = 0;
-		};
-		F52E4E5002C2757401C226C8 = {
-			fileRef = F52E4E4F02C2757401C226C8;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -410,8 +358,9 @@
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/csh;
-			shellScript = "~/Codes/tri_basis/createlib";
+			shellScript = ./createlib;
 		};
 	};
 	rootObject = 08FB7793FE84155DC02AAC07;

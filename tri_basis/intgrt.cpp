@@ -23,7 +23,7 @@ void hpbasis::intgrt(FLT **f, FLT *rslt) {
       }
    }
 
-   for(n=0;n<sm+3;++n) {
+   for(n=0;n<sm+vm;++n) {
       rslt[n] = 0.0;
       for (j=0; j < gpn; ++j)
             rslt[n] += gn[n][j]*wtn[j]*wk0[n][j];
@@ -32,13 +32,13 @@ void hpbasis::intgrt(FLT **f, FLT *rslt) {
    for(n=sm+3;n<2*sm+3;++n) {
       rslt[n] = 0.0;
       for (j=0; j < gpn; ++j)
-            rslt[n] += gn[n][j]*wtn[j]*wk0[1][j];
+            rslt[n] += gn[n][j]*wtn[j]*wk0[2][j];
    }   
 
    for(n=2*sm+3;n<bm;++n) {
       rslt[n] = 0.0;
       for (j=0; j < gpn; ++j)
-            rslt[n] += gn[n][j]*wtn[j]*wk0[0][j];
+            rslt[n] += gn[n][j]*wtn[j]*wk0[1][j];
    }   
    
    indx = bm;
@@ -75,14 +75,14 @@ void hpbasis::intgrtrs(FLT **fx, FLT **fy, FLT *rslt) {
    }
 
    for (j=0; j < gpn; ++j ) {
-      for (m=0; m < sm+3; ++m)
+      for (m=0; m < sm+vm; ++m)
             rslt[m] -= gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
    
-      for (; m < 2*sm+3; ++m) 
-            rslt[m] -= gnwtnn0[m][j]*wk0[1][j] +dgnwtn[m][j]*wk1[1][j];
+      for (; m < 2*sm+vm; ++m) 
+            rslt[m] -= gnwtnn0[m][j]*wk0[2][j] +dgnwtn[m][j]*wk1[2][j];
       
       for (; m < bm; ++m)
-            rslt[m] -= gnwtnn0[m][j]*wk0[0][j] +dgnwtn[m][j]*wk1[0][j];
+            rslt[m] -= gnwtnn0[m][j]*wk0[1][j] +dgnwtn[m][j]*wk1[1][j];
    }
    
    indx = bm;
@@ -111,7 +111,7 @@ void hpbasis::intgrtr(FLT **f, FLT *rslt1) {
       }
    }
 
-   for (m=0; m < sm+3; ++m) {
+   for (m=0; m < sm+vm; ++m) {
       for (j=0; j < gpn; ++j ) {
          rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[m][j];
       }
@@ -119,13 +119,13 @@ void hpbasis::intgrtr(FLT **f, FLT *rslt1) {
 
    for (m=sm+3; m < 2*sm+3; ++m) {
       for (j=0; j < gpn; ++j ) {
-         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[1][j];
+         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[2][j];
       }
    }
    
    for (m=2*sm+3; m < bm; ++m) {
       for (j=0; j < gpn; ++j ) {
-         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[0][j];
+         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[1][j];
       }
    }
    
@@ -156,7 +156,7 @@ void hpbasis::intgrts(FLT **f, FLT *rslt2) {
       }
    }
 
-   for (m=0; m < sm+3; ++m) {
+   for (m=0; m < sm+vm; ++m) {
       for (j=0; j < gpn; ++j ) {
          rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[m][j] 
          +gn[m][j]*wk1[m][j]*n0[j]);
@@ -165,15 +165,15 @@ void hpbasis::intgrts(FLT **f, FLT *rslt2) {
 
    for (m=sm+3; m < 2*sm+3; ++m) {
       for (j=0; j < gpn; ++j ) {
-         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[1][j] 
-         +gn[m][j]*wk1[1][j]*n0[j]);
+         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[2][j] 
+         +gn[m][j]*wk1[2][j]*n0[j]);
       }   
    }
 
    for (m=2*sm+3; m < bm; ++m) {
       for (j=0; j < gpn; ++j ) {
-         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[0][j] 
-         +gn[m][j]*wk1[0][j]*n0[j]);
+         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[1][j] 
+         +gn[m][j]*wk1[1][j]*n0[j]);
       }   
    }
    

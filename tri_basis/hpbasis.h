@@ -19,12 +19,13 @@
 
 #define MXTM 100
 #define MORTHOGONAL
+#define VERTEX
 
 class hpbasis {
    public:
       int p;
-      /* NUMBER OF MODES : SIDE/INTERIOR/TOTAL/BOUNDARY */
-      int sm,im,tm,bm;
+      /* NUMBER OF MODES : VERTEX,SIDE/INTERIOR/TOTAL/BOUNDARY */
+      int vm,sm,im,tm,bm;
       /* NUMBER OF X/S MODES & GAUSS POINTS */      
       int nmodx,nmodn,gpx,gpn;
       /* BANDWITH OF INTERIOR/INTERIOR MATRIX */

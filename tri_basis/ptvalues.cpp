@@ -16,16 +16,22 @@ void hpbasis::ptvalues(FLT x, FLT eta) {
     int k,m,ind;
    
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-   pgx[0] = .5*(1-x);
-   pgx[1] = .5*(1+x);
-   pgx[2] = 1.0;
+   pgx[0] = 1.0;
+#ifndef VERTEX
+   if (p) {
+#endif
+      pgx[1] = .5*(1-x);
+      pgx[2] = .5*(1+x);
+#ifndef VERTEX
+   }
+#endif
 
-   /* SIDE 1   */
+   /* SIDE 0   */
    /* CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
    pkm = 0.0;
    for (m = 0;m < sm;++m) {
-      pgx[m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
+      pgx[m+3] = pgx[1]*pgx[2]*pk*norm[m+3];
       pkp = (x-a0[0][m])*pk - b0[0][m]*pkm;
       pkm = pk;
       pk = pkp;
@@ -36,15 +42,23 @@ void hpbasis::ptvalues(FLT x, FLT eta) {
    ind = 0;
    
    /* VERTEX 0,1,2   */
-   pgn[ind++] = (1-eta)*.5;
-   pgn[ind++] = (1-eta)*.5;
+#ifdef VERTEX
    pgn[ind++] = (1+eta)*.5;
+   pgn[ind++] = (1-eta)*.5;
+   pgn[ind++] = (1-eta)*.5;
+#else
+   pgn[ind++] = 1.0;
+   if (p) {
+      pgn[ind++] = (1-eta)*.5;
+      pgn[ind++] = (1-eta)*.5;
+   }
+#endif
 
-   /* SIDE 1 (s)      */
+   /* SIDE 0 (s)      */
    for(m = 2; m <= sm+1; ++m)
       pgn[ind++] = pow(.5*(1-eta),m);
 
-   /* SIDE 2   */
+   /* SIDE 1   */
    pk = 1.0;
    pkm = 0.0;
    for(m=0;m<sm;++m) {
@@ -54,7 +68,7 @@ void hpbasis::ptvalues(FLT x, FLT eta) {
       pk = pkp;
    }
 
-   /* SIDE 3   */
+   /* SIDE 2   */
    pk = 1.0;
    pkm = 0.0;
    for(m = 0;m<sm;++m) {
@@ -86,16 +100,21 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
    int k,m,n,ind;
    
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-   pgx[0] = .5*(1-x);
-   dpgx[0] = -0.5;
-   
-   pgx[1] = .5*(1+x);
-   dpgx[1] = 0.5;
-   
-   pgx[2] = 1.0;
-   dpgx[2] = 0.0;
+   pgx[0] = 1.0;
+   dpgx[0] = 0.0;
+#ifndef VERTEX
+   if (p) {
+#endif
+      pgx[1] = .5*(1-x);
+      dpgx[1] = -0.5;
+      
+      pgx[2] = .5*(1+x);
+      dpgx[2] = 0.5;
+#ifndef VERTEX
+   }
+#endif
 
-   /* SIDE 1   */
+   /* SIDE 0   */
    /* CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
    pkm = 0.0;
@@ -117,29 +136,35 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
    /****************************************/
    ind = 0;
 
-   /* VERTEX A   */
-   pgn[ind] = (1-eta)*.5;
-   dpgn[ind] = -.5;
-   ++ind;
-   
-   /* VERTEX B  */
-   pgn[ind] = (1-eta)*.5;
-   dpgn[ind] = -.5;
-   ++ind;
-
-   /* VERTEX C    */   
+   /* VERTEX 0,1,2   */
+#ifdef VERTEX
    pgn[ind] = (1+eta)*.5;
-   dpgn[ind] = .5;
-   ++ind;
+   dpgn[ind++] = 0.5;
+   
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind++] = -0.5;
 
-   /* SIDE 1 (s)      */
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind++] = -0.5;
+#else
+   pgn[ind] = 1.0;
+   dpgn[ind++] = 0.0;
+   if (p) {
+      pgn[ind] = (1-eta)*.5;
+      dpgn[ind++] = -0.5;
+      pgn[ind] = (1-eta)*.5;
+      dpgn[ind++] = -0.5;
+   }
+#endif
+
+   /* SIDE 0 (s)      */
    for(m = 2; m <= sm+1; ++m) {
       pgn[ind] = pow(.5*(1-eta),m);
       dpgn[ind] = -.5*m*pow(.5*(1.-eta),m-1);
       ++ind;
    }
 
-   /* SIDE 2   */
+   /* SIDE 1   */
    pk = 1.0;
    pkm = 0.0;
    dpk = 0.0;
@@ -156,7 +181,7 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
       ++ind;
    }
 
-   /* SIDE 3   */
+   /* SIDE 2   */
    pk = 1.0;
    pkm = 0.0;
    dpk = 0.0;
@@ -205,16 +230,22 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
     int m,ind;
    
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-   pgx[0] = .5*(1-x);
-   pgx[1] = .5*(1+x);
-   pgx[2] = 1.0;
+   pgx[0] = 1.0;
+#ifndef VERTEX
+   if (p) {
+#endif
+      pgx[1] = .5*(1-x);
+      pgx[2] = .5*(1+x);
+#ifndef VERTEX
+   }
+#endif
 
-   /* SIDE 1   */
+   /* SIDE 0   */
    /* CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
    pkm = 0.0;
    for (m = 0;m < sm;++m) {
-      pgx[m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
+      pgx[m+3] = pgx[1]*pgx[2]*pk*norm[m+3];
       pkp = (x-a0[0][m])*pk - b0[0][m]*pkm;
       pkm = pk;
       pk = pkp;
@@ -225,15 +256,23 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
    ind = 0;
    
    /* VERTEX 0,1,2   */
-   pgn[ind++] = (1-eta)*.5;
-   pgn[ind++] = (1-eta)*.5;
+#ifdef VERTEX
    pgn[ind++] = (1+eta)*.5;
+   pgn[ind++] = (1-eta)*.5;
+   pgn[ind++] = (1-eta)*.5;
+#else
+   pgn[ind++] = 1.0;
+   if (p) {
+      pgn[ind++] = (1-eta)*.5;
+      pgn[ind++] = (1-eta)*.5;
+   }
+#endif
 
-   /* SIDE 1 (s)      */
+   /* SIDE 0 (s)      */
    for(m = 2; m <= sm+1; ++m)
       pgn[ind++] = pow(.5*(1-eta),m);
 
-   /* SIDE 2   */
+   /* SIDE 1   */
    pk = 1.0;
    pkm = 0.0;
    for(m=0;m<sm;++m) {
@@ -243,7 +282,7 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
       pk = pkp;
    }
 
-   /* SIDE 3   */
+   /* SIDE 2   */
    pk = 1.0;
    pkm = 0.0;
    for(m = 0;m<sm;++m) {
@@ -262,16 +301,21 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
    int m,n,ind;
 
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-   pgx[0] = .5*(1-x);
-   dpgx[0] = -0.5;
-   
-   pgx[1] = .5*(1+x);
-   dpgx[1] = 0.5;
-   
-   pgx[2] = 1.0;
-   dpgx[2] = 0.0;
+   pgx[0] = 1.0;
+   dpgx[0] = 0.0;
+#ifndef VERTEX
+   if (p) {
+#endif
+      pgx[1] = .5*(1-x);
+      dpgx[1] = -0.5;
+      
+      pgx[2] = .5*(1+x);
+      dpgx[2] = 0.5;
+#ifndef VERTEX
+   }
+#endif
 
-   /* SIDE 1   */
+   /* SIDE 0   */
    /* CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
    pkm = 0.0;
@@ -293,29 +337,35 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
    /****************************************/
    ind = 0;
 
-   /* VERTEX A   */
-   pgn[ind] = (1-eta)*.5;
-   dpgn[ind] = -.5;
-   ++ind;
-   
-   /* VERTEX B  */
-   pgn[ind] = (1-eta)*.5;
-   dpgn[ind] = -.5;
-   ++ind;
-
-   /* VERTEX C    */   
+   /* VERTEX 0,1,2   */
+#ifdef VERTEX
    pgn[ind] = (1+eta)*.5;
-   dpgn[ind] = .5;
-   ++ind;
+   dpgn[ind++] = 0.5;
+   
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind++] = -0.5;
 
-   /* SIDE 1 (s)      */
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind++] = -0.5;
+#else
+   pgn[ind] = 1.0;
+   dpgn[ind++] = 0.0;
+   if (p) {
+      pgn[ind] = (1-eta)*.5;
+      dpgn[ind++] = -0.5;
+      pgn[ind] = (1-eta)*.5;
+      dpgn[ind++] = -0.5;
+   }
+#endif
+
+   /* SIDE 0 (s)      */
    for(m = 2; m <= sm+1; ++m) {
       pgn[ind] = pow(.5*(1-eta),m);
       dpgn[ind] = -.5*m*pow(.5*(1.-eta),m-1);
       ++ind;
    }
 
-   /* SIDE 2   */
+   /* SIDE 1   */
    pk = 1.0;
    pkm = 0.0;
    dpk = 0.0;
@@ -332,7 +382,7 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
       ++ind;
    }
 
-   /* SIDE 3   */
+   /* SIDE 2   */
    pk = 1.0;
    pkm = 0.0;
    dpk = 0.0;
@@ -358,9 +408,14 @@ void hpbasis::ptvalues1d(FLT x) {
     int m;
    
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
+#ifdef VERTEX
    pgx[0] = .5*(1-x);
    pgx[1] = .5*(1+x);
-
+#else
+   pgx[0] = 1.0;
+   if (!p) return;
+   pgx[1] = x;
+#endif
    /* SIDE 1   */
    /* CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
@@ -379,11 +434,21 @@ void hpbasis::ptvalues1d_deriv(FLT x) {
     FLT pkp,pk,pkm,dpkp,dpk,dpkm;
     int m;
 
+#ifdef VERTEX
    pgx[0]  = .5*(1-x);
    dpgx[0] = -.5;
    
    pgx[1]  = .5*(1+x);
    dpgx[1] = .5;
+#else
+   pgx[0]  = 1.0;
+   dpgx[0] = 0.0;
+   
+   if (!p) return;
+   
+   pgx[1]  = x;
+   dpgx[1] = 1.0;
+#endif
 
    /* SIDE 1 CALCULATE P, P' USING RECURSION RELATION */
    pk = 1.0;
