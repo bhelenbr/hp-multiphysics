@@ -8,11 +8,11 @@
 #include<assert.h>
 
 int mesh::coarsen(const class mesh& inmesh) {
-	int i,j,k,sind;
-	int v0, v1, odd;
-   int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
-   int nloop;
-   FLT mindist;
+	/* static */int i,j,k,sind;
+	/* static */int v0, v1, odd;
+   /* static */int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
+   /* static */int nloop;
+   /* static */FLT mindist;
    
    if (!initialized) {
 /*		VERTEX STORAGE ALLOCATION */

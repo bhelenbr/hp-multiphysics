@@ -18,10 +18,10 @@ int mesh::setcoarse(const class mesh& tgt) {
 
 /*	THIS IS THE NEW WAY USING THE QUADTREE DATA STRUCTURE */
 int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
-	int i,j,k,bnum,tind,sind,v0,error=0;
-	double x,y,wgt[3],ainv;
-	double dx,dy,a,b,c,minneg;
-	int neg_count, triloc, sidloc;
+	/* static */int i,j,k,bnum,tind,sind,v0,error=0;
+	/* static */double x,y,wgt[3],ainv;
+	/* static */double dx,dy,a,b,c,minneg;
+	/* static */int neg_count, triloc, sidloc;
    
 /*	LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
    for(i=0;i<nvrtx;++i) {

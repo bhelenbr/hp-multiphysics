@@ -154,7 +154,7 @@ void mesh::createvtri(void) {
 
 /*	CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
 void mesh::cnt_nbor(void) {
-	int i;
+	/* static */int i;
 	
 	for (i=0;i<nvrtx;++i)
 		nnbor[i] = 0;
@@ -184,8 +184,8 @@ void mesh::createttri(void) {
 }
 
 void mesh::treeinit() {
-   int i,j,sind,v0;
-   FLT x1,y1,x2,y2;
+   /* static */int i,j,sind,v0;
+   /* static */FLT x1,y1,x2,y2;
    
    x1 = vrtx[0][0];
    y1 = vrtx[0][1];
@@ -214,7 +214,7 @@ void mesh::treeinit() {
 /*	REORDERS BOUNDARIES TO BE SEQUENTIAL */
 /*	USES INTWK1 & INTWK2 AS WORK ARRAYS */
 void mesh::bdrysidereorder(int bdrynum) {
-	int i,j,count,total,sind,minv,nsegs,first[MAXSB];
+	/* static */int i,j,count,total,sind,minv,nsegs,first[MAXSB];
    
    total = sbdry[bdrynum].num;
    
@@ -407,7 +407,7 @@ FINDNEXT:
 
 /* FIX STRI TTRI TO POINT TO GROUP/SIDE ON BOUNDARY */
 void mesh::bdrylabel() {
-   static int i,j,k,sind,tind;
+   /* static */int i,j,k,sind,tind;
    
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {

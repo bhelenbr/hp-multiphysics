@@ -21,14 +21,14 @@
 /* BUT IT DOESN'T INTERFERE WITH ANYTHING */
 
 void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
-   int i,j,nv;
-   int lp, sd;
-   int sind,dir,sindnxt,dirnxt;
-   int sind1,sindprev;
-   int nsidebefore,newside;
-   int ngood,goodvrt[MAXGOOD];
-   int minv,maxv;
-   int v1,v2,v[4];
+   /* static */int i,j,nv;
+   /* static */int lp, sd;
+   /* static */int sind,dir,sindnxt,dirnxt;
+   /* static */int sind1,sindprev;
+   /* static */int nsidebefore,newside;
+   /* static */int ngood,goodvrt[MAXGOOD];
+   /* static */int minv,maxv;
+   /* static */int v1,v2,v[4];
 
 /*	CREATE VERTEX LIST */
 /*	STORE IN NNBOR SINCE THIS IS OBVIOUSLY UNUSED RIGHT NOW */
@@ -141,11 +141,11 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
 
 
 void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
-   int i,j,k,ncnvx,cnvx[2],vtry,itemp;
-   FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
-   FLT xmid,ymid,area,alpha,beta,xcen,ycen;
-   FLT hmin,height;
-   FLT temp,ang[MAXGOOD],ds1,ds2;
+   /* static */int i,j,k,ncnvx,cnvx[2],vtry,itemp;
+   /* static */FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
+   /* static */FLT xmid,ymid,area,alpha,beta,xcen,ycen;
+   /* static */FLT hmin,height;
+   /* static */FLT temp,ang[MAXGOOD],ds1,ds2;
    
    dx2 = vrtx[v[2]][0] -vrtx[v[1]][0];
    dy2 = vrtx[v[2]][1] -vrtx[v[1]][1];
@@ -255,8 +255,8 @@ NEXT: continue;
 }
 
 void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
-   int i,j,k,end,sind1,tind;
-   int minv,maxv,order,sindprev,temp;
+   /* static */int i,j,k,end,sind1,tind;
+   /* static */int minv,maxv,order,sindprev,temp;
       
 /*	ADD NEW TRIANGLE */
    tvrtx[ntri][0] = v0;

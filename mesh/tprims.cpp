@@ -3,10 +3,10 @@
 #include<cstdio>
 
 FLT mesh::incircle(int tind, FLT *a) const {
-	int i,i1,i2,i3;
-	FLT pt[4][2];
-	FLT l2[4];
-	FLT determ;
+	/* static */int i,i1,i2,i3;
+	/* static */FLT pt[4][2];
+	/* static */FLT l2[4];
+	/* static */FLT determ;
 	
 	for(i=0;i<3;++i) {
 		pt[i][0] = vrtx[tvrtx[tind][i]][0];
@@ -35,7 +35,7 @@ FLT mesh::incircle(int tind, FLT *a) const {
 
 
 FLT mesh::area(int v0, int v1, int v2) const {
-   FLT dx1,dy1,dx2,dy2;
+   /* static */FLT dx1,dy1,dx2,dy2;
 	
 	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
 	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
@@ -46,8 +46,8 @@ FLT mesh::area(int v0, int v1, int v2) const {
 }
 
 FLT mesh::area(int snum, int v2) const {
-	FLT dx1,dy1,dx2,dy2;
-	int v0, v1;
+	/* static */FLT dx1,dy1,dx2,dy2;
+	/* static */int v0, v1;
 	
 	v0 = svrtx[snum][0];
 	v1 = svrtx[snum][1];
@@ -61,8 +61,8 @@ FLT mesh::area(int snum, int v2) const {
 }
 
 FLT mesh::area(int tind) const {
-	FLT dx1,dy1,dx2,dy2;
-	int v0, v1, v2;
+	/* static */FLT dx1,dy1,dx2,dy2;
+	/* static */int v0, v1, v2;
 	
 	v0 = tvrtx[tind][0];
 	v1 = tvrtx[tind][1];
@@ -76,11 +76,11 @@ FLT mesh::area(int tind) const {
 	return(dx1*dy2 -dy1*dx2);
 }
 
-static FLT a[3];
+/* static */FLT a[3];
 
 FLT mesh::intri(int tind, FLT x, FLT y) const {
-   int v0,v1,v2;
-   FLT dx0,dy0,dx1,dy1,dx2,dy2;
+   /* static */int v0,v1,v2;
+   /* static */FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
    v0 = tvrtx[tind][0];
    v1 = tvrtx[tind][1];
@@ -102,8 +102,8 @@ FLT mesh::intri(int tind, FLT x, FLT y) const {
 
 /*	RETURNS WEIGHTS FROM INTRI FUNCTION */
 void mesh::getwgts(FLT *wt) const {
-   int i;
-   FLT sum;
+   /* static */int i;
+   /* static */FLT sum;
    
    sum = a[0] +a[1] +a[2];
    for(i=0;i<3;++i) 
@@ -113,10 +113,10 @@ void mesh::getwgts(FLT *wt) const {
 }
       
 FLT mesh::minangle(int v0, int v1, int v2) const {
-   int i, i1, i2;
-   FLT l[3];
-   FLT dx[3], dy[3];
-   FLT crossprod;
+   /* static */int i, i1, i2;
+   /* static */FLT l[3];
+   /* static */FLT dx[3], dy[3];
+   /* static */FLT crossprod;
    
    dx[0] = vrtx[v2][0] -vrtx[v1][0];
    dy[0] = vrtx[v2][1] -vrtx[v1][1];
@@ -142,8 +142,8 @@ FLT mesh::minangle(int v0, int v1, int v2) const {
 }
    
 FLT mesh::angle(int v0, int v1, int v2) const {
-   FLT l[3];
-   FLT dx, dy;
+   /* static */FLT l[3];
+   /* static */FLT dx, dy;
    
    dx = vrtx[v1][0] -vrtx[v0][0];
    dy = vrtx[v1][1] -vrtx[v0][1];
@@ -162,8 +162,8 @@ FLT mesh::angle(int v0, int v1, int v2) const {
 }
 
 FLT mesh::tradius(int tind) const {
-   int v0;
-   FLT xcen, ycen,dx1,dy1;
+   /* static */int v0;
+   /* static */FLT xcen, ycen,dx1,dy1;
    
    v0 = tvrtx[tind][0];
    tcenter(tind,xcen,ycen);
@@ -173,10 +173,10 @@ FLT mesh::tradius(int tind) const {
 }
 
 void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
-   FLT alpha,beta;
-   FLT xmid1,ymid1,xmid2,ymid2;
-   FLT dx1,dy1,dx2,dy2,area;
-	int v0, v1, v2;
+   /* static */FLT alpha,beta;
+   /* static */FLT xmid1,ymid1,xmid2,ymid2;
+   /* static */FLT dx1,dy1,dx2,dy2,area;
+	/* static */int v0, v1, v2;
 	
 	v0 = tvrtx[tind][0];
 	v1 = tvrtx[tind][1];
@@ -202,8 +202,8 @@ void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
 }
 
 FLT mesh::aspect(int tind) const {
-   int v0,v1,v2;
-   FLT dx1,dy1,dx2,dy2,area,perim;
+   /* static */int v0,v1,v2;
+   /* static */FLT dx1,dy1,dx2,dy2,area,perim;
    
    v0 = tvrtx[tind][0];
 	v1 = tvrtx[tind][1];

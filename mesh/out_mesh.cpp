@@ -4,9 +4,9 @@
 #include"mesh.h"
 
 int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const {
-	char fnmapp[100];
-	FILE *out;
-	int i,j,tind,count;
+	/* static */char fnmapp[100];
+	/* static */FILE *out;
+	/* static */int i,j,tind,count;
    
    switch (filetype) {
    
@@ -194,7 +194,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
 }
 
 void mesh::setbcinfo() {
-   int i,j;
+   /* static */int i,j;
    
 /*	SET UP VRTX BC INFORMATION FOR OUTPUT */
    for(i=0;i<nvrtx;++i)

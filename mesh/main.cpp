@@ -29,20 +29,21 @@ int main(int argc, char *argv[]) {
    char *out2[2];
    mesh x,y;
    
-   x.in_mesh("/Users/helenbrk/Codes/grids/KOVA/kova8");
+
+/*   x.in_mesh("/Volumes/work/helenbrk/Codes/grids/KOVA/kova8");
    x.out_mesh("test",grid);
    y.in_mesh("test",grid);
    y.setbcinfo();
    y.out_mesh("test2");
    return(0);
-   
+ */  
 /*	START CLOCK TIMER */
    clock();
 /*	THIS DEFORMS A MESH */
 //	inname[0] = "../../grids/TIM/tim";
 //	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";
 
-   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
+   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
    
    z.init(1,3,inname,easymesh,10.0);
    

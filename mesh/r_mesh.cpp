@@ -46,8 +46,8 @@ int r_mesh::setcoarse(class r_mesh& tgt) {
    
 
 void r_mesh::rklaplace(void) {
-   int sind,tind,v0,v1,k;
-   FLT dx,dy,l;
+   /* static */int sind,tind,v0,v1,k;
+   /* static */FLT dx,dy,l;
    
    for(sind=0;sind<nside;++sind)
       ksprg[sind] = 0.0;
@@ -79,8 +79,8 @@ void r_mesh::rklaplace(void) {
 
 
 void r_mesh::rksprg(void) {
-   int sind,v0,v1;
-   double dx,dy;
+   /* static */int sind,v0,v1;
+   /* static */double dx,dy;
 
 /* 2D SPRING CONSTANTS FINE MESH*/
    for(sind=0;sind<nside;++sind) {
@@ -97,7 +97,7 @@ void r_mesh::rksprg(void) {
 }
 
 void r_mesh::calc_kvol() {
-   int i,tind;
+   /* static */int i,tind;
    
    for(i=0;i<nvrtx;++i) 
       kvol[i] = 0.0;
@@ -119,7 +119,7 @@ void r_mesh::kvol_mp() {
 }
 
 void r_mesh::kvoli() {
-   int i;
+   /* static */int i;
    
    rcv(YDIR_MP,(FLT *) kvol,0,0,1);
    
@@ -128,8 +128,8 @@ void r_mesh::kvoli() {
 }
 
 void r_mesh::rkmgrid(void) {
-   int i,j,sind,tind,tind0,tind1,v0,v1;
-   class r_mesh *fmesh;
+   /* static */int i,j,sind,tind,tind0,tind1,v0,v1;
+   /* static */class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
 
@@ -224,7 +224,7 @@ void r_mesh::rkmgrid_mp() {
 }
 
 void r_mesh::rkmgridi() {
-   int i;
+   /* static */int i;
    
    rcv(YDIR_MP,(FLT *) kvol,0,0,1);
    
@@ -239,8 +239,8 @@ void r_mesh::rkmgridi() {
 /*************************************/
 #ifndef FOURTH
 void r_mesh::rsdl() {
-   int i,j,n,sind,v0,v1;
-   FLT dx,dy;
+   /* static */int i,j,n,sind,v0,v1;
+   /* static */FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -300,7 +300,7 @@ void r_mesh::rsdl() {
 
 void r_mesh::vddt(void)
 {
-   static int i,v0,v1,sind;
+   /* static */int i,v0,v1,sind;
 
 /**************************************************/
 /*   DETERMINE MESH MOVEMENT TIME STEP           */
@@ -329,8 +329,8 @@ void r_mesh::vddt(void)
 /* TO CACLUATE LAPLACIAN 				 */
 /*************************************/
 void r_mesh::rsdl() {
-   int i,j,n,v0,v1,sind;
-   FLT dx,dy;
+   /* static */int i,j,n,v0,v1,sind;
+   /* static */FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -380,8 +380,8 @@ void r_mesh::rsdl1_mp() {
 }
 
 void r_mesh::rsdl1() {
-   int i,j,n,v0,v1,sind;
-   FLT dx,dy;
+   /* static */int i,j,n,v0,v1,sind;
+   /* static */FLT dx,dy;
    
    rcv(YDIR_MP,(FLT *) rg->work, 0,1,2);
    
@@ -447,7 +447,7 @@ void r_mesh::rsdl1() {
 
 void r_mesh::vddt(void)
 {
-   static int i,v0,v1,sind;
+   /* static */int i,v0,v1,sind;
 
 /**************************************************/
 /*   DETERMINE MESH MOVEMENT TIME STEP           */
@@ -474,7 +474,7 @@ void r_mesh::vddt1_mp() {
 }
 
 void r_mesh::vddt1(void) {
-   static int i,v0,v1,sind;
+   /* static */int i,v0,v1,sind;
 
    rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
    
@@ -510,7 +510,7 @@ void r_mesh::vddt_mp() {
 }
 
 void r_mesh::vddti(void) {
-   int i;
+   /* static */int i;
    
    rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
    
@@ -519,7 +519,7 @@ void r_mesh::vddti(void) {
 }
 
 void r_mesh::update() {
-   int i,n;
+   /* static */int i,n;
 
    rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
    
@@ -531,7 +531,7 @@ void r_mesh::update() {
 }
 
 void r_mesh::source() {
-   int i,n;
+   /* static */int i,n;
    
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n) 
@@ -543,7 +543,7 @@ void r_mesh::source() {
 }
 
 void r_mesh::sumsrc() {
-   int i,n;
+   /* static */int i,n;
    
    rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
 
@@ -554,8 +554,8 @@ void r_mesh::sumsrc() {
 }
 
 void r_mesh::mg_getfres() {
-   int i,j,n,tind,v0;
-   static class r_mesh *fmesh;
+   /* static */int i,j,n,tind,v0;
+   /* static */class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
       
@@ -598,8 +598,8 @@ void r_mesh::mg_getfres() {
 }
 
 void r_mesh::mg_getcchng() {
-   int i,j,n,ind,tind;
-   class r_mesh *cmesh;
+   /* static */int i,j,n,ind,tind;
+   /* static */class r_mesh *cmesh;
    
    cmesh = static_cast<class r_mesh *>(cmpt);
 
@@ -632,8 +632,8 @@ void r_mesh::mg_getcchng() {
 }
 
 void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
-   int i,j,k,sind,count,offset,bnum;
-   class mesh *tgt;
+   /* static */int i,j,k,sind,count,offset,bnum;
+   /* static */class mesh *tgt;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & mask) {
@@ -656,7 +656,7 @@ void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
 }
 
 void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
-   int i,j,k,sind,count,offset;
+   /* static */int i,j,k,sind,count,offset;
       
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & mask) {
@@ -677,8 +677,8 @@ void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
 }
 
 void r_mesh::maxres() {
-   int i,n;
-   FLT mxr[ND];
+   /* static */int i,n;
+   /* static */FLT mxr[ND];
 
    for(n=0;n<ND;++n)
       mxr[n] = 0.0;

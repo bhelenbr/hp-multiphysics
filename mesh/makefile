@@ -1,12 +1,13 @@
-MESHOBJ = coarsen.o ldmesh.o metric.o triangulate.o insert.o main.o out_mesh.o tprims.o
-QTREEOBJ = quad.o
-UTOBJ = xmalloc.o
+MESHOBJ = coarsen.o collapse.o copy.o findmatch.o in_mesh.o insert.o out_mesh.o rebay.o  \
+	  setup.o swap.o tprims.o triangulate.o yaber.o mvpttobdry.o connect.o r_mesh.o 
 
-unstructured.exe: $(QTREEOBJ) $(MESHOBJ) $(UTOBJ)
-	c++ -o $@ $(MESHOBJ) $(QTREEOBJ) $(UTOBJ)
+CPPFLAGS = -O3 -I/home/helenbrk/codes/include/
 
-$(MESHOBJ): mesh.h
+libmesh.a: $(MESHOBJ)
+	libtool --mode=link ${CC} -o $@ $(MESHOBJ)
+	mv -f libmesh.a /home/helenbrk/codes/lib/
+	cp -f mesh.h /home/helenbrk/codes/include/
+	cp -f r_mesh.h /home/helenbrk/codes/include/
+	rm *.o
 
-$(QTREEOBJ): quadtree.h
-
-$(UTOBJ): utilities.h
+$(MESHOBJ): mesh.h r_mesh.h

@@ -16,7 +16,7 @@ int ntdel, tdel[MAXLST+1];
 int nsdel, sdel[MAXLST+1];
 
 void mesh::insert(FLT x, FLT y) {
-   int tind,vnear;
+   /* static */int tind,vnear;
    
    vrtx[nvrtx][0] = x;
    vrtx[nvrtx][1] = y;
@@ -37,9 +37,9 @@ void mesh::insert(FLT x, FLT y) {
 }
 
 void mesh::insert(int tind, int vnum) {
-   int i,j,tin,v0,dir;
-   int sct, nskeep, skeep[MAXLST+1];
-   int sind, sind1;
+   /* static */int i,j,tin,v0,dir;
+   /* static */int sct, nskeep, skeep[MAXLST+1];
+   /* static */int sind, sind1;
    
 /*	SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
@@ -216,9 +216,9 @@ void mesh::insert(int tind, int vnum) {
 }
 
 void mesh::bdry_insert(int tind, int snum, int vnum) {
-   int i,j,tin,v0,dir,tbdry;
-   int sct, nskeep, skeep[MAXLST+1];
-   int sind, sind1;
+   /* static */int i,j,tin,v0,dir,tbdry;
+   /* static */int sct, nskeep, skeep[MAXLST+1];
+   /* static */int sind, sind1;
    
    tbdry = tind;
       
@@ -440,7 +440,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
 int mesh::maxsrch = MAXLST*3/4;
 
 int mesh::findtri(FLT x, FLT y, int vnear) const {
-   static int i,j,vn,dir,stoptri,tin,tind;
+   /* static */int i,j,vn,dir,stoptri,tin,tind;
 
 /*	HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
    tind = vtri[vnear];

@@ -4,7 +4,7 @@
 
 
 void mesh::copy(const mesh& tgt) {
-   int i,j,n;
+   /* static */int i,j,n;
       
    if (!initialized) {
       allocate(tgt.maxvst);

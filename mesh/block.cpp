@@ -28,7 +28,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
 }
 
 void block::reconnect() {
-   int i;
+   /* static */int i;
    
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);

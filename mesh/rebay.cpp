@@ -26,10 +26,10 @@ extern int nsdel, sdel[MAXLST+1];
 
 
 void mesh::rebay(FLT tolsize) {
-   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
-   FLT xpt,ypt,wt[3];
-   FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
-   FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
+   /* static */int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
+   /* static */FLT xpt,ypt,wt[3];
+   /* static */FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
+   /* static */FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
    
 /* SET UP FLTWK */
    fltwkreb();
@@ -211,7 +211,7 @@ INSRT:
 }
    
 void mesh::putinlst(int sind) {
-   int i, temp, top, bot, mid;
+   /* static */int i, temp, top, bot, mid;
       
 /*	CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
    bot = 0;
@@ -249,7 +249,7 @@ void mesh::putinlst(int sind) {
 }
 
 void mesh::tkoutlst(int sind) {
-   int bgn,temp,i;
+   /* static */int bgn,temp,i;
    
    bgn = intwk3[sind];
    for(i=bgn+1;i<nslst;++i) {
@@ -265,7 +265,7 @@ void mesh::tkoutlst(int sind) {
 }
 
 void mesh::fltwkreb(int i) {
-   static FLT dif, av;
+   /* static */FLT dif, av;
    
 /*	CALCULATE SIDE LENGTH RATIO FOR YABER */
 /*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
@@ -279,7 +279,7 @@ void mesh::fltwkreb(int i) {
 }
 
 void mesh::fltwkreb() {
-   static int i;
+   /* static */int i;
    
    for(i=0;i<nside;++i)
       fltwkreb(i);

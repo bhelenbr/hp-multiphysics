@@ -34,8 +34,8 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, 
 }
 
 void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
-   int i;   
-   char fnmcat[80],outname[80];
+   /* static */int i;   
+   /* static */char fnmcat[80],outname[80];
 
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
 /*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
@@ -57,7 +57,7 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
 }
 
 void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
-   int i;   
+   /* static */int i;   
 
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
 /*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
@@ -70,7 +70,7 @@ void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
 }
 
 void blocks::jacobi(int niter, int lvl) {
-   static int i,iter;
+   /* static */int i,iter;
       
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
@@ -117,7 +117,7 @@ void blocks::jacobi(int niter, int lvl) {
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   int i,j;
+   int i,j;  // DON'T MAKE THESE /* static */SCREWS UP RECURSION
    
    for (i=0;i<vw;++i) {
       jacobi(1,lvl);
@@ -149,7 +149,7 @@ void blocks::cycle(int vw, int lvl = 0) {
 }
 
 void blocks::ksrc() {
-   int i,j;
+   /* static */int i,j;
 
 #define GEOMETRIC
 

@@ -10,7 +10,7 @@
 #include"r_mesh.h"
 
 void r_mesh::perturb() {
-   int i,j,sind,v0;
+   /* static */int i,j,sind,v0;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type  == EULR_MASK) {
@@ -36,8 +36,8 @@ void r_mesh::perturb() {
 
 
 void r_mesh::length1() {
-   int i,j,v0,sind,bnum,count;
-   class mesh *tgt;
+   /* static */int i,j,v0,sind,bnum,count;
+   /* static */class mesh *tgt;
    
 /*	SET VLNGTH HERE */
 //      vlngth[i] = 0.125 +0.0001*(vrtx[i][0] +vrtx[i][1]);
@@ -64,8 +64,8 @@ void r_mesh::length1() {
 }
 
 void r_mesh::length_mp() {
-   int i,j,v0,sind,bnum,count;
-   class mesh *tgt;
+   /* static */int i,j,v0,sind,bnum,count;
+   /* static */class mesh *tgt;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
@@ -101,7 +101,7 @@ void r_mesh::length_mp() {
 }
 
 void r_mesh::length2() {
-   int i,j,v0,sind,count;
+   /* static */int i,j,v0,sind,count;
 
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMX_MASK) {

@@ -26,7 +26,7 @@ void putinlst(int sind);
 void tkoutlst(int sind);
 
 void mesh::yaber(FLT tolsize) {
-   int i,j,tind,sind,nfail,v0,v1,cnt;
+   /* static */int i,j,tind,sind,nfail,v0,v1,cnt;
    
 /*	SET UP FLTWK */
    fltwkyab();
@@ -258,7 +258,7 @@ void mesh::checkintwk() {
 }
 
 void mesh::fltwkyab(int i) {
-   static FLT dif,av;
+   /* static */FLT dif,av;
    
 /*	CALCULATE SIDE LENGTH RATIO FOR YABER */
 /*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
@@ -272,7 +272,7 @@ void mesh::fltwkyab(int i) {
 }
 
 void mesh::fltwkyab() {
-   static int i;
+   /* static */int i;
    
    for(i=0;i<nside;++i)
       fltwkyab(i);

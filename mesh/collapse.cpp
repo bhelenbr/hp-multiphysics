@@ -9,10 +9,10 @@ extern int ntdel, tdel[MAXLST +1];
 extern int nsdel, sdel[MAXLST +1];
 
 int mesh::collapse(int sind) {
-   int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
-   int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
-   int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
-   FLT x,y,a,asum,dx,dy,l0,l1;
+   /* static */int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
+   /* static */int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
+   /* static */int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
+   /* static */FLT x,y,a,asum,dx,dy,l0,l1;
    
 /*	FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
    for(i=0;i<2;++i) {
@@ -293,7 +293,7 @@ DELETE:
 
 /* DELETE UNREFERENCED TRIANGLE */
 void mesh::dlttri(int tind) {
-   int i,j,v0,t1,sind,flip;
+   /* static */int i,j,v0,t1,sind,flip;
    
    --ntri;
    if (tind == ntri) return;
@@ -325,7 +325,7 @@ void mesh::dlttri(int tind) {
 
 /* DELETE UNREFERENCED SIDE */
 void mesh::dltside(int sind) {
-   int j,k,tind;
+   /* static */int j,k,tind;
    
 /*	DELETE SIDE */
    --nside;
@@ -352,8 +352,8 @@ void mesh::dltside(int sind) {
 
 /* DELETE UNREFERENCED VERTEX */
 void mesh::dltvrtx(int v0) {
-   int vn,stoptri,dir;
-   int tind, sind, flip;
+   /* static */int vn,stoptri,dir;
+   /* static */int tind, sind, flip;
       
    --nvrtx;
    

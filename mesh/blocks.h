@@ -1,6 +1,6 @@
 #include"r_mesh.h"
 
-/*	THIS IS A SEQUENCE OF RMESHES & STATIC STORAGE FOR A SIGNLE MULTIGRID BLOCK */
+/*	THIS IS A SEQUENCE OF RMESHES & STORAGE FOR A SIGNLE MULTIGRID BLOCK */
 class block {
    private:
       int ngrid;

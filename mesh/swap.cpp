@@ -14,7 +14,7 @@
 #include<float.h>
 
 int mesh::swap(int sind, FLT tol = 0.0) {
-   int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
+   /* static */int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
          
    t1 = stri[sind][0];
    t2 = stri[sind][1];
@@ -98,7 +98,7 @@ int mesh::swap(int sind, FLT tol = 0.0) {
    
    
 void mesh::swap(int nswp, int *swp, FLT tol = 0.0) {
-   int i,flag;
+   /* static */int i,flag;
    
    do {
       flag = 0;
@@ -110,7 +110,7 @@ void mesh::swap(int nswp, int *swp, FLT tol = 0.0) {
 }
 
 void mesh::swap(FLT tol = 0.0) {
-   int nswap,i;
+   /* static */int nswap,i;
    
 /*	PERFORM EDGE SWAPPING */
    do {
