@@ -38,7 +38,7 @@ template<int ND> void mesh<ND>::getnewvrtxobject(int bnum, int idnum) {
    
 #ifdef MAPPING
    /* SET UP MAPPING IF NEEDED */
-   int mapping[4][2] = {{COMX_MASK,vcommx},{COMY_MASK,vcommy},{PRDX_MASK,vprdx},{PRDY_MASK,vprdy}};   
+   int mapping[4][2] = {{COMX_MASK,vcommx},{COMY_MASK,vcommy},{PRDX_MASK+COMX_MASK,vprdx},{PRDY_MASK+COMY_MASK,vprdy}};   
    for(int i=0;i<4;++i) {
       if (mapping[i][0] == type) {
          type = mapping[i][1];
@@ -53,13 +53,13 @@ template<int ND> void mesh<ND>::getnewvrtxobject(int bnum, int idnum) {
       	break;
       }
       case vprdx: {
-         prdc_template<vcomm<mesh<ND> >,mesh<ND> > *temp = new prdc_template<vcomm<mesh<ND> >,mesh<ND> >(idnum,*this);
-         (*temp).setdir() = 1;
-         vbdry[bnum] = temp;
+         vbdry[bnum] = new prdc_template<vcomm<mesh<ND> >,mesh>(idnum,*this);
       	break;
       }
       case vprdy: {
-         vbdry[bnum] = new prdc_template<vcomm<mesh<ND> >,mesh>(idnum,*this);
+         prdc_template<vcomm<mesh<ND> >,mesh<ND> > *temp = new prdc_template<vcomm<mesh<ND> >,mesh<ND> >(idnum,*this);
+         (*temp).setdir() = 1;
+         vbdry[bnum] = temp;
          break;
       }
       default: {
@@ -78,8 +78,8 @@ template<int ND> void mesh<ND>::getnewsideobject(int bnum, int idnum) {
    
 #ifdef MAPPING
    /* SET UP MAPPING IF NEEDED */
-   int mapping[4][2] = {{COMX_MASK,scommx},{COMY_MASK,scommy},{PRDX_MASK,sprdx},{PRDY_MASK,sprdy}};   
-   for(int i=0;i<4;++i) {
+   int mapping[5][2] = {{COMX_MASK,scommx},{COMY_MASK,scommy},{PRDX_MASK+COMX_MASK,sprdx},{PRDY_MASK+COMY_MASK,sprdy},{IFCE_MASK+CURV_MASK,scommy}};   
+   for(int i=0;i<5;++i) {
       if (mapping[i][0] == type) {
          type = mapping[i][1];
          break;
