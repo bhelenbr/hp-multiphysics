@@ -64,7 +64,7 @@ class mesh {
       } *sd;
       
       /* SIDE BOUNDARY INFO */
-      static const int MAXSB = 8;
+      static const int MAXSB = 30;
       int nsbd;
       side_bdry *sbdry[MAXSB]; 
       side_bdry* getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata);
@@ -111,6 +111,7 @@ class mesh {
       void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+      void coarsen3();
       void refineby2(const class mesh& xmesh);
       void swap(FLT swaptol = EPSILON);
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = EPSILON);
@@ -188,6 +189,8 @@ class mesh {
       
       /* FOR COARSENING A SIDE */
       int collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *nsdel);
+      int collapse1(int sind,int bgnend, int& ntdel,int *tdel,int& nsdel,int *nsdel);
+
       void dltvrtx(int vind);
       void dltd(int sind);
       void dlttri(int tind);

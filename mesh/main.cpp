@@ -24,6 +24,7 @@ static GBool Coarsen_hp = gFalse;
 static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
 static GBool Format = gFalse;
+static GBool Coarsen_Marks = gFalse;
 GBool printHelp = gFalse;
 
 
@@ -50,28 +51,23 @@ static ArgDesc argDesc[] = {
    "partition mesh"},
   {"-x"  ,argFlag,    &Format,         0,
    "change format"},
+  {"-l"  ,argFlag,    &Coarsen_Marks,         0,
+   "Coarsen vertices based on list of marks"},
   {NULL}
 };
 
 
 int main(int argc, char *argv[]) {
    GBool ok;
-   char *outfile;
    
   // parse args
    ok = parseArgs(argDesc, &argc, argv);
-   if (argc == 2) {
-      outfile = argv[1];
-   }
-   else if (argc == 3) {
-      outfile = argv[2];
-   }
-   else if (!ok || argc < 1 || argc > 3 || printHelp) {
+   if (!ok || argc < 2 || printHelp) {
       fprintf(stderr, "mesh utility ");
       printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
       exit(1);
    }
-
+   
    class mesh zx, zy;
    ftype::name in = static_cast<ftype::name>(informat);
    ftype::name out = static_cast<ftype::name>(outformat);
@@ -79,7 +75,7 @@ int main(int argc, char *argv[]) {
    if (Refineby2) {
       zx.input(argv[1],in,8.0);
       zy.refineby2(zx);
-      zy.output(outfile,out);
+      zy.output(argv[2],out);
       return 0;
    }
 
@@ -89,7 +85,7 @@ int main(int argc, char *argv[]) {
       printf("input # of times to unrefineby2\n");
       scanf("%d",&p);
       zy.coarsen_substructured(zx,p);
-      zy.output(outfile,out);
+      zy.output(argv[2],out);
       return 0;
    }
 
@@ -99,7 +95,7 @@ int main(int argc, char *argv[]) {
       scanf("%le%le",s,s+1);
       zx.input(argv[1],in);
       zx.scale(s);
-      zx.output(outfile,out);
+      zx.output(argv[2],out);
       return 0;
    }
    
@@ -109,14 +105,14 @@ int main(int argc, char *argv[]) {
       scanf("%le%le",s,s+1);
       zx.input(argv[1],in);
       zx.shift(s);
-      zx.output(outfile,out);
+      zx.output(argv[2],out);
       return 0;
    }
    
    if (Format) {
       class mesh zx;
       zx.input(argv[1],in);
-      zx.output(outfile,out);
+      zx.output(argv[2],out);
       return(0);
    }
    
@@ -130,10 +126,10 @@ int main(int argc, char *argv[]) {
       zx.setpartition(p);
       mesh zpart[p];
       
-      strcat(outfile,".");
+      strcat(argv[2],".");
 
       for(int i=0;i<p;++i) {
-         number_str(outappend,outfile,i,1);
+         number_str(outappend,argv[2],i,1);
          zpart[i].partition(zx,i);
          zpart[i].output(outappend,out);
       }
@@ -142,14 +138,28 @@ int main(int argc, char *argv[]) {
 #endif
       return(0);
    }
+   
+   if (Coarsen_Marks) {
+      zx.input(argv[1],in);
+      FILE *fp = fopen(argv[3],"r");
+      for(int i=0;i<zx.nvrtx;++i) {
+         fscanf(fp,"%d\n",&zx.i3wk[i]);
+         zx.i3wk[i] = 1-zx.i3wk[i];
+      }
+      zx.checkintegrity();
+      zx.coarsen3();
+      zx.output(argv[2],out); 
+      return(0);     
+   }
+      
 
    class blocks z;
    if (Generate) {
       z.init(argv[1]);
       for (int i=0;i<2;++i)
          z.restructure();
-      z.output(outfile,out);
-      return 0;
+      z.output(argv[2],out);
+      return(0);
    }
 
 #ifdef MPISRC
@@ -164,7 +174,7 @@ int main(int argc, char *argv[]) {
    }
    else if (argc == 3) {
       /* READ INPUT MAP FROM FILE & OUTPUT TO FILE */
-      z.init(argv[1],outfile);
+      z.init(argv[1],argv[2]);
    }
    else {
       /* CREATE INPUT MAPS HERE*/
@@ -190,15 +200,15 @@ int main(int argc, char *argv[]) {
       input["nblock"] = "2";
 #endif
       input["b0.type"] = "1";
-      input["b0.mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top8";
+      input["b0.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/top8";
       input["b0.filetype"] = "0";
       input["b0.growth factor"] = "4.0";
-      input["b0.bdryfile"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top.bdry.inpt";
+      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top.bdry.inpt";
       input["b1.type"] = "1";
-      input["b1.mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot8";
+      input["b1.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/bot8";
       input["b1.filetype"] = "0";
       input["b1.growth factor"] = "4.0";
-      input["b1.bdryfile"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot.bdry.inpt";
+      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot.bdry.inpt";
       output_map(input,std::cout);
       z.init(input);
    }

@@ -11,18 +11,31 @@ int mesh::maxlst, mesh::maxsrch;
 sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile, sharedmem *win) {
    int i,j,n,sind,count,temp,tind,v0,v1,sign;
    int ierr;
-   char grd_app[100];
+   char grd_nm[120], grd_app[120];
    FILE *grd;
    int v[3],s[3],e[3];
    int bcntr[MAXSB];
    std::map<std::string,std::string> bdrymap;
    std::map<std::string,std::string> *pbdrymap = &bdrymap;
+         
+   if (!(strncmp("${HOME}",filename, 7))) {
+      strcpy(grd_nm,getenv("HOME"));
+      strcat(grd_nm, filename+7);
+   }
+   else 
+      strcpy(grd_nm,filename);
    
    if (bdryfile) {
-      input_map(bdrymap,bdryfile);
+      if (!(strncmp("${HOME}",bdryfile, 7))) {
+         strcpy(grd_app,getenv("HOME"));
+         strcat(grd_app, bdryfile+7);
+         input_map(bdrymap,grd_app);
+      }
+      else 
+         input_map(bdrymap,bdryfile);
    }
    else {
-      strcpy(grd_app,filename);
+      strcpy(grd_app,grd_nm);
       strcat(grd_app,"_bdry.inpt");
       grd = fopen(grd_app,"r");
       if (grd) {
@@ -37,7 +50,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
     switch (filetype) {            
         case(ftype::easymesh):
             /* LOAD SIDE INFORMATION */
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".s");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
@@ -115,7 +128,7 @@ next1a:     continue;
             }
                
             /* LOAD VERTEX INFORMATION               */
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".n");
             grd = fopen(grd_app,"r");
             if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
@@ -165,7 +178,7 @@ next1a:     continue;
             }
                         
             /* LOAD ELEMENT INFORMATION */
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".e");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
@@ -201,11 +214,11 @@ next1a:     continue;
             break;
         
         case(ftype::gambit):
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".FDNEUT");
             grd = fopen(grd_app,"r");
             if (grd == NULL) {
-                    *log << "trouble opening " << filename << std::endl;
+                    *log << "trouble opening " << grd_nm << std::endl;
                     exit(1);
             }
             
@@ -316,7 +329,7 @@ next1a:     continue;
             break;
             
          case(ftype::grid):
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".grd");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
@@ -378,7 +391,7 @@ next1a:     continue;
             break;
             
          case(ftype::mavriplis):
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".mvp");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
@@ -497,7 +510,7 @@ next1a:     continue;
             }
 
             /* LOAD VERTEX POSITIONS               */
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".txt");
             grd = fopen(grd_app,"r");
             if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
@@ -645,7 +658,7 @@ next1c:     continue;
 #endif
 
          case(ftype::tecplot):
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".dat");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
@@ -716,7 +729,7 @@ next1c:     continue;
             
          case(ftype::boundary):
             /* LOAD BOUNDARY INFORMATION */
-            strcpy(grd_app,filename);
+            strcpy(grd_app,grd_nm);
             strcat(grd_app,".d");
             grd = fopen(grd_app,"r");
             if (grd == NULL) { 
