@@ -117,27 +117,59 @@ void blocks::init(char *file) {
       ntstep += readin +1;
       
       for(i=0;i<nblocks;++i) {
-         number_str(outname, "data", i, 1);
-         strcat(outname, ".");
-         number_str(bname,outname,readin,3);
+      
+/*			INPUT MESH */
+         number_str(bname,"mesh",readin,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);
+         printf("#Reading mesh: %s\n",outname);
+         blk[i].grd[0].in_mesh(outname,easymesh);  
+         blk[i].grd[0].spectral_hp::setbcinfo();
 
-/*			ADAPTED MESH */         
+/*			FOR ADAPTIVE MESH */         
          if (adapt) {
-            blk[i].grd[0].in_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
-            blk[i].grd[0].spectral_hp::setbcinfo();
-            strcpy(outname,bname);
-            strcat(outname,"vlg");
+            number_str(bname,"vlgth",readin,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);
+            printf("#Reading vlength: %s\n",outname);
             blk[i].grd[0].inlength(outname);
          }
 
-/*			READ SOLUTION */         
-         blk[i].grd[0].spectral_hp::input(bname,text);
-         
+/*			READ SOLUTION */ 
+         number_str(bname,"data",readin,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1); 
+         printf("#Reading solution: %s\n",outname);
+         blk[i].grd[0].spectral_hp::input(outname,text);
+
 /*			INPUT UNSTEADY TIME HISTORY */
-         strcat(bname,".");
-         for(j=0;j<hp_mgrid::nstep-1;++j) {
+         number_str(outname,"rstrtdata",readin,3);
+         strcat(outname, ".");
+         number_str(bname, outname, i, 1);
+         for(j=0;j<MXSTEP-1;++j) {
             number_str(outname,bname,j,1);
-            blk[i].grd[0].input(blk[i].gbl.ugbd[j],outname,text);
+            printf("#Reading restart data: %s\n",outname);
+            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,text);
+         }
+   
+         number_str(outname,"rstrtvrtx",readin,3);
+         strcat(outname, ".");
+         number_str(bname, outname, i, 1);
+         for(j=0;j<MXSTEP-1;++j) {
+            number_str(outname,bname,j,1);
+            printf("#Reading restart mesh: %s\n",outname);
+            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+         }
+      }
+      
+      for(j=0;j<nblocks;++j) {
+         match = 0;
+         for(k=0;k<nblocks;++k)
+            match += blk[j].grd[0].findmatch(blk[k].grd[0]);
+            
+         if (match != blk[j].grd[0].alld_mp()) {
+            printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[0].alld_mp());
+            exit(1);
          }
       }
 
@@ -146,7 +178,7 @@ void blocks::init(char *file) {
          adaptation();
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
-      }  
+      }
    }
    else {
       for(i=0;i<nblocks;++i) {
@@ -302,8 +334,8 @@ void blocks::go() {
          cycle(vwcycle);
          printf("%d ",iter);
          endcycle();
-//         r_cycle(vwcycle);
-//         r_maxres();
+         r_cycle(vwcycle);
+         r_maxres();
          printf("\n");
       }
 

@@ -319,7 +319,7 @@ void hp_mgrid::surfinvrt1(int bnum) {
    
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
-      if (vbdry[i].type&(HP_MGRID_MP)) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          vbnum = vbdry[i].adjbnum;
          tgt = vbdry[i].adjmesh;
          tgt->vbuff[vbnum][0] = srf->gbl->vres[0][0];
@@ -330,7 +330,7 @@ void hp_mgrid::surfinvrt1(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
       
-      if (vbdry[i].type&(HP_MGRID_MP)) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          vbnum = vbdry[i].adjbnum;
          tgt = vbdry[i].adjmesh;
          tgt->vbuff[vbnum][0] = srf->gbl->vres[end][0];
@@ -537,7 +537,7 @@ void hp_mgrid::surfdt1(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
       
-      if (vbdry[i].type&(HP_MGRID_MP)) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          vbnum = vbdry[i].adjbnum;
          tgt = vbdry[i].adjmesh;
          count = 0;
@@ -550,7 +550,7 @@ void hp_mgrid::surfdt1(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
       
-      if (vbdry[i].type&(HP_MGRID_MP)) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          vbnum = vbdry[i].adjbnum;
          tgt = vbdry[i].adjmesh; 
          count = 0;
@@ -579,7 +579,7 @@ void hp_mgrid::surfdt2(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
       
-      if (vbdry[i].type&HP_MGRID_MP) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          count = 0;
          for(m=0;m<ND;++m)
             for(n=0;n<ND;++n) 
@@ -590,7 +590,7 @@ void hp_mgrid::surfdt2(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
       
-      if (vbdry[i].type&HP_MGRID_MP) {
+      if (vbdry[i].type&(COMX_MASK+COMY_MASK)) {
          count = 0;
          for(m=0;m<ND;++m)
             for(n=0;n<ND;++n) 

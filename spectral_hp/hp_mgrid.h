@@ -13,8 +13,6 @@
 #define NSTAGE 5
 #define MXSTEP 2
 
-#define HP_MGRID_MP (COMX_MASK +COMY_MASK)
-
 /* THESE THINGS ARE SHARED BY ALL MESHES OF THE SAME BLOCK */
 struct hp_mgrid_glbls {
 

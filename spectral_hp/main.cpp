@@ -17,30 +17,17 @@ extern FLT rhotemporary;
 int main(int argc, char **argv) {
    class blocks myblock;
 
-#ifdef SKIP
-   class mesh test1, test2;
-   
-   test1.in_mesh("error1",easymesh);
-   test2.coarsen(test1);
-   test2.setbcinfo();
-   test2.out_mesh("error2");
-   
-   exit(1);
-#endif
 
+/*
    myblock.init(argv[1]);
    myblock.go();
    
    return(0);
+*/
 
+/*	FOR TEST ADAPTATION */
    myblock.init(argv[1]);
-   myblock.tadvance();
-   myblock.output(1,tecplot);
-   myblock.adaptation();
-   myblock.tadvance();
-   myblock.output(2,tecplot);
-
-   
+   myblock.output(10,tecplot);
    
    return(0);
 }

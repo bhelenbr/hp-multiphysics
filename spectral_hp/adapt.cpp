@@ -56,10 +56,6 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 /* BEGIN ADAPTION PROCEDURE */
    swap();
 
-/*	CALCULATE SIDE LENGTH RATIO FOR YABER */
-   for(i=0;i<nside;++i)
-      fltwk[i] = MIN(vlngth[svrtx[i][0]],vlngth[svrtx[i][1]])/distance(svrtx[i][0],svrtx[i][1]);
-
 /* COARSEN */ 
    nvrt0 = nvrtx;
    yaber(1.0/tolerance);
@@ -80,10 +76,6 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          for(n=0;n<ND;++n)
             gbl->vrtxbd[step][v0][n] = gbl->vrtxbd[step][i][n];
    }
-   
-/*	CALCULATE SIDE LENGTH RATIO FOR REBAY */
-   for(i=0;i<nside;++i)
-      fltwk[i] = MAX(vlngth[svrtx[i][0]],vlngth[svrtx[i][1]])/distance(svrtx[i][0],svrtx[i][1]);
  
 /*	REFINE */
    nvrt0 = nvrtx;
@@ -157,7 +149,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                str.b.ptprobe1d(NV,uht,gbl->ugbd[step].v[v0]);
             }
 
-            if (str.sinfo[sind] > -1) {
+            if (str.sinfo[stgt] > -1) {
                for(step=0;step<nstep-1;++step) {
                   str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
                   str.b.ptprobe1d(ND,uht,gbl->vrtxbd[step][v0]);

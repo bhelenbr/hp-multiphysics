@@ -220,7 +220,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
-   int bnum,bind,ierr;
+   int innum,intyp,ierr;
    FILE *in;
    char buffer[200];
    
@@ -278,22 +278,16 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
 
 /*			BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
-            fscanf(in,"Boundary %*d, type %d, num %d\n",&bind,&bnum);
-            for(j=0;j<nsbd;++j)
-               if (sbdry[j].type == bind) break;
-            
-            bind = j;
-            if (bind != i) printf("Boundary groups reordered %d %d\n",i,bind);
-
-            if (sbdry[bind].num != bnum) {
-               printf("input file doesn't have same number of boundary sides\n");
+            fscanf(in,"Boundary %*d, type %d, num %d\n",&intyp,&innum);
+            if (sbdry[i].num != innum || intyp != sbdry[i].type) {
+               printf("input file doesn't have same number of boundary sides %d %d %d %d\n",innum,sbdry[i].num,sbdry[i].type,intyp);
                exit(1);
             }
 
             indx = 0;
-            for(j=0;j<sbdry[bind].num;++j) {
+            for(j=0;j<sbdry[i].num;++j) {
                for(m=0;m<pin -1;++m) {
-                  fscanf(in,"%le %le\n",&bin[bind][indx].curv[0],&bin[bind][indx].curv[1]);
+                  fscanf(in,"%le %le\n",&bin[i][indx].curv[0],&bin[i][indx].curv[1]);
                   ++indx;
                }
                indx += p0 -pin;
