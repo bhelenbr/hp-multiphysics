@@ -7,7 +7,7 @@
  *
  */
 
-#include "spectral_hp.h"
+#include "blocks.h"
 #include<stdio.h>
 #include<utilities.h>
 
@@ -18,13 +18,19 @@ int main() {
    int i,j;
    class spectral_hp x,y;
    class hpbasis base;
+   class blocks myblock;
+
+#ifdef SKIP
    FLT u[3];
-   
+ 
    base.initialize(2);
 
 //   x.in_mesh("/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/KOVA/WKOVA/kova3",easymesh,10);
    x.in_mesh("../../grids/TIM/tim",easymesh,10);
    x.allocate(base);
+   x.tobasis(&f1);
+   x.output("hope",tecplot);
+   exit(0);
    
    for(i=0;i<2;++i) {
    x.output("hope",tecplot);
@@ -33,7 +39,14 @@ int main() {
    y.output("hope1",tecplot);
    x.output("new",tecplot);
    }
+
+   return(0);
+ #endif
    
+   myblock.init(1, 1, 1, "../../grids/TIM/tim",easymesh,10);
+   
+   myblock.output("hope",tecplot);
+
    return(0);
 }
 

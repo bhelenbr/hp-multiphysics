@@ -44,7 +44,7 @@ void hpbasis::initialize(int pdegree) {
          free(wk1);
          free(wk2);
          free(wk3);
-         printf("warning: better to allocate from largest to smallest\n");
+         printf("warning: better to allocate hpbasis from largest to smallest\n");
       }
       mat_alloc(wk0,nmodx,gpn,FLT);
       mat_alloc(wk1,nmodx,gpn,FLT);
@@ -74,8 +74,8 @@ void hpbasis::initialize_values(void)
 /*	ALLOCATE STORAGE FOR RECURSION RELATION COEFFICENTS*/
    ipoly = MAX(gpx+1,sm+1);
    ipoly = MAX(ipoly,gpn+1);
-   mat_alloc(a0,sm+1,ipoly,FLT);
-   mat_alloc(b0,sm+1,ipoly,FLT);
+   mat_alloc(a0,sm+2,ipoly,FLT);
+   mat_alloc(b0,sm+2,ipoly,FLT);
    
 /*	ALLOCATE INTEGRATION, PROJECTION, & DERIVATIVE VARIABLES */
    mat_alloc(gx,nmodx,gpx,FLT);
@@ -171,32 +171,34 @@ void hpbasis::initialize_values(void)
       gx[2][i] = 1;
       dgx[2][i] = 0;
 
-/*		SIDE 1 IPOLY = 6 FOR JACOBI	*/
-      ipoly = 6;
-      al = 1.0;
-      be = 1.0;
-      ierr = recur(sm+1,ipoly,al,be,a0[0],b0[0]);
-      if (ierr != 0) {
-         printf("recur #3 error %d\n",ierr);
-         return;
-      }
-
-
-/*		CALCULATE P, P' USING RECURSION RELATION */
-      pk = 1.0;
-      pkm = 0.0;
-      dpk = 0.0;
-      dpkm = 0.0;
-
-      for (m = 1;m < sm+1;++m) {
-         gx[m+2][i] = (1.+x)*(1.-x)*.25*pk;
-         dgx[m+2][i] = -x*.5*pk +(1.+x)*(1.-x)*.25*dpk;
-         pkp = (x-a0[0][m-1])*pk - b0[0][m-1]*pkm;
-         dpkp = pk + (x-a0[0][m-1])*dpk - b0[0][m-1]*dpkm;
-         dpkm = dpk;
-         dpk = dpkp;
-         pkm = pk;
-         pk = pkp;
+      if (sm) {
+/*			SIDE 1 IPOLY = 6 FOR JACOBI	*/
+         ipoly = 6;
+         al = 1.0;
+         be = 1.0;
+         ierr = recur(sm+1,ipoly,al,be,a0[0],b0[0]);
+         if (ierr != 0) {
+            printf("recur #3 error %d\n",ierr);
+            return;
+         }
+   
+   
+/*			CALCULATE P, P' USING RECURSION RELATION */
+         pk = 1.0;
+         pkm = 0.0;
+         dpk = 0.0;
+         dpkm = 0.0;
+   
+         for (m = 1;m < sm+1;++m) {
+            gx[m+2][i] = (1.+x)*(1.-x)*.25*pk;
+            dgx[m+2][i] = -x*.5*pk +(1.+x)*(1.-x)*.25*dpk;
+            pkp = (x-a0[0][m-1])*pk - b0[0][m-1]*pkm;
+            dpkp = pk + (x-a0[0][m-1])*dpk - b0[0][m-1]*dpkm;
+            dpkm = dpk;
+            dpk = dpkp;
+            pkm = pk;
+            pk = pkp;
+         }
       }
    }	
 
@@ -266,90 +268,94 @@ void hpbasis::initialize_values(void)
       gn[ind][i] = (1+eta)*.5;
       dgn[ind][i] = .5;
 
-/*	  	SIDE 1 (s)		*/
-      for(m = 2; m <= sm+1; ++m) {
-         ++ind;
-         gn[ind][i] = pow(.5*(1-eta),m);
-         dgn[ind][i] = -.5*m*pow(.5*(1.-eta),m-1);
-      }
-
-
-/*		SIDE 2 IPOLY = 6 FOR JACOBI	*/
-      ipoly = 6;
-      al = 1.0;
-      be = 1.0;
-      ierr = recur(sm+1,ipoly,al,be,a0[1],b0[1]);
-      if (ierr != 0) {
-         printf("recur #3 error %d\n",ierr);
-         return;
-      }
-
-/*		SIDE 2	*/
-      pk = 1.0;
-      pkm = 0.0;
-      dpk = 0.0;
-      dpkm = 0.0;
-
-      for(n=1;n<=sm;++n) {
-         ++ind;
-         gn[ind][i] = (1.-eta)*(1.+eta)*.25*pk;		
-         dgn[ind][i] = -.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk;
-         pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
-         dpkp = pk + (eta-a0[1][n-1])*dpk - b0[1][n-1]*dpkm;
-         dpkm = dpk;
-         dpk = dpkp;
-         pkm = pk;
-         pk = pkp;
-      }
-
-/*	 	SIDE 3	*/
-      pk = 1.0;
-      pkm = 0.0;
-      dpk = 0.0;
-      dpkm = 0.0;
-
-      for(n=1;n<=sm;++n) {
-         ++ind;
-         gn[ind][i] = (n % 2 ? 1 : -1)*(1.-eta)*(1.+eta)*.25*pk;
-         dgn[ind][i] = (n % 2 ? 1 : -1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk);
-         pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
-         dpkp = pk + (eta-a0[1][n-1])*dpk - b0[1][n-1]*dpkm;
-         dpkm = dpk;
-         dpk = dpkp;
-         pkm = pk;
-         pk = pkp;
-      }
-
-/*	  	INTERIOR MODES	*/
-      ind = bm;
-      for(m = 2; m< sm+1;++m) {		
-/*	 		CALCULATE RECURSION RELATION FOR P^(2m-1,1)(s)
-         SIDE 1 IPOLY = 6 FOR JACOBI  	*/
+      if (sm) {
+/*	 	 	SIDE 1 (s)		*/
+         for(m = 2; m <= sm+1; ++m) {
+            ++ind;
+            gn[ind][i] = pow(.5*(1-eta),m);
+            dgn[ind][i] = -.5*m*pow(.5*(1.-eta),m-1);
+         }
+   
+   
+/*			SIDE 2 IPOLY = 6 FOR JACOBI	*/
          ipoly = 6;
-         al = 2.*m-1;
+         al = 1.0;
          be = 1.0;
-         ierr = recur(sm+2-m,ipoly,al,be,a0[m],b0[m]);
+         ierr = recur(sm+1,ipoly,al,be,a0[1],b0[1]);
          if (ierr != 0) {
-            printf("recur #4 error %d\n",ierr);
+            printf("recur #3 error %d\n",ierr);
             return;
          }
-
+   
+/*			SIDE 2	*/
          pk = 1.0;
          pkm = 0.0;
          dpk = 0.0;
          dpkm = 0.0;
-
-         for(n = 1; n < sm+2-m;++n) {
-            gn[ind][i] = pow(.5*(1.-eta),m)*.5*(1.+eta)*pk;
-            dgn[ind][i] = -.25*m*pow(.5*(1.-eta),m-1)*(1.+eta)*pk 
-                     +pow(.5*(1.-eta),m)*.5*(pk + (1.+eta)*dpk);
-            pkp = (eta-a0[m][n-1])*pk - b0[m][n-1]*pkm;
-            dpkp = pk + (eta-a0[m][n-1])*dpk - b0[m][n-1]*dpkm;
+   
+         for(n=1;n<=sm;++n) {
+            ++ind;
+            gn[ind][i] = (1.-eta)*(1.+eta)*.25*pk;		
+            dgn[ind][i] = -.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk;
+            pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
+            dpkp = pk + (eta-a0[1][n-1])*dpk - b0[1][n-1]*dpkm;
             dpkm = dpk;
             dpk = dpkp;
             pkm = pk;
             pk = pkp;
+         }
+   
+   /*	 	SIDE 3	*/
+         pk = 1.0;
+         pkm = 0.0;
+         dpk = 0.0;
+         dpkm = 0.0;
+   
+         for(n=1;n<=sm;++n) {
             ++ind;
+            gn[ind][i] = (n % 2 ? 1 : -1)*(1.-eta)*(1.+eta)*.25*pk;
+            dgn[ind][i] = (n % 2 ? 1 : -1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk);
+            pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
+            dpkp = pk + (eta-a0[1][n-1])*dpk - b0[1][n-1]*dpkm;
+            dpkm = dpk;
+            dpk = dpkp;
+            pkm = pk;
+            pk = pkp;
+         }
+   
+/*	 	 	INTERIOR MODES	*/
+         if (im) {
+            ind = bm;
+            for(m = 2; m< sm+1;++m) {		
+/*	 				CALCULATE RECURSION RELATION FOR P^(2m-1,1)(s)
+               SIDE 1 IPOLY = 6 FOR JACOBI  	*/
+               ipoly = 6;
+               al = 2.*m-1;
+               be = 1.0;
+               ierr = recur(sm+2-m,ipoly,al,be,a0[m],b0[m]);
+               if (ierr != 0) {
+                  printf("recur #4 error %d\n",ierr);
+                  return;
+               }
+      
+               pk = 1.0;
+               pkm = 0.0;
+               dpk = 0.0;
+               dpkm = 0.0;
+      
+               for(n = 1; n < sm+2-m;++n) {
+                  gn[ind][i] = pow(.5*(1.-eta),m)*.5*(1.+eta)*pk;
+                  dgn[ind][i] = -.25*m*pow(.5*(1.-eta),m-1)*(1.+eta)*pk 
+                           +pow(.5*(1.-eta),m)*.5*(pk + (1.+eta)*dpk);
+                  pkp = (eta-a0[m][n-1])*pk - b0[m][n-1]*pkm;
+                  dpkp = pk + (eta-a0[m][n-1])*dpk - b0[m][n-1]*dpkm;
+                  dpkm = dpk;
+                  dpk = dpkp;
+                  pkm = pk;
+                  pk = pkp;
+                  ++ind;
+               }
+            }
          }
       }
    }

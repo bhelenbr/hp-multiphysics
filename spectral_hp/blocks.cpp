@@ -1,6 +1,7 @@
 #include"blocks.h"
 #include<cstring>
 #include<utilities.h>
+#include<stdio.h>
 
 extern FLT f1(int n, FLT x, FLT y);
 
@@ -13,13 +14,16 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    nblocks = nb;
    mglvls = mg;  // AT LEAST ONE ALWAYS
    lg2pmax = lg2p;
-   mgrids = MIN(mglvls-lg2pmax,1);
- 
+   mgrids = MAX(mglvls-lg2pmax,1);
+    
 /*	INITIALIZE BASIS FUNCTIONS */
    p = 1;
-   for(i=0;i<=lg2pmax;++i) {
+   for(i=0;i<lg2pmax;++i)
+      p = p<<1;
+
+   for(i=lg2pmax;i>=0;--i) {
       base[i].initialize(p);
-      p *= 2;
+      p = p>>1;
    }
    
    blk = new class block[nblocks];
