@@ -313,7 +313,7 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
 
    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
+      maxvst =  MAX((int) (static_cast<FLT>(inmesh.maxvst)/inmesh.nside*work.nside),100);
       maxsbel = MAX(inmesh.maxsbel/2,10);
       allocate(maxvst);
       bdryalloc(maxsbel);

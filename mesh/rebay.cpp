@@ -181,7 +181,7 @@ INSRT:
          qtree.nearpt(nvrtx,vnear);
          tind = findtri(xpt,ypt,vnear);
          getwgts(wt);
-         err = insert(tind,nvrtx,20.0);
+         err = insert(tind,nvrtx,10.0);
          if (!err) {
             vlngth[nvrtx] = 0.0;
             for(i=0;i<3;++i) 

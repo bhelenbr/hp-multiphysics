@@ -129,7 +129,8 @@ int mesh::collapse(int sind) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
             bnum = (-stri[sind][1]>>16) -1;
             delt = sbdry[bnum].isfrst;
-            printf("#Warning: degenerate case in edge collapse for bdry %d, picking %d\n",sbdry[bnum].type,delt);
+            if (sbdry[bnum].type&(COMX_MASK+COMY_MASK))
+               printf("#Warning: degenerate case in edge collapse for bdry %d, picking %d\n",sbdry[bnum].type,delt);
          }
       }
    }
