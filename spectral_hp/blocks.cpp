@@ -345,16 +345,16 @@ void blocks::cycle(int vw, int lvl) {
       }
 #endif
 
-#define TWO_LEVEL  //TEMPORARY
+#define NO_TWO_LEVEL  //TEMPORARY
 #ifdef TWO_LEVEL
-      FLT mxr2[NV], einit, emax = 0.0;
-      vw = 2;
       if (lvl == 1) {
+         FLT mxr[NV], einit, emax = 0.0;
+         vw = 2;
          for(i=0;i<nblocks;++i)
-            emax = blk[i].grd[grid].maxres(mxr2);
+            emax = blk[i].grd[grid].maxres(mxr);
          
          if (vcount == 0) einit = emax;
-         else if (emax/einit > 1.0e-3) --vcount;
+         else if (emax/einit > 1.0e-3 && emax > 1.0e-14) --vcount;
          // printf("%%second level %e\n",emax);
       }
 #endif

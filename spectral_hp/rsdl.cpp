@@ -40,7 +40,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
    for(tind = 0; tind<ntri;++tind) {
    
-      if (tinfo[tind] > -5) {
+      if (tinfo[tind] > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
             b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
