@@ -349,6 +349,7 @@ next2:      continue;
          delete []intwk1;
          delete []intwk2;
          delete []intwk3;
+         printf("better to allocate from largest mesh to smallest\n");
       }
       fltwk = new FLT[maxvst];
       intwk1 = new int[maxvst];

@@ -160,8 +160,8 @@ class mesh {
 /*		DEFAULT INITIALIZATION */
       mesh() : initialized(0), fine(NULL), coarse(NULL) {};
 /*		COPY CONSTRUCTOR TO DUPLICATE MESHES */
-      mesh(const mesh& copy) : initialized(0), fine(NULL), coarse(NULL) { printf("in mesh copy\n"); *this = copy;}
-      mesh& operator=(const mesh& tgt) {this->copy(tgt); return(*this);}
+//      mesh(const mesh& copy) : initialized(0), fine(NULL), coarse(NULL) { printf("in mesh copy\n"); *this = copy;}
+//      mesh& operator=(const mesh& tgt) {this->copy(tgt); return(*this);}
       void copy(const mesh& tgt);
       
 /*		ALLOCATE COMMUNICATION BUFFERS */
