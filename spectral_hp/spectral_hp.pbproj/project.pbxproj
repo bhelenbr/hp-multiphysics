@@ -45,13 +45,15 @@
 				F52FE4D802180CBB01990B20,
 				F52FE4DC02180FA201990B20,
 				F58209B601808CC201990B20,
-				0249A663FF388D9811CA2CEA,
 				F58BA0FB01762F8301990B20,
 				F58BA0F901762F8301990B20,
 				F58BA0FA01762F8301990B20,
 				F58BA0F801762F8301990B20,
+				F55E22B9029D695F01990B20,
+				F55E22BC029D697C01990B20,
+				F55E22BD029D697C01990B20,
 				F58BA10001762FBE01990B20,
-				F5A11A68029A9B2901990B20,
+				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -134,7 +136,6 @@
 				F52FC80E01BE791F01990B20,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
-				F52FE4D2021459BA01990B20,
 				F5A11A6A029ABBE001990B20,
 				F52FE4D0021429E601990B20,
 				F581CD2901989D4B01990B20,
@@ -161,7 +162,7 @@
 				HEADER_SEARCH_PATHS = ../include;
 				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN /Volumes/work/helenbrk/Codes/packages/pV3";
 				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_CFLAGS = "-DPV3 -DNOUNDERSCORE -DNOUNS";
+				OTHER_CFLAGS = "-DNOUNDERSCORE -DNOUNS";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "planar++";
@@ -185,7 +186,6 @@
 				F505FF120192F1EB01990B20,
 				F598B8700193249F01990B20,
 				F581CD2A01989D4B01990B20,
-				F5A11A6B029ABBE001990B20,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -225,7 +225,6 @@
 				F54BE4D301E1038D01990B20,
 				F5AC61750252568D01990B20,
 				F5F1F64A026CB83001990B20,
-				F5A11A61029998A401990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -243,7 +242,9 @@
 				F58BA0FE01762F8301990B20,
 				F58BA0FC01762F8301990B20,
 				F58BA10101762FBE01990B20,
-				F5A11A69029A9B2901990B20,
+				F55E22BA029D695F01990B20,
+				F55E22C2029D697C01990B20,
+				F55E22C3029D697C01990B20,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -458,11 +459,6 @@
 			path = pv3routines.cpp;
 			refType = 4;
 		};
-		F52FE4D2021459BA01990B20 = {
-			isa = PBXFileReference;
-			path = osdepend.h;
-			refType = 4;
-		};
 		F52FE4D802180CBB01990B20 = {
 			isa = PBXFileReference;
 			name = libmyblas.a;
@@ -545,6 +541,42 @@
 		};
 		F558DFB30191E60901990B20 = {
 			fileRef = F5D77C330191A7E901990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F55E22B9029D695F01990B20 = {
+			isa = PBXFileReference;
+			name = libpV3.a;
+			path = /Volumes/work/helenbrk/Codes/packages/pV3/libpV3.a;
+			refType = 0;
+		};
+		F55E22BA029D695F01990B20 = {
+			fileRef = F55E22B9029D695F01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F55E22BC029D697C01990B20 = {
+			isa = PBXFileReference;
+			name = libgpvm3.a;
+			path = /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN/libgpvm3.a;
+			refType = 0;
+		};
+		F55E22BD029D697C01990B20 = {
+			isa = PBXFileReference;
+			name = libpvm3.a;
+			path = /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN/libpvm3.a;
+			refType = 0;
+		};
+		F55E22C2029D697C01990B20 = {
+			fileRef = F55E22BC029D697C01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F55E22C3029D697C01990B20 = {
+			fileRef = F55E22BD029D697C01990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -689,34 +721,10 @@
 			settings = {
 			};
 		};
-		F5A11A61029998A401990B20 = {
-			fileRef = F52FE4D0021429E601990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5A11A68029A9B2901990B20 = {
-			isa = PBXFileReference;
-			name = libpV3ser.a;
-			path = /Volumes/work/helenbrk/Codes/packages/pV3/libpV3ser.a;
-			refType = 0;
-		};
-		F5A11A69029A9B2901990B20 = {
-			fileRef = F5A11A68029A9B2901990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5A11A6A029ABBE001990B20 = {
 			isa = PBXFileReference;
 			path = pV3.h;
 			refType = 4;
-		};
-		F5A11A6B029ABBE001990B20 = {
-			fileRef = F5A11A6A029ABBE001990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5A17FF3017CD50401990B20 = {
 			isa = PBXFileReference;

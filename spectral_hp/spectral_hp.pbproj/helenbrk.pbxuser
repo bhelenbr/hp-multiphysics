@@ -15,10 +15,10 @@
 					ActiveTab = 0;
 					Frame = "{{0, 23}, {1241, 869}}";
 					Split0 = {
-						ActiveTab = 2;
+						ActiveTab = 3;
 						Frame = "{{298, 0}, {943, 869}}";
 						Split0 = {
-							Frame = "{{0, 296}, {943, 573}}";
+							Frame = "{{0, 298}, {943, 571}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
@@ -159,11 +159,6 @@
 	F52FE4D0021429E601990B20 = {
 		uiCtxt = {
 			sepNavWindowFrame = "{{100, 650}, {750, 502}}";
-		};
-	};
-	F52FE4D2021459BA01990B20 = {
-		uiCtxt = {
-			sepNavWindowFrame = "{{123, 629}, {750, 502}}";
 		};
 	};
 	F533C5CF01938985017C3E7F = {
