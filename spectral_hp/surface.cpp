@@ -748,7 +748,7 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
       for(i=0;i<sbdry[bnum].num;++i) {
          for(m=0;m<b.sm;++m) {
             for(n=0;n<ND;++n)
-               srf->sug[indx1+m][n] = srf->gbl->sug0[indx1+m][n] -alpha[stage]*srf->gbl->sres[indx][n];
+               srf->sug[indx1][n] = srf->gbl->sug0[indx1][n] -alpha[stage]*srf->gbl->sres[indx][n];
             ++indx;
             ++indx1;
          }
