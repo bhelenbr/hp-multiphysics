@@ -25,12 +25,12 @@ template<class GRD> class mgrid : public block {
    public:
       mgrid() : log(&std::cout), adapt_flag(0) {}
       void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0);
-      void load_const(std::map <std::string,std::string>& input) {}
+      void load_const(std::map <std::string,std::string>& input);
       void alloc(std::map<std::string,std::string>& input);
       void input(char *filename) {
-         grd[0].in_mesh(filename,text);
+         grd[0].in_mesh(filename,ftype::text);
       }
-      void output(char *filename, FTYPE filetype = easymesh) {
+      void output(char *filename, ftype::name filetype = ftype::easymesh) {
          grd[0].setbcinfo();
          grd[0].out_mesh(filename,filetype);
       }
@@ -87,7 +87,7 @@ template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& in
 	
 	int filetype;
    data.str(input["filetype"]);
-   if (!(data >> filetype)) filetype = grid;
+   if (!(data >> filetype)) filetype = ftype::grid;
    *log << "#filetype: " << filetype << std::endl;
    data.clear();
 	
@@ -95,7 +95,7 @@ template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& in
    data.str(input["mesh"]);
    if (!(data >> filename)) {*log << "no mesh name\n"; exit(1);}
    *log << "#mesh: " << filename << std::endl;
-   grd[0].in_mesh(filename.c_str(),static_cast<FTYPE>(filetype),grwfac);
+   grd[0].in_mesh(filename.c_str(),static_cast<ftype::name>(filetype),grwfac);
    data.clear();   
    
    /* CREATE COARSE MESHES */
@@ -106,6 +106,16 @@ template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& in
    for(i=1;i<ngrid;++i)
       grd[i].allocate(1,&gbl_store);
 
+   return;
+}
+
+template<class GRD> void mgrid<GRD>::load_const(std::map <std::string,std::string>& input) {
+   
+   std::istringstream data(input["tolerance"]);
+   if (!(data >> tolerance)) tolerance = 0.6; 
+   *log << "#tolerance: " << tolerance << std::endl;
+   data.clear();
+   
    return;
 }
 
@@ -225,12 +235,9 @@ template<class GRD> class rblock : public mgrid<GRD> {
 
 template<class GRD> void rblock<GRD>::load_const(std::map <std::string,std::string>& input) {
 
-   std::istringstream data(input["tolerance"]);
-   if (!(data >> tolerance)) tolerance = 0.6; 
-   *log << "#tolerance: " << tolerance << std::endl;
-   data.clear();
+   mgrid<GRD>::load_const(input);
    
-   data.str(input["fadd"]);
+   std::istringstream data(input["fadd"]);
    if (!(data >> GRD::fadd)) GRD::fadd = 1.0;
    *log << "#fadd: " << GRD::fadd << std::endl;
    data.clear();
