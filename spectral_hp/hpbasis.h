@@ -171,6 +171,7 @@ class hpbasis {
       
       /* SETUP FUNCTIONS */
       void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
+      void sideinfoinit(); // SET UP THINGS TO EVALUATE NORMAL DERIVATIVES ALONG SIDE
       void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
       void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
       void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT

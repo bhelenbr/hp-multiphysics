@@ -183,7 +183,7 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
 void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
    FLT pkp,pk,pkm,dpk,dpkm,dpkp;
    int k,m,n,ind;
-
+   
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
    pgx[0] = .5*(1-x);
    dpgx[0] = -0.5;
@@ -272,9 +272,9 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
       pk = pkp;
       ++ind;
    }
+
    
    /*  INTERIOR MODES   */
-   ind = bm;
    for(m = 2; m< sm+1;++m) {      
       pk = 1.0;
       pkm = 0.0;

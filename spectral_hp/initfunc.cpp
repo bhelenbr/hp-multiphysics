@@ -16,7 +16,7 @@
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
-#define FREESTREAM
+#define TEST
 #define BIGAMP
 
 /***************************/
@@ -30,9 +30,9 @@ int startup = 1;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1 +0.1*x*x);
+         return(x*x);
       case(1):
-         return(0);
+         return(y/(x*x +y*y));
       case(2):
          return(0);
    }

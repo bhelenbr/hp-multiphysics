@@ -8,10 +8,11 @@
  */
 
 #include "hpbasis.h"
+#include<stdio.h>
 
 void hpbasis::proj(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
     int i,j,m,n,ind;
-    FLT xm1,oeta;
+    FLT xp1,oeta;
          
    /* DETERMINE U VALUES, GRAD U VALUES
    AT COLLOCATION POINTS
@@ -20,7 +21,7 @@ void hpbasis::proj(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
 
    /* GENERAL FORMULA */
    /* dg/dr = 2.0/(1-n) g(s) dg/dx */
-   /* dg/ds = g(x)dg/dn -(1+x)/2 dg/dr */
+   /* dg/ds = g(x)dg/dn +(1+x)/2 dg/dr = g(x)dg/dn +(1+x)/(1-s) g(s) dg/dx */
 
 
    /* PART I - sum u*g_mn for each n, s_j   */
@@ -76,7 +77,7 @@ void hpbasis::proj(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
        
    /* SUM OVER N AT EACH I,J POINT   */     
     for (i=0; i < gpx; ++i ) {
-      xm1 = x0[i];
+      xp1 = x0[i];
        for (j=0; j < gpn; ++j) {
           f[i][j]   = 0.0;
          dx[i][j] = 0.0;
@@ -87,7 +88,7 @@ void hpbasis::proj(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
             dy[i][j] += wk1[n][j]*gx[n][i];
             dx[i][j] += wk2[n][j]*dgx[n][i];
          }
-         dy[i][j] += xm1*dx[i][j];
+         dy[i][j] += xp1*dx[i][j];
       }
    }
 
@@ -165,7 +166,7 @@ void hpbasis::proj(FLT u1, FLT u2, FLT u3, FLT **f) {
 
 void hpbasis::proj_bdry(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
     int i,j,m,n;
-    FLT xm1,oeta;
+    FLT xp1,oeta;
          
    /* DETERMINE U VALUES, GRAD U VALUES
    AT COLLOCATION POINTS
@@ -217,7 +218,7 @@ void hpbasis::proj_bdry(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
        
    /* SUM OVER N AT EACH I,J POINT   */     
     for (i=0; i < gpx; ++i ) {
-      xm1 = x0[i];
+      xp1 = x0[i];
        for (j=0; j < gpn; ++j) {
           f[i][j]   = 0.0;
          dx[i][j] = 0.0;
@@ -228,7 +229,7 @@ void hpbasis::proj_bdry(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
             dy[i][j] += wk1[n][j]*gx[n][i];
             dx[i][j] += wk2[n][j]*dgx[n][i];
          }
-         dy[i][j] += xm1*dx[i][j];
+         dy[i][j] += xp1*dx[i][j];
       }
    }
 
@@ -373,99 +374,23 @@ void hpbasis::proj_bdry_leg(FLT *lin, FLT **f) {
    return;
 }
 
-void hp_basis::proj_side(int side, FLT *lin, FLT *f, FLT *dtan, FLT *dnrm) {
+void hpbasis::proj_side(int side, FLT *lin, FLT *f, FLT *dtan, FLT *dnrm) {
+   int i,m;
 
-   /* SUM FOR N=1      */
-   /* VERTEX A         */
-   wk1[0][0] = lin[0]*dgnendpt[0];
-
-   /* SIDE 3      */
-   for(m = 2*sm+3; m < bm; ++m )
-      wk1[0][0] += lin[m]*dgnendpt[m];
-
-   /* SUM FOR N=2      */
-   /* VERTEX B         */
-   wk1[1][0] = lin[1]*dgnendpt[1];
-
-   /* SIDE 2      */
-   for (m = sm+3; m < 2*sm+3; ++m)
-      wk1[1][0] += lin[m]*dgnendpt[m];
-
-   /* SUM FOR N=3      */
-   /* VERTEX C         */
-   wk1[2][0] = lin[2]*dgnendpt[2];
-
-   ind = bm;
-   for(m = 3; m < sm+3; ++m) {
-      /* SIDE 1      */
-      wk1[m][0] = lin[m]*dgnendpt[m];
-   
-      /* INTERIOR MODES      */
-      for(n = 0; n < sm+2-m; ++n) {
-         wk1[m][0] += lin[ind]*dgnendpt[ind];
-         ++ind;
-      }
-   }
-    
-   /* SUM OVER N AT EACH I,J POINT   */     
-    for (i=0; i < gpx; ++i ) {
-      xm1 = x0[i];
-      f[i]   = 0.0;
-      dx[i] = 0.0;
-      dy[i] = 0.0;
-      
-      for(n=3; n < nmodx; ++n ) {     
-         f[i]  += lin[n]*gx[n][i];
-         dy[i] += wk1[n][0]*gx[n][i];
-         dx[i] += lin[n]*dgx[n][i];
-      }
-      f[i] -= lin[2]*gx[2][i];
-      dy[i] += xm1*dx[i];
-   }
-   
-   /*	SIDE 2 */
+   /* NORMAL DERIVATIVE */
    for(i=0;i<gpx;++i) {
-      f[i]   = 0.0;
-      dx[i] = 0.0;
-      dy[i] = 0.0;
-      for(m=0;m<sm;++m) {
-         f[i] += lin[m +2*sm+3]*gx[m+3][i];
-         dy[i] += lin[m +2*sm+3]*dgx[m+3][i];
-      }
-         
-   /* SUM FOR N=1      */
-   /* VERTEX A         */
-   dx[i] = lin[0]*gx[0][i]*dgxendpt[0][0];
-
-   /* SIDE 3      */
-   for(m = 2*sm+3; m < bm; ++m )
-      wk1[0][0] += lin[m]**dgnendpt[m];
-
-   /* SUM FOR N=2      */
-   /* VERTEX B         */
-   wk1[1][0] = lin[1]*dgnendpt[1];
-
-   /* SIDE 2      */
-   for (m = sm+3; m < 2*sm+3; ++m)
-      wk1[1][0] += lin[m]*dgnendpt[m];
-
-   /* SUM FOR N=3      */
-   /* VERTEX C         */
-   wk1[2][0] = lin[2]*dgnendpt[2];
-
-   ind = bm;
-   for(m = 3; m < sm+3; ++m) {
-      /* SIDE 1      */
-      wk1[m][0] = lin[m]*dgnendpt[m];
-   
-      /* INTERIOR MODES      */
-      for(n = 0; n < sm+2-m; ++n) {
-         wk1[m][0] += lin[ind]*dgnendpt[ind];
-         ++ind;
-      }
+      dnrm[i] = 0.0;
+      for(m=0;m<tm;++m)
+         dnrm[i] += lin[m]*dgnorm[side][m][i];
    }
 
-
+/*	MOVE SIDE & VERTEX MODES TO WK & THEN PROJECT VALUES & TANGENT DERIVS */   
+   wk0[0][0] = lin[side];
+   wk0[0][1] = lin[(side+1)%3];
+   for(m=0;m<sm;++m)
+      wk0[0][m+2] = lin[side*sm +3 +m];
+      
+   proj1d(wk0[0],f,dtan);
+   
    return;
 }
-

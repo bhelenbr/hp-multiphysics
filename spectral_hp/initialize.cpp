@@ -67,6 +67,7 @@ void hpbasis::initialize(int pdegree) {
    /* SETUP VALUES OF FUNCTIONS */
    /*****************************/
    initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
+   sideinfoinit(); // SET UP THINGS TO CALCULATE NORMAL DERIVATIVE TO SIDE ALONG SIDE
    lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
    legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
    
@@ -106,9 +107,6 @@ void hpbasis::initialize_values(void)
    mat_alloc(dltn1,gpn,gpn,FLT);
    mat_alloc(dltn2,gpn,gpn,FLT);
    vect_alloc(norm,tm,FLT);
-
-   for(i=0;i<3;++i)
-      mat_alloc(dgnorm[i],tm,gpx);
       
    /* GENERATE RECURSION RELATION FOR LEGENDRE
    POLYNOMIALS (USED TO GENERATE GAUSS POINTS)
@@ -354,43 +352,128 @@ void hpbasis::initialize_values(void)
       }
    }
    
+   return;
+}
+   
+   
+void hpbasis::sideinfoinit() {
+   int i,m,n,ind;
+   FLT x,eta,xp1oeta,xp1,oeta;
+
+   for(i=0;i<3;++i)
+      mat_alloc(dgnorm[i],tm,gpx,FLT);
+   
    /*	CALCULATE NORMAL DERIVATIVE VALUES ALONG SIDES */
-   /* SIDE 0 */
-   eta = -1.0;
+   /*	SIDE 0 */
    for(i=0;i<gpx;++i) {
+      eta = -1.0;
       x = 2.*x0[i] -1.0;
       ptvalues_deriv(x,eta);
+      xp1oeta = x0[i]*2.0/(1-eta);
       
       /* CALCULATE POLYNOMIALS */
       /* VERTEX A   */
-      dgnorm[0][0][i] = dpgn[0]*pgx[0] -x0[i]*pgn[0]*dpgx[0];
+      dgnorm[0][0][i] = dpgn[0]*pgx[0] +xp1oeta*pgn[0]*dpgx[0];
 
       /* VERTEX B  */
-      dgnorm[0][1][i] = dpgn[1]*pgx[1] -x0[i]*pgn[1]*dpgx[1];
+      dgnorm[0][1][i] = dpgn[1]*pgx[1] +xp1oeta*pgn[1]*dpgx[1];
 
       /* VERTEX C    */   
-      dgnorm[0][2][i] = dpgn[2]*1.0 -0.0;
+      dgnorm[0][2][i] = dpgn[2]*pgx[2] +xp1oeta*pgn[2]*dpgx[2];
 
       /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[m-1] -x0[i]*pgn[m]*dpgx[m-1];
+         dgnorm[0][m][i] = dpgn[m]*pgx[m] +xp1oeta*pgn[m]*dpgx[m];
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[1] -x0[i]*pgn[m]*dpgx[1];
+         dgnorm[0][m][i] = dpgn[m]*pgx[1] +xp1oeta*pgn[m]*dpgx[1];
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[0] -x0[i]*pgn[m]*dpgx[0];
+         dgnorm[0][m][i] = dpgn[m]*pgx[0] +xp1oeta*pgn[m]*dpgx[0];
 
       /*  INTERIOR MODES   */
       ind = bm;
-      for(m = 2; m< sm+1;++m) {      
-         for(n = 1; n < sm+2-m;++n) {
-            dgnorm[0][ind][i] = dpgn[ind]*pgx[m] -x0[i]*pgn[ind]*dpgx[m];
+      for(m = 3; m< sm+2;++m) {      
+         for(n = 1; n < sm+3-m;++n) {
+            dgnorm[0][ind][i] = dpgn[ind]*pgx[m] +xp1oeta*pgn[ind]*dpgx[m];
             ++ind;
          }
       }
    }
+   
+   /* SIDE 1 */
+   for(i=0;i<gpx;++i) {
+      eta = 2.*x0[i] -1.0;
+      x = -eta;
+      ptvalues_deriv(x,eta);
+      oeta = 2.0/(1-eta);
+      xp1 = (x+1)/2.0;
+      
+      /* CALCULATE POLYNOMIALS */
+      /* VERTEX A   */
+      dgnorm[1][0][i] = -0.5*(dpgn[0]*pgx[0] +(xp1 +1)*oeta*pgn[0]*dpgx[0]);
 
+      /* VERTEX B  */
+      dgnorm[1][1][i] = -0.5*(dpgn[1]*pgx[1] +(xp1 +1)*oeta*pgn[1]*dpgx[1]);
+
+      /* VERTEX C    */   
+      dgnorm[1][2][i] = -0.5*(dpgn[2]*pgx[2] +(xp1 +1)*oeta*pgn[2]*dpgx[2]);
+
+      /*  SIDE 1 (s)      */
+      for(m = 3; m < sm+3; ++m)
+         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[m] +(xp1 +1)*oeta*pgn[m]*dpgx[m]);
+         
+      for(m=sm+3;m<2*sm+3;++m)
+         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[1] +(xp1 +1)*oeta*pgn[m]*dpgx[1]);
+
+      for(m=2*sm+3;m<bm;++m)
+         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[0] +(xp1 +1)*oeta*pgn[m]*dpgx[0]);
+
+      /*  INTERIOR MODES   */
+      ind = bm;
+      for(m = 3; m< sm+2;++m) {      
+         for(n = 1; n < sm+3-m;++n) {
+            dgnorm[1][ind][i] = -0.5*(dpgn[ind]*pgx[m] +(xp1 +1)*oeta*pgn[ind]*dpgx[m]);
+            ++ind;
+         }
+      }
+   }
+   
+   /* SIDE 2 */
+   for(i=0;i<gpx;++i) {
+      x = -1.0;
+      eta = 1.0 -2.*x0[i];
+      ptvalues_deriv(x,eta);
+      
+      /* CALCULATE POLYNOMIALS */
+      /* VERTEX A   */
+      dgnorm[2][0][i] = 2.0/(1. -eta)*pgn[0]*dpgx[0];
+
+      /* VERTEX B  */
+      dgnorm[2][1][i] = 2.0/(1. -eta)*pgn[1]*dpgx[1];
+
+      /* VERTEX C    */   
+      dgnorm[2][2][i] = 2.0/(1. -eta)*pgn[2]*dpgx[2];
+
+      /*  SIDE 1 (s)      */
+      for(m = 3; m < sm+3; ++m)
+         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[m];
+         
+      for(m=sm+3;m<2*sm+3;++m)
+         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[1];
+
+      for(m=2*sm+3;m<bm;++m)
+         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[0];
+
+      /*  INTERIOR MODES   */
+      ind = bm;
+      for(m = 3; m< sm+2;++m) {      
+         for(n = 1; n < sm+3-m;++n) {
+            dgnorm[2][ind][i] = 2.0/(1. -eta)*pgn[ind]*dpgx[m];
+            ++ind;
+         }
+      }
+   }
 
    return;
 }
