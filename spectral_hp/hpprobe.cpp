@@ -90,7 +90,7 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
    pgx[0] = .5*(1-x);
    dpgx[0] = -0.5;
    
-   dpgx[1] = .5*(1+x);
+   pgx[1] = .5*(1+x);
    dpgx[1] = 0.5;
    
    pgx[2] = 1.0;
@@ -104,7 +104,7 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
    dpkm = 0.0;
    for (m = 0;m < sm;++m) {
       pgx[m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
-      dpgx[m+3] = (-x*.5*pk +(1.+x)*(1.-x)*.25*dpk)*norm[m+2];
+      dpgx[m+3] = (-x*.5*pk +(1.+x)*(1.-x)*.25*dpk)*norm[m+3];
       pkp = (x-a0[0][m])*pk - b0[0][m]*pkm;
       dpkp = pk + (x-a0[0][m])*dpk - b0[0][m]*dpkm;
       dpkm = dpk;
@@ -146,8 +146,8 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
    dpk = 0.0;
    dpkm = 0.0;
    for(n=0;n<sm;++n) {
-      pgn[ind] = (1.-eta)*(1.+eta)*.25*pk*norm[n+3];;		
-      dpgn[ind] = -.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk;
+      pgn[ind] = (1.-eta)*(1.+eta)*.25*pk*norm[n+3];
+      dpgn[ind] = (-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk)*norm[n+3];
       pkp = (eta-a0[1][n])*pk - b0[1][n]*pkm;
       dpkp = pk + (eta-a0[1][n])*dpk - b0[1][n]*dpkm;
       dpkm = dpk;
@@ -164,8 +164,8 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
    dpkm = 0.0;
 
    for(n=0;n<sm;++n) {
-      pgn[ind] = (n % 2 ? -1 : 1)*(1.-eta)*(1.+eta)*.25*pk;
-      dpgn[ind] = (n % 2 ? -1 : 1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk);
+      pgn[ind] = (n % 2 ? -1 : 1)*(1.-eta)*(1.+eta)*.25*pk*norm[n+3];
+      dpgn[ind] = (n % 2 ? -1 : 1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk)*norm[n+3];
       pkp = (eta-a0[1][n])*pk - b0[1][n]*pkm;
       dpkp = pk + (eta-a0[1][n])*dpk - b0[1][n]*dpkm;
       dpkm = dpk;
@@ -298,7 +298,7 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
 			wk1[m][0] = lin[n][m]*dpgn[m];
 	 		wk2[m][0] = wk0[m][0]*n0;
 		}
-	 	
+
 /*		SUM OVER N AT EACH I,J POINT	*/  	
       x0 = 0.5*(1+x);
       f[n]	= 0.0;

@@ -28,7 +28,6 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    grd[0].in_mesh(grd_nm,static_cast<FILETYPE>(fmt),grwfac);
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
-/*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }

@@ -24,27 +24,27 @@
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {1006, 316}}";
+								Frame = "{{0, 0}, {749, 316}}";
 								Split0 = {
-									Frame = "{{0, 170}, {1006, 146}}";
+									Frame = "{{0, 170}, {749, 146}}";
 									Split0 = {
-										Frame = "{{0, 0}, {351, 146}}";
+										Frame = "{{0, 0}, {260, 146}}";
 									};
 									Split1 = {
-										Frame = "{{360, 0}, {646, 146}}";
+										Frame = "{{269, 0}, {480, 146}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {1006, 145}}";
+									Frame = "{{0, 0}, {749, 145}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {749, 105}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {1006, 316}}";
+							Frame = "{{0, 0}, {749, 316}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
@@ -138,12 +138,17 @@
 	};
 	F5125C0E01728F7501000001 = {
 		uiCtxt = {
-			sepNavWindowFrame = "{{333, 592}, {750, 502}}";
+			sepNavWindowFrame = "{{225, 229}, {750, 502}}";
 		};
 	};
 	F5125C0F01728F7501000001 = {
 		uiCtxt = {
 			sepNavWindowFrame = "{{649, 150}, {750, 502}}";
+		};
+	};
+	F5125C1001728F7501000001 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{15, 239}, {750, 502}}";
 		};
 	};
 	F525D077017F63DC01990B20 = {

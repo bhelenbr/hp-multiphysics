@@ -69,6 +69,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    if (tinfo[tind] > -1) {
 /*		DEAL WITH CURVED SIDES */
       crdtouht(tind);
+
       iter = 0;
       do {
          b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
@@ -82,7 +83,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          r += dr;
          s += ds;
          if (iter++ > 50) {
-            printf("max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f \n",tind,xp,yp,r,s);
+            printf("max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
             break;
          }
       } while (fabs(dr) +fabs(ds) > 100.*EPSILON);

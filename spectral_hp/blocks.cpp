@@ -124,67 +124,6 @@ void blocks::init(char *file) {
    return;
 }
 
-
-void blocks::init(int nb, int mg, int lg2p, char *filename) {
-   int i,j,k,p,match;
-   char fnmcat[80];
-   char app[2];
-
-   nblocks = nb;
-   mglvls = mg;  // AT LEAST ONE ALWAYS
-   lg2pmax = lg2p;
-   mgrids = MAX(mglvls-lg2pmax,1);
-    
-/*	INITIALIZE BASIS FUNCTIONS */
-   p = 1;
-   for(i=0;i<lg2pmax;++i)
-      p = p<<1;
-   for(i=lg2pmax;i>=0;--i) {
-      base[i].initialize(p);
-      p = p>>1;
-   }
-   
-   blk = new class block[nblocks];
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   if (nblocks > 1) {
-      for (i=0;i<nblocks;++i) {
-         strcpy(fnmcat,filename);
-         app[0] = 'a'+i;
-         app[1] = '\0';
-         strcat(fnmcat,app);
-         blk[i].initialize(fnmcat, mgrids, base, lg2pmax);
-      }
-   }
-   else
-      blk[0].initialize(filename, mgrids, base, lg2pmax);
-
-/*	MATCH BOUNDARIES */
-   for(i=0;i<mgrids;++i) {
-      for(j=0;j<nblocks;++j) {
-         match = 0;
-         for(k=0;k<nblocks;++k)
-            match += blk[j].grd[i].findmatch(blk[k].grd[i]);
-            
-         if (match != blk[j].grd[i].alld_mp()) {
-            printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[i].alld_mp());
-            exit(1);
-         }
-      }
-   }
-   
-   hp_mgrid::setstatics(0.0,0.0,1.0);
-   
-/*	NEED TO INITIALIZE EACH WITH INITIALIZATION FUNCTION */
-   for(i=0;i<nblocks;++i) {
-      blk[i].grd[0].loadbasis(base[lg2pmax]);
-      blk[i].grd[0].tobasis(&f1);
-      blk[i].grd[0].surfvrttoug();
-   }
-
-   return;
-}
-
 FLT outertime = 0.0;
 
 void blocks::tadvance() {
@@ -246,16 +185,17 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   static int i,j,n;
+   int i,j,n;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
-   
-   grid = lvl -lg2pmax;
-   bsnum =0;
 
 /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */   
    if (lvl <= lg2pmax) {
       grid = 0;
       bsnum = lg2pmax-lvl;
+   }
+   else {
+      grid = lvl -lg2pmax;
+      bsnum =0;
    }
                   
    for (i=0;i<vw;++i) {
@@ -337,7 +277,7 @@ void blocks::output(int number, FILETYPE type=text) {
       strcat(outname, ".");
       number_str(bname,outname,number,3);
       blk[i].grd[0].output(bname,type);
-		if (adapt) blk[i].grd[0].out_mesh(bname,gambit);            
+		if (adapt) blk[i].grd[0].out_mesh(bname,easymesh);            
    }
    
    return;
@@ -365,8 +305,8 @@ void blocks::go() {
          adaptation();
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
-      }
-      
+      }       
+
       if (tstep == 0) {
          hp_mgrid::nstep = 2;
 			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;

@@ -15,7 +15,7 @@
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
-#define KOVASZNAY
+#define CYLINDER
 
 /***************************/
 /* INITIALIZATION FUNCTION */

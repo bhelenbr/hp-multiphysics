@@ -41,7 +41,6 @@ class blocks {
 
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
-      void init(int nb, int mg, int lg2p, char *filename);
       void init(char *filename);
       
 /*		START SIMULATION */
