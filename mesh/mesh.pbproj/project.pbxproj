@@ -26,12 +26,6 @@
 //012
 //013
 //014
-		0114BFA700CEFB737F000001 = {
-			fileRef = 07F2E94600974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		014CEA460018CE2711CA2923 = {
 			buildRules = (
 			);
@@ -243,6 +237,7 @@
 			buildStyles = (
 				014CEA460018CE2711CA2923,
 				014CEA470018CE2711CA2923,
+				F5F501A101A008B701990B20,
 			);
 			isa = PBXProject;
 			mainGroup = 08FB7794FE84155DC02AAC07;
@@ -301,6 +296,7 @@
 				08FB77A1FE84155DC02AAC07,
 				08FB77A3FE84155DC02AAC07,
 				08FB77A5FE84155DC02AAC07,
+				F5F501A201A008E201990B20,
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -345,7 +341,6 @@
 				07F2E95E00974D3D80990B20,
 				07F2E95F00974D3D80990B20,
 				00E0854400CAD1857F000001,
-				0114BFA700CEFB737F000001,
 				F5BDAB55014068AC01000001,
 				F5CD435B014C4B3A01000001,
 				F543FC1C014FF18901000001,
@@ -354,6 +349,7 @@
 				F5CED4B0015630AA01000001,
 				F5BE6B510162B73801000001,
 				F5AF3BFA01879D4B0131A0B3,
+				F515DB4201A45AE301990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -421,6 +417,12 @@
 			isa = PBXFileReference;
 			path = triangulate.cpp;
 			refType = 4;
+		};
+		F515DB4201A45AE301990B20 = {
+			fileRef = 07F2E94600974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F543FC18014FCBC901000001 = {
 			isa = PBXFileReference;
@@ -506,6 +508,27 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5F501A101A008B701990B20 = {
+			buildRules = (
+			);
+			buildSettings = {
+			};
+			isa = PBXBuildStyle;
+			name = Library;
+		};
+		F5F501A201A008E201990B20 = {
+			buildActionMask = 12;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			name = "Shell Script";
+			neededFileNames = (
+			);
+			shellPath = /bin/csh;
+			shellScript = "~helenbrk/Codes/mesh/createlib";
 		};
 		F5F975AA015243AF01000001 = {
 			fileRef = 07F2E94900974D3D80990B20;
