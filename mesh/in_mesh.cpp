@@ -299,7 +299,8 @@ next1:      continue;
             }
             fclose(grd);
             
-            treeinit();
+            if (vin == vrtx) treeinit();
+            
             return(1);
 
          default:
