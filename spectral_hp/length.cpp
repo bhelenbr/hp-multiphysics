@@ -12,7 +12,23 @@
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
-void hp_mgrid::length1() {
+void hp_mgrid::energy(FLT& esum, FLT& asum) {
+   int tind,j,v0;
+   FLT q;
+   
+   for(tind=0;tind<ntri;++tind) {
+      q = 0.0;
+      for(j=0;j<3;++j) {
+         v0 = tvrtx[tind][j];
+         q += pow(ug.v[v0][0],2) +pow(ug.v[v0][1],2);
+      }
+      esum += gbl->rho*q/3.*area(tind);
+      asum += area(tind);
+   }
+   return;
+}
+
+void hp_mgrid::length1(FLT norm) {
    int i,j,v0,v1,indx,sind,bnum,count;
    FLT sum,u,v,ruv,lgtol,lgf,ratio;
    class mesh *tgt;
@@ -52,28 +68,29 @@ void hp_mgrid::length1() {
          break;
          
       default:
-         indx = 0;
+         indx = b.sm-1;
          for(i=0;i<nside;++i) {
             v0 = svrtx[i][0];
             v1 = svrtx[i][1];
             u = fabs(ug.v[v0][0] +ug.v[v1][0]);
             v = fabs(ug.v[v0][1] +ug.v[v1][1]);
             ruv = gbl->rho*0.5*(u + v);
-            sum = ruv*(fabs(ug.s[indx+b.sm -1][0]) +fabs(ug.s[indx+b.sm -1][1])) +fabs(ug.s[indx+b.sm -1][2]);
+            sum = ruv*(fabs(ug.s[indx][0]) +fabs(ug.s[indx][1])) +fabs(ug.s[indx][2]);
             fltwk[v0] += sum;
             fltwk[v1] += sum;
             indx += sm0;
+            
          }
-         
+
          /* BOUNDARY CURVATURE? */
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
-            indx = 0;
+            indx = b.sm-1;
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               /* THIS LIMITS BOUNDARY CURVATURE DUE TO -> ALL <- HIGHER ORDER MODES TO 1/invbdryerr VARIATION */
+               /* THIS LIMITS BOUNDARY CURVATURE TO 1/invbdryerr VARIATION */
                sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b.p+1)/2.0);
                fltwk[v0] += sum*trncerr*nnbor[v0];
                fltwk[v1] += sum*trncerr*nnbor[v1];
@@ -82,15 +99,15 @@ void hp_mgrid::length1() {
          }
          break;
    }
-      
+         
    
    for(i=0;i<nvrtx;++i) {
-      fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
+      fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1));
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
-//    vlngth[i] = MIN(vlngth[i],gbl->maxlength);
-//    vlngth[i] = MAX(vlngth[i],gbl->minlength);
+//   	  vlngth[i] = MIN(vlngth[i],0.3333);  // TEMPORARY !!!
+//      vlngth[i] = MAX(vlngth[i],gbl->minlength);  //TEMPORARY !!!! 
    }
    
    /* AVOID HIGH ASPECT RATIOS */
