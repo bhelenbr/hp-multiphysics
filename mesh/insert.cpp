@@ -300,7 +300,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    stri[nside][1] = -(((i+1)<<16) +sbdry[i].num);
    sbdry[i].el[sbdry[i].num++] = nside;
    if (sbdry[i].num > maxsbel) {
-      printf("too many boundary elements\n");
+      printf("too many boundary elements, %d %d\n",sbdry[i].type,sbdry[i].num);
       exit(1);
    }
    ++nside;
