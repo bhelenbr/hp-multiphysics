@@ -204,9 +204,10 @@ class mesh {
 
       /* MESH MODIFICATION */   
       int coarsen(const class mesh& xmesh);
+      void coarsen2(const class mesh& inmesh, class mesh& work);
       void length();
-      void swap(FLT tolsize = 0.0);
-      void yaber(FLT tolsize, int yes_swap, FLT swaptol);
+      void swap(FLT swaptol = 0.0);
+      void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
       inline void treeupdate() { qtree.update(0,nvrtx);}
       void rebay(FLT tolsize);
       

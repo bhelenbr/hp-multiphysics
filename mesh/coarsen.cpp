@@ -300,3 +300,34 @@ int mesh::smooth_cofa(int niter) {
    return(1);
 }
 
+void mesh::coarsen2(const class mesh &inmesh, class mesh &work) {
+   int i;
+   
+   work.copy(inmesh);
+   work.initvlngth();
+   for(i=0;i<work.nvrtx;++i)
+      work.vlngth[i] = 1.6*work.vlngth[i];
+      
+   work.yaber(1.414, 0);
+   work.qtree.reinit();  // REMOVES UNUSED QUADS
+
+   if (!initialized) {
+      /* VERTEX STORAGE ALLOCATION */
+      maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
+      maxsbel = MAX(inmesh.maxsbel/2,10);
+      allocate(maxvst);
+      bdryalloc(maxsbel);
+      nsbd = inmesh.nsbd;
+      nvbd = inmesh.nvbd;
+      qtree.allocate(vrtx,maxvst);
+      initialized = 1;
+   }      
+   copy(work);
+   initvlngth();
+   
+   return;
+}
+   
+   
+   
+
