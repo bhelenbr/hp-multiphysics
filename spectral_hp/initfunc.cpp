@@ -527,12 +527,16 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    }
 
 #ifdef LAYER
-   if (typ == 1025) {
+   if (typ == 1026) {
       if (startup) {
          iter = 0;
          do {
             mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
+#ifdef TWOLAYER
             delt_dist = -(hgt(typ,x,y)-1.0)/mag;
+#else
+            delt_dist = -(hgt(typ,x,y)-0.475)/mag;
+#endif
             x += delt_dist*dhgtdx(typ,x,y);
             y += delt_dist*dhgtdy(typ,x,y);
             if (++iter > 100) {
@@ -547,7 +551,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       return;
    }
 
-   if (typ & IFCE_MASK) {
+   if (typ & (FSRF_MASK+IFCE_MASK)) {
       if (startup) {
          return;
       }
