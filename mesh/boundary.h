@@ -17,7 +17,7 @@ class vrtx_boundary {
    private:
       mesh &x;
       int idnum;
-      FLT pt[ND];
+      FLT pt[mesh::ND];
       int v0;
       
    public:
@@ -33,23 +33,23 @@ class vrtx_boundary {
       /* OTHER USEFUL STUFF */
       virtual void copy(const vrtx_boundary &bin) {
          v0 = bin.v0;
-         for(int n=0;n<ND;++n)
+         for(int n=0;n<mesh::ND;++n)
             pt[n] = bin.pt[n];
       }
       virtual void output(FILE *out) {
          fprintf(out,"vbdry idnum: %d point: %d\n",idnum,v0);
-         for(int n=0;n<ND;++n)
+         for(int n=0;n<mesh::ND;++n)
             fprintf(out,"%f ",pt[n]);
          fprintf(out,"\n");
       }
       virtual void input(FILE *in){
          fscanf(in,"vbdry idnum: %*d point: %d\n",&v0);
-         for(int n=0;n<ND;++n)
+         for(int n=0;n<mesh::ND;++n)
             fscanf(in,"%lf ",&pt[n]);
          fscanf(in,"\n");
       } 
       virtual void getgeometryfrommesh() {
-         for(int n=0;n<ND;++n) {
+         for(int n=0;n<mesh::ND;++n) {
             pt[n] = b().vrtx[v0][n];
          }
       }
@@ -160,7 +160,7 @@ class comm_boundary : public side_boundary {
       /* INITIALIZE STORAGE */
       void alloc(int nside) {
          side_boundary::alloc(nside);
-         sbuff = new FLT[2*ND*mxsz()];
+         sbuff = new FLT[2*mesh::ND*mxsz()];
       }
       
       /* ZERO FIRST VALUE */

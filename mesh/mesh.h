@@ -14,7 +14,6 @@
 #define EPSILON DBL_EPSILON
 #endif
 
-#define ND 2
 
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
 
@@ -22,13 +21,17 @@ class side_boundary;
 class vrtx_boundary;
 
 class mesh {
+
+   
    /***************/
    /* DATA        */
    /***************/
    protected:
       int initialized, maxvst;
 
-   public:      
+   public:
+      static const int ND = 2;
+      
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];

@@ -296,17 +296,17 @@ void curv_boundary::mvpttobdry(int indx, FLT psi, FLT pt[2]) {
    FLT mag, delt_dist;
       
    /* FOR AN ANALYTIC DEFINED SIDE */
-   for (n=0;n<ND;++n)
+   for (n=0;n<mesh::ND;++n)
       pt[n] = (1. -psi)*b().vrtx[b().svrtx[sd(indx)][0]][n] +psi*b().vrtx[b().svrtx[sd(indx)][1]][n];
 
    iter = 0;
    do {
       mag = 0.0;
-      for(n=0;n<ND;++n)
+      for(n=0;n<mesh::ND;++n)
          mag += pow(dhgt(n,pt),2);
       mag = sqrt(mag);
       delt_dist = -hgt(pt)/mag;
-      for(n=0;n<ND;++n)
+      for(n=0;n<mesh::ND;++n)
          pt[n] += delt_dist*dhgt(n,pt)/mag;
       if (++iter > 100) {
          printf("iterations exceeded curved boundary %d %f %f\n",idnty(),pt[0],pt[1]);

@@ -14,9 +14,9 @@ ONLY INCLUDE FROM WITH R_MESH.H
 class rbdry_interface {
    public:
       /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-      virtual void dirichlet(FLT (*)[ND]) {}
+      virtual void dirichlet(FLT (*)[mesh::ND]) {}
 #ifdef FOURTH
-      virtual void fixdx2(FLT (*)[ND]) {}
+      virtual void fixdx2(FLT (*)[mesh::ND]) {}
 #endif
       virtual void tadvance() {}
 };
@@ -24,12 +24,12 @@ class rbdry_interface {
 /* GENERIC PROTOCALS FOR MOVING BOUNDARIES */
 class no_rfix {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[ND]) {}
+      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {}
 };
 
 class rfixx {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[ND]) {
+      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -43,7 +43,7 @@ class rfixx {
 
 class rfixy {
    public:
-      static void dirichlet(class side_boundary *bin, FLT (*res)[ND]) {
+      static void dirichlet(class side_boundary *bin, FLT (*res)[mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -66,7 +66,7 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
    public:
       rgeneric(class r_mesh& xin, int type) : BASE(xin,type), x(xin) {}
       inline r_mesh& b() {return(x);}
-      void dirichlet(FLT (*res)[ND]) {
+      void dirichlet(FLT (*res)[mesh::ND]) {
          xfix.dirichlet(this,res);
          yfix.dirichlet(this,res);
       }

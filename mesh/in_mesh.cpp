@@ -91,15 +91,26 @@ next1:      continue;
                printf("1: error in grid %s\n",grd_app);
                exit(1);
             }
-    
+            
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d:");
+#if (ND == 3)
+               fgets(grd_app,100,grd);
+               ierr = sscanf(grd_app,"%lf%lf%lf%d",&vin[i][0],&vin[i][1],&vin[i][2],&vinfo[i]);
+               if (ierr != ND+1) {
+                  ierr = sscanf(grd_app,"%lf%lf%d",&vin[i][0],&vin[i][1],&vinfo[i]);
+                  if (ierr != ND) { printf("2: error in grid\n"); exit(1); }
+               }
+#else
                ierr = 0;
-               for(n=0;n<ND;++n)
-                  ierr += fscanf(grd,"%lf\n",&vin[i][n]);
-               ierr += fscanf(grd,"%d\n",&vinfo[i]);
-               if (ierr != n+1) { printf("2: error in grid\n"); exit(1); }
+               for(n=0;n<ND;++n) {
+                  ierr += fscanf(grd,"%lf",&vin[i][n]);
+               }
+               ierr += fscanf(grd,"%d",&vinfo[i]);
+               if (ierr != ND+1)  { printf("2: error in grid\n"); exit(1); }
+#endif
+
             }
             fclose(grd);
 
