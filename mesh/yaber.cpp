@@ -80,9 +80,9 @@ void mesh::yaber(FLT tolsize) {
       assert(sind != -1);
       
 /*		COLLAPSE EDGE */
-      nfail = collapse(sind);
       printf("collapsing side %d: %d\n",sind,nfail);
-
+      nfail = collapse(sind);
+      
       for(i=0;i<nsdel;++i) 
          if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
          
@@ -112,7 +112,7 @@ void mesh::yaber(FLT tolsize) {
          }
       }
    }
-      
+   
 /*	DELETE LEFTOVER VERTICES */
 /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
    for(i=nvrtx-1;i>=0;--i) {
@@ -155,7 +155,7 @@ void mesh::yaber(FLT tolsize) {
       for(j=0;j<sbdry[i].num;++j) 
          while (sbdry[i].el[j] >= nside) 
             sbdry[i].el[j] = sinfo[sbdry[i].el[j]]; 
-            
+
    for (i=0;i<nsbd;++i)
       bdrysidereorder(i);
    
@@ -172,6 +172,66 @@ void mesh::yaber(FLT tolsize) {
          dlttri(i);
       }
    }
-   
+
 	return;
 }
+
+void mesh::checkintegrity() {
+   int i,j,sind,dir;
+   
+   for(i=0;i<ntri;++i) {
+      if (tinfo[i] < 0) continue;
+      
+      for(j=0;j<3;++j) {
+         sind = tside[i].side[j];
+         dir = -(tside[i].sign[j] -1)/2;
+         
+         if (sinfo[sind] == -3) {
+            printf("references deleted side %d %d\n",i,sind);
+            for(i=0;i<nside;++i)
+               sinfo[i] += 2;
+            out_mesh("error");
+            exit(1);;
+         }
+
+         if (svrtx[sind][dir] != tvrtx[i][(j+1)%3] && svrtx[sind][1-dir] != tvrtx[i][(j+2)%3]) {
+            printf("failed vrtx check tind %d sind %d\n",i,sind);
+            for(i=0;i<nside;++i)
+               sinfo[i] += 2;
+            out_mesh("error"); 
+            exit(1);;
+         }    
+         
+         if (stri[sind][dir] != i) {
+            printf("failed side check tind %d sind %d\n",i,sind);
+            for(i=0;i<nside;++i)
+               sinfo[i] += 2;
+            out_mesh("error"); 
+            exit(1);;
+         }
+         
+         if (ttri[i][j] != stri[sind][1-dir]) {
+            printf("failed ttri check tind %d sind %d\n",i,sind);
+            for(i=0;i<nside;++i)
+               sinfo[i] += 2;
+            out_mesh("error"); 
+            exit(1);;
+         }
+         
+         if (ttri[i][j] > 0) {
+            if(tinfo[ttri[i][j]] < 0) {
+               printf("references deleted tri\n");
+               for(i=0;i<nside;++i)
+                  sinfo[i] += 2;
+               out_mesh("error"); 
+               exit(1);;
+            }
+         }
+      }
+   }
+   
+   return;
+}
+   
+   
+         

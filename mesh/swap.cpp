@@ -14,9 +14,8 @@
 #include<float.h>
 
 int mesh::swap(int sind, FLT tol = 0.0) {
-   int j,t1,t2,tind,s1,snum1,snum2,v0,v1,vt1,vt2,dir;
-   int tempsid[2],tempsgn[2];
-      
+   int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
+         
    t1 = stri[sind][0];
    t2 = stri[sind][1];
    
@@ -30,10 +29,8 @@ int mesh::swap(int sind, FLT tol = 0.0) {
       if (tside[t2].side[snum2] == sind) break;
    assert(snum2 != 3); 
    
-   dir = (1 +tside[t1].sign[snum1])/2;
-   v0 = svrtx[sind][1-dir];
-   v1 = svrtx[sind][dir];
-   
+   v0 = svrtx[sind][0];
+   v1 = svrtx[sind][1];
    vt1 = tvrtx[t1][snum1];
    vt2 = tvrtx[t2][snum2];
    
@@ -46,82 +43,57 @@ int mesh::swap(int sind, FLT tol = 0.0) {
 /*	SWAP SIDE */
    svrtx[sind][0] = vt2;
    svrtx[sind][1] = vt1;
-   stri[sind][0] = t1;
-   stri[sind][1] = t2;
-   
-   tvrtx[t1][0] = vt2;
-   tvrtx[t1][1] = vt1;
-   tvrtx[t1][2] = v0;
-   
-   tvrtx[t2][0] = vt1;
-   tvrtx[t2][1] = vt2;
-   tvrtx[t2][2] = v1;
-   
-   tempsid[0] = tside[t1].side[(snum1+2)%3];
-   tempsgn[0] = tside[t1].sign[(snum1+2)%3];
-   
-   tempsid[1] = tside[t1].side[(snum1+1)%3];
-   tempsgn[1] = tside[t1].sign[(snum1+1)%3];
 
-/*	FIX STRI/TTRI FOR TWO SIDES */   
-   s1 = tempsid[1];
-   dir = (1 -tempsgn[1])/2;
-   stri[s1][dir] = t2;
-   tind = stri[s1][1-dir];
-   if (tind > -1) {
-      for(j=0;j<3;++j)
-         if (ttri[tind][j] == t1) break;
-      assert(j != 3);
-      ttri[tind][j] = t2;
-   }
+/*	KEEP 2/3 VERTICES IN SAME SPOT */
+   tvrtx[t1][(snum1 +2)%3] = vt2;
+   tvrtx[t2][(snum2 +2)%3] = vt1;
+
+   s1p = (snum1 +1)%3;
+   s2p = (snum2 +1)%3;
    
-   s1 = tside[t2].side[(snum2 +1)%3];
-   dir = (1 -tside[t2].sign[(snum2 +1)%3])/2;
-   stri[s1][dir] = t1;
-   tind = stri[s1][1-dir];
+/*	FIX 2 CHANGED EXTERIOR SIDES */
+   tside[t1].side[snum1] = tside[t2].side[s2p];
+   tside[t1].sign[snum1] = tside[t2].sign[s2p];
+   ttri[t1][snum1] = ttri[t2][s2p];
+
+   tside[t2].side[snum2] = tside[t1].side[s1p];
+   tside[t2].sign[snum2] = tside[t1].sign[s1p];
+   ttri[t2][snum2] = ttri[t1][s1p];
+   
+/*	FIX STRI/TTRI FOR 2 CHANGED EXTERIOR SIDES */
+   sd = tside[t1].side[snum1];
+   dir = (1 -tside[t1].sign[snum1])/2;
+   stri[sd][dir] = t1;
+   tind = ttri[t1][snum1];
    if (tind > -1) {
       for(j=0;j<3;++j)
-         if (ttri[tind][j] == t2) break;
+         if (tside[tind].side[j] == sd) break;
       assert(j != 3);
       ttri[tind][j] = t1;
    }
    
-   tside[t1].side[2] = sind;
-   tside[t1].sign[2] = 1;
-   
-   tside[t1].side[1] = tside[t2].side[(snum2 +1)%3];
-   tside[t1].sign[1] = tside[t2].sign[(snum2 +1)%3];
-   
-   tside[t1].side[0] = tempsid[0];
-   tside[t1].sign[0] = tempsgn[0];
-   
-   tempsid[0] = tside[t2].side[(snum2 +2)%3];
-   tempsgn[0] = tside[t2].sign[(snum2 +2)%3];
-   
-   tside[t2].side[2] = sind;
-   tside[t2].sign[2] = -1;
-   
-   tside[t2].side[1] = tempsid[1];
-   tside[t2].sign[1] = tempsgn[1];
-   
-   tside[t2].side[0] = tempsid[0];
-   tside[t2].sign[0] = tempsgn[0];
-   
-   vtri[v0] = t1;
-   vtri[v1] = t2;
-   
-   for(j=0;j<3;++j) {
-      s1 = tside[t1].side[j];
-      dir = (1 +tside[t1].sign[j])/2;
-      ttri[t1][j] = stri[s1][dir];
-   }
+   sd = tside[t2].side[snum2];
+   dir = (1 -tside[t2].sign[snum2])/2;
+   stri[sd][dir] = t2;
+   tind = ttri[t2][snum2];
+   if (tind > -1) {
+      for(j=0;j<3;++j)
+         if (tside[tind].side[j] == sd) break;
+      assert(j != 3);
+      ttri[tind][j] = t2;
+   } 
 
-   for(j=0;j<3;++j) {
-      s1 = tside[t2].side[j];
-      dir = (1 +tside[t2].sign[j])/2;
-      ttri[t2][j] = stri[s1][dir];
-   }
+   vtri[v0] = t1;
+   vtri[v1] = t2;  
    
+   ttri[t1][s1p] = t2;
+   ttri[t2][s2p] = t1;
+   
+   tside[t1].side[s1p] = sind;
+   tside[t2].side[s2p] = sind;  
+   tside[t1].sign[s1p] =  1;
+   tside[t2].sign[s2p] = -1;
+
    return(1);
 }
    
