@@ -328,9 +328,7 @@ void blocks::cycle(int vw, int lvl) {
    for (i=0;i<vw;++i) {
    
       nstage(grid,base[bsnum].sm,lvl);
-      
-      if (lvl == mglvls-1) return;
-      
+
 #ifdef PV3
       if (lvl == 0) {
          pvtime = 1.0*iter;
@@ -338,6 +336,8 @@ void blocks::cycle(int vw, int lvl) {
       }
 #endif
       
+      if (lvl == mglvls-1) return;
+            
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].rsdl(NSTAGE,lvl);
 
