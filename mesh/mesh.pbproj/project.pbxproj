@@ -237,7 +237,6 @@
 			buildStyles = (
 				014CEA460018CE2711CA2923,
 				014CEA470018CE2711CA2923,
-				F5F501A101A008B701990B20,
 			);
 			isa = PBXProject;
 			mainGroup = 08FB7794FE84155DC02AAC07;
@@ -299,9 +298,11 @@
 				F5F501A201A008E201990B20,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
 				LIBRARY_SEARCH_PATHS = ../lib;
+				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -508,14 +509,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F5F501A101A008B701990B20 = {
-			buildRules = (
-			);
-			buildSettings = {
-			};
-			isa = PBXBuildStyle;
-			name = Library;
 		};
 		F5F501A201A008E201990B20 = {
 			buildActionMask = 12;

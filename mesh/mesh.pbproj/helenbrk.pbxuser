@@ -20,7 +20,7 @@
 		);
 	};
 	08FB7793FE84155DC02AAC07 = {
-		activeBuildStyle = 014CEA460018CE2711CA2923;
+		activeBuildStyle = 014CEA470018CE2711CA2923;
 		activeTarget = 08FB779FFE84155DC02AAC07;
 		addToTargets = (
 			08FB779FFE84155DC02AAC07,
@@ -31,7 +31,7 @@
 			PBXWorkspaceConfiguration = {
 				ContentSize = "{1158, 784}";
 				LeftSlideOut = {
-					ActiveTab = 0;
+					ActiveTab = 3;
 					Frame = "{{0, 23}, {1158, 761}}";
 					Split0 = {
 						Frame = "{{225, 0}, {933, 761}}";
@@ -42,34 +42,34 @@
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {823, 319}}";
+								Frame = "{{0, 0}, {933, 319}}";
 								Split0 = {
-									Frame = "{{0, 135}, {823, 184}}";
+									Frame = "{{0, 253}, {933, 66}}";
 									Split0 = {
-										Frame = "{{0, 0}, {390, 184}}";
+										Frame = "{{0, 0}, {442, 66}}";
 									};
 									Split1 = {
-										Frame = "{{399, 0}, {424, 184}}";
+										Frame = "{{451, 0}, {482, 66}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {823, 110}}";
+									Frame = "{{0, 0}, {933, 228}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {781, 173}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {823, 319}}";
+							Frame = "{{0, 0}, {933, 319}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {823, 238}}";
+							Frame = "{{0, 0}, {933, 238}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {823, 238}}";
+								Frame = "{{0, 0}, {933, 238}}";
 							};
 						};
 						Tab2 = {
@@ -96,12 +96,12 @@
 						Frame = "{{0, 0}, {200, 100}}";
 					};
 					Tab3 = {
-						Frame = "{{0, 0}, {200, 704}}";
+						Frame = "{{0, 0}, {200, 761}}";
 						Split0 = {
-							Frame = "{{0, 0}, {200, 340}}";
+							Frame = "{{0, 0}, {200, 367}}";
 						};
 						Split1 = {
-							Frame = "{{0, 349}, {200, 355}}";
+							Frame = "{{0, 376}, {200, 385}}";
 						};
 						SplitCount = 2;
 					};
