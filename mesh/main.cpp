@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 /*	THIS DEFORMS A MESH */
    class blocks z;
 
-  z.init(1,3,"../../grids/TIM/tim",easymesh,10.0);
+  z.init(1,4,"../../grids/TIM/tim",easymesh,10.0);
 //  z.init(1,4,"/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5",easymesh,5.0);
 //  z.init(1,3,"start",easymesh,10.0);
 

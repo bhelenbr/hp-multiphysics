@@ -9,7 +9,7 @@
 
 int mesh::coarsen(const class mesh& fmesh) {
 	int i,j,sind;
-	int v0, v1;
+	int v0, v1, odd;
    int nloop;
    FLT mindist;
    
@@ -90,7 +90,52 @@ int mesh::coarsen(const class mesh& fmesh) {
 			svrtx[nside][0] = intwk2[v0];
 		}
 
-		for(j=2;j<fmesh.sbdry[i].num;j+=2) {
+      odd = fmesh.sbdry[i].num%2;
+      for(j=2;j<fmesh.sbdry[i].num/2;j+=2) {
+			v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
+			vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
+			vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
+			intwk2[v0] = nvrtx;
+			svrtx[nside][1] = nvrtx;
+			sbdry[i].el[sbdry[i].num] = nside;
+         stri[nside][1] = -1;
+			++nside; 
+			++sbdry[i].num;
+			svrtx[nside][0] = nvrtx;
+			++nvrtx;
+         assert(sbdry[i].num < maxsbel -1);
+         assert(nside < maxvst -1);
+         assert(nvrtx < maxvst -1);
+		}
+      
+/*		IF ODD AVERAGE MIDDLE POINT (KEEPS SYMMETRY WITH MATCHING BOUNDARIES) */
+      if (odd) {
+         printf("coarsening side with odd number of points\n");
+         j = fmesh.sbdry[i].num/2;
+         v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
+         v1 = fmesh.svrtx[fmesh.sbdry[i].el[j]][1];
+         vrtx[nvrtx][0] = 0.5*(fmesh.vrtx[v0][0] +fmesh.vrtx[v1][0]);
+			vrtx[nvrtx][1] = 0.5*(fmesh.vrtx[v0][1] +fmesh.vrtx[v1][1]);
+			intwk2[v0] = nvrtx;
+         intwk2[v1]= nvrtx;
+			svrtx[nside][1] = nvrtx;
+			sbdry[i].el[sbdry[i].num] = nside;
+         stri[nside][1] = -1;
+			++nside; 
+			++sbdry[i].num;
+			svrtx[nside][0] = nvrtx;
+			++nvrtx;
+         assert(sbdry[i].num < maxsbel -1);
+         assert(nside < maxvst -1);
+         assert(nvrtx < maxvst -1); 
+         j = fmesh.sbdry[i].num -((fmesh.sbdry[i].num-2)/4)*2;
+         
+      }
+      else {
+         j = fmesh.sbdry[i].num/2;
+      }
+
+      for(;j<fmesh.sbdry[i].num;j+=2) {
 			v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
 			vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
 			vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
@@ -130,23 +175,6 @@ int mesh::coarsen(const class mesh& fmesh) {
       assert(sbdry[i].num < maxsbel -1);
       assert(nside < maxvst -1);
       assert(nvrtx < maxvst -1);      
-	}
-
-/*	SMOOTH BOUNDARY POINT DISTRIBUTION FOR SIDES WITH UNEVEN NUMBER */
-	int s0;
-	int s1;
-	for(i=0;i<nsbd;++i) {
-		if (fmesh.sbdry[i].num%2 != 0 && fmesh.sbdry[i].num > 1) {
-			s0 = sbdry[i].el[sbdry[i].num-2];
-			s1 = sbdry[i].el[sbdry[i].num-1];
-/*			CHECK COLINEARITY */			
-			if (abs(area(s0,svrtx[s1][1])) < 10.*FLT_EPSILON) {
-				vrtx[svrtx[s0][1]][0] = 
-					0.5*(vrtx[svrtx[s0][0]][0] +vrtx[svrtx[s1][1]][0]);
-				vrtx[svrtx[s0][1]][1] = 
-					0.5*(vrtx[svrtx[s0][0]][1] +vrtx[svrtx[s1][1]][1]);					
-			}
-		}
 	}
    
    treeinit();
