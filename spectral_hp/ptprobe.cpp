@@ -40,13 +40,13 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          assert(vn != 3);
          
          if (ttri[tind][vn] < 0) {
-            typ = sbdry[-ttri[tind][vn]/maxsbel -1].type;
+            typ = sbdry[(-ttri[tind][vn]>>16) -1].type;
             break;
          }
          
          tind = ttri[tind][(vn +1)%3];
          if (tind < 0) {
-            typ = sbdry[-tind/maxsbel -1].type;
+            typ = sbdry[(-tind>>16) -1].type;
             break; 
          }
       } while(tind != stoptri);
@@ -109,7 +109,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       assert(vn != 3);
       
       if (ttri[tind][vn] < 0) {
-         bnum = -ttri[tind][vn]/maxsbel -1;
+         bnum = (-ttri[tind][vn]>>16) -1;
          if (sbdry[bnum].type == typ) {
             sind = tside[tind].side[vn];
             break;
@@ -118,14 +118,14 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       
       tind = ttri[tind][(vn +dir)%3];
       if (tind < 0) {
-         bnum = -tind/maxsbel -1;
+         bnum = (-tind>>16) -1;
          if (sbdry[bnum].type == typ) {
             sind = tside[told].side[(vn+dir)%3];
             break; 
          }
          if (dir > 1) {
 /*				DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
-            printf("here\n");
+            printf("#brute force boundary locate\n");
             for(bnum=0;bnum<nsbd;++bnum)
                if (sbdry[bnum].type == typ) break;
             sind = sbdry[bnum].el[0];
@@ -139,15 +139,17 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       
       if (tind == stoptri) {
 /*			COULDN'T FIND SIDE DO BRUTE FORCE */
+         printf("#brute force bdry locate\n");
          for(bnum=0;bnum<nsbd;++bnum)
             if (sbdry[bnum].type == typ) break;
          sind = sbdry[bnum].el[0];
          break;
       }
    }
+   
 
 /*	SEARCH AROUND THIS SIDE */
-   snumnew = -stri[sind][1] -(bnum+1)*maxsbel;
+   snumnew = -stri[sind][1]&0xFFFF;
    snum = snumnew;
    for(;;) {
       sind = sbdry[bnum].el[snumnew];

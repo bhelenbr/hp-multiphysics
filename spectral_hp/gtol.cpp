@@ -284,8 +284,8 @@ void spectral_hp::crdtouht(int tind) {
          }
       }
       else {
-         bnum = -stri[sind][1]/maxsbel -1;
-         indx = (-stri[sind][1] -(bnum+1)*maxsbel)*sm0;
+         bnum = (-stri[sind][1]>>16) -1;
+         indx = (-stri[sind][1]&0xFFFF)*sm0;
          for (m = 0; m < b.sm; ++m) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
@@ -321,8 +321,8 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
          }
       }
       else {
-         bnum = -stri[sind][1]/maxsbel -1;
-         indx = (-stri[sind][1] -(bnum+1)*maxsbel)*sm0;
+         bnum = (-stri[sind][1]>>16) -1;
+         indx = (-stri[sind][1]&0xFFFF)*sm0;
          for (m = 0; m < b.sm; ++m) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
@@ -344,8 +344,8 @@ void spectral_hp::crdtouht1d(int sind) {
       uht[n][1] = vrtx[v1][n];
    }
    
-   bnum = -stri[sind][1]/maxsbel -1;
-   indx = (-stri[sind][1] -(bnum+1)*maxsbel)*sm0;
+   bnum = (-stri[sind][1]>>16) -1;
+   indx = (-stri[sind][1]&0xFFFF)*sm0;
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 
@@ -364,8 +364,8 @@ void spectral_hp::crdtouht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) 
       uht[n][1] = vrtx[v1][n];
    }
    
-   bnum = -stri[sind][1]/maxsbel -1;
-   indx = (-stri[sind][1] -(bnum+1)*maxsbel)*sm0;
+   bnum = (-stri[sind][1]>>16) -1;
+   indx = (-stri[sind][1]&0xFFFF)*sm0;
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 

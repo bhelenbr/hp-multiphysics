@@ -54,8 +54,8 @@ void hp_mgrid::length1() {
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
       if (fltwk[i] <= tol || fltwk[i] >= 1./tol) {
-      	fltwk[i] = MAX(0.5,fltwk[i]);
-      	fltwk[i] = MIN(2.0,fltwk[i]);
+//      	fltwk[i] = MAX(0.5,fltwk[i]);
+//      	fltwk[i] = MIN(2.0,fltwk[i]);
          vlngth[i] /= fltwk[i];
 //         vlngth[i] = MIN(vlngth[i],gbl->maxlength);
 //         vlngth[i] = MAX(vlngth[i],gbl->minlength);

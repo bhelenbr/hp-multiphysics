@@ -324,8 +324,8 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          for(i=0;i<nside;++i) {
             indx = b.sm*i;
             if (sinfo[i] > -1) {
-               bnum = -stri[i][1]/maxsbel -1;
-               bind = (-stri[i][1] -(bnum+1)*maxsbel)*sm0;
+               bnum = (-stri[i][1]>>16) -1;
+               bind = (-stri[i][1]&0xFFFF)*sm0;
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
                   &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],

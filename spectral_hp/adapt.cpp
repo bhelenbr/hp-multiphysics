@@ -267,7 +267,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             
             switch(sinfo[sind]) {
                case(-1): // UNTOUCHED
-                  indx1 = ((-str.stri[sind][1])%maxsbel)*str.sm0;
+                  indx1 = (-str.stri[sind][1]&0xFFFF)*str.sm0;
                   for(m=0;m<b.sm;++m)
                      binfo[i][indx+m] = str.binfo[i][indx1+m];
                   
@@ -361,7 +361,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                      for(m=0;m<b.gpx;++m) {
                         x = crd[0][0][m];
                         y = crd[1][0][m];
-      
+                        
 /*	   						FIND PSI */            
                         stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
                         
@@ -406,7 +406,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 /*   					SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
 /*   					ALREADY MOVED UG INFO JUST NEED TO MOVE BINFO */
                   assert(sinfo[sind] > -1);
-                  indx1 = ((-str.stri[sinfo[sind]][1])%maxsbel)*str.sm0;
+                  indx1 = (-str.stri[sinfo[sind]][1]&0xFFFF)*str.sm0;
                   for(m=0;m<b.sm;++m)
                      binfo[i][indx+m] = str.binfo[i][indx1+m];
                      

@@ -302,8 +302,8 @@ void blocks::go() {
          cycle(vwcycle);
          printf("%d ",iter);
          endcycle();
-         r_cycle(vwcycle);
-         r_maxres();
+//         r_cycle(vwcycle);
+//         r_maxres();
          printf("\n");
       }
 

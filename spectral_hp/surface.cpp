@@ -924,9 +924,9 @@ void hp_mgrid::surfgetfres(int bnum) {
       v0 = fmesh->svrtx[sind][0];
       tind = fmesh->coarse[v0].tri;
       for(snum=0;snum<3;++snum) 
-         if (-ttri[tind][snum]/maxsbel -1  == bnum) break;
+         if ((-ttri[tind][snum]>>16) -1  == bnum) break;
       assert(snum != 3);
-      indx = (-ttri[tind][snum] -(bnum+1)*maxsbel);      
+      indx = -ttri[tind][snum]&0xFFFF;
       for(n=0;n<ND;++n) {
          srf->gbl->vres0[indx][n] += fmesh->coarse[v0].wt[(snum+1)%3]*srf->gbl->vres[i][n];
          srf->gbl->vres0[indx+1][n] += fmesh->coarse[v0].wt[(snum+2)%3]*srf->gbl->vres[i][n];
@@ -953,9 +953,9 @@ void hp_mgrid::surfgetfres(int bnum) {
       v0 = svrtx[sind][0];
       tind = fine[v0].tri;
       for(snum=0;snum<3;++snum) 
-         if (-fmesh->ttri[tind][snum]/fmesh->maxsbel -1  == bnum) break;
+         if ((-fmesh->ttri[tind][snum]>>16) -1  == bnum) break;
       assert(snum != 3);
-      indx = (-fmesh->ttri[tind][snum] -(bnum+1)*fmesh->maxsbel);
+      indx = -fmesh->ttri[tind][snum]&0xFFFF;
           
       for(n=0;n<ND;++n) {
          srf->vug[i][n] += fine[v0].wt[(snum+1)%3]*finesrf->vug[indx][n];
@@ -1009,9 +1009,9 @@ void hp_mgrid::surfgetcchng(int bnum) {
       v0 = svrtx[sind][0];
       tind = coarse[v0].tri;
       for(snum=0;snum<3;++snum) 
-         if (-cmesh->ttri[tind][snum]/cmesh->maxsbel -1  == bnum) break;
+         if ((-cmesh->ttri[tind][snum]>>16) -1  == bnum) break;
       assert(snum != 3);
-      indx = (-cmesh->ttri[tind][snum] -(bnum+1)*cmesh->maxsbel);
+      indx = -cmesh->ttri[tind][snum]&0xFFFF;
          
       for(n=0;n<ND;++n) {
          srf->gbl->vres[i][n] -= coarse[v0].wt[(snum+1)%3]*coarsesrf->vug_frst[indx][n];
