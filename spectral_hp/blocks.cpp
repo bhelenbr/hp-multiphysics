@@ -64,8 +64,8 @@ void blocks::init(char *file, int start_sim) {
    hp_mgrid::extrap = 0; /* DON'T EXTRAPOLATE ON FIRST CALL TO TADVANCE */
 
    /* READ IN NUMBER OF TIME STEP/OUTPUT INTERVAL */
-   fscanf(fp,"%*[^\n]%d %d\n",&ntstep,&out_intrvl);
-   printf("#NTSTEP\t\tOUTPUT INTERVAL\n#%d\t\t%d\n",ntstep,out_intrvl);
+   fscanf(fp,"%*[^\n]%d %d %d\n",&ntstep,&out_intrvl,&rstrt_intrvl);
+   printf("#NTSTEP\t\tOUTPUT INTERVAL\t\tRSTRT INTERVAL\n#%d\t\t%d\t\t%d\n",ntstep,out_intrvl,rstrt_intrvl);
    
    /* READ IN ITERATION PARAMETERS */
    fscanf(fp,"%*[^\n]%d %d %d\n",&mglvls,&vwcycle,&ncycle);
@@ -325,7 +325,7 @@ void blocks::cycle(int vw, int lvl) {
    
       nstage(grid,base[bsnum].sm,lvl);
 
-#define FINE_ERROR  //TEMPORARY
+#define NO_FINE_ERROR
 #if (defined(PV3) || defined(FINE_ERROR))
       if (lvl == 0) {
 #ifdef FINE_ERROR
@@ -345,7 +345,7 @@ void blocks::cycle(int vw, int lvl) {
       }
 #endif
 
-#define NO_TWO_LEVEL  //TEMPORARY
+#define NO_TWO_LEVEL
 #ifdef TWO_LEVEL
       if (lvl == 1) {
          FLT mxr[NV], einit, emax = 0.0;
@@ -425,7 +425,7 @@ void blocks::go() {
          printf("%d ",iter);
 #ifndef FINE_ERROR
        	endcycle();
-#define NO_DEFORM // TEMPORARY
+#define DEFORM
 #ifdef DEFORM
        	r_cycle(vwcycle);
       	r_maxres();
@@ -437,10 +437,14 @@ void blocks::go() {
       hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
       
       blk[0].grd[0].drag(1028);
+
       if (!(tstep%out_intrvl)) {
-         output(tstep+1,text);
          output(tstep+1,tecplot);
+         if (!(tstep%(rstrt_intrvl*out_intrvl))) {
+            output(tstep+1,text);
+         }
       }
+
        
 #define NDEBUG
 #ifdef DEBUG
@@ -542,51 +546,67 @@ void blocks::output(int number, FILETYPE type) {
    int i,j;
    char outname[30], bname[30];
 
-   for(i=0;i<nblocks;++i) {
-      number_str(bname,"data",number,3);
-      strcat(bname, ".");
-      number_str(outname, bname, i, 1);
-
-      /* OUTPUT SOLUTION */
-      blk[i].grd[0].output(outname,type);
-
-      /* OUTPUT MESH */
-      number_str(bname,"mesh",number,3);
-      strcat(bname, ".");
-      number_str(outname, bname, i, 1);         
-      blk[i].grd[0].mesh::setbcinfo();
-      blk[i].grd[0].out_mesh(outname,grid);
-      blk[i].grd[0].spectral_hp::setbcinfo();
+   switch(type) {
+      case(tecplot):
+         for(i=0;i<nblocks;++i) {
+            number_str(bname,"data",number,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);
       
-      if (adapt) {
-         number_str(bname,"vlgth",number,3);
-         strcat(bname, ".");
-         number_str(outname, bname, i, 1);
-         blk[i].grd[0].outlength(outname,type);      
-      }
-   
-      /* OUTPUT UNSTEADY TIME HISTORY */
-      /*	FIRST INDEX IS HISTORY NUMBER */
-      /* SECOND IS BLOCK NUMBER */
-      number_str(outname,"rstrtdata",number,3);
-      strcat(outname, ".");
-      for(j=0;j<MXSTEPM1;++j) {
-         number_str(bname,outname,j,1);
-         strcat(bname, ".");
-         number_str(bname, bname, i, 1);
-         blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,type);
-      }
-
-      /* OUTPUT INTERPOLATED MESH TIME HISTORY */
-      number_str(outname,"rstrtvrtx",number,3);
-      strcat(outname, ".");
-      for(j=0;j<MXSTEPM1;++j) {
-         number_str(bname,outname,j,1);
-         strcat(bname, ".");
-         number_str(bname, bname, i, 1);
-         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],bname,type);
-      }
+            /* OUTPUT SOLUTION */
+            blk[i].grd[0].output(outname,type);
+         }
+         break;
+         
+      default:
+         for(i=0;i<nblocks;++i) {
+            number_str(bname,"data",number,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);
+      
+            /* OUTPUT SOLUTION */
+            blk[i].grd[0].output(outname,type);
+      
+            /* OUTPUT MESH */
+            number_str(bname,"mesh",number,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);         
+            blk[i].grd[0].mesh::setbcinfo();
+            blk[i].grd[0].out_mesh(outname,grid);
+            blk[i].grd[0].spectral_hp::setbcinfo();
+            
+            if (adapt) {
+               number_str(bname,"vlgth",number,3);
+               strcat(bname, ".");
+               number_str(outname, bname, i, 1);
+               blk[i].grd[0].outlength(outname,type);      
+            }
+         
+            /* OUTPUT UNSTEADY TIME HISTORY */
+            /*	FIRST INDEX IS HISTORY NUMBER */
+            /* SECOND IS BLOCK NUMBER */
+            number_str(outname,"rstrtdata",number,3);
+            strcat(outname, ".");
+            for(j=0;j<MXSTEPM1;++j) {
+               number_str(bname,outname,j,1);
+               strcat(bname, ".");
+               number_str(bname, bname, i, 1);
+               blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,type);
+            }
+      
+            /* OUTPUT INTERPOLATED MESH TIME HISTORY */
+            number_str(outname,"rstrtvrtx",number,3);
+            strcat(outname, ".");
+            for(j=0;j<MXSTEPM1;++j) {
+               number_str(bname,outname,j,1);
+               strcat(bname, ".");
+               number_str(bname, bname, i, 1);
+               blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],bname,type);
+            }
+         }
+         break;
    }
+   
    
    return;
 }
