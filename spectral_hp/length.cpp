@@ -95,7 +95,7 @@ void hp_mgrid::length1() {
    }
    
    /* AVOID HIGH ASPECT RATIOS */
-//   do {
+   do {
       count = 0;
       for(i=0;i<nside;++i) {
          v0 = svrtx[i][0];
@@ -112,7 +112,7 @@ void hp_mgrid::length1() {
          }
       }
       printf("#aspect ratio fixes %d\n",count);
-//   } while(count > 0);
+   } while(count > 0);
 
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
@@ -309,7 +309,6 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          
       default:
          printf("Output of length function is not supported in that filetype\n");
-         exit(1);
          break;
    }
          

@@ -390,8 +390,8 @@ void blocks::go() {
          output(tstep+1,tecplot);
       }
        
-
-/*		THIS IS TO ALLOW EXACT RESTARTS WHEN DEBUGGING */
+#ifdef DEBUG
+      /*	THIS IS TO ALLOW MACHINE EXACT RESTARTS WHEN DEBUGGING */
       for(i=0;i<nblocks;++i) {
          readin = tstep +1;
          /* INPUT MESH */
@@ -436,6 +436,7 @@ void blocks::go() {
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
       }
+#endif
 
       if (adapt && tstep != ntstep-1) {
          adaptation();
@@ -477,9 +478,7 @@ void blocks::output(int number, FILETYPE type=text) {
 
       /* OUTPUT SOLUTION */
       blk[i].grd[0].output(outname,type);
-      
-//      blk[i].grd[0].output(blk[i].grd[0].gbl->res,blk[i].grd[0].vrtx,blk[i].grd[0].binfo,outname,tecplot);
-      
+            
       /* OUTPUT MESH */
       number_str(bname,"mesh",number,3);
       strcat(bname, ".");
@@ -492,7 +491,7 @@ void blocks::output(int number, FILETYPE type=text) {
          number_str(bname,"vlgth",number,3);
          strcat(bname, ".");
          number_str(outname, bname, i, 1);
-         blk[i].grd[0].outlength(outname,text);      
+         blk[i].grd[0].outlength(outname,type);      
       }
       
       /* OUTPUT UNSTEADY TIME HISTORY */
@@ -504,12 +503,13 @@ void blocks::output(int number, FILETYPE type=text) {
          blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,type);
       }
 
+      /* OUTPUT INTERPOLATED MESH TIME HISTORY */
       number_str(outname,"rstrtvrtx",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);
       for(j=0;j<MXSTEPM1;++j) {
          number_str(outname,bname,j,1);
-         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,type);
       }
    }
    
