@@ -51,6 +51,7 @@
 				F58BA0FA01762F8301990B20,
 				F58BA0F801762F8301990B20,
 				F58BA10001762FBE01990B20,
+				F5A11A68029A9B2901990B20,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -134,6 +135,7 @@
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
 				F52FE4D2021459BA01990B20,
+				F5A11A6A029ABBE001990B20,
 				F52FE4D0021429E601990B20,
 				F581CD2901989D4B01990B20,
 				F581CD240198731301990B20,
@@ -157,9 +159,9 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib";
+				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN /Volumes/work/helenbrk/Codes/packages/pV3";
 				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_CFLAGS = "";
+				OTHER_CFLAGS = "-DPV3 -DNOUNDERSCORE -DNOUNS";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "planar++";
@@ -183,6 +185,7 @@
 				F505FF120192F1EB01990B20,
 				F598B8700193249F01990B20,
 				F581CD2A01989D4B01990B20,
+				F5A11A6B029ABBE001990B20,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -222,6 +225,7 @@
 				F54BE4D301E1038D01990B20,
 				F5AC61750252568D01990B20,
 				F5F1F64A026CB83001990B20,
+				F5A11A61029998A401990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -239,6 +243,7 @@
 				F58BA0FE01762F8301990B20,
 				F58BA0FC01762F8301990B20,
 				F58BA10101762FBE01990B20,
+				F5A11A69029A9B2901990B20,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -680,6 +685,35 @@
 		};
 		F598B8720193249F01990B20 = {
 			fileRef = F5D77C310191A7BB01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A11A61029998A401990B20 = {
+			fileRef = F52FE4D0021429E601990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A11A68029A9B2901990B20 = {
+			isa = PBXFileReference;
+			name = libpV3ser.a;
+			path = /Volumes/work/helenbrk/Codes/packages/pV3/libpV3ser.a;
+			refType = 0;
+		};
+		F5A11A69029A9B2901990B20 = {
+			fileRef = F5A11A68029A9B2901990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A11A6A029ABBE001990B20 = {
+			isa = PBXFileReference;
+			path = pV3.h;
+			refType = 4;
+		};
+		F5A11A6B029ABBE001990B20 = {
+			fileRef = F5A11A6A029ABBE001990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
