@@ -14,7 +14,6 @@
 #include <string.h>
 #include <time.h>
 
-extern FLT f1(int n, FLT x, FLT y);
 
 #ifdef PV3
 extern "C" int MAINPROG(int argc, char **argv);
@@ -28,15 +27,19 @@ int main(int argc, char **argv) {
 #ifdef SIMULATION      
    /* NORMAL SIMULATION */
    myblock.init(argv[1]);
-   /* START CLOCK TIMER */
-   clock();
-//   myblock.minvrt_test(10,f1);
-//   myblock.output(1,tecplot);
-//   myblock.output(1,text);
    myblock.go();
    cpu_time = clock();
    printf("#that took %ld cpu time\n",cpu_time);
    return(0);
+#endif
+
+#ifdef DEBUG
+   extern FLT f1(int n, FLT x, FLT y);
+
+   myblock.init(argv[1]);
+   myblock.minvrt_test(10,f1);
+   myblock.output(-2,text);
+   myblock.go();
 #endif
 
 #ifdef PV3VIEWER   
