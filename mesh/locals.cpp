@@ -147,6 +147,44 @@ class rtranslating : public rfixd {
       }
 };
 
+class rtransandrot : public rfixd {
+   private:
+      FLT v0, amp, omega;
+      FLT time;
+   public:
+      rtransandrot(int type,r_mesh &x, FLT v0in, FLT ampin, FLT omegain) : 
+         rfixd(type,x), v0(v0in), amp(ampin), omega(omegain), time(0.0) {}
+         
+      void tadvance() {
+         int n,vrt;
+         FLT center[2], center1[2], dx[2],xp[2];
+         FLT theta, theta1,dtheta;
+         
+         center[0] = v0*time;
+         center[1] = amp*(1-cos(omega*time));
+         theta = atan(omega*amp*sin(omega*time)/v0);
+         
+         
+
+         time = time +1.0;
+         
+         center1[0] = v0*time;
+         center1[1] = amp*(1-cos(omega*time));
+         theta1 = atan(omega*amp*sin(omega*time)/v0);
+         dtheta = theta1-theta;
+                  
+         for(int j=0;j<nsd();++j) {
+            vrt = b().svrtx[sd(j)][0];
+            xp[0] = b().vrtx[vrt][0]-center[0];
+            xp[1] = b().vrtx[vrt][1]-center[1];         
+            dx[0] = center1[0]-center[0] +xp[0]*cos(dtheta)-xp[1]*sin(dtheta) -xp[0];
+            dx[1] = center1[1]-center[1] +xp[0]*sin(dtheta)+xp[1]*cos(dtheta) -xp[1];
+            for(n=0;n<2;++n)
+               b().vrtx[vrt][n] += dx[n];
+         }
+      }
+};
+
 /* THIS IS SET UP FOR RMESH PROBLEMS */
 void r_mesh::getnewsideobject(int bnum, int idnum) {
    /* STRIP OF IDNTY INFO TO JUST GET TYPE */
@@ -154,9 +192,9 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
    
    /* SET UP MAPPING IF NEEDED */
 #ifdef MAPPING
-   int mapping[7][2] = {{COMX_MASK,scommx},{COMY_MASK,scommy},{PRDX_MASK,sprdx},{PRDY_MASK,sprdy},
-                        {OUTF_MASK,stranslating1},{EULR_MASK,stranslating2},{FSRF_MASK,sb23}};   
-   for(int i=0;i<7;++i) {
+   int mapping[10][2] = {{COMX_MASK,scommx},{COMY_MASK,scommy},{IFCE_MASK+CURV_MASK,scommy},{PRDX_MASK+COMX_MASK,sprdx},{PRDY_MASK+COMY_MASK,sprdy},
+                        {OUTF_MASK,splain},{EULR_MASK,stranslating2},{FSRF_MASK,sb23},{SYMM_MASK,stranslating1},{INFL_MASK,stranslating2}};   
+   for(int i=0;i<10;++i) {
       if (mapping[i][0] == type) {
          type = mapping[i][1];
          break;
@@ -195,12 +233,11 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
          break;
       }
       case stranslating1: {
-         FLT dx[2] = {0.0,-0.05};
-         sbdry[bnum] = new rtranslating(idnum,*this,dx);
+         sbdry[bnum] = new rtransandrot(idnum,*this,0.02,2.5,1./300.);
          break;
       }
       case stranslating2: {
-         FLT dx[2] = {-0.9,0.0};
+         FLT dx[2] = {0.0,0.1};
          sbdry[bnum] = new rtranslating(idnum,*this,dx);
          break;
       }
@@ -223,7 +260,7 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
 
 block * blocks::getnewblock(int type) {
    enum {twoD=1, threeD, rblock2D, capri};
-      
+         
    switch(type) {
       case (twoD):
          return(new mgrid<mesh<2> >);

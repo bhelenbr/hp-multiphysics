@@ -709,7 +709,7 @@ next1c:     continue;
                if (stri[i][1] < 0) ++count;
 
             nsbd = 0;
-            getnewsideobject(0,1);
+            getnewsideobject(0,1025);
             sbdry[0]->alloc(static_cast<int>(grwfac*count));
             sbdry[0]->nsd() = count;
             count = 0;

@@ -366,7 +366,8 @@ template<int ND> void mesh<ND>::fltwkreb(int i) {
    /*(THIS ESSENTIALLY TAKES THE MINUMUM) */
    dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
    av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
-   fltwk[i] = (av +(dif*dif/(0.01*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
+   fltwk[i] = (av -(dif*dif/(0.01*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
+   //fltwk[i] = MIN(vlngth[svrtx[i][0]],vlngth[svrtx[i][1]])/distance(svrtx[i][0],svrtx[i][1]);
 
    return;
 }

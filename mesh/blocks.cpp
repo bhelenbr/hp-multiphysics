@@ -231,13 +231,13 @@ void blocks::localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,i
 void blocks::mpimatch(int vsf,boundary *v1,int p,int b1,int b2,int i,int j) {
   if (p < myid) {
       v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-      *log << "#second lmatch id: " << v1->idnty() << " vsf: " << vsf 
+      *log << "#second mpimatch id: " << v1->idnty() << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
       v1->setfrst(false);
    }
    else {
       v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-      *log << "#first lmatch id: " << v1->idnty() << " vsf: " << vsf 
+      *log << "#first mpimatch id: " << v1->idnty() << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
    }
    return;
@@ -601,8 +601,8 @@ void blocks::go() {
          *log << '\n';
       }
       restructure();
-      number_str(outname, "end", step, 2);
-      output(outname,ftype::tecplot);
+      number_str(outname, "end", step, 3);
+      output(outname,ftype::grid);
    }
    cpu_time = clock();
    *log << "that took " << cpu_time << " cpu time" << std::endl;

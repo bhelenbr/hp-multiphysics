@@ -5,6 +5,7 @@
 #include <quadtree.h>
 #include <ftype.h>
 #include <iostream>
+#include <float.h>
 
 #ifdef SINGLE
 #define FLT float
@@ -122,13 +123,13 @@ template<int ND> class mesh {
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void refineby2(const class mesh& xmesh);
-      void swap(FLT swaptol = 0.0);
-      void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
+      void swap(FLT swaptol = EPSILON);
+      void yaber(FLT tolsize, int yes_swap, FLT swaptol = EPSILON);
       inline void treeupdate() { qtree.update(0,nvrtx);}
       void rebay(FLT tolsize);
       void trebay(FLT tolsize);
       inline void adapt(FLT tolerance) {
-         yaber(1.0/tolerance,1,0.0);
+         yaber(1.0/tolerance,1,EPSILON);
          treeupdate();
          rebay(tolerance);
          return;

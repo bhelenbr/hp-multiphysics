@@ -14,14 +14,71 @@
 
 using namespace std;
 
-/* GENERATE CONVERT MAXMIN HEIGHT */
-#define GENERATE
+/* GENERATE CONVERT MAXMIN HEIGHT SHIFT COARSEN_TECPLOT SCALE */
+#define NOSCALE
 
 #ifdef CAPRI
 CAPRI_MAIN(int argc, char *argv[]) {
 #else
 int main(int argc, char *argv[]) {
 #endif
+
+#ifdef COARSEN_TECPLOT
+   class mesh<2> zx, zy;
+   int i,sind,sign,p,p2;
+   
+   if (argc != 3) {
+      printf("usage: tectohp filename p");
+      exit(1);
+   }
+   zx.in_mesh(argv[1],ftype::tecplot);
+   sscanf(argv[2],"%d",&p);
+
+   zy.copy(zx);
+   
+   p2 = p*p;
+   zy.ntri = zx.ntri/p2;
+   zy.nside = (zy.ntri*3 +zx.sbdry[0]->nsd()/p)/2;
+   zy.nvrtx = zx.nvrtx -zy.nside*(p-1) -zy.ntri*((p-1)*(p-2))/2;
+   
+   for(i=0;i<zx.ntri;i+=p2) {
+      zy.tvrtx[i/p2][0] = zx.tvrtx[i+2*p-2][2];
+      zy.tvrtx[i/p2][1] = zx.tvrtx[i][0];
+      zy.tvrtx[i/p2][2] = zx.tvrtx[i+p2-1][1];
+      sind = (zx.tvrtx[i][1] -zy.nvrtx)/(p-1);
+      sign = ((zx.tvrtx[i][1] -zy.nvrtx)%(p-1) == 0 ? 1 : -1);
+      zy.tside[i/p2].side[0] = sind; 
+      zy.tside[i/p2].sign[0] = sign;
+      zy.svrtx[sind][(1-sign)/2] = zy.tvrtx[i/p2][1];
+      zy.svrtx[sind][(1+sign)/2] = zy.tvrtx[i/p2][2];
+      
+      sind = (zx.tvrtx[i+p2-1][2] -zy.nvrtx)/(p-1);
+      sign = ((zx.tvrtx[i+p2-1][2] -zy.nvrtx)%(p-1) == 0 ? 1 : -1);
+      zy.tside[i/p2].side[1] = sind;
+      zy.tside[i/p2].sign[1] = sign;
+      zy.svrtx[sind][(1-sign)/2] = zy.tvrtx[i/p2][2];
+      zy.svrtx[sind][(1+sign)/2] = zy.tvrtx[i/p2][0];
+      
+      sind = (zx.tvrtx[i+2*p-2][0] -zy.nvrtx)/(p-1);
+      sign = ((zx.tvrtx[i+2*p-2][0] -zy.nvrtx)%(p-1) == 0 ? 1 : -1);
+      zy.tside[i/p2].side[2] = sind;
+      zy.tside[i/p2].sign[2] = sign;
+      zy.svrtx[sind][(1-sign)/2] = zy.tvrtx[i/p2][0];
+      zy.svrtx[sind][(1+sign)/2] = zy.tvrtx[i/p2][1];
+   }
+   zy.sbdry[0]->nsd() = zx.sbdry[0]->nsd()/p;
+   i = 0;
+   if (zx.svrtx[zx.sbdry[0]->sd(0)][0] < zy.nvrtx) ++i;
+   for(;i<zx.sbdry[0]->nsd();i+=p) {
+      sind = (zx.svrtx[zx.sbdry[0]->sd(i)][0] -zy.nvrtx)/(p-1);
+      zy.sbdry[0]->sd(i/p) = sind;
+   }
+   zy.out_mesh(argv[1],ftype::grid);
+   
+   return 0;
+#endif
+      
+   
 
 #ifdef HEIGHT
     int count,sind;
@@ -41,6 +98,30 @@ int main(int argc, char *argv[]) {
         }
     }
     printf("%d %e\n",count,xmax-xmin);
+    return 0;
+#endif
+
+#ifdef SCALE
+    class mesh<2> zx;
+    double scale;
+    
+    sscanf(argv[1],"%le",&scale);
+    zx.in_mesh(argv[2],ftype::easymesh);
+    for(int i=0;i<zx.nvrtx;++i)
+       zx.vrtx[i][1] *= scale;
+    zx.out_mesh(argv[2],ftype::grid);
+    return 0;
+#endif
+
+#ifdef SHIFT
+    class mesh<2> zx;
+    double offset;
+    
+    sscanf(argv[1],"%le",&offset);
+    zx.in_mesh(argv[2],ftype::grid);
+    for(int i=0;i<zx.nvrtx;++i)
+       zx.vrtx[i][1] += offset;
+    zx.out_mesh(argv[2],ftype::text);
     return 0;
 #endif
    
@@ -111,7 +192,7 @@ int main(int argc, char *argv[]) {
 #ifdef CONVERT
    class mesh<2> zx;
 
-   zx.in_mesh(argv[1],ftype::grid);
+   zx.in_mesh(argv[1],ftype::easymesh);
    zx.out_mesh(argv[1],ftype::tecplot);
    
    return(0);
@@ -123,14 +204,14 @@ class blocks z;
 #ifdef GENERATE
    z.init(argv[1]);
    z.restructure();
-   z.restructure();
-   z.output(argv[1],ftype::grid);
+   z.output("testing",ftype::grid);
+   for (int i=0;i<10;++i)
+      z.restructure();
+   z.output("testing2",ftype::grid);
    
    return 0;
 #endif
 
-
-   
 #ifdef MPISRC
    int myid;
    MPI_Init(&argc,&argv);
@@ -149,15 +230,15 @@ class blocks z;
       /* CREATE INPUT MAPS HERE*/
       map<string,string> input[3];
       
-      input[0]["mglvls"] = "1";
-      input[0]["ngrid"] = "1";
+      input[0]["mglvls"] = "3";
+      input[0]["ngrid"] = "3";
       input[0]["ntstep"] = "1";
       input[0]["fadd"] = "1.0";
       input[0]["vnn"] = "0.5";
       input[0]["itercrsn"] = "1";
       input[0]["iterrfne"] = "0";
       input[0]["njacobi"] = "1";
-      input[0]["ncycle"] = "1000";
+      input[0]["ncycle"] = "1500";
       input[0]["vwcycle"] = "2";
       input[0]["tolerance"] = "0.66";
       input[0]["logfile"] = "duh";
@@ -166,24 +247,24 @@ class blocks z;
       /* LIST OF NBLOCKS FOR EACH PROCESSOR */
       input[0]["nblock"] = "1 1";
       if (myid == 0) {
-         input[1]["blktype"] = "0";
+         input[1]["blktype"] = "3";
          input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top8";
          input[1]["growth factor"] = "4.0";
          input[1]["filetype"] = "0";
       }
       else {
-         input[1]["blktype"] = "0";
+         input[1]["blktype"] = "3";
          input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot8";
          input[1]["growth factor"] = "4.0";
          input[1]["filetype"] = "0";
       }
 #else
       input[0]["nblock"] = "2";
-      input[1]["blktype"] = "0";
+      input[1]["blktype"] = "3";
       input[1]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top8";
       input[1]["growth factor"] = "4.0";
       input[1]["filetype"] = "0";
-      input[2]["blktype"] = "0";
+      input[2]["blktype"] = "3";
       input[2]["mesh"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot8";
       input[2]["growth factor"] = "4.0";
       input[2]["filetype"] = "0";

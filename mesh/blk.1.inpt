@@ -10,7 +10,7 @@ blktype: 1
 mesh: 1 2
 growth factor: 4.0
 filetype: 6
-adatp: 0
+adapt: 0
 
 
 
