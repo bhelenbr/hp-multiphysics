@@ -309,6 +309,12 @@ FLT outertime = 0.0;
 
 void blocks::tadvance(int stage) {
    int i,grid,lvl,bsnum;
+   
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].matchboundaries1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].matchboundaries2();
 
 #ifdef BACKDIFF
    r_ksrc();
@@ -744,23 +750,23 @@ void blocks::go() {
 
       if (!(tstep%out_intrvl)) {
          output(tstep+1,tecplot,0); 
+#ifdef PARAMETERLOOP
+         /* FIND MAXIMUM WIDTH */
+         int scap;
+         scap = 0;
+         maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
+         ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
+         ind = blk[1].grd[0].svrtx[ind][0];
+         if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;      
+         aratio = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
+         fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
+         blk[1].gbl.rho,blk[1].gbl.mu/blk[0].gbl.mu,(1.-dydt)/blk[0].gbl.mu,
+         (1.-dydt)*(1-dydt)/blk[1].sgbl[0].sigma,blk[1].gbl.mu/sqrt(blk[1].gbl.rho*blk[1].sgbl[0].sigma),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/(12.*(1-dydt)*(1-dydt)),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/blk[1].sgbl[0].sigma,
+         aratio,hp_mgrid::g,dydt,scap);
+#endif
          if (!(tstep%(rstrt_intrvl*out_intrvl))) {
             output(tstep+1,text,1);         
-#ifdef PARAMETERLOOP
-            /* FIND MAXIMUM WIDTH */
-            int scap;
-            scap = 0;
-            maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
-            ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
-            ind = blk[1].grd[0].svrtx[ind][0];
-            if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;      
-            aratio = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
-            fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
-            blk[1].gbl.rho,blk[1].gbl.mu/blk[0].gbl.mu,(1.-dydt)/blk[0].gbl.mu,
-            (1.-dydt)*(1-dydt)/blk[1].sgbl[0].sigma,blk[1].gbl.mu/sqrt(blk[1].gbl.rho*blk[1].sgbl[0].sigma),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/(12.*(1-dydt)*(1-dydt)),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/blk[1].sgbl[0].sigma,
-            aratio,hp_mgrid::g,dydt,scap);
-
-            
+#ifdef PARAMETERLOOP            
             ratio = fabs((aratioold-aratio)/aratio);
             if (ratio > 0.05 && tstep > 0) {
                factor = pow(factor,0.5);

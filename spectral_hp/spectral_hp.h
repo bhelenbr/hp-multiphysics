@@ -19,6 +19,12 @@ struct vsi {
    FLT (*i)[NV];
 };
 
+/* struct vsi {
+   Array<TinyVector<FLT,NV>,1> v;
+   Array<TinyVector<FLT,NV>,1> s;
+   Array<TinyVector<FLT,NV>,1> i;
+}; */
+
 /* BOUNDARY INFORMATION */
 struct bistruct {
    FLT flx[NV];

@@ -12,20 +12,26 @@ CPPFLAGS = -Wno-long-double -I$(HOME)/Codes/include/
 
 ## Darwin:
 ## Machine specific for OS X
-CPPFLAGS += -O3
-LIB += -framework veclib
-DEFINES += -DNOUNDERSCORE -DPOINTERLONG -DNOUNS
-PV3HOME = ${HOME}/Packages/pV3/
+#CPPFLAGS += -O3
+#LIB += -framework veclib
+#DEFINES += -DNOUNDERSCORE -DPOINTERLONG -DNOUNS
+#PV3HOME = ${HOME}/Packages/pV3/
+#FORTRTL = /opt/ibmcmp/lib
+#FORTLIB = -lxlf90_r.A -lxlfmath.A
+#FORTMAIN =
 
 ## Linux:
 ##  Machine specific for Linux
 #CXX=icpc #(cares)
-#CXX=g++3 #(shelob)
-#CPPFLAGS += -O3
-#LIB += -llapack -lblas -lg2c
-#PV3HOME = /usr/local/pV3/
-#DEFINES += -DUNDERSCORE -DPOINTERLONG
-#LD = /usr/local/pgi/linux86/bin/pgf77 #(shelob)
+CXX=g++3 #(shelob)
+CPPFLAGS += -O3
+LIB += -llapack -lblas -lg2c
+PV3HOME = /usr/local/pV3/
+DEFINES += -DUNDERSCORE -DPOINTERLONG
+FORTRTL = /usr/local/pgi/linux86/lib#(shelob)
+FORTMAIN = $(FORTRTL)/pgfmain.o #(shelob)
+FORTLIB = -lpgftnrtl -lpgc #(shelob)
+
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -42,16 +48,12 @@ PV3HOME = ${HOME}/Packages/pV3/
 
 ### End machine dependent
 CPPFLAGS += $(DEFINES)
-#FORTRTL = /usr/local/pgi/linux86/lib
-#FORTLIB = $(FORTRTL)/pgfmain.o -lpgftnrtl -lpgc
-FORTRTL = /opt/ibmcmp/lib
-FORTLIB = -lxlf90_r.A -lxlfmath.A
-PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3_xlf -lgpvm3 -lpvm3 -L$(FORTRTL) $(FORTLIB)
+PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3 -lgpvm3 -lpvm3 -L$(FORTRTL) $(FORTLIB)
 
 hp: $(OBJ)
-	${CXX} -o $@ $(OBJ) $(LIB) $(PVLIB)
+	${CXX} -o $@ $(OBJ) $(LIB)
 	
 hp.pV3: $(OBJ) $(VIZ)
-	${CXX} -v -o $@ $(OBJ) $(LIB) $(VIZ) $(PVLIB)
+	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
 
 $(OBJ): spectral_hp.h hp_mgrid.h blocks.h defines.h surface.h

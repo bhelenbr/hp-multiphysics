@@ -41,7 +41,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    lg2pmax = lg2p;
    
    grd[0].spectral_hp::allocate(&hpbase[lg2pmax]);
-   grd[0].init_comm_buf(3*NV*(hpbase[lg2pmax].sm +2));
+   grd[0].init_comm_buf(3*(NV+ND)*(hpbase[lg2pmax].sm +2));
    for(i=1;i<ngrid;++i) {
       grd[i].spectral_hp::allocate(&hpbase[0]);
       grd[i].init_comm_buf(NV*3);

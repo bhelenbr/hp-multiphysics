@@ -45,7 +45,7 @@
 				F52FE4D802180CBB01990B20,
 				F52FE4DC02180FA201990B20,
 				F58209B601808CC201990B20,
-				F5605E2102C2C2F501AA3076,
+				6F6DD44607E9122700F9C72F,
 				F5605E1D02C2C26901AA3076,
 				F51A851D02DDC6D7012A8EDA,
 				F5605E1E02C2C26901AA3076,
@@ -210,29 +210,13 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
-		6F65232707E7D3470088CCD9 = {
-			fileRef = F5A11A6A029ABBE001990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		6F65232807E7D3480088CCD9 = {
-			fileRef = F52FE4D0021429E601990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		6F65235E07E7D8460088CCD9 = {
-			fileRef = F5605E2102C2C2F501AA3076;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		6F65235F07E7D8470088CCD9 = {
-			fileRef = F5605E1E02C2C26901AA3076;
-			isa = PBXBuildFile;
-			settings = {
-			};
+		6F6DD44607E9122700F9C72F = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libpV3_xlf.a;
+			path = /Users/helenbrk/Packages/pV3/clients/DARWIN/libpV3_xlf.a;
+			refType = 0;
+			sourceTree = "<absolute>";
 		};
 		6FA5712405AE030D003EC856 = {
 			buildPhases = (
@@ -250,7 +234,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = "f2cFortran NO_PV3 NOUNDERSCORE NOUNS";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/lib /Users/helenbrk/Packages/pV3 /Users/helenbrk/Packages/pvm3/lib/DARWIN";
+				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/lib /Users/helenbrk/Packages/pV3 /Users/helenbrk/Packages/pvm3/lib/DARWIN /Users/helenbrk/Packages/pV3/clients/DARWIN";
 				OTHER_CFLAGS = "";
 				OTHER_CPLUSPLUSFLAGS = "-falign-loops -funroll-loops";
 				OTHER_LDFLAGS = "";
@@ -276,7 +260,6 @@
 				6FA5712805AE030D003EC856,
 				6FA5712905AE030D003EC856,
 				6FA5712A05AE030D003EC856,
-				6F65232707E7D3470088CCD9,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -342,7 +325,6 @@
 				6FA5714305AE030D003EC856,
 				6FADFA2906710E7700BDB7F9,
 				6F1C359907E5D2F700E90F5F,
-				6F65232807E7D3480088CCD9,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -502,8 +484,6 @@
 				6FA5714C05AE030D003EC856,
 				6FA5714D05AE030D003EC856,
 				6F1C35D307E5D90600E90F5F,
-				6F65235E07E7D8460088CCD9,
-				6F65235F07E7D8470088CCD9,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -799,14 +779,6 @@
 			lastKnownFileType = archive.ar;
 			name = libpvm3.a;
 			path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libpvm3.a;
-			refType = 0;
-			sourceTree = "<absolute>";
-		};
-		F5605E2102C2C2F501AA3076 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libpV3.a;
-			path = /Users/helenbrk/Packages/pV3/libpV3.a;
 			refType = 0;
 			sourceTree = "<absolute>";
 		};

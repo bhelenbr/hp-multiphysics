@@ -709,79 +709,224 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
  
 }
 
-void hp_mgrid::bdrycheck1() {
-   int i,j,n,v0,count,bnum,sind;
+
+void hp_mgrid::matchboundaries1() {
+   int i,j,m,n,v0,sind,bnum,count,indx,indx1;
    class mesh *tgt;
    
-   /* SEND SIDE INFO */
+   /* SEND POSITIONS, NUMBER, AND SOLUTION TO ADJACENT MESHES */
+   /* SENDS EVERYTHING FOR ALL BOUNDARIES */
+   /* SORT OUT WHAT TO DO AFTER RECEIVE */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & (COMX_MASK +COMY_MASK +IFCE_MASK)) {
+      if (sbdry[i].type & ALLD_MP) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
+         
+         /* SEND NUMBER AS FLOAT? */
+         tgt->sbuff[bnum][count++] = sbdry[i].num;
+         
          for(j=0;j<sbdry[i].num;++j) {
+            /* SEND VERTEX INFO */
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            for (n=0;n<ND;++n) 
+            for(n=0;n<ND;++n)
                tgt->sbuff[bnum][count++] = vrtx[v0][n];
+            for(n=0;n<NV;++n)
+               tgt->sbuff[bnum][count++] = ug.v[v0][n];
+               
+            /* SEND SIDE INFO */
+            indx = sind*b->sm;
+            indx1 = j*b->sm;
+            for(m=0;m<b->sm;++m) {
+               for (n=0;n<ND;++n) 
+                  tgt->sbuff[bnum][count++] = binfo[i][indx1+m].curv[n];
+               for (n=0;n<NV;++n) 
+                  tgt->sbuff[bnum][count++] = ug.s[indx+m][n];
+            }
          }
          v0 = svrtx[sind][1];
-         for (n=0;n<ND;++n) 
-            tgt->sbuff[bnum][count++] = vrtx[v0][n]; 
-      }    
+         for(n=0;n<ND;++n)
+            tgt->sbuff[bnum][count++] = vrtx[v0][n];
+         for(n=0;n<NV;++n)
+            tgt->sbuff[bnum][count++] = ug.v[v0][n];
+      } 
    }
-   
+
    return;
+   
 }
 
-void hp_mgrid::bdrycheck2() {
-    int i,j,n,v0;
-    int sind,count;
-      
-   /* THIS PART TO RECIEVE AND ZERO FOR SIDES */
-   /* RECEIVE P'TH SIDE MODE MESSAGES */
-   /* CALCULATE AVERAGE RESIDUAL */
+void hp_mgrid::matchboundaries2() {
+   int i,j,m,n,v0,num,sind,bnum,count,indx,indx1,msgn;
+   
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & PRDX_MASK) {
-         count = 1;
+         count = 0;
+         
+         /*	RECV NUMBER */
+         num = static_cast<int>(sbuff[i][count++]);
+         if (num != sbdry[i].num) {
+            printf("non matching number of boundaries %d\n",sbdry[i].type);
+            exit(1);
+         }
+         
+         /* RECV INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
-            vrtx[v0][1] = 0.5*(vrtx[v0][1] +sbuff[i][count++]);
-            ++count;
+            ++count; // SKIP X
+            for(n=1;n<ND;++n)
+               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+            for(n=0;n<NV;++n)
+               ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+               
+            
+            indx = sind*b->sm;
+            indx1 = j*b->sm;
+            msgn = 1;
+            for(m=0;m<b->sm;++m) {
+               ++count; // SKIP X
+               for(n=1;n<ND;++n)
+                  binfo[i][indx1+m].curv[n] = 0.5*(binfo[i][indx1+m].curv[n] +msgn*sbuff[i][count++]);
+               for(n=0;n<NV;++n)
+                  ug.s[indx+m][n] = 0.5*(ug.s[indx+m][n] +msgn*sbuff[i][count++]);
+               msgn *= -1;
+            } 
          }
          v0 = svrtx[sind][0];
-         vrtx[v0][1] = 0.5*(vrtx[v0][1] +sbuff[i][count++]); 
-         continue;   
+         ++count; // SKIP X
+         for(n=1;n<ND;++n)
+            vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+         for(n=0;n<NV;++n)
+            ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+            
+         continue;
       }
-      
       if (sbdry[i].type & PRDY_MASK) {
          count = 0;
+         
+         /*	RECV NUMBER */
+         num = static_cast<int>(sbuff[i][count++]);
+         if (num != sbdry[i].num) {
+            printf("non matching number of boundaries %d\n",sbdry[i].type);
+            exit(1);
+         }
+         
+         /* RECV INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
-            vrtx[v0][0] = 0.5*(vrtx[v0][0] +sbuff[i][count++]);
-            ++count;
+            for(n=0;n<1;++n)
+               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+            ++count; // SKIP Y
+            for(n=0;n<NV;++n)
+               ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+               
+            
+            indx = sind*b->sm;
+            indx1 = j*b->sm;
+            msgn = 1;
+            for(m=0;m<b->sm;++m) {
+               for(n=0;n<1;++n)
+                  binfo[i][indx1+m].curv[n] = 0.5*(binfo[i][indx1+m].curv[n] +msgn*sbuff[i][count++]);
+               ++count; // SKIP Y
+               for(n=0;n<NV;++n)
+                  ug.s[indx+m][n] = 0.5*(ug.s[indx+m][n] +msgn*sbuff[i][count++]);
+               msgn *= -1;
+            } 
          }
          v0 = svrtx[sind][0];
-         vrtx[v0][0] = 0.5*(vrtx[v0][0] +sbuff[i][count++]); 
-         continue;   
+         for(n=0;n<1;++n)
+            vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+         ++count; // SKIP Y
+         for(n=0;n<NV;++n)
+            ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+            
+         continue;
       }
       
-      if (sbdry[i].type & (COMX_MASK +COMY_MASK +IFCE_MASK)) {
+      if (sbdry[i].type & IFCE_MASK) {
          count = 0;
+         
+         /*	RECV NUMBER */
+         num = static_cast<int>(sbuff[i][count++]);
+         if (num != sbdry[i].num) {
+            printf("non matching number of boundaries %d\n",sbdry[i].type);
+            exit(1);
+         }
+         
+         /* RECV INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
             for(n=0;n<ND;++n)
-               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]); 
+               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+            for(n=0;n<ND;++n)
+               ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+            ++count; // SKIP P
+            
+            indx = sind*b->sm;
+            indx1 = j*b->sm;
+            msgn = 1;
+            for(m=0;m<b->sm;++m) {
+               for(n=0;n<ND;++n)
+                  binfo[i][indx1+m].curv[n] = 0.5*(binfo[i][indx1+m].curv[n] +msgn*sbuff[i][count++]);
+               for(n=0;n<ND;++n)
+                  ug.s[indx+m][n] = 0.5*(ug.s[indx+m][n] +msgn*sbuff[i][count++]);
+               ++count; // SKIP P
+               msgn *= -1;
+            } 
          }
+         v0 = svrtx[sind][0];
+         for(n=0;n<ND;++n)
+            vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+         for(n=0;n<ND;++n)
+            ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+         ++count; // SKIP P
+            
+         continue;
+      }
+      
+      if (sbdry[i].type & ALLD_MP) {
+         count = 0;
+         
+         /*	RECV NUMBER */
+         num = static_cast<int>(sbuff[i][count++]);
+         if (num != sbdry[i].num) {
+            printf("non matching number of boundaries %d\n",sbdry[i].type);
+            exit(1);
+         }
+         
+         /* RECV INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            for(n=0;n<ND;++n)
+               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+            for(n=0;n<NV;++n)
+               ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+               
+            
+            indx = sind*b->sm;
+            indx1 = j*b->sm;
+            msgn = 1;
+            for(m=0;m<b->sm;++m) {
+               for(n=0;n<ND;++n)
+                  binfo[bnum][indx1+m].curv[n] = 0.5*(binfo[i][indx1+m].curv[n] +msgn*sbuff[i][count++]);
+               for(n=0;n<NV;++n)
+                  ug.s[indx+m][n] = 0.5*(ug.s[indx+m][n] +msgn*sbuff[i][count++]);
+               msgn *= -1;
+            } 
+         }
+         v0 = svrtx[sind][0];
+         for(n=0;n<ND;++n)
+            vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]);
+         for(n=0;n<NV;++n)
+            ug.v[v0][n] = 0.5*(ug.v[v0][n] +sbuff[i][count++]);
+            
+         continue;
       }
    }
-   
    return;
 }
-
-
-
-
