@@ -526,7 +526,7 @@ int mesh::findbdryside(FLT *x, int vnear) const {
          tind = ttri[tin][j];
          if (tind < 0) {
             sind = tside[tin].side[j];
-            if (insidecircle(sind,x) > 0.0) goto FOUND;
+            if (insidecircle(sind,x) > -EPSILON) goto FOUND;
             continue;
          }
          if (intwk1[tind] == 0) continue;

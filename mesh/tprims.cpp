@@ -42,7 +42,7 @@ FLT mesh::insidecircle(int sind, FLT *a) const {
    ctr[0] = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
    ctr[1] = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
    dist2 = (a[0]-ctr[0])*(a[0]-ctr[0]) +(a[1]-ctr[1])*(a[1]-ctr[1]);
-   return(0.5*distance2(v0,v1) -dist2);
+   return(0.25*distance2(v0,v1) -dist2);
 }
 
 
