@@ -46,14 +46,23 @@ class blocks {
       }
       
 /*		PERTURB BLOCK MESH */
-      inline void perturb(int step) {
+      inline void perturb() {
          for(int i=0;i<nblocks;++i)
-            blk[i].grd[0].perturb(step);
+            blk[i].grd[0].perturb();
          return;
       }
       
-      inline void restructure(FLT tolerance) {
-         for (int i=0;i<nblocks;++i) {
+      void restructure(FLT tolerance) {
+         int i;
+         
+         for (i=0;i<nblocks;++i) 
+            blk[i].grd[0].length1();
+            
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[0].length_mp();
+            
+         for(i=0;i<nblocks;++i) {
+            blk[i].grd[0].length2();
             blk[i].grd[0].swap();
             blk[i].grd[0].yaber(1.0/tolerance);
             blk[i].grd[0].treeupdate();

@@ -11,38 +11,41 @@
 #include<float.h>
 #include<math.h>
 
-/* CYLINDER OR WAVE */
-#define WAVE
-
-#ifdef CYLINDER
 #define R 0.5
-extern FLT center;
-FLT hgt(int type, FLT x, FLT y) {
-   x -= center;
-	return(x*x + y*y - R*R);
-}
-FLT dhgtdx(int type, FLT x, FLT y) {
-   x -= center;
-	return(2*x);
-}
-FLT dhgtdy(int type, FLT x, FLT y) {
-	return(2*y);
-}
-#endif
 
-#ifdef WAVE
+extern FLT center;
 extern FLT amp;
 
 FLT hgt(int type, FLT x, FLT y) {
-	return(y - amp*sin(2.*M_PI*(x-0.0)));
+   if (type&EULR_MASK) {
+      x -= center;
+      return(x*x + y*y - R*R);
+   }
+   if (type&(FSRF_MASK +IFCE_MASK)) {
+      return(y - amp*cos(2.*M_PI*(x-0.0)));
+   }
+   
+   return(0.0);
 }
 FLT dhgtdx(int type, FLT x, FLT y) {
-	return(-amp*2.*M_PI*cos(2.*M_PI*(x-0.0)));
+   if (type&EULR_MASK) {
+      x -= center;
+      return(2*x);
+   }
+   if (type&(FSRF_MASK +IFCE_MASK)) {
+      return(amp*2.*M_PI*sin(2.*M_PI*(x-0.0)));
+   }
+   return(1.0);
 }
 FLT dhgtdy(int type, FLT x, FLT y) {
-	return(1.0);
+   if (type&EULR_MASK) {
+      return(2*y);
+   }
+   if (type&(FSRF_MASK +IFCE_MASK)) {
+      return(1.0);
+   }
+   return(1.0);
 }
-#endif
 
 void mvpttobdry(int typ, FLT& x, FLT &y) {
    int iter;

@@ -287,7 +287,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       exit(1);
    }
    ++nside;
-   
+
    assert(nskeep == nsdel+1);
    assert(nskeep == ntdel+1);
    

@@ -16,45 +16,13 @@ int mesh::coarsen(const class mesh& inmesh) {
    if (!initialized) {
 /*		VERTEX STORAGE ALLOCATION */
       maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
-      vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-      vlngth = new FLT[maxvst];
-      vinfo = new int[maxvst+1];
-      ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-      nnbor = new int[maxvst];
-      vtri = new int[maxvst];
-	
-/*		VERTEX BOUNDARY STORAGE INFORMATION */		
-      nvbd = inmesh.nvbd;
-      maxvbel = inmesh.maxvbel;
-      for(i=0;i<nvbd;++i)
-         vbdry[i].el = new int[maxvbel];
-
-/*		SIDE STORAGE ALLOCATION */	
-      svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-      stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-      sinfo = new int[maxvst+1];
-      ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-
-/*		SIDE BOUNDARY STORAGE ALLOCATION */
+      allocate(maxvst);
       nsbd = inmesh.nsbd;
-      maxsbel = MAX(inmesh.maxsbel/2,4);
-      for(i=0;i<nsbd;++i)
-         sbdry[i].el = new int[maxsbel];      
-
-/*		TRIANGLE ALLOCATION */			
-      tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-      ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-      tside = new struct tsidedata[maxvst];
-      tinfo = new int[maxvst+1];
-      ++tinfo; // ALLOWS US TO ACCESS TINFO(-1)
-      
+      nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);
-      
       initialized = 1;
    }
    
-
-
 /* PREPARE FOR COARSENING */
 /*	USE GLOBAL INTWK2 TO KEEP TRACK OF WHETHER VERTICES ARE IN */   
 	for(i=0;i<inmesh.nvrtx;++i)

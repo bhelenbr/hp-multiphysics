@@ -32,11 +32,8 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
             }
 
             if (!initialized) {
-               maxvst = nside + (int) (grwfac*nside);
-               svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-               stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-               sinfo = new int[maxvst+1];
-               ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
+               allocate(nside + (int) (grwfac*nside));
+               vin = vrtx;
             }
             else if (nside > maxvst) {
                printf("mesh is too large\n");
@@ -56,53 +53,29 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                   exit(1);
                }
             }
-            fclose(grd);	
-            
+            fclose(grd);
+
 /*          FIGURE OUT HOW MANY BOUNDARY GROUPS THERE ARE & HOW MANY OF EACH */
             nsbd = 0;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
                   for (j = 0; j <nsbd;++j) {
                      if (sinfo[i] == sbdry[j].type) {
-                              ++sbdry[j].num;
-                              goto next1;
+                        sbdry[j].el[sbdry[j].num++]= i;
+                        if (sbdry[j].num > maxsbel) {
+                           printf("Boundaries are too big? %d %d\n",sbdry[j].type,maxsbel);
+                           exit(1);
+                        }
+                        goto next1;
                      }
                   }
 /*						NEW SIDE */
                   sbdry[nsbd].type = sinfo[i];
                   sbdry[nsbd].num = 1;
-                  ++nsbd;
+                  sbdry[nsbd++].el[0]= i;
                }
 next1:      continue;
             }
-
-/*	    		ALLOCATE STORAGE */
-            if (!initialized) {
-               maxsbel = 0;
-               for(i=0;i<nsbd;++i)
-                  maxsbel = MAX(sbdry[i].num,maxsbel);
-                  
-               maxsbel = maxsbel + (int) (grwfac*maxsbel);
-   
-               for(i=0;i<nsbd;++i)
-                  sbdry[i].el = new int[maxsbel];
-            }
-            
-            for(i=0;i<nsbd;++i)
-               sbdry[i].num = 0;
-
- 
-/*				STORE BOUNDARY INFO */
-            for(i=0;i<nside;++i) {
-               if (sinfo[i]) {
-                  for (j = 0; j <nsbd;++j) {
-                     if (sinfo[i] == sbdry[j].type) {
-                        sbdry[j].el[sbdry[j].num++] = i;
-                        break;
-                     }
-                  }
-               }
-            }	
                
 /*	    		LOAD VERTEX INFORMATION 				  */
             strcpy(grd_app,filename);
@@ -115,16 +88,6 @@ next1:      continue;
                printf("1: error in grid %s\n",grd_app);
                exit(1);
             }
-            
-            if (!initialized) {
-               vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-               vin = vrtx;
-               vlngth = new FLT[maxvst];
-               vinfo = new int[maxvst+1];
-               ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-               nnbor = new int[maxvst];
-               vtri = new int[maxvst];
-            }
     
 /*	    		ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
@@ -135,14 +98,12 @@ next1:      continue;
 
 /*				THIS IS GOING TO HAVE TO CHANGE */
 /*	    		COUNT VERTEX BOUNDARY GROUPS  */
-            maxvbel = 2;
             nvbd = 0;
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
 /*			    		NEW VRTX B.C. */
                   vbdry[nvbd].type = vinfo[i];
                   vbdry[nvbd].num = 1;
-                  if (!initialized) vbdry[nvbd].el = new int[maxvbel];
                   vbdry[nvbd].el[0] = i;
                   ++nvbd;
                   if (nvbd >= MAXSB) {
@@ -164,14 +125,6 @@ next1:      continue;
             if(ierr != 1) {
                printf("error in file %s\n",grd_app);
                exit(1);
-            }
-            
-            if (!initialized) {
-               tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-               ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-               tside = new struct tsidedata[maxvst];
-               tinfo = new int[maxvst+1];
-               ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
             }
     
             for(i=0;i<ntri;++i) {
@@ -215,25 +168,9 @@ next1:      continue;
             if (!initialized) {
                maxvst = (3*i)/2; 
                maxvst = nvrtx +(int) (grwfac*nvrtx);
-               vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+               allocate(maxvst);
                vin = vrtx;
-               vlngth = new FLT[maxvst];
-               vinfo = new int[maxvst+1];
-               ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-               nnbor = new int[maxvst];
-               vtri = new int[maxvst];
-               
-               svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-               stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-               sinfo = new int[maxvst+1];
-               ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-               
-               tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-               ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-               tside = new struct tsidedata[maxvst];
-               tinfo = new int[maxvst+1];
-               ++tinfo;
-            } 
+            }
             else if ((3*i)/2 > maxvst) {
                printf("mesh is too large\n");
                exit(1);
@@ -271,8 +208,6 @@ next1:      continue;
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
                   ,&sbdry[i].num,&sbdry[i].type);
                fscanf(grd,"%*[^\n]\n");
-
-               if (!initialized) maxsbel = MAX(sbdry[i].num,maxsbel);
                
                svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry[i].num*2*sizeof(int));
                     
@@ -284,13 +219,6 @@ next1:      continue;
                   vinfo[svrtxbtemp[i][j][0]] = sbdry[i].type;
                   vinfo[svrtxbtemp[i][j][1]] = sbdry[i].type;
                }
-            }
-                                    
-/*	    		ALLOCATE BOUNDARY STORAGE */
-            if (!initialized) {
-               maxsbel = maxsbel + (int) (grwfac*maxsbel);	
-               for(i=0;i<nsbd;++i) 
-                  sbdry[i].el = new int[maxsbel];
             }
     
             count = 0;
@@ -472,5 +400,41 @@ void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
          }
       }
    }   
+   return;
+}
+
+void mesh::allocate(int mxsize) {
+   int i;
+   
+/*	SIDE INFO */
+   maxvst = mxsize;
+   svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+   stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+   sinfo = new int[maxvst+1];
+   ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
+   
+   maxsbel = MAX((int) sqrt(maxvst),10);
+   for(i=0;i<MAXSB;++i)
+      sbdry[i].el = new int[maxsbel];
+
+/*	VERTEX INFO */                  
+   vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+   vlngth = new FLT[maxvst];
+   vinfo = new int[maxvst+1];
+   ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
+   nnbor = new int[maxvst];
+   vtri = new int[maxvst];
+   
+   maxvbel = 2;
+   for(i=0;i<MAXSB;++i)
+      vbdry[i].el = new int[maxvbel];
+   
+/*	TRI INFO */               
+   tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+   ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+   tside = new struct tsidedata[maxvst];
+   tinfo = new int[maxvst+1];
+   ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
+   
    return;
 }

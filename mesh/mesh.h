@@ -4,7 +4,7 @@
 #define FLT double
 
 #define ND 2
-#define MAXSB 16
+#define MAXSB 8
 #define MAXLST 1000
 
 /*	FIRST 16 BITS DETERMINE TYPE */
@@ -171,9 +171,7 @@ class mesh {
    public:
 /*		DEFAULT INITIALIZATION */
       mesh() : initialized(0), fine(NULL), coarse(NULL) {};
-/*		COPY CONSTRUCTOR TO DUPLICATE MESHES */
-//      mesh(const mesh& copy) : initialized(0), fine(NULL), coarse(NULL) { printf("in mesh copy\n"); *this = copy;}
-//      mesh& operator=(const mesh& tgt) {this->copy(tgt); return(*this);}
+      void allocate(int mxsize);
       void copy(const mesh& tgt);
       
 /*		ALLOCATE COMMUNICATION BUFFERS */
@@ -203,7 +201,7 @@ class mesh {
 
 /*    MESH MODIFICATION */   
       int coarsen(const class mesh& xmesh);
-      void density();
+      void length();
       void swap(FLT tolsize = 0.0);
       void yaber(FLT tolsize);
       inline void treeupdate() { qtree.update(0,nvrtx);}

@@ -101,7 +101,7 @@ void mesh::rebay(FLT tolsize) {
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
-   
+         
          bdry_insert(tind,snum,nvrtx);
          ++bdrycnt;
          
@@ -109,7 +109,7 @@ void mesh::rebay(FLT tolsize) {
          ntnew = ntdel +1;
       }
       else {
-         
+         printf("interior insert\n");
 /*			USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
          dy = vrtx[v0][1] -vrtx[v1][1];

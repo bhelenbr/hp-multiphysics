@@ -92,7 +92,12 @@ class r_mesh :public mesh {
          void rcv(int MASK, FLT *base,int bgn,int end, int stride);
            
 /*   		TESTS */
-         void perturb(int step);
+         void perturb();
+         
+/*			TO SET UP ADAPTATION VLENGTH */
+         void length1();
+         void length_mp();
+         void length2();
          
          friend class block;
          friend class blocks;

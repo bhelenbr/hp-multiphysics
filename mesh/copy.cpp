@@ -7,47 +7,12 @@ void mesh::copy(const mesh& tgt) {
    int i,j,n;
       
    if (!initialized) {
-/*		VERTEX STORAGE ALLOCATION */
-      maxvst = (int) (tgt.maxvst);
-      vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-      vlngth = new FLT[maxvst];
-      vinfo = new int[maxvst+1];
-      ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-      nnbor = new int[maxvst];
-      vtri = new int[maxvst];
-	
-/*		VERTEX BOUNDARY STORAGE INFORMATION */		
-      nvbd = tgt.nvbd;
-      maxvbel = tgt.maxvbel;
-      for(i=0;i<nvbd;++i)
-         vbdry[i].el = new int[maxvbel];
-
-/*		SIDE STORAGE ALLOCATION */	
-      svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-      stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-      sinfo = new int[maxvst+1];
-      ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-
-
-/*		SIDE BOUNDARY STORAGE ALLOCATION */
-      nsbd = tgt.nsbd;
-      maxsbel = tgt.maxsbel;
-      for(i=0;i<nsbd;++i)
-         sbdry[i].el = new int[maxsbel];      
-
-/*		TRIANGLE ALLOCATION */			
-      tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-      ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-      tside = new struct tsidedata[maxvst];
-      tinfo = new int[maxvst+1];
-      ++tinfo; // ALLOWS US TO ACCESS TINFO(-1)
+      allocate(tgt.maxvst);
       initialized = 1;
    }
    else {
 /*		CHECK IF BIG ENOUGH */
-      assert(maxvst >= tgt.maxvst);
-      assert(maxvbel >= tgt.maxvbel);
-      assert(maxsbel >= tgt.maxsbel);
+      assert(maxvst >= tgt.nside);
    }
    
 /*	COPY VERTEX INFO OVER */

@@ -134,10 +134,8 @@ void mesh::treeinit() {
       }
    }
 
-//   qtree.init(x1-EPSILON,y1-EPSILON,x2+EPSILON,y2+EPSILON);
-   
-   qtree.init(0.,-1.,1.,1.); //TEMPORARY
-   
+   qtree.init(x1-0.5*(x2-x1),y1-0.5*(y2-y1),x2+0.5*(x2-x1),y2+0.5*(y2-y1));
+      
    for(i=0;i<nvrtx;++i) 
       qtree.addpt(i);
 
@@ -199,7 +197,6 @@ void mesh::bdrysidereorder(int bdrynum) {
    
 /*	MAKE NEW BOUNDARIES FOR DISCONNECTED SEGMENTS */
    for(i=1;i<nsegs;++i) {
-      if (!initialized) sbdry[nsbd].el = new int[maxsbel];
       sbdry[nsbd].num = 0;
       sbdry[nsbd].type = sbdry[bdrynum].type;
       sind = first[i];
@@ -380,5 +377,17 @@ void mesh::initvlngth() {
    return;
 }
       
-   
+void mesh::length() {
+   int i;
+
+/* THIS NEEDS TO BE MODIFED DEPENDING ON DESIRED RESULT */
+/* SIDE BASED REFINEMENT CRITERION */
+//   for(i=0;i<nvrtx;++i)
+//      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
+
+   for(i=0;i<nvrtx;++i)
+      vlngth[i] = 1./32.;
+
+   return;
+}
    
