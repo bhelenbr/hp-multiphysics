@@ -425,10 +425,10 @@ void hpbasis::sideinfoinit() {
          dgnorm[0][m][i] = dpgn[m]*pgx[m] +xp1oeta*pgn[m]*dpgx[m];
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[1] +xp1oeta*pgn[m]*dpgx[1];
+         dgnorm[0][m][i] = dpgn[m]*pgx[2] +xp1oeta*pgn[m]*dpgx[2];
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[0] +xp1oeta*pgn[m]*dpgx[0];
+         dgnorm[0][m][i] = dpgn[m]*pgx[1] +xp1oeta*pgn[m]*dpgx[1];
 
       /*  INTERIOR MODES   */
       ind = bm;
@@ -461,10 +461,10 @@ void hpbasis::sideinfoinit() {
          dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[m];
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[1];
+         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[2];
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[0];
+         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[1];
 
       /*  INTERIOR MODES   */
       ind = bm;
@@ -498,10 +498,10 @@ void hpbasis::sideinfoinit() {
          dgnorm[2][m][i] = -(dpgn[m]*pgx[m] +(xp1 -1)*oeta*pgn[m]*dpgx[m]);
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[2][m][i] = -(dpgn[m]*pgx[1] +(xp1 -1)*oeta*pgn[m]*dpgx[1]);
+         dgnorm[2][m][i] = -(dpgn[m]*pgx[2] +(xp1 -1)*oeta*pgn[m]*dpgx[2]);
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[2][m][i] = -(dpgn[m]*pgx[0] +(xp1 -1)*oeta*pgn[m]*dpgx[0]);
+         dgnorm[2][m][i] = -(dpgn[m]*pgx[1] +(xp1 -1)*oeta*pgn[m]*dpgx[1]);
 
       /*  INTERIOR MODES   */
       ind = bm;
