@@ -109,6 +109,7 @@ void hp_mgrid::length1(FLT norm) {
       fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1));
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
+#ifndef THREELAYER
       vlngth[i] /= fltwk[i];
 #ifdef THREELAYER
 #define TRES 0.0125
@@ -121,6 +122,7 @@ void hp_mgrid::length1(FLT norm) {
       else {
          vlngth[i] = MIN(vlngth[i],TRES);
       }
+#endif
 #endif
 #ifdef TWOLAYER
       vlngth[i] = MIN(vlngth[i],0.3333); 

@@ -18,6 +18,7 @@ extern FLT amp,lam,theta;
 
 #ifdef DROP
 extern FLT dydt;
+static FLT factor;
 #endif
 
 void blocks::init(char *file, int start_sim) {
@@ -66,8 +67,14 @@ void blocks::init(char *file, int start_sim) {
    printf("#MESH MOVEMENT FADD\n#%f\n",r_mesh::fadd); //r_mesh::fadd);
 
    /* READ IN PHYSICAL PARAMETERS */
+#ifndef DROP
    fscanf(fp,"%*[^\n]%lf %lf\n",&hp_mgrid::dti,&hp_mgrid::g);
-   printf("#1/DT\t\tgravity\n#%0.2f\t%0.2f\n",hp_mgrid::dti,hp_mgrid::g);
+   printf("#1/DT\t\tgravity\n#%8.4e\t%8.4e\n",hp_mgrid::dti,hp_mgrid::g);
+#else
+   fscanf(fp,"%*[^\n]%lf %lf %lf\n",&hp_mgrid::dti,&hp_mgrid::g,&factor);
+   printf("#1/DT\t\tgravity\n#%8.4e\t%8.4e\t%8.4e\n",hp_mgrid::dti,hp_mgrid::g,factor);
+   factor = pow(10.0,factor);
+#endif
 
    /* SET BACKWARDS DIFFERENCE CONSTANTS */
    hp_mgrid::setbd(1);
@@ -266,7 +273,7 @@ void blocks::findmatch(int grdlvl) {
 FLT outertime = 0.0;
 
 void blocks::tadvance(int stage) {
-   int i;
+   int i,grid,lvl,bsnum;
    
 #ifdef BACKDIFF
    r_ksrc();
@@ -275,8 +282,22 @@ void blocks::tadvance(int stage) {
       hp_mgrid::time = hp_mgrid::time +1.0/hp_mgrid::dti;
       outertime = hp_mgrid::time;
       
-   for(i=0;i<nblocks;++i)
-      blk[i].tadvance();
+   for(i=0;i<nblocks;++i) {
+      for(lvl=0;lvl<mglvls;++lvl) {
+         if (lvl <= lg2pmax) {
+            grid = 0;
+            bsnum = lg2pmax-lvl;
+         }
+         else {
+            grid = lvl -lg2pmax;
+            bsnum =0;
+         }
+         blk[i].grd[grid].loadbasis(base[bsnum]);
+         blk[i].grd[grid].unsteady_sources(lvl);
+      }
+      blk[i].grd[0].loadbasis(base[lg2pmax]);
+      blk[i].grd[0].shift();
+   }
 #else
    if (stage == 0) r_ksrc();
    
@@ -533,7 +554,6 @@ void blocks::go() {
       fout = fopen("dropdata.dat","w");
       fprintf(fout,"VARIABLES=\"File\" \"Dens\" \"mu\" \"Re\" \"We\" \"Oh\" \"Cd\" \"Eo\" \"E\" \"g\" \"dydt\" \"Scap\"\n");
    }
-   FLT factor = pow(10.0,0.1);
    FLT aratioold = 1.0, aratio = 1.0;
    FLT gold = hp_mgrid::g/factor;
    FLT ratio;
@@ -549,18 +569,20 @@ void blocks::go() {
 #endif
          printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);      
          for(iter=0;iter<ncycle;++iter) {
+#ifdef DEFORM
+            r_cycle(vwcycle);
+#endif
             cycle(vwcycle);
             printf("%d %ld ",total++,clock());
             error = printerror();
 #ifdef DEFORM
-            r_cycle(vwcycle);
             r_printerror();
 #endif
+            printf("\n");
 #ifdef PV3
             pvtime = 1.0*iter;
             pV_UPDATE(&pvtime);
 #endif
-            printf("\n");
             // output(iter+1000,tecplot);
 
          }
@@ -595,8 +617,8 @@ void blocks::go() {
          aratio,hp_mgrid::g,dydt,scap);
 
          ratio = fabs((aratioold-aratio)/aratio);
-         if (ratio > 0.1) {
-            factor = 1.0 +(factor-1.0)/2.0;
+         if (ratio > 0.05) {
+            factor = pow(factor,0.1);
             printf("#factor change %e\n",factor);
 	 }
          aratioold = aratio;

@@ -47,10 +47,8 @@ struct hp_mgrid_glbls {
    /* UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
    struct vsi ugbd[TMSTORE]; // BACKWARDS DIFFERENCE FLOW INFO
    FLT (*vrtxbd[TMSTORE])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
-   struct bistruct *binfobd[TMSTORE][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
-   FLT ***dugdt[NV];  // UNSTEADY SOURCE FOR FLOW (ONLY NEEDED ON FINEST MESH)
+   struct bistruct *binfobd[TMSTORE][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION  */
    struct bistruct *dbinfodt[MAXSB]; // UNSTEADY CURVED SIDE VELOCITY (ONLY NEEDED ON FINEST MESH)
-   /* MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
       
    /* PHYSICAL CONSTANTS */
    FLT rho, rhoi, mu, nu;
@@ -98,6 +96,9 @@ class hp_mgrid : public spectral_hp {
       FLT (*dvrtdt)[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
       FLT (*vug_frst)[NV]; // SOLUTION ON FIRST ENTRY TO COARSE MESH
       struct vsi dres[MXLG2P]; // DRIVING TERM FOR MULTIGRID
+      
+      /* PRECALCULATED UNSTEADY SOURCES */
+      FLT ***dugdt[MXLG2P][NV]; 
       
       /* SURFACE BOUNDARY CONDITION STUFF */
       class surface *srf;
@@ -182,9 +183,14 @@ class hp_mgrid : public spectral_hp {
       void getfres();
       void getcchng();
 
-      /* FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
-      void tadvance(int stage = 0);
-      void getfdvrtdt();  // TO TRANSFER MESH TIME DERIVATIVE TO COARSE MESHES */
+      /* ADVANCE TIME SOLUTION */
+#ifdef BACKDIFF
+      void unsteady_sources(int mgrid);
+      void shift(int stage = 0);
+#else
+      void tadvance(int stage);
+      void getfdvrtdt(); 
+#endif
       
       /* FUNCTIONS FOR ADAPTION */ 
       void energy(FLT& energy, FLT& area);     

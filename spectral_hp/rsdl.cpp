@@ -26,7 +26,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    int ntemp;
    int v[3];
    
-   
    ntemp = nvrtx*NV;
    ftemp = &gbl->res.v[0][0];
    for(i=0;i<ntemp;++i)
@@ -162,51 +161,26 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       /* NEGATIVE REAL TERMS */
       if (beta[stage] > 0.0) {
          /* TIME DERIVATIVE TERMS */ 
-         if (!mgrid) {
-            for(i=0;i<b.gpx;++i) {
-               for(j=0;j<b.gpn;++j) {
-                  cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-                  res[0][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[0][i][j]*cjcb[i][j] +gbl->dugdt[0][tind][i][j];
-                  res[1][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[1][i][j]*cjcb[i][j] +gbl->dugdt[1][tind][i][j];
-                  res[2][i][j] = gbl->rho*RAD(i,j)*bd[0]*cjcb[i][j] +gbl->dugdt[2][tind][i][j];
-                  
+         for(i=0;i<b.gpx;++i) {
+            for(j=0;j<b.gpn;++j) {
+               cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
+               res[0][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[0][i][j]*cjcb[i][j] +dugdt[log2p][0][tind][i][j];
+               res[1][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[1][i][j]*cjcb[i][j] +dugdt[log2p][1][tind][i][j];
+               res[2][i][j] = gbl->rho*RAD(i,j)*bd[0]*cjcb[i][j] +dugdt[log2p][2][tind][i][j];
+               
 #ifdef AXISYMMETRIC
-                  res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
+               res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
 #endif
 
 #ifdef LAYER
-                  res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
-                  res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+               res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+               res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 
 #ifdef INERTIALESS
-                  res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
-                  res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
+               res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+               res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 #endif
 #endif
-               }
-            }
-         }
-         else {
-            for(i=0;i<b.gpx;++i) {
-               for(j=0;j<b.gpn;++j) {
-                  cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-                  res[0][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[0][i][j]*cjcb[i][j];
-                  res[1][i][j] = gbl->rho*RAD(i,j)*bd[0]*u[1][i][j]*cjcb[i][j];
-                  res[2][i][j] = gbl->rho*RAD(i,j)*bd[0]*cjcb[i][j];
-#ifdef AXISYMMETRIC
-                  res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
-#endif
-
-#ifdef LAYER
-                  res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
-                  res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
-
-#ifdef INERTIALESS
-                  res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
-                  res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
-#endif
-#endif
-               }
             }
          }
          b.intgrt(res[0],lf[0]);

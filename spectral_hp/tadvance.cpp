@@ -16,18 +16,131 @@ FLT hp_mgrid::bd[TMSCHEME+1];
 extern FLT lam;
 #endif
 
-void hp_mgrid::tadvance(int stage) {
+void hp_mgrid::unsteady_sources(int mgrid) {
    int i,j,n,tind,step;
-   FLT temp;
+   class hp_mgrid *fmesh;
    
 #ifdef DROP
    lam = 1.0e99;
 #endif
 
-   /*********************************************************/   
-   /* CALCULATE TIME DERIVATIVE SOURCE TERM FOR FINEST MESH */
-   /*********************************************************/ 
-   /* FIRST TERM */ 
+   if (!mgrid) {
+   /* ON FINEST LEVEL MOVE BD INFO TO WORK */
+      for(step=0;step<TMSCHEME-1;++step) {  
+         for(i=0;i<nvrtx;++i)
+            for(n=0;n<ND;++n)
+               ugwk[step].v[i][n] = gbl->ugbd[step].v[i][n];
+
+         for(i=0;i<nside*b.sm;++i)
+            for(n=0;n<ND;++n)
+               ugwk[step].s[i][n] = gbl->ugbd[step].s[i][n];            
+
+         for(i=0;i<ntri*b.im;++i)
+            for(n=0;n<ND;++n)
+               ugwk[step].i[i][n] = gbl->ugbd[step].i[i][n]; 
+               
+         for(i=0;i<nvrtx;++i)
+            for(n=0;n<ND;++n)
+               vrtxwk[step][i][n] = gbl->vrtxbd[step][i][n];
+               
+         for(i=0;i<nsbd;++i)
+            if (sbdry[i].type&CURV_MASK)
+               for(j=0;j<sbdry[i].num*b.sm;++j) 
+                     for(n=0;n<ND;++n)
+                        binfowk[step][i][j].curv[n] = gbl->binfobd[step][i][j].curv[n];
+      }
+                     
+                     
+      /* CALCULATE MESH VELOCITY SOURCE TERM */
+      for(i=0;i<nvrtx;++i) {
+         for(n=0;n<ND;++n) {
+            dvrtdt[i][n] = bd[1]*vrtx[i][n];
+            for(step=0;step<TMSCHEME-1;++step)
+               dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
+         }
+      }
+      
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type&CURV_MASK) {
+            for(j=0;j<sbdry[i].num*b.sm;++j) {
+               for(n=0;n<ND;++n) {
+                  gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
+                  for(step=0;step<TMSCHEME-1;++step)
+                     gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
+               }
+            }
+         }
+      }
+      
+      /* CALCULATE 1D MESH SOURCE ON FINE MESH ONLY */
+      surfvrttoug();
+      setksprg1d();
+      surfksrc1d();
+   }
+   else if (p0 == 1) {
+      /* MOVE WORK INFO TO COARSER MESHES */
+      fmesh = static_cast<class hp_mgrid *>(fmpt);
+      
+      /* CALCULATE UNSTEADY SOURCE TERM ON COARSE MESHES */
+      for(i=0;i<nvrtx;++i) {
+         tind = fine[i].tri;
+
+         for(n=0;n<ND;++n)
+            vrtx[i][n] = 0.0;
+            
+         for(n=0;n<ND;++n)
+            dvrtdt[i][n] = 0.0;
+         
+         for(n=0;n<NV;++n)
+            ug.v[i][n] = 0.0;
+            
+         for(j=0;j<3;++j) {
+            for(n=0;n<ND;++n)
+               vrtx[i][n] += fine[i].wt[j]*fmesh->vrtx[fmesh->tvrtx[tind][j]][n];
+               
+            for(n=0;n<ND;++n)
+               dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
+               
+            for(n=0;n<NV;++n)
+               ug.v[i][n] += fine[i].wt[j]*fmesh->ug.v[fmesh->tvrtx[tind][j]][n];
+         }
+      }
+      
+      for(step=0;step<TMSCHEME-1;++step) {   
+         /* CALCULATE UNSTEADY SOURCE TERM ON COARSE MESHES */
+         for(i=0;i<nvrtx;++i) {
+            tind = fine[i].tri;
+
+            for(n=0;n<ND;++n)
+               vrtx_frst[i][n] = 0.0;
+            
+            for(n=0;n<NV;++n)
+               vug_frst[i][n] = 0.0;
+               
+            for(j=0;j<3;++j) {
+               for(n=0;n<ND;++n)
+                  vrtx_frst[i][n] += fine[i].wt[j]*vrtxwk[step][fmesh->tvrtx[tind][j]][n];
+                  
+               for(n=0;n<NV;++n)
+                  vug_frst[i][n] += fine[i].wt[j]*ugwk[step].v[fmesh->tvrtx[tind][j]][n];
+            }
+         }
+         
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               vrtxwk[step][i][n] = vrtx_frst[i][n];
+            
+            for(n=0;n<NV;++n)
+               ugwk[step].v[i][n] = vug_frst[i][n];
+         }
+      }
+
+      /* SET SPRING CONSTANTS FOR COARSER MESHES */
+      setksprg1d();
+   }
+   
+   
+   /* CALCULATE SOURCE TERMS AT GAUSS POINTS */
    for(tind=0;tind<ntri;++tind) {
       if (tinfo[tind] > -1) {
          crdtocht(tind);
@@ -54,48 +167,57 @@ void hp_mgrid::tadvance(int stage) {
       for(i=0;i<b.gpx;++i) {
          for(j=0;j<b.gpn;++j) {   
             cjcb[i][j] = bd[1]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
-            for(n=0;n<ND;++n)
-               gbl->dugdt[n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
-            gbl->dugdt[ND][tind][i][j] = cjcb[i][j];
+            for(n=0;n<ND;++n) {
+               dugdt[log2p][n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
+            }
+            dugdt[log2p][ND][tind][i][j] = cjcb[i][j];
          }            
       }
    }
-   
+
    /* NOW DO ADDITIONAL TERMS FOR HIGHER-ORDER BD */
    for(step=0;step<TMSCHEME-1;++step) {
       for(tind=0;tind<ntri;++tind) {
          if (tinfo[tind] > -1) {
-            crdtocht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
+            crdtocht(tind,vrtxwk[step],binfowk[step]);
             for(n=0;n<ND;++n)
                b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
          }
          else {
             for(n=0;n<ND;++n)
-               b.proj(gbl->vrtxbd[step][tvrtx[tind][0]][n],gbl->vrtxbd[step][tvrtx[tind][1]][n],gbl->vrtxbd[step][tvrtx[tind][2]][n],crd[n]);
+               b.proj(vrtxwk[step][tvrtx[tind][0]][n],vrtxwk[step][tvrtx[tind][1]][n],vrtxwk[step][tvrtx[tind][2]][n],crd[n]);
                
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
                   for(n=0;n<ND;++n) {
-                     dcrd[n][0][i][j] = 0.5*(gbl->vrtxbd[step][tvrtx[tind][1]][n] -gbl->vrtxbd[step][tvrtx[tind][0]][n]);
-                     dcrd[n][1][i][j] = 0.5*(gbl->vrtxbd[step][tvrtx[tind][2]][n] -gbl->vrtxbd[step][tvrtx[tind][0]][n]);
+                     dcrd[n][0][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][1]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
+                     dcrd[n][1][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][2]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
                   }
                }
             }
          }
-         ugtouht(tind,gbl->ugbd[step]);
+         ugtouht(tind,ugwk[step]);
          for(n=0;n<ND;++n)
             b.proj(uht[n],u[n]);
                      
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {   
                cjcb[i][j] = bd[step+2]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
-               for(n=0;n<ND;++n)
-                  gbl->dugdt[n][tind][i][j]  += u[n][i][j]*cjcb[i][j];
-               gbl->dugdt[ND][tind][i][j] += cjcb[i][j];
+               for(n=0;n<ND;++n) {
+                  dugdt[log2p][n][tind][i][j]  += u[n][i][j]*cjcb[i][j];
+               }
+               dugdt[log2p][ND][tind][i][j] += cjcb[i][j];
             }            
          }
       }
    }
+
+   return;
+}
+
+void hp_mgrid::shift(int stage) {
+   int i,j,n,step;
+   FLT temp;
    
    /* SHIFT BACKWARDS DIFFERENCE STORAGE */
    for(i=0;i<nvrtx;++i)
@@ -137,28 +259,6 @@ void hp_mgrid::tadvance(int stage) {
          ug.i[i][n] += extrap*temp;
       }
    }   
-
-   /* DO SIMILAR THING FOR MESH VELOCITY TERMS */
-   /* CALCULATE MESH VELOCITY SOURCE TERM */
-   for(i=0;i<nvrtx;++i) {
-      for(n=0;n<ND;++n) {
-         dvrtdt[i][n] = bd[1]*vrtx[i][n];
-         for(step=0;step<TMSCHEME-1;++step)
-            dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
-      }
-   }
-   
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num*b.sm;++j) {
-            for(n=0;n<ND;++n) {
-               gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
-               for(step=0;step<TMSCHEME-1;++step)
-                  gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
-            }
-         }
-      }
-   }
    
    /* SHIFT BD MESH INFORMATION */
    for(i=0;i<nvrtx;++i)
@@ -198,43 +298,12 @@ void hp_mgrid::tadvance(int stage) {
    /* ALSO ELIMINATES ERROR FOR NEW ADAPTATION POINTS ON ANALYTICALLY DEFINED SURFACE */
    curvinit(EULR_MASK+INFL_MASK);
    
-//   for(i=0;i<nvrtx;++i)
-//      vrtx[i][0] += 0.1;
-
-   /* UPDATE UNSTEADY INFLOW VARIABLES */
-   setinflow();
-
    /* MOVE EXTRAPOLATED VERTEX INFO FOR FREE SURFACES TO UKNOWN VECTOR */
    surfvrttoug();
 
    return;
 }
 
-void hp_mgrid::getfdvrtdt() {
-   int i,j,n,tind;
-   class hp_mgrid *fmesh;
-
-//   for(i=0;i<nvrtx;++i)
-//      vrtx[i][0] += 0.1;
-   
-   fmesh = static_cast<class hp_mgrid *>(fmpt);
-   
-   /* CALCULATE MESH VELOCITY SOURCE TERM ON COARSE MESHES */
-   /* TO CALCULATE VUG ON COARSE MESH */
-   for(i=0;i<nvrtx;++i) {
-      tind = fine[i].tri;
-
-      for(n=0;n<ND;++n)
-         dvrtdt[i][n] = 0.0;
-         
-      for(j=0;j<3;++j) {
-         for(n=0;n<ND;++n)
-            dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
-      }
-   }
-   
-   return;
-}
 
 void hp_mgrid::setbd(int nsteps) {
    int i;
@@ -265,4 +334,3 @@ void hp_mgrid::setbd(int nsteps) {
    
    return;
 }
-

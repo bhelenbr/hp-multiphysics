@@ -93,6 +93,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    /* FIGURE OUT WHERE WE ARE */   
    if (mgrid && p0 == 1) onfmesh = 0;
    else onfmesh = 1;
+   
    log2p = 0;
    while ((b.p-1)>>log2p > 0) ++log2p;
    if (log2p > MXLG2P) {
@@ -100,9 +101,12 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       exit(1);
    }
    
-   /* THINGS NEEDED 1 FOR EACH PHYSICAL GRID */
+      /* THINGS NEEDED 1 FOR EACH PHYSICAL GRID */
    if ((onfmesh && b.p == p0) || !onfmesh)
       dvrtdt = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+   
+   for(i=0;i<NV;++i)
+      tens_alloc(dugdt[log2p][i],maxvst,b.gpx,b.gpn,FLT);  // UNSTEADY SOURCE FOR FLOW
 
    /* THINGS NEEDED FOR EACH MGRID LEVEL BUT NOT FINEST */
    if (mgrid) {
@@ -166,8 +170,6 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
       for(j=0;j<nsbd;++j)
          store->binfobd[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
    }
-   for(i=0;i<NV;++i)
-      tens_alloc(store->dugdt[i],maxvst,b.gpx,b.gpn,FLT);  // UNSTEADY SOURCE FOR FLOW
    
    for(j=0;j<nsbd;++j)
       store->dbinfodt[j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
