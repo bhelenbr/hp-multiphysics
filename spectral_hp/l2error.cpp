@@ -71,9 +71,11 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
    FLT ddpsi1, ddpsi2, psil, psir;
    FLT xp[ND], dx[ND];
+   FLT maxloc[ND],minloc[ND],max,min;
    int bnum, v0, v1, sind;
    
-   FLT max = 0.0;
+   max = -1.0e99;
+   min = 1.0e99;
    
    for(bnum=0;bnum<nsbd;++bnum) {
       if (!(sbdry[bnum].type&type)) continue;
@@ -106,8 +108,17 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
          ddpsi1 = (*fxy)(dx);
          if (ddpsi1 * ddpsi2 < 0.0) {
             v0 = svrtx[sbdry[bnum].el[indx]][0];
-            max = MAX(max,(*fxy)(vrtx[v0]));
-            printf("#LOCAL MAX: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
+            if ((*fxy)(vrtx[v0]) > max) {
+               maxloc[0] = vrtx[v0][0];
+               maxloc[1] = vrtx[v0][1];
+               max = (*fxy)(vrtx[v0]);
+            }
+            if ((*fxy)(vrtx[v0]) < min) {
+               minloc[0] = vrtx[v0][0];
+               minloc[1] = vrtx[v0][1];
+               min = (*fxy)(vrtx[v0]);
+            }
+            // printf("#LOCAL EXTREMA: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
          }
          b.ptprobe1d(ND, cht, xp, dx, 1.0);
          ddpsi2 = (*fxy)(dx);
@@ -122,11 +133,23 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
                else
                   psil = 0.5*(psil+psir);
             }
-            max = MAX(max,(*fxy)(xp));
-            printf("#LOCAL MAX: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
+            if ((*fxy)(xp) > max) {
+               maxloc[0] = xp[0];
+               maxloc[1] = xp[1];
+               max = (*fxy)(xp);
+            }
+            if ((*fxy)(xp) < min) {
+               minloc[0] = xp[0];
+               minloc[1] = xp[1];
+               min = (*fxy)(xp);
+            }
+            // printf("#LOCAL EXTREMA: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
          }  
       }
    }
+   printf("#EXTREMA %e %e %e\n",maxloc[0],maxloc[1],max);
+   printf("#EXTREMA %e %e %e\n",minloc[0],minloc[1],min);
+   
    return(max);
 }
 

@@ -54,9 +54,7 @@ int main(int argc, char **argv) {
    hp.in_mesh(argv[1],grid,1.0);
    hp.allocate(b);
    hp.input(argv[1],tecplot);
-   hp.output("test",tecplot);
-   hp.output("test",text);
-   hp.findmaxy(IFCE_MASK);
+   hp.findmaxy(CURV_MASK);
 #endif
    
    
