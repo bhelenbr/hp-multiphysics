@@ -62,8 +62,8 @@
 		};
 		0249A662FF388D9811CA2CEA = {
 			children = (
-				F5D40DCA01948889012E171D,
-				F5F3507B019A14BD012DA41C,
+				F52FE4D402180BEC01990B20,
+				F52FE4D502180BEC01990B20,
 				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
@@ -243,6 +243,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07,
 				0249A662FF388D9811CA2CEA,
+				F556D7CB0226C8DC01990B20,
 				1AB674ADFE9D54B511CA2CBB,
 			);
 			isa = PBXGroup;
@@ -295,7 +296,8 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = ../lib;
+				LIBRARY_SEARCH_PATHS = "../lib /Volumes/work/helenbrk/Codes/lib";
+				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -360,9 +362,9 @@
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
+				F52FE4D602180BEC01990B20,
+				F52FE4D702180BEC01990B20,
 				0249A664FF388D9811CA2CEA,
-				F5D40DCB01948889012E171D,
-				F5F3507C019A14BD012DA41C,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -386,7 +388,6 @@
 //1A4
 		1AB674ADFE9D54B511CA2CBB = {
 			children = (
-				F50AF9AC0188A63E01990B20,
 				0249A660FF388D4511CA2CEA,
 			);
 			isa = PBXGroup;
@@ -425,6 +426,30 @@
 			settings = {
 			};
 		};
+		F52FE4D402180BEC01990B20 = {
+			isa = PBXFileReference;
+			name = libquad.a;
+			path = ../lib/libquad.a;
+			refType = 2;
+		};
+		F52FE4D502180BEC01990B20 = {
+			isa = PBXFileReference;
+			name = libutil.a;
+			path = ../lib/libutil.a;
+			refType = 2;
+		};
+		F52FE4D602180BEC01990B20 = {
+			fileRef = F52FE4D402180BEC01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52FE4D702180BEC01990B20 = {
+			fileRef = F52FE4D502180BEC01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F543FC18014FCBC901000001 = {
 			isa = PBXFileReference;
 			path = rebay.cpp;
@@ -435,6 +460,21 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F556D7CB0226C8DC01990B20 = {
+			children = (
+				F50AF9AC0188A63E01990B20,
+				F556D7CC0226C8DC01990B20,
+			);
+			isa = PBXGroup;
+			name = Scripts;
+			path = "";
+			refType = 4;
+		};
+		F556D7CC0226C8DC01990B20 = {
+			isa = PBXFileReference;
+			path = makefile;
+			refType = 4;
 		};
 		F5AF3BF901879D4B0131A0B3 = {
 			isa = PBXFileReference;
@@ -486,18 +526,6 @@
 			settings = {
 			};
 		};
-		F5D40DCA01948889012E171D = {
-			isa = PBXFileReference;
-			name = quad.o;
-			path = ../lib/quad.o;
-			refType = 2;
-		};
-		F5D40DCB01948889012E171D = {
-			fileRef = F5D40DCA01948889012E171D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5D8A52401ED28B00152D5E2 = {
 			isa = PBXFileReference;
 			path = r_length.cpp;
@@ -505,18 +533,6 @@
 		};
 		F5D8A52501ED28B00152D5E2 = {
 			fileRef = F5D8A52401ED28B00152D5E2;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5F3507B019A14BD012DA41C = {
-			isa = PBXFileReference;
-			name = utilities.o;
-			path = ../lib/utilities.o;
-			refType = 2;
-		};
-		F5F3507C019A14BD012DA41C = {
-			fileRef = F5F3507B019A14BD012DA41C;
 			isa = PBXBuildFile;
 			settings = {
 			};
