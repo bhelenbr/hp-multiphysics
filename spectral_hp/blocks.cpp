@@ -218,7 +218,7 @@ void blocks::tadvance() {
    
    if (hp_mgrid::dti > 0.0) 
       hp_mgrid::time = hp_mgrid::time +1./hp_mgrid::dti;
-      outertime = hp_mgrid::time;  // TEMPORARY
+      outertime = hp_mgrid::time;
    
    r_ksrc();
 
@@ -307,7 +307,7 @@ void blocks::cycle(int vw, int lvl = 0) {
    }
                   
    for (i=0;i<vw;++i) {
-
+   
       nstage(grid,base[bsnum].sm,lvl);
       
       if (lvl == mglvls-1) return;
@@ -381,7 +381,7 @@ void blocks::go() {
          printf("%d ",iter);
          endcycle();
          r_cycle(vwcycle);
-         r_maxres();
+      	r_maxres();
          printf("\n");
       }
       

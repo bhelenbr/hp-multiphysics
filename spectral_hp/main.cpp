@@ -27,12 +27,11 @@ int main(int argc, char **argv) {
    class hpbasis w;
    struct hp_mgrid_glbls gbl;
       
+   myblock.init(argv[1]);
+
    /* START CLOCK TIMER */
    clock();
-
-   myblock.init(argv[1]);
    myblock.go();
-   
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
    

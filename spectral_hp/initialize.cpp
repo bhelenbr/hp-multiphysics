@@ -965,11 +965,11 @@ void hpbasis::legpt()
          lgrnge[1][i][j] = pgn[1]*pgx[1];
 
          /* VERTEX C    */   
-         lgrnge[2][i][j] = pgn[2]*1.0;
+         lgrnge[2][i][j] = pgn[2]*pgx[2];
 
          /*  SIDE 1 (s)      */
          for(m = 3; m < sm+3; ++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[m-1];
+            lgrnge[m][i][j] = pgn[m]*pgx[m];
             
          for(m=sm+3;m<2*sm+3;++m)
             lgrnge[m][i][j] = pgn[m]*pgx[1];
@@ -979,8 +979,8 @@ void hpbasis::legpt()
 
          /*  INTERIOR MODES   */
          ind = bm;
-         for(m = 2; m< sm+1;++m) {      
-            for(n = 1; n < sm+2-m;++n) {
+         for(m = 3; m< sm+2;++m) {      
+            for(n = 1; n < sm+3-m;++n) {
                lgrnge[ind][i][j] = pgn[ind]*pgx[m];
                ++ind;
             }

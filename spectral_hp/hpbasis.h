@@ -156,13 +156,17 @@ class hpbasis {
          ptprobe(nv, lin, f);
       }
       void ptprobe(int nv, FLT **lin, FLT *f);  // REUSES OLD R,S
+      
+      /* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
       void ptprobe_bdry(int nv, FLT **lin, FLT *f); // REUSES OLD R,S ONLY BDRY MODES 
+      void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
+      
+      /* 1D SIDE PROBE FUNCTIONS */
       inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
          ptvalues1d(x);
          ptprobe1d(nv,lin,f);
       }
-      void ptprobe1d(int nv, FLT **lin, FLT *f);
-      void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s);
+      void ptprobe1d(int nv, FLT **lin, FLT *f);  // REUSES OLD VALUES OF X
       
    /* LOCAL STORAGE/WORK */
    private:
@@ -175,9 +179,13 @@ class hpbasis {
       void sideinfoinit(); // SET UP THINGS TO EVALUATE NORMAL DERIVATIVES ALONG SIDE
       void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
       void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
+      
+      /* TO CALCULATE BASIS FUNCTIONS & DERIVATIVES */
       void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
       void ptvalues_deriv(FLT r, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
       void ptvalues_deriv_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      
+      /* 1D SIDE BASIS FUNCTIONS & DERIVATIVES */
       void ptvalues1d(FLT x);
       void ptvalues1d_deriv(FLT x);
 };
