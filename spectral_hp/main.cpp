@@ -9,15 +9,14 @@
 
 
 #include "blocks.h"
-#include"osdepend.h"
+#include"pV3.h"
 #include<stdio.h>
 #include<utilities.h>
 #include<time.h>
 
 #ifdef PV3
-extern "C" int MAIN_(int argc, char **argv);
-
-int MAIN_(int argc, char**argv) {
+extern "C" int MAINPROG(int argc, char **argv);
+int MAINPROG(int argc, char**argv) {
 #else
 int main(int argc, char **argv) {
 #endif

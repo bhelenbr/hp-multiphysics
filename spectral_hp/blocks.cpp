@@ -2,7 +2,7 @@
 #include<cstring>
 #include<utilities.h>
 #include<stdio.h>
-#include"osdepend.h"
+#include"pV3.h"
 
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);

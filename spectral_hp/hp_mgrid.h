@@ -194,7 +194,7 @@ class hp_mgrid : public spectral_hp {
 #ifdef PV3
       void pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
       void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
-&kptet,int& knblock,int blocks[][3],int& ksurf,int& knsurf,int& hint);
+&kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
       void pvgrid(float (*xyz)[3]);
       void pvscal(int *key, float *v);
       void pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);

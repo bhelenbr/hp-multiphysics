@@ -35,12 +35,15 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
    r = wgt[1]*2 -1.0;
    
    if (tinfo[tind] < 0) return(tind);
+   
+   printf("In find and move %f %f\n",xp,yp);
 
    /* MOVE POINT WITH SIDE CURVATURE */
    crdtouht(tind);
    b.ptprobe_bdry(ND,uht,x,r,s);
    xp = x[0];
    yp = x[1];
+
 
    return(tind);
 }
