@@ -12,7 +12,7 @@
 #include<math.h>
 
 /* CYLINDER OR WAVE */
-#define CYLINDER
+#define WAVE
 
 #ifdef CYLINDER
 #define R 0.5
@@ -34,10 +34,10 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 extern FLT amp;
 
 FLT hgt(int type, FLT x, FLT y) {
-	return(y - amp*cos(2.*M_PI*x));
+	return(y - amp*sin(2.*M_PI*(x-0.0)));
 }
 FLT dhgtdx(int type, FLT x, FLT y) {
-	return(+amp*2.*M_PI*sin(2.*M_PI*x));
+	return(-amp*2.*M_PI*cos(2.*M_PI*(x-0.0)));
 }
 FLT dhgtdy(int type, FLT x, FLT y) {
 	return(1.0);

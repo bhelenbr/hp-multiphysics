@@ -23,7 +23,7 @@ class blocks {
       
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
-      void init(int nb, int mg, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      void init(int nb, int mg, char **filenames, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void findmatch();
 
 /*		JACOBI ITERATION ON ALL BLOCKS */  
@@ -36,6 +36,7 @@ class blocks {
       void ksrc();
       
 /*		OUTPUT FINE BLOCK MESH */
+      void out_mesh(char **filename, FILETYPE filetype = easymesh);
       void out_mesh(char *filename, FILETYPE filetype = easymesh);
       
 /*		PRINT ERRORS */
@@ -54,7 +55,6 @@ class blocks {
       inline void restructure(FLT tolerance) {
          for (int i=0;i<nblocks;++i) {
             blk[i].grd[0].swap();
-            blk[i].grd[0].density();
             blk[i].grd[0].yaber(1.0/tolerance);
             blk[i].grd[0].treeupdate();
             blk[i].grd[0].rebay(tolerance);

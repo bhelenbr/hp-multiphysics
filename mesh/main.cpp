@@ -17,7 +17,7 @@
 #include<utilities.h>
 #include<time.h>
 
-#define CYLINDER
+#define WAVE
 
 FLT center;
 /* THIS NEEDS TO BE MODIFED DEPENDING ON DESIRED RESULT */
@@ -28,9 +28,8 @@ void mesh::density() {
 //   for(i=0;i<nvrtx;++i)
 //      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
 
-   for(i=0;i<nvrtx;++i)
-      vlngth[i] = 1./32.;
-
+//   for(i=0;i<nvrtx;++i)
+//      vlngth[i] = 1./32.;
       
    for(i=0;i<nside;++i)
       fltwk[i] = (vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]])/
@@ -69,10 +68,10 @@ void r_mesh::perturb(int step) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            vrtx[v0][1]  = +0.25*step/10.*cos(2.*M_PI*vrtx[v0][0]);
+            vrtx[v0][1]  = +0.25*step/20.*sin(2.*M_PI*(vrtx[v0][0]-0.0));
          }
          v0 = svrtx[sind][1];
-         vrtx[v0][1]  = +0.25*step/10.*cos(2.*M_PI*vrtx[v0][0]);
+         vrtx[v0][1]  = +0.25*step/20.*sin(2.*M_PI*(vrtx[v0][0]-0.0));
       }
    }
    amp = 0.25*step/10.;
@@ -83,9 +82,12 @@ void r_mesh::perturb(int step) {
 
 int main(int argc, char *argv[]) {
    int i,step = 0;
-   char name[100];
+   char outname[100];
    clock_t cpu_time;
    class mesh x, y;
+   class blocks z;
+   char *inname[2];
+   char *out2[2];
 
 /*	START CLOCK TIMER */
    clock();
@@ -131,11 +133,15 @@ int main(int argc, char *argv[]) {
 #endif
 
 /*	THIS DEFORMS A MESH */
-   class blocks z;
 
-  z.init(1,4,"../../grids/TIM/tim",easymesh,10.0);
-//  z.init(1,4,"/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5",easymesh,5.0);
-//  z.init(1,3,"start",easymesh,10.0);
+   
+//	inname[0] = "../../grids/TIM/tim";
+//	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";
+   
+   inname[0] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/bot1";
+   inname[1] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/top1";
+   
+   z.init(2,3,inname,easymesh,50.0);
 
 #define NOT_ONE
 
@@ -150,22 +156,26 @@ int main(int argc, char *argv[]) {
    z.restructure(0.66);
 #else
 /* For Incremental Changes */
-   for(step = 1; step<=2;++step) {
+   for(step = 1; step<=30;++step) {
       z.ksrc();
       z.perturb(step);
-      for(i=0;i<100;++i) {
+#ifdef SKIP
+      for(i=0;i<40;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();
          printf("\n");
       }
+#endif
       z.restructure(0.66);
-      number_str(name, "test", step, 2);
-      z.out_mesh(name);
+      number_str(outname, "test", step, 2);
+      z.out_mesh(outname);
    }
    
-   z.out_mesh("deform",tecplot);
-   z.restructure(0.66);
+   out2[0] = "bamp0.375";
+   out2[1] = "tamp0.375";
+   z.out_mesh(out2,easymesh);
+   
 #endif
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);

@@ -244,6 +244,10 @@ void mesh::putinlst(int sind) {
    intwk3[sind] = bot;
    ++nslst;
    
+   if (fltwk[intwk2[bot]] == fltwk[intwk2[bot-1]] || fltwk[intwk2[bot]] == fltwk[intwk2[bot+1]]) {
+      printf("could be in trouble\n");
+   }
+
    assert(nslst < maxvst -1);
    
    return;

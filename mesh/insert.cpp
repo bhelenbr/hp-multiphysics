@@ -27,7 +27,10 @@ void mesh::insert(FLT x, FLT y) {
    tind = findtri(x,y,vnear);  
    insert(tind,nvrtx);
    ++nvrtx;
-   assert(nvrtx < maxvst -1);
+   if (nvrtx >= maxvst -1) {
+      printf("need to use larger growth factor: too many vertices\n");
+      exit(1);
+   }
    
    return;
 }
@@ -97,8 +100,10 @@ void mesh::insert(int tind, int vnum) {
    ntri += 2;
    nside += 3;
    
-   assert(ntri < maxvst);   
-   assert(nside < maxvst);
+   if (ntri > maxvst || nside > maxvst) {
+      printf("need to use bigger growth factor: too many sides/tris %d/%d\n",nside,ntri);
+      exit(1);
+   }
    
    sct = 0;
    for(i=0;i<nskeep;++i) {
@@ -309,8 +314,10 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    ntri += 1;
    nside += 1;  
    
-   assert(ntri < maxvst);   
-   assert(nside < maxvst);
+   if (ntri > maxvst || nside > maxvst) {
+      printf("need to use bigger growth factor: too many sides/tris %d/%d\n",nside,ntri);
+      exit(1);
+   }
 
    sct = 1;   // SKIP FIRST SIDE 
    for(i=0;i<nskeep;++i) {

@@ -1,29 +1,18 @@
 #include"blocks.h"
 #include<cstring>
 #include<cstdio>
+#include<utilities.h>
 
-void blocks::init(int n, int mg, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
    int i,j,k,match;
-   char fnmcat[80];
-   char app[2];
 
    nblocks = n;
    mglvls = mg;
    blk = new class block[nblocks];
 
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   if (nblocks > 1) {
-      for (i=0;i<nblocks;++i) {
-         strcpy(fnmcat,filename);
-         app[0] = 'a'+i;
-         app[1] = '\0';
-         strcat(fnmcat,app);
-         blk[i].init(mg,fnmcat,filetype,grwfac);
-      }
-   }
-   else
-      blk[0].init(mg,filename,filetype,grwfac);
+   for (i=0;i<nblocks;++i) 
+      blk[i].init(mg,filename[i],filetype,grwfac);
+
 
 /*	MATCH BOUNDARIES */
    for(i=0;i<mg;++i) {
@@ -46,19 +35,17 @@ void blocks::init(int n, int mg, char *filename, FILETYPE filetype = easymesh, F
 
 void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
    int i;   
-   char fnmcat[80];
-   char app[2];
+   char fnmcat[80],outname[80];
 
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
 /*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    if (nblocks > 1) {
       for (i=0;i<nblocks;++i) {
          strcpy(fnmcat,filename);
-         app[0] = 'a'+i;
-         app[1] = '\0';
-         strcat(fnmcat,app);
+         strcat(fnmcat,".");
+         number_str(outname, fnmcat, i, 1);
          blk[i].grd[0].setbcinfo();
-         blk[i].grd[0].out_mesh(fnmcat,filetype);
+         blk[i].grd[0].out_mesh(outname,filetype);
       }
    }
    else {
@@ -69,6 +56,18 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
    return;
 }
 
+void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
+   int i;   
+
+/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
+/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
+   for (i=0;i<nblocks;++i) {
+      blk[i].grd[0].setbcinfo();
+      blk[i].grd[0].out_mesh(filename[i],filetype);
+   }
+ 
+   return;
+}
 
 void blocks::jacobi(int niter, int lvl) {
    static int i,iter;
