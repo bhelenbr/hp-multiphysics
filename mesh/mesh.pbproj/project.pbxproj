@@ -86,11 +86,6 @@
 //072
 //073
 //074
-		07F2E94100974D3D80990B20 = {
-			isa = PBXFileReference;
-			path = block.cpp;
-			refType = 4;
-		};
 		07F2E94200974D3D80990B20 = {
 			isa = PBXFileReference;
 			path = coarsen.cpp;
@@ -211,7 +206,6 @@
 				F51A5D6802B541FB012A8EDA,
 				F5AF3BF901879D4B0131A0B3,
 				F5C9C262032CCEAF01990B69,
-				07F2E94100974D3D80990B20,
 				07F2E94E00974D3D80990B20,
 			);
 			isa = PBXGroup;
@@ -590,7 +584,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/csh;
-			shellScript = "~/Codes/mesh/createlib";
+			shellScript = ./createlib;
 		};
 		F5F975AB0152459801000001 = {
 			isa = PBXFileReference;
