@@ -25,6 +25,7 @@ struct surface_glbls {
    /* PSEUDO TIME ITERATION */
    FLT (*vdt)[ND][ND];
    FLT (*sdt)[ND][ND];
+   FLT *dtfnrm;
    FLT *normc;
    FLT *meshc;
 }; 
