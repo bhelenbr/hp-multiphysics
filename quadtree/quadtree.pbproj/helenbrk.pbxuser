@@ -14,9 +14,9 @@
 					Frame = "{{0, 23}, {1351, 952}}";
 					Split0 = {
 						ActiveTab = 1;
-						Frame = "{{225, 0}, {1126, 952}}";
+						Frame = "{{224, 0}, {1127, 952}}";
 						Split0 = {
-							Frame = "{{0, 233}, {1126, 719}}";
+							Frame = "{{0, 232}, {1127, 720}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
@@ -24,12 +24,12 @@
 								ActiveTab = 0;
 								Frame = "{{0, 0}, {1126, 373}}";
 								Split0 = {
-									Frame = "{{0, 170}, {1126, 203}}";
+									Frame = "{{0, 169}, {1126, 204}}";
 									Split0 = {
-										Frame = "{{0, 0}, {541, 203}}";
+										Frame = "{{0, 0}, {541, 204}}";
 									};
 									Split1 = {
-										Frame = "{{550, 0}, {576, 203}}";
+										Frame = "{{550, 0}, {576, 204}}";
 									};
 									SplitCount = 2;
 								};
@@ -46,16 +46,16 @@
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {1126, 208}}";
+							Frame = "{{0, 0}, {1127, 208}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {1126, 208}}";
+								Frame = "{{0, 0}, {1127, 208}}";
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {1128, 139}}";
-							BuildTranscriptFrame = "{{0, 148}, {1128, 126}}";
-							Frame = "{{0, 0}, {1126, 272}}";
+							BuildMessageFrame = "{{0, 0}, {1129, 139}}";
+							BuildTranscriptFrame = "{{0, 148}, {1129, 126}}";
+							Frame = "{{0, 0}, {1127, 272}}";
 						};
 						Tab3 = {
 							Frame = "{{0, 0}, {1126, 248}}";
@@ -67,9 +67,9 @@
 						Frame = "{{0, 0}, {200, 952}}";
 					};
 					Tab1 = {
-						ClassesFrame = "{{0, 0}, {202, 524}}";
-						Frame = "{{0, 0}, {200, 866}}";
-						MembersFrame = "{{0, 533}, {202, 333}}";
+						ClassesFrame = "{{0, 0}, {202, 576}}";
+						Frame = "{{0, 0}, {200, 952}}";
+						MembersFrame = "{{0, 585}, {202, 367}}";
 						OptionsSetName = "Flat, project classes";
 					};
 					Tab2 = {
