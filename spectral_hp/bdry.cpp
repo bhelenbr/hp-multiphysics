@@ -327,201 +327,254 @@ void hp_mgrid::addbflux(int mgrid) {
    
 	return;
 }
-	
-void hp_mgrid::bdry_rcvandzero(int mode) {
-	static int i,j,n;
-	static int sind,v0,count,indx;
+
+void hp_mgrid::bdry_vsnd() {
+   int i,j,n,sind,count,v0,bnum;
+   class mesh *tgt;
    
-   if (mode < 0) {
-/*		THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
-/*		RECEIVE VRTX MESSAGES */
-/* 	CALCULATE AVERAGE RESIDUAL */
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type & HP_MGRID_MP) {
-            count = 0;
-/*   			RECV VERTEX INFO */
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][1];
-               for(n=0;n<NV;++n)
-                  gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
-            }
+/*	SEND VERTEX INFO FOR Y_DIR*/
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMY_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
+            for (n=0;n<NV;++n) 
+               tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+         }
+         v0 = svrtx[sind][1];
+         for (n=0;n<NV;++n) 
+            tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+      }
+      if (sbdry[i].type & IFCE_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            for (n=0;n<ND;++n) 
+               tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+         }
+         v0 = svrtx[sind][1];
+         for (n=0;n<ND;++n) 
+            tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+      }
+   }
+   
+   return;
+}
+
+void hp_mgrid::bdry_mp() {
+   int i,j,n,sind,count,v0,bnum;
+   class mesh *tgt;
+   
+/*	THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
+/*	RECEIVE VRTX MESSAGES */
+/* CALCULATE AVERAGE RESIDUAL */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMY_MASK) {
+         count = 0;
+/*   		RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
             for(n=0;n<NV;++n)
                gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
          }
+         v0 = svrtx[sind][0];
+         for(n=0;n<NV;++n)
+            gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
+      }
 
-         if (sbdry[i].type & IFCE_MASK) {
-            count = 0;
-/*   			RECV VERTEX INFO */
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][1];
-               for(n=0;n<ND;++n)
-                  gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
-            }
-            v0 = svrtx[sind][0];
+      if (sbdry[i].type & IFCE_MASK) {
+         count = 0;
+/*   		RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
             for(n=0;n<ND;++n)
                gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
-         }         
-      }
-   
-/*		APPLY VRTX DIRICHLET CONDITIONS TO RES */
-      for(i=0;i<nvbd;++i) {
-         if (vbdry[i].type&INFL_MASK) {
-            for(j=0;j<vbdry[i].num;++j) {
-               v0 = vbdry[i].el[j];
-               for(n=0;n<ND;++n)
-                  gbl->res.v[v0][n] = 0.0;
-            }
          }
-         
-         if (vbdry[i].type&SYMM_MASK) {
-            for(j=0;j<vbdry[i].num;++j) {
-               v0 = vbdry[i].el[j];
-               gbl->res.v[v0][0] = 0.0;
-            }
-         }
-      }
+         v0 = svrtx[sind][0];
+         for(n=0;n<ND;++n)
+            gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
+      }         
+   }
    
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type&INFL_MASK) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               for(n=0;n<ND;++n)
-                  gbl->res.v[v0][n] = 0.0;
-            }
+/*	SEND VERTEX INFO FOR X_DIR*/
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMX_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            for (n=0;n<NV;++n) 
+               tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+         }
+         v0 = svrtx[sind][1];
+         for (n=0;n<NV;++n) 
+            tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
+      }
+   }
+   
+   return;
+}
+
+
+void hp_mgrid::bdry_vrcvandzero() {
+	static int i,j,n;
+	static int sind,v0,count;
+   
+/*	THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
+/*	RECEIVE VRTX MESSAGES */
+/* CALCULATE AVERAGE RESIDUAL */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMX_MASK) {
+         count = 0;
+/*   		RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
+            for(n=0;n<NV;++n)
+               gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
+         }
+         v0 = svrtx[sind][0];
+         for(n=0;n<NV;++n)
+            gbl->res.v[v0][n] = 0.5*(gbl->res.v[v0][n] +sbuff[i][count++]);
+      }         
+   }
+
+/*	APPLY VRTX DIRICHLET CONDITIONS TO RES */
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].type&INFL_MASK) {
+         for(j=0;j<vbdry[i].num;++j) {
+            v0 = vbdry[i].el[j];
             for(n=0;n<ND;++n)
                gbl->res.v[v0][n] = 0.0;
          }
-         
-         if (sbdry[i].type&SYMM_MASK) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               gbl->res.v[v0][0] = 0.0;
-            }
-            v0 = svrtx[sind][1];
+      }
+      
+      if (vbdry[i].type&SYMM_MASK) {
+         for(j=0;j<vbdry[i].num;++j) {
+            v0 = vbdry[i].el[j];
             gbl->res.v[v0][0] = 0.0;
          }
       }
    }
-   else {
-   
-/*		THIS PART TO RECIEVE AND ZERO FOR SIDES */
-/*		RECEIVE P'TH SIDE MODE MESSAGES */
-/* 	CALCULATE AVERAGE RESIDUAL */
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type & HP_MGRID_MP) {
-            count = 0;
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               indx = sbdry[i].el[j]*b.sm +mode;
-               for(n=0;n<NV;++n)
-                  gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
-            }
-         }
-         if (sbdry[i].type & IFCE_MASK) {
-            count = 0;
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               indx = sbdry[i].el[j]*b.sm +mode;
-               for(n=0;n<ND;++n)
-                  gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
-            }
-         }         
-      }
 
-/*		APPLY SIDE DIRICHLET CONDITIONS TO MODE */
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type&INFL_MASK) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j]*b.sm +mode;
-               for(n=0;n<ND;++n)
-                  gbl->res.s[sind][n] = 0.0;
-            }
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type&INFL_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            for(n=0;n<ND;++n)
+               gbl->res.v[v0][n] = 0.0;
          }
-         
-         if (sbdry[i].type&SYMM_MASK) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j]*b.sm +mode;
-               gbl->res.s[sind][0] = 0.0;
-            }
+         v0 = svrtx[sind][1];
+         for(n=0;n<ND;++n)
+            gbl->res.v[v0][n] = 0.0;
+      }
+      
+      if (sbdry[i].type&SYMM_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            gbl->res.v[v0][0] = 0.0;
+         }
+         v0 = svrtx[sind][1];
+         gbl->res.v[v0][0] = 0.0;
+      }
+   }
+   
+   return;
+}
+
+void hp_mgrid::bdry_ssnd(int mode) {
+   int i,j,n,count,indx,bnum;
+   class mesh *tgt;
+   
+/* SEND SIDE INFO */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & (COMX_MASK +COMY_MASK)) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            indx = sbdry[i].el[j]*b.sm +mode;
+            for (n=0;n<NV;++n) 
+               tgt->sbuff[bnum][count++] = gbl->res.s[indx][n];
+         }
+      } 
+
+      if (sbdry[i].type & IFCE_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            indx = sbdry[i].el[j]*b.sm +mode;
+            for (n=0;n<ND;++n) 
+               tgt->sbuff[bnum][count++] = gbl->res.s[indx][n];
+         }
+      }         
+   }
+   
+   return;
+}
+
+	
+void hp_mgrid::bdry_srcvandzero(int mode) {
+	static int i,j,n;
+	static int sind,count,indx;
+   
+/*	THIS PART TO RECIEVE AND ZERO FOR SIDES */
+/*	RECEIVE P'TH SIDE MODE MESSAGES */
+/* CALCULATE AVERAGE RESIDUAL */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & (COMX_MASK +COMY_MASK)) {
+         count = 0;
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            indx = sbdry[i].el[j]*b.sm +mode;
+            for(n=0;n<NV;++n)
+               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
+         }
+      }
+      if (sbdry[i].type & IFCE_MASK) {
+         count = 0;
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            indx = sbdry[i].el[j]*b.sm +mode;
+            for(n=0;n<ND;++n)
+               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
+         }
+      }         
+   }
+
+/*	APPLY SIDE DIRICHLET CONDITIONS TO MODE */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type&INFL_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j]*b.sm +mode;
+            for(n=0;n<ND;++n)
+               gbl->res.s[sind][n] = 0.0;
+         }
+      }
+      
+      if (sbdry[i].type&SYMM_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j]*b.sm +mode;
+            gbl->res.s[sind][0] = 0.0;
          }
       }
    }
    
 	return;
-}
-
-
-void hp_mgrid::bdry_snd(int mode) {
-   int i,j,n,sind,count,indx,v0,bnum;
-   class mesh *tgt;
-   
-   if (mode < 0) {
-/*		SEND VERTEX INFO */
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type & HP_MGRID_MP) {
-            bnum = sbdry[i].adjbnum;
-            tgt = sbdry[i].adjmesh;
-            count = 0;
-/*				SEND VERTEX INFO */
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               for (n=0;n<NV;++n) 
-                  tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
-            }
-            v0 = svrtx[sind][1];
-            for (n=0;n<NV;++n) 
-               tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
-         }
-         if (sbdry[i].type & IFCE_MASK) {
-            bnum = sbdry[i].adjbnum;
-            tgt = sbdry[i].adjmesh;
-            count = 0;
-/*				SEND VERTEX INFO */
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               for (n=0;n<ND;++n) 
-                  tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
-            }
-            v0 = svrtx[sind][1];
-            for (n=0;n<ND;++n) 
-               tgt->sbuff[bnum][count++] = gbl->res.v[v0][n];
-         }
-      }
-   }
-   else {
-/*    SEND SIDE INFO */
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type & HP_MGRID_MP) {
-            bnum = sbdry[i].adjbnum;
-            tgt = sbdry[i].adjmesh;
-            count = 0;
-            for(j=0;j<sbdry[i].num;++j) {
-               indx = sbdry[i].el[j]*b.sm +mode;
-               for (n=0;n<NV;++n) 
-                  tgt->sbuff[bnum][count++] = gbl->res.s[indx][n];
-            }
-         } 
-
-         if (sbdry[i].type & IFCE_MASK) {
-            bnum = sbdry[i].adjbnum;
-            tgt = sbdry[i].adjmesh;
-            count = 0;
-            for(j=0;j<sbdry[i].num;++j) {
-               indx = sbdry[i].el[j]*b.sm +mode;
-               for (n=0;n<ND;++n) 
-                  tgt->sbuff[bnum][count++] = gbl->res.s[indx][n];
-            }
-         }         
-      }
-   }
-   
-   return;
 }
 
 

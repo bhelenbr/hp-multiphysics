@@ -64,7 +64,7 @@ void hp_mgrid::length1() {
 
 /*	SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & ALLD_MP) {
+      if (sbdry[i].type & COMY_MASK) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
@@ -83,11 +83,48 @@ void hp_mgrid::length1() {
    
 }
 
+void hp_mgrid::length_mp() {
+   int i,j,v0,sind,bnum,count;
+   class mesh *tgt;
+   
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMY_MASK) {
+         count = 0;
+/*			RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
+         }
+         v0 = svrtx[sind][0];
+         vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
+      }
+   }
+   
+/*	SEND COMMUNICATIONS TO ADJACENT MESHES */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMX_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            tgt->sbuff[bnum][count++] = vlngth[v0];
+         }
+         v0 = svrtx[sind][1];
+         tgt->sbuff[bnum][count++] = vlngth[v0];
+      }
+   }
+   return;
+}
+
 void hp_mgrid::length2() {
    int i,j,v0,sind,count;
 
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & ALLD_MP) {
+      if (sbdry[i].type & COMX_MASK) {
          count = 0;
 /*			RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {

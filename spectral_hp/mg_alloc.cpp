@@ -168,20 +168,19 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    return;
 }
 
-void hp_mgrid::maxres(FLT mx[NV]) {
+void hp_mgrid::maxres() {
    int i,n;
+   FLT mxr[NV];
+   
+   for(n=0;n<NV;++n)
+      mxr[n] = 0.0;
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl->res.v[i][n]));
-
-   for(i=0;i<nside*b.sm;++i)
-      for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl->res.s[i][n]));
-
-   for(i=0;i<ntri*b.im;++i)
-      for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl->res.i[i][n]));
+         mxr[n] = MAX(mxr[n],fabs(gbl->res.v[i][n]));
+         
+   for(n=0;n<NV;++n)
+      printf("%.3e  ",mxr[n]);
          
    return;
 }

@@ -67,7 +67,7 @@ void hp_mgrid::minvrt1(void) {
 /*********************************************/
 /*	SEND MESSAGES FOR VERTICES 					*/	
 /*********************************************/
-   bdry_snd(-1);
+   bdry_vsnd();
 
    return;
 }
@@ -79,7 +79,7 @@ void hp_mgrid::minvrt2(void) {
 /*  RECEIVE MESSAGES FOR VERTICES */
 /* APPLY DIRCHLET B.C.S TO VERTICES */
 /**********************************/
-   bdry_rcvandzero(-1);
+   bdry_vrcvandzero();
 
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
@@ -116,7 +116,7 @@ void hp_mgrid::minvrt2(void) {
 			}
 		}
 /* 	SEND MESSAGE FOR LOWEST ORDER MODE */
-      bdry_snd(0);
+      bdry_ssnd(0);
    }
 
 /*	FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
@@ -140,7 +140,7 @@ void hp_mgrid::minvrt3(int mode) {
    
 /* RECEIVE MESSAGE FOR MODE */
 /* APPLY DIRCHLET B.C.S TO MODE */
-   bdry_rcvandzero(mode);
+   bdry_srcvandzero(mode);
 
 /*	SOLVE FOR MODE */
    indx = mode;
@@ -178,7 +178,7 @@ void hp_mgrid::minvrt3(int mode) {
    
 /* SEND MESSAGES FOR NEXT MODE */
    ++mode;
-	bdry_snd(mode);
+	bdry_ssnd(mode);
          
    return;
 }
@@ -189,7 +189,7 @@ void hp_mgrid::minvrt4() {
 /* RECEIVE MESSAGE FOR LAST MODE */
 /* APPLY DIRICHLET B.C.'S */
    indx = b.sm-1;
-   bdry_rcvandzero(indx);
+   bdry_srcvandzero(indx);
 
    for(sind = 0; sind < nside; ++sind) {
       gbl->res.s[indx][0] *= gbl->sdiagv[sind]*b.sdiag[b.sm-1];

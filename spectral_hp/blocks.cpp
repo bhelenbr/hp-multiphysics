@@ -111,7 +111,6 @@ void blocks::init(char *file) {
    }
 
 /*	MATCH BOUNDARIES */
-   printf("%d %d\n",mgrids,nblocks);
    for(i=0;i<mgrids;++i) {
       for(j=0;j<nblocks;++j) {
          match = 0;
@@ -196,6 +195,9 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 /*****************************************/
    for(i=0;i<nblocks;++i)
       blk[i].grd[grdnum].tstep1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[grdnum].tstep_mp();
 
    for(i=0;i<nblocks;++i)
       blk[i].grd[grdnum].tstep2();
@@ -214,6 +216,9 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
          blk[i].grd[grdnum].minvrt1();
          
       for(i=0;i<nblocks;++i)
+         blk[i].grd[grdnum].bdry_mp();
+         
+      for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].minvrt2();
       
       for(mode=0;mode<sm-1;++mode)
@@ -224,7 +229,6 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
          for(i=0;i<nblocks;++i)
             blk[i].grd[grdnum].minvrt4();
       }
-
       
       for(i=0;i<nblocks;++i) 
          blk[i].grd[grdnum].nstage2(stage);
@@ -234,7 +238,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   int i,j,n;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
+   int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
 
 /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */   
@@ -250,17 +254,6 @@ void blocks::cycle(int vw, int lvl = 0) {
    for (i=0;i<vw;++i) {
 
       nstage(grid,base[bsnum].sm,lvl);
-
-/*		CALCULATE MAX RESIDUAL ON FINEST MESH */
-      if (lvl == 0) {
-         for(n=0;n<NV;++n)
-            mxr[n] = 0.0;
-      
-         for (i=0;i<nblocks;++i) {
-            blk[i].grd[0].maxres(mxr);
-            blk[i].grd[0].surfugtovrt1();
-         }
-      }
       
       if (lvl == mglvls-1) return;
       
@@ -290,6 +283,23 @@ void blocks::cycle(int vw, int lvl = 0) {
    }
 
    return;
+}
+
+void blocks::endcycle() {
+   int i;
+/*	CALCULATE MAX RESIDUAL ON FINEST MESH */
+/*	MOVE INTERFACE VERTICES */
+
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].maxres();
+      
+   for(i=0;i<nblocks;++i) {
+      blk[i].grd[0].surfmaxres();
+      blk[i].grd[0].surfugtovrt1();
+   }
+   
+   for (i=0;i<nblocks;++i)
+      blk[i].grd[0].surfugtovrt2();
 }
 
 void blocks::output(int number, FILETYPE type=text) {
@@ -335,7 +345,7 @@ void blocks::go() {
       for(iter=0;iter<ncycle;++iter) {
          cycle(vwcycle);
          printf("%d ",iter);
-         print_maxres();
+         endcycle();
          printf("\n");
       }
          
@@ -373,6 +383,9 @@ void blocks::adaptation() {
    
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].length1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].length_mp();
       
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].length2();

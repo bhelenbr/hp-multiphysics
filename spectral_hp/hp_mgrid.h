@@ -120,14 +120,15 @@ class hp_mgrid : public spectral_hp {
 
 /*		CALCULATE TIMESTEP */
       void tstep1();
+      void tstep_mp();
       void tstep2();
       
 /*		DETERMINE SOLUTION RESIDUAL */
       void rsdl(int stage, int mgrid);
       void rsdlp1(int stage, int mgrid);
       
-/*		MEASURE SOLUTION RESIDUAL */
-      void maxres(FLT mx[NV]);
+/*		PRINT SOLUTION RESIDUAL */
+      void maxres();
 
 /*		INVERT MASS MATRIX (4 STEP PROCESS WITH COMMUNICATION IN BETWEEN EACH STEP) */
       void minvrt1();
@@ -138,8 +139,11 @@ class hp_mgrid : public spectral_hp {
 /*		BOUNDARY CONDITION ROUTINES */
       void setinflow();
       void addbflux(int mgrid);
-      void bdry_rcvandzero(int mode);
-      void bdry_snd(int mode);
+      void bdry_vsnd();
+      void bdry_mp();
+      void bdry_vrcvandzero();
+      void bdry_ssnd(int mode);
+      void bdry_srcvandzero(int mode);
 
 /*		COUPLED SURFACE BOUNDARY ROUTINES */ 
       void surfvrttoug();
@@ -156,6 +160,7 @@ class hp_mgrid : public spectral_hp {
       void surfnstage2(int bnum, int stage);
       void surfgetfres(int bnum);
       void surfgetcchng(int bnum);
+      void surfmaxres();
       
 /*		PARTS FOR 5 STEP UPDATE */
       void nstage1();
@@ -173,6 +178,7 @@ class hp_mgrid : public spectral_hp {
       
 /*		FUNCTIONS FOR ADAPTION */      
       void length1();
+      void length_mp();
       void length2(); 
       void outlength(char *name, FILETYPE type);
       void inlength(char *name);

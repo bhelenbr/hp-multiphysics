@@ -129,17 +129,10 @@ void block::tadvance() {
 }
 
 void block::reconnect() {
-   int i,j;
-   char name[100];
+   int i;
 
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
-//      number_str(name,"mgrid",i,1);
-      
-      grd[i].mesh::setbcinfo();
-      grd[i].checkintegrity();
-
-//      grd[i].out_mesh(name);
       grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
@@ -147,5 +140,21 @@ void block::reconnect() {
 
    return;
 }
+
+void block::coarsenchk() {
+   int i;
+   char name[100];
+
+   for(i = 1; i< ngrid; ++i) {
+      number_str(name,"mgrid",i,1);
+      grd[i].mesh::setbcinfo();
+      grd[i].checkintegrity();
+      grd[i].out_mesh(name);
+      grd[i].setbcinfo();
+   }
+   return;
+}
+
+
 
 

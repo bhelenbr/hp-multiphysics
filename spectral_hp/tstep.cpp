@@ -65,9 +65,9 @@ void hp_mgrid::tstep1(void) {
 		}
 	}
    
-/*	SEND BOUNDARY INFORMATION */
+/*	SEND Y-DIRECTION BOUNDARY INFORMATION */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & HP_MGRID_MP) {
+      if (sbdry[i].type & COMY_MASK) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
@@ -123,12 +123,13 @@ void hp_mgrid::tstep1(void) {
    return;
 }
 
-void hp_mgrid::tstep2(void) {
-   static int i,j,sind,v0,count;
+void hp_mgrid::tstep_mp() {
+   int i,j,sind,v0,count,bnum;
+   class mesh *tgt;
    
 /*	RECEIVE COMMUNCATION PACKETS FROM OTHER MESHES */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & HP_MGRID_MP) {
+      if (sbdry[i].type & COMY_MASK) {
          count = 0;
 /*			RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
@@ -168,6 +169,66 @@ void hp_mgrid::tstep2(void) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sdiagv[sind] = 0.5*(gbl->sdiagv[sind] +sbuff[i][count++]);
+            }
+         }
+      }
+   }
+   
+/*	SEND X-DIRECTION BOUNDARY INFORMATION */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMX_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
+            tgt->sbuff[bnum][count++] = gbl->vdiagp[v0];
+         }
+         v0 = svrtx[sind][1];
+         tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
+         tgt->sbuff[bnum][count++] = gbl->vdiagp[v0];
+
+/*			SEND SIDE INFO */
+         if (b.sm) {
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               tgt->sbuff[bnum][count++] = gbl->sdiagv[sind];
+               tgt->sbuff[bnum][count++] = gbl->sdiagp[sind];
+            }
+         }
+      }
+   }
+   
+   return;
+}
+
+void hp_mgrid::tstep2(void) {
+   static int i,j,sind,v0,count;
+   
+/*	RECEIVE COMMUNCATION PACKETS FROM OTHER MESHES */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & COMX_MASK) {
+         count = 0;
+/*			RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
+            gbl->vdiagp[v0] = 0.5*(gbl->vdiagp[v0] +sbuff[i][count++]);
+         }
+         v0 = svrtx[sind][0];
+         gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
+         gbl->vdiagp[v0] = 0.5*(gbl->vdiagp[v0] +sbuff[i][count++]);
+
+/*			RECV SIDE INFO */
+         if (b.sm > 0) {
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               sind = sbdry[i].el[j];
+               gbl->sdiagv[sind] = 0.5*(gbl->sdiagv[sind] +sbuff[i][count++]);
+               gbl->sdiagp[sind] = 0.5*(gbl->sdiagp[sind] +sbuff[i][count++]);
             }
          }
       }

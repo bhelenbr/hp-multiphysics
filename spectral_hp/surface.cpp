@@ -299,7 +299,7 @@ void hp_mgrid::surfinvrt1(int bnum) {
 }
 
 void hp_mgrid::surfinvrt2(int bnum) {
-	static int i,m,n,v0,v1,indx,indx1,end,vbnum;
+	static int i,m,n,v0,v1,indx,indx1,end;
    FLT temp;
    class surface *srf;
 
@@ -419,7 +419,7 @@ void hp_mgrid::surfdt1(int bnum) {
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
-   
+      
    drho = gbl->rho -srf->gbl->rho2;
    srho = gbl->rho +srf->gbl->rho2;
    smu = gbl->mu +srf->gbl->mu2;
@@ -517,7 +517,7 @@ void hp_mgrid::surfdt1(int bnum) {
 }
 
 void hp_mgrid::surfdt2(int bnum) {
-   static int i,m,n,indx,vbnum,v0,v1,end,count;
+   static int i,m,n,indx,v0,v1,end,count;
    FLT jcbi,temp;
 	static class surface *srf;
    
@@ -741,7 +741,8 @@ void hp_mgrid::surfugtovrt1() {
             for(n=0;n<ND;++n)
                tgt->sbuff[vbnum][count++] = srf->vug[i][n];
             for(m=0;m<b.sm;++m)
-               tgt->sbuff[vbnum][count++] = srf->sug[i*b.sm +m][n];
+               for(n=0;n<ND;++n)
+                  tgt->sbuff[vbnum][count++] = srf->sug[i*b.sm +m][n];
          }
          for(n=0;n<ND;++n)
             tgt->sbuff[vbnum][count++] = srf->vug[sbdry[bnum].num][n];
@@ -756,26 +757,25 @@ void hp_mgrid::surfugtovrt2() {
    static class surface *srf;
    
    for (bnum=0;bnum<nsbd;++bnum) {
-      if (!sbdry[bnum].type&(IFCE_MASK)) continue;
+      if (!(sbdry[bnum].type&IFCE_MASK)) continue;
       
       srf = static_cast<class surface *>(sbdry[bnum].misc);
-      if (srf == NULL) return;
+      if (srf != NULL) return;
    
 /*   	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
       count = 0;
-      indx = 0;
       for(j=sbdry[bnum].num-1;j>=0;--j) {
          sind = sbdry[bnum].el[j];
          v0 = svrtx[sind][1];
          for(n=0;n<ND;++n)
             vrtx[v0][n] = sbuff[bnum][count++];
          
+         indx = j*b.sm;
          msgn = 1;
          for(m=0;m<b.sm;++m) {
             for(n=0;n<ND;++n)
-               binfo[bnum][indx].curv[n] = msgn*sbuff[bnum][count++];
+               binfo[bnum][indx+m].curv[n] = msgn*sbuff[bnum][count++];
             msgn *= -1;
-            ++indx;
          }      
       }
       v0 = svrtx[sind][0];
@@ -909,10 +909,7 @@ void hp_mgrid::surfgetfres(int bnum) {
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n)
          srf->vug_frst[i][n] = srf->vug[i][n];
-         
-/*	TEMPORARY */
-   surfugtovrt1();
-   
+
    return;
 }
 
@@ -966,11 +963,34 @@ void hp_mgrid::surfgetcchng(int bnum) {
       for(n=0;n<ND;++n) 
          srf->vug[i][n] += srf->gbl->vres[i][n];
 
-/*	TEMPORARY */
-   surfugtovrt1();
-
    return;
 }
     
+void hp_mgrid::surfmaxres() {
+   int i,n,bnum;
+   static class surface *srf;
+   static FLT mxr[ND];
+   
+   
+   for (bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
+   
+      srf = static_cast<class surface *>(sbdry[bnum].misc);
+      if (srf == NULL) return;
+      
+      for(n=0;n<ND;++n)
+         mxr[n] = 0.0;
+      
+      for(i=0;i<sbdry[bnum].num+1;++i)
+         for(n=0;n<ND;++n)
+            mxr[n] = MAX(fabs(srf->gbl->vres[i][n]),mxr[n]);
+            
+
+      for(n=0;n<ND;++n)
+         printf("%.3e  ",mxr[n]);
+   }
+   
+	return;
+}
 
    

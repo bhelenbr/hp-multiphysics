@@ -15,6 +15,7 @@ class block {
       void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
       void tadvance();
       void reconnect();
+      void coarsenchk();
 };
 
 /*	THIS IS A MULTIBLOCK MESH */
@@ -48,12 +49,7 @@ class blocks {
 
 /*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);
-      
-/*		PRINT MAXIMUM RESIDUALS (NV) */
-      inline void print_maxres() {
-         for(int n=0;n<NV;++n)
-            printf(" %e ",mxr[n]);
-      }
+      void endcycle(); // PRINTS DIAGNOSTIC INFO & MOVES SURFACES
 
 /*		OUTPUT FINE MESH SOLUTION */
       void output(int number, FILETYPE filetype = text);
