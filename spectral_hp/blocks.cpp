@@ -68,7 +68,7 @@ void blocks::init(char *file) {
    printf("#1/DT\t\tgravity\n#%0.2f\t%0.2f\n",hp_mgrid::dti,hp_mgrid::g);
 
 /*	SET BACKWARDS DIFFERENCE CONSTANTS */
-   for(i=0;i<NSTEP+1;++i)
+   for(i=0;i<MXSTEP+1;++i)
       hp_mgrid::bd[i] = 0.0;
    hp_mgrid::bd[0] = hp_mgrid::dti;
    hp_mgrid::bd[1] = -hp_mgrid::dti;
@@ -363,18 +363,18 @@ void blocks::go() {
       
       if (adapt) {
          adaptation();
-         blk[0].grd[0].out_mesh("test");
-         exit(1);
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
       }
       
       if (tstep == 0) {
+         hp_mgrid::nstep = 2;
 			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
          hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
          hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
 		}
 //		else {
+//			hp_mgrid::nstep = 3;
 //			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
 //			hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
 //			hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;

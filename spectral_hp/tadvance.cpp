@@ -52,7 +52,7 @@ void hp_mgrid::tadvance() {
    }
    
 /*	NOW DO ADDITIONAL TERMS FOR HIGHER-ORDER BD */
-   for(step=0;step<NSTEP-1;++step) {
+   for(step=0;step<nstep-1;++step) {
       for(tind=0;tind<ntri;++tind) {
          if (tinfo[tind] > -1) {
             crdtouht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
@@ -89,17 +89,17 @@ void hp_mgrid::tadvance() {
    
 /*	SHIFT BACKWARDS DIFFERENCE STORAGE */
    for(i=0;i<nvrtx;++i)
-      for(step=NSTEP-2;step>=1;--step)
+      for(step=nstep-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].v[i][n] = gbl->ugbd[step-1].v[i][n];
 
    for(i=0;i<nside*b.sm;++i)
-      for(step=NSTEP-2;step>=1;--step)
+      for(step=nstep-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].s[i][n] = gbl->ugbd[step-1].s[i][n];            
 
    for(i=0;i<ntri*b.im;++i)
-      for(step=NSTEP-2;step>=1;--step)
+      for(step=nstep-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].i[i][n] = gbl->ugbd[step-1].i[i][n];    
    
@@ -133,7 +133,7 @@ void hp_mgrid::tadvance() {
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<ND;++n) {
          dvrtdt[i][n] = bd[1]*vrtx[i][n];
-         for(step=0;step<NSTEP-1;++step)
+         for(step=0;step<nstep-1;++step)
             dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
       }
    }
@@ -143,7 +143,7 @@ void hp_mgrid::tadvance() {
          for(j=0;j<sbdry[i].num;++j) {
             for(n=0;n<ND;++n) {
                gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
-               for(step=0;step<NSTEP-1;++step)
+               for(step=0;step<nstep-1;++step)
                   gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
             }
          }
@@ -152,14 +152,14 @@ void hp_mgrid::tadvance() {
    
 /* SHIFT BD MESH INFORMATION */
    for(i=0;i<nvrtx;++i)
-      for(step=NSTEP-2;step>=1;--step)
+      for(step=nstep-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->vrtxbd[step][i][n] = gbl->vrtxbd[step-1][i][n];
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
          for(j=0;j<sbdry[i].num;++j) 
-            for(step=NSTEP-2;step>=1;--step)
+            for(step=nstep-2;step>=1;--step)
                   for(n=0;n<ND;++n)
                      gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
 

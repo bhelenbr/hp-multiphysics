@@ -10,11 +10,11 @@
 #include"spectral_hp.h"
 #include"utilities.h"
 
-spectral_hp& spectral_hp::operator=(const spectral_hp& tgt) {
+void spectral_hp::copy(const spectral_hp& tgt) {
    int i,n,j;
    
 /*	COPY MESH INFORMATION */
-   this->copy(tgt);
+   this->mesh::copy(tgt);
       
 /*	SHALLOW COPY BASIS */   
    b = tgt.b;
@@ -54,7 +54,7 @@ spectral_hp& spectral_hp::operator=(const spectral_hp& tgt) {
       for(j=0;j<sbdry[i].num*(1+sm0) +1;++j)
          binfo[i][j] = tgt.binfo[i][j];
          
-   return(*this);
+   return;
 }
          
    

@@ -200,15 +200,8 @@ void hpbasis::ptvalues1d(FLT x) {
    return;
 }
 
-
-void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
    static int k,m,n,ind;
-   static FLT x,eta;
-   
-   x = 2.0*(1+r)/(1-s) -1.0;
-   eta = s;
-   
-   ptvalues(x,eta);
    
    for(n=0;n<nv;++n) {
    
@@ -322,12 +315,9 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
    return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {
+void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f) {
    static int k,n;
-    
-   ptvalues1d(x);
-/*	SUM OVER N X MODES	*/  	
-   
+
    for(n=0;n<nv;++n) {
       f[n]	= 0.0;
 
@@ -337,6 +327,4 @@ void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {
    
    return;
 }
-   
-
    

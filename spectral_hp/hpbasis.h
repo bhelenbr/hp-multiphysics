@@ -130,9 +130,17 @@ class hpbasis {
       void intgrtx1d(FLT *f, FLT *rslt);
       
 /*		POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
-      void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s);
+      inline void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+         ptvalues(2.0*(1+r)/(1-s) -1.0,s);
+         ptprobe(nv, lin, f);
+      }
+      void ptprobe(int nv, FLT **lin, FLT *f);
+      inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
+         ptvalues1d(x);
+         ptprobe1d(nv,lin,f);
+      }
+      void ptprobe1d(int nv, FLT **lin, FLT *f);
       void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s);
-      void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x);
       
 /*	LOCAL STORAGE/WORK */
    private:

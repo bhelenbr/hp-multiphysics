@@ -50,7 +50,9 @@ class spectral_hp : public mesh  {
       void ugtouht(int tind);
       void ugtouht(int tind, struct vsi ug);
       void ugtouht_bdry(int tind);
+      void ugtouht_bdry(int tind, struct vsi ug);
       void ugtouht1d(int sind);
+      void ugtouht1d(int sind, struct vsi ug);
       void crdtouht(int tind);
       void crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo);
       void crdtouht1d(int sind);
@@ -64,8 +66,7 @@ class spectral_hp : public mesh  {
                   
    public:
       spectral_hp() : mesh() , size(0) {}
-      spectral_hp(const spectral_hp& copy) : mesh(copy), size(0) { *this = copy;}
-      spectral_hp& operator=(const spectral_hp& copy);
+      void copy(const spectral_hp& copy);
       void allocate(class hpbasis& bas);
       inline void loadbasis(class hpbasis& bas) { b = bas;}
       void tobasis(struct vsi g, FLT (*func)(int, FLT, FLT));
@@ -75,7 +76,6 @@ class spectral_hp : public mesh  {
       inline void input(char *name, FILETYPE type) {input(ug,name,type);}
       void output(struct vsi g, char *name, FILETYPE type);
       inline void output(char *name, FILETYPE type) {output(ug,name,type);}
-      void adapt(class spectral_hp& bgn, FLT tolerance);
       void ptprobe(FLT xp, FLT yp, FLT u[NV]);
       void ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
       int findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s);

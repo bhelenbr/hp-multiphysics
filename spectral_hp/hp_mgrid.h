@@ -12,7 +12,7 @@
 
 #define MXLG2P 5
 #define NSTAGE 5
-#define NSTEP 2
+#define MXSTEP 3
 
 #define HP_MGRID_MP (COMX_MASK +COMY_MASK)
 
@@ -40,9 +40,9 @@ struct hp_mgrid_glbls {
    FLT *tau,*delt;
 
 /*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
-   struct vsi ugbd[NSTEP-1]; // BACKWARDS DIFFERENCE FLOW INFO
-   FLT (*vrtxbd[NSTEP-1])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
-   struct bistruct *binfobd[NSTEP-1][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
+   struct vsi ugbd[MXSTEP-1]; // BACKWARDS DIFFERENCE FLOW INFO
+   FLT (*vrtxbd[MXSTEP-1])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
+   struct bistruct *binfobd[MXSTEP-1][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
    FLT ***dugdt[NV];  // UNSTEADY SOURCE FOR FLOW (ONLY NEEDED ON FINEST MESH)
    struct bistruct *dbinfodt[MAXSB]; // UNSTEADY CURVED SIDE VELOCITY (ONLY NEEDED ON FINEST MESH)
 /*	MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
@@ -57,15 +57,21 @@ struct hp_mgrid_glbls {
 class hp_mgrid : public spectral_hp {
    protected:
 /*		THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
-      static const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0};
-      static const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
-      static FLT **cv00,**cv01,**cv10,**cv11;
-      static FLT **e00,**e01,**e10,**e11;
-      static FLT g, dti, time, bd[NSTEP+1];
+      static const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0}; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
+      static const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; // MULTISTAGE TIME STEP CONSTANTS (REAL)
+      static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
+      static FLT **e00,**e01,**e10,**e11; // LOCAL WORK ARRAYS
+      static int nstep; // NUMBER OF STEPS IN BD SCHEME
+      static FLT g, dti, time, bd[MXSTEP+1]; // GRAVITY, INVERSE TIME STEP, TIME, BACKWARDS DIFFERENCE CONSTANTS
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
-      static FLT adis;
+      static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static FLT trncerr, tol;  //	ADAPTATION CONSTANTS  
+      static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
+      static struct vsi ugstr[MXSTEP-1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
+      static FLT (*vrtxstr[MXSTEP-1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
+      static struct bistruct *binfostr[MXSTEP-1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
+      static FLT **bdwk[MXSTEP-1][NV]; // WORK FOR ADAPTATION
       static int size;
   
 /*		TELLS WHICH P WE ARE ON FOR P MULTIGRID */
@@ -161,14 +167,15 @@ class hp_mgrid : public spectral_hp {
       int setfine(class hp_mgrid& tgt);
       int setcoarse(class hp_mgrid& tgt); 
 
-/*		SETUP MESH DENSITY FUNCTION FOR ADAPTION */      
-      void density1();
-      void density2();
-      void outdensity(char *name);
-      
 /*		FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
       void tadvance();
       
+/*		FUNCTIONS FOR ADAPTION */      
+      void density1();
+      void density2(); 
+      void outdensity(char *name);
+      void adapt(class hp_mgrid& bgn, FLT tolerance);
+
       friend class block;
       friend class blocks;
 };

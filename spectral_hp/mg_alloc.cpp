@@ -17,17 +17,24 @@ FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 FLT hp_mgrid::trncerr, hp_mgrid::tol;
+class hp_mgrid hp_mgrid::hpstr; // STORAGE FOR ADAPTATION 
+struct vsi hp_mgrid::ugstr[MXSTEP-1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
+FLT (*hp_mgrid::vrtxstr[MXSTEP-1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
+struct bistruct *hp_mgrid::binfostr[MXSTEP-1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
+FLT **hp_mgrid::bdwk[MXSTEP-1][NV]; // WORK FOR ADAPTATION
 int hp_mgrid::size;
+
 
 /*	STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
 const FLT hp_mgrid::alpha[NSTAGE+1];
 const FLT hp_mgrid::beta[NSTAGE+1];
-FLT hp_mgrid::bd[NSTEP+1];
+int hp_mgrid::nstep=1;
+FLT hp_mgrid::bd[MXSTEP+1];
 FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
 
 
 void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
-   int onfmesh;
+   int i,j,n,onfmesh;
    
    if (spectral_hp::size == 0 or mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
@@ -45,6 +52,21 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       mat_alloc(e10,b.gpx,b.gpn,FLT);
       mat_alloc(e11,b.gpx,b.gpn,FLT);
       size = b.p;
+      
+/*		ALLOCATE UNSTEADY ADAPTATION STORAGE */
+      for(i=0;i<MXSTEP-1;++i) {
+         ugstr[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+         ugstr[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+         ugstr[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
+         
+         vrtxstr[i] = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+         for(j=0;j<nsbd;++j)
+            if (sbdry[j].type&CURV_MASK) 
+               binfostr[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+               
+         for(n=0;n<NV;++n)
+            mat_alloc(bdwk[i][n],b.gpx,b.gpn,FLT);
+      }      
    }
    else {
       if (size < b.p) {
@@ -129,7 +151,7 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    vect_alloc(store->delt,maxvst,FLT);
 
 /*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
-   for(i=0;i<NSTEP-1;++i) {
+   for(i=0;i<MXSTEP-1;++i) {
       store->ugbd[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       store->ugbd[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
       store->ugbd[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));

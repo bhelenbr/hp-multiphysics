@@ -29,7 +29,7 @@ class blocks {
       int ntstep,out_intrvl; // TIME STEP STUFF
       int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
       int adapt; //FLAG FOR ADAPTATION
-      class spectral_hp temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
+      class hp_mgrid temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
 
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       
