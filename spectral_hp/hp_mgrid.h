@@ -167,8 +167,7 @@ class hp_mgrid : public spectral_hp {
       void surfgetfres(int bnum);
       void surfgetcchng(int bnum);
       void surfmaxres();
-      void surfarea(FLT &area, FLT &ybar);
-      void surfprecondition(int bnum);
+      void integrated_averages(FLT a[]);
       
       /* PARTS FOR 5 STEP UPDATE */
       void nstage1();
