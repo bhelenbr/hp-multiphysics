@@ -6,6 +6,8 @@
 		addToTargets = (
 			08FB779FFE84155DC02AAC07,
 		);
+		breakpoints = (
+		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
 				ContentSize = "{1351, 975}";
@@ -13,36 +15,36 @@
 					ActiveTab = 0;
 					Frame = "{{0, 23}, {1351, 952}}";
 					Split0 = {
-						ActiveTab = 1;
+						ActiveTab = 0;
 						Frame = "{{224, 0}, {1127, 952}}";
 						Split0 = {
-							Frame = "{{0, 232}, {1127, 720}}";
+							Frame = "{{0, 397}, {1127, 555}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {1126, 373}}";
+								Frame = "{{0, 0}, {1127, 373}}";
 								Split0 = {
-									Frame = "{{0, 169}, {1126, 204}}";
+									Frame = "{{0, 169}, {1127, 204}}";
 									Split0 = {
 										Frame = "{{0, 0}, {541, 204}}";
 									};
 									Split1 = {
-										Frame = "{{550, 0}, {576, 204}}";
+										Frame = "{{550, 0}, {577, 204}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {1126, 145}}";
+									Frame = "{{0, 0}, {1127, 145}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {954, 105}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {1126, 373}}";
+							Frame = "{{0, 0}, {1127, 373}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {

@@ -83,8 +83,8 @@
 		};
 		08FB7794FE84155DC02AAC07 = {
 			children = (
-				F5440D5102465FF801990B20,
 				08FB7795FE84155DC02AAC07,
+				F5440D5102465FF801990B20,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
 			);
@@ -143,8 +143,8 @@
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F51211020190489701990B20,
 				F512110801904AE101990B20,
+				F5440D54024A823501990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -202,12 +202,6 @@
 			path = quadtree.h;
 			refType = 4;
 		};
-		F51211020190489701990B20 = {
-			fileRef = F51210FF0190489701990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F512110701904AE101990B20 = {
 			isa = PBXFileReference;
 			path = main.cpp;
@@ -250,6 +244,12 @@
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;
+		};
+		F5440D54024A823501990B20 = {
+			fileRef = F51210FF0190489701990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F584D18701B43B0E01990B20 = {
 			fileRef = F51211000190489701990B20;
