@@ -71,7 +71,7 @@ class spectral_hp : public r_mesh  {
       inline void loadbasis(class hpbasis& bas) { b = bas;}
       void tobasis(struct vsi g, FLT (*func)(int, FLT, FLT));
       inline void tobasis(FLT (*func)(int, FLT, FLT)) {tobasis(ug,func);}
-      void curvinit();
+      void curvinit(int MASK = ~0);
       void input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE type);
       inline void input(char *name, FILETYPE type) {input(ug,vrtx,binfo,name,type);}
       inline void input(struct vsi g, char *name, FILETYPE type) {input(g,vrtx,binfo,name,type);}

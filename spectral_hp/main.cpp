@@ -44,6 +44,7 @@ int main(int argc, char **argv) {
    return(0);
    
    /*	TO OUTPUT TRUNCATION ERROR */
+   /* 
    test.mesh::in_mesh("mesh530.0",grid);
    w.initialize(4);
    test.mesh::setbcinfo();
@@ -53,6 +54,9 @@ int main(int argc, char **argv) {
    test.spectral_hp::input("data530.0",text);
    test.outlength("terror",tecplot);
    return(0);
+   
+   
+   
 
 }
 

@@ -10,7 +10,7 @@
 #include"spectral_hp.h"
 #include<myblas.h>
 
-void spectral_hp::curvinit() {
+void spectral_hp::curvinit(int MASK = ~0) {
    int i,j,m,n,bind,indx,sind,v0,v1,info,typ;
    FLT x,y;
    char uplo[] = "U";
@@ -19,7 +19,7 @@ void spectral_hp::curvinit() {
    for(bind=0;bind<nsbd;++bind) {
       typ = sbdry[bind].type;
 
-      if (!(typ&CURV_MASK)) continue;
+      if (!(typ&CURV_MASK) || !(typ&MASK)) continue;
 
       /* DON'T MESH WITH END VERTICES */
       for(j=1;j<sbdry[bind].num;++j) {
@@ -40,6 +40,8 @@ void spectral_hp::curvinit() {
    /*****************************/
    for(bind=0;bind<nsbd;++bind) {
       typ = sbdry[bind].type;
+
+      if (!(typ&MASK)) continue;
 
       if (!(typ&CURV_MASK)) {
          for(j=0;j<sbdry[bind].num*sm0;++j)

@@ -231,10 +231,10 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    if (typ&(EULR_MASK +INFL_MASK)) {
       iter = 0;
       do {
-         mag = sqrt(dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y));
+         mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
          delt_dist = -hgt(typ,x,y)/mag;
-         x += delt_dist*dhgtdx(typ,x,y)/mag;
-         y += delt_dist*dhgtdy(typ,x,y)/mag;
+         x += delt_dist*dhgtdx(typ,x,y);
+         y += delt_dist*dhgtdy(typ,x,y);
          if (++iter > 100) {
             printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
             exit(1);
@@ -248,10 +248,10 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       if (startup) {
          iter = 0;
          do {
-            mag = sqrt(dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y));
+            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
             delt_dist = -hgt(typ,x,y)/mag;
-            x += delt_dist*dhgtdx(typ,x,y)/mag;
-            y += delt_dist*dhgtdy(typ,x,y)/mag;
+            x += delt_dist*dhgtdx(typ,x,y);
+            y += delt_dist*dhgtdy(typ,x,y);
             if (++iter > 100) {
                printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
                exit(1);

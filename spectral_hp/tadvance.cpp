@@ -183,6 +183,10 @@ void hp_mgrid::tadvance() {
       }
    }
    
+   /* MOVE UNSTEADY ANALYTICALLY DEFINED SURFACE POINTS TO NEW LOCATION */
+   /* ALSO ELIMINATES ERROR FOR NEW ADAPTATION POINTS ON ANALYTICALLY DEFINED SURFACE */
+   curvinit(EULR_MASK+INFL_MASK);
+   
    /* TESTING TEMPORARY */
 //   for(i=0;i<nvrtx;++i)
 //      vrtx[i][0] += 0.1;

@@ -1,6 +1,10 @@
 #include"spectral_hp.h"
 #include<assert.h>
 
+extern FLT hgt(int type, FLT x, FLT y);
+extern FLT dhgtdx(int type, FLT x, FLT y);
+extern FLT dhgtdy(int type, FLT x, FLT y);
+
 void spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
    FLT r,s;
    int tind;
@@ -96,152 +100,98 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %e\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
          break;
       }
-   } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
+   } while (fabs(dr) +fabs(ds) > (1.0 +sqrt(det))*10.0*EPSILON);
 
    return(tind);
 }
       
 int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
-   int j,vnear,sind,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
-   FLT dpsi,xp[ND],dx,dy,ol;
+   int vnear,sind,tind,snum,snumnew,v0,v1,iter,bnum;
+   FLT dpsi,xp[ND],dx,dy,ol,mag,delt_dist;
    
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);
    xp[0] = x; xp[1] = y;
    sind = findbdryside(xp,vnear,typ);
-   if (sind < 0) {
-      printf("#Warning: brute force boundary locate (%f,%f) nearpt %d neartri %d type %d\n",x,y,vnear,vtri[vnear],typ);
-      for(bnum=0;bnum<nsbd;++bnum)
-         if (sbdry[bnum].type == typ) break;
-      sind = sbdry[bnum].el[sbdry[bnum].num/2];
-   }
-   bnum = (-stri[sind][1]>>16) -1;
-
    
-#ifdef OLDWAY
-   tind = vtri[vnear];
-   stoptri = tind;
-   dir = 1;
-   for(;;) {
-      told = tind;
-      for(vn=0;vn<3;++vn) 
-         if (tvrtx[tind][vn] == vnear) break;
-      
-      assert(vn != 3);
-      
-      if (ttri[tind][vn] < 0) {
-         bnum = (-ttri[tind][vn]>>16) -1;
-         assert(bnum > -1 && bnum < nsbd);
-         if (sbdry[bnum].type == typ) {
-            sind = tside[tind].side[vn];
-            break;
-         }
-      }
-      
-      tind = ttri[tind][(vn +dir)%3];
-      if (tind < 0) {
-         bnum = (-tind>>16) -1;
-         assert(bnum > -1 && bnum < nsbd);
-         if (sbdry[bnum].type == typ) {
-            sind = tside[told].side[(vn+dir)%3];
-            break; 
-         }
-         if (dir > 1) {
-            /* DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
-            printf("#Warning: brute force boundary locate\n");
-            for(bnum=0;bnum<nsbd;++bnum)
-               if (sbdry[bnum].type == typ) break;
-            sind = sbdry[bnum].el[0];
-            break;
-         }
-         /* REVERSE DIRECTION AND GO BACK TO START */
-         ++dir;
-         tind = vtri[vnear];
-         stoptri = -1;
-      }
-      
-      if (tind == stoptri) {
-         /* COULDN'T FIND SIDE DO BRUTE FORCE */
-         printf("#Warning: brute force bdry locate\n");
-         for(bnum=0;bnum<nsbd;++bnum)
-            if (sbdry[bnum].type == typ) break;
-         sind = sbdry[bnum].el[0];
-         break;
-      }
-   }
-#endif
-   
-
-   /* SEARCH AROUND THIS SIDE */
-   snumnew = -stri[sind][1]&0xFFFF;
-   snum = snumnew;
-   for(;;) {
-      sind = sbdry[bnum].el[snumnew];
+   if (sind > -1) {
+      bnum = (-stri[sind][1]>>16) -1;
+      snum = -stri[sind][1]&0xFFFF;
       v0 = svrtx[sind][0];
       v1 = svrtx[sind][1];
       dx = vrtx[v1][0] - vrtx[v0][0];
       dy = vrtx[v1][1] - vrtx[v0][1];
       ol = 2./(dx*dx +dy*dy);
       psi = ol*((x -vrtx[v0][0])*dx +(y -vrtx[v0][1])*dy) -1.;
-
-      if (psi < -1.) {
-         if (snumnew <= snum) {
-            snum = snumnew;
-            snumnew -= 1;
-            if (snumnew == -1) snumnew = sbdry[bnum].num-1;
-            continue;
+   }
+   else {
+      printf("#Warning: brute force boundary locate (%f,%f) nearpt %d neartri %d type %d\n",x,y,vnear,vtri[vnear],typ);
+      for(bnum=0;bnum<nsbd;++bnum)
+         if (sbdry[bnum].type == typ) break;
+      
+      /* SEARCH FROM MIDDLE */
+      sind = sbdry[bnum].el[sbdry[bnum].num/2];
+      snumnew = -stri[sind][1]&0xFFFF;
+      snum = snumnew;
+      for(;;) {
+         sind = sbdry[bnum].el[snumnew];
+         v0 = svrtx[sind][0];
+         v1 = svrtx[sind][1];
+         dx = vrtx[v1][0] - vrtx[v0][0];
+         dy = vrtx[v1][1] - vrtx[v0][1];
+         ol = 2./(dx*dx +dy*dy);
+         psi = ol*((x -vrtx[v0][0])*dx +(y -vrtx[v0][1])*dy) -1.;
+   
+         if (psi < -1.) {
+            if (snumnew <= snum) {
+               snum = snumnew;
+               snumnew -= 1;
+               if (snumnew == -1) snumnew = sbdry[bnum].num-1;
+               continue;
+            }
+            else {
+               printf("#Warning: trouble finding side point %f %f, best guess side %d psi -1.0\n",x,y,sbdry[bnum].el[snumnew]);
+               psi = -1.;
+            }
          }
-         else {
-            printf("#Warning: trouble finding side point %f %f, best guess side %d psi -1.0\n",x,y,sbdry[bnum].el[snumnew]);
-            psi = -1.;
+         else if (psi >  1.) {
+            if (snumnew >= snum) {
+               snum = snumnew;
+               snumnew += 1;
+               if (snumnew == sbdry[bnum].num) snumnew = 0;
+               continue;
+            }
+            else {
+               printf("#Warning: trouble finding side point %f %f, best guess side %d psi 1.0\n",x,y,sbdry[bnum].el[snumnew]);
+               psi = 1.;
+            }
          }
+         break;
       }
-      else if (psi >  1.) {
-         if (snumnew >= snum) {
-            snum = snumnew;
-            snumnew += 1;
-            if (snumnew == sbdry[bnum].num) snumnew = 0;
-            continue;
-         }
-         else {
-            printf("#Warning: trouble finding side point %f %f, best guess side %d psi 1.0\n",x,y,sbdry[bnum].el[snumnew]);
-            psi = 1.;
-         }
-      }
-      break;
-   };
+   }
 
-   /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
-   if (typ&CURV_MASK) {
+   if (!(typ&CURV_MASK)) {
+      x = vrtx[v0][0] +dx*(psi +1.)*.5;
+      y = vrtx[v0][1] +dy*(psi +1.)*.5;
+   }
+   else {
+      /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+      /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */ 
+      iter = 0;
       crdtouht1d(sind);
       dx *= ol;
       dy *= ol;
-      iter = 0;
       do {
          b.ptprobe1d(ND,uht,xp,psi);
-         
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
          psi += dpsi;
          if (iter++ > 100) {
-            printf("#Warning: max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f\n",tind,typ,x,y);
+            printf("#Warning: max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f error: %e\n",tind,typ,x,y,dpsi);
             break;
-         }
-         /*
-         if (psi > 1.0) {
-            psi = 1.0;
-            break;
-         }
-         if (psi < -1.0) {
-            psi = 1.0;
-            break;
-         }   */     
+         }  
       } while (fabs(dpsi) > 100.*EPSILON);
       x = xp[0];
       y = xp[1]; 
-   }
-   else {
-      x = vrtx[v0][0] +dx*(psi +1.)*.5;
-      y = vrtx[v0][1] +dy*(psi +1.)*.5;
    }
    
    return(sind);
