@@ -7,7 +7,7 @@ extern FLT f1(int n, FLT x, FLT y);
 
 void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
    int i,j,k,p,match;
-   FLT cfl[MXLG2P];
+   FLT cfl[MXLG2P], surfcfl[MXLG2P][ND], surffadd[ND];
    char fnmcat[80];
    char app[2];
 
@@ -58,11 +58,23 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 /*	WHERE IS THIS GOING TO BE STORED? */   
 /*	LOAD PHYSICAL CONSTANTS & ITERATIVE THINGS FOR EACH BLOCK */
    blk[0].setphysics(1.0, 0.025, 0.0, &f1);
+   blk[0].setsurfphysics(0,1.0,0.5,0.0125);
+
    cfl[0] = 2.5;
    cfl[1] = 1.5;
    cfl[2] = 1.0;
    blk[0].setiter(0.75,cfl,1.0,0);
    
+   surfcfl[0][0] = 2.0;
+   surfcfl[1][0] = 1.5;
+   surfcfl[2][0] = 1.0;
+   surfcfl[0][1] = 1.0;
+   surfcfl[1][1] = 0.75;
+   surfcfl[2][1] = 0.5;
+   surffadd[0] = 0.5;
+   surffadd[1] = 0.5;
+   blk[0].setsurfiter(0,surffadd,surfcfl);
+
    for(i=0;i<nblocks;++i)
        blk[i].hpinit(base, lg2pmax);
 
@@ -70,6 +82,7 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    for(i=0;i<nblocks;++i) {
       blk[i].grd[0].loadbasis(base[lg2pmax]);
       blk[i].grd[0].tobasis(&f1);
+      blk[i].grd[0].surfvrttoug();
    }
 
    return;
@@ -80,7 +93,7 @@ void blocks::tadvance() {
    
    time = time +dt;
    
-   for(i=0;i<nblocks;++i) 
+   for(i=0;i<nblocks;++i)
       blk[i].grd[0].setinflow();
       
    return;
@@ -153,8 +166,10 @@ void blocks::cycle(int vw, int lvl = 0) {
          for(n=0;n<NV;++n)
             mxr[n] = 0.0;
       
-         for (i=0;i<nblocks;++i)
+         for (i=0;i<nblocks;++i) {
             blk[i].grd[0].maxres(mxr);
+            blk[i].grd[0].surfugtovrt1();
+         }
       }
       
       if (lvl == mglvls-1) return;

@@ -132,6 +132,11 @@ void hp_mgrid::minvrt2(void) {
       bdry_snd(0);
    }
 
+/*	FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
+         surfinvrt2(i);
+         
    return;
 }
 
@@ -216,11 +221,6 @@ void hp_mgrid::minvrt4() {
          }
       }
    }
-   
-/*	FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
-   for(i=0;i<nsbd;++i)
-      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
-         surfinvrt2(i);
 
    return;
 }

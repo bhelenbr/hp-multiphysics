@@ -13,7 +13,7 @@
 #define MXLG2P 5
 #define NSTAGE 5
 
-#define HP_MGRID_MP (PRDX_MASK +PRDY_MASK +COMX_MASK +COMY_MASK)
+#define HP_MGRID_MP (COMX_MASK +COMY_MASK)
 
 /* THESE THINGS ARE SHARED BY ALL MESHES OF THE SAME BLOCK */
 struct hp_mgrid_glbls {
@@ -138,9 +138,9 @@ class hp_mgrid : public spectral_hp {
       void bdry_snd(int mode);
 
 /*		COUPLED SURFACE BOUNDARY ROUTINES */ 
-      void surfvrttoug(int bnum);
-      void surfugtovrt1(int bnum);
-      void surfugtovrt2(int bnum);
+      void surfvrttoug();
+      void surfugtovrt1();
+      void surfugtovrt2();
       void surfrsdl(int bnum, int mgrid);
       void surfinvrt1(int bnum);
       void surfinvrt2(int bnum);

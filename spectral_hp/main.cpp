@@ -47,11 +47,13 @@ int main() {
    
 //   myblock.init(1, 1, 0, "../../grids/TIM/tim2",easymesh,5);
 
-   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
-   myblock.output("hope0",tecplot);
+//   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
+//   9  7.569496e-05  3.783905e-05  1.604564e-04
 
+   myblock.init(1,1,0,"../../grids/WAVE/wave8",easymesh,5);
+   myblock.output("hope0",tecplot);
    myblock.tadvance();
-   for(i=0;i<10;++i) {
+   for(i=0;i<1;++i) {
       myblock.cycle(1);
       printf("%d ",i);
       myblock.print_maxres();

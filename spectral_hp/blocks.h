@@ -17,6 +17,7 @@ class block {
          gbl.mu = mu;
          gbl.nu = mu/rho;
          gbl.sigma = sigma;
+         gbl.g = 1.0;
          gbl.func = f;
       }
       inline void setiter(FLT fadd, FLT flowcfl[], FLT adis, int chrctr) {
@@ -26,6 +27,20 @@ class block {
          gbl.adis = adis;
          gbl.charyes = chrctr;
       }
+      inline void setsurfphysics(int snum, FLT drho, FLT rhoav, FLT muav) {
+         gbl.sgbl[snum].drho = drho;
+         gbl.sgbl[snum].rhoav = rhoav;
+         gbl.sgbl[snum].muav = muav;
+      }
+      inline void setsurfiter(int snum, FLT fadd[ND], FLT cfl[MXLG2P][ND]) {
+         for(int n=0;n<ND;++n)
+            gbl.sgbl[snum].fadd[n] = fadd[n];
+         for (int i=0;i<MXLG2P;++i)
+            for (int n=0;n<ND;++n)
+               gbl.sgbl[snum].cfl[i][n] = cfl[n][i];
+      }
+      
+      
       void hpinit(class hpbasis *bin, int lgpmax);
       void reconnect();
 };

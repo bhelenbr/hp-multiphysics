@@ -13,7 +13,9 @@
 #include "math.h"
 #include<assert.h>
 
-#define KOVASZNAY
+
+// KOVASNAY TEST CYLINDER FREESTREAM
+#define FREESTREAM
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -27,6 +29,20 @@ FLT f1(int n, FLT x, FLT y) {
          return(1 +exp(-10.*(x*x)));
       case(2):
          return(1 +exp(-10.*(x*x)));
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef FREESTREAM
+FLT f1(int n, FLT x, FLT y) {
+   switch(n) {
+      case(0):
+         return(1.0);
+      case(1):
+         return(0.0);
+      case(2):
+         return(0.0);
    }
    return(0.0);
 }

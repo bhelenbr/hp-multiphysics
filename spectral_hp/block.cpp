@@ -32,6 +32,8 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
    }
 
 /*	INITIALIZE HP_MGRID STORAGE NECESSARY FOR EACH MESH */ 
+
+   
 	grd[0].allocate(0,gbl);  // 0 DENOTES FINEST LEVEL ALLOCATES GLOBAL STORAGE
    for(i = lg2pmax -1; i >= 0; --i) {
       grd[0].loadbasis(hpbase[i]);

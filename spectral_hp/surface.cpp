@@ -16,10 +16,8 @@ void surface::alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface
       vug = (FLT (*)[ND]) xmalloc((maxside+1)*ND*sizeof(FLT));
       sug = (FLT (*)[ND]) xmalloc(maxside*(p-1)*ND*sizeof(FLT));
    }
-   else {
-      vdres[log2p] = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
-      sdres[log2p] = (FLT (*)[ND]) xmalloc(ND*maxside*(p-1)*sizeof(FLT)); 
-   }
+   vdres[log2p] = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
+   sdres[log2p] = (FLT (*)[ND]) xmalloc(ND*maxside*(p-1)*sizeof(FLT)); 
    gbl = store;         
    
    if (!fmesh) {
@@ -64,7 +62,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 /*	DETRMINE DX CORRECTION TO CONSERVE AREA */
 /*	IMPORTANT FOR STEADY SOLUTIONS */
 /*	SINCE THERE ARE MULTIPLE STEADY-STATES */
-   if (!sbdry[bnum].type&(IFCE_MASK +FSRF_MASK)) {
+   if (!(sbdry[bnum].type&(IFCE_MASK +FSRF_MASK))) {
       printf("error shouldn't be in surfrsdl\n");
       exit(1);
    }
@@ -98,16 +96,16 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 
 /*		UG STORES THE CURRENT BOUNDARY POSITION */         
 		for(n=0;n<ND;++n) {
-         uht[n][0] = vug[indx][n];
-         uht[n][1] = vug[indx+1][n];
+         uht[n][0] = srf->vug[indx][n];
+         uht[n][1] = srf->vug[indx+1][n];
       }
       if (b.sm > 0) {
          indx1 = indx*b.sm;
          for(m=0;m<b.sm;++m)
             for(n=0;n<ND;++n)
-               uht[n][m+2] = sug[indx1 +m][n];
+               uht[n][m+2] = srf->sug[indx1 +m][n];
       }
-      
+
       for(n=0;n<ND;++n)
          b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
 
@@ -196,12 +194,12 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       }
    }
    else {
-/*		ADD TANGENTIAL MESH MOVEMENT SOURCE */
-      for(i=0;i<sbdry[bnum].num+1;++i) 
-         srf->gbl.vres[i][0] += srf->vdres[log2p][i][0];
+/*		ADD TANGENTIAL MESH MOVEMENT SOURCE */   
+//      for(i=0;i<sbdry[bnum].num+1;++i) TEMPORARY
+//         srf->gbl.vres[i][0] += srf->vdres[log2p][i][0];
 
-      for(i=0;i<sbdry[bnum].num*b.sm;++i) 
-         srf->gbl.sres[i][0] += srf->sdres[log2p][i][0];
+ //     for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+ //        srf->gbl.sres[i][0] += srf->sdres[log2p][i][0];
    }
 
    return;
@@ -247,7 +245,6 @@ void hp_mgrid::surfinvrt1(int bnum) {
    
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
-      
       if (vbdry[i].type&(HP_MGRID_MP)) {
          vbnum = vbdry[i].adjbnum;
          tgt = vbdry[i].adjmesh;
@@ -291,9 +288,11 @@ void hp_mgrid::surfinvrt2(int bnum) {
          srf->gbl.vres[0][1] = 0.5*(srf->gbl.vres[0][1] +vbuff[vbnum][1]);
       }
       
-      if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
+      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK +PRDY_MASK)) {
          srf->gbl.vres[0][0] = 0.0;
-         srf->gbl.vres[0][1] = 0.5*(srf->gbl.vres[0][1] +vbuff[vbnum][1]);
+      }
+      if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {  // TOTALLY FIXED POINT
+         srf->gbl.vres[0][1] = 0.0;
       }
    }
    
@@ -307,7 +306,9 @@ void hp_mgrid::surfinvrt2(int bnum) {
       
       if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
          srf->gbl.vres[end][0] = 0.0;
-         srf->gbl.vres[end][1] = 0.5*(srf->gbl.vres[end][1] +vbuff[vbnum][1]);
+      }
+      if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {  // TOTALLY FIXED POINT
+         srf->gbl.vres[end][1] = 0.0;
       }
    }
    
@@ -330,8 +331,9 @@ void hp_mgrid::surfinvrt2(int bnum) {
    
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
-      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK))
+      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK)) {
          srf->gbl.vres[end][0] = 0.0;
+      }
       if (vbdry[i].type&PRDY_MASK)
          srf->gbl.vres[end][1] = 0.0;
    }   
@@ -655,104 +657,116 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    return;
 }
 
-void hp_mgrid::surfugtovrt1(int bnum) {
-   int i,m,n,sind,indx,v0,vbnum,count;
+void hp_mgrid::surfugtovrt1() {
+   int i,m,n,sind,indx,v0,bnum,vbnum,count;
    static class surface *srf;
    static class mesh *tgt;
    
-   srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl.first) return;
+   for (bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
    
-   indx = 0;
-   for(i=0;i<sbdry[bnum].num;++i) {
-      sind = sbdry[bnum].el[i];
-      v0 = svrtx[sind][0];
-      for(n=0;n<ND;++n)
-         vrtx[v0][n] = srf->vug[i][n];
+      srf = static_cast<class surface *>(sbdry[bnum].misc);
+      if (!srf->gbl.first) return;
       
-      for(m=0;m<b.sm;++m) {
-         for(n=0;n<ND;++n)
-            binfo[bnum][indx].curv[n] = srf->sug[indx][n];
-         ++indx;
-      }
-   }
-   v0 = svrtx[sind][1];
-   for(n=0;n<ND;++n)
-      vrtx[v0][n] = srf->vug[sbdry[bnum].num][n];
-
-/*	SEND MESSAGES TO MATCHING INTERFACE */      
-   if (sbdry[bnum].type&IFCE_MASK) {
-      tgt = sbdry[bnum].adjmesh;
-      vbnum = sbdry[bnum].adjbnum;
-      count = 0;
+      indx = 0;
       for(i=0;i<sbdry[bnum].num;++i) {
+         sind = sbdry[bnum].el[i];
+         v0 = svrtx[sind][0];
          for(n=0;n<ND;++n)
-            tgt->sbuff[vbnum][count++] = srf->vug[i][n];
-         for(m=0;m<b.sm;++m)
-            tgt->sbuff[vbnum][count++] = srf->sug[i*b.sm +m][n];
+            vrtx[v0][n] = srf->vug[i][n];
+         
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<ND;++n)
+               binfo[bnum][indx].curv[n] = srf->sug[indx][n];
+            ++indx;
+         }
       }
-      for(n=0;n<ND;++n)
-         tgt->sbuff[vbnum][count++] = srf->vug[sbdry[bnum].num][n];
-   }
-      
-	return;
-}
-
-void hp_mgrid::surfugtovrt2(int bnum) {
-   int j,m,n,sind,indx,msgn,v0,count;
-   static class surface *srf;
-   
-   srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (srf->gbl.first) return;
-
-/*	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
-   count = 0;
-   indx = 0;
-   for(j=sbdry[bnum].num-1;j>=0;--j) {
-      sind = sbdry[bnum].el[j];
       v0 = svrtx[sind][1];
       for(n=0;n<ND;++n)
-         vrtx[v0][n] = sbuff[bnum][count++];
-      
-      msgn = 1;
-      for(m=0;m<b.sm;++m) {
+         vrtx[v0][n] = srf->vug[sbdry[bnum].num][n];
+   
+   /*	SEND MESSAGES TO MATCHING INTERFACE */      
+      if (sbdry[bnum].type&IFCE_MASK) {
+         tgt = sbdry[bnum].adjmesh;
+         vbnum = sbdry[bnum].adjbnum;
+         count = 0;
+         for(i=0;i<sbdry[bnum].num;++i) {
+            for(n=0;n<ND;++n)
+               tgt->sbuff[vbnum][count++] = srf->vug[i][n];
+            for(m=0;m<b.sm;++m)
+               tgt->sbuff[vbnum][count++] = srf->sug[i*b.sm +m][n];
+         }
          for(n=0;n<ND;++n)
-            binfo[bnum][indx].curv[n] = msgn*sbuff[bnum][count++];
-         msgn *= -1;
-         ++indx;
-      }      
+            tgt->sbuff[vbnum][count++] = srf->vug[sbdry[bnum].num][n];
+      }
    }
-   v0 = svrtx[sind][0];
-   for(n=0;n<ND;++n)
-      vrtx[v0][n] = sbuff[bnum][count++];
-
+   
 	return;
 }
 
-void hp_mgrid::surfvrttoug(int bnum) {
-   int i,m,n,indx,sind,v0;
+void hp_mgrid::surfugtovrt2() {
+   int j,m,n,sind,indx,msgn,v0,count,bnum;
    static class surface *srf;
    
-   srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl.first) return;
+   for (bnum=0;bnum<nsbd;++bnum) {
+      if (!sbdry[bnum].type&(IFCE_MASK)) continue;
+      
+      srf = static_cast<class surface *>(sbdry[bnum].misc);
+      if (srf->gbl.first) return;
    
-   indx = 0;
-   for(i=0;i<sbdry[bnum].num;++i) {
-      sind = sbdry[bnum].el[i];
+   /*	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
+      count = 0;
+      indx = 0;
+      for(j=sbdry[bnum].num-1;j>=0;--j) {
+         sind = sbdry[bnum].el[j];
+         v0 = svrtx[sind][1];
+         for(n=0;n<ND;++n)
+            vrtx[v0][n] = sbuff[bnum][count++];
+         
+         msgn = 1;
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<ND;++n)
+               binfo[bnum][indx].curv[n] = msgn*sbuff[bnum][count++];
+            msgn *= -1;
+            ++indx;
+         }      
+      }
       v0 = svrtx[sind][0];
       for(n=0;n<ND;++n)
-         srf->vug[i][n] = vrtx[v0][n];
-      
-      for(m=0;m<b.sm;++m) {
-         for(n=0;n<ND;++n)
-            srf->sug[indx][n] = binfo[bnum][indx].curv[n];
-         ++indx;
-      }
+         vrtx[v0][n] = sbuff[bnum][count++];
    }
-   v0 = svrtx[sind][1];
-   for(n=0;n<ND;++n)
-      srf->vug[sbdry[bnum].num][n] = vrtx[v0][n];
+   
+	return;
+}
+
+void hp_mgrid::surfvrttoug() {
+   int i,m,n,indx,sind,v0,bnum;
+   static class surface *srf;
+   
+   for (bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
       
+      srf = static_cast<class surface *>(sbdry[bnum].misc);
+      if (!srf->gbl.first) return;
+      
+      indx = 0;
+      for(i=0;i<sbdry[bnum].num;++i) {
+         sind = sbdry[bnum].el[i];
+         v0 = svrtx[sind][0];
+         for(n=0;n<ND;++n)
+            srf->vug[i][n] = vrtx[v0][n];
+         
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<ND;++n)
+               srf->sug[indx][n] = binfo[bnum][indx].curv[n];
+            ++indx;
+         }
+      }
+      v0 = svrtx[sind][1];
+      for(n=0;n<ND;++n)
+         srf->vug[sbdry[bnum].num][n] = vrtx[v0][n];
+   }
+         
 	return;
 }
 

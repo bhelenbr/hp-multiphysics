@@ -82,6 +82,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
          srf[count].alloc(maxsbel, log2p, mgrid, onfmesh, store.sgbl[count]);
+         sbdry[i].misc = static_cast<void *>(&srf[count]);
          ++count;
       }
    }
