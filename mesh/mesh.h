@@ -70,6 +70,7 @@ class mesh {
          /* STUFF FOR COMMUNICATION BOUNDARIES */
          class mesh *adjmesh;
          int adjbnum;
+         int isfrst;
          void *misc;  // POINTER TO ANYTHING ELSE
       } vbdry[MAXSB];
 
@@ -216,6 +217,8 @@ class mesh {
 
       /* FUNCTION TO FIND MATCHING MESH BOUNDARIES */
       int findmatch(class mesh& tgt);
+      /* FUNCTION TO ZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
+      void zerobdryisfrst();
       /* TELLS HOW MANY COMMUNICATION BOUNDARIES THERE ARE */
       int alld_mp();
       

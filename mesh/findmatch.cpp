@@ -12,6 +12,7 @@ int mesh::findmatch(class mesh& tgt) {
                if (&tgt == this && i == j) continue;  // CAN'T MATCH VERTEX TO ITSELF */
                vbdry[i].adjmesh = &tgt;
                vbdry[i].adjbnum = j;
+               vbdry[i].isfrst = 1 -tgt.vbdry[j].isfrst;
                found = 1;
                break;
             }
@@ -30,6 +31,7 @@ int mesh::findmatch(class mesh& tgt) {
                if (&tgt == this && i == j) continue;  // CAN'T MATCH SIDE TO ITSELF */
                sbdry[i].adjmesh = &tgt;
                sbdry[i].adjbnum = j;
+               sbdry[i].isfrst = 1 -tgt.sbdry[j].isfrst;
                ++matches;
                break;
             }
@@ -48,5 +50,17 @@ int mesh::alld_mp() {
       if (sbdry[i].type & ALLD_MP) ++matches;
       
    return(matches);
+}
+
+void mesh::zerobdryisfrst() {
+   int i
+   
+   for(i=0;i<nvbd;++i)
+      vbdry[i].isfrst = 0;
+      
+   for(i=0;i<nsbd;++i)
+      sbdry[i].isfrst = 0;
+      
+   return;
 }
 
