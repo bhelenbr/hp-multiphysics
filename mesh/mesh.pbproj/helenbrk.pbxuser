@@ -20,7 +20,7 @@
 		);
 	};
 	08FB7793FE84155DC02AAC07 = {
-		activeBuildStyle = 014CEA470018CE2711CA2923;
+		activeBuildStyle = 014CEA460018CE2711CA2923;
 		activeTarget = 08FB779FFE84155DC02AAC07;
 		addToTargets = (
 			08FB779FFE84155DC02AAC07,
@@ -34,10 +34,10 @@
 					ActiveTab = 0;
 					Frame = "{{0, 23}, {1253, 918}}";
 					Split0 = {
-						ActiveTab = 1;
+						ActiveTab = 3;
 						Frame = "{{225, 0}, {1028, 918}}";
 						Split0 = {
-							Frame = "{{0, 263}, {1028, 655}}";
+							Frame = "{{0, 320}, {1028, 598}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
@@ -74,8 +74,8 @@
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {1030, 205}}";
-							BuildTranscriptFrame = "{{0, 214}, {1030, 23}}";
+							BuildMessageFrame = "{{0, 0}, {1030, 104}}";
+							BuildTranscriptFrame = "{{0, 113}, {1030, 124}}";
 							Frame = "{{0, 0}, {1028, 235}}";
 						};
 						Tab3 = {
