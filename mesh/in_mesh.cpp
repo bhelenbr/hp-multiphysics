@@ -403,9 +403,9 @@ next2:      continue;
 void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
 
    int oldbtype[NOLDBTYPE][2] = 
-                             {{FSRF_OLD,FSRF_MASK},
-                             {FCE1_OLD,IFCE_MASK},
-                             {FCE2_OLD,IFCE_MASK},
+                             {{FSRF_OLD,FSRF_MASK+CURV_MASK},
+                             {FCE1_OLD,IFCE_MASK+CURV_MASK},
+                             {FCE2_OLD,IFCE_MASK+CURV_MASK},
                              {INFC_OLD,INFL_MASK+CURV_MASK},
                              {INFS_OLD,INFL_MASK},
                              {SYMC_OLD,SYMM_MASK},

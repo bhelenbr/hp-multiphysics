@@ -82,12 +82,28 @@ int mesh::collapse(int sind) {
 /* 		BOTH ON BOUNDARY */
 /*			IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
          if (stri[sind][1] > -1 || vinfo[svrtx[sind][0]] +vinfo[svrtx[sind][1]] == 2) return(1);
-         if (vinfo[svrtx[sind][0]] == 1)
+         if (vinfo[svrtx[sind][0]] == 1) {
             delt = 1;
-         else if (vinfo[svrtx[sind][1]] == 1) 
+            goto DELETE;
+         }
+         if (vinfo[svrtx[sind][1]] == 1) {
             delt = 0;
-         else
-            goto SEARCH;
+            goto DELETE;
+         }
+         
+         tind = stri[sind][0];
+         for (i=0;i<3;++i)
+            if(tside[tind].side[i] == sind) break;
+         assert(i != 3);
+         if (ttri[tind][(i+1)%3] < 0) {
+            delt = 0;
+            goto DELETE;
+         }
+         if (ttri[tind][(i+2)%3] < 0) {
+            delt = 1;
+            goto DELETE;
+         }
+         goto SEARCH;
       }
       goto DELETE;
    }

@@ -78,11 +78,11 @@ void mesh::rebay(FLT tolsize) {
          exit(1);
       }
       
-      printf("inserting point in side %d\n",sind);
       
 /*		CHECK IF IT IS A BOUNDARY EDGE */
       if (stri[sind][1] < 0) {
-      
+         printf("inserting point in boundary side %d\n",sind);
+
 /*			MIDPOINT */
          xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
          ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
@@ -104,6 +104,8 @@ void mesh::rebay(FLT tolsize) {
          ntnew = ntdel +1;
       }
       else {
+         printf("inserting point in interior side %d\n",sind);
+         
 /*			USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
          dy = vrtx[v0][1] -vrtx[v1][1];
@@ -146,17 +148,30 @@ INSRT:
 /*			INSERT POINT */
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
-      
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
          tind = findtri(xpt,ypt,vnear);
-         getwgts(wt);
-         vlngth[nvrtx] = 0.0;
-         for(i=0;i<3;++i) 
-            vlngth[nvrtx] += wt[i]*vlngth[tvrtx[tind][i]];
-         insert(tind,nvrtx);
-         nsnew = nsdel +3;
-         ntnew = ntdel +2;
+         if (tind > -1) {
+            getwgts(wt);
+            vlngth[nvrtx] = 0.0;
+            for(i=0;i<3;++i) 
+               vlngth[nvrtx] += wt[i]*vlngth[tvrtx[tind][i]];
+            insert(tind,nvrtx);
+            nsnew = nsdel +3;
+            ntnew = ntdel +2;
+         }
+         else {
+/*				REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
+            printf("skipping insert\n");
+            qtree.dltpt(nvrtx);
+            --nvrtx;
+            nsdel = 1;
+            sdel[0] = sind;
+            nsnew = 0;
+            ntnew = 2;
+            tdel[0] = stri[sind][0];
+            tdel[1] = stri[sind][1];
+         }
       }
       ++nvrtx;
 
