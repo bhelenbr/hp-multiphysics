@@ -2,7 +2,7 @@
 #include"utilities.h"
 
 void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
-   int i, maxvst;
+   int i;
    
    ngrid = n;
    grd = new class r_mesh[ngrid];
@@ -11,13 +11,9 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    grd[0].init_comm_buf(8);
    
 /* WORK VARIABLES FOR MGRID */
-   maxvst = grd[0].max();
-   rglbl.work = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-   rglbl.res = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-   rglbl.diag = new FLT[maxvst];
-   rglbl.fadd = 0.75;
-   rglbl.vnn = 0.5;
-   grd[0].init(0,&rglbl);
+   r_mesh::fadd = 0.75;
+   r_mesh::vnn = 0.5;
+   grd[0].allocate(0,&rglbl);
    
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
@@ -25,7 +21,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
 /*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
-      grd[i].init(1,&rglbl);
+      grd[i].allocate(1,&rglbl);
    }
 
    return;
@@ -36,6 +32,7 @@ void block::reconnect() {
    
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
+      grd[i].setbcinfo();
 /*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);

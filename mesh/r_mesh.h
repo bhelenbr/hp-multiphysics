@@ -1,28 +1,28 @@
+#ifndef _r_mesh_h_
+#define _r_mesh_h_
+
+#include"mesh.h"
+
 /*	AN R-DEFORMABLE MULTI-GRID MESH OBJECT */
 /*	GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
-#include"mesh.h"
 
-#define FOURTH
-
-#define FIXX_MASK (0xFF -PRDY_MASK)
-#define FIXY_MASK (0xFF -PRDX_MASK -SYMM_MASK) 
-
-#define FIX2X_MASK (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK)
-#define FIX2Y_MASK (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK -SYMM_MASK)
+#define NO_FOURTH
 
 /*	MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
 struct r_mesh_glbls {
    FLT (*work)[ND];
    FLT (*res)[ND];
    FLT *diag;
-   FLT vnn;
-   FLT fadd;
 };
 
 class r_mesh :public mesh {
    /* MESH DEFORMATION VARIABLES */
       protected:
+/*			THINGS SHARED BY ALL BLOCKS */
+         static FLT vnn, fadd;
+         static int fixx_mask, fixy_mask, fix2x_mask, fix2y_mask;
+         
 /*			STRUCTURE CONTAINING ALL MESH INDEPENDENT VARIABLES */
          struct r_mesh_glbls *rg;
          
@@ -32,13 +32,12 @@ class r_mesh :public mesh {
          FLT *kvol;
          FLT (*vrtx_frst)[ND];
          bool isfrst;
-         
-/*			MGRID MESH POINTERS */
-         class r_mesh *cmesh;
-         class r_mesh *fmesh;
+                  
+/*			SETUP FUNCTION */
+         void gbl_alloc(struct r_mesh_glbls *store);
 
       public:
-         void init(bool coarse, struct r_mesh_glbls *rginit);
+         void allocate(bool coarse, struct r_mesh_glbls *rginit);
 
 /*    	SETUP SPRING CONSTANTS */
 /*			LAPLACE CONSTANTS */
@@ -62,7 +61,8 @@ class r_mesh :public mesh {
 /*    	CALCULATE RESIDUAL */
          void rsdl();
          void rsdl_mp();
-         void update(int lvl);
+         void update();
+         void maxres();
 
 /*			CALCLATE SOURCE TERM */
          void source();
@@ -93,4 +93,8 @@ class r_mesh :public mesh {
            
 /*   		TESTS */
          void perturb(int step);
+         
+         friend class block;
+         friend class blocks;
 };
+#endif

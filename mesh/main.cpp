@@ -153,11 +153,15 @@ int main(int argc, char *argv[]) {
    for(step = 1; step<=2;++step) {
       z.ksrc();
       z.perturb(step);
-      for(i=0;i<100;++i)
+      for(i=0;i<100;++i) {
          z.cycle(2);
+         printf("%d ",i);
+         z.maxres();
+         printf("\n");
+      }
       z.restructure(0.66);
-//      number_str(name, "test", step, 2);
-//      z.out_mesh(name);
+      number_str(name, "test", step, 2);
+      z.out_mesh(name);
    }
    
    z.out_mesh("deform",tecplot);

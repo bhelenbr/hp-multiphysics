@@ -44,6 +44,32 @@ void blocks::init(int n, int mg, char *filename, FILETYPE filetype = easymesh, F
    return;
 }
 
+void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
+   int i;   
+   char fnmcat[80];
+   char app[2];
+
+/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
+/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
+   if (nblocks > 1) {
+      for (i=0;i<nblocks;++i) {
+         strcpy(fnmcat,filename);
+         app[0] = 'a'+i;
+         app[1] = '\0';
+         strcat(fnmcat,app);
+         blk[i].grd[0].setbcinfo();
+         blk[i].grd[0].out_mesh(fnmcat,filetype);
+      }
+   }
+   else {
+      blk[0].grd[0].setbcinfo();
+      blk[0].grd[0].out_mesh(filename,filetype);
+   }
+   
+   return;
+}
+
+
 void blocks::jacobi(int niter, int lvl) {
    static int i,iter;
       
@@ -85,7 +111,7 @@ void blocks::jacobi(int niter, int lvl) {
          blk[i].grd[lvl].rsdl_mp();
 
       for(i=0;i<nblocks;++i) 
-         blk[i].grd[lvl].update(lvl);
+         blk[i].grd[lvl].update();
    }
 
    return;
@@ -120,31 +146,6 @@ void blocks::cycle(int vw, int lvl = 0) {
          blk[j].grd[lvl].mg_getcchng();
    }
 
-   return;
-}
-
-void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
-   int i;   
-   char fnmcat[80];
-   char app[2];
-
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   if (nblocks > 1) {
-      for (i=0;i<nblocks;++i) {
-         strcpy(fnmcat,filename);
-         app[0] = 'a'+i;
-         app[1] = '\0';
-         strcat(fnmcat,app);
-         blk[i].grd[0].setbcinfo();
-         blk[i].grd[0].out_mesh(fnmcat,filetype);
-      }
-   }
-   else {
-      blk[0].grd[0].setbcinfo();
-      blk[0].grd[0].out_mesh(filename,filetype);
-   }
-   
    return;
 }
 

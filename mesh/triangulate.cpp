@@ -29,7 +29,7 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
    int ngood,goodvrt[MAXGOOD];
    int minv,maxv;
    int v1,v2,v[4];
-   
+
 /*	CREATE VERTEX LIST */
 /*	STORE IN NNBOR SINCE THIS IS OBVIOUSLY UNUSED RIGHT NOW */
    nv = 0;
@@ -132,7 +132,7 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
          nnbor[nv++] = svrtx[sind][1];
       }
 
-   } while(newside > 0);
+   } while(nsdloop[0] > 0);
    
    return;
 }

@@ -1,3 +1,6 @@
+#ifndef _mesh_h_
+#define _mesh_h_
+
 #define FLT double
 
 #define ND 2
@@ -95,6 +98,8 @@ class mesh {
          int tri;
          double wt[3];
       };
+      void *fmpt;  // CAN BE USED TO POINT TO ANY OBJECT INHERITED FROM MESH
+      void *cmpt;  // DITTO
       struct mg_trans *fine;
       struct mg_trans *coarse;
       int mgconnect(struct mg_trans *cnnct, const class mesh& tgt);
@@ -210,4 +215,5 @@ class mesh {
       int setfine(const class mesh& tgt);
       int setcoarse(const class mesh& tgt);
 };
-   
+#endif
+

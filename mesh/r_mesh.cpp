@@ -4,11 +4,18 @@
 #include<cstdio>
 #include<cmath>
 
-void r_mesh::init(bool coarse, struct r_mesh_glbls *rginit) {
+FLT r_mesh::fadd, r_mesh::vnn;
+int r_mesh::fixx_mask = (0xFF -PRDY_MASK);
+int r_mesh::fixy_mask = (0xFF -PRDX_MASK -SYMM_MASK);
+int r_mesh::fix2x_mask = (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK);
+int r_mesh::fix2y_mask = (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK -SYMM_MASK);
+
+void r_mesh::allocate(bool coarse, struct r_mesh_glbls *rginit) {
 
 /*	global mgrid arrays */
 	rg = rginit;
-
+   if (!coarse) gbl_alloc(rginit);
+   
 /*	local storage */   
    ksprg = new FLT[maxvst];
    kvol = new FLT[maxvst];
@@ -17,15 +24,21 @@ void r_mesh::init(bool coarse, struct r_mesh_glbls *rginit) {
    isfrst = false;
 }
 
+void r_mesh::gbl_alloc(struct r_mesh_glbls *store) {
+   store->work = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+   store->res = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+   store->diag = new FLT[maxvst];
+}
+
 int r_mesh::setfine(class r_mesh& tgt) {
-   fmesh = &tgt;
+   fmpt = &tgt;
    if (fine == NULL)
       fine = new struct mg_trans[maxvst];
    return(mgconnect(fine,tgt));
 }
 
 int r_mesh::setcoarse(class r_mesh& tgt) {
-   cmesh = &tgt;
+   cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
    return(mgconnect(coarse,tgt));
@@ -116,6 +129,9 @@ void r_mesh::kvoli() {
 
 void r_mesh::rkmgrid(void) {
    int i,j,sind,tind,tind0,tind1,v0,v1;
+   class r_mesh *fmesh;
+   
+   fmesh = static_cast<class r_mesh *>(fmpt);
 
 /* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
    for(i=0;i<fmesh->nvrtx;++i)
@@ -260,14 +276,14 @@ void r_mesh::rsdl() {
    
 /* APPLY DIRICHLET BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & FIXX_MASK) {
+      if (sbdry[i].type & fixx_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->res[svrtx[sind][0]][0] = 0.0;
             rg->res[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & FIXY_MASK) {
+      if (sbdry[i].type & fixy_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->res[svrtx[sind][0]][1] = 0.0;
@@ -336,14 +352,14 @@ void r_mesh::rsdl() {
 
 /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & FIX2X_MASK) {
+      if (sbdry[i].type & fix2x_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->work[svrtx[sind][0]][0] = 0.0;
             rg->work[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & FIX2Y_MASK) {
+      if (sbdry[i].type & fix2y_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->work[svrtx[sind][0]][1] = 0.0;
@@ -408,14 +424,14 @@ void r_mesh::rsdl1() {
 
 /* APPLY BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & FIXX_MASK) {
+      if (sbdry[i].type & fixx_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->res[svrtx[sind][0]][0] = 0.0;
             rg->res[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & FIXY_MASK) {
+      if (sbdry[i].type & fixy_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->res[svrtx[sind][0]][1] = 0.0;
@@ -499,30 +515,17 @@ void r_mesh::vddti(void) {
    rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
    
    for(i=0;i<nvrtx;++i)
-      rg->diag[i] = rg->vnn/rg->diag[i];
+      rg->diag[i] = vnn/rg->diag[i];
 }
 
-void r_mesh::update(int mglvl) {
-   static int count = 0;
+void r_mesh::update() {
    int i,n;
-   FLT error[ND];
 
    rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
          vrtx[i][n] -= rg->diag[i]*rg->res[i][n];
-
-   if (!mglvl) {
-      for(n=0;n<ND;++n)
-         error[n] = 0.0;
-      
-      for(i=0;i<nvrtx;++i)
-         for(n=0;n<ND;++n)
-            error[n] = (error[n] > fabs(rg->diag[i]*rg->res[i][n]) ? error[n] : fabs(rg->diag[i]*rg->res[i][n]));
-      
-      printf("%d %e %e\n",count++,error[0],error[1]);
-   }
    
    return;
 }
@@ -552,7 +555,10 @@ void r_mesh::sumsrc() {
 
 void r_mesh::mg_getfres() {
    int i,j,n,tind,v0;
+   static class r_mesh *fmesh;
    
+   fmesh = static_cast<class r_mesh *>(fmpt);
+      
    fmesh->rcv(YDIR_MP,(FLT *) rg->res,0,1,2); 
    
    for(i=0;i<nvrtx;++i)
@@ -565,7 +571,7 @@ void r_mesh::mg_getfres() {
       for(j=0;j<3;++j) {
          v0 = tvrtx[tind][j];
          for(n=0;n<ND;++n)
-            src[v0][n] += rg->fadd*fmesh->coarse[i].wt[j]*rg->res[i][n];
+            src[v0][n] += fadd*fmesh->coarse[i].wt[j]*rg->res[i][n];
       }
    }
    
@@ -593,6 +599,9 @@ void r_mesh::mg_getfres() {
 
 void r_mesh::mg_getcchng() {
    int i,j,n,ind,tind;
+   class r_mesh *cmesh;
+   
+   cmesh = static_cast<class r_mesh *>(cmpt);
 
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)
@@ -618,7 +627,7 @@ void r_mesh::mg_getcchng() {
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n) 
          vrtx[i][n] += rg->res[i][n];
-                  
+
    return;
 }
 
@@ -648,7 +657,7 @@ void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
 
 void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
    int i,j,k,sind,count,offset;
-   
+      
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & mask) {
          count = 0;
@@ -664,5 +673,22 @@ void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
       }
    }
    
+   return;
+}
+
+void r_mesh::maxres() {
+   int i,n;
+   FLT mxr[ND];
+
+   for(n=0;n<ND;++n)
+      mxr[n] = 0.0;
+
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n)
+         mxr[n] = MAX(mxr[n],fabs(rg->res[i][n]));
+         
+   for(n=0;n<ND;++n)
+      printf("%.3e  ",mxr[n]);
+         
    return;
 }

@@ -32,11 +32,17 @@ class blocks {
 /*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
       void cycle(int vw, int lvl = 0);
 
-/*		OUTPUT FINE BLOCK MESH */
-      void out_mesh(char *filename, FILETYPE filetype = easymesh);
-
 /*		CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
       void ksrc();
+      
+/*		OUTPUT FINE BLOCK MESH */
+      void out_mesh(char *filename, FILETYPE filetype = easymesh);
+      
+/*		PRINT ERRORS */
+      inline void maxres() {
+         for(int i=0;i<nblocks;++i)
+            blk[i].grd[0].maxres();
+      }
       
 /*		PERTURB BLOCK MESH */
       inline void perturb(int step) {
