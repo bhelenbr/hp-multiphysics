@@ -10,6 +10,7 @@
 #include"mesh.h"
 #include<float.h>   
 #include<assert.h>
+#include<stdlib.h>
 
 int ntdel, tdel[MAXLST+1];
 int nsdel, sdel[MAXLST+1];

@@ -27,7 +27,15 @@ int main(int argc, char *argv[]) {
    char outname[100];
    char *inname[2];
    char *out2[2];
-
+   mesh x,y;
+   
+   x.in_mesh("/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/DROP/LONG/drop3b");
+   y.coarsen(x);
+   y.setbcinfo();
+   y.smooth_cofa(2);
+   y.out_mesh("/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/DROP/LONG/drop2b");
+   return(0);
+   
 /*	START CLOCK TIMER */
    clock();
 /*	THIS DEFORMS A MESH */

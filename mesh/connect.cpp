@@ -2,6 +2,7 @@
 #include<cstdio>
 #include<cfloat>
 #include<iostream>
+#include<stdlib.h>
 
 int mesh::setfine(const class mesh& tgt) {
    if (fine == NULL) 

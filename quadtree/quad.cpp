@@ -6,12 +6,13 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
- #include"quadtree.h"
- #include<utilities.h>
- #include<float.h>
- #include<cstdio>
- #include<assert.h>
- #include<string.h>
+#include"quadtree.h"
+#include<utilities.h>
+#include<float.h>
+#include<cstdio>
+#include<assert.h>
+#include<string.h>
+#include<math.h>
 
 /* STATIC VARIABLES FOR SEARCHING */ 
 class quad **quadtree::srchlst;
@@ -512,11 +513,3 @@ void quadtree::update(int v0) {
    return;
 }
 
-   
-
-   
-   
-
-
-   
-   

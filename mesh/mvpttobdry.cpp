@@ -10,6 +10,7 @@
 #include "mesh.h"
 #include<float.h>
 #include<math.h>
+#include<stdlib.h>
 
 #define R 0.5
 
@@ -65,3 +66,4 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    
    return;
 }
+
