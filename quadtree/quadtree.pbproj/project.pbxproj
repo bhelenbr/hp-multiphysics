@@ -83,6 +83,7 @@
 		};
 		08FB7794FE84155DC02AAC07 = {
 			children = (
+				F5440D5102465FF801990B20,
 				08FB7795FE84155DC02AAC07,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
@@ -230,6 +231,25 @@
 			);
 			shellPath = /bin/csh;
 			shellScript = "~helenbrk/Codes/quadtree/createlib";
+		};
+		F5440D5102465FF801990B20 = {
+			children = (
+				F5440D5202465FF801990B20,
+				F5440D5302465FF801990B20,
+			);
+			isa = PBXGroup;
+			name = Scripts;
+			refType = 4;
+		};
+		F5440D5202465FF801990B20 = {
+			isa = PBXFileReference;
+			path = makefile;
+			refType = 4;
+		};
+		F5440D5302465FF801990B20 = {
+			isa = PBXExecutableFileReference;
+			path = createlib;
+			refType = 4;
 		};
 		F584D18701B43B0E01990B20 = {
 			fileRef = F51211000190489701990B20;
