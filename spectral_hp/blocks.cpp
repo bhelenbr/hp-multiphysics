@@ -60,12 +60,12 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    blk[0].setphysics(1.0, 0.025, 0.0, &f1);
    blk[0].setsurfphysics(0,1.0,0.5,0.0125);
 
-   cfl[0] = 2.5;
+   cfl[0] = 0.0;
    cfl[1] = 1.5;
    cfl[2] = 1.0;
-   blk[0].setiter(0.75,cfl,1.0,0);
+   blk[0].setiter(0.5,cfl,1.0,0);
    
-   surfcfl[0][0] = 1.0;
+   surfcfl[0][0] = 2.0;
    surfcfl[1][0] = 1.5;
    surfcfl[2][0] = 1.0;
    surfcfl[0][1] = 1.0;

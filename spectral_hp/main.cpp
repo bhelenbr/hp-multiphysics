@@ -24,12 +24,11 @@ int main() {
 
 /*
 //   x.in_mesh("/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/KOVA/WKOVA/kova3",easymesh,10);
-   m1.in_mesh("../../grids/TIM/tim",easymesh,10);
+   m1.in_mesh("/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVEOLD/wave3",easymesh,10);
    m2.coarsen(m1);
    m2.bcinfo();
-   m2.out_mesh("tim2",easymesh);
+   m2.out_mesh("/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVEOLD/wave2",easymesh);
    exit(1);
-
    base.initialize(2);
    x.in_mesh("../../grids/REMESH/data264b",easymesh,5);
    x.convertbtypes();
@@ -72,10 +71,10 @@ int main() {
    
 //   myblock.init(1, 1, 0, "../../grids/TIM/tim2",easymesh,5);
 
-//   myblock.init(1, 4, 1, "../../grids/KOVA/kova16",easymesh,5);
+//   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
 //   9  7.569496e-05  3.783905e-05  1.604564e-04
 
-   myblock.init(1,1,1,"../../grids/WAVE/wave3",easymesh,5);
+   myblock.init(1,2,0,"../../grids/WAVE/wave3",easymesh,5);
    myblock.tadvance();
    for(i=0;i<10;++i) {
       myblock.cycle(1);

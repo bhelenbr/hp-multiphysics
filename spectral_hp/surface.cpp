@@ -193,7 +193,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          }
       }
       for(i=0;i<sbdry[bnum].num+1;++i) {
-         for(n=0;n<ND;++n)		
+         for(n=0;n<ND;++n)
             srf->gbl->vres[i][n] += srf->vdres[log2p][i][n];
       }
       for(i=0;i<sbdry[bnum].num*b.sm;++i) {
@@ -835,12 +835,17 @@ void hp_mgrid::surfgetfres(int bnum) {
       indx = (-ttri[tind][snum] -(bnum+1)*maxsbel);      
       for(n=0;n<ND;++n) {
          srf->gbl->vres0[indx][n] += fmesh->coarse[v0].wt[(snum+1)%3]*srf->gbl->vres[i][n];
-         srf->gbl->vres[indx+1][n] += fmesh->coarse[v0].wt[(snum+2)%3]*srf->gbl->vres[i][n];
+         srf->gbl->vres0[indx+1][n] += fmesh->coarse[v0].wt[(snum+2)%3]*srf->gbl->vres[i][n];
       }
    }
 
 /*	CALCULATE VALUES OF SOLUTION ON COARSE MESH */
    finesrf = static_cast<class surface *>(fmesh->sbdry[bnum].misc);
+   
+   for(i=0;i<sbdry[bnum].num +1;++i)
+      for(n=0;n<ND;++n)
+         srf->vug[i][n] = 0.0;
+         
 /*	DO ENDPOINTS FIRST */
    for(n=0;n<ND;++n)
       srf->vug[0][n] = finesrf->vug[0][n];
@@ -869,6 +874,9 @@ void hp_mgrid::surfgetfres(int bnum) {
       for(n=0;n<ND;++n)
          srf->vug_frst[i][n] = srf->vug[i][n];
          
+/*	TEMPORARY */
+   surfugtovrt1();
+   
    return;
 }
 
@@ -887,21 +895,21 @@ void hp_mgrid::surfgetcchng(int bnum) {
    
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->sbdry[bnum].num+1;++i)
-      for(n=0;n<ND;++n) 
+      for(n=0;n<ND;++n)
          coarsesrf->vug_frst[i][n] -= coarsesrf->vug[i][n];
-         
+   
 /* LOOP THROUGH FINE VERTICES   */
 /* TO DETERMINE CHANGE IN SOLUTION */   
 /*	DO ENDPOINTS FIRST */
    for(n=0;n<ND;++n)
-      srf->gbl->vres[0][n] = coarsesrf->vug_frst[0][n];
+      srf->gbl->vres[0][n] = -coarsesrf->vug_frst[0][n];
 
    for(n=0;n<ND;++n)
-      srf->gbl->vres[sbdry[bnum].num][n] = coarsesrf->vug_frst[cmesh->sbdry[bnum].num][n];
+      srf->gbl->vres[sbdry[bnum].num][n] = -coarsesrf->vug_frst[cmesh->sbdry[bnum].num][n];
       
    for(i=1;i<sbdry[bnum].num;++i) {
       
-      for(n=0;n<NV;++n)
+      for(n=0;n<ND;++n)
          srf->gbl->vres[i][n] = 0.0;
          
       sind = sbdry[bnum].el[i];
@@ -921,6 +929,9 @@ void hp_mgrid::surfgetcchng(int bnum) {
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n) 
          srf->vug[i][n] += srf->gbl->vres[i][n];
+
+/*	TEMPORARY */
+   surfugtovrt1();
 
    return;
 }

@@ -7,26 +7,14 @@ class block {
       int lg2pmax;
       class hpbasis *hpbase;
       struct hp_mgrid_glbls gbl;
+      class hp_mgrid *grd;
+      friend class blocks;
       
    public:
-      class hp_mgrid *grd;
-      void meshinit(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
-      inline void setphysics(FLT rho, FLT mu, FLT sigma, FLT (*f)(int n, FLT x, FLT y)) {
-         gbl.rho = rho;
-         gbl.rhoi = 1.0/rho;
-         gbl.mu = mu;
-         gbl.nu = mu/rho;
-         gbl.sigma = sigma;
-         gbl.g = 1.0;
-         gbl.func = f;
-      }
-      inline void setiter(FLT fadd, FLT flowcfl[], FLT adis, int chrctr) {
-         gbl.fadd = fadd;
-         for (int i=0;i<MXLG2P;++i)
-            gbl.flowcfl[i] = flowcfl[i];
-         gbl.adis = adis;
-         gbl.charyes = chrctr;
-      }
+      void initialize(char *inputfile);
+      
+
+
       inline void setsurfphysics(int snum, FLT drho, FLT rhoav, FLT muav) {
          gbl.sgbl[snum].drho = drho;
          gbl.sgbl[snum].rhoav = rhoav;
