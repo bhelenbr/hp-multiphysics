@@ -2,14 +2,17 @@
 #include<cstring>
 #include<utilities.h>
 #include<stdio.h>
+#include<time.h>
 #include"pV3.h"
 
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
-#ifdef TWOLAYER
+#ifdef LAYER
 extern FLT amp,lam,theta;
+extern FLT mux[LAYER];
+extern FLT rhox[LAYER];
 #endif
 static int iter;
 
@@ -74,14 +77,19 @@ void blocks::init(char *file, int start_sim) {
    fscanf(fp,"%*[^\n]%d %d %d\n",&mglvls,&vwcycle,&ncycle);
    printf("#MGLEVELS\t\tVWCYCLE\t\t# OF CYCLES\n#%d\t\t%d\t\t%d\n",mglvls,vwcycle,ncycle);
 
+   /* READ IN ITERATION PARAMETERS */
+   fscanf(fp,"%*[^\n]%d %d\n",&nup,&ndown);
+   printf("#NSWEEPUP\t\tNSWEEPDN\n#%d\t\t%d\n",nup,ndown);
+
    /* READ IN INITIALIZATION PARAMETER */
    fscanf(fp,"%*[^\n]%d\n",&readin);
    printf("#READ FILE #\n#%d\n",readin);
 
-#ifdef TWOLAYER
+#ifdef LAYER
    /* READ IN AMPLITUDE / WAVELENGTH / THETA */
    fscanf(fp,"%*[^\n]%lf%lf%lf\n",&amp,&lam,&theta);
    printf("#AMP WAVELENGTH THETA #\n#%e\t%e\t%e\n",amp,lam,theta);
+   theta *= M_PI/180.0;
 #endif
 
    /* READ IN NUMBER OF BLOCKS */
@@ -115,6 +123,13 @@ void blocks::init(char *file, int start_sim) {
    /* MATCH BOUNDARIES FOR EACH MGRID LEVEL */
    for(i=0;i<mgrids;++i) 
       findmatch(i);
+   
+#ifdef LAYER
+   for(i=0;i<nblocks;++i) {
+      rhox[i] = blk[i].gbl.rho;
+      mux[i] = blk[i].gbl.mu;
+   }
+#endif
 
    /* INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin > 0) {
@@ -174,10 +189,13 @@ void blocks::init(char *file, int start_sim) {
    }
    else {
       for(i=0;i<nblocks;++i) {
-         blk[i].grd[0].curvinit();
-   //      blk[i].grd[0].smooth_cofa(2);   //TEMPORARY
-         blk[i].grd[0].tobasis(&f1);
+          blk[i].grd[0].curvinit();
+         // blk[i].grd[0].smooth_cofa(2);
+         blk[i].grd[0].tobasis(&f1); 
       }
+#ifdef DROP
+      blk[1].grd[0].tobasis(&f2); 
+#endif
       startup = 0;
    }
    
@@ -200,12 +218,14 @@ void blocks::init(char *file, int start_sim) {
                   blk[j].grd[i].r_mesh::mg_getfres();
          }
       }
-      
+#ifdef DEBUG
       for(i=0;i<nblocks;++i) {
          number_str(bname,"multigrid.",i,1);
          strcat(bname,".");
          blk[i].coarsenchk(bname);
       }
+      output(-1,text);
+#endif
    }
    
 #ifdef PV3
@@ -309,24 +329,25 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
       
       for(i=0;i<nblocks;++i) 
          blk[i].grd[grdnum].nstage2(stage);
+         
+      for(i=0;i<nblocks;++i) 
+         blk[i].grd[grdnum].surfugtovrt1();
+      
+      for (i=0;i<nblocks;++i)
+         blk[i].grd[grdnum].surfugtovrt2();
    }
    
-   
-   for(i=0;i<nblocks;++i) 
-      blk[i].grd[grdnum].surfugtovrt1();
-
-   for (i=0;i<nblocks;++i)
-      blk[i].grd[grdnum].surfugtovrt2();
-         
    return;
 }
 
 void blocks::cycle(int vw, int lvl) {
    int j,vcount;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
-#ifdef PV3
-   float pvtime = 0.0;
+#if (defined(TWO_LEVEL) || defined(SOLVECOARSE))
+   FLT mxr[NV], emax = 0.0, err;
+   int crscntr = 0;
 #endif
+
 
    /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */ 
    if (lvl <= lg2pmax) {
@@ -337,52 +358,74 @@ void blocks::cycle(int vw, int lvl) {
       grid = lvl -lg2pmax;
       bsnum =0;
    }
-                  
-   for (vcount=0;vcount<vw;++vcount) {
-   
-      nstage(grid,base[bsnum].sm,lvl);
 
-#if (defined(PV3) || defined(FINE_ERROR))
-      if (lvl == 0) {
-#ifdef FINE_ERROR
-         FLT mxr[NV];
-         int n;
-         
-         for(int i=0;i<nblocks;++i) {
-            blk[i].grd[grid].maxres(mxr);
-            for(n=0;n<NV;++n)
-               printf("%.3e  ",mxr[n]);
-         }
-#endif
-#ifdef PV3
-         pvtime = 1.0*iter;
-         pV_UPDATE(&pvtime);
-#endif
-      }
-#endif
+
+   for (vcount=0;vcount<vw;++vcount) {
+
+//      /* TEMPORARY TO TEST MULTIGRID */
+//      if (lvl != 0) {
+//         hp_mgrid::cfl[0] = 2.5;
+//         surface::cfl[bsnum][1] = 0.0;
+//      }
+//      else {
+//         hp_mgrid::cfl[0] = 2.5;
+//         surface::cfl[bsnum][1] = 2.5;
+//      }      
+
+//      char fname[100];
+//      static int count[3] = {0, 0, 0};
+//      number_str(fname,"iterate",lvl,1);
+//      strcat(fname,".");
+//      number_str(fname,fname,count[lvl]++,3);
+//      blk[0].grd[grid].output(fname,tecplot);
+
+      for (int i=ndown;i--;)
+         nstage(grid,base[bsnum].sm,lvl);
 
 #ifdef TWO_LEVEL
       if (lvl == 1) {
-         FLT mxr[NV], einit, emax = 0.0;
-         vw = 2;
          for(int i=0;i<nblocks;++i)
-            emax = blk[i].grd[grid].maxres(mxr);
+            err = blk[i].grd[grid].maxres(mxr);
          
-         if (vcount == 0) einit = emax;
-         else if (emax/einit > 1.0e-5 && emax > 1.0e-10) --vcount;
-         
+         emax = MAX(emax,err);
+         if (err/emax > 3.0e-5 && err > 1.0e-11) --vcount;
          printf("# second level %e %e\n",emax,einit);
       }
 #endif
 
-      if (lvl == mglvls-1) return;
+      if (lvl == mglvls-1) {
+#ifdef SOLVECOARSE
+         /* DO A GOOD JOB ON COARSEST MESH */
+         if (mglvls != 1) {
+
+            for(int i=0;i<nblocks;++i)
+               err = blk[i].grd[grid].maxres(mxr);
             
+            emax = MAX(emax,err);
+            --vcount;
+            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > 100) {
+               printf("# Coarsest grid iterations %d\n",crscntr);
+               vcount+=2;
+            }
+            ++crscntr;
+         }
+#endif
+         continue;
+      }
+
+        
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].rsdl(NSTAGE,lvl);
 
       if (bsnum == 0) {
          for(j=0;j<nblocks;++j)
             blk[j].grd[grid+1].getfres();
+            
+         for(j=0;j<nblocks;++j) 
+            blk[j].grd[grid+1].surfugtovrt1();
+         
+         for (j=0;j<nblocks;++j)
+            blk[j].grd[grid+1].surfugtovrt2();
       }
       else {
          for(j=0;j<nblocks;++j)
@@ -399,60 +442,139 @@ void blocks::cycle(int vw, int lvl) {
 
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].getcchng();
+      
+//      char fname[100];
+//      static int count[3] = {0, 0, 0};
+//      number_str(fname,"coarsechng",lvl,1);
+//      number_str(fname,fname,count[lvl]++,1);
+//      number_str(fname,fname,0,1);
+//      blk[0].grd[grid].output(blk[0].grd[grid].gbl->res,blk[0].grd[grid].vrtx,blk[0].grd[grid].binfo,fname,tecplot);
+
+         
+      for(j=0;j<nblocks;++j) 
+         blk[j].grd[grid].surfugtovrt1();
+      
+      for (j=0;j<nblocks;++j)
+         blk[j].grd[grid].surfugtovrt2();
    }
+   
+   for (int i=nup;i--;)
+      nstage(grid,base[bsnum].sm,lvl);
 
    return;
 }
 
-void blocks::endcycle() {
+FLT blocks::printerror() {
    int i,n;
-   FLT mxr[NV];
+   FLT mxr[NV], biggest = 0.0;
    
    /* CALCULATE MAX RESIDUAL ON FINEST MESH */
-   /* MOVE INTERFACE VERTICES */
    for(i=0;i<nblocks;++i) {
       blk[i].grd[0].maxres(mxr);
-      for(n=0;n<NV;++n)
+      for(n=0;n<NV;++n) {
          printf("%.3e  ",mxr[n]);
+         biggest = MAX(biggest,mxr[n]);
+      }
    }
       
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].surfmaxres();
+
+   return(biggest);
 }
 
 
 void blocks::go() {
-   int tstep;
+   int tstep,total = 0;
+   FLT error;
+#ifdef PV3
+   float pvtime = 0.0;
+#endif
+#ifdef PARAMETERLOOP
+   FILE *fout;
+   fout = fopen("dropdata.dat","r");
+   if (fout) {
+      fclose(fout);
+      fout = fopen("dropdata.dat","a");
+   }
+   else {
+      fout = fopen("dropdata.dat","w");
+      fprintf(fout,"VARIABLES=\"File\" \"Dens\" \"mu\" \"Re\" \"We\" \"Oh\" \"Cd\" \"E\" \"Scap\"\n");
+   }
+#endif
+
+#ifdef PARAMETERLOOP
+   for(tstep=1;tstep<readin;++tstep) {
+      FLT factor = pow(10.0,-0.1);
+      blk[1].sgbl[0].sigma *= factor;
+      blk[1].sgbl[0].mu2 *= sqrt(factor);
+      blk[0].gbl.mu *= sqrt(factor);
+      blk[1].gbl.mu *= sqrt(factor);
+      blk[0].gbl.nu *= sqrt(factor);
+      blk[1].gbl.nu *= sqrt(factor);
+   }
+#endif
    
    for(tstep=readin;tstep<ntstep;++tstep) {
       
       tadvance();
       
-      printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);
-      printf("ZONE\n");
-      
+      printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);      
       for(iter=0;iter<ncycle;++iter) {
          cycle(vwcycle);
-         printf("%d ",iter);
-#ifndef FINE_ERROR
-       	endcycle();
+         printf("%d %ld ",total++,clock());
+         error = printerror();
 #ifdef DEFORM
       	r_cycle(vwcycle);
-         r_maxres();
+         r_printerror();
 #endif
+#ifdef PV3
+         pvtime = 1.0*iter;
+         pV_UPDATE(&pvtime);
 #endif
          printf("\n");
+         // output(iter+100,tecplot);
       }
 
       blk[0].grd[0].drag(1028);
 
       if (!(tstep%out_intrvl)) {
-         output(tstep+1,tecplot); 
+         output(tstep+1,tecplot,0); 
          if (!(tstep%(rstrt_intrvl*out_intrvl))) {
-            output(tstep+1,text);
+            output(tstep+1,text,1);
          }
+         
+#ifdef PARAMETERLOOP
+         /* FIND MAXIMUM WIDTH */
+         FLT maxw;
+         int scap;
+         int ind;
+         scap = 0;
+         maxw = 0.0;
+         for(int temp = 0; temp < blk[1].grd[0].sbdry[0].num;++temp) {
+            ind = blk[1].grd[0].sbdry[0].el[temp];
+            ind = blk[1].grd[0].svrtx[ind][0];
+            maxw = MAX(maxw,blk[1].grd[0].vrtx[ind][0]);
+         }
+         if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;
+         fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
+         blk[1].gbl.rho,blk[1].gbl.mu/blk[0].gbl.mu,1./blk[0].gbl.mu,
+         1./blk[1].sgbl[0].sigma,blk[1].gbl.mu/sqrt(blk[1].gbl.rho*blk[1].sgbl[0].sigma),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/12.,
+         (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw),scap);
+         
+         FLT factor = pow(10.0,-0.1);
+         blk[1].sgbl[0].sigma *= factor;
+         blk[1].sgbl[0].mu2 *= sqrt(factor);
+         blk[0].gbl.mu *= sqrt(factor);
+         blk[1].gbl.mu *= sqrt(factor);
+         blk[0].gbl.nu *= sqrt(factor);
+         blk[1].gbl.nu *= sqrt(factor);
+         if (blk[0].gbl.mu < 0.005) {
+            printf("#REACHED LIMITS\n");
+            exit(1);
+         }
+#endif
       }
-
        
 #ifdef DEBUG
       int i,j;
@@ -564,72 +686,68 @@ void blocks::adaptation() {
    return;
 }
 
-void blocks::output(int number, FILETYPE type) {
+void blocks::output(int number, FILETYPE type, int verbose) {
    int i,j;
    char outname[30], bname[30];
 
-   switch(type) {
-      case(tecplot):
-         for(i=0;i<nblocks;++i) {
-            number_str(bname,"data",number,3);
-            strcat(bname, ".");
-            number_str(outname, bname, i, 1);
-      
-            /* OUTPUT SOLUTION */
-            blk[i].grd[0].output(outname,type);
-         }
-         break;
-         
-      default:
-         for(i=0;i<nblocks;++i) {
-            number_str(bname,"data",number,3);
-            strcat(bname, ".");
-            number_str(outname, bname, i, 1);
-      
-            /* OUTPUT SOLUTION */
-            blk[i].grd[0].output(outname,type);
-      
-            /* OUTPUT MESH */
-            number_str(bname,"mesh",number,3);
-            strcat(bname, ".");
-            number_str(outname, bname, i, 1);         
-            blk[i].grd[0].mesh::setbcinfo();
-            blk[i].grd[0].out_mesh(outname,grid);
-            blk[i].grd[0].spectral_hp::setbcinfo();
-            
-            if (adapt) {
-               number_str(bname,"vlgth",number,3);
-               strcat(bname, ".");
-               number_str(outname, bname, i, 1);
-               blk[i].grd[0].outlength(outname,type);      
-            }
-         
-            /* OUTPUT UNSTEADY TIME HISTORY */
-            /*	FIRST INDEX IS HISTORY NUMBER */
-            /* SECOND IS BLOCK NUMBER */
-            number_str(outname,"rstrtdata",number,3);
-            strcat(outname, ".");
-            for(j=0;j<MXSTEPM1;++j) {
-               number_str(bname,outname,j,1);
-               strcat(bname, ".");
-               number_str(bname, bname, i, 1);
-               blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,type);
-            }
-      
-            /* OUTPUT INTERPOLATED MESH TIME HISTORY */
-            number_str(outname,"rstrtvrtx",number,3);
-            strcat(outname, ".");
-            for(j=0;j<MXSTEPM1;++j) {
-               number_str(bname,outname,j,1);
-               strcat(bname, ".");
-               number_str(bname, bname, i, 1);
-               blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],bname,type);
-            }
-         }
-         break;
+   if (!verbose) {
+      for(i=0;i<nblocks;++i) {
+         number_str(bname,"data",number,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);
+   
+         /* OUTPUT SOLUTION */
+         blk[i].grd[0].output(outname,type);
+      }
    }
+   else {
+      for(i=0;i<nblocks;++i) {
+         number_str(bname,"data",number,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);
    
+         /* OUTPUT SOLUTION */
+         blk[i].grd[0].output(outname,type);
    
+         /* OUTPUT MESH */
+         number_str(bname,"mesh",number,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);         
+         blk[i].grd[0].mesh::setbcinfo();
+         blk[i].grd[0].out_mesh(outname,grid);
+         blk[i].grd[0].spectral_hp::setbcinfo();
+         
+         if (adapt) {
+            number_str(bname,"vlgth",number,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);
+            blk[i].grd[0].outlength(outname,type);      
+         }
+      
+         /* OUTPUT UNSTEADY TIME HISTORY */
+         /*	FIRST INDEX IS HISTORY NUMBER */
+         /* SECOND IS BLOCK NUMBER */
+         number_str(outname,"rstrtdata",number,3);
+         strcat(outname, ".");
+         for(j=0;j<MXSTEPM1;++j) {
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,type);
+         }
+   
+         /* OUTPUT INTERPOLATED MESH TIME HISTORY */
+         number_str(outname,"rstrtvrtx",number,3);
+         strcat(outname, ".");
+         for(j=0;j<MXSTEPM1;++j) {
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],bname,type);
+         }
+      }
+   }
+      
    return;
 }
 
