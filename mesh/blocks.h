@@ -10,6 +10,7 @@ class block {
       class r_mesh *grd;
       void init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void reconnect();
+      friend class blocks;
 };
 
 
@@ -49,6 +50,7 @@ class blocks {
             blk[i].grd[0].swap();
             blk[i].grd[0].density();
             blk[i].grd[0].yaber(1.0/tolerance);
+            blk[i].grd[0].treeupdate();
             blk[i].grd[0].rebay(tolerance);
             blk[i].reconnect();
          }

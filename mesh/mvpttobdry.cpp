@@ -12,7 +12,7 @@
 #include<math.h>
 
 /* CYLINDER OR WAVE */
-#define WAVE
+#define CYLINDER
 
 #ifdef CYLINDER
 #define R 0.5

@@ -191,8 +191,8 @@ class mesh {
       void density();
       void swap(FLT tolsize = 0.0);
       void yaber(FLT tolsize);
+      inline void treeupdate() { qtree.update(0,nvrtx);}
       void rebay(FLT tolsize);
-
       
 /*    CENTER OF AREA MESH SMOOTHING */
       int smooth_cofa(int niter);

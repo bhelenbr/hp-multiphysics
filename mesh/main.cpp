@@ -17,7 +17,7 @@
 #include<utilities.h>
 #include<time.h>
 
-#define WAVE
+#define CYLINDER
 
 FLT center;
 /* THIS NEEDS TO BE MODIFED DEPENDING ON DESIRED RESULT */
@@ -28,8 +28,8 @@ void mesh::density() {
 //   for(i=0;i<nvrtx;++i)
 //      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
 
-   for(i=0;i<nvrtx;++i)
-      vlngth[i] = 1./32.;
+//   for(i=0;i<nvrtx;++i)
+//      vlngth[i] = 1./32.;
 
       
    for(i=0;i<nside;++i)
@@ -133,9 +133,9 @@ int main(int argc, char *argv[]) {
 /*	THIS DEFORMS A MESH */
    class blocks z;
 
-//  z.init(1,3,"../../grids/TIM/tim",easymesh,100.0);
+  z.init(1,3,"../../grids/TIM/tim",easymesh,10.0);
 //  z.init(1,4,"/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5",easymesh,5.0);
-  z.init(1,3,"start",easymesh,10.0);
+//  z.init(1,3,"start",easymesh,10.0);
 
 #define NOT_ONE
 
@@ -150,12 +150,12 @@ int main(int argc, char *argv[]) {
    z.restructure(0.66);
 #else
 /* For Incremental Changes */
-   for(step = 1; step<=15;++step) {
+   for(step = 1; step<=2;++step) {
       z.ksrc();
       z.perturb(step);
       for(i=0;i<100;++i)
          z.cycle(2);
-//      z.restructure(0.66);
+      z.restructure(0.66);
 //      number_str(name, "test", step, 2);
 //      z.out_mesh(name);
    }

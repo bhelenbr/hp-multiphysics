@@ -137,7 +137,7 @@ void mesh::treeinit() {
    
    for(i=0;i<nvrtx;++i) 
       qtree.addpt(i);
-   
+
    return;
 }
 
