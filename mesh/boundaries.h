@@ -472,7 +472,7 @@ template<class BASE> class comm_bdry : public BASE {
 
 class vcomm : public comm_bdry<vrtx_bdry> {
    public:
-      vcomm(int inid, mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {}
+      vcomm(int inid, mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {mytype="comm";}
       vcomm* create(mesh& xin) const {return new vcomm(idnum,xin);}
 
       /* GENERIC VERTEX COMMUNICATIONS */
@@ -483,7 +483,7 @@ class vcomm : public comm_bdry<vrtx_bdry> {
 class scomm : public comm_bdry<class side_bdry> {
    public:            
       /* CONSTRUCTOR */
-      scomm(int inid, mesh& xin) : comm_bdry<side_bdry>(inid,xin) {}
+      scomm(int inid, mesh& xin) : comm_bdry<side_bdry>(inid,xin) {mytype="comm";}
       scomm* create(mesh& xin) const {return new scomm(idnum,xin);}
       
       /* GENERIC COMMUNICATIONS */
@@ -494,7 +494,7 @@ class scomm : public comm_bdry<class side_bdry> {
 class spartition : public scomm {
    public:
       /* CONSTRUCTOR */
-      spartition(int inid, mesh& xin) : scomm(inid,xin) {grouping = 1;}
+      spartition(int inid, mesh& xin) : scomm(inid,xin) {grouping = 1;mytype="partition";}
       spartition* create(mesh& xin) const {return new spartition(idnum,xin);}
       block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
 };
@@ -506,7 +506,7 @@ template<class BASE> class prdc_template : public BASE {
       int dir;
    public:      
       /* CONSTRUCTOR */
-      prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {}
+      prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {mytype="prdc";}
       prdc_template<BASE>* create(mesh& xin) const {
          prdc_template<BASE> *temp = new prdc_template<BASE>(idnum,xin);
          temp->setdir()=dir;
@@ -549,7 +549,7 @@ class curved_analytic : public side_bdry {
 
    public:      
       /* CONSTRUCTOR */
-      curved_analytic(int idin, mesh &xin) : side_bdry(idin,xin) {}
+      curved_analytic(int idin, mesh &xin) : side_bdry(idin,xin) {mytype="curved_analytic";}
       curved_analytic* create(mesh& xin) const {return new curved_analytic(idnum,xin);}
 
       void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
@@ -569,7 +569,7 @@ class sinewave : public curved_analytic {
          return(1.0);
       }
    public:
-      sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {}
+      sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {mytype="sinewave";}
       sinewave* create(mesh& xin) const {return new sinewave(idnum,xin);}
 
       void output(std::ostream& fout) {         
@@ -620,7 +620,7 @@ class circle : public curved_analytic {
          return(-2.*(pt[dir]-center[dir]));
       }
       
-      circle(int inid, mesh &xin) : curved_analytic(inid,xin), radius(0.5) {center[0] = 0.0; center[1] = 0.0;}
+      circle(int inid, mesh &xin) : curved_analytic(inid,xin), radius(0.5) {center[0] = 0.0; center[1] = 0.0; mytype="circle";}
       circle* create(mesh& xin) const {return new circle(idnum,xin);}
 
       void output(std::ostream& fout) {

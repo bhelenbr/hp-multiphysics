@@ -27,7 +27,12 @@ int mesh::insert(FLT x[ND]) {
 
    /* FIND TRIANGLE CONTAINING POINT */      
    tind = findtri(x,vnear);
-   assert(tind > -1);  
+   if (tind < 0) {
+      std::cerr << "couldn't find triangle for point: " << x[0] << ' ' << x[1] << " vnear: " << vnear << std::endl;
+      std::cerr << "maxsrch: " << maxsrch << "vtri: " << vd[vnear].tri << std::endl;
+      output("error",ftype::grid);
+      exit(1);
+   }    
    if (nvrtx >= maxvst) {
       *log << "need to use larger growth factor: too many vertices" << std::endl;
       exit(1);
@@ -459,6 +464,8 @@ void mesh::bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int 
 int mesh::findtri(FLT x[ND], int vnear) const {
    int i,j,vn,dir,stoptri,tin,tind;
    int ntdel, tdel[maxlst];
+   int tclose,nsurround;
+   FLT minclosest,closest;
    
    /* HERE WE USE i1wk THIS MUST BE -1 BEFORE USING */
    tind = vd[vnear].tri;
@@ -466,9 +473,13 @@ int mesh::findtri(FLT x[ND], int vnear) const {
    dir = 1;
    ntdel = 0;
    do {
+      if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
+      i1wk[tind] = 0;
+      tdel[ntdel++] = tind;
+      assert(ntdel < maxlst -1);
+   
       for(vn=0;vn<3;++vn) 
          if (td[tind].vrtx[vn] == vnear) break;
-      
       assert(vn != 3);
       
       tind = td[tind].tri[(vn +dir)%3];
@@ -477,17 +488,17 @@ int mesh::findtri(FLT x[ND], int vnear) const {
          /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
          tind = vd[vnear].tri;
+         for(vn=0;vn<3;++vn) 
+            if (td[tind].vrtx[vn] == vnear) break;
+         assert(vn != 3);
+         tind = td[tind].tri[(vn +dir)%3];
+         if (tind < 0) break;
          stoptri = -1;
       }
-      
-      i1wk[tind] = 0;
-      tdel[ntdel++] = tind;
-      assert(ntdel < maxlst -1);
-
-      if (intri(tind,x) < EPSILON) goto FOUND;
-         
    } while(tind != stoptri); 
    
+   nsurround = ntdel;
+      
    /* DIDN'T FIND TRIANGLE */
    /* NEED TO SEARCH SURROUNDING TRIANGLES */
    for(i=0;i<ntdel;++i) {
@@ -498,14 +509,25 @@ int mesh::findtri(FLT x[ND], int vnear) const {
          if (i1wk[tind] == 0) continue;
          i1wk[tind] = 0;
          tdel[ntdel++] = tind;         
-         if (intri(tind,x) < EPSILON) goto FOUND;
+         if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
       }
       if (ntdel >= maxsrch-4) break;
    }
-   tind = -1;
    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
+   tind = tdel[0];
+   minclosest = intri(tind,x)/area(tind);
+   tclose = tind;
+   for (i=1;i<nsurround;++i) {
+      tind = tdel[i];
+      if ((closest = intri(tind,x)/area(tind)) < minclosest) {
+         minclosest = closest;
+         tclose = tind;
+      }
+   }
+   intri(tclose,x);
+   tind = -tclose;
+      
 FOUND:
-
    /* RESET INTWKW1 TO -1 */
    for(i=0;i<ntdel;++i)
       i1wk[tdel[i]] = -1;

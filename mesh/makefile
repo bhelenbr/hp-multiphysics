@@ -1,21 +1,49 @@
-OBJ = blocks.o connect.o insert.o output.o r_mesh.o tprims.o \
-copy.o setup.o triangulate.o \
-coarsen.o findmatch.o rebay.o swap.o yaber.o \
-collapse.o input.o refineby2.o tprims3d.o generate.o
+OBJ = coarsen.o copy.o getnewblock.o insert.o out_mesh.o r_mesh.o \
+tprims.o collapse.o findmatch.o getnewr_bdry.o rebay.o setup.o\
+triangulate.o boundary.o connect.o getnewbdry.o in_mesh.o meshutilities.o \
+refineby2.o swap.o yaber.o
 
-MAINOBJ = main.o locals.o dummy.o 
+MAINOBJ = blocks.o main.o 
 
-CXX = g++3
+LIB = -L$(HOME)/Codes/lib -lutil -lquad -lparseargs -linput_map -lm
+CPPFLAGS = -I$(HOME)/Codes/include/
 
-CPPFLAGS = -DCAPRI -DUNDERSCORE $(CAPRIOPTS) -DBO_DEC -DLIN -DLININTEL -I/Users/helenbrk/Codes/include/ -I/usr/local/OCCapri/include
-LIBPATH = -L/home/helenbrk/Codes/lib -L$(CASROOT)/Linux/lib -L/usr/local/OCCapri/lib
-LIBS = -lquad -lutil -linput_map -lcapri -lFWOSPlugin -lPTKernel -lTKBool -lTKCAF -lTKCDF -lTKernel -lTKFeat -lTKGeomAlgo -lTKMath -lTKOffset -lTKPCAF -lTKPrim -lTKPShape -lTKService -lTKTopAlgo -lTKBRep -lTKG2d -lTKG3d -lTKGeomBase -lTKShHealing
+### Begin machine dependent
 
-mesh: $(OBJ) $(MAINOBJ) block.h  blocks.h  boundary.h  mboundary.h  mesh.h  rblock.h  rboundary.h  r_mesh.h  sblock.h
-	${CXX} ${CPPFLAGS} -o $@ $(OBJ) $(MAINOBJ) $(LIBPATH) $(LIBS) 
+## Darwin:
+## Machine specific for Darwin
+#AR = libtool
+#ARFLAGS = -o
+#CPPFLAGS += -O3
 
-libmesh.a: $(MESHOBJ)
-	libtool --mode=link ${CC} -o $@ $(MESHOBJ)
-	mv -f libmesh.a /home/helenbrk/Codes/lib/
-	cp -f *.h /home/helenbrk/Codes/include/
+## Linux:
+##  Machine specific for Linux
+#CXX=icpc #(cares)
+CXX=g++3 #(shelob)
+CPPFLAGS += -O3
+
+## IRIX64:
+#CPPFLAGS += -Ofast=IP30  #(sauter)
+#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
+#CPPFLAGS += -Ofast=IPrk5 #(origin)
+
+## Aix:
+## Machine specific for Jupiter
+#CPPFLAGS += -O3
+
+### End machine dependent
+
+all: libmesh.a mblock
+
+libmesh.a: $(OBJ)
+	$(AR) $(ARFLAGS) $@ $(OBJ)
+	mv -f libmesh.a $(HOME)/Codes/lib/
+	cp -f mesh.h $(HOME)/Codes/include/
+	cp -f r_mesh.h $(HOME)/Codes/include/
+	
+mblock: $(OBJ) $(MAINOBJ)
+	${CXX} -o $@ $(MAINOBJ) $(OBJ) $(LIB)
+
+$(OBJ): mesh.h r_mesh.h
+
 

@@ -4,6 +4,7 @@
 #include <parseargs.h>
 #include "mesh.h"
 #include "math.h"
+#include <input_map.h>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
    else if (argc == 3) {
       outfile = argv[2];
    }
-   else if (!ok || argc < 2 || argc > 3 || printHelp) {
+   else if (!ok || argc < 1 || argc > 3 || printHelp) {
       fprintf(stderr, "mesh utility ");
       printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
       exit(1);
@@ -120,20 +121,25 @@ int main(int argc, char *argv[]) {
    }
    
    if (Partition) {
+#ifdef METIS
       int p;
       char outappend[100];
       printf("input # of partitions\n");
-      // scanf("%d",&p);
-      p = 4;
+      scanf("%d",&p);
       zx.input(argv[1],in);
       zx.setpartition(p);
       mesh zpart[p];
       
+      strcat(outfile,".");
+
       for(int i=0;i<p;++i) {
          number_str(outappend,outfile,i,1);
          zpart[i].partition(zx,i);
          zpart[i].output(outappend,out);
       }
+#else
+      printf("Need metis package to partition\n");
+#endif
       return(0);
    }
 
@@ -193,6 +199,7 @@ int main(int argc, char *argv[]) {
       input["b1.filetype"] = "0";
       input["b1.growth factor"] = "4.0";
       input["b1.bdryfile"] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot.bdry.inpt";
+      output_map(input,std::cout);
       z.init(input);
    }
 

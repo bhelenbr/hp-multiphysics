@@ -32,8 +32,9 @@
 /* GENERIC INTERFACE FOR A B.C. */
 class boundary {
    public:
-      std::string idprefix; 
       int idnum;
+      std::string idprefix; 
+      std::string mytype;
 
       boundary(int idin) : idnum(idin) {
          char buffer[100];
@@ -45,7 +46,7 @@ class boundary {
       virtual void alloc(int n) {}
       virtual void copy(const boundary& bin) {}
       virtual void output(std::ostream& fout) {
-         fout << idprefix << ".type: " << typeid(*this).name() << std::endl;         
+         fout << idprefix << ".type: " << mytype << std::endl;         
       }
       virtual void input(std::map<std::string,std::string>& bdrydata) {}
       virtual void setupcoordinates() {}
@@ -89,12 +90,13 @@ class boundary {
 
 /* SPECIALIZATION FOR A VERTEX */
 class vrtx_bdry : public boundary {
+   
    public:
       mesh &x;
       int v0;
       
       /* CONSTRUCTOR */
-      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = "v" +idprefix;}
+      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = "v" +idprefix; mytype="plain";}
       
       /* OTHER USEFUL STUFF */
       vrtx_bdry* create(mesh &xin) const { return(new vrtx_bdry(idnum,xin));}
@@ -120,7 +122,7 @@ class side_bdry : public boundary {
       int *el;
       
       /* CONSTRUCTOR */
-      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix;}
+      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix; mytype="plain";}
       
       /* BASIC B.C. STUFF */
       void alloc(int n);
@@ -132,7 +134,7 @@ class side_bdry : public boundary {
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
       virtual block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
-      // virtual void findbdrypt(const boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout);
+      virtual void findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const;
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
@@ -143,12 +145,26 @@ class side_bdry : public boundary {
 
 class vtype {
    public:
+      static const int ntypes = 3;
       enum ids {plain=1,comm,prdc};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
 };
 
 class stype {
    public:
+      static const int ntypes = 7;
       enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition};
+      static const char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i)
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
 };
 
 #endif

@@ -72,146 +72,95 @@ void side_bdry::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
    return;
 }
 
+void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
+   int k,sind,v0,v1,sidlocprev;
+   FLT dx,dy,ol,psi,normdist;
+   FLT psiprev,normdistprev;
+   FLT mindist = 1.0e32;
+      
+   if (x.sd[el[0]].vrtx[0] == x.sd[el[nel-1]].vrtx[1]) {
+      /* BOUNDARY IS A LOOP */
+      sind = el[nel-1];
+      v0 = x.sd[sind].vrtx[0];
+      v1 = x.sd[sind].vrtx[1];
+      dx = x.vrtx[v1][0] - x.vrtx[v0][0];
+      dy = x.vrtx[v1][1] - x.vrtx[v0][1];
+      ol = 2./(dx*dx +dy*dy);
+      psi = ol*((xpt[0] -x.vrtx[v0][0])*dx +(xpt[1] -x.vrtx[v0][1])*dy) -1.;
+      normdist = dx*(xpt[1]-x.vrtx[v0][1])-dy*(xpt[0]-x.vrtx[v1][0]);
+      normdist *= sqrt(ol/2.);
+      psiprev = psi;
+      normdistprev = normdist;
+      sidlocprev = nel-1;
+   } 
+   else {
+      psiprev = -1.0;
+   }
+   
+   for(k=0;k<nel;++k) {
+      sind = el[k];
+      v0 = x.sd[sind].vrtx[0];
+      v1 = x.sd[sind].vrtx[1];
+      dx = x.vrtx[v1][0] - x.vrtx[v0][0];
+      dy = x.vrtx[v1][1] - x.vrtx[v0][1];
+      ol = 2./(dx*dx +dy*dy);
+      psi = ol*((xpt[0] -x.vrtx[v0][0])*dx +(xpt[1] -x.vrtx[v0][1])*dy) -1.;
+      normdist = dx*(xpt[1]-x.vrtx[v0][1])-dy*(xpt[0]-x.vrtx[v1][0]);
+      normdist *= sqrt(ol/2.);
+      
+      if (psi <= -1.0 && psiprev >= 1.0) {
+         /* PREVIOUS & THIS SIDE ARE POTENTIAL MATCHES */
+         if (fabs(normdist) < mindist) {
+            mindist = fabs(normdist);
+            sidloc = k;
+            psiloc = -1.0;
+         }
+         if (fabs(normdistprev) < mindist) {
+            mindist = fabs(normdistprev);
+            sidloc = sidlocprev;
+            psiloc = 1.0;
+         }
+      }
+      else if (psi >= -1.0 && psi <= 1.0) {
+         /* POTENTIAL SIDE */
+         if (fabs(normdist) < mindist) {
+            mindist = fabs(normdist);
+            sidloc = k;
+            psiloc = psi;
+         }
+      }
+      psiprev = psi;
+      normdistprev = normdist;
+      sidlocprev = k;
+   }
+   
+   return;
+}
+
+
+
 block::ctrl side_bdry::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
-   int i,k,sind,tind,v0,neg_count,j,triloc,sidloc;
-   FLT xp[2],dx,dy,wgt[3],ainv,a,b,c,minneg;
+   int j,k,sind,tind,v0,sidloc;
+   FLT psiloc;
    
    if (excpt != 0) return(block::stop);
    
-   /* BOUNDARY IS A PHYSICAL BOUNDARY (ALIGNED CURVES) */
-   for(k=0;k<nel;++k) {
+   for(k=1;k<nel;++k) {
       v0 = x.sd[el[k]].vrtx[0];
-      xp[0] = x.vrtx[v0][0];
-      xp[1] = x.vrtx[v0][1];
-      minneg = -1.0E32;
-      
-      /* LOOP THROUGH TARGET SIDES TO FIND TRIANGLE */
-      for(i=0;i<tgt.sbdry[bnum]->nel;++i) {
-         sind = tgt.sbdry[bnum]->el[i];
-         tind = tgt.sd[sind].tri[0];
-         if (tind < 0) {
-            *x.log << "boundary side in wrong direction" << sind << tind << std::endl;
-            exit(1);
-         }
-         neg_count = 0;
-         for(j=0;j<3;++j) {
-            wgt[j] = 
-            ((tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][0]
-               -tgt.vrtx[tgt.td[tind].vrtx[j]][0])*
-            (xp[1]-tgt.vrtx[tgt.td[tind].vrtx[j]][1])-
-            (tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][1]
-            -tgt.vrtx[tgt.td[tind].vrtx[j]][1])*
-            (xp[0]-tgt.vrtx[tgt.td[tind].vrtx[j]][0]));
-            if (wgt[j] < 0.0) ++neg_count;
-         }
-         if (neg_count==0) {
-            sidloc = sind;
-            break;
-         }
-         else {
-            if(neg_count == 1) {
-               for(j=0;j<3;++j) {
-                  if (wgt[j] < 0 && wgt[j] > minneg) {
-                     minneg = wgt[j];
-                     sidloc = sind;
-                     triloc = tind;
-                  }
-               }
-            }
-         }
-      }
-      sind = sidloc;   
-
-      /* PROJECT LOCATION NORMAL TO CURVED FACE */
-      dx = xp[0]-tgt.vrtx[tgt.sd[sind].vrtx[0]][0];
-      dy = xp[1]-tgt.vrtx[tgt.sd[sind].vrtx[0]][1];
-      a = sqrt(dx*dx+dy*dy);
-      dx = xp[0]-tgt.vrtx[tgt.sd[sind].vrtx[1]][0];
-      dy = xp[1]-tgt.vrtx[tgt.sd[sind].vrtx[1]][1];
-      b = sqrt(dx*dx+dy*dy);
-      dx = tgt.vrtx[tgt.sd[sind].vrtx[0]][0]
-         -tgt.vrtx[tgt.sd[sind].vrtx[1]][0];
-      dy = tgt.vrtx[tgt.sd[sind].vrtx[0]][1]
-         -tgt.vrtx[tgt.sd[sind].vrtx[1]][1];
-      c = sqrt(dx*dx+dy*dy);
-      a = (b*b+c*c-a*a)/(2.*c*c);
-      xp[0] = tgt.vrtx[tgt.sd[sind].vrtx[1]][0] +dx*a;
-      xp[1] = tgt.vrtx[tgt.sd[sind].vrtx[1]][1] +dy*a;
+      tgt.sbdry[bnum]->findbdryside(x.vrtx[v0], sidloc, psiloc);
+      sind = tgt.sbdry[bnum]->el[sidloc];
       tind = tgt.sd[sind].tri[0];                     
-      for(j=0;j<3;++j) {
-         wgt[j] = 
-         ((tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][0]
-         -tgt.vrtx[tgt.td[tind].vrtx[j]][0])*
-         (xp[1]-tgt.vrtx[tgt.td[tind].vrtx[j]][1])-
-         (tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][1]
-         -tgt.vrtx[tgt.td[tind].vrtx[j]][1])*
-         (xp[0]-tgt.vrtx[tgt.td[tind].vrtx[j]][0]));
-      }
       cnnct[v0].tri = tind;
-      ainv = 1.0/(tgt.area(tind));
-      for (j=0;j<3;++j) {
-         cnnct[v0].wt[(j+2)%3] = wgt[j]*ainv;
-         if (wgt[j]*ainv > 1.0) 
-            cnnct[v0].wt[(j+2)%3] = 1.0; 
-            
-         if (wgt[j]*ainv < 0.0)
-            cnnct[v0].wt[(j+2)%3] = 0.0;
-      }
-   }
- 
+      for (j=0;j<3;++j) 
+         if (tgt.td[tind].side[j] == sind) break;
+      assert(j < 3);
+      cnnct[v0].wt[j] = 0.0;
+      cnnct[v0].wt[(j+1)%3] = 0.5*(1.-psiloc);
+      cnnct[v0].wt[(j+2)%3] = 0.5*(1.+psiloc);
+   } 
+   
    return(block::stop);
 }
-
-
-#ifdef SKIP
-void side_bdry::setupcoordinates() {
-   int i,n;
-   FLT length,x1[mesh::DIM],x0[mesh::DIM];
-   
-   for(n=0;n<mesh::DIM;++n)
-      x0[n] = x.vrtx[x.sd[el[0]].vrtx[0]][n];
-   
-   s[0] = 0.0;
-   for(i=0;i<nel;++i) {
-      length = 0.0;
-      for(n=0;n<mesh::DIM;++n) {
-         x1[n] = x.vrtx[x.sd[el[i]].vrtx[1]][n];
-         length += pow(x1[n]-x0[n],2);
-         x0[n] = x1[n];
-      }
-      s[i+1] = s[0] +sqrt(length);
-   }
-   
-   return;
-}
-#endif
-
-
-#ifdef SKIP
-void side_bdry::findbdrypt(const boundary *bin,int ntgt,FLT psitgt,int *nout, FLT *psiout) {
-   int top,bot;
-   FLT s0;
-
-   const side_bdry *tgt = dynamic_cast<const side_bdry*>(bin);
-   s0 = psitgt*tgt->s[ntgt+1] +(1.-psitgt)*tgt->s[ntgt];
-   
-   /* SEARCH BOUNDARY */
-   bot = 0;
-   top = nel-1;
-   do {
-      *nout = (top +bot)/2;
-      *psiout = (s0-s[*nout])/(s[*nout +1] -s[*nout]);
-      if (*psiout > 1.0 +10.*EPSILON)
-         bot = *nout+1;
-      else if (*psiout < 0.0 -10.*EPSILON)
-         top = *nout-1;
-      else
-         break;
-   } while (top >= bot);
-   
-   return;
-}
-#endif
 
 /* SWAP ELEMENTS IN LIST */
 void side_bdry::swap(int s1, int s2) {

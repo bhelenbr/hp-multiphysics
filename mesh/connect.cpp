@@ -17,7 +17,7 @@ block::ctrl mesh::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& 
          /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
          for(i=0;i<nvrtx;++i) {
             tgt.qtree.nearpt(vrtx[i],v0);
-            cnnct[i].tri = tgt.findtri(vrtx[i],v0);
+            cnnct[i].tri = abs(tgt.findtri(vrtx[i],v0));
             tgt.getwgts(cnnct[i].wt);
          }
       default:

@@ -23,7 +23,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
    }
    else {
       strcpy(grd_app,filename);
-      strcat(grd_app,".bdry.inpt");
+      strcat(grd_app,"_bdry.inpt");
       grd = fopen(grd_app,"r");
       if (grd) {
          fclose(grd);

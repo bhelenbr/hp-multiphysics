@@ -10,6 +10,9 @@
 #include "mesh.h"
 #include "boundaries.h"
 
+const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
+const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition"};
+
 vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata) {
    std::string keyword;
    std::istringstream data;
@@ -25,9 +28,11 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
       keyword = std::string(idntystring) + ".type";
       mi = (*bdrydata).find(keyword);
       if (mi != (*bdrydata).end()) {
-         data.str((*bdrydata)[keyword]);
-         data >> type;  
-         data.clear(); 
+         type = vtype::getid((*mi).second.c_str());
+         if (type < 0)  {
+            *log << "unknown vertex type:" << (*mi).second << std::endl;
+            exit(1);
+         }
       }
    }
    
@@ -72,13 +77,16 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
       keyword = std::string(idntystring) + ".type";
       mi = (*bdrydata).find(keyword);
       if (mi != (*bdrydata).end()) {
-         data.str((*bdrydata)[keyword]);
-         data >> type;  
-         data.clear(); 
+         type = stype::getid((*mi).second.c_str());
+         if (type < 0)  {
+            *log << "unknown side type:" << (*mi).second << std::endl;
+            exit(1);
+         }
       }
       else {
          *log << "couldn't find type for side: " << idnum << std::endl;
-         *log << "using type: " << type << std::endl;
+         *log << "using type: plain" << std::endl;
+         type = stype::plain;
       }
    }
    *log << "making side " << idnum << std::endl;
@@ -114,7 +122,7 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
       }
       default: {
          temp = new side_bdry(idnum,*this);
-         std::cout << "unrecognizable side type: " << idnum << std::endl;
+         std::cout << "unrecognizable side type: " << idnum << "type " << type << std::endl;
          break;
       }
    }

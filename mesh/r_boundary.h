@@ -10,26 +10,28 @@
 
 class r_side_bdry {
    protected:
+      std::string mytype;
       r_mesh &x;
       side_bdry &base;
 
    public:
-      r_side_bdry(r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {}
+      r_side_bdry(r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
       /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
       virtual void output(std::ostream& fout) {
-         fout << base.idprefix << ".r_type: " << typeid(*this).name() << std::endl;         
+         fout << base.idprefix << ".r_type: " << mytype << std::endl;         
       }
       virtual void input(std::map<std::string,std::string>& bdrydata) {}
       virtual void tadvance() {}
       virtual void dirichlet() {}
       virtual void fixdx2() {}
+      virtual ~r_side_bdry() {}
 };
 
 class r_fixed : public r_side_bdry {
    public:
       int dstart, dstop;
       
-      r_fixed(r_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {} 
+      r_fixed(r_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";} 
          
       void input(std::map <std::string,std::string>& inmap) {
          r_side_bdry::input(inmap);
@@ -61,7 +63,7 @@ class r_fixed4 : public r_fixed {
       int d2start, d2stop;
 
       r_fixed4(r_mesh &xin, side_bdry &bin, int dstr, int dstp, int d2str, int d2stp)
-         : r_fixed(xin,bin), d2start(d2str), d2stop(d2stp) {} 
+         : r_fixed(xin,bin), d2start(d2str), d2stop(d2stp) {mytype="fixed4";} 
       
       void fixdx2() {
          for(int j=0;j<base.nel;++j) {
@@ -82,6 +84,7 @@ class r_translating : public r_fixed {
       r_translating(r_mesh &xin, side_bdry &bin): r_fixed(xin,bin) { 
          for(int n=0;n<mesh::DIM;++n)
             dx[n] = 0.0;
+         mytype = "translating";
       }
       void input(std::map <std::string,std::string>& inmap) {
          r_fixed::input(inmap);
@@ -111,7 +114,7 @@ class r_oscillating : public r_fixed {
       FLT time;
       
       r_oscillating(r_mesh &xin, side_bdry &bin) : 
-         r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0), time(0.0) {}
+         r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0), time(0.0) {mytype="oscillating";}
          
       void input(std::map <std::string,std::string>& inmap) {
          r_fixed::input(inmap);
@@ -154,12 +157,17 @@ class r_oscillating : public r_fixed {
       }
 };
 
-
 class r_stype {
    public:
-      enum {plain=1, fixed, translating, oscillating};
+      static const int ntypes = 4;
+      enum ids {plain=1, fixed, translating, oscillating};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
 };
-
 
 
 

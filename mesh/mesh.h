@@ -1,6 +1,7 @@
 #ifndef _mesh_h_
 #define _mesh_h_
 
+#include <math.h>
 #include <quadtree.h>
 #include <ftype.h>
 #include <iostream>
