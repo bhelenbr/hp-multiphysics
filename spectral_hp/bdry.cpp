@@ -590,8 +590,8 @@ void hp_mgrid::bdry_srcvandzero(int mode) {
 
 
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]) {
-    FLT ul,vl,ur,vr,pl,pr,rhoi;
-    FLT um,c,den,lam0,lam1,lam2,v[3],mag;
+   FLT ul,vl,ur,vr,pl,pr,cl,cr,rhoi;
+   FLT u,um,v,c,den,lam0,lam1,lam2,uvp[3],mag;
    
    rhoi = 1./rho;
 
@@ -612,29 +612,30 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
       
    um = mv[0]*norm[0] +mv[1]*norm[1];
    
-   c = sqrt((ul-.5*um)*(ul-.5*um) +gam);
+   cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
+   cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
+   c = 0.5*(cl+cr);
+   u = 0.5*(ul+ur);
+   v = 0.5*(vl+vr);
    
    den = 1./(2*c);
-   
-   lam0 = ul-um;
-   lam1 = ul-.5*um +c; /* always positive */
-   lam2 = ul-.5*um -c; /* always negative */
+   lam0 = u -um;
+   lam1 = u-.5*um +c; /* always positive */
+   lam2 = u-.5*um -c; /* always negative */
    
    /* PERFORM CHARACTERISTIC SWAP */
    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
-   v[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-
+   uvp[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
    if (lam0 > 0.0)
-      v[1] = vl*((pl-pr)*rhoi +lam2*(ul-ur))*den/(ul-lam1) +vl;
+      uvp[1] = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
    else
-      v[1] = vl*((pl-pr)*rhoi +lam1*(ul-ur))*den/(ul-lam2) +vr;
-
-   v[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+      uvp[1] = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
+   uvp[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
 
    /* CHANGE BACK TO X,Y COORDINATES */
-   wl[0] =  v[0]*norm[0] -v[1]*norm[1];
-   wl[1] =  v[0]*norm[1] +v[1]*norm[0];
-   wl[2] =  v[2];
+   wl[0] =  uvp[0]*norm[0] -uvp[1]*norm[1];
+   wl[1] =  uvp[0]*norm[1] +uvp[1]*norm[0];
+   wl[2] =  uvp[2];
 
    /* SHOULDN'T CHANGE NORM */   
    norm[0] *= mag;
