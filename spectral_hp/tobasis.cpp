@@ -32,9 +32,9 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
             b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
       }
       else {
-         crdtouht1d(sind);
+         crdtocht1d(sind);
          for(n=0;n<ND;++n)
-            b.proj1d(uht[n],crd[n][0]);
+            b.proj1d(cht[n],crd[n][0]);
       }
       
       for(n=0;n<NV;++n)
@@ -67,9 +67,9 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
             b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
       }
       else {
-         crdtouht(tind);
+         crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(uht[n],crd[n]);
+            b.proj_bdry(cht[n],crd[n]);
       }
          
       for(n=0;n<NV;++n)
@@ -87,4 +87,5 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
    }
    
    return;
-}
+}   
+

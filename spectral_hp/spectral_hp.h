@@ -43,7 +43,8 @@ class spectral_hp : public r_mesh  {
       /* STATIC WORK ARRAYS */
       static FLT **u[NV],**du[NV][ND],**res[NV];
       static FLT **crd[ND], **dcrd[ND][ND], **cjcb;
-      static FLT *uht[NV], *lf[NV], *lf1[NV];
+      static FLT *uht[NV], *lf[NV];
+      static FLT *cht[ND], *cf[ND];
       static int pmax;
       
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -53,10 +54,10 @@ class spectral_hp : public r_mesh  {
       void ugtouht_bdry(int tind, struct vsi ug);
       void ugtouht1d(int sind);
       void ugtouht1d(int sind, struct vsi ug);
-      void crdtouht(int tind);
-      void crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo);
-      void crdtouht1d(int sind);
-      void crdtouht1d(int sind, FLT (*vrtx)[ND], struct bistruct **binfo);
+      void crdtocht(int tind);
+      void crdtocht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo);
+      void crdtocht1d(int sind);
+      void crdtocht1d(int sind, FLT (*vrtx)[ND], struct bistruct **binfo);
 
       /* THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
       void lftog(int tind, struct vsi);

@@ -41,13 +41,13 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    for(tind = 0; tind<ntri;++tind) {
    
       if (tinfo[tind] > -5) {
-         crdtouht(tind);
+         crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(uht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
             
-         crdtouht(tind,dvrtdt,gbl->dbinfodt);
+         crdtocht(tind,dvrtdt,gbl->dbinfodt);
          for(n=0;n<ND;++n)
-            b.proj_bdry(uht[n],u[n]);
+            b.proj_bdry(cht[n],u[n]);
       }
       else {
          for(n=0;n<ND;++n)
@@ -95,13 +95,13 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             fluxx = gbl->rho*RAD(i,j)*(u[0][i][j] -mvel[0][i][j]);
             fluxy = gbl->rho*RAD(i,j)*(u[1][i][j] -mvel[1][i][j]);
 
-            du[2][0][i][j] = -dcrd[1][1][i][j]*fluxx +dcrd[0][1][i][j]*fluxy;
-            du[2][1][i][j] = +dcrd[1][0][i][j]*fluxx -dcrd[0][0][i][j]*fluxy;
+            du[2][0][i][j] = +dcrd[1][1][i][j]*fluxx -dcrd[0][1][i][j]*fluxy;
+            du[2][1][i][j] = -dcrd[1][0][i][j]*fluxx +dcrd[0][0][i][j]*fluxy;
 
-            cv00[i][j] =  u[0][i][j]*du[2][0][i][j] -dcrd[1][1][i][j]*RAD(i,j)*u[2][i][j];
-            cv01[i][j] =  u[0][i][j]*du[2][1][i][j] +dcrd[1][0][i][j]*RAD(i,j)*u[2][i][j];
-            cv10[i][j] =  u[1][i][j]*du[2][0][i][j] +dcrd[0][1][i][j]*RAD(i,j)*u[2][i][j];
-            cv11[i][j] =  u[1][i][j]*du[2][1][i][j] -dcrd[0][0][i][j]*RAD(i,j)*u[2][i][j];
+            cv00[i][j] =  u[0][i][j]*du[2][0][i][j] +dcrd[1][1][i][j]*RAD(i,j)*u[2][i][j];
+            cv01[i][j] =  u[0][i][j]*du[2][1][i][j] -dcrd[1][0][i][j]*RAD(i,j)*u[2][i][j];
+            cv10[i][j] =  u[1][i][j]*du[2][0][i][j] -dcrd[0][1][i][j]*RAD(i,j)*u[2][i][j];
+            cv11[i][j] =  u[1][i][j]*du[2][1][i][j] +dcrd[0][0][i][j]*RAD(i,j)*u[2][i][j];
          }
       }
       b.intgrtrs(cv00,cv01,lf[0]);
@@ -154,20 +154,20 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                
                /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-               visc[0][0][0][0] =  cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][1][i][j] +dcrd[0][1][i][j]*dcrd[0][1][i][j]);
-               visc[0][0][1][1] =  cjcb[i][j]*(2.*dcrd[1][0][i][j]*dcrd[1][0][i][j] +dcrd[0][0][i][j]*dcrd[0][0][i][j]);
-               visc[0][0][0][1] = -cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][0][i][j] +dcrd[0][1][i][j]*dcrd[0][0][i][j]);
+               visc[0][0][0][0] = -cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][1][i][j] +dcrd[0][1][i][j]*dcrd[0][1][i][j]);
+               visc[0][0][1][1] = -cjcb[i][j]*(2.*dcrd[1][0][i][j]*dcrd[1][0][i][j] +dcrd[0][0][i][j]*dcrd[0][0][i][j]);
+               visc[0][0][0][1] =  cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][0][i][j] +dcrd[0][1][i][j]*dcrd[0][0][i][j]);
 #define           viscI0II0II1II0I visc[0][0][0][1]
 
-               visc[1][1][0][0] =  cjcb[i][j]*(dcrd[1][1][i][j]*dcrd[1][1][i][j] +2.*dcrd[0][1][i][j]*dcrd[0][1][i][j]);
-               visc[1][1][1][1] =  cjcb[i][j]*(dcrd[1][0][i][j]*dcrd[1][0][i][j] +2.*dcrd[0][0][i][j]*dcrd[0][0][i][j]);
-               visc[1][1][0][1] = -cjcb[i][j]*(dcrd[1][1][i][j]*dcrd[1][0][i][j] +2.*dcrd[0][1][i][j]*dcrd[0][0][i][j]);
+               visc[1][1][0][0] = -cjcb[i][j]*(dcrd[1][1][i][j]*dcrd[1][1][i][j] +2.*dcrd[0][1][i][j]*dcrd[0][1][i][j]);
+               visc[1][1][1][1] = -cjcb[i][j]*(dcrd[1][0][i][j]*dcrd[1][0][i][j] +2.*dcrd[0][0][i][j]*dcrd[0][0][i][j]);
+               visc[1][1][0][1] =  cjcb[i][j]*(dcrd[1][1][i][j]*dcrd[1][0][i][j] +2.*dcrd[0][1][i][j]*dcrd[0][0][i][j]);
 #define           viscI1II1II1II0I visc[1][1][0][1]
                
-               visc[0][1][0][0] = -cjcb[i][j]*dcrd[0][1][i][j]*dcrd[1][1][i][j];
-               visc[0][1][1][1] = -cjcb[i][j]*dcrd[0][0][i][j]*dcrd[1][0][i][j];
-               visc[0][1][0][1] =  cjcb[i][j]*dcrd[0][1][i][j]*dcrd[1][0][i][j];
-               visc[0][1][1][0] =  cjcb[i][j]*dcrd[0][0][i][j]*dcrd[1][1][i][j];
+               visc[0][1][0][0] =  cjcb[i][j]*dcrd[0][1][i][j]*dcrd[1][1][i][j];
+               visc[0][1][1][1] =  cjcb[i][j]*dcrd[0][0][i][j]*dcrd[1][0][i][j];
+               visc[0][1][0][1] = -cjcb[i][j]*dcrd[0][1][i][j]*dcrd[1][0][i][j];
+               visc[0][1][1][0] = -cjcb[i][j]*dcrd[0][0][i][j]*dcrd[1][1][i][j];
 
                   /* OTHER SYMMETRIES    */            
 #define           viscI1II0II0II0I visc[0][1][0][0]
@@ -189,13 +189,10 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                e11[i][j] = +viscI1II0II1II0I*du[0][0][i][j] +viscI1II1II1II0I*du[1][0][i][j]
                            +viscI1II0II1II1I*du[0][1][i][j] +visc[1][1][1][1]*du[1][1][i][j];
                            
-               cv00[i][j] = -cv00[i][j] -e00[i][j];
-               cv01[i][j] = -cv01[i][j] -e01[i][j];
-               cv10[i][j] = -cv10[i][j] -e10[i][j];
-               cv11[i][j] = -cv11[i][j] -e11[i][j];
-               
-               du[2][0][i][j] *= -1;
-               du[2][1][i][j] *= -1;
+               cv00[i][j] += e00[i][j];
+               cv01[i][j] += e01[i][j];
+               cv10[i][j] += e10[i][j];
+               cv11[i][j] += e11[i][j];
             }
          }
          b.derivr(cv00,res[0]);
@@ -214,26 +211,26 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                tres[1] = gbl->tau[tind]*res[1][i][j];
                tres[2] = gbl->delt[tind]*res[2][i][j];
 
-               e00[i][j] += (dcrd[1][1][i][j]*(2*u[0][i][j]-mvel[0][i][j])
+               e00[i][j] -= (dcrd[1][1][i][j]*(2*u[0][i][j]-mvel[0][i][j])
                            -dcrd[0][1][i][j]*(u[1][i][j]-mvel[1][i][j]))*tres[0]
                            -dcrd[0][1][i][j]*u[0][i][j]*tres[1]
                            +dcrd[1][1][i][j]*tres[2];
-               e01[i][j] += (-dcrd[1][0][i][j]*(2*u[0][i][j]-mvel[0][i][j])
+               e01[i][j] -= (-dcrd[1][0][i][j]*(2*u[0][i][j]-mvel[0][i][j])
                            +dcrd[0][0][i][j]*(u[1][i][j]-mvel[1][i][j]))*tres[0]
                            +dcrd[0][0][i][j]*u[0][i][j]*tres[1]
                            -dcrd[1][0][i][j]*tres[2];
-               e10[i][j] += +dcrd[1][1][i][j]*u[1][i][j]*tres[0]
+               e10[i][j] -= +dcrd[1][1][i][j]*u[1][i][j]*tres[0]
                            +(dcrd[1][1][i][j]*(u[0][i][j]-mvel[0][i][j])
                            -dcrd[0][1][i][j]*(2.*u[1][i][j]-mvel[1][i][j]))*tres[1]
                            -dcrd[0][1][i][j]*tres[2];
-               e11[i][j] += -dcrd[1][0][i][j]*u[1][i][j]*tres[0]
+               e11[i][j] -= -dcrd[1][0][i][j]*u[1][i][j]*tres[0]
                            +(-dcrd[1][0][i][j]*(u[0][i][j]-mvel[0][i][j])
                            +dcrd[0][0][i][j]*(2.*u[1][i][j]-mvel[1][i][j]))*tres[1]
                            +dcrd[0][0][i][j]*tres[2];
 
                            
-               du[2][0][i][j] = (dcrd[1][1][i][j]*tres[0] -dcrd[0][1][i][j]*tres[1]);
-               du[2][1][i][j] = (-dcrd[1][0][i][j]*tres[0] +dcrd[0][0][i][j]*tres[1]);
+               du[2][0][i][j] = -(dcrd[1][1][i][j]*tres[0] -dcrd[0][1][i][j]*tres[1]);
+               du[2][1][i][j] = -(-dcrd[1][0][i][j]*tres[0] +dcrd[0][0][i][j]*tres[1]);
             }
          }
          b.intgrtrs(e00,e01,lf[0]);

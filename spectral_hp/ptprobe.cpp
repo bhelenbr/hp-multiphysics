@@ -28,7 +28,9 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
    FLT x[ND],wgt[3];
    int tind,v0;
 
-   qtree.nearpt(xp,yp,v0);
+   x[0] = xp;
+   x[1] = yp;
+   qtree.nearpt(x,v0);
    tind = findtri(xp,yp,v0);
    getwgts(wgt);
 
@@ -43,8 +45,8 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
    printf("In find and move %f %f\n",xp,yp);
 
    /* MOVE POINT WITH SIDE CURVATURE */
-   crdtouht(tind);
-   b.ptprobe_bdry(ND,uht,x,r,s);
+   crdtocht(tind);
+   b.ptprobe_bdry(ND,cht,x,r,s);
    xp = x[0];
    yp = x[1];
 
@@ -57,7 +59,9 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
    int iter,sind,tind,v0;
 
-   qtree.nearpt(xp,yp,v0);
+   x[0] = xp;
+   x[1] = yp;
+   qtree.nearpt(x,v0);
    tind = findtri(xp,yp,v0);
    getwgts(wgt);
 
@@ -83,11 +87,11 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    if (tinfo[tind] < 0) return(tind);
 
    /* DEAL WITH CURVED SIDES */
-   crdtouht(tind);
+   crdtocht(tind);
 
    iter = 0;
    do {
-      b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
+      b.ptprobe_bdry(ND,cht,x,ddr,dds,r,s);
       det = 1.0/(fabs(ddr[0]*dds[1] - ddr[1]*dds[0]) +10.0*EPSILON);
       dx = xp-x[0];
       dy = yp-x[1];
@@ -110,8 +114,8 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    FLT dpsi,xp[ND],dx,dy,ol;
    
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
-   qtree.nearpt(x,y,vnear);
    xp[0] = x; xp[1] = y;
+   qtree.nearpt(xp,vnear);
    sind = findbdryside(xp,vnear,typ);
    
    if (sind > -1) {
@@ -178,11 +182,11 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
       /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */ 
       iter = 0;
-      crdtouht1d(sind);
+      crdtocht1d(sind);
       dx *= ol;
       dy *= ol;
       do {
-         b.ptprobe1d(ND,uht,xp,psi);
+         b.ptprobe1d(ND,cht,xp,psi);
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
          psi += dpsi;
          if (iter++ > 100) {

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 38;
 	objects = {
 		014CEA460018CE2711CA2923 = {
 			buildRules = (
@@ -41,19 +41,17 @@
 		};
 		0249A662FF388D9811CA2CEA = {
 			children = (
+				F5EACF8102C2B7D4015D0A1B,
 				F52FE4D902180CBB01990B20,
 				F52FE4D802180CBB01990B20,
 				F52FE4DC02180FA201990B20,
 				F58209B601808CC201990B20,
-				F58BA0FB01762F8301990B20,
-				F58BA0F901762F8301990B20,
-				F58BA0FA01762F8301990B20,
-				F58BA0F801762F8301990B20,
-				F55E22B9029D695F01990B20,
-				F55E22BC029D697C01990B20,
-				F55E22BD029D697C01990B20,
-				F58BA10001762FBE01990B20,
+				F5605E2102C2C2F501AA3076,
+				F5605E1D02C2C26901AA3076,
+				F51A851D02DDC6D7012A8EDA,
+				F5605E1E02C2C26901AA3076,
 				0249A663FF388D9811CA2CEA,
+				F51291FA0336051D01990B69,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
@@ -95,8 +93,8 @@
 		};
 		08FB7794FE84155DC02AAC07 = {
 			children = (
-				08FB7795FE84155DC02AAC07,
 				F52FE4CF0214251601990B20,
+				08FB7795FE84155DC02AAC07,
 				0249A662FF388D9811CA2CEA,
 				1AB674ADFE9D54B511CA2CBB,
 			);
@@ -112,27 +110,20 @@
 				F58BA1070176870001990B20,
 				F50AF9AD0188A79101990B20,
 				F5D29C8B017777F4015A943B,
+				F512923C03362F0701990B69,
 				F5573A45017A8DCA01844834,
 				F5F454CE017B8027012831FF,
 				F5A17FF3017CD50401990B20,
 				F525D077017F63DC01990B20,
-				F5D29C8901777758015A943B,
-				F5125C0E01728F7501000001,
-				F5125C1001728F7501000001,
-				F5D29C8F01778131015A943B,
-				F5125C0F01728F7501000001,
-				F5D29C8D01777E87015A943B,
-				F525D079017F69D201990B20,
-				F5F1F649026CB83001990B20,
 				F5D49A36018E4DE001601E15,
 				F5EF233C018F35F701990B20,
 				F5D49A38018E525101601E15,
 				F51211320190A2DE01990B20,
 				F512112A01908E3801990B20,
 				F512112C01908E7201990B20,
-				F5D77C310191A7BB01990B20,
 				F5D77C330191A7E901990B20,
 				F533C5CF01938985017C3E7F,
+				F5D77C310191A7BB01990B20,
 				F52FC80E01BE791F01990B20,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
@@ -160,9 +151,9 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN /Volumes/work/helenbrk/Codes/packages/pV3";
+				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/packages/pvm3/lib/DARWIN /Users/helenbrk/Codes/packages/pV3 /Users/helenbrk/Codes/lib";
 				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_CFLAGS = "-DPV3 -DNOUNDERSCORE -DNOUNS";
+				OTHER_CFLAGS = "-Df2cFortran -DNO_PV3 -DNOUNDERSCORE -DNOUNS";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "planar++";
@@ -182,30 +173,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5125C1101728F7501000001,
-				F5D29C8A01777758015A943B,
 				F505FF120192F1EB01990B20,
 				F598B8700193249F01990B20,
 				F581CD2A01989D4B01990B20,
-				F5DEB69C02A5290901990B20,
 			);
 			isa = PBXHeadersBuildPhase;
-			name = Headers;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5125C1201728F7501000001,
-				F5125C1301728F7501000001,
-				F5125C1401728F7501000001,
 				F53AD9B00173E34A01000001,
 				F58BA1080176870001990B20,
-				F5D29C8E01777E87015A943B,
-				F5D29C9001778131015A943B,
 				F5573A44017A235501844834,
 				F5573A46017A8DCA01844834,
 				F5F454CF017B8027012831FF,
 				F5A17FF4017CD50401990B20,
-				F571E77A018104EE01C86C07,
 				F58209BC01808E8D01990B20,
 				F5A85EFC0186FF6101990B20,
 				F50AF9AE0188A79101990B20,
@@ -225,38 +208,31 @@
 				F5D490A001C5369601990B20,
 				F54BE4D301E1038D01990B20,
 				F5AC61750252568D01990B20,
-				F5F1F64A026CB83001990B20,
-				F5DEB69D02A5290901990B20,
+				F512923D03362F0701990B69,
 			);
 			isa = PBXSourcesBuildPhase;
-			name = Sources;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
+				F5EACF8202C2B7D4015D0A1B,
 				F52FE4DA02180CBB01990B20,
 				F58209B901808CC201990B20,
 				F52FE4DB02180CBB01990B20,
-				F52FE4DD02180FA201990B20,
+				F5EACF8302C2B808015D0A1B,
+				F51292080336051D01990B69,
 				0249A664FF388D9811CA2CEA,
-				F58BA0FF01762F8301990B20,
-				F58BA0FD01762F8301990B20,
-				F58BA0FE01762F8301990B20,
-				F58BA0FC01762F8301990B20,
-				F58BA10101762FBE01990B20,
-				F55E22BA029D695F01990B20,
-				F55E22C2029D697C01990B20,
-				F55E22C3029D697C01990B20,
 			);
 			isa = PBXFrameworksBuildPhase;
-			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A5FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
-			name = "ResourceManager Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 //080
 //081
@@ -385,53 +361,49 @@
 			path = spectral_hp.h;
 			refType = 4;
 		};
-		F5125C0E01728F7501000001 = {
-			isa = PBXFileReference;
-			path = initialize.cpp;
-			refType = 4;
-		};
-		F5125C0F01728F7501000001 = {
-			isa = PBXFileReference;
-			path = intgrt.cpp;
-			refType = 4;
-		};
-		F5125C1001728F7501000001 = {
-			isa = PBXFileReference;
-			path = proj.cpp;
-			refType = 4;
-		};
 		F5125C1101728F7501000001 = {
 			fileRef = F5125C0D01728F7501000001;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F5125C1201728F7501000001 = {
-			fileRef = F5125C0E01728F7501000001;
+		F51291FA0336051D01990B69 = {
+			isa = PBXFrameworkReference;
+			name = vecLib.framework;
+			path = /System/Library/Frameworks/vecLib.framework;
+			refType = 0;
+		};
+		F51292080336051D01990B69 = {
+			fileRef = F51291FA0336051D01990B69;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F5125C1301728F7501000001 = {
-			fileRef = F5125C0F01728F7501000001;
+		F51292300336253E01990B69 = {
+			isa = PBXFileReference;
+			path = blkinput.3;
+			refType = 4;
+		};
+		F512923C03362F0701990B69 = {
+			isa = PBXFileReference;
+			path = l2error.cpp;
+			refType = 4;
+		};
+		F512923D03362F0701990B69 = {
+			fileRef = F512923C03362F0701990B69;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F5125C1401728F7501000001 = {
-			fileRef = F5125C1001728F7501000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
+		F51A851D02DDC6D7012A8EDA = {
+			isa = PBXFileReference;
+			name = libgpvm3.a;
+			path = /Users/helenbrk/Codes/packages/pvm3/lib/DARWIN/libgpvm3.a;
+			refType = 0;
 		};
 		F525D077017F63DC01990B20 = {
 			isa = PBXFileReference;
 			path = ptprobe.cpp;
-			refType = 4;
-		};
-		F525D079017F69D201990B20 = {
-			isa = PBXFileReference;
-			path = hpprobe.cpp;
 			refType = 4;
 		};
 		F52FC80E01BE791F01990B20 = {
@@ -450,6 +422,7 @@
 				F5ACCDA501BFCB8401990B20,
 				F5C7542701B9E9E501115962,
 				F5CA0FBF01E5DB2201990B20,
+				F51292300336253E01990B69,
 			);
 			isa = PBXGroup;
 			name = Inputs;
@@ -490,12 +463,6 @@
 			name = libutil.a;
 			path = ../lib/libutil.a;
 			refType = 2;
-		};
-		F52FE4DD02180FA201990B20 = {
-			fileRef = F52FE4DC02180FA201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F533C5CF01938985017C3E7F = {
 			isa = PBXFileReference;
@@ -547,52 +514,28 @@
 			settings = {
 			};
 		};
-		F55E22B9029D695F01990B20 = {
+		F5605E1D02C2C26901AA3076 = {
 			isa = PBXFileReference;
-			name = libpV3.a;
-			path = /Volumes/work/helenbrk/Codes/packages/pV3/libpV3.a;
+			name = libfpvm3.a;
+			path = /Users/helenbrk/Codes/packages/pvm3/lib/DARWIN/libfpvm3.a;
 			refType = 0;
 		};
-		F55E22BA029D695F01990B20 = {
-			fileRef = F55E22B9029D695F01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F55E22BC029D697C01990B20 = {
-			isa = PBXFileReference;
-			name = libgpvm3.a;
-			path = /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN/libgpvm3.a;
-			refType = 0;
-		};
-		F55E22BD029D697C01990B20 = {
+		F5605E1E02C2C26901AA3076 = {
 			isa = PBXFileReference;
 			name = libpvm3.a;
-			path = /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN/libpvm3.a;
+			path = /Users/helenbrk/Codes/packages/pvm3/lib/DARWIN/libpvm3.a;
 			refType = 0;
 		};
-		F55E22C2029D697C01990B20 = {
-			fileRef = F55E22BC029D697C01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F55E22C3029D697C01990B20 = {
-			fileRef = F55E22BD029D697C01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
+		F5605E2102C2C2F501AA3076 = {
+			isa = PBXFileReference;
+			name = libpV3.a;
+			path = /Users/helenbrk/Codes/packages/pV3/libpV3.a;
+			refType = 0;
 		};
 		F564AD060185F05601990B20 = {
 			isa = PBXFileReference;
 			path = adapt.cpp;
 			refType = 4;
-		};
-		F571E77A018104EE01C86C07 = {
-			fileRef = F525D079017F69D201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F581CD240198731301990B20 = {
 			isa = PBXFileReference;
@@ -630,66 +573,6 @@
 		};
 		F58209BC01808E8D01990B20 = {
 			fileRef = F525D077017F63DC01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58BA0F801762F8301990B20 = {
-			isa = PBXFileReference;
-			name = libatlas.a;
-			path = /sw/lib/libatlas.a;
-			refType = 0;
-		};
-		F58BA0F901762F8301990B20 = {
-			isa = PBXFileReference;
-			name = libcblas.a;
-			path = /sw/lib/libcblas.a;
-			refType = 0;
-		};
-		F58BA0FA01762F8301990B20 = {
-			isa = PBXFileReference;
-			name = libf77blas.a;
-			path = /sw/lib/libf77blas.a;
-			refType = 0;
-		};
-		F58BA0FB01762F8301990B20 = {
-			isa = PBXFileReference;
-			name = liblapack.a;
-			path = /sw/lib/liblapack.a;
-			refType = 0;
-		};
-		F58BA0FC01762F8301990B20 = {
-			fileRef = F58BA0F801762F8301990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58BA0FD01762F8301990B20 = {
-			fileRef = F58BA0F901762F8301990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58BA0FE01762F8301990B20 = {
-			fileRef = F58BA0FA01762F8301990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58BA0FF01762F8301990B20 = {
-			fileRef = F58BA0FB01762F8301990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58BA10001762FBE01990B20 = {
-			isa = PBXFileReference;
-			name = libg2c.a;
-			path = /usr/lib/libg2c.a;
-			refType = 0;
-		};
-		F58BA10101762FBE01990B20 = {
-			fileRef = F58BA10001762FBE01990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -776,43 +659,10 @@
 			path = blkinput.2;
 			refType = 4;
 		};
-		F5D29C8901777758015A943B = {
-			isa = PBXFileReference;
-			path = hpbasis.h;
-			refType = 4;
-		};
-		F5D29C8A01777758015A943B = {
-			fileRef = F5D29C8901777758015A943B;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5D29C8B017777F4015A943B = {
 			isa = PBXFileReference;
 			path = tobasis.cpp;
 			refType = 4;
-		};
-		F5D29C8D01777E87015A943B = {
-			isa = PBXFileReference;
-			path = intgrt1d.cpp;
-			refType = 4;
-		};
-		F5D29C8E01777E87015A943B = {
-			fileRef = F5D29C8D01777E87015A943B;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5D29C8F01778131015A943B = {
-			isa = PBXFileReference;
-			path = proj1d.cpp;
-			refType = 4;
-		};
-		F5D29C9001778131015A943B = {
-			fileRef = F5D29C8F01778131015A943B;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5D40DC301948526012E171D = {
 			fileRef = F505FF110192F1EB01990B20;
@@ -846,14 +696,20 @@
 			path = nstage.cpp;
 			refType = 4;
 		};
-		F5DEB69C02A5290901990B20 = {
-			fileRef = F5A11A6A029ABBE001990B20;
+		F5EACF8102C2B7D4015D0A1B = {
+			isa = PBXFileReference;
+			name = libbasis.a;
+			path = ../lib/libbasis.a;
+			refType = 2;
+		};
+		F5EACF8202C2B7D4015D0A1B = {
+			fileRef = F5EACF8102C2B7D4015D0A1B;
 			isa = PBXBuildFile;
 			settings = {
 			};
 		};
-		F5DEB69D02A5290901990B20 = {
-			fileRef = F52FE4D0021429E601990B20;
+		F5EACF8302C2B808015D0A1B = {
+			fileRef = F52FE4DC02180FA201990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -862,17 +718,6 @@
 			isa = PBXFileReference;
 			path = mg_alloc.cpp;
 			refType = 4;
-		};
-		F5F1F649026CB83001990B20 = {
-			isa = PBXFileReference;
-			path = ptvalues.cpp;
-			refType = 4;
-		};
-		F5F1F64A026CB83001990B20 = {
-			fileRef = F5F1F649026CB83001990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5F454CE017B8027012831FF = {
 			isa = PBXFileReference;

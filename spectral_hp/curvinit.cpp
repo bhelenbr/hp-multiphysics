@@ -10,7 +10,7 @@
 #include"spectral_hp.h"
 #include<myblas.h>
 
-void spectral_hp::curvinit(int MASK = ~0) {
+void spectral_hp::curvinit(int MASK) {
    int i,j,m,n,bind,indx,sind,v0,v1,info,typ;
    FLT x,y;
    char uplo[] = "U";
@@ -71,11 +71,11 @@ void spectral_hp::curvinit(int MASK = ~0) {
          
          indx = j*sm0;
          for(n=0;n<ND;++n) {
-            b.intgrt1d(crd[n][0],lf[n]);
-            PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
+            b.intgrt1d(crd[n][0],cf[n]);
+            PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&cf[n][2],b.sm,info);
          
             for(m=0;m<b.sm;++m)
-               binfo[bind][indx+m].curv[n] = -lf[n][m+2];
+               binfo[bind][indx+m].curv[n] = -cf[n][m+2];
          }
       }
    }

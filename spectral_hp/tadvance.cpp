@@ -19,9 +19,9 @@ void hp_mgrid::tadvance() {
    /* FIRST TERM */ 
    for(tind=0;tind<ntri;++tind) {
       if (tinfo[tind] > -1) {
-         crdtouht(tind);
+         crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(uht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
       }
       else {
          for(n=0;n<ND;++n)
@@ -54,9 +54,9 @@ void hp_mgrid::tadvance() {
    for(step=0;step<MXSTEP-1;++step) {
       for(tind=0;tind<ntri;++tind) {
          if (tinfo[tind] > -1) {
-            crdtouht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
+            crdtocht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
             for(n=0;n<ND;++n)
-               b.proj_bdry(uht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+               b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
          }
          else {
             for(n=0;n<ND;++n)

@@ -457,9 +457,9 @@ void hp_mgrid::pvgrid(int &kn, float (*xyz)[3]) {
                b.proj1d_leg(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
          }
          else {
-            crdtouht1d(sind);
+            crdtocht1d(sind);
             for(n=0;n<ND;++n)
-               b.proj1d_leg(uht[n],crd[n][0]);
+               b.proj1d_leg(cht[n],crd[n][0]);
          }
          for(i=1;i<b.sm+1;++i) {
             for(n=0;n<ND;++n)
@@ -477,9 +477,9 @@ void hp_mgrid::pvgrid(int &kn, float (*xyz)[3]) {
                   b.proj_leg(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
             }
             else {
-               crdtouht(tind);
+               crdtocht(tind);
                for(n=0;n<ND;++n)
-                  b.proj_bdry_leg(uht[n],crd[n]);
+                  b.proj_bdry_leg(cht[n],crd[n]);
             }
             
             for(i=1;i<b.sm;++i) {

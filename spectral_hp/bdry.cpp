@@ -46,13 +46,13 @@ void hp_mgrid::setinflow() {
             v1 = svrtx[sind][1];
             
             if (sbdry[i].type&CURV_MASK) {
-               crdtouht1d(sind);
+               crdtocht1d(sind);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+                  b.proj1d(cht[n],crd[n][0],dcrd[n][0][0]);
                
-               crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+               crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][1]);
+                  b.proj1d(cht[n],crd[n][1]);
             }
             else {
                for(n=0;n<ND;++n) {
@@ -203,13 +203,13 @@ void hp_mgrid::addbflux(int mgrid) {
             v1 = svrtx[sind][1];
             
             if (sbdry[i].type&CURV_MASK) {
-               crdtouht1d(sind);
+               crdtocht1d(sind);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+                  b.proj1d(cht[n],crd[n][0],dcrd[n][0][0]);
                
-               crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+               crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][1]);
+                  b.proj1d(cht[n],crd[n][1]);
             }
             else {
                for(n=0;n<ND;++n) {
@@ -277,13 +277,13 @@ void hp_mgrid::addbflux(int mgrid) {
             v1 = svrtx[sind][1];
             
             if (sbdry[i].type&CURV_MASK) {
-               crdtouht1d(sind);
+               crdtocht1d(sind);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+                  b.proj1d(cht[n],crd[n][0],dcrd[n][0][0]);
                
-               crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+               crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
                for(n=0;n<ND;++n)
-                  b.proj1d(uht[n],crd[n][1]);
+                  b.proj1d(cht[n],crd[n][1]);
             }
             else {
                for(n=0;n<ND;++n) {

@@ -16,7 +16,9 @@
 #include<time.h>
 
 /* SIMULATION / PV3VIEWER / TERROR */
-#define PV3VIEWER
+#define SIMULATION
+
+extern FLT f1(int n, FLT x, FLT y);
 
 #ifdef PV3
 extern "C" int MAINPROG(int argc, char **argv);
@@ -32,7 +34,10 @@ int main(int argc, char **argv) {
    myblock.init(argv[1]);
    /* START CLOCK TIMER */
    clock();
-   myblock.go();
+   myblock.minvrt_test(1,f1);
+   myblock.output(1,tecplot);
+   myblock.output(1,text);
+//   myblock.go();
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
    return(0);

@@ -13,7 +13,8 @@
 /* STATIC WORK ARRAYS */
 FLT **spectral_hp::u[NV],**spectral_hp::du[NV][ND], **spectral_hp::res[NV];
 FLT **spectral_hp::crd[ND],**spectral_hp::dcrd[ND][ND], **spectral_hp::cjcb;
-FLT *spectral_hp::uht[NV], *spectral_hp::lf[NV], *spectral_hp::lf1[NV];
+FLT *spectral_hp::uht[NV], *spectral_hp::lf[NV];
+FLT *spectral_hp::cht[ND], *spectral_hp::cf[ND];
 int spectral_hp::pmax = 0;
    
 void spectral_hp::allocate(class hpbasis& bas) {
@@ -45,13 +46,15 @@ void spectral_hp::allocate(class hpbasis& bas) {
             
          vect_alloc(uht[n],b.tm,FLT);
          vect_alloc(lf[n],b.tm,FLT);
-         vect_alloc(lf1[n],b.tm,FLT);
       }
       
       for(n=0;n<ND;++n) {
          mat_alloc(crd[n],b.gpx,b.gpn,FLT);
          for(m=0;m<ND;++m)
             mat_alloc(dcrd[n][m],b.gpx,b.gpn,FLT);
+            
+         vect_alloc(cht[n],b.tm,FLT);
+         vect_alloc(cf[n],b.tm,FLT);
       }
       mat_alloc(cjcb,b.gpx,b.gpn,FLT);
       pmax = b.p;

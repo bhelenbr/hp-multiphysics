@@ -44,6 +44,7 @@ class blocks {
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(char *filename, int start_sim = 1);
+      void minvrt_test(int, double (*)(int, double, double));
       
       /* START SIMULATION */
       void go();

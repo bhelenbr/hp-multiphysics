@@ -1,7 +1,7 @@
 #include"hp_mgrid.h"
-#include<myblas.h>
 #include<assert.h>
 #include<utilities.h>
+#include<myblas.h>
 
 FLT surface::fadd[ND];
 FLT surface::cfl[MXLG2P][ND];
@@ -148,9 +148,9 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       sind = sbdry[bnum].el[indx];
 
       /* THIS IS FOR LINEARIZED SURFACES */      
-//      crdtouht1d(sind);
+//      crdtocht1d(sind);
 //      for(n=0;n<ND;++n)
-//         b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+//         b.proj1d(cht[n],crd[n][0],dcrd[n][0][0]);
 
       /* UG STORES THE CURRENT BOUNDARY POSITION */
       for(n=0;n<ND;++n) {
@@ -167,9 +167,9 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       for(n=0;n<ND;++n)
          b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
          
-      crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+      crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
       for(n=0;n<ND;++n)
-         b.proj1d(uht[n],mvel[n][0]);
+         b.proj1d(cht[n],mvel[n][0]);
 
       ugtouht1d(sind);
       for(n=0;n<ND;++n)
@@ -190,17 +190,17 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +fabs(drhor*g*norm[1]/jcb))/tabs));
 
          /* TANGENTIAL SPACING & NORMAL FLUX */            
-         res[0][0][i] = srf->ksprg[indx]*jcb;
+         res[0][0][i] = -srf->ksprg[indx]*jcb;
          res[1][0][i] = -RAD1D(i)*(mvel[0][0][i]*norm[0] +mvel[1][0][i]*norm[1]);
-         res[1][1][i] = res[1][0][i]*tau;
+         res[1][1][i] = -res[1][0][i]*tau;
          
          /* SURFACE TENSION SOURCE TERM */ 
-         u[0][0][i] = -RAD1D(i)*srf->gbl->sigma*norm[1]/jcb;
+         u[0][0][i] = +RAD1D(i)*srf->gbl->sigma*norm[1]/jcb;
          u[0][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
 #ifdef AXISYMMETRIC
          u[0][1][i] += srf->gbl->sigma*jcb;
 #endif
-         u[1][0][i] = +RAD1D(i)*srf->gbl->sigma*norm[0]/jcb;
+         u[1][0][i] = -RAD1D(i)*srf->gbl->sigma*norm[0]/jcb;
          u[1][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
       }
       
@@ -350,10 +350,14 @@ void hp_mgrid::surfinvrt2(int bnum) {
    int i,m,n,v0,v1,indx,indx1,end;
    FLT temp;
    class surface *srf;
+   
+
 
 /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
+   
+
    
 /* RECEIVE MESSAGES AND ZERO VERTEX MODES */
    end = sbdry[bnum].num;
@@ -399,7 +403,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
          srf->gbl->vres[end][1] = 0.0;
       }
    }
-   
+
    /* SOLVE FOR VERTEX MODES */
    for(i=0;i<=end;++i) {
       temp                = srf->gbl->vres[i][0]*srf->gbl->vdt[i][0][0] +srf->gbl->vres[i][1]*srf->gbl->vdt[i][0][1];
@@ -425,16 +429,13 @@ void hp_mgrid::surfinvrt2(int bnum) {
          srf->gbl->vres[end][1] = 0.0;
    }   
    
-//   for(i=0;i<=end;++i)
-//      printf("%d %f %f\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
-   
    /* SOLVE FOR SIDE MODES */
    if (b.sm > 0) {
       indx1 = 0;
       for(indx = 0; indx<sbdry[bnum].num; ++indx) {
          
          /* INVERT SIDE MODES */
-         DPBSLN(b.sdiag1d,b.sm,b.sbwth,&(srf->gbl->sres[indx1][0]),ND);      
+         DPBTRSNU(b.sdiag1d,b.sm,b.sbwth,&(srf->gbl->sres[indx1][0]),ND);
          for(m=0;m<b.sm;++m) {
             temp                      = srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][0][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][0][1];
             srf->gbl->sres[indx1][1] = srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][1][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][1][1];       
@@ -494,7 +495,7 @@ void hp_mgrid::surfdt1(int bnum) {
  
       vslp = fabs(-((ug.v[v0][0]-(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]))+(ug.v[v1][0]-(bd[0]*vrtx[v1][0] +dvrtdt[v1][0])))*nrm[1]/h
                +((ug.v[v0][1]-(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]))+(ug.v[v1][1]-(bd[0]*vrtx[v1][1] +dvrtdt[v1][1])))*nrm[0]/h);
-
+      
       hsm = h/(.25*(b.p+1)*(b.p+1));
 
       strss = srf->gbl->sigma/(hsm*hsm) +2.*fabs(drho*g*nrm[1]/h);
@@ -502,6 +503,7 @@ void hp_mgrid::surfdt1(int bnum) {
       dtfli = smu/(srho*hsm*hsm) +vslp/hsm +bd[0];
       dttang  = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
       dtnorm  = srho*hsm*cnvct*dtfli +strss;
+      
       srf->gbl->normc[indx] = srho*hsm*cnvct*dtfli/dtnorm;
       srf->gbl->meshc[indx] = srho*hsm*dtfli;
       dtnorm = dtnorm/srf->gbl->meshc[indx];
@@ -517,7 +519,7 @@ void hp_mgrid::surfdt1(int bnum) {
       srf->gbl->vdt[indx+1][0][1] =  dttang*nrm[0]*b.vdiag1d;
       srf->gbl->vdt[indx+1][1][0] =  dtnorm*nrm[0]*b.vdiag1d;
       srf->gbl->vdt[indx+1][1][1] =  dtnorm*nrm[1]*b.vdiag1d;
-         
+               
       if (b.sm) {
          srf->gbl->sdt[indx][0][0] = -dttang*nrm[1];
          srf->gbl->sdt[indx][0][1] =  dttang*nrm[0];
@@ -610,7 +612,7 @@ void hp_mgrid::surfdt2(int bnum) {
       /* INVERT VERTEX MATRIX */
       jcbi = 1.0/(srf->gbl->vdt[indx][0][0]*srf->gbl->vdt[indx][1][1] 
                  -srf->gbl->vdt[indx][0][1]*srf->gbl->vdt[indx][1][0]);
-
+                 
       temp = srf->gbl->vdt[indx][0][0]*jcbi*surface::cfl[log2p][1];
       srf->gbl->vdt[indx][0][0] = srf->gbl->vdt[indx][1][1]*jcbi*surface::cfl[log2p][0];
       srf->gbl->vdt[indx][1][1] = temp;

@@ -21,9 +21,9 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 	for(tind=0;tind<ntri;++tind) {
       
       if (tinfo[tind] > -1) {
-         crdtouht(tind);
+         crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(uht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
       }
       else {
          for(n=0;n<ND;++n)

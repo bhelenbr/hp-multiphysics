@@ -8,9 +8,9 @@
  */
 
 #include"hp_mgrid.h"
-#include<myblas.h>
 #include"utilities.h"
 #include<assert.h>
+#include<myblas.h>
 
 /* THIS IS USED IN THE MVPTTOBDRY FUNCTION */
 extern class spectral_hp *tgt;
@@ -126,8 +126,8 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
 
          if (str.tinfo[tind] > -1) {
             for(step=0;step<MXSTEPM1;++step) {
-               str.crdtouht(tind,vrtxstr[step],binfostr[step]);
-               str.b.ptprobe_bdry(ND,uht,gbl->vrtxbd[step][i]);
+               str.crdtocht(tind,vrtxstr[step],binfostr[step]);
+               str.b.ptprobe_bdry(ND,cht,gbl->vrtxbd[step][i]);
             }
          }
          else {
@@ -159,8 +159,8 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
 
             if (str.sinfo[stgt] > -1) {
                for(step=0;step<MXSTEPM1;++step) {
-                  str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
-                  str.b.ptprobe1d(ND,uht,gbl->vrtxbd[step][v0]);
+                  str.crdtocht1d(stgt,vrtxstr[step],binfostr[step]);
+                  str.b.ptprobe1d(ND,cht,gbl->vrtxbd[step][v0]);
                }
             }
             else {
@@ -322,8 +322,8 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                         }
                         
                         for(step=0;step<MXSTEPM1;++step) {
-                           str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
-                           str.b.ptprobe1d(ND,uht,upt);
+                           str.crdtocht1d(stgt,vrtxstr[step],binfostr[step]);
+                           str.b.ptprobe1d(ND,cht,upt);
                            for(n=0;n<ND;++n)   
                               bdwk[step][n][1][m] -= upt[n];
                         }                    
@@ -461,9 +461,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                      b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
                }
                else {
-                  crdtouht(tind);
+                  crdtocht(tind);
                   for(n=0;n<ND;++n)
-                     b.proj_bdry(uht[n],crd[n]);
+                     b.proj_bdry(cht[n],crd[n]);
                }
                   
                for (i=0; i < b.gpx; ++i ) {

@@ -12,7 +12,7 @@
 #include<assert.h>
 #include<stdlib.h>
 
-void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot) {
+void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ) {
    char fnmapp[100];
    FILE *out;
    int i,j,k,n,v0,v1,sind,tind,indx,sgn;
@@ -94,9 +94,9 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                      b.proj1d_leg(vin[v0][n],vin[v1][n],crd[n][0]);
                }
                else {
-                  crdtouht1d(sind,vin,bin);
+                  crdtocht1d(sind,vin,bin);
                   for(n=0;n<ND;++n)
-                     b.proj1d_leg(uht[n],crd[n][0]);
+                     b.proj1d_leg(cht[n],crd[n][0]);
                }
                
                ugtouht1d(sind,g);
@@ -124,9 +124,9 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                         b.proj_leg(vin[tvrtx[tind][0]][n],vin[tvrtx[tind][1]][n],vin[tvrtx[tind][2]][n],crd[n]);
                   }
                   else {
-                     crdtouht(tind,vin,bin);
+                     crdtocht(tind,vin,bin);
                      for(n=0;n<ND;++n)
-                        b.proj_bdry_leg(uht[n],crd[n]);
+                        b.proj_bdry_leg(cht[n],crd[n]);
                   }
                   
                   for(i=1;i<b.sm;++i) {
@@ -147,14 +147,25 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
          
          for(tind=0;tind<ntri;++tind) {
 
-            /* VERTICES */
-            ijind[0][0] = tvrtx[tind][0];
-            ijind[b.sm+1][0] = tvrtx[tind][1];
-            ijind[0][b.sm+1] = tvrtx[tind][2];
-   
-            /* SIDES */         
+             /* VERTICES */
+            ijind[0][b.sm+1] = tvrtx[tind][0];
+            ijind[0][0] = tvrtx[tind][1];
+            ijind[b.sm+1][0] = tvrtx[tind][2];
+
+            /* SIDES */
             indx = tside[tind].side[0];
             sgn = tside[tind].sign[0];
+            if (sgn < 0) {
+               for(i=0;i<b.sm;++i)
+                  ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
+            }
+            else {
+               for(i=0;i<b.sm;++i)
+                  ijind[i+1][0] = nvrtx +indx*b.sm +i;
+            }
+            
+            indx = tside[tind].side[1];
+            sgn = tside[tind].sign[1];
             if (sgn > 0) {
                for(i=0;i<b.sm;++i)
                   ijind[b.sm-i][i+1] = nvrtx +indx*b.sm +i;
@@ -164,8 +175,8 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                   ijind[b.sm-i][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
             }
 
-            indx = tside[tind].side[1];
-            sgn = tside[tind].sign[1];
+            indx = tside[tind].side[2];
+            sgn = tside[tind].sign[2];
             if (sgn > 0) {
                for(i=0;i<b.sm;++i)
                   ijind[0][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
@@ -173,17 +184,6 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             else {
                for(i=0;i<b.sm;++i)
                   ijind[0][i+1] = nvrtx +indx*b.sm +i;
-            }
-            
-            indx = tside[tind].side[2];
-            sgn = tside[tind].sign[2];
-            if (sgn < 0) {
-               for(i=0;i<b.sm;++i)
-                  ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
-            }
-            else {
-               for(i=0;i<b.sm;++i)
-                  ijind[i+1][0] = nvrtx +indx*b.sm +i;
             }
    
             /* INTERIOR VERTICES */

@@ -24,13 +24,13 @@ void hp_mgrid::drag(int type) {
          assert(sd != 3);
          sd = (sd+1)%3; // BASIS SIDE ORDERING & MESH SIDE ORDERING ARE DIFFERENT
          
-         crdtouht(tind);
+         crdtocht(tind);
          for(m=b.bm;m<b.tm;++m)
             for(n=0;n<ND;++n)
-               uht[n][m] = 0.0;
+               cht[n][m] = 0.0;
                
          for(n=0;n<ND;++n)
-            b.proj_side(sd,uht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0]);
+            b.proj_side(sd,cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0]);
 
          ugtouht(tind);
  

@@ -10,7 +10,7 @@ extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO AD
 
 static int iter;
 
-void blocks::init(char *file, int start_sim = 1) {
+void blocks::init(char *file, int start_sim) {
    int i,j,p;
    FILE *fp;
    char blockname[100],outname[20], bname[20];
@@ -308,7 +308,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
    return;
 }
 
-void blocks::cycle(int vw, int lvl = 0) {
+void blocks::cycle(int vw, int lvl) {
    int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
 #ifdef PV3
@@ -557,4 +557,66 @@ void blocks::output(int number, FILETYPE type=text) {
    
    return;
 }
+
+void blocks::minvrt_test(int iter, FLT (*func)(int, FLT, FLT)) {
+   int i,stage,mode;
+      
+   /*****************************************/
+   /* NSTAGE UPDATE OF FLOW VARIABLES    ****/
+   /*****************************************/
+   
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].minvrt_test_tstep();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].tstep_mp();
+
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].tstep2();
+      
+   for(stage=0;stage<iter;++stage) {
+
+      /* CALCULATE RESIDUAL */   
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].minvrt_test_bgn(func);
+                           
+      /* INVERT MASS MATRIX (4 STEP PROCESS) */
+      /* HAVE TO BE VERY CAREFUL WITH COMMUNICATION */
+      /* USE MESSAGE BEFORE SENDING NEXT */
+      /* VERTICES MUST BE 2 PART PROCESS BECAUSE OF CORNERS */
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].minvrt1();  //SEND Y
+         
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].bdry_mp(); //RCV Y SEND X
+         
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].minvrt2(); //RCV X SEND SIDE MODE 0 Y & X
+                  
+      for(mode=0;mode<base[lg2pmax].sm-1;++mode) {
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[0].minvrt3(mode); // RCV SIDE MODE Y & X
+            
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[0].minvrt3_mp(mode+1); //SEND SIDE Y & X
+      }
+      
+      if (base[lg2pmax].sm) {
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[0].minvrt4(); //RCV Y & X
+      }
+      
+      for(i=0;i<nblocks;++i) 
+         blk[i].grd[0].minvrt_test_end();
+      
+      printf("%d ",stage);
+      for(i=0;i<nblocks;++i) 
+         blk[i].grd[0].maxres();
+      printf("\n");
+      
+   }
+
+   return;
+}
+
    

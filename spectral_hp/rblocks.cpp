@@ -56,7 +56,7 @@ void blocks::r_jacobi(int niter, int lvl) {
    return;
 }
 
-void blocks::r_cycle(int vw, int lvl = 0) {
+void blocks::r_cycle(int vw, int lvl) {
    int i,j;
    
    for (i=0;i<vw;++i) {
