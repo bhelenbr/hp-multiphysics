@@ -48,8 +48,6 @@ class side_boundary {
       }
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
-      virtual void init_comm_buf(int factor) {}
-      virtual void zerofrst() {return;}
       virtual int isfrst() {return(1);}
       virtual int match(side_boundary *in) {return 1;}
       virtual void setphase(int phase) {}
@@ -110,10 +108,12 @@ class comm_boundary : public side_boundary {
       comm_boundary(mesh &xin, int inid) : side_boundary(xin,inid) , frst(0), myphase(0) {}
       
       /* INITIALIZE STORAGE */
-      void init_comm_buf(int factor) {sbuff = new FLT[factor*mxsz()];}
+      void alloc(int nside) {
+         side_boundary::alloc(nside);
+         sbuff = new FLT[2*ND*mxsz()];
+      }
       
       /* ZERO FIRST VALUE */
-      void zerofrst() {frst = 0;}
       void setphase(int i) {myphase = i;}
 
       /* MATCH BOUNDARIES */
@@ -170,5 +170,3 @@ template<class BASE> class curv_template : public BASE {
 typedef curv_template<side_boundary> curv_boundary;
 typedef curv_template<comm_boundary> ifce_boundary;
 
-
-      

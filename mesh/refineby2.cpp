@@ -89,11 +89,4 @@ void mesh::refineby2(const class mesh& inmesh) {
    
    return;
 }
-   
-   
 
-   
-   
-         
-
-   

@@ -1,27 +1,41 @@
-#include<cstdio>
+#include"r_mesh.h"
 #include"blocks.h"
-#include<iostream>
-#include<cstring>
-#include<math.h>
+#include"block.h"
 #include<utilities.h>
 #include<time.h>
+#include<stdio.h>
+#include<iostream>
+#include<map>
+#include<string>
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
    int i,step = 0;
    clock_t cpu_time;
-   class blocks z;
-   char outname[100];
-   char *inname[2];
+   class blocks<block<r_mesh> > z;
+   char outname[50];
 
-   /* START CLOCK TIMER */
-   clock();
-   
+
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
-   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
+   /* START CLOCK TIMER */
+   clock();
+
+   map<string,string> input;
    
-   z.init(1,5,inname,easymesh,10.0);
-   z.out_mesh("begin",grid);
+   input["nblock"] = "1";
+   input["ngrid"] = "5";
+   input["mglvls"] = "5";
+   input["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
+   input["growth factor"] = "10.0";
+   input["filetype"] = "0";
+   input["fadd"] = "1.0";
+   input["vnn"] = "0.5";
+
+   z.load_constants(input);
+   z.init(input);
+   z.output("begin",grid);
     for(step = 1; step<=1;++step) {
       z.ksrc();
       z.tadvance();
@@ -31,10 +45,10 @@ int main(int argc, char *argv[]) {
          z.maxres();
          printf("\n");
       }
-      z.out_mesh("deformed",grid);
+      z.output("deformed",grid);
       z.restructure(0.66);
       number_str(outname, "end", step, 2);
-      z.out_mesh(outname,grid);
+      z.output(outname,grid);
    }
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);

@@ -14,17 +14,17 @@ class rbdry_interface;
 
 class r_mesh :public mesh {
       public:
+         /* THINGS SHARED BY ALL BLOCKS */
+         static FLT vnn, fadd;
+         
          /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
-         struct r_gbl {
+         struct gbl {
             FLT (*work)[ND];
             FLT (*res)[ND];
             FLT *diag;
          } *rg;
          
-      private:
-         /* THINGS SHARED BY ALL BLOCKS */
-         static FLT vnn, fadd;
-         
+      private:         
          /* MESH VARIABLES */
          FLT *ksprg;
          FLT (*src)[ND];
@@ -34,11 +34,13 @@ class r_mesh :public mesh {
          
          rbdry_interface *rbdry[MAXSB];
          void getnewsideobject(int bnum, int type);
+         
+         /* SETUP FUNCTION */
+         /* CALLED BY ALLOCATE WHEN COARSE IS FALSE */
+         void gbl_alloc(r_mesh::gbl *store);
                   
       public:
-         /* SETUP FUNCTION */
-         void gbl_alloc(r_mesh::r_gbl *store);
-         void allocate(bool coarse, r_mesh::r_gbl *rginit);
+         void allocate(bool coarse, r_mesh::gbl *rginit);
 
          /* SETUP SPRING CONSTANTS */
          /* LAPLACE CONSTANTS */
@@ -88,9 +90,6 @@ class r_mesh :public mesh {
          
          /* TESTS */
          void tadvance();
-         
-         friend class block;
-         friend class blocks;
 };
 
 #include "rboundary.h"

@@ -16,6 +16,7 @@
 #define ND 2
 
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
+
 class side_boundary;
 
 class mesh {
@@ -24,7 +25,6 @@ class mesh {
    /***************/
    protected:
       int initialized, maxvst;
-
 
    public:      
       /* VERTEX DATA */
@@ -97,9 +97,8 @@ class mesh {
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      int in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
-      inline int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
-      void convertbtypes(const int (*old)[2] = NULL, int nold = 0);
+      int in_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      inline int in_mesh(const char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
       int out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const;
       inline int out_mesh(const char *filename, FILETYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
       void setbcinfo();
@@ -110,7 +109,7 @@ class mesh {
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      virtual void setlength() {}
+      virtual void setlength() {printf("here\n");}
       void length1();
       void length_mp(int phase);
       void length2(int phase); 
@@ -128,8 +127,6 @@ class mesh {
       /* FIND MATCHING MESH BOUNDARIES */
       void findmatch(class mesh& tgt);
       FLT *vbuff[MAXSB];
-      void init_comm_buf(int factor);
-      void zerobdryfrst();
       void matchboundaries1();
       void matchboundaries_mp(int phase);
       void matchboundaries2(int phase);
@@ -214,23 +211,11 @@ class mesh {
 
 #include "boundary.h"
 
-void inline mesh::init_comm_buf(int factor) {
-   for(int i=0;i<MAXSB;++i)
-      vbuff[i] = new FLT[factor];
+//void inline mesh::init_comm_buf(int factor) {
+//   for(int i=0;i<MAXSB;++i)
+//      vbuff[i] = new FLT[factor];
+// }
 
-   for(int i=0;i<nsbd;++i)
-      sbdry[i]->init_comm_buf(factor);
-}
-
-/* FZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
-void inline mesh::zerobdryfrst() {
-   int i;
-   for(i=0;i<nvbd;++i)
-      vbdry[i].isfrst = 0;
-   
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->zerofrst();
-}
 /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
 void inline mesh::matchboundaries1() {
    for(int i=0;i<nsbd;++i) 

@@ -1,7 +1,11 @@
-MESHOBJ = coarsen.o collapse.o copy.o findmatch.o in_mesh.o insert.o out_mesh.o rebay.o  \
-	  setup.o swap.o tprims.o triangulate.o yaber.o mvpttobdry.o connect.o r_mesh.o 
+MESHOBJ = boundary.o coarsen.o collapse.o connect.o copy.o findmatch.o in_mesh.o insert.o \
+main.o out_mesh.o rboundary.o rebay.o refineby2.o r_mesh.o setup.o swap.o tprims.o \
+triangulate.o yaber.o
 
-CPPFLAGS = -O3 -I/home/helenbrk/codes/include/
+CPPFLAGS = -g -I/home/helenbrk/codes/include/
+
+mesh: $(MESHOBJ)
+	${CXX} ${CPPFLAGS} -o $@ $(MESHOBJ) ../lib/libquad.a ../lib/libutil.a 
 
 libmesh.a: $(MESHOBJ)
 	libtool --mode=link ${CC} -o $@ $(MESHOBJ)

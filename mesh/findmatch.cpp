@@ -3,8 +3,9 @@
 #include <stdlib.h>
 
 void mesh::findmatch(class mesh& tgt) {
-   int i,j,found;
+   int i,j;
 
+#ifdef SKIP
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].type & ALLD_MP) {
          found = 0;
@@ -23,15 +24,13 @@ void mesh::findmatch(class mesh& tgt) {
          }
       }
    }
+#endif
    
    for(i=0;i<nsbd;++i) {
       for(j=0;j<tgt.nsbd;++j) {
          if (&tgt == this && i == j) continue;  // CAN'T MATCH SIDE TO ITSELF */
-         if (sbdry[i]->match(tgt.sbdry[j])) goto NEXT;
+         if (sbdry[i]->match(tgt.sbdry[j])) break;
       }
-      printf("#Error: couldn't match boundary %d\n",sbdry[i]->idnty());
-      exit(1);
-NEXT:;
    }
    
    return;

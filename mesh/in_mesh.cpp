@@ -8,7 +8,7 @@ FLT *mesh::fltwk;
 int *mesh::intwk1, *mesh::intwk2,*mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
-int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype, FLT grwfac) {
+int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype, FLT grwfac) {
     int i,j,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
@@ -539,6 +539,6 @@ void mesh::allocate(int mxsize) {
    tside = new struct tsidedata[maxvst];
    tinfo = new int[maxvst+1];
    ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
-   
+
    return;
 }

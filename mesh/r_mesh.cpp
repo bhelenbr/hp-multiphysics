@@ -6,7 +6,8 @@
 
 FLT r_mesh::fadd, r_mesh::vnn;
 
-void r_mesh::allocate(bool coarse, r_mesh::r_gbl *rginit) {
+void r_mesh::allocate(bool coarse, r_mesh::gbl *rginit) {
+
 
    /* global mgrid arrays */
    rg = rginit;
@@ -20,7 +21,7 @@ void r_mesh::allocate(bool coarse, r_mesh::r_gbl *rginit) {
    isfrst = false;
 }
 
-void r_mesh::gbl_alloc(r_mesh::r_gbl *store) {
+void r_mesh::gbl_alloc(r_mesh::gbl *store) {
    store->work = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
    store->res = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
    store->diag = new FLT[maxvst];
