@@ -140,12 +140,6 @@ void quadtree::addpt(int v0, class quad* start = NULL) {
    
    if (qpt->num < 4) {
 /*		QUAD CAN ACCEPT NEW POINT */
-      if (vrtx[v0][0] > qpt->xmax +10.*EPSILON || vrtx[v0][0] < qpt->xmin -10.*EPSILON) {
-         printf("point is outside x quadtree area %f %f %f\n",vrtx[v0][0],qpt->xmax,qpt->xmin);
-      }
-      if (vrtx[v0][1] > qpt->ymax +10.*EPSILON || vrtx[v0][1] < qpt->ymin -10.*EPSILON) {
-         printf("point is outside y quadtree area %f %f %f\n",vrtx[v0][1],qpt->ymax,qpt->ymin);
-      }
       qpt->node[qpt->num++] = v0;
       indx[v0] = qpt;
       return;
@@ -398,15 +392,15 @@ void quadtree::output(char *filename, FILETYPE type=tecplot) {
    /*				PRINT BOX & POINTS */
                if (qpt->num > 0) {
                   fprintf(out,"ZONE N=4, E=1, F=FEPOINT, ET=QUADRILATERAL, C=RED\n");
-                  fprintf(out,"%f %f\n",qpt->xmin,qpt->ymin);
-                  fprintf(out,"%f %f\n",qpt->xmax,qpt->ymin);
-                  fprintf(out,"%f %f\n",qpt->xmax,qpt->ymax);
-                  fprintf(out,"%f %f\n",qpt->xmin,qpt->ymax);
+                  fprintf(out,"%f  %f\n",qpt->xmin,qpt->ymin);
+                  fprintf(out,"%f  %f\n",qpt->xmax,qpt->ymin);
+                  fprintf(out,"%f  %f\n",qpt->xmax,qpt->ymax);
+                  fprintf(out,"%f  %f\n",qpt->xmin,qpt->ymax);
                   fprintf(out,"%d %d %d %d\n",1,2,3,4);
                   
                   fprintf(out,"ZONE I=%d, C=BLACK\n",qpt->num);
                   for(i=0;i<qpt->num;++i) 
-                     fprintf(out,"%f %f\n",vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
+                     fprintf(out,"%f  %f\n",vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
                }
             }
          }
@@ -446,31 +440,14 @@ void quadtree::movept(int from, int to) {
    return;
 }
 
-void quadtree::update() {
-   int i,v0,nsrch;
-   class quad *topbox;
+void quadtree::update(int bgn, int end) {
+   int i;
    class quad *qpt;
-
-   nsrch = 0;
-   srchlst[nsrch++] = base;
-   topbox = srchlst[0];	 
-
-   while (nsrch > 0) {
-      qpt = srchlst[--nsrch];
-
-      if (qpt->num < 0) {
-/*				ADD DAUGHTERS TO LIST */
-         for(i=0;i<4;++i)
-            srchlst[nsrch++] = qpt->dghtr[i];
-         continue;
-      }
-      else {
-/*			CHECK POINTS */
-         for(i=0;i<qpt->num;++i) {
-            v0 = qpt->node[i];
-            if (vrtx[v0][0] < qpt->xmin || vrtx[v0][0] > qpt->xmax || vrtx[v0][1] < qpt->ymin || vrtx[v0][1] > qpt->ymax) update(v0);
-         }
-      }
+   
+   for(i=bgn;i<end;++i) {
+      qpt = indx[i];
+      if (qpt == NULL) continue;
+      if (vrtx[i][0] < qpt->xmin || vrtx[i][0] > qpt->xmax || vrtx[i][1] < qpt->ymin || vrtx[i][1] > qpt->ymax) update(i);
    }
    
    return;
@@ -484,9 +461,8 @@ void quadtree::update(int v0) {
 
   	x = vrtx[v0][0];
    y = vrtx[v0][1];
-
+      
    nsrch = 0;
-   assert(indx[v0] != NULL);
    srchlst[nsrch++] = indx[v0];
    topbox = srchlst[0];	
 
@@ -501,9 +477,9 @@ void quadtree::update(int v0) {
             continue;
          }
          else {
-            if (topbox->xmin <= x && topbox->xmax >= x && topbox->ymin <= y && topbox->ymax >= y) {
+            if (qpt->xmin <= x && qpt->xmax >= x && qpt->ymin <= y && qpt->ymax >= y) {
                dltpt(v0);
-               addpt(v0, topbox);
+               addpt(v0, qpt);
                return;
             }
          }

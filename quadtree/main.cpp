@@ -30,7 +30,7 @@ int main() {
    
    vtest[0][0] = 0.9;
    vtest[0][1] = 0.9;
-   testtree.update();
+   testtree.update(0,10);
    
    dist = testtree.nearpt(0, i); 
    printf("%d %f\n",i,dist);
