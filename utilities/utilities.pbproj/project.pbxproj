@@ -3,23 +3,26 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 38;
+	objectVersion = 39;
 	objects = {
 		014CEA520018CE5811CA2923 = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				OPTIMIZATION_CFLAGS = "-O0";
+				ZERO_LINK = YES;
 			};
 			isa = PBXBuildStyle;
 			name = Development;
 		};
 		014CEA530018CE5811CA2923 = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Deployment;
@@ -29,27 +32,14 @@
 //012
 //013
 //014
-//030
-//031
-//032
-//033
-//034
-		034768E8FF38A79811DB9C8B = {
-			isa = PBXExecutableFileReference;
-			path = utilities;
-			refType = 3;
-		};
-//030
-//031
-//032
-//033
-//034
 //080
 //081
 //082
 //083
 //084
 		08FB7793FE84155DC02AAC07 = {
+			buildSettings = {
+			};
 			buildStyles = (
 				014CEA520018CE5811CA2923,
 				014CEA530018CE5811CA2923,
@@ -59,7 +49,7 @@
 			mainGroup = 08FB7794FE84155DC02AAC07;
 			projectDirPath = "";
 			targets = (
-				08FB779FFE84155DC02AAC07,
+				6FFC0CB205AE04C400A78095,
 			);
 		};
 		08FB7794FE84155DC02AAC07 = {
@@ -71,6 +61,7 @@
 			isa = PBXGroup;
 			name = utilities;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		08FB7795FE84155DC02AAC07 = {
 			children = (
@@ -79,84 +70,22 @@
 				F512110F01904CF201990B20,
 				F512111001904CF201990B20,
 				F512111101904CF201990B20,
+				6FC45D5B07A0B81400ADC8D3,
+				6FC45D3A07A0B71400ADC8D3,
+				6FC45D3B07A0B71400ADC8D3,
 			);
 			isa = PBXGroup;
 			name = Source;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		08FB7796FE84155DC02AAC07 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			path = main.c;
 			refType = 4;
-		};
-		08FB779FFE84155DC02AAC07 = {
-			buildPhases = (
-				08FB77A0FE84155DC02AAC07,
-				08FB77A1FE84155DC02AAC07,
-				08FB77A3FE84155DC02AAC07,
-				08FB77A5FE84155DC02AAC07,
-				F515DB4301A46FE701990B20,
-			);
-			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = "";
-				HEADER_SEARCH_PATHS = "";
-				LIBRARY_SEARCH_PATHS = "";
-				OTHER_CFLAGS = "-Df2cFortran\n#define f2cFortran\n";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = utilities;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
-			};
-			dependencies = (
-			);
-			isa = PBXToolTarget;
-			name = utilities;
-			productName = utilities;
-			productReference = 034768E8FF38A79811DB9C8B;
-		};
-		08FB77A0FE84155DC02AAC07 = {
-			buildActionMask = 2147483647;
-			files = (
-				F512111201904CF201990B20,
-				F512111301904CF201990B20,
-			);
-			isa = PBXHeadersBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		08FB77A1FE84155DC02AAC07 = {
-			buildActionMask = 2147483647;
-			files = (
-				08FB77A2FE84155DC02AAC07,
-				F512111401904CF201990B20,
-				F512111501904CF201990B20,
-			);
-			isa = PBXSourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		08FB77A2FE84155DC02AAC07 = {
-			fileRef = 08FB7796FE84155DC02AAC07;
-			isa = PBXBuildFile;
-			settings = {
-				ATTRIBUTES = (
-				);
-			};
-		};
-		08FB77A3FE84155DC02AAC07 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		08FB77A5FE84155DC02AAC07 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXRezBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
+			sourceTree = "<group>";
 		};
 //080
 //081
@@ -170,17 +99,187 @@
 //1A4
 		1AB674ADFE9D54B511CA2CBB = {
 			children = (
-				034768E8FF38A79811DB9C8B,
+				6FFC0CBE05AE04C400A78095,
 			);
 			isa = PBXGroup;
 			name = Products;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 //1A0
 //1A1
 //1A2
 //1A3
 //1A4
+//6F0
+//6F1
+//6F2
+//6F3
+//6F4
+		6FC45D3A07A0B71400ADC8D3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
+			path = parseargs.c;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6FC45D3B07A0B71400ADC8D3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = parseargs.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6FC45D3C07A0B71400ADC8D3 = {
+			fileRef = 6FC45D3A07A0B71400ADC8D3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FC45D3D07A0B71400ADC8D3 = {
+			fileRef = 6FC45D3B07A0B71400ADC8D3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FC45D5B07A0B81400ADC8D3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = gtypes.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6FC45D5C07A0B81400ADC8D3 = {
+			fileRef = 6FC45D5B07A0B81400ADC8D3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FFC0CB205AE04C400A78095 = {
+			buildPhases = (
+				6FFC0CB305AE04C400A78095,
+				6FFC0CB605AE04C400A78095,
+				6FFC0CBA05AE04C400A78095,
+				6FFC0CBB05AE04C400A78095,
+				6FFC0CBC05AE04C400A78095,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				CC = "/usr/bin/gcc-3.3";
+				CPLUSPLUS = "/usr/bin/g++-3.3";
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "f2cFortran\n#define\"";
+				HEADER_SEARCH_PATHS = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = utilities;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = utilities;
+			productName = utilities;
+			productReference = 6FFC0CBE05AE04C400A78095;
+			productType = "com.apple.product-type.tool";
+		};
+		6FFC0CB305AE04C400A78095 = {
+			buildActionMask = 2147483647;
+			files = (
+				6FFC0CB405AE04C400A78095,
+				6FFC0CB505AE04C400A78095,
+				6FC45D3D07A0B71400ADC8D3,
+				6FC45D5C07A0B81400ADC8D3,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0CB405AE04C400A78095 = {
+			fileRef = F512110E01904CF201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FFC0CB505AE04C400A78095 = {
+			fileRef = F512111001904CF201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FFC0CB605AE04C400A78095 = {
+			buildActionMask = 2147483647;
+			files = (
+				6FFC0CB705AE04C400A78095,
+				6FFC0CB805AE04C400A78095,
+				6FFC0CB905AE04C400A78095,
+				6FC45D3C07A0B71400ADC8D3,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0CB705AE04C400A78095 = {
+			fileRef = 08FB7796FE84155DC02AAC07;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+				);
+			};
+		};
+		6FFC0CB805AE04C400A78095 = {
+			fileRef = F512110F01904CF201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FFC0CB905AE04C400A78095 = {
+			fileRef = F512111101904CF201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FFC0CBA05AE04C400A78095 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0CBB05AE04C400A78095 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXRezBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0CBC05AE04C400A78095 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/csh;
+			shellScript = ./createlib;
+		};
+		6FFC0CBE05AE04C400A78095 = {
+			explicitFileType = "compiled.mach-o.executable";
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = utilities;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+//6F0
+//6F1
+//6F2
+//6F3
+//6F4
 //F50
 //F51
 //F52
@@ -189,63 +288,34 @@
 		F512110E01904CF201990B20 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			path = myblas.h;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		F512110F01904CF201990B20 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			path = myblas.c;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		F512111001904CF201990B20 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
 			path = utilities.h;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		F512111101904CF201990B20 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.c;
 			path = utilities.c;
 			refType = 4;
-		};
-		F512111201904CF201990B20 = {
-			fileRef = F512110E01904CF201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F512111301904CF201990B20 = {
-			fileRef = F512111001904CF201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F512111401904CF201990B20 = {
-			fileRef = F512110F01904CF201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F512111501904CF201990B20 = {
-			fileRef = F512111101904CF201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F515DB4301A46FE701990B20 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			generatedFileNames = (
-			);
-			isa = PBXShellScriptBuildPhase;
-			neededFileNames = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/csh;
-			shellScript = ./createlib;
+			sourceTree = "<group>";
 		};
 		F5563BE902242FAE01990B20 = {
 			children = (
@@ -255,18 +325,23 @@
 			isa = PBXGroup;
 			name = Scripts;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		F5563BEA02242FAE01990B20 = {
 			fileEncoding = 30;
-			isa = PBXExecutableFileReference;
+			isa = PBXFileReference;
+			lastKnownFileType = text.script.csh;
 			path = createlib;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 		F5563BEB02242FAE01990B20 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.make;
 			path = makefile;
 			refType = 4;
+			sourceTree = "<group>";
 		};
 	};
 	rootObject = 08FB7793FE84155DC02AAC07;

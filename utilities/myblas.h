@@ -8,7 +8,8 @@
  */
 
 #include<cfortran.h>
-
+extern "C" void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs);
+extern "C" void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void BLCKTRI(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2]);
@@ -61,6 +62,9 @@ PROTOCCALLSFSUB5(DPOTRF,dpotrf,STRING,INT,DOUBLEV,INT,PINT)
 
 PROTOCCALLSFSUB8(DPOTRS,dpotrs,STRING,INT,INT,DOUBLEV,INT,DOUBLEV,INT,PINT)
 #define DPOTRS(UPLO,N,NRHS,A,LDA,B,LDB,INFO) CCALLSFSUB8(DPOTRS,dpotrs,STRING,INT,INT,DOUBLEV,INT,DOUBLEV,INT,PINT,UPLO,N,NRHS,A,LDA,B,LDB,INFO)
+
+PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBLEV,PINT)
+#define DSPEV(JOBZ, UPLO, N, AP, W, Z, LDZ, WORK, INFO) CCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBLEV,PINT,JOBZ, UPLO, N, AP, W, Z, LDZ, WORK, INFO)
 
 #ifdef SINGLE
 #define GETRF SGETRF

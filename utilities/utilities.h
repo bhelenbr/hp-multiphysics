@@ -1,5 +1,8 @@
 #include<stdlib.h>
 
+#ifndef _utilities_h_
+#define _utilities_h_
+
 #define MAX(A,B) (A>B?A:B)
 #define MIN(A,B) (A<B?A:B)
 #define SIGN(A) (A > 0 ? 1 : -1)
@@ -7,6 +10,28 @@
 #ifdef __cplusplus
 extern "C" void *xmalloc(size_t a);	
 extern "C" void number_str(char *out, const char *in, int n, int dgts);
+#include<iostream>
+
+class sharedmem {
+   public:
+      size_t size;
+      void *p;
+      sharedmem() : size(0) {}
+      sharedmem(size_t t) {allocate(t);}
+      int allocate(size_t t) {
+         if (size) {
+            free(p);
+         }
+         size = t;
+         p = malloc(t);
+         if (!p) {
+            std::cerr << "couldn't allocate shared memory\n";
+            return(1);
+         }
+         return(0);
+      }
+};
+
 #else
 extern void *xmalloc(size_t a);	
 extern void number_str(char *out, const char *in, int n, int dgts);
@@ -45,3 +70,4 @@ exit(1); } \
 for(l=1;l<i;++l) {a[l] = a[l-1] + j;} \
 for(l=1;l<(i)*(j);++l) {a[0][l] = a[0][l-1] + k; }\
 }
+#endif

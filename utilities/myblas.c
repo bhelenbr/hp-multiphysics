@@ -1,6 +1,38 @@
 #include<math.h>
 #include<float.h>
 
+void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs) {
+
+	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
+   /* SAME AS DPBTRS, BUT FOR RHS VARIABLES AT ONCE */
+	int i,j,frst,ba,n;
+   int ofdgp = ofdg+1;		
+
+	for(i=0;i<ordr;++i) {
+		frst = (ofdg -i > 0 ? ofdg -i : 0);
+		ba = -frst;
+		for(j=frst;j<ofdg;++j)
+			for(n=0;n<rhs;++n)
+				b[rhs*i +n] -= abd[i*ofdgp +j]*b[(ba+j)*rhs +n];
+
+		for(n=0;n<rhs;++n)
+			b[i*rhs +n] /= abd[i*ofdgp +ofdg];
+	}
+
+	for(i=ordr-1;i>=0;--i) {
+ 		for(n=0;n<rhs;++n)
+ 			b[i*rhs +n] /= abd[i*ofdgp +ofdg];
+
+ 		frst = (ofdg -i > 0 ? ofdg -i : 0);
+ 		ba = -frst;
+ 		for(j=frst;j<ofdg;++j)
+ 			for(n=0;n<rhs;++n)
+				b[rhs*(ba+j) +n] -= abd[i*ofdgp +j]*b[i*rhs +n];
+	}
+	
+	return;
+}
+
 void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs) {
 
 	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
@@ -31,6 +63,39 @@ void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs) {
 	
 	return;
 }
+
+void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs) {
+
+	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
+   /* SAME AS DPBTRS, BUT FOR RHS VARIABLES AT ONCE */
+	int i,j,frst,ba,n;		
+
+	for(i=0;i<ordr;++i) {
+		frst = (ofdg -i > 0 ? ofdg -i : 0);
+		ba = -frst;
+		for(j=frst;j<ofdg;++j)
+			for(n=0;n<rhs;++n)
+				b[rhs*i +n] -= abd[i*stride+j]*b[(ba+j)*rhs +n];
+
+		for(n=0;n<rhs;++n)
+			b[i*rhs +n] /= abd[i*stride+ofdg];
+	}
+
+	for(i=ordr-1;i>=0;--i) {
+ 		for(n=0;n<rhs;++n)
+ 			b[i*rhs +n] /= abd[i*stride+ofdg];
+
+ 		frst = (ofdg -i > 0 ? ofdg -i : 0);
+ 		ba = -frst;
+ 		for(j=frst;j<ofdg;++j)
+ 			for(n=0;n<rhs;++n)
+				b[rhs*(ba+j) +n] -= abd[i*stride+j]*b[i*rhs +n];
+	}
+	
+	return;
+}
+
+
 
 void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs) {
 
