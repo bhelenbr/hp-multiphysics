@@ -35,7 +35,7 @@ void hp_mgrid::length1() {
             fltwk[v1] += sum;
          }
          
-         /* BOUNDARY CURVATURE? */
+         /* BOUNDARY CURVATURE (FOR LINEAR THIS IS DIFFICULT TO TEST)
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
             for(j=0;j<sbdry[i].num;++j) {
@@ -47,8 +47,8 @@ void hp_mgrid::length1() {
                fltwk[v1] += sum;
             }
          }
-               
-            
+         */
+                     
          break;
          
       default:
@@ -73,9 +73,10 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
-               fltwk[v0] += sum;
-               fltwk[v1] += sum;
+               /* THIS LIMITS BOUNDARY CURVATURE DUE TO -> ALL <- HIGHER ORDER MODES TO 1/invbdryerr VARIATION */
+               sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b.p+1)/2.0);
+               fltwk[v0] += sum*trncerr*nnbor[v0];
+               fltwk[v1] += sum*trncerr*nnbor[v1];
                indx += sm0;
             }
          }

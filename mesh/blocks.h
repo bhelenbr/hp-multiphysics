@@ -66,11 +66,11 @@ class blocks {
             blk[i].grd[0].length2();
             blk[i].grd[0].yaber(1.0/tolerance,1,0.0);
             blk[i].grd[0].setbcinfo();
-            blk[i].grd[0].out_mesh("coarse",tecplot);
+            blk[i].grd[0].out_mesh("coarse",grid);
             blk[i].grd[0].treeupdate();
             blk[i].grd[0].rebay(tolerance);
             blk[i].grd[0].setbcinfo();
-            blk[i].grd[0].out_mesh("refine",tecplot);
+            blk[i].grd[0].out_mesh("refine",grid);
             blk[i].reconnect();
          }
          

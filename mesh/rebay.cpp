@@ -11,6 +11,8 @@
 #include<assert.h>
 #include<math.h>
 
+#define REBAY
+
 /* MEMORY USAGE */
 /* INTWK2 - LIST OF SIDES TO BE REFINED */
 /* INTWK3 - BACK REFERENCE FROM SIDE INTO LIST */
@@ -109,6 +111,24 @@ void mesh::rebay(FLT tolsize) {
          ntnew = ntdel +1;
       }
       else {
+      
+#ifdef REBAY
+         /* THIS IS TRIANGLE BASED REFINEMENT */
+         /*	FIND ACCEPTED EDGE ON TRIANGLE & BUILD OFF OF IT */
+         if (vinfo[tind] < 3) {
+            for (snum=0;snum<3;++snum) 
+               if (intwk3[snum] == -1) break;
+         }
+         else {
+            tind = stri[sind][1];
+            for (snum=0;snum<3;++snum) 
+               if (intwk3[snum] == -1) break;
+         }
+         
+         v0 = tvrtx[tind][(snum+1)%3];
+         v1 = tvrtx[tind][(snum+2)%3];
+         v2 = tvrtx[tind][snum];
+         
          /* USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
          dy = vrtx[v0][1] -vrtx[v1][1];
@@ -129,7 +149,7 @@ void mesh::rebay(FLT tolsize) {
          q = sqrt(dx*dx +dy*dy);
          if (q < p) goto INSRT;
 
-         densty    = .5*(vlngth[v0]  +vlngth[v1]);
+         densty    = (vlngth[v0]  +vlngth[v1])/sqrt(3.0);
          rad1      = MAX(densty,p);
          rad2      = .5*(p*p  +q*q)/q;
          cirrad    = MIN(rad1,rad2);
@@ -146,7 +166,12 @@ void mesh::rebay(FLT tolsize) {
          if (xdif*rn1 +ydif*rn2 < 0.) rsign = -1.;
          xpt       = xmid +rsign*dist*rn1;
          ypt       = ymid +rsign*dist*rn2;
-      
+#else
+         /* MIDPOINT RULE (VERY SIMPLE) */
+         xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
+         ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+#endif
+
 INSRT:
          /* INSERT POINT */
          vrtx[nvrtx][0] = xpt;

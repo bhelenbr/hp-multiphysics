@@ -16,11 +16,11 @@
 
 /* INITIAL CONDITIONS */
 /* KOVASZNAY TEST CYLINDER FREESTREAM */
-#define TEST
+#define FREESTREAM
 
 /*	CURVED SURFACES */
 /* CIRCLE SIN COS */
-#define SIN
+#define CIRCLE
 
 /* FOR A CIRCLE */
 FLT rad = 0.5;
@@ -31,7 +31,7 @@ FLT centery = 0.0;
 #ifdef COS
 FLT amp = 0.375;
 #else
-FLT amp = 0.000;
+FLT amp = 0.075;
 #endif
 
 
@@ -46,7 +46,7 @@ int startup = 1;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(y*y*y*y);
+         return(1.0);
       case(1):
          return(0.0);
       case(2):
@@ -63,7 +63,7 @@ FLT f1(int n, FLT x, FLT y) {
       case(0):
          return(0.0);
       case(1):
-         return(0.0);
+         return(0.1);
       case(2):
          return(0.0);
    }

@@ -19,11 +19,14 @@ struct r_mesh_glbls {
 
 class r_mesh :public mesh {
    /* MESH DEFORMATION VARIABLES */
+      protected:
+         /* FOR SETTING BOUNDARY CONDITIONS */
+         static int fixx_mask, fixy_mask, fixdx_mask, fixdy_mask;
+   
       private:
          /* THINGS SHARED BY ALL BLOCKS */
          static FLT vnn, fadd;
-         static int fixx_mask, fixy_mask, fixdx_mask, fixdy_mask;
-         
+                  
          /* STRUCTURE CONTAINING ALL MESH INDEPENDENT VARIABLES */
          struct r_mesh_glbls *rg;
          

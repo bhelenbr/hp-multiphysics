@@ -137,20 +137,22 @@ void blocks::init(char *file) {
          /* INPUT UNSTEADY TIME HISTORY */
          number_str(outname,"rstrtdata",readin,3);
          strcat(outname, ".");
-         number_str(bname, outname, i, 1);
          for(j=0;j<MXSTEPM1;++j) {
-            number_str(outname,bname,j,1);
-            printf("#Reading restart data: %s\n",outname);
-            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,text);
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            printf("#Reading restart data: %s\n",bname);
+            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,text);
          }
-   
+         
          number_str(outname,"rstrtvrtx",readin,3);
          strcat(outname, ".");
-         number_str(bname, outname, i, 1);
          for(j=0;j<MXSTEPM1;++j) {
-            number_str(outname,bname,j,1);
-            printf("#Reading restart mesh: %s\n",outname);
-            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            printf("#Reading restart mesh: %s\n",bname);
+            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],bname,text);
          }
       }
       hp_mgrid::setbd(MXSTEP);
@@ -424,20 +426,22 @@ void blocks::go() {
          /* INPUT UNSTEADY TIME HISTORY */
          number_str(outname,"rstrtdata",readin,3);
          strcat(outname, ".");
-         number_str(bname, outname, i, 1);
          for(j=0;j<MXSTEPM1;++j) {
-            number_str(outname,bname,j,1);
-            printf("#Reading restart data: %s\n",outname);
-            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,text);
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            printf("#Reading restart data: %s\n",bname);
+            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,text);
          }
-   
+         
          number_str(outname,"rstrtvrtx",readin,3);
          strcat(outname, ".");
-         number_str(bname, outname, i, 1);
          for(j=0;j<MXSTEPM1;++j) {
-            number_str(outname,bname,j,1);
-            printf("#Reading restart mesh: %s\n",outname);
-            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+            number_str(bname,outname,j,1);
+            strcat(bname, ".");
+            number_str(bname, bname, i, 1);
+            printf("#Reading restart mesh: %s\n",bname);
+            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],bname,text);
          }
       }
 #endif
@@ -509,21 +513,25 @@ void blocks::output(int number, FILETYPE type=text) {
       }
       
       /* OUTPUT UNSTEADY TIME HISTORY */
+      /*	FIRST INDEX IS HISTORY NUMBER */
+      /* SECOND IS BLOCK NUMBER */
       number_str(outname,"rstrtdata",number,3);
       strcat(outname, ".");
-      number_str(bname, outname, i, 1);
       for(j=0;j<MXSTEPM1;++j) {
-         number_str(outname,bname,j,1);
-         blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,type);
+         number_str(bname,outname,j,1);
+         strcat(bname, ".");
+         number_str(bname, bname, i, 1);
+         blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],bname,type);
       }
 
       /* OUTPUT INTERPOLATED MESH TIME HISTORY */
       number_str(outname,"rstrtvrtx",number,3);
       strcat(outname, ".");
-      number_str(bname, outname, i, 1);
       for(j=0;j<MXSTEPM1;++j) {
-         number_str(outname,bname,j,1);
-         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,type);
+         number_str(bname,outname,j,1);
+         strcat(bname, ".");
+         number_str(bname, bname, i, 1);
+         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],bname,type);
       }
    }
    

@@ -36,6 +36,8 @@ FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
 void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    int i,j,n,onfmesh;
    
+   r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK -INFL_MASK;  //TEMPORARY
+   
    if (spectral_hp::size == 0 || mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
       exit(1);
