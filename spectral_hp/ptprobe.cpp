@@ -33,7 +33,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
       /* THIS ASSUMES SIDE RADIUS OF CURVATURE IS LESS THAN 1/2 LENGTH OF SIDE ON BDRY */
       x[0] = xp;
       x[1] = yp;
-      sind = findbdryside(x,v0);
+      sind = findbdryside(x,v0,0,0);
       if (sind < 0 || sinfo[sind] < 0) {
          printf("Warning: error finding boundary tri (%f,%f) nearpt %d sind %d\n",xp,yp,v0,sind);
       }
@@ -79,22 +79,15 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);
    xp[0] = x; xp[1] = y;
-   sind = findbdryside(xp,vnear);
+   sind = findbdryside(xp,vnear,typ);
    if (sind < 0) {
       printf("#Warning: brute force boundary locate (%f,%f) %d\n",x,y,typ);
       for(bnum=0;bnum<nsbd;++bnum)
          if (sbdry[bnum].type == typ) break;
       sind = sbdry[bnum].el[sbdry[bnum].num/2];
    }
-   else {
-      bnum = (-stri[sind][1]>>16) -1;
-      if (sbdry[bnum].type != typ) {
-         printf("#Warning: brute force boundary locate (%f,%f) sind %d, type: %d %d\n",x,y,sind,sbdry[bnum].type,typ);
-         for(bnum=0;bnum<nsbd;++bnum)
-            if (sbdry[bnum].type == typ) break;
-         sind = sbdry[bnum].el[sbdry[bnum].num/2];
-      }
-   }
+   bnum = (-stri[sind][1]>>16) -1;
+
    
 #ifdef OLDWAY
    tind = vtri[vnear];
