@@ -41,8 +41,6 @@ void hp_mgrid::drag(int type) {
             circ += b.wtx[i]*sqrt(dcrd[0][0][0][i]*dcrd[0][0][0][i] +dcrd[1][0][0][i]*dcrd[1][0][0][i]);
             cjcb[0][i] = gbl->mu*RAD1D(i)/(dcrd[0][0][0][i]*dcrd[1][1][0][i] -dcrd[1][0][0][i]*dcrd[0][1][0][i]);
             
-//            printf("%d %f\n",sd,cjcb[0][i]/gbl->mu*(du[0][0][0][i]*dcrd[1][1][0][i] -du[0][1][0][i]*dcrd[1][0][0][i]));
-            
             /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
             /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
             visc[0][0][0][0] =  cjcb[0][i]*(2.*dcrd[1][1][0][i]*dcrd[1][1][0][i] +dcrd[0][1][0][i]*dcrd[0][1][0][i]);
@@ -66,10 +64,10 @@ void hp_mgrid::drag(int type) {
 #define     viscI1II0II0II1I visc[0][1][1][0]
 #define     viscI1II0II1II0I visc[0][1][0][1]
 
-            drg[0] -=   b.wtx[i]*(-u[2][0][i]*dcrd[1][0][0][i] 
+            drg[0] -=   b.wtx[i]*(-u[2][0][i]*RAD1D(i)*dcrd[1][0][0][i] 
                         -viscI0II0II1II0I*du[0][0][0][i] -visc[0][1][1][0]*du[1][0][0][i]
                         -visc[0][0][1][1]*du[0][1][0][i] -visc[0][1][1][1]*du[1][1][0][i]);															
-            drg[1] -=   b.wtx[i]*(-u[2][0][i]*dcrd[0][0][0][i] 
+            drg[1] -=   b.wtx[i]*( u[2][0][i]*RAD1D(i)*dcrd[0][0][0][i]
                         -viscI1II0II1II0I*du[0][0][0][i] -viscI1II1II1II0I*du[1][0][0][i]
                         -viscI1II0II1II1I*du[0][1][0][i] -visc[1][1][1][1]*du[1][1][0][i]);
          }				

@@ -159,7 +159,7 @@ void blocks::init(char *file) {
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],bname,text);
          }
       }
-      hp_mgrid::setbd(MXSTEP);
+      hp_mgrid::setbd(MIN(MXSTEP,readin));
             
       /* REFIND BOUNDARIES ON FINE MESH */
       findmatch(0);
@@ -397,7 +397,7 @@ void blocks::go() {
       
       hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
       
-      blk[0].grd[0].drag(66564);
+      blk[0].grd[0].drag(1028);
       if (!(tstep%out_intrvl)) {
          output(tstep+1,text);
          output(tstep+1,tecplot);
