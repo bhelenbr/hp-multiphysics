@@ -205,7 +205,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
          x += delt_dist*dhgtdx(typ,x,y)/mag;
          y += delt_dist*dhgtdy(typ,x,y)/mag;
          if (++iter > 100) {
-            printf("iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+            printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
             exit(1);
          }
       } while (fabs(delt_dist) > 10.*EPSILON);
@@ -222,7 +222,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
             x += delt_dist*dhgtdx(typ,x,y)/mag;
             y += delt_dist*dhgtdy(typ,x,y)/mag;
             if (++iter > 100) {
-               printf("iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
                exit(1);
             }
          } while (fabs(delt_dist) > 10.*EPSILON);

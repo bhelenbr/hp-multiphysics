@@ -216,10 +216,10 @@ void blocks::tadvance() {
       hp_mgrid::time = hp_mgrid::time +1./hp_mgrid::dti;
       outertime = hp_mgrid::time;  // TEMPORARY
    
+   r_ksrc();
+
    for(i=0;i<nblocks;++i)
       blk[i].tadvance();
-      
-   r_ksrc();
    
    return;
 }

@@ -59,7 +59,7 @@ struct hp_mgrid_glbls {
 };
 
 class hp_mgrid : public spectral_hp {
-   protected:
+   private:
 /*		THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
       static const FLT alpha[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
       static const FLT beta[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (REAL)
@@ -89,7 +89,6 @@ class hp_mgrid : public spectral_hp {
       FLT (*dvrtdt)[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
       FLT (*vug_frst)[NV]; // SOLUTION ON FIRST ENTRY TO COARSE MESH
       struct vsi dres[MXLG2P]; // DRIVING TERM FOR MULTIGRID
-      bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
       
 /*    SURFACE BOUNDARY CONDITION STUFF */
       class surface *srf;
@@ -97,6 +96,9 @@ class hp_mgrid : public spectral_hp {
 /*		SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
       void gbl_alloc(struct hp_mgrid_glbls *store);
+      
+   private:
+      bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);

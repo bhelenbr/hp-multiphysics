@@ -49,7 +49,7 @@ void hpbasis::initialize(int pdegree) {
          free(dpgx);
          free(pgn);
          free(dpgn);  
-         printf("warning: better to allocate hpbasis from largest to smallest\n");
+         printf("#Warning: better to allocate hpbasis from largest to smallest\n");
       }
       mat_alloc(wk0,nmodx,gpn,FLT);
       mat_alloc(wk1,nmodx,gpn,FLT);
@@ -130,13 +130,13 @@ void hpbasis::initialize_values(void)
    ierr = recur(gpx+1,ipoly,al,be,a0[0],b0[0]);
    if (ierr != 0) {
       printf("recur #1 error %d\n",ierr);
-      return;
+      exit(1);
    }
 
    ierr = gauss(gpx,a0[0],b0[0],EPSILON,x0,wtx,e);
    if (ierr != 0) {
       printf("gauss #1 error %d\n",ierr);
-      return;
+      exit(1);
    }
 
 /***********************************************/
@@ -189,7 +189,7 @@ void hpbasis::initialize_values(void)
          ierr = recur(sm+1,ipoly,al,be,a0[0],b0[0]);
          if (ierr != 0) {
             printf("recur #3 error %d\n",ierr);
-            return;
+            exit(1);
          }
    
    
@@ -222,13 +222,13 @@ void hpbasis::initialize_values(void)
    ierr = recur(gpn,ipoly,al,be,a0[1],b0[1]);
    if (ierr != 0) {
       printf("recur #2 error %d\n",ierr);
-      return;
+      exit(1);
    }	
    
    ierr = radau(gpn-1,a0[1],b0[1],-1.0,n0,wtn,e,e1,e2);		
    if (ierr != 0) {
       printf("gauss #3 error %d\n",ierr);
-      return;
+      exit(1);
    }
    
    for (i=0;i<gpn;++i)
@@ -294,7 +294,7 @@ void hpbasis::initialize_values(void)
          ierr = recur(sm+1,ipoly,al,be,a0[1],b0[1]);
          if (ierr != 0) {
             printf("recur #3 error %d\n",ierr);
-            return;
+            exit(1);
          }
    
 /*			SIDE 2	*/
@@ -345,7 +345,7 @@ void hpbasis::initialize_values(void)
                ierr = recur(sm+2-m,ipoly,al,be,a0[m],b0[m]);
                if (ierr != 0) {
                   printf("recur #4 error %d\n",ierr);
-                  return;
+                  exit(1);
                }
       
                pk = 1.0;
@@ -612,8 +612,7 @@ void hpbasis::lumpinv(void) {
             GETRF(im,im,mwk[0],MXTM,ipiv,info);
             if (info != 0) {
                printf("DGETRF FAILED SIDE info:%d (sm+2):%d k:%d\n",info,(sm+2),k);
-               for(j=0;j<im;++j)
-                  vwk[j] = 0.0;
+               exit(1);
             }
             else
                GETRS(trans,im,1,mwk[0],MXTM,ipiv,vwk,MXTM,info);

@@ -21,8 +21,8 @@ void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
 }
 
 int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
-	static FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,psi;
-	static int iter,tind,sind,v0,vn,stoptri,typ;
+	FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,close,test;
+	int iter,tind,v0,vn,stoptri,tclose,dir;
 
    qtree.nearpt(xp,yp,v0);
    tind = findtri(xp,yp,v0);
@@ -31,32 +31,36 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    if (tind == -1) {
 /*		THIS SHOULD RARELY HAPPEN I HOPE */
 /*		POINT IS PROBABLY IN CURVED TRIANGLE NEAR BOUNDARY */
+      close = 1.0e16;
       tind = vtri[v0];
       stoptri = tind;
+      dir = 1;
       do {
          for(vn=0;vn<3;++vn) 
             if (tvrtx[tind][vn] == v0) break;
          
          assert(vn != 3);
          
-         if (ttri[tind][vn] < 0) {
-            typ = sbdry[(-ttri[tind][vn]>>16) -1].type;
-            break;
-         }
-         
-         tind = ttri[tind][(vn +1)%3];
+         tind = ttri[tind][(vn +dir)%3];
          if (tind < 0) {
-            typ = sbdry[(-tind>>16) -1].type;
-            break; 
+            if (dir > 1) break;
+   /*			REVERSE DIRECTION AND GO BACK TO START */
+            ++dir;
+            tind = vtri[v0];
+            stoptri = -1;
          }
-      } while(tind != stoptri);
+   
+         test = intri(tind,xp,yp);
+         if (test < close) {
+            close = test;
+            tclose = tind;
+         }            
+      } while(tind != stoptri); 
 
-      if (tind == stoptri) {
-         printf("couldn't find triangle for point %d %f %f\n",v0,xp,yp);
-         return(-1);
+      tind = tclose;
+      if (tinfo[tind] == -1) {
+         printf("Warning: closest triangle was not curved\n");
       }
-      sind = findbdrypt(typ,xp,yp,psi);
-      tind = stri[sind][0];
       wgt[1] = 0.5;
       wgt[2] = 0.5;
    }
@@ -82,7 +86,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          r += dr;
          s += ds;
          if (iter++ > 50) {
-            printf("max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
+            printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
             break;
          }
       } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
@@ -126,7 +130,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
          }
          if (dir > 1) {
 /*				DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
-            printf("#brute force boundary locate\n");
+            printf("#Warning: brute force boundary locate\n");
             for(bnum=0;bnum<nsbd;++bnum)
                if (sbdry[bnum].type == typ) break;
             sind = sbdry[bnum].el[0];
@@ -140,7 +144,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       
       if (tind == stoptri) {
 /*			COULDN'T FIND SIDE DO BRUTE FORCE */
-         printf("#brute force bdry locate\n");
+         printf("#Warning: brute force bdry locate\n");
          for(bnum=0;bnum<nsbd;++bnum)
             if (sbdry[bnum].type == typ) break;
          sind = sbdry[bnum].el[0];
@@ -169,6 +173,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
             continue;
          }
          else {
+            printf("#Warning: trouble finding side point %f %f, best guess side %d psi -1.0\n",x,y,sbdry[bnum].el[snumnew]);
             psi = -1.;
          }
       }
@@ -180,6 +185,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
             continue;
          }
          else {
+            printf("#Warning: trouble finding side point %f %f, best guess side %d psi 1.0\n",x,y,sbdry[bnum].el[snumnew]);
             psi = 1.;
          }
       }
@@ -198,7 +204,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
          psi += dpsi;
          if (iter++ > 100) {
-            printf("max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f\n",tind,typ,x,y);
+            printf("#Warning: max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f\n",tind,typ,x,y);
             break;
          }
 /*         
