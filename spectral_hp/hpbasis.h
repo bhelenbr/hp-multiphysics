@@ -48,8 +48,10 @@ class hpbasis {
       FLT **gxwtx, **dgxwtx;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
       FLT *dltx, **dltx1;
+      /*	X DERIVATIVES AT X = -1,1 */
+      FLT (*dgxendpts)[2];
       
-      /* Y FUNCTIONS & DERIVATIVES */
+      /* ETA FUNCTIONS & DERIVATIVES */
       FLT **gn, **dgn;
       /* GAUSS WEIGTS & LOCATIONS */
       FLT *wtn, *n0;
@@ -57,6 +59,8 @@ class hpbasis {
       FLT **gnwtnn0,**dgnwtn;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
       FLT *dltn, **dltn1, **dltn2;
+      /* N DERIVATIVES AT N = -1 */
+      FLT *dgnendpt;
 
       /* RENORMALIZATION CONSTANTS */
       FLT *norm;
@@ -103,7 +107,7 @@ class hpbasis {
       void proj(FLT u1, FLT u2, FLT u3, FLT **f);
       /* PROJECT USING SIDE/VERTEX MODES WITH R & S DERIVATIVES */
       void proj_bdry(FLT *lin, FLT **f, FLT **dr, FLT **ds);
-      /* PROJECT USING SIDE/VERTEX MODES ONLY VALUE */
+      /* PROJECT USING SIDE/VERTEX MODES ONLY */
       void proj_bdry(FLT *lin, FLT **f);
       /* PROJECT TO LEGENDRE POINTS (FOR OUTPUTING) */
       void proj_leg(FLT *lin, FLT **f);
@@ -111,6 +115,9 @@ class hpbasis {
       void proj_leg(FLT u1, FLT u2, FLT u3, FLT **f);
       /* PROJECT TO LEGENDRE POINTS USING SIDE/VERTEX MODES ONLY (FOR OUTPUTING) */
       void proj_bdry_leg(FLT *lin, FLT **f);
+      /* PROJECT VALUES & TANGENT & NORMAL DERIVATIVES TO 1D SIDE GAUSS POINTS */
+      /* dx is tangential derivative, dn is normal derivative to side */
+      void proj_side(int side, FLT *lin, FLT *f, FLT *dx, FLT *dn);
 
       /* DERIVATIVE IN R */
       void derivr(FLT **f, FLT **dr);
@@ -168,7 +175,9 @@ class hpbasis {
       void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
       void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
       void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
-      void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      void ptvalues_deriv(FLT r, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
+      void ptvalues_deriv_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
       void ptvalues1d(FLT x);
+      void ptvalues1d_deriv(FLT x);
 };
 
