@@ -92,6 +92,9 @@ void mesh::createtsidestri(void) {
          sinfo[sindprev] = i;
       sinfo[i] = -1;
    }
+   
+   for(i=0;i<nside;++i)
+      stri[i][1] = -1;
 
    for(tind=0;tind<ntri;++tind) {
       vout = tvrtx[tind][0];
@@ -468,14 +471,19 @@ void mesh::initvlngth() {
       
 void mesh::length() {
    int i;
+   FLT x,y,r;
 
    /* THIS NEEDS TO BE MODIFED DEPENDING ON DESIRED RESULT */
    /* SIDE BASED REFINEMENT CRITERION */
 //   for(i=0;i<nvrtx;++i)
 //      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
 
-   for(i=0;i<nvrtx;++i)
-      vlngth[i] = 1./32.;
+   for(i=0;i<nvrtx;++i) {
+      x = vrtx[i][0];
+      y = vrtx[i][1];
+      r = x*x +y*y;
+      vlngth[i] = 2.0 -1.8*exp(-0.1*r)/exp(-0.1*.25);
+   }
 
    return;
 }
