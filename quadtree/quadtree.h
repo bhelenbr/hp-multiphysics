@@ -65,6 +65,7 @@ class quadtree {
       inline void init(FLT (*v)[ND], int mxv, FLT x1, FLT y1, FLT x2, FLT y2) { allocate(v,mxv); init(x1,y1,x2,y2);}
       void init(); // RESETS WITH SAME AREA
       void init(FLT x1, FLT y1, FLT x2, FLT y2);  // RESETS QUAD WITH NEW AREA
+      void reinit(); // ERASES TREE AND REINSERTS POINTS THUS REMOVING UNUSED QUADS
       
       inline void change_vptr(FLT (*v)[ND]) { vrtx = v;}
       inline FLT xmin() {return(base[0].xmin);}

@@ -91,13 +91,28 @@ void quadtree::copy(const class quadtree& tgt) {
       indx = new class quad*[maxvrtx];
    }
    else {
-      assert(size >= tgt.size);
-      assert(maxvrtx >= tgt.maxvrtx);
+      assert(size >= tgt.current);
    }
 
-   for(i=0;i<maxvrtx;++i) {
-      if (tgt.indx[i] == NULL) indx[i] = NULL;
-      else indx[i] = base + (tgt.indx[i] -tgt.base);
+   if (maxvrtx < tgt.maxvrtx) {
+      for(i=0;i<maxvrtx;++i) {
+         if (tgt.indx[i] == NULL) indx[i] = NULL;
+         else indx[i] = base + (tgt.indx[i] -tgt.base);
+      }
+   
+      for(i=maxvrtx;i<tgt.maxvrtx;++i)
+         if (tgt.indx[i] != NULL) {
+            printf("quadtree is too small for copy\n");
+            exit(1);
+      }
+   }
+   else {
+      for(i=0;i<tgt.maxvrtx;++i) {
+         if (tgt.indx[i] == NULL) indx[i] = NULL;
+         else indx[i] = base + (tgt.indx[i] -tgt.base);
+      }
+      for(i=tgt.maxvrtx;i<maxvrtx;++i)
+         indx[i] = NULL;
    }
 
    current = tgt.current;
@@ -124,6 +139,23 @@ void quadtree::copy(const class quadtree& tgt) {
    
    return;
 }
+
+
+void quadtree::reinit() {
+   int i;
+      
+   assert(size != 0); 
+   
+   base[0].num = 0;
+   current = 1;
+   
+   for(i=0;i<maxvrtx;++i)
+      if (indx[i] != NULL) addpt(i);
+   
+   return;
+}
+
+
 
 void quadtree::addpt(int v0, class quad* start = NULL) {
    int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
