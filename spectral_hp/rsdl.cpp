@@ -8,6 +8,11 @@
  */
 
 #include "hp_mgrid.h"
+
+#define NO_TWOLAYER
+#ifdef TWOLAYER
+extern FLT body[2];
+#endif
    
 void hp_mgrid::rsdl(int stage, int mgrid) {
    int i,j,n,tind;
@@ -49,7 +54,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(n=0;n<ND;++n)
             b.proj_bdry(cht[n],u[n]);
       }
-      else {
+   	else {
          for(n=0;n<ND;++n)
             b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
             
@@ -59,8 +64,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][1]][n] -vrtx[tvrtx[tind][0]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][0]][n]);
+                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][1]][n]);
+                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][0]][n] -vrtx[tvrtx[tind][1]][n]);
                }
             }
          }
@@ -125,6 +130,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   
 #ifdef AXISYMMETRIC
                   res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
+#endif
+
+#ifdef TWOLAYER
+                  res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
+                  res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 #endif
                }
             }
@@ -195,6 +205,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                cv11[i][j] += e11[i][j];
             }
          }
+         
+         
          b.derivr(cv00,res[0]);
          b.derivs(cv01,res[0]);
          b.derivr(cv10,res[1]);
@@ -206,7 +218,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
-
                tres[0] = gbl->tau[tind]*res[0][i][j];
                tres[1] = gbl->tau[tind]*res[1][i][j];
                tres[2] = gbl->delt[tind]*res[2][i][j];
@@ -306,7 +317,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             gbl->res.s[i][n] += dres[log2p].i[i][n];  
    }
 
-   /*
+/*
    for(i=0;i<nvrtx;++i)
       printf("v: %d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
       
@@ -317,7 +328,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       printf("i: %d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
         
    exit(1);
-   */
+*/
 
    return;
 }
