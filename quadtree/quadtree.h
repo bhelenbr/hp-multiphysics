@@ -8,6 +8,7 @@
  */
 
 #include<cstdio>
+#include<math.h>
 #ifndef _quadtree_h_
 #define _quadtree_h_
 
@@ -21,21 +22,25 @@
 
 class quad {
    private:
+      static const int ND = 2;
       friend class quadtree;
       int num; 			// NUMBER OF POINTS
       class quad *prnt;	// POINTER TO PARENT QUAD
       int pind; 			// DAUGHTER NUMBER OF PARENT
-      FLT xmin, ymin;
-      FLT xmax, ymax;
+      FLT xmin[ND], xmax[ND];
       union {
-         int node[4];    	// STORES EITHER NODES OR POINTER TO DAUGHTERS
-         class quad *dghtr[4];
+         int node[(1<<ND)];    	// STORES EITHER NODES OR POINTER TO DAUGHTERS
+         class quad *dghtr[(1<<ND)];
       };
       
    public:
       quad() {}
-      quad(quad *p, int i, FLT x1, FLT y1, FLT x2, FLT y2) : 
-         num(0), prnt(p), pind(i), xmin(x1), ymin(y1), xmax(x2), ymax(y2) {}
+      quad(quad *p, int i, FLT x1[ND], FLT x2[ND]) : num(0), prnt(p), pind(i) {
+         for(int n=0;n<ND;++n) {
+            xmin[n] = x1[n];
+            xmax[n] = x2[n];
+         }
+      }
          
 };
 
@@ -57,21 +62,19 @@ class quadtree {
       quadtree() : size(0) {};
       void copy(const class quadtree& tgt);
       void allocate(FLT (*v)[ND],int mxv);
-      inline void init(FLT (*v)[ND], int mxv, FLT x1, FLT y1, FLT x2, FLT y2) { allocate(v,mxv); init(x1,y1,x2,y2);}
+      inline void init(FLT (*v)[ND], int mxv, FLT x1[ND], FLT x2[ND]) { allocate(v,mxv); init(x1,x2);}
       void init(); // RESETS WITH SAME AREA
-      void init(FLT x1, FLT y1, FLT x2, FLT y2);  // RESETS QUAD WITH NEW AREA
+      void init(FLT x1[ND], FLT x2[ND]);  // RESETS QUAD WITH NEW AREA
       void reinit(); // ERASES TREE AND REINSERTS POINTS THUS REMOVING UNUSED QUADS
       
       inline void change_vptr(FLT (*v)[ND]) { vrtx = v;}
-      inline FLT xmin() {return(base[0].xmin);}
-      inline FLT ymin() {return(base[0].ymin);}
-      inline FLT xmax() {return(base[0].xmax);}
-      inline FLT ymax() {return(base[0].ymax);} 
+      inline FLT xmin(int i) {return(base[0].xmin[i]);}
+      inline FLT xmax(int i) {return(base[0].xmax[i]);}
            
       void addpt(int v0, class quad *start = 0);
       
       FLT nearpt(int v0, int& pt) const;
-      FLT nearpt(FLT x, FLT y, int& pt) const;
+      FLT nearpt(FLT x[ND], int& pt) const;
       
       void dltpt(int v0);
       

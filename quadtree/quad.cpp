@@ -36,7 +36,12 @@ void quadtree::allocate(FLT (*v)[ND], int mxv) {
    for(i=0;i<maxvrtx;++i)
       indx[i] = NULL;
 
-   base[0] = quad(NULL,0,0.0,0.0,1.0,1.0);
+   FLT x1[ND], x2[ND];
+   for(i=0;i<ND;++i) {
+      x1[i] = 0.0;
+      x2[i] = 1.0;
+   }
+   base[0] = quad(NULL,0,x1,x2);
    current = 1;
    
    if (maxsrch == 0) {
@@ -53,18 +58,21 @@ void quadtree::allocate(FLT (*v)[ND], int mxv) {
    }
 }
 
-void quadtree::init(FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
-
-   if (xmin >= xmax || ymin >= ymax) {
-      printf("quadtree initialization error: zero domain area %f %f %f %f\n",xmin,xmax,ymin,ymax);
-      exit(1);
+void quadtree::init(FLT x1[ND], FLT x2[ND]) {
+   int i;
+   
+   for(i=0;i<ND;++i) {
+      if(x1[i] >= x2[i]) {
+       	printf("quadtree initialization error: zero domain area %d %f %f\n",i,x1[i],x2[i]);
+         exit(1);
+      }
    }
+   
+   
 
-//   base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
+   base[0] = quad(NULL,0,x1,x2);
 
-   base[0].num = 0; base[0].prnt = NULL; base[0].pind = 0; base[0].xmin = xmin; base[0].ymin = ymin; base[0].xmax = xmax; base[0].ymax = ymax;
-
-   for(int i = 0; i<maxvrtx; ++i)
+   for(i = 0; i<maxvrtx; ++i)
       indx[i] = NULL;
       
    current = 1;
@@ -72,8 +80,7 @@ void quadtree::init(FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
 
 void quadtree::init() {
 
-//   base[0] = quad(NULL,0,base[0].xmin,base[0].ymin,base[0].xmax,base[0].ymax);
-   base[0].num = 0; base[0].prnt = NULL; base[0].pind = 0;
+   base[0] = quad(NULL,0,base[0].xmin,base[0].xmax);
    for(int i = 0; i<maxvrtx; ++i)
       indx[i] = NULL;
       
@@ -81,7 +88,7 @@ void quadtree::init() {
 }
 
 void quadtree::copy(const class quadtree& tgt) {
-   int i,j;
+   int i,j,n;
       
    vrtx = tgt.vrtx;
    if (size == 0) {
@@ -121,16 +128,16 @@ void quadtree::copy(const class quadtree& tgt) {
       base[i].num = tgt.base[i].num;
       base[i].prnt = base +(tgt.base[i].prnt -tgt.base);
       base[i].pind = tgt.base[i].pind;
-      base[i].xmin = tgt.base[i].xmin;
-      base[i].ymin = tgt.base[i].ymin;
-      base[i].xmax = tgt.base[i].xmax;
-      base[i].ymax = tgt.base[i].ymax;
+      for(n=0;n<ND;++n) {
+         base[i].xmin[n] = tgt.base[i].xmin[n];
+         base[i].xmax[n] = tgt.base[i].xmax[n];
+      }
       if (base[i].num > 0) {
-         for(j=0;j<4;++j)
+         for(j=0;j<(1<<ND);++j)
             base[i].node[j] = tgt.base[i].node[j];
       }
       else {
-         for(j=0;j<4;++j)
+         for(j=0;j<(1<<ND);++j)
             base[i].dghtr[j] = base +(tgt.base[i].dghtr[j] -tgt.base);
       }
    }
@@ -155,13 +162,11 @@ void quadtree::reinit() {
    return;
 }
 
-
-
 void quadtree::addpt(int v0, class quad* start) {
-   int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
+   int i,j,n;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    class quad *qpt;  // SAME
-   int store[5];
-   FLT avoid0,xshift,yshift,x1,y1,dx,dy;
+   int store[(1<<ND) +1];
+   FLT avoid0,xshift,x1[ND],x2[ND],dx[ND];
    
    if (start == NULL) 
       qpt = base;
@@ -170,16 +175,16 @@ void quadtree::addpt(int v0, class quad* start) {
 
 /*	LOOP TO BOTTOM OF TREE */
    while (qpt->num < 0) {
-      xshift = vrtx[v0][0] -0.5*(qpt->xmax +qpt->xmin);
-      avoid0 = MAX(fabs(xshift), 10.*EPSILON);
-      i = ((int) ((1+10.*EPSILON)*xshift/avoid0) +1)/2;
-      yshift = vrtx[v0][1] -0.5*(qpt->ymax +qpt->ymin);
-      avoid0 = MAX(fabs(yshift), 10.*EPSILON);
-      i = 2*i +((int) ((1+10.*EPSILON)*yshift/avoid0) +1)/2;
+      i = 0;
+      for(n=0;n<ND;++n) {
+         xshift = vrtx[v0][n] -0.5*(qpt->xmax[n] +qpt->xmin[n]);
+         avoid0 = MAX(fabs(xshift), 10.*EPSILON);
+         i = (i<<1) +((int) ((1+10.*EPSILON)*xshift/avoid0) +1)/2;
+      }
       qpt = qpt->dghtr[i];
    }
    
-   if (qpt->num < 4) {
+   if (qpt->num < (1<<ND)) {
 /*		QUAD CAN ACCEPT NEW POINT */
       qpt->node[qpt->num++] = v0;
       indx[v0] = qpt;
@@ -187,30 +192,31 @@ void quadtree::addpt(int v0, class quad* start) {
    }
 
 /*	QUAD IS FULL SUBDIVIDE */
-   if (current +4 >= size) {
+   if (current +(1<<ND) >= size) {
       printf("Need to allocate bigger quadtree %d\n",size);
-      output("quad_error");
+      output("quad_error",quadtree::text);
       exit(1);
    }
-   for (i=0;i<4;++i)
+   for (i=0;i<(1<<ND);++i)
       store[i] = qpt->node[i];
-   store[4] = v0;
+   store[(1<<ND)] = v0;
    
    qpt->num = -1;
-   dx = (qpt->xmax -qpt->xmin)*0.5;
-   dy = (qpt->ymax -qpt->ymin)*0.5;
-      
-   for (i=0;i<2;++i) {
-      for(j=0;j<2;++j) {
-         x1 = qpt->xmin +dx*i;
-         y1 = qpt->ymin +dy*j;
-         base[current] = quad(qpt,2*i +j,x1,y1,x1+dx,y1+dy);
-         qpt->dghtr[2*i +j] = base +current;
-         ++current;
+   for(n=0;n<ND;++n)
+      dx[n] = (qpt->xmax[n] -qpt->xmin[n])*0.5;
+
+   for(i=0;i<(1<<ND);++i) {
+      for(n=0;n<ND;++n) {
+         j = (i>>(ND-n-1))&1;
+         x1[n] = qpt->xmin[n] +dx[n]*j;
+         x2[n] = x1[n] +dx[n];
       }
+      base[current] = quad(qpt,i,x1,x2);
+      qpt->dghtr[i] = base +current;
+      ++current;
    }
    
-   for(i=0;i<5;++i)
+   for(i=0;i<(1<<ND)+1;++i)
       addpt(store[i],qpt);
       
    return;
@@ -218,16 +224,17 @@ void quadtree::addpt(int v0, class quad* start) {
 
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
 FLT quadtree::nearpt(int v0, int& pt) const {
-   int i,nsrch,exclude;
+   int i,n,nsrch,exclude;
    class quad *topbox;
-   FLT dist,dx,dy,xh,xl,yh,yl,mindist;
+   FLT dist,dx[ND],xh[ND],xl[ND],mindist;
    class quad *qpt;
 
-   xl = base[0].xmin;
-   xh = base[0].xmax;
-   yl = base[0].ymin;
-   yh = base[0].ymax;
-   mindist = (xh -xl)*(xh -xl) +(yh-yl)*(yh-yl);
+   mindist = 0.0;
+   for(n=0;n<ND;++n) {
+      xl[n] = base[0].xmin[n];
+      xh[n] = base[0].xmax[n];
+      mindist += pow(xh[n]-xl[n],2);
+   }
    nsrch = 0;
    
    if (indx[v0] == NULL) 
@@ -240,10 +247,12 @@ FLT quadtree::nearpt(int v0, int& pt) const {
    for(;;) {
       while (nsrch > 0) {
          qpt = srchlst[--nsrch];
-         if (qpt->xmin > xh || qpt->xmax < xl || qpt->ymin > yh || qpt->ymax < yl) continue;
+         for(n=0;n<ND;++n)
+            if(qpt->xmin[n] > xh[n] || qpt->xmax[n] < xl[n]) goto NEXT;
+         
          if (qpt->num < 0) {
 /*				ADD DAUGHTERS TO LIST */
-            for(i=0;i<4;++i)
+            for(i=0;i<(1<<ND);++i)
                srchlst[nsrch++] = qpt->dghtr[i];
             continue;
          }
@@ -251,97 +260,110 @@ FLT quadtree::nearpt(int v0, int& pt) const {
 /*				CHECK POINTS */
             for(i=0;i<qpt->num;++i) {
                if (qpt->node[i] == v0) continue;
-               dx = vrtx[v0][0] -vrtx[qpt->node[i]][0];
-               dy = vrtx[v0][1] -vrtx[qpt->node[i]][1];
-               dist = dx*dx + dy*dy;
+               dist = 0.0;
+               for(n=0;n<ND;++n) {
+                  dx[n] = vrtx[v0][n] -vrtx[qpt->node[i]][n];
+                  dist += pow(dx[n],2);
+               }
                if (dist < mindist) {
                   pt = qpt->node[i];
                   mindist = dist;
                   dist = sqrt(dist);
-                  xh = vrtx[v0][0] +dist;
-                  xl = vrtx[v0][0] -dist;
-                  yh = vrtx[v0][1] +dist;
-                  yl = vrtx[v0][1] -dist;
+                  for(n=0;n<ND;++n) {
+                     xh[n] = vrtx[v0][n] +dist;
+                     xl[n] = vrtx[v0][n] -dist;
+                  }
                }
             }
          }
+         NEXT: continue;
       }
-      if (topbox->xmin < xl && topbox->xmax > xh && 
-            topbox->ymin < yl && topbox->ymax > yh) return(mindist);
-      
+      for(n=0;n<ND;++n)
+         if (topbox->xmin[n] > xl[n] || topbox->xmax[n] < xh[n]) goto MORECHECK;         
+      return(mindist);
+
+      MORECHECK:
       exclude = topbox->pind;
       topbox = topbox->prnt;
 
 /*		CHECK IF WE ARE AT THE TOP LEVEL */
       if (topbox == NULL) return(mindist);
       
-      for(i=0;i<4;++i)
+      for(i=0;i<(1<<ND);++i)
          if (i != exclude) srchlst[nsrch++] = topbox->dghtr[i];
    }
 
    return(mindist);
 }
 
-/* FIND CLOSEST POINT TO AN ARBITRARY POINT */
-FLT quadtree::nearpt(FLT x, FLT y, int& pt) const {
-   int i,nsrch,exclude;
+/*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
+FLT quadtree::nearpt(FLT x[ND], int& pt) const {
+   int i,n,nsrch,exclude;
    class quad *topbox;
-   FLT dist,dx,dy,xh,xl,yh,yl,mindist;
+   FLT dist,dx[ND],xh[ND],xl[ND],mindist;
    class quad *qpt;
 
-   xl = base[0].xmin;
-   xh = base[0].xmax;
-   yl = base[0].ymin;
-   yh = base[0].ymax;
-   mindist = (xh -xl)*(xh -xl) +(yh-yl)*(yh-yl);
-   
+   mindist = 0.0;
+   for(n=0;n<ND;++n) {
+      xl[n] = base[0].xmin[n];
+      xh[n] = base[0].xmax[n];
+      mindist += pow(xh[n]-xl[n],2);
+   }
    nsrch = 0;
-   srchlst[nsrch++] = base;
+   srchlst[nsrch++] = base;      
    topbox = srchlst[0];	 
 
    for(;;) {
       while (nsrch > 0) {
          qpt = srchlst[--nsrch];
-         if (qpt->xmin > xh || qpt->xmax < xl || qpt->ymin > yh || qpt->ymax < yl) continue;
+         for(n=0;n<ND;++n)
+            if(qpt->xmin[n] > xh[n] || qpt->xmax[n] < xl[n]) goto NEXT;
+         
          if (qpt->num < 0) {
 /*				ADD DAUGHTERS TO LIST */
-            for(i=0;i<4;++i)
+            for(i=0;i<(1<<ND);++i)
                srchlst[nsrch++] = qpt->dghtr[i];
             continue;
          }
          else {
 /*				CHECK POINTS */
             for(i=0;i<qpt->num;++i) {
-               dx = x -vrtx[qpt->node[i]][0];
-               dy = y -vrtx[qpt->node[i]][1];
-               dist = dx*dx + dy*dy;
+               dist = 0.0;
+               for(n=0;n<ND;++n) {
+                  dx[n] = x[n] -vrtx[qpt->node[i]][n];
+                  dist += pow(dx[n],2);
+               }
                if (dist < mindist) {
                   pt = qpt->node[i];
                   mindist = dist;
-                  dist = sqrt(mindist);
-                  xh = x +dist;
-                  xl = x -dist;
-                  yh = y +dist;
-                  yl = y -dist;
+                  dist = sqrt(dist);
+                  for(n=0;n<ND;++n) {
+                     xh[n] = x[n] +dist;
+                     xl[n] = x[n] -dist;
+                  }
                }
             }
          }
+         NEXT: continue;
       }
-      if (topbox->xmin < xl && topbox->xmax > xh && 
-            topbox->ymin < yl && topbox->ymax > yh) return(mindist);
-      
+      for(n=0;n<ND;++n)
+         if (topbox->xmin[n] > xl[n] || topbox->xmax[n] < xh[n]) goto MORECHECK;         
+      return(mindist);
+
+      MORECHECK:
       exclude = topbox->pind;
       topbox = topbox->prnt;
 
 /*		CHECK IF WE ARE AT THE TOP LEVEL */
       if (topbox == NULL) return(mindist);
       
-      for(i=0;i<4;++i)
+      for(i=0;i<(1<<ND);++i)
          if (i != exclude) srchlst[nsrch++] = topbox->dghtr[i];
    }
 
    return(mindist);
 }
+
 
 void quadtree::dltpt(int v0) {
    int ind, i;
@@ -378,8 +400,8 @@ void quadtree::dltpt(int v0) {
 }
 
 void quadtree::output(char *filename, FILETYPE type) {
-   int i,nsrch;
-   char fnmapp[100];
+   int i,j,n,nsrch;
+   char fnmapp[100],etype[20],order[20];
    class quad *qpt;
    FILE *out;
    
@@ -400,19 +422,34 @@ void quadtree::output(char *filename, FILETYPE type) {
             qpt = srchlst[--nsrch];
             if (qpt->num < 0) {
       /*			ADD DAUGHTERS TO LIST */
-               for(i=0;i<4;++i)
+               for(i=0;i<(1<<ND);++i)
                   srchlst[nsrch++] = qpt->dghtr[i];
                continue;
             }
             else {
       /*			PRINT POINTS */
-               fprintf(out,"box: %f %f %f %f\n",qpt->xmin,qpt->xmax,qpt->ymin,qpt->ymax);
-               for(i=0;i<qpt->num;++i) 
-                  fprintf(out,"%d %f %f\n",qpt->node[i],vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
+               fprintf(out,"box: \n");
+               for(n=0;n<ND;++n)
+                  fprintf(out,"(%f %f) ",qpt->xmin[n],qpt->xmax[n]);
+               fprintf(out,"\n");
+               for(i=0;i<qpt->num;++i) {
+                  fprintf(out,"%d ",i);
+                  for(n=0;n<ND;++n)
+                     fprintf(out,"%f ",vrtx[qpt->node[i]][n]);
+                  fprintf(out,"\n");
+               }
             }
          }
          break;
       case(tecplot):
+         if (ND == 2) {
+            strcpy(etype,"QUADRILATERAL");
+            strcpy(order,"1 3 4 2\n");
+         }
+         else if (ND == 3) {
+            strcpy(etype,"HEXAHEDRAL");
+            strcpy(order,"1 3 7 5 2 4 8 6");
+         }
          strcat(fnmapp,".dat");
          out = fopen(fnmapp,"w");
          if (out == NULL ) {
@@ -426,19 +463,23 @@ void quadtree::output(char *filename, FILETYPE type) {
             qpt = srchlst[--nsrch];
             if (qpt->num < 0) {
       /*			ADD DAUGHTERS TO LIST */
-               for(i=0;i<4;++i)
+               for(i=0;i<(1<<ND);++i)
                   srchlst[nsrch++] = qpt->dghtr[i];
                continue;
             }
             else {
    /*				PRINT BOX & POINTS */
                if (qpt->num > 0) {
-                  fprintf(out,"ZONE N=4, E=1, F=FEPOINT, ET=QUADRILATERAL, C=RED\n");
-                  fprintf(out,"%f  %f\n",qpt->xmin,qpt->ymin);
-                  fprintf(out,"%f  %f\n",qpt->xmax,qpt->ymin);
-                  fprintf(out,"%f  %f\n",qpt->xmax,qpt->ymax);
-                  fprintf(out,"%f  %f\n",qpt->xmin,qpt->ymax);
-                  fprintf(out,"%d %d %d %d\n",1,2,3,4);
+                  fprintf(out,"ZONE N=%d, E=1, F=FEPOINT, ET=%s, C=RED\n",(1<<ND),etype);
+                  for(i=0;i<(1<<ND);++i) {
+                     for(n=0;n<ND;++n) {
+                        j = (i>>(ND-n-1))&1;
+                        if (j) fprintf(out,"%f  ",qpt->xmax[n]);
+                        else fprintf(out,"%f  ",qpt->xmin[n]);
+                     }
+                     fprintf(out,"\n");
+                  }
+                  fprintf(out,"%s\n",order);
                   
                   fprintf(out,"ZONE I=%d, C=BLACK\n",qpt->num);
                   for(i=0;i<qpt->num;++i) 
@@ -483,26 +524,31 @@ void quadtree::movept(int from, int to) {
 }
 
 void quadtree::update(int bgn, int end) {
-   int i;
+   int i,n;
    class quad *qpt;
    
    for(i=bgn;i<end;++i) {
       qpt = indx[i];
       if (qpt == NULL) continue;
-      if (vrtx[i][0] < qpt->xmin || vrtx[i][0] > qpt->xmax || vrtx[i][1] < qpt->ymin || vrtx[i][1] > qpt->ymax) update(i);
+      for(n=0;n<ND;++n) {
+         if (vrtx[i][n] < qpt->xmin[n] || vrtx[i][n] > qpt->xmax[n]) {
+            update(i);
+            break;
+         }
+      }
    }
    
    return;
 }
 
 void quadtree::update(int v0) {
-   int i,nsrch,exclude;
-   FLT x,y;
+   int i,n,nsrch,exclude;
+   FLT x[ND];
    class quad *topbox;
    class quad *qpt;
 
-  	x = vrtx[v0][0];
-   y = vrtx[v0][1];
+   for(n=0;n<ND;++n)
+      x[n] = vrtx[v0][n];
       
    nsrch = 0;
    srchlst[nsrch++] = indx[v0];
@@ -514,16 +560,17 @@ void quadtree::update(int v0) {
  
          if (qpt->num < 0) {
 /*				ADD DAUGHTERS TO LIST */
-            for(i=0;i<4;++i)
+            for(i=0;i<(1<<ND);++i)
                srchlst[nsrch++] = qpt->dghtr[i];
             continue;
          }
          else {
-            if (qpt->xmin <= x && qpt->xmax >= x && qpt->ymin <= y && qpt->ymax >= y) {
-               dltpt(v0);
-               addpt(v0, qpt);
-               return;
-            }
+            for(n=0;n<ND;++n)
+               if(qpt->xmin[n] > x[n] || qpt->xmax[n] < x[n]) goto UPDATE;
+            continue;
+            UPDATE: dltpt(v0);
+            addpt(v0, qpt);
+            return;
          }
       }
       
@@ -532,13 +579,15 @@ void quadtree::update(int v0) {
 
 /*		CHECK IF WE ARE AT THE TOP LEVEL */
       if (topbox == NULL) {
-         printf("#Warning: point is outside of quadtree domain\n");
-         printf("#(%f,%f) (%f,%f): (%f, %f)\n",base[0].xmin,base[0].ymin,base[0].xmax,base[0].ymax,x,y);
+         printf("#Warning: point is outside of quadtree domain\n#");
+         for(n=0;n<ND;++n)
+            printf("(%f,%f): %f " ,base[0].xmin[n],base[0].xmax[n],x[n]);
+         printf("\n");
          addpt(v0);
          return;
       }
       
-      for(i=0;i<4;++i)
+      for(i=0;i<(1<<ND);++i)
          if (i != exclude) srchlst[nsrch++] = topbox->dghtr[i];
    }
 

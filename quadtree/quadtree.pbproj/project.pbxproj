@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 38;
 	objects = {
 		014CEA460018CE2711CA2923 = {
 			buildRules = (
@@ -138,16 +138,16 @@
 				F584D18701B43B0E01990B20,
 			);
 			isa = PBXHeadersBuildPhase;
-			name = Headers;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F512110801904AE101990B20,
 				F5440D54024A823501990B20,
+				F512910F03311D6101990B69,
 			);
 			isa = PBXSourcesBuildPhase;
-			name = Sources;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -155,14 +155,14 @@
 				0249A664FF388D9811CA2CEA,
 			);
 			isa = PBXFrameworksBuildPhase;
-			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A5FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
-			name = "ResourceManager Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 //080
 //081
@@ -207,7 +207,7 @@
 			path = main.cpp;
 			refType = 4;
 		};
-		F512110801904AE101990B20 = {
+		F512910F03311D6101990B69 = {
 			fileRef = F512110701904AE101990B20;
 			isa = PBXBuildFile;
 			settings = {
@@ -220,11 +220,11 @@
 			generatedFileNames = (
 			);
 			isa = PBXShellScriptBuildPhase;
-			name = "Shell Script";
 			neededFileNames = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/csh;
-			shellScript = "~/Codes/quadtree/createlib";
+			shellScript = ./createlib;
 		};
 		F5440D5102465FF801990B20 = {
 			children = (

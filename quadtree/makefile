@@ -1,8 +1,8 @@
 OBJ = quad.o
-CPPFLAGS = -O3 -I/home/helenbrk/codes/include/
+CPPFLAGS = -O3 -I$(HOME)/Codes/include/
 
 libquad.a: quadtree.h $(OBJ)
 	libtool --mode=link ${CC} -o $@ $(OBJ)
-	mv -f libquad.a /home/helenbrk/codes/lib/
-	cp -f quadtree.h /home/helenbrk/codes/include/
+	mv -f libquad.a $(HOME)/Codes/lib/
+	cp -f quadtree.h $(HOME)/Codes/include/
 	rm *.o
