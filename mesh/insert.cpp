@@ -512,8 +512,8 @@ FOUND:
 }
 
 
-int mesh::findbdryside(FLT *x, int vnear) const {
-   int i,j,tin,tind,sind;
+int mesh::findbdryside(FLT *x, int vnear, int type, int typemask = 0xFFFFFFFF) const {
+   int i,j,tin,tind,sind,typ1;
    
    /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
    tind = vtri[vnear];
@@ -525,8 +525,9 @@ int mesh::findbdryside(FLT *x, int vnear) const {
       for(j=0;j<3;++j) {
          tind = ttri[tin][j];
          if (tind < 0) {
+            typ1 = sbdry[(-tind>>16) -1].type;
             sind = tside[tin].side[j];
-            if (insidecircle(sind,x) > -EPSILON) goto FOUND;
+            if ((typ1&typemask) == type && insidecircle(sind,x) > -EPSILON) goto FOUND;
             continue;
          }
          if (intwk1[tind] == 0) continue;

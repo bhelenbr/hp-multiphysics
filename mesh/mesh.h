@@ -135,7 +135,7 @@ class mesh {
       int insert(int tind, int vnum, FLT theta = 0.0);
       void bdry_insert(int tind, int snum, int vnum);
       int findtri(FLT x, FLT y, int vnear) const;
-      int findbdryside(FLT *x, int vnear) const;
+      int findbdryside(FLT *x, int vnear, int type, int typemask = 0xFFFFFFFF) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
