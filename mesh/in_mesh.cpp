@@ -172,7 +172,6 @@ next1:      continue;
 
 /*	    		FIGURE OUT HOW MANY VERTEX BOUNDARY GROUPS THERE ARE & HOW MANY OF EACH */
             nvbd = 0;
-#ifdef SKIP
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
                   for (j = 0; j <nvbd;++j) {
@@ -212,7 +211,6 @@ next2:      continue;
                   }
                }
             }
-#endif
                         
 /*	    		LOAD ELEMENT INFORMATION */
             strcpy(grd_app,filename);

@@ -14,7 +14,7 @@
 #define OUTF_MASK (1<<3)
 #define SYMM_MASK (1<<4)
 #define EULR_MASK (1<<5)
-#define PRDX_MASK (1<<6)
+#define PRDX_MASK (1<<6)   
 #define PRDY_MASK (1<<7)
 #define COMX_MASK (1<<8)
 #define COMY_MASK (1<<9)
@@ -22,8 +22,8 @@
 
 /* MASK FOR ALL MESSAGE PASSING BOUNDARIES */
 /* X/Y SPLIT ONLY WORKS FOR FACE TO FACE BOUNDARIES & 2X2 BOUNDARY INTERSECTIONS */
-#define XDIR_MP (PRDX_MASK +COMX_MASK)
-#define YDIR_MP (PRDY_MASK +COMY_MASK +IFCE_MASK)
+#define XDIR_MP COMX_MASK
+#define YDIR_MP (COMY_MASK +IFCE_MASK)
 #define ALLD_MP (XDIR_MP +YDIR_MP)
                              
 #if (FLT == double)
