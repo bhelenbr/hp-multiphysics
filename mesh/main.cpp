@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
    x.swap();
    x.yaber(1/0.66);
    x.rebay(0.66);
-   x.bcinfo();
+   x.setbcinfo();
    x.out_mesh("start");
    exit(10);
 */
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 //   y.out_mesh("test");
 //   exit(0);
 //   x.rebay(0.8);
-//   x.bcinfo();
+//   x.setbcinfo();
 //   x.out_mesh("test");
 //   exit(0);
 /*

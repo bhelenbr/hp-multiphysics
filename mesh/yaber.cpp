@@ -26,7 +26,9 @@ void putinlst(int sind);
 void tkoutlst(int sind);
 
 void mesh::yaber(FLT tolsize) {
-   int i,j,tind,sind,nfail,v0,v1;
+   int i,j,tind,sind,nfail,v0,v1,cnt;
+   
+   cnt = 0;
    
 /*	NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
 /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
@@ -80,14 +82,14 @@ void mesh::yaber(FLT tolsize) {
       assert(sind != -1);
       
 /*		COLLAPSE EDGE */
-      printf("collapsing side %d ",sind);
       nfail = collapse(sind);
-      printf("%d\n",nfail);
+      ++cnt;
       
       for(i=0;i<nsdel;++i) 
          if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
          
       if (nfail) {
+         printf("side collapse failed %d\n",sind);
 /*			MARK SIDE AS ACCEPTED AND MOVE ON */
          for(i=0;i<2;++i) {
             tind = stri[sind][i];
@@ -173,6 +175,8 @@ void mesh::yaber(FLT tolsize) {
          dlttri(i);
       }
    }
+   
+   printf("#Yaber finished: %d sides coarsened\n",cnt);
 
 	return;
 }
@@ -182,6 +186,8 @@ void mesh::checkintegrity() {
    
    for(i=0;i<ntri;++i) {
       if (tinfo[i] < 0) continue;
+      
+      if (area(i) < 0.0) printf("negative area %d\n",i);
       
       for(j=0;j<3;++j) {
          sind = tside[i].side[j];
@@ -233,6 +239,20 @@ void mesh::checkintegrity() {
    
    return;
 }
+
+void mesh::checkintwk() {
+   int i;
    
+   for(i=0;i<maxvst;++i)
+      if (intwk1[i] != -1) printf("failed intwk1 check %d: %d\n",i,intwk1[i]);
+      
+   for(i=0;i<maxvst;++i)
+      if (intwk2[i] != -1) printf("failed intwk2 check %d: %d\n",i,intwk2[i]);
+   
+   for(i=0;i<maxvst;++i)
+      if (intwk3[i] != -1) printf("failed intwk3 check %d: %d\n",i,intwk3[i]);
+   
+   return;
+}
    
          

@@ -136,12 +136,12 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
          app[0] = 'a'+i;
          app[1] = '\0';
          strcat(fnmcat,app);
-         blk[i].grd[0].bcinfo();
+         blk[i].grd[0].setbcinfo();
          blk[i].grd[0].out_mesh(fnmcat,filetype);
       }
    }
    else {
-      blk[0].grd[0].bcinfo();
+      blk[0].grd[0].setbcinfo();
       blk[0].grd[0].out_mesh(filename,filetype);
    }
    

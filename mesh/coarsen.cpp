@@ -47,9 +47,12 @@ int mesh::coarsen(const class mesh& fmesh) {
       tside = new struct tsidedata[maxvst];
       tinfo = new int[maxvst+1];
       ++tinfo; // ALLOWS US TO ACCESS TINFO(-1)
+      
+      qtree.allocate(vrtx,maxvst);
+      
+      initialized = 1;
    }
    
-   initialized = 1;
 
 
 /* PREPARE FOR COARSENING */
@@ -92,7 +95,6 @@ int mesh::coarsen(const class mesh& fmesh) {
 
       odd = fmesh.sbdry[i].num%2;
       if (odd) {
-         printf("coarsening side with odd number of points\n");
          for(j=2;j<fmesh.sbdry[i].num/2;j+=2) {
             v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
             vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
@@ -237,6 +239,11 @@ int mesh::coarsen(const class mesh& fmesh) {
 /*	CREATE INITIAL TRIANGULATION */            
    triangulate(sidelst,nsdloop,nloop);
 
+   for(i=0;i<10;++i) 
+      delete []sidelst[i];
+   delete []sidelst;
+   delete []nsdloop;
+
 /****************************************************/			
 /*	Boyer-Watson Algorithm to insert interior points */
 /****************************************************/
@@ -270,6 +277,13 @@ int mesh::coarsen(const class mesh& fmesh) {
    
    bdrylabel();
    initvlngth();
+   
+/*	PRINT SOME GENERAL DEBUGGING INFO */
+   printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d\n",maxvst,nvrtx,nside,ntri);
+   
+/* PRINT BOUNDARY INFO */
+   for(i=0;i<nsbd;++i)
+      printf("MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
 
 	return(1);
 }

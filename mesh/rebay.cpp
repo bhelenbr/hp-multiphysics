@@ -26,11 +26,14 @@ extern int nsdel, sdel[MAXLST+1];
 
 
 void mesh::rebay(FLT tolsize) {
-   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid;
+   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
    FLT xpt,ypt,wt[3];
    FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
    FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
          
+   bdrycnt = 0;
+   intrcnt = 0;
+   
 /*	USE VINFO[TIND] = 3,2,1,0 TO FIND BOUNDARY REFINE TRI'S */
    for(i=0;i<ntri;++i)
       vinfo[i] = 0;
@@ -81,7 +84,6 @@ void mesh::rebay(FLT tolsize) {
       
 /*		CHECK IF IT IS A BOUNDARY EDGE */
       if (stri[sind][1] < 0) {
-         printf("inserting point in boundary side %d\n",sind);
 
 /*			MIDPOINT */
          xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
@@ -98,12 +100,12 @@ void mesh::rebay(FLT tolsize) {
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
    
          bdry_insert(tind,snum,nvrtx);
+         ++bdrycnt;
          
          nsnew = nsdel +2;
          ntnew = ntdel +1;
       }
       else {
-         printf("inserting point in interior side %d\n",sind);
          
 /*			USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
@@ -159,6 +161,7 @@ INSRT:
             insert(tind,nvrtx);
             nsnew = nsdel +3;
             ntnew = ntdel +2;
+            ++intrcnt;
          }
          else {
 /*				REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
@@ -200,6 +203,8 @@ INSRT:
       bdrysidereorder(i);
       
    cnt_nbor();
+   
+   printf("#Rebay finished: new interior points %d, new boundary points %d\n",intrcnt,bdrycnt);
 
    return;
 }

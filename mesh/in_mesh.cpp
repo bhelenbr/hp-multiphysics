@@ -373,6 +373,7 @@ next2:      continue;
    createttri();
    createvtri();
    cnt_nbor();
+   qtree.allocate(vrtx,maxvst);
    treeinit();
    initvlngth();
 

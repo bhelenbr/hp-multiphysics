@@ -119,7 +119,7 @@ void mesh::copy(const mesh& tgt) {
    for(i=0;i<ntri;++i)
       tinfo[i] = tgt.tinfo[i];
       
-   qtree = tgt.qtree;
+   qtree.copy(tgt.qtree);
    qtree.change_vptr(vrtx);
    
    return;  

@@ -132,7 +132,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
     return(1);
 }
 
-void mesh::bcinfo() {
+void mesh::setbcinfo() {
    int i,j;
    
 /*	SET UP VRTX BC INFORMATION FOR OUTPUT */
@@ -150,6 +150,10 @@ void mesh::bcinfo() {
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry[i].num;++j)
          sinfo[sbdry[i].el[j]] = sbdry[i].type;
+
+/*	SET UP TRI INFO FOR EASYMESH OUTPUT */         
+   for(i=0;i<ntri;++i)
+      tinfo[i] = 0;
          
    return;
 }

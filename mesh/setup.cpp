@@ -134,7 +134,7 @@ void mesh::treeinit() {
       }
    }
 
-   qtree.init(vrtx,maxvst,x1-EPSILON,y1-EPSILON,x2+EPSILON,y2+EPSILON);
+   qtree.init(x1-EPSILON,y1-EPSILON,x2+EPSILON,y2+EPSILON);
    
    for(i=0;i<nvrtx;++i) 
       qtree.addpt(i);

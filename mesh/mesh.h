@@ -120,7 +120,10 @@ class mesh {
       void triangulate(int **sidelst, int *nside, int nloop, int cknbor = 1);
       void findpt(int *vrtxlst,int nv,int *v,int chkadj,int good[], int &ngood);
       void addtri(int v0,int v1,int v2,int sind,int dir);
+      
+/*		SOME DEGUGGING FUNCTIONS */
       void checkintegrity();
+      void checkintwk();
 
 /*		TO INSERT A POINT */
       void insert(FLT x, FLT y);
@@ -182,7 +185,7 @@ class mesh {
       int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void convertbtypes(const int (*old)[2] = NULL, int nold = 0);
       int out_mesh(const char *filename, FILETYPE filetype = easymesh) const;
-      void bcinfo();
+      void setbcinfo();
       
 /*		ACCESS TO SIMPLE MESH DATA */
       int max() {return maxvst;}
