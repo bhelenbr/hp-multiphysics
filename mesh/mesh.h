@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <quadtree.h>
+#include <cstdio>
 
 
 #ifdef SINGLE
@@ -34,7 +35,7 @@ class mesh {
       int *vinfo;
       int *nnbor;
       int *vtri;
-      class quadtree qtree;
+      class quadtree<ND> qtree;
    
       /* VERTEX BOUNDARY INFO */
       static const int MAXSB = 8;

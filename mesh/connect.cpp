@@ -32,11 +32,8 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
    
    /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
    for(i=0;i<nvrtx;++i) {
-      x = vrtx[i][0];
-      y = vrtx[i][1];
-      
-      tgt.qtree.nearpt(x,y,v0);
-      cnnct[i].tri = tgt.findtri(x,y,v0);
+      tgt.qtree.nearpt(vrtx[i],v0);
+      cnnct[i].tri = tgt.findtri(vrtx[i][0],vrtx[i][1],v0);
       tgt.getwgts(cnnct[i].wt);
    }
 

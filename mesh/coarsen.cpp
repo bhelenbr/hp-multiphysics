@@ -240,7 +240,7 @@ FINDNEXT:
    for(i=0;i<inmesh.nvrtx;++i) {
       if (intwk2[i] == 0) continue;
       
-      mindist = qtree.nearpt(inmesh.vrtx[i][0],inmesh.vrtx[i][1],j);
+      mindist = qtree.nearpt(inmesh.vrtx[i],j);
       if (sqrt(mindist) < fltwk[i]) continue;
       
       insert(inmesh.vrtx[i][0],inmesh.vrtx[i][1]);
