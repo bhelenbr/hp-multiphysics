@@ -32,14 +32,14 @@ void hpbasis::intgrtx1d(FLT *f, FLT *rslt) {
    int i,n;
    
    for(i=0;i<gpx;++i)
-      rslt[0] += dgxwtx[0][i]*f[i];
+      rslt[0] -= dgxwtx[0][i]*f[i];
    
    for(i=0;i<gpx;++i)
-      rslt[1] += dgxwtx[1][i]*f[i];
+      rslt[1] -= dgxwtx[1][i]*f[i];
       
    for(n=3;n<nmodx;++n)
       for(i=0;i<gpx;++i)
-         rslt[n-1] += dgxwtx[n][i]*f[i];
+         rslt[n-1] -= dgxwtx[n][i]*f[i];
    
    return;
 }

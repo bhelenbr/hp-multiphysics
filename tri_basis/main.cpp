@@ -6,7 +6,7 @@
 /* LAGRANGIAN1D / MASS */
 #define MASS
 
-#define P 12
+#define P 8
 int main (int argc, const char * argv[]) {
    int i,j,info;
    hpbasis b;
@@ -62,7 +62,7 @@ int main (int argc, const char * argv[]) {
       b.intgrtx1d(e,f);
       for(j=0;j<P+1;++j) {
          m[i][j] = 0.5*c[j];
-         k[i][j] = 2.0*f[j];
+         k[i][j] = -2.0*f[j];
       }
    }
 
@@ -196,7 +196,7 @@ int main (int argc, const char * argv[]) {
       printf("trouble\n");
    
    for(i=0;i<b.bm;++i) {
-      for(j=0;j<b.bm;++j) {
+      for(j=0;j<b.tm;++j) {
         // if (fabs(m[i][j]) > 1.0e-10) 
         //    printf("* ");
         // else 
@@ -210,7 +210,7 @@ int main (int argc, const char * argv[]) {
    for(i=2;i<P;++i) {
       for(int n=1;n<P-i;++n)
          ++ind;
-      for(j=0;j<b.bm;++j) {
+      for(j=0;j<b.tm;++j) {
         // if (fabs(m[i][j]) > 1.0e-10) 
         //    printf("* ");
         // else 

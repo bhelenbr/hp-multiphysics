@@ -18,7 +18,7 @@
 #endif
 
 #define MXTM 100
-#define NO_MORTHOGONAL
+#define MORTHOGONAL
 
 class hpbasis {
    public:
@@ -78,6 +78,8 @@ class hpbasis {
       FLT **bfmi;
       /* INTERIOR DIAGONAL */
       FLT **idiag;
+      /* MASS MATRIX WITH STATIC INVERSION OF INTERIOR MODES */
+      FLT **msi;
       
       /*1D (SIDE) MASS MATRIX INVERSION */
       /* REMOVE SIDE COMPONENT FROM VERTICES */

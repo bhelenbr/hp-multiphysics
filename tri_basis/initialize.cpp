@@ -529,6 +529,7 @@ void hpbasis::lumpinv(void) {
    mat_alloc(ifmb,bm,im,FLT);
    mat_alloc(bfmi,bm,im,FLT);
    mat_alloc(idiag,im,ibwth+1,FLT);
+   mat_alloc(msi,bm,bm,FLT);
    
    /* ALLOCATE 1D MASS MATRIX INVERSION VARIABLES */
    mat_alloc(vfms1d,2,sm,FLT);
@@ -756,8 +757,8 @@ void hpbasis::lumpinv(void) {
       }
       
       PBTRF(uplo,im,ibwth,idiag[0],ibwth+1,info);
-      if (info != 0 || rcond < 10.*EPSILON) {
-         printf("PBTRF FAILED (sm+2) : %d info: %d cond: %f\n",(sm+2), info,rcond);
+      if (info != 0) {
+         printf("PBTRF FAILED info: %d\n", info);
          exit(1);
       }
                
@@ -786,9 +787,59 @@ void hpbasis::lumpinv(void) {
       }
       */
    }
+      
+   /* FORM A - BC^{-1}B^T */  
+   /* MASS MATRIX WITH STATIC CONDENSATION OF INTERIOR MODES */
+   for(i=0;i<bm;++i) {
+      for(j=0;j<bm;++j) {
+         mwk[i][j] = mm[i][j];
+         for(k=0;k<im;++k)
+            mwk[i][j] -= bfmi[i][k]*mm[j][k+bm];
+      }
+   }
 
+#ifndef SKIP
+   /* SETUP BAND DIAGONAL FORM OF MATRIX */
+   /* ONLY NECESSARY WHEN USING DPBTRF */ 
+   for(j=0;j<bm;++j) {
+      for(i=0;i<=j;++i) {
+         k = i - (j-(bm-1));
+         msi[j][k] = mwk[i][j];
+      }
+   }
+   PBTRF(uplo,bm,bm-1,msi[0],bm,info);
+   if (info != 0) {
+      printf("PBTRF FAILED info: %d\n", info);
+      exit(1);
+   }
+#else
+   for(i=0;i<bm;++i)
+      for(j=0;j<bm;++j) 
+         msi[i][j] = mwk[i][j];
+         
+   DPOTRF(uplo,bm,&msi[0][0],bm,info);
+   if (info != 0) {
+      printf("POTRF FAILED info: %d\n", info);
+      exit(1);
+   }
+#endif
 
+   
 #ifdef SKIP
+   for(i=0;i<bm;++i) {
+      for(j=0;j<bm;++j) 
+         mwk[i][j] = 0.0;
+      mwk[i][i] = 1.0;
+   }
+         
+   /* CHECK INVERSE */
+   for(i=0;i<bm;++i) {
+      DPBTRS(uplo,bm,bm-1,1,msi[0],bm,mwk[i],bm,info);
+      for(j=0;j<bm;++j)
+         printf("%e ",mwk[i][j]);
+      printf("\n");
+   }
+
    /* CHECK TO MAKE SURE PREVIOUS RESULTS ARE RIGHT */
    for(i=0;i<3;++i) {
       i1 = (i+1)%3;
