@@ -238,11 +238,13 @@ int mesh::coarsen(const class mesh& fmesh) {
    
 /*	CREATE INITIAL TRIANGULATION */            
    triangulate(sidelst,nsdloop,nloop);
-
+         
    for(i=0;i<10;++i) 
       delete []sidelst[i];
    delete []sidelst;
    delete []nsdloop;
+   
+
 
 /****************************************************/			
 /*	Boyer-Watson Algorithm to insert interior points */
@@ -255,7 +257,7 @@ int mesh::coarsen(const class mesh& fmesh) {
          intwk2[fmesh.svrtx[sind][1]] = 0;
       }
    }
-   
+
    for(i=0;i<fmesh.nvrtx;++i) {
 		if (intwk2[i] == 0) continue;
       

@@ -14,9 +14,7 @@ int mesh::in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) 
     char grd_app[100];
     FILE *grd;
     int v[3],s[3],e[3];
-    
-    initialized = 1;
-    
+        
     switch (filetype) {            
         case(easymesh):
 /*          LOAD SIDE INFORMATION */
@@ -32,12 +30,19 @@ int mesh::in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) 
                     printf("error in side file: %s\n",grd_app);
                     exit(1);
             }
-            maxvst = nside + (int) (grwfac*nside);
-            svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-            stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-            sinfo = new int[maxvst+1];
-            ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-            
+
+            if (!initialized) {
+               maxvst = nside + (int) (grwfac*nside);
+               svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+               stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+               sinfo = new int[maxvst+1];
+               ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
+            }
+            else if (nside > maxvst) {
+               printf("mesh is too large\n");
+               exit(1);
+            }
+               
             for(i=0;i<maxvst;++i) {
                     stri[i][0] = -1;
                     stri[i][1] = -1;
@@ -70,18 +75,22 @@ int mesh::in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) 
                }
 next1:      continue;
             }
-            
-/*	    		ALLOCATE STORAGE */	
-            maxsbel = 0;
-            for(i=0;i<nsbd;++i) {
-               maxsbel = MAX(sbdry[i].num,maxsbel);
-            }
-            maxsbel = maxsbel + (int) (grwfac*maxsbel);
 
-            for(i=0;i<nsbd;++i) {
-               sbdry[i].el = new int[maxsbel];
-               sbdry[i].num = 0;
+/*	    		ALLOCATE STORAGE */
+            if (!initialized) {
+               maxsbel = 0;
+               for(i=0;i<nsbd;++i)
+                  maxsbel = MAX(sbdry[i].num,maxsbel);
+                  
+               maxsbel = maxsbel + (int) (grwfac*maxsbel);
+   
+               for(i=0;i<nsbd;++i)
+                  sbdry[i].el = new int[maxsbel];
             }
+            
+            for(i=0;i<nsbd;++i)
+               sbdry[i].num = 0;
+
  
 /*				STORE BOUNDARY INFO */
             for(i=0;i<nside;++i) {
@@ -106,12 +115,15 @@ next1:      continue;
                printf("1: error in grid %s\n",grd_app);
                exit(1);
             }
-            vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-            vlngth = new FLT[maxvst];
-            vinfo = new int[maxvst+1];
-            ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-            nnbor = new int[maxvst];
-            vtri = new int[maxvst];
+            
+            if (!initialized) {
+               vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+               vlngth = new FLT[maxvst];
+               vinfo = new int[maxvst+1];
+               ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
+               nnbor = new int[maxvst];
+               vtri = new int[maxvst];
+            }
     
 /*	    		ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
@@ -138,18 +150,20 @@ next1:      continue;
 next2:      continue;
             }
 
-/*				ALLOCATE STORAGE */    
-            maxvbel = 0;
-            for(i=0;i<nvbd;++i) {
-               maxvbel = MAX(vbdry[i].num,maxvbel);	
+            if (!initialized) {
+/*					ALLOCATE STORAGE */    
+               maxvbel = 0;
+               for(i=0;i<nvbd;++i)
+                  maxvbel = MAX(vbdry[i].num,maxvbel);	
+
+               maxvbel = maxvbel + (int) (grwfac*maxvbel);
+      
+               for(i=0;i<nvbd;++i)
+                  vbdry[i].el = new int[maxvbel];
             }
-            maxvbel = maxvbel + (int) (grwfac*maxvbel);
-    
-/*	    		ALLOCATE STORAGE */	
-            for(i=0;i<nvbd;++i) {
-               vbdry[i].el = new int[maxvbel];
+            
+            for(i=0;i<nvbd;++i)
                vbdry[i].num = 0;
-            }
     
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
@@ -175,12 +189,14 @@ next2:      continue;
                printf("error in file %s\n",grd_app);
                exit(1);
             }
-            tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-            ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-            tside = new struct tsidedata[maxvst];
-    
-            tinfo = new int[maxvst+1];
-            ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
+            
+            if (!initialized) {
+               tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+               ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+               tside = new struct tsidedata[maxvst];
+               tinfo = new int[maxvst+1];
+               ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
+            }
     
             for(i=0;i<ntri;++i) {
                 ierr = fscanf(grd,"%*d:%d%d%d%d%d%d%d%d%d%*f%*f%d\n"
@@ -216,18 +232,35 @@ next2:      continue;
             for(i=0;i<5;++i)
                 fscanf(grd,"%*[^\n]\n");
                 
-            fscanf(grd,"%d%d%d\n",&nvrtx,&maxvst,&nsbd);
+            fscanf(grd,"%d%d%d\n",&nvrtx,&i,&nsbd);
             nsbd -= 1;
  /*			MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
  /*			FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
-            maxvst = 3*maxvst/2; 
-            maxvst = nvrtx +(int) (grwfac*nvrtx);
-            vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-            vlngth = new FLT[maxvst];
-            vinfo = new int[maxvst+1];
-            ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-            nnbor = new int[maxvst];
-            vtri = new int[maxvst];
+            if (!initialized) {
+               maxvst = (3*i)/2; 
+               maxvst = nvrtx +(int) (grwfac*nvrtx);
+               vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+               vlngth = new FLT[maxvst];
+               vinfo = new int[maxvst+1];
+               ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
+               nnbor = new int[maxvst];
+               vtri = new int[maxvst];
+               
+               svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+               stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+               sinfo = new int[maxvst+1];
+               ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
+               
+               tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+               ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+               tside = new struct tsidedata[maxvst];
+               tinfo = new int[maxvst+1];
+               ++tinfo;
+            } 
+            else if ((3*i)/2 > maxvst) {
+               printf("mesh is too large\n");
+               exit(1);
+            }
     
             for(i=0;i<8;++i)
                 fscanf(grd,"%*[^\n]\n");
@@ -243,17 +276,10 @@ next2:      continue;
 
 /*				READ ELEMENT DATA */
             fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^\n]\n",&ntri);
-            tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-            ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-            tside = new struct tsidedata[maxvst];
-            tinfo = new int[maxvst+1];
-            ++tinfo;
-
             fscanf(grd,"%*[^\n]");
                     
             for(i=0;i<ntri;++i) {
                 fscanf(grd,"%*d %d %d %d",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
-
                 --tvrtx[i][0];
                 --tvrtx[i][1];
                 --tvrtx[i][2];
@@ -267,9 +293,9 @@ next2:      continue;
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
                   ,&sbdry[i].num,&sbdry[i].type);
-               
-               maxsbel = MAX(sbdry[i].num,maxsbel);
                fscanf(grd,"%*[^\n]\n");
+
+               if (!initialized) maxsbel = MAX(sbdry[i].num,maxsbel);
                
                svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry[i].num*2*sizeof(int));
                     
@@ -284,19 +310,15 @@ next2:      continue;
             }
                                     
 /*	    		ALLOCATE BOUNDARY STORAGE */
-            maxsbel = maxsbel + (int) (grwfac*maxsbel);	
-            for(i=0;i<nsbd;++i) 
-               sbdry[i].el = new int[maxsbel];
+            if (!initialized) {
+               maxsbel = maxsbel + (int) (grwfac*maxsbel);	
+               for(i=0;i<nsbd;++i) 
+                  sbdry[i].el = new int[maxsbel];
+            }
     
             count = 0;
             for(i=0;i<nsbd;++i) 
                count += sbdry[i].num;
-            
-            svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-            stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-            sinfo = new int[maxvst+1];
-            ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-
 
 /*				CREATE SIDE INFORMATION */
             createsideinfo();
@@ -373,10 +395,12 @@ next2:      continue;
    createttri();
    createvtri();
    cnt_nbor();
-   qtree.allocate(vrtx,maxvst);
+   if (!initialized) qtree.allocate(vrtx,maxvst);
    treeinit();
    initvlngth();
 
+   initialized = 1;
+   
    return(1);
 }
 

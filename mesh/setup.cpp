@@ -145,7 +145,7 @@ void mesh::treeinit() {
 /*	REORDERS BOUNDARIES TO BE SEQUENTIAL */
 /*	USES INTWK1 & INTWK2 AS WORK ARRAYS */
 void mesh::bdrysidereorder(int bdrynum) {
-	int i,j,count,total,sind,nsegs,first[MAXSB];
+	int i,j,count,total,sind,minv,nsegs,first[MAXSB];
    
    total = sbdry[bdrynum].num;
    
@@ -163,6 +163,19 @@ void mesh::bdrysidereorder(int bdrynum) {
       sind = sbdry[bdrynum].el[i];
       if (intwk1[svrtx[sind][0]] == -1) 
          first[nsegs++] = sind;
+   }
+   
+/*	SPECIAL CONSTRAINT IF LOOP */
+/*	THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
+   if (nsegs == 0) {
+      minv = nvrtx;
+      for(i=0;i<sbdry[bdrynum].num;++i) {
+         sind = sbdry[bdrynum].el[i];
+         if (svrtx[sind][1] < minv) {
+            first[0] = sind;
+            minv = svrtx[sind][1];
+         }
+      }
    }
    
 /*	MAKE FIRST LIST */
@@ -220,7 +233,7 @@ void mesh::bdrysidereorder(int bdrynum) {
 
 void mesh::bdrygroupreorder(void) {
    int i,j,k,sideord[MAXSB],nloop,strtloop[MAXSB],v0;
-   int bnum,bgn,end,count;
+   int bnum,bgn,end,count,max,mark;
    struct boundary tmpsb;
    FLT sum;
    
@@ -266,10 +279,21 @@ FINDNEXT:
    }
       
 /*	REARRANGE GROUPS EXTERIOR GOES FIRST */
-/* JUST CHANGES sbel POINTER DOESN'T MOVE WHOLE LIST */
+/* JUST CHANGES SBEL POINTER DOESN'T MOVE WHOLE LIST */
+
+/*	THIS IS TO ENSURE ADAPTED MESHES ALWAYS HAVE THE SAME ORDERING   */
+/* MAINLY FOR DEBUGGING PURPOSES (ONLY WORKS FOR 1 LOOP) */
+   max = -1;
+   for(i=bgn;i<end;++i) {
+      if (sbdry[sideord[i]].type > max) {
+         max = sbdry[sideord[i]].type;
+         mark = i -bgn;
+      }
+   }
+
    count = 0;
    for(i=bgn;i<end;++i) {
-      bnum = sideord[i];
+      bnum = sideord[(i -bgn +mark)%(end-bgn) +bgn];
       
       tmpsb = sbdry[count];
       sbdry[count] = sbdry[bnum];
@@ -282,7 +306,7 @@ FINDNEXT:
             break;
          }
       }
-      sideord[i] = count;
+      sideord[(i -bgn +mark)%(end-bgn) +bgn] = count;
       ++count;
    }
    
