@@ -3,7 +3,8 @@
 #include<utilities.h>
 #include<stdio.h>
 
-extern FLT f1(int n, FLT x, FLT y);
+extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTION
+extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
 void blocks::init(char *file) {
    int i,j,k,p,match;
@@ -110,6 +111,7 @@ void blocks::init(char *file) {
    }
 
 /*	MATCH BOUNDARIES */
+   printf("%d %d\n",mgrids,nblocks);
    for(i=0;i<mgrids;++i) {
       for(j=0;j<nblocks;++j) {
          match = 0;
@@ -125,6 +127,9 @@ void blocks::init(char *file) {
 
 /*	INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin >= 0) {
+      startup = 0;
+      ntstep += readin +1;
+      
       for(i=0;i<nblocks;++i) {
          number_str(outname, "data", i, 1);
          strcat(outname, ".");
@@ -162,6 +167,7 @@ void blocks::init(char *file) {
          blk[i].grd[0].curvinit();
          blk[i].grd[0].tobasis(&f1);
       }
+      startup = 0;
    }
 
    return;
@@ -299,10 +305,10 @@ void blocks::output(int number, FILETYPE type=text) {
       blk[i].grd[0].output(bname,type);
       
 /*		OUTPUT MESH */         
-		if (adapt) {
-         blk[i].grd[0].mesh::setbcinfo();
-         blk[i].grd[0].out_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
-         blk[i].grd[0].spectral_hp::setbcinfo();
+      blk[i].grd[0].mesh::setbcinfo();
+      blk[i].grd[0].out_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
+      blk[i].grd[0].spectral_hp::setbcinfo();
+      if (adapt) {
          strcpy(outname,bname);
          strcat(outname,"vlg");
          blk[i].grd[0].outlength(outname,type);      
@@ -334,8 +340,8 @@ void blocks::go() {
       }
          
       if (!(tstep%out_intrvl)) {
-         output(tstep,text);
-         output(tstep,tecplot);
+         output(tstep+1,text);
+         output(tstep+1,tecplot);
       }
       
       if (adapt && tstep != ntstep-1) {
@@ -344,12 +350,12 @@ void blocks::go() {
             blk[i].reconnect();
       }       
 
-//      if (tstep == 0) {
-//         hp_mgrid::nstep = 1;
-//			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-//         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-//         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-//		}
+      if (tstep == 0 && hp_mgrid::dti > 0.0) {
+         hp_mgrid::nstep = 2;
+			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+		}
 //		else {
 //			hp_mgrid::nstep = 3;
 //			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;

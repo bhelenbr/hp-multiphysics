@@ -15,7 +15,7 @@
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
-#define CYLINDER
+#define FREESTREAM
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -40,7 +40,7 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0 +0.1*outertime);
+         return(1.0 +0.0*outertime);
       case(1):
          return(0.0);
       case(2):
@@ -122,10 +122,6 @@ double df1d(int n, double x, double y, int dir) {
 }
 #endif
 
-
-
-
-
 /***************************/
 /*	CURVED SIDE DEFINITIONS */
 /***************************/
@@ -135,7 +131,7 @@ FLT centerx = 0.0;
 FLT centery = 0.0;
 
 /*	FOR A SINE WAVE */
-FLT amp = 0.1;
+FLT amp = 0.05;
 
 FLT hgt(int type, FLT x, FLT y) {
    if (type&(EULR_MASK +INFL_MASK)) {
@@ -180,6 +176,7 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 
 /* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
 class spectral_hp *tgt;
+int startup = 1;
 
 void mvpttobdry(int typ, FLT& x, FLT &y) {
    int iter;
@@ -202,8 +199,21 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    }
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {
-
-      tgt->findbdrypt(typ,x,y,psi);
+      if (startup) {
+         iter = 0;
+         do {
+            mag = sqrt(dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y));
+            delt_dist = -hgt(typ,x,y)/mag;
+            x += delt_dist*dhgtdx(typ,x,y)/mag;
+            y += delt_dist*dhgtdy(typ,x,y)/mag;
+            if (++iter > 100) {
+               printf("iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               exit(1);
+            }
+         } while (fabs(delt_dist) > 10.*EPSILON);
+      }
+      else 
+         tgt->findbdrypt(typ,x,y,psi);
       
       return;
    }

@@ -9,7 +9,6 @@
 
 #include "hp_mgrid.h"
 
-
 void hp_mgrid::tadvance() {
    int i,j,n,tind,step;
    FLT temp;
@@ -43,10 +42,10 @@ void hp_mgrid::tadvance() {
                   
       for(i=0;i<b.gpx;++i) {
          for(j=0;j<b.gpn;++j) {	
-            cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
+            cjcb[i][j] = bd[1]*gbl->rho*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
             for(n=0;n<ND;++n)
-               gbl->dugdt[n][tind][i][j]  = bd[1]*u[n][i][j]*cjcb[i][j];
-            gbl->dugdt[ND][tind][i][j] = bd[1]*gbl->rho*cjcb[i][j];
+               gbl->dugdt[n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
+            gbl->dugdt[ND][tind][i][j] = cjcb[i][j];
          }				
       }
    }
@@ -78,10 +77,10 @@ void hp_mgrid::tadvance() {
                      
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {	
-               cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
+               cjcb[i][j] = bd[step+2]*gbl->rho*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
                for(n=0;n<ND;++n)
-                  gbl->dugdt[n][tind][i][j]  += bd[step+2]*u[0][i][j]*cjcb[i][j];
-               gbl->dugdt[ND][tind][i][j] += bd[step+2]*gbl->rho*cjcb[i][j];
+                  gbl->dugdt[n][tind][i][j]  += u[n][i][j]*cjcb[i][j];
+               gbl->dugdt[ND][tind][i][j] += cjcb[i][j];
             }				
          }
       }
@@ -183,6 +182,10 @@ void hp_mgrid::tadvance() {
          }
       }
    }
+   
+/*	TESTING TEMPORARY */
+//   for(i=0;i<nvrtx;++i)
+//      vrtx[i][0] *= 1.1;
 
 /*	UPDATE UNSTEADY INFLOW VARIABLES */
    setinflow();
@@ -190,5 +193,29 @@ void hp_mgrid::tadvance() {
 /*	MOVE VERTEX INFO FOR FREE SURFACES TO UKNOWN VECTOR */
    surfvrttoug();
 
+   return;
+}
+
+void hp_mgrid::getfdvrtdt() {
+   int i,j,n,tind;
+
+/*	TEMPORARY */   
+//   for(i=0;i<nvrtx;++i)
+//      vrtx[i][0] *= 1.1;
+   
+/* CALCULATE MESH VELOCITY SOURCE TERM ON COARSE MESHES */
+/* TO CALCULATE VUG ON COARSE MESH */
+   for(i=0;i<nvrtx;++i) {
+      tind = fine[i].tri;
+
+      for(n=0;n<NV;++n)
+         dvrtdt[i][n] = 0.0;
+         
+      for(j=0;j<3;++j) {
+         for(n=0;n<NV;++n)
+            dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
+      }
+   }
+   
    return;
 }

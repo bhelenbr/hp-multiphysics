@@ -169,6 +169,7 @@ class hp_mgrid : public spectral_hp {
 
 /*		FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
       void tadvance();
+      void getfdvrtdt();  // TO TRANSFER MESH TIME DERIVATIVE TO COARSE MESHES */
       
 /*		FUNCTIONS FOR ADAPTION */      
       void length1();

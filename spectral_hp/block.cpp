@@ -87,19 +87,23 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
 
       for(bnum=0;bnum<grd[0].nsbd;++bnum) 
          if (grd[0].sbdry[bnum].type == surfid) break;
-      assert(bnum != grd[0].nsbd);
+      
+      if (bnum==grd[0].nsbd) {
+         printf("Side ID doesn't match input file\n");
+         exit(1);
+      }
 
 /*		ALLOCATE FINE SURFACE STORAGE */ 
       grd[0].srf[i].alloc(grd[0].maxsbel, lg2pmax, 0, 1, &sgbl[i]);
       for(j = lg2pmax -1; j >= 0; --j) {
          grd[0].srf[i].alloc(grd[0].maxsbel, j, 1, 1, &sgbl[i]);
       }
-      grd[0].sbdry[i].misc = static_cast<void *>(&grd[0].srf[i]);
+      grd[0].sbdry[bnum].misc = static_cast<void *>(&grd[0].srf[i]);
 
 /*		ALLOCATE COARSE SURFACE STORAGE */
       for(j=1;j<ngrid;++j) {
          grd[j].srf[i].alloc(grd[j].maxsbel, 0, 1, 0, &sgbl[i]);
-         grd[j].sbdry[i].misc = static_cast<void *>(&grd[j].srf[i]);
+         grd[j].sbdry[bnum].misc = static_cast<void *>(&grd[j].srf[i]);
       }
       
 /*		READ SURFACE PHYSICS INFO */
@@ -116,10 +120,12 @@ void block::tadvance() {
    int j;
    
    grd[0].tadvance();
+   grd[0].setksprg1d();
    
-   for(j=0;j<ngrid;++j)
+   for(j=1;j<ngrid;++j) {
+      grd[j].getfdvrtdt();
       grd[j].setksprg1d();
-   
+   }
 }
 
 void block::reconnect() {

@@ -10,7 +10,7 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
 
 void hp_mgrid::setinflow() {
 	static int i,j,k,m,n,indx,v0,v1,info;
-	static FLT x,y;
+	static FLT x,y,mvel[ND];
 	static int sind;
    char uplo[] = "U";
 
@@ -49,7 +49,10 @@ void hp_mgrid::setinflow() {
                crdtouht1d(sind);
                for(n=0;n<ND;++n)
                   b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
-
+               
+               crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+               for(n=0;n<ND;++n)
+                  b.proj1d(uht[n],crd[n][1]);
             }
             else {
                for(n=0;n<ND;++n) {
@@ -57,9 +60,11 @@ void hp_mgrid::setinflow() {
                   
                   for(k=0;k<b.gpx;++k)
                      dcrd[n][0][0][k] = 0.5*(vrtx[v1][n]-vrtx[v0][n]);
+               
+                  b.proj1d(dvrtdt[v0][n],dvrtdt[v1][n],crd[n][1]);
                }
             }
-            
+
             if (b.sm) {
                for(n=0;n<ND;++n)
                   b.proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
@@ -84,10 +89,12 @@ void hp_mgrid::setinflow() {
             for(n=0;n<ND;++n)
                b.proj1d(uht[n],u[n][0]);
 
-/*				NEED TO FIGURE OUT WHAT I'M DOING HERE FOR MOVING MESH */
+            for(k=0;k<b.gpx;++k) {
+               for(n=0;n<ND;++n)
+                  mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
                
-            for(k=0;k<b.gpx;++k)
-               res[2][0][k] = gbl->rho*(u[0][0][k]*dcrd[1][0][0][k] -u[1][0][k]*dcrd[0][0][0][k]);
+               res[2][0][k] = gbl->rho*((u[0][0][k] -mvel[0])*dcrd[1][0][0][k] -(u[1][0][k] -mvel[1])*dcrd[0][0][0][k]);
+            }
             
             b.intgrt1d(res[2][0],lf[0]);
             
@@ -231,7 +238,7 @@ void hp_mgrid::addbflux(int mgrid) {
                else 
                   chrctr(gbl->rho,gam,wl,wr,nrm,mvel);
                   
-               res[2][0][k] = gbl->rho*(wl[0]*nrm[0] +wl[1]*nrm[1]);
+               res[2][0][k] = gbl->rho*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
                res[0][0][k] = res[2][0][k]*wl[0] +wl[2]*nrm[0];
                res[1][0][k] = res[2][0][k]*wl[1] +wl[2]*nrm[1];
             }

@@ -315,10 +315,14 @@ void hp_mgrid::surfinvrt2(int bnum) {
       if (vbdry[i].el[0] != v0) continue;
       
       if (vbdry[i].type&(COMX_MASK +COMY_MASK)) {
-         srf->gbl->vres[0][0] = 0.5*(srf->gbl->vres[0][0] +vbuff[vbnum][0]);
-         srf->gbl->vres[0][1] = 0.5*(srf->gbl->vres[0][1] +vbuff[vbnum][1]);
+         srf->gbl->vres[0][0] = 0.5*(srf->gbl->vres[0][0] +vbuff[i][0]);
+         srf->gbl->vres[0][1] = 0.5*(srf->gbl->vres[0][1] +vbuff[i][1]);
       }
-      
+   }
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0) continue;
+            
       if (vbdry[i].type&(PRDX_MASK +SYMM_MASK +PRDY_MASK)) {
          srf->gbl->vres[0][0] = 0.0;
       }
@@ -331,10 +335,15 @@ void hp_mgrid::surfinvrt2(int bnum) {
       if (vbdry[i].el[0] != v1) continue;
       
       if (vbdry[i].type&(COMX_MASK +COMY_MASK)) {
-         srf->gbl->vres[end][0] = 0.5*(srf->gbl->vres[end][0] +vbuff[vbnum][0]);
-         srf->gbl->vres[end][1] = 0.5*(srf->gbl->vres[end][1] +vbuff[vbnum][1]);
+         srf->gbl->vres[end][0] = 0.5*(srf->gbl->vres[end][0] +vbuff[i][0]);
+         srf->gbl->vres[end][1] = 0.5*(srf->gbl->vres[end][1] +vbuff[i][1]);
       }
-      
+   }
+   
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v1) continue;
+            
       if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
          srf->gbl->vres[end][0] = 0.0;
       }
@@ -342,6 +351,8 @@ void hp_mgrid::surfinvrt2(int bnum) {
          srf->gbl->vres[end][1] = 0.0;
       }
    }
+   
+
    
 /*	SOLVE FOR VERTEX MODES */
 	for(i=0;i<=end;++i) {
@@ -525,7 +536,7 @@ void hp_mgrid::surfdt2(int bnum) {
          count = 0;
          for(m=0;m<ND;++m)
             for(n=0;n<ND;++n) 
-               srf->gbl->vdt[0][m][n] = 0.5*(srf->gbl->vdt[0][m][n] +vbuff[vbnum][count++]);
+               srf->gbl->vdt[0][m][n] = 0.5*(srf->gbl->vdt[0][m][n] +vbuff[i][count++]);
       }
    }
 
@@ -536,7 +547,7 @@ void hp_mgrid::surfdt2(int bnum) {
          count = 0;
          for(m=0;m<ND;++m)
             for(n=0;n<ND;++n) 
-               srf->gbl->vdt[end][m][n] = 0.5*(srf->gbl->vdt[end][m][n] +vbuff[vbnum][count++]);
+               srf->gbl->vdt[end][m][n] = 0.5*(srf->gbl->vdt[end][m][n] +vbuff[i][count++]);
       }
    } 
    

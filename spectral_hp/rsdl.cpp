@@ -69,7 +69,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 /*		CALCULATE MESH VELOCITY */
       for(i=0;i<b.gpx;++i)
          for(j=0;j<b.gpn;++j)
-            for(n=0;n<ND;++n) 
+            for(n=0;n<ND;++n)
                crd[n][i][j] = bd[0]*crd[n][i][j] +u[n][i][j];
 
       ugtouht(tind);
@@ -187,16 +187,17 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                cv10[i][j] = -cv10[i][j] -e10[i][j];
                cv11[i][j] = -cv11[i][j] -e11[i][j];
                
-//               du[2][0][i][j] *= -1;
-//               du[2][1][i][j] *= -1;
+               du[2][0][i][j] *= -1;
+               du[2][1][i][j] *= -1;
                
-#ifdef MOVING_MESH
+#ifdef OLDWAYS
+/*	THESE DON'T WORK FOR MOVING MESH RIGHT NOW */
                   res[2][i][j] += gbl->rho*
                                  (dcrd[1][1][i][j]*(du[0][0][i][j] -dlmvx[0][i][j])
                                  -dcrd[0][1][i][j]*(du[1][0][i][j] -dlmvx[1][i][j])
                                  -dcrd[1][0][i][j]*(du[0][1][i][j] -dlmvy[0][i][j])
                                  +dcrd[0][0][i][j]*(du[1][1][i][j] -dlmvy[1][i][j]));
-#else					
+
                  res[2][i][j] += gbl->rho*(dcrd[1][1][i][j]*du[0][0][i][j] -dcrd[0][1][i][j]*du[1][0][i][j]
                                           -dcrd[1][0][i][j]*du[0][1][i][j] +dcrd[0][0][i][j]*du[1][1][i][j]);
 #endif
@@ -207,8 +208,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          b.derivs(cv01,res[0]);
          b.derivr(cv10,res[1]);
          b.derivs(cv11,res[1]);
-//         b.derivr(du[2][0],res[2]);
-//         b.derivs(du[2][1],res[2]);
+         b.derivr(du[2][0],res[2]);
+         b.derivs(du[2][1],res[2]);
          
 
 /*			THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
@@ -308,10 +309,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 			for(n=0;n<NV;++n)		
 				gbl->res.s[i][n] += dres[log2p].i[i][n];  
 	}
-      
-//   bdry_rcvandzero(-1);
-//   for(i=0;i<b.sm;++i)
-//      bdry_rcvandzero(i);
-
+   
+//   for(i=0;i<nvrtx;++i)
+//     printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+   
 	return;
 }
