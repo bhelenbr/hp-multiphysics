@@ -196,6 +196,7 @@
 				07F2E94500974D3D80990B20,
 				F515EA5602B7E15B012A8EDA,
 				07F2E94B00974D3D80990B20,
+				F5774E7503B137EB01990B69,
 				07F2E94200974D3D80990B20,
 				F50FCD7F0128AA9801000001,
 				F5BDAB54014068AC01000001,
@@ -210,6 +211,7 @@
 				07F2E94A00974D3D80990B20,
 				F51A5D6802B541FB012A8EDA,
 				F573B1BB0379A61301990B69,
+				F510D95503AA6B8401990B69,
 				F5C9C262032CCEAF01990B69,
 				07F2E94E00974D3D80990B20,
 				F53FC7D10343C82E01E186A8,
@@ -235,8 +237,8 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "../include \"~/Codes/packages/mpich-1.2.3/include\"";
 				LIBRARY_SEARCH_PATHS = "../lib /Users/helenbrk/Codes/packages/mpich-1.2.3/lib /Users/helenbrk/Codes/lib";
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "-DMPISRC";
+				OPTIMIZATION_CFLAGS = "-O2";
+				OTHER_CFLAGS = "-DNO_MPISRC";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = mblock;
@@ -258,11 +260,12 @@
 			files = (
 				07F2E95400974D3D80990B20,
 				F5C9C19A03253B8801990B69,
-				F5C9C1A80326737201990B69,
-				F5C9C1AD0327AC9C01990B69,
-				F5C9C1AF0327AC9D01990B69,
-				F5C9C263032CCEAF01990B69,
-				F573B1BC0379A61301990B69,
+				F5A0EF5B03A8C77301990B69,
+				F5A0EF5D03A8C77501990B69,
+				F5A0EF5E03A8C77701990B69,
+				F5A0EF5F03A8C77801990B69,
+				F5A0EF6003A8C77801990B69,
+				F510D95903AA703501990B69,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -271,24 +274,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5AECAC802E2155601F7FB4B,
-				F51D149902E6DC4201375D4A,
-				F5C9C18C03253B8301990B69,
-				F5C9C18D03253B8301990B69,
-				F5C9C18E03253B8401990B69,
-				F5C9C18F03253B8401990B69,
-				F5C9C19003253B8401990B69,
-				F5C9C19103253B8501990B69,
-				F5C9C19203253B8501990B69,
-				F5C9C19303253B8501990B69,
-				F5C9C19403253B8601990B69,
-				F5C9C19503253B8601990B69,
-				F5C9C19603253B8701990B69,
-				F5C9C19703253B8701990B69,
-				F5C9C19803253B8801990B69,
-				F5C9C19903253B8801990B69,
-				F5C9C1A90326737201990B69,
-				F5C9C1AE0327AC9D01990B69,
-				F53FC7D20343C82E01E186A8,
+				F5A0EF5C03A8C77301990B69,
+				F5A0EF6103A8C77901990B69,
+				F5A0EF6203A8C77B01990B69,
+				F5774E6603B0F8E501990B69,
+				F5774E6703B0F8E501990B69,
+				F5774E6803B0F8E601990B69,
+				F5774E6903B0F8E601990B69,
+				F5774E6A03B0F8E701990B69,
+				F5774E6B03B0F8E701990B69,
+				F5774E6C03B0F8E801990B69,
+				F5774E6D03B0F8E801990B69,
+				F5774E6E03B0F8E901990B69,
+				F5774E6F03B0F8E901990B69,
+				F5774E7003B0F8EA01990B69,
+				F5774E7103B0F8EA01990B69,
+				F5774E7203B0F8EB01990B69,
+				F5774E7303B0F8EB01990B69,
+				F5774E7403B0F8EC01990B69,
+				F5774E7803B1461F01990B69,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,6 +355,18 @@
 			path = triangulate.cpp;
 			refType = 4;
 		};
+		F510D95503AA6B8401990B69 = {
+			isa = PBXFileReference;
+			name = sblock.h;
+			path = /Users/helenbrk/Codes/mesh/sblock.h;
+			refType = 0;
+		};
+		F510D95903AA703501990B69 = {
+			fileRef = F510D95503AA6B8401990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F515EA5602B7E15B012A8EDA = {
 			isa = PBXFileReference;
 			path = refineby2.cpp;
@@ -360,12 +376,6 @@
 			isa = PBXFileReference;
 			path = rboundary.h;
 			refType = 4;
-		};
-		F51D149902E6DC4201375D4A = {
-			fileRef = 07F2E94600974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F528820502B1545D012A8EDA = {
 			isa = PBXFileReference;
@@ -405,12 +415,6 @@
 			isa = PBXFileReference;
 			path = blocks.cpp;
 			refType = 4;
-		};
-		F53FC7D20343C82E01E186A8 = {
-			fileRef = F53FC7D10343C82E01E186A8;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F543FC18014FCBC901000001 = {
 			isa = PBXFileReference;
@@ -461,8 +465,151 @@
 			path = rblock.h;
 			refType = 4;
 		};
-		F573B1BC0379A61301990B69 = {
+		F5774E6603B0F8E501990B69 = {
+			fileRef = 07F2E94600974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6703B0F8E501990B69 = {
+			fileRef = F5BE6B500162B73801000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6803B0F8E601990B69 = {
+			fileRef = 07F2E94700974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6903B0F8E601990B69 = {
+			fileRef = 07F2E94800974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6A03B0F8E701990B69 = {
+			fileRef = 07F2E94500974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6B03B0F8E701990B69 = {
+			fileRef = F515EA5602B7E15B012A8EDA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6C03B0F8E801990B69 = {
+			fileRef = 07F2E94B00974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6D03B0F8E801990B69 = {
+			fileRef = 07F2E94200974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6E03B0F8E901990B69 = {
+			fileRef = F50FCD7F0128AA9801000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E6F03B0F8E901990B69 = {
+			fileRef = F5BDAB54014068AC01000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7003B0F8EA01990B69 = {
+			fileRef = F543FC18014FCBC901000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7103B0F8EA01990B69 = {
+			fileRef = 00E0854300CAD1857F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7203B0F8EB01990B69 = {
+			fileRef = F5CED4AF015630AA01000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7303B0F8EB01990B69 = {
+			fileRef = F5F975AB0152459801000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7403B0F8EC01990B69 = {
+			fileRef = 07F2E94300974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5774E7503B137EB01990B69 = {
+			isa = PBXFileReference;
+			path = tprims3d.cpp;
+			refType = 4;
+		};
+		F5774E7803B1461F01990B69 = {
+			fileRef = F5774E7503B137EB01990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF5B03A8C77301990B69 = {
+			fileRef = 07F2E94D00974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF5C03A8C77301990B69 = {
+			fileRef = 07F2E94A00974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF5D03A8C77501990B69 = {
+			fileRef = F51A5D6802B541FB012A8EDA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF5E03A8C77701990B69 = {
 			fileRef = F573B1BB0379A61301990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF5F03A8C77801990B69 = {
+			fileRef = F5C9C262032CCEAF01990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF6003A8C77801990B69 = {
+			fileRef = 07F2E94E00974D3D80990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF6103A8C77901990B69 = {
+			fileRef = F53FC7D10343C82E01E186A8;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5A0EF6203A8C77B01990B69 = {
+			fileRef = F5AF3BF901879D4B0131A0B3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -488,122 +635,8 @@
 			path = copy.cpp;
 			refType = 4;
 		};
-		F5C9C18C03253B8301990B69 = {
-			fileRef = F5BE6B500162B73801000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C18D03253B8301990B69 = {
-			fileRef = 07F2E94700974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C18E03253B8401990B69 = {
-			fileRef = 07F2E94800974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C18F03253B8401990B69 = {
-			fileRef = 07F2E94200974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19003253B8401990B69 = {
-			fileRef = F515EA5602B7E15B012A8EDA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19103253B8501990B69 = {
-			fileRef = 07F2E94B00974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19203253B8501990B69 = {
-			fileRef = F50FCD7F0128AA9801000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19303253B8501990B69 = {
-			fileRef = F5BDAB54014068AC01000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19403253B8601990B69 = {
-			fileRef = F543FC18014FCBC901000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19503253B8601990B69 = {
-			fileRef = 00E0854300CAD1857F000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19603253B8701990B69 = {
-			fileRef = F5CED4AF015630AA01000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19703253B8701990B69 = {
-			fileRef = F5F975AB0152459801000001;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19803253B8801990B69 = {
-			fileRef = 07F2E94500974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C19903253B8801990B69 = {
-			fileRef = 07F2E94300974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5C9C19A03253B8801990B69 = {
 			fileRef = F528820602B1545D012A8EDA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C1A80326737201990B69 = {
-			fileRef = 07F2E94D00974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C1A90326737201990B69 = {
-			fileRef = 07F2E94A00974D3D80990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C1AD0327AC9C01990B69 = {
-			fileRef = F51A5D6802B541FB012A8EDA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C1AE0327AC9D01990B69 = {
-			fileRef = F5AF3BF901879D4B0131A0B3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C9C1AF0327AC9D01990B69 = {
-			fileRef = 07F2E94E00974D3D80990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -612,12 +645,6 @@
 			isa = PBXFileReference;
 			path = block.h;
 			refType = 4;
-		};
-		F5C9C263032CCEAF01990B69 = {
-			fileRef = F5C9C262032CCEAF01990B69;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F5CED4AF015630AA01000001 = {
 			isa = PBXFileReference;
@@ -663,7 +690,7 @@
 			refType = 4;
 		};
 		F5F501A201A008E201990B20 = {
-			buildActionMask = 12;
+			buildActionMask = 8;
 			files = (
 			);
 			generatedFileNames = (
@@ -671,7 +698,7 @@
 			isa = PBXShellScriptBuildPhase;
 			neededFileNames = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/csh;
 			shellScript = ./createlib;
 		};
