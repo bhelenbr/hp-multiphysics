@@ -10,40 +10,41 @@
 		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{974, 605}";
+				ContentSize = "{1221, 739}";
 				LeftSlideOut = {
 					ActiveTab = 0;
-					Frame = "{{0, 23}, {974, 582}}";
+					Frame = "{{0, 23}, {1221, 716}}";
 					Split0 = {
-						Frame = "{{224, 0}, {750, 582}}";
+						ActiveTab = 0;
+						Frame = "{{224, 0}, {997, 716}}";
 						Split0 = {
-							Frame = "{{0, 24}, {750, 558}}";
+							Frame = "{{0, 429}, {997, 287}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {750, 266}}";
+								Frame = "{{0, 0}, {997, 405}}";
 								Split0 = {
-									Frame = "{{0, 120}, {750, 146}}";
+									Frame = "{{0, 189}, {997, 216}}";
 									Split0 = {
-										Frame = "{{0, 0}, {253, 146}}";
+										Frame = "{{0, 0}, {332, 216}}";
 									};
 									Split1 = {
-										Frame = "{{262, 0}, {488, 146}}";
+										Frame = "{{341, 0}, {656, 216}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {750, 96}}";
+									Frame = "{{0, 0}, {997, 165}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {749, 105}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {750, 266}}";
+							Frame = "{{0, 0}, {997, 405}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
@@ -54,18 +55,18 @@
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {752, 139}}";
-							BuildTranscriptFrame = "{{0, 148}, {752, 126}}";
-							Frame = "{{0, 0}, {750, 272}}";
+							BuildMessageFrame = "{{0, 0}, {999, 139}}";
+							BuildTranscriptFrame = "{{0, 148}, {999, 126}}";
+							Frame = "{{0, 0}, {997, 272}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {750, 350}}";
+							Frame = "{{0, 0}, {997, 350}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {200, 582}}";
+						Frame = "{{0, 0}, {200, 716}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 530}}";
