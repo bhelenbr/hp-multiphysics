@@ -310,7 +310,6 @@ next1:      continue;
    if (maxvst > gblmaxvst) {
       if (gblmaxvst > 0) {
          printf("better to allocate from largest mesh to smallest\n");
-         exit(1);
       }
       fltwk = new FLT[maxvst];
       intwk1 = new int[maxvst];
@@ -335,7 +334,7 @@ next1:      continue;
    printf("#Boundaries\n");
    bdrylabel();
    for(i=0;i<nsbd;++i)
-      printf("%d: type %d, number %d\n",i,sbdry[i].type,sbdry[i].num);
+      printf("#%d: type %d, number %d\n",i,sbdry[i].type,sbdry[i].num);
 
    createttri();
    createvtri();
