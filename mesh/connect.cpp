@@ -108,9 +108,9 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
             (tgt.vrtx[tgt.tvrtx[tind][(j+1)%3]][1]
             -tgt.vrtx[tgt.tvrtx[tind][j]][1])*
             (x-tgt.vrtx[tgt.tvrtx[tind][j]][0]));
-         }	
+         }
          cnnct[v0].tri = tind;
-         ainv = 1.0/(4.*tgt.area(tind));
+         ainv = 1.0/(tgt.area(tind));
          for (j=0;j<3;++j) {
             cnnct[v0].wt[(j+2)%3] = wgt[j]*ainv;
             if (wgt[j]*ainv > 1.0) 
