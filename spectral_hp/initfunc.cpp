@@ -15,8 +15,8 @@
 #include<stdlib.h>
 
 /* INITIAL CONDITIONS */
-/* KOVASZNAY TEST CYLINDER FREESTREAM TWOLAYER CONV_DIFF UNSTEADY_DROP*/
-#define UNSTEADY_DROP
+/* KOVASZNAY TEST CYLINDER FREESTREAM TWOLAYER CONVDIFF UNSTEADY_DROP */
+#define TWOLAYER
 
 /*	CURVED SURFACES */
 /* CIRCLE SIN COS NACA */
@@ -166,10 +166,10 @@ double df1d(int n, double x, double y, int dir) {
 
 #ifdef CONVDIFF
 
-FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
-// FLT forcing(FLT x,FLT y) {return(0.0);}
+// FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
+FLT forcing(FLT x,FLT y) {return(0.0);}
 FLT blayer = 0.0;
-FLT axext = 1.0*cos(M_PI*10.0/180.0), ayext = 1.0*sin(M_PI*10.0/180.0);
+FLT axext = 1.0*cos(M_PI*0.0/180.0), ayext = 1.0*sin(M_PI*0.0/180.0);
 FLT nuext = 0.0;
 
 FLT f1(int n, FLT x, FLT y) {
@@ -177,14 +177,20 @@ FLT f1(int n, FLT x, FLT y) {
    FLT axx = axext*2.*M_PI;
    FLT xx = x*2.*M_PI;
    FLT yx = y*2.*M_PI;
+   double eps = 0.05;
+   
    switch(n) {
-      case(0):
+      case(2):
          return(axx*sin(xx)/(axx*axx +nux*nux)
            +nux*cos(xx)/(axx*axx +nux*nux)
            +(nux > 0.0 ? blayer*exp(axx/nux*xx) : 0.0)
            +startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
       case(1):
-         return(startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));        
+         return(startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
+      case(0):
+         if (x > 2.*eps)
+            return(0.0);
+         return(1+cos(M_PI*(x-eps)/eps));
    }
    return(0.0);
 }

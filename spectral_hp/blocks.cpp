@@ -533,7 +533,8 @@ void blocks::adaptation() {
       blk[i].grd[0].matchboundaries2();
 
    /* SET-UP LENGTH FUNCTION */
-#ifdef energy
+#define ENERGY
+#ifdef ENERGY
    FLT e = 0.0, a = 0.0;
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].energy(e,a);
