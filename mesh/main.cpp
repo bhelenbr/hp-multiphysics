@@ -1,5 +1,5 @@
-#include"r_mesh.h"
 #include"blocks.h"
+#include"rblock.h"
 #include<utilities.h>
 #include<time.h>
 #include<stdio.h>
@@ -8,6 +8,10 @@
 #include<string>
 
 using namespace std;
+
+block * blocks::getnewblock(int type) {
+   return(new rblock<r_mesh>);
+}
 
 int main(int argc, char *argv[]) {
    clock_t cpu_time;
@@ -32,6 +36,7 @@ int main(int argc, char *argv[]) {
    input[0]["ncycle"] = "50";
    input[0]["tolerance"] = "0.66";
    
+   input[1]["blktype"] = "0";
    input[1]["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
    input[1]["growth factor"] = "10.0";
    input[1]["filetype"] = "0";

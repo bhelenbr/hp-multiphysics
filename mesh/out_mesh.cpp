@@ -3,7 +3,7 @@
 #include<stdlib.h>
 #include"mesh.h"
 
-int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) const {
+int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
    char fnmapp[100];
    FILE *out;
    int i,j,n,tind,count;

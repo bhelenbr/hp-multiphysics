@@ -207,16 +207,16 @@ class prdy_boundary : public comm_boundary {
       void rcvpositions(int phase) { rcv(phase,&(b().vrtx[0][0]),0,0,2); }
 };
 
-template<class BASE> class curv_template : public BASE {
+template<class BASE> class curv_bdry_template : public BASE {
    protected:
-      virtual FLT hgt(FLT x[ND]) = 0;
-      virtual FLT dhgt(int dir, FLT x[ND]) = 0;
+      virtual FLT hgt(FLT x[mesh::ND]) = 0;
+      virtual FLT dhgt(int dir, FLT x[mesh::ND]) = 0;
    public:      
       /* CONSTRUCTOR */
-      curv_template(mesh &xin, int idin) : BASE(xin,idin) {}
-      void mvpttobdry(int nel,FLT psi, FLT pt[ND]);
+      curv_bdry_template(mesh &xin, int idin) : BASE(xin,idin) {}
+      void mvpttobdry(int nel,FLT psi, FLT pt[mesh::ND]);
 };
 
-typedef curv_template<side_boundary> curv_boundary;
-typedef curv_template<comm_boundary> ifce_boundary;
+typedef curv_bdry_template<side_boundary> curv_boundary;
+typedef curv_bdry_template<comm_boundary> ifce_boundary;
 

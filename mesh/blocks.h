@@ -10,12 +10,12 @@ class blocks {
       
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
-      virtual block * getnewblock(int type);
+      block * getnewblock(int type);  // THIS MUST BE INSTANTIATED FOR PARTICULAR PROBLEM
       void load_constants(std::map<std::string,std::string> input[]);
       void init(std::map<std::string,std::string> input[]);
       void findmatch();
       void matchboundaries();
-      void output(char *filename, FILETYPE filetype);
+      void output(char *filename, FTYPE filetype);
       void input(char *filename) {}
       void go();
       

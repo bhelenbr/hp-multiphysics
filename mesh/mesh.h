@@ -4,7 +4,7 @@
 #include <math.h>
 #include <quadtree.h>
 #include <cstdio>
-
+#include <ftype.h>
 
 #ifdef SINGLE
 #define FLT float
@@ -14,15 +14,11 @@
 #define EPSILON DBL_EPSILON
 #endif
 
-
-enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
-
 class side_boundary;
 class vrtx_boundary;
 
 class mesh {
 
-   
    /***************/
    /* DATA        */
    /***************/
@@ -94,10 +90,10 @@ class mesh {
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      int in_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
-      inline int in_mesh(const char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
-      int out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const;
-      inline int out_mesh(const char *filename, FILETYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
+      int in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1);
+      inline int in_mesh(const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
+      int out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh) const;
+      inline int out_mesh(const char *filename, FTYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
       void setbcinfo();
       
       /* ACCESS TO SIMPLE MESH DATA */

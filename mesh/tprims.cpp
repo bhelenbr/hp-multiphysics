@@ -88,7 +88,7 @@ FLT mesh::area(int tind) const {
    return(dx1*dy2 -dy1*dx2);
 }
 
-FLT a[3];
+static FLT a[3];
 
 FLT mesh::intri(int tind, FLT x[ND]) const {
    int v0,v1,v2;

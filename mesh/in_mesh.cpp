@@ -8,7 +8,7 @@ FLT *mesh::fltwk;
 int *mesh::intwk1, *mesh::intwk2,*mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
-int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype, FLT grwfac) {
+int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwfac) {
     int i,j,n,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];

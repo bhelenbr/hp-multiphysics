@@ -15,10 +15,6 @@
 #include<sstream>
 
 
-block * blocks::getnewblock(int type) {
-   return(new rblock<r_mesh>);
-}
-
 void blocks::load_constants(std::map<std::string,std::string> input[0]) {
 
    std::istringstream data(input[0]["itercrsn"]);   
@@ -77,7 +73,7 @@ void blocks::init(std::map<std::string,std::string> input[]) {
       for (mi=input[i+1].begin(); mi != input[i+1].end(); ++mi)
          merge[mi->first] = mi->second;
       
-      data.str(input[0]["blktype"]);   
+      data.str(input[i+1]["blktype"]);   
       data >> type;
       std::cout << "#blktype:" << type << std::endl;
       data.clear();
@@ -113,16 +109,16 @@ void blocks::matchboundaries() {
    for (lvl=0;lvl<ngrid;++lvl) {
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->matchboundaries(lvl,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
    }
 }
 
 
-void blocks::output(char *filename, FILETYPE filetype) {
+void blocks::output(char *filename, FTYPE filetype) {
    int i;   
    char fnmcat[80],outname[80];
 
@@ -149,11 +145,11 @@ void blocks::rsdl(int lvl) {
    
    excpt = 0;
    do {
-      state = stop;
+      state = block::stop;
       for(i=0;i<nblock;++i)
          state &= blk[i]->rsdl(lvl,excpt);
       excpt += state;
-   } while (state != stop);
+   } while (state != block::stop);
 
    return;
 }
@@ -170,22 +166,22 @@ void blocks::iterate(int lvl) {
    
    excpt = 0;
    do {
-      state = stop;
+      state = block::stop;
       for(i=0;i<nblock;++i)
          state &= blk[i]->vddt(lvl,excpt);
       excpt += state;
-   } while (state != stop);
+   } while (state != block::stop);
 
    for(iter=0;iter<njacobi;++iter) {
       rsdl(lvl);
    
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->update(lvl,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
    }
 
    return;
@@ -206,21 +202,21 @@ void blocks::cycle(int vw, int lvl) {
       
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->mg_getfres(lvl+1,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
           
       cycle(vw, lvl+1);
 
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->mg_getcchng(lvl,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
          
       for(iter=0;iter<iterrfne;++iter)
          iterate(lvl);
@@ -256,11 +252,11 @@ void blocks::tadvance() {
    for (lvl=0;lvl<ngrid;++lvl) {
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->tadvance(lvl,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
    }
 
    return;
@@ -274,20 +270,20 @@ void blocks::restructure() {
    
    excpt = 0;
    do {
-      state = stop;
+      state = block::stop;
       for(i=0;i<nblock;++i)
          state &= blk[i]->adapt(excpt);
       excpt += state;
-   } while (state != stop);
+   } while (state != block::stop);
    
    for(lvl=1;lvl<ngrid;++lvl) {
       excpt = 0;
       do {
-         state = stop;
+         state = block::stop;
          for(i=0;i<nblock;++i)
             state &= blk[i]->reconnect(lvl,excpt);
          excpt += state;
-      } while (state != stop);
+      } while (state != block::stop);
    }
             
    return;
