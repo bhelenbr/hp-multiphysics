@@ -4,7 +4,7 @@
 #include<utilities.h>
 
 void blocks::init(int n, int mg, char **filename, FILETYPE filetype, FLT grwfac) {
-   int i,j,k,match,phase;
+   int i,j,k,match;
 
    nblocks = n;
    mglvls = mg;
