@@ -20,7 +20,10 @@
 /* THIS OBVIOUSLY NEEDS TO BE CLEANED UP A BIT */
 /* BUT IT DOESN'T INTERFERE WITH ANYTHING */
 
-void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
+template void mesh<2>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor);
+template void mesh<3>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor);
+
+template<int ND> void mesh<ND>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
    int i,j,nv;
    int lp, sd;
    int sind,dir,sindnxt,dirnxt;
@@ -139,7 +142,10 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
             
 
 
-void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
+template void mesh<2>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood);
+template void mesh<3>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood);
+
+template<int ND> void mesh<ND>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
    int i,j,k,ncnvx,cnvx[2],vtry,itemp;
    FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
    FLT xmid,ymid,area,alpha,beta,xcen,ycen;
@@ -253,7 +259,10 @@ NEXT: continue;
    return;
 }
 
-void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
+template void mesh<2>::addtri(int v0,int v1, int v2, int sind, int dir);
+template void mesh<3>::addtri(int v0,int v1, int v2, int sind, int dir);
+
+template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir) {
    int i,j,k,end,sind1,tind;
    int minv,maxv,order,sindprev,temp;
       

@@ -14,22 +14,21 @@ ONLY INCLUDE FROM WITH R_MESH.H
 class rbdry_interface {
    public:
       /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-      virtual void dirichlet(FLT (*)[mesh::ND]) {}
+      virtual void dirichlet(FLT (*)[r_mesh::ND]) {}
 #ifdef FOURTH
-      virtual void fixdx2(FLT (*)[mesh::ND]) {}
+      virtual void fixdx2(FLT (*)[r_mesh::ND]) {}
 #endif
-      virtual void tadvance() {}
 };
 
 /* GENERIC PROTOCALS FOR MOVING BOUNDARIES */
 class no_rfix {
    public:
-      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {}
+      static void dirichlet(class side_template<mesh<2> > *bin, FLT (*res)[r_mesh::ND]) {}
 };
 
 class rfixx {
    public:
-      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {
+      static void dirichlet(class side_template<mesh<2> > *bin, FLT (*res)[r_mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -43,7 +42,7 @@ class rfixx {
 
 class rfixy {
    public:
-      static void dirichlet(class side_template<mesh> *bin, FLT (*res)[mesh::ND]) {
+      static void dirichlet(class side_template<mesh<2> > *bin, FLT (*res)[r_mesh::ND]) {
       int j,sind;
       
       for(j=0;j<bin->nsd();++j) {
@@ -66,7 +65,7 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
    public:
       rgeneric(int type, class r_mesh& xin) : BASE(type,xin), x(xin) {}
       inline r_mesh& b() {return(x);}
-      void dirichlet(FLT (*res)[mesh::ND]) {
+      void dirichlet(FLT (*res)[r_mesh::ND]) {
          xfix.dirichlet(this,res);
          yfix.dirichlet(this,res);
       }
@@ -74,11 +73,11 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
 };
 
 
-typedef rgeneric<prdc_template<scomm<mesh>,mesh>,rfixx,no_rfix> rprdx;
-typedef rgeneric<prdc_template<scomm<mesh>,mesh>,no_rfix,rfixx> rprdy;
-typedef rgeneric<scomm<mesh>,no_rfix,no_rfix> rcomm;
-typedef rgeneric<side_template<mesh>,rfixx,rfixy> rfixd;
-typedef rgeneric<curv_template<side_template<mesh>,mesh>,rfixx,rfixy> rfixd_curved;
-typedef rgeneric<scomm<mesh>,rfixx,rfixy> rifce;
-typedef rgeneric<side_template<mesh>,rfixx,no_rfix> rsymm;
+typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,rfixx,no_rfix> rprdx;
+typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,no_rfix,rfixx> rprdy;
+typedef rgeneric<scomm<mesh<2> >,no_rfix,no_rfix> rcomm;
+typedef rgeneric<side_template<mesh<2> >,rfixx,rfixy> rfixd;
+typedef rgeneric<curv_template<side_template<mesh<2> >,mesh<2> >,rfixx,rfixy> rfixd_curved;
+typedef rgeneric<scomm<mesh<2> >,rfixx,rfixy> rifce;
+typedef rgeneric<side_template<mesh<2> >,rfixx,no_rfix> rsymm;
 

@@ -6,7 +6,10 @@
 
 using namespace std;
 
-int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
+template int mesh<2>::out_mesh(FLT (*vin)[2], const char *filename, FTYPE filetype) const;
+template int mesh<3>::out_mesh(FLT (*vin)[3], const char *filename, FTYPE filetype) const;
+
+template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
    char fnmapp[100];
    int i,j,n,tind,count;
    ofstream out;
@@ -234,7 +237,10 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
     return(1);
 }
 
-void mesh::setbcinfo() {
+template void mesh<2>::setbcinfo();
+template void mesh<3>::setbcinfo();
+
+template<int ND> void mesh<ND>::setbcinfo() {
    int i,j;
    
    /* SET UP VRTX BC INFORMATION FOR OUTPUT */

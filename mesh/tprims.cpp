@@ -1,7 +1,10 @@
 #include"mesh.h"
 #include<cmath>
 
-FLT mesh::incircle(int tind, FLT *a) const {
+template FLT mesh<2>::incircle(int tind, FLT *a) const;
+template FLT mesh<3>::incircle(int tind, FLT *a) const;
+
+template<int ND> FLT mesh<ND>::incircle(int tind, FLT *a) const {
    int i,i1,i2,i3;
    FLT pt[4][2];
    FLT l2[4];
@@ -32,7 +35,10 @@ FLT mesh::incircle(int tind, FLT *a) const {
    return(determ);
 }
 
-FLT mesh::insidecircle(int sind, FLT *a) const {
+template FLT mesh<2>::insidecircle(int sind, FLT *a) const;
+template FLT mesh<3>::insidecircle(int sind, FLT *a) const;
+
+template<int ND> FLT mesh<ND>::insidecircle(int sind, FLT *a) const {
    int v0,v1;
    FLT ctr[2],dist2;
    
@@ -45,7 +51,9 @@ FLT mesh::insidecircle(int sind, FLT *a) const {
 }
 
 
-FLT mesh::area(int v0, int v1, int v2) const {
+template FLT mesh<2>::area(int v0, int v1, int v2) const;
+
+template<int ND> FLT mesh<ND>::area(int v0, int v1, int v2) const {
    FLT dx1,dy1,dx2,dy2;
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
@@ -56,7 +64,10 @@ FLT mesh::area(int v0, int v1, int v2) const {
    return(dx1*dy2 -dy1*dx2);
 }
 
-FLT mesh::area(int snum, int v2) const {
+template FLT mesh<2>::area(int snum, int v2) const;
+template FLT mesh<3>::area(int snum, int v2) const;
+
+template<int ND> FLT mesh<ND>::area(int snum, int v2) const {
    FLT dx1,dy1,dx2,dy2;
    int v0, v1;
    
@@ -71,7 +82,10 @@ FLT mesh::area(int snum, int v2) const {
    return(dx1*dy2 -dy1*dx2);
 }
 
-FLT mesh::area(int tind) const {
+template FLT mesh<2>::area(int tind) const;
+template FLT mesh<3>::area(int tind) const;
+
+template<int ND> FLT mesh<ND>::area(int tind) const {
    FLT dx1,dy1,dx2,dy2;
    int v0, v1, v2;
    
@@ -89,7 +103,9 @@ FLT mesh::area(int tind) const {
 
 static FLT a[3];
 
-FLT mesh::intri(int tind, FLT x[ND]) const {
+template FLT mesh<2>::intri(int tind, FLT x[2]) const;
+
+template<int ND> FLT mesh<ND>::intri(int tind, FLT x[ND]) const {
    int v0,v1,v2;
    FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
@@ -112,7 +128,9 @@ FLT mesh::intri(int tind, FLT x[ND]) const {
 }
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
-void mesh::getwgts(FLT *wt) const {
+template void mesh<2>::getwgts(FLT *wt) const;
+
+template<int ND> void mesh<ND>::getwgts(FLT *wt) const {
    int i;
    FLT sum;
    
@@ -123,7 +141,10 @@ void mesh::getwgts(FLT *wt) const {
    return;
 }
       
-FLT mesh::minangle(int v0, int v1, int v2) const {
+template FLT mesh<2>::minangle(int v0, int v1, int v2) const;
+template FLT mesh<3>::minangle(int v0, int v1, int v2) const;
+
+template<int ND> FLT mesh<ND>::minangle(int v0, int v1, int v2) const {
    int i, i1, i2;
    FLT l[3];
    FLT dx[3], dy[3];
@@ -152,7 +173,10 @@ FLT mesh::minangle(int v0, int v1, int v2) const {
    
 }
    
-FLT mesh::angle(int v0, int v1, int v2) const {
+template FLT mesh<2>::angle(int v0, int v1, int v2) const;
+template FLT mesh<3>::angle(int v0, int v1, int v2) const;
+
+template<int ND> FLT mesh<ND>::angle(int v0, int v1, int v2) const {
    FLT l[3];
    FLT dx, dy;
    
@@ -172,7 +196,10 @@ FLT mesh::angle(int v0, int v1, int v2) const {
    
 }
 
-FLT mesh::tradius(int tind) const {
+template FLT mesh<2>::tradius(int tind) const;
+template FLT mesh<3>::tradius(int tind) const;
+
+template<int ND> FLT mesh<ND>::tradius(int tind) const {
    int v0;
    FLT xcen[ND],dx1,dy1;
    
@@ -183,7 +210,10 @@ FLT mesh::tradius(int tind) const {
    return(sqrt(dx1*dx1 +dy1*dy1));
 }
 
-void mesh::tcenter(int tind, FLT x[ND]) const {
+template void mesh<2>::tcenter(int tind, FLT x[2]) const;
+template void mesh<3>::tcenter(int tind, FLT x[3]) const;
+
+template<int ND> void mesh<ND>::tcenter(int tind, FLT x[ND]) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2;
    FLT dx1,dy1,dx2,dy2,area;
@@ -212,7 +242,10 @@ void mesh::tcenter(int tind, FLT x[ND]) const {
    return;
 }
 
-FLT mesh::aspect(int tind) const {
+template FLT mesh<2>::aspect(int tind) const;
+template FLT mesh<3>::aspect(int tind) const;
+
+template<int ND> FLT mesh<ND>::aspect(int tind) const {
    int v0,v1,v2;
    FLT dx1,dy1,dx2,dy2,area,perim;
    

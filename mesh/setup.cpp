@@ -6,7 +6,10 @@
 /* USES VINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-void mesh::createsideinfo(void) {
+template void mesh<2>::createsideinfo(void);
+template void mesh<3>::createsideinfo(void);
+
+template<int ND> void mesh<ND>::createsideinfo(void) {
    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
    
    for(i=0;i<nvrtx;++i)
@@ -69,7 +72,10 @@ NEXTTRISIDE:
    return;
 }
 
-void mesh::createtsidestri(void) {
+template void mesh<2>::createtsidestri(void);
+template void mesh<3>::createtsidestri(void);
+
+template<int ND> void mesh<ND>::createtsidestri(void) {
    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
    
    for(i=0;i<nvrtx;++i)
@@ -141,8 +147,10 @@ NEXTTRISIDE:
 }
 
 
+template void mesh<2>::createvtri(void);
+template void mesh<3>::createvtri(void);
 
-void mesh::createvtri(void) {
+template<int ND> void mesh<ND>::createvtri(void) {
    int i,tind;
    
    /* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
@@ -154,7 +162,10 @@ void mesh::createvtri(void) {
 }
 
 /* CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
-void mesh::cnt_nbor(void) {
+template void mesh<2>::cnt_nbor(void);
+template void mesh<3>::cnt_nbor(void);
+
+template<int ND> void mesh<ND>::cnt_nbor(void) {
    int i;
    
    for (i=0;i<nvrtx;++i)
@@ -168,9 +179,11 @@ void mesh::cnt_nbor(void) {
    return;
 }
 
+template void mesh<2>::createttri(void);
+template void mesh<3>::createttri(void);
 
 /* CREATES TRIANGLE TO TRIANGLE POINTER */
-void mesh::createttri(void) {
+template<int ND> void mesh<ND>::createttri(void) {
    int tind,sind,j,flip;
    
    for(tind=0;tind<ntri;++tind) {
@@ -184,7 +197,10 @@ void mesh::createttri(void) {
    return;
 }
 
-void mesh::treeinit() {
+template void mesh<2>::treeinit();
+template void mesh<3>::treeinit();
+
+template<int ND> void mesh<ND>::treeinit() {
    int i,j,n,sind,v0;
    FLT x1[ND], x2[ND], dx;
    
@@ -220,8 +236,11 @@ void mesh::treeinit() {
    return;
 }
 
+template void mesh<2>::bdrylabel();
+template void mesh<3>::bdrylabel();
+
 /* FIX STRI TTRI TO POINT TO GROUP/SIDE ON BOUNDARY */
-void mesh::bdrylabel() {
+template<int ND> void mesh<ND>::bdrylabel() {
    int i,j,k,sind,tind;
    
    for(i=0;i<nsbd;++i) {
@@ -239,7 +258,10 @@ void mesh::bdrylabel() {
    return;
 }
 
-void mesh::initvlngth() {
+template void mesh<2>::initvlngth();
+template void mesh<3>::initvlngth();
+
+template<int ND> void mesh<ND>::initvlngth() {
    int i,v0,v1;
    FLT l;
    

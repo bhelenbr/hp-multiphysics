@@ -6,7 +6,11 @@
 #include<cfloat>
 #include<assert.h>
 
-int mesh::coarsen(FLT factor, const class mesh& inmesh) {
+
+template int mesh<2>::coarsen(FLT factor, const class mesh& inmesh);
+template int mesh<3>::coarsen(FLT factor, const class mesh& inmesh);
+
+template<int ND> int mesh<ND>::coarsen(FLT factor, const class mesh& inmesh) {
    int i,j,k,n,sind,count;
    int v0, v1, odd;
    int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
@@ -273,7 +277,10 @@ FINDNEXT:
 }
 
 
-int mesh::smooth_cofa(int niter) {
+template int mesh<2>::smooth_cofa(int niter);
+template int mesh<3>::smooth_cofa(int niter);
+
+template<int ND> int mesh<ND>::smooth_cofa(int niter) {
    int iter,sind,i,j,n,v0,v1;
    
    for(i=0;i<nvrtx;++i)
@@ -311,7 +318,10 @@ int mesh::smooth_cofa(int niter) {
    return(1);
 }
 
-void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
+template void mesh<2>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work);
+template void mesh<3>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work);
+
+template<int ND> void mesh<ND>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
    int i;
    
    work.copy(inmesh);

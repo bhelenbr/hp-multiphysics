@@ -2,8 +2,10 @@
 #include"utilities.h"
 #include<assert.h>
 
+template void mesh<2>::copy(const mesh<2>& tgt);
+template void mesh<3>::copy(const mesh<3>& tgt);
 
-void mesh::copy(const mesh& tgt) {
+template<int ND> void mesh<ND>::copy(const mesh<ND>& tgt) {
    int i,n;
       
    if (!initialized) {

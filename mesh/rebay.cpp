@@ -24,9 +24,21 @@
 /* THESE TELL WHICH SIDES/TRIS WERE DELETED */
 /* ntdel, tdel[MAXLST+1]; */
 /* nsdel, sdel[MAXLST+1]; */
+int mesh<2>::nslst;
+int mesh<2>::ntdel;
+int mesh<2>::tdel[MAXLST+1];
+int mesh<2>::nsdel;
+int mesh<2>::sdel[MAXLST+1];
+int mesh<3>::nslst;
+int mesh<3>::ntdel;
+int mesh<3>::tdel[MAXLST+1];
+int mesh<3>::nsdel;
+int mesh<3>::sdel[MAXLST+1];
 
+template void mesh<2>::rebay(FLT tolsize);
+template void mesh<3>::rebay(FLT tolsize);
 
-void mesh::rebay(FLT tolsize) {
+template<int ND> void mesh<ND>::rebay(FLT tolsize) {
    int i,j,n,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
    int bnum,bel;
    FLT xpt[2],wt[3];
@@ -246,7 +258,10 @@ INSRT:
    return;
 }
    
-void mesh::putinlst(int sind) {
+template void mesh<2>::putinlst(int sind);
+template void mesh<3>::putinlst(int sind);
+
+template<int ND> void mesh<ND>::putinlst(int sind) {
    int i, temp, top, bot, mid;
       
    /* CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
@@ -284,7 +299,10 @@ void mesh::putinlst(int sind) {
    return;
 }
 
-void mesh::tkoutlst(int sind) {
+template void mesh<2>::tkoutlst(int sind);
+template void mesh<3>::tkoutlst(int sind);
+
+template<int ND> void mesh<ND>::tkoutlst(int sind) {
    int bgn,temp,i;
    
    bgn = intwk3[sind];
@@ -300,7 +318,10 @@ void mesh::tkoutlst(int sind) {
    return;
 }
 
-void mesh::fltwkreb(int i) {
+template void mesh<2>::fltwkreb(int i);
+template void mesh<3>::fltwkreb(int i);
+
+template<int ND> void mesh<ND>::fltwkreb(int i) {
    FLT dif, av;
    
    /* CALCULATE SIDE LENGTH RATIO FOR YABER */
@@ -314,7 +335,10 @@ void mesh::fltwkreb(int i) {
    return;
 }
 
-void mesh::fltwkreb() {
+template void mesh<2>::fltwkreb();
+template void mesh<3>::fltwkreb();
+
+template<int ND> void mesh<ND>::fltwkreb() {
    int i;
    
    for(i=0;i<nside;++i)

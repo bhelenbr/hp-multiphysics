@@ -9,7 +9,7 @@ class boundary;
 
 class block {
    public:
-      enum control_state {stay = 0, advance = 1, stop = 3};
+      enum ctrl {stay = 0, advance = 1, stop = 3};
       virtual void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0) = 0;
       virtual void load_const(std::map <std::string,std::string>& input) = 0;
       virtual void alloc(std::map <std::string,std::string>& input) = 0;
@@ -21,14 +21,14 @@ class block {
       virtual boundary* sbdry(int grdlvl,int num) = 0;
       virtual boundary* fbdry(int grdlvl,int num) = 0;
       virtual void maxres() = 0;
-      virtual control_state matchboundaries(int lvl, int excpt) = 0;
-      virtual control_state rsdl(int lvl, int excpt) = 0;
-      virtual control_state vddt(int lvl, int excpt) = 0;
-      virtual control_state update(int lvl, int excpt) = 0;
-      virtual control_state mg_getfres(int lvl, int excpt) = 0;
-      virtual control_state mg_getcchng(int lvl, int excpt) = 0;
-      virtual control_state reconnect(int lvl, int excpt) = 0;
-      virtual control_state tadvance(int lvl, int excpt) = 0;
-      virtual control_state adapt(int excpt) = 0;
+      virtual ctrl matchboundaries(int lvl, int excpt) = 0;
+      virtual ctrl rsdl(int lvl, int excpt) = 0;
+      virtual ctrl vddt(int lvl, int excpt) = 0;
+      virtual ctrl update(int lvl, int excpt) = 0;
+      virtual ctrl mg_getfres(int lvl, int excpt) = 0;
+      virtual ctrl mg_getcchng(int lvl, int excpt) = 0;
+      virtual ctrl reconnect(int lvl, int excpt) = 0;
+      virtual ctrl tadvance(int lvl, int excpt) = 0;
+      virtual ctrl adapt(int excpt) = 0;
 };
 #endif

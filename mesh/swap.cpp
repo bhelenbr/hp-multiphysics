@@ -12,7 +12,10 @@
 #include<assert.h>
 #include<float.h>
 
-int mesh::swap(int sind, FLT tol) {
+template int mesh<2>::swap(int sind, FLT tol);
+template int mesh<3>::swap(int sind, FLT tol);
+
+template<int ND> int mesh<ND>::swap(int sind, FLT tol) {
    int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
          
    t1 = stri[sind][0];
@@ -96,7 +99,10 @@ int mesh::swap(int sind, FLT tol) {
 }
    
    
-void mesh::swap(int nswp, int *swp, FLT tol) {
+template void mesh<2>::swap(int nswp, int *swp, FLT tol);
+template void mesh<3>::swap(int nswp, int *swp, FLT tol);
+
+template<int ND> void mesh<ND>::swap(int nswp, int *swp, FLT tol) {
    int i,flag;
    
    do {
@@ -108,7 +114,10 @@ void mesh::swap(int nswp, int *swp, FLT tol) {
    return;
 }
 
-void mesh::swap(FLT tol) {
+template void mesh<2>::swap(FLT tol);
+template void mesh<3>::swap(FLT tol);
+
+template<int ND> void mesh<ND>::swap(FLT tol) {
    int nswap,i;
    
    /* PERFORM EDGE SWAPPING */

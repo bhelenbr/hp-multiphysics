@@ -1,6 +1,6 @@
-#include"blocks.h"
-#include<map>
-#include<string>
+#include "blocks.h"
+#include <map>
+#include <string>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -10,7 +10,7 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
    class blocks z;
-
+   
 #ifdef MPISRC
    int myid;
    MPI_Init(&argc,&argv);

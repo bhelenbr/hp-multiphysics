@@ -13,11 +13,12 @@
 #include<assert.h>
 #include<stdlib.h>
 
-int mesh::nslst;
-int mesh::ntdel, mesh::tdel[mesh::MAXLST+1];
-int mesh::nsdel, mesh::sdel[mesh::MAXLST+1];
 
-int mesh::insert(FLT x[ND]) {
+
+template int mesh<2>::insert(FLT x[2]);
+template int mesh<3>::insert(FLT x[3]);
+
+template<int ND> int mesh<ND>::insert(FLT x[ND]) {
    int n,tind,vnear,err;
    
    for(n=0;n<ND;++n)
@@ -39,7 +40,10 @@ int mesh::insert(FLT x[ND]) {
    return(err);
 }
 
-int mesh::insert(int tind, int vnum, FLT theta) {
+template int mesh<2>::insert(int tind, int vnum, FLT theta);
+template int mesh<3>::insert(int tind, int vnum, FLT theta);
+
+template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
    int i,j,tin,v0,dir;
    int sct, nskeep, skeep[MAXLST+1];
    int sind, sind1;
@@ -232,7 +236,10 @@ int mesh::insert(int tind, int vnum, FLT theta) {
    return(0);
 }
 
-void mesh::bdry_insert(int tind, int snum, int vnum) {
+template void mesh<2>::bdry_insert(int tind, int snum, int vnum);
+template void mesh<3>::bdry_insert(int tind, int snum, int vnum);
+
+template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
    int i,j,tin,v0,dir,tbdry;
    int sct, nskeep, skeep[MAXLST+1];
    int sind, sind1;
@@ -454,9 +461,12 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    return;
 }
 
-int mesh::maxsrch = MAXLST*3/4;
+template<int ND> int mesh<ND>::maxsrch = MAXLST*3/4;
 
-int mesh::findtri(FLT x[ND], int vnear) const {
+template int mesh<2>::findtri(FLT x[2], int vnear) const;
+template int mesh<3>::findtri(FLT x[3], int vnear) const;
+
+template<int ND> int mesh<ND>::findtri(FLT x[ND], int vnear) const {
    int i,j,vn,dir,stoptri,tin,tind;
 
    /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */

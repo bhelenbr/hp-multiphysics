@@ -9,46 +9,48 @@
 #ifndef _r_block_h_
 #define _r_block_h_
 
-/* THIS IS A SEQUENCE OF MESHES & STORAGE FOR A DEFORMABLE BLOCK */
-template<class GRD> class rblock : public block {
+
+/* GENERIC MULTIGRID BLOCK */
+
+template<class GRD> class mgrid : public block {
    protected:
       std::ostream *log;
       int ngrid, mp_phase;
       typename GRD::gbl gbl_store;
       GRD *grd;
       FLT tolerance;
-      
+   
    public:
       void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0);
-      void load_const(std::map <std::string,std::string>& input);
-      void alloc(std::map <std::string,std::string>& input);
+      void load_const(std::map <std::string,std::string>& input) {}
+      void alloc(std::map<std::string,std::string>& input);
       void input(char *filename) {
          grd[0].in_mesh(filename,text);
       }
       void output(char *filename, FTYPE filetype = easymesh) {
-         grd[0].mesh::setbcinfo();
+         grd[0].setbcinfo();
          grd[0].out_mesh(filename,filetype);
       }
       void coarsenchk(const char *fname);
-      void maxres() { grd[0].maxres();}
-      control_state rsdl(int lvl, int excpt);
-      control_state vddt(int lvl, int excpt);
-      control_state update(int lvl, int excpt);
-      control_state mg_getfres(int lvl, int excpt);
-      control_state mg_getcchng(int lvl, int excpt);
-      control_state reconnect(int lvl, int excpt);
-      control_state tadvance(int lvl, int excpt);
-      control_state adapt(int excpt);
-      control_state matchboundaries(int lvl, int excpt);
+      block::ctrl reconnect(int lvl, int excpt);
+      block::ctrl matchboundaries(int lvl, int excpt);
       int comm_entity_size(int grdlvl);
       int comm_entity_list(int grdlvl, int *list);
       boundary* vbdry(int grdlvl, int num);
       boundary* sbdry(int grdlvl, int num);
       boundary* fbdry(int grdlvl, int num);
+      
+      block::ctrl tadvance(int lvl, int excpt) {return(stop);}
+      block::ctrl rsdl(int lvl, int excpt) {return(stop);}
+      void maxres() {}
+      block::ctrl vddt(int lvl, int excpt) {return(stop);}
+      block::ctrl update(int lvl, int excpt) {return(stop);}
+      block::ctrl mg_getfres(int lvl, int excpt) {return(stop);}
+      block::ctrl mg_getcchng(int lvl, int excpt) {return(stop);}
+      block::ctrl adapt(int excpt);
 };
 
-
-template<class GRD> void rblock<GRD>::init(std::map <std::string,std::string>& input, std::ostream *inlog) {
+template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& input, std::ostream *inlog) {
 
    if (inlog) {
       log = inlog;
@@ -69,27 +71,7 @@ template<class GRD> void rblock<GRD>::init(std::map <std::string,std::string>& i
       
 }
 
-template<class GRD> void rblock<GRD>::load_const(std::map <std::string,std::string>& input) {
-
-   std::istringstream data(input["tolerance"]);
-   data >> tolerance; 
-   *log << "#tolerance: " << tolerance << std::endl;
-   data.clear();
-   
-   data.str(input["fadd"]);
-   data >> GRD::fadd;
-   *log << "#fadd: " << GRD::fadd << std::endl;
-   data.clear();
-
-   data.str(input["vnn"]);
-   data >> GRD::vnn; 
-   *log << "#vnn: " << GRD::vnn << std::endl;
-   data.clear();
-      
-   return;
-}
-
-template<class GRD> void rblock<GRD>::alloc(std::map<std::string,std::string>& input) {
+template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& input) {
    int i;
    
 	FLT grwfac;
@@ -123,27 +105,27 @@ template<class GRD> void rblock<GRD>::alloc(std::map<std::string,std::string>& i
    return;
 }
 
-template<class GRD> int rblock<GRD>::comm_entity_size(int grdlvl) {
+template<class GRD> int mgrid<GRD>::comm_entity_size(int grdlvl) {
    return(grd[grdlvl].comm_entity_size());
 }
 
-template<class GRD> int rblock<GRD>::comm_entity_list(int grdlvl, int *list) {
+template<class GRD> int mgrid<GRD>::comm_entity_list(int grdlvl, int *list) {
    return(grd[grdlvl].comm_entity_list(list));
 }
 
-template<class GRD> boundary* rblock<GRD>::vbdry(int grdlvl, int num) {
+template<class GRD> boundary* mgrid<GRD>::vbdry(int grdlvl, int num) {
    return(grd[grdlvl].vbdry[num]);
 }
 
-template<class GRD> boundary* rblock<GRD>::sbdry(int grdlvl, int num) {
+template<class GRD> boundary* mgrid<GRD>::sbdry(int grdlvl, int num) {
    return(grd[grdlvl].sbdry[num]);
 }
 
-template<class GRD> boundary* rblock<GRD>::fbdry(int grdlvl, int num) {
+template<class GRD> boundary* mgrid<GRD>::fbdry(int grdlvl, int num) {
    return(0);
 }
 
-template<class GRD> block::control_state rblock<GRD>::reconnect(int grdnum, int phase) {
+template<class GRD> block::ctrl mgrid<GRD>::reconnect(int grdnum, int phase) {
 #define OLDRECONNECT
 #ifdef OLDRECONNECT
    grd[grdnum].coarsen(1.6,grd[grdnum-1]);
@@ -157,13 +139,13 @@ template<class GRD> block::control_state rblock<GRD>::reconnect(int grdnum, int 
    return(stop);
 }
 
-template<class GRD> void rblock<GRD>::coarsenchk(const char *fname) {
+template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
    int i;
    char name[100];
 
    for(i = 1; i< ngrid; ++i) {
       number_str(name,fname,i,1);
-      grd[i].mesh::setbcinfo();
+      grd[i].setbcinfo();
       grd[i].checkintegrity();
       grd[i].out_mesh(name);
       grd[i].setbcinfo();
@@ -171,7 +153,89 @@ template<class GRD> void rblock<GRD>::coarsenchk(const char *fname) {
    return;
 }
 
-template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int execpoint) {
+template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) {
+   
+   switch (excpt) {
+      case(0):
+         mp_phase = 0;
+         grd[lvl].matchboundaries1();
+         return(advance);
+      case(1):
+         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
+      case(2):
+         grd[lvl].matchboundaries2();
+         return(stop);
+   }
+   
+   *log << "control flow error matchboundaries\n";
+   exit(1);
+   
+   return(stop);
+}
+
+template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
+   
+   switch(excpt) {
+      case(0):
+         mp_phase = 0;
+         grd[0].length1();
+         return(advance);
+      case(1):
+         return(static_cast<ctrl>(grd[0].msgpass(mp_phase++)));
+      case(2):
+         grd[0].length2();
+         return(advance);
+      case(3):
+         grd[0].adapt(tolerance);
+         return(stop);
+   }
+   
+   *log << "control flow error: adapt" << std::endl;
+   exit(1);
+   
+   return(stop);
+}
+
+
+
+
+/* THIS IS A SEQUENCE OF MESHES & STORAGE FOR A DEFORMABLE BLOCK */
+template<class GRD> class rblock : public mgrid<GRD> {
+
+   public:
+      void load_const(std::map <std::string,std::string>& input);
+      void maxres() { grd[0].maxres();}
+      block::ctrl rsdl(int lvl, int excpt);
+      block::ctrl vddt(int lvl, int excpt);
+      block::ctrl update(int lvl, int excpt);
+      block::ctrl mg_getfres(int lvl, int excpt);
+      block::ctrl mg_getcchng(int lvl, int excpt);
+      block::ctrl tadvance(int lvl, int excpt);
+};
+
+
+
+template<class GRD> void rblock<GRD>::load_const(std::map <std::string,std::string>& input) {
+
+   std::istringstream data(input["tolerance"]);
+   data >> tolerance; 
+   *log << "#tolerance: " << tolerance << std::endl;
+   data.clear();
+   
+   data.str(input["fadd"]);
+   data >> GRD::fadd;
+   *log << "#fadd: " << GRD::fadd << std::endl;
+   data.clear();
+
+   data.str(input["vnn"]);
+   data >> GRD::vnn; 
+   *log << "#vnn: " << GRD::vnn << std::endl;
+   data.clear();
+      
+   return;
+}
+
+template<class GRD> block::ctrl rblock<GRD>::tadvance(int lvl, int execpoint) {
    
    if (lvl == 0) {
       switch (execpoint) {
@@ -182,7 +246,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
             
          case (1):
-            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
+            return(static_cast<block::ctrl>(grd[0].msgpass(mp_phase++)));
             
          case (2):
             grd[0].kvoli();
@@ -196,7 +260,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
             
          case (4):
-            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
+            return(static_cast<ctrl>(grd[0].msgpass(mp_phase++)));
 #else
 #define P2 0
 #endif            
@@ -207,7 +271,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
 
          case (4+P2):
-            return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
+            return(static_cast<block::ctrl>(grd[0].msgpass(mp_phase++)));
          
          case (5+P2):
             grd[0].rsdl_finalrcv();
@@ -230,7 +294,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             return(advance);
             
          case (1):
-            return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+            return(static_cast<block::ctrl>(grd[lvl].msgpass(mp_phase++)));
             
          case (2):
             grd[lvl].kvoli();
@@ -251,7 +315,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
             grd[lvl].rkmgrid();
             return(advance);
          case(1):
-            return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+            return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
          case(2):
             grd[lvl].kvoli();
             return(stop);
@@ -262,30 +326,7 @@ template<class GRD> block::control_state rblock<GRD>::tadvance(int lvl, int exec
    return(stop);
 }
 
-template<class GRD> block::control_state rblock<GRD>::adapt(int excpt) {
-   
-   switch(excpt) {
-      case(0):
-         mp_phase = 0;
-         grd[0].length1();
-         return(advance);
-      case(1):
-         return(static_cast<control_state>(grd[0].msgpass(mp_phase++)));
-      case(2):
-         grd[0].length2();
-         return(advance);
-      case(3):
-         grd[0].adapt(tolerance);
-         return(stop);
-   }
-   
-   *log << "control flow error: adapt" << std::endl;
-   exit(1);
-   
-   return(stop);
-}
-
-template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
+template<class GRD> block::ctrl rblock<GRD>::rsdl(int lvl, int excpt) {
 
    switch (excpt) {
 #ifdef FOURTH
@@ -294,7 +335,7 @@ template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
          grd[lvl].rsdl1();
          return(advance);
       case(1):
-         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;
@@ -302,7 +343,7 @@ template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
          return(advance);
          
       case(1+P2):
-         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<block::ctrl>(grd[lvl].msgpass(mp_phase++)));
          
       case(2+P2):
          grd[lvl].rsdl_finalrcv();
@@ -316,7 +357,7 @@ template<class GRD> block::control_state rblock<GRD>::rsdl(int lvl, int excpt) {
    return(stop);
 }
 
-template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
+template<class GRD> block::ctrl rblock<GRD>::vddt(int lvl, int excpt) {
 
    switch (excpt) {
 #ifdef FOURTH
@@ -325,7 +366,7 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
          grd[lvl].vddt1();
          return(advance);
       case(1):
-         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;
@@ -333,7 +374,7 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
          return(advance);
          
       case(1+P2):
-         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<block::ctrl>(grd[lvl].msgpass(mp_phase++)));
          
       case(2+P2):
          grd[lvl].vddti();
@@ -346,38 +387,18 @@ template<class GRD> block::control_state rblock<GRD>::vddt(int lvl, int excpt) {
    return(stop);
 }
 
-template<class GRD> block::control_state rblock<GRD>::update(int lvl, int excpt) {
+template<class GRD> block::ctrl rblock<GRD>::update(int lvl, int excpt) {
    grd[lvl].update();
    return(stop);
 }
 
-template<class GRD> block::control_state rblock<GRD>::mg_getfres(int lvl, int excpt) {
+template<class GRD> block::ctrl rblock<GRD>::mg_getfres(int lvl, int excpt) {
    grd[lvl].mg_getfres();
    return(stop);
 }
 
-template<class GRD> block::control_state rblock<GRD>::mg_getcchng(int lvl, int excpt) {
+template<class GRD> block::ctrl rblock<GRD>::mg_getcchng(int lvl, int excpt) {
    grd[lvl].mg_getcchng();
-   return(stop);
-}
-
-template<class GRD> block::control_state rblock<GRD>::matchboundaries(int lvl, int excpt) {
-   
-   switch (excpt) {
-      case(0):
-         mp_phase = 0;
-         grd[lvl].matchboundaries1();
-         return(advance);
-      case(1):
-         return(static_cast<control_state>(grd[lvl].msgpass(mp_phase++)));
-      case(2):
-         grd[lvl].matchboundaries2();
-         return(stop);
-   }
-   
-   *log << "control flow error matchboundaries\n";
-   exit(1);
-   
    return(stop);
 }
 #endif

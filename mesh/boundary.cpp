@@ -41,7 +41,7 @@ template<class BASE, class MESH> void comm_boundary<BASE,MESH>::setphase(int pha
 /* MATCH BOUNDARIES */
 template<class BASE, class MESH> int comm_boundary<BASE,MESH>::local_cnnct(boundary *bin, int msg_tag) {
    if (bin->idnty() == idnty()) {
-      local_match[nlocal_match] = dynamic_cast<comm_boundary<BASE,MESH> *>(bin);
+      local_match[nlocal_match] = bin->mysndbuff();
       local_tags[nlocal_match] = msg_tag;
       local_phase[nlocal_match] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
       local_rcv_buf[nlocal_match] = xmalloc(buffsize*sizeof(FLT));
@@ -72,9 +72,9 @@ template<class BASE, class MESH> int comm_boundary<BASE,MESH>::rcv(int phase) {
          /* LOCAL PASSES */
          for(m=0;m<nlocal_match;++m) {
             if (phase != local_phase[m]) continue;
-            
+       
             for(i=0;i<msgsize;++i)
-               static_cast<FLT *>(local_rcv_buf[m])[i] = local_match[m]->fsndbuf(i);
+               static_cast<FLT *>(local_rcv_buf[m])[i] = static_cast<FLT *>(local_match[m])[i];
          }
 
 #ifdef MPISRC
@@ -98,7 +98,7 @@ template<class BASE, class MESH> int comm_boundary<BASE,MESH>::rcv(int phase) {
             if (phase != local_phase[m]) continue;
             
             for(i=0;i<msgsize;++i)
-               static_cast<int *>(local_rcv_buf[m])[i] = local_match[m]->isndbuf(i);
+               static_cast<int *>(local_rcv_buf[m])[i] = static_cast<int *>(local_match[m])[i];
          }
 
 #ifdef MPISRC
@@ -159,11 +159,11 @@ template<class BASE, class MESH> void comm_boundary<BASE,MESH>::snd(int phase) {
 /* GENERIC FUNCTIONS FOR SIDES        */
 /**************************************/
 
-template<class MESH> void side_template<MESH>::mvpttobdry(int indx, FLT psi, FLT pt[MESH::ND]) {
+template<class MESH> void side_template<MESH>::mvpttobdry(int indx, FLT psi, FLT pt[MESH::DIM]) {
    /* FOR A LINEAR SIDE */
    int n;
    
-   for (n=0;n<MESH::ND;++n)
+   for (n=0;n<MESH::DIM;++n)
       pt[n] = (1. -psi)*b().vrtx[b().svrtx[sd(indx)][0]][n] +psi*b().vrtx[b().svrtx[sd(indx)][1]][n];
    
    return;
@@ -171,15 +171,15 @@ template<class MESH> void side_template<MESH>::mvpttobdry(int indx, FLT psi, FLT
 
 template<class MESH> void side_template<MESH>::getgeometryfrommesh() {
    int i,n;
-   FLT length,x1[MESH::ND],x0[MESH::ND];
+   FLT length,x1[MESH::DIM],x0[MESH::DIM];
    
-   for(n=0;n<MESH::ND;++n)
+   for(n=0;n<MESH::DIM;++n)
       x0[n] = b().vrtx[b().svrtx[sd(0)][0]][n];
    
    s[0] = 0.0;
    for(i=0;i<nsd();++i) {
       length = 0.0;
-      for(n=0;n<MESH::ND;++n) {
+      for(n=0;n<MESH::DIM;++n) {
          x1[n] = b().vrtx[b().svrtx[sd(i)][1]][n];
          length += pow(x1[n]-x0[n],2);
          x0[n] = x1[n];

@@ -5,7 +5,10 @@
 #include<utilities.h>
 #include<string.h>
 
-void mesh::setfine(class mesh& tgt) {
+template void mesh<2>::setfine(class mesh& tgt);
+template void mesh<3>::setfine(class mesh& tgt);
+
+template<int ND> void mesh<ND>::setfine(class mesh& tgt) {
    fmpt = &tgt;
    if (fine == NULL) 
       fine = new struct mg_trans[maxvst];
@@ -13,7 +16,10 @@ void mesh::setfine(class mesh& tgt) {
    return;
 }
 
-void mesh::setcoarse(class mesh& tgt) {
+template void mesh<2>::setcoarse(class mesh& tgt);
+template void mesh<3>::setcoarse(class mesh& tgt);
+
+template<int ND> void mesh<ND>::setcoarse(class mesh& tgt) {
    cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
@@ -22,7 +28,10 @@ void mesh::setcoarse(class mesh& tgt) {
 }
 
 /* THIS IS THE NEW WAY USING THE QUADTREE DATA STRUCTURE */
-void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
+template void mesh<2>::mgconnect(struct mg_trans *cnnct, const class mesh& tgt);
+template void mesh<3>::mgconnect(struct mg_trans *cnnct, const class mesh& tgt);
+
+template<int ND> void mesh<ND>::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
    int i,j,k,bnum,tind,sind,v0;
    double x,y,wgt[3],ainv;
    double dx,dy,a,b,c,minneg;
@@ -133,7 +142,10 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
 /*	 THIS ROUTINE DETERMINES THE POSITION OF COARSE VERTICES  */
 /*  TO TEST USING MULTI-GRID CONNECTION */
 /* THE MULTIGRID CONNECTIONS */
-void mesh::testconnect(char *fname) {
+template void mesh<2>::testconnect(char *fname);
+template void mesh<3>::testconnect(char *fname);
+
+template<int ND> void mesh<ND>::testconnect(char *fname) {
    int i,j,n,tind;
    class mesh *fmesh, *cmesh;
    char fappnd[100];

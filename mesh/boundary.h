@@ -38,12 +38,14 @@ class boundary {
       virtual void input(FILE *fin, FLT grwfac = 1.0) {}
       virtual void getgeometryfrommesh() {}
       virtual void summarize(std::ostream& fout) {fout << "idnum: " << idnty() << '\n';}
+      virtual void tadvance() {}
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
       virtual bool is_comm() {return(false);}
       virtual bool is_frst() {return(true);}
       virtual void setfrst(bool tf) {}
       virtual int local_cnnct(boundary *bin, int msg_tag) {return 1;}
+      virtual void *mysndbuff() {return 0;}
 #ifdef MPISRC
       virtual int mpi_cnnct(int proc_tgt, int msg_tag) {return 1;}
 #endif
@@ -72,7 +74,7 @@ template<class BASE, class MESH> class comm_boundary : public BASE {
       
       /* LOCAL MATCHES */
       int nlocal_match;
-      comm_boundary *local_match[maxmatch];
+      void *local_match[maxmatch];
       int local_tags[maxmatch];
       int local_phase[maxmatch];
       void *local_rcv_buf[maxmatch];
@@ -95,6 +97,7 @@ template<class BASE, class MESH> class comm_boundary : public BASE {
       void setfrst(bool tf) {first = tf;}; 
       int& sndsize() {return(msgsize);}
       boundary::msg_type& sndtype() {return(msgtype);}
+      void *mysndbuff() {return(sndbuff);}
       int& isndbuf(int n) {return(isndalias[n]);}
       FLT& fsndbuf(int n) {return(fsndalias[n]);}
       
@@ -114,12 +117,12 @@ template <class MESH> class vrtx_template : public boundary {
    protected:
       MESH &x;
       int v0;
-      FLT pt[MESH::ND];
+      FLT pt[MESH::DIM];
       
    public:
       /* CONSTRUCTOR */
       vrtx_template(int inid, MESH &xin) : boundary(inid), x(xin) {}
-      void alloc(int n) { boundary::alloc(MESH::ND*n);}
+      void alloc(int n) { boundary::alloc(MESH::DIM*n);}
       
       /* ACCESS FUNCTIONS */
       inline MESH& b() {return(x);} // return base mesh
@@ -130,20 +133,20 @@ template <class MESH> class vrtx_template : public boundary {
          boundary::copy(bin);
          const vrtx_template<MESH>& temp = dynamic_cast<const vrtx_template<MESH>& >(bin);
          v0 = temp.v0;
-         for(int n=0;n<MESH::ND;++n)
+         for(int n=0;n<MESH::DIM;++n)
             pt[n] = temp.pt[n];
       }
       void output(std::ostream& fout) {
          boundary::output(fout);
          fout << "point: " << v0 << '\n';
-         for(int n=0;n<MESH::ND;++n)
+         for(int n=0;n<MESH::DIM;++n)
             fout << pt[n] << ' ';
          fout << "\n";
       }
       void input(FILE *fin, FLT grwfac=1.0) {
          boundary::input(fin);
          std::fscanf(fin,"point: %d\n",&v0);
-         for(int n=0;n<MESH::ND;++n)
+         for(int n=0;n<MESH::DIM;++n)
             std::fscanf(fin,"%lf ",&pt[n]);
          fscanf(fin,"\n");
       } 
@@ -152,7 +155,7 @@ template <class MESH> class vrtx_template : public boundary {
       }
       
       void getgeometryfrommesh() {
-         for(int n=0;n<MESH::ND;++n) {
+         for(int n=0;n<MESH::DIM;++n) {
             pt[n] = b().vrtx[v0][n];
          }
       }
@@ -160,8 +163,8 @@ template <class MESH> class vrtx_template : public boundary {
       /* MORE SPECIFIC SENDING FOR VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
       virtual void finalrcv(FLT *base,int bgn,int end, int stride) {}
-      void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,MESH::ND);}
-      void rcvpositions() {finalrcv(&(b().vrtx[0][0]),0,1,MESH::ND);}
+      void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,MESH::DIM);}
+      void rcvpositions() {finalrcv(&(b().vrtx[0][0]),0,1,MESH::DIM);}
 };
 
 template<class MESH> class vcomm : public comm_boundary<vrtx_template<MESH>,MESH> {
@@ -170,7 +173,7 @@ template<class MESH> class vcomm : public comm_boundary<vrtx_template<MESH>,MESH
       
       void alloc(int n) {
          vrtx_template<MESH>::alloc(n);
-         comm_boundary<vrtx_template<MESH>,MESH>::alloc(MESH::ND*n);
+         comm_boundary<vrtx_template<MESH>,MESH>::alloc(MESH::DIM*n);
       }
          
       /* GENERIC VERTEX COMMUNICATIONS */
@@ -241,7 +244,7 @@ template <class MESH> class side_template : public boundary {
       /* ADDITIONAL STUFF FOR SIDES */
       virtual void swap(int s1, int s2);
       virtual void reorder();
-      virtual void mvpttobdry(int nel,FLT psi, FLT pt[MESH::ND]);
+      virtual void mvpttobdry(int nel,FLT psi, FLT pt[MESH::DIM]);
       virtual void findbdrypt(const boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout);
       virtual void summarize(std::ostream& fout) {
          fout << "#BDRY " << idnty() << " MAX " << mxsz() << " SIDES " << nsd() << '\n';
@@ -250,8 +253,8 @@ template <class MESH> class side_template : public boundary {
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
       virtual void finalrcv(FLT *base,int bgn,int end, int stride) {}
-      void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,MESH::ND);}
-      void rcvpositions() {finalrcv(&(b().vrtx[0][0]),0,1,MESH::ND); }
+      void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,MESH::DIM-1,MESH::DIM);}
+      void rcvpositions() {finalrcv(&(b().vrtx[0][0]),0,MESH::DIM-1,MESH::DIM); }
 };
 
 template<class MESH> class scomm : public comm_boundary<side_template<MESH>,MESH> {
@@ -262,7 +265,7 @@ template<class MESH> class scomm : public comm_boundary<side_template<MESH>,MESH
       /* INITIALIZE STORAGE */
       void alloc(int n) {
          side_template<MESH>::alloc(n);
-         comm_boundary<side_template<MESH>,MESH>::alloc(MESH::ND*n);
+         comm_boundary<side_template<MESH>,MESH>::alloc(MESH::DIM*n);
       }
 
       
@@ -284,6 +287,9 @@ template<class MESH> class scomm : public comm_boundary<side_template<MESH>,MESH
          sndsize() = count;
          sndtype() = boundary::flt_msg;
       }
+      
+      
+      
       
       virtual void finalrcv(FLT *base,int bgn,int end, int stride) {
          int j,k,m,count,offset,sind;
@@ -362,18 +368,18 @@ template<class BASE, class MESH> class prdc_template : public BASE {
       int& setdir() {return(dir);}
       
       /* SEND/RCV VRTX POSITION */
-      void sndpositions() { loadbuff(&(b().vrtx[0][0]),1-dir,1-dir +MESH::ND-2,MESH::ND); }
-      void rcvpositions() { finalrcv(&(b().vrtx[0][0]),1-dir,1-dir +MESH::ND-2,MESH::ND); }
+      void sndpositions() { loadbuff(&(b().vrtx[0][0]),1-dir,1-dir +MESH::DIM-2,MESH::DIM); }
+      void rcvpositions() { finalrcv(&(b().vrtx[0][0]),1-dir,1-dir +MESH::DIM-2,MESH::DIM); }
 };
 
 template<class BASE, class MESH> class curv_template : public BASE {
    protected:
-      virtual FLT hgt(FLT x[MESH::ND]) = 0;
-      virtual FLT dhgt(int dir, FLT x[MESH::ND]) = 0;
+      virtual FLT hgt(FLT x[MESH::DIM]) = 0;
+      virtual FLT dhgt(int dir, FLT x[MESH::DIM]) = 0;
    public:      
       /* CONSTRUCTOR */
       curv_template(int idin, MESH &xin) : BASE(idin,xin) {}
-      void mvpttobdry(FLT pt[MESH::ND]) {
+      void mvpttobdry(FLT pt[MESH::DIM]) {
          int iter,n;
          FLT mag, delt_dist;
             
@@ -381,11 +387,11 @@ template<class BASE, class MESH> class curv_template : public BASE {
          iter = 0;
          do {
             mag = 0.0;
-            for(n=0;n<MESH::ND;++n)
+            for(n=0;n<MESH::DIM;++n)
                mag += pow(dhgt(n,pt),2);
             mag = sqrt(mag);
             delt_dist = -hgt(pt)/mag;
-            for(n=0;n<MESH::ND;++n)
+            for(n=0;n<MESH::DIM;++n)
                pt[n] += delt_dist*dhgt(n,pt)/mag;
             if (++iter > 100) {
                *b().log << "iterations exceeded curved boundary " << idnty() << ' ' << pt[0] << ' ' << pt[1] << '\n';
@@ -397,6 +403,62 @@ template<class BASE, class MESH> class curv_template : public BASE {
       }
 };
 
+/* 3D to 2D BOUNDARY */
+template<class MESH> class threetotwo : public scomm<MESH> {
+   public:
+      threetotwo(int inid, MESH& xin) : scomm<MESH>(inid,xin) {}
+      void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,3);}
+      void rcvpositions() {}
+};
+
+template<class MESH> class twotothree : public scomm<MESH> {
+   public:
+      twotothree(int inid, MESH& xin) : scomm<MESH>(inid,xin) {}
+      void finalrcv(FLT *base,int bgn,int end, int stride) {}
+      void rcvpositions() {
+         FLT *base = &(b().vrtx[0][0]);
+         int bgn = 0, end = 1, stride = 2;
+         int j,k,m,count,offset,sind;
+#ifdef MPISRC
+         MPI_Status status;
+#endif
+         /* NOT TOTALLY SURE HOW 1 TO MANY WILL WORK */
+         /* THIS IS ONLY FOR ONE TO ONE MATCHES */
+         
+         /* ASSUMES REVERSE ORDERING OF SIDES */
+         /* WON'T WORK IN 3D */
+         for(m=0;m<nlocal_match;++m) {   
+            count = 0;
+            for(j=nsd()-1;j>=0;--j) {
+               sind = sd(j);
+               offset = b().svrtx[sind][1]*stride;
+               for (k=bgn;k<=end;++k)
+                  base[offset+k] = static_cast<FLT *>(local_rcv_buf[m])[count++];
+            }
+            offset = b().svrtx[sind][0]*stride;
+            for (k=bgn;k<=end;++k) 
+                  base[offset+k] = static_cast<FLT *>(local_rcv_buf[m])[count++];            
+         }
+         
+      
+#ifdef MPISRC
+         /* MPI PASSES */
+         for(m=0;m<nmpi_match;++m) {
+            MPI_Wait(&mpi_rcvrqst[m], &status);
+            count = 0;
+            for(j=nsd()-1;j>=0;--j) {
+               sind = sd(j);
+               offset = b().svrtx[sind][1]*stride;
+               for (k=bgn;k<=end;++k) 
+                  base[offset+k] = static_cast<FLT *>(mpi_rcv_buf[m])[count++];
+            }
+            offset = b().svrtx[sind][0]*stride;
+            for (k=bgn;k<=end;++k) 
+                  base[offset+k] = static_cast<FLT *>(mpi_rcv_buf[m])[count++];
+         }
+#endif
+      }
+};
 #include "boundary.cpp"
 
 #endif

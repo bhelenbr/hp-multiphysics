@@ -1,7 +1,10 @@
 #include "mesh.h"
 #include <stdlib.h>
 
-int mesh::comm_entity_size() {
+template int mesh<2>::comm_entity_size();
+template int mesh<3>::comm_entity_size();
+
+template<int ND> int mesh<ND>::comm_entity_size() {
    int i,tsize,nvcomm,nscomm;
    
    /*	VERTEX INFO */   
@@ -23,9 +26,10 @@ int mesh::comm_entity_size() {
    return(tsize);
 }
    
+template int mesh<2>::comm_entity_list(int *list);
+template int mesh<3>::comm_entity_list(int *list);
 
-
-int mesh::comm_entity_list(int *list) {
+template<int ND> int mesh<ND>::comm_entity_list(int *list) {
    int i,j,nvcomm,nscomm,tsize,v0,v0id;
    
    /* MAKE 1D PACKED LIST OF ALL INFORMATION ON COMMUNICATION BOUNDARIES */
@@ -83,7 +87,10 @@ int mesh::comm_entity_list(int *list) {
    return(tsize);
 }
 
-int mesh::msgpass(int phase) {
+template int mesh<2>::msgpass(int phase);
+template int mesh<3>::msgpass(int phase);
+
+template<int ND> int mesh<ND>::msgpass(int phase) {
    int stop=1;
 
    for(int i=0;i<nsbd;++i) 
@@ -102,8 +109,11 @@ int mesh::msgpass(int phase) {
    return(stop);
 }
 
+template void mesh<2>::matchboundaries1();
+template void mesh<3>::matchboundaries1();
+
 /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
-void mesh::matchboundaries1() {
+template<int ND> void mesh<ND>::matchboundaries1() {
    
    for(int i=0;i<nvbd;++i)
       vbdry[i]->sndpositions();
@@ -117,14 +127,20 @@ void mesh::matchboundaries1() {
       vbdry[i]->snd(0);
 }
 
-void mesh::matchboundaries2() {
+template void mesh<2>::matchboundaries2();
+template void mesh<3>::matchboundaries2();
+
+template<int ND> void mesh<ND>::matchboundaries2() {
    for(int i=0;i<nsbd;++i)
       sbdry[i]->rcvpositions();
    for(int i=0;i<nvbd;++i)
       vbdry[i]->rcvpositions();
 }
 
-void mesh::length1() {
+template void mesh<2>::length1();
+template void mesh<3>::length1();
+
+template<int ND> void mesh<ND>::length1() {
    int i;
    
    setlength();
@@ -145,7 +161,10 @@ void mesh::length1() {
    
 }
 
-void mesh::length2() {
+template void mesh<2>::length2();
+template void mesh<3>::length2();
+
+template<int ND> void mesh<ND>::length2() {
    int i;
    
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */

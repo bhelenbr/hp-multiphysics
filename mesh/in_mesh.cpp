@@ -3,11 +3,23 @@
 #include<cstdlib>
 #include<cstring>
 
-FLT *mesh::fltwk;
-int *mesh::intwk1, *mesh::intwk2,*mesh::intwk3;
-int mesh::gblmaxvst = 0;
+FLT *mesh<2>::fltwk;
+int *mesh<2>::intwk1;
+int *mesh<2>::intwk2;
+int *mesh<2>::intwk3;
+int mesh<2>::gblmaxvst = 0;
 
-int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwfac) {
+FLT *mesh<3>::fltwk;
+int *mesh<3>::intwk1;
+int *mesh<3>::intwk2;
+int *mesh<3>::intwk3;
+int mesh<3>::gblmaxvst = 0;
+
+/* CREATE INSTANTIATIONS OF THESE FUNCTIONS */
+template int mesh<2>::in_mesh(FLT (*vin)[2], const char *filename, FTYPE filetype, FLT grwfac);
+template int mesh<3>::in_mesh(FLT (*vin)[3], const char *filename, FTYPE filetype, FLT grwfac);
+
+template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwfac) {
     int i,j,n,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
@@ -94,22 +106,22 @@ next1:      continue;
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d:");
-#if (ND == 3)
-               fgets(grd_app,100,grd);
-               ierr = sscanf(grd_app,"%lf%lf%lf%d",&vin[i][0],&vin[i][1],&vin[i][2],&vinfo[i]);
-               if (ierr != ND+1) {
-                  ierr = sscanf(grd_app,"%lf%lf%d",&vin[i][0],&vin[i][1],&vinfo[i]);
-                  if (ierr != ND) { *log << "2: error in grid" << std::endl; exit(1); }
+               if (DIM == 3) {
+                  fgets(grd_app,100,grd);
+                  ierr = sscanf(grd_app,"%lf%lf%lf%d",&vin[i][0],&vin[i][1],&vin[i][2],&vinfo[i]);
+                  if (ierr != ND+1) {
+                     ierr = sscanf(grd_app,"%lf%lf%d",&vin[i][0],&vin[i][1],&vinfo[i]);
+                     if (ierr != ND) { *log << "2a: error in grid" << std::endl; exit(1); }
+                  }
                }
-#else
-               ierr = 0;
-               for(n=0;n<ND;++n) {
-                  ierr += fscanf(grd,"%lf",&vin[i][n]);
+               else {
+                  ierr = 0;
+                  for(n=0;n<ND;++n) {
+                     ierr += fscanf(grd,"%lf",&vin[i][n]);
+                  }
+                  ierr += fscanf(grd,"%d",&vinfo[i]);
+                  if (ierr != ND+1)  { *log << "2b: error in grid" << std::endl; exit(1); }
                }
-               ierr += fscanf(grd,"%d",&vinfo[i]);
-               if (ierr != ND+1)  { *log << "2: error in grid" << std::endl; exit(1); }
-#endif
-
             }
             fclose(grd);
 
@@ -484,7 +496,7 @@ next1:      continue;
                for(n=0;n<ND;++n)
                   ierr = fscanf(grd,"%lf",&vin[i][n]);
                fscanf(grd,"\n");
-               if (ierr != ND) { *log << "2: error in grid" << std::endl; exit(1); }
+               if (ierr != ND) { *log << "2c: error in grid" << std::endl; exit(1); }
             }
             fclose(grd);
             
@@ -542,7 +554,10 @@ next1:      continue;
    return(1);
 }
 
-void mesh::allocate(int mxsize) {
+template void mesh<2>::allocate(int mxsize);
+template void mesh<3>::allocate(int mxsize);
+
+template<int ND> void mesh<ND>::allocate(int mxsize) {
    
    /* SIDE INFO */
    maxvst = mxsize;

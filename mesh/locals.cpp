@@ -10,53 +10,63 @@
 #include "r_mesh.h"
 #include "rblock.h"
 #include "blocks.h"
-#include<float.h>
-#include<math.h>
-#include<stdlib.h>
+#include "sblock.h"
 
-block * blocks::getnewblock(int type) {
-   return(new rblock<r_mesh>);
-}
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-void mesh::getnewvrtxobject(int i, int type) {
-/*
-   if (type & (PRDX_MASK +PRDY_MASK +COMX_MASK +COMY_MASK) ) {
-      vbdry[i] = new vcom_boundary(*this,type);
-      return;
-   }
-*/
+/* INSTANTIATED IMPLICITLY BECAUSE OF REFERENCE ABOVE TO 2,3?? */
+template<int ND> void mesh<ND>::getnewvrtxobject(int i, int type) {
 
-   if (type & (PRDX_MASK)) { 
-      vbdry[i] = new prdc_template<vcomm<mesh>,mesh>(type,*this);
+   if (type & (COMX_MASK +COMY_MASK) ) {
+      vbdry[i] = new vcomm<mesh<ND> >(type,*this);
       return;
    }
-   vbdry[i] = new vrtx_template<mesh>(type,*this);
+   if (type & (PRDY_MASK)) { 
+      prdc_template<vcomm<mesh<ND> >,mesh<ND> > *temp = new prdc_template<vcomm<mesh<ND> >,mesh<ND> >(type,*this);
+      (*temp).setdir() = 1;
+      vbdry[i] = temp;
+      return;
+   }
+   if (type & (PRDX_MASK)) { 
+      vbdry[i] = new prdc_template<vcomm<mesh<ND> >,mesh>(type,*this);
+      return;
+   }
+   vbdry[i] = new vrtx_template<mesh<ND> >(type,*this);
 
    return;
 }
 
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-void mesh::getnewsideobject(int i, int type) {
-/*
+template<int ND> void mesh<ND>::getnewsideobject(int i, int type) {
+
    if (type & PRDX_MASK) {
-      sbdry[i] = new prdx_boundary(*this,type);
+      sbdry[i] = new prdc_template<scomm<mesh<ND> >,mesh<ND> >(type,*this);
       return;
    }
    if (type & PRDY_MASK) {
-      sbdry[i] = new prdy_boundary(*this,type);
+      prdc_template<scomm<mesh<ND> >,mesh<ND> > *temp = new prdc_template<scomm<mesh<ND> >,mesh<ND> >(type,*this);
+      (*temp).setdir() = 1;
+      sbdry[i] = temp;
       return;
    }
    if (type & (COMX_MASK+COMY_MASK)) {
-      sbdry[i] = new scomm_boundary(*this,type); 
+      sbdry[i] = new scomm<mesh<ND> >(type,*this); 
       return;
    }
-*/
-   sbdry[i] = new side_template<mesh>(type,*this);
+   if (type == 1 && ND == 3) {
+      sbdry[i] = new threetotwo<mesh<ND> >(type,*this);
+      return;
+   }
+   if (type == 1 && ND == 2) {
+      sbdry[i] = new twotothree<mesh<ND> >(type,*this);
+      return;
+   }
+   sbdry[i] = new side_template<mesh<ND> >(type,*this);
 
    return;
 }
+
 
 class rboat1 : public rfixd {
    public:
@@ -107,7 +117,6 @@ void r_mesh::getnewsideobject(int i, int type) {
          sbdry[i] = temp;
          break;
       }
-/*
       else if (type & COMX_MASK) {
          rcomm *temp = new rcomm(type,*this);
          sbdry[i] = temp;
@@ -118,17 +127,18 @@ void r_mesh::getnewsideobject(int i, int type) {
          sbdry[i] = temp;
          break;
       }
-*/
       else if (type & OUTF_MASK) {
          sbdry[i] = new rboat1(type,*this);
          break;
       }
-/*
       else if (type & EULR_MASK) {
          sbdry[i] = new rboat2(type,*this); 
          break;
       }
-*/
+      else if (type & FSRF_MASK) {
+         sbdry[i] = new rgeneric<twotothree<mesh<2> >,rfixx,rfixy>(type,*this);
+         break;
+      }
       else {
          sbdry[i] = new rfixd(type,*this);
          break;
@@ -138,4 +148,16 @@ void r_mesh::getnewsideobject(int i, int type) {
    rbdry[i] = dynamic_cast<rbdry_interface *>(sbdry[i]);
    
    return;
+}
+
+
+block * blocks::getnewblock(int type) {
+   switch(type) {
+      case(0):
+         return(new rblock<r_mesh>);
+      case(1):
+         return(new sblock);
+   }
+   
+   return(0);
 }

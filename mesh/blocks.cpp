@@ -174,8 +174,7 @@ void blocks::init(std::map<std::string,std::string> input[]) {
    }
 
    findmatch();
-   matchboundaries();
-
+   
    return;
 }
 
@@ -570,7 +569,7 @@ void blocks::go() {
       output("deformed",tecplot);
       restructure();
       number_str(outname, "end", step, 2);
-      output(outname,easymesh);
+      output(outname,tecplot);
    }
    cpu_time = clock();
    *log << "that took " << cpu_time << " cpu time" << std::endl;
@@ -591,6 +590,8 @@ void blocks::tadvance() {
          excpt += state;
       } while (state != block::stop);
    }
+   
+   matchboundaries();
 
    return;
 }

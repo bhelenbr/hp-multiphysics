@@ -17,7 +17,7 @@
 template<class T> class side_template;
 template<class T> class vrtx_template;
 
-class mesh {
+template<int ND> class mesh {
 
    /***************/
    /* DATA        */
@@ -26,9 +26,14 @@ class mesh {
       int initialized, maxvst;
 
    public:
-      static const int ND = 2;
       std::ostream *log;
-
+      static const int DIM = ND;
+      
+      /* STORES THINGS NEEDED FOR A BLOCK OF MESHES */
+      /* AT THIS POINT DON'T NEED ANYTHING */
+      struct gbl {
+      } *rg;
+      
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];
@@ -41,7 +46,7 @@ class mesh {
       /* VERTEX BOUNDARY INFO */
       static const int MAXVB = 8;
       int nvbd;
-      vrtx_template<mesh> *vbdry[MAXVB];
+      vrtx_template<mesh<ND> > *vbdry[MAXVB];
       virtual void getnewvrtxobject(int bnum, int type);
      
       /* SIDE DATA */      
@@ -53,7 +58,7 @@ class mesh {
       /* SIDE BOUNDARY INFO */
       static const int MAXSB = 8;
       int nsbd;
-      side_template<mesh> *sbdry[MAXSB]; 
+      side_template<mesh<ND> > *sbdry[MAXSB]; 
       virtual void getnewsideobject(int bnum, int type);
 
       /* TRIANGLE DATA */      
@@ -88,6 +93,7 @@ class mesh {
       /**************/
       /* DEFAULT INITIALIZATION */
       mesh() : initialized(0), log(&std::cout), fmpt(NULL), cmpt(NULL), fine(NULL), coarse(NULL) {}
+      void allocate(bool coarse, mesh::gbl *ginit) {}
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
@@ -103,7 +109,11 @@ class mesh {
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      virtual void setlength() {*log << "in generic setlength" << std::endl;}
+      virtual void setlength() {
+         for(int i=0;i<nvrtx;++i)
+            vlngth[i] = 0.1571;
+         *log << "in generic setlength" << std::endl;
+      }
       void length1();
       void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
@@ -115,12 +125,10 @@ class mesh {
       void rebay(FLT tolsize);
       inline void adapt(FLT tolerance) {
          yaber(1.0/tolerance,1,0.0);
-//         setbcinfo();
-//         out_mesh("coarse",grid);
+         out_mesh("coarse",tecplot);
          treeupdate();
          rebay(tolerance);
-//        setbcinfo();
-//        out_mesh("refine",grid);
+         out_mesh("refine",tecplot);
          return;
       }
       
@@ -182,8 +190,8 @@ class mesh {
       /* ORDERED LIST FUNCTIONS */
       static const int MAXLST = 1000;
       static int nslst;
-      static int ntdel, tdel[MAXLST+1];
-      static int nsdel, sdel[MAXLST+1];
+      static int ntdel, tdel[1000+1];
+      static int nsdel, sdel[1000+1];
       void putinlst(int sind);
       void tkoutlst(int sind);
       
@@ -236,5 +244,30 @@ class mesh {
 #define XDIR_MP COMX_MASK
 #define YDIR_MP (COMY_MASK +IFCE_MASK)
 #define ALLD_MP (XDIR_MP +YDIR_MP)
+
+#ifdef SKIP
+#include "in_mesh.cpp"
+#include "copy.cpp"
+#include "setup.cpp"
+#include "out_mesh.cpp"
+#include "findmatch.cpp"
+#include "refineby2.cpp"
+#include "tprims.cpp"
+#include "coarsen.cpp"
+#include "triangulate.cpp"
+#include "insert.cpp"
+#include "rebay.cpp"
+#include "collapse.cpp"
+#include "swap.cpp"
+#include "yaber.cpp"
+#include "connect.cpp"
+
+template\<int ND\> ([a-z]*) mesh\<ND\>::([^?]*) \{
+
+template \1 mesh\<2\>::\2;
+template \1 mesh\<3\>::\2;
+
+template\<int ND\> \1 mesh\<ND\>::\2 \{
+#endif
 
 #endif

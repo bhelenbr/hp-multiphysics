@@ -21,7 +21,10 @@
 /* nslst IS THE NUMER OF SIDES NEEDING COARSENING */
 /* STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
 
-void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
+template void mesh<2>::yaber(FLT tolsize, int yes_swap, FLT swaptol);
+template void mesh<3>::yaber(FLT tolsize, int yes_swap, FLT swaptol);
+
+template<int ND> void mesh<ND>::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
    
    /* SET UP FLTWK */
@@ -179,7 +182,10 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    return;
 }
 
-void mesh::checkintegrity() const {
+template void mesh<2>::checkintegrity() const;
+template void mesh<3>::checkintegrity() const;
+
+template<int ND> void mesh<ND>::checkintegrity() const {
    int i,j,sind,dir;
    
    for(i=0;i<ntri;++i) {
@@ -238,7 +244,10 @@ void mesh::checkintegrity() const {
    return;
 }
 
-void mesh::checkintwk() const {
+template void mesh<2>::checkintwk() const;
+template void mesh<3>::checkintwk() const;
+
+template<int ND> void mesh<ND>::checkintwk() const {
    int i;
    
    for(i=0;i<maxvst;++i)
@@ -253,7 +262,10 @@ void mesh::checkintwk() const {
    return;
 }
 
-void mesh::fltwkyab(int i) {
+template void mesh<2>::fltwkyab(int i);
+template void mesh<3>::fltwkyab(int i);
+
+template<int ND> void mesh<ND>::fltwkyab(int i) {
    FLT dif,av;
    
    /* CALCULATE SIDE LENGTH RATIO FOR YABER */
@@ -267,7 +279,10 @@ void mesh::fltwkyab(int i) {
    return;
 }
 
-void mesh::fltwkyab() {
+template void mesh<2>::fltwkyab();
+template void mesh<3>::fltwkyab();
+
+template<int ND> void mesh<ND>::fltwkyab() {
    int i;
    
    for(i=0;i<nside;++i)

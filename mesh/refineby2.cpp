@@ -10,7 +10,10 @@
 #include<utilities.h>
 #include<assert.h>
 
-void mesh::refineby2(const class mesh& inmesh) {
+template void mesh<2>::refineby2(const class mesh<2>& inmesh);
+template void mesh<3>::refineby2(const class mesh<3>& inmesh);
+
+template<int ND> void mesh<ND>::refineby2(const class mesh<ND>& inmesh) {
    int i,j,k,n,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
    FLT xpt[ND];
    

@@ -7,7 +7,10 @@
 /* ntdel, tdel[MAXLST +1]; */
 /* nsdel, sdel[MAXLST +1]; */
 
-int mesh::collapse(int sind) {
+template int mesh<2>::collapse(int sind);
+template int mesh<3>::collapse(int sind);
+
+template<int ND> int mesh<ND>::collapse(int sind) {
    int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2],bnum;
    int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
    int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
@@ -279,7 +282,10 @@ DELETE:
 }
 
 /* DELETE UNREFERENCED TRIANGLE */
-void mesh::dlttri(int tind) {
+template void mesh<2>::dlttri(int tind);
+template void mesh<3>::dlttri(int tind);
+
+template<int ND> void mesh<ND>::dlttri(int tind) {
    int i,j,v0,t1,sind,flip;
    
    --ntri;
@@ -311,7 +317,10 @@ void mesh::dlttri(int tind) {
 }
 
 /* DELETE UNREFERENCED SIDE */
-void mesh::dltside(int sind) {
+template void mesh<2>::dltside(int sind);
+template void mesh<3>::dltside(int sind);
+
+template<int ND> void mesh<ND>::dltside(int sind) {
    int j,k,tind;
    
    /* DELETE SIDE */
@@ -338,7 +347,10 @@ void mesh::dltside(int sind) {
 }
 
 /* DELETE UNREFERENCED VERTEX */
-void mesh::dltvrtx(int v0) {
+template void mesh<2>::dltvrtx(int v0);
+template void mesh<3>::dltvrtx(int v0);
+
+template<int ND> void mesh<ND>::dltvrtx(int v0) {
    int vn,stoptri,dir;
    int tind, sind, flip;
       

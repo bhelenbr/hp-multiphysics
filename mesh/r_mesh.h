@@ -12,13 +12,14 @@
 /* MESH DEFORMATION VARIABLES */
 class rbdry_interface;
 
-class r_mesh :public mesh {
+class r_mesh : public mesh<2> {
       public:
          /* THINGS SHARED BY ALL BLOCKS */
          static FLT vnn, fadd;
+         static const int ND = 2;
          
          /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
-         struct gbl {
+         struct gbl : public mesh<2>::gbl {
             FLT (*work)[ND];
             FLT (*res)[ND];
             FLT *diag;
@@ -89,6 +90,9 @@ class r_mesh :public mesh {
 
 inline void r_mesh::tadvance() {
    for(int i=0;i<nsbd;++i) 
-      rbdry[i]->tadvance();
+      sbdry[i]->tadvance();
+      
+   for(int i=0;i<nvbd;++i)
+      vbdry[i]->tadvance();
 }
 #endif
