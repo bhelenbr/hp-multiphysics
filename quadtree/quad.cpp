@@ -9,13 +9,13 @@
 #include"quad_impl.h"
 
 /* STATIC VARIABLES FOR SEARCHING */
-class quad<1> **quadtree<1>::srchlst;
+class quad<1> **quadtree<1>::srchlst = 0;
 int quadtree<1>::maxsrch = 0;
 
-class quad<2> **quadtree<2>::srchlst;
+class quad<2> **quadtree<2>::srchlst = 0;
 int quadtree<2>::maxsrch = 0;
  
-class quad<3> **quadtree<3>::srchlst;
+class quad<3> **quadtree<3>::srchlst = 0;
 int quadtree<3>::maxsrch = 0;
 
 template class quad<1>;
