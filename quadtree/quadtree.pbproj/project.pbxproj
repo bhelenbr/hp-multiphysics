@@ -134,7 +134,7 @@
 		08FB77A0FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F51211010190489701990B20,
+				F584D18701B43B0E01990B20,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -201,12 +201,6 @@
 			path = quadtree.h;
 			refType = 4;
 		};
-		F51211010190489701990B20 = {
-			fileRef = F51211000190489701990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F51211020190489701990B20 = {
 			fileRef = F51210FF0190489701990B20;
 			isa = PBXBuildFile;
@@ -236,6 +230,12 @@
 			);
 			shellPath = /bin/csh;
 			shellScript = "~helenbrk/Codes/quadtree/createlib";
+		};
+		F584D18701B43B0E01990B20 = {
+			fileRef = F51211000190489701990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 	};
 	rootObject = 08FB7793FE84155DC02AAC07;

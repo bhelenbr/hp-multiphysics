@@ -103,6 +103,11 @@
 			);
 		};
 	};
+	F51211000190489701990B20 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{77, 671}, {750, 502}}";
+		};
+	};
 	F51211030190489701990B20 = {
 		activeArgIndex = 2147483647;
 		argumentStrings = (
