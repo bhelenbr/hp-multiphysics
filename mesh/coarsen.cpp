@@ -7,7 +7,7 @@
 #include<cfloat>
 #include<assert.h>
 
-int mesh::coarsen(const class mesh& inmesh) {
+int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    int i,j,k,sind;
    int v0, v1, odd;
    int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
@@ -39,7 +39,7 @@ int mesh::coarsen(const class mesh& inmesh) {
    }
 
    for(i=0;i<inmesh.nvrtx;++i)
-      fltwk[i] *= 1.6; /* SHOULD BE BETWEEN 1.5 and 2.0 */
+      fltwk[i] *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
 
    nvrtx = 0;
    nside = 0;
@@ -300,13 +300,13 @@ int mesh::smooth_cofa(int niter) {
    return(1);
 }
 
-void mesh::coarsen2(const class mesh &inmesh, class mesh &work) {
+void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
    int i;
    
    work.copy(inmesh);
    work.initvlngth();
    for(i=0;i<work.nvrtx;++i)
-      work.vlngth[i] = 1.6*work.vlngth[i];
+      work.vlngth[i] = factor*work.vlngth[i];
       
    work.yaber(1.414, 0);
    work.qtree.reinit();  // REMOVES UNUSED QUADS

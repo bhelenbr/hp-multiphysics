@@ -204,8 +204,8 @@ class mesh {
       int max() {return maxvst;}
 
       /* MESH MODIFICATION */   
-      int coarsen(const class mesh& xmesh);
-      void coarsen2(const class mesh& inmesh, class mesh& work);
+      int coarsen(FLT factor, const class mesh& xmesh);
+      void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
       void length();
       void swap(FLT swaptol = 0.0);
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
@@ -215,10 +215,13 @@ class mesh {
       /* CENTER OF AREA MESH SMOOTHING */
       int smooth_cofa(int niter);
 
-      /* FUNCTION TO FIND MATCHING MESH BOUNDARIES */
+      /* FIND MATCHING MESH BOUNDARIES */
       int findmatch(class mesh& tgt);
-      /* FUNCTION TO ZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
+      /* FZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
       void zerobdryisfrst();
+      /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
+      void matchboundaries1();
+      void matchboundaries2();
       /* TELLS HOW MANY COMMUNICATION BOUNDARIES THERE ARE */
       int alld_mp();
       

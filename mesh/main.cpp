@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
       number_str(outname, "test", i, 1);
       x[i].setbcinfo();
       x[i].out_mesh(outname);
-      x[i+1].coarsen(x[i]);
+      x[i+1].coarsen(1.6,x[i]);
    }
    */ 
  

@@ -9,7 +9,7 @@ extern int ntdel, tdel[MAXLST +1];
 extern int nsdel, sdel[MAXLST +1];
 
 int mesh::collapse(int sind) {
-   int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
+   int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2],bnum;
    int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
    int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
    FLT x,y,a,asum,dx,dy,l0,l1;
@@ -105,7 +105,7 @@ int mesh::collapse(int sind) {
          }
          
          /* CAN PICK EITHER POINT KEEP ONE CLOSEST TO CENTER OF PREVIOUS/NEXT VERTICES ON BOUNDARY */
-         /* SHOULD KEEP COMMUNICATION BOUNDARIES COHERENT */
+         /* KEEP COMMUNICATION BOUNDARIES COHERENT */
          sd1 = bside[0][0];
          sd2 = bside[1][1];
          
@@ -123,26 +123,14 @@ int mesh::collapse(int sind) {
          dx = vrtx[v0][0]-x;
          dy = vrtx[v0][1]-y;
          l1 = dx*dx +dy*dy;
-         
-         if (l0 == l1) {
-            /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
-            /* PICK CLOSEST ZERO */
-            /*(CIRCLES CENTERED AROUND ZERO WITH EQUAL LENGTH SIDES ARE STILL DEGENERATE) */
-            v0 = svrtx[sind][0];
-            v1 = svrtx[sind][1];
-            dx = vrtx[v0][0];
-            dy = vrtx[v0][1];
-            l0 = dx*dx +dy*dy;
-            
-            dx = vrtx[v1][0];
-            dy = vrtx[v1][1];
-            l1 = dx*dx +dy*dy;
-            
-            if (l0 == l1) {
-               printf("wickedly degenerate case\n");
-            }
-         }
          delt = (l0 < l1 ? 1 : 0);
+
+         if (fabs(l0 - l1) < EPSILON) {
+            /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
+            bnum = (-stri[sind][1]>>16) -1;
+            delt = sbdry[bnum].isfrst;
+            printf("#Warning: degenerate case in edge collapse, picking %d\n",delt);
+         }
       }
    }
    else {

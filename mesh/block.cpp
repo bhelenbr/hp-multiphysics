@@ -16,7 +16,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    grd[0].allocate(0,&rglbl);
    
    for(i = 1; i< ngrid; ++i) {
-      grd[i].coarsen(grd[i-1]);
+      grd[i].coarsen(1.6,grd[i-1]);
       grd[i].init_comm_buf(8);
       /* grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
@@ -31,7 +31,7 @@ void block::reconnect() {
    int i;
    
    for(i = 1; i< ngrid; ++i) {
-      grd[i].coarsen(grd[i-1]);
+      grd[i].coarsen(1.6,grd[i-1]);
       grd[i].setbcinfo();
       /* grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
