@@ -80,13 +80,13 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    qtree.nearpt(x,y,vnear);
    xp[0] = x; xp[1] = y;
    sind = findbdryside(xp,vnear);
-   if (sind < 0 || sbdry[(-stri[sind][1]>>16) -1].type != typ) {
+   if (sind > 0 || sbdry[(-stri[sind][1]>>16) -1].type != typ) {
       printf("#Warning: brute force boundary locate\n");
       for(bnum=0;bnum<nsbd;++bnum)
          if (sbdry[bnum].type == typ) break;
       sind = sbdry[bnum].el[0];
    }
-      
+   bnum = (-stri[sind][1]>>16) -1;
    
 #ifdef OLDWAY
    tind = vtri[vnear];
