@@ -10,14 +10,25 @@
 #include "blocks.h"
 #include<stdio.h>
 #include<utilities.h>
+#include<time.h>
+
 
 int main(int argc, char **argv) {
    class blocks myblock;
+   clock_t cpu_time;
 
+#ifdef SKIP
+/*	START CLOCK TIMER */
+   clock();
+   
    myblock.init(argv[1]);
    myblock.go();
    
+   cpu_time = clock();
+   printf("that took %ld cpu time\n",cpu_time);
+   
    return(0);
+#endif
 
 
 /*	FOR TEST ADAPTATION */

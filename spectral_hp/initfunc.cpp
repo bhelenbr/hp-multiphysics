@@ -142,7 +142,7 @@ FLT centerx = 0.0;
 FLT centery = 0.0;
 
 /*	FOR A SINE WAVE */
-FLT amp = 0.05;
+FLT amp = 0.375;
 
 FLT hgt(int type, FLT x, FLT y) {
    if (type&(EULR_MASK +INFL_MASK)) {
