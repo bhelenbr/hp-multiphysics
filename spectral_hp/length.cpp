@@ -106,7 +106,7 @@ void hp_mgrid::length1(FLT norm) {
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
-#ifdef TWOLAYER
+#ifdef LAYER
       vlngth[i] = MIN(vlngth[i],0.3333); 
 #endif
    }
