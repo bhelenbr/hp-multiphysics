@@ -298,7 +298,9 @@ next1:      continue;
                if (ierr != 2) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
-            break;
+            
+            treeinit();
+            return(1);
 
          default:
             printf("That filetype is not supported\n");
