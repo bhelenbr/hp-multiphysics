@@ -128,11 +128,10 @@ void block::tadvance() {
 }
 
 void block::reconnect() {
-   int i;
-   
+   int i,j;
+
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
-/*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }

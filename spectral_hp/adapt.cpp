@@ -80,6 +80,13 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 /*	REFINE */
    nvrt0 = nvrtx;
    rebay(tolerance);
+   
+/*	TO SEE MESH MANIPULATION */
+   for(i=0;i<nside;++i)
+      sinfo[i] += 2;
+   out_mesh("adapt");
+   for(i=0;i<nside;++i)
+      sinfo[i] -= 2;
 
 /* MARK BOUNDARY VERTICES */
    for(i=nvrt0;i<nvrtx;++i)
@@ -209,7 +216,6 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       indx1 += str.sm0;
       indx += sm0;
    }
-
    
 /*	UPDATE BOUNDARY SIDES */
    for(i=0;i<nsbd;++i) {

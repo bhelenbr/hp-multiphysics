@@ -243,24 +243,18 @@ void blocks::cycle(int vw, int lvl = 0) {
    return;
 }
 
-void blocks::output(char *filename, FILETYPE filetype = text) {
+void blocks::output(const char *filename, FILETYPE type = text) {
    int i;   
-   char fnmcat[80];
-   char app[2];
+   char fnmcat[80],bname[80];
 
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
 /*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   if (nblocks > 1) {
-      for (i=0;i<nblocks;++i) {
-         strcpy(fnmcat,filename);
-         app[0] = 'a'+i;
-         app[1] = '\0';
-         strcat(fnmcat,app);
-         blk[i].grd[0].output(fnmcat,filetype);
-      }
-   }
-   else {
-      blk[0].grd[0].output(filename,filetype); 
+   strcpy(fnmcat,filename);
+   strcat(fnmcat,".");
+   for(i=0;i<nblocks;++i) {
+      number_str(bname,fnmcat,i,1);
+      blk[i].grd[0].output(bname,type);
+		if (adapt) blk[i].grd[0].out_mesh(bname,easymesh);            
    }
    
    return;
@@ -270,8 +264,6 @@ void blocks::output(int number, FILETYPE type=text) {
    int i;
    char outname[20], bname[20];
 
-   number_str(outname, "data", number, 3);
-   strcat(outname, ".");
    for(i=0;i<nblocks;++i) {
       number_str(outname, "data", i, 1);
       strcat(outname, ".");
@@ -301,7 +293,7 @@ void blocks::go() {
          output(tstep,tecplot);
       }
       
-      if (adapt) {
+      if (adapt && tstep != ntstep-1) {
          adaptation();
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();

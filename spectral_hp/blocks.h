@@ -59,7 +59,7 @@ class blocks {
       }
 
 /*		OUTPUT FINE MESH SOLUTION */
-      void output(char *filename, FILETYPE filetype = text);
+      void output(const char *filename, FILETYPE filetype = text);
       void output(int number, FILETYPE filetype = text);
 
 /*		MESH REFINEMENT */
