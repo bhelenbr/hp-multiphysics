@@ -24,11 +24,11 @@
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0 +x*(1-x));
+         return(x*x);
       case(1):
          return(x*(1-x)*y*(1-y));
       case(2):
-         return(y*(1-y));
+         return(y*(1-y)*y*y);
    }
    return(0.0);
 }
@@ -40,7 +40,7 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0 +0.0*outertime);
+         return(0.0 +0.0*outertime);
       case(1):
          return(0.0);
       case(2):

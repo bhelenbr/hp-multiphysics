@@ -7,7 +7,7 @@ extern FLT f1(int n, FLT x, FLT y);
 void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) {
    FILE *fp;
    char grd_nm[200];
-   int i,j,nsurf,surfid,bnum;
+   int i,j,nsurf,surfid,bnum,sflag;
    int fmt;
    FLT grwfac;
    
@@ -67,53 +67,59 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    
 /* LOAD FUNCTION INFO??? */
    gbl.func = &f1;
-
-/*	LOAD SURFACE INFORMATION */
-   fscanf(fp,"%*[^\n]%d\n",&nsurf);
-   printf("#FIRST SURFACES\n#%d\n",nsurf);
    
-/*	SET SURFACE POINTERS TO NULL FOR UNUSED SURFACES */
-   for(i=0;i<grd[0].nsbd;++i) 
-      if(grd[0].sbdry[i].type&(CURV_MASK+IFCE_MASK))
-         for(j=0;j<ngrid;++j)
-            grd[j].sbdry[i].misc = NULL;
+   sflag = 0;
+   for(i=0;i<grd[0].nsbd;++i)
+      if (grd[0].sbdry[i].type & (IFCE_MASK +FSRF_MASK)) sflag = 1;
 
-/*	ALLOCATE GLOBAL STORAGE FOR EACH FIRST SURFACE */   
-   sgbl = new struct surface_glbls[nsurf];
-               
-/* CREATE NSURF SURFACE OBJECTS FOR EACH GRID */
-   for (j=0;j<ngrid;++j)
-      grd[j].srf = new class surface[nsurf];
-
-/*	ALLOCATE SURFACE OBJECTS */
-   for(i=0;i<nsurf;++i) {
-      fscanf(fp,"%*[^\n]%d\n",&surfid);
-      printf("#SURFACE ID\n#%d\n",surfid);
-
-      for(bnum=0;bnum<grd[0].nsbd;++bnum) 
-         if (grd[0].sbdry[bnum].type == surfid) break;
+   if (sflag) {
+/*   	LOAD SURFACE INFORMATION */
+      fscanf(fp,"%*[^\n]%d\n",&nsurf);
+      printf("#FIRST SURFACES\n#%d\n",nsurf);
       
-      if (bnum==grd[0].nsbd) {
-         printf("Side ID doesn't match input file\n");
-         exit(1);
+/*   	SET SURFACE POINTERS TO NULL FOR UNUSED SURFACES */
+      for(i=0;i<grd[0].nsbd;++i) 
+         if(grd[0].sbdry[i].type&(CURV_MASK+IFCE_MASK))
+            for(j=0;j<ngrid;++j)
+               grd[j].sbdry[i].misc = NULL;
+   
+/*   	ALLOCATE GLOBAL STORAGE FOR EACH FIRST SURFACE */   
+      sgbl = new struct surface_glbls[nsurf];
+                  
+/*    CREATE NSURF SURFACE OBJECTS FOR EACH GRID */
+      for (j=0;j<ngrid;++j)
+         grd[j].srf = new class surface[nsurf];
+   
+/*   	ALLOCATE SURFACE OBJECTS */
+      for(i=0;i<nsurf;++i) {
+         fscanf(fp,"%*[^\n]%d\n",&surfid);
+         printf("#SURFACE ID\n#%d\n",surfid);
+   
+         for(bnum=0;bnum<grd[0].nsbd;++bnum) 
+            if (grd[0].sbdry[bnum].type == surfid) break;
+         
+         if (bnum==grd[0].nsbd) {
+            printf("Side ID doesn't match input file\n");
+            exit(1);
+         }
+   
+/*   		ALLOCATE FINE SURFACE STORAGE */ 
+         grd[0].srf[i].alloc(grd[0].maxsbel, lg2pmax, 0, 1, &sgbl[i]);
+         for(j = lg2pmax -1; j >= 0; --j) {
+            grd[0].srf[i].alloc(grd[0].maxsbel, j, 1, 1, &sgbl[i]);
+         }
+         grd[0].sbdry[bnum].misc = static_cast<void *>(&grd[0].srf[i]);
+   
+/*   		ALLOCATE COARSE SURFACE STORAGE */
+         for(j=1;j<ngrid;++j) {
+            grd[j].srf[i].alloc(grd[j].maxsbel, 0, 1, 0, &sgbl[i]);
+            grd[j].sbdry[bnum].misc = static_cast<void *>(&grd[j].srf[i]);
+         }
+         
+/*   		READ SURFACE PHYSICS INFO */
+         fscanf(fp,"%*[^\n]%lf %lf %lf\n",&sgbl[i].sigma,&sgbl[i].rho2,&sgbl[i].mu2);
+         printf("#SIGMA\t\tRHO2\t\tMU2\n#%f\t\t%f\t\t%f\n",sgbl[i].sigma,sgbl[i].rho2,sgbl[i].mu2);
       }
-
-/*		ALLOCATE FINE SURFACE STORAGE */ 
-      grd[0].srf[i].alloc(grd[0].maxsbel, lg2pmax, 0, 1, &sgbl[i]);
-      for(j = lg2pmax -1; j >= 0; --j) {
-         grd[0].srf[i].alloc(grd[0].maxsbel, j, 1, 1, &sgbl[i]);
-      }
-      grd[0].sbdry[bnum].misc = static_cast<void *>(&grd[0].srf[i]);
-
-/*		ALLOCATE COARSE SURFACE STORAGE */
-      for(j=1;j<ngrid;++j) {
-         grd[j].srf[i].alloc(grd[j].maxsbel, 0, 1, 0, &sgbl[i]);
-         grd[j].sbdry[bnum].misc = static_cast<void *>(&grd[j].srf[i]);
-      }
-      
-/*		READ SURFACE PHYSICS INFO */
-      fscanf(fp,"%*[^\n]%lf %lf %lf\n",&sgbl[i].sigma,&sgbl[i].rho2,&sgbl[i].mu2);
-      printf("#SIGMA\t\tRHO2\t\tMU2\n#%f\t\t%f\t\t%f\n",sgbl[i].sigma,sgbl[i].rho2,sgbl[i].mu2);
    }
 
    grd[0].loadbasis(hpbase[lg2pmax]);

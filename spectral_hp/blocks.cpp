@@ -291,6 +291,70 @@ void blocks::endcycle() {
       blk[i].grd[0].surfugtovrt2();
 }
 
+void blocks::go() {
+   int i,tstep, iter;
+   
+   for(tstep=readin+1;tstep<ntstep;++tstep) {
+      
+      tadvance();
+      
+      for(iter=0;iter<ncycle;++iter) {
+         cycle(vwcycle);
+         printf("%d ",iter);
+         endcycle();
+         r_cycle(vwcycle);
+         r_maxres();
+         printf("\n");
+      }
+
+      if (tstep == 0 && hp_mgrid::dti > 0.0) {
+         hp_mgrid::nstep = 2;
+			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+		}
+//		else {
+//			hp_mgrid::nstep = 3;
+//			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
+//			hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
+//			hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
+//			hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
+//		}
+
+      if (!(tstep%out_intrvl)) {
+         output(tstep+1,text);
+         output(tstep+1,tecplot);
+      }
+      
+      if (adapt && tstep != ntstep-1) {
+         adaptation();
+         for(i=0;i<nblocks;++i)
+            blk[i].reconnect();
+      }
+   }
+   
+   return;
+}
+   
+void blocks::adaptation() {
+   int i;
+   
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].length1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].length_mp();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].length2();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].adapt(temp_hp,0.66);
+
+
+   return;
+}
+
 void blocks::output(int number, FILETYPE type=text) {
    int i,j;
    char outname[20], bname[20];
@@ -322,7 +386,7 @@ void blocks::output(int number, FILETYPE type=text) {
       number_str(outname,"rstrtdata",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);
-      for(j=0;j<hp_mgrid::nstep-1;++j) {
+      for(j=0;j<MXSTEP-1;++j) {
          number_str(outname,bname,j,1);
          blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,type);
       }
@@ -330,81 +394,11 @@ void blocks::output(int number, FILETYPE type=text) {
       number_str(outname,"rstrtvrtx",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);
-      for(j=0;j<hp_mgrid::nstep-1;++j) {
+      for(j=0;j<MXSTEP-1;++j) {
          number_str(outname,bname,j,1);
          blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,text);
       }
    }
    
-   return;
-}
-
-void blocks::go() {
-   int i,tstep, iter;
-   
-   for(tstep=readin+1;tstep<ntstep;++tstep) {
-      
-      tadvance();
-      
-      for(iter=0;iter<ncycle;++iter) {
-         cycle(vwcycle);
-         printf("%d ",iter);
-         endcycle();
-         r_cycle(vwcycle);
-         r_maxres();
-         printf("\n");
-      }
-         
-      if (!(tstep%out_intrvl)) {
-         output(tstep+1,text);
-         output(tstep+1,tecplot);
-      }
-
-      if (tstep == 0 && hp_mgrid::dti > 0.0) {
-         hp_mgrid::nstep = 2;
-			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-		}
-//		else {
-//			hp_mgrid::nstep = 3;
-//			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
-//			hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
-//			hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
-//			hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
-//		}
-      
-      if (adapt && tstep != ntstep-1) {
-         adaptation();
-         for(i=0;i<nblocks;++i)
-            blk[i].reconnect();
-      }
-   }
-   
-   return;
-}
-   
-void blocks::adaptation() {
-   int i;
-   
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].length1();
-      
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].length_mp();
-      
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].length2();
-      
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].adapt(temp_hp,0.66);
-      
-   blk[0].grd[0].mesh::setbcinfo();
-   blk[1].grd[0].mesh::setbcinfo();
-   blk[0].grd[0].out_mesh("adapt0");
-   blk[1].grd[0].out_mesh("adapt1");
-   blk[0].grd[0].setbcinfo();
-   blk[1].grd[0].setbcinfo();
-
    return;
 }

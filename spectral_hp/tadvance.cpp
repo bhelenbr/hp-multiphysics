@@ -88,17 +88,17 @@ void hp_mgrid::tadvance() {
    
 /*	SHIFT BACKWARDS DIFFERENCE STORAGE */
    for(i=0;i<nvrtx;++i)
-      for(step=nstep-2;step>=1;--step)
+      for(step=MXSTEP-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].v[i][n] = gbl->ugbd[step-1].v[i][n];
 
    for(i=0;i<nside*b.sm;++i)
-      for(step=nstep-2;step>=1;--step)
+      for(step=MXSTEP-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].s[i][n] = gbl->ugbd[step-1].s[i][n];            
 
    for(i=0;i<ntri*b.im;++i)
-      for(step=nstep-2;step>=1;--step)
+      for(step=MXSTEP-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].i[i][n] = gbl->ugbd[step-1].i[i][n];    
    
@@ -151,14 +151,14 @@ void hp_mgrid::tadvance() {
    
 /* SHIFT BD MESH INFORMATION */
    for(i=0;i<nvrtx;++i)
-      for(step=nstep-2;step>=1;--step)
+      for(step=MXSTEP-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->vrtxbd[step][i][n] = gbl->vrtxbd[step-1][i][n];
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
          for(j=0;j<sbdry[i].num*b.sm;++j) 
-            for(step=nstep-2;step>=1;--step)
+            for(step=MXSTEP-2;step>=1;--step)
                   for(n=0;n<ND;++n)
                      gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
 

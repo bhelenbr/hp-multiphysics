@@ -27,9 +27,20 @@ int main(int argc, char **argv) {
    
    exit(1);
 #endif
-   
+
    myblock.init(argv[1]);
    myblock.go();
+   
+   return(0);
+
+   myblock.init(argv[1]);
+   myblock.tadvance();
+   myblock.output(1,tecplot);
+   myblock.adaptation();
+   myblock.tadvance();
+   myblock.output(2,tecplot);
+
+   
    
    return(0);
 }

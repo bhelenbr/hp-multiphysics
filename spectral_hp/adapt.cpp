@@ -16,7 +16,7 @@
 extern class spectral_hp *tgt;
 
 void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
-   int i,j,m,n,v0,v1,sind,stgt,info,indx,indx1,indx2,nvrt0,tind,touchd,snum,step;
+   int i,j,m,n,v0,v1,sind,stgt,ttgt,info,indx,indx1,indx2,nvrt0,tind,touchd,snum,step;
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
    
@@ -148,26 +148,26 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       for(j=0;j<sbdry[i].num;++j) {
          v0 = svrtx[sbdry[i].el[j]][0];
          if (v0 >= nvrt0) {
-            sind = findbdrypt(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],psi);
-            str.ugtouht1d(sind);  
+            stgt = str.findbdrypt(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],psi);
+            str.ugtouht1d(stgt);  
             str.b.ptprobe1d(NV,uht,ug.v[v0],psi);
             
             for(step=0;step<nstep-1;++step) {
-               str.ugtouht1d(tind,ugstr[step]);
-               str.b.ptprobe1d(NV,uht,gbl->ugbd[step].v[i]);
+               str.ugtouht1d(stgt,ugstr[step]);
+               str.b.ptprobe1d(NV,uht,gbl->ugbd[step].v[v0]);
             }
 
             if (str.sinfo[sind] > -1) {
                for(step=0;step<nstep-1;++step) {
-                  str.crdtouht1d(sind,vrtxstr[step],binfostr[step]);
-                  str.b.ptprobe1d(ND,uht,gbl->vrtxbd[step][i]);
+                  str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
+                  str.b.ptprobe1d(ND,uht,gbl->vrtxbd[step][v0]);
                }
             }
             else {
                for(step=0;step<nstep-1;++step) {
                   for(n=0;n<ND;++n) 
-                     gbl->vrtxbd[step][i][n] = vrtxstr[step][str.svrtx[sind][0]][n]*(1. -psi)/2.
-                                              +vrtxstr[step][str.svrtx[sind][1]][n]*(1. +psi)/2.;
+                     gbl->vrtxbd[step][v0][n] = vrtxstr[step][str.svrtx[stgt][0]][n]*(1. -psi)/2.
+                                              +vrtxstr[step][str.svrtx[stgt][1]][n]*(1. +psi)/2.;
                }
             }
          }
@@ -379,7 +379,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         }
                      }
                   }
-                  
+
                   indx1 = sind*sm0;      
                   for(n=0;n<NV;++n)
                      b.intgrt1d(res[n][0],lf[n]);
@@ -449,7 +449,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                   b.proj_bdry(uht[n],u[n]);
                   
                for(step=0;step<nstep-1;++step) {
-                  ugtouht_bdry(tind,ugstr[step]);
+                  ugtouht_bdry(tind,gbl->ugbd[step]);
                   for(n=0;n<NV;++n)
                      b.proj_bdry(uht[n],bdwk[step][n]);
                }
@@ -466,14 +466,14 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                   
                for (i=0; i < b.gpx; ++i ) {
                   for (j=0; j < b.gpn; ++j ) {
-                     tind = str.findinteriorpt(crd[0][i][j],crd[1][i][j],r,s);
-                     str.ugtouht(tind);
+                     ttgt = str.findinteriorpt(crd[0][i][j],crd[1][i][j],r,s);
+                     str.ugtouht(ttgt);
                      str.b.ptprobe(NV,uht,upt,r,s);
                      for(n=0;n<NV;++n)
                         u[n][i][j] -= upt[n];
                      
                      for(step=0;step<nstep-1;++step) {
-                        str.ugtouht(tind,ugstr[step]);
+                        str.ugtouht(ttgt,ugstr[step]);
                         str.b.ptprobe(NV,uht,upt);
                         for(n=0;n<NV;++n)
                            bdwk[step][n][i][j] -= upt[n];
@@ -505,12 +505,12 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                
                for(i=0;i<b.im;++i)
                   for(n=0;n<NV;++n)
-                     ug.i[indx+i][n] = str.ug.i[indx1+m][n];
+                     ug.i[indx+i][n] = str.ug.i[indx1+i][n];
                
                for(step=0;step<nstep-1;++step) {
                   for(n=0;n<NV;++n)
                      for(i=0;i<b.im;++i)
-                        gbl->ugbd[step].i[indx+i][n] = ugstr[step].i[indx+i][n];
+                        gbl->ugbd[step].i[indx+i][n] = ugstr[step].i[indx1+i][n];
                }
                
                break;

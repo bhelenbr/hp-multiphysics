@@ -11,7 +11,7 @@
 
 #define MXLG2P 5
 #define NSTAGE 5
-#define MXSTEP 3
+#define MXSTEP 2
 
 #define HP_MGRID_MP (COMX_MASK +COMY_MASK)
 
