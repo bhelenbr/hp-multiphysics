@@ -95,16 +95,17 @@ void r_mesh::calc_kvol() {
    return;
 }
 
-void r_mesh::kvol_mp(int phase) {
-   int i;
+int r_mesh::kvol_mp(int phase) {
+   int i,stop;
    
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) kvol,0,0,1);
 
+   stop = 1;
    for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
+      stop &= sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
 
-   return;
+   return(stop);
 }
 
 void r_mesh::kvoli(int phase) {
@@ -208,16 +209,17 @@ void r_mesh::rkmgrid(void) {
    return;
 }
 
-void r_mesh::rkmgrid_mp(int phase) {
-   int i;
+int r_mesh::rkmgrid_mp(int phase) {
+   int i,stop;
    
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) kvol,0,0,1);
 
+   stop = 1;
    for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
+      stop &= sbdry[i]->send(phase+1,(FLT *) kvol,0,0,1);
 
-   return;
+   return(stop);
 }
 
 void r_mesh::rkmgridi(int phase) {
@@ -275,10 +277,6 @@ void r_mesh::rsdl() {
    /* APPLY DIRICHLET BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       rbdry[i]->dirichlet(rg->res);
-
-   /* SEND COMMUNICATION PACKETS */ 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->res, 0, 1, 2);
    
    return;
 }
@@ -368,14 +366,17 @@ void r_mesh::rsdl() {
    return;
 }
 
-void r_mesh::rsdl1_mp(int phase) {
+int r_mesh::rsdl1_mp(int phase) {
+   int i,stop;
+   
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) rg->work,0,1,2);
 
+   stop = 1;
    for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) rg->work,0,1,2);
+      stop &= sbdry[i]->send(phase+1,(FLT *) rg->work,0,1,2);
 
-   return;
+   return(stop);
 }
 
 void r_mesh::rsdl1(int phase) {
@@ -471,14 +472,17 @@ void r_mesh::vddt(void)
    return;
 }
 
-void r_mesh::vddt1_mp(int phase) {
+int r_mesh::vddt1_mp(int phase) {
+   int i,stop;
+   
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
 
+   stop = 1;
    for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
+      stop &= sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
 
-   return;
+   return(stop);
 }
 
 void r_mesh::vddt1(int phase) {
@@ -507,28 +511,36 @@ void r_mesh::vddt1(int phase) {
 }
 #endif
 
-void r_mesh::rsdl_mp(int phase) {
+int r_mesh::rsdl_snd(int phase) {
+   int i,stop;
+
+   stop = 1;
+   for(i=0;i<nsbd;++i)   
+      stop &= sbdry[i]->send(phase,(FLT *) rg->res,0,1,2);
+
+   return(stop);
+}
+
+void r_mesh::rsdl_rcv(int phase) {
    int i;
    
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) rg->res,0,1,2);
 
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) rg->res,0,1,2);
-
-   return;
+	return;
 }
 
-void r_mesh::vddt_mp(int phase) {
-   int i;
+int r_mesh::vddt_mp(int phase) {
+   int i,stop;
    
    for(i=0;i<nsbd;++i)   
       sbdry[i]->rcv(phase,(FLT *) rg->diag,0,0,1);
 
+   stop = 1;
    for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
+      stop &= sbdry[i]->send(phase+1,(FLT *) rg->diag,0,0,1);
 
-   return;
+   return(stop);
 }
 
 void r_mesh::vddti(int phase) {
@@ -541,12 +553,9 @@ void r_mesh::vddti(int phase) {
       rg->diag[i] = vnn/rg->diag[i];
 }
 
-void r_mesh::update(int phase) {
+void r_mesh::update() {
    int i,n;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->res,0,1,2);
-   
+
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
          vrtx[i][n] -= rg->diag[i]*rg->res[i][n];
@@ -554,39 +563,31 @@ void r_mesh::update(int phase) {
    return;
 }
 
-void r_mesh::source() {
+void r_mesh::zero_source() {
    int i,n;
    
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n) 
          src[i][n] = 0.0;
-         
-   rsdl();
-   
+            
    return;
 }
 
-void r_mesh::sumsrc(int phase) {
+void r_mesh::sumsrc() {
    int i,n;
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->rcv(phase,(FLT *) rg->res,0,1,2);
 
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n)
          src[i][n] = -1.0*rg->res[i][n];
-
+   
    return;
 }
 
-void r_mesh::mg_getfres(int phase) {
+void r_mesh::mg_getfres() {
    int i,j,n,tind,v0;
    class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
-   
-   for(i=0;i<nsbd;++i)   
-      fmesh->sbdry[i]->rcv(phase,(FLT *) rg->res,0,1,2);
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)

@@ -11,6 +11,7 @@ ONLY INCLUDE FROM WITH MESH
 #endif
 
 #include <stdio.h>
+#include <utilities.h>
 
 class vrtx_boundary {
    private:
@@ -59,9 +60,9 @@ class vrtx_boundary {
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
       virtual int match(vrtx_boundary *in) {return 1;}
       virtual void setphase(int phase, int match) {}
-      virtual void send(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual int send(int phase, FLT *base,int bgn,int end, int stride) {return(1);}
       virtual void rcv(int phase, FLT *base,int bgn,int end, int stride) {}
-      virtual void sendposition(int phase) {return;}
+      virtual int sendposition(int phase) {return(1);}
       virtual void rcvposition(int phase) {return;}
 };
 
@@ -70,30 +71,31 @@ class vcom_boundary : public vrtx_boundary {
       static const int maxmatch = 8;
       int nmatch;
       class vcom_boundary *vmatch[maxmatch];
-      int myphase[maxmatch];
+      int myphase[maxmatch],maxphase;
       FLT *vbuff;
       int msgsize;
       
-      vcom_boundary(mesh &xin, int inid) : vrtx_boundary(xin, inid), nmatch(0) {}
+      vcom_boundary(mesh &xin, int inid) : vrtx_boundary(xin, inid), nmatch(0), maxphase(0) {}
       void alloc() {vbuff = new FLT[4];}
       
       /* ZERO FIRST VALUE */
-      void setphase(int phase, int match) {myphase[match] = phase;}
+      void setphase(int phase, int match) {myphase[match] = phase; maxphase = MAX(maxphase,phase);}
 
       /* MATCH BOUNDARIES */
       int match(vrtx_boundary *in) {
          if (in->idnty() == idnty()) {
             vmatch[nmatch] = dynamic_cast<vcom_boundary *>(in);
-            myphase[nmatch++] = 0; // NOT SURE HOW TO DO THIS YET
+            setphase(0,nmatch); // NOT SURE HOW TO DO THIS YET
+            ++nmatch;
             return(1);
          }
          return(0);
       }
       
       /* SEND/RCV VRTX POSITION */
-      void send(int phase, FLT *base,int bgn,int end, int stride);
+      int send(int phase, FLT *base,int bgn,int end, int stride);
       void rcv(int phase, FLT *base,int bgn,int end, int stride);
-      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),0,1,2);}
+      int sendpositions(int phase) { return(send(phase,&(b().vrtx[0][0]),0,1,2));}
       void rcvpositions(int phase) {rcv(phase,&(b().vrtx[0][0]),0,1,2); }
    
 };
@@ -137,9 +139,9 @@ class side_boundary {
       virtual int isfrst() {return(1);}
       virtual int match(side_boundary *in) {return 1;}
       virtual void setphase(int phase) {}
-      virtual void send(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual int send(int phase, FLT *base,int bgn,int end, int stride) {return(1);}
       virtual void rcv(int phase, FLT *base,int bgn,int end, int stride) {}
-      virtual void sendpositions(int phase) {return;}
+      virtual int sendpositions(int phase) {return(1);}
       virtual void rcvpositions(int phase) {return;}
 };
 
@@ -178,9 +180,9 @@ class comm_boundary : public side_boundary {
       int isfrst() {return(frst);}
       
       /* SEND/RCV VRTX POSITION */
-      void send(int phase, FLT *base,int bgn,int end, int stride);
+      int send(int phase, FLT *base,int bgn,int end, int stride);
       void rcv(int phase, FLT *base,int bgn,int end, int stride);
-      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),0,1,2);}
+      int sendpositions(int phase) { return(send(phase,&(b().vrtx[0][0]),0,1,2));}
       void rcvpositions(int phase) {rcv(phase,&(b().vrtx[0][0]),0,1,2); }
       
 };
@@ -191,7 +193,7 @@ class prdx_boundary : public comm_boundary {
       prdx_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {setphase(0);}
 
       /* SEND/RCV Y VRTX POSITION */
-      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),1,1,2); }
+      int sendpositions(int phase) { return(send(phase,&(b().vrtx[0][0]),1,1,2)); }
       void rcvpositions(int phase) { rcv(phase,&(b().vrtx[0][0]),1,1,2); }
 };
 
@@ -201,7 +203,7 @@ class prdy_boundary : public comm_boundary {
       prdy_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {setphase(1);}
 
       /* SEND/RCV X VRTX POSITION */
-      void sendpositions(int phase){ send(phase,&(b().vrtx[0][0]),0,0,2); }
+      int sendpositions(int phase){ return(send(phase,&(b().vrtx[0][0]),0,0,2)); }
       void rcvpositions(int phase) { rcv(phase,&(b().vrtx[0][0]),0,0,2); }
 };
 

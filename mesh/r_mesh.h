@@ -48,7 +48,7 @@ class r_mesh :public mesh {
 
          /* NEEDED FOR BIHARMONIC METHOD */
          void calc_kvol();
-         void kvol_mp(int phase);
+         int kvol_mp(int phase);
          void kvoli(int phase);         
 
          /* SPRING METHOD */
@@ -58,34 +58,35 @@ class r_mesh :public mesh {
          /* USING INTERPOLATION OPERATORS */
          /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
          void rkmgrid();
-         void rkmgrid_mp(int phase);
+         int rkmgrid_mp(int phase);
          void rkmgridi(int phase);
    
          /* CALCULATE RESIDUAL */
          void rsdl();
-         void rsdl_mp(int phase);
-         void update(int phase);
+         int rsdl_snd(int phase);
+         void rsdl_rcv(int phase);
+         void update();
          void maxres();
 
          /* CALCLATE SOURCE TERM */
-         void source();
-         void sumsrc(int phase);
+         void zero_source();
+         void sumsrc();
 
          /* CALCULATE VOL*DT */
          void vddt();
-         void vddt_mp(int phase);
+         int vddt_mp(int phase);
          void vddti(int phase);
 
 #ifdef FOURTH
          /* TWO STEP PROCEDURE FOR 4TH ORDER */
          void rsdl1();
-         void rsdl1_mp(int phase);
+         int rsdl1_mp(int phase);
          void vddt1();
-         void vddt1_mp(int phase);
+         int vddt1_mp(int phase);
 #endif
 
          /* MGRID TRANSFER */
-         void mg_getfres(int phase);
+         void mg_getfres();
          void mg_getcchng();
          
          /* TESTS */

@@ -247,7 +247,7 @@ void side_boundary::reorder() {
 
 
 /* GENERIC VERTEX COMMUNICATIONS */
-void comm_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
+int comm_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
    int j,k,sind,count,offset;
    
    if (phase == myphase || phase < 0) {
@@ -265,7 +265,7 @@ void comm_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
       bdrymatch->msgsize = nsd();
    }
       
-   return;
+   return((phase >= myphase ? 1 : 0));
 }
 
 void comm_boundary::rcv (int phase, FLT *base,int bgn,int end, int stride) {
@@ -330,16 +330,19 @@ void mesh::length1() {
    
 }
 
-void mesh::length_mp(int phase) {
-   int i;
+int mesh::length_mp(int phase) {
+   int i,stop;
    
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) 
       sbdry[i]->rcv(phase,vlngth,0,0,1);
   
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
+   stop = 1;
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->send(phase+1,vlngth,0,0,1);
+      stop &= sbdry[i]->send(phase+1,vlngth,0,0,1);
+      
+   return(stop);
 }
 
 
@@ -352,7 +355,7 @@ void mesh::length2(int phase) {
 }
 
 /* GENERIC VERTEX COMMUNICATIONS */
-void vcom_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
+int vcom_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
    int i,k,count,offset;
    
    for(i=0;i<nmatch;++i) {
@@ -364,7 +367,7 @@ void vcom_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
       }
    }
       
-   return;
+   return((phase >= maxphase ? 1 : 0));
 }
 
 void vcom_boundary::rcv (int phase, FLT *base,int bgn,int end, int stride) {

@@ -105,7 +105,7 @@ class mesh {
       void initvlngth();
       virtual void setlength() {printf("here\n");}
       void length1();
-      void length_mp(int phase);
+      int length_mp(int phase);
       void length2(int phase); 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
@@ -114,6 +114,16 @@ class mesh {
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
       inline void treeupdate() { qtree.update(0,nvrtx);}
       void rebay(FLT tolsize);
+      inline void adapt(FLT tolerance) {
+         yaber(1.0/tolerance,1,0.0);
+//         setbcinfo();
+//         out_mesh("coarse",grid);
+         treeupdate();
+         rebay(tolerance);
+//        setbcinfo();
+//        out_mesh("refine",grid);
+         return;
+      }
       
       /* CENTER OF AREA MESH SMOOTHING */
       int smooth_cofa(int niter);
@@ -122,7 +132,7 @@ class mesh {
       void findmatch(class mesh& tgt);
       FLT *vbuff[MAXSB];
       void matchboundaries1();
-      void matchboundaries_mp(int phase);
+      int matchboundaries_mp(int phase);
       void matchboundaries2(int phase);
 
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
@@ -217,12 +227,17 @@ void inline mesh::matchboundaries1() {
       sbdry[i]->sendpositions(0);
 }
 
-void inline mesh::matchboundaries_mp(int phase) {
+int inline mesh::matchboundaries_mp(int phase) {
+   int stop;
+   
    for(int i=0;i<nsbd;++i) 
       sbdry[i]->rcvpositions(phase);
    
+   stop = 1;
    for(int i=0;i<nsbd;++i) 
-      sbdry[i]->sendpositions(phase+1);      
+      stop &= sbdry[i]->sendpositions(phase+1);
+   
+   return(stop);
 }
 
 void inline mesh::matchboundaries2(int phase) {

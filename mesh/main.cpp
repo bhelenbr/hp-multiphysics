@@ -1,6 +1,5 @@
 #include"r_mesh.h"
 #include"blocks.h"
-#include"block.h"
 #include<utilities.h>
 #include<time.h>
 #include<stdio.h>
@@ -12,18 +11,7 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
    clock_t cpu_time;
-   mesh x;
-   class blocks<block<r_mesh> > z;
-
-
-//	x.in_mesh("/Users/helenbrk/Codes/grids3d/circ3",easymesh,10.0);
-   x.in_mesh("test",grid,10.0);
-
-   mesh y;
-   y.refineby2(x);
-   y.out_mesh("test",easymesh);
-   
-   return(0);
+   class blocks z;
 
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
@@ -33,12 +21,15 @@ int main(int argc, char *argv[]) {
    map<string,string> input[2];
    
    input[0]["nblock"] = "1";
+   input[0]["mglvls"] = "5";
    input[0]["ngrid"] = "5";
    input[0]["ntstep"] = "1";
    input[0]["fadd"] = "1.0";
    input[0]["vnn"] = "0.5";
    input[0]["itercrsn"] = "1";
-   input[0]["niter"] = "50";
+   input[0]["iterrfne"] = "0";
+   input[0]["njacobi"] = "1";
+   input[0]["ncycle"] = "50";
    input[0]["tolerance"] = "0.66";
    
    input[1]["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
