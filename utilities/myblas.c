@@ -1,9 +1,41 @@
 #include<math.h>
 #include<float.h>
 
+void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs) {
+
+	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
+   /* SAME AS DPBTRS, BUT FOR RHS VARIABLES AT ONCE */
+	int i,j,frst,ba,n;		
+
+	for(i=0;i<ordr;++i) {
+		frst = (ofdg -i > 0 ? ofdg -i : 0);
+		ba = -frst;
+		for(j=frst;j<ofdg;++j)
+			for(n=0;n<rhs;++n)
+				b[rhs*i +n] -= abd[i][j]*b[(ba+j)*rhs +n];
+
+		for(n=0;n<rhs;++n)
+			b[i*rhs +n] /= abd[i][ofdg];
+	}
+
+	for(i=ordr-1;i>=0;--i) {
+ 		for(n=0;n<rhs;++n)
+ 			b[i*rhs +n] /= abd[i][ofdg];
+
+ 		frst = (ofdg -i > 0 ? ofdg -i : 0);
+ 		ba = -frst;
+ 		for(j=frst;j<ofdg;++j)
+ 			for(n=0;n<rhs;++n)
+				b[rhs*(ba+j) +n] -= abd[i][j]*b[i*rhs +n];
+	}
+	
+	return;
+}
+
 void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs) {
 
-/* SAME AS DPBSL, BUT FOR RHS VARIABLES AT ONCE */
+	/* ACCEPTS LL^T CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
+   /* SAME AS DPBSL, BUT FOR RHS VARIABLES AT ONCE */
 	static int i,j,frst,ba,n;		
 
 	for(i=0;i<ordr;++i) {

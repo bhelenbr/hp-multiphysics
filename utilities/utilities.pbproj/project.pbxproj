@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 38;
 	objects = {
 		014CEA520018CE5811CA2923 = {
 			buildRules = (
@@ -99,9 +99,8 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = "";
-				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = "";
-				OTHER_CFLAGS = "";
+				OTHER_CFLAGS = "-Df2cFortran\n#define f2cFortran\n";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = utilities;
@@ -113,7 +112,6 @@
 			);
 			isa = PBXToolTarget;
 			name = utilities;
-			productInstallPath = "$(HOME)/bin";
 			productName = utilities;
 			productReference = 034768E8FF38A79811DB9C8B;
 			shouldUseHeadermap = 1;
@@ -125,7 +123,7 @@
 				F512111301904CF201990B20,
 			);
 			isa = PBXHeadersBuildPhase;
-			name = Headers;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -135,7 +133,7 @@
 				F512111501904CF201990B20,
 			);
 			isa = PBXSourcesBuildPhase;
-			name = Sources;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A2FE84155DC02AAC07 = {
 			fileRef = 08FB7796FE84155DC02AAC07;
@@ -150,14 +148,14 @@
 			files = (
 			);
 			isa = PBXFrameworksBuildPhase;
-			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		08FB77A5FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
-			name = "ResourceManager Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 //080
 //081
@@ -238,11 +236,11 @@
 			generatedFileNames = (
 			);
 			isa = PBXShellScriptBuildPhase;
-			name = "Shell Script";
 			neededFileNames = (
 			);
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/csh;
-			shellScript = "~/Codes/utilities/createlib";
+			shellScript = ./createlib;
 		};
 		F5563BE902242FAE01990B20 = {
 			children = (

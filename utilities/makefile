@@ -7,10 +7,12 @@ all:libutil.a libmyblas.a
 
 libutil.a: utilities.h $(OBJU)
 	libtool --mode=link ${CC} -o $@ $(OBJU)
-	cp -f utilities.h /home/helenbrk/codes/include/
-	mv -f libutil.a /home/helenbrk/codes/lib/
+#	ar -r $@ $(OBJU)
+	cp -f utilities.h $(HOME)/codes/include/
+	mv -f libutil.a $(HOME)/codes/lib/
 
 libmyblas.a: myblas.h $(OBJM)
 	libtool --mode=link ${CC} -o $@ $(OBJM)
-	cp -f myblas.h /home/helenbrk/codes/include/
-	mv -f libmyblas.a /home/helenbrk/codes/lib/
+#	ar -r $@ $(OBJM)
+	cp -f myblas.h $(HOME)/codes/include/
+	mv -f libmyblas.a $(HOME)/codes/lib/
