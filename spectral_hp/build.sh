@@ -5,12 +5,12 @@ SYS=$(uname)
 echo '
 OBJ = allocate.o copy.o tobasis.o gtol.o output.o curvinit.o ptprobe.o mg_alloc.o \
 rsdl.o minvrt.o movco.o movfin.o tstep.o nstage.o bdry.o tadvance.o length.o adapt.o \
-surface.o drag.o block.o blocks.o rblocks.o main.o initfunc.o
+surface.o drag.o block.o blocks.o rblocks.o main.o initfunc.o l2error.o
 VIZ = pv3routines.o
 MYLIB = -L$(HOME)/Codes/lib -lutil -lmyblas -lmesh -lquad -lbasis
 ' > makefile
 
-if [ $SYS = "linux-gnu" ]; then
+if [ $SYS = "Linux" ]; then
 
 echo '
 PVLIB = -L/usr/local/pV3/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3 -lgpvm3 -lpvm3

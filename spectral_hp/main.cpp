@@ -14,7 +14,6 @@
 #include <string.h>
 #include <time.h>
 
-
 #ifdef PV3
 extern "C" int MAINPROG(int argc, char **argv);
 int MAINPROG(int argc, char**argv) {
@@ -47,6 +46,20 @@ int main(int argc, char **argv) {
    myblock.init(argv[1],0);
    return(0);
 #endif
+
+#ifdef FINDMAX
+   hpbasis b;
+   spectral_hp hp;
+   b.initialize(4,5);
+   hp.in_mesh(argv[1],grid,1.0);
+   hp.allocate(b);
+   hp.input(argv[1],tecplot);
+   hp.output("test",tecplot);
+   hp.output("test",text);
+   hp.findmaxy(IFCE_MASK);
+#endif
+   
+   
 }
 
 

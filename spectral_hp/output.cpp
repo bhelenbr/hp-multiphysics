@@ -12,6 +12,7 @@
 #include<assert.h>
 #include<stdlib.h>
 #include <utilities.h>
+#include <myblas.h>
 
 void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ) {
    char fnmapp[100];
@@ -223,6 +224,8 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
    int bnum,innum,intyp,v0;
    FILE *in;
    char buffer[200];
+   char trans[] = "T";
+
    
    switch(typ) {
    
@@ -324,6 +327,153 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          fclose(in);
          break;
 
+      case(tecplot):
+         /* CAN ONLY DO THIS IF HAVE MESH FILE */
+         strcpy(buffer,name);
+         strcat(buffer,".dat");
+         in = fopen(buffer,"r");
+         if (in == NULL ) {
+            printf("couldn't open tecplot input file %s\n",name);
+            exit(1);
+         }
+         fscanf(in,"%*[^\n]\n");
+
+         for(i=0;i<nvrtx;++i) {
+            fscanf(in,"%*e %*e");
+            for(n=0;n<NV;++n)
+               fscanf(in,"%le ",&g.v[i][n]);
+            fscanf(in,"\n");
+         }
+         
+         if (b.sm < 1) return;
+            
+         FLT temp,matrix[MXTM][MXTM];
+         int sind,info,ipiv[2*MXTM];
+            
+         /* REVERSE OUTPUTING PROCESS */
+         for(m=0;m<b.sm;++m)
+            for(n=0;n<b.sm;++n)
+               matrix[n][m] = b.lgrnge1d[m+2][n+1];
+            
+         GETRF(b.sm,b.sm,matrix[0],MXTM,ipiv,info);
+         if (info != 0) {
+            printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+            exit(1);
+         }
+            
+         for(sind=0;sind<nside;++sind) {
+            if (sinfo[sind] < 0) {
+               ugtouht1d(sind,g);
+               for(n=0;n<NV;++n)
+                  b.proj1d_leg(uht[n],u[n][0]);
+               
+               for(m=0;m<b.sm;++m) {
+                  fscanf(in,"%*e %*e");
+                  for(n=0;n<NV;++n) {
+                     fscanf(in,"%le ",&temp);
+                     u[n][0][m+1] -= temp;
+                  }
+                  fscanf(in,"\n");
+               }
+               for(n=0;n<NV;++n) {
+                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
+                  indx = sind*b.sm;
+                  for(m=0;m<b.sm;++m)
+                     g.s[indx+m][n] = -u[n][0][1+m];
+               }
+            }
+            else {
+               crdtocht1d(sind,vin,bin);
+               for(n=0;n<ND;++n)
+                  b.proj1d_leg(cht[n],crd[n][0]);
+               
+               ugtouht1d(sind,g);
+               for(n=0;n<NV;++n)
+                  b.proj1d_leg(uht[n],u[n][0]);
+               
+               for(m=0;m<b.sm;++m) {
+                  for(n=0;n<ND;++n) {
+                     fscanf(in,"%le",&temp);
+                     crd[n][0][m+1] -= temp;
+                  }
+                  
+                  for(n=0;n<NV;++n) {
+                     fscanf(in,"%le",&temp);
+                     u[n][0][m+1] -= temp;
+                  }
+                  fscanf(in,"\n");
+               }
+               for(n=0;n<NV;++n) {
+                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
+                  indx = sind*b.sm;
+                  for(m=0;m<b.sm;++m)
+                     g.s[indx+m][n] = -u[n][0][1+m];
+               }
+               
+               bnum = (-stri[sind][1]>>16) -1;
+               indx = (-stri[sind][1]&0xFFFF)*sm0;
+               for(n=0;n<ND;++n) {
+                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&crd[n][0][1],MXTM,info);
+                  for(m=0;m<b.sm;++m)
+                     binfo[bnum][indx+m].curv[n] = -crd[n][0][1+m];
+               }
+            }
+         }
+            
+         if (b.im < 1) return;
+         
+         int tind;
+         
+         for(i=0;i<ntri*b.im;++i)
+            for(n=0;n<NV;++n)
+               g.i[i][n] = 0.0;
+         
+         /* REVERSE OUTPUTING PROCESS */
+         for(m=0;m<b.im;++m) {
+            n = 0;
+            for(i=1;i<b.sm;++i) {
+               for(j=1;j<b.sm-(i-1);++j) {
+                  matrix[n++][m] = b.lgrnge[m+b.bm][i][j];
+               }
+            }
+         }
+    
+         GETRF(b.im,b.im,matrix[0],MXTM,ipiv,info);
+         if (info != 0) {
+            printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+            exit(1);
+         }
+
+         for(tind=0;tind<ntri;++tind) {
+            ugtouht(tind);
+            for(n=0;n<NV;++n)
+               b.proj_leg(uht[n],u[n]);
+            
+            m = 0;
+            for(i=1;i<b.sm;++i) {
+               for(j=1;j<b.sm-(i-1);++j) {
+                  for(n=0;n<ND;++n)
+                     uht[n][m] = u[n][i][j];
+                  for(n=0;n<ND;++n)
+                     fscanf(in,"%*e ");
+                  for(n=0;n<NV;++n) {
+                     fscanf(in,"%le ",&temp);   
+                     uht[n][m] -= temp;
+                  }
+                  fscanf(in,"\n");
+                  ++m;
+               }
+            }
+            for(n=0;n<NV;++n) {
+               GETRS(trans,b.im,1,matrix[0],MXTM,ipiv,uht[n],MXTM,info);
+               indx = tind*b.im;
+               for(m=0;m<b.im;++m)
+                  g.i[indx+m][n] = -uht[n][m];
+            }
+         }            
+               
+         break;
+               
       default:
          printf("Spectral_hp input of that filetype is not supported\n");
          exit(1);

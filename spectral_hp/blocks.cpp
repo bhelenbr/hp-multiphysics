@@ -554,8 +554,13 @@ void blocks::go() {
       fout = fopen("dropdata.dat","w");
       fprintf(fout,"VARIABLES=\"File\" \"Dens\" \"mu\" \"Re\" \"We\" \"Oh\" \"Cd\" \"Eo\" \"E\" \"g\" \"dydt\" \"Scap\"\n");
    }
+   
    FLT aratioold = 1.0, aratio = 1.0;
-   FLT gold = hp_mgrid::g/factor;
+   int ind;
+   FLT maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
+   ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
+   ind = blk[1].grd[0].svrtx[ind][0];
+   aratioold = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
    FLT ratio;
 #endif
    
@@ -599,16 +604,11 @@ void blocks::go() {
          
 #ifdef PARAMETERLOOP
          /* FIND MAXIMUM WIDTH */
-         FLT maxw;
          int scap;
-         int ind;
          scap = 0;
-         maxw = 0.0;
-         for(int temp = 0; temp < blk[1].grd[0].sbdry[0].num;++temp) {
-            ind = blk[1].grd[0].sbdry[0].el[temp];
-            ind = blk[1].grd[0].svrtx[ind][0];
-            maxw = MAX(maxw,blk[1].grd[0].vrtx[ind][0]);
-         }
+         maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
+         ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
+         ind = blk[1].grd[0].svrtx[ind][0];
          if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;      
          aratio = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
          fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
@@ -622,7 +622,6 @@ void blocks::go() {
             printf("#factor change %e\n",factor);
 	 }
          aratioold = aratio;
-         gold = hp_mgrid::g;
          hp_mgrid::g=hp_mgrid::g*factor;
 #endif
       }

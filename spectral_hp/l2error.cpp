@@ -8,6 +8,7 @@
  */
 
 #include "spectral_hp.h"
+#include <utilities.h>
 
 void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 	int i,j,n,tind,loc[NV];
@@ -66,4 +67,72 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 		
 	return;
 }
+
+FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
+   FLT ddpsi1, ddpsi2, psil, psir;
+   FLT xp[ND], dx[ND];
+   int bnum, v0, v1, sind;
+   
+   FLT max = 0.0;
+   
+   for(bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&type)) continue;
+      
+      v0 = svrtx[sbdry[bnum].el[0]][0];
+      v1 = svrtx[sbdry[bnum].el[sbdry[bnum].num-1]][1];
+      /* CHECK IF PERIODIC */
+      ddpsi2 = 0.0;
+      if (v0 == v1) {
+         sind = sbdry[bnum].el[sbdry[bnum].num-1];
+         crdtocht(sind);
+         b.ptprobe1d(ND, cht, xp, dx, 1.0);
+         ddpsi2 = (*fxy)(dx);
+      }
+      else {
+         for(int i=0;i<nvbd;++i) {
+            if (vbdry[i].type&(COMX_MASK+COMY_MASK) && vbdry[i].el[0] == v0) {
+               sind = sbdry[bnum].el[sbdry[bnum].num-1];
+               crdtocht1d(sind);
+               b.ptprobe1d(ND, cht, xp, dx, 1.0);
+               ddpsi2 = (*fxy)(dx);
+            }
+         } 
+      }
+
+      for(int indx=0;indx<sbdry[bnum].num;++indx) {
+         sind = sbdry[bnum].el[indx];
+         crdtocht1d(sind);
+         b.ptprobe1d(ND, cht, xp, dx, -1.0);
+         ddpsi1 = (*fxy)(dx);
+         if (ddpsi1 * ddpsi2 < 0.0) {
+            v0 = svrtx[sbdry[bnum].el[indx]][0];
+            max = MAX(max,(*fxy)(vrtx[v0]));
+            printf("#LOCAL MAX: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
+         }
+         b.ptprobe1d(ND, cht, xp, dx, 1.0);
+         ddpsi2 = (*fxy)(dx);
+         if (ddpsi1 *ddpsi2 < 0.0) {
+            /* INTERIOR MAXIMUM */
+            psil = -1.0;
+            psir = 1.0;
+            while (psir-psil > 1.0e-10) {
+               b.ptprobe1d(ND, cht, xp, dx, 0.5*(psil +psir));
+               if ((*fxy)(dx)*ddpsi1 < 0.0) 
+                  psir = 0.5*(psil+psir);
+               else
+                  psil = 0.5*(psil+psir);
+            }
+            max = MAX(max,(*fxy)(xp));
+            printf("#LOCAL MAX: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
+         }  
+      }
+   }
+   return(max);
+}
+
+static FLT fx(FLT xp[ND]) { return(xp[0]);}
+static FLT fy(FLT xp[ND]) { return(xp[1]);}
+FLT spectral_hp::findmaxx(int type) {return(findmax(type,&fx));}
+FLT spectral_hp::findmaxy(int type) {return(findmax(type,&fy));} 
+   
 
