@@ -13,6 +13,10 @@
 #ifdef LAYER
 extern FLT body[2];
 #endif
+
+#ifdef DROP
+extern FLT dydt;
+#endif
    
 void hp_mgrid::rsdl(int stage, int mgrid) {
    int i,j,n,tind;
@@ -94,10 +98,15 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
 
       /* CALCULATE MESH VELOCITY */
-      for(i=0;i<b.gpx;++i)
-         for(j=0;j<b.gpn;++j)
+      for(i=0;i<b.gpx;++i) {
+         for(j=0;j<b.gpn;++j) {
             for(n=0;n<ND;++n)
                mvel[n][i][j] = bd[0]*crd[n][i][j] +u[n][i][j];
+#ifdef DROP
+            mvel[1][i][j] += dydt;
+#endif
+         }
+      }
 
       /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
       /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
@@ -152,9 +161,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
       /* NEGATIVE REAL TERMS */
       if (beta[stage] > 0.0) {
-            
-         /* TIME DERIVATIVE TERMS */
-         if (!mgrid) {         
+         /* TIME DERIVATIVE TERMS */ 
+         if (!mgrid) {
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
                   cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
@@ -306,17 +314,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
    }
 
-   /*
-   for(i=0;i<nvrtx;++i)
-      printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
-      
-   for(i=0;i<nside*b.sm;++i)
-      printf("%d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
-
-   for(i=0;i<ntri*b.im;++i)
-      printf("%d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]);      
-   */      
-
    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
@@ -328,11 +325,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
    for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
-         gbl->res.i[i][n] += gbl->vf.i[i][n];         
-      
+         gbl->res.i[i][n] += gbl->vf.i[i][n];     
+
    /* ADD IN BOUNDARY FLUXES */
    addbflux(mgrid);
-
+      
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
 /*********************************************/   
@@ -346,7 +343,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                         
          for(i=0;i<nside*b.sm;++i)
             for(n=0;n<NV;++n)
-               dres[log2p].s[i][n] = fadd*gbl->res0.s[i][n] -gbl->res.s[i][n];        
+               dres[log2p].s[i][n] = fadd*gbl->res0.s[i][n] -gbl->res.s[i][n];     
       
          for(i=0;i<ntri*b.im;++i)
             for(n=0;n<NV;++n)
