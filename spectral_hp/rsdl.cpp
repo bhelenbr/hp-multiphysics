@@ -154,7 +154,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 
-                  /* TEMPORARY FOR INERTIALESS FLOW */
 #ifdef INERTIALESS
                   res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
@@ -178,7 +177,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 
-                  /* TEMPORARY FOR INERTIALESS FLOW */
 #ifdef INERTIALESS
                   res[0][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];

@@ -10,7 +10,7 @@ class block {
       struct surface_glbls *sgbl;
       struct r_mesh_glbls rgbl;
       class hp_mgrid *grd;
-      static class hp_mgrid temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
+      static class hp_mgrid temp_hp; // SOLUTION STORAGE FOR ADAPTION
       friend class blocks;
       
    public:
