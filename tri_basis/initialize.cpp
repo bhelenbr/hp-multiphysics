@@ -173,8 +173,13 @@ void hpbasis::initialize_values(void)
 
    /* SIDE 1 IPOLY = 6 FOR JACOBI POLYNOMIALS  */
    ipoly = 6;
+#ifdef MORTHOGONAL
+   al = 2.0;
+   be = 2.0;
+#else
    al = 1.0;
    be = 1.0;
+#endif
    ierr = recur(sm+1,ipoly,al,be,a0[0],b0[0]);
    if (ierr != 0) {
       printf("recur #3 error %d\n",ierr);
@@ -268,8 +273,13 @@ void hpbasis::initialize_values(void)
    /* RECURSION RELATION FOR SIDE MODES */
    /* SIDE 2 IPOLY = 6 FOR JACOBI   */
    ipoly = 6;
+#ifdef MORTHOGONAL
+   al = 2.0;
+   be = 2.0;
+#else
    al = 1.0;
    be = 1.0;
+#endif
    ierr = recur(sm+1,ipoly,al,be,a0[1],b0[1]);
    if (ierr != 0) {
       printf("recur #3 error %d\n",ierr);
@@ -280,8 +290,13 @@ void hpbasis::initialize_values(void)
    for(m = 2; m< sm+1;++m) {      
    /* CALCULATE RECURSION RELATION FOR P^(2m-1,1)(s) SIDE 1 IPOLY = 6 FOR JACOBI     */
       ipoly = 6;
+#ifdef MORTHOGONAL
+      al = 2.*m+1;
+      be = 2.0;
+#else
       al = 2.*m-1;
       be = 1.0;
+#endif
       ierr = recur(sm+2-m,ipoly,al,be,a0[m],b0[m]);
       if (ierr != 0) {
          printf("recur #4 error %d\n",ierr);

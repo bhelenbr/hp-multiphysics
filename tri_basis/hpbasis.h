@@ -18,6 +18,7 @@
 #endif
 
 #define MXTM 100
+#define NO_MORTHOGONAL
 
 class hpbasis {
    public:
@@ -92,6 +93,7 @@ class hpbasis {
       inline void initialize(int pdegree) { initialize(pdegree, pdegree+1);}
       static inline int smode(int p1) {return(p1-1);}
       static inline int imode(int p1) {return((p1-2)*(p1-1)/2);}
+      static inline int tmode(int p1) {return((p1+2)*(p1+1)/2);}
       /* PROJECT WITH R & S DERIVATIVES */
       void proj(FLT *lin, FLT **f, FLT **dr, FLT **ds);
       /* PROJECT ONLY VALUE */
