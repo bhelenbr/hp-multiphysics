@@ -68,13 +68,47 @@ void hp_mgrid::setksprg1d() {
          }
       }
    }
+   
+   
    return;
 }
+void hp_mgrid::surfksrc1d() {
+   int i,bnum;
+   class surface *srf;
+
+   for(bnum=0;bnum<nsbd;++bnum) {
+      if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
+         srf = static_cast<class surface *>(sbdry[bnum].misc);
+         if (srf != NULL) {
+/*				ZERO TANGENTIAL MESH MOVEMENT SOURCE */   
+            for(i=0;i<sbdry[bnum].num+1;++i)
+               srf->vdres[log2p][i][0] = 0.0;
+
+            for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+               srf->sdres[log2p][i][0] = 0.0;
+
+            surfrsdl(bnum, 0);
+            
+/*				TANGENTIAL MESH MOVEMENT SOURCE */   
+            for(i=0;i<sbdry[bnum].num+1;++i)
+               srf->vdres[log2p][i][0] = -srf->gbl->vres[i][0];
+
+            for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+               srf->sdres[log2p][i][0] = -srf->gbl->sres[i][0];
+         }
+      }
+   }
+   
+   
+   return;
+}
+
+
 
 void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 	static int i,m,n,sind,indx,indx1,count;
 	static FLT norm[ND], jcb, tau, tabs;
-	static FLT dnormdt, hsm;
+	static FLT dnormdt = 0.0, hsm;
    FLT sigor, drhor;
    class surface *srf;
 
@@ -122,7 +156,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          uht[n][1] = srf->vug[indx+1][n];
       }
       if (b.sm > 0) {
-         indx1 = indx*b.sm;
+         indx1 = indx*sm0;
          for(m=0;m<b.sm;++m)
             for(n=0;n<ND;++n)
                uht[n][m+2] = srf->sug[indx1 +m][n];
@@ -137,16 +171,17 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 
       ugtouht1d(sind);
       for(n=0;n<ND;++n)
-         b.proj1d(uht[n],u[n][0]);      
-
+         b.proj1d(uht[n],u[n][0]);   
+         
       for(i=0;i<b.gpx;++i) {
          norm[0] =  dcrd[1][0][0][i];
          norm[1] = -dcrd[0][0][0][i];
          jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+         
 /*			FIGURE OUT WHAT TO DO HERE FOR RELATIVE VELOCITY STORED IN CRD[N][1]*/
          for(n=0;n<ND;++n)
             crd[n][1][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +crd[n][1][i] +dnormdt*norm[n]/jcb); 
-            
+
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
          tabs = fabs(tau) + 10.*EPSILON;
@@ -157,7 +192,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          res[1][0][i] = -(crd[0][1][i]*norm[0] +crd[1][1][i]*norm[1]);
          res[1][1][i] = res[1][0][i]*tau;
 
-/*			SURFACE TENSION SOURCE TERM */
+/*			SURFACE TENSION SOURCE TERM */ 
          u[0][0][i] = -srf->gbl->sigma*norm[1]/jcb;
          u[0][1][i] = +(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
          u[1][0][i] = +srf->gbl->sigma*norm[0]/jcb;
@@ -200,7 +235,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       for(n=0;n<ND;++n)
          binfo[bnum][count].flx[n] = lf[n][1];
    }
-
+      
 /************************************************/
 /*	MODIFY SURFACE RESIDUALS ON COARSER MESHES	*/
 /************************************************/	
@@ -226,13 +261,21 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
    }
    else {
 /*		ADD TANGENTIAL MESH MOVEMENT SOURCE */   
-//      for(i=0;i<sbdry[bnum].num+1;++i) TEMPORARY
-//         srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
+/*   	for(i=0;i<sbdry[bnum].num+1;++i)
+         srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
 
- //     for(i=0;i<sbdry[bnum].num*b.sm;++i) 
- //        srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
-   }
-   
+      for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+         srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
+*/   }
+
+/*
+      for(i=0;i<sbdry[bnum].num+1;++i)
+            printf("res: %f %f\n",srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
+            
+      for(i=0;i<sbdry[bnum].num*b.sm;++i)
+         printf("res: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
+*/
+
    return;
 }
 
@@ -368,9 +411,6 @@ void hp_mgrid::surfinvrt2(int bnum) {
          srf->gbl->vres[0][1] = 0.0;
    }       
    
-//   for(i=0;i<=end;++i)
-//      printf("%d %f %f\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
-   
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
       if (vbdry[i].type&(PRDX_MASK +SYMM_MASK)) {
@@ -379,6 +419,9 @@ void hp_mgrid::surfinvrt2(int bnum) {
       if (vbdry[i].type&PRDY_MASK)
          srf->gbl->vres[end][1] = 0.0;
    }   
+   
+//   for(i=0;i<=end;++i)
+//      printf("%d %f %f\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
 	
 /*	SOLVE FOR SIDE MODES */
 	if (b.sm > 0) {
@@ -393,7 +436,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
 				srf->gbl->sres[indx1][0] = temp;
             ++indx1;
          }
-			
+         
          indx1 -= b.sm;
          for(m=0;m<b.sm;++m) {
             for(n=0;n<ND;++n) {
@@ -405,6 +448,10 @@ void hp_mgrid::surfinvrt2(int bnum) {
 		}
 	}
    
+//   for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+//      printf("s: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
+   
+         
    return;
 }
 
@@ -675,7 +722,7 @@ void hp_mgrid::surfnstage1(int bnum) {
          srf->gbl->vug0[i][n] = srf->vug[i][n];
          
    if (b.sm > 0) {
-      for(i=0;i<sbdry[bnum].num*b.sm;++i)
+      for(i=0;i<sbdry[bnum].num*sm0;++i)
          for(n=0;n<ND;++n)
             srf->gbl->sug0[i][n] = srf->sug[i][n];
    }
@@ -684,7 +731,7 @@ void hp_mgrid::surfnstage1(int bnum) {
 }
 
 void hp_mgrid::surfnstage2(int bnum, int stage) {
-   int i,n;
+   int i,m,n,indx,indx1;
    static class surface *srf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
@@ -696,9 +743,17 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    }
 
    if (b.sm > 0) {
-      for(i=0;i<sbdry[bnum].num*b.sm;++i)
-         for(n=0;n<ND;++n)
-            srf->sug[i][n] = srf->gbl->sug0[i][n] -alpha[stage]*srf->gbl->sres[i][n];
+      indx = 0;
+      indx1 = 0;
+      for(i=0;i<sbdry[bnum].num;++i) {
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<ND;++n)
+               srf->sug[indx1+m][n] = srf->gbl->sug0[indx1+m][n] -alpha[stage]*srf->gbl->sres[indx][n];
+            ++indx;
+            ++indx1;
+         }
+         indx1 += sm0 -b.sm;
+      }
    }
    
    return;

@@ -54,8 +54,8 @@ void hp_mgrid::length1() {
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
       if (fltwk[i] <= tol || fltwk[i] >= 1./tol) {
-//      	fltwk[i] = MAX(0.5,fltwk[i]);
-//      	fltwk[i] = MIN(2.0,fltwk[i]);
+      	fltwk[i] = MAX(0.5,fltwk[i]);
+      	fltwk[i] = MIN(2.0,fltwk[i]);
          vlngth[i] /= fltwk[i];
 //         vlngth[i] = MIN(vlngth[i],gbl->maxlength);
 //         vlngth[i] = MAX(vlngth[i],gbl->minlength);
@@ -64,7 +64,7 @@ void hp_mgrid::length1() {
 
 /*	SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & COMY_MASK) {
+      if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
@@ -88,7 +88,7 @@ void hp_mgrid::length_mp() {
    class mesh *tgt;
    
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & COMY_MASK) {
+      if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
          count = 0;
 /*			RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {

@@ -875,7 +875,7 @@ void hpbasis::legpt()
       for(j=1;j<sm-(i-1);++j) {
   			s = -1 +2.0*((FLT) j)/(FLT)(sm+1);
   			r = -1 +2.0*((FLT) i)/(FLT)(sm+1);
-  			x = 2.0*(1+x)/(1-s) -1.0;
+  			x = 2.0*(1+r)/(1-s) -1.0;
          eta = s;
   					
 /*			CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */

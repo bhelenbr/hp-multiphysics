@@ -139,7 +139,7 @@ void hp_mgrid::tadvance() {
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
+         for(j=0;j<sbdry[i].num*b.sm;++j) {
             for(n=0;n<ND;++n) {
                gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
                for(step=0;step<nstep-1;++step)
@@ -157,7 +157,7 @@ void hp_mgrid::tadvance() {
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
-         for(j=0;j<sbdry[i].num;++j) 
+         for(j=0;j<sbdry[i].num*b.sm;++j) 
             for(step=nstep-2;step>=1;--step)
                   for(n=0;n<ND;++n)
                      gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
@@ -173,7 +173,7 @@ void hp_mgrid::tadvance() {
             
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
+         for(j=0;j<sbdry[i].num*b.sm;++j) {
             for(n=0;n<ND;++n) {
                temp = binfo[i][j].curv[n] -gbl->binfobd[0][i][j].curv[n];
                gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
@@ -211,11 +211,11 @@ void hp_mgrid::getfdvrtdt() {
    for(i=0;i<nvrtx;++i) {
       tind = fine[i].tri;
 
-      for(n=0;n<NV;++n)
+      for(n=0;n<ND;++n)
          dvrtdt[i][n] = 0.0;
          
       for(j=0;j<3;++j) {
-         for(n=0;n<NV;++n)
+         for(n=0;n<ND;++n)
             dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
       }
    }

@@ -126,6 +126,7 @@ void block::tadvance() {
    
    grd[0].tadvance();
    grd[0].setksprg1d();
+//   grd[0].surfksrc1d();
    
    for(j=1;j<ngrid;++j) {
       grd[j].getfdvrtdt();

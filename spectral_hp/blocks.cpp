@@ -24,13 +24,8 @@ void blocks::init(char *file) {
 /*	READ FLOW ITERATIVE INFORMATION */
 /*	ITERATION CFL NUMBERS */
    fscanf(fp,"%*[^\n]");
-   printf("#FLOWCFL\n#");
-   for(i=0;i<=lg2pmax;++i) {
-      fscanf(fp,"%lf",&hp_mgrid::cfl[i]);
-      printf("%.2f\t",hp_mgrid::cfl[i]);
-   }
-   fscanf(fp,"%*[^\n]\n");
-   printf("\n");
+   fscanf(fp,"%lf%lf%lf\n",&hp_mgrid::cfl[0],&hp_mgrid::cfl[1],&hp_mgrid::cfl[2]);
+   printf("#FLOWCFL\n#%.2f\t%.2f\t%.2f\n",hp_mgrid::cfl[0],hp_mgrid::cfl[1],hp_mgrid::cfl[2]);
 
 /*	LOAD FADD, ADIS, CHARACTERITIC FLAG */   
    fscanf(fp,"%*[^\n]%lf %lf %d\n",&hp_mgrid::fadd,&hp_mgrid::adis,&hp_mgrid::charyes);
@@ -39,19 +34,12 @@ void blocks::init(char *file) {
 /* LOAD ADAPTATION INFORMATION */
    fscanf(fp,"%*[^\n]%d %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::tol);
    printf("#ADAPT\t\tTRNCERR\t\tTOLERANCE\n#%d\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::tol);
-
- 
  
 /*	READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
-   printf("#TANGENT/NORMAL SURFCFLS\n#");
-   for(i=0;i<=lg2pmax;++i) {
-      fscanf(fp,"%lf,%lf ",&surface::cfl[i][0],&surface::cfl[i][1]);
-      printf("%.2f,%.2f\t",surface::cfl[i][0],surface::cfl[i][1]);
-   }
-   fscanf(fp,"%*[^\n]\n");
-   printf("\n");
-   
+   fscanf(fp,"%lf,%lf%lf,%lf%lf,%lf\n",&surface::cfl[0][0],&surface::cfl[0][1],&surface::cfl[1][0],&surface::cfl[1][1],&surface::cfl[2][0],&surface::cfl[2][1]);
+   printf("#TANGENT/NORMAL SURFCFLS\n#%.2f,%.2f\t%.2f,%.2f\t%.2f,%.2f\n",surface::cfl[0][0],surface::cfl[0][1],surface::cfl[1][0],surface::cfl[1][1],surface::cfl[2][0],surface::cfl[2][1]);
+      
    fscanf(fp,"%*[^\n]%lf %lf\n",&surface::fadd[0],&surface::fadd[1]);
    printf("#TANGENT/NORMAL FADD\n#%0.2f\t%0.2f\n",surface::fadd[0],surface::fadd[1]); 
    
@@ -308,29 +296,44 @@ void blocks::output(int number, FILETYPE type=text) {
    char outname[20], bname[20];
 
    for(i=0;i<nblocks;++i) {
-      number_str(outname, "data", i, 1);
-      strcat(outname, ".");
+      number_str(bname,"data",number,3);
+      strcat(bname, ".");
+      number_str(outname, bname, i, 1);
 
 /*		OUTPUT SOLUTION */
-      number_str(bname,outname,number,3);
-      blk[i].grd[0].output(bname,type);
+      blk[i].grd[0].output(outname,type);
       
-/*		OUTPUT MESH */         
+/*		OUTPUT MESH */
+      number_str(bname,"mesh",number,3);
+      strcat(bname, ".");
+      number_str(outname, bname, i, 1);         
       blk[i].grd[0].mesh::setbcinfo();
-      blk[i].grd[0].out_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
+      blk[i].grd[0].out_mesh(outname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
       blk[i].grd[0].spectral_hp::setbcinfo();
+      
       if (adapt) {
-         strcpy(outname,bname);
-         strcat(outname,"vlg");
+         number_str(bname,"vlgth",number,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);
          blk[i].grd[0].outlength(outname,type);      
       }
       
 /*		OUTPUT UNSTEADY TIME HISTORY */
-      strcat(bname,".");
+      number_str(outname,"rstrtdata",number,3);
+      strcat(outname, ".");
+      number_str(bname, outname, i, 1);
       for(j=0;j<hp_mgrid::nstep-1;++j) {
          number_str(outname,bname,j,1);
          blk[i].grd[0].output(blk[i].gbl.ugbd[j],outname,type);
       }
+
+//      number_str(outname,"rstrtmesh",number,3);
+//      strcat(outname, ".");
+//      number_str(bname, outname, i, 1);
+//      for(j=0;j<hp_mgrid::nstep-1;++j) {
+//         number_str(outname,bname,j,1);
+//         blk[i].grd[0].output(blk[i].gbl.ugbd[j],outname,type);
+//      }
    }
    
    return;
@@ -356,12 +359,6 @@ void blocks::go() {
          output(tstep+1,text);
          output(tstep+1,tecplot);
       }
-      
-      if (adapt && tstep != ntstep-1) {
-         adaptation();
-         for(i=0;i<nblocks;++i)
-            blk[i].reconnect();
-      }       
 
       if (tstep == 0 && hp_mgrid::dti > 0.0) {
          hp_mgrid::nstep = 2;
@@ -376,6 +373,12 @@ void blocks::go() {
 //			hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
 //			hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
 //		}
+      
+      if (adapt && tstep != ntstep-1) {
+         adaptation();
+         for(i=0;i<nblocks;++i)
+            blk[i].reconnect();
+      }
    }
    
    return;
@@ -396,5 +399,12 @@ void blocks::adaptation() {
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].adapt(temp_hp,0.66);
       
+   blk[0].grd[0].mesh::setbcinfo();
+   blk[1].grd[0].mesh::setbcinfo();
+   blk[0].grd[0].out_mesh("adapt0");
+   blk[1].grd[0].out_mesh("adapt1");
+   blk[0].grd[0].setbcinfo();
+   blk[1].grd[0].setbcinfo();
+
    return;
 }

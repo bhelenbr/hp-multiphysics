@@ -43,7 +43,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             
       for(i=0;i<nsbd;++i)
          if (sbdry[i].type&CURV_MASK) 
-            for (j=0;j<sbdry[i].num;++j)
+            for (j=0;j<sbdry[i].num*b.sm;++j)
                binfostr[step][i][j] = gbl->binfobd[step][i][j];
    }
 
@@ -67,6 +67,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 /*	MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
    for(i=nvrt0-1;i>=nvrtx;--i) {
       if (vinfo[i] < 0) continue;
+      
       v0 = vinfo[i];
       for(n=0;n<NV;++n)
          ug.v[v0][n] = ug.v[i][n];
@@ -74,6 +75,10 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       for(step=0;step<nstep-1;++step)
          for(n=0;n<NV;++n)
             gbl->ugbd[step].v[v0][n] = gbl->ugbd[step].v[i][n];
+            
+      for(step=0;step<nstep-1;++step)
+         for(n=0;n<ND;++n)
+            gbl->vrtxbd[step][v0][n] = gbl->vrtxbd[step][i][n];
    }
    
 /*	CALCULATE SIDE LENGTH RATIO FOR REBAY */
@@ -315,9 +320,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         }
                         
                         for(step=0;step<nstep-1;++step) {
-                           str.crdtouht1d(sind,vrtxstr[step],binfostr[step]);;
+                           str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
                            str.b.ptprobe(ND,uht,upt);
-                           for(n=0;n<NV;++n)   
+                           for(n=0;n<ND;++n)   
                               bdwk[step][n][1][i] -= upt[n];
                         }                    
                      }     

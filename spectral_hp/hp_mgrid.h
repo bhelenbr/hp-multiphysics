@@ -132,6 +132,7 @@ class hp_mgrid : public spectral_hp {
       void surfugtovrt2();
 /*		SETUP SURFACE 1D SPRING CONSTANTS */
       void setksprg1d();
+      void surfksrc1d();
       void surfrsdl(int bnum, int mgrid);
       void surfinvrt1(int bnum);
       void surfinvrt2(int bnum);
