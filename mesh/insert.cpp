@@ -512,59 +512,30 @@ FOUND:
 }
 
 
-int mesh::findbdrytri(FLT *x, int vnear) const {
-   int i,j,vn,dir,stoptri,tin,tind;
+int mesh::findbdryside(FLT *x, int vnear) const {
+   int i,j,tin,tind,sind;
    
    /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
    tind = vtri[vnear];
-   stoptri = tind;
-   dir = 1;
-   ntdel = 0;
-   do {
-      for(vn=0;vn<3;++vn) 
-         if (tvrtx[tind][vn] == vnear) break;
-      
-      assert(vn != 3);
-      
-      tind1 = ttri[tind][(vn +dir)%3];
-      if (tind1 < 0) {
-         if (insidecircle(tside[tind].side[(vn+dir)%3],x) > 0.0) goto FOUND;
-         if (dir > 1) break;
-         /* REVERSE DIRECTION AND GO BACK TO START */
-         ++dir;
-         tind = vtri[vnear];
-         stoptri = -1;
-      }
-      tind = tind1;
-      
-      intwk1[tind] = 0;
-      tdel[ntdel++] = tind;
-      assert(ntdel < MAXLST -1);
-         
-   } while(tind != stoptri); 
-   
-   /* DIDN'T FIND TRIANGLE */
-   /* NEED TO SEARCH SURROUNDING TRIANGLES */
+   tdel[0] = tind;
+   ntdel = 1;
+   /* SEARCH TRIANGLES FOR BOUNDARY SIDE CONTAINING POINT */
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
          tind = ttri[tin][j];
-         if (tind < 0) continue;
+         if (tind < 0) {
+            sind = tside[tin].side[j];
+            if (insidecircle(sind,x) > 0.0) goto FOUND;
+            continue;
+         }
          if (intwk1[tind] == 0) continue;
          intwk1[tind] = 0;
          tdel[ntdel++] = tind; 
-         for(j=0;j<3;++j) {
-            if(ttri[tind][j] < 0) {
-               /* THIS IS A BOUNDARY SIDE */
-               /* CHECK IF CIRCLE CENTERED ON SIDE CENTER */
-               /* AND RADIUS SIDE LENGTH/2 CONTAINS POINT */
-               if (insidecircle(tside[tind].side[j],x) > 0.0) goto FOUND;
-            }
-         }
       }
       if (i >= maxsrch) break;
    }
-   tind = -1;
+   sind = -1;
    
 FOUND:
 
@@ -572,5 +543,5 @@ FOUND:
    for(i=0;i<ntdel;++i)
       intwk1[tdel[i]] = -1;
 
-   return(tind);
+   return(sind);
 }
