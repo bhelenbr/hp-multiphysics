@@ -71,7 +71,76 @@ NEXTTRISIDE:
    return;
 }
 
-/*	CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
+void mesh::createtsidestri(void) {
+   int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
+   
+   for(i=0;i<nvrtx;++i)
+      vinfo[i] = -1;
+      
+   for(i=0;i<nside;++i) {
+      v1 = svrtx[i][0];
+      v2 = svrtx[i][1];
+      minv = (v1 < v2 ? v1 : v2);
+      sind = vinfo[minv];
+      while (sind >= 0) {
+         sindprev = sind;
+         sind = sinfo[sind];
+      }
+      if (vinfo[minv] < 0)
+         vinfo[minv] = i;
+      else 
+         sinfo[sindprev] = i;
+      sinfo[i] = -1;
+   }
+
+   for(tind=0;tind<ntri;++tind) {
+      vout = tvrtx[tind][0];
+      v1 = tvrtx[tind][1];
+      v2 = tvrtx[tind][2];
+      for(j=0;j<3;++j) {
+/*			CHECK IF SIDE HAS BEEN CREATED ALREADY */
+         if (v2 > v1) {
+            minv = v1;
+            maxv = v2;
+            order = 0;
+         }
+         else {
+            minv = v2;
+            maxv = v1;
+            order = 1;
+         }
+         sind = vinfo[minv];
+         while (sind >= 0) {
+            if (maxv == svrtx[sind][1]) {
+               stri[sind][order] = tind;
+               tside[tind].side[j] = sind;
+               tside[tind].sign[j] = 1 -2*order;
+               goto NEXTTRISIDE;
+            }
+            if (maxv == svrtx[sind][0]) {
+               stri[sind][1-order] = tind;
+               tside[tind].side[j] = sind;
+               tside[tind].sign[j] = 2*order -1;
+               goto NEXTTRISIDE;
+            }
+            sind = sinfo[sind];
+         }
+         printf("didn't match side %d %d\n",v1,v2);
+         exit(1);
+         
+NEXTTRISIDE:
+         temp = vout;
+         vout = v1;
+         v1 = v2;
+         v2 = temp;
+      }
+   }
+
+   return;
+}
+
+
+
 void mesh::createvtri(void) {
 	int i,tind;
 	

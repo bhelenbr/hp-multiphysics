@@ -40,7 +40,7 @@
 #include<quadtree.h>
 
 
-enum FILETYPE {easymesh, gambit, tecplot, text, binary};
+enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary};
 
 /*	THIS ROUTINE MUST BE SUPPLIED IF USING CURVED BOUNDARIES */
 /*	GIVEN AN INPUT X,Y SHOULD MOVE POINT ONTO CURVED SURFACE */
@@ -117,6 +117,7 @@ class mesh {
       void bdrygroupreorder(void);
       void bdrylabel(void);
       void createsideinfo(void);
+      void createtsidestri(void);
       void createttri(void);
       void createvtri(void);
       void treeinit();

@@ -29,11 +29,11 @@ int main(int argc, char *argv[]) {
    char *out2[2];
    mesh x,y;
    
-   x.in_mesh("/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/DROP/LONG/drop3b");
-   y.coarsen(x);
+   x.in_mesh("/Users/helenbrk/Codes/grids/KOVA/kova8");
+   x.out_mesh("test",grid);
+   y.in_mesh("test",grid);
    y.setbcinfo();
-   y.smooth_cofa(2);
-   y.out_mesh("/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/DROP/LONG/drop2b");
+   y.out_mesh("test2");
    return(0);
    
 /*	START CLOCK TIMER */
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 //	inname[0] = "../../grids/TIM/tim";
 //	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";
 
-   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
+   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
    
    z.init(1,3,inname,easymesh,10.0);
    

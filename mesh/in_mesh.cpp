@@ -270,6 +270,68 @@ next1:      continue;
 
             break;
             
+         case(grid):
+            strcpy(grd_app,filename);
+            strcat(grd_app,".grd");
+            grd = fopen(grd_app,"r");
+            if (grd==NULL) {
+                    printf("couldn't open file: %s\n",grd_app);
+                    exit(1);
+            }
+            /*	HEADER LINES */
+            fscanf(grd,"nvrtx: %d\t nside: %d\t ntri: %d\n",&nvrtx,&nside,&ntri);
+            
+            if (!initialized) {
+               allocate(nside + (int) (grwfac*nside));
+               vin = vrtx;
+            }
+            else if (nside > maxvst) {
+               printf("mesh is too large\n");
+               exit(1);
+            }
+   
+            /*	VRTX INFO */                        
+            for(i=0;i<nvrtx;++i)
+               fscanf(grd,"%lf %lf\n",&vin[i][0],&vin[i][1]);
+                     
+            /* SIDE INFO */
+            for(i=0;i<nside;++i)
+               fscanf(grd,"%d %d\n",&svrtx[i][0],&svrtx[i][1]);
+   
+            /*	THEN TRI INFO */
+            for(i=0;i<ntri;++i)
+               fscanf(grd,"%d %d %d\n",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
+               
+            /* CREATE TSIDE & STRI */
+            createtsidestri();
+   
+            /*	SIDE BOUNDARY INFO HEADER */
+            fscanf(grd,"nsbd: %d\n",&nsbd);
+            
+            count = 0;
+            for(i=0;i<nsbd;++i) {
+               fscanf(grd,"type: %d\t number %d\n",&sbdry[i].type,&sbdry[i].num);
+               count += sbdry[i].num;
+            }
+            
+/*          ALLOCATE BOUNDARY STORAGE */
+            if (!initialized) bdryalloc(count + (int) (grwfac*count));
+            
+            for(i=0;i<nsbd;++i)
+               for(j=0;j<sbdry[i].num;++j)
+                  fscanf(grd,"%d\n",&sbdry[i].el[j]);
+                  
+            /*	VERTEX BOUNDARY INFO HEADER */
+            fscanf(grd,"nvbd: %d\n",&nvbd);
+            for(i=0;i<nvbd;++i)
+               fscanf(grd,"%d %d\n",&vbdry[i].type,&vbdry[i].num);
+            
+            for(i=0;i<nvbd;++i)
+               for(j=0;j<vbdry[i].num;++j)
+                  fscanf(grd,"%d\n",&vbdry[i].el[j]);
+            
+            break;
+            
          case(text):
             if (!initialized) {
                printf("to read in vertex positions only must first load mesh structure\n");
@@ -332,10 +394,6 @@ next1:      continue;
 /*	REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
    for(i=0;i<nsbd;++i) 
       bdrysidereorder(i);
-      
-/*	REORDER BOUNDARY GROUPS (MIN TYPE TO MAX TYPE) */
-/* THIS IS JUST TO ENSURE THAT RELOADING MESHES WON'T CHANGE ORDER */
-   
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
    printf("#Boundaries\n");
