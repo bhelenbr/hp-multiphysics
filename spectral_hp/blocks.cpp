@@ -76,7 +76,18 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    return;
 }
 
-void blocks::nstage(int grdnum, int sm) {
+void blocks::tadvance() {
+   int i;
+   
+   time = time +dt;
+   
+   for(i=0;i<nblocks;++i) 
+      blk[i].grd[0].setinflow();
+      
+   return;
+}
+
+void blocks::nstage(int grdnum, int sm, int mgrid) {
    static int i,stage,mode;
       
 /*****************************************/
@@ -95,7 +106,7 @@ void blocks::nstage(int grdnum, int sm) {
 
 /*		CALCULATE RESIDUAL */   
       for(i=0;i<nblocks;++i)
-         blk[i].grd[grdnum].rsdl(stage,grdnum);
+         blk[i].grd[grdnum].rsdl(stage,mgrid);
          
 /*		INVERT MASS MATRIX (4 STEP PROCESS) */
       for(i=0;i<nblocks;++i)
@@ -136,7 +147,7 @@ void blocks::cycle(int vw, int lvl = 0) {
                   
    for (i=0;i<vw;++i) {
 
-      nstage(lvl,base[bsnum].sm);
+      nstage(grid,base[bsnum].sm,lvl);
 
       if (lvl == mglvls-1) return;
       
@@ -190,4 +201,17 @@ void blocks::output(char *filename, FILETYPE filetype = text) {
    
    return;
 }
+
+void blocks::maxres(FLT mx[NV]) {
+   int i,n;
+   
+   for(n=0;n<NV;++n)
+      mx[n] = 0.0;
+      
+   for (i=0;i<nblocks;++i)
+      blk[i].grd[0].maxres(mx);
+      
+   return;
+}
+   
    

@@ -43,9 +43,18 @@ int main() {
    return(0);
  #endif
    
-   myblock.init(1, 1, 1, "../../grids/TIM/tim",easymesh,10);
+   myblock.init(1, 3, 1, "../../grids/TIM/tim",easymesh,10);
+   myblock.output("hope0",tecplot);
+
+   myblock.tadvance();
+   for(i=0;i<1;++i) {
+      myblock.cycle(1);
+      printf("%d ",i);
+      myblock.maxres();
+      printf("\n");
+   }
    
-   myblock.output("hope",tecplot);
+   myblock.output("hope1",tecplot);
 
    return(0);
 }

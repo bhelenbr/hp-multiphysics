@@ -39,17 +39,29 @@ class blocks {
       int mglvls;
       class block *blk;
       class hpbasis base[MXLG2P];
+      
+/*		THINGS FOR ALL BLOCKS */
+      FLT time, dt;
+      
+/*		5 STAGE UPDATE ON ALL BLOCKS */  
+      void nstage(int grdnum, int sm, int mgrid);
+
+/*		SET-UP COMMUNICATION BOUNDARIES */      
+      void findmatch();
+
 
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
-      void findmatch();
-
-/*		5 STAGE UPDATE ON ALL BLOCKS */  
-      void nstage(int grdnum, int sm);
+      
+/*		PREPARE FOR NEW TIMESTEP */
+      void tadvance();
 
 /*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);
+      
+/*		PRINT MAXIMUM RESIDUALS (NV) */
+      void maxres();
 
 /*		OUTPUT FINE MESH SOLUTION */
       void output(char *filename, FILETYPE filetype = text);

@@ -87,6 +87,9 @@ class hp_mgrid : public spectral_hp {
 /*		MGRID MESH POINTERS */
       class hp_mgrid *cmesh;
       class hp_mgrid *fmesh;
+      
+/*		SOME PRIVATE UTILITY FUNCTIONS */
+      void restouht_bdry(int tind); // USED IN MINVRT
 
    public:
       void allocate(struct hp_mgrid_glbls& ginit, int mgrid);
@@ -107,6 +110,9 @@ class hp_mgrid : public spectral_hp {
 /*		DETERMINE SOLUTION RESIDUAL */
       void rsdl(int stage, int mgrid);
       void rsdlp1(int stage, int mgrid);
+      
+/*		MEASURE SOLUTION RESIDUAL */
+      void maxres(FLT mx[NV]);
 
 /*		INVERT MASS MATRIX (4 STEP PROCESS WITH COMMUNICATION IN BETWEEN EACH STEP) */
       void minvrt1();

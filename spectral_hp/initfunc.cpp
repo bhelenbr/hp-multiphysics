@@ -16,7 +16,7 @@
 /***************************/
 /* INITIALIZATION FUNCTION */
 /***************************/
-FLT f1(int n, FLT x, FLT y) {
+FLT f2(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
          return(1 +exp(-10.*x*x));
@@ -24,6 +24,25 @@ FLT f1(int n, FLT x, FLT y) {
          return(1 +exp(-10.*(x*x)));
       case(2):
          return(1 +exp(-10.*(x*x)));
+   }
+   return(0.0);
+}
+
+FLT f1(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
+         if (r < 0.55) 
+            return(0.0);
+         else
+            return(1.0);
+      case(1):
+         return(0.0);
+      case(2):
+         return(0.0);
    }
    return(0.0);
 }

@@ -73,3 +73,22 @@ void hp_mgrid::allocate(struct hp_mgrid_glbls& ginit, int mgrid) {
    
    return;
 }
+
+void hp_mgrid::maxres(FLT mx[NV]) {
+   int i,n;
+   
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         mx[n] = MAX(mx[n],fabs(gbl.vres[i][n]));
+
+   for(i=0;i<nside*b.sm;++i)
+      for(n=0;n<NV;++n)
+         mx[n] = MAX(mx[n],fabs(gbl.sres[i][n]));
+
+   for(i=0;i<ntri*b.im;++i)
+      for(n=0;n<NV;++n)
+         mx[n] = MAX(mx[n],fabs(gbl.ires[i][n]));
+         
+   return;
+}
+   

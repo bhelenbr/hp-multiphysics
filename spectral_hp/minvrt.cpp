@@ -13,13 +13,13 @@ void hp_mgrid::minvrt1(void) {
       indx = 0;
 		for(sind = 0; sind<nside;++sind) {
 /*			SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */			
-			for (i=0; i<2; ++i) {
-				v0 = svrtx[sind][i];
-				for (k=0; k <b.sm; ++k) {
+         for (k=0; k <b.sm; ++k) {
+            for (i=0; i<2; ++i) {
+               v0 = svrtx[sind][i];
 					for(n=0;n<NV;++n)
 						gbl.vres[v0][n] -= b.sfmv[i][k]*gbl.sres[indx][n];
-               ++indx;
             }
+            ++indx;
 			}
 		}
 			
@@ -82,6 +82,10 @@ void hp_mgrid::minvrt2(void) {
 		gbl.vres[i][2] *= gbl.vdiagp[i];
 	}
 
+//   for(i=0;i<nvrtx;++i)
+//      printf("%d %f %f %f\n",i,gbl.vres[i][0],gbl.vres[i][1],gbl.vres[i][2]);
+      
+
 /*	REMOVE VERTEX CONTRIBUTION FROM INTERIOR & SIDE MODES */
 	if (b.sm > 0) {
 /*		SOLVE FOR SIDE MODES */
@@ -135,6 +139,7 @@ void hp_mgrid::minvrt3(int mode) {
       gbl.sres[indx][0] *= gbl.sdiagv[sind]*b.sdiag[mode];
       gbl.sres[indx][1] *= gbl.sdiagv[sind]*b.sdiag[mode];
       gbl.sres[indx][2] *= gbl.sdiagp[sind]*b.sdiag[mode];
+//      printf("%d %f %f %f\n",indx,gbl.sres[indx][0],gbl.sres[indx][1],gbl.sres[indx][2]);
       indx += b.sm;
    }
 
@@ -180,21 +185,68 @@ void hp_mgrid::minvrt4() {
       gbl.sres[indx][0] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
       gbl.sres[indx][1] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
       gbl.sres[indx][2] *= gbl.sdiagp[sind]*b.sdiag[b.sm-1];
-      indx += b.sm;
-   }					
+//      printf("%d %f %f %f\n",indx,gbl.sres[indx][0],gbl.sres[indx][1],gbl.sres[indx][2]);
 
+      indx += b.sm;
+   }
+   
 /*	SOLVE FOR INTERIOR MODES */			
    if (b.im > 0) {
       indx = 0;
       for(tind = 0; tind < ntri; ++tind) {
-         ugtouht_bdry(tind);
+         restouht_bdry(tind);
          for(k=0;k<b.im;++k) {
-            for (i=0;i<b.bm;++i)
+            for (i=0;i<b.bm;++i) 
                for(n=0;n<NV;++n) 
                   gbl.ires[indx][n] -= b.bfmi[i][k]*uht[n][i];
             ++indx;
          }
       }
+   }
+   
+   return;
+}
+
+void hp_mgrid::restouht_bdry(int tind) {
+	static int i,m,n,indx,cnt;
+	static int sign, msgn;
+	
+	for (i=0; i<3; ++i) {
+		indx = tvrtx[tind][i];
+		for(n=0; n<NV; ++n)
+			uht[n][i] = gbl.vres[indx][n];
+	}
+
+/* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+   cnt = 3;
+   indx = tside[tind].side[2]*sm0;
+   sign = tside[tind].sign[2];
+   msgn = 1;
+   for (m = 0; m < b.sm; ++m) {
+      for(n=0; n<NV; ++n)
+         uht[n][cnt] = msgn*gbl.sres[indx +m][n];
+      msgn *= sign;
+      ++cnt;
+   }
+   
+   indx = tside[tind].side[0]*sm0;
+   sign = tside[tind].sign[0];
+   msgn = 1;
+   for (m = 0; m < b.sm; ++m) {
+      for(n=0; n<NV; ++n)
+         uht[n][cnt] = msgn*gbl.sres[indx +m][n];
+      msgn *= sign;
+      ++cnt;
+   }
+   
+   indx = tside[tind].side[1]*sm0;
+   sign = tside[tind].sign[1];
+   msgn = 1;
+   for (m = 0; m < b.sm; ++m) {
+      for(n=0; n<NV; ++n)
+         uht[n][cnt] = msgn*gbl.sres[indx +m][n];
+      msgn *= sign;
+      ++cnt;
    }
    
    return;

@@ -9,10 +9,9 @@ int hp_mgrid::setfine(class hp_mgrid& tgt) {
 
 void hp_mgrid::getfres() {
    int i,j,k,m,n,tind,v0,indx,indx1;
-   
-//   fmesh->rcv(YDIR_MP,(FLT *) rg.res,0,1,2); 
-   
-   
+      
+   isfrst = true;
+
    if(p0 > 1) {
 /* 	TRANSFER IS ON FINE MESH */
 		for(i=0;i<nvrtx;++i)
@@ -83,8 +82,6 @@ void hp_mgrid::getfres() {
       for(n=0;n<NV;++n)
          vug_frst[i][n] = vug[i][n];
    }
-
-   isfrst = true;
 
    return;
 }

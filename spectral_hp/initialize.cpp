@@ -209,13 +209,13 @@ void hpbasis::initialize_values(void)
    ipoly = 6;
    al = 1.0;
    be = 0.0;
-   ierr = recur(gpn+1,ipoly,al,be,a0[1],b0[1]);
+   ierr = recur(gpn,ipoly,al,be,a0[1],b0[1]);
    if (ierr != 0) {
       printf("recur #2 error %d\n",ierr);
       return;
    }	
    
-   ierr = radau(gpn,a0[1],b0[1],-1.0,n0,wtn,e,e1,e2);		
+   ierr = radau(gpn-1,a0[1],b0[1],-1.0,n0,wtn,e,e1,e2);		
    if (ierr != 0) {
       printf("gauss #3 error %d\n",ierr);
       return;

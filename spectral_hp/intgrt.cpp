@@ -8,6 +8,7 @@
  */
 
 #include <hpbasis.h>
+#include<stdio.h>
 
 void hpbasis::intgrt(FLT **f, FLT *rslt) {
 	static int i,j,m,n,indx;

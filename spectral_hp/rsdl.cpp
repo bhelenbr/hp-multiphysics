@@ -25,10 +25,23 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
     for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
          gbl.ires[i][n] = 0.0;  
+         
+    for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         gbl.vvf[i][n] *= (1. -beta[stage]);
+
+    for(i=0;i<nside*b.sm;++i)
+      for(n=0;n<NV;++n)
+         gbl.svf[i][n]  *= (1. -beta[stage]);
+                 
+    for(i=0;i<ntri*b.im;++i)
+      for(n=0;n<NV;++n)
+         gbl.ivf[i][n]  *= (1. -beta[stage]);          
+         
 
 	for(tind = 0; tind<ntri;++tind) {
    
-      if (tinfo[tind] > -1) {
+      if (tinfo[tind] > -5) {
          crdtouht(tind);
          for(n=0;n<ND;++n)
             b.proj_bdry(uht[n], crd[n], dcrd[n][0], dcrd[n][1]);
@@ -68,7 +81,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 #endif
                du[2][0][i][j] = -dcrd[1][1][i][j]*fluxx +dcrd[0][1][i][j]*fluxy;
                du[2][1][i][j] = +dcrd[1][0][i][j]*fluxx -dcrd[0][0][i][j]*fluxy;
-   
+
                cv00[i][j] =  u[0][i][j]*du[2][0][i][j] -dcrd[1][1][i][j]*u[2][i][j];
                cv01[i][j] =  u[0][i][j]*du[2][1][i][j] +dcrd[1][0][i][j]*u[2][i][j];
                cv10[i][j] =  u[1][i][j]*du[2][0][i][j] +dcrd[0][1][i][j]*u[2][i][j];
@@ -250,7 +263,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
 /*	ADD IN BOUNDARY FLUXES */
    addbflux(mgrid);
-	
+
 /*********************************************/
 /*	MODIFY RESIDUALS ON COARSER MESHES			*/
 /*********************************************/	
@@ -280,8 +293,25 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             
 		for(i=0;i<ntri*b.im;++i) 
 			for(n=0;n<NV;++n)		
-				gbl.sres[i][n] += sdres[log2p][i][n];      
+				gbl.sres[i][n] += sdres[log2p][i][n];  
+            
+                
+#ifdef SKIP
+   for(i=0;i<nvrtx;++i)
+      printf("%d %f %f %f\n",i,gbl.vres[i][0],gbl.vres[i][1],gbl.vres[i][2]);
+
+   for(i=0;i<nside*b.sm;++i)
+         printf("%d %f %f %f\n",i,gbl.sres[i][0],gbl.sres[i][1],gbl.sres[i][2]);
+         
+   for(i=0;i<ntri*b.im;++i)
+      printf("%d %f %f %f\n",i,gbl.ires[i][0],gbl.ires[i][1],gbl.ires[i][2]);
+#endif
+
 	}
+   
+
+
+
    
 	return;
 }
