@@ -13,8 +13,10 @@
 #define FLT float
 #define EPSILON FLT_EPSILON
 #else
+#ifndef FLT
 #define FLT double
 #define EPSILON DBL_EPSILON
+#endif
 #endif
 
 #define MXTM 100
@@ -166,12 +168,12 @@ class hpbasis {
       void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
       
       /* 1D SIDE PROBE FUNCTIONS */
-      inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
+      inline void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
          ptvalues1d(x);
          ptprobe1d(nv,lin,f);
       }
       void ptprobe1d(int nv, FLT **lin, FLT *f);  // REUSES OLD VALUES OF X
-      inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx, FLT x) {    
+      inline void ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx, FLT x) {    
          ptvalues1d_deriv(x);
          ptprobe1d(nv,lin,f,dx);
       }

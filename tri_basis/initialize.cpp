@@ -7,7 +7,7 @@
  *
  */
  
- #define DEBUG
+#define NODEBUG
 
 #include<math.h>
 #include<utilities.h>
@@ -169,6 +169,8 @@ void hpbasis::initialize(int pdegree, int gpoints) {
       uht[m] = 1.0;
       
       proj1d(uht,u[0],dx[0]);
+      for(int j=0;j<gpx;++j)
+         dx1[0][j] = 0.0;
       derivx1d(u[0],dx1[0]);
       for(int i=0;i<gpx;++i)
          printf("T11D: %d %e %e\n",i,dx[0][i],dx1[0][i]);
@@ -660,19 +662,25 @@ void hpbasis::lumpinv(void) {
    char trans[] = "T", uplo[] = "U";
    
    /* ALLOCATE MASS MATRIX INVERSION VARIABLES */
-   mat_alloc(vfms,3,sm,FLT);
-   mat_alloc(sfmv,2,sm,FLT);            
-   vect_alloc(sdiag,sm,FLT);
-   tens_alloc(sfms,sm,sm-1,3,FLT);
-   mat_alloc(ifmb,bm,im,FLT);
-   mat_alloc(bfmi,bm,im,FLT);
-   mat_alloc(idiag,im,ibwth+1,FLT);
+   if (sm > 0) {
+      mat_alloc(vfms,3,sm,FLT);
+      mat_alloc(sfmv,2,sm,FLT);            
+      vect_alloc(sdiag,sm,FLT);
+   }
+   if (sm > 1) tens_alloc(sfms,sm-1,sm,3,FLT);
+   if (im > 0) {
+      mat_alloc(ifmb,bm,im,FLT);
+      mat_alloc(bfmi,bm,im,FLT);
+      mat_alloc(idiag,im,ibwth+1,FLT);
+   }
    mat_alloc(msi,bm,bm,FLT);
    
    /* ALLOCATE 1D MASS MATRIX INVERSION VARIABLES */
-   mat_alloc(vfms1d,2,sm,FLT);
-   mat_alloc(sfmv1d,2,sm,FLT);            
-   mat_alloc(sdiag1d,sm,sbwth+1,FLT);
+   if (sm > 0) {
+      mat_alloc(vfms1d,2,sm,FLT);
+      mat_alloc(sfmv1d,2,sm,FLT);            
+      mat_alloc(sdiag1d,sm,sbwth+1,FLT);
+   }
 
    /********************************************/   
    /* GENERATE MASS MATRIX                  */
@@ -1194,7 +1202,7 @@ void hpbasis::lumpinv(void) {
          }
       }
       printf("LI3 %2d:",k);
-      for(j=0;j<sm+2;++j)
+      for(j=1;j<sm+3;++j)
          printf("%+.4e  ",l[j]);
       printf("%+.4e  ",vdiag1d);
       printf("\n");
