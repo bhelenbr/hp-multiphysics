@@ -86,16 +86,16 @@ int mesh::msgpass(int phase) {
    int stop=1;
 
    for(int i=0;i<nsbd;++i) 
-      stop &= sbdry[i]->rcv(phase);
+      stop &= sbdry[i]->comm_transmit(phase);
    for(int i=0;i<nvbd;++i) 
-      stop &= vbdry[i]->rcv(phase);
+      stop &= vbdry[i]->comm_transmit(phase);
    
    
    if (!stop) {
       for(int i=0;i<nsbd;++i)
-         sbdry[i]->snd(phase+1);
+         sbdry[i]->comm_prepare(phase+1);
       for(int i=0;i<nvbd;++i)
-         vbdry[i]->snd(phase+1);
+         vbdry[i]->comm_prepare(phase+1);
    }
    
    return(stop);
@@ -111,9 +111,9 @@ void mesh::matchboundaries1() {
    
    /* FIRST PHASE OF SENDING */
    for(int i=0;i<nsbd;++i)
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(int i=0;i<nvbd;++i)
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
 }
 
 void mesh::matchboundaries2() {
@@ -134,9 +134,9 @@ void mesh::length1() {
    
 
    for(i=0;i<nsbd;++i)
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i)
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
 
    return;
    
@@ -261,6 +261,7 @@ void mesh::partition(const class mesh& xin, int npart) {
             /* BOUNDARY SIDE */
             bnum = (-indx>>16) -1;
             bel = -indx&0xFFFF;
+
             for (j = 0; j <nsbd;++j) {
                if (xin.sbdry[bnum]->idnum == sbdry[j]->idnum) {
                   ++bcntr[j];
@@ -269,7 +270,7 @@ void mesh::partition(const class mesh& xin, int npart) {
                }
             }
             /* NEW SIDE */
-            sbdry[nsbd] = sbdry[bnum]->create(*this);
+            sbdry[nsbd] = xin.sbdry[bnum]->create(*this);
             sd[i].info = nsbd;
             bcntr[nsbd++] = 1;
 
@@ -280,9 +281,9 @@ void mesh::partition(const class mesh& xin, int npart) {
          }
          else {
             /* PARTITION SIDE */
-            match = td[indx].info;
-            if (match < npart) bnum = (match<<16) + (npart << 24) + (1<<8);
-            else bnum = (npart<<16) + (match << 24) + stype::comm;
+            match = xin.td[indx].info;
+            if (match < npart) bnum = (match<<16) + (npart << 24) + stype::partition;
+            else bnum = (npart<<16) + (match << 24) + stype::partition;
             for (j = 0; j <nsbd;++j) {
                if (sbdry[j]->idnum == bnum) {
                   ++bcntr[j];

@@ -7,18 +7,7 @@ void mesh::copy(const mesh& tgt) {
    int i,n;
       
    if (!initialized) {
-      allocate(tgt.maxvst,tgt.scratch);
-      nsbd = tgt.nsbd;
-      for(i=0;i<tgt.nsbd;++i) {
-         sbdry[i] = tgt.sbdry[i]->create(*this);
-         sbdry[i]->alloc(tgt.sbdry[i]->maxel);
-      }
-      nvbd = tgt.nvbd;
-      for(i=0;i<tgt.nvbd;++i) {
-         vbdry[i] = tgt.vbdry[i]->create(*this);
-         vbdry[i]->alloc(1);
-      }
-      initialized = 1;
+      allocate_duplicate(1.0,tgt);
    }
    else {
       /* CHECK IF BIG ENOUGH */

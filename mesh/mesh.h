@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include "block.h"
 
 #ifdef SINGLE
 #define FLT float
@@ -90,11 +91,15 @@ class mesh {
       /* DEFAULT INITIALIZATION */
       mesh() : initialized(0), log(&std::cout) {}
       sharedmem* allocate(int mxsize, sharedmem *wkin = 0);
+      void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void load_scratch_pointers();
       void copy(const mesh& tgt);
+      void coarsen_substructured(const class mesh &tgt,int p);
+      void shift(FLT s[ND]);
+      void scale(FLT s[ND]);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh, const char *bdrymap = 0, FLT grwfac = 1,sharedmem *win = 0);
+      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
       int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
       void setbcinfo();
 
@@ -112,6 +117,7 @@ class mesh {
       void rebay(FLT tolsize);
       void trebay(FLT tolsize);
       inline void adapt(FLT tolerance) {
+         treeinit(); // TEMPORARY
          yaber(1.0/tolerance,1,EPSILON);
          treeupdate();
          rebay(tolerance);
@@ -138,12 +144,21 @@ class mesh {
          int tri;
          FLT wt[3];
       };
-      void mgconnect(transfer *cnnct, const class mesh& tgt);
+      block::ctrl mgconnect(int excpt, transfer *cnnct, const class mesh& tgt);
       void testconnect(char *fname,transfer *cnnct, mesh *cmesh);
       
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity() const;
       void checkintwk() const;
+      
+      /* NEW ADAPTATION ROUTINES */
+      void setup_for_adapt();
+      void coarsen_bdry(FLT tolsize);
+      FLT side_lngth_ratio(int i) {   
+         /* CALCULATE SIDE TO TARGET LENGTH RATIO */
+         /* ERROR ON THE CONSERVATIVE SIDE (OVER-REFINED) BY TAKING MAX VLNGTH */
+         return(MAX(vlngth[sd[i].vrtx[0]],vlngth[sd[i].vrtx[1]])/distance(sd[i].vrtx[0],sd[i].vrtx[1]));
+      }
       
    protected:
       /*******************/
@@ -187,6 +202,7 @@ class mesh {
       void swap(int nswp, int *swp, FLT tol = 0.0); //SWAPS A LIST OF SIDES
 
       /* PRIMITIVE FUNCTIONS */
+   public:
       inline FLT distance(int v0, int v1) const {
          FLT d = 0.0;
          for(int n = 0; n<ND;++n)

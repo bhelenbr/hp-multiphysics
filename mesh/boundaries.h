@@ -10,87 +10,101 @@
 template<class BASE> class comm_bdry : public BASE {
    protected:
       static const int maxmatch = 8;
-      int first;
-      int maxphase;
-      int buffsize;
-      void *sndbuff;
-      int *isndalias;
-      FLT *fsndalias;
-      int msgsize;
-      boundary::msg_type msgtype;
+      bool first; // FOR MASTER-SLAVE COMMUNICATION
+      int grouping;  // TO MAKE GROUPS THAT ONLY COMMUNICATE IN RESTRICTED SITUATIONS GROUP 1 ALL, GROUP 2 PARTITIONS 
+      int maxphase; //  FOR SYMMETRIC MESSAGE PASSING
+      int buffsize; // SIZE OF BUFFER (TIMES SIZEOF(FLT))
+      void *sndbuf; // OUTGOING MESSAGE BUFFER
+      int msgsize; // OUTGOING SIZE
+      boundary::msg_type msgtype; // OUTGOING TYPE
       
-      /* LOCAL MATCHES */
-      int nlocal_match;
-      void *local_match[maxmatch];
-      int local_tags[maxmatch];
-      int local_phase[maxmatch];
-      void *local_rcv_buf[maxmatch];
-      
-      int nmpi_match;
+      /* MATCHES */
+      int nmatch; // NUMBER OF LOCAL MATCHING BOUNDARIES
 #ifdef MPISRC
-      /* MPI MATCHES */
-      int mpi_match[maxmatch];
-      int mpi_tags[maxmatch];
-      int mpi_phase[maxmatch];
-      MPI_Request mpi_rcvrqst[maxmatch];
-      MPI_Request mpi_sndrqst[maxmatch];
-      void *mpi_rcv_buf[maxmatch];
+      enum matchtype {local, mpi};
+#else
+      enum matchtype {local};
+#endif
+      matchtype mtype[maxmatch]; // LOCAL OR MPI OR ?
+      void *local_match[maxmatch]; // POINTERS TO REMOTE BUFFERS
+      int tags[maxmatch]; //IDENTIFIES EACH CONNECTION UNIQUELY
+      int phase[maxmatch];  // TO SET-UP STAGGERED SEQUENCE OF SYMMETRIC PASSES
+      void *rcvbuf[maxmatch]; //LOCAL BUFFERS TO STORE INCOMING MESSAGES
+#ifdef MPISRC
+      int mpi_match[maxmatch]; //PROCESSOR NUMBERS FOR MPI
+      MPI_Request mpi_rcvrqst[maxmatch]; // IDENTIFIER RETURNED FROM MPI TO MONITOR SUCCESS OF RECV
+      MPI_Request mpi_sndrqst[maxmatch]; // IDENTIFIER RETURNED FROM MPI TO MONITOR SUCCESS OF SEND
 #endif
             
    public:
-      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), maxphase(0), buffsize(0), nlocal_match(0), nmpi_match(0)  {}
-      comm_bdry<BASE>* create(mesh &xin) const {return(new comm_bdry<BASE>(idnum,xin));}
+      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {}
+      comm_bdry<BASE>* create(mesh &xin) const {
+         comm_bdry<BASE> *temp = new comm_bdry<BASE>(idnum,xin);
+         temp->grouping = grouping;
+         return(temp);
+      }
+      void output(std::ostream& fout) {
+         BASE::output(fout);
+         fout << BASE::idprefix << ".group" << ": " << grouping << std::endl;  
+      }
+      void input(std::map <std::string,std::string>& inmap) {
+         std::string keyword;
+         std::map<std::string,std::string>::const_iterator mi;
+         std::istringstream data;
+         
+         BASE::input(inmap);
+         grouping = 0;
+         keyword = BASE::idprefix + ".group";
+         mi = inmap.find(keyword);
+         if (mi != inmap.end()) {
+            data.str(mi->second);
+            data >> grouping;
+            data.clear();
+         }
+      }
       bool is_comm() {return(true);}
-      bool is_frst() {return(first);}
-      void setfrst(bool tf) {first = tf;}; 
+      bool& is_frst() {return(first);}
+      int& group() {return(grouping);}
       int& sndsize() {return(msgsize);}
       boundary::msg_type& sndtype() {return(msgtype);}
-      void *mysndbuff() {return(sndbuff);}
-      int& isndbuf(int n) {return(isndalias[n]);}
-      FLT& fsndbuf(int n) {return(fsndalias[n]);}
+      void *psndbuf() {return(sndbuf);}
+      int& isndbuf(int n) {return(static_cast<int *>(sndbuf)[n]);}
+      FLT& fsndbuf(int n) {return(static_cast<FLT *>(sndbuf)[n]);}
+      void *prcvbuf(int match) {return(rcvbuff);}
+      int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf[match])[n]);}
+      FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf[match])[n]);}
       
       void alloc(int size) {
          BASE::alloc(size);
          buffsize = size*3;   // should be mesh::DIM;
-         sndbuff = xmalloc(buffsize*sizeof(FLT)); 
-         isndalias = static_cast<int *>(sndbuff);
-         fsndalias = static_cast<FLT *>(sndbuff);        
+         sndbuf = xmalloc(buffsize*sizeof(FLT)); 
       }
       void resize_buffers(int size) {
-         if (sndbuff) free(sndbuff);
+         if (sndbuf) free(sndbuf);
          buffsize = size;
-         sndbuff = xmalloc(buffsize*sizeof(FLT)); 
-         isndalias = static_cast<int *>(sndbuff);
-         fsndalias = static_cast<FLT *>(sndbuff); 
+         sndbuf = xmalloc(buffsize*sizeof(FLT)); 
       }
       
-      void setphase(int phase, int msg_tag) {
+      void setphase(int newphase, int msg_tag) {
          int i;
-         for(i=0;i<nlocal_match;++i) {
-            if (local_tags[i] == msg_tag) {
-               local_phase[i] = phase;
-               maxphase = MAX(maxphase,phase);
+         for(i=0;i<nmatch;++i) {
+            if (tags[i] == msg_tag) {
+               phase[i] = newphase;
+               maxphase = MAX(maxphase,newphase);
             }
          }
-
-#ifdef MPISRC
-         for(i=0;i<nmpi_match;++i) {
-            if (mpi_tags[i] == msg_tag) {
-               mpi_phase[i] = phase;
-               maxphase = MAX(maxphase,phase);
-            }
-         }
-#endif
          return;
       }
 
       int local_cnnct(boundary *bin, int msg_tag) {
          if (bin->idnum == idnum) {
-            local_match[nlocal_match] = bin->mysndbuff();
-            local_tags[nlocal_match] = msg_tag;
-            local_phase[nlocal_match] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
-            local_rcv_buf[nlocal_match] = xmalloc(buffsize*sizeof(FLT));
-            ++nlocal_match;
+            mtype[nmatch] = local;
+            local_match[nmatch] = bin->psndbuf();
+            tags[nmatch] = msg_tag;
+            phase[nmatch] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
+            rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
+            
+            ++nmatch;
             return(0);
          }
          *x.log << "error: not local match" << idnum << bin->idnum << std::endl;
@@ -99,105 +113,361 @@ template<class BASE> class comm_bdry : public BASE {
       
 #ifdef MPISRC
       int mpi_cnnct(int nproc, int msg_tag) {
-         mpi_match[nmpi_match] = nproc;
-         mpi_tags[nmpi_match] = msg_tag;
-         mpi_phase[nmpi_match] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
-         mpi_rcv_buf[nmpi_match] = xmalloc(buffsize*sizeof(FLT));
-         ++nmpi_match;
+         mtype[nmatch] = mpi;
+         mpi_match[nmatch] = nproc;
+         tags[nmatch] = msg_tag;
+         phase[nmatch] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
+         rcv_buf[nmatch] = xmalloc(buffsize*sizeof(FLT));
+         ++nmatch;
          return(0);
       }
 #endif
 
-      /* GENERIC MECHANISM FOR SENDING */
-      int rcv(int phase) {
-         int i,m;
-         
-         switch(msgtype) {
-            case(boundary::flt_msg):
-               /* LOCAL PASSES */
-               for(m=0;m<nlocal_match;++m) {
-                  if (phase != local_phase[m]) continue;
-             
-                  for(i=0;i<msgsize;++i)
-                     static_cast<FLT *>(local_rcv_buf[m])[i] = static_cast<FLT *>(local_match[m])[i];
-               }
-
-#ifdef MPISRC
-               /* MPI PASSES */
-               for(m=0;m<nmpi_match;++m) {
-                  if (phase != mpi_phase[m]) continue;
-#ifdef SINGLE
-                  MPI_Isend(fsndalias, msgsize, MPI_FLOAT, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-#else
-                  MPI_Isend(fsndalias, msgsize, MPI_DOUBLE, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);             
-#endif
-               }
-#endif
-               break;
-               
-            case(boundary::int_msg):
-               /* LOCAL PASSES */
-               for(m=0;m<nlocal_match;++m) {
-                  if (phase != local_phase[m]) continue;
-                  
-                  for(i=0;i<msgsize;++i)
-                     static_cast<int *>(local_rcv_buf[m])[i] = static_cast<int *>(local_match[m])[i];
-               }
-
-#ifdef MPISRC
-               /* MPI PASSES */
-               for(m=0;m<nmpi_match;++m) {
-                  if (phase != mpi_phase[m]) continue;
-                  
-                  MPI_Isend(isndalias, msgsize, MPI_INT, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-               }
-#endif
-
-               break;              
-         }
-         
-         /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
-         return((phase-maxphase >= 0 ? 1 : 0));
-      }
-
-      void snd(int phase) {
-#ifdef MPISRC
+      /* MECHANISM FOR SYMMETRIC SENDING */
+      void comm_prepare(int phi) {         
          int m;
-#endif
-         /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
-
-#ifdef MPISRC
          switch(msgtype) {
             case(flt_msg):
                /* MPI POST RECEIVES FIRST */
-               for(m=0;m<nmpi_match;++m) {
-                  if (phase != mpi_phase[m]) continue;
+               for(m=0;m<nmatch;++m) {
+                  if (phi != phase[m]) continue;
+                  
+                  switch(mtype[m]) {
+                     case(local):
+                        /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
+                        break;  
+#ifdef MPISRC
+                     case(mpi):
 #ifdef SINGLE
-                  MPI_Irecv(static_cast<FLT *>(mpi_rcv_buf[m]), msgsize, MPI_FLOAT, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_FLOAT, 
+                           mpi_match[m], tags[m], MPI_COMM_WORLD, &mpi_rcvrqst[m]);
 #else
-                  MPI_Irecv(static_cast<FLT *>(mpi_rcv_buf[m]), msgsize, MPI_DOUBLE, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);             
-#endif
+                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_DOUBLE, 
+                           mpi_match[m], tags[m], MPI_COMM_WORLD, &mpi_rcvrqst[m]); 
+                        break;
+#endif   
+#endif      
+                  }
                }
                break;
                
             case(int_msg):
                /* MPI POST RECEIVES FIRST */
-               for(m=0;m<nmpi_match;++m) {
-                  if (phase != mpi_phase[m]) continue;
+               for(m=0;m<nmatch;++m) {
+                  if (phi != phase[m]) continue;
                   
-                  MPI_Irecv(static_cast<int *>(mpi_rcv_buf[m]), msgsize, MPI_INT, 
-                     mpi_match[m], mpi_tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                  switch(mtype[m]) {
+                     case(local):
+                        /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
+                        break;  
+#ifdef MPISRC
+                     case(mpi):
+                        MPI_Irecv(&ircvbuf(m,0), msgsize, MPI_INT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                        break;
+#endif         
+                  }
+
                }
                break;              
          }
+      }
+      
+      int comm_transmit(int phi) {
+         int i,m;
+         
+         switch(msgtype) {
+            case(boundary::flt_msg):
+               /* LOCAL PASSES */
+               for(m=0;m<nmatch;++m) {
+                  if (phi != phase[m]) continue;
+             
+                  switch(mtype[m]) {
+                     case(local):
+                        for(i=0;i<msgsize;++i)
+                           frcvbuf(m,i) = static_cast<FLT *>(local_match[m])[i];
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+#ifdef SINGLE
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+#else
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);             
 #endif
+                        break;
+#endif
+                  }
+               }
+               break;
+               
+            case(boundary::int_msg):
+               /* LOCAL PASSES */
+               for(m=0;m<nmatch;++m) {
+                  if (phi != phase[m]) continue;
+                  
+                  switch(mtype[m]) {
+                     case(local):
+                        for(i=0;i<msgsize;++i)
+                           ircvbuf(m,i) = static_cast<int *>(local_match[m])[i];
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+                     /* MPI PASSES */                  
+                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                        break;
+#endif
+                  }
+               }
+               break;              
+         }
+         
+         /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
+         return((phi-maxphase >= 0 ? 1 : 0));
+      }
+      
+      void comm_wait(int phi) {
+
+         for(int m=0;m<nmatch;++m) {
+            if (phi != phase[m]) continue;
+            
+            switch(mtype[m]) {
+               case(local):
+                  break;
+#ifdef MPISRC
+               case(mpi):
+                  MPI_Status status;
+                  MPI_Wait(&mpi_rcvrqst[m], &status); 
+                  break;
+#endif
+            }
+         }
+         return;
+      }
+      
+      /* MECHANISM FOR MASTER SLAVE COMMUNICATIONS */
+      void master_slave_prepare() {
+         if (first) return;
+
+         switch(msgtype) {
+            case(flt_msg):
+                switch(mtype[0]) {
+                  case(local):
+                     /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
+                     return;
+#ifdef MPISRC
+                  case(mpi):
+                     /* MPI POST RECEIVES FIRST */
+#ifdef SINGLE
+                     MPI_Irecv(&frcvbuf(0,0), msgsize, MPI_FLOAT, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
+#else
+                     MPI_Irecv(&frcvbuf(0,0), msgsize, MPI_DOUBLE, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);             
+#endif
+                     break;
+#endif
+               }
+
+                     
+            case(int_msg):
+               switch(mtype[0]) {
+                  case(local):
+                     /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
+                     return;
+#ifdef MPISRC
+                  case(mpi):
+                     /* MPI POST RECEIVES FIRST */
+                     MPI_Irecv(&ircvbuf(0,0), msgsize, MPI_INT, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
+                     break;    
+#endif
+               }
+         }
+      }
+      
+      void master_slave_transmit() {
+         if (!first) return;
+         
+         int i,m;
+         switch(msgtype) {
+            case(boundary::flt_msg):
+               /* LOCAL PASSES */
+               for(m=0;m<nmatch;++m) {   
+                  switch(mtype[m]) {
+                     case(local):
+                        for(i=0;i<msgsize;++i)
+                           frcvbuf(m,i) = static_cast<FLT *>(local_match[m])[i];
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+               /* MPI PASSES */
+#ifdef SINGLE
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+#else
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+#endif
+                        break;
+#endif         
+                  }
+               }
+               break;
+               
+            case(boundary::int_msg):
+               /* LOCAL PASSES */
+               for(m=0;m<nmatch;++m) {   
+                  switch(mtype[m]) {
+                     case(local):
+                        for(i=0;i<msgsize;++i)
+                           ircvbuf(m,i) = static_cast<int *>(local_match[m])[i];
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+                        /* MPI PASSES */
+                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                        break;
+#endif
+                  }
+               }
+               break;              
+         }
+         return;
       }
 
+      void master_slave_wait() {
+         if (first) return;
+
+         switch(mtype[0]) {
+            case(local):
+               return;
+#ifdef MPISRC
+            case(mpi):
+               MPI_Status status;
+               MPI_Wait(&mpi_rcvrqst[0], &status); 
+               return;
+#endif
+         }
+         return;
+      }
+
+      /* MECHANISM FOR MASTER SLAVE COMMUNICATIONS */
+      void slave_master_prepare() {
+         
+         if (!first) return;
+ 
+         int m;
+         switch(msgtype) {
+            case(flt_msg):
+               /* MPI POST RECEIVES FIRST */
+               for(m=0;m<nmatch;++m) {
+                  switch(mtype[m]) {
+                     case(local):
+                        /* NOTHING TO DO */
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+#ifdef SINGLE
+                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_FLOAT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+#else
+                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_DOUBLE, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);  
+#endif
+                        break;
+#endif
+                  }
+               }
+               break;
+               
+            case(int_msg):
+               /* MPI POST RECEIVES FIRST */
+               for(m=0;m<nmatch;++m) {
+                  switch(mtype[m]) {
+                     case(local):
+                        /* NOTHING TO DO */
+                        break;
+#ifdef MPISRC
+                     case(mpi):
+                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_INT, 
+                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                        break;
+#endif
+                  }
+               }
+               break;              
+         }
+      }
+            
+      void slave_master_transmit() {
+         if (first) return;
+         
+         int i;
+         
+         switch(msgtype) {
+            case(boundary::flt_msg):
+               switch(mtype[0]) {
+                  case(local):
+                     /* LOCAL PASSES */
+                     for(i=0;i<msgsize;++i)
+                        frcvbuf(0,i) = static_cast<FLT *>(local_match[0])[i];
+                     break;
+#ifdef MPISRC
+                  case(mpi):
+               /* MPI PASSES */
+#ifdef SINGLE
+                     MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+#else
+                     MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);             
+#endif
+                     break;
+#endif
+               }
+               break;
+               
+            case(boundary::int_msg):
+               switch(mtype[0]) {
+                  case(local):
+                     /* LOCAL PASSES */
+                     for(i=0;i<msgsize;++i)
+                        ircvbuf(0,0) = static_cast<int *>(local_match[0])[i];
+                     break;
+#ifdef MPISRC
+                  case(mpi):
+                     /* MPI PASSES */
+                     MPI_Isend(&isndbuf(0) msgsize, MPI_INT, 
+                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+                     break;
+#endif
+               }
+               break;              
+         }
+         return;
+      }
+
+      void slave_master_wait() {
+         if (!first) return;
+
+         for(int m=0;m<nmatch;++m) {
+            switch(mtype[m]) {
+               case(local):
+                  break;
+#ifdef MPISRC
+               case(mpi):
+                  MPI_Status status;
+                  MPI_Wait(&mpi_rcvrqst[m], &status); 
+                  break;
+#endif
+            }
+         }
+         return;
+      }
 };
 
 class vcomm : public comm_bdry<vrtx_bdry> {
@@ -221,6 +491,15 @@ class scomm : public comm_bdry<class side_bdry> {
       virtual void finalrcv(FLT *base,int bgn,int end, int stride);
 };
 
+class spartition : public scomm {
+   public:
+      /* CONSTRUCTOR */
+      spartition(int inid, mesh& xin) : scomm(inid,xin) {grouping = 1;}
+      spartition* create(mesh& xin) const {return new spartition(idnum,xin);}
+      block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
+};
+
+
 /* CAN DO PERIODIC IN X OR Z (dir = 0/1) IN 3D */
 template<class BASE> class prdc_template : public BASE {
    protected:
@@ -228,22 +507,23 @@ template<class BASE> class prdc_template : public BASE {
    public:      
       /* CONSTRUCTOR */
       prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {}
-      prdc_template<BASE>* create(mesh& xin) const {return new prdc_template<BASE>(idnum,xin);}
-
+      prdc_template<BASE>* create(mesh& xin) const {
+         prdc_template<BASE> *temp = new prdc_template<BASE>(idnum,xin);
+         temp->setdir()=dir;
+         return(temp);
+      }
       int& setdir() {return(dir);}
       void output(std::ostream& fout) {
          BASE::output(fout);
          fout << BASE::idprefix << ".dir" << ": " << dir << std::endl;  
       }
       void input(std::map <std::string,std::string>& inmap) {
-         char idntystring[100];
          std::string keyword;
          std::map<std::string,std::string>::const_iterator mi;
          std::istringstream data;
          
          BASE::input(inmap);
 
-         sprintf(idntystring,"%d",idnum);
          keyword = BASE::idprefix + ".dir";
          mi = inmap.find(keyword);
          if (mi != inmap.end()) {
@@ -277,25 +557,24 @@ class curved_analytic : public side_bdry {
 
 class sinewave : public curved_analytic {
    protected:
+      int h_or_v;
+      FLT amp, lam, phase, offset;
       FLT hgt(FLT pt[mesh::DIM]) {
-         return(pt[1] -offset -amp*sin(2.*M_PI*pt[0]/lam +phase));
+         return(pt[1-h_or_v] -offset -amp*sin(2.*M_PI*pt[h_or_v]/lam +phase));
       }
       FLT dhgt(int dir, FLT pt[mesh::DIM]) {
-         switch(dir) {
-            case(0):
-               return(-amp*2.*M_PI/lam*cos(2.*M_PI*pt[0]/lam+phase));
-            case(1):
-               return(1.0);
-         }
+         if (dir == h_or_v) 
+            return(-amp*2.*M_PI/lam*cos(2.*M_PI*pt[h_or_v]/lam+phase));
+         
          return(1.0);
       }
    public:
-      FLT amp, lam, phase, offset;
-      sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {}
+      sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {}
       sinewave* create(mesh& xin) const {return new sinewave(idnum,xin);}
 
       void output(std::ostream& fout) {         
          curved_analytic::output(fout);
+         fout << idprefix << ".h_or_v" << h_or_v << std::endl;
          fout << idprefix << ".amp: " << amp << std::endl;
          fout << idprefix << ".lam: " << lam << std::endl;
          fout << idprefix << ".phase: " << phase << std::endl;
@@ -304,8 +583,12 @@ class sinewave : public curved_analytic {
          
       void input(std::map <std::string,std::string>& inmap) {   
          curved_analytic::input(inmap);
+         
+         std::istringstream data(inmap[idprefix+".h_or_v"]);
+         if (!(data >> h_or_v)) h_or_v = 0;
+         data.clear();
 
-         std::istringstream data(inmap[idprefix+".amp"]);
+         data.str(inmap[idprefix+".amp"]);
          if (!(data >> amp)) amp = 0.0;
          data.clear();
          
@@ -315,13 +598,15 @@ class sinewave : public curved_analytic {
          
          data.str(inmap[idprefix +".phase"]);
          if (!(data >> phase)) phase = 0.0;
+         phase = phase/360.0*2.0*M_PI;
          data.clear();
          
          data.str(inmap[idprefix +".offset"]);
          if (!(data >> offset)) offset = 0.0;
          data.clear();
+         
+         // *(x.log) << amp << ' ' << lam << ' ' << phase << ' ' << offset/M_PI*180.0 << std::endl;
       }
-      
 };
 
 class circle : public curved_analytic {

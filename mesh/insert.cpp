@@ -459,7 +459,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int 
 int mesh::findtri(FLT x[ND], int vnear) const {
    int i,j,vn,dir,stoptri,tin,tind;
    int ntdel, tdel[maxlst];
-
+   
    /* HERE WE USE i1wk THIS MUST BE -1 BEFORE USING */
    tind = vd[vnear].tri;
    stoptri = tind;
@@ -500,10 +500,10 @@ int mesh::findtri(FLT x[ND], int vnear) const {
          tdel[ntdel++] = tind;         
          if (intri(tind,x) < EPSILON) goto FOUND;
       }
-      if (i >= maxsrch) break;
+      if (ntdel >= maxsrch-4) break;
    }
    tind = -1;
-   // std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
+   std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
 FOUND:
 
    /* RESET INTWKW1 TO -1 */

@@ -7,14 +7,19 @@
 #include <cmath>
 #include <input_map.h>
 
-sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, r_mesh::gbl *rgin, sharedmem *wkin) {
-
-   std::istringstream data(input["fadd"]);
+sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, r_mesh::gbl *rgin, sharedmem *wkin) {
+   std::string keyword;
+   std::istringstream data;
+   std::string filename;
+   
+   keyword = prefix + ".fadd";
+   data.str(input[keyword]);
    if (!(data >> fadd)) fadd = 1.0;
    *log << "#fadd: " << fadd << std::endl;
    data.clear();
 
-   data.str(input["vnn"]);
+   keyword = prefix + ".vnn";
+   data.str(input[keyword]);
    if (!(data >> vnn)) vnn = 0.5; 
    *log << "#vnn: " << vnn << std::endl;
    data.clear();
@@ -37,7 +42,8 @@ sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, 
    
    std::string bdryfile;
    std::map<std::string,std::string> bdrymap;
-   data.str(input["bdryfile"]);
+   keyword = prefix + ".bdryfile";
+   data.str(input[keyword]);
    data >> bdryfile;
    data.clear();
 
@@ -123,9 +129,9 @@ void r_mesh::calc_kvol() {
       vbdry[i]->loadbuff(kvol,0,0,1);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
            
    return;
 }
@@ -230,9 +236,9 @@ void r_mesh::rkmgrid(mesh::transfer *fv_to_ct, r_mesh *fmesh) {
       vbdry[i]->loadbuff(kvol,0,0,1);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
 
    return;
 }
@@ -288,9 +294,9 @@ void r_mesh::rsdl() {
       vbdry[i]->loadbuff((FLT *) res,0,1,2);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
    
    return;
 }
@@ -333,9 +339,9 @@ void r_mesh::vddt(void)
       vbdry[i]->loadbuff(diag,0,0,1);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
    
    return;
 }
@@ -426,6 +432,7 @@ block::ctrl r_mesh::mg_getfres(int excpt, mesh::transfer *fv_to_ct, mesh::transf
 
 block::ctrl r_mesh::mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *cmesh) {
    int i,j,n,ind,tind;  
+   int stop=1;
    
    switch (excpt) {
       case(0):
@@ -450,38 +457,36 @@ block::ctrl r_mesh::mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transf
                   res[i][n] -= fv_to_ct[i].wt[j]*cmesh->vrtx_frst[ind][n];
             }
          }
-         
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n) 
-               vrtx[i][n] += res[i][n];
-               
+                    
          /* SEND COMMUNICATION PACKETS  */ 
+         mp_phase = 0;
          for(i=0;i<nsbd;++i)
-            sbdry[i]->loadbuff((FLT *) vrtx,0,1,2);
-         for(i=0;i<nvbd;++i)
-            vbdry[i]->loadbuff((FLT *) vrtx,0,1,2);
+            if (sbdry[i]->group()&0x1) sbdry[i]->loadbuff((FLT *) res,0,1,2);
             
          for(i=0;i<nsbd;++i) 
-            sbdry[i]->snd(0);
-         for(i=0;i<nvbd;++i) 
-            vbdry[i]->snd(0);
+            if (sbdry[i]->group()&0x1) sbdry[i]->comm_prepare(0);
          
          return(block::advance);
          
       case(1):
-         return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+         for(i=0;i<nsbd;++i) 
+            if (sbdry[i]->group()&0x1) stop &= sbdry[i]->comm_transmit(mp_phase);
+         ++mp_phase;
+                
+         if (!stop) {
+            for(i=0;i<nsbd;++i)
+               if (sbdry[i]->group()&0x1) sbdry[i]->comm_prepare(mp_phase);
+         }
+         return(static_cast<block::ctrl>(stop));
 
       case(2):
          for(i=0;i<nsbd;++i)
-            sbdry[i]->finalrcv((FLT *) vrtx,0,1,2);
-         for(i=0;i<nvbd;++i)
-            vbdry[i]->finalrcv((FLT *) vrtx,0,1,2); 
-             
-         return(block::stop); 
+            if (sbdry[i]->group()&0x1) sbdry[i]->finalrcv((FLT *) res,0,1,2);
+            
+         for(i=0;i<nvrtx;++i)
+            for(n=0;n<ND;++n) 
+               vrtx[i][n] += res[i][n];
    }
-
-   
-
    return(block::stop);
 }
 
@@ -542,9 +547,9 @@ void r_mesh::rsdl1() {
       vbdry[i]->loadbuff((FLT *) work,0,1,2);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
 
    return;
 }
@@ -606,9 +611,9 @@ void r_mesh::rsdl() {
       vbdry[i]->loadbuff((FLT *) res,0,1,2);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
    
    return;
 }
@@ -637,9 +642,9 @@ void r_mesh::vddt1(void)
       vbdry[i]->loadbuff(diag,0,0,1);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
    
    return;
 }
@@ -672,9 +677,9 @@ void r_mesh::vddt() {
       vbdry[i]->loadbuff(diag,0,0,1);
       
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->snd(0);
+      sbdry[i]->comm_prepare(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);
+      vbdry[i]->comm_prepare(0);
    
    return;
 }

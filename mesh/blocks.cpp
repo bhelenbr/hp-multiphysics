@@ -27,9 +27,8 @@
 
 void blocks::init(const char *infile, const char *outfile) {
    int i,nb,total;
-   char ctemp[100],fname[100];
+   char ctemp[100];
    std::map<std::string,std::string> maptemp;
-   std::map<std::string,std::string> *input;
    
 #ifdef MPISRC
    MPI_Comm_size(MPI_COMM_WORLD,&nproc);
@@ -57,45 +56,22 @@ void blocks::init(const char *infile, const char *outfile) {
    }
    maptemp["nblock"] = ctemp;  // NUMBER OF BLOCKS FOR THIS PROCESSOR */
    data.clear();
+   maptemp["bstart"] = total; // BLOCK NUMBER TO START FROM FOR THIS PROCESSOR
 
-   data.str(maptemp["nblock"]);
-   data >> nblock;  
-   data.clear(); 
-
-   /* ALLOCATE MAP ARRAY */
-   input = new std::map<std::string,std::string>[nblock+1];
-   input[0] = maptemp;
-   
-   /* LOAD BLOCK FILE PREFIX */
-   data.str(maptemp["blockfile"]);
-   if (!(data >> ctemp)) {
-      std::cout << "error reading blockfile prefix\n"; 
-      exit(1);
-   }
-   data.clear();
-   
-   strcat(ctemp,".");   
-   /* READ IN MAPS FOR THIS PROCESSOR */
-   for(i=0;i<nblock;++i) {
-      strcpy(fname,ctemp);
-      number_str(fname,ctemp,total+i,1);
-      strcat(fname,".inpt");
-      input_map(input[i+1],fname);
-   }
-   
+      
    if (outfile) {
-      input[0]["logfile"] = outfile;
+      maptemp["logfile"] = outfile;
    }
 
-   init(input);
+   init(maptemp);
    
    return;
 }
    
 
 
-void blocks::init(std::map<std::string,std::string> input[]) {
-   int i,type;
+void blocks::init(std::map<std::string,std::string> input) {
+   int i;
    char outfile[100];
    std::map<std::string,std::string>::const_iterator mi;
    std::map<std::string,std::string> merge;
@@ -109,8 +85,8 @@ void blocks::init(std::map<std::string,std::string> input[]) {
    std::istringstream data;
 
    /* OPEN LOGFILES FOR EACH PROCESSOR */
-   mi = input[0].find("logfile");
-   if (mi != input[0].end()) {
+   mi = input.find("logfile");
+   if (mi != input.end()) {
       data.str(mi->second);
       data >> outfile;
       data.clear();
@@ -132,8 +108,8 @@ void blocks::init(std::map<std::string,std::string> input[]) {
    *log << "gi_uStart status = ", status, "\n";
    if (status != CAPRI_SUCCESS) exit(1);
    
-   mi = input[0].find("BRep");
-   if (mi != input[0].end()) {
+   mi = input.find("BRep");
+   if (mi != input.end()) {
       char temp[100];
       strcpy(temp,mi->second.c_str());
       status = gi_uLoadPart(temp);
@@ -143,107 +119,108 @@ void blocks::init(std::map<std::string,std::string> input[]) {
 #endif   
    
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
-   data.str(input[0]["itercrsn"]);   
+   data.str(input["itercrsn"]);   
    if (!(data >> itercrsn)) itercrsn = 1;
    *log << "#itercrsn: " << itercrsn << std::endl;
    data.clear();
    
-   data.str(input[0]["iterrfne"]);   
+   data.str(input["iterrfne"]);   
    if (!(data >> iterrfne)) iterrfne = 0;
    *log << "#iterrfne: " << iterrfne << std::endl;
    data.clear();
       
-   data.str(input[0]["njacobi"]);   
+   data.str(input["njacobi"]);   
    if (!(data >> njacobi)) njacobi = 1;
    *log << "#njacobi: " << njacobi << std::endl;
    data.clear();
    
-   data.str(input[0]["ncycle"]);   
+   data.str(input["ncycle"]);   
    if (!(data >> ncycle)) ncycle = 20;
    *log << "#ncycle: " << ncycle << std::endl;
    data.clear();
    
-   data.str(input[0]["vwcycle"]);   
+   data.str(input["vwcycle"]);   
    if (!(data >> vw)) vw = 2;
    *log << "#vwcycle: " << vw << std::endl;
    data.clear();
    
-   data.str(input[0]["ntstep"]);   
+   data.str(input["ntstep"]);   
    if (!(data >> ntstep)) ntstep = 1;
    *log << "#ntstep: " << ntstep << std::endl;
    data.clear();
    
    /* LOAD NUMBER OF GRIDS */
-   data.str(input[0]["nblock"]);
+   data.str(input["nblock"]);
    if (!(data >> nblock)) nblock = 1;
    *log << "#nblock: " << nblock << std::endl;
    data.clear();
    
-   data.str(input[0]["ngrid"]);   
+   data.str(input["ngrid"]);   
    if (!(data >> ngrid)) ngrid = 1;
    *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
-   data.str(input[0]["mglvls"]);   
+   data.str(input["mglvls"]);   
    if (!(data >> mglvls)) mglvls = 1;
    *log << "#mglvls: " << mglvls << std::endl;
+   data.clear();
+   
+   int bstart;
+   data.str(input["bstart"]);   
+   if (!(data >> bstart)) bstart = 0;
    data.clear();
 
    blk = new block *[nblock];
 
+   int lvl = 0;
+   int excpt = 0;
+   int state = block::stop;
    for (i=0;i<nblock;++i) {
-      merge = input[0];
-      for (mi=input[i+1].begin(); mi != input[i+1].end(); ++mi)
-         merge[mi->first] = mi->second;
-      
-      data.str(input[i+1]["blktype"]);   
-      if (!(data >> type)) {*log << "Error: no blktype\n"; type = 1;}
-      *log << "#blktype: " << type << std::endl;
-      data.clear();
-      blk[i] = getnewblock(type);
-      blk[i]->init(merge,log);
+      blk[i] = getnewblock(bstart+i,&input);
+      blk[i]->init(input,log);
    }
-   output("start",ftype::grid);
-
+   
    findmatch();
    matchboundaries();
+   for(lvl=1;lvl<ngrid;++lvl) {
+      excpt = 0;
+      do {
+         state = block::stop;
+         for(i=0;i<nblock;++i) {
+            state &= blk[i]->reconnect(lvl,excpt);
+         }
+         excpt += state;
+      } while (state != block::stop);
+   }
    output("matched",ftype::grid);
-
+   
+   for(i=0;i<nblock;++i) {
+      number_str(outfile,"coarsenchk",i,1);
+      strcat(outfile,".");
+      blk[i]->coarsenchk(outfile);
+   }
+   
    return;
 }
 
-void blocks::localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,int j) {
-   if (v2 < v1) {
-      /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
-      v1->local_cnnct(v2,v1->idnum +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-      *log << "#second lmatch id: " << v1->idnum << " vsf: " << vsf 
-           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
-      v1->setfrst(false);
-   }
-   else {
-      v1->local_cnnct(v2,v1->idnum +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-      *log << "#first lmatch id: " << v1->idnum << " vsf: " << vsf 
-           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
-   }
-   return;
-}
+static int maxblock,maxbdry,pdig,bdig,ndig;
 
-#ifdef MPISRC
-void blocks::mpimatch(int vsf,boundary *v1,int p,int b1,int b2,int i,int j) {
-  if (p < myid) {
-      v1->mpi_cnnct(p,v1->idnum +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-      *log << "#second mpimatch id: " << v1->idnum << " vsf: " << vsf 
-           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
-      v1->setfrst(false);
-   }
-   else {
-      v1->mpi_cnnct(p,v1->idnum +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-      *log << "#first mpimatch id: " << v1->idnum << " vsf: " << vsf 
-           <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
-   }
-   return;
+int tagid(int vsf,int p1,int p2,int b1,int b2,int n1,int n2) {
+   int tag = vsf;
+   int shift =2;
+   tag += (p1+p2)<<shift;
+   shift += pdig;
+   tag += (b1+b2)<<shift;
+   shift += bdig;
+   tag += (n1+n2)<<shift;
+   shift += ndig;
+   tag += abs(p1-p2)<<shift;
+   shift += pdig;
+   tag += abs(b1-b2)<<shift;
+   shift += bdig;
+   tag += abs(n1-n2)<<shift;
+   return(tag);
 }
-#endif
 
 void blocks::findmatch() {
    int b,b1,b2,i,j,k,grdlvl,p,count,tsize;
@@ -321,13 +298,17 @@ void blocks::findmatch() {
 #endif
 
       /* UNPACK ENTITY LIST INTO MORE USABLE FORM */
+      maxblock = 0; // SO I CAN GENERATE UNIQUE TAGS
+      maxbdry = 0; // SO I CAN GENERATE UNIQUE TAGS
       count = 0;
       for(p=0;p<nproc;++p) {
          blksinfo[p].nblock = entitylist[count++];
+         maxblock = MAX(maxblock,blksinfo[p].nblock);
          blksinfo[p].blkinfo = new commblocks::commblock[blksinfo[p].nblock];
          for(b=0;b<blksinfo[p].nblock;++b) {
             bp = &blksinfo[p].blkinfo[b];
             bp->nvcomm = entitylist[count++];
+            maxbdry = MAX(maxbdry,bp->nvcomm);
             bp->vcomm = new commblocks::commblock::vid[bp->nvcomm];
             for(i=0;i<bp->nvcomm;++i) {
                bp->vcomm[i].nvbd = entitylist[count++];
@@ -335,6 +316,7 @@ void blocks::findmatch() {
             }
             
             bp->nscomm = entitylist[count++];
+            maxbdry = MAX(maxbdry,bp->nscomm);
             bp->scomm = new commblocks::commblock::sid[bp->nscomm];
             for(i=0;i<bp->nscomm;++i) {
                bp->scomm[i].nsbd = entitylist[count++];
@@ -344,6 +326,7 @@ void blocks::findmatch() {
             }
             
             bp->nfcomm = entitylist[count++];
+            maxbdry = MAX(maxbdry,bp->nfcomm);
             bp->fcomm = new commblocks::commblock::fid[bp->nfcomm];
             for(i=0;i<bp->nfcomm;++i) {
                bp->fcomm[i].nfbd = entitylist[count++];
@@ -355,6 +338,15 @@ void blocks::findmatch() {
             }
          }
       }
+      
+      /* CALCULATE NUMBER OF BINARY DIGITS NEEDED TO MAKE TAGS */
+      pdig = 1;
+      while ((nproc>>pdig) > 0) ++pdig;
+      bdig = 1;
+      while ((maxblock>>bdig) > 0) ++bdig;
+      ndig = 1;
+      while ((maxbdry>>ndig) > 0) ++ndig;
+      if (2*(pdig+bdig+ndig)+2 > 32) *log << "can't guarantee unique tags\n";
       
       /* CAN NOW START TO LOOK FOR MATCHES */
       /* FOR NOW ALL COMMUNICATION IN 1 PHASE */
@@ -369,38 +361,69 @@ void blocks::findmatch() {
                bp2 = &blksinfo[p].blkinfo[b2];
                /* LOOK FOR VERTEX MATCHES */
                for(i=0;i<bp1->nvcomm;++i) {
+                  bool first_found = false;
                   for(j=0;j<bp2->nvcomm;++j) {
                      if (bp1->vcomm[i].idnum == bp2->vcomm[j].idnum) {
                         if (p == myid) {
-                           if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
+                           if (bp1 == bp2 && i == j) {
+                              if (!first_found) first_found = true;  // BOUNDARY'S FIRST FLAG SHOULD ALREADY BE SET
+                              continue;  // CAN"T MATCH TO MYSELF
+                           }
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
                            boundary *v2 = blk[b2]->vbdry(grdlvl,bp2->vcomm[j].nvbd);
-                           localmatch(1,v1,v2,b1,b2,i,j);
+                           v1->local_cnnct(v2,tagid(1,myid,myid,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false; 
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "vrtx local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
-                           mpimatch(1,v1,p,b1,b2,i,j);
+                           v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false;
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "vrtx mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
                         }
 #endif
+                        
                      }
                   }
                }
                
                /* LOOK FOR SIDE MATCHES */
                for(i=0;i<bp1->nscomm;++i) {
+                  bool first_found = false;
                   for(j=0;j<bp2->nscomm;++j) {
                      if (bp1->scomm[i].idnum == bp2->scomm[j].idnum) {
                         if (p == myid) {
-                           if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
+                           if (bp1 == bp2 && i == j) {
+                              if (!first_found) first_found = true;  // BOUNDARY'S FIRST FLAG SHOULD ALREADY BE SET
+                              continue;  // CAN"T MATCH TO MYSELF
+                           }
                            boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
                            boundary *v2 = blk[b2]->sbdry(grdlvl,bp2->scomm[j].nsbd);
-                           localmatch(2,v1,v2,b1,b2,i,j);
+                           v1->local_cnnct(v2,tagid(2,myid,myid,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false;
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "side local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
-                           mpimatch(2,v1,p,b1,b2,i,j);
+                           v1->mpi_cnnct(p,tagid(2,myid,p,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false;
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "side mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+
                         }
 #endif
                      }
@@ -409,18 +432,34 @@ void blocks::findmatch() {
                
                /* LOOK FOR FACE MATCHES */
                for(i=0;i<bp1->nfcomm;++i) {
+                  bool first_found = false;
                   for(j=0;j<bp2->nfcomm;++j) {
                      if (bp1->fcomm[i].idnum == bp2->fcomm[j].idnum) {
                         if (p == myid) {
-                           if (bp1 == bp2 && i == j) continue;  // CAN"T MATCH TO MYSELF
+                           if (bp1 == bp2 && i == j) {
+                              if (!first_found) first_found = true;  // BOUNDARY'S FIRST FLAG SHOULD ALREADY BE SET
+                              continue;  // CAN"T MATCH TO MYSELF
+                           }
                            boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
                            boundary *v2 = blk[b2]->fbdry(grdlvl,bp2->fcomm[j].nfbd);
-                           localmatch(3,v1,v2,b1,b2,i,j);
+                           v1->local_cnnct(v2,tagid(3,myid,myid,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false;
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "face local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+
                         }
 #ifdef MPISRC
                         else {
                            boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
-                           mpimatch(3,v1,p,b1,b2,i,j);
+                           v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
+                           if (!first_found) {
+                              v1->is_frst() = false;
+                              first_found = true;
+                           }
+                           *log << "#mgrid " << grdlvl << "face mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+
                         }
 #endif
                      }
@@ -458,7 +497,7 @@ void blocks::matchboundaries() {
    int i,lvl,excpt;
    int state;
    
-   for (lvl=0;lvl<ngrid;++lvl) {
+   for (lvl=0;lvl<1;++lvl) {
       excpt = 0;
       do {
          state = block::stop;
@@ -599,7 +638,7 @@ void blocks::go() {
          *log << '\n';
       }
       number_str(outname, "end", step, 3);
-      output(outname,ftype::grid);
+      output(outname,ftype::tecplot);
       restructure();
    }
    cpu_time = clock();

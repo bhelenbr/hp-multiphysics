@@ -103,7 +103,7 @@ void mesh::rebay(FLT tolsize) {
          qtree.addpt(nvrtx);
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
 #ifdef VERBOSE
-         *log << "Inserting boundary side\n";
+         *log << "Inserting boundary side at " << vrtx[nvrtx][0] << ' ' << vrtx[nvrtx][1] << std::endl;
 #endif
          bdry_insert(tind,snum,nvrtx,ntdel,tdel,nsdel,sdel);
          ++bdrycnt;
@@ -573,5 +573,17 @@ INSRT:
 
    return;
 }
+
+
+/* STEPS */
+// INITIALIZE FLAGS //
+// COARSEN BOUNDARIES //
+// COARSEN INTERIOR //
+// REFINE BOUNDARIES //
+// REFINE INTERIOR //
+
+
+
+
       
    

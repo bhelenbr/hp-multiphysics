@@ -16,6 +16,7 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
 
    
    /* FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
+   /* EXCLUDES TRIANGLES ADJACENT TO DELETED SIDE */
    for(i=0;i<2;++i) {
       vnear = sd[sind].vrtx[i];
       tind = vd[vnear].tri;
@@ -79,7 +80,7 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
       else {         
          /* BOTH ON BOUNDARY */
          /* IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
-         if (sd[sind].tri[1] > -1 || vd[sd[sind].vrtx[0]].info +vd[sd[sind].vrtx[1]].info == 2) return(1);
+         if (sd[sind].tri[1] > -1 || vd[sd[sind].vrtx[0]].info +vd[sd[sind].vrtx[1]].info == 2) return(-1);
 
          /* CHECK IF CORNER POINT */
          if (vd[sd[sind].vrtx[0]].info == 1) {
@@ -277,7 +278,7 @@ DELETE:
    /* SWAP AFFECTED SIDES */      
    swap(nssrnd[delt],ssrnd[delt]);
 
-   return(0);
+   return(delt);
 }
 
 /* DELETE UNREFERENCED TRIANGLE */

@@ -21,19 +21,7 @@ void mesh::refineby2(const class mesh& inmesh) {
    /* BECAUSE OF INTWK USAGE */
     if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  4*inmesh.maxvst;
-      allocate(maxvst,inmesh.scratch);
-      nsbd = inmesh.nsbd;
-      for(i=0;i<nsbd;++i) {
-         sbdry[i] = inmesh.sbdry[i]->create(*this);
-         sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->maxel,10));
-      }
-      nvbd = inmesh.nvbd;
-      for(i=0;i<nvbd;++i) {
-         vbdry[i] = inmesh.vbdry[i]->create(*this);
-         vbdry[i]->alloc(1);
-      }
-      qtree.allocate(vrtx,maxvst);
+      allocate_duplicate(0.5,inmesh);
       initialized = 1;
    }
    
@@ -86,7 +74,6 @@ void mesh::refineby2(const class mesh& inmesh) {
          assert(snum > -2);
          qtree.addpt(nvrtx);
          bdry_insert(tind,snum,nvrtx,ntdel,tdel,nsdel,sdel);
-         output("check",ftype::grid);
          ++nvrtx;
       }
    }

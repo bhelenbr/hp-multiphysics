@@ -77,7 +77,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
             exit(1);
          }
 
-         out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << " E = " << ntri << endl;
+         out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << endl;
          
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)

@@ -16,20 +16,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    
    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
-      allocate(maxvst,inmesh.scratch);
-      nsbd = inmesh.nsbd;
-      for(i=0;i<nsbd;++i) {
-         sbdry[i] = inmesh.sbdry[i]->create(*this);
-         sbdry[i]->alloc(MAX(inmesh.sbdry[i]->maxel/2+1,10));
-      }
-      nvbd = inmesh.nvbd;
-      for(i=0;i<nvbd;++i) {
-         vbdry[i] = inmesh.vbdry[i]->create(*this);
-         vbdry[i]->alloc(1);
-      }
-      qtree.allocate(vrtx,maxvst);
-      initialized = 1;
+      allocate_duplicate(1.9,inmesh);
    }
    
    log = inmesh.log;
@@ -276,21 +263,7 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
    int i;
    
    if (!initialized) {
-      /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX(static_cast<int>(inmesh.maxvst*size_reduce),100);
-      allocate(maxvst,inmesh.scratch);
-      nsbd = inmesh.nsbd;
-      for(i=0;i<nsbd;++i) {
-         sbdry[i] = inmesh.sbdry[i]->create(*this);
-         sbdry[i]->alloc(MAX(inmesh.sbdry[i]->maxel/2+1,10));
-      }
-      nvbd = inmesh.nvbd;
-      for(i=0;i<nvbd;++i) {
-         vbdry[i] = inmesh.vbdry[i]->create(*this);
-         vbdry[i]->alloc(1);
-      }
-      qtree.allocate(vrtx,maxvst);
-      initialized = 1;
+      allocate_duplicate(size_reduce,inmesh);
    }      
    copy(inmesh);
    initvlngth();
@@ -302,7 +275,6 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
    
    return;
 }
-   
    
    
 

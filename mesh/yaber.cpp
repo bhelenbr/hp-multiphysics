@@ -92,7 +92,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
          if (i3wk[sdel[i]] > -1) tkoutlst(sdel[i]);
       }
          
-      if (nfail) {
+      if (nfail < 0) {
          *log << "#Warning: side collapse failed" << sind << std::endl;
          /* MARK SIDE AS ACCEPTED AND MOVE ON */
          for(i=0;i<2;++i) {
@@ -280,4 +280,9 @@ void mesh::fltwkyab() {
       fltwkyab(i);
    return;
 }
+      
+      
+      
+   
+   
 

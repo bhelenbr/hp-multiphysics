@@ -33,9 +33,8 @@
 class boundary {
    public:
       std::string idprefix; 
-   public:
       int idnum;
-      enum msg_type {flt_msg, int_msg};
+
       boundary(int idin) : idnum(idin) {
          char buffer[100];
          std::string keyname;
@@ -52,20 +51,37 @@ class boundary {
       virtual void setupcoordinates() {}
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
+      enum msg_type {flt_msg, int_msg};
+      union  {
+         bool bdum;
+         int idum;
+         FLT fdum;
+         msg_type mdum;
+      } dummy;
       virtual bool is_comm() {return(false);}
-      virtual bool is_frst() {return(true);}
-      virtual void setfrst(bool tf) {}
+      virtual bool& is_frst() {return(dummy.bdum=true);}
+      virtual int& group() {return(dummy.idum=0);}
+      virtual int matches() {return(0);}
       virtual int local_cnnct(boundary *bin, int msg_tag) {return 1;}
 #ifdef MPISRC
       virtual int mpi_cnnct(int proc_tgt, int msg_tag) {return 1;}
 #endif
       virtual void setphase(int phase, int msg_tag) {}
       virtual void resize_buffers(int size) {}
-      virtual void *mysndbuff() {return 0;}
-      
-      /* GENERIC MECHANISM FOR SENDING? */
-      virtual void snd(int phase) {}
-      virtual int rcv(int phase) {return 1;}
+      virtual void *psndbuf() {return(&dummy);}
+      virtual int& isndbuf(int indx) {return(dummy.idum);}
+      virtual FLT& fsndbuf(int indx) {return(dummy.fdum);}
+      virtual int& sndsize() {return(dummy.idum=0);}
+      virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
+      virtual void comm_prepare(int phase) {}
+      virtual int comm_transmit(int phase) {return 1;}
+      virtual void comm_wait(int phase) {}
+      virtual void master_slave_prepare() {}
+      virtual void master_slave_transmit() {}
+      virtual void master_slave_wait() {}
+      virtual void slave_master_prepare() {}
+      virtual void slave_master_transmit() {}
+      virtual void slave_master_wait() {}
       virtual void sndpositions() {}
       virtual void rcvpositions() {}
       virtual ~boundary() {}
@@ -115,6 +131,7 @@ class side_bdry : public boundary {
       virtual void swap(int s1, int s2);
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
+      virtual block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
       // virtual void findbdrypt(const boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout);
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
@@ -131,7 +148,7 @@ class vtype {
 
 class stype {
    public:
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline};
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition};
 };
 
 #endif

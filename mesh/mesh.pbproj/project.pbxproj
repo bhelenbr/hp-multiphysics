@@ -31,7 +31,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				OPTIMIZATION_CFLAGS = "-O0";
-				ZERO_LINK = YES;
+				ZERO_LINK = NO;
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -57,10 +57,11 @@
 //024
 		0249A662FF388D9811CA2CEA = {
 			children = (
-				F52FE4D402180BEC01990B20,
-				F52FE4D502180BEC01990B20,
 				F5DD976F03A7AAC701990B69,
+				6F8509B607A5383700343685,
+				6F8509B207A5381400343685,
 				6FC6A54203CC99B700990B69,
+				6FC45DA007A0C30F00ADC8D3,
 				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
@@ -214,6 +215,7 @@
 		};
 		08FB7795FE84155DC02AAC07 = {
 			children = (
+				6F5F76680760062A0026BE93,
 				08FB7796FE84155DC02AAC07,
 				07F2E95000974D3D80990B20,
 				07F2E94600974D3D80990B20,
@@ -231,6 +233,7 @@
 				F5CED4AF015630AA01000001,
 				F5F975AB0152459801000001,
 				07F2E94300974D3D80990B20,
+				6FC45D1207A0B35E00ADC8D3,
 				F528820602B1545D012A8EDA,
 				6FCD4658071240D80003FAD1,
 				F528820502B1545D012A8EDA,
@@ -329,6 +332,14 @@
 			settings = {
 			};
 		};
+		6F5F76680760062A0026BE93 = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = adapt.cpp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
 		6F61B739070CEB2700224E74 = {
 			fileRef = F5AF3BF901879D4B0131A0B3;
 			isa = PBXBuildFile;
@@ -337,6 +348,62 @@
 		};
 		6F6EFBED070B4EE600BF1E6E = {
 			fileRef = 6FF8CC88070B25260099AAD7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6F8509B207A5381400343685 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libutil.a;
+			path = /Users/helenbrk/Codes/lib/libutil.a;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		6F8509B307A5381400343685 = {
+			fileRef = 6F8509B207A5381400343685;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6F8509B607A5383700343685 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libquad.a;
+			path = /Users/helenbrk/Codes/lib/libquad.a;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		6F8509B707A5383700343685 = {
+			fileRef = 6F8509B607A5383700343685;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FC45D1207A0B35E00ADC8D3 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = meshutilities.cpp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		6FC45D1307A0B35E00ADC8D3 = {
+			fileRef = 6FC45D1207A0B35E00ADC8D3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		6FC45DA007A0C30F00ADC8D3 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libparseargs.a;
+			path = /Users/helenbrk/Codes/lib/libparseargs.a;
+			refType = 0;
+			sourceTree = "<absolute>";
+		};
+		6FC45DA107A0C30F00ADC8D3 = {
+			fileRef = 6FC45DA007A0C30F00ADC8D3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -436,6 +503,7 @@
 				6FF8CC8D070B25A40099AAD7,
 				6F6EFBED070B4EE600BF1E6E,
 				6F61B739070CEB2700224E74,
+				6FC45D1307A0B35E00ADC8D3,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -527,26 +595,15 @@
 		6FC7DEF705B30C6E001FE736 = {
 			buildActionMask = 2147483647;
 			files = (
-				6FC7DEF805B30C6E001FE736,
-				6FC7DEF905B30C6E001FE736,
 				6FC7DEFA05B30C6E001FE736,
 				6FC7DEFB05B30C6E001FE736,
 				6FC7DEFE05B30C6E001FE736,
+				6FC45DA107A0C30F00ADC8D3,
+				6F8509B307A5381400343685,
+				6F8509B707A5383700343685,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FC7DEF805B30C6E001FE736 = {
-			fileRef = F52FE4D402180BEC01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		6FC7DEF905B30C6E001FE736 = {
-			fileRef = F52FE4D502180BEC01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		6FC7DEFA05B30C6E001FE736 = {
 			fileRef = F5DD976F03A7AAC701990B69;
@@ -699,22 +756,6 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
 			path = boundary.h;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F52FE4D402180BEC01990B20 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libquad.a;
-			path = ../lib/libquad.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F52FE4D502180BEC01990B20 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libutil.a;
-			path = ../lib/libutil.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

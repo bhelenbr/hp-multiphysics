@@ -20,31 +20,20 @@ void vcomm::loadbuff(FLT *base,int bgn,int end, int stride) {
    /* LOAD SEND BUFFER */   
    offset = v0*stride +bgn;
    for (i=0;i<end-bgn+1;++i) 
-      fsndalias[i] = base[offset+i];
+      fsndbuf(i) = base[offset+i];
 }
 
 void vcomm::finalrcv(FLT *base,int bgn,int end, int stride) {
    int i,m,offset;
 
    /* REMINDER DON'T OVERWRITE SEND BUFFER */
-#ifdef MPISRC
-   MPI_Status status;
-   /* MPI PASSES */
-   for(m=0;m<nmpi_match;++m)
-      MPI_Wait(&mpi_rcvrqst[m], &status);         
-#endif
-   
    offset = v0*stride +bgn;
    for(i=0;i<end-bgn+1;++i) {
-      base[offset] = fsndalias[i];  // ELIMINATES UNDESIRABLE SIDE/VRTX INTERACTIONS
-      for(m=0;m<nlocal_match;++m)
-         base[offset] += static_cast<FLT *>(local_rcv_buf[m])[i];
+      base[offset] = fsndbuf(i);  // ELIMINATES UNDESIRABLE SIDE/VRTX INTERACTIONS
+      for(m=0;m<nmatch;++m)
+         base[offset] += frcvbuf(m,i);
 
-#ifdef MPISRC
-      for(m=0;m<nmpi_match;++m)
-         base[offset] += static_cast<FLT *>(mpi_rcv_buf[m])[i];
-#endif
-      base[offset++] /= (1 +nlocal_match +nmpi_match);
+      base[offset++] /= (1 +nmatch);
    }
 }
 
@@ -82,6 +71,97 @@ void side_bdry::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
    
    return;
 }
+
+block::ctrl side_bdry::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
+   int i,k,sind,tind,v0,neg_count,j,triloc,sidloc;
+   FLT xp[2],dx,dy,wgt[3],ainv,a,b,c,minneg;
+   
+   if (excpt != 0) return(block::stop);
+   
+   /* BOUNDARY IS A PHYSICAL BOUNDARY (ALIGNED CURVES) */
+   for(k=0;k<nel;++k) {
+      v0 = x.sd[el[k]].vrtx[0];
+      xp[0] = x.vrtx[v0][0];
+      xp[1] = x.vrtx[v0][1];
+      minneg = -1.0E32;
+      
+      /* LOOP THROUGH TARGET SIDES TO FIND TRIANGLE */
+      for(i=0;i<tgt.sbdry[bnum]->nel;++i) {
+         sind = tgt.sbdry[bnum]->el[i];
+         tind = tgt.sd[sind].tri[0];
+         if (tind < 0) {
+            *x.log << "boundary side in wrong direction" << sind << tind << std::endl;
+            exit(1);
+         }
+         neg_count = 0;
+         for(j=0;j<3;++j) {
+            wgt[j] = 
+            ((tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][0]
+               -tgt.vrtx[tgt.td[tind].vrtx[j]][0])*
+            (xp[1]-tgt.vrtx[tgt.td[tind].vrtx[j]][1])-
+            (tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][1]
+            -tgt.vrtx[tgt.td[tind].vrtx[j]][1])*
+            (xp[0]-tgt.vrtx[tgt.td[tind].vrtx[j]][0]));
+            if (wgt[j] < 0.0) ++neg_count;
+         }
+         if (neg_count==0) {
+            sidloc = sind;
+            break;
+         }
+         else {
+            if(neg_count == 1) {
+               for(j=0;j<3;++j) {
+                  if (wgt[j] < 0 && wgt[j] > minneg) {
+                     minneg = wgt[j];
+                     sidloc = sind;
+                     triloc = tind;
+                  }
+               }
+            }
+         }
+      }
+      sind = sidloc;   
+
+      /* PROJECT LOCATION NORMAL TO CURVED FACE */
+      dx = xp[0]-tgt.vrtx[tgt.sd[sind].vrtx[0]][0];
+      dy = xp[1]-tgt.vrtx[tgt.sd[sind].vrtx[0]][1];
+      a = sqrt(dx*dx+dy*dy);
+      dx = xp[0]-tgt.vrtx[tgt.sd[sind].vrtx[1]][0];
+      dy = xp[1]-tgt.vrtx[tgt.sd[sind].vrtx[1]][1];
+      b = sqrt(dx*dx+dy*dy);
+      dx = tgt.vrtx[tgt.sd[sind].vrtx[0]][0]
+         -tgt.vrtx[tgt.sd[sind].vrtx[1]][0];
+      dy = tgt.vrtx[tgt.sd[sind].vrtx[0]][1]
+         -tgt.vrtx[tgt.sd[sind].vrtx[1]][1];
+      c = sqrt(dx*dx+dy*dy);
+      a = (b*b+c*c-a*a)/(2.*c*c);
+      xp[0] = tgt.vrtx[tgt.sd[sind].vrtx[1]][0] +dx*a;
+      xp[1] = tgt.vrtx[tgt.sd[sind].vrtx[1]][1] +dy*a;
+      tind = tgt.sd[sind].tri[0];                     
+      for(j=0;j<3;++j) {
+         wgt[j] = 
+         ((tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][0]
+         -tgt.vrtx[tgt.td[tind].vrtx[j]][0])*
+         (xp[1]-tgt.vrtx[tgt.td[tind].vrtx[j]][1])-
+         (tgt.vrtx[tgt.td[tind].vrtx[(j+1)%3]][1]
+         -tgt.vrtx[tgt.td[tind].vrtx[j]][1])*
+         (xp[0]-tgt.vrtx[tgt.td[tind].vrtx[j]][0]));
+      }
+      cnnct[v0].tri = tind;
+      ainv = 1.0/(tgt.area(tind));
+      for (j=0;j<3;++j) {
+         cnnct[v0].wt[(j+2)%3] = wgt[j]*ainv;
+         if (wgt[j]*ainv > 1.0) 
+            cnnct[v0].wt[(j+2)%3] = 1.0; 
+            
+         if (wgt[j]*ainv < 0.0)
+            cnnct[v0].wt[(j+2)%3] = 0.0;
+      }
+   }
+ 
+   return(block::stop);
+}
+
 
 #ifdef SKIP
 void side_bdry::setupcoordinates() {
@@ -231,12 +311,13 @@ void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
    for(j=0;j<nel;++j) {
       sind = el[j];
       offset = x.sd[sind].vrtx[0]*stride;
-      for (k=bgn;k<=end;++k) 
-         fsndalias[count++] = base[offset+k];
+      for (k=bgn;k<=end;++k) {
+         fsndbuf(count++) = base[offset+k];
+      }
    }
    offset = x.sd[sind].vrtx[1]*stride;
    for (k=bgn;k<=end;++k) 
-      fsndalias[count++] = base[offset+k]; 
+      fsndbuf(count++) = base[offset+k]; 
       
    sndsize() = count;
    sndtype() = boundary::flt_msg;
@@ -258,53 +339,100 @@ void scomm::finalrcv(FLT *base,int bgn,int end, int stride) {
       sind = el[j];
       offset = x.sd[sind].vrtx[0]*stride;
       for (k=bgn;k<=end;++k)
-         base[offset+k] = fsndalias[count++];
+         base[offset+k] = fsndbuf(count++);
    }
    offset = x.sd[sind].vrtx[1]*stride;
    for (k=bgn;k<=end;++k)
-      base[offset+k] = fsndalias[count++];
+      base[offset+k] = fsndbuf(count++);
    
-   for(m=0;m<nlocal_match;++m) {            
+   for(m=0;m<nmatch;++m) {            
       count = 0;
       for(j=nel-1;j>=0;--j) {
          sind = el[j];
          offset = x.sd[sind].vrtx[1]*stride;
-         for (k=bgn;k<=end;++k) 
-            base[offset+k] += static_cast<FLT *>(local_rcv_buf[m])[count++];
+         for (k=bgn;k<=end;++k) {
+            base[offset+k] += frcvbuf(m,count++);
+         }
       }
       offset = x.sd[sind].vrtx[0]*stride;
       for (k=bgn;k<=end;++k) 
-            base[offset+k] += static_cast<FLT *>(local_rcv_buf[m])[count++];            
+            base[offset+k] += frcvbuf(m,count++);            
    }
    
-
-#ifdef MPISRC
-   /* MPI PASSES */
-   for(m=0;m<nmpi_match;++m) {
-      MPI_Wait(&mpi_rcvrqst[m], &status);
-      count = 0;
-      for(j=nel-1;j>=0;--j) {
-         sind = el[j];
-         offset = x.sd[sind].vrtx[1]*stride;
-         for (k=bgn;k<=end;++k) 
-            base[offset+k] += static_cast<FLT *>(mpi_rcv_buf[m])[count++];
-      }
-      offset = x.sd[sind].vrtx[0]*stride;
-      for (k=bgn;k<=end;++k) 
-            base[offset+k] += static_cast<FLT *>(mpi_rcv_buf[m])[count++];
-   }
-#endif
-
    count = 0;
    for(j=0;j<nel;++j) {
       sind = el[j];
       offset = x.sd[sind].vrtx[0]*stride;
       for (k=bgn;k<=end;++k)
-         base[offset+k] /= (1 +nlocal_match +nmpi_match);
+         base[offset+k] /= (1 +nmatch);
    }
    offset = x.sd[sind].vrtx[1]*stride;
    for (k=bgn;k<=end;++k)
-      base[offset+k] /= (1 +nlocal_match +nmpi_match);
+      base[offset+k] /= (1 +nmatch);
+}
+
+block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
+   int i,j,k,v0;
+   
+   switch(excpt) {
+      case(0):
+         /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
+         /* MAKE SURE ENDPOINTS ARE OK */
+         i = x.sd[el[0]].vrtx[0];
+         if (cnnct[i].tri < 0) {
+            tgt.qtree.nearpt(x.vrtx[i],v0);
+            cnnct[i].tri=tgt.vd[v0].tri;
+            for(j=0;j<3;++j) {
+               cnnct[i].wt[j] = 0.0;
+               if (tgt.td[cnnct[i].tri].vrtx[j] == v0) cnnct[i].wt[j] = 1.0;
+            }
+         }
+         i = x.sd[el[nel-1]].vrtx[1];
+         if (cnnct[i].tri < 0) {
+            tgt.qtree.nearpt(x.vrtx[i],v0);
+            cnnct[i].tri=tgt.vd[v0].tri;
+            for(j=0;j<3;++j) {
+               cnnct[i].wt[j] = 0.0;
+               if (tgt.td[cnnct[i].tri].vrtx[j] == v0) cnnct[i].wt[j] = 1.0;
+            }
+         }
+         
+         if (first) {
+            sndsize() = 0;
+            sndtype() = int_msg;
+            for(k=1;k<nel;++k) {
+               v0 = x.sd[el[k]].vrtx[0];
+               if (cnnct[v0].tri > 0) {
+                  isndbuf(sndsize()++) = -1;
+               }
+               else {
+                  isndbuf(sndsize()++) = +1;
+                  cnnct[v0].tri = 0;
+                  for(j=0;j<3;++j)
+                     cnnct[v0].wt[j] = 0.0;
+               }
+            }
+            slave_master_prepare(); 
+         }
+         return(block::advance);                       
+      case(1):
+         slave_master_transmit();
+         return(block::advance);
+      case(2):
+         slave_master_wait();
+         if (!first) {
+            i = 0;
+            for(k=nel-1;k>0;--k) {
+               v0 = x.sd[el[k]].vrtx[1];
+               if (ircvbuf(0,i) < 0) {
+                  cnnct[v0].tri = 0;
+                  for(j=0;j<3;++j)
+                     cnnct[v0].wt[j] = 0.0;
+               }
+            }
+         }               
+   }
+   return(block::stop);
 }
 
 void curved_analytic::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {

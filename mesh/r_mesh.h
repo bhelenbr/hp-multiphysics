@@ -80,7 +80,7 @@ class r_mesh : public mesh {
          FLT *diag;
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-         sharedmem* init(bool coarse, std::map <std::string,std::string>& input, gbl *rgin, sharedmem *wkin = 0);
+         sharedmem* init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin, sharedmem *wkin = 0);
          void load_scratch_pointers();
          void output(char *filename, ftype::name filetype) {
             mesh::output(filename,filetype);

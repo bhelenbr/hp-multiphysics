@@ -13,18 +13,12 @@ class blocks {
       block **blk;
       std::ostream *log;
       std::ofstream filelog;
-      
-      /* private utilities */
-      void localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,int j);
-#ifdef MPISRC
-      void mpimatch(int vsf,boundary *v1,int p,int b1,int b2,int i,int j);
-#endif
 
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
       blocks() : nproc(1), myid(0) {}
-      block * getnewblock(int type);  // THIS MUST BE INSTANTIATED FOR PARTICULAR PROBLEM
-      void init(std::map<std::string,std::string> input[]);
+      block* getnewblock(int idnum, std::map<std::string,std::string> *blockdata);
+      void init(std::map<std::string,std::string> input);
       void init(const char *infile, const char *outfile = 0);
       void findmatch();
       void matchboundaries();

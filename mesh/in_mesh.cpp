@@ -8,7 +8,7 @@
 int *mesh::i1wk = 0, *mesh::i2wk = 0, *mesh::i3wk = 0;
 int mesh::maxlst, mesh::maxsrch;
 
-sharedmem* mesh::input(const char *filename, ftype::name filetype, const char *bdryfile, FLT grwfac, sharedmem *win) {
+sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile, sharedmem *win) {
    int i,j,n,sind,count,temp,tind,v0,v1,sign;
    int ierr;
    char grd_app[100];
@@ -219,7 +219,6 @@ next1a:     continue;
             if (!initialized) {
                maxvst = static_cast<int>((grwfac*3*i)/2); 
                allocate(maxvst,win);
-               vrtx = vrtx;
             }
             else if ((3*i)/2 > maxvst) {
                *log << "mesh is too large" << std::endl;
@@ -329,7 +328,6 @@ next1a:     continue;
             
             if (!initialized) {
                allocate(nside + (int) (grwfac*nside),win);
-               vrtx = vrtx;
             }
             else if (nside > maxvst) {
                *log << "mesh is too large" << std::endl;
@@ -365,7 +363,7 @@ next1a:     continue;
                if (!sbdry[i]->maxel) sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nel));
                else assert(sbdry[i]->nel < sbdry[i]->maxel);
                for(int j=0;j<sbdry[i]->nel;++j) {
-                  fscanf(grd,"%*d:%d\n",&sbdry[i]->el[j]);
+                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry[i]->el[j]);
                }
             }
             
@@ -400,7 +398,6 @@ next1a:     continue;
             
             if (!initialized) {
                allocate(nside + (int) (grwfac*nside),win);
-               vrtx = vrtx;
             }
             else if (nside > maxvst) {
                *log << "mesh is too large" << std::endl;
@@ -552,7 +549,6 @@ next1a:     continue;
             if (!initialized) {
                maxvst = static_cast<int>((grwfac*3*ntri)/2); 
                allocate(maxvst,win);
-               vrtx = vrtx;
             }
             else if ((3*ntri)/2 > maxvst) {
                *log << "mesh is too large" << std::endl;
@@ -674,7 +670,6 @@ next1c:     continue;
             if (!initialized) {
                maxvst = static_cast<int>(grwfac*3*ntri);
                allocate(maxvst,win);
-               vrtx = vrtx;
             }
             else if ((3*ntri) > maxvst) {
                *log << "mesh is too large" << std::endl;
@@ -893,3 +888,26 @@ void mesh::load_scratch_pointers() {
    fwk = static_cast<FLT *>(scratch->p);
    return;
 }
+
+void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
+   int i;
+
+   if (!initialized) {
+      maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
+      allocate(maxvst,inmesh.scratch);
+      nsbd = inmesh.nsbd;
+      for(i=0;i<nsbd;++i) {
+         sbdry[i] = inmesh.sbdry[i]->create(*this);
+         sbdry[i]->alloc(MAX(static_cast<int>(inmesh.sbdry[i]->maxel/sizereduce1d)+1,10));
+      }
+      nvbd = inmesh.nvbd;
+      for(i=0;i<nvbd;++i) {
+         vbdry[i] = inmesh.vbdry[i]->create(*this);
+         vbdry[i]->alloc(1);
+      }
+      qtree.allocate(vrtx,maxvst);
+      initialized = 1;
+   }
+}
+   
+

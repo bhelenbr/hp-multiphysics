@@ -65,7 +65,7 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
    int type;        
    side_bdry *temp;  
    
-   type = idnum&0xffff;
+   type = idnum&0xff;
 
    if (bdrydata) {
       sprintf(idntystring,"s%d",idnum);
@@ -76,8 +76,12 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
          data >> type;  
          data.clear(); 
       }
+      else {
+         *log << "couldn't find type for side: " << idnum << std::endl;
+         *log << "using type: " << type << std::endl;
+      }
    }
-   // *log << "making side " << idnum << std::endl;
+   *log << "making side " << idnum << std::endl;
 
    switch(type) {
       case stype::plain: {
@@ -102,6 +106,10 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
       }
       case stype::spline: {
     //     temp = new spline(idnum,*this);
+         break;
+      }
+      case stype::partition: {
+         temp = new spartition(idnum,*this);
          break;
       }
       default: {
