@@ -20,7 +20,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
    
+#ifdef PV3
    changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
+#endif
    
    /* UPDATE QUADTREE FOR MOVING MESH */
    // treeupdate(); // USE TREE UPDATE IF DOMAIN DOESN'T MOVE ONLY MESH DEFORMATION
