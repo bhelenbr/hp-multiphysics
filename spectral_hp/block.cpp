@@ -125,9 +125,10 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    return;
 }
 
-void block::tadvance() {
+void block::tadvance(int stage) {
    int j;
    
+#ifdef BACKDIFF
    grd[0].surfvrttoug();
    grd[0].setksprg1d();
    grd[0].surfksrc1d();
@@ -137,6 +138,18 @@ void block::tadvance() {
       grd[j].getfdvrtdt();
       grd[j].setksprg1d();
    }
+#else
+   if (stage == 0) {
+      grd[0].surfvrttoug();
+      grd[0].setksprg1d();
+      grd[0].surfksrc1d();
+      for(j=1;j<ngrid;++j)
+         grd[j].setksprg1d();
+   }
+   grd[0].tadvance(stage);
+   for(j=1;j<ngrid;++j)
+      grd[j].getfdvrtdt();
+#endif
 }
 
 #ifdef OLDRECONNECT
