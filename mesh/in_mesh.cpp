@@ -9,7 +9,7 @@ int *mesh::intwk1, *mesh::intwk2, *mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
 int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
-    int i,j,sind,count,temp;
+    int i,j,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
     FILE *grd;
@@ -329,6 +329,119 @@ next1:      continue;
             for(i=0;i<nvbd;++i)
                for(j=0;j<vbdry[i].num;++j)
                   fscanf(grd,"%d\n",&vbdry[i].el[j]);
+            
+            break;
+            
+         case(mavriplis):
+            strcpy(grd_app,filename);
+            strcat(grd_app,".mvp");
+            grd = fopen(grd_app,"r");
+            if (grd==NULL) {
+                    printf("couldn't open file: %s\n",grd_app);
+                    exit(1);
+            }
+              
+            for(i=0;i<12;++i) {
+               fscanf(grd,"%*[^\n]\n");
+            }          
+
+            ierr = fscanf(grd,"%d%d%d%*d%*d%d\n",&nsbd,&nvrtx,&nside,&ntri);
+            if (ierr != 4) {
+               printf("trouble with mavriplis format\n");
+               exit(1);
+            }
+            
+            if (!initialized) {
+               allocate(nside + (int) (grwfac*nside));
+               vin = vrtx;
+            }
+            else if (nside > maxvst) {
+               printf("mesh is too large\n");
+               exit(1);
+            }
+            
+            fscanf(grd,"%*[^\n]\n");
+            
+            fscanf(grd,"%*d%d%*d%d%*d%*d\n",&sbdry[0].num,&count);
+            
+            /* ALLOCATE BOUNDARY STORAGE */
+            if (!initialized) bdryalloc(count + (int) (grwfac*count));
+
+            /* EXTERNAL BOUNDARY */
+            for(i=0;i<sbdry[0].num;++i)
+               sbdry[0].el[i] = i;
+            sbdry[0].type = OUTF_MASK;
+            
+            ++nsbd;
+            
+            for(i=1;i<nsbd;++i) {
+               sbdry[i].type = EULR_MASK;
+               fscanf(grd,"%*[^\n]\n");
+               fscanf(grd,"%d%d%*[^\n]\n",&sbdry[i].el[0],&sbdry[i].num);
+               --sbdry[i].el[0];
+               sbdry[i].num -= sbdry[i].el[0];
+               for(j=1;j<sbdry[i].num;++j)
+                  sbdry[i].el[j] = j +sbdry[i].el[0];
+            }
+            
+            fscanf(grd,"%*[^\n]\n");
+               
+            for(i=0;i<nside;++i) {
+               fscanf(grd,"%d%d%d%d%*d\n",&svrtx[i][0],&svrtx[i][1],&stri[i][0],&stri[i][1]);
+               --svrtx[i][0];--svrtx[i][1];--stri[i][0];--stri[i][1];
+               
+               if (stri[i][1] >= ntri) stri[i][1] = -1;
+            }
+            
+            for(i=0;i<nvrtx;++i)
+               fscanf(grd,"%lf%lf%*[^\n]\n",&vrtx[i][0],&vrtx[i][1]);
+               
+            for(i=0;i<ntri;++i)
+               for(j=0;j<3;++j)
+                  tside[i].side[j] = -1;
+                  
+            for(i=0;i<nside;++i) {
+               tind = stri[i][0];
+               j = 0;
+               while (tside[tind].side[j] > 0)
+                  ++j;
+               tside[tind].side[j] = i;
+               tside[tind].sign[j] = 1;
+               
+               tind = stri[i][1];
+               if (tind > -1) {
+                  j = 0;
+                  while (tside[tind].side[j] > 0)
+                     ++j;
+                  tside[tind].side[j] = i;
+                  tside[tind].sign[j] = -1;
+               }
+            }
+            
+            /* REORDER SIDES TO BE COUNTERCLOCKWISE */
+            /* FILL IN TVRTX */
+            for(tind=0;tind<ntri;++tind) {
+               v0 = svrtx[tside[tind].side[0]][(tside[tind].sign[0]+1)/2];
+               v1 = svrtx[tside[tind].side[1]][(1-tside[tind].sign[1])/2];
+               if (v0 != v1) {
+                  /* SWITCH SIDES */
+                  j = tside[tind].side[1];
+                  tside[tind].side[1] = tside[tind].side[2];
+                  tside[tind].side[2] = j;
+                  j = tside[tind].sign[1];
+                  tside[tind].sign[1] = tside[tind].sign[2];
+                  tside[tind].sign[2] = j;
+               }
+               
+               tvrtx[tind][2] = v0;
+               sind = tside[tind].side[2];
+               sign = tside[tind].sign[2];
+               tvrtx[tind][1] = svrtx[sind][(sign+1)/2];
+               tvrtx[tind][0] = svrtx[sind][(1-sign)/2];
+            }
+            
+            setbcinfo();
+            out_mesh("test",easymesh);
             
             break;
             

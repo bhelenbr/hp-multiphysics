@@ -24,6 +24,7 @@
 #define COMX_MASK (1<<8)
 #define COMY_MASK (1<<9)
 #define CURV_MASK (1<<10)
+#define PRMT_MASK (1<<11)
 
 /* MASK FOR ALL MESSAGE PASSING BOUNDARIES */
 /* X/Y SPLIT ONLY WORKS FOR FACE TO FACE BOUNDARIES & 2X2 BOUNDARY INTERSECTIONS */
@@ -39,8 +40,7 @@
 
 #include<quadtree.h>
 
-
-enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary};
+enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
 
 /* THIS ROUTINE MUST BE SUPPLIED IF USING CURVED BOUNDARIES */
 /* GIVEN AN INPUT X,Y SHOULD MOVE POINT ONTO CURVED SURFACE */
@@ -51,6 +51,7 @@ class mesh {
    protected:
       int initialized, maxvst;
 
+   public:
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];
@@ -84,7 +85,7 @@ class mesh {
       int nsbd;
       int maxsbel;
       struct boundary sbdry[MAXSB];
-
+      
       /* TRIANGLE DATA */      
       int ntri;
       int (*tvrtx)[3];
@@ -238,4 +239,3 @@ class mesh {
       
 };
 #endif
-
