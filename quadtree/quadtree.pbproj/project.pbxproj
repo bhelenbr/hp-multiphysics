@@ -107,6 +107,7 @@
 				08FB77A1FE84155DC02AAC07,
 				08FB77A3FE84155DC02AAC07,
 				08FB77A5FE84155DC02AAC07,
+				F515DB4701A4706A01990B20,
 			);
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -222,6 +223,19 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F515DB4701A4706A01990B20 = {
+			buildActionMask = 2147483647;
+			files = (
+			);
+			generatedFileNames = (
+			);
+			isa = PBXShellScriptBuildPhase;
+			name = "Shell Script";
+			neededFileNames = (
+			);
+			shellPath = /bin/csh;
+			shellScript = "~helenbrk/Codes/quadtree/createlib";
 		};
 	};
 	rootObject = 08FB7793FE84155DC02AAC07;
