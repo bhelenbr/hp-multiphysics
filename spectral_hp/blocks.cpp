@@ -57,10 +57,8 @@ void blocks::init(char *file) {
    printf("#1/DT\t\tgravity\n#%0.2f\t%0.2f\n",hp_mgrid::dti,hp_mgrid::g);
 
 /*	SET BACKWARDS DIFFERENCE CONSTANTS */
-   for(i=0;i<MXSTEP+1;++i)
-      hp_mgrid::bd[i] = 0.0;
-   hp_mgrid::bd[0] = hp_mgrid::dti;
-   hp_mgrid::bd[1] = -hp_mgrid::dti;
+   hp_mgrid::setbd(1);
+   hp_mgrid::extrap = 0; /* DON'T EXTRAPOLATE ON FIRST CALL TO TADVANCE */
 
 /*	READ IN NUMBER OF TIME STEP/OUTPUT INTERVAL */
    fscanf(fp,"%*[^\n]%d %d\n",&ntstep,&out_intrvl);
@@ -104,9 +102,9 @@ void blocks::init(char *file) {
 
 
 /*	INITIALIZE SOLUTION FOR EACH BLOCK */
-   if (readin >= 0) {
+   if (readin > 0) {
       startup = 0;
-      ntstep += readin +1;
+      ntstep += readin;
       
       for(i=0;i<nblocks;++i) {
       
@@ -118,7 +116,8 @@ void blocks::init(char *file) {
          blk[i].grd[0].in_mesh(outname,easymesh);  
          blk[i].grd[0].spectral_hp::setbcinfo();
 
-/*			FOR ADAPTIVE MESH */         
+/*			FOR ADAPTIVE MESH */ 
+#ifdef TEMPO        
          if (adapt) {
             number_str(bname,"vlgth",readin,3);
             strcat(bname, ".");
@@ -126,6 +125,7 @@ void blocks::init(char *file) {
             printf("#Reading vlength: %s\n",outname);
             blk[i].grd[0].inlength(outname);
          }
+#endif
 
 /*			READ SOLUTION */ 
          number_str(bname,"data",readin,3);
@@ -134,11 +134,12 @@ void blocks::init(char *file) {
          printf("#Reading solution: %s\n",outname);
          blk[i].grd[0].spectral_hp::input(outname,text);
 
+#ifdef TEMPO
 /*			INPUT UNSTEADY TIME HISTORY */
          number_str(outname,"rstrtdata",readin,3);
          strcat(outname, ".");
          number_str(bname, outname, i, 1);
-         for(j=0;j<MXSTEP-1;++j) {
+         for(j=0;j<MXSTEPM1;++j) {
             number_str(outname,bname,j,1);
             printf("#Reading restart data: %s\n",outname);
             blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,text);
@@ -147,13 +148,15 @@ void blocks::init(char *file) {
          number_str(outname,"rstrtvrtx",readin,3);
          strcat(outname, ".");
          number_str(bname, outname, i, 1);
-         for(j=0;j<MXSTEP-1;++j) {
+         for(j=0;j<MXSTEPM1;++j) {
             number_str(outname,bname,j,1);
             printf("#Reading restart mesh: %s\n",outname);
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
+#endif
       }
-      
+      hp_mgrid::setbd(MXSTEP);
+            
 /*		REFIND BOUNDARIES ON FINE MESH */
       findmatch(0);
 
@@ -165,9 +168,16 @@ void blocks::init(char *file) {
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
 
-/*			REFIND BOUNDARIES FOR COARSE MESHES */            
+/*			REFIND BOUNDARIES FOR COARSE MESHES */
+/*			JUST IN CASE BDRY ORDERING CHANGED */            
          for(i=1;i<mgrids;++i) 
             findmatch(i);
+      }
+      else {
+/*			THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
+         for(i = 1; i < mgrids; ++i)
+            for(j=0;j<nblocks;++j)
+               blk[j].grd[i].r_mesh::mg_getfres();
       }
    }
    else {
@@ -176,7 +186,7 @@ void blocks::init(char *file) {
          blk[i].grd[0].tobasis(&f1);
       }
       startup = 0;
-   }   
+   }
 
    return;
 }
@@ -249,14 +259,14 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
          blk[i].grd[grdnum].bdry_mp(); //RCV Y SEND X
          
       for(i=0;i<nblocks;++i)
-         blk[i].grd[grdnum].minvrt2(); //RCV X SEND Y & X
+         blk[i].grd[grdnum].minvrt2(); //RCV X SEND SIDE MODE 0 Y & X
                   
       for(mode=0;mode<sm-1;++mode) {
          for(i=0;i<nblocks;++i)
-            blk[i].grd[grdnum].minvrt3(mode); // RCV Y & X
+            blk[i].grd[grdnum].minvrt3(mode); // RCV SIDE MODE Y & X
             
          for(i=0;i<nblocks;++i)
-            blk[i].grd[grdnum].minvrt3_mp(mode+1); //SEND Y & X
+            blk[i].grd[grdnum].minvrt3_mp(mode+1); //SEND SIDE Y & X
       }
       
       if (sm) {
@@ -267,6 +277,10 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
       for(i=0;i<nblocks;++i) 
          blk[i].grd[grdnum].nstage2(stage);
    }
+   
+//   if (mgrid == 0) 
+//      for(i=0;i<nblocks;++i) 
+//         blk[i].grd[grdnum].maxres();
 
    return;
 }
@@ -354,20 +368,8 @@ void blocks::go() {
          r_maxres();
          printf("\n");
       }
-
-//      if (tstep == 0 && hp_mgrid::dti > 0.0) {
-//         hp_mgrid::nstep = 2;
-//			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-//         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-//         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-//		}
-//		else {
-//			hp_mgrid::nstep = 3;
-//			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
-//			hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
-//			hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
-//			hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
-//		}
+      
+      hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
 
       if (!(tstep%out_intrvl)) {
          output(tstep+1,text);
@@ -415,6 +417,8 @@ void blocks::output(int number, FILETYPE type=text) {
 /*		OUTPUT SOLUTION */
       blk[i].grd[0].output(outname,type);
       
+//      blk[i].grd[0].output(blk[i].grd[0].gbl->res,blk[i].grd[0].vrtx,blk[i].grd[0].binfo,outname,tecplot);
+      
 /*		OUTPUT MESH */
       number_str(bname,"mesh",number,3);
       strcat(bname, ".");
@@ -434,7 +438,7 @@ void blocks::output(int number, FILETYPE type=text) {
       number_str(outname,"rstrtdata",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);
-      for(j=0;j<MXSTEP-1;++j) {
+      for(j=0;j<MXSTEPM1;++j) {
          number_str(outname,bname,j,1);
          blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,type);
       }
@@ -442,7 +446,7 @@ void blocks::output(int number, FILETYPE type=text) {
       number_str(outname,"rstrtvrtx",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);
-      for(j=0;j<MXSTEP-1;++j) {
+      for(j=0;j<MXSTEPM1;++j) {
          number_str(outname,bname,j,1);
          blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,text);
       }

@@ -51,7 +51,7 @@ void hp_mgrid::tadvance() {
    }
    
 /*	NOW DO ADDITIONAL TERMS FOR HIGHER-ORDER BD */
-   for(step=0;step<nstep-1;++step) {
+   for(step=0;step<MXSTEP-1;++step) {
       for(tind=0;tind<ntri;++tind) {
          if (tinfo[tind] > -1) {
             crdtouht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
@@ -107,7 +107,7 @@ void hp_mgrid::tadvance() {
       for(n=0;n<NV;++n) {
          temp = ug.v[i][n] -gbl->ugbd[0].v[i][n];
          gbl->ugbd[0].v[i][n] = ug.v[i][n];
-//TEMPORARY         ug.v[i][n] += temp;
+         ug.v[i][n] += extrap*temp;
       }
    }
 
@@ -115,7 +115,7 @@ void hp_mgrid::tadvance() {
       for(n=0;n<NV;++n) {
          temp = ug.s[i][n] -gbl->ugbd[0].s[i][n];
          gbl->ugbd[0].s[i][n] = ug.s[i][n];
-//TEMPORARY         ug.s[i][n] += temp;
+         ug.s[i][n] += extrap*temp;
       }
    } 
 
@@ -123,7 +123,7 @@ void hp_mgrid::tadvance() {
       for(n=0;n<NV;++n) {
          temp = ug.i[i][n] -gbl->ugbd[0].i[i][n];
          gbl->ugbd[0].i[i][n] = ug.i[i][n];
-//TEMPORARY         ug.i[i][n] += temp;
+         ug.i[i][n] += extrap*temp;
       }
    }   
 
@@ -132,7 +132,7 @@ void hp_mgrid::tadvance() {
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<ND;++n) {
          dvrtdt[i][n] = bd[1]*vrtx[i][n];
-         for(step=0;step<nstep-1;++step)
+         for(step=0;step<MXSTEP-1;++step)
             dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
       }
    }
@@ -142,7 +142,7 @@ void hp_mgrid::tadvance() {
          for(j=0;j<sbdry[i].num*b.sm;++j) {
             for(n=0;n<ND;++n) {
                gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
-               for(step=0;step<nstep-1;++step)
+               for(step=0;step<MXSTEP-1;++step)
                   gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
             }
          }
@@ -167,7 +167,7 @@ void hp_mgrid::tadvance() {
       for(n=0;n<ND;++n) {
          temp = vrtx[i][n] -gbl->vrtxbd[0][i][n];
          gbl->vrtxbd[0][i][n] = vrtx[i][n];
-//         vrtx[i][n] += temp;
+         vrtx[i][n] += extrap*temp;
       }
    }
             
@@ -177,7 +177,7 @@ void hp_mgrid::tadvance() {
             for(n=0;n<ND;++n) {
                temp = binfo[i][j].curv[n] -gbl->binfobd[0][i][j].curv[n];
                gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
-//               binfo[i][j].curv[n] += temp;
+               binfo[i][j].curv[n] += extrap*temp;
             }
          }
       }
@@ -185,7 +185,7 @@ void hp_mgrid::tadvance() {
    
 /*	TESTING TEMPORARY */
 //   for(i=0;i<nvrtx;++i)
-//      vrtx[i][0] *= 1.1;
+//      vrtx[i][0] += 0.1;
 
 /*	UPDATE UNSTEADY INFLOW VARIABLES */
    setinflow();
@@ -202,7 +202,7 @@ void hp_mgrid::getfdvrtdt() {
 
 /*	TEMPORARY */   
 //   for(i=0;i<nvrtx;++i)
-//      vrtx[i][0] *= 1.1;
+//      vrtx[i][0] += 0.1;
    
    fmesh = static_cast<class hp_mgrid *>(fmpt);
    

@@ -20,6 +20,10 @@
 /***************************/
 /* INITIALIZATION FUNCTION */
 /***************************/
+
+/*	FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
+int startup = 1;
+
 #ifdef TEST
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
@@ -39,11 +43,11 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(0.0 +0.0*outertime);
+         return(0.0);
       case(1):
          return(0.0);
       case(2):
-         return(0.00);
+         return(0.0);
    }
    return(0.0);
 }
@@ -166,7 +170,7 @@ FLT dhgtdx(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(2.*amp*M_PI*sin(2.*M_PI*x));
+      return(+2.*amp*M_PI*sin(2.*M_PI*x));
    }
    
    return(0.0);
@@ -187,7 +191,6 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 
 /* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
 class spectral_hp *tgt;
-int startup = 1;
 
 void mvpttobdry(int typ, FLT& x, FLT &y) {
    int iter;

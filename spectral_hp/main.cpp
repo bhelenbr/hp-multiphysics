@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
 /*	START CLOCK TIMER */
    clock();
-   
+
    myblock.init(argv[1]);
    myblock.go();
    

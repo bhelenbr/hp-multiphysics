@@ -6,6 +6,7 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
+#define BRATIO 0.0
 
 #include"hp_mgrid.h"
 #include<math.h>
@@ -43,7 +44,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = 100.0*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+               sum = BRATIO*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
             }
@@ -74,7 +75,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = 100.0*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+               sum = BRATIO*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
                indx += sm0;
@@ -89,7 +90,13 @@ void hp_mgrid::length1() {
       if (fltwk[i] <= tol || fltwk[i] >= 1./tol) {
          lgf = log(fltwk[i]);
          fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-         vlngth[i] /= fltwk[i];
+
+/*
+         if (fltwk[i] >= 1.)
+            vlngth[i] /= fltwk[i];
+         else if (fltwk[i] <= tol)
+            vlngth[i] *= 2.0;
+*/
 //         vlngth[i] = MIN(vlngth[i],gbl->maxlength);
 //         vlngth[i] = MAX(vlngth[i],gbl->minlength);
       }

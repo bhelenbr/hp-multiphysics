@@ -18,17 +18,17 @@ FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 FLT hp_mgrid::trncerr, hp_mgrid::tol;
 class hp_mgrid hp_mgrid::hpstr; // STORAGE FOR ADAPTATION 
-struct vsi hp_mgrid::ugstr[MXSTEP-1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
-FLT (*hp_mgrid::vrtxstr[MXSTEP-1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
-struct bistruct *hp_mgrid::binfostr[MXSTEP-1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
-FLT **hp_mgrid::bdwk[MXSTEP-1][NV]; // WORK FOR ADAPTATION
+struct vsi hp_mgrid::ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
+FLT (*hp_mgrid::vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
+struct bistruct *hp_mgrid::binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
+FLT **hp_mgrid::bdwk[MXSTEPM1][NV]; // WORK FOR ADAPTATION
 int hp_mgrid::size;
 
 
 /*	STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
 const FLT hp_mgrid::alpha[NSTAGE+1];
 const FLT hp_mgrid::beta[NSTAGE+1];
-int hp_mgrid::nstep=1;
+int hp_mgrid::extrap=0;
 FLT hp_mgrid::bd[MXSTEP+1];
 FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
 
@@ -54,7 +54,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       size = b.p;
       
 /*		ALLOCATE UNSTEADY ADAPTATION STORAGE */
-      for(i=0;i<MXSTEP-1;++i) {
+      for(i=0;i<MXSTEPM1;++i) {
          ugstr[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
          ugstr[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
          ugstr[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
@@ -138,19 +138,16 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    if (imn > 0) store->res0.i = (FLT (*)[NV]) xmalloc(NV*maxvst*imn*sizeof(FLT));
 
 /*	PRECONDITIONER  */
-   vect_alloc(store->gam,maxvst,FLT);
-   vect_alloc(store->dtstar,maxvst,FLT);
-   vect_alloc(store->vdiagv,maxvst,FLT);
-   vect_alloc(store->vdiagp,maxvst,FLT);
-   vect_alloc(store->sdiagv,maxvst,FLT);
-   vect_alloc(store->sdiagp,maxvst,FLT);
+   store->vprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
+   store->sprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
+   store->tprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
    
 /* STABILIZATION */
    vect_alloc(store->tau,maxvst,FLT);
    vect_alloc(store->delt,maxvst,FLT);
 
 /*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
-   for(i=0;i<MXSTEP-1;++i) {
+   for(i=0;i<MXSTEPM1;++i) {
       store->ugbd[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       store->ugbd[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
       store->ugbd[i].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
@@ -182,6 +179,34 @@ void hp_mgrid::maxres() {
    for(n=0;n<NV;++n)
       printf("%.3e  ",mxr[n]);
          
+   return;
+}
+
+void hp_mgrid::setbd(int nsteps) {
+   int i;
+   
+   for(i=0;i<MXSTEP+1;++i)
+      hp_mgrid::bd[i] = 0.0;
+      
+   switch(nsteps) {
+      case(1):
+         hp_mgrid::bd[0] =  hp_mgrid::dti;
+         hp_mgrid::bd[1] = -hp_mgrid::dti;
+         break;
+      case(2):
+         hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+         break;
+   	case(3):
+         hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
+         hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
+         hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
+         break;
+   }
+   hp_mgrid::extrap = 1;
+   
    return;
 }
    

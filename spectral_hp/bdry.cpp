@@ -159,6 +159,7 @@ void hp_mgrid::addbflux(int mgrid) {
       }
    }
    
+   
 /*	THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
 /* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
    for(i=0;i<nsbd;++i) {
@@ -223,7 +224,7 @@ void hp_mgrid::addbflux(int mgrid) {
             for(n=0;n<NV;++n)
                b.proj1d(uht[n],u[n][0]);
             
-            gam = 1.0/gbl->gam[stri[sind][0]];
+            gam = gbl->rhoi*gbl->tprcn[stri[sind][0]][0][0]/gbl->tprcn[stri[sind][0]][NV-1][NV-1];
             for(k=0;k<b.gpx;++k) {
                for(n=0;n<NV;++n) {
                   wl[n] = u[n][0][k];

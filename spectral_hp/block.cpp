@@ -26,13 +26,8 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    ngrid = grds;
    grd = new class hp_mgrid[ngrid];
    grd[0].in_mesh(grd_nm,static_cast<FILETYPE>(fmt),grwfac);
-   for(i = 1; i< ngrid; ++i) {
-      grd[i].coarsen(grd[i-1]);
-      grd[i].setbcinfo();
-      grd[i].setfine(grd[i-1]);
-      grd[i-1].setcoarse(grd[i]);
-   }
-   
+   reconnect();
+      
 /*	ALLOCATE R-DEFORMABLE MESH STORAGE */
    grd[0].r_mesh::allocate(0,&rgbl);
    for(i = 1; i< ngrid; ++i)
@@ -132,7 +127,7 @@ void block::tadvance() {
    
    grd[0].tadvance();
    grd[0].setksprg1d();
-//   grd[0].surfksrc1d();
+   grd[0].surfksrc1d();
    
    for(j=1;j<ngrid;++j) {
       grd[j].getfdvrtdt();

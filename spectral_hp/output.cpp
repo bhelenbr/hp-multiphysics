@@ -9,6 +9,7 @@
 
 #include "spectral_hp.h"
 #include<cstring>
+#include<assert.h>
 
 void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot) {
    char fnmapp[100];
@@ -219,7 +220,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 #define NEW
 
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
-   int i,j,k,m,n,pin,indx;
+   int i,j,k,m,n,pin,indx,bind;
    int bnum,innum,intyp,ierr,v0;
    FILE *in;
    char buffer[200];
@@ -320,46 +321,49 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             }
          }
       
-         for(i=0;i<nside;++i) {
-            indx = b.sm*i;
-            if (sinfo[i] > -1) {
-               bnum = (-stri[i][1]>>16) -1;
-               bind = (-stri[i][1]&0xFFFF)*sm0;
-               assert(assert(bnum > -1 && bnum < nsbd););
-               assert(indx > -1 && indx < sbdry[bnum].num*sm0);
-               
-               for(m=0;m<b.sm;++m) {
-                  ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-                  &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],
-                  &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
-                  if(ierr != 5) {
-                     printf("error in reading curved side %d\n",i);
-                     exit(1);
+         if (b.sm > 0) {
+            for(i=0;i<nside;++i) {
+               indx = b.sm*i;
+               if (sinfo[i] > -1) {
+                  bnum = (-stri[i][1]>>16) -1;
+                  bind = (-stri[i][1]&0xFFFF)*sm0;
+                  assert(bnum > -1 && bnum < nsbd);
+                  assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
+                  
+                  for(m=0;m<b.sm;++m) {
+                     ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
+                     &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],
+                     &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
+                     if(ierr != 5) {
+                        printf("error in reading curved side %d\n",i);
+                        exit(1);
+                     }
+                  }
+               }
+               else {
+                  for(m=0;m<b.sm;++m) {
+                     ierr = fscanf(in,"%le %le %le\n",
+                     &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
+                     if(ierr != 3) {
+                        printf("error in reading straight side %d\n",i);
+                        exit(1);
+                     }
                   }
                }
             }
-            else {
-               for(m=0;m<b.sm;++m) {
+         
+            if (b.im > 0) {
+               for(i=0;i<b.im*ntri;++i) {
                   ierr = fscanf(in,"%le %le %le\n",
-                  &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
+                  &g.i[i][0],&g.i[i][1],&g.i[i][2]);
                   if(ierr != 3) {
-                     printf("error in reading straight side %d\n",i);
+                     printf("error in read file6\n");
                      exit(1);
                   }
                }
             }
          }
-      
-         if (b.im > 0) {
-            for(i=0;i<b.im*ntri;++i) {
-               ierr = fscanf(in,"%le %le %le\n",
-               &g.i[i][0],&g.i[i][1],&g.i[i][2]);
-               if(ierr != 3) {
-                  printf("error in read file6\n");
-                  exit(1);
-               }
-            }
-         }
+         
          break;
 #endif
       default:

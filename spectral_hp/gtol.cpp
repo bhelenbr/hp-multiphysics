@@ -354,7 +354,7 @@ void spectral_hp::crdtouht1d(int sind) {
    bnum = (-stri[sind][1]>>16) -1;
    indx = (-stri[sind][1]&0xFFFF)*sm0;
    assert(bnum > -1 && bnum < nsbd);
-   assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+   assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 
@@ -376,7 +376,7 @@ void spectral_hp::crdtouht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) 
    bnum = (-stri[sind][1]>>16) -1;
    indx = (-stri[sind][1]&0xFFFF)*sm0;
    assert(bnum > -1 && bnum < nsbd);
-   assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+   assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 

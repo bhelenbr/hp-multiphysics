@@ -261,12 +261,12 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
    }
    else {
 /*		ADD TANGENTIAL MESH MOVEMENT SOURCE */   
-/*   	for(i=0;i<sbdry[bnum].num+1;++i)
+   	for(i=0;i<sbdry[bnum].num+1;++i)
          srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
 
       for(i=0;i<sbdry[bnum].num*b.sm;++i) 
          srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
-*/   }
+   }
 
 /*
       for(i=0;i<sbdry[bnum].num+1;++i)
@@ -401,7 +401,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
 		srf->gbl->vres[i][1] = srf->gbl->vres[i][0]*srf->gbl->vdt[i][1][0] +srf->gbl->vres[i][1]*srf->gbl->vdt[i][1][1];
 		srf->gbl->vres[i][0] = temp;
 	}
-
+   
 /* HAVE TO CORRECT AT PRDC BOUNDARIES SO POINT DOESN'T MOVE OFF LINE */
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
