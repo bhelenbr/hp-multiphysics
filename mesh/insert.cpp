@@ -308,7 +308,7 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
    stri[nside][1] = -(((i+1)<<16) +sbdry[i]->nsd());
    sbdry[i]->sd(sbdry[i]->nsd()++) = nside;
    if (sbdry[i]->nsd() > sbdry[i]->mxsz()) {
-      *log << "too many boundary elements" <<  sbdry[i]->idnty()  << sbdry[i]->mxsz() << std::endl;
+      *log << "too many boundary elements" <<  sbdry[i]->idnty()  << ' ' << sbdry[i]->mxsz() << std::endl;
       exit(1);
    }
    ++nside;
