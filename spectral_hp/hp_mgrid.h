@@ -71,7 +71,6 @@ class hp_mgrid : public spectral_hp {
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static FLT trncerr, invbdryerr, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
-      static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
       static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
       static FLT (*vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO

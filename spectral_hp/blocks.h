@@ -10,6 +10,7 @@ class block {
       struct surface_glbls *sgbl;
       struct r_mesh_glbls rgbl;
       class hp_mgrid *grd;
+      static class hp_mgrid temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
       friend class blocks;
       
    public:
@@ -31,7 +32,6 @@ class blocks {
       int ntstep,out_intrvl,readin; // TIME STEP STUFF
       int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
       int adapt; //FLAG FOR ADAPTATION
-      class hp_mgrid temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
 
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       

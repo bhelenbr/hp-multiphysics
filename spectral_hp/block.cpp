@@ -4,6 +4,8 @@
 
 extern FLT f1(int n, FLT x, FLT y);
 
+class hp_mgrid block::temp_hp;
+
 void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) {
    FILE *fp;
    char grd_nm[200];
@@ -136,11 +138,14 @@ void block::tadvance() {
    }
 }
 
+#define OLDRECONNECT
+
+#ifdef OLDRECONNECT
 void block::reconnect() {
    int i;
 
    for(i = 1; i< ngrid; ++i) {
-      grd[i].coarsen(grd[i-1]);
+      grd[i].coarsen(1.6,grd[i-1]);
       grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
@@ -148,6 +153,22 @@ void block::reconnect() {
 
    return;
 }
+#else
+void block::reconnect() {
+   int i;
+
+   for(i = 1; i< ngrid; ++i) {
+      grd[i].coarsen2(1.5,grd[i-1],temp_hp);
+      grd[i].setbcinfo();
+      grd[i].setfine(grd[i-1]);
+      grd[i-1].setcoarse(grd[i]);
+   }
+
+   return;
+}
+#endif
+
+
 
 void block::coarsenchk(const char *fname) {
    int i;

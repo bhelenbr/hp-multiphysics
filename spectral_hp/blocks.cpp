@@ -162,10 +162,6 @@ void blocks::init(char *file) {
       if (adapt) {
          adaptation();
 
-         /* CREATE COARSE MESHES */
-         for(i=0;i<nblocks;++i)
-            blk[i].reconnect();
-
          /* REFIND BOUNDARIES FOR COARSE MESHES */
          /* JUST IN CASE BDRY ORDERING CHANGED */            
          for(i=1;i<mgrids;++i) 
@@ -185,6 +181,8 @@ void blocks::init(char *file) {
       }
       startup = 0;
    }
+
+   blk[0].coarsenchk("test");
    
 #ifdef PV3
    viz_init();
@@ -193,19 +191,23 @@ void blocks::init(char *file) {
    return;
 }
 
-void blocks::findmatch(int i) {
+void blocks::findmatch(int grdlvl) {
    int j,k,match;
+   
+   for(j=0;j<nblocks;++j)
+      blk[j].grd[grdlvl].zerobdryisfrst();
    
    for(j=0;j<nblocks;++j) {
       match = 0;
       for(k=0;k<nblocks;++k)
-         match += blk[j].grd[i].findmatch(blk[k].grd[i]);
+         match += blk[j].grd[grdlvl].findmatch(blk[k].grd[grdlvl]);
          
-      if (match != blk[j].grd[i].alld_mp()) {
-         printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[i].alld_mp());
+      if (match != blk[j].grd[grdlvl].alld_mp()) {
+         printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[grdlvl].alld_mp());
          exit(1);
       }
    }
+   
    return;
 }
 
@@ -390,6 +392,7 @@ void blocks::go() {
          output(tstep+1,tecplot);
       }
        
+#define DEBUG
 #ifdef DEBUG
       /*	THIS IS TO ALLOW MACHINE EXACT RESTARTS WHEN DEBUGGING */
       for(i=0;i<nblocks;++i) {
@@ -438,11 +441,8 @@ void blocks::go() {
       }
 #endif
 
-      if (adapt && tstep != ntstep-1) {
-         adaptation();
-         for(i=0;i<nblocks;++i)
-            blk[i].reconnect();
-      }
+      
+      if (adapt && tstep != ntstep-1)  adaptation();
    }
    
    return;
@@ -451,6 +451,15 @@ void blocks::go() {
 void blocks::adaptation() {
    int i;
    
+   /* THIS IS TO ENSURE COMMUNICATION BOUNDARES GET */
+   /* COARSENED THE SAME WAY */
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].matchboundaries1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].matchboundaries2();
+
+   /* SET-UP LENGTH FUNCTION */
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].length1();
       
@@ -459,10 +468,14 @@ void blocks::adaptation() {
       
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].length2();
-      
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].adapt(temp_hp);
 
+   /*	ADAPT MESH */      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].adapt(block::temp_hp);
+
+   /* RECONNECT COARSE MESHES */
+   for(i=0;i<nblocks;++i)
+      blk[i].reconnect();
 
    return;
 }
