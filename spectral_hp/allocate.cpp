@@ -78,7 +78,7 @@ void spectral_hp::setbcinfo() {
 /*	SET UP VRTX BC INFORMATION FOR OUTPUT */
    for(i=0;i<nvrtx;++i)
       vinfo[i] = -1;
-   
+
    for(i=0;i<nvbd;++i)
       for(j=0;j<vbdry[i].num;++j)
          vinfo[vbdry[i].el[j]] = vbdry[i].type;

@@ -57,7 +57,7 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 
 /*	WHERE IS THIS GOING TO BE STORED? */   
 /*	LOAD PHYSICAL CONSTANTS & ITERATIVE THINGS FOR EACH BLOCK */
-   blk[0].setphysics(1.0, 0.025, 0.0, &f1);
+   blk[0].setphysics(1.0, 0.025, 1.0, &f1);
    blk[0].setsurfphysics(0,1.0,0.5,0.0125);
 
    cfl[0] = 2.5;
@@ -77,7 +77,7 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 
    for(i=0;i<nblocks;++i)
        blk[i].hpinit(base, lg2pmax);
-
+       
 /*	NEED TO INITIALIZE EACH WITH INITIALIZATION FUNCTION */
    for(i=0;i<nblocks;++i) {
       blk[i].grd[0].loadbasis(base[lg2pmax]);
@@ -219,7 +219,8 @@ void blocks::output(char *filename, FILETYPE filetype = text) {
       }
    }
    else {
-      blk[0].grd[0].output(filename,filetype);
+      blk[0].grd[0].bcinfo();
+      blk[0].grd[0].out_mesh(filename,filetype);  //TEMPORARY 
    }
    
    return;

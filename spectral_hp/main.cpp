@@ -31,7 +31,6 @@ int main() {
    
    x.allocate(base);
    x.tobasis(&f1);
-   x.output("hope",tecplot);
    exit(0);
    
    for(i=0;i<2;++i) {
@@ -51,16 +50,15 @@ int main() {
 //   9  7.569496e-05  3.783905e-05  1.604564e-04
 
    myblock.init(1,1,0,"../../grids/WAVE/wave8",easymesh,5);
-   myblock.output("hope0",tecplot);
    myblock.tadvance();
-   for(i=0;i<1;++i) {
+   for(i=0;i<10;++i) {
       myblock.cycle(1);
       printf("%d ",i);
       myblock.print_maxres();
       printf("\n");
    }
    
-   myblock.output("hope1",tecplot);
+   myblock.output("hope1",easymesh);
 
    return(0);
 }

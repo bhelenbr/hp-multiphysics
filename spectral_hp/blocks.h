@@ -37,7 +37,7 @@ class block {
             gbl.sgbl[snum].fadd[n] = fadd[n];
          for (int i=0;i<MXLG2P;++i)
             for (int n=0;n<ND;++n)
-               gbl.sgbl[snum].cfl[i][n] = cfl[n][i];
+               gbl.sgbl[snum].cfl[i][n] = cfl[i][n];
       }
       
       

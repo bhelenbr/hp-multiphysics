@@ -73,8 +73,8 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
    if (!srf->gbl.first) return;
    
    count = 0;
-   sigor = gbl.sigma/srf->gbl.rhoav;
-   drhor = srf->gbl.drho/srf->gbl.rhoav;
+   sigor = gbl.sigma/(2.*srf->gbl.rhoav);
+   drhor = srf->gbl.drho/(2.*srf->gbl.rhoav);
       
 /*	CONSERVE AREA FOR STEADY CLOSED BDRY PROBLEMS */	
 //   if (dt0 == 0.0) dnormdt = srf->gbl.lamv*cnsrvarea(bnum);
@@ -123,23 +123,23 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
             
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
-         tabs = fabs(tau) + EPSILON;
-         tau = tau/(jcb*(tabs*tabs/hsm +dt0 +(sigor/(hsm*hsm) +drhor*gbl.g*fabs(norm[1]/jcb))/tabs));
+         tabs = fabs(tau) + FLT_EPSILON;  // TEMPORARY CHANGE TO EPSILON
+         tau = tau/(jcb*(tabs/hsm +dt0 +(sigor/(hsm*hsm) +drhor*gbl.g*fabs(norm[1]/jcb))/tabs));
 
 /*			TANGENTIAL SPACING & NORMAL FLUX */            
          res[0][0][i] = srf->ksprg[indx]*jcb;
          res[1][0][i] = crd[0][1][i]*norm[0] +crd[1][1][i]*norm[1];
          res[1][1][i] = res[1][0][i]*tau;
-         
+
 /*			SURFACE TENSION SOURCE TERM */
          u[0][0][i] = -gbl.sigma*norm[1]/jcb;
          u[0][1][i] = +srf->gbl.drho*gbl.g*crd[1][0][i]*norm[0];
          u[1][0][i] = +gbl.sigma*norm[0]/jcb;
-         u[1][1][i] = +srf->gbl.drho*gbl.g*crd[1][0][i]*norm[0];            
+         u[1][1][i] = +srf->gbl.drho*gbl.g*crd[1][0][i]*norm[1];            
       }
       
       for(m=0;m<b.sm+2;++m)
-         lf[n][0] = 0.0;
+         lf[0][m] = 0.0;
 
 /*		INTEGRATE & STORE SURFACE RESIDUALS */               
       b.intgrtx1d(res[0][0],lf[0]);
@@ -158,8 +158,8 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       b.intgrt1d(u[0][1],lf[0]);
       b.intgrtx1d(u[0][0],lf[0]);
       b.intgrt1d(u[1][1],lf[1]);
-      b.intgrt1d(u[1][0],lf[1]);
-
+      b.intgrtx1d(u[1][0],lf[1]);
+      
 /*		STORE IN BINFO.FLUX */
       for(n=0;n<ND;++n) {
          binfo[bnum][count].flx[n] += lf[n][0];
@@ -201,7 +201,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
  //     for(i=0;i<sbdry[bnum].num*b.sm;++i) 
  //        srf->gbl.sres[i][0] += srf->sdres[log2p][i][0];
    }
-
+   
    return;
 }
 
@@ -316,7 +316,9 @@ void hp_mgrid::surfinvrt2(int bnum) {
 	for(i=0;i<=end;++i) {
 		temp                = srf->gbl.vres[i][0]*srf->gbl.vdt[i][0][0] +srf->gbl.vres[i][1]*srf->gbl.vdt[i][0][1];
 		srf->gbl.vres[i][1] = srf->gbl.vres[i][0]*srf->gbl.vdt[i][1][0] +srf->gbl.vres[i][1]*srf->gbl.vdt[i][1][1];
-		srf->gbl.vres[i][2] = temp;
+		srf->gbl.vres[i][0] = temp;
+      
+      printf("%d %f %f\n",i,temp,srf->gbl.vres[i][1]);
 	}
    
 /* HAVE TO CORRECT AT PRDC BOUNDARIES SO POINT DOESN'T MOVE OFF LINE */
@@ -363,6 +365,8 @@ void hp_mgrid::surfinvrt2(int bnum) {
 		}
 	}
    
+   exit(10);
+   
    return;
 }
 
@@ -392,7 +396,7 @@ void hp_mgrid::surfdt1(int bnum) {
 		nrm[0] =  0.5*(vrtx[v1][1] -vrtx[v0][1]);
 		nrm[1] = -0.5*(vrtx[v1][0] -vrtx[v0][0]);
 		h = 2.0*sqrt(nrm[0]*nrm[0] +nrm[1]*nrm[1]);
-
+ 
 #ifdef MOVING_MESH
 		vslp = fabs(-((vug[v0][0]-mv[v0][0])+(ug[v1][0]-mv[v1][0]))*nrm[1]/h
 				   +((ug[v0][1]-mv[v0][1])+(ug[v1][1]-mv[v1][1]))*nrm[0]/h);
@@ -405,9 +409,11 @@ void hp_mgrid::surfdt1(int bnum) {
 		cnvct = dt0 + vslp/hsm;
 		dtfli = srf->gbl.muav/(srf->gbl.rhoav*hsm*hsm) +vslp/hsm +dt0;
 		dttang  = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
-		dtnorm  = srf->gbl.rhoav*hsm*cnvct*dtfli +strss;
+		dtnorm  = 2.*srf->gbl.rhoav*hsm*cnvct*dtfli +strss;
 		srf->gbl.normc[indx] = srf->gbl.rhoav*hsm*cnvct*dtfli/dtnorm;
 		srf->gbl.meshc[indx] = srf->gbl.rhoav*hsm*dtfli;
+      
+      printf("%d %f %f\n",indx,dtnorm,dttang);
 							
 		srf->gbl.vdt[indx][0][0] += -dttang*nrm[1]*b.vdiag1d;
 		srf->gbl.vdt[indx][0][1] +=  dttang*nrm[0]*b.vdiag1d;
@@ -417,7 +423,7 @@ void hp_mgrid::surfdt1(int bnum) {
 		srf->gbl.vdt[indx+1][0][1] =  dttang*nrm[0]*b.vdiag1d;
 		srf->gbl.vdt[indx+1][1][0] =  dtnorm*nrm[0]*b.vdiag1d;
 		srf->gbl.vdt[indx+1][1][1] =  dtnorm*nrm[1]*b.vdiag1d;
-	
+      	
       if (b.sm) {
          srf->gbl.sdt[indx][0][0] = -dttang*nrm[1];
          srf->gbl.sdt[indx][0][1] =  dttang*nrm[0];
@@ -425,6 +431,8 @@ void hp_mgrid::surfdt1(int bnum) {
          srf->gbl.sdt[indx][1][1] =  dtnorm*nrm[1];
       }
 	}
+   
+   
 
 /*	SEND COMMUNICATION INFO FOR ENDPOINTS */
    end = sbdry[bnum].num;
@@ -514,8 +522,12 @@ void hp_mgrid::surfdt2(int bnum) {
 		srf->gbl.vdt[indx][1][1] = temp;
 		srf->gbl.vdt[indx][0][1] *= -jcbi*srf->gbl.cfl[log2p][1];
 		srf->gbl.vdt[indx][1][0] *= -jcbi*srf->gbl.cfl[log2p][0];
-	}
+      
+      printf("%d %f %f %f %f\n",indx,srf->gbl.vdt[indx][0][0],srf->gbl.vdt[indx][0][1],srf->gbl.vdt[indx][1][0],srf->gbl.vdt[indx][1][1]);
+      printf("%f %f\n",srf->gbl.cfl[log2p][0],srf->gbl.cfl[log2p][1]);
 
+	}
+   exit(10);
 /*	INVERT SIDE MATRIX */   
    if (b.sm > 2) {
       for(indx=0;indx<sbdry[bnum].num;++indx) {

@@ -122,7 +122,11 @@ void hp_mgrid::tstep1(void) {
          }
       }
    }
-
+   
+/*	SET UP TSTEP FOR ACTIVE BOUNDARIES */   
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
+         surfdt1(i);
    
    return;
 }
@@ -190,6 +194,11 @@ void hp_mgrid::tstep2(void) {
 			gbl.sdiagp[i] = 1.0/gbl.sdiagp[i];
 		}
 	}
+   
+/*	SET UP TSTEP FOR ACTIVE BOUNDARIES */   
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
+         surfdt2(i);
    
 	return;
 }
