@@ -37,8 +37,10 @@ class spectral_hp : public r_mesh  {
       
       /* BOUNDARY INFORMATION */
       /* NOT ALL BOUNDARIES NEED THIS INFO, BUT EXTRA STORAGE IS MINISCULE */
+   public:
       struct bistruct *binfo[MAXSB];
       
+   protected:
       /* STATIC WORK ARRAYS */
       static FLT **u[NV],**du[NV][ND],**res[NV];
       static FLT **crd[ND], **dcrd[ND][ND], **cjcb;
