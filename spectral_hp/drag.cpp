@@ -22,7 +22,6 @@ void hp_mgrid::drag(int type) {
          for(sd=0;sd<3;++sd)
             if (tside[tind].side[sd] == sind) break;
          assert(sd != 3);
-         sd = (sd+1)%3; // BASIS SIDE ORDERING & MESH SIDE ORDERING ARE DIFFERENT
          
          crdtocht(tind);
          for(m=b.bm;m<b.tm;++m)
