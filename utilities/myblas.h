@@ -7,7 +7,6 @@
  *
  */
 
-#define f2cFortran
 #include<cfortran.h>
 
 extern "C" void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
