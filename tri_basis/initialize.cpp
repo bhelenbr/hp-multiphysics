@@ -7,7 +7,7 @@
  *
  */
  
- #define NODEBUG
+ #define DEBUG
 
 #include<math.h>
 #include<utilities.h>
@@ -81,7 +81,123 @@ void hpbasis::initialize(int pdegree, int gpoints) {
    sideinfoinit(); // SET UP THINGS TO CALCULATE NORMAL DERIVATIVE TO SIDE ALONG SIDE
    lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
    legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
+
+#ifdef DEBUG
+   /* SOME TESTING */
+   double *uht;
+   double **u;
+   double **u1;
+   double **dx;
+   double **dy;
+   double **dx1;
+   double **dy1;
+   vect_alloc(uht,MXTM,FLT);
+   mat_alloc(u,gpx,gpn,FLT);
+   mat_alloc(u1,gpx,gpn,FLT);
+   mat_alloc(dx,gpx,gpn,FLT);
+   mat_alloc(dy,gpx,gpn,FLT);
+   mat_alloc(dx1,gpx,gpn,FLT);
+   mat_alloc(dy1,gpx,gpn,FLT);
    
+   for(int m=0;m<tm;++m) {
+      for(int j=0;j<tm;++j)
+         uht[j] = 0.0;
+      uht[m] = 1.0;
+      
+      proj_side(0, uht, u[0], dx[0], dy[0]);
+      for (int i = 0; i<gpx;++i)
+         printf("T0A: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+      
+      proj_side(1, uht, u[0], dx[0], dy[0]);
+      for (int i = 0; i<gpx;++i)
+         printf("T0B: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+      
+      proj_side(2, uht, u[0], dx[0], dy[0]);
+      for (int i = 0; i<gpx;++i)
+         printf("T0C: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+
+      proj(uht,u,dx,dy);
+      for(int i=0;i<gpx;++i) {
+         for(int j=0;j<gpn;++j) {
+            dx1[i][j] = 0.0;
+            dy1[i][j] = 0.0;
+         }
+      }
+      derivr(u,dx1);
+      derivs(u,dy1);
+      for(int i=0;i<gpx;++i)
+         for(int j=0;j<gpn;++j)
+            printf("T1: %d %d %e %e %e %e\n",i,j,dx[i][j],dx1[i][j],dy[i][j],dy1[i][j]);
+            
+
+      if (m < 3) {
+         proj(uht[0], uht[1], uht[2], u1);
+         for(int i=0;i<gpx;++i)
+            for(int j=0;j<gpn;++j)
+               printf("T2: %d %d %e %e\n",i,j,u1[i][j],u[i][j]);
+      }
+      
+      if (m < bm) {
+         proj_bdry(uht,u1,dx1,dy1);
+         for(int i=0;i<gpx;++i)
+            for(int j=0;j<gpn;++j)
+               printf("T3: %d %d %e %e %e %e %e %e\n",i,j,u1[i][j],u[i][j],dx[i][j],dx1[i][j],dy[i][j],dy1[i][j]);
+         
+         proj_bdry(uht,u1);
+         for(int i=0;i<gpx;++i)
+            for(int j=0;j<gpn;++j)
+               printf("T4: %d %d %e %e\n",i,j,u1[i][j],u[i][j]);
+      }
+      
+      ptprobe(1, &uht, u[0], 0.25, 0.25);
+      ptprobe_bdry(1, &uht, u1[0], 0.25, 0.25);
+      ptprobe_bdry(1, &uht, dx1[0], dx[0], dy[0], 0.25, 0.25);
+      printf("T5: %e %e %e\n",u[0][0],u1[0][0],dx1[0][0]);
+      printf("T5: %e %e\n",dx[0][0],dy[0][0]);
+
+      intgrtrs(dx,dy,uht);
+      for(int j=0;j<tm;++j)
+         printf("T6: %d %e\n",j,uht[j]);
+         
+   }
+
+
+   /* 1D TESTING */
+   for(int m=0;m<sm+2;++m) {
+      for(int j=0;j<sm+2;++j)
+         uht[j] = 0.0;
+      uht[m] = 1.0;
+      
+      proj1d(uht,u[0],dx[0]);
+      derivx1d(u[0],dx1[0]);
+      for(int i=0;i<gpx;++i)
+         printf("T11D: %d %e %e\n",i,dx[0][i],dx1[0][i]);
+      
+      proj1d(uht,u1[0]);
+      for(int i=0;i<gpx;++i)
+         printf("T21D: %d %e %e\n",i,u1[0][i],u[0][i]);
+         
+      if (m < 2) {
+         proj1d(uht[0], uht[1], u1[0]);
+         for(int i=0;i<gpx;++i)
+            printf("T31D: %d %e %e\n",i,u1[0][i],u[0][i]);
+      }
+      
+      ptprobe1d(1, &uht, u[0], 0.25);
+      ptprobe1d(1, &uht, u1[0], dx[0], 0.25);
+      printf("T41D: %e %e %e\n",u[0][0],u1[0][0],dx[0][0]);
+      
+      
+      intgrt1d(u[0],uht);
+      for(int j=0;j<sm+2;++j)
+         printf("T51D: %d %e\n",j,uht[j]);
+         
+      intgrtx1d(u[0],uht);
+      for(int j=0;j<sm+2;++j)
+         printf("T61D: %d %e\n",j,uht[j]);
+   }
+      
+#endif
    return;
 }
 
@@ -382,6 +498,9 @@ void hpbasis::initialize_values(void)
       for(i=0;i<gpx;++i) {
          gxwtx[m][i] = gx[m][i]*wtx[i];
          dgxwtx[m][i] = dgx[m][i]*wtx[i];
+#ifdef DEBUG
+         printf("%d %d %e %e\n",m,i,gxwtx[m][i],dgxwtx[m][i]);
+#endif
       }
    }
    
@@ -389,6 +508,9 @@ void hpbasis::initialize_values(void)
       for(j=0;j<gpn;++j) {
          gnwtnn0[m][j] = gn[m][j]*wtn[j]*n0[j];
          dgnwtn[m][j] = dgn[m][j]*wtn[j];
+#ifdef DEBUG
+         printf("%d %d %e %e\n",m,j,gnwtnn0[m][j],dgnwtn[m][j]);
+#endif
       }
    }
    
@@ -562,6 +684,15 @@ void hpbasis::lumpinv(void) {
 
       proj(u,wk1);  // PROJECT USES WK0
       intgrt(wk1,l); // INTGRT USES WK0
+      
+#ifdef DEBUG
+      for(i=0;i<gpx;++i)
+         for(j=0;j<gpn;++j)
+            printf("MIMM: %d %d %e\n",i,j,wk1[i][j]);
+      for(i=0;i<tm;++i)
+         printf("MIMM2: %d %e\n",i,l[i]);
+#endif
+
       for(i=0;i<tm;++i) 
          mm[m][i] = l[i];      
    }
@@ -874,7 +1005,7 @@ void hpbasis::lumpinv(void) {
       intgrt(wk1,mwk[i]);
       printf("%2d:",i);
       for(j=0;j<tm;++j)
-         printf("%+.4le  ",mwk[i][j]);
+         printf("%+.4e  ",mwk[i][j]);
       printf("\n");
    }
    
@@ -892,7 +1023,7 @@ void hpbasis::lumpinv(void) {
          
          printf("%2d:",3+i*sm+k);
          for(j=0;j<tm;++j)
-            printf("%+.4le  ",mwk[i*sm+k+3][j]);
+            printf("%+.4e  ",mwk[i*sm+k+3][j]);
          printf("\n");
       }         
    }
@@ -973,7 +1104,7 @@ void hpbasis::lumpinv(void) {
    for(i=0;i<sm+2;++i) {
       printf("LI2: %2d:",i);
       for(j=0;j<sm+2;++j)
-         printf("%+.4lf ",mm[i][j]);
+         printf("%+.4f ",mm[i][j]);
       printf("\n");
    }
 #endif
@@ -1064,8 +1195,8 @@ void hpbasis::lumpinv(void) {
       }
       printf("LI3 %2d:",k);
       for(j=0;j<sm+2;++j)
-         printf("%+.4le  ",l[j]);
-      printf("%+.4le  ",vdiag1d);
+         printf("%+.4e  ",l[j]);
+      printf("%+.4e  ",vdiag1d);
       printf("\n");
    }
 #endif
