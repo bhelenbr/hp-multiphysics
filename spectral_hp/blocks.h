@@ -28,6 +28,8 @@ class blocks {
 
       int ntstep,out_intrvl; // TIME STEP STUFF
       int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
+      int adapt; //FLAG FOR ADAPTATION
+      class spectral_hp temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
 
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       
@@ -62,4 +64,5 @@ class blocks {
       void output(int number, FILETYPE filetype = text);
 
 /*		MESH REFINEMENT */
+      void adaptation();
 };

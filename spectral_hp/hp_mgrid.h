@@ -50,9 +50,6 @@ struct hp_mgrid_glbls {
 /*	PHYSICAL CONSTANTS */
    FLT rho, rhoi, mu, nu;
 
-/*	ADAPTION CONSTANTS */   
-   FLT trncerr, tol, minlength, maxlength;
-
 /*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
    FLT (*func)(int n, FLT x, FLT y);
 };
@@ -68,8 +65,9 @@ class hp_mgrid : public spectral_hp {
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis;
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
+      static FLT trncerr, tol;  //	ADAPTATION CONSTANTS  
       static int size;
-
+  
 /*		TELLS WHICH P WE ARE ON FOR P MULTIGRID */
       int log2p;
       

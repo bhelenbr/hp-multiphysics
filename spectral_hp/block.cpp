@@ -31,9 +31,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
 /*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
-      grd[i].out_mesh("test",tecplot);
    }
-   exit(1);
 
 /*	INITIALIZE SPECTRAL_HP VECTORS */
    hpbase = bin;

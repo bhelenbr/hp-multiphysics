@@ -16,6 +16,7 @@ FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
+FLT hp_mgrid::trncerr, hp_mgrid::tol;
 int hp_mgrid::size;
 
 /*	STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */

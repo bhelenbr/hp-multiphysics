@@ -34,7 +34,12 @@ void blocks::init(char *file) {
 
 /*	LOAD FADD, ADIS, CHARACTERITIC FLAG */   
    fscanf(fp,"%*[^\n]%lf %lf %d\n",&hp_mgrid::fadd,&hp_mgrid::adis,&hp_mgrid::charyes);
-   printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);      
+   printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
+   
+/* LOAD ADAPTATION INFORMATION */
+   fscanf(fp,"%*[^\n]%d %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::tol);
+   printf("#ADAPT\t\tTRNCERR\t\tTOLERANCE\n#%d\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::tol);
+
  
  
 /*	READ SURFACE ITERATIVE INFORMATION */
@@ -332,17 +337,16 @@ void blocks::output(int number, FILETYPE type=text) {
       strcat(outname, ".");
       number_str(bname,outname,number,3);
       blk[i].grd[0].output(bname,type);
-//		if (adapt) blk[i].grd[0].out_mesh(bname,gambit);            
+		if (adapt) blk[i].grd[0].out_mesh(bname,gambit);            
    }
    
    return;
 }
 
 void blocks::go() {
-   int tstep, iter;
+   int i,tstep, iter;
    
    for(tstep=0;tstep<ntstep;++tstep) {
-//      if (adapt) {};
       
       tadvance();
       
@@ -355,6 +359,14 @@ void blocks::go() {
          
       if (!(tstep%out_intrvl)) {
          output(tstep,tecplot);
+      }
+      
+      if (adapt) {
+         adaptation();
+         blk[0].grd[0].out_mesh("test");
+         exit(1);
+         for(i=0;i<nblocks;++i)
+            blk[i].reconnect();
       }
       
       if (tstep == 0) {
@@ -373,4 +385,17 @@ void blocks::go() {
    return;
 }
    
+void blocks::adaptation() {
+   int i;
    
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].density1();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].density2();
+      
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].adapt(temp_hp,0.66);
+      
+   return;
+}
