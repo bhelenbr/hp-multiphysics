@@ -6,10 +6,10 @@
 
 using namespace std;
 
-template int mesh<2>::out_mesh(FLT (*vin)[2], const char *filename, FTYPE filetype) const;
-template int mesh<3>::out_mesh(FLT (*vin)[3], const char *filename, FTYPE filetype) const;
+template int mesh<2>::out_mesh(FLT (*vin)[2], const char *filename, ftype::name filetype) const;
+template int mesh<3>::out_mesh(FLT (*vin)[3], const char *filename, ftype::name filetype) const;
 
-template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype) const {
+template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype) const {
    char fnmapp[100];
    int i,j,n,tind,count;
    ofstream out;
@@ -19,7 +19,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          
    switch (filetype) {
    
-      case (easymesh):
+      case (ftype::easymesh):
          /* CREATE EASYMESH OUTPUT FILES */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".n");
@@ -70,7 +70,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          out.close();
          break;
       
-      case (tecplot):
+      case (ftype::tecplot):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".dat");
          out.open(fnmapp);
@@ -95,7 +95,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          out.close();
          break;
 
-      case (mavriplis):
+      case (ftype::mavriplis):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".GDS");
          out.open(fnmapp);
@@ -123,7 +123,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
             out.close();
          break; 
          
-      case (gambit):
+      case (ftype::gambit):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".FDNEUT");
          out.open(fnmapp);
@@ -194,7 +194,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          out.close();
          break;
 
-      case(text):
+      case(ftype::text):
          /* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".txt");
@@ -214,7 +214,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          out.close();
          break;
          
-      case(grid):
+      case(ftype::grid):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".grd");
          out.open(fnmapp);

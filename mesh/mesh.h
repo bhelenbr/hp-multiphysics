@@ -102,11 +102,10 @@ template<int ND> class mesh {
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      int in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1);
-      inline int in_mesh(const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
-      void triangulate(const char *filename, FLT grwfac = 1);
-      int out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh) const;
-      inline int out_mesh(const char *filename, FTYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
+      int in_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype = ftype::easymesh, FLT grwfac = 1);
+      inline int in_mesh(const char *filename, ftype::name filetype = ftype::easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
+      int out_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype = ftype::easymesh) const;
+      inline int out_mesh(const char *filename, ftype::name filetype = ftype::easymesh) const {return(out_mesh(vrtx,filename,filetype));}
       void setbcinfo();
       
       /* ACCESS TO SIMPLE MESH DATA */
@@ -129,12 +128,9 @@ template<int ND> class mesh {
       void rebay(FLT tolsize);
       void trebay(FLT tolsize);
       inline void adapt(FLT tolerance) {
-         out_mesh("deform",tecplot);
          yaber(1.0/tolerance,1,0.0);
-         out_mesh("coarse",tecplot);
          treeupdate();
-         trebay(tolerance);
-         out_mesh("refine",tecplot);
+         rebay(tolerance);
          return;
       }
       
@@ -179,7 +175,6 @@ template<int ND> class mesh {
       /* MESH MODIFICATION FUNCTIONS */
       /* TO CREATE AN INITIAL TRIANGUlATION */
       void triangulate(int nside);
-      void findpt(int *vrtxlst,int nv,int *v,int chkadj,int good[], int &ngood);
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
