@@ -442,6 +442,10 @@ next1:      continue;
                tvrtx[tind][0] = svrtx[sind][(1-sign)/2];
             }
             
+            nvbd = 0;
+            
+            out_mesh("test",grid);
+            
             setbcinfo();
             
             break;
