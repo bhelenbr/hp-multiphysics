@@ -211,6 +211,7 @@ void hpbasis::initialize_values(void)
    ipoly = 6;
    al = 1.0;
    be = 0.0;
+#ifdef OLDWAY
    ierr = recur(gpn,ipoly,al,be,a0[1],b0[1]);
    if (ierr != 0) {
       printf("recur #2 error %d\n",ierr);
@@ -222,6 +223,19 @@ void hpbasis::initialize_values(void)
       printf("gauss #3 error %d\n",ierr);
       exit(1);
    }
+#else
+   ierr = recur(gpn+1,ipoly,al,be,a0[1],b0[1]);
+   if (ierr != 0) {
+      printf("recur #2 error %d\n",ierr);
+      exit(1);
+   }
+
+   ierr = gauss(gpn,a0[1],b0[1],EPSILON,n0,wtn,e);
+   if (ierr != 0) {
+      printf("gauss #1 error %d\n",ierr);
+      exit(1);
+   }
+#endif
    
    for (i=0;i<gpn;++i)
       wtn[i] *= 0.5;
