@@ -8,6 +8,7 @@
  */
 
 #include"mesh.h"
+#include<math.h>
 #include<float.h>   
 #include<assert.h>
 #include<stdlib.h>
@@ -15,8 +16,8 @@
 int ntdel, tdel[MAXLST+1];
 int nsdel, sdel[MAXLST+1];
 
-void mesh::insert(FLT x, FLT y) {
-   int tind,vnear;
+int mesh::insert(FLT x, FLT y) {
+   int tind,vnear,err;
    
    vrtx[nvrtx][0] = x;
    vrtx[nvrtx][1] = y;
@@ -27,20 +28,22 @@ void mesh::insert(FLT x, FLT y) {
    /* FIND TRIANGLE CONTAINING POINT */      
    tind = findtri(x,y,vnear);
    assert(tind > -1);  
-   insert(tind,nvrtx);
-   ++nvrtx;
-   if (nvrtx >= maxvst -1) {
+   if (nvrtx >= maxvst) {
       printf("need to use larger growth factor: too many vertices\n");
       exit(1);
    }
+   err = insert(tind,nvrtx);
+   nvrtx += 1 -err;
    
-   return;
+   return(err);
 }
 
-void mesh::insert(int tind, int vnum) {
+int mesh::insert(int tind, int vnum, FLT theta = 0.0) {
    int i,j,tin,v0,dir;
    int sct, nskeep, skeep[MAXLST+1];
    int sind, sind1;
+   
+   if (tind < 0) return(1);
    
    /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
@@ -91,6 +94,15 @@ void mesh::insert(int tind, int vnum) {
    /* RESET INTWK1 */
    for(i=0;i<nskeep;++i)
       intwk1[tdel[i]] = -1;
+      
+   /*	CHECK THAT WE AREN'T INSERTING POINT VERY CLOSE TO BOUNDARY */
+   for(i=0;i<nskeep;++i) {
+      sind = skeep[i];
+      if(fabs(minangle(vnum, svrtx[sind][0] , svrtx[sind][1])) < theta*M_PI/180.0) {
+         printf("#Warning: inserting too close to boundary\n");
+         return(1);
+      }
+   }
    
    /* ADD NEW INDICES TO DEL LIST */
    for(i=nsdel;i<nskeep;++i)
@@ -213,7 +225,7 @@ void mesh::insert(int tind, int vnum) {
       intwk1[svrtx[sind][1]] = -1;
    }
       
-   return;
+   return(0);
 }
 
 void mesh::bdry_insert(int tind, int snum, int vnum) {

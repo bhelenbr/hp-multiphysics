@@ -130,8 +130,8 @@ class mesh {
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
-      void insert(FLT x, FLT y);
-      void insert(int tind, int vnum);
+      int insert(FLT x, FLT y);
+      int insert(int tind, int vnum, FLT theta = 0.0);
       void bdry_insert(int tind, int snum, int vnum);
       int findtri(FLT x, FLT y, int vnear) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY

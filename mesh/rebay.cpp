@@ -26,7 +26,7 @@ extern int nsdel, sdel[MAXLST+1];
 
 
 void mesh::rebay(FLT tolsize) {
-   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
+   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt,err;
    FLT xpt,ypt,wt[3];
    FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
    FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
@@ -155,18 +155,18 @@ INSRT:
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
          tind = findtri(xpt,ypt,vnear);
-         if (tind > -1) {
-            getwgts(wt);
+         getwgts(wt);
+         err = insert(tind,nvrtx,20.0);
+         if (!err) {
             vlngth[nvrtx] = 0.0;
             for(i=0;i<3;++i) 
                vlngth[nvrtx] += wt[i]*vlngth[tvrtx[tind][i]];
-            insert(tind,nvrtx);
             nsnew = nsdel +3;
             ntnew = ntdel +2;
             ++intrcnt;
          }
          else {
-            /* REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
+            /* REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN OR CLOSE TO BOUNDARY SKIP SIDE FOR NOW? */
             printf("#Warning: skipping insert\n");
             qtree.dltpt(nvrtx);
             --nvrtx;
