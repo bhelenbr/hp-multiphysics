@@ -13,12 +13,6 @@
 #define MXLG2P 5
 #define NSTAGE 5
 
-#if (MXSTEP == 1)
-#define MXSTEPM1 1
-#else
-#define MXSTEPM1 MXSTEP-1
-#endif
-
 #ifdef AXISYMMETRIC
 #define RAD(I,J) crd[0][I][J]
 #define RAD1D(I) crd[0][0][I]
@@ -51,9 +45,9 @@ struct hp_mgrid_glbls {
    FLT *tau,*delt;
 
    /* UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
-   struct vsi ugbd[MXSTEPM1]; // BACKWARDS DIFFERENCE FLOW INFO
-   FLT (*vrtxbd[MXSTEPM1])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
-   struct bistruct *binfobd[MXSTEPM1][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
+   struct vsi ugbd[TMSTORE]; // BACKWARDS DIFFERENCE FLOW INFO
+   FLT (*vrtxbd[TMSTORE])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
+   struct bistruct *binfobd[TMSTORE][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
    FLT ***dugdt[NV];  // UNSTEADY SOURCE FOR FLOW (ONLY NEEDED ON FINEST MESH)
    struct bistruct *dbinfodt[MAXSB]; // UNSTEADY CURVED SIDE VELOCITY (ONLY NEEDED ON FINEST MESH)
    /* MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
@@ -73,17 +67,25 @@ class hp_mgrid : public spectral_hp {
       static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
       static FLT **e00,**e01,**e10,**e11; // LOCAL WORK ARRAYS
       static FLT **(mvel[ND]); // for local mesh velocity info
-      static int extrap; // NUMBER OF STEPS IN BD SCHEME
-      static FLT g, dti, time, bd[MXSTEP+1]; // GRAVITY, INVERSE TIME STEP, TIME, BACKWARDS DIFFERENCE CONSTANTS
+      static FLT g, dti, time; // GRAVITY, INVERSE TIME STEP, TIME
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static FLT trncerr, invbdryerr, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
       static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
-      static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
-      static FLT (*vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
-      static struct bistruct *binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
-      static FLT **bdwk[MXSTEPM1][NV]; // WORK FOR ADAPTATION
+      static int extrap; 
+#ifdef BACKDIFF
+      static FLT bd[TMSCHEME+1];  // BACKWARDS DIFFERENCE CONSTANTS
+#else
+      static FLT bd[1]; // DIAGONAL TERM FOR DIRK SCHEME
+      static const FLT adirk[TMSCHEME][TMSCHEME];
+      static const FLT bdirk[TMSCHEME]; 
+      static const FLT cdirk[TMSCHEME];
+#endif
+      static struct vsi ugwk[TMADAPT]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
+      static FLT (*vrtxwk[TMADAPT])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
+      static struct bistruct *binfowk[TMADAPT][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
+      static FLT **bdwk[TMADAPT][NV]; // LOCAL WORK FOR ADAPTATION
       static int size;
   
       /* TELLS WHICH P WE ARE ON FOR P MULTIGRID */
@@ -106,6 +108,9 @@ class hp_mgrid : public spectral_hp {
       
    private:
       bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
+#ifdef DROP
+      FLT dresy[MXLG2P],dydt0,resy,resy0;
+#endif
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);
@@ -157,7 +162,7 @@ class hp_mgrid : public spectral_hp {
       /* SETUP SURFACE 1D SPRING CONSTANTS */
       void setksprg1d();
       void surfksrc1d();
-      void surfrsdl(int bnum, int mgrid);
+      void surfrsdl(int mgrid);
       void surfinvrt1(int bnum);
       void surfinvrt2(int bnum);
       void surfdt1(int bnum);
@@ -178,7 +183,7 @@ class hp_mgrid : public spectral_hp {
       void getcchng();
 
       /* FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
-      void tadvance();
+      void tadvance(int stage = 0);
       void getfdvrtdt();  // TO TRANSFER MESH TIME DERIVATIVE TO COARSE MESHES */
       
       /* FUNCTIONS FOR ADAPTION */ 
