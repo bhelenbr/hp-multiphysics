@@ -10,10 +10,10 @@ extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO AD
 
 static int iter;
 
-void blocks::init(char *file) {
+void blocks::init(char *file, int adptnxt = 1) {
    int i,j,p;
    FILE *fp;
-   char blockname[100], outname[20], bname[20];
+   char blockname[100],outname[20], bname[20];
    
    fp = fopen(file,"r");
    if (fp == NULL) {
@@ -107,7 +107,6 @@ void blocks::init(char *file) {
    for(i=0;i<mgrids;++i) 
       findmatch(i);
 
-
    /* INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin > 0) {
       startup = 0;
@@ -163,22 +162,6 @@ void blocks::init(char *file) {
             
       /* REFIND BOUNDARIES ON FINE MESH */
       findmatch(0);
-
-      /* DO ADAPTATION FOR NEXT TIME STEP */      
-      if (adapt) {
-         adaptation();
-
-         /* REFIND BOUNDARIES FOR COARSE MESHES */
-         /* JUST IN CASE BDRY ORDERING CHANGED */            
-         for(i=1;i<mgrids;++i) 
-            findmatch(i);
-      }
-      else {
-         /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
-         for(i = 1; i < mgrids; ++i)
-            for(j=0;j<nblocks;++j)
-               blk[j].grd[i].r_mesh::mg_getfres();
-      }
    }
    else {
       for(i=0;i<nblocks;++i) {
@@ -187,17 +170,40 @@ void blocks::init(char *file) {
       }
       startup = 0;
    }
+   
+   /* DO ADAPTATION FOR CONTINUATION OF NEXT TIME STEP */
+   if (adptnxt) firstadapt();
+   
+   return;
+}
 
+
+void blocks::firstadapt() {
+   int i,j;
+   char bname[100];
+   
+   /* DO ADAPTATION FOR NEXT TIME STEP */      
+   if (adapt) {
+      adaptation();
+
+      /* REFIND BOUNDARIES FOR COARSE MESHES */
+      /* JUST IN CASE BDRY ORDERING CHANGED */            
+      for(i=1;i<mgrids;++i) 
+         findmatch(i);
+   }
+   else {
+      /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
+      for(i = 1; i < mgrids; ++i)
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[i].r_mesh::mg_getfres();
+   }
+      
    for(i=0;i<nblocks;++i) {
       number_str(bname,"multigrid.",i,1);
       strcat(bname,".");
       blk[i].coarsenchk(bname);
    }
    
-#ifdef PV3
-   viz_init();
-#endif
-
    return;
 }
 
@@ -379,6 +385,10 @@ void blocks::go() {
    int i,j,tstep;
    char outname[20], bname[20];
    
+#ifdef PV3
+   viz_init();
+#endif
+
    for(tstep=readin;tstep<ntstep;++tstep) {
       
       tadvance();
@@ -548,3 +558,4 @@ void blocks::output(int number, FILETYPE type=text) {
    
    return;
 }
+   

@@ -41,13 +41,17 @@ class blocks {
       /* SETUP COMMUNICATION BOUNDARIES */
       void findmatch(int mglvl);
       
+      /* PERFORM ADAPTION ON READIN FILE */
+      /* OR SET UP COARSE GRIDS FOR NON ADAPT */
+      void firstadapt();
+      
 #ifdef PV3
       void viz_init();
 #endif
 
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
-      void init(char *filename);
+      void init(char *filename, int firstadapt = 1);
       
       /* START SIMULATION */
       void go();
@@ -64,7 +68,7 @@ class blocks {
 
       /* MESH REFINEMENT */
       void adaptation();
-      
+
       /* R-MESH DEFORMATION */
       /* JACOBI ITERATION ON ALL BLOCKS */  
       void r_jacobi(int niter, int mglvl);
