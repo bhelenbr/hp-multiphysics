@@ -57,9 +57,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
 
    /* SET TARGET POINTER: USED IN EXTERNAL FUNCTION MVPTTOBDRY PROVIDED TO MESH */
    tgt = &str;
-
+   
    /* REDUCE maxsrch (KEEP FAILED TRIANGLE SEARCHES LOCAL) */
-   mesh::maxsrch = 15;
+   // mesh::maxsrch = 15;
    
 	/* SWAP & COARSEN */ 
    nvrt0 = nvrtx;
@@ -528,10 +528,10 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
    else {
       setbcinfo();
    }
-
+   
    /* RESTORE maxsrch in findtri */
-   mesh::maxsrch = 3*MAXLST/4;
-                  
+   // mesh::maxsrch = 3*MAXLST/4;
+     
    return;
 }
    
