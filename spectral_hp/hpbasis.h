@@ -155,7 +155,8 @@ class hpbasis {
          ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
          ptprobe(nv, lin, f);
       }
-      void ptprobe(int nv, FLT **lin, FLT *f);
+      void ptprobe(int nv, FLT **lin, FLT *f);  // REUSES OLD R,S
+      void ptprobe_bdry(int nv, FLT **lin, FLT *f); // REUSES OLD R,S ONLY BDRY MODES 
       inline void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
          ptvalues1d(x);
          ptprobe1d(nv,lin,f);

@@ -16,7 +16,7 @@
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
-#define CYLINDER
+#define FREESTREAM
 #define BIGAMP
 
 /***************************/

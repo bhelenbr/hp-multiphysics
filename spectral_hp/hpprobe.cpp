@@ -399,6 +399,47 @@ void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
    return;
 }
 
+void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f) {
+   int k,m,n,ind;
+   
+   for(n=0;n<nv;++n) {
+   
+      /* SUM ALL S MODE CONTRIBUTIONS */
+      /* VERTEX A         */
+      wk0[0][0] = lin[n][0]*pgn[0];
+
+      /* SIDE 3      */
+      for(m = 2*sm+3; m < bm; ++m )
+         wk0[0][0] += lin[n][m]*pgn[m];
+  
+      /* SUM FOR N=2      */
+      /* VERTEX B         */
+      wk0[1][0] = lin[n][1]*pgn[1];
+
+      /* SIDE 2      */
+      for (m = sm+3; m < 2*sm+3; ++m)
+         wk0[1][0] += lin[n][m]*pgn[m];
+
+      /* SUM FOR N=3      */
+      /* VERTEX C         */
+      wk0[2][0] = lin[n][2]*pgn[2];
+
+      /* LOOP FOR INTERIOR MODES      */
+      ind = bm;
+      for(m = 3; m < sm+3; ++m) {
+         /* SIDE 1      */
+         wk0[m][0] = lin[n][m]*pgn[m];
+      }
+       
+   /* SUM OVER N X MODES   */     
+      f[n]   = 0.0;
+
+      for(k=0; k < nmodx; ++k )  
+         f[n]   += wk0[k][0]*pgx[k];
+   }
+   return;
+}
+
 void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s) {
    int k,m,n;
    FLT n0,x0,x,eta;

@@ -119,7 +119,7 @@ void hp_mgrid::adapt(class hp_mgrid& str) {
          if (str.tinfo[tind] > -1) {
             for(step=0;step<MXSTEPM1;++step) {
                str.crdtouht(tind,vrtxstr[step],binfostr[step]);
-               str.b.ptprobe(ND,uht,gbl->vrtxbd[step][i]);
+               str.b.ptprobe_bdry(ND,uht,gbl->vrtxbd[step][i]);
             }
          }
          else {
