@@ -2,41 +2,41 @@
 #include<myblas.h>
 
 /*************************************************/
-/*	SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
-/*	(THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
-/* BUT NOT INDEPENDENT OF TIME/MESH POSITION	 */
+/* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
+/* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
+/* BUT NOT INDEPENDENT OF TIME/MESH POSITION    */
 /*************************************************/
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
 
 void hp_mgrid::setinflow() {
-	static int i,j,k,m,n,indx,v0,v1,info;
-	static FLT x,y,mvel[ND];
-	static int sind;
+    int i,j,k,m,n,indx,v0,v1,info;
+    FLT x,y,mvel[ND];
+    int sind;
    char uplo[] = "U";
 
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&INFL_MASK) {
-/*			INFLOW BOUNDARIES */
-/*			SET VERTEX VALUES OF U,V */	
+         /* INFLOW BOUNDARIES */
+         /* SET VERTEX VALUES OF U,V */   
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
    
-            x = vrtx[v0][0];		
+            x = vrtx[v0][0];      
             y = vrtx[v0][1];
             ug.v[v0][0] = (*(gbl->func))(0,x,y);
             ug.v[v0][1] = (*(gbl->func))(1,x,y);
          }
          v0 = svrtx[sind][1];
-         x = vrtx[v0][0];		
+         x = vrtx[v0][0];      
          y = vrtx[v0][1];
          ug.v[v0][0] = (*(gbl->func))(0,x,y);
          ug.v[v0][1] = (*(gbl->func))(1,x,y);
          
-/**********************************/   
-/*			SET SIDE VALUES & FLUXES */
-/**********************************/
-/*			ZERO FLUX FOR FIRST VERTEX */
+         /**********************************/   
+         /* SET SIDE VALUES & FLUXES */
+         /**********************************/
+         /* ZERO FLUX FOR FIRST VERTEX */
          for(n=0;n<NV;++n)
             binfo[i][0].flx[n] = 0.0;
             
@@ -84,7 +84,7 @@ void hp_mgrid::setinflow() {
                }
             }
             
-/*				NOW SET FLUXES */
+            /* NOW SET FLUXES */
             ugtouht1d(sind);
             for(n=0;n<ND;++n)
                b.proj1d(uht[n],u[n][0]);
@@ -105,21 +105,21 @@ void hp_mgrid::setinflow() {
             binfo[i][indx].flx[2] = lf[0][1];
          }
       }
-	}
+   }
    
-	return;
+   return;
 }
 
 void hp_mgrid::addbflux(int mgrid) {
-	static int i,j,k,n,indx,indx1;
-	static int sind,v0,v1;
-	static FLT gam, nrm[ND], wl[NV], wr[NV];
-   static FLT mvel[ND] = {0.0, 0.0};
-	
-/***********************************/
-/*	ADD SOURCE TERMS ON FINEST MESH */
-/***********************************/
-	if(!mgrid) {
+    int i,j,k,n,indx,indx1;
+    int sind,v0,v1;
+    FLT gam, nrm[ND], wl[NV], wr[NV];
+   FLT mvel[ND] = {0.0, 0.0};
+   
+   /***********************************/
+   /* ADD SOURCE TERMS ON FINEST MESH */
+   /***********************************/
+   if(!mgrid) {
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&INFL_MASK) {
             indx = 0;
@@ -136,7 +136,7 @@ void hp_mgrid::addbflux(int mgrid) {
          }
          
          if (sbdry[i].type&OUTF_MASK) {
-/*				ALLOWS FOR APPLIED STRESS ON BOUNDARY */
+            /* ALLOWS FOR APPLIED STRESS ON BOUNDARY */
             indx = 0;
             for(j=0;j<sbdry[i].num;++j) {
                sind=sbdry[i].el[j];
@@ -160,17 +160,17 @@ void hp_mgrid::addbflux(int mgrid) {
    }
    
    
-/*	THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
-/* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
+   /* THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
+   /* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-/* 		POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
+         /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
          if (sbdry[i].misc == NULL) continue;
          
-/*			CALCULATE RESIDUAL / SURFACE TENSION TERMS */
+         /* CALCULATE RESIDUAL / SURFACE TENSION TERMS */
          surfrsdl(i,mgrid);
 
-/*			ADD SURFACE TENSION SOURCE TERM */
+         /* ADD SURFACE TENSION SOURCE TERM */
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
             sind=sbdry[i].el[j];
@@ -192,7 +192,7 @@ void hp_mgrid::addbflux(int mgrid) {
       }
 
 
-/* 	OUTFLOW BOUNDARY CONDITION    */
+      /* OUTFLOW BOUNDARY CONDITION    */
       if (sbdry[i].type&OUTF_MASK) {
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
@@ -266,7 +266,7 @@ void hp_mgrid::addbflux(int mgrid) {
          }
       }
 
-/* 	INVISCID WALL BOUNDARY CONDITION */
+      /* INVISCID WALL BOUNDARY CONDITION */
       if (sbdry[i].type&EULR_MASK) {
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
@@ -328,20 +328,20 @@ void hp_mgrid::addbflux(int mgrid) {
       }
    }
    
-	return;
+   return;
 }
 
 void hp_mgrid::bdry_vsnd() {
    int i,j,n,sind,count,v0,bnum;
    class mesh *tgt;
    
-/*	SEND VERTEX INFO FOR Y_DIR*/
+   /* SEND VERTEX INFO FOR Y_DIR*/
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMY_MASK) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
-/*			SEND VERTEX INFO */
+         /* SEND VERTEX INFO */
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
@@ -356,7 +356,7 @@ void hp_mgrid::bdry_vsnd() {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
-/*			SEND VERTEX INFO */
+         /* SEND VERTEX INFO */
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
@@ -376,13 +376,13 @@ void hp_mgrid::bdry_mp() {
    int i,j,n,sind,count,v0,bnum;
    class mesh *tgt;
    
-/*	THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
-/*	RECEIVE VRTX MESSAGES */
-/* CALCULATE AVERAGE RESIDUAL */
+   /* THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
+   /* RECEIVE VRTX MESSAGES */
+   /* CALCULATE AVERAGE RESIDUAL */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMY_MASK) {
          count = 0;
-/*   		RECV VERTEX INFO */
+         /* RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
@@ -396,7 +396,7 @@ void hp_mgrid::bdry_mp() {
 
       if (sbdry[i].type & IFCE_MASK) {
          count = 0;
-/*   		RECV VERTEX INFO */
+         /* RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
@@ -409,13 +409,13 @@ void hp_mgrid::bdry_mp() {
       }         
    }
    
-/*	SEND VERTEX INFO FOR X_DIR*/
+   /* SEND VERTEX INFO FOR X_DIR*/
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMX_MASK) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
-/*			SEND VERTEX INFO */
+         /* SEND VERTEX INFO */
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
@@ -433,16 +433,16 @@ void hp_mgrid::bdry_mp() {
 
 
 void hp_mgrid::bdry_vrcvandzero() {
-	static int i,j,n;
-	static int sind,v0,count;
+    int i,j,n;
+    int sind,v0,count;
    
-/*	THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
-/*	RECEIVE VRTX MESSAGES */
-/* CALCULATE AVERAGE RESIDUAL */
+   /* THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
+   /* RECEIVE VRTX MESSAGES */
+   /* CALCULATE AVERAGE RESIDUAL */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMX_MASK) {
          count = 0;
-/*   		RECV VERTEX INFO */
+         /* RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
@@ -455,7 +455,7 @@ void hp_mgrid::bdry_vrcvandzero() {
       }         
    }
 
-/*	APPLY VRTX DIRICHLET CONDITIONS TO RES */
+   /* APPLY VRTX DIRICHLET CONDITIONS TO RES */
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].type&INFL_MASK) {
          for(j=0;j<vbdry[i].num;++j) {
@@ -504,7 +504,7 @@ void hp_mgrid::bdry_ssnd(int mode) {
    int i,j,n,count,indx,bnum;
    class mesh *tgt;
    
-/* SEND SIDE INFO */
+   /* SEND SIDE INFO */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMX_MASK +COMY_MASK)) {
          bnum = sbdry[i].adjbnum;
@@ -533,16 +533,16 @@ void hp_mgrid::bdry_ssnd(int mode) {
    return;
 }
 
-	
+   
 void hp_mgrid::bdry_srcvandzero(int mode) {
-	static int i,j,n;
-	static int sind,count,indx,sign;
+    int i,j,n;
+    int sind,count,indx,sign;
    
    sign = (mode % 2 ? -1 : 1);
    
-/*	THIS PART TO RECIEVE AND ZERO FOR SIDES */
-/*	RECEIVE P'TH SIDE MODE MESSAGES */
-/* CALCULATE AVERAGE RESIDUAL */
+   /* THIS PART TO RECIEVE AND ZERO FOR SIDES */
+   /* RECEIVE P'TH SIDE MODE MESSAGES */
+   /* CALCULATE AVERAGE RESIDUAL */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMX_MASK +COMY_MASK)) {
          count = 0;
@@ -565,7 +565,7 @@ void hp_mgrid::bdry_srcvandzero(int mode) {
       }         
    }
 
-/*	APPLY SIDE DIRICHLET CONDITIONS TO MODE */
+   /* APPLY SIDE DIRICHLET CONDITIONS TO MODE */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&INFL_MASK) {
          for(j=0;j<sbdry[i].num;++j) {
@@ -583,62 +583,62 @@ void hp_mgrid::bdry_srcvandzero(int mode) {
       }
    }
    
-	return;
+   return;
 }
 
 
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]) {
-	static FLT ul,vl,ur,vr,pl,pr,rhoi;
-	static FLT um,c,den,lam0,lam1,lam2,v[3],mag;
-	
+    FLT ul,vl,ur,vr,pl,pr,rhoi;
+    FLT um,c,den,lam0,lam1,lam2,v[3],mag;
+   
    rhoi = 1./rho;
 
-/*	CHARACTERISTIC FAR-FIELD B.C. */	
-	mag = sqrt(norm[0]*norm[0] + norm[1]*norm[1]);
-	
-	norm[0] /= mag;
-	norm[1] /= mag;
-	
-	ul =  wl[0]*norm[0] +wl[1]*norm[1];
-	vl = -wl[0]*norm[1] +wl[1]*norm[0];
-	pl =  wl[2];
-		
-/*	DEPENDENT ON FREESTREAM CONDITIONS */
-	ur =  wr[0]*norm[0] +wr[1]*norm[1];
-	vr = -wr[0]*norm[1] +wr[1]*norm[0];
-	pr =  wr[3];
-		
-	um = mv[0]*norm[0] +mv[1]*norm[1];
-	
-	c = sqrt((ul-.5*um)*(ul-.5*um) +gam);
-	
-	den = 1./(2*c);
-	
-	lam0 = ul-um;
-	lam1 = ul-.5*um +c; /* always positive */
-	lam2 = ul-.5*um -c; /* always negative */
-	
-/*	PERFORM CHARACTERISTIC SWAP */
-/* BASED ON LINEARIZATION AROUND UL,VL,PL */
-	v[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
+   /* CHARACTERISTIC FAR-FIELD B.C. */   
+   mag = sqrt(norm[0]*norm[0] + norm[1]*norm[1]);
+   
+   norm[0] /= mag;
+   norm[1] /= mag;
+   
+   ul =  wl[0]*norm[0] +wl[1]*norm[1];
+   vl = -wl[0]*norm[1] +wl[1]*norm[0];
+   pl =  wl[2];
+      
+   /* DEPENDENT ON FREESTREAM CONDITIONS */
+   ur =  wr[0]*norm[0] +wr[1]*norm[1];
+   vr = -wr[0]*norm[1] +wr[1]*norm[0];
+   pr =  wr[3];
+      
+   um = mv[0]*norm[0] +mv[1]*norm[1];
+   
+   c = sqrt((ul-.5*um)*(ul-.5*um) +gam);
+   
+   den = 1./(2*c);
+   
+   lam0 = ul-um;
+   lam1 = ul-.5*um +c; /* always positive */
+   lam2 = ul-.5*um -c; /* always negative */
+   
+   /* PERFORM CHARACTERISTIC SWAP */
+   /* BASED ON LINEARIZATION AROUND UL,VL,PL */
+   v[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
 
-	if (lam0 > 0.0)
-		v[1] = vl*((pl-pr)*rhoi +lam2*(ul-ur))*den/(ul-lam1) +vl;
-	else
-		v[1] = vl*((pl-pr)*rhoi +lam1*(ul-ur))*den/(ul-lam2) +vr;
+   if (lam0 > 0.0)
+      v[1] = vl*((pl-pr)*rhoi +lam2*(ul-ur))*den/(ul-lam1) +vl;
+   else
+      v[1] = vl*((pl-pr)*rhoi +lam1*(ul-ur))*den/(ul-lam2) +vr;
 
-	v[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+   v[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
 
-/*	CHANGE BACK TO X,Y COORDINATES */
-	wl[0] =  v[0]*norm[0] -v[1]*norm[1];
-	wl[1] =  v[0]*norm[1] +v[1]*norm[0];
-	wl[2] =  v[2];
+   /* CHANGE BACK TO X,Y COORDINATES */
+   wl[0] =  v[0]*norm[0] -v[1]*norm[1];
+   wl[1] =  v[0]*norm[1] +v[1]*norm[0];
+   wl[2] =  v[2];
 
-/*	SHOULDN'T CHANGE NORM */   
+   /* SHOULDN'T CHANGE NORM */   
    norm[0] *= mag;
    norm[1] *= mag;
    
-	return;
+   return;
  
 }
 
@@ -646,7 +646,7 @@ void hp_mgrid::bdrycheck1() {
    int i,j,n,v0,count,bnum,sind;
    class mesh *tgt;
    
-/* SEND SIDE INFO */
+   /* SEND SIDE INFO */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMX_MASK +COMY_MASK +IFCE_MASK)) {
          bnum = sbdry[i].adjbnum;
@@ -668,12 +668,12 @@ void hp_mgrid::bdrycheck1() {
 }
 
 void hp_mgrid::bdrycheck2() {
-	static int i,j,n,v0;
-	static int sind,count;
+    int i,j,n,v0;
+    int sind,count;
       
-/*	THIS PART TO RECIEVE AND ZERO FOR SIDES */
-/*	RECEIVE P'TH SIDE MODE MESSAGES */
-/* CALCULATE AVERAGE RESIDUAL */
+   /* THIS PART TO RECIEVE AND ZERO FOR SIDES */
+   /* RECEIVE P'TH SIDE MODE MESSAGES */
+   /* CALCULATE AVERAGE RESIDUAL */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & PRDX_MASK) {
          count = 1;

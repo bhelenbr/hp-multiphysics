@@ -14,9 +14,9 @@
 
 void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot) {
    char fnmapp[100];
-	FILE *out;
-	int i,j,k,n,v0,v1,sind,tind,indx,sgn;
-   static int ijind[MXTM][MXTM];
+   FILE *out;
+   int i,j,k,n,v0,v1,sind,tind,indx,sgn;
+   int ijind[MXTM][MXTM];
 
    switch (typ) {
       case (text):
@@ -28,13 +28,13 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             exit(1);
          }
          
-/*			HEADER INFORMATION */
+         /* HEADER INFORMATION */
          fprintf(out,"p0 = %d\n",p0);
          fprintf(out,"nvrtx = %d, nside = %d, ntri = %d\n",nvrtx,nside,ntri);
          fprintf(out,"nsbd = %d\n",nsbd);
          for(i=0;i<nsbd;++i)
             fprintf(out," type = %d, number = %d\n",sbdry[i].type,sbdry[i].num);
-/*			END HEADER */
+         /* END HEADER */
          fprintf(out,"END OF HEADER\n");
 
          for(i=0;i<nvrtx;++i) {
@@ -55,7 +55,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             fprintf(out,"\n");
          }
 
-/*			BOUNDARY INFO */
+         /* BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
             fprintf(out,"Boundary %d, type %d, num %d, frstvrtx %d\n",i,sbdry[i].type,sbdry[i].num,svrtx[sbdry[i].el[0]][0]);
             for(j=0;j<sbdry[i].num*sm0;++j)
@@ -75,17 +75,17 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
       
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx+b.sm*nside+b.im*ntri,ntri*(b.sm+1)*(b.sm+1));
 
-/*			VERTEX MODES */
+         /* VERTEX MODES */
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",vin[i][n]);
             for(n=0;n<NV;++n)
-               fprintf(out,"%.6e ",g.v[i][n]);					
+               fprintf(out,"%.6e ",g.v[i][n]);               
             fprintf(out,"\n");
          }
          
          if (b.p > 1) {
-/*				SIDE MODES */
+            /* SIDE MODES */
             for(sind=0;sind<nside;++sind) {
                if (sinfo[sind] < 0) {
                   v0 = svrtx[sind][0];
@@ -107,12 +107,12 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                   for(n=0;n<ND;++n)
                      fprintf(out,"%e ",crd[n][0][i]);
                   for(n=0;n<NV;++n)
-                     fprintf(out,"%.6e ",u[n][0][i]);					
+                     fprintf(out,"%.6e ",u[n][0][i]);               
                   fprintf(out,"\n");
                }
             }
    
-/*				INTERIOR MODES */
+            /* INTERIOR MODES */
             if (b.p > 2) {
                for(tind = 0; tind < ntri; ++tind) {
                   ugtouht(tind,g);
@@ -134,7 +134,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                         for(n=0;n<ND;++n)
                            fprintf(out,"%e ",crd[n][i][j]);
                         for(n=0;n<NV;++n)
-                           fprintf(out,"%.6e ",u[n][i][j]);					
+                           fprintf(out,"%.6e ",u[n][i][j]);               
                         fprintf(out,"\n");
                      }
                   }
@@ -142,17 +142,17 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             }
          }
       
-/*			OUTPUT CONNECTIVY INFO */
+         /* OUTPUT CONNECTIVY INFO */
          fprintf(out,"\n#CONNECTION DATA#\n");
          
          for(tind=0;tind<ntri;++tind) {
 
-/*				VERTICES */
+            /* VERTICES */
             ijind[0][0] = tvrtx[tind][0];
             ijind[b.sm+1][0] = tvrtx[tind][1];
             ijind[0][b.sm+1] = tvrtx[tind][2];
    
-/*				SIDES */		   
+            /* SIDES */         
             indx = tside[tind].side[0];
             sgn = tside[tind].sign[0];
             if (sgn > 0) {
@@ -186,7 +186,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                   ijind[i+1][0] = nvrtx +indx*b.sm +i;
             }
    
-/*				INTERIOR VERTICES */
+            /* INTERIOR VERTICES */
             k = 0;
             for(i=1;i<b.sm;++i) {
                for(j=1;j<b.sm-(i-1);++j) {
@@ -195,7 +195,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                }
             }
    
-/*				OUTPUT CONNECTION LIST */		
+            /* OUTPUT CONNECTION LIST */      
             for(i=0;i<b.sm+1;++i) {
                for(j=0;j<b.sm-i;++j) {
                   fprintf(out,"%d %d %d\n"
@@ -213,9 +213,9 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
       default:
          printf("That filetype is not supported for spectral_hp output\n");
          break;
-  	}
+     }
    
- 	return;
+    return;
 }
 
 #define NEW
@@ -238,8 +238,8 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             exit(1);
          }
          
-/*			HEADER INFORMATION */
-/*			INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
+         /* HEADER INFORMATION */
+         /* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
          fscanf(in,"p0 = %d\n",&pin);
          
          do {
@@ -278,10 +278,10 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          }
          
 
-/*			BOUNDARY INFO */
+         /* BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
             fscanf(in,"Boundary %*d, type %d, num %d, frstvrtx %d\n",&intyp,&innum,&v0);
-/*				FIND MATCHING BOUNDARY (CAN CHANGE NUMBER/ORDER) */
+            /* FIND MATCHING BOUNDARY (CAN CHANGE NUMBER/ORDER) */
             for(bnum=0;bnum<nsbd;++bnum)
                if (svrtx[sbdry[bnum].el[0]][0] == v0) 
                   break;
@@ -310,7 +310,7 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             exit(1);
          }
          
-/*			SKIP FIRST LINE */
+         /* SKIP FIRST LINE */
          fscanf(in,"%*[^\n]");
          
          for(i=0;i<nvrtx;++i) {

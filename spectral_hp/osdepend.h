@@ -1,9 +1,9 @@
 /*
- *	pV3 Client Include
+ *   pV3 Client Include
  *
- *	Allows OS/machine dependent stuff to work with FORTRAN
+ *   Allows OS/machine dependent stuff to work with FORTRAN
  *
- *	Copyright 1994 - 1997, Massachusetts Institute of Technology.
+ *   Copyright 1994 - 1997, Massachusetts Institute of Technology.
  */
 
 /*
@@ -13,6 +13,9 @@
  *
  *
 $Log$
+Revision 1.2  2002/03/01 16:50:47  helenbrk
+Changed comment format, moved pV3 call
+
 Revision 1.1  2002/02/21 23:13:38  helenbrk
 Added pV3 and many changes for compilation in LINUX
 
@@ -197,94 +200,94 @@ extern "C" {
 #ifdef CRAY
 
 #ifdef T3E
-void	pV_INIT __ProtoGlarp__(( char *title, int title_len, INT *iopt,
-				 INT *npgcut, char *tpgcut, int tpgcut_len,
-				 INT *nkeys, INT *ikeys, char *tkeys, 
-				 int tkeys_len, INT *fkeys, FLOAT *flims,
-				 INT *mirror, INT *knode, INT *kequiv,
-				 INT *kcel1, INT *kcel2, INT *kcel3,
-				 INT *kcel4, INT *knptet, INT *kptet,
-				 INT *knblock, INT *blocks, INT *ksurf,
-				 INT *knsurf, INT *istat ));
-void	pV_CONSOLE __ProtoGlarp__(( char *string, int string_len ));
+void   pV_INIT __ProtoGlarp__(( char *title, int title_len, INT *iopt,
+             INT *npgcut, char *tpgcut, int tpgcut_len,
+             INT *nkeys, INT *ikeys, char *tkeys, 
+             int tkeys_len, INT *fkeys, FLOAT *flims,
+             INT *mirror, INT *knode, INT *kequiv,
+             INT *kcel1, INT *kcel2, INT *kcel3,
+             INT *kcel4, INT *knptet, INT *kptet,
+             INT *knblock, INT *blocks, INT *ksurf,
+             INT *knsurf, INT *istat ));
+void   pV_CONSOLE __ProtoGlarp__(( char *string, int string_len ));
 #else
 /* title, tpgcut and tkeys are pointers packed with the string len */
-void	pV_INIT __ProtoGlarp__(( int title, int *iopt, int *npgcut,
-				 int tpgcut, int *nkeys, int *ikeys,
-				 int tkeys, int *fkeys, float *flims,
-				 int *mirror, int *knode, int *kequiv,
-				 int *kcel1, int *kcel2, int *kcel3,
-				 int *kcel4, int *knptet, int *kptet,
-				 int *knblock, int *blocks, int *ksurf,
-				 int *knsurf, int *istat));
+void   pV_INIT __ProtoGlarp__(( int title, int *iopt, int *npgcut,
+             int tpgcut, int *nkeys, int *ikeys,
+             int tkeys, int *fkeys, float *flims,
+             int *mirror, int *knode, int *kequiv,
+             int *kcel1, int *kcel2, int *kcel3,
+             int *kcel4, int *knptet, int *kptet,
+             int *knblock, int *blocks, int *ksurf,
+             int *knsurf, int *istat));
 /* string is a char pointer packed with the string length */
-void	pV_CONSOLE __ProtoGlarp__(( int string ));
+void   pV_CONSOLE __ProtoGlarp__(( int string ));
 #endif
 
 #else
-void	pV_INIT __ProtoGlarp__(( char *title, INT *iopt, INT *npgcut,
-				 char *tpgcut, INT *nkeys, INT *ikeys,
-				 char *tkeys, INT *fkeys, FLOAT *flims,
-				 INT *mirror, INT *knode, INT *kequiv,
-				 INT *kcel1, INT *kcel2, INT *kcel3,
-				 INT *kcel4, INT *knptet, INT *kptet,
-				 INT *knblock, INT *blocks, INT *ksurf,
-				 INT *knsurf, INT *istat, int title_len,
-				 int tpgcut_len, int tkeys_len ));
-void	pV_CONSOLE __ProtoGlarp__(( char *string, int string_len ));
+void   pV_INIT __ProtoGlarp__(( char *title, INT *iopt, INT *npgcut,
+             char *tpgcut, INT *nkeys, INT *ikeys,
+             char *tkeys, INT *fkeys, FLOAT *flims,
+             INT *mirror, INT *knode, INT *kequiv,
+             INT *kcel1, INT *kcel2, INT *kcel3,
+             INT *kcel4, INT *knptet, INT *kptet,
+             INT *knblock, INT *blocks, INT *ksurf,
+             INT *knsurf, INT *istat, int title_len,
+             int tpgcut_len, int tkeys_len ));
+void   pV_CONSOLE __ProtoGlarp__(( char *string, int string_len ));
 #endif
-void	pV_UPDATE __ProtoGlarp__(( FLOAT *time ));
-void	pV_STAT  __ProtoGlarp__(( INT *istate ));
-void	pV_TERMIN __ProtoGlarp__(( void ));
-void	pV_GETSTRUC __ProtoGlarp__(( INT *opt, void **ptr, INT *len ));
-void	pV_FIELD __ProtoGlarp__(( INT *ls, INT *lv, INT *lt, INT *lz ));
-void	pV_SENDXI __ProtoGlarp__(( INT *index, INT *exnum, INT *subindex,
+void   pV_UPDATE __ProtoGlarp__(( FLOAT *time ));
+void   pV_STAT  __ProtoGlarp__(( INT *istate ));
+void   pV_TERMIN __ProtoGlarp__(( void ));
+void   pV_GETSTRUC __ProtoGlarp__(( INT *opt, void **ptr, INT *len ));
+void   pV_FIELD __ProtoGlarp__(( INT *ls, INT *lv, INT *lt, INT *lz ));
+void   pV_SENDXI __ProtoGlarp__(( INT *index, INT *exnum, INT *subindex,
                                    INT *subsize, INT *len, INT *ivec ));
-void	pV_SENDXR __ProtoGlarp__(( INT *index, INT *exnum, INT *subindex,
+void   pV_SENDXR __ProtoGlarp__(( INT *index, INT *exnum, INT *subindex,
                                    INT *subsize, INT *len, FLOAT *rvec ));
 
 #ifdef _MPI_INCLUDE
-int	pV_MPIStart __ProtoGlarp__(( MPI_Comm cin, int rank, int ncl,
-	                             int bsize, MPI_Comm *cout ));
-void	pV_MPISTOP __ProtoGlarp__(( void ));
+int   pV_MPIStart __ProtoGlarp__(( MPI_Comm cin, int rank, int ncl,
+                                int bsize, MPI_Comm *cout ));
+void   pV_MPISTOP __ProtoGlarp__(( void ));
 #endif
 /*
-void	pVCLIENT __ProtoGlarp__(( INT *cid, char *cname, char *dname ));
-void	pVCELL __ProtoGlarp__(( INT *cel1, INT *cel2, INT *cel3,
-				INT *cel4, INT *nptet, INT *ptet ));
-void	pVSURFACE __ProtoGlarp__(( INT *nsurf, INT *scon, INT *scel,
-				   char *tsurf ));
-void	pVEQUIV __ProtoGlarp__(( INT *listeq ));
-void	pVBLANK __ProtoGlarp__(( INT *iblank, INT *tidcon ));
-void	pVGRID __ProtoGlarp__(( FLOAT *xyz ));
-void	pVSCAL __ProtoGlarp__(( INT *jkey, FLOAT *s ));
-void	pVTHRES __ProtoGlarp__(( INT *jkey, FLOAT *xyz, FLOAT *t ));
-void	pVVECT __ProtoGlarp__(( INT *jkey, FLOAT *v ));
-void	pVSTRUC __ProtoGlarp__(( INT *knode, INT *kequiv,
-				 INT *kcel1, INT *kcel2, INT *kcel3,
-				 INT *kcel4, INT *knptet, INT *kptet,
-				 INT *knblock, INT *blocks, INT *ksurf,
-				 INT *knsurf, INT *hint ));
-void	pVLOCATE __ProtoGlarp__(( FLOAT *pxyz, INT *kcold, INT *kcnew ));
-void	pVCONNECT __ProtoGlarp__(( INT *kcout, INT *kfout, INT *kcin,
-				   INT *idtin ));
-void	pVZPRIME __ProtoGlarp__(( INT *idcut, FLOAT *xyz, INT *nnode,
-				  FLOAT *zprime, FLOAT *xpc, FLOAT *ypc,
-				  FLOAT *halfw ));
-void	pVXYPRIME __ProtoGlarp__(( FLOAT *zprime, INT *kn, FLOAT *xyz,
+void   pVCLIENT __ProtoGlarp__(( INT *cid, char *cname, char *dname ));
+void   pVCELL __ProtoGlarp__(( INT *cel1, INT *cel2, INT *cel3,
+            INT *cel4, INT *nptet, INT *ptet ));
+void   pVSURFACE __ProtoGlarp__(( INT *nsurf, INT *scon, INT *scel,
+               char *tsurf ));
+void   pVEQUIV __ProtoGlarp__(( INT *listeq ));
+void   pVBLANK __ProtoGlarp__(( INT *iblank, INT *tidcon ));
+void   pVGRID __ProtoGlarp__(( FLOAT *xyz ));
+void   pVSCAL __ProtoGlarp__(( INT *jkey, FLOAT *s ));
+void   pVTHRES __ProtoGlarp__(( INT *jkey, FLOAT *xyz, FLOAT *t ));
+void   pVVECT __ProtoGlarp__(( INT *jkey, FLOAT *v ));
+void   pVSTRUC __ProtoGlarp__(( INT *knode, INT *kequiv,
+             INT *kcel1, INT *kcel2, INT *kcel3,
+             INT *kcel4, INT *knptet, INT *kptet,
+             INT *knblock, INT *blocks, INT *ksurf,
+             INT *knsurf, INT *hint ));
+void   pVLOCATE __ProtoGlarp__(( FLOAT *pxyz, INT *kcold, INT *kcnew ));
+void   pVCONNECT __ProtoGlarp__(( INT *kcout, INT *kfout, INT *kcin,
+               INT *idtin ));
+void   pVZPRIME __ProtoGlarp__(( INT *idcut, FLOAT *xyz, INT *nnode,
+              FLOAT *zprime, FLOAT *xpc, FLOAT *ypc,
+              FLOAT *halfw ));
+void   pVXYPRIME __ProtoGlarp__(( FLOAT *zprime, INT *kn, FLOAT *xyz,
                                    INT *n, FLOAT *xyp ));
-void	pVSURF __ProtoGlarp__(( INT *isurf, FLOAT *xpc, FLOAT *ypc,
-				FLOAT *halfw ));
-void	pVXYSURF __ProtoGlarp__(( INT *kn, FLOAT *xyz, INT *n, FLOAT *xyp ));
-void	pVSSURF __ProtoGlarp__(( INT *jkey, INT *kn, FLOAT *xyz,
-				 INT *n, FLOAT *s ));
-void	pVVSURF __ProtoGlarp__(( INT *jkey, INT *kn, FLOAT *xyz,
-				 INT *n, FLOAT *v ));
-void	pVSTRING __ProtoGlarp__(( char *string ));
-void	pVCATCH __ProtoGlarp__(( char *string ));
-void	pVEXTRACT __ProtoGlarp__(( INT *index, INT *exnum, INT *reqmask,
+void   pVSURF __ProtoGlarp__(( INT *isurf, FLOAT *xpc, FLOAT *ypc,
+            FLOAT *halfw ));
+void   pVXYSURF __ProtoGlarp__(( INT *kn, FLOAT *xyz, INT *n, FLOAT *xyp ));
+void   pVSSURF __ProtoGlarp__(( INT *jkey, INT *kn, FLOAT *xyz,
+             INT *n, FLOAT *s ));
+void   pVVSURF __ProtoGlarp__(( INT *jkey, INT *kn, FLOAT *xyz,
+             INT *n, FLOAT *v ));
+void   pVSTRING __ProtoGlarp__(( char *string ));
+void   pVCATCH __ProtoGlarp__(( char *string ));
+void   pVEXTRACT __ProtoGlarp__(( INT *index, INT *exnum, INT *reqmask,
                                    INT *ival, FLOAT *rvec ));
-void	pVSTATE __ProtoGlarp__(( INT *rank, INT *kn, INT *n, FLOAT *sv ));
+void   pVSTATE __ProtoGlarp__(( INT *rank, INT *kn, INT *n, FLOAT *sv ));
 */
 
 #ifdef __cplusplus

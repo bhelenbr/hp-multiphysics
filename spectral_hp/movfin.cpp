@@ -10,25 +10,25 @@ int hp_mgrid::setcoarse(class hp_mgrid& tgt) {
 void hp_mgrid::getcchng(void) {
    int i,j,n,ind,tind;
    class hp_mgrid *cmesh;
-	
-	if(b.p > 1) {
-		return;
-	}
+   
+   if(b.p > 1) {
+      return;
+   }
    
    cmesh = static_cast<class hp_mgrid *>(cmpt);
    
-/*	TRANFER COUPLED BOUNDARY RESIDUALS */
+   /* TRANFER COUPLED BOUNDARY RESIDUALS */
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
          surfgetcchng(i);
 
-/* DETERMINE CORRECTIONS ON COARSE MESH   */   
+   /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)
       for(n=0;n<NV;++n) 
          cmesh->vug_frst[i][n] -= cmesh->ug.v[i][n];
 
-/* LOOP THROUGH FINE VERTICES   */
-/* TO DETERMINE CHANGE IN SOLUTION */   
+   /* LOOP THROUGH FINE VERTICES   */
+   /* TO DETERMINE CHANGE IN SOLUTION */   
    for(i=0;i<nvrtx;++i) {
       
       for(n=0;n<NV;++n)
@@ -51,9 +51,9 @@ void hp_mgrid::getcchng(void) {
 }
 
 
-	
-	
-	
-	
-		
-		
+   
+   
+   
+   
+      
+      

@@ -13,16 +13,16 @@ void hp_mgrid::getfres() {
    
    isfrst = true;
    
-/*	TRANSFER COUPLED SURFACE RESIDUALS */
+   /* TRANSFER COUPLED SURFACE RESIDUALS */
    for(i=0;i<nsbd;++i)
       if(sbdry[i].type&(FSRF_MASK+IFCE_MASK))
          surfgetfres(i);
 
    if(p0 > 1) {
-/* 	TRANSFER IS ON FINE MESH */
-		for(i=0;i<nvrtx;++i)
-			for(n=0;n<NV;++n)
-				gbl->res0.v[i][n] = gbl->res.v[i][n];
+      /* TRANSFER IS ON FINE MESH */
+      for(i=0;i<nvrtx;++i)
+         for(n=0;n<NV;++n)
+            gbl->res0.v[i][n] = gbl->res.v[i][n];
 
       if (b.p > 1) {
          indx = 0;
@@ -36,35 +36,35 @@ void hp_mgrid::getfres() {
             }
             indx1 += b.p;
          }
-			
-			if (b.p > 2) {
-				indx = 0;
+         
+         if (b.p > 2) {
+            indx = 0;
             indx1 = 0;
-				for(tind=0;tind<ntri;++tind) {
-					for(m=1;m<b.sm;++m) {
-						for(k=0;k<b.sm-m;++k) {
-							for(n=0; n<NV; ++n)
-								gbl->res0.i[indx][n] = gbl->res.i[indx1][n];
-							++indx;
+            for(tind=0;tind<ntri;++tind) {
+               for(m=1;m<b.sm;++m) {
+                  for(k=0;k<b.sm-m;++k) {
+                     for(n=0; n<NV; ++n)
+                        gbl->res0.i[indx][n] = gbl->res.i[indx1][n];
+                     ++indx;
                      ++indx1;
-						}
-						indx1 += b.p;
-					}
-				}
-			}
-		}
+                  }
+                  indx1 += b.p;
+               }
+            }
+         }
+      }
       
       return;
-	}
+   }
    
    fmesh = static_cast<class hp_mgrid *>(fmpt);
    
-/* TRANSFER IS BETWEEN DIFFERENT MESHES */
+   /* TRANSFER IS BETWEEN DIFFERENT MESHES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
          gbl->res0.v[i][n] = 0.0;
          
-/* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
+   /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
    for(i=0;i<fmesh->nvrtx;++i) {
       tind = fmesh->coarse[i].tri;
       for(j=0;j<3;++j) {
@@ -74,8 +74,8 @@ void hp_mgrid::getfres() {
       }
    }
    
-/* LOOP THROUGH COARSE VERTICES   */
-/* TO CALCULATE VUG ON COARSE MESH */
+   /* LOOP THROUGH COARSE VERTICES   */
+   /* TO CALCULATE VUG ON COARSE MESH */
    for(i=0;i<nvrtx;++i) {
       tind = fine[i].tri;
 

@@ -11,20 +11,20 @@
 #include<assert.h>
 
 void spectral_hp::ugtouht(int tind) {
-	static int i,k,m,n,indx,cnt;
-	static int sign, msgn;
+    int i,k,m,n,indx,cnt;
+    int sign, msgn;
 
-/*	THIS IS FOR FLOW VARIABLES ON ANY MESH */
-/*	VERTICES */	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = ug.v[indx][n];
-	}
-	
+   /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
+   /* VERTICES */   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = ug.v[indx][n];
+   }
+   
 
-/* SIDES */
-/* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+   /* SIDES */
+   /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
    cnt = 3;
    indx = tside[tind].side[2]*sm0;
    sign = tside[tind].sign[2];
@@ -56,8 +56,8 @@ void spectral_hp::ugtouht(int tind) {
       ++cnt;
    }
 
-/*	INTERIORS */	
-   if (b.im > 0) {	
+   /* INTERIORS */   
+   if (b.im > 0) {   
       indx = tind*im0;
       for(m = 1; m < b.sm; ++m) {
          for(k = 0; k < b.sm-m; ++k) {
@@ -68,25 +68,25 @@ void spectral_hp::ugtouht(int tind) {
          indx += sm0 -b.sm;
       }
    }
-	
-	return;
+   
+   return;
 }
 
 void spectral_hp::ugtouht(int tind, struct vsi ug) {
-	static int i,k,m,n,indx,cnt;
-	static int sign, msgn;
+    int i,k,m,n,indx,cnt;
+    int sign, msgn;
 
-/*	THIS IS FOR FLOW VARIABLES ON ANY MESH */
-/*	VERTICES */	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = ug.v[indx][n];
-	}
-	
+   /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
+   /* VERTICES */   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = ug.v[indx][n];
+   }
+   
 
-/* SIDES */
-/* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+   /* SIDES */
+   /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
    cnt = 3;
    indx = tside[tind].side[2]*sm0;
    sign = tside[tind].sign[2];
@@ -118,8 +118,8 @@ void spectral_hp::ugtouht(int tind, struct vsi ug) {
       ++cnt;
    }
 
-/*	INTERIORS */	
-   if (b.im > 0) {	
+   /* INTERIORS */   
+   if (b.im > 0) {   
       indx = tind*im0;
       for(m = 1; m < b.sm; ++m) {
          for(k = 0; k < b.sm-m; ++k) {
@@ -130,21 +130,21 @@ void spectral_hp::ugtouht(int tind, struct vsi ug) {
          indx += sm0 -b.sm;
       }
    }
-	
-	return;
+   
+   return;
 }
 
 void spectral_hp::ugtouht_bdry(int tind) {
-	static int i,m,n,indx,cnt;
-	static int sign, msgn;
-	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = ug.v[indx][n];
-	}
+    int i,m,n,indx,cnt;
+    int sign, msgn;
+   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = ug.v[indx][n];
+   }
 
-/* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+   /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
    cnt = 3;
    indx = tside[tind].side[2]*sm0;
    sign = tside[tind].sign[2];
@@ -175,21 +175,21 @@ void spectral_hp::ugtouht_bdry(int tind) {
       msgn *= sign;
       ++cnt;
    }
-	
-	return;
+   
+   return;
 }
 
 void spectral_hp::ugtouht_bdry(int tind,struct vsi ug) {
-	static int i,m,n,indx,cnt;
-	static int sign, msgn;
-	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = ug.v[indx][n];
-	}
+    int i,m,n,indx,cnt;
+    int sign, msgn;
+   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = ug.v[indx][n];
+   }
 
-/* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+   /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
    cnt = 3;
    indx = tside[tind].side[2]*sm0;
    sign = tside[tind].sign[2];
@@ -220,13 +220,13 @@ void spectral_hp::ugtouht_bdry(int tind,struct vsi ug) {
       msgn *= sign;
       ++cnt;
    }
-	
-	return;
+   
+   return;
 }
 
 
 void spectral_hp::ugtouht1d(int sind) {
-   static int m,n,indx,v0,v1;
+   int m,n,indx,v0,v1;
    
    v0 = svrtx[sind][0];
    v1 = svrtx[sind][1];
@@ -234,7 +234,7 @@ void spectral_hp::ugtouht1d(int sind) {
       uht[n][0] = ug.v[v0][n];
       uht[n][1] = ug.v[v1][n];
    }
- 	
+    
    indx = sind*sm0;
    for(m=0;m<b.sm;++m)
     for(n=0;n<NV;++n) 
@@ -244,7 +244,7 @@ void spectral_hp::ugtouht1d(int sind) {
 }
 
 void spectral_hp::ugtouht1d(int sind, struct vsi ug) {
-   static int m,n,indx,v0,v1;
+   int m,n,indx,v0,v1;
    
    v0 = svrtx[sind][0];
    v1 = svrtx[sind][1];
@@ -252,7 +252,7 @@ void spectral_hp::ugtouht1d(int sind, struct vsi ug) {
       uht[n][0] = ug.v[v0][n];
       uht[n][1] = ug.v[v1][n];
    }
- 	
+    
    indx = sind*sm0;
    for(m=0;m<b.sm;++m)
     for(n=0;n<NV;++n) 
@@ -262,20 +262,20 @@ void spectral_hp::ugtouht1d(int sind, struct vsi ug) {
 }
 
 void spectral_hp::crdtouht(int tind) {
-   static int i,m,n,cnt,bnum,sind,indx;
+   int i,m,n,cnt,bnum,sind,indx;
    
-/*	VERTICES */	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = vrtx[indx][n];
-	}
+   /* VERTICES */   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = vrtx[indx][n];
+   }
 
-	if (b.sm == 0) return;
+   if (b.sm == 0) return;
    
-/* SIDES */
+   /* SIDES */
    cnt = 3;
-   for (i=0; i<3;++i) {	
+   for (i=0; i<3;++i) {   
       sind = tside[tind].side[(i+2)%3];
       if (sinfo[sind] < 0) {
          for(m=0;m<b.sm;++m) {
@@ -302,20 +302,20 @@ void spectral_hp::crdtouht(int tind) {
 }
 
 void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
-   static int i,m,n,cnt,bnum,sind,indx;
+   int i,m,n,cnt,bnum,sind,indx;
    
-/*	VERTICES */	
-	for (i=0; i<3; ++i) {
-		indx = tvrtx[tind][i];
-		for(n=0; n<NV; ++n)
-			uht[n][i] = vrtx[indx][n];
-	}
+   /* VERTICES */   
+   for (i=0; i<3; ++i) {
+      indx = tvrtx[tind][i];
+      for(n=0; n<NV; ++n)
+         uht[n][i] = vrtx[indx][n];
+   }
 
-	if (b.sm == 0) return;
+   if (b.sm == 0) return;
    
-/* SIDES */
+   /* SIDES */
    cnt = 3;
-   for (i=0; i<3;++i) {	
+   for (i=0; i<3;++i) {   
       sind = tside[tind].side[(i+2)%3];
       if (sinfo[sind] < 0) {
          for(m=0;m<b.sm;++m) {
@@ -342,7 +342,7 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
 }
 
 void spectral_hp::crdtouht1d(int sind) {
-   static int m,n,bnum,indx,v0,v1;
+   int m,n,bnum,indx,v0,v1;
    
    v0 = svrtx[sind][0];
    v1 = svrtx[sind][1];
@@ -364,7 +364,7 @@ void spectral_hp::crdtouht1d(int sind) {
 }
 
 void spectral_hp::crdtouht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) {
-   static int m,n,bnum,indx,v0,v1;
+   int m,n,bnum,indx,v0,v1;
    
    v0 = svrtx[sind][0];
    v1 = svrtx[sind][1];
@@ -386,9 +386,9 @@ void spectral_hp::crdtouht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) 
 }
 
 void spectral_hp::lftog(int tind, struct vsi g) {
-   static int m,n,indx,gindx,sgn,msgn;
+   int m,n,indx,gindx,sgn,msgn;
    
-/*	VERTEX MODES */
+   /* VERTEX MODES */
    for (m=0; m<3; ++m) {
       gindx = tvrtx[tind][m];
       for(n=0;n<NV;++n)
@@ -397,8 +397,8 @@ void spectral_hp::lftog(int tind, struct vsi g) {
 
 
    if (b.p > 1) {
-/* 	SIDE MODES */
-/* 	SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
+      /* SIDE MODES */
+      /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
       indx = 3;
       gindx = tside[tind].side[2]*b.sm;
       sgn = tside[tind].sign[2];

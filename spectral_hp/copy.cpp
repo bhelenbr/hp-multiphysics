@@ -13,10 +13,10 @@
 void spectral_hp::copy(const spectral_hp& tgt) {
    int i,n,j;
    
-/*	COPY MESH INFORMATION */
+   /* COPY MESH INFORMATION */
    this->mesh::copy(tgt);
       
-/*	SHALLOW COPY BASIS */   
+   /* SHALLOW COPY BASIS */   
    b = tgt.b;
    
    p0 = tgt.p0;
@@ -29,7 +29,7 @@ void spectral_hp::copy(const spectral_hp& tgt) {
       ug.i = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
       size = maxvst;
       
-/*	ALLOCATE STORAGE FOR BOUNDARIES */
+      /* ALLOCATE STORAGE FOR BOUNDARIES */
       for(i=0;i<nsbd;++i)
          binfo[i] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
    }

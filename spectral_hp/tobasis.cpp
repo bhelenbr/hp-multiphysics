@@ -11,18 +11,18 @@
 #include<myblas.h>
 
 void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
-	int tind,i,j,m,n,indx,v0,v1,sind,info;
+   int tind,i,j,m,n,indx,v0,v1,sind,info;
    char uplo[] = "U";
    
-/*	LOOP THROUGH VERTICES */
+   /* LOOP THROUGH VERTICES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
          g.v[i][n] = func(n,vrtx[i][0],vrtx[i][1]);
          
    if (b.sm <= 0) return;
 
-/*	LOOP THROUGH SIDES */	
-	for(sind=0;sind<nside;++sind) {
+   /* LOOP THROUGH SIDES */   
+   for(sind=0;sind<nside;++sind) {
             
       v0 = svrtx[sind][0];
       v1 = svrtx[sind][1];
@@ -53,14 +53,14 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
          for(m=0;m<b.sm;++m) 
             g.s[indx+m][n] = -lf[n][2+m];
       }
-	}
-	
-	if (b.im <= 0) return;
+   }
+   
+   if (b.im <= 0) return;
    
    for(tind = 0; tind < ntri; ++tind) {
-		ugtouht_bdry(tind);
-		for(n=0;n<NV;++n)
-			b.proj_bdry(uht[n],u[n]);
+      ugtouht_bdry(tind);
+      for(n=0;n<NV;++n)
+         b.proj_bdry(uht[n],u[n]);
          
       if (tinfo[tind] < 0) {
          for(n=0;n<ND;++n)
@@ -79,12 +79,12 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
                      
       indx = tind*im0;
       for(n=0;n<NV;++n) {
-			b.intgrt(u[n],lf[n]);
-			DPBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
-			for(i=0;i<b.im;++i)
-				g.i[indx+i][n] = -lf[n][b.bm+i];
-		}
-	}
+         b.intgrt(u[n],lf[n]);
+         DPBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
+         for(i=0;i<b.im;++i)
+            g.i[indx+i][n] = -lf[n][b.bm+i];
+      }
+   }
    
-	return;
+   return;
 }

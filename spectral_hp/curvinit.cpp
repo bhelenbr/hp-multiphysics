@@ -11,17 +11,17 @@
 #include<myblas.h>
 
 void spectral_hp::curvinit() {
-	int i,j,m,n,bind,indx,sind,v0,v1,info,typ;
-	FLT x,y;
+   int i,j,m,n,bind,indx,sind,v0,v1,info,typ;
+   FLT x,y;
    char uplo[] = "U";
 
-/*	MAKE SURE VERTICES ARE ON SURFACE */
+   /* MAKE SURE VERTICES ARE ON SURFACE */
    for(bind=0;bind<nsbd;++bind) {
       typ = sbdry[bind].type;
 
       if (!(typ&CURV_MASK)) continue;
 
-/*		DON'T MESH WITH END VERTICES */
+      /* DON'T MESH WITH END VERTICES */
       for(j=1;j<sbdry[bind].num;++j) {
          sind = sbdry[bind].el[j];
          v0 = svrtx[sind][0];
@@ -31,13 +31,13 @@ void spectral_hp::curvinit() {
          vrtx[v0][0] = x;
          vrtx[v0][1] = y;
       }
-	}
+   }
 
-	if (b.p == 1) return;
-		
-/*****************************/
-/*	SET UP HIGHER ORDER MODES */
-/*****************************/
+   if (b.p == 1) return;
+      
+   /*****************************/
+   /* SET UP HIGHER ORDER MODES */
+   /*****************************/
    for(bind=0;bind<nsbd;++bind) {
       typ = sbdry[bind].type;
 
@@ -76,8 +76,8 @@ void spectral_hp::curvinit() {
                binfo[bind][indx+m].curv[n] = -lf[n][m+2];
          }
       }
-	}
+   }
 
-	return;
+   return;
 }
 

@@ -8,6 +8,8 @@ extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
+static int iter;
+
 void blocks::init(char *file) {
    int i,j,p;
    FILE *fp;
@@ -19,25 +21,25 @@ void blocks::init(char *file) {
       exit(1);
    }
 
-/*	READ POLYNOMIAL DEGREE */
+   /* READ POLYNOMIAL DEGREE */
    fscanf(fp,"%*[^\n]%d\n",&lg2pmax);
    printf("#LOG_2 PMAX\n#%d\n",lg2pmax);
 
-/*	READ FLOW ITERATIVE INFORMATION */
-/*	ITERATION CFL NUMBERS */
+   /* READ FLOW ITERATIVE INFORMATION */
+   /* ITERATION CFL NUMBERS */
    fscanf(fp,"%*[^\n]");
    fscanf(fp,"%lf%lf%lf\n",&hp_mgrid::cfl[0],&hp_mgrid::cfl[1],&hp_mgrid::cfl[2]);
    printf("#FLOWCFL\n#%.2f\t%.2f\t%.2f\n",hp_mgrid::cfl[0],hp_mgrid::cfl[1],hp_mgrid::cfl[2]);
 
-/*	LOAD FADD, ADIS, CHARACTERITIC FLAG */   
+   /* LOAD FADD, ADIS, CHARACTERITIC FLAG */   
    fscanf(fp,"%*[^\n]%lf %lf %d\n",&hp_mgrid::fadd,&hp_mgrid::adis,&hp_mgrid::charyes);
    printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
    
-/* LOAD ADAPTATION INFORMATION */
+   /* LOAD ADAPTATION INFORMATION */
    fscanf(fp,"%*[^\n]%d %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::bdryerr,&hp_mgrid::tol);
    printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tTOLERANCE\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::bdryerr,hp_mgrid::tol);
  
-/*	READ SURFACE ITERATIVE INFORMATION */
+   /* READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
    fscanf(fp,"%lf,%lf%lf,%lf%lf,%lf\n",&surface::cfl[0][0],&surface::cfl[0][1],&surface::cfl[1][0],&surface::cfl[1][1],&surface::cfl[2][0],&surface::cfl[2][1]);
    printf("#TANGENT/NORMAL SURFCFLS\n#%.2f,%.2f\t%.2f,%.2f\t%.2f,%.2f\n",surface::cfl[0][0],surface::cfl[0][1],surface::cfl[1][0],surface::cfl[1][1],surface::cfl[2][0],surface::cfl[2][1]);
@@ -45,42 +47,42 @@ void blocks::init(char *file) {
    fscanf(fp,"%*[^\n]%lf %lf\n",&surface::fadd[0],&surface::fadd[1]);
    printf("#TANGENT/NORMAL FADD\n#%0.2f\t%0.2f\n",surface::fadd[0],surface::fadd[1]); 
    
-/*	READ MESH MOVEMENT ITERATIVE INFORMATION */
+   /* READ MESH MOVEMENT ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]%lf\n",&r_mesh::vnn); //&r_mesh::cfl);
    printf("#MESH MOVEMENT CFL\n#%f\n",r_mesh::vnn); //r_mesh::cfl);
 
-/*	READ MESH MOVEMENT FADD */
+   /* READ MESH MOVEMENT FADD */
    fscanf(fp,"%*[^\n]%lf\n",&r_mesh::fadd); //&r_mesh::fadd);
    printf("#MESH MOVEMENT FADD\n#%f\n",r_mesh::fadd); //r_mesh::fadd);
 
-/*	READ IN PHYSICAL PARAMETERS */
+   /* READ IN PHYSICAL PARAMETERS */
    fscanf(fp,"%*[^\n]%lf %lf\n",&hp_mgrid::dti,&hp_mgrid::g);
    printf("#1/DT\t\tgravity\n#%0.2f\t%0.2f\n",hp_mgrid::dti,hp_mgrid::g);
 
-/*	SET BACKWARDS DIFFERENCE CONSTANTS */
+   /* SET BACKWARDS DIFFERENCE CONSTANTS */
    hp_mgrid::setbd(1);
    hp_mgrid::extrap = 0; /* DON'T EXTRAPOLATE ON FIRST CALL TO TADVANCE */
 
-/*	READ IN NUMBER OF TIME STEP/OUTPUT INTERVAL */
+   /* READ IN NUMBER OF TIME STEP/OUTPUT INTERVAL */
    fscanf(fp,"%*[^\n]%d %d\n",&ntstep,&out_intrvl);
    printf("#NTSTEP\t\tOUTPUT INTERVAL\n#%d\t\t%d\n",ntstep,out_intrvl);
    
-/*	READ IN ITERATION PARAMETERS */
+   /* READ IN ITERATION PARAMETERS */
    fscanf(fp,"%*[^\n]%d %d %d\n",&mglvls,&vwcycle,&ncycle);
    printf("#MGLEVELS\t\tVWCYCLE\t\t# OF CYCLES\n#%d\t\t%d\t\t%d\n",mglvls,vwcycle,ncycle);
 
-/*	READ IN INITIALIZATION PARAMETER */
+   /* READ IN INITIALIZATION PARAMETER */
    fscanf(fp,"%*[^\n]%d\n",&readin);
    printf("#READ FILE #\n#%d\n",readin);
    
-/*	READ IN NUMBER OF BLOCKS */
+   /* READ IN NUMBER OF BLOCKS */
    fscanf(fp,"%*[^\n]%d\n",&nblocks);  
    printf("#NBLOCKS\n#%d\n",nblocks);
    
-/*	BEGIN INITIALIZATION OF EACH BLOCK */   
+   /* BEGIN INITIALIZATION OF EACH BLOCK */   
    mgrids = MAX(mglvls-lg2pmax,1);   
 
-/*	INITIALIZE BASIS FUNCTIONS */
+   /* INITIALIZE BASIS FUNCTIONS */
    p = 1;
    for(i=0;i<lg2pmax;++i)
       p = p<<1;
@@ -90,26 +92,26 @@ void blocks::init(char *file) {
    }
    
    blk = new class block[nblocks];
-/*	OPEN EACH BLOCK FILE AND READ IN DATA */
+   /* OPEN EACH BLOCK FILE AND READ IN DATA */
    for (i=0;i<nblocks;++i) {
       fscanf(fp,"%s\n",blockname);
       printf("#\n#opening block %d: %s\n#\n",i,blockname);
       blk[i].initialize(blockname, mgrids, base, lg2pmax);
    }
 
-/*	MATCH BOUNDARIES FOR EACH MGRID LEVEL */
+   /* MATCH BOUNDARIES FOR EACH MGRID LEVEL */
    for(i=0;i<mgrids;++i) 
       findmatch(i);
 
 
-/*	INITIALIZE SOLUTION FOR EACH BLOCK */
+   /* INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin > 0) {
       startup = 0;
       ntstep += readin;
       
       for(i=0;i<nblocks;++i) {
       
-/*			INPUT MESH */
+         /* INPUT MESH */
          number_str(bname,"mesh",readin,3);
          strcat(bname, ".");
          number_str(outname, bname, i, 1);
@@ -117,7 +119,7 @@ void blocks::init(char *file) {
          blk[i].grd[0].in_mesh(outname,grid);  
          blk[i].grd[0].spectral_hp::setbcinfo();
 
-/*			FOR ADAPTIVE MESH */ 
+         /* FOR ADAPTIVE MESH */ 
          if (adapt) {
             number_str(bname,"vlgth",readin,3);
             strcat(bname, ".");
@@ -125,14 +127,14 @@ void blocks::init(char *file) {
             printf("#Reading vlength: %s\n",outname);
             blk[i].grd[0].inlength(outname);
          }
-/*			READ SOLUTION */ 
+         /* READ SOLUTION */ 
          number_str(bname,"data",readin,3);
          strcat(bname, ".");
          number_str(outname, bname, i, 1); 
          printf("#Reading solution: %s\n",outname);
          blk[i].grd[0].spectral_hp::input(outname,text);
 
-/*			INPUT UNSTEADY TIME HISTORY */
+         /* INPUT UNSTEADY TIME HISTORY */
          number_str(outname,"rstrtdata",readin,3);
          strcat(outname, ".");
          number_str(bname, outname, i, 1);
@@ -153,24 +155,24 @@ void blocks::init(char *file) {
       }
       hp_mgrid::setbd(MXSTEP);
             
-/*		REFIND BOUNDARIES ON FINE MESH */
+      /* REFIND BOUNDARIES ON FINE MESH */
       findmatch(0);
 
-/*		DO ADAPTATION FOR NEXT TIME STEP */      
+      /* DO ADAPTATION FOR NEXT TIME STEP */      
       if (adapt) {
          adaptation();
 
-/*			CREATE COARSE MESHES */
+         /* CREATE COARSE MESHES */
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
 
-/*			REFIND BOUNDARIES FOR COARSE MESHES */
-/*			JUST IN CASE BDRY ORDERING CHANGED */            
+         /* REFIND BOUNDARIES FOR COARSE MESHES */
+         /* JUST IN CASE BDRY ORDERING CHANGED */            
          for(i=1;i<mgrids;++i) 
             findmatch(i);
       }
       else {
-/*			THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
+         /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
          for(i = 1; i < mgrids; ++i)
             for(j=0;j<nblocks;++j)
                blk[j].grd[i].r_mesh::mg_getfres();
@@ -225,11 +227,11 @@ void blocks::tadvance() {
 }
 
 void blocks::nstage(int grdnum, int sm, int mgrid) {
-   static int i,stage,mode;
+   int i,stage,mode;
       
-/*****************************************/
-/* NSTAGE UPDATE OF FLOW VARIABLES    ****/
-/*****************************************/
+   /*****************************************/
+   /* NSTAGE UPDATE OF FLOW VARIABLES    ****/
+   /*****************************************/
    for(i=0;i<nblocks;++i)
       blk[i].grd[grdnum].tstep1();
       
@@ -244,14 +246,14 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
       
    for(stage=0;stage<NSTAGE;++stage) {
 
-/*		CALCULATE RESIDUAL */   
+      /* CALCULATE RESIDUAL */   
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].rsdl(stage,mgrid);
                            
-/*		INVERT MASS MATRIX (4 STEP PROCESS) */
-/*		HAVE TO BE VERY CAREFUL WITH COMMUNICATION */
-/* 	USE MESSAGE BEFORE SENDING NEXT */
-/*		VERTICES MUST BE 2 PART PROCESS BECAUSE OF CORNERS */
+      /* INVERT MASS MATRIX (4 STEP PROCESS) */
+      /* HAVE TO BE VERY CAREFUL WITH COMMUNICATION */
+      /* USE MESSAGE BEFORE SENDING NEXT */
+      /* VERTICES MUST BE 2 PART PROCESS BECAUSE OF CORNERS */
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].minvrt1();  //SEND Y
          
@@ -288,8 +290,11 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 void blocks::cycle(int vw, int lvl = 0) {
    int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
+#ifdef PV3
+   float pvtime = 0.0;
+#endif
 
-/* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */   
+   /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */ 
    if (lvl <= lg2pmax) {
       grid = 0;
       bsnum = lg2pmax-lvl;
@@ -304,6 +309,13 @@ void blocks::cycle(int vw, int lvl = 0) {
       nstage(grid,base[bsnum].sm,lvl);
       
       if (lvl == mglvls-1) return;
+      
+#ifdef PV3
+      if (lvl == 0) {
+         pvtime = 1.0*iter;
+         pV_UPDATE(&pvtime);
+      }
+#endif
       
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].rsdl(NSTAGE,lvl);
@@ -335,9 +347,9 @@ void blocks::cycle(int vw, int lvl = 0) {
 
 void blocks::endcycle() {
    int i;
-/*	CALCULATE MAX RESIDUAL ON FINEST MESH */
-/*	MOVE INTERFACE VERTICES */
 
+   /* CALCULATE MAX RESIDUAL ON FINEST MESH */
+   /* MOVE INTERFACE VERTICES */
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].maxres();
       
@@ -350,9 +362,9 @@ void blocks::endcycle() {
       blk[i].grd[0].surfugtovrt2();
 }
 
+
 void blocks::go() {
-   int i,tstep, iter;
-   float pvtime;
+   int i,tstep;
    
    for(tstep=readin;tstep<ntstep;++tstep) {
       
@@ -362,10 +374,6 @@ void blocks::go() {
       printf("ZONE\n");
       
       for(iter=0;iter<ncycle;++iter) {
-#ifdef PV3
-         pvtime = 1.0*iter;
-         pV_UPDATE(&pvtime);
-#endif
          cycle(vwcycle);
          printf("%d ",iter);
          endcycle();
@@ -419,12 +427,12 @@ void blocks::output(int number, FILETYPE type=text) {
       strcat(bname, ".");
       number_str(outname, bname, i, 1);
 
-/*		OUTPUT SOLUTION */
+      /* OUTPUT SOLUTION */
       blk[i].grd[0].output(outname,type);
       
 //      blk[i].grd[0].output(blk[i].grd[0].gbl->res,blk[i].grd[0].vrtx,blk[i].grd[0].binfo,outname,tecplot);
       
-/*		OUTPUT MESH */
+      /* OUTPUT MESH */
       number_str(bname,"mesh",number,3);
       strcat(bname, ".");
       number_str(outname, bname, i, 1);         
@@ -439,7 +447,7 @@ void blocks::output(int number, FILETYPE type=text) {
          blk[i].grd[0].outlength(outname,text);      
       }
       
-/*		OUTPUT UNSTEADY TIME HISTORY */
+      /* OUTPUT UNSTEADY TIME HISTORY */
       number_str(outname,"rstrtdata",number,3);
       strcat(outname, ".");
       number_str(bname, outname, i, 1);

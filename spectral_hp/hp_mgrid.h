@@ -23,44 +23,44 @@
 /* THESE THINGS ARE SHARED BY ALL MESHES OF THE SAME BLOCK */
 struct hp_mgrid_glbls {
 
-/*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
+   /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
    struct vsi ug0;
 
-/*	RESIDUAL STORAGE */
+   /* RESIDUAL STORAGE */
    struct vsi res;
 
-/*	VISCOUS FORCE RESIDUAL STORAGE */
+   /* VISCOUS FORCE RESIDUAL STORAGE */
    struct vsi vf;  
    
-/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
+   /* RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
    struct vsi res0;
 
-/*	MATRIX PRECONDITIONER  */
+   /* MATRIX PRECONDITIONER  */
    FLT (*vprcn)[NV][NV];
    FLT (*sprcn)[NV][NV];
    FLT (*tprcn)[NV][NV];
    
-/* STABILIZATION */
+   /* STABILIZATION */
    FLT *tau,*delt;
 
-/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
+   /* UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
    struct vsi ugbd[MXSTEPM1]; // BACKWARDS DIFFERENCE FLOW INFO
    FLT (*vrtxbd[MXSTEPM1])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
    struct bistruct *binfobd[MXSTEPM1][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
    FLT ***dugdt[NV];  // UNSTEADY SOURCE FOR FLOW (ONLY NEEDED ON FINEST MESH)
    struct bistruct *dbinfodt[MAXSB]; // UNSTEADY CURVED SIDE VELOCITY (ONLY NEEDED ON FINEST MESH)
-/*	MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
+   /* MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
       
-/*	PHYSICAL CONSTANTS */
+   /* PHYSICAL CONSTANTS */
    FLT rho, rhoi, mu, nu;
 
-/*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
+   /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
    FLT (*func)(int n, FLT x, FLT y);
 };
 
 class hp_mgrid : public spectral_hp {
    private:
-/*		THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
+      /* THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
       static const FLT alpha[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
       static const FLT beta[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (REAL)
       static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
@@ -70,30 +70,30 @@ class hp_mgrid : public spectral_hp {
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-      static FLT trncerr, bdryerr, tol;  //	ADAPTATION CONSTANTS  
+      static FLT trncerr, bdryerr, tol;  //   ADAPTATION CONSTANTS  
       static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
-		static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
+      static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
       static FLT (*vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
       static struct bistruct *binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
       static FLT **bdwk[MXSTEPM1][NV]; // WORK FOR ADAPTATION
       static int size;
   
-/*		TELLS WHICH P WE ARE ON FOR P MULTIGRID */
+      /* TELLS WHICH P WE ARE ON FOR P MULTIGRID */
       int log2p;
       
-/*		THINGS SHARED BY HP_MGRIDS IN SAME BLOCK */
+      /* THINGS SHARED BY HP_MGRIDS IN SAME BLOCK */
       struct hp_mgrid_glbls *gbl;
       
-/*		THINGS NEEDED ON EACH HP_MGRID MESH FOR MGRID */
+      /* THINGS NEEDED ON EACH HP_MGRID MESH FOR MGRID */
       FLT (*dvrtdt)[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
       FLT (*vug_frst)[NV]; // SOLUTION ON FIRST ENTRY TO COARSE MESH
       struct vsi dres[MXLG2P]; // DRIVING TERM FOR MULTIGRID
       
-/*    SURFACE BOUNDARY CONDITION STUFF */
+      /* SURFACE BOUNDARY CONDITION STUFF */
       class surface *srf;
       
-/*		SOME PRIVATE UTILITY FUNCTIONS */
+      /* SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
       void gbl_alloc(struct hp_mgrid_glbls *store);
       
@@ -107,28 +107,28 @@ class hp_mgrid : public spectral_hp {
          log2p = 0;
          while ((b.p-1)>>log2p > 0) ++log2p;
       }
-/*		SET UP HIGHER-ORDER BACKWARD-DIFFERENCE CONSTANTS */
+      /* SET UP HIGHER-ORDER BACKWARD-DIFFERENCE CONSTANTS */
       static void setbd(int nsteps);
 
-/*		CALCULATE TIMESTEP */
+      /* CALCULATE TIMESTEP */
       void tstep1();
       void tstep_mp();
       void tstep2();
       
-/*		DETERMINE SOLUTION RESIDUAL */
+      /* DETERMINE SOLUTION RESIDUAL */
       void rsdl(int stage, int mgrid);
       
-/*		PRINT SOLUTION RESIDUAL */
+      /* PRINT SOLUTION RESIDUAL */
       void maxres();
 
-/*		INVERT MASS MATRIX (4 STEP PROCESS WITH COMMUNICATION IN BETWEEN EACH STEP) */
+      /* INVERT MASS MATRIX (4 STEP PROCESS WITH COMMUNICATION IN BETWEEN EACH STEP) */
       void minvrt1();
       void minvrt2();
       void minvrt3(int mode);
       inline void minvrt3_mp(int mode) {bdry_ssnd(mode);}
       void minvrt4();
 
-/*		BOUNDARY CONDITION ROUTINES */
+      /* BOUNDARY CONDITION ROUTINES */
       void setinflow();
       void addbflux(int mgrid);
       void bdry_vsnd();
@@ -139,11 +139,11 @@ class hp_mgrid : public spectral_hp {
       void bdrycheck1();
       void bdrycheck2();
 
-/*		COUPLED SURFACE BOUNDARY ROUTINES */ 
+      /* COUPLED SURFACE BOUNDARY ROUTINES */ 
       void surfvrttoug();
       void surfugtovrt1();
       void surfugtovrt2();
-/*		SETUP SURFACE 1D SPRING CONSTANTS */
+      /* SETUP SURFACE 1D SPRING CONSTANTS */
       void setksprg1d();
       void surfksrc1d();
       void surfrsdl(int bnum, int mgrid);
@@ -157,21 +157,21 @@ class hp_mgrid : public spectral_hp {
       void surfgetcchng(int bnum);
       void surfmaxres();
       
-/*		PARTS FOR 5 STEP UPDATE */
+      /* PARTS FOR 5 STEP UPDATE */
       void nstage1();
       void nstage2(int stage);
       
-/*    MGRID TRANSFER */
+      /* MGRID TRANSFER */
       void getfres();
       void getcchng();
       int setfine(class hp_mgrid& tgt);
       int setcoarse(class hp_mgrid& tgt); 
 
-/*		FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
+      /* FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
       void tadvance();
       void getfdvrtdt();  // TO TRANSFER MESH TIME DERIVATIVE TO COARSE MESHES */
       
-/*		FUNCTIONS FOR ADAPTION */      
+      /* FUNCTIONS FOR ADAPTION */      
       void length1();
       void length_mp();
       void length2(); 
@@ -184,7 +184,7 @@ class hp_mgrid : public spectral_hp {
       
 #ifdef PV3
       void pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
-		void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
+      void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
 &kptet,int& knblock,int blocks[][3],int& ksurf,int& knsurf,int& hint);
       void pvgrid(float (*xyz)[3]);
       void pvscal(int *key, float *v);

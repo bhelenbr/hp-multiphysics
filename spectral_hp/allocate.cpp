@@ -24,14 +24,14 @@ void spectral_hp::allocate(class hpbasis& bas) {
       exit(1);
    }
 
-/*	SHALLOW COPY BASIS */   
+   /* SHALLOW COPY BASIS */   
    b = bas;
    
    p0 = b.p;
    sm0 = b.sm;
    im0 = b.im;
       
-/*   	LOCAL STORAGE/WORK */
+   /* LOCAL STORAGE/WORK */
    if (p0 > pmax) {
       if (pmax != 0) {
          printf("allocate from largest to smallest\n");
@@ -63,7 +63,7 @@ void spectral_hp::allocate(class hpbasis& bas) {
    
    size = maxvst;
    
-/*	ALLOCATE STORAGE FOR BOUNDARIES */
+   /* ALLOCATE STORAGE FOR BOUNDARIES */
    for(i=0;i<nsbd;++i)
       binfo[i] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
       
@@ -73,9 +73,9 @@ void spectral_hp::allocate(class hpbasis& bas) {
 }
 
 void spectral_hp::setbcinfo() {
-   static int i,j,sind;
+   int i,j,sind;
    
-/*	SET UP VRTX BC INFORMATION FOR OUTPUT */
+   /* SET UP VRTX BC INFORMATION FOR OUTPUT */
    for(i=0;i<nvrtx;++i)
       vinfo[i] = -1;
 
@@ -83,7 +83,7 @@ void spectral_hp::setbcinfo() {
       for(j=0;j<vbdry[i].num;++j)
          vinfo[vbdry[i].el[j]] = vbdry[i].type;
 
-/*	SET UP SIDE BC INFORMATION FOR CURVED SIDES OUTPUT */
+   /* SET UP SIDE BC INFORMATION FOR CURVED SIDES OUTPUT */
    for(i=0;i<nside;++i)
       sinfo[i] = -1;
    

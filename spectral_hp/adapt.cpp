@@ -20,12 +20,12 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
    
-	changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
-	
-/*	COPY SOLUTION & MESH TO BEGIN */
+   changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
+   
+   /* COPY SOLUTION & MESH TO BEGIN */
    str.spectral_hp::copy(*this);
    
-/*	COPY UNSTEADY SOURCE TERMS TOO */
+   /* COPY UNSTEADY SOURCE TERMS TOO */
    for(step=0;step<MXSTEPM1;++step) {
       for(i=0;i<nvrtx;++i)
          for(n=0;n<NV;++n)
@@ -49,20 +49,20 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                binfostr[step][i][j] = gbl->binfobd[step][i][j];
    }
 
-/*	SET TARGET POINTER: USED IN EXTERNAL FUNCTION MVPTTOBDRY PROVIDED TO MESH */
+   /* SET TARGET POINTER: USED IN EXTERNAL FUNCTION MVPTTOBDRY PROVIDED TO MESH */
    tgt = &str;
 
-/*	REDUCE maxsrch (KEEP FAILED TRIANGLE SEARCHES LOCAL) */
+   /* REDUCE maxsrch (KEEP FAILED TRIANGLE SEARCHES LOCAL) */
    mesh::maxsrch = 15;
    
-/* BEGIN ADAPTION PROCEDURE */
+   /* BEGIN ADAPTION PROCEDURE */
    swap();
 
-/* COARSEN */ 
+	/* COARSEN */ 
    nvrt0 = nvrtx;
    yaber(1.0/tolerance);
       
-/*	MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
+   /* MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
    for(i=nvrt0-1;i>=nvrtx;--i) {
       if (vinfo[i] < 0) continue;
       
@@ -79,26 +79,26 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             gbl->vrtxbd[step][v0][n] = gbl->vrtxbd[step][i][n];
    }
  
-/*	REFINE */
+   /* REFINE */
    nvrt0 = nvrtx;
    rebay(tolerance);
    
-/* TO SEE MESH MANIPULATION */
+   /* TO SEE MESH MANIPULATION */
    for(i=0;i<nside;++i)
       sinfo[i] += 2;
    out_mesh("adapt");
    for(i=0;i<nside;++i)
       sinfo[i] -= 2;
    
-/*	PRINT SOME GENERAL DEBUGGING INFO */
+   /* PRINT SOME GENERAL DEBUGGING INFO */
    printf("#\n#\nREFINED MESH\n");
    printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b.sm*nside+b.im*ntri);
    
-/* PRINT BOUNDARY INFO */
+   /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
       printf("MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
 
-/* MARK BOUNDARY VERTICES */
+   /* MARK BOUNDARY VERTICES */
    for(i=nvrt0;i<nvrtx;++i)
       vinfo[i] = -1;
 
@@ -106,7 +106,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       for(j=0;j<sbdry[i].num;++j)
          vinfo[svrtx[sbdry[i].el[j]][0]] = 0;
       
-/*	ASSIGN NEW VALUES */
+   /* ASSIGN NEW VALUES */
    for(i=nvrt0;i<nvrtx;++i) {
       if (vinfo[i] < 0) {
          tind = str.findinteriorpt(vrtx[i][0],vrtx[i][1],r,s);
@@ -137,7 +137,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    }
          
 
-/* ASSIGN NEW BOUNDARY VERTEX VALUES */
+   /* ASSIGN NEW BOUNDARY VERTEX VALUES */
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {
          v0 = svrtx[sbdry[i].el[j]][0];
@@ -171,17 +171,17 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    
    if (b.sm > 0) {
       
-/*    ASSIGN NEW SIDE VALUES */
+      /* ASSIGN NEW SIDE VALUES */
       indx = 0;
       indx1 = 0;
       for(sind=0;sind<nside;++sind) {
          switch (sinfo[sind]) {
             case(-1): 
-/*   				UNTOUCHED/UNMOVED */            
+               /* UNTOUCHED/UNMOVED */            
                break;
    
             case(-2):
-/*   				TOUCHED */
+               /* TOUCHED */
                if (stri[sind][1] < 0) break; // DO BOUNDARY SIDES SEPARATELY
    
                v0 = svrtx[sind][0];
@@ -236,7 +236,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                break;
    
             default:
-/*   				SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
+               /* SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
                assert(sinfo[sind] > -1);
                
                indx2 = sinfo[sind]*str.sm0;
@@ -255,7 +255,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          indx += sm0;
       }
       
-/*   	UPDATE BOUNDARY SIDES */
+      /* UPDATE BOUNDARY SIDES */
       for(i=0;i<nsbd;++i) {
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
@@ -297,13 +297,13 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         x = crd[0][0][m];
                         y = crd[1][0][m];
       
-   /*   						THIS MOVES X,Y PT TO BOUNDRY */            
+                        /* THIS MOVES X,Y PT TO BOUNDRY */            
                         stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
                         assert(stgt >= 0);
                         crd[0][0][m] -= x;
                         crd[1][0][m] -= y;
       
-/*	   						CALCULATE VALUE OF SOLUTION AT POINT */
+                        /* CALCULATE VALUE OF SOLUTION AT POINT */
                         str.ugtouht1d(stgt);
                         str.b.ptprobe1d(NV,uht,upt,psi);
                         for(n=0;n<NV;++n)
@@ -359,10 +359,10 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         x = crd[0][0][m];
                         y = crd[1][0][m];
                         
-/*	   						FIND PSI */            
+                        /* FIND PSI */            
                         stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
                         assert(stgt >= 0);
-/*	   						CALCULATE VALUE OF SOLUTION AT POINT */
+                        /* CALCULATE VALUE OF SOLUTION AT POINT */
                         str.ugtouht1d(stgt);
                         str.b.ptprobe1d(NV,uht,upt,psi);
                         for(n=0;n<NV;++n)
@@ -400,8 +400,8 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                   break;
                   
                default:
-/*   					SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
-/*   					ALREADY MOVED UG INFO JUST NEED TO MOVE BINFO */
+                  /* SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
+                  /* ALREADY MOVED UG INFO JUST NEED TO MOVE BINFO */
                   assert(sinfo[sind] > -1);
                   indx1 = (-str.stri[sinfo[sind]][1]&0xFFFF)*str.sm0;
                   for(m=0;m<b.sm;++m)
@@ -420,7 +420,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 
    if (b.im > 0) {
 
-/*    FIGURE OUT WHICH TRIANGLES HAVE BEEN TOUCHED */
+      /* FIGURE OUT WHICH TRIANGLES HAVE BEEN TOUCHED */
       for(tind=0;tind<ntri;++tind) {
          touchd = 0;
          for(snum=0;snum<3;++snum)
@@ -430,10 +430,10 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          else intwk2[i] = tinfo[tind];
       }
       
-/*    SET UP BDRY CONDITION INFO */
+      /* SET UP BDRY CONDITION INFO */
       setbcinfo();
          
-/*    RESET INTERIOR VALUES */
+      /* RESET INTERIOR VALUES */
       indx = 0;
       for(tind=0;tind<ntri;++tind) {
          switch (intwk2[tind]) {
@@ -516,7 +516,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          indx += im0;
       }
       
-/*		RESET intwk2 */
+      /* RESET intwk2 */
       for(i=0;i<ntri;++i)
          intwk2[i] = -1;
    }
@@ -524,7 +524,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       setbcinfo();
    }
 
-/*	RESTORE maxsrch in findtri */
+   /* RESTORE maxsrch in findtri */
    mesh::maxsrch = 3*MAXLST/4;
                
    return;

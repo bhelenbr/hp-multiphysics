@@ -10,9 +10,9 @@
 #include"hp_mgrid.h"
 #include<utilities.h>
 
-/*	STATIC WORK VARIABLES USED BY ALL HP_MGRID OBJECTS */
+/* STATIC WORK VARIABLES USED BY ALL HP_MGRID OBJECTS */
 FLT **hp_mgrid::cv00,**hp_mgrid::cv01,**hp_mgrid::cv10,**hp_mgrid::cv11;
-FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;	
+FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;   
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
@@ -26,7 +26,7 @@ FLT **hp_mgrid::bdwk[MXSTEPM1][NV]; // WORK FOR ADAPTATION
 int hp_mgrid::size;
 
 
-/*	STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
+/* STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
 const FLT hp_mgrid::alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0};
 const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
 int hp_mgrid::extrap=0;
@@ -47,14 +47,14 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       mat_alloc(cv01,b.gpx,b.gpn,FLT);
       mat_alloc(cv10,b.gpx,b.gpn,FLT);
       mat_alloc(cv11,b.gpx,b.gpn,FLT);
-      	
+         
       mat_alloc(e00,b.gpx,b.gpn,FLT);
       mat_alloc(e01,b.gpx,b.gpn,FLT);
       mat_alloc(e10,b.gpx,b.gpn,FLT);
       mat_alloc(e11,b.gpx,b.gpn,FLT);
       size = b.p;
       
-/*		ALLOCATE UNSTEADY ADAPTATION STORAGE */
+      /* ALLOCATE UNSTEADY ADAPTATION STORAGE */
       for(i=0;i<MXSTEPM1;++i) {
          ugstr[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
          ugstr[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
@@ -75,13 +75,13 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       }
    }
 
-/*	ON FINEST MESH ALLOCATE GLOBAL STORAGE */   
+   /* ON FINEST MESH ALLOCATE GLOBAL STORAGE */   
    if (!mgrid) gbl_alloc(store);
 
-/*	COPY GLOBAL POINTER */   
+   /* COPY GLOBAL POINTER */   
    gbl = store;
 
-/* FIGURE OUT WHERE WE ARE */   
+   /* FIGURE OUT WHERE WE ARE */   
    if (mgrid && p0 == 1) onfmesh = 0;
    else onfmesh = 1;
    log2p = 0;
@@ -91,19 +91,19 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       exit(1);
    }
    
-/*	THINGS NEEDED 1 FOR EACH PHYSICAL GRID */
+   /* THINGS NEEDED 1 FOR EACH PHYSICAL GRID */
    if ((onfmesh && b.p == p0) || !onfmesh)
-   	dvrtdt = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+      dvrtdt = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
 
-/*	THINGS NEEDED FOR EACH MGRID LEVEL BUT NOT FINEST */
+   /* THINGS NEEDED FOR EACH MGRID LEVEL BUT NOT FINEST */
    if (mgrid) {
 
-/*		NEED TO STORE INITIAL RESIDUAL ON EACH COARSE LEVEL */
+      /* NEED TO STORE INITIAL RESIDUAL ON EACH COARSE LEVEL */
       dres[log2p].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       dres[log2p].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
       dres[log2p].i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
          
-/*		THINGS NEEDED ONLY FOR COARSE MESHES (NOT ON COARSE P LEVELS) */
+      /* THINGS NEEDED ONLY FOR COARSE MESHES (NOT ON COARSE P LEVELS) */
       if (!onfmesh) {
          vug_frst = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       }
@@ -115,22 +115,22 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
 void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    int i, j, pn, smn, imn;
    
-/*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
+   /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
    store->ug0.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    store->ug0.s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
    store->ug0.i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
-/*	RESIDUAL STORAGE */
+   /* RESIDUAL STORAGE */
    store->res.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    store->res.s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
    store->res.i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
-/*	VISCOUS FORCE RESIDUAL STORAGE */
+   /* VISCOUS FORCE RESIDUAL STORAGE */
    store->vf.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    store->vf.s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
    store->vf.i = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
    
-/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID NEXT COARSER MESH */
+   /* RESIDUAL STORAGE FOR ENTRY TO MULTIGRID NEXT COARSER MESH */
    store->res0.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    pn = b.p>>1;
    smn = pn-1;
@@ -138,7 +138,7 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    if (smn > 0) store->res0.s = (FLT (*)[NV]) xmalloc(NV*maxvst*smn*sizeof(FLT));
    if (imn > 0) store->res0.i = (FLT (*)[NV]) xmalloc(NV*maxvst*imn*sizeof(FLT));
 
-/*	PRECONDITIONER  */
+   /* PRECONDITIONER  */
    store->vprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
    store->sprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
    store->tprcn = (FLT (*)[NV][NV]) xmalloc(NV*NV*maxvst*sizeof(FLT));
@@ -147,7 +147,7 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    vect_alloc(store->tau,maxvst,FLT);
    vect_alloc(store->delt,maxvst,FLT);
 
-/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
+   /* UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
    for(i=0;i<MXSTEPM1;++i) {
       store->ugbd[i].v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       store->ugbd[i].s = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
@@ -199,7 +199,7 @@ void hp_mgrid::setbd(int nsteps) {
          hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
          hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
          break;
-   	case(3):
+      case(3):
          hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
          hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
          hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;

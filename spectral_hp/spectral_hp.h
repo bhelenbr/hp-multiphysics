@@ -33,20 +33,20 @@ class spectral_hp : public r_mesh  {
       hpbasis b;
       int p0, sm0, im0;  // INITIALIZATION VALUES 
       
-/*		SOLUTION INFORMATION */
+      /* SOLUTION INFORMATION */
       struct vsi ug;
       
-/*		BOUNDARY INFORMATION */
-/*		NOT ALL BOUNDARIES NEED THIS INFO, BUT EXTRA STORAGE IS MINISCULE */
+      /* BOUNDARY INFORMATION */
+      /* NOT ALL BOUNDARIES NEED THIS INFO, BUT EXTRA STORAGE IS MINISCULE */
       struct bistruct *binfo[MAXSB];
       
-/*		STATIC WORK ARRAYS */
+      /* STATIC WORK ARRAYS */
       static FLT **u[NV],**du[NV][ND],**res[NV];
       static FLT **crd[ND], **dcrd[ND][ND], **cjcb;
       static FLT *uht[NV], *lf[NV], *lf1[NV];
       static int pmax;
       
-/*		FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
+      /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
       void ugtouht(int tind);
       void ugtouht(int tind, struct vsi ug);
       void ugtouht_bdry(int tind);
@@ -58,10 +58,10 @@ class spectral_hp : public r_mesh  {
       void crdtouht1d(int sind);
       void crdtouht1d(int sind, FLT (*vrtx)[ND], struct bistruct **binfo);
 
-/*		THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
+      /* THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
       void lftog(int tind, struct vsi);
 
-/*		SETUP V/S/T INFO */
+      /* SETUP V/S/T INFO */
       void setbcinfo();
                   
    public:

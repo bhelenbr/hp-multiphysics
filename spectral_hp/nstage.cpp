@@ -2,27 +2,27 @@
 
 void hp_mgrid::nstage1(void)
 {
-	static int i,n;
-/******************************************************************/
-/* BEGINNING OF MULTISTAGE PSEUDO-TIME-UPDATE OF FLOW & MESH POSITION ****/
-/******************************************************************/
+    int i,n;
+   /******************************************************************/
+   /* BEGINNING OF MULTISTAGE PSEUDO-TIME-UPDATE OF FLOW & MESH POSITION ****/
+   /******************************************************************/
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<NV;++n)
          gbl->ug0.v[i][n] = ug.v[i][n];
 
-	if (b.p > 1) {
+   if (b.p > 1) {
       for(i=0;i<nside*sm0;++i) 
-			for(n=0;n<NV;++n)
-				gbl->ug0.s[i][n] = ug.s[i][n];
+         for(n=0;n<NV;++n)
+            gbl->ug0.s[i][n] = ug.s[i][n];
       
       if (b.p > 2) {
          for(i=0;i<ntri*im0;++i)
             for(n=0;n<NV;++n)
                gbl->ug0.i[i][n] = ug.i[i][n];
       }   
-	}
+   }
 
-/*	COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+   /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
          surfnstage1(i);
@@ -54,7 +54,7 @@ void hp_mgrid::nstage2(int stage) {
             ++indx1;
          }
          indx1 += sm0 -b.sm;
-      }			
+      }         
 
       if (b.im > 0) {
          indx = 0;
@@ -73,13 +73,13 @@ void hp_mgrid::nstage2(int stage) {
       }
    }
    
-/*	COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+   /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
          surfnstage2(i,stage);
    }
    
-/*   for(i=0;i<nsbd;++i) {
+   /* for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&FSRF_MASK) {
          for(k=0;k<sbdry[i].num;++k) {
             indx = sbdry[i].el[k];
@@ -87,7 +87,7 @@ void hp_mgrid::nstage2(int stage) {
          }
       }
    }
-*/
+   */
             
    return;
 }

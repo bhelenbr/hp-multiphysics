@@ -10,7 +10,7 @@
 #include"hpbasis.h"
 
 void hpbasis::intgrt1d(FLT *f, FLT *rslt) {
-   static int i,n;
+   int i,n;
    
    for(n=0;n<sm+2;++n)
       rslt[n] = 0.0;
@@ -29,7 +29,7 @@ void hpbasis::intgrt1d(FLT *f, FLT *rslt) {
 }
    
 void hpbasis::intgrtx1d(FLT *f, FLT *rslt) {
-   static int i,n;
+   int i,n;
    
    for(i=0;i<gpx;++i)
       rslt[0] += dgxwtx[0][i]*f[i];

@@ -1,6 +1,6 @@
 #include"hp_mgrid.h"
 
-/*	THIS IS A SEQUENCE OF RMESHES & STATIC STORAGE FOR A SIGNLE MULTIGRID BLOCK */
+/* THIS IS A SEQUENCE OF RMESHES & STATIC STORAGE FOR A SIGNLE MULTIGRID BLOCK */
 class block {
    private:
       int ngrid;
@@ -19,7 +19,7 @@ class block {
       void coarsenchk(const char *name);
 };
 
-/*	THIS IS A MULTIBLOCK MESH */
+/* THIS IS A MULTIBLOCK MESH */
 class blocks {
    private:
       int lg2pmax;  // HP PARAMETER
@@ -35,10 +35,10 @@ class blocks {
 
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       
-/*		5 STAGE UPDATE ON ALL BLOCKS */  
+      /*5 STAGE UPDATE ON ALL BLOCKS */  
       void nstage(int grdnum, int sm, int mgrid);
       
-/*		SETUP COMMUNICATION BOUNDARIES */
+      /* SETUP COMMUNICATION BOUNDARIES */
       void findmatch(int mglvl);
       
 #ifdef PV3
@@ -46,33 +46,33 @@ class blocks {
 #endif
 
    public:
-/*		INITIALIZE MULTIBLOCK/MGRID MESH */
+      /* INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(char *filename);
       
-/*		START SIMULATION */
+      /* START SIMULATION */
       void go();
       
-/*		PREPARE FOR NEW TIMESTEP */
+      /* PREPARE FOR NEW TIMESTEP */
       void tadvance();
 
-/*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
+      /* MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);
       void endcycle(); // PRINTS DIAGNOSTIC INFO & MOVES SURFACES
 
-/*		OUTPUT FINE MESH SOLUTION */
+      /* OUTPUT FINE MESH SOLUTION */
       void output(int number, FILETYPE filetype = text);
 
-/*		MESH REFINEMENT */
+      /* MESH REFINEMENT */
       void adaptation();
       
-/*		R-MESH DEFORMATION */
-/*		JACOBI ITERATION ON ALL BLOCKS */  
+      /* R-MESH DEFORMATION */
+      /* JACOBI ITERATION ON ALL BLOCKS */  
       void r_jacobi(int niter, int mglvl);
-/*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
+      /* MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
       void r_cycle(int vw, int lvl = 0);
-/*		CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
+      /* CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
       void r_ksrc();
-/*		PRINT MAGNITUDE OF RESIDUAL */
+      /* PRINT MAGNITUDE OF RESIDUAL */
       inline void r_maxres() {
          for(int i=0;i<nblocks;++i)
             blk[i].grd[0].r_mesh::maxres();

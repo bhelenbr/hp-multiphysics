@@ -35,7 +35,7 @@ void hp_mgrid::length1() {
             fltwk[v1] += sum;
          }
          
-/*			BOUNDARY CURVATURE? */
+         /* BOUNDARY CURVATURE? */
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
             for(j=0;j<sbdry[i].num;++j) {
@@ -65,7 +65,7 @@ void hp_mgrid::length1() {
             indx += sm0;
          }
          
-/*			BOUNDARY CURVATURE? */
+         /* BOUNDARY CURVATURE? */
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
             indx = 0;
@@ -94,7 +94,7 @@ void hp_mgrid::length1() {
       }
    }
    
-/*	AVOID HIGH ASPECT RATIOS */
+   /* AVOID HIGH ASPECT RATIOS */
 //   do {
       count = 0;
       for(i=0;i<nside;++i) {
@@ -114,13 +114,13 @@ void hp_mgrid::length1() {
       printf("#aspect ratio fixes %d\n",count);
 //   } while(count > 0);
 
-/*	SEND COMMUNICATIONS TO ADJACENT MESHES */
+   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
-/*			SEND VERTEX INFO */
+         /* SEND VERTEX INFO */
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
@@ -142,7 +142,7 @@ void hp_mgrid::length_mp() {
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
          count = 0;
-/*			RECV VERTEX INFO */
+         /* RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
@@ -153,13 +153,13 @@ void hp_mgrid::length_mp() {
       }
    }
    
-/*	SEND COMMUNICATIONS TO ADJACENT MESHES */
+   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMX_MASK) {
          bnum = sbdry[i].adjbnum;
          tgt = sbdry[i].adjmesh;
          count = 0;
-/*			SEND VERTEX INFO */
+         /* SEND VERTEX INFO */
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
@@ -178,7 +178,7 @@ void hp_mgrid::length2() {
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & COMX_MASK) {
          count = 0;
-/*			RECV VERTEX INFO */
+         /* RECV VERTEX INFO */
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
@@ -196,8 +196,8 @@ void hp_mgrid::length2() {
 
 void hp_mgrid::outlength(char *name, FILETYPE type) {
    char fnmapp[100];
-	FILE *out;
-	int i,n,tind;
+   FILE *out;
+   int i,n,tind;
 
    strcpy(fnmapp,name);
 
@@ -224,31 +224,31 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
       
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
       
-      /*	VERTEX MODES */
+         /* VERTEX MODES */
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",vrtx[i][n]);
-            fprintf(out,"%.6e\n",vlngth[i]);					
+            fprintf(out,"%.6e\n",vlngth[i]);               
          }
          
-      /*	OUTPUT CONNECTIVY INFO */
+         /* OUTPUT CONNECTIVY INFO */
          fprintf(out,"\n#CONNECTION DATA#\n");
          
          for(tind=0;tind<ntri;++tind)
             fprintf(out,"%d %d %d\n"
                ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
           
-/*			OUTPUT FLTWK INFO */
+         /* OUTPUT FLTWK INFO */
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nside,ntri);
       
-      /*	VERTEX MODES */
+         /* VERTEX MODES */
          for(i=0;i<nside;++i) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",0.5*(vrtx[svrtx[i][0]][n] +vrtx[svrtx[i][1]][n]));
-            fprintf(out,"%.6e\n",fltwk[i]);					
+            fprintf(out,"%.6e\n",fltwk[i]);               
          }
          
-      /*	OUTPUT CONNECTIVY INFO */
+         /* OUTPUT CONNECTIVY INFO */
          fprintf(out,"\n#CONNECTION DATA#\n");
          
          for(tind=0;tind<ntri;++tind)
@@ -269,8 +269,8 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
 
 void hp_mgrid::inlength(char *name) {
    char fnmapp[100];
-	FILE *out;
-	int i;
+   FILE *out;
+   int i;
 
    strcpy(fnmapp,name);
    strcat(fnmapp,".txt");

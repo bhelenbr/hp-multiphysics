@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
    class blocks myblock;
    clock_t cpu_time;
 
-/*	START CLOCK TIMER */
+   /* START CLOCK TIMER */
    clock();
 
    myblock.init(argv[1]);
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
    return(0);
 
 
-/*	FOR TEST ADAPTATION */
+   /* FOR TEST ADAPTATION */
    myblock.init(argv[1]);
    myblock.output(10,tecplot);
    

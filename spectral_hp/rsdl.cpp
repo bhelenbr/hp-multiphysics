@@ -10,9 +10,9 @@
 #include "hp_mgrid.h"
    
 void hp_mgrid::rsdl(int stage, int mgrid) {
-   static int i,j,n,tind;
-   static FLT fluxx,fluxy;
-   static FLT visc[ND][ND][ND][ND], tres[NV];
+   int i,j,n,tind;
+   FLT fluxx,fluxy;
+   FLT visc[ND][ND][ND][ND], tres[NV];
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
@@ -38,7 +38,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       for(n=0;n<NV;++n)
          gbl->vf.i[i][n]  *= (1. -beta[stage]);          
 
-	for(tind = 0; tind<ntri;++tind) {
+   for(tind = 0; tind<ntri;++tind) {
    
       if (tinfo[tind] > -5) {
          crdtouht(tind);
@@ -66,7 +66,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          }
       }
 
-/*		CALCULATE MESH VELOCITY */
+      /* CALCULATE MESH VELOCITY */
       for(i=0;i<b.gpx;++i)
          for(j=0;j<b.gpn;++j)
             for(n=0;n<ND;++n)
@@ -88,7 +88,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(i=0;i<b.tm;++i)
             lf[n][i] = 0.0;
 
-/*		CONVECTIVE TERMS (IMAGINARY FIRST)*/
+      /* CONVECTIVE TERMS (IMAGINARY FIRST)*/
       for(i=0;i<b.gpx;++i) {
          for(j=0;j<b.gpn;++j) {
 
@@ -108,14 +108,14 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       b.intgrtrs(cv10,cv11,lf[1]);
       b.intgrtrs(du[2][0],du[2][1],lf[2]);
 
-/*		ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
+      /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
       lftog(tind,gbl->res);
 
-/*		NEGATIVE REAL TERMS */
+      /* NEGATIVE REAL TERMS */
       if (beta[stage] > 0.0) {
             
-/*			TIME DERIVATIVE TERMS */
-         if (!mgrid) {			
+         /* TIME DERIVATIVE TERMS */
+         if (!mgrid) {         
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
                   cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
@@ -139,18 +139,18 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          b.intgrt(res[1],lf[1]);
          b.intgrt(res[2],lf[2]);
 
-/*			VISCOUS TERMS  */
+         /* VISCOUS TERMS  */
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
 
                cjcb[i][j] = gbl->mu/cjcb[i][j];
                
-/*					BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-/*					INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
+               /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
+               /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
                visc[0][0][0][0] =  cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][1][i][j] +dcrd[0][1][i][j]*dcrd[0][1][i][j]);
                visc[0][0][1][1] =  cjcb[i][j]*(2.*dcrd[1][0][i][j]*dcrd[1][0][i][j] +dcrd[0][0][i][j]*dcrd[0][0][i][j]);
                visc[0][0][0][1] = -cjcb[i][j]*(2.*dcrd[1][1][i][j]*dcrd[1][0][i][j] +dcrd[0][1][i][j]*dcrd[0][0][i][j]);
-#define  			viscI0II0II1II0I visc[0][0][0][1]
+#define           viscI0II0II1II0I visc[0][0][0][1]
 
                visc[1][1][0][0] =  cjcb[i][j]*(dcrd[1][1][i][j]*dcrd[1][1][i][j] +2.*dcrd[0][1][i][j]*dcrd[0][1][i][j]);
                visc[1][1][1][1] =  cjcb[i][j]*(dcrd[1][0][i][j]*dcrd[1][0][i][j] +2.*dcrd[0][0][i][j]*dcrd[0][0][i][j]);
@@ -162,7 +162,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                visc[0][1][0][1] =  cjcb[i][j]*dcrd[0][1][i][j]*dcrd[1][0][i][j];
                visc[0][1][1][0] =  cjcb[i][j]*dcrd[0][0][i][j]*dcrd[1][1][i][j];
 
-/*						OTHER SYMMETRIES    */            
+                  /* OTHER SYMMETRIES    */            
 #define           viscI1II0II0II0I visc[0][1][0][0]
 #define           viscI1II0II1II1I visc[0][1][1][1]
 #define           viscI1II0II0II1I visc[0][1][1][0]
@@ -191,7 +191,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                du[2][1][i][j] *= -1;
                
 #ifdef OLDWAYS
-/*	THESE DON'T WORK FOR MOVING MESH RIGHT NOW */
+   /* THESE DON'T WORK FOR MOVING MESH RIGHT NOW */
                   res[2][i][j] += gbl->rho*
                                  (dcrd[1][1][i][j]*(du[0][0][i][j] -dlmvx[0][i][j])
                                  -dcrd[0][1][i][j]*(du[1][0][i][j] -dlmvx[1][i][j])
@@ -212,7 +212,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          b.derivs(du[2][1],res[2]);
          
 
-/*			THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
+         /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
 
@@ -252,9 +252,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                
          lftog(tind,gbl->vf);
       }
-	}
+   }
 
-/*   
+   /*
    for(i=0;i<nvrtx;++i)
       printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
       
@@ -263,30 +263,30 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 
    for(i=0;i<ntri*b.im;++i)
       printf("%d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]);      
-*/      
+   */      
 
-/*	ADD IN VISCOUS/DISSIPATIVE FLUX */
-	for(i=0;i<nvrtx;++i)
-		for(n=0;n<NV;++n)
-			gbl->res.v[i][n] += gbl->vf.v[i][n];
+   /* ADD IN VISCOUS/DISSIPATIVE FLUX */
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         gbl->res.v[i][n] += gbl->vf.v[i][n];
 
- 	for(i=0;i<nside*b.sm;++i)
-		for(n=0;n<NV;++n)
-			gbl->res.s[i][n] += gbl->vf.s[i][n];        
+    for(i=0;i<nside*b.sm;++i)
+      for(n=0;n<NV;++n)
+         gbl->res.s[i][n] += gbl->vf.s[i][n];        
 
-	for(i=0;i<ntri*b.im;++i)
-		for(n=0;n<NV;++n)
-			gbl->res.i[i][n] += gbl->vf.i[i][n];         
+   for(i=0;i<ntri*b.im;++i)
+      for(n=0;n<NV;++n)
+         gbl->res.i[i][n] += gbl->vf.i[i][n];         
       
-/*	ADD IN BOUNDARY FLUXES */
+   /* ADD IN BOUNDARY FLUXES */
    addbflux(mgrid);
 
 /*********************************************/
-/*	MODIFY RESIDUALS ON COARSER MESHES			*/
-/*********************************************/	
-	if(mgrid) {
-/* 	CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-		if(isfrst) {
+   /* MODIFY RESIDUALS ON COARSER MESHES         */
+/*********************************************/   
+   if(mgrid) {
+   /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+      if(isfrst) {
          for(i=0;i<nvrtx;++i)
             for(n=0;n<NV;++n)
                dres[log2p].v[i][n] = fadd*gbl->res0.v[i][n] -gbl->res.v[i][n];
@@ -300,22 +300,22 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                dres[log2p].i[i][n] = fadd*gbl->res0.i[i][n] -gbl->res.s[i][n];
                
          isfrst = false;
-		}
+      }
 
-		for(i=0;i<nvrtx;++i) 
-			for(n=0;n<NV;++n)		
-				gbl->res.v[i][n] += dres[log2p].v[i][n];	
+      for(i=0;i<nvrtx;++i) 
+         for(n=0;n<NV;++n)      
+            gbl->res.v[i][n] += dres[log2p].v[i][n];   
             
-		for(i=0;i<nside*b.sm;++i) 
-			for(n=0;n<NV;++n)		
-				gbl->res.s[i][n] += dres[log2p].s[i][n];
+      for(i=0;i<nside*b.sm;++i) 
+         for(n=0;n<NV;++n)      
+            gbl->res.s[i][n] += dres[log2p].s[i][n];
             
-		for(i=0;i<ntri*b.im;++i) 
-			for(n=0;n<NV;++n)		
-				gbl->res.s[i][n] += dres[log2p].i[i][n];  
-	}
+      for(i=0;i<ntri*b.im;++i) 
+         for(n=0;n<NV;++n)      
+            gbl->res.s[i][n] += dres[log2p].i[i][n];  
+   }
 
-/*   
+   /*
    for(i=0;i<nvrtx;++i)
       printf("v: %d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
       
@@ -326,7 +326,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       printf("i: %d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
         
    exit(1);
-*/
+   */
 
-	return;
+   return;
 }

@@ -10,7 +10,7 @@
 #include "hpbasis.h"
 
 void hpbasis::proj1d(FLT *lin, FLT *f, FLT *dx) {
-   static int i,n;
+   int i,n;
    
    for(i=0;i<gpx;++i) {
       f[i] = lin[0]*gx[0][i] +lin[1]*gx[1][i];
@@ -28,7 +28,7 @@ void hpbasis::proj1d(FLT *lin, FLT *f, FLT *dx) {
 }
 
 void hpbasis::proj1d(FLT *lin, FLT *f) {
-   static int i,n;
+   int i,n;
    
    for(i=0;i<gpx;++i)
       f[i] = lin[0]*gx[0][i] +lin[1]*gx[1][i];
@@ -41,7 +41,7 @@ void hpbasis::proj1d(FLT *lin, FLT *f) {
 }
 
 void hpbasis::proj1d(FLT u1, FLT u2, FLT *f) {
-   static int i;
+   int i;
    
    for(i=0;i<gpx;++i)
       f[i] = u1*gx[0][i] +u2*gx[1][i];
@@ -50,8 +50,8 @@ void hpbasis::proj1d(FLT u1, FLT u2, FLT *f) {
 }
 
 void hpbasis::derivx1d(FLT *f, FLT *dx) {
-	static int i,n;
-	static FLT uddlt[MXTM];
+    int i,n;
+    FLT uddlt[MXTM];
 
    for (i=0;i<gpx;++i)
       uddlt[i] = f[i]*dltx[i];
@@ -63,11 +63,11 @@ void hpbasis::derivx1d(FLT *f, FLT *dx) {
          dx[i] += (uddlt[i] + uddlt[n])*dltx1[i][n];
    }
 
-	return;
+   return;
 }
 
 void hpbasis::proj1d_leg(FLT *lin, FLT *f) {
-   static int i,m;
+   int i,m;
 
    for (i=1;i<sm+1;++i)
       f[i] = lin[0]*lgrnge1d[0][i]+lin[1]*lgrnge1d[1][i];
@@ -80,7 +80,7 @@ void hpbasis::proj1d_leg(FLT *lin, FLT *f) {
 }
 
 void hpbasis::proj1d_leg(FLT u1, FLT u2, FLT *f) {
-   static int i;
+   int i;
    
    for (i=1;i<sm+1;++i)
       f[i] = u1*lgrnge1d[0][i] +u2*lgrnge1d[1][i];

@@ -22,7 +22,7 @@
 /* INITIALIZATION FUNCTION */
 /***************************/
 
-/*	FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
+   /* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
 int startup = 1;
 
 #ifdef TEST
@@ -91,20 +91,20 @@ FLT f1(int n, FLT x, FLT y) {
 FLT kovamu = 0.025;
 
 double f1(int n, double x, double y) { 
-	double re, lda;
+   double re, lda;
 
-	if (kovamu > 0.0) {
-		re = 1/kovamu;
-		lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
-	}
-	else
-		lda = 0.0;
+   if (kovamu > 0.0) {
+      re = 1/kovamu;
+      lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
+   }
+   else
+      lda = 0.0;
 
    switch (n) {
       case(0):
          return(1 - cos(2*M_PI*y)*exp(lda*x));
       case(1):
-      	return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
+         return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
       case(2):
          return(-.5*exp(2.*lda*x)+.5*exp(2.*lda*1.0));
    }
@@ -113,14 +113,14 @@ double f1(int n, double x, double y) {
 
 
 double df1d(int n, double x, double y, int dir) {
-	double re, lda;
+   double re, lda;
 
-	if (kovamu > 0.0) {
-		re = 1/kovamu;
-		lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
-	}
-	else
-		lda = 0.0;
+   if (kovamu > 0.0) {
+      re = 1/kovamu;
+      lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
+   }
+   else
+      lda = 0.0;
 
    switch(n) {
       case(0):
@@ -129,7 +129,7 @@ double df1d(int n, double x, double y, int dir) {
          else
             return( 2*M_PI*sin(2*M_PI*y)*exp(lda*x));
       case(1):
-      	if (dir == 0) 
+         if (dir == 0) 
             return(lda/(2*M_PI)*lda*sin(2*M_PI*y)*exp(lda*x));
          else
             return(lda*cos(2*M_PI*y)*exp(lda*x));
@@ -139,14 +139,14 @@ double df1d(int n, double x, double y, int dir) {
 #endif
 
 /***************************/
-/*	CURVED SIDE DEFINITIONS */
+   /* CURVED SIDE DEFINITIONS */
 /***************************/
 /* FOR A SPHERE */
 FLT rad = 0.5;
 FLT centerx = 0.0;
 FLT centery = 0.0;
 
-/*	FOR A SINE WAVE */
+/* FOR A SINE WAVE */
 FLT amp = 0.075;
 
 FLT hgt(int type, FLT x, FLT y) {

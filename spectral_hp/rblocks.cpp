@@ -10,11 +10,11 @@
 #include "blocks.h"
    
 void blocks::r_jacobi(int niter, int lvl) {
-   static int i,iter;
+   int i,iter;
       
-/*****************************************/
-/* JACOBI-ITERATION FOR MESH POSITION ****/
-/*****************************************/
+   /*****************************************/
+   /* JACOBI-ITERATION FOR MESH POSITION ****/
+   /*****************************************/
 
    for(i=0;i<nblocks;++i)
       blk[i].grd[lvl].r_mesh::vddt();
@@ -94,7 +94,7 @@ void blocks::r_ksrc() {
 #define GEOMETRIC
 
 #ifdef GEOMETRIC   
-/*	SETUP SPRING CONSTANTS  */
+   /* SETUP SPRING CONSTANTS  */
    for(i=0;i<mgrids;++i) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rklaplace();
@@ -106,19 +106,19 @@ void blocks::r_ksrc() {
          blk[j].grd[i].kvoli();
    }
 #else
-/*	USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
-/*	MUST BE DONE THIS WAY FOR SPRING METHOD */
-/*	SETUP FIRST MESH */
+   /* USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
+   /* MUST BE DONE THIS WAY FOR SPRING METHOD */
+   /* SETUP FIRST MESH */
    for(j=0;j<nblocks;++j) 
       blk[j].grd[0].rklaplace();
    
    for(j=0;j<nblocks;++j)
       blk[j].grd[0].kvol_mp();
                
-	for(j=0;j<nblocks;++j)
+   for(j=0;j<nblocks;++j)
       blk[j].grd[0].kvoli();
    
-/*	SETUP COARSE GRIDS */
+   /* SETUP COARSE GRIDS */
    for(i=1;i<mgrids;++i) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rkmgrid();

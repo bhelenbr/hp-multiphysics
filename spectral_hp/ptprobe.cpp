@@ -21,16 +21,16 @@ void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
 }
 
 int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
-	FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,close,test;
-	int iter,tind,v0,vn,stoptri,tclose,dir;
+   FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,close,test;
+   int iter,tind,v0,vn,stoptri,tclose,dir;
 
    qtree.nearpt(xp,yp,v0);
    tind = findtri(xp,yp,v0);
    getwgts(wgt);
 
    if (tind == -1) {
-/*		THIS SHOULD RARELY HAPPEN I HOPE */
-/*		POINT IS PROBABLY IN CURVED TRIANGLE NEAR BOUNDARY */
+      /* THIS SHOULD RARELY HAPPEN I HOPE */
+      /* POINT IS PROBABLY IN CURVED TRIANGLE NEAR BOUNDARY */
       close = 1.0e16;
       tind = vtri[v0];
       stoptri = tind;
@@ -44,7 +44,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          tind = ttri[tind][(vn +dir)%3];
          if (tind < 0) {
             if (dir > 1) break;
-   /*			REVERSE DIRECTION AND GO BACK TO START */
+            /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir;
             tind = vtri[v0];
             stoptri = -1;
@@ -66,12 +66,12 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    }
 
 
-/* TRIANGLE COORDINATES */	
+   /* TRIANGLE COORDINATES */   
    s = wgt[2]*2 -1.0;
    r = wgt[1]*2 -1.0;
 
    if (tinfo[tind] > -1) {
-/*		DEAL WITH CURVED SIDES */
+      /* DEAL WITH CURVED SIDES */
       crdtouht(tind);
 
       iter = 0;
@@ -94,12 +94,12 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
 
    return(tind);
 }
-		
+      
 int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    int vnear,sind,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
    FLT dpsi,xp[ND],dx,dy,ol;
    
-/*	SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
+   /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);
    tind = vtri[vnear];
    stoptri = tind;
@@ -129,21 +129,21 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
             break; 
          }
          if (dir > 1) {
-/*				DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
+            /* DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
             printf("#Warning: brute force boundary locate\n");
             for(bnum=0;bnum<nsbd;++bnum)
                if (sbdry[bnum].type == typ) break;
             sind = sbdry[bnum].el[0];
             break;
          }
-/*			REVERSE DIRECTION AND GO BACK TO START */
+         /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
          tind = vtri[vnear];
          stoptri = -1;
       }
       
       if (tind == stoptri) {
-/*			COULDN'T FIND SIDE DO BRUTE FORCE */
+         /* COULDN'T FIND SIDE DO BRUTE FORCE */
          printf("#Warning: brute force bdry locate\n");
          for(bnum=0;bnum<nsbd;++bnum)
             if (sbdry[bnum].type == typ) break;
@@ -153,7 +153,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    }
    
 
-/*	SEARCH AROUND THIS SIDE */
+   /* SEARCH AROUND THIS SIDE */
    snumnew = -stri[sind][1]&0xFFFF;
    snum = snumnew;
    for(;;) {
@@ -192,7 +192,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       break;
    };
 
-/*	FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+   /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
    if (typ&CURV_MASK) {
       crdtouht1d(sind);
       dx *= ol;
@@ -207,7 +207,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
             printf("#Warning: max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f\n",tind,typ,x,y);
             break;
          }
-/*         
+         /*
          if (psi > 1.0) {
             psi = 1.0;
             break;

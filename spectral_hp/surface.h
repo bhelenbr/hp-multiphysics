@@ -10,19 +10,19 @@
 #define MXLG2P 5
 
 struct surface_glbls {
-/*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
+   /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
    FLT (*vug0)[ND];
    FLT (*sug0)[ND];
-/*	AVERAGE PROPERTIES */
+   /* AVERAGE PROPERTIES */
    FLT sigma;
    FLT rho2;
    FLT mu2;
-/*	RESIDUALS */
+   /* RESIDUALS */
    FLT (*vres)[ND];
    FLT (*sres)[ND];
    FLT (*vres0)[ND];
    FLT (*sres0)[ND];
-/*	PSEUDO TIME ITERATION */
+   /* PSEUDO TIME ITERATION */
    FLT (*vdt)[ND][ND];
    FLT (*sdt)[ND][ND];
    FLT *normc;
@@ -39,11 +39,11 @@ class surface {
       FLT (*sdres[MXLG2P])[ND];
       struct surface_glbls *gbl;
       
-/*		THINGS USED BY ALL SURFACES */
+      /* THINGS USED BY ALL SURFACES */
       static FLT fadd[ND];
       static FLT cfl[MXLG2P][ND];
       
-/*		FINE MESH GLBL ALLOCATION */
+      /* FINE MESH GLBL ALLOCATION */
       void gbl_alloc(int maxside, int p, struct surface_glbls *store);
 
    public:
