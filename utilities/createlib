@@ -2,7 +2,8 @@
 
 cp -f utilities.h ~/Codes/include
 cp -f myblas.h ~/Codes/include
-cd build/intermediates/utilities.build/Objects/ppc/
+#cd build/intermediates/utilities.build/Objects/ppc/
+cd build/utilities.build/utilities.build/Objects-normal/ppc
 libtool -o libutil.a utilities.o
 libtool -o libmyblas.a myblas.o
 mv -f libmyblas.a ~/Codes/lib
