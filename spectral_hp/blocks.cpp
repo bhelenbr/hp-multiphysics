@@ -8,7 +8,6 @@ extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO AD
 
 void blocks::init(char *file) {
    int i,j,k,p,match;
-   FLT temp;
    FILE *fp;
    char blockname[100], outname[20], bname[20];
    
@@ -57,12 +56,12 @@ void blocks::init(char *file) {
    printf("#TANGENT/NORMAL FADD\n#%0.2f\t%0.2f\n",surface::fadd[0],surface::fadd[1]); 
    
 /*	READ MESH MOVEMENT ITERATIVE INFORMATION */
-   fscanf(fp,"%*[^\n]%lf\n",&temp); //&r_mesh::cfl);
-   printf("#MESH MOVEMENT CFL\n#%f\n",temp); //r_mesh::cfl);
+   fscanf(fp,"%*[^\n]%lf\n",&r_mesh::vnn); //&r_mesh::cfl);
+   printf("#MESH MOVEMENT CFL\n#%f\n",r_mesh::vnn); //r_mesh::cfl);
 
 /*	READ MESH MOVEMENT FADD */
-   fscanf(fp,"%*[^\n]%lf\n",&temp); //&r_mesh::fadd);
-   printf("#MESH MOVEMENT FADD\n#%f\n",temp); //r_mesh::fadd);
+   fscanf(fp,"%*[^\n]%lf\n",&r_mesh::fadd); //&r_mesh::fadd);
+   printf("#MESH MOVEMENT FADD\n#%f\n",r_mesh::fadd); //r_mesh::fadd);
 
 /*	READ IN PHYSICAL PARAMETERS */
    fscanf(fp,"%*[^\n]%lf %lf\n",&hp_mgrid::dti,&hp_mgrid::g);
@@ -167,7 +166,7 @@ void blocks::init(char *file) {
          blk[i].grd[0].tobasis(&f1);
       }
       startup = 0;
-   }
+   }   
 
    return;
 }
@@ -183,6 +182,8 @@ void blocks::tadvance() {
    
    for(i=0;i<nblocks;++i)
       blk[i].tadvance();
+      
+   r_ksrc();
    
    return;
 }
@@ -210,7 +211,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 /*		CALCULATE RESIDUAL */   
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].rsdl(stage,mgrid);
-         
+                  
 /*		INVERT MASS MATRIX (4 STEP PROCESS) */
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].minvrt1();
@@ -220,7 +221,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
          
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].minvrt2();
-      
+
       for(mode=0;mode<sm-1;++mode)
          for(i=0;i<nblocks;++i)
             blk[i].grd[grdnum].minvrt3(mode);
@@ -346,6 +347,8 @@ void blocks::go() {
          cycle(vwcycle);
          printf("%d ",iter);
          endcycle();
+         r_cycle(vwcycle);
+         r_maxres();
          printf("\n");
       }
          

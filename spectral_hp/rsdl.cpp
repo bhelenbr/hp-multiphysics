@@ -311,7 +311,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 	}
    
 //   for(i=0;i<nvrtx;++i)
-//     printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
-   
+//     printf("%f %f %f %f %f\n",vrtx[i][0],vrtx[i][1],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+        
 	return;
 }

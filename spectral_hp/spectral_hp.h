@@ -7,7 +7,7 @@
  *
  */
 
-#include<mesh.h>
+#include<r_mesh.h>
 #include<float.h>
 #include"hpbasis.h"
 
@@ -26,7 +26,7 @@ struct bistruct {
    FLT curv[ND];
 };
 
-class spectral_hp : public mesh  {
+class spectral_hp : public r_mesh  {
    protected:
       int size;
       
@@ -65,7 +65,7 @@ class spectral_hp : public mesh  {
       void setbcinfo();
                   
    public:
-      spectral_hp() : mesh() , size(0) {}
+      spectral_hp() : r_mesh() , size(0) {}
       void copy(const spectral_hp& copy);
       void allocate(class hpbasis& bas);
       inline void loadbasis(class hpbasis& bas) { b = bas;}

@@ -198,10 +198,13 @@ void hp_mgrid::tadvance() {
 
 void hp_mgrid::getfdvrtdt() {
    int i,j,n,tind;
+   static class hp_mgrid *fmesh;
 
 /*	TEMPORARY */   
 //   for(i=0;i<nvrtx;++i)
 //      vrtx[i][0] *= 1.1;
+   
+   fmesh = static_cast<class hp_mgrid *>(fmpt);
    
 /* CALCULATE MESH VELOCITY SOURCE TERM ON COARSE MESHES */
 /* TO CALCULATE VUG ON COARSE MESH */

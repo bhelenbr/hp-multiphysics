@@ -88,6 +88,9 @@ void hp_mgrid::minvrt2(void) {
 		gbl->res.v[i][2] *= gbl->vdiagp[i];
 	}
    
+//   for(i=0;i<nvrtx;++i)
+//     printf("%f %f %f %f %f %f %f\n",vrtx[i][0],vrtx[i][1],gbl->vdiagv[i],gbl->vdiagp[i],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+   
 /*	REMOVE VERTEX CONTRIBUTION FROM INTERIOR & SIDE MODES */
 	if (b.sm > 0) {
 /*		SOLVE FOR SIDE MODES */

@@ -6,9 +6,8 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
-
-#include "spectral_hp.h"
-#include "surface.h"
+#include"spectral_hp.h"
+#include"surface.h"
 
 #define MXLG2P 5
 #define NSTAGE 5
@@ -89,34 +88,17 @@ class hp_mgrid : public spectral_hp {
 /*    SURFACE BOUNDARY CONDITION STUFF */
       class surface *srf;
       
-/*		MGRID MESH POINTERS */
-      class hp_mgrid *cmesh;
-      class hp_mgrid *fmesh;
-      
 /*		SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
       void gbl_alloc(struct hp_mgrid_glbls *store);
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);
-      static inline void setstatics(FLT dtiin, FLT timein, FLT gin) {
-         dti = dtiin;
-         time = timein;
-         g = gin;
-         bd[0] = 1.5*dti;
-         bd[1] = -2.*dti;
-         bd[2] = 0.5*dti;
-         bd[3] = 0.0;
-      }
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
          log2p = 0;
          while ((b.p-1)>>log2p > 0) ++log2p;
       }
-
-/*		CREATE SOURCE (FOR UNSTEADY) */
-      void allocate_source();
-      void dt_source(spectral_hp un0, spectral_hp un1, spectral_hp un2);
 
 /*		CALCULATE TIMESTEP */
       void tstep1();
@@ -125,7 +107,6 @@ class hp_mgrid : public spectral_hp {
       
 /*		DETERMINE SOLUTION RESIDUAL */
       void rsdl(int stage, int mgrid);
-      void rsdlp1(int stage, int mgrid);
       
 /*		PRINT SOLUTION RESIDUAL */
       void maxres();
@@ -183,8 +164,7 @@ class hp_mgrid : public spectral_hp {
       void outlength(char *name, FILETYPE type);
       void inlength(char *name);
       void adapt(class hp_mgrid& bgn, FLT tolerance);
-
-
+      
       friend class block;
       friend class blocks;
 };

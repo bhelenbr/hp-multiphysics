@@ -37,8 +37,8 @@ void hp_mgrid::tstep1(void) {
 		qmax = 0.0;
 		for(j=0;j<3;++j) {
 			v0 = v[j];
-			q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] -dvrtdt[v0][0]),2.0) 
-				+pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] -dvrtdt[v0][1]),2.0);
+			q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]),2.0) 
+				+pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]),2.0);
 			qmax = MAX(qmax,q);
 		}
 		gbl->gam[tind] = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);  

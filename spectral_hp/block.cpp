@@ -32,16 +32,21 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }
+   
+/*	ALLOCATE R-DEFORMABLE MESH STORAGE */
+   grd[0].r_mesh::allocate(0,&rgbl);
+   for(i = 1; i< ngrid; ++i)
+      grd[i].r_mesh::allocate(1,&rgbl);
 
-/*	INITIALIZE SPECTRAL_HP VECTORS */
+/*	ALLOCATE SPECTRAL_HP VECTORS */
    hpbase = bin;
    lg2pmax = lg2p;
    
    grd[0].spectral_hp::allocate(hpbase[lg2pmax]);
-   grd[0].init_comm_buf(NV*(hpbase[lg2pmax].sm +2));
+   grd[0].init_comm_buf(3*NV*(hpbase[lg2pmax].sm +2));
    for(i=1;i<ngrid;++i) {
       grd[i].spectral_hp::allocate(hpbase[0]);
-      grd[i].init_comm_buf(NV*2);
+      grd[i].init_comm_buf(NV*3);
    }
 
 /*	INITIALIZE HP_MGRID STORAGE FOR MULTIGRID SOLUTION */ 
@@ -141,12 +146,12 @@ void block::reconnect() {
    return;
 }
 
-void block::coarsenchk() {
+void block::coarsenchk(const char *fname) {
    int i;
    char name[100];
 
    for(i = 1; i< ngrid; ++i) {
-      number_str(name,"mgrid",i,1);
+      number_str(name,fname,i,1);
       grd[i].mesh::setbcinfo();
       grd[i].checkintegrity();
       grd[i].out_mesh(name);

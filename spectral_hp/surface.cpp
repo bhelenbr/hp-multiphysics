@@ -149,7 +149,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
             
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
-         tabs = fabs(tau) + EPSILON;
+         tabs = fabs(tau) + 10.*EPSILON;
          tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +drhor*g*fabs(norm[1]/jcb))/tabs));
 
 /*			TANGENTIAL SPACING & NORMAL FLUX */            
@@ -352,8 +352,6 @@ void hp_mgrid::surfinvrt2(int bnum) {
       }
    }
    
-
-   
 /*	SOLVE FOR VERTEX MODES */
 	for(i=0;i<=end;++i) {
 		temp                = srf->gbl->vres[i][0]*srf->gbl->vdt[i][0][0] +srf->gbl->vres[i][1]*srf->gbl->vdt[i][0][1];
@@ -369,7 +367,9 @@ void hp_mgrid::surfinvrt2(int bnum) {
       if (vbdry[i].type&PRDY_MASK)
          srf->gbl->vres[0][1] = 0.0;
    }       
- 
+   
+//   for(i=0;i<=end;++i)
+//      printf("%d %f %f\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
    
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
@@ -440,8 +440,8 @@ void hp_mgrid::surfdt1(int bnum) {
 		nrm[1] = -0.5*(vrtx[v1][0] -vrtx[v0][0]);
 		h = 2.0*sqrt(nrm[0]*nrm[0] +nrm[1]*nrm[1]);
  
-		vslp = fabs(-((ug.v[v0][0]-(bd[0]*vrtx[v0][0] -dvrtdt[v0][0]))+(ug.v[v1][0]-(bd[0]*vrtx[v1][0] -dvrtdt[v1][0])))*nrm[1]/h
-				   +((ug.v[v0][1]-(bd[0]*vrtx[v0][1] -dvrtdt[v0][1]))+(ug.v[v1][1]-(bd[0]*vrtx[v1][1] -dvrtdt[v1][1])))*nrm[0]/h);
+		vslp = fabs(-((ug.v[v0][0]-(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]))+(ug.v[v1][0]-(bd[0]*vrtx[v1][0] +dvrtdt[v1][0])))*nrm[1]/h
+				   +((ug.v[v0][1]-(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]))+(ug.v[v1][1]-(bd[0]*vrtx[v1][1] +dvrtdt[v1][1])))*nrm[0]/h);
 
 		hsm = h/(.25*(b.p+1)*(b.p+1));
 
@@ -820,6 +820,7 @@ void hp_mgrid::surfvrttoug() {
 void hp_mgrid::surfgetfres(int bnum) {
    int i,j,n,indx,indx1,tind,v0,snum,sind;
    static class surface *srf, *finesrf;
+   static class hp_mgrid *fmesh;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
@@ -847,6 +848,8 @@ void hp_mgrid::surfgetfres(int bnum) {
       }
       return;
    }
+   
+   fmesh = static_cast<class hp_mgrid *>(fmpt);
    
 /* TRANSFER IS BETWEEN DIFFERENT MESHES */
    for(i=0;i<sbdry[bnum].num +1;++i)
@@ -916,6 +919,7 @@ void hp_mgrid::surfgetfres(int bnum) {
 void hp_mgrid::surfgetcchng(int bnum) {
    int i,n,tind,sind,v0,snum,indx;
    static class surface *srf, *coarsesrf;
+   static class hp_mgrid *cmesh;
 
  	if(b.p > 1) {
 		return;
@@ -924,6 +928,7 @@ void hp_mgrid::surfgetcchng(int bnum) {
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
    
+   cmesh = static_cast<class hp_mgrid *>(cmpt);
    coarsesrf = static_cast<class surface *>(cmesh->sbdry[bnum].misc);
    
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   

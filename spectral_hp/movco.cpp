@@ -1,7 +1,7 @@
 #include"hp_mgrid.h"
 
 int hp_mgrid::setfine(class hp_mgrid& tgt) {
-   fmesh = &tgt;
+   fmpt = &tgt;
    if (fine == NULL)
       fine = new struct mg_trans[maxvst];
    return(mgconnect(fine,tgt));
@@ -9,7 +9,8 @@ int hp_mgrid::setfine(class hp_mgrid& tgt) {
 
 void hp_mgrid::getfres() {
    int i,j,k,m,n,tind,v0,indx,indx1;
-      
+   class hp_mgrid *fmesh;
+   
    isfrst = true;
    
 /*	TRANSFER COUPLED SURFACE RESIDUALS */
@@ -55,6 +56,8 @@ void hp_mgrid::getfres() {
       
       return;
 	}
+   
+   fmesh = static_cast<class hp_mgrid *>(fmpt);
    
 /* TRANSFER IS BETWEEN DIFFERENT MESHES */
    for(i=0;i<nvrtx;++i)

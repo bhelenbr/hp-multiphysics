@@ -1,7 +1,7 @@
 #include"hp_mgrid.h"
 
 int hp_mgrid::setcoarse(class hp_mgrid& tgt) {
-   cmesh = &tgt;
+   cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
    return(mgconnect(coarse,tgt));
@@ -9,10 +9,13 @@ int hp_mgrid::setcoarse(class hp_mgrid& tgt) {
 
 void hp_mgrid::getcchng(void) {
    int i,j,n,ind,tind;
+   class hp_mgrid *cmesh;
 	
 	if(b.p > 1) {
 		return;
 	}
+   
+   cmesh = static_cast<class hp_mgrid *>(cmpt);
    
 /*	TRANFER COUPLED BOUNDARY RESIDUALS */
    for(i=0;i<nsbd;++i)

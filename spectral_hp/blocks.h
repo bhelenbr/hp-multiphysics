@@ -8,6 +8,7 @@ class block {
       class hpbasis *hpbase;
       struct hp_mgrid_glbls gbl;
       struct surface_glbls *sgbl;
+      struct r_mesh_glbls rgbl;
       class hp_mgrid *grd;
       friend class blocks;
       
@@ -15,7 +16,7 @@ class block {
       void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
       void tadvance();
       void reconnect();
-      void coarsenchk();
+      void coarsenchk(const char *name);
 };
 
 /*	THIS IS A MULTIBLOCK MESH */
@@ -56,4 +57,17 @@ class blocks {
 
 /*		MESH REFINEMENT */
       void adaptation();
+      
+/*		R-MESH DEFORMATION */
+/*		JACOBI ITERATION ON ALL BLOCKS */  
+      void r_jacobi(int niter, int mglvl);
+/*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
+      void r_cycle(int vw, int lvl = 0);
+/*		CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
+      void r_ksrc();
+/*		PRINT MAGNITUDE OF RESIDUAL */
+      inline void r_maxres() {
+         for(int i=0;i<nblocks;++i)
+            blk[i].grd[0].r_mesh::maxres();
+      }
 };
