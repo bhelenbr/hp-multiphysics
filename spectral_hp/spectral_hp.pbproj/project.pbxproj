@@ -44,7 +44,7 @@
 				F512111A01904F8901990B20,
 				F58209B601808CC201990B20,
 				F58209B701808CC201990B20,
-				F58209B801808CC201990B20,
+				F569AE4F019726EB01990B20,
 				0249A663FF388D9811CA2CEA,
 				F58BA0FB01762F8301990B20,
 				F58BA0F901762F8301990B20,
@@ -128,6 +128,7 @@
 				F512112A01908E3801990B20,
 				F512112C01908E7201990B20,
 				F5D77C310191A7BB01990B20,
+				F569AE480197079B01990B20,
 				F5D77C330191A7E901990B20,
 				F533C5CF01938985017C3E7F,
 				F505FF0F0192F1EB01990B20,
@@ -193,7 +194,6 @@
 				F571E77A018104EE01C86C07,
 				F58209BC01808E8D01990B20,
 				F5A85EFC0186FF6101990B20,
-				F5D5D18B0188FFD801B371E4,
 				F50AF9AE0188A79101990B20,
 				F50AF9B00188AC3601990B20,
 				F51211250190724301990B20,
@@ -206,6 +206,7 @@
 				F598B8710193249F01990B20,
 				F598B8720193249F01990B20,
 				F5D40DC301948526012E171D,
+				F569AE5A019772E101990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -216,13 +217,13 @@
 				F512111B01904F8901990B20,
 				F58209B901808CC201990B20,
 				F58209BA01808CC201990B20,
-				F58209BB01808CC201990B20,
 				0249A664FF388D9811CA2CEA,
 				F58BA0FF01762F8301990B20,
 				F58BA0FD01762F8301990B20,
 				F58BA0FE01762F8301990B20,
 				F58BA0FC01762F8301990B20,
 				F58BA10101762FBE01990B20,
+				F569AE50019726EB01990B20,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -466,6 +467,31 @@
 			path = adapt.cpp;
 			refType = 4;
 		};
+		F569AE480197079B01990B20 = {
+			indentWidth = 3;
+			isa = PBXFileReference;
+			path = update.cpp;
+			refType = 4;
+			usesTabs = 0;
+		};
+		F569AE4F019726EB01990B20 = {
+			isa = PBXFileReference;
+			name = utilities.o;
+			path = ../lib/utilities.o;
+			refType = 2;
+		};
+		F569AE50019726EB01990B20 = {
+			fileRef = F569AE4F019726EB01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F569AE5A019772E101990B20 = {
+			fileRef = F564AD060185F05601990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F571E77A018104EE01C86C07 = {
 			fileRef = F525D079017F69D201990B20;
 			isa = PBXBuildFile;
@@ -484,12 +510,6 @@
 			path = ../lib/quad.o;
 			refType = 2;
 		};
-		F58209B801808CC201990B20 = {
-			isa = PBXFileReference;
-			name = xmalloc.o;
-			path = ../lib/xmalloc.o;
-			refType = 2;
-		};
 		F58209B901808CC201990B20 = {
 			fileRef = F58209B601808CC201990B20;
 			isa = PBXBuildFile;
@@ -498,12 +518,6 @@
 		};
 		F58209BA01808CC201990B20 = {
 			fileRef = F58209B701808CC201990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F58209BB01808CC201990B20 = {
-			fileRef = F58209B801808CC201990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -679,12 +693,6 @@
 			path = rsdl.cpp;
 			refType = 4;
 		};
-		F5D5D18B0188FFD801B371E4 = {
-			fileRef = F564AD060185F05601990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F5D77C310191A7BB01990B20 = {
 			isa = PBXFileReference;
 			path = tstep.cpp;
@@ -692,7 +700,7 @@
 		};
 		F5D77C330191A7E901990B20 = {
 			isa = PBXFileReference;
-			path = update.cpp;
+			path = nstage.cpp;
 			refType = 4;
 		};
 		F5EF233C018F35F701990B20 = {
