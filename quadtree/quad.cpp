@@ -148,6 +148,7 @@ void quadtree::addpt(int v0, class quad* start = NULL) {
 /*	QUAD IS FULL SUBDIVIDE */
    if (current +4 >= size) {
       printf("Need to allocate bigger quadtree %d\n",size);
+      output("quad_error");
       exit(1);
    }
    for (i=0;i<4;++i)
