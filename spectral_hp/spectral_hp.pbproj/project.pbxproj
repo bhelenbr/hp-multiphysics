@@ -122,8 +122,14 @@
 				F5D29C8D01777E87015A943B,
 				F525D079017F69D201990B20,
 				F5D49A36018E4DE001601E15,
-				F5D49A38018E525101601E15,
 				F5EF233C018F35F701990B20,
+				F5D49A38018E525101601E15,
+				F51211320190A2DE01990B20,
+				F512112A01908E3801990B20,
+				F512112C01908E7201990B20,
+				F5D77C310191A7BB01990B20,
+				F5D77C330191A7E901990B20,
+				F558DFB40191EA6F01990B20,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -161,6 +167,7 @@
 			files = (
 				F5125C1101728F7501000001,
 				F5D29C8A01777758015A943B,
+				F51211240190724301990B20,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -185,6 +192,13 @@
 				F5D5D18B0188FFD801B371E4,
 				F50AF9AE0188A79101990B20,
 				F50AF9B00188AC3601990B20,
+				F51211250190724301990B20,
+				F512112901907CCD01990B20,
+				F512112D01908E7201990B20,
+				F51211310190A16001990B20,
+				F51211330190A2DE01990B20,
+				F5D77C320191A7BB01990B20,
+				F558DFB30191E60901990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -275,6 +289,57 @@
 			settings = {
 			};
 		};
+		F51211240190724301990B20 = {
+			fileRef = F5D49A36018E4DE001601E15;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51211250190724301990B20 = {
+			fileRef = F5EF233C018F35F701990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F512112901907CCD01990B20 = {
+			fileRef = F5D49A38018E525101601E15;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F512112A01908E3801990B20 = {
+			isa = PBXFileReference;
+			path = movco.cpp;
+			refType = 4;
+		};
+		F512112C01908E7201990B20 = {
+			isa = PBXFileReference;
+			path = movfin.cpp;
+			refType = 4;
+		};
+		F512112D01908E7201990B20 = {
+			fileRef = F512112C01908E7201990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51211310190A16001990B20 = {
+			fileRef = F512112A01908E3801990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51211320190A2DE01990B20 = {
+			isa = PBXFileReference;
+			path = minvrt.cpp;
+			refType = 4;
+		};
+		F51211330190A2DE01990B20 = {
+			fileRef = F51211320190A2DE01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5125C0D01728F7501000001 = {
 			isa = PBXFileReference;
 			path = spectral_hp.h;
@@ -356,6 +421,18 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F558DFB30191E60901990B20 = {
+			fileRef = F5D77C330191A7E901990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F558DFB40191EA6F01990B20 = {
+			isa = PBXFileReference;
+			name = flowbnds.c;
+			path = /Volumes/work/helenbrk/Codes/spectral_hp/flowbnds.c;
+			refType = 0;
 		};
 		F564AD060185F05601990B20 = {
 			isa = PBXFileReference;
@@ -556,6 +633,22 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5D77C310191A7BB01990B20 = {
+			isa = PBXFileReference;
+			path = tstep.cpp;
+			refType = 4;
+		};
+		F5D77C320191A7BB01990B20 = {
+			fileRef = F5D77C310191A7BB01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D77C330191A7E901990B20 = {
+			isa = PBXFileReference;
+			path = update.cpp;
+			refType = 4;
 		};
 		F5EF233C018F35F701990B20 = {
 			isa = PBXFileReference;
