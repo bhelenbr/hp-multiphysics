@@ -4,14 +4,16 @@
 #include<iostream>
 #include<stdlib.h>
 
-void mesh::setfine(const class mesh& tgt) {
+void mesh::setfine(class mesh& tgt) {
+   fmpt = &tgt;
    if (fine == NULL) 
       fine = new struct mg_trans[maxvst];
    mgconnect(fine,tgt);
    return;
 }
 
-void mesh::setcoarse(const class mesh& tgt) {
+void mesh::setcoarse(class mesh& tgt) {
+   cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
    mgconnect(coarse,tgt);

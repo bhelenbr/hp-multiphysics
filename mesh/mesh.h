@@ -226,8 +226,8 @@ class mesh {
       int alld_mp();
       
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
-      void setfine(const class mesh& tgt);
-      void setcoarse(const class mesh& tgt);
+      void setfine(class mesh& tgt);
+      void setcoarse(class mesh& tgt);
       
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity() const;

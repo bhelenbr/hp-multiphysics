@@ -30,22 +30,6 @@ void r_mesh::gbl_alloc(struct r_mesh_glbls *store) {
    store->diag = new FLT[maxvst];
 }
 
-void r_mesh::setfine(class r_mesh& tgt) {
-   fmpt = &tgt;
-   if (fine == NULL)
-      fine = new struct mg_trans[maxvst];
-   mgconnect(fine,tgt);
-   return;
-}
-
-void r_mesh::setcoarse(class r_mesh& tgt) {
-   cmpt = &tgt;
-   if (coarse == NULL)
-      coarse = new struct mg_trans[maxvst];
-   mgconnect(coarse,tgt);
-   return;
-}  
-
 void r_mesh::rklaplace(void) {
    int sind,tind,v0,v1,k;
    FLT dx,dy,l;

@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
    
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
-   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
+   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
    
    z.init(1,3,inname,easymesh,10.0);
    
@@ -313,12 +313,12 @@ int main(int argc, char *argv[]) {
 #Swap cycle finished: 938 sides swapped
 #Swap cycle finished: 65 sides swapped
 #Swap cycle finished: 0 sides swapped
-#Yaber finished: 360 sides coarsened
-#Rebay finished: new interior points 290, new boundary points 0
+#Yaber finished: 355 sides coarsened
+#Rebay finished: new interior points 324, new boundary points 0
 #
 #
 #COARSE MESH
-#MAXVST 25416 VERTICES 782 SIDES 2227 ELEMENTS 1444
+#MAXVST 25416 VERTICES 791 SIDES 2254 ELEMENTS 1462
 #MAX 1342 BDRY 0 TYPE 8 SIDES 25
 #MAX 1342 BDRY 1 TYPE 4 SIDES 15
 #MAX 1342 BDRY 2 TYPE 1 SIDES 21
@@ -328,16 +328,14 @@ int main(int argc, char *argv[]) {
 #
 #
 #COARSE MESH
-#MAXVST 7261 VERTICES 251 SIDES 696 ELEMENTS 444
+#MAXVST 7261 VERTICES 256 SIDES 711 ELEMENTS 454
 #MAX 671 BDRY 0 TYPE 8 SIDES 12
 #MAX 671 BDRY 1 TYPE 4 SIDES 8
 #MAX 671 BDRY 2 TYPE 1 SIDES 10
 #MAX 671 BDRY 3 TYPE 131080 SIDES 12
 #MAX 671 BDRY 4 TYPE 32 SIDES 10
 #MAX 671 BDRY 5 TYPE 65544 SIDES 8
-that took 692 cpu time
-
-mblock has exited with status 0.
+that took 2795 cpu time
 */
 
 }

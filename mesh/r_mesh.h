@@ -7,7 +7,7 @@
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
 
-#define NO_FOURTH
+#define FOURTH
 
 /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
 struct r_mesh_glbls {
@@ -84,8 +84,6 @@ class r_mesh :public mesh {
          /* MGRID TRANSFER */
          void mg_getfres();
          void mg_getcchng();
-         void setfine(class r_mesh& tgt);
-         void setcoarse(class r_mesh& tgt);  
          
          /* COMMUNICATION BOUNDARIES */
          void send(int MASK, FLT *base,int bgn,int end, int stride);
