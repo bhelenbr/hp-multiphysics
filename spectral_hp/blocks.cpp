@@ -371,7 +371,7 @@ void blocks::cycle(int vw, int lvl) {
          if (vcount == 0) einit = emax;
          else if (emax/einit > 1.0e-5 && emax > 1.0e-10) --vcount;
          
-         printf("%%second level %e %e\n",emax,einit);
+         printf("# second level %e %e\n",emax,einit);
       }
 #endif
 
