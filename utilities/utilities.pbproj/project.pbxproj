@@ -242,7 +242,7 @@
 			neededFileNames = (
 			);
 			shellPath = /bin/csh;
-			shellScript = "~helenbrk/Codes/utilities/createlib";
+			shellScript = "~/Codes/utilities/createlib";
 		};
 		F5563BE902242FAE01990B20 = {
 			children = (
