@@ -28,48 +28,43 @@ int main(int argc, char *argv[]) {
    char *inname[2];
    char *out2[2];
    mesh x[10];
-   
-
-   /*
-   x[0].in_mesh("/Volumes/work/helenbrk/Codes/spectral_hp/build/mesh134.0",grid);
-   for (i=0;i<5;++i) {
-      number_str(outname, "test", i, 1);
-      x[i].setbcinfo();
-      x[i].out_mesh(outname);
-      x[i+1].coarsen(1.6,x[i]);
-   }
-   */ 
  
    /* START CLOCK TIMER */
    clock();
    
+   x[0].in_mesh("/Volumes/work/helenbrk/Documents/Deformation/kspring45");
+   x[0].out_mesh("fourth",tecplot);
+   x[1].in_mesh("/Volumes/work/helenbrk/Documents/Deformation/kprg45");
+   x[1].out_mesh("kspring",tecplot);
+   return(0);
+   
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
-   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
-   
-   z.init(1,3,inname,easymesh,10.0);
+   inname[0] = "/Volumes/work/helenbrk/shelob/codes/grids2/CYLINDER/fine";
+//   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
+   z.init(1,5,inname,easymesh,10.0);
    
    z.out_mesh("begin",tecplot);
 
-   for(step = 1; step<=1;++step) {
+   for(step = 1; step<=25;++step) {
       center += step/FLT(10);  // FOR THE MOVING CYLINDER PROBLEM
       amp = 0.25*step/10.;  // FOR THE DEFORMING SURFACE 
       z.ksrc();
       z.perturb();
       
 
-      for(i=0;i<200;++i) {
+      for(i=0;i<300;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();
          printf("\n");
       }
       
-      z.out_mesh("deformed",tecplot);
+//      z.out_mesh("deformed",tecplot);
       
-      z.restructure(0.66);
-      number_str(outname, "test", step, 2);
-      z.out_mesh(outname);
+//      z.restructure(0.66);
+      number_str(outname, "fourth", step, 2);
+      z.out_mesh(outname,tecplot);
    }
    
    out2[0] = "bamp0.375";

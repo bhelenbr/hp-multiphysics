@@ -7,7 +7,8 @@
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
 
-#define NO_FOURTH
+#define FOURTH
+#define GEOMETRIC
 
 /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
 struct r_mesh_glbls {
@@ -21,7 +22,7 @@ class r_mesh :public mesh {
       private:
          /* THINGS SHARED BY ALL BLOCKS */
          static FLT vnn, fadd;
-         static int fixx_mask, fixy_mask, fix2x_mask, fix2y_mask;
+         static int fixx_mask, fixy_mask, fixdx_mask, fixdy_mask;
          
          /* STRUCTURE CONTAINING ALL MESH INDEPENDENT VARIABLES */
          struct r_mesh_glbls *rg;

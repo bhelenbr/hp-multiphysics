@@ -27,7 +27,15 @@ void r_mesh::perturb() {
             vrtx[v0][0] -= 0.0;
             vrtx[v0][1] -= 0.5;
          }
-      }     
+      }
+      if (sbdry[i].type&CURV_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            vrtx[v0][0] += 0.2;
+            vrtx[v0][1] += 0.2;
+         }
+      }    
       
    }
    

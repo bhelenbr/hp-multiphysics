@@ -151,8 +151,6 @@ void blocks::cycle(int vw, int lvl = 0) {
 void blocks::ksrc() {
    int i,j;
 
-#define GEOMETRIC
-
 #ifdef GEOMETRIC   
    /* SETUP SPRING CONSTANTS  */
    for(i=0;i<mglvls;++i) {

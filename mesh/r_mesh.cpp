@@ -7,8 +7,8 @@
 FLT r_mesh::fadd, r_mesh::vnn;
 int r_mesh::fixx_mask = (0xFF -PRDY_MASK);
 int r_mesh::fixy_mask = (0xFF -PRDX_MASK -SYMM_MASK);
-int r_mesh::fix2x_mask = (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK);
-int r_mesh::fix2y_mask = (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR_MASK -SYMM_MASK);
+int r_mesh::fixdx_mask = (PRDX_MASK +PRDY_MASK +CURV_MASK);
+int r_mesh::fixdy_mask = (PRDX_MASK +PRDY_MASK +CURV_MASK +SYMM_MASK);
 
 void r_mesh::allocate(bool coarse, struct r_mesh_glbls *rginit) {
 
@@ -73,7 +73,7 @@ void r_mesh::rksprg(void) {
       v1 = svrtx[sind][1];
       dx = vrtx[v1][0] -vrtx[v0][0];
       dy = vrtx[v1][1] -vrtx[v0][1];
-      ksprg[sind] = 1.0/sqrt(dx*dx +dy*dy);
+      ksprg[sind] = 1.0/(dx*dx +dy*dy);
    }
 
    calc_kvol();
@@ -337,14 +337,14 @@ void r_mesh::rsdl() {
 
    /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & fix2x_mask) {
+      if (sbdry[i].type & fixdx_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->work[svrtx[sind][0]][0] = 0.0;
             rg->work[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & fix2y_mask) {
+      if (sbdry[i].type & fixdy_mask) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             rg->work[svrtx[sind][0]][1] = 0.0;
