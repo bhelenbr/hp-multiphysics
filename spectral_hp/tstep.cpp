@@ -19,7 +19,7 @@ void hp_mgrid::tstep1(void) {
       for(n=0;n<NV;++n)
          gbl->vprcn[i][n][n] = 0.0;
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       for(i=0;i<nside;++i) 
          for(n=0;n<NV;++n)
             gbl->sprcn[i][n][n] = 0.0;
@@ -47,8 +47,8 @@ void hp_mgrid::tstep1(void) {
          out_mesh("negative",grid);
          exit(1);
       }
-      h = 4.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
-      hmax = hmax/(0.25*(b.p +1)*(b.p+1));
+      h = 4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
+      hmax = hmax/(0.25*(b->p +1)*(b->p+1));
       
       qmax = 0.0;
       for(j=0;j<3;++j) {
@@ -118,7 +118,7 @@ void hp_mgrid::tstep1(void) {
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
          gbl->vprcn[v[i]][NV-1][NV-1]  += gbl->tprcn[tind][NV-1][NV-1];
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             side = tside[tind].side[i];
             gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
             gbl->sprcn[side][NV-1][NV-1] += gbl->tprcn[tind][NV-1][NV-1];
@@ -144,7 +144,7 @@ void hp_mgrid::tstep1(void) {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -167,7 +167,7 @@ void hp_mgrid::tstep1(void) {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -204,7 +204,7 @@ void hp_mgrid::tstep_mp() {
          gbl->vprcn[v0][NV-1][NV-1] = 0.5*(gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -226,7 +226,7 @@ void hp_mgrid::tstep_mp() {
          gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -253,7 +253,7 @@ void hp_mgrid::tstep_mp() {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -285,7 +285,7 @@ void hp_mgrid::tstep2(void) {
          gbl->vprcn[v0][NV-1][NV-1] = 0.5*(gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -297,12 +297,12 @@ void hp_mgrid::tstep2(void) {
       
    /* FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0] = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);
+      gbl->vprcn[i][0][0] = 1.0/(b->vdiag*gbl->vprcn[i][0][0]);
       gbl->vprcn[i][1][1] = gbl->vprcn[i][0][0];
-      gbl->vprcn[i][NV-1][NV-1] = 1.0/(b.vdiag*gbl->vprcn[i][NV-1][NV-1]);
+      gbl->vprcn[i][NV-1][NV-1] = 1.0/(b->vdiag*gbl->vprcn[i][NV-1][NV-1]);
    }
       
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       /* FORM DIAGANOL PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
          gbl->sprcn[i][0][0] = 1.0/gbl->sprcn[i][0][0];
@@ -332,7 +332,7 @@ void hp_mgrid::tstep1(void) {
          for(m=0;m<NV;++m)
             gbl->vprcn[i][n][m] = 0.0;
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       for(i=0;i<nside;++i)
          for(n=0;n<NV;++n)
             for(m=0;m<NV;++m)
@@ -372,7 +372,7 @@ void hp_mgrid::tstep1(void) {
          qmax = MAX(qmax,q);
       }
       hmax = sqrt(hmax);
-      h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      h = 2.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
       u[0] *= 1./3.;
       u[1] *= 1./3.;
 
@@ -405,7 +405,7 @@ void hp_mgrid::tstep1(void) {
          gbl->vprcn[v[i]][0][NV-1]  += gbl->tprcn[tind][0][NV-1];
          gbl->vprcn[v[i]][1][NV-1]  += gbl->tprcn[tind][1][NV-1];
 
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             /* ASSEMBLE SIDE PRECONDITIONER */
             side = tside[tind].side[i];
             gbl->sprcn[side][0][0]  += gbl->tprcn[tind][0][0];
@@ -439,7 +439,7 @@ void hp_mgrid::tstep1(void) {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -464,7 +464,7 @@ void hp_mgrid::tstep1(void) {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -505,7 +505,7 @@ void hp_mgrid::tstep_mp() {
          gbl->vprcn[v0][NV-1][NV-1] = 0.5*(gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -529,7 +529,7 @@ void hp_mgrid::tstep_mp() {
          gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -560,7 +560,7 @@ void hp_mgrid::tstep_mp() {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -598,7 +598,7 @@ void hp_mgrid::tstep2(void) {
          gbl->vprcn[v0][NV-1][NV-1] = 0.5*(gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -612,13 +612,13 @@ void hp_mgrid::tstep2(void) {
    
    /* INVERT PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0]  = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);
-      gbl->vprcn[i][NV-1][NV-1]  = 1.0/(b.vdiag*gbl->vprcn[i][NV-1][NV-1]);
-      gbl->vprcn[i][0][NV-1] = -b.vdiag*gbl->vprcn[i][0][NV-1]*gbl->vprcn[i][0][0]*gbl->vprcn[i][NV-1][NV-1];
-      gbl->vprcn[i][1][NV-1] = -b.vdiag*gbl->vprcn[i][1][NV-1]*gbl->vprcn[i][0][0]*gbl->vprcn[i][NV-1][NV-1];      
+      gbl->vprcn[i][0][0]  = 1.0/(b->vdiag*gbl->vprcn[i][0][0]);
+      gbl->vprcn[i][NV-1][NV-1]  = 1.0/(b->vdiag*gbl->vprcn[i][NV-1][NV-1]);
+      gbl->vprcn[i][0][NV-1] = -b->vdiag*gbl->vprcn[i][0][NV-1]*gbl->vprcn[i][0][0]*gbl->vprcn[i][NV-1][NV-1];
+      gbl->vprcn[i][1][NV-1] = -b->vdiag*gbl->vprcn[i][1][NV-1]*gbl->vprcn[i][0][0]*gbl->vprcn[i][NV-1][NV-1];      
    }
    
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       /* INVERT PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
          gbl->sprcn[i][0][0] = 1.0/gbl->sprcn[i][0][0];

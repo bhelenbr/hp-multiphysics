@@ -21,11 +21,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       for(n=0;n<NV;++n)
          gbl->res.v[i][n] = 0.0;
 
-    for(i=0;i<nside*b.sm;++i)
+    for(i=0;i<nside*b->sm;++i)
       for(n=0;n<NV;++n)
          gbl->res.s[i][n] = 0.0;
                  
-    for(i=0;i<ntri*b.im;++i)
+    for(i=0;i<ntri*b->im;++i)
       for(n=0;n<NV;++n)
          gbl->res.i[i][n] = 0.0;
          
@@ -33,11 +33,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       for(n=0;n<NV;++n)
          gbl->vf.v[i][n] *= (1. -beta[stage]);
 
-    for(i=0;i<nside*b.sm;++i)
+    for(i=0;i<nside*b->sm;++i)
       for(n=0;n<NV;++n)
          gbl->vf.s[i][n]  *= (1. -beta[stage]);
                  
-    for(i=0;i<ntri*b.im;++i)
+    for(i=0;i<ntri*b->im;++i)
       for(n=0;n<NV;++n)
          gbl->vf.i[i][n]  *= (1. -beta[stage]);          
 
@@ -46,21 +46,21 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       if (tinfo[tind] > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b->proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1],MXGP);
             
          crdtocht(tind,dvrtdt,gbl->dbinfodt);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n],u[n]);
+            b->proj_bdry(cht[n],u[n],MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n],MXGP);
             
          for(n=0;n<ND;++n)
-            b.proj(dvrtdt[tvrtx[tind][0]][n],dvrtdt[tvrtx[tind][1]][n],dvrtdt[tvrtx[tind][2]][n],u[n]);
+            b->proj(dvrtdt[tvrtx[tind][0]][n],dvrtdt[tvrtx[tind][1]][n],dvrtdt[tvrtx[tind][2]][n],u[n],MXGP);
             
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
                for(n=0;n<ND;++n) {
                   dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][1]][n]);
                   dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][0]][n] -vrtx[tvrtx[tind][1]][n]);
@@ -70,22 +70,22 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
 
       /* CALCULATE MESH VELOCITY */
-      for(i=0;i<b.gpx;++i)
-         for(j=0;j<b.gpn;++j)
+      for(i=0;i<b->gpx;++i)
+         for(j=0;j<b->gpn;++j)
             for(n=0;n<ND;++n)
                mvel[n][i][j] = bd[0]*crd[n][i][j] +u[n][i][j];
 
       ugtouht(tind);
-      b.proj(uht[0],u[0],du[0][0],du[0][1]);
+      b->proj(uht[0],u[0],du[0][0],du[0][1],MXGP);
 
 
       for(n=0;n<NV;++n)
-         for(i=0;i<b.tm;++i)
+         for(i=0;i<b->tm;++i)
             lf[n][i] = 0.0;
 
       /* CONVECTION */
-      for(i=0;i<b.gpx;++i) {
-         for(j=0;j<b.gpn;++j) {
+      for(i=0;i<b->gpx;++i) {
+         for(j=0;j<b->gpn;++j) {
 
             fluxx = RAD(i,j)*(axext -mvel[0][i][j])*u[0][i][j];
             fluxy = RAD(i,j)*(ayext -mvel[1][i][j])*u[0][i][j];
@@ -94,7 +94,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             cv01[i][j] = -dcrd[1][0][i][j]*fluxx +dcrd[0][0][i][j]*fluxy;
          }
       }
-      b.intgrtrs(cv00,cv01,lf[0]);
+      b->intgrtrs(lf[0],cv00,cv01,MXGP);
 
       /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
       lftog(tind,gbl->res);
@@ -104,8 +104,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             
          /* TIME DERIVATIVE TERMS */
          if (!mgrid) {         
-            for(i=0;i<b.gpx;++i) {
-               for(j=0;j<b.gpn;++j) {
+            for(i=0;i<b->gpx;++i) {
+               for(j=0;j<b->gpn;++j) {
                   cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
                   res[0][i][j] = RAD(i,j)*bd[0]*u[0][i][j]*cjcb[i][j] +gbl->dugdt[0][tind][i][j];
                   res[0][i][j] += RAD(i,j)*cjcb[i][j]*forcing(crd[0][i][j],crd[1][i][j]);
@@ -113,18 +113,18 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             }
          }
          else {
-            for(i=0;i<b.gpx;++i) {
-               for(j=0;j<b.gpn;++j) {
+            for(i=0;i<b->gpx;++i) {
+               for(j=0;j<b->gpn;++j) {
                   cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
                   res[0][i][j] = RAD(i,j)*bd[0]*u[0][i][j]*cjcb[i][j];
                }
             }
          }
-         b.intgrt(res[0],lf[0]);
+         b->intgrt(lf[0],res[0],MXGP);
 
          /* DIFFUSIVE TERMS  */
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
 
                cjcb[i][j] = nuext*RAD(i,j)/cjcb[i][j];
                
@@ -142,12 +142,12 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                cv01[i][j] += e01[i][j];
              }
          }
-         b.derivr(cv00,res[0]);
-         b.derivs(cv01,res[0]);
+         b->derivr(cv00,res[0],MXGP);
+         b->derivs(cv01,res[0],MXGP);
 
          /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
 
                tres[0] = gbl->tau[tind]*res[0][i][j];
 
@@ -157,10 +157,10 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                              +dcrd[0][0][i][j]*(ayext-mvel[1][i][j]))*tres[0];
            }
          }
-         b.intgrtrs(e00,e01,lf[0]); 
+         b->intgrtrs(lf[0],e00,e01,MXGP); 
 
          for(n=0;n<NV;++n)
-            for(i=0;i<b.tm;++i)
+            for(i=0;i<b->tm;++i)
                lf[n][i] *= beta[stage];
                
          lftog(tind,gbl->vf);
@@ -172,11 +172,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       for(n=0;n<NV;++n)
          gbl->res.v[i][n] += gbl->vf.v[i][n];
 
-    for(i=0;i<nside*b.sm;++i)
+    for(i=0;i<nside*b->sm;++i)
       for(n=0;n<NV;++n)
          gbl->res.s[i][n] += gbl->vf.s[i][n];        
 
-   for(i=0;i<ntri*b.im;++i)
+   for(i=0;i<ntri*b->im;++i)
       for(n=0;n<NV;++n)
          gbl->res.i[i][n] += gbl->vf.i[i][n];         
       
@@ -193,11 +193,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             for(n=0;n<NV;++n)
                dres[log2p].v[i][n] = fadd*gbl->res0.v[i][n] -gbl->res.v[i][n];
       
-         for(i=0;i<nside*b.sm;++i)
+         for(i=0;i<nside*b->sm;++i)
             for(n=0;n<NV;++n)
                dres[log2p].s[i][n] = fadd*gbl->res0.s[i][n] -gbl->res.s[i][n];        
       
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<NV;++n)
                dres[log2p].i[i][n] = fadd*gbl->res0.i[i][n] -gbl->res.s[i][n];
                
@@ -208,11 +208,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(n=0;n<NV;++n)      
             gbl->res.v[i][n] += dres[log2p].v[i][n];   
             
-      for(i=0;i<nside*b.sm;++i) 
+      for(i=0;i<nside*b->sm;++i) 
          for(n=0;n<NV;++n)      
             gbl->res.s[i][n] += dres[log2p].s[i][n];
             
-      for(i=0;i<ntri*b.im;++i) 
+      for(i=0;i<ntri*b->im;++i) 
          for(n=0;n<NV;++n)      
             gbl->res.s[i][n] += dres[log2p].i[i][n];  
    }

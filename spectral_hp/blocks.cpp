@@ -220,7 +220,7 @@ void blocks::init(char *file, int start_sim) {
       for(i=0;i<blk[0].grd[0].nvrtx;++i)
          blk[0].grd[0].vrtx[i][1] += offset;
 #endif
-#endif      
+#endif   
 
       for(i=0;i<nblocks;++i) {
           blk[i].grd[0].curvinit();
@@ -327,10 +327,10 @@ void blocks::tadvance(int stage) {
             grid = lvl -lg2pmax;
             bsnum =0;
          }
-         blk[i].grd[grid].loadbasis(base[bsnum]);
+         blk[i].grd[grid].loadbasis(&base[bsnum]);
          blk[i].grd[grid].unsteady_sources(lvl);
       }
-      blk[i].grd[0].loadbasis(base[lg2pmax]);
+      blk[i].grd[0].loadbasis(&base[lg2pmax]);
       blk[i].grd[0].shift();
    }
 #else
@@ -357,10 +357,10 @@ void blocks::tadvance(int stage) {
             grid = lvl -lg2pmax;
             bsnum =0;
          }
-         blk[i].grd[grid].loadbasis(base[bsnum]);
+         blk[i].grd[grid].loadbasis(&base[bsnum]);
          blk[i].grd[grid].unsteady_sources(stage,lvl);
       }
-      blk[i].grd[0].loadbasis(base[lg2pmax]);
+      blk[i].grd[0].loadbasis(&base[lg2pmax]);
    }
 #endif
 
@@ -512,7 +512,7 @@ void blocks::cycle(int vw, int lvl) {
             err = MAX(err,blk[i].grd[grid].maxres(mxr));
                      
          emax = MAX(emax,err);
-         if (err/emax > 1.0e-4 && err > 1.0e-11) --vcount;
+         if (err/emax > 3.0e-5 && err > 1.0e-11) --vcount;
          printf("# second level %e %e\n",emax,err);
       }
 #endif
@@ -575,7 +575,7 @@ void blocks::cycle(int vw, int lvl) {
       }
       else {
          for(j=0;j<nblocks;++j)
-            blk[j].grd[0].loadbasis(base[bsnum -1]);
+            blk[j].grd[0].loadbasis(&base[bsnum -1]);
             
          for(j=0;j<nblocks;++j)
             blk[j].grd[0].getfres();
@@ -585,7 +585,7 @@ void blocks::cycle(int vw, int lvl) {
 
       if (bsnum) {
          for(j=0;j<nblocks;++j)
-            blk[j].grd[0].loadbasis(base[bsnum]);
+            blk[j].grd[0].loadbasis(&base[bsnum]);
       } 
 #ifdef DEFORM
       else {

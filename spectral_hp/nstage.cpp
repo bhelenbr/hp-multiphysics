@@ -10,12 +10,12 @@ void hp_mgrid::nstage1(void)
       for(n=0;n<NV;++n)
          gbl->ug0.v[i][n] = ug.v[i][n];
 
-   if (b.p > 1) {
+   if (b->p > 1) {
       for(i=0;i<nside*sm0;++i) 
          for(n=0;n<NV;++n)
             gbl->ug0.s[i][n] = ug.s[i][n];
       
-      if (b.p > 2) {
+      if (b->p > 2) {
          for(i=0;i<ntri*im0;++i)
             for(n=0;n<NV;++n)
                gbl->ug0.i[i][n] = ug.i[i][n];
@@ -43,31 +43,31 @@ void hp_mgrid::nstage2(int stage) {
       for(n=0;n<NV;++n)
          ug.v[i][n] = gbl->ug0.v[i][n] -cflalpha*gbl->res.v[i][n];
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       indx = 0;
       indx1 = 0;
       for(i=0;i<nside;++i) {
-         for (m=0;m<b.sm;++m) {
+         for (m=0;m<b->sm;++m) {
             for(n=0;n<NV;++n)
                ug.s[indx1][n] = gbl->ug0.s[indx1][n] -cflalpha*gbl->res.s[indx][n];
             ++indx;
             ++indx1;
          }
-         indx1 += sm0 -b.sm;
+         indx1 += sm0 -b->sm;
       }         
 
-      if (b.im > 0) {
+      if (b->im > 0) {
          indx = 0;
          indx1 = 0;
          for(i=0;i<ntri;++i) {
-            for(m=1;m<b.sm;++m) {
-               for(k=0;k<b.sm-m;++k) {
+            for(m=1;m<b->sm;++m) {
+               for(k=0;k<b->sm-m;++k) {
                   for(n=0;n<NV;++n) {
                      ug.i[indx1][n] =  gbl->ug0.i[indx1][n] -cflalpha*gbl->res.i[indx][n];
                   }
                   ++indx; ++indx1;
                }
-               indx1 += sm0 -b.sm;
+               indx1 += sm0 -b->sm;
             }
          }
       }

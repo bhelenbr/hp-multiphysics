@@ -11,7 +11,7 @@ void spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
    
    tind = findinteriorpt(xp,yp,r,s);
    ugtouht(tind);  
-   b.ptprobe(NV,uht,uout,r,s);
+   b->ptprobe(NV,uout,r,s,uht[0],MXTM);
 }
 
 void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
@@ -20,7 +20,7 @@ void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
    
    sind = findbdrypt(typ,xp,yp,psi);
    ugtouht1d(sind);  
-   b.ptprobe1d(NV,uht,uout,psi);
+   b->ptprobe1d(NV,uout,psi,uht[0],MXTM);
 
 }
 
@@ -46,7 +46,7 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
 
    /* MOVE POINT WITH SIDE CURVATURE */
    crdtocht(tind);
-   b.ptprobe_bdry(ND,cht,x,r,s);
+   b->ptprobe_bdry(ND,x,r,s,cht[0],MXTM);
    xp = x[0];
    yp = x[1];
 
@@ -95,7 +95,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    
    iter = 0;
    do {
-      b.ptprobe_bdry(ND,cht,x,ddr,dds,r,s);
+      b->ptprobe_bdry(ND,x,ddr,dds,r,s,cht[0],MXTM);
       det = 1.0/(fabs(ddr[0]*dds[1] - ddr[1]*dds[0]) +10.0*EPSILON);
       dx = xp-x[0];
       dy = yp-x[1];
@@ -191,7 +191,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       dy *= ol;
       roundoff = 10.0*EPSILON*(1.0 +(fabs(x*dx) +fabs(y*dy)));
       do {
-         b.ptprobe1d(ND,cht,xp,psi);
+         b->ptprobe1d(ND,xp,psi,cht[0],MXTM);
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
          psi += dpsi;
          if (iter++ > 100) {

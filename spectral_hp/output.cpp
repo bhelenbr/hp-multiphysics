@@ -75,7 +75,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             exit(1);
          }
       
-         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx+b.sm*nside+b.im*ntri,ntri*(b.sm+1)*(b.sm+1));
+         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx+b->sm*nside+b->im*ntri,ntri*(b->sm+1)*(b->sm+1));
 
          /* VERTEX MODES */
          for(i=0;i<nvrtx;++i) {
@@ -86,25 +86,25 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             fprintf(out,"\n");
          }
          
-         if (b.p > 1) {
+         if (b->p > 1) {
             /* SIDE MODES */
             for(sind=0;sind<nside;++sind) {
                if (sinfo[sind] < 0) {
                   v0 = svrtx[sind][0];
                   v1 = svrtx[sind][1];
                   for(n=0;n<ND;++n)
-                     b.proj1d_leg(vin[v0][n],vin[v1][n],crd[n][0]);
+                     b->proj1d_leg(vin[v0][n],vin[v1][n],crd[n][0]);
                }
                else {
                   crdtocht1d(sind,vin,bin);
                   for(n=0;n<ND;++n)
-                  	b.proj1d_leg(cht[n],crd[n][0]);
+                  	b->proj1d_leg(cht[n],crd[n][0]);
                }
                ugtouht1d(sind,g);
                for(n=0;n<NV;++n)
-                  b.proj1d_leg(uht[n],u[n][0]);
+                  b->proj1d_leg(uht[n],u[n][0]);
 
-               for(i=1;i<b.sm+1;++i) {
+               for(i=1;i<b->sm+1;++i) {
                   for(n=0;n<ND;++n)
                      fprintf(out,"%e ",crd[n][0][i]);
                   for(n=0;n<NV;++n)
@@ -114,24 +114,24 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             }
    
             /* INTERIOR MODES */
-            if (b.p > 2) {
+            if (b->p > 2) {
                for(tind = 0; tind < ntri; ++tind) {
                   ugtouht(tind,g);
                   for(n=0;n<NV;++n)
-                     b.proj_leg(uht[n],u[n]);
+                     b->proj_leg(uht[n],u[n][0],MXGP);
                      
                   if (tinfo[tind] < 0) {
                      for(n=0;n<ND;++n)
-                        b.proj_leg(vin[tvrtx[tind][0]][n],vin[tvrtx[tind][1]][n],vin[tvrtx[tind][2]][n],crd[n]);
+                        b->proj_leg(vin[tvrtx[tind][0]][n],vin[tvrtx[tind][1]][n],vin[tvrtx[tind][2]][n],crd[n][0],MXGP);
                   }
                   else {
                      crdtocht(tind,vin,bin);
                      for(n=0;n<ND;++n)
-                        b.proj_bdry_leg(cht[n],crd[n]);
+                        b->proj_bdry_leg(cht[n],crd[n][0],MXGP);
                   }
                   
-                  for(i=1;i<b.sm;++i) {
-                     for(j=1;j<b.sm-(i-1);++j) {
+                  for(i=1;i<b->sm;++i) {
+                     for(j=1;j<b->sm-(i-1);++j) {
                         for(n=0;n<ND;++n)
                            fprintf(out,"%e ",crd[n][i][j]);
                         for(n=0;n<NV;++n)
@@ -149,63 +149,63 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
          for(tind=0;tind<ntri;++tind) {
 
              /* VERTICES */
-            ijind[0][b.sm+1] = tvrtx[tind][0];
+            ijind[0][b->sm+1] = tvrtx[tind][0];
             ijind[0][0] = tvrtx[tind][1];
-            ijind[b.sm+1][0] = tvrtx[tind][2];
+            ijind[b->sm+1][0] = tvrtx[tind][2];
 
             /* SIDES */
             indx = tside[tind].side[0];
             sgn = tside[tind].sign[0];
             if (sgn < 0) {
-               for(i=0;i<b.sm;++i)
-                  ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
+               for(i=0;i<b->sm;++i)
+                  ijind[i+1][0] = nvrtx +(indx+1)*b->sm -(i+1);
             }
             else {
-               for(i=0;i<b.sm;++i)
-                  ijind[i+1][0] = nvrtx +indx*b.sm +i;
+               for(i=0;i<b->sm;++i)
+                  ijind[i+1][0] = nvrtx +indx*b->sm +i;
             }
             
             indx = tside[tind].side[1];
             sgn = tside[tind].sign[1];
             if (sgn > 0) {
-               for(i=0;i<b.sm;++i)
-                  ijind[b.sm-i][i+1] = nvrtx +indx*b.sm +i;
+               for(i=0;i<b->sm;++i)
+                  ijind[b->sm-i][i+1] = nvrtx +indx*b->sm +i;
             }
             else {
-               for(i=0;i<b.sm;++i)
-                  ijind[b.sm-i][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
+               for(i=0;i<b->sm;++i)
+                  ijind[b->sm-i][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
             }
 
             indx = tside[tind].side[2];
             sgn = tside[tind].sign[2];
             if (sgn > 0) {
-               for(i=0;i<b.sm;++i)
-                  ijind[0][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
+               for(i=0;i<b->sm;++i)
+                  ijind[0][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
             }
             else {
-               for(i=0;i<b.sm;++i)
-                  ijind[0][i+1] = nvrtx +indx*b.sm +i;
+               for(i=0;i<b->sm;++i)
+                  ijind[0][i+1] = nvrtx +indx*b->sm +i;
             }
    
             /* INTERIOR VERTICES */
             k = 0;
-            for(i=1;i<b.sm;++i) {
-               for(j=1;j<b.sm-(i-1);++j) {
-                  ijind[i][j] = nvrtx +nside*b.sm +tind*b.im +k;
+            for(i=1;i<b->sm;++i) {
+               for(j=1;j<b->sm-(i-1);++j) {
+                  ijind[i][j] = nvrtx +nside*b->sm +tind*b->im +k;
                   ++k;
                }
             }
    
             /* OUTPUT CONNECTION LIST */      
-            for(i=0;i<b.sm+1;++i) {
-               for(j=0;j<b.sm-i;++j) {
+            for(i=0;i<b->sm+1;++i) {
+               for(j=0;j<b->sm-i;++j) {
                   fprintf(out,"%d %d %d\n"
                   ,ijind[i][j]+1,ijind[i+1][j]+1,ijind[i][j+1]+1);
                   fprintf(out,"%d %d %d\n"
                   ,ijind[i+1][j]+1,ijind[i+1][j+1]+1,ijind[i][j+1]+1);
                }
                fprintf(out,"%d %d %d\n"
-               ,ijind[i][b.sm-i]+1,ijind[i+1][b.sm-i]+1,ijind[i][b.sm+1-i]+1);
+               ,ijind[i][b->sm-i]+1,ijind[i+1][b->sm-i]+1,ijind[i][b->sm+1-i]+1);
             }
          }
          fclose(out);
@@ -345,17 +345,17 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             fscanf(in,"\n");
          }
          
-         if (b.sm < 1) return;
+         if (b->sm < 1) return;
             
          FLT temp,matrix[MXTM][MXTM];
          int sind,info,ipiv[2*MXTM];
             
          /* REVERSE OUTPUTING PROCESS */
-         for(m=0;m<b.sm;++m)
-            for(n=0;n<b.sm;++n)
-               matrix[n][m] = b.lgrnge1d[m+2][n+1];
+         for(m=0;m<b->sm;++m)
+            for(n=0;n<b->sm;++n)
+               matrix[n][m] = b->lgrnge1d(m+2,n+1);
             
-         GETRF(b.sm,b.sm,matrix[0],MXTM,ipiv,info);
+         GETRF(b->sm,b->sm,matrix[0],MXTM,ipiv,info);
          if (info != 0) {
             printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
             exit(1);
@@ -365,9 +365,9 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             if (sinfo[sind] < 0) {
                ugtouht1d(sind,g);
                for(n=0;n<NV;++n)
-                  b.proj1d_leg(uht[n],u[n][0]);
+                  b->proj1d_leg(uht[n],u[n][0]);
                
-               for(m=0;m<b.sm;++m) {
+               for(m=0;m<b->sm;++m) {
                   fscanf(in,"%*e %*e");
                   for(n=0;n<NV;++n) {
                      fscanf(in,"%le ",&temp);
@@ -376,22 +376,22 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
                   fscanf(in,"\n");
                }
                for(n=0;n<NV;++n) {
-                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
-                  indx = sind*b.sm;
-                  for(m=0;m<b.sm;++m)
+                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
+                  indx = sind*b->sm;
+                  for(m=0;m<b->sm;++m)
                      g.s[indx+m][n] = -u[n][0][1+m];
                }
             }
             else {
                crdtocht1d(sind,vin,bin);
                for(n=0;n<ND;++n)
-                  b.proj1d_leg(cht[n],crd[n][0]);
+                  b->proj1d_leg(cht[n],crd[n][0]);
                
                ugtouht1d(sind,g);
                for(n=0;n<NV;++n)
-                  b.proj1d_leg(uht[n],u[n][0]);
+                  b->proj1d_leg(uht[n],u[n][0]);
                
-               for(m=0;m<b.sm;++m) {
+               for(m=0;m<b->sm;++m) {
                   for(n=0;n<ND;++n) {
                      fscanf(in,"%le",&temp);
                      crd[n][0][m+1] -= temp;
@@ -404,41 +404,41 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
                   fscanf(in,"\n");
                }
                for(n=0;n<NV;++n) {
-                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
-                  indx = sind*b.sm;
-                  for(m=0;m<b.sm;++m)
+                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
+                  indx = sind*b->sm;
+                  for(m=0;m<b->sm;++m)
                      g.s[indx+m][n] = -u[n][0][1+m];
                }
                
                bnum = (-stri[sind][1]>>16) -1;
                indx = (-stri[sind][1]&0xFFFF)*sm0;
                for(n=0;n<ND;++n) {
-                  GETRS(trans,b.sm,1,matrix[0],MXTM,ipiv,&crd[n][0][1],MXTM,info);
-                  for(m=0;m<b.sm;++m)
+                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&crd[n][0][1],MXTM,info);
+                  for(m=0;m<b->sm;++m)
                      binfo[bnum][indx+m].curv[n] = -crd[n][0][1+m];
                }
             }
          }
             
-         if (b.im < 1) return;
+         if (b->im < 1) return;
          
          int tind;
          
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<NV;++n)
                g.i[i][n] = 0.0;
          
          /* REVERSE OUTPUTING PROCESS */
-         for(m=0;m<b.im;++m) {
+         for(m=0;m<b->im;++m) {
             n = 0;
-            for(i=1;i<b.sm;++i) {
-               for(j=1;j<b.sm-(i-1);++j) {
-                  matrix[n++][m] = b.lgrnge[m+b.bm][i][j];
+            for(i=1;i<b->sm;++i) {
+               for(j=1;j<b->sm-(i-1);++j) {
+                  matrix[n++][m] = b->lgrnge(m+b->bm,i,j);
                }
             }
          }
     
-         GETRF(b.im,b.im,matrix[0],MXTM,ipiv,info);
+         GETRF(b->im,b->im,matrix[0],MXTM,ipiv,info);
          if (info != 0) {
             printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
             exit(1);
@@ -447,11 +447,11 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          for(tind=0;tind<ntri;++tind) {
             ugtouht(tind);
             for(n=0;n<NV;++n)
-               b.proj_leg(uht[n],u[n]);
+               b->proj_leg(uht[n],u[n][0],MXGP);
             
             m = 0;
-            for(i=1;i<b.sm;++i) {
-               for(j=1;j<b.sm-(i-1);++j) {
+            for(i=1;i<b->sm;++i) {
+               for(j=1;j<b->sm-(i-1);++j) {
                   for(n=0;n<ND;++n)
                      uht[n][m] = u[n][i][j];
                   for(n=0;n<ND;++n)
@@ -465,9 +465,9 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
                }
             }
             for(n=0;n<NV;++n) {
-               GETRS(trans,b.im,1,matrix[0],MXTM,ipiv,uht[n],MXTM,info);
-               indx = tind*b.im;
-               for(m=0;m<b.im;++m)
+               GETRS(trans,b->im,1,matrix[0],MXTM,ipiv,uht[n],MXTM,info);
+               indx = tind*b->im;
+               for(m=0;m<b->im;++m)
                   g.i[indx+m][n] = -uht[n][m];
             }
          }            

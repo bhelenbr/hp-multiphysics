@@ -3,11 +3,13 @@
 
 /* SIMULATION PV3VIEWER FINDMAX */
 #define SIMULATION
+#define PV3
 
 /* KOVASZNAY TEST CYLINDER SPHERE FREESTREAM CONVDIFF */
 /* UNSTEADY_DROP DROP TWOLAYER TWOLAYERNOINERTIA WAVE */
-/* THREELAYER TAYLOR MOVING_TAYLOR ACCELERATING */
-#define ACCELERATING
+/* THREELAYER TAYLOR MOVING_TAYLOR ACCELERATING SOURCETERM*/
+/* BOUNDARY_LAYER */
+#define DROP
 
 /* CIRCLE SIN COS NACA */
 #define CIRCLE
@@ -81,8 +83,8 @@
 #define NO_PARAMETERLOOP
 
 /* CONVERGENCE TOLERANCE */
-#define CVGTOLREL 1.0e-14
-#define CVGTOLABS 1.0e-14
+#define CVGTOLREL 1.0e-12
+#define CVGTOLABS 1.0e-12
 
 /* AUTOMATIC SWITCHES FOR PARTICULAR CASES */
 #ifdef CIRCLE
@@ -91,7 +93,7 @@
 #define CENTERY 0.0;
 #endif
 
-#if (defined(SPHERE) || defined(KOVASZNAY) || defined(CYLINDER) || defined(CONVDIFF) || defined(TEST) || defined(FREESTREAM))
+#if (defined(SPHERE) || defined(KOVASZNAY) || defined(CYLINDER) || defined(CONVDIFF) || defined(TEST) || defined(FREESTREAM) || defined(BOUNDARY_LAYER))
 #undef DEFORM
 #define NO_DEFORM
 #endif
@@ -101,7 +103,7 @@
 #define AXISYMMETRIC
 #endif
 
-#if (defined(DROP) || defined(UNSTEADY_DROP))
+#if (defined(UNSTEADY_DROP) || defined(DROP))
 #undef NO_ENERGY
 #define ENERGY
 #endif
@@ -144,9 +146,14 @@
 
 #ifdef WAVE
 #undef CIRCLE
+#define FREESTREAM
+#endif
+
+#ifdef FREESTREAM
+#define ANALYTIC
+#define ALIGNSQUARE
 #undef DEFORM
 #define NO_DEFORM
-#define FREESTREAM
 #endif
 
 #ifdef SHEAR
@@ -160,6 +167,7 @@
 #undef DEFORM
 #define NO_DEFORM
 #define ANALYTIC
+#define ALIGNSQUARE
 #endif
 
 #ifdef MOVING_TAYLOR
@@ -167,6 +175,7 @@
 #undef DEFORM
 #define UNCOUPLED_DEFORMATION
 #define ANALYTIC
+#define ALIGNSQUARE
 #endif
 
 #ifdef ACCELERATING
@@ -174,5 +183,25 @@
 #define NO_DEFORM
 #define ANALYTIC
 #define ALIGNSQUARE
+#endif
+
+#ifdef KOVASZNAY
+#define OUTF_STRESS
+#define ANALYTIC
+#define ALIGNSQUARE
+#endif
+
+#ifdef SOURCETERM
+#define ANALYTIC
+#define ALIGNSQUARE
+#endif
+
+#ifdef NOZZLE
+#undef DEFORM
+#define NO_DEFORM
+#undef NO_AXISYMMETRIC
+#define AXISYMMETRIC
+#undef CIRCLE
+#define VSIN
 #endif
 

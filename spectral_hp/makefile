@@ -6,7 +6,7 @@ VIZ = pv3routines.o
 
 LIB = -L$(HOME)/Codes/lib -lutil -lmyblas -lmesh -lquad -lbasis -lm
 DEFINES = -Df2cFortran
-CPPFLAGS = -I$(HOME)/Codes/include/
+CPPFLAGS = -Wno-long-double -I$(HOME)/Codes/include/
 
 ### Begin machine dependent
 
@@ -15,6 +15,7 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 CPPFLAGS += -O3
 LIB += -framework veclib
 DEFINES += -DNOUNDERSCORE -DPOINTERLONG -DNOUNS
+PV3HOME = ${HOME}/Packages/pV3/
 
 ## Linux:
 ##  Machine specific for Linux
@@ -41,13 +42,16 @@ DEFINES += -DNOUNDERSCORE -DPOINTERLONG -DNOUNS
 
 ### End machine dependent
 CPPFLAGS += $(DEFINES)
-PGIHOME = /usr/local/pgi/linux86/lib
-PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3 -lgpvm3 -lpvm3 -L$(PGIHOME) -lpgftnrtl -lpgc
+#FORTRTL = /usr/local/pgi/linux86/lib
+#FORTLIB = $(FORTRTL)/pgfmain.o -lpgftnrtl -lpgc
+FORTRTL = /opt/ibmcmp/lib
+FORTLIB = -lxlf90_r.A -lxlfmath.A
+PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3_xlf -lgpvm3 -lpvm3 -L$(FORTRTL) $(FORTLIB)
 
 hp: $(OBJ)
-	${CXX} -o $@ $(OBJ) $(LIB)
+	${CXX} -o $@ $(OBJ) $(LIB) $(PVLIB)
 	
 hp.pV3: $(OBJ) $(VIZ)
-	${CXX} -o $@ $(OBJ) $(VIZ) $(PGIHOME)/pgfmain.o $(LIB) $(PVLIB)
-	
+	${CXX} -v -o $@ $(OBJ) $(LIB) $(VIZ) $(PVLIB)
+
 $(OBJ): spectral_hp.h hp_mgrid.h blocks.h defines.h surface.h

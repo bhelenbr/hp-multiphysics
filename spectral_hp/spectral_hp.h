@@ -29,7 +29,7 @@ class spectral_hp : public r_mesh  {
    protected:
       int size;
       
-      hpbasis b;
+      hpbasis *b;
       int p0, sm0, im0;  // INITIALIZATION VALUES 
       
       /* SOLUTION INFORMATION */
@@ -42,10 +42,10 @@ class spectral_hp : public r_mesh  {
       
    protected:
       /* STATIC WORK ARRAYS */
-      static FLT **u[NV],**du[NV][ND],**res[NV];
-      static FLT **crd[ND], **dcrd[ND][ND], **cjcb;
-      static FLT *uht[NV], *lf[NV];
-      static FLT *cht[ND], *cf[ND];
+      static FLT u[NV][MXGP][MXGP],du[NV][ND][MXGP][MXGP],res[NV][MXGP][MXGP];
+      static FLT crd[ND][MXGP][MXGP], dcrd[ND][ND][MXGP][MXGP], cjcb[MXGP][MXGP];
+      static FLT uht[NV][MXTM], lf[NV][MXTM];
+      static FLT cht[ND][MXTM], cf[ND][MXTM];
       static int pmax;
       
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -69,8 +69,8 @@ class spectral_hp : public r_mesh  {
    public:
       spectral_hp() : r_mesh() , size(0) {}
       void copy(const spectral_hp& copy);
-      void allocate(class hpbasis& bas);
-      inline void loadbasis(class hpbasis& bas) { b = bas;}
+      void allocate(class hpbasis *bas);
+      inline void loadbasis(class hpbasis *bas) { b = bas;}
       void tobasis(struct vsi g, FLT (*func)(int, FLT, FLT));
       void l2error(FLT (*func)(int, FLT, FLT));
       FLT findmax(int type, FLT (*fxy)(FLT x[ND]));

@@ -44,7 +44,7 @@ void spectral_hp::curvinit(int MASK) {
       }
    }
 
-   if (b.p == 1) return;
+   if (b->p == 1) return;
       
    /*****************************/
    /* SET UP HIGHER ORDER MODES */
@@ -68,10 +68,10 @@ void spectral_hp::curvinit(int MASK) {
          v0 = svrtx[sind][0];
          v1 = svrtx[sind][1];
          
-         for(n=0;n<ND;++n)
-            b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+         for(n=0;n<ND;++n) 
+            b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
       
-         for(i=0;i<b.gpx;++i) {
+         for(i=0;i<b->gpx;++i) {
             x = crd[0][0][i];
             y = crd[1][0][i];
             mvpttobdry(typ,x,y);
@@ -82,10 +82,10 @@ void spectral_hp::curvinit(int MASK) {
          
          indx = j*sm0;
          for(n=0;n<ND;++n) {
-            b.intgrt1d(crd[n][0],cf[n]);
-            PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&cf[n][2],b.sm,info);
+            b->intgrt1d(cf[n],crd[n][0]);
+            PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&cf[n][2],b->sm,info);
          
-            for(m=0;m<b.sm;++m)
+            for(m=0;m<b->sm;++m)
                binfo[bind][indx+m].curv[n] = -cf[n][m+2];
          }
       }

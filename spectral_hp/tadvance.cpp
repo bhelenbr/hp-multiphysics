@@ -25,11 +25,11 @@ void hp_mgrid::unsteady_sources(int mgrid) {
             for(n=0;n<ND;++n)
                ugwk[step].v[i][n] = gbl->ugbd[step].v[i][n];
 
-         for(i=0;i<nside*b.sm;++i)
+         for(i=0;i<nside*b->sm;++i)
             for(n=0;n<ND;++n)
                ugwk[step].s[i][n] = gbl->ugbd[step].s[i][n];            
 
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<ND;++n)
                ugwk[step].i[i][n] = gbl->ugbd[step].i[i][n]; 
                
@@ -39,7 +39,7 @@ void hp_mgrid::unsteady_sources(int mgrid) {
                
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b.sm;++j) 
+               for(j=0;j<sbdry[i].num*b->sm;++j) 
                      for(n=0;n<ND;++n)
                         binfowk[step][i][j].curv[n] = gbl->binfobd[step][i][j].curv[n];
       }
@@ -56,7 +56,7 @@ void hp_mgrid::unsteady_sources(int mgrid) {
       
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&CURV_MASK) {
-            for(j=0;j<sbdry[i].num*b.sm;++j) {
+            for(j=0;j<sbdry[i].num*b->sm;++j) {
                for(n=0;n<ND;++n) {
                   gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
                   for(step=0;step<TMSCHEME-1;++step)
@@ -139,14 +139,14 @@ void hp_mgrid::unsteady_sources(int mgrid) {
       if (tinfo[tind] > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
             
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
                for(n=0;n<ND;++n) {
                   dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][1]][n] -vrtx[tvrtx[tind][0]][n]);
                   dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][0]][n]);
@@ -156,10 +156,10 @@ void hp_mgrid::unsteady_sources(int mgrid) {
       }
       ugtouht(tind);
       for(n=0;n<ND;++n)
-         b.proj(uht[n],u[n]);
+         b->proj(uht[n],u[n][0],MXGP);
                   
-      for(i=0;i<b.gpx;++i) {
-         for(j=0;j<b.gpn;++j) {   
+      for(i=0;i<b->gpx;++i) {
+         for(j=0;j<b->gpn;++j) {   
             cjcb[i][j] = bd[1]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
             for(n=0;n<ND;++n) {
                dugdt[log2p][n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
@@ -175,14 +175,14 @@ void hp_mgrid::unsteady_sources(int mgrid) {
          if (tinfo[tind] > -1) {
             crdtocht(tind,vrtxwk[step],binfowk[step]);
             for(n=0;n<ND;++n)
-               b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+               b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
          }
          else {
             for(n=0;n<ND;++n)
-               b.proj(vrtxwk[step][tvrtx[tind][0]][n],vrtxwk[step][tvrtx[tind][1]][n],vrtxwk[step][tvrtx[tind][2]][n],crd[n]);
+               b->proj(vrtxwk[step][tvrtx[tind][0]][n],vrtxwk[step][tvrtx[tind][1]][n],vrtxwk[step][tvrtx[tind][2]][n],crd[n][0],MXGP);
                
-            for(i=0;i<b.gpx;++i) {
-               for(j=0;j<b.gpn;++j) {
+            for(i=0;i<b->gpx;++i) {
+               for(j=0;j<b->gpn;++j) {
                   for(n=0;n<ND;++n) {
                      dcrd[n][0][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][1]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
                      dcrd[n][1][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][2]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
@@ -192,10 +192,10 @@ void hp_mgrid::unsteady_sources(int mgrid) {
          }
          ugtouht(tind,ugwk[step]);
          for(n=0;n<ND;++n)
-            b.proj(uht[n],u[n]);
+            b->proj(uht[n],u[n][0],MXGP);
                      
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {   
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {   
                cjcb[i][j] = bd[step+2]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
                for(n=0;n<ND;++n) {
                   dugdt[log2p][n][tind][i][j]  += u[n][i][j]*cjcb[i][j];
@@ -219,12 +219,12 @@ void hp_mgrid::shift() {
          for(n=0;n<ND;++n)
             gbl->ugbd[step].v[i][n] = gbl->ugbd[step-1].v[i][n];
 
-   for(i=0;i<nside*b.sm;++i)
+   for(i=0;i<nside*b->sm;++i)
       for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].s[i][n] = gbl->ugbd[step-1].s[i][n];            
 
-   for(i=0;i<ntri*b.im;++i)
+   for(i=0;i<ntri*b->im;++i)
       for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].i[i][n] = gbl->ugbd[step-1].i[i][n];    
@@ -238,7 +238,7 @@ void hp_mgrid::shift() {
       }
    }
 
-   for(i=0;i<nside*b.sm;++i) {
+   for(i=0;i<nside*b->sm;++i) {
       for(n=0;n<NV;++n) {
          temp = ug.s[i][n] -gbl->ugbd[0].s[i][n];
          gbl->ugbd[0].s[i][n] = ug.s[i][n];
@@ -246,7 +246,7 @@ void hp_mgrid::shift() {
       }
    } 
 
-   for(i=0;i<ntri*b.im;++i) {
+   for(i=0;i<ntri*b->im;++i) {
       for(n=0;n<NV;++n) {
          temp = ug.i[i][n] -gbl->ugbd[0].i[i][n];
          gbl->ugbd[0].i[i][n] = ug.i[i][n];
@@ -262,7 +262,7 @@ void hp_mgrid::shift() {
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
-         for(j=0;j<sbdry[i].num*b.sm;++j) 
+         for(j=0;j<sbdry[i].num*b->sm;++j) 
             for(step=TMSCHEME-2;step>=1;--step)
                   for(n=0;n<ND;++n)
                      gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
@@ -278,7 +278,7 @@ void hp_mgrid::shift() {
             
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num*b.sm;++j) {
+         for(j=0;j<sbdry[i].num*b->sm;++j) {
             for(n=0;n<ND;++n) {
                temp = binfo[i][j].curv[n] -gbl->binfobd[0][i][j].curv[n];
                gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
@@ -396,11 +396,11 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             for(n=0;n<NV;++n)
                gbl->ugbd[stage].v[i][n] = (ug.v[i][n] -gbl->ugbd[0].v[i][n])*adirk[stage-1][stage-1];
       
-         for(i=0;i<nside*b.sm;++i)
+         for(i=0;i<nside*b->sm;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[stage].s[i][n] = (ug.s[i][n] -gbl->ugbd[0].s[i][n])*adirk[stage-1][stage-1];
          
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[stage].i[i][n] = (ug.i[i][n] -gbl->ugbd[0].i[i][n])*adirk[stage-1][stage-1];
          
@@ -410,7 +410,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
                         
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b.sm;++j) 
+               for(j=0;j<sbdry[i].num*b->sm;++j) 
                   for(n=0;n<ND;++n)
                      gbl->binfobd[stage][i][j].curv[n] = (binfo[i][j].curv[n]-gbl->binfobd[0][i][j].curv[n])*adirk[stage-1][stage-1];
       }
@@ -421,11 +421,11 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             for(n=0;n<NV;++n)
                gbl->ugbd[0].v[i][n] = ug.v[i][n];
          
-         for(i=0;i<nside*b.sm;++i)
+         for(i=0;i<nside*b->sm;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[0].s[i][n] = ug.s[i][n];
          
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[0].i[i][n] = ug.i[i][n];
          
@@ -436,7 +436,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
          
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b.sm;++j) 
+               for(j=0;j<sbdry[i].num*b->sm;++j) 
                   for(n=0;n<ND;++n)
                      gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
          
@@ -452,11 +452,11 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             for(n=0;n<NV;++n)
                gbl->ugbd[0].v[i][n] += adirk[stage][s]*gbl->ugbd[s+1].v[i][n];
          
-         for(i=0;i<nside*b.sm;++i)
+         for(i=0;i<nside*b->sm;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[0].s[i][n] += adirk[stage][s]*gbl->ugbd[s+1].s[i][n];
          
-         for(i=0;i<ntri*b.im;++i)
+         for(i=0;i<ntri*b->im;++i)
             for(n=0;n<NV;++n)
                gbl->ugbd[0].i[i][n] += adirk[stage][s]*gbl->ugbd[s+1].i[i][n];
          
@@ -466,7 +466,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
          
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b.sm;++j) 
+               for(j=0;j<sbdry[i].num*b->sm;++j) 
                   for(n=0;n<ND;++n)
                      gbl->binfobd[0][i][j].curv[n] += adirk[stage][s]*gbl->binfobd[s+1][i][j].curv[n];
                      
@@ -478,11 +478,11 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
          for(n=0;n<ND;++n)
             ugwk[0].v[i][n] = gbl->ugbd[0].v[i][n];
 
-      for(i=0;i<nside*b.sm;++i)
+      for(i=0;i<nside*b->sm;++i)
          for(n=0;n<ND;++n)
             ugwk[0].s[i][n] = gbl->ugbd[0].s[i][n];            
 
-      for(i=0;i<ntri*b.im;++i)
+      for(i=0;i<ntri*b->im;++i)
          for(n=0;n<ND;++n)
             ugwk[0].i[i][n] = gbl->ugbd[0].i[i][n]; 
             
@@ -492,7 +492,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             
       for(i=0;i<nsbd;++i)
          if (sbdry[i].type&CURV_MASK)
-            for(j=0;j<sbdry[i].num*b.sm;++j) 
+            for(j=0;j<sbdry[i].num*b->sm;++j) 
                   for(n=0;n<ND;++n)
                      binfowk[0][i][j].curv[n] = gbl->binfobd[0][i][j].curv[n];
                      
@@ -505,7 +505,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&CURV_MASK) {
-            for(j=0;j<sbdry[i].num*b.sm;++j) {
+            for(j=0;j<sbdry[i].num*b->sm;++j) {
                for(n=0;n<ND;++n) {
                   gbl->dbinfodt[i][j].curv[n] = -bd[0]*gbl->binfobd[0][i][j].curv[n];
                }
@@ -519,6 +519,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
       curvinit(EULR_MASK+INFL_MASK);
       surfvrttoug();
       setinflow();
+
    }
    else if (p0 == 1) {
       /* MOVE WORK INFO TO COARSER MESHES */
@@ -588,14 +589,14 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
       if (tinfo[tind] > -1) {
          crdtocht(tind,vrtxwk[0],binfowk[0]);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b.proj(vrtxwk[0][tvrtx[tind][0]][n],vrtxwk[0][tvrtx[tind][1]][n],vrtxwk[0][tvrtx[tind][2]][n],crd[n]);
+            b->proj(vrtxwk[0][tvrtx[tind][0]][n],vrtxwk[0][tvrtx[tind][1]][n],vrtxwk[0][tvrtx[tind][2]][n],crd[n][0],MXGP);
             
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
                for(n=0;n<ND;++n) {
                   dcrd[n][0][i][j] = 0.5*(vrtxwk[0][tvrtx[tind][1]][n] -vrtxwk[0][tvrtx[tind][0]][n]);
                   dcrd[n][1][i][j] = 0.5*(vrtxwk[0][tvrtx[tind][2]][n] -vrtxwk[0][tvrtx[tind][0]][n]);
@@ -605,10 +606,10 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
       }
       ugtouht(tind,ugwk[0]);
       for(n=0;n<ND;++n)
-         b.proj(uht[n],u[n]);
+         b->proj(uht[n],u[n][0],MXGP);
                   
-      for(i=0;i<b.gpx;++i) {
-         for(j=0;j<b.gpn;++j) {   
+      for(i=0;i<b->gpx;++i) {
+         for(j=0;j<b->gpn;++j) {   
             cjcb[i][j] = -bd[0]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
             for(n=0;n<ND;++n)
                dugdt[log2p][n][tind][i][j]  = u[n][i][j]*cjcb[i][j];

@@ -40,20 +40,20 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    hpbase = bin;
    lg2pmax = lg2p;
    
-   grd[0].spectral_hp::allocate(hpbase[lg2pmax]);
+   grd[0].spectral_hp::allocate(&hpbase[lg2pmax]);
    grd[0].init_comm_buf(3*NV*(hpbase[lg2pmax].sm +2));
    for(i=1;i<ngrid;++i) {
-      grd[i].spectral_hp::allocate(hpbase[0]);
+      grd[i].spectral_hp::allocate(&hpbase[0]);
       grd[i].init_comm_buf(NV*3);
    }
 
    /* INITIALIZE HP_MGRID STORAGE FOR MULTIGRID SOLUTION */ 
    grd[0].allocate(0,&gbl);  // 0 DENOTES FINEST LEVEL ALLOCATES GLOBAL STORAGE
    for(i = lg2pmax -1; i >= 0; --i) {
-      grd[0].loadbasis(hpbase[i]);
+      grd[0].loadbasis(&hpbase[i]);
       grd[0].allocate(1,&gbl); // 1 DENOTES MGRID LEVEL
    }
-   grd[0].loadbasis(hpbase[lg2pmax]);
+   grd[0].loadbasis(&hpbase[lg2pmax]);
    for(i=1;i<ngrid;++i)
       grd[i].allocate(1,&gbl);
 
@@ -120,7 +120,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
       }
    }
 
-   grd[0].loadbasis(hpbase[lg2pmax]);
+   grd[0].loadbasis(&hpbase[lg2pmax]);
 
    return;
 }

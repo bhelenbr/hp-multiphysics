@@ -39,7 +39,7 @@ void hp_mgrid::length1(FLT norm) {
    for(i=0;i<nvrtx;++i)
       fltwk[i] = 0.0;
 
-   switch(b.p) {
+   switch(b->p) {
       case(1):
          for(i=0;i<nside;++i) {
             v0 = svrtx[i][0];
@@ -66,7 +66,7 @@ void hp_mgrid::length1(FLT norm) {
          break;
          
       default:
-         indx = b.sm-1;
+         indx = b->sm-1;
          for(i=0;i<nside;++i) {
             v0 = svrtx[i][0];
             v1 = svrtx[i][1];
@@ -80,13 +80,13 @@ void hp_mgrid::length1(FLT norm) {
          /* BOUNDARY CURVATURE? */
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
-            indx = b.sm-1;
+            indx = b->sm-1;
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
                /* THIS LIMITS BOUNDARY CURVATURE TO 1/invbdryerr VARIATION */
-               sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b.p+1)/2.0);
+               sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b->p+1)/2.0);
                fltwk[v0] += sum*trncerr*nnbor[v0];
                fltwk[v1] += sum*trncerr*nnbor[v1];
                indx += sm0;
@@ -97,7 +97,7 @@ void hp_mgrid::length1(FLT norm) {
          
    
    for(i=0;i<nvrtx;++i) {
-      fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1));
+      fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b->p+1));
       lgf = log(fltwk[i]+EPSILON);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
@@ -236,7 +236,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          for(i=0;i<nvrtx;++i)
             fltwk[i] = 0.0;
 
-         switch(b.p) {
+         switch(b->p) {
             case(1):
                for(i=0;i<nside;++i) {
                   v0 = svrtx[i][0];
@@ -265,7 +265,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                for(i=0;i<nside;++i) {
                   v0 = svrtx[i][0];
                   v1 = svrtx[i][1];
-                  sum = fabs(ug.s[indx+b.sm -1][0]);
+                  sum = fabs(ug.s[indx+b->sm -1][0]);
                   fltwk[v0] += sum;
                   fltwk[v1] += sum;
                   indx += sm0;
@@ -279,7 +279,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                      sind = sbdry[i].el[j];
                      v0 = svrtx[sind][0];
                      v1 = svrtx[sind][1];
-                     sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+                     sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b->sm-1].curv[0]) +fabs(binfo[i][indx+b->sm-1].curv[1]));
                      fltwk[v0] += sum;
                      fltwk[v1] += sum;
                      indx += sm0;

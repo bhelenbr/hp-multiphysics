@@ -37,11 +37,11 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
          for(n=0;n<NV;++n)
             ugwk[step].v[i][n] = gbl->ugbd[step].v[i][n];
       
-      for(i=0;i<nside*b.sm;++i)
+      for(i=0;i<nside*b->sm;++i)
          for(n=0;n<NV;++n)
             ugwk[step].s[i][n] = gbl->ugbd[step].s[i][n];
 
-      for(i=0;i<ntri*b.im;++i)
+      for(i=0;i<ntri*b->im;++i)
          for(n=0;n<NV;++n)
             ugwk[step].i[i][n] = gbl->ugbd[step].i[i][n];            
                
@@ -51,7 +51,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
             
       for(i=0;i<nsbd;++i)
          if (sbdry[i].type&CURV_MASK) 
-            for (j=0;j<sbdry[i].num*b.sm;++j)
+            for (j=0;j<sbdry[i].num*b->sm;++j)
                binfowk[step][i][j] = gbl->binfobd[step][i][j];
    }
 
@@ -97,7 +97,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
    
    /* PRINT SOME GENERAL DEBUGGING INFO */
    printf("#\n#\n#REFINED MESH\n");
-   printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b.sm*nside+b.im*ntri);
+   printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b->sm*nside+b->im*ntri);
    
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
@@ -117,17 +117,17 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
          tind = str.findandmvptincurved(vrtx[i][0],vrtx[i][1],r,s);
          assert(tind >= 0);
          str.ugtouht(tind);
-         str.b.ptprobe(NV,uht,ug.v[i],r,s);
+         str.b->ptprobe(NV,ug.v[i],r,s,uht[0],MXTM);
 
          for(step=0;step<TMADAPT;++step) {
             str.ugtouht(tind,ugwk[step]);
-            str.b.ptprobe(NV,uht,gbl->ugbd[step].v[i]);
+            str.b->ptprobe(NV,gbl->ugbd[step].v[i],uht[0],MXTM);
          }
 
          if (str.tinfo[tind] > -1) {
             for(step=0;step<TMADAPT;++step) {
                str.crdtocht(tind,vrtxwk[step],binfowk[step]);
-               str.b.ptprobe_bdry(ND,cht,gbl->vrtxbd[step][i]);
+               str.b->ptprobe_bdry(ND,gbl->vrtxbd[step][i],cht[0],MXTM);
             }
          }
          else {
@@ -150,17 +150,17 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
             stgt = str.findbdrypt(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],psi);
             assert(stgt >= 0);
             str.ugtouht1d(stgt);  
-            str.b.ptprobe1d(NV,uht,ug.v[v0],psi);
+            str.b->ptprobe1d(NV,ug.v[v0],psi,uht[0],MXTM);
             
             for(step=0;step<TMADAPT;++step) {
                str.ugtouht1d(stgt,ugwk[step]);
-               str.b.ptprobe1d(NV,uht,gbl->ugbd[step].v[v0]);
+               str.b->ptprobe1d(NV,gbl->ugbd[step].v[v0],uht[0],MXTM);
             }
 
             if (str.sinfo[stgt] > -1) {
                for(step=0;step<TMADAPT;++step) {
                   str.crdtocht1d(stgt,vrtxwk[step],binfowk[step]);
-                  str.b.ptprobe1d(ND,cht,gbl->vrtxbd[step][v0]);
+                  str.b->ptprobe1d(ND,gbl->vrtxbd[step][v0],cht[0],MXTM);
                }
             }
             else {
@@ -174,7 +174,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
       }
    }
    
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       
       /* ASSIGN NEW SIDE VALUES */
       indx = 0;
@@ -193,47 +193,47 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                v1 = svrtx[sind][1];
    
                for(n=0;n<ND;++n)
-                  b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+                  b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
    
                for(n=0;n<NV;++n)
-                  b.proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
+                  b->proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
                   
                for(step=0;step<TMADAPT;++step)
                   for(n=0;n<NV;++n)
-                     b.proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
+                     b->proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
          
-               for(i=0;i<b.gpx;++i) {
+               for(i=0;i<b->gpx;++i) {
                   tind = str.findinteriorpt(crd[0][0][i],crd[1][0][i],r,s);
                   assert(tind >= 0);
                   str.ugtouht(tind);  
-                  str.b.ptprobe(NV,uht,upt,r,s);
+                  str.b->ptprobe(NV,upt,r,s,uht[0],MXTM);
                   for(n=0;n<NV;++n)
                      res[n][0][i] -= upt[n];
                   
                   for(step=0;step<TMADAPT;++step) {
                      str.ugtouht(tind,ugwk[step]);
-                     str.b.ptprobe(NV,uht,upt);
+                     str.b->ptprobe(NV,upt,uht[0],MXTM);
                      for(n=0;n<NV;++n)   
                         bdwk[step][n][0][i] -= upt[n];
                   }
                }            
                      
                for(n=0;n<NV;++n)
-                  b.intgrt1d(res[n][0],lf[n]);
+                  b->intgrt1d(lf[n],res[n][0]);
             
                for(n=0;n<NV;++n) {
-                  PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
-                  for(m=0;m<b.sm;++m) 
+                  PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
+                  for(m=0;m<b->sm;++m) 
                      ug.s[indx+m][n] = -lf[n][2+m];
                }
                
                for(step=0;step<TMADAPT;++step) {
                   for(n=0;n<NV;++n)
-                     b.intgrt1d(bdwk[step][n][0],lf[n]);
+                     b->intgrt1d(lf[n],bdwk[step][n][0]);
             
                   for(n=0;n<NV;++n) {
-                     PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
-                     for(m=0;m<b.sm;++m) 
+                     PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
+                     for(m=0;m<b->sm;++m) 
                         gbl->ugbd[step].s[indx+m][n] = -lf[n][2+m];
                   }
                }
@@ -245,12 +245,12 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                assert(sinfo[sind] > -1);
                
                indx2 = sinfo[sind]*str.sm0;
-               for(m=0;m<b.sm;++m)
+               for(m=0;m<b->sm;++m)
                   for(n=0;n<NV;++n)
                      ug.s[indx+m][n] = str.ug.s[indx2+m][n];
                      
                for(step=0;step<TMADAPT;++step)
-                  for(m=0;m<b.sm;++m)
+                  for(m=0;m<b->sm;++m)
                      for(n=0;n<NV;++n)
                         gbl->ugbd[step].s[indx+m][n] = gbl->ugbd[step].s[indx2+m][n];
                      
@@ -269,11 +269,11 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
             switch(sinfo[sind]) {
                case(-1): // UNTOUCHED
                   indx1 = (-str.stri[sind][1]&0xFFFF)*str.sm0;
-                  for(m=0;m<b.sm;++m)
+                  for(m=0;m<b->sm;++m)
                      binfo[i][indx+m] = str.binfo[i][indx1+m];
                   
                   for(step=0;step<TMADAPT;++step)
-                     for(m=0;m<b.sm;++m)
+                     for(m=0;m<b->sm;++m)
                         gbl->binfobd[step][i][indx+m] = binfowk[step][i][indx1+m];   
                   
                   break;
@@ -283,22 +283,22 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                   v1 = svrtx[sind][1];
       
                   for(n=0;n<ND;++n)
-                     b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+                     b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
       
                   for(n=0;n<NV;++n)
-                     b.proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
+                     b->proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
                      
                   for(step=0;step<TMADAPT;++step)
                      for(n=0;n<NV;++n)
-                        b.proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
+                        b->proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
                         
                   if (sbdry[i].type&CURV_MASK) {
                   
                      for(step=0;step<TMADAPT;++step)
                         for(n=0;n<ND;++n)
-                           b.proj1d(gbl->vrtxbd[step][v0][n],gbl->vrtxbd[step][v1][n],bdwk[step][n][1]);      
+                           b->proj1d(gbl->vrtxbd[step][v0][n],gbl->vrtxbd[step][v1][n],bdwk[step][n][1]);      
                      
-                     for(m=0;m<b.gpx;++m) {
+                     for(m=0;m<b->gpx;++m) {
                         x = crd[0][0][m];
                         y = crd[1][0][m];
       
@@ -310,57 +310,57 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
       
                         /* CALCULATE VALUE OF SOLUTION AT POINT */
                         str.ugtouht1d(stgt);
-                        str.b.ptprobe1d(NV,uht,upt,psi);
+                        str.b->ptprobe1d(NV,upt,psi,uht[0],MXTM);
                         for(n=0;n<NV;++n)
                            res[n][0][m] -= upt[n]; 
                         
                         for(step=0;step<TMADAPT;++step) {
                            str.ugtouht1d(stgt,ugwk[step]);
-                           str.b.ptprobe1d(NV,uht,upt);
+                           str.b->ptprobe1d(NV,upt,uht[0],MXTM);
                            for(n=0;n<NV;++n)   
                               bdwk[step][n][0][m] -= upt[n];
                         }
                         
                         for(step=0;step<TMADAPT;++step) {
                            str.crdtocht1d(stgt,vrtxwk[step],binfowk[step]);
-                           str.b.ptprobe1d(ND,cht,upt);
+                           str.b->ptprobe1d(ND,upt,cht[0],MXTM);
                            for(n=0;n<ND;++n)   
                               bdwk[step][n][1][m] -= upt[n];
                         }                    
                      }     
                   
                      for(n=0;n<ND;++n) {
-                        b.intgrt1d(crd[n][0],lf[n]);
-                        PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
+                        b->intgrt1d(lf[n],crd[n][0]);
+                        PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
                      
-                        for(m=0;m<b.sm;++m)
+                        for(m=0;m<b->sm;++m)
                            binfo[i][indx+m].curv[n] = -lf[n][m+2];
                      }
          
                      for(step=0;step<TMADAPT;++step) {
                         for(n=0;n<ND;++n) {
-                           b.intgrt1d(bdwk[step][n][1],lf[n]);
-                           PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
+                           b->intgrt1d(bdwk[step][n][1],lf[n]);
+                           PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
                         
-                           for(m=0;m<b.sm;++m)
+                           for(m=0;m<b->sm;++m)
                               gbl->binfobd[step][i][indx+m].curv[n] = -lf[n][m+2];
                         }
                      }
                   }
                   else {
                      for(n=0;n<ND;++n)
-                        for(m=0;m<b.sm;++m)
+                        for(m=0;m<b->sm;++m)
                            binfo[i][indx+m].curv[n] = 0.0;
 
                      for(step=0;step<TMADAPT;++step) {
                         for(n=0;n<ND;++n) {
-                           for(m=0;m<b.sm;++m)
+                           for(m=0;m<b->sm;++m)
                               gbl->binfobd[step][i][indx+m].curv[n] = 0.0;
                         }
                      }                           
                      
                            
-                     for(m=0;m<b.gpx;++m) {
+                     for(m=0;m<b->gpx;++m) {
                         x = crd[0][0][m];
                         y = crd[1][0][m];
                         
@@ -369,13 +369,13 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                         assert(stgt >= 0);
                         /* CALCULATE VALUE OF SOLUTION AT POINT */
                         str.ugtouht1d(stgt);
-                        str.b.ptprobe1d(NV,uht,upt,psi);
+                        str.b->ptprobe1d(NV,upt,psi,uht[0],MXTM);
                         for(n=0;n<NV;++n)
                            res[n][0][m] -= upt[n]; 
                         
                         for(step=0;step<TMADAPT;++step) {
                            str.ugtouht1d(stgt,ugwk[step]);
-                           str.b.ptprobe1d(NV,uht,upt);
+                           str.b->ptprobe1d(NV,upt,uht[0],MXTM);
                            for(n=0;n<NV;++n)   
                               bdwk[step][n][0][m] -= upt[n];
                         }
@@ -384,21 +384,21 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
 
                   indx1 = sind*sm0;      
                   for(n=0;n<NV;++n)
-                     b.intgrt1d(res[n][0],lf[n]);
+                     b->intgrt1d(lf[n],res[n][0]);
                
                   for(n=0;n<NV;++n) {
-                     PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
-                     for(m=0;m<b.sm;++m) 
+                     PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
+                     for(m=0;m<b->sm;++m) 
                         ug.s[indx1+m][n] = -lf[n][2+m];
                   }
                   
                   for(step=0;step<TMADAPT;++step) {
                      for(n=0;n<NV;++n)
-                        b.intgrt1d(bdwk[step][n][0],lf[n]);
+                        b->intgrt1d(lf[n],bdwk[step][n][0]);
                
                      for(n=0;n<NV;++n) {
-                        PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
-                        for(m=0;m<b.sm;++m) 
+                        PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
+                        for(m=0;m<b->sm;++m) 
                            gbl->ugbd[step].s[indx1+m][n] = -lf[n][2+m];
                      }
                   }
@@ -409,11 +409,11 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                   /* ALREADY MOVED UG INFO JUST NEED TO MOVE BINFO */
                   assert(sinfo[sind] > -1);
                   indx1 = (-str.stri[sinfo[sind]][1]&0xFFFF)*str.sm0;
-                  for(m=0;m<b.sm;++m)
+                  for(m=0;m<b->sm;++m)
                      binfo[i][indx+m] = str.binfo[i][indx1+m];
                      
                   for(step=0;step<TMADAPT;++step) 
-                     for(m=0;m<b.sm;++m)
+                     for(m=0;m<b->sm;++m)
                         gbl->binfobd[step][i][indx+m] = binfowk[step][i][indx1+m];
                         
                   break;
@@ -423,7 +423,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
       }
     }  
 
-   if (b.im > 0) {
+   if (b->im > 0) {
 
       /* FIGURE OUT WHICH TRIANGLES HAVE BEEN TOUCHED */
       for(tind=0;tind<ntri;++tind) {
@@ -448,36 +448,36 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
             case(-2): // TOUCHED
                ugtouht_bdry(tind);
                for(n=0;n<NV;++n)
-                  b.proj_bdry(uht[n],u[n]);
+                  b->proj_bdry(uht[n],u[n][0],MXGP);
                   
                for(step=0;step<TMADAPT;++step) {
                   ugtouht_bdry(tind,gbl->ugbd[step]);
                   for(n=0;n<NV;++n)
-                     b.proj_bdry(uht[n],bdwk[step][n]);
+                     b->proj_bdry(uht[n],bdwk[step][n][0],MXGP);
                }
                   
                if (tinfo[tind] < 0) {
                   for(n=0;n<ND;++n)
-                     b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+                     b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
                }
                else {
                   crdtocht(tind);
                   for(n=0;n<ND;++n)
-                     b.proj_bdry(cht[n],crd[n]);
+                     b->proj_bdry(cht[n],crd[n][0],MXGP);
                }
                   
-               for (i=0; i < b.gpx; ++i ) {
-                  for (j=0; j < b.gpn; ++j ) {
+               for (i=0; i < b->gpx; ++i ) {
+                  for (j=0; j < b->gpn; ++j ) {
                      ttgt = str.findinteriorpt(crd[0][i][j],crd[1][i][j],r,s);
                      assert(ttgt >= 0);
                      str.ugtouht(ttgt);
-                     str.b.ptprobe(NV,uht,upt,r,s);
+                     str.b->ptprobe(NV,upt,r,s,uht[0],MXTM);
                      for(n=0;n<NV;++n)
                         u[n][i][j] -= upt[n];
                      
                      for(step=0;step<TMADAPT;++step) {
                         str.ugtouht(ttgt,ugwk[step]);
-                        str.b.ptprobe(NV,uht,upt);
+                        str.b->ptprobe(NV,upt,uht[0],MXTM);
                         for(n=0;n<NV;++n)
                            bdwk[step][n][i][j] -= upt[n];
                      }
@@ -485,18 +485,18 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                }
                               
                for(n=0;n<NV;++n) {
-                  b.intgrt(u[n],lf[n]);
-                  PBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
-                  for(i=0;i<b.im;++i)
-                     ug.i[indx+i][n] = -lf[n][b.bm+i];
+                  b->intgrt(lf[n],u[n][0],MXGP);
+                  PBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
+                  for(i=0;i<b->im;++i)
+                     ug.i[indx+i][n] = -lf[n][b->bm+i];
                }
                
                for(step=0;step<TMADAPT;++step) {
                   for(n=0;n<NV;++n) {
-                     b.intgrt(bdwk[step][n],lf[n]);
-                     PBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
-                     for(i=0;i<b.im;++i)
-                        gbl->ugbd[step].i[indx+i][n] = -lf[n][b.bm+i];
+                     b->intgrt(lf[n],bdwk[step][n][0],MXGP);
+                     PBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
+                     for(i=0;i<b->im;++i)
+                        gbl->ugbd[step].i[indx+i][n] = -lf[n][b->bm+i];
                   }
                }
                
@@ -506,13 +506,13 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
                
                indx1 = intwk2[tind]*str.im0;
                
-               for(i=0;i<b.im;++i)
+               for(i=0;i<b->im;++i)
                   for(n=0;n<NV;++n)
                      ug.i[indx+i][n] = str.ug.i[indx1+i][n];
                
                for(step=0;step<TMADAPT;++step) {
                   for(n=0;n<NV;++n)
-                     for(i=0;i<b.im;++i)
+                     for(i=0;i<b->im;++i)
                         gbl->ugbd[step].i[indx+i][n] = ugwk[step].i[indx1+i][n];
                }
                

@@ -4,7 +4,7 @@ void hp_mgrid::getcchng(void) {
    int i,j,n,ind,tind;
    class hp_mgrid *cmesh;
    
-   if(b.p > 1) {
+   if(b->p > 1) {
       return;
    }
    

@@ -29,7 +29,7 @@ void spectral_hp::ugtouht(int tind) {
       indx = tside[tind].side[i]*sm0;
       sign = tside[tind].sign[i];
       msgn = 1;
-      for (m = 0; m < b.sm; ++m) {
+      for (m = 0; m < b->sm; ++m) {
          for(n=0; n<NV; ++n)
             uht[n][cnt] = msgn*ug.s[indx +m][n];
          msgn *= sign;
@@ -38,15 +38,15 @@ void spectral_hp::ugtouht(int tind) {
    }
  
    /* INTERIORS */   
-   if (b.im > 0) {   
+   if (b->im > 0) {   
       indx = tind*im0;
-      for(m = 1; m < b.sm; ++m) {
-         for(k = 0; k < b.sm-m; ++k) {
+      for(m = 1; m < b->sm; ++m) {
+         for(k = 0; k < b->sm-m; ++k) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = ug.i[indx][n];
             ++cnt; ++indx;
          }
-         indx += sm0 -b.sm;
+         indx += sm0 -b->sm;
       }
    }
    
@@ -73,7 +73,7 @@ void spectral_hp::ugtouht(int tind, struct vsi ug) {
       indx = tside[tind].side[i]*sm0;
       sign = tside[tind].sign[i];
       msgn = 1;
-      for (m = 0; m < b.sm; ++m) {
+      for (m = 0; m < b->sm; ++m) {
          for(n=0; n<NV; ++n)
             uht[n][cnt] = msgn*ug.s[indx +m][n];
          msgn *= sign;
@@ -82,15 +82,15 @@ void spectral_hp::ugtouht(int tind, struct vsi ug) {
    }
 
    /* INTERIORS */   
-   if (b.im > 0) {   
+   if (b->im > 0) {   
       indx = tind*im0;
-      for(m = 1; m < b.sm; ++m) {
-         for(k = 0; k < b.sm-m; ++k) {
+      for(m = 1; m < b->sm; ++m) {
+         for(k = 0; k < b->sm-m; ++k) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = ug.i[indx][n];
             ++cnt; ++indx;
          }
-         indx += sm0 -b.sm;
+         indx += sm0 -b->sm;
       }
    }
    
@@ -113,7 +113,7 @@ void spectral_hp::ugtouht_bdry(int tind) {
       indx = tside[tind].side[i]*sm0;
       sign = tside[tind].sign[i];
       msgn = 1;
-      for (m = 0; m < b.sm; ++m) {
+      for (m = 0; m < b->sm; ++m) {
          for(n=0; n<NV; ++n)
             uht[n][cnt] = msgn*ug.s[indx +m][n];
          msgn *= sign;
@@ -140,7 +140,7 @@ void spectral_hp::ugtouht_bdry(int tind,struct vsi ug) {
       indx = tside[tind].side[i]*sm0;
       sign = tside[tind].sign[i];
       msgn = 1;
-      for (m = 0; m < b.sm; ++m) {
+      for (m = 0; m < b->sm; ++m) {
          for(n=0; n<NV; ++n)
             uht[n][cnt] = msgn*ug.s[indx +m][n];
          msgn *= sign;
@@ -163,7 +163,7 @@ void spectral_hp::ugtouht1d(int sind) {
    }
     
    indx = sind*sm0;
-   for(m=0;m<b.sm;++m)
+   for(m=0;m<b->sm;++m)
     for(n=0;n<NV;++n) 
       uht[n][m+2] = ug.s[indx+m][n];
          
@@ -181,7 +181,7 @@ void spectral_hp::ugtouht1d(int sind, struct vsi ug) {
    }
     
    indx = sind*sm0;
-   for(m=0;m<b.sm;++m)
+   for(m=0;m<b->sm;++m)
     for(n=0;n<NV;++n) 
       uht[n][m+2] = ug.s[indx+m][n];
          
@@ -198,14 +198,14 @@ void spectral_hp::crdtocht(int tind) {
          cht[n][i] = vrtx[indx][n];
    }
 
-   if (b.sm == 0) return;
+   if (b->sm == 0) return;
    
    /* SIDES */
    cnt = 3;
    for (i=0; i<3;++i) {   
       sind = tside[tind].side[i];
       if (sinfo[sind] < 0) {
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                cht[n][cnt] = 0.0;
             ++cnt;
@@ -217,7 +217,7 @@ void spectral_hp::crdtocht(int tind) {
          assert(bnum > -1 && bnum < nsbd);
          assert(indx > -1 && indx < sbdry[bnum].num*sm0);
          
-         for (m = 0; m < b.sm; ++m) {
+         for (m = 0; m < b->sm; ++m) {
             for(n=0; n<ND; ++n)
                cht[n][cnt] = binfo[bnum][indx+m].curv[n];
             ++cnt;
@@ -238,14 +238,14 @@ void spectral_hp::crdtocht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
          cht[n][i] = vrtx[indx][n];
    }
 
-   if (b.sm == 0) return;
+   if (b->sm == 0) return;
    
    /* SIDES */
    cnt = 3;
    for (i=0; i<3;++i) {   
       sind = tside[tind].side[i];
       if (sinfo[sind] < 0) {
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                cht[n][cnt] = 0.0;
             ++cnt;
@@ -257,7 +257,7 @@ void spectral_hp::crdtocht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
          assert(bnum > -1 && bnum < nsbd);
          assert(indx > -1 && indx < sbdry[bnum].num*sm0);
          
-         for (m = 0; m < b.sm; ++m) {
+         for (m = 0; m < b->sm; ++m) {
             for(n=0; n<ND; ++n)
                cht[n][cnt] = binfo[bnum][indx+m].curv[n];
             ++cnt;
@@ -283,7 +283,7 @@ void spectral_hp::crdtocht1d(int sind) {
    assert(bnum > -1 && bnum < nsbd);
    assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
    
-   for(m=0;m<b.sm;++m)
+   for(m=0;m<b->sm;++m)
     for(n=0;n<ND;++n) 
          cht[n][m+2] = binfo[bnum][indx+m].curv[n];
          
@@ -305,7 +305,7 @@ void spectral_hp::crdtocht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) 
    assert(bnum > -1 && bnum < nsbd);
    assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
    
-   for(m=0;m<b.sm;++m)
+   for(m=0;m<b->sm;++m)
     for(n=0;n<ND;++n) 
          cht[n][m+2] = binfo[bnum][indx+m].curv[n];
          
@@ -323,14 +323,14 @@ void spectral_hp::lftog(int tind, struct vsi g) {
    }
 
 
-   if (b.p > 1) {
+   if (b->p > 1) {
       /* SIDE MODES */
       indx = 3;
       for(i=0;i<3;++i) {
-         gindx = tside[tind].side[i]*b.sm;
+         gindx = tside[tind].side[i]*b->sm;
          sgn = tside[tind].sign[i];
          msgn = 1;
-         for (m = 0; m < b.sm; ++m) {
+         for (m = 0; m < b->sm; ++m) {
             for(n=0;n<NV;++n)
                g.s[gindx][n] += msgn*lf[n][indx];
             msgn *= sgn;
@@ -339,9 +339,9 @@ void spectral_hp::lftog(int tind, struct vsi g) {
          }
       }
 
-      gindx = tind*b.im;
-      indx = b.bm;
-      for(m=0;m<b.im;++m) {
+      gindx = tind*b->im;
+      indx = b->bm;
+      for(m=0;m<b->im;++m) {
          for(n=0;n<NV;++n)
             g.i[gindx][n] += lf[n][indx];
          ++gindx;

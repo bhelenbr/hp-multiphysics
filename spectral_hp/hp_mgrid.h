@@ -62,9 +62,9 @@ class hp_mgrid : public spectral_hp {
       /* THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
       static const FLT alpha[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
       static const FLT beta[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (REAL)
-      static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
-      static FLT **e00,**e01,**e10,**e11; // LOCAL WORK ARRAYS
-      static FLT **(mvel[ND]); // for local mesh velocity info
+      static FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
+      static FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
+      static FLT mvel[ND][MXGP][MXGP]; // for local mesh velocity info
       static FLT g, dti, time; // GRAVITY, INVERSE TIME STEP, TIME
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
@@ -87,7 +87,7 @@ class hp_mgrid : public spectral_hp {
       static struct vsi ugwk[TMADAPT]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
       static FLT (*vrtxwk[TMADAPT])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
       static struct bistruct *binfowk[TMADAPT][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
-      static FLT **bdwk[TMADAPT][NV]; // LOCAL WORK FOR ADAPTATION
+      static FLT bdwk[TMADAPT][NV][MXGP][MXGP]; // LOCAL WORK FOR ADAPTATION
       static int size;
   
       /* TELLS WHICH P WE ARE ON FOR P MULTIGRID */
@@ -116,10 +116,10 @@ class hp_mgrid : public spectral_hp {
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);
-      void inline loadbasis(class hpbasis& bas) { 
+      void inline loadbasis(class hpbasis *bas) { 
          b = bas;
          log2p = 0;
-         while ((b.p-1)>>log2p > 0) ++log2p;
+         while ((b->p-1)>>log2p > 0) ++log2p;
       }
       /* SET UP HIGHER-ORDER BACKWARD-DIFFERENCE CONSTANTS */
       static void setbd(int nsteps);

@@ -11,54 +11,25 @@
 #include<utilities.h>
 
 /* STATIC WORK ARRAYS */
-FLT **spectral_hp::u[NV],**spectral_hp::du[NV][ND], **spectral_hp::res[NV];
-FLT **spectral_hp::crd[ND],**spectral_hp::dcrd[ND][ND], **spectral_hp::cjcb;
-FLT *spectral_hp::uht[NV], *spectral_hp::lf[NV];
-FLT *spectral_hp::cht[ND], *spectral_hp::cf[ND];
+FLT spectral_hp::u[NV][MXGP][MXGP],spectral_hp::du[NV][ND][MXGP][MXGP], spectral_hp::res[NV][MXGP][MXGP];
+FLT spectral_hp::crd[ND][MXGP][MXGP],spectral_hp::dcrd[ND][ND][MXGP][MXGP], spectral_hp::cjcb[MXGP][MXGP];
+FLT spectral_hp::uht[NV][MXTM], spectral_hp::lf[NV][MXTM];
+FLT spectral_hp::cht[ND][MXTM], spectral_hp::cf[ND][MXTM];
 int spectral_hp::pmax = 0;
    
-void spectral_hp::allocate(class hpbasis& bas) {
-   int i,m,n;
+void spectral_hp::allocate(class hpbasis *bas) {
+   int i;
    
    if (initialized == 0) {
       printf("must load mesh before allocating\n");
       exit(1);
    }
 
-   /* SHALLOW COPY BASIS */   
    b = bas;
    
-   p0 = b.p;
-   sm0 = b.sm;
-   im0 = b.im;
-      
-   /* LOCAL STORAGE/WORK */
-   if (p0 > pmax) {
-      if (pmax != 0) {
-         printf("allocate from largest to smallest\n");
-         exit(1);
-      }
-      for(n=0;n<NV;++n) {
-         mat_alloc(u[n],b.gpx,b.gpn,FLT);
-         mat_alloc(res[n],b.gpx,b.gpn,FLT);
-         for(m=0;m<ND;++m)
-            mat_alloc(du[n][m],b.gpx,b.gpn,FLT);
-            
-         vect_alloc(uht[n],b.tm,FLT);
-         vect_alloc(lf[n],b.tm,FLT);
-      }
-      
-      for(n=0;n<ND;++n) {
-         mat_alloc(crd[n],b.gpx,b.gpn,FLT);
-         for(m=0;m<ND;++m)
-            mat_alloc(dcrd[n][m],b.gpx,b.gpn,FLT);
-            
-         vect_alloc(cht[n],b.tm,FLT);
-         vect_alloc(cf[n],b.tm,FLT);
-      }
-      mat_alloc(cjcb,b.gpx,b.gpn,FLT);
-      pmax = b.p;
-   }
+   p0 = b->p;
+   sm0 = b->sm;
+   im0 = b->im;
    
    ug.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    ug.s = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));

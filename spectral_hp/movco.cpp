@@ -17,31 +17,31 @@ void hp_mgrid::getfres() {
          for(n=0;n<NV;++n)
             gbl->res0.v[i][n] = gbl->res.v[i][n];
 
-      if (b.p > 1) {
+      if (b->p > 1) {
          indx = 0;
          indx1 = 0;
          for(i=0;i<nside;++i) {
-            for (j=0;j<b.sm;++j) {
+            for (j=0;j<b->sm;++j) {
                for(n=0;n<NV;++n)
                   gbl->res0.s[indx][n] = gbl->res.s[indx1][n];
                ++indx;
                ++indx1;
             }
-            indx1 += b.p;
+            indx1 += b->p;
          }
          
-         if (b.p > 2) {
+         if (b->p > 2) {
             indx = 0;
             indx1 = 0;
             for(tind=0;tind<ntri;++tind) {
-               for(m=1;m<b.sm;++m) {
-                  for(k=0;k<b.sm-m;++k) {
+               for(m=1;m<b->sm;++m) {
+                  for(k=0;k<b->sm-m;++k) {
                      for(n=0; n<NV; ++n)
                         gbl->res0.i[indx][n] = gbl->res.i[indx1][n];
                      ++indx;
                      ++indx1;
                   }
-                  indx1 += b.p;
+                  indx1 += b->p;
                }
             }
          }

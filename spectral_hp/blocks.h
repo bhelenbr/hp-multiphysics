@@ -61,7 +61,7 @@ class blocks {
       void output(int number, FILETYPE filetype = text, int verbose = 0);
       void loadbasis() {
          for (int i=0;i<nblocks;++i)
-            blk[i].grd[0].loadbasis(base[lg2pmax]);
+            blk[i].grd[0].loadbasis(&base[lg2pmax]);
       }
             
 

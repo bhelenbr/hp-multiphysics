@@ -16,7 +16,7 @@ void hp_mgrid::tstep1(void) {
       gbl->vprcn[i][0][0] = 0.0;
    }
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       for(i=0;i<nside;++i) {
          gbl->sprcn[i][0][0] = 0.0;
       }
@@ -41,7 +41,7 @@ void hp_mgrid::tstep1(void) {
          exit(1);
       }
       
-      h   =  4.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      h   =  4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
       lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*bd[0]);
 
       /* SET UP DISSIPATIVE COEFFICIENTS */
@@ -62,7 +62,7 @@ void hp_mgrid::tstep1(void) {
       gbl->tprcn[tind][0][0] = jcb;      
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             side = tside[tind].side[i];
             gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
          }
@@ -91,7 +91,7 @@ void hp_mgrid::tstep1(void) {
 
       /* SMALLEST LENGTH FOR CALCULATING EIGENVALUES */
       /* MOST RESTRICTIVE */
-      h   =  4.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      h   =  4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
       
       /* 1.5 IS BASED ON COMPARISON TO R_MESH FOR LAPLACE */
       lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*bd[0]);
@@ -109,7 +109,7 @@ void hp_mgrid::tstep1(void) {
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
 
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             side = tside[tind].side[i];
             gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
          }
@@ -133,7 +133,7 @@ void hp_mgrid::tstep1(void) {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -163,7 +163,7 @@ void hp_mgrid::tstep_mp() {
          gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -188,7 +188,7 @@ void hp_mgrid::tstep_mp() {
          tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b.sm) {
+         if (b->sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
@@ -217,7 +217,7 @@ void hp_mgrid::tstep2(void) {
          gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
@@ -228,10 +228,10 @@ void hp_mgrid::tstep2(void) {
       
    /* FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0]  = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);
+      gbl->vprcn[i][0][0]  = 1.0/(b->vdiag*gbl->vprcn[i][0][0]);
    }
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       /* FORM DIAGANOL PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
          gbl->sprcn[i][0][0] = 1.0/gbl->sprcn[i][0][0];

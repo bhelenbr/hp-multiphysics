@@ -19,7 +19,7 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
       for(n=0;n<NV;++n)
          g.v[i][n] = func(n,vrtx[i][0],vrtx[i][1]);
          
-   if (b.sm <= 0) return;
+   if (b->sm <= 0) return;
 
    /* LOOP THROUGH SIDES */   
    for(sind=0;sind<nside;++sind) {
@@ -29,60 +29,60 @@ void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
       
       if (sinfo[sind] < 0) {
          for(n=0;n<ND;++n)
-            b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+            b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
       }
       else {
          crdtocht1d(sind);
          for(n=0;n<ND;++n)
-            b.proj1d(cht[n],crd[n][0]);
+            b->proj1d(cht[n],crd[n][0]);
       }
       
       for(n=0;n<NV;++n)
-         b.proj1d(g.v[v0][n],g.v[v1][n],res[n][0]);
+         b->proj1d(g.v[v0][n],g.v[v1][n],res[n][0]);
 
-      for(i=0;i<b.gpx; ++i)
+      for(i=0;i<b->gpx; ++i)
          for(n=0;n<NV;++n)
             res[n][0][i] -= (*func)(n,crd[0][0][i],crd[1][0][i]);
             
       for(n=0;n<NV;++n)
-         b.intgrt1d(res[n][0],lf[n]);
+         b->intgrt1d(lf[n],res[n][0]);
    
       indx = sind*sm0;
       for(n=0;n<NV;++n) {
-         PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
-         for(m=0;m<b.sm;++m) 
+         PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
+         for(m=0;m<b->sm;++m) 
             g.s[indx+m][n] = -lf[n][2+m];
       }
    }
    
-   if (b.im <= 0) return;
+   if (b->im <= 0) return;
    
    for(tind = 0; tind < ntri; ++tind) {
       ugtouht_bdry(tind);
       for(n=0;n<NV;++n)
-         b.proj_bdry(uht[n],u[n]);
+         b->proj_bdry(uht[n],u[n][0],MXGP);
          
       if (tinfo[tind] < 0) {
          for(n=0;n<ND;++n)
-            b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
       }
       else {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n],crd[n]);
+            b->proj_bdry(cht[n],crd[n][0],MXGP);
       }
          
       for(n=0;n<NV;++n)
-         for (i=0; i < b.gpx; ++i )
-            for (j=0; j < b.gpn; ++j )
+         for (i=0; i < b->gpx; ++i )
+            for (j=0; j < b->gpn; ++j )
                u[n][i][j] -= (*func)(n,crd[0][i][j],crd[1][i][j]);
                      
       indx = tind*im0;
       for(n=0;n<NV;++n) {
-         b.intgrt(u[n],lf[n]);
-         DPBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
-         for(i=0;i<b.im;++i)
-            g.i[indx+i][n] = -lf[n][b.bm+i];
+         b->intgrt(lf[n],u[n][0],MXGP);
+         DPBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
+         for(i=0;i<b->im;++i)
+            g.i[indx+i][n] = -lf[n][b->bm+i];
       }
    }
    

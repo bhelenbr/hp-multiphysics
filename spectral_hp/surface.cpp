@@ -86,7 +86,7 @@ void hp_mgrid::surfksrc1d() {
             for(i=0;i<sbdry[bnum].num+1;++i)
                srf->vdres[log2p][i][0] = 0.0;
 
-            for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+            for(i=0;i<sbdry[bnum].num*b->sm;++i) 
                srf->sdres[log2p][i][0] = 0.0;
          }
       }
@@ -102,7 +102,7 @@ void hp_mgrid::surfksrc1d() {
                srf->vdres[log2p][i][0] = -srf->gbl->vres[i][0];
             }
 
-            for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+            for(i=0;i<sbdry[bnum].num*b->sm;++i) {
                srf->sdres[log2p][i][0] = -0.0*srf->gbl->sres[i][0];  // TEMPO FOR UNIFORM SPACING OF HIGHER MODES ALONG SIDE
             }
          }
@@ -172,24 +172,24 @@ void hp_mgrid::surfrsdl(int mgrid) {
             uht[n][0] = srf->vug[indx][n];
             uht[n][1] = srf->vug[indx+1][n];
          }
-         if (b.sm > 0) {
+         if (b->sm > 0) {
             indx1 = indx*sm0;
-            for(m=0;m<b.sm;++m)
+            for(m=0;m<b->sm;++m)
                for(n=0;n<ND;++n)
                   uht[n][m+2] = srf->sug[indx1 +m][n];
          }
          for(n=0;n<ND;++n)
-            b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+            b->proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
             
          crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
          for(n=0;n<ND;++n)
-            b.proj1d(cht[n],mvel[n][0]);
+            b->proj1d(cht[n],mvel[n][0]);
 
          ugtouht1d(sind);
          for(n=0;n<ND;++n)
-            b.proj1d(uht[n],u[n][0]);   
+            b->proj1d(uht[n],u[n][0]);   
          
-         for(i=0;i<b.gpx;++i) {
+         for(i=0;i<b->gpx;++i) {
             norm[0] =  dcrd[1][0][0][i];
             norm[1] = -dcrd[0][0][0][i];
             jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
@@ -219,45 +219,45 @@ void hp_mgrid::surfrsdl(int mgrid) {
             u[1][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
          }
          
-         for(m=0;m<b.sm+2;++m)
+         for(m=0;m<b->sm+2;++m)
             cf[0][m] = 0.0;
 
          /* INTEGRATE & STORE SURFACE RESIDUALS */               
-         b.intgrtx1d(res[0][0],cf[0]);
-         b.intgrt1d(res[1][0],cf[1]);
-         b.intgrtx1d(res[1][1],cf[1]);
+         b->intgrtx1d(cf[0],res[0][0]);
+         b->intgrt1d(cf[1],res[1][0]);
+         b->intgrtx1d(cf[1],res[1][1]);
          
 #ifdef DROP
-         b.intgrt1d(res[2][0],lf[2]);
+         b->intgrt1d(lf[2],res[2][0]);
 #endif
          
          /* TO LEAVE TANGENTIAL POSITION TOTALLY FREE */
-         /* for(m=0;m<b.sm+2;++m)
+         /* for(m=0;m<b->sm+2;++m)
             cf[0][m] = 0.0; */
          
          /* STORE IN RES */
          for(n=0;n<ND;++n) {
             srf->gbl->vres[indx][n] += cf[n][0];
             srf->gbl->vres[indx+1][n] = cf[n][1];
-            for(m=0;m<b.sm;++m)
-               srf->gbl->sres[b.sm*indx +m][n] = cf[n][m+2];
+            for(m=0;m<b->sm;++m)
+               srf->gbl->sres[b->sm*indx +m][n] = cf[n][m+2];
          }
          
 #ifdef DROP
          srf->gbl->vres[indx][1] += lf[2][0];
          srf->gbl->vres[indx+1][1] += lf[2][1];
-         for(m=0;m<b.sm;++m)
-            srf->gbl->sres[b.sm*indx +m][1] += lf[2][m+2];
+         for(m=0;m<b->sm;++m)
+            srf->gbl->sres[b->sm*indx +m][1] += lf[2][m+2];
 #endif
          
          /* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-         b.intgrt1d(u[0][1],lf[0]);
-         b.intgrtx1d(u[0][0],lf[0]);
-         b.intgrt1d(u[1][1],lf[1]);
-         b.intgrtx1d(u[1][0],lf[1]);
+         b->intgrt1d(lf[0],u[0][1]);
+         b->intgrtx1d(lf[0],u[0][0]);
+         b->intgrt1d(lf[1],u[1][1]);
+         b->intgrtx1d(lf[1],u[1][0]);
 
          /* MASS FLUX PRECONDITIONER */
-         for(m=0;m<b.sm+2;++m)
+         for(m=0;m<b->sm+2;++m)
             lf[2][m] = -gbl->rho*cf[1][m]; 
 
 #ifndef INERTIALESS
@@ -267,7 +267,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
          for (n=0;n<ND;++n) {
             lf[n][0] -= uht[n][0]*(gbl->rho -srf->gbl->rho2)*cf[1][0];
             lf[n][1] -= uht[n][1]*(gbl->rho -srf->gbl->rho2)*cf[1][1];
-            for(m=0;m<b.sm;++m)
+            for(m=0;m<b->sm;++m)
                lf[n][m+2] -= ubar[n]*(gbl->rho -srf->gbl->rho2)*cf[1][m+2];
          }
 #endif
@@ -277,7 +277,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
             binfo[bnum][count].flx[n] += lf[n][0];
          ++count;
          
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<NV;++n)
                binfo[bnum][count].flx[n] = lf[n][m+2];
             ++count;
@@ -296,7 +296,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
 
             /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
             crdtocht1d(sbdry[bnum].el[0]);
-            b.ptprobe1d(2,cht,rp,norm,-1.0);
+            b->ptprobe1d(2,rp,norm,-1.0,cht[0],MXTM);
             jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 #ifdef AXISYMMETRIC
             binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
@@ -320,7 +320,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
 
             /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
             crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
-            b.ptprobe1d(2,cht,rp,norm,1.0);
+            b->ptprobe1d(2,rp,norm,1.0,cht[0],MXTM);
             jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 #ifdef AXISYMMETRIC
             binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
@@ -344,7 +344,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
                for(n=0;n<ND;++n)
                   srf->vdres[log2p][i][n] = surface::fadd[n]*srf->gbl->vres0[i][n] -srf->gbl->vres[i][n];
             }
-            for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+            for(i=0;i<sbdry[bnum].num*b->sm;++i) {
                for(n=0;n<ND;++n)
                   srf->sdres[log2p][i][n] = surface::fadd[n]*srf->gbl->sres0[i][n] -srf->gbl->sres[i][n];
             }
@@ -353,7 +353,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
             for(n=0;n<ND;++n)
                srf->gbl->vres[i][n] += srf->vdres[log2p][i][n];
          }
-         for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+         for(i=0;i<sbdry[bnum].num*b->sm;++i) {
             for(n=0;n<ND;++n)      
                srf->gbl->sres[i][n] += srf->sdres[log2p][i][n];
          }
@@ -363,7 +363,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
          for(i=0;i<sbdry[bnum].num+1;++i)
             srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
 
-         for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+         for(i=0;i<sbdry[bnum].num*b->sm;++i) 
             srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
       }
       
@@ -378,13 +378,13 @@ void hp_mgrid::surfrsdl(int mgrid) {
          for(i=0;i<sbdry[bnum].num;++i) {
             tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*binfo[bnum][count].flx[2]/gbl->rho;
                      
-            count -= b.sm;
+            count -= b->sm;
             msgn = 1;
-            for(m=0;m<b.sm;++m) {
+            for(m=0;m<b->sm;++m) {
                tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*msgn*binfo[bnum][count++].flx[2]/gbl->rho;
                msgn *= -1;
             }
-            count -= (b.sm+1);
+            count -= (b->sm+1);
             
          }
          tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*binfo[bnum][0].flx[2]/gbl->rho;
@@ -397,7 +397,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
 //      for(i=0;i<sbdry[bnum].num+1;++i)
 //         printf("vres: %d %e %e\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
 //            
-//      for(i=0;i<sbdry[bnum].num*b.sm;++i)
+//      for(i=0;i<sbdry[bnum].num*b->sm;++i)
 //         printf("sres: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
          
    }
@@ -417,15 +417,15 @@ void hp_mgrid::surfinvrt1(int bnum) {
    
    /* INVERT MASS MATRIX */
    /* LOOP THROUGH SIDES */
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       indx1 = 0;
       for(indx = 0; indx<sbdry[bnum].num; ++indx) {
          /* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */         
-         for (m=0; m <b.sm; ++m) {
+         for (m=0; m <b->sm; ++m) {
             for(n=0;n<ND;++n)
-               srf->gbl->vres[indx][n] -= b.sfmv1d[0][m]*srf->gbl->sres[indx1][n];
+               srf->gbl->vres[indx][n] -= b->sfmv1d(0,m)*srf->gbl->sres[indx1][n];
             for(n=0;n<ND;++n)
-               srf->gbl->vres[indx+1][n] -= b.sfmv1d[1][m]*srf->gbl->sres[indx1][n];
+               srf->gbl->vres[indx+1][n] -= b->sfmv1d(1,m)*srf->gbl->sres[indx1][n];
             ++indx1;
          }
       }
@@ -548,31 +548,31 @@ void hp_mgrid::surfinvrt2(int bnum) {
    }   
    
    /* SOLVE FOR SIDE MODES */
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       indx1 = 0;
       for(indx = 0; indx<sbdry[bnum].num; ++indx) {
          
          /* INVERT SIDE MODES */
-         DPBTRSNU(b.sdiag1d,b.sm,b.sbwth,&(srf->gbl->sres[indx1][0]),ND);
-         for(m=0;m<b.sm;++m) {
+         DPBTRSNU2(&b->sdiag1d(0,0),b->sbwth+1,b->sm,b->sbwth,&(srf->gbl->sres[indx1][0]),ND);
+         for(m=0;m<b->sm;++m) {
             temp                      = srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][0][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][0][1];
             srf->gbl->sres[indx1][1] = srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][1][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][1][1];       
             srf->gbl->sres[indx1][0] = temp;
             ++indx1;
          }
          
-         indx1 -= b.sm;
-         for(m=0;m<b.sm;++m) {
+         indx1 -= b->sm;
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n) {
-               srf->gbl->sres[indx1][n] -= b.vfms1d[0][m]*srf->gbl->vres[indx][n];
-               srf->gbl->sres[indx1][n] -= b.vfms1d[1][m]*srf->gbl->vres[indx+1][n];
+               srf->gbl->sres[indx1][n] -= b->vfms1d(0,m)*srf->gbl->vres[indx][n];
+               srf->gbl->sres[indx1][n] -= b->vfms1d(1,m)*srf->gbl->vres[indx+1][n];
             }
             ++indx1;
          }
       }
    }
    
-//   for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+//   for(i=0;i<sbdry[bnum].num*b->sm;++i) 
 //      printf("s: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
    
          
@@ -635,9 +635,9 @@ void hp_mgrid::surfdt1(int bnum) {
       qmax = MAX(qmax,uvel*uvel+vvel*vvel);
       vslp = MAX(vslp,fabs(-uvel*nrm[1]/h +vvel*nrm[0]/h));
       
-      hsm = h/(.25*(b.p+1)*(b.p+1));
+      hsm = h/(.25*(b->p+1)*(b->p+1));
             
-      dttang = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
+      dttang = 2.*srf->ksprg[indx]*(.25*(b->p+1)*(b->p+1))/hsm;
       strss =  4.*srf->gbl->sigma/(hsm*hsm) +fabs(drho*g*nrm[1]/h);
       gam1 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu1/hsm)*(0.5*hsm*bd[0] + 2.*nu1/hsm);
       gam2 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu2/hsm)*(0.5*hsm*bd[0] + 2.*nu2/hsm);
@@ -662,16 +662,16 @@ void hp_mgrid::surfdt1(int bnum) {
       nrm[0] *= 0.5;
       nrm[1] *= 0.5;
             
-      srf->gbl->vdt[indx][0][0] += -dttang*nrm[1]*b.vdiag1d;
-      srf->gbl->vdt[indx][0][1] +=  dttang*nrm[0]*b.vdiag1d;
-      srf->gbl->vdt[indx][1][0] +=  dtnorm*nrm[0]*b.vdiag1d;
-      srf->gbl->vdt[indx][1][1] +=  dtnorm*nrm[1]*b.vdiag1d;
-      srf->gbl->vdt[indx+1][0][0] = -dttang*nrm[1]*b.vdiag1d;
-      srf->gbl->vdt[indx+1][0][1] =  dttang*nrm[0]*b.vdiag1d;
-      srf->gbl->vdt[indx+1][1][0] =  dtnorm*nrm[0]*b.vdiag1d;
-      srf->gbl->vdt[indx+1][1][1] =  dtnorm*nrm[1]*b.vdiag1d;
+      srf->gbl->vdt[indx][0][0] += -dttang*nrm[1]*b->vdiag1d;
+      srf->gbl->vdt[indx][0][1] +=  dttang*nrm[0]*b->vdiag1d;
+      srf->gbl->vdt[indx][1][0] +=  dtnorm*nrm[0]*b->vdiag1d;
+      srf->gbl->vdt[indx][1][1] +=  dtnorm*nrm[1]*b->vdiag1d;
+      srf->gbl->vdt[indx+1][0][0] = -dttang*nrm[1]*b->vdiag1d;
+      srf->gbl->vdt[indx+1][0][1] =  dttang*nrm[0]*b->vdiag1d;
+      srf->gbl->vdt[indx+1][1][0] =  dtnorm*nrm[0]*b->vdiag1d;
+      srf->gbl->vdt[indx+1][1][1] =  dtnorm*nrm[1]*b->vdiag1d;
                
-      if (b.sm) {
+      if (b->sm) {
          srf->gbl->sdt[indx][0][0] = -dttang*nrm[1];
          srf->gbl->sdt[indx][0][1] =  dttang*nrm[0];
          srf->gbl->sdt[indx][1][0] =  dtnorm*nrm[0];
@@ -772,7 +772,7 @@ void hp_mgrid::surfdt2(int bnum) {
    }
 
    /* INVERT SIDE MATRIX */   
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       for(indx=0;indx<sbdry[bnum].num;++indx) {
          /* INVERT SIDE MVDT MATRIX */
          jcbi = 1.0/(srf->gbl->sdt[indx][0][0]*srf->gbl->sdt[indx][1][1] 
@@ -800,7 +800,7 @@ void hp_mgrid::surfnstage1(int bnum) {
       for(n=0;n<ND;++n)
          srf->gbl->vug0[i][n] = srf->vug[i][n];
          
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       for(i=0;i<sbdry[bnum].num*sm0;++i)
          for(n=0;n<ND;++n)
             srf->gbl->sug0[i][n] = srf->sug[i][n];
@@ -822,17 +822,17 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
       }
    }
 
-   if (b.sm > 0) {
+   if (b->sm > 0) {
       indx = 0;
       indx1 = 0;
       for(i=0;i<sbdry[bnum].num;++i) {
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                srf->sug[indx1][n] = srf->gbl->sug0[indx1][n] -alpha[stage]*srf->gbl->sres[indx][n];
             ++indx;
             ++indx1;
          }
-         indx1 += sm0 -b.sm;
+         indx1 += sm0 -b->sm;
       }
    }
    
@@ -857,12 +857,12 @@ void hp_mgrid::surfugtovrt1() {
          for(n=0;n<ND;++n)
             vrtx[v0][n] = srf->vug[i][n];
          
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                binfo[bnum][indx].curv[n] = srf->sug[indx][n];
             ++indx;
          }
-         indx += sm0 -b.sm;
+         indx += sm0 -b->sm;
       }
       v0 = svrtx[sind][1];
       for(n=0;n<ND;++n)
@@ -876,7 +876,7 @@ void hp_mgrid::surfugtovrt1() {
          for(i=0;i<sbdry[bnum].num;++i) {
             for(n=0;n<ND;++n)
                tgt->sbuff[vbnum][count++] = srf->vug[i][n];
-            for(m=0;m<b.sm;++m)
+            for(m=0;m<b->sm;++m)
                for(n=0;n<ND;++n)
                   tgt->sbuff[vbnum][count++] = srf->sug[i*sm0 +m][n];
          }
@@ -908,7 +908,7 @@ void hp_mgrid::surfugtovrt2() {
          
          indx = j*sm0;
          msgn = 1;
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                binfo[bnum][indx+m].curv[n] = msgn*sbuff[bnum][count++];
             msgn *= -1;
@@ -939,7 +939,7 @@ void hp_mgrid::surfvrttoug() {
          for(n=0;n<ND;++n)
             srf->vug[i][n] = vrtx[v0][n];
          
-         for(m=0;m<b.sm;++m) {
+         for(m=0;m<b->sm;++m) {
             for(n=0;n<ND;++n)
                srf->sug[indx][n] = binfo[bnum][indx].curv[n];
             ++indx;
@@ -969,17 +969,17 @@ void hp_mgrid::surfgetfres(int bnum) {
          for(n=0;n<ND;++n)
             srf->gbl->vres0[i][n] = srf->gbl->vres[i][n];
 
-      if (b.sm > 0) {
+      if (b->sm > 0) {
          indx = 0;
          indx1 = 0;
          for(i=0;i<sbdry[bnum].num;++i) {
-            for (j=0;j<b.sm;++j) {
+            for (j=0;j<b->sm;++j) {
                for(n=0;n<ND;++n)
                      srf->gbl->sres0[indx][n] = srf->gbl->sres[indx1][n];
                ++indx;
                ++indx1;
             }
-            indx1 += b.p;
+            indx1 += b->p;
          }
       }
       return;
@@ -1057,7 +1057,7 @@ void hp_mgrid::surfgetcchng(int bnum) {
    class surface *srf, *coarsesrf;
    class hp_mgrid *cmesh;
 
-    if(b.p > 1) {
+    if(b->p > 1) {
       return;
    } 
     
@@ -1150,14 +1150,14 @@ void hp_mgrid::integrated_averages(FLT a[]) {
       if (tinfo[tind] > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
+            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b.proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
 
-         for(i=0;i<b.gpx;++i) {
-            for(j=0;j<b.gpn;++j) {
+         for(i=0;i<b->gpx;++i) {
+            for(j=0;j<b->gpn;++j) {
                for(n=0;n<ND;++n) {
                   dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][1]][n]);
                   dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][0]][n] -vrtx[tvrtx[tind][1]][n]);
@@ -1167,16 +1167,16 @@ void hp_mgrid::integrated_averages(FLT a[]) {
       }
       
       ugtouht(tind);
-      b.proj(uht[0],u[0]);
-      b.proj(uht[1],u[1]);
-      for(i=0;i<b.gpx;++i) {
-         for(j=0;j<b.gpn;++j) {
+      b->proj(uht[0],u[0][0],MXGP);
+      b->proj(uht[1],u[1][0],MXGP);
+      for(i=0;i<b->gpx;++i) {
+         for(j=0;j<b->gpn;++j) {
             cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-            a[0] += RAD(i,j)*b.wtx[i]*b.wtn[j]*cjcb[i][j];
-            a[1] += crd[0][i][j]*RAD(i,j)*b.wtx[i]*b.wtn[j]*cjcb[i][j];
-            a[2] += crd[1][i][j]*RAD(i,j)*b.wtx[i]*b.wtn[j]*cjcb[i][j];
-            a[3] += u[0][i][j]*RAD(i,j)*b.wtx[i]*b.wtn[j]*cjcb[i][j];
-            a[4] += u[1][i][j]*RAD(i,j)*b.wtx[i]*b.wtn[j]*cjcb[i][j];
+            a[0] += RAD(i,j)*b->wtx(i)*b->wtn(j)*cjcb[i][j];
+            a[1] += crd[0][i][j]*RAD(i,j)*b->wtx(i)*b->wtn(j)*cjcb[i][j];
+            a[2] += crd[1][i][j]*RAD(i,j)*b->wtx(i)*b->wtn(j)*cjcb[i][j];
+            a[3] += u[0][i][j]*RAD(i,j)*b->wtx(i)*b->wtn(j)*cjcb[i][j];
+            a[4] += u[1][i][j]*RAD(i,j)*b->wtx(i)*b->wtn(j)*cjcb[i][j];
          }
       }
    }
@@ -1193,21 +1193,21 @@ void hp_mgrid::integrated_averages(FLT a[]) {
 //         uht[n][0] = srf->vug[indx][n];
 //         uht[n][1] = srf->vug[indx+1][n];
 //      }
-//      if (b.sm > 0) {
+//      if (b->sm > 0) {
 //         indx1 = indx*sm0;
-//         for(m=0;m<b.sm;++m)
+//         for(m=0;m<b->sm;++m)
 //            for(n=0;n<ND;++n)
 //               uht[n][m+2] = srf->sug[indx1 +m][n];
 //      }
 //      
 //      for(n=0;n<ND;++n)
-//         b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+//         b->proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
 //      
-//      for(i=0;i<b.gpx;++i) {
+//      for(i=0;i<b->gpx;++i) {
 //         norm[0] =  dcrd[1][0][0][i];
 //         norm[1] = -dcrd[0][0][0][i];
 //         jcb = RAD1D(i)*sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
-//         circ += jcb*b.wtx[i];
+//         circ += jcb*b->wtx[i];
 //      }
 //   }
    
