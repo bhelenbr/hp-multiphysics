@@ -42,7 +42,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = trncerr/bdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+               sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
             }
@@ -73,7 +73,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = trncerr/bdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+               sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
                indx += sm0;
@@ -196,6 +196,8 @@ void hp_mgrid::length2() {
 
 void hp_mgrid::outlength(char *name, FILETYPE type) {
    char fnmapp[100];
+   int j,v0,v1,indx,sind;
+   FLT sum,u,v,ruv;
    FILE *out;
    int i,n,tind;
 
@@ -221,6 +223,71 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
             printf("couldn't open tecplot output file %s\n",fnmapp);
             exit(1);
          }
+         
+         for(i=0;i<nvrtx;++i)
+            fltwk[i] = 0.0;
+
+         switch(b.p) {
+            case(1):
+               for(i=0;i<nside;++i) {
+                  v0 = svrtx[i][0];
+                  v1 = svrtx[i][1];
+                  u = fabs(ug.v[v0][0] +ug.v[v1][0]);
+                  v = fabs(ug.v[v0][1] +ug.v[v1][1]);
+                  ruv = gbl->rho*0.5*(u + v);
+                  sum = ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]);
+                  fltwk[v0] += sum;
+                  fltwk[v1] += sum;
+               }
+               
+               /* BOUNDARY CURVATURE? */
+               for(i=0;i<nsbd;++i) {
+                  if (!(sbdry[i].type&CURV_MASK)) continue;
+                  for(j=0;j<sbdry[i].num;++j) {
+                     sind = sbdry[i].el[j];
+                     v0 = svrtx[sind][0];
+                     v1 = svrtx[sind][1];
+                     sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+                     fltwk[v0] += sum;
+                     fltwk[v1] += sum;
+                  }
+               }
+               break;
+               
+            default:
+               indx = 0;
+               for(i=0;i<nside;++i) {
+                  v0 = svrtx[i][0];
+                  v1 = svrtx[i][1];
+                  u = fabs(ug.v[v0][0] +ug.v[v1][0]);
+                  v = fabs(ug.v[v0][1] +ug.v[v1][1]);
+                  ruv = gbl->rho*0.5*(u + v);
+                  sum = ruv*(fabs(ug.s[indx+b.sm -1][0]) +fabs(ug.s[indx+b.sm -1][1])) +fabs(ug.s[indx+b.sm -1][2]);
+                  fltwk[v0] += sum;
+                  fltwk[v1] += sum;
+                  indx += sm0;
+               }
+               
+               /* BOUNDARY CURVATURE? */
+               for(i=0;i<nsbd;++i) {
+                  if (!(sbdry[i].type&CURV_MASK)) continue;
+                  indx = 0;
+                  for(j=0;j<sbdry[i].num;++j) {
+                     sind = sbdry[i].el[j];
+                     v0 = svrtx[sind][0];
+                     v1 = svrtx[sind][1];
+                     sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+                     fltwk[v0] += sum;
+                     fltwk[v1] += sum;
+                     indx += sm0;
+                  }
+               }
+               break;
+         }
+            
+         
+         for(i=0;i<nvrtx;++i)
+            fltwk[i] = log10(fltwk[i]/nnbor[i]);
       
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
       
@@ -228,7 +295,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",vrtx[i][n]);
-            fprintf(out,"%.6e\n",vlngth[i]);               
+            fprintf(out,"%.6e %.6e\n",vlngth[i],fltwk[i]);               
          }
          
          /* OUTPUT CONNECTIVY INFO */
@@ -237,23 +304,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          for(tind=0;tind<ntri;++tind)
             fprintf(out,"%d %d %d\n"
                ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
-          
-         /* OUTPUT FLTWK INFO */
-         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nside,ntri);
-      
-         /* VERTEX MODES */
-         for(i=0;i<nside;++i) {
-            for(n=0;n<ND;++n)
-               fprintf(out,"%e ",0.5*(vrtx[svrtx[i][0]][n] +vrtx[svrtx[i][1]][n]));
-            fprintf(out,"%.6e\n",fltwk[i]);               
-         }
-         
-         /* OUTPUT CONNECTIVY INFO */
-         fprintf(out,"\n#CONNECTION DATA#\n");
-         
-         for(tind=0;tind<ntri;++tind)
-            fprintf(out,"%d %d %d\n"
-               ,tside[tind].side[0]+1,tside[tind].side[1]+1,tside[tind].side[2]+1);
+
          break;
          
       default:

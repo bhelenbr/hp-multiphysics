@@ -3,9 +3,9 @@ LOG_2 PMAX
 FLOWCFLS (2.5   1.5   1.0)
 2.5   1.5   1.0
 FADD      DISSIPATION      CHRCT B.C.'S?
-0.5      1.0            0
+0.7      1.0            0
 ADAPT      TRNCERR      BDRYERR         TOLERANCE
-1          0.0003       0.001           .5
+0          0.0003       0.000           .5
 TANGENT/NORMAL CFLS (FOR SURFACES) (2.0,1.0   1.5,0.75   1.0,0.5)
 2.0,1.0   1.5,0.75   1.0,0.5
 TANGENT/NORMAL FADD
@@ -15,13 +15,13 @@ MESH MOVEMENT CFL FOR INTERIOR MESH (0.9)
 MESH MOVEMENT FADD (0.5)
 0.5
 1/DT      GRAVITY
-40.0      1.0
+00.0      1.0
 NTSTEPS   OUTPUT INTERVAL
 1         1
 MG DEPTH V(1)/W(2) CYCLE   NCYCLES
-5        2                30
+5        1                 10000
 READ FILE?
-78
+0
 NBLOCKS
 1
 ../blkinput.1

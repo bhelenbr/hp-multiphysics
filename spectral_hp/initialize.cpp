@@ -694,7 +694,24 @@ void hpbasis::lumpinv(void) {
             bfmi[i][j] = mm[i][j+bm];
          }
          PBTRS(uplo,im,ibwth,1,idiag[0],ibwth+1,bfmi[i],im,info);
-      }   
+      }
+      
+      /* TEST INVERSE 
+      for(i=0;i<im;++i) {
+         for(j=0;j<bm;++j)
+            printf(" %f ",bfmi[j][i]);    
+         printf("\n");
+      }
+         
+      printf("ibwth %d\n",ibwth);
+      for(i=0;i<im;++i) {
+         PBTRS(uplo,im,ibwth,1,idiag[0],ibwth+1,&mm[i+bm][bm],im,info);
+         printf("%d: ",i);
+         for(j=0;j<im;++j)
+            printf("%f ",mm[i+bm][bm+j]);
+         printf("\n");
+      }
+      */
    }
 
 
@@ -790,7 +807,7 @@ void hpbasis::lumpinv(void) {
          for(j=0; j<sm; ++j) {
             vfms1d[i][j] = mm[i][j+2];
          }
-         PBTRS(uplo,sm,sbwth,1,sdiag1d[0],sbwth+1,bfmi[i],(sm+2)-2,info);
+         PBTRS(uplo,sm,sbwth,1,sdiag1d[0],sbwth+1,vfms1d[i],(sm+2)-2,info);
       }
 
       /* MATRIX TO REMOVE SIDE MODES FROM VERTICES */   
@@ -857,6 +874,8 @@ void hpbasis::lumpinv(void) {
       printf("\n");
    }
 #endif
+
+
 
    return;
 }         

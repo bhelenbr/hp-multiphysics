@@ -70,7 +70,7 @@ class hp_mgrid : public spectral_hp {
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-      static FLT trncerr, bdryerr, tol;  //   ADAPTATION CONSTANTS  
+      static FLT trncerr, invbdryerr, tol;  //   ADAPTATION CONSTANTS  
       static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
       static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
@@ -164,8 +164,8 @@ class hp_mgrid : public spectral_hp {
       /* MGRID TRANSFER */
       void getfres();
       void getcchng();
-      int setfine(class hp_mgrid& tgt);
-      int setcoarse(class hp_mgrid& tgt); 
+      void setfine(class hp_mgrid& tgt);
+      void setcoarse(class hp_mgrid& tgt); 
 
       /* FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
       void tadvance();

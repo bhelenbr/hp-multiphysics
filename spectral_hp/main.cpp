@@ -23,7 +23,10 @@ int main(int argc, char **argv) {
 #endif
    class blocks myblock;
    clock_t cpu_time;
-
+   class hp_mgrid test;
+   class hpbasis w;
+   struct hp_mgrid_glbls gbl;
+      
    /* START CLOCK TIMER */
    clock();
 
@@ -40,6 +43,17 @@ int main(int argc, char **argv) {
    myblock.init(argv[1]);
    myblock.output(10,tecplot);
    
+   return(0);
+   
+   /*	TO OUTPUT TRUNCATION ERROR */
+   test.mesh::in_mesh("mesh530.0",grid);
+   w.initialize(4);
+   test.mesh::setbcinfo();
+   test.spectral_hp::allocate(w);
+   gbl.rho = 1.0;
+   test.allocate(0,&gbl);
+   test.spectral_hp::input("data530.0",text);
+   test.outlength("terror",tecplot);
    return(0);
 
 }

@@ -88,12 +88,12 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       sinfo[i] -= 2;
    
    /* PRINT SOME GENERAL DEBUGGING INFO */
-   printf("#\n#\nREFINED MESH\n");
+   printf("#\n#\n#REFINED MESH\n");
    printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b.sm*nside+b.im*ntri);
    
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      printf("MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
+      printf("#MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
 
    /* MARK BOUNDARY VERTICES */
    for(i=nvrt0;i<nvrtx;++i)

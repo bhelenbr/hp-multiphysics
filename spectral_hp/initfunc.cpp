@@ -16,7 +16,8 @@
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
-#define FREESTREAM
+#define CYLINDER
+#define NOBIGAMP
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -29,11 +30,11 @@ int startup = 1;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(x*x);
+         return(1 +0.1*x*x);
       case(1):
-         return(x*(1-x)*y*(1-y));
+         return(0);
       case(2):
-         return(y*(1-y)*y*y);
+         return(0);
    }
    return(0.0);
 }
@@ -147,7 +148,11 @@ FLT centerx = 0.0;
 FLT centery = 0.0;
 
 /* FOR A SINE WAVE */
+#ifdef BIGAMP
+FLT amp = 0.375;
+#else
 FLT amp = 0.075;
+#endif
 
 FLT hgt(int type, FLT x, FLT y) {
    if (type&(EULR_MASK +INFL_MASK)) {
@@ -157,7 +162,11 @@ FLT hgt(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
+#ifdef BIGAMP
+      return(y -amp*cos(2.*M_PI*x));
+#else
       return(y -amp*sin(2.*M_PI*x));
+#endif
    }
    
    return(0.0);
@@ -171,7 +180,11 @@ FLT dhgtdx(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
+#ifdef BIGAMP
+      return(2.*amp*M_PI*sin(2.*M_PI*x));
+#else
       return(-2.*amp*M_PI*cos(2.*M_PI*x));
+#endif
    }
    
    return(0.0);

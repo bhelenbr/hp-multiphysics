@@ -36,8 +36,8 @@ void blocks::init(char *file) {
    printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
    
    /* LOAD ADAPTATION INFORMATION */
-   fscanf(fp,"%*[^\n]%d %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::bdryerr,&hp_mgrid::tol);
-   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tTOLERANCE\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::bdryerr,hp_mgrid::tol);
+   fscanf(fp,"%*[^\n]%d %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::invbdryerr,&hp_mgrid::tol);
+   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tTOLERANCE\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::invbdryerr,hp_mgrid::tol);
  
    /* READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
@@ -152,7 +152,6 @@ void blocks::init(char *file) {
             printf("#Reading restart mesh: %s\n",outname);
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
-         blk[i].grd[0].surfvrttoug(); // NECESSARY FOR CORRECT SURFKSRC CALCULATION
       }
       hp_mgrid::setbd(MXSTEP);
             
@@ -436,7 +435,6 @@ void blocks::go() {
             printf("#Reading restart mesh: %s\n",outname);
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
-         blk[i].grd[0].surfvrttoug();  // NECESSARY FOR CORRECT SURFKSRC CALCULATION
       }
 
       if (adapt && tstep != ntstep-1) {

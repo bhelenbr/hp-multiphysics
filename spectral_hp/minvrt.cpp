@@ -275,21 +275,19 @@ void hp_mgrid::minvrt4() {
    if (b.im > 0) {
       indx = 0;
       for(tind = 0; tind < ntri; ++tind) { 
-
          DPBSLN(b.idiag,b.im,b.ibwth,&(gbl->res.i[indx][0]),NV);
          restouht_bdry(tind);
-
 #ifdef CONSERV
          for(k=0;k<b.im;++k) {
             gbl->res.i[indx][0] /= gbl->tprcn[tind][0][0];
             gbl->res.i[indx][1] /= gbl->tprcn[tind][0][0];
             gbl->res.i[indx][2] /= gbl->tprcn[tind][NV-1][NV-1];
             
-            for (i=0;i<b.bm;++i) 
+            for (i=0;i<b.bm;++i)
                for(n=0;n<NV;++n) 
                   gbl->res.i[indx][n] -= b.bfmi[i][k]*uht[n][i];
-            
-            ++indx;            
+           
+             ++indx;            
          }
 #else      
          for(k=0;k<b.im;++k) {

@@ -95,7 +95,7 @@ void hp_mgrid::surfksrc1d() {
             }
 
             for(i=0;i<sbdry[bnum].num*b.sm;++i) {
-               srf->sdres[log2p][i][0] = -srf->gbl->sres[i][0];
+               srf->sdres[log2p][i][0] = -0.0*srf->gbl->sres[i][0];  // TEMPORARY FOR UNIFORM SPACING OF HIGHER MODES ALONG SIDE
             }
          }
       }
@@ -272,12 +272,12 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 
    /*
       for(i=0;i<sbdry[bnum].num+1;++i)
-            printf("res: %f %f\n",srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
+            printf("vres: %f %f\n",srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
             
       for(i=0;i<sbdry[bnum].num*b.sm;++i)
-         printf("res: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
+         printf("sres: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
    */
-
+   
    return;
 }
 

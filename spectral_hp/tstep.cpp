@@ -2,10 +2,12 @@
 #include<math.h>
 #include<utilities.h>
 
+#define NO_ARTIFICIAL_COMPRESSIBILITY
+
 #ifdef CONSERV
 void hp_mgrid::tstep1(void) {
-    int tind,i,j,sind,count,bnum,side,v0,*v;
-    FLT jcb,h,hmax,q,qmax,lam1,c,gam,dtstari;
+   int tind,i,j,sind,count,bnum,side,v0,*v;
+   FLT jcb,h,hmax,q,qmax,lam1,c,gam,dtstari;
    class mesh *tgt;
 
    /***************************************/
@@ -22,7 +24,10 @@ void hp_mgrid::tstep1(void) {
          gbl->sprcn[i][NV-1][NV-1] = 0.0;
       }
    }
-
+   
+#ifdef ARTIFICIAL_COMPRESSIBILITY
+   gam = 10.0;
+   dtstari = 0.0;
    for(tind = 0; tind < ntri; ++tind) {
       jcb = 0.25*area(tind);
       v = tvrtx[tind];
@@ -49,7 +54,61 @@ void hp_mgrid::tstep1(void) {
             +pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]),2.0);
          qmax = MAX(qmax,q);
       }
-      gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);  
+      q = sqrt(qmax);
+      c = sqrt(qmax +gam);
+      lam1  = (q+c);
+
+      /* SET UP DISSIPATIVE COEFFICIENTS */
+      gbl->tau[tind]  = adis*h/(jcb*sqrt(gam));
+      gbl->delt[tind] = qmax*gbl->tau[tind];
+      
+      /* SET UP DIAGONAL PRECONDITIONER */
+      dtstari = MAX((gbl->nu/(h*h) +lam1/h +bd[0]),dtstari);
+   }
+      
+   for(tind=0;tind<ntri;++tind) {
+      jcb = 0.25*area(tind)*dtstari;
+      v = tvrtx[tind];
+      gbl->tprcn[tind][0][0] = gbl->rho*jcb;      
+      gbl->tprcn[tind][NV-1][NV-1] =  jcb/gam;
+      for(i=0;i<3;++i) {
+         gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
+         gbl->vprcn[v[i]][NV-1][NV-1]  += gbl->tprcn[tind][NV-1][NV-1];
+         if (b.sm > 0) {
+            side = tside[tind].side[i];
+            gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
+            gbl->sprcn[side][NV-1][NV-1] += gbl->tprcn[tind][NV-1][NV-1];
+         }
+      }
+   } 
+#else
+   for(tind = 0; tind < ntri; ++tind) {
+      jcb = 0.25*area(tind);
+      v = tvrtx[tind];
+      hmax = 0.0;
+      for(j=0;j<3;++j) {
+         h = pow(vrtx[v[j]][1] -vrtx[v[(j+1)%3]][1],2.0) + 
+         pow(vrtx[v[j]][0] -vrtx[v[(j+1)%3]][0],2.0);
+         hmax = (h > hmax ? h : hmax);
+      }
+      hmax = sqrt(hmax);
+      
+      if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
+         printf("negative triangle area\n");
+         output("negative",tecplot);
+         exit(1);
+      }
+      
+      h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      
+      qmax = 0.0;
+      for(j=0;j<3;++j) {
+         v0 = v[j];
+         q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]),2.0) 
+            +pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]),2.0);
+         qmax = MAX(qmax,q);
+      }
+      gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h); 
       q = sqrt(qmax);
       c = sqrt(qmax +gam);
       lam1  = (q+c);
@@ -72,6 +131,7 @@ void hp_mgrid::tstep1(void) {
          }
       }
    }
+#endif
    
    /* SEND Y-DIRECTION BOUNDARY INFORMATION */
    for(i=0;i<nsbd;++i) {
@@ -241,7 +301,7 @@ void hp_mgrid::tstep2(void) {
          }
       }
    }
-   
+      
    /* FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
       gbl->vprcn[i][0][0]  = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);

@@ -125,6 +125,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
 void block::tadvance() {
    int j;
    
+   grd[0].surfvrttoug();
    grd[0].setksprg1d();
    grd[0].surfksrc1d();
    grd[0].tadvance();

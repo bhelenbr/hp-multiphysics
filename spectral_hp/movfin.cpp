@@ -1,10 +1,11 @@
 #include"hp_mgrid.h"
 
-int hp_mgrid::setcoarse(class hp_mgrid& tgt) {
+void hp_mgrid::setcoarse(class hp_mgrid& tgt) {
    cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
-   return(mgconnect(coarse,tgt));
+   mgconnect(coarse,tgt);
+   return;
 }
 
 void hp_mgrid::getcchng(void) {
