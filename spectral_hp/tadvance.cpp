@@ -9,9 +9,20 @@
 
 #include "hp_mgrid.h"
 
-void hp_mgrid::tadvance() {
+int hp_mgrid::extrap=0;
+FLT hp_mgrid::bd[TMSCHEME+1];
+
+#ifdef DROP
+extern FLT lam;
+#endif
+
+void hp_mgrid::tadvance(int stage) {
    int i,j,n,tind,step;
    FLT temp;
+   
+#ifdef DROP
+   lam = 1.0e99;
+#endif
 
    /*********************************************************/   
    /* CALCULATE TIME DERIVATIVE SOURCE TERM FOR FINEST MESH */
@@ -51,7 +62,7 @@ void hp_mgrid::tadvance() {
    }
    
    /* NOW DO ADDITIONAL TERMS FOR HIGHER-ORDER BD */
-   for(step=0;step<MXSTEP-1;++step) {
+   for(step=0;step<TMSCHEME-1;++step) {
       for(tind=0;tind<ntri;++tind) {
          if (tinfo[tind] > -1) {
             crdtocht(tind,gbl->vrtxbd[step],gbl->binfobd[step]);
@@ -88,17 +99,17 @@ void hp_mgrid::tadvance() {
    
    /* SHIFT BACKWARDS DIFFERENCE STORAGE */
    for(i=0;i<nvrtx;++i)
-      for(step=MXSTEP-2;step>=1;--step)
+      for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].v[i][n] = gbl->ugbd[step-1].v[i][n];
 
    for(i=0;i<nside*b.sm;++i)
-      for(step=MXSTEP-2;step>=1;--step)
+      for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].s[i][n] = gbl->ugbd[step-1].s[i][n];            
 
    for(i=0;i<ntri*b.im;++i)
-      for(step=MXSTEP-2;step>=1;--step)
+      for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->ugbd[step].i[i][n] = gbl->ugbd[step-1].i[i][n];    
    
@@ -132,7 +143,7 @@ void hp_mgrid::tadvance() {
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<ND;++n) {
          dvrtdt[i][n] = bd[1]*vrtx[i][n];
-         for(step=0;step<MXSTEP-1;++step)
+         for(step=0;step<TMSCHEME-1;++step)
             dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
       }
    }
@@ -142,7 +153,7 @@ void hp_mgrid::tadvance() {
          for(j=0;j<sbdry[i].num*b.sm;++j) {
             for(n=0;n<ND;++n) {
                gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
-               for(step=0;step<MXSTEP-1;++step)
+               for(step=0;step<TMSCHEME-1;++step)
                   gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
             }
          }
@@ -151,14 +162,14 @@ void hp_mgrid::tadvance() {
    
    /* SHIFT BD MESH INFORMATION */
    for(i=0;i<nvrtx;++i)
-      for(step=MXSTEP-2;step>=1;--step)
+      for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
             gbl->vrtxbd[step][i][n] = gbl->vrtxbd[step-1][i][n];
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
          for(j=0;j<sbdry[i].num*b.sm;++j) 
-            for(step=MXSTEP-2;step>=1;--step)
+            for(step=TMSCHEME-2;step>=1;--step)
                   for(n=0;n<ND;++n)
                      gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
 
@@ -224,3 +235,34 @@ void hp_mgrid::getfdvrtdt() {
    
    return;
 }
+
+void hp_mgrid::setbd(int nsteps) {
+   int i;
+   
+   for(i=0;i<TMSCHEME+1;++i)
+      hp_mgrid::bd[i] = 0.0;
+   
+   switch(nsteps) {
+      case(1):
+         hp_mgrid::bd[0] =  hp_mgrid::dti;
+         hp_mgrid::bd[1] = -hp_mgrid::dti;
+         break;
+      case(2):
+         hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+         hp_mgrid::extrap = 1;
+         break;
+      case(3):
+         hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
+         hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
+         hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
+         hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
+         hp_mgrid::extrap = 1;
+         break;
+   }
+
+   
+   return;
+}
+
