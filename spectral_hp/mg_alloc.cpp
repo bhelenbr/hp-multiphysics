@@ -12,7 +12,8 @@
 
 /* STATIC WORK VARIABLES USED BY ALL HP_MGRID OBJECTS */
 FLT **hp_mgrid::cv00,**hp_mgrid::cv01,**hp_mgrid::cv10,**hp_mgrid::cv11;
-FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;   
+FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11; 
+FLT **(hp_mgrid::mvel[ND]); // for local mesh velocity info
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
@@ -54,6 +55,9 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
       mat_alloc(e10,b.gpx,b.gpn,FLT);
       mat_alloc(e11,b.gpx,b.gpn,FLT);
       size = b.p;
+      
+      for(n=0;n<ND;++n)
+         mat_alloc(mvel[n],b.gpx,b.gpn,FLT);
       
       /* ALLOCATE UNSTEADY ADAPTATION STORAGE */
       for(i=0;i<MXSTEPM1;++i) {

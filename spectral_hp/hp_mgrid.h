@@ -9,6 +9,7 @@
 #include"spectral_hp.h"
 #include"surface.h"
 
+
 #define MXLG2P 5
 #define NSTAGE 5
 #define MXSTEP 2
@@ -19,6 +20,15 @@
 #endif
 
 #define CONSERV
+#define NO_AXISYMMETRIC
+
+#ifdef AXISYMMETRIC
+#define RAD(I,J) crd[0][I][J]
+#define RAD1D(I) crd[0][0][I]
+#else
+#define RAD(I,J) 1
+#define RAD1D(I) 1
+#endif
 
 /* THESE THINGS ARE SHARED BY ALL MESHES OF THE SAME BLOCK */
 struct hp_mgrid_glbls {
@@ -65,6 +75,7 @@ class hp_mgrid : public spectral_hp {
       static const FLT beta[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (REAL)
       static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
       static FLT **e00,**e01,**e10,**e11; // LOCAL WORK ARRAYS
+      static FLT **(mvel[ND]); // for local mesh velocity info
       static int extrap; // NUMBER OF STEPS IN BD SCHEME
       static FLT g, dti, time, bd[MXSTEP+1]; // GRAVITY, INVERSE TIME STEP, TIME, BACKWARDS DIFFERENCE CONSTANTS
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
@@ -175,7 +186,7 @@ class hp_mgrid : public spectral_hp {
       void length2(); 
       void outlength(char *name, FILETYPE type);
       void inlength(char *name);
-      void adapt(class hp_mgrid& bgn);
+      void adapt(class hp_mgrid& bgn, char *adaptfile);
       
       friend class block;
       friend class blocks;

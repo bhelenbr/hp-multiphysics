@@ -95,7 +95,8 @@ class hpbasis {
       /* DIAGONAL FOR SIDES */      
       FLT **sdiag1d;
          
-      void initialize(int pdegree);
+      void initialize(int pdegree, int gpoints);
+      inline void initialize(int pdegree) { initialize(pdegree, pdegree+1);}
       static inline int smode(int p1) {return(p1-1);}
       static inline int imode(int p1) {return((p1-2)*(p1-1)/2);}
       /* PROJECT WITH R & S DERIVATIVES */

@@ -1,6 +1,7 @@
 #include"blocks.h"
 #include"utilities.h"
 #include<assert.h>
+#include<string.h>
 
 extern FLT f1(int n, FLT x, FLT y);
 
@@ -174,12 +175,13 @@ void block::coarsenchk(const char *fname) {
    int i;
    char name[100];
 
-   for(i = 1; i< ngrid; ++i) {
+   for(i = 0; i< ngrid; ++i) {
       number_str(name,fname,i,1);
       grd[i].mesh::setbcinfo();
       grd[i].checkintegrity();
-      grd[i].out_mesh(name);
+      grd[i].out_mesh(name,grid);
       grd[i].setbcinfo();
+      grd[i].testconnect(name);
    }
    return;
 }

@@ -169,7 +169,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          
       crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
       for(n=0;n<ND;++n)
-         b.proj1d(uht[n],crd[n][1]);
+         b.proj1d(uht[n],mvel[n][0]);
 
       ugtouht1d(sind);
       for(n=0;n<ND;++n)
@@ -180,25 +180,28 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          norm[1] = -dcrd[0][0][0][i];
          jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
          
-         /* FIGURE OUT WHAT TO DO HERE FOR RELATIVE VELOCITY STORED IN CRD[N][1]*/
+         /* RELATIVE VELOCITY STORED IN MVEL[N][0]*/
          for(n=0;n<ND;++n)
-            crd[n][1][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +crd[n][1][i] +dnormdt*norm[n]/jcb); 
+            mvel[n][0][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +mvel[n][0][i] +dnormdt*norm[n]/jcb); 
 
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
-         tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
+         tau = (mvel[0][0][i]*dcrd[0][0][0][i] +mvel[1][0][i]*dcrd[1][0][0][i])/jcb;
          tabs = fabs(tau) + 10.*EPSILON;
          tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +fabs(drhor*g*norm[1]/jcb))/tabs));
 
          /* TANGENTIAL SPACING & NORMAL FLUX */            
          res[0][0][i] = srf->ksprg[indx]*jcb;
-         res[1][0][i] = -(crd[0][1][i]*norm[0] +crd[1][1][i]*norm[1]);
+         res[1][0][i] = -RAD1D(i)*(mvel[0][0][i]*norm[0] +mvel[1][0][i]*norm[1]);
          res[1][1][i] = res[1][0][i]*tau;
-
+         
          /* SURFACE TENSION SOURCE TERM */ 
-         u[0][0][i] = -srf->gbl->sigma*norm[1]/jcb;
-         u[0][1][i] = +(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
-         u[1][0][i] = +srf->gbl->sigma*norm[0]/jcb;
-         u[1][1][i] = +(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
+         u[0][0][i] = -RAD1D(i)*srf->gbl->sigma*norm[1]/jcb;
+         u[0][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
+#ifdef AXISYMMETRIC
+         u[0][1][i] += srf->gbl->sigma*jcb;
+#endif
+         u[1][0][i] = +RAD1D(i)*srf->gbl->sigma*norm[0]/jcb;
+         u[1][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
       }
       
       for(m=0;m<b.sm+2;++m)
@@ -502,6 +505,9 @@ void hp_mgrid::surfdt1(int bnum) {
       srf->gbl->normc[indx] = srho*hsm*cnvct*dtfli/dtnorm;
       srf->gbl->meshc[indx] = srho*hsm*dtfli;
       dtnorm = dtnorm/srf->gbl->meshc[indx];
+#ifdef AXISYMMETRIC
+      dtnorm *= 0.5*(vrtx[v0][0] +vrtx[v1][0]);
+#endif
 
       srf->gbl->vdt[indx][0][0] += -dttang*nrm[1]*b.vdiag1d;
       srf->gbl->vdt[indx][0][1] +=  dttang*nrm[0]*b.vdiag1d;

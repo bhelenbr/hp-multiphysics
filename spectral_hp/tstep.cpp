@@ -69,8 +69,11 @@ void hp_mgrid::tstep1(void) {
    printf("#iterative to physical time step ratio: %f\n",bd[0]/dtstari);
       
    for(tind=0;tind<ntri;++tind) {
-      jcb = 0.25*area(tind)*dtstari;
       v = tvrtx[tind];
+      jcb = 0.25*area(tind)*dtstari;
+#ifdef AXISYMMETRIC
+      jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
+#endif
       gbl->tprcn[tind][0][0] = gbl->rho*jcb;      
       gbl->tprcn[tind][NV-1][NV-1] =  jcb/gam;
       for(i=0;i<3;++i) {
@@ -121,6 +124,9 @@ void hp_mgrid::tstep1(void) {
       
       /* SET UP DIAGONAL PRECONDITIONER */
       dtstari = jcb*(gbl->nu/(h*h) +lam1/h +bd[0]);
+#ifdef AXISYMMETRIC
+      dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
+#endif
       gbl->tprcn[tind][0][0] = gbl->rho*dtstari;      
       gbl->tprcn[tind][NV-1][NV-1] =  dtstari/gam;
       for(i=0;i<3;++i) {
@@ -395,6 +401,9 @@ void hp_mgrid::tstep1(void) {
 
       /* STORE PRECONDITIONER (THIS IS TO DRIVE ITERATION USING NONCONSERVATIVE SYSTEM) */
       dtstari = jcb*(gbl->nu/(h*h) +lam1/h +bd[0]);
+#ifdef AXISYMMETRIC
+      dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
+#endif
       gbl->tprcn[tind][0][0]  = dtstari*gbl->rho;
    	/* gbl->tprcn[tind][1][1] = gbl->tprcn[tind][0][0]; */
       gbl->tprcn[tind][NV-1][NV-1] =  dtstari/gam;

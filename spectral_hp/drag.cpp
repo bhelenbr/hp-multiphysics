@@ -39,7 +39,7 @@ void hp_mgrid::drag(int type) {
 
          for (i=0;i<b.gpx;++i) {
             circ += b.wtx[i]*sqrt(dcrd[0][0][0][i]*dcrd[0][0][0][i] +dcrd[1][0][0][i]*dcrd[1][0][0][i]);
-            cjcb[0][i] = gbl->mu/(dcrd[0][0][0][i]*dcrd[1][1][0][i] -dcrd[1][0][0][i]*dcrd[0][1][0][i]);
+            cjcb[0][i] = gbl->mu*RAD1D(i)/(dcrd[0][0][0][i]*dcrd[1][1][0][i] -dcrd[1][0][0][i]*dcrd[0][1][0][i]);
             
 //            printf("%d %f\n",sd,cjcb[0][i]/gbl->mu*(du[0][0][0][i]*dcrd[1][1][0][i] -du[0][1][0][i]*dcrd[1][0][0][i]));
             

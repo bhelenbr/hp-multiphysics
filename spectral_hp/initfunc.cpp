@@ -78,12 +78,12 @@ FLT f1(int n, FLT x, FLT y) {
    r = sqrt(x*x +y*y);
    
    switch(n) {
-      case(0):
+      case(1):
          if (r < 0.55) 
             return(0.0);
          else
             return(1.0);
-      case(1):
+      case(0):
          return(0.0);
       case(2):
          return(0.0);

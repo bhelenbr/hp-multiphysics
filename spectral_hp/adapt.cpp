@@ -15,7 +15,7 @@
 /* THIS IS USED IN THE MVPTTOBDRY FUNCTION */
 extern class spectral_hp *tgt;
 
-void hp_mgrid::adapt(class hp_mgrid& str) {
+void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
    int i,j,m,n,v0,v1,sind,stgt,ttgt,info,indx,indx1,indx2,nvrt0,tind,touchd,snum,step;
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
@@ -87,7 +87,9 @@ void hp_mgrid::adapt(class hp_mgrid& str) {
    /* TO SEE MESH MANIPULATION */
    for(i=0;i<nside;++i)
       sinfo[i] += 2;
-   out_mesh("adapt");
+
+   out_mesh(adaptfile);
+
    for(i=0;i<nside;++i)
       sinfo[i] -= 2;
    

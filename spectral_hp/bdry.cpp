@@ -93,7 +93,7 @@ void hp_mgrid::setinflow() {
                for(n=0;n<ND;++n)
                   mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
                
-               res[2][0][k] = gbl->rho*((u[0][0][k] -mvel[0])*dcrd[1][0][0][k] -(u[1][0][k] -mvel[1])*dcrd[0][0][0][k]);
+               res[2][0][k] = gbl->rho*RAD1D(k)*((u[0][0][k] -mvel[0])*dcrd[1][0][0][k] -(u[1][0][k] -mvel[1])*dcrd[0][0][0][k]);
             }
             
             b.intgrt1d(res[2][0],lf[0]);
@@ -243,9 +243,9 @@ void hp_mgrid::addbflux(int mgrid) {
                else 
                   chrctr(gbl->rho,gam,wl,wr,nrm,mvel);
                   
-               res[2][0][k] = gbl->rho*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
-               res[0][0][k] = res[2][0][k]*wl[0] +wl[2]*nrm[0];
-               res[1][0][k] = res[2][0][k]*wl[1] +wl[2]*nrm[1];
+               res[2][0][k] = gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
+               res[0][0][k] = res[2][0][k]*wl[0] +wl[2]*RAD1D(k)*nrm[0];
+               res[1][0][k] = res[2][0][k]*wl[1] +wl[2]*RAD1D(k)*nrm[1];
             }
             
             for(n=0;n<NV;++n)
@@ -304,9 +304,9 @@ void hp_mgrid::addbflux(int mgrid) {
                wl[1] = (gbl->func)(1,crd[0][0][k],crd[1][0][k]);
                for(n=0;n<ND;++n)
                   mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
-               res[2][0][k] = gbl->rho*((wl[0] -mvel[0])*dcrd[1][0][0][k] -(wl[1] -mvel[1])*dcrd[0][0][0][k]);
-               res[0][0][k] = res[2][0][k]*wl[0] +u[2][0][k]*dcrd[1][0][0][k];
-               res[1][0][k] = res[2][0][k]*wl[1] -u[2][0][k]*dcrd[0][0][0][k];
+               res[2][0][k] = gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*dcrd[1][0][0][k] -(wl[1] -mvel[1])*dcrd[0][0][0][k]);
+               res[0][0][k] = res[2][0][k]*wl[0] +u[2][0][k]*RAD1D(k)*dcrd[1][0][0][k];
+               res[1][0][k] = res[2][0][k]*wl[1] -u[2][0][k]*RAD1D(k)*dcrd[0][0][0][k];
             }
             
             for(n=0;n<NV;++n)

@@ -87,7 +87,11 @@ void blocks::init(char *file) {
    for(i=0;i<lg2pmax;++i)
       p = p<<1;
    for(i=lg2pmax;i>=0;--i) {
+#ifdef AXISYMMETRIC
+      base[i].initialize(p,p+2);
+#else
       base[i].initialize(p);
+#endif
       p = p>>1;
    }
    
@@ -184,7 +188,11 @@ void blocks::init(char *file) {
       startup = 0;
    }
 
-   blk[0].coarsenchk("test");
+   for(i=0;i<nblocks;++i) {
+      number_str(bname,"multigrid.",i,1);
+      strcat(bname,".");
+      blk[i].coarsenchk(bname);
+   }
    
 #ifdef PV3
    viz_init();
@@ -455,6 +463,7 @@ void blocks::go() {
    
 void blocks::adaptation() {
    int i;
+   char adaptfile[20];
    
    /* THIS IS TO ENSURE COMMUNICATION BOUNDARES GET */
    /* COARSENED THE SAME WAY */
@@ -475,8 +484,10 @@ void blocks::adaptation() {
       blk[i].grd[0].length2();
 
    /*	ADAPT MESH */      
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].adapt(block::temp_hp);
+   for(i=0;i<nblocks;++i) {
+      number_str(adaptfile,"adapt",i,1);
+      blk[i].grd[0].adapt(block::temp_hp,adaptfile);
+   }
 
    /* RECONNECT COARSE MESHES */
    for(i=0;i<nblocks;++i)

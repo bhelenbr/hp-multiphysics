@@ -18,7 +18,7 @@ FLT **hpbasis::wk0, **hpbasis::wk1, **hpbasis::wk2, **hpbasis::wk3;
 FLT *hpbasis::pgx, *hpbasis::dpgx, *hpbasis::pgn, *hpbasis::dpgn;
 
 
-void hpbasis::initialize(int pdegree) {
+void hpbasis::initialize(int pdegree, int gpoints) {
 
    if (pdegree < 1) {
       printf("error can't use 0th order basis\n");
@@ -35,8 +35,8 @@ void hpbasis::initialize(int pdegree) {
    
    nmodx = p+2;
    nmodn = tm;
-   gpx = p +1;
-   gpn = p +1;
+   gpx = gpoints;
+   gpn = gpoints;
    
    /* WORK VARIABLES */   
    if (p > wkpmax) {
