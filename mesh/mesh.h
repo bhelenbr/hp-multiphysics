@@ -209,6 +209,7 @@ class mesh {
       /* MESH MODIFICATION */   
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
+      void refineby2(const class mesh& xmesh);
       void length();
       void swap(FLT swaptol = 0.0);
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);

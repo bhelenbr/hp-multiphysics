@@ -304,22 +304,24 @@ next1:      continue;
                
             /* CREATE TSIDE & STRI */
             createtsidestri();
-   
+            
+            count = 0;
+            for(i=0;i<nside;++i)
+               if (stri[i][1] < 0) ++count;
+            
+            /* ALLOCATE BOUNDARY STORAGE */
+            if (!initialized) bdryalloc(count + (int) (grwfac*count));
+
             /* SIDE BOUNDARY INFO HEADER */
             fscanf(grd,"nsbd: %d\n",&nsbd);
             
             count = 0;
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"type: %d\t number %d\n",&sbdry[i].type,&sbdry[i].num);
-               count += sbdry[i].num;
-            }
-            
-            /* ALLOCATE BOUNDARY STORAGE */
-            if (!initialized) bdryalloc(count + (int) (grwfac*count));
-            
-            for(i=0;i<nsbd;++i)
+               fscanf(grd,"type: %d\nnumber: %d\n",&sbdry[i].type,&sbdry[i].num);
+               
                for(j=0;j<sbdry[i].num;++j)
                   fscanf(grd,"%d\n",&sbdry[i].el[j]);
+            }
                   
             /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"nvbd: %d\n",&nvbd);
@@ -441,7 +443,6 @@ next1:      continue;
             }
             
             setbcinfo();
-            out_mesh("test",easymesh);
             
             break;
             

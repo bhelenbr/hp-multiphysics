@@ -166,12 +166,12 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
 
          /* SIDE BOUNDARY INFO HEADER */
          fprintf(out,"nsbd: %d\n",nsbd);
-         for(i=0;i<nsbd;++i)
-            fprintf(out,"type: %d\t number %d\n",sbdry[i].type,sbdry[i].num);
-         
-         for(i=0;i<nsbd;++i)
+         for(i=0;i<nsbd;++i) {
+            fprintf(out,"type: %d\nnumber: %d\n",sbdry[i].type,sbdry[i].num);
+
             for(j=0;j<sbdry[i].num;++j)
                fprintf(out,"%d\n",sbdry[i].el[j]);
+         }
                
          /* VERTEX BOUNDARY INFO HEADER */
          fprintf(out,"nvbd: %d\n",nvbd);

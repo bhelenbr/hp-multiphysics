@@ -28,6 +28,14 @@ int main(int argc, char *argv[]) {
    char *inname[2];
    char *out2[2];
    mesh x[10];
+   
+   x[0].in_mesh("/Users/helenbrk/Codes/grids/KOVA/kova8",easymesh,100);
+   x[1].refineby2(x[0]);
+   x[1].setbcinfo();
+   number_str(outname,"/Users/helenbrk/Codes/grids/KOVA/kova",16,1);
+   x[1].out_mesh(outname,easymesh);
+
+   return(0);
  
    /* START CLOCK TIMER */
    clock();
@@ -35,7 +43,7 @@ int main(int argc, char *argv[]) {
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
 //   inname[0] = "/Volumes/work/helenbrk/shelob/codes/grids2/CYLINDER/fine";
-   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
+   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
    z.init(1,5,inname,easymesh,10.0);
    
    z.out_mesh("begin",tecplot);
@@ -46,7 +54,7 @@ int main(int argc, char *argv[]) {
       z.ksrc();
       z.perturb();
       
-      for(i=0;i<300;++i) {
+      for(i=0;i<50;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();

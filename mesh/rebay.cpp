@@ -101,7 +101,6 @@ void mesh::rebay(FLT tolsize) {
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
          qtree.addpt(nvrtx);
-         qtree.nearpt(nvrtx,vnear);
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
          
          bdry_insert(tind,snum,nvrtx);
