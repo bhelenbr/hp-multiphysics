@@ -22,27 +22,27 @@
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {749, 373}}";
+								Frame = "{{0, 0}, {1126, 373}}";
 								Split0 = {
-									Frame = "{{0, 170}, {749, 203}}";
+									Frame = "{{0, 170}, {1126, 203}}";
 									Split0 = {
-										Frame = "{{0, 0}, {359, 203}}";
+										Frame = "{{0, 0}, {541, 203}}";
 									};
 									Split1 = {
-										Frame = "{{368, 0}, {381, 203}}";
+										Frame = "{{550, 0}, {576, 203}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {749, 145}}";
+									Frame = "{{0, 0}, {1126, 145}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {954, 105}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {749, 373}}";
+							Frame = "{{0, 0}, {1126, 373}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
