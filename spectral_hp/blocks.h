@@ -40,6 +40,10 @@ class blocks {
       
 /*		SETUP COMMUNICATION BOUNDARIES */
       void findmatch(int mglvl);
+      
+#ifdef PV3
+      void viz_init();
+#endif
 
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */

@@ -171,3 +171,4 @@ class hpbasis {
       void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
       void ptvalues1d(FLT x);
 };
+

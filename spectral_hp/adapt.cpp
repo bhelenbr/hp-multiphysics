@@ -20,6 +20,8 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
    
+	changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
+	
 /*	COPY SOLUTION & MESH TO BEGIN */
    str.spectral_hp::copy(*this);
    

@@ -18,6 +18,7 @@ FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 FLT hp_mgrid::trncerr, hp_mgrid::bdryerr, hp_mgrid::tol;
 class hp_mgrid hp_mgrid::hpstr; // STORAGE FOR ADAPTATION 
+int hp_mgrid::changed = 1; //FLAG FOR PV3 TO INDICATE STRUCTURE CHANGED
 struct vsi hp_mgrid::ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
 FLT (*hp_mgrid::vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
 struct bistruct *hp_mgrid::binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
@@ -26,8 +27,8 @@ int hp_mgrid::size;
 
 
 /*	STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
-const FLT hp_mgrid::alpha[NSTAGE+1];
-const FLT hp_mgrid::beta[NSTAGE+1];
+const FLT hp_mgrid::alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0};
+const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
 int hp_mgrid::extrap=0;
 FLT hp_mgrid::bd[MXSTEP+1];
 FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
@@ -36,7 +37,7 @@ FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
 void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    int i,j,n,onfmesh;
    
-   if (spectral_hp::size == 0 or mesh::initialized == 0) {
+   if (spectral_hp::size == 0 || mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
       exit(1);
    }

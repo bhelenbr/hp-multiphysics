@@ -7,7 +7,7 @@
  *
  */
 
-#include <hpbasis.h>
+#include "hpbasis.h"
 
 void hpbasis::proj1d(FLT *lin, FLT *f, FLT *dx) {
    static int i,n;
@@ -87,3 +87,4 @@ void hpbasis::proj1d_leg(FLT u1, FLT u2, FLT *f) {
       
    return;
 }
+

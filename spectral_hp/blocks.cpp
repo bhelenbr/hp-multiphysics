@@ -2,6 +2,7 @@
 #include<cstring>
 #include<utilities.h>
 #include<stdio.h>
+#include"osdepend.h"
 
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
@@ -182,6 +183,10 @@ void blocks::init(char *file) {
       }
       startup = 0;
    }
+   
+#ifdef PV3
+   viz_init();
+#endif
 
    return;
 }
@@ -347,6 +352,7 @@ void blocks::endcycle() {
 
 void blocks::go() {
    int i,tstep, iter;
+   float pvtime;
    
    for(tstep=readin;tstep<ntstep;++tstep) {
       
@@ -356,6 +362,10 @@ void blocks::go() {
       printf("ZONE\n");
       
       for(iter=0;iter<ncycle;++iter) {
+#ifdef PV3
+         pvtime = 1.0*iter;
+         pV_UPDATE(&pvtime);
+#endif
          cycle(vwcycle);
          printf("%d ",iter);
          endcycle();

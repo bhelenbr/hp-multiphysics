@@ -25,11 +25,6 @@ void hp_mgrid::tstep1(void) {
 
 	for(tind = 0; tind < ntri; ++tind) {
       jcb = 0.25*area(tind);
-      if (jcb < 0.0) {
-         printf("negative triangle area\n");
-         output("negative",tecplot);
-         exit(1);
-      }
 		v = tvrtx[tind];
 		hmax = 0.0;
 		for(j=0;j<3;++j) {
@@ -38,6 +33,13 @@ void hp_mgrid::tstep1(void) {
 			hmax = (h > hmax ? h : hmax);
 		}
 		hmax = sqrt(hmax);
+      
+      if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
+         printf("negative triangle area\n");
+         output("negative",tecplot);
+         exit(1);
+      }
+      
 		h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
 		
 		qmax = 0.0;

@@ -7,7 +7,7 @@
  *
  */
 
-#include <hpbasis.h>
+#include "hpbasis.h"
 
 void hpbasis::proj(FLT *lin, FLT **f, FLT **dx, FLT **dy) {
 	static int i,j,m,n,ind;

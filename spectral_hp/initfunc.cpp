@@ -12,6 +12,7 @@
 #include "spectral_hp.h"
 #include "math.h"
 #include<assert.h>
+#include<stdlib.h>
 
 
 // KOVASNAY TEST CYLINDER FREESTREAM
@@ -146,7 +147,7 @@ FLT centerx = 0.0;
 FLT centery = 0.0;
 
 /*	FOR A SINE WAVE */
-FLT amp = 0.375;
+FLT amp = 0.075;
 
 FLT hgt(int type, FLT x, FLT y) {
    if (type&(EULR_MASK +INFL_MASK)) {
@@ -156,7 +157,7 @@ FLT hgt(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(y -amp*cos(2.*M_PI*x));
+      return(y -amp*sin(2.*M_PI*x));
    }
    
    return(0.0);
@@ -170,7 +171,7 @@ FLT dhgtdx(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(+2.*amp*M_PI*sin(2.*M_PI*x));
+      return(-2.*amp*M_PI*cos(2.*M_PI*x));
    }
    
    return(0.0);

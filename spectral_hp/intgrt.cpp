@@ -7,7 +7,7 @@
  *
  */
 
-#include <hpbasis.h>
+#include"hpbasis.h"
 #include<stdio.h>
 
 void hpbasis::intgrt(FLT **f, FLT *rslt) {

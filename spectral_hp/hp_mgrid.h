@@ -61,8 +61,8 @@ struct hp_mgrid_glbls {
 class hp_mgrid : public spectral_hp {
    protected:
 /*		THINGS SHARED BY ALL HP_MGRIDS (STATIC) */
-      static const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0}; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
-      static const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; // MULTISTAGE TIME STEP CONSTANTS (REAL)
+      static const FLT alpha[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (IMAGINARY)
+      static const FLT beta[NSTAGE+1]; // MULTISTAGE TIME STEP CONSTANTS (REAL)
       static FLT **cv00,**cv01,**cv10,**cv11; // LOCAL WORK ARRAYS
       static FLT **e00,**e01,**e10,**e11; // LOCAL WORK ARRAYS
       static int extrap; // NUMBER OF STEPS IN BD SCHEME
@@ -72,6 +72,7 @@ class hp_mgrid : public spectral_hp {
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static FLT trncerr, bdryerr, tol;  //	ADAPTATION CONSTANTS  
       static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
+		static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
       static FLT (*vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
       static struct bistruct *binfostr[MXSTEPM1][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
@@ -178,6 +179,16 @@ class hp_mgrid : public spectral_hp {
       
       friend class block;
       friend class blocks;
+      
+#ifdef PV3
+      void pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
+		void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
+&kptet,int& knblock,int blocks[][3],int& ksurf,int& knsurf,int& hint);
+      void pvgrid(float (*xyz)[3]);
+      void pvscal(int *key, float *v);
+      void pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
+      void pvvect(int *key,float v[][3]);
+      void flotov(struct vsi flo,int nvar, float *v);
+#endif
 };
-
 

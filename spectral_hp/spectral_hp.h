@@ -83,3 +83,4 @@ class spectral_hp : public r_mesh  {
       int findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s);
       int findbdrypt(int typ, FLT &x, FLT &y, FLT &psi);
 };
+

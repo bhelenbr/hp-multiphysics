@@ -7,7 +7,7 @@
  *
  */
 
-#include <hpbasis.h>
+#include"hpbasis.h"
 
 void hpbasis::intgrt1d(FLT *f, FLT *rslt) {
    static int i,n;

@@ -10,6 +10,7 @@
 #include "spectral_hp.h"
 #include<cstring>
 #include<assert.h>
+#include<stdlib.h>
 
 void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot) {
    char fnmapp[100];
@@ -280,13 +281,13 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
 /*			BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
             fscanf(in,"Boundary %*d, type %d, num %d, frstvrtx %d\n",&intyp,&innum,&v0);
-/*				FIND MATCHING BOUNDARY (CAN CHANGE NUMBER) */
+/*				FIND MATCHING BOUNDARY (CAN CHANGE NUMBER/ORDER) */
             for(bnum=0;bnum<nsbd;++bnum)
                if (svrtx[sbdry[bnum].el[0]][0] == v0) 
                   break;
             
             if (bnum == nsbd || innum != sbdry[bnum].num) {
-               printf("Trouble matching boundaries %d %d %d %d\n",innum,sbdry[bnum].num,sbdry[bnum].type,intyp);
+               printf("Trouble reading boundary info %d %d %d %d\n",innum,sbdry[bnum].num,sbdry[bnum].type,intyp);
                exit(1);
             }
 

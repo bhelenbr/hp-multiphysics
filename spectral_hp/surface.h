@@ -52,3 +52,4 @@ class surface {
       friend class block;
       friend class blocks;
 };
+
