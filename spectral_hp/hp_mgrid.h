@@ -39,19 +39,25 @@ struct hp_mgrid_glbls {
    FLT *gam,*dtstar;
    FLT *vdiagv, *vdiagp;
    FLT *sdiagv, *sdiagp;
-
-/*	ITERATION PARAMETERS */
-   FLT fadd, flowcfl[MXLG2P];  
    
 /* STABILIZATION */
    FLT *tau,*delt,adis;
 
-/*	UNSTEADY SOURCE TERMS */
+/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
    FLT (*ug0)[NV], (*ug1)[NV], (*ug2)[NV], *jcb1, *jcb2;
    FLT ***dudt[ND], ***cdjdt;
-   
+
+/*	ITERATION PARAMETERS */
+   FLT fadd, flowcfl[MXLG2P];  
+      
 /*	PHYSICAL CONSTANTS */
    FLT rho, rhoi, mu, nu, sigma;
+
+/*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
+   FLT (*func)(int n, FLT x, FLT y);
+   
+/*	OTHER CONSTANTS */
+   FLT charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
    
 };
 
@@ -83,12 +89,21 @@ class hp_mgrid : public spectral_hp {
       class hp_mgrid *fmesh;
 
    public:
-      void allocate(struct hp_mgrid_glbls ginit, int mgrid);
+      void allocate(struct hp_mgrid_glbls& ginit, int mgrid);
+      void inline loadbasis(class hpbasis& bas) { 
+         b = bas;
+         log2p = 0;
+         while ((b.p-1)>>log2p > 0) ++log2p;
+      }
 
 /*		CREATE SOURCE (FOR UNSTEADY) */
       void allocate_source();
       void dt_source(spectral_hp un0, spectral_hp un1, spectral_hp un2);
 
+/*		CALCULATE TIMESTEP */
+      void tstep1();
+      void tstep2();
+      
 /*		DETERMINE SOLUTION RESIDUAL */
       void rsdl(int stage, int mgrid);
       void rsdlp1(int stage, int mgrid);
@@ -99,9 +114,10 @@ class hp_mgrid : public spectral_hp {
       void minvrt3(int mode);
       void minvrt4();
 
-/*		CALCULATE TIMESTEP */
-      void tstep1();
-      void tstep2();
+/*		BOUNDARY CONDITION ROUTINES */
+      void setinflow();
+      void addbflux(int mgrid);
+      void bdry_rcvandzero(int mode);
       
 /*		PARTS FOR 5 STEP UPDATE */
       void nstage1();

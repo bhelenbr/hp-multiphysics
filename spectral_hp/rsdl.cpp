@@ -249,7 +249,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 			gbl.ires[i][n] += gbl.ivf[i][n];         
 
 /*	ADD IN BOUNDARY FLUXES */
-   addbflux();
+   addbflux(mgrid);
 	
 /*********************************************/
 /*	MODIFY RESIDUALS ON COARSER MESHES			*/

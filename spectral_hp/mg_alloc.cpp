@@ -21,7 +21,7 @@ const FLT hp_mgrid::beta[NSTAGE+1];
 FLT hp_mgrid::dt0=0.0, hp_mgrid::dt1=0.0, hp_mgrid::dt2=0.0, hp_mgrid::dt3=0.0;
 
 
-void hp_mgrid::allocate(struct hp_mgrid_glbls ginit, int mgrid) {
+void hp_mgrid::allocate(struct hp_mgrid_glbls& ginit, int mgrid) {
    
    if (spectral_hp::size == 0 or mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
