@@ -57,11 +57,33 @@ void blocks::r_jacobi(int niter, int lvl) {
 }
 
 void blocks::r_cycle(int vw, int lvl) {
-   int i,j;
+   int vcount,j,crscntr=0;
+#ifdef SOLVECOARSE
+   FLT mxr[NV], emax = 0.0, err;
+#endif
    
-   for (i=0;i<vw;++i) {
-      r_jacobi(1,lvl);
-      if (lvl == mgrids-1) return;
+   for (vcount=0;vcount<vw;++vcount) {
+      r_jacobi(ndown,lvl);
+   
+      if (lvl == mgrids-1) {
+#ifdef SOLVECOARSE
+         /* DO A GOOD JOB ON COARSEST MESH */
+         if (mgrids != 1) {
+
+            for(int i=0;i<nblocks;++i)
+               err = blk[i].grd[lvl].r_mesh::maxres(mxr);
+            
+            emax = MAX(emax,err);
+            --vcount;
+            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > 100) {
+               // printf("# r_mesh coarsest grid iterations %d\n",crscntr);
+               vcount+=2;
+            }
+            ++crscntr;
+         }
+#endif      
+         continue;
+      }
       
       for(j=0;j<nblocks;++j)
          blk[j].grd[lvl].r_mesh::rsdl();
@@ -84,6 +106,8 @@ void blocks::r_cycle(int vw, int lvl) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[lvl].r_mesh::mg_getcchng();
    }
+   
+   r_jacobi(nup,lvl);
 
    return;
 }
