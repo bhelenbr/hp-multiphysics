@@ -108,8 +108,8 @@ void hp_mgrid::surfksrc1d() {
 
 
 void hp_mgrid::surfrsdl(int bnum, int mgrid) {
-   int i,m,n,sind,indx,indx1,count;
-   FLT norm[ND], jcb, tau, tabs;
+   int i,m,n,sind,indx,indx1,count,v0;
+   FLT norm[ND], rp[ND], jcb, tau, tabs;
    FLT dnormdt = 0.0, hsm;
    FLT sigor, drhor;
    class surface *srf;
@@ -240,6 +240,43 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       for(n=0;n<ND;++n)
          binfo[bnum][count].flx[n] = lf[n][1];
    }
+   
+   /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+   v0 = svrtx[sbdry[bnum].el[0]][0];
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+
+      /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+      crdtocht1d(sbdry[bnum].el[0]);
+      b.ptprobe1d(2,cht,rp,norm,-1.0);
+      jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+#ifdef AXISYMMETRIC
+      binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+      binfo[bnum][0].flx[1] -= -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+#else
+      binfo[bnum][0].flx[0] -= -srf->gbl->sigma*norm[0]/jcb;
+      binfo[bnum][0].flx[1] -= -srf->gbl->sigma*norm[1]/jcb;
+#endif
+   }
+   
+   /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+   v0 = svrtx[sbdry[bnum].el[sbdry[bnum].num -1]][1];
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+
+      /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+      crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
+      b.ptprobe1d(2,cht,rp,norm,1.0);
+      jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+#ifdef AXISYMMETRIC
+      binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+      binfo[bnum][count].flx[1] += -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+#else
+      binfo[bnum][count].flx[0] += -srf->gbl->sigma*norm[0]/jcb;
+      binfo[bnum][count].flx[1] += -srf->gbl->sigma*norm[1]/jcb;
+#endif
+   }   
+   
       
    /************************************************/
    /* MODIFY SURFACE RESIDUALS ON COARSER MESHES   */
