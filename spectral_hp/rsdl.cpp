@@ -8,8 +8,9 @@
  */
 
 #include "hp_mgrid.h"
+#include <stdlib.h>
 
-#ifdef TWOLAYER
+#ifdef LAYER
 extern FLT body[2];
 #endif
    
@@ -54,25 +55,34 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          ftemp[i]  *= oneminusbeta;          
 
    for(tind = 0; tind<ntri;++tind) {
+      /* LOAD INDICES OF VERTEX POINTS */
       for(n=0;n<3;++n)
          v[n] = tvrtx[tind][n];
    
+      /* IF TINFO > -1 IT IS CURVED ELEMENT */
       if (tinfo[tind] > -1) {
+         /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
          crdtocht(tind);
+         
+         /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
          for(n=0;n<ND;++n)
             b.proj_bdry(cht[n], crd[n], dcrd[n][0], dcrd[n][1]);
-            
+         
+         /* DO SIMILAR THINGS FOR TIME HISTORY OF MESH (NECESSARY FOR MOVING MESH) */
          crdtocht(tind,dvrtdt,gbl->dbinfodt);
          for(n=0;n<ND;++n)
             b.proj_bdry(cht[n],u[n]);
       }
    	else {
+         /* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
          for(n=0;n<ND;++n)
             b.proj(vrtx[v[0]][n],vrtx[v[1]][n],vrtx[v[2]][n],crd[n]);
             
+         /* DO SIMILAR THINGS FOR TIME HISTORY OF MESH (NECESSARY FOR MOVING MESH) */
          for(n=0;n<ND;++n)
             b.proj(dvrtdt[v[0]][n],dvrtdt[v[1]][n],dvrtdt[v[2]][n],u[n]);
             
+         /* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
                for(n=0;n<ND;++n) {
@@ -89,6 +99,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             for(n=0;n<ND;++n)
                mvel[n][i][j] = bd[0]*crd[n][i][j] +u[n][i][j];
 
+      /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
+      /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
       ugtouht(tind);
       if (beta[stage] > 0.0) {
          b.proj(uht[0],u[0],du[0][0],du[0][1]);
@@ -100,7 +112,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          b.proj(uht[1],u[1]);
          b.proj(uht[2],u[2]);
       }
-
+      
+      /* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
       for(n=0;n<NV;++n)
          for(i=0;i<b.tm;++i)
             lf[n][i] = 0.0;
@@ -112,11 +125,14 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             fluxx = gbl->rho*RAD(i,j)*(u[0][i][j] -mvel[0][i][j]);
             fluxy = gbl->rho*RAD(i,j)*(u[1][i][j] -mvel[1][i][j]);
             
+            /* CONTINUITY EQUATION FLUXES */
             du[2][0][i][j] = +dcrd[1][1][i][j]*fluxx -dcrd[0][1][i][j]*fluxy;
             du[2][1][i][j] = -dcrd[1][0][i][j]*fluxx +dcrd[0][0][i][j]*fluxy;
 #ifndef INERTIALESS
+            /* U-MOMENTUM */
             cv00[i][j] =  u[0][i][j]*du[2][0][i][j] +dcrd[1][1][i][j]*RAD(i,j)*u[2][i][j];
             cv01[i][j] =  u[0][i][j]*du[2][1][i][j] -dcrd[1][0][i][j]*RAD(i,j)*u[2][i][j];
+            /* V-MOMENTUM */
             cv10[i][j] =  u[1][i][j]*du[2][0][i][j] -dcrd[0][1][i][j]*RAD(i,j)*u[2][i][j];
             cv11[i][j] =  u[1][i][j]*du[2][1][i][j] +dcrd[0][0][i][j]*RAD(i,j)*u[2][i][j];
 #else
@@ -150,7 +166,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
 #endif
 
-#ifdef TWOLAYER
+#ifdef LAYER
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 
@@ -173,7 +189,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= cjcb[i][j]*(u[2][i][j] -2*gbl->mu*u[0][i][j]/crd[0][i][j]);
 #endif
 
-#ifdef TWOLAYER
+#ifdef LAYER
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 
@@ -239,7 +255,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             }
          }
          
-         
+         /* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
          b.derivr(cv00,res[0]);
          b.derivs(cv01,res[0]);
          b.derivr(cv10,res[1]);
@@ -323,10 +339,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    if(mgrid) {
    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
       if(isfrst) {
+      
          for(i=0;i<nvrtx;++i)
             for(n=0;n<NV;++n)
                dres[log2p].v[i][n] = fadd*gbl->res0.v[i][n] -gbl->res.v[i][n];
-      
+                        
          for(i=0;i<nside*b.sm;++i)
             for(n=0;n<NV;++n)
                dres[log2p].s[i][n] = fadd*gbl->res0.s[i][n] -gbl->res.s[i][n];        
@@ -351,18 +368,18 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             gbl->res.s[i][n] += dres[log2p].i[i][n];  
    }
 
-/*
-   for(i=0;i<nvrtx;++i)
-      printf("v: %d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
-      
-   for(i=0;i<nside*b.sm;++i)
-      printf("s: %d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
 
-   for(i=0;i<ntri*b.im;++i)
-      printf("i: %d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
-        
-   exit(1);
-*/
+//   for(i=0;i<nvrtx;++i)
+//      printf("v: %d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+//      
+//   for(i=0;i<nside*b.sm;++i)
+//      printf("s: %d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
+//
+//   for(i=0;i<ntri*b.im;++i)
+//      printf("i: %d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
+//        
+//   exit(1);
+
 
    return;
 }
