@@ -74,17 +74,16 @@ void hpbasis::intgrtrs(FLT **fx, FLT **fy, FLT *rslt) {
       }
    }
 
-   for (m=0; m < sm+3; ++m)
-      for (j=0; j < gpn; ++j )
-         rslt[m] += gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
-
-   for (m=sm+3; m < 2*sm+3; ++m) 
-      for (j=0; j < gpn; ++j )
-         rslt[m] += gnwtnn0[m][j]*wk0[1][j] +dgnwtn[m][j]*wk1[1][j];
+   for (j=0; j < gpn; ++j ) {
+      for (m=0; m < sm+3; ++m)
+            rslt[m] += gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
    
-   for (m=2*sm+3; m < bm; ++m)
-      for (j=0; j < gpn; ++j )
-         rslt[m] += gnwtnn0[m][j]*wk0[0][j] +dgnwtn[m][j]*wk1[0][j];
+      for (; m < 2*sm+3; ++m) 
+            rslt[m] += gnwtnn0[m][j]*wk0[1][j] +dgnwtn[m][j]*wk1[1][j];
+      
+      for (; m < bm; ++m)
+            rslt[m] += gnwtnn0[m][j]*wk0[0][j] +dgnwtn[m][j]*wk1[0][j];
+   }
    
    indx = bm;
    for(m = 3; m < sm+2;++m) {

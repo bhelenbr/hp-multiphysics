@@ -48,8 +48,6 @@ class hpbasis {
       FLT **gxwtx, **dgxwtx;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
       FLT *dltx, **dltx1;
-      /*	X DERIVATIVES AT X = -1,1 */
-      FLT (*dgxendpts)[2];
       
       /* ETA FUNCTIONS & DERIVATIVES */
       FLT **gn, **dgn;
@@ -59,14 +57,15 @@ class hpbasis {
       FLT **gnwtnn0,**dgnwtn;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
       FLT *dltn, **dltn1, **dltn2;
-      /* N DERIVATIVES AT N = -1 */
-      FLT *dgnendpt;
 
       /* RENORMALIZATION CONSTANTS */
       FLT *norm;
       
       /* FOR OUTPUTING TO LEGENDRE POINTS */         
       FLT **lgrnge1d, ***lgrnge;
+      
+      /* FOR CALCULATING NORMAL DERIVATIVES ALONG SIDES */
+      FLT **dgnorm[3];
 
       /* LUMPED MASS MATRIX INVERSION */
       /* REMOVE SIDE COMPONENT FROM VERTICES */

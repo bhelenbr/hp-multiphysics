@@ -78,8 +78,7 @@ void hpbasis::initialize_values(void)
 
    FLT al,be,x,eta;
    FLT e[MXTM],e1[MXTM],e2[MXTM];
-   FLT pkp, pk, pkm, dpkp, dpk, dpkm;
-   int i,j,k,m,n,ipoly,ierr,ind;
+   int i,j,k,m,n,ipoly,ierr;
    
    /* ALLOCATE STORAGE FOR RECURSION RELATION COEFFICENTS*/
    ipoly = MAX(gpx+1,sm+1);
@@ -96,7 +95,6 @@ void hpbasis::initialize_values(void)
    mat_alloc(dgxwtx,nmodx,gpx,FLT);
    vect_alloc(dltx,gpx,FLT);
    mat_alloc(dltx1,gpx,gpx,FLT);
-   dgxendpts = (FLT (*)[2]) xmalloc(nmodx*2*sizeof(FLT));
    
    mat_alloc(gn,nmodn,gpn,FLT);
    mat_alloc(dgn,nmodn,gpn,FLT);   
@@ -108,7 +106,9 @@ void hpbasis::initialize_values(void)
    mat_alloc(dltn1,gpn,gpn,FLT);
    mat_alloc(dltn2,gpn,gpn,FLT);
    vect_alloc(norm,tm,FLT);
-   vect_alloc(dgnendpt,nmodn,FLT);
+
+   for(i=0;i<3;++i)
+      mat_alloc(dgnorm[i],tm,gpx);
       
    /* GENERATE RECURSION RELATION FOR LEGENDRE
    POLYNOMIALS (USED TO GENERATE GAUSS POINTS)
@@ -353,6 +353,44 @@ void hpbasis::initialize_values(void)
          dgnwtn[m][j] = dgn[m][j]*wtn[j];
       }
    }
+   
+   /*	CALCULATE NORMAL DERIVATIVE VALUES ALONG SIDES */
+   /* SIDE 0 */
+   eta = -1.0;
+   for(i=0;i<gpx;++i) {
+      x = 2.*x0[i] -1.0;
+      ptvalues_deriv(x,eta);
+      
+      /* CALCULATE POLYNOMIALS */
+      /* VERTEX A   */
+      dgnorm[0][0][i] = dpgn[0]*pgx[0] -x0[i]*pgn[0]*dpgx[0];
+
+      /* VERTEX B  */
+      dgnorm[0][1][i] = dpgn[1]*pgx[1] -x0[i]*pgn[1]*dpgx[1];
+
+      /* VERTEX C    */   
+      dgnorm[0][2][i] = dpgn[2]*1.0 -0.0;
+
+      /*  SIDE 1 (s)      */
+      for(m = 3; m < sm+3; ++m)
+         dgnorm[0][m][i] = dpgn[m]*pgx[m-1] -x0[i]*pgn[m]*dpgx[m-1];
+         
+      for(m=sm+3;m<2*sm+3;++m)
+         dgnorm[0][m][i] = dpgn[m]*pgx[1] -x0[i]*pgn[m]*dpgx[1];
+
+      for(m=2*sm+3;m<bm;++m)
+         dgnorm[0][m][i] = dpgn[m]*pgx[0] -x0[i]*pgn[m]*dpgx[0];
+
+      /*  INTERIOR MODES   */
+      ind = bm;
+      for(m = 2; m< sm+1;++m) {      
+         for(n = 1; n < sm+2-m;++n) {
+            dgnorm[0][ind][i] = dpgn[ind]*pgx[m] -x0[i]*pgn[ind]*dpgx[m];
+            ++ind;
+         }
+      }
+   }
+
 
    return;
 }
@@ -801,7 +839,7 @@ void hpbasis::lumpinv(void) {
 
 void hpbasis::legpt()
 {
-   FLT x,eta,r,s, pkp, pk, pkm;
+   FLT x,eta,r,s;
    int i,j,m,n,ind;
    
    mat_alloc(lgrnge1d,nmodx,sm+1,FLT);
@@ -810,75 +848,39 @@ void hpbasis::legpt()
    /* CALCULATE PROJECTION POINTS IN INTERIOR */
    for(i=1;i<sm;++i) {
       for(j=1;j<sm-(i-1);++j) {
-           s = -1 +2.0*((FLT) j)/(FLT)(sm+1);
-           r = -1 +2.0*((FLT) i)/(FLT)(sm+1);
-           x = 2.0*(1+r)/(1-s) -1.0;
+         s = -1 +2.0*((FLT) j)/(FLT)(sm+1);
+         r = -1 +2.0*((FLT) i)/(FLT)(sm+1);
+         x = 2.0*(1+r)/(1-s) -1.0;
          eta = s;
                  
          /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-           lgrnge1d[0][i] = .5*(1-x);
-         lgrnge1d[1][i] = .5*(1+x);
-         lgrnge1d[2][i] = 1.0;
-
-         /* SIDE 1   */
-         /* CALCULATE P, P' USING RECURSION RELATION */
-         pk = 1.0;
-         pkm = 0.0;
-         for (m = 1;m < sm+1;++m) {
-            lgrnge1d[m+2][i] = (1.+x)*(1.-x)*.25*pk*norm[m+2];
-            pkp = (x-a0[0][m-1])*pk - b0[0][m-1]*pkm;
-            pkm = pk;
-            pk = pkp;
-           }
+         ptvalues(x,eta);
      
-      
          /* CALCULATE S POLYNOMIALS */
-         ind = 0;
          /* VERTEX A   */
-         lgrnge[ind++][i][j] = (1-eta)*.5*lgrnge1d[0][i];
+         lgrnge[0][i][j] = pgn[0]*pgx[0];
 
          /* VERTEX B  */
-         lgrnge[ind++][i][j] = (1-eta)*.5*lgrnge1d[1][i];
+         lgrnge[1][i][j] = pgn[1]*pgx[1];
 
          /* VERTEX C    */   
-         lgrnge[ind++][i][j] = (1+eta)*.5*lgrnge1d[2][i];
+         lgrnge[2][i][j] = pgn[2]*1.0;
 
          /*  SIDE 1 (s)      */
-         for(m = 2; m <= sm+1; ++m) {
-            lgrnge[ind++][i][j] = pow(.5*(1-eta),m)*lgrnge1d[m+1][i];
-         }
+         for(m = 3; m < sm+3; ++m)
+            lgrnge[m][i][j] = pgn[m]*pgx[m-1];
+            
+         for(m=sm+3;m<2*sm+3;++m)
+            lgrnge[m][i][j] = pgn[m]*pgx[1];
 
-         /* SIDE 2   */
-         pk = 1.0;
-         pkm = 0.0;
-         for(n=1;n<=sm;++n) {
-            lgrnge[ind++][i][j] = (1.-eta)*(1.+eta)*.25*pk*lgrnge1d[1][i]*norm[n+2];
-            pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
-            pkm = pk;
-            pk = pkp;
-           }
-
-         /* SIDE 3   */
-         pk = 1.0;
-         pkm = 0.0;
-         for( n = 1; n<= sm;++n) {
-            lgrnge[ind++][i][j] = (n % 2 ? 1 : -1)*
-            (1.-eta)*(1.+eta)*.25*pk*lgrnge1d[0][i]*norm[n+2];
-            pkp = (eta-a0[1][n-1])*pk - b0[1][n-1]*pkm;
-            pkm = pk;
-            pk = pkp;
-           }
+         for(m=2*sm+3;m<bm;++m)
+            lgrnge[m][i][j] = pgn[m]*pgx[0];
 
          /*  INTERIOR MODES   */
          ind = bm;
          for(m = 2; m< sm+1;++m) {      
-            pk = 1.0;
-            pkm = 0.0;
             for(n = 1; n < sm+2-m;++n) {
-               lgrnge[ind][i][j] = pow(.5*(1.-eta),m)*.5*(1.+eta)*pk*norm[ind]*lgrnge1d[m+1][i];
-               pkp = (eta-a0[m][n-1])*pk - b0[m][n-1]*pkm;
-               pkm = pk;
-               pk = pkp;
+               lgrnge[ind][i][j] = pgn[ind]*pgx[m];
                ++ind;
             }
          }
@@ -888,21 +890,15 @@ void hpbasis::legpt()
    /* NOW CALCULATE VALUES OF G FOR SIDE PROJECTION */
    for (i=1;i<sm+1;++i) {
       x = 2.0*(FLT) i/(FLT)(sm+1) -1.0;
-      lgrnge1d[0][i] = .5*(1-x);
-      lgrnge1d[1][i] = .5*(1+x);
+      ptvalues1d(x);
+      lgrnge1d[0][i] = pgx[0];
+      lgrnge1d[1][i] = pgx[1];
 
       /* SIDE 1   */
-      /* CALCULATE P, P' USING RECURSION RELATION */
-      pk = 1.0;
-      pkm = 0.0;
-      for (m = 1;m < sm+1;++m) {
-         lgrnge1d[m+1][i] = (1.+x)*(1.-x)*.25*pk*norm[m+2];
-         pkp = (x-a0[0][m-1])*pk - b0[0][m-1]*pkm;
-         pkm = pk;
-         pk = pkp;
-        }
-     }
-      
+      for (m = 2;m < sm+2;++m)
+         lgrnge1d[m][i] = pgx[m];
+   }
+   
    return;
 }
 

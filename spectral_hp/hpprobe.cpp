@@ -182,7 +182,7 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
 /* CALCULATE VALUE OF G(X) & DG/DX, G(eta), DG/Deta AT POINT FOR ONLY BOUNDARY MODES */
 void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
    FLT pkp,pk,pkm,dpk,dpkm,dpkp;
-   int m,n,ind;
+   int k,m,n,ind;
 
    /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
    pgx[0] = .5*(1-x);
@@ -321,7 +321,7 @@ void hpbasis::ptvalues1d(FLT x) {
 }
 
 void hpbasis::ptvalues1d_deriv(FLT x) {
-    FLT pkp,pk,pkm;
+    FLT pkp,pk,pkm,dpkp,dpk,dpkm;
     int m;
 
    pgx[0]  = .5*(1-x);

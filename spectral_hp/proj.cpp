@@ -373,3 +373,99 @@ void hpbasis::proj_bdry_leg(FLT *lin, FLT **f) {
    return;
 }
 
+void hp_basis::proj_side(int side, FLT *lin, FLT *f, FLT *dtan, FLT *dnrm) {
+
+   /* SUM FOR N=1      */
+   /* VERTEX A         */
+   wk1[0][0] = lin[0]*dgnendpt[0];
+
+   /* SIDE 3      */
+   for(m = 2*sm+3; m < bm; ++m )
+      wk1[0][0] += lin[m]*dgnendpt[m];
+
+   /* SUM FOR N=2      */
+   /* VERTEX B         */
+   wk1[1][0] = lin[1]*dgnendpt[1];
+
+   /* SIDE 2      */
+   for (m = sm+3; m < 2*sm+3; ++m)
+      wk1[1][0] += lin[m]*dgnendpt[m];
+
+   /* SUM FOR N=3      */
+   /* VERTEX C         */
+   wk1[2][0] = lin[2]*dgnendpt[2];
+
+   ind = bm;
+   for(m = 3; m < sm+3; ++m) {
+      /* SIDE 1      */
+      wk1[m][0] = lin[m]*dgnendpt[m];
+   
+      /* INTERIOR MODES      */
+      for(n = 0; n < sm+2-m; ++n) {
+         wk1[m][0] += lin[ind]*dgnendpt[ind];
+         ++ind;
+      }
+   }
+    
+   /* SUM OVER N AT EACH I,J POINT   */     
+    for (i=0; i < gpx; ++i ) {
+      xm1 = x0[i];
+      f[i]   = 0.0;
+      dx[i] = 0.0;
+      dy[i] = 0.0;
+      
+      for(n=3; n < nmodx; ++n ) {     
+         f[i]  += lin[n]*gx[n][i];
+         dy[i] += wk1[n][0]*gx[n][i];
+         dx[i] += lin[n]*dgx[n][i];
+      }
+      f[i] -= lin[2]*gx[2][i];
+      dy[i] += xm1*dx[i];
+   }
+   
+   /*	SIDE 2 */
+   for(i=0;i<gpx;++i) {
+      f[i]   = 0.0;
+      dx[i] = 0.0;
+      dy[i] = 0.0;
+      for(m=0;m<sm;++m) {
+         f[i] += lin[m +2*sm+3]*gx[m+3][i];
+         dy[i] += lin[m +2*sm+3]*dgx[m+3][i];
+      }
+         
+   /* SUM FOR N=1      */
+   /* VERTEX A         */
+   dx[i] = lin[0]*gx[0][i]*dgxendpt[0][0];
+
+   /* SIDE 3      */
+   for(m = 2*sm+3; m < bm; ++m )
+      wk1[0][0] += lin[m]**dgnendpt[m];
+
+   /* SUM FOR N=2      */
+   /* VERTEX B         */
+   wk1[1][0] = lin[1]*dgnendpt[1];
+
+   /* SIDE 2      */
+   for (m = sm+3; m < 2*sm+3; ++m)
+      wk1[1][0] += lin[m]*dgnendpt[m];
+
+   /* SUM FOR N=3      */
+   /* VERTEX C         */
+   wk1[2][0] = lin[2]*dgnendpt[2];
+
+   ind = bm;
+   for(m = 3; m < sm+3; ++m) {
+      /* SIDE 1      */
+      wk1[m][0] = lin[m]*dgnendpt[m];
+   
+      /* INTERIOR MODES      */
+      for(n = 0; n < sm+2-m; ++n) {
+         wk1[m][0] += lin[ind]*dgnendpt[ind];
+         ++ind;
+      }
+   }
+
+
+   return;
+}
+
