@@ -17,7 +17,6 @@ int main(int argc, char **argv) {
    class blocks myblock;
    clock_t cpu_time;
 
-#ifdef SKIP
 /*	START CLOCK TIMER */
    clock();
    
@@ -28,7 +27,6 @@ int main(int argc, char **argv) {
    printf("that took %ld cpu time\n",cpu_time);
    
    return(0);
-#endif
 
 
 /*	FOR TEST ADAPTATION */

@@ -152,7 +152,7 @@ FLT hgt(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(y -amp*sin(2.*M_PI*x));
+      return(y -amp*cos(2.*M_PI*x));
    }
    
    return(0.0);
@@ -166,7 +166,7 @@ FLT dhgtdx(int type, FLT x, FLT y) {
    }
    
    if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(-2.*amp*M_PI*cos(2.*M_PI*x));
+      return(2.*amp*M_PI*sin(2.*M_PI*x));
    }
    
    return(0.0);

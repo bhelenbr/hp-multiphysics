@@ -81,6 +81,13 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    nvrt0 = nvrtx;
    rebay(tolerance);
    
+/* TO SEE MESH MANIPULATION */
+   for(i=0;i<nside;++i)
+      sinfo[i] += 2;
+   out_mesh("adapt");
+   for(i=0;i<nside;++i)
+      sinfo[i] -= 2;
+   
 /*	PRINT SOME GENERAL DEBUGGING INFO */
    printf("#\n#\nREFINED MESH\n");
    printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b.sm*nside+b.im*ntri);
@@ -88,13 +95,6 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
 /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
       printf("MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
-      
-/* TO SEE MESH MANIPULATION */
-   for(i=0;i<nside;++i)
-      sinfo[i] += 2;
-   out_mesh("adapt");
-   for(i=0;i<nside;++i)
-      sinfo[i] -= 2;
 
 /* MARK BOUNDARY VERTICES */
    for(i=nvrt0;i<nvrtx;++i)

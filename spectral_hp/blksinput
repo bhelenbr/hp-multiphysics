@@ -1,5 +1,5 @@
 LOG_2 PMAX
-0
+2
 FLOWCFLS (2.5	1.5	1.0)
 2.5	1.5	1.0
 FADD		DISSIPATION		CHRCT B.C.'S?
@@ -19,11 +19,11 @@ MESH MOVEMENT FADD (0.5)
 NTSTEPS	OUTPUT INTERVAL
 5			1
 MG DEPTH V(1)/W(2) CYCLE	NCYCLES
-4			2						1
+1			2						50
 READ FILE?
 -1
 NBLOCKS
 2
-../blkinput.1
 ../blkinput.2
+../blkinput.1
 
