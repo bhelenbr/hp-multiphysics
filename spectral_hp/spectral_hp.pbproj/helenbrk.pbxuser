@@ -10,63 +10,63 @@
 		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{974, 605}";
+				ContentSize = "{1231, 828}";
 				LeftSlideOut = {
 					ActiveTab = 0;
-					Frame = "{{0, 23}, {974, 582}}";
+					Frame = "{{0, 23}, {1231, 805}}";
 					Split0 = {
 						ActiveTab = 1;
-						Frame = "{{225, 0}, {749, 582}}";
+						Frame = "{{225, 0}, {1006, 805}}";
 						Split0 = {
-							Frame = "{{0, 234}, {749, 348}}";
+							Frame = "{{0, 234}, {1006, 571}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {749, 316}}";
+								Frame = "{{0, 0}, {1006, 316}}";
 								Split0 = {
-									Frame = "{{0, 170}, {749, 146}}";
+									Frame = "{{0, 170}, {1006, 146}}";
 									Split0 = {
-										Frame = "{{0, 0}, {261, 146}}";
+										Frame = "{{0, 0}, {351, 146}}";
 									};
 									Split1 = {
-										Frame = "{{270, 0}, {479, 146}}";
+										Frame = "{{360, 0}, {646, 146}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {749, 145}}";
+									Frame = "{{0, 0}, {1006, 145}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {749, 105}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {749, 316}}";
+							Frame = "{{0, 0}, {1006, 316}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {749, 209}}";
+							Frame = "{{0, 0}, {1006, 209}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {749, 209}}";
+								Frame = "{{0, 0}, {1006, 209}}";
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {751, 139}}";
-							BuildTranscriptFrame = "{{0, 148}, {751, 126}}";
-							Frame = "{{0, 0}, {749, 272}}";
+							BuildMessageFrame = "{{0, 0}, {1008, 139}}";
+							BuildTranscriptFrame = "{{0, 148}, {1008, 126}}";
+							Frame = "{{0, 0}, {1006, 272}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {749, 248}}";
+							Frame = "{{0, 0}, {1006, 248}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {200, 582}}";
+						Frame = "{{0, 0}, {200, 805}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 585}}";
@@ -78,17 +78,17 @@
 						Frame = "{{0, 0}, {200, 100}}";
 					};
 					Tab3 = {
-						Frame = "{{0, 0}, {200, 582}}";
+						Frame = "{{0, 0}, {200, 805}}";
 						Split0 = {
-							Frame = "{{0, 0}, {200, 281}}";
+							Frame = "{{0, 0}, {200, 390}}";
 						};
 						Split1 = {
-							Frame = "{{0, 290}, {200, 292}}";
+							Frame = "{{0, 399}, {200, 406}}";
 						};
 						SplitCount = 2;
 					};
 					Tab4 = {
-						Frame = "{{0, 0}, {250, 100}}";
+						Frame = "{{0, 0}, {250, 805}}";
 					};
 					TabCount = 5;
 				};
@@ -123,7 +123,7 @@
 	F5125C0C01728F2501000001 = {
 		activeArgIndex = 0;
 		argumentStrings = (
-			../input,
+			../blksinput,
 		);
 		debuggerPlugin = GDBDebugging;
 		dylibVariantSuffix = "";
@@ -158,7 +158,7 @@
 	};
 	F581CD240198731301990B20 = {
 		uiCtxt = {
-			sepNavWindowFrame = "{{10, 268}, {556, 451}}";
+			sepNavWindowFrame = "{{77, 671}, {750, 502}}";
 		};
 	};
 }
