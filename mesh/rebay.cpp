@@ -89,7 +89,7 @@ void mesh::rebay(FLT tolsize) {
          xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
          ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
          
-         bid = sbdry[-stri[sind][1]/maxsbel -1].type;
+         bid = sbdry[(-stri[sind][1]>>16) -1].type;
          if (bid&CURV_MASK) mvpttobdry(bid,xpt,ypt);
                   
 /*			INSERT POINT */
@@ -211,7 +211,7 @@ INSRT:
    
 void mesh::putinlst(int sind) {
    int i, temp, top, bot, mid;
-   
+      
 /*	CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
    bot = 0;
    if (nslst > 0) {
@@ -238,7 +238,6 @@ void mesh::putinlst(int sind) {
          intwk3[temp] = i+1;
       }
    }
-      
    intwk2[bot]= sind;
    intwk3[sind] = bot;
    ++nslst;

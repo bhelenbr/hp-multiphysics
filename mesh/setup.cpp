@@ -345,7 +345,7 @@ void mesh::bdrylabel() {
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {
          sind = sbdry[i].el[j];
-         stri[sind][1] = -((i+1)*maxsbel +j);
+         stri[sind][1] = -(((i+1)<<16) +j);
          tind = stri[sind][0];
          for(k=0;k<3;++k)
             if (tside[tind].side[k] == sind) break;

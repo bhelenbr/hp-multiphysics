@@ -145,6 +145,10 @@ next1:      continue;
                   if (!initialized) vbdry[nvbd].el = new int[maxvbel];
                   vbdry[nvbd].el[0] = i;
                   ++nvbd;
+                  if (nvbd >= MAXSB) {
+                     printf("Too many vertex boundary conditions: %d\n",nvbd);
+                     exit(1);
+                  }
                }
             }
                         

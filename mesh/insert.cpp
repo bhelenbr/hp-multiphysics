@@ -274,8 +274,8 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    svrtx[sind][1] = vnum;
 /*	ADD NEW SIDE TO BOUNDARY GROUP */
 /*	NEED TO REORDER WHEN FINISHED */
-   i = -stri[sind][1]/maxsbel -1;
-   stri[nside][1] = -((i+1)*maxsbel +sbdry[i].num);
+   i = (-stri[sind][1]>>16) -1;
+   stri[nside][1] = -(((i+1)<<16) +sbdry[i].num);
    sbdry[i].el[sbdry[i].num++] = nside;
    if (sbdry[i].num > maxsbel) {
       printf("too many boundary elements\n");

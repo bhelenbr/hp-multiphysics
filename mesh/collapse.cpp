@@ -10,7 +10,7 @@ extern int nsdel, sdel[MAXLST +1];
 
 int mesh::collapse(int sind) {
    int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
-   int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST];
+   int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
    int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
    FLT x,y,a,asum,dx,dy,l0,l1;
    
@@ -33,6 +33,7 @@ int mesh::collapse(int sind) {
          
          tind1 = ttri[tind][(vn +dir[i])%3];
          if (tind1 < 0) {
+            bside[i][dir[i]-1] = tside[tind].side[(vn +dir[i])%3];
             if (dir[i] > 1) break;
 /*				REVERSE DIRECTION AND GO BACK TO START */
             ++dir[i];
@@ -69,11 +70,7 @@ int mesh::collapse(int sind) {
 /*		ONE OR BOTH POINTS ON BOUNDARY  */
       if (dir[0] + dir[1] == 3) {
 /* 		ONE POINT ON BOUNDARY */
-         if (vinfo[svrtx[sind][0]] == 1)
-            delt = 1;
-         else if (vinfo[svrtx[sind][1]] == 1) 
-            delt = 0;
-         else if (dir[0] == 1)
+         if (dir[0] == 1)
             delt = 0;
          else if (dir[1] == 1)
             delt = 1;
@@ -82,6 +79,8 @@ int mesh::collapse(int sind) {
 /* 		BOTH ON BOUNDARY */
 /*			IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
          if (stri[sind][1] > -1 || vinfo[svrtx[sind][0]] +vinfo[svrtx[sind][1]] == 2) return(1);
+
+/*			CHECK IF CORNER POINT */
          if (vinfo[svrtx[sind][0]] == 1) {
             delt = 1;
             goto DELETE;
@@ -90,7 +89,8 @@ int mesh::collapse(int sind) {
             delt = 0;
             goto DELETE;
          }
-         
+
+/*			CHECK IF TWO EDGES OF TRIANGLE ARE ON BOUNDARY */         
          tind = stri[sind][0];
          for (i=0;i<3;++i)
             if(tside[tind].side[i] == sind) break;
@@ -103,51 +103,71 @@ int mesh::collapse(int sind) {
             delt = 1;
             goto DELETE;
          }
-         goto SEARCH;
-      }
-      goto DELETE;
-   }
-
-SEARCH:
-
-/*	KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
-   x = 0.0;
-   y = 0.0;
-   asum = 0.0;
-   for(i=0;i<2;++i) {
-      tind = stri[sind][i];
-      if (tind > -1) {
-         a = area(tind);
-         asum += a;
-         for(vn=0;vn<3;++vn) {
-            x += a*vrtx[tvrtx[tind][vn]][0];
-            y += a*vrtx[tvrtx[tind][vn]][1];
-         }
-      }            
-      for(j=0;j<ntsrnd[i];++j) {
-         tind = tsrnd[i][j];
-         a = area(tind);
-         asum += a;
-         for(vn=0;vn<3;++vn) {
-            x += a*vrtx[tvrtx[tind][vn]][0];
-            y += a*vrtx[tvrtx[tind][vn]][1];
-         }
+         
+/*			CAN PICK EITHER POINT KEEP ONE CLOSEST TO CENTER OF PREVIOUS/NEXT VERTICES ON BOUNDARY */
+/*			SHOULD KEEP COMMUNICATION BOUNDARIES COHERENT */
+         sd1 = bside[0][0];
+         sd2 = bside[1][1];
+         
+         v0 = svrtx[sd1][0];
+         v1 = svrtx[sd2][1];
+         x = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
+         y = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+         
+         v0 = svrtx[sind][0];
+         dx = vrtx[v0][0]-x;
+         dy = vrtx[v0][1]-y;
+         l0 = dx*dx +dy*dy;
+         
+         v0 = svrtx[sind][1];
+         dx = vrtx[v0][0]-x;
+         dy = vrtx[v0][1]-y;
+         l1 = dx*dx +dy*dy;
+                 
+         delt = (l0 < l1 ? 1 : 0);
       }
    }
-   asum = 1./(3.*asum);
-   x = x*asum;
-   y = y*asum;
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
-   dx = vrtx[v0][0] -x;
-   dy = vrtx[v0][1] -y;
-   l0 = dx*dx +dy*dy;   
-   dx = vrtx[v1][0] -x;
-   dy = vrtx[v1][1] -y;
-   l1 = dx*dx +dy*dy;
+   else {
+/*		THIS IS AN INTERIOR EDGE WITH NO CONNECTION TO BOUNDARY */
+/*		KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
+      x = 0.0;
+      y = 0.0;
+      asum = 0.0;
+      for(i=0;i<2;++i) {
+         tind = stri[sind][i];
+         if (tind > -1) {
+            a = area(tind);
+            asum += a;
+            for(vn=0;vn<3;++vn) {
+               x += a*vrtx[tvrtx[tind][vn]][0];
+               y += a*vrtx[tvrtx[tind][vn]][1];
+            }
+         }            
+         for(j=0;j<ntsrnd[i];++j) {
+            tind = tsrnd[i][j];
+            a = area(tind);
+            asum += a;
+            for(vn=0;vn<3;++vn) {
+               x += a*vrtx[tvrtx[tind][vn]][0];
+               y += a*vrtx[tvrtx[tind][vn]][1];
+            }
+         }
+      }
+      asum = 1./(3.*asum);
+      x = x*asum;
+      y = y*asum;
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+      dx = vrtx[v0][0] -x;
+      dy = vrtx[v0][1] -y;
+      l0 = dx*dx +dy*dy;   
+      dx = vrtx[v1][0] -x;
+      dy = vrtx[v1][1] -y;
+      l1 = dx*dx +dy*dy;
+      
+      delt = (l0 > l1 ? 0 : 1);
+   }
    
-   delt = (l0 > l1 ? 0 : 1);
-
 DELETE:
    
 /*	UPDATE TVRTX & SVRTX */
