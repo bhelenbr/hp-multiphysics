@@ -5,12 +5,6 @@
 
 extern FLT f1(int n, FLT x, FLT y);
 
-#ifdef TWOLAYER
-extern FLT mux[2];
-extern FLT rhox[2];
-extern FLT theta;
-#endif
-
 class hp_mgrid block::temp_hp;
 
 void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) {
@@ -123,15 +117,6 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
          /* READ SURFACE PHYSICS INFO */
          fscanf(fp,"%*[^\n]%lf %lf %lf\n",&sgbl[i].sigma,&sgbl[i].rho2,&sgbl[i].mu2);
          printf("#SIGMA\t\tRHO2\t\tMU2\n#%f\t\t%f\t\t%f\n",sgbl[i].sigma,sgbl[i].rho2,sgbl[i].mu2);
-
-#ifdef TWOLAYER
-         if (surfid & IFCE_MASK) {
-            rhox[0] = gbl.rho;
-            rhox[1] = sgbl[0].rho2;
-            mux[0] = gbl.mu;
-            mux[1] = sgbl[0].mu2;
-         }
-#endif
       }
    }
 
@@ -160,6 +145,13 @@ void block::reconnect() {
 
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(1.6,grd[i-1]);
+      /* TEMPORARY TO ALIGN EDGES ON CARTESIAN
+      for(int k=0;k<grd[i].nvrtx;++k)
+         grd[i].vrtx[k][1] *= 1. +0.01*grd[i].vrtx[k][0];
+      grd[i].swap();
+      for(int k=0;k<grd[i].nvrtx;++k)
+         grd[i].vrtx[k][1] /= 1. +0.01*grd[i].vrtx[k][0];
+     */
       grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
