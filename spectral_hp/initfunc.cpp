@@ -14,27 +14,13 @@
 #include<assert.h>
 #include<stdlib.h>
 
-/* INITIAL CONDITIONS */
-/* KOVASZNAY TEST CYLINDER FREESTREAM TWOLAYER CONVDIFF UNSTEADY_DROP */
-#define TWOLAYER
-
-/*	CURVED SURFACES */
-/* CIRCLE SIN COS NACA */
-#define CIRCLE
-
 /* FOR A CIRCLE */
-FLT rad = 0.5;
-FLT centerx = 0.0;
-FLT centery = 0.0;
+FLT rad = RADIUS;
+FLT centerx = CENTERX;
+FLT centery = CENTERY;
 
-/* FOR A SINE/COSINE WAVE */
-#ifdef COS
-FLT amp = 0.375;
-#else
-FLT amp = 0.01;
-FLT lam = 6.0;
-#endif
-
+FLT amp = AMP;
+FLT lam = LAM;
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -62,7 +48,7 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0 +0.0*(x+0.5)*(x-3.0)*sin(M_PI*y));
+         return(1.0 +startup*amp*(x+0.5)*(x-3.0)*sin(M_PI*y));
       case(1):
          return(0.0);
       case(2):
@@ -73,6 +59,27 @@ FLT f1(int n, FLT x, FLT y) {
 #endif
 
 #ifdef CYLINDER
+FLT f1(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
+         if (r < 0.55) 
+            return(0.0);
+         else
+            return(1.0);
+      case(1):
+         return(0.0);
+      case(2):
+         return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef SPHERE
 FLT f1(int n, FLT x, FLT y) {
    FLT r;
    
@@ -105,7 +112,7 @@ FLT f1(int n, FLT x, FLT y) {
       case(0):
          return(0.0);
       case(1):
-         return(0.0+0.0*sin(2.*M_PI*outertime/100.0));
+         return(0.0+amp*sin(2.*M_PI*outertime/100.0));
       case(2):
          return(0.0);
    }
@@ -166,11 +173,14 @@ double df1d(int n, double x, double y, int dir) {
 
 #ifdef CONVDIFF
 
-// FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
+#if (CASE == 0)
+FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
+#else
 FLT forcing(FLT x,FLT y) {return(0.0);}
+#endif
 FLT blayer = 0.0;
-FLT axext = 1.0*cos(M_PI*0.0/180.0), ayext = 1.0*sin(M_PI*0.0/180.0);
-FLT nuext = 0.0;
+FLT axext = AMP*cos(M_PI*LAM/180.0), ayext = AMP*sin(M_PI*LAM/180.0);
+FLT nuext = (1.0 - AMP);
 
 FLT f1(int n, FLT x, FLT y) {
    FLT nux = nuext*4.*M_PI*M_PI;
@@ -180,14 +190,14 @@ FLT f1(int n, FLT x, FLT y) {
    double eps = 0.05;
    
    switch(n) {
-      case(2):
+      case((0+CASE)%3):
          return(axx*sin(xx)/(axx*axx +nux*nux)
            +nux*cos(xx)/(axx*axx +nux*nux)
            +(nux > 0.0 ? blayer*exp(axx/nux*xx) : 0.0)
            +startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
-      case(1):
+      case((1+CASE)%3):
          return(startup*((sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
-      case(0):
+      case((2+CASE)%3):
          if (x > 2.*eps)
             return(0.0);
          return(1+cos(M_PI*(x-eps)/eps));
@@ -200,11 +210,11 @@ FLT df1d(int n, FLT x, FLT y) {
    FLT axx = axext*2.*M_PI;
    FLT xx = x*2.*M_PI;
    switch(n) {
-      case(1):
+      case((0+CASE)%3):
          return(axx*cos(xx)/(axx*axx +nux*nux) 
            -nuext*sin(x)/(axx*axx +nux*nux)
            +(nux > 0.0 ? blayer*axx/nux*exp(axx/nux*xx) : 0.0));
-      case(0):
+      case(!CASE):
          return(0.0);
    }
    return(0.0);

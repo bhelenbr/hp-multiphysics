@@ -2,7 +2,6 @@
 #include<math.h>
 #include<utilities.h>
 
-#define NO_TIME_ACCURATE
 extern FLT axext, ayext, nuext;
 
 void hp_mgrid::tstep1(void) {

@@ -12,15 +12,12 @@
 
 #define MXLG2P 5
 #define NSTAGE 5
-#define MXSTEP 2
+
 #if (MXSTEP == 1)
 #define MXSTEPM1 1
 #else
 #define MXSTEPM1 MXSTEP-1
 #endif
-
-#define CONSERV
-#define NO_AXISYMMETRIC
 
 #ifdef AXISYMMETRIC
 #define RAD(I,J) crd[0][I][J]

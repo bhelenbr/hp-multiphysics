@@ -2,13 +2,10 @@
 #include<math.h>
 #include<utilities.h>
 
-#define NO_TIMEACCURATE  
-#define NO_INERTIALESS
-
 #ifdef CONSERV
 void hp_mgrid::tstep1(void) {
    int tind,i,j,n,sind,count,bnum,side,v0,*v;
-   FLT jcb,h,hmax,q,qmax,lam1,c,gam,dtstari;
+   FLT jcb,h,hmax,q,qmax,lam1,c,gam;
    class mesh *tgt;
 
    /***************************************/
@@ -26,7 +23,7 @@ void hp_mgrid::tstep1(void) {
    
 #ifdef TIMEACCURATE
    gam = 10.0;
-   dtstari = 0.0;
+   FLT dtstari = 0.0;
 #endif
 
    for(tind = 0; tind < ntri; ++tind) {
@@ -59,7 +56,6 @@ void hp_mgrid::tstep1(void) {
 #ifndef TIMEACCURATE
       gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);
 #endif
-     // gam = MAX(gam,0.1);  //TEMPORARY
       q = sqrt(qmax);
       c = sqrt(qmax +gam);
       lam1  = (q+c);
@@ -82,7 +78,7 @@ void hp_mgrid::tstep1(void) {
 #ifndef INERTIALESS
       jcb *= (gbl->nu/(h*h) +lam1/h +bd[0]);
 #else
-      jcb *= gbl->nu/(h*h); // TEMPORARY FOR INERTIALESS FLOW
+      jcb *= gbl->nu/(h*h);
 #endif
       
 #ifdef AXISYMMETRIC

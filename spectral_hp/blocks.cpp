@@ -7,9 +7,9 @@
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
-#define NOTWOLAYER
+
 #ifdef TWOLAYER
-extern FLT amp,lam,theta; // TEMPORARY USED FOR TWOLAYER
+extern FLT amp,lam,theta;
 #endif
 static int iter;
 
@@ -78,7 +78,6 @@ void blocks::init(char *file, int start_sim) {
    fscanf(fp,"%*[^\n]%d\n",&readin);
    printf("#READ FILE #\n#%d\n",readin);
 
-#define NOTWOLAYER
 #ifdef TWOLAYER
    /* READ IN AMPLITUDE / WAVELENGTH / THETA */
    fscanf(fp,"%*[^\n]%lf%lf%lf\n",&amp,&lam,&theta);
@@ -323,7 +322,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 }
 
 void blocks::cycle(int vw, int lvl) {
-   int i,j,vcount;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
+   int j,vcount;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
 #ifdef PV3
    float pvtime = 0.0;
@@ -343,14 +342,13 @@ void blocks::cycle(int vw, int lvl) {
    
       nstage(grid,base[bsnum].sm,lvl);
 
-#define NO_FINE_ERROR
 #if (defined(PV3) || defined(FINE_ERROR))
       if (lvl == 0) {
 #ifdef FINE_ERROR
          FLT mxr[NV];
          int n;
          
-         for(i=0;i<nblocks;++i) {
+         for(int i=0;i<nblocks;++i) {
             blk[i].grd[grid].maxres(mxr);
             for(n=0;n<NV;++n)
                printf("%.3e  ",mxr[n]);
@@ -363,12 +361,11 @@ void blocks::cycle(int vw, int lvl) {
       }
 #endif
 
-#define NO_TWO_LEVEL
 #ifdef TWO_LEVEL
       if (lvl == 1) {
          FLT mxr[NV], einit, emax = 0.0;
          vw = 2;
-         for(i=0;i<nblocks;++i)
+         for(int i=0;i<nblocks;++i)
             emax = blk[i].grd[grid].maxres(mxr);
          
          if (vcount == 0) einit = emax;
@@ -439,7 +436,6 @@ void blocks::go() {
          printf("%d ",iter);
 #ifndef FINE_ERROR
        	endcycle();
-#define DEFORM
 #ifdef DEFORM
       	r_cycle(vwcycle);
          r_maxres();
@@ -458,7 +454,6 @@ void blocks::go() {
       }
 
        
-#define NDEBUG
 #ifdef DEBUG
       int i,j;
       char outname[20], bname[20];
@@ -514,6 +509,11 @@ void blocks::go() {
       
       if (adapt && tstep != ntstep-1)  adaptation();
       
+      /* THE FOLLOWING IS TO CHECK ADAPTATION ERROR */
+      // if (!(tstep%out_intrvl)) {
+      //   output((tstep+1)*100,tecplot); 
+      // }
+
       hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
    }
       
@@ -533,7 +533,6 @@ void blocks::adaptation() {
       blk[i].grd[0].matchboundaries2();
 
    /* SET-UP LENGTH FUNCTION */
-#define ENERGY
 #ifdef ENERGY
    FLT e = 0.0, a = 0.0;
    for(i=0;i<nblocks;++i)

@@ -101,8 +101,6 @@ void hp_mgrid::length1(FLT norm) {
       lgf = log(fltwk[i]+EPSILON);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
-//   	  vlngth[i] = MIN(vlngth[i],0.3333);  // TEMPORARY !!!
-//      vlngth[i] = MAX(vlngth[i],gbl->minlength);  //TEMPORARY !!!! 
    }
    
    /* AVOID HIGH ASPECT RATIOS */

@@ -56,8 +56,8 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
 
 
 int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
-   FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
-   int iter,sind,tind,v0;
+   FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,roundoff,dxmax[ND];
+   int n,iter,sind,tind,v0;
 
    x[0] = xp;
    x[1] = yp;
@@ -88,7 +88,11 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
 
    /* DEAL WITH CURVED SIDES */
    crdtocht(tind);
-
+   
+   for(n=0;n<ND;++n)
+      dxmax[n] = fabs(cht[n][0]-cht[n][1]) +fabs(cht[n][1]-cht[n][2]);
+   roundoff = 10.0*EPSILON*(1.0 +(fabs(xp)*dxmax[1] +fabs(yp)*dxmax[0])/area(tind));
+   
    iter = 0;
    do {
       b.ptprobe_bdry(ND,cht,x,ddr,dds,r,s);
@@ -104,14 +108,14 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %e\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
          break;
       }
-   } while (fabs(dr) +fabs(ds) > (1.0 +sqrt(det))*10.0*EPSILON);
+   } while (fabs(dr) +fabs(ds) > roundoff);
 
    return(tind);
 }
       
 int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    int vnear,sind,tind,snum,snumnew,v0,v1,iter,bnum;
-   FLT dpsi,xp[ND],dx,dy,ol;
+   FLT dpsi,xp[ND],dx,dy,ol,roundoff;
    
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    xp[0] = x; xp[1] = y;
@@ -185,6 +189,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       crdtocht1d(sind);
       dx *= ol;
       dy *= ol;
+      roundoff = 10.0*EPSILON*(1.0 +(fabs(x*dx) +fabs(y*dy)));
       do {
          b.ptprobe1d(ND,cht,xp,psi);
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
@@ -193,7 +198,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
             printf("#Warning: max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f error: %e\n",tind,typ,x,y,dpsi);
             break;
          }  
-      } while (fabs(dpsi) > 100.*EPSILON);
+      } while (fabs(dpsi) > roundoff);
       x = xp[0];
       y = xp[1]; 
    }

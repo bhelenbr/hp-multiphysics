@@ -9,9 +9,6 @@
 
 #include "hp_mgrid.h"
 
-#define NO_TWOLAYER
-#define NO_INERTIALESS
-
 #ifdef TWOLAYER
 extern FLT body[2];
 #endif

@@ -7,11 +7,10 @@
  *
  */
 
-#include<r_mesh.h>
-#include<float.h>
-#include<hpbasis.h>
-
-#define NV 3
+#include <r_mesh.h>
+#include <float.h>
+#include <hpbasis.h>
+#include "defines.h"
 
 /* SOLUTION VECTOR */
 struct vsi {

@@ -217,8 +217,6 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
     return;
 }
 
-#define NEW
-
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
    int bnum,innum,intyp,v0;
@@ -227,7 +225,6 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
    
    switch(typ) {
    
-#ifdef NEW
       case (text):
          strcpy(buffer,name);
          strcat(buffer,".txt");
@@ -301,72 +298,7 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          }
          fclose(in);
          break;
-#else
-      int bind, ierr;
-      case (text):
-         in = fopen(name,"r");
-         if (in == NULL ) {
-            printf("couldn't open text input file %s\n",name);
-            exit(1);
-         }
-         
-         /* SKIP FIRST LINE */
-         fscanf(in,"%*[^\n]");
-         
-         for(i=0;i<nvrtx;++i) {
-            ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-            &vin[i][0],&vin[i][1],&g.v[i][0],&g.v[i][1],&g.v[i][2]);
-            if(ierr != 5) {
-               printf("error in read file %d\n",i);
-               exit(1);
-            }
-         }
-      
-         if (b.sm > 0) {
-            for(i=0;i<nside;++i) {
-               indx = b.sm*i;
-               if (sinfo[i] > -1) {
-                  bnum = (-stri[i][1]>>16) -1;
-                  bind = (-stri[i][1]&0xFFFF)*sm0;
-                  assert(bnum > -1 && bnum < nsbd);
-                  assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
-                  
-                  for(m=0;m<b.sm;++m) {
-                     ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-                     &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],
-                     &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
-                     if(ierr != 5) {
-                        printf("error in reading curved side %d\n",i);
-                        exit(1);
-                     }
-                  }
-               }
-               else {
-                  for(m=0;m<b.sm;++m) {
-                     ierr = fscanf(in,"%le %le %le\n",
-                     &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
-                     if(ierr != 3) {
-                        printf("error in reading straight side %d\n",i);
-                        exit(1);
-                     }
-                  }
-               }
-            }
-         
-            if (b.im > 0) {
-               for(i=0;i<b.im*ntri;++i) {
-                  ierr = fscanf(in,"%le %le %le\n",
-                  &g.i[i][0],&g.i[i][1],&g.i[i][2]);
-                  if(ierr != 3) {
-                     printf("error in read file6\n");
-                     exit(1);
-                  }
-               }
-            }
-         }
-         
-         break;
-#endif
+
       default:
          printf("Spectral_hp input of that filetype is not supported\n");
          exit(1);

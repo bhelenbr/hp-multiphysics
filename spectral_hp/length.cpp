@@ -106,8 +106,9 @@ void hp_mgrid::length1(FLT norm) {
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
-//   	  vlngth[i] = MIN(vlngth[i],0.3333);  // TEMPORARY !!!
-//      vlngth[i] = MAX(vlngth[i],gbl->minlength);  //TEMPORARY !!!! 
+#ifdef TWOLAYER
+      vlngth[i] = MIN(vlngth[i],0.3333); 
+#endif
    }
    
    /* AVOID HIGH ASPECT RATIOS */
@@ -233,7 +234,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          break;
 
       case(tecplot):               
-         strcat(fnmapp,".dat");
+         strcat(fnmapp,".lgth.dat");
          out = fopen(fnmapp,"w");
          if (out == NULL ) {
             printf("couldn't open tecplot output file %s\n",fnmapp);
@@ -303,7 +304,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
             
          
          for(i=0;i<nvrtx;++i)
-            fltwk[i] = log10(fltwk[i]/nnbor[i]);
+            fltwk[i] = log10(fltwk[i]/(nnbor[i]*trncerr));
       
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
       

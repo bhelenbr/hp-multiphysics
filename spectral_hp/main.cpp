@@ -6,17 +6,13 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-
-
+#include "defines.h"
 #include "blocks.h"
-#include"pV3.h"
-#include<stdio.h>
-#include<utilities.h>
-#include<string.h>
-#include<time.h>
-
-/* SIMULATION / PV3VIEWER / TERROR */
-#define SIMULATION
+#include "pV3.h"
+#include <stdio.h>
+#include <utilities.h>
+#include <string.h>
+#include <time.h>
 
 extern FLT f1(int n, FLT x, FLT y);
 
