@@ -332,10 +332,13 @@ next1:      continue;
 /*	REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
    for(i=0;i<nsbd;++i) 
       bdrysidereorder(i);
+      
+/*	REORDER BOUNDARY GROUPS (MIN TYPE TO MAX TYPE) */
+/* THIS IS JUST TO ENSURE THAT RELOADING MESHES WON'T CHANGE ORDER */
+   
+   bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
-/*	REORDER SIDE BOUNDARY GROUPS TO BE SEQUENTIAL */
    printf("#Boundaries\n");
-   bdrylabel();
    for(i=0;i<nsbd;++i)
       printf("#%d: type %d, number %d\n",i,sbdry[i].type,sbdry[i].num);
 

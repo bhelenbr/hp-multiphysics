@@ -142,6 +142,45 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
          fclose(out);
          break;
          
+      case(grid):
+         strcpy(fnmapp,filename);
+         strcat(fnmapp,".grd");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open output file %s for output\n",fnmapp);
+            exit(1);
+         }
+         
+/*			HEADER LINES */
+         fprintf(out,"nvrtx: %d\t nside: %d\t ntri: %d\n",nvrtx,nside,ntri);
+
+/*			VRTX INFO */                        
+         for(i=0;i<nvrtx;++i)
+            fprintf(out,"%17.10e %17.10e\n",vin[i][0],vin[i][1]);
+                    
+/*			SIDE INFO */
+         for(i=0;i<nside;++i)
+            fprintf(out,"%d %d\n",svrtx[i][0],svrtx[i][1]);
+
+/*			THEN TRI INFO */
+         for(i=0;i<ntri;++i)
+            fprintf(out,"%d %d %d\n",tvrtx[i][0],tvrtx[i][1],tvrtx[i][2]);
+
+/*			SIDE BOUNDARY INFO HEADER */
+         printf("nsbd: %d\n",nsbd);
+         for(i=0;i<nsbd;++i)
+            printf("type: %d\t number %d\n",sbdry[i].type,sbdry[i].num);
+         
+         for(i=0;i<nsbd;++i)
+            for(j=0;j<sbdry[i].num;++j)
+               printf("%d\n",sbdry[i].el[j];
+               
+/*			VERTEX BOUNDARY INFO HEADER */
+         printf("nvbd: %d\n",nvbd);
+         for(i=0;i<nvbd;++i)
+
+            
+         
       default:
          printf("That filetype is not supported yet\n");
          break;
