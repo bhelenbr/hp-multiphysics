@@ -130,7 +130,8 @@ int mesh::collapse(int sind) {
             bnum = (-stri[sind][1]>>16) -1;
             delt = sbdry[bnum].isfrst;
             if (sbdry[bnum].type&(COMX_MASK+COMY_MASK))
-               printf("#Warning: degenerate case in edge collapse for bdry %d, picking %d\n",sbdry[bnum].type,delt);
+               printf("#Warning: degenerate case in edge collapse for bdry %d,%d, picking %d, (%f %f)\n"
+                  ,bnum,sbdry[bnum].type,delt,vrtx[svrtx[sind][delt]][0],vrtx[svrtx[sind][delt]][1]);
          }
       }
    }
