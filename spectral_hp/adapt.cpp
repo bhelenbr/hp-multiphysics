@@ -22,6 +22,9 @@ void hp_mgrid::adapt(class hp_mgrid& str) {
    
    changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
    
+   /* UPDATE QUADTREE FOR MOVING MESH */
+   treeupdate();
+   
    /* COPY SOLUTION & MESH TO BEGIN */
    str.spectral_hp::copy(*this);
    
