@@ -11,6 +11,11 @@ void hp_mgrid::getfres() {
    int i,j,k,m,n,tind,v0,indx,indx1;
       
    isfrst = true;
+   
+/*	TRANSFER COUPLED SURFACE RESIDUALS */
+   for(i=0;i<nsbd;++i)
+      if(sbdry[i].type&(FSRF_MASK+IFCE_MASK))
+         surfgetfres(i);
 
    if(p0 > 1) {
 /* 	TRANSFER IS ON FINE MESH */

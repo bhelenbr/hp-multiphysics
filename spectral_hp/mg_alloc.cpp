@@ -74,6 +74,56 @@ void hp_mgrid::allocate(struct hp_mgrid_glbls& ginit, int mgrid) {
    return;
 }
 
+void hp_mgrid::gbl_alloc(int mx, int p, struct hp_mgrid_glbls& store) {
+   int sm, im;
+   
+   sm = p-1;
+   im = (p-2)*(p-1)/2;
+
+/*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
+   store.vug0 = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
+   store.sug0 = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
+   store.iug0 = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+
+/*	RESIDUAL STORAGE */
+   store.vres = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
+   store.sres = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
+   store.ires = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+
+/*	VISCOUS FORCE RESIDUAL STORAGE */
+   store.vvf = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
+   store.svf = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
+   store.ivf = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+   
+/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
+   store.vres0 = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
+   p = p>>1;
+   sm = p-1;
+   im = (p-2)*(p-1)/2;
+   if (sm > 0) store.sres0 = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
+   if (im > 0) store.ires0 = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+
+/*	PRECONDITIONER  */
+   vect_alloc(store.gam,mx,FLT);
+   vect_alloc(store.dtstar,mx,FLT);
+   vect_alloc(store.vdiagv,mx,FLT);
+   vect_alloc(store.vdiagp,mx,FLT);
+   vect_alloc(store.sdiagv,mx,FLT);
+   vect_alloc(store.sdiagp,mx,FLT);
+   
+/* STABILIZATION */
+   vect_alloc(store.tau,mx,FLT);
+   vect_alloc(store.delt,mx,FLT);
+
+#ifdef SKIP
+/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
+   FLT (*ug0)[NV], (*ug1)[NV], (*ug2)[NV], *jcb1, *jcb2;
+   FLT ***dudt[ND], ***cdjdt;
+#endif
+
+   return;
+}
+
 void hp_mgrid::maxres(FLT mx[NV]) {
    int i,n;
    

@@ -59,6 +59,11 @@ void hp_mgrid::minvrt1(void) {
 		}
 	}
    
+/*	INVERT MATRICES FOR COUPLED BOUNDARY EQUATIONS */
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
+         surfinvrt1(i);
+   
 /*********************************************/
 /*	SEND MESSAGES FOR VERTICES 					*/	
 /*********************************************/
@@ -212,9 +217,10 @@ void hp_mgrid::minvrt4() {
       }
    }
    
-//   bdry_rcvandzero(-1);
-//   for(i=0;i<b.sm;++i)
-//      bdry_rcvandzero(i);
+/*	FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
+         surfinvrt2(i);
 
    return;
 }

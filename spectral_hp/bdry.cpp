@@ -153,7 +153,11 @@ void hp_mgrid::addbflux(int mgrid) {
 /* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-/*			SURFACE TENSION SOURCE TERM */
+
+/*			CALCULATE RESIDUAL / SURFACE TENSION TERMS */
+         surfrsdl(i,mgrid);
+
+/*			ADD SURFACE TENSION SOURCE TERM */
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
             sind=sbdry[i].el[j];

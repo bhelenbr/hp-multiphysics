@@ -13,6 +13,11 @@ void hp_mgrid::getcchng(void) {
 	if(b.p > 1) {
 		return;
 	}
+   
+/*	TRANFER COUPLED BOUNDARY RESIDUALS */
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
+         surfgetcchng(i);
 
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)

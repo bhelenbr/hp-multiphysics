@@ -8,6 +8,7 @@
  */
 
 #include "spectral_hp.h"
+#include "surface.h"
 
 #define MXLG2P 5
 #define NSTAGE 5
@@ -60,6 +61,9 @@ struct hp_mgrid_glbls {
    
 /*	OTHER CONSTANTS */
    FLT charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
+
+/*	MAXIMUM SURFACES FOR A SINGLE BLOCK IS 2 */   
+   struct surface_glbls sgbl[2];
    
 };
 
@@ -95,6 +99,7 @@ class hp_mgrid : public spectral_hp {
       
    public:
       void allocate(struct hp_mgrid_glbls& ginit, int mgrid);
+      static void gbl_alloc(int maxvst, int log2p, struct hp_mgrid_glbls& store);
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
          log2p = 0;
@@ -128,10 +133,19 @@ class hp_mgrid : public spectral_hp {
       void bdry_rcvandzero(int mode);
       void bdry_snd(int mode);
 
-/*		SURFACE BOUNDARY ROUTINES */      
+/*		COUPLED SURFACE BOUNDARY ROUTINES */ 
+      void surfvrttoug(int bnum);
+      void surfugtovrt1(int bnum);
+      void surfugtovrt2(int bnum);
       void surfrsdl(int bnum, int mgrid);
       void surfinvrt1(int bnum);
       void surfinvrt2(int bnum);
+      void surfdt1(int bnum);
+      void surfdt2(int bnum);
+      void surfnstage1(int bnum);
+      void surfnstage2(int bnum, int stage);
+      void surfgetfres(int bnum);
+      void surfgetcchng(int bnum);
       
 /*		PARTS FOR 5 STEP UPDATE */
       void nstage1();

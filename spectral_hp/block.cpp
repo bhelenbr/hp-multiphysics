@@ -18,11 +18,11 @@ void block::meshinit(int n, char *filename, FILETYPE filetype = easymesh, FLT gr
 }
 
 void block::hpinit(class hpbasis *bin, int lg2p) {
-   int maxvst,i;
+   int i;
    
    hpbase = bin;
    lg2pmax = lg2p;
-
+   
 /*	INITIALIZE SPECTRAL_HP'S */
    grd[0].spectral_hp::allocate(hpbase[lg2pmax]);
    grd[0].init_comm_buf(NV*(hpbase[lg2pmax].sm +2));
@@ -30,46 +30,9 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
       grd[i].spectral_hp::allocate(hpbase[0]);
       grd[i].init_comm_buf(NV*2);
    }
-
-/*	ALLOCATE GLOBAL STORAGE */
-   maxvst = grd[0].max();
-/*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-   gbl.vug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   gbl.sug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].sm*sizeof(FLT));
-   gbl.iug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].im*sizeof(FLT));
-
-/*	RESIDUAL STORAGE */
-   gbl.vres = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   gbl.sres = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].sm*sizeof(FLT));
-   gbl.ires = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].im*sizeof(FLT));
-
-/*	VISCOUS FORCE RESIDUAL STORAGE */
-   gbl.vvf = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   gbl.svf = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].sm*sizeof(FLT));
-   gbl.ivf = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax].im*sizeof(FLT));
    
-/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
-   gbl.vres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   if (lg2pmax > 1) gbl.sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].sm*sizeof(FLT));
-   if (lg2pmax > 1) gbl.ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].im*sizeof(FLT));
-
-/*	PRECONDITIONER  */
-   vect_alloc(gbl.gam,maxvst,FLT);
-   vect_alloc(gbl.dtstar,maxvst,FLT);
-   vect_alloc(gbl.vdiagv,maxvst,FLT);
-   vect_alloc(gbl.vdiagp,maxvst,FLT);
-   vect_alloc(gbl.sdiagv,maxvst,FLT);
-   vect_alloc(gbl.sdiagp,maxvst,FLT);
-   
-/* STABILIZATION */
-   vect_alloc(gbl.tau,maxvst,FLT);
-   vect_alloc(gbl.delt,maxvst,FLT);
-
-#ifdef SKIP
-/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
-   FLT (*ug0)[NV], (*ug1)[NV], (*ug2)[NV], *jcb1, *jcb2;
-   FLT ***dudt[ND], ***cdjdt;
-#endif
+/*	ALLOCATE GLOBAL STORAGE FOR HP_MGRIDS */
+   hp_mgrid::gbl_alloc(grd[0].max(),hpbase[lg2pmax].p,gbl);
 
 /*	INITIALIZE HP_MGRID STORAGE NECESSARY FOR EACH MESH */ 
 	grd[0].allocate(gbl,0);  // 0 DENOTES FINEST LEVEL

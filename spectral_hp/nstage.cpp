@@ -3,7 +3,6 @@
 void hp_mgrid::nstage1(void)
 {
 	static int i,n;
-
 /******************************************************************/
 /* BEGINNING OF MULTISTAGE PSEUDO-TIME-UPDATE OF FLOW & MESH POSITION ****/
 /******************************************************************/
@@ -23,6 +22,11 @@ void hp_mgrid::nstage1(void)
       }   
 	}
 
+/*	COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
+         surfnstage1(i);
+         
    return;
 }
 
@@ -67,6 +71,12 @@ void hp_mgrid::nstage2(int stage) {
             }
          }
       }
+   }
+   
+/*	COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
+         surfnstage2(i,stage);
    }
          
    return;
