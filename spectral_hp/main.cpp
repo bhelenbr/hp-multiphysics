@@ -34,10 +34,12 @@ int main() {
    x.in_mesh("../../grids/REMESH/data264",easymesh,5);
    x.convertbtypes();
    x.allocate(base);
-   x.input("../../data264",text);
+   x.input("../../grids/REMESH/data264",text);
    x.output("out1",tecplot);
-   x.adapt(y,0.75);
-   x.output("out2",tecplot);
+   x.mesh::bcinfo();
+   x.output("out1",easymesh);
+ //  x.adapt(y,0.75);
+ //  x.output("out2",tecplot);
 
    exit(1);
    

@@ -22,7 +22,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
          strcat(fnmapp,".txt");
          out = fopen(fnmapp,"w");
          if (out == NULL ) {
-            printf("couldn't open output file\n");
+            printf("couldn't open text output file %s\n",fnmapp);
             exit(1);
          }
          
@@ -67,7 +67,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
          strcat(fnmapp,".dat");
          out = fopen(fnmapp,"w");
          if (out == NULL ) {
-            printf("couldn't open output file\n");
+            printf("couldn't open tecplot output file %s\n",fnmapp);
             exit(1);
          }
       
@@ -231,7 +231,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
       case (text):
          in = fopen(name,"r");
          if (in == NULL ) {
-            printf("couldn't open output file\n");
+            printf("couldn't open text input file %s\n",name);
             exit(1);
          }
          
@@ -293,7 +293,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
       case (text):
          in = fopen(name,"r");
          if (in == NULL ) {
-            printf("couldn't open output file\n");
+            printf("couldn't open text input file %s\n",name);
             exit(1);
          }
          
