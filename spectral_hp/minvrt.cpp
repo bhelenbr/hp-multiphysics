@@ -59,9 +59,9 @@ void hp_mgrid::minvrt1(void) {
 		}
 	}
    
-/********************************/
-/*	MESSAGE PASSING MUST GO HERE FOR VERTICES */	
-/********************************/
+/*********************************************/
+/*	SEND MESSAGES */	
+/*********************************************/
 
    return;
 }
@@ -72,8 +72,9 @@ void hp_mgrid::minvrt2(void) {
 /**********************************/
 /*  RECEIVE MESSAGES */
 /**********************************/
+
+/* APPLY DIRCHLET B.C.S TO VERTICES */
    
-/* DIRICHLET CONDITIONS ARE APPLIED TO VDIAG IN TSTEP */
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
 		gbl.vres[i][0] *= gbl.vdiagv[i];
@@ -110,6 +111,9 @@ void hp_mgrid::minvrt2(void) {
 			}
 		}
    }
+   
+/* SEND MESSAGE FOR LOWEST ORDER MODE */
+   
    return;
 }
 
@@ -121,6 +125,10 @@ void hp_mgrid::minvrt3(int mode) {
    static int i,j,m,n,indx,sind,tind;
    static int sign[3],msgn,sgn,side[3];
    
+/* RECEIVE MESSAGE FOR MODE */
+
+/* APPLY DIRCHLET B.C.S TO MODE */
+
 /*	SOLVE FOR MODE */
    indx = mode;
    for(sind = 0; sind < nside; ++sind) {
@@ -154,16 +162,18 @@ void hp_mgrid::minvrt3(int mode) {
          }
       }
    }
+   
+/* SEND MESSAGES FOR NEXT MODE */
       
    return;
 }
 
-/********************************/
-/*	MESSAGE PASSING MUST GO HERE */	
-/********************************/
-
 void hp_mgrid::minvrt4() {  
    int i,k,n,sind,indx,tind;
+   
+/* RECEIVE MESSAGE FOR LAST MODE */
+
+/* APPLY DIRICHLET B.C.'S */
 			
    indx = b.sm-1;
    for(sind = 0; sind < nside; ++sind) {
@@ -186,5 +196,6 @@ void hp_mgrid::minvrt4() {
          }
       }
    }
+   
    return;
 }

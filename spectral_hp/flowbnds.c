@@ -7,7 +7,7 @@
 /* BUT NOT INDEPENDENT OF TIME/MESH POSITION	 */
 /*************************************************/
 
-void setinflow(FLT (*func)(int, FLT, FLT)) {
+void hp_mgrid::setinflow(FLT (*func)(int, FLT, FLT)) {
 	static int i,k,m,indx,indx1,indm,v0,v1,info;
 	static double x,y;
 	static int sind,sgn,ind;
@@ -100,87 +100,122 @@ void setinflow(FLT (*func)(int, FLT, FLT)) {
 	return;
 }
 
-void flowsrc(void) {
-	static int i,m,n,ind,indx,indm, sgn;
+void hp_mgrid::addbflux(int mgrid) {
+	static int i,m,n,indx,indx1,indm, sgn;
 	static int sind,indx1,v0,v1;
 	static double fx[MXSM][NV], x[ND], nrm[ND], w[NV+ND];
 	
 /***********************************/
 /*	ADD SOURCE TERMS ON FINEST MESH */
 /***********************************/
-	if(mg_lvl == max_lvl) {
-/*		RESET BOUNDARY VALUES OF SOLUTION */
-#ifdef MOVING_MESH
-		setinfl();
-#endif
-		
-/*		INFLOW SIDES   */	
-		for(sind=binfc; sind < einfs; ++sind) {
-			v0 = svrtx[sind][0];
-			v1 = svrtx[sind][1];
-			indx = (sind-binfc)*sm;
-			indx1 = sind*(sm-2) + nvrtx;
-			gf[v0][2] += infl[indx];
-			gf[v1][2] += infl[indx+1];
-			for(m=0;m<sm-2;++m) {
-				gf[indx1+m][2] += infl[indx+m+2];
-			}
-		}
+	if(!mgrid) {
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type&INFL_MASK) {
+            indx = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               sind=sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               indx1 = sind*b.sm;
+               vres[v0][2] += binfo[i][indx++].flx[2];
+               for(k=0;k<b.sm;++k)
+                  sres[indx1++][2] += binfo[i][indx++].flx[2];
+            }
+            v0 = svrtx[sind][1];
+            vres[v0][2] += binfo[i].indx.flx[2];
+         }
+         
+         if (sbdry[i].type&OUTF_MASK) {
+/*				ALLOWS FOR APPLIED STRESS ON BOUNDARY */
+            indx = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               sind=sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               indx1 = sind*b.sm;
+               for(n=0;n<ND;++n)
+                  vres[v0][n] += binfo[i][indx].flx[n];
+               ++indx;
+               for(k=0;k<b.sm;++k) {
+                  for(n=0;n<ND;++n)
+                     sres[indx1][n] += binfo[i][indx].flx[n];
+                  ++indx;
+                  ++indx1;
+               }
+            }
+            v0 = svrtx[sind][1];
+            for(n=0;n<ND;++n)
+               vres[v0][n] += binfo[i].indx.flx[n];
+         }
+      }
+   }
+   
+/*	THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
+/* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
+/*			SURFACE TENSION SOURCE TERM */
+         indx = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            sind=sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            indx1 = sind*b.sm;
+            for(n=0;n<ND;++n)
+               vres[v0][n] += binfo[i][indx].flx[n];
+            ++indx;
+            for(k=0;k<b.sm;++k) {
+               for(n=0;n<ND;++n)
+                  sres[indx1][n] += binfo[i][indx].flx[n];
+               ++indx;
+               ++indx1;
+            }
+         }
+         v0 = svrtx[sind][1];
+         for(n=0;n<ND;++n)
+            vres[v0][n] += binfo[i].indx.flx[n];
+      }
 
-/*		OUTFLOW STRESS */
-		for(sind=boutf; sind < eoutf; ++sind) {
-			v0 = svrtx[sind][0];
-			v1 = svrtx[sind][1];
-			indx = (sind-boutf)*sm;
-			indx1 = sind*(sm-2) + nvrtx;
-			gf[v0][0] += outf[0][indx];
-			gf[v0][1] += outf[1][indx];
-			gf[v1][0] += outf[0][indx+1];
-			gf[v1][1] += outf[1][indx+1];
-			for(m=0;m<sm-2;++m) {
-				gf[indx1+m][0] += outf[0][indx+m+2];
-				gf[indx1+m][1] += outf[1][indx+m+2];
-			}
-		}
-	}
-	
-/*****************************/
-/*	ADD SURFACE SOURCE TERMS  */
-/*****************************/
-/*	FREE SURFACE SIDES   */	
-	for(sind=bfsrf; sind < efsrf; ++sind) {
-		v0 = svrtx[sind][0];
-		v1 = svrtx[sind][1];
-		indx = sind*sm;
-		indx1 = sind*(sm-2) + nvrtx;
-		gf[v0][0] += srft[0][indx];
-		gf[v0][1] += srft[1][indx];
-		gf[v1][0] += srft[0][indx+1];
-		gf[v1][1] += srft[1][indx+1];
-		for(m=0;m<sm-2;++m) {
-			gf[indx1+m][0] += srft[0][indx+m+2];
-			gf[indx1+m][1] += srft[1][indx+m+2];
-		}
-	}
 
-/*	INTERFACE SIDES   */	
-	for(sind=bifce; sind < eifce; ++sind) {
-		v0 = svrtx[sind][0];
-		v1 = svrtx[sind][1];
-		indx = sind*sm;
-		indx1 = sind*(sm-2) + nvrtx;
-		gf[v0][0] += srft[0][indx];
-		gf[v0][1] += srft[1][indx];
-		gf[v1][0] += srft[0][indx+1];
-		gf[v1][1] += srft[1][indx+1];
-		for(m=0;m<sm-2;++m) {
-			gf[indx1+m][0] += srft[0][indx+m+2];
-			gf[indx1+m][1] += srft[1][indx+m+2];
-		}
-	}
+/* 	OUTFLOW BOUNDARY CONDITION    */
+      if (sbdry[i].type&OUTF_MASK) {
+         indx = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            v1 = svrtx[sind][1];
+            
+            if (!sbdry[i].type&CURV_MASK) {
+               for(n=0;n<ND;++n)
+                  b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+                  for(k=0;k<b.gpx;++k)
+                     dcrd[n][0][0][k] = 0.5*(vrtx[v1][n]-vrtx[v0][n]);
+            }
+            else {
+               crdtouht1d(sind);
+               for(n=0;n<ND;++n)
+                  b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+            }
+            
+            ugtouht1d(sind);
+            for(n=0;n<ND;++n)
+               b.proj1d(uht[n],u[n][0]);
 
-/* OUTFLOW BOUNDARY CONDITION    */
-	for(sind=boutf; sind < eoutf; ++sind) {
+/*				NEED TO FIGURE OUT WHAT I'M DOING HERE FOR MOVING MESH */
+               
+            for(k=0;k<b.gpx;++k) {
+               res[2][0][k] = gbl.rho*(u[0][0][k]*dcrd[1][0][0][k] -u[1][0][k]*dcrd[0][0][0][k]);
+               res[0][0][k] = res[2][0][k]*u[0][0][k];
+               res[1][0][k] = res[2][0][k]*u[1][0][k];
+            }
+            
+            b.intgrt1d(res[2][0],lf[0]);
+            
+            indx = j*(b.sm +1);
+            binfo[i][indx].flx[2] += lf[0][0];
+            for(m=0;m<b.sm;++m)
+               binfo[i][indx+m].flx[2] = lf[0][m+2];
+            binfo[i][indx +b.sm+1].flx[2] = lf[0][1];
+         }
+         
+         
 		indx = sind*(mg_sm-2) + nvrtx;
 		v0 = svrtx[sind][0];
 		v1 = svrtx[sind][1];
@@ -447,7 +482,7 @@ void flowbnds(void) {
 	return;
 }
 
-void chrctr(int tind, double wl[5], double norm[2], double x[2]) {
+void chrctr(FLT igam, double wl[3], double wr[3], double norm[2], double vnrm) {
 	static int ind;
 	static double ul,vl,ur,vr,pl,pr;
 	static double um,c,den,lam0,lam1,lam2,v[3],mag;
@@ -456,7 +491,7 @@ void chrctr(int tind, double wl[5], double norm[2], double x[2]) {
 
 /*	PRESSURE FIXED B.C. */
 	if (!charyes) {
-		wl[2] = f3(x[0],x[1],ind);
+		wl[2] = wr[2];
 		return;
 	}
 

@@ -248,8 +248,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 		for(n=0;n<NV;++n)
 			gbl.ires[i][n] += gbl.ivf[i][n];         
 
-/*	ADD IN BOUNDARY SOURCES */
-//	flowsrc();
+/*	ADD IN BOUNDARY FLUXES */
+   addbflux();
 	
 /*********************************************/
 /*	MODIFY RESIDUALS ON COARSER MESHES			*/
@@ -282,12 +282,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 			for(n=0;n<NV;++n)		
 				gbl.sres[i][n] += sdres[log2p][i][n];      
 	}
-
-/*	APPLY BOUNDARY CONDITIONS */
-//	flowbnds(); 
-
-/* SEND COMMUNICATION PACKETS */   
-//   send(XDIR_MP, (FLT *) res, 0, 1, 2);
    
 	return;
 }

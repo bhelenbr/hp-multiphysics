@@ -129,7 +129,7 @@
 				F512112C01908E7201990B20,
 				F5D77C310191A7BB01990B20,
 				F5D77C330191A7E901990B20,
-				F558DFB40191EA6F01990B20,
+				F533C5CF01938985017C3E7F,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -199,6 +199,7 @@
 				F51211330190A2DE01990B20,
 				F5D77C320191A7BB01990B20,
 				F558DFB30191E60901990B20,
+				F533C5D001938985017C3E7F,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -394,6 +395,17 @@
 			path = hpprobe.cpp;
 			refType = 4;
 		};
+		F533C5CF01938985017C3E7F = {
+			isa = PBXFileReference;
+			path = flowbnds.c;
+			refType = 4;
+		};
+		F533C5D001938985017C3E7F = {
+			fileRef = F533C5CF01938985017C3E7F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F53AD9AF0173E34A01000001 = {
 			isa = PBXFileReference;
 			path = main.cpp;
@@ -427,12 +439,6 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
-		};
-		F558DFB40191EA6F01990B20 = {
-			isa = PBXFileReference;
-			name = flowbnds.c;
-			path = /Volumes/work/helenbrk/Codes/spectral_hp/flowbnds.c;
-			refType = 0;
 		};
 		F564AD060185F05601990B20 = {
 			isa = PBXFileReference;
