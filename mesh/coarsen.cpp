@@ -286,7 +286,7 @@ int mesh::coarsen(const class mesh& inmesh) {
    
 /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      printf("MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
+      printf("#MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
 
 	return(1);
 }

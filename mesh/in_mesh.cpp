@@ -118,6 +118,7 @@ next1:      continue;
             
             if (!initialized) {
                vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+               vin = vrtx;
                vlngth = new FLT[maxvst];
                vinfo = new int[maxvst+1];
                ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
@@ -211,6 +212,7 @@ next1:      continue;
                maxvst = (3*i)/2; 
                maxvst = nvrtx +(int) (grwfac*nvrtx);
                vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+               vin = vrtx;
                vlngth = new FLT[maxvst];
                vinfo = new int[maxvst+1];
                ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
