@@ -30,6 +30,9 @@ void mesh::rebay(FLT tolsize) {
    FLT xpt,ypt,wt[3];
    FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
    FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
+   
+/* SET UP FLTWK */
+   fltwkreb();
          
    bdrycnt = 0;
    intrcnt = 0;
@@ -185,8 +188,7 @@ INSRT:
          sind = sdel[i];
          sinfo[sind] = -2; // MARK SIDE AS TOUCHED (OR SHOULD THIS BE DONE IN INSERT?)
          intwk3[sind] = -1;
-         fltwk[sind] = (vlngth[svrtx[sind][0]] +vlngth[svrtx[sind][1]])/
-            (2.*distance(svrtx[sind][0],svrtx[sind][1]));
+         fltwkreb(sind);
          if (fltwk[sind] < tolsize) putinlst(sind);
       }
          
@@ -260,6 +262,28 @@ void mesh::tkoutlst(int sind) {
    --nslst;
    intwk2[nslst] = -1;
    
+   return;
+}
+
+void mesh::fltwkreb(int i) {
+   static FLT dif, av;
+   
+/*	CALCULATE SIDE LENGTH RATIO FOR YABER */
+/*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
+/*	OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
+/*	(THIS ESSENTIALLY TAKES THE MINUMUM) */
+   dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
+   av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
+   fltwk[i] = (av +(dif*dif/(0.1*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
+   
+   return;
+}
+
+void mesh::fltwkreb() {
+   static int i;
+   
+   for(i=0;i<nside;++i)
+      fltwkreb(i);
    return;
 }
       

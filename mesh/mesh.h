@@ -135,12 +135,16 @@ class mesh {
       void insert(int tind, int vnum);
       void bdry_insert(int tind, int snum, int vnum);
       int findtri(FLT x, FLT y, int vnear) const;
+      void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
+      void fltwkreb();
       
-/*		TO DELETE A SIDE */
+/*		FOR COARSENING A SIDE */
       int collapse(int sind);
       void dltvrtx(int vind);
       void dltside(int sind);
       void dlttri(int tind);
+      void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
+      void fltwkyab();
       
 /*		ORDERED LIST FUNCTIONS */
       void putinlst(int sind);

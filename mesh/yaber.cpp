@@ -28,6 +28,9 @@ void tkoutlst(int sind);
 void mesh::yaber(FLT tolsize) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
    
+/*	SET UP FLTWK */
+   fltwkyab();
+   
    cnt = 0;
    
 /*	NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
@@ -68,7 +71,7 @@ void mesh::yaber(FLT tolsize) {
          putinlst(i);
       }
    }
-   
+
    tinfo[-1] = 0;
    
 /*	BEGIN COARSENING ALGORITHM */
@@ -106,8 +109,7 @@ void mesh::yaber(FLT tolsize) {
          for(j=0;j<3;++j) {
             sind = tside[tind].side[j];
             if (intwk3[sind] > -1) tkoutlst(sind);
-            fltwk[sind] = (vlngth[svrtx[sind][0]] +vlngth[svrtx[sind][1]])/
-               (2.*distance(svrtx[sind][0],svrtx[sind][1]));
+            fltwkyab(sind);
             if (fltwk[sind] > tolsize) {
                putinlst(sind);
                ++tinfo[tind];
@@ -252,6 +254,28 @@ void mesh::checkintwk() {
    for(i=0;i<maxvst;++i)
       if (intwk3[i] != -1) printf("failed intwk3 check %d: %d\n",i,intwk3[i]);
    
+   return;
+}
+
+void mesh::fltwkyab(int i) {
+   static FLT dif,av;
+   
+/*	CALCULATE SIDE LENGTH RATIO FOR YABER */
+/*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
+/*	OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
+/*	(THIS ESSENTIALLY TAKES THE MINUMUM) */
+   dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
+   av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
+   fltwk[i] = (av -(dif*dif/(0.1*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
+   
+   return;
+}
+
+void mesh::fltwkyab() {
+   static int i;
+   
+   for(i=0;i<nside;++i)
+      fltwkyab(i);
    return;
 }
    

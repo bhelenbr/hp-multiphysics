@@ -123,7 +123,26 @@ int mesh::collapse(int sind) {
          dx = vrtx[v0][0]-x;
          dy = vrtx[v0][1]-y;
          l1 = dx*dx +dy*dy;
-                 
+         
+         if (l0 == l1) {
+/*				CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
+/*				PICK CLOSEST ZERO */
+/*				(CIRCLES CENTERED AROUND ZERO WITH EQUAL LENGTH SIDES ARE DEGENERATE) */
+            v0 = svrtx[sind][0];
+            v1 = svrtx[sind][1];
+            dx = vrtx[v0][0];
+            dy = vrtx[v0][1];
+            l0 = dx*dx +dy*dy;
+            
+            dx = vrtx[v1][0];
+            dy = vrtx[v1][1];
+            l1 = dx*dx +dy*dy;
+            
+            if (l0 == l1) {
+               printf("wickedly degenerate case\n");
+               exit(10);
+            }
+         }
          delt = (l0 < l1 ? 1 : 0);
       }
    }
