@@ -326,7 +326,7 @@ void hp_mgrid::inlength(char *name) {
    out = fopen(fnmapp,"r");
    if (out == NULL ) {
       printf("couldn't open vlgth input file %s\n",fnmapp);
-      exit(1);
+      return;
    }
    for(i=0;i<nvrtx;++i)
       fscanf(out,"%lf\n",&vlngth[i]);
