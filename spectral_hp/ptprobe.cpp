@@ -107,7 +107,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
       
 int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
    int vnear,sind,tind,snum,snumnew,v0,v1,iter,bnum;
-   FLT dpsi,xp[ND],dx,dy,ol,mag,delt_dist;
+   FLT dpsi,xp[ND],dx,dy,ol;
    
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);

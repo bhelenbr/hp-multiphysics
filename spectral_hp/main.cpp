@@ -16,7 +16,7 @@
 #include<time.h>
 
 /* SIMULATION / PV3VIEWER / TERROR */
-#define SIMULATION
+#define PV3VIEWER
 
 #ifdef PV3
 extern "C" int MAINPROG(int argc, char **argv);
@@ -41,7 +41,6 @@ int main(int argc, char **argv) {
 #ifdef PV3VIEWER   
    /* PV3 STATIC VIEWER */
    myblock.init(argv[1],0);
-
    return(0);
 #endif
 }

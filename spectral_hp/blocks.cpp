@@ -174,6 +174,15 @@ void blocks::init(char *file, int adptnxt = 1) {
    /* DO ADAPTATION FOR CONTINUATION OF NEXT TIME STEP */
    if (adptnxt) firstadapt();
    
+#ifdef PV3
+   if (!adptnxt)
+      viz_init(0);
+   else if(adapt)
+      viz_init(-3);
+   else
+      viz_init(-2);
+#endif
+   
    return;
 }
 
@@ -385,10 +394,6 @@ void blocks::go() {
    int i,j,tstep;
    char outname[20], bname[20];
    
-#ifdef PV3
-   viz_init();
-#endif
-
    for(tstep=readin;tstep<ntstep;++tstep) {
       
       tadvance();

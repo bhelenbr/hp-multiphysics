@@ -2,6 +2,7 @@
 #include<math.h>
 #include"blocks.h"
 #include"pV3.h"
+#include<utilities.h>
 
 /** WARNING THIS ONLY WORKS FOR ONE BLOCK RIGHT NOW */
 
@@ -10,8 +11,7 @@
 #define LEN_TKEYS 40 /* MUST BE LONGER THAN 32 */
 #define KNBLOCK 1
 
-int npvgrds;
-class hp_mgrid **pvgrds;
+class blocks *thisblocks;
 
 void flotov(struct vsi,int nvar, float *v);
 void logflotov(struct vsi,int nvar, float *v);
@@ -19,7 +19,7 @@ void logflotov(struct vsi,int nvar, float *v);
 int strcpn(char *str1,char *str2);
 int strcpb(char *str1,char *str2, int len);
 
-void blocks::viz_init(void) {
+void blocks::viz_init(int iopt) {
    /**********************************************/
    /*  The important declarations needed for pV3 */
    /**********************************************/
@@ -52,12 +52,8 @@ void blocks::viz_init(void) {
                             {-16.0, 1.0},  {-16.0, 1.0}}; //, {0.0, 0.0},  {0.0, 0.0}, 
                         //    {0.0, 0.0},  {0.0, 0.0}, {1.0, 0.0}};
 
-   INT knode, istat;
-   INT npgcut = 0;
-   INT iopt, mirr, kequiv, kcel1, kcel2, kcel3, kcel4, knptet, kptet;
-   INT knblock, iblock[KNBLOCK][3], ksurf, knsurf;
-   
-   int i;
+   INT istat;
+   INT mirr;
 
 /*   
    TITL:i: C Title (up to 80 characters used)
@@ -107,47 +103,94 @@ void blocks::viz_init(void) {
    Appendix for a list of the error codes.
    
 */
-   pvgrds = new (hp_mgrid *)[nblocks];
-   for(i=0;i<nblocks;++i)
-      pvgrds[i] = &blk[i].grd[0];
-   npvgrds = nblocks;
-   
+   thisblocks = this;   
    printf("%s",ttl);
 
-   iopt   = -3;
    mirr   = 0;
-   knode  = 2*blk[0].grd[0].maxvst*(1 +blk[0].grd[0].b.sm +blk[0].grd[0].b.im);
-   kequiv = 0;
-   kcel1  = 0;
-   kcel2  = 0;
-   kcel3  = blk[0].grd[0].maxvst*(blk[0].grd[0].b.sm+1)*(blk[0].grd[0].b.sm+1);
-   kcel4  = 0;
-   knptet = 0;
-   kptet  = 0;
-   knblock= 0;
-    
-   knsurf = 1;
-   ksurf  = kcel3;
-      
    istat  = 0;
    len_titl = strcpn(titl,ttl);
    cid = 1;
-   
-   
+      
    /* NOTE: string lengths are appended onto the stack */
    pV_INIT(titl, &cid, blank, blank, &iopt, &zero, &data[0][0], &num_keys,
            ikeys, &tkeys[0][0], fkeys, &flims[0][0], &mirr, NULL, &zero,
            &istat, len_titl, len_blank, len_blank, LEN_TKEYS, LEN_TKEYS);
 
-/*   
-   pV_INIT(titl, &iopt, &zero, &tkeys[0][0], &num_keys, ikeys, &tkeys[0][0],
-            fkeys, &flims[0][0], &mirr, &knode, &kequiv, &kcel1, &kcel2, &kcel3,
-            &kcel4, &knptet, &kptet, &knblock, &iblock[0][0], &ksurf, &knsurf,
-            &istat, len_titl, LEN_TKEYS, LEN_TKEYS);
-*/
-   printf(" = %d\n",istat);
+   printf(" = %d with iopt: %d\n",istat,iopt);
    
 }
+
+/****************************************************************************
+  pVStruc subroutine which supplies basic mesh information
+*****************************************************************************/
+
+void pVSTRUC (INT *knode,  INT *kequiv,  INT *kcel1,
+				 INT *kcel2,  INT *kcel3,   INT *kcel4,
+				 INT *knptet, INT *kptet,   INT *knblock,
+				 INT *blocks, INT *kphedra, INT *ksurf, 
+				 INT *knsurf, INT *hint ) {
+                
+   thisblocks->pvstruc(*knode, *kequiv, *kcel1, *kcel2, *kcel3, *kcel4,*knptet,*kptet,*knblock,*blocks,*kphedra,*ksurf,*knsurf,*hint);
+   
+   return;
+}
+
+void blocks::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
+&kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint) {
+   int i;
+   static int first = 1;
+   
+   kequiv = 0;
+   knode = 0;
+   kcel1  = 0;
+   kcel2  = 0;
+   kcel3 = 0;
+   kcel4  = 0;
+   knptet = 0;
+   kptet  = 0;
+   knblock = 0;
+   kphedra = 0; 
+   knsurf = nblocks;
+   ksurf = 0;
+   hint = 0;
+
+/*   if (first) {
+      for(i=0;i<nblocks;++i) {
+         knode += 2*blk[i].grd[0].maxvst*(1 +blk[i].grd[0].b.sm +blk[i].grd[0].b.im);
+         kcel3 += blk[i].grd[0].maxvst*(blk[i].grd[0].b.sm+1)*(blk[i].grd[0].b.sm+1);
+         ksurf += blk[i].grd[0].maxvst*(blk[i].grd[0].b.sm+1)*(blk[i].grd[0].b.sm+1);;
+      }
+      first = 0;
+   } 
+   else { */
+   
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].pvstruc(knode, kequiv, kcel1, kcel2, kcel3, kcel4, knptet,kptet,knblock,blocks,kphedra,ksurf,knsurf,hint);
+   
+   return;
+}
+
+
+void hp_mgrid::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
+&kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint) {
+   int i;
+   
+   if (changed) {
+      knode  += 2*(nvrtx +b.sm*nside+b.im*ntri);
+   }
+   else {
+      knode = -1;
+      return;
+   }
+
+   kcel3 += ntri*(b.sm+1)*(b.sm+1);
+   ksurf += 2*ntri*(b.sm+1)*(b.sm+1);
+   for(i=0;i<nsbd;++i)
+      ksurf += sbdry[i].num*(b.sm+1);
+   
+   return;
+}
+
 
 
 /****************************************************************************
@@ -155,15 +198,26 @@ void blocks::viz_init(void) {
 *****************************************************************************/
 
 void pVCELL(INT *cel1, INT *cel2,  INT *cel3, INT *cel4, INT *nptet, INT *ptet) {
-   pvgrds[0]->pvcell((int (*)[4]) cel1,(int (*)[5]) cel2, (int (*)[6]) cel3,(int (*)[8]) cel4,(int (*)[8]) nptet,ptet);
+   thisblocks->pvcell((int (*)[4]) cel1,(int (*)[5]) cel2, (int (*)[6]) cel3,(int (*)[8]) cel4,(int (*)[8]) nptet,ptet);
    return;
 }
-   
-void hp_mgrid::pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]) {
-   static int i, j, k, ijind[30][30], kp, kn, tind, sgn, indx;
 
-   kp = (nvrtx +b.sm*nside +b.im*ntri);
+void blocks::pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]) {
+   int i,kn,kpoffset;
+
    kn = 0;
+   kpoffset = 0;
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].pvcell(kn,kpoffset,cel1,cel2,cel3,cel4,nptet,ptet);
+      
+   return;
+}
+      
+   
+void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]) {
+   static int i, j, k, ijind[30][30], dkp, tind, sgn, indx;
+
+   dkp = (nvrtx +b.sm*nside +b.im*ntri);
    
    /* FRONT FACE OF 2D MESH */
    for(tind=0;tind<ntri;++tind) {
@@ -219,71 +273,34 @@ void hp_mgrid::pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8]
       /* OUTPUT CONNECTION LIST */      
       for(i=0;i<b.sm+1;++i) {
          for(j=0;j<b.sm-i;++j) {
-            cel3[kn][0] = ijind[i][j]+1;
-            cel3[kn][1] = ijind[i][j]+1 +kp;
-            cel3[kn][2] = ijind[i+1][j]+1 +kp;
-            cel3[kn][3] = ijind[i+1][j]+1;
-            cel3[kn][4] = ijind[i][j+1]+1 +kp;
-            cel3[kn++][5] = ijind[i][j+1]+1;
+            cel3[kn][0] = ijind[i][j]+1 +kpoffset;
+            cel3[kn][1] = ijind[i][j]+1 +dkp +kpoffset;
+            cel3[kn][2] = ijind[i+1][j]+1 +dkp +kpoffset;
+            cel3[kn][3] = ijind[i+1][j]+1 +kpoffset;
+            cel3[kn][4] = ijind[i][j+1]+1 +dkp +kpoffset;
+            cel3[kn++][5] = ijind[i][j+1]+1 +kpoffset;
 
-            cel3[kn][0] = ijind[i+1][j]+1;
-            cel3[kn][1] = ijind[i+1][j]+1 +kp;
-            cel3[kn][2] = ijind[i+1][j+1]+1 +kp;
-            cel3[kn][3] = ijind[i+1][j+1]+1;
-            cel3[kn][4] = ijind[i][j+1]+1 +kp;
-            cel3[kn++][5] = ijind[i][j+1]+1;   
+            cel3[kn][0] = ijind[i+1][j]+1 +kpoffset;
+            cel3[kn][1] = ijind[i+1][j]+1 +dkp +kpoffset;
+            cel3[kn][2] = ijind[i+1][j+1]+1 +dkp +kpoffset;
+            cel3[kn][3] = ijind[i+1][j+1]+1 +kpoffset;
+            cel3[kn][4] = ijind[i][j+1]+1 +dkp +kpoffset;
+            cel3[kn++][5] = ijind[i][j+1]+1 +kpoffset;   
          }
-         cel3[kn][0] = ijind[i][b.sm-i]+1;
-         cel3[kn][1] = ijind[i][b.sm-i]+1 +kp;
-         cel3[kn][2] = ijind[i+1][b.sm-i]+1 +kp;
-         cel3[kn][3] = ijind[i+1][b.sm-i]+1;
-         cel3[kn][4] = ijind[i][b.sm+1-i]+1 +kp;
-         cel3[kn++][5] = ijind[i][b.sm+1-i]+1;
+         cel3[kn][0] = ijind[i][b.sm-i]+1 +kpoffset;
+         cel3[kn][1] = ijind[i][b.sm-i]+1 +dkp +kpoffset;
+         cel3[kn][2] = ijind[i+1][b.sm-i]+1 +dkp +kpoffset;
+         cel3[kn][3] = ijind[i+1][b.sm-i]+1 +kpoffset;
+         cel3[kn][4] = ijind[i][b.sm+1-i]+1 +dkp +kpoffset;
+         cel3[kn++][5] = ijind[i][b.sm+1-i]+1 +kpoffset;
 
       }      
    }
+   
+   kpoffset += 2*dkp;
 
    return;   
 }
-
-void pVSTRUC (INT *knode,  INT *kequiv,  INT *kcel1,
-				 INT *kcel2,  INT *kcel3,   INT *kcel4,
-				 INT *knptet, INT *kptet,   INT *knblock,
-				 INT *blocks, INT *kphedra, INT *ksurf, 
-				 INT *knsurf, INT *hint ) {
-                
-   pvgrds[0]->pvstruc(*knode, *kequiv, *kcel1, *kcel2, *kcel3, *kcel4,*knptet,*kptet,*knblock,*blocks,*kphedra,*ksurf,*knsurf,*hint);
-   
-   return;
-}
-
-void hp_mgrid::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
-&kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint) {
-
-   if (changed) {
-      knode  = 2*(nvrtx +b.sm*nside+b.im*ntri);
-   }
-   else {
-      knode = -1;
-      return;
-   }
-   kequiv = 0;
-   kcel1  = 0;
-   kcel2  = 0;
-   kcel3 = 0;
-   kcel3  = ntri*(b.sm+1)*(b.sm+1);
-   kcel4  = 0;
-   knptet = 0;
-   kptet  = 0;
-   knblock = 0;
-   kphedra = 0; 
-   knsurf = 1;
-   ksurf  = kcel3;
-   
-   hint = 0;
-   return;
-}
-
 
 
 /****************************************************************************
@@ -292,15 +309,26 @@ void hp_mgrid::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kce
 void pVSURFACE(INT  *nsurf, INT *scon,   INT *scel,
 				   char *tsurf, int tsurfLEN) {
    
-   pvgrds[0]->pvsurface((int (*)[3]) nsurf,scon,(int (*)[4]) scel,(char (*)[20]) tsurf);
+   thisblocks->pvsurface((int (*)[3]) nsurf,scon,(int (*)[4]) scel,(char (*)[20]) tsurf);
 }
 
-void hp_mgrid::pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]) {
-   static int i, j, k, ijind[30][30], kp, kn, tind, sgn, indx;
+void blocks::pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]) {
+   int i,vrtxoffset;
    
-   kp = (nvrtx +b.sm*nside +b.im*ntri);
-   kn = 0;
+   nsurf[0][0] = 0;
+   vrtxoffset = 0;
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].pvsurface(i,vrtxoffset,nsurf,scon,scel,tsurf);
+
+   return;
+}
+
+void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]) {
+   static int i, j, k, ijind[30][30], kn, tind, sgn, indx;
+   char sname[30];
    
+   kn = nsurf[MAX(snum-1,0)][0];  // END OF PREVIOUS SURFACE OR ZERO
+      
    /* FRONT FACE OF 2D MESH */
    for(tind=0;tind<ntri;++tind) {
 
@@ -355,30 +383,33 @@ void hp_mgrid::pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[]
       /* OUTPUT CONNECTION LIST */      
       for(i=0;i<b.sm+1;++i) {
          for(j=0;j<b.sm-i;++j) {
-            scel[kn][0] = ijind[i][j]+1;
-            scel[kn][1] = ijind[i+1][j]+1;
-            scel[kn][2] = ijind[i][j+1]+1;
+            scel[kn][0] = ijind[i][j]+1 +offset;
+            scel[kn][1] = ijind[i+1][j]+1 +offset;
+            scel[kn][2] = ijind[i][j+1]+1 +offset;
             scel[kn][3] = 0;
             scon[kn++] = 0;
 
-            scel[kn][0] = ijind[i+1][j]+1;
-            scel[kn][1] = ijind[i+1][j+1]+1;
-            scel[kn][2] = ijind[i][j+1]+1;
+            scel[kn][0] = ijind[i+1][j]+1 +offset;
+            scel[kn][1] = ijind[i+1][j+1]+1 +offset;
+            scel[kn][2] = ijind[i][j+1]+1 +offset;
             scel[kn][3] = 0;
             scon[kn++] = 0;   
          }
-         scel[kn][0] = ijind[i][b.sm-i]+1;
-         scel[kn][1] = ijind[i+1][b.sm-i]+1;
-         scel[kn][2] = ijind[i][b.sm+1-i]+1;
+         scel[kn][0] = ijind[i][b.sm-i]+1 +offset;
+         scel[kn][1] = ijind[i+1][b.sm-i]+1 +offset;
+         scel[kn][2] = ijind[i][b.sm+1-i]+1 +offset;
          scel[kn][3] = 0;
          scon[kn++] = 0;   
       }
    }
-   nsurf[0][0] = kn;
-   nsurf[0][1] = 16;
-   nsurf[0][2] = 1000;
-   strcpb(tsurf[0],"2D MESH",20);
+
+   nsurf[snum][0] = kn;
+   nsurf[snum][1] = 16;
+   nsurf[snum][2] = 1000  +snum;
+   number_str(sname,"block",snum,1);
+   strcpb(tsurf[snum],sname,20);
    
+   offset += 2*(nvrtx +b.sm*nside +b.im*ntri);
    
    return;
 }
@@ -388,16 +419,25 @@ void hp_mgrid::pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[]
   pVGRID subroutine which passes the grid coordinates to pV3
 *****************************************************************************/
 void pVGRID(float *xyz) {
-   pvgrds[0]->pvgrid((float (*)[3]) xyz);
+   thisblocks->pvgrid((float (*)[3]) xyz);
 }
 
-void hp_mgrid::pvgrid(float (*xyz)[3]) {
-   static int i,j,n,tind,sind,kn;
+void blocks::pvgrid(float (*xyz)[3]) {
+   int i,kn;
+   
+   kn = 0;
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[0].pvgrid(kn,xyz);
+      
+   return;
+}
+
+void hp_mgrid::pvgrid(int &kn, float (*xyz)[3]) {
+   static int i,j,n,tind,sind,knstart;
    static double zplane;
    static int v0, v1;
    
-   kn = 0;
-   
+   knstart = kn;
    zplane = -0.5;
    
    /* VERTEX MODES */
@@ -453,12 +493,13 @@ void hp_mgrid::pvgrid(float (*xyz)[3]) {
       }
    }
    
-   for(i=0;i<kn;++i) {
+   for(i=knstart;i<kn;++i) {
       for(n=0;n<ND;++n)
-         xyz[i+kn][n] = xyz[i][n];
-      xyz[i+kn][2] = 0.5;
+         xyz[i+kn-knstart][n] = xyz[i][n];
+      xyz[i+kn-knstart][2] = 0.5;
    }
-
+   
+   kn += kn-knstart;
 
    return;
 }
@@ -467,56 +508,136 @@ void hp_mgrid::pvgrid(float (*xyz)[3]) {
   pV3SCAL subroutine which provides all the scalar data to pV3
 *****************************************************************************/
 void pVSCAL(int *key, float *v) {
-   pvgrds[0]->pvscal(key,v);
+   thisblocks->pvscal(key,v);
 }
 
-void hp_mgrid::pvscal(int *key, float *v) {
-
-   switch (*key) {
-      case 1: /* u-velocity */
-         flotov(ug,0,v);
-         break;
-      case 2: /* v-velocity */
-         flotov(ug,1,v);
-         break;
-      case 3: /* pressure */
-         flotov(ug,2,v);
-         break;
-
-      /* RESIDUALS */
-      case 4: /* u-velocity */
-         logflotov(gbl->res,0,v);
-         break;
-      case 5: /* v-velocity */
-         logflotov(gbl->res,1,v);
-         break;
-      case 6: /* pressure */
-         logflotov(gbl->res,2,v);
-         break;         
-         
+void blocks::pvscal(int *key, float *v) {
+   int i,offset;
+   
+   offset = 0;
+   for(i=0;i<nblocks;++i) {
+      switch (*key) {
+         case 1: /* u-velocity */
+            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,0,v);
+            break;
+         case 2: /* v-velocity */
+            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,1,v);
+            break;
+         case 3: /* pressure */
+            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,2,v);
+            break;
+   
+         /* RESIDUALS */
+         case 4: /* u-velocity */
+            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,0,v);
+            break;
+         case 5: /* v-velocity */
+            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,1,v);
+            break;
+         case 6: /* pressure */
+            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,2,v);
+            break;         
+            
 #ifdef SKIP         
-      case 7: /* x-velocity */
-//         mvtov(mv,0,v);
-         break;
-      case 8: /* y-velocity */
-//         mvtov(mv,1,v);
-         break;         
-      case 9: /* x-velocity */
-//         mvgftov(mvgf,0,v);
-         break;
-      case 10: /* y-velocity */
-//         mvgftov(mvgf,1,v);
-         break;
+         case 7: /* x-velocity */
+   //         mvtov(mv,0,v);
+            break;
+         case 8: /* y-velocity */
+   //         mvtov(mv,1,v);
+            break;         
+         case 9: /* x-velocity */
+   //         mvgftov(mvgf,0,v);
+            break;
+         case 10: /* y-velocity */
+   //         mvgftov(mvgf,1,v);
+            break;
 #endif
-   }            
+      }  
+   }
 
    return;
 }
 
-void pVVECT(int *key,FLOAT v[][3]) {
-   pvgrds[0]->pvvect(key,v);
+void hp_mgrid::flotov(int &kn, struct vsi flo,int nvar, float *v) {
+   static int i,j,tind,sind,knstart;
+   
+   knstart = kn;
+   /* VERTEX MODES */
+   for(i=0;i<nvrtx;++i)
+      v[kn++] = flo.v[i][nvar];
+   
+   if (b.p > 1) {
+      /* SIDE MODES */
+      for(sind=0;sind<nside;++sind) {
+         ugtouht1d(sind,flo);
+         b.proj1d_leg(uht[nvar],u[nvar][0]);
+
+         for(i=1;i<b.sm+1;++i)
+            v[kn++] = u[nvar][0][i];   
+      }
+
+      /* INTERIOR MODES */
+      if (b.p > 2) {
+         for(tind = 0; tind < ntri; ++tind) {
+            ugtouht(tind,flo);
+            b.proj_leg(uht[nvar],u[nvar]);
+               
+            for(i=1;i<b.sm;++i)
+               for(j=1;j<b.sm-(i-1);++j)
+                  v[kn++] = u[nvar][i][j];               
+         }
+      }
+   }
+   
+   for(i=knstart;i<kn;++i)
+      v[i+kn-knstart] = v[i];
+
+   kn += kn-knstart;
+   
+   return;
 }
 
+void hp_mgrid::logflotov(int &kn, struct vsi flo,int nvar, float *v) {
+   static int i,j,tind,sind,knstart;
+   
+    knstart = kn;
+   /* VERTEX MODES */
+   for(i=0;i<nvrtx;++i)
+      v[kn++] = log10(fabs(flo.v[i][nvar]) +EPSILON);
+   
+   if (b.p > 1) {
+      /* SIDE MODES */
+      for(sind=0;sind<nside;++sind) {
+         ugtouht1d(sind,flo);
+         b.proj1d_leg(uht[nvar],u[nvar][0]);
+
+         for(i=1;i<b.sm+1;++i)
+            v[kn++] = log10(fabs(u[nvar][0][i]) +EPSILON);   
+      }
+
+      /* INTERIOR MODES */
+      if (b.p > 2) {
+         for(tind = 0; tind < ntri; ++tind) {
+            ugtouht(tind,flo);
+            b.proj_leg(uht[nvar],u[nvar]);
+               
+            for(i=1;i<b.sm;++i)
+               for(j=1;j<b.sm-(i-1);++j)
+                  v[kn++] = log10(fabs(u[nvar][i][j])+EPSILON);               
+         }
+      }
+   }
+   
+   for(i=knstart;i<kn;++i)
+      v[i+kn-knstart] = v[i];
+
+   kn += kn-knstart;
+
+   return;
+}
+
+
+#ifdef SKIP
 void hp_mgrid::pvvect(int *key,FLOAT v[][3]) {
    static int i,j,n,tind,sind,kn;
 
@@ -566,81 +687,7 @@ void hp_mgrid::pvvect(int *key,FLOAT v[][3]) {
    
    return;
 }
-
-
-void hp_mgrid::flotov(struct vsi flo,int nvar, float *v) {
-   static int i,j,tind,sind,kn;
-   
-    kn = 0;
-   /* VERTEX MODES */
-   for(i=0;i<nvrtx;++i)
-      v[kn++] = flo.v[i][nvar];
-   
-   if (b.p > 1) {
-      /* SIDE MODES */
-      for(sind=0;sind<nside;++sind) {
-         ugtouht1d(sind,flo);
-         b.proj1d_leg(uht[nvar],u[nvar][0]);
-
-         for(i=1;i<b.sm+1;++i)
-            v[kn++] = u[nvar][0][i];   
-      }
-
-      /* INTERIOR MODES */
-      if (b.p > 2) {
-         for(tind = 0; tind < ntri; ++tind) {
-            ugtouht(tind,flo);
-            b.proj_leg(uht[nvar],u[nvar]);
-               
-            for(i=1;i<b.sm;++i)
-               for(j=1;j<b.sm-(i-1);++j)
-                  v[kn++] = u[nvar][i][j];               
-         }
-      }
-   }
-   
-   for(i=0;i<kn;++i)
-      v[i+kn] = v[i];
-
-   return;
-}
-
-void hp_mgrid::logflotov(struct vsi flo,int nvar, float *v) {
-   static int i,j,tind,sind,kn;
-   
-    kn = 0;
-   /* VERTEX MODES */
-   for(i=0;i<nvrtx;++i)
-      v[kn++] = log10(fabs(flo.v[i][nvar]) +EPSILON);
-   
-   if (b.p > 1) {
-      /* SIDE MODES */
-      for(sind=0;sind<nside;++sind) {
-         ugtouht1d(sind,flo);
-         b.proj1d_leg(uht[nvar],u[nvar][0]);
-
-         for(i=1;i<b.sm+1;++i)
-            v[kn++] = log10(fabs(u[nvar][0][i]) +EPSILON);   
-      }
-
-      /* INTERIOR MODES */
-      if (b.p > 2) {
-         for(tind = 0; tind < ntri; ++tind) {
-            ugtouht(tind,flo);
-            b.proj_leg(uht[nvar],u[nvar]);
-               
-            for(i=1;i<b.sm;++i)
-               for(j=1;j<b.sm-(i-1);++j)
-                  v[kn++] = log10(fabs(u[nvar][i][j])+EPSILON);               
-         }
-      }
-   }
-   
-   for(i=0;i<kn;++i)
-      v[i+kn] = v[i];
-
-   return;
-}
+#endif
 
 /* strcpb copies str2 into str1 up to, but not including the first null and
    then pads with blanks to the len character */

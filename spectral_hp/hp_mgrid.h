@@ -192,15 +192,13 @@ class hp_mgrid : public spectral_hp {
       friend class blocks;
       
 #ifdef PV3
-      void pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
-      void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
-&kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
-      void pvgrid(float (*xyz)[3]);
-      void pvscal(int *key, float *v);
-      void pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
-      void pvvect(int *key,float v[][3]);
-      void flotov(struct vsi flo,int nvar, float *v);
-      void logflotov(struct vsi flo,int nvar, float *v);
+      void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
+      void pvcell(int &kn, int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
+      void pvgrid(int &kn, float (*xyz)[3]);
+      void pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
+      void pvvect(int *key, float v[][3]);
+      void flotov(int &kn, struct vsi flo,int nvar, float *v);
+      void logflotov(int &kn, struct vsi flo,int nvar, float *v);
 #endif
 };
 
