@@ -4,12 +4,14 @@
 
 
 void mesh::copy(const mesh& tgt) {
-   int i,j,n;
+   int i,n;
       
    if (!initialized) {
       allocate(tgt.maxvst);
       for(i=0;i<tgt.nsbd;++i)
          getnewsideobject(i,tgt.sbdry[i]->idnty());
+      for(i=0;i<tgt.nvbd;++i)
+         getnewvrtxobject(i,tgt.vbdry[i]->idnty());
       initialized = 1;
    }
    else {
@@ -40,13 +42,9 @@ void mesh::copy(const mesh& tgt) {
       
    /* COPY VERTEX BOUNDARY INFO */
    nvbd = tgt.nvbd;
-   for(i=0;i<nvbd;++i) {
-      vbdry[i].type = tgt.vbdry[i].type;
-      vbdry[i].num = tgt.vbdry[i].num;
-      for(j=0;j<vbdry[i].num;++j) 
-         vbdry[i].el[j] = tgt.vbdry[i].el[j];
-   }
-   
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->copy(*tgt.vbdry[i]);
+         
 /* COPY SIDE INFORMATION */
    nside = tgt.nside;
    for(i=0;i<nside;++i)

@@ -24,6 +24,9 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          sbdry[i]->alloc(MAX(inmesh.sbdry[i]->mxsz()/2,10));
       }
       nvbd = inmesh.nvbd;
+      for(i=0;i<nvbd;++i) {
+         getnewvrtxobject(i,inmesh.vbdry[i]->idnty());
+      }
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
    }
@@ -172,10 +175,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    
    /* MOVE VERTEX BDRY INFORMATION */
    for(i=0;i<inmesh.nvbd;++i) {
-      vbdry[i].type = inmesh.vbdry[i].type;
-      vbdry[i].num = inmesh.vbdry[i].num;
-      for(j=0;j<vbdry[i].num;++j)
-         vbdry[i].el[j] = intwk2[inmesh.vbdry[i].el[j]];
+      vbdry[i]->copy(*inmesh.vbdry[i]);
+      vbdry[i]->v() = intwk2[inmesh.vbdry[i]->v()];
    }
    
    treeinit();

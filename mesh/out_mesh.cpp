@@ -173,13 +173,10 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
          /* VERTEX BOUNDARY INFO HEADER */
          fprintf(out,"nvbd: %d\n",nvbd);
          for(i=0;i<nvbd;++i)
-            fprintf(out,"%d %d\n",vbdry[i].type,vbdry[i].num);
-         
-         for(i=0;i<nvbd;++i)
-            for(j=0;j<vbdry[i].num;++j)
-               fprintf(out,"%d\n",vbdry[i].el[j]);
+            vbdry[i]->output(out);
          
          fclose(out);
+         
          break;
 
       default:
@@ -198,8 +195,7 @@ void mesh::setbcinfo() {
       vinfo[i] = 0;
    
    for(i=0;i<nvbd;++i)
-      for(j=0;j<vbdry[i].num;++j)
-         vinfo[vbdry[i].el[j]] = vbdry[i].type;
+      vinfo[vbdry[i]->v()] = vbdry[i]->idnty();
 
    /* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
    for(i=0;i<nside;++i)

@@ -12,6 +12,18 @@
 #include "mesh.h"
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
+void mesh::getnewvrtxobject(int i, int type) {
+   if (type & (PRDX_MASK +PRDY_MASK +COMX_MASK +COMY_MASK) ) {
+      vbdry[i] = new vcom_boundary(*this,type);
+      return;
+   }
+   vbdry[i] = new vrtx_boundary(*this,type);
+
+   return;
+}
+
+
+/* FUNCTION TO CREATE BOUNDARY OBJECTS */
 void mesh::getnewsideobject(int i, int type) {
    if (type & PRDX_MASK) {
       sbdry[i] = new prdx_boundary(*this,type);
@@ -335,6 +347,37 @@ void mesh::length2(int phase) {
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(int i=0;i<nsbd;++i) 
       sbdry[i]->rcv(phase,vlngth,0,0,1);
+   
+   return;
+}
+
+/* GENERIC VERTEX COMMUNICATIONS */
+void vcom_boundary::send (int phase, FLT *base,int bgn,int end, int stride) {
+   int i,k,count,offset;
+   
+   for(i=0;i<nmatch;++i) {
+      if (phase == myphase[i]) {
+         offset = v()*stride;
+         count = 0;
+         for (k=bgn;k<=end;++k) 
+            vmatch[i]->vbuff[count++] = base[offset+k];
+      }
+   }
+      
+   return;
+}
+
+void vcom_boundary::rcv (int phase, FLT *base,int bgn,int end, int stride) {
+   int i,k,count,offset;
+   
+   for(i=0;i<nmatch;++i) {
+      if (phase == myphase[i]) {
+         offset = v()*stride;
+         count = 0;
+         for (k=bgn;k<=end;++k) 
+            base[offset+k] = 0.5*(base[offset+k] +vbuff[count++]);
+      }
+   }
    
    return;
 }

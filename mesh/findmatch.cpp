@@ -5,26 +5,12 @@
 void mesh::findmatch(class mesh& tgt) {
    int i,j;
 
-#ifdef SKIP
    for(i=0;i<nvbd;++i) {
-      if (vbdry[i].type & ALLD_MP) {
-         found = 0;
-         for(j=0;j<tgt.nvbd;++j) {
-            if (vbdry[i].type == tgt.vbdry[j].type) {
-               if (&tgt == this && i == j) continue;  // CAN'T MATCH VERTEX TO ITSELF */
-               vbdry[i].adjmesh = &tgt;
-               vbdry[i].adjbnum = j;
-               vbdry[i].isfrst = 1 -tgt.vbdry[j].isfrst;
-               found = 1;
-               break;
-            }
-         }
-         if (found) {
-            printf("#matched vertex %d to %d\n",vbdry[i].el[0],vbdry[j].el[0]);
-         }
+      for(j=0;j<tgt.nvbd;++j) {
+         if (&tgt == this && i == j) continue;  // CAN'T MATCH VERTEX TO ITSELF */
+         vbdry[i]->match(tgt.vbdry[j]);
       }
    }
-#endif
    
    for(i=0;i<nsbd;++i) {
       for(j=0;j<tgt.nsbd;++j) {

@@ -19,6 +19,7 @@
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
 
 class side_boundary;
+class vrtx_boundary;
 
 class mesh {
    /***************/
@@ -38,20 +39,11 @@ class mesh {
       class quadtree<ND> qtree;
    
       /* VERTEX BOUNDARY INFO */
-      static const int MAXSB = 8;
+      static const int MAXVB = 8;
       int nvbd;
-      int maxvbel;  
-      struct boundary {
-         int type;
-         int num;
-         int *el;
-         /* STUFF FOR COMMUNICATION BOUNDARIES */
-         class mesh *adjmesh;
-         int adjbnum;
-         int isfrst;
-         void *misc;  // POINTER TO ANYTHING ELSE
-      } vbdry[MAXSB];
-
+      vrtx_boundary *vbdry[MAXVB];
+      virtual void getnewvrtxobject(int bnu, int type);
+     
       /* SIDE DATA */      
       int nside;
       int (*svrtx)[ND];
@@ -59,6 +51,7 @@ class mesh {
       int *sinfo;
       
       /* SIDE BOUNDARY INFO */
+      static const int MAXSB = 8;
       int nsbd;
       side_boundary *sbdry[MAXSB]; 
       virtual void getnewsideobject(int bnum, int type);
@@ -211,11 +204,6 @@ class mesh {
 };
 
 #include "boundary.h"
-
-//void inline mesh::init_comm_buf(int factor) {
-//   for(int i=0;i<MAXSB;++i)
-//      vbuff[i] = new FLT[factor];
-// }
 
 /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
 void inline mesh::matchboundaries1() {

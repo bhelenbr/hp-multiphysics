@@ -12,7 +12,93 @@ ONLY INCLUDE FROM WITH MESH
 
 #include <stdio.h>
 
-/* FAT INTERFACE FOR A BOUNDARY CONDITION */   
+class vrtx_boundary {
+   private:
+      mesh &x;
+      int idnum;
+      FLT pt[ND];
+      int v0;
+      
+   public:
+      /* CONSTRUCTOR */
+      vrtx_boundary(mesh &xin, int inid) : x(xin), idnum(inid) { alloc(); }
+      
+      /* ACCESS FUNCTIONS */
+      inline int idnty() const {return(idnum);}
+      inline int& v() {return(v0);}
+      inline mesh& b() {return(x);} // return base mesh
+      
+      virtual void alloc() {}
+      /* OTHER USEFUL STUFF */
+      virtual void copy(const vrtx_boundary &bin) {
+         v0 = bin.v0;
+         for(int n=0;n<ND;++n)
+            pt[n] = bin.pt[n];
+      }
+      virtual void output(FILE *out) {
+         fprintf(out,"vbdry idnum: %d point: %d\n",idnum,v0);
+         for(int n=0;n<ND;++n)
+            fprintf(out,"%f ",pt[n]);
+         fprintf(out,"\n");
+      }
+      virtual void input(FILE *in){
+         fscanf(in,"vbdry idnum: %*d point: %d\n",&v0);
+         for(int n=0;n<ND;++n)
+            fscanf(in,"%lf ",&pt[n]);
+         fscanf(in,"\n");
+      } 
+      virtual void getgeometryfrommesh() {
+         for(int n=0;n<ND;++n) {
+            pt[n] = b().vrtx[v0][n];
+         }
+      }
+      virtual void summarize() {
+         std::printf("#VBDRY %d VRTX %d\n",idnty(),v());
+      }
+      
+      /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
+      virtual int match(vrtx_boundary *in) {return 1;}
+      virtual void setphase(int phase, int match) {}
+      virtual void send(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual void rcv(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual void sendposition(int phase) {return;}
+      virtual void rcvposition(int phase) {return;}
+};
+
+class vcom_boundary : public vrtx_boundary {
+   public:
+      static const int maxmatch = 8;
+      int nmatch;
+      class vcom_boundary *vmatch[maxmatch];
+      int myphase[maxmatch];
+      FLT *vbuff;
+      int msgsize;
+      
+      vcom_boundary(mesh &xin, int inid) : vrtx_boundary(xin, inid), nmatch(0) {}
+      void alloc() {vbuff = new FLT[4];}
+      
+      /* ZERO FIRST VALUE */
+      void setphase(int phase, int match) {myphase[match] = phase;}
+
+      /* MATCH BOUNDARIES */
+      int match(vrtx_boundary *in) {
+         if (in->idnty() == idnty()) {
+            vmatch[nmatch] = dynamic_cast<vcom_boundary *>(in);
+            myphase[nmatch++] = 0; // NOT SURE HOW TO DO THIS YET
+            return(1);
+         }
+         return(0);
+      }
+      
+      /* SEND/RCV VRTX POSITION */
+      void send(int phase, FLT *base,int bgn,int end, int stride);
+      void rcv(int phase, FLT *base,int bgn,int end, int stride);
+      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),0,1,2);}
+      void rcvpositions(int phase) {rcv(phase,&(b().vrtx[0][0]),0,1,2); }
+   
+};
+
+/* INTERFACE FOR A BOUNDARY CONDITION */   
 class side_boundary {
    private:
       mesh &x;
@@ -56,44 +142,6 @@ class side_boundary {
       virtual void sendpositions(int phase) {return;}
       virtual void rcvpositions(int phase) {return;}
 };
-
-#ifdef SKIP
-      /* HP BOUNDARY FUNCTIONS */
-      virtual void setcrv() {}
-      virtual void hpinput(FILE *) {}
-      virtual void hpoutput(FILE *) {}
-      virtual void setbcinfo() {}
-      virtual void loadcrv(int ind, FLT *u[ND], int offset, int ibd = 0) {}
-      
-      /* HP MGRID BOUNDARY FUNCTIONS */
-      virtual void addbflux() {}
-      virtual void vsndx() {}
-      virtual void vsndy() {}
-      virtual void vrcvx() {}
-      virtual void vrcvy() {}
-      virtual void vzero() {}
-      virtual void ssnd(int m) {}
-      virtual void srcv(int m) {}
-      virtual void szero(int m) {}
-      virtual void tstep_sndx() {}
-      virtual void tstep_rcv() {}
-      virtual void tstep_sndy() {}
-      virtual void tstep_rcv(1,) {}
-      virtual void setinflow() {}
-      
-      /* FOR DYNAMIC BOUNDARIES */
-      virtual void tstep1() {}
-      virtual void tstep2() {}
-      virtual void minvrt1() {}
-      virtual void minvrt2() {}
-      virtual void getfres() {}
-      virtual void getcchng() {}
-      virtual void nstage1() {}
-      virtual void nstage2() {}
-      virtual void vrttoug() {}
-      virtual void ugtovrt() {}
-#endif
-
 
 class comm_boundary : public side_boundary {
    public:

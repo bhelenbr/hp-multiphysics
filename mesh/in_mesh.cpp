@@ -105,11 +105,10 @@ next1:      continue;
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
                   /* NEW VRTX B.C. */
-                  vbdry[nvbd].type = vinfo[i];
-                  vbdry[nvbd].num = 1;
-                  vbdry[nvbd].el[0] = i;
+                  getnewvrtxobject(vinfo[i],nvbd);
+                  vbdry[nvbd]->v() = i;
                   ++nvbd;
-                  if (nvbd >= MAXSB) {
+                  if (nvbd >= MAXVB) {
                      printf("Too many vertex boundary conditions: increase MAXSB %d\n",nvbd);
                      exit(1);
                   }
@@ -310,15 +309,14 @@ next1:      continue;
                getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
             }
-                  
+            
             /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"nvbd: %d\n",&nvbd);
-            for(i=0;i<nvbd;++i)
-               fscanf(grd,"%d %d\n",&vbdry[i].type,&vbdry[i].num);
-            
-            for(i=0;i<nvbd;++i)
-               for(j=0;j<vbdry[i].num;++j)
-                  fscanf(grd,"%d\n",&vbdry[i].el[j]);
+            for(i=0;i<nvbd;++i) {
+               fscanf(grd,"type: %d\n",&temp);
+               getnewvrtxobject(i,temp);
+               vbdry[i]->input(grd);
+            }
             
             break;
             

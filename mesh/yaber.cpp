@@ -57,9 +57,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    }
    
    for(i=0;i<nvbd;++i)
-      for(j=0;j<vbdry[i].num;++j)
-         vinfo[vbdry[i].el[j]] = 1;
- 
+      vinfo[vbdry[i]->v()] = 1;
    
    /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
@@ -128,11 +126,9 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nvbd;++i)
-      for(j=0;j<vbdry[i].num;++j) 
-         while (vbdry[i].el[j] >= nvrtx) 
-            vbdry[i].el[j] = vinfo[vbdry[i].el[j]];  
+      while (vbdry[i]->v() >= nvrtx) 
+         vbdry[i]->v() = vinfo[vbdry[i]->v()];  
    
-         
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       for(j=sbdry[i]->nsd()-1;j>=0;--j) 

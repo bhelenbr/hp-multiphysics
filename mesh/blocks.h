@@ -77,7 +77,7 @@ template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::s
    
    data.str(input["niter"]);   
    data >> niter;
-   std::cout << "#niter:" << ngrid << endl;
+   std::cout << "#niter:" << niter << endl;
    data.clear();
    
    data.str(input["ntstep"]);   
