@@ -129,7 +129,7 @@ int mesh::collapse(int sind) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
             bnum = (-stri[sind][1]>>16) -1;
             delt = sbdry[bnum].isfrst;
-            printf("#Warning: degenerate case in edge collapse, picking %d\n",delt);
+            printf("#Warning: degenerate case in edge collapse for bdry %d, picking %d\n",sbdry[bnum].type,delt);
          }
       }
    }
