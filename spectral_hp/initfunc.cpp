@@ -19,8 +19,7 @@ FLT rad = RADIUS;
 FLT centerx = CENTERX;
 FLT centery = CENTERY;
 
-FLT amp = AMP;
-FLT lam = LAM;
+FLT amp,lam,theta;
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -62,11 +61,30 @@ FLT f1(int n, FLT x, FLT y) {
    
    switch(n) {
       case(0):
-         return(lam +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
+         return(lam +0.5*pow(outertime,2) +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
       case(1):
-         return(0.0 +startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
+         return(+startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
       case(2):
-         return(0.0 +startup*amp*x*(1.-x)*((sin(xx) +sin(8*xx))*(sin(yx)+sin(8*yx))));
+         return(startup*amp*x*(1.-x)*((sin(xx) +sin(8*xx))*(sin(yx)+sin(8*yx))));
+   }
+
+   return(0.0);
+}
+#endif
+
+#ifdef SHEAR
+extern FLT outertime;
+FLT f1(int n, FLT x, FLT y) {
+   FLT xx = x*2.*M_PI;
+   FLT yx = y*2.*M_PI;
+
+   switch(n) {
+      case(0):
+         return(1.0 +lam*y +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
+      case(1):
+         return(startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
+      case(2):
+         return(startup*amp*x*(1.-x)*((sin(xx) +sin(8*xx))*(sin(yx)+sin(8*yx))));
    }
 
    return(0.0);
@@ -87,6 +105,27 @@ FLT f1(int n, FLT x, FLT y) {
             return(1.0);
       case(1):
          return(0.0);
+      case(2):
+         return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef SPHERE
+FLT f1(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
+         return(0.0);
+      case(1):
+         if (r < 0.55) 
+            return(0.0);
+         else
+            return(1.0);
       case(2):
          return(0.0);
    }
@@ -128,7 +167,7 @@ FLT f2(int n, FLT x, FLT y) {
          else
             return(1.0);
       case(2):
-         return(4*1.0); //4*sigma
+         return(4*10.0); //4*sigma
    }
    return(0.0);
 }
@@ -146,7 +185,7 @@ FLT f1(int n, FLT x, FLT y) {
       case(0):
          return(0.0);
       case(1):
-         return(0.0+amp*sin(2.*M_PI*outertime/100.0));
+         return(lam+amp*sin(2.*M_PI*outertime/theta));
       case(2):
          return(0.0);
    }
@@ -263,7 +302,6 @@ FLT body[2];
 static FLT h = 2.0;
 FLT mux[2];
 FLT rhox[2];
-FLT theta;
 
 
 double f1(int n, double x, double y) { 
@@ -313,7 +351,6 @@ double f1(int n, double x, double y) {
 FLT body[ND];
 FLT mux[3];
 FLT rhox[3];
-FLT theta;
 
 double f1(int n, double x, double y) { 
    FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
