@@ -104,7 +104,7 @@ void blocks::viz_init(int iopt) {
    
 */
    thisblocks = this;   
-   printf("%s\n",ttl);
+   printf("%s",ttl);
 
    mirr   = 0;
    istat  = 0;
