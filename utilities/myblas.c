@@ -13,18 +13,18 @@ void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs) {
 			for(n=0;n<rhs;++n)
 				b[rhs*i +n] -= abd[i][j]*b[(ba+j)*rhs +n];
 
-		for(n=0;n<3;++n)
+		for(n=0;n<rhs;++n)
 			b[i*rhs +n] /= abd[i][ofdg];
 	}
 
 	for(i=ordr-1;i>=0;--i) {
- 		for(n=0;n<3;++n)
+ 		for(n=0;n<rhs;++n)
  			b[i*rhs +n] /= abd[i][ofdg];
 
  		frst = (ofdg -i > 0 ? ofdg -i : 0);
  		ba = i-ofdg +frst;
  		for(j=frst;j<ofdg;++j)
- 			for(n=0;n<3;++n)
+ 			for(n=0;n<rhs;++n)
 				b[rhs*(ba+j) +n] -= abd[i][j]*b[i*rhs +n];
 	}
 	
