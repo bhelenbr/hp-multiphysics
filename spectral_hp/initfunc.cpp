@@ -16,7 +16,7 @@
 
 /* INITIAL CONDITIONS */
 /* KOVASZNAY TEST CYLINDER FREESTREAM */
-#define CONVDIFF
+#define TWOLAYER
 
 /*	CURVED SURFACES */
 /* CIRCLE SIN COS */
@@ -31,7 +31,7 @@ FLT centery = 0.0;
 #ifdef COS
 FLT amp = 0.375;
 #else
-FLT amp = 0.25*0.075;
+FLT amp = 0.01;
 #endif
 
 
@@ -186,6 +186,63 @@ FLT df1d(int n, FLT x, FLT y) {
 #endif
 
 
+#ifdef TWOLAYER
+
+FLT body[2];
+static FLT h = 1.75;
+
+double f1(int n, double x, double y) { 
+   FLT bf,re,g1,g2,n1,n2,q1,q2;
+   FLT mux[2] = {1.0,2.5};
+   FLT rhox[2] = {1.0,1.0};
+   FLT theta = 0.2;
+
+   /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+   /* THETA DEFINED + CLOCKWISE */
+   bf = mux[0]/(rhox[0]*(0.5 +(h-1)*rhox[1]/rhox[0])*sin(theta));
+   body[0] = bf*sin(theta);
+   body[1] = -bf*cos(theta);
+   
+   re = rhox[0]/mux[0];
+   g1 = -bf*sin(theta);
+   g2 = -bf*rhox[1]/rhox[0]*sin(theta);
+   n1 = 1;
+   q1 = 1;
+   n2 = mux[1]/mux[0];
+   q2 = rhox[1]/rhox[0];
+   
+/*   bf = 1.0;
+   body[0] = 0.0;
+   body[1] = -1.0;
+   theta = 0.0; */
+
+   if (y < 1) {
+      switch (n) {
+         case(0):
+            return(0.5*re*g1/n1*y*y +(re*g2*(1-h)-re*g1)*y);
+         case(1):
+            return(0.0);
+         case(2):
+            return(-bf*q1*cos(theta)*(y-h));
+      }
+   }
+   else {
+      switch (n) {
+         case(0):
+            return(0.5*re*g1/n2*y*y -re*g2*h/n2*y -0.5*g2*re/n2 +re*g2*h/n2 +re*g2*(1-h)-re*g1/2);
+         case(1):
+            return(0.0);
+         case(2):
+            return(-bf*q2*cos(theta)*(y-h));
+      }
+   }   
+      
+   return(0.0);
+}
+#endif
+
+
+
 /***************************/
 /* CURVED SIDE DEFINITIONS */
 /***************************/
@@ -286,13 +343,14 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       
       return;
    }
-   
+
+#ifdef TWOLAYER
    if (typ == 1026) {
       if (startup) {
          iter = 0;
          do {
             mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-            delt_dist = -(hgt(typ,x,y)+0.5)/mag;
+            delt_dist = -(hgt(typ,x,y)-1.0)/mag;
             x += delt_dist*dhgtdx(typ,x,y);
             y += delt_dist*dhgtdy(typ,x,y);
             if (++iter > 100) {
@@ -306,6 +364,28 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       
       return;
    }
+
+   if (typ == 1025) {
+      if (startup) {
+         iter = 0;
+         do {
+            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
+            delt_dist = -(hgt(typ,x,y)-h)/mag;
+            x += delt_dist*dhgtdx(typ,x,y);
+            y += delt_dist*dhgtdy(typ,x,y);
+            if (++iter > 100) {
+               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               exit(1);
+            }
+         } while (fabs(delt_dist) > 10.*EPSILON);
+      }
+      else
+         tgt->findbdrypt(typ,x,y,psi);
+
+      return;
+   }
+   
+#endif
    
    if (typ == 66562) {
        if (startup) {
@@ -325,7 +405,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
          tgt->findbdrypt(typ,x,y,psi);
       
       return;
-   }  
+   }
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {
       if (startup) {
