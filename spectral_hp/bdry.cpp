@@ -672,7 +672,7 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
    /* DEPENDENT ON FREESTREAM CONDITIONS */
    ur =  wr[0]*norm[0] +wr[1]*norm[1];
    vr = -wr[0]*norm[1] +wr[1]*norm[0];
-   pr =  wr[3];
+   pr =  wr[2];
       
    um = mv[0]*norm[0] +mv[1]*norm[1];
    
@@ -686,7 +686,7 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
    lam0 = u -um;
    lam1 = u-.5*um +c; /* always positive */
    lam2 = u-.5*um -c; /* always negative */
-   
+      
    /* PERFORM CHARACTERISTIC SWAP */
    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
    uvp[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
@@ -695,7 +695,7 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
    else
       uvp[1] = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
    uvp[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
-
+   
    /* CHANGE BACK TO X,Y COORDINATES */
    wl[0] =  uvp[0]*norm[0] -uvp[1]*norm[1];
    wl[1] =  uvp[0]*norm[1] +uvp[1]*norm[0];
@@ -704,7 +704,7 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
    /* SHOULDN'T CHANGE NORM */   
    norm[0] *= mag;
    norm[1] *= mag;
-   
+      
    return;
  
 }
