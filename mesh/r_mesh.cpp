@@ -635,11 +635,11 @@ void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
             sind = sbdry[i].el[j];
             offset = svrtx[sind][0]*stride;
             for (k=bgn;k<=end;++k) 
-               tgt->recvbuf[bnum][count++] = base[offset+k];
+               tgt->sbuff[bnum][count++] = base[offset+k];
          }
          offset = svrtx[sind][1]*stride;
          for (k=bgn;k<=end;++k) 
-            tgt->recvbuf[bnum][count++] = base[offset+k];
+            tgt->sbuff[bnum][count++] = base[offset+k];
       }
    }
    
@@ -656,11 +656,11 @@ void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
             sind = sbdry[i].el[j];
             offset = svrtx[sind][1]*stride;
             for (k=bgn;k<=end;++k) 
-               base[offset+k] = 0.5*(base[offset+k] +recvbuf[i][count++]);
+               base[offset+k] = 0.5*(base[offset+k] +sbuff[i][count++]);
          }
          offset = svrtx[sind][0]*stride;
          for (k=bgn;k<=end;++k) 
-               base[offset+k] = 0.5*(base[offset+k] +recvbuf[i][count++]);
+               base[offset+k] = 0.5*(base[offset+k] +sbuff[i][count++]);
       }
    }
    

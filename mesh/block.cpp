@@ -8,6 +8,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    grd = new class r_mesh[ngrid];
    
    grd[0].in_mesh(filename,filetype,grwfac);
+   grd[0].init_comm_buf(8);
    
 /* WORK VARIABLES FOR MGRID */
    maxvst = grd[0].max();
@@ -20,6 +21,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
+      grd[i].init_comm_buf(8);
 /*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);

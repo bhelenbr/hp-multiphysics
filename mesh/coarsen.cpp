@@ -75,8 +75,6 @@ int mesh::coarsen(const class mesh& fmesh) {
 	for(i=0;i<nsbd;++i) {
 		sbdry[i].num = 0;
 		sbdry[i].type = fmesh.sbdry[i].type;
-      if (sbdry[i].type & ALLD_MP)
-         recvbuf[i] = new FLT[8*maxsbel];
 
 /*		CHECK IF FIRST POINT INSERTED*/
 		v0 = fmesh.svrtx[fmesh.sbdry[i].el[0]][0];

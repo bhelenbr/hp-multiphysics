@@ -3,7 +3,37 @@
 #define ND 2
 #define MAXSB 16
 #define MAXLST 1000
+
+/*	FIRST 16 BITS DETERMINE TYPE */
+/* LAST 16 BITS GIVE UNIQUE IDENTITY NUMBER */
+/*	IDENTITY NUMBER SHOULD BE THE SAME FOR SIDES WHICH MATCH */
+/*	IDENTITIY NUMBER IS UNIQUE ONLY FOR EACH TYPE */
+#define FSRF_MASK (1<<0)
+#define IFCE_MASK (1<<1)
+#define INFL_MASK (1<<2)
+#define OUTF_MASK (1<<3)
+#define SYMM_MASK (1<<4)
+#define EULR_MASK (1<<5)
+#define PRDX_MASK (1<<6)
+#define PRDY_MASK (1<<7)
+#define COMX_MASK (1<<8)
+#define COMY_MASK (1<<9)
+#define CURV_MASK (1<<10)
+
+/* MASK FOR ALL MESSAGE PASSING BOUNDARIES */
+/* X/Y SPLIT ONLY WORKS FOR FACE TO FACE BOUNDARIES & 2X2 BOUNDARY INTERSECTIONS */
+#define XDIR_MP (PRDX_MASK +COMX_MASK)
+#define YDIR_MP (PRDY_MASK +COMY_MASK +IFCE_MASK)
+#define ALLD_MP (XDIR_MP +YDIR_MP)
+                             
+#if (FLT == double)
+#define EPSILON DBL_EPSILON
+#else
+#define EPSILON FLT_EPSILON
+#endif
+
 #include<quadtree.h>
+
 
 enum FILETYPE {easymesh, gambit, tecplot, text, binary};
 
@@ -36,7 +66,7 @@ class mesh {
          class mesh *adjmesh;
          int adjbnum;
       } vbdry[MAXSB];
-   
+
 /*    SIDE DATA */      
       int nside;
       int (*svrtx)[ND];
@@ -47,7 +77,7 @@ class mesh {
       int nsbd;
       int maxsbel;
       struct boundary sbdry[MAXSB];
-   
+
 /*    TRIANGLE DATA */      
       int ntri;
       int (*tvrtx)[3];
@@ -132,8 +162,19 @@ class mesh {
       mesh& operator=(const mesh& tgt) {this->copy(tgt); return(*this);}
       void copy(const mesh& tgt);
       
-/*		THIS HAS TO BE PUBLIC SO WE CAN RECIEVE MESSAGES FROM OTHER MESHES */
-      FLT *recvbuf[MAXSB];
+/*		ALLOCATE COMMUNICATION BUFFERS */
+/*		THESE HAVE TO BE PUBLIC TO RECEIVE MESSAGES */
+      FLT *vbuff[MAXSB];
+      FLT *sbuff[MAXSB];
+      void inline init_comm_buf(int factor) {
+         for(int i=0;i<nvbd;++i)
+            if (vbdry[i].type & ALLD_MP)
+               vbuff[i] = new FLT[factor];
+
+         for(int i=0;i<nsbd;++i)
+            if (sbdry[i].type & ALLD_MP)
+               sbuff[i] = new FLT[factor*maxsbel];
+      }
 
 /*    INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
@@ -163,71 +204,4 @@ class mesh {
       int setfine(const class mesh& tgt);
       int setcoarse(const class mesh& tgt);
 };
-
-
-/*	FIRST 16 BITS DETERMINE TYPE */
-/* LAST 16 BITS GIVE UNIQUE IDENTITY NUMBER */
-/*	IDENTITY NUMBER SHOULD BE THE SAME FOR SIDES WHICH MATCH */
-/*	IDENTITIY NUMBER IS UNIQUE ONLY FOR EACH TYPE */
-#define FSRF_MASK (1<<0)
-#define IFCE_MASK (1<<1)
-#define INFL_MASK (1<<2)
-#define OUTF_MASK (1<<3)
-#define SYMM_MASK (1<<4)
-#define EULR_MASK (1<<5)
-#define PRDX_MASK (1<<6)
-#define PRDY_MASK (1<<7)
-#define COMX_MASK (1<<8)
-#define COMY_MASK (1<<9)
-#define CURV_MASK (1<<10)
-
-/* MASK FOR ALL MESSAGE PASSING BOUNDARIES */
-/* X/Y SPLIT ONLY WORKS FOR FACE TO FACE BOUNDARIES & 2X2 BOUNDARY INTERSECTIONS */
-#define XDIR_MP (PRDX_MASK +COMX_MASK)
-#define YDIR_MP (PRDY_MASK +COMY_MASK +IFCE_MASK)
-#define ALLD_MP (XDIR_MP +YDIR_MP)
-
-/* MAPPING FROM OLD DEFINITIONS TO NEW */
-#define NOLDBTYPE 14
-
-#define FSRF_OLD 1
-#define FCE1_OLD 2
-#define FCE2_OLD 4
-#define INFC_OLD 8
-#define INFS_OLD 32
-#define SYMC_OLD 16
-#define PDX1_OLD 64
-#define PDX2_OLD 128
-#define OUTF_OLD 512
-#define INVC_OLD 1024
-#define INVS_OLD 2048
-#define PDY1_OLD 4096
-#define PDY2_OLD 8192
-#define FXMV_OLD 256
-#define OUT2_OLD 513
-
-#define NOUSEOLDBTYPE
-
-const int oldbtype[NOLDBTYPE][2] = 
-                             {{FSRF_OLD,FSRF_MASK},
-                             {FCE1_OLD,IFCE_MASK},
-                             {FCE2_OLD,IFCE_MASK},
-                             {INFC_OLD,INFL_MASK+CURV_MASK},
-                             {INFS_OLD,INFL_MASK},
-                             {SYMC_OLD,SYMM_MASK},
-                             {PDX1_OLD,PRDX_MASK},
-                             {PDX2_OLD,PRDX_MASK},
-                             {OUTF_OLD,OUTF_MASK},
-                             {INVC_OLD,EULR_MASK+CURV_MASK},
-                             {INVS_OLD,EULR_MASK},
-                             {PDY1_OLD,PRDY_MASK},
-                             {PDY2_OLD,PRDY_MASK},
-                             {OUT2_OLD,OUTF_MASK+(1<<16)}};
-                             
-#if (FLT == double)
-#define EPSILON DBL_EPSILON
-#else
-#define EPSILON FLT_EPSILON
-#endif
-
    
