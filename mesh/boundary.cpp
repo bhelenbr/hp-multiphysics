@@ -75,7 +75,7 @@ void side_boundary::getgeometryfrommesh() {
 void side_boundary::alloc(int n) {
    maxel = n;
    vect_alloc(el,n,int);
-   s = (FLT (*)[ND]) xmalloc(2*n*sizeof(FLT));
+   s = (FLT (*)[2]) xmalloc(2*n*sizeof(FLT));
 }
 
      

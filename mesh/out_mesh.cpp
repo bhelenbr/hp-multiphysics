@@ -6,7 +6,7 @@
 int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) const {
    char fnmapp[100];
    FILE *out;
-   int i,j,tind,count;
+   int i,j,n,tind,count;
    
    switch (filetype) {
    
@@ -20,9 +20,12 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
             exit(1);
          }
          fprintf(out,"%d\n",nvrtx);
-         for(i=0;i<nvrtx;++i)
-            fprintf(out,"\t%d: %17.10e %17.10e %d\n",i,vin[i][0],vin[i][1],vinfo[i]); 
-            
+         for(i=0;i<nvrtx;++i) {
+            fprintf(out,"\t%d: ",i);
+            for(n=0;n<ND;++n)
+               fprintf(out,"%17.10e ",vin[i][n]);
+            fprintf(out,"%d\n",vinfo[i]);
+         }            
          fclose(out);
 
          /* SIDE FILE */      
@@ -61,8 +64,11 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
 
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
          
-         for(i=0;i<nvrtx;++i)
-            fprintf(out,"%e  %e  \n",vin[i][0],vin[i][1]);
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               fprintf(out,"%e  ",vin[i][n]);
+            fprintf(out,"\n");
+         }
 
            fprintf(out,"\n#CONNECTION DATA#\n");
          
@@ -90,7 +96,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
          fprintf(out,"VERSION    8.01\n");
          fprintf(out,"29 Nov 1999    13:23:58\n");
          fprintf(out,"   NO. OF NODES   NO. ELEMENTS NO. ELT GROUPS          NDFCD          NDFVL\n");
-         fprintf(out,"%15d%15d%15d%15d%15d\n",nvrtx,count,nsbd+1,2,2);
+         fprintf(out,"%15d%15d%15d%15d%15d\n",nvrtx,count,nsbd+1,ND,ND);
          fprintf(out,"   STEADY/TRANS     TURB. FLAG FREE SURF FLAG    COMPR. FLAG   RESULTS ONLY\n");
          fprintf(out,"%12d%12d%12d%12d%12d\n",0,0,0,0,0);
          fprintf(out,"TEMPERATURE/SPECIES FLAGS\n");
@@ -99,8 +105,12 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
          fprintf(out,"         1         1         0\n");
          fprintf(out,"NODAL COORDINATES\n");
          
-         for(i=0;i<nvrtx;++i) 
-            fprintf(out,"%10d%20.10e%20.10e\n",i+1,vin[i][0],vin[i][1]);
+         for(i=0;i<nvrtx;++i) {
+            fprintf(out,"%10d",i+1);
+            for(n=0;n<ND;++n)
+               fprintf(out,"%20.10e",vin[i][n]);
+            fprintf(out,"\n");
+         }
             
          fprintf(out,"BOUNDARY CONDITIONS\n");
          fprintf(out,"         0         0         0     0.0\n");
@@ -134,8 +144,12 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
             exit(1);
          }
          fprintf(out,"%d\n",nvrtx);
-         for(i=0;i<nvrtx;++i)
-            fprintf(out,"\t%d: %17.10e %17.10e\n",i,vin[i][0],vin[i][1]); 
+         for(i=0;i<nvrtx;++i) {
+            fprintf(out,"\t%d:",i);
+            for(n=0;n<ND;++n)
+               fprintf(out," %17.10e",vin[i][n]); 
+            fprintf(out,"\n");
+         }
             
          fclose(out);
          break;
@@ -153,8 +167,11 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
          fprintf(out,"nvrtx: %d\t nside: %d\t ntri: %d\n",nvrtx,nside,ntri);
 
          /* VRTX INFO */                        
-         for(i=0;i<nvrtx;++i)
-            fprintf(out,"%17.10e %17.10e\n",vin[i][0],vin[i][1]);
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               fprintf(out,"%17.10e ",vin[i][n]);
+            fprintf(out,"\n");
+         }
                     
          /* SIDE INFO */
          for(i=0;i<nside;++i)

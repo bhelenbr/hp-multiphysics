@@ -8,7 +8,7 @@
 #include<assert.h>
 
 int mesh::coarsen(FLT factor, const class mesh& inmesh) {
-   int i,j,k,sind,count;
+   int i,j,k,n,sind,count;
    int v0, v1, odd;
    int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
    int nloop;
@@ -61,8 +61,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       /* CHECK IF FIRST POINT INSERTED*/
       v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(0)][0];
       if (intwk2[v0] < 0) {
-         vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
-         vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
+         for(n=0;n<ND;++n)
+            vrtx[nvrtx][n] = inmesh.vrtx[v0][n];
          intwk2[v0] = nvrtx;
          svrtx[nside][0] = nvrtx;
          ++nvrtx;
@@ -76,8 +76,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       if (odd) {
          for(j=2;j<inmesh.sbdry[i]->nsd()/2;j+=2) {
             v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
-            vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
-            vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
+            for(n=0;n<ND;++n)
+               vrtx[nvrtx][n] = inmesh.vrtx[v0][n];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
             sbdry[i]->sd(sbdry[i]->nsd()) = nside;
@@ -96,8 +96,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             j = inmesh.sbdry[i]->nsd()/2;
             v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
             v1 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][1];
-            vrtx[nvrtx][0] = 0.5*(inmesh.vrtx[v0][0] +inmesh.vrtx[v1][0]);
-            vrtx[nvrtx][1] = 0.5*(inmesh.vrtx[v0][1] +inmesh.vrtx[v1][1]);
+            for(n=0;n<ND;++n)
+               vrtx[nvrtx][n] = 0.5*(inmesh.vrtx[v0][n] +inmesh.vrtx[v1][n]);
             intwk2[v0] = nvrtx;
             intwk2[v1]= nvrtx;
             svrtx[nside][1] = nvrtx;
@@ -114,8 +114,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          
          for(j = inmesh.sbdry[i]->nsd() -((inmesh.sbdry[i]->nsd()-2)/4)*2;j<inmesh.sbdry[i]->nsd();j+=2) {
             v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
-            vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
-            vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
+            for(n=0;n<ND;++n)
+               vrtx[nvrtx][n] = inmesh.vrtx[v0][n];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
             sbdry[i]->sd(sbdry[i]->nsd()) = nside;
@@ -132,8 +132,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       else {
          for(j=2;j<inmesh.sbdry[i]->nsd();j+=2) {
             v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
-            vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
-            vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
+            for(n=0;n<ND;++n)
+               vrtx[nvrtx][n] = inmesh.vrtx[v0][n];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
             sbdry[i]->sd(sbdry[i]->nsd()) = nside;
@@ -151,8 +151,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       /* INSERT LAST POINT */
       v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(inmesh.sbdry[i]->nsd()-1)][1];
       if (intwk2[v0] < 0) {
-         vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
-         vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
+         for(n=0;n<ND;++n)
+            vrtx[nvrtx][n] = inmesh.vrtx[v0][n];
          intwk2[v0] = nvrtx;
          svrtx[nside][1] = nvrtx;
          sbdry[i]->sd(sbdry[i]->nsd()) = nside;
@@ -244,7 +244,7 @@ FINDNEXT:
       mindist = qtree.nearpt(inmesh.vrtx[i],j);
       if (sqrt(mindist) < fltwk[i]) continue;
       
-      insert(inmesh.vrtx[i][0],inmesh.vrtx[i][1]);
+      insert(inmesh.vrtx[i]);
    }
    cnt_nbor();
    
@@ -329,6 +329,9 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
       for(i=0;i<nsbd;++i)
          getnewsideobject(i,inmesh.sbdry[i]->idnty());
       nvbd = inmesh.nvbd;
+      for(i=0;i<nvbd;++i) {
+         getnewvrtxobject(i,inmesh.vbdry[i]->idnty());
+      }
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
    }      

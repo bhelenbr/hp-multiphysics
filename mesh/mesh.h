@@ -42,12 +42,12 @@ class mesh {
       static const int MAXVB = 8;
       int nvbd;
       vrtx_boundary *vbdry[MAXVB];
-      virtual void getnewvrtxobject(int bnu, int type);
+      virtual void getnewvrtxobject(int bnum, int type);
      
       /* SIDE DATA */      
       int nside;
-      int (*svrtx)[ND];
-      int (*stri)[ND];
+      int (*svrtx)[2];
+      int (*stri)[2];
       int *sinfo;
       
       /* SIDE BOUNDARY INFO */
@@ -87,7 +87,7 @@ class mesh {
       /*  INTERFACE */
       /**************/
       /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), fine(NULL), coarse(NULL) {}
+      mesh() : initialized(0), fmpt(NULL), cmpt(NULL), fine(NULL), coarse(NULL) {}
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
@@ -155,10 +155,10 @@ class mesh {
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
-      int insert(FLT x, FLT y);
+      int insert(FLT x[ND]);
       int insert(int tind, int vnum, FLT theta = 0.0);
       void bdry_insert(int tind, int snum, int vnum);
-      int findtri(FLT x, FLT y, int vnear) const;
+      int findtri(FLT x[ND], int vnear) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
@@ -184,12 +184,18 @@ class mesh {
 
       /* PRIMITIVE FUNCTIONS */
       inline FLT distance(int v0, int v1) const {
-         return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
+         FLT d = 0.0;
+         for(int n = 0; n<ND;++n)
+            d += pow(vrtx[v0][n] -vrtx[v1][n],2);
+         return(sqrt(d));
       }
       inline FLT distance2(int v0, int v1) const {
-         return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
-      }     
-      FLT incircle(int tind, double *a) const;
+         FLT d = 0.0;
+         for(int n = 0; n<ND;++n)
+            d += pow(vrtx[v0][n] -vrtx[v1][n],2);
+         return(d);
+      }  
+      FLT incircle(int tind, FLT *a) const;
       FLT insidecircle(int sind, FLT *a) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
@@ -197,9 +203,9 @@ class mesh {
       FLT minangle(int v0, int v1, int v2) const;
       FLT angle(int v0, int v1, int v2) const;
       FLT tradius(int tind) const;
-      void tcenter(int tind, FLT &xpt, FLT &ypt) const;
+      void tcenter(int tind, FLT x[ND]) const;
       FLT aspect(int tind) const;
-      FLT intri(int tind, FLT x, FLT y) const;
+      FLT intri(int tind, FLT x[ND]) const;
       void getwgts(FLT *) const;
 };
 

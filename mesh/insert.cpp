@@ -17,17 +17,17 @@ int mesh::nslst;
 int mesh::ntdel, mesh::tdel[mesh::MAXLST+1];
 int mesh::nsdel, mesh::sdel[mesh::MAXLST+1];
 
-int mesh::insert(FLT x, FLT y) {
-   int tind,vnear,err;
+int mesh::insert(FLT x[ND]) {
+   int n,tind,vnear,err;
    
-   vrtx[nvrtx][0] = x;
-   vrtx[nvrtx][1] = y;
+   for(n=0;n<ND;++n)
+      vrtx[nvrtx][n] = x[n];
    
    qtree.addpt(nvrtx);
    qtree.nearpt(nvrtx,vnear);
 
    /* FIND TRIANGLE CONTAINING POINT */      
-   tind = findtri(x,y,vnear);
+   tind = findtri(x,vnear);
    assert(tind > -1);  
    if (nvrtx >= maxvst) {
       printf("need to use larger growth factor: too many vertices\n");
@@ -456,7 +456,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
 
 int mesh::maxsrch = MAXLST*3/4;
 
-int mesh::findtri(FLT x, FLT y, int vnear) const {
+int mesh::findtri(FLT x[ND], int vnear) const {
    int i,j,vn,dir,stoptri,tin,tind;
 
    /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
@@ -483,7 +483,7 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
       tdel[ntdel++] = tind;
       assert(ntdel < MAXLST -1);
 
-      if (intri(tind,x,y) < EPSILON) goto FOUND;
+      if (intri(tind,x) < EPSILON) goto FOUND;
          
    } while(tind != stoptri); 
    
@@ -497,7 +497,7 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
          if (intwk1[tind] == 0) continue;
          intwk1[tind] = 0;
          tdel[ntdel++] = tind;         
-         if (intri(tind,x,y) < EPSILON) goto FOUND;
+         if (intri(tind,x) < EPSILON) goto FOUND;
       }
       if (i >= maxsrch) break;
    }

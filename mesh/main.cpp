@@ -12,28 +12,38 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
    clock_t cpu_time;
+   mesh x;
    class blocks<block<r_mesh> > z;
 
+
+//	x.in_mesh("/Users/helenbrk/Codes/grids3d/circ3",easymesh,10.0);
+   x.in_mesh("test",grid,10.0);
+
+   mesh y;
+   y.refineby2(x);
+   y.out_mesh("test",easymesh);
+   
+   return(0);
 
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
    /* START CLOCK TIMER */
    clock();
 
-   map<string,string> input;
+   map<string,string> input[2];
    
-   input["nblock"] = "1";
-   input["ngrid"] = "5";
-   input["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
-   input["growth factor"] = "10.0";
-   input["filetype"] = "0";
-   input["fadd"] = "1.0";
-   input["vnn"] = "0.5";
-   input["ntstep"] = "1";
-   input["itercrsn"] = "1";
-   input["niter"] = "50";
-   input["tolerance"] = "0.66";
+   input[0]["nblock"] = "1";
+   input[0]["ngrid"] = "5";
+   input[0]["ntstep"] = "1";
+   input[0]["fadd"] = "1.0";
+   input[0]["vnn"] = "0.5";
+   input[0]["itercrsn"] = "1";
+   input[0]["niter"] = "50";
+   input[0]["tolerance"] = "0.66";
    
+   input[1]["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
+   input[1]["growth factor"] = "10.0";
+   input[1]["filetype"] = "0";
 
    z.load_constants(input);
    z.init(input);

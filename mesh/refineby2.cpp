@@ -11,8 +11,8 @@
 #include<assert.h>
 
 void mesh::refineby2(const class mesh& inmesh) {
-   int i,j,k,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
-   FLT xpt,ypt;
+   int i,j,k,n,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
+   FLT xpt[ND];
    
    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
    /* BECAUSE OF INTWK USAGE */
@@ -26,6 +26,9 @@ void mesh::refineby2(const class mesh& inmesh) {
          sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->mxsz(),10));
       }
       nvbd = inmesh.nvbd;
+      for(i=0;i<nvbd;++i) {
+         getnewvrtxobject(i,inmesh.vbdry[i]->idnty());
+      }
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
    }
@@ -42,19 +45,20 @@ void mesh::refineby2(const class mesh& inmesh) {
       v1 = svrtx[sind][1];
       
       /* MIDPOINT */
-      xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
-      ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+      for(n=0;n<ND;++n)
+         xpt[n] = 0.5*(vrtx[v0][n] +vrtx[v1][n]);
                
       /* INSERT POINT */
-      vrtx[count][0] = xpt;
-      vrtx[count++][1] = ypt;
+      for(n=0;n<ND;++n)
+         vrtx[count][n] = xpt[n];
+      ++count;
    }
    
    /*	INSERT INTERIOR POINTS */
    for(i=nvrtx;i<count;++i) { 
       qtree.addpt(nvrtx);
       qtree.nearpt(nvrtx,vnear);
-      tind = findtri(vrtx[nvrtx][0],vrtx[nvrtx][1],vnear);
+      tind = findtri(vrtx[nvrtx],vnear);
       err = insert(tind,nvrtx,0.0);
       ++nvrtx;
    }

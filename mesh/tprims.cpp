@@ -90,7 +90,7 @@ FLT mesh::area(int tind) const {
 
 FLT a[3];
 
-FLT mesh::intri(int tind, FLT x, FLT y) const {
+FLT mesh::intri(int tind, FLT x[ND]) const {
    int v0,v1,v2;
    FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
@@ -98,12 +98,12 @@ FLT mesh::intri(int tind, FLT x, FLT y) const {
    v1 = tvrtx[tind][1];
    v2 = tvrtx[tind][2];
    
-   dx0 =  (x -vrtx[v0][0]);
-   dy0 =  (y -vrtx[v0][1]); 
-   dx1 =  (x -vrtx[v1][0]);
-   dy1 =  (y -vrtx[v1][1]);
-   dx2 =  (x -vrtx[v2][0]);
-   dy2 =  (y -vrtx[v2][1]);
+   dx0 =  (x[0] -vrtx[v0][0]);
+   dy0 =  (x[1] -vrtx[v0][1]); 
+   dx1 =  (x[0] -vrtx[v1][0]);
+   dy1 =  (x[1] -vrtx[v1][1]);
+   dx2 =  (x[0] -vrtx[v2][0]);
+   dy2 =  (x[1] -vrtx[v2][1]);
    
    a[0] = (dy2*dx1 -dx2*dy1);
    a[1] = (dy0*dx2 -dx0*dy2);
@@ -175,16 +175,16 @@ FLT mesh::angle(int v0, int v1, int v2) const {
 
 FLT mesh::tradius(int tind) const {
    int v0;
-   FLT xcen, ycen,dx1,dy1;
+   FLT xcen[ND],dx1,dy1;
    
    v0 = tvrtx[tind][0];
-   tcenter(tind,xcen,ycen);
-   dx1 = (vrtx[v0][0] -xcen);
-   dy1 = (vrtx[v0][1] -ycen);
+   tcenter(tind,xcen);
+   dx1 = (vrtx[v0][0] -xcen[0]);
+   dy1 = (vrtx[v0][1] -xcen[1]);
    return(sqrt(dx1*dx1 +dy1*dy1));
 }
 
-void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
+void mesh::tcenter(int tind, FLT x[ND]) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2;
    FLT dx1,dy1,dx2,dy2,area;
@@ -207,8 +207,8 @@ void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
    area        = 1.0/(dx1*dy2 -dy1*dx2);
    alpha       = dx2*xmid2 +dy2*ymid2;
    beta        = dx1*xmid1 +dy1*ymid1;
-   xcen = area*(beta*dy2 -alpha*dy1);
-   ycen = area*(alpha*dx1 -beta*dx2);
+   x[0] = area*(beta*dy2 -alpha*dy1);
+   x[1] = area*(alpha*dx1 -beta*dx2);
    
    return;
 }

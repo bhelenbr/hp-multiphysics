@@ -14,8 +14,8 @@ template<class BLK> class blocks {
       
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
-      void load_constants(std::map<std::string,std::string>& input);
-      void init(std::map<std::string,std::string>& input);
+      void load_constants(std::map<std::string,std::string> input[]);
+      void init(std::map<std::string,std::string> input[]);
       void findmatch();
       void matchboundaries();
       void output(char *filename, FILETYPE filetype);
@@ -68,19 +68,19 @@ template<class BLK> class blocks {
       }
 };
 
-template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::string>& input) {
+template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::string> input[0]) {
 
-   std::istringstream data(input["itercrsn"]);   
+   std::istringstream data(input[0]["itercrsn"]);   
    data >> itercrsn;
    std::cout << "#itercrsn:" << itercrsn << endl;
    data.clear();
    
-   data.str(input["niter"]);   
+   data.str(input[0]["niter"]);   
    data >> niter;
    std::cout << "#niter:" << niter << endl;
    data.clear();
    
-   data.str(input["ntstep"]);   
+   data.str(input[0]["ntstep"]);   
    data >> ntstep;
    std::cout << "#ntstep:" << ntstep << endl;
    data.clear(); 
@@ -88,16 +88,18 @@ template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::s
    return;
 }
 
-template<class BLK> void blocks<BLK>::init(std::map<std::string,std::string>& input) {
+template<class BLK> void blocks<BLK>::init(std::map<std::string,std::string> input[]) {
    int i;
+   std::map<std::string,std::string>::const_iterator mi;
+   std::map<std::string,std::string> merge;
    
    /* LOAD NUMBER OF GRIDS */
-   std::istringstream data(input["nblock"]);
+   std::istringstream data(input[0]["nblock"]);
    data >> nblock;
    std::cout << "#nblock:" << nblock << endl;
    data.clear();
    
-   data.str(input["ngrid"]);   
+   data.str(input[0]["ngrid"]);   
    data >> ngrid;
    std::cout << "#ngrid:" << ngrid << endl;
    data.clear();
@@ -105,9 +107,12 @@ template<class BLK> void blocks<BLK>::init(std::map<std::string,std::string>& in
    blk = new BLK[nblock];
 
    for (i=0;i<nblock;++i) {
-      blk[i].init(input);
-      blk[i].load_const(input);
-      blk[i].alloc(input);
+      merge = input[0];
+      for (mi=input[i+1].begin(); mi != input[i+1].end(); ++mi)
+         merge[mi->first] = mi->second;
+      blk[i].init(merge);
+      blk[i].load_const(merge);
+      blk[i].alloc(merge);
    }
    
    findmatch();

@@ -27,11 +27,11 @@
 
 
 void mesh::rebay(FLT tolsize) {
-   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
+   int i,j,n,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
    int bnum,bel;
-   FLT xpt,ypt,wt[3];
-   FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
-   FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
+   FLT xpt[2],wt[3];
+   FLT dx[2],p,q,s1sq,s2sq,rad1,rad2,rs;
+   FLT xmid[2],densty,cirrad,arg,dist,rn[2],xdif[2],rsign;
    
    /* SET UP FLTWK */
    fltwkreb();
@@ -123,56 +123,72 @@ void mesh::rebay(FLT tolsize) {
          v2 = tvrtx[tind][snum];
          
          /* USE REBAY'S ALGORITHM FOR INSERT POINT */
-         dx = vrtx[v0][0] -vrtx[v1][0];
-         dy = vrtx[v0][1] -vrtx[v1][1];
-         p = 0.5*sqrt(dx*dx +dy*dy);
-         dx = vrtx[v2][0] -vrtx[v1][0];
-         dy = vrtx[v2][1] -vrtx[v1][1];
-         s1sq = 0.25*(dx*dx +dy*dy);
-         dx = vrtx[v2][0] -vrtx[v0][0];
-         dy = vrtx[v2][1] -vrtx[v0][1];
-         s2sq = 0.25*(dx*dx +dy*dy);
-         tcenter(tind,xpt,ypt);
+         p = 0.0;
+         for(n=0;n<ND;++n) {
+            dx[n] = vrtx[v0][n] -vrtx[v1][n];
+            p += pow(dx[n],2);
+         }
+         p = 0.5*sqrt(p);
+         
+         s1sq = 0.0;
+         for(n=0;n<ND;++n) {
+            dx[n] = vrtx[v2][n] -vrtx[v1][n];
+            s1sq += pow(dx[n],2);
+         }
+         s1sq *= 0.25;
+
+         s2sq = 0.0;
+         for(n=0;n<ND;++n) {
+            dx[n] = vrtx[v2][n] -vrtx[v0][n];
+            s2sq += pow(dx[n],2);
+         }
+         s2sq *= 0.25;         
+         tcenter(tind,xpt);
          if (p*p > s1sq +s2sq) goto INSRT;
          
-         xmid = .5*(vrtx[v0][0] +vrtx[v1][0]);
-         ymid = .5*(vrtx[v0][1] +vrtx[v1][1]);
-         dx = xpt -xmid;
-         dy = ypt -ymid;
-         q = sqrt(dx*dx +dy*dy);
+         q = 0.0;
+         for(n=0;n<ND;++n) {
+            xmid[n] = .5*(vrtx[v0][n] +vrtx[v1][n]);
+            dx[n] = xpt[n] -xmid[n];
+            q += pow(dx[n],2);
+         }
+         q = sqrt(q);
          if (q < p) goto INSRT;
 
-         densty    = (vlngth[v0]  +vlngth[v1])/sqrt(3.0);
-         rad1      = MAX(densty,p);
-         rad2      = .5*(p*p  +q*q)/q;
-         cirrad    = MIN(rad1,rad2);
-         arg       = fabs(cirrad*cirrad  -p*p);
-         dist      = cirrad  +sqrt(arg);
-         dx        = vrtx[v1][0] -vrtx[v0][0];
-         dy        = vrtx[v1][1] -vrtx[v0][1];
-         rs        = 1./sqrt(dx*dx  +dy*dy);
-         rn1       = dy*rs;
-         rn2       = -dx*rs;
-         xdif      = vrtx[v2][0]  -xmid;
-         ydif      = vrtx[v2][1]  -ymid;
-         rsign     = 1.;
-         if (xdif*rn1 +ydif*rn2 < 0.) rsign = -1.;
-         xpt       = xmid +rsign*dist*rn1;
-         ypt       = ymid +rsign*dist*rn2;
+         densty = (vlngth[v0]  +vlngth[v1])/sqrt(3.0);
+         rad1 = MAX(densty,p);
+         rad2 = .5*(p*p  +q*q)/q;
+         cirrad = MIN(rad1,rad2);
+         arg = fabs(cirrad*cirrad  -p*p);
+         dist = cirrad  +sqrt(arg);
+         rs = 0.0;
+         for(n=0;n<ND;++n) {
+            dx[n] = vrtx[v1][n] -vrtx[v0][n];
+            rs += pow(dx[n],2);
+         }
+         rs = 1./sqrt(rs);
+         rn[0] =  dx[1]*rs;
+         rn[1] = -dx[0]*rs;
+         for(n=0;n<ND;++n)
+            xdif[n] = vrtx[v2][n]  -xmid[n];
+         rsign = 1.;
+         if (xdif[0]*rn[0] +xdif[1]*rn[1] < 0.) rsign = -1.;
+         for(n=0;n<ND;++n)
+            xpt[n] = xmid[n] +rsign*dist*rn[n];
 #else
          /* MIDPOINT RULE (VERY SIMPLE) */
-         xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
-         ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+         for(n=0;n<ND;++n)
+            xpt[n] = 0.5*(vrtx[v0][n] +vrtx[v1][n]);
 #endif
 
 INSRT:
          /* INSERT POINT */
-         vrtx[nvrtx][0] = xpt;
-         vrtx[nvrtx][1] = ypt;
+         for(n=0;n<ND;++n)
+            vrtx[nvrtx][n] = xpt[n];
          
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
-         tind = findtri(xpt,ypt,vnear);
+         tind = findtri(xpt,vnear);
          getwgts(wt);
          err = insert(tind,nvrtx,10.0);
          if (!err) {

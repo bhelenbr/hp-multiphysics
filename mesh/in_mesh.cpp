@@ -9,7 +9,7 @@ int *mesh::intwk1, *mesh::intwk2,*mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
 int mesh::in_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype, FLT grwfac) {
-    int i,j,sind,count,temp,tind,v0,v1,sign;
+    int i,j,n,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
     FILE *grd;
@@ -94,12 +94,15 @@ next1:      continue;
     
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
-               ierr = fscanf(grd,"%*d:%lf%lf%d\n",&vin[i][0],&vin[i][1],&vinfo[i]);
-               if (ierr != 3) { printf("2: error in grid\n"); exit(1); }
+               fscanf(grd,"%*d:");
+               ierr = 0;
+               for(n=0;n<ND;++n)
+                  ierr += fscanf(grd,"%lf\n",&vin[i][n]);
+               ierr += fscanf(grd,"%d\n",&vinfo[i]);
+               if (ierr != n+1) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
 
-            /* THIS IS GOING TO HAVE TO CHANGE */
             /* COUNT VERTEX BOUNDARY GROUPS  */
             nvbd = 0;
             for(i=0;i<nvrtx;++i) {
@@ -183,8 +186,11 @@ next1:      continue;
 
             /* READ VERTEX DATA */    
             for(i=0;i<nvrtx;++i) {
-                fscanf(grd,"%*d %le %le\n",&vin[i][0],&vin[i][1]);
-                vinfo[i] = -1;
+               fscanf(grd,"%*d");
+               for(n=0;n<ND;++n)
+                  fscanf(grd,"%le ",&vin[i][n]);
+               fscanf(grd,"\n");
+               vinfo[i] = -1;
             }
                 
             for(i=0;i<2;++i)
@@ -203,7 +209,7 @@ next1:      continue;
             }
 
             /* READ BOUNDARY DATA STORE TEMPORARILY */            
-            int (*svrtxbtemp[MAXSB])[ND];
+            int (*svrtxbtemp[MAXSB])[2];
     
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
@@ -286,8 +292,11 @@ next1:      continue;
             }
    
             /* VRTX INFO */                        
-            for(i=0;i<nvrtx;++i)
-               fscanf(grd,"%lf %lf\n",&vin[i][0],&vin[i][1]);
+            for(i=0;i<nvrtx;++i) {
+               for(n=0;n<ND;++n)
+               	fscanf(grd,"%lf",&vin[i][n]);
+               fscanf(grd,"\n");
+            }
                      
             /* SIDE INFO */
             for(i=0;i<nside;++i)
@@ -305,7 +314,7 @@ next1:      continue;
 
             count = 0;
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"type: %d\n",&temp);
+               fscanf(grd,"idnty: %d\n",&temp);
                getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
             }
@@ -313,7 +322,7 @@ next1:      continue;
             /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"nvbd: %d\n",&nvbd);
             for(i=0;i<nvbd;++i) {
-               fscanf(grd,"type: %d\n",&temp);
+               fscanf(grd,"idnty: %d\n",&temp);
                getnewvrtxobject(i,temp);
                vbdry[i]->input(grd);
             }
@@ -381,8 +390,11 @@ next1:      continue;
                if (stri[i][1] >= ntri) stri[i][1] = -1;
             }
             
-            for(i=0;i<nvrtx;++i)
-               fscanf(grd,"%lf%lf%*[^\n]\n",&vrtx[i][0],&vrtx[i][1]);
+            for(i=0;i<nvrtx;++i) {
+               for(n=0;n<ND;++n)
+               	fscanf(grd,"%lf",&vrtx[i][n]);
+               fscanf(grd,"%*[^\n]\n");
+            }
                
             for(i=0;i<ntri;++i)
                for(j=0;j<3;++j)
@@ -455,8 +467,12 @@ next1:      continue;
     
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
-               ierr = fscanf(grd,"%*d:%lf%lf\n",&vin[i][0],&vin[i][1]);
-               if (ierr != 2) { printf("2: error in grid\n"); exit(1); }
+               fscanf(grd,"%*d:");
+               ierr = 0;
+               for(n=0;n<ND;++n)
+                  ierr = fscanf(grd,"%lf",&vin[i][n]);
+               fscanf(grd,"\n");
+               if (ierr != ND) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
             
