@@ -171,7 +171,7 @@ template<int ND> void mesh<ND>::testconnect(char *fname) {
       }
       strcpy(fappnd,fname);
       strcat(fappnd,"_tocrse");
-      out_mesh(work, fappnd, grid);
+      out_mesh(work, fappnd, ftype::grid);
    }
    
    
@@ -194,7 +194,7 @@ template<int ND> void mesh<ND>::testconnect(char *fname) {
    
       strcpy(fappnd,fname);
       strcat(fappnd,"_tofine");
-      out_mesh(work, fappnd, grid);
+      out_mesh(work, fappnd, ftype::grid);
    }
 
    free(work);

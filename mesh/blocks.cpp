@@ -472,7 +472,7 @@ void blocks::matchboundaries() {
 }
 
 
-void blocks::output(char *filename, FTYPE filetype) {
+void blocks::output(char *filename, ftype::name filetype) {
    int i;   
    char fnmcat[80], fnmcat1[80];
    
@@ -602,7 +602,7 @@ void blocks::go() {
       }
       restructure();
       number_str(outname, "end", step, 2);
-      output(outname,tecplot);
+      output(outname,ftype::tecplot);
    }
    cpu_time = clock();
    *log << "that took " << cpu_time << " cpu time" << std::endl;

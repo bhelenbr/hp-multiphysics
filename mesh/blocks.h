@@ -26,7 +26,7 @@ class blocks {
       void init(const char *infile, const char *outfile = 0);
       void findmatch();
       void matchboundaries();
-      void output(char *filename, FTYPE filetype);
+      void output(char *filename, ftype::name filetype);
       void input(char *filename) {}
       void go();
       

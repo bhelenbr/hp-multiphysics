@@ -14,7 +14,7 @@ class block {
       virtual void load_const(std::map <std::string,std::string>& input) = 0;
       virtual void alloc(std::map <std::string,std::string>& input) = 0;
       virtual void input(char *filename) = 0;
-      virtual void output(char *filename, FTYPE filetype = easymesh) = 0;
+      virtual void output(char *filename, ftype::name filetype = ftype::easymesh) = 0;
       virtual int comm_entity_size(int grdlvl) = 0;
       virtual int comm_entity_list(int grdlvl, int *list) = 0;
       virtual boundary* vbdry(int grdlvl,int num) = 0;
