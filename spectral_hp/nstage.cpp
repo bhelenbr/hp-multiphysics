@@ -37,7 +37,7 @@ void hp_mgrid::nstage2(int stage) {
    int i,m,k,n,indx,indx1;
    FLT cflalpha;
 
-   cflalpha = gbl->flowcfl[log2p]*alpha[stage];
+   cflalpha = gbl->cfl[log2p]*alpha[stage];
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)

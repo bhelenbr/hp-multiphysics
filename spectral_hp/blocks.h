@@ -7,29 +7,12 @@ class block {
       int lg2pmax;
       class hpbasis *hpbase;
       struct hp_mgrid_glbls gbl;
+      struct surface_glbls *sgbl;
       class hp_mgrid *grd;
       friend class blocks;
       
    public:
-      void initialize(char *inputfile);
-      
-
-
-      inline void setsurfphysics(int snum, FLT drho, FLT rhoav, FLT muav) {
-         gbl.sgbl[snum].drho = drho;
-         gbl.sgbl[snum].rhoav = rhoav;
-         gbl.sgbl[snum].muav = muav;
-      }
-      inline void setsurfiter(int snum, FLT fadd[ND], FLT cfl[MXLG2P][ND]) {
-         for(int n=0;n<ND;++n)
-            gbl.sgbl[snum].fadd[n] = fadd[n];
-         for (int i=0;i<MXLG2P;++i)
-            for (int n=0;n<ND;++n)
-               gbl.sgbl[snum].cfl[i][n] = cfl[i][n];
-      }
-      
-      
-      void hpinit(class hpbasis *bin, int lgpmax);
+      void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
       void reconnect();
 };
 
@@ -53,10 +36,9 @@ class blocks {
 /*		SET-UP COMMUNICATION BOUNDARIES */      
       void findmatch();
 
-
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
-      void init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      void init(int nb, int mg, int lg2p, char *filename);
       
 /*		PREPARE FOR NEW TIMESTEP */
       void tadvance();

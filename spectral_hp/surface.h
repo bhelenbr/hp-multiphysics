@@ -10,15 +10,13 @@
 #define MXLG2P 5
 
 struct surface_glbls {
-/*	FLAG TO MARK DUPLICATE INTERFACES */
-   int first;
 /*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
    FLT (*vug0)[ND];
    FLT (*sug0)[ND];
 /*	AVERAGE PROPERTIES */
-   FLT drho;
-   FLT rhoav;
-   FLT muav;
+   FLT sigma;
+   FLT rho2;
+   FLT mu2;
 /*	ITERATIVE CONSTANTS */
    FLT fadd[ND];
    FLT cfl[MXLG2P][ND];

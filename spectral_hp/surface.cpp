@@ -31,8 +31,6 @@ void surface::alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface
 
 void surface::gbl_alloc(int maxside, int p, struct surface_glbls *store) {
    
-   store->first = 1;
-   
 /*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
    store->vug0 = (FLT (*)[ND]) xmalloc((maxside+1)*ND*sizeof(FLT));
    store->sug0 = (FLT (*)[ND]) xmalloc(maxside*(p-1)*ND*sizeof(FLT));
@@ -49,6 +47,24 @@ void surface::gbl_alloc(int maxside, int p, struct surface_glbls *store) {
    vect_alloc(store->normc,maxside,FLT);
    vect_alloc(store->meshc,maxside,FLT);
    
+   return;
+}
+
+void hp_mgrid::setksprg1d() {
+   int i,j,sind;
+   class surface *srf;
+
+   for(i=0;i<nsbd;++i) {
+      if(sbdry[i].type&(CURV_MASK+IFCE_MASK)) {
+         srf = static_cast<class surface *>(sbdry[i].misc);
+         if (srf != NULL) {
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               srf->ksprg[j] = 1.0/distance(svrtx[sind][0],svrtx[sind][1]);
+            }
+         }
+      }
+   }
    return;
 }
 
@@ -70,11 +86,11 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    
 /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
    
    count = 0;
-   sigor = gbl->sigma/(2.*srf->gbl->rhoav);
-   drhor = srf->gbl->drho/(2.*srf->gbl->rhoav);
+   sigor = srf->gbl->sigma/(gbl->rho +srf->gbl->rho2);
+   drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
       
 /*	CONSERVE AREA FOR STEADY CLOSED BDRY PROBLEMS */	
 //   if (dt0 == 0.0) dnormdt = srf->gbl->lamv*cnsrvarea(bnum);
@@ -127,7 +143,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
          tabs = fabs(tau) + FLT_EPSILON;  // TEMPORARY CHANGE TO EPSILON
-         tau = tau/(jcb*(tabs/hsm +dt0 +(sigor/(hsm*hsm) +drhor*gbl->g*fabs(norm[1]/jcb))/tabs));
+         tau = tau/(jcb*(tabs/hsm +dt0 +(sigor/(hsm*hsm) +drhor*g*fabs(norm[1]/jcb))/tabs));
 
 /*			TANGENTIAL SPACING & NORMAL FLUX */            
          res[0][0][i] = srf->ksprg[indx]*jcb;
@@ -135,10 +151,10 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          res[1][1][i] = res[1][0][i]*tau;
 
 /*			SURFACE TENSION SOURCE TERM */
-         u[0][0][i] = -gbl->sigma*norm[1]/jcb;
-         u[0][1][i] = +srf->gbl->drho*gbl->g*crd[1][0][i]*norm[0];
-         u[1][0][i] = +gbl->sigma*norm[0]/jcb;
-         u[1][1][i] = +srf->gbl->drho*gbl->g*crd[1][0][i]*norm[1];            
+         u[0][0][i] = -srf->gbl->sigma*norm[1]/jcb;
+         u[0][1][i] = +(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
+         u[1][0][i] = +srf->gbl->sigma*norm[0]/jcb;
+         u[1][1][i] = +(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
       }
       
       for(m=0;m<b.sm+2;++m)
@@ -221,7 +237,7 @@ void hp_mgrid::surfinvrt1(int bnum) {
 /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
    srf = static_cast<class surface *>(sbdry[bnum].misc);
 	
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
    
 /*	INVERT MASS MATRIX */
 /*	LOOP THROUGH SIDES */
@@ -282,7 +298,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
 
 /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
    
 /* RECEIVE MESSAGES AND ZERO VERTEX MODES */
    end = sbdry[bnum].num;
@@ -381,9 +397,14 @@ void hp_mgrid::surfdt1(int bnum) {
 	static FLT vslp, strss, cnvct, dtfli;
 	static class surface *srf;
    static class mesh *tgt;
+   FLT drho, srho, smu;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
+   
+   drho = gbl->rho -srf->gbl->rho2;
+   srho = gbl->rho +srf->gbl->rho2;
+   smu = gbl->mu +srf->gbl->mu2;
 
 /**************************************************/
 /*	DETERMINE SURFACE MOVEMENT TIME STEP			  */
@@ -409,13 +430,13 @@ void hp_mgrid::surfdt1(int bnum) {
 #endif
 		hsm = h/(.25*(b.p+1)*(b.p+1));
 
-		strss = gbl->sigma/(hsm*hsm) + srf->gbl->drho*gbl->g*2.*fabs(nrm[1]/h);
+		strss = srf->gbl->sigma/(hsm*hsm) + drho*g*2.*fabs(nrm[1]/h);
 		cnvct = dt0 + vslp/hsm;
-		dtfli = srf->gbl->muav/(srf->gbl->rhoav*hsm*hsm) +vslp/hsm +dt0;
+		dtfli = smu/(srho*hsm*hsm) +vslp/hsm +dt0;
 		dttang  = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
-		dtnorm  = 2.*srf->gbl->rhoav*hsm*cnvct*dtfli +strss;
-		srf->gbl->normc[indx] = 2.0*srf->gbl->rhoav*hsm*cnvct*dtfli/dtnorm;
-		srf->gbl->meshc[indx] = 2.0*srf->gbl->rhoav*hsm*dtfli;
+		dtnorm  = srho*hsm*cnvct*dtfli +strss;
+		srf->gbl->normc[indx] = srho*hsm*cnvct*dtfli/dtnorm;
+		srf->gbl->meshc[indx] = srho*hsm*dtfli;
       dtnorm = dtnorm/srf->gbl->meshc[indx];
 
 		srf->gbl->vdt[indx][0][0] += -dttang*nrm[1]*b.vdiag1d;
@@ -486,7 +507,7 @@ void hp_mgrid::surfdt2(int bnum) {
 	static class surface *srf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
 
 /*	RECEIVE COMMUNICATION PACKETS */
 /* RECEIVE MESSAGES AND ZERO VERTEX MODES */
@@ -632,7 +653,7 @@ void hp_mgrid::surfnstage1(int bnum) {
    static class surface *srf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
    
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n)
@@ -652,7 +673,7 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    static class surface *srf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
       
    for(i=0;i<sbdry[bnum].num+1;++i) {
       for(n=0;n<ND;++n)
@@ -677,7 +698,7 @@ void hp_mgrid::surfugtovrt1() {
       if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
    
       srf = static_cast<class surface *>(sbdry[bnum].misc);
-      if (!srf->gbl->first) return;
+      if (srf == NULL) return;
       
       indx = 0;
       for(i=0;i<sbdry[bnum].num;++i) {
@@ -723,7 +744,7 @@ void hp_mgrid::surfugtovrt2() {
       if (!sbdry[bnum].type&(IFCE_MASK)) continue;
       
       srf = static_cast<class surface *>(sbdry[bnum].misc);
-      if (srf->gbl->first) return;
+      if (srf == NULL) return;
    
    /*	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
       count = 0;
@@ -758,7 +779,7 @@ void hp_mgrid::surfvrttoug() {
       if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
       
       srf = static_cast<class surface *>(sbdry[bnum].misc);
-      if (!srf->gbl->first) return;
+      if (srf == NULL) return;
       
       indx = 0;
       for(i=0;i<sbdry[bnum].num;++i) {
@@ -786,7 +807,7 @@ void hp_mgrid::surfgetfres(int bnum) {
    static class surface *srf, *finesrf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
 
 /*	TRANSFER INTERFACE RESIDUALS */
 
@@ -889,7 +910,7 @@ void hp_mgrid::surfgetcchng(int bnum) {
 	} 
     
    srf = static_cast<class surface *>(sbdry[bnum].misc);
-   if (!srf->gbl->first) return;
+   if (srf == NULL) return;
    
    coarsesrf = static_cast<class surface *>(cmesh->sbdry[bnum].misc);
    

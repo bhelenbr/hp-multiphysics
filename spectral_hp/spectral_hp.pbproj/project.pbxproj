@@ -135,6 +135,7 @@
 				F505FF0F0192F1EB01990B20,
 				F505FF100192F1EB01990B20,
 				F505FF110192F1EB01990B20,
+				F5C7542701B9E9E501115962,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -656,6 +657,11 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		F5C7542701B9E9E501115962 = {
+			isa = PBXFileReference;
+			path = input;
+			refType = 4;
 		};
 		F5D29C8901777758015A943B = {
 			isa = PBXFileReference;

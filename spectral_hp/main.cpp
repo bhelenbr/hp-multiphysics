@@ -14,7 +14,7 @@
 extern FLT f1(int n, FLT x, FLT y);
 extern FLT rhotemporary;
 
-int main() {
+int main(int argc, char **argv) {
    
    int i,j;
    class spectral_hp x,x1,y,y1;
@@ -74,7 +74,7 @@ int main() {
 //   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
 //   9  7.569496e-05  3.783905e-05  1.604564e-04
 
-   myblock.init(1,2,0,"../../grids/WAVE/wave3",easymesh,5);
+   myblock.init(1,2,0,argv[1]);
    myblock.tadvance();
    for(i=0;i<10;++i) {
       myblock.cycle(1);

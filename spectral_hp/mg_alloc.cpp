@@ -19,9 +19,11 @@ int hp_mgrid::size;
 const FLT hp_mgrid::alpha[NSTAGE+1];
 const FLT hp_mgrid::beta[NSTAGE+1];
 FLT hp_mgrid::dt0=0.0, hp_mgrid::dt1=0.0, hp_mgrid::dt2=0.0, hp_mgrid::dt3=0.0;
+FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;
+
 
 void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
-   int onfmesh,count,i,sind,j;
+   int onfmesh;
    
    if (spectral_hp::size == 0 or mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
@@ -74,22 +76,6 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
 /*		THINGS NEEDED ONLY FOR COARSE MESHES (NOT ON COARSE P LEVELS) */
       if (!onfmesh) {
          vug_frst = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-      }
-   }
-   
-/*	ALLOCATE THINGS NEEDED FOR SURFACES */
-   count = 0;
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-         srf[count].alloc(maxsbel, log2p, mgrid, onfmesh, &(store->sgbl[count]));
-         sbdry[i].misc = static_cast<void *>(&srf[count]);
-         if (!mgrid || !onfmesh) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               srf[count].ksprg[j] = 1.0/distance(svrtx[sind][0],svrtx[sind][1]);
-            }
-         }
-         ++count;
       }
    }
    

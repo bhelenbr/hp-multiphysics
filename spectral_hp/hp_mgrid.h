@@ -51,21 +51,16 @@ struct hp_mgrid_glbls {
    FLT ***dudt[ND], ***cdjdt;
 
 /*	ITERATION PARAMETERS */
-   FLT fadd, flowcfl[MXLG2P];  
+   FLT fadd, cfl[MXLG2P];  
       
 /*	PHYSICAL CONSTANTS */
-   FLT rho, rhoi, mu, nu, sigma, g;
+   FLT rho, rhoi, mu, nu;
+   
+/*	OTHER CONSTANTS */
+   int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 
 /*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
    FLT (*func)(int n, FLT x, FLT y);
-   
-/*	OTHER CONSTANTS */
-   FLT charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-
-/*	GLBL STORAGE FOR COUPLED SURFACE EQUATIONS */
-/*	MAXIMUM SURFACES FOR A SINGLE BLOCK IS 2 */   
-   struct surface_glbls sgbl[2];
-   int sgbl_id[2]; // TELLS WHICH GBL GOES WITH WHICH SIDE 
 };
 
 class hp_mgrid : public spectral_hp {
@@ -75,7 +70,7 @@ class hp_mgrid : public spectral_hp {
       static const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
       static FLT **cv00,**cv01,**cv10,**cv11;
       static FLT **e00,**e01,**e10,**e11;
-      static FLT dt0, dt1, dt2, dt3;
+      static FLT g, dti, time, dt0, dt1, dt2, dt3;
       static int size;
 
 /*		TELLS WHICH P WE ARE ON FOR P MULTIGRID */
@@ -92,7 +87,7 @@ class hp_mgrid : public spectral_hp {
       bool isfrst;
       
 /*    SURFACE BOUNDARY CONDITION STUFF */
-      class surface srf[2];
+      class surface *srf;
       
 /*		MGRID MESH POINTERS */
       class hp_mgrid *cmesh;
@@ -104,6 +99,15 @@ class hp_mgrid : public spectral_hp {
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);
+      static inline void setstatics(FLT dtiin, FLT timein, FLT gin) {
+         dti = dtiin;
+         time = timein;
+         g = gin;
+         dt0 = 1.5*dti;
+         dt1 = -2.*dti;
+         dt2 = 0.5*dti;
+         dt3 = 0.0;
+      }
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
          log2p = 0;
@@ -141,6 +145,8 @@ class hp_mgrid : public spectral_hp {
       void surfvrttoug();
       void surfugtovrt1();
       void surfugtovrt2();
+/*		SETUP SURFACE 1D SPRING CONSTANTS */
+      void setksprg1d();
       void surfrsdl(int bnum, int mgrid);
       void surfinvrt1(int bnum);
       void surfinvrt2(int bnum);
@@ -160,6 +166,8 @@ class hp_mgrid : public spectral_hp {
       void getcchng();
       int setfine(class hp_mgrid& tgt);
       int setcoarse(class hp_mgrid& tgt);  
+      
+      friend class block;
 };
 
 

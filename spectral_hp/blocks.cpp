@@ -5,9 +5,8 @@
 
 extern FLT f1(int n, FLT x, FLT y);
 
-void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+void blocks::init(int nb, int mg, int lg2p, char *filename) {
    int i,j,k,p,match;
-   FLT cfl[MXLG2P], surfcfl[MXLG2P][ND], surffadd[ND];
    char fnmcat[80];
    char app[2];
 
@@ -20,13 +19,12 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    p = 1;
    for(i=0;i<lg2pmax;++i)
       p = p<<1;
-
    for(i=lg2pmax;i>=0;--i) {
       base[i].initialize(p);
       p = p>>1;
    }
+   
    blk = new class block[nblocks];
-
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
 /*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    if (nblocks > 1) {
@@ -35,11 +33,11 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
          app[0] = 'a'+i;
          app[1] = '\0';
          strcat(fnmcat,app);
-         blk[i].meshinit(mgrids,fnmcat,filetype,grwfac);
+         blk[i].initialize(fnmcat, mgrids, base, lg2pmax);
       }
    }
    else
-      blk[0].meshinit(mgrids,filename,filetype,grwfac);
+      blk[0].initialize(filename, mgrids, base, lg2pmax);
 
 /*	MATCH BOUNDARIES */
    for(i=0;i<mgrids;++i) {
@@ -54,30 +52,9 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
          }
       }
    }
-
-/*	WHERE IS THIS GOING TO BE STORED? */   
-/*	LOAD PHYSICAL CONSTANTS & ITERATIVE THINGS FOR EACH BLOCK */
-   blk[0].setphysics(1.0, 0.025, 0.0, &f1);
-   blk[0].setsurfphysics(0,1.0,0.5,0.0125);
-
-   cfl[0] = 0.0;
-   cfl[1] = 1.5;
-   cfl[2] = 1.0;
-   blk[0].setiter(0.5,cfl,1.0,0);
    
-   surfcfl[0][0] = 2.0;
-   surfcfl[1][0] = 1.5;
-   surfcfl[2][0] = 1.0;
-   surfcfl[0][1] = 1.0;
-   surfcfl[1][1] = 0.75;
-   surfcfl[2][1] = 0.5;
-   surffadd[0] = 0.5;
-   surffadd[1] = 0.5;
-   blk[0].setsurfiter(0,surffadd,surfcfl);
-
-   for(i=0;i<nblocks;++i)
-       blk[i].hpinit(base, lg2pmax);
-       
+   hp_mgrid::setstatics(0.0,0.0,1.0);
+   
 /*	NEED TO INITIALIZE EACH WITH INITIALIZATION FUNCTION */
    for(i=0;i<nblocks;++i) {
       blk[i].grd[0].loadbasis(base[lg2pmax]);
@@ -89,13 +66,17 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 }
 
 void blocks::tadvance() {
-   int i;
+   int i,j;
    
    time = time +dt;
    
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].setinflow();
       
+   for(i=0;i<nblocks;++i)
+      for(j=0;j<mgrids;++j)
+         blk[i].grd[j].setksprg1d();
+         
    return;
 }
 
