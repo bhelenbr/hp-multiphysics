@@ -25,7 +25,7 @@ extern int nslst;
 void putinlst(int sind);
 void tkoutlst(int sind);
 
-void mesh::yaber(FLT tolsize) {
+void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
    
    /* SET UP FLTWK */
@@ -41,6 +41,9 @@ void mesh::yaber(FLT tolsize) {
    /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
    for(i=0;i<nside;++i)
       sinfo[i] = -1;
+      
+   /* SWAP SIDES AND MARK SWAPPED SIDES TOUCHED */
+   if (yes_swap) swap(swaptol);
       
    /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
    for(i=0;i<nvrtx;++i)
@@ -150,7 +153,6 @@ void mesh::yaber(FLT tolsize) {
          else 
             sinfo[i] = -2;
          sinfo[nside-1] = i;
-         fltwk[i] = fltwk[nside-1];  // THIS ALLOWS US TO CALL REBAY WITH OUT RECALCULATING 
          dltside(i);
       }
    }
@@ -165,15 +167,15 @@ void mesh::yaber(FLT tolsize) {
       bdrysidereorder(i);
    
    /* CLEAN UP DELETED TRIS */
-   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI: TINFO = 0 -> UNMOVED*/
+   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
    /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
    for(i=0;i<ntri;++i)
-      assert(tinfo[i] <= 0);
+      assert(tinfo[i] <= 0);  
       
    for(i=ntri-1;i>=0;--i) {
-      if (tinfo[i] < 0) {
-         tinfo[i] = MAX(ntri-1,tinfo[ntri-1]);
-         tinfo[ntri-1] = i;
+      if (tinfo[i] < 0) {  // DELETED TRI
+         tinfo[i] = MAX(ntri-1,tinfo[ntri-1]);  // TINFO STORES ORIGINAL TRI INDEX
+         tinfo[ntri-1] = i; // RECORD MOVEMENT HISTORY FOR TRI'S > NTRI
          dlttri(i);
       }
    }
