@@ -267,7 +267,7 @@ void spectral_hp::crdtouht(int tind) {
    /* VERTICES */   
    for (i=0; i<3; ++i) {
       indx = tvrtx[tind][i];
-      for(n=0; n<NV; ++n)
+      for(n=0; n<ND; ++n)
          uht[n][i] = vrtx[indx][n];
    }
 
@@ -279,7 +279,7 @@ void spectral_hp::crdtouht(int tind) {
       sind = tside[tind].side[(i+2)%3];
       if (sinfo[sind] < 0) {
          for(m=0;m<b.sm;++m) {
-            for(n=0;n<NV;++n)
+            for(n=0;n<ND;++n)
                uht[n][cnt] = 0.0;
             ++cnt;
          }
@@ -291,7 +291,7 @@ void spectral_hp::crdtouht(int tind) {
          assert(indx > -1 && indx < sbdry[bnum].num*sm0);
          
          for (m = 0; m < b.sm; ++m) {
-            for(n=0; n<NV; ++n)
+            for(n=0; n<ND; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
             ++cnt;
          }
@@ -307,7 +307,7 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
    /* VERTICES */   
    for (i=0; i<3; ++i) {
       indx = tvrtx[tind][i];
-      for(n=0; n<NV; ++n)
+      for(n=0; n<ND; ++n)
          uht[n][i] = vrtx[indx][n];
    }
 
@@ -319,7 +319,7 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
       sind = tside[tind].side[(i+2)%3];
       if (sinfo[sind] < 0) {
          for(m=0;m<b.sm;++m) {
-            for(n=0;n<NV;++n)
+            for(n=0;n<ND;++n)
                uht[n][cnt] = 0.0;
             ++cnt;
          }
@@ -331,7 +331,7 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
          assert(indx > -1 && indx < sbdry[bnum].num*sm0);
          
          for (m = 0; m < b.sm; ++m) {
-            for(n=0; n<NV; ++n)
+            for(n=0; n<ND; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
             ++cnt;
          }
