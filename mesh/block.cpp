@@ -7,7 +7,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    ngrid = n;
    grd = new class r_mesh[ngrid];
    
-   grd[0].in_mesh(filename,filetype,grwfac);
+   grd[0].in_mesh(filename,filetype,grwfac);   
    grd[0].init_comm_buf(8);
    
 /* WORK VARIABLES FOR MGRID */

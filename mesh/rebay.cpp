@@ -93,7 +93,6 @@ void mesh::rebay(FLT tolsize) {
 /*			INSERT POINT */
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
-      
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
@@ -148,6 +147,7 @@ INSRT:
 /*			INSERT POINT */
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
+         
          qtree.addpt(nvrtx);
          qtree.nearpt(nvrtx,vnear);
          tind = findtri(xpt,ypt,vnear);

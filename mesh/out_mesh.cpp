@@ -22,7 +22,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
          }
          fprintf(out,"%d\n",nvrtx);
          for(i=0;i<nvrtx;++i)
-            fprintf(out,"\t%d: %17.10e %17.10e %d\n",i,vrtx[i][0],vrtx[i][1],vinfo[i]);
+            fprintf(out,"\t%d: %17.10e %17.10e %d\n",i,vrtx[i][0],vrtx[i][1],vinfo[i]); 
             
          fclose(out);
 
@@ -45,7 +45,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
             fprintf(out,"%d: %d %d %d %d %d %d %d %d %d 0.0 0.0 %d\n",
             i,tvrtx[i][0],tvrtx[i][1],tvrtx[i][2],
             ttri[i][0],ttri[i][1],ttri[i][2],
-            tside[i].side[0],tside[i].side[1],tside[i].side[2],tinfo[i]);
+            tside[i].side[0],tside[i].side[1],tside[i].side[2],tinfo[i]); 
          }	
       
          fclose(out);

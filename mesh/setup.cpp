@@ -1,6 +1,7 @@
 #include"mesh.h"
 #include"utilities.h"
 #include<cstdio>
+#include<float.h>
 
 /*	CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
 /*	USES VINFO TO STORE FIRST SIND FROM VERTEX */
@@ -132,7 +133,7 @@ void mesh::treeinit() {
       }
    }
    
-   qtree.init(vrtx,maxvst,x1,y1,x2,y2);
+   qtree.init(vrtx,maxvst,x1-EPSILON,y1-EPSILON,x2+EPSILON,y2+EPSILON);
    
    for(i=0;i<nvrtx;++i) 
       qtree.addpt(i);

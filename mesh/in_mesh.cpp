@@ -382,7 +382,7 @@ next2:      continue;
 }
 
 /* MAPPING FROM OLD DEFINITIONS TO NEW */
-#define NOLDBTYPE 14
+#define NOLDBTYPE 15
 
 #define FSRF_OLD 1
 #define FCE1_OLD 2
@@ -392,12 +392,12 @@ next2:      continue;
 #define SYMC_OLD 16
 #define PDX1_OLD 64
 #define PDX2_OLD 128
+#define FXMV_OLD 256
 #define OUTF_OLD 512
 #define INVC_OLD 1024
 #define INVS_OLD 2048
 #define PDY1_OLD 4096
 #define PDY2_OLD 8192
-#define FXMV_OLD 256
 #define OUT2_OLD 513
 
 void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
@@ -407,15 +407,16 @@ void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
                              {FCE1_OLD,IFCE_MASK+CURV_MASK},
                              {FCE2_OLD,IFCE_MASK+CURV_MASK},
                              {INFC_OLD,INFL_MASK+CURV_MASK},
-                             {INFS_OLD,INFL_MASK},
-                             {SYMC_OLD,SYMM_MASK},
-                             {PDX1_OLD,PRDX_MASK},
-                             {PDX2_OLD,PRDX_MASK},
-                             {OUTF_OLD,OUTF_MASK},
                              {INVC_OLD,EULR_MASK+CURV_MASK},
+                             {INFS_OLD,INFL_MASK},
+                             {FXMV_OLD+INFS_OLD,INFL_MASK},
+                             {SYMC_OLD,SYMM_MASK},
+                             {PDX1_OLD,PRDX_MASK+COMX_MASK},
+                             {PDX2_OLD,PRDX_MASK+COMX_MASK},
+                             {OUTF_OLD,OUTF_MASK},
                              {INVS_OLD,EULR_MASK},
-                             {PDY1_OLD,PRDY_MASK},
-                             {PDY2_OLD,PRDY_MASK},
+                             {PDY1_OLD,PRDY_MASK+COMY_MASK},
+                             {PDY2_OLD,PRDY_MASK+COMY_MASK},
                              {OUT2_OLD,OUTF_MASK+(1<<16)}};
    int i,j;
    
