@@ -345,11 +345,8 @@ next2:      continue;
 /*	ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
    if (maxvst > gblmaxvst) {
       if (gblmaxvst > 0) {
-         delete []fltwk;
-         delete []intwk1;
-         delete []intwk2;
-         delete []intwk3;
          printf("better to allocate from largest mesh to smallest\n");
+         exit(1);
       }
       fltwk = new FLT[maxvst];
       intwk1 = new int[maxvst];
