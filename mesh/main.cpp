@@ -12,16 +12,17 @@ int main(int argc, char *argv[]) {
    class blocks z;
    char outname[100];
    char *inname[2];
-   char *out2[2];
+
    /* START CLOCK TIMER */
    clock();
    
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
-   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
+   inname[0] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
    
-   z.init(1,5,inname,easymesh,10.0);   
-   for(step = 1; step<=1;++step) {
+   z.init(1,5,inname,easymesh,10.0);
+   z.out_mesh("begin",grid);
+    for(step = 1; step<=1;++step) {
       z.ksrc();
       z.tadvance();
        for(i=0;i<50;++i) {
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
       }
       z.out_mesh("deformed",grid);
       z.restructure(0.66);
-      number_str(outname, "fourth", step, 2);
+      number_str(outname, "end", step, 2);
       z.out_mesh(outname,grid);
    }
    cpu_time = clock();

@@ -233,9 +233,8 @@ void mesh::bdrylabel() {
    return;
 }
 
-
 void mesh::initvlngth() {
-   int i,j,v0,v1,sind;
+   int i,v0,v1;
    FLT l;
    
    for(i=0;i<nvrtx;++i)
@@ -251,27 +250,8 @@ void mesh::initvlngth() {
    
    for(i=0;i<nvrtx;++i)
       vlngth[i] /= nnbor[i];
-      
-   /* REDO BOUNDARY SIDES SO THAT COMMUNICATION BOUNDARIES */
-   /* WILL BE THE SAME WITHOUT COMMUNICATING */
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         sind = sbdry[i]->sd(j);
-         v0 = svrtx[sind][0];
-         vlngth[v0] = 0.0;
-      }
-   }
-   
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         sind = sbdry[i]->sd(j);
-         v0 = svrtx[sind][0];
-         v1 = svrtx[sind][1];
-         l = 0.5*distance(v0,v1);
-         vlngth[v0] += l;
-         vlngth[v1] += l;
-      }
-   }
-   
+
    return;
 }
+      
+      

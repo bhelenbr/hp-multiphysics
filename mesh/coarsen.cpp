@@ -20,7 +20,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       allocate(maxvst);
       nsbd = inmesh.nsbd;
       for(i=0;i<nsbd;++i) {
-         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
+         getnewsideobject(i,inmesh.sbdry[i]->idnty());
          sbdry[i]->alloc(MAX(inmesh.sbdry[i]->mxsz()/2,10));
       }
       nvbd = inmesh.nvbd;
@@ -326,7 +326,7 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
       allocate(maxvst);
       nsbd = inmesh.nsbd;
       for(i=0;i<nsbd;++i)
-         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
+         getnewsideobject(i,inmesh.sbdry[i]->idnty());
       nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);
       initialized = 1;

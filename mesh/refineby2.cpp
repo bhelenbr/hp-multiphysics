@@ -22,7 +22,7 @@ void mesh::refineby2(const class mesh& inmesh) {
       allocate(maxvst);
       nsbd = inmesh.nsbd;
       for(i=0;i<nsbd;++i) {
-         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
+         getnewsideobject(i,inmesh.sbdry[i]->idnty());
          sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->mxsz(),10));
       }
       nvbd = inmesh.nvbd;

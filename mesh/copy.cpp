@@ -9,7 +9,7 @@ void mesh::copy(const mesh& tgt) {
    if (!initialized) {
       allocate(tgt.maxvst);
       for(i=0;i<tgt.nsbd;++i)
-         sbdry[i] = getnewsideobject(tgt.sbdry[i]->idnty());
+         getnewsideobject(i,tgt.sbdry[i]->idnty());
       initialized = 1;
    }
    else {

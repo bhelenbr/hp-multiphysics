@@ -4,7 +4,7 @@
 #include<utilities.h>
 
 void blocks::init(int n, int mg, char **filename, FILETYPE filetype, FLT grwfac) {
-   int i,j,k,match;
+   int i,j,k,match,phase;
 
    nblocks = n;
    mglvls = mg;
@@ -21,6 +21,18 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype, FLT grwfac)
          for(k=0;k<nblocks;++k)
             blk[j].grd[i].findmatch(blk[k].grd[i]);
       }
+      
+#ifdef TEMPORARY
+      for(j=0;j<nblocks;++j)
+         blk[j].grd[i].matchboundaries1();
+      
+      for(j=0;j<nblocks;++j)
+         for(phase=0;phase<lastphase;++phase)
+            blk[j].grd[i].matchboundaries_mp(phase);
+      
+      for(j=0;j<nblocks;++j)
+         blk[j].grd[i].matchboundaries2(lastphase);  
+#endif
    }
 
    ksrc();
@@ -65,7 +77,7 @@ void blocks::out_mesh(char **filename, FILETYPE filetype) {
 }
 
 void blocks::jacobi(int niter, int lvl) {
-   int i,iter;
+   int i,iter,phase;
       
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
@@ -75,18 +87,19 @@ void blocks::jacobi(int niter, int lvl) {
       blk[i].grd[lvl].vddt();
 
 #ifdef FOURTH
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].vddt1_mp();   
+   for (phase=0;phase<lastphase;++phase)
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[lvl].vddt1_mp(phase);   
    
    for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].vddt1();
+      blk[i].grd[lvl].vddt1(lastphase);
 #endif
-
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].vddt_mp();     
+   for (phase=0;phase<lastphase;++phase)
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[lvl].vddt_mp(phase);     
    
    for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].vddti();
+      blk[i].grd[lvl].vddti(lastphase);
 
    for(iter=0;iter<niter;++iter) {
    
@@ -94,25 +107,26 @@ void blocks::jacobi(int niter, int lvl) {
          blk[i].grd[lvl].rsdl();
 
 #ifdef FOURTH
+      for (phase=0;phase<lastphase;++phase)
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[lvl].rsdl1_mp(phase);     
+         
       for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].rsdl1_mp();     
-      
-      for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].rsdl1();
+         blk[i].grd[lvl].rsdl1(lastphase);
 #endif
-
+   for (phase=0;phase<lastphase;++phase)
       for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].rsdl_mp();
+         blk[i].grd[lvl].rsdl_mp(phase);
 
       for(i=0;i<nblocks;++i) 
-         blk[i].grd[lvl].update();
+         blk[i].grd[lvl].update(lastphase);
    }
 
    return;
 }
 
 void blocks::cycle(int vw, int lvl) {
-   int i,j;  // DON'T MAKE THESE SCREWS UP RECURSION
+   int i,j,phase;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    
    for (i=0;i<vw;++i) {
       jacobi(1,lvl);
@@ -128,11 +142,12 @@ void blocks::cycle(int vw, int lvl) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[lvl].rsdl1();
 #endif
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].rsdl_mp();      
+      for (phase=0;phase<lastphase;++phase)
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[lvl].rsdl_mp(phase);      
       
       for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl+1].mg_getfres();
+         blk[j].grd[lvl+1].mg_getfres(lastphase);
       
       cycle(vw, lvl+1);
 
@@ -144,7 +159,7 @@ void blocks::cycle(int vw, int lvl) {
 }
 
 void blocks::ksrc() {
-   int i,j;
+   int i,j,phase;
 
 #ifdef GEOMETRIC   
    /* SETUP SPRING CONSTANTS  */
@@ -152,11 +167,12 @@ void blocks::ksrc() {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rklaplace();
       
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].kvol_mp();
+      for (phase=0;phase<lastphase;++phase)
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[i].kvol_mp(phase);
                
       for(j=0;j<nblocks;++j)
-         blk[j].grd[i].kvoli();
+         blk[j].grd[i].kvoli(lastphase);
    }
 #else
    /* USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
@@ -165,22 +181,24 @@ void blocks::ksrc() {
    for(j=0;j<nblocks;++j) 
       blk[j].grd[0].rklaplace();
    
-   for(j=0;j<nblocks;++j)
-      blk[j].grd[0].kvol_mp();
+   for (phase=0;phase<lastphase;++phase)
+      for(j=0;j<nblocks;++j)
+         blk[j].grd[0].kvol_mp(phase);
                
    for(j=0;j<nblocks;++j)
-      blk[j].grd[0].kvoli();
+      blk[j].grd[0].kvoli(lastphase);
    
    /* SETUP COARSE GRIDS */
    for(i=1;i<mglvls;++i) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rkmgrid();
       
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rkmgrid_mp();
+      for (phase=0;phase<lastphase;++phase)
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[i].rkmgrid_mp(phase);
                
       for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rkmgridi();
+         blk[j].grd[i].rkmgridi(lastphase);
    }
 #endif
       
@@ -189,17 +207,19 @@ void blocks::ksrc() {
       blk[i].grd[0].source();
 
 #ifdef FOURTH
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl1_mp();  
+   for (phase=0;phase<lastphase;++phase)
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].rsdl1_mp(phase);  
 
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl1();
+      blk[i].grd[0].rsdl1(lastphase);
 #endif
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl_mp();
+   for (phase=0;phase<lastphase;++phase)
+      for(i=0;i<nblocks;++i)
+         blk[i].grd[0].rsdl_mp(phase);
    
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].sumsrc();
+      blk[i].grd[0].sumsrc(lastphase);
    
    return;
 }

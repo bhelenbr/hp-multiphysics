@@ -57,7 +57,7 @@ class mesh {
       /* SIDE BOUNDARY INFO */
       int nsbd;
       side_boundary *sbdry[MAXSB]; 
-      virtual side_boundary* getnewsideobject(int type);
+      virtual void getnewsideobject(int bnum, int type);
 
       /* TRIANGLE DATA */      
       int ntri;
@@ -94,7 +94,6 @@ class mesh {
       void createttri(void);
       void createvtri(void);
       void treeinit();
-      void initvlngth();
 
       /* MESH MODIFICATION FUNCTIONS */
       /* TO CREATE AN INITIAL TRIANGUlATION */
@@ -163,11 +162,16 @@ class mesh {
       /* ACCESS TO SIMPLE MESH DATA */
       int max() {return maxvst;}
 
-      /* MESH MODIFICATION */   
+      /* MESH MODIFICATION */  
+      /* TO SET UP ADAPTATION VLENGTH */
+      void initvlngth();
+      virtual void setlength() {}
+      void length1();
+      void length_mp(int phase);
+      void length2(int phase); 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
       void refineby2(const class mesh& xmesh);
-      void length();
       void swap(FLT swaptol = 0.0);
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
       inline void treeupdate() { qtree.update(0,nvrtx);}
@@ -182,7 +186,8 @@ class mesh {
       void init_comm_buf(int factor);
       void zerobdryfrst();
       void matchboundaries1();
-      void matchboundaries2();
+      void matchboundaries_mp(int phase);
+      void matchboundaries2(int phase);
 
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
       void setfine(class mesh& tgt);
@@ -217,12 +222,20 @@ void inline mesh::zerobdryfrst() {
 /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
 void inline mesh::matchboundaries1() {
    for(int i=0;i<nsbd;++i) 
-      sbdry[i]->sendpositions();
+      sbdry[i]->sendpositions(0);
 }
 
-void inline mesh::matchboundaries2() {
+void inline mesh::matchboundaries_mp(int phase) {
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->rcvpositions(phase);
+   
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->sendpositions(phase+1);      
+}
+
+void inline mesh::matchboundaries2(int phase) {
    for(int i=0;i<nsbd;++i)
-      sbdry[i]->rcvpositions();
+      sbdry[i]->rcvpositions(phase);
 }
 
 /* SOME CONVENIENT BOUNDARY TYPES */

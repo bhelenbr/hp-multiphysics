@@ -12,19 +12,17 @@ ONLY INCLUDE FROM WITH MESH
 
 #include <stdio.h>
 
-/* FAT INTERFACE FOR A BOUNDARY CONDITION */
-
+/* FAT INTERFACE FOR A BOUNDARY CONDITION */   
 class side_boundary {
    private:
       mesh &x;
-      const int idnum;
+      int idnum;
       int maxel;
       int nel;
       int *el;
       FLT (*s)[2];
       
    public:
-      /* PUBLIC VIRTUAL FUNCTIONS */
       /* CONSTRUCTOR */
       side_boundary(mesh &xin, int inid) : x(xin), idnum(inid), maxel(0)  {};
       
@@ -41,11 +39,10 @@ class side_boundary {
       virtual void output(FILE *out);
       virtual void input(FILE *in, FLT grwfac);
       virtual void swap(int s1, int s2);
-      virtual side_boundary* reorder();
+      virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, FLT pt[2]);
       virtual void getgeometryfrommesh();
       virtual void findbdrypt(const class side_boundary *tgt,int ntgt,FLT psitgt,int *nout, FLT *psiout);
-      virtual void length() {}
       virtual void summarize() {
          std::printf("#BDRY %d MAX %d SIDES %d\n",idnty(),mxsz(),nsd());
       }
@@ -55,18 +52,14 @@ class side_boundary {
       virtual void zerofrst() {return;}
       virtual int isfrst() {return(1);}
       virtual int match(side_boundary *in) {return 1;}
-      virtual void sendpositions() {return;}
-      virtual void rcvpositions() {return;}
-      
-      /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-      virtual void dirichlet(FLT (*)[ND]) {}
-      virtual void fixdx2(FLT (*)[ND]) {}
-      virtual void sendx(FLT *base,int bgn,int end, int stride) {}
-      virtual void sendy(FLT *base,int bgn,int end, int stride) {}
-      virtual void rcvx(FLT *base,int bgn,int end, int stride) {}
-      virtual void rcvy(FLT *base,int bgn,int end, int stride) {}
-      virtual void tadvance() {}
-      
+      virtual void setphase(int phase) {}
+      virtual void send(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual void rcv(int phase, FLT *base,int bgn,int end, int stride) {}
+      virtual void sendpositions(int phase) {return;}
+      virtual void rcvpositions(int phase) {return;}
+};
+
+#ifdef SKIP
       /* HP BOUNDARY FUNCTIONS */
       virtual void setcrv() {}
       virtual void hpinput(FILE *) {}
@@ -85,9 +78,9 @@ class side_boundary {
       virtual void srcv(int m) {}
       virtual void szero(int m) {}
       virtual void tstep_sndx() {}
-      virtual void tstep_rcvx() {}
+      virtual void tstep_rcv() {}
       virtual void tstep_sndy() {}
-      virtual void tstep_rcvy() {}
+      virtual void tstep_rcv(1,) {}
       virtual void setinflow() {}
       
       /* FOR DYNAMIC BOUNDARIES */
@@ -101,25 +94,28 @@ class side_boundary {
       virtual void nstage2() {}
       virtual void vrttoug() {}
       virtual void ugtovrt() {}
-};
+#endif
+
 
 class comm_boundary : public side_boundary {
    public:
       /* ADDITIONAL STUFF FOR COMMUNICATION BOUNDARIES */
       class comm_boundary *bdrymatch;
       int frst;
+      int myphase;
       FLT *sbuff;
       int msgsize;
       
       /* CONSTRUCTOR */
-      comm_boundary(mesh &xin, int inid) : side_boundary(xin,inid) , frst(0) {}
+      comm_boundary(mesh &xin, int inid) : side_boundary(xin,inid) , frst(0), myphase(0) {}
       
       /* INITIALIZE STORAGE */
       void init_comm_buf(int factor) {sbuff = new FLT[factor*mxsz()];}
       
       /* ZERO FIRST VALUE */
       void zerofrst() {frst = 0;}
-      
+      void setphase(int i) {myphase = i;}
+
       /* MATCH BOUNDARIES */
       int match(side_boundary *in) {
          if (in->idnty() == idnty()) {
@@ -133,46 +129,46 @@ class comm_boundary : public side_boundary {
       /* TEST FIRST */
       int isfrst() {return(frst);}
       
-      /* SOME GENERIC VERTEX COMMUNICATION FUNCTIONS */
-      /* SHOULD NOT BE CALLED DIRECTLY FROM MESH */
-      void send (FLT *base,int bgn,int end, int stride);
-      void rcv (FLT *base,int bgn,int end, int stride);
-      
       /* SEND/RCV VRTX POSITION */
-      void sendpositions() { send(&(b().vrtx[0][0]),0,1,2);}
-      void rcvpositions() {rcv(&(b().vrtx[0][0]),0,1,2); }
+      void send(int phase, FLT *base,int bgn,int end, int stride);
+      void rcv(int phase, FLT *base,int bgn,int end, int stride);
+      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),0,1,2);}
+      void rcvpositions(int phase) {rcv(phase,&(b().vrtx[0][0]),0,1,2); }
       
 };
 
 class prdx_boundary : public comm_boundary {
    public:      
       /* CONSTRUCTOR */
-      prdx_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {}
+      prdx_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {setphase(0);}
 
       /* SEND/RCV Y VRTX POSITION */
-      void sendpositions() { send(&(b().vrtx[0][0]),1,1,2); }
-      void rcvpositions() { rcv(&(b().vrtx[0][0]),1,1,2); }
+      void sendpositions(int phase) { send(phase,&(b().vrtx[0][0]),1,1,2); }
+      void rcvpositions(int phase) { rcv(phase,&(b().vrtx[0][0]),1,1,2); }
 };
 
 class prdy_boundary : public comm_boundary {
    public:      
       /* CONSTRUCTOR */
-      prdy_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {}
+      prdy_boundary(mesh &xin, int idin) : comm_boundary(xin,idin) {setphase(1);}
 
       /* SEND/RCV X VRTX POSITION */
-      void sendvrtxposition(){ send(&(b().vrtx[0][0]),0,0,2); }
-      void rcvvrtxposition() { rcv(&(b().vrtx[0][0]),0,0,2); }
+      void sendpositions(int phase){ send(phase,&(b().vrtx[0][0]),0,0,2); }
+      void rcvpositions(int phase) { rcv(phase,&(b().vrtx[0][0]),0,0,2); }
 };
 
-class curv_boundary : public side_boundary {
+template<class BASE> class curv_template : public BASE {
    protected:
       virtual FLT hgt(FLT x[ND]) = 0;
       virtual FLT dhgt(int dir, FLT x[ND]) = 0;
    public:      
       /* CONSTRUCTOR */
-      curv_boundary(mesh &xin, int idin) : side_boundary(xin,idin) {}
+      curv_template(mesh &xin, int idin) : BASE(xin,idin) {}
       void mvpttobdry(int nel,FLT psi, FLT pt[ND]);
 };
+
+typedef curv_template<side_boundary> curv_boundary;
+typedef curv_template<comm_boundary> ifce_boundary;
 
 
       

@@ -68,7 +68,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype, FLT grwfac)
                      }
                   }
                   /* NEW SIDE */
-                  sbdry[nsbd] = getnewsideobject(sinfo[i]);
+                  getnewsideobject(nsbd,sinfo[i]);
                   sbdry[nsbd]->alloc(static_cast<int>(count*grwfac));
                   sbdry[nsbd]->nsd() = 1;
                   sbdry[nsbd++]->sd(0)= i;
@@ -210,7 +210,7 @@ next1:      continue;
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
                   ,&count,&temp);
                
-               sbdry[i] = getnewsideobject(temp);
+               getnewsideobject(i,temp);
                sbdry[i]->alloc(static_cast<int>(count*grwfac));
                sbdry[i]->nsd() = count;
                
@@ -307,7 +307,7 @@ next1:      continue;
             count = 0;
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"type: %d\n",&temp);
-               sbdry[i] = getnewsideobject(temp);
+               getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
             }
                   
@@ -355,7 +355,7 @@ next1:      continue;
             fscanf(grd,"%*d%d%*d%d%*d%*d\n",&temp,&count);
             
             /* EXTERNAL BOUNDARY */
-            sbdry[0] = getnewsideobject(OUTF_MASK);
+            getnewsideobject(0,OUTF_MASK);
             sbdry[0]->alloc(static_cast<int>(grwfac*temp));
             sbdry[0]->nsd() = temp;
             for(i=0;i<sbdry[0]->nsd();++i)
@@ -364,7 +364,7 @@ next1:      continue;
             ++nsbd;
             
             for(i=1;i<nsbd;++i) {
-               sbdry[i] = getnewsideobject(EULR_MASK+CURV_MASK);
+               getnewsideobject(i,EULR_MASK+CURV_MASK);
                fscanf(grd,"%*[^\n]\n");
                fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry[i]->nsd());
                sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nsd()));
@@ -492,16 +492,10 @@ next1:      continue;
          intwk3[i] = -1;
    }
     
-   /* REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
-   sbdry[nsbd] = 0;
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-      sbdry[nsbd] = sbdry[i]->reorder();
+      sbdry[i]->reorder();
       sbdry[i]->getgeometryfrommesh();
-      if (sbdry[nsbd] != 0) {
-         printf("#creating new boundary: %d num: %d\n",sbdry[nsbd]->idnty(),sbdry[nsbd]->nsd());
-         sbdry[++nsbd] = 0;
-      }
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT

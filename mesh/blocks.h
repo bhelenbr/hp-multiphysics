@@ -20,6 +20,7 @@ class blocks {
    private:
       int nblocks;
       int mglvls;
+      static const int lastphase = 1;
       class block *blk;
       
    public:
@@ -60,10 +61,10 @@ class blocks {
             blk[i].grd[0].length1();
             
          for(i=0;i<nblocks;++i)
-            blk[i].grd[0].length_mp();
+            blk[i].grd[0].length_mp(0);
             
          for(i=0;i<nblocks;++i) {
-            blk[i].grd[0].length2();
+            blk[i].grd[0].length2(1);
             blk[i].grd[0].yaber(1.0/tolerance,1,0.0);
             blk[i].grd[0].setbcinfo();
             blk[i].grd[0].out_mesh("coarse",grid);

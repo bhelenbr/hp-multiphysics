@@ -2,7 +2,6 @@
 #define _r_mesh_h_
 
 #include "mesh.h"
-#include "rboundary.h"
 /* AN R-DEFORMABLE MULTI-GRID MESH OBJECT */
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
@@ -11,6 +10,7 @@
 #define GEOMETRIC
 
 /* MESH DEFORMATION VARIABLES */
+class rbdry_interface;
 
 class r_mesh :public mesh {
       public:
@@ -32,7 +32,8 @@ class r_mesh :public mesh {
          FLT (*vrtx_frst)[ND];
          bool isfrst;
          
-         side_boundary* getnewsideobject(int type);
+         rbdry_interface *rbdry[MAXSB];
+         void getnewsideobject(int bnum, int type);
                   
       public:
          /* SETUP FUNCTION */
@@ -45,8 +46,8 @@ class r_mesh :public mesh {
 
          /* NEEDED FOR BIHARMONIC METHOD */
          void calc_kvol();
-         void kvol_mp();
-         void kvoli();         
+         void kvol_mp(int phase);
+         void kvoli(int phase);         
 
          /* SPRING METHOD */
          void rksprg();
@@ -55,48 +56,47 @@ class r_mesh :public mesh {
          /* USING INTERPOLATION OPERATORS */
          /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
          void rkmgrid();
-         void rkmgrid_mp();
-         void rkmgridi();
+         void rkmgrid_mp(int phase);
+         void rkmgridi(int phase);
    
          /* CALCULATE RESIDUAL */
          void rsdl();
-         void rsdl_mp();
-         void update();
+         void rsdl_mp(int phase);
+         void update(int phase);
          void maxres();
 
          /* CALCLATE SOURCE TERM */
          void source();
-         void sumsrc();
+         void sumsrc(int phase);
 
          /* CALCULATE VOL*DT */
          void vddt();
-         void vddt_mp();
-         void vddti();
+         void vddt_mp(int phase);
+         void vddti(int phase);
 
 #ifdef FOURTH
          /* TWO STEP PROCEDURE FOR 4TH ORDER */
          void rsdl1();
-         void rsdl1_mp();
+         void rsdl1_mp(int phase);
          void vddt1();
-         void vddt1_mp();
+         void vddt1_mp(int phase);
 #endif
-         
+
          /* MGRID TRANSFER */
-         void mg_getfres();
+         void mg_getfres(int phase);
          void mg_getcchng();
          
          /* TESTS */
-         void tadvance() {
-            for(int i=0;i<nsbd;++i) 
-               sbdry[i]->tadvance();
-         }
-         
-         /* TO SET UP ADAPTATION VLENGTH */
-         void length1();
-         void length_mp();
-         void length2();
+         void tadvance();
          
          friend class block;
          friend class blocks;
 };
+
+#include "rboundary.h"
+
+inline void r_mesh::tadvance() {
+   for(int i=0;i<nsbd;++i) 
+      rbdry[i]->tadvance();
+}
 #endif
