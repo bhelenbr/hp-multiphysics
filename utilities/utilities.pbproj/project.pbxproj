@@ -54,6 +54,7 @@
 				014CEA520018CE5811CA2923,
 				014CEA530018CE5811CA2923,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 08FB7794FE84155DC02AAC07;
 			projectDirPath = "";
@@ -84,6 +85,7 @@
 			refType = 4;
 		};
 		08FB7796FE84155DC02AAC07 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = main.c;
 			refType = 4;
@@ -114,7 +116,6 @@
 			name = utilities;
 			productName = utilities;
 			productReference = 034768E8FF38A79811DB9C8B;
-			shouldUseHeadermap = 1;
 		};
 		08FB77A0FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -186,21 +187,25 @@
 //F53
 //F54
 		F512110E01904CF201990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = myblas.h;
 			refType = 4;
 		};
 		F512110F01904CF201990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = myblas.c;
 			refType = 4;
 		};
 		F512111001904CF201990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = utilities.h;
 			refType = 4;
 		};
 		F512111101904CF201990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = utilities.c;
 			refType = 4;
@@ -252,11 +257,13 @@
 			refType = 4;
 		};
 		F5563BEA02242FAE01990B20 = {
+			fileEncoding = 30;
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;
 		};
 		F5563BEB02242FAE01990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = makefile;
 			refType = 4;
