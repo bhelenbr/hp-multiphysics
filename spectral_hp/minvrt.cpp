@@ -4,7 +4,7 @@
 /* THIS REQUIRES MESSAGE PASSING FOR EACH P SIDE MODE */
 void hp_mgrid::minvrt1(void) {
     int tind,sind,i,j,k,n,indx,indx1,indx2,v0,sgn,msgn;
-   
+         
    /************************************************/
    /**********      INVERT MASS MATRIX      **********/
    /************************************************/
@@ -38,7 +38,7 @@ void hp_mgrid::minvrt1(void) {
                sgn = tside[tind].sign[i];
                msgn = 1;
                for (j=0;j<b.sm;++j) {
-                  for (k=0;k<b.im;++k) 
+                  for (k=0;k<b.im;++k)
                      for(n=0;n<NV;++n)
                         gbl->res.s[indx1][n] -= msgn*b.ifmb[indx2][k]*gbl->res.i[indx+k][n];
                   msgn *= sgn;
@@ -75,7 +75,7 @@ void hp_mgrid::minvrt1(void) {
    /* SEND MESSAGES FOR VERTICES                */   
    /*********************************************/
    bdry_vsnd();
-
+   
    return;
 }
 
@@ -90,9 +90,6 @@ void hp_mgrid::minvrt2(void) {
    /**********************************/
    bdry_vrcvandzero();
 
-   //   for(i=0;i<nvrtx;++i)
-   //     printf("%d %f %f %f %f %f\n",i,vrtx[i][0],vrtx[i][1],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
-   
    /* FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
@@ -203,12 +200,13 @@ void hp_mgrid::minvrt3(int mode) {
       
       /* REMOVE MODES J,K FROM MODE I,M */
       for(i=0;i<3;++i) {
-         msgn = (mode +1 % 2 ? sign[i] : 1);
+         msgn = ( (mode +1) % 2 ? sign[i] : 1);
          for(m=mode+1;m<b.sm;++m) {
             for(j=0;j<3;++j) {
                indx = (i+j)%3;
-               for(n=0;n<NV;++n) 
+               for(n=0;n<NV;++n) {
                   gbl->res.s[side[i]+m][n] -= msgn*b.sfms[mode][m][j]*uht[n][indx];
+               }
             }
             msgn *= sign[i];
          }
@@ -225,13 +223,13 @@ void hp_mgrid::minvrt3(int mode) {
       
       /* REMOVE MODES J,K FROM MODE I,M */
       for(i=0;i<3;++i) {
-         msgn = (mode +1 % 2 ? sign[i] : 1);
+         msgn = ( (mode +1) % 2 ? sign[i] : 1);
          for(m=mode+1;m<b.sm;++m) {
             for(j=0;j<3;++j) {
                indx = (i+j)%3;
                gbl->res.s[side[i]+m][0] -= msgn*b.sfms[mode][m][j]*(uht[0][indx] +gbl->tprcn[tind][0][NV-1]*uht[2][indx]);
                gbl->res.s[side[i]+m][1] -= msgn*b.sfms[mode][m][j]*(uht[1][indx] +gbl->tprcn[tind][1][NV-1]*uht[2][indx]);
-               gbl->res.s[side[i]+m][1] -= msgn*b.sfms[mode][m][j]*(uht[2][indx]*gbl->tprcn[tind][NV-1][NV-1]);
+               gbl->res.s[side[i]+m][1] -= msgn*b.sfms[mode][m][j]*(uht[2][indx]*gbl->tprcn[tind][NV-1][NV-1]);            
             }
             msgn *= sign[i];
          }
@@ -257,7 +255,7 @@ void hp_mgrid::minvrt3(int mode) {
          indx += b.sm;
       }
 #endif
-         
+
    return;
 }
 

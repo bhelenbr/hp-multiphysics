@@ -34,10 +34,10 @@ int main(int argc, char **argv) {
    myblock.init(argv[1]);
    /* START CLOCK TIMER */
    clock();
-   myblock.minvrt_test(1,f1);
-   myblock.output(1,tecplot);
-   myblock.output(1,text);
-//   myblock.go();
+//   myblock.minvrt_test(10,f1);
+//   myblock.output(1,tecplot);
+//   myblock.output(1,text);
+   myblock.go();
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
    return(0);
