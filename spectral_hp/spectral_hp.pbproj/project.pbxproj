@@ -155,7 +155,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = ../include;
-				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/lib";
+				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib";
 				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -456,14 +456,14 @@
 		F52FE4D802180CBB01990B20 = {
 			isa = PBXFileReference;
 			name = libmyblas.a;
-			path = /Volumes/work/helenbrk/Codes/lib/libmyblas.a;
-			refType = 0;
+			path = ../lib/libmyblas.a;
+			refType = 2;
 		};
 		F52FE4D902180CBB01990B20 = {
 			isa = PBXFileReference;
 			name = libquad.a;
-			path = /Volumes/work/helenbrk/Codes/lib/libquad.a;
-			refType = 0;
+			path = ../lib/libquad.a;
+			refType = 2;
 		};
 		F52FE4DA02180CBB01990B20 = {
 			fileRef = F52FE4D802180CBB01990B20;
@@ -480,8 +480,8 @@
 		F52FE4DC02180FA201990B20 = {
 			isa = PBXFileReference;
 			name = libutil.a;
-			path = /Volumes/work/helenbrk/Codes/lib/libutil.a;
-			refType = 0;
+			path = ../lib/libutil.a;
+			refType = 2;
 		};
 		F52FE4DD02180FA201990B20 = {
 			fileRef = F52FE4DC02180FA201990B20;
