@@ -76,9 +76,7 @@ void hp_mgrid::setksprg1d() {
 }
 void hp_mgrid::surfksrc1d() {
    int i,bnum;
-   class surface *srf;
-   
-   surfrsdl(0);
+   class surface *srf;   
 
    for(bnum=0;bnum<nsbd;++bnum) {
       if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
@@ -90,7 +88,15 @@ void hp_mgrid::surfksrc1d() {
 
             for(i=0;i<sbdry[bnum].num*b.sm;++i) 
                srf->sdres[log2p][i][0] = 0.0;
-            
+         }
+      }
+   }
+   surfrsdl(0);
+   
+   for(bnum=0;bnum<nsbd;++bnum) {
+      if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
+         srf = static_cast<class surface *>(sbdry[bnum].misc);
+         if (srf != NULL) {         
             /* TANGENTIAL MESH MOVEMENT SOURCE */   
             for(i=0;i<sbdry[bnum].num+1;++i) {
                srf->vdres[log2p][i][0] = -srf->gbl->vres[i][0];
@@ -609,16 +615,16 @@ void hp_mgrid::surfdt1(int bnum) {
       h = sqrt(nrm[0]*nrm[0] +nrm[1]*nrm[1]);
       
       
-      uvel = ug.v[v0][0]-bd[0]*vrtx[v0][0] +dvrtdt[v0][0];
-      vvel = ug.v[v0][1]-bd[0]*vrtx[v0][1] +dvrtdt[v0][1];  
+      uvel = ug.v[v0][0]-(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]);
+      vvel = ug.v[v0][1]-(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]);  
 #ifdef DROP
       vvel -= dydt;
 #endif
       qmax = uvel*uvel+vvel*vvel;
       vslp = fabs(-uvel*nrm[1]/h +vvel*nrm[0]/h);
 
-      uvel = ug.v[v1][0]-bd[0]*vrtx[v1][0] +dvrtdt[v1][0];
-      vvel = ug.v[v1][1]-bd[0]*vrtx[v1][1] +dvrtdt[v1][1];
+      uvel = ug.v[v1][0]-(bd[0]*vrtx[v1][0] +dvrtdt[v1][0]);
+      vvel = ug.v[v1][1]-(bd[0]*vrtx[v1][1] +dvrtdt[v1][1]);
 #ifdef DROP
       vvel  -= dydt;
 #endif
@@ -817,7 +823,7 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    if (srf == NULL) return;
    
 #ifdef DROP
-   dydt = dydt0 -1.666*alpha[stage]*resy;
+   dydt = dydt0 -1.666*surface::cfl[0][1]*alpha[stage]*resy;
 #endif
       
    for(i=0;i<sbdry[bnum].num+1;++i) {
