@@ -306,16 +306,16 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         
                         for(step=0;step<nstep-1;++step) {
                            str.ugtouht1d(stgt,ugstr[step]);
-                           str.b.ptprobe(NV,uht,upt);
+                           str.b.ptprobe1d(NV,uht,upt);
                            for(n=0;n<NV;++n)   
-                              bdwk[step][n][0][i] -= upt[n];
+                              bdwk[step][n][0][m] -= upt[n];
                         }
                         
                         for(step=0;step<nstep-1;++step) {
                            str.crdtouht1d(stgt,vrtxstr[step],binfostr[step]);
-                           str.b.ptprobe(ND,uht,upt);
+                           str.b.ptprobe1d(ND,uht,upt);
                            for(n=0;n<ND;++n)   
-                              bdwk[step][n][1][i] -= upt[n];
+                              bdwk[step][n][1][m] -= upt[n];
                         }                    
                      }     
                   
@@ -365,9 +365,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         
                         for(step=0;step<nstep-1;++step) {
                            str.ugtouht1d(stgt,ugstr[step]);
-                           str.b.ptprobe(NV,uht,upt);
+                           str.b.ptprobe1d(NV,uht,upt);
                            for(n=0;n<NV;++n)   
-                              bdwk[step][n][0][i] -= upt[n];
+                              bdwk[step][n][0][m] -= upt[n];
                         }
                      }
                   }

@@ -113,6 +113,7 @@ class hp_mgrid : public spectral_hp {
       void minvrt1();
       void minvrt2();
       void minvrt3(int mode);
+      inline void minvrt3_mp(int mode) {bdry_ssnd(mode);}
       void minvrt4();
 
 /*		BOUNDARY CONDITION ROUTINES */

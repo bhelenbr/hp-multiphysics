@@ -253,12 +253,17 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          lftog(tind,gbl->vf);
       }
 	}
-   
-//   for(i=0;i<nvrtx;++i)
-//      printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+
+/*   
+   for(i=0;i<nvrtx;++i)
+      printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
       
-//   for(i=0;i<nside*b.sm;++i)
-//      printf("%d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
+   for(i=0;i<nside*b.sm;++i)
+      printf("%d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
+
+   for(i=0;i<ntri*b.im;++i)
+      printf("%d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]);      
+*/      
 
 /*	ADD IN VISCOUS/DISSIPATIVE FLUX */
 	for(i=0;i<nvrtx;++i)
@@ -309,9 +314,19 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 			for(n=0;n<NV;++n)		
 				gbl->res.s[i][n] += dres[log2p].i[i][n];  
 	}
-   
-//   for(i=0;i<nvrtx;++i)
-//     printf("%f %f %f %f %f\n",vrtx[i][0],vrtx[i][1],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+
+/*   
+   for(i=0;i<nvrtx;++i)
+      printf("v: %d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+      
+   for(i=0;i<nside*b.sm;++i)
+      printf("s: %d %f %f %f\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
+
+   for(i=0;i<ntri*b.im;++i)
+      printf("i: %d %f %f %f\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
         
+   exit(1);
+*/
+
 	return;
 }

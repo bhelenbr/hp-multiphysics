@@ -3,7 +3,8 @@
 #include<utilities.h>
 #include<stdio.h>
 
-extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTION
+extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
+extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
 void blocks::init(char *file) {
@@ -231,24 +232,31 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 /*		CALCULATE RESIDUAL */   
       for(i=0;i<nblocks;++i)
          blk[i].grd[grdnum].rsdl(stage,mgrid);
-                  
+                           
 /*		INVERT MASS MATRIX (4 STEP PROCESS) */
+/*		HAVE TO BE VERY CAREFUL WITH COMMUNICATION */
+/* 	USE MESSAGE BEFORE SENDING NEXT */
+/*		VERTICES MUST BE 2 PART PROCESS BECAUSE OF CORNERS */
       for(i=0;i<nblocks;++i)
-         blk[i].grd[grdnum].minvrt1();
+         blk[i].grd[grdnum].minvrt1();  //SEND Y
          
       for(i=0;i<nblocks;++i)
-         blk[i].grd[grdnum].bdry_mp();
+         blk[i].grd[grdnum].bdry_mp(); //RCV Y SEND X
          
       for(i=0;i<nblocks;++i)
-         blk[i].grd[grdnum].minvrt2();
-
-      for(mode=0;mode<sm-1;++mode)
+         blk[i].grd[grdnum].minvrt2(); //RCV X SEND Y & X
+                  
+      for(mode=0;mode<sm-1;++mode) {
          for(i=0;i<nblocks;++i)
-            blk[i].grd[grdnum].minvrt3(mode);
+            blk[i].grd[grdnum].minvrt3(mode); // RCV Y & X
+            
+         for(i=0;i<nblocks;++i)
+            blk[i].grd[grdnum].minvrt3_mp(mode+1); //SEND Y & X
+      }
       
       if (sm) {
          for(i=0;i<nblocks;++i)
-            blk[i].grd[grdnum].minvrt4();
+            blk[i].grd[grdnum].minvrt4(); //RCV Y & X
       }
       
       for(i=0;i<nblocks;++i) 

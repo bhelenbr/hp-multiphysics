@@ -36,8 +36,19 @@ FLT f1(int n, FLT x, FLT y) {
 
 #ifdef FREESTREAM
 extern FLT outertime;
-
 FLT f1(int n, FLT x, FLT y) {
+   switch(n) {
+      case(0):
+         return(0.0 +0.0*outertime);
+      case(1):
+         return(0.0);
+      case(2):
+         return(0.00);
+   }
+   return(0.0);
+}
+
+FLT f2(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
          return(0.0 +0.0*outertime);

@@ -825,7 +825,7 @@ void hp_mgrid::surfugtovrt2() {
          for(n=0;n<ND;++n)
             vrtx[v0][n] = sbuff[bnum][count++];
          
-         indx = j*b.sm;
+         indx = j*sm0;
          msgn = 1;
          for(m=0;m<b.sm;++m) {
             for(n=0;n<ND;++n)

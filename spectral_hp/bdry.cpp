@@ -163,7 +163,9 @@ void hp_mgrid::addbflux(int mgrid) {
 /* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-
+/* 		POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
+         if (sbdry[i].misc == NULL) continue;
+         
 /*			CALCULATE RESIDUAL / SURFACE TENSION TERMS */
          surfrsdl(i,mgrid);
 
@@ -522,6 +524,7 @@ void hp_mgrid::bdry_ssnd(int mode) {
             indx = sbdry[i].el[j]*b.sm +mode;
             for (n=0;n<ND;++n) 
                tgt->sbuff[bnum][count++] = gbl->res.s[indx][n];
+//            printf("Sent %d %f %f\n",count,tgt->sbuff[bnum][count-2],tgt->sbuff[bnum][count-1]);
          }
       }         
    }
@@ -532,7 +535,9 @@ void hp_mgrid::bdry_ssnd(int mode) {
 	
 void hp_mgrid::bdry_srcvandzero(int mode) {
 	static int i,j,n;
-	static int sind,count,indx;
+	static int sind,count,indx,sign;
+   
+   sign = (mode % 2 ? -1 : 1);
    
 /*	THIS PART TO RECIEVE AND ZERO FOR SIDES */
 /*	RECEIVE P'TH SIDE MODE MESSAGES */
@@ -543,15 +548,18 @@ void hp_mgrid::bdry_srcvandzero(int mode) {
          for(j=sbdry[i].num-1;j>=0;--j) {
             indx = sbdry[i].el[j]*b.sm +mode;
             for(n=0;n<NV;++n)
-               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
+               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sign*sbuff[i][count++]);
          }
       }
+      
       if (sbdry[i].type & IFCE_MASK) {
          count = 0;
          for(j=sbdry[i].num-1;j>=0;--j) {
             indx = sbdry[i].el[j]*b.sm +mode;
             for(n=0;n<ND;++n)
-               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sbuff[i][count++]);
+               gbl->res.s[indx][n] = 0.5*(gbl->res.s[indx][n] +sign*sbuff[i][count++]);
+//            printf("Recieved %d %f %f\n",count,sbuff[i][count-2],sbuff[i][count-1]);
+
          }
       }         
    }

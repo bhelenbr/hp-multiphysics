@@ -72,6 +72,8 @@ void hp_mgrid::minvrt1(void) {
    return;
 }
 
+
+
 void hp_mgrid::minvrt2(void) {
    static int i,k,tind,v0,indx,j,indx1,sgn,msgn;
    
@@ -87,9 +89,11 @@ void hp_mgrid::minvrt2(void) {
 		gbl->res.v[i][1] *= gbl->vdiagv[i];
 		gbl->res.v[i][2] *= gbl->vdiagp[i];
 	}
+
    
 //   for(i=0;i<nvrtx;++i)
-//     printf("%f %f %f %f %f %f %f\n",vrtx[i][0],vrtx[i][1],gbl->vdiagv[i],gbl->vdiagp[i],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+//     printf("%d %f %f %f %f %f\n",i,vrtx[i][0],vrtx[i][1],gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
+   
    
 /*	REMOVE VERTEX CONTRIBUTION FROM INTERIOR & SIDE MODES */
 	if (b.sm > 0) {
@@ -153,6 +157,9 @@ void hp_mgrid::minvrt3(int mode) {
       gbl->res.s[indx][2] *= gbl->sdiagp[sind]*b.sdiag[mode];
       indx += b.sm;
    }
+   
+//   for(sind = mode; sind <nside+mode;++sind)
+//      printf("%d %f %f %f\n",sind-mode,gbl->res.s[sind][0],gbl->res.s[sind][1],gbl->res.s[sind][2]);
 
 /*	REMOVE MODE FROM HIGHER MODES */
    for(tind=0;tind<ntri;++tind) {
@@ -178,10 +185,6 @@ void hp_mgrid::minvrt3(int mode) {
          }
       }
    }
-   
-/* SEND MESSAGES FOR NEXT MODE */
-   ++mode;
-	bdry_ssnd(mode);
          
    return;
 }
