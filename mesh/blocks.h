@@ -64,9 +64,14 @@ class blocks {
          for(i=0;i<nblocks;++i) {
             blk[i].grd[0].length2();
             blk[i].grd[0].swap();
+            blk[i].grd[0].out_mesh("swap",tecplot);
             blk[i].grd[0].yaber(1.0/tolerance);
+            blk[i].grd[0].setbcinfo();
+            blk[i].grd[0].out_mesh("coarse",tecplot);
             blk[i].grd[0].treeupdate();
             blk[i].grd[0].rebay(tolerance);
+            blk[i].grd[0].setbcinfo();
+            blk[i].grd[0].out_mesh("refine",tecplot);
             blk[i].reconnect();
          }
          return;

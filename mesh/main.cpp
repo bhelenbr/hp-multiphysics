@@ -34,23 +34,29 @@ int main(int argc, char *argv[]) {
 /*	THIS DEFORMS A MESH */
 //	inname[0] = "../../grids/TIM/tim";
 //	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";
-   inname[0] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/bot1";
-   inname[1] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/top1";
+//   inname[0] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/bot1";
+//   inname[1] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/top1";
+   inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
    
-   z.init(2,3,inname,easymesh,50.0);
+   z.init(1,3,inname,easymesh,10.0);
+   
+   z.out_mesh("begin",tecplot);
 
-   for(step = 1; step<=15;++step) {
+   for(step = 1; step<=1;++step) {
       center += step/FLT(10);  // FOR THE MOVING CYLINDER PROBLEM
       amp = 0.25*step/10.;  // FOR THE DEFORMING SURFACE 
       z.ksrc();
       z.perturb();
+      
 
-      for(i=0;i<40;++i) {
+      for(i=0;i<200;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();
          printf("\n");
       }
+      
+      z.out_mesh("deformed",tecplot);
       
       z.restructure(0.66);
       number_str(outname, "test", step, 2);

@@ -13,6 +13,32 @@ void r_mesh::perturb() {
    int i,j,sind,v0;
    
    for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type  == EULR_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            vrtx[v0][0] -= 1.9;
+         }
+      }
+       if (sbdry[i].type  == FSRF_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            vrtx[v0][0] -= 0.0;
+            vrtx[v0][1] -= 0.5;
+         }
+      }     
+      
+   }
+   
+   return;
+}
+
+/*
+void r_mesh::perturb() {
+   int i,j,sind,v0;
+   
+   for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {
          sind = sbdry[i].el[j];
          v0 = svrtx[sind][0];
@@ -24,15 +50,15 @@ void r_mesh::perturb() {
    
    return;
 }
-
+*/
 
 void r_mesh::length1() {
    int i,j,v0,sind,bnum,count;
    class mesh *tgt;
    
 /*	SET VLNGTH HERE */
-   for(i=0;i<nvrtx;++i)
-      vlngth[i] = 0.125 +0.0001*(vrtx[i][0] +vrtx[i][1]);
+//   for(i=0;i<nvrtx;++i)
+//      vlngth[i] = 0.125 +0.0001*(vrtx[i][0] +vrtx[i][1]);
 
 /*	SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {

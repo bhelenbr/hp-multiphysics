@@ -213,7 +213,7 @@ FINDNEXT:
 /*	CREATE INITIAL TRIANGULATION */            
    triangulate(sidelst,nsdloop,nloop);
          
-   for(i=0;i<10;++i) 
+   for(i=0;i<nsbd;++i) 
       delete []sidelst[i];
 
 /****************************************************/			
