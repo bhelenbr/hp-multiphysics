@@ -6,8 +6,6 @@
 	objectVersion = 39;
 	objects = {
 		014CEA460018CE2711CA2923 = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -21,8 +19,6 @@
 			name = Development;
 		};
 		014CEA470018CE2711CA2923 = {
-			buildRules = (
-			);
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
@@ -122,7 +118,6 @@
 				F525D077017F63DC01990B20,
 				F5D49A36018E4DE001601E15,
 				F5EF233C018F35F701990B20,
-				F51211320190A2DE01990B20,
 				F512112A01908E3801990B20,
 				F512112C01908E7201990B20,
 				F5D77C330191A7E901990B20,
@@ -130,14 +125,14 @@
 				F533C5CF01938985017C3E7F,
 				F5D77C310191A7BB01990B20,
 				F52FC80E01BE791F01990B20,
-				6F31F91505C372FE00244B1E,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
-				F5A11A6A029ABBE001990B20,
-				F52FE4D0021429E601990B20,
+				F51211320190A2DE01990B20,
 				F581CD2901989D4B01990B20,
 				F581CD240198731301990B20,
 				F5AC61740252568D01990B20,
+				F5A11A6A029ABBE001990B20,
+				F52FE4D0021429E601990B20,
 				F505FF0F0192F1EB01990B20,
 				F505FF100192F1EB01990B20,
 				F505FF110192F1EB01990B20,
@@ -160,8 +155,8 @@
 //1A4
 		1AB674ADFE9D54B511CA2CBB = {
 			children = (
-				6F36D9BC03C60AC700990B69,
 				6FA5715005AE030D003EC856,
+				6FBDE2450752894300545747,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -183,22 +178,6 @@
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
 			path = defines.h;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		6F31F91505C372FE00244B1E = {
-			fileEncoding = 4;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = tadvance_dirk.cpp;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		6F36D9BC03C60AC700990B69 = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = text.script.sh;
-			path = build.sh;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -315,7 +294,7 @@
 				6FA5714205AE030D003EC856,
 				6FA5714305AE030D003EC856,
 				6FA5714505AE030D003EC856,
-				6FAD9BAF05C8AA5B00900638,
+				6FADFA2906710E7700BDB7F9,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -541,11 +520,19 @@
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6FAD9BAF05C8AA5B00900638 = {
+		6FADFA2906710E7700BDB7F9 = {
 			fileRef = F52FC80E01BE791F01990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		6FBDE2450752894300545747 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.make;
+			path = makefile;
+			refType = 4;
+			sourceTree = "<group>";
 		};
 //6F0
 //6F1
@@ -630,8 +617,7 @@
 			sourceTree = "<group>";
 		};
 		F51291FA0336051D01990B69 = {
-			fallbackIsa = PBXFileReference;
-			isa = PBXFrameworkReference;
+			isa = PBXFileReference;
 			lastKnownFileType = wrapper.framework;
 			name = vecLib.framework;
 			path = /System/Library/Frameworks/vecLib.framework;
@@ -656,7 +642,7 @@
 		};
 		F51A851D02DDC6D7012A8EDA = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libgpvm3.a;
 			path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libgpvm3.a;
 			refType = 0;
@@ -757,7 +743,7 @@
 		};
 		F5605E1D02C2C26901AA3076 = {
 			isa = PBXFileReference;
-			lastKnownFileType = file;
+			lastKnownFileType = archive.ar;
 			name = libfpvm3.a;
 			path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libfpvm3.a;
 			refType = 0;

@@ -13,7 +13,18 @@
 void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 	int i,j,n,tind,loc[NV];
 	FLT err,mxr[NV],l2r[NV];
-
+   
+#ifdef TAYLOR
+   extern FLT ppipi;
+//   
+//   ptprobe(0.5,0.5,l2r);
+//   ppipi = l2r[2];
+   
+/* MATCH PRESSURE AT ONE POINT */
+   ppipi = 0.0;
+   ppipi = -(*func)(2,vrtx[0][0],vrtx[0][1])+ug.v[0][2];
+#endif
+   
 	for(n=0;n<NV;++n) {
 		mxr[n] = 0.0;
 		l2r[n] = 0.0;
@@ -106,7 +117,7 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
          crdtocht1d(sind);
          b.ptprobe1d(ND, cht, xp, dx, -1.0);
          ddpsi1 = (*fxy)(dx);
-         if (ddpsi1 * ddpsi2 < 0.0) {
+         if (ddpsi1 * ddpsi2 <= 0.0) {
             v0 = svrtx[sbdry[bnum].el[indx]][0];
             if ((*fxy)(vrtx[v0]) > max) {
                maxloc[0] = vrtx[v0][0];
@@ -118,11 +129,11 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
                minloc[1] = vrtx[v0][1];
                min = (*fxy)(vrtx[v0]);
             }
-            // printf("#LOCAL EXTREMA: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
+            printf("#LOCAL EXTREMA: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
          }
          b.ptprobe1d(ND, cht, xp, dx, 1.0);
          ddpsi2 = (*fxy)(dx);
-         if (ddpsi1 *ddpsi2 < 0.0) {
+         if (ddpsi1 *ddpsi2 <= 0.0) {
             /* INTERIOR MAXIMUM */
             psil = -1.0;
             psir = 1.0;
@@ -143,7 +154,7 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
                minloc[1] = xp[1];
                min = (*fxy)(xp);
             }
-            // printf("#LOCAL EXTREMA: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
+            printf("#LOCAL EXTREMA: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
          }  
       }
    }

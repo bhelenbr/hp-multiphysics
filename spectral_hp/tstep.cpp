@@ -11,7 +11,7 @@ void hp_mgrid::tstep1(void) {
    int tind,i,j,n,sind,count,bnum,side,v0,*v;
    FLT jcb,h,hmax,q,qmax,lam1,gam;
    class mesh *tgt;
-   
+
    /***************************************/
    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
    /***************************************/
@@ -31,7 +31,7 @@ void hp_mgrid::tstep1(void) {
 #endif
 
    for(tind = 0; tind < ntri; ++tind) {
-      jcb = 0.25*area(tind);
+      jcb = 0.25*area(tind);  // area is 2 x triangle area
       v = tvrtx[tind];
       hmax = 0.0;
       for(j=0;j<3;++j) {
@@ -89,7 +89,9 @@ void hp_mgrid::tstep1(void) {
 #else
 
 #ifndef INERTIALESS
-      jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +bd[0];
+      // jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +bd[0];
+      jcb *= 2.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+
 #else
       jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif

@@ -27,41 +27,30 @@ FLT amp,lam,theta;
 
 /* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
 int startup = 1;
+extern FLT outertime;
 
 #ifdef TEST
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(x);
+         return(pow(x,amp));
       case(1):
-         return(x*x);
+         return(pow(y,amp));
       case(2):
-         return(x*x*x);
+         return(pow(x*y,amp));
    }
    return(0.0);
 }
 #endif
 
 #ifdef FREESTREAM
-extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    FLT xx = x*2.*M_PI;
    FLT yx = y*2.*M_PI;
 
-/*
    switch(n) {
       case(0):
-         return(lam);
-      case(1):
-         return(0.0);
-      case(2):
-         return(0.01*startup);
-   }
-*/
-   
-   switch(n) {
-      case(0):
-         return(lam +0.5*pow(outertime,2) +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
+         return(lam +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
       case(1):
          return(+startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
       case(2):
@@ -72,8 +61,39 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
 
+#ifdef SOURCETERM
+FLT f1(int n, FLT x, FLT y) {
+   switch(n) {
+      case(0):
+         return(1.0);
+      case(1):
+         return(0.0);
+      case(2):
+         return(pow(x-0.5,amp) +startup*0.01*x*(1.-x));
+   }
+
+   return(0.0);
+}
+#endif
+
+#ifdef ACCELERATING
+FLT f1(int n, FLT x, FLT y) {
+   switch(n) {
+      case(0):
+         return(lam +1.0*pow(outertime,amp));
+      case(1):
+         return(0.0);
+      case(2):
+         return(-(x-1)*amp*pow(outertime,amp-1.0));
+   }
+
+   return(0.0);
+}
+#endif
+
+
+
 #ifdef SHEAR
-extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    FLT xx = x*2.*M_PI;
    FLT yx = y*2.*M_PI;
@@ -91,6 +111,24 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
 
+#ifdef TAYLOR
+FLT ppipi = -0.5;
+
+FLT f1(int n, FLT x, FLT y) {
+   
+   x *= 2.*M_PI;
+   y *= 2.*M_PI;
+   switch(n) {
+      case(0):
+         return(exp(-8.*M_PI*M_PI*outertime)*sin(y)*cos(x));
+      case(1):
+         return(-exp(-8.*M_PI*M_PI*outertime)*cos(y)*sin(x));
+      case(2):
+         return(0.5*exp(-16.*M_PI*M_PI*outertime)*(sin(x)*sin(x)+sin(y)*sin(y)) +ppipi);
+   }
+}
+#endif
+
 #ifdef CYLINDER
 FLT f1(int n, FLT x, FLT y) {
    FLT r;
@@ -99,8 +137,48 @@ FLT f1(int n, FLT x, FLT y) {
    
    switch(n) {
       case(0):
-         if (r < 0.55) 
+         if (r < 0.51) 
             return(0.0);
+         else
+            return(1.0);
+      case(1):
+         if (r < 0.51) 
+            return(0.0);
+         else if (x < 10.0 && x > 0.0 && abs(y) < 10.0)
+            return(amp*sin(2.*M_PI*x));
+         else
+            return(0.0);   
+      case(2):
+         return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef NOZZLE
+FLT f1(int n, FLT x, FLT y) { 
+   switch(n) {
+      case(0):
+         return(0.0);
+      case(1):
+         if (y==0.0)
+            return(-pow(1.0-x,1./7.));
+         else
+            return(0.0);
+      case(2):
+         return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef BOUNDARY_LAYER
+FLT f1(int n, FLT x, FLT y) {   
+   
+   switch(n) {
+      case(0):
+         if (y < 1.0e-4) 
+            return(1.0 -(1-y/1.0e-4)*(1-y/1.0e-4));
          else
             return(1.0);
       case(1):
@@ -134,48 +212,65 @@ FLT f1(int n, FLT x, FLT y) {
 #endif
 
 #ifdef DROP
+FLT mux[2];
+FLT rhox[2];
+FLT sigmax;
+
 FLT f1(int n, FLT x, FLT y) {
-   FLT r;
+   FLT r,sint,cost,k;
+   FLT ur,ut;
    
+   k = mux[1]/mux[0];
    r = sqrt(x*x +y*y);
-   
+
+   sint = x/r;
+   cost = -y/r;
+   ur = -(16.0*r*r*r+16.0*r*r*r*k-8.0*r*r-12.0*r*r*k+k)/(r*r*r)/(1.0+k)*cost/16.0;
+   ut = sint*(32.0*r*r*r+32.0*r*r*r*k-8.0*r*r-12.0*r*r*k-k)/(r*r*r)/(1.0+k)/32.0;
    switch(n) {
       case(0):
-         return(0.0);
-      case(1):
-         if (r < 0.55) 
+         if (r < 75.0)
+            return(ur*sint+ut*cost);
+         else
             return(0.0);
+      case(1):
+         if (r < 75.0)
+            return(-ur*cost+ut*sint);
          else
             return(1.0);
       case(2):
-         return(0.0); 
+         if (r < 75.0)
+            return(mux[0]/2*cost*(2+3*k)/(2*r*r*(1+k))); 
+         else
+            return(0.0);
    }
    return(0.0);
 }
 
 FLT f2(int n, FLT x, FLT y) {
-   FLT r;
+   FLT r,sint,cost,k;
+   FLT ur,ut;
    
+   k = mux[1]/mux[0];
    r = sqrt(x*x +y*y);
-   
+
+   sint = x/(r+FLT_EPSILON);
+   cost = (y > 0.0 ? -1 : 1)*sqrt(1.-sint*sint);
+   ur = -(4.0*r*r-1.0)*cost/(1.0+k)/2.0;
+   ut = sint*(8.0*r*r-1.0)/(1.0+k)/2.0;
    switch(n) {
       case(0):
-         return(0.0);
+         return(ur*sint+ut*cost);
       case(1):
-         if (r < 0.55) 
-            return(0.0);
-         else
-            return(1.0);
+         return(-ur*cost+ut*sint);
       case(2):
-         return(4*10.0); //4*sigma
+         return(4*sigmax -5*mux[1]*r*cost*4/(1+k)); 
    }
    return(0.0);
 }
 #endif
 
 #ifdef UNSTEADY_DROP
-extern FLT outertime;
-
 FLT f1(int n, FLT x, FLT y) {
    FLT r;
    
@@ -185,9 +280,16 @@ FLT f1(int n, FLT x, FLT y) {
       case(0):
          return(0.0);
       case(1):
-         return(lam+amp*sin(2.*M_PI*outertime/theta));
+         // return(lam+amp*sin(2.*M_PI*outertime/theta));
+         if (outertime/lam < 1.0)
+            return((1.-cos(M_PI*outertime/lam))*0.5*amp);
+         else
+            return(amp);
       case(2):
-         return(0.0);
+         if (outertime/lam < 1.0)
+            return(-y*M_PI/lam*sin(M_PI*outertime/lam)*0.5*amp);
+         else
+            return(0.0);
    }
    return(0.0);
 }
@@ -198,7 +300,7 @@ FLT kovamu = 0.025;
 
 double f1(int n, double x, double y) { 
    double re, lda;
-
+   
    if (kovamu > 0.0) {
       re = 1/kovamu;
       lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
@@ -208,11 +310,11 @@ double f1(int n, double x, double y) {
 
    switch (n) {
       case(0):
-         return(1 - cos(2*M_PI*y)*exp(lda*x) +0.01*(x+0.5)*(x-3.0));
+         return(1.0 - cos(2*M_PI*y)*exp(lda*x));
       case(1):
          return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
       case(2):
-         return(-.5*exp(2.*lda*x)+.5*exp(2.*lda*1.0));
+         return(-.5*exp(2.*lda*x));
    }
    return(0.0);
 }
@@ -220,7 +322,7 @@ double f1(int n, double x, double y) {
 
 double df1d(int n, double x, double y, int dir) {
    double re, lda;
-
+   
    if (kovamu > 0.0) {
       re = 1/kovamu;
       lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
@@ -354,26 +456,33 @@ FLT rhox[3];
 
 double f1(int n, double x, double y) { 
    FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
+   int mid,nonmid;
    
    /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
    /* THETA DEFINED + CLOCKWISE */
-   bf = 2.*mux[2]/(rhox[2]*sin(theta));
+   /* FAIL PROOF TEST */
+   if (fabs(mux[2] -mux[1]) < 1.0e-6) mid = 0;
+   else if (fabs(mux[2] -mux[0]) < 1.0e-6) mid = 1;
+   else mid = 2;
+   nonmid = (mid+1)%3;
+   
+   bf = 2.*mux[nonmid]/(rhox[nonmid]*sin(theta));
    body[0] = bf*sin(theta);
    body[1] = -bf*cos(theta);
    
-   re = rhox[0]/mux[0];
+   re = rhox[nonmid]/mux[nonmid];
    
    h1 = 0.475;
    n1 = 1;
    q1 = 1;
    
    h2 = 0.525;
-   n2 = mux[0]/mux[2];
-   q2 = rhox[0]/rhox[2];
+   n2 = mux[mid]/mux[nonmid];
+   q2 = rhox[mid]/rhox[nonmid];
    
    h3 = 1.0;
-   n3 = mux[1]/mux[2];
-   q3 = rhox[1]/rhox[2];
+   n3 = mux[nonmid]/mux[nonmid];
+   q3 = rhox[nonmid]/rhox[nonmid];
 
    switch (n) {
       case(0):
@@ -454,6 +563,29 @@ FLT dhgtdx(int type, FLT x, FLT y) {
 FLT dhgtdy(int type, FLT x, FLT y) {   
    if (type&(CURV_MASK)) {
       return(1.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef VSIN
+FLT hgt(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(x -(amp*cos(2.*M_PI*y/lam) +0.55));
+   }
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(1.0);
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(+2.*amp*M_PI/lam*sin(2.*M_PI*y/lam));
    }
    return(0.0);
 }
@@ -545,6 +677,12 @@ class spectral_hp *tgt;
 void mvpttobdry(int typ, FLT& x, FLT &y) {
    int iter;
    FLT mag, delt_dist,psi;
+   
+   /* MOVING VERTEX POINTS */
+   if (typ&MVPT_MASK) {
+      /* MOVE POINT IF YOU WANT TO */
+      return;
+   }
    
    if (typ&(EULR_MASK +INFL_MASK)) {
       iter = 0;

@@ -3,7 +3,9 @@
 #include<utilities.h>
 #include<stdio.h>
 #include<time.h>
+#ifdef PV3
 #include"pV3.h"
+#endif
 
 extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
@@ -17,8 +19,10 @@ static int iter;
 extern FLT amp,lam,theta;
 
 #ifdef DROP
-extern FLT dydt;
 static FLT factor;
+extern FLT mux[2];
+extern FLT rhox[2];
+extern FLT sigmax;
 #endif
 
 void blocks::init(char *file, int start_sim) {
@@ -100,9 +104,6 @@ void blocks::init(char *file, int start_sim) {
    fscanf(fp,"%*[^\n]%lf%lf%lf\n",&amp,&lam,&theta);
    printf("#AMP WAVELENGTH THETA #\n#%e\t%e\t%e\n",amp,lam,theta);
    theta *= M_PI/180.0;
-#ifdef DROP
-   dydt = lam;
-#endif
    
    /* READ IN NUMBER OF BLOCKS */
    fscanf(fp,"%*[^\n]%d\n",&nblocks);  
@@ -136,11 +137,14 @@ void blocks::init(char *file, int start_sim) {
    for(i=0;i<mgrids;++i) 
       findmatch(i);
    
-#ifdef LAYER
+#if (defined(LAYER) || defined(DROP))
    for(i=0;i<nblocks;++i) {
       rhox[i] = blk[i].gbl.rho;
       mux[i] = blk[i].gbl.mu;
    }
+#ifdef DROP
+   sigmax = blk[1].sgbl->sigma;
+#endif
 #endif
 
    /* INITIALIZE SOLUTION FOR EACH BLOCK */
@@ -196,10 +200,28 @@ void blocks::init(char *file, int start_sim) {
       }
       hp_mgrid::setbd(MIN(TMSCHEME,readin));
             
-      /* REFIND BOUNDARIES ON FINE MESH */
-      findmatch(0);
+#ifdef DROP
+      extern FLT dydt;
+      FLT avg[5], kc; 
+      kc = blk[1].sgbl[0].sigma/(blk[1].gbl.mu +blk[0].gbl.mu);
+      blk[1].grd[0].integrated_averages(avg);
+      dydt = amp*kc*avg[2] +avg[4];
+#endif
    }
    else {
+   
+#if (defined(ANALYTIC) && defined(BACKDIFF))
+      extern FLT outertime;
+      hp_mgrid::time = -(TMSCHEME-1)/hp_mgrid::dti;
+      outertime = hp_mgrid::time;
+      startup = 4;
+#ifdef MOVING_TAYLOR
+      FLT offset = amp*sin(2.*M_PI*hp_mgrid::time/0.04);
+      for(i=0;i<blk[0].grd[0].nvrtx;++i)
+         blk[0].grd[0].vrtx[i][1] += offset;
+#endif
+#endif      
+
       for(i=0;i<nblocks;++i) {
           blk[i].grd[0].curvinit();
          // blk[i].grd[0].smooth_cofa(2);
@@ -207,6 +229,20 @@ void blocks::init(char *file, int start_sim) {
       }
 #ifdef DROP
       blk[1].grd[0].tobasis(&f2); 
+#endif
+
+#if (defined(ANALYTIC) && defined(BACKDIFF))
+      startup = 1;
+      for (int tstep=0;tstep<TMSCHEME-1;++tstep) {
+         tadvance();
+         for(i=0;i<nblocks;++i) {
+            blk[i].grd[0].curvinit();
+            blk[i].grd[0].tobasis(&f1); 
+         }
+         hp_mgrid::setbd(MIN(TMSCHEME,tstep+2));
+      }
+      readin = TMSCHEME-1;
+      ntstep += TMSCHEME-1;
 #endif
       startup = 0;
    }
@@ -217,13 +253,12 @@ void blocks::init(char *file, int start_sim) {
          if (adapt) {
             /* DO ADAPTATION FOR NEXT TIME STEP */
             adaptation();
-      
-            /* REFIND BOUNDARIES FOR COARSE MESHES */
-            /* JUST IN CASE BDRY ORDERING CHANGED */            
-            for(i=1;i<mgrids;++i) 
-               findmatch(i);
          }
          else {
+            /* RECREATE COARSE MESHES */
+            for(i=0;i<nblocks;++i)
+               blk[i].reconnect();
+               
             /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
             for(i = 1; i < mgrids; ++i)
                for(j=0;j<nblocks;++j)
@@ -274,7 +309,7 @@ FLT outertime = 0.0;
 
 void blocks::tadvance(int stage) {
    int i,grid,lvl,bsnum;
-   
+
 #ifdef BACKDIFF
    r_ksrc();
 
@@ -303,14 +338,45 @@ void blocks::tadvance(int stage) {
    
    if (hp_mgrid::dti > 0.0) 
       hp_mgrid::time += hp_mgrid::cdirk[stage]/hp_mgrid::dti;
+
+#if (TMSCHEME == 4)
+   hp_mgrid::bd[0] = hp_mgrid::dti*hp_mgrid::adirk[stage+1][stage+1];
+#else
+   hp_mgrid::bd[0] = hp_mgrid::dti*hp_mgrid::adirk[stage][stage];
+#endif
+   
    outertime = hp_mgrid::time;
    
-   for(i=0;i<nblocks;++i)
-      blk[i].tadvance(stage);
+   for(i=0;i<nblocks;++i) {
+      for(lvl=0;lvl<mglvls;++lvl) {
+         if (lvl <= lg2pmax) {
+            grid = 0;
+            bsnum = lg2pmax-lvl;
+         }
+         else {
+            grid = lvl -lg2pmax;
+            bsnum =0;
+         }
+         blk[i].grd[grid].loadbasis(base[bsnum]);
+         blk[i].grd[grid].unsteady_sources(stage,lvl);
+      }
+      blk[i].grd[0].loadbasis(base[lg2pmax]);
+   }
+#endif
+
+#ifdef MOVING_TAYLOR
+   FLT offset = amp*sin(2.*M_PI*hp_mgrid::time/0.04);
+   FLT corner = blk[0].grd[0].vrtx[0][1];
+   for(i=0;i<blk[0].grd[0].nvrtx;++i)
+      blk[0].grd[0].vrtx[i][1] = (blk[0].grd[0].vrtx[i][1]-corner) +offset;
 #endif
 
    return;
 }
+
+#ifdef DROP
+extern FLT dydt;
+#endif
 
 void blocks::nstage(int grdnum, int sm, int mgrid) {
    int i,stage,mode;
@@ -318,6 +384,13 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
    /*****************************************/
    /* NSTAGE UPDATE OF FLOW VARIABLES    ****/
    /*****************************************/
+#ifdef DROP
+   FLT avg[5], kc; 
+   kc = blk[1].sgbl[0].sigma/(blk[1].gbl.mu +blk[0].gbl.mu);
+   blk[1].grd[grdnum].integrated_averages(avg);
+   dydt = amp*kc*avg[2] +avg[4];
+#endif
+
    for(i=0;i<nblocks;++i)
       blk[i].grd[grdnum].tstep1();
       
@@ -378,6 +451,8 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
    return;
 }
 
+#define NO_FILEOUTPUT
+
 void blocks::cycle(int vw, int lvl) {
    int j,vcount;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
@@ -385,6 +460,8 @@ void blocks::cycle(int vw, int lvl) {
    FLT mxr[NV], emax = 0.0, err;
    int crscntr = 0;
 #endif
+   char fname[100];
+   static int count[3] = {0, 0, 0};
 
 
    /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */ 
@@ -409,15 +486,24 @@ void blocks::cycle(int vw, int lvl) {
 //           hp_mgrid::cfl[0] = 0.5;
 //           surface::cfl[bsnum][1] = 2.5;
 //        }      
-//      char fname[100];
-//      static int count[3] = {0, 0, 0};
-//      number_str(fname,"iterate",lvl,1);
-//      strcat(fname,".");
-//      number_str(fname,fname,count[lvl]++,3);
-//      blk[0].grd[grid].output(fname,tecplot);
 
-      for (int i=ndown;i--;)
+      for (int i=ndown;i--;) {
          nstage(grid,base[bsnum].sm,lvl);
+#ifdef DEFORM
+         r_jacobi(1,grid);
+#endif
+#ifdef FILEOUTPUT
+         for (j=0;j<nblocks;++j) {
+            number_str(fname,"debug",lvl,1);
+            strcat(fname,".");
+            number_str(fname,fname,j,1);
+            strcat(fname,".");
+            number_str(fname,fname,count[lvl],3);
+            blk[j].grd[grid].output(fname,tecplot);
+         }
+         ++count[lvl];
+#endif
+      }
 
 #ifdef TWO_LEVEL
       if (lvl == 1) {
@@ -426,17 +512,8 @@ void blocks::cycle(int vw, int lvl) {
             err = MAX(err,blk[i].grd[grid].maxres(mxr));
                      
          emax = MAX(emax,err);
-         if (err/emax > 3.0e-5 && err > 1.0e-11) --vcount;
+         if (err/emax > 1.0e-4 && err > 1.0e-11) --vcount;
          printf("# second level %e %e\n",emax,err);
-         
-//         char fname[100],tname[100];
-//         static int count;
-//         number_str(fname,"coarse",count++,3);
-//         strcat(fname,".");
-//         for(int i=0;i<nblocks;++i) {
-//            number_str(tname,fname,i,1);
-//            blk[i].grd[grid].output(tname,tecplot);
-//         }
       }
 #endif
 
@@ -468,6 +545,25 @@ void blocks::cycle(int vw, int lvl) {
          blk[j].grd[grid].rsdl(NSTAGE,lvl);
 
       if (bsnum == 0) {
+
+#ifdef DEFORM
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid].r_mesh::rsdl();
+            
+#ifdef FOURTH
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid].r_mesh::rsdl1_mp();      
+
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid].r_mesh::rsdl1();
+#endif
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid].r_mesh::rsdl_mp();
+            
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid+1].r_mesh::mg_getfres();
+#endif      
+      
          for(j=0;j<nblocks;++j)
             blk[j].grd[grid+1].getfres();
             
@@ -484,23 +580,23 @@ void blocks::cycle(int vw, int lvl) {
          for(j=0;j<nblocks;++j)
             blk[j].grd[0].getfres();
       }
+      
       cycle(vw, lvl+1);
 
-      if (bsnum)
+      if (bsnum) {
          for(j=0;j<nblocks;++j)
             blk[j].grd[0].loadbasis(base[bsnum]);
+      } 
+#ifdef DEFORM
+      else {
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid].r_mesh::mg_getcchng();
+      }
+#endif
 
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].getcchng();
       
-//      char fname[100];
-//      static int count[3] = {0, 0, 0};
-//      number_str(fname,"coarsechng",lvl,1);
-//      number_str(fname,fname,count[lvl]++,1);
-//      number_str(fname,fname,0,1);
-//      blk[0].grd[grid].output(blk[0].grd[grid].gbl->res,blk[0].grd[grid].vrtx,blk[0].grd[grid].binfo,fname,tecplot);
-
-         
       for(j=0;j<nblocks;++j) 
          blk[j].grd[grid].surfugtovrt1();
       
@@ -508,9 +604,38 @@ void blocks::cycle(int vw, int lvl) {
          blk[j].grd[grid].surfugtovrt2();
    }
    
-   for (int i=nup;i--;)
-      nstage(grid,base[bsnum].sm,lvl);
+#ifdef FILEOUTPUT
+   for (j=0;j<nblocks;++j) {
+      number_str(fname,"debug",lvl,1);
+      strcat(fname,".");
+      number_str(fname,fname,j,1);
+      strcat(fname,".");
+      number_str(fname,fname,count[lvl],3);
+      blk[j].grd[grid].output(fname,tecplot);
+   }
+   ++count[lvl];
+#endif
 
+   for (int i=nup;i--;) {
+      nstage(grid,base[bsnum].sm,lvl);
+#ifdef DEFORM
+      r_jacobi(1,grid);
+#endif
+#ifdef FILEOUTPUT
+      for (j=0;j<nblocks;++j) {
+         number_str(fname,"debug",lvl,1);
+         strcat(fname,".");
+         number_str(fname,fname,j,1);
+         strcat(fname,".");
+         number_str(fname,fname,count[lvl],3);
+         blk[j].grd[grid].output(fname,tecplot);
+      }
+      ++count[lvl];
+#endif
+   }
+
+
+      
    return;
 }
 
@@ -562,6 +687,7 @@ void blocks::go() {
    ind = blk[1].grd[0].svrtx[ind][0];
    aratioold = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
    FLT ratio;
+   int lvls_store = mglvls;
 #endif
    
    for(tstep=readin;tstep<ntstep;++tstep) {
@@ -569,21 +695,31 @@ void blocks::go() {
       tadvance();
       {
 #else 
-      for(int s=0;s<TMSCHEME;++s) {
+      for(int s=0;s<DIRKSOLVES;++s) {
          tadvance(s);
 #endif
-         printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);  
+         printf("#\n#TIMESTEP NUMBER %d\n",tstep+1); 
+
+#ifdef UNCOUPLED_DEFORMATION
+         maxerr = 0.0;
+         for(iter=0;iter<ncycle;++iter) {
+            r_cycle(vwcycle);
+            printf("%d %ld ",total++,clock());
+            error = r_printerror();
+            printf("\n");
+            maxerr = MAX(error,maxerr);
+            if (error/maxerr < CVGTOLREL || error < CVGTOLABS) break;
+         }
+#endif
 
          maxerr = 0.0;
          for(iter=0;iter<ncycle;++iter) {
-
-#ifdef DEFORM
-            r_cycle(vwcycle);
+#ifdef DROP
+            mglvls = MIN(iter/4+1,lvls_store);
 #endif
             cycle(vwcycle);
             printf("%d %ld ",total++,clock());
             error = printerror();
-
 #ifdef DEFORM
             r_printerror();
 #endif
@@ -593,44 +729,47 @@ void blocks::go() {
             pV_UPDATE(&pvtime);
 #endif
             maxerr = MAX(error,maxerr);
-            if (error/maxerr < CVGTOL || error < 1.0e-13) break;
+            if (error/maxerr < CVGTOLREL || error < CVGTOLABS) break;
             
-            // output(iter+1000,tecplot);
+            //output(iter+1000,tecplot);
          }
 
          // output(tstep*TMSCHEME +s,tecplot);
       }
       
       blk[0].grd[0].drag(1028);
+#ifdef ANALYTIC
+      blk[0].grd[0].l2error(&f1);
+#endif
 
       if (!(tstep%out_intrvl)) {
          output(tstep+1,tecplot,0); 
          if (!(tstep%(rstrt_intrvl*out_intrvl))) {
-            output(tstep+1,text,1);
-         }
-         
+            output(tstep+1,text,1);         
 #ifdef PARAMETERLOOP
-         /* FIND MAXIMUM WIDTH */
-         int scap;
-         scap = 0;
-         maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
-         ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
-         ind = blk[1].grd[0].svrtx[ind][0];
-         if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;      
-         aratio = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
-         fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
-         blk[1].gbl.rho,blk[1].gbl.mu/blk[0].gbl.mu,(1.-dydt)/blk[0].gbl.mu,
-         (1.-dydt)*(1-dydt)/blk[1].sgbl[0].sigma,blk[1].gbl.mu/sqrt(blk[1].gbl.rho*blk[1].sgbl[0].sigma),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/(12.*(1-dydt)*(1-dydt)),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/blk[1].sgbl[0].sigma,
-         aratio,hp_mgrid::g,dydt,scap);
+            /* FIND MAXIMUM WIDTH */
+            int scap;
+            scap = 0;
+            maxw = blk[1].grd[0].findmaxx(IFCE_MASK);
+            ind = blk[1].grd[0].sbdry[0].el[blk[1].grd[0].sbdry[0].num-1];
+            ind = blk[1].grd[0].svrtx[ind][0];
+            if (blk[1].grd[0].vrtx[ind][1] > blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]) scap = 1;      
+            aratio = (blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[1].el[0]][1]-blk[1].grd[0].vrtx[blk[1].grd[0].vbdry[0].el[0]][1])/(2.*maxw);
+            fprintf(fout,"%d %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %d\n",tstep+1,
+            blk[1].gbl.rho,blk[1].gbl.mu/blk[0].gbl.mu,(1.-dydt)/blk[0].gbl.mu,
+            (1.-dydt)*(1-dydt)/blk[1].sgbl[0].sigma,blk[1].gbl.mu/sqrt(blk[1].gbl.rho*blk[1].sgbl[0].sigma),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/(12.*(1-dydt)*(1-dydt)),hp_mgrid::g*(blk[1].gbl.rho-blk[0].gbl.rho)/blk[1].sgbl[0].sigma,
+            aratio,hp_mgrid::g,dydt,scap);
 
-         ratio = fabs((aratioold-aratio)/aratio);
-         if (ratio > 0.05) {
-            factor = pow(factor,0.1);
-            printf("#factor change %e\n",factor);
-	 }
-         aratioold = aratio;
-         hp_mgrid::g=hp_mgrid::g*factor;
+            
+            ratio = fabs((aratioold-aratio)/aratio);
+            if (ratio > 0.05 && tstep > 0) {
+               factor = pow(factor,0.5);
+               printf("#factor change %e\n",factor);
+            }
+            aratioold = aratio;
+            hp_mgrid::g=hp_mgrid::g*factor;
 #endif
+         }
       }
        
 #ifdef DEBUG
@@ -739,6 +878,12 @@ void blocks::adaptation() {
    /* RECONNECT COARSE MESHES */
    for(i=0;i<nblocks;++i)
       blk[i].reconnect();
+
+   for(i=0;i<nblocks;++i) {
+      number_str(adaptfile,"multigrid.",i,1);
+      strcat(adaptfile,".");
+      blk[i].coarsenchk(adaptfile);         
+   }
 
    return;
 }

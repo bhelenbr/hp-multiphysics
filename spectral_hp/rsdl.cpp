@@ -14,6 +14,10 @@
 extern FLT body[2];
 #endif
 
+#ifdef SOURCETERM
+extern FLT amp;
+#endif
+
 #ifdef DROP
 extern FLT dydt;
 #endif
@@ -56,6 +60,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    ftemp = &gbl->vf.i[0][0];
    for(i=0;i<ntemp;++i)
          ftemp[i]  *= oneminusbeta;          
+         
+   /* UPDATE BOUNDARY VALUES & ADD IN BOUNDARY FLUXES */
+   addbflux(mgrid);
 
    for(tind = 0; tind<ntri;++tind) {
       /* LOAD INDICES OF VERTEX POINTS */
@@ -181,6 +188,10 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                res[1][i][j] = -gbl->rho*RAD(i,j)*cjcb[i][j]*body[1];
 #endif
 #endif
+
+#ifdef SOURCETERM
+               res[0][i][j] -= RAD(i,j)*cjcb[i][j]*amp*pow(crd[0][i][j]-0.5,amp-1.);
+#endif
             }
          }
          b.intgrt(res[0],lf[0]);
@@ -300,9 +311,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
          gbl->res.i[i][n] += gbl->vf.i[i][n];     
-
-   /* ADD IN BOUNDARY FLUXES */
-   addbflux(mgrid);
       
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
@@ -327,8 +335,8 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
 
       for(i=0;i<nvrtx;++i) 
-         for(n=0;n<NV;++n)      
-            gbl->res.v[i][n] += dres[log2p].v[i][n];   
+         for(n=0;n<NV;++n)  
+            gbl->res.v[i][n] += dres[log2p].v[i][n]; 
             
       for(i=0;i<nside*b.sm;++i) 
          for(n=0;n<NV;++n)      

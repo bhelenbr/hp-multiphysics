@@ -18,7 +18,9 @@ FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 FLT hp_mgrid::trncerr, hp_mgrid::invbdryerr, hp_mgrid::vlngth_tol, hp_mgrid::adapt_tol;
+#ifdef PV3
 int hp_mgrid::changed = 1; //FLAG FOR PV3 TO INDICATE STRUCTURE CHANGED
+#endif
 struct vsi hp_mgrid::ugwk[TMADAPT]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
 FLT (*hp_mgrid::vrtxwk[TMADAPT])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
 struct bistruct *hp_mgrid::binfowk[TMADAPT][MAXSB]; // STORAGE FOR UNSTEADY ADAPTATION BOUNDARY BD INFO
@@ -85,7 +87,17 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    }
 
    /* ON FINEST MESH ALLOCATE GLOBAL STORAGE */   
-   if (!mgrid) gbl_alloc(store);
+   if (!mgrid) {
+      gbl_alloc(store);
+#ifdef PV3
+      ugpv3.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+      ugpv3.s = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
+      ugpv3.i = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
+      vrtxpv3 = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+      for(i=0;i<nsbd;++i)
+         binfopv3[i] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+#endif
+   }
 
    /* COPY GLOBAL POINTER */   
    gbl = store;

@@ -65,7 +65,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    tind = findtri(xp,yp,v0);
    getwgts(wgt);
 
-   if (tind == -1) {
+   if (tind < 0) {
       /* POINT IS IN CONVEX CURVED TRIANGLE NEAR BOUNDARY */
       /* THIS ASSUMES SIDE RADIUS OF CURVATURE IS LESS THAN 1/2 LENGTH OF SIDE ON BDRY */
       x[0] = xp;

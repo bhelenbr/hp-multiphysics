@@ -11,22 +11,37 @@
 #include<utilities.h>
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
+#ifdef DROP
+extern FLT dydt;
+#endif
 
 void hp_mgrid::energy(FLT& esum, FLT& asum) {
    int tind,j,v0;
-   FLT q;
+   FLT q,p,duv,um,vm,u,v;
    
    for(tind=0;tind<ntri;++tind) {
       q = 0.0;
+      p = 0.0;
+      duv = 0.0;
+      um = ug.v[tvrtx[tind][2]][0];
+      vm = ug.v[tvrtx[tind][2]][1];
+#ifdef DROP
+      vm -= dydt;
+#endif
       for(j=0;j<3;++j) {
          v0 = tvrtx[tind][j];
-#ifndef DROP
-         q += pow(ug.v[v0][0],2) +pow(ug.v[v0][1],2);
-#else
-         q += pow(ug.v[v0][0],2) +pow(ug.v[v0][1]-1.0,2);
+         u = ug.v[v0][0];
+         v = ug.v[v0][1];
+#ifdef DROP
+         v -= dydt;
 #endif
+         q += pow(u,2) +pow(v,2);
+         p += fabs(ug.v[v0][2]);
+         duv += fabs(u-um)+fabs(v-vm);
+         um = u;
+         vm = v;
       }
-      esum += gbl->rho*q/3.*area(tind);
+      esum += 1./3.*( (0.5*gbl->rho*q +p)*area(tind) +duv*gbl->mu*sqrt(area(tind)) );
       asum += area(tind);
    }
    return;
@@ -36,7 +51,7 @@ void hp_mgrid::length1(FLT norm) {
    int i,j,v0,v1,indx,sind,bnum,count;
    FLT sum,u,v,ruv,lgtol,lgf,ratio;
    class mesh *tgt;
-   
+
    lgtol = -log(vlngth_tol);
    
    for(i=0;i<nvrtx;++i)
@@ -49,8 +64,11 @@ void hp_mgrid::length1(FLT norm) {
             v1 = svrtx[i][1];
             u = fabs(ug.v[v0][0] +ug.v[v1][0]);
             v = fabs(ug.v[v0][1] +ug.v[v1][1]);
-            ruv = gbl->rho*0.5*(u + v);
-            sum = ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]);
+#ifdef DROP
+            v -= dydt;
+#endif
+            ruv = gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1);
+            sum = distance2(v0,v1)*(ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]));
             fltwk[v0] += sum;
             fltwk[v1] += sum;
          }
@@ -78,8 +96,11 @@ void hp_mgrid::length1(FLT norm) {
             v1 = svrtx[i][1];
             u = fabs(ug.v[v0][0] +ug.v[v1][0]);
             v = fabs(ug.v[v0][1] +ug.v[v1][1]);
-            ruv = gbl->rho*0.5*(u + v);
-            sum = ruv*(fabs(ug.s[indx][0]) +fabs(ug.s[indx][1])) +fabs(ug.s[indx][2]);
+#ifdef DROP
+            v -= dydt;
+#endif
+            ruv = gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1);
+            sum = distance2(v0,v1)*(ruv*(fabs(ug.s[indx][0]) +fabs(ug.s[indx][1])) +fabs(ug.s[indx][2]));
             fltwk[v0] += sum;
             fltwk[v1] += sum;
             indx += sm0;
@@ -103,16 +124,19 @@ void hp_mgrid::length1(FLT norm) {
          }
          break;
    }
+
+
          
 
    for(i=0;i<nvrtx;++i) {
-      fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1));
+      fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1+ND));
+#ifndef DROP
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-#ifndef THREELAYER
-      vlngth[i] /= fltwk[i];
+#endif
+      vlngth[i] /= fltwk[i];      
 #ifdef THREELAYER
-#define TRES 0.0125
+#define TRES 0.025/THREELAYER
       if (vrtx[i][1] > 0.525) {
          vlngth[i] = MIN(vlngth[i],TRES +(vrtx[i][1]-0.525)*(9*TRES)/0.475);
       }
@@ -123,13 +147,13 @@ void hp_mgrid::length1(FLT norm) {
          vlngth[i] = MIN(vlngth[i],TRES);
       }
 #endif
-#endif
 #ifdef TWOLAYER
       vlngth[i] = MIN(vlngth[i],0.3333); 
 #endif
    }
    
    /* AVOID HIGH ASPECT RATIOS */
+   int nsweep = 0;
    do {
       count = 0;
       for(i=0;i<nside;++i) {
@@ -146,8 +170,9 @@ void hp_mgrid::length1(FLT norm) {
             ++count;
          }
       }
-      printf("#aspect ratio fixes %d\n",count);
-   } while(count > 0);
+      ++nsweep;
+      printf("#aspect ratio fixes %d: %d\n",nsweep,count);
+   } while(count > 0 && nsweep < 5);
 
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
@@ -269,8 +294,8 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                   v1 = svrtx[i][1];
                   u = fabs(ug.v[v0][0] +ug.v[v1][0]);
                   v = fabs(ug.v[v0][1] +ug.v[v1][1]);
-                  ruv = gbl->rho*0.5*(u + v);
-                  sum = ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]);
+                  ruv = 0.5*gbl->rho*(u + v);
+                  sum = distance2(v0,v1)*(ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]));
                   fltwk[v0] += sum;
                   fltwk[v1] += sum;
                }
@@ -296,8 +321,8 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                   v1 = svrtx[i][1];
                   u = fabs(ug.v[v0][0] +ug.v[v1][0]);
                   v = fabs(ug.v[v0][1] +ug.v[v1][1]);
-                  ruv = gbl->rho*0.5*(u + v);
-                  sum = ruv*(fabs(ug.s[indx+b.sm -1][0]) +fabs(ug.s[indx+b.sm -1][1])) +fabs(ug.s[indx+b.sm -1][2]);
+                  ruv = 0.5*gbl->rho*(u + v);
+                  sum = distance2(v0,v1)*(ruv*(fabs(ug.s[indx+b.sm -1][0]) +fabs(ug.s[indx+b.sm -1][1])) +fabs(ug.s[indx+b.sm -1][2]));
                   fltwk[v0] += sum;
                   fltwk[v1] += sum;
                   indx += sm0;
@@ -361,11 +386,12 @@ void hp_mgrid::inlength(char *name) {
    strcat(fnmapp,".txt");
    out = fopen(fnmapp,"r");
    if (out == NULL ) {
-      printf("couldn't open vlgth input file %s\n",fnmapp);
+      printf("#couldn't open vlngth input file %s. Reinitializing vlngth\n",fnmapp);
+      initvlngth();
       return;
    }
-   for(i=0;i<nvrtx;++i)
-      fscanf(out,"%lf\n",&vlngth[i]);
+   for(i=0;i<nvrtx;++i) 
+      fscanf(out,"%le\n",&vlngth[i]);
                
    return;
 }

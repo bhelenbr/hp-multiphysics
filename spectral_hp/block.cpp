@@ -125,40 +125,51 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    return;
 }
 
-#ifdef DIRK
-void block::tadvance(int stage) {
-   int j;
-   
-   if (stage == 0) {
-      grd[0].surfvrttoug();
-      grd[0].setksprg1d();
-      grd[0].surfksrc1d();
-      for(j=1;j<ngrid;++j)
-         grd[j].setksprg1d();
-   }
-   grd[0].tadvance(stage);
-   for(j=1;j<ngrid;++j)
-      grd[j].getfdvrtdt();
-}
-#endif
-
 #ifdef OLDRECONNECT
 void block::reconnect() {
    int i;
+   
+#ifdef ALIGNSQUARE
+   FLT xmax[ND];
+   
+   for (int n=0;n<ND;++n) 
+      xmax[n] = grd[0].vrtx[0][n];
+      
+   for(int k=0;k<grd[0].nvrtx;++k) 
+      for(int n=0;n<ND;++n) 
+         xmax[n] = MAX(xmax[n],grd[0].vrtx[k][n]);
+   
+   /* RESCALE TO SQUARE */
+   for(int k=0;k<grd[0].nvrtx;++k) 
+      for(int n=0;n<ND;++n) 
+         grd[0].vrtx[k][n] /= xmax[n];   
+#endif
+         
 
    for(i = 1; i< ngrid; ++i) {
+    
       grd[i].coarsen(1.6,grd[i-1]);
-      /* TEMPORARY TO ALIGN EDGES ON CARTESIAN
+      
+#ifdef ALIGNSQUARE
+      /* TO ALIGN EDGES ON CARTESIAN */
       for(int k=0;k<grd[i].nvrtx;++k)
-         grd[i].vrtx[k][1] *= 1. +0.01*grd[i].vrtx[k][0];
+         grd[i].vrtx[k][1] += 0.01*grd[i].vrtx[k][0];
       grd[i].swap();
       for(int k=0;k<grd[i].nvrtx;++k)
-         grd[i].vrtx[k][1] /= 1. +0.01*grd[i].vrtx[k][0];
-     */
+         grd[i].vrtx[k][1] -= 0.01*grd[i].vrtx[k][0];
+#endif
       grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }
+   
+#ifdef ALIGNSQUARE
+   /* RESCALE BACK */
+   for(i=0;i<ngrid;++i)
+      for(int k=0;k<grd[i].nvrtx;++k) 
+         for(int n=0;n<ND;++n) 
+            grd[i].vrtx[k][n] *= xmax[n];
+#endif
 
    return;
 }

@@ -14,6 +14,17 @@ void spectral_hp::curvinit(int MASK) {
    int i,j,m,n,bind,indx,sind,v0,v1,info,typ;
    FLT x,y;
    char uplo[] = "U";
+   
+   for(bind=0;bind<nvbd;++bind) {
+      if (!(vbdry[bind].type&MVPT_MASK)) continue;
+      
+      v0 = vbdry[bind].el[0];
+      x = vrtx[v0][0];
+      y = vrtx[v0][1];
+      mvpttobdry(vbdry[bind].type,x,y);
+      vrtx[v0][0] = x;
+      vrtx[v0][1] = y;
+   }
 
    /* MAKE SURE VERTICES ARE ON SURFACE */
    for(bind=0;bind<nsbd;++bind) {

@@ -8,6 +8,10 @@
 /*************************************************/
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
 
+#ifdef OUTF_STRESS
+double df1d(int n, double x, double y, int dir);
+#endif
+
 #ifdef DROP
 extern FLT dydt;
 #endif
@@ -41,8 +45,7 @@ void hp_mgrid::setinflow() {
          /* SET SIDE VALUES & FLUXES */
          /**********************************/
          /* ZERO FLUX FOR FIRST VERTEX */
-         for(n=0;n<NV;++n)
-            binfo[i][0].flx[n] = 0.0;
+         binfo[i][0].flx[2] = 0.0;
             
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
@@ -112,17 +115,75 @@ void hp_mgrid::setinflow() {
             binfo[i][indx].flx[2] = lf[0][1];
          }
       }
+      
+#ifdef OUTF_STRESS
+      double nrm[ND];
+      
+      if (sbdry[i].type&OUTF_MASK) {
+      
+         for(n=0;n<ND;++n)
+            binfo[i][0].flx[n] = 0.0;
+            
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            
+            if (sbdry[i].type&CURV_MASK) {
+               crdtocht1d(sind);
+               for(n=0;n<ND;++n)
+                  b.proj1d(cht[n],crd[n][0],dcrd[n][0][0]);
+            }
+            else {
+               v0 = svrtx[sind][0];
+               v1 = svrtx[sind][1]; 
+               for(n=0;n<ND;++n) {
+                  b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+                  
+                  for(k=0;k<b.gpx;++k)
+                     dcrd[n][0][0][k] = 0.5*(vrtx[v1][n]-vrtx[v0][n]);
+               }
+            }
+            
+            for(k=0;k<b.gpx;++k) {
+               nrm[0] = dcrd[1][0][0][k];
+               nrm[1] = -dcrd[0][0][0][k];
+               
+               res[0][0][k] = -gbl->mu*RAD1D(k)*(nrm[0]*(2.*df1d(0,crd[0][0][k],crd[1][0][k],0))
+                             +nrm[1]*(df1d(0,crd[0][0][k],crd[1][0][k],1) +df1d(1,crd[0][0][k],crd[1][0][k],0)));
+               res[1][0][k] = -gbl->mu*RAD1D(k)*(nrm[1]*(2.*df1d(1,crd[0][0][k],crd[1][0][k],1))
+                             +nrm[0]*(df1d(0,crd[0][0][k],crd[1][0][k],1) +df1d(1,crd[0][0][k],crd[1][0][k],0)));
+            }
+            
+            for(n=0;n<ND;++n)
+               b.intgrt1d(res[n][0],lf[n]);
+               
+            indx = j*(b.sm +1);
+            for(n=0;n<ND;++n)
+               binfo[i][indx].flx[n] += lf[n][0];
+            ++indx;
+            
+            for(m=0;m<b.sm;++m) {
+               for(n=0;n<ND;++n) {
+                  binfo[i][indx].flx[n] = lf[n][m+2];
+               }
+               ++indx;
+            }
+            for(n=0;n<ND;++n) 
+               binfo[i][indx].flx[n] = lf[n][1];
+         }
+      }
+#endif
    }
    
    return;
 }
 
 void hp_mgrid::addbflux(int mgrid) {
-    int i,j,k,n,indx,indx1;
-    int sind,v0,v1;
-    FLT gam, nrm[ND], wl[NV], wr[NV];
+   int i,j,k,n,indx,indx1;
+   int sind,v0,v1;
+   FLT gam, nrm[ND], wl[NV], wr[NV];
    FLT mvel[ND] = {0.0, 0.0};
    
+
    setinflow();
    
    /* THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
@@ -141,6 +202,30 @@ void hp_mgrid::addbflux(int mgrid) {
          v0 = svrtx[sind][1];
          gbl->res.v[v0][2] += binfo[i][indx].flx[2];
       }
+      
+#ifdef OUTF_STRESS
+      if (sbdry[i].type&OUTF_MASK) {
+         /* ADD SURFACE TENSION SOURCE TERM */
+         indx = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            sind=sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            for(n=0;n<ND;++n)
+               gbl->res.v[v0][n] += binfo[i][indx].flx[n];
+            ++indx;
+            indx1 = sind*b.sm;
+            for(k=0;k<b.sm;++k) {
+               for(n=0;n<ND;++n)
+                  gbl->res.s[indx1][n] += binfo[i][indx].flx[n];
+               ++indx;
+               ++indx1;
+            }
+         }
+         v0 = svrtx[sind][1];
+         for(n=0;n<ND;++n)
+            gbl->res.v[v0][n] += binfo[i][indx].flx[n];
+      }
+#endif
 
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
          /* ADD SURFACE TENSION SOURCE TERM */

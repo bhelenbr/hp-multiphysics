@@ -2,14 +2,17 @@
 #include<math.h>
 #include"blocks.h"
 #include"pV3.h"
+
 #include<utilities.h>
 
 /** WARNING THIS ONLY WORKS FOR ONE BLOCK RIGHT NOW */
 
-#define NKEYS 6
+#define NKEYS 9
 #define MNOD 20000
 #define LEN_TKEYS 40 /* MUST BE LONGER THAN 32 */
 #define KNBLOCK 1
+
+#define NO_PV3DEBUG
 
 class blocks *thisblocks;
 
@@ -34,26 +37,24 @@ void blocks::viz_init(int iopt) {
    {{"u-Velocity                             "},
     {"v-Velocity                             "},
     {"Pressure                               "},
-    {"Residual-u                             "},
-    {"Residual-v                             "},
-    {"Residual-p                             "}};
-#ifdef SKIP
-    {"x-Velocity                             "},
-    {"y-Velocity                             "},     
-    {"Residual-x                             "},
-    {"Residual-y                             "},
-    {"Flow vectors                           "}};
-#endif
+    {"Flow vectors                           "},
+    {"x-position                             "},
+    {"y-position                             "},  
+    {"Running Difference                     "},
+    {"Frozen Difference                      "},
+    {"Normal Snapshot                        "}};
     
    static INT zero = 0, cid = 1;
-   static INT fkeys[NKEYS] = { 1,1,1,1,1,1}; // ,1,1,1,1,2};
-   static INT ikeys[NKEYS] = { 'u','v','p','U','V','P'}; // ,'x','y','X','Y','a'};
-   static FLOAT flims[NKEYS][2] = {{0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0}, {-16.0, 1.0},
-                            {-16.0, 1.0},  {-16.0, 1.0}}; //, {0.0, 0.0},  {0.0, 0.0}, 
-                        //    {0.0, 0.0},  {0.0, 0.0}, {1.0, 0.0}};
+   static INT fkeys[NKEYS] = { 1,1,1,2,1,1,1,1,1};
+   static INT ikeys[NKEYS] = { 'u','v','p','a','x','y','1','2','3'};
+   static FLOAT flims[NKEYS][2] = {{0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0},  {0.0, 0.0}};
 
    INT istat;
    INT mirr;
+   
+#ifdef PV3DEBUG
+   printf("I'm in viz_init\n");
+#endif
 
 /*   
    TITL:i: C Title (up to 80 characters used)
@@ -129,6 +130,10 @@ void pVSTRUC (INT *knode,  INT *kequiv,  INT *kcel1,
 				 INT *knptet, INT *kptet,   INT *knblock,
 				 INT *blocks, INT *kphedra, INT *ksurf, 
 				 INT *knsurf, INT *hint ) {
+             
+#ifdef PV3DEBUG
+   printf("I'm in pVSTRUC\n");
+#endif
                 
    thisblocks->pvstruc(*knode, *kequiv, *kcel1, *kcel2, *kcel3, *kcel4,*knptet,*kptet,*knblock,*blocks,*kphedra,*ksurf,*knsurf,*hint);
    
@@ -138,7 +143,6 @@ void pVSTRUC (INT *knode,  INT *kequiv,  INT *kcel1,
 void blocks::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int
 &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint) {
    int i;
-   static int first = 1;
    
    kequiv = 0;
    knode = 0;
@@ -198,6 +202,9 @@ void hp_mgrid::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kce
 *****************************************************************************/
 
 void pVCELL(INT *cel1, INT *cel2,  INT *cel3, INT *cel4, INT *nptet, INT *ptet) {
+#ifdef PV3DEBUG
+   printf("I'm in pVCELL\n");
+#endif
    thisblocks->pvcell((int (*)[4]) cel1,(int (*)[5]) cel2, (int (*)[6]) cel3,(int (*)[8]) cel4,(int (*)[8]) nptet,ptet);
    return;
 }
@@ -309,7 +316,9 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
 *****************************************************************************/
 void pVSURFACE(INT  *nsurf, INT *scon,   INT *scel,
 				   char *tsurf, int tsurfLEN) {
-   
+#ifdef PV3DEBUG
+   printf("I'm in pVSURFACE\n");
+#endif
    thisblocks->pvsurface((int (*)[3]) nsurf,scon,(int (*)[4]) scel,(char (*)[20]) tsurf);
 }
 
@@ -419,6 +428,9 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
   pVGRID subroutine which passes the grid coordinates to pV3
 *****************************************************************************/
 void pVGRID(float *xyz) {
+#ifdef PV3DEBUG
+   printf("I'm in pVGRID\n");
+#endif
    thisblocks->pvgrid((float (*)[3]) xyz);
 }
 
@@ -508,58 +520,69 @@ void hp_mgrid::pvgrid(int &kn, float (*xyz)[3]) {
   pV3SCAL subroutine which provides all the scalar data to pV3
 *****************************************************************************/
 void pVSCAL(int *key, float *v) {
+#ifdef PV3DEBUG
+   printf("I'm in pVSCAL: %d\n",*key);
+#endif
    thisblocks->pvscal(key,v);
 }
 
 void blocks::pvscal(int *key, float *v) {
    int i,offset;
-   
+   static int running_subtract=0,fixed_subtract = 0;
+   struct vsi myvsi;
+   FLT (*myvrtx)[ND];
+   struct bistruct **mybinfo;
+   int state = 5;
+   int ivec;
+   FLOAT rvec[5];
+   char title[40];
+
+#ifdef PV3DEBUG
+   printf("I'm in pVSCAL: %d %d %d\n",*key,running_subtract,fixed_subtract);
+#endif
+
    offset = 0;
    for(i=0;i<nblocks;++i) {
+      if (running_subtract +fixed_subtract) {
+         blk[i].grd[0].pv3subtract(running_subtract);
+         myvsi = hp_mgrid::ugwk[0];
+         myvrtx = hp_mgrid::vrtxwk[0];
+         mybinfo = hp_mgrid::binfowk[0];
+         ivec = *key;
+      }
+      else {
+         myvsi = blk[i].grd[0].ug;
+         myvrtx = blk[i].grd[0].vrtx;
+         mybinfo = blk[i].grd[0].binfo;
+      }         
       switch (*key) {
-         case 1: /* u-velocity */
-            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,0,v);
+         case 1:case 2:case 3: /* flow */
+            blk[i].grd[0].flotov(offset,myvsi,(*key-1),v);
             break;
-         case 2: /* v-velocity */
-            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,1,v);
+         case 5:case 6: /* mesh positions */
+            blk[i].grd[0].meshtov(offset,myvrtx,mybinfo,(*key-5),v);
             break;
-         case 3: /* pressure */
-            blk[i].grd[0].flotov(offset,blk[i].grd[0].ug,2,v);
+         case 7:
+            running_subtract = 1;
+            fixed_subtract = 0;
+            return;
+         case 8: 
+            running_subtract = 0;
+            fixed_subtract = 1;
+            blk[i].grd[0].pv3freeze();
             break;
-   
-         /* RESIDUALS */
-         case 4: /* u-velocity */
-            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,0,v);
-            break;
-         case 5: /* v-velocity */
-            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,1,v);
-            break;
-         case 6: /* pressure */
-            blk[i].grd[0].logflotov(offset,blk[i].gbl.res,2,v);
-            break;         
-            
-#ifdef SKIP         
-         case 7: /* x-velocity */
-   //         mvtov(mv,0,v);
-            break;
-         case 8: /* y-velocity */
-   //         mvtov(mv,1,v);
-            break;         
-         case 9: /* x-velocity */
-   //         mvgftov(mvgf,0,v);
-            break;
-         case 10: /* y-velocity */
-   //         mvgftov(mvgf,1,v);
-            break;
-#endif
-      }  
+         case 9:
+            running_subtract = 0;
+            fixed_subtract = 0;
+            return;
+      }
    }
 
    return;
 }
 
-void hp_mgrid::flotov(int &kn, struct vsi flo,int nvar, float *v) {
-   static int i,j,tind,sind,knstart;
+void hp_mgrid::flotov(int &kn, struct vsi flo, int nvar, float *v) {
+   int i,j,tind,sind,knstart;
    
    knstart = kn;
    /* VERTEX MODES */
@@ -597,33 +620,53 @@ void hp_mgrid::flotov(int &kn, struct vsi flo,int nvar, float *v) {
    return;
 }
 
-void hp_mgrid::logflotov(int &kn, struct vsi flo,int nvar, float *v) {
+void hp_mgrid::meshtov(int &kn, FLT (*vin)[ND], struct bistruct **bin, int nvar, float *v) {
    static int i,j,tind,sind,knstart;
+   static int v0, v1;
    
-    knstart = kn;
+#ifdef PV3DEBUG
+   printf("Entering meshtov\n");
+#endif
+   
+   knstart = kn;
    /* VERTEX MODES */
    for(i=0;i<nvrtx;++i)
-      v[kn++] = log10(fabs(flo.v[i][nvar]) +EPSILON);
-   
+      v[kn++] = vin[i][nvar];
+      
    if (b.p > 1) {
       /* SIDE MODES */
       for(sind=0;sind<nside;++sind) {
-         ugtouht1d(sind,flo);
-         b.proj1d_leg(uht[nvar],u[nvar][0]);
-
-         for(i=1;i<b.sm+1;++i)
-            v[kn++] = log10(fabs(u[nvar][0][i]) +EPSILON);   
+         if (sinfo[sind] < 0) {
+            v0 = svrtx[sind][0];
+            v1 = svrtx[sind][1];
+            b.proj1d_leg(vin[v0][nvar],vin[v1][nvar],crd[nvar][0]);
+         }
+         else {
+            crdtocht1d(sind,vin,bin);
+            b.proj1d_leg(cht[nvar],crd[nvar][0]);
+         }
+         for(i=1;i<b.sm+1;++i) {
+             v[kn++] = crd[nvar][0][i];
+         }
       }
 
       /* INTERIOR MODES */
       if (b.p > 2) {
          for(tind = 0; tind < ntri; ++tind) {
-            ugtouht(tind,flo);
-            b.proj_leg(uht[nvar],u[nvar]);
-               
-            for(i=1;i<b.sm;++i)
-               for(j=1;j<b.sm-(i-1);++j)
-                  v[kn++] = log10(fabs(u[nvar][i][j])+EPSILON);               
+         
+            if (tinfo[tind] < 0) {
+               b.proj_leg(vin[tvrtx[tind][0]][nvar],vin[tvrtx[tind][1]][nvar],vin[tvrtx[tind][2]][nvar],crd[nvar]);
+            }
+            else {
+               crdtocht(tind,vin,bin);
+               b.proj_bdry_leg(cht[nvar],crd[nvar]);
+            }
+            
+            for(i=1;i<b.sm;++i) {
+               for(j=1;j<b.sm-(i-1);++j) {
+                  v[kn++] = crd[nvar][i][j];
+               }
+            }
          }
       }
    }
@@ -632,16 +675,95 @@ void hp_mgrid::logflotov(int &kn, struct vsi flo,int nvar, float *v) {
       v[i+kn-knstart] = v[i];
 
    kn += kn-knstart;
+#ifdef PV3DEBUG
+   printf("Exiting meshtov\n");
+#endif
 
    return;
 }
 
 
-#ifdef SKIP
-void hp_mgrid::pvvect(int *key,FLOAT v[][3]) {
-   static int i,j,n,tind,sind,kn;
+void hp_mgrid::pv3subtract(int running) {
+   int i,j,n;
+         
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         ugwk[0].v[i][n] = ug.v[i][n]-ugpv3.v[i][n];
+   
+   for(i=0;i<nside*b.sm;++i)
+      for(n=0;n<NV;++n)
+         ugwk[0].s[i][n] = ug.s[i][n]-ugpv3.s[i][n];
 
-    kn = 0;
+   for(i=0;i<ntri*b.im;++i)
+      for(n=0;n<NV;++n)
+         ugwk[0].i[i][n] = ug.i[i][n]-ugpv3.i[i][n];            
+            
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n)
+         vrtxwk[0][i][n] = vrtx[i][n]-vrtxpv3[i][n];
+         
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&CURV_MASK) 
+         for (j=0;j<sbdry[i].num*b.sm;++j)
+            for(n=0;n<ND;++n)
+               binfowk[0][i][j].curv[n] = binfo[i][j].curv[n] -binfopv3[i][j].curv[n];
+            
+   if (running)
+      pv3freeze();
+
+   return;
+}
+
+void hp_mgrid::pv3freeze() {
+   int i,j,n;
+   
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         ugpv3.v[i][n] = ug.v[i][n];
+   
+   for(i=0;i<nside*b.sm;++i)
+      for(n=0;n<NV;++n)
+         ugpv3.s[i][n] = ug.s[i][n];
+
+   for(i=0;i<ntri*b.im;++i)
+      for(n=0;n<NV;++n)
+         ugpv3.i[i][n] = ug.i[i][n];            
+            
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<ND;++n)
+         vrtxpv3[i][n] = vrtx[i][n];
+         
+   for(i=0;i<nsbd;++i)
+      if (sbdry[i].type&CURV_MASK) 
+         for (j=0;j<sbdry[i].num*b.sm;++j)
+            binfopv3[i][j] = binfo[i][j];
+            
+   return;
+}
+
+
+void pVVECT(int *key, FLOAT *v) {
+#ifdef PV3DEBUG
+   printf("I'm in pVVECT\n");
+#endif
+   thisblocks->pvvect(key,(FLOAT (*)[NV]) v);
+}
+
+void blocks::pvvect(int *key, FLOAT (*v)[3]) {
+   int i,offset;
+   
+   offset = 0;
+   for(i=0;i<nblocks;++i) 
+      blk[i].grd[0].pvvect(offset,v);
+
+   return;
+}
+   
+void hp_mgrid::pvvect(int &kn,FLOAT v[][3]) {
+   int i,j,n,tind,sind,knstart;
+
+   knstart = kn;
+
    /* VERTEX MODES */
    for(i=0;i<nvrtx;++i) {
       v[kn][0] = ug.v[i][0];
@@ -681,13 +803,14 @@ void hp_mgrid::pvvect(int *key,FLOAT v[][3]) {
       }
    }
 
-    for(i=0;i<kn;++i)
-      for(j=0;j<3;++j)
-         v[i+kn][j] = v[i][j];  
-   
+   for(i=knstart;i<kn;++i)
+      for(n=0;n<NV;++n)
+         v[i+kn-knstart][n] = v[i][n];
+
+   kn += kn-knstart;
+      
    return;
 }
-#endif
 
 /* strcpb copies str2 into str1 up to, but not including the first null and
    then pads with blanks to the len character */

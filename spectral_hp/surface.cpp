@@ -103,7 +103,7 @@ void hp_mgrid::surfksrc1d() {
             }
 
             for(i=0;i<sbdry[bnum].num*b.sm;++i) {
-               srf->sdres[log2p][i][0] = -1.0*srf->gbl->sres[i][0];  // TEMPO FOR UNIFORM SPACING OF HIGHER MODES ALONG SIDE
+               srf->sdres[log2p][i][0] = -0.0*srf->gbl->sres[i][0];  // TEMPO FOR UNIFORM SPACING OF HIGHER MODES ALONG SIDE
             }
          }
       }
@@ -114,9 +114,8 @@ void hp_mgrid::surfksrc1d() {
 }
 
 #ifdef DROP
-extern FLT amp,lam,theta;
+extern FLT amp;
 FLT dydt = 0.0;
-static FLT vflux = 0.0;
 #endif
 
 void hp_mgrid::surfrsdl(int mgrid) {
@@ -131,25 +130,23 @@ void hp_mgrid::surfrsdl(int mgrid) {
 
       srf = static_cast<class surface *>(sbdry[bnum].misc);
       if (srf == NULL) continue;
+      
+      count = 0;
+      sigor = srf->gbl->sigma/(gbl->rho +srf->gbl->rho2);
+      drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
+      
 
+#ifdef DROP
       /* DETRMINE DX CORRECTION TO CONSERVE AREA */
       /* IMPORTANT FOR STEADY SOLUTIONS */
       /* SINCE THERE ARE MULTIPLE STEADY-STATES */
-#ifdef DROP
       /* TO ENSURE GET CORRECT VOLUME */
-      FLT avg[5],rbar; 
+      FLT avg[5],rbar, vflux, kc; 
+      kc = srf->gbl->sigma/(gbl->mu +srf->gbl->mu2);
       integrated_averages(avg);
       rbar  = pow(3.*0.5*avg[0],1.0/3.0);
-      vflux =  amp*(rbar -0.5);
-      
-      resy = dydt -(1.0*avg[4] +theta*avg[2]);
-      if (mgrid) {
-         if (isfrst) {
-            dresy[log2p] = surface::fadd[1]*resy0 -resy;
-         }
-         resy += dresy[log2p];
-      }
-
+      vflux =  amp*kc*(rbar -0.5);
+      dydt = amp*kc*avg[2] +avg[4];
       /* C_D TO G CONVERSION REMINDER 
       re = 1.0/srf->gbl->mu2;
       cd = 24./re*(1 +0.1935*pow(re,0.6305));
@@ -157,10 +154,6 @@ void hp_mgrid::surfrsdl(int mgrid) {
       g = amp*(avg[2] +avg[4]) +12.*cd/(gbl->rho -srf->gbl->rho2);
       */
 #endif
-      
-      count = 0;
-      sigor = srf->gbl->sigma/(gbl->rho +srf->gbl->rho2);
-      drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
             
       /**************************************************/
       /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
@@ -238,8 +231,8 @@ void hp_mgrid::surfrsdl(int mgrid) {
          b.intgrt1d(res[2][0],lf[2]);
 #endif
          
-         /* TEMPORARY TO LEAVE TANGENTiAL POSITION TOTALLY FREE
-         for(m=0;m<b.sm+2;++m)
+         /* TO LEAVE TANGENTIAL POSITION TOTALLY FREE */
+         /* for(m=0;m<b.sm+2;++m)
             cf[0][m] = 0.0; */
          
          /* STORE IN RES */
@@ -262,10 +255,10 @@ void hp_mgrid::surfrsdl(int mgrid) {
          b.intgrtx1d(u[0][0],lf[0]);
          b.intgrt1d(u[1][1],lf[1]);
          b.intgrtx1d(u[1][0],lf[1]);
-      
+
          /* MASS FLUX PRECONDITIONER */
          for(m=0;m<b.sm+2;++m)
-            lf[2][m] = -gbl->rho*cf[1][m];
+            lf[2][m] = -gbl->rho*cf[1][m]; 
 
 #ifndef INERTIALESS
          for (n=0;n<ND;++n) 
@@ -297,37 +290,49 @@ void hp_mgrid::surfrsdl(int mgrid) {
       /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
       v0 = svrtx[sbdry[bnum].el[0]][0];
       for(i=0;i<nvbd;++i) {
-         if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+         if (vbdry[i].el[0] != v0) continue;
+         
+          if  (vbdry[i].type&OUTF_MASK) {
 
-         /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-         crdtocht1d(sbdry[bnum].el[0]);
-         b.ptprobe1d(2,cht,rp,norm,-1.0);
-         jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+            /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+            crdtocht1d(sbdry[bnum].el[0]);
+            b.ptprobe1d(2,cht,rp,norm,-1.0);
+            jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 #ifdef AXISYMMETRIC
-         binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
-         binfo[bnum][0].flx[1] -= -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+            binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+            binfo[bnum][0].flx[1] -= -rp[0]*srf->gbl->sigma*norm[1]/jcb;
 #else
-         binfo[bnum][0].flx[0] -= -srf->gbl->sigma*norm[0]/jcb;
-         binfo[bnum][0].flx[1] -= -srf->gbl->sigma*norm[1]/jcb;
+            binfo[bnum][0].flx[0] -= -srf->gbl->sigma*norm[0]/jcb;
+            binfo[bnum][0].flx[1] -= -srf->gbl->sigma*norm[1]/jcb;
 #endif
+         }
+         if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {
+            binfo[bnum][0].flx[2] = 0.0;
+         }
       }
       
       /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
       v0 = svrtx[sbdry[bnum].el[sbdry[bnum].num -1]][1];
       for(i=0;i<nvbd;++i) {
-         if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+         if (vbdry[i].el[0] != v0) continue;
+         
+         if  (vbdry[i].type&OUTF_MASK) {
 
-         /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-         crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
-         b.ptprobe1d(2,cht,rp,norm,1.0);
-         jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+            /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+            crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
+            b.ptprobe1d(2,cht,rp,norm,1.0);
+            jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 #ifdef AXISYMMETRIC
-         binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
-         binfo[bnum][count].flx[1] += -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+            binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+            binfo[bnum][count].flx[1] += -rp[0]*srf->gbl->sigma*norm[1]/jcb;
 #else
-         binfo[bnum][count].flx[0] += -srf->gbl->sigma*norm[0]/jcb;
-         binfo[bnum][count].flx[1] += -srf->gbl->sigma*norm[1]/jcb;
+            binfo[bnum][count].flx[0] += -srf->gbl->sigma*norm[0]/jcb;
+            binfo[bnum][count].flx[1] += -srf->gbl->sigma*norm[1]/jcb;
 #endif
+         }
+         if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {
+            binfo[bnum][count].flx[2] = 0.0;
+         }
       }   
          
       /************************************************/
@@ -603,7 +608,7 @@ void hp_mgrid::surfdt1(int bnum) {
    for(n=0;n<ND;++n)
       for(m=0;m<ND;++m)
          srf->gbl->vdt[0][m][n] = 0.0;
-         
+            
    for(indx=0; indx < sbdry[bnum].num; ++indx) {
       sind = sbdry[bnum].el[indx];
       v0 = svrtx[sind][0];
@@ -634,14 +639,13 @@ void hp_mgrid::surfdt1(int bnum) {
             
       dttang = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
       strss =  4.*srf->gbl->sigma/(hsm*hsm) +fabs(drho*g*nrm[1]/h);
-      gam1 = 3.0*qmax +(0.5*hsm*bd[0] + 8.*nu1/hsm)*(0.5*hsm*bd[0] + 8.*nu1/hsm);
-      gam2 = 3.0*qmax +(0.5*hsm*bd[0] + 8.*nu2/hsm)*(0.5*hsm*bd[0] + 8.*nu2/hsm);
+      gam1 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu1/hsm)*(0.5*hsm*bd[0] + 2.*nu1/hsm);
+      gam2 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu2/hsm)*(0.5*hsm*bd[0] + 2.*nu2/hsm);
 #ifdef INERTIALESS
-      gam1 = (8.*nu1/hsm)*(8.*nu1/hsm);
-      gam2 = (8.*nu2/hsm)*(8.*nu2/hsm);
+      gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
+      gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-      dtnorm = 2.*vslp/hsm +bd[0] +3.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2));
-   
+      dtnorm = 2.*vslp/hsm +bd[0] +1.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2));
       /* SET UP DISSIPATIVE COEFFICIENT */
       /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
       /* RESIDUAL HAS DX/2 WEIGHTING */
@@ -649,6 +653,7 @@ void hp_mgrid::surfdt1(int bnum) {
       /* |a| dx/2 2/dx dv/dpsi [a du/dx dx/2] dpsi */
       /* |a| dv/dpsi [a du/dx dx/2] dpsi */
       srf->gbl->meshc[indx] = adis/(h*dtnorm*0.5);
+      /* srf->gbl->meshc[indx] = adis/(h*vslp/hsm); */
          
 #ifdef AXISYMMETRIC
       dtnorm *= 0.5*(vrtx[v0][0] +vrtx[v1][0]);
@@ -656,7 +661,7 @@ void hp_mgrid::surfdt1(int bnum) {
 
       nrm[0] *= 0.5;
       nrm[1] *= 0.5;
-      
+            
       srf->gbl->vdt[indx][0][0] += -dttang*nrm[1]*b.vdiag1d;
       srf->gbl->vdt[indx][0][1] +=  dttang*nrm[0]*b.vdiag1d;
       srf->gbl->vdt[indx][1][0] +=  dtnorm*nrm[0]*b.vdiag1d;
@@ -673,6 +678,8 @@ void hp_mgrid::surfdt1(int bnum) {
          srf->gbl->sdt[indx][1][1] =  dtnorm*nrm[1];
       }
    }
+   
+   // printf("# Surface Max Time Step: %e\n",dtmax);
    
    /* SEND COMMUNICATION INFO FOR ENDPOINTS */
    end = sbdry[bnum].num;
@@ -763,6 +770,7 @@ void hp_mgrid::surfdt2(int bnum) {
       srf->gbl->vdt[indx][0][1] *= -jcbi*surface::cfl[log2p][1];
       srf->gbl->vdt[indx][1][0] *= -jcbi*surface::cfl[log2p][0];
    }
+
    /* INVERT SIDE MATRIX */   
    if (b.sm > 0) {
       for(indx=0;indx<sbdry[bnum].num;++indx) {
@@ -787,10 +795,6 @@ void hp_mgrid::surfnstage1(int bnum) {
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
-   
-#ifdef DROP
-   dydt0 = dydt;
-#endif
 
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n)
@@ -812,10 +816,6 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
    
-#ifdef DROP
-   dydt = dydt0 -1.666*surface::cfl[0][1]*alpha[stage]*resy;
-#endif
-      
    for(i=0;i<sbdry[bnum].num+1;++i) {
       for(n=0;n<ND;++n) {
          srf->vug[i][n] = srf->gbl->vug0[i][n] -alpha[stage]*srf->gbl->vres[i][n];
@@ -960,10 +960,6 @@ void hp_mgrid::surfgetfres(int bnum) {
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
-   
-#ifdef DROP
-   resy0 = resy;
-#endif
    
    /* TRANSFER INTERFACE RESIDUALS */
 
@@ -1132,9 +1128,6 @@ void hp_mgrid::surfmaxres() {
 
       for(n=0;n<ND;++n)
          printf("%.3e  ",mxr[n]);
-#ifdef DROP
-      printf("%.3e %.3e ",fabs(vflux),fabs(resy));
-#endif
    }
    
    return;

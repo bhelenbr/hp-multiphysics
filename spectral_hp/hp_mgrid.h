@@ -70,15 +70,19 @@ class hp_mgrid : public spectral_hp {
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static FLT trncerr, invbdryerr, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
-      static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static int extrap; 
 #ifdef BACKDIFF
       static FLT bd[TMSCHEME+1];  // BACKWARDS DIFFERENCE CONSTANTS
 #else
       static FLT bd[1]; // DIAGONAL TERM FOR DIRK SCHEME
-      static const FLT adirk[TMSCHEME][TMSCHEME];
-      static const FLT bdirk[TMSCHEME]; 
-      static const FLT cdirk[TMSCHEME];
+      static FLT adirk[TMSCHEME][TMSCHEME];
+      static FLT cdirk[DIRKSOLVES];
+#endif
+#ifdef PV3
+      static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
+      struct vsi ugpv3; // STORAGE FOR pV3 to see mode change
+      FLT (*vrtxpv3)[ND]; // STORAGE FOR pV3 to see mode change
+      struct bistruct *binfopv3[MAXSB]; // STORAGE FOR pV3 to see mode change
 #endif
       static struct vsi ugwk[TMADAPT]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
       static FLT (*vrtxwk[TMADAPT])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO
@@ -109,9 +113,6 @@ class hp_mgrid : public spectral_hp {
       
    private:
       bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
-#ifdef DROP
-      FLT dresy[MXLG2P],dydt0,resy,resy0;
-#endif
 
    public:
       void allocate(int mgrid, struct hp_mgrid_glbls *store);
@@ -186,10 +187,9 @@ class hp_mgrid : public spectral_hp {
       /* ADVANCE TIME SOLUTION */
 #ifdef BACKDIFF
       void unsteady_sources(int mgrid);
-      void shift(int stage = 0);
+      void shift();
 #else
-      void tadvance(int stage);
-      void getfdvrtdt(); 
+      void unsteady_sources(int stage, int mgrid);
 #endif
       
       /* FUNCTIONS FOR ADAPTION */ 
@@ -209,9 +209,11 @@ class hp_mgrid : public spectral_hp {
       void pvcell(int &kn, int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
       void pvgrid(int &kn, float (*xyz)[3]);
       void pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
-      void pvvect(int *key, float v[][3]);
+      void pvvect(int &offset, float v[][3]);
       void flotov(int &kn, struct vsi flo,int nvar, float *v);
-      void logflotov(int &kn, struct vsi flo,int nvar, float *v);
+      void meshtov(int &kn, FLT (*vin)[ND], struct bistruct **bin, int nvar, float *v);
+      void pv3freeze();
+      void pv3subtract(int frozen);
 #endif
 };
 
