@@ -452,7 +452,7 @@ void blocks::cycle(int vw, int lvl) {
             emax = MAX(emax,err);
             --vcount;
             if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > SOLVECOARSE) {
-               printf("# Coarsest grid iterations %d\n",crscntr);
+               printf("# Coarsest grid iterations %d %e\n",crscntr,err/emax);
                vcount+=2;
             }
             ++crscntr;
@@ -539,7 +539,7 @@ extern FLT dydt;
 
 void blocks::go() {
    int tstep,total = 0;
-   FLT error;
+   FLT error, maxerr;
 #ifdef PV3
    float pvtime = 0.0;
 #endif
@@ -572,14 +572,18 @@ void blocks::go() {
       for(int s=0;s<TMSCHEME;++s) {
          tadvance(s);
 #endif
-         printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);      
+         printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);  
+
+         maxerr = 0.0;
          for(iter=0;iter<ncycle;++iter) {
+
 #ifdef DEFORM
             r_cycle(vwcycle);
 #endif
             cycle(vwcycle);
             printf("%d %ld ",total++,clock());
             error = printerror();
+
 #ifdef DEFORM
             r_printerror();
 #endif
@@ -588,9 +592,12 @@ void blocks::go() {
             pvtime = 1.0*iter;
             pV_UPDATE(&pvtime);
 #endif
+            maxerr = MAX(error,maxerr);
+            if (error/maxerr < CVGTOL || error < 1.0e-13) break;
+            
             // output(iter+1000,tecplot);
-
          }
+
          // output(tstep*TMSCHEME +s,tecplot);
       }
       
