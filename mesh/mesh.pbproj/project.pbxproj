@@ -548,7 +548,7 @@
 			neededFileNames = (
 			);
 			shellPath = /bin/csh;
-			shellScript = "~helenbrk/Codes/mesh/createlib";
+			shellScript = "~/Codes/mesh/createlib";
 		};
 		F5F975AA015243AF01000001 = {
 			fileRef = 07F2E94900974D3D80990B20;
