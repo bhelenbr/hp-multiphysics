@@ -58,10 +58,9 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
       }	
 	}
    
-   printf("# ERROR: ");
 	for(n=0;n<NV;++n) {
 		l2r[n] = sqrt(l2r[n]); 
-		printf("%.3e %.3e %4d ",l2r[n],mxr[n],loc[n]);
+		printf("#L_2: %.3e L_inf %.3e %4d ",l2r[n],mxr[n],loc[n]);
 	}
 	printf("\n");
 		
