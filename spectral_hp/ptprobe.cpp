@@ -21,8 +21,8 @@ void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
 }
 
 int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
-   FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,close,test;
-   int iter,tind,v0,vn,stoptri,tclose,dir;
+   FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
+   int iter,sind,tind,v0;
 
    qtree.nearpt(xp,yp,v0);
    tind = findtri(xp,yp,v0);
@@ -31,38 +31,13 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    if (tind == -1) {
       /* POINT IS IN CONVEX CURVED TRIANGLE NEAR BOUNDARY */
       /* THIS ASSUMES SIDE RADIUS OF CURVATURE IS LESS THAN 1/2 LENGTH OF SIDE ON BDRY */
-      findbdryside(xp,yp,v0);
-      
-      close = 1.0e16;
-      tind = vtri[v0];
-      stoptri = tind;
-      dir = 1;
-      do {
-         for(vn=0;vn<3;++vn) 
-            if (tvrtx[tind][vn] == v0) break;
-         
-         assert(vn != 3);
-         
-         tind = ttri[tind][(vn +dir)%3];
-         if (tind < 0) {
-            if (dir > 1) break;
-            /* REVERSE DIRECTION AND GO BACK TO START */
-            ++dir;
-            tind = vtri[v0];
-            stoptri = -1;
-         }
-   
-         test = intri(tind,xp,yp);
-         if (test < close) {
-            close = test;
-            tclose = tind;
-         }            
-      } while(tind != stoptri); 
-
-      tind = tclose;
-      if (tinfo[tind] == -1) {
-         printf("Warning: closest triangle was not curved (%f,%f) nearpt %d tind %d\n",xp,yp,v0,tind);
+      x[0] = xp;
+      x[1] = yp;
+      sind = findbdryside(x,v0);
+      if (sind < 0 || sinfo[sind] < 0) {
+         printf("Warning: error finding boundary tri (%f,%f) nearpt %d sind %d\n",xp,yp,v0,sind);
       }
+      tind = stri[sind][0];
       wgt[1] = 0.5;
       wgt[2] = 0.5;
    }
@@ -98,11 +73,22 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
 }
       
 int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
-   int vnear,sind,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
+   int j,vnear,sind,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
    FLT dpsi,xp[ND],dx,dy,ol;
    
    /* SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);
+   xp[0] = x; xp[1] = y;
+   sind = findbdryside(xp,vnear);
+   if (sind < 0 || sbdry[(-stri[sind][1]>>16) -1].type != typ) {
+      printf("#Warning: brute force boundary locate\n");
+      for(bnum=0;bnum<nsbd;++bnum)
+         if (sbdry[bnum].type == typ) break;
+      sind = sbdry[bnum].el[0];
+   }
+      
+   
+#ifdef OLDWAY
    tind = vtri[vnear];
    stoptri = tind;
    dir = 1;
@@ -153,6 +139,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
          break;
       }
    }
+#endif
    
 
    /* SEARCH AROUND THIS SIDE */
