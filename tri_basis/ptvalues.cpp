@@ -79,15 +79,15 @@ void hpbasis::ptvalues(FLT x, FLT eta) {
    }
 
    /* INTERIOR MODES   */
-   ind = bm;
    for(m = 2; m< sm+1;++m) {      
       pk = 1.0;
       pkm = 0.0;
       for(k = 0; k < sm+1-m;++k) {
-         pgn[ind++] = pow(.5*(1.-eta),m)*.5*(1.+eta)*pk*norm[ind];
+         pgn[ind] = pow(.5*(1.-eta),m)*.5*(1.+eta)*pk*norm[ind];
          pkp = (eta-a0[m][k])*pk - b0[m][k]*pkm;
          pkm = pk;
          pk = pkp;
+         ++ind;
       }
    }
    
