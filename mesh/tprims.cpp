@@ -191,14 +191,33 @@ template FLT mesh<2>::tradius(int tind) const;
 template FLT mesh<3>::tradius(int tind) const;
 
 template<int ND> FLT mesh<ND>::tradius(int tind) const {
-   int v0;
-   FLT xcen[ND],dx1,dy1;
+   FLT alpha,beta;
+   FLT xmid1,ymid1,xmid2,ymid2,xcen,ycen;
+   FLT dx1,dy1,dx2,dy2,area;
+   int v0, v1, v2;
    
    v0 = tvrtx[tind][0];
-   tcenter(tind,xcen);
-   dx1 = (vrtx[v0][0] -xcen[0]);
-   dy1 = (vrtx[v0][1] -xcen[1]);
-   return(sqrt(dx1*dx1 +dy1*dy1));
+   v1 = tvrtx[tind][1];
+   v2 = tvrtx[tind][2];
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+
+   /* RELATIVE TO POINT 0 TO AVOID ROUNDOFF */
+   xmid1 = 0.5*(vrtx[v2][0] -vrtx[v0][0]);
+   ymid1 = 0.5*(vrtx[v2][1] -vrtx[v0][1]);   
+   xmid2 = 0.5*(vrtx[v1][0] -vrtx[v0][0]);
+   ymid2 = 0.5*(vrtx[v1][1] -vrtx[v0][1]);
+      
+   area        = 1.0/(dx1*dy2 -dy1*dx2);
+   alpha       = dx2*xmid2 +dy2*ymid2;
+   beta        = dx1*xmid1 +dy1*ymid1;
+   xcen = area*(beta*dy2 -alpha*dy1);
+   ycen = area*(alpha*dx1 -beta*dx2);
+
+   return(sqrt(xcen*xcen +ycen*ycen));
 }
 
 template void mesh<2>::tcenter(int tind, FLT x[2]) const;
@@ -219,16 +238,17 @@ template<int ND> void mesh<ND>::tcenter(int tind, FLT x[ND]) const {
    dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
    dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
 
-   xmid1 = 0.5*(vrtx[v2][0] +vrtx[v0][0]);
-   ymid1 = 0.5*(vrtx[v2][1] +vrtx[v0][1]);   
-   xmid2 = 0.5*(vrtx[v1][0] +vrtx[v0][0]);
-   ymid2 = 0.5*(vrtx[v1][1] +vrtx[v0][1]);
+   /* RELATIVE TO POINT V0 */
+   xmid1 = 0.5*(vrtx[v2][0] -vrtx[v0][0]);
+   ymid1 = 0.5*(vrtx[v2][1] -vrtx[v0][1]);   
+   xmid2 = 0.5*(vrtx[v1][0] -vrtx[v0][0]);
+   ymid2 = 0.5*(vrtx[v1][1] -vrtx[v0][1]);
       
    area        = 1.0/(dx1*dy2 -dy1*dx2);
    alpha       = dx2*xmid2 +dy2*ymid2;
    beta        = dx1*xmid1 +dy1*ymid1;
-   x[0] = area*(beta*dy2 -alpha*dy1);
-   x[1] = area*(alpha*dx1 -beta*dx2);
+   x[0] = area*(beta*dy2 -alpha*dy1) +vrtx[v0][0];
+   x[1] = area*(alpha*dx1 -beta*dx2) +vrtx[v0][1];
    
    return;
 }

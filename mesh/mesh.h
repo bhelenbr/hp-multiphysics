@@ -10,8 +10,10 @@
 #define FLT float
 #define EPSILON FLT_EPSILON
 #else
+#ifndef FLT
 #define FLT double
 #define EPSILON DBL_EPSILON
+#endif
 #endif
 
 template<class T> class side_template;
@@ -176,7 +178,7 @@ template<int ND> class mesh {
 
       /* MESH MODIFICATION FUNCTIONS */
       /* TO CREATE AN INITIAL TRIANGUlATION */
-      void triangulate(int **sidelst, int *nside, int nloop, int cknbor = 1);
+      void triangulate(int nside);
       void findpt(int *vrtxlst,int nv,int *v,int chkadj,int good[], int &ngood);
       void addtri(int v0,int v1,int v2,int sind,int dir);
 

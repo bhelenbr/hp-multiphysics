@@ -11,10 +11,8 @@ template int mesh<2>::coarsen(FLT factor, const class mesh& inmesh);
 template int mesh<3>::coarsen(FLT factor, const class mesh& inmesh);
 
 template<int ND> int mesh<ND>::coarsen(FLT factor, const class mesh& inmesh) {
-   int i,j,k,n,sind,count;
+   int i,j,n,sind;
    int v0, v1, odd;
-   int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
-   int nloop;
    FLT mindist;
 
    if (!initialized) {
@@ -187,50 +185,10 @@ template<int ND> int mesh<ND>::coarsen(FLT factor, const class mesh& inmesh) {
    
    treeinit();
 
-   /* CREATE ORDERED LIST OF SIDES */
-   /* STORAGE FOR SIDELST */
-   count = 0;
-   for(i=0;i<nsbd;++i) 
-      count += sbdry[i]->mxsz();
-   
-   for(i=0;i<nsbd;++i)
-      sidelst[i] = new int[count];
-
-   /* TEMPORARY LIST OF BOUNDARIES */
-   for(i=0;i<nsbd;++i) 
-      sideord[i] = i;
-
-   nloop = 0;
-   nsdloop[0] = 0;
-   for(i=0; i<nsbd; ++i) {
-      for(j=0;j<sbdry[sideord[i]]->nsd();++j)
-         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]]->sd(j) +1;
-
-      v0 = svrtx[sbdry[sideord[i]]->sd(sbdry[sideord[i]]->nsd()-1)][1];
-      for(j=i+1; j<nsbd;++j) {
-         if (v0 ==  svrtx[sbdry[sideord[j]]->sd(0)][0]) {
-            k = sideord[i+1];
-            sideord[i+1] = sideord[j];
-            sideord[j] = k;
-            goto FINDNEXT;
-         }
-      }
-      /* NEW LOOP */
-      nsdloop[++nloop] = 0;       
-FINDNEXT:
-      continue;
-   }
-
-   if (nloop == 0) {
-      *log << "Problem with boundaries nloop:" << nloop << std::endl;
-      exit(1);
-   }
-   
-   /* CREATE INITIAL TRIANGULATION */            
-   triangulate(sidelst,nsdloop,nloop);
-         
-   for(i=0;i<nsbd;++i) 
-      delete []sidelst[i];
+   for(i=0;i<nside;++i)
+      intwk1[i] = i+1;
+      
+   triangulate(nside);
 
    /****************************************************/         
    /* Boyer-Watson Algorithm to insert interior points */

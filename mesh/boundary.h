@@ -20,8 +20,10 @@
 #define FLT float
 #define EPSILON FLT_EPSILON
 #else
+#ifndef FLT
 #define FLT double
 #define EPSILON DBL_EPSILON
+#endif
 #endif
 
 /* GENERIC INTERFACE FOR A B.C. */

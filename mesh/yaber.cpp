@@ -53,10 +53,8 @@ template<int ND> void mesh<ND>::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    for(i=0;i<nsbd;++i) {
       v0 = svrtx[sbdry[i]->sd(0)][0];
       v1 = svrtx[sbdry[i]->sd(sbdry[i]->nsd()-1)][1];
-      if (v0 != v1) {
-         vinfo[v0] = 1;
-         vinfo[v1] = 1;
-      }
+      vinfo[v0] = 1;
+      vinfo[v1] = 1;
    }
    
    for(i=0;i<nvbd;++i)

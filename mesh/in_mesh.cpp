@@ -364,7 +364,6 @@ next1a:     continue;
             fscanf(grd,"%*[^:]:%d",&nsbd);
             count = 0;
             for(i=0;i<nsbd;++i) {
-
                fscanf(grd,"%*[^:]:%d",&temp);
                getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
@@ -658,6 +657,16 @@ next1c:     continue;
                *log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
+                
+                
+//            /* SKIP FIRST ZONE? */
+//            char mychar;
+//            do {
+//                fscanf(grd,"%*[^\n]\n");
+//                mychar = fgetc(grd);
+//            } while (mychar != 'Z');
+            
+            
             /* HEADER LINES */
             fscanf(grd,"%*[^,],%*[^,],%*[^=]=%d%*[^=]=%d\n",&nvrtx,&ntri);
             
@@ -677,7 +686,7 @@ next1c:     continue;
             for(i=0;i<nvrtx;++i) {
                for(n=0;n<ND;++n)
                   fscanf(grd,"%le ",&vin[i][n]);
-               fscanf(grd,"\n");
+               fscanf(grd,"%*[^\n]\n");
                vinfo[i] = -1;
             }
 
@@ -724,9 +733,9 @@ next1c:     continue;
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
-   *log << "#Boundaries" << std::endl;
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize(*log);
+//   *log << "#Boundaries" << std::endl;
+//   for(i=0;i<nsbd;++i)
+//      sbdry[i]->summarize(*log);
 
    createttri();
    createvtri();

@@ -229,16 +229,23 @@ template<class MESH> void side_template<MESH>::output(std::ostream& out) {
 }
 
 template<class MESH> void side_template<MESH>::input(FILE *in, FLT grwfac) {
-	int i;
+	int i,nin;
+   char buff[80];
 	
-	fscanf(in,"%*[^:]:%d",&nel);
-	
+	fscanf(in,"%*[^:]:%d\n",&nel);
 	if (!maxel) alloc(static_cast<int>(grwfac*nel));
 	else assert(nel < maxel);
 	
-	for(i=0;i<nel;++i)
-      fscanf(in,"%*d: %d %lf %lf\n",&el[i],&s[i],&s[i+1]);
-		
+	for(i=0;i<nel;++i) {
+      fgets(buff,80,in);
+      nin = sscanf(buff,"%*d: %d %lf %lf\n",&el[i],&s[i],&s[i+1]);
+      if (nin != 3) {
+         sscanf(buff,"%*d: %d\n",&el[i]);
+         s[i] = 0.0;
+         s[i+1] = 0.0;
+      }
+   }
+   
 	return;
 }
 

@@ -16,9 +16,7 @@ template void mesh<2>::triangulate(const char *filename, FLT grwfac);
 template void mesh<3>::triangulate(const char *filename, FLT grwfac);
 
 template<int ND> void mesh<ND>::triangulate(const char *filename, FLT grwfac) {
-   int i,j,k,n,count,v0;
-   int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
-   int nloop;
+   int i,j,n;
    int bcntr[MAXSB];
    char grd_app[100];
    FILE *grd;
@@ -43,7 +41,7 @@ template<int ND> void mesh<ND>::triangulate(const char *filename, FLT grwfac) {
       fscanf(grd,"%*d:");
       for(n=0;n<ND;++n)
          fscanf(grd,"%lf",&vrtx[i][n]);
-      fscanf(grd,"%*f%d\n",&vinfo[i]);
+      fscanf(grd,"%lf%d\n",&vlngth[i],&vinfo[i]);
    }
    
    /* COUNT VERTEX BOUNDARY GROUPS  */
@@ -118,71 +116,12 @@ next1a:     continue;
       sbdry[i]->summarize(*log);
    
    ntri = 0;
-//   treeinit();  //TEMPORARY
+   treeinit();
 
-   /* CREATE ORDERED LIST OF SIDES */
-   /* STORAGE FOR SIDELST */
-   count = 0;
-   for(i=0;i<nsbd;++i) 
-      count += sbdry[i]->mxsz();
-   
-   for(i=0;i<nsbd;++i)
-      sidelst[i] = new int[count];
-
-   /* TEMPORARY LIST OF BOUNDARIES */
-   for(i=0;i<nsbd;++i) 
-      sideord[i] = i;
-
-   nloop = 0;
-   nsdloop[0] = 0;
-   for(i=0; i<nsbd; ++i) {
-      for(j=0;j<sbdry[sideord[i]]->nsd();++j)
-         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]]->sd(j) +1;
-
-      v0 = svrtx[sbdry[sideord[i]]->sd(sbdry[sideord[i]]->nsd()-1)][1];
-      for(j=i+1; j<nsbd;++j) {
-         if (v0 ==  svrtx[sbdry[sideord[j]]->sd(0)][0]) {
-            k = sideord[i+1];
-            sideord[i+1] = sideord[j];
-            sideord[j] = k;
-            goto FINDNEXT;
-         }
-      }
-      /* NEW LOOP */
-      nsdloop[++nloop] = 0;       
-FINDNEXT:
-      continue;
-   }
-
-   if (nloop == 0) {
-      *log << "Problem with boundaries nloop:" << nloop << std::endl;
-      exit(1);
-   }
-   
-   /* CHECK LOOPS */
-   k = 0;
-   for(i=0;i<nloop;++i) {
-      *log << "Loop " << i << ' ' << nsdloop[i] << std::endl;
-      v0 = svrtx[sidelst[i][0]-1][0];
-      for(j=0;j<nsdloop[i];++j) {
-         k = sidelst[i][j]-1;
-         if (svrtx[k][0] != v0) {
-            *log << "Boundaries not a loop " << i << ' ' << nsdloop[i] << ' ' << k << ' ' << svrtx[k][0] << ' ' << svrtx[k][1] << std::endl;
-            exit(10);
-         }
-         v0 = svrtx[k][1];
-      }
-      if (svrtx[k][1] != svrtx[sidelst[i][0]-1][0]) {
-         *log << "Boundaries not a loop " << i << ' ' << nsdloop[i] << ' ' << k << ' ' << svrtx[k][0] << ' ' << svrtx[k][1] << std::endl;
-         exit(10);
-      }
-   }
-   
-   /* CREATE INITIAL TRIANGULATION */            
-   triangulate(sidelst,nsdloop,nloop);
-   
-   for(i=0;i<nsbd;++i) 
-      delete []sidelst[i];
+   for(i=0;i<nside;++i)
+      intwk1[i] = i+1;
+      
+   triangulate(nside);
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
@@ -198,252 +137,250 @@ FINDNEXT:
    return;
 }
 
-
 #define MAXGOOD 100
 
-/* USES VINFO/SINFO TO STORE SIDE LOOKUP */
-/* USES NNBOR TO STORE LIST OF VERTICES */
-/* USES TINFO TO STORE NEW SIDE LIST */ 
-/* THIS OBVIOUSLY NEEDS TO BE CLEANED UP A BIT */
-/* BUT IT DOESN'T INTERFERE WITH ANYTHING */
+template void mesh<2>::triangulate(int nsd);
+template void mesh<3>::triangulate(int nsd);
 
-template void mesh<2>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor);
-template void mesh<3>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor);
-
-template<int ND> void mesh<ND>::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
-   int i,j,nv;
-   int lp, sd;
-   int sind,dir,sindnxt,dirnxt;
+template<int ND> void mesh<ND>::triangulate(int nsd) {
+   int i,j,n,vcnt,sck,dirck,stest,nv,vtry;
+   int sd;
+   int bgn,end;
+   int sind,dir;
    int sind1,sindprev;
-   int nsidebefore,newside;
-   int ngood,goodvrt[MAXGOOD];
-   int minv,maxv;
-   int v1,v2,v[4];
+   int nsidebefore,ntest;
+   int ngood,good[MAXGOOD];
+   int minv,maxv,itemp;
+   int v0,v1,v2,v3;
+   FLT xmid[2],xcen[2];
+   FLT xm1dx1,xm2dx2;
+   FLT hmin,height;
+   FLT temp,ang[MAXGOOD],ds1,ds2;
+   FLT xmax[ND],xmin[ND],xmax1[ND],xmin1[ND];
+   FLT dx1[ND],dx2[ND],dx3[ND],dx4[ND];
+   FLT det,s,t;
 
    /* CREATE VERTEX LIST */
-   /* STORE IN NNBOR SINCE THIS IS OBVIOUSLY UNUSED RIGHT NOW */
+   /* STORE IN NNBOR SINCE THIS IS UNUSED RIGHT NOW */
    nv = 0;
-   for(i=0;i<nloop;++i) {
-      for(j=0;j<nsdloop[i];++j) {
-         sind = abs(sidelst[i][j]) -1;
-         dir = (1 -SIGN(sidelst[i][j]))/2;
-         stri[sind][dir] = -1;
-         nnbor[nv++] = svrtx[sind][dir];
-         assert(nv < maxvst-1);
-      }
+   for(i=0;i<nsd;++i) {
+      sind = abs(intwk1[i]) -1;
+      dir = (1 -SIGN(intwk1[i]))/2;
+      stri[sind][dir] = -1;
+      intwk2[nv++] = svrtx[sind][dir];
+      assert(nv < maxvst-1);
    }
 
    /* SETUP SIDE POINTER INFO */
    for(i=0;i<nv;++i)
-      vinfo[nnbor[i]] = -1;
+      vinfo[intwk2[i]] = -1;
       
-   for(i=0;i<nloop;++i) {
-      for(j=0;j<nsdloop[i];++j) {
-         sind = abs(sidelst[i][j]) -1;
-         v1 = svrtx[sind][0];
-         v2 = svrtx[sind][1];
-         if (v2 > v1) {
-            minv = v1;
-            maxv = v2;
-         }
-         else {
-            minv = v2;
-            maxv = v1;
-         }
-         sind1 = vinfo[minv];
-         while (sind1 >= 0) {
-            sindprev = sind1;
-            sind1 = sinfo[sind1];
-         }
-         sinfo[sind] = -1;
-         if (vinfo[minv] < 0)
-            vinfo[minv] = sind;
-         else 
-            sinfo[sindprev] = sind;
+   for(i=0;i<nsd;++i) {
+      sind = abs(intwk1[i]) -1;
+      v1 = svrtx[sind][0];
+      v2 = svrtx[sind][1];
+      if (v2 > v1) {
+         minv = v1;
+         maxv = v2;
       }
+      else {
+         minv = v2;
+         maxv = v1;
+      }
+      sind1 = vinfo[minv];
+      while (sind1 >= 0) {
+         sindprev = sind1;
+         sind1 = sinfo[sind1];
+      }
+      sinfo[sind] = -1;
+      if (vinfo[minv] < 0)
+         vinfo[minv] = sind;
+      else 
+         sinfo[sindprev] = sind;
    }
    
-   /* PUT PERIODICITY ENDSIDE ON SIDELST */
-   for(lp=0;lp<nloop;++lp) 
-      sidelst[lp][nsdloop[lp]] = sidelst[lp][0];
+   bgn = 0;
+   end = nsd;
+   ntest = end;
+   while(bgn < end) {
+      nsidebefore = nside;
+      for(sd=bgn;sd<end;++sd) {
+         sind = abs(intwk1[sd]) -1;
+         dir =  (1 -SIGN(intwk1[sd]))/2;
          
-   do {
-      newside = 0;
-      
-      for(lp=0;lp<nloop;++lp) {
-         sind = abs(sidelst[lp][nsdloop[lp]-1]) -1;
-         dir =  (1 -SIGN(sidelst[lp][nsdloop[lp]-1]))/2;
-         v[1] = svrtx[sind][dir];
-         for(sd=0;sd<nsdloop[lp];++sd) {
-            if (cknbor) {
-               v[0] = v[1];
-               sind = abs(sidelst[lp][sd+1]) -1;
-               dir = (1 -SIGN(sidelst[lp][sd+1]))/2;
-               v[3] = svrtx[sind][1 -dir];
-            }
-            sind = abs(sidelst[lp][sd]) -1;
-            dir =  (1 -SIGN(sidelst[lp][sd]))/2;
-            v[1] = svrtx[sind][dir];
-            v[2] = svrtx[sind][1 -dir];
+         if (stri[sind][dir] > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
+         
+         v0 = svrtx[sind][dir];
+         v1 = svrtx[sind][1 -dir];
 
-            if (stri[sind][dir] > -1) { // SIDE HAS ALREADY BEEN MATCHED 
-               sind = sindnxt;
-               dir = dirnxt;
-               continue; 
-            }
-            findpt(nnbor,nv,v,cknbor,goodvrt,ngood);
-            nsidebefore = nside;
-            addtri(v[1],v[2],goodvrt[0],sind,dir);
-            /* ADD ANY DEGENERATE TRIANGLES */           
-            for(i=1;i<ngood;++i)
-               addtri(goodvrt[i-1],v[2],goodvrt[i],-1,-1);
-
-            /* STORE NEWSIDES IN TINFO SINCE THIS IS ALSO UNUSED RIGHT NOW */ 
-            assert(newside +nside - nsidebefore < maxvst);
-            for(i=nsidebefore;i<nside;++i)
-               tinfo[newside++] = i;
+         /* SEARCH FOR GOOD POINTS */
+         for(n=0;n<ND;++n) {
+            dx2[n] = vrtx[v1][n] -vrtx[v0][n];
+            xmid[n] = 0.5*(vrtx[v1][n] -vrtx[v0][n]);
          }
+         hmin = 1.0e99;
+         
+         /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
+         for(i=0;i<nv;++i) {
+            vtry = intwk2[i];
+            if (vtry == v0 || vtry == v1) continue;
+      
+            for(n=0;n<ND;++n)
+               dx1[n] = vrtx[v0][n] -vrtx[vtry][n];
+            det        = dx1[0]*dx2[1] -dx1[1]*dx2[0];
+            if (det <= 0.0) continue;
+            
+            /* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
+            det = 1./det;
+            xm1dx1       = -0.5*(dx1[0]*dx1[0] +dx1[1]*dx1[1]);
+            xm2dx2       =  0.5*(dx2[0]*dx2[0] +dx2[1]*dx2[1]);
+            xcen[0] = det*(xm1dx1*dx2[1] -xm2dx2*dx1[1]);
+            xcen[1] = det*(xm2dx2*dx1[0] -xm1dx1*dx2[0]);
+                  
+            /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
+            /* ABOVE THE EDGE MID-POINT IS MINIMIZED */
+            height = dx2[0]*(xcen[1] -xmid[1]) -dx2[1]*(xcen[0] -xmid[0]);
+                  
+            if (height > hmin +100.*EPSILON*fabs(hmin)) continue;
+            
+            /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
+            /* WITH ALL OTHER BOUNDARY SIDES */
+            
+            minv = MIN(vtry,v0);
+            maxv = MAX(vtry,v0);
+            for(vcnt=0;vcnt<2;++vcnt) {
+               /* LOOK THROUGH ALL SIDES CONNECTED TO L1 FOR DUPLICATE */
+               /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
+               sind1 = vinfo[minv];
+               while (sind1 >= 0) {
+                  if (maxv == svrtx[sind1][0] || maxv == svrtx[sind1][1]) goto twochecks;
+                  sind1 = sinfo[sind1];
+               }
+               
+               for(n=0;n<ND;++n) {
+                  xmin[n]      = MIN(vrtx[v0][n],vrtx[v1][n]);
+                  xmax[n]      = MAX(vrtx[v0][n],vrtx[v1][n]);
+               }
+               
+               for(sck=0;sck<ntest;++sck) {
+                  stest = abs(intwk1[sck])-1;
+                  if (stest == sind) continue;
+                  dirck =  (1 -SIGN(intwk1[sck]))/2;
+                  v2 = svrtx[stest][dirck];
+                  v3 = svrtx[stest][1-dirck];
+                  if (v2 == minv || v3 == minv) {
+                     /* SPECIAL TEST FOR CONNECTED SIDES */
+                     if (area(v2,v3,maxv) > 0.0) goto checks_ok;
+                     goto NEXT;
+                  }
+                  if (v2 == maxv || v3 == maxv) {
+                     /* SPECIAL TEST FOR CONNECTED SIDES */
+                     if (area(v2,v3,minv) > 0.0) goto checks_ok;
+                     goto NEXT;
+                  }
+                  for(n=0;n<ND;++n) {
+                     xmin1[n]      = MIN(vrtx[v2][n],vrtx[v3][n]);
+                     xmax1[n]      = MAX(vrtx[v2][n],vrtx[v3][n]);
+                  }
+                  for(n=0;n<ND;++n)
+                     if (xmax[n] < xmin1[n] || xmin[n] > xmax1[n]) goto checks_ok;
+      
+                  for(n=0;n<ND;++n) {
+                     dx1[n] = vrtx[maxv][n] -vrtx[minv][n];
+                     dx3[n] = vrtx[v3][n]-vrtx[v2][n];
+                     dx4[n] = vrtx[minv][n]-vrtx[v2][n];
+                  }
+                  
+                  det = -dx1[0]*dx3[1] +dx1[1]*dx3[0];
+                  if (det < EPSILON*100.0*(fabs(xmax[0])+fabs(xmax[1]))) goto checks_ok;
+                  
+                  det = 1./det;
+                  s = det*(dx4[0]*dx3[1] -dx3[0]*dx4[1]);
+                  t = det*(-dx1[0]*dx4[1] +dx4[0]*dx1[1]);
+                  
+                  if (s < 0.0 || s > 1.0) goto checks_ok;
+                  if (t < 0.0 || t > 1.0) goto checks_ok;
+                  
+                  goto NEXT;
+                  
+checks_ok:        continue;
+               }
+twochecks:
+               minv = MIN(vtry,v1);
+               maxv = MAX(vtry,v1);
+            }
+      
+            /* CHECK IF DEGENERATE */
+            if (height > hmin-100.*EPSILON*fabs(hmin)) {
+               good[ngood++] = vtry;
+               assert(ngood < MAXGOOD);
+               continue;
+            }
+            
+            ngood = 0;
+            good[ngood++] = vtry;
+            hmin = height;
+      NEXT: continue;
+         }
+         
+         if (ngood > 1) {
+            /* ORDER COCIRCULAR POINTS */   
+            /* CALCULATE SIDE ANGLE */
+            ds2 = 1./sqrt(dx2[0]*dx2[0] +dx2[1]*dx2[1]);
+            for(i=0;i<ngood;++i) {
+               vtry = good[i];
+               dx1[0] = vrtx[v0][0] -vrtx[vtry][0];
+               dx1[1] = vrtx[v0][1] -vrtx[vtry][1];
+               ds1 = 1./sqrt(dx1[0]*dx1[0] +dx1[1]*dx1[1]);
+               ang[i] = -(dx2[0]*dx1[0]  +dx2[1]*dx1[1])*ds2*ds1;
+            }
+         
+            /* ORDER POINTS BY ANGLE */      
+            for(i=0;i<ngood-1;++i) {
+               for(j=i+1;j<ngood;++j) {
+      
+                  /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN intwk2 */
+                  if (good[i] == good[j]) {
+                     good[j] = good[ngood-1];
+                     --ngood;
+                  }
+      
+                  /* ORDER BY ANGLE */
+                  if(ang[i] > ang[j]) {
+                     temp = ang[i];
+                     ang[i] = ang[j];
+                     ang[j] = temp;
+                     itemp = good[i];
+                     good[i] = good[j];
+                     good[j] = itemp;
+                  }
+               }
+               // *log << "degenerate case" << v0 << ' ' << v1 << std::endl;
+            }
+         }
+         addtri(v0,v1,good[0],sind,dir);
+         /* ADD ANY DEGENERATE TRIANGLES */           
+         for(i=1;i<ngood;++i)
+            addtri(good[i-1],v1,good[i],-1,-1);
       }
      
-      cknbor = 0;
-      nloop = 1;
-      nsdloop[0] = 0;
-      for(i=0;i<newside;++i) {
-         if (stri[tinfo[i]][1] < 0) {
-            sidelst[0][nsdloop[0]++] = -(tinfo[i] + 1);
-         }
-      }
-         
+      bgn = end;
+      end += nside -nsidebefore;
       nv = 0;
-      for(i=0;i<nsdloop[0];++i) {
-         sind = -sidelst[0][i] -1;
-         nnbor[nv++] = svrtx[sind][1];
+      for(i=nsidebefore;i<nside;++i) {
+         intwk1[bgn+i-nsidebefore] = -(i + 1);
+         intwk2[nv++] = svrtx[i][1];
       }
-
-   } while(nsdloop[0] > 0);
-   
-   return;
-}
-            
-            
-
-
-template void mesh<2>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood);
-template void mesh<3>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood);
-
-template<int ND> void mesh<ND>::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
-   int i,j,k,ncnvx,cnvx[2],vtry,itemp;
-   FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
-   FLT xmid,ymid,area,alpha,beta,xcen,ycen;
-   FLT hmin,height;
-   FLT temp,ang[MAXGOOD],ds1,ds2;
-   
-   dx2 = vrtx[v[2]][0] -vrtx[v[1]][0];
-   dy2 = vrtx[v[2]][1] -vrtx[v[1]][1];
-   xmid = 0.5*(vrtx[v[2]][0] +vrtx[v[1]][0]);
-   ymid = 0.5*(vrtx[v[2]][1] +vrtx[v[1]][1]);
-   
-   hmin = 1.0e99;
-
-   ncnvx = 0;
-   if (chkadj) {
-      /* CHECK WHETHER ADJACENT SIDES ARE CONCAVE OR CONVEX */
-      dx1 = vrtx[v[1]][0] -vrtx[v[0]][0];
-      dy1 = vrtx[v[1]][1] -vrtx[v[0]][1]; 
-      area        = dx1*dy2 -dy1*dx2;
-      if (area > 0.0)
-         cnvx[ncnvx++] = 0;
-
-      dx1 = vrtx[v[1]][0] -vrtx[v[3]][0];
-      dy1 = vrtx[v[1]][1] -vrtx[v[3]][1]; 
-      area        = dx1*dy2 -dy1*dx2;
-      if (area > 0.0)
-         cnvx[ncnvx++] = 2;
    }
    
-   /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
-   for(i=0;i<nv;++i) {
-      vtry = nnbor[i];
-      dx1 = vrtx[v[1]][0] -vrtx[vtry][0];
-      dy1 = vrtx[v[1]][1] -vrtx[vtry][1]; 
-      area        = dx1*dy2 -dy1*dx2;
-      if (area < 10.*EPSILON) continue;
-      
-      /* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
-      area = 1./area;
-      alpha       = dx2*xmid +dy2*ymid;
-      beta        = .5*(dx1*(vrtx[vtry][0] +vrtx[v[1]][0]) +dy1*(vrtx[vtry][1] +vrtx[v[1]][1]));
-      xcen = area*(beta*dy2 -alpha*dy1);
-      ycen = area*(alpha*dx1 -beta*dx2);
-
-      /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
-      /* ABOVE THE EDGE MID-POINT IS MINIMIZED */
-      height = dx2*(ycen -ymid) -dy2*(xcen -xmid);
-
-      if (height > hmin +10.*EPSILON) continue;
-      
-      /* CHECK FOR INTERSECTION WITH CONVEX SIDES */
-      for(k=0;k<ncnvx;++k) {
-         j = cnvx[k];
-         dx1 = vrtx[v[j]][0]-vrtx[vtry][0];
-         dy1 = vrtx[v[j]][1]-vrtx[vtry][1];
-         dx2a = vrtx[v[j+1]][0]-vrtx[v[j]][0];
-         dy2a = vrtx[v[j+1]][1]-vrtx[v[j]][1];
-         area = dx1*dy2a -dy1*dx2a;
-         if (area < 0.0) goto NEXT;
-      }
-
-      /* CHECK IF DEGENERATE */
-      if (height > hmin-10.*EPSILON) {
-         // *log << "degenerate case" << v[1] << ' ' << v[2] << std::endl;
-         good[ngood++] = vtry;
-         assert(ngood < MAXGOOD);
-         continue;
-      }
-      
-      ngood = 0;
-      good[ngood++] = vtry;
-      hmin = height;
-NEXT: continue;
-   }
-   
-   if (ngood > 1) {
-      /* ORDER COCIRCULAR POINTS */   
-      /* CALCULATE SIDE ANGLE */
-      ds2 = 1./sqrt(dx2*dx2 +dy2*dy2);
-      for(i=0;i<ngood;++i) {
-         vtry = good[i];
-         dx1 = vrtx[v[1]][0] -vrtx[vtry][0];
-         dy1 = vrtx[v[1]][1] -vrtx[vtry][1];
-         ds1 = 1./sqrt(dx1*dx1 +dy1*dy1);
-         ang[i] = -(dx2*dx1  +dy2*dy1)*ds2*ds1;
-      }
-   
-      /* ORDER POINTS BY ANGLE */      
-      for(i=0;i<ngood-1;++i) {
-         for(j=i+1;j<ngood;++j) {
-
-            /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN NNBOR */
-            if (good[i] == good[j]) {
-               good[j] = good[ngood-1];
-               --ngood;
-            }
-
-            /* ORDER BY ANGLE */
-            if(ang[i] > ang[j]) {
-               temp = ang[i];
-               ang[i] = ang[j];
-               ang[j] = temp;
-               itemp = good[i];
-               good[i] = good[j];
-               good[j] = itemp;
-            }
-         }
-      }
+   for(i=0;i<maxvst;++i) {
+      intwk1[i] = -1;
+      intwk2[i] = -1;
    }
    
    return;
 }
+
 
 template void mesh<2>::addtri(int v0,int v1, int v2, int sind, int dir);
 template void mesh<3>::addtri(int v0,int v1, int v2, int sind, int dir);
@@ -567,7 +504,7 @@ NEXTTRISIDE:
    ++ntri;
    
    assert(ntri < maxvst -1);
-   
+      
    return;
 }
 
