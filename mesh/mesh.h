@@ -65,6 +65,7 @@ class mesh {
 /*			STUFF FOR COMMUNICATION BOUNDARIES */
          class mesh *adjmesh;
          int adjbnum;
+         void *misc; // VOID POINTER TO HANG ANY OTHER WEIRD STUFF
       } vbdry[MAXSB];
 
 /*    SIDE DATA */      
