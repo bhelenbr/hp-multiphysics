@@ -30,18 +30,15 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
       grd[i].spectral_hp::allocate(hpbase[0]);
       grd[i].init_comm_buf(NV*2);
    }
-   
-/*	ALLOCATE GLOBAL STORAGE FOR HP_MGRIDS */
-   hp_mgrid::gbl_alloc(grd[0].max(),hpbase[lg2pmax].p,gbl);
 
 /*	INITIALIZE HP_MGRID STORAGE NECESSARY FOR EACH MESH */ 
-	grd[0].allocate(gbl,0);  // 0 DENOTES FINEST LEVEL
+	grd[0].allocate(0,gbl);  // 0 DENOTES FINEST LEVEL ALLOCATES GLOBAL STORAGE
    for(i = lg2pmax -1; i >= 0; --i) {
       grd[0].loadbasis(hpbase[i]);
-      grd[0].allocate(gbl,1); // 1 DENOTES MGRID LEVEL
+      grd[0].allocate(1,gbl); // 1 DENOTES MGRID LEVEL
    }
    for(i=1;i<ngrid;++i)
-      grd[i].allocate(gbl,1);
+      grd[i].allocate(1,gbl);
    
    return;
 }

@@ -20,8 +20,8 @@ const FLT hp_mgrid::alpha[NSTAGE+1];
 const FLT hp_mgrid::beta[NSTAGE+1];
 FLT hp_mgrid::dt0=0.0, hp_mgrid::dt1=0.0, hp_mgrid::dt2=0.0, hp_mgrid::dt3=0.0;
 
-
-void hp_mgrid::allocate(struct hp_mgrid_glbls& ginit, int mgrid) {
+void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
+   int onfmesh,count,i;
    
    if (spectral_hp::size == 0 or mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");
@@ -47,73 +47,85 @@ void hp_mgrid::allocate(struct hp_mgrid_glbls& ginit, int mgrid) {
       }
    }
 
-/*	INITIALIZE GLOBAL STRUCTURE */   
-   gbl = ginit;
+/*	ON FINEST MESH ALLOCATE GLOBAL STORAGE */   
+   if (!mgrid) gbl_alloc(store);
+
+/*	COPY GLOBAL POINTERS */   
+   gbl = store;
+
+/* FIGURE OUT WHERE WE ARE */   
+   if (mgrid && p0 == 1) onfmesh = 0;
+   else onfmesh = 1;
+   log2p = 0;
+   while ((b.p-1)>>log2p > 0) ++log2p;
+   if (log2p > MXLG2P) {
+      printf("make MXLG2P bigger %d %d\n",log2p,MXLG2P);
+      exit(1);
+   }
    
 /*	THINGS NEEDED FOR EACH MGRID LEVEL BUT NOT FINEST */
    if (mgrid) {
-      log2p = 0;
-      while ((b.p-1)>>log2p > 0) ++log2p;
-      
-      if (log2p > MXLG2P) {
-         printf("make MXLG2P bigger %d %d\n",log2p,MXLG2P);
-         exit(1);
-      }
 
 /*		NEED TO STORE INITIAL RESIDUAL ON EACH COARSE LEVEL */
       vdres[log2p] = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
       sdres[log2p] = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
       idres[log2p] = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
          
-/*		THINGS NEEDED ONLY FOR COARSE MESHES (NOT ON COARSE P BUT FINE MESH LEVELS) */
-      if (p0 == 1) {
+/*		THINGS NEEDED ONLY FOR COARSE MESHES (NOT ON COARSE P LEVELS) */
+      if (!onfmesh) {
          vug_frst = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+      }
+   }
+   
+/*	ALLOCATE THINGS NEEDED FOR SURFACES */
+   count = 0;
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
+         srf[count].alloc(maxsbel, log2p, mgrid, onfmesh, store.sgbl[count]);
+         ++count;
       }
    }
    
    return;
 }
 
-void hp_mgrid::gbl_alloc(int mx, int p, struct hp_mgrid_glbls& store) {
-   int sm, im;
+void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls& store) {
+   int pn, smn, imn;
    
-   sm = p-1;
-   im = (p-2)*(p-1)/2;
-
 /*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-   store.vug0 = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
-   store.sug0 = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
-   store.iug0 = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+   store.vug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store.sug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store.iug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
 /*	RESIDUAL STORAGE */
-   store.vres = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
-   store.sres = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
-   store.ires = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+   store.vres = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store.sres = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store.ires = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
 /*	VISCOUS FORCE RESIDUAL STORAGE */
-   store.vvf = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
-   store.svf = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
-   store.ivf = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+   store.vvf = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store.svf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store.ivf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
    
-/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
-   store.vres0 = (FLT (*)[NV]) xmalloc(NV*mx*sizeof(FLT));
-   p = p>>1;
-   sm = p-1;
-   im = (p-2)*(p-1)/2;
-   if (sm > 0) store.sres0 = (FLT (*)[NV]) xmalloc(NV*mx*sm*sizeof(FLT));
-   if (im > 0) store.ires0 = (FLT (*)[NV]) xmalloc(NV*mx*im*sizeof(FLT));
+/*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID NEXT COARSER MESH */
+   store.vres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   pn = b.p>>1;
+   smn = pn-1;
+   imn = (pn-2)*(pn-1)/2;
+   if (smn > 0) store.sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*smn*sizeof(FLT));
+   if (imn > 0) store.ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*imn*sizeof(FLT));
 
 /*	PRECONDITIONER  */
-   vect_alloc(store.gam,mx,FLT);
-   vect_alloc(store.dtstar,mx,FLT);
-   vect_alloc(store.vdiagv,mx,FLT);
-   vect_alloc(store.vdiagp,mx,FLT);
-   vect_alloc(store.sdiagv,mx,FLT);
-   vect_alloc(store.sdiagp,mx,FLT);
+   vect_alloc(store.gam,maxvst,FLT);
+   vect_alloc(store.dtstar,maxvst,FLT);
+   vect_alloc(store.vdiagv,maxvst,FLT);
+   vect_alloc(store.vdiagp,maxvst,FLT);
+   vect_alloc(store.sdiagv,maxvst,FLT);
+   vect_alloc(store.sdiagp,maxvst,FLT);
    
 /* STABILIZATION */
-   vect_alloc(store.tau,mx,FLT);
-   vect_alloc(store.delt,mx,FLT);
+   vect_alloc(store.tau,maxvst,FLT);
+   vect_alloc(store.delt,maxvst,FLT);
 
 #ifdef SKIP
 /*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */

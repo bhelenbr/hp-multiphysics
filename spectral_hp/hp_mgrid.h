@@ -62,9 +62,10 @@ struct hp_mgrid_glbls {
 /*	OTHER CONSTANTS */
    FLT charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
 
+/*	GLBL STORAGE FOR COUPLED SURFACE EQUATIONS */
 /*	MAXIMUM SURFACES FOR A SINGLE BLOCK IS 2 */   
    struct surface_glbls sgbl[2];
-   
+   int sgbl_id[2]; // TELLS WHICH GBL GOES WITH WHICH SIDE 
 };
 
 class hp_mgrid : public spectral_hp {
@@ -90,16 +91,19 @@ class hp_mgrid : public spectral_hp {
       FLT (*idres[MXLG2P])[NV];
       bool isfrst;
       
+/*    SURFACE BOUNDARY CONDITION STUFF */
+      class surface srf[2];
+      
 /*		MGRID MESH POINTERS */
       class hp_mgrid *cmesh;
       class hp_mgrid *fmesh;
       
 /*		SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
-      
+      void gbl_alloc(struct hp_mgrid_glbls& store);
+
    public:
-      void allocate(struct hp_mgrid_glbls& ginit, int mgrid);
-      static void gbl_alloc(int maxvst, int log2p, struct hp_mgrid_glbls& store);
+      void allocate(int mgrid, struct hp_mgrid_glbls& store);
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
          log2p = 0;

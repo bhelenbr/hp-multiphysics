@@ -3,37 +3,35 @@
 #include<assert.h>
 #include<utilities.h>
 
-void surface::alloc(int maxside, int log2p, int mgrid, struct surface_glbls g) {
+void surface::alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls& store) {
    int i,p;
    
    p = 1;
-   for(i=0;i<log2p;++i)
+   for (i=0;i<log2p;++i)
       p = p<<1;
-   
-   gbl = g;
-   
-   vect_alloc(ksprg,maxside,FLT);
-   vug = (FLT (*)[ND]) xmalloc((maxside+1)*ND*sizeof(FLT));
-   sug = (FLT (*)[ND]) xmalloc(maxside*(p-1)*ND*sizeof(FLT));
-   p = 1;
-   for(i=0;i<log2p;++i) {
-      vdres[i] = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
-      sdres[i] = (FLT (*)[ND]) xmalloc(ND*maxside*(p-1)*sizeof(FLT));  
-      p = p<<1;
+
+   if (!mgrid) {
+      gbl_alloc(maxside, p, store);
+      vect_alloc(ksprg,maxside,FLT);
+      vug = (FLT (*)[ND]) xmalloc((maxside+1)*ND*sizeof(FLT));
+      sug = (FLT (*)[ND]) xmalloc(maxside*(p-1)*ND*sizeof(FLT));
    }
-         
+   else {
+      vdres[log2p] = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
+      sdres[log2p] = (FLT (*)[ND]) xmalloc(ND*maxside*(p-1)*sizeof(FLT)); 
+   }
+   gbl = store;         
    
-/*	THINGS NEEDED FOR EACH MGRID LEVEL BUT NOT FINEST */
-   if (mgrid) {
-/*		NEED TO STORE INITIAL RESIDUAL ON EACH COARSE LEVEL */
-      vdres[0] = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
+   if (!fmesh) {
+      vect_alloc(ksprg,maxside,FLT);
+      vug = (FLT (*)[ND]) xmalloc((maxside+1)*ND*sizeof(FLT));
       vug_frst = (FLT (*)[ND]) xmalloc(ND*(maxside+1)*sizeof(FLT));
    }
 
    return;
 }
 
-void surface::glblsalloc(int maxside, int p, struct surface_glbls& store) {
+void surface::gbl_alloc(int maxside, int p, struct surface_glbls& store) {
    
    store.first = 1;
    
