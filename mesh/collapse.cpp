@@ -77,7 +77,7 @@ template<int ND> int mesh<ND>::collapse(int sind) {
          else if (dir[1] == 1)
             delt = 1;
       }
-      else {
+      else {         
          /* BOTH ON BOUNDARY */
          /* IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
          if (stri[sind][1] > -1 || vinfo[svrtx[sind][0]] +vinfo[svrtx[sind][1]] == 2) return(1);

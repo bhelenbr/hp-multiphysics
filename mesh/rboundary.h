@@ -6,7 +6,7 @@
  *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
  *
  */
- #ifndef _r_mesh_h_
+#ifndef _r_mesh_h_
 ONLY INCLUDE FROM WITH R_MESH.H
 #endif
 
@@ -54,6 +54,7 @@ class rfixy {
    }
 };
 
+#ifndef FOURTH
 template<class BASE, class FIXX, class FIXY> class rgeneric 
    : public BASE, public rbdry_interface {
    
@@ -72,7 +73,6 @@ template<class BASE, class FIXX, class FIXY> class rgeneric
       void tadvance() {}
 };
 
-
 typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,rfixx,no_rfix> rprdx;
 typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,no_rfix,rfixx> rprdy;
 typedef rgeneric<scomm<mesh<2> >,no_rfix,no_rfix> rcomm;
@@ -80,4 +80,42 @@ typedef rgeneric<side_template<mesh<2> >,rfixx,rfixy> rfixd;
 typedef rgeneric<curv_template<side_template<mesh<2> >,mesh<2> >,rfixx,rfixy> rfixd_curved;
 typedef rgeneric<scomm<mesh<2> >,rfixx,rfixy> rifce;
 typedef rgeneric<side_template<mesh<2> >,rfixx,no_rfix> rsymm;
+
+#else
+template<class BASE, class FIXX, class FIXY, class FIXD2X, class FIXD2Y> class rgeneric 
+   : public BASE, public rbdry_interface {
+   
+   private:
+      r_mesh &x;
+      FIXX xfix;
+      FIXY yfix;
+      FIXD2X x2fix;
+      FIXD2Y y2fix;
+      
+   public:
+      rgeneric(int type, class r_mesh& xin) : BASE(type,xin), x(xin) {}
+      inline r_mesh& b() {return(x);}
+      void dirichlet(FLT (*res)[r_mesh::ND]) {
+         xfix.dirichlet(this,res);
+         yfix.dirichlet(this,res);
+      }
+      void fixdx2(FLT (*res)[r_mesh::ND]) {
+         x2fix.dirichlet(this,res);
+         y2fix.dirichlet(this,res);
+      }
+      void tadvance() {}
+};
+
+typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,rfixx,no_rfix,no_rfix,no_rfix> rprdx;
+typedef rgeneric<prdc_template<scomm<mesh<2> >,mesh<2> >,no_rfix,rfixx,no_rfix,no_rfix> rprdy;
+typedef rgeneric<scomm<mesh<2> >,no_rfix,no_rfix,no_rfix,no_rfix> rcomm;
+typedef rgeneric<side_template<mesh<2> >,rfixx,rfixy,no_rfix,no_rfix> rfixd;
+typedef rgeneric<side_template<mesh<2> >,rfixx,rfixy,rfixx,rfixy> rfarfield;
+typedef rgeneric<curv_template<side_template<mesh<2> >,mesh<2> >,rfixx,rfixy,no_rfix,no_rfix> rfixd_curved;
+typedef rgeneric<scomm<mesh<2> >,rfixx,rfixy,no_rfix,no_rfix> rifce;
+typedef rgeneric<side_template<mesh<2> >,rfixx,no_rfix,rfixx,rfixy> rsymm;
+#endif
+
+
+
 

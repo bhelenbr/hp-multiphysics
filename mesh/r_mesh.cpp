@@ -457,7 +457,7 @@ void r_mesh::maxres() {
 /* TO CACLUATE LAPLACIAN              */
 /*************************************/
 void r_mesh::rsdl1() {
-   int i,j,n,v0,v1,sind;
+   int i,n,v0,v1,sind;
    FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
@@ -491,33 +491,13 @@ void r_mesh::rsdl1() {
    for(i=0;i<nsbd;++i) 
       sbdry[i]->snd(0);
    for(i=0;i<nvbd;++i) 
-      vbdry[i]->snd(0);   
-
-#ifdef SKIP
-   /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i]->idnty() & fixdx_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->work[svrtx[sind][0]][0] = 0.0;
-            rg->work[svrtx[sind][1]][0] = 0.0;
-         }
-      }
-      if (sbdry[i]->idnty() & fixdy_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->work[svrtx[sind][0]][1] = 0.0;
-            rg->work[svrtx[sind][1]][1] = 0.0;
-         }
-      }
-   }
-#endif
+      vbdry[i]->snd(0);
 
    return;
 }
 
 void r_mesh::rsdl() {
-   int i,j,n,v0,v1,sind;
+   int i,n,v0,v1,sind;
    FLT dx,dy;
    
    for(i=0;i<nsbd;++i)
@@ -562,23 +542,9 @@ void r_mesh::rsdl() {
       for(n=0;n<ND;++n)
          rg->res[i][n] += src[i][n];  
 
-   /* APPLY BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i]->idnty() & fixx_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->res[svrtx[sind][0]][0] = 0.0;
-            rg->res[svrtx[sind][1]][0] = 0.0;
-         }
-      }
-      if (sbdry[i]->idnty() & fixy_mask) {
-         for(j=0;j<sbdry[i]->nsd();++j) {
-            sind = sbdry[i]->sd(j);
-            rg->res[svrtx[sind][0]][1] = 0.0;
-            rg->res[svrtx[sind][1]][1] = 0.0;
-         }
-      }
-   }
+   /* APPLY DIRICHLET BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i)
+      rbdry[i]->dirichlet(rg->res);
    
    /* SEND COMMUNICATION PACKETS  */ 
    for(i=0;i<nsbd;++i)
@@ -594,7 +560,7 @@ void r_mesh::rsdl() {
    return;
 }
 
-void r_mesh::vddt(void)
+void r_mesh::vddt1(void)
 {
    int i,v0,v1,sind;
 
@@ -625,7 +591,7 @@ void r_mesh::vddt(void)
    return;
 }
 
-void r_mesh::vddt1() {
+void r_mesh::vddt() {
    int i,v0,v1,sind;
 
    for(i=0;i<nsbd;++i)
@@ -645,10 +611,18 @@ void r_mesh::vddt1() {
       rg->diag[v0] += fabs(ksprg[sind])*(rg->work[v0][0] +fabs(ksprg[sind])*kvol[v1]);
       rg->diag[v1] += fabs(ksprg[sind])*(rg->work[v1][0] +fabs(ksprg[sind])*kvol[v0]);
    }
-   
-   for(i=0;i<nsbd;++i)   
-      sbdry[i]->send(0,(FLT *) rg->diag,0,0,1);
 
+   /* SEND COMMUNICATION PACKETS  */ 
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->loadbuff(rg->diag,0,0,1);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->loadbuff(rg->diag,0,0,1);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->snd(0);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->snd(0);
+   
    return;
 }
 #endif

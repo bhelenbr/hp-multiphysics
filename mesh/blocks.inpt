@@ -1,15 +1,6 @@
-mglvls:	1
-ngrid:	1
+mglvls:	3
+ngrid:	3
 ntstep:	1
-fadd:	1.0
-vnn:	0.5
-itercrsn:	1
-iterrfne:	0
-njacobi:	1
 ncycle:	100
-vwcycle:	2
-tolerance:	0.66
-BRep:/home/helenbrk/OCCapri/BRep/halfsphere
-nologfile:duh
-blockfile:/Users/helenbrk/Codes/grids3d/channel/blk
-nblock:	8
+blockfile:	 ../blk
+nblock:	1

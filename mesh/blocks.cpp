@@ -45,10 +45,16 @@ void blocks::init(const char *infile, const char *outfile) {
    std::istringstream data(maptemp["nblock"]);
    for (i=0;i<myid;++i) {
       std::cout << i << std::endl;
-      data >> nb;  
+      if (!(data >> nb)) {
+         std::cout << "error reading blocks\n"; 
+         exit(1);
+      }
       total += nb;
    }
-   data >> ctemp;
+   if (!(data >> ctemp)) {
+      std::cout << "error reading blocks\n"; 
+      exit(1);
+   }
    maptemp["nblock"] = ctemp;  // NUMBER OF BLOCKS FOR THIS PROCESSOR */
    data.clear();
 
@@ -62,7 +68,10 @@ void blocks::init(const char *infile, const char *outfile) {
    
    /* LOAD BLOCK FILE PREFIX */
    data.str(maptemp["blockfile"]);
-   data >> ctemp;  
+   if (!(data >> ctemp)) {
+      std::cout << "error reading blockfile prefix\n"; 
+      exit(1);
+   }
    data.clear();
    
    strcat(ctemp,".");   
@@ -135,48 +144,48 @@ void blocks::init(std::map<std::string,std::string> input[]) {
    
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
    data.str(input[0]["itercrsn"]);   
-   data >> itercrsn;
+   if (!(data >> itercrsn)) itercrsn = 1;
    *log << "#itercrsn: " << itercrsn << std::endl;
    data.clear();
    
    data.str(input[0]["iterrfne"]);   
-   data >> iterrfne;
+   if (!(data >> iterrfne)) iterrfne = 0;
    *log << "#iterrfne: " << iterrfne << std::endl;
    data.clear();
-   
+      
    data.str(input[0]["njacobi"]);   
-   data >> njacobi;
+   if (!(data >> njacobi)) njacobi = 1;
    *log << "#njacobi: " << njacobi << std::endl;
    data.clear();
    
    data.str(input[0]["ncycle"]);   
-   data >> ncycle;
+   if (!(data >> ncycle)) ncycle = 20;
    *log << "#ncycle: " << ncycle << std::endl;
    data.clear();
    
    data.str(input[0]["vwcycle"]);   
-   data >> vw;
+   if (!(data >> vw)) vw = 2;
    *log << "#vwcycle: " << vw << std::endl;
    data.clear();
    
    data.str(input[0]["ntstep"]);   
-   data >> ntstep;
+   if (!(data >> ntstep)) ntstep = 1;
    *log << "#ntstep: " << ntstep << std::endl;
    data.clear();
    
    /* LOAD NUMBER OF GRIDS */
    data.str(input[0]["nblock"]);
-   data >> nblock;
+   if (!(data >> nblock)) nblock = 1;
    *log << "#nblock: " << nblock << std::endl;
    data.clear();
    
    data.str(input[0]["ngrid"]);   
-   data >> ngrid;
+   if (!(data >> ngrid)) ngrid = 1;
    *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
    data.str(input[0]["mglvls"]);   
-   data >> mglvls;
+   if (!(data >> mglvls)) mglvls = 1;
    *log << "#mglvls: " << mglvls << std::endl;
    data.clear();
 
@@ -188,7 +197,7 @@ void blocks::init(std::map<std::string,std::string> input[]) {
          merge[mi->first] = mi->second;
       
       data.str(input[i+1]["blktype"]);   
-      data >> type;
+      if (!(data >> type)) {*log << "Error: no blktype\n"; type = 1;}
       *log << "#blktype: " << type << std::endl;
       data.clear();
       blk[i] = getnewblock(type);
@@ -196,15 +205,8 @@ void blocks::init(std::map<std::string,std::string> input[]) {
       blk[i]->load_const(merge);
       blk[i]->alloc(merge);
    }
-   
-   output("channel",tecplot);
-   output("channel",grid);
-
    findmatch();
    matchboundaries();
-   
-   output("channel1",tecplot);
-   output("channel1",grid);
 
    return;
 }
@@ -590,14 +592,14 @@ void blocks::go() {
    clock();
    for(step = 1;step<=ntstep;++step) {
       tadvance();
+      matchboundaries();
+
       for(i=0;i<ncycle;++i) {
          cycle(vw);
          *log << i << ' ';
          maxres();
          *log << '\n';
       }
-      output("deformed",grid);
-      output("deformed",tecplot);
       restructure();
       number_str(outname, "end", step, 2);
       output(outname,tecplot);

@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <ftype.h>
 
 #ifndef _r_block_h_
 #define _r_block_h_
@@ -60,16 +61,14 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
 
    /* LOAD NUMBER OF GRIDS */
    std::istringstream data(input["ngrid"]);
-   data >> ngrid;
+   if (!(data >> ngrid)) ngrid = 1;
    *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
-   std::map<std::string,std::string>::const_iterator mi;
-   mi = input.find("adapt");
-   if (mi != input.end()) {
-      data.str(mi->second);
-      data >> adapt_flag;
-   }
+   data.str(input["adapt"]);
+   if (!(data >> adapt_flag)) adapt_flag = 0;
+   *log << "#adapt: " << adapt_flag << std::endl;
+   data.clear();  
    
    grd = new GRD[ngrid];
    for(int i = 0; i<ngrid;++i)
@@ -82,19 +81,19 @@ template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& in
    
 	FLT grwfac;
    std::istringstream data(input["growth factor"]);
-   data >> grwfac;
+   if (!(data >> grwfac)) grwfac = 2.0;
    *log << "#growth factor: " << grwfac << std::endl;
    data.clear();
 	
 	int filetype;
    data.str(input["filetype"]);
-   data >> filetype;
+   if (!(data >> filetype)) filetype = grid;
    *log << "#filetype: " << filetype << std::endl;
    data.clear();
 	
    std::string filename;
    data.str(input["mesh"]);
-   data >> filename;
+   if (!(data >> filename)) {*log << "no mesh name\n"; exit(1);}
    *log << "#mesh: " << filename << std::endl;
    grd[0].in_mesh(filename.c_str(),static_cast<FTYPE>(filetype),grwfac);
    data.clear();   
@@ -135,7 +134,9 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int grdnum, int phase) {
 #ifdef OLDRECONNECT
    grd[grdnum].coarsen(1.6,grd[grdnum-1]);
 #else
-   grd[grdnum].coarsen2(1.5,grd[grdnum-1],temp_hp);
+   FLT size_reduce = 1.0;
+   if (grdnum > 1) size_reduce = 0.25;
+   grd[grdnum].coarsen2(1.5,grd[grdnum-1],0.25);
 #endif
    grd[grdnum].setbcinfo();
    grd[grdnum].setfine(grd[grdnum-1]);
@@ -225,17 +226,17 @@ template<class GRD> class rblock : public mgrid<GRD> {
 template<class GRD> void rblock<GRD>::load_const(std::map <std::string,std::string>& input) {
 
    std::istringstream data(input["tolerance"]);
-   data >> tolerance; 
+   if (!(data >> tolerance)) tolerance = 0.6; 
    *log << "#tolerance: " << tolerance << std::endl;
    data.clear();
    
    data.str(input["fadd"]);
-   data >> GRD::fadd;
+   if (!(data >> GRD::fadd)) GRD::fadd = 1.0;
    *log << "#fadd: " << GRD::fadd << std::endl;
    data.clear();
 
    data.str(input["vnn"]);
-   data >> GRD::vnn; 
+   if (!(data >> GRD::vnn)) GRD::vnn = 0.5; 
    *log << "#vnn: " << GRD::vnn << std::endl;
    data.clear();
       
@@ -267,7 +268,7 @@ template<class GRD> block::ctrl rblock<GRD>::tadvance(int lvl, int execpoint) {
             return(advance);
             
          case (4):
-            return(static_cast<ctrl>(grd[0].msgpass(mp_phase++)));
+            return(static_cast<block::ctrl>(grd[0].msgpass(mp_phase++)));
 #else
 #define P2 0
 #endif            
@@ -342,7 +343,7 @@ template<class GRD> block::ctrl rblock<GRD>::rsdl(int lvl, int excpt) {
          grd[lvl].rsdl1();
          return(advance);
       case(1):
-         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<block::ctrl>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;
@@ -373,7 +374,7 @@ template<class GRD> block::ctrl rblock<GRD>::vddt(int lvl, int excpt) {
          grd[lvl].vddt1();
          return(advance);
       case(1):
-         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
+         return(static_cast<block::ctrl>(grd[lvl].msgpass(mp_phase++)));
 #endif
       case(0+P2):
          mp_phase = 0;

@@ -25,8 +25,10 @@
 #define COMY_MASK (1<<9)
 #define CURV_MASK (1<<10)
 
+#define MAPPING
+
 enum {vcommx = 1,vcommy,vprdx,vprdy};
-enum {splain=1, scommx, scommy, sprdx, sprdy, sb23, stranslating1, stranslating2};
+enum {splain=1, scommx, scommy, sprdx, sprdy, sb23, stranslating1, stranslating2, capri_edge};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 /* INSTANTIATED IMPLICITLY BECAUSE OF REFERENCE ABOVE TO 2,3?? */
@@ -44,7 +46,7 @@ template<int ND> void mesh<ND>::getnewvrtxobject(int bnum, int idnum) {
       }
    }
 #endif
-   
+
    switch(type) {
       case vcommx: case vcommy: {
          vbdry[bnum] = new vcomm<mesh<ND> >(idnum,*this);
@@ -69,10 +71,8 @@ template<int ND> void mesh<ND>::getnewvrtxobject(int bnum, int idnum) {
    return;
 }
 
-
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 template<int ND> void mesh<ND>::getnewsideobject(int bnum, int idnum) {
-
 /* STRIP OF IDNTY INFO TO JUST GET TYPE */
    int type = idnum&0xFFFF;
    
@@ -86,7 +86,7 @@ template<int ND> void mesh<ND>::getnewsideobject(int bnum, int idnum) {
       }
    }
 #endif
-   
+
    switch(type) {
       case splain: {
          sbdry[bnum] = new side_template<mesh<ND> >(idnum,*this);
@@ -113,6 +113,12 @@ template<int ND> void mesh<ND>::getnewsideobject(int bnum, int idnum) {
             sbdry[bnum] = new twotothree<mesh<ND> >(idnum,*this);
          break;
       }
+#ifdef CAPRI
+      case capri_edge: {
+         sbdry[bnum] = new capri_edge<mesh<ND> >(idnum,*this);
+         break;
+      }
+#endif
       default: {
          *log << "not sure what kind of sboundary this is for mesh: " << idnum << std::endl;
          sbdry[bnum] = new side_template<mesh<ND> >(idnum,*this);
@@ -138,9 +144,6 @@ class rtranslating : public rfixd {
             for(n=0;n<2;++n)
                b().vrtx[v0][n] += dx[n];
          }
-         v0 = b().svrtx[sd(nsd()-1)][1];
-         for(n=0;n<2;++n)
-         b().vrtx[v0][n] += dx[n];
       }
 };
 
@@ -184,7 +187,11 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
          break;
       }
       case sb23: {
+#ifndef FOURTH
          sbdry[bnum] = new rgeneric<twotothree<mesh<2> >,rfixx,rfixy>(idnum,*this);
+#else
+         sbdry[bnum] = new rgeneric<twotothree<mesh<2> >,rfixx,rfixy,no_rfix,no_rfix>(idnum,*this);
+#endif
          break;
       }
       case stranslating1: {
@@ -199,10 +206,14 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
       }
       default: {
          *log << "Don't know this rboundary type:" << idnum << std::endl;
+#ifndef FOURTH
          sbdry[bnum] = new rfixd(idnum,*this);
+#else
+         sbdry[bnum] = new rfarfield(idnum,*this);
+#endif
          break;
       }
-   };
+   }
    
    rbdry[bnum] = dynamic_cast<rbdry_interface *>(sbdry[bnum]);
    
@@ -212,6 +223,7 @@ void r_mesh::getnewsideobject(int bnum, int idnum) {
 
 block * blocks::getnewblock(int type) {
    enum {twoD=1, threeD, rblock2D, capri};
+      
    switch(type) {
       case (twoD):
          return(new mgrid<mesh<2> >);
@@ -225,3 +237,7 @@ block * blocks::getnewblock(int type) {
    
    return(0);
 }
+
+
+   
+   

@@ -1,5 +1,5 @@
 blktype:	3
-mesh:channel.0
-filetype:	3
+mesh:	 /Users/helenbrk/Codes/grids/BOAT/boat2
+filetype:	0
 growth factor:	4.0
 adapt:	1

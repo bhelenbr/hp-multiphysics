@@ -223,7 +223,7 @@ template<class MESH> void side_template<MESH>::output(std::ostream& out) {
    
 	out << "number: " << nel << '\n';
 	for(i=0;i<nel;++i)
-		out << el[i] << ' ' << s[i] << ' ' << s[i+1] << '\n';
+      out << i << ": " << el[i] << ' ' << s[i] << ' ' << s[i+1] << '\n';
 		
 	return;
 }
@@ -231,13 +231,13 @@ template<class MESH> void side_template<MESH>::output(std::ostream& out) {
 template<class MESH> void side_template<MESH>::input(FILE *in, FLT grwfac) {
 	int i;
 	
-	fscanf(in,"%*[^:]:%d\n",&nel);
+	fscanf(in,"%*[^:]:%d",&nel);
 	
 	if (!maxel) alloc(static_cast<int>(grwfac*nel));
 	else assert(nel < maxel);
 	
 	for(i=0;i<nel;++i)
-		fscanf(in,"%d %lf %lf\n",&el[i],&s[i],&s[i+1]);
+      fscanf(in,"%*d: %d %lf %lf\n",&el[i],&s[i],&s[i+1]);
 		
 	return;
 }

@@ -234,6 +234,7 @@ template <class MESH> class side_template : public boundary {
       inline int& nsd() {return(nel);}
       inline int& sd(int ind) {return(el[ind]);}
       inline MESH& b() {return(x);} // return base mesh
+      inline FLT& spt(int ind) {return(s[ind]);}
       
       /* BASIC B.C. STUFF */
       void alloc(int n);
@@ -404,10 +405,20 @@ template<class BASE, class MESH> class curv_template : public BASE {
       }
 };
 
+#ifdef CAPRI
+#include <capri.h>
+#endif
+
+#include <rbd.h>
+
 /* 3D to 2D BOUNDARY */
 template<class MESH> class threetotwo : public scomm<MESH> {
+   int face;
    public:
-      threetotwo(int inid, MESH& xin) : scomm<MESH>(inid,xin) {}
+      threetotwo(int inid, MESH& xin) : scomm<MESH>(inid,xin) {
+         if ((inid&0xFFFF)==16) face = 7;
+         else face = 8;
+      }
       void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,3);}
       void rcvpositions() {
          int i,sind,v0;
@@ -418,6 +429,52 @@ template<class MESH> class threetotwo : public scomm<MESH> {
          }
          v0 = b().svrtx[sind][1];
          b().vrtx[v0][2] = 0.0;
+      }
+      
+      void tadvance() {
+         int i,sind,v0,n,iter;
+         double x[3],x1[3];
+#ifdef CAPRI
+         int icode;
+         double t = -100.0;
+         double uv[2] = {-100.0,100.0};
+#endif
+                  
+         for(i=0;i<nsd();++i) {
+            sind = sd(i);
+            v0 = b().svrtx[sind][0];
+            for(n=0;n<3;++n)
+               x[n] = b().vrtx[v0][n];
+            rigidbodyrmv(x);
+            for (iter = 0; iter < 5; ++iter) {
+               for(n=0;n<3;++n)
+                  x1[n] = x[n];
+               rigidbodyadd(x);
+               x1[2] -= x[2];
+#ifdef CAPRI
+               icode = gi_qNearestOnFace(1, face, x1, uv, x);
+#endif
+            }
+            rigidbodyadd(x);
+            for(n=0;n<3;++n)
+               b().vrtx[v0][n] = x[n];
+         }
+         v0 = b().svrtx[sind][1];
+         for(n=0;n<3;++n)
+            x[n] = b().vrtx[v0][n];
+         rigidbodyrmv(x);
+         for (iter = 0; iter < 5; ++iter) {
+            for(n=0;n<3;++n)
+               x1[n] = x[n];
+            rigidbodyadd(x);
+            x1[2] -= x[2];
+#ifdef CAPRI
+            icode = gi_qNearestOnFace(1, face, x1, uv, x);
+#endif
+         }
+         rigidbodyadd(x);
+         for(n=0;n<3;++n)
+            b().vrtx[v0][n] = x[n];
       }
 };
 
@@ -469,6 +526,69 @@ template<class MESH> class twotothree : public scomm<MESH> {
 #endif
       }
 };
+
+#ifdef CAPRI
+template<class MESH> class capri_edge : public side_template<MESH> {
+   private:
+      int vol, edge;
+   public:
+      capri_edge(int inid, MESH& xin) : side_template<MESH>(inid,xin), vol(1), edge(inid&0xFFFF) {}
+
+      void tadvance() {
+         int i,n,icode,sind,v0;
+         double x1[3],x2[3];
+         double t = -10.0;
+         
+         for(i=0;i<nsd();++i) {
+            sind = sd(i);
+            v0 = b().svrtx[sind][0];
+            icode = gi_qPointOnEdge(1, edge, spt(i), b().vrtx[v0], 0, x1, x1);
+            rigidbodyadd(b().vrtx[v0]);
+         }
+         v0 = b().svrtx[sind][1];
+         icode = gi_qPointOnEdge(1, edge, spt(nsd()), b().vrtx[v0], 0, x1, x1);
+         rigidbodyadd(b().vrtx[v0]);
+         
+         return;
+      }
+      
+      void getgeometryfrommesh() {
+         int i,n,icode,sind,v0;
+         double x[3],x1[3];
+         int cpri_npt;
+         double *cpri_pts, *t;
+         double dist[2];
+         
+         icode = gi_dTesselEdge(1, edge, &cpri_npt, &cpri_pts, &t);
+         
+         if (cpri_npt != nsd()+1) {
+            *b().log << "error in cpri_edge: " << edge << ' ' << cpri_npt << ' ' << nsd()+1 << std::endl;
+            exit(1);
+         }
+         
+         /* FIGURE OUT DIRECTION */
+         icode = gi_qPointOnEdge(1, edge, t[0], x, 0, x1, x1);
+         dist[0] = 0.0;
+         for(n=0;n<3;++n)
+            dist[0] += fabs(x[n] - b().vrtx[b().svrtx[sd(0)][0]][n]);
+         
+         dist[1] = 0.0;
+         for(n=0;n<3;++n)
+            dist[1] += fabs(x[n] - b().vrtx[b().svrtx[sd(nsd()-1)][1]][n]); 
+            
+         if (dist[0] < dist[1]) { 
+            for(i=0;i<nsd()+1;++i)
+               spt(i) = t[i];
+         }
+         else {
+            for(i=0;i<nsd()+1;++i)
+               spt(i) = t[cpri_npt-1-i];
+         }
+      }
+};
+#endif
+   
+
 #include "boundary.cpp"
 
 #endif

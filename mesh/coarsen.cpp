@@ -318,23 +318,15 @@ template<int ND> int mesh<ND>::smooth_cofa(int niter) {
    return(1);
 }
 
-template void mesh<2>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work);
-template void mesh<3>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work);
+template void mesh<2>::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce);
+template void mesh<3>::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce);
 
-template<int ND> void mesh<ND>::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
+template<int ND> void mesh<ND>::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
    int i;
    
-   work.copy(inmesh);
-   work.initvlngth();
-   for(i=0;i<work.nvrtx;++i)
-      work.vlngth[i] = factor*work.vlngth[i];
-      
-   work.yaber(1.414, 0);
-   work.qtree.reinit();  // REMOVES UNUSED QUADS
-
    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX((int) (static_cast<FLT>(inmesh.maxvst)/inmesh.nside*work.nside),100);
+      maxvst =  MAX(static_cast<int>(inmesh.maxvst*size_reduce),100);
       allocate(maxvst);
       nsbd = inmesh.nsbd;
       for(i=0;i<nsbd;++i)
@@ -346,8 +338,13 @@ template<int ND> void mesh<ND>::coarsen2(FLT factor, const class mesh &inmesh, c
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
    }      
-   copy(work);
+   copy(inmesh);
    initvlngth();
+   for(i=0;i<nvrtx;++i)
+      vlngth[i] = factor*vlngth[i];
+      
+   yaber(1.414, 0);
+   qtree.reinit();  // REMOVES UNUSED QUADS
    
    return;
 }

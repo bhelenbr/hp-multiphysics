@@ -262,7 +262,7 @@ template void mesh<2>::initvlngth();
 template void mesh<3>::initvlngth();
 
 template<int ND> void mesh<ND>::initvlngth() {
-   int i,v0,v1;
+   int i,j,v0,v1;
    FLT l;
    
    for(i=0;i<nvrtx;++i)
@@ -278,8 +278,74 @@ template<int ND> void mesh<ND>::initvlngth() {
    
    for(i=0;i<nvrtx;++i)
       vlngth[i] /= nnbor[i];
+      
+   
+   for(i=0;i<nsbd;++i) {
+      for(j=0;j<sbdry[i]->nsd();++j) {
+         v0 = svrtx[sbdry[i]->sd(j)][0];
+         vlngth[v0] = 1.0e32;
+      }
+   }
+           
+   for(i=0;i<nsbd;++i) {
+      for(j=0;j<sbdry[i]->nsd();++j) {
+         v0 = svrtx[sbdry[i]->sd(j)][0];
+         v1 = svrtx[sbdry[i]->sd(j)][1];
+         l = distance(v0,v1);
+         vlngth[v0] = MIN(l,vlngth[v0]);
+         vlngth[v1] = MIN(l,vlngth[v1]);
+      }
+   }
 
    return;
 }
+
+template void mesh<2>::settrim();
+template void mesh<3>::settrim();
+
+template<int ND> void mesh<ND>::settrim() {
+   int i,j,n,bsd,tin,tind,nsrch;
+   
+   for(i=0;i<ntri;++i)
+      tinfo[i] = 0;
+
+   ntdel = 0;
+
+   for (bsd=0;bsd<sbdry[0]->nsd();++bsd) {
+      tind = stri[sbdry[0]->sd(bsd)][0];
+      if (tinfo[tind] > 0) continue;
       
+      intwk1[0] = tind;
+      tinfo[tind] = 1;
+      nsrch = ntdel+1;
       
+      /* NEED TO SEARCH SURROUNDING TRIANGLES */
+      for(i=ntdel;i<nsrch;++i) {
+         tin = intwk1[i];
+         for (n=0;n<3;++n)
+            if (fltwk[tvrtx[tin][n]] < 0.0) goto NEXT;
+            
+         intwk1[ntdel++] = tin;
+
+         for(j=0;j<3;++j) {
+            tind = ttri[tin][j];
+            if (tind < 0) continue;
+            if (tinfo[tind] > 0) continue; 
+            tinfo[tind] = 1;        
+            intwk1[nsrch++] = tind;
+         }
+         NEXT: continue;
+      }
+   }
+   
+   for(i=0;i<ntri;++i)
+      tinfo[i] = 0;
+      
+   for(i=0;i<ntdel;++i)
+      tinfo[intwk1[i]] = 1;
+      
+   for(i=0;i<maxvst;++i)
+      intwk1[i] = -1;
+
+   return;
+}

@@ -102,6 +102,7 @@ template<int ND> class mesh {
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       int in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1);
       inline int in_mesh(const char *filename, FTYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
+      void triangulate(const char *filename, FLT grwfac = 1);
       int out_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype = easymesh) const;
       inline int out_mesh(const char *filename, FTYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
       void setbcinfo();
@@ -113,24 +114,24 @@ template<int ND> class mesh {
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
       virtual void setlength() {
-        // for(int i=0;i<nvrtx;++i)
-        //    vlngth[i] = 0.0982;
          *log << "in generic setlength" << std::endl;
       }
       void length1();
       void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
-      void coarsen2(FLT factor, const class mesh& inmesh, class mesh& work);
+      void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void refineby2(const class mesh& xmesh);
       void swap(FLT swaptol = 0.0);
       void yaber(FLT tolsize, int yes_swap, FLT swaptol = 0.0);
       inline void treeupdate() { qtree.update(0,nvrtx);}
       void rebay(FLT tolsize);
+      void trebay(FLT tolsize);
       inline void adapt(FLT tolerance) {
+         out_mesh("deform",tecplot);
          yaber(1.0/tolerance,1,0.0);
          out_mesh("coarse",tecplot);
          treeupdate();
-         rebay(tolerance);
+         trebay(tolerance);
          out_mesh("refine",tecplot);
          return;
       }
@@ -139,6 +140,11 @@ template<int ND> class mesh {
       int smooth_cofa(int niter);
 
       /* FIND MATCHING MESH BOUNDARIES */
+      void settrim();
+#ifdef METIS
+      void setpartition(int nparts); 
+#endif 
+      void partition(const class mesh& xmesh, int npart);
       int comm_entity_size();
       int comm_entity_list(int *list);
       int msgpass(int phase);
@@ -191,10 +197,10 @@ template<int ND> class mesh {
       void fltwkyab();
       
       /* ORDERED LIST FUNCTIONS */
-      static const int MAXLST = 1000;
+      static const int MAXLST = 10000;
       static int nslst;
-      static int ntdel, tdel[1000+1];
-      static int nsdel, sdel[1000+1];
+      static int ntdel, tdel[MAXLST+1];
+      static int nsdel, sdel[MAXLST+1];
       void putinlst(int sind);
       void tkoutlst(int sind);
       

@@ -343,6 +343,7 @@ next1a:     continue;
    
             /* VRTX INFO */                        
             for(i=0;i<nvrtx;++i) {
+               fscanf(grd,"%*d:");
                for(n=0;n<ND;++n)
                	fscanf(grd,"%lf",&vin[i][n]);
                fscanf(grd,"\n");
@@ -350,29 +351,29 @@ next1a:     continue;
                      
             /* SIDE INFO */
             for(i=0;i<nside;++i)
-               fscanf(grd,"%d %d\n",&svrtx[i][0],&svrtx[i][1]);
+               fscanf(grd,"%*d: %d %d\n",&svrtx[i][0],&svrtx[i][1]);
    
             /* THEN TRI INFO */
             for(i=0;i<ntri;++i)
-               fscanf(grd,"%d %d %d\n",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
+               fscanf(grd,"%*d: %d %d %d\n",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
                
             /* CREATE TSIDE & STRI */
             createtsidestri();
    
             /* SIDE BOUNDARY INFO HEADER */
-            fscanf(grd,"nsbd: %d",&nsbd);
+            fscanf(grd,"%*[^:]:%d",&nsbd);
             count = 0;
             for(i=0;i<nsbd;++i) {
 
-               fscanf(grd,"%*[^:]:%d\n",&temp);
+               fscanf(grd,"%*[^:]:%d",&temp);
                getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
             }
             
             /* VERTEX BOUNDARY INFO HEADER */
-            fscanf(grd,"nvbd: %d\n",&nvbd);
+            fscanf(grd,"%*[^:]:%d",&nvbd);
             for(i=0;i<nvbd;++i) {
-               fscanf(grd,"idnum: %d\n",&temp);
+               fscanf(grd,"%*[^:]:%d",&temp);
                getnewvrtxobject(i,temp);
                vbdry[i]->alloc(1);
                vbdry[i]->input(grd);
@@ -533,6 +534,7 @@ next1a:     continue;
 
 #ifdef CAPRI         
          case(BRep):
+
             /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
             sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
                         
@@ -610,7 +612,7 @@ next1a:     continue;
                      }
                   }
                   for (j = 0; j <nsbd;++j) {
-                     if (sinfo[i] == sbdry[j]->idnty()) {
+                     if (sinfo[i] == (sbdry[j]->idnty()&0xFFFF)) {
                         ++bcntr[j];
                         goto next1b;
                      }
@@ -619,7 +621,7 @@ next1a:     continue;
                   getnewsideobject(nsbd,sinfo[i]);
                   bcntr[nsbd++] = 1;
                   if (nsbd > MAXSB) {
-                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
+                     *log << "error: too many different side boundaries: increase MAXSB" << nsbd << std::endl;
                      exit(1);
                   }
                }
@@ -634,7 +636,7 @@ next1b:      continue;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sinfo[i] == sbdry[j]->idnty()) {
+                     if (sinfo[i] == (sbdry[j]->idnty()&0xFFFF)) {
                         sbdry[j]->sd(sbdry[j]->nsd()++) = i;
                         goto next1c;
                      }
@@ -648,11 +650,136 @@ next1c:     continue;
             break;
 #endif
 
+         case(tecplot):
+            strcpy(grd_app,filename);
+            strcat(grd_app,".dat");
+            grd = fopen(grd_app,"r");
+            if (grd==NULL) {
+               *log << "couldn't open grid file: " << grd_app << std::endl;
+               exit(1);
+            }
+            /* HEADER LINES */
+            fscanf(grd,"%*[^,],%*[^,],%*[^=]=%d%*[^=]=%d\n",&nvrtx,&ntri);
+            
+            /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
+            /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
+            if (!initialized) {
+               maxvst = static_cast<int>(grwfac*3*ntri);
+               allocate(maxvst);
+               vin = vrtx;
+            }
+            else if ((3*ntri) > maxvst) {
+               *log << "mesh is too large" << std::endl;
+               exit(1);
+            }
+               
+            /* READ VERTEX DATA */
+            for(i=0;i<nvrtx;++i) {
+               for(n=0;n<ND;++n)
+                  fscanf(grd,"%le ",&vin[i][n]);
+               fscanf(grd,"\n");
+               vinfo[i] = -1;
+            }
+
+            fscanf(grd,"%*[^0-9]");
+
+            for(i=0;i<ntri;++i) {
+               fscanf(grd,"%d %d %d",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
+               --tvrtx[i][0];
+               --tvrtx[i][1];
+               --tvrtx[i][2];
+               tinfo[i] = 0;
+            }
+
+            /* CREATE SIDE INFORMATION */
+            createsideinfo();
+
+            /* FIND ALL BOUNDARY SIDES */
+            count = 0;
+            for(i=0;i<nside;++i)
+               if (stri[i][1] < 0) ++count;
+
+            nsbd = 0;
+            getnewsideobject(0,1);
+            sbdry[0]->alloc(static_cast<int>(grwfac*count));
+            sbdry[0]->nsd() = count;
+            count = 0;
+            for(i=0;i<nside;++i)
+               if (stri[i][1] < 0) sbdry[0]->sd(count++) = i;
+            ++nsbd;
+            nvbd = 0;
+            
+            break;
+            
          default:
             *log << "That filetype is not supported" << std::endl;
             exit(1);
    }
+    
+   for(i=0;i<nsbd;++i) {
+      /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
+      sbdry[i]->reorder();
+      sbdry[i]->getgeometryfrommesh();
+   }
+   
+   bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
+   *log << "#Boundaries" << std::endl;
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->summarize(*log);
+
+   createttri();
+   createvtri();
+   cnt_nbor();
+   if (!initialized) qtree.allocate(vin,maxvst);
+   treeinit(); 
+   initvlngth();
+
+   initialized = 1;
+
+   return(1);
+}
+
+template void mesh<2>::allocate(int mxsize);
+template void mesh<3>::allocate(int mxsize);
+
+template<int ND> void mesh<ND>::allocate(int mxsize) {
+   int i;
+   
+   /* SIDE INFO */
+   maxvst = mxsize;
+   svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+   stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
+   sinfo = new int[maxvst+1];
+   if (!sinfo) {
+      printf("couldn't allocate\n");
+      exit(1);
+   }
+   ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
+
+   /* VERTEX INFO */                  
+   vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
+   vlngth = new FLT[maxvst];
+   vinfo = new int[maxvst+1];
+   ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
+   nnbor = new int[maxvst];
+   vtri = new int[maxvst];
+   if (!vlngth || !vinfo || !nnbor || !vtri) {
+      printf("couldn't allocate\n");
+      exit(1);
+   }
+   
+   /* TRI INFO */               
+   tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+   ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
+   tside = new struct tsidedata[maxvst];
+   tinfo = new int[maxvst+1];
+   ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
+   if (!tside || !tinfo) {
+      printf("couldn't allocate\n");
+      exit(1);
+   }
+   
    /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
    if (maxvst > gblmaxvst) {
@@ -673,57 +800,6 @@ next1c:     continue;
       for(i=0;i<maxvst;++i)
          intwk3[i] = -1;
    }
-    
-   for(i=0;i<nsbd;++i) {
-      /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-      sbdry[i]->reorder();
-      sbdry[i]->getgeometryfrommesh();
-   }
-   
-   bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
-
-   *log << "#Boundaries" << std::endl;
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize(*log);
-
-   createttri();
-   createvtri();
-   cnt_nbor();
-   if (!initialized) qtree.allocate(vin,maxvst);
-   treeinit();
-   initvlngth();
-
-   initialized = 1;
-
-   return(1);
-}
-
-template void mesh<2>::allocate(int mxsize);
-template void mesh<3>::allocate(int mxsize);
-
-template<int ND> void mesh<ND>::allocate(int mxsize) {
-   
-   /* SIDE INFO */
-   maxvst = mxsize;
-   svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-   stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
-   sinfo = new int[maxvst+1];
-   ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-
-   /* VERTEX INFO */                  
-   vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-   vlngth = new FLT[maxvst];
-   vinfo = new int[maxvst+1];
-   ++vinfo;  //  ALLOWS US TO ACCES VINFO[-1]
-   nnbor = new int[maxvst];
-   vtri = new int[maxvst];
-   
-   /* TRI INFO */               
-   tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-   ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
-   tside = new struct tsidedata[maxvst];
-   tinfo = new int[maxvst+1];
-   ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
 
    return;
 }

@@ -5,32 +5,23 @@ template FLT mesh<2>::incircle(int tind, FLT *a) const;
 template FLT mesh<3>::incircle(int tind, FLT *a) const;
 
 template<int ND> FLT mesh<ND>::incircle(int tind, FLT *a) const {
-   int i,i1,i2,i3;
-   FLT pt[4][2];
-   FLT l2[4];
+   int i;
+   FLT pt[3][2];
+   FLT l2[3];
    FLT determ;
    
    for(i=0;i<3;++i) {
-      pt[i][0] = vrtx[tvrtx[tind][i]][0];
-      pt[i][1] = vrtx[tvrtx[tind][i]][1];
+      pt[i][0] = vrtx[tvrtx[tind][i]][0]-a[0];
+      pt[i][1] = vrtx[tvrtx[tind][i]][1]-a[1];
    }
-   pt[3][0] = a[0];
-   pt[3][1] = a[1];
 
-   for(i=0;i<4;++i)
+   for(i=0;i<3;++i)
       l2[i] = pt[i][0]*pt[i][0] +pt[i][1]*pt[i][1];
 
    determ = 0.0;
-   for(i=0;i<4;++i) {
-      determ *= -1.0;
-      i1 = (i+1)%4;
-      i2 = (i+2)%4;
-      i3 = (i+3)%4;
-      determ +=  pt[i1][0]*(pt[i2][1]*l2[i3] -pt[i3][1]*l2[i2]);
-      determ += -pt[i1][1]*(pt[i2][0]*l2[i3] -pt[i3][0]*l2[i2]);
-      determ +=  l2[i1]*(pt[i2][0]*pt[i3][1] -pt[i2][1]*pt[i3][0]);
-
-   }
+   determ +=  pt[0][0]*(pt[1][1]*l2[2] -pt[2][1]*l2[1]);
+   determ += -pt[0][1]*(pt[1][0]*l2[2] -pt[2][0]*l2[1]);
+   determ +=  l2[0]*(pt[1][0]*pt[2][1] -pt[1][1]*pt[2][0]);
    
    return(determ);
 }

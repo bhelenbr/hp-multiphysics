@@ -12,6 +12,193 @@
 #include<float.h>
 #include<assert.h>
 
+template void mesh<2>::triangulate(const char *filename, FLT grwfac);
+template void mesh<3>::triangulate(const char *filename, FLT grwfac);
+
+template<int ND> void mesh<ND>::triangulate(const char *filename, FLT grwfac) {
+   int i,j,k,n,count,v0;
+   int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
+   int nloop;
+   int bcntr[MAXSB];
+   char grd_app[100];
+   FILE *grd;
+   
+   /* LOAD BOUNDARY INFORMATION */
+   strcpy(grd_app,filename);
+   strcat(grd_app,".d");
+   grd = fopen(grd_app,"r");
+   if (grd == NULL) { 
+      printf("couldn't open %s for reading\n",grd_app);
+      exit(1);
+   }
+   
+   fscanf(grd,"%d\n",&nvrtx);
+   
+   maxvst = static_cast<int>(grwfac*pow(nvrtx,2));
+   allocate(maxvst);
+   qtree.allocate(vrtx,maxvst);
+   initialized = 1;
+   
+   for(i=0;i<nvrtx;++i) {
+      fscanf(grd,"%*d:");
+      for(n=0;n<ND;++n)
+         fscanf(grd,"%lf",&vrtx[i][n]);
+      fscanf(grd,"%*f%d\n",&vinfo[i]);
+   }
+   
+   /* COUNT VERTEX BOUNDARY GROUPS  */
+   nvbd = 0;
+   for(i=0;i<nvrtx;++i) {
+      if (vinfo[i]) {
+         /* NEW VRTX B.C. */
+         getnewvrtxobject(nvbd,vinfo[i]);
+         vbdry[nvbd]->alloc(1);
+         vbdry[nvbd]->v() = i;
+         ++nvbd;
+         if (nvbd >= MAXVB) {
+            *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
+            exit(1);
+         }
+      }
+   }
+   
+   fscanf(grd,"%d\n",&nside);
+   
+   for(i=0;i<nside;++i)
+      fscanf(grd,"%*d:%d%d%d\n",&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
+      
+   /* COUNT BOUNDARY GROUPS */
+   nsbd = 0;
+   for(i=0;i<nside;++i) {
+      if (sinfo[i]) {
+         for (j = 0; j <nsbd;++j) {
+            if (sinfo[i] == sbdry[j]->idnty()) {
+               ++bcntr[j];
+               goto next1;
+            }
+         }
+         /* NEW SIDE */
+         getnewsideobject(nsbd,sinfo[i]);
+         bcntr[nsbd++] = 1;
+         if (nsbd > MAXSB) {
+            *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
+            exit(1);
+         }
+      }
+next1:      continue;
+   }
+   
+   for(i=0;i<nsbd;++i) {
+      sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
+      sbdry[i]->nsd() = 0;
+   }
+   
+   for(i=0;i<nside;++i) {
+      if (sinfo[i]) {
+         for (j = 0; j <nsbd;++j) {
+            if (sinfo[i] == sbdry[j]->idnty()) {
+               sbdry[j]->sd(sbdry[j]->nsd()++) = i;
+               goto next1a;
+            }
+         }
+         printf("Big error\n");
+         exit(1);
+      }
+next1a:     continue;
+   }
+   
+   for(i=0;i<nsbd;++i) {
+      /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
+      sbdry[i]->reorder();
+      sbdry[i]->getgeometryfrommesh();
+   }
+   
+   *log << "#Boundaries" << std::endl;
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->summarize(*log);
+   
+   ntri = 0;
+//   treeinit();  //TEMPORARY
+
+   /* CREATE ORDERED LIST OF SIDES */
+   /* STORAGE FOR SIDELST */
+   count = 0;
+   for(i=0;i<nsbd;++i) 
+      count += sbdry[i]->mxsz();
+   
+   for(i=0;i<nsbd;++i)
+      sidelst[i] = new int[count];
+
+   /* TEMPORARY LIST OF BOUNDARIES */
+   for(i=0;i<nsbd;++i) 
+      sideord[i] = i;
+
+   nloop = 0;
+   nsdloop[0] = 0;
+   for(i=0; i<nsbd; ++i) {
+      for(j=0;j<sbdry[sideord[i]]->nsd();++j)
+         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]]->sd(j) +1;
+
+      v0 = svrtx[sbdry[sideord[i]]->sd(sbdry[sideord[i]]->nsd()-1)][1];
+      for(j=i+1; j<nsbd;++j) {
+         if (v0 ==  svrtx[sbdry[sideord[j]]->sd(0)][0]) {
+            k = sideord[i+1];
+            sideord[i+1] = sideord[j];
+            sideord[j] = k;
+            goto FINDNEXT;
+         }
+      }
+      /* NEW LOOP */
+      nsdloop[++nloop] = 0;       
+FINDNEXT:
+      continue;
+   }
+
+   if (nloop == 0) {
+      *log << "Problem with boundaries nloop:" << nloop << std::endl;
+      exit(1);
+   }
+   
+   /* CHECK LOOPS */
+   k = 0;
+   for(i=0;i<nloop;++i) {
+      *log << "Loop " << i << ' ' << nsdloop[i] << std::endl;
+      v0 = svrtx[sidelst[i][0]-1][0];
+      for(j=0;j<nsdloop[i];++j) {
+         k = sidelst[i][j]-1;
+         if (svrtx[k][0] != v0) {
+            *log << "Boundaries not a loop " << i << ' ' << nsdloop[i] << ' ' << k << ' ' << svrtx[k][0] << ' ' << svrtx[k][1] << std::endl;
+            exit(10);
+         }
+         v0 = svrtx[k][1];
+      }
+      if (svrtx[k][1] != svrtx[sidelst[i][0]-1][0]) {
+         *log << "Boundaries not a loop " << i << ' ' << nsdloop[i] << ' ' << k << ' ' << svrtx[k][0] << ' ' << svrtx[k][1] << std::endl;
+         exit(10);
+      }
+   }
+   
+   /* CREATE INITIAL TRIANGULATION */            
+   triangulate(sidelst,nsdloop,nloop);
+   
+   for(i=0;i<nsbd;++i) 
+      delete []sidelst[i];
+   
+   bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+
+   *log << "#Boundaries" << std::endl;
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->summarize(*log);
+
+   createttri();
+   createvtri();
+   cnt_nbor();
+   checkintegrity();
+   
+   return;
+}
+
+
 #define MAXGOOD 100
 
 /* USES VINFO/SINFO TO STORE SIDE LOOKUP */
@@ -105,7 +292,6 @@ template<int ND> void mesh<ND>::triangulate(int **sidelst, int *nsdloop, int nlo
                continue; 
             }
             findpt(nnbor,nv,v,cknbor,goodvrt,ngood);
-            
             nsidebefore = nside;
             addtri(v[1],v[2],goodvrt[0],sind,dir);
             /* ADD ANY DEGENERATE TRIANGLES */           
@@ -181,7 +367,7 @@ template<int ND> void mesh<ND>::findpt(int *nnbor,int nv,int *v,int chkadj,int g
       dx1 = vrtx[v[1]][0] -vrtx[vtry][0];
       dy1 = vrtx[v[1]][1] -vrtx[vtry][1]; 
       area        = dx1*dy2 -dy1*dx2;
-      if (area < FLT_EPSILON) continue;
+      if (area < 10.*EPSILON) continue;
       
       /* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
       area = 1./area;
@@ -194,7 +380,7 @@ template<int ND> void mesh<ND>::findpt(int *nnbor,int nv,int *v,int chkadj,int g
       /* ABOVE THE EDGE MID-POINT IS MINIMIZED */
       height = dx2*(ycen -ymid) -dy2*(xcen -xmid);
 
-      if (height > hmin +10.*FLT_EPSILON) continue;
+      if (height > hmin +10.*EPSILON) continue;
       
       /* CHECK FOR INTERSECTION WITH CONVEX SIDES */
       for(k=0;k<ncnvx;++k) {
@@ -203,13 +389,13 @@ template<int ND> void mesh<ND>::findpt(int *nnbor,int nv,int *v,int chkadj,int g
          dy1 = vrtx[v[j]][1]-vrtx[vtry][1];
          dx2a = vrtx[v[j+1]][0]-vrtx[v[j]][0];
          dy2a = vrtx[v[j+1]][1]-vrtx[v[j]][1];
-      
          area = dx1*dy2a -dy1*dx2a;
          if (area < 0.0) goto NEXT;
       }
 
       /* CHECK IF DEGENERATE */
-      if (height > hmin-10.*FLT_EPSILON) {
+      if (height > hmin-10.*EPSILON) {
+         // *log << "degenerate case" << v[1] << ' ' << v[2] << std::endl;
          good[ngood++] = vtry;
          assert(ngood < MAXGOOD);
          continue;
@@ -311,8 +497,9 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
          if (maxv == svrtx[sind1][order]) {
             /* SIDE IN SAME DIRECTION */
             if (stri[sind1][0] >= 0) {
-               *log << "1:side already matched?" << sind1 << v1 << v2 << std::endl;
-               out_mesh("error");
+               *log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+               out_mesh("error",tecplot);
+               out_mesh("error",grid);
                exit(1);
             }
             stri[sind1][0] = ntri;
@@ -333,8 +520,9 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
          else if(maxv == svrtx[sind1][1-order]) {
             /* SIDE IN OPPOSITE DIRECTION */
             if (stri[sind1][1] >= 0) {
-               *log << "2:side already matched?" << sind1 << v1 << v2 << std::endl;
-               out_mesh("error");
+               *log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+               out_mesh("error",tecplot);
+               out_mesh("error",grid);
                exit(1);
             }
             stri[sind1][1] = ntri;
@@ -382,3 +570,4 @@ NEXTTRISIDE:
    
    return;
 }
+

@@ -95,6 +95,34 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
          out.close();
          break;
 
+      case (mavriplis):
+         strcpy(fnmapp,filename);
+         strcat(fnmapp,".GDS");
+         out.open(fnmapp);
+         if (out == NULL ) {
+            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+
+         out << "YIN " << nvrtx << endl;
+
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               out << "       " << vin[i][n];
+            if (ND == 2) out << "       " << 0.0;
+            out << endl;
+         }
+
+         out << "0\n";
+         out << ntri << '\n';
+
+         for(i=0;i<ntri;++i) {
+            out << "1 Default" << endl;
+            out << 3 << ' ' << tvrtx[i][0]+1 << ' ' << tvrtx[i][1]+1 << ' ' << tvrtx[i][2]+1 << endl;
+         }
+            out.close();
+         break; 
+         
       case (gambit):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".FDNEUT");
@@ -202,6 +230,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
 
          /* VRTX INFO */                        
          for(i=0;i<nvrtx;++i) {
+            out << i << ": ";
             for(n=0;n<ND;++n)
                out << vin[i][n] << ' ';
             out << "\n";
@@ -209,11 +238,11 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
                     
          /* SIDE INFO */
          for(i=0;i<nside;++i)
-            out << svrtx[i][0] << ' ' << svrtx[i][1] << endl;
+            out << i << ": " << svrtx[i][0] << ' ' << svrtx[i][1] << endl;
 
          /* THEN TRI INFO */
          for(i=0;i<ntri;++i)
-            out << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2] << endl;
+            out << i << ": " << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2] << endl;
 
          /* SIDE BOUNDARY INFO HEADER */
          out << "nsbd: " << nsbd << endl;

@@ -202,7 +202,7 @@ template<int ND> void mesh<ND>::checkintegrity() const {
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error");
-            exit(1);;
+            exit(1);
          }
 
          if (svrtx[sind][dir] != tvrtx[i][(j+1)%3] && svrtx[sind][1-dir] != tvrtx[i][(j+2)%3]) {
@@ -210,7 +210,7 @@ template<int ND> void mesh<ND>::checkintegrity() const {
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
-            exit(1);;
+            exit(1);
          }    
          
          if (stri[sind][dir] != i) {
@@ -218,7 +218,7 @@ template<int ND> void mesh<ND>::checkintegrity() const {
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
-            exit(1);;
+            exit(1);
          }
          
          if (ttri[i][j] != stri[sind][1-dir]) {
@@ -226,7 +226,7 @@ template<int ND> void mesh<ND>::checkintegrity() const {
             for(i=0;i<nside;++i)
                sinfo[i] += 2;
             out_mesh("error"); 
-            exit(1);;
+            exit(1);
          }
          
          if (ttri[i][j] > 0) {
@@ -235,7 +235,7 @@ template<int ND> void mesh<ND>::checkintegrity() const {
                for(i=0;i<nside;++i)
                   sinfo[i] += 2;
                out_mesh("error"); 
-               exit(1);;
+               exit(1);
             }
          }
       }
