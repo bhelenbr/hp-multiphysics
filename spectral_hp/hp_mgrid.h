@@ -82,7 +82,7 @@ class hp_mgrid : public spectral_hp {
       int log2p;
       
 /*		THINGS SHARED BY HP_MGRIDS IN SAME BLOCK */
-      struct hp_mgrid_glbls gbl;
+      struct hp_mgrid_glbls *gbl;
       
 /*		THINGS NEEDED ON EACH HP_MGRID MESH FOR MGRID */
       FLT (*vug_frst)[NV];
@@ -100,10 +100,10 @@ class hp_mgrid : public spectral_hp {
       
 /*		SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
-      void gbl_alloc(struct hp_mgrid_glbls& store);
+      void gbl_alloc(struct hp_mgrid_glbls *store);
 
    public:
-      void allocate(int mgrid, struct hp_mgrid_glbls& store);
+      void allocate(int mgrid, struct hp_mgrid_glbls *store);
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
          log2p = 0;

@@ -16,27 +16,27 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         gbl.vres[i][n] = 0.0;
+         gbl->vres[i][n] = 0.0;
 
     for(i=0;i<nside*b.sm;++i)
       for(n=0;n<NV;++n)
-         gbl.sres[i][n] = 0.0;
+         gbl->sres[i][n] = 0.0;
                  
     for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
-         gbl.ires[i][n] = 0.0;  
+         gbl->ires[i][n] = 0.0;  
          
     for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         gbl.vvf[i][n] *= (1. -beta[stage]);
+         gbl->vvf[i][n] *= (1. -beta[stage]);
 
     for(i=0;i<nside*b.sm;++i)
       for(n=0;n<NV;++n)
-         gbl.svf[i][n]  *= (1. -beta[stage]);
+         gbl->svf[i][n]  *= (1. -beta[stage]);
                  
     for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
-         gbl.ivf[i][n]  *= (1. -beta[stage]);          
+         gbl->ivf[i][n]  *= (1. -beta[stage]);          
 
 	for(tind = 0; tind<ntri;++tind) {
    
@@ -72,11 +72,11 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(i=0;i<b.gpx;++i) {
             for(j=0;j<b.gpn;++j) {
 #ifdef MOVING_MESH
-               fluxx = gbl.rho*(u[0][i][j] -crd[0][i][j]);
-               fluxy = gbl.rho*(u[1][i][j] -crd[1][i][j]);
+               fluxx = gbl->rho*(u[0][i][j] -crd[0][i][j]);
+               fluxy = gbl->rho*(u[1][i][j] -crd[1][i][j]);
 #else
-               fluxx = gbl.rho*u[0][i][j];
-               fluxy = gbl.rho*u[1][i][j];
+               fluxx = gbl->rho*u[0][i][j];
+               fluxy = gbl->rho*u[1][i][j];
 #endif
                du[2][0][i][j] = -dcrd[1][1][i][j]*fluxx +dcrd[0][1][i][j]*fluxy;
                du[2][1][i][j] = +dcrd[1][0][i][j]*fluxx -dcrd[0][0][i][j]*fluxy;
@@ -92,7 +92,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          b.intgrtrs(du[2][0],du[2][1],lf[2]);
 
 /*			ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-         lftog(tind,gbl.vres,gbl.sres,gbl.ires);
+         lftog(tind,gbl->vres,gbl->sres,gbl->ires);
 
 /*			NEGATIVE REAL TERMS */
          if (beta[stage] > 0.0) {
@@ -102,9 +102,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                for(i=0;i<b.gpx;++i) {
                   for(j=0;j<b.gpn;++j) {
                      cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-                     res[0][i][j] = gbl.rho*dt0*u[0][i][j]*cjcb[i][j]; // +udt[tind][0][i][j];
-                     res[1][i][j] = gbl.rho*dt0*u[1][i][j]*cjcb[i][j];// +udt[tind][1][i][j];
-                     res[2][i][j] = gbl.rho*dt0*cjcb[i][j];// +udt[tind][2][i][j];
+                     res[0][i][j] = gbl->rho*dt0*u[0][i][j]*cjcb[i][j]; // +udt[tind][0][i][j];
+                     res[1][i][j] = gbl->rho*dt0*u[1][i][j]*cjcb[i][j];// +udt[tind][1][i][j];
+                     res[2][i][j] = gbl->rho*dt0*cjcb[i][j];// +udt[tind][2][i][j];
                   }
                }
             }
@@ -112,9 +112,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                for(i=0;i<b.gpx;++i) {
                   for(j=0;j<b.gpn;++j) {
                      cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-                     res[0][i][j] = gbl.rho*dt0*u[0][i][j]*cjcb[i][j];
-                     res[1][i][j] = gbl.rho*dt0*u[1][i][j]*cjcb[i][j];
-                     res[2][i][j] = gbl.rho*dt0*cjcb[i][j];
+                     res[0][i][j] = gbl->rho*dt0*u[0][i][j]*cjcb[i][j];
+                     res[1][i][j] = gbl->rho*dt0*u[1][i][j]*cjcb[i][j];
+                     res[2][i][j] = gbl->rho*dt0*cjcb[i][j];
                   }
                }
             }
@@ -126,7 +126,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
 
-                  cjcb[i][j] = gbl.mu/cjcb[i][j];
+                  cjcb[i][j] = gbl->mu/cjcb[i][j];
                   
 /*						BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 /*						INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -165,22 +165,19 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   e11[i][j] = +viscI1II0II1II0I*du[0][0][i][j] +viscI1II1II1II0I*du[1][0][i][j]
                               +viscI1II0II1II1I*du[0][1][i][j] +visc[1][1][1][1]*du[1][1][i][j];
                               
-                  printf("%d %f %f %f %f\n",tind,e00[i][j],e01[i][j],e11[i][j],e10[i][j]);
-
-                              
                   cv00[i][j] = -cv00[i][j] -e00[i][j];
                   cv01[i][j] = -cv01[i][j] -e01[i][j];
                   cv10[i][j] = -cv10[i][j] -e10[i][j];
                   cv11[i][j] = -cv11[i][j] -e11[i][j];
    
 #ifdef MOVING_MESH
-                  res[2][i][j] += gbl.rho*
+                  res[2][i][j] += gbl->rho*
                                  (dcrd[1][1][i][j]*(du[0][0][i][j] -dlmvx[0][i][j])
                                  -dcrd[0][1][i][j]*(du[1][0][i][j] -dlmvx[1][i][j])
                                  -dcrd[1][0][i][j]*(du[0][1][i][j] -dlmvy[0][i][j])
                                  +dcrd[0][0][i][j]*(du[1][1][i][j] -dlmvy[1][i][j]));
 #else					
-                  res[2][i][j] += gbl.rho*(dcrd[1][1][i][j]*du[0][0][i][j] -dcrd[0][1][i][j]*du[1][0][i][j]
+                  res[2][i][j] += gbl->rho*(dcrd[1][1][i][j]*du[0][0][i][j] -dcrd[0][1][i][j]*du[1][0][i][j]
                                           -dcrd[1][0][i][j]*du[0][1][i][j] +dcrd[0][0][i][j]*du[1][1][i][j]);
 #endif
    
@@ -196,9 +193,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
 
-                  tres[0] = gbl.tau[tind]*res[0][i][j];
-                  tres[1] = gbl.tau[tind]*res[1][i][j];
-                  tres[2] = gbl.delt[tind]*res[2][i][j];
+                  tres[0] = gbl->tau[tind]*res[0][i][j];
+                  tres[1] = gbl->tau[tind]*res[1][i][j];
+                  tres[2] = gbl->delt[tind]*res[2][i][j];
                   
 
 #ifdef MOVING_MESH							
@@ -249,26 +246,23 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                for(i=0;i<b.tm;++i)
                   lf[n][i] *= beta[stage];
                   
-            lftog(tind,gbl.vvf,gbl.svf,gbl.ivf);
+            lftog(tind,gbl->vvf,gbl->svf,gbl->ivf);
          }
       }
 	}
-   
-   for(i=0;i<nvrtx;++i)
-      printf("%d %f %f %f\n",i,gbl.vvf[i][0],gbl.vvf[i][1],gbl.vvf[i][2]);   
-      
+
 /*	ADD IN VISCOUS/DISSIPATIVE FLUX */
 	for(i=0;i<nvrtx;++i)
 		for(n=0;n<NV;++n)
-			gbl.vres[i][n] += gbl.vvf[i][n];
+			gbl->vres[i][n] += gbl->vvf[i][n];
 
  	for(i=0;i<nside*b.sm;++i)
 		for(n=0;n<NV;++n)
-			gbl.sres[i][n] += gbl.svf[i][n];        
+			gbl->sres[i][n] += gbl->svf[i][n];        
 
 	for(i=0;i<ntri*b.im;++i)
 		for(n=0;n<NV;++n)
-			gbl.ires[i][n] += gbl.ivf[i][n];         
+			gbl->ires[i][n] += gbl->ivf[i][n];         
          
 
       
@@ -283,35 +277,31 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 		if(isfrst) {
          for(i=0;i<nvrtx;++i)
             for(n=0;n<NV;++n)
-               vdres[log2p][i][n] = gbl.fadd*gbl.vres0[i][n] - gbl.vres[i][n];
+               vdres[log2p][i][n] = gbl->fadd*gbl->vres0[i][n] - gbl->vres[i][n];
       
          for(i=0;i<nside*b.sm;++i)
             for(n=0;n<NV;++n)
-               sdres[log2p][i][n] = gbl.fadd*gbl.sres0[i][n] - gbl.sres[i][n];        
+               sdres[log2p][i][n] = gbl->fadd*gbl->sres0[i][n] - gbl->sres[i][n];        
       
          for(i=0;i<ntri*b.im;++i)
             for(n=0;n<NV;++n)
-               idres[log2p][i][n] = gbl.fadd*gbl.sres0[i][n] - gbl.sres[i][n];
+               idres[log2p][i][n] = gbl->fadd*gbl->sres0[i][n] - gbl->sres[i][n];
                
          isfrst = false;
 		}
 
 		for(i=0;i<nvrtx;++i) 
 			for(n=0;n<NV;++n)		
-				gbl.vres[i][n] += vdres[log2p][i][n];	
+				gbl->vres[i][n] += vdres[log2p][i][n];	
             
 		for(i=0;i<nside*b.sm;++i) 
 			for(n=0;n<NV;++n)		
-				gbl.sres[i][n] += sdres[log2p][i][n];
+				gbl->sres[i][n] += sdres[log2p][i][n];
             
 		for(i=0;i<ntri*b.im;++i) 
 			for(n=0;n<NV;++n)		
-				gbl.sres[i][n] += sdres[log2p][i][n];  
+				gbl->sres[i][n] += sdres[log2p][i][n];  
 	}
-
-
-      
-   exit(1);
       
 //   bdry_rcvandzero(-1);
 //   for(i=0;i<b.sm;++i)

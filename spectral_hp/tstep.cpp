@@ -11,14 +11,14 @@ void hp_mgrid::tstep1(void) {
 /** DETERMINE FLOW PSEUDO-TIME STEP ****/
 /***************************************/
 	for(i=0;i<nvrtx;++i) {
-		gbl.vdiagv[i] = 0.0;
-		gbl.vdiagp[i] = 0.0;
+		gbl->vdiagv[i] = 0.0;
+		gbl->vdiagp[i] = 0.0;
 	}
 
 	if (b.sm > 0) {
 		for(i=0;i<nside;++i) {
-			gbl.sdiagv[i] = 0.0;
-			gbl.sdiagp[i] = 0.0;
+			gbl->sdiagv[i] = 0.0;
+			gbl->sdiagp[i] = 0.0;
 		}
 	}
 
@@ -49,26 +49,26 @@ void hp_mgrid::tstep1(void) {
 			qmax = MAX(qmax,q);
 		}
 #endif
-		gbl.gam[tind] = qmax +(0.25*h*dt0 + gbl.nu/h)*(0.25*h*dt0 + gbl.nu/h);  
+		gbl->gam[tind] = qmax +(0.25*h*dt0 + gbl->nu/h)*(0.25*h*dt0 + gbl->nu/h);  
 		
 		q = sqrt(qmax);
-		c = sqrt(qmax+gbl.gam[tind]);
+		c = sqrt(qmax+gbl->gam[tind]);
 		lam1  = (q+c);
 		
-		gbl.dtstar[tind]  = gbl.nu/(h*h) +lam1/h +dt0;
-		gbl.dtstar[tind] *= jcb*gbl.rho;
+		gbl->dtstar[tind]  = gbl->nu/(h*h) +lam1/h +dt0;
+		gbl->dtstar[tind] *= jcb*gbl->rho;
 
 /*		SET UP DISSIPATIVE COEFFICIENTS */
-		gbl.tau[tind]  = gbl.adis*h/(jcb*sqrt(gbl.gam[tind]));
-		gbl.delt[tind] = qmax*gbl.tau[tind];
-		gbl.gam[tind] =  1.0/gbl.gam[tind];
+		gbl->tau[tind]  = gbl->adis*h/(jcb*sqrt(gbl->gam[tind]));
+		gbl->delt[tind] = qmax*gbl->tau[tind];
+		gbl->gam[tind] =  1.0/gbl->gam[tind];
 		for(i=0;i<3;++i) {
-			gbl.vdiagv[v[i]]  += gbl.dtstar[tind]*b.vdiag;
-			gbl.vdiagp[v[i]]  += gbl.dtstar[tind]*gbl.gam[tind]*b.vdiag*gbl.rhoi;
+			gbl->vdiagv[v[i]]  += gbl->dtstar[tind]*b.vdiag;
+			gbl->vdiagp[v[i]]  += gbl->dtstar[tind]*gbl->gam[tind]*b.vdiag*gbl->rhoi;
 			if (b.sm > 0) {
 				side = tside[tind].side[i];
-				gbl.sdiagv[side] += gbl.dtstar[tind];
-				gbl.sdiagp[side] += gbl.dtstar[tind]*gbl.gam[tind]*gbl.rhoi;
+				gbl->sdiagv[side] += gbl->dtstar[tind];
+				gbl->sdiagp[side] += gbl->dtstar[tind]*gbl->gam[tind]*gbl->rhoi;
 			}
 		}
 	}
@@ -83,19 +83,19 @@ void hp_mgrid::tstep1(void) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
-            tgt->sbuff[bnum][count++] = gbl.vdiagp[v0];
+            tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
+            tgt->sbuff[bnum][count++] = gbl->vdiagp[v0];
          }
          v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
-         tgt->sbuff[bnum][count++] = gbl.vdiagp[v0];
+         tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
+         tgt->sbuff[bnum][count++] = gbl->vdiagp[v0];
 
 /*			SEND SIDE INFO */
          if (b.sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl.sdiagv[sind];
-               tgt->sbuff[bnum][count++] = gbl.sdiagp[sind];
+               tgt->sbuff[bnum][count++] = gbl->sdiagv[sind];
+               tgt->sbuff[bnum][count++] = gbl->sdiagp[sind];
             }
          }
       }
@@ -108,16 +108,16 @@ void hp_mgrid::tstep1(void) {
          for(j=0;j<sbdry[i].num;++j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+            tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
          }
          v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+         tgt->sbuff[bnum][count++] = gbl->vdiagv[v0];
 
 /*			SEND SIDE INFO */
          if (b.sm) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl.sdiagv[sind];
+               tgt->sbuff[bnum][count++] = gbl->sdiagv[sind];
             }
          }
       }
@@ -142,19 +142,19 @@ void hp_mgrid::tstep2(void) {
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
-            gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
-            gbl.vdiagp[v0] = 0.5*(gbl.vdiagp[v0] +sbuff[i][count++]);
+            gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
+            gbl->vdiagp[v0] = 0.5*(gbl->vdiagp[v0] +sbuff[i][count++]);
          }
          v0 = svrtx[sind][0];
-         gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
-         gbl.vdiagp[v0] = 0.5*(gbl.vdiagp[v0] +sbuff[i][count++]);
+         gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
+         gbl->vdiagp[v0] = 0.5*(gbl->vdiagp[v0] +sbuff[i][count++]);
 
 /*			RECV SIDE INFO */
          if (b.sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
-               gbl.sdiagv[sind] = 0.5*(gbl.sdiagv[sind] +sbuff[i][count++]);
-               gbl.sdiagp[sind] = 0.5*(gbl.sdiagp[sind] +sbuff[i][count++]);
+               gbl->sdiagv[sind] = 0.5*(gbl->sdiagv[sind] +sbuff[i][count++]);
+               gbl->sdiagp[sind] = 0.5*(gbl->sdiagp[sind] +sbuff[i][count++]);
             }
          }
       }
@@ -166,16 +166,16 @@ void hp_mgrid::tstep2(void) {
          for(j=sbdry[i].num-1;j>=0;--j) {
             sind = sbdry[i].el[j];
             v0 = svrtx[sind][1];
-            gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+            gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
          }
          v0 = svrtx[sind][0];
-         gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+         gbl->vdiagv[v0] = 0.5*(gbl->vdiagv[v0] +sbuff[i][count++]);
 
 /*			RECV SIDE INFO */
          if (b.sm > 0) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
-               gbl.sdiagv[sind] = 0.5*(gbl.sdiagv[sind] +sbuff[i][count++]);
+               gbl->sdiagv[sind] = 0.5*(gbl->sdiagv[sind] +sbuff[i][count++]);
             }
          }
       }
@@ -183,15 +183,15 @@ void hp_mgrid::tstep2(void) {
    
 /*	FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl.vdiagv[i]  = 1.0/gbl.vdiagv[i];
-      gbl.vdiagp[i]  = 1.0/gbl.vdiagp[i];
+      gbl->vdiagv[i]  = 1.0/gbl->vdiagv[i];
+      gbl->vdiagp[i]  = 1.0/gbl->vdiagp[i];
    }
       
    if (b.sm > 0) {
 /*		FORM DIAGANOL PRECONDITIONER FOR SIDES */				
 		for(i=0;i<nside;++i) {
-			gbl.sdiagv[i] = 1.0/gbl.sdiagv[i];
-			gbl.sdiagp[i] = 1.0/gbl.sdiagp[i];
+			gbl->sdiagv[i] = 1.0/gbl->sdiagv[i];
+			gbl->sdiagp[i] = 1.0/gbl->sdiagp[i];
 		}
 	}
    

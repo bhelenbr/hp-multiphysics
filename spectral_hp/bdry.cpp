@@ -24,14 +24,14 @@ void hp_mgrid::setinflow() {
    
             x = vrtx[v0][0];		
             y = vrtx[v0][1];
-            vug[v0][0] = (*gbl.func)(0,x,y);
-            vug[v0][1] = (*gbl.func)(1,x,y);
+            vug[v0][0] = (*(gbl->func))(0,x,y);
+            vug[v0][1] = (*(gbl->func))(1,x,y);
          }
          v0 = svrtx[sind][1];
          x = vrtx[v0][0];		
          y = vrtx[v0][1];
-         vug[v0][0] = (*gbl.func)(0,x,y);
-         vug[v0][1] = (*gbl.func)(1,x,y);
+         vug[v0][0] = (*(gbl->func))(0,x,y);
+         vug[v0][1] = (*(gbl->func))(1,x,y);
          
 /**********************************/   
 /*			SET SIDE VALUES & FLUXES */
@@ -63,7 +63,7 @@ void hp_mgrid::setinflow() {
          
                for(k=0;k<b.gpx; ++k)
                   for(n=0;n<ND;++n)
-                     res[n][0][k] -= (*gbl.func)(n,crd[0][0][k],crd[1][0][k]);
+                     res[n][0][k] -= (*(gbl->func))(n,crd[0][0][k],crd[1][0][k]);
                      
                for(n=0;n<ND;++n)
                   b.intgrt1d(res[n][0],lf[n]);
@@ -84,7 +84,7 @@ void hp_mgrid::setinflow() {
 /*				NEED TO FIGURE OUT WHAT I'M DOING HERE FOR MOVING MESH */
                
             for(k=0;k<b.gpx;++k)
-               res[2][0][k] = gbl.rho*(u[0][0][k]*dcrd[1][0][0][k] -u[1][0][k]*dcrd[0][0][0][k]);
+               res[2][0][k] = gbl->rho*(u[0][0][k]*dcrd[1][0][0][k] -u[1][0][k]*dcrd[0][0][0][k]);
             
             b.intgrt1d(res[2][0],lf[0]);
             
@@ -116,13 +116,13 @@ void hp_mgrid::addbflux(int mgrid) {
             for(j=0;j<sbdry[i].num;++j) {
                sind=sbdry[i].el[j];
                v0 = svrtx[sind][0];
-               gbl.vres[v0][2] += binfo[i][indx++].flx[2];
+               gbl->vres[v0][2] += binfo[i][indx++].flx[2];
                indx1 = sind*b.sm;
                for(k=0;k<b.sm;++k)
-                  gbl.sres[indx1++][2] += binfo[i][indx++].flx[2];
+                  gbl->sres[indx1++][2] += binfo[i][indx++].flx[2];
             }
             v0 = svrtx[sind][1];
-            gbl.vres[v0][2] += binfo[i][indx].flx[2];
+            gbl->vres[v0][2] += binfo[i][indx].flx[2];
          }
          
          if (sbdry[i].type&OUTF_MASK) {
@@ -133,18 +133,18 @@ void hp_mgrid::addbflux(int mgrid) {
                v0 = svrtx[sind][0];
                indx1 = sind*b.sm;
                for(n=0;n<ND;++n)
-                  gbl.vres[v0][n] += 0.0*binfo[i][indx].flx[n];
+                  gbl->vres[v0][n] += binfo[i][indx].flx[n];
                ++indx;
                for(k=0;k<b.sm;++k) {
                   for(n=0;n<ND;++n)
-                     gbl.sres[indx1][n] += 0.0*binfo[i][indx].flx[n];
+                     gbl->sres[indx1][n] += binfo[i][indx].flx[n];
                   ++indx;
                   ++indx1;
                }
             }
             v0 = svrtx[sind][1];
             for(n=0;n<ND;++n)
-               gbl.vres[v0][n] += 0.0*binfo[i][indx].flx[n];
+               gbl->vres[v0][n] += binfo[i][indx].flx[n];
          }
       }
    }
@@ -163,19 +163,19 @@ void hp_mgrid::addbflux(int mgrid) {
             sind=sbdry[i].el[j];
             v0 = svrtx[sind][0];
             for(n=0;n<ND;++n)
-               gbl.vres[v0][n] += binfo[i][indx].flx[n];
+               gbl->vres[v0][n] += binfo[i][indx].flx[n];
             ++indx;
             indx1 = sind*b.sm;
             for(k=0;k<b.sm;++k) {
                for(n=0;n<ND;++n)
-                  gbl.sres[indx1][n] += binfo[i][indx].flx[n];
+                  gbl->sres[indx1][n] += binfo[i][indx].flx[n];
                ++indx;
                ++indx1;
             }
          }
          v0 = svrtx[sind][1];
          for(n=0;n<ND;++n)
-            gbl.vres[v0][n] += binfo[i][indx].flx[n];
+            gbl->vres[v0][n] += binfo[i][indx].flx[n];
       }
 
 
@@ -203,23 +203,23 @@ void hp_mgrid::addbflux(int mgrid) {
             for(n=0;n<NV;++n)
                b.proj1d(uht[n],u[n][0]);
             
-            gam = 1.0/gbl.gam[stri[sind][0]];
+            gam = 1.0/gbl->gam[stri[sind][0]];
             for(k=0;k<b.gpx;++k) {
                for(n=0;n<NV;++n) {
                   wl[n] = u[n][0][k];
-                  wr[n] = (gbl.func)(n,crd[0][0][k],crd[1][0][k]);
+                  wr[n] = (gbl->func)(n,crd[0][0][k],crd[1][0][k]);
                }
                nrm[0] = dcrd[1][0][0][k];
                nrm[1] = -dcrd[0][0][0][k];
 #ifdef MOVING_MESH
 /* SET UP MVEL HERE */
 #endif
-               if (!gbl.charyes)
+               if (!gbl->charyes)
                   wl[2] = wr[2];
                else 
-                  chrctr(gbl.rho,gam,wl,wr,nrm,mvel);
+                  chrctr(gbl->rho,gam,wl,wr,nrm,mvel);
                   
-               res[2][0][k] = gbl.rho*(wl[0]*nrm[0] +wl[1]*nrm[1]);
+               res[2][0][k] = gbl->rho*(wl[0]*nrm[0] +wl[1]*nrm[1]);
                res[0][0][k] = res[2][0][k]*wl[0] +wl[2]*nrm[0];
                res[1][0][k] = res[2][0][k]*wl[1] +wl[2]*nrm[1];
             }
@@ -228,16 +228,16 @@ void hp_mgrid::addbflux(int mgrid) {
                b.intgrt1d(res[n][0],lf[n]);
             
             for(n=0;n<NV;++n)
-               gbl.vres[v0][n] += lf[n][0];
+               gbl->vres[v0][n] += lf[n][0];
 
             for(n=0;n<NV;++n)
-               gbl.vres[v1][n] += lf[n][1];
+               gbl->vres[v1][n] += lf[n][1];
             
             indx1 = sind*b.sm;
             indx = 2;
             for(k=0;k<b.sm;++k) {
                for(n=0;n<NV;++n)
-                  gbl.sres[indx1][n] += lf[n][indx];
+                  gbl->sres[indx1][n] += lf[n][indx];
                ++indx1;
                ++indx;
             }
@@ -268,11 +268,11 @@ void hp_mgrid::addbflux(int mgrid) {
             b.proj1d(uht[2],u[2][0]);
                
             for(k=0;k<b.gpx;++k) {
-               wl[0] = (gbl.func)(0,crd[0][0][k],crd[1][0][k]);
-               wl[1] = (gbl.func)(1,crd[0][0][k],crd[1][0][k]);
+               wl[0] = (gbl->func)(0,crd[0][0][k],crd[1][0][k]);
+               wl[1] = (gbl->func)(1,crd[0][0][k],crd[1][0][k]);
 #ifdef MOVING_MESH
 #else
-               res[2][0][k] = gbl.rho*(wl[0]*dcrd[1][0][0][k] -wl[1]*dcrd[0][0][0][k]);
+               res[2][0][k] = gbl->rho*(wl[0]*dcrd[1][0][0][k] -wl[1]*dcrd[0][0][0][k]);
 #endif
                res[0][0][k] = res[2][0][k]*wl[0] +u[2][0][k]*dcrd[1][0][0][k];
                res[1][0][k] = res[2][0][k]*wl[1] -u[2][0][k]*dcrd[0][0][0][k];
@@ -282,16 +282,16 @@ void hp_mgrid::addbflux(int mgrid) {
                b.intgrt1d(res[n][0],lf[n]);
             
             for(n=0;n<NV;++n)
-               gbl.vres[v0][n] += lf[n][0];
+               gbl->vres[v0][n] += lf[n][0];
 
             for(n=0;n<NV;++n)
-               gbl.vres[v1][n] += lf[n][1];
+               gbl->vres[v1][n] += lf[n][1];
             
             indx1 = sind*b.sm;
             indx = 2;
             for(k=0;k<b.sm;++k) {
                for(n=0;n<NV;++n)
-                  gbl.sres[indx1][n] += lf[n][indx];
+                  gbl->sres[indx1][n] += lf[n][indx];
                ++indx1;
                ++indx;
             }
@@ -318,11 +318,11 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][1];
                for(n=0;n<NV;++n)
-                  gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+                  gbl->vres[v0][n] = 0.5*(gbl->vres[v0][n] +sbuff[i][count++]);
             }
             v0 = svrtx[sind][0];
             for(n=0;n<NV;++n)
-               gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+               gbl->vres[v0][n] = 0.5*(gbl->vres[v0][n] +sbuff[i][count++]);
          }
 
          if (sbdry[i].type & IFCE_MASK) {
@@ -332,11 +332,11 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][1];
                for(n=0;n<ND;++n)
-                  gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+                  gbl->vres[v0][n] = 0.5*(gbl->vres[v0][n] +sbuff[i][count++]);
             }
             v0 = svrtx[sind][0];
             for(n=0;n<ND;++n)
-               gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+               gbl->vres[v0][n] = 0.5*(gbl->vres[v0][n] +sbuff[i][count++]);
          }         
       }
    
@@ -346,14 +346,14 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
             for(j=0;j<vbdry[i].num;++j) {
                v0 = vbdry[i].el[j];
                for(n=0;n<ND;++n)
-                  gbl.vres[v0][n] = 0.0;
+                  gbl->vres[v0][n] = 0.0;
             }
          }
          
          if (vbdry[i].type&SYMM_MASK) {
             for(j=0;j<vbdry[i].num;++j) {
                v0 = vbdry[i].el[j];
-               gbl.vres[v0][0] = 0.0;
+               gbl->vres[v0][0] = 0.0;
             }
          }
       }
@@ -364,21 +364,21 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                for(n=0;n<ND;++n)
-                  gbl.vres[v0][n] = 0.0;
+                  gbl->vres[v0][n] = 0.0;
             }
             v0 = svrtx[sind][1];
             for(n=0;n<ND;++n)
-               gbl.vres[v0][n] = 0.0;
+               gbl->vres[v0][n] = 0.0;
          }
          
          if (sbdry[i].type&SYMM_MASK) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
-               gbl.vres[v0][0] = 0.0;
+               gbl->vres[v0][0] = 0.0;
             }
             v0 = svrtx[sind][1];
-            gbl.vres[v0][0] = 0.0;
+            gbl->vres[v0][0] = 0.0;
          }
       }
    }
@@ -393,7 +393,7 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                indx = sbdry[i].el[j]*b.sm +mode;
                for(n=0;n<NV;++n)
-                  gbl.sres[indx][n] = 0.5*(gbl.sres[indx][n] +sbuff[i][count++]);
+                  gbl->sres[indx][n] = 0.5*(gbl->sres[indx][n] +sbuff[i][count++]);
             }
          }
          if (sbdry[i].type & IFCE_MASK) {
@@ -401,7 +401,7 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
             for(j=sbdry[i].num-1;j>=0;--j) {
                indx = sbdry[i].el[j]*b.sm +mode;
                for(n=0;n<ND;++n)
-                  gbl.sres[indx][n] = 0.5*(gbl.sres[indx][n] +sbuff[i][count++]);
+                  gbl->sres[indx][n] = 0.5*(gbl->sres[indx][n] +sbuff[i][count++]);
             }
          }         
       }
@@ -412,14 +412,14 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j]*b.sm +mode;
                for(n=0;n<ND;++n)
-                  gbl.sres[sind][n] = 0.0;
+                  gbl->sres[sind][n] = 0.0;
             }
          }
          
          if (sbdry[i].type&SYMM_MASK) {
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j]*b.sm +mode;
-               gbl.sres[sind][0] = 0.0;
+               gbl->sres[sind][0] = 0.0;
             }
          }
       }
@@ -445,11 +445,11 @@ void hp_mgrid::bdry_snd(int mode) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                for (n=0;n<NV;++n) 
-                  tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+                  tgt->sbuff[bnum][count++] = gbl->vres[v0][n];
             }
             v0 = svrtx[sind][1];
             for (n=0;n<NV;++n) 
-               tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+               tgt->sbuff[bnum][count++] = gbl->vres[v0][n];
          }
          if (sbdry[i].type & IFCE_MASK) {
             bnum = sbdry[i].adjbnum;
@@ -460,11 +460,11 @@ void hp_mgrid::bdry_snd(int mode) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                for (n=0;n<ND;++n) 
-                  tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+                  tgt->sbuff[bnum][count++] = gbl->vres[v0][n];
             }
             v0 = svrtx[sind][1];
             for (n=0;n<ND;++n) 
-               tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+               tgt->sbuff[bnum][count++] = gbl->vres[v0][n];
          }
       }
    }
@@ -478,7 +478,7 @@ void hp_mgrid::bdry_snd(int mode) {
             for(j=0;j<sbdry[i].num;++j) {
                indx = sbdry[i].el[j]*b.sm +mode;
                for (n=0;n<NV;++n) 
-                  tgt->sbuff[bnum][count++] = gbl.sres[indx][n];
+                  tgt->sbuff[bnum][count++] = gbl->sres[indx][n];
             }
          } 
 
@@ -489,7 +489,7 @@ void hp_mgrid::bdry_snd(int mode) {
             for(j=0;j<sbdry[i].num;++j) {
                indx = sbdry[i].el[j]*b.sm +mode;
                for (n=0;n<ND;++n) 
-                  tgt->sbuff[bnum][count++] = gbl.sres[indx][n];
+                  tgt->sbuff[bnum][count++] = gbl->sres[indx][n];
             }
          }         
       }

@@ -42,12 +42,12 @@ class surface {
       FLT (*vug_frst)[ND];
       FLT (*vdres[MXLG2P])[ND];
       FLT (*sdres[MXLG2P])[ND];
-      struct surface_glbls gbl;
+      struct surface_glbls *gbl;
       
 /*		FINE MESH GLBL ALLOCATION */
-      void gbl_alloc(int maxside, int p, struct surface_glbls& store);
+      void gbl_alloc(int maxside, int p, struct surface_glbls *store);
 
    public:
-      void alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls& store);
+      void alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls *store);
       friend class hp_mgrid;
 };

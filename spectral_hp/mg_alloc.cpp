@@ -20,7 +20,7 @@ const FLT hp_mgrid::alpha[NSTAGE+1];
 const FLT hp_mgrid::beta[NSTAGE+1];
 FLT hp_mgrid::dt0=0.0, hp_mgrid::dt1=0.0, hp_mgrid::dt2=0.0, hp_mgrid::dt3=0.0;
 
-void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
+void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    int onfmesh,count,i,sind,j;
    
    if (spectral_hp::size == 0 or mesh::initialized == 0) {
@@ -50,7 +50,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
 /*	ON FINEST MESH ALLOCATE GLOBAL STORAGE */   
    if (!mgrid) gbl_alloc(store);
 
-/*	COPY GLOBAL POINTERS */   
+/*	COPY GLOBAL POINTER */   
    gbl = store;
 
 /* FIGURE OUT WHERE WE ARE */   
@@ -81,7 +81,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
    count = 0;
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-         srf[count].alloc(maxsbel, log2p, mgrid, onfmesh, store.sgbl[count]);
+         srf[count].alloc(maxsbel, log2p, mgrid, onfmesh, &(store->sgbl[count]));
          sbdry[i].misc = static_cast<void *>(&srf[count]);
          if (!mgrid || !onfmesh) {
             for(j=0;j<sbdry[i].num;++j) {
@@ -96,43 +96,43 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls& store) {
    return;
 }
 
-void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls& store) {
+void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
    int pn, smn, imn;
    
 /*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-   store.vug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   store.sug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
-   store.iug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
+   store->vug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store->sug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store->iug0 = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
 /*	RESIDUAL STORAGE */
-   store.vres = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   store.sres = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
-   store.ires = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
+   store->vres = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store->sres = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store->ires = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
 
 /*	VISCOUS FORCE RESIDUAL STORAGE */
-   store.vvf = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   store.svf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
-   store.ivf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
+   store->vvf = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store->svf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.sm*sizeof(FLT));
+   store->ivf = (FLT (*)[NV]) xmalloc(NV*maxvst*b.im*sizeof(FLT));
    
 /*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID NEXT COARSER MESH */
-   store.vres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   store->vres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
    pn = b.p>>1;
    smn = pn-1;
    imn = (pn-2)*(pn-1)/2;
-   if (smn > 0) store.sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*smn*sizeof(FLT));
-   if (imn > 0) store.ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*imn*sizeof(FLT));
+   if (smn > 0) store->sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*smn*sizeof(FLT));
+   if (imn > 0) store->ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*imn*sizeof(FLT));
 
 /*	PRECONDITIONER  */
-   vect_alloc(store.gam,maxvst,FLT);
-   vect_alloc(store.dtstar,maxvst,FLT);
-   vect_alloc(store.vdiagv,maxvst,FLT);
-   vect_alloc(store.vdiagp,maxvst,FLT);
-   vect_alloc(store.sdiagv,maxvst,FLT);
-   vect_alloc(store.sdiagp,maxvst,FLT);
+   vect_alloc(store->gam,maxvst,FLT);
+   vect_alloc(store->dtstar,maxvst,FLT);
+   vect_alloc(store->vdiagv,maxvst,FLT);
+   vect_alloc(store->vdiagp,maxvst,FLT);
+   vect_alloc(store->sdiagv,maxvst,FLT);
+   vect_alloc(store->sdiagp,maxvst,FLT);
    
 /* STABILIZATION */
-   vect_alloc(store.tau,maxvst,FLT);
-   vect_alloc(store.delt,maxvst,FLT);
+   vect_alloc(store->tau,maxvst,FLT);
+   vect_alloc(store->delt,maxvst,FLT);
 
 #ifdef SKIP
 /*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
@@ -148,15 +148,15 @@ void hp_mgrid::maxres(FLT mx[NV]) {
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl.vres[i][n]));
+         mx[n] = MAX(mx[n],fabs(gbl->vres[i][n]));
 
    for(i=0;i<nside*b.sm;++i)
       for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl.sres[i][n]));
+         mx[n] = MAX(mx[n],fabs(gbl->sres[i][n]));
 
    for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
-         mx[n] = MAX(mx[n],fabs(gbl.ires[i][n]));
+         mx[n] = MAX(mx[n],fabs(gbl->ires[i][n]));
          
    return;
 }

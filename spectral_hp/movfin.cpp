@@ -29,20 +29,20 @@ void hp_mgrid::getcchng(void) {
    for(i=0;i<nvrtx;++i) {
       
       for(n=0;n<NV;++n)
-         gbl.vres[i][n] = 0.0;
+         gbl->vres[i][n] = 0.0;
       
       tind = coarse[i].tri;
       
       for(j=0;j<3;++j) {
          ind = cmesh->tvrtx[tind][j];
          for(n=0;n<NV;++n) 
-            gbl.vres[i][n] -= coarse[i].wt[j]*cmesh->vug_frst[ind][n];
+            gbl->vres[i][n] -= coarse[i].wt[j]*cmesh->vug_frst[ind][n];
       }
    }
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n) 
-         vug[i][n] += gbl.vres[i][n];
+         vug[i][n] += gbl->vres[i][n];
 
    return;
 }

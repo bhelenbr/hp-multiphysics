@@ -65,10 +65,10 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    cfl[2] = 1.0;
    blk[0].setiter(0.75,cfl,1.0,0);
    
-   surfcfl[0][0] = 0.0;
+   surfcfl[0][0] = 1.0;
    surfcfl[1][0] = 1.5;
    surfcfl[2][0] = 1.0;
-   surfcfl[0][1] = 0.0;
+   surfcfl[0][1] = 1.0;
    surfcfl[1][1] = 0.75;
    surfcfl[2][1] = 0.5;
    surffadd[0] = 0.5;
@@ -219,7 +219,6 @@ void blocks::output(char *filename, FILETYPE filetype = text) {
       }
    }
    else {
-      blk[0].grd[0].bcinfo();
       blk[0].grd[0].output(filename,filetype); 
    }
    
