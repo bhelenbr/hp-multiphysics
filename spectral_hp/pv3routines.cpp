@@ -222,14 +222,27 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
    /* FRONT FACE OF 2D MESH */
    for(tind=0;tind<ntri;++tind) {
 
-      /* VERTICES */
-      ijind[0][0] = tvrtx[tind][0];
-      ijind[b.sm+1][0] = tvrtx[tind][1];
-      ijind[0][b.sm+1] = tvrtx[tind][2];
 
-      /* SIDES */         
+
+      /* VERTICES */
+      ijind[0][b.sm+1] = tvrtx[tind][0];
+      ijind[0][0] = tvrtx[tind][1];
+      ijind[b.sm+1][0] = tvrtx[tind][2];
+
+      /* SIDES */
       indx = tside[tind].side[0];
       sgn = tside[tind].sign[0];
+      if (sgn < 0) {
+         for(i=0;i<b.sm;++i)
+            ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
+      }
+      else {
+         for(i=0;i<b.sm;++i)
+            ijind[i+1][0] = nvrtx +indx*b.sm +i;
+      }
+
+      indx = tside[tind].side[1];
+      sgn = tside[tind].sign[1];
       if (sgn > 0) {
          for(i=0;i<b.sm;++i)
             ijind[b.sm-i][i+1] = nvrtx +indx*b.sm +i;
@@ -238,9 +251,9 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
          for(i=0;i<b.sm;++i)
             ijind[b.sm-i][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
       }
- 
-      indx = tside[tind].side[1];
-      sgn = tside[tind].sign[1];
+
+      indx = tside[tind].side[2];
+      sgn = tside[tind].sign[2];
       if (sgn > 0) {
          for(i=0;i<b.sm;++i)
             ijind[0][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
@@ -248,17 +261,6 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
       else {
          for(i=0;i<b.sm;++i)
             ijind[0][i+1] = nvrtx +indx*b.sm +i;
-      }
-      
-      indx = tside[tind].side[2];
-      sgn = tside[tind].sign[2];
-      if (sgn < 0) {
-         for(i=0;i<b.sm;++i)
-            ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
-      }
-      else {
-         for(i=0;i<b.sm;++i)
-            ijind[i+1][0] = nvrtx +indx*b.sm +i;
       }
 
       /* INTERIOR VERTICES */
@@ -269,7 +271,6 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
             ++k;
          }
       }
-      
       /* OUTPUT CONNECTION LIST */      
       for(i=0;i<b.sm+1;++i) {
          for(j=0;j<b.sm-i;++j) {
@@ -333,13 +334,24 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
    for(tind=0;tind<ntri;++tind) {
 
       /* VERTICES */
-      ijind[0][0] = tvrtx[tind][0];
-      ijind[b.sm+1][0] = tvrtx[tind][1];
-      ijind[0][b.sm+1] = tvrtx[tind][2];
+      ijind[0][b.sm+1] = tvrtx[tind][0];
+      ijind[0][0] = tvrtx[tind][1];
+      ijind[b.sm+1][0] = tvrtx[tind][2];
 
-      /* SIDES */         
+      /* SIDES */
       indx = tside[tind].side[0];
       sgn = tside[tind].sign[0];
+      if (sgn < 0) {
+         for(i=0;i<b.sm;++i)
+            ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
+      }
+      else {
+         for(i=0;i<b.sm;++i)
+            ijind[i+1][0] = nvrtx +indx*b.sm +i;
+      }
+
+      indx = tside[tind].side[1];
+      sgn = tside[tind].sign[1];
       if (sgn > 0) {
          for(i=0;i<b.sm;++i)
             ijind[b.sm-i][i+1] = nvrtx +indx*b.sm +i;
@@ -349,8 +361,8 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
             ijind[b.sm-i][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
       }
 
-      indx = tside[tind].side[1];
-      sgn = tside[tind].sign[1];
+      indx = tside[tind].side[2];
+      sgn = tside[tind].sign[2];
       if (sgn > 0) {
          for(i=0;i<b.sm;++i)
             ijind[0][i+1] = nvrtx +(indx+1)*b.sm -(i+1);
@@ -358,17 +370,6 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
       else {
          for(i=0;i<b.sm;++i)
             ijind[0][i+1] = nvrtx +indx*b.sm +i;
-      }
-      
-      indx = tside[tind].side[2];
-      sgn = tside[tind].sign[2];
-      if (sgn < 0) {
-         for(i=0;i<b.sm;++i)
-            ijind[i+1][0] = nvrtx +(indx+1)*b.sm -(i+1);
-      }
-      else {
-         for(i=0;i<b.sm;++i)
-            ijind[i+1][0] = nvrtx +indx*b.sm +i;
       }
 
       /* INTERIOR VERTICES */
@@ -379,7 +380,6 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
             ++k;
          }
       }
-
       /* OUTPUT CONNECTION LIST */      
       for(i=0;i<b.sm+1;++i) {
          for(j=0;j<b.sm-i;++j) {
