@@ -13,7 +13,7 @@
 			F51211030190489701990B20,
 		);
 		perUserDictionary = {
-			PBXPerProjectTemplateStateSaveDate = 53543610;
+			PBXPerProjectTemplateStateSaveDate = 53630093;
 			"PBXTemplateGeometry-F5534CB2020F3F8A0DCA290F" = {
 				ContentSize = "{594, 303}";
 				LeftSlideOut = {
@@ -134,130 +134,7 @@
 				StatusViewVisible = YES;
 				Template = F5534CB2020F3F8A0DCA290F;
 				ToolbarVisible = YES;
-				WindowLocation = "{264, 748}";
-			};
-			"PBXTemplateGeometry-F5CA7ECC015C09990DCA290F" = {
-				ContentSize = "{773, 558}";
-				LeftSlideOut = {
-					Collapsed = NO;
-					Frame = "{{0, 23}, {773, 535}}";
-					Split0 = {
-						ActiveTab = 0;
-						Collapsed = NO;
-						Frame = "{{24, 0}, {749, 535}}";
-						Split0 = {
-							Frame = "{{0, 273}, {749, 262}}";
-						};
-						SplitCount = 1;
-						Tab0 = {
-							Debugger = {
-								ActiveTab = 0;
-								Collapsed = NO;
-								Frame = "{{0, 0}, {749, 267}}";
-								Split0 = {
-									Frame = "{{0, 147}, {749, 120}}";
-									Split0 = {
-										Frame = "{{0, 0}, {366, 120}}";
-									};
-									Split1 = {
-										DebugVariablesTableConfiguration = (
-											Name,
-											93.80298,
-											Value,
-											116.074,
-											Summary,
-											138.123,
-										);
-										Frame = "{{375, 0}, {374, 120}}";
-									};
-									SplitCount = 2;
-								};
-								SplitCount = 1;
-								Tab0 = {
-									Frame = "{{0, 0}, {749, 123}}";
-								};
-								Tab1 = {
-									Frame = "{{0, 0}, {100, 50}}";
-								};
-								TabCount = 2;
-								TabsVisible = YES;
-							};
-							Frame = "{{0, 0}, {749, 267}}";
-							LauncherConfigVersion = 7;
-						};
-						Tab1 = {
-							Frame = "{{0, 0}, {664, 208}}";
-							LauncherConfigVersion = 3;
-							Runner = {
-								Frame = "{{0, 0}, {664, 208}}";
-							};
-						};
-						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {666, 43}}";
-							BuildTranscriptFrame = "{{0, 52}, {666, 0}}";
-							Frame = "{{0, 0}, {664, 50}}";
-						};
-						Tab3 = {
-							Frame = "{{0, 0}, {612, 295}}";
-						};
-						TabCount = 4;
-						TabsVisible = NO;
-					};
-					SplitCount = 1;
-					Tab0 = {
-						Frame = "{{0, 0}, {313, 531}}";
-						GroupTreeTableConfiguration = (
-							TargetStatusColumn,
-							18,
-							MainColumn,
-							280,
-						);
-					};
-					Tab1 = {
-						ClassesFrame = "{{0, 0}, {280, 398}}";
-						ClassesTreeTableConfiguration = (
-							PBXBookColumnIdentifier,
-							20,
-							PBXClassColumnIdentifier,
-							237,
-						);
-						Frame = "{{0, 0}, {278, 659}}";
-						MembersFrame = "{{0, 407}, {280, 252}}";
-						MembersTreeTableConfiguration = (
-							PBXBookColumnIdentifier,
-							20,
-							PBXMethodColumnIdentifier,
-							236,
-						);
-					};
-					Tab2 = {
-						Frame = "{{0, 0}, {200, 100}}";
-					};
-					Tab3 = {
-						Frame = "{{0, 0}, {200, 557}}";
-						TargetTableConfiguration = (
-							ActiveObject,
-							16,
-							ObjectNames,
-							202.296,
-						);
-					};
-					Tab4 = {
-						BreakpointsTreeTableConfiguration = (
-							breakpointColumn,
-							197,
-							enabledColumn,
-							31,
-						);
-						Frame = "{{0, 0}, {250, 100}}";
-					};
-					TabCount = 5;
-					TabsVisible = YES;
-				};
-				StatusViewVisible = YES;
-				Template = F5CA7ECC015C09990DCA290F;
-				ToolbarVisible = YES;
-				WindowLocation = "{384, 299}";
+				WindowLocation = "{272, 647}";
 			};
 			PBXWorkspaceContents = (
 				{
@@ -265,10 +142,14 @@
 						Split0 = {
 							Split0 = {
 								NavContent0 = {
-									bookmark = F5C9C1E00329136501990B69;
+									bookmark = F512915F0331461501990B69;
 									history = (
-										F5C9C1DE0329136501990B69,
-										F5C9C0D30323EA5601990B69,
+										F51291160331461501990B69,
+										F51291170331461501990B69,
+										F51291180331461501990B69,
+										F51291190331461501990B69,
+										F512911A0331461501990B69,
+										F512911B0331461501990B69,
 									);
 									prevStack = (
 										F5C9C0D50323EA5601990B69,
@@ -281,11 +162,78 @@
 										F5C9C0DC0323EA5601990B69,
 										F5C9C0DD0323EA5601990B69,
 										F5C9C1DF0329136501990B69,
+										F512911C0331461501990B69,
+										F512911D0331461501990B69,
+										F512911E0331461501990B69,
+										F512911F0331461501990B69,
+										F51291200331461501990B69,
+										F51291210331461501990B69,
+										F51291220331461501990B69,
+										F51291230331461501990B69,
+										F51291240331461501990B69,
+										F51291250331461501990B69,
+										F51291260331461501990B69,
+										F51291270331461501990B69,
+										F51291280331461501990B69,
+										F51291290331461501990B69,
+										F512912A0331461501990B69,
+										F512912B0331461501990B69,
+										F512912C0331461501990B69,
+										F512912D0331461501990B69,
+										F512912E0331461501990B69,
+										F512912F0331461501990B69,
+										F51291300331461501990B69,
+										F51291310331461501990B69,
+										F51291320331461501990B69,
+										F51291330331461501990B69,
+										F51291340331461501990B69,
+										F51291350331461501990B69,
+										F51291360331461501990B69,
+										F51291370331461501990B69,
+										F51291380331461501990B69,
+										F51291390331461501990B69,
+										F512913A0331461501990B69,
+										F512913B0331461501990B69,
+										F512913C0331461501990B69,
+										F512913D0331461501990B69,
+										F512913E0331461501990B69,
+										F512913F0331461501990B69,
+										F51291400331461501990B69,
+										F51291410331461501990B69,
+										F51291420331461501990B69,
+										F51291430331461501990B69,
+										F51291440331461501990B69,
+										F51291450331461501990B69,
+										F51291460331461501990B69,
+										F51291470331461501990B69,
+										F51291480331461501990B69,
+										F51291490331461501990B69,
+										F512914A0331461501990B69,
+										F512914B0331461501990B69,
+										F512914C0331461501990B69,
+										F512914D0331461501990B69,
+										F512914E0331461501990B69,
+										F512914F0331461501990B69,
+										F51291500331461501990B69,
+										F51291510331461501990B69,
+										F51291520331461501990B69,
+										F51291530331461501990B69,
+										F51291540331461501990B69,
+										F51291550331461501990B69,
+										F51291560331461501990B69,
+										F51291570331461501990B69,
+										F51291580331461501990B69,
+										F51291590331461501990B69,
+										F512915A0331461501990B69,
+										F512915B0331461501990B69,
+										F512915C0331461501990B69,
+										F512915D0331461501990B69,
+										F512915E0331461501990B69,
 									);
 								};
 								NavCount = 1;
 								NavGeometry0 = {
-									Frame = "{{0, 0}, {572, 398}}";
+									Frame = "{{0, 0}, {726, 408}}";
 									NavBarVisible = YES;
 								};
 							};
@@ -317,27 +265,27 @@
 			);
 			PBXWorkspaceGeometries = (
 				{
-					ContentSize = "{856, 572}";
+					ContentSize = "{1009, 702}";
 					LeftSlideOut = {
 						ActiveTab = 0;
 						Collapsed = NO;
-						Frame = "{{0, 23}, {856, 549}}";
+						Frame = "{{0, 23}, {1009, 679}}";
 						Split0 = {
 							ActiveTab = 2;
 							Collapsed = NO;
-							Frame = "{{284, 0}, {572, 549}}";
+							Frame = "{{283, 0}, {726, 679}}";
 							Split0 = {
-								Frame = "{{0, 151}, {572, 398}}";
+								Frame = "{{0, 271}, {726, 408}}";
 							};
 							SplitCount = 1;
 							Tab0 = {
 								Debugger = {
 									Collapsed = NO;
-									Frame = "{{0, 0}, {572, 214}}";
+									Frame = "{{0, 0}, {725, 214}}";
 									Split0 = {
-										Frame = "{{0, 24}, {572, 190}}";
+										Frame = "{{0, 24}, {725, 190}}";
 										Split0 = {
-											Frame = "{{0, 0}, {279, 190}}";
+											Frame = "{{0, 0}, {354, 190}}";
 										};
 										Split1 = {
 											DebugVariablesTableConfiguration = (
@@ -346,9 +294,9 @@
 												Value,
 												86.07401,
 												Summary,
-												108.123,
+												186.123,
 											);
-											Frame = "{{288, 0}, {284, 190}}";
+											Frame = "{{363, 0}, {362, 190}}";
 										};
 										SplitCount = 2;
 									};
@@ -362,37 +310,37 @@
 									TabCount = 2;
 									TabsVisible = YES;
 								};
-								Frame = "{{0, 0}, {572, 214}}";
+								Frame = "{{0, 0}, {725, 214}}";
 								LauncherConfigVersion = 7;
 							};
 							Tab1 = {
-								Frame = "{{0, 0}, {572, 125}}";
+								Frame = "{{0, 0}, {725, 125}}";
 								LauncherConfigVersion = 3;
 								Runner = {
-									Frame = "{{0, 0}, {572, 125}}";
+									Frame = "{{0, 0}, {725, 125}}";
 								};
 							};
 							Tab2 = {
-								BuildMessageFrame = "{{0, 0}, {574, 120}}";
-								BuildTranscriptFrame = "{{0, 129}, {574, 0}}";
-								Frame = "{{0, 0}, {572, 127}}";
+								BuildMessageFrame = "{{0, 0}, {728, 104}}";
+								BuildTranscriptFrame = "{{0, 113}, {728, 136}}";
+								Frame = "{{0, 0}, {726, 247}}";
 							};
 							Tab3 = {
-								Frame = "{{0, 0}, {572, 265}}";
+								Frame = "{{0, 0}, {726, 265}}";
 							};
 							TabCount = 4;
 							TabsVisible = YES;
 						};
 						SplitCount = 1;
 						Tab0 = {
-							Frame = "{{0, 0}, {260, 549}}";
+							Frame = "{{0, 0}, {259, 679}}";
 							GroupTreeTableConfiguration = (
 								SCMStatusColumn,
 								22,
 								TargetStatusColumn,
 								18,
 								MainColumn,
-								205,
+								204,
 							);
 						};
 						Tab1 = {
@@ -416,7 +364,7 @@
 							Frame = "{{0, 0}, {226, 549}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {191, 549}}";
+							Frame = "{{0, 0}, {191, 679}}";
 							TargetTableConfiguration = (
 								ActiveObject,
 								16,
@@ -439,13 +387,86 @@
 					StatusViewVisible = YES;
 					Template = F5F68CF101725D4C0D7A8F4C;
 					ToolbarVisible = YES;
-					WindowLocation = "{249, 256}";
+					WindowLocation = "{251, 309}";
 				},
 			);
-			PBXWorkspaceStateSaveDate = 53543610;
+			PBXWorkspaceStateSaveDate = 53630093;
 		};
 		perUserProjectItems = {
-			F5C9C0D30323EA5601990B69 = F5C9C0D30323EA5601990B69;
+			F51291160331461501990B69 = F51291160331461501990B69;
+			F51291170331461501990B69 = F51291170331461501990B69;
+			F51291180331461501990B69 = F51291180331461501990B69;
+			F51291190331461501990B69 = F51291190331461501990B69;
+			F512911A0331461501990B69 = F512911A0331461501990B69;
+			F512911B0331461501990B69 = F512911B0331461501990B69;
+			F512911C0331461501990B69 = F512911C0331461501990B69;
+			F512911D0331461501990B69 = F512911D0331461501990B69;
+			F512911E0331461501990B69 = F512911E0331461501990B69;
+			F512911F0331461501990B69 = F512911F0331461501990B69;
+			F51291200331461501990B69 = F51291200331461501990B69;
+			F51291210331461501990B69 = F51291210331461501990B69;
+			F51291220331461501990B69 = F51291220331461501990B69;
+			F51291230331461501990B69 = F51291230331461501990B69;
+			F51291240331461501990B69 = F51291240331461501990B69;
+			F51291250331461501990B69 = F51291250331461501990B69;
+			F51291260331461501990B69 = F51291260331461501990B69;
+			F51291270331461501990B69 = F51291270331461501990B69;
+			F51291280331461501990B69 = F51291280331461501990B69;
+			F51291290331461501990B69 = F51291290331461501990B69;
+			F512912A0331461501990B69 = F512912A0331461501990B69;
+			F512912B0331461501990B69 = F512912B0331461501990B69;
+			F512912C0331461501990B69 = F512912C0331461501990B69;
+			F512912D0331461501990B69 = F512912D0331461501990B69;
+			F512912E0331461501990B69 = F512912E0331461501990B69;
+			F512912F0331461501990B69 = F512912F0331461501990B69;
+			F51291300331461501990B69 = F51291300331461501990B69;
+			F51291310331461501990B69 = F51291310331461501990B69;
+			F51291320331461501990B69 = F51291320331461501990B69;
+			F51291330331461501990B69 = F51291330331461501990B69;
+			F51291340331461501990B69 = F51291340331461501990B69;
+			F51291350331461501990B69 = F51291350331461501990B69;
+			F51291360331461501990B69 = F51291360331461501990B69;
+			F51291370331461501990B69 = F51291370331461501990B69;
+			F51291380331461501990B69 = F51291380331461501990B69;
+			F51291390331461501990B69 = F51291390331461501990B69;
+			F512913A0331461501990B69 = F512913A0331461501990B69;
+			F512913B0331461501990B69 = F512913B0331461501990B69;
+			F512913C0331461501990B69 = F512913C0331461501990B69;
+			F512913D0331461501990B69 = F512913D0331461501990B69;
+			F512913E0331461501990B69 = F512913E0331461501990B69;
+			F512913F0331461501990B69 = F512913F0331461501990B69;
+			F51291400331461501990B69 = F51291400331461501990B69;
+			F51291410331461501990B69 = F51291410331461501990B69;
+			F51291420331461501990B69 = F51291420331461501990B69;
+			F51291430331461501990B69 = F51291430331461501990B69;
+			F51291440331461501990B69 = F51291440331461501990B69;
+			F51291450331461501990B69 = F51291450331461501990B69;
+			F51291460331461501990B69 = F51291460331461501990B69;
+			F51291470331461501990B69 = F51291470331461501990B69;
+			F51291480331461501990B69 = F51291480331461501990B69;
+			F51291490331461501990B69 = F51291490331461501990B69;
+			F512914A0331461501990B69 = F512914A0331461501990B69;
+			F512914B0331461501990B69 = F512914B0331461501990B69;
+			F512914C0331461501990B69 = F512914C0331461501990B69;
+			F512914D0331461501990B69 = F512914D0331461501990B69;
+			F512914E0331461501990B69 = F512914E0331461501990B69;
+			F512914F0331461501990B69 = F512914F0331461501990B69;
+			F51291500331461501990B69 = F51291500331461501990B69;
+			F51291510331461501990B69 = F51291510331461501990B69;
+			F51291520331461501990B69 = F51291520331461501990B69;
+			F51291530331461501990B69 = F51291530331461501990B69;
+			F51291540331461501990B69 = F51291540331461501990B69;
+			F51291550331461501990B69 = F51291550331461501990B69;
+			F51291560331461501990B69 = F51291560331461501990B69;
+			F51291570331461501990B69 = F51291570331461501990B69;
+			F51291580331461501990B69 = F51291580331461501990B69;
+			F51291590331461501990B69 = F51291590331461501990B69;
+			F512915A0331461501990B69 = F512915A0331461501990B69;
+			F512915B0331461501990B69 = F512915B0331461501990B69;
+			F512915C0331461501990B69 = F512915C0331461501990B69;
+			F512915D0331461501990B69 = F512915D0331461501990B69;
+			F512915E0331461501990B69 = F512915E0331461501990B69;
+			F512915F0331461501990B69 = F512915F0331461501990B69;
 			F5C9C0D50323EA5601990B69 = F5C9C0D50323EA5601990B69;
 			F5C9C0D60323EA5601990B69 = F5C9C0D60323EA5601990B69;
 			F5C9C0D70323EA5601990B69 = F5C9C0D70323EA5601990B69;
@@ -455,9 +476,7 @@
 			F5C9C0DB0323EA5601990B69 = F5C9C0DB0323EA5601990B69;
 			F5C9C0DC0323EA5601990B69 = F5C9C0DC0323EA5601990B69;
 			F5C9C0DD0323EA5601990B69 = F5C9C0DD0323EA5601990B69;
-			F5C9C1DE0329136501990B69 = F5C9C1DE0329136501990B69;
 			F5C9C1DF0329136501990B69 = F5C9C1DF0329136501990B69;
-			F5C9C1E00329136501990B69 = F5C9C1E00329136501990B69;
 		};
 		projectwideBuildSettings = {
 		};
@@ -491,22 +510,740 @@
 		sourceDirectories = (
 		);
 	};
-	F5C9C0D30323EA5601990B69 = {
+	F51291160331461501990B69 = {
+		fRef = F5440D5202465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "makefile: 9";
+		rLen = 0;
+		rLoc = 208;
+		rType = 0;
+		vrLen = 208;
+		vrLoc = 0;
+	};
+	F51291170331461501990B69 = {
+		isa = PBXTargetBookmark;
+		trg = 08FB779FFE84155DC02AAC07;
+	};
+	F51291180331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 18";
+		rLen = 67;
+		rLoc = 271;
+		rType = 0;
+		vrLen = 491;
+		vrLoc = 0;
+	};
+	F51291190331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 14";
+		rLen = 0;
+		rLoc = 185;
+		rType = 0;
+		vrLen = 634;
+		vrLoc = 0;
+	};
+	F512911A0331461501990B69 = {
 		fRef = F51211000190489701990B20;
 		isa = PBXTextBookmark;
-		name = "quadtree.h: output";
-		rLen = 58;
-		rLoc = 2224;
+		name = "quadtree.h: 23";
+		rLen = 0;
+		rLoc = 340;
 		rType = 0;
-		vrLen = 608;
-		vrLoc = 1694;
+		vrLen = 492;
+		vrLoc = 144;
+	};
+	F512911B0331461501990B69 = {
+		fRef = F5440D5302465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "createlib: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 212;
+		vrLoc = 0;
+	};
+	F512911C0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 75";
+		rLen = 0;
+		rLoc = 2015;
+		rType = 0;
+		vrLen = 1021;
+		vrLoc = 1228;
+	};
+	F512911D0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 359";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 794;
+		vrLoc = 7826;
+	};
+	F512911E0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 50";
+		rLen = 0;
+		rLoc = 1105;
+		rType = 0;
+		vrLen = 1016;
+		vrLoc = 940;
+	};
+	F512911F0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: testtree";
+		rLen = 74;
+		rLoc = 213;
+		rType = 0;
+		vrLen = 663;
+		vrLoc = 0;
+	};
+	F51291200331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 18";
+		rLen = 32;
+		rLoc = 277;
+		rType = 0;
+		vrLen = 636;
+		vrLoc = 0;
+	};
+	F51291210331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 71";
+		rLen = 0;
+		rLoc = 1927;
+		rType = 0;
+		vrLen = 1208;
+		vrLoc = 1060;
+	};
+	F51291220331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 18";
+		rLen = 0;
+		rLoc = 271;
+		rType = 0;
+		vrLen = 829;
+		vrLoc = 0;
+	};
+	F51291230331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 32";
+		rLen = 79;
+		rLoc = 602;
+		rType = 0;
+		vrLen = 620;
+		vrLoc = 264;
+	};
+	F51291240331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 199";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 756;
+		vrLoc = 4114;
+	};
+	F51291250331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: addpt";
+		rLen = 0;
+		rLoc = 1927;
+		rType = 0;
+		vrLen = 1046;
+		vrLoc = 1246;
+	};
+	F51291260331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 44";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 725;
+		vrLoc = 534;
+	};
+	F51291270331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: quad";
+		rLen = 16;
+		rLoc = 749;
+		rType = 0;
+		vrLen = 755;
+		vrLoc = 342;
+	};
+	F51291280331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 44";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 722;
+		vrLoc = 534;
+	};
+	F51291290331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: testtree";
+		rLen = 74;
+		rLoc = 213;
+		rType = 0;
+		vrLen = 663;
+		vrLoc = 0;
+	};
+	F512912A0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: quad";
+		rLen = 16;
+		rLoc = 749;
+		rType = 0;
+		vrLen = 749;
+		vrLoc = 222;
+	};
+	F512912B0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: i";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 566;
+		vrLoc = 12264;
+	};
+	F512912C0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 23";
+		rLen = 0;
+		rLoc = 659;
+		rType = 0;
+		vrLen = 769;
+		vrLoc = 142;
+	};
+	F512912D0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 475";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 1155;
+		vrLoc = 11070;
+	};
+	F512912E0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 23";
+		rLen = 0;
+		rLoc = 659;
+		rType = 0;
+		vrLen = 769;
+		vrLoc = 142;
+	};
+	F512912F0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 881;
+		vrLoc = 1273;
+	};
+	F51291300331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 162";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 612;
+		vrLoc = 3392;
+	};
+	F51291310331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 881;
+		vrLoc = 1273;
+	};
+	F51291320331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 22";
+		rLen = 0;
+		rLoc = 629;
+		rType = 0;
+		vrLen = 789;
+		vrLoc = 146;
+	};
+	F51291330331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 572;
+		vrLoc = 179;
+	};
+	F51291340331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: x1";
+		rLen = 0;
+		rLoc = 284;
+		rType = 0;
+		vrLen = 824;
+		vrLoc = 0;
+	};
+	F51291350331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 182";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 602;
+		vrLoc = 3710;
+	};
+	F51291360331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 37";
+		rLen = 0;
+		rLoc = 935;
+		rType = 0;
+		vrLen = 420;
+		vrLoc = 527;
+	};
+	F51291370331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 573";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 723;
+		vrLoc = 13385;
+	};
+	F51291380331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 37";
+		rLen = 0;
+		rLoc = 935;
+		rType = 0;
+		vrLen = 800;
+		vrLoc = 147;
+	};
+	F51291390331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: output";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 1375;
+		vrLoc = 10742;
+	};
+	F512913A0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 45";
+		rLen = 0;
+		rLoc = 1925;
+		rType = 0;
+		vrLen = 554;
+		vrLoc = 146;
+	};
+	F512913B0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 561;
+		vrLoc = 179;
+	};
+	F512913C0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: output";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 795;
+		vrLoc = 10742;
+	};
+	F512913D0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 45";
+		rLen = 0;
+		rLoc = 1925;
+		rType = 0;
+		vrLen = 554;
+		vrLoc = 146;
+	};
+	F512913E0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: output";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 795;
+		vrLoc = 10742;
+	};
+	F512913F0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 1196;
+		vrLoc = 1097;
+	};
+	F51291400331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: output";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 1367;
+		vrLoc = 10490;
+	};
+	F51291410331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 25";
+		rLen = 0;
+		rLoc = 659;
+		rType = 0;
+		vrLen = 656;
+		vrLoc = 196;
+	};
+	F51291420331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 892;
+		vrLoc = 1097;
+	};
+	F51291430331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: init";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 436;
+		vrLoc = 1254;
+	};
+	F51291440331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 59";
+		rLen = 0;
+		rLoc = 1267;
+		rType = 0;
+		vrLen = 629;
+		vrLoc = 342;
+	};
+	F51291450331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 21";
+		rLen = 0;
+		rLoc = 489;
+		rType = 0;
+		vrLen = 635;
+		vrLoc = 196;
+	};
+	F51291460331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 78";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 399;
+		vrLoc = 1254;
+	};
+	F51291470331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: ";
+		rLen = 0;
+		rLoc = 954;
+		rType = 0;
+		vrLen = 628;
+		vrLoc = 342;
+	};
+	F51291480331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 64";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 394;
+		vrLoc = 1246;
+	};
+	F51291490331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: ";
+		rLen = 0;
+		rLoc = 954;
+		rType = 0;
+		vrLen = 628;
+		vrLoc = 342;
+	};
+	F512914A0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 23";
+		rLen = 0;
+		rLoc = 628;
+		rType = 0;
+		vrLen = 658;
+		vrLoc = 196;
+	};
+	F512914B0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: init";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 516;
+		vrLoc = 4379;
+	};
+	F512914C0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: vtest";
+		rLen = 0;
+		rLoc = 360;
+		rType = 0;
+		vrLen = 666;
+		vrLoc = 169;
+	};
+	F512914D0331461501990B69 = {
+		fRef = F5440D5302465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "createlib: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 212;
+		vrLoc = 0;
+	};
+	F512914E0331461501990B69 = {
+		fRef = F5440D5202465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "makefile: 9";
+		rLen = 0;
+		rLoc = 208;
+		rType = 0;
+		vrLen = 208;
+		vrLoc = 0;
+	};
+	F512914F0331461501990B69 = {
+		fRef = F5440D5302465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "createlib: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 212;
+		vrLoc = 0;
+	};
+	F51291500331461501990B69 = {
+		fRef = F5440D5202465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "makefile: 9";
+		rLen = 0;
+		rLoc = 208;
+		rType = 0;
+		vrLen = 208;
+		vrLoc = 0;
+	};
+	F51291510331461501990B69 = {
+		isa = PBXTargetBookmark;
+		trg = 08FB779FFE84155DC02AAC07;
+	};
+	F51291520331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: vtest";
+		rLen = 0;
+		rLoc = 360;
+		rType = 0;
+		vrLen = 929;
+		vrLoc = 169;
+	};
+	F51291530331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: change_vptr";
+		rLen = 278;
+		rLoc = 1875;
+		rType = 0;
+		vrLen = 955;
+		vrLoc = 236;
+	};
+	F51291540331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 73";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 474;
+		vrLoc = 1301;
+	};
+	F51291550331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: quad";
+		rLen = 4;
+		rLoc = 771;
+		rType = 0;
+		vrLen = 642;
+		vrLoc = 236;
+	};
+	F51291560331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: qpt";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 371;
+		vrLoc = 13275;
+	};
+	F51291570331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 88";
+		rLen = 0;
+		rLoc = 2284;
+		rType = 0;
+		vrLen = 612;
+		vrLoc = 1700;
+	};
+	F51291580331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: copytree";
+		rLen = 0;
+		rLoc = 674;
+		rType = 0;
+		vrLen = 530;
+		vrLoc = 415;
+	};
+	F51291590331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 23";
+		rLen = 0;
+		rLoc = 340;
+		rType = 0;
+		vrLen = 583;
+		vrLoc = 200;
+	};
+	F512915A0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 526";
+		rLen = 0;
+		rLoc = 566;
+		rType = 0;
+		vrLen = 503;
+		vrLoc = 12839;
+	};
+	F512915B0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 47";
+		rLen = 0;
+		rLoc = 1096;
+		rType = 0;
+		vrLen = 464;
+		vrLoc = 643;
+	};
+	F512915C0331461501990B69 = {
+		fRef = F51210FF0190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quad.cpp: 18";
+		rLen = 67;
+		rLoc = 271;
+		rType = 0;
+		vrLen = 491;
+		vrLoc = 0;
+	};
+	F512915D0331461501990B69 = {
+		fRef = F512110701904AE101990B20;
+		isa = PBXTextBookmark;
+		name = "main.cpp: 14";
+		rLen = 0;
+		rLoc = 185;
+		rType = 0;
+		vrLen = 634;
+		vrLoc = 0;
+	};
+	F512915E0331461501990B69 = {
+		fRef = F51211000190489701990B20;
+		isa = PBXTextBookmark;
+		name = "quadtree.h: 23";
+		rLen = 0;
+		rLoc = 340;
+		rType = 0;
+		vrLen = 492;
+		vrLoc = 144;
+	};
+	F512915F0331461501990B69 = {
+		fRef = F5440D5302465FF801990B20;
+		isa = PBXTextBookmark;
+		name = "createlib: 8";
+		rLen = 0;
+		rLoc = 212;
+		rType = 0;
+		vrLen = 214;
+		vrLoc = 0;
 	};
 	F5C9C0D50323EA5601990B69 = {
 		fRef = F51211000190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quadtree.h: 13";
 		rLen = 0;
-		rLoc = 221;
+		rLoc = 187;
 		rType = 0;
 		vrLen = 350;
 		vrLoc = 0;
@@ -515,8 +1252,8 @@
 		fRef = F51210FF0190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quad.cpp: addpt";
-		rLen = 50;
-		rLoc = 3451;
+		rLen = 0;
+		rLoc = 566;
 		rType = 0;
 		vrLen = 429;
 		vrLoc = 3494;
@@ -525,8 +1262,8 @@
 		fRef = F51211000190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quadtree.h: addpt";
-		rLen = 49;
-		rLoc = 1892;
+		rLen = 53;
+		rLoc = 1888;
 		rType = 0;
 		vrLen = 895;
 		vrLoc = 1306;
@@ -535,8 +1272,8 @@
 		fRef = F51210FF0190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quad.cpp: addpt";
-		rLen = 50;
-		rLoc = 3451;
+		rLen = 0;
+		rLoc = 566;
 		rType = 0;
 		vrLen = 429;
 		vrLoc = 3494;
@@ -545,8 +1282,8 @@
 		fRef = F51211000190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quadtree.h: addpt";
-		rLen = 49;
-		rLoc = 1892;
+		rLen = 53;
+		rLoc = 1888;
 		rType = 0;
 		vrLen = 895;
 		vrLoc = 1306;
@@ -555,8 +1292,8 @@
 		fRef = F51210FF0190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quad.cpp: addpt";
-		rLen = 50;
-		rLoc = 3451;
+		rLen = 0;
+		rLoc = 566;
 		rType = 0;
 		vrLen = 429;
 		vrLoc = 3494;
@@ -575,8 +1312,8 @@
 		fRef = F51210FF0190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quad.cpp: output";
-		rLen = 55;
-		rLoc = 9247;
+		rLen = 0;
+		rLoc = 566;
 		rType = 0;
 		vrLen = 403;
 		vrLoc = 9055;
@@ -591,34 +1328,14 @@
 		vrLen = 608;
 		vrLoc = 1694;
 	};
-	F5C9C1DE0329136501990B69 = {
-		fRef = F51210FF0190489701990B20;
-		isa = PBXTextBookmark;
-		name = "quad.cpp: output";
-		rLen = 0;
-		rLoc = 9298;
-		rType = 0;
-		vrLen = 395;
-		vrLoc = 9055;
-	};
 	F5C9C1DF0329136501990B69 = {
 		fRef = F51210FF0190489701990B20;
 		isa = PBXTextBookmark;
 		name = "quad.cpp: output";
 		rLen = 0;
-		rLoc = 9298;
+		rLoc = 566;
 		rType = 0;
 		vrLen = 395;
 		vrLoc = 9055;
-	};
-	F5C9C1E00329136501990B69 = {
-		fRef = F51211000190489701990B20;
-		isa = PBXTextBookmark;
-		name = "quadtree.h: 21";
-		rLen = 0;
-		rLoc = 342;
-		rType = 0;
-		vrLen = 351;
-		vrLoc = 0;
 	};
 }

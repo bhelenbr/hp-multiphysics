@@ -97,6 +97,7 @@
 				F512110701904AE101990B20,
 				F51211000190489701990B20,
 				F51210FF0190489701990B20,
+				F5129161033258B801990B69,
 			);
 			isa = PBXGroup;
 			name = Source;
@@ -136,6 +137,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F584D18701B43B0E01990B20,
+				F5129162033258B801990B69,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -143,8 +145,8 @@
 		08FB77A1FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5440D54024A823501990B20,
 				F512910F03311D6101990B69,
+				F51291630332596201990B69,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -213,6 +215,23 @@
 			settings = {
 			};
 		};
+		F5129161033258B801990B69 = {
+			isa = PBXFileReference;
+			path = quad_impl.h;
+			refType = 4;
+		};
+		F5129162033258B801990B69 = {
+			fileRef = F5129161033258B801990B69;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51291630332596201990B69 = {
+			fileRef = F51210FF0190489701990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F515DB4701A4706A01990B20 = {
 			buildActionMask = 2147483647;
 			files = (
@@ -244,12 +263,6 @@
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;
-		};
-		F5440D54024A823501990B20 = {
-			fileRef = F51210FF0190489701990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F584D18701B43B0E01990B20 = {
 			fileRef = F51211000190489701990B20;
