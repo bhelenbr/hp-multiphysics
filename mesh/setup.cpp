@@ -233,7 +233,7 @@ void mesh::bdrysidereorder(int bdrynum) {
 
 void mesh::bdrygroupreorder(void) {
    int i,j,k,sideord[MAXSB],nloop,strtloop[MAXSB],v0;
-   int bnum,bgn,end,count,min,mark;
+   int bnum,bgn,end,count,max,mark;
    struct boundary tmpsb;
    FLT sum;
    
@@ -282,10 +282,10 @@ FINDNEXT:
 /* JUST CHANGES SBEL POINTER DOESN'T MOVE WHOLE LIST */
 /*	THIS IS TO ENSURE ADAPTED MESHES ALWAYS HAVE THE SAME ORDERING   */
 /* MAINLY FOR DEBUGGING PURPOSES (ONLY WORKS FOR 1 LOOP) */
-   min = 1<<28;
+   max = -1;
    for(i=bgn;i<end;++i) {
-      if (sbdry[sideord[i]].type < min) {
-         min = sbdry[sideord[i]].type;
+      if (sbdry[sideord[i]].type > max) {
+         max = sbdry[sideord[i]].type;
          mark = i -bgn;
       }
    }
