@@ -207,10 +207,10 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
             }
          }
          fclose(out);
-         break;
-         
+         break; 
+                 
       default:
-         printf("That filetype is not supported for spectral_hp output\n");
+         out_mesh(name,typ);
          break;
      }
    
