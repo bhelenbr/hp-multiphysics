@@ -1,7 +1,7 @@
 // !$*UTF8*$!
 {
 	08FB7793FE84155DC02AAC07 = {
-		activeBuildStyle = 014CEA460018CE2711CA2923;
+		activeBuildStyle = 014CEA470018CE2711CA2923;
 		activeTarget = 08FB779FFE84155DC02AAC07;
 		addToTargets = (
 			08FB779FFE84155DC02AAC07,
@@ -47,10 +47,10 @@
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {1095, 209}}";
+							Frame = "{{0, 0}, {1021, 209}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {1095, 209}}";
+								Frame = "{{0, 0}, {1021, 209}}";
 							};
 						};
 						Tab2 = {
@@ -87,7 +87,7 @@
 						SplitCount = 2;
 					};
 					Tab4 = {
-						Frame = "{{0, 0}, {250, 582}}";
+						Frame = "{{0, 0}, {250, 942}}";
 					};
 					TabCount = 5;
 				};
