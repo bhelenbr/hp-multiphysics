@@ -26,7 +26,7 @@ void blocks::viz_init(int iopt) {
    char data[5][80], titl[80];
    static char blank[] = " ";
    static int len_blank = 1;
-   static char ttl[] = "# pV3 Initialization";
+   static char ttl[] = "# pV3 Initialization: ";
    static int len_titl;
    static INT num_keys = NKEYS;
    static INT len_tkeys = LEN_TKEYS;
@@ -104,7 +104,7 @@ void blocks::viz_init(int iopt) {
    
 */
    thisblocks = this;   
-   printf("%s",ttl);
+   printf("%s\n",ttl);
 
    mirr   = 0;
    istat  = 0;
@@ -116,7 +116,7 @@ void blocks::viz_init(int iopt) {
            ikeys, &tkeys[0][0], fkeys, &flims[0][0], &mirr, NULL, &zero,
            &istat, len_titl, len_blank, len_blank, LEN_TKEYS, LEN_TKEYS);
 
-   printf(" = %d with iopt: %d\n",istat,iopt);
+   printf("#pV3 Initialization = %d with iopt: %d\n",istat,iopt);
    
 }
 

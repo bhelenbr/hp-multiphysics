@@ -42,7 +42,7 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
    
    if (tinfo[tind] < 0) return(tind);
    
-   printf("In find and move %f %f\n",xp,yp);
+   printf("#In find and move %f %f\n",xp,yp);
 
    /* MOVE POINT WITH SIDE CURVATURE */
    crdtocht(tind);
