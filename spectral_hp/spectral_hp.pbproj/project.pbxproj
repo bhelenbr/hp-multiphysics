@@ -130,6 +130,7 @@
 				F533C5CF01938985017C3E7F,
 				F5D77C310191A7BB01990B20,
 				F52FC80E01BE791F01990B20,
+				6F31F91505C372FE00244B1E,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
 				F5A11A6A029ABBE001990B20,
@@ -185,11 +186,19 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
+		6F31F91505C372FE00244B1E = {
+			fileEncoding = 4;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = tadvance_dirk.cpp;
+			refType = 4;
+			sourceTree = "<group>";
+		};
 		6F36D9BC03C60AC700990B69 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.make;
-			path = makefile;
+			lastKnownFileType = text.script.sh;
+			path = build.sh;
 			refType = 4;
 			sourceTree = "<group>";
 		};
@@ -305,8 +314,8 @@
 				6FA5714105AE030D003EC856,
 				6FA5714205AE030D003EC856,
 				6FA5714305AE030D003EC856,
-				6FA5714405AE030D003EC856,
 				6FA5714505AE030D003EC856,
+				6FAD9BAF05C8AA5B00900638,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -455,12 +464,6 @@
 			settings = {
 			};
 		};
-		6FA5714405AE030D003EC856 = {
-			fileRef = F52FC80E01BE791F01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		6FA5714505AE030D003EC856 = {
 			fileRef = F50AF9AF0188AC3601990B20;
 			isa = PBXBuildFile;
@@ -537,6 +540,12 @@
 			path = sphp;
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6FAD9BAF05C8AA5B00900638 = {
+			fileRef = F52FC80E01BE791F01990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 //6F0
 //6F1
