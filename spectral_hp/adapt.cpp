@@ -55,12 +55,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    /* REDUCE maxsrch (KEEP FAILED TRIANGLE SEARCHES LOCAL) */
    mesh::maxsrch = 15;
    
-   /* BEGIN ADAPTION PROCEDURE */
-   swap();
-
-	/* COARSEN */ 
+	/* SWAP & COARSEN */ 
    nvrt0 = nvrtx;
-   yaber(1.0/tolerance);
+   yaber(1.0/tolerance,1,0.0);
       
    /* MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
    for(i=nvrt0-1;i>=nvrtx;--i) {
@@ -427,7 +424,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             touchd = MIN(touchd,sinfo[tside[tind].side[snum]]);
             
          if (touchd == -2) intwk2[tind] = -2;
-         else intwk2[i] = tinfo[tind];
+         else intwk2[tind] = tinfo[tind];  // 0 -> UNTOUCHED/UNMOVED OR > 0 -> ORIGINAL LOCATION
       }
       
       /* SET UP BDRY CONDITION INFO */

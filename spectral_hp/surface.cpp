@@ -90,11 +90,13 @@ void hp_mgrid::surfksrc1d() {
             surfrsdl(bnum, 0);
             
             /* TANGENTIAL MESH MOVEMENT SOURCE */   
-            for(i=0;i<sbdry[bnum].num+1;++i)
+            for(i=0;i<sbdry[bnum].num+1;++i) {
                srf->vdres[log2p][i][0] = -srf->gbl->vres[i][0];
+            }
 
-            for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+            for(i=0;i<sbdry[bnum].num*b.sm;++i) {
                srf->sdres[log2p][i][0] = -srf->gbl->sres[i][0];
+            }
          }
       }
    }

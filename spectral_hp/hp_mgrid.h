@@ -191,6 +191,7 @@ class hp_mgrid : public spectral_hp {
       void pvsurface(int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
       void pvvect(int *key,float v[][3]);
       void flotov(struct vsi flo,int nvar, float *v);
+      void logflotov(struct vsi flo,int nvar, float *v);
 #endif
 };
 

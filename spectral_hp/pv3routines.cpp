@@ -23,6 +23,7 @@ int npvgrds;
 class hp_mgrid **pvgrds;
 
 void flotov(struct vsi,int nvar, float *v);
+void logflotov(struct vsi,int nvar, float *v);
 
 int strcpn(char *str1,char *str2);
 int strcpb(char *str1,char *str2, int len);
@@ -55,8 +56,8 @@ void blocks::viz_init(void) {
    static INT zero = 0;
    static INT fkeys[NKEYS] = { 1,1,1,1,1,1}; // ,1,1,1,1,2};
    static INT ikeys[NKEYS] = { 'u','v','p','U','V','P'}; // ,'x','y','X','Y','a'};
-   static FLOAT flims[NKEYS][2] = {{0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
-                            {0.0, 0.0},  {0.0, 0.0}}; //, {0.0, 0.0},  {0.0, 0.0}, 
+   static FLOAT flims[NKEYS][2] = {{0.0, 0.0},  {0.0, 0.0}, {0.0, 0.0}, {-16.0, 1.0},
+                            {-16.0, 1.0},  {-16.0, 1.0}}; //, {0.0, 0.0},  {0.0, 0.0}, 
                         //    {0.0, 0.0},  {0.0, 0.0}, {1.0, 0.0}};
 
    INT iopt, mirr, knode, kequiv, kcel1, kcel2, kcel3, kcel4, knptet, kptet;
@@ -453,13 +454,13 @@ void hp_mgrid::pvscal(int *key, float *v) {
 
       /* RESIDUALS */
       case 4: /* u-velocity */
-         flotov(gbl->res,0,v);
+         logflotov(gbl->res,0,v);
          break;
       case 5: /* v-velocity */
-         flotov(gbl->res,1,v);
+         logflotov(gbl->res,1,v);
          break;
       case 6: /* pressure */
-         flotov(gbl->res,2,v);
+         logflotov(gbl->res,2,v);
          break;         
          
 #ifdef SKIP         
@@ -563,6 +564,43 @@ void hp_mgrid::flotov(struct vsi flo,int nvar, float *v) {
             for(i=1;i<b.sm;++i)
                for(j=1;j<b.sm-(i-1);++j)
                   v[kn++] = u[nvar][i][j];               
+         }
+      }
+   }
+   
+   for(i=0;i<kn;++i)
+      v[i+kn] = v[i];
+
+   return;
+}
+
+void hp_mgrid::logflotov(struct vsi flo,int nvar, float *v) {
+   static int i,j,tind,sind,kn;
+   
+    kn = 0;
+   /* VERTEX MODES */
+   for(i=0;i<nvrtx;++i)
+      v[kn++] = log10(fabs(flo.v[i][nvar]) +EPSILON);
+   
+   if (b.p > 1) {
+      /* SIDE MODES */
+      for(sind=0;sind<nside;++sind) {
+         ugtouht1d(sind,flo);
+         b.proj1d_leg(uht[nvar],u[nvar][0]);
+
+         for(i=1;i<b.sm+1;++i)
+            v[kn++] = log10(fabs(u[nvar][0][i]) +EPSILON);   
+      }
+
+      /* INTERIOR MODES */
+      if (b.p > 2) {
+         for(tind = 0; tind < ntri; ++tind) {
+            ugtouht(tind,flo);
+            b.proj_leg(uht[nvar],u[nvar]);
+               
+            for(i=1;i<b.sm;++i)
+               for(j=1;j<b.sm-(i-1);++j)
+                  v[kn++] = log10(fabs(u[nvar][i][j])+EPSILON);               
          }
       }
    }

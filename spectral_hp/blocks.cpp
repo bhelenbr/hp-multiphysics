@@ -152,6 +152,7 @@ void blocks::init(char *file) {
             printf("#Reading restart mesh: %s\n",outname);
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
+         blk[i].grd[0].surfvrttoug(); // NECESSARY FOR CORRECT SURFKSRC CALCULATION
       }
       hp_mgrid::setbd(MXSTEP);
             
@@ -364,7 +365,8 @@ void blocks::endcycle() {
 
 
 void blocks::go() {
-   int i,tstep;
+   int i,j,tstep;
+   char outname[20], bname[20];
    
    for(tstep=readin;tstep<ntstep;++tstep) {
       
@@ -388,7 +390,55 @@ void blocks::go() {
          output(tstep+1,text);
          output(tstep+1,tecplot);
       }
-      
+       
+
+/*		THIS IS TO ALLOW EXACT RESTARTS WHEN DEBUGGING */
+      for(i=0;i<nblocks;++i) {
+         readin = tstep +1;
+         /* INPUT MESH */
+         number_str(bname,"mesh",readin,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1);
+         printf("#Reading mesh: %s\n",outname);
+         blk[i].grd[0].in_mesh(outname,grid);  
+         blk[i].grd[0].spectral_hp::setbcinfo();
+
+         /* FOR ADAPTIVE MESH */ 
+         if (adapt) {
+            number_str(bname,"vlgth",readin,3);
+            strcat(bname, ".");
+            number_str(outname, bname, i, 1);
+            printf("#Reading vlength: %s\n",outname);
+            blk[i].grd[0].inlength(outname);
+         }
+         /* READ SOLUTION */ 
+         number_str(bname,"data",readin,3);
+         strcat(bname, ".");
+         number_str(outname, bname, i, 1); 
+         printf("#Reading solution: %s\n",outname);
+         blk[i].grd[0].spectral_hp::input(outname,text);
+
+         /* INPUT UNSTEADY TIME HISTORY */
+         number_str(outname,"rstrtdata",readin,3);
+         strcat(outname, ".");
+         number_str(bname, outname, i, 1);
+         for(j=0;j<MXSTEPM1;++j) {
+            number_str(outname,bname,j,1);
+            printf("#Reading restart data: %s\n",outname);
+            blk[i].grd[0].input(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,text);
+         }
+   
+         number_str(outname,"rstrtvrtx",readin,3);
+         strcat(outname, ".");
+         number_str(bname, outname, i, 1);
+         for(j=0;j<MXSTEPM1;++j) {
+            number_str(outname,bname,j,1);
+            printf("#Reading restart mesh: %s\n",outname);
+            blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+         }
+         blk[i].grd[0].surfvrttoug();  // NECESSARY FOR CORRECT SURFKSRC CALCULATION
+      }
+
       if (adapt && tstep != ntstep-1) {
          adaptation();
          for(i=0;i<nblocks;++i)

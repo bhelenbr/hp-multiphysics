@@ -190,7 +190,7 @@ void hp_mgrid::tadvance() {
    /* UPDATE UNSTEADY INFLOW VARIABLES */
    setinflow();
 
-   /* MOVE VERTEX INFO FOR FREE SURFACES TO UKNOWN VECTOR */
+   /* MOVE EXTRAPOLATED VERTEX INFO FOR FREE SURFACES TO UKNOWN VECTOR */
    surfvrttoug();
 
    return;

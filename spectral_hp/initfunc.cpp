@@ -139,7 +139,7 @@ double df1d(int n, double x, double y, int dir) {
 #endif
 
 /***************************/
-   /* CURVED SIDE DEFINITIONS */
+/* CURVED SIDE DEFINITIONS */
 /***************************/
 /* FOR A SPHERE */
 FLT rad = 0.5;
