@@ -77,6 +77,8 @@ void hp_mgrid::setksprg1d() {
 void hp_mgrid::surfksrc1d() {
    int i,bnum;
    class surface *srf;
+   
+   surfrsdl(0);
 
    for(bnum=0;bnum<nsbd;++bnum) {
       if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
@@ -88,8 +90,6 @@ void hp_mgrid::surfksrc1d() {
 
             for(i=0;i<sbdry[bnum].num*b.sm;++i) 
                srf->sdres[log2p][i][0] = 0.0;
-
-            surfrsdl(bnum, 0);
             
             /* TANGENTIAL MESH MOVEMENT SOURCE */   
             for(i=0;i<sbdry[bnum].num+1;++i) {
@@ -107,259 +107,290 @@ void hp_mgrid::surfksrc1d() {
    return;
 }
 
-void hp_mgrid::surfrsdl(int bnum, int mgrid) {
-   int i,m,n,sind,indx,indx1,count,v0;
+#ifdef DROP
+extern FLT amp,lam,theta;
+FLT dydt = 0.0;
+static FLT vflux = 0.0;
+#endif
+
+void hp_mgrid::surfrsdl(int mgrid) {
+   int i,m,n,sind,indx,indx1,count,v0,bnum;
    FLT ubar[ND], norm[ND], rp[ND], jcb;
    FLT sigor, drhor;
    class surface *srf;
 
-   if (!(sbdry[bnum].type&(IFCE_MASK +FSRF_MASK))) {
-      printf("error shouldn't be in surfrsdl\n");
-      exit(1);
-   }
 
-   srf = static_cast<class surface *>(sbdry[bnum].misc);
+   for(bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
 
-   /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */
-   if (srf == NULL) return;
+      srf = static_cast<class surface *>(sbdry[bnum].misc);
+      if (srf == NULL) continue;
 
-   /* DETRMINE DX CORRECTION TO CONSERVE AREA */
-   /* IMPORTANT FOR STEADY SOLUTIONS */
-   /* SINCE THERE ARE MULTIPLE STEADY-STATES */
+      /* DETRMINE DX CORRECTION TO CONSERVE AREA */
+      /* IMPORTANT FOR STEADY SOLUTIONS */
+      /* SINCE THERE ARE MULTIPLE STEADY-STATES */
 #ifdef DROP
-   /* TO ENSURE GET CORRECT VOLUME */
-   FLT avg[5],vflux,rbar; 
-   integrated_averages(avg);
-   rbar  = pow(3.*0.5*avg[0],1.0/3.0);
-   vflux =  1.0*(rbar -0.5);
-
-   /* ESTIMATE C_D BASED ON SPHERE */
-   FLT cd,re;
-   re = 1.0/srf->gbl->mu2;
-   cd = 24./re*(1 +0.1935*pow(re,0.6305));
-#ifdef INERTIALESS
-   cd = 24./re;
-#endif
-   cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-   g = 1.0*(avg[2]) +1.0*avg[4] +12.*cd/(gbl->rho -srf->gbl->rho2);
-   
-    static FILE *fp = 0;
-    static int counter = 0;
-    if (!fp) fp = fopen("size.dat","w");
-    if (mgrid==0 && fp) fprintf(fp,"%d %e %e %e\n",counter++,fabs(rbar-0.5),vflux,g);
-#endif
-   
-   count = 0;
-   sigor = srf->gbl->sigma/(gbl->rho +srf->gbl->rho2);
-   drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
-         
-   /**************************************************/
-   /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
-   /**************************************************/
-   for(n=0;n<ND;++n)
-      srf->gbl->vres[0][n] = 0.0;
- 
-   for(n=0;n<NV;++n) 
-      binfo[bnum][0].flx[n] = 0.0;
-
-   for(indx=0;indx<sbdry[bnum].num;++indx) {
-      sind = sbdry[bnum].el[indx];
-
-      /* UG STORES THE CURRENT BOUNDARY POSITION */
-      for(n=0;n<ND;++n) {
-         uht[n][0] = srf->vug[indx][n];
-         uht[n][1] = srf->vug[indx+1][n];
-      }
-      if (b.sm > 0) {
-         indx1 = indx*sm0;
-         for(m=0;m<b.sm;++m)
-            for(n=0;n<ND;++n)
-               uht[n][m+2] = srf->sug[indx1 +m][n];
-      }
-
-      for(n=0;n<ND;++n)
-         b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
-         
-      crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
-      for(n=0;n<ND;++n)
-         b.proj1d(cht[n],mvel[n][0]);
-
-      ugtouht1d(sind);
-      for(n=0;n<ND;++n)
-         b.proj1d(uht[n],u[n][0]);   
+      /* TO ENSURE GET CORRECT VOLUME */
+      FLT avg[5],rbar; 
+      integrated_averages(avg);
+      rbar  = pow(3.*0.5*avg[0],1.0/3.0);
+      vflux =  amp*(rbar -0.5);
       
-      for(i=0;i<b.gpx;++i) {
-         norm[0] =  dcrd[1][0][0][i];
-         norm[1] = -dcrd[0][0][0][i];
-         jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
-         /* RELATIVE VELOCITY STORED IN MVEL[N][0]*/
+      resy = dydt -(1.0*avg[4] +theta*avg[2]);
+      if (mgrid) {
+         if (isfrst) {
+            dresy[log2p] = resy0 -resy;
+         }
+         resy += dresy[log2p];
+      }
+
+      /* C_D TO G CONVERSION REMINDER 
+      re = 1.0/srf->gbl->mu2;
+      cd = 24./re*(1 +0.1935*pow(re,0.6305));
+      cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
+      g = amp*(avg[2] +avg[4]) +12.*cd/(gbl->rho -srf->gbl->rho2);
+      */
+#endif
+      
+      count = 0;
+      sigor = srf->gbl->sigma/(gbl->rho +srf->gbl->rho2);
+      drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
+            
+      /**************************************************/
+      /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
+      /**************************************************/
+      for(n=0;n<ND;++n)
+         srf->gbl->vres[0][n] = 0.0;
+    
+      for(n=0;n<NV;++n) 
+         binfo[bnum][0].flx[n] = 0.0;
+
+      for(indx=0;indx<sbdry[bnum].num;++indx) {
+         sind = sbdry[bnum].el[indx];
+
+         /* UG STORES THE CURRENT BOUNDARY POSITION */
+         for(n=0;n<ND;++n) {
+            uht[n][0] = srf->vug[indx][n];
+            uht[n][1] = srf->vug[indx+1][n];
+         }
+         if (b.sm > 0) {
+            indx1 = indx*sm0;
+            for(m=0;m<b.sm;++m)
+               for(n=0;n<ND;++n)
+                  uht[n][m+2] = srf->sug[indx1 +m][n];
+         }
          for(n=0;n<ND;++n)
-            mvel[n][0][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +mvel[n][0][i]); // +vflux*norm[n]/jcb); 
+            b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+            
+         crdtocht1d(sind,dvrtdt,gbl->dbinfodt);
+         for(n=0;n<ND;++n)
+            b.proj1d(cht[n],mvel[n][0]);
 
-         /* TANGENTIAL SPACING & NORMAL FLUX */            
-         res[0][0][i] = -srf->ksprg[indx]*jcb;
-         res[1][0][i] = -RAD1D(i)*(mvel[0][0][i]*norm[0] +mvel[1][0][i]*norm[1]);
-         res[1][1][i] = -res[1][0][i]*srf->gbl->meshc[indx];
+         ugtouht1d(sind);
+         for(n=0;n<ND;++n)
+            b.proj1d(uht[n],u[n][0]);   
+         
+         for(i=0;i<b.gpx;++i) {
+            norm[0] =  dcrd[1][0][0][i];
+            norm[1] = -dcrd[0][0][0][i];
+            jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+            
+            /* RELATIVE VELOCITY STORED IN MVEL[N][0]*/
+            for(n=0;n<ND;++n)
+               mvel[n][0][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +mvel[n][0][i]);
+               
 #ifdef DROP
-         res[2][0][i] = +RAD1D(i)*vflux*jcb;
+            mvel[1][0][i] -= dydt;
+#endif
+            /* TANGENTIAL SPACING & NORMAL FLUX */            
+            res[0][0][i] = -srf->ksprg[indx]*jcb;
+            res[1][0][i] = -RAD1D(i)*(mvel[0][0][i]*norm[0] +mvel[1][0][i]*norm[1]);
+            res[1][1][i] = -res[1][0][i]*(-norm[1]*mvel[0][0][i] +norm[0]*mvel[1][0][i])/jcb*srf->gbl->meshc[indx];
+#ifdef DROP
+            res[2][0][i] = +RAD1D(i)*vflux*jcb;
+#endif
+            
+            /* SURFACE TENSION SOURCE TERM */ 
+            u[0][0][i] = +RAD1D(i)*srf->gbl->sigma*norm[1]/jcb;
+            u[0][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
+#ifdef AXISYMMETRIC
+            u[0][1][i] += srf->gbl->sigma*jcb;
+#endif
+            u[1][0][i] = -RAD1D(i)*srf->gbl->sigma*norm[0]/jcb;
+            u[1][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
+         }
+         
+         for(m=0;m<b.sm+2;++m)
+            cf[0][m] = 0.0;
+
+         /* INTEGRATE & STORE SURFACE RESIDUALS */               
+         b.intgrtx1d(res[0][0],cf[0]);
+         b.intgrt1d(res[1][0],cf[1]);
+         b.intgrtx1d(res[1][1],cf[1]);
+         
+#ifdef DROP
+         b.intgrt1d(res[2][0],lf[2]);
 #endif
          
-         /* SURFACE TENSION SOURCE TERM */ 
-         u[0][0][i] = +RAD1D(i)*srf->gbl->sigma*norm[1]/jcb;
-         u[0][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[0];
-#ifdef AXISYMMETRIC
-         u[0][1][i] += srf->gbl->sigma*jcb;
-#endif
-         u[1][0][i] = -RAD1D(i)*srf->gbl->sigma*norm[0]/jcb;
-         u[1][1][i] = +RAD1D(i)*(gbl->rho -srf->gbl->rho2)*g*crd[1][0][i]*norm[1];            
-      }
-      
-      for(m=0;m<b.sm+2;++m)
-         cf[0][m] = 0.0;
-
-      /* INTEGRATE & STORE SURFACE RESIDUALS */               
-      b.intgrtx1d(res[0][0],cf[0]);
-      b.intgrt1d(res[1][0],cf[1]);
-      b.intgrtx1d(res[1][1],cf[1]);
-      
+         /* TEMPORARY TO LEAVE TANGENTiAL POSITION TOTALLY FREE
+         for(m=0;m<b.sm+2;++m)
+            cf[0][m] = 0.0;
+          */
+         
+         /* STORE IN RES */
+         for(n=0;n<ND;++n) {
+            srf->gbl->vres[indx][n] += cf[n][0];
+            srf->gbl->vres[indx+1][n] = cf[n][1];
+            for(m=0;m<b.sm;++m)
+               srf->gbl->sres[b.sm*indx +m][n] = cf[n][m+2];
+         }
+         
 #ifdef DROP
-      b.intgrt1d(res[2][0],lf[2]);
-#endif
-      
-      /* TEMPORARY TO LEAVE TANGENTiAL POSITION TOTALLY FREE
-      for(m=0;m<b.sm+2;++m)
-         cf[0][m] = 0.0;
-       */
-      
-      /* STORE IN RES */
-      for(n=0;n<ND;++n) {
-         srf->gbl->vres[indx][n] += cf[n][0];
-         srf->gbl->vres[indx+1][n] = cf[n][1];
+         srf->gbl->vres[indx][1] += lf[2][0];
+         srf->gbl->vres[indx+1][1] += lf[2][1];
          for(m=0;m<b.sm;++m)
-            srf->gbl->sres[b.sm*indx +m][n] = cf[n][m+2];
-      }
-      
-#ifdef DROP
-      srf->gbl->vres[indx][1] += lf[2][0];
-      srf->gbl->vres[indx+1][1] += lf[2][1];
-      for(m=0;m<b.sm;++m)
-         srf->gbl->sres[b.sm*indx +m][1] += lf[2][m+2];
+            srf->gbl->sres[b.sm*indx +m][1] += lf[2][m+2];
 #endif
+         
+         /* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
+         b.intgrt1d(u[0][1],lf[0]);
+         b.intgrtx1d(u[0][0],lf[0]);
+         b.intgrt1d(u[1][1],lf[1]);
+         b.intgrtx1d(u[1][0],lf[1]);
       
-      /* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-      b.intgrt1d(u[0][1],lf[0]);
-      b.intgrtx1d(u[0][0],lf[0]);
-      b.intgrt1d(u[1][1],lf[1]);
-      b.intgrtx1d(u[1][0],lf[1]);
-   
-      /* MASS FLUX PRECONDITIONER */
-      for(m=0;m<b.sm+2;++m)
-         lf[2][m] = -gbl->rho*cf[1][m];
+         /* MASS FLUX PRECONDITIONER */
+         for(m=0;m<b.sm+2;++m)
+            lf[2][m] = -gbl->rho*cf[1][m];
 
 #ifndef INERTIALESS
-      /* FOR FREE-SURFACE MOMENTUM FLUX PRECONDITIONING */
-      if (sbdry[bnum].type&FSRF_MASK) {
          for (n=0;n<ND;++n) 
             ubar[n] = 0.5*(uht[n][0] +uht[n][1]);
             
          for (n=0;n<ND;++n) {
-            lf[n][0] -= uht[n][0]*cf[1][0];
-            lf[n][1] -= uht[n][1]*cf[1][1];
+            lf[n][0] -= uht[n][0]*(gbl->rho -srf->gbl->rho2)*cf[1][0];
+            lf[n][1] -= uht[n][1]*(gbl->rho -srf->gbl->rho2)*cf[1][1];
             for(m=0;m<b.sm;++m)
-               lf[n][m+2] -= ubar[n]*cf[1][m+2];
+               lf[n][m+2] -= ubar[n]*(gbl->rho -srf->gbl->rho2)*cf[1][m+2];
          }
-      }
 #endif
 
-      /* STORE IN BINFO.FLUX */
-      for(n=0;n<NV;++n) 
-         binfo[bnum][count].flx[n] += lf[n][0];
-      ++count;
-      
-      for(m=0;m<b.sm;++m) {
-         for(n=0;n<NV;++n)
-            binfo[bnum][count].flx[n] = lf[n][m+2];
+         /* STORE IN BINFO.FLUX */
+         for(n=0;n<NV;++n) 
+            binfo[bnum][count].flx[n] += lf[n][0];
          ++count;
+         
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<NV;++n)
+               binfo[bnum][count].flx[n] = lf[n][m+2];
+            ++count;
+         }
+         
+         for(n=0;n<NV;++n)
+            binfo[bnum][count].flx[n] = lf[n][1];
       }
       
-      for(n=0;n<NV;++n)
-         binfo[bnum][count].flx[n] = lf[n][1];
-   }
-   
-   /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-   v0 = svrtx[sbdry[bnum].el[0]][0];
-   for(i=0;i<nvbd;++i) {
-      if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+      /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+      v0 = svrtx[sbdry[bnum].el[0]][0];
+      for(i=0;i<nvbd;++i) {
+         if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
 
-      /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-      crdtocht1d(sbdry[bnum].el[0]);
-      b.ptprobe1d(2,cht,rp,norm,-1.0);
-      jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+         /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+         crdtocht1d(sbdry[bnum].el[0]);
+         b.ptprobe1d(2,cht,rp,norm,-1.0);
+         jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 #ifdef AXISYMMETRIC
-      binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
-      binfo[bnum][0].flx[1] -= -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+         binfo[bnum][0].flx[0] -= -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+         binfo[bnum][0].flx[1] -= -rp[0]*srf->gbl->sigma*norm[1]/jcb;
 #else
-      binfo[bnum][0].flx[0] -= -srf->gbl->sigma*norm[0]/jcb;
-      binfo[bnum][0].flx[1] -= -srf->gbl->sigma*norm[1]/jcb;
+         binfo[bnum][0].flx[0] -= -srf->gbl->sigma*norm[0]/jcb;
+         binfo[bnum][0].flx[1] -= -srf->gbl->sigma*norm[1]/jcb;
 #endif
-   }
-   
-   /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-   v0 = svrtx[sbdry[bnum].el[sbdry[bnum].num -1]][1];
-   for(i=0;i<nvbd;++i) {
-      if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
-
-      /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-      crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
-      b.ptprobe1d(2,cht,rp,norm,1.0);
-      jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
-#ifdef AXISYMMETRIC
-      binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
-      binfo[bnum][count].flx[1] += -rp[0]*srf->gbl->sigma*norm[1]/jcb;
-#else
-      binfo[bnum][count].flx[0] += -srf->gbl->sigma*norm[0]/jcb;
-      binfo[bnum][count].flx[1] += -srf->gbl->sigma*norm[1]/jcb;
-#endif
-   }   
-   
+      }
       
-   /************************************************/
-   /* MODIFY SURFACE RESIDUALS ON COARSER MESHES   */
-   /************************************************/   
-   if(mgrid) {
-      if (isfrst) {
+      /* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+      v0 = svrtx[sbdry[bnum].el[sbdry[bnum].num -1]][1];
+      for(i=0;i<nvbd;++i) {
+         if (vbdry[i].el[0] != v0 || !(vbdry[i].type&OUTF_MASK)) continue;
+
+         /* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+         crdtocht1d(sbdry[bnum].el[sbdry[bnum].num -1]);
+         b.ptprobe1d(2,cht,rp,norm,1.0);
+         jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
+#ifdef AXISYMMETRIC
+         binfo[bnum][count].flx[0] += -rp[0]*srf->gbl->sigma*norm[0]/jcb;
+         binfo[bnum][count].flx[1] += -rp[0]*srf->gbl->sigma*norm[1]/jcb;
+#else
+         binfo[bnum][count].flx[0] += -srf->gbl->sigma*norm[0]/jcb;
+         binfo[bnum][count].flx[1] += -srf->gbl->sigma*norm[1]/jcb;
+#endif
+      }   
+         
+      /************************************************/
+      /* MODIFY SURFACE RESIDUALS ON COARSER MESHES   */
+      /************************************************/   
+      if(mgrid) {
+         if (isfrst) {
+            for(i=0;i<sbdry[bnum].num+1;++i) {
+               for(n=0;n<ND;++n)
+                  srf->vdres[log2p][i][n] = surface::fadd[n]*srf->gbl->vres0[i][n] -srf->gbl->vres[i][n];
+            }
+            for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+               for(n=0;n<ND;++n)
+                  srf->sdres[log2p][i][n] = surface::fadd[n]*srf->gbl->sres0[i][n] -srf->gbl->sres[i][n];
+            }
+         }
          for(i=0;i<sbdry[bnum].num+1;++i) {
             for(n=0;n<ND;++n)
-               srf->vdres[log2p][i][n] = surface::fadd[n]*srf->gbl->vres0[i][n] -srf->gbl->vres[i][n];
+               srf->gbl->vres[i][n] += srf->vdres[log2p][i][n];
          }
          for(i=0;i<sbdry[bnum].num*b.sm;++i) {
-            for(n=0;n<ND;++n)
-               srf->sdres[log2p][i][n] = surface::fadd[n]*srf->gbl->sres0[i][n] -srf->gbl->sres[i][n];
+            for(n=0;n<ND;++n)      
+               srf->gbl->sres[i][n] += srf->sdres[log2p][i][n];
          }
       }
-      for(i=0;i<sbdry[bnum].num+1;++i) {
-         for(n=0;n<ND;++n)
-            srf->gbl->vres[i][n] += srf->vdres[log2p][i][n];
-      }
-      for(i=0;i<sbdry[bnum].num*b.sm;++i) {
-         for(n=0;n<ND;++n)      
-            srf->gbl->sres[i][n] += srf->sdres[log2p][i][n];
-      }
-   }
-   else {
-      /* ADD TANGENTIAL MESH MOVEMENT SOURCE */   
-      for(i=0;i<sbdry[bnum].num+1;++i)
-         srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
+      else {
+         /* ADD TANGENTIAL MESH MOVEMENT SOURCE */   
+         for(i=0;i<sbdry[bnum].num+1;++i)
+            srf->gbl->vres[i][0] += srf->vdres[log2p][i][0];
 
-      for(i=0;i<sbdry[bnum].num*b.sm;++i) 
-         srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
-   }
+         for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+            srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
+      }
+      
+      
+      if (sbdry[bnum].type&IFCE_MASK) {
+      /* THIS IS TO SEND CONTINUITY FLUX FOR INTERFACE */
+         class spectral_hp *tgt = static_cast<spectral_hp *>(sbdry[bnum].adjmesh);
+         int vbnum = sbdry[bnum].adjbnum;
+         int msgn;
+                  
+         int count1 = 0;
+         for(i=0;i<sbdry[bnum].num;++i) {
+            tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*binfo[bnum][count].flx[2]/gbl->rho;
+                     
+            count -= b.sm;
+            msgn = 1;
+            for(m=0;m<b.sm;++m) {
+               tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*msgn*binfo[bnum][count++].flx[2]/gbl->rho;
+               msgn *= -1;
+            }
+            count -= (b.sm+1);
+            
+         }
+         tgt->binfo[vbnum][count1++].flx[2] = -srf->gbl->rho2*binfo[bnum][0].flx[2]/gbl->rho;
+         
+         for(i=0;i<count1;++i)
+            for (n=0;n<ND;++n)
+               tgt->binfo[vbnum][i].flx[n] = 0.0;
+      }
 
-//   for(i=0;i<sbdry[bnum].num+1;++i)
-//      printf("vres: %d %e %e\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
-//         
-//   for(i=0;i<sbdry[bnum].num*b.sm;++i)
-//      printf("sres: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
+//      for(i=0;i<sbdry[bnum].num+1;++i)
+//         printf("vres: %d %e %e\n",i,srf->gbl->vres[i][0],srf->gbl->vres[i][1]);
+//            
+//      for(i=0;i<sbdry[bnum].num*b.sm;++i)
+//         printf("sres: %f %f\n",srf->gbl->sres[i][0],srf->gbl->sres[i][1]);
+         
+   }
 
    return;
 }
@@ -561,20 +592,6 @@ void hp_mgrid::surfdt1(int bnum) {
    else
       nu2 = 0.0;
 
-#ifdef DROP
-   /* ESTIMATE C_D BASED ON SPHERE */
-   FLT avg[5],cd,re;
-   integrated_averages(avg);
-   re = 1.0/srf->gbl->mu2;
-   cd = 24./re*(1 +0.1935*pow(re,0.6305));
-#ifdef INERTIALESS
-   cd = 24./re;
-#endif
-   cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-   g = 1.0*(avg[2]) +1.0*avg[4] +12.*cd/(gbl->rho -srf->gbl->rho2);
-#endif
-      
-
    /**************************************************/
    /* DETERMINE SURFACE MOVEMENT TIME STEP           */
    /**************************************************/
@@ -590,27 +607,50 @@ void hp_mgrid::surfdt1(int bnum) {
       nrm[0] =  (vrtx[v1][1] -vrtx[v0][1]);
       nrm[1] = -(vrtx[v1][0] -vrtx[v0][0]);
       h = sqrt(nrm[0]*nrm[0] +nrm[1]*nrm[1]);
- 
-      uvel = 0.5*(ug.v[v0][0]-(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]) +ug.v[v1][0]-(bd[0]*vrtx[v1][0] +dvrtdt[v1][0]));
-      vvel = 0.5*(ug.v[v0][1]-(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]) +ug.v[v1][1]-(bd[0]*vrtx[v1][1] +dvrtdt[v1][1]));
-      vslp = -uvel*nrm[1]/h +vvel*nrm[0]/h;
+      
+      
+      uvel = ug.v[v0][0]-bd[0]*vrtx[v0][0] +dvrtdt[v0][0];
+      vvel = ug.v[v0][1]-bd[0]*vrtx[v0][1] +dvrtdt[v0][1];  
+#ifdef DROP
+      vvel -= dydt;
+#endif
+      qmax = uvel*uvel+vvel*vvel;
+      vslp = fabs(-uvel*nrm[1]/h +vvel*nrm[0]/h);
+
+      uvel = ug.v[v1][0]-bd[0]*vrtx[v1][0] +dvrtdt[v1][0];
+      vvel = ug.v[v1][1]-bd[0]*vrtx[v1][1] +dvrtdt[v1][1];
+#ifdef DROP
+      vvel  -= dydt;
+#endif
+      qmax = MAX(qmax,uvel*uvel+vvel*vvel);
+      vslp = MAX(vslp,fabs(-uvel*nrm[1]/h +vvel*nrm[0]/h));
       
       hsm = h/(.25*(b.p+1)*(b.p+1));
-      
+            
       dttang = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
       strss =  4.*srf->gbl->sigma/(hsm*hsm) +fabs(drho*g*nrm[1]/h);
-      qmax = sqrt(uvel*uvel +vvel*vvel);
       gam1 = 3.0*qmax +(0.5*hsm*bd[0] + 8.*nu1/hsm)*(0.5*hsm*bd[0] + 8.*nu1/hsm);
       gam2 = 3.0*qmax +(0.5*hsm*bd[0] + 8.*nu2/hsm)*(0.5*hsm*bd[0] + 8.*nu2/hsm);
 #ifdef INERTIALESS
       gam1 = (8.*nu1/hsm)*(8.*nu1/hsm);
       gam2 = (8.*nu2/hsm)*(8.*nu2/hsm);
 #endif
-      dtnorm = 2.*fabs(vslp)/hsm +bd[0] +3.*strss/(gbl->rho*sqrt(vslp*vslp +gam1) +srf->gbl->rho2*sqrt(vslp*vslp +gam2));
+      dtnorm = 2.*vslp/hsm +bd[0] +3.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2));
+            
+#ifdef DROP
+      // lam = MIN(2.*fabs(vslp)/(M_PI*0.5) +(4.*srf->gbl->sigma/(M_PI*0.5*M_PI*0.5) +fabs(drho*g*nrm[1]/h))/(gbl->rho*sqrt(qmax +8.*nu1/(M_PI*0.5)),lam)
+      lam = MIN(dtnorm,lam);
+#endif
+
+      // printf("side: %d dts: %e %e %e, vslp: %e\n",indx,2.*fabs(vslp)/hsm,bd[0],3.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2)),vslp);
       
       /* SET UP DISSIPATIVE COEFFICIENT */
-      /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE +/- 1 */
-      srf->gbl->meshc[indx] = adis*vslp/(h*dtnorm*0.5);
+      /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+      /* RESIDUAL HAS DX/2 WEIGHTING */
+      /* |a| dx/2 dv/dx [a du/dx] dx/2 dpsi */
+      /* |a| dx/2 2/dx dv/dpsi [a du/dx dx/2] dpsi */
+      /* |a| dv/dpsi [a du/dx dx/2] dpsi */
+      srf->gbl->meshc[indx] = adis/(h*dtnorm*0.5);
          
 #ifdef AXISYMMETRIC
       dtnorm *= 0.5*(vrtx[v0][0] +vrtx[v1][0]);
@@ -751,6 +791,10 @@ void hp_mgrid::surfnstage1(int bnum) {
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
+   
+#ifdef DROP
+   dydt0 = dydt;
+#endif
 
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n)
@@ -771,6 +815,10 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
+   
+#ifdef DROP
+   dydt = dydt0 -1.666*alpha[stage]*resy;
+#endif
       
    for(i=0;i<sbdry[bnum].num+1;++i) {
       for(n=0;n<ND;++n) {
@@ -917,6 +965,10 @@ void hp_mgrid::surfgetfres(int bnum) {
    srf = static_cast<class surface *>(sbdry[bnum].misc);
    if (srf == NULL) return;
    
+#ifdef DROP
+   resy0 = resy;
+#endif
+   
    /* TRANSFER INTERFACE RESIDUALS */
 
    if(p0 > 1) {
@@ -1004,7 +1056,7 @@ void hp_mgrid::surfgetfres(int bnum) {
    for(i=0;i<sbdry[bnum].num+1;++i)
       for(n=0;n<ND;++n)
          srf->vug_frst[i][n] = srf->vug[i][n];
-
+   
    return;
 }
 
@@ -1068,6 +1120,11 @@ void hp_mgrid::surfmaxres() {
    class surface *srf;
    FLT mxr[ND];
    
+#ifdef DROP
+   static FILE *fp = 0;
+   static int counter = 0;
+   if (!fp) fp = fopen("size.dat","w");
+#endif
    
    for (bnum=0;bnum<nsbd;++bnum) {
       if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
@@ -1075,6 +1132,10 @@ void hp_mgrid::surfmaxres() {
       srf = static_cast<class surface *>(sbdry[bnum].misc);
       if (srf == NULL) continue;
       
+#ifdef DROP
+      fprintf(fp,"%d %e %e %e %e\n",counter++,vflux,resy,dydt,lam);
+#endif
+
       for(n=0;n<ND;++n)
          mxr[n] = 0.0;
       
