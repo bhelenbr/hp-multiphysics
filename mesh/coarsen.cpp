@@ -8,8 +8,9 @@
 #include<assert.h>
 
 int mesh::coarsen(const class mesh& inmesh) {
-	int i,j,sind;
+	int i,j,k,sind;
 	int v0, v1, odd;
+   int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
    int nloop;
    FLT mindist;
    
@@ -174,35 +175,35 @@ int mesh::coarsen(const class mesh& inmesh) {
    
    treeinit();
 
-/*	ALLOCATE TEMPORARY STORAGE FOR ORDERED BOUNDARY LOOPS */
-   int **sidelst;
-   int *nsdloop;
-   
-   sidelst = new int *[10];
-   nsdloop = new int[10];
-   for(i=0;i<10;++i) {
+/*	CREATE ORDERED LIST OF SIDES */
+/*	STORAGE FOR SIDELST */
+   for(i=0;i<nsbd;++i)
       sidelst[i] = new int[maxsbel*nsbd];
-      nsdloop[i] = 0;
-   }
 
-/*	MAKE ORDERED LIST OF SIDES */
-/*	EACH LOOP ASSIGNED TO DIFFERENT ARRAY */
-/*	ASSUMES CCW ORDERING OF GROUPS/ELEMENTS */   
+/*	TEMPORARY LIST OF BOUNDARIES */
+   for(i=0;i<nsbd;++i) 
+      sideord[i] = i;
+
    nloop = 0;
-   v0 = svrtx[sbdry[0].el[0]][0];
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i].num;++j)
-         sidelst[nloop][nsdloop[nloop]++] = sbdry[i].el[j] +1;
-         
-      if (v0 == svrtx[sbdry[i].el[sbdry[i].num-1]][1]) {
-         ++nloop;
-         if (nloop > 10) {
-            printf("Too many internal loops %d\n",nloop);
-            exit(1);
-         }
-         if (i < nsbd -1) v0 = svrtx[sbdry[i+1].el[0]][0];
-      }
-   }
+   nsdloop[0] = 0;
+	for(i=0; i<nsbd; ++i) {
+      for(j=0;j<sbdry[sideord[i]].num;++j)
+         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]].el[j] +1;
+
+      v0 = svrtx[sbdry[sideord[i]].el[sbdry[sideord[i]].num-1]][1];
+		for(j=i+1; j<nsbd;++j) {
+			if (v0 ==  svrtx[sbdry[sideord[j]].el[0]][0]) {
+            k = sideord[i+1];
+				sideord[i+1] = sideord[j];
+            sideord[j] = k;
+				goto FINDNEXT;
+			}
+		}
+/*		NEW LOOP */
+      nsdloop[++nloop] = 0;       
+FINDNEXT:
+      continue;
+	}
 
    if (nloop == 0) {
       printf("Problem with boundaries nloop: %d\n",nloop);
@@ -214,10 +215,6 @@ int mesh::coarsen(const class mesh& inmesh) {
          
    for(i=0;i<10;++i) 
       delete []sidelst[i];
-   delete []sidelst;
-   delete []nsdloop;
-   
-
 
 /****************************************************/			
 /*	Boyer-Watson Algorithm to insert interior points */

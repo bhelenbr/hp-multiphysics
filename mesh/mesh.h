@@ -1,6 +1,8 @@
 #ifndef _mesh_h_
 #define _mesh_h_
 
+#include<math.h>
+
 #define FLT double
 
 #define ND 2
@@ -155,7 +157,12 @@ class mesh {
       void swap(int nswp, int *swp, FLT tol = 0.0); //SWAPS A LIST OF SIDES
 
 /*		PRIMITIVE FUNCTIONS */
-      FLT distance(const int v0, const int v1) const;
+      inline FLT mesh::distance(int v0, int v1) const {
+         return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
+      }
+      inline FLT mesh::distance2(int v0, int v1) const {
+         return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
+      }     
       FLT incircle(int tind, double *a) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
@@ -180,13 +187,11 @@ class mesh {
       FLT *vbuff[MAXSB];
       FLT *sbuff[MAXSB];
       void inline init_comm_buf(int factor) {
-         for(int i=0;i<nvbd;++i)
-            if (vbdry[i].type & ALLD_MP)
-               vbuff[i] = new FLT[factor];
+         for(int i=0;i<MAXSB;++i)
+            vbuff[i] = new FLT[factor];
 
          for(int i=0;i<nsbd;++i)
-            if (sbdry[i].type & ALLD_MP)
-               sbuff[i] = new FLT[factor*maxsbel];
+            sbuff[i] = new FLT[factor*maxsbel];
       }
 
 /*    INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */

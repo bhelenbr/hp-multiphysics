@@ -34,10 +34,6 @@ FLT mesh::incircle(int tind, FLT *a) const {
 }
 
 
-FLT mesh::distance(int v0, int v1) const {
-	return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
-}
-
 FLT mesh::area(int v0, int v1, int v2) const {
    FLT dx1,dy1,dx2,dy2;
 	

@@ -332,7 +332,10 @@ next1:      continue;
       bdrysidereorder(i);
 
 /*	REORDER SIDE BOUNDARY GROUPS TO BE SEQUENTIAL */
-   bdrygroupreorder();
+   printf("#Boundaries\n");
+   bdrylabel();
+   for(i=0;i<nsbd;++i)
+      printf("%d: type %d, number %d\n",i,sbdry[i].type,sbdry[i].num);
 
    createttri();
    createvtri();
