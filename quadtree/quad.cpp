@@ -11,6 +11,7 @@
  #include<float.h>
  #include<cstdio>
  #include<assert.h>
+ #include<string.h>
 
 /* STATIC VARIABLES FOR SEARCHING */ 
 class quad **quadtree::srchlst;
@@ -340,29 +341,78 @@ void quadtree::dltpt(int v0) {
    return;
 }
 
-void quadtree::output() {
+void quadtree::output(char *filename, FILETYPE type=tecplot) {
    int i,nsrch;
+   char fnmapp[100];
    class quad *qpt;
+   FILE *out;
    
-   nsrch = 0;
-   srchlst[nsrch++] = base;
+   strcpy(fnmapp,filename);
    
-   while (nsrch > 0) {
-      qpt = srchlst[--nsrch];
-      if (qpt->num < 0) {
-/*			ADD DAUGHTERS TO LIST */
-         for(i=0;i<4;++i)
-            srchlst[nsrch++] = qpt->dghtr[i];
-         continue;
-      }
-      else {
-/*			PRINT POINTS */
-         printf("box: %f %f %f %f\n",qpt->xmin,qpt->xmax,qpt->ymin,qpt->ymax);
-         for(i=0;i<qpt->num;++i) 
-            printf("%d %f %f\n",qpt->node[i],vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
-      }
+   switch (type) {
+      case(text):
+         strcat(fnmapp,".text");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open output file %s for output\n",fnmapp);
+            exit(1);
+         }
+         nsrch = 0;
+         srchlst[nsrch++] = base;
+         
+         while (nsrch > 0) {
+            qpt = srchlst[--nsrch];
+            if (qpt->num < 0) {
+      /*			ADD DAUGHTERS TO LIST */
+               for(i=0;i<4;++i)
+                  srchlst[nsrch++] = qpt->dghtr[i];
+               continue;
+            }
+            else {
+      /*			PRINT POINTS */
+               fprintf(out,"box: %f %f %f %f\n",qpt->xmin,qpt->xmax,qpt->ymin,qpt->ymax);
+               for(i=0;i<qpt->num;++i) 
+                  fprintf(out,"%d %f %f\n",qpt->node[i],vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
+            }
+         }
+         break;
+      case(tecplot):
+         strcat(fnmapp,".dat");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open output file %s for output\n",fnmapp);
+            exit(1);
+         }
+         nsrch = 0;
+         srchlst[nsrch++] = base;
+         
+         while (nsrch > 0) {
+            qpt = srchlst[--nsrch];
+            if (qpt->num < 0) {
+      /*			ADD DAUGHTERS TO LIST */
+               for(i=0;i<4;++i)
+                  srchlst[nsrch++] = qpt->dghtr[i];
+               continue;
+            }
+            else {
+   /*				PRINT BOX & POINTS */
+               if (qpt->num > 0) {
+                  fprintf(out,"ZONE N=4, E=1, F=FEPOINT, ET=QUADRILATERAL, C=RED\n");
+                  fprintf(out,"%f %f\n",qpt->xmin,qpt->ymin);
+                  fprintf(out,"%f %f\n",qpt->xmax,qpt->ymin);
+                  fprintf(out,"%f %f\n",qpt->xmax,qpt->ymax);
+                  fprintf(out,"%f %f\n",qpt->xmin,qpt->ymax);
+                  fprintf(out,"%d %d %d %d\n",1,2,3,4);
+                  
+                  fprintf(out,"ZONE I=%d, C=BLACK\n",qpt->num);
+                  for(i=0;i<qpt->num;++i) 
+                     fprintf(out,"%f %f\n",vrtx[qpt->node[i]][0],vrtx[qpt->node[i]][1]);
+               }
+            }
+         }
+         break;
    }
-   
+
    return;
 }
 
@@ -418,7 +468,7 @@ void quadtree::update() {
 /*			CHECK POINTS */
          for(i=0;i<qpt->num;++i) {
             v0 = qpt->node[i];
-            if (vrtx[v0][0] < qpt->xmin || vrtx[v0][1] > qpt->xmax || vrtx[v0][1] < qpt->ymin || vrtx[v0][1] > qpt->ymax) update(v0);
+            if (vrtx[v0][0] < qpt->xmin || vrtx[v0][0] > qpt->xmax || vrtx[v0][1] < qpt->ymin || vrtx[v0][1] > qpt->ymax) update(v0);
          }
       }
    }

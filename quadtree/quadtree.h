@@ -24,7 +24,7 @@
 #ifndef ND
 #define ND 2
 #endif
-
+enum FILETYPE {easymesh, gambit, tecplot, text, binary};
 class quadtree {
    private:
       int maxvrtx;
@@ -50,7 +50,8 @@ class quadtree {
       FLT nearpt(FLT x, FLT y, int& pt) const;
       void dltpt(int v0);
       void movept(int from, int to);
-      void output(void);
+      enum FILETYPE {text,tecplot};
+      void output(char *filename, FILETYPE type=tecplot);
       void update();
       void update(int v0);
 

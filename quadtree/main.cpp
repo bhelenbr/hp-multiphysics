@@ -35,6 +35,8 @@ int main() {
    dist = testtree.nearpt(0, i); 
    printf("%d %f\n",i,dist);
    
+   testtree.output("out");
+   
    
    return(0);
 }
