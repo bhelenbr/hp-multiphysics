@@ -205,6 +205,7 @@
 				F505FF130192F1EB01990B20,
 				F598B8710193249F01990B20,
 				F598B8720193249F01990B20,
+				F5D40DC301948526012E171D,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -658,6 +659,12 @@
 		};
 		F5D29C9001778131015A943B = {
 			fileRef = F5D29C8F01778131015A943B;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D40DC301948526012E171D = {
+			fileRef = F505FF110192F1EB01990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};

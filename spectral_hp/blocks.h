@@ -34,24 +34,25 @@ class block {
 class blocks {
    private:
       int lg2pmax;
-      class hpbasis base[MXLG2P];
       int nblocks;
       int mgrids;
+      int mglvls;
       class block *blk;
-      
+      class hpbasis base[MXLG2P];
+
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void findmatch();
 
 /*		5 STAGE UPDATE ON ALL BLOCKS */  
-      void nstage(int mglvl);
+      void nstage(int grdnum, int sm);
 
 /*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);
 
 /*		OUTPUT FINE MESH SOLUTION */
-      void output(char *filename, FILETYPE filetype = easymesh);
+      void output(char *filename, FILETYPE filetype = text);
 
 /*		MESH REFINEMENT */      
       inline void restructure(FLT tolerance) {

@@ -1,6 +1,6 @@
 #include"blocks.h"
 #include<cstring>
-#include<cstdio>
+#include<utilities.h>
 
 extern FLT f1(int n, FLT x, FLT y);
 
@@ -11,8 +11,9 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    char app[2];
 
    nblocks = nb;
-   mgrids = mg;
+   mglvls = mg;  // AT LEAST ONE ALWAYS
    lg2pmax = lg2p;
+   mgrids = MIN(mglvls-lg2pmax,1);
  
 /*	INITIALIZE BASIS FUNCTIONS */
    p = 1;
@@ -31,11 +32,11 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
          app[0] = 'a'+i;
          app[1] = '\0';
          strcat(fnmcat,app);
-         blk[i].meshinit(mg,fnmcat,filetype,grwfac);
+         blk[i].meshinit(mgrids,fnmcat,filetype,grwfac);
       }
    }
    else
-      blk[0].meshinit(mg,filename,filetype,grwfac);
+      blk[0].meshinit(mgrids,filename,filetype,grwfac);
 
 /*	MATCH BOUNDARIES */
    for(i=0;i<mgrids;++i) {
@@ -71,89 +72,99 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
    return;
 }
 
-void blocks::nstage(int lvl,int sm) {
-   static int i,stage;
+void blocks::nstage(int grdnum, int sm) {
+   static int i,stage,mode;
       
 /*****************************************/
-/* JACOBI-ITERATION FOR MESH POSITION ****/
+/* NSTAGE UPDATE OF FLOW VARIABLES    ****/
 /*****************************************/
+   for(i=0;i<nblocks;++i)
+      blk[i].grd[grdnum].tstep1();
 
    for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].tstep1();
-
-//   for(i=0;i<nblocks;++i)
-//      blk[i].grd[lvl].vddt_mp();     
-   
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].tstep2();
+      blk[i].grd[grdnum].tstep2();
 
    for(i=0;i<nblocks;++i)
-      blk[i].grd[lvl].nstage1();
+      blk[i].grd[grdnum].nstage1();
       
-   for(stage=0;iter<niter;++iter) {
+   for(stage=0;stage<NSTAGE;++stage) {
 
 /*		CALCULATE RESIDUAL */   
       for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].rsdl(stage,lvl);
+         blk[i].grd[grdnum].rsdl(stage,grdnum);
          
 /*		INVERT MASS MATRIX (4 STEP PROCESS) */
       for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].minvrt1();
+         blk[i].grd[grdnum].minvrt1();
          
       for(i=0;i<nblocks;++i)
-         blk[i].grd[lvl].minvrt2();
+         blk[i].grd[grdnum].minvrt2();
       
       for(mode=0;mode<sm-1;++mode)
          for(i=0;i<nblocks;++i)
-            blk[i].grd[lvl].minvrt3(mode);
-      }
+            blk[i].grd[grdnum].minvrt3(mode);
       
       if (sm) {
          for(i=0;i<nblocks;++i)
-            blk[i].grd[lvl].minvrt4();
+            blk[i].grd[grdnum].minvrt4();
       }
 
       
       for(i=0;i<nblocks;++i) 
-         blk[i].grd[lvl].nstage2(stage);
+         blk[i].grd[grdnum].nstage2(stage);
    }
 
    return;
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   int i,j;
+   static int i,j;
+   int grid,bsnum;
    
+   grid = lvl -lg2pmax;
+   bsnum =0;
+
+/* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */   
+   if (lvl <= lg2pmax) {
+      grid = 0;
+      bsnum = lg2pmax-lvl;
+   }
+                  
    for (i=0;i<vw;++i) {
-      jacobi(1,lvl);
+
+      nstage(lvl,base[bsnum].sm);
+
       if (lvl == mglvls-1) return;
       
       for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].rsdl();
-         
-#ifdef FOURTH
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].rsdl1_mp();      
-
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].rsdl1();
-#endif
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].rsdl_mp();      
+         blk[j].grd[grid].rsdl(NSTAGE,lvl);
       
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl+1].mg_getfres();
+      if (bsnum == 0) {
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[grid+1].getfres();
+      }
+      else {
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[0].loadbasis(base[bsnum -1]);
+            
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[0].getfres();
+      }
       
       cycle(vw, lvl+1);
+      
+      if (bsnum)
+         for(j=0;j<nblocks;++j)
+            blk[j].grd[0].loadbasis(base[bsnum]);
 
       for(j=0;j<nblocks;++j)
-         blk[j].grd[lvl].mg_getcchng();
+         blk[j].grd[grid].getcchng();
    }
 
    return;
 }
 
-void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
+void blocks::output(char *filename, FILETYPE filetype = text) {
    int i;   
    char fnmcat[80];
    char app[2];
@@ -166,83 +177,13 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
          app[0] = 'a'+i;
          app[1] = '\0';
          strcat(fnmcat,app);
-         blk[i].grd[0].bcinfo();
-         blk[i].grd[0].out_mesh(fnmcat,filetype);
+         blk[i].grd[0].output(fnmcat,filetype);
       }
    }
    else {
-      blk[0].grd[0].bcinfo();
-      blk[0].grd[0].out_mesh(filename,filetype);
+      blk[0].grd[0].output(filename,filetype);
    }
    
    return;
 }
-
-void blocks::ksrc() {
-   int i,j;
-
-#define GEOMETRIC
-
-#ifdef GEOMETRIC   
-/*	SETUP SPRING CONSTANTS  */
-   for(i=0;i<mglvls;++i) {
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rklaplace();
-      
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].kvol_mp();
-               
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].kvoli();
-   }
-#else
-/*	USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
-/*	MUST BE DONE THIS WAY FOR SPRING METHOD */
-/*	SETUP FIRST MESH */
-   for(j=0;j<nblocks;++j) 
-      blk[j].grd[0].rklaplace();
-   
-   for(j=0;j<nblocks;++j)
-      blk[j].grd[0].kvol_mp();
-               
-	for(j=0;j<nblocks;++j)
-      blk[j].grd[0].kvoli();
-   
-/*	SETUP COARSE GRIDS */
-   for(i=1;i<mglvls;++i) {
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rkmgrid();
-      
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rkmgrid_mp();
-               
-      for(j=0;j<nblocks;++j)
-         blk[j].grd[i].rkmgridi();
-   }
-#endif
-      
-/* CALCULATE SOURCE TERM ON FINEST MESH */
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].source();
-
-#ifdef FOURTH
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl1_mp();  
-
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl1();
-#endif
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].rsdl_mp();
-   
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].sumsrc();
-   
-   return;
-}
-#endif
-
-
-
-
    
