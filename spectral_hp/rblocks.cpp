@@ -58,12 +58,24 @@ void blocks::r_jacobi(int niter, int lvl) {
 
 void blocks::r_cycle(int vw, int lvl) {
    int vcount,j,crscntr=0;
-#ifdef SOLVECOARSE
+#if (defined(SOLVECOARSE) || defined(TWO_LEVEL))
    FLT mxr[NV], emax = 0.0, err;
 #endif
    
    for (vcount=0;vcount<vw;++vcount) {
       r_jacobi(ndown,lvl);
+      
+#ifdef TWO_LEVEL
+      if (lvl == 1) {
+         err = 0.0;
+         for(int i=0;i<nblocks;++i)
+            err = MAX(err,blk[i].grd[lvl].r_mesh::maxres(mxr));
+         
+         emax = MAX(emax,err);
+         if (err/emax > 3.0e-5 && err > 1.0e-11) --vcount;
+         // printf("#R_MESH second level %e %e\n",emax,err);
+      }
+#endif
    
       if (lvl == mgrids-1) {
 #ifdef SOLVECOARSE
