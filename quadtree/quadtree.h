@@ -25,37 +25,6 @@
 #define ND 2
 #endif
 
-class quadtree {
-   private:
-      int maxvrtx;
-      FLT (*vrtx)[ND];
-      class quad *base;
-      class quad **indx;
-      int size;
-      int current;
-
-/*		THIS IS USED BY ALL QUADS FOR SEARCHING */      
-      static class quad **srchlst;
-      static int maxsrch;
-
-   public:
-      quadtree() : size(0) {};
-      quadtree(const quadtree& copy) : size(0) {*this = copy;}
-      quadtree& operator=(const quadtree& copy);
-      void change_vptr(FLT (*v)[ND]) { vrtx = v;}
-      void init(FLT (*v)[ND], int mxv, FLT x1, FLT y1, FLT x2, FLT y2);
-      void init(FLT x1, FLT y1, FLT x2, FLT y2);
-      void addpt(int v0, class quad *start = NULL);
-      FLT nearpt(int v0, int& pt) const;
-      FLT nearpt(FLT x, FLT y, int& pt) const;
-      void dltpt(int v0);
-      void movept(int from, int to);
-      enum FILETYPE {text,tecplot};
-      void output(char *filename, FILETYPE type=tecplot);
-      void update(int bgn, int end);
-      void update(int v0);
-};
-
 class quad {
    private:
       friend class quadtree;
@@ -74,5 +43,48 @@ class quad {
       quad(quad *p, int i, FLT x1, FLT y1, FLT x2, FLT y2) : 
          num(0), prnt(p), pind(i), xmin(x1), ymin(y1), xmax(x2), ymax(y2) {}
          
+};
+
+class quadtree {
+   private:
+      int maxvrtx;
+      FLT (*vrtx)[ND];
+      class quad *base;
+      class quad **indx;
+      int size;
+      int current;
+
+/*		THIS IS USED BY ALL QUADS FOR SEARCHING */      
+      static class quad **srchlst;
+      static int maxsrch;
+
+   public:
+      quadtree() : size(0) {};
+      void copy(const class quadtree& tgt);
+      void allocate(FLT (*v)[ND],int mxv);
+      inline void init(FLT (*v)[ND], int mxv, FLT x1, FLT y1, FLT x2, FLT y2) { allocate(v,mxv); init(x1,y1,x2,y2);}
+      void init(); // RESETS WITH SAME AREA
+      void init(FLT x1, FLT y1, FLT x2, FLT y2);  // RESETS QUAD WITH NEW AREA
+      
+      inline void change_vptr(FLT (*v)[ND]) { vrtx = v;}
+      inline FLT xmin() {return(base[0].xmin);}
+      inline FLT ymin() {return(base[0].ymin);}
+      inline FLT xmax() {return(base[0].xmax);}
+      inline FLT ymax() {return(base[0].ymax);} 
+           
+      void addpt(int v0, class quad *start = NULL);
+      
+      FLT nearpt(int v0, int& pt) const;
+      FLT nearpt(FLT x, FLT y, int& pt) const;
+      
+      void dltpt(int v0);
+      
+      void movept(int from, int to);
+      
+      void update(int bgn, int end);
+      void update(int v0);
+      
+      enum FILETYPE {text,tecplot};
+      void output(char *filename, FILETYPE type=tecplot);
 };
 #endif

@@ -17,7 +17,7 @@
 class quad **quadtree::srchlst;
 int quadtree::maxsrch = 0;
   
-void quadtree::init(FLT (*v)[ND], int mxv, FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
+void quadtree::allocate(FLT (*v)[ND], int mxv) {
    int i;
    
    vrtx = v;
@@ -34,12 +34,8 @@ void quadtree::init(FLT (*v)[ND], int mxv, FLT xmin, FLT ymin, FLT xmax, FLT yma
    indx = new class quad*[maxvrtx];
    for(i=0;i<maxvrtx;++i)
       indx[i] = NULL;
-      
-   if (xmin >= xmax || ymin >= ymax) {
-      printf("quadtree initialization error: zero domain area %f %f %f %f\n",xmin,xmax,ymin,ymax);
-      exit(1);
-   }
-   base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
+
+   base[0] = quad(NULL,0,0.0,0.0,1.0,1.0);
    current = 1;
    
    if (maxsrch == 0) {
@@ -63,7 +59,9 @@ void quadtree::init(FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
       exit(1);
    }
 
-   base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
+//   base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
+
+   base[0].num = 0; base[0].prnt = NULL; base[0].pind = 0; base[0].xmin = xmin; base[0].ymin = ymin; base[0].xmax = xmax; base[0].ymax = ymax;
 
    for(int i = 0; i<maxvrtx; ++i)
       indx[i] = NULL;
@@ -71,49 +69,59 @@ void quadtree::init(FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
    current = 1;
 }
 
-quadtree& quadtree::operator=(const quadtree& copy) {
+void quadtree::init() {
+
+//   base[0] = quad(NULL,0,base[0].xmin,base[0].ymin,base[0].xmax,base[0].ymax);
+   base[0].num = 0; base[0].prnt = NULL; base[0].pind = 0;
+   for(int i = 0; i<maxvrtx; ++i)
+      indx[i] = NULL;
+      
+   current = 1;
+}
+
+void quadtree::copy(const class quadtree& tgt) {
    int i,j;
       
-   vrtx = copy.vrtx;
+   vrtx = tgt.vrtx;
    if (size == 0) {
-      maxvrtx = copy.maxvrtx;
-      size = copy.size;
+      maxvrtx = tgt.maxvrtx;
+      size = tgt.size;
       base = new class quad[size];
       indx = new class quad*[maxvrtx];
    }
    else {
-      assert(size >= copy.size);
-      assert(maxvrtx >= copy.maxvrtx);
+      assert(size >= tgt.size);
+      assert(maxvrtx >= tgt.maxvrtx);
    }
 
    for(i=0;i<maxvrtx;++i) {
-      if (copy.indx[i] == NULL) indx[i] = NULL;
-      else indx[i] = base + (copy.indx[i] -copy.base);
+      if (tgt.indx[i] == NULL) indx[i] = NULL;
+      else indx[i] = base + (tgt.indx[i] -tgt.base);
    }
 
-   current = copy.current;
+   current = tgt.current;
    
    for(i=0;i<current;++i) {
-      base[i].num = copy.base[i].num;
-      base[i].prnt = base +(copy.base[i].prnt -copy.base);
-      base[i].pind = copy.base[i].pind;
-      base[i].xmin = copy.base[i].xmin;
-      base[i].ymin = copy.base[i].ymin;
-      base[i].xmax = copy.base[i].xmax;
-      base[i].ymax = copy.base[i].ymax;
+      base[i].num = tgt.base[i].num;
+      base[i].prnt = base +(tgt.base[i].prnt -tgt.base);
+      base[i].pind = tgt.base[i].pind;
+      base[i].xmin = tgt.base[i].xmin;
+      base[i].ymin = tgt.base[i].ymin;
+      base[i].xmax = tgt.base[i].xmax;
+      base[i].ymax = tgt.base[i].ymax;
       if (base[i].num > 0) {
          for(j=0;j<4;++j)
-            base[i].node[j] = copy.base[i].node[j];
+            base[i].node[j] = tgt.base[i].node[j];
       }
       else {
          for(j=0;j<4;++j)
-            base[i].dghtr[j] = base +(copy.base[i].dghtr[j] -copy.base);
+            base[i].dghtr[j] = base +(tgt.base[i].dghtr[j] -tgt.base);
       }
    }
    
    base[0].prnt = NULL;
    
-   return(*this);
+   return;
 }
 
 void quadtree::addpt(int v0, class quad* start = NULL) {
