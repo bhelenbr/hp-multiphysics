@@ -170,6 +170,8 @@ class hp_mgrid : public spectral_hp {
       void surfgetfres(int bnum);
       void surfgetcchng(int bnum);
       void surfmaxres();
+      void surfarea(FLT &area, FLT &ybar);
+      void surfprecondition(int bnum);
       
       /* PARTS FOR 5 STEP UPDATE */
       void nstage1();
@@ -183,8 +185,9 @@ class hp_mgrid : public spectral_hp {
       void tadvance();
       void getfdvrtdt();  // TO TRANSFER MESH TIME DERIVATIVE TO COARSE MESHES */
       
-      /* FUNCTIONS FOR ADAPTION */      
-      void length1();
+      /* FUNCTIONS FOR ADAPTION */ 
+      void energy(FLT& energy, FLT& area);     
+      void length1(FLT norm=1.0);
       void length_mp();
       void length2(); 
       void outlength(char *name, FILETYPE type);
