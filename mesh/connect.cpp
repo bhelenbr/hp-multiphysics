@@ -3,6 +3,8 @@
 #include<cfloat>
 #include<iostream>
 #include<stdlib.h>
+#include<utilities.h>
+#include<string.h>
 
 void mesh::setfine(class mesh& tgt) {
    fmpt = &tgt;
@@ -130,3 +132,66 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
 
    return;
 }
+
+
+/*	 THIS ROUTINE DETERMINES THE POSITION OF COARSE VERTICES  */
+/*  TO TEST USING MULTI-GRID CONNECTION */
+/* THE MULTIGRID CONNECTIONS */
+void mesh::testconnect(char *fname) {
+   int i,j,n,tind;
+   class mesh *fmesh, *cmesh;
+   char fappnd[100];
+   FLT (*work)[ND];
+   
+   work = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
+   
+   cmesh = static_cast<class mesh *>(cmpt);
+
+   if (cmesh != NULL) {
+            
+      /* LOOP THROUGH VERTICES TO TO CALCULATE POSITION OF COARSE VERTICES  */
+      for(i=0;i<nvrtx;++i) {
+         tind = coarse[i].tri;
+         
+         for(n=0;n<ND;++n)
+            work[i][n] = 0.0;
+         
+         for(j=0;j<3;++j) {
+            for(n=0;n<ND;++n)
+               work[i][n] += coarse[i].wt[j]*cmesh->vrtx[cmesh->tvrtx[tind][j]][n];
+         }
+      }
+      strcpy(fappnd,fname);
+      strcat(fappnd,"_tocrse");
+      out_mesh(work, fappnd, grid);
+   }
+   
+   
+   fmesh = static_cast<class mesh *>(fmpt);
+
+   if (fmesh != NULL) {
+      /* LOOP THROUGH VERTICES   */
+      /* TO CALCULATE VRTX POSITION FROM FINE MESH */
+      for(i=0;i<nvrtx;++i) {
+         tind = fine[i].tri;
+   
+         for(n=0;n<ND;++n)
+            work[i][n] = 0.0;
+            
+         for(j=0;j<3;++j) {
+            for(n=0;n<ND;++n)
+               work[i][n] += fine[i].wt[j]*fmesh->vrtx[fmesh->tvrtx[tind][j]][n];
+         }
+      }
+   
+      strcpy(fappnd,fname);
+      strcat(fappnd,"_tofine");
+      out_mesh(work, fappnd, grid);
+   }
+
+   free(work);
+   
+   return;
+}
+
+   

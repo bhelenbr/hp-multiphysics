@@ -230,6 +230,7 @@ class mesh {
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
       void setfine(class mesh& tgt);
       void setcoarse(class mesh& tgt);
+      void testconnect(char *fname);
       
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity() const;
