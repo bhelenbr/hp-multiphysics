@@ -148,8 +148,8 @@ double df1d(int n, double x, double y, int dir) {
 // FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
 FLT forcing(FLT x,FLT y) {return(0.0);}
 FLT blayer = 0.0;
-FLT axext = 0.0*cos(10.0), ayext = 0.0*sin(10.0);
-FLT nuext = 1.0;
+FLT axext = 1.0*cos(M_PI*10.0/180.0), ayext = 1.0*sin(M_PI*10.0/180.0);
+FLT nuext = 0.0;
 
 FLT f1(int n, FLT x, FLT y) {
    FLT nux = nuext*4.*M_PI*M_PI;

@@ -300,16 +300,12 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
       for(i=0;i<nblocks;++i) 
          blk[i].grd[grdnum].nstage2(stage);
    }
-   
-//   if (mgrid == 0) 
-//      for(i=0;i<nblocks;++i) 
-//         blk[i].grd[grdnum].maxres();
-
+         
    return;
 }
 
 void blocks::cycle(int vw, int lvl) {
-   int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
+   int i,j,vcount;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int grid,bsnum;
 #ifdef PV3
    float pvtime = 0.0;
@@ -325,14 +321,41 @@ void blocks::cycle(int vw, int lvl) {
       bsnum =0;
    }
                   
-   for (i=0;i<vw;++i) {
+   for (vcount=0;vcount<vw;++vcount) {
    
       nstage(grid,base[bsnum].sm,lvl);
 
-#ifdef PV3
+#define FINE_ERROR  //TEMPORARY
+#if (defined(PV3) || defined(FINE_ERROR))
       if (lvl == 0) {
+#ifdef FINE_ERROR
+         FLT mxr[NV];
+         int n;
+         
+         for(i=0;i<nblocks;++i) {
+            blk[i].grd[grid].maxres(mxr);
+            for(n=0;n<NV;++n)
+               printf("%.3e  ",mxr[n]);
+         }
+#endif
+#ifdef PV3
          pvtime = 1.0*iter;
          pV_UPDATE(&pvtime);
+#endif
+      }
+#endif
+
+#define TWO_LEVEL  //TEMPORARY
+#ifdef TWO_LEVEL
+      FLT mxr2[NV], einit, emax = 0.0;
+      vw = 2;
+      if (lvl == 1) {
+         for(i=0;i<nblocks;++i)
+            emax = blk[i].grd[grid].maxres(mxr2);
+         
+         if (vcount == 0) einit = emax;
+         else if (emax/einit > 1.0e-3) --vcount;
+         // printf("%%second level %e\n",emax);
       }
 #endif
       
@@ -352,9 +375,8 @@ void blocks::cycle(int vw, int lvl) {
          for(j=0;j<nblocks;++j)
             blk[j].grd[0].getfres();
       }
-      
       cycle(vw, lvl+1);
-      
+
       if (bsnum)
          for(j=0;j<nblocks;++j)
             blk[j].grd[0].loadbasis(base[bsnum]);
@@ -367,12 +389,16 @@ void blocks::cycle(int vw, int lvl) {
 }
 
 void blocks::endcycle() {
-   int i;
-
+   int i,n;
+   FLT mxr[NV];
+   
    /* CALCULATE MAX RESIDUAL ON FINEST MESH */
    /* MOVE INTERFACE VERTICES */
-   for(i=0;i<nblocks;++i)
-      blk[i].grd[0].maxres();
+   for(i=0;i<nblocks;++i) {
+      blk[i].grd[0].maxres(mxr);
+      for(n=0;n<NV;++n)
+         printf("%.3e  ",mxr[n]);
+   }
       
    for(i=0;i<nblocks;++i) {
       blk[i].grd[0].surfmaxres();
@@ -397,9 +423,14 @@ void blocks::go() {
       for(iter=0;iter<ncycle;++iter) {
          cycle(vwcycle);
          printf("%d ",iter);
-         endcycle();
-         r_cycle(vwcycle);
+#ifndef FINE_ERROR
+       	endcycle();
+#define NO_DEFORM // TEMPORARY
+#ifdef DEFORM
+       	r_cycle(vwcycle);
       	r_maxres();
+#endif
+#endif
          printf("\n");
       }
       
@@ -611,9 +642,14 @@ void blocks::minvrt_test(int iter, FLT (*func)(int, FLT, FLT)) {
       for(i=0;i<nblocks;++i) 
          blk[i].grd[0].minvrt_test_end();
       
+      int n;
+      FLT mxr[NV];
       printf("%d ",stage);
-      for(i=0;i<nblocks;++i) 
-         blk[i].grd[0].maxres();
+      for(i=0;i<nblocks;++i) {
+         blk[i].grd[0].maxres(mxr);
+         for(n=0;n<ND;++n)
+            printf("%.3e  ",mxr[n]);
+      }
       printf("\n");
       
    }

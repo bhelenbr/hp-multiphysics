@@ -129,7 +129,7 @@ class hp_mgrid : public spectral_hp {
       void rsdl(int stage, int mgrid);
       
       /* PRINT SOLUTION RESIDUAL */
-      void maxres();
+      FLT maxres(FLT *err);
 
       /* INVERT MASS MATRIX (4 STEP PROCESS WITH COMMUNICATION IN BETWEEN EACH STEP) */
       void minvrt1();

@@ -70,9 +70,16 @@ class blocks {
       /* CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
       void r_ksrc();
       /* PRINT MAGNITUDE OF RESIDUAL */
+      /* PRINT ERRORS */
       inline void r_maxres() {
-         for(int i=0;i<nblocks;++i)
-            blk[i].grd[0].r_mesh::maxres();
+         int n;
+         FLT mxr[ND];
+         
+         for(int i=0;i<nblocks;++i) {
+            blk[i].grd[0].maxres(mxr);
+            for(n=0;n<ND;++n)
+               printf("%.3e  ",mxr[n]);
+         }
       }
       
 #ifdef PV3

@@ -206,11 +206,8 @@ void hp_mgrid::addbflux(int mgrid) {
                for(n=0;n<ND;++n)
                   mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
                   
-               if (charyes)
-                  chrctr(axext,ayext,wl,wr,nrm,mvel);
-               else
-                  wl[0] = wr[0];
-                  
+               chrctr(axext,ayext,wl,wr,nrm,mvel);
+                                 
                res[0][0][k] = wl[0]*RAD1D(k)*((axext -mvel[0])*nrm[0] +(ayext -mvel[1])*nrm[1]);
             }
             

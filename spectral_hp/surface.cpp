@@ -1091,7 +1091,6 @@ void hp_mgrid::surfmaxres() {
       for(i=0;i<sbdry[bnum].num+1;++i)
          for(n=0;n<ND;++n)
             mxr[n] = MAX(fabs(srf->gbl->vres[i][n]),mxr[n]);
-            
 
       for(n=0;n<ND;++n)
          printf("%.3e  ",mxr[n]);
