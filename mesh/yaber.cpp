@@ -80,8 +80,9 @@ void mesh::yaber(FLT tolsize) {
       assert(sind != -1);
       
 /*		COLLAPSE EDGE */
-      printf("collapsing side %d: %d\n",sind,nfail);
+      printf("collapsing side %d ",sind);
       nfail = collapse(sind);
+      printf("%d\n",nfail);
       
       for(i=0;i<nsdel;++i) 
          if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
