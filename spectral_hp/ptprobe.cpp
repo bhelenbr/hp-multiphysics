@@ -37,8 +37,8 @@ int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
    assert(tind > -1);
 
    /* TRIANGLE COORDINATES */   
-   s = wgt[2]*2 -1.0;
-   r = wgt[1]*2 -1.0;
+   s = wgt[0]*2 -1.0;
+   r = wgt[2]*2 -1.0;
    
    if (tinfo[tind] < 0) return(tind);
    
@@ -75,14 +75,14 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
          printf("Warning: couldn't find boundary tri (%f,%f) nearpt %d neartri %d sind %d\n",xp,yp,v0,vtri[v0],sind);
       }
       tind = stri[sind][0];
-      wgt[1] = 0.5;
       wgt[2] = 0.5;
+      wgt[0] = 0.5;
    }
 
 
    /* TRIANGLE COORDINATES */   
-   s = wgt[2]*2 -1.0;
-   r = wgt[1]*2 -1.0;
+   s = wgt[0]*2 -1.0;
+   r = wgt[2]*2 -1.0;
    
    if (tinfo[tind] < 0) return(tind);
 

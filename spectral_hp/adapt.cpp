@@ -133,9 +133,9 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
          else {
             for(step=0;step<MXSTEPM1;++step) {
                for(n=0;n<ND;++n) 
-                  gbl->vrtxbd[step][i][n] = vrtxstr[step][str.tvrtx[tind][0]][n]*(-r -s)/2.
-                                           +vrtxstr[step][str.tvrtx[tind][1]][n]*(r +1.)/2.
-                                           +vrtxstr[step][str.tvrtx[tind][2]][n]*(s +1.)/2.;
+                  gbl->vrtxbd[step][i][n] = vrtxstr[step][str.tvrtx[tind][0]][n]*(s +1.)/2.
+                                           +vrtxstr[step][str.tvrtx[tind][1]][n]*(-r -s)/2.
+                                           +vrtxstr[step][str.tvrtx[tind][2]][n]*(r +1.)/2.;
             }
          }
       }
@@ -531,7 +531,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
 
    /* RESTORE maxsrch in findtri */
    mesh::maxsrch = 3*MAXLST/4;
-               
+                  
    return;
 }
    

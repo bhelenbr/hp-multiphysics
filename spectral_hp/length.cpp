@@ -88,7 +88,8 @@ void hp_mgrid::length1() {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-      vlngth[i] /= fltwk[i];
+//      vlngth[i] /= fltwk[i];
+      vlngth[i] *= 2.0; // TEMPORARY
 //    vlngth[i] = MIN(vlngth[i],gbl->maxlength);
 //    vlngth[i] = MAX(vlngth[i],gbl->minlength);
    }

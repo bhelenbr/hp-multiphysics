@@ -17,7 +17,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
    FILE *out;
    int i,j,k,n,v0,v1,sind,tind,indx,sgn;
    int ijind[MXTM][MXTM];
-
+   
    switch (typ) {
       case (text):
          strcpy(fnmapp,name);
@@ -96,9 +96,8 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
                else {
                   crdtocht1d(sind,vin,bin);
                   for(n=0;n<ND;++n)
-                     b.proj1d_leg(cht[n],crd[n][0]);
+                  	b.proj1d_leg(cht[n],crd[n][0]);
                }
-               
                ugtouht1d(sind,g);
                for(n=0;n<NV;++n)
                   b.proj1d_leg(uht[n],u[n][0]);
@@ -221,8 +220,8 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 #define NEW
 
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
-   int i,j,k,m,n,pin,indx,bind;
-   int bnum,innum,intyp,ierr,v0;
+   int i,j,k,m,n,pin,indx;
+   int bnum,innum,intyp,v0;
    FILE *in;
    char buffer[200];
    
@@ -303,6 +302,7 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
          fclose(in);
          break;
 #else
+      int bind, ierr;
       case (text):
          in = fopen(name,"r");
          if (in == NULL ) {

@@ -385,8 +385,7 @@ void blocks::endcycle() {
 
 
 void blocks::go() {
-   int i,j,tstep;
-   char outname[20], bname[20];
+   int tstep;
    
    for(tstep=readin;tstep<ntstep;++tstep) {
       
@@ -414,6 +413,9 @@ void blocks::go() {
        
 #define NDEBUG
 #ifdef DEBUG
+      int i,j;
+      char outname[20], bname[20];
+      
       /*	THIS IS TO ALLOW MACHINE EXACT RESTARTS WHEN DEBUGGING */
       for(i=0;i<nblocks;++i) {
          readin = tstep +1;
@@ -505,9 +507,9 @@ void blocks::adaptation() {
    return;
 }
 
-void blocks::output(int number, FILETYPE type=text) {
+void blocks::output(int number, FILETYPE type) {
    int i,j;
-   char outname[20], bname[20];
+   char outname[30], bname[30];
 
    for(i=0;i<nblocks;++i) {
       number_str(bname,"data",number,3);
@@ -516,7 +518,7 @@ void blocks::output(int number, FILETYPE type=text) {
 
       /* OUTPUT SOLUTION */
       blk[i].grd[0].output(outname,type);
-            
+
       /* OUTPUT MESH */
       number_str(bname,"mesh",number,3);
       strcat(bname, ".");
@@ -531,7 +533,7 @@ void blocks::output(int number, FILETYPE type=text) {
          number_str(outname, bname, i, 1);
          blk[i].grd[0].outlength(outname,type);      
       }
-      
+   
       /* OUTPUT UNSTEADY TIME HISTORY */
       /*	FIRST INDEX IS HISTORY NUMBER */
       /* SECOND IS BLOCK NUMBER */
