@@ -19,38 +19,40 @@ int main() {
    class spectral_hp x,y;
    class hpbasis base;
    class blocks myblock;
+   class mesh m1,m2;
 
 #ifdef SKIP
-   FLT u[3];
- 
-   base.initialize(2);
-
 //   x.in_mesh("/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/KOVA/WKOVA/kova3",easymesh,10);
-   x.in_mesh("../../grids/TIM/tim",easymesh,10);
+   m1.in_mesh("../../grids/TIM/tim",easymesh,10);
+   m2.coarsen(m1);
+   m2.bcinfo();
+   m2.out_mesh("tim2",easymesh);
+   exit(1);
+   
    x.allocate(base);
    x.tobasis(&f1);
    x.output("hope",tecplot);
    exit(0);
    
    for(i=0;i<2;++i) {
-   x.output("hope",tecplot);
-   x.density(0.001,0.001,1.0);
-   x.adapt(y,0.66);
-   y.output("hope1",tecplot);
-   x.output("new",tecplot);
+      x.output("hope",tecplot);
+      x.density(0.001,0.001,1.0);
+      x.adapt(y,0.66);
+      y.output("hope1",tecplot);
+      x.output("new",tecplot);
    }
 
    return(0);
- #endif
+#endif
    
-   myblock.init(1, 3, 1, "../../grids/TIM/tim",easymesh,10);
+   myblock.init(1, 3, 2, "../../grids/TIM/tim2",easymesh,5);
    myblock.output("hope0",tecplot);
 
    myblock.tadvance();
-   for(i=0;i<1;++i) {
+   for(i=0;i<10;++i) {
       myblock.cycle(1);
       printf("%d ",i);
-      myblock.maxres();
+      myblock.print_maxres();
       printf("\n");
    }
    

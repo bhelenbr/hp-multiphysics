@@ -51,7 +51,7 @@ void hp_mgrid::getfres() {
       return;
 	}
    
- /*TRANSFER IS BETWEEN DIFFERENT MESHES */
+/* TRANSFER IS BETWEEN DIFFERENT MESHES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
          gbl.vres0[i][n] = 0.0;
@@ -62,7 +62,7 @@ void hp_mgrid::getfres() {
       for(j=0;j<3;++j) {
          v0 = tvrtx[tind][j];
          for(n=0;n<NV;++n)
-            gbl.vres0[v0][n] += gbl.fadd*fmesh->coarse[i].wt[j]*gbl.vres[i][n];
+            gbl.vres0[v0][n] += fmesh->coarse[i].wt[j]*gbl.vres[i][n];
       }
    }
    

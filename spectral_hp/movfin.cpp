@@ -16,7 +16,7 @@ void hp_mgrid::getcchng(void) {
 
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)
-      for(n=0;n<ND;++n) 
+      for(n=0;n<NV;++n) 
          cmesh->vug_frst[i][n] -= cmesh->vug[i][n];
 
 /* LOOP THROUGH FINE VERTICES   */
@@ -36,9 +36,9 @@ void hp_mgrid::getcchng(void) {
    }
    
    for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n) 
+      for(n=0;n<NV;++n) 
          vug[i][n] += gbl.vres[i][n];
-                  
+
    return;
 }
 

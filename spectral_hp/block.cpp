@@ -3,7 +3,7 @@
 
 void block::meshinit(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
    int i;
-
+   
    ngrid = n;
    grd = new class hp_mgrid[ngrid];
    grd[0].in_mesh(filename,filetype,grwfac);
@@ -27,6 +27,7 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
    grd[0].spectral_hp::allocate(hpbase[lg2pmax]);
    for(i=1;i<ngrid;++i)
       grd[i].spectral_hp::allocate(hpbase[0]);
+      
 
 /*	ALLOCATE GLOBAL STORAGE */
    maxvst = grd[0].max();
@@ -47,8 +48,8 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
    
 /*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
    gbl.vres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   gbl.sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].sm*sizeof(FLT));
-   gbl.ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].im*sizeof(FLT));
+   if (lg2pmax > 1) gbl.sres0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].sm*sizeof(FLT));
+   if (lg2pmax > 1) gbl.ires0 = (FLT (*)[NV]) xmalloc(NV*maxvst*hpbase[lg2pmax-1].im*sizeof(FLT));
 
 /*	PRECONDITIONER  */
    vect_alloc(gbl.gam,maxvst,FLT);

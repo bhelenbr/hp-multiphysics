@@ -31,10 +31,13 @@ void hp_mgrid::nstage1(void)
 /********************************/
 void hp_mgrid::nstage2(int stage) {
    int i,m,k,n,indx,indx1;
+   FLT cflalpha;
 
+   cflalpha = gbl.flowcfl[log2p]*alpha[stage];
+   
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         vug[i][n] = gbl.vug0[i][n] -alpha[stage]*gbl.vres[i][n];
+         vug[i][n] = gbl.vug0[i][n] -cflalpha*gbl.vres[i][n];
 
    if (b.sm > 0) {
       indx = 0;
@@ -42,7 +45,7 @@ void hp_mgrid::nstage2(int stage) {
       for(i=0;i<nside;++i) {
          for (m=0;m<b.sm;++m) {
             for(n=0;n<NV;++n)
-               sug[indx1][n] = gbl.sug0[indx1][n] -alpha[stage]*gbl.sres[indx][n];
+               sug[indx1][n] = gbl.sug0[indx1][n] -cflalpha*gbl.sres[indx][n];
             ++indx;
             ++indx1;
          }
@@ -56,7 +59,7 @@ void hp_mgrid::nstage2(int stage) {
             for(m=1;m<b.sm;++m) {
                for(k=0;k<b.sm-m;++k) {
                   for(n=0;n<NV;++n) {
-                     iug[indx1][n] =  gbl.iug0[indx1][n] -alpha[stage]*gbl.ires[indx][n];
+                     iug[indx1][n] =  gbl.iug0[indx1][n] -cflalpha*gbl.ires[indx][n];
                   }
                   ++indx; ++indx1;
                }
@@ -65,6 +68,6 @@ void hp_mgrid::nstage2(int stage) {
          }
       }
    }
-   
+         
    return;
 }

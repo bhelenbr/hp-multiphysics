@@ -34,8 +34,8 @@ void hp_mgrid::minvrt1(void) {
 						for(n=0;n<NV;++n)
 							gbl.vres[v0][n] -= b.ifmb[i][k]*gbl.ires[indx +k][n];
 
-					indx1 = tside[tind].side[i]*b.sm;
-					sgn = tside[tind].sign[i];
+					indx1 = tside[tind].side[(i+2)%3]*b.sm;
+					sgn = tside[tind].sign[(i+2)%3];
 					msgn = 1;
 					for (j=0;j<b.sm;++j) {
 						for (k=0;k<b.im;++k) 
@@ -81,11 +81,7 @@ void hp_mgrid::minvrt2(void) {
 		gbl.vres[i][1] *= gbl.vdiagv[i];
 		gbl.vres[i][2] *= gbl.vdiagp[i];
 	}
-
-//   for(i=0;i<nvrtx;++i)
-//      printf("%d %f %f %f\n",i,gbl.vres[i][0],gbl.vres[i][1],gbl.vres[i][2]);
-      
-
+   
 /*	REMOVE VERTEX CONTRIBUTION FROM INTERIOR & SIDE MODES */
 	if (b.sm > 0) {
 /*		SOLVE FOR SIDE MODES */
@@ -102,22 +98,21 @@ void hp_mgrid::minvrt2(void) {
 				indx = tside[tind].side[i]*b.sm;
 				sgn  = tside[tind].sign[i];
 				for(j=0;j<3;++j) {
-					indx1 = (i+j)%3;
+					indx1 = (i+j+1)%3;  // BASIS AND GLOBAL HAVE DIFFERENT ORDERING!
 					msgn = 1;
 					for(k=0;k<b.sm;++k) {
-						gbl.sres[indx][0] -= msgn*b.vfms[j][k]*uht[0][indx1];
-						gbl.sres[indx][1] -= msgn*b.vfms[j][k]*uht[1][indx1];
-						gbl.sres[indx][2] -= msgn*b.vfms[j][k]*uht[2][indx1];
+						gbl.sres[indx +k][0] -= msgn*b.vfms[j][k]*uht[0][indx1];
+						gbl.sres[indx +k][1] -= msgn*b.vfms[j][k]*uht[1][indx1];
+						gbl.sres[indx +k][2] -= msgn*b.vfms[j][k]*uht[2][indx1];
 						msgn *= sgn;
-                  ++indx;
 					}
 				}
 			}
 		}
    }
-   
+
 /* SEND MESSAGE FOR LOWEST ORDER MODE */
-   
+
    return;
 }
 
@@ -139,7 +134,6 @@ void hp_mgrid::minvrt3(int mode) {
       gbl.sres[indx][0] *= gbl.sdiagv[sind]*b.sdiag[mode];
       gbl.sres[indx][1] *= gbl.sdiagv[sind]*b.sdiag[mode];
       gbl.sres[indx][2] *= gbl.sdiagp[sind]*b.sdiag[mode];
-//      printf("%d %f %f %f\n",indx,gbl.sres[indx][0],gbl.sres[indx][1],gbl.sres[indx][2]);
       indx += b.sm;
    }
 
@@ -180,13 +174,11 @@ void hp_mgrid::minvrt4() {
 /* APPLY DIRICHLET B.C.'S */
    indx = b.sm-1;
    bdry_rcvandzero(indx);
-			
+
    for(sind = 0; sind < nside; ++sind) {
       gbl.sres[indx][0] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
       gbl.sres[indx][1] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
       gbl.sres[indx][2] *= gbl.sdiagp[sind]*b.sdiag[b.sm-1];
-//      printf("%d %f %f %f\n",indx,gbl.sres[indx][0],gbl.sres[indx][1],gbl.sres[indx][2]);
-
       indx += b.sm;
    }
    
@@ -204,6 +196,10 @@ void hp_mgrid::minvrt4() {
       }
    }
    
+//   bdry_rcvandzero(-1);
+//   for(i=0;i<b.sm;++i)
+//      bdry_rcvandzero(i);
+
    return;
 }
 

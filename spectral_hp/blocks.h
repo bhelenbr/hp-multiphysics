@@ -42,6 +42,7 @@ class blocks {
       
 /*		THINGS FOR ALL BLOCKS */
       FLT time, dt;
+      FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       
 /*		5 STAGE UPDATE ON ALL BLOCKS */  
       void nstage(int grdnum, int sm, int mgrid);
@@ -61,7 +62,10 @@ class blocks {
       void cycle(int vw, int lvl = 0);
       
 /*		PRINT MAXIMUM RESIDUALS (NV) */
-      void maxres();
+      inline void print_maxres() {
+         for(int n=0;n<NV;++n)
+            printf(" %e ",mxr[n]);
+      }
 
 /*		OUTPUT FINE MESH SOLUTION */
       void output(char *filename, FILETYPE filetype = text);

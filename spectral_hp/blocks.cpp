@@ -25,7 +25,6 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
       base[i].initialize(p);
       p = p>>1;
    }
-   
    blk = new class block[nblocks];
 
 /*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
@@ -60,8 +59,8 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 /*	LOAD PHYSICAL CONSTANTS & ITERATIVE THINGS FOR EACH BLOCK */
    blk[0].setphysics(1.0, 1.0, 0.0, &f1);
    cfl[0] = 2.5;
-   cfl[1] = 1.25;
-   cfl[2] = 0.75;
+   cfl[1] = 1.5;
+   cfl[2] = 1.0;
    blk[0].setiter(0.75,cfl,1.0,0);
    
    for(i=0;i<nblocks;++i)
@@ -133,7 +132,7 @@ void blocks::nstage(int grdnum, int sm, int mgrid) {
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   static int i,j;
+   static int i,j,n;
    int grid,bsnum;
    
    grid = lvl -lg2pmax;
@@ -149,11 +148,20 @@ void blocks::cycle(int vw, int lvl = 0) {
 
       nstage(grid,base[bsnum].sm,lvl);
 
+/*		CALCULATE MAX RESIDUAL ON FINEST MESH */
+      if (lvl == 0) {
+         for(n=0;n<NV;++n)
+            mxr[n] = 0.0;
+      
+         for (i=0;i<nblocks;++i)
+            blk[i].grd[0].maxres(mxr);
+      }
+      
       if (lvl == mglvls-1) return;
       
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].rsdl(NSTAGE,lvl);
-      
+
       if (bsnum == 0) {
          for(j=0;j<nblocks;++j)
             blk[j].grd[grid+1].getfres();
@@ -199,18 +207,6 @@ void blocks::output(char *filename, FILETYPE filetype = text) {
       blk[0].grd[0].output(filename,filetype);
    }
    
-   return;
-}
-
-void blocks::maxres(FLT mx[NV]) {
-   int i,n;
-   
-   for(n=0;n<NV;++n)
-      mx[n] = 0.0;
-      
-   for (i=0;i<nblocks;++i)
-      blk[i].grd[0].maxres(mx);
-      
    return;
 }
    

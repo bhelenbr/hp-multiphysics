@@ -4,7 +4,7 @@
 
 void hp_mgrid::tstep1(void) {
 	static int tind,i,j,side,v0,*v;
-	static FLT a,h,hmax,q,qmax,lam1,c;
+	static FLT jcb,h,hmax,q,qmax,lam1,c;
 
 /***************************************/
 /** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -22,7 +22,7 @@ void hp_mgrid::tstep1(void) {
 	}
 
 	for(tind = 0; tind < ntri; ++tind) {
-      a = area(tind);
+      jcb = 0.25*area(tind);
 		v = tvrtx[tind];
 		hmax = 0.0;
 		for(j=0;j<3;++j) {
@@ -31,7 +31,7 @@ void hp_mgrid::tstep1(void) {
 			hmax = (h > hmax ? h : hmax);
 		}
 		hmax = sqrt(hmax);
-		h = 2.*a/(0.25*(b.p +1)*(b.p+1)*hmax);
+		h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
 		
 		qmax = 0.0;
 #ifdef MOVING_MESH
@@ -48,7 +48,6 @@ void hp_mgrid::tstep1(void) {
 			qmax = MAX(qmax,q);
 		}
 #endif
-
 		gbl.gam[tind] = qmax +(0.25*h*dt0 + gbl.nu/h)*(0.25*h*dt0 + gbl.nu/h);  
 		
 		q = sqrt(qmax);
@@ -56,12 +55,11 @@ void hp_mgrid::tstep1(void) {
 		lam1  = (q+c);
 		
 		gbl.dtstar[tind]  = gbl.nu/(h*h) +lam1/h +dt0;
-		gbl.dtstar[tind] *= a*gbl.rho;
+		gbl.dtstar[tind] *= jcb*gbl.rho;
 
 /*		SET UP DISSIPATIVE COEFFICIENTS */
-		gbl.tau[tind]  = gbl.adis*h/(a*sqrt(gbl.gam[tind]));
+		gbl.tau[tind]  = gbl.adis*h/(jcb*sqrt(gbl.gam[tind]));
 		gbl.delt[tind] = qmax*gbl.tau[tind];
-
 		gbl.gam[tind] =  1.0/gbl.gam[tind];
 		for(i=0;i<3;++i) {
 			gbl.vdiagv[v[i]]  += gbl.dtstar[tind]*b.vdiag;
@@ -86,19 +84,17 @@ void hp_mgrid::tstep2(void) {
 
 /*	FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl.vdiagv[i]  = gbl.flowcfl[log2p]/gbl.vdiagv[i];
-      gbl.vdiagp[i]  = gbl.flowcfl[log2p]/gbl.vdiagp[i];
+      gbl.vdiagv[i]  = 1.0/gbl.vdiagv[i];
+      gbl.vdiagp[i]  = 1.0/gbl.vdiagp[i];
    }
       
    if (b.sm > 0) {
 /*		FORM DIAGANOL PRECONDITIONER FOR SIDES */				
 		for(i=0;i<nside;++i) {
-			gbl.sdiagv[i] = gbl.flowcfl[log2p]/gbl.sdiagv[i];
-			gbl.sdiagp[i] = gbl.flowcfl[log2p]/gbl.sdiagp[i];
+			gbl.sdiagv[i] = 1.0/gbl.sdiagv[i];
+			gbl.sdiagp[i] = 1.0/gbl.sdiagp[i];
 		}
 	}
    
-   
-	
 	return;
 }
