@@ -60,7 +60,7 @@ void hp_mgrid::minvrt1(void) {
 	}
    
 /*********************************************/
-/*	SEND MESSAGES */	
+/*	SEND MESSAGES FOR VERTICES 					*/	
 /*********************************************/
 
    return;
@@ -70,11 +70,11 @@ void hp_mgrid::minvrt2(void) {
    static int i,k,tind,v0,indx,j,indx1,sgn,msgn;
    
 /**********************************/
-/*  RECEIVE MESSAGES */
-/**********************************/
-
+/*  RECEIVE MESSAGES FOR VERTICES */
 /* APPLY DIRCHLET B.C.S TO VERTICES */
-   
+/**********************************/
+   bdry_rcvandzero(-1);
+
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
 		gbl.vres[i][0] *= gbl.vdiagv[i];
@@ -126,8 +126,8 @@ void hp_mgrid::minvrt3(int mode) {
    static int sign[3],msgn,sgn,side[3];
    
 /* RECEIVE MESSAGE FOR MODE */
-
 /* APPLY DIRCHLET B.C.S TO MODE */
+   bdry_rcvandzero(mode);
 
 /*	SOLVE FOR MODE */
    indx = mode;
@@ -172,10 +172,10 @@ void hp_mgrid::minvrt4() {
    int i,k,n,sind,indx,tind;
    
 /* RECEIVE MESSAGE FOR LAST MODE */
-
 /* APPLY DIRICHLET B.C.'S */
-			
    indx = b.sm-1;
+   bdry_rcvandzero(indx);
+			
    for(sind = 0; sind < nside; ++sind) {
       gbl.sres[indx][0] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
       gbl.sres[indx][1] *= gbl.sdiagv[sind]*b.sdiag[b.sm-1];
