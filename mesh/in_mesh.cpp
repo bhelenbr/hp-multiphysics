@@ -4,44 +4,6 @@
 #include<cstdlib>
 #include<cstring>
 
-/* MAPPING FROM OLD DEFINITIONS TO NEW */
-#define NOLDBTYPE 14
-
-#define FSRF_OLD 1
-#define FCE1_OLD 2
-#define FCE2_OLD 4
-#define INFC_OLD 8
-#define INFS_OLD 32
-#define SYMC_OLD 16
-#define PDX1_OLD 64
-#define PDX2_OLD 128
-#define OUTF_OLD 512
-#define INVC_OLD 1024
-#define INVS_OLD 2048
-#define PDY1_OLD 4096
-#define PDY2_OLD 8192
-#define FXMV_OLD 256
-#define OUT2_OLD 513
-
-#define NOUSEOLDBTYPE
-
-const int oldbtype[NOLDBTYPE][2] = 
-                             {{FSRF_OLD,FSRF_MASK},
-                             {FCE1_OLD,IFCE_MASK},
-                             {FCE2_OLD,IFCE_MASK},
-                             {INFC_OLD,INFL_MASK+CURV_MASK},
-                             {INFS_OLD,INFL_MASK},
-                             {SYMC_OLD,SYMM_MASK},
-                             {PDX1_OLD,PRDX_MASK},
-                             {PDX2_OLD,PRDX_MASK},
-                             {OUTF_OLD,OUTF_MASK},
-                             {INVC_OLD,EULR_MASK+CURV_MASK},
-                             {INVS_OLD,EULR_MASK},
-                             {PDY1_OLD,PRDY_MASK},
-                             {PDY2_OLD,PRDY_MASK},
-                             {OUT2_OLD,OUTF_MASK+(1<<16)}};
-
-
 FLT *mesh::fltwk;
 int *mesh::intwk1, *mesh::intwk2, *mesh::intwk3;
 int mesh::gblmaxvst = 0;
@@ -88,18 +50,6 @@ int mesh::in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) 
                   printf("error in side file %s\n",grd_app);
                   exit(1);
                }
-                
-#ifdef USEOLDBTYPE
-/*					THIS IS TO MAP INPUT BOUNDARY DESCRIPTION NUMBERS TO SOMETHING ELSE */
-               if (sinfo[i]) {
-                  for(j=0;j<NOLDBTYPE;++j) {
-                     if( (sinfo[i]&(0xFFFF-FXMV_OLD)) == oldbtype[j][0]) {
-                        sinfo[i] = oldbtype[j][1];
-                        break;
-                     }
-                  }
-               }
-#endif
             }
             fclose(grd);	
             
@@ -429,4 +379,67 @@ next2:      continue;
    initvlngth();
 
    return(1);
+}
+
+/* MAPPING FROM OLD DEFINITIONS TO NEW */
+#define NOLDBTYPE 14
+
+#define FSRF_OLD 1
+#define FCE1_OLD 2
+#define FCE2_OLD 4
+#define INFC_OLD 8
+#define INFS_OLD 32
+#define SYMC_OLD 16
+#define PDX1_OLD 64
+#define PDX2_OLD 128
+#define OUTF_OLD 512
+#define INVC_OLD 1024
+#define INVS_OLD 2048
+#define PDY1_OLD 4096
+#define PDY2_OLD 8192
+#define FXMV_OLD 256
+#define OUT2_OLD 513
+
+void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
+
+   int oldbtype[NOLDBTYPE][2] = 
+                             {{FSRF_OLD,FSRF_MASK},
+                             {FCE1_OLD,IFCE_MASK},
+                             {FCE2_OLD,IFCE_MASK},
+                             {INFC_OLD,INFL_MASK+CURV_MASK},
+                             {INFS_OLD,INFL_MASK},
+                             {SYMC_OLD,SYMM_MASK},
+                             {PDX1_OLD,PRDX_MASK},
+                             {PDX2_OLD,PRDX_MASK},
+                             {OUTF_OLD,OUTF_MASK},
+                             {INVC_OLD,EULR_MASK+CURV_MASK},
+                             {INVS_OLD,EULR_MASK},
+                             {PDY1_OLD,PRDY_MASK},
+                             {PDY2_OLD,PRDY_MASK},
+                             {OUT2_OLD,OUTF_MASK+(1<<16)}};
+   int i,j;
+   
+   if (old == NULL) {
+      old = oldbtype;
+      nold = NOLDBTYPE;
+   }
+   
+   for(i=0;i<nvbd;++i) {
+      for(j=0;j<NOLDBTYPE;++j) {
+         if (vbdry[i].type == old[j][0]) {
+            vbdry[i].type = old[j][1];
+            break;
+         }
+      }
+   }
+   
+   for(i=0;i<nsbd;++i) {
+      for(j=0;j<NOLDBTYPE;++j) {
+         if (sbdry[i].type == old[j][0]) {
+            sbdry[i].type = old[j][1];
+            break;
+         }
+      }
+   }   
+   return;
 }

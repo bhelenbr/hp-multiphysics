@@ -179,6 +179,7 @@ class mesh {
 
 /*    INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      void convertbtypes(const int (*old)[2] = NULL, int nold = 0);
       int out_mesh(const char *filename, FILETYPE filetype = easymesh) const;
       void bcinfo();
       
