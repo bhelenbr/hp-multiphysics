@@ -91,26 +91,26 @@ int mesh::coarsen(const class mesh& fmesh) {
 		}
 
       odd = fmesh.sbdry[i].num%2;
-      for(j=2;j<fmesh.sbdry[i].num/2;j+=2) {
-			v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
-			vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
-			vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
-			intwk2[v0] = nvrtx;
-			svrtx[nside][1] = nvrtx;
-			sbdry[i].el[sbdry[i].num] = nside;
-         stri[nside][1] = -1;
-			++nside; 
-			++sbdry[i].num;
-			svrtx[nside][0] = nvrtx;
-			++nvrtx;
-         assert(sbdry[i].num < maxsbel -1);
-         assert(nside < maxvst -1);
-         assert(nvrtx < maxvst -1);
-		}
-      
-/*		IF ODD AVERAGE MIDDLE POINT (KEEPS SYMMETRY WITH MATCHING BOUNDARIES) */
       if (odd) {
          printf("coarsening side with odd number of points\n");
+         for(j=2;j<fmesh.sbdry[i].num/2;j+=2) {
+            v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
+            vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
+            vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
+            intwk2[v0] = nvrtx;
+            svrtx[nside][1] = nvrtx;
+            sbdry[i].el[sbdry[i].num] = nside;
+            stri[nside][1] = -1;
+            ++nside; 
+            ++sbdry[i].num;
+            svrtx[nside][0] = nvrtx;
+            ++nvrtx;
+            assert(sbdry[i].num < maxsbel -1);
+            assert(nside < maxvst -1);
+            assert(nvrtx < maxvst -1);
+         } 
+
+/*			MIDDLE POINT OF ODD NUMBERED SIDE */
          j = fmesh.sbdry[i].num/2;
          v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
          v1 = fmesh.svrtx[fmesh.sbdry[i].el[j]][1];
@@ -128,30 +128,42 @@ int mesh::coarsen(const class mesh& fmesh) {
          assert(sbdry[i].num < maxsbel -1);
          assert(nside < maxvst -1);
          assert(nvrtx < maxvst -1); 
-         j = fmesh.sbdry[i].num -((fmesh.sbdry[i].num-2)/4)*2;
-         
+         for(j = fmesh.sbdry[i].num -((fmesh.sbdry[i].num-2)/4)*2;j<fmesh.sbdry[i].num;j+=2) {
+            v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
+            vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
+            vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
+            intwk2[v0] = nvrtx;
+            svrtx[nside][1] = nvrtx;
+            sbdry[i].el[sbdry[i].num] = nside;
+            stri[nside][1] = -1;
+            ++nside; 
+            ++sbdry[i].num;
+            svrtx[nside][0] = nvrtx;
+            ++nvrtx;
+            assert(sbdry[i].num < maxsbel -1);
+            assert(nside < maxvst -1);
+            assert(nvrtx < maxvst -1);
+         }
       }
       else {
-         j = fmesh.sbdry[i].num/2;
+         for(j=2;j<fmesh.sbdry[i].num;j+=2) {
+            v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
+            vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
+            vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
+            intwk2[v0] = nvrtx;
+            svrtx[nside][1] = nvrtx;
+            sbdry[i].el[sbdry[i].num] = nside;
+            stri[nside][1] = -1;
+            ++nside; 
+            ++sbdry[i].num;
+            svrtx[nside][0] = nvrtx;
+            ++nvrtx;
+            assert(sbdry[i].num < maxsbel -1);
+            assert(nside < maxvst -1);
+            assert(nvrtx < maxvst -1);
+         }
       }
-
-      for(;j<fmesh.sbdry[i].num;j+=2) {
-			v0 = fmesh.svrtx[fmesh.sbdry[i].el[j]][0];
-			vrtx[nvrtx][0] = fmesh.vrtx[v0][0];
-			vrtx[nvrtx][1] = fmesh.vrtx[v0][1];
-			intwk2[v0] = nvrtx;
-			svrtx[nside][1] = nvrtx;
-			sbdry[i].el[sbdry[i].num] = nside;
-         stri[nside][1] = -1;
-			++nside; 
-			++sbdry[i].num;
-			svrtx[nside][0] = nvrtx;
-			++nvrtx;
-         assert(sbdry[i].num < maxsbel -1);
-         assert(nside < maxvst -1);
-         assert(nvrtx < maxvst -1);
-		}
-		
+      
 /*		INSERT LAST POINT */
 		v0 = fmesh.svrtx[fmesh.sbdry[i].el[fmesh.sbdry[i].num-1]][1];
 		if (intwk2[v0] < 0) {
