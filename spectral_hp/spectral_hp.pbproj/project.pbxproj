@@ -129,6 +129,7 @@
 				F5D77C310191A7BB01990B20,
 				F5D77C330191A7E901990B20,
 				F533C5CF01938985017C3E7F,
+				F5AC61740252568D01990B20,
 				F52FC80E01BE791F01990B20,
 				F50AF9AF0188AC3601990B20,
 				F564AD060185F05601990B20,
@@ -218,6 +219,7 @@
 				F52FC80F01BE791F01990B20,
 				F5D490A001C5369601990B20,
 				F54BE4D301E1038D01990B20,
+				F5AC61750252568D01990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -441,6 +443,7 @@
 			);
 			isa = PBXGroup;
 			name = Inputs;
+			path = "";
 			refType = 4;
 		};
 		F52FE4D0021429E601990B20 = {
@@ -697,6 +700,17 @@
 		};
 		F5A85EFC0186FF6101990B20 = {
 			fileRef = F5A85EFB0186FF6101990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5AC61740252568D01990B20 = {
+			isa = PBXFileReference;
+			path = drag.cpp;
+			refType = 4;
+		};
+		F5AC61750252568D01990B20 = {
+			fileRef = F5AC61740252568D01990B20;
 			isa = PBXBuildFile;
 			settings = {
 			};
