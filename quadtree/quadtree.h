@@ -19,10 +19,6 @@
 #define FLT double
 #endif
 
-#ifndef ND
-#define ND 2
-#endif
-
 class quad {
    private:
       friend class quadtree;
@@ -45,6 +41,7 @@ class quad {
 
 class quadtree {
    private:
+      static const int ND = 2;
       int maxvrtx;
       FLT (*vrtx)[ND];
       class quad *base;
