@@ -132,47 +132,18 @@ next1:      continue;
             }
             fclose(grd);
 
-/*	    		FIGURE OUT HOW MANY VERTEX BOUNDARY GROUPS THERE ARE & HOW MANY OF EACH */
+/*				THIS IS GOING TO HAVE TO CHANGE */
+/*	    		COUNT VERTEX BOUNDARY GROUPS  */
+            maxvbel = 2;
             nvbd = 0;
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
-                  for (j = 0; j <nvbd;++j) {
-                     if (vinfo[i] == vbdry[j].type) {
-                        ++vbdry[j].num;
-                        goto next2;
-                     }
-                  }
-/*			    		NEW SIDE */
+/*			    		NEW VRTX B.C. */
                   vbdry[nvbd].type = vinfo[i];
                   vbdry[nvbd].num = 1;
+                  if (!initialized) vbdry[nvbd].el = new int[maxvbel];
+                  vbdry[nvbd].el[0] = i;
                   ++nvbd;
-               }
-next2:      continue;
-            }
-
-            if (!initialized) {
-/*					ALLOCATE STORAGE */    
-               maxvbel = 0;
-               for(i=0;i<nvbd;++i)
-                  maxvbel = MAX(vbdry[i].num,maxvbel);	
-
-               maxvbel = maxvbel + (int) (grwfac*maxvbel);
-      
-               for(i=0;i<nvbd;++i)
-                  vbdry[i].el = new int[maxvbel];
-            }
-            
-            for(i=0;i<nvbd;++i)
-               vbdry[i].num = 0;
-    
-            for(i=0;i<nvrtx;++i) {
-               if (vinfo[i]) {
-                  for (j = 0; j <nvbd;++j) {
-                     if (vinfo[i] == vbdry[j].type) {
-                        vbdry[j].el[vbdry[j].num++] = i;
-                        break;
-                     }
-                  }
                }
             }
                         
