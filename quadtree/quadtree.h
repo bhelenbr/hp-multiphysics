@@ -71,7 +71,7 @@ class quadtree {
       inline FLT xmax() {return(base[0].xmax);}
       inline FLT ymax() {return(base[0].ymax);} 
            
-      void addpt(int v0, class quad *start = NULL);
+      void addpt(int v0, class quad *start = 0);
       
       FLT nearpt(int v0, int& pt) const;
       FLT nearpt(FLT x, FLT y, int& pt) const;

@@ -157,7 +157,7 @@ void quadtree::reinit() {
 
 
 
-void quadtree::addpt(int v0, class quad* start = NULL) {
+void quadtree::addpt(int v0, class quad* start) {
    int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    class quad *qpt;  // SAME
    int store[5];
@@ -377,7 +377,7 @@ void quadtree::dltpt(int v0) {
    return;
 }
 
-void quadtree::output(char *filename, FILETYPE type=tecplot) {
+void quadtree::output(char *filename, FILETYPE type) {
    int i,nsrch;
    char fnmapp[100];
    class quad *qpt;
