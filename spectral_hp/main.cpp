@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 //   myblock.output(1,text);
    myblock.go();
    cpu_time = clock();
-   printf("that took %ld cpu time\n",cpu_time);
+   printf("#that took %ld cpu time\n",cpu_time);
    return(0);
 #endif
 

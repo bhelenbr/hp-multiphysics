@@ -16,7 +16,7 @@
 
 /* INITIAL CONDITIONS */
 /* KOVASZNAY TEST CYLINDER FREESTREAM */
-#define TEST
+#define CONVDIFF
 
 /*	CURVED SURFACES */
 /* CIRCLE SIN COS */
@@ -31,7 +31,7 @@ FLT centery = 0.0;
 #ifdef COS
 FLT amp = 0.375;
 #else
-FLT amp = 0.0*0.075;
+FLT amp = 0.25*0.075;
 #endif
 
 
@@ -61,7 +61,7 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(0.0 +0.0*(x+0.5)*(x-3.0)*sin(M_PI*y));
+         return(1.0 +0.0*(x+0.5)*(x-3.0)*sin(M_PI*y));
       case(1):
          return(0.0);
       case(2):
@@ -142,6 +142,49 @@ double df1d(int n, double x, double y, int dir) {
    return(0.0);
 }
 #endif
+
+#ifdef CONVDIFF
+
+// FLT forcing(FLT x,FLT y) { return(-cos(2.*M_PI*x));}
+FLT forcing(FLT x,FLT y) {return(0.0);}
+FLT blayer = 0.0;
+FLT axext = 0.0*cos(10.0), ayext = 0.0*sin(10.0);
+FLT nuext = 1.0;
+
+FLT f1(int n, FLT x, FLT y) {
+   FLT nux = nuext*4.*M_PI*M_PI;
+   FLT axx = axext*2.*M_PI;
+   FLT xx = x*2.*M_PI;
+   FLT yx = y*2.*M_PI;
+   switch(n) {
+      case(1):
+         return(axx*sin(xx)/(axx*axx +nux*nux)
+           +nux*cos(xx)/(axx*axx +nux*nux)
+           +(nux > 0.0 ? blayer*exp(axx/nux*xx) : 0.0)
+           +startup*(x*(1-x)*y*(1-y)*(sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
+      case(0):
+         return(startup*(x*(1-x)*y*(1-y)*(sin(xx) +sin(100*xx))*(sin(yx)+sin(100*yx))));
+   }
+   return(0.0);
+}
+
+FLT df1d(int n, FLT x, FLT y) {
+   FLT nux = nuext*4.*M_PI*M_PI;
+   FLT axx = axext*2.*M_PI;
+   FLT xx = x*2.*M_PI;
+   switch(n) {
+      case(1):
+         return(axx*cos(xx)/(axx*axx +nux*nux) 
+           -nuext*sin(x)/(axx*axx +nux*nux)
+           +(nux > 0.0 ? blayer*axx/nux*exp(axx/nux*xx) : 0.0));
+      case(0):
+         return(0.0);
+   }
+   return(0.0);
+}
+
+#endif
+
 
 /***************************/
 /* CURVED SIDE DEFINITIONS */
@@ -243,6 +286,46 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       
       return;
    }
+   
+   if (typ == 1026) {
+      if (startup) {
+         iter = 0;
+         do {
+            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
+            delt_dist = -(hgt(typ,x,y)+0.5)/mag;
+            x += delt_dist*dhgtdx(typ,x,y);
+            y += delt_dist*dhgtdy(typ,x,y);
+            if (++iter > 100) {
+               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               exit(1);
+            }
+         } while (fabs(delt_dist) > 10.*EPSILON);
+      }
+      else 
+         tgt->findbdrypt(typ,x,y,psi);
+      
+      return;
+   }
+   
+   if (typ == 66562) {
+       if (startup) {
+         iter = 0;
+         do {
+            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
+            delt_dist = -(hgt(typ,x,y)-0.5)/mag;
+            x += delt_dist*dhgtdx(typ,x,y);
+            y += delt_dist*dhgtdy(typ,x,y);
+            if (++iter > 100) {
+               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               exit(1);
+            }
+         } while (fabs(delt_dist) > 10.*EPSILON);
+      }
+      else 
+         tgt->findbdrypt(typ,x,y,psi);
+      
+      return;
+   }  
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {
       if (startup) {

@@ -29,6 +29,8 @@ int hp_mgrid::size;
 /* STATIC VARIABLES USED BY ALL HP_MGRID OBJECTS */
 const FLT hp_mgrid::alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0};
 const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
+//const FLT hp_mgrid::alpha[NSTAGE+1] = {1.0, 1.0};  // 1 JACOBI SWEEP
+//const FLT hp_mgrid::beta[NSTAGE+1] = {1.0, 1.0};  // 1 JACOBI SWEEP
 int hp_mgrid::extrap=0;
 FLT hp_mgrid::bd[MXSTEP+1];
 FLT hp_mgrid::dti=0.0, hp_mgrid::time=0.0, hp_mgrid::g=0.0;

@@ -11,7 +11,7 @@
 #include<float.h>
 #include<hpbasis.h>
 
-#define NV 3
+#define NV 1
 
 /* SOLUTION VECTOR */
 struct vsi {

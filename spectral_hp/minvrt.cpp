@@ -53,11 +53,9 @@ void hp_mgrid::minvrt1(void) {
    
    /* SOLVE FOR VERTEX MODES */
 #ifdef CONSERV
-   for(i=0;i<nvrtx;++i) {
-      gbl->res.v[i][0] *= gbl->vprcn[i][0][0];
-      gbl->res.v[i][1] *= gbl->vprcn[i][0][0];
-      gbl->res.v[i][2] *= gbl->vprcn[i][NV-1][NV-1];
-   }
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         gbl->res.v[i][n] *= gbl->vprcn[i][n][n];
 #else
    for(i=0;i<nvrtx;++i) {
       gbl->res.v[i][0] = gbl->res.v[i][0]*gbl->vprcn[i][0][0] +gbl->res.v[i][2]*gbl->vprcn[i][0][NV-1];
@@ -82,7 +80,7 @@ void hp_mgrid::minvrt1(void) {
    /* CALL bdry_mp() here */
 
 void hp_mgrid::minvrt2(void) {
-   int i,k,sind,tind,v0,indx,j,indx1,sgn,msgn;
+   int i,k,n,sind,tind,v0,indx,j,indx1,sgn,msgn;
    
    /**********************************/
    /*  RECEIVE MESSAGES FOR VERTICES */
@@ -105,9 +103,8 @@ void hp_mgrid::minvrt2(void) {
 #ifdef CONSERV
       for(i=0;i<3;++i) {
          v0 = tvrtx[tind][i];
-         uht[0][i] = gbl->res.v[v0][0]*gbl->tprcn[tind][0][0];
-         uht[1][i] = gbl->res.v[v0][1]*gbl->tprcn[tind][0][0];
-         uht[2][i] = gbl->res.v[v0][2]*gbl->tprcn[tind][NV-1][NV-1];
+         for(n=0;n<NV;++n)
+            uht[n][i] = gbl->res.v[v0][n]*gbl->tprcn[tind][n][n];
       }
 
       for(i=0;i<3;++i) {
@@ -117,9 +114,8 @@ void hp_mgrid::minvrt2(void) {
             indx1 = (i+j)%3;
             msgn = 1;
             for(k=0;k<b.sm;++k) {
-               gbl->res.s[indx +k][0] -= msgn*b.vfms[j][k]*uht[0][indx1];
-               gbl->res.s[indx +k][1] -= msgn*b.vfms[j][k]*uht[1][indx1];
-               gbl->res.s[indx +k][2] -= msgn*b.vfms[j][k]*uht[2][indx1];
+               for(n=0;n<NV;++n)
+                  gbl->res.s[indx +k][n] -= msgn*b.vfms[j][k]*uht[n][indx1];
                msgn *= sgn;
             }
          }
@@ -154,9 +150,8 @@ void hp_mgrid::minvrt2(void) {
 #ifdef CONSERV
    indx = 0;
    for(sind = 0; sind < nside; ++sind) {
-      gbl->res.s[indx][0] *= gbl->sprcn[sind][0][0]*b.sdiag[0];
-      gbl->res.s[indx][1] *= gbl->sprcn[sind][0][0]*b.sdiag[0];
-      gbl->res.s[indx][2] *= gbl->sprcn[sind][NV-1][NV-1]*b.sdiag[0];
+      for(n=0;n<NV;++n)
+         gbl->res.s[indx][n] *= gbl->sprcn[sind][n][n]*b.sdiag[0];
       indx += b.sm;
    }
 #else
@@ -193,9 +188,8 @@ void hp_mgrid::minvrt3(int mode) {
          side[i] = tside[tind].side[i]*b.sm;
          sign[i] = tside[tind].sign[i];
          sgn     = (mode % 2 ? sign[i] : 1);
-         uht[0][i] = sgn*gbl->res.s[side[i]+mode][0]*gbl->tprcn[tind][0][0];
-         uht[1][i] = sgn*gbl->res.s[side[i]+mode][1]*gbl->tprcn[tind][0][0];
-         uht[2][i] = sgn*gbl->res.s[side[i]+mode][2]*gbl->tprcn[tind][NV-1][NV-1];
+         for(n=0;n<NV;++n)
+            uht[n][i] = sgn*gbl->res.s[side[i]+mode][n]*gbl->tprcn[tind][n][n];
       }
       
       /* REMOVE MODES J,K FROM MODE I,M */
@@ -241,9 +235,8 @@ void hp_mgrid::minvrt3(int mode) {
 #ifdef CONSERV
       indx = mode +1;
       for(sind = 0; sind < nside; ++sind) {
-         gbl->res.s[indx][0] *= gbl->sprcn[sind][0][0]*b.sdiag[mode+1];
-         gbl->res.s[indx][1] *= gbl->sprcn[sind][0][0]*b.sdiag[mode+1];
-         gbl->res.s[indx][2] *= gbl->sprcn[sind][NV-1][NV-1]*b.sdiag[mode+1];
+         for(n=0;n<NV;++n)
+            gbl->res.s[indx][n] *= gbl->sprcn[sind][n][n]*b.sdiag[mode+1];
          indx += b.sm;
       }
 #else
@@ -277,9 +270,8 @@ void hp_mgrid::minvrt4() {
          restouht_bdry(tind);
 #ifdef CONSERV
          for(k=0;k<b.im;++k) {
-            gbl->res.i[indx][0] /= gbl->tprcn[tind][0][0];
-            gbl->res.i[indx][1] /= gbl->tprcn[tind][0][0];
-            gbl->res.i[indx][2] /= gbl->tprcn[tind][NV-1][NV-1];
+            for(n=0;n<NV;++n)
+               gbl->res.i[indx][n] /= gbl->tprcn[tind][n][n];
             
             for (i=0;i<b.bm;++i)
                for(n=0;n<NV;++n) 
@@ -426,8 +418,8 @@ void hp_mgrid::minvrt_test_tstep() {
 #ifdef AXISYMMETRIC
       dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
-      gbl->tprcn[tind][0][0] = dtstari;      
-      gbl->tprcn[tind][NV-1][NV-1] =  dtstari;
+      for(n=0;n<NV;++n)
+         gbl->tprcn[tind][n][n] = dtstari;      
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
          gbl->vprcn[v[i]][NV-1][NV-1]  += gbl->tprcn[tind][NV-1][NV-1];

@@ -1,5 +1,12 @@
 GRIDNAME
-/Users/helenbrk/Codes/grids/WAVE/INOUT/wave8
+/Users/helenbrk/Codes/grids/SQUARE/square16a
+FORMAT (0 EM) (1 GAMBIT)   GROWTH FACTOR
+0            32.0
+RHO      MU
+1.0      0.00
+
+GRIDNAME
+/Users/helenbrk/Codes/grids/SHEET/bot
 FORMAT (0/1 EM/GAMBIT)   GROWTH FACTOR
 0                        10.0
 RHO      MU
@@ -7,9 +14,9 @@ RHO      MU
 N SURFACES (NO DUPLICATES)
 1
 SURFACE ID
-1025
+1026
 SIGMA      RHO2      MU2
-0.00      0.0      0.0
+0.10       500.0      1.25
 
 GRIDNAME
 /Users/helenbrk/Codes/grids/WAVE/BIGAMP/bamp0.375
@@ -25,11 +32,17 @@ SIGMA      RHO2      MU2
 0.002      0.0      0.0
 
 GRIDNAME
-/Users/helenbrk/Codes/grids/SQUARE/square1a
-FORMAT (0 EM) (1 GAMBIT)   GROWTH FACTOR
-0            8.0
+/Users/helenbrk/Codes/grids/WAVE/INOUT/wave8
+FORMAT (0/1 EM/GAMBIT)   GROWTH FACTOR
+0                        10.0
 RHO      MU
-1.0      0.00
+1.0      0.025
+N SURFACES (NO DUPLICATES)
+1
+SURFACE ID
+1025
+SIGMA      RHO2      MU2
+0.00      0.0      0.0
 
 GRIDNAME
 /Users/helenbrk/Codes/grids/TRI/tri2
@@ -53,19 +66,6 @@ RHO      MU
 1.0      0.025
 
 GRIDNAME
-/Users/helenbrk/Codes/grids/SHEET/bot
-FORMAT (0/1 EM/GAMBIT)   GROWTH FACTOR
-0                        10.0
-RHO      MU
-1.0      0.025
-N SURFACES (NO DUPLICATES)
-1
-SURFACE ID
-1026
-SIGMA      RHO2      MU2
-0.00       500.0      1.25
-
-GRIDNAME /home/helenbrk/codes/grids2/SPHERE/AXICY/axicy3
 /Users/helenbrk/shelob/codes/grids2/SPHERE/AXICY/axicy3
 FORMAT   GROWTH FACTOR
 0            100.0
@@ -128,7 +128,7 @@ SIGMA      RHO2      MU2
 0.02      0.0      0.0
 
 GRIDNAME
-/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids2/CYLINDER/cy_new
+/Users/helenbrk/codes/grids2/CYLINDER/cy_new
 FORMAT   GROWTH FACTOR
 0            10.0
 RHO      MU
@@ -142,7 +142,7 @@ RHO      MU
 1.0      0.025
 
 GRIDNAME
-/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids2/CYLINDER/cy_new
+/Users/helenbrk/codes/grids2/CYLINDER/cy_new
 FORMAT   GROWTH FACTOR
 0            10.0
 RHO      MU
@@ -156,7 +156,7 @@ RHO      MU
 1.0      0.025
 
 GRIDNAME
-/private/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/AXICY/LONG/long
+/Users/helenbrk/codes/grids/AXICY/LONG/long
 FORMAT   GROWTH FACTOR
 0            40.0
 RHO      MU

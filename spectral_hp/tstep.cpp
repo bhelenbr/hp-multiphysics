@@ -13,16 +13,14 @@ void hp_mgrid::tstep1(void) {
    /***************************************/
    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
    /***************************************/
-   for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0] = 0.0;
-      gbl->vprcn[i][NV-1][NV-1] = 0.0;
-   }
+   for(i=0;i<nvrtx;++i)
+      for(n=0;n<NV;++n)
+         gbl->vprcn[i][n][n] = 0.0;
 
    if (b.sm > 0) {
-      for(i=0;i<nside;++i) {
-         gbl->sprcn[i][0][0] = 0.0;
-         gbl->sprcn[i][NV-1][NV-1] = 0.0;
-      }
+      for(i=0;i<nside;++i) 
+         for(n=0;n<NV;++n)
+            gbl->sprcn[i][n][n] = 0.0;
    }
    
 #ifdef ARTIFICIAL_COMPRESSIBILITY
@@ -74,7 +72,8 @@ void hp_mgrid::tstep1(void) {
 #ifdef AXISYMMETRIC
       jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
-      gbl->tprcn[tind][0][0] = gbl->rho*jcb;      
+      gbl->tprcn[tind][0][0] = gbl->rho*jcb; 
+      gbl->tprcn[tind][1][1] = gbl->rho*jcb;     
       gbl->tprcn[tind][NV-1][NV-1] =  jcb/gam;
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
@@ -127,7 +126,8 @@ void hp_mgrid::tstep1(void) {
 #ifdef AXISYMMETRIC
       dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
-      gbl->tprcn[tind][0][0] = gbl->rho*dtstari;      
+      gbl->tprcn[tind][0][0] = gbl->rho*dtstari;   
+      gbl->tprcn[tind][1][1] = gbl->rho*dtstari;     
       gbl->tprcn[tind][NV-1][NV-1] =  dtstari/gam;
       for(i=0;i<3;++i) {
          gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
@@ -312,14 +312,16 @@ void hp_mgrid::tstep2(void) {
       
    /* FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0]  = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);
-      gbl->vprcn[i][NV-1][NV-1]  = 1.0/(b.vdiag*gbl->vprcn[i][NV-1][NV-1]);
+      gbl->vprcn[i][0][0] = 1.0/(b.vdiag*gbl->vprcn[i][0][0]);
+      gbl->vprcn[i][1][1] = gbl->vprcn[i][0][0];
+      gbl->vprcn[i][NV-1][NV-1] = 1.0/(b.vdiag*gbl->vprcn[i][NV-1][NV-1]);
    }
       
    if (b.sm > 0) {
       /* FORM DIAGANOL PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
          gbl->sprcn[i][0][0] = 1.0/gbl->sprcn[i][0][0];
+         gbl->sprcn[i][1][1] = gbl->sprcn[i][0][0];
          gbl->sprcn[i][NV-1][NV-1] = 1.0/gbl->sprcn[i][NV-1][NV-1];
       }
    }
