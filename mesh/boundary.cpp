@@ -231,7 +231,7 @@ template<class MESH> void side_template<MESH>::output(std::ostream& out) {
 template<class MESH> void side_template<MESH>::input(FILE *in, FLT grwfac) {
 	int i;
 	
-	fscanf(in,"number: %d\n",&nel);
+	fscanf(in,"%*[^:]:%d\n",&nel);
 	
 	if (!maxel) alloc(static_cast<int>(grwfac*nel));
 	else assert(nel < maxel);

@@ -6,9 +6,17 @@
 #include <mpi.h>
 #endif
 
+#ifdef CAPRI
+#include <capri.h>
+#endif
+
 using namespace std;
 
+#ifdef CAPRI
+CAPRI_MAIN(int argc, char *argv[]) {
+#else
 int main(int argc, char *argv[]) {
+#endif
    class blocks z;
    
 #ifdef MPISRC
@@ -338,3 +346,4 @@ int main(int argc, char *argv[]) {
 #MAX 671 BDRY 5 TYPE 65544 SIDES 8
 that took 2795 cpu time
 */
+

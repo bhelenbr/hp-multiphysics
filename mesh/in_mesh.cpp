@@ -3,6 +3,10 @@
 #include<cstdlib>
 #include<cstring>
 
+#ifdef CAPRI
+#include <capri.h>
+#endif
+
 FLT *mesh<2>::fltwk;
 int *mesh<2>::intwk1;
 int *mesh<2>::intwk2;
@@ -25,6 +29,14 @@ template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTY
     char grd_app[100];
     FILE *grd;
     int v[3],s[3],e[3];
+    int bcntr[MAXSB];
+#ifdef CAPRI
+   int status;
+   int cpri_nnode,cpri_nedge,cpri_nface,cpri_nbound;
+   int *cpri_tris,*cpri_tric,*cpri_ptype,*cpri_pindex;
+   double *cpri_points, *cpri_uv;
+   char *cpri_name; 
+#endif
         
     switch (filetype) {            
         case(easymesh):
@@ -51,7 +63,6 @@ template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTY
                exit(1);
             }
            
-            count = 0;
             for(i=0;i<nside;++i) {
                ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
                ,&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
@@ -59,7 +70,6 @@ template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTY
                   *log << "error: in side file " << grd_app << std::endl;
                   exit(1);
                }
-               if (sinfo[i]) ++count;
             }
             fclose(grd);
             
@@ -68,27 +78,45 @@ template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTY
                stri[i][1] = -1;
             }
             
-            /* ORGANIZE BOUNDARY GROUPS */
+            /* COUNT BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
                   for (j = 0; j <nsbd;++j) {
                      if (sinfo[i] == sbdry[j]->idnty()) {
-                        sbdry[j]->sd(sbdry[j]->nsd()++) = i;
+                        ++bcntr[j];
                         goto next1;
                      }
                   }
                   /* NEW SIDE */
                   getnewsideobject(nsbd,sinfo[i]);
-                  sbdry[nsbd]->alloc(static_cast<int>(count*grwfac));
-                  sbdry[nsbd]->nsd() = 1;
-                  sbdry[nsbd++]->sd(0)= i;
+                  bcntr[nsbd++] = 1;
                   if (nsbd > MAXSB) {
                      *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
                      exit(1);
                   }
                }
 next1:      continue;
+            }
+            
+            for(i=0;i<nsbd;++i) {
+               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
+               sbdry[i]->nsd() = 0;
+            }
+            
+            
+            for(i=0;i<nside;++i) {
+               if (sinfo[i]) {
+                  for (j = 0; j <nsbd;++j) {
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        sbdry[j]->sd(sbdry[j]->nsd()++) = i;
+                        goto next1a;
+                     }
+                  }
+                  printf("Big error\n");
+                  exit(1);
+               }
+next1a:     continue;
             }
                
             /* LOAD VERTEX INFORMATION               */
@@ -194,8 +222,7 @@ next1:      continue;
             /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
             /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
             if (!initialized) {
-               maxvst = (3*i)/2; 
-               maxvst = nvrtx +(int) (grwfac*nvrtx);
+               maxvst = static_cast<int>((grwfac*3*i)/2); 
                allocate(maxvst);
                vin = vrtx;
             }
@@ -299,8 +326,8 @@ next1:      continue;
             strcat(grd_app,".grd");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    *log << "couldn't open file: " << grd_app << std::endl;
-                    exit(1);
+               *log << "couldn't open grid file: " << grd_app << std::endl;
+               exit(1);
             }
             /* HEADER LINES */
             fscanf(grd,"nvrtx: %d\t nside: %d\t ntri: %d\n",&nvrtx,&nside,&ntri);
@@ -333,11 +360,11 @@ next1:      continue;
             createtsidestri();
    
             /* SIDE BOUNDARY INFO HEADER */
-            fscanf(grd,"nsbd: %d\n",&nsbd);
-
+            fscanf(grd,"nsbd: %d",&nsbd);
             count = 0;
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"idnty: %d\n",&temp);
+
+               fscanf(grd,"%*[^:]:%d\n",&temp);
                getnewsideobject(i,temp);
                sbdry[i]->input(grd,grwfac);
             }
@@ -345,7 +372,7 @@ next1:      continue;
             /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"nvbd: %d\n",&nvbd);
             for(i=0;i<nvbd;++i) {
-               fscanf(grd,"idnty: %d\n",&temp);
+               fscanf(grd,"idnum: %d\n",&temp);
                getnewvrtxobject(i,temp);
                vbdry[i]->alloc(1);
                vbdry[i]->input(grd);
@@ -386,7 +413,7 @@ next1:      continue;
             fscanf(grd,"%*d%d%*d%d%*d%*d\n",&temp,&count);
             
             /* EXTERNAL BOUNDARY */
-            getnewsideobject(0,OUTF_MASK);
+            getnewsideobject(0,(1<<3));
             sbdry[0]->alloc(static_cast<int>(grwfac*temp));
             sbdry[0]->nsd() = temp;
             for(i=0;i<sbdry[0]->nsd();++i)
@@ -395,7 +422,7 @@ next1:      continue;
             ++nsbd;
             
             for(i=1;i<nsbd;++i) {
-               getnewsideobject(i,EULR_MASK+CURV_MASK);
+               getnewsideobject(i,(1<<5) +(1<<10));
                fscanf(grd,"%*[^\n]\n");
                fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry[i]->nsd());
                sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nsd()));
@@ -504,6 +531,123 @@ next1:      continue;
             
             return(1);
 
+#ifdef CAPRI         
+         case(BRep):
+            /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
+            sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
+                        
+            status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
+            *log << " gi_uGetVolume status =" << status << std::endl;
+            if (status != CAPRI_SUCCESS) exit(1);
+            *log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
+
+            status = gi_dTesselFace(cpri_vol, cpri_face, &ntri, &cpri_tris, &cpri_tric, &nvrtx, &cpri_points, 
+               &cpri_ptype, &cpri_pindex, &cpri_uv);
+            if (status != CAPRI_SUCCESS) {
+               *log << "gi_dTesselFace status = " << status << std::endl;
+               exit(1);
+            }
+
+            /* ALLOCATE BASIC STORAGE */
+            if (!initialized) {
+               maxvst = static_cast<int>((grwfac*3*ntri)/2); 
+               allocate(maxvst);
+               vin = vrtx;
+            }
+            else if ((3*ntri)/2 > maxvst) {
+               *log << "mesh is too large" << std::endl;
+               exit(1);
+            }
+            
+            /* LOAD VERTEX INFO */
+            for (i=0;i<nvrtx;++i)
+               for(n=0;n<ND;++n)
+                  vrtx[i][n] = cpri_points[i*3+n];
+            
+            /* LOAD TRI INFORMATION */
+            for (i=0;i<ntri;++i)
+               for(n=0;n<3;++n)
+                  tvrtx[i][n] = cpri_tris[i*3+n] -1;
+                              
+            /* CREATE SIDE INFORMATION */
+            createsideinfo();
+            
+            nvbd = 0;
+            /* CREATE VERTEX BOUNDARIES */
+            for(i=0;i<nvrtx;++i) {
+               if (cpri_ptype[i] == 0) {
+                  getnewvrtxobject(nvbd,cpri_pindex[i]);
+                  vbdry[nvbd]->alloc(1);
+                  vbdry[nvbd]->v() = i;
+                  ++nvbd;
+                  if (nvbd >= MAXVB) {
+                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
+                     exit(1);
+                  }
+               }
+            }
+            
+            for(i=0;i<nside;++i)
+               sinfo[i] = 0;
+            
+            /* COUNT BOUNDARY GROUPS */
+            nsbd = 0;
+            for(i=0;i<nside;++i) {
+               if (stri[i][1] < 0) {
+                  v0 = svrtx[i][0];
+                  /* FIGURE OUT EDGE INDEX */
+                  if (cpri_ptype[v0] > 0) {
+                     sinfo[i] = cpri_pindex[v0];
+                  }
+                  else {
+                     v0 = svrtx[i][1];
+                     if (cpri_ptype[v0] > 0) {
+                        sinfo[i] = cpri_pindex[v0];
+                     }
+                     else {
+                        *log << "Error in BRep Boundary Groups\n";
+                        exit(1);
+                     }
+                  }
+                  for (j = 0; j <nsbd;++j) {
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        ++bcntr[j];
+                        goto next1b;
+                     }
+                  }
+                  /* NEW SIDE */
+                  getnewsideobject(nsbd,sinfo[i]);
+                  bcntr[nsbd++] = 1;
+                  if (nsbd > MAXSB) {
+                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
+                     exit(1);
+                  }
+               }
+next1b:      continue;
+            }
+            
+            for(i=0;i<nsbd;++i) {
+               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
+               sbdry[i]->nsd() = 0;
+            }
+            
+            for(i=0;i<nside;++i) {
+               if (sinfo[i]) {
+                  for (j = 0; j <nsbd;++j) {
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        sbdry[j]->sd(sbdry[j]->nsd()++) = i;
+                        goto next1c;
+                     }
+                  }
+                  printf("Big error\n");
+                  exit(1);
+               }
+next1c:     continue;
+            }
+            
+            break;
+#endif
+
          default:
             *log << "That filetype is not supported" << std::endl;
             exit(1);
@@ -550,7 +694,7 @@ next1:      continue;
    initvlngth();
 
    initialized = 1;
-   
+
    return(1);
 }
 

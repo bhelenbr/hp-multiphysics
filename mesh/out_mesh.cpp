@@ -14,7 +14,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, FT
    int i,j,n,tind,count;
    ofstream out;
    
-   out << scientific;
+   out.setf(std::ios::scientific, std::ios::floatfield);
    out.precision(10);
          
    switch (filetype) {

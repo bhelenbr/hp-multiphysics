@@ -9,7 +9,7 @@
 
 #include "blocks.h"
 #include "boundary.h"
-#include<time.h>
+#include <time.h>
 #include <input_map.h>
 #include <utilities.h>
 #include <iostream>
@@ -21,6 +21,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef CAPRI
+#include <capri.h>
+#endif
+
 void blocks::init(const char *infile, const char *outfile) {
    int i,nb,total;
    char ctemp[100],fname[100];
@@ -30,15 +34,17 @@ void blocks::init(const char *infile, const char *outfile) {
 #ifdef MPISRC
    MPI_Comm_size(MPI_COMM_WORLD,&nproc);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif
+#endif   
 
    input_map(maptemp,infile);
    
    /* EXTRACT NBLOCKS FOR MYID */
    /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
+   /* TO AVOID BUGS IN GCC 2.97 */
    total = 0;
    std::istringstream data(maptemp["nblock"]);
    for (i=0;i<myid;++i) {
+      std::cout << i << std::endl;
       data >> nb;  
       total += nb;
    }
@@ -48,8 +54,8 @@ void blocks::init(const char *infile, const char *outfile) {
 
    data.str(maptemp["nblock"]);
    data >> nblock;  
-   data.clear();   
-   
+   data.clear(); 
+
    /* ALLOCATE MAP ARRAY */
    input = new std::map<std::string,std::string>[nblock+1];
    input[0] = maptemp;
@@ -90,27 +96,45 @@ void blocks::init(std::map<std::string,std::string> input[]) {
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
    
-   /* OPEN LOGFILES FOR EACH BLOCK */
+   
+   std::istringstream data;
+
+   /* OPEN LOGFILES FOR EACH PROCESSOR */
    mi = input[0].find("logfile");
    if (mi != input[0].end()) {
-      std::istringstream data(mi->second);
+      data.str(mi->second);
       data >> outfile;
+      data.clear();
       strcat(outfile,".");
       number_str(outfile,outfile,myid,1);
       strcat(outfile,".log");
-      filelog.setf(std::ios_base::scientific, std::ios_base::floatfield);
+      filelog.setf(std::ios::scientific, std::ios::floatfield);
       filelog.precision(3);
       filelog.open(outfile);
       log = &filelog;
    }
    else {
-      std::cout.setf(std::ios_base::scientific, std::ios_base::floatfield);
+      std::cout.setf(std::ios::scientific, std::ios::floatfield);
       std::cout.precision(3);
       log = &std::cout;
    }
-     
+#ifdef CAPRI
+   int status = gi_uStart();
+   *log << "gi_uStart status = ", status, "\n";
+   if (status != CAPRI_SUCCESS) exit(1);
+   
+   mi = input[0].find("BRep");
+   if (mi != input[0].end()) {
+      char temp[100];
+      strcpy(temp,mi->second.c_str());
+      status = gi_uLoadPart(temp);
+      *log << mi->second << ": gi_uLoadPart status = " << status << std::endl;
+      if (status != CAPRI_SUCCESS) exit(1);
+   }
+#endif   
+   
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
-   std::istringstream data(input[0]["itercrsn"]);   
+   data.str(input[0]["itercrsn"]);   
    data >> itercrsn;
    *log << "#itercrsn: " << itercrsn << std::endl;
    data.clear();
@@ -138,7 +162,7 @@ void blocks::init(std::map<std::string,std::string> input[]) {
    data.str(input[0]["ntstep"]);   
    data >> ntstep;
    *log << "#ntstep: " << ntstep << std::endl;
-   data.clear(); 
+   data.clear();
    
    /* LOAD NUMBER OF GRIDS */
    data.str(input[0]["nblock"]);
@@ -172,9 +196,16 @@ void blocks::init(std::map<std::string,std::string> input[]) {
       blk[i]->load_const(merge);
       blk[i]->alloc(merge);
    }
+   
+   output("channel",tecplot);
+   output("channel",grid);
 
    findmatch();
+   matchboundaries();
    
+   output("channel1",tecplot);
+   output("channel1",grid);
+
    return;
 }
 
@@ -622,3 +653,4 @@ void blocks::restructure() {
             
    return;
 }
+

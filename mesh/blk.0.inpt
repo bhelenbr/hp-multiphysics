@@ -1,12 +1,5 @@
-%blktype: 0
-%mesh: /Users/helenbrk/Codes/grids/WIND/PRDC/top8
-%growth factor: 4.0
-%filetype: 0
-blktype: 0
-mesh: /Users/helenbrk/Codes/grids3d/plane/plane
-growth factor: 4.0
-filetype: 0
-
-
-
-
+blktype:	3
+mesh:channel.0
+filetype:	3
+growth factor:	4.0
+adapt:	1

@@ -2,11 +2,15 @@
 %mesh: /Users/helenbrk/Codes/grids/WIND/PRDC/bot8
 %growth factor: 4.0
 %filetype: 0
+%blktype: 1
+%mesh: /Users/helenbrk/Codes/grids3d/sphere/sphere
+%growth factor: 4.0
+%filetype: 0
 blktype: 1
-mesh: /Users/helenbrk/Codes/grids3d/sphere/sphere
+mesh: 1 2
 growth factor: 4.0
-filetype: 0
-
+filetype: 6
+adatp: 0
 
 
 

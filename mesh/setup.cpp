@@ -222,7 +222,7 @@ template<int ND> void mesh<ND>::treeinit() {
    }
    
    for(n=0;n<ND;++n) {
-      dx = x2[n]-x1[n];
+      dx = MAX(x2[n]-x1[n],100.0*EPSILON);
       x1[n] -= 0.25*dx;
       x2[n] += 0.25*dx;
    }

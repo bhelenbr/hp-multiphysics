@@ -28,6 +28,9 @@ template<int ND> class mesh {
    public:
       std::ostream *log;
       static const int DIM = ND;
+#ifdef CAPRI
+      int cpri_vol, cpri_face;
+#endif
       
       /* STORES THINGS NEEDED FOR A BLOCK OF MESHES */
       /* AT THIS POINT DON'T NEED ANYTHING */
@@ -110,8 +113,8 @@ template<int ND> class mesh {
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
       virtual void setlength() {
-         for(int i=0;i<nvrtx;++i)
-            vlngth[i] = 0.1571;
+        // for(int i=0;i<nvrtx;++i)
+        //    vlngth[i] = 0.0982;
          *log << "in generic setlength" << std::endl;
       }
       void length1();
@@ -228,46 +231,12 @@ template<int ND> class mesh {
 
 #include "boundary.h"
 
-/* SOME CONVENIENT BOUNDARY TYPES */
-#define FSRF_MASK (1<<0)
-#define IFCE_MASK (1<<1)
-#define INFL_MASK (1<<2)
-#define OUTF_MASK (1<<3)
-#define SYMM_MASK (1<<4)
-#define EULR_MASK (1<<5)
-#define PRDX_MASK (1<<6)   
-#define PRDY_MASK (1<<7)
-#define COMX_MASK (1<<8)
-#define COMY_MASK (1<<9)
-#define CURV_MASK (1<<10)
-#define PRMT_MASK (1<<11)
-#define XDIR_MP COMX_MASK
-#define YDIR_MP (COMY_MASK +IFCE_MASK)
-#define ALLD_MP (XDIR_MP +YDIR_MP)
-
-#ifdef SKIP
-#include "in_mesh.cpp"
-#include "copy.cpp"
-#include "setup.cpp"
-#include "out_mesh.cpp"
-#include "findmatch.cpp"
-#include "refineby2.cpp"
-#include "tprims.cpp"
-#include "coarsen.cpp"
-#include "triangulate.cpp"
-#include "insert.cpp"
-#include "rebay.cpp"
-#include "collapse.cpp"
-#include "swap.cpp"
-#include "yaber.cpp"
-#include "connect.cpp"
-
+/* REMINDER FIND AND REPLACE TO INSERT FUNCTION INSTANTIATIONS 
 template\<int ND\> ([a-z]*) mesh\<ND\>::([^?]*) \{
 
 template \1 mesh\<2\>::\2;
 template \1 mesh\<3\>::\2;
 
 template\<int ND\> \1 mesh\<ND\>::\2 \{
-#endif
-
+*/
 #endif

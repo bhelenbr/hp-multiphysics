@@ -7,6 +7,7 @@
  *
  */
 #include <utilities.h>
+#include <stdio.h>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -408,7 +409,16 @@ template<class MESH> class threetotwo : public scomm<MESH> {
    public:
       threetotwo(int inid, MESH& xin) : scomm<MESH>(inid,xin) {}
       void sndpositions() {loadbuff(&(b().vrtx[0][0]),0,1,3);}
-      void rcvpositions() {}
+      void rcvpositions() {
+         int i,sind,v0;
+         for(i=0;i<nsd();++i) {
+            sind = sd(i);
+            v0 = b().svrtx[sind][0];
+            b().vrtx[v0][2] = 0.0;
+         }
+         v0 = b().svrtx[sind][1];
+         b().vrtx[v0][2] = 0.0;
+      }
 };
 
 template<class MESH> class twotothree : public scomm<MESH> {
@@ -462,4 +472,4 @@ template<class MESH> class twotothree : public scomm<MESH> {
 #include "boundary.cpp"
 
 #endif
-   
+

@@ -18,9 +18,11 @@ template<class GRD> class mgrid : public block {
       int ngrid, mp_phase;
       typename GRD::gbl gbl_store;
       GRD *grd;
+      bool adapt_flag;
       FLT tolerance;
    
    public:
+      mgrid() : log(&std::cout), adapt_flag(0) {}
       void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0);
       void load_const(std::map <std::string,std::string>& input) {}
       void alloc(std::map<std::string,std::string>& input);
@@ -55,16 +57,20 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    if (inlog) {
       log = inlog;
    } 
-   else {
-      log = &std::cout;
-   }
-   
+
    /* LOAD NUMBER OF GRIDS */
    std::istringstream data(input["ngrid"]);
    data >> ngrid;
    *log << "#ngrid: " << ngrid << std::endl;
    data.clear();
-
+   
+   std::map<std::string,std::string>::const_iterator mi;
+   mi = input.find("adapt");
+   if (mi != input.end()) {
+      data.str(mi->second);
+      data >> adapt_flag;
+   }
+   
    grd = new GRD[ngrid];
    for(int i = 0; i<ngrid;++i)
       grd[i].log = log;
@@ -90,9 +96,8 @@ template<class GRD> void mgrid<GRD>::alloc(std::map<std::string,std::string>& in
    data.str(input["mesh"]);
    data >> filename;
    *log << "#mesh: " << filename << std::endl;
-   data.clear();
-   
    grd[0].in_mesh(filename.c_str(),static_cast<FTYPE>(filetype),grwfac);
+   data.clear();   
    
    /* CREATE COARSE MESHES */
    for(i=1;i<ngrid;++i)
@@ -174,6 +179,8 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
+
+   if (!adapt_flag) return(stop);
    
    switch(excpt) {
       case(0):

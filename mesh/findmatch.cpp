@@ -18,7 +18,7 @@ template<int ND> int mesh<ND>::comm_entity_size() {
    nscomm = 0;
    for(i=0;i<nsbd;++i)
       if (sbdry[i]->is_comm()) ++nscomm; 
-      
+   
    tsize += 1 +4*nscomm; // bdry number, id, v0id, v1id
    
    tsize += 1;  // nfcomm = 0
