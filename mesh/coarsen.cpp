@@ -177,6 +177,14 @@ int mesh::coarsen(const class mesh& fmesh) {
       assert(nvrtx < maxvst -1);      
 	}
    
+/*	MOVE VERTEX BDRY INFORMATION */
+   for(i=0;i<fmesh.nvbd;++i) {
+      vbdry[i].type = fmesh.vbdry[i].type;
+      vbdry[i].num = fmesh.vbdry[i].num;
+      for(j=0;j<vbdry[i].num;++j)
+         vbdry[i].el[j] = intwk2[fmesh.vbdry[i].el[j]];
+   }
+   
    treeinit();
 
 /*	ALLOCATE TEMPORARY STORAGE FOR ORDERED BOUNDARY LOOPS */
