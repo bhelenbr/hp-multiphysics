@@ -30,13 +30,6 @@ int main(int argc, char *argv[]) {
 
 /*	START CLOCK TIMER */
    clock();
-   inname[0] = "/Volumes/work/helenbrk/Codes/spectral_hp/build/mesh068.1";
-   inname[1] = "/Volumes/work/helenbrk/Codes/spectral_hp/build/mesh068.0";  
-   z.init(2,1,inname,easymesh,10.0);
-   z.out_mesh("mesh",tecplot);
-   return(0);  
-   
-   
 /*	THIS DEFORMS A MESH */
 //	inname[0] = "../../grids/TIM/tim";
 //	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";

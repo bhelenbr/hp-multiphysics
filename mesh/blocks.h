@@ -10,6 +10,7 @@ class block {
       class r_mesh *grd;
       void init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void reconnect();
+      void coarsenchk(const char *fname);
       friend class blocks;
 };
 
@@ -74,6 +75,8 @@ class blocks {
             blk[i].grd[0].out_mesh("refine",tecplot);
             blk[i].reconnect();
          }
+         
+         
          return;
       }
 };

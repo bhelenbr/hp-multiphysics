@@ -33,10 +33,24 @@ void block::reconnect() {
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
       grd[i].setbcinfo();
-/*    grd[i].smooth_cofa(2); */
+/*      grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }
 
+   return;
+}
+
+void block::coarsenchk(const char *fname) {
+   int i;
+   char name[100];
+
+   for(i = 1; i< ngrid; ++i) {
+      number_str(name,fname,i,1);
+      grd[i].mesh::setbcinfo();
+      grd[i].checkintegrity();
+      grd[i].out_mesh(name);
+      grd[i].setbcinfo();
+   }
    return;
 }
