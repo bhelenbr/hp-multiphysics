@@ -20,7 +20,11 @@ void hp_mgrid::energy(FLT& esum, FLT& asum) {
       q = 0.0;
       for(j=0;j<3;++j) {
          v0 = tvrtx[tind][j];
+#ifndef DROP
          q += pow(ug.v[v0][0],2) +pow(ug.v[v0][1],2);
+#else
+         q += pow(ug.v[v0][0],2) +pow(ug.v[v0][1]-1.0,2);
+#endif
       }
       esum += gbl->rho*q/3.*area(tind);
       asum += area(tind);
@@ -100,13 +104,25 @@ void hp_mgrid::length1(FLT norm) {
          break;
    }
          
-   
+
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b.p+1));
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
       vlngth[i] /= fltwk[i];
-#ifdef LAYER
+#ifdef THREELAYER
+#define TRES 0.0125
+      if (vrtx[i][1] > 0.525) {
+         vlngth[i] = MIN(vlngth[i],TRES +(vrtx[i][1]-0.525)*(9*TRES)/0.475);
+      }
+      else if (vrtx[i][1] < 0.475) {
+         vlngth[i] = MIN(vlngth[i],TRES +(0.475 -vrtx[i][1])*(9*TRES)/0.475);
+      }
+      else {
+         vlngth[i] = MIN(vlngth[i],TRES);
+      }
+#endif
+#ifdef TWOLAYER
       vlngth[i] = MIN(vlngth[i],0.3333); 
 #endif
    }
