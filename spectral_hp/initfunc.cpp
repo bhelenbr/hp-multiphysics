@@ -46,14 +46,29 @@ FLT f1(int n, FLT x, FLT y) {
 #ifdef FREESTREAM
 extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
+   FLT xx = x*2.*M_PI;
+   FLT yx = y*2.*M_PI;
+
+/*
    switch(n) {
       case(0):
-         return(1.0 +startup*amp*(x+0.5)*(x-3.0)*sin(M_PI*y));
+         return(lam);
       case(1):
          return(0.0);
       case(2):
-         return(0.0);
+         return(0.01*startup);
    }
+*/
+   
+   switch(n) {
+      case(0):
+         return(lam +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
+      case(1):
+         return(0.0 +startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
+      case(2):
+         return(0.0 +startup*amp*x*(1.-x)*((sin(xx) +sin(8*xx))*(sin(yx)+sin(8*yx))));
+   }
+
    return(0.0);
 }
 #endif
@@ -79,7 +94,7 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
 
-#ifdef SPHERE
+#ifdef DROP
 FLT f1(int n, FLT x, FLT y) {
    FLT r;
    
@@ -94,7 +109,26 @@ FLT f1(int n, FLT x, FLT y) {
          else
             return(1.0);
       case(2):
+         return(0.0); 
+   }
+   return(0.0);
+}
+
+FLT f2(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
          return(0.0);
+      case(1):
+         if (r < 0.55) 
+            return(0.0);
+         else
+            return(1.0);
+      case(2):
+         return(4*1.0); //4*sigma
    }
    return(0.0);
 }
@@ -274,6 +308,63 @@ double f1(int n, double x, double y) {
 }
 #endif
 
+#ifdef THREELAYER
+
+FLT body[ND];
+FLT mux[3];
+FLT rhox[3];
+FLT theta;
+
+double f1(int n, double x, double y) { 
+   FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
+   
+   /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+   /* THETA DEFINED + CLOCKWISE */
+   bf = 2.*mux[2]/(rhox[2]*sin(theta));
+   body[0] = bf*sin(theta);
+   body[1] = -bf*cos(theta);
+   
+   re = rhox[0]/mux[0];
+   
+   h1 = 0.475;
+   n1 = 1;
+   q1 = 1;
+   
+   h2 = 0.525;
+   n2 = mux[0]/mux[2];
+   q2 = rhox[0]/rhox[2];
+   
+   h3 = 1.0;
+   n3 = mux[1]/mux[2];
+   q3 = rhox[1]/rhox[2];
+
+   switch (n) {
+      case(0):
+         if (y <= 0.475) {
+            double c1 = 2.0*h3/n1;
+            double c2 = 0.0;
+            return(-1./n1*y*y +c1*y +c2);
+         }
+         else if (y <= 0.525) {
+            double c1 = 2.0*h3/n2;
+            double c2 = h1*(h1*n1-h1*n2-2*h3*n1+2*h3*n2)/(n1*n2);
+            return(-1./n2*y*y +c1*y +c2);
+         }
+         else {
+            double c1 = 2*h3/n3;
+            double c2 = (-h2*h2*n1*n3 +h2*h2*n1*n2 +h1*h1*n1*n3-h1*h1*n2*n3-2*h2*h3*n1*n2+2*h2*h3*n1*n3
+                         -2*h1*h3*n1*n3 +2*h1*h3*n2*n3)/(n1*n2*n3);
+            return(-1./n3*y*y +c1*y +c2);
+         }
+      case(1):
+         return(0.0);
+      case(2):
+         return(-2.*cos(theta)/(sin(theta)*re)*y);
+   }
+
+   return(0.0);
+}
+#endif
 
 
 /***************************/
@@ -354,6 +445,30 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 }
 #endif
 
+#ifdef WAVE
+FLT hgt(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(y -amp*(sin(2.*M_PI*x) +sin(15.*M_PI*x)));
+      
+   }
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(-2.*amp*M_PI*cos(2.*M_PI*x) -15.*amp*M_PI*cos(15.*M_PI*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(1.0);
+   }
+   return(0.0);
+}
+#endif
+
 #ifdef NACA
 FLT hgt(int type, FLT x, FLT y) { 
    double thickness = 0.12;
@@ -411,8 +526,8 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       return;
    }
 
-#ifdef TWOLAYER
-   if (typ == 1026) {
+#ifdef LAYER
+   if (typ == 1025) {
       if (startup) {
          iter = 0;
          do {
@@ -421,7 +536,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
             x += delt_dist*dhgtdx(typ,x,y);
             y += delt_dist*dhgtdy(typ,x,y);
             if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
                exit(1);
             }
          } while (fabs(delt_dist) > 10.*EPSILON);
@@ -432,7 +547,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       return;
    }
 
-   if (typ == 1025) {
+   if (typ & IFCE_MASK) {
       if (startup) {
          return;
       }
@@ -453,7 +568,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
             x += delt_dist*dhgtdx(typ,x,y);
             y += delt_dist*dhgtdy(typ,x,y);
             if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f\n",typ,x,y);
+               printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
                exit(1);
             }
          } while (fabs(delt_dist) > 10.*EPSILON);
