@@ -85,6 +85,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    rebay(tolerance);
    
 /*	PRINT SOME GENERAL DEBUGGING INFO */
+   printf("#\n#\nREFINED MESH\n");
    printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b.sm*nside+b.im*ntri);
    
 /* PRINT BOUNDARY INFO */
@@ -118,6 +119,21 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             str.ugtouht(tind,ugstr[step]);
             str.b.ptprobe(NV,uht,gbl->ugbd[step].v[i]);
          }
+
+         if (str.tinfo[tind] > -1) {
+            for(step=0;step<nstep-1;++step) {
+               str.crdtouht(tind,vrtxstr[step],binfostr[step]);
+               str.b.ptprobe(ND,uht,gbl->vrtxbd[step][i]);
+            }
+         }
+         else {
+            for(step=0;step<nstep-1;++step) {
+               for(n=0;n<ND;++n) 
+                  gbl->vrtxbd[step][i][n] = vrtxstr[step][str.tvrtx[tind][0]][n]*(-r -s)/2.
+                                           +vrtxstr[step][str.tvrtx[tind][1]][n]*(r +1.)/2.
+                                           +vrtxstr[step][str.tvrtx[tind][2]][n]*(s +1.)/2.;
+            }
+         }
       }
    }
          
@@ -134,6 +150,20 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
             for(step=0;step<nstep-1;++step) {
                str.ugtouht1d(tind,ugstr[step]);
                str.b.ptprobe1d(NV,uht,gbl->ugbd[step].v[i]);
+            }
+
+            if (str.sinfo[sind] > -1) {
+               for(step=0;step<nstep-1;++step) {
+                  str.crdtouht1d(sind,vrtxstr[step],binfostr[step]);
+                  str.b.ptprobe1d(ND,uht,gbl->vrtxbd[step][i]);
+               }
+            }
+            else {
+               for(step=0;step<nstep-1;++step) {
+                  for(n=0;n<ND;++n) 
+                     gbl->vrtxbd[step][i][n] = vrtxstr[step][str.svrtx[sind][0]][n]*(1. -psi)/2.
+                                              +vrtxstr[step][str.svrtx[sind][1]][n]*(1. +psi)/2.;
+               }
             }
          }
       }
@@ -165,7 +195,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                   
                for(step=0;step<nstep-1;++step)
                   for(n=0;n<NV;++n)
-                     b.proj1d(ugstr[step].v[v0][n],ugstr[step].v[v1][n],bdwk[step][n][0]);
+                     b.proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
          
                for(i=0;i<b.gpx;++i) {
                   tind = str.findinteriorpt(crd[0][0][i],crd[1][0][i],r,s);
@@ -254,32 +284,44 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                      
                   for(step=0;step<nstep-1;++step)
                      for(n=0;n<NV;++n)
-                        b.proj1d(ugstr[step].v[v0][n],ugstr[step].v[v1][n],bdwk[step][n][0]);
+                        b.proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
                         
-                  for(m=0;m<b.gpx;++m) {
-                     x = crd[0][0][m];
-                     y = crd[1][0][m];
-   
-/*   						THIS MOVES X,Y PT TO BOUNDRY */            
-                     stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
-                     crd[0][0][m] -= x;
-                     crd[1][0][m] -= y;
-   
-/*   						CALCULATE VALUE OF SOLUTION AT POINT */
-                     str.ugtouht1d(stgt);
-                     str.b.ptprobe1d(NV,uht,upt,psi);
-                     for(n=0;n<NV;++n)
-                        res[n][0][m] -= upt[n]; 
-                     
-                     for(step=0;step<nstep-1;++step) {
-                        str.ugtouht1d(stgt,ugstr[step]);
-                        str.b.ptprobe(NV,uht,upt);
-                        for(n=0;n<NV;++n)   
-                           bdwk[step][n][0][i] -= upt[n];
-                     }   
-                  }     
-                  
                   if (sbdry[i].type&CURV_MASK) {
+                  
+                     for(step=0;step<nstep-1;++step)
+                        for(n=0;n<ND;++n)
+                           b.proj1d(gbl->vrtxbd[step][v0][n],gbl->vrtxbd[step][v1][n],bdwk[step][n][1]);      
+                     
+                     for(m=0;m<b.gpx;++m) {
+                        x = crd[0][0][m];
+                        y = crd[1][0][m];
+      
+   /*   						THIS MOVES X,Y PT TO BOUNDRY */            
+                        stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
+                        crd[0][0][m] -= x;
+                        crd[1][0][m] -= y;
+      
+/*	   						CALCULATE VALUE OF SOLUTION AT POINT */
+                        str.ugtouht1d(stgt);
+                        str.b.ptprobe1d(NV,uht,upt,psi);
+                        for(n=0;n<NV;++n)
+                           res[n][0][m] -= upt[n]; 
+                        
+                        for(step=0;step<nstep-1;++step) {
+                           str.ugtouht1d(stgt,ugstr[step]);
+                           str.b.ptprobe(NV,uht,upt);
+                           for(n=0;n<NV;++n)   
+                              bdwk[step][n][0][i] -= upt[n];
+                        }
+                        
+                        for(step=0;step<nstep-1;++step) {
+                           str.crdtouht1d(sind,vrtxstr[step],binfostr[step]);;
+                           str.b.ptprobe(ND,uht,upt);
+                           for(n=0;n<NV;++n)   
+                              bdwk[step][n][1][i] -= upt[n];
+                        }                    
+                     }     
+                  
                      for(n=0;n<ND;++n) {
                         b.intgrt1d(crd[n][0],lf[n]);
                         PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
@@ -287,11 +329,50 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         for(m=0;m<b.sm;++m)
                            binfo[i][indx+m].curv[n] = -lf[n][m+2];
                      }
+         
+                     for(step=0;step<nstep-1;++step) {
+                        for(n=0;n<ND;++n) {
+                           b.intgrt1d(bdwk[step][n][1],lf[n]);
+                           PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
+                        
+                           for(m=0;m<b.sm;++m)
+                              gbl->binfobd[step][i][indx+m].curv[n] = -lf[n][m+2];
+                        }
+                     }
                   }
                   else {
                      for(n=0;n<ND;++n)
                         for(m=0;m<b.sm;++m)
                            binfo[i][indx+m].curv[n] = 0.0;
+
+                     for(step=0;step<nstep-1;++step) {
+                        for(n=0;n<ND;++n) {
+                           for(m=0;m<b.sm;++m)
+                              gbl->binfobd[step][i][indx+m].curv[n] = 0.0;
+                        }
+                     }                           
+                     
+                           
+                     for(m=0;m<b.gpx;++m) {
+                        x = crd[0][0][m];
+                        y = crd[1][0][m];
+      
+/*	   						FIND PSI */            
+                        stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
+                        
+/*	   						CALCULATE VALUE OF SOLUTION AT POINT */
+                        str.ugtouht1d(stgt);
+                        str.b.ptprobe1d(NV,uht,upt,psi);
+                        for(n=0;n<NV;++n)
+                           res[n][0][m] -= upt[n]; 
+                        
+                        for(step=0;step<nstep-1;++step) {
+                           str.ugtouht1d(stgt,ugstr[step]);
+                           str.b.ptprobe(NV,uht,upt);
+                           for(n=0;n<NV;++n)   
+                              bdwk[step][n][0][i] -= upt[n];
+                        }
+                     }
                   }
                   
                   indx1 = sind*sm0;      
