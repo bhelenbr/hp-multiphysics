@@ -209,7 +209,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
  //     for(i=0;i<sbdry[bnum].num*b.sm;++i) 
  //        srf->gbl->sres[i][0] += srf->sdres[log2p][i][0];
    }
-
+   
    return;
 }
 
@@ -347,12 +347,12 @@ void hp_mgrid::surfinvrt2(int bnum) {
    }   
 	
 /*	SOLVE FOR SIDE MODES */
-	if (b.sm > 2) {
+	if (b.sm > 0) {
       indx1 = 0;
 		for(indx = 0; indx<sbdry[bnum].num; ++indx) {
          
 /*			INVERT SIDE MODES */
-			DPBSLN(b.sdiag1d,b.sm,b.sbwth,&srf->gbl->sres[indx1][0],ND);		
+			DPBSLN(b.sdiag1d,b.sm,b.sbwth,&(srf->gbl->sres[indx1][0]),ND);		
 			for(m=0;m<b.sm;++m) {
 				temp 							= srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][0][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][0][1];
 				srf->gbl->sres[indx1][1] = srf->gbl->sres[indx1][0]*srf->gbl->sdt[indx][1][0] +srf->gbl->sres[indx1][1]*srf->gbl->sdt[indx][1][1]; 		
@@ -363,8 +363,8 @@ void hp_mgrid::surfinvrt2(int bnum) {
          indx1 -= b.sm;
          for(m=0;m<b.sm;++m) {
             for(n=0;n<ND;++n) {
-               gbl->sres[indx1][n] -= b.vfms1d[0][m]*srf->gbl->vres[indx][n];
-               gbl->sres[indx1][n] -= b.vfms1d[1][m]*srf->gbl->vres[indx+1][n];
+               srf->gbl->sres[indx1][n] -= b.vfms1d[0][m]*srf->gbl->vres[indx][n];
+               srf->gbl->sres[indx1][n] -= b.vfms1d[1][m]*srf->gbl->vres[indx+1][n];
             }
             ++indx1;
          }
@@ -527,7 +527,7 @@ void hp_mgrid::surfdt2(int bnum) {
 		srf->gbl->vdt[indx][1][0] *= -jcbi*srf->gbl->cfl[log2p][0];
 	}
 /*	INVERT SIDE MATRIX */   
-   if (b.sm > 2) {
+   if (b.sm > 0) {
       for(indx=0;indx<sbdry[bnum].num;++indx) {
 /*			INVERT SIDE MVDT MATRIX */
 			jcbi = 1.0/(srf->gbl->sdt[indx][0][0]*srf->gbl->sdt[indx][1][1] 
