@@ -4,8 +4,10 @@
 /* SIMULATION PV3VIEWER */
 #define SIMULATION 
 
-/* KOVASZNAY TEST CYLINDER SPHERE FREESTREAM TWOLAYER CONVDIFF UNSTEADY_DROP DROP TWOLAYERNOINERTIA */
-#define FREESTREAM
+/* KOVASZNAY TEST CYLINDER SPHERE FREESTREAM CONVDIFF */
+/* UNSTEADY_DROP DROP TWOLAYER TWOLAYERNOINERTIA WAVE */
+/* THREELAYER */
+#define DROP
 
 /* CIRCLE SIN COS NACA */
 #define CIRCLE
@@ -31,11 +33,11 @@
 /* OLDRECONNECT NEWRECONNECT */
 #define OLDRECONNECT 
 
-/* FINE_ERROR NO_FINE_ERROR */
-#define NO_FINE_ERROR
-
 /* TWO_LEVEL NO_TWO_LEVEL */
 #define NO_TWO_LEVEL
+
+/* SOLVECOARSE NO_SOLVECOARSE */
+#define SOLVECOARSE
 
 /* DEFORM  NO_DEFORM */
 #define DEFORM
@@ -51,6 +53,9 @@
 
 /* ENERGY NO_ENERGY */
 #define NO_ENERGY
+
+/* PARAMETERLOOP NO_PARAMETERLOOP */
+#define NO_PARAMETERLOOP
 
 /* AUTOMATIC SWITCHES FOR PARTICULAR CASES */
 #ifdef CIRCLE
@@ -77,20 +82,38 @@
 #define AXISYMMETRIC
 #endif
 
+#if (defined(DROP) || defined(UNSTEADY_DROP))
+#undef NO_ENERGY
+#define ENERGY
+#endif
+
 #ifdef UNSTEADY_DROP
 #define AMP 0.0
+#endif
+
+#ifdef DROP
+#undef NO_PARAMETERLOOP
+#define PARAMETERLOOP
 #endif
 
 #ifdef TWOLAYER
 #undef CIRCLE
 #define SIN
+#define LAYER 2
 #endif
 
 #ifdef TWOLAYERNOINERTIA
 #define TWOLAYER
+#define LAYER 2
 #define INERTIALESS
 #undef CIRCLE
 #define SIN
+#endif
+
+#ifdef THREELAYER
+#undef CIRCLE
+#define SIN
+#define LAYER 3
 #endif
 
 #ifdef CONVDIFF
@@ -104,17 +127,12 @@
 #endif
 #endif
 
-#if (defined(DROP) || defined(UNSTEADY_DROP))
-#undef NO_ENERGY
-#define ENERGY
+#ifdef WAVE
+#undef CIRCLE
+#undef DEFORM
+#define NO_DEFORM
+#undef AMP
+#define AMP 0.0001
+#define FREESTREAM
 #endif
-
-
-
-
-
-
-
-
-
 
