@@ -1,14 +1,40 @@
 OBJ = quad.o
-CPPFLAGS = -O3 -I$(HOME)/Codes/include/
-CCFLAGS = -O3 -I$(HOME)/Codes/include/
 
-#CXX = g++3
+CPPFLAGS = -I$(HOME)/Codes/include/
 
-libquad.a: quadtree.h $(OBJ)
-#	libtool --mode=link ${CC} -o $@ $(OBJ)
-	ar -r $@ $(OBJ)
+### Begin machine dependent
+
+## Darwin:
+## Machine specific for Darwin
+#AR = libtool
+#ARFLAGS = -o
+#CPPFLAGS += -O3
+
+## Linux:
+##  Machine specific for Linux
+#CXX=icpc #(cares)
+CXX=g++3 #(shelob)
+CPPFLAGS += -O3
+
+## IRIX64:
+#CPPFLAGS += -Ofast=IP30  #(sauter)
+#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
+#CPPFLAGS += -Ofast=IPrk5 #(origin)
+
+## Aix:
+## Machine specific for Jupiter
+#CPPFLAGS += -O3
+
+### End machine dependent
+
+all: libquad.a quadtest
+
+libquad.a: $(OBJ)
+	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libquad.a $(HOME)/Codes/lib/
 	cp -f quadtree.h $(HOME)/Codes/include/
 
-quadtest: libquad.a main.o
-	${CCC} -o $@ main.o -L$(HOME)/Codes/lib -lquad -lm
+quadtest: $(OBJ) main.o
+	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lquad -lm
+
+$(OBJ): quadtree.h quad_impl.h

@@ -14,8 +14,10 @@
 #define EPSILON FLT_EPSILON
 #define FLT float
 #else
+#ifndef FLT
 #define EPSILON DBL_EPSILON
 #define FLT double
+#endif
 #endif
 
 template<int ND> class quadtree;
