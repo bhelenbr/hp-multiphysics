@@ -11,7 +11,7 @@ void block::init(int n, char *filename, FILETYPE filetype = easymesh, FLT grwfac
    grd[0].init_comm_buf(8);
    
    /* WORK VARIABLES FOR MGRID */
-   r_mesh::fadd = 0.5;
+   r_mesh::fadd = 0.75;
    r_mesh::vnn = 0.5;
    grd[0].allocate(0,&rglbl);
    
