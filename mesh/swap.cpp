@@ -35,7 +35,7 @@ int mesh::swap(int sind, FLT tol = 0.0) {
    vt2 = tvrtx[t2][snum2];
    
    if (MIN(minangle(v0,v1,vt1),minangle(v1,v0,vt2)) >
-       MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol) return(0);
+       MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol -10.0*EPSILON) return(0);
        
    sinfo[sind] = -2; /* MARK SIDE AS TOUCHED */   
    
