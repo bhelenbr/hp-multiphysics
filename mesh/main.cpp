@@ -2,15 +2,15 @@
 #include"blocks.h"
 #include<iostream>
 
-/*	DEFINES/THINGS TO TIDDLE WITH */
-/*	r_mesh.h: FOURTH: SWITCH FROM LAPLACIAN TO BIHARMONIC */
-/*	blocks.cpp: GEOMETRIC: SWITCH FOR DETERMING K_IJ IN MULTIGRID (USE GEOMETRIC)*/
+/* DEFINES/THINGS TO TIDDLE WITH */
+/* r_mesh.h: FOURTH: SWITCH FROM LAPLACIAN TO BIHARMONIC */
+/* blocks.cpp: GEOMETRIC: SWITCH FOR DETERMING K_IJ IN MULTIGRID (USE GEOMETRIC)*/
 /* mesh.h: USEOLDBTYPE: remaps boundary identifies from my old types to new */
-/*	r_mesh.h: FIX?_MASK: DETERMINES DIRICHLET MESH MOVMENT BC'S */
+/* r_mesh.h: FIX?_MASK: DETERMINES DIRICHLET MESH MOVMENT BC'S */
 /* r_mesh.h: FIX2?_MASK: DETERMINES DIRICHLET B.C.'S on Nabla^2 for Biharmonic */
 /* mesh.h: ?DIR_MP: mask for communication boundaries */
-/*	r_mesh.cpp: different perturb functions for deformed mesh */
-/*	r_mesh.cpp: vnn/fadd - jacobi/multigrid parameters */
+/* r_mesh.cpp: different perturb functions for deformed mesh */
+/* r_mesh.cpp: vnn/fadd - jacobi/multigrid parameters */
 
 #include<cstring>
 #include<math.h>
@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
    mesh x[10];
    
 
-/*
+   /*
    x[0].in_mesh("/Volumes/work/helenbrk/Codes/spectral_hp/build/mesh134.0",grid);
    for (i=0;i<5;++i) {
       number_str(outname, "test", i, 1);
@@ -38,16 +38,13 @@ int main(int argc, char *argv[]) {
       x[i].out_mesh(outname);
       x[i+1].coarsen(x[i]);
    }
-*/
-
-   return(0);
+   */ 
  
- 
-/*	START CLOCK TIMER */
+   /* START CLOCK TIMER */
    clock();
    
-/*	THIS DEFORMS A MESH */
-/* CANONICAL TEST PROBLEM */
+   /* THIS DEFORMS A MESH */
+   /* CANONICAL TEST PROBLEM */
    inname[0] = "/Volumes/work/helenbrk/Codes/grids/BOAT/boat2";
    
    z.init(1,3,inname,easymesh,10.0);
@@ -84,7 +81,7 @@ int main(int argc, char *argv[]) {
 
    return(0);
    
-/*	OUTPUT FROM TEST PROBLEM */
+   /* OUTPUT FROM TEST PROBLEM */
 /*
 #Boundaries
 #0: type 8, number 50

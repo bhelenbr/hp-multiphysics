@@ -4,14 +4,14 @@
 #include"mesh.h"
 
 int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const {
-	/* static */char fnmapp[100];
-	/* static */FILE *out;
-	/* static */int i,j,tind,count;
+   char fnmapp[100];
+   FILE *out;
+   int i,j,tind,count;
    
    switch (filetype) {
    
       case (easymesh):
-      /*	CREATE EASYMESH OUTPUT FILES */
+         /* CREATE EASYMESH OUTPUT FILES */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".n");
          out = fopen(fnmapp,"w");
@@ -25,15 +25,15 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
             
          fclose(out);
 
-      /*	SIDE FILE */		
+         /* SIDE FILE */      
          strcpy(fnmapp,filename);
          strcat(fnmapp,".s");
-         out = fopen(fnmapp,"w");	
+         out = fopen(fnmapp,"w");   
          fprintf(out,"%d\n",nside);
          for(i=0;i<nside;++i) {
             fprintf(out,"%d: %d %d %d %d %d\n",i,svrtx[i][0],svrtx[i][1],
             stri[i][0],stri[i][1],sinfo[i]);
-         }	
+         }   
          fclose(out);
       
          strcpy(fnmapp,filename);
@@ -45,7 +45,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
             i,tvrtx[i][0],tvrtx[i][1],tvrtx[i][2],
             ttri[i][0],ttri[i][1],ttri[i][2],
             tside[i].side[0],tside[i].side[1],tside[i].side[2],tinfo[i]); 
-         }	
+         }   
       
          fclose(out);
          break;
@@ -64,7 +64,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
          for(i=0;i<nvrtx;++i)
             fprintf(out,"%e  %e  \n",vin[i][0],vin[i][1]);
 
-        	fprintf(out,"\n#CONNECTION DATA#\n");
+           fprintf(out,"\n#CONNECTION DATA#\n");
          
          for(i=0;i<ntri;++i)
             fprintf(out,"%d %d %d\n",tvrtx[i][0]+1,tvrtx[i][1]+1,tvrtx[i][2]+1);
@@ -84,7 +84,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
          count = ntri;
          for(i=0;i<nsbd;++i)
             count += sbdry[i].num;
-	
+   
          fprintf(out,"** FIDAP NEUTRAL FILE\n");
          fprintf(out,"%s\n",filename);
          fprintf(out,"VERSION    8.01\n");
@@ -110,7 +110,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
          fprintf(out,"ENTITY NAME:   fluid\n");
          
          for(tind=0;tind<ntri;++tind) {
-         	fprintf(out,"%8d%8d%8d%8d\n",tind+1,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
+            fprintf(out,"%8d%8d%8d%8d\n",tind+1,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
          }
         
          count = ntri+1;
@@ -125,7 +125,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
          break;
 
       case(text):
-/*			JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
+         /* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".txt");
          out = fopen(fnmapp,"w");
@@ -149,22 +149,22 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
             exit(1);
          }
          
-/*			HEADER LINES */
+         /* HEADER LINES */
          fprintf(out,"nvrtx: %d\t nside: %d\t ntri: %d\n",nvrtx,nside,ntri);
 
-/*			VRTX INFO */                        
+         /* VRTX INFO */                        
          for(i=0;i<nvrtx;++i)
             fprintf(out,"%17.10e %17.10e\n",vin[i][0],vin[i][1]);
                     
-/*			SIDE INFO */
+         /* SIDE INFO */
          for(i=0;i<nside;++i)
             fprintf(out,"%d %d\n",svrtx[i][0],svrtx[i][1]);
 
-/*			THEN TRI INFO */
+         /* THEN TRI INFO */
          for(i=0;i<ntri;++i)
             fprintf(out,"%d %d %d\n",tvrtx[i][0],tvrtx[i][1],tvrtx[i][2]);
 
-/*			SIDE BOUNDARY INFO HEADER */
+         /* SIDE BOUNDARY INFO HEADER */
          fprintf(out,"nsbd: %d\n",nsbd);
          for(i=0;i<nsbd;++i)
             fprintf(out,"type: %d\t number %d\n",sbdry[i].type,sbdry[i].num);
@@ -173,7 +173,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
             for(j=0;j<sbdry[i].num;++j)
                fprintf(out,"%d\n",sbdry[i].el[j]);
                
-/*			VERTEX BOUNDARY INFO HEADER */
+         /* VERTEX BOUNDARY INFO HEADER */
          fprintf(out,"nvbd: %d\n",nvbd);
          for(i=0;i<nvbd;++i)
             fprintf(out,"%d %d\n",vbdry[i].type,vbdry[i].num);
@@ -194,9 +194,9 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = eas
 }
 
 void mesh::setbcinfo() {
-   /* static */int i,j;
+   int i,j;
    
-/*	SET UP VRTX BC INFORMATION FOR OUTPUT */
+   /* SET UP VRTX BC INFORMATION FOR OUTPUT */
    for(i=0;i<nvrtx;++i)
       vinfo[i] = 0;
    
@@ -204,7 +204,7 @@ void mesh::setbcinfo() {
       for(j=0;j<vbdry[i].num;++j)
          vinfo[vbdry[i].el[j]] = vbdry[i].type;
 
-/*	SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
+   /* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
    for(i=0;i<nside;++i)
       sinfo[i] = 0;
    
@@ -212,7 +212,7 @@ void mesh::setbcinfo() {
       for(j=0;j<sbdry[i].num;++j)
          sinfo[sbdry[i].el[j]] = sbdry[i].type;
 
-/*	SET UP TRI INFO FOR EASYMESH OUTPUT */         
+   /* SET UP TRI INFO FOR EASYMESH OUTPUT */         
    for(i=0;i<ntri;++i)
       tinfo[i] = 0;
          

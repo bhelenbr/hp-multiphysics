@@ -3,84 +3,84 @@
 #include<cstdio>
 
 FLT mesh::incircle(int tind, FLT *a) const {
-	/* static */int i,i1,i2,i3;
-	/* static */FLT pt[4][2];
-	/* static */FLT l2[4];
-	/* static */FLT determ;
-	
-	for(i=0;i<3;++i) {
-		pt[i][0] = vrtx[tvrtx[tind][i]][0];
-		pt[i][1] = vrtx[tvrtx[tind][i]][1];
-	}
-	pt[3][0] = a[0];
-	pt[3][1] = a[1];
+   int i,i1,i2,i3;
+   FLT pt[4][2];
+   FLT l2[4];
+   FLT determ;
+   
+   for(i=0;i<3;++i) {
+      pt[i][0] = vrtx[tvrtx[tind][i]][0];
+      pt[i][1] = vrtx[tvrtx[tind][i]][1];
+   }
+   pt[3][0] = a[0];
+   pt[3][1] = a[1];
 
-	for(i=0;i<4;++i)
-		l2[i] = pt[i][0]*pt[i][0] +pt[i][1]*pt[i][1];
+   for(i=0;i<4;++i)
+      l2[i] = pt[i][0]*pt[i][0] +pt[i][1]*pt[i][1];
 
-	determ = 0.0;
-	for(i=0;i<4;++i) {
-		determ *= -1.0;
-		i1 = (i+1)%4;
-		i2 = (i+2)%4;
-		i3 = (i+3)%4;
-		determ +=  pt[i1][0]*(pt[i2][1]*l2[i3] -pt[i3][1]*l2[i2]);
-		determ += -pt[i1][1]*(pt[i2][0]*l2[i3] -pt[i3][0]*l2[i2]);
-		determ +=  l2[i1]*(pt[i2][0]*pt[i3][1] -pt[i2][1]*pt[i3][0]);
+   determ = 0.0;
+   for(i=0;i<4;++i) {
+      determ *= -1.0;
+      i1 = (i+1)%4;
+      i2 = (i+2)%4;
+      i3 = (i+3)%4;
+      determ +=  pt[i1][0]*(pt[i2][1]*l2[i3] -pt[i3][1]*l2[i2]);
+      determ += -pt[i1][1]*(pt[i2][0]*l2[i3] -pt[i3][0]*l2[i2]);
+      determ +=  l2[i1]*(pt[i2][0]*pt[i3][1] -pt[i2][1]*pt[i3][0]);
 
-	}
-	
-	return(determ);
+   }
+   
+   return(determ);
 }
 
 
 FLT mesh::area(int v0, int v1, int v2) const {
-   /* static */FLT dx1,dy1,dx2,dy2;
-	
-	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
-	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
-	dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
-	dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+   FLT dx1,dy1,dx2,dy2;
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
 
-	return(dx1*dy2 -dy1*dx2);
+   return(dx1*dy2 -dy1*dx2);
 }
 
 FLT mesh::area(int snum, int v2) const {
-	/* static */FLT dx1,dy1,dx2,dy2;
-	/* static */int v0, v1;
-	
-	v0 = svrtx[snum][0];
-	v1 = svrtx[snum][1];
-	
-	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
-	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
-	dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
-	dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+   FLT dx1,dy1,dx2,dy2;
+   int v0, v1;
+   
+   v0 = svrtx[snum][0];
+   v1 = svrtx[snum][1];
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
 
-	return(dx1*dy2 -dy1*dx2);
+   return(dx1*dy2 -dy1*dx2);
 }
 
 FLT mesh::area(int tind) const {
-	/* static */FLT dx1,dy1,dx2,dy2;
-	/* static */int v0, v1, v2;
-	
-	v0 = tvrtx[tind][0];
-	v1 = tvrtx[tind][1];
+   FLT dx1,dy1,dx2,dy2;
+   int v0, v1, v2;
+   
+   v0 = tvrtx[tind][0];
+   v1 = tvrtx[tind][1];
    v2 = tvrtx[tind][2];
-	
-	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
-	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
-	dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
-	dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
 
-	return(dx1*dy2 -dy1*dx2);
+   return(dx1*dy2 -dy1*dx2);
 }
 
-/* static */FLT a[3];
+FLT a[3];
 
 FLT mesh::intri(int tind, FLT x, FLT y) const {
-   /* static */int v0,v1,v2;
-   /* static */FLT dx0,dy0,dx1,dy1,dx2,dy2;
+   int v0,v1,v2;
+   FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
    v0 = tvrtx[tind][0];
    v1 = tvrtx[tind][1];
@@ -100,10 +100,10 @@ FLT mesh::intri(int tind, FLT x, FLT y) const {
    return(fabs(a[0]) +fabs(a[1]) +fabs(a[2]) - (a[0] +a[1] +a[2]));
 }
 
-/*	RETURNS WEIGHTS FROM INTRI FUNCTION */
+/* RETURNS WEIGHTS FROM INTRI FUNCTION */
 void mesh::getwgts(FLT *wt) const {
-   /* static */int i;
-   /* static */FLT sum;
+   int i;
+   FLT sum;
    
    sum = a[0] +a[1] +a[2];
    for(i=0;i<3;++i) 
@@ -113,10 +113,10 @@ void mesh::getwgts(FLT *wt) const {
 }
       
 FLT mesh::minangle(int v0, int v1, int v2) const {
-   /* static */int i, i1, i2;
-   /* static */FLT l[3];
-   /* static */FLT dx[3], dy[3];
-   /* static */FLT crossprod;
+   int i, i1, i2;
+   FLT l[3];
+   FLT dx[3], dy[3];
+   FLT crossprod;
    
    dx[0] = vrtx[v2][0] -vrtx[v1][0];
    dy[0] = vrtx[v2][1] -vrtx[v1][1];
@@ -142,8 +142,8 @@ FLT mesh::minangle(int v0, int v1, int v2) const {
 }
    
 FLT mesh::angle(int v0, int v1, int v2) const {
-   /* static */FLT l[3];
-   /* static */FLT dx, dy;
+   FLT l[3];
+   FLT dx, dy;
    
    dx = vrtx[v1][0] -vrtx[v0][0];
    dy = vrtx[v1][1] -vrtx[v0][1];
@@ -162,8 +162,8 @@ FLT mesh::angle(int v0, int v1, int v2) const {
 }
 
 FLT mesh::tradius(int tind) const {
-   /* static */int v0;
-   /* static */FLT xcen, ycen,dx1,dy1;
+   int v0;
+   FLT xcen, ycen,dx1,dy1;
    
    v0 = tvrtx[tind][0];
    tcenter(tind,xcen,ycen);
@@ -173,19 +173,19 @@ FLT mesh::tradius(int tind) const {
 }
 
 void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
-   /* static */FLT alpha,beta;
-   /* static */FLT xmid1,ymid1,xmid2,ymid2;
-   /* static */FLT dx1,dy1,dx2,dy2,area;
-	/* static */int v0, v1, v2;
-	
-	v0 = tvrtx[tind][0];
-	v1 = tvrtx[tind][1];
+   FLT alpha,beta;
+   FLT xmid1,ymid1,xmid2,ymid2;
+   FLT dx1,dy1,dx2,dy2,area;
+   int v0, v1, v2;
+   
+   v0 = tvrtx[tind][0];
+   v1 = tvrtx[tind][1];
    v2 = tvrtx[tind][2];
-	
-	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
-	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
-	dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
-	dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
 
    xmid1 = 0.5*(vrtx[v2][0] +vrtx[v0][0]);
    ymid1 = 0.5*(vrtx[v2][1] +vrtx[v0][1]);   
@@ -202,17 +202,17 @@ void mesh::tcenter(int tind, FLT &xcen, FLT &ycen) const {
 }
 
 FLT mesh::aspect(int tind) const {
-   /* static */int v0,v1,v2;
-   /* static */FLT dx1,dy1,dx2,dy2,area,perim;
+   int v0,v1,v2;
+   FLT dx1,dy1,dx2,dy2,area,perim;
    
    v0 = tvrtx[tind][0];
-	v1 = tvrtx[tind][1];
+   v1 = tvrtx[tind][1];
    v2 = tvrtx[tind][2];
-	
-	dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
-	dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
-	dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
-	dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
+   
+   dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
+   dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
+   dx2 =  (vrtx[v1][0]-vrtx[v0][0]);
+   dy2 =  (vrtx[v1][1]-vrtx[v0][1]);
    
    area = (dx1*dy2 -dy1*dx2);
    perim = sqrt(dx1*dx1 +dy1*dy1) +sqrt(dx2*dx2 +dy2*dy2)

@@ -11,37 +11,37 @@
 #include<assert.h>
 #include<math.h>
 
-/*	MEMORY USAGE */
+/* MEMORY USAGE */
 /* INTWK2 - LIST OF SIDES TO BE REFINED */
 /* INTWK3 - BACK REFERENCE FROM SIDE INTO LIST */
 /* vinfo - TRIANGLE ACCEPTANCE INDICATOR >= 0 */
 
-/*	THIS KEEPS TRACK OF HOW MANY SIDES NEED REFINEMENT */
-/*	SIDES ARE STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
+/* THIS KEEPS TRACK OF HOW MANY SIDES NEED REFINEMENT */
+/* SIDES ARE STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
 int nslst;
 
-/*	THESE ARE FROM INSERT & TELL WHICH SIDES/TRIS WERE DELETED */
+/* THESE ARE FROM INSERT & TELL WHICH SIDES/TRIS WERE DELETED */
 extern int ntdel, tdel[MAXLST+1];
 extern int nsdel, sdel[MAXLST+1];
 
 
 void mesh::rebay(FLT tolsize) {
-   /* static */int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
-   /* static */FLT xpt,ypt,wt[3];
-   /* static */FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
-   /* static */FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
+   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt;
+   FLT xpt,ypt,wt[3];
+   FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
+   FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
    
-/* SET UP FLTWK */
+   /* SET UP FLTWK */
    fltwkreb();
          
    bdrycnt = 0;
    intrcnt = 0;
    
-/*	USE VINFO[TIND] = 3,2,1,0 TO FIND BOUNDARY REFINE TRI'S */
+   /* USE VINFO[TIND] = 3,2,1,0 TO FIND BOUNDARY REFINE TRI'S */
    for(i=0;i<ntri;++i)
       vinfo[i] = 0;
    
-/*	CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
+   /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
    for(i=0;i<nside;++i) {
       if (fltwk[i] < tolsize) {
@@ -53,7 +53,7 @@ void mesh::rebay(FLT tolsize) {
    
    vinfo[-1] = 0;
 
-/*	BEGIN REFINEMENT ALGORITHM */
+   /* BEGIN REFINEMENT ALGORITHM */
    while (nslst > 0) {
       sind = -1;
       for(i=0;i<nslst;++i) {
@@ -85,17 +85,17 @@ void mesh::rebay(FLT tolsize) {
       }
       
       
-/*		CHECK IF IT IS A BOUNDARY EDGE */
+      /* CHECK IF IT IS A BOUNDARY EDGE */
       if (stri[sind][1] < 0) {
 
-/*			MIDPOINT */
+         /* MIDPOINT */
          xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
          ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
          
          bid = sbdry[(-stri[sind][1]>>16) -1].type;
          if (bid&CURV_MASK) mvpttobdry(bid,xpt,ypt);
                   
-/*			INSERT POINT */
+         /* INSERT POINT */
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
          qtree.addpt(nvrtx);
@@ -109,7 +109,7 @@ void mesh::rebay(FLT tolsize) {
          ntnew = ntdel +1;
       }
       else {
-/*			USE REBAY'S ALGORITHM FOR INSERT POINT */
+         /* USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
          dy = vrtx[v0][1] -vrtx[v1][1];
          p = 0.5*sqrt(dx*dx +dy*dy);
@@ -148,7 +148,7 @@ void mesh::rebay(FLT tolsize) {
          ypt       = ymid +rsign*dist*rn2;
       
 INSRT:
-/*			INSERT POINT */
+         /* INSERT POINT */
          vrtx[nvrtx][0] = xpt;
          vrtx[nvrtx][1] = ypt;
          
@@ -166,7 +166,7 @@ INSRT:
             ++intrcnt;
          }
          else {
-/*				REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
+            /* REBAY ALGORITHM IS TRYING TO INSERT POINT OUTSIDE OF DOMAIN SKIP SIDE FOR NOW? */
             printf("#Warning: skipping insert\n");
             qtree.dltpt(nvrtx);
             --nvrtx;
@@ -191,7 +191,7 @@ INSRT:
          if (fltwk[sind] < tolsize) putinlst(sind);
       }
          
-/*		RECONSTRUCT AFFECTED TRIS vinfo ARRAY */
+      /* RECONSTRUCT AFFECTED TRIS vinfo ARRAY */
       for(i=0;i<ntnew;++i) {
          tind = tdel[i];
          vinfo[tind] = 0;
@@ -211,9 +211,9 @@ INSRT:
 }
    
 void mesh::putinlst(int sind) {
-   /* static */int i, temp, top, bot, mid;
+   int i, temp, top, bot, mid;
       
-/*	CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
+   /* CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
    bot = 0;
    if (nslst > 0) {
       top = 0;
@@ -249,7 +249,7 @@ void mesh::putinlst(int sind) {
 }
 
 void mesh::tkoutlst(int sind) {
-   /* static */int bgn,temp,i;
+   int bgn,temp,i;
    
    bgn = intwk3[sind];
    for(i=bgn+1;i<nslst;++i) {
@@ -265,12 +265,12 @@ void mesh::tkoutlst(int sind) {
 }
 
 void mesh::fltwkreb(int i) {
-   /* static */FLT dif, av;
+   FLT dif, av;
    
-/*	CALCULATE SIDE LENGTH RATIO FOR YABER */
-/*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
-/*	OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
-/*	(THIS ESSENTIALLY TAKES THE MINUMUM) */
+   /* CALCULATE SIDE LENGTH RATIO FOR YABER */
+   /* HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
+   /* OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
+   /*(THIS ESSENTIALLY TAKES THE MINUMUM) */
    dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
    av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
    fltwk[i] = (av +(dif*dif/(0.1*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
@@ -279,7 +279,7 @@ void mesh::fltwkreb(int i) {
 }
 
 void mesh::fltwkreb() {
-   /* static */int i;
+   int i;
    
    for(i=0;i<nside;++i)
       fltwkreb(i);

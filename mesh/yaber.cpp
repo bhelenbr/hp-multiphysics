@@ -11,43 +11,43 @@
 #include"utilities.h"
 #include<assert.h>
 
-/*	THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
+/* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
-/*	THESE TELL WHICH SIDES/TRIS WERE DELETED */
+/* THESE TELL WHICH SIDES/TRIS WERE DELETED */
 extern int ntdel, tdel[MAXLST+1];
 extern int nsdel, sdel[MAXLST+1];
 
-/*	THIS IS THE NUMER OF SIDES NEEDING COARSENING */
-/*	STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
+/* THIS IS THE NUMER OF SIDES NEEDING COARSENING */
+/* STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
 extern int nslst;
 
 void putinlst(int sind);
 void tkoutlst(int sind);
 
 void mesh::yaber(FLT tolsize) {
-   /* static */int i,j,tind,sind,nfail,v0,v1,cnt;
+   int i,j,tind,sind,nfail,v0,v1,cnt;
    
-/*	SET UP FLTWK */
+   /* SET UP FLTWK */
    fltwkyab();
    
    cnt = 0;
    
-/*	NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
-/* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
+   /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
+   /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
    for(i=0;i<ntri;++i)
       tinfo[i] = 0;
 
-/* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
+   /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
    for(i=0;i<nside;++i)
       sinfo[i] = -1;
       
-/* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
+   /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
    for(i=0;i<nvrtx;++i)
       vinfo[i] = 0;
       
-/*	MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
-/*	THESE SHOULD NOT BE DELETED */
+   /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
+   /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
       v0 = svrtx[sbdry[i].el[0]][0];
       v1 = svrtx[sbdry[i].el[sbdry[i].num-1]][1];
@@ -62,7 +62,7 @@ void mesh::yaber(FLT tolsize) {
          vinfo[vbdry[i].el[j]] = 1;
  
    
-/*	CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
+   /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
    for(i=0;i<nside;++i) {
       if (fltwk[i] > tolsize) {
@@ -74,7 +74,7 @@ void mesh::yaber(FLT tolsize) {
 
    tinfo[-1] = 0;
    
-/*	BEGIN COARSENING ALGORITHM */
+   /* BEGIN COARSENING ALGORITHM */
    while (nslst > 0) {
       sind = -1;
       for(i=nslst-1;i>=0;--i) {  // START WITH LARGEST SIDE TO DENSITY RATIO
@@ -84,7 +84,7 @@ void mesh::yaber(FLT tolsize) {
       }
       assert(sind != -1);
       
-/*		COLLAPSE EDGE */
+      /* COLLAPSE EDGE */
       nfail = collapse(sind);
       ++cnt;
       
@@ -93,7 +93,7 @@ void mesh::yaber(FLT tolsize) {
          
       if (nfail) {
          printf("#Warning: side collapse failed %d\n",sind);
-/*			MARK SIDE AS ACCEPTED AND MOVE ON */
+         /* MARK SIDE AS ACCEPTED AND MOVE ON */
          for(i=0;i<2;++i) {
             tind = stri[sind][i];
             if (tind < 0) continue;
@@ -102,7 +102,7 @@ void mesh::yaber(FLT tolsize) {
          continue;
       }
          
-/*		RECONSTRUCT AFFECTED TINFO ARRAY */
+      /* RECONSTRUCT AFFECTED TINFO ARRAY */
       for(i=0;i<ntdel;++i) {
          tind = tdel[i];
          tinfo[tind] = 0;
@@ -118,8 +118,8 @@ void mesh::yaber(FLT tolsize) {
       }
    }
    
-/*	DELETE LEFTOVER VERTICES */
-/* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
+   /* DELETE LEFTOVER VERTICES */
+   /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
    for(i=nvrtx-1;i>=0;--i) {
       if (vinfo[i] < 0) {
          vinfo[nvrtx-1] = i;
@@ -127,22 +127,22 @@ void mesh::yaber(FLT tolsize) {
       }
    }
    
-/*	FIX BOUNDARY CONDITION POINTERS */
+   /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nvbd;++i)
       for(j=0;j<vbdry[i].num;++j) 
          while (vbdry[i].el[j] >= nvrtx) 
             vbdry[i].el[j] = vinfo[vbdry[i].el[j]];  
    
          
-/*	DELETE SIDES FROM BOUNDARY CONDITIONS */
+   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       for(j=sbdry[i].num-1;j>=0;--j) 
          if (sinfo[sbdry[i].el[j]] == -3) 
             sbdry[i].el[j] = sbdry[i].el[--sbdry[i].num];
                         
-/*	CLEAN UP SIDES */
-/* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-/*	SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
+   /* CLEAN UP SIDES */
+   /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
+   /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
    for(i=nside-1;i>=0;--i) {
       if (sinfo[i] == -3) {
          if (sinfo[nside-1] >= -1)
@@ -155,7 +155,7 @@ void mesh::yaber(FLT tolsize) {
       }
    }
    
-/*	FIX BOUNDARY CONDITION POINTERS */
+   /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry[i].num;++j) 
          while (sbdry[i].el[j] >= nside) 
@@ -164,9 +164,9 @@ void mesh::yaber(FLT tolsize) {
    for (i=0;i<nsbd;++i)
       bdrysidereorder(i);
    
-/*	CLEAN UP DELETED TRIS */
-/* TINFO < NTRI STORES INDEX OF ORIGINAL TRI: TINFO = 0 -> UNMOVED*/
-/* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
+   /* CLEAN UP DELETED TRIS */
+   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI: TINFO = 0 -> UNMOVED*/
+   /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
    for(i=0;i<ntri;++i)
       assert(tinfo[i] <= 0);
       
@@ -180,7 +180,7 @@ void mesh::yaber(FLT tolsize) {
    
    printf("#Yaber finished: %d sides coarsened\n",cnt);
 
-	return;
+   return;
 }
 
 void mesh::checkintegrity() const {
@@ -258,12 +258,12 @@ void mesh::checkintwk() const {
 }
 
 void mesh::fltwkyab(int i) {
-   /* static */FLT dif,av;
+   FLT dif,av;
    
-/*	CALCULATE SIDE LENGTH RATIO FOR YABER */
-/*	HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
-/*	OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
-/*	(THIS ESSENTIALLY TAKES THE MINUMUM) */
+   /* CALCULATE SIDE LENGTH RATIO FOR YABER */
+   /* HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
+   /* OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
+   /*(THIS ESSENTIALLY TAKES THE MINUMUM) */
    dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
    av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
    fltwk[i] = (av -(dif*dif/(0.1*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
@@ -272,7 +272,7 @@ void mesh::fltwkyab(int i) {
 }
 
 void mesh::fltwkyab() {
-   /* static */int i;
+   int i;
    
    for(i=0;i<nside;++i)
       fltwkyab(i);

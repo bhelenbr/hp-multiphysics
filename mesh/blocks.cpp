@@ -14,7 +14,7 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, 
       blk[i].init(mg,filename[i],filetype,grwfac);
 
 
-/*	MATCH BOUNDARIES */
+   /* MATCH BOUNDARIES */
    for(i=0;i<mg;++i) {
       for(j=0;j<nblocks;++j) {
          match = 0;
@@ -34,11 +34,11 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype = easymesh, 
 }
 
 void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
-   /* static */int i;   
-   /* static */char fnmcat[80],outname[80];
+   int i;   
+   char fnmcat[80],outname[80];
 
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
+   /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
+   /* I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    if (nblocks > 1) {
       for (i=0;i<nblocks;++i) {
          strcpy(fnmcat,filename);
@@ -57,10 +57,10 @@ void blocks::out_mesh(char *filename, FILETYPE filetype = easymesh) {
 }
 
 void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
-   /* static */int i;   
+   int i;   
 
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
+   /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
+   /* I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    for (i=0;i<nblocks;++i) {
       blk[i].grd[0].setbcinfo();
       blk[i].grd[0].out_mesh(filename[i],filetype);
@@ -70,7 +70,7 @@ void blocks::out_mesh(char **filename, FILETYPE filetype = easymesh) {
 }
 
 void blocks::jacobi(int niter, int lvl) {
-   /* static */int i,iter;
+   int i,iter;
       
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
@@ -117,7 +117,7 @@ void blocks::jacobi(int niter, int lvl) {
 }
 
 void blocks::cycle(int vw, int lvl = 0) {
-   int i,j;  // DON'T MAKE THESE /* static */SCREWS UP RECURSION
+   int i,j;  // DON'T MAKE THESE SCREWS UP RECURSION
    
    for (i=0;i<vw;++i) {
       jacobi(1,lvl);
@@ -149,12 +149,12 @@ void blocks::cycle(int vw, int lvl = 0) {
 }
 
 void blocks::ksrc() {
-   /* static */int i,j;
+   int i,j;
 
 #define GEOMETRIC
 
 #ifdef GEOMETRIC   
-/*	SETUP SPRING CONSTANTS  */
+   /* SETUP SPRING CONSTANTS  */
    for(i=0;i<mglvls;++i) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rklaplace();
@@ -166,19 +166,19 @@ void blocks::ksrc() {
          blk[j].grd[i].kvoli();
    }
 #else
-/*	USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
-/*	MUST BE DONE THIS WAY FOR SPRING METHOD */
-/*	SETUP FIRST MESH */
+   /* USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
+   /* MUST BE DONE THIS WAY FOR SPRING METHOD */
+   /* SETUP FIRST MESH */
    for(j=0;j<nblocks;++j) 
       blk[j].grd[0].rklaplace();
    
    for(j=0;j<nblocks;++j)
       blk[j].grd[0].kvol_mp();
                
-	for(j=0;j<nblocks;++j)
+   for(j=0;j<nblocks;++j)
       blk[j].grd[0].kvoli();
    
-/*	SETUP COARSE GRIDS */
+   /* SETUP COARSE GRIDS */
    for(i=1;i<mglvls;++i) {
       for(j=0;j<nblocks;++j)
          blk[j].grd[i].rkmgrid();

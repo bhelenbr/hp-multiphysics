@@ -21,17 +21,17 @@
 /* BUT IT DOESN'T INTERFERE WITH ANYTHING */
 
 void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
-   /* static */int i,j,nv;
-   /* static */int lp, sd;
-   /* static */int sind,dir,sindnxt,dirnxt;
-   /* static */int sind1,sindprev;
-   /* static */int nsidebefore,newside;
-   /* static */int ngood,goodvrt[MAXGOOD];
-   /* static */int minv,maxv;
-   /* static */int v1,v2,v[4];
+   int i,j,nv;
+   int lp, sd;
+   int sind,dir,sindnxt,dirnxt;
+   int sind1,sindprev;
+   int nsidebefore,newside;
+   int ngood,goodvrt[MAXGOOD];
+   int minv,maxv;
+   int v1,v2,v[4];
 
-/*	CREATE VERTEX LIST */
-/*	STORE IN NNBOR SINCE THIS IS OBVIOUSLY UNUSED RIGHT NOW */
+   /* CREATE VERTEX LIST */
+   /* STORE IN NNBOR SINCE THIS IS OBVIOUSLY UNUSED RIGHT NOW */
    nv = 0;
    for(i=0;i<nloop;++i) {
       for(j=0;j<nsdloop[i];++j) {
@@ -43,7 +43,7 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
       }
    }
 
-/*	SETUP SIDE POINTER INFO */
+   /* SETUP SIDE POINTER INFO */
    for(i=0;i<nv;++i)
       vinfo[nnbor[i]] = -1;
       
@@ -73,7 +73,7 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
       }
    }
    
-/*	PUT PERIODICITY ENDSIDE ON SIDELST */
+   /* PUT PERIODICITY ENDSIDE ON SIDELST */
    for(lp=0;lp<nloop;++lp) 
       sidelst[lp][nsdloop[lp]] = sidelst[lp][0];
          
@@ -105,11 +105,11 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
             
             nsidebefore = nside;
             addtri(v[1],v[2],goodvrt[0],sind,dir);
- /*			ADD ANY DEGENERATE TRIANGLES */           
+            /* ADD ANY DEGENERATE TRIANGLES */           
             for(i=1;i<ngood;++i)
                addtri(goodvrt[i-1],v[2],goodvrt[i],-1,-1);
 
-/*				STORE NEWSIDES IN TINFO SINCE THIS IS ALSO UNUSED RIGHT NOW */ 
+            /* STORE NEWSIDES IN TINFO SINCE THIS IS ALSO UNUSED RIGHT NOW */ 
             assert(newside +nside - nsidebefore < maxvst);
             for(i=nsidebefore;i<nside;++i)
                tinfo[newside++] = i;
@@ -141,11 +141,11 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor = 1) {
 
 
 void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
-   /* static */int i,j,k,ncnvx,cnvx[2],vtry,itemp;
-   /* static */FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
-   /* static */FLT xmid,ymid,area,alpha,beta,xcen,ycen;
-   /* static */FLT hmin,height;
-   /* static */FLT temp,ang[MAXGOOD],ds1,ds2;
+   int i,j,k,ncnvx,cnvx[2],vtry,itemp;
+   FLT dx1,dy1,dx2,dy2,dx2a,dy2a;
+   FLT xmid,ymid,area,alpha,beta,xcen,ycen;
+   FLT hmin,height;
+   FLT temp,ang[MAXGOOD],ds1,ds2;
    
    dx2 = vrtx[v[2]][0] -vrtx[v[1]][0];
    dy2 = vrtx[v[2]][1] -vrtx[v[1]][1];
@@ -156,7 +156,7 @@ void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
 
    ncnvx = 0;
    if (chkadj) {
-/*		CHECK WHETHER ADJACENT SIDES ARE CONCAVE OR CONVEX */
+      /* CHECK WHETHER ADJACENT SIDES ARE CONCAVE OR CONVEX */
       dx1 = vrtx[v[1]][0] -vrtx[v[0]][0];
       dy1 = vrtx[v[1]][1] -vrtx[v[0]][1]; 
       area        = dx1*dy2 -dy1*dx2;
@@ -170,7 +170,7 @@ void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
          cnvx[ncnvx++] = 2;
    }
    
-/*	FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
+   /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
    for(i=0;i<nv;++i) {
       vtry = nnbor[i];
       dx1 = vrtx[v[1]][0] -vrtx[vtry][0];
@@ -178,32 +178,32 @@ void mesh::findpt(int *nnbor,int nv,int *v,int chkadj,int good[], int &ngood) {
       area        = dx1*dy2 -dy1*dx2;
       if (area < FLT_EPSILON) continue;
       
-/*		CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
+      /* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
       area = 1./area;
       alpha       = dx2*xmid +dy2*ymid;
       beta        = .5*(dx1*(vrtx[vtry][0] +vrtx[v[1]][0]) +dy1*(vrtx[vtry][1] +vrtx[v[1]][1]));
       xcen = area*(beta*dy2 -alpha*dy1);
       ycen = area*(alpha*dx1 -beta*dx2);
 
-/*		FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
-/*		ABOVE THE EDGE MID-POINT IS MINIMIZED */
+      /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
+      /* ABOVE THE EDGE MID-POINT IS MINIMIZED */
       height = dx2*(ycen -ymid) -dy2*(xcen -xmid);
 
       if (height > hmin +10.*FLT_EPSILON) continue;
       
-/*		CHECK FOR INTERSECTION WITH CONVEX SIDES */
+      /* CHECK FOR INTERSECTION WITH CONVEX SIDES */
       for(k=0;k<ncnvx;++k) {
          j = cnvx[k];
          dx1 = vrtx[v[j]][0]-vrtx[vtry][0];
          dy1 = vrtx[v[j]][1]-vrtx[vtry][1];
          dx2a = vrtx[v[j+1]][0]-vrtx[v[j]][0];
          dy2a = vrtx[v[j+1]][1]-vrtx[v[j]][1];
-   	
+      
          area = dx1*dy2a -dy1*dx2a;
          if (area < 0.0) goto NEXT;
       }
 
-/*		CHECK IF DEGENERATE */
+      /* CHECK IF DEGENERATE */
       if (height > hmin-10.*FLT_EPSILON) {
          good[ngood++] = vtry;
          assert(ngood < MAXGOOD);
@@ -217,8 +217,8 @@ NEXT: continue;
    }
    
    if (ngood > 1) {
-/*		ORDER COCIRCULAR POINTS */   
-/*		CALCULATE SIDE ANGLE */
+      /* ORDER COCIRCULAR POINTS */   
+      /* CALCULATE SIDE ANGLE */
       ds2 = 1./sqrt(dx2*dx2 +dy2*dy2);
       for(i=0;i<ngood;++i) {
          vtry = good[i];
@@ -228,17 +228,17 @@ NEXT: continue;
          ang[i] = -(dx2*dx1  +dy2*dy1)*ds2*ds1;
       }
    
-/*		ORDER POINTS BY ANGLE */      
+      /* ORDER POINTS BY ANGLE */      
       for(i=0;i<ngood-1;++i) {
          for(j=i+1;j<ngood;++j) {
 
-/*				TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN NNBOR */
+            /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN NNBOR */
             if (good[i] == good[j]) {
                good[j] = good[ngood-1];
                --ngood;
             }
 
-/*				ORDER BY ANGLE */
+            /* ORDER BY ANGLE */
             if(ang[i] > ang[j]) {
                temp = ang[i];
                ang[i] = ang[j];
@@ -255,10 +255,10 @@ NEXT: continue;
 }
 
 void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
-   /* static */int i,j,k,end,sind1,tind;
-   /* static */int minv,maxv,order,sindprev,temp;
+   int i,j,k,end,sind1,tind;
+   int minv,maxv,order,sindprev,temp;
       
-/*	ADD NEW TRIANGLE */
+   /* ADD NEW TRIANGLE */
    tvrtx[ntri][0] = v0;
    tvrtx[ntri][1] = v1;
    tvrtx[ntri][2] = v2;
@@ -269,7 +269,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
    
    end = 3;
    if (sind > -1) {
-/*		SIDE 2 INFO IS KNOWN ALREADY */
+      /* SIDE 2 INFO IS KNOWN ALREADY */
       tside[ntri].side[2] = sind;
       tside[ntri].sign[2] = 1 -2*dir;
       stri[sind][dir] = ntri;
@@ -286,7 +286,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
       end = 2;
    }
 
-/*	LOOP THROUGH SIDES */
+   /* LOOP THROUGH SIDES */
    for(k=0;k<end;++k) {
       if (v2 > v1) {
          minv = v1;
@@ -301,7 +301,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
       sind1 = vinfo[minv];
       while (sind1 >= 0) {
          if (maxv == svrtx[sind1][order]) {
-/*				SIDE IN SAME DIRECTION */
+            /* SIDE IN SAME DIRECTION */
             if (stri[sind1][0] >= 0) {
                printf("1:side already matched?%d %d %d\n",sind1,v1,v2);
                out_mesh("error");
@@ -323,7 +323,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
             goto NEXTTRISIDE;
          }
          else if(maxv == svrtx[sind1][1-order]) {
-/*							SIDE IN OPPOSITE DIRECTION */
+            /* SIDE IN OPPOSITE DIRECTION */
             if (stri[sind1][1] >= 0) {
                printf("2:side already matched? %d %d %d\n",sind1,v1,v2);
                out_mesh("error");
@@ -347,7 +347,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          sindprev = sind1;
          sind1 = sinfo[sind1];
       }
-/*		NEW SIDE */
+      /* NEW SIDE */
       svrtx[nside][0] = v1;
       svrtx[nside][1] = v2;
       stri[nside][0] = ntri;

@@ -1,6 +1,6 @@
 #include"r_mesh.h"
 
-/*	THIS IS A SEQUENCE OF RMESHES & STORAGE FOR A SIGNLE MULTIGRID BLOCK */
+/* THIS IS A SEQUENCE OF RMESHES & STORAGE FOR A SIGNLE MULTIGRID BLOCK */
 class block {
    private:
       int ngrid;
@@ -15,7 +15,7 @@ class block {
 };
 
 
-/*	THIS IS A MULTIBLOCK MESH */
+/* THIS IS A MULTIBLOCK MESH */
 class blocks {
    private:
       int nblocks;
@@ -23,30 +23,30 @@ class blocks {
       class block *blk;
       
    public:
-/*		INITIALIZE MULTIBLOCK/MGRID MESH */
+      /* INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(int nb, int mg, char **filenames, FILETYPE filetype = easymesh, FLT grwfac = 1);
       void findmatch();
 
-/*		JACOBI ITERATION ON ALL BLOCKS */  
+      /* JACOBI ITERATION ON ALL BLOCKS */  
       void jacobi(int niter, int mglvl);
 
-/*		MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
+      /* MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle */
       void cycle(int vw, int lvl = 0);
 
-/*		CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
+      /* CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
       void ksrc();
       
-/*		OUTPUT FINE BLOCK MESH */
+      /* OUTPUT FINE BLOCK MESH */
       void out_mesh(char **filename, FILETYPE filetype = easymesh);
       void out_mesh(char *filename, FILETYPE filetype = easymesh);
       
-/*		PRINT ERRORS */
+      /* PRINT ERRORS */
       inline void maxres() {
          for(int i=0;i<nblocks;++i)
             blk[i].grd[0].maxres();
       }
       
-/*		PERTURB BLOCK MESH */
+      /* PERTURB BLOCK MESH */
       inline void perturb() {
          for(int i=0;i<nblocks;++i)
             blk[i].grd[0].perturb();
@@ -75,7 +75,6 @@ class blocks {
             blk[i].grd[0].out_mesh("refine",tecplot);
             blk[i].reconnect();
          }
-         
          
          return;
       }

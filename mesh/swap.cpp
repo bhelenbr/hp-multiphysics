@@ -14,7 +14,7 @@
 #include<float.h>
 
 int mesh::swap(int sind, FLT tol = 0.0) {
-   /* static */int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
+   int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
          
    t1 = stri[sind][0];
    t2 = stri[sind][1];
@@ -39,18 +39,18 @@ int mesh::swap(int sind, FLT tol = 0.0) {
        
    sinfo[sind] = -2; /* MARK SIDE AS TOUCHED */   
    
-/*	SWAP SIDE */
+   /* SWAP SIDE */
    svrtx[sind][0] = vt2;
    svrtx[sind][1] = vt1;
 
-/*	KEEP 2/3 VERTICES IN SAME SPOT */
+   /* KEEP 2/3 VERTICES IN SAME SPOT */
    tvrtx[t1][(snum1 +2)%3] = vt2;
    tvrtx[t2][(snum2 +2)%3] = vt1;
 
    s1p = (snum1 +1)%3;
    s2p = (snum2 +1)%3;
    
-/*	FIX 2 CHANGED EXTERIOR SIDES */
+   /* FIX 2 CHANGED EXTERIOR SIDES */
    tside[t1].side[snum1] = tside[t2].side[s2p];
    tside[t1].sign[snum1] = tside[t2].sign[s2p];
    ttri[t1][snum1] = ttri[t2][s2p];
@@ -59,7 +59,7 @@ int mesh::swap(int sind, FLT tol = 0.0) {
    tside[t2].sign[snum2] = tside[t1].sign[s1p];
    ttri[t2][snum2] = ttri[t1][s1p];
    
-/*	FIX STRI/TTRI FOR 2 CHANGED EXTERIOR SIDES */
+   /* FIX STRI/TTRI FOR 2 CHANGED EXTERIOR SIDES */
    sd = tside[t1].side[snum1];
    dir = (1 -tside[t1].sign[snum1])/2;
    stri[sd][dir] = t1;
@@ -98,7 +98,7 @@ int mesh::swap(int sind, FLT tol = 0.0) {
    
    
 void mesh::swap(int nswp, int *swp, FLT tol = 0.0) {
-   /* static */int i,flag;
+   int i,flag;
    
    do {
       flag = 0;
@@ -110,9 +110,9 @@ void mesh::swap(int nswp, int *swp, FLT tol = 0.0) {
 }
 
 void mesh::swap(FLT tol = 0.0) {
-   /* static */int nswap,i;
+   int nswap,i;
    
-/*	PERFORM EDGE SWAPPING */
+   /* PERFORM EDGE SWAPPING */
    do {
       nswap = 0;
       for(i=0;i<nside;++i)

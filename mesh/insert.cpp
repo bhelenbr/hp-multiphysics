@@ -16,7 +16,7 @@ int ntdel, tdel[MAXLST+1];
 int nsdel, sdel[MAXLST+1];
 
 void mesh::insert(FLT x, FLT y) {
-   /* static */int tind,vnear;
+   int tind,vnear;
    
    vrtx[nvrtx][0] = x;
    vrtx[nvrtx][1] = y;
@@ -24,8 +24,9 @@ void mesh::insert(FLT x, FLT y) {
    qtree.addpt(nvrtx);
    qtree.nearpt(nvrtx,vnear);
 
-/*	FIND TRIANGLE CONTAINING POINT */      
-   tind = findtri(x,y,vnear);  
+   /* FIND TRIANGLE CONTAINING POINT */      
+   tind = findtri(x,y,vnear);
+   assert(tind > -1);  
    insert(tind,nvrtx);
    ++nvrtx;
    if (nvrtx >= maxvst -1) {
@@ -37,11 +38,11 @@ void mesh::insert(FLT x, FLT y) {
 }
 
 void mesh::insert(int tind, int vnum) {
-   /* static */int i,j,tin,v0,dir;
-   /* static */int sct, nskeep, skeep[MAXLST+1];
-   /* static */int sind, sind1;
+   int i,j,tin,v0,dir;
+   int sct, nskeep, skeep[MAXLST+1];
+   int sind, sind1;
    
-/*	SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
+   /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
    tdel[ntdel++] = tind;
    intwk1[tind] = 0;
@@ -60,7 +61,7 @@ void mesh::insert(int tind, int vnum) {
       }
    }
 
-/*	CREATE LIST OF SIDES TO BE DELETED AND BOUNDARY SIDES */
+   /* CREATE LIST OF SIDES TO BE DELETED AND BOUNDARY SIDES */
    nsdel = 0;
    nskeep = 0;
    for(i=0;i<ntdel;++i) {
@@ -68,13 +69,13 @@ void mesh::insert(int tind, int vnum) {
       for(j=0;j<3;++j) {
          tind = ttri[tin][j];
          if (tind < 0 || intwk1[tind] != 0) {
-/*				KEEP SIDE */
+            /* KEEP SIDE */
             skeep[nskeep++] = tside[tin].side[j];
             assert(nskeep < MAXLST);
             continue;
          }
          else {
-/*				DELETE SIDE */
+            /* DELETE SIDE */
             if (tside[tin].sign[j] > 0) {
                sind = tside[tin].side[j];
                sdel[nsdel++] = sind;
@@ -87,11 +88,11 @@ void mesh::insert(int tind, int vnum) {
    assert(nskeep == nsdel+3);
    assert(nskeep == ntdel+2);
    
-/*	RESET INTWK1 */
+   /* RESET INTWK1 */
    for(i=0;i<nskeep;++i)
       intwk1[tdel[i]] = -1;
    
-/*	ADD NEW INDICES TO DEL LIST */
+   /* ADD NEW INDICES TO DEL LIST */
    for(i=nsdel;i<nskeep;++i)
       sdel[i] = nside +(i-nsdel);
    
@@ -110,13 +111,13 @@ void mesh::insert(int tind, int vnum) {
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
       tind = tdel[i];
-/*		CHECK SIDE DIRECTION  */
+      /* CHECK SIDE DIRECTION  */
       if (area(sind,vnum) > 0.0) 
          dir = 0;
       else 
          dir = 1;
          
-/*		CREATE NEW INFO */
+      /* CREATE NEW INFO */
       v0 = svrtx[sind][dir];
       tvrtx[tind][0] = v0;
       vtri[v0] = tind;
@@ -126,7 +127,7 @@ void mesh::insert(int tind, int vnum) {
       tvrtx[tind][2] = vnum;
       vtri[vnum] = tind;
 
-/*		SIDE 2 INFO */      
+      /* SIDE 2 INFO */      
       tside[tind].side[2] = sind;
       tside[tind].sign[2] = 1 -2*dir;
       
@@ -142,7 +143,7 @@ void mesh::insert(int tind, int vnum) {
          }
       }
 
-/*		CREATE SIDE 1 INFO */
+      /* CREATE SIDE 1 INFO */
       v0 = svrtx[sind][dir];
       sind1 = intwk1[v0];
       if (sind1 > -1) {
@@ -173,7 +174,7 @@ void mesh::insert(int tind, int vnum) {
       }
       
 
-/*		CREATE SIDE 0 INFO */
+      /* CREATE SIDE 0 INFO */
       v0 = svrtx[sind][1-dir];
       sind1 = intwk1[v0];
       if (sind1 > -1) {
@@ -205,7 +206,7 @@ void mesh::insert(int tind, int vnum) {
       }
    }
    
-/*	RESET INTWK1 */
+   /* RESET INTWK1 */
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
       intwk1[svrtx[sind][0]] = -1;
@@ -216,16 +217,16 @@ void mesh::insert(int tind, int vnum) {
 }
 
 void mesh::bdry_insert(int tind, int snum, int vnum) {
-   /* static */int i,j,tin,v0,dir,tbdry;
-   /* static */int sct, nskeep, skeep[MAXLST+1];
-   /* static */int sind, sind1;
+   int i,j,tin,v0,dir,tbdry;
+   int sct, nskeep, skeep[MAXLST+1];
+   int sind, sind1;
    
    tbdry = tind;
       
-/*	SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
+   /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
    tdel[ntdel++] = tind;
-  	intwk1[tind] = 0;
+     intwk1[tind] = 0;
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
@@ -241,7 +242,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       }
    }
 
-/*	CREATE LIST OF SIDES TO BE DELETED AND BOUNDARY SIDES */
+   /* CREATE LIST OF SIDES TO BE DELETED AND BOUNDARY SIDES */
    nsdel = 0;
    sdel[nsdel++] = tside[tbdry].side[snum];
    nskeep = 0;
@@ -251,19 +252,19 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
          tind = ttri[tin][j];
          if (tind < 0) {
             if (tin == tbdry && j == snum) continue;               
-/*				KEEP SIDE */
+            /* KEEP SIDE */
             skeep[nskeep++] = tside[tin].side[j];
             assert(nskeep < MAXLST);
             continue;
          }
          else if (intwk1[tind] != 0) {
-/*				KEEP SIDE */
+            /* KEEP SIDE */
             skeep[nskeep++] = tside[tin].side[j];
             assert(nskeep < MAXLST);
             continue; 
          }
          else {
-/*				DELETE SIDE */
+            /* DELETE SIDE */
             if (tside[tin].sign[j] > 0) {
                sind = tside[tin].side[j];
                sdel[nsdel++] = sind;
@@ -273,13 +274,13 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       }
    }
    
-/*	ALTER OLD BOUNDARY SIDE & CREATE NEW SIDE */
+   /* ALTER OLD BOUNDARY SIDE & CREATE NEW SIDE */
    sind = tside[tbdry].side[snum];
    svrtx[nside][0] = vnum;
    svrtx[nside][1] = svrtx[sind][1];
    svrtx[sind][1] = vnum;
-/*	ADD NEW SIDE TO BOUNDARY GROUP */
-/*	NEED TO REORDER WHEN FINISHED */
+   /* ADD NEW SIDE TO BOUNDARY GROUP */
+   /* NEED TO REORDER WHEN FINISHED */
    i = (-stri[sind][1]>>16) -1;
    stri[nside][1] = -(((i+1)<<16) +sbdry[i].num);
    sbdry[i].el[sbdry[i].num++] = nside;
@@ -292,22 +293,22 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    assert(nskeep == nsdel+1);
    assert(nskeep == ntdel+1);
    
-/*	RESET INTWK1 */
+   /* RESET INTWK1 */
    for(i=0;i<nskeep;++i)
       intwk1[tdel[i]] = -1;
    
-/*	ADD NEW INDICES TO DEL LIST */
+   /* ADD NEW INDICES TO DEL LIST */
    for(i=nsdel;i<nskeep;++i)
       sdel[i] = nside +(i-nsdel);
       
-/*	ADD THIS ONE TOO (NEVER GETS ACCESSED HERE)*/
-/* BUT FOR ACCOUNTING PURPOSES IN REBAY */
+   /* ADD THIS ONE TOO (NEVER GETS ACCESSED HERE)*/
+   /* BUT FOR ACCOUNTING PURPOSES IN REBAY */
    sdel[nskeep] = nside -1;
    
    for(i=ntdel;i<nskeep;++i)
       tdel[i] = ntri +(i-ntdel);
 
-/*	USE INTWK1 TO FIND SIDES */
+   /* USE INTWK1 TO FIND SIDES */
    sind = tside[tbdry].side[snum];
    intwk1[svrtx[sind][0]] = sind;
    intwk1[svrtx[nside-1][1]] = nside-1;
@@ -324,13 +325,13 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
       tind = tdel[i];
-/*		CHECK SIDE DIRECTION  */
+      /* CHECK SIDE DIRECTION  */
       if (area(sind,vnum) > 0.0) 
          dir = 0;
       else 
          dir = 1;
 
-/*		CREATE NEW INFO */
+      /* CREATE NEW INFO */
       v0 = svrtx[sind][dir];
       tvrtx[tind][0] = v0;
       vtri[v0] = tind;
@@ -340,7 +341,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       tvrtx[tind][2] = vnum;
       vtri[vnum] = tind;
 
-/*		SIDE 2 INFO */      
+      /* SIDE 2 INFO */      
       tside[tind].side[2] = sind;
       tside[tind].sign[2] = 1 -2*dir;
       
@@ -356,9 +357,9 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
          }
       }
 
-/*		CREATE SIDE 1 INFO */
-/*		CREATE IN OPPOSITE DIRECTION */
-/*		IF CREATED IT IS IN SAME DIRECTION */
+      /* CREATE SIDE 1 INFO */
+      /* CREATE IN OPPOSITE DIRECTION */
+      /* IF CREATED IT IS IN SAME DIRECTION */
       v0 = svrtx[sind][dir];
       sind1 = intwk1[v0];
       if (sind1 > -1) {
@@ -389,9 +390,9 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       }
       
 
-/*		CREATE SIDE 0 INFO */
-/*		CREATE IN OPPOSITE DIRECTION */
-/*		IF CREATED IT IS IN SAME DIRECTION */
+      /* CREATE SIDE 0 INFO */
+      /* CREATE IN OPPOSITE DIRECTION */
+      /* IF CREATED IT IS IN SAME DIRECTION */
       v0 = svrtx[sind][1-dir];
       sind1 = intwk1[v0];
       if (sind1 > -1) {
@@ -423,7 +424,7 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
       }
    }
 
-/*	RESET INTWK1 */   
+   /* RESET INTWK1 */   
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
       intwk1[svrtx[sind][0]] = -1;
@@ -440,9 +441,9 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
 int mesh::maxsrch = MAXLST*3/4;
 
 int mesh::findtri(FLT x, FLT y, int vnear) const {
-   /* static */int i,j,vn,dir,stoptri,tin,tind;
+   int i,j,vn,dir,stoptri,tin,tind;
 
-/*	HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
+   /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
    tind = vtri[vnear];
    stoptri = tind;
    dir = 1;
@@ -456,7 +457,7 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
       tind = ttri[tind][(vn +dir)%3];
       if (tind < 0) {
          if (dir > 1) break;
-/*			REVERSE DIRECTION AND GO BACK TO START */
+         /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
          tind = vtri[vnear];
          stoptri = -1;
@@ -470,8 +471,8 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
          
    } while(tind != stoptri); 
    
-/*	DIDN'T FIND TRIANGLE */
-/*	NEED TO SEARCH SURROUNDING TRIANGLES */
+   /* DIDN'T FIND TRIANGLE */
+   /* NEED TO SEARCH SURROUNDING TRIANGLES */
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
@@ -484,12 +485,11 @@ int mesh::findtri(FLT x, FLT y, int vnear) const {
       }
       if (i >= maxsrch) break;
    }
-	printf("Warning: couldn't find triangle for point %f %f\n",x,y);
    tind = -1;
    
 FOUND:
 
-/*	RESET INTWKW1 TO -1 */
+   /* RESET INTWKW1 TO -1 */
    for(i=0;i<ntdel;++i)
       intwk1[tdel[i]] = -1;
 

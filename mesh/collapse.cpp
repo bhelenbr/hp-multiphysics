@@ -4,17 +4,17 @@
 #include<assert.h>
 #include<float.h>
 
-/*	THESE TELL WHICH TRIS WERE AFFECTED & WHICH SIDES WERE DELETED */
+/* THESE TELL WHICH TRIS WERE AFFECTED & WHICH SIDES WERE DELETED */
 extern int ntdel, tdel[MAXLST +1];
 extern int nsdel, sdel[MAXLST +1];
 
 int mesh::collapse(int sind) {
-   /* static */int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
-   /* static */int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
-   /* static */int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
-   /* static */FLT x,y,a,asum,dx,dy,l0,l1;
+   int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2];
+   int ntsrnd[2],tsrnd[2][MAXLST],nssrnd[2],ssrnd[2][MAXLST],bside[2][2];
+   int delt,v0,v1,sd,pt,sd1,sd2,t1,t2;
+   FLT x,y,a,asum,dx,dy,l0,l1;
    
-/*	FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
+   /* FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
    for(i=0;i<2;++i) {
       vnear = svrtx[sind][i];
       tind = vtri[vnear];
@@ -35,7 +35,7 @@ int mesh::collapse(int sind) {
          if (tind1 < 0) {
             bside[i][dir[i]-1] = tside[tind].side[(vn +dir[i])%3];
             if (dir[i] > 1) break;
-/*				REVERSE DIRECTION AND GO BACK TO START */
+            /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir[i];
             tind1 = vtri[vnear];
             prev = 1;
@@ -61,26 +61,26 @@ int mesh::collapse(int sind) {
       } while(tind != stoptri); 
    }
 
-/*	DECIDE WHICH POINT TO COLLAPSE TOWARDS */
-/*	REGARDLESS OF OUTCOME THIS SIDE SHOULD BE REMOVED FROM LIST */
+   /* DECIDE WHICH POINT TO COLLAPSE TOWARDS */
+   /* REGARDLESS OF OUTCOME THIS SIDE SHOULD BE REMOVED FROM LIST */
    nsdel = 0;
    sdel[nsdel++] = sind;
 
    if (dir[0] + dir[1] > 2) {
-/*		ONE OR BOTH POINTS ON BOUNDARY  */
+      /* ONE OR BOTH POINTS ON BOUNDARY  */
       if (dir[0] + dir[1] == 3) {
-/* 		ONE POINT ON BOUNDARY */
+         /* ONE POINT ON BOUNDARY */
          if (dir[0] == 1)
             delt = 0;
          else if (dir[1] == 1)
             delt = 1;
       }
       else {
-/* 		BOTH ON BOUNDARY */
-/*			IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
+         /* BOTH ON BOUNDARY */
+         /* IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
          if (stri[sind][1] > -1 || vinfo[svrtx[sind][0]] +vinfo[svrtx[sind][1]] == 2) return(1);
 
-/*			CHECK IF CORNER POINT */
+         /* CHECK IF CORNER POINT */
          if (vinfo[svrtx[sind][0]] == 1) {
             delt = 1;
             goto DELETE;
@@ -90,7 +90,7 @@ int mesh::collapse(int sind) {
             goto DELETE;
          }
 
-/*			CHECK IF TWO EDGES OF TRIANGLE ARE ON BOUNDARY */         
+         /* CHECK IF TWO EDGES OF TRIANGLE ARE ON BOUNDARY */         
          tind = stri[sind][0];
          for (i=0;i<3;++i)
             if(tside[tind].side[i] == sind) break;
@@ -104,8 +104,8 @@ int mesh::collapse(int sind) {
             goto DELETE;
          }
          
-/*			CAN PICK EITHER POINT KEEP ONE CLOSEST TO CENTER OF PREVIOUS/NEXT VERTICES ON BOUNDARY */
-/*			SHOULD KEEP COMMUNICATION BOUNDARIES COHERENT */
+         /* CAN PICK EITHER POINT KEEP ONE CLOSEST TO CENTER OF PREVIOUS/NEXT VERTICES ON BOUNDARY */
+         /* SHOULD KEEP COMMUNICATION BOUNDARIES COHERENT */
          sd1 = bside[0][0];
          sd2 = bside[1][1];
          
@@ -125,9 +125,9 @@ int mesh::collapse(int sind) {
          l1 = dx*dx +dy*dy;
          
          if (l0 == l1) {
-/*				CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
-/*				PICK CLOSEST ZERO */
-/*				(CIRCLES CENTERED AROUND ZERO WITH EQUAL LENGTH SIDES ARE DEGENERATE) */
+            /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
+            /* PICK CLOSEST ZERO */
+            /*(CIRCLES CENTERED AROUND ZERO WITH EQUAL LENGTH SIDES ARE DEGENERATE) */
             v0 = svrtx[sind][0];
             v1 = svrtx[sind][1];
             dx = vrtx[v0][0];
@@ -147,8 +147,8 @@ int mesh::collapse(int sind) {
       }
    }
    else {
-/*		THIS IS AN INTERIOR EDGE WITH NO CONNECTION TO BOUNDARY */
-/*		KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
+      /* THIS IS AN INTERIOR EDGE WITH NO CONNECTION TO BOUNDARY */
+      /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
       x = 0.0;
       y = 0.0;
       asum = 0.0;
@@ -189,7 +189,7 @@ int mesh::collapse(int sind) {
    
 DELETE:
    
-/*	UPDATE TVRTX & SVRTX */
+   /* UPDATE TVRTX & SVRTX */
    v0 = svrtx[sind][1-delt];
    v1 = svrtx[sind][delt];
    
@@ -214,15 +214,15 @@ DELETE:
       assert(j != 3);
    }
 
-/*	MARK SIDE AS DELETED */      
+   /* MARK SIDE AS DELETED */      
    sinfo[sind] = -3;
 
-/*	CLOSE THE GAP */
+   /* CLOSE THE GAP */
    for(i=0;i<2;++i) {
       tind = stri[sind][i];
       if (tind < 0) continue;
 
-/*		MARK TRI AS DELETED TO BE REMOVED LATER */
+      /* MARK TRI AS DELETED TO BE REMOVED LATER */
       tinfo[tind] = -1;  
       
       for(sd1=0;sd1<3;++sd1)
@@ -235,7 +235,7 @@ DELETE:
       else
          sd2 = (sd1+1)%3;
          
-/*		MARK SIDE AS DELETED TO BE REMOVED LATER */
+      /* MARK SIDE AS DELETED TO BE REMOVED LATER */
       sd = tside[tind].side[sd2];
       sinfo[sd] = -3;
       sdel[nsdel++] = sd;
@@ -243,7 +243,7 @@ DELETE:
       t1 = ttri[tind][sd1];
       t2 = ttri[tind][sd2];
 
-/*		UPDATE TTRI FOR T1 */  
+      /* UPDATE TTRI FOR T1 */  
       if (t1 > -1) {
          for(j=0;j<3;++j) {
             if(ttri[t1][j] == tind) {
@@ -255,12 +255,12 @@ DELETE:
          vtri[tvrtx[tind][(sd1+1)%3]] = t1;
          vtri[tvrtx[tind][(sd1+2)%3]] = t1;
       }
-/*		UPDATE STRI FOR KEPT SIDE */
+      /* UPDATE STRI FOR KEPT SIDE */
       sd = tside[tind].side[sd1];
       pt = (1 -tside[tind].sign[sd1])/2;
       stri[sd][pt] = t2;
 
-/*		UPDATE TTRI/TSIDE FOR T2 */
+      /* UPDATE TTRI/TSIDE FOR T2 */
       if (t2 > -1) {
          for(j=0;j<3;++j) {
             if(ttri[t2][j] == tind) {
@@ -276,16 +276,16 @@ DELETE:
       }
    }
    
-/* NEED TO REMOVE LEFTOVERS */
+   /* NEED TO REMOVE LEFTOVERS */
    qtree.dltpt(v1);
    vinfo[v1] = -1;
    
-/*	STORE LIST OF AFFECTED TRIANGLES */
+   /* STORE LIST OF AFFECTED TRIANGLES */
    ntdel = ntsrnd[delt];
    for(i=0;i<ntsrnd[delt];++i)
       tdel[i] = tsrnd[delt][i];
       
-/*	SWAP AFFECTED SIDES */      
+   /* SWAP AFFECTED SIDES */      
    swap(nssrnd[delt],ssrnd[delt]);
 
    return(0);
@@ -293,7 +293,7 @@ DELETE:
 
 /* DELETE UNREFERENCED TRIANGLE */
 void mesh::dlttri(int tind) {
-   /* static */int i,j,v0,t1,sind,flip;
+   int i,j,v0,t1,sind,flip;
    
    --ntri;
    if (tind == ntri) return;
@@ -325,9 +325,9 @@ void mesh::dlttri(int tind) {
 
 /* DELETE UNREFERENCED SIDE */
 void mesh::dltside(int sind) {
-   /* static */int j,k,tind;
+   int j,k,tind;
    
-/*	DELETE SIDE */
+   /* DELETE SIDE */
    --nside;
    
    if (sind == nside) return;
@@ -352,8 +352,8 @@ void mesh::dltside(int sind) {
 
 /* DELETE UNREFERENCED VERTEX */
 void mesh::dltvrtx(int v0) {
-   /* static */int vn,stoptri,dir;
-   /* static */int tind, sind, flip;
+   int vn,stoptri,dir;
+   int tind, sind, flip;
       
    --nvrtx;
    
@@ -384,7 +384,7 @@ void mesh::dltvrtx(int v0) {
       tind = ttri[tind][(vn +dir)%3];
       if (tind < 0) {
          if (dir > 1) break;
-/*			REVERSE DIRECTION AND GO BACK TO START */
+         /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
          tind = vtri[nvrtx];
          for(vn=0;vn<3;++vn) {

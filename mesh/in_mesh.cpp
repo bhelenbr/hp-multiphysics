@@ -17,7 +17,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
         
     switch (filetype) {            
         case(easymesh):
-/*          LOAD SIDE INFORMATION */
+            /* LOAD SIDE INFORMATION */
             strcpy(grd_app,filename);
             strcat(grd_app,".s");
             grd = fopen(grd_app,"r");
@@ -57,10 +57,10 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                stri[i][1] = -1;
             }
             
-/*          ALLOCATE BOUNDARY STORAGE */
+            /* ALLOCATE BOUNDARY STORAGE */
             if (!initialized) bdryalloc(count + (int) (grwfac*count));
             
-/*				ORGANIZE BOUNDARY GROUPS */
+            /* ORGANIZE BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
@@ -70,7 +70,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                         goto next1;
                      }
                   }
-/*						NEW SIDE */
+                  /* NEW SIDE */
                   sbdry[nsbd].type = sinfo[i];
                   sbdry[nsbd].num = 1;
                   sbdry[nsbd++].el[0]= i;
@@ -82,7 +82,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
 next1:      continue;
             }
                
-/*	    		LOAD VERTEX INFORMATION 				  */
+            /* LOAD VERTEX INFORMATION               */
             strcpy(grd_app,filename);
             strcat(grd_app,".n");
             grd = fopen(grd_app,"r");
@@ -94,19 +94,19 @@ next1:      continue;
                exit(1);
             }
     
-/*	    		ERROR %lf SHOULD BE FLT */
+            /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                ierr = fscanf(grd,"%*d:%lf%lf%d\n",&vin[i][0],&vin[i][1],&vinfo[i]);
                if (ierr != 3) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
 
-/*				THIS IS GOING TO HAVE TO CHANGE */
-/*	    		COUNT VERTEX BOUNDARY GROUPS  */
+            /* THIS IS GOING TO HAVE TO CHANGE */
+            /* COUNT VERTEX BOUNDARY GROUPS  */
             nvbd = 0;
             for(i=0;i<nvrtx;++i) {
                if (vinfo[i]) {
-/*			    		NEW VRTX B.C. */
+                  /* NEW VRTX B.C. */
                   vbdry[nvbd].type = vinfo[i];
                   vbdry[nvbd].num = 1;
                   vbdry[nvbd].el[0] = i;
@@ -118,7 +118,7 @@ next1:      continue;
                }
             }
                         
-/*	    		LOAD ELEMENT INFORMATION */
+            /* LOAD ELEMENT INFORMATION */
             strcpy(grd_app,filename);
             strcat(grd_app,".e");
             grd = fopen(grd_app,"r");
@@ -139,13 +139,13 @@ next1:      continue;
                 for (j=0;j<3;++j) {
                     tvrtx[i][j] = v[j];
                     if(svrtx[s[j]][0] == v[(j+1)%3]) {
-/* 							SIDE DEFINED IN SAME DIRECTION */
+                        /* SIDE DEFINED IN SAME DIRECTION */
                         stri[s[j]][0] = i;
                         tside[i].side[j] = s[j];
                         tside[i].sign[j] = 1;
                     }
                     else {
-/* 							SIDE DEFINED IN OPPOSITE DIRECTION */
+                        /* SIDE DEFINED IN OPPOSITE DIRECTION */
                         stri[s[j]][1] = i;
                         tside[i].side[j] = s[j];
                         tside[i].sign[j] = -1;
@@ -168,8 +168,8 @@ next1:      continue;
                 
             fscanf(grd,"%d%d%d\n",&nvrtx,&i,&nsbd);
             nsbd -= 1;
- /*			MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
- /*			FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
+            /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
+            /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
             if (!initialized) {
                maxvst = (3*i)/2; 
                maxvst = nvrtx +(int) (grwfac*nvrtx);
@@ -184,7 +184,7 @@ next1:      continue;
             for(i=0;i<8;++i)
                 fscanf(grd,"%*[^\n]\n");
 
-/*				READ VERTEX DATA */    
+            /* READ VERTEX DATA */    
             for(i=0;i<nvrtx;++i) {
                 fscanf(grd,"%*d %le %le\n",&vin[i][0],&vin[i][1]);
                 vinfo[i] = -1;
@@ -193,7 +193,7 @@ next1:      continue;
             for(i=0;i<2;++i)
                 fscanf(grd,"%*[^\n]\n");
 
-/*				READ ELEMENT DATA */
+            /* READ ELEMENT DATA */
             fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^\n]\n",&ntri);
             fscanf(grd,"%*[^\n]");
                     
@@ -205,7 +205,7 @@ next1:      continue;
                 tinfo[i] = 0;
             }
 
-/*				READ BOUNDARY DATA STORE TEMPORARILY */            
+            /* READ BOUNDARY DATA STORE TEMPORARILY */            
             maxsbel = 0;
             int (*svrtxbtemp[MAXSB])[ND];
     
@@ -232,11 +232,11 @@ next1:      continue;
                
             if (!initialized) bdryalloc(count + (int) (grwfac*count));
 
-/*				CREATE SIDE INFORMATION */
+            /* CREATE SIDE INFORMATION */
             createsideinfo();
                 
-/*				FIND ALL BOUNDARY SIDES */
-/*				STORE LOCATION BY VERTEX NUMBER */
+            /* FIND ALL BOUNDARY SIDES */
+            /* STORE LOCATION BY VERTEX NUMBER */
             for(i=0;i<nside;++i) 
                if (stri[i][1] < 0)
                   vinfo[svrtx[i][0]] = i;
@@ -244,7 +244,7 @@ next1:      continue;
             for(i=0;i<nside;++i)
                sinfo[i] = 0;
 
-/*				MATCH BOUNDARY SIDES TO GROUPS */    
+            /* MATCH BOUNDARY SIDES TO GROUPS */    
             for(i=0;i<nsbd;++i) {
                for(j=0;j<sbdry[i].num;++j) {
                   sind = vinfo[svrtxbtemp[i][j][0]];
@@ -278,7 +278,7 @@ next1:      continue;
                     printf("couldn't open file: %s\n",grd_app);
                     exit(1);
             }
-            /*	HEADER LINES */
+            /* HEADER LINES */
             fscanf(grd,"nvrtx: %d\t nside: %d\t ntri: %d\n",&nvrtx,&nside,&ntri);
             
             if (!initialized) {
@@ -290,7 +290,7 @@ next1:      continue;
                exit(1);
             }
    
-            /*	VRTX INFO */                        
+            /* VRTX INFO */                        
             for(i=0;i<nvrtx;++i)
                fscanf(grd,"%lf %lf\n",&vin[i][0],&vin[i][1]);
                      
@@ -298,14 +298,14 @@ next1:      continue;
             for(i=0;i<nside;++i)
                fscanf(grd,"%d %d\n",&svrtx[i][0],&svrtx[i][1]);
    
-            /*	THEN TRI INFO */
+            /* THEN TRI INFO */
             for(i=0;i<ntri;++i)
                fscanf(grd,"%d %d %d\n",&tvrtx[i][0],&tvrtx[i][1],&tvrtx[i][2]);
                
             /* CREATE TSIDE & STRI */
             createtsidestri();
    
-            /*	SIDE BOUNDARY INFO HEADER */
+            /* SIDE BOUNDARY INFO HEADER */
             fscanf(grd,"nsbd: %d\n",&nsbd);
             
             count = 0;
@@ -314,14 +314,14 @@ next1:      continue;
                count += sbdry[i].num;
             }
             
-/*          ALLOCATE BOUNDARY STORAGE */
+            /* ALLOCATE BOUNDARY STORAGE */
             if (!initialized) bdryalloc(count + (int) (grwfac*count));
             
             for(i=0;i<nsbd;++i)
                for(j=0;j<sbdry[i].num;++j)
                   fscanf(grd,"%d\n",&sbdry[i].el[j]);
                   
-            /*	VERTEX BOUNDARY INFO HEADER */
+            /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"nvbd: %d\n",&nvbd);
             for(i=0;i<nvbd;++i)
                fscanf(grd,"%d %d\n",&vbdry[i].type,&vbdry[i].num);
@@ -338,7 +338,7 @@ next1:      continue;
                exit(1);
             }
 
-/*	    		LOAD VERTEX POSITIONS 				  */
+            /* LOAD VERTEX POSITIONS               */
             strcpy(grd_app,filename);
             strcat(grd_app,".txt");
             grd = fopen(grd_app,"r");
@@ -354,7 +354,7 @@ next1:      continue;
                exit(1);
             }
     
-/*	    		ERROR %lf SHOULD BE FLT */
+            /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                ierr = fscanf(grd,"%*d:%lf%lf\n",&vin[i][0],&vin[i][1]);
                if (ierr != 2) { printf("2: error in grid\n"); exit(1); }
@@ -370,8 +370,8 @@ next1:      continue;
             exit(1);
    }
 
-/*	ALLOCATE WORK ARRAYS USED BY ALL MESHES */
-/*	ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
+   /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
+   /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */    
    if (maxvst > gblmaxvst) {
       if (gblmaxvst > 0) {
          printf("#Warning: better to allocate from largest mesh to smallest\n");
@@ -382,7 +382,7 @@ next1:      continue;
       intwk3 = new int[maxvst];
       gblmaxvst = maxvst;
 
-/*		INTWK1,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
+      /* INTWK1,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
       for(i=0;i<maxvst;++i)
          intwk1[i] = -1;
       for(i=0;i<maxvst;++i)
@@ -391,7 +391,7 @@ next1:      continue;
          intwk3[i] = -1;
    }
     
-/*	REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
+   /* REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
    for(i=0;i<nsbd;++i) 
       bdrysidereorder(i);
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
@@ -478,14 +478,14 @@ void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
 
 void mesh::allocate(int mxsize) {
    
-/*	SIDE INFO */
+   /* SIDE INFO */
    maxvst = mxsize;
    svrtx  = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
    stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
    sinfo = new int[maxvst+1];
    ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
 
-/*	VERTEX INFO */                  
+   /* VERTEX INFO */                  
    vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
    vlngth = new FLT[maxvst];
    vinfo = new int[maxvst+1];
@@ -493,7 +493,7 @@ void mesh::allocate(int mxsize) {
    nnbor = new int[maxvst];
    vtri = new int[maxvst];
    
-/*	TRI INFO */               
+   /* TRI INFO */               
    tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
    ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
    tside = new struct tsidedata[maxvst];

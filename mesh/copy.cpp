@@ -4,7 +4,7 @@
 
 
 void mesh::copy(const mesh& tgt) {
-   /* static */int i,j,n;
+   int i,j,n;
       
    if (!initialized) {
       allocate(tgt.maxvst);
@@ -12,14 +12,14 @@ void mesh::copy(const mesh& tgt) {
       initialized = 1;
    }
    else {
-/*		CHECK IF BIG ENOUGH */
+      /* CHECK IF BIG ENOUGH */
       if (tgt.nside > maxvst) {
          printf("mesh is too big to copy\n");
          exit(1);
       }
    }
    
-/*	COPY VERTEX INFO OVER */
+   /* COPY VERTEX INFO OVER */
    nvrtx = tgt.nvrtx;
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -37,7 +37,7 @@ void mesh::copy(const mesh& tgt) {
    for(i=0;i<nvrtx;++i)
       vtri[i] = tgt.vtri[i];
       
-/*	tgt VERTEX BOUNDARY INFO */
+   /* tgt VERTEX BOUNDARY INFO */
    nvbd = tgt.nvbd;
    for(i=0;i<nvbd;++i) {
       vbdry[i].type = tgt.vbdry[i].type;
@@ -59,7 +59,7 @@ void mesh::copy(const mesh& tgt) {
    for(i=0;i<nside;++i)
       sinfo[i] = tgt.sinfo[i];
       
-/*	tgt SIDE BOUNDARY INFO */
+   /* tgt SIDE BOUNDARY INFO */
    nsbd = tgt.nsbd;
    for(i=0;i<nsbd;++i) {
       sbdry[i].type = tgt.sbdry[i].type;
@@ -72,7 +72,7 @@ void mesh::copy(const mesh& tgt) {
          sbdry[i].el[j] = tgt.sbdry[i].el[j];
    }
    
-/*	tgt ELEMENT DATA */
+   /* tgt ELEMENT DATA */
    ntri = tgt.ntri;
    for(i=0;i<ntri;++i)
       for(n=0;n<3;++n)

@@ -4,26 +4,29 @@
 #include<iostream>
 #include<stdlib.h>
 
-int mesh::setfine(const class mesh& tgt) {
+void mesh::setfine(const class mesh& tgt) {
    if (fine == NULL) 
       fine = new struct mg_trans[maxvst];
-   return(mgconnect(fine,tgt));
+   mgconnect(fine,tgt);
+   return;
 }
 
-int mesh::setcoarse(const class mesh& tgt) {
+void mesh::setcoarse(const class mesh& tgt) {
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
-   return(mgconnect(coarse,tgt));
+   mgconnect(coarse,tgt);
+   return;
 }
 
-/*	THIS IS THE NEW WAY USING THE QUADTREE DATA STRUCTURE */
-int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
-	/* static */int i,j,k,bnum,tind,sind,v0,error=0;
-	/* static */double x,y,wgt[3],ainv;
-	/* static */double dx,dy,a,b,c,minneg;
-	/* static */int neg_count, triloc, sidloc;
+/* THIS IS THE NEW WAY USING THE QUADTREE DATA STRUCTURE */
+void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
+   int i,j,k,bnum,tind,sind,v0;
+   double x,y,wgt[3],ainv;
+   double dx,dy,a,b,c,minneg;
+   int neg_count, triloc, sidloc;
    
-/*	LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
+   
+   /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
    for(i=0;i<nvrtx;++i) {
       x = vrtx[i][0];
       y = vrtx[i][1];
@@ -33,10 +36,10 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
       tgt.getwgts(cnnct[i].wt);
    }
 
-/*	REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
+   /* REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
    for(bnum=0;bnum<nsbd;++bnum) {
    
-/*		CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
+      /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
       if(sbdry[bnum].type != tgt.sbdry[bnum].type) {
          printf("error: sides are not numbered the same\n");
          exit(1);
@@ -48,7 +51,7 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
          y = vrtx[v0][1];
          minneg = -1.0E32;
          
-   /* 	LOOP THROUGH TARGET SIDES TO FIND TRIANGLE */
+         /* LOOP THROUGH TARGET SIDES TO FIND TRIANGLE */
          for(i=0;i<tgt.sbdry[bnum].num;++i) {
             sind = tgt.sbdry[bnum].el[i];
             tind = tgt.stri[sind][0];
@@ -83,9 +86,9 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
                }
             }
          }
-         sind = sidloc;	
+         sind = sidloc;   
 
-   /*		PROJECT LOCATION NORMAL TO CURVED FACE */
+         /* PROJECT LOCATION NORMAL TO CURVED FACE */
          dx = x-tgt.vrtx[tgt.svrtx[sind][0]][0];
          dy = y-tgt.vrtx[tgt.svrtx[sind][0]][1];
          a = sqrt(dx*dx+dy*dy);
@@ -100,7 +103,7 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
          a = (b*b+c*c-a*a)/(2.*c*c);
          x = tgt.vrtx[tgt.svrtx[sind][1]][0] +dx*a;
          y = tgt.vrtx[tgt.svrtx[sind][1]][1] +dy*a;
-         tind = tgt.stri[sind][0];							
+         tind = tgt.stri[sind][0];                     
          for(j=0;j<3;++j) {
             wgt[j] = 
             ((tgt.vrtx[tgt.tvrtx[tind][(j+1)%3]][0]
@@ -123,5 +126,5 @@ int mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
       }
    }
 
-	return(error);
+   return;
 }

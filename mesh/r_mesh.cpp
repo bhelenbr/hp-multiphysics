@@ -12,11 +12,11 @@ int r_mesh::fix2y_mask = (0xFF -FSRF_MASK -IFCE_MASK -PRDX_MASK -PRDY_MASK -EULR
 
 void r_mesh::allocate(bool coarse, struct r_mesh_glbls *rginit) {
 
-/*	global mgrid arrays */
-	rg = rginit;
+   /* global mgrid arrays */
+   rg = rginit;
    if (!coarse) gbl_alloc(rginit);
    
-/*	local storage */   
+   /* local storage */   
    ksprg = new FLT[maxvst];
    kvol = new FLT[maxvst];
    src = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
@@ -30,31 +30,32 @@ void r_mesh::gbl_alloc(struct r_mesh_glbls *store) {
    store->diag = new FLT[maxvst];
 }
 
-int r_mesh::setfine(class r_mesh& tgt) {
+void r_mesh::setfine(class r_mesh& tgt) {
    fmpt = &tgt;
    if (fine == NULL)
       fine = new struct mg_trans[maxvst];
-   return(mgconnect(fine,tgt));
+   mgconnect(fine,tgt);
+   return;
 }
 
-int r_mesh::setcoarse(class r_mesh& tgt) {
+void r_mesh::setcoarse(class r_mesh& tgt) {
    cmpt = &tgt;
    if (coarse == NULL)
       coarse = new struct mg_trans[maxvst];
-   return(mgconnect(coarse,tgt));
+   mgconnect(coarse,tgt);
+   return;
 }  
-   
 
 void r_mesh::rklaplace(void) {
-   /* static */int sind,tind,v0,v1,k;
-   /* static */FLT dx,dy,l;
+   int sind,tind,v0,v1,k;
+   FLT dx,dy,l;
    
    for(sind=0;sind<nside;++sind)
       ksprg[sind] = 0.0;
 
-/* COEFFICIENTS FOR LAPLACE EQUATION */
-/* THIS REQUIRES 2 EVALUATIONS OF SIDE LENGTH FOR EACH SIDE */
-/* BUT IS LOGISTICALLY SIMPLE        */         
+   /* COEFFICIENTS FOR LAPLACE EQUATION */
+   /* THIS REQUIRES 2 EVALUATIONS OF SIDE LENGTH FOR EACH SIDE */
+   /* BUT IS LOGISTICALLY SIMPLE        */         
    for(tind=0;tind<ntri;++tind) {
       for(k=0;k<3;++k) {
          sind = tside[tind].side[k];
@@ -72,17 +73,17 @@ void r_mesh::rklaplace(void) {
       }
    }      
 
-	calc_kvol();
+   calc_kvol();
    
    return;
 }
 
 
 void r_mesh::rksprg(void) {
-   /* static */int sind,v0,v1;
-   /* static */double dx,dy;
+   int sind,v0,v1;
+   double dx,dy;
 
-/* 2D SPRING CONSTANTS FINE MESH*/
+   /* 2D SPRING CONSTANTS FINE MESH*/
    for(sind=0;sind<nside;++sind) {
       v0 = svrtx[sind][0];
       v1 = svrtx[sind][1];
@@ -97,7 +98,7 @@ void r_mesh::rksprg(void) {
 }
 
 void r_mesh::calc_kvol() {
-   /* static */int i,tind;
+   int i,tind;
    
    for(i=0;i<nvrtx;++i) 
       kvol[i] = 0.0;
@@ -106,7 +107,7 @@ void r_mesh::calc_kvol() {
       for(i=0;i<3;++i) 
          kvol[tvrtx[tind][i]] += area(tind);
                   
-/*	SEND COMMUNICATION PACKETS IN XFIRST */   
+   /* SEND COMMUNICATION PACKETS IN XFIRST */   
    send(XDIR_MP,(FLT *) kvol,0,0,1);
    
    return;
@@ -119,7 +120,7 @@ void r_mesh::kvol_mp() {
 }
 
 void r_mesh::kvoli() {
-   /* static */int i;
+   int i;
    
    rcv(YDIR_MP,(FLT *) kvol,0,0,1);
    
@@ -128,16 +129,16 @@ void r_mesh::kvoli() {
 }
 
 void r_mesh::rkmgrid(void) {
-   /* static */int i,j,sind,tind,tind0,tind1,v0,v1;
-   /* static */class r_mesh *fmesh;
+   int i,j,sind,tind,tind0,tind1,v0,v1;
+   class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
 
-/* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
+   /* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
    for(i=0;i<fmesh->nvrtx;++i)
       rg->diag[i] = 0.0;
 
-/* FORM KIJ SUM AT VERTICES */
+   /* FORM KIJ SUM AT VERTICES */
    for(sind=0;sind<fmesh->nside;++sind) {
       v0 = fmesh->svrtx[sind][0];
       v1 = fmesh->svrtx[sind][1];
@@ -148,8 +149,8 @@ void r_mesh::rkmgrid(void) {
    for(i=0;i<nside;++i)
       ksprg[i] = 0.0;
 
-/* LOOP THROUGH FINE VERTICES   */
-/* TO CALCULATE KSPRG ON COARSE MESH */   
+   /* LOOP THROUGH FINE VERTICES   */
+   /* TO CALCULATE KSPRG ON COARSE MESH */   
    for(i=0;i<fmesh->nvrtx;++i) {
       tind = fmesh->coarse[i].tri;
       for(j=0;j<3;++j) {
@@ -158,15 +159,15 @@ void r_mesh::rkmgrid(void) {
       }
    }
 
-/* LOOP THROUGH FINE SIDES */
+   /* LOOP THROUGH FINE SIDES */
    for(i=0;i<fmesh->nside;++i) {
       v0 = fmesh->svrtx[i][0];
       v1 = fmesh->svrtx[i][1];
       tind0 = fmesh->coarse[v0].tri;
       tind1 = fmesh->coarse[v1].tri;
-               
-/*    TEMPORARILY STORE WEIGHTS FOR FINE POINTS (0,1) */
-/*    FOR EACH COARSE VERTEX */
+                  
+      /* TEMPORARILY STORE WEIGHTS FOR FINE POINTS (0,1) */
+      /* FOR EACH COARSE VERTEX */
       for(j=0;j<3;++j)  {
          rg->work[tvrtx[tind1][j]][0] = 0.0;
          rg->work[tvrtx[tind0][j]][1] = 0.0;
@@ -177,7 +178,7 @@ void r_mesh::rkmgrid(void) {
          rg->work[tvrtx[tind1][j]][1] = fmesh->coarse[v1].wt[j];
       }
       
-/*    LOOP THROUGH COARSE TRIANGLE 0 SIDES */
+      /* LOOP THROUGH COARSE TRIANGLE 0 SIDES */
       for(j=0;j<3;++j) {
          sind = tside[tind0].side[j];
          ksprg[sind] += fmesh->ksprg[i]*
@@ -198,8 +199,8 @@ void r_mesh::rkmgrid(void) {
       }
    }
    
-/*	CALCULATE KVOL USING MULTIGRID I VOL I^T*/
-/* LOOP THROUGH FINE VERTICES TO CALCULATE COARSE VOLUME  */
+   /* CALCULATE KVOL USING MULTIGRID I VOL I^T*/
+   /* LOOP THROUGH FINE VERTICES TO CALCULATE COARSE VOLUME  */
    for(i=0;i<nvrtx;++i)
       kvol[i] = 0.0;
 
@@ -211,7 +212,7 @@ void r_mesh::rkmgrid(void) {
       }
    }
 
-/*	SEND COMMUNICATION PACKETS IN XFIRST */   
+   /* SEND COMMUNICATION PACKETS IN XFIRST */   
    send(XDIR_MP,(FLT *) kvol,0,0,1);
    
    return;
@@ -224,7 +225,7 @@ void r_mesh::rkmgrid_mp() {
 }
 
 void r_mesh::rkmgridi() {
-   /* static */int i;
+   int i;
    
    rcv(YDIR_MP,(FLT *) kvol,0,0,1);
    
@@ -239,8 +240,8 @@ void r_mesh::rkmgridi() {
 /*************************************/
 #ifndef FOURTH
 void r_mesh::rsdl() {
-   /* static */int i,j,n,sind,v0,v1;
-   /* static */FLT dx,dy;
+   int i,j,n,sind,v0,v1;
+   FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -260,7 +261,7 @@ void r_mesh::rsdl() {
       rg->res[v1][1] += dy;
    }
    
-/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+   /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
    if (isfrst) {
       for(i=0;i<nvrtx;++i) 
          for(n=0;n<ND;++n)
@@ -269,12 +270,12 @@ void r_mesh::rsdl() {
       isfrst = false;
    }
 
-/* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
+   /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n)
          rg->res[i][n] += src[i][n];
    
-/* APPLY DIRICHLET BOUNDARY CONDITIONS */
+   /* APPLY DIRICHLET BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & fixx_mask) {
          for(j=0;j<sbdry[i].num;++j) {
@@ -292,7 +293,7 @@ void r_mesh::rsdl() {
       }
    }
 
-/* SEND COMMUNICATION PACKETS */   
+   /* SEND COMMUNICATION PACKETS */   
    send(XDIR_MP, (FLT *) rg->res, 0, 1, 2);
    
    return;
@@ -300,15 +301,15 @@ void r_mesh::rsdl() {
 
 void r_mesh::vddt(void)
 {
-   /* static */int i,v0,v1,sind;
+   int i,v0,v1,sind;
 
-/**************************************************/
-/*   DETERMINE MESH MOVEMENT TIME STEP           */
-/**************************************************/
+   /**************************************************/
+   /* DETERMINE MESH MOVEMENT TIME STEP           */
+   /**************************************************/
    for(i=0;i<nvrtx;++i)
       rg->diag[i] = 0.0;
 
-/* FORM TIME STEP FOR MV_UPDATE */
+   /* FORM TIME STEP FOR MV_UPDATE */
    for(sind=0;sind<nside;++sind) {
       v0 = svrtx[sind][0];
       v1 = svrtx[sind][1];
@@ -316,7 +317,7 @@ void r_mesh::vddt(void)
       rg->diag[v1] += fabs(ksprg[sind]);
    }
 
-/*	SEND COMMUNICATION PACKETS */   
+   /* SEND COMMUNICATION PACKETS */   
    send(XDIR_MP, (FLT *) rg->diag,0,0,1);
    
    return;
@@ -325,12 +326,12 @@ void r_mesh::vddt(void)
 #else
 /*************************************/ 
 /* FOURTH ORDER MESH MOVEMENT SCHEME */
-/*	THIS HAS TO BE DONE IN TWO PARTS  */
-/* TO CACLUATE LAPLACIAN 				 */
+/* THIS HAS TO BE DONE IN TWO PARTS  */
+/* TO CACLUATE LAPLACIAN              */
 /*************************************/
 void r_mesh::rsdl() {
-   /* static */int i,j,n,v0,v1,sind;
-   /* static */FLT dx,dy;
+   int i,j,n,v0,v1,sind;
+   FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -350,7 +351,7 @@ void r_mesh::rsdl() {
       rg->work[v1][1] += dy;      
    }
 
-/* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
+   /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & fix2x_mask) {
          for(j=0;j<sbdry[i].num;++j) {
@@ -380,12 +381,12 @@ void r_mesh::rsdl1_mp() {
 }
 
 void r_mesh::rsdl1() {
-   /* static */int i,j,n,v0,v1,sind;
-   /* static */FLT dx,dy;
+   int i,j,n,v0,v1,sind;
+   FLT dx,dy;
    
    rcv(YDIR_MP,(FLT *) rg->work, 0,1,2);
    
-/* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
+   /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n) 
          rg->work[i][n] *= kvol[i];
@@ -408,7 +409,7 @@ void r_mesh::rsdl1() {
       rg->res[v1][1] += dy;      
    }
 
-/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+   /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
    if (isfrst) {
       for(i=0;i<nvrtx;++i) 
          for(n=0;n<ND;++n)
@@ -417,12 +418,12 @@ void r_mesh::rsdl1() {
       isfrst = false;
    }
    
-/* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
+   /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n)
          rg->res[i][n] += src[i][n];  
 
-/* APPLY BOUNDARY CONDITIONS */
+   /* APPLY BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & fixx_mask) {
          for(j=0;j<sbdry[i].num;++j) {
@@ -447,11 +448,11 @@ void r_mesh::rsdl1() {
 
 void r_mesh::vddt(void)
 {
-   /* static */int i,v0,v1,sind;
+   int i,v0,v1,sind;
 
-/**************************************************/
-/*   DETERMINE MESH MOVEMENT TIME STEP           */
-/**************************************************/
+   /**************************************************/
+   /* DETERMINE MESH MOVEMENT TIME STEP           */
+   /**************************************************/
    for(i=0;i<nvrtx;++i)
       rg->diag[i] = 0.0;
       
@@ -474,7 +475,7 @@ void r_mesh::vddt1_mp() {
 }
 
 void r_mesh::vddt1(void) {
-   /* static */int i,v0,v1,sind;
+   int i,v0,v1,sind;
 
    rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
    
@@ -510,7 +511,7 @@ void r_mesh::vddt_mp() {
 }
 
 void r_mesh::vddti(void) {
-   /* static */int i;
+   int i;
    
    rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
    
@@ -519,7 +520,7 @@ void r_mesh::vddti(void) {
 }
 
 void r_mesh::update() {
-   /* static */int i,n;
+   int i,n;
 
    rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
    
@@ -531,7 +532,7 @@ void r_mesh::update() {
 }
 
 void r_mesh::source() {
-   /* static */int i,n;
+   int i,n;
    
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n) 
@@ -543,7 +544,7 @@ void r_mesh::source() {
 }
 
 void r_mesh::sumsrc() {
-   /* static */int i,n;
+   int i,n;
    
    rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
 
@@ -554,8 +555,8 @@ void r_mesh::sumsrc() {
 }
 
 void r_mesh::mg_getfres() {
-   /* static */int i,j,n,tind,v0;
-   /* static */class r_mesh *fmesh;
+   int i,j,n,tind,v0;
+   class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
       
@@ -565,7 +566,7 @@ void r_mesh::mg_getfres() {
       for(n=0;n<ND;++n)
          src[i][n] = 0.0;
          
-/* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
+   /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
    for(i=0;i<fmesh->nvrtx;++i) {
       tind = fmesh->coarse[i].tri;
       for(j=0;j<3;++j) {
@@ -575,8 +576,8 @@ void r_mesh::mg_getfres() {
       }
    }
    
-/* LOOP THROUGH COARSE VERTICES   */
-/* TO CALCULATE VRTX ON COARSE MESH */
+   /* LOOP THROUGH COARSE VERTICES   */
+   /* TO CALCULATE VRTX ON COARSE MESH */
    for(i=0;i<nvrtx;++i) {
       tind = fine[i].tri;
 
@@ -598,18 +599,18 @@ void r_mesh::mg_getfres() {
 }
 
 void r_mesh::mg_getcchng() {
-   /* static */int i,j,n,ind,tind;
-   /* static */class r_mesh *cmesh;
+   int i,j,n,ind,tind;
+   class r_mesh *cmesh;
    
    cmesh = static_cast<class r_mesh *>(cmpt);
 
-/* DETERMINE CORRECTIONS ON COARSE MESH   */   
+   /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)
       for(n=0;n<ND;++n) 
          cmesh->vrtx_frst[i][n] -= cmesh->vrtx[i][n];
 
-/* LOOP THROUGH FINE VERTICES   */
-/* TO DETERMINE CHANGE IN SOLUTION */   
+   /* LOOP THROUGH FINE VERTICES   */
+   /* TO DETERMINE CHANGE IN SOLUTION */   
    for(i=0;i<nvrtx;++i) {
       
       for(n=0;n<ND;++n)
@@ -632,8 +633,8 @@ void r_mesh::mg_getcchng() {
 }
 
 void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
-   /* static */int i,j,k,sind,count,offset,bnum;
-   /* static */class mesh *tgt;
+   int i,j,k,sind,count,offset,bnum;
+   class mesh *tgt;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & mask) {
@@ -656,7 +657,7 @@ void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
 }
 
 void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
-   /* static */int i,j,k,sind,count,offset;
+   int i,j,k,sind,count,offset;
       
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type & mask) {
@@ -677,8 +678,8 @@ void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
 }
 
 void r_mesh::maxres() {
-   /* static */int i,n;
-   /* static */FLT mxr[ND];
+   int i,n;
+   FLT mxr[ND];
 
    for(n=0;n<ND;++n)
       mxr[n] = 0.0;
