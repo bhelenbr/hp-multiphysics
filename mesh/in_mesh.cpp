@@ -20,10 +20,10 @@ int *mesh<3>::intwk3;
 int mesh<3>::gblmaxvst = 0;
 
 /* CREATE INSTANTIATIONS OF THESE FUNCTIONS */
-template int mesh<2>::in_mesh(FLT (*vin)[2], const char *filename, FTYPE filetype, FLT grwfac);
-template int mesh<3>::in_mesh(FLT (*vin)[3], const char *filename, FTYPE filetype, FLT grwfac);
+template int mesh<2>::in_mesh(FLT (*vin)[2], const char *filename, ftype::name filetype, FLT grwfac);
+template int mesh<3>::in_mesh(FLT (*vin)[3], const char *filename, ftype::name filetype, FLT grwfac);
 
-template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTYPE filetype, FLT grwfac) {
+template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype, FLT grwfac) {
     int i,j,n,sind,count,temp,tind,v0,v1,sign;
     int ierr;
     char grd_app[100];
@@ -39,7 +39,7 @@ template<int ND> int mesh<ND>::in_mesh(FLT (*vin)[ND], const char *filename, FTY
 #endif
         
     switch (filetype) {            
-        case(easymesh):
+        case(ftype::easymesh):
             /* LOAD SIDE INFORMATION */
             strcpy(grd_app,filename);
             strcat(grd_app,".s");
@@ -205,7 +205,7 @@ next1a:     continue;
             }
             break;
         
-        case(gambit):
+        case(ftype::gambit):
             strcpy(grd_app,filename);
             strcat(grd_app,".FDNEUT");
             grd = fopen(grd_app,"r");
@@ -321,7 +321,7 @@ next1a:     continue;
 
             break;
             
-         case(grid):
+         case(ftype::grid):
             strcpy(grd_app,filename);
             strcat(grd_app,".grd");
             grd = fopen(grd_app,"r");
@@ -380,7 +380,7 @@ next1a:     continue;
             
             break;
             
-         case(mavriplis):
+         case(ftype::mavriplis):
             strcpy(grd_app,filename);
             strcat(grd_app,".mvp");
             grd = fopen(grd_app,"r");
@@ -494,7 +494,7 @@ next1a:     continue;
                         
             break;
             
-         case(text):
+         case(ftype::text):
             if (!initialized) {
                *log << "to read in vertex positions only must first load mesh structure" << std::endl;
                exit(1);
@@ -532,7 +532,7 @@ next1a:     continue;
             return(1);
 
 #ifdef CAPRI         
-         case(BRep):
+         case(ftype::BRep):
 
             /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
             sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
@@ -649,7 +649,7 @@ next1c:     continue;
             break;
 #endif
 
-         case(tecplot):
+         case(ftype::tecplot):
             strcpy(grd_app,filename);
             strcat(grd_app,".dat");
             grd = fopen(grd_app,"r");
@@ -720,6 +720,98 @@ next1c:     continue;
             
             break;
             
+         case(ftype::boundary):
+            /* LOAD BOUNDARY INFORMATION */
+            strcpy(grd_app,filename);
+            strcat(grd_app,".d");
+            grd = fopen(grd_app,"r");
+            if (grd == NULL) { 
+               printf("couldn't open %s for reading\n",grd_app);
+               exit(1);
+            }
+
+            fscanf(grd,"%d\n",&nvrtx);
+
+            maxvst = static_cast<int>(grwfac*pow(nvrtx,2));
+            allocate(maxvst);
+            qtree.allocate(vrtx,maxvst);
+            initialized = 1;
+
+            for(i=0;i<nvrtx;++i) {
+               fscanf(grd,"%*d:");
+               for(n=0;n<ND;++n)
+                  fscanf(grd,"%lf",&vrtx[i][n]);
+               fscanf(grd,"%lf%d\n",&vlngth[i],&vinfo[i]);
+            }
+
+            /* COUNT VERTEX BOUNDARY GROUPS  */
+            nvbd = 0;
+            for(i=0;i<nvrtx;++i) {
+               if (vinfo[i]) {
+                  /* NEW VRTX B.C. */
+                  getnewvrtxobject(nvbd,vinfo[i]);
+                  vbdry[nvbd]->alloc(1);
+                  vbdry[nvbd]->v() = i;
+                  ++nvbd;
+                  if (nvbd >= MAXVB) {
+                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
+                     exit(1);
+                  }
+               }
+            }
+
+            fscanf(grd,"%d\n",&nside);
+
+            for(i=0;i<nside;++i)
+               fscanf(grd,"%*d:%d%d%d\n",&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
+               
+            /* COUNT BOUNDARY GROUPS */
+            nsbd = 0;
+            for(i=0;i<nside;++i) {
+               if (sinfo[i]) {
+                  for (j = 0; j <nsbd;++j) {
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        ++bcntr[j];
+                        goto bdnext1;
+                     }
+                  }
+                  /* NEW SIDE */
+                  getnewsideobject(nsbd,sinfo[i]);
+                  bcntr[nsbd++] = 1;
+                  if (nsbd > MAXSB) {
+                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
+                     exit(1);
+                  }
+               }
+            bdnext1:      continue;
+            }
+
+            for(i=0;i<nsbd;++i) {
+               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
+               sbdry[i]->nsd() = 0;
+            }
+
+            for(i=0;i<nside;++i) {
+               if (sinfo[i]) {
+                  for (j = 0; j <nsbd;++j) {
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        sbdry[j]->sd(sbdry[j]->nsd()++) = i;
+                        goto bdnext1a;
+                     }
+                  }
+                  printf("Big error\n");
+                  exit(1);
+               }
+            bdnext1a:     continue;
+            }
+            
+            for(i=0;i<nside;++i)
+               intwk1[i] = i+1;
+              
+            ntri = 0;
+            triangulate(nside);
+            break;
+       
          default:
             *log << "That filetype is not supported" << std::endl;
             exit(1);
@@ -742,7 +834,8 @@ next1c:     continue;
    cnt_nbor();
    if (!initialized) qtree.allocate(vin,maxvst);
    treeinit(); 
-   initvlngth();
+   if (filetype != ftype::boundary) initvlngth();
+   checkintegrity();
 
    initialized = 1;
 
