@@ -145,7 +145,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
       resy = dydt -(1.0*avg[4] +theta*avg[2]);
       if (mgrid) {
          if (isfrst) {
-            dresy[log2p] = resy0 -resy;
+            dresy[log2p] = surface::fadd[1]*resy0 -resy;
          }
          resy += dresy[log2p];
       }
@@ -240,8 +240,7 @@ void hp_mgrid::surfrsdl(int mgrid) {
          
          /* TEMPORARY TO LEAVE TANGENTiAL POSITION TOTALLY FREE
          for(m=0;m<b.sm+2;++m)
-            cf[0][m] = 0.0;
-          */
+            cf[0][m] = 0.0; */
          
          /* STORE IN RES */
          for(n=0;n<ND;++n) {
@@ -604,7 +603,7 @@ void hp_mgrid::surfdt1(int bnum) {
    for(n=0;n<ND;++n)
       for(m=0;m<ND;++m)
          srf->gbl->vdt[0][m][n] = 0.0;
-   
+         
    for(indx=0; indx < sbdry[bnum].num; ++indx) {
       sind = sbdry[bnum].el[indx];
       v0 = svrtx[sind][0];
@@ -642,14 +641,7 @@ void hp_mgrid::surfdt1(int bnum) {
       gam2 = (8.*nu2/hsm)*(8.*nu2/hsm);
 #endif
       dtnorm = 2.*vslp/hsm +bd[0] +3.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2));
-            
-#ifdef DROP
-      // lam = MIN(2.*fabs(vslp)/(M_PI*0.5) +(4.*srf->gbl->sigma/(M_PI*0.5*M_PI*0.5) +fabs(drho*g*nrm[1]/h))/(gbl->rho*sqrt(qmax +8.*nu1/(M_PI*0.5)),lam)
-      lam = MIN(dtnorm,lam);
-#endif
-
-      // printf("side: %d dts: %e %e %e, vslp: %e\n",indx,2.*fabs(vslp)/hsm,bd[0],3.*strss/(gbl->rho*sqrt(qmax +gam1) +srf->gbl->rho2*sqrt(qmax +gam2)),vslp);
-      
+   
       /* SET UP DISSIPATIVE COEFFICIENT */
       /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
       /* RESIDUAL HAS DX/2 WEIGHTING */
@@ -682,8 +674,6 @@ void hp_mgrid::surfdt1(int bnum) {
       }
    }
    
-   
-
    /* SEND COMMUNICATION INFO FOR ENDPOINTS */
    end = sbdry[bnum].num;
    v0 = svrtx[sbdry[bnum].el[0]][0];
@@ -1126,21 +1116,12 @@ void hp_mgrid::surfmaxres() {
    class surface *srf;
    FLT mxr[ND];
    
-#ifdef DROP
-   static FILE *fp = 0;
-   static int counter = 0;
-   if (!fp) fp = fopen("size.dat","w");
-#endif
-   
    for (bnum=0;bnum<nsbd;++bnum) {
       if (!(sbdry[bnum].type&(FSRF_MASK +IFCE_MASK))) continue;
    
       srf = static_cast<class surface *>(sbdry[bnum].misc);
       if (srf == NULL) continue;
       
-#ifdef DROP
-      fprintf(fp,"%d %e %e %e %e\n",counter++,vflux,resy,dydt,lam);
-#endif
 
       for(n=0;n<ND;++n)
          mxr[n] = 0.0;
@@ -1151,6 +1132,9 @@ void hp_mgrid::surfmaxres() {
 
       for(n=0;n<ND;++n)
          printf("%.3e  ",mxr[n]);
+#ifdef DROP
+      printf("%.3e %.3e ",fabs(vflux),fabs(resy));
+#endif
    }
    
    return;
