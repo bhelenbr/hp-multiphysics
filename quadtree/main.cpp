@@ -28,5 +28,13 @@ int main() {
    dist = copytree.nearpt(9, i); 
    printf("%d %f\n",i,dist);
    
+   vtest[0][0] = 0.9;
+   vtest[0][1] = 0.9;
+   testtree.update();
+   
+   dist = testtree.nearpt(0, i); 
+   printf("%d %f\n",i,dist);
+   
+   
    return(0);
 }

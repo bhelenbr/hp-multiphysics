@@ -34,6 +34,10 @@ class quadtree {
       int size;
       int current;
 
+/*		THIS IS USED BY ALL QUADS FOR SEARCHING */      
+      static class quad **srchlst;
+      static int maxsrch;
+
    public:
       quadtree() : size(0) {};
       quadtree(const quadtree& copy) : size(0) {*this = copy;}
@@ -47,6 +51,9 @@ class quadtree {
       void dltpt(int v0);
       void movept(int from, int to);
       void output(void);
+      void update();
+      void update(int v0);
+
 };
 
 class quad {
