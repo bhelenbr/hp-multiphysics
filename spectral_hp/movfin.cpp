@@ -1,13 +1,5 @@
 #include"hp_mgrid.h"
 
-void hp_mgrid::setcoarse(class hp_mgrid& tgt) {
-   cmpt = &tgt;
-   if (coarse == NULL)
-      coarse = new struct mg_trans[maxvst];
-   mgconnect(coarse,tgt);
-   return;
-}
-
 void hp_mgrid::getcchng(void) {
    int i,j,n,ind,tind;
    class hp_mgrid *cmesh;

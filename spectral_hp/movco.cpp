@@ -1,13 +1,5 @@
 #include"hp_mgrid.h"
 
-void hp_mgrid::setfine(class hp_mgrid& tgt) {
-   fmpt = &tgt;
-   if (fine == NULL)
-      fine = new struct mg_trans[maxvst];
-   mgconnect(fine,tgt);
-   return;
-}
-
 void hp_mgrid::getfres() {
    int i,j,k,m,n,tind,v0,indx,indx1;
    class hp_mgrid *fmesh;

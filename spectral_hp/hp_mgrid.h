@@ -164,8 +164,6 @@ class hp_mgrid : public spectral_hp {
       /* MGRID TRANSFER */
       void getfres();
       void getcchng();
-      void setfine(class hp_mgrid& tgt);
-      void setcoarse(class hp_mgrid& tgt); 
 
       /* FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
       void tadvance();
