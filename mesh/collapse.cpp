@@ -5,8 +5,8 @@
 #include<float.h>
 
 /* THESE TELL WHICH TRIS WERE AFFECTED & WHICH SIDES WERE DELETED */
-extern int ntdel, tdel[MAXLST +1];
-extern int nsdel, sdel[MAXLST +1];
+/* ntdel, tdel[MAXLST +1]; */
+/* nsdel, sdel[MAXLST +1]; */
 
 int mesh::collapse(int sind) {
    int i,j,vn,vnear,prev,tind,tind1,stoptri,dir[2],bnum;

@@ -13,8 +13,9 @@
 #include<assert.h>
 #include<stdlib.h>
 
-int ntdel, tdel[MAXLST+1];
-int nsdel, sdel[MAXLST+1];
+int mesh::nslst;
+int mesh::ntdel, mesh::tdel[mesh::MAXLST+1];
+int mesh::nsdel, mesh::sdel[mesh::MAXLST+1];
 
 int mesh::insert(FLT x, FLT y) {
    int tind,vnear,err;

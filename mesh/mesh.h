@@ -4,6 +4,7 @@
 #include <math.h>
 #include <quadtree.h>
 
+
 #ifdef SINGLE
 #define FLT float
 #define EPSILON FLT_EPSILON
@@ -13,18 +14,19 @@
 #endif
 
 #define ND 2
-#define MAXSB 8
-#define MAXLST 1000
 
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
 class side_boundary;
 
 class mesh {
-
+   /***************/
+   /* DATA        */
+   /***************/
    protected:
       int initialized, maxvst;
 
-   public:
+
+   public:      
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];
@@ -35,6 +37,7 @@ class mesh {
       class quadtree qtree;
    
       /* VERTEX BOUNDARY INFO */
+      static const int MAXSB = 8;
       int nvbd;
       int maxvbel;  
       struct boundary {
@@ -85,70 +88,12 @@ class mesh {
       static FLT *fltwk;
       static int gblmaxvst, *intwk1, *intwk2, *intwk3;
       static int maxsrch;  // MAX TRIS TO SEARCH IN FINDTRI ROUTINE
-
-      /* SETUP FUNCTIONS */   
-      void cnt_nbor(void);
-      void bdrylabel(void);
-      void createsideinfo(void);
-      void createtsidestri(void);
-      void createttri(void);
-      void createvtri(void);
-      void treeinit();
-
-      /* MESH MODIFICATION FUNCTIONS */
-      /* TO CREATE AN INITIAL TRIANGUlATION */
-      void triangulate(int **sidelst, int *nside, int nloop, int cknbor = 1);
-      void findpt(int *vrtxlst,int nv,int *v,int chkadj,int good[], int &ngood);
-      void addtri(int v0,int v1,int v2,int sind,int dir);
-
-      /* TO INSERT A POINT */
-      int insert(FLT x, FLT y);
-      int insert(int tind, int vnum, FLT theta = 0.0);
-      void bdry_insert(int tind, int snum, int vnum);
-      int findtri(FLT x, FLT y, int vnear) const;
-      void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
-      void fltwkreb();
       
-      /* FOR COARSENING A SIDE */
-      int collapse(int sind);
-      void dltvrtx(int vind);
-      void dltside(int sind);
-      void dlttri(int tind);
-      void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
-      void fltwkyab();
-      
-      /* ORDERED LIST FUNCTIONS */
-      void putinlst(int sind);
-      void tkoutlst(int sind);
-      
-      /* TO EDGE SWAP FOR IMPROVED QUALITY */
-      int swap(int sind, FLT tol = 0.0);  //SWAPS A SINGLE SIDE 
-      void swap(int nswp, int *swp, FLT tol = 0.0); //SWAPS A LIST OF SIDES
-
-      /* PRIMITIVE FUNCTIONS */
-      inline FLT distance(int v0, int v1) const {
-         return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
-      }
-      inline FLT distance2(int v0, int v1) const {
-         return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
-      }     
-      FLT incircle(int tind, double *a) const;
-      FLT insidecircle(int sind, FLT *a) const;
-      FLT area(int sind, int vind) const;
-      FLT area(int v0, int v1, int v2) const;
-      FLT area(int tind) const;
-      FLT minangle(int v0, int v1, int v2) const;
-      FLT angle(int v0, int v1, int v2) const;
-      FLT tradius(int tind) const;
-      void tcenter(int tind, FLT &xpt, FLT &ypt) const;
-      FLT aspect(int tind) const;
-      FLT intri(int tind, FLT x, FLT y) const;
-      void getwgts(FLT *) const;
-
-   public:
+      /**************/
+      /*  INTERFACE */
+      /**************/
       /* DEFAULT INITIALIZATION */
       mesh() : initialized(0), fine(NULL), coarse(NULL) {}
-      void allocate(int mxsize);
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
@@ -198,6 +143,73 @@ class mesh {
       void checkintegrity() const;
       void checkintwk() const;
       
+   protected:
+      /*******************/
+      /* INTERNAL FUNCTIONS */
+      /*******************/  
+      void allocate(int mxsize);
+       
+      void cnt_nbor(void);
+      void bdrylabel(void);
+      void createsideinfo(void);
+      void createtsidestri(void);
+      void createttri(void);
+      void createvtri(void);
+      void treeinit();
+
+      /* MESH MODIFICATION FUNCTIONS */
+      /* TO CREATE AN INITIAL TRIANGUlATION */
+      void triangulate(int **sidelst, int *nside, int nloop, int cknbor = 1);
+      void findpt(int *vrtxlst,int nv,int *v,int chkadj,int good[], int &ngood);
+      void addtri(int v0,int v1,int v2,int sind,int dir);
+
+      /* TO INSERT A POINT */
+      int insert(FLT x, FLT y);
+      int insert(int tind, int vnum, FLT theta = 0.0);
+      void bdry_insert(int tind, int snum, int vnum);
+      int findtri(FLT x, FLT y, int vnear) const;
+      void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
+      void fltwkreb();
+      
+      /* FOR COARSENING A SIDE */
+      int collapse(int sind);
+      void dltvrtx(int vind);
+      void dltside(int sind);
+      void dlttri(int tind);
+      void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
+      void fltwkyab();
+      
+      /* ORDERED LIST FUNCTIONS */
+      static const int MAXLST = 1000;
+      static int nslst;
+      static int ntdel, tdel[MAXLST+1];
+      static int nsdel, sdel[MAXLST+1];
+      void putinlst(int sind);
+      void tkoutlst(int sind);
+      
+      /* TO EDGE SWAP FOR IMPROVED QUALITY */
+      int swap(int sind, FLT tol = 0.0);  //SWAPS A SINGLE SIDE 
+      void swap(int nswp, int *swp, FLT tol = 0.0); //SWAPS A LIST OF SIDES
+
+      /* PRIMITIVE FUNCTIONS */
+      inline FLT distance(int v0, int v1) const {
+         return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
+      }
+      inline FLT distance2(int v0, int v1) const {
+         return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
+      }     
+      FLT incircle(int tind, double *a) const;
+      FLT insidecircle(int sind, FLT *a) const;
+      FLT area(int sind, int vind) const;
+      FLT area(int v0, int v1, int v2) const;
+      FLT area(int tind) const;
+      FLT minangle(int v0, int v1, int v2) const;
+      FLT angle(int v0, int v1, int v2) const;
+      FLT tradius(int tind) const;
+      void tcenter(int tind, FLT &xpt, FLT &ypt) const;
+      FLT aspect(int tind) const;
+      FLT intri(int tind, FLT x, FLT y) const;
+      void getwgts(FLT *) const;
 };
 
 #include "boundary.h"

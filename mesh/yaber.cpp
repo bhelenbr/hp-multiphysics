@@ -15,15 +15,11 @@
 /* THUS THE NAME YABER -> REBAY */
 
 /* THESE TELL WHICH SIDES/TRIS WERE DELETED */
-extern int ntdel, tdel[MAXLST+1];
-extern int nsdel, sdel[MAXLST+1];
+/* ntdel, tdel[MAXLST+1]; */
+/* nsdel, sdel[MAXLST+1]; */
 
-/* THIS IS THE NUMER OF SIDES NEEDING COARSENING */
+/* nslst IS THE NUMER OF SIDES NEEDING COARSENING */
 /* STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
-extern int nslst;
-
-void putinlst(int sind);
-void tkoutlst(int sind);
 
 void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
