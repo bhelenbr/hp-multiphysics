@@ -74,6 +74,7 @@
 				014CEA460018CE2711CA2923,
 				014CEA470018CE2711CA2923,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 08FB7794FE84155DC02AAC07;
 			projectDirPath = "";
@@ -131,7 +132,6 @@
 			productInstallPath = "$(HOME)/bin";
 			productName = quadtree;
 			productReference = 0249A660FF388D4511CA2CEA;
-			shouldUseHeadermap = 1;
 		};
 		08FB77A0FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -195,16 +195,19 @@
 //F53
 //F54
 		F51210FF0190489701990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = quad.cpp;
 			refType = 4;
 		};
 		F51211000190489701990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = quadtree.h;
 			refType = 4;
 		};
 		F512110701904AE101990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = main.cpp;
 			refType = 4;
@@ -216,6 +219,7 @@
 			};
 		};
 		F5129161033258B801990B69 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = quad_impl.h;
 			refType = 4;
@@ -255,11 +259,13 @@
 			refType = 4;
 		};
 		F5440D5202465FF801990B20 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = makefile;
 			refType = 4;
 		};
 		F5440D5302465FF801990B20 = {
+			fileEncoding = 30;
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;

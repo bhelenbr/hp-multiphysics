@@ -25,3 +25,4 @@ template class quad<3>;
 template class quadtree<1>;
 template class quadtree<2>;
 template class quadtree<3>;
+

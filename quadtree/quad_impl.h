@@ -596,3 +596,4 @@ template<int ND> void quadtree<ND>::update(int v0) {
 
    return;
 }
+
