@@ -65,6 +65,8 @@ void hp_mgrid::tstep1(void) {
       /* SET UP DIAGONAL PRECONDITIONER */
       dtstari = MAX((gbl->nu/(h*h) +lam1/h +bd[0]),dtstari);
    }
+   
+   printf("#iterative to physical time step ratio: %f\n",bd[0]/dtstari);
       
    for(tind=0;tind<ntri;++tind) {
       jcb = 0.25*area(tind)*dtstari;

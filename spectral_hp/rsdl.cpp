@@ -11,6 +11,7 @@
    
 void hp_mgrid::rsdl(int stage, int mgrid) {
    int i,j,n,tind;
+   FLT rho;
    FLT fluxx,fluxy;
    FLT visc[ND][ND][ND][ND], tres[NV];
    
@@ -119,9 +120,10 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             for(i=0;i<b.gpx;++i) {
                for(j=0;j<b.gpn;++j) {
                   cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
+                  rho = gbl->rho*(1 +0.1*u[2][i][j]);
                   res[0][i][j] = gbl->rho*bd[0]*u[0][i][j]*cjcb[i][j] +gbl->dugdt[0][tind][i][j];
                   res[1][i][j] = gbl->rho*bd[0]*u[1][i][j]*cjcb[i][j] +gbl->dugdt[1][tind][i][j];
-                  res[2][i][j] = gbl->rho*bd[0]*cjcb[i][j] +gbl->dugdt[2][tind][i][j];
+                  res[2][i][j] = rho*bd[0]*cjcb[i][j] +gbl->dugdt[2][tind][i][j];
                }
             }
          }

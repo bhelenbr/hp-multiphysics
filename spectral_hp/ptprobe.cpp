@@ -34,8 +34,8 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
       x[0] = xp;
       x[1] = yp;
       sind = findbdryside(x,v0,CURV_MASK,CURV_MASK);
-      if (sind < 0 || sinfo[sind] < 0) {
-         printf("Warning: error finding boundary tri (%f,%f) nearpt %d neartri %d sind %d\n",xp,yp,v0,vtri[v0],sind);
+      if (sind < 0) {
+         printf("Warning: couldn't find boundary tri (%f,%f) nearpt %d neartri %d sind %d\n",xp,yp,v0,vtri[v0],sind);
       }
       tind = stri[sind][0];
       wgt[1] = 0.5;

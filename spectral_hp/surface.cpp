@@ -187,7 +187,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
          tabs = fabs(tau) + 10.*EPSILON;
-         tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +drhor*g*fabs(norm[1]/jcb))/tabs));
+         tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +fabs(drhor*g*norm[1]/jcb))/tabs));
 
          /* TANGENTIAL SPACING & NORMAL FLUX */            
          res[0][0][i] = srf->ksprg[indx]*jcb;
@@ -494,7 +494,7 @@ void hp_mgrid::surfdt1(int bnum) {
 
       hsm = h/(.25*(b.p+1)*(b.p+1));
 
-      strss = srf->gbl->sigma/(hsm*hsm) + drho*g*2.*fabs(nrm[1]/h);
+      strss = srf->gbl->sigma/(hsm*hsm) +2.*fabs(drho*g*nrm[1]/h);
       cnvct = bd[0] + vslp/hsm;
       dtfli = smu/(srho*hsm*hsm) +vslp/hsm +bd[0];
       dttang  = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;

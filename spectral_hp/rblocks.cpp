@@ -91,8 +91,6 @@ void blocks::r_cycle(int vw, int lvl = 0) {
 void blocks::r_ksrc() {
    int i,j;
 
-#define GEOMETRIC
-
 #ifdef GEOMETRIC   
    /* SETUP SPRING CONSTANTS  */
    for(i=0;i<mgrids;++i) {

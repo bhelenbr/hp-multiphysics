@@ -23,7 +23,8 @@ void hp_mgrid::adapt(class hp_mgrid& str) {
    changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
    
    /* UPDATE QUADTREE FOR MOVING MESH */
-   treeupdate();
+   // treeupdate(); // USE TREE UPDATE IF DOMAIN DOESN'T MOVE ONLY MESH DEFORMATION
+   treeinit();  // (REINITIALIZES ENTIRE TREE - NECESSARY FOR MOVING DOMAINS)
    
    /* COPY SOLUTION & MESH TO BEGIN */
    str.spectral_hp::copy(*this);

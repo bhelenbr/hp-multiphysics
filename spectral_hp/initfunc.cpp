@@ -14,16 +14,32 @@
 #include<assert.h>
 #include<stdlib.h>
 
+/* INITIAL CONDITIONS */
+/* KOVASZNAY TEST CYLINDER FREESTREAM */
+#define KOVASZNAY
 
-// KOVASNAY TEST CYLINDER FREESTREAM
-#define FREESTREAM
-#define BIGAMP
+/*	CURVED SURFACES */
+/* CIRCLE SIN COS */
+#define CIRCLE
+
+/* FOR A CIRCLE */
+FLT rad = 0.5;
+FLT centerx = 0.0;
+FLT centery = 0.0;
+
+/* FOR A SINE/COSINE WAVE */
+#ifdef COS
+FLT amp = 0.375;
+#else
+FLT amp = 0.075;
+#endif
+
 
 /***************************/
 /* INITIALIZATION FUNCTION */
 /***************************/
 
-   /* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
+/* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
 int startup = 1;
 
 #ifdef TEST
@@ -46,18 +62,6 @@ FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
          return(0.0);
-      case(1):
-         return(0.0);
-      case(2):
-         return(0.0);
-   }
-   return(0.0);
-}
-
-FLT f2(int n, FLT x, FLT y) {
-   switch(n) {
-      case(0):
-         return(0.0 +0.0*outertime);
       case(1):
          return(0.0);
       case(2):
@@ -103,7 +107,7 @@ double f1(int n, double x, double y) {
 
    switch (n) {
       case(0):
-         return(1 - cos(2*M_PI*y)*exp(lda*x));
+         return(1 - cos(2*M_PI*y)*exp(lda*x) +0.01*(x+0.5)*(x-3.0));
       case(1):
          return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
       case(2):
@@ -142,66 +146,80 @@ double df1d(int n, double x, double y, int dir) {
 /***************************/
 /* CURVED SIDE DEFINITIONS */
 /***************************/
-/* FOR A SPHERE */
-FLT rad = 0.5;
-FLT centerx = 0.0;
-FLT centery = 0.0;
-
-/* FOR A SINE WAVE */
-#ifdef BIGAMP
-FLT amp = 0.375;
-#else
-FLT amp = 0.075;
-#endif
-
+#ifdef CIRCLE
 FLT hgt(int type, FLT x, FLT y) {
-   if (type&(EULR_MASK +INFL_MASK)) {
+   if (type&(CURV_MASK)) {
       x -= centerx;
       y -= centery;
       return(x*x + y*y - rad*rad);
    }
-   
-   if (type&(FSRF_MASK +IFCE_MASK)) {
-#ifdef BIGAMP
-      return(y -amp*cos(2.*M_PI*x));
-#else
-      return(y -amp*sin(2.*M_PI*x));
-#endif
-   }
-   
    return(0.0);
-      
 }
+
 FLT dhgtdx(int type, FLT x, FLT y) {
-   if (type&(EULR_MASK +INFL_MASK)) {
+   if (type&(CURV_MASK)) {
       x -= centerx;
       y -= centery;
       return(2*x);
    }
-   
-   if (type&(FSRF_MASK +IFCE_MASK)) {
-#ifdef BIGAMP
-      return(2.*amp*M_PI*sin(2.*M_PI*x));
-#else
-      return(-2.*amp*M_PI*cos(2.*M_PI*x));
-#endif
-   }
-   
    return(0.0);
 }
+
 FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(EULR_MASK +INFL_MASK)) {
+   if (type&(CURV_MASK)) {
       x -= centerx;
       y -= centery;
       return(2*y);
    }
-   
-   if (type&(FSRF_MASK +IFCE_MASK)) {
-      return(1.0);
-   }
-   
    return(0.0);
 }
+#endif
+
+#ifdef SIN
+FLT hgt(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(y -amp*sin(2.*M_PI*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(-2.*amp*M_PI*cos(2.*M_PI*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(1.0);
+   }
+   return(0.0);
+}
+#endif
+
+#ifdef COS
+FLT hgt(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(y -amp*cos(2.*M_PI*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(2.*amp*M_PI*sin(2.*M_PI*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(1.0);
+   }
+   return(0.0);
+}
+#endif
 
 /* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
 class spectral_hp *tgt;
