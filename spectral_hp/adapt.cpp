@@ -243,7 +243,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                for(step=0;step<nstep-1;++step)
                   for(m=0;m<b.sm;++m)
                      for(n=0;n<NV;++n)
-                        gbl->ugbd[step].s[indx+m][n] = gbl->ugbd[step].s[indx+m][n];
+                        gbl->ugbd[step].s[indx+m][n] = gbl->ugbd[step].s[indx2+m][n];
                      
                break;
          }     

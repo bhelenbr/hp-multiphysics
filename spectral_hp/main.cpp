@@ -11,19 +11,14 @@
 #include<stdio.h>
 #include<utilities.h>
 
-extern FLT f1(int n, FLT x, FLT y);
-extern FLT rhotemporary;
-
 int main(int argc, char **argv) {
    class blocks myblock;
 
-
-/*
    myblock.init(argv[1]);
    myblock.go();
    
    return(0);
-*/
+
 
 /*	FOR TEST ADAPTATION */
    myblock.init(argv[1]);
