@@ -12,131 +12,6 @@
 #include<float.h>
 #include<assert.h>
 
-template void mesh<2>::triangulate(const char *filename, FLT grwfac);
-template void mesh<3>::triangulate(const char *filename, FLT grwfac);
-
-template<int ND> void mesh<ND>::triangulate(const char *filename, FLT grwfac) {
-   int i,j,n;
-   int bcntr[MAXSB];
-   char grd_app[100];
-   FILE *grd;
-   
-   /* LOAD BOUNDARY INFORMATION */
-   strcpy(grd_app,filename);
-   strcat(grd_app,".d");
-   grd = fopen(grd_app,"r");
-   if (grd == NULL) { 
-      printf("couldn't open %s for reading\n",grd_app);
-      exit(1);
-   }
-   
-   fscanf(grd,"%d\n",&nvrtx);
-   
-   maxvst = static_cast<int>(grwfac*pow(nvrtx,2));
-   allocate(maxvst);
-   qtree.allocate(vrtx,maxvst);
-   initialized = 1;
-   
-   for(i=0;i<nvrtx;++i) {
-      fscanf(grd,"%*d:");
-      for(n=0;n<ND;++n)
-         fscanf(grd,"%lf",&vrtx[i][n]);
-      fscanf(grd,"%lf%d\n",&vlngth[i],&vinfo[i]);
-   }
-   
-   /* COUNT VERTEX BOUNDARY GROUPS  */
-   nvbd = 0;
-   for(i=0;i<nvrtx;++i) {
-      if (vinfo[i]) {
-         /* NEW VRTX B.C. */
-         getnewvrtxobject(nvbd,vinfo[i]);
-         vbdry[nvbd]->alloc(1);
-         vbdry[nvbd]->v() = i;
-         ++nvbd;
-         if (nvbd >= MAXVB) {
-            *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
-            exit(1);
-         }
-      }
-   }
-   
-   fscanf(grd,"%d\n",&nside);
-   
-   for(i=0;i<nside;++i)
-      fscanf(grd,"%*d:%d%d%d\n",&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
-      
-   /* COUNT BOUNDARY GROUPS */
-   nsbd = 0;
-   for(i=0;i<nside;++i) {
-      if (sinfo[i]) {
-         for (j = 0; j <nsbd;++j) {
-            if (sinfo[i] == sbdry[j]->idnty()) {
-               ++bcntr[j];
-               goto next1;
-            }
-         }
-         /* NEW SIDE */
-         getnewsideobject(nsbd,sinfo[i]);
-         bcntr[nsbd++] = 1;
-         if (nsbd > MAXSB) {
-            *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
-            exit(1);
-         }
-      }
-next1:      continue;
-   }
-   
-   for(i=0;i<nsbd;++i) {
-      sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
-      sbdry[i]->nsd() = 0;
-   }
-   
-   for(i=0;i<nside;++i) {
-      if (sinfo[i]) {
-         for (j = 0; j <nsbd;++j) {
-            if (sinfo[i] == sbdry[j]->idnty()) {
-               sbdry[j]->sd(sbdry[j]->nsd()++) = i;
-               goto next1a;
-            }
-         }
-         printf("Big error\n");
-         exit(1);
-      }
-next1a:     continue;
-   }
-   
-   for(i=0;i<nsbd;++i) {
-      /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-      sbdry[i]->reorder();
-      sbdry[i]->getgeometryfrommesh();
-   }
-   
-   *log << "#Boundaries" << std::endl;
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize(*log);
-   
-   ntri = 0;
-   treeinit();
-
-   for(i=0;i<nside;++i)
-      intwk1[i] = i+1;
-      
-   triangulate(nside);
-   
-   bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
-
-   *log << "#Boundaries" << std::endl;
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize(*log);
-
-   createttri();
-   createvtri();
-   cnt_nbor();
-   checkintegrity();
-   
-   return;
-}
-
 #define MAXGOOD 100
 
 template void mesh<2>::triangulate(int nsd);
@@ -151,7 +26,7 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
    int nsidebefore,ntest;
    int ngood,good[MAXGOOD];
    int minv,maxv,itemp;
-   int v0,v1,v2,v3;
+   int v[2],v2,v3;
    FLT xmid[2],xcen[2];
    FLT xm1dx1,xm2dx2;
    FLT hmin,height;
@@ -177,15 +52,15 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
       
    for(i=0;i<nsd;++i) {
       sind = abs(intwk1[i]) -1;
-      v1 = svrtx[sind][0];
-      v2 = svrtx[sind][1];
-      if (v2 > v1) {
-         minv = v1;
-         maxv = v2;
+      v[0] = svrtx[sind][0];
+      v[1] = svrtx[sind][1];
+      if (v[1] > v[0]) {
+         minv = v[0];
+         maxv = v[1];
       }
       else {
-         minv = v2;
-         maxv = v1;
+         minv = v[1];
+         maxv = v[0];
       }
       sind1 = vinfo[minv];
       while (sind1 >= 0) {
@@ -210,23 +85,23 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
          
          if (stri[sind][dir] > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
          
-         v0 = svrtx[sind][dir];
-         v1 = svrtx[sind][1 -dir];
+         v[0] = svrtx[sind][dir];
+         v[1] = svrtx[sind][1 -dir];
 
          /* SEARCH FOR GOOD POINTS */
          for(n=0;n<ND;++n) {
-            dx2[n] = vrtx[v1][n] -vrtx[v0][n];
-            xmid[n] = 0.5*(vrtx[v1][n] -vrtx[v0][n]);
+            dx2[n] = vrtx[v[1]][n] -vrtx[v[0]][n];
+            xmid[n] = 0.5*(vrtx[v[1]][n] -vrtx[v[0]][n]);
          }
          hmin = 1.0e99;
          
          /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
          for(i=0;i<nv;++i) {
             vtry = intwk2[i];
-            if (vtry == v0 || vtry == v1) continue;
+            if (vtry == v[0] || vtry == v[1]) continue;
       
             for(n=0;n<ND;++n)
-               dx1[n] = vrtx[v0][n] -vrtx[vtry][n];
+               dx1[n] = vrtx[v[0]][n] -vrtx[vtry][n];
             det        = dx1[0]*dx2[1] -dx1[1]*dx2[0];
             if (det <= 0.0) continue;
             
@@ -238,28 +113,27 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
             xcen[1] = det*(xm2dx2*dx1[0] -xm1dx1*dx2[0]);
                   
             /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
-            /* ABOVE THE EDGE MID-POINT IS MINIMIZED */
+            /* ABOVE THE EDGE MID-POINT IS MINIMIZED (MINIMIZES RADIUS) */
             height = dx2[0]*(xcen[1] -xmid[1]) -dx2[1]*(xcen[0] -xmid[0]);
-                  
+
             if (height > hmin +100.*EPSILON*fabs(hmin)) continue;
             
             /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
             /* WITH ALL OTHER BOUNDARY SIDES */
-            
-            minv = MIN(vtry,v0);
-            maxv = MAX(vtry,v0);
             for(vcnt=0;vcnt<2;++vcnt) {
-               /* LOOK THROUGH ALL SIDES CONNECTED TO L1 FOR DUPLICATE */
+               minv = MIN(vtry,v[vcnt]);
+               maxv = MAX(vtry,v[vcnt]);
+               /* LOOK THROUGH ALL SIDES CONNECTED TO MINV FOR DUPLICATE */
                /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
                sind1 = vinfo[minv];
                while (sind1 >= 0) {
-                  if (maxv == svrtx[sind1][0] || maxv == svrtx[sind1][1]) goto twochecks;
+                  if (maxv == svrtx[sind1][0] || maxv == svrtx[sind1][1]) goto next_vrt;
                   sind1 = sinfo[sind1];
                }
                
                for(n=0;n<ND;++n) {
-                  xmin[n]      = MIN(vrtx[v0][n],vrtx[v1][n]);
-                  xmax[n]      = MAX(vrtx[v0][n],vrtx[v1][n]);
+                  xmin[n]      = MIN(vrtx[v[0]][n],vrtx[v[1]][n]);
+                  xmax[n]      = MAX(vrtx[v[0]][n],vrtx[v[1]][n]);
                }
                
                for(sck=0;sck<ntest;++sck) {
@@ -270,20 +144,22 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
                   v3 = svrtx[stest][1-dirck];
                   if (v2 == minv || v3 == minv) {
                      /* SPECIAL TEST FOR CONNECTED SIDES */
-                     if (area(v2,v3,maxv) > 0.0) goto checks_ok;
-                     goto NEXT;
+                     /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
+                     if (area(v2,v3,v[vcnt]) > 0.0 && area(v2,v3,maxv) <= 0.0) goto vtry_failed;
+                     continue;
                   }
                   if (v2 == maxv || v3 == maxv) {
                      /* SPECIAL TEST FOR CONNECTED SIDES */
-                     if (area(v2,v3,minv) > 0.0) goto checks_ok;
-                     goto NEXT;
+                     /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
+                     if (area(v2,v3,v[vcnt]) > 0.0 && area(v2,v3,minv) <= 0.0) goto vtry_failed;
+                     continue;
                   }
                   for(n=0;n<ND;++n) {
                      xmin1[n]      = MIN(vrtx[v2][n],vrtx[v3][n]);
                      xmax1[n]      = MAX(vrtx[v2][n],vrtx[v3][n]);
                   }
                   for(n=0;n<ND;++n)
-                     if (xmax[n] < xmin1[n] || xmin[n] > xmax1[n]) goto checks_ok;
+                     if (xmax[n] < xmin1[n] || xmin[n] > xmax1[n]) goto next_bdry_side;
       
                   for(n=0;n<ND;++n) {
                      dx1[n] = vrtx[maxv][n] -vrtx[minv][n];
@@ -292,22 +168,20 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
                   }
                   
                   det = -dx1[0]*dx3[1] +dx1[1]*dx3[0];
-                  if (det < EPSILON*100.0*(fabs(xmax[0])+fabs(xmax[1]))) goto checks_ok;
+                  if (det < EPSILON*100.0*(fabs(xmax[0])+fabs(xmax[1]))) continue;
                   
                   det = 1./det;
                   s = det*(dx4[0]*dx3[1] -dx3[0]*dx4[1]);
                   t = det*(-dx1[0]*dx4[1] +dx4[0]*dx1[1]);
                   
-                  if (s < 0.0 || s > 1.0) goto checks_ok;
-                  if (t < 0.0 || t > 1.0) goto checks_ok;
+                  if (s < 0.0 || s > 1.0) continue;
+                  if (t < 0.0 || t > 1.0) continue;
                   
-                  goto NEXT;
+                  goto vtry_failed;
                   
-checks_ok:        continue;
+next_bdry_side:   continue;
                }
-twochecks:
-               minv = MIN(vtry,v1);
-               maxv = MAX(vtry,v1);
+next_vrt:      continue;
             }
       
             /* CHECK IF DEGENERATE */
@@ -320,7 +194,7 @@ twochecks:
             ngood = 0;
             good[ngood++] = vtry;
             hmin = height;
-      NEXT: continue;
+vtry_failed:continue;
          }
          
          if (ngood > 1) {
@@ -329,8 +203,8 @@ twochecks:
             ds2 = 1./sqrt(dx2[0]*dx2[0] +dx2[1]*dx2[1]);
             for(i=0;i<ngood;++i) {
                vtry = good[i];
-               dx1[0] = vrtx[v0][0] -vrtx[vtry][0];
-               dx1[1] = vrtx[v0][1] -vrtx[vtry][1];
+               dx1[0] = vrtx[v[0]][0] -vrtx[vtry][0];
+               dx1[1] = vrtx[v[0]][1] -vrtx[vtry][1];
                ds1 = 1./sqrt(dx1[0]*dx1[0] +dx1[1]*dx1[1]);
                ang[i] = -(dx2[0]*dx1[0]  +dx2[1]*dx1[1])*ds2*ds1;
             }
@@ -355,22 +229,19 @@ twochecks:
                      good[j] = itemp;
                   }
                }
-               // *log << "degenerate case" << v0 << ' ' << v1 << std::endl;
+               // *log << "degenerate case" << v[0] << ' ' << v[1] << std::endl;
             }
          }
-         addtri(v0,v1,good[0],sind,dir);
+         addtri(v[0],v[1],good[0],sind,dir);
          /* ADD ANY DEGENERATE TRIANGLES */           
          for(i=1;i<ngood;++i)
-            addtri(good[i-1],v1,good[i],-1,-1);
+            addtri(good[i-1],v[1],good[i],-1,-1);
       }
      
       bgn = end;
       end += nside -nsidebefore;
-      nv = 0;
-      for(i=nsidebefore;i<nside;++i) {
+      for(i=nsidebefore;i<nside;++i)
          intwk1[bgn+i-nsidebefore] = -(i + 1);
-         intwk2[nv++] = svrtx[i][1];
-      }
    }
    
    for(i=0;i<maxvst;++i) {
@@ -379,6 +250,7 @@ twochecks:
    }
    
    return;
+
 }
 
 
@@ -435,8 +307,8 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
             /* SIDE IN SAME DIRECTION */
             if (stri[sind1][0] >= 0) {
                *log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               out_mesh("error",tecplot);
-               out_mesh("error",grid);
+               out_mesh("error",ftype::tecplot);
+               out_mesh("error",ftype::grid);
                exit(1);
             }
             stri[sind1][0] = ntri;
@@ -458,8 +330,8 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
             /* SIDE IN OPPOSITE DIRECTION */
             if (stri[sind1][1] >= 0) {
                *log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               out_mesh("error",tecplot);
-               out_mesh("error",grid);
+               out_mesh("error",ftype::tecplot);
+               out_mesh("error",ftype::grid);
                exit(1);
             }
             stri[sind1][1] = ntri;
