@@ -6,7 +6,9 @@
 /* THIS IS A MULTIBLOCK MESH */
 template<class BLK> class blocks {
    private:
-      int nblock, mglvls, ngrid;
+      int nblock, ngrid;
+      int niter, itercrsn, iterrfne;
+      int ntstep;
       static const int lastphase = 1;
       BLK *blk;
       
@@ -18,6 +20,7 @@ template<class BLK> class blocks {
       void matchboundaries();
       void output(char *filename, FILETYPE filetype);
       void input(char *filename) {}
+      void go();
 
       /* ITERATION ON ALL BLOCKS */  
       void iterate(int mglvl);
@@ -28,8 +31,6 @@ template<class BLK> class blocks {
       /* CALCULATE DEFORMATION SOURCE TERM ON FINEST MESH */
       void ksrc();
       
-      /* OUTPUT FINE BLOCK MESH */
-      
       /* PRINT ERRORS */
       inline void maxres() {
          for(int i=0;i<nblock;++i)
@@ -38,52 +39,57 @@ template<class BLK> class blocks {
       
       /* MOVE BOUNDARIES */
       inline void tadvance() {
+         ksrc();
+         
          for(int i=0;i<nblock;++i)
             blk[i].tadvance();
          return;
       }
 
-      inline void restructure(double tolerance) {
-         int i;
+      inline void restructure() {
+         int i,phase;
+         
+         matchboundaries();
          
          for (i=0;i<nblock;++i) 
             blk[i].lvl(0).length1();
             
-         for(i=0;i<nblock;++i)
-            blk[i].lvl(0).length_mp(0);
+         for(phase=0;phase<lastphase;++phase)
+            for(i=0;i<nblock;++i)
+               blk[i].lvl(0).length_mp(phase);
             
          for(i=0;i<nblock;++i) {
-            blk[i].lvl(0).length2(1);
-            blk[i].lvl(0).yaber(1.0/tolerance,1,0.0);
-            blk[i].lvl(0).setbcinfo();
-            blk[i].lvl(0).out_mesh("coarse",grid);
-            blk[i].lvl(0).treeupdate();
-            blk[i].lvl(0).rebay(tolerance);
-            blk[i].lvl(0).setbcinfo();
-            blk[i].lvl(0).out_mesh("refine",grid);
+            blk[i].lvl(0).length2(lastphase);
+            blk[i].adapt();
             blk[i].reconnect();
-         } 
+         }
          
          return;
       }
 };
 
-template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::string>& input) { 
- //  std::istringstream data;
+template<class BLK> void blocks<BLK>::load_constants(std::map<std::string,std::string>& input) {
 
-//   data.str(input["mglvls"]);
-
-	std::istringstream data(input["mglvls"]);
-   data >> mglvls;
-   std::cout << "#mglvls:" << mglvls << endl;
-   data.clear();  
-
+   std::istringstream data(input["itercrsn"]);   
+   data >> itercrsn;
+   std::cout << "#itercrsn:" << itercrsn << endl;
+   data.clear();
+   
+   data.str(input["niter"]);   
+   data >> niter;
+   std::cout << "#niter:" << ngrid << endl;
+   data.clear();
+   
+   data.str(input["ntstep"]);   
+   data >> ntstep;
+   std::cout << "#ntstep:" << ntstep << endl;
+   data.clear(); 
+   
    return;
 }
 
 template<class BLK> void blocks<BLK>::init(std::map<std::string,std::string>& input) {
    int i;
-   
    
    /* LOAD NUMBER OF GRIDS */
    std::istringstream data(input["nblock"]);
@@ -186,7 +192,7 @@ template<class BLK> void blocks<BLK>::iterate(int lvl) {
    for(i=0;i<nblock;++i)
       blk[i].lvl(lvl).vddti(lastphase);
 
-   for(iter=0;iter<1;++iter) {
+   for(iter=0;iter<itercrsn;++iter) {
    
       for(i=0;i<nblock;++i)
          blk[i].lvl(lvl).rsdl();
@@ -216,7 +222,7 @@ template<class BLK> void blocks<BLK>::cycle(int vw, int lvl) {
    for (i=0;i<vw;++i) {
       iterate(lvl);
       
-      if (lvl == mglvls-1) return;
+      if (lvl == ngrid-1) return;
       
       for(j=0;j<nblock;++j)
          blk[j].lvl(lvl).rsdl();
@@ -309,6 +315,26 @@ template<class BLK> void blocks<BLK>::ksrc() {
    for(i=0;i<nblock;++i)
       blk[i].lvl(0).sumsrc(lastphase);
 
+   return;
+}
+
+template<class BLK> void blocks<BLK>::go() {
+   int i,step;
+   char outname[100];
+   
+   for(step = 1;step<=ntstep;++step) {
+      tadvance();
+      for(i=0;i<niter;++i) {
+         cycle(2);
+         printf("%d ",i);
+         maxres();
+         printf("\n");
+      }
+      output("deformed",grid);
+      restructure();
+      number_str(outname, "end", step, 2);
+      output(outname,grid);
+   }
    return;
 }
 

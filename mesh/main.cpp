@@ -11,10 +11,8 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-   int i,step = 0;
    clock_t cpu_time;
    class blocks<block<r_mesh> > z;
-   char outname[50];
 
 
    /* THIS DEFORMS A MESH */
@@ -26,30 +24,21 @@ int main(int argc, char *argv[]) {
    
    input["nblock"] = "1";
    input["ngrid"] = "5";
-   input["mglvls"] = "5";
    input["mesh"] = "/Users/helenbrk/Codes/grids/BOAT/pboat";
    input["growth factor"] = "10.0";
    input["filetype"] = "0";
    input["fadd"] = "1.0";
    input["vnn"] = "0.5";
+   input["ntstep"] = "1";
+   input["itercrsn"] = "1";
+   input["niter"] = "50";
+   input["tolerance"] = "0.66";
+   
 
    z.load_constants(input);
    z.init(input);
-   z.output("begin",grid);
-    for(step = 1; step<=1;++step) {
-      z.ksrc();
-      z.tadvance();
-       for(i=0;i<50;++i) {
-         z.cycle(2);
-         printf("%d ",i);
-         z.maxres();
-         printf("\n");
-      }
-      z.output("deformed",grid);
-      z.restructure(0.66);
-      number_str(outname, "end", step, 2);
-      z.output(outname,grid);
-   }
+	z.go();
+   
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
 

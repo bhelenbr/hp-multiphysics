@@ -8,6 +8,7 @@ template<class GRD> class block {
       int ngrid;
       typename GRD::gbl gbl_store;
       GRD *grd;
+      FLT tolerance;
       
    public:
       void init(std::map <std::string,std::string>& input);
@@ -24,6 +25,7 @@ template<class GRD> class block {
       void reconnect();
       void coarsenchk(const char *fname);
       void tadvance();
+      void adapt();
 };
 
 template<class GRD> void block<GRD>::init(std::map <std::string,std::string>& input) {
@@ -38,9 +40,13 @@ template<class GRD> void block<GRD>::init(std::map <std::string,std::string>& in
 }
 
 template<class GRD> void block<GRD>::load_const(std::map <std::string,std::string>& input) {
+
+   std::istringstream data(input["tolerance"]);
+   data >> tolerance; 
+   std::cout << "#tolerance: " << tolerance << endl;
+   data.clear();
    
-   
-   std::istringstream data(input["fadd"]);
+   data.str(input["fadd"]);
    data >> GRD::fadd;
    std::cout << "#fadd: " << GRD::fadd << endl;
    data.clear();
@@ -49,7 +55,7 @@ template<class GRD> void block<GRD>::load_const(std::map <std::string,std::strin
    data >> GRD::vnn; 
    std::cout << "#vnn: " << GRD::vnn << endl;
    data.clear();
-   
+      
    return;
 }
 
@@ -121,5 +127,15 @@ template<class GRD> void block<GRD>::coarsenchk(const char *fname) {
 
 template<class GRD> void block<GRD>::tadvance() {
    grd[0].tadvance();
+}
+
+template<class GRD> void block<GRD>::adapt() {
+   grd[0].yaber(1.0/tolerance,1,0.0);
+   grd[0].setbcinfo();
+   grd[0].out_mesh("coarse",grid);
+   grd[0].treeupdate();
+   grd[0].rebay(tolerance);
+   grd[0].setbcinfo();
+   grd[0].out_mesh("refine",grid);
 }
    
