@@ -387,8 +387,7 @@ void blocks::go() {
       
       hp_mgrid::setbd(MIN(MXSTEP,tstep+2));
       
- //     blk[0].grd[0].drag(66564);
-      blk[0].grd[0].drag(4);
+      blk[0].grd[0].drag(66564);
       if (!(tstep%out_intrvl)) {
          output(tstep+1,text);
          output(tstep+1,tecplot);

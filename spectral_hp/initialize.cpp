@@ -359,6 +359,9 @@ void hpbasis::initialize_values(void)
 void hpbasis::sideinfoinit() {
    int i,m,n,ind;
    FLT x,eta,xp1oeta,xp1,oeta;
+   
+   /*	THIS IS TO CALCULATE NORMAL DERIVATIVES TO SIDE */
+   /* SIDES 1 & 2 ARE ROTATED TO SIDE 0 POSITION */
 
    for(i=0;i<3;++i)
       mat_alloc(dgnorm[i],tm,gpx,FLT);
@@ -404,39 +407,38 @@ void hpbasis::sideinfoinit() {
    /* SIDE 1 */
    for(i=0;i<gpx;++i) {
       eta = 2.*x0[i] -1.0;
-      x = -eta;
+      x = 1.0;
       ptvalues_deriv(x,eta);
       oeta = 2.0/(1-eta);
-      xp1 = (x+1)/2.0;
-      
+
       /* CALCULATE POLYNOMIALS */
       /* VERTEX A   */
-      dgnorm[1][0][i] = -0.5*(dpgn[0]*pgx[0] +(xp1 +1)*oeta*pgn[0]*dpgx[0]);
+      dgnorm[1][0][i] = -oeta*pgn[0]*dpgx[0];
 
       /* VERTEX B  */
-      dgnorm[1][1][i] = -0.5*(dpgn[1]*pgx[1] +(xp1 +1)*oeta*pgn[1]*dpgx[1]);
+      dgnorm[1][1][i] = -oeta*pgn[1]*dpgx[1];
 
       /* VERTEX C    */   
-      dgnorm[1][2][i] = -0.5*(dpgn[2]*pgx[2] +(xp1 +1)*oeta*pgn[2]*dpgx[2]);
+      dgnorm[1][2][i] = -oeta*pgn[2]*dpgx[2];
 
       /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
-         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[m] +(xp1 +1)*oeta*pgn[m]*dpgx[m]);
+         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[m];
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[1] +(xp1 +1)*oeta*pgn[m]*dpgx[1]);
+         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[1];
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[1][m][i] = -0.5*(dpgn[m]*pgx[0] +(xp1 +1)*oeta*pgn[m]*dpgx[0]);
+         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[0];
 
       /*  INTERIOR MODES   */
       ind = bm;
       for(m = 3; m< sm+2;++m) {      
          for(n = 1; n < sm+3-m;++n) {
-            dgnorm[1][ind][i] = -0.5*(dpgn[ind]*pgx[m] +(xp1 +1)*oeta*pgn[ind]*dpgx[m]);
+            dgnorm[1][ind][i] = -oeta*pgn[ind]*dpgx[m];
             ++ind;
          }
-      }
+      }      
    }
    
    /* SIDE 2 */
@@ -444,32 +446,34 @@ void hpbasis::sideinfoinit() {
       x = -1.0;
       eta = 1.0 -2.*x0[i];
       ptvalues_deriv(x,eta);
-      
+      oeta = 2.0/(1-eta);
+      xp1 = (x+1)/2.0;
+
       /* CALCULATE POLYNOMIALS */
       /* VERTEX A   */
-      dgnorm[2][0][i] = 2.0/(1. -eta)*pgn[0]*dpgx[0];
+      dgnorm[2][0][i] = -(dpgn[0]*pgx[0] +(xp1 -1)*oeta*pgn[0]*dpgx[0]);
 
       /* VERTEX B  */
-      dgnorm[2][1][i] = 2.0/(1. -eta)*pgn[1]*dpgx[1];
+      dgnorm[2][1][i] = -(dpgn[1]*pgx[1] +(xp1 -1)*oeta*pgn[1]*dpgx[1]);
 
       /* VERTEX C    */   
-      dgnorm[2][2][i] = 2.0/(1. -eta)*pgn[2]*dpgx[2];
+      dgnorm[2][2][i] = -(dpgn[2]*pgx[2] +(xp1 -1)*oeta*pgn[2]*dpgx[2]);
 
       /*  SIDE 1 (s)      */
       for(m = 3; m < sm+3; ++m)
-         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[m];
+         dgnorm[2][m][i] = -(dpgn[m]*pgx[m] +(xp1 -1)*oeta*pgn[m]*dpgx[m]);
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[1];
+         dgnorm[2][m][i] = -(dpgn[m]*pgx[1] +(xp1 -1)*oeta*pgn[m]*dpgx[1]);
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[2][m][i] = 2.0/(1. -eta)*pgn[m]*dpgx[0];
+         dgnorm[2][m][i] = -(dpgn[m]*pgx[0] +(xp1 -1)*oeta*pgn[m]*dpgx[0]);
 
       /*  INTERIOR MODES   */
       ind = bm;
       for(m = 3; m< sm+2;++m) {      
          for(n = 1; n < sm+3-m;++n) {
-            dgnorm[2][ind][i] = 2.0/(1. -eta)*pgn[ind]*dpgx[m];
+            dgnorm[2][ind][i] = -(dpgn[ind]*pgx[m] +(xp1 -1)*oeta*pgn[ind]*dpgx[m]);
             ++ind;
          }
       }

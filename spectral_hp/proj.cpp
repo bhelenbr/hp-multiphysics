@@ -391,6 +391,6 @@ void hpbasis::proj_side(int side, FLT *lin, FLT *f, FLT *dtan, FLT *dnrm) {
       wk0[0][m+2] = lin[side*sm +3 +m];
       
    proj1d(wk0[0],f,dtan);
-   
+      
    return;
 }
