@@ -13,7 +13,7 @@
 void hp_mgrid::tadvance() {
    int i,j,n,tind,step;
    FLT temp;
-   
+
 /*********************************************************/	
 /* CALCULATE TIME DERIVATIVE SOURCE TERM FOR FINEST MESH */
 /*********************************************************/ 
@@ -186,6 +186,9 @@ void hp_mgrid::tadvance() {
 
 /*	UPDATE UNSTEADY INFLOW VARIABLES */
    setinflow();
-         
+
+/*	MOVE VERTEX INFO FOR FREE SURFACES TO UKNOWN VECTOR */
+   surfvrttoug();
+
    return;
 }

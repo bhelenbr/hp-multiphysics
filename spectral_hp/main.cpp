@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
    
    test1.in_mesh("error1",easymesh);
    test2.coarsen(test1);
-   test2.bcinfo();
+   test2.setbcinfo();
    test2.out_mesh("error2");
    
    exit(1);

@@ -9,7 +9,7 @@ void blocks::init(char *file) {
    int i,j,k,p,match;
    FLT temp;
    FILE *fp;
-   char blockname[100];
+   char blockname[100], outname[20], bname[20];
    
    fp = fopen(file,"r");
    if (fp == NULL) {
@@ -80,12 +80,15 @@ void blocks::init(char *file) {
 /*	READ IN ITERATION PARAMETERS */
    fscanf(fp,"%*[^\n]%d %d %d\n",&mglvls,&vwcycle,&ncycle);
    printf("#MGLEVELS\t\tVWCYCLE\t\t# OF CYCLES\n#%d\t\t%d\t\t%d\n",mglvls,vwcycle,ncycle);
+
+/*	READ IN INITIALIZATION PARAMETER */
+   fscanf(fp,"%*[^\n]%d\n",&readin);
+   printf("#READ FILE #\n#%d\n",readin);
    
 /*	READ IN NUMBER OF BLOCKS */
    fscanf(fp,"%*[^\n]%d\n",&nblocks);  
    printf("#NBLOCKS\n#%d\n",nblocks);
    
-
 /*	BEGIN INITIALIZATION OF EACH BLOCK */   
    mgrids = MAX(mglvls-lg2pmax,1);   
 
@@ -99,8 +102,7 @@ void blocks::init(char *file) {
    }
    
    blk = new class block[nblocks];
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
+/*	OPEN EACH BLOCK FILE AND READ IN DATA */
    for (i=0;i<nblocks;++i) {
       fscanf(fp,"%s\n",blockname);
       printf("#\n#opening block %d: %s\n#\n",i,blockname);
@@ -119,8 +121,49 @@ void blocks::init(char *file) {
             exit(1);
          }
       }
-   } 
-   
+   }
+
+/*	INITIALIZE SOLUTION FOR EACH BLOCK */
+   if (readin >= 0) {
+      for(i=0;i<nblocks;++i) {
+         number_str(outname, "data", i, 1);
+         strcat(outname, ".");
+         number_str(bname,outname,readin,3);
+
+/*			ADAPTED MESH */         
+         if (adapt) {
+            blk[i].grd[0].in_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
+            blk[i].grd[0].spectral_hp::setbcinfo();
+            strcpy(outname,bname);
+            strcat(outname,"vlg");
+            blk[i].grd[0].inlength(outname);
+         }
+
+/*			READ SOLUTION */         
+         blk[i].grd[0].spectral_hp::input(bname,text);
+         
+/*			INPUT UNSTEADY TIME HISTORY */
+         strcat(bname,".");
+         for(j=0;j<hp_mgrid::nstep-1;++j) {
+            number_str(outname,bname,j,1);
+            blk[i].grd[0].input(blk[i].gbl.ugbd[j],outname,text);
+         }
+      }
+
+/*		DO ADAPTATION FOR NEXT TIME STEP */      
+      if (adapt) {
+         adaptation();
+         for(i=0;i<nblocks;++i)
+            blk[i].reconnect();
+      }  
+   }
+   else {
+      for(i=0;i<nblocks;++i) {
+         blk[i].grd[0].curvinit();
+         blk[i].grd[0].tobasis(&f1);
+      }
+   }
+
    return;
 }
 
@@ -243,33 +286,34 @@ void blocks::cycle(int vw, int lvl = 0) {
    return;
 }
 
-void blocks::output(const char *filename, FILETYPE type = text) {
-   int i;   
-   char fnmcat[80],bname[80];
-
-/*	ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-/*	I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   strcpy(fnmcat,filename);
-   strcat(fnmcat,".");
-   for(i=0;i<nblocks;++i) {
-      number_str(bname,fnmcat,i,1);
-      blk[i].grd[0].output(bname,type);
-		if (adapt) blk[i].grd[0].out_mesh(bname,easymesh);            
-   }
-   
-   return;
-}
-
 void blocks::output(int number, FILETYPE type=text) {
-   int i;
+   int i,j;
    char outname[20], bname[20];
 
    for(i=0;i<nblocks;++i) {
       number_str(outname, "data", i, 1);
       strcat(outname, ".");
+
+/*		OUTPUT SOLUTION */
       number_str(bname,outname,number,3);
       blk[i].grd[0].output(bname,type);
-		if (adapt) blk[i].grd[0].out_mesh(bname,easymesh);            
+      
+/*		OUTPUT MESH */         
+		if (adapt) {
+         blk[i].grd[0].mesh::setbcinfo();
+         blk[i].grd[0].out_mesh(bname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
+         blk[i].grd[0].spectral_hp::setbcinfo();
+         strcpy(outname,bname);
+         strcat(outname,"vlg");
+         blk[i].grd[0].outlength(outname,type);      
+      }
+      
+/*		OUTPUT UNSTEADY TIME HISTORY */
+      strcat(bname,".");
+      for(j=0;j<hp_mgrid::nstep-1;++j) {
+         number_str(outname,bname,j,1);
+         blk[i].grd[0].output(blk[i].gbl.ugbd[j],outname,type);
+      }
    }
    
    return;
@@ -278,7 +322,7 @@ void blocks::output(int number, FILETYPE type=text) {
 void blocks::go() {
    int i,tstep, iter;
    
-   for(tstep=0;tstep<ntstep;++tstep) {
+   for(tstep=readin+1;tstep<ntstep;++tstep) {
       
       tadvance();
       
@@ -290,6 +334,7 @@ void blocks::go() {
       }
          
       if (!(tstep%out_intrvl)) {
+         output(tstep,text);
          output(tstep,tecplot);
       }
       
@@ -299,12 +344,12 @@ void blocks::go() {
             blk[i].reconnect();
       }       
 
-      if (tstep == 0) {
-         hp_mgrid::nstep = 2;
-			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-		}
+//      if (tstep == 0) {
+//         hp_mgrid::nstep = 1;
+//			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+//         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+//         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+//		}
 //		else {
 //			hp_mgrid::nstep = 3;
 //			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
@@ -321,10 +366,10 @@ void blocks::adaptation() {
    int i;
    
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].density1();
+      blk[i].grd[0].length1();
       
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].density2();
+      blk[i].grd[0].length2();
       
    for(i=0;i<nblocks;++i)
       blk[i].grd[0].adapt(temp_hp,0.66);

@@ -31,7 +31,7 @@ void spectral_hp::allocate(class hpbasis& bas) {
    sm0 = b.sm;
    im0 = b.im;
       
-   /*	LOCAL STORAGE/WORK */
+/*   	LOCAL STORAGE/WORK */
    if (p0 > pmax) {
       if (pmax != 0) {
          printf("allocate from largest to smallest\n");

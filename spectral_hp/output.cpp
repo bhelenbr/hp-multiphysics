@@ -205,6 +205,7 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
                ,ijind[i][b.sm-i]+1,ijind[i+1][b.sm-i]+1,ijind[i][b.sm+1-i]+1);
             }
          }
+         fclose(out);
          break;
          
       case(easymesh):
@@ -219,6 +220,8 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
  	return;
 }
 
+#define NEW
+
 void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
    int bnum,bind,ierr;
@@ -229,7 +232,9 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
    
 #ifdef NEW
       case (text):
-         in = fopen(name,"r");
+         strcpy(buffer,name);
+         strcat(buffer,".txt");
+         in = fopen(buffer,"r");
          if (in == NULL ) {
             printf("couldn't open text input file %s\n",name);
             exit(1);
@@ -277,11 +282,22 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
 
 /*			BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
-            fscanf(in,"Boundary %*d, type %*d, num %*d\n");
+            fscanf(in,"Boundary %*d, type %d, num %d\n",&bind,&bnum);
+            for(j=0;j<nsbd;++j)
+               if (sbdry[j].type == bind) break;
+            
+            bind = j;
+            if (bind != i) printf("Boundary groups reordered %d %d\n",i,bind);
+
+            if (sbdry[bind].num != bnum) {
+               printf("input file doesn't have same number of boundary sides\n");
+               exit(1);
+            }
+
             indx = 0;
-            for(j=0;j<sbdry[i].num;++j) {
+            for(j=0;j<sbdry[bind].num;++j) {
                for(m=0;m<pin -1;++m) {
-                  fscanf(in,"%le %le\n",&binfo[i][indx].curv[0],&binfo[i][indx].curv[1]);
+                  fscanf(in,"%le %le\n",&binfo[bind][indx].curv[0],&binfo[bind][indx].curv[1]);
                   ++indx;
                }
                indx += p0 -pin;

@@ -28,6 +28,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    grd[0].in_mesh(grd_nm,static_cast<FILETYPE>(fmt),grwfac);
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
+      grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }
@@ -106,13 +107,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
       printf("#SIGMA\t\tRHO2\t\tMU2\n#%f\t\t%f\t\t%f\n",sgbl[i].sigma,sgbl[i].rho2,sgbl[i].mu2);
    }
 
-//	scanf("%*[^\n]%d %d\n",&rf, &rfnum);
-//	printf("#READ FILE?\tFILE #\n#%1d\t\t%d\n",rf,rfnum);
-
    grd[0].loadbasis(hpbase[lg2pmax]);
-   grd[0].curvinit();
-   grd[0].tobasis(&f1);
-   grd[0].surfvrttoug();
 
    return;
 }
@@ -129,9 +124,17 @@ void block::tadvance() {
 
 void block::reconnect() {
    int i,j;
+   char name[100];
 
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(grd[i-1]);
+//      number_str(name,"mgrid",i,1);
+      
+      grd[i].mesh::setbcinfo();
+      grd[i].checkintegrity();
+
+//      grd[i].out_mesh(name);
+      grd[i].setbcinfo();
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
    }

@@ -7,7 +7,22 @@
  *
  */
 
+#include<float.h>
+
 #define FLT double
+#if (FLT == double)
+#define GETRF DGETRF
+#define GETRS DGETRS
+#define PBTRF DPBTRF
+#define PBTRS DPBTRS
+#define EPSILON DBL_EPSILON
+#else
+#define GETRF SGETRF
+#define GETRS SGETRS
+#define PBTRF SPBTRF
+#define PBTRS SPBTRS
+#define EPSILON FLT_EPSILON
+#endif
 
 #define MXTM 100
 
@@ -131,7 +146,7 @@ class hpbasis {
       
 /*		POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
       inline void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
-         ptvalues(2.0*(1+r)/(1-s) -1.0,s);
+         ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
          ptprobe(nv, lin, f);
       }
       void ptprobe(int nv, FLT **lin, FLT *f);
@@ -156,17 +171,3 @@ class hpbasis {
       void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
       void ptvalues1d(FLT x);
 };
-
-#if (FLT == double)
-#define GETRF DGETRF
-#define GETRS DGETRS
-#define PBTRF DPBTRF
-#define PBTRS DPBTRS
-#define EPSILON DBL_EPSILON
-#else
-#define GETRF SGETRF
-#define GETRS SGETRS
-#define PBTRF SPBTRF
-#define PBTRS SPBTRS
-#define EPSILON FLT_EPSILON
-#endif

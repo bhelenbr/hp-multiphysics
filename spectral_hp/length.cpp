@@ -1,5 +1,5 @@
 /*
- *  density.cpp
+ *  length.cpp
  *  planar++
  *
  *  Created by helenbrk on Thu Oct 25 2001.
@@ -13,7 +13,7 @@
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
-void hp_mgrid::density1() {
+void hp_mgrid::length1() {
    int i,j,v0,v1,indx,sind,bnum,count;
    FLT sum,u,v,ruv;
    class mesh *tgt;
@@ -83,7 +83,7 @@ void hp_mgrid::density1() {
    
 }
 
-void hp_mgrid::density2() {
+void hp_mgrid::length2() {
    int i,j,v0,sind,count;
 
    for(i=0;i<nsbd;++i) {
@@ -105,37 +105,72 @@ void hp_mgrid::density2() {
 
 #include<string.h>
 
-void hp_mgrid::outdensity(char *name) {
+void hp_mgrid::outlength(char *name, FILETYPE type) {
    char fnmapp[100];
 	FILE *out;
 	int i,n,tind;
 
    strcpy(fnmapp,name);
-   strcat(fnmapp,".dat");
-   out = fopen(fnmapp,"w");
-   if (out == NULL ) {
-      printf("couldn't open tecplot output file %s\n",fnmapp);
-      exit(1);
-   }
 
-   fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
+   switch(type) {
+      case(text):
+         strcat(fnmapp,".txt");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open tecplot output file %s\n",fnmapp);
+            exit(1);
+         }
+         for(i=0;i<nvrtx;++i)
+            fprintf(out,"%e\n",vlngth[i]);
+            
+         break;
 
-/*	VERTEX MODES */
-   for(i=0;i<nvrtx;++i) {
-      for(n=0;n<ND;++n)
-         fprintf(out,"%e ",vrtx[i][n]);
-      fprintf(out,"%.6e %.6e",vlngth[i],fltwk[i]);					
-      fprintf(out,"\n");
+      case(tecplot):               
+         strcat(fnmapp,".dat");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open tecplot output file %s\n",fnmapp);
+            exit(1);
+         }
+      
+         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
+      
+      /*	VERTEX MODES */
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               fprintf(out,"%e ",vrtx[i][n]);
+            fprintf(out,"%.6e %.6e",vlngth[i],fltwk[i]);					
+            fprintf(out,"\n");
+         }
+         
+      /*	OUTPUT CONNECTIVY INFO */
+         fprintf(out,"\n#CONNECTION DATA#\n");
+         
+         for(tind=0;tind<ntri;++tind)
+            fprintf(out,"%d %d %d\n"
+               ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
+         break;
    }
-   
-/*	OUTPUT CONNECTIVY INFO */
-   fprintf(out,"\n#CONNECTION DATA#\n");
-   
-   for(tind=0;tind<ntri;++tind)
-      fprintf(out,"%d %d %d\n"
-         ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
          
    fclose(out);
    
+   return;
+}
+
+void hp_mgrid::inlength(char *name) {
+   char fnmapp[100];
+	FILE *out;
+	int i;
+
+   strcpy(fnmapp,name);
+   strcat(fnmapp,".txt");
+   out = fopen(fnmapp,"r");
+   if (out == NULL ) {
+      printf("couldn't open vlgth input file %s\n",fnmapp);
+      exit(1);
+   }
+   for(i=0;i<nvrtx;++i)
+      fscanf(out,"%lf\n",&vlngth[i]);
+               
    return;
 }

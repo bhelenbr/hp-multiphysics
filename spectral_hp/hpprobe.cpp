@@ -251,7 +251,7 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
    static int k,m,n;
    static FLT n0,x0,x,eta;
    
-   x = 2.0*(1+r)/(1-s) -1.0;
+   x = 2.0*(1+r)/(1-s+10.*EPSILON) -1.0;
    eta = s;
    
    ptvalues_bdry(x,eta);

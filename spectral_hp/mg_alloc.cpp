@@ -61,8 +61,7 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
          
          vrtxstr[i] = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
          for(j=0;j<nsbd;++j)
-            if (sbdry[j].type&CURV_MASK) 
-               binfostr[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+            binfostr[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
                
          for(n=0;n<NV;++n)
             mat_alloc(bdwk[i][n],b.gpx,b.gpn,FLT);
@@ -158,15 +157,13 @@ void hp_mgrid::gbl_alloc(struct hp_mgrid_glbls *store) {
       
       store->vrtxbd[i] = (FLT (*)[ND]) xmalloc(ND*maxvst*sizeof(FLT));
       for(j=0;j<nsbd;++j)
-         if (sbdry[j].type&CURV_MASK) 
-            store->binfobd[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+         store->binfobd[i][j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
    }
    for(i=0;i<NV;++i)
       tens_alloc(store->dugdt[i],maxvst,b.gpx,b.gpn,FLT);  // UNSTEADY SOURCE FOR FLOW
    
    for(j=0;j<nsbd;++j)
-      if (sbdry[j].type&CURV_MASK) 
-         store->dbinfodt[j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
+      store->dbinfodt[j] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
 
    return;
 }
@@ -189,3 +186,5 @@ void hp_mgrid::maxres(FLT mx[NV]) {
    return;
 }
    
+   
+

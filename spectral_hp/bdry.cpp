@@ -332,7 +332,7 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type & HP_MGRID_MP) {
             count = 0;
-   /*			RECV VERTEX INFO */
+/*   			RECV VERTEX INFO */
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][1];
@@ -346,7 +346,7 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
 
          if (sbdry[i].type & IFCE_MASK) {
             count = 0;
-   /*			RECV VERTEX INFO */
+/*   			RECV VERTEX INFO */
             for(j=sbdry[i].num-1;j>=0;--j) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][1];

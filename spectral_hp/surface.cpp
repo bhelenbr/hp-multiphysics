@@ -721,7 +721,7 @@ void hp_mgrid::surfugtovrt1() {
       for(n=0;n<ND;++n)
          vrtx[v0][n] = srf->vug[sbdry[bnum].num][n];
    
-   /*	SEND MESSAGES TO MATCHING INTERFACE */      
+/*   	SEND MESSAGES TO MATCHING INTERFACE */      
       if (sbdry[bnum].type&IFCE_MASK) {
          tgt = sbdry[bnum].adjmesh;
          vbnum = sbdry[bnum].adjbnum;
@@ -750,7 +750,7 @@ void hp_mgrid::surfugtovrt2() {
       srf = static_cast<class surface *>(sbdry[bnum].misc);
       if (srf == NULL) return;
    
-   /*	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
+/*   	RECEIVE MESSAGES FROM MATCHING INTERFACE */      
       count = 0;
       indx = 0;
       for(j=sbdry[bnum].num-1;j>=0;--j) {

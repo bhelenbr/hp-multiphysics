@@ -171,10 +171,12 @@ class hp_mgrid : public spectral_hp {
       void tadvance();
       
 /*		FUNCTIONS FOR ADAPTION */      
-      void density1();
-      void density2(); 
-      void outdensity(char *name);
+      void length1();
+      void length2(); 
+      void outlength(char *name, FILETYPE type);
+      void inlength(char *name);
       void adapt(class hp_mgrid& bgn, FLT tolerance);
+
 
       friend class block;
       friend class blocks;

@@ -20,8 +20,11 @@ NTSTEPS	OUTPUT INTERVAL
 5			1
 MG LVLS	V(1)/W(2) CYCLE	NCYCLES
 4			2						30
+READ FILE?
+3
 NBLOCKS
 1
 ../cyinput.1
 ../blkinput.2
+
 

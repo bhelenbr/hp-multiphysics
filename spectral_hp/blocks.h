@@ -26,7 +26,7 @@ class blocks {
       int nblocks;  // NUMBER OF BLOCKS
       class block *blk;
 
-      int ntstep,out_intrvl; // TIME STEP STUFF
+      int ntstep,out_intrvl,readin; // TIME STEP STUFF
       int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
       int adapt; //FLAG FOR ADAPTATION
       class hp_mgrid temp_hp; //TEMPORARY SOLUTION STORAGE FOR ADAPTION
@@ -59,7 +59,6 @@ class blocks {
       }
 
 /*		OUTPUT FINE MESH SOLUTION */
-      void output(const char *filename, FILETYPE filetype = text);
       void output(int number, FILETYPE filetype = text);
 
 /*		MESH REFINEMENT */

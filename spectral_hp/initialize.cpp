@@ -8,7 +8,6 @@
  */
 
 #include<math.h>
-#include<float.h>
 #include<utilities.h>
 #include"hpbasis.h"
 #include<myblas.h>
@@ -316,7 +315,7 @@ void hpbasis::initialize_values(void)
             pk = pkp;
          }
    
-   /*	 	SIDE 3	*/
+/*   	 	SIDE 3	*/
          pk = 1.0;
          pkm = 0.0;
          dpk = 0.0;
