@@ -124,6 +124,8 @@ class hp_mgrid : public spectral_hp {
       void bdry_vrcvandzero();
       void bdry_ssnd(int mode);
       void bdry_srcvandzero(int mode);
+      void bdrycheck1();
+      void bdrycheck2();
 
 /*		COUPLED SURFACE BOUNDARY ROUTINES */ 
       void surfvrttoug();

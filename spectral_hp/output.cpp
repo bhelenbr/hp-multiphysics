@@ -55,7 +55,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 
 /*			BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
-            fprintf(out,"Boundary %d, type %d, num %d\n",i,sbdry[i].type,sbdry[i].num);
+            fprintf(out,"Boundary %d, type %d, num %d, frstvrtx %d\n",i,sbdry[i].type,sbdry[i].num,svrtx[sbdry[i].el[0]][0]);
             for(j=0;j<sbdry[i].num*sm0;++j)
                fprintf(out,"%15.8e %15.8e\n",bin[i][j].curv[0],bin[i][j].curv[1]);
          }
@@ -220,7 +220,7 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
 
 void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
-   int innum,intyp,ierr;
+   int bnum,innum,intyp,ierr,v0;
    FILE *in;
    char buffer[200];
    
@@ -278,16 +278,21 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
 
 /*			BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
-            fscanf(in,"Boundary %*d, type %d, num %d\n",&intyp,&innum);
-            if (sbdry[i].num != innum || intyp != sbdry[i].type) {
-               printf("input file doesn't have same number of boundary sides %d %d %d %d\n",innum,sbdry[i].num,sbdry[i].type,intyp);
+            fscanf(in,"Boundary %*d, type %d, num %d, frstvrtx %d\n",&intyp,&innum,&v0);
+/*				FIND MATCHING BOUNDARY (CAN CHANGE NUMBER) */
+            for(bnum=0;bnum<nsbd;++bnum)
+               if (svrtx[sbdry[bnum].el[0]][0] == v0) 
+                  break;
+            
+            if (bnum == nsbd || innum != sbdry[bnum].num) {
+               printf("Trouble matching boundaries %d %d %d %d\n",innum,sbdry[bnum].num,sbdry[bnum].type,intyp);
                exit(1);
             }
 
             indx = 0;
-            for(j=0;j<sbdry[i].num;++j) {
+            for(j=0;j<sbdry[bnum].num;++j) {
                for(m=0;m<pin -1;++m) {
-                  fscanf(in,"%le %le\n",&bin[i][indx].curv[0],&bin[i][indx].curv[1]);
+                  fscanf(in,"%le %le\n",&bin[bnum][indx].curv[0],&bin[bnum][indx].curv[1]);
                   ++indx;
                }
                indx += p0 -pin;
@@ -320,6 +325,9 @@ void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, cha
             if (sinfo[i] > -1) {
                bnum = (-stri[i][1]>>16) -1;
                bind = (-stri[i][1]&0xFFFF)*sm0;
+               assert(assert(bnum > -1 && bnum < nsbd););
+               assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+               
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
                   &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],

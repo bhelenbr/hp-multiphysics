@@ -24,6 +24,11 @@ void hp_mgrid::tstep1(void) {
 
 	for(tind = 0; tind < ntri; ++tind) {
       jcb = 0.25*area(tind);
+      if (jcb < 0.0) {
+         printf("negative triangle area\n");
+         output("negative",tecplot);
+         exit(1);
+      }
 		v = tvrtx[tind];
 		hmax = 0.0;
 		for(j=0;j<3;++j) {

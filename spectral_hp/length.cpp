@@ -15,7 +15,7 @@
 
 void hp_mgrid::length1() {
    int i,j,v0,v1,indx,sind,bnum,count;
-   FLT sum,u,v,ruv,lgtol,lgf;
+   FLT sum,u,v,ruv,lgtol,lgf,ratio;
    class mesh *tgt;
    
    lgtol = -log(tol);
@@ -35,6 +35,21 @@ void hp_mgrid::length1() {
             fltwk[v0] += sum;
             fltwk[v1] += sum;
          }
+         
+/*			BOUNDARY CURVATURE? */
+         for(i=0;i<nsbd;++i) {
+            if (!(sbdry[i].type&CURV_MASK)) continue;
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               v1 = svrtx[sind][1];
+               sum = 100.0*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+               fltwk[v0] += sum;
+               fltwk[v1] += sum;
+            }
+         }
+               
+            
          break;
          
       default:
@@ -50,8 +65,24 @@ void hp_mgrid::length1() {
             fltwk[v1] += sum;
             indx += sm0;
          }
+         
+/*			BOUNDARY CURVATURE? */
+         for(i=0;i<nsbd;++i) {
+            if (!(sbdry[i].type&CURV_MASK)) continue;
+            indx = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               v1 = svrtx[sind][1];
+               sum = 100.0*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+               fltwk[v0] += sum;
+               fltwk[v1] += sum;
+               indx += sm0;
+            }
+         }
          break;
    }
+      
    
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
@@ -63,6 +94,26 @@ void hp_mgrid::length1() {
 //         vlngth[i] = MAX(vlngth[i],gbl->minlength);
       }
    }
+   
+/*	AVOID HIGH ASPECT RATIOS */
+//   do {
+      count = 0;
+      for(i=0;i<nside;++i) {
+         v0 = svrtx[i][0];
+         v1 = svrtx[i][1];
+         ratio = vlngth[v1]/vlngth[v0];
+         
+         if (ratio > 3.0) {
+            vlngth[v1] = 2.5*vlngth[v0];
+            ++count;
+         }
+         else if (ratio < 0.333) {
+            vlngth[v0] = 2.5*vlngth[v1];
+            ++count;
+         }
+      }
+      printf("#aspect ratio fixes %d\n",count);
+//   } while(count > 0);
 
 /*	SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nsbd;++i) {
@@ -178,8 +229,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",vrtx[i][n]);
-            fprintf(out,"%.6e %.6e",vlngth[i],fltwk[i]);					
-            fprintf(out,"\n");
+            fprintf(out,"%.6e\n",vlngth[i]);					
          }
          
       /*	OUTPUT CONNECTIVY INFO */
@@ -188,6 +238,23 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
          for(tind=0;tind<ntri;++tind)
             fprintf(out,"%d %d %d\n"
                ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
+          
+/*			OUTPUT FLTWK INFO */
+         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nside,ntri);
+      
+      /*	VERTEX MODES */
+         for(i=0;i<nside;++i) {
+            for(n=0;n<ND;++n)
+               fprintf(out,"%e ",0.5*(vrtx[svrtx[i][0]][n] +vrtx[svrtx[i][1]][n]));
+            fprintf(out,"%.6e\n",fltwk[i]);					
+         }
+         
+      /*	OUTPUT CONNECTIVY INFO */
+         fprintf(out,"\n#CONNECTION DATA#\n");
+         
+         for(tind=0;tind<ntri;++tind)
+            fprintf(out,"%d %d %d\n"
+               ,tside[tind].side[0]+1,tside[tind].side[1]+1,tside[tind].side[2]+1);
          break;
          
       default:

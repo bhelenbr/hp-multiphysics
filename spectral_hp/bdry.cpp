@@ -641,3 +641,79 @@ void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], dou
  
 }
 
+void hp_mgrid::bdrycheck1() {
+   int i,j,n,v0,count,bnum,sind;
+   class mesh *tgt;
+   
+/* SEND SIDE INFO */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & (COMX_MASK +COMY_MASK +IFCE_MASK)) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            for (n=0;n<ND;++n) 
+               tgt->sbuff[bnum][count++] = vrtx[v0][n];
+         }
+         v0 = svrtx[sind][1];
+         for (n=0;n<ND;++n) 
+            tgt->sbuff[bnum][count++] = vrtx[v0][n]; 
+      }    
+   }
+   
+   return;
+}
+
+void hp_mgrid::bdrycheck2() {
+	static int i,j,n,v0;
+	static int sind,count;
+      
+/*	THIS PART TO RECIEVE AND ZERO FOR SIDES */
+/*	RECEIVE P'TH SIDE MODE MESSAGES */
+/* CALCULATE AVERAGE RESIDUAL */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & PRDX_MASK) {
+         count = 1;
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            vrtx[v0][1] = 0.5*(vrtx[v0][1] +sbuff[i][count++]);
+            ++count;
+         }
+         v0 = svrtx[sind][0];
+         vrtx[v0][1] = 0.5*(vrtx[v0][1] +sbuff[i][count++]); 
+         continue;   
+      }
+      
+      if (sbdry[i].type & PRDY_MASK) {
+         count = 0;
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            vrtx[v0][0] = 0.5*(vrtx[v0][0] +sbuff[i][count++]);
+            ++count;
+         }
+         v0 = svrtx[sind][0];
+         vrtx[v0][0] = 0.5*(vrtx[v0][0] +sbuff[i][count++]); 
+         continue;   
+      }
+      
+      if (sbdry[i].type & (COMX_MASK +COMY_MASK +IFCE_MASK)) {
+         count = 0;
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            for(n=0;n<ND;++n)
+               vrtx[v0][n] = 0.5*(vrtx[v0][n] +sbuff[i][count++]); 
+         }
+      }
+   }
+   
+   return;
+}
+
+
+
+

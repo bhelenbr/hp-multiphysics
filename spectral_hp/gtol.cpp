@@ -8,6 +8,7 @@
  */
 
 #include "spectral_hp.h"
+#include<assert.h>
 
 void spectral_hp::ugtouht(int tind) {
 	static int i,k,m,n,indx,cnt;
@@ -286,6 +287,9 @@ void spectral_hp::crdtouht(int tind) {
       else {
          bnum = (-stri[sind][1]>>16) -1;
          indx = (-stri[sind][1]&0xFFFF)*sm0;
+         assert(bnum > -1 && bnum < nsbd);
+         assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+         
          for (m = 0; m < b.sm; ++m) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
@@ -323,6 +327,9 @@ void spectral_hp::crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
       else {
          bnum = (-stri[sind][1]>>16) -1;
          indx = (-stri[sind][1]&0xFFFF)*sm0;
+         assert(bnum > -1 && bnum < nsbd);
+         assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+         
          for (m = 0; m < b.sm; ++m) {
             for(n=0; n<NV; ++n)
                uht[n][cnt] = binfo[bnum][indx+m].curv[n];
@@ -346,6 +353,8 @@ void spectral_hp::crdtouht1d(int sind) {
    
    bnum = (-stri[sind][1]>>16) -1;
    indx = (-stri[sind][1]&0xFFFF)*sm0;
+   assert(bnum > -1 && bnum < nsbd);
+   assert(indx > -1 && indx < sbdry[bnum].num*sm0);
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 
@@ -366,6 +375,8 @@ void spectral_hp::crdtouht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) 
    
    bnum = (-stri[sind][1]>>16) -1;
    indx = (-stri[sind][1]&0xFFFF)*sm0;
+   assert(bnum > -1 && bnum < nsbd);
+   assert(indx > -1 && indx < sbdry[bnum].num*sm0);
    
    for(m=0;m<b.sm;++m)
     for(n=0;n<ND;++n) 

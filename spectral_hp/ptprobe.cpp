@@ -52,7 +52,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
       } while(tind != stoptri);
 
       if (tind == stoptri) {
-         printf("uh-oh %d %f %f\n",v0,xp,yp);
+         printf("couldn't find triangle for point %d %f %f\n",v0,xp,yp);
          return(-1);
       }
       sind = findbdrypt(typ,xp,yp,psi);
@@ -110,6 +110,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       
       if (ttri[tind][vn] < 0) {
          bnum = (-ttri[tind][vn]>>16) -1;
+         assert(bnum > -1 && bnum < nsbd);
          if (sbdry[bnum].type == typ) {
             sind = tside[tind].side[vn];
             break;
@@ -119,6 +120,7 @@ int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
       tind = ttri[tind][(vn +dir)%3];
       if (tind < 0) {
          bnum = (-tind>>16) -1;
+         assert(bnum > -1 && bnum < nsbd);
          if (sbdry[bnum].type == typ) {
             sind = tside[told].side[(vn+dir)%3];
             break; 

@@ -37,6 +37,9 @@ class blocks {
       
 /*		5 STAGE UPDATE ON ALL BLOCKS */  
       void nstage(int grdnum, int sm, int mgrid);
+      
+/*		SETUP COMMUNICATION BOUNDARIES */
+      void findmatch(int mglvl);
 
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */

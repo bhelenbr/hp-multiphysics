@@ -8,7 +8,7 @@ extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
 void blocks::init(char *file) {
-   int i,j,k,p,match;
+   int i,j,p;
    FILE *fp;
    char blockname[100], outname[20], bname[20];
    
@@ -98,19 +98,10 @@ void blocks::init(char *file) {
       blk[i].initialize(blockname, mgrids, base, lg2pmax);
    }
 
-/*	MATCH BOUNDARIES */
-   for(i=0;i<mgrids;++i) {
-      for(j=0;j<nblocks;++j) {
-         match = 0;
-         for(k=0;k<nblocks;++k)
-            match += blk[j].grd[i].findmatch(blk[k].grd[i]);
-            
-         if (match != blk[j].grd[i].alld_mp()) {
-            printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[i].alld_mp());
-            exit(1);
-         }
-      }
-   }
+/*	MATCH BOUNDARIES FOR EACH MGRID LEVEL */
+   for(i=0;i<mgrids;++i) 
+      findmatch(i);
+
 
 /*	INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin >= 0) {
@@ -163,22 +154,20 @@ void blocks::init(char *file) {
          }
       }
       
-      for(j=0;j<nblocks;++j) {
-         match = 0;
-         for(k=0;k<nblocks;++k)
-            match += blk[j].grd[0].findmatch(blk[k].grd[0]);
-            
-         if (match != blk[j].grd[0].alld_mp()) {
-            printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[0].alld_mp());
-            exit(1);
-         }
-      }
+/*		REFIND BOUNDARIES ON FINE MESH */
+      findmatch(0);
 
 /*		DO ADAPTATION FOR NEXT TIME STEP */      
       if (adapt) {
          adaptation();
+
+/*			CREATE COARSE MESHES */
          for(i=0;i<nblocks;++i)
             blk[i].reconnect();
+
+/*			REFIND BOUNDARIES FOR COARSE MESHES */            
+         for(i=1;i<mgrids;++i) 
+            findmatch(i);
       }
    }
    else {
@@ -189,6 +178,22 @@ void blocks::init(char *file) {
       startup = 0;
    }   
 
+   return;
+}
+
+void blocks::findmatch(int i) {
+   int j,k,match;
+   
+   for(j=0;j<nblocks;++j) {
+      match = 0;
+      for(k=0;k<nblocks;++k)
+         match += blk[j].grd[i].findmatch(blk[k].grd[i]);
+         
+      if (match != blk[j].grd[i].alld_mp()) {
+         printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[i].alld_mp());
+         exit(1);
+      }
+   }
    return;
 }
 
@@ -334,9 +339,12 @@ void blocks::endcycle() {
 void blocks::go() {
    int i,tstep, iter;
    
-   for(tstep=readin+1;tstep<ntstep;++tstep) {
+   for(tstep=readin;tstep<ntstep;++tstep) {
       
       tadvance();
+      
+      printf("#\n#TIMESTEP NUMBER %d\n",tstep+1);
+      printf("ZONE\n");
       
       for(iter=0;iter<ncycle;++iter) {
          cycle(vwcycle);
@@ -347,12 +355,12 @@ void blocks::go() {
          printf("\n");
       }
 
-      if (tstep == 0 && hp_mgrid::dti > 0.0) {
-         hp_mgrid::nstep = 2;
-			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-		}
+//      if (tstep == 0 && hp_mgrid::dti > 0.0) {
+//         hp_mgrid::nstep = 2;
+//			hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
+//         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
+//         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
+//		}
 //		else {
 //			hp_mgrid::nstep = 3;
 //			hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
@@ -419,7 +427,7 @@ void blocks::output(int number, FILETYPE type=text) {
          number_str(bname,"vlgth",number,3);
          strcat(bname, ".");
          number_str(outname, bname, i, 1);
-         blk[i].grd[0].outlength(outname,type);      
+         blk[i].grd[0].outlength(outname,text);      
       }
       
 /*		OUTPUT UNSTEADY TIME HISTORY */
