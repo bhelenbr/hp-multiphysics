@@ -15,36 +15,36 @@
 					ActiveTab = 0;
 					Frame = "{{0, 23}, {1241, 869}}";
 					Split0 = {
-						ActiveTab = 3;
+						ActiveTab = 2;
 						Frame = "{{298, 0}, {943, 869}}";
 						Split0 = {
-							Frame = "{{0, 298}, {943, 571}}";
+							Frame = "{{0, 296}, {943, 573}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {943, 250}}";
+								Frame = "{{0, 0}, {943, 420}}";
 								Split0 = {
-									Frame = "{{0, 196}, {943, 54}}";
+									Frame = "{{0, 230}, {943, 190}}";
 									Split0 = {
-										Frame = "{{0, 0}, {293, 54}}";
+										Frame = "{{0, 0}, {293, 190}}";
 									};
 									Split1 = {
-										Frame = "{{302, 0}, {641, 54}}";
+										Frame = "{{302, 0}, {641, 190}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {943, 172}}";
+									Frame = "{{0, 0}, {943, 206}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {1095, 138}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {943, 250}}";
+							Frame = "{{0, 0}, {943, 420}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
@@ -158,7 +158,7 @@
 	};
 	F52FE4D0021429E601990B20 = {
 		uiCtxt = {
-			sepNavWindowFrame = "{{100, 650}, {750, 502}}";
+			sepNavWindowFrame = "{{100, 239}, {1015, 913}}";
 		};
 	};
 	F533C5CF01938985017C3E7F = {

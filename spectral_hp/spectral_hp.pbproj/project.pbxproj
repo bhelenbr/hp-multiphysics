@@ -162,7 +162,7 @@
 				HEADER_SEARCH_PATHS = ../include;
 				LIBRARY_SEARCH_PATHS = "../lib /usr/lib/gcc/darwin/2.95.2 /sw/lib /Volumes/work/helenbrk/Codes/packages/pvm3/lib/DARWIN /Volumes/work/helenbrk/Codes/packages/pV3";
 				OPTIMIZATION_CFLAGS = "-O3";
-				OTHER_CFLAGS = "-DNOUNDERSCORE -DNOUNS";
+				OTHER_CFLAGS = "-DPV3 -DNOUNDERSCORE -DNOUNS";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = "planar++";
@@ -186,6 +186,7 @@
 				F505FF120192F1EB01990B20,
 				F598B8700193249F01990B20,
 				F581CD2A01989D4B01990B20,
+				F5DEB69C02A5290901990B20,
 			);
 			isa = PBXHeadersBuildPhase;
 			name = Headers;
@@ -225,6 +226,7 @@
 				F54BE4D301E1038D01990B20,
 				F5AC61750252568D01990B20,
 				F5F1F64A026CB83001990B20,
+				F5DEB69D02A5290901990B20,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -843,6 +845,18 @@
 			isa = PBXFileReference;
 			path = nstage.cpp;
 			refType = 4;
+		};
+		F5DEB69C02A5290901990B20 = {
+			fileRef = F5A11A6A029ABBE001990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5DEB69D02A5290901990B20 = {
+			fileRef = F52FE4D0021429E601990B20;
+			isa = PBXBuildFile;
+			settings = {
+			};
 		};
 		F5EF233C018F35F701990B20 = {
 			isa = PBXFileReference;
