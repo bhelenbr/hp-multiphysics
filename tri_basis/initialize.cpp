@@ -36,6 +36,9 @@ void hpbasis::initialize(int pdegree, int gpoints) {
    tm = bm + im;
    ibwth = (2*(sm-1) < im -1? 2*(sm-1) : im-1);
    ibwth = (ibwth > 0 ? ibwth : 0);
+#ifdef MORTHOGONAL
+   ibwth = 1;
+#endif
    
    (p > 0 ? nmodx = p+2 : nmodx = 1);
    nmodn = tm;

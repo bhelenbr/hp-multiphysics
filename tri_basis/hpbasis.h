@@ -130,6 +130,7 @@ class hpbasis {
       void intgrtr(FLT **f, FLT *rslt1);
       /* INTEGRATE W/RSPCT TO DG/DS */
       void intgrts(FLT **f, FLT *rslt2);
+      void intgrtrs(FLT *fx, FLT *fy, int fsz, FLT *rslt);
 
       /* SAME STUFF EXCEPT 1D   */   
       /* PROJECT WITH X DERIVATIVES */

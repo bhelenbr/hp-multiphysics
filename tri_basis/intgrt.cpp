@@ -54,6 +54,82 @@ void hpbasis::intgrt(FLT **f, FLT *rslt) {
    return;
 }
 
+/* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
+/* THIS IS AN OPTIMIZED VERSION NOT IN USE RIGHT NOW */
+void hpbasis::intgrtrs(FLT *fx, FLT *fy, int fsz, FLT *rslt) {
+   int i,j,m,n,indx,indx1;
+   FLT wk0[MXTM][MXTM],wk1[MXTM][MXTM],wk2[MXTM][MXTM];
+   int fcnt,s1,s2,s3,nmax;
+   FLT lcl_wk0, lcl_wk1;
+   
+   for (j = 0; j < gpn; ++j) {
+      fcnt = j;
+      wk2[0][j] = fx[fcnt] +fy[fcnt]*x0[0];
+      lcl_wk0 = wk2[0][j]*dgxwtx[0][0];
+      lcl_wk1 = fy[fcnt]*gxwtx[0][0];  
+      fcnt += fsz;    
+      for(i = 1; i < gpx; ++i) {
+         wk2[i][j] = fx[fcnt] +fy[fcnt]*x0[i];
+         lcl_wk0 += wk2[i][j]*dgxwtx[0][i];
+         lcl_wk1 += fy[fcnt]*gxwtx[0][i];
+         fcnt += fsz;
+      }
+      wk0[0][j] = lcl_wk0;
+      wk1[0][j] = lcl_wk1;
+   }
+
+   for (n = 1; n < nmodx; ++n) {
+      for (j = 0; j < gpn; ++j) {
+         fcnt = j;
+         lcl_wk0 = wk2[0][j]*dgxwtx[n][0];
+         lcl_wk1 = fy[fcnt]*gxwtx[n][0];
+         fcnt += fsz;    
+         for(i = 1; i < gpx; ++i) {
+            lcl_wk0 += wk2[i][j]*dgxwtx[n][i];
+            lcl_wk1 += fy[fcnt]*gxwtx[n][i];
+            fcnt += fsz;
+         }
+         wk0[n][j] = lcl_wk0;
+         wk1[n][j] = lcl_wk1;
+      }
+   }
+   
+   s1 = sm+vm;
+   s2 = 2*sm+vm;
+   s3 = bm;
+   for (j=0; j < gpn; ++j ) {
+      for (m=0; m < s1; ++m)
+            rslt[m] -= gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
+   
+      lcl_wk0 = wk0[2][j];
+      lcl_wk1 = wk1[2][j];
+      for (; m < s2; ++m) 
+            rslt[m] -= gnwtnn0[m][j]*lcl_wk0 +dgnwtn[m][j]*lcl_wk1;
+      
+      lcl_wk0 = wk0[1][j];
+      lcl_wk1 = wk1[1][j];
+      for (; m < s3; ++m)
+            rslt[m] -= gnwtnn0[m][j]*lcl_wk0 +dgnwtn[m][j]*lcl_wk1;
+   }
+   
+   indx = s3;
+   for(m = 3; m < sm+2;++m) {
+      nmax = sm+2-m;
+      for (j=0; j < gpn; ++j ) {
+         indx1 = indx;
+         lcl_wk0 = wk0[m][j];
+         lcl_wk1 = wk1[m][j];
+         for(n = 0; n < nmax; ++n) {
+            rslt[indx1] -= gnwtnn0[indx1][j]*lcl_wk0+dgnwtn[indx1][j]*lcl_wk1;
+            ++indx1;
+         }
+      }
+      indx = indx1;
+   }
+   
+   
+   return;
+}
 
 /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
 void hpbasis::intgrtrs(FLT **fx, FLT **fy, FLT *rslt) {

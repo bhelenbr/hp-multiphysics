@@ -76,6 +76,7 @@
 				014CEA460018CE2711CA2923,
 				014CEA470018CE2711CA2923,
 			);
+			hasScannedForEncodings = 1;
 			isa = PBXProject;
 			mainGroup = 08FB7794FE84155DC02AAC07;
 			projectDirPath = "";
@@ -111,6 +112,7 @@
 			refType = 4;
 		};
 		08FB7796FE84155DC02AAC07 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = main.cpp;
 			refType = 4;
@@ -127,6 +129,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				HEADER_SEARCH_PATHS = /Users/helenbrk/Codes/include;
 				LIBRARY_SEARCH_PATHS = "/Users/helenbrk/Codes/lib /usr/lib/gcc/darwin/3.1";
+				OPTIMIZATION_CFLAGS = "-O3";
 				OTHER_CFLAGS = "-Df2cFortran";
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = tri_basis;
@@ -140,7 +143,6 @@
 			name = tri_basis;
 			productName = tri_basis;
 			productReference = 0249A660FF388D4511CA2CEA;
-			shouldUseHeadermap = 1;
 		};
 		08FB77A0FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -237,41 +239,49 @@
 			};
 		};
 		F52E4E2602C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = hpbasis.h;
 			refType = 4;
 		};
 		F52E4E2702C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = hpprobe.cpp;
 			refType = 4;
 		};
 		F52E4E2802C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = initialize.cpp;
 			refType = 4;
 		};
 		F52E4E2902C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = intgrt.cpp;
 			refType = 4;
 		};
 		F52E4E2A02C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = intgrt1d.cpp;
 			refType = 4;
 		};
 		F52E4E2B02C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = proj.cpp;
 			refType = 4;
 		};
 		F52E4E2C02C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = proj1d.cpp;
 			refType = 4;
 		};
 		F52E4E2D02C26DDD01C226C8 = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = ptvalues.cpp;
 			refType = 4;
@@ -340,11 +350,13 @@
 			refType = 4;
 		};
 		F5EACF6602C2B35F015D0A1B = {
+			fileEncoding = 30;
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;
 		};
 		F5EACF6702C2B35F015D0A1B = {
+			fileEncoding = 30;
 			isa = PBXFileReference;
 			path = makefile;
 			refType = 4;
