@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
-#define BRATIO 0.0
+#define BRATIO 100.0
 
 #include"hp_mgrid.h"
 #include<math.h>
@@ -90,15 +90,9 @@ void hp_mgrid::length1() {
       if (fltwk[i] <= tol || fltwk[i] >= 1./tol) {
          lgf = log(fltwk[i]);
          fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-
-/*
-         if (fltwk[i] >= 1.)
-            vlngth[i] /= fltwk[i];
-         else if (fltwk[i] <= tol)
-            vlngth[i] *= 2.0;
-*/
-//         vlngth[i] = MIN(vlngth[i],gbl->maxlength);
-//         vlngth[i] = MAX(vlngth[i],gbl->minlength);
+         vlngth[i] /= fltwk[i];
+//       vlngth[i] = MIN(vlngth[i],gbl->maxlength);
+//       vlngth[i] = MAX(vlngth[i],gbl->minlength);
       }
    }
    
