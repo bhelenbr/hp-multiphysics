@@ -44,20 +44,20 @@ void mesh::mgconnect(struct mg_trans *cnnct, const class mesh& tgt) {
    for(bnum=0;bnum<nsbd;++bnum) {
    
       /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
-      if(sbdry[bnum].type != tgt.sbdry[bnum].type) {
+      if(sbdry[bnum]->idnty() != tgt.sbdry[bnum]->idnty()) {
          printf("error: sides are not numbered the same\n");
          exit(1);
       }
          
-      for(k=0;k<sbdry[bnum].num;++k) {
-         v0 = svrtx[sbdry[bnum].el[k]][0];
+      for(k=0;k<sbdry[bnum]->nsd();++k) {
+         v0 = svrtx[sbdry[bnum]->sd(k)][0];
          x = vrtx[v0][0];
          y = vrtx[v0][1];
          minneg = -1.0E32;
          
          /* LOOP THROUGH TARGET SIDES TO FIND TRIANGLE */
-         for(i=0;i<tgt.sbdry[bnum].num;++i) {
-            sind = tgt.sbdry[bnum].el[i];
+         for(i=0;i<tgt.sbdry[bnum]->nsd();++i) {
+            sind = tgt.sbdry[bnum]->sd(i);
             tind = tgt.stri[sind][0];
             if (tind < 0) {
                printf("boundary side in wrong direction %d %d\n",sind,tind);

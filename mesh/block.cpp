@@ -13,7 +13,7 @@ void block::init(int n, char *filename, FILETYPE filetype, FLT grwfac) {
    /* WORK VARIABLES FOR MGRID */
    r_mesh::fadd = 1.0;
    r_mesh::vnn = 0.5;
-   grd[0].allocate(0,&rglbl);
+   grd[0].allocate(0,&rg);
    
    for(i = 1; i< ngrid; ++i) {
       grd[i].coarsen(1.6,grd[i-1]);
@@ -21,7 +21,7 @@ void block::init(int n, char *filename, FILETYPE filetype, FLT grwfac) {
       /* grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
-      grd[i].allocate(1,&rglbl);
+      grd[i].allocate(1,&rg);
    }
 
    return;

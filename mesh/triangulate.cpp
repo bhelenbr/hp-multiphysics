@@ -122,7 +122,6 @@ void mesh::triangulate(int **sidelst, int *nsdloop, int nloop, int cknbor) {
       for(i=0;i<newside;++i) {
          if (stri[tinfo[i]][1] < 0) {
             sidelst[0][nsdloop[0]++] = -(tinfo[i] + 1);
-            assert(nsdloop[0] < maxsbel*nsbd -1);
          }
       }
          

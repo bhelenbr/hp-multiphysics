@@ -1,24 +1,10 @@
 #include<cstdio>
 #include"blocks.h"
 #include<iostream>
-
-/* DEFINES/THINGS TO TIDDLE WITH */
-/* r_mesh.h: FOURTH: SWITCH FROM LAPLACIAN TO BIHARMONIC */
-/* blocks.cpp: GEOMETRIC: SWITCH FOR DETERMING K_IJ IN MULTIGRID (USE GEOMETRIC)*/
-/* mesh.h: USEOLDBTYPE: remaps boundary identifies from my old types to new */
-/* r_mesh.h: FIX?_MASK: DETERMINES DIRICHLET MESH MOVMENT BC'S */
-/* r_mesh.h: FIX2?_MASK: DETERMINES DIRICHLET B.C.'S on Nabla^2 for Biharmonic */
-/* mesh.h: ?DIR_MP: mask for communication boundaries */
-/* r_mesh.cpp: different perturb functions for deformed mesh */
-/* r_mesh.cpp: vnn/fadd - jacobi/multigrid parameters */
-
 #include<cstring>
 #include<math.h>
 #include<utilities.h>
 #include<time.h>
-
-FLT center;
-FLT amp;
 
 int main(int argc, char *argv[]) {
    int i,step = 0;
@@ -27,36 +13,18 @@ int main(int argc, char *argv[]) {
    char outname[100];
    char *inname[2];
    char *out2[2];
-   mesh x,y;
-   
-   x.in_mesh("/Users/helenbrk/Codes/grids/SQUARE/square1",easymesh);
-   for(i=0;i<x.nvrtx;++i) {
-      x.vrtx[i][1] *= +(1.0+ 0.5*x.vrtx[i][0]);
-   }
-   x.swap();
-   for(i=0;i<x.nvrtx;++i) {
-      x.vrtx[i][1] /= +(1.0+ 0.5*x.vrtx[i][0]);
-   }
-   x.setbcinfo();
-   x.out_mesh("/Users/helenbrk/Codes/grids/SQUARE/square1a",easymesh);
-   return(0);
- 
    /* START CLOCK TIMER */
    clock();
    
    /* THIS DEFORMS A MESH */
    /* CANONICAL TEST PROBLEM */
-//   inname[0] = "/Volumes/work/helenbrk/shelob/codes/grids2/CYLINDER/fine";
    inname[0] = "/Users/helenbrk/Codes/grids/BOAT/boat2";
-   z.init(1,5,inname,easymesh,10.0);
    
+   z.init(1,5,inname,easymesh,10.0);   
    for(step = 1; step<=1;++step) {
-      center += step/FLT(10);  // FOR THE MOVING CYLINDER PROBLEM
-      amp = 0.25*step/10.;  // FOR THE DEFORMING SURFACE 
       z.ksrc();
-      z.perturb();
-      
-      for(i=0;i<50;++i) {
+      z.tadvance();
+       for(i=0;i<50;++i) {
          z.cycle(2);
          printf("%d ",i);
          z.maxres();
@@ -67,15 +35,12 @@ int main(int argc, char *argv[]) {
       number_str(outname, "fourth", step, 2);
       z.out_mesh(outname,grid);
    }
-   
-//   out2[0] = "bamp0.375";
-//   out2[1] = "tamp0.375";
-//   z.out_mesh(out2,easymesh);
-   
    cpu_time = clock();
    printf("that took %ld cpu time\n",cpu_time);
 
    return(0);
+}
+
    
    /* OUTPUT FROM TEST PROBLEM */
 /*
@@ -333,5 +298,3 @@ int main(int argc, char *argv[]) {
 #MAX 671 BDRY 5 TYPE 65544 SIDES 8
 that took 2795 cpu time
 */
-
-}

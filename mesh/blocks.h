@@ -4,7 +4,7 @@
 class block {
    private:
       int ngrid;
-      struct r_mesh_glbls rglbl;
+      struct r_mesh::r_gbl rg;
       
    public:
       class r_mesh *grd;
@@ -46,10 +46,10 @@ class blocks {
             blk[i].grd[0].maxres();
       }
       
-      /* PERTURB BLOCK MESH */
-      inline void perturb() {
+      /* MOVE BOUNDARIES */
+      inline void tadvance() {
          for(int i=0;i<nblocks;++i)
-            blk[i].grd[0].perturb();
+            blk[i].grd[0].tadvance();
          return;
       }
       

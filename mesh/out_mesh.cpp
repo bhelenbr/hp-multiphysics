@@ -83,7 +83,7 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
 
          count = ntri;
          for(i=0;i<nsbd;++i)
-            count += sbdry[i].num;
+            count += sbdry[i]->nsd();
    
          fprintf(out,"** FIDAP NEUTRAL FILE\n");
          fprintf(out,"%s\n",filename);
@@ -116,10 +116,10 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
          count = ntri+1;
         
          for(i=0;i<nsbd;++i) {
-            fprintf(out,"GROUP:%9d ELEMENTS:%10d NODES:%13d GEOMETRY:%5d TYPE:%4d\n",i+2,sbdry[i].num,2,0,sbdry[i].type);
+            fprintf(out,"GROUP:%9d ELEMENTS:%10d NODES:%13d GEOMETRY:%5d TYPE:%4d\n",i+2,sbdry[i]->nsd(),2,0,sbdry[i]->idnty());
             fprintf(out,"ENTITY NAME:   surface.1\n");
-            for(j=0;j<sbdry[i].num;++j) 
-                  fprintf(out,"%8d%8d%8d\n",count++,svrtx[sbdry[i].el[j]][0]+1,svrtx[sbdry[i].el[j]][1]+1);
+            for(j=0;j<sbdry[i]->nsd();++j) 
+                  fprintf(out,"%8d%8d%8d\n",count++,svrtx[sbdry[i]->sd(j)][0]+1,svrtx[sbdry[i]->sd(j)][1]+1);
          }
          fclose(out);
          break;
@@ -166,12 +166,9 @@ int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype) cons
 
          /* SIDE BOUNDARY INFO HEADER */
          fprintf(out,"nsbd: %d\n",nsbd);
-         for(i=0;i<nsbd;++i) {
-            fprintf(out,"type: %d\nnumber: %d\n",sbdry[i].type,sbdry[i].num);
+         for(i=0;i<nsbd;++i)
+            sbdry[i]->output(out);
 
-            for(j=0;j<sbdry[i].num;++j)
-               fprintf(out,"%d\n",sbdry[i].el[j]);
-         }
                
          /* VERTEX BOUNDARY INFO HEADER */
          fprintf(out,"nvbd: %d\n",nvbd);
@@ -209,8 +206,8 @@ void mesh::setbcinfo() {
       sinfo[i] = 0;
    
    for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry[i].num;++j)
-         sinfo[sbdry[i].el[j]] = sbdry[i].type;
+      for(j=0;j<sbdry[i]->nsd();++j)
+         sinfo[sbdry[i]->sd(j)] = sbdry[i]->idnty();
 
    /* SET UP TRI INFO FOR EASYMESH OUTPUT */         
    for(i=0;i<ntri;++i)

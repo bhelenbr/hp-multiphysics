@@ -28,7 +28,8 @@ extern int nsdel, sdel[MAXLST+1];
 
 
 void mesh::rebay(FLT tolsize) {
-   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bid,bdrycnt,intrcnt,err;
+   int i,j,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
+   int bnum,bel;
    FLT xpt,ypt,wt[3];
    FLT dx,dy,p,q,s1sq,s2sq,rad1,rad2,rs;
    FLT xmid,ymid,densty,cirrad,arg,dist,rn1,rn2,xdif,ydif,rsign;
@@ -89,17 +90,11 @@ void mesh::rebay(FLT tolsize) {
       
       /* CHECK IF IT IS A BOUNDARY EDGE */
       if (stri[sind][1] < 0) {
-
-         /* MIDPOINT */
-         xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
-         ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
-         
-         bid = sbdry[(-stri[sind][1]>>16) -1].type;
-         if (bid&CURV_MASK) mvpttobdry(bid,xpt,ypt);
+         bnum = (-stri[sind][1]>>16) -1;
+         bel = -stri[sind][1]&0xFFFF;
+         sbdry[bnum]->mvpttobdry(bel,0.5,vrtx[nvrtx]);
                   
          /* INSERT POINT */
-         vrtx[nvrtx][0] = xpt;
-         vrtx[nvrtx][1] = ypt;
          qtree.addpt(nvrtx);
          vlngth[nvrtx] = 0.5*(vlngth[v0] +vlngth[v1]);
          
@@ -225,7 +220,9 @@ INSRT:
    }
    
    for (i=0;i<nsbd;++i)
-      bdrysidereorder(i);
+      sbdry[i]->reorder();
+   
+   bdrylabel();
       
    cnt_nbor();
    

@@ -1,7 +1,8 @@
 #ifndef _mesh_h_
 #define _mesh_h_
 
-#include<math.h>
+#include <math.h>
+#include <quadtree.h>
 
 #ifdef SINGLE
 #define FLT float
@@ -15,36 +16,8 @@
 #define MAXSB 8
 #define MAXLST 1000
 
-/* FIRST 16 BITS DETERMINE TYPE */
-/* LAST 16 BITS GIVE UNIQUE IDENTITY NUMBER */
-/* IDENTITY NUMBER SHOULD BE THE SAME FOR SIDES WHICH MATCH */
-/* IDENTITIY NUMBER IS UNIQUE ONLY FOR EACH TYPE */
-#define FSRF_MASK (1<<0)
-#define IFCE_MASK (1<<1)
-#define INFL_MASK (1<<2)
-#define OUTF_MASK (1<<3)
-#define SYMM_MASK (1<<4)
-#define EULR_MASK (1<<5)
-#define PRDX_MASK (1<<6)   
-#define PRDY_MASK (1<<7)
-#define COMX_MASK (1<<8)
-#define COMY_MASK (1<<9)
-#define CURV_MASK (1<<10)
-#define PRMT_MASK (1<<11)
-
-/* MASK FOR ALL MESSAGE PASSING BOUNDARIES */
-/* X/Y SPLIT ONLY WORKS FOR FACE TO FACE BOUNDARIES & 2X2 BOUNDARY INTERSECTIONS */
-#define XDIR_MP COMX_MASK
-#define YDIR_MP (COMY_MASK +IFCE_MASK)
-#define ALLD_MP (XDIR_MP +YDIR_MP)
-                             
-#include<quadtree.h>
-
 enum FILETYPE {easymesh, gambit, tecplot, grid, text, binary, mavriplis};
-
-/* THIS ROUTINE MUST BE SUPPLIED IF USING CURVED BOUNDARIES */
-/* GIVEN AN INPUT X,Y SHOULD MOVE POINT ONTO CURVED SURFACE */
-extern void mvpttobdry(int typ, FLT& x, FLT &y);
+class side_boundary;
 
 class mesh {
 
@@ -83,9 +56,9 @@ class mesh {
       
       /* SIDE BOUNDARY INFO */
       int nsbd;
-      int maxsbel;
-      struct boundary sbdry[MAXSB];
-      
+      side_boundary *sbdry[MAXSB]; 
+      virtual side_boundary* getnewsideobject(int type);
+
       /* TRIANGLE DATA */      
       int ntri;
       int (*tvrtx)[3];
@@ -115,8 +88,6 @@ class mesh {
 
       /* SETUP FUNCTIONS */   
       void cnt_nbor(void);
-      void bdrysidereorder(int sidenum);
-      void bdrygroupreorder(void);
       void bdrylabel(void);
       void createsideinfo(void);
       void createtsidestri(void);
@@ -136,7 +107,6 @@ class mesh {
       int insert(int tind, int vnum, FLT theta = 0.0);
       void bdry_insert(int tind, int snum, int vnum);
       int findtri(FLT x, FLT y, int vnear) const;
-      int findbdryside(FLT *x, int vnear, int type, int typemask = 0xFFFFFFFF) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
@@ -157,14 +127,14 @@ class mesh {
       void swap(int nswp, int *swp, FLT tol = 0.0); //SWAPS A LIST OF SIDES
 
       /* PRIMITIVE FUNCTIONS */
-      inline FLT mesh::distance(int v0, int v1) const {
+      inline FLT distance(int v0, int v1) const {
          return(sqrt(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0)));
       }
-      inline FLT mesh::distance2(int v0, int v1) const {
+      inline FLT distance2(int v0, int v1) const {
          return(pow(vrtx[v0][0] -vrtx[v1][0],2.0) +pow(vrtx[v0][1] -vrtx[v1][1],2.0));
       }     
       FLT incircle(int tind, double *a) const;
-      FLT mesh::insidecircle(int sind, FLT *a) const;
+      FLT insidecircle(int sind, FLT *a) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
       FLT area(int tind) const;
@@ -178,22 +148,9 @@ class mesh {
 
    public:
       /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), fine(NULL), coarse(NULL) {};
+      mesh() : initialized(0), fine(NULL), coarse(NULL) {}
       void allocate(int mxsize);
-      void bdryalloc(int mxbel);
       void copy(const mesh& tgt);
-      
-      /* ALLOCATE COMMUNICATION BUFFERS */
-      /* THESE HAVE TO BE PUBLIC TO RECEIVE MESSAGES */
-      FLT *vbuff[MAXSB];
-      FLT *sbuff[MAXSB];
-      void inline init_comm_buf(int factor) {
-         for(int i=0;i<MAXSB;++i)
-            vbuff[i] = new FLT[factor];
-
-         for(int i=0;i<nsbd;++i)
-            sbuff[i] = new FLT[factor*maxsbel];
-      }
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       int in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
@@ -220,23 +177,69 @@ class mesh {
       int smooth_cofa(int niter);
 
       /* FIND MATCHING MESH BOUNDARIES */
-      int findmatch(class mesh& tgt);
-      /* FZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
-      void zerobdryisfrst();
-      /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
+      void findmatch(class mesh& tgt);
+      FLT *vbuff[MAXSB];
+      void init_comm_buf(int factor);
+      void zerobdryfrst();
       void matchboundaries1();
       void matchboundaries2();
-      /* TELLS HOW MANY COMMUNICATION BOUNDARIES THERE ARE */
-      int alld_mp();
-      
+
       /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
       void setfine(class mesh& tgt);
       void setcoarse(class mesh& tgt);
       void testconnect(char *fname);
-      
+
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity() const;
       void checkintwk() const;
       
 };
+
+#include "boundary.h"
+
+void inline mesh::init_comm_buf(int factor) {
+   for(int i=0;i<MAXSB;++i)
+      vbuff[i] = new FLT[factor];
+
+   for(int i=0;i<nsbd;++i)
+      sbdry[i]->init_comm_buf(factor);
+}
+
+/* FZERO BDRY ISFRST ON COMMUNICATION BOUNDARIES */
+void inline mesh::zerobdryfrst() {
+   int i;
+   for(i=0;i<nvbd;++i)
+      vbdry[i].isfrst = 0;
+   
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->zerofrst();
+}
+/*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
+void inline mesh::matchboundaries1() {
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->sendpositions();
+}
+
+void inline mesh::matchboundaries2() {
+   for(int i=0;i<nsbd;++i)
+      sbdry[i]->rcvpositions();
+}
+
+/* SOME CONVENIENT BOUNDARY TYPES */
+#define FSRF_MASK (1<<0)
+#define IFCE_MASK (1<<1)
+#define INFL_MASK (1<<2)
+#define OUTF_MASK (1<<3)
+#define SYMM_MASK (1<<4)
+#define EULR_MASK (1<<5)
+#define PRDX_MASK (1<<6)   
+#define PRDY_MASK (1<<7)
+#define COMX_MASK (1<<8)
+#define COMY_MASK (1<<9)
+#define CURV_MASK (1<<10)
+#define PRMT_MASK (1<<11)
+#define XDIR_MP COMX_MASK
+#define YDIR_MP (COMY_MASK +IFCE_MASK)
+#define ALLD_MP (XDIR_MP +YDIR_MP)
+
 #endif

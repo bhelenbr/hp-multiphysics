@@ -297,10 +297,10 @@ void mesh::bdry_insert(int tind, int snum, int vnum) {
    /* ADD NEW SIDE TO BOUNDARY GROUP */
    /* NEED TO REORDER WHEN FINISHED */
    i = (-stri[sind][1]>>16) -1;
-   stri[nside][1] = -(((i+1)<<16) +sbdry[i].num);
-   sbdry[i].el[sbdry[i].num++] = nside;
-   if (sbdry[i].num > maxsbel) {
-      printf("too many boundary elements, %d %d\n",sbdry[i].type,sbdry[i].num);
+   stri[nside][1] = -(((i+1)<<16) +sbdry[i]->nsd());
+   sbdry[i]->sd(sbdry[i]->nsd()++) = nside;
+   if (sbdry[i]->nsd() > sbdry[i]->mxsz()) {
+      printf("too many boundary elements %d %d\n",sbdry[i]->idnty(),sbdry[i]->mxsz());
       exit(1);
    }
    ++nside;
@@ -510,40 +510,3 @@ FOUND:
 
    return(tind);
 }
-
-
-int mesh::findbdryside(FLT *x, int vnear, int type, int typemask) const {
-   int i,j,tin,tind,sind,typ1;
-   
-   /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
-   tind = vtri[vnear];
-   tdel[0] = tind;
-   ntdel = 1;
-   /* SEARCH TRIANGLES FOR BOUNDARY SIDE CONTAINING POINT */
-   for(i=0;i<ntdel;++i) {
-      tin = tdel[i];
-      for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
-         if (tind < 0) {
-            typ1 = sbdry[(-tind>>16) -1].type;
-            sind = tside[tin].side[j];
-            if ((typ1&typemask) == type && insidecircle(sind,x) > -EPSILON) goto FOUND;
-            continue;
-         }
-         if (intwk1[tind] == 0) continue;
-         intwk1[tind] = 0;
-         tdel[ntdel++] = tind; 
-      }
-      if (i >= maxsrch) break;
-   }
-   sind = -1;
-   
-FOUND:
-
-   /* RESET INTWKW1 TO -1 */
-   for(i=0;i<ntdel;++i)
-      intwk1[tdel[i]] = -1;
-
-   return(sind);
-}
-

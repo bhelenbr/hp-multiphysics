@@ -1,8 +1,8 @@
 #ifndef _r_mesh_h_
 #define _r_mesh_h_
 
-#include"mesh.h"
-
+#include "mesh.h"
+#include "rboundary.h"
 /* AN R-DEFORMABLE MULTI-GRID MESH OBJECT */
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
@@ -10,25 +10,20 @@
 #define NO_FOURTH
 #define GEOMETRIC
 
-/* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
-struct r_mesh_glbls {
-   FLT (*work)[ND];
-   FLT (*res)[ND];
-   FLT *diag;
-};
+/* MESH DEFORMATION VARIABLES */
 
 class r_mesh :public mesh {
-   /* MESH DEFORMATION VARIABLES */
-      protected:
-         /* FOR SETTING BOUNDARY CONDITIONS */
-         static int fixx_mask, fixy_mask, fixdx_mask, fixdy_mask;
-   
+      public:
+         /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
+         struct r_gbl {
+            FLT (*work)[ND];
+            FLT (*res)[ND];
+            FLT *diag;
+         } *rg;
+         
       private:
          /* THINGS SHARED BY ALL BLOCKS */
          static FLT vnn, fadd;
-                  
-         /* STRUCTURE CONTAINING ALL MESH INDEPENDENT VARIABLES */
-         struct r_mesh_glbls *rg;
          
          /* MESH VARIABLES */
          FLT *ksprg;
@@ -37,11 +32,12 @@ class r_mesh :public mesh {
          FLT (*vrtx_frst)[ND];
          bool isfrst;
          
-         /* SETUP FUNCTION */
-         void gbl_alloc(struct r_mesh_glbls *store);
-
+         side_boundary* getnewsideobject(int type);
+                  
       public:
-         void allocate(bool coarse, struct r_mesh_glbls *rginit);
+         /* SETUP FUNCTION */
+         void gbl_alloc(r_mesh::r_gbl *store);
+         void allocate(bool coarse, r_mesh::r_gbl *rginit);
 
          /* SETUP SPRING CONSTANTS */
          /* LAPLACE CONSTANTS */
@@ -89,12 +85,11 @@ class r_mesh :public mesh {
          void mg_getfres();
          void mg_getcchng();
          
-         /* COMMUNICATION BOUNDARIES */
-         void send(int MASK, FLT *base,int bgn,int end, int stride);
-         void rcv(int MASK, FLT *base,int bgn,int end, int stride);
-           
          /* TESTS */
-         void perturb();
+         void tadvance() {
+            for(int i=0;i<nsbd;++i) 
+               sbdry[i]->tadvance();
+         }
          
          /* TO SET UP ADAPTATION VLENGTH */
          void length1();

@@ -8,19 +8,21 @@
 #include<assert.h>
 
 int mesh::coarsen(FLT factor, const class mesh& inmesh) {
-   int i,j,k,sind;
+   int i,j,k,sind,count;
    int v0, v1, odd;
    int sideord[MAXSB], *sidelst[MAXSB], nsdloop[MAXSB];
    int nloop;
    FLT mindist;
-   
+
    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
       maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
-      maxsbel = MAX(inmesh.maxsbel/2,10);
       allocate(maxvst);
-      bdryalloc(maxsbel);
       nsbd = inmesh.nsbd;
+      for(i=0;i<nsbd;++i) {
+         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
+         sbdry[i]->alloc(MAX(inmesh.sbdry[i]->mxsz()/2,10));
+      }
       nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
@@ -47,11 +49,14 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
    /* COARSEN SIDES   */
    for(i=0;i<nsbd;++i) {
-      sbdry[i].num = 0;
-      sbdry[i].type = inmesh.sbdry[i].type;
+      sbdry[i]->nsd() = 0;
+      if (sbdry[i]->idnty() != inmesh.sbdry[i]->idnty()) {
+         printf("can't coarsen into object with different boundaries\n");
+         exit(1);
+      }
 
       /* CHECK IF FIRST POINT INSERTED*/
-      v0 = inmesh.svrtx[inmesh.sbdry[i].el[0]][0];
+      v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(0)][0];
       if (intwk2[v0] < 0) {
          vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
          vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
@@ -64,103 +69,103 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          svrtx[nside][0] = intwk2[v0];
       }
 
-      odd = inmesh.sbdry[i].num%2;
+      odd = inmesh.sbdry[i]->nsd()%2;
       if (odd) {
-         for(j=2;j<inmesh.sbdry[i].num/2;j+=2) {
-            v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
+         for(j=2;j<inmesh.sbdry[i]->nsd()/2;j+=2) {
+            v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
             vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
             vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
-            sbdry[i].el[sbdry[i].num] = nside;
+            sbdry[i]->sd(sbdry[i]->nsd()) = nside;
             stri[nside][1] = -1;
             ++nside; 
-            ++sbdry[i].num;
+            ++sbdry[i]->nsd();
             svrtx[nside][0] = nvrtx;
             ++nvrtx;
-            assert(sbdry[i].num < maxsbel -1);
+            assert(sbdry[i]->nsd() < sbdry[i]->mxsz() -1);
             assert(nside < maxvst -1);
             assert(nvrtx < maxvst -1);
          } 
 
          /* MIDDLE POINT OF ODD NUMBERED SIDE */
-         if (inmesh.sbdry[i].num > 1) {
-            j = inmesh.sbdry[i].num/2;
-            v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
-            v1 = inmesh.svrtx[inmesh.sbdry[i].el[j]][1];
+         if (inmesh.sbdry[i]->nsd() > 1) {
+            j = inmesh.sbdry[i]->nsd()/2;
+            v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
+            v1 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][1];
             vrtx[nvrtx][0] = 0.5*(inmesh.vrtx[v0][0] +inmesh.vrtx[v1][0]);
             vrtx[nvrtx][1] = 0.5*(inmesh.vrtx[v0][1] +inmesh.vrtx[v1][1]);
             intwk2[v0] = nvrtx;
             intwk2[v1]= nvrtx;
             svrtx[nside][1] = nvrtx;
-            sbdry[i].el[sbdry[i].num] = nside;
+            sbdry[i]->sd(sbdry[i]->nsd()) = nside;
             stri[nside][1] = -1;
             ++nside; 
-            ++sbdry[i].num;
+            ++sbdry[i]->nsd();
             svrtx[nside][0] = nvrtx;
             ++nvrtx;
-            assert(sbdry[i].num < maxsbel -1);
+            assert(sbdry[i]->nsd() < sbdry[i]->mxsz() -1);
             assert(nside < maxvst -1);
             assert(nvrtx < maxvst -1); 
          }
          
-         for(j = inmesh.sbdry[i].num -((inmesh.sbdry[i].num-2)/4)*2;j<inmesh.sbdry[i].num;j+=2) {
-            v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
+         for(j = inmesh.sbdry[i]->nsd() -((inmesh.sbdry[i]->nsd()-2)/4)*2;j<inmesh.sbdry[i]->nsd();j+=2) {
+            v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
             vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
             vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
-            sbdry[i].el[sbdry[i].num] = nside;
+            sbdry[i]->sd(sbdry[i]->nsd()) = nside;
             stri[nside][1] = -1;
             ++nside; 
-            ++sbdry[i].num;
+            ++sbdry[i]->nsd();
             svrtx[nside][0] = nvrtx;
             ++nvrtx;
-            assert(sbdry[i].num < maxsbel -1);
+            assert(sbdry[i]->nsd() < sbdry[i]->mxsz() -1);
             assert(nside < maxvst -1);
             assert(nvrtx < maxvst -1);
          }
       }
       else {
-         for(j=2;j<inmesh.sbdry[i].num;j+=2) {
-            v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
+         for(j=2;j<inmesh.sbdry[i]->nsd();j+=2) {
+            v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(j)][0];
             vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
             vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
             intwk2[v0] = nvrtx;
             svrtx[nside][1] = nvrtx;
-            sbdry[i].el[sbdry[i].num] = nside;
+            sbdry[i]->sd(sbdry[i]->nsd()) = nside;
             stri[nside][1] = -1;
             ++nside; 
-            ++sbdry[i].num;
+            ++sbdry[i]->nsd();
             svrtx[nside][0] = nvrtx;
             ++nvrtx;
-            assert(sbdry[i].num < maxsbel -1);
+            assert(sbdry[i]->nsd() < sbdry[i]->mxsz() -1);
             assert(nside < maxvst -1);
             assert(nvrtx < maxvst -1);
          }
       }
       
       /* INSERT LAST POINT */
-      v0 = inmesh.svrtx[inmesh.sbdry[i].el[inmesh.sbdry[i].num-1]][1];
+      v0 = inmesh.svrtx[inmesh.sbdry[i]->sd(inmesh.sbdry[i]->nsd()-1)][1];
       if (intwk2[v0] < 0) {
          vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
          vrtx[nvrtx][1] = inmesh.vrtx[v0][1];
          intwk2[v0] = nvrtx;
          svrtx[nside][1] = nvrtx;
-         sbdry[i].el[sbdry[i].num] = nside;
+         sbdry[i]->sd(sbdry[i]->nsd()) = nside;
          stri[nside][1] = -1;
          ++nside;
-         ++sbdry[i].num;
+         ++sbdry[i]->nsd();
          ++nvrtx;
       }
       else {
          svrtx[nside][1] = intwk2[v0];
-         sbdry[i].el[sbdry[i].num] = nside;
+         sbdry[i]->sd(sbdry[i]->nsd()) = nside;
          stri[nside][1] = -1;
          ++nside;
-         ++sbdry[i].num;
+         ++sbdry[i]->nsd();
       }
-      assert(sbdry[i].num < maxsbel -1);
+      assert(sbdry[i]->nsd() < sbdry[i]->mxsz() -1);
       assert(nside < maxvst -1);
       assert(nvrtx < maxvst -1);      
    }
@@ -177,8 +182,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
    /* CREATE ORDERED LIST OF SIDES */
    /* STORAGE FOR SIDELST */
+   count = 0;
+   for(i=0;i<nsbd;++i) 
+      count += sbdry[i]->mxsz();
+   
    for(i=0;i<nsbd;++i)
-      sidelst[i] = new int[maxsbel*nsbd];
+      sidelst[i] = new int[count];
 
    /* TEMPORARY LIST OF BOUNDARIES */
    for(i=0;i<nsbd;++i) 
@@ -187,12 +196,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    nloop = 0;
    nsdloop[0] = 0;
    for(i=0; i<nsbd; ++i) {
-      for(j=0;j<sbdry[sideord[i]].num;++j)
-         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]].el[j] +1;
+      for(j=0;j<sbdry[sideord[i]]->nsd();++j)
+         sidelst[nloop][nsdloop[nloop]++] = sbdry[sideord[i]]->sd(j) +1;
 
-      v0 = svrtx[sbdry[sideord[i]].el[sbdry[sideord[i]].num-1]][1];
+      v0 = svrtx[sbdry[sideord[i]]->sd(sbdry[sideord[i]]->nsd()-1)][1];
       for(j=i+1; j<nsbd;++j) {
-         if (v0 ==  svrtx[sbdry[sideord[j]].el[0]][0]) {
+         if (v0 ==  svrtx[sbdry[sideord[j]]->sd(0)][0]) {
             k = sideord[i+1];
             sideord[i+1] = sideord[j];
             sideord[j] = k;
@@ -221,8 +230,8 @@ FINDNEXT:
    /****************************************************/
    /* MARK ALL FINE MESH BOUNDARY NODES SO WE KNOW NOT TO INSERT */
    for(i=0;i<inmesh.nsbd;++i) {
-      for(j=0;j<inmesh.sbdry[i].num;++j) {
-         sind = inmesh.sbdry[i].el[j];
+      for(j=0;j<inmesh.sbdry[i]->nsd();++j) {
+         sind = inmesh.sbdry[i]->sd(j);
          intwk2[inmesh.svrtx[sind][0]] = 0;
          intwk2[inmesh.svrtx[sind][1]] = 0;
       }
@@ -240,8 +249,8 @@ FINDNEXT:
    
    /* RESET INTWK2 */
    for(i=0;i<inmesh.nsbd;++i) {
-      for(j=0;j<inmesh.sbdry[i].num;++j) {
-         sind = inmesh.sbdry[i].el[j];
+      for(j=0;j<inmesh.sbdry[i]->nsd();++j) {
+         sind = inmesh.sbdry[i]->sd(j);
          intwk2[inmesh.svrtx[sind][0]] = -1;
          intwk2[inmesh.svrtx[sind][1]] = -1;
       }
@@ -256,7 +265,7 @@ FINDNEXT:
    
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      printf("#MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
+      sbdry[i]->summarize();
 
    return(1);
 }
@@ -269,8 +278,8 @@ int mesh::smooth_cofa(int niter) {
       vinfo[i] = 0;
       
    for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i].num;++j) {
-         sind = sbdry[i].el[j];
+      for(j=0;j<sbdry[i]->nsd();++j) {
+         sind = sbdry[i]->sd(j);
          vinfo[svrtx[sind][0]] = -1;
          vinfo[svrtx[sind][1]] = -1;
       }
@@ -314,10 +323,10 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, class mesh &work) {
    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
       maxvst =  MAX((int) (static_cast<FLT>(inmesh.maxvst)/inmesh.nside*work.nside),100);
-      maxsbel = MAX(inmesh.maxsbel/2,10);
       allocate(maxvst);
-      bdryalloc(maxsbel);
       nsbd = inmesh.nsbd;
+      for(i=0;i<nsbd;++i)
+         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
       nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);
       initialized = 1;

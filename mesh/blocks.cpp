@@ -19,12 +19,7 @@ void blocks::init(int n, int mg, char **filename, FILETYPE filetype, FLT grwfac)
       for(j=0;j<nblocks;++j) {
          match = 0;
          for(k=0;k<nblocks;++k)
-            match += blk[j].grd[i].findmatch(blk[k].grd[i]);
-            
-         if (match != blk[j].grd[i].alld_mp()) {
-            printf("error in matching boundaries %d: %d %d\n",j,match,blk[j].grd[i].alld_mp());
-            exit(1);
-         }
+            blk[j].grd[i].findmatch(blk[k].grd[i]);
       }
    }
 

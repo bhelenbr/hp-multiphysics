@@ -5,7 +5,7 @@
 #include<cstring>
 
 FLT *mesh::fltwk;
-int *mesh::intwk1, *mesh::intwk2, *mesh::intwk3;
+int *mesh::intwk1, *mesh::intwk2,*mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
 int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype, FLT grwfac) {
@@ -57,23 +57,21 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype, FLT grwfac)
                stri[i][1] = -1;
             }
             
-            /* ALLOCATE BOUNDARY STORAGE */
-            if (!initialized) bdryalloc(count + (int) (grwfac*count));
-            
             /* ORGANIZE BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sinfo[i] == sbdry[j].type) {
-                        sbdry[j].el[sbdry[j].num++]= i;
+                     if (sinfo[i] == sbdry[j]->idnty()) {
+                        sbdry[j]->sd(sbdry[j]->nsd()++) = i;
                         goto next1;
                      }
                   }
                   /* NEW SIDE */
-                  sbdry[nsbd].type = sinfo[i];
-                  sbdry[nsbd].num = 1;
-                  sbdry[nsbd++].el[0]= i;
+                  sbdry[nsbd] = getnewsideobject(sinfo[i]);
+                  sbdry[nsbd]->alloc(static_cast<int>(count*grwfac));
+                  sbdry[nsbd]->nsd() = 1;
+                  sbdry[nsbd++]->sd(0)= i;
                   if (nsbd > MAXSB) {
                      printf("too many different side boundaries: increase MAXSB\n");
                      exit(1);
@@ -206,31 +204,29 @@ next1:      continue;
             }
 
             /* READ BOUNDARY DATA STORE TEMPORARILY */            
-            maxsbel = 0;
             int (*svrtxbtemp[MAXSB])[ND];
     
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
-                  ,&sbdry[i].num,&sbdry[i].type);
+                  ,&count,&temp);
+               
+               sbdry[i] = getnewsideobject(temp);
+               sbdry[i]->alloc(static_cast<int>(count*grwfac));
+               sbdry[i]->nsd() = count;
+               
                fscanf(grd,"%*[^\n]\n");
                
-               svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry[i].num*2*sizeof(int));
+               svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry[i]->nsd()*2*sizeof(int));
                     
-               for(j=0;j<sbdry[i].num;++j) {
+               for(j=0;j<sbdry[i]->nsd();++j) {
                   fscanf(grd,"%*d %d %d\n"
                      ,&svrtxbtemp[i][j][0],&svrtxbtemp[i][j][1]);
                   --svrtxbtemp[i][j][0];
                   --svrtxbtemp[i][j][1];
-                  vinfo[svrtxbtemp[i][j][0]] = sbdry[i].type;
-                  vinfo[svrtxbtemp[i][j][1]] = sbdry[i].type;
+                  vinfo[svrtxbtemp[i][j][0]] = sbdry[i]->idnty();
+                  vinfo[svrtxbtemp[i][j][1]] = sbdry[i]->idnty();
                }
             }
-    
-            count = 0;
-            for(i=0;i<nsbd;++i) 
-               count += sbdry[i].num;
-               
-            if (!initialized) bdryalloc(count + (int) (grwfac*count));
 
             /* CREATE SIDE INFORMATION */
             createsideinfo();
@@ -246,15 +242,15 @@ next1:      continue;
 
             /* MATCH BOUNDARY SIDES TO GROUPS */    
             for(i=0;i<nsbd;++i) {
-               for(j=0;j<sbdry[i].num;++j) {
+               for(j=0;j<sbdry[i]->nsd();++j) {
                   sind = vinfo[svrtxbtemp[i][j][0]];
                   if (sind < 0) {
                      printf("error in boundary information %d %d\n",i,j);
                      exit(1);
                   }
                   if (svrtx[sind][1] == svrtxbtemp[i][j][1]) {
-                     sinfo[sind] = sbdry[i].type;
-                     sbdry[i].el[j] = sind;
+                     sinfo[sind] = sbdry[i]->idnty();
+                     sbdry[i]->sd(j) = sind;
                      vinfo[svrtx[sind][0]] = 0;
                   }
                   else {
@@ -304,23 +300,15 @@ next1:      continue;
                
             /* CREATE TSIDE & STRI */
             createtsidestri();
-            
-            count = 0;
-            for(i=0;i<nside;++i)
-               if (stri[i][1] < 0) ++count;
-            
-            /* ALLOCATE BOUNDARY STORAGE */
-            if (!initialized) bdryalloc(count + (int) (grwfac*count));
-
+   
             /* SIDE BOUNDARY INFO HEADER */
             fscanf(grd,"nsbd: %d\n",&nsbd);
-            
+
             count = 0;
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"type: %d\nnumber: %d\n",&sbdry[i].type,&sbdry[i].num);
-               
-               for(j=0;j<sbdry[i].num;++j)
-                  fscanf(grd,"%d\n",&sbdry[i].el[j]);
+               fscanf(grd,"type: %d\n",&temp);
+               sbdry[i] = getnewsideobject(temp);
+               sbdry[i]->input(grd,grwfac);
             }
                   
             /* VERTEX BOUNDARY INFO HEADER */
@@ -364,26 +352,26 @@ next1:      continue;
             
             fscanf(grd,"%*[^\n]\n");
             
-            fscanf(grd,"%*d%d%*d%d%*d%*d\n",&sbdry[0].num,&count);
+            fscanf(grd,"%*d%d%*d%d%*d%*d\n",&temp,&count);
             
-            /* ALLOCATE BOUNDARY STORAGE */
-            if (!initialized) bdryalloc(count + (int) (grwfac*count));
-
             /* EXTERNAL BOUNDARY */
-            for(i=0;i<sbdry[0].num;++i)
-               sbdry[0].el[i] = i;
-            sbdry[0].type = OUTF_MASK;
+            sbdry[0] = getnewsideobject(OUTF_MASK);
+            sbdry[0]->alloc(static_cast<int>(grwfac*temp));
+            sbdry[0]->nsd() = temp;
+            for(i=0;i<sbdry[0]->nsd();++i)
+               sbdry[0]->sd(i) = i;
             
             ++nsbd;
             
             for(i=1;i<nsbd;++i) {
-               sbdry[i].type = EULR_MASK;
+               sbdry[i] = getnewsideobject(EULR_MASK+CURV_MASK);
                fscanf(grd,"%*[^\n]\n");
-               fscanf(grd,"%d%d%*[^\n]\n",&sbdry[i].el[0],&sbdry[i].num);
-               --sbdry[i].el[0];
-               sbdry[i].num -= sbdry[i].el[0];
-               for(j=1;j<sbdry[i].num;++j)
-                  sbdry[i].el[j] = j +sbdry[i].el[0];
+               fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry[i]->nsd());
+               sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nsd()));
+               sbdry[i]->sd(0) = temp-1;
+               sbdry[i]->nsd() -= sbdry[i]->sd(0);
+               for(j=1;j<sbdry[i]->nsd();++j)
+                  sbdry[i]->sd(j) = j +sbdry[i]->sd(0);
             }
             
             fscanf(grd,"%*[^\n]\n");
@@ -441,13 +429,8 @@ next1:      continue;
                tvrtx[tind][1] = svrtx[sind][(sign+1)/2];
                tvrtx[tind][0] = svrtx[sind][(1-sign)/2];
             }
-            
             nvbd = 0;
-            
-            out_mesh("test",grid);
-            
-            setbcinfo();
-            
+                        
             break;
             
          case(text):
@@ -510,13 +493,22 @@ next1:      continue;
    }
     
    /* REORDER SIDE BOUNDARY POINTERS TO BE SEQUENTIAL */
-   for(i=0;i<nsbd;++i) 
-      bdrysidereorder(i);
+   sbdry[nsbd] = 0;
+   for(i=0;i<nsbd;++i) {
+      /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
+      sbdry[nsbd] = sbdry[i]->reorder();
+      sbdry[i]->getgeometryfrommesh();
+      if (sbdry[nsbd] != 0) {
+         printf("#creating new boundary: %d num: %d\n",sbdry[nsbd]->idnty(),sbdry[nsbd]->nsd());
+         sbdry[++nsbd] = 0;
+      }
+   }
+   
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 
    printf("#Boundaries\n");
    for(i=0;i<nsbd;++i)
-      printf("#%d: type %d, number %d\n",i,sbdry[i].type,sbdry[i].num);
+      sbdry[i]->summarize();
 
    createttri();
    createvtri();
@@ -528,70 +520,6 @@ next1:      continue;
    initialized = 1;
    
    return(1);
-}
-
-/* MAPPING FROM OLD DEFINITIONS TO NEW */
-#define NOLDBTYPE 15
-
-#define FSRF_OLD 1
-#define FCE1_OLD 2
-#define FCE2_OLD 4
-#define INFC_OLD 8
-#define INFS_OLD 32
-#define SYMC_OLD 16
-#define PDX1_OLD 64
-#define PDX2_OLD 128
-#define FXMV_OLD 256
-#define OUTF_OLD 512
-#define INVC_OLD 1024
-#define INVS_OLD 2048
-#define PDY1_OLD 4096
-#define PDY2_OLD 8192
-#define OUT2_OLD 513
-
-void mesh::convertbtypes(const int (*old)[2], int nold) {
-
-   int oldbtype[NOLDBTYPE][2] = 
-                             {{FSRF_OLD,FSRF_MASK+CURV_MASK},
-                             {FCE1_OLD,IFCE_MASK+CURV_MASK},
-                             {FCE2_OLD,IFCE_MASK+CURV_MASK},
-                             {INFC_OLD,INFL_MASK+CURV_MASK},
-                             {INVC_OLD,EULR_MASK+CURV_MASK},
-                             {INFS_OLD,INFL_MASK},
-                             {FXMV_OLD+INFS_OLD,INFL_MASK},
-                             {SYMC_OLD,SYMM_MASK},
-                             {PDX1_OLD,PRDX_MASK+COMX_MASK},
-                             {PDX2_OLD,PRDX_MASK+COMX_MASK},
-                             {OUTF_OLD,OUTF_MASK},
-                             {INVS_OLD,EULR_MASK},
-                             {PDY1_OLD,PRDY_MASK+COMY_MASK},
-                             {PDY2_OLD,PRDY_MASK+COMY_MASK},
-                             {OUT2_OLD,OUTF_MASK+(1<<16)}};
-   int i,j;
-   
-   if (old == NULL) {
-      old = oldbtype;
-      nold = NOLDBTYPE;
-   }
-   
-   for(i=0;i<nvbd;++i) {
-      for(j=0;j<NOLDBTYPE;++j) {
-         if (vbdry[i].type == old[j][0]) {
-            vbdry[i].type = old[j][1];
-            break;
-         }
-      }
-   }
-   
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<NOLDBTYPE;++j) {
-         if (sbdry[i].type == old[j][0]) {
-            sbdry[i].type = old[j][1];
-            break;
-         }
-      }
-   }   
-   return;
 }
 
 void mesh::allocate(int mxsize) {
@@ -618,19 +546,5 @@ void mesh::allocate(int mxsize) {
    tinfo = new int[maxvst+1];
    ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
    
-   return;
-}
-
-void mesh::bdryalloc(int mxbel) {
-   int i;
-   
-   maxsbel = mxbel;
-   for(i=0;i<MAXSB;++i)
-      sbdry[i].el = new int[maxsbel];
-      
-   maxvbel = 2;
-   for(i=0;i<MAXSB;++i)
-      vbdry[i].el = new int[maxvbel];
-      
    return;
 }

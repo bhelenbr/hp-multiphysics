@@ -5,12 +5,8 @@
 #include<cmath>
 
 FLT r_mesh::fadd, r_mesh::vnn;
-int r_mesh::fixx_mask = (0xFF -PRDY_MASK);
-int r_mesh::fixy_mask = (0xFF -PRDX_MASK -SYMM_MASK);
-int r_mesh::fixdx_mask = (PRDX_MASK +PRDY_MASK +CURV_MASK);
-int r_mesh::fixdy_mask = (PRDX_MASK +PRDY_MASK +CURV_MASK +SYMM_MASK);
 
-void r_mesh::allocate(bool coarse, struct r_mesh_glbls *rginit) {
+void r_mesh::allocate(bool coarse, r_mesh::r_gbl *rginit) {
 
    /* global mgrid arrays */
    rg = rginit;
@@ -24,7 +20,7 @@ void r_mesh::allocate(bool coarse, struct r_mesh_glbls *rginit) {
    isfrst = false;
 }
 
-void r_mesh::gbl_alloc(struct r_mesh_glbls *store) {
+void r_mesh::gbl_alloc(r_mesh::r_gbl *store) {
    store->work = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
    store->res = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
    store->diag = new FLT[maxvst];
@@ -91,22 +87,30 @@ void r_mesh::calc_kvol() {
       for(i=0;i<3;++i) 
          kvol[tvrtx[tind][i]] += area(tind);
                   
-   /* SEND COMMUNICATION PACKETS IN XFIRST */   
-   send(XDIR_MP,(FLT *) kvol,0,0,1);
+   /* SEND COMMUNICATION PACKETS IN XFIRST */
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->sendx((FLT *) kvol,0,0,1);
    
    return;
 }
 
 void r_mesh::kvol_mp() {
-   rcv(XDIR_MP,(FLT *) kvol,0,0,1);
-   send(YDIR_MP,(FLT *) kvol,0,0,1);
+   int i;
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) kvol,0,0,1);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) kvol,0,0,1);
+
    return;
 }
 
 void r_mesh::kvoli() {
    int i;
    
-   rcv(YDIR_MP,(FLT *) kvol,0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) kvol,0,0,1);
    
    for(i=0;i<nvrtx;++i)
       kvol[i] = 1./kvol[i];
@@ -196,22 +200,30 @@ void r_mesh::rkmgrid(void) {
       }
    }
 
-   /* SEND COMMUNICATION PACKETS IN XFIRST */   
-   send(XDIR_MP,(FLT *) kvol,0,0,1);
-   
+   /* SEND COMMUNICATION PACKETS IN XFIRST */ 
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) kvol,0,0,1);
+
    return;
 }
 
 void r_mesh::rkmgrid_mp() {
-   rcv(XDIR_MP,(FLT *) kvol,0,0,1);
-   send(YDIR_MP,(FLT *) kvol,0,0,1);
+   int i;
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) kvol,0,0,1);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) kvol,0,0,1);
+
    return;
 }
 
 void r_mesh::rkmgridi() {
    int i;
    
-   rcv(YDIR_MP,(FLT *) kvol,0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) kvol,0,0,1);
    
    for(i=0;i<nvrtx;++i)
       kvol[i] = 1./kvol[i];
@@ -224,7 +236,7 @@ void r_mesh::rkmgridi() {
 /*************************************/
 #ifndef FOURTH
 void r_mesh::rsdl() {
-   int i,j,n,sind,v0,v1;
+   int i,n,sind,v0,v1;
    FLT dx,dy;
    
    for(i=0;i<nvrtx;++i)
@@ -260,25 +272,12 @@ void r_mesh::rsdl() {
          rg->res[i][n] += src[i][n];
    
    /* APPLY DIRICHLET BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & fixx_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            rg->res[svrtx[sind][0]][0] = 0.0;
-            rg->res[svrtx[sind][1]][0] = 0.0;
-         }
-      }
-      if (sbdry[i].type & fixy_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            rg->res[svrtx[sind][0]][1] = 0.0;
-            rg->res[svrtx[sind][1]][1] = 0.0;
-         }
-      }
-   }
+   for(i=0;i<nsbd;++i)
+      sbdry[i]->dirichlet(rg->res);
 
-   /* SEND COMMUNICATION PACKETS */   
-   send(XDIR_MP, (FLT *) rg->res, 0, 1, 2);
+   /* SEND COMMUNICATION PACKETS */ 
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->res, 0, 1, 2);
    
    return;
 }
@@ -301,8 +300,9 @@ void r_mesh::vddt(void)
       rg->diag[v1] += fabs(ksprg[sind]);
    }
 
-   /* SEND COMMUNICATION PACKETS */   
-   send(XDIR_MP, (FLT *) rg->diag,0,0,1);
+   /* SEND COMMUNICATION PACKETS */
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->diag,0,0,1);
    
    return;
 }
@@ -334,19 +334,29 @@ void r_mesh::rsdl() {
       rg->work[v1][0] += dx;
       rg->work[v1][1] += dy;      
    }
+   
+   /* APPLY DIRICHLET BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i)
+      dynamic_cast<rside_boundary *>(sbdry[i])->fixdx2(rg->work);
 
+   /* SEND COMMUNICATION PACKETS */ 
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->work,0,1,2);
+   
+
+#ifdef SKIP
    /* APPLY ZERO SECOND DERIVATIVE BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & fixdx_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
+      if (sbdry[i]->idnty() & fixdx_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
             rg->work[svrtx[sind][0]][0] = 0.0;
             rg->work[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & fixdy_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
+      if (sbdry[i]->idnty() & fixdy_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
             rg->work[svrtx[sind][0]][1] = 0.0;
             rg->work[svrtx[sind][1]][1] = 0.0;
          }
@@ -354,13 +364,18 @@ void r_mesh::rsdl() {
    }
    
    send(XDIR_MP,(FLT *) rg->work,0,1,2);
-   
+#endif
+
    return;
 }
 
 void r_mesh::rsdl1_mp() {
-   rcv(XDIR_MP,(FLT *) rg->work,0,1,2);
-   send(YDIR_MP,(FLT *) rg->work,0,1,2);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) rg->work,0,1,2);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) rg->work,0,1,2);
+
    return;
 }
 
@@ -368,8 +383,9 @@ void r_mesh::rsdl1() {
    int i,j,n,v0,v1,sind;
    FLT dx,dy;
    
-   rcv(YDIR_MP,(FLT *) rg->work, 0,1,2);
-   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) rg->work,0,1,2);
+
    /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n) 
@@ -409,24 +425,26 @@ void r_mesh::rsdl1() {
 
    /* APPLY BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & fixx_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
+      if (sbdry[i]->idnty() & fixx_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
             rg->res[svrtx[sind][0]][0] = 0.0;
             rg->res[svrtx[sind][1]][0] = 0.0;
          }
       }
-      if (sbdry[i].type & fixy_mask) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
+      if (sbdry[i]->idnty() & fixy_mask) {
+         for(j=0;j<sbdry[i]->nsd();++j) {
+            sind = sbdry[i]->sd(j);
             rg->res[svrtx[sind][0]][1] = 0.0;
             rg->res[svrtx[sind][1]][1] = 0.0;
          }
       }
    }
    
-   send(XDIR_MP, (FLT *) rg->res,0,1,2);
-
+   /* SEND COMMUNICATION PACKETS */ 
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->res,0,1,2);
+ 
    return;
 }
 
@@ -447,21 +465,28 @@ void r_mesh::vddt(void)
       rg->diag[v1] += fabs(ksprg[sind]);
    }
    
-   send(XDIR_MP,(FLT *) rg->diag,0,0,1);
+   /* SEND COMMUNICATION PACKETS */ 
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->diag,0,0,1);
    
    return;
 }
 
 void r_mesh::vddt1_mp() {
-   rcv(XDIR_MP,(FLT *) rg->diag,0,0,1);
-   send(YDIR_MP,(FLT *) rg->diag,0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) rg->diag,0,0,1);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) rg->diag,0,0,1);
+
    return;
 }
 
 void r_mesh::vddt1(void) {
    int i,v0,v1,sind;
 
-   rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) rg->diag,0,0,1);
    
    for(i=0;i<nvrtx;++i)
       rg->work[i][0] = rg->diag[i]*kvol[i];
@@ -476,28 +501,42 @@ void r_mesh::vddt1(void) {
       rg->diag[v1] += fabs(ksprg[sind])*(rg->work[v1][0] +fabs(ksprg[sind])*kvol[v0]);
    }
    
-   send(XDIR_MP, (FLT *) rg->diag,0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendx((FLT *) rg->diag,0,0,1);
 
    return;
 }
 #endif
 
 void r_mesh::rsdl_mp() {
-   rcv(XDIR_MP, (FLT *) rg->res, 0, 1, 2);
-   send(YDIR_MP, (FLT *) rg->res, 0, 1, 2);
+   int i;
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) rg->res,0,1,2);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) rg->res,0,1,2);
+
    return;
 }
 
 void r_mesh::vddt_mp() {
-   rcv(XDIR_MP, (FLT *) rg->diag,0,0,1);
-   send(YDIR_MP, (FLT *) rg->diag,0,0,1);
+   int i;
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) rg->diag,0,0,1);
+
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->sendy((FLT *) rg->diag,0,0,1);
+
    return;
 }
 
 void r_mesh::vddti(void) {
    int i;
    
-   rcv(YDIR_MP,(FLT *) rg->diag, 0,0,1);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) rg->diag,0,0,1);
    
    for(i=0;i<nvrtx;++i)
       rg->diag[i] = vnn/rg->diag[i];
@@ -505,8 +544,9 @@ void r_mesh::vddti(void) {
 
 void r_mesh::update() {
    int i,n;
-
-   rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
+   
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvy((FLT *) rg->res,0,1,2);
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -530,11 +570,13 @@ void r_mesh::source() {
 void r_mesh::sumsrc() {
    int i,n;
    
-   rcv(YDIR_MP,(FLT *) rg->res, 0, 1, 2);
+   for(i=0;i<nsbd;++i)   
+      sbdry[i]->rcvx((FLT *) rg->res,0,1,2);
 
    for(i=0;i<nvrtx;++i) 
       for(n=0;n<ND;++n)
-         src[i][n] = -1.0*rg->res[i][n];   
+         src[i][n] = -1.0*rg->res[i][n];
+
    return;
 }
 
@@ -543,8 +585,9 @@ void r_mesh::mg_getfres() {
    class r_mesh *fmesh;
    
    fmesh = static_cast<class r_mesh *>(fmpt);
-      
-   fmesh->rcv(YDIR_MP,(FLT *) rg->res,0,1,2); 
+   
+   for(i=0;i<nsbd;++i)   
+      fmesh->sbdry[i]->rcvy((FLT *) rg->res,0,1,2);
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -613,51 +656,6 @@ void r_mesh::mg_getcchng() {
       for(n=0;n<ND;++n) 
          vrtx[i][n] += rg->res[i][n];
 
-   return;
-}
-
-void r_mesh::send(int mask, FLT *base,int bgn,int end, int stride) {
-   int i,j,k,sind,count,offset,bnum;
-   class mesh *tgt;
-   
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & mask) {
-         bnum = sbdry[i].adjbnum;
-         tgt = sbdry[i].adjmesh;
-         count = 0;
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            offset = svrtx[sind][0]*stride;
-            for (k=bgn;k<=end;++k) 
-               tgt->sbuff[bnum][count++] = base[offset+k];
-         }
-         offset = svrtx[sind][1]*stride;
-         for (k=bgn;k<=end;++k) 
-            tgt->sbuff[bnum][count++] = base[offset+k];
-      }
-   }
-   
-   return;
-}
-
-void r_mesh::rcv(int mask, FLT *base,int bgn,int end, int stride) {
-   int i,j,k,sind,count,offset;
-      
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & mask) {
-         count = 0;
-         for(j=sbdry[i].num-1;j>=0;--j) {
-            sind = sbdry[i].el[j];
-            offset = svrtx[sind][1]*stride;
-            for (k=bgn;k<=end;++k) 
-               base[offset+k] = 0.5*(base[offset+k] +sbuff[i][count++]);
-         }
-         offset = svrtx[sind][0]*stride;
-         for (k=bgn;k<=end;++k) 
-               base[offset+k] = 0.5*(base[offset+k] +sbuff[i][count++]);
-      }
-   }
-   
    return;
 }
 

@@ -11,19 +11,20 @@
 #include<assert.h>
 
 void mesh::refineby2(const class mesh& inmesh) {
-   int i,j,k,sind,tind,v0,v1,count,bid,snum,vnear,err,initialsidenumber;
+   int i,j,k,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
    FLT xpt,ypt;
    
    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
    /* BECAUSE OF INTWK USAGE */
-   
-   if (!initialized) {
+    if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX((int) (inmesh.maxvst),10);
-      maxsbel = MAX(inmesh.maxsbel,10);
+      maxvst =  MAX(inmesh.maxvst,10);
       allocate(maxvst);
-      bdryalloc(maxsbel);
       nsbd = inmesh.nsbd;
+      for(i=0;i<nsbd;++i) {
+         sbdry[i] = getnewsideobject(inmesh.sbdry[i]->idnty());
+         sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->mxsz(),10));
+      }
       nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);
       initialized = 1;
@@ -61,22 +62,10 @@ void mesh::refineby2(const class mesh& inmesh) {
    
    /* INSERT BOUNDARY POINTS */
    for(i=0;i<nsbd;++i) {
-      initialsidenumber = sbdry[i].num;
+      initialsidenumber = sbdry[i]->nsd();
       for(j=0;j<initialsidenumber;++j) {
-         sind = sbdry[i].el[j];
-         v0 = svrtx[sind][0];
-         v1 = svrtx[sind][1];
-         
-         /* MIDPOINT */
-         xpt = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
-         ypt = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
-         
-         bid = sbdry[(-stri[sind][1]>>16) -1].type;
-         if (bid&CURV_MASK) mvpttobdry(bid,xpt,ypt);
-                  
-         /* INSERT POINT */
-         vrtx[nvrtx][0] = xpt;
-         vrtx[nvrtx][1] = ypt;
+         sind = sbdry[i]->sd(j);
+         sbdry[i]->mvpttobdry(j,0.5,vrtx[nvrtx]);
          
          tind = stri[sind][0];
          snum = -2;
@@ -94,7 +83,7 @@ void mesh::refineby2(const class mesh& inmesh) {
    }
       
    for (i=0;i<nsbd;++i)
-      bdrysidereorder(i);
+      sbdry[i]->reorder();
       
    cnt_nbor();
    

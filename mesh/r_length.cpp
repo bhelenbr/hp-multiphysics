@@ -9,121 +9,34 @@
 
 #include"r_mesh.h"
 
-void r_mesh::perturb() {
-   int i,j,sind,v0;
-   
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type  == EULR_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            vrtx[v0][0] -= 0.9;
-         }
-      }
-       if (sbdry[i].type  == FSRF_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            vrtx[v0][0] -= 0.0;
-            vrtx[v0][1] -= 0.5;
-         }
-      }
-      if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            vrtx[v0][0] += 0.2;
-            vrtx[v0][1] += 0.2;
-         }
-      }    
-      
-   }
-   
-   return;
-}
-
-
 void r_mesh::length1() {
-   int i,j,v0,sind,bnum,count;
-   class mesh *tgt;
+   int i;
    
-   /* SET VLNGTH HERE */
-//      vlngth[i] = 0.125 +0.0001*(vrtx[i][0] +vrtx[i][1]);
-
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
-         bnum = sbdry[i].adjbnum;
-         tgt = sbdry[i].adjmesh;
-         count = 0;
-         /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = vlngth[v0];
-         }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = vlngth[v0];
-      }
-   }
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->sendy(vlngth,0,0,1);
 
    return;
    
 }
 
 void r_mesh::length_mp() {
-   int i,j,v0,sind,bnum,count;
-   class mesh *tgt;
-   
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & (COMY_MASK +IFCE_MASK)) {
-         count = 0;
-         /* RECV VERTEX INFO */
-         for(j=sbdry[i].num-1;j>=0;--j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][1];
-            vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
-         }
-         v0 = svrtx[sind][0];
-         vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
-      }
-   }
+   int i;
    
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & COMX_MASK) {
-         bnum = sbdry[i].adjbnum;
-         tgt = sbdry[i].adjmesh;
-         count = 0;
-         /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = vlngth[v0];
-         }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = vlngth[v0];
-      }
-   }
-   return;
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->rcvy(vlngth,0,0,1);
+  
+   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->sendx(vlngth,0,0,1);
 }
 
-void r_mesh::length2() {
-   int i,j,v0,sind,count;
 
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & COMX_MASK) {
-         count = 0;
-         /* RECV VERTEX INFO */
-         for(j=sbdry[i].num-1;j>=0;--j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][1];
-            vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
-         }
-         v0 = svrtx[sind][0];
-         vlngth[v0] = 0.5*(vlngth[v0] +sbuff[i][count++]);
-      }
-   }
+void r_mesh::length2() {
+   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->rcvx(vlngth,0,0,1);
    
    return;
 }
