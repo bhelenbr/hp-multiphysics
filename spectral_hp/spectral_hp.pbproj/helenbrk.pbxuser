@@ -1064,6 +1064,7 @@
 			6F61C60705C577F800AD7E7D = 6F61C60705C577F800AD7E7D;
 			6F61C60C05C5824400AD7E7D = 6F61C60C05C5824400AD7E7D;
 			6F61C60D05C5824700AD7E7D = 6F61C60D05C5824700AD7E7D;
+			6F61C61105C5826C00AD7E7D = 6F61C61105C5826C00AD7E7D;
 			6F69AD0705BD890F00F1AD09 = 6F69AD0705BD890F00F1AD09;
 			6F69AD0A05BD891200F1AD09 = 6F69AD0A05BD891200F1AD09;
 			6F69AD1005BD892E00F1AD09 = 6F69AD1005BD892E00F1AD09;
@@ -3830,6 +3831,23 @@
 		sourceTree = "<absolute>";
 	};
 	6F61C61005C5826500AD7E7D = {
+		isa = PBXFileReference;
+		name = helenbrk.pbxuser;
+		path = /Users/helenbrk/Codes/spectral_hp.oldbc/spectral_hp.pbproj/helenbrk.pbxuser;
+		refType = 0;
+		sourceTree = "<absolute>";
+	};
+	6F61C61105C5826C00AD7E7D = {
+		fRef = 6F61C61405C5828B00AD7E7D;
+		isa = PBXTextBookmark;
+		name = "(null): 5144";
+		rLen = 0;
+		rLoc = 126189;
+		rType = 0;
+		vrLen = 1004;
+		vrLoc = 125185;
+	};
+	6F61C61405C5828B00AD7E7D = {
 		isa = PBXFileReference;
 		name = helenbrk.pbxuser;
 		path = /Users/helenbrk/Codes/spectral_hp.oldbc/spectral_hp.pbproj/helenbrk.pbxuser;
