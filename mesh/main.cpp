@@ -28,8 +28,8 @@ void mesh::density() {
 //   for(i=0;i<nvrtx;++i)
 //      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
 
-//   for(i=0;i<nvrtx;++i)
-//      vlngth[i] = 1./32.;
+   for(i=0;i<nvrtx;++i)
+      vlngth[i] = 1./32.;
 
       
    for(i=0;i<nside;++i)

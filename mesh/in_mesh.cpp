@@ -360,9 +360,10 @@ next1:      continue;
 /*	    		ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                ierr = fscanf(grd,"%*d:%lf%lf\n",&vin[i][0],&vin[i][1]);
-               if (ierr != 3) { printf("2: error in grid\n"); exit(1); }
+               if (ierr != 2) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
+            break;
 
          default:
             printf("That filetype is not supported\n");

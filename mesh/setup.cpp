@@ -197,7 +197,7 @@ void mesh::bdrysidereorder(int bdrynum) {
    
 /*	MAKE NEW BOUNDARIES FOR DISCONNECTED SEGMENTS */
    for(i=1;i<nsegs;++i) {
-      sbdry[nsbd].el = new int[maxsbel];
+      if (!initialized) sbdry[nsbd].el = new int[maxsbel];
       sbdry[nsbd].num = 0;
       sbdry[nsbd].type = sbdry[bdrynum].type;
       sind = first[i];
@@ -233,7 +233,7 @@ void mesh::bdrysidereorder(int bdrynum) {
 
 void mesh::bdrygroupreorder(void) {
    int i,j,k,sideord[MAXSB],nloop,strtloop[MAXSB],v0;
-   int bnum,bgn,end,count,max,mark;
+   int bnum,bgn,end,count,min,mark;
    struct boundary tmpsb;
    FLT sum;
    
@@ -280,13 +280,12 @@ FINDNEXT:
       
 /*	REARRANGE GROUPS EXTERIOR GOES FIRST */
 /* JUST CHANGES SBEL POINTER DOESN'T MOVE WHOLE LIST */
-
 /*	THIS IS TO ENSURE ADAPTED MESHES ALWAYS HAVE THE SAME ORDERING   */
 /* MAINLY FOR DEBUGGING PURPOSES (ONLY WORKS FOR 1 LOOP) */
-   max = -1;
+   min = 1<<28;
    for(i=bgn;i<end;++i) {
-      if (sbdry[sideord[i]].type > max) {
-         max = sbdry[sideord[i]].type;
+      if (sbdry[sideord[i]].type < min) {
+         min = sbdry[sideord[i]].type;
          mark = i -bgn;
       }
    }

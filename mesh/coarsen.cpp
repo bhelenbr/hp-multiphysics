@@ -15,7 +15,7 @@ int mesh::coarsen(const class mesh& inmesh) {
    
    if (!initialized) {
 /*		VERTEX STORAGE ALLOCATION */
-      maxvst = (int) (inmesh.maxvst/3.5);
+      maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
       vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
       vlngth = new FLT[maxvst];
       vinfo = new int[maxvst+1];
@@ -37,7 +37,7 @@ int mesh::coarsen(const class mesh& inmesh) {
 
 /*		SIDE BOUNDARY STORAGE ALLOCATION */
       nsbd = inmesh.nsbd;
-      maxsbel = MAX(inmesh.maxsbel/2,2);
+      maxsbel = MAX(inmesh.maxsbel/2,4);
       for(i=0;i<nsbd;++i)
          sbdry[i].el = new int[maxsbel];      
 
@@ -113,23 +113,26 @@ int mesh::coarsen(const class mesh& inmesh) {
          } 
 
 /*			MIDDLE POINT OF ODD NUMBERED SIDE */
-         j = inmesh.sbdry[i].num/2;
-         v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
-         v1 = inmesh.svrtx[inmesh.sbdry[i].el[j]][1];
-         vrtx[nvrtx][0] = 0.5*(inmesh.vrtx[v0][0] +inmesh.vrtx[v1][0]);
-			vrtx[nvrtx][1] = 0.5*(inmesh.vrtx[v0][1] +inmesh.vrtx[v1][1]);
-			intwk2[v0] = nvrtx;
-         intwk2[v1]= nvrtx;
-			svrtx[nside][1] = nvrtx;
-			sbdry[i].el[sbdry[i].num] = nside;
-         stri[nside][1] = -1;
-			++nside; 
-			++sbdry[i].num;
-			svrtx[nside][0] = nvrtx;
-			++nvrtx;
-         assert(sbdry[i].num < maxsbel -1);
-         assert(nside < maxvst -1);
-         assert(nvrtx < maxvst -1); 
+         if (inmesh.sbdry[i].num > 1) {
+            j = inmesh.sbdry[i].num/2;
+            v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
+            v1 = inmesh.svrtx[inmesh.sbdry[i].el[j]][1];
+            vrtx[nvrtx][0] = 0.5*(inmesh.vrtx[v0][0] +inmesh.vrtx[v1][0]);
+            vrtx[nvrtx][1] = 0.5*(inmesh.vrtx[v0][1] +inmesh.vrtx[v1][1]);
+            intwk2[v0] = nvrtx;
+            intwk2[v1]= nvrtx;
+            svrtx[nside][1] = nvrtx;
+            sbdry[i].el[sbdry[i].num] = nside;
+            stri[nside][1] = -1;
+            ++nside; 
+            ++sbdry[i].num;
+            svrtx[nside][0] = nvrtx;
+            ++nvrtx;
+            assert(sbdry[i].num < maxsbel -1);
+            assert(nside < maxvst -1);
+            assert(nvrtx < maxvst -1); 
+         }
+         
          for(j = inmesh.sbdry[i].num -((inmesh.sbdry[i].num-2)/4)*2;j<inmesh.sbdry[i].num;j+=2) {
             v0 = inmesh.svrtx[inmesh.sbdry[i].el[j]][0];
             vrtx[nvrtx][0] = inmesh.vrtx[v0][0];
