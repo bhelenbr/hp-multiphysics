@@ -152,13 +152,17 @@ class hpbasis {
       void intgrtx1d(FLT *f, FLT *rslt);
       
       /* POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
-      inline void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+      inline void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
          ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
          ptprobe(nv, lin, f);
       }
       void ptprobe(int nv, FLT **lin, FLT *f);  // REUSES OLD R,S
       
       /* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
+      inline void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+         ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
+         ptprobe_bdry(nv, lin, f);
+      }
       void ptprobe_bdry(int nv, FLT **lin, FLT *f); // REUSES OLD R,S ONLY BDRY MODES 
       void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
       
@@ -184,6 +188,7 @@ class hpbasis {
       /* TO CALCULATE BASIS FUNCTIONS & DERIVATIVES */
       void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
       void ptvalues_deriv(FLT r, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
+      void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
       void ptvalues_deriv_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
       
       /* 1D SIDE BASIS FUNCTIONS & DERIVATIVES */

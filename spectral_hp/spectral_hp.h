@@ -81,6 +81,7 @@ class spectral_hp : public r_mesh  {
       void ptprobe(FLT xp, FLT yp, FLT u[NV]);
       void ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
       int findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s);
+      int findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s);
       int findbdrypt(int typ, FLT &x, FLT &y, FLT &psi);
 };
 

@@ -7,67 +7,66 @@
 			08FB779FFE84155DC02AAC07,
 		);
 		breakpoints = (
-			F5811330025CC7B801990B20,
 		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{1350, 959}";
+				ContentSize = "{917, 516}";
 				LeftSlideOut = {
 					ActiveTab = 0;
-					Frame = "{{0, 23}, {1350, 936}}";
+					Frame = "{{0, 23}, {917, 493}}";
 					Split0 = {
-						ActiveTab = 3;
-						Frame = "{{298, 0}, {1052, 936}}";
+						ActiveTab = 0;
+						Frame = "{{298, 0}, {619, 493}}";
 						Split0 = {
-							Frame = "{{0, 298}, {1052, 638}}";
+							Frame = "{{0, 274}, {619, 219}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
 							Debugger = {
 								ActiveTab = 0;
-								Frame = "{{0, 0}, {1052, 420}}";
+								Frame = "{{0, 0}, {619, 250}}";
 								Split0 = {
-									Frame = "{{0, 186}, {1052, 234}}";
+									Frame = "{{0, 136}, {619, 114}}";
 									Split0 = {
-										Frame = "{{0, 0}, {332, 234}}";
+										Frame = "{{0, 0}, {194, 114}}";
 									};
 									Split1 = {
-										Frame = "{{341, 0}, {711, 234}}";
+										Frame = "{{203, 0}, {416, 114}}";
 									};
 									SplitCount = 2;
 								};
 								SplitCount = 1;
 								Tab0 = {
-									Frame = "{{0, 0}, {1052, 162}}";
+									Frame = "{{0, 0}, {619, 112}}";
 								};
 								Tab1 = {
 									Frame = "{{0, 0}, {1095, 138}}";
 								};
 								TabCount = 2;
 							};
-							Frame = "{{0, 0}, {1052, 420}}";
+							Frame = "{{0, 0}, {619, 250}}";
 							LauncherConfigVersion = 4;
 						};
 						Tab1 = {
-							Frame = "{{0, 0}, {1052, 209}}";
+							Frame = "{{0, 0}, {619, 209}}";
 							LauncherConfigVersion = 3;
 							Runner = {
-								Frame = "{{0, 0}, {1052, 209}}";
+								Frame = "{{0, 0}, {619, 209}}";
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {1054, 139}}";
-							BuildTranscriptFrame = "{{0, 148}, {1054, 126}}";
-							Frame = "{{0, 0}, {1052, 272}}";
+							BuildMessageFrame = "{{0, 0}, {621, 139}}";
+							BuildTranscriptFrame = "{{0, 148}, {621, 126}}";
+							Frame = "{{0, 0}, {619, 272}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {1052, 274}}";
+							Frame = "{{0, 0}, {619, 274}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {274, 936}}";
+						Frame = "{{0, 0}, {274, 493}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 530}}";
@@ -176,12 +175,6 @@
 		uiCtxt = {
 			sepNavWindowFrame = "{{77, 671}, {750, 502}}";
 		};
-	};
-	F5811330025CC7B801990B20 = {
-		fileReference = F525D077017F63DC01990B20;
-		isa = PBXFileBreakpoint;
-		lineNumber = 85;
-		state = 1;
 	};
 	F581CD240198731301990B20 = {
 		uiCtxt = {

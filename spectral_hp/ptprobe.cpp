@@ -20,6 +20,32 @@ void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
 
 }
 
+int spectral_hp::findandmvptincurved(FLT &xp, FLT &yp, FLT &r, FLT &s) {
+   FLT x[ND],wgt[3];
+   int tind,v0;
+
+   qtree.nearpt(xp,yp,v0);
+   tind = findtri(xp,yp,v0);
+   getwgts(wgt);
+
+   assert(tind > -1);
+
+   /* TRIANGLE COORDINATES */   
+   s = wgt[2]*2 -1.0;
+   r = wgt[1]*2 -1.0;
+   
+   if (tinfo[tind] < 0) return(tind);
+
+   /* MOVE POINT WITH SIDE CURVATURE */
+   crdtouht(tind);
+   b.ptprobe_bdry(ND,uht,x,r,s);
+   xp = x[0];
+   yp = x[1];
+
+   return(tind);
+}
+
+
 int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
    int iter,sind,tind,v0;
@@ -46,8 +72,8 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    /* TRIANGLE COORDINATES */   
    s = wgt[2]*2 -1.0;
    r = wgt[1]*2 -1.0;
-   if (tinfo[tind] < 0) return(tind);
    
+   if (tinfo[tind] < 0) return(tind);
 
    /* DEAL WITH CURVED SIDES */
    crdtouht(tind);
@@ -63,8 +89,8 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
 
       r += dr;
       s += ds;
-      if (iter++ > 50) {
-         printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
+      if (iter++ > 100) {
+         printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %e\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
          break;
       }
    } while (fabs(dr) +fabs(ds) > 100.*EPSILON);

@@ -112,7 +112,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
    /* ASSIGN NEW VALUES */
    for(i=nvrt0;i<nvrtx;++i) {
       if (vinfo[i] < 0) {
-         tind = str.findinteriorpt(vrtx[i][0],vrtx[i][1],r,s);
+         tind = str.findandmvptincurved(vrtx[i][0],vrtx[i][1],r,s);
          assert(tind >= 0);
          str.ugtouht(tind);
          str.b.ptprobe(NV,uht,ug.v[i],r,s);

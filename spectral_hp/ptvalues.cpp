@@ -198,6 +198,64 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
    return;
 }
 
+/* CALCULATES VALUES OF GX POLYNOMIALS & GS POLYNOMIALS AT POINT */
+/* BOUNDARY MODES ONLY */
+void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
+    FLT pkp,pk,pkm;
+    int k,m,ind;
+   
+   /* CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
+   pgx[0] = .5*(1-x);
+   pgx[1] = .5*(1+x);
+   pgx[2] = 1.0;
+
+   /* SIDE 1   */
+   /* CALCULATE P, P' USING RECURSION RELATION */
+   pk = 1.0;
+   pkm = 0.0;
+   for (m = 0;m < sm;++m) {
+      pgx[m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
+      pkp = (x-a0[0][m])*pk - b0[0][m]*pkm;
+      pkm = pk;
+      pk = pkp;
+   }
+
+
+   /* CALCULATE S POLYNOMIALS */
+   ind = 0;
+   
+   /* VERTEX 0,1,2   */
+   pgn[ind++] = (1-eta)*.5;
+   pgn[ind++] = (1-eta)*.5;
+   pgn[ind++] = (1+eta)*.5;
+
+   /* SIDE 1 (s)      */
+   for(m = 2; m <= sm+1; ++m)
+      pgn[ind++] = pow(.5*(1-eta),m);
+
+   /* SIDE 2   */
+   pk = 1.0;
+   pkm = 0.0;
+   for(m=0;m<sm;++m) {
+      pgn[ind++] = (1.-eta)*(1.+eta)*.25*pk*norm[m+3];
+      pkp = (eta-a0[1][m])*pk - b0[1][m]*pkm;
+      pkm = pk;
+      pk = pkp;
+   }
+
+   /* SIDE 3   */
+   pk = 1.0;
+   pkm = 0.0;
+   for(m = 0;m<sm;++m) {
+      pgn[ind++] = (m % 2 ? -1 : 1)*(1.-eta)*(1.+eta)*.25*pk*norm[m+3];
+      pkp = (eta-a0[1][m])*pk - b0[1][m]*pkm;
+      pkm = pk;
+      pk = pkp;
+   }
+   
+   return;
+}
+
 /* CALCULATE VALUE OF G(X) & DG/DX, G(eta), DG/Deta AT POINT FOR ONLY BOUNDARY MODES */
 void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
    FLT pkp,pk,pkm,dpk,dpkm,dpkp;

@@ -86,13 +86,11 @@ void hp_mgrid::length1() {
    
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
-      if (fltwk[i] <= vlngth_tol || fltwk[i] >= 1./vlngth_tol) {
-         lgf = log(fltwk[i]);
-         fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-         vlngth[i] /= fltwk[i];
-//       vlngth[i] = MIN(vlngth[i],gbl->maxlength);
-//       vlngth[i] = MAX(vlngth[i],gbl->minlength);
-      }
+      lgf = log(fltwk[i]);
+      fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
+      vlngth[i] /= fltwk[i];
+//    vlngth[i] = MIN(vlngth[i],gbl->maxlength);
+//    vlngth[i] = MAX(vlngth[i],gbl->minlength);
    }
    
    /* AVOID HIGH ASPECT RATIOS */

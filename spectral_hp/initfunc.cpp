@@ -61,9 +61,9 @@ extern FLT outertime;
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(0.0);
+         return(1.0 +0.01*(x+0.5)*(x-3.0)*sin(M_PI*y));
       case(1):
-         return(0.1);
+         return(0.0);
       case(2):
          return(0.0);
    }
