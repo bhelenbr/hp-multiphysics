@@ -6,8 +6,6 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
-#define BRATIO 100.0
-
 #include"hp_mgrid.h"
 #include<math.h>
 #include<utilities.h>
@@ -44,7 +42,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = BRATIO*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+               sum = trncerr/bdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
             }
@@ -75,7 +73,7 @@ void hp_mgrid::length1() {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = BRATIO*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
+               sum = trncerr/bdryerr*(fabs(binfo[i][indx+b.sm-1].curv[0]) +fabs(binfo[i][indx+b.sm-1].curv[1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
                indx += sm0;

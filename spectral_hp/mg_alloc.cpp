@@ -16,7 +16,7 @@ FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-FLT hp_mgrid::trncerr, hp_mgrid::tol;
+FLT hp_mgrid::trncerr, hp_mgrid::bdryerr, hp_mgrid::tol;
 class hp_mgrid hp_mgrid::hpstr; // STORAGE FOR ADAPTATION 
 struct vsi hp_mgrid::ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
 FLT (*hp_mgrid::vrtxstr[MXSTEPM1])[ND]; // STORAGE FOR UNSTEADY ADAPTATION MESH BD INFO

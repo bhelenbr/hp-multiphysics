@@ -33,8 +33,8 @@ void blocks::init(char *file) {
    printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
    
 /* LOAD ADAPTATION INFORMATION */
-   fscanf(fp,"%*[^\n]%d %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::tol);
-   printf("#ADAPT\t\tTRNCERR\t\tTOLERANCE\n#%d\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::tol);
+   fscanf(fp,"%*[^\n]%d %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::bdryerr,&hp_mgrid::tol);
+   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tTOLERANCE\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::bdryerr,hp_mgrid::tol);
  
 /*	READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
@@ -117,7 +117,6 @@ void blocks::init(char *file) {
          blk[i].grd[0].spectral_hp::setbcinfo();
 
 /*			FOR ADAPTIVE MESH */ 
-#ifdef TEMPO        
          if (adapt) {
             number_str(bname,"vlgth",readin,3);
             strcat(bname, ".");
@@ -125,8 +124,6 @@ void blocks::init(char *file) {
             printf("#Reading vlength: %s\n",outname);
             blk[i].grd[0].inlength(outname);
          }
-#endif
-
 /*			READ SOLUTION */ 
          number_str(bname,"data",readin,3);
          strcat(bname, ".");
@@ -134,7 +131,6 @@ void blocks::init(char *file) {
          printf("#Reading solution: %s\n",outname);
          blk[i].grd[0].spectral_hp::input(outname,text);
 
-#ifdef TEMPO
 /*			INPUT UNSTEADY TIME HISTORY */
          number_str(outname,"rstrtdata",readin,3);
          strcat(outname, ".");
@@ -153,7 +149,6 @@ void blocks::init(char *file) {
             printf("#Reading restart mesh: %s\n",outname);
             blk[i].grd[0].in_mesh(blk[i].gbl.vrtxbd[j],outname,text);
          }
-#endif
       }
       hp_mgrid::setbd(MXSTEP);
             
