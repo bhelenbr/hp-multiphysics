@@ -187,6 +187,11 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
             fprintf(out,"%d %d %d\n"
                ,tvrtx[tind][0]+1,tvrtx[tind][1]+1,tvrtx[tind][2]+1);
          break;
+         
+      default:
+         printf("Output of length function is not supported in that filetype\n");
+         exit(1);
+         break;
    }
          
    fclose(out);

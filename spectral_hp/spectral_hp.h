@@ -72,10 +72,12 @@ class spectral_hp : public r_mesh  {
       void tobasis(struct vsi g, FLT (*func)(int, FLT, FLT));
       inline void tobasis(FLT (*func)(int, FLT, FLT)) {tobasis(ug,func);}
       void curvinit();
-      void input(struct vsi g, char *name, FILETYPE type);
-      inline void input(char *name, FILETYPE type) {input(ug,name,type);}
-      void output(struct vsi g, char *name, FILETYPE type);
-      inline void output(char *name, FILETYPE type) {output(ug,name,type);}
+      void input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE type);
+      inline void input(char *name, FILETYPE type) {input(ug,vrtx,binfo,name,type);}
+      inline void input(struct vsi g, char *name, FILETYPE type) {input(g,vrtx,binfo,name,type);}
+      void output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot);
+      inline void output(struct vsi g, char *name, FILETYPE type=tecplot) {output(g,vrtx,binfo,name,type);}
+      inline void output(char *name, FILETYPE type=tecplot) {output(ug,vrtx,binfo,name,type);}
       void ptprobe(FLT xp, FLT yp, FLT u[NV]);
       void ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
       int findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s);

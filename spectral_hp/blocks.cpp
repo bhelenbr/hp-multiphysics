@@ -324,16 +324,16 @@ void blocks::output(int number, FILETYPE type=text) {
       number_str(bname, outname, i, 1);
       for(j=0;j<hp_mgrid::nstep-1;++j) {
          number_str(outname,bname,j,1);
-         blk[i].grd[0].output(blk[i].gbl.ugbd[j],outname,type);
+         blk[i].grd[0].output(blk[i].gbl.ugbd[j],blk[i].gbl.vrtxbd[j],blk[i].gbl.binfobd[j],outname,type);
       }
 
-//      number_str(outname,"rstrtmesh",number,3);
-//      strcat(outname, ".");
-//      number_str(bname, outname, i, 1);
-//      for(j=0;j<hp_mgrid::nstep-1;++j) {
-//         number_str(outname,bname,j,1);
-//         blk[i].grd[0].output(blk[i].gbl.ugbd[j],outname,type);
-//      }
+      number_str(outname,"rstrtvrtx",number,3);
+      strcat(outname, ".");
+      number_str(bname, outname, i, 1);
+      for(j=0;j<hp_mgrid::nstep-1;++j) {
+         number_str(outname,bname,j,1);
+         blk[i].grd[0].out_mesh(blk[i].gbl.vrtxbd[j],outname,text);
+      }
    }
    
    return;

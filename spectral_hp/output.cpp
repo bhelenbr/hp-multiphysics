@@ -10,7 +10,7 @@
 #include "spectral_hp.h"
 #include<cstring>
 
-void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
+void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = tecplot) {
    char fnmapp[100];
 	FILE *out;
 	int i,j,k,n,v0,v1,sind,tind,indx,sgn;
@@ -57,7 +57,7 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
          for(i=0;i<nsbd;++i) {
             fprintf(out,"Boundary %d, type %d, num %d\n",i,sbdry[i].type,sbdry[i].num);
             for(j=0;j<sbdry[i].num*sm0;++j)
-               fprintf(out,"%15.8e %15.8e\n",binfo[i][j].curv[0],binfo[i][j].curv[1]);
+               fprintf(out,"%15.8e %15.8e\n",bin[i][j].curv[0],bin[i][j].curv[1]);
          }
          fclose(out);
          break;
@@ -76,7 +76,7 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
 /*			VERTEX MODES */
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               fprintf(out,"%e ",vrtx[i][n]);
+               fprintf(out,"%e ",vin[i][n]);
             for(n=0;n<NV;++n)
                fprintf(out,"%.6e ",g.v[i][n]);					
             fprintf(out,"\n");
@@ -89,15 +89,15 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
                   v0 = svrtx[sind][0];
                   v1 = svrtx[sind][1];
                   for(n=0;n<ND;++n)
-                     b.proj1d_leg(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+                     b.proj1d_leg(vin[v0][n],vin[v1][n],crd[n][0]);
                }
                else {
-                  crdtouht1d(sind);
+                  crdtouht1d(sind,vin,bin);
                   for(n=0;n<ND;++n)
                      b.proj1d_leg(uht[n],crd[n][0]);
                }
                
-               ugtouht1d(sind);
+               ugtouht1d(sind,g);
                for(n=0;n<NV;++n)
                   b.proj1d_leg(uht[n],u[n][0]);
 
@@ -113,16 +113,16 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
 /*				INTERIOR MODES */
             if (b.p > 2) {
                for(tind = 0; tind < ntri; ++tind) {
-                  ugtouht(tind);
+                  ugtouht(tind,g);
                   for(n=0;n<NV;++n)
                      b.proj_leg(uht[n],u[n]);
                      
                   if (tinfo[tind] < 0) {
                      for(n=0;n<ND;++n)
-                        b.proj_leg(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n]);
+                        b.proj_leg(vin[tvrtx[tind][0]][n],vin[tvrtx[tind][1]][n],vin[tvrtx[tind][2]][n],crd[n]);
                   }
                   else {
-                     crdtouht(tind);
+                     crdtouht(tind,vin,bin);
                      for(n=0;n<ND;++n)
                         b.proj_bdry_leg(uht[n],crd[n]);
                   }
@@ -208,12 +208,8 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
          fclose(out);
          break;
          
-      case(easymesh):
-         out_mesh(name,easymesh);
-         break;
-      
-      case(gambit):
-         out_mesh(name,gambit);
+      default:
+         printf("That filetype is not supported for spectral_hp output\n");
          break;
   	}
    
@@ -222,7 +218,7 @@ void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
 
 #define NEW
 
-void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
+void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
    int bnum,bind,ierr;
    FILE *in;
@@ -297,7 +293,7 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
             indx = 0;
             for(j=0;j<sbdry[bind].num;++j) {
                for(m=0;m<pin -1;++m) {
-                  fscanf(in,"%le %le\n",&binfo[bind][indx].curv[0],&binfo[bind][indx].curv[1]);
+                  fscanf(in,"%le %le\n",&bin[bind][indx].curv[0],&bin[bind][indx].curv[1]);
                   ++indx;
                }
                indx += p0 -pin;
@@ -318,7 +314,7 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
          
          for(i=0;i<nvrtx;++i) {
             ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-            &vrtx[i][0],&vrtx[i][1],&g.v[i][0],&g.v[i][1],&g.v[i][2]);
+            &vin[i][0],&vin[i][1],&g.v[i][0],&g.v[i][1],&g.v[i][2]);
             if(ierr != 5) {
                printf("error in read file %d\n",i);
                exit(1);
@@ -332,7 +328,7 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
                bind = (-stri[i][1] -(bnum+1)*maxsbel)*sm0;
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-                  &binfo[bnum][bind+m].curv[0],&binfo[bnum][bind+m].curv[1],
+                  &bin[bnum][bind+m].curv[0],&bin[bnum][bind+m].curv[1],
                   &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
                   if(ierr != 5) {
                      printf("error in reading curved side %d\n",i);
@@ -364,6 +360,10 @@ void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
          }
          break;
 #endif
+      default:
+         printf("Spectral_hp input of that filetype is not supported\n");
+         exit(1);
+         break;
    }
    
    return;
