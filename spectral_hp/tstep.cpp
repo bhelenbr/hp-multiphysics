@@ -2,7 +2,8 @@
 #include<math.h>
 #include<utilities.h>
 
-#define NO_TIMEACCURATE
+#define NO_TIMEACCURATE  
+#define NO_INERTIALESS
 
 #ifdef CONSERV
 void hp_mgrid::tstep1(void) {
@@ -27,6 +28,7 @@ void hp_mgrid::tstep1(void) {
    gam = 10.0;
    dtstari = 0.0;
 #endif
+
    for(tind = 0; tind < ntri; ++tind) {
       jcb = 0.25*area(tind);
       v = tvrtx[tind];
@@ -39,8 +41,9 @@ void hp_mgrid::tstep1(void) {
       hmax = sqrt(hmax);
       
       if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-         printf("negative triangle area\n");
+         printf("negative triangle area caught in tstep %d %d\n",nvrtx,ntri);
          output("negative",tecplot);
+         out_mesh("negative",grid);
          exit(1);
       }
       
@@ -54,11 +57,18 @@ void hp_mgrid::tstep1(void) {
          qmax = MAX(qmax,q);
       }
 #ifndef TIMEACCURATE
-      gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h); 
+      gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);
 #endif
+     // gam = MAX(gam,0.1);  //TEMPORARY
       q = sqrt(qmax);
       c = sqrt(qmax +gam);
       lam1  = (q+c);
+
+#ifdef INERTIALESS
+      gam = pow(gbl->nu/h,2); 
+      c = gbl->nu/h;
+      lam1 = c; 	
+#endif
 
       /* SET UP DISSIPATIVE COEFFICIENTS */
       gbl->tau[tind]  = adis*h/(jcb*sqrt(gam));
@@ -68,8 +78,13 @@ void hp_mgrid::tstep1(void) {
 #ifdef TIMEACCURATE
       dtstari = MAX((gbl->nu/(h*h) +lam1/h +bd[0]),dtstari);
 #else
+
+#ifndef INERTIALESS
       jcb *= (gbl->nu/(h*h) +lam1/h +bd[0]);
-         
+#else
+      jcb *= gbl->nu/(h*h); // TEMPORARY FOR INERTIALESS FLOW
+#endif
+      
 #ifdef AXISYMMETRIC
       jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
