@@ -3,13 +3,45 @@
 
 int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
 	static FLT r,s,dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
-	static int iter,tind,v0;
+	static int iter,tind,sind,v0,vn,stoptri,typ;
 
    qtree.nearpt(xp,yp,v0);
    tind = findtri(xp,yp,v0);
-   if (tind == -1) return(-1);
-   
    getwgts(wgt);
+
+   if (tind == -1) {
+/*		THIS SHOULD RARELY HAPPEN I HOPE */
+/*		POINT IS PROBABLY IN CURVED TRIANGLE ON BOUNDARY */
+      tind = vtri[v0];
+      stoptri = tind;
+      do {
+         for(vn=0;vn<3;++vn) 
+            if (tvrtx[tind][vn] == v0) break;
+         
+         assert(vn != 3);
+         
+         if (ttri[tind][vn] < 0) {
+            typ = sbdry[-ttri[tind][vn]/maxsbel -1].type;
+            break;
+         }
+         
+         tind = ttri[tind][(vn +1)%3];
+         if (tind < 0) {
+            typ = sbdry[-tind/maxsbel -1].type;
+            break; 
+         }
+      } while(tind != stoptri);
+
+      if (tind == stoptri) {
+         printf("uh-oh %d %f %f\n",v0,xp,yp);
+         return(1);
+      }
+      bdry_locate(typ,xp,yp,sind);
+      tind = stri[sind][0];
+      wgt[1] = 0.5;
+      wgt[2] = 0.5;
+   }
+
 
 /* TRIANGLE COORDINATES */	
    s = wgt[2]*2 -1.0;
@@ -74,8 +106,12 @@ FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
             break; 
          }
          if (dir > 1) {
-            printf("couldn't find sidetype %d around vertex %d\n",typ,vnear);
-            exit(1);
+/*				DIDN'T FIND SIDE SO DO BRUTE FORCE METHOD */
+            printf("here\n");
+            for(bnum=0;bnum<nsbd;++bnum)
+               if (sbdry[bnum].type == typ) break;
+            sind = sbdry[bnum].el[0];
+            break;
          }
 /*			REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
@@ -84,8 +120,11 @@ FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
       }
       
       if (tind == stoptri) {
-         printf("couldn't find sidetype %d around vertex %d\n",typ,vnear);
-         exit(1);
+/*			COULDN'T FIND SIDE DO BRUTE FORCE */
+         for(bnum=0;bnum<nsbd;++bnum)
+            if (sbdry[bnum].type == typ) break;
+         sind = sbdry[bnum].el[0];
+         break;
       }
    }
 

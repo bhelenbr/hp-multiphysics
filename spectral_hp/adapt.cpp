@@ -26,13 +26,21 @@ void spectral_hp::adapt(class spectral_hp& bgn, FLT tolerance) {
 /*	SET TARGET POINTER: USED IN EXTERNAL FUNCTION MVPTTOBDRY PROVIDED TO MESH */
    tgt = &bgn;
 
+/*	REDUCE maxsrch (KEEP TRIANGLE SEARCHES LOCAL) */
+   mesh::maxsrch = 15;
+   
 /* BEGIN ADAPTION PROCEDURE */
    swap();
-   
-/* COARSEN */            
+
+/*	CALCULATE SIDE LENGTH RATIO */
+   for(i=0;i<nside;++i)
+      fltwk[i] = (vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]])/
+         (2.*distance(svrtx[i][0],svrtx[i][1]));
+
+/* COARSEN */ 
    nvrt0 = nvrtx;
    yaber(1.0/tolerance);
-   
+      
 /*	MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
    for(i=nvrt0-1;i>=nvrtx;--i) {
       if (vinfo[i] < 0) continue;
@@ -45,8 +53,6 @@ void spectral_hp::adapt(class spectral_hp& bgn, FLT tolerance) {
    nvrt0 = nvrtx;
    rebay(tolerance);
 
-   out_mesh("mesh",easymesh);
-   
 /* MARK BOUNDARY VERTICES */
    for(i=nvrt0;i<nvrtx;++i)
       vinfo[i] = -1;
@@ -63,7 +69,9 @@ void spectral_hp::adapt(class spectral_hp& bgn, FLT tolerance) {
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry[i].num;++j) {
          v0 = svrtx[sbdry[i].el[j]][0];
-         if (v0 > nvrt0) bgn.ptprobe1d(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],vug[v0]);
+         if (v0 >= nvrt0) {
+            bgn.ptprobe1d(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],vug[v0]);
+         }
       }
    }
          
@@ -80,10 +88,11 @@ void spectral_hp::adapt(class spectral_hp& bgn, FLT tolerance) {
          case(-2):
 /*				TOUCHED */
             if (stri[sind][1] < 0) break; // DO BOUNDARY SIDES SEPARATELY
+            
 
             v0 = svrtx[sind][0];
             v1 = svrtx[sind][1];
-            
+
             for(n=0;n<ND;++n)
                b.proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
  
@@ -273,6 +282,9 @@ void spectral_hp::adapt(class spectral_hp& bgn, FLT tolerance) {
 /*	RESET intwk2 */
    for(i=0;i<ntri;++i)
       intwk2[i] = -1;
+      
+/*	RESTORE maxsrch in findtri */
+   mesh::maxsrch = 3*MAXLST/4;
             
    return;
 }

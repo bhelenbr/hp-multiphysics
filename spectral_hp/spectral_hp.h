@@ -43,6 +43,7 @@ class spectral_hp : public mesh  {
       void ugtouht1d(int sind);
       void crdtouht1d(int sind);
       void crdtouht(int tind);
+
 /*		THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
       void lftog(int tind, FLT (*v)[NV], FLT (*s)[NV], FLT (*i)[NV]);
 
@@ -59,7 +60,9 @@ class spectral_hp : public mesh  {
       void curvinit();
       void input(char *name, FILETYPE type);
       void output(char *name, FILETYPE type);
-      void density(FLT terr, FLT min, FLT max);
+      void density1(FLT terr, FLT min, FLT max);
+      void density2();
+      void outdensity(char *name);
       void adapt(class spectral_hp& bgn, FLT tolerance);
       int ptprobe(FLT xp, FLT yp, FLT u[NV]);
       int ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);

@@ -85,15 +85,5 @@ class blocks {
 /*		OUTPUT FINE MESH SOLUTION */
       void output(char *filename, FILETYPE filetype = text);
 
-/*		MESH REFINEMENT */      
-      inline void restructure(FLT tolerance) {
-         for (int i=0;i<nblocks;++i) {
-            blk[i].grd[0].swap();
-            blk[i].grd[0].density(0.1,0.01,10.0);
-            blk[i].grd[0].yaber(1.0/tolerance);
-            blk[i].grd[0].rebay(tolerance);
-            blk[i].reconnect();
-         }
-         return;
-      }
+/*		MESH REFINEMENT */
 };

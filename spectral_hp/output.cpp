@@ -316,10 +316,10 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
                bind = (-stri[i][1] -(bnum+1)*maxsbel)*sm0;
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-                  &binfo[bnum][bind+m].curv[0],&binfo[bnum][bind+m].curv[0],
+                  &binfo[bnum][bind+m].curv[0],&binfo[bnum][bind+m].curv[1],
                   &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
                   if(ierr != 5) {
-                     printf("error in read file2\n");
+                     printf("error in reading curved side %d\n",i);
                      exit(1);
                   }
                }
@@ -329,7 +329,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
                   ierr = fscanf(in,"%le %le %le\n",
                   &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
                   if(ierr != 3) {
-                     printf("error in read file2\n");
+                     printf("error in reading straight side %d\n",i);
                      exit(1);
                   }
                }

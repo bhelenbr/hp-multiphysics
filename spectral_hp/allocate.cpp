@@ -66,7 +66,7 @@ void spectral_hp::allocate(class hpbasis& bas) {
 /*	ALLOCATE STORAGE FOR BOUNDARIES */
    for(i=0;i<nsbd;++i)
       binfo[i] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
-
+      
    setbcinfo();
 
    return;
@@ -88,7 +88,7 @@ void spectral_hp::setbcinfo() {
       sinfo[i] = -1;
    
    for(i=0;i<ntri;++i)
-      tinfo[0] = -1;
+      tinfo[i] = -1;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&CURV_MASK) {

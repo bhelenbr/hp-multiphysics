@@ -253,6 +253,3 @@ void spectral_hp::lftog(int tind, FLT (*v)[NV], FLT (*s)[NV], FLT (*i)[NV]) {
    
    return;
 }
-
-
-
