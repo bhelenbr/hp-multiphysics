@@ -6,32 +6,22 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
- 
-#define NODEBUG
+#define NO_DEBUG
 
-#include<math.h>
-#include<utilities.h>
-#include"hpbasis.h"
-#include<myblas.h>
+#include <math.h>
+#include <utilities.h>
+#include <myblas.h>
+#include "hpbasis.h"
 
-int hpbasis::wkpmax = 0;
 const int hpbasis::sbwth;
-FLT **hpbasis::wk0, **hpbasis::wk1, **hpbasis::wk2, **hpbasis::wk3;
-FLT *hpbasis::pgx, *hpbasis::dpgx, *hpbasis::pgn, *hpbasis::dpgn;
 
-
-void hpbasis::initialize(int pdegree, int gpoints) {
-   int maxwk;
-   
-#ifdef VERTEX
+void hpbasis::initialize(int pdegree, int gpoints) {   
    if (pdegree < 1) {
       printf("error can't use 0th order basis with vertex based modes\n");
       exit(1);
    }
-#endif
    
    p = pdegree;
-   vm = (p > 0 ? 3 : 1);
    sm = MAX(p -1,0);
    im = (p > 0 ? (p-2)*(p-1)/2 : 0);
    bm = MAX(3*p,1);
@@ -46,33 +36,11 @@ void hpbasis::initialize(int pdegree, int gpoints) {
    nmodn = tm;
    gpx = gpoints;
    gpn = gpoints;
-  
-   maxwk = MAX(nmodx,gpx);
- 
-   /* WORK VARIABLES */   
-   if (maxwk > wkpmax) {
-      if (wkpmax != 0) {
-         free(wk0);
-         free(wk1);
-         free(wk2);
-         free(wk3);
-         free(pgx);
-         free(dpgx);
-         free(pgn);
-         free(dpgn);  
-         printf("#Warning: better to allocate hpbasis from largest to smallest\n");
-      }
-      mat_alloc(wk0,maxwk,gpn,FLT);
-      mat_alloc(wk1,maxwk,gpn,FLT);
-      mat_alloc(wk2,maxwk,gpn,FLT);
-      mat_alloc(wk3,maxwk,gpn,FLT);
-      vect_alloc(pgx,nmodx,FLT);
-      vect_alloc(dpgx,nmodx,FLT);
-      vect_alloc(pgn,tm,FLT);      
-      vect_alloc(dpgn,tm,FLT);
-      
-      wkpmax = maxwk;
-   }
+
+   pgx.resize(nmodx);
+   dpgx.resize(nmodx);
+   pgn.resize(tm);
+   dpgn.resize(tm);
    
    /*****************************/
    /* SETUP VALUES OF FUNCTIONS */
@@ -81,125 +49,131 @@ void hpbasis::initialize(int pdegree, int gpoints) {
    sideinfoinit(); // SET UP THINGS TO CALCULATE NORMAL DERIVATIVE TO SIDE ALONG SIDE
    lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
    legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
-
+   
 #ifdef DEBUG
    /* SOME TESTING */
-   double *uht;
-   double **u;
-   double **u1;
-   double **dx;
-   double **dy;
-   double **dx1;
-   double **dy1;
-   vect_alloc(uht,MXTM,FLT);
-   mat_alloc(u,gpx,gpn,FLT);
-   mat_alloc(u1,gpx,gpn,FLT);
-   mat_alloc(dx,gpx,gpn,FLT);
-   mat_alloc(dy,gpx,gpn,FLT);
-   mat_alloc(dx1,gpx,gpn,FLT);
-   mat_alloc(dy1,gpx,gpn,FLT);
+   Array<double,1> uht(MXTM);
+   Array<double,2> u(gpx,gpn);
+   Array<double,2> u1(gpx,gpn);
+   Array<double,2> dx(gpx,gpn);
+   Array<double,2> dy(gpx,gpn);
+   Array<double,2> dx1(gpx,gpn);
+   Array<double,2> dy1(gpx,gpn);
    
    for(int m=0;m<tm;++m) {
       for(int j=0;j<tm;++j)
-         uht[j] = 0.0;
-      uht[m] = 1.0;
+         uht(j) = 0.0;
+      uht(m) = 1.0;
       
-      proj_side(0, uht, u[0], dx[0], dy[0]);
+      proj_side(0,&uht(0),&u(0,0),&dx(0,0),&dy(0,0));
       for (int i = 0; i<gpx;++i)
-         printf("T0A: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+         printf("T0A: %d %e %e %e\n",i,u(0,i),dx(0,i),dy(0,i));
       
-      proj_side(1, uht, u[0], dx[0], dy[0]);
+      proj_side(1,&uht(0),&u(0,0),&dx(0,0),&dy(0,0));
       for (int i = 0; i<gpx;++i)
-         printf("T0B: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+         printf("T0B: %d %e %e %e\n",i,u(0,i),dx(0,i),dy(0,i));
       
-      proj_side(2, uht, u[0], dx[0], dy[0]);
+      proj_side(2,&uht(0),&u(0,0),&dx(0,0),&dy(0,0));
       for (int i = 0; i<gpx;++i)
-         printf("T0C: %d %e %e %e\n",i,u[0][i],dx[0][i],dy[0][i]);
+         printf("T0C: %d %e %e %e\n",i,u(0,i),dx(0,i),dy(0,i));
 
-      proj(uht,u,dx,dy);
+      proj(&uht(0),&u(0,0),&dx(0,0),&dy(0,0),gpn);
       for(int i=0;i<gpx;++i) {
          for(int j=0;j<gpn;++j) {
-            dx1[i][j] = 0.0;
-            dy1[i][j] = 0.0;
+            dx1(i,j) = 0.0;
+            dy1(i,j) = 0.0;
          }
       }
-      derivr(u,dx1);
-      derivs(u,dy1);
+      derivr(&u(0,0),&dx1(0,0),gpn);
+      derivs(&u(0,0),&dy1(0,0),gpn);
       for(int i=0;i<gpx;++i)
          for(int j=0;j<gpn;++j)
-            printf("T1: %d %d %e %e %e %e\n",i,j,dx[i][j],dx1[i][j],dy[i][j],dy1[i][j]);
+            printf("T1: %d %d %e %e %e %e\n",i,j,dx(i,j),dx1(i,j),dy(i,j),dy1(i,j));
             
 
       if (m < 3) {
-         proj(uht[0], uht[1], uht[2], u1);
+         proj(uht(0),uht(1),uht(2),&u1(0,0),gpn);
          for(int i=0;i<gpx;++i)
             for(int j=0;j<gpn;++j)
-               printf("T2: %d %d %e %e\n",i,j,u1[i][j],u[i][j]);
+               printf("T2: %d %d %e %e\n",i,j,u1(i,j),u(i,j));
       }
       
       if (m < bm) {
-         proj_bdry(uht,u1,dx1,dy1);
+         proj_bdry(&uht(0),&u1(0,0),&dx1(0,0), &dy1(0,0),gpn);
          for(int i=0;i<gpx;++i)
             for(int j=0;j<gpn;++j)
-               printf("T3: %d %d %e %e %e %e %e %e\n",i,j,u1[i][j],u[i][j],dx[i][j],dx1[i][j],dy[i][j],dy1[i][j]);
+               printf("T3: %d %d %e %e %e %e %e %e\n",i,j,u1(i,j),u(i,j),dx(i,j),dx1(i,j),dy(i,j),dy1(i,j));
          
-         proj_bdry(uht,u1);
+         proj_bdry(&uht(0),&u1(0,0),gpn);
          for(int i=0;i<gpx;++i)
             for(int j=0;j<gpn;++j)
-               printf("T4: %d %d %e %e\n",i,j,u1[i][j],u[i][j]);
+               printf("T4: %d %d %e %e\n",i,j,u1(i,j),u(i,j));
       }
-      
-      ptprobe(1, &uht, u[0], 0.25, 0.25);
-      ptprobe_bdry(1, &uht, u1[0], 0.25, 0.25);
-      ptprobe_bdry(1, &uht, dx1[0], dx[0], dy[0], 0.25, 0.25);
-      printf("T5: %e %e %e\n",u[0][0],u1[0][0],dx1[0][0]);
-      printf("T5: %e %e\n",dx[0][0],dy[0][0]);
 
-      intgrtrs(dx,dy,uht);
+      FLT val,valx,valy,val1,val2;
+      ptprobe(1, &val, 0.25, 0.25, &uht(0), MXTM);
+      ptprobe_bdry(1,&val1, 0.25, 0.25,&uht(0), MXTM);
+      ptprobe_bdry(1, &val2, &valx, &valy, 0.25, 0.25,&uht(0),MXTM);
+      printf("T5: %e %e %e\n",val,val1,val2);
+      printf("T5: %e %e\n",valx,valy);
+      
+      intgrtrs(&uht(0),&dx(0,0),&dy(0,0),gpn);
       for(int j=0;j<tm;++j)
-         printf("T6: %d %e\n",j,uht[j]);
+         printf("T6: %d %e\n",j,uht(j));
+      
          
    }
 
 
    /* 1D TESTING */
+   for (int i=0;i<gpx;++i)
+      printf("dltx: %d %e\n",i,dltx(i));
+      
+   for (int i=0;i<gpx;++i) 
+      for(int n=0;n<gpx;++n) 
+         printf("dltx1: %d %d %e\n",i,n,dltx1(i,n));
+         
+         
    for(int m=0;m<sm+2;++m) {
       for(int j=0;j<sm+2;++j)
-         uht[j] = 0.0;
-      uht[m] = 1.0;
+         uht(j) = 0.0;
+      uht(m) = 1.0;
       
-      proj1d(uht,u[0],dx[0]);
+      proj1d(&uht(0),&u(0,0),&dx(0,0));
       for(int j=0;j<gpx;++j)
-         dx1[0][j] = 0.0;
-      derivx1d(u[0],dx1[0]);
+         dx1(0,j) = 0.0;
+      derivx1d(&u(0,0),&dx1(0,0));
       for(int i=0;i<gpx;++i)
-         printf("T11D: %d %e %e\n",i,dx[0][i],dx1[0][i]);
+         printf("T11D: %d %e %e\n",i,dx(0,i),dx1(0,i));
       
-      proj1d(uht,u1[0]);
+      proj1d(&uht(0),&u1(0,0));
       for(int i=0;i<gpx;++i)
-         printf("T21D: %d %e %e\n",i,u1[0][i],u[0][i]);
+         printf("T21D: %d %e %e\n",i,u1(0,i),u(0,i));
          
       if (m < 2) {
-         proj1d(uht[0], uht[1], u1[0]);
+         proj1d(uht(0),uht(1),&u1(0,0));
          for(int i=0;i<gpx;++i)
-            printf("T31D: %d %e %e\n",i,u1[0][i],u[0][i]);
+            printf("T31D: %d %e %e\n",i,u1(0,i),u(0,i));
       }
       
-      ptprobe1d(1, &uht, u[0], 0.25);
-      ptprobe1d(1, &uht, u1[0], dx[0], 0.25);
-      printf("T41D: %e %e %e\n",u[0][0],u1[0][0],dx[0][0]);
+      FLT val,valx,val1;
+      
+      ptprobe1d(1,&val, 0.25,&uht(0),MXTM);
+      ptprobe1d(1,&val1,&valx, 0.25, &uht(0),MXTM);
+      printf("T41D: %e %e %e\n",val,val1,valx);
       
       
-      intgrt1d(u[0],uht);
+      intgrt1d(&uht(0),&u(0,0));
       for(int j=0;j<sm+2;++j)
-         printf("T51D: %d %e\n",j,uht[j]);
+         printf("T51D: %d %e\n",j,uht(j));
          
-      intgrtx1d(u[0],uht);
+      intgrtx1d(&uht(0),&u(0,0));
       for(int j=0;j<sm+2;++j)
-         printf("T61D: %d %e\n",j,uht[j]);
+         printf("T61D: %d %e\n",j,uht(j));
    }
       
 #endif
+   
    return;
 }
 
@@ -207,35 +181,36 @@ void hpbasis::initialize_values(void)
 {
 
    FLT al,be,x,eta;
-   FLT e[MXTM],e1[MXTM],e2[MXTM];
    int i,j,k,m,n,ipoly,ierr;
-   
+   Array<FLT,1> e(MXTM),e1(MXTM),e2(MXTM);
+
    /* ALLOCATE STORAGE FOR RECURSION RELATION COEFFICENTS*/
    ipoly = MAX(gpx+1,sm+1);
    ipoly = MAX(ipoly,gpn+1);
-   mat_alloc(a0,sm+2,ipoly,FLT);
-   mat_alloc(b0,sm+2,ipoly,FLT);
+   a0.resize(sm+2,ipoly);
+   b0.resize(sm+2,ipoly);
    
    /* ALLOCATE INTEGRATION, PROJECTION, & DERIVATIVE VARIABLES */
-   mat_alloc(gx,nmodx,gpx,FLT);
-   mat_alloc(dgx,nmodx,gpx,FLT);
-   vect_alloc(wtx,gpx,FLT);
-   vect_alloc(x0,gpx,FLT);
-   mat_alloc(gxwtx,nmodx,gpx,FLT);
-   mat_alloc(dgxwtx,nmodx,gpx,FLT);
-   vect_alloc(dltx,gpx,FLT);
-   mat_alloc(dltx1,gpx,gpx,FLT);
+   gx.resize(gpx,nmodx);
+   dgx.resize(gpx,nmodx);
+   wtx.resize(gpx);
+   x0.resize(gpx);
+   gxwtx.resize(nmodx,gpx);
+   dgxwtx.resize(nmodx,gpx);
+   dltx.resize(gpx);
+   dltx1.resize(gpx,gpx);
    
-   mat_alloc(gn,nmodn,gpn,FLT);
-   mat_alloc(dgn,nmodn,gpn,FLT);   
-   vect_alloc(wtn,gpn,FLT);
-   vect_alloc(n0,gpn,FLT);
-   mat_alloc(gnwtnn0,nmodn,gpn,FLT);
-   mat_alloc(dgnwtn,nmodn,gpn,FLT);
-   vect_alloc(dltn,gpn,FLT);
-   mat_alloc(dltn1,gpn,gpn,FLT);
-   mat_alloc(dltn2,gpn,gpn,FLT);
-   vect_alloc(norm,tm,FLT);
+   gn.resize(gpn,tm);
+   dgn.resize(gpn,tm);
+   wtn.resize(gpn);
+   n0.resize(gpn);
+   gnwtn.resize(tm,gpn);
+   gnwtnn0.resize(tm,gpn);
+   dgnwtn.resize(tm,gpn);
+   dltn.resize(gpn);
+   dltn1.resize(gpx,gpx);
+   dltn2.resize(gpn,gpn);
+   norm.resize(tm);
       
    /* GENERATE RECURSION RELATION FOR LEGENDRE
    POLYNOMIALS (USED TO GENERATE GAUSS POINTS)
@@ -256,13 +231,13 @@ void hpbasis::initialize_values(void)
    ipoly = 1;
    al = 0.0;
    be = 0.0;
-   ierr = recur(gpx+1,ipoly,al,be,a0[0],b0[0]);
+   ierr = recur(gpx+1,ipoly,al,be,&a0(0,0),&b0(0,0));
    if (ierr != 0) {
       printf("recur #1 error %d\n",ierr);
       exit(1);
    }
 
-   ierr = gauss(gpx,a0[0],b0[0],EPSILON,x0,wtx,e);
+   ierr = gauss(gpx,&a0(0,0),&b0(0,0),EPSILON,&x0(0),&wtx(0),&e(0));
    if (ierr != 0) {
       printf("gauss #1 error %d\n",ierr);
       exit(1);
@@ -272,29 +247,29 @@ void hpbasis::initialize_values(void)
    /* CALCULATE FACTORS FOR LAGRANGIAN DERIVATIVE */
    /***********************************************/
    for (i=0;i<gpx;++i) {
-      dltx[i] = 1.0;
+      dltx(i) = 1.0;
       for(k=0;k<i;++k)
-         dltx[i] *= (x0[i]-x0[k]);
+         dltx(i) *= (x0(i)-x0(k));
       for(k=i+1;k<gpx;++k)
-         dltx[i] *= (x0[i]-x0[k]);
+         dltx(i) *= (x0(i)-x0(k));
    }
    
    for (i=0;i<gpx;++i) {
       for(n=0;n<i;++n) 
-         dltx1[i][n] = dltx[i]/(x0[i]-x0[n]);
+         dltx1(i,n) = dltx(i)/(x0(i)-x0(n));
       for(n=i+1;n<gpx;++n) 
-         dltx1[i][n] = dltx[i]/(x0[i]-x0[n]);
+         dltx1(i,n) = dltx(i)/(x0(i)-x0(n));
    }
 
    for (i=0;i<gpx;++i) {
       for(n=0;n<i;++n) 
-         dltn1[i][n] = dltx[i]/(x0[i]-x0[n])*.5*(1+x0[i]);
+         dltn1(i,n) = dltx(i)/(x0(i)-x0(n))*.5*(1+x0(i));
       for(n=i+1;n<gpx;++n) 
-         dltn1[i][n] = dltx[i]/(x0[i]-x0[n])*.5*(1+x0[i]);
+         dltn1(i,n) = dltx(i)/(x0(i)-x0(n))*.5*(1+x0(i));
    }
       
    for (i=0;i<gpx;++i)
-      dltx[i] = 1.0/dltx[i];   
+      dltx(i) = 1.0/dltx(i);   
 
    /*************************************************/ 
    /* NOW CALCULATE VALUES OF G, G' AT GAUSS POINTS */
@@ -309,24 +284,24 @@ void hpbasis::initialize_values(void)
    al = 1.0;
    be = 1.0;
 #endif
-   ierr = recur(sm+1,ipoly,al,be,a0[0],b0[0]);
+   ierr = recur(sm+1,ipoly,al,be,&a0(0,0),&b0(0,0));
    if (ierr != 0) {
       printf("recur #3 error %d\n",ierr);
       exit(1);
    }
 
    for(i=0;i<tm;++i)
-      norm[i] = 1.0;
+      norm(i) = 1.0;
    
    for(i = 0;i < gpx; ++i) {
-      x = x0[i];
-      x0[i] = 0.5*(1+x);
+      x = x0(i);
+      x0(i) = 0.5*(1+x);
       
       ptvalues_deriv(x,0.0);
 
       for (m = 0;m < nmodx;++m) {
-         gx[m][i] = pgx[m];
-         dgx[m][i] = dpgx[m];
+         gx(i,m) = pgx(m);
+         dgx(i,m) = dpgx(m);
       }
    }
 
@@ -337,25 +312,25 @@ void hpbasis::initialize_values(void)
    al = 1.0;
    be = 0.0;
 #ifdef OLDWAY
-   ierr = recur(gpn,ipoly,al,be,a0[1],b0[1]);
+   ierr = recur(gpn,ipoly,al,be,&a0(1,0),&b0(1,0));
    if (ierr != 0) {
       printf("recur #2 error %d\n",ierr);
       exit(1);
    }   
    
-   ierr = radau(gpn-1,a0[1],b0[1],-1.0,n0,wtn,e,e1,e2);      
+   ierr = radau(gpn-1,&a0(1,0),&b0(1,0),-1.0,&n0(0),&wtn(0),&e(0),&e1(0),&e2(0));      
    if (ierr != 0) {
       printf("gauss #3 error %d\n",ierr);
       exit(1);
    }
 #else
-   ierr = recur(gpn+1,ipoly,al,be,a0[1],b0[1]);
+   ierr = recur(gpn+1,ipoly,al,be,&a0(1,0),&b0(1,0));
    if (ierr != 0) {
       printf("recur #2 error %d\n",ierr);
       exit(1);
    }
 
-   ierr = gauss(gpn,a0[1],b0[1],EPSILON,n0,wtn,e);
+   ierr = gauss(gpn,&a0(1,0),&b0(1,0),EPSILON,&n0(0),&wtn(0),&e(0));
    if (ierr != 0) {
       printf("gauss #1 error %d\n",ierr);
       exit(1);
@@ -363,28 +338,28 @@ void hpbasis::initialize_values(void)
 #endif
    
    for (i=0;i<gpn;++i)
-      wtn[i] *= 0.5;
+      wtn(i) *= 0.5;
 
    /***********************************************/
    /* CALCULATE FACTORS FOR LAGRANGIAN DERIVATIVE */
    /***********************************************/
    for (i=0;i<gpn;++i) {
-      dltn[i] = 1.0;
+      dltn(i) = 1.0;
       for(k=0;k<i;++k)
-         dltn[i] *= (n0[i]-n0[k]);
+         dltn(i) *= (n0(i)-n0(k));
       for(k=i+1;k<gpn;++k)
-         dltn[i] *= (n0[i]-n0[k]);
+         dltn(i) *= (n0(i)-n0(k));
    }
    
    for (j=0;j<gpn;++j) {
       for(n=0;n<j;++n) 
-         dltn2[j][n] = dltn[j]/(n0[j]-n0[n]);
+         dltn2(j,n) = dltn(j)/(n0(j)-n0(n));
       for(n=j+1;n<gpn;++n) 
-         dltn2[j][n] = dltn[j]/(n0[j]-n0[n]);
+         dltn2(j,n) = dltn(j)/(n0(j)-n0(n));
    }
    
    for (j=0;j<gpn;++j)
-      dltn[j] = 1.0/dltn[j];
+      dltn(j) = 1.0/dltn(j);
    
 
    /******************************************/
@@ -400,7 +375,7 @@ void hpbasis::initialize_values(void)
    al = 1.0;
    be = 1.0;
 #endif
-   ierr = recur(sm+1,ipoly,al,be,a0[1],b0[1]);
+   ierr = recur(sm+1,ipoly,al,be,&a0(1,0),&b0(1,0));
    if (ierr != 0) {
       printf("recur #3 error %d\n",ierr);
       exit(1);
@@ -417,7 +392,7 @@ void hpbasis::initialize_values(void)
       al = 2.*m-1;
       be = 1.0;
 #endif
-      ierr = recur(sm+2-m,ipoly,al,be,a0[m],b0[m]);
+      ierr = recur(sm+2-m,ipoly,al,be,&a0(m,0),&b0(m,0));
       if (ierr != 0) {
          printf("recur #4 error %d\n",ierr);
          exit(1);
@@ -425,15 +400,15 @@ void hpbasis::initialize_values(void)
    }
    
    
-   for(i=0;i<gpn;++i) {
-      eta = n0[i];
-      n0[i] = 2.0/(1-eta);
+   for(j=0;j<gpn;++j) {
+      eta = n0(j);
+      n0(j) = 2.0/(1-eta);
 
       ptvalues_deriv(0.0,eta);
       
       for(m=0;m<tm;++m) {
-         gn[m][i] = pgn[m];
-         dgn[m][i] = dpgn[m];
+         gn(j,m) = pgn(m);
+         dgn(j,m) = dpgn(m);
       }
    }
 
@@ -442,22 +417,22 @@ void hpbasis::initialize_values(void)
    /* ************************** */
    /* SIDE & VERTEX MODES */
    for(n=0;n<3;++n)
-      norm[n] = 1.0;
+      norm(n) = 1.0;
    for (n = 3; n < sm+3; ++n) {
-      norm[n] = 0.0;
+      norm(n) = 0.0;
       for(i = 0; i < gpx; ++i)
-         norm[n] += wtx[i]*gx[n][i]*gx[n][i];
-      norm[n] = 1./sqrt(norm[n]);
-      norm[n+sm] = norm[n];
-      norm[n+2*sm] = norm[n];
+         norm(n) += wtx(i)*gx(i,n)*gx(i,n);
+      norm(n) = 1./sqrt(norm(n));
+      norm(n+sm) = norm(n);
+      norm(n+2*sm) = norm(n);
    }
    
    /* INTERIOR MODES */
    for(m = bm; m < tm; ++m) {
-      norm[m] = 0.0;
+      norm(m) = 0.0;
       for(j = 0; j < gpn; ++j)
-           norm[m] += wtn[j]*gn[m][j]*gn[m][j];
-        norm[m] = 1./sqrt(norm[m]);
+           norm(m) += wtn(j)*gn(j,m)*gn(j,m);
+        norm(m) = 1./sqrt(norm(m));
    }
 
    /***************/
@@ -465,30 +440,30 @@ void hpbasis::initialize_values(void)
    /***************/
    for (n = 3; n < nmodx; ++n) {         
       for (i =0;i<gpx;++i) {
-         gx[n][i] *= norm[n];
-         dgx[n][i] *= norm[n];
+         gx(i,n) *= norm(n);
+         dgx(i,n) *= norm(n);
 #ifdef DEBUG
-         printf("IV1: %d %d %e %e\n",i,n,gx[n][i],dgx[n][i]);
+         printf("IV1: %d %d %e %e\n",i,n,gx(i,n),dgx(i,n));
 #endif
       }
       for (j=0;j<gpn;++j) {
          /* SIDE 2 & 3 MUST BE RENORMALIZED BY SAME CONSTANT TO MATCH */
-         gn[n +sm][j] *= norm[n];
-         dgn[n+sm][j] *= norm[n];
-         gn[n +2*sm][j] *= norm[n];
-         dgn[n +2*sm][j] *= norm[n];
+         gn(j,n +sm) *= norm(n);
+         dgn(j,n+sm) *= norm(n);
+         gn(j,n +2*sm) *= norm(n);
+         dgn(j,n +2*sm) *= norm(n);
 #ifdef DEBUG
-         printf("IV2: %d %d %e %e\n",j,n,gn[n][j],dgx[n][j]);
+         printf("IV2: %d %d %e %e\n",j,n,gn(j,n),dgx(j,n));
 #endif
       }
    }
 
    for(m = bm; m < tm; ++m) {
-      for(i = 0; i < gpn; ++i) {
-         gn[m][i] = gn[m][i]*norm[m];
-         dgn[m][i] = dgn[m][i]*norm[m];
+      for(j = 0; j < gpn; ++j) {
+         gn(j,m) = gn(j,m)*norm(m);
+         dgn(j,m) = dgn(j,m)*norm(m);
 #ifdef DEBUG
-         printf("IV3: %d %d %e %e\n",i,m,gn[m][i],dgn[m][i]);
+         printf("IV3: %d %d %e %e\n",j,m,gn(j,m),dgn(j,m));
 #endif
       }
    }
@@ -498,20 +473,21 @@ void hpbasis::initialize_values(void)
    /*****************************************/
    for(m=0;m<nmodx;++m) {
       for(i=0;i<gpx;++i) {
-         gxwtx[m][i] = gx[m][i]*wtx[i];
-         dgxwtx[m][i] = dgx[m][i]*wtx[i];
+         gxwtx(m,i) = gx(i,m)*wtx(i);
+         dgxwtx(m,i) = dgx(i,m)*wtx(i);
 #ifdef DEBUG
-         printf("%d %d %e %e\n",m,i,gxwtx[m][i],dgxwtx[m][i]);
+         printf("%d %d %e %e\n",m,i,gxwtx(m,i),dgxwtx(m,i));
 #endif
       }
    }
    
    for(m=0;m<tm;++m) {
       for(j=0;j<gpn;++j) {
-         gnwtnn0[m][j] = gn[m][j]*wtn[j]*n0[j];
-         dgnwtn[m][j] = dgn[m][j]*wtn[j];
+         gnwtn(m,j) = gn(j,m)*wtn(j);
+         gnwtnn0(m,j) = gn(j,m)*wtn(j)*n0(j);
+         dgnwtn(m,j) = dgn(j,m)*wtn(j);
 #ifdef DEBUG
-         printf("%d %d %e %e\n",m,j,gnwtnn0[m][j],dgnwtn[m][j]);
+         printf("%d %d %e %e %e\n",m,j,gnwtn(m,j),gnwtnn0(m,j),dgnwtn(m,j));
 #endif
       }
    }
@@ -526,14 +502,12 @@ void hpbasis::sideinfoinit() {
    
    /*	THIS IS TO CALCULATE NORMAL DERIVATIVES TO SIDE */
    /* SIDES 1 & 2 ARE ROTATED TO SIDE 0 POSITION */
-
-   for(i=0;i<3;++i)
-      mat_alloc(dgnorm[i],tm,gpx,FLT);
+   dgnorm.resize(3,tm,gpx);
       
    if (p == 0) {
       for(ind=0;ind<3;++ind)
          for(i=0;i<gpx;++i)
-            dgnorm[ind][0][i] = 0.0;
+            dgnorm(ind,0,i) = 0.0;
       
       return;
    }
@@ -542,34 +516,34 @@ void hpbasis::sideinfoinit() {
    /*	SIDE 0 */
    for(i=0;i<gpx;++i) {
       eta = -1.0;
-      x = 2.*x0[i] -1.0;
+      x = 2.*x0(i) -1.0;
       ptvalues_deriv(x,eta);
-      xp1oeta = x0[i]*2.0/(1-eta);
+      xp1oeta = x0(i)*2.0/(1-eta);
       
       /* CALCULATE POLYNOMIALS */
       /* VERTEX 0   */
-      dgnorm[0][0][i] = dpgn[0]*pgx[0] +xp1oeta*pgn[0]*dpgx[0];
+      dgnorm(0,0,i) = dpgn(0)*pgx(0) +xp1oeta*pgn(0)*dpgx(0);
 
       /* VERTEX 1  */
-      dgnorm[0][1][i] = dpgn[1]*pgx[1] +xp1oeta*pgn[1]*dpgx[1];
+      dgnorm(0,1,i) = dpgn(1)*pgx(1) +xp1oeta*pgn(1)*dpgx(1);
 
       /* VERTEX 2    */   
-      dgnorm[0][2][i] = dpgn[2]*pgx[2] +xp1oeta*pgn[2]*dpgx[2];
+      dgnorm(0,2,i) = dpgn(2)*pgx(2) +xp1oeta*pgn(2)*dpgx(2);
 
       for(m = 3; m < sm+3; ++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[m] +xp1oeta*pgn[m]*dpgx[m];
+         dgnorm(0,m,i) = dpgn(m)*pgx(m) +xp1oeta*pgn(m)*dpgx(m);
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[2] +xp1oeta*pgn[m]*dpgx[2];
+         dgnorm(0,m,i) = dpgn(m)*pgx(2) +xp1oeta*pgn(m)*dpgx(2);
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[0][m][i] = dpgn[m]*pgx[1] +xp1oeta*pgn[m]*dpgx[1];
+         dgnorm(0,m,i) = dpgn(m)*pgx(1) +xp1oeta*pgn(m)*dpgx(1);
 
       /*  INTERIOR MODES   */
       ind = bm;
       for(m = 3; m< sm+2;++m) {      
          for(n = 1; n < sm+3-m;++n) {
-            dgnorm[0][ind][i] = dpgn[ind]*pgx[m] +xp1oeta*pgn[ind]*dpgx[m];
+            dgnorm(0,ind,i) = dpgn(ind)*pgx(m) +xp1oeta*pgn(ind)*dpgx(m);
             ++ind;
          }
       }
@@ -577,35 +551,35 @@ void hpbasis::sideinfoinit() {
    
    /* SIDE 1 */
    for(i=0;i<gpx;++i) {
-      eta = 2.*x0[i] -1.0;
+      eta = 2.*x0(i) -1.0;
       x = 1.0;
       ptvalues_deriv(x,eta);
       oeta = 2.0/(1-eta);
 
       /* CALCULATE POLYNOMIALS */
       /* VERTEX 0   */
-      dgnorm[1][0][i] = -oeta*pgn[0]*dpgx[0];
+      dgnorm(1,0,i) = -oeta*pgn(0)*dpgx(0);
 
       /* VERTEX 1  */
-      dgnorm[1][1][i] = -oeta*pgn[1]*dpgx[1];
+      dgnorm(1,1,i) = -oeta*pgn(1)*dpgx(1);
 
       /* VERTEX 2    */   
-      dgnorm[1][2][i] = -oeta*pgn[2]*dpgx[2];
+      dgnorm(1,2,i) = -oeta*pgn(2)*dpgx(2);
 
       for(m = 3; m < sm+3; ++m)
-         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[m];
+         dgnorm(1,m,i) = -oeta*pgn(m)*dpgx(m);
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[2];
+         dgnorm(1,m,i) = -oeta*pgn(m)*dpgx(2);
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[1][m][i] = -oeta*pgn[m]*dpgx[1];
+         dgnorm(1,m,i) = -oeta*pgn(m)*dpgx(1);
 
       /*  INTERIOR MODES   */
       ind = bm;
       for(m = 3; m< sm+2;++m) {      
          for(n = 1; n < sm+3-m;++n) {
-            dgnorm[1][ind][i] = -oeta*pgn[ind]*dpgx[m];
+            dgnorm(1,ind,i) = -oeta*pgn(ind)*dpgx(m);
             ++ind;
          }
       }      
@@ -614,35 +588,35 @@ void hpbasis::sideinfoinit() {
    /* SIDE 2 */
    for(i=0;i<gpx;++i) {
       x = -1.0;
-      eta = 1.0 -2.*x0[i];
+      eta = 1.0 -2.*x0(i);
       ptvalues_deriv(x,eta);
       oeta = 2.0/(1-eta);
       xp1 = (x+1)/2.0;
 
       /* CALCULATE POLYNOMIALS */
       /* VERTEX 0   */
-      dgnorm[2][0][i] = -(dpgn[0]*pgx[0] +(xp1 -1)*oeta*pgn[0]*dpgx[0]);
+      dgnorm(2,0,i) = -(dpgn(0)*pgx(0) +(xp1 -1)*oeta*pgn(0)*dpgx(0));
 
       /* VERTEX 1  */
-      dgnorm[2][1][i] = -(dpgn[1]*pgx[1] +(xp1 -1)*oeta*pgn[1]*dpgx[1]);
+      dgnorm(2,1,i) = -(dpgn(1)*pgx(1) +(xp1 -1)*oeta*pgn(1)*dpgx(1));
 
       /* VERTEX 2    */   
-      dgnorm[2][2][i] = -(dpgn[2]*pgx[2] +(xp1 -1)*oeta*pgn[2]*dpgx[2]);
+      dgnorm(2,2,i) = -(dpgn(2)*pgx(2) +(xp1 -1)*oeta*pgn(2)*dpgx(2));
 
       for(m = 3; m < sm+3; ++m)
-         dgnorm[2][m][i] = -(dpgn[m]*pgx[m] +(xp1 -1)*oeta*pgn[m]*dpgx[m]);
+         dgnorm(2,m,i) = -(dpgn(m)*pgx(m) +(xp1 -1)*oeta*pgn(m)*dpgx(m));
          
       for(m=sm+3;m<2*sm+3;++m)
-         dgnorm[2][m][i] = -(dpgn[m]*pgx[2] +(xp1 -1)*oeta*pgn[m]*dpgx[2]);
+         dgnorm(2,m,i) = -(dpgn(m)*pgx(2) +(xp1 -1)*oeta*pgn(m)*dpgx(2));
 
       for(m=2*sm+3;m<bm;++m)
-         dgnorm[2][m][i] = -(dpgn[m]*pgx[1] +(xp1 -1)*oeta*pgn[m]*dpgx[1]);
+         dgnorm(2,m,i) = -(dpgn(m)*pgx(1) +(xp1 -1)*oeta*pgn(m)*dpgx(1));
 
       /*  INTERIOR MODES   */
       ind = bm;
       for(m = 3; m< sm+2;++m) {      
          for(n = 1; n < sm+3-m;++n) {
-            dgnorm[2][ind][i] = -(dpgn[ind]*pgx[m] +(xp1 -1)*oeta*pgn[ind]*dpgx[m]);
+            dgnorm(2,ind,i) = -(dpgn(ind)*pgx(m) +(xp1 -1)*oeta*pgn(ind)*dpgx(m));
             ++ind;
          }
       }
@@ -655,31 +629,32 @@ void hpbasis::sideinfoinit() {
 /** CALCULATE THINGS FOR LUMPED MASS INVERSION  */
 /************************************************/
 void hpbasis::lumpinv(void) {
-   int i,i1,i2,j,k,m,info,ind,ind1,n,ipiv[2*MXTM];
-   FLT mwk[MXTM][MXTM],vwk[MXTM], mm[MXTM][MXTM];
-   FLT u[MXTM],l[MXTM];
+   int i,i1,i2,j,k,m,info,ind,ind1,n;
+   Array<int,1> ipiv(2*MXTM);
+   Array<FLT,2> mwk(MXTM,MXTM),mm(MXTM,MXTM);
+   Array<FLT,1> u(MXTM),l(MXTM),vwk(MXTM),wk1(MXTM*MXGP);
    FLT rcond=1;
    char trans[] = "T", uplo[] = "U";
    
    /* ALLOCATE MASS MATRIX INVERSION VARIABLES */
    if (sm > 0) {
-      mat_alloc(vfms,3,sm,FLT);
-      mat_alloc(sfmv,2,sm,FLT);            
-      vect_alloc(sdiag,sm,FLT);
+      vfms.resize(3,sm);
+      sfmv.resize(2,sm);
+      sdiag.resize(sm);
    }
-   if (sm > 1) tens_alloc(sfms,sm-1,sm,3,FLT);
+   if (sm > 1) sfms.resize(sm-1,sm,3);
    if (im > 0) {
-      mat_alloc(ifmb,bm,im,FLT);
-      mat_alloc(bfmi,bm,im,FLT);
-      mat_alloc(idiag,im,ibwth+1,FLT);
+      ifmb.resize(bm,im);
+      bfmi.resize(bm,im);
+      idiag.resize(im,ibwth+1);
    }
-   mat_alloc(msi,bm,bm,FLT);
+   msi.resize(bm,bm);
    
    /* ALLOCATE 1D MASS MATRIX INVERSION VARIABLES */
    if (sm > 0) {
-      mat_alloc(vfms1d,2,sm,FLT);
-      mat_alloc(sfmv1d,2,sm,FLT);            
-      mat_alloc(sdiag1d,sm,sbwth+1,FLT);
+      vfms1d.resize(2,sm);
+      sfmv1d.resize(2,sm);
+      sdiag1d.resize(sm,sbwth+1);
    }
 
    /********************************************/   
@@ -687,38 +662,23 @@ void hpbasis::lumpinv(void) {
    /********************************************/
    for(m=0;m<tm;++m) {
       for(i=0;i<tm;++i)
-         u[i] = 0.0;
-      u[m] = 1.0;
+         u(i) = 0.0;
+      u(m) = 1.0;
 
-      proj(u,wk1);  // PROJECT USES WK0
-      intgrt(wk1,l); // INTGRT USES WK0
-      
+      proj(&u(0),&wk1(0),gpn);  // PROJECT USES WK0
+      intgrt(&l(0),&wk1(0),gpn); // INTGRT USES WK0
+
 #ifdef DEBUG
       for(i=0;i<gpx;++i)
          for(j=0;j<gpn;++j)
-            printf("MIMM: %d %d %e\n",i,j,wk1[i][j]);
+            printf("MIMM: %d %d %e\n",i,j,wk1(i*gpn +j));
       for(i=0;i<tm;++i)
-         printf("MIMM2: %d %e\n",i,l[i]);
+         printf("MIMM2: %d %e\n",i,l(i));
 #endif
-
+            
       for(i=0;i<tm;++i) 
-         mm[m][i] = l[i];      
+         mm(m,i) = l(i);      
    }
-
-#ifdef DEBUG
-   FILE *fp;
-   fp = fopen("mass","w");
-   if (fp == NULL)
-      printf("trouble\n");
-   
-   for(i=0;i<tm;++i) {
-      for(j=0;j<tm;++j) {
-         fprintf(fp,"%+18.15e ",mm[i][j]);
-      }
-      fprintf(fp,"\n");
-   }
-   fclose(fp);
-#endif
 
    /*******************************************************/      
    /*  EQUATIONS TO FIND VERTEX VALUES TO SM-1 ACCURACY */
@@ -731,25 +691,25 @@ void hpbasis::lumpinv(void) {
          /*2 CROSS VERTEX CONSTRAINTS */
          for(k=0;k<2;++k) {
             ind = (i+1+k)%3;
-            vwk[k] = mm[ind][i];
+            vwk(k) = mm(ind,i);
             for(j=0;j<sm;++j) {
-               mwk[k][j] = mm[ind][3+j+i1*sm];
-               mwk[k][j+sm] = mm[ind][3+j+i2*sm];
+               mwk(k,j) = mm(ind,3+j+i1*sm);
+               mwk(k,j+sm) = mm(ind,3+j+i2*sm);
             }
             for(j=0;j<im;++j)
-               mwk[k][2*sm+j] = mm[ind][j+bm];
+               mwk(k,2*sm+j) = mm(ind,j+bm);
          }
 
          /*3x(SM-3) SIDE CONSTRAINTS */
          for(k=0;k<3;++k) {
             for(m=0;m<sm-1;++m) {   
-               vwk[m+2+k*(sm-1)] = mm[3+m+k*sm][i];
+               vwk(m+2+k*(sm-1)) = mm(3+m+k*sm,i);
                for(j=0;j<sm;++j) {
-                  mwk[m+2+k*(sm-1)][j] = mm[3+m+k*sm][3+j+i1*sm];
-                  mwk[m+2+k*(sm-1)][j+sm] = mm[3+m+k*sm][3+j+i2*sm];
+                  mwk(m+2+k*(sm-1),j) = mm(3+m+k*sm,3+j+i1*sm);
+                  mwk(m+2+k*(sm-1),j+sm) = mm(3+m+k*sm,3+j+i2*sm);
                }
                for(j=0;j<im;++j)
-                  mwk[m+2+k*(sm-1)][2*sm+j] = mm[3+m+k*sm][j+bm];
+                  mwk(m+2+k*(sm-1),2*sm+j) = mm(3+m+k*sm,j+bm);
             }
          }
          
@@ -758,53 +718,53 @@ void hpbasis::lumpinv(void) {
          ind = 3*sm-1;   ind1 = 0;
          for(m=2;m<sm+1;++m) {      
             for(n = 1; n < sm+1-m;++n) {
-               vwk[ind] = mm[ind1+bm][i];
+               vwk(ind) = mm(ind1+bm,i);
                for(j=0;j<sm;++j) {
-                  mwk[ind][j] = mm[ind1+bm][3+j+i1*sm];
-                  mwk[ind][j+sm] = mm[ind1+bm][3+j+i2*sm];
+                  mwk(ind,j) = mm(ind1+bm,3+j+i1*sm);
+                  mwk(ind,j+sm) = mm(ind1+bm,3+j+i2*sm);
                }
                for(j=0;j<im;++j)
-                  mwk[ind][2*sm+j] = mm[ind1+bm][j+bm];
+                  mwk(ind,2*sm+j) = mm(ind1+bm,j+bm);
                ++ind;
                ++ind1;
             }
             ++ind1;
          }
 
-         GETRF((sm+1)*(sm+2)/2-1,(sm+1)*(sm+2)/2-1,mwk[0],MXTM,ipiv,info);
+         GETRF((sm+1)*(sm+2)/2-1,(sm+1)*(sm+2)/2-1,&mwk(0,0),MXTM,&ipiv(0),info);
          if (info != 0) {
             printf("DGETRF FAILED - VRTX info:%d sm:%d i:%d\n",info,(sm+2),i);
             exit(1);
          }
-         GETRS(trans,(sm+1)*(sm+2)/2-1,1,mwk[0],MXTM,ipiv,vwk,MXTM,info);
+         GETRS(trans,(sm+1)*(sm+2)/2-1,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
                                        
          /* STORE INTERIOR VALUES */
          for(k=0;k<im;++k)
-            ifmb[i][k] = vwk[k+2*sm];         
+            ifmb(i,k) = vwk(k+2*sm);         
       }
    
       /* STORE SIDE VALUES */
       for(k=0;k<sm;++k) {
-         sfmv[0][k] = vwk[k+sm];
-         sfmv[1][k] = vwk[k];
+         sfmv(0,k) = vwk(k+sm);
+         sfmv(1,k) = vwk(k);
          
       }
 
       /* FIND VERTEX DIAGANOL ELEMENT */
-      vdiag = mm[2][2];
+      vdiag = mm(2,2);
       for(k=0;k<sm;++k) {
-         vdiag -= sfmv[0][k]*mm[2][3+k+1*sm];
-         vdiag -= sfmv[1][k]*mm[2][3+k];
+         vdiag -= sfmv(0,k)*mm(2,3+k+1*sm);
+         vdiag -= sfmv(1,k)*mm(2,3+k);
       }
 
       for(k=0;k<im;++k)
-         vdiag -= ifmb[2][k]*mm[2][k+bm];
+         vdiag -= ifmb(2,k)*mm(2,k+bm);
    }
    else {
       if (p > 0)
-         vdiag = mm[0][0] + mm[0][1] + mm[0][2];
+         vdiag = mm(0,0) + mm(0,1) + mm(0,2);
       else
-         vdiag = mm[0][0];
+         vdiag = mm(0,0);
    }
 
 
@@ -821,16 +781,16 @@ void hpbasis::lumpinv(void) {
             ind = 0;
             /* CROSS SIDE MODES */
             for(j=k;j<sm-1;++j) {
-               vwk[ind] =  mm[i*sm+3+k][i1*sm+3+j];
+               vwk(ind) =  mm(i*sm+3+k,i1*sm+3+j);
                for(m=0;m<im;++m)  
-                  mwk[ind][m] = mm[bm+m][i1*sm+3+j];
+                  mwk(ind,m) = mm(bm+m,i1*sm+3+j);
                ++ind;
             }
             
             for(j=k;j<MIN(2*k,sm-1);++j) {
-               vwk[ind] =  mm[i*sm+3+k][i2*sm+3+j];
+               vwk(ind) =  mm(i*sm+3+k,i2*sm+3+j);
                for(m=0;m<im;++m)  
-                  mwk[ind][m] = mm[bm+m][i2*sm+3+j];
+                  mwk(ind,m) = mm(bm+m,i2*sm+3+j);
                ++ind;
             }                     
 
@@ -838,43 +798,43 @@ void hpbasis::lumpinv(void) {
             ind1 = 0;
             for(m = 2; m< sm+1;++m) {      
                for(n = 1; n < sm+1-m;++n) {
-                  vwk[ind] = mm[i*sm+3+k][bm+ind1];
+                  vwk(ind) = mm(i*sm+3+k,bm+ind1);
                   for(j=0;j<im;++j) 
-                     mwk[ind][j] = mm[bm+j][bm+ind1];
+                     mwk(ind,j) = mm(bm+j,bm+ind1);
                   ++ind;
                   ++ind1;
                }
                ++ind1;
             }
 
-            GETRF(im,im,mwk[0],MXTM,ipiv,info);
+            GETRF(im,im,&mwk(0,0),MXTM,&ipiv(0),info);
             if (info != 0) {
                printf("DGETRF FAILED SIDE info:%d (sm+2):%d k:%d\n",info,(sm+2),k);
                exit(1);
             }
             else
-               GETRS(trans,im,1,mwk[0],MXTM,ipiv,vwk,MXTM,info);
+               GETRS(trans,im,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
 
             for(j=0;j<im;++j)
-               ifmb[i*sm+3+k][j] = vwk[j];
+               ifmb(i*sm+3+k,j) = vwk(j);
          }
 
          /* FOR HIGHEST ORDER MODE - STATIC INVERT ALL INTERIOR MODES */
          for(j=0;j<im;++j) {
-            vwk[j] = mm[i*sm +sm +2][j+bm];
+            vwk(j) = mm(i*sm +sm +2,j+bm);
             for(k=0;k<im;++k)
-               mwk[j][k] = mm[k+bm][j+bm];
+               mwk(j,k) = mm(k+bm,j+bm);
          }
 
-         GETRF(im,im,mwk[0],MXTM,ipiv,info);
+         GETRF(im,im,&mwk(0,0),MXTM,&ipiv(0),info);
          if (info != 0) {
             printf("GETRF FAILED info: %d cond: %f\n",info,rcond);
             exit(1);
          }
-         GETRS(trans,im,1,mwk[0],MXTM,ipiv,vwk,MXTM,info);
+         GETRS(trans,im,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
 
          for(j=0;j<im;++j)
-            ifmb[i*sm +sm +2][j] = vwk[j];
+            ifmb(i*sm +sm +2,j) = vwk(j);
       }
    }
 
@@ -883,25 +843,25 @@ void hpbasis::lumpinv(void) {
    /*********************************************/
    for(k=0;k<sm;++k) {
       for(j=0;j<tm;++j)
-         u[j] = 0.0;
+         u(j) = 0.0;
          
-      u[k+3] = 1.0;
+      u(k+3) = 1.0;
       for(j=0;j<im;++j) {
-         u[j+bm] = -ifmb[k+3][j];
+         u(j+bm) = -ifmb(k+3,j);
       }
 
-      proj(u,wk1);
-      intgrt(wk1,l);
+      proj(&u(0),&wk1(0),gpn);
+      intgrt(&l(0),&wk1(0),gpn);
       
       for(j=0;j<3;++j)
-         vfms[j][k] = l[j];
+         vfms(j,k) = l(j);
          
-      sdiag[k] = 1.0/l[3+k];
+      sdiag(k) = 1.0/l(3+k);
       
       for(j=0;j<k;++j) {
-         sfms[j][k][0] = l[3+j];
-         sfms[j][k][1] = l[3+j+sm];
-         sfms[j][k][2] = l[3+j+2*sm];
+         sfms(j,k,0) = l(3+j);
+         sfms(j,k,1) = l(3+j+sm);
+         sfms(j,k,2) = l(3+j+2*sm);
       }
    }
 
@@ -916,11 +876,11 @@ void hpbasis::lumpinv(void) {
          i1 = (0 > j-ibwth ? 0 : j-ibwth);
          for(i=i1;i<=j;++i) {
             k = i - (j-ibwth);
-            idiag[j][k] = mm[i+bm][j+bm];
+            idiag(j,k) = mm(i+bm,j+bm);
          }
       }
       
-      PBTRF(uplo,im,ibwth,idiag[0],ibwth+1,info);
+      PBTRF(uplo,im,ibwth,&idiag(0,0),ibwth+1,info);
       if (info != 0) {
          printf("1:PBTRF FAILED info: %d\n", info);
          exit(1);
@@ -929,24 +889,24 @@ void hpbasis::lumpinv(void) {
       /* MATRIX TO REMOVE BOUNDARY MODES FROM INTERIOR */
       for(i=0; i<bm; ++i ) {
          for(j=0; j<im; ++j ) {
-            bfmi[i][j] = mm[i][j+bm];
+            bfmi(i,j) = mm(i,j+bm);
          }
-         PBTRS(uplo,im,ibwth,1,idiag[0],ibwth+1,bfmi[i],im,info);
+         PBTRS(uplo,im,ibwth,1,&idiag(0,0),ibwth+1,&bfmi(i,0),im,info);
       }
       
       /* TEST INVERSE 
       for(i=0;i<im;++i) {
          for(j=0;j<bm;++j)
-            printf(" %f ",bfmi[j][i]);    
+            printf(" %f ",bfmi(j,i));    
          printf("\n");
       }
          
       printf("ibwth %d\n",ibwth);
       for(i=0;i<im;++i) {
-         PBTRS(uplo,im,ibwth,1,idiag[0],ibwth+1,&mm[i+bm][bm],im,info);
+         PBTRS(uplo,im,ibwth,1,&idiag(0,0),ibwth+1,&mm(i+bm,bm),im,info);
          printf("%d: ",i);
          for(j=0;j<im;++j)
-            printf("%f ",mm[i+bm][bm+j]);
+            printf("%f ",mm(i+bm,bm+j));
          printf("\n");
       }
       */
@@ -956,9 +916,9 @@ void hpbasis::lumpinv(void) {
    /* MASS MATRIX WITH STATIC CONDENSATION OF INTERIOR MODES */
    for(i=0;i<bm;++i) {
       for(j=0;j<bm;++j) {
-         mwk[i][j] = mm[i][j];
+         mwk(i,j) = mm(i,j);
          for(k=0;k<im;++k)
-            mwk[i][j] -= bfmi[i][k]*mm[j][k+bm];
+            mwk(i,j) -= bfmi(i,k)*mm(j,k+bm);
       }
    }
 
@@ -968,10 +928,10 @@ void hpbasis::lumpinv(void) {
    for(j=0;j<bm;++j) {
       for(i=0;i<=j;++i) {
          k = i - (j-(bm-1));
-         msi[j][k] = mwk[i][j];
+         msi(j,k) = mwk(i,j);
       }
    }
-   PBTRF(uplo,bm,bm-1,msi[0],bm,info);
+   PBTRF(uplo,bm,bm-1,&msi(0,0),bm,info);
    if (info != 0) {
       printf("2:PBTRF FAILED info: %d\n", info);
       exit(1);
@@ -979,9 +939,9 @@ void hpbasis::lumpinv(void) {
 #else
    for(i=0;i<bm;++i)
       for(j=0;j<bm;++j) 
-         msi[i][j] = mwk[i][j];
+         msi(i,j) = mwk(i,j);
          
-   DPOTRF(uplo,bm,&msi[0][0],bm,info);
+   DPOTRF(uplo,bm,&msi(0,0),bm,info);
    if (info != 0) {
       printf("POTRF FAILED info: %d\n", info);
       exit(1);
@@ -996,64 +956,64 @@ void hpbasis::lumpinv(void) {
       i1 = (i+1)%3;
       i2 = (i+2)%3;
 
-      u[i] = 1.0;
-      u[i1] = 0.0;
-      u[i2] = 0.0;
+      u(i) = 1.0;
+      u(i1) = 0.0;
+      u(i2) = 0.0;
       
       for(j=0;j<sm;++j) {
-         u[3+j+i*sm] = 0.0;
-         u[3+j+i1*sm] = -sfmv[1][j];
-         u[3+j+i2*sm] = -sfmv[0][j];
+         u(3+j+i*sm) = 0.0;
+         u(3+j+i1*sm) = -sfmv(1,j);
+         u(3+j+i2*sm) = -sfmv(0,j);
       }
       
       for(j=0;j<im;++j)
-         u[bm+j] = -ifmb[i][j];
+         u(bm+j) = -ifmb(i,j);
          
-      proj(u,wk1);
-      intgrt(wk1,mwk[i]);
+      proj(&u(0),&wk1(0),gpn);
+      intgrt(&mwk(i,0),&wk1(0),gpn);
       printf("%2d:",i);
       for(j=0;j<tm;++j)
-         printf("%+.4e  ",mwk[i][j]);
+         printf("%+.4le  ",mwk(i,j));
       printf("\n");
    }
    
    for(i=0;i<3;++i) {
       for(k=0;k<sm;++k) {
          for(j=0;j<tm;++j)
-            u[j] = 0.0;
-         u[i*sm+k+3] = 1.0;
+            u(j) = 0.0;
+         u(i*sm+k+3) = 1.0;
          for(j=0;j<im;++j) {
-            u[j+bm] = -ifmb[i*sm+k+3][j];
+            u(j+bm) = -ifmb(i*sm+k+3,j);
          }
 
-         proj(u,wk1);
-         intgrt(wk1,mwk[i*sm+k+3]);
+         proj(&u(0),&wk1(0),gpn);
+         intgrt(&mwk(i*sm+k+3,0),&wk1(0),gpn);
          
          printf("%2d:",3+i*sm+k);
          for(j=0;j<tm;++j)
-            printf("%+.4e  ",mwk[i*sm+k+3][j]);
+            printf("%+.4le  ",mwk(i*sm+k+3,j));
          printf("\n");
       }         
    }
    
    for(i=0;i<im;++i) {
       for(j=0;j<tm;++j)
-         u[j] = 0.0;
-      u[i +bm] = 1.0;  
-      proj(u,wk1);
-      intgrt(wk1,mwk[i+bm]);
+         u(j) = 0.0;
+      u(i +bm) = 1.0;  
+      proj(&u(0),&wk1(0),gpn);
+      intgrt(&mwk(i+bm,0),&wk1(0),gpn);
    }
    
    for(i=0;i<3;++i)
       for(m=0;m<tm;++m)
-         mwk[i][m] /= vdiag;
+         mwk(i,m) /= vdiag;
          
    for(i=0;i<3;++i) {
       for(j=0;j<3;++j) {
          i1 = (i+j)%3;
          for(k=0;k<sm;++k) {
             for(m=0;m<tm;++m)
-               mwk[i*sm+k+3][m] -= vfms[j][k]*mwk[i1][m];
+               mwk(i*sm+k+3,m) -= vfms(j,k)*mwk(i1,m);
          }
       }
    }
@@ -1063,36 +1023,33 @@ void hpbasis::lumpinv(void) {
    for(mode = 0; mode <sm;++mode) {
       for(i=0;i<3;++i)
          for(k=0;k<tm;++k)
-            mwk[3+i*sm+mode][k] *= sdiag[mode];
+            mwk(3+i*sm+mode,k) *= sdiag(mode);
       for(i=0;i<3;++i) {
          for(m=mode+1;m<sm;++m) {
             for(j=0;j<3;++j) {
                i1 = (i+j)%3;
                for(k=0;k<tm;++k)
-                  mwk[3+i*sm+m][k] -= sfms[mode][m][j]*mwk[3+i1*sm+mode][k];
+                  mwk(3+i*sm+m,k) -= sfms(mode,m,j)*mwk(3+i1*sm+mode,k);
             }
          }
       }
    }
-   DPBTRSNU(idiag,im,ibwth,&mwk[bm][0],MXTM);
+   DPBTRSNU1(&idiag(0,0),im,ibwth,&mwk(bm,0),MXTM);
    for(k=0;k<im;++k)
       for(i=0;i<bm;++i)
          for(j=0;j<tm;++j)
-            mwk[bm+k][j] -= bfmi[i][k]*mwk[i][j];
+            mwk(bm+k,j) -= bfmi(i,k)*mwk(i,j);
                      
    for(m=0;m<tm;++m) {
       printf("LI1: %2d:",m);
       for(j=0;j<tm;++j) {
-         if (fabs(mwk[m][j]) > 1.0e-12)
-            printf("%+.2e  ",mwk[m][j]);
+         if (fabs(mwk(m,j)) > 1.0e-12)
+            printf("%+.2e  ",mwk(m,j));
          else
             printf("%+.2e  ",0.0);
       }
       printf("\n");
    }
-   
-   
-   
 #endif   
 
    /********************************************************************/   
@@ -1101,9 +1058,9 @@ void hpbasis::lumpinv(void) {
    /* CALCULATE 1-D MASS MATRIX */   
    for(m=1;m<p+2;++m) {
       for(k=1;k<p+2;++k) {
-         mm[m-1][k-1]= 0.0;
+         mm(m-1,k-1)= 0.0;
          for(i=0;i<gpx;++i)
-            mm[m-1][k-1] += wtx[i]*gx[m][i]*gx[k][i];
+            mm(m-1,k-1) += wtx(i)*gx(i,m)*gx(i,k);
       }
    }
 
@@ -1112,7 +1069,7 @@ void hpbasis::lumpinv(void) {
    for(i=0;i<sm+2;++i) {
       printf("LI2: %2d:",i);
       for(j=0;j<sm+2;++j)
-         printf("%+.4f ",mm[i][j]);
+         printf("%+.4lf ",mm(i,j));
       printf("\n");
    }
 #endif
@@ -1123,11 +1080,11 @@ void hpbasis::lumpinv(void) {
          i1 = (0 > j-sbwth ? 0 : j-sbwth);
          for(i=i1;i<=j;++i) {
             k = i - (j-sbwth);
-            sdiag1d[j][k] = mm[i+2][j+2];
+            sdiag1d(j,k) = mm(i+2,j+2);
          }
       }
 
-      PBTRF(uplo,sm,sbwth,sdiag1d[0],sbwth+1,info);
+      PBTRF(uplo,sm,sbwth,&sdiag1d(0,0),sbwth+1,info);
       if (info != 0 || rcond < 100.*EPSILON) {
          printf("PBTRF FAILED - 1D (sm+2) : %d info: %d cond: %f\n",(sm+2), info,rcond);
          exit(1);
@@ -1136,75 +1093,75 @@ void hpbasis::lumpinv(void) {
       /* MATRIX TO REMOVE VERTEX MODES FROM SIDES */
       for(i=0; i<2; ++i) {
          for(j=0; j<sm; ++j) {
-            vfms1d[i][j] = mm[i][j+2];
+            vfms1d(i,j) = mm(i,j+2);
          }
-         PBTRS(uplo,sm,sbwth,1,sdiag1d[0],sbwth+1,vfms1d[i],(sm+2)-2,info);
+         PBTRS(uplo,sm,sbwth,1,&sdiag1d(0,0),sbwth+1,&vfms1d(i,0),(sm+2)-2,info);
       }
 
       /* MATRIX TO REMOVE SIDE MODES FROM VERTICES */   
       for(i=0;i<2;++i) {      
          /* VERTEX CONSTRAINT */
-         vwk[0] = mm[i][(i+1)%2];
+         vwk(0) = mm(i,(i+1)%2);
          for(m=0;m<sm;++m)
-            mwk[0][m] = mm[(i+1)%2][m+2];
+            mwk(0,m) = mm((i+1)%2,m+2);
 
          /* SIDE CONSTRAINTS */
          for(m=0;m<sm-1;++m) {
-            vwk[m+1] = mm[i][m+2];
+            vwk(m+1) = mm(i,m+2);
             for(k=0;k<sm;++k) {
-               mwk[m+1][k] = mm[m+2][k+2];
+               mwk(m+1,k) = mm(m+2,k+2);
             }
          }
-         GETRF(sm,sm,mwk[0],MXTM,ipiv,info);
+         GETRF(sm,sm,&mwk(0,0),MXTM,&ipiv(0),info);
          if (info != 0) {
-            printf("DGETRF FAILED - VRTX info:%d (sm+2):%d i:%d\n",info,(sm+2),i);
+            printf("1D DGETRF FAILED - VRTX info:%d (sm+2):%d i:%d\n",info,(sm+2),i);
             exit(1);
          }
-         GETRS(trans,sm,1,mwk[0],MXTM,ipiv,vwk,MXTM,info);
+         GETRS(trans,sm,1,&mwk(0,0),MXTM,&ipiv(0),&vwk(0),MXTM,info);
 
          /* STORE MATRIX */
          for(k=0;k<sm;++k)
-            sfmv1d[i][k] = vwk[k];
+            sfmv1d(i,k) = vwk(k);
       }
 
       /* FIND VERTEX DIAGANOL ELEMENT */
-      vdiag1d = mm[0][0];
+      vdiag1d = mm(0,0);
       for(k=0;k<sm;++k)
-         vdiag1d -= sfmv1d[0][k]*mm[0][2+k];
+         vdiag1d -= sfmv1d(0,k)*mm(0,2+k);
    }
    else {
       if (p > 0) 
-         vdiag1d = mm[0][0]+mm[0][1];
+         vdiag1d = mm(0,0)+mm(0,1);
       else
-         vdiag1d = mm[0][0];
+         vdiag1d = mm(0,0);
    }
 
 #ifdef DEBUG
    /* CHECK TO MAKE SURE PREVIOUS 1D RESULTS ARE RIGHT */
-   double uht[MXTM];
+   Array<FLT,1> uht(MXTM);
    for(k=0;k<2;++k) {
-      u[k] = 1.0;
-      u[(k+1)%2] = 0.0;
+      u(k) = 1.0;
+      u((k+1)%2) = 0.0;
       for(m=0;m<sm;++m)
-         u[m+2] = -sfmv1d[k][m];
+         u(m+2) = -sfmv1d(k,m);
 
-      for(i=0;i<sm+2;++i) {
-         uht[i] = u[0]*gx[0][i];
-         uht[i] += u[1]*gx[1][i];
+      for(i=0;i<gpx;++i) {
+         uht(i) = u(0)*gx(i,0);
+         uht(i) += u(1)*gx(i,1);
          for(m=0;m<sm;++m)
-            uht[i] += u[m+2]*gx[3+m][i];
+            uht(i) += u(m+2)*gx(i,3+m);
       }
 
       for(m=1;m<sm+3;++m) {
-         l[m] = 0.0;
+         l(m) = 0.0;
          for(i=0;i<gpx;++i) {
-            l[m] += wtx[i]*gx[m][i]*uht[i];
+            l(m) += wtx(i)*gx(i,m)*uht(i);
          }
       }
       printf("LI3 %2d:",k);
       for(j=1;j<sm+3;++j)
-         printf("%+.4e  ",l[j]);
-      printf("%+.4e  ",vdiag1d);
+         printf("%+.4le  ",l(j));
+      printf("%+.4le  ",vdiag1d);
       printf("\n");
    }
 #endif
@@ -1219,8 +1176,8 @@ void hpbasis::legpt()
    FLT x,eta,r,s;
    int i,j,m,n,ind;
    
-   mat_alloc(lgrnge1d,nmodx,sm+1,FLT);
-   tens_alloc(lgrnge,tm,sm+1,sm+1,FLT);
+   lgrnge1d.resize(nmodx,sm+1);
+   lgrnge.resize(tm,sm+1,sm+1);
 
    /* CALCULATE PROJECTION POINTS IN INTERIOR */
    for(i=1;i<sm;++i) {
@@ -1235,29 +1192,29 @@ void hpbasis::legpt()
      
          /* CALCULATE S POLYNOMIALS */
          /* VERTEX A   */
-         lgrnge[0][i][j] = pgn[0]*pgx[0];
+         lgrnge(0,i,j) = pgn(0)*pgx(0);
 
          /* VERTEX B  */
-         lgrnge[1][i][j] = pgn[1]*pgx[1];
+         lgrnge(1,i,j) = pgn(1)*pgx(1);
 
          /* VERTEX C    */   
-         lgrnge[2][i][j] = pgn[2]*pgx[2];
+         lgrnge(2,i,j) = pgn(2)*pgx(2);
 
          /*  SIDE 1 (s)      */
          for(m = 3; m < sm+3; ++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[m];
+            lgrnge(m,i,j) = pgn(m)*pgx(m);
             
          for(m=sm+3;m<2*sm+3;++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[2];
+            lgrnge(m,i,j) = pgn(m)*pgx(2);
 
          for(m=2*sm+3;m<bm;++m)
-            lgrnge[m][i][j] = pgn[m]*pgx[1];
+            lgrnge(m,i,j) = pgn(m)*pgx(1);
 
          /*  INTERIOR MODES   */
          ind = bm;
          for(m = 3; m< sm+2;++m) {      
             for(n = 1; n < sm+3-m;++n) {
-               lgrnge[ind][i][j] = pgn[ind]*pgx[m];
+               lgrnge(ind,i,j) = pgn(ind)*pgx(m);
                ++ind;
             }
          }
@@ -1269,7 +1226,7 @@ void hpbasis::legpt()
       x = 2.0*(FLT) i/(FLT)(sm+1) -1.0;
       ptvalues1d(x);
       for(m=0;m<p+1;++m)
-         lgrnge1d[m][i] = pgx[m];
+         lgrnge1d(m,i) = pgx(m);
    }
    
    return;

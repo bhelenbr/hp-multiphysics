@@ -9,17 +9,17 @@ LIB = -L$(HOME)/Codes/lib -lmyblas -lm
 
 ## Darwin:
 ## Machine specific for OS X
-AR = libtool
-ARFLAGS = -o
-CPPFLAGS += -O3
-LIB += -framework veclib
+#AR = libtool
+#ARFLAGS = -o
+#CPPFLAGS += -O3
+#LIB += -framework veclib
  
 ## Linux:
 ##  Machine specific for Linux
 #CXX=icpc #(cares)
-#CXX=g++3 #(shelob)
-#CPPFLAGS += -O3
-#LIB += -llapack -lblas -lg2c
+CXX=g++3 #(shelob)
+CPPFLAGS += -O3
+LIB += -llapack -lblas -lg2c
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)

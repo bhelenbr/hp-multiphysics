@@ -6,8 +6,9 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
+#include <blitz/array.h>
 
-#include<float.h>
+#include <float.h>
 
 #ifdef SINGLE
 #define FLT float
@@ -19,15 +20,18 @@
 #endif
 #endif
 
-#define MXTM 100
+#define MAXP 4
+#define MXTM (MAXP+2)*(MAXP+1)/2
+#define MXGP (MAXP+2)
 #define MORTHOGONAL
-#define VERTEX
+
+using namespace blitz;
 
 class hpbasis {
    public:
       int p;
       /* NUMBER OF MODES : VERTEX,SIDE/INTERIOR/TOTAL/BOUNDARY */
-      int vm,sm,im,tm,bm;
+      int sm,im,tm,bm;
       /* NUMBER OF X/S MODES & GAUSS POINTS */      
       int nmodx,nmodn,gpx,gpn;
       /* BANDWITH OF INTERIOR/INTERIOR MATRIX */
@@ -35,64 +39,67 @@ class hpbasis {
       /* BANDWITH OF SIDE/SIDE MATRIX (1D) */
       static const int sbwth = 2;
       /* RECURSION RELATION COEFFICIENTS */
-      FLT **a0, **b0;
+      Array<FLT,2> a0, b0;
       
       /* X FUNCTIONS & DERIVATIVES */
-      FLT **gx, **dgx;
+      Array<FLT,2> gx, dgx;
       /* GAUSS WEIGTS & LOCATIONS */
-      FLT *wtx, *x0;
+      Array<FLT,1> wtx, x0;
       /* COMBINED THINGS FOR FAST INTEGRATION */
-      FLT **gxwtx, **dgxwtx;
+      Array<FLT,2> gxwtx, dgxwtx;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
-      FLT *dltx, **dltx1;
+      Array<FLT,1> dltx;
+      Array<FLT,2> dltx1;
       
       /* ETA FUNCTIONS & DERIVATIVES */
-      FLT **gn, **dgn;
+      Array<FLT,2> gn, dgn;
       /* GAUSS WEIGTS & LOCATIONS */
-      FLT *wtn, *n0;
+      Array<FLT,1> wtn, n0;
       /* COMBINED THINGS FOR FAST INTEGRATION */
-      FLT **gnwtnn0,**dgnwtn;
+      Array<FLT,2> gnwtn, gnwtnn0, dgnwtn;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
-      FLT *dltn, **dltn1, **dltn2;
+      Array<FLT,1> dltn;
+      Array<FLT,2> dltn1, dltn2;
 
       /* RENORMALIZATION CONSTANTS */
-      FLT *norm;
+      Array<FLT,1> norm;
       
       /* FOR OUTPUTING TO LEGENDRE POINTS */         
-      FLT **lgrnge1d, ***lgrnge;
+      Array<FLT,2> lgrnge1d;
+      Array<FLT,3> lgrnge;
       
       /* FOR CALCULATING NORMAL DERIVATIVES ALONG SIDES */
-      FLT **dgnorm[3];
+      Array<FLT,3> dgnorm;
 
       /* LUMPED MASS MATRIX INVERSION */
       /* REMOVE SIDE COMPONENT FROM VERTICES */
-      FLT **sfmv;
+      Array<FLT,2> sfmv;
       /* REMOVE INTERIOR COMPONENT FROM VERTICES & SIDES */
-      FLT **ifmb;
+      Array<FLT,2> ifmb;
       /* DIAGONAL FOR VERTICES AFTER REMOVAL OF SIDES & INTERIORS */
       FLT vdiag;
       /* AFTER FINDING VERTEX REMOVE FROM SIDE MODES */
-      FLT **vfms;
+      Array<FLT,2> vfms;
       /* DIAGONAL FOR SIDES */      
-      FLT *sdiag;
+      Array<FLT,1> sdiag;
       /* AFTER FINDING LOW ORDER SIDES REMOVE FROM HIGH ORDER SIDE MODES */
-      FLT ***sfms;
+      Array<FLT,3> sfms;
       /* AFTER FINDING VERTICES & ALL SIDES REMOVE FROM INTERIOR */
-      FLT **bfmi;
+      Array<FLT,2> bfmi;
       /* INTERIOR DIAGONAL */
-      FLT **idiag;
+      Array<FLT,2> idiag;
       /* MASS MATRIX WITH STATIC INVERSION OF INTERIOR MODES */
-      FLT **msi;
+      Array<FLT,2> msi;
       
       /*1D (SIDE) MASS MATRIX INVERSION */
       /* REMOVE SIDE COMPONENT FROM VERTICES */
-      FLT **sfmv1d;
+      Array<FLT,2> sfmv1d;
       /* DIAGONAL FOR VERTICES AFTER REMOVAL OF SIDES */
       FLT vdiag1d;
       /* AFTER FINDING VERTEX REMOVE FROM SIDE MODES */
-      FLT **vfms1d;
+      Array<FLT,2> vfms1d;
       /* DIAGONAL FOR SIDES */      
-      FLT **sdiag1d;
+      Array<FLT,2> sdiag1d;
          
       void initialize(int pdegree, int gpoints);
       inline void initialize(int pdegree) { initialize(pdegree, pdegree+1);}
@@ -100,39 +107,34 @@ class hpbasis {
       static inline int imode(int p1) {return((p1-2)*(p1-1)/2);}
       static inline int tmode(int p1) {return((p1+2)*(p1+1)/2);}
       /* PROJECT WITH R & S DERIVATIVES */
-      void proj(FLT *lin, FLT **f, FLT **dr, FLT **ds);
+      void proj(FLT *lin, FLT *f, FLT *dx, FLT *dy, int stride);
       /* PROJECT ONLY VALUE */
-      void proj(FLT *lin, FLT **f);
+      void proj(FLT *lin, FLT *f, int stride);
       /* PROJECT A LINEAR FUNCTION */
-      void proj(FLT u1, FLT u2, FLT u3, FLT **f);
+      void proj(FLT u1, FLT u2, FLT u3, FLT *f, int stride);
       /* PROJECT USING SIDE/VERTEX MODES WITH R & S DERIVATIVES */
-      void proj_bdry(FLT *lin, FLT **f, FLT **dr, FLT **ds);
+      void proj_bdry(FLT *lin, FLT *f, FLT *dr, FLT *ds, int stride);
       /* PROJECT USING SIDE/VERTEX MODES ONLY */
-      void proj_bdry(FLT *lin, FLT **f);
+      void proj_bdry(FLT *lin, FLT *f, int stride);
       /* PROJECT TO LEGENDRE POINTS (FOR OUTPUTING) */
-      void proj_leg(FLT *lin, FLT **f);
+      void proj_leg(FLT *lin, FLT *f, int stride);
       /* PROJECT LINEAR FUNCTION TO LEGENDRE POINTS (FOR OUTPUTING) */
-      void proj_leg(FLT u1, FLT u2, FLT u3, FLT **f);
+      void proj_leg(FLT u1, FLT u2, FLT u3, FLT *f, int stride);
       /* PROJECT TO LEGENDRE POINTS USING SIDE/VERTEX MODES ONLY (FOR OUTPUTING) */
-      void proj_bdry_leg(FLT *lin, FLT **f);
+      void proj_bdry_leg(FLT *lin, FLT *f, int stride);
       /* PROJECT VALUES & TANGENT & NORMAL DERIVATIVES TO 1D SIDE GAUSS POINTS */
       /* dx is tangential derivative, dn is normal derivative to side */
       void proj_side(int side, FLT *lin, FLT *f, FLT *dx, FLT *dn);
 
       /* DERIVATIVE IN R */
-      void derivr(FLT **f, FLT **dr);
+      void derivr(FLT *f, FLT *dr, int stride);
       /* DERIVATIVE IN S */
-      void derivs(FLT **f, FLT **ds);
+      void derivs(FLT *f, FLT *ds, int stride);
       /* INTEGRATE WITH RESPECT TO BASIS */
-      /* WARNING THESE ADD INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-      void intgrt(FLT **f, FLT *rslt);
+      void intgrt(FLT *rslt, FLT *f, int stride);
       /* INTEGRATE FX W/RSPCT TO DG/DR & FY W/RSPCT TO DG/DS */
-      void intgrtrs(FLT **fr, FLT **fs, FLT *rslt);
-      /* INTEGRATE W/RSPCT TO DG/DR */
-      void intgrtr(FLT **f, FLT *rslt1);
-      /* INTEGRATE W/RSPCT TO DG/DS */
-      void intgrts(FLT **f, FLT *rslt2);
-      void intgrtrs(FLT *fx, FLT *fy, int fsz, FLT *rslt);
+      /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
+      void intgrtrs(FLT *rslt, FLT *dx, FLT *dy, int stride);
 
       /* SAME STUFF EXCEPT 1D   */   
       /* PROJECT WITH X DERIVATIVES */
@@ -148,42 +150,40 @@ class hpbasis {
       /* DERIVATIVE IN X */
       void derivx1d(FLT *f, FLT *dx);
       /* INTEGRATE WITH RESPECT TO BASIS */
-      void intgrt1d(FLT *f, FLT *rslt);
+      void intgrt1d(FLT *rslt, FLT *f);
       /* INTEGRATE W/RSPCT TO DG/DX */
-      void intgrtx1d(FLT *f, FLT *rslt);
-      
+      void intgrtx1d(FLT *rslt, FLT *f);
+           
       /* POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
-      inline void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+      inline void ptprobe(int nv, FLT *f, FLT r, FLT s, FLT *lin, int stride) {
          ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
-         ptprobe(nv, lin, f);
+         ptprobe(nv, f, lin, stride);
       }
-      void ptprobe(int nv, FLT **lin, FLT *f);  // REUSES OLD R,S
+      void ptprobe(int nv, FLT *f, FLT *lin, int stride);  // REUSES OLD R,S
       
       /* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
-      inline void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
+      inline void ptprobe_bdry(int nv, FLT *f, FLT r, FLT s, FLT *lin, int stride) {
          ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
-         ptprobe_bdry(nv, lin, f);
+         ptprobe_bdry(nv, f, lin, stride);
       }
-      void ptprobe_bdry(int nv, FLT **lin, FLT *f); // REUSES OLD R,S ONLY BDRY MODES 
-      void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
+      void ptprobe_bdry(int nv, FLT *f, FLT *lin, int stride); // REUSES OLD R,S ONLY BDRY MODES 
+      void ptprobe_bdry(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT *lin, int stride); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
       
       /* 1D SIDE PROBE FUNCTIONS */
-      inline void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {    
+      inline void hpbasis::ptprobe1d(int nv, FLT *f, FLT x, FLT *sin, int stride) {    
          ptvalues1d(x);
-         ptprobe1d(nv,lin,f);
+         ptprobe1d(nv,f,sin,stride);
       }
-      void ptprobe1d(int nv, FLT **lin, FLT *f);  // REUSES OLD VALUES OF X
-      inline void ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx, FLT x) {    
+      void ptprobe1d(int nv, FLT *f, FLT *sin, int stride);  // REUSES OLD VALUES OF X
+      inline void hpbasis::ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, FLT *sin, int stride) {    
          ptvalues1d_deriv(x);
-         ptprobe1d(nv,lin,f,dx);
+         ptprobe1d(nv,f,dx,sin,stride);
       }
-      void ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx);
+      void ptprobe1d(int nv, FLT *f, FLT *dx, FLT *sin, int stride);
       
    /* LOCAL STORAGE/WORK */
    private:
-      static int wkpmax;
-      static FLT **wk0,**wk1,**wk2,**wk3;
-      static FLT *pgx, *dpgx, *pgn, *dpgn; // FOR POINT PROBE
+      Array<FLT,1> pgx, dpgx, pgn, dpgn; // FOR POINT PROBE
       
       /* SETUP FUNCTIONS */
       void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
@@ -201,4 +201,5 @@ class hpbasis {
       void ptvalues1d(FLT x);
       void ptvalues1d_deriv(FLT x);
 };
+
 

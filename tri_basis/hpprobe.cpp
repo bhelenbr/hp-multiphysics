@@ -11,104 +11,126 @@
 #include<math.h>
 #include<utilities.h>
 
+#ifndef BZ_DEBUG
+#define lin(n,m) lin1[(n)*stride +m]
+#define sin(n,k) sin1[(n)*stride +k]
+#define f(i) f1[(i)]
+#define dx(i) dx1[(i)]
+#define dy(i) dy1[(i)]
+#endif
 
-void hpbasis::ptprobe(int nv, FLT **lin, FLT *f) {
-   int k,m,n,ind;
+void hpbasis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
+   TinyVector<FLT,MXTM> wk0;
+   const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
+   const int lnmodx = nmodx;  
+   FLT lcl0;
+#ifdef BZ_DEBUG
+   Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+   Array<FLT,1> f(f1, shape(nv), neverDeleteData);
+#endif
    
-   for(n=0;n<nv;++n) {
+   for(int n=0;n<nv;++n) {
    
       /* SUM ALL S MODE CONTRIBUTIONS */
       /* VERTEX 0         */
-      wk0[0][0] = lin[n][0]*pgn[0];
+      wk0(0) = lin(n,0)*pgn(0);
       
-#ifndef VERTEX
-      if (p) {
-#endif
-
       /* VERTEX 1         */
-      wk0[1][0] = lin[n][1]*pgn[1];
-
+      lcl0 = lin(n,1)*pgn(1);
       /* SIDE 2      */
-      for(m = 2*sm+3; m < bm; ++m )
-         wk0[1][0] += lin[n][m]*pgn[m];
+      for(int m = bs2; m < bint; ++m )
+         lcl0 += lin(n,m)*pgn(m);
+      wk0(1) = lcl0;
   
       /* VERTEX 2         */
-      wk0[2][0] = lin[n][2]*pgn[2];
-
+      lcl0 = lin(n,2)*pgn(2);
       /* SIDE 1      */
-      for (m = sm+3; m < 2*sm+3; ++m)
-         wk0[2][0] += lin[n][m]*pgn[m];
+      for (int m = bs1; m < bs2; ++m)
+         lcl0 += lin(n,m)*pgn(m);
+      wk0(2) = lcl0;
 
       /* LOOP FOR INTERIOR MODES      */
-      ind = bm;
-      for(m = 3; m < sm+3; ++m) {
+      int ind = bint;
+      int bint1 = sm+2-3;
+      for(int m = 3; m < bs1; ++m) {
          /* SIDE 0      */
-         wk0[m][0] = lin[n][m]*pgn[m];
+         lcl0 = lin(n,m)*pgn(m);
       
          /* INTERIOR MODES      */
-         for(k = 0; k < sm+2-m; ++k) {
-            wk0[m][0] += lin[n][ind]*pgn[ind];
-            ++ind;
+         for(int k = 0; k < bint1; ++k) {
+            lcl0 += lin(n,ind+k)*pgn(ind+k);
          }
+         ind += bint1--;
+         wk0(m) = lcl0;
       }
-#ifndef VERTEX
-      }
-#endif
-       
-   /* SUM OVER N X MODES   */     
-      f[n]   = 0.0;
 
-      for(k=0; k < nmodx; ++k )  
-         f[n]   += wk0[k][0]*pgx[k];
+   /* SUM OVER N X MODES   */     
+      lcl0   = 0.0;
+      for(int k=0; k < lnmodx; ++k )  
+         lcl0 += wk0(k)*pgx(k);
+      f(n) = lcl0;
    }
+   
    return;
 }
 
-void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f) {
-   int k,m,n;
+void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
+   TinyVector<FLT,MXTM> wk0;
+   const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
+   const int lnmodx = nmodx;  
+   FLT lcl0;
+#ifdef BZ_DEBUG
+   Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+   Array<FLT,1> f(f1, shape(nv), neverDeleteData);
+#endif
    
-   for(n=0;n<nv;++n) {
+   for(int n=0;n<nv;++n) {
    
       /* SUM ALL S MODE CONTRIBUTIONS */
       /* VERTEX 0         */
-      wk0[0][0] = lin[n][0]*pgn[0];
+      wk0(0) = lin(n,0)*pgn(0);
       
-#ifndef VERTEX
-      if (p) {
-#endif
-
       /* VERTEX 1         */
-      wk0[1][0] = lin[n][1]*pgn[1];
-
+      lcl0 = lin(n,1)*pgn(1);
       /* SIDE 2      */
-      for(m = 2*sm+3; m < bm; ++m )
-         wk0[1][0] += lin[n][m]*pgn[m];
+      for(int m = bs2; m < bint; ++m )
+         lcl0 += lin(n,m)*pgn(m);
+      wk0(1) = lcl0;
   
       /* VERTEX 2         */
-      wk0[2][0] = lin[n][2]*pgn[2];
-
+      lcl0 = lin(n,2)*pgn(2);
       /* SIDE 1      */
-      for (m = sm+3; m < 2*sm+3; ++m)
-         wk0[2][0] += lin[n][m]*pgn[m];
+      for (int m = bs1; m < bs2; ++m)
+         lcl0 += lin(n,m)*pgn(m);
+      wk0(2) = lcl0;
 
       /* SIDE 0      */
-      for(m = 3; m < sm+3; ++m) 
-         wk0[m][0] = lin[n][m]*pgn[m];
-#ifndef VERTEX
+      for(int m = 3; m < bs1; ++m) {
+         wk0(m) = lin(n,m)*pgn(m);
       }
-#endif       
-   /* SUM OVER N X MODES   */     
-      f[n]   = 0.0;
 
-      for(k=0; k < nmodx; ++k )  
-         f[n]   += wk0[k][0]*pgx[k];
+   /* SUM OVER N X MODES   */     
+      lcl0   = 0.0;
+      for(int k=0; k < lnmodx; ++k )  
+         lcl0 += wk0(k)*pgx(k);
+      f(n) = lcl0;
    }
+   
    return;
 }
 
-void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s) {
-   int k,m,n;
-   FLT n0,x0,x,eta;
+void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, FLT *lin1, int stride) {
+   TinyVector<FLT,MXTM> wk0,wk1,wk2;
+   const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
+   FLT lcl0, lcl1, lcl2;
+   FLT xp1,oeta; 
+   FLT x,eta;
+#ifdef BZ_DEBUG
+   Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+   Array<FLT,1> f(f1, shape(nv), neverDeleteData);
+   Array<FLT,1> dx(dx1, shape(nv), neverDeleteData);
+   Array<FLT,1> dy(dy1, shape(nv), neverDeleteData);
+#endif
    
    s = MIN(1.0-10.*EPSILON,s);
    x = 2.0*(1+r)/(1-s) -1.0;
@@ -116,94 +138,102 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
    
    ptvalues_deriv_bdry(x,eta);
    
-   for(n=0;n<nv;++n) {
+   for(int n=0;n<nv;++n) {
 
       /* PART I - sum u*g_mn for each n, s_j   */
-      n0 = 2./(1 -eta);
+      oeta = 2./(1 -eta);
       
       /* VERTEX 0         */
-      wk0[0][0] = lin[n][0]*pgn[0];
-      wk1[0][0] = lin[n][0]*dpgn[0];
-      wk2[0][0] = wk0[0][0]*n0;
-      
-#ifndef VERTEX
-      if (p) {
-#endif
+      wk0(0) = lin(n,0)*pgn(0);
+      wk1(0) = lin(n,0)*dpgn(0);
+      wk2(0) = wk0(0)*oeta;
 
       /* VERTEX 1         */
-      wk0[1][0] = lin[n][1]*pgn[1];
-      wk1[1][0] = lin[n][1]*dpgn[1];
-
+      lcl0 = lin(n,1)*pgn(1);
+      lcl1 = lin(n,1)*dpgn(1);
       /* SIDE 2      */
-      for(m = 2*sm+3; m < bm; ++m ) {
-         wk0[1][0] += lin[n][m]*pgn[m];
-         wk1[1][0] += lin[n][m]*dpgn[m];
-      }         
-      wk2[1][0] = wk0[1][0]*n0;
+      for(int m = bs2; m < bint; ++m ) {
+         lcl0 += lin(n,m)*pgn(m);
+         lcl1 += lin(n,m)*dpgn(m);
+      }  
+      wk0(1) = lcl0;
+      wk1(1) = lcl1;       
+      wk2(1) = lcl0*oeta;
          
   
       /* VERTEX 2         */
-      wk0[2][0] = lin[n][2]*pgn[2];
-      wk1[2][0] = lin[n][2]*dpgn[2];
-
+      lcl0 = lin(n,2)*pgn(2);
+      lcl1 = lin(n,2)*dpgn(2);
       /* SIDE 1      */
-      for (m = sm+3; m < 2*sm+3; ++m) {
-         wk0[2][0] += lin[n][m]*pgn[m];
-         wk1[2][0] += lin[n][m]*dpgn[m];
+      for (int m = bs1; m < bs2; ++m) {
+         lcl0 += lin(n,m)*pgn(m);
+         lcl1 += lin(n,m)*dpgn(m);
       }         
-       wk2[2][0] = wk0[2][0]*n0;
+      wk0(2) = lcl0;
+      wk1(2) = lcl1;       
+      wk2(2) = lcl0*oeta;
 
-      for(m = 3; m < sm+3; ++m) {
+      for(int m = 3; m < bs1; ++m) {
          /* SIDE 0      */
-         wk0[m][0] = lin[n][m]*pgn[m];
-         wk1[m][0] = lin[n][m]*dpgn[m];
-         wk2[m][0] = wk0[m][0]*n0;
+         wk0(m) = lin(n,m)*pgn(m);
+         wk1(m) = lin(n,m)*dpgn(m);
+         wk2(m) = wk0(m)*oeta;
       }
-#ifndef VERTEX
-      }
-#endif
 
       /* SUM OVER N AT EACH I,J POINT   */     
-      x0 = 0.5*(1+x);
-      f[n]   = 0.0;
-      dx[n] = 0.0;
-      dy[n] = 0.0;
-
-      for(k=0; k < nmodx; ++k ) {     
-         f[n]   += wk0[k][0]*pgx[k];
-         dy[n] += wk1[k][0]*pgx[k];
-         dx[n] += wk2[k][0]*dpgx[k];
+      xp1 = 0.5*(1+x);
+      lcl0 = 0.0;
+      lcl1 = 0.0;
+      lcl2 = 0.0;
+      for(int k=0; k < nmodx; ++k ) {     
+         lcl0 += wk0(k)*pgx(k);
+         lcl1 += wk1(k)*pgx(k);
+         lcl2 += wk2(k)*dpgx(k);
       }
-      dy[n] += x0*dx[n];
+      f(n) = lcl0;
+      dx(n) = lcl2;
+      dy(n) = lcl1 +xp1*lcl2;
    }
    return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f) {
-   int k,n;
-
-   for(n=0;n<nv;++n) {
-      f[n]   = 0.0;
-
-      for(k=0; k < p+1; ++k )  
-         f[n]   += lin[n][k]*pgx[k];
+void hpbasis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
+   const int pp=p+1;
+   FLT lcl0;
+#ifdef BZ_DEBUG
+   Array<FLT,2> sin(sin1, shape(nv,stride), neverDeleteData);
+   Array<FLT,1> f(f1, shape(nv), neverDeleteData);
+#endif
+   
+   for(int n=0;n<nv;++n) {
+      lcl0 = 0.0;
+      for(int k=0; k < pp; ++k )  
+         lcl0 += sin(n,k)*pgx(k);
+      f(n) = lcl0;
 
    }
    
    return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT *dx) {
-   int k,n;
-
-   for(n=0;n<nv;++n) {
-      f[n]   = 0.0;
-      dx[n]  = 0.0;
-
-      for(k=0; k < p+1; ++k )  {
-         f[n]   += lin[n][k]*pgx[k];
-         dx[n]  += lin[n][k]*dpgx[k];
+void hpbasis::ptprobe1d(int nv, FLT *f1, FLT *dx1, FLT *sin1, int stride) {
+   const int pp = p+1;
+   FLT lcl0,lcl1;
+#ifdef BZ_DEBUG
+   Array<FLT,2> sin(sin1, shape(nv,stride), neverDeleteData);
+   Array<FLT,1> f(f1, shape(nv), neverDeleteData);
+   Array<FLT,1> dx(dx1, shape(nv), neverDeleteData);
+#endif
+   
+   for(int n=0;n<nv;++n) {
+      lcl0 = 0.0;
+      lcl1 = 0.0;
+      for(int k=0; k < pp; ++k ) {
+         lcl0 += sin(n,k)*pgx(k);
+         lcl1 += sin(n,k)*dpgx(k);
       }
+      f(n) = lcl0;
+      dx(n) = lcl1;
    }
    
    return;

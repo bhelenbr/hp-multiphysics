@@ -7,46 +7,69 @@
  *
  */
 
-#include"hpbasis.h"
-#include<stdio.h>
+#include "hpbasis.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-void hpbasis::intgrt(FLT **f, FLT *rslt) {
-    int i,j,m,n,indx;
-        
-   /* INTEGRATE FUNCTION FOR EACH TEST FUNCTION   */
+/* 2D to 1D access */
+#ifndef BZ_DEBUG
+#define f(i,j) f1[(i)*stride +j]
+#define dx(i,j) dx1[(i)*stride +j]
+#define dy(i,j) dy1[(i)*stride +j]
+#define rslt(i) rslt1[i]
+#endif
 
-   for (n = 0; n < nmodx; ++n) {
-      for (j = 0; j < gpn; ++j) {
-         wk0[n][j] = 0.0;
-         for(i = 0; i < gpx; ++i)
-            wk0[n][j] += f[i][j]*gxwtx[n][i];
+void hpbasis::intgrt(FLT *rslt1, FLT *f1, int stride) {
+   TinyMatrix<FLT,MXTM,MXGP> wk0;
+   const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
+   const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;
+   FLT lcl0;
+#ifdef BZ_DEBUG
+   Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
+   Array<FLT,1> rslt(rslt1, shape(tm), neverDeleteData);
+#endif
+      
+   for (int n = 0; n < lnmodx; ++n) {
+      for (int j = 0; j < lgpn; ++j) {
+         lcl0 = f(0,j)*gxwtx(n,0);
+         for(int i = 1; i < lgpx; ++i) {
+            lcl0 += f(i,j)*gxwtx(n,i);
+         }
+         wk0(n,j) = lcl0;
       }
    }
-
-   for(n=0;n<sm+vm;++n) {
-      rslt[n] = 0.0;
-      for (j=0; j < gpn; ++j)
-            rslt[n] += gn[n][j]*wtn[j]*wk0[n][j];
+   
+   /* SIDE 0 */
+   for (int m=0; m < bs1; ++m) {
+      lcl0 = 0.0;
+      for (int j=0; j < lgpn; ++j ) 
+         lcl0 += gnwtn(m,j)*wk0(m,j);
+      rslt(m) = lcl0;
    }
    
-   for(n=sm+3;n<2*sm+3;++n) {
-      rslt[n] = 0.0;
-      for (j=0; j < gpn; ++j)
-            rslt[n] += gn[n][j]*wtn[j]*wk0[2][j];
-   }   
-
-   for(n=2*sm+3;n<bm;++n) {
-      rslt[n] = 0.0;
-      for (j=0; j < gpn; ++j)
-            rslt[n] += gn[n][j]*wtn[j]*wk0[1][j];
-   }   
+   /* SIDE 1 */
+   for (int m=bs1;m<bs2;++m) {
+      lcl0 = 0.0;
+      for (int j=0; j < lgpn; ++j ) 
+         lcl0 += gnwtn(m,j)*wk0(2,j);
+      rslt(m) = lcl0;
+   }
    
-   indx = bm;
-   for(m = 3; m < sm+2; ++m) {
-      for(n = 0; n < sm+2-m; ++n) {
-         rslt[indx] = 0.0;
-         for (j=0; j < gpn; ++j )
-            rslt[indx] += gn[indx][j]*wtn[j]*wk0[m][j];
+   /* SIDE 2 */
+   for (int m=bs2;m<bint;++m) {
+      lcl0 = 0.0;
+      for (int j=0; j < lgpn; ++j ) 
+         lcl0 += gnwtn(m,j)*wk0(1,j);
+      rslt(m) = lcl0;
+   }
+   
+   int indx = bint;
+   for(int m = 3; m < lsm2; ++m) {
+      for(int n = 0; n < lsm2-m; ++n) {
+         lcl0 = 0.0;
+         for (int j=0; j < lgpn; ++j )
+            lcl0 += gnwtn(indx,j)*wk0(m,j);
+         rslt(indx) = lcl0;
          ++indx;
       }
    }
@@ -55,214 +78,80 @@ void hpbasis::intgrt(FLT **f, FLT *rslt) {
 }
 
 /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-/* THIS IS AN OPTIMIZED VERSION NOT IN USE RIGHT NOW */
-void hpbasis::intgrtrs(FLT *fx, FLT *fy, int fsz, FLT *rslt) {
-   int i,j,m,n,indx,indx1;
-   FLT wk0[MXTM][MXTM],wk1[MXTM][MXTM],wk2[MXTM][MXTM];
-   int fcnt,s1,s2,s3,nmax;
-   FLT lcl_wk0, lcl_wk1;
-   
-   for (j = 0; j < gpn; ++j) {
-      fcnt = j;
-      wk2[0][j] = fx[fcnt] +fy[fcnt]*x0[0];
-      lcl_wk0 = wk2[0][j]*dgxwtx[0][0];
-      lcl_wk1 = fy[fcnt]*gxwtx[0][0];  
-      fcnt += fsz;    
-      for(i = 1; i < gpx; ++i) {
-         wk2[i][j] = fx[fcnt] +fy[fcnt]*x0[i];
-         lcl_wk0 += wk2[i][j]*dgxwtx[0][i];
-         lcl_wk1 += fy[fcnt]*gxwtx[0][i];
-         fcnt += fsz;
-      }
-      wk0[0][j] = lcl_wk0;
-      wk1[0][j] = lcl_wk1;
-   }
-
-   for (n = 1; n < nmodx; ++n) {
-      for (j = 0; j < gpn; ++j) {
-         fcnt = j;
-         lcl_wk0 = wk2[0][j]*dgxwtx[n][0];
-         lcl_wk1 = fy[fcnt]*gxwtx[n][0];
-         fcnt += fsz;    
-         for(i = 1; i < gpx; ++i) {
-            lcl_wk0 += wk2[i][j]*dgxwtx[n][i];
-            lcl_wk1 += fy[fcnt]*gxwtx[n][i];
-            fcnt += fsz;
-         }
-         wk0[n][j] = lcl_wk0;
-         wk1[n][j] = lcl_wk1;
-      }
-   }
-   
-   s1 = sm+vm;
-   s2 = 2*sm+vm;
-   s3 = bm;
-   for (j=0; j < gpn; ++j ) {
-      for (m=0; m < s1; ++m)
-            rslt[m] -= gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
-   
-      lcl_wk0 = wk0[2][j];
-      lcl_wk1 = wk1[2][j];
-      for (; m < s2; ++m) 
-            rslt[m] -= gnwtnn0[m][j]*lcl_wk0 +dgnwtn[m][j]*lcl_wk1;
+void hpbasis::intgrtrs(FLT *rslt1, FLT *dx1, FLT *dy1, int stride) {
+   TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
+   const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
+   const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;
+   FLT lcl0, lcl1;
+#ifdef BZ_DEBUG
+   Array<FLT,2> dx(dx1, shape(gpx,stride), neverDeleteData);
+   Array<FLT,2> dy(dy1, shape(gpx,stride), neverDeleteData);
+   Array<FLT,1> rslt(rslt1, shape(tm), neverDeleteData);
+#endif
       
-      lcl_wk0 = wk0[1][j];
-      lcl_wk1 = wk1[1][j];
-      for (; m < s3; ++m)
-            rslt[m] -= gnwtnn0[m][j]*lcl_wk0 +dgnwtn[m][j]*lcl_wk1;
-   }
-   
-   indx = s3;
-   for(m = 3; m < sm+2;++m) {
-      nmax = sm+2-m;
-      for (j=0; j < gpn; ++j ) {
-         indx1 = indx;
-         lcl_wk0 = wk0[m][j];
-         lcl_wk1 = wk1[m][j];
-         for(n = 0; n < nmax; ++n) {
-            rslt[indx1] -= gnwtnn0[indx1][j]*lcl_wk0+dgnwtn[indx1][j]*lcl_wk1;
-            ++indx1;
-         }
+   for (int j = 0; j < lgpn; ++j) {
+      wk2(0,j) = dx(0,j) +dy(0,j)*x0(0);
+      lcl0 = wk2(0,j)*dgxwtx(0,0);
+      lcl1 = dy(0,j)*gxwtx(0,0);  
+      for(int i = 1; i < lgpx; ++i) {
+         wk2(i,j) = dx(i,j) +dy(i,j)*x0(i);
+         lcl0 += wk2(i,j)*dgxwtx(0,i);
+         lcl1 += dy(i,j)*gxwtx(0,i);
       }
-      indx = indx1;
-   }
-   
-   
-   return;
-}
-
-/* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-void hpbasis::intgrtrs(FLT **fx, FLT **fy, FLT *rslt) {
-    int i,j,m,n,indx;
-   
-   for(i=0;i<gpx;++i)
-      for(j=0;j<gpn;++j)
-         wk2[i][j] = fx[i][j] +fy[i][j]*x0[i];
-         
-   for (n = 0; n < nmodx; ++n) {
-      for (j = 0; j < gpn; ++j) {
-         wk0[n][j] = 0.0;
-         wk1[n][j] = 0.0;      
-         for(i = 0; i < gpx; ++i) {
-            wk0[n][j] += wk2[i][j]*dgxwtx[n][i];
-            wk1[n][j] += fy[i][j]*gxwtx[n][i];
-         }
-      }
+      wk0(0,j) = lcl0;
+      wk1(0,j) = lcl1;
    }
 
-   for (j=0; j < gpn; ++j ) {
-      for (m=0; m < sm+vm; ++m)
-            rslt[m] -= gnwtnn0[m][j]*wk0[m][j] +dgnwtn[m][j]*wk1[m][j];
+   for (int n = 1; n < lnmodx; ++n) {
+      for (int j = 0; j < lgpn; ++j) {
+         lcl0 = wk2(0,j)*dgxwtx(n,0);
+         lcl1 = dy(0,j)*gxwtx(n,0);
+         for(int i = 1; i < lgpx; ++i) {
+            lcl0 += wk2(i,j)*dgxwtx(n,i);
+            lcl1 += dy(i,j)*gxwtx(n,i);
+         }
+         wk0(n,j) = lcl0;
+         wk1(n,j) = lcl1;
+      }
+   }
    
-      for (; m < 2*sm+vm; ++m) 
-            rslt[m] -= gnwtnn0[m][j]*wk0[2][j] +dgnwtn[m][j]*wk1[2][j];
+   /* SIDE 0 */
+   for (int m=0; m < bs1; ++m) {
+      lcl0 = rslt(m);
+      for (int j=0; j < lgpn; ++j ) 
+         lcl0 -= gnwtnn0(m,j)*wk0(m,j) +dgnwtn(m,j)*wk1(m,j);
+      rslt(m) = lcl0;
+   }
+   
+   for (int j=0; j < lgpn; ++j ) {
+      /* SIDE 1 */
+      lcl0 = wk0(2,j);
+      lcl1 = wk1(2,j);
+      for (int m=bs1; m < bs2; ++m) 
+         rslt(m) -= gnwtnn0(m,j)*lcl0 +dgnwtn(m,j)*lcl1;
       
-      for (; m < bm; ++m)
-            rslt[m] -= gnwtnn0[m][j]*wk0[1][j] +dgnwtn[m][j]*wk1[1][j];
+      /* SIDE 2 */
+      lcl0 = wk0(1,j);
+      lcl1 = wk1(1,j);
+      for (int m=bs2; m < bint; ++m)
+         rslt(m) -= gnwtnn0(m,j)*lcl0 +dgnwtn(m,j)*lcl1;
    }
    
-   indx = bm;
-   for(m = 3; m < sm+2;++m) {
-      for(n = 0; n < sm+2-m; ++n) {
-         for (j=0; j < gpn; ++j ) {
-            rslt[indx] -= gnwtnn0[indx][j]*wk0[m][j]+dgnwtn[indx][j]*wk1[m][j];
+   int indx = bint;
+   for(int m = 3; m < lsm2;++m) {
+      int nmax = lsm2-m;
+      for (int j=0; j < lgpn; ++j ) {
+         lcl0 = wk0(m,j);
+         lcl1 = wk1(m,j);
+         for(int n = 0; n < nmax; ++n) {
+            rslt(indx) -= gnwtnn0(indx,j)*lcl0+dgnwtn(indx,j)*lcl1;
+            ++indx;
          }
-         ++indx;
+         indx -= nmax;
       }
+      indx += nmax;
    }
    
-   return;
-}
-
-
-void hpbasis::intgrtr(FLT **f, FLT *rslt1) {
-    int i,j,m,n,indx;
-   
-   for (n = 0; n < nmodx; ++n) {
-      for (j = 0; j < gpn; ++j) {
-         wk2[n][j] = 0.0;      
-         for(i = 0; i < gpx; ++i) {
-            wk2[n][j] += f[i][j]*dgx[n][i]*wtx[i];
-         }
-      }
-   }
-
-   for (m=0; m < sm+vm; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[m][j];
-      }
-   }
-
-   for (m=sm+3; m < 2*sm+3; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[2][j];
-      }
-   }
-   
-   for (m=2*sm+3; m < bm; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt1[m] -= wtn[j]*gn[m][j]*n0[j]*wk2[1][j];
-      }
-   }
-   
-   indx = bm;
-   for(m = 3; m < sm+2;++m) {
-      for(n = 0; n < sm+2-m; ++n) {
-         for (j=0; j < gpn; ++j ) {
-            rslt1[indx] -= wtn[j]*gn[indx][j]*n0[j]*wk2[m][j];
-         }
-         ++indx;
-      }
-   }   
-   
-   return;
-}
-
-void hpbasis::intgrts(FLT **f, FLT *rslt2) {
-    int i,j,m,n,indx;
-   
-   for (n = 0; n < nmodx; ++n) {
-      for (j = 0; j < gpn; ++j) {
-         wk0[n][j] = 0.0;
-         wk1[n][j] = 0.0;
-         for(i = 0; i < gpx; ++i) {
-            wk0[n][j] += f[i][j]*gx[n][i]*wtx[i];
-            wk1[n][j] += f[i][j]*x0[i]*dgx[n][i]*wtx[i];
-         }
-      }
-   }
-
-   for (m=0; m < sm+vm; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[m][j] 
-         +gn[m][j]*wk1[m][j]*n0[j]);
-      }
-   }
-
-   for (m=sm+3; m < 2*sm+3; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[2][j] 
-         +gn[m][j]*wk1[2][j]*n0[j]);
-      }   
-   }
-
-   for (m=2*sm+3; m < bm; ++m) {
-      for (j=0; j < gpn; ++j ) {
-         rslt2[m] -= wtn[j]*(dgn[m][j]*wk0[1][j] 
-         +gn[m][j]*wk1[1][j]*n0[j]);
-      }   
-   }
-   
-   indx = bm;
-   for(m = 3; m < sm+2;++m) {
-      for(n = 0; n < sm+2-m;++n) {
-         for (j=0; j < gpn; ++j ) {
-            rslt2[indx] -= wtn[j]*(dgn[indx][j]*wk0[m][j] 
-            +gn[indx][j]*wk1[m][j]*n0[j]);
-         }
-         ++indx;
-      }
-   }
    
    return;
 }
