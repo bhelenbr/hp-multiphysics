@@ -120,7 +120,7 @@ void hp_mgrid::addbflux(int mgrid) {
    /* ADD SOURCE TERMS ON FINEST MESH */
    /***********************************/
    if(!mgrid) {
-      setinflow();  //TEMPORARY
+      setinflow();
       
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&INFL_MASK) {
