@@ -130,6 +130,8 @@ class hp_mgrid : public spectral_hp {
 
 /*		SURFACE BOUNDARY ROUTINES */      
       void surfrsdl(int bnum, int mgrid);
+      void surfinvrt1(int bnum);
+      void surfinvrt2(int bnum);
       
 /*		PARTS FOR 5 STEP UPDATE */
       void nstage1();

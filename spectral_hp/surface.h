@@ -13,16 +13,21 @@ struct surface_glbls {
    int first;
    FLT drho;
    FLT rhoav;
-   FLT (*res)[ND];
    FLT fadd0;
    FLT fadd1;
-   FLT (*res0)[ND];
+   FLT (*vres)[ND];
+   FLT (*sres)[ND];
+   FLT (*vres0)[ND];
+   FLT (*sres0)[ND];
+   FLT (*vdt)[ND][ND];
+   FLT (*sdt)[ND][ND];
 }; 
 
 class surface {
    public:
       FLT *ksprg;
-      FLT (*dres[MXLG2P])[ND];
+      FLT (*vdres[MXLG2P])[ND];
+      FLT (*sdres[MXLG2P])[ND];
       FLT *sfct;
       struct surface_glbls gbl;
       

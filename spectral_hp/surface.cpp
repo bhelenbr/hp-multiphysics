@@ -1,4 +1,5 @@
 #include"surface.h"
+#include<myblas.h>
 
  
 void hp_mgrid::surfrsdl(int bnum, int mgrid) {
@@ -33,7 +34,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 /*	DETERMINE MESH RESIDUALS & SURFACE TENSION	  */
 /**************************************************/
    for(n=0;n<ND;++n)
-      srf->gbl.res[0][n] = 0.0;
+      srf->gbl.vres[0][n] = 0.0;
 
    for(indx=0;indx<sbdry[bnum].num;++indx) {
       sind = sbdry[bnum].el[indx];
@@ -81,10 +82,10 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 
 /*		STORE IN RES */
       for(n=0;n<ND;++n) {
-         srf->gbl.res[count][n] += lf[n][0];
+         srf->gbl.vres[indx][n] += lf[n][0];
+         srf->gbl.vres[indx+1][n] = lf[n][1];
          for(m=0;m<b.sm;++m)
-            srf->gbl.res[count+m+1][n] = lf[n][m+2];
-         srf->gbl.res[count+b.sm+1][n] = lf[n][1];
+            srf->gbl.sres[b.sm*indx +m][n] = lf[n][m+2];
       }
       
 /*		INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
@@ -108,158 +109,190 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 /************************************************/	
    if(mgrid) {
       if (isfrst) {
-         for(i=0;i<count;++i) {
-            srf->dres[log2p][i][0] = srf->gbl.fadd0*srf->gbl.res0[i][0] -srf->gbl.res[i][0];
-            srf->dres[log2p][i][1] = srf->gbl.fadd1*srf->gbl.res0[i][1] -srf->gbl.res[i][1];
+         for(i=0;i<sbdry[bnum].num+1;++i) {
+            srf->vdres[log2p][i][0] = srf->gbl.fadd0*srf->gbl.vres0[i][0] -srf->gbl.vres[i][0];
+            srf->vdres[log2p][i][1] = srf->gbl.fadd1*srf->gbl.vres0[i][1] -srf->gbl.vres[i][1];
+         }
+         for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+            srf->sdres[log2p][i][0] = srf->gbl.fadd0*srf->gbl.sres0[i][0] -srf->gbl.sres[i][0];
+            srf->sdres[log2p][i][1] = srf->gbl.fadd1*srf->gbl.sres0[i][1] -srf->gbl.sres[i][1];
          }
       }
-      for(i=0;i<count;++i)
+      for(i=0;i<sbdry[bnum].num+1;++i) {
          for(n=0;n<ND;++n)		
-            srf->gbl.res[i][n] += srf->dres[log2p][i][n];
+            srf->gbl.vres[i][n] += srf->vdres[log2p][i][n];
+      }
+      for(i=0;i<sbdry[bnum].num*b.sm;++i) {
+         for(n=0;n<ND;++n)		
+            srf->gbl.sres[i][n] += srf->sdres[log2p][i][n];
+      }
    }
    else {
 /*		ADD TANGENTIAL MESH MOVEMENT SOURCE */
-      for(i=0;i<count;++i)
-         srf->gbl.res[i][0] += srf->dres[log2p][i][0];
+      for(i=0;i<sbdry[bnum].num+1;++i) 
+         srf->gbl.vres[i][0] += srf->vdres[log2p][i][0];
+
+      for(i=0;i<sbdry[bnum].num*b.sm;++i) 
+         srf->gbl.sres[i][0] += srf->sdres[log2p][i][0];
    }
 
    return;
 }
 
-#ifdef SKIP
-void surfinvrt(void) {
-	static int i,m,n,sind,v0,v1,indx,indx1,sgn;
-	static double temp;
+void hp_mgrid::surfinvrt1(int bnum) {
+	static int i,m,n,v0,v1,indx,indx1,end,vbnum;
+   class surface *srf;
+   class mesh *tgt;
+
+/* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
+   srf = static_cast<class surface *>(sbdry[i].misc);
 	
+   if (srf->gbl.first == 0) return;
+   
 /*	INVERT MASS MATRIX */
 /*	LOOP THROUGH SIDES */
-	if (sm > 2) {
-		for(sind = 0; sind<eifce; ++sind) {
-			indx = eifce+1 +sind*(sm-2);
+	if (b.sm > 0) {
+      indx1 = 0;
+		for(indx = 0; indx<sbdry[bnum].num; ++indx) {
 /*			SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */			
-			for (i=0; i<2; ++i) {
-				for (m=0; m <sm-2; ++m)
-					for(n=0;n<ND+1;++n)
-						surfgf[sind+i][n] -= sfmv1d[i][m]*surfgf[indx+m][n];
+         for (m=0; m <b.sm; ++m) {
+            for(n=0;n<ND;++n)
+               srf->gbl.vres[indx][n] -= b.sfmv1d[0][m]*srf->gbl.sres[indx1][n];
+            for(n=0;n<ND;++n)
+               srf->gbl.vres[indx+1][n] -= b.sfmv1d[1][m]*srf->gbl.sres[indx1][n];
+            ++indx1;
 			}
-		}
-	}
-	
-	if (spdx1 || surfclsd) {
-		surfgf[0][0] += surfgf[eifce][0];
-		surfgf[0][1] += surfgf[eifce][1];
-		surfgf[0][2] += surfgf[eifce][2];
-		surfgf[eifce][0] = surfgf[0][0];
-		surfgf[eifce][1] = surfgf[0][1];
-		surfgf[eifce][2] = surfgf[0][2];
+      }
 	}
 
+/*	SEND COMMUNICATION INFO FOR ENDPOINTS */
+   end = sbdry[bnum].num;
+   v0 = svrtx[sbdry[bnum].el[0]][0];
+   v1 = svrtx[sbdry[bnum].el[end-1]][1];
+   if (v0 == v1) {
+/*		SURFACE IS A LOOP ON SINGLE BLOCK */
+      srf->gbl.vres[0][1] = 0.5*(srf->gbl.vres[0][1] +srf->gbl.vres[end][1]);
+      srf->gbl.vres[end][1] = srf->gbl.vres[0][1];
+      srf->gbl.vres[0][0] = 0.0;
+      srf->gbl.vres[end][0] = 0.0;
+   }
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0) continue;
+      
+      if (vbdry[i].type&(HP_MGRID_MP)) {
+         vbnum = vbdry[i].adjbnum;
+         tgt = vbdry[i].adjmesh;
+         tgt->vbuff[vbnum][0] = srf->gbl.vres[0][0];
+         tgt->vbuff[vbnum][1] = srf->gbl.vres[0][1];
+      }
+   }
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v1) continue;
+      
+      if (vbdry[i].type&(HP_MGRID_MP)) {
+         vbnum = vbdry[i].adjbnum;
+         tgt = vbdry[i].adjmesh;
+         tgt->vbuff[vbnum][0] = srf->gbl.vres[end][0];
+         tgt->vbuff[vbnum][1] = srf->gbl.vres[end][1];
+      }
+   }
+
+   return;
+}
+
+void hp_mgrid::surfinvrt2(int bnum) {
+	static int i,m,n,v0,v1,indx,indx1,end,vbnum;
+   FLT temp;
+   class surface *srf;
+
+/* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
+   srf = static_cast<class surface *>(sbdry[i].misc);
+   if (srf->gbl.first == 0) return;
+   
+/* RECEIVE MESSAGES AND ZERO VERTEX MODES */
+   end = sbdry[bnum].num;
+   v0 = svrtx[sbdry[bnum].el[0]][0];
+   v1 = svrtx[sbdry[bnum].el[end-1]][1];
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0) continue;
+      
+      if (vbdry[i].type&(COMX_MASK +COMY_MASK)) {
+         srf->gbl.vres[0][0] = 0.5*(srf->gbl.vres[0][0] +vbuff[vbnum][0]);
+         srf->gbl.vres[0][1] = 0.5*(srf->gbl.vres[0][1] +vbuff[vbnum][1]);
+      }
+      
+      if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
+         srf->gbl.vres[0][0] = 0.0;
+         srf->gbl.vres[0][1] = 0.5*(srf->gbl.vres[0][1] +vbuff[vbnum][1]);
+      }
+   }
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v1) continue;
+      
+      if (vbdry[i].type&(COMX_MASK +COMY_MASK)) {
+         srf->gbl.vres[end][0] = 0.5*(srf->gbl.vres[end][0] +vbuff[vbnum][0]);
+         srf->gbl.vres[end][1] = 0.5*(srf->gbl.vres[end][1] +vbuff[vbnum][1]);
+      }
+      
+      if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
+         srf->gbl.vres[end][0] = 0.0;
+         srf->gbl.vres[end][1] = 0.5*(srf->gbl.vres[end][1] +vbuff[vbnum][1]);
+      }
+   }
+   
 /*	SOLVE FOR VERTEX MODES */
-	for(i=0;i<eifce;++i) {
-		v0 = svrtx[i][0];
-		temp 			= surfgf[i][0]*vsurfdt[i][0][0]
-						 +surfgf[i][1]*vsurfdt[i][0][1];
-		mvgf[v0][1] = surfgf[i][0]*vsurfdt[i][1][0]
-						 +surfgf[i][1]*vsurfdt[i][1][1];
-		mvgf[v0][0] = temp;
-		
-		surfgf[i][0]   = surfgf[i][2]*vsurfdt[i][0][2];
-		surfgf[i][1]   = surfgf[i][2]*vsurfdt[i][1][2];
-		gf[v0][0] += surfgf[i][0];
-		gf[v0][1] += surfgf[i][1];
+	for(i=0;i<=end;++i) {
+		temp                = srf->gbl.vres[i][0]*srf->gbl.vdt[i][0][0] +srf->gbl.vres[i][1]*srf->gbl.vdt[i][0][1];
+		srf->gbl.vres[i][1] = srf->gbl.vres[i][0]*srf->gbl.vdt[i][1][0] +srf->gbl.vres[i][1]*srf->gbl.vdt[i][1][1];
+		srf->gbl.vres[i][2] = temp;
 	}
-	v0 = svrtx[eifce-1][1];
-	temp 			= surfgf[eifce][0]*vsurfdt[eifce][0][0]
-					 +surfgf[eifce][1]*vsurfdt[eifce][0][1];
-	mvgf[v0][1] = surfgf[eifce][0]*vsurfdt[eifce][1][0]
-					 +surfgf[eifce][1]*vsurfdt[eifce][1][1];
-	mvgf[v0][0] = temp;
-	
-	surfgf[eifce][0]   = surfgf[eifce][2]*vsurfdt[eifce][0][2];
-	surfgf[eifce][1]   = surfgf[eifce][2]*vsurfdt[eifce][1][2];	
-	gf[v0][0] += surfgf[eifce][0];
-	gf[v0][1] += surfgf[eifce][1];
+   
+/* HAVE TO CORRECT AT PRDC BOUNDARIES SO POINT DOESN'T MOVE OFF LINE */
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0) continue;
+      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK))
+         srf->gbl.vres[0][0] = 0.0;
+      if (vbdry[i].type&PRDY_MASK)
+         srf->gbl.vres[0][1] = 0.0;
+   }       
+ 
+   
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v1) continue;
+      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK))
+         srf->gbl.vres[end][0] = 0.0;
+      if (vbdry[i].type&PRDY_MASK)
+         srf->gbl.vres[end][1] = 0.0;
+   }   
 	
 /*	SOLVE FOR SIDE MODES */
-	if (sm > 2) {
-		for(sind = 0; sind<eifce; ++sind) {
-			indx = eifce+1 +sind*(sm-2);
-			indx1 = nvrtx +sind*(sm-2);
-
+	if (b.sm > 2) {
+      indx1 = 0;
+		for(indx = 0; indx<sbdry[bnum].num; ++indx) {
+         
 /*			INVERT SIDE MODES */
-			DPBSLN(sdiag1d,sm-2,SBWTH,&surfgf[indx][0],ND+1);		
-			for(m=0;m<sm-2;++m) {
-				temp = 				  surfgf[indx+m][0]*ssurfdt[sind][0][0]
-				 						 +surfgf[indx+m][1]*ssurfdt[sind][0][1];
-				mvgf[indx1+m][1] = surfgf[indx+m][0]*ssurfdt[sind][1][0]
-				 						 +surfgf[indx+m][1]*ssurfdt[sind][1][1]; 		
-				mvgf[indx1+m][0] = temp;
-				
-				gf[indx1+m][0]   += surfgf[indx+m][2]*ssurfdt[sind][0][2];
-				gf[indx1+m][1]   += surfgf[indx+m][2]*ssurfdt[sind][1][2];							}
+			DPBSLN(b.sdiag1d,b.sm,b.sbwth,&srf->gbl.sres[indx1][0],ND);		
+			for(m=0;m<b.sm;++m) {
+				temp 							= srf->gbl.sres[indx1][0]*srf->gbl.sdt[indx][0][0] +srf->gbl.sres[indx1][1]*srf->gbl.sdt[indx][0][1];
+				srf->gbl.sres[indx1][1] = srf->gbl.sres[indx1][0]*srf->gbl.sdt[indx][1][0] +srf->gbl.sres[indx1][1]*srf->gbl.sdt[indx][1][1]; 		
+				srf->gbl.sres[indx1][0] = temp;
+            ++indx1;
+         }
 			
-			for(i=0;i<2;++i) {
-				v0 = svrtx[0+sind][i];
-				for(m=0;m<sm-2;++m) {
-					for(n=0;n<ND;++n) {
-						mvgf[indx1+m][n] -= vfms1d[i][m]*mvgf[v0][n];
-						gf[indx1+m][n] -= vfms1d[i][m]*surfgf[sind+i][n];
-					}
-				}
-			}
+         indx1 -= b.sm;
+         for(m=0;m<b.sm;++m) {
+            for(n=0;n<ND;++n) {
+               gbl.sres[indx1][n] -= b.vfms1d[0][m]*srf->gbl.vres[indx][n];
+               gbl.sres[indx1][n] -= b.vfms1d[1][m]*srf->gbl.vres[indx+1][n];
+            }
+            ++indx1;
+         }
 		}
 	}
-
-	v0 = svrtx[0][0];
-	v1 = svrtx[eifce-1][1];
-			
-	if (spdx1) {
-		mvgf[v0][0] = 0.0;
-		mvgf[v1][0] = 0.0;
-	}
-		
-	if (spdy1)	{
-		mvgf[v0][1] = 0.0;
-		mvgf[v1][1] = 0.0;
-	}
-	
-	if (ssymc) {
-		mvgf[v0][0] = 0.0;
-		mvgf[v1][0] = 0.0;
-		gf[v0][0] = 0.0;
-		gf[v1][0] = 0.0;
-	}
-
-#ifdef FIXEND
-	mvgf[v0][0] = 0.0;
-	mvgf[v1][0] = 0.0;
-	mvgf[v1][1] = 0.0;
-	gf[v1][0] = 0.0;
-	gf[v1][1] = 0.0;
-#endif
-
-
-/*	EQUATE INTERFACE RESIDUALS */
-	if (sifce) {
-		for(i=0; i < vifce; ++i) {
-			indx = vifce_lst[i];
-			indx1 = vifc2_lst[vifce-1-i];
-			gf[indx1][0] = gf[indx][0];
-			gf[indx1][1] = gf[indx][1];
-		}
-
-		for(sind=0; sind < sifce; ++sind) {
-			indx  = nvrtx + (sind+bifce)*(sm-2);
-			indx1 = nvrtx + (eifc2-1-sind)*(sm-2);
-			for(m=0;m<sm-2;++m) {
-				sgn     = (m % 2 ? -1 : 1);		
-				gf[indx1+m][0] = sgn*gf[indx+m][0];
-				gf[indx1+m][1] = sgn*gf[indx+m][1];
-			}		
-		}
-	}
-	
-	return;
+   
+   return;
 }
-#endif
 
