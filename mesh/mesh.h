@@ -187,9 +187,11 @@ class mesh {
       }
 
 /*    INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      int in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1);
+      inline int in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
       void convertbtypes(const int (*old)[2] = NULL, int nold = 0);
-      int out_mesh(const char *filename, FILETYPE filetype = easymesh) const;
+      int out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const;
+      inline int out_mesh(const char *filename, FILETYPE filetype = easymesh) const {return(out_mesh(vrtx,filename,filetype));}
       void setbcinfo();
       
 /*		ACCESS TO SIMPLE MESH DATA */

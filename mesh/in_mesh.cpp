@@ -8,8 +8,8 @@ FLT *mesh::fltwk;
 int *mesh::intwk1, *mesh::intwk2, *mesh::intwk3;
 int mesh::gblmaxvst = 0;
 
-int mesh::in_mesh(char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
-    int i,j,sind,count;
+int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, FLT grwfac = 1) {
+    int i,j,sind,count,temp;
     int ierr;
     char grd_app[100];
     FILE *grd;
@@ -127,7 +127,7 @@ next1:      continue;
     
 /*	    		ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
-               ierr = fscanf(grd,"%*d:%lf%lf%d\n",&vrtx[i][0],&vrtx[i][1],&vinfo[i]);
+               ierr = fscanf(grd,"%*d:%lf%lf%d\n",&vin[i][0],&vin[i][1],&vinfo[i]);
                if (ierr != 3) { printf("2: error in grid\n"); exit(1); }
             }
             fclose(grd);
@@ -238,7 +238,7 @@ next1:      continue;
 
 /*				READ VERTEX DATA */    
             for(i=0;i<nvrtx;++i) {
-                fscanf(grd,"%*d %le %le\n",&vrtx[i][0],&vrtx[i][1]);
+                fscanf(grd,"%*d %le %le\n",&vin[i][0],&vin[i][1]);
                 vinfo[i] = -1;
             }
                 
@@ -329,6 +329,35 @@ next1:      continue;
 
             break;
             
+         case(text):
+            if (!initialized) {
+               printf("to read in vertex positions only must first load mesh structure\n");
+               exit(1);
+            }
+
+/*	    		LOAD VERTEX POSITIONS 				  */
+            strcpy(grd_app,filename);
+            strcat(grd_app,".txt");
+            grd = fopen(grd_app,"r");
+            if (!grd) {printf("trouble opening grid %s\n",grd_app); exit(1);}
+    
+            ierr = fscanf(grd,"%d\n",&temp);
+            if(ierr != 1) {
+               printf("1: error in grid %s\n",grd_app);
+               exit(1);
+            }
+            if (temp != nvrtx) {
+               printf("grid doesn't match vertex list\n");
+               exit(1);
+            }
+    
+/*	    		ERROR %lf SHOULD BE FLT */
+            for(i=0;i<nvrtx;++i) {
+               ierr = fscanf(grd,"%*d:%lf%lf\n",&vin[i][0],&vin[i][1]);
+               if (ierr != 3) { printf("2: error in grid\n"); exit(1); }
+            }
+            fclose(grd);
+
          default:
             printf("That filetype is not supported\n");
             exit(1);
@@ -366,7 +395,7 @@ next1:      continue;
    createttri();
    createvtri();
    cnt_nbor();
-   if (!initialized) qtree.allocate(vrtx,maxvst);
+   if (!initialized) qtree.allocate(vin,maxvst);
    treeinit();
    initvlngth();
 

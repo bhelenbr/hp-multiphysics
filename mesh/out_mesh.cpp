@@ -4,7 +4,7 @@
 
 #define NO_SETUPBC
 
-int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
+int mesh::out_mesh(FLT (*vin)[ND], const char *filename, FILETYPE filetype = easymesh) const {
 	char fnmapp[100];
 	FILE *out;
 	int i,j,tind,count;
@@ -22,7 +22,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
          }
          fprintf(out,"%d\n",nvrtx);
          for(i=0;i<nvrtx;++i)
-            fprintf(out,"\t%d: %17.10e %17.10e %d\n",i,vrtx[i][0],vrtx[i][1],vinfo[i]); 
+            fprintf(out,"\t%d: %17.10e %17.10e %d\n",i,vin[i][0],vin[i][1],vinfo[i]); 
             
          fclose(out);
 
@@ -63,7 +63,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
          fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx,ntri);
          
          for(i=0;i<nvrtx;++i)
-            fprintf(out,"%e  %e  \n",vrtx[i][0],vrtx[i][1]);
+            fprintf(out,"%e  %e  \n",vin[i][0],vin[i][1]);
 
         	fprintf(out,"\n#CONNECTION DATA#\n");
          
@@ -101,7 +101,7 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
          fprintf(out,"NODAL COORDINATES\n");
          
          for(i=0;i<nvrtx;++i) 
-            fprintf(out,"%10d%20.10e%20.10e\n",i+1,vrtx[i][0],vrtx[i][1]);
+            fprintf(out,"%10d%20.10e%20.10e\n",i+1,vin[i][0],vin[i][1]);
             
          fprintf(out,"BOUNDARY CONDITIONS\n");
          fprintf(out,"         0         0         0     0.0\n");
@@ -124,6 +124,23 @@ int mesh::out_mesh(const char *filename, FILETYPE filetype = easymesh) const {
          }
          fclose(out);
          break;
+
+      case(text):
+/*			JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
+         strcpy(fnmapp,filename);
+         strcat(fnmapp,".txt");
+         out = fopen(fnmapp,"w");
+         if (out == NULL ) {
+            printf("couldn't open output file %s for output\n",fnmapp);
+            exit(1);
+         }
+         fprintf(out,"%d\n",nvrtx);
+         for(i=0;i<nvrtx;++i)
+            fprintf(out,"\t%d: %17.10e %17.10e\n",i,vin[i][0],vin[i][1]); 
+            
+         fclose(out);
+         break;
+         
       default:
          printf("That filetype is not supported yet\n");
          break;
