@@ -8,6 +8,10 @@
 /*************************************************/
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
 
+#ifdef DROP
+extern FLT dydt;
+#endif
+
 void hp_mgrid::setinflow() {
     int i,j,k,m,n,indx,v0,v1,info;
     FLT x,y,mvel[ND];
@@ -92,6 +96,9 @@ void hp_mgrid::setinflow() {
             for(k=0;k<b.gpx;++k) {
                for(n=0;n<ND;++n)
                   mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
+#ifdef DROP
+               mvel[1] += dydt;
+#endif
                
                res[2][0][k] = gbl->rho*RAD1D(k)*((u[0][0][k] -mvel[0])*dcrd[1][0][0][k] -(u[1][0][k] -mvel[1])*dcrd[0][0][0][k]);
             }
@@ -116,80 +123,44 @@ void hp_mgrid::addbflux(int mgrid) {
     FLT gam, nrm[ND], wl[NV], wr[NV];
    FLT mvel[ND] = {0.0, 0.0};
    
-   /***********************************/
-   /* ADD SOURCE TERMS ON FINEST MESH */
-   /***********************************/
-   if(!mgrid) {
-      setinflow();
-      
-      for(i=0;i<nsbd;++i) {
-         if (sbdry[i].type&INFL_MASK) {
-            indx = 0;
-            for(j=0;j<sbdry[i].num;++j) {
-               sind=sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               gbl->res.v[v0][2] += binfo[i][indx++].flx[2];
-               indx1 = sind*b.sm;
-               for(k=0;k<b.sm;++k)
-                  gbl->res.s[indx1++][2] += binfo[i][indx++].flx[2];
-            }
-            v0 = svrtx[sind][1];
-            gbl->res.v[v0][2] += binfo[i][indx].flx[2];
-         }
-         
-         if (sbdry[i].type&OUTF_MASK) {
-            /* ALLOWS FOR APPLIED STRESS ON BOUNDARY */
-            indx = 0;
-            for(j=0;j<sbdry[i].num;++j) {
-               sind=sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               indx1 = sind*b.sm;
-               for(n=0;n<ND;++n)
-                  gbl->res.v[v0][n] += binfo[i][indx].flx[n];
-               ++indx;
-               for(k=0;k<b.sm;++k) {
-                  for(n=0;n<ND;++n)
-                     gbl->res.s[indx1][n] += binfo[i][indx].flx[n];
-                  ++indx;
-                  ++indx1;
-               }
-            }
-            v0 = svrtx[sind][1];
-            for(n=0;n<ND;++n)
-               gbl->res.v[v0][n] += binfo[i][indx].flx[n];
-         }
-      }
-   }
-   
+   setinflow();
    
    /* THESE ARE SOURCE TERMS WHICH CHANGE WITH THE SOLUTION */
    /* MUST BE UPDATED DURING MGRID FOR GOOD CONVERGENCE */
    for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
-         /* POINTER TO STUFF NEEDED FOR SURFACES IS STORED IN MISCELLANEOUS */      
-         if (sbdry[i].misc == NULL) continue;
-         
-         /* CALCULATE RESIDUAL / SURFACE TENSION TERMS */
-         surfrsdl(i,mgrid);
+      if (sbdry[i].type&INFL_MASK) {
+         indx = 0;
+         for(j=0;j<sbdry[i].num;++j) {
+            sind=sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            gbl->res.v[v0][2] += binfo[i][indx++].flx[2];
+            indx1 = sind*b.sm;
+            for(k=0;k<b.sm;++k)
+               gbl->res.s[indx1++][2] += binfo[i][indx++].flx[2];
+         }
+         v0 = svrtx[sind][1];
+         gbl->res.v[v0][2] += binfo[i][indx].flx[2];
+      }
 
+      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK)) {
          /* ADD SURFACE TENSION SOURCE TERM */
          indx = 0;
          for(j=0;j<sbdry[i].num;++j) {
             sind=sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            for(n=0;n<ND;++n)
+            for(n=0;n<NV;++n)
                gbl->res.v[v0][n] += binfo[i][indx].flx[n];
             ++indx;
             indx1 = sind*b.sm;
             for(k=0;k<b.sm;++k) {
-               for(n=0;n<ND;++n)
+               for(n=0;n<NV;++n)
                   gbl->res.s[indx1][n] += binfo[i][indx].flx[n];
                ++indx;
                ++indx1;
             }
          }
          v0 = svrtx[sind][1];
-         for(n=0;n<ND;++n)
+         for(n=0;n<NV;++n)
             gbl->res.v[v0][n] += binfo[i][indx].flx[n];
       }
 
@@ -237,15 +208,23 @@ void hp_mgrid::addbflux(int mgrid) {
 
                for(n=0;n<ND;++n)
                   mvel[n] = bd[0]*crd[n][0][k] +crd[n][1][k];
+#ifdef DROP
+               mvel[1] += dydt;
+#endif
                   
                if (!charyes)
                   wl[2] = wr[2];
                else 
                   chrctr(gbl->rho,gam,wl,wr,nrm,mvel);
-                  
+               
                res[2][0][k] = gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
+#ifndef INERTIALESS
                res[0][0][k] = res[2][0][k]*wl[0] +wl[2]*RAD1D(k)*nrm[0];
                res[1][0][k] = res[2][0][k]*wl[1] +wl[2]*RAD1D(k)*nrm[1];
+#else
+               res[0][0][k] = wl[2]*RAD1D(k)*nrm[0];
+               res[1][0][k] = wl[2]*RAD1D(k)*nrm[1]; 
+#endif
             }
             
             for(n=0;n<NV;++n)
