@@ -28,11 +28,22 @@ void quadtree::init(FLT (*v)[ND], int mxv, FLT xmin, FLT ymin, FLT xmax, FLT yma
    indx = new class quad*[maxvrtx];
    for(i=0;i<maxvrtx;++i)
       indx[i] = NULL;
+      
+   if (xmin >= xmax || ymin >= ymax) {
+      printf("quadtree initialization error: zero domain area %f %f %f %f\n",xmin,xmax,ymin,ymax);
+      exit(1);
+   }
    base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
    current = 1;
 }
 
 void quadtree::init(FLT xmin, FLT ymin, FLT xmax, FLT ymax) {
+
+   if (xmin >= xmax || ymin >= ymax) {
+      printf("quadtree initialization error: zero domain area %f %f %f %f\n",xmin,xmax,ymin,ymax);
+      exit(1);
+   }
+
    base[0] = quad(NULL,0,xmin,ymin,xmax,ymax);
 
    for(int i = 0; i<maxvrtx; ++i)
@@ -100,16 +111,22 @@ void quadtree::addpt(int v0, class quad* start = NULL) {
 /*	LOOP TO BOTTOM OF TREE */
    while (qpt->num < 0) {
       xshift = vrtx[v0][0] -0.5*(qpt->xmax +qpt->xmin);
-      avoid0 = MAX(fabs(xshift), 10.*FLT_EPSILON);
+      avoid0 = MAX(fabs(xshift), 10.*EPSILON);
       i = ((int) ((1+10.*FLT_EPSILON)*xshift/avoid0) +1)/2;
       yshift = vrtx[v0][1] -0.5*(qpt->ymax +qpt->ymin);
-      avoid0 = MAX(fabs(yshift), 10.*FLT_EPSILON);
+      avoid0 = MAX(fabs(yshift), 10.*EPSILON);
       i = 2*i +((int) ((1+10.*FLT_EPSILON)*yshift/avoid0) +1)/2;
       qpt = qpt->dghtr[i];
    }
    
    if (qpt->num < 4) {
 /*		QUAD CAN ACCEPT NEW POINT */
+      if (vrtx[v0][0] > qpt->xmax +10.*EPSILON || vrtx[v0][0] < qpt->xmin -10.*EPSILON) {
+         printf("point is outside x quadtree area %f %f %f\n",vrtx[v0][0],qpt->xmax,qpt->xmin);
+      }
+      if (vrtx[v0][1] > qpt->ymax +10.*EPSILON || vrtx[v0][1] < qpt->ymin -10.*EPSILON) {
+         printf("point is outside y quadtree area %f %f %f\n",vrtx[v0][1],qpt->ymax,qpt->ymin);
+      }
       qpt->node[qpt->num++] = v0;
       indx[v0] = qpt;
       return;

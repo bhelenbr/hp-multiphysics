@@ -15,6 +15,12 @@
 #define FLT double
 #endif
 
+#if (FLT == double)
+#define EPSILON DBL_EPSILON
+#else
+#define EPSILON FLT_EPSILON
+#endif
+
 #ifndef ND
 #define ND 2
 #endif
