@@ -29,8 +29,10 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    getwgts(wgt);
 
    if (tind == -1) {
-      /* THIS SHOULD RARELY HAPPEN I HOPE */
-      /* POINT IS PROBABLY IN CURVED TRIANGLE NEAR BOUNDARY */
+      /* POINT IS IN CONVEX CURVED TRIANGLE NEAR BOUNDARY */
+      /* THIS ASSUMES SIDE RADIUS OF CURVATURE IS LESS THAN 1/2 LENGTH OF SIDE ON BDRY */
+      findbdryside(xp,yp,v0);
+      
       close = 1.0e16;
       tind = vtri[v0];
       stoptri = tind;
@@ -59,7 +61,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
 
       tind = tclose;
       if (tinfo[tind] == -1) {
-         printf("Warning: closest triangle was not curved\n");
+         printf("Warning: closest triangle was not curved (%f,%f) nearpt %d tind %d\n",xp,yp,v0,tind);
       }
       wgt[1] = 0.5;
       wgt[2] = 0.5;
@@ -69,28 +71,28 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
    /* TRIANGLE COORDINATES */   
    s = wgt[2]*2 -1.0;
    r = wgt[1]*2 -1.0;
+   if (tinfo[tind] < 0) return(tind);
+   
 
-   if (tinfo[tind] > -1) {
-      /* DEAL WITH CURVED SIDES */
-      crdtouht(tind);
+   /* DEAL WITH CURVED SIDES */
+   crdtouht(tind);
 
-      iter = 0;
-      do {
-         b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
-         det = 1.0/(fabs(ddr[0]*dds[1] - ddr[1]*dds[0]) +10.0*EPSILON);
-         dx = xp-x[0];
-         dy = yp-x[1];
-         dr =  (dds[1]*dx -dds[0]*dy)*det;
-         ds = -(ddr[1]*dx -ddr[0]*dy)*det;
+   iter = 0;
+   do {
+      b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
+      det = 1.0/(fabs(ddr[0]*dds[1] - ddr[1]*dds[0]) +10.0*EPSILON);
+      dx = xp-x[0];
+      dy = yp-x[1];
+      dr =  (dds[1]*dx -dds[0]*dy)*det;
+      ds = -(ddr[1]*dx -ddr[0]*dy)*det;
 
-         r += dr;
-         s += ds;
-         if (iter++ > 50) {
-            printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
-            break;
-         }
-      } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
-   }
+      r += dr;
+      s += ds;
+      if (iter++ > 50) {
+         printf("#Warning: max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f error: %f\n",tind,xp,yp,r,s,fabs(dr) +fabs(ds));
+         break;
+      }
+   } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
 
    return(tind);
 }

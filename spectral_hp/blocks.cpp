@@ -221,8 +221,6 @@ void blocks::tadvance() {
       outertime = hp_mgrid::time;  // TEMPORARY
    
    r_ksrc();
-   
-   blk[0].grd[0].output(blk[0].gbl.ugbd[0],blk[0].gbl.vrtxbd[0],blk[0].gbl.binfobd[0],"tempo",tecplot);
 
    for(i=0;i<nblocks;++i)
       blk[i].tadvance();
