@@ -7,30 +7,30 @@
  *
  */
 #include "mesh.h"
-#include<utilities.h>
-#include<assert.h>
+#include "boundary.h"
+#include <utilities.h>
+#include <assert.h>
 
-template void mesh<2>::refineby2(const class mesh<2>& inmesh);
-template void mesh<3>::refineby2(const class mesh<3>& inmesh);
-
-template<int ND> void mesh<ND>::refineby2(const class mesh<ND>& inmesh) {
+void mesh::refineby2(const class mesh& inmesh) {
    int i,j,k,n,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
+   int ntdel, tdel[maxlst];
+   int nsdel, sdel[maxlst];
    FLT xpt[ND];
    
    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
    /* BECAUSE OF INTWK USAGE */
     if (!initialized) {
       /* VERTEX STORAGE ALLOCATION */
-      maxvst =  MAX(inmesh.maxvst,10);
-      allocate(maxvst);
+      maxvst =  4*inmesh.maxvst;
+      allocate(maxvst,inmesh.scratch);
       nsbd = inmesh.nsbd;
       for(i=0;i<nsbd;++i) {
-         getnewsideobject(i,inmesh.sbdry[i]->idnty());
-         sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->mxsz(),10));
+         sbdry[i] = inmesh.sbdry[i]->create(*this);
+         sbdry[i]->alloc(MAX(2*inmesh.sbdry[i]->maxel,10));
       }
       nvbd = inmesh.nvbd;
       for(i=0;i<nvbd;++i) {
-         getnewvrtxobject(i,inmesh.vbdry[i]->idnty());
+         vbdry[i] = inmesh.vbdry[i]->create(*this);
          vbdry[i]->alloc(1);
       }
       qtree.allocate(vrtx,maxvst);
@@ -43,10 +43,10 @@ template<int ND> void mesh<ND>::refineby2(const class mesh<ND>& inmesh) {
    count = nvrtx;
    for(sind=0;sind<nside;++sind) {
    
-      if (stri[sind][1] < 0) continue;
+      if (sd[sind].tri[1] < 0) continue;
       
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
+      v0 = sd[sind].vrtx[0];
+      v1 = sd[sind].vrtx[1];
       
       /* MIDPOINT */
       for(n=0;n<ND;++n)
@@ -63,29 +63,30 @@ template<int ND> void mesh<ND>::refineby2(const class mesh<ND>& inmesh) {
       qtree.addpt(nvrtx);
       qtree.nearpt(nvrtx,vnear);
       tind = findtri(vrtx[nvrtx],vnear);
-      err = insert(tind,nvrtx,0.0);
+      err = insert(tind,nvrtx,0.0,ntdel,tdel,nsdel,sdel);
       ++nvrtx;
    }
 
    
    /* INSERT BOUNDARY POINTS */
    for(i=0;i<nsbd;++i) {
-      initialsidenumber = sbdry[i]->nsd();
+      initialsidenumber = sbdry[i]->nel;
       for(j=0;j<initialsidenumber;++j) {
-         sind = sbdry[i]->sd(j);
+         sind = sbdry[i]->el[j];
          sbdry[i]->mvpttobdry(j,0.5,vrtx[nvrtx]);
          
-         tind = stri[sind][0];
+         tind = sd[sind].tri[0];
          snum = -2;
          for(k=0;k<3;++k) {
-            if (tside[tind].side[k] == sind) {
+            if (td[tind].side[k] == sind) {
                snum = k;
                break;
             }
          }
          assert(snum > -2);
          qtree.addpt(nvrtx);
-         bdry_insert(tind,snum,nvrtx);
+         bdry_insert(tind,snum,nvrtx,ntdel,tdel,nsdel,sdel);
+         output("check",ftype::grid);
          ++nvrtx;
       }
    }

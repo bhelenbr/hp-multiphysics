@@ -1,10 +1,8 @@
 #include "mesh.h"
+#include "boundary.h"
 #include <stdlib.h>
 
-template int mesh<2>::comm_entity_size();
-template int mesh<3>::comm_entity_size();
-
-template<int ND> int mesh<ND>::comm_entity_size() {
+int mesh::comm_entity_size() {
    int i,tsize,nvcomm,nscomm;
    
    /*	VERTEX INFO */   
@@ -25,11 +23,8 @@ template<int ND> int mesh<ND>::comm_entity_size() {
    
    return(tsize);
 }
-   
-template int mesh<2>::comm_entity_list(int *list);
-template int mesh<3>::comm_entity_list(int *list);
 
-template<int ND> int mesh<ND>::comm_entity_list(int *list) {
+int mesh::comm_entity_list(int *list) {
    int i,j,nvcomm,nscomm,tsize,v0,v0id;
    
    /* MAKE 1D PACKED LIST OF ALL INFORMATION ON COMMUNICATION BOUNDARIES */
@@ -45,7 +40,7 @@ template<int ND> int mesh<ND>::comm_entity_list(int *list) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i]->is_comm()) {
          list[tsize++] = i;
-         list[tsize++] = vbdry[i]->idnty();
+         list[tsize++] = vbdry[i]->idnum;
       }
    }
    
@@ -59,21 +54,21 @@ template<int ND> int mesh<ND>::comm_entity_list(int *list) {
    for(i=0;i<nsbd;++i) {
       if (sbdry[i]->is_comm()) {
          list[tsize++] = i;
-         list[tsize++] = sbdry[i]->idnty();
-         v0 = svrtx[sbdry[i]->sd(0)][0];
+         list[tsize++] = sbdry[i]->idnum;
+         v0 = sd[sbdry[i]->el[0]].vrtx[0];
          v0id = -1;
          for(j=0;j<nvbd;++j) {
-            if (vbdry[j]->v() == v0) {
-               v0id = vbdry[j]->idnty();
+            if (vbdry[j]->v0 == v0) {
+               v0id = vbdry[j]->idnum;
                break;
             }
          }
          list[tsize++] = v0id;
-         v0 = svrtx[sbdry[i]->sd(sbdry[i]->nsd()-1)][1];
+         v0 = sd[sbdry[i]->el[sbdry[i]->nel-1]].vrtx[1];
          v0id = -1;
          for(j=0;j<nvbd;++j) {
-            if (vbdry[j]->v() == v0) {
-               v0id = vbdry[j]->idnty();
+            if (vbdry[j]->v0 == v0) {
+               v0id = vbdry[j]->idnum;
                break;
             }
          }
@@ -87,10 +82,7 @@ template<int ND> int mesh<ND>::comm_entity_list(int *list) {
    return(tsize);
 }
 
-template int mesh<2>::msgpass(int phase);
-template int mesh<3>::msgpass(int phase);
-
-template<int ND> int mesh<ND>::msgpass(int phase) {
+int mesh::msgpass(int phase) {
    int stop=1;
 
    for(int i=0;i<nsbd;++i) 
@@ -109,11 +101,8 @@ template<int ND> int mesh<ND>::msgpass(int phase) {
    return(stop);
 }
 
-template void mesh<2>::matchboundaries1();
-template void mesh<3>::matchboundaries1();
-
 /*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
-template<int ND> void mesh<ND>::matchboundaries1() {
+void mesh::matchboundaries1() {
    
    for(int i=0;i<nvbd;++i)
       vbdry[i]->sndpositions();
@@ -127,24 +116,16 @@ template<int ND> void mesh<ND>::matchboundaries1() {
       vbdry[i]->snd(0);
 }
 
-template void mesh<2>::matchboundaries2();
-template void mesh<3>::matchboundaries2();
-
-template<int ND> void mesh<ND>::matchboundaries2() {
+void mesh::matchboundaries2() {
    for(int i=0;i<nsbd;++i)
       sbdry[i]->rcvpositions();
    for(int i=0;i<nvbd;++i)
       vbdry[i]->rcvpositions();
 }
 
-template void mesh<2>::length1();
-template void mesh<3>::length1();
-
-template<int ND> void mesh<ND>::length1() {
+void mesh::length1() {
    int i;
-   
-   setlength();
-   
+      
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
       sbdry[i]->loadbuff(vlngth,0,0,1);
@@ -161,10 +142,7 @@ template<int ND> void mesh<ND>::length1() {
    
 }
 
-template void mesh<2>::length2();
-template void mesh<3>::length2();
-
-template<int ND> void mesh<ND>::length2() {
+void mesh::length2() {
    int i;
    
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
@@ -177,37 +155,43 @@ template<int ND> void mesh<ND>::length2() {
 }
 
 #ifdef METIS
-//#include <metis.h>
 
 extern "C" void METIS_PartMeshNodal(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
 int *epart, int *npart);
 
-template void mesh<2>::setpartition(int nparts);
-template void mesh<3>::setpartition(int nparts);
-
-template<int ND> void mesh<ND>::setpartition(int nparts) {
+void mesh::setpartition(int nparts) {
+   int i,n;
    int etype = 1;
    int numflag = 0;
    int edgecut;
-   METIS_PartMeshNodal(&ntri, &nvrtx, static_cast<int *>(&tvrtx[0][0]), &etype, &numflag, &nparts, &edgecut,tinfo,vinfo);
+   
+   /* CREATE ISOLATED TVRTX ARRAY */
+   int (*tvrtx)[3] = static_cast<int (*)[3]>(scratch->p);
+   for(i=0;i<ntri;++i)
+      for(n=0;n<3;++n)
+         tvrtx[i][n] = td[i].vrtx[n];
+         
+   METIS_PartMeshNodal(&ntri, &nvrtx, static_cast<int *>(&tvrtx[0][0]), &etype, &numflag, &nparts, &edgecut,i1wk,i2wk);
+   delete []tvrtx;
+   
+   for(i=0;i<ntri;++i)
+      td[i].info = i1wk[i];
+            
    return;
 }
 #endif
 
-template void mesh<2>::partition(const class mesh& xmesh, int npart);
-template void mesh<3>::partition(const class mesh& xmesh, int npart);
-
-template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
+void mesh::partition(const class mesh& xin, int npart) {
    int i,j,n,tind,v0,indx;
    int bcntr[MAXSB];
    int bnum,bel,match;
    
    ntri = 0;
    for(i=0;i<xin.ntri;++i) {
-      if (xin.tinfo[i] == npart) {
+      if (xin.td[i].info == npart) {
          ++ntri;
          for(n=0;n<3;++n)
-            xin.vinfo[xin.tvrtx[i][n]] = npart;
+            xin.vd[xin.td[i].vrtx[n]].info = npart;
       }
    }
    
@@ -215,7 +199,7 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
    
    if (!initialized) {
       maxvst = 3*ntri;
-      allocate(maxvst);
+      allocate(maxvst,xin.scratch);
    }
    else if (3*ntri > maxvst) {
       *log << "mesh is too large" << std::endl;
@@ -224,20 +208,20 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
 
    nvrtx = 0;
    for(i=0;i<xin.nvrtx;++i) {
-      if (xin.vinfo[i] == npart) {
+      if (xin.vd[i].info == npart) {
          for(n=0;n<ND;++n)
             vrtx[nvrtx][n] = xin.vrtx[i][n];
-         intwk1[i] = nvrtx;
+         i1wk[i] = nvrtx;
          ++nvrtx;
       }
    }
 
    ntri = 0;
    for(i=0;i<xin.ntri;++i) {
-      if (xin.tinfo[i] == npart) {
+      if (xin.td[i].info == npart) {
          for(n=0;n<3;++n)
-            tvrtx[ntri][n] = intwk1[xin.tvrtx[i][n]];
-         intwk2[ntri] = i;
+            td[ntri].vrtx[n] = i1wk[xin.td[i].vrtx[n]];
+         i2wk[ntri] = i;
          ++ntri;
       }
    }
@@ -247,10 +231,10 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
    /* MOVE BOUNDARY INFO */
    nvbd = 0;
    for(i=0;i<xin.nvbd;++i) {
-      if (xin.vinfo[vbdry[i]->v()] == npart) {
-         getnewvrtxobject(nvbd,xin.vbdry[i]->idnty());
+      if (xin.vd[vbdry[i]->v0].info == npart) {
+         vbdry[nvbd] = xin.vbdry[i]->create(*this);
          vbdry[nvbd]->alloc(1);
-         vbdry[nvbd]->v() = xin.vinfo[vbdry[i]->v()];
+         vbdry[nvbd]->v0 = xin.vd[vbdry[i]->v0].info;
          ++nvbd;
          if (nvbd >= MAXVB) {
             *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
@@ -262,31 +246,31 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
    
    nsbd = 0;
    for(i=0;i<nside;++i) {
-      sinfo[i] = -1;
-      if (stri[i][1] < 0) {
-         tind = intwk2[stri[i][0]];
+      sd[i].info = -1;
+      if (sd[i].tri[1] < 0) {
+         tind = i2wk[sd[i].tri[0]];
 
-         v0 = svrtx[i][0];
+         v0 = sd[i].vrtx[0];
          for(n=0;n<3;++n)
-            if (intwk1[xin.tvrtx[tind][n]] == v0) break;
+            if (i1wk[xin.td[tind].vrtx[n]] == v0) break;
          if (n==3) printf("error in partitioning\n");
          n = (n+2)%3;
 
-         indx = xin.ttri[tind][n];
+         indx = xin.td[tind].tri[n];
          if (indx < 0) {
             /* BOUNDARY SIDE */
             bnum = (-indx>>16) -1;
             bel = -indx&0xFFFF;
             for (j = 0; j <nsbd;++j) {
-               if (xin.sbdry[bnum]->idnty() == sbdry[j]->idnty()) {
+               if (xin.sbdry[bnum]->idnum == sbdry[j]->idnum) {
                   ++bcntr[j];
-                  sinfo[i] = j;
+                  sd[i].info = j;
                   goto next1;
                }
             }
             /* NEW SIDE */
-            getnewsideobject(nsbd,xin.sbdry[bnum]->idnty());
-            sinfo[i] = nsbd;
+            sbdry[nsbd] = sbdry[bnum]->create(*this);
+            sd[i].info = nsbd;
             bcntr[nsbd++] = 1;
 
             if (nsbd > MAXSB) {
@@ -296,19 +280,19 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
          }
          else {
             /* PARTITION SIDE */
-            match = tinfo[indx];
+            match = td[indx].info;
             if (match < npart) bnum = (match<<16) + (npart << 24) + (1<<8);
-            else bnum = (npart<<16) + (match << 24) + (1<<8);
+            else bnum = (npart<<16) + (match << 24) + stype::comm;
             for (j = 0; j <nsbd;++j) {
-               if (sbdry[j]->idnty() == bnum) {
+               if (sbdry[j]->idnum == bnum) {
                   ++bcntr[j];
-                  sinfo[i] = j;
+                  sd[i].info = j;
                   goto next1;
                }
             }
             /* NEW SIDE */
-            getnewsideobject(nsbd,bnum);
-            sinfo[i] = nsbd;
+            sbdry[nsbd] = getnewsideobject(bnum,0);
+            sd[i].info = nsbd;
             bcntr[nsbd++] = 1;
             if (nsbd > MAXSB) {
                *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
@@ -321,32 +305,28 @@ template<int ND> void mesh<ND>::partition(const class mesh& xin, int npart) {
 
    for(i=0;i<nsbd;++i) {
       sbdry[i]->alloc(static_cast<int>(bcntr[i]*2));
-      sbdry[i]->nsd() = 0;
+      sbdry[i]->nel = 0;
    }       
    
    
    for(i=0;i<nside;++i) {
-      if (sinfo[i] > -1) 
-         sbdry[sinfo[i]]->sd(sbdry[sinfo[i]]->nsd()++) = i;
+      if (sd[i].info > -1) 
+         sbdry[sd[i].info]->el[sbdry[sd[i].info]->nel++] = i;
    }
    
-   /* INTWK1,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
+   /* i1wk,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
    for(i=0;i<xin.maxvst;++i)
-      intwk1[i] = -1;
+      i1wk[i] = -1;
    for(i=0;i<xin.maxvst;++i)
-      intwk2[i] = -1;
+      i2wk[i] = -1;
     
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
       sbdry[i]->reorder();
-      sbdry[i]->getgeometryfrommesh();
+      sbdry[i]->setupcoordinates();
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
-
-   *log << "#Boundaries" << std::endl;
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->summarize(*log);
 
    createttri();
    createvtri();

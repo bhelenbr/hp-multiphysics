@@ -6,42 +6,34 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#include"mesh.h"
-#include"utilities.h"
-#include<assert.h>
-#include<math.h>
+#include "mesh.h"
+#include "boundary.h"
+#include "utilities.h"
+#include <assert.h>
+#include <math.h>
 
 #define VERBOSE
 
 #define REBAY
 
 /* MEMORY USAGE */
-/* INTWK2 - LIST OF SIDES TO BE REFINED */
-/* INTWK3 - BACK REFERENCE FROM SIDE INTO LIST */
+/* i2wk - LIST OF SIDES TO BE REFINED */
+/* i3wk - BACK REFERENCE FROM SIDE INTO LIST */
 /* vinfo - TRIANGLE ACCEPTANCE INDICATOR >= 0 */
 
 /* nslst KEEPS TRACK OF HOW MANY SIDES NEED REFINEMENT */
-/* SIDES ARE STORED IN INTWK2 WITH BACK REFERENCE IN INTWK3 */
+/* SIDES ARE STORED IN i2wk WITH BACK REFERENCE IN i3wk */
 
 /* THESE TELL WHICH SIDES/TRIS WERE DELETED */
-/* ntdel, tdel[MAXLST+1]; */
-/* nsdel, sdel[MAXLST+1]; */
-int mesh<2>::nslst;
-int mesh<2>::ntdel;
-int mesh<2>::tdel[MAXLST+1];
-int mesh<2>::nsdel;
-int mesh<2>::sdel[MAXLST+1];
-int mesh<3>::nslst;
-int mesh<3>::ntdel;
-int mesh<3>::tdel[MAXLST+1];
-int mesh<3>::nsdel;
-int mesh<3>::sdel[MAXLST+1];
+/* ntdel, tdel[maxlst+1]; */
+/* nsdel, sdel[maxlst+1]; */
 
-template void mesh<2>::rebay(FLT tolsize);
-template void mesh<3>::rebay(FLT tolsize);
+int nslst;
 
-template<int ND> void mesh<ND>::rebay(FLT tolsize) {
+void mesh::rebay(FLT tolsize) {
    int i,j,n,tind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
+   int nsdel,sdel[maxlst];
+   int ntdel,tdel[maxlst];
    int bnum,bel;
    FLT xpt[2],wt[3],norm;
    FLT dx[2],p,q,s1sq,s2sq,rad1,rad2,rs;
@@ -55,35 +47,35 @@ template<int ND> void mesh<ND>::rebay(FLT tolsize) {
    
    /* USE VINFO[TIND] = 3,2,1,0 TO FIND BOUNDARY REFINE TRI'S */
    for(i=0;i<ntri;++i)
-      vinfo[i] = 0;
+      vd[i].info = 0;
    
    /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
    for(i=0;i<nside;++i) {
-      if (fltwk[i] < tolsize) {
-         vinfo[stri[i][0]] += 1;
-         vinfo[MAX(stri[i][1],-1)] += 1;
+      if (fwk[i] < tolsize) {
+         vd[sd[i].tri[0]].info += 1;
+         vd[MAX(sd[i].tri[1],-1)].info += 1;
          putinlst(i);
       }
    }
    
-   vinfo[-1] = 0;
+   vd[-1].info = 0;
 
    /* BEGIN REFINEMENT ALGORITHM */
    while (nslst > 0) {
       sind = -1;
       for(i=0;i<nslst;++i) {
-         if (vinfo[stri[intwk2[i]][0]] +vinfo[MAX(stri[intwk2[i]][1],-1)] == 6) continue;
-         sind = intwk2[i];
+         if (vd[sd[i2wk[i]].tri[0]].info +vd[MAX(sd[i2wk[i]].tri[1],-1)].info == 6) continue;
+         sind = i2wk[i];
          break;
       }
       assert(sind != -1);
             
 
-      tind = stri[sind][0];
+      tind = sd[sind].tri[0];
       snum = -2;
       for(j=0;j<3;++j) {
-         if (tside[tind].side[j] == sind) {
+         if (td[tind].side[j] == sind) {
             snum = j;
             break;
          }
@@ -91,9 +83,9 @@ template<int ND> void mesh<ND>::rebay(FLT tolsize) {
       assert(snum > -2);
          
       
-      v0 = tvrtx[tind][(snum+1)%3];
-      v1 = tvrtx[tind][(snum+2)%3];
-      v2 = tvrtx[tind][snum];
+      v0 = td[tind].vrtx[(snum+1)%3];
+      v1 = td[tind].vrtx[(snum+2)%3];
+      v2 = td[tind].vrtx[snum];
       
       if (nvrtx > maxvst -2) {
          *log << "too many vertices" << std::endl;
@@ -102,9 +94,9 @@ template<int ND> void mesh<ND>::rebay(FLT tolsize) {
       
       
       /* CHECK IF IT IS A BOUNDARY EDGE */
-      if (stri[sind][1] < 0) {
-         bnum = (-stri[sind][1]>>16) -1;
-         bel = -stri[sind][1]&0xFFFF;
+      if (sd[sind].tri[1] < 0) {
+         bnum = (-sd[sind].tri[1]>>16) -1;
+         bel = -sd[sind].tri[1]&0xFFFF;
          sbdry[bnum]->mvpttobdry(bel,0.5,vrtx[nvrtx]);
                   
          /* INSERT POINT */
@@ -113,7 +105,7 @@ template<int ND> void mesh<ND>::rebay(FLT tolsize) {
 #ifdef VERBOSE
          *log << "Inserting boundary side\n";
 #endif
-         bdry_insert(tind,snum,nvrtx);
+         bdry_insert(tind,snum,nvrtx,ntdel,tdel,nsdel,sdel);
          ++bdrycnt;
          
          nsnew = nsdel +2;
@@ -124,19 +116,19 @@ template<int ND> void mesh<ND>::rebay(FLT tolsize) {
 #ifdef REBAY
          /* THIS IS TRIANGLE BASED REFINEMENT */
          /*	FIND ACCEPTED EDGE ON TRIANGLE & BUILD OFF OF IT */
-         if (vinfo[tind] < 3) {
+         if (vd[tind].info < 3) {
             for (snum=0;snum<3;++snum) 
-               if (intwk3[snum] == -1) break;
+               if (i3wk[snum] == -1) break;
          }
          else {
-            tind = stri[sind][1];
+            tind = sd[sind].tri[1];
             for (snum=0;snum<3;++snum) 
-               if (intwk3[snum] == -1) break;
+               if (i3wk[snum] == -1) break;
          }
          
-         v0 = tvrtx[tind][(snum+1)%3];
-         v1 = tvrtx[tind][(snum+2)%3];
-         v2 = tvrtx[tind][snum];
+         v0 = td[tind].vrtx[(snum+1)%3];
+         v1 = td[tind].vrtx[(snum+2)%3];
+         v2 = td[tind].vrtx[snum];
          
          /* USE REBAY'S ALGORITHM FOR INSERT POINT */
          p = 0.0;
@@ -223,8 +215,8 @@ INSRT:
             sdel[0] = sind;
             nsnew = 0;
             ntnew = 2;
-            tdel[0] = stri[sind][0];
-            tdel[1] = stri[sind][1];
+            tdel[0] = sd[sind].tri[0];
+            tdel[1] = sd[sind].tri[1];
             goto IEND;
          }
             
@@ -233,9 +225,9 @@ INSRT:
          getwgts(wt);
          vlngth[nvrtx] = 0.0;
          for(i=0;i<3;++i)
-            vlngth[nvrtx] += wt[i]*vlngth[tvrtx[tind][i]];
+            vlngth[nvrtx] += wt[i]*vlngth[td[tind].vrtx[i]];
 
-         err = insert(tind,nvrtx,0.001);
+         err = insert(tind,nvrtx,0.001,ntdel,tdel,nsdel,sdel);
          if (!err) {
             nsnew = nsdel +3;
             ntnew = ntdel +2;
@@ -254,36 +246,38 @@ INSRT:
             sdel[0] = sind;
             nsnew = 0;
             ntnew = 2;
-            tdel[0] = stri[sind][0];
-            tdel[1] = stri[sind][1];
+            tdel[0] = sd[sind].tri[0];
+            tdel[1] = sd[sind].tri[1];
          }
       }
 IEND: ++nvrtx;
          
       for(i=0;i<nsdel;++i) 
-         if (intwk3[sdel[i]] > -1) tkoutlst(sdel[i]);
+         if (i3wk[sdel[i]] > -1) tkoutlst(sdel[i]);
          
-      if (intwk3[sind] > -1) tkoutlst(sind);
+      if (i3wk[sind] > -1) tkoutlst(sind);
                   
       for(i=0;i<nsnew;++i) {
          sind = sdel[i];
-         sinfo[sind] = -2; // MARK SIDE AS TOUCHED (OR SHOULD THIS BE DONE IN INSERT?)
-         intwk3[sind] = -1;
+         sd[sind].info = -2; // MARK SIDE AS TOUCHED (OR SHOULD THIS BE DONE IN INSERT?)
+         i3wk[sind] = -1;
          fltwkreb(sind);
-         if (fltwk[sind] < tolsize) putinlst(sind);
+         if (fwk[sind] < tolsize) putinlst(sind);
       }
          
       /* RECONSTRUCT AFFECTED TRIS vinfo ARRAY */
       for(i=0;i<ntnew;++i) {
          tind = tdel[i];
-         vinfo[tind] = 0;
+         vd[tind].info = 0;
          for(j=0;j<3;++j)
-            if (intwk3[tside[tind].side[j]] > -1) ++vinfo[tind];
+            if (i3wk[td[tind].side[j]] > -1) ++vd[tind].info;
       }
    }
    
-   for (i=0;i<nsbd;++i)
+   for (i=0;i<nsbd;++i) {
       sbdry[i]->reorder();
+      sbdry[i]->setupcoordinates();
+   }
    
    bdrylabel();
       
@@ -294,10 +288,7 @@ IEND: ++nvrtx;
    return;
 }
    
-template void mesh<2>::putinlst(int sind);
-template void mesh<3>::putinlst(int sind);
-
-template<int ND> void mesh<ND>::putinlst(int sind) {
+void mesh::putinlst(int sind) {
    int i, temp, top, bot, mid;
       
    /* CREATE ORDERED LIST OF SIDES BY RATIO FLTWORK (LENGTH/DENSITY) */
@@ -305,29 +296,29 @@ template<int ND> void mesh<ND>::putinlst(int sind) {
    if (nslst > 0) {
       top = 0;
       bot = nslst-1;
-      if (fltwk[sind] < fltwk[intwk2[top]]) {
+      if (fwk[sind] < fwk[i2wk[top]]) {
          bot = 0;
       }
-      else if (fltwk[sind] > fltwk[intwk2[bot]]) {
+      else if (fwk[sind] > fwk[i2wk[bot]]) {
          bot = nslst;
       }
       else {
          while(top < bot-1) {
             mid = top + (bot -top)/2;
-            if (fltwk[sind] > fltwk[intwk2[mid]])
+            if (fwk[sind] > fwk[i2wk[mid]])
                top = mid;
             else
                bot = mid;
          }
       }
       for(i=nslst-1;i>=bot;--i) {
-         temp = intwk2[i];
-         intwk2[i+1] = temp;
-         intwk3[temp] = i+1;
+         temp = i2wk[i];
+         i2wk[i+1] = temp;
+         i3wk[temp] = i+1;
       }
    }
-   intwk2[bot]= sind;
-   intwk3[sind] = bot;
+   i2wk[bot]= sind;
+   i3wk[sind] = bot;
    ++nslst;
 
    assert(nslst < maxvst -1);
@@ -335,47 +326,38 @@ template<int ND> void mesh<ND>::putinlst(int sind) {
    return;
 }
 
-template void mesh<2>::tkoutlst(int sind);
-template void mesh<3>::tkoutlst(int sind);
-
-template<int ND> void mesh<ND>::tkoutlst(int sind) {
+void mesh::tkoutlst(int sind) {
    int bgn,temp,i;
    
-   bgn = intwk3[sind];
+   bgn = i3wk[sind];
    for(i=bgn+1;i<nslst;++i) {
-      temp = intwk2[i];
-      intwk2[i-1] = temp;
-      intwk3[temp] = i-1;
+      temp = i2wk[i];
+      i2wk[i-1] = temp;
+      i3wk[temp] = i-1;
    }
-   intwk3[sind] = -1;
+   i3wk[sind] = -1;
    --nslst;
-   intwk2[nslst] = -1;
+   i2wk[nslst] = -1;
    
    return;
 }
 
-template void mesh<2>::fltwkreb(int i);
-template void mesh<3>::fltwkreb(int i);
-
-template<int ND> void mesh<ND>::fltwkreb(int i) {
+void mesh::fltwkreb(int i) {
    FLT dif, av;
    
    /* CALCULATE SIDE LENGTH RATIO FOR YABER */
    /* HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
    /* OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
    /*(THIS ESSENTIALLY TAKES THE MINUMUM) */
-   dif = 0.5*(vlngth[svrtx[i][0]] -vlngth[svrtx[i][1]]);
-   av = 0.5*(vlngth[svrtx[i][0]] +vlngth[svrtx[i][1]]);
-   fltwk[i] = (av -(dif*dif/(0.01*av +fabs(dif))))/distance(svrtx[i][0],svrtx[i][1]);
-   //fltwk[i] = MIN(vlngth[svrtx[i][0]],vlngth[svrtx[i][1]])/distance(svrtx[i][0],svrtx[i][1]);
+   dif = 0.5*(vlngth[sd[i].vrtx[0]] -vlngth[sd[i].vrtx[1]]);
+   av = 0.5*(vlngth[sd[i].vrtx[0]] +vlngth[sd[i].vrtx[1]]);
+   fwk[i] = (av -(dif*dif/(0.01*av +fabs(dif))))/distance(sd[i].vrtx[0],sd[i].vrtx[1]);
+   //fwk[i] = MIN(vlngth[sd[i].vrtx[0]],vlngth[sd[i].vrtx[1]])/distance(sd[i].vrtx[0],sd[i].vrtx[1]);
 
    return;
 }
 
-template void mesh<2>::fltwkreb();
-template void mesh<3>::fltwkreb();
-
-template<int ND> void mesh<ND>::fltwkreb() {
+void mesh::fltwkreb() {
    int i;
    
    for(i=0;i<nside;++i)
@@ -383,14 +365,13 @@ template<int ND> void mesh<ND>::fltwkreb() {
    return;
 }
 
-template void mesh<2>::trebay(FLT tolsize);
-template void mesh<3>::trebay(FLT tolsize);
-
-template<int ND> void mesh<ND>::trebay(FLT tolsize) {
+void mesh::trebay(FLT tolsize) {
    int i,j,n,tind,tfind,sind,v0,v1,v2,vnear,nsnew,ntnew,snum,bdrycnt,intrcnt,err;
    FLT xpt[2],wt[3],norm;
    FLT dx[2],p,q,s1sq,s2sq,rad1,rad2,rs;
    FLT xmid[2],densty,cirrad,arg,dist,rn[2],xdif[2],rsign;
+   int ntdel,tdel[maxlst];
+   int nsdel,sdel[maxlst];
    
    /* SET UP FLTWK */
    fltwkreb();
@@ -400,29 +381,29 @@ template<int ND> void mesh<ND>::trebay(FLT tolsize) {
    
    /* USE VINFO[TIND] = 3,2,1,0 TO FIND BOUNDARY REFINE TRI'S */
    for(i=0;i<ntri;++i)
-      vinfo[i] = 0;
+      vd[i].info = 0;
    
    /* CLASSIFY TRIANGLES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
    for(i=0;i<ntri;++i) {
       for(j=0;j<3;++j) {
-         if (fltwk[tside[i].side[j]] < tolsize) {
+         if (fwk[td[i].side[j]] < tolsize) {
             putinlst(i);
             break;
          }
       }
    }
    
-   vinfo[-1] = 0;
+   vd[-1].info = 0;
 
    /* BEGIN REFINEMENT ALGORITHM */
    while (nslst > 0) {
       for(i=0;i<nslst;++i) {
          for(j=0;j<3;++j) {
-            tind = ttri[intwk2[i]][j];
-            if (tind < 0 || intwk3[tind] == -1) {
+            tind = td[i2wk[i]].tri[j];
+            if (tind < 0 || i3wk[tind] == -1) {
                snum = j;
-               tind = intwk2[i];
+               tind = i2wk[i];
                goto TFOUND;
             }
          }
@@ -437,9 +418,9 @@ template<int ND> void mesh<ND>::trebay(FLT tolsize) {
       
       /* THIS IS TRIANGLE BASED REFINEMENT */
       /*	FIND ACCEPTED EDGE ON TRIANGLE & BUILD OFF OF IT */
-      v0 = tvrtx[tind][(snum+1)%3];
-      v1 = tvrtx[tind][(snum+2)%3];
-      v2 = tvrtx[tind][snum];
+      v0 = td[tind].vrtx[(snum+1)%3];
+      v1 = td[tind].vrtx[(snum+2)%3];
+      v2 = td[tind].vrtx[snum];
       
       /* USE REBAY'S ALGORITHM FOR INSERT POINT */
       p = 0.0;
@@ -522,7 +503,7 @@ INSRT:
          
       tfind = findtri(xpt,vnear);
       if (tfind < 0) {
-         *log << "#Warning: Trying to insert outside domain ";
+         *log << "#Warning: Trying to insert outd domain ";
          for(n=0;n<ND;++n)
             *log << vrtx[v0][n] << ' '; 
          for(n=0;n<ND;++n)
@@ -535,9 +516,9 @@ INSRT:
       getwgts(wt);
       vlngth[nvrtx] = 0.0;
       for(i=0;i<3;++i)
-         vlngth[nvrtx] += wt[i]*vlngth[tvrtx[tfind][i]];
+         vlngth[nvrtx] += wt[i]*vlngth[td[tfind].vrtx[i]];
 
-      err = insert(tfind,nvrtx,0.00001);
+      err = insert(tfind,nvrtx,0.00001,ntdel,tdel,nsdel,sdel);
       if (!err) {
          qtree.addpt(nvrtx);
          nsnew = nsdel +3;
@@ -557,20 +538,20 @@ INSRT:
       ++nvrtx;
          
       for(i=0;i<ntdel;++i) 
-         if (intwk3[tdel[i]] > -1) tkoutlst(tdel[i]);
+         if (i3wk[tdel[i]] > -1) tkoutlst(tdel[i]);
       
-      if (intwk3[tind] > -1) tkoutlst(tind);
+      if (i3wk[tind] > -1) tkoutlst(tind);
       
       for(i=0;i<nsnew;++i) {
          sind = sdel[i];
-         sinfo[sind] = -2; // MARK SIDE AS TOUCHED (OR SHOULD THIS BE DONE IN INSERT?)
+         sd[sind].info = -2; // MARK SIDE AS TOUCHED (OR SHOULD THIS BE DONE IN INSERT?)
          fltwkreb(sind);
       }
          
       for(i=0;i<ntnew;++i) {
          tind = tdel[i];
          for(j=0;j<3;++j) {
-            if (fltwk[tside[tind].side[j]] < tolsize) {
+            if (fwk[td[tind].side[j]] < tolsize) {
                putinlst(tind);
                break;
             }
@@ -579,8 +560,10 @@ INSRT:
 //      checkintegrity();
    }
    
-   for (i=0;i<nsbd;++i)
+   for (i=0;i<nsbd;++i) {
       sbdry[i]->reorder();
+      sbdry[i]->setupcoordinates();
+   }
    
    bdrylabel();
       

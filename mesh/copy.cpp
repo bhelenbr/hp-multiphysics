@@ -1,19 +1,23 @@
-#include"mesh.h"
-#include"utilities.h"
+#include "mesh.h"
+#include "boundary.h"
+#include "utilities.h"
 #include<assert.h>
 
-template void mesh<2>::copy(const mesh<2>& tgt);
-template void mesh<3>::copy(const mesh<3>& tgt);
-
-template<int ND> void mesh<ND>::copy(const mesh<ND>& tgt) {
+void mesh::copy(const mesh& tgt) {
    int i,n;
       
    if (!initialized) {
-      allocate(tgt.maxvst);
-      for(i=0;i<tgt.nsbd;++i)
-         getnewsideobject(i,tgt.sbdry[i]->idnty());
-      for(i=0;i<tgt.nvbd;++i)
-         getnewvrtxobject(i,tgt.vbdry[i]->idnty());
+      allocate(tgt.maxvst,tgt.scratch);
+      nsbd = tgt.nsbd;
+      for(i=0;i<tgt.nsbd;++i) {
+         sbdry[i] = tgt.sbdry[i]->create(*this);
+         sbdry[i]->alloc(tgt.sbdry[i]->maxel);
+      }
+      nvbd = tgt.nvbd;
+      for(i=0;i<tgt.nvbd;++i) {
+         vbdry[i] = tgt.vbdry[i]->create(*this);
+         vbdry[i]->alloc(1);
+      }
       initialized = 1;
    }
    else {
@@ -36,16 +40,15 @@ template<int ND> void mesh<ND>::copy(const mesh<ND>& tgt) {
       vlngth[i] = tgt.vlngth[i];
 
    for(i=0;i<nvrtx;++i)
-      vinfo[i] = tgt.vinfo[i];
+      vd[i].info = tgt.vd[i].info;
 
    for(i=0;i<nvrtx;++i)
-      nnbor[i] = tgt.nnbor[i];
+      vd[i].nnbor = tgt.vd[i].nnbor;
       
    for(i=0;i<nvrtx;++i)
-      vtri[i] = tgt.vtri[i];
+      vd[i].tri = tgt.vd[i].tri;
       
    /* COPY VERTEX BOUNDARY INFO */
-   nvbd = tgt.nvbd;
    for(i=0;i<nvbd;++i)
       vbdry[i]->copy(*tgt.vbdry[i]);
          
@@ -53,17 +56,16 @@ template<int ND> void mesh<ND>::copy(const mesh<ND>& tgt) {
    nside = tgt.nside;
    for(i=0;i<nside;++i)
       for(n=0;n<2;++n)
-         svrtx[i][n] = tgt.svrtx[i][n];
+         sd[i].vrtx[n] = tgt.sd[i].vrtx[n];
 
    for(i=0;i<nside;++i)
       for(n=0;n<2;++n)
-         stri[i][n] = tgt.stri[i][n];
+         sd[i].tri[n] = tgt.sd[i].tri[n];
          
    for(i=0;i<nside;++i)
-      sinfo[i] = tgt.sinfo[i];
+      sd[i].info = tgt.sd[i].info;
       
    /* COPY SIDE BOUNDARY INFO */
-   nsbd = tgt.nsbd;
    for(i=0;i<nsbd;++i)
       sbdry[i]->copy(*tgt.sbdry[i]);
    
@@ -71,21 +73,21 @@ template<int ND> void mesh<ND>::copy(const mesh<ND>& tgt) {
    ntri = tgt.ntri;
    for(i=0;i<ntri;++i)
       for(n=0;n<3;++n)
-         tvrtx[i][n] = tgt.tvrtx[i][n];
+         td[i].vrtx[n] = tgt.td[i].vrtx[n];
  
    for(i=0;i<ntri;++i)
       for(n=0;n<3;++n)
-         ttri[i][n] = tgt.ttri[i][n];
+         td[i].tri[n] = tgt.td[i].tri[n];
    
    for(i=0;i<ntri;++i) {
       for(n=0;n<3;++n) {
-         tside[i].side[n] = tgt.tside[i].side[n];
-         tside[i].sign[n] = tgt.tside[i].sign[n];
+         td[i].side[n] = tgt.td[i].side[n];
+         td[i].sign[n] = tgt.td[i].sign[n];
       }
    }
    
    for(i=0;i<ntri;++i)
-      tinfo[i] = tgt.tinfo[i];
+      td[i].info = tgt.td[i].info;
       
    qtree.copy(tgt.qtree);
    qtree.change_vptr(vrtx);

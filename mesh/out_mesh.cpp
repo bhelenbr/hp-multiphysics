@@ -3,13 +3,11 @@
 #include <fstream>
 #include <iomanip>
 #include "mesh.h"
+#include "boundary.h"
 
 using namespace std;
 
-template int mesh<2>::out_mesh(FLT (*vin)[2], const char *filename, ftype::name filetype) const;
-template int mesh<3>::out_mesh(FLT (*vin)[3], const char *filename, ftype::name filetype) const;
-
-template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype) const {
+int mesh::output(const char *filename, ftype::name filetype) const {
    char fnmapp[100];
    int i,j,n,tind,count;
    ofstream out;
@@ -33,8 +31,8 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          for(i=0;i<nvrtx;++i) {
             out << i << ": ";
             for(n=0;n<ND;++n)
-               out << vin[i][n] << ' ';
-            out << vinfo[i] << endl;
+               out << vrtx[i][n] << ' ';
+            out << vd[i].info << endl;
          }            
          out.close();
 
@@ -48,8 +46,8 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          }
          out << nside << endl;   
          for(i=0;i<nside;++i) {
-            out << i << ": " << svrtx[i][0] << ' ' << svrtx[i][1] << ' ';
-            out << stri[i][0] << ' ' << stri[i][1] << ' ' << sinfo[i] <<endl;
+            out << i << ": " << sd[i].vrtx[0] << ' ' << sd[i].vrtx[1] << ' ';
+            out << sd[i].tri[0] << ' ' << sd[i].tri[1] << ' ' << sd[i].info <<endl;
          }
          out.close();
    
@@ -62,10 +60,10 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          }
          out << ntri << endl;
          for(i=0;i<ntri;++i) {
-            out << i << ": " << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2];
-            out << ' ' << ttri[i][0] << ' ' << ttri[i][1] << ' ' << ttri[i][2];
-            out << ' ' << tside[i].side[0] << ' ' << tside[i].side[1] << ' ' << tside[i].side[2];
-            out << " 0.0 0.0 " << tinfo[i] << endl;
+            out << i << ": " << td[i].vrtx[0] << ' ' << td[i].vrtx[1] << ' ' << td[i].vrtx[2];
+            out << ' ' << td[i].tri[0] << ' ' << td[i].tri[1] << ' ' << td[i].tri[2];
+            out << ' ' << td[i].side[0] << ' ' << td[i].side[1] << ' ' << td[i].side[2];
+            out << " 0.0 0.0 " << td[i].info << endl;
          }   
          out.close();
          break;
@@ -83,14 +81,14 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               out << vin[i][n] << ' ';
+               out << vrtx[i][n] << ' ';
             out << endl;
          }
 
          out << "\n#CONNECTION DATA#\n";
          
          for(i=0;i<ntri;++i)
-            out << tvrtx[i][0]+1 << ' ' << tvrtx[i][1]+1 << ' ' << tvrtx[i][2]+1 << endl;
+            out << td[i].vrtx[0]+1 << ' ' << td[i].vrtx[1]+1 << ' ' << td[i].vrtx[2]+1 << endl;
             
          out.close();
          break;
@@ -108,7 +106,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
 
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               out << "       " << vin[i][n];
+               out << "       " << vrtx[i][n];
             if (ND == 2) out << "       " << 0.0;
             out << endl;
          }
@@ -118,7 +116,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
 
          for(i=0;i<ntri;++i) {
             out << "1 Default" << endl;
-            out << 3 << ' ' << tvrtx[i][0]+1 << ' ' << tvrtx[i][1]+1 << ' ' << tvrtx[i][2]+1 << endl;
+            out << 3 << ' ' << td[i].vrtx[0]+1 << ' ' << td[i].vrtx[1]+1 << ' ' << td[i].vrtx[2]+1 << endl;
          }
             out.close();
          break; 
@@ -134,7 +132,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
 
          count = ntri;
          for(i=0;i<nsbd;++i)
-            count += sbdry[i]->nsd();
+            count += sbdry[i]->nel;
    
          out << "** FIDAP NEUTRAL FILE\n";
          out << filename << "\n";
@@ -154,7 +152,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          for(i=0;i<nvrtx;++i) {
             out << setw(10) << i+1;
             for(n=0;n<ND;++n)
-               out << setw(20) << vin[i][n];
+               out << setw(20) << vrtx[i][n];
             out << '\n';
          }
             
@@ -170,9 +168,9 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          
          for(tind=0;tind<ntri;++tind) {
             out << setw(8) << tind+1;
-            out << setw(8) << tvrtx[tind][0]+1;
-            out << setw(8) << tvrtx[tind][1]+1;
-            out << setw(8) << tvrtx[tind][2]+1;
+            out << setw(8) << td[tind].vrtx[0]+1;
+            out << setw(8) << td[tind].vrtx[1]+1;
+            out << setw(8) << td[tind].vrtx[2]+1;
             out << endl;
          }
         
@@ -180,15 +178,16 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
         
          for(i=0;i<nsbd;++i) {
             out << "GROUP:" << setw(9) << i+2;
-            out << " ELEMENTS:" << setw(10) << sbdry[i]->nsd();
+            out << " ELEMENTS:" << setw(10) << sbdry[i]->nel;
             out << " NODES:" << setw(13) << 2;
             out << " GEOMETRY:" << setw(5) << 0;
-            out << " TYPE:" << setw(4) << sbdry[i]->idnty() << endl;
+            out << " ID:" << setw(4) << sbdry[i]->idnum << endl;
+
             out << "ENTITY NAME:   surface.1\n";
-            for(j=0;j<sbdry[i]->nsd();++j) {
+            for(j=0;j<sbdry[i]->nel;++j) {
                out << setw(8) << count++;
-               out << setw(8) << svrtx[sbdry[i]->sd(j)][0]+1;
-               out << setw(8) << svrtx[sbdry[i]->sd(j)][1]+1 << endl;
+               out << setw(8) << sd[sbdry[i]->el[j]].vrtx[0]+1;
+               out << setw(8) << sd[sbdry[i]->el[j]].vrtx[1]+1 << endl;
             }
          }
          out.close();
@@ -207,7 +206,7 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          for(i=0;i<nvrtx;++i) {
             out << i << ":";
             for(n=0;n<ND;++n)
-               out << vin[i][n] << ' '; 
+               out << vrtx[i][n] << ' '; 
             out << "\n";
          }
             
@@ -232,27 +231,33 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          for(i=0;i<nvrtx;++i) {
             out << i << ": ";
             for(n=0;n<ND;++n)
-               out << vin[i][n] << ' ';
+               out << vrtx[i][n] << ' ';
             out << "\n";
          }
                     
          /* SIDE INFO */
          for(i=0;i<nside;++i)
-            out << i << ": " << svrtx[i][0] << ' ' << svrtx[i][1] << endl;
+            out << i << ": " << sd[i].vrtx[0] << ' ' << sd[i].vrtx[1] << endl;
 
          /* THEN TRI INFO */
          for(i=0;i<ntri;++i)
-            out << i << ": " << tvrtx[i][0] << ' ' << tvrtx[i][1] << ' ' << tvrtx[i][2] << endl;
+            out << i << ": " << td[i].vrtx[0] << ' ' << td[i].vrtx[1] << ' ' << td[i].vrtx[2] << endl;
 
          /* SIDE BOUNDARY INFO HEADER */
          out << "nsbd: " << nsbd << endl;
-         for(i=0;i<nsbd;++i)
-            sbdry[i]->output(out);
+         for(i=0;i<nsbd;++i) {
+            out << "idnum: " << sbdry[i]->idnum << endl;
+         	out << "number: " << sbdry[i]->nel << endl;
+            for(int j=0;j<sbdry[i]->nel;++j)
+               out << j << ": " << sbdry[i]->el[j] << std::endl;
+         }
 
          /* VERTEX BOUNDARY INFO HEADER */
          out << "nvbd: " << nvbd << endl;
-         for(i=0;i<nvbd;++i)
-            vbdry[i]->output(out);
+         for(i=0;i<nvbd;++i) {
+            out << "idnum: " << vbdry[i]->idnum << endl;
+            out << "point: " << vbdry[i]->v0 << endl;
+         }
          
          out.close();
          
@@ -262,34 +267,40 @@ template<int ND> int mesh<ND>::out_mesh(FLT (*vin)[ND], const char *filename, ft
          *log << "That filetype is not supported yet" << endl;
          break;
    }
+   
+   /*
+   strcpy(fnmapp,filename);
+   strcat(fnmapp,".bdry.inpt");
+   out.open(fnmapp);
+   for(i=0;i<nvbd;++i) vbdry[i]->output(out);
+   for(i=0;i<nsbd;++i) sbdry[i]->output(out);
+   out.close();
+   */
 
-    return(1);
+   return(1);
 }
 
-template void mesh<2>::setbcinfo();
-template void mesh<3>::setbcinfo();
-
-template<int ND> void mesh<ND>::setbcinfo() {
+void mesh::setbcinfo() {
    int i,j;
    
    /* SET UP VRTX BC INFORMATION FOR OUTPUT */
    for(i=0;i<nvrtx;++i)
-      vinfo[i] = 0;
+      vd[i].info = 0;
    
    for(i=0;i<nvbd;++i)
-      vinfo[vbdry[i]->v()] = vbdry[i]->idnty();
+      vd[vbdry[i]->v0].info = vbdry[i]->idnum;
 
    /* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
    for(i=0;i<nside;++i)
-      sinfo[i] = 0;
+      sd[i].info = 0;
    
    for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry[i]->nsd();++j)
-         sinfo[sbdry[i]->sd(j)] = sbdry[i]->idnty();
+      for(j=0;j<sbdry[i]->nel;++j)
+         sd[sbdry[i]->el[j]].info = sbdry[i]->idnum;
 
    /* SET UP TRI INFO FOR EASYMESH OUTPUT */         
    for(i=0;i<ntri;++i)
-      tinfo[i] = 0;
+      td[i].info = 0;
          
    return;
 }

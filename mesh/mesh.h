@@ -1,11 +1,15 @@
 #ifndef _mesh_h_
 #define _mesh_h_
 
-#include <math.h>
 #include <quadtree.h>
 #include <ftype.h>
 #include <iostream>
 #include <float.h>
+#include <utilities.h>
+#include <iostream>
+#include <map>
+#include <string>
+#include <sstream>
 
 #ifdef SINGLE
 #define FLT float
@@ -17,107 +21,86 @@
 #endif
 #endif
 
-template<class T> class side_template;
-template<class T> class vrtx_template;
 
-template<int ND> class mesh {
+class side_bdry;
+class vrtx_bdry;
+
+class mesh {
 
    /***************/
    /* DATA        */
    /***************/
-   protected:
-      int initialized, maxvst;
-
    public:
-      std::ostream *log;
+      int initialized, maxvst;
+      static const int ND = 2;
       static const int DIM = ND;
-#ifdef CAPRI
-      int cpri_vol, cpri_face;
-#endif
-      
-      /* STORES THINGS NEEDED FOR A BLOCK OF MESHES */
-      /* AT THIS POINT DON'T NEED ANYTHING */
-      struct gbl {
-      } *rg;
+      std::ostream *log;
       
       /* VERTEX DATA */
       int nvrtx;
       FLT (*vrtx)[ND];
       FLT *vlngth;
-      int *vinfo;
-      int *nnbor;
-      int *vtri;
+      struct vstruct {
+         int tri;
+         int nnbor;
+         int info;
+      } *vd;
       class quadtree<ND> qtree;
    
       /* VERTEX BOUNDARY INFO */
       static const int MAXVB = 8;
       int nvbd;
-      vrtx_template<mesh<ND> > *vbdry[MAXVB];
-      virtual void getnewvrtxobject(int bnum, int type);
-     
+      vrtx_bdry *vbdry[MAXVB];
+      vrtx_bdry* getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata);
+
       /* SIDE DATA */      
       int nside;
-      int (*svrtx)[2];
-      int (*stri)[2];
-      int *sinfo;
+      struct sstruct {
+         int vrtx[2];
+         int tri[2];
+         int info;
+      } *sd;
       
       /* SIDE BOUNDARY INFO */
       static const int MAXSB = 8;
       int nsbd;
-      side_template<mesh<ND> > *sbdry[MAXSB]; 
-      virtual void getnewsideobject(int bnum, int type);
+      side_bdry *sbdry[MAXSB]; 
+      side_bdry* getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata);
 
       /* TRIANGLE DATA */      
       int ntri;
-      int (*tvrtx)[3];
-      int (*ttri)[3];
-      struct tsidedata {
+      struct tstruct {
+         int vrtx[3];
          int side[3];
          int sign[3];
-      } *tside;
-      int *tinfo;
-
-      /* THIS IS AN INTERPOLATION STRUCTURE IF USING MULTIGRID */
-      /* UNALLOCATED UNLESS CONNECT IS CALLED */      
-      struct mg_trans {
-         int tri;
-         double wt[3];
-      };
-      void *fmpt;  // CAN BE USED TO POINT TO ANY OBJECT INHERITED FROM MESH
-      void *cmpt;  // DITTO
-      struct mg_trans *fine;
-      struct mg_trans *coarse;
-      void mgconnect(struct mg_trans *cnnct, const class mesh& tgt);
+         int tri[3];
+         int info;
+      } *td;
       
-      /* THESE ARE STATIC WORK ARRAYS FOR MESH REFINEMENT ROUTINES */
-      static FLT *fltwk;
-      static int gblmaxvst, *intwk1, *intwk2, *intwk3;
-      static int maxsrch;  // MAX TRIS TO SEARCH IN FINDTRI ROUTINE
+      /* THESE ARE NOT SHARED BECAUSE THEY HAVE TO BE KEPT INITIALIZED TO -1 */
+      static int maxsrch, maxlst;
+      static int *i1wk, *i2wk, *i3wk;
+      /* THIS SHARED FLOATING WORK */
+      sharedmem *scratch;
+      FLT *fwk;
       
       /**************/
       /*  INTERFACE */
       /**************/
       /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), log(&std::cout), fmpt(NULL), cmpt(NULL), fine(NULL), coarse(NULL) {}
-      void allocate(bool coarse, mesh::gbl *ginit) {}
+      mesh() : initialized(0), log(&std::cout) {}
+      sharedmem* allocate(int mxsize, sharedmem *wkin = 0);
+      void load_scratch_pointers();
       void copy(const mesh& tgt);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      int in_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype = ftype::easymesh, FLT grwfac = 1);
-      inline int in_mesh(const char *filename, ftype::name filetype = ftype::easymesh, FLT grwfac = 1) {return(in_mesh(vrtx,filename,filetype,grwfac));}
-      int out_mesh(FLT (*vin)[ND], const char *filename, ftype::name filetype = ftype::easymesh) const;
-      inline int out_mesh(const char *filename, ftype::name filetype = ftype::easymesh) const {return(out_mesh(vrtx,filename,filetype));}
+      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh, const char *bdrymap = 0, FLT grwfac = 1,sharedmem *win = 0);
+      int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
       void setbcinfo();
-      
-      /* ACCESS TO SIMPLE MESH DATA */
-      int max() {return maxvst;}
 
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      virtual void setlength() {
-         *log << "in generic setlength" << std::endl;
-      }
       void length1();
       void length2(); 
       int coarsen(FLT factor, const class mesh& xmesh);
@@ -149,12 +132,15 @@ template<int ND> class mesh {
       int msgpass(int phase);
       void matchboundaries1();
       void matchboundaries2();
-
-      /* FUNCTION TO ALLOCATE & SET INTERPOLATION WEIGHTS BETWEEN TWO MESHES */
-      void setfine(class mesh& tgt);
-      void setcoarse(class mesh& tgt);
-      void testconnect(char *fname);
-
+      
+      /* THIS IS AN INTERPOLATION DATA STRUCTURE */
+      struct transfer {
+         int tri;
+         FLT wt[3];
+      };
+      void mgconnect(transfer *cnnct, const class mesh& tgt);
+      void testconnect(char *fname,transfer *cnnct, mesh *cmesh);
+      
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity() const;
       void checkintwk() const;
@@ -163,12 +149,10 @@ template<int ND> class mesh {
       /*******************/
       /* INTERNAL FUNCTIONS */
       /*******************/  
-      void allocate(int mxsize);
-       
       void cnt_nbor(void);
       void bdrylabel(void);
       void createsideinfo(void);
-      void createtsidestri(void);
+      void createtdstri(void);
       void createttri(void);
       void createvtri(void);
       void treeinit();
@@ -180,25 +164,21 @@ template<int ND> class mesh {
 
       /* TO INSERT A POINT */
       int insert(FLT x[ND]);
-      int insert(int tind, int vnum, FLT theta = 0.0);
-      void bdry_insert(int tind, int snum, int vnum);
+      int insert(int tind, int vnum, FLT theta, int &ntdel, int *tdel, int &nsdel, int *sdel);
+      void bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int &nsdel, int *sdel);
       int findtri(FLT x[ND], int vnear) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
       /* FOR COARSENING A SIDE */
-      int collapse(int sind);
+      int collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *nsdel);
       void dltvrtx(int vind);
-      void dltside(int sind);
+      void dltd(int sind);
       void dlttri(int tind);
       void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
       void fltwkyab();
       
       /* ORDERED LIST FUNCTIONS */
-      static const int MAXLST = 10000;
-      static int nslst;
-      static int ntdel, tdel[MAXLST+1];
-      static int nsdel, sdel[MAXLST+1];
       void putinlst(int sind);
       void tkoutlst(int sind);
       
@@ -232,15 +212,4 @@ template<int ND> class mesh {
       FLT intri(int tind, FLT x[ND]) const;
       void getwgts(FLT *) const;
 };
-
-#include "boundary.h"
-
-/* REMINDER FIND AND REPLACE TO INSERT FUNCTION INSTANTIATIONS 
-template\<int ND\> ([a-z]*) mesh\<ND\>::([^?]*) \{
-
-template \1 mesh\<2\>::\2;
-template \1 mesh\<3\>::\2;
-
-template\<int ND\> \1 mesh\<ND\>::\2 \{
-*/
 #endif

@@ -202,11 +202,12 @@ void blocks::init(std::map<std::string,std::string> input[]) {
       data.clear();
       blk[i] = getnewblock(type);
       blk[i]->init(merge,log);
-      blk[i]->load_const(merge);
-      blk[i]->alloc(merge);
    }
+   output("start",ftype::grid);
+
    findmatch();
    matchboundaries();
+   output("matched",ftype::grid);
 
    return;
 }
@@ -214,14 +215,14 @@ void blocks::init(std::map<std::string,std::string> input[]) {
 void blocks::localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,int j) {
    if (v2 < v1) {
       /* FIRST DETERMINED BY HARDWARE ADDRESS OK? */
-      v1->local_cnnct(v2,v1->idnty() +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-      *log << "#second lmatch id: " << v1->idnty() << " vsf: " << vsf 
+      v1->local_cnnct(v2,v1->idnum +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
+      *log << "#second lmatch id: " << v1->idnum << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
       v1->setfrst(false);
    }
    else {
-      v1->local_cnnct(v2,v1->idnty() +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-      *log << "#first lmatch id: " << v1->idnty() << " vsf: " << vsf 
+      v1->local_cnnct(v2,v1->idnum +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
+      *log << "#first lmatch id: " << v1->idnum << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
    }
    return;
@@ -230,14 +231,14 @@ void blocks::localmatch(int vsf,boundary *v1, boundary *v2,int b1,int b2,int i,i
 #ifdef MPISRC
 void blocks::mpimatch(int vsf,boundary *v1,int p,int b1,int b2,int i,int j) {
   if (p < myid) {
-      v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
-      *log << "#second mpimatch id: " << v1->idnty() << " vsf: " << vsf 
+      v1->mpi_cnnct(p,v1->idnum +(vsf<<16) +(b1<<18) +(b2<<22) +(i<<26) +(j<<28));
+      *log << "#second mpimatch id: " << v1->idnum << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
       v1->setfrst(false);
    }
    else {
-      v1->mpi_cnnct(p,v1->idnty() +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
-      *log << "#first mpimatch id: " << v1->idnty() << " vsf: " << vsf 
+      v1->mpi_cnnct(p,v1->idnum +(vsf<<16) +(b2<<18) +(b1<<22) +(j<<26) +(i<<28));
+      *log << "#first mpimatch id: " << v1->idnum << " vsf: " << vsf 
            <<  " b1: " << b1 << " b2: " << b2 << " i: " << i << " j: " << j << "\n";
    }
    return;
@@ -450,9 +451,6 @@ void blocks::findmatch() {
    return;
 }
 
-
-
-            
             
             
    /* MATCH BOUNDARIES */
@@ -527,7 +525,7 @@ void blocks::iterate(int lvl) {
    do {
       state = block::stop;
       for(i=0;i<nblock;++i)
-         state &= blk[i]->vddt(lvl,excpt);
+         state &= blk[i]->setup_preconditioner(lvl,excpt);
       excpt += state;
    } while (state != block::stop);
 
@@ -600,9 +598,9 @@ void blocks::go() {
          maxres();
          *log << '\n';
       }
-      restructure();
       number_str(outname, "end", step, 3);
       output(outname,ftype::grid);
+      restructure();
    }
    cpu_time = clock();
    *log << "that took " << cpu_time << " cpu time" << std::endl;
@@ -647,8 +645,9 @@ void blocks::restructure() {
       excpt = 0;
       do {
          state = block::stop;
-         for(i=0;i<nblock;++i)
+         for(i=0;i<nblock;++i) {
             state &= blk[i]->reconnect(lvl,excpt);
+         }
          excpt += state;
       } while (state != block::stop);
    }

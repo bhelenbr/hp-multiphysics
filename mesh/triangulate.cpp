@@ -14,12 +14,9 @@
 
 #define MAXGOOD 100
 
-template void mesh<2>::triangulate(int nsd);
-template void mesh<3>::triangulate(int nsd);
-
-template<int ND> void mesh<ND>::triangulate(int nsd) {
+void mesh::triangulate(int nsd) {
    int i,j,n,vcnt,sck,dirck,stest,nv,vtry;
-   int sd;
+   int sind2;
    int bgn,end;
    int sind,dir;
    int sind1,sindprev;
@@ -39,21 +36,21 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
    /* STORE IN NNBOR SINCE THIS IS UNUSED RIGHT NOW */
    nv = 0;
    for(i=0;i<nsd;++i) {
-      sind = abs(intwk1[i]) -1;
-      dir = (1 -SIGN(intwk1[i]))/2;
-      stri[sind][dir] = -1;
-      intwk2[nv++] = svrtx[sind][dir];
+      sind = abs(i1wk[i]) -1;
+      dir = (1 -SIGN(i1wk[i]))/2;
+      sd[sind].tri[dir] = -1;
+      i2wk[nv++] = sd[sind].vrtx[dir];
       assert(nv < maxvst-1);
    }
 
    /* SETUP SIDE POINTER INFO */
    for(i=0;i<nv;++i)
-      vinfo[intwk2[i]] = -1;
+      vd[i2wk[i]].info = -1;
       
    for(i=0;i<nsd;++i) {
-      sind = abs(intwk1[i]) -1;
-      v[0] = svrtx[sind][0];
-      v[1] = svrtx[sind][1];
+      sind = abs(i1wk[i]) -1;
+      v[0] = sd[sind].vrtx[0];
+      v[1] = sd[sind].vrtx[1];
       if (v[1] > v[0]) {
          minv = v[0];
          maxv = v[1];
@@ -62,16 +59,16 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
          minv = v[1];
          maxv = v[0];
       }
-      sind1 = vinfo[minv];
+      sind1 = vd[minv].info;
       while (sind1 >= 0) {
          sindprev = sind1;
-         sind1 = sinfo[sind1];
+         sind1 = sd[sind1].info;
       }
-      sinfo[sind] = -1;
-      if (vinfo[minv] < 0)
-         vinfo[minv] = sind;
+      sd[sind].info = -1;
+      if (vd[minv].info < 0)
+         vd[minv].info = sind;
       else 
-         sinfo[sindprev] = sind;
+         sd[sindprev].info = sind;
    }
    
    bgn = 0;
@@ -79,14 +76,14 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
    ntest = end;
    while(bgn < end) {
       nsidebefore = nside;
-      for(sd=bgn;sd<end;++sd) {
-         sind = abs(intwk1[sd]) -1;
-         dir =  (1 -SIGN(intwk1[sd]))/2;
+      for(sind2=bgn;sind2<end;++sind2) {
+         sind = abs(i1wk[sind2]) -1;
+         dir =  (1 -SIGN(i1wk[sind2]))/2;
          
-         if (stri[sind][dir] > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
+         if (sd[sind].tri[dir] > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
          
-         v[0] = svrtx[sind][dir];
-         v[1] = svrtx[sind][1 -dir];
+         v[0] = sd[sind].vrtx[dir];
+         v[1] = sd[sind].vrtx[1 -dir];
 
          /* SEARCH FOR GOOD POINTS */
          for(n=0;n<ND;++n) {
@@ -97,7 +94,7 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
          
          /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
          for(i=0;i<nv;++i) {
-            vtry = intwk2[i];
+            vtry = i2wk[i];
             if (vtry == v[0] || vtry == v[1]) continue;
       
             for(n=0;n<ND;++n)
@@ -125,10 +122,10 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
                maxv = MAX(vtry,v[vcnt]);
                /* LOOK THROUGH ALL SIDES CONNECTED TO MINV FOR DUPLICATE */
                /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
-               sind1 = vinfo[minv];
+               sind1 = vd[minv].info;
                while (sind1 >= 0) {
-                  if (maxv == svrtx[sind1][0] || maxv == svrtx[sind1][1]) goto next_vrt;
-                  sind1 = sinfo[sind1];
+                  if (maxv == sd[sind1].vrtx[0] || maxv == sd[sind1].vrtx[1]) goto next_vrt;
+                  sind1 = sd[sind1].info;
                }
                
                for(n=0;n<ND;++n) {
@@ -137,11 +134,11 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
                }
                
                for(sck=0;sck<ntest;++sck) {
-                  stest = abs(intwk1[sck])-1;
+                  stest = abs(i1wk[sck])-1;
                   if (stest == sind) continue;
-                  dirck =  (1 -SIGN(intwk1[sck]))/2;
-                  v2 = svrtx[stest][dirck];
-                  v3 = svrtx[stest][1-dirck];
+                  dirck =  (1 -SIGN(i1wk[sck]))/2;
+                  v2 = sd[stest].vrtx[dirck];
+                  v3 = sd[stest].vrtx[1-dirck];
                   if (v2 == minv || v3 == minv) {
                      /* SPECIAL TEST FOR CONNECTED SIDES */
                      /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
@@ -213,7 +210,7 @@ vtry_failed:continue;
             for(i=0;i<ngood-1;++i) {
                for(j=i+1;j<ngood;++j) {
       
-                  /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN intwk2 */
+                  /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN i2wk */
                   if (good[i] == good[j]) {
                      good[j] = good[ngood-1];
                      --ngood;
@@ -241,47 +238,43 @@ vtry_failed:continue;
       bgn = end;
       end += nside -nsidebefore;
       for(i=nsidebefore;i<nside;++i)
-         intwk1[bgn+i-nsidebefore] = -(i + 1);
+         i1wk[bgn+i-nsidebefore] = -(i + 1);
    }
    
    for(i=0;i<maxvst;++i) {
-      intwk1[i] = -1;
-      intwk2[i] = -1;
+      i1wk[i] = -1;
+      i2wk[i] = -1;
    }
       
    return;
 
 }
 
-
-template void mesh<2>::addtri(int v0,int v1, int v2, int sind, int dir);
-template void mesh<3>::addtri(int v0,int v1, int v2, int sind, int dir);
-
-template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir) {
+void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
    int i,j,k,end,sind1,tind;
    int minv,maxv,order,sindprev,temp;
       
    /* ADD NEW TRIANGLE */
-   tvrtx[ntri][0] = v0;
-   tvrtx[ntri][1] = v1;
-   tvrtx[ntri][2] = v2;
+   td[ntri].vrtx[0] = v0;
+   td[ntri].vrtx[1] = v1;
+   td[ntri].vrtx[2] = v2;
                
-   vtri[v0] = ntri;
-   vtri[v1] = ntri;
-   vtri[v2] = ntri;
+   vd[v0].tri = ntri;
+   vd[v1].tri = ntri;
+   vd[v2].tri = ntri;
    
    end = 3;
    if (sind > -1) {
       /* SIDE 2 INFO IS KNOWN ALREADY */
-      tside[ntri].side[2] = sind;
-      tside[ntri].sign[2] = 1 -2*dir;
-      stri[sind][dir] = ntri;
-      tind = stri[sind][1-dir];
-      ttri[ntri][2] = tind;
+      td[ntri].side[2] = sind;
+      td[ntri].sign[2] = 1 -2*dir;
+      sd[sind].tri[dir] = ntri;
+      tind = sd[sind].tri[1-dir];
+      td[ntri].tri[2] = tind;
       if (tind > -1) {
          for(i=0;i<3;++i) {
-            if (tside[tind].side[i] == sind) {
-               ttri[tind][i] = ntri;
+            if (td[tind].side[i] == sind) {
+               td[tind].tri[i] = ntri;
                break;
             }
          }
@@ -301,48 +294,48 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
          maxv = v1;
          order = 0;
       }
-      sind1 = vinfo[minv];
+      sind1 = vd[minv].info;
       while (sind1 >= 0) {
-         if (maxv == svrtx[sind1][order]) {
+         if (maxv == sd[sind1].vrtx[order]) {
             /* SIDE IN SAME DIRECTION */
-            if (stri[sind1][0] >= 0) {
+            if (sd[sind1].tri[0] >= 0) {
                *log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               out_mesh("error",ftype::tecplot);
-               out_mesh("error",ftype::grid);
+               output("error",ftype::tecplot);
+               output("error",ftype::grid);
                exit(1);
             }
-            stri[sind1][0] = ntri;
-            tside[ntri].side[k] = sind1;
-            tside[ntri].sign[k] = 1;
-            tind = stri[sind1][1];
-            ttri[ntri][k] = tind;
+            sd[sind1].tri[0] = ntri;
+            td[ntri].side[k] = sind1;
+            td[ntri].sign[k] = 1;
+            tind = sd[sind1].tri[1];
+            td[ntri].tri[k] = tind;
             if (tind > -1) {
                for(j=0;j<3;++j) {
-                  if (tside[tind].side[j] == sind1) {
-                     ttri[tind][j] = ntri;
+                  if (td[tind].side[j] == sind1) {
+                     td[tind].tri[j] = ntri;
                      break;
                   }
                }
             }
             goto NEXTTRISIDE;
          }
-         else if(maxv == svrtx[sind1][1-order]) {
+         else if(maxv == sd[sind1].vrtx[1-order]) {
             /* SIDE IN OPPOSITE DIRECTION */
-            if (stri[sind1][1] >= 0) {
+            if (sd[sind1].tri[1] >= 0) {
                *log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               out_mesh("error",ftype::tecplot);
-               out_mesh("error",ftype::grid);
+               output("error",ftype::tecplot);
+               output("error",ftype::grid);
                exit(1);
             }
-            stri[sind1][1] = ntri;
-            tside[ntri].side[k] = sind1;
-            tside[ntri].sign[k] = -1;
-            tind = stri[sind1][0];
-            ttri[ntri][k] = tind;
+            sd[sind1].tri[1] = ntri;
+            td[ntri].side[k] = sind1;
+            td[ntri].sign[k] = -1;
+            tind = sd[sind1].tri[0];
+            td[ntri].tri[k] = tind;
             if (tind > -1) {
                for(j=0;j<3;++j) {
-                  if (tside[tind].side[j] == sind1) {
-                     ttri[tind][j] = ntri;
+                  if (td[tind].side[j] == sind1) {
+                     td[tind].tri[j] = ntri;
                      break;
                   }
                }
@@ -350,20 +343,20 @@ template<int ND> void mesh<ND>::addtri(int v0,int v1, int v2, int sind, int dir)
             goto NEXTTRISIDE;     
          }
          sindprev = sind1;
-         sind1 = sinfo[sind1];
+         sind1 = sd[sind1].info;
       }
       /* NEW SIDE */
-      svrtx[nside][0] = v1;
-      svrtx[nside][1] = v2;
-      stri[nside][0] = ntri;
-      stri[nside][1] = -1;
-      tside[ntri].side[k] = nside;
-      tside[ntri].sign[k] = 1;
-      sinfo[nside] = -1;
-      if (vinfo[minv] < 0)
-         vinfo[minv] = nside;
+      sd[nside].vrtx[0] = v1;
+      sd[nside].vrtx[1] = v2;
+      sd[nside].tri[0] = ntri;
+      sd[nside].tri[1] = -1;
+      td[ntri].side[k] = nside;
+      td[ntri].sign[k] = 1;
+      sd[nside].info = -1;
+      if (vd[minv].info < 0)
+         vd[minv].info = nside;
       else 
-         sinfo[sindprev] = nside;
+         sd[sindprev].info = nside;
       ++nside;
       assert(nside < maxvst -1);
          

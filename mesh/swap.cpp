@@ -12,97 +12,92 @@
 #include<assert.h>
 #include<float.h>
 
-template int mesh<2>::swap(int sind, FLT tol);
-template int mesh<3>::swap(int sind, FLT tol);
-
-template<int ND> int mesh<ND>::swap(int sind, FLT tol) {
-   int j,t1,t2,s1p,s2p,snum1,snum2,tind,sd,v0,v1,vt1,vt2,dir;
+int mesh::swap(int sind, FLT tol) {
+   int j,t1,t2,s1p,s2p,snum1,snum2,tind,sind1,v0,v1,vt1,vt2,dir;
          
-   t1 = stri[sind][0];
-   t2 = stri[sind][1];
+   
+   t1 = sd[sind].tri[0];
+   t2 = sd[sind].tri[1];
    
    if (t1 < 0 || t2 < 0) return(0);
 
    for(snum1 = 0; snum1 < 3; ++snum1)
-      if (tside[t1].side[snum1] == sind) break;
+      if (td[t1].side[snum1] == sind) break;
    assert(snum1 != 3);
 
    for(snum2 = 0; snum2 < 3; ++snum2)
-      if (tside[t2].side[snum2] == sind) break;
+      if (td[t2].side[snum2] == sind) break;
    assert(snum2 != 3); 
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
-   vt1 = tvrtx[t1][snum1];
-   vt2 = tvrtx[t2][snum2];
+   v0 = sd[sind].vrtx[0];
+   v1 = sd[sind].vrtx[1];
+   vt1 = td[t1].vrtx[snum1];
+   vt2 = td[t2].vrtx[snum2];
    
    if (MIN(minangle(v0,v1,vt1),minangle(v1,v0,vt2)) >
        MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol -10.0*EPSILON) return(0);
        
-   sinfo[sind] = -2; /* MARK SIDE AS TOUCHED */   
+   sd[sind].info = -2; /* MARK SIDE AS TOUCHED */   
    
    /* SWAP SIDE */
-   svrtx[sind][0] = vt2;
-   svrtx[sind][1] = vt1;
+   sd[sind].vrtx[0] = vt2;
+   sd[sind].vrtx[1] = vt1;
 
    /* KEEP 2/3 VERTICES IN SAME SPOT */
-   tvrtx[t1][(snum1 +2)%3] = vt2;
-   tvrtx[t2][(snum2 +2)%3] = vt1;
+   td[t1].vrtx[(snum1 +2)%3] = vt2;
+   td[t2].vrtx[(snum2 +2)%3] = vt1;
 
    s1p = (snum1 +1)%3;
    s2p = (snum2 +1)%3;
    
    /* FIX 2 CHANGED EXTERIOR SIDES */
-   tside[t1].side[snum1] = tside[t2].side[s2p];
-   tside[t1].sign[snum1] = tside[t2].sign[s2p];
-   ttri[t1][snum1] = ttri[t2][s2p];
+   td[t1].side[snum1] = td[t2].side[s2p];
+   td[t1].sign[snum1] = td[t2].sign[s2p];
+   td[t1].tri[snum1] = td[t2].tri[s2p];
 
-   tside[t2].side[snum2] = tside[t1].side[s1p];
-   tside[t2].sign[snum2] = tside[t1].sign[s1p];
-   ttri[t2][snum2] = ttri[t1][s1p];
+   td[t2].side[snum2] = td[t1].side[s1p];
+   td[t2].sign[snum2] = td[t1].sign[s1p];
+   td[t2].tri[snum2] = td[t1].tri[s1p];
    
    /* FIX STRI/TTRI FOR 2 CHANGED EXTERIOR SIDES */
-   sd = tside[t1].side[snum1];
-   dir = (1 -tside[t1].sign[snum1])/2;
-   stri[sd][dir] = t1;
-   tind = ttri[t1][snum1];
+   sind1 = td[t1].side[snum1];
+   dir = (1 -td[t1].sign[snum1])/2;
+   sd[sind1].tri[dir] = t1;
+   tind = td[t1].tri[snum1];
    if (tind > -1) {
       for(j=0;j<3;++j)
-         if (tside[tind].side[j] == sd) break;
+         if (td[tind].side[j] == sind1) break;
       assert(j != 3);
-      ttri[tind][j] = t1;
+      td[tind].tri[j] = t1;
    }
    
-   sd = tside[t2].side[snum2];
-   dir = (1 -tside[t2].sign[snum2])/2;
-   stri[sd][dir] = t2;
-   tind = ttri[t2][snum2];
+   sind1 = td[t2].side[snum2];
+   dir = (1 -td[t2].sign[snum2])/2;
+   sd[sind1].tri[dir] = t2;
+   tind = td[t2].tri[snum2];
    if (tind > -1) {
       for(j=0;j<3;++j)
-         if (tside[tind].side[j] == sd) break;
+         if (td[tind].side[j] == sind1) break;
       assert(j != 3);
-      ttri[tind][j] = t2;
+      td[tind].tri[j] = t2;
    } 
 
-   vtri[v0] = t1;
-   vtri[v1] = t2;  
+   vd[v0].tri = t1;
+   vd[v1].tri = t2;  
    
-   ttri[t1][s1p] = t2;
-   ttri[t2][s2p] = t1;
+   td[t1].tri[s1p] = t2;
+   td[t2].tri[s2p] = t1;
    
-   tside[t1].side[s1p] = sind;
-   tside[t2].side[s2p] = sind;  
-   tside[t1].sign[s1p] =  1;
-   tside[t2].sign[s2p] = -1;
+   td[t1].side[s1p] = sind;
+   td[t2].side[s2p] = sind;  
+   td[t1].sign[s1p] =  1;
+   td[t2].sign[s2p] = -1;
 
    return(1);
 }
    
    
-template void mesh<2>::swap(int nswp, int *swp, FLT tol);
-template void mesh<3>::swap(int nswp, int *swp, FLT tol);
-
-template<int ND> void mesh<ND>::swap(int nswp, int *swp, FLT tol) {
+void mesh::swap(int nswp, int *swp, FLT tol) {
    int i,flag;
    
    do {
@@ -114,10 +109,7 @@ template<int ND> void mesh<ND>::swap(int nswp, int *swp, FLT tol) {
    return;
 }
 
-template void mesh<2>::swap(FLT tol);
-template void mesh<3>::swap(FLT tol);
-
-template<int ND> void mesh<ND>::swap(FLT tol) {
+void mesh::swap(FLT tol) {
    int nswap,i;
    
    /* PERFORM EDGE SWAPPING */

@@ -11,9 +11,6 @@ class block {
    public:
       enum ctrl {stay = 0, advance = 1, stop = 3};
       virtual void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0) = 0;
-      virtual void load_const(std::map <std::string,std::string>& input) = 0;
-      virtual void alloc(std::map <std::string,std::string>& input) = 0;
-      virtual void input(char *filename) = 0;
       virtual void output(char *filename, ftype::name filetype = ftype::easymesh) = 0;
       virtual int comm_entity_size(int grdlvl) = 0;
       virtual int comm_entity_list(int grdlvl, int *list) = 0;
@@ -23,7 +20,7 @@ class block {
       virtual void maxres() = 0;
       virtual ctrl matchboundaries(int lvl, int excpt) = 0;
       virtual ctrl rsdl(int lvl, int excpt) = 0;
-      virtual ctrl vddt(int lvl, int excpt) = 0;
+      virtual ctrl setup_preconditioner(int lvl, int excpt) = 0;
       virtual ctrl update(int lvl, int excpt) = 0;
       virtual ctrl mg_getfres(int lvl, int excpt) = 0;
       virtual ctrl mg_getcchng(int lvl, int excpt) = 0;

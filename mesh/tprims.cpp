@@ -1,18 +1,15 @@
 #include"mesh.h"
 #include<cmath>
 
-template FLT mesh<2>::incircle(int tind, FLT *a) const;
-template FLT mesh<3>::incircle(int tind, FLT *a) const;
-
-template<int ND> FLT mesh<ND>::incircle(int tind, FLT *a) const {
+FLT mesh::incircle(int tind, FLT *a) const {
    int i;
    FLT pt[3][2];
    FLT l2[3];
    FLT determ;
    
    for(i=0;i<3;++i) {
-      pt[i][0] = vrtx[tvrtx[tind][i]][0]-a[0];
-      pt[i][1] = vrtx[tvrtx[tind][i]][1]-a[1];
+      pt[i][0] = vrtx[td[tind].vrtx[i]][0]-a[0];
+      pt[i][1] = vrtx[td[tind].vrtx[i]][1]-a[1];
    }
 
    for(i=0;i<3;++i)
@@ -26,15 +23,12 @@ template<int ND> FLT mesh<ND>::incircle(int tind, FLT *a) const {
    return(determ);
 }
 
-template FLT mesh<2>::insidecircle(int sind, FLT *a) const;
-template FLT mesh<3>::insidecircle(int sind, FLT *a) const;
-
-template<int ND> FLT mesh<ND>::insidecircle(int sind, FLT *a) const {
+FLT mesh::insidecircle(int sind, FLT *a) const {
    int v0,v1;
    FLT ctr[2],dist2;
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
+   v0 = sd[sind].vrtx[0];
+   v1 = sd[sind].vrtx[1];
    ctr[0] = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
    ctr[1] = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
    dist2 = (a[0]-ctr[0])*(a[0]-ctr[0]) +(a[1]-ctr[1])*(a[1]-ctr[1]);
@@ -42,9 +36,7 @@ template<int ND> FLT mesh<ND>::insidecircle(int sind, FLT *a) const {
 }
 
 
-template FLT mesh<2>::area(int v0, int v1, int v2) const;
-
-template<int ND> FLT mesh<ND>::area(int v0, int v1, int v2) const {
+FLT mesh::area(int v0, int v1, int v2) const {
    FLT dx1,dy1,dx2,dy2;
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
@@ -55,15 +47,12 @@ template<int ND> FLT mesh<ND>::area(int v0, int v1, int v2) const {
    return(dx1*dy2 -dy1*dx2);
 }
 
-template FLT mesh<2>::area(int snum, int v2) const;
-template FLT mesh<3>::area(int snum, int v2) const;
-
-template<int ND> FLT mesh<ND>::area(int snum, int v2) const {
+FLT mesh::area(int snum, int v2) const {
    FLT dx1,dy1,dx2,dy2;
    int v0, v1;
    
-   v0 = svrtx[snum][0];
-   v1 = svrtx[snum][1];
+   v0 = sd[snum].vrtx[0];
+   v1 = sd[snum].vrtx[1];
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
    dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
@@ -73,16 +62,13 @@ template<int ND> FLT mesh<ND>::area(int snum, int v2) const {
    return(dx1*dy2 -dy1*dx2);
 }
 
-template FLT mesh<2>::area(int tind) const;
-template FLT mesh<3>::area(int tind) const;
-
-template<int ND> FLT mesh<ND>::area(int tind) const {
+FLT mesh::area(int tind) const {
    FLT dx1,dy1,dx2,dy2;
    int v0, v1, v2;
    
-   v0 = tvrtx[tind][0];
-   v1 = tvrtx[tind][1];
-   v2 = tvrtx[tind][2];
+   v0 = td[tind].vrtx[0];
+   v1 = td[tind].vrtx[1];
+   v2 = td[tind].vrtx[2];
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
    dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
@@ -94,15 +80,13 @@ template<int ND> FLT mesh<ND>::area(int tind) const {
 
 static FLT a[3];
 
-template FLT mesh<2>::intri(int tind, FLT x[2]) const;
-
-template<int ND> FLT mesh<ND>::intri(int tind, FLT x[ND]) const {
+FLT mesh::intri(int tind, FLT x[ND]) const {
    int v0,v1,v2;
    FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
-   v0 = tvrtx[tind][0];
-   v1 = tvrtx[tind][1];
-   v2 = tvrtx[tind][2];
+   v0 = td[tind].vrtx[0];
+   v1 = td[tind].vrtx[1];
+   v2 = td[tind].vrtx[2];
    
    dx0 =  (x[0] -vrtx[v0][0]);
    dy0 =  (x[1] -vrtx[v0][1]); 
@@ -119,9 +103,7 @@ template<int ND> FLT mesh<ND>::intri(int tind, FLT x[ND]) const {
 }
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
-template void mesh<2>::getwgts(FLT *wt) const;
-
-template<int ND> void mesh<ND>::getwgts(FLT *wt) const {
+void mesh::getwgts(FLT *wt) const {
    int i;
    FLT sum;
    
@@ -132,10 +114,7 @@ template<int ND> void mesh<ND>::getwgts(FLT *wt) const {
    return;
 }
       
-template FLT mesh<2>::minangle(int v0, int v1, int v2) const;
-template FLT mesh<3>::minangle(int v0, int v1, int v2) const;
-
-template<int ND> FLT mesh<ND>::minangle(int v0, int v1, int v2) const {
+FLT mesh::minangle(int v0, int v1, int v2) const {
    int i, i1, i2;
    FLT l[3];
    FLT dx[3], dy[3];
@@ -164,10 +143,7 @@ template<int ND> FLT mesh<ND>::minangle(int v0, int v1, int v2) const {
    
 }
    
-template FLT mesh<2>::angle(int v0, int v1, int v2) const;
-template FLT mesh<3>::angle(int v0, int v1, int v2) const;
-
-template<int ND> FLT mesh<ND>::angle(int v0, int v1, int v2) const {
+FLT mesh::angle(int v0, int v1, int v2) const {
    FLT l[3];
    FLT dx, dy;
    
@@ -187,18 +163,15 @@ template<int ND> FLT mesh<ND>::angle(int v0, int v1, int v2) const {
    
 }
 
-template FLT mesh<2>::tradius(int tind) const;
-template FLT mesh<3>::tradius(int tind) const;
-
-template<int ND> FLT mesh<ND>::tradius(int tind) const {
+FLT mesh::tradius(int tind) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2,xcen,ycen;
    FLT dx1,dy1,dx2,dy2,area;
    int v0, v1, v2;
    
-   v0 = tvrtx[tind][0];
-   v1 = tvrtx[tind][1];
-   v2 = tvrtx[tind][2];
+   v0 = td[tind].vrtx[0];
+   v1 = td[tind].vrtx[1];
+   v2 = td[tind].vrtx[2];
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
    dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
@@ -220,18 +193,15 @@ template<int ND> FLT mesh<ND>::tradius(int tind) const {
    return(sqrt(xcen*xcen +ycen*ycen));
 }
 
-template void mesh<2>::tcenter(int tind, FLT x[2]) const;
-template void mesh<3>::tcenter(int tind, FLT x[3]) const;
-
-template<int ND> void mesh<ND>::tcenter(int tind, FLT x[ND]) const {
+void mesh::tcenter(int tind, FLT x[ND]) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2;
    FLT dx1,dy1,dx2,dy2,area;
    int v0, v1, v2;
    
-   v0 = tvrtx[tind][0];
-   v1 = tvrtx[tind][1];
-   v2 = tvrtx[tind][2];
+   v0 = td[tind].vrtx[0];
+   v1 = td[tind].vrtx[1];
+   v2 = td[tind].vrtx[2];
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
    dy1 =  (vrtx[v0][1]-vrtx[v2][1]);
@@ -253,16 +223,13 @@ template<int ND> void mesh<ND>::tcenter(int tind, FLT x[ND]) const {
    return;
 }
 
-template FLT mesh<2>::aspect(int tind) const;
-template FLT mesh<3>::aspect(int tind) const;
-
-template<int ND> FLT mesh<ND>::aspect(int tind) const {
+FLT mesh::aspect(int tind) const {
    int v0,v1,v2;
    FLT dx1,dy1,dx2,dy2,area,perim;
    
-   v0 = tvrtx[tind][0];
-   v1 = tvrtx[tind][1];
-   v2 = tvrtx[tind][2];
+   v0 = td[tind].vrtx[0];
+   v1 = td[tind].vrtx[1];
+   v2 = td[tind].vrtx[2];
    
    dx1 =  (vrtx[v0][0]-vrtx[v2][0]);
    dy1 =  (vrtx[v0][1]-vrtx[v2][1]);

@@ -7,19 +7,17 @@
  *
  */
 
-#include"mesh.h"
-#include<math.h>
-#include<float.h>   
-#include<assert.h>
-#include<stdlib.h>
+#include "mesh.h"
+#include "boundary.h"
+#include <math.h>
+#include <float.h>   
+#include <assert.h>
+#include <stdlib.h>
 
-
-
-template int mesh<2>::insert(FLT x[2]);
-template int mesh<3>::insert(FLT x[3]);
-
-template<int ND> int mesh<ND>::insert(FLT x[ND]) {
+int mesh::insert(FLT x[ND]) {
    int n,tind,vnear,err;
+   int ntdel, tdel[maxlst];
+   int nsdel, sdel[maxlst];
    
    for(n=0;n<ND;++n)
       vrtx[nvrtx][n] = x[n];
@@ -34,40 +32,38 @@ template<int ND> int mesh<ND>::insert(FLT x[ND]) {
       *log << "need to use larger growth factor: too many vertices" << std::endl;
       exit(1);
    }
-   err = insert(tind,nvrtx);
+   err = insert(tind,nvrtx,0.0,ntdel,tdel,nsdel,sdel);
    nvrtx += 1 -err;
    
    return(err);
 }
 
-template int mesh<2>::insert(int tind, int vnum, FLT theta);
-template int mesh<3>::insert(int tind, int vnum, FLT theta);
-
-template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
+int mesh::insert(int tind, int vnum, FLT theta, int &ntdel, int *tdel, int &nsdel, int *sdel) {
    int i,j,tin,v0,dir;
-   int sct, nskeep, skeep[MAXLST+1];
+   int sct;
+   int nskeep, skeep[maxlst];
    int sind, sind1;
    
    if (tind < 0) {
-      *log << "Warning: trying to insert point outside domain" << std::endl;
+      *log << "Warning: trying to insert point outd domain" << std::endl;
       return(1);
    }
    
    /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
    tdel[ntdel++] = tind;
-   intwk1[tind] = 0;
+   i1wk[tind] = 0;
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
+         tind = td[tin].tri[j];
          if (tind < 0) continue;
-         if (intwk1[tind] == 0) continue;
+         if (i1wk[tind] == 0) continue;
 
          if (incircle(tind,vrtx[vnum]) > 0.0) {
             tdel[ntdel++] = tind;
-            intwk1[tind] = 0;
-            assert(ntdel < MAXLST);
+            i1wk[tind] = 0;
+            assert(ntdel < maxlst -1);
          }
       }
    }
@@ -78,19 +74,19 @@ template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
-         if (tind < 0 || intwk1[tind] != 0) {
+         tind = td[tin].tri[j];
+         if (tind < 0 || i1wk[tind] != 0) {
             /* KEEP SIDE */
-            skeep[nskeep++] = tside[tin].side[j];
-            assert(nskeep < MAXLST);
+            skeep[nskeep++] = td[tin].side[j];
+            assert(nskeep < maxlst);
             continue;
          }
          else {
             /* DELETE SIDE */
-            if (tside[tin].sign[j] > 0) {
-               sind = tside[tin].side[j];
+            if (td[tin].sign[j] > 0) {
+               sind = td[tin].side[j];
                sdel[nsdel++] = sind;
-               assert(nsdel < MAXLST);
+               assert(nsdel < maxlst);
             }
          }
       }
@@ -99,14 +95,15 @@ template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
    assert(nskeep == nsdel+3);
    assert(nskeep == ntdel+2);
    
-   /* RESET INTWK1 */
-   for(i=0;i<nskeep;++i)
-      intwk1[tdel[i]] = -1;
-      
+   /* RESET i1wk */
+   for(i=0;i<ntdel;++i) {
+      i1wk[tdel[i]] = -1;
+   }
+   
    /*	CHECK THAT WE AREN'T INSERTING POINT VERY CLOSE TO BOUNDARY */
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
-      if(fabs(minangle(vnum, svrtx[sind][0] , svrtx[sind][1])) < theta*M_PI/180.0) {
+      if(fabs(minangle(vnum, sd[sind].vrtx[0] , sd[sind].vrtx[1])) < theta*M_PI/180.0) {
          *log << "#Warning: inserting too close to boundary" << std::endl;
          return(1);
       }
@@ -138,45 +135,45 @@ template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
          dir = 1;
          
       /* CREATE NEW INFO */
-      v0 = svrtx[sind][dir];
-      tvrtx[tind][0] = v0;
-      vtri[v0] = tind;
-      v0 = svrtx[sind][1-dir];
-      tvrtx[tind][1] = v0;
-      vtri[v0] = tind;
-      tvrtx[tind][2] = vnum;
-      vtri[vnum] = tind;
+      v0 = sd[sind].vrtx[dir];
+      td[tind].vrtx[0] = v0;
+      vd[v0].tri = tind;
+      v0 = sd[sind].vrtx[1-dir];
+      td[tind].vrtx[1] = v0;
+      vd[v0].tri = tind;
+      td[tind].vrtx[2] = vnum;
+      vd[vnum].tri = tind;
 
       /* SIDE 2 INFO */      
-      tside[tind].side[2] = sind;
-      tside[tind].sign[2] = 1 -2*dir;
+      td[tind].side[2] = sind;
+      td[tind].sign[2] = 1 -2*dir;
       
-      stri[sind][dir] = tind;
-      tin = stri[sind][1-dir];
-      ttri[tind][2] = tin;
+      sd[sind].tri[dir] = tind;
+      tin = sd[sind].tri[1-dir];
+      td[tind].tri[2] = tin;
       if (tin > -1) {
          for(j=0;j<3;++j) {
-            if (tside[tin].side[j] == sind) {
-               ttri[tin][j] = tind;
+            if (td[tin].side[j] == sind) {
+               td[tin].tri[j] = tind;
                break;
             }
          }
       }
 
       /* CREATE SIDE 1 INFO */
-      v0 = svrtx[sind][dir];
-      sind1 = intwk1[v0];
+      v0 = sd[sind].vrtx[dir];
+      sind1 = i1wk[v0];
       if (sind1 > -1) {
-         tside[tind].side[1] = sind1;
-         tside[tind].sign[1] = -1;
+         td[tind].side[1] = sind1;
+         td[tind].sign[1] = -1;
          
-         stri[sind1][1] = tind;
-         tin = stri[sind1][0];
-         ttri[tind][1] = tin;
+         sd[sind1].tri[1] = tind;
+         tin = sd[sind1].tri[0];
+         td[tind].tri[1] = tin;
          if (tin > -1) {
             for(j=0;j<3;++j) {
-               if (tside[tin].side[j] == sind1) {
-                  ttri[tin][j] = tind;
+               if (td[tin].side[j] == sind1) {
+                  td[tin].tri[j] = tind;
                   break;
                }
             }
@@ -184,30 +181,30 @@ template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
       }
       else {
          sind1 = sdel[sct++];
-         tside[tind].side[1] = sind1;
-         tside[tind].sign[1] = -1;
+         td[tind].side[1] = sind1;
+         td[tind].sign[1] = -1;
          
-         stri[sind1][1] = tind;
-         svrtx[sind1][0] = v0;
-         svrtx[sind1][1] = vnum;
-         intwk1[v0] = sind1;
+         sd[sind1].tri[1] = tind;
+         sd[sind1].vrtx[0] = v0;
+         sd[sind1].vrtx[1] = vnum;
+         i1wk[v0] = sind1;
       }
       
 
       /* CREATE SIDE 0 INFO */
-      v0 = svrtx[sind][1-dir];
-      sind1 = intwk1[v0];
+      v0 = sd[sind].vrtx[1-dir];
+      sind1 = i1wk[v0];
       if (sind1 > -1) {
-         tside[tind].side[0] = sind1;
-         tside[tind].sign[0] = 1;
+         td[tind].side[0] = sind1;
+         td[tind].sign[0] = 1;
          
-         stri[sind1][0] = tind;
-         tin = stri[sind1][1];
-         ttri[tind][0] = tin;
+         sd[sind1].tri[0] = tind;
+         tin = sd[sind1].tri[1];
+         td[tind].tri[0] = tin;
          if (tin > -1) {
             for(j=0;j<3;++j) {
-               if (tside[tin].side[j] == sind1) {
-                  ttri[tin][j] = tind;
+               if (td[tin].side[j] == sind1) {
+                  td[tin].tri[j] = tind;
                   break;
                }
             }
@@ -215,33 +212,31 @@ template<int ND> int mesh<ND>::insert(int tind, int vnum, FLT theta) {
       }
       else {
          sind1 = sdel[sct++];
-         tside[tind].side[0] = sind1;
-         tside[tind].sign[0] = 1;
+         td[tind].side[0] = sind1;
+         td[tind].sign[0] = 1;
          
-         stri[sind1][0] = tind;
+         sd[sind1].tri[0] = tind;
          
-         svrtx[sind1][0] = v0;
-         svrtx[sind1][1] = vnum;
-         intwk1[v0] = sind1;
+         sd[sind1].vrtx[0] = v0;
+         sd[sind1].vrtx[1] = vnum;
+         i1wk[v0] = sind1;
       }
    }
    
-   /* RESET INTWK1 */
+   /* RESET i1wk */
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
-      intwk1[svrtx[sind][0]] = -1;
-      intwk1[svrtx[sind][1]] = -1;
+      i1wk[sd[sind].vrtx[0]] = -1;
+      i1wk[sd[sind].vrtx[1]] = -1;
    }
       
    return(0);
 }
 
-template void mesh<2>::bdry_insert(int tind, int snum, int vnum);
-template void mesh<3>::bdry_insert(int tind, int snum, int vnum);
-
-template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
+void mesh::bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int &nsdel, int *sdel) {
    int i,j,tin,v0,dir,tbdry;
-   int sct, nskeep, skeep[MAXLST+1];
+   int nskeep, skeep[maxlst];
+   int sct;
    int sind, sind1;
    
    tbdry = tind;
@@ -249,66 +244,66 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
    /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    ntdel = 0;
    tdel[ntdel++] = tind;
-     intwk1[tind] = 0;
+     i1wk[tind] = 0;
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
+         tind = td[tin].tri[j];
          if (tind < 0) continue;
-         if (intwk1[tind] == 0) continue;
+         if (i1wk[tind] == 0) continue;
 
          if (incircle(tind,vrtx[vnum]) > 0.0) {
             tdel[ntdel++] = tind;
-            intwk1[tind] = 0;
-            assert(ntdel < MAXLST);
+            i1wk[tind] = 0;
+            assert(ntdel < maxlst);
          }
       }
    }
 
    /* CREATE LIST OF SIDES TO BE DELETED AND BOUNDARY SIDES */
    nsdel = 0;
-   sdel[nsdel++] = tside[tbdry].side[snum];
+   sdel[nsdel++] = td[tbdry].side[snum];
    nskeep = 0;
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
+         tind = td[tin].tri[j];
          if (tind < 0) {
             if (tin == tbdry && j == snum) continue;               
             /* KEEP SIDE */
-            skeep[nskeep++] = tside[tin].side[j];
-            assert(nskeep < MAXLST);
+            skeep[nskeep++] = td[tin].side[j];
+            assert(nskeep < maxlst);
             continue;
          }
-         else if (intwk1[tind] != 0) {
+         else if (i1wk[tind] != 0) {
             /* KEEP SIDE */
-            skeep[nskeep++] = tside[tin].side[j];
-            assert(nskeep < MAXLST);
+            skeep[nskeep++] = td[tin].side[j];
+            assert(nskeep < maxlst);
             continue; 
          }
          else {
             /* DELETE SIDE */
-            if (tside[tin].sign[j] > 0) {
-               sind = tside[tin].side[j];
+            if (td[tin].sign[j] > 0) {
+               sind = td[tin].side[j];
                sdel[nsdel++] = sind;
-               assert(nsdel < MAXLST);
+               assert(nsdel < maxlst);
             }
          }
       }
    }
    
    /* ALTER OLD BOUNDARY SIDE & CREATE NEW SIDE */
-   sind = tside[tbdry].side[snum];
-   svrtx[nside][0] = vnum;
-   svrtx[nside][1] = svrtx[sind][1];
-   svrtx[sind][1] = vnum;
+   sind = td[tbdry].side[snum];
+   sd[nside].vrtx[0] = vnum;
+   sd[nside].vrtx[1] = sd[sind].vrtx[1];
+   sd[sind].vrtx[1] = vnum;
    /* ADD NEW SIDE TO BOUNDARY GROUP */
    /* NEED TO REORDER WHEN FINISHED */
-   i = (-stri[sind][1]>>16) -1;
-   stri[nside][1] = -(((i+1)<<16) +sbdry[i]->nsd());
-   sbdry[i]->sd(sbdry[i]->nsd()++) = nside;
-   if (sbdry[i]->nsd() > sbdry[i]->mxsz()) {
-      *log << "too many boundary elements" <<  sbdry[i]->idnty()  << ' ' << sbdry[i]->mxsz() << std::endl;
+   i = (-sd[sind].tri[1]>>16) -1;
+   sd[nside].tri[1] = -(((i+1)<<16) +sbdry[i]->nel);
+   sbdry[i]->el[sbdry[i]->nel++] = nside;
+   if (sbdry[i]->nel > sbdry[i]->maxel) {
+      *log << "too many boundary elements" <<  sbdry[i]->idnum  << ' ' << sbdry[i]->maxel << std::endl;
       exit(1);
    }
    ++nside;
@@ -316,9 +311,9 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
    assert(nskeep == nsdel+1);
    assert(nskeep == ntdel+1);
    
-   /* RESET INTWK1 */
-   for(i=0;i<nskeep;++i)
-      intwk1[tdel[i]] = -1;
+   /* RESET i1wk */
+   for(i=0;i<nsdel;++i)
+      i1wk[tdel[i]] = -1;
    
    /* ADD NEW INDICES TO DEL LIST */
    for(i=nsdel;i<nskeep;++i)
@@ -331,10 +326,10 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
    for(i=ntdel;i<nskeep;++i)
       tdel[i] = ntri +(i-ntdel);
 
-   /* USE INTWK1 TO FIND SIDES */
-   sind = tside[tbdry].side[snum];
-   intwk1[svrtx[sind][0]] = sind;
-   intwk1[svrtx[nside-1][1]] = nside-1;
+   /* USE i1wk TO FIND SIDES */
+   sind = td[tbdry].side[snum];
+   i1wk[sd[sind].vrtx[0]] = sind;
+   i1wk[sd[nside-1].vrtx[1]] = nside-1;
       
    ntri += 1;
    nside += 1;  
@@ -355,26 +350,26 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
          dir = 1;
 
       /* CREATE NEW INFO */
-      v0 = svrtx[sind][dir];
-      tvrtx[tind][0] = v0;
-      vtri[v0] = tind;
-      v0 = svrtx[sind][1-dir];
-      tvrtx[tind][1] = v0;
-      vtri[v0] = tind;
-      tvrtx[tind][2] = vnum;
-      vtri[vnum] = tind;
+      v0 = sd[sind].vrtx[dir];
+      td[tind].vrtx[0] = v0;
+      vd[v0].tri = tind;
+      v0 = sd[sind].vrtx[1-dir];
+      td[tind].vrtx[1] = v0;
+      vd[v0].tri = tind;
+      td[tind].vrtx[2] = vnum;
+      vd[vnum].tri = tind;
 
       /* SIDE 2 INFO */      
-      tside[tind].side[2] = sind;
-      tside[tind].sign[2] = 1 -2*dir;
+      td[tind].side[2] = sind;
+      td[tind].sign[2] = 1 -2*dir;
       
-      stri[sind][dir] = tind;
-      tin = stri[sind][1-dir];
-      ttri[tind][2] = tin;
+      sd[sind].tri[dir] = tind;
+      tin = sd[sind].tri[1-dir];
+      td[tind].tri[2] = tin;
       if (tin > -1) {
          for(j=0;j<3;++j) {
-            if (tside[tin].side[j] == sind) {
-               ttri[tin][j] = tind;
+            if (td[tin].side[j] == sind) {
+               td[tin].tri[j] = tind;
                break;
             }
          }
@@ -383,19 +378,19 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
       /* CREATE SIDE 1 INFO */
       /* CREATE IN OPPOSITE DIRECTION */
       /* IF CREATED IT IS IN SAME DIRECTION */
-      v0 = svrtx[sind][dir];
-      sind1 = intwk1[v0];
+      v0 = sd[sind].vrtx[dir];
+      sind1 = i1wk[v0];
       if (sind1 > -1) {
-         tside[tind].side[1] = sind1;
-         tside[tind].sign[1] = 1;
+         td[tind].side[1] = sind1;
+         td[tind].sign[1] = 1;
          
-         stri[sind1][0] = tind;
-         tin = stri[sind1][1];
-         ttri[tind][1] = tin;
+         sd[sind1].tri[0] = tind;
+         tin = sd[sind1].tri[1];
+         td[tind].tri[1] = tin;
          if (tin > -1) {
             for(j=0;j<3;++j) {
-               if (tside[tin].side[j] == sind1) {
-                  ttri[tin][j] = tind;
+               if (td[tin].side[j] == sind1) {
+                  td[tin].tri[j] = tind;
                   break;
                }
             }
@@ -403,32 +398,32 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
       }
       else {
          sind1 = sdel[sct++];
-         tside[tind].side[1] = sind1;
-         tside[tind].sign[1] = -1;
+         td[tind].side[1] = sind1;
+         td[tind].sign[1] = -1;
          
-         stri[sind1][1] = tind;
-         svrtx[sind1][0] = v0;
-         svrtx[sind1][1] = vnum;
-         intwk1[v0] = sind1;
+         sd[sind1].tri[1] = tind;
+         sd[sind1].vrtx[0] = v0;
+         sd[sind1].vrtx[1] = vnum;
+         i1wk[v0] = sind1;
       }
       
 
       /* CREATE SIDE 0 INFO */
       /* CREATE IN OPPOSITE DIRECTION */
       /* IF CREATED IT IS IN SAME DIRECTION */
-      v0 = svrtx[sind][1-dir];
-      sind1 = intwk1[v0];
+      v0 = sd[sind].vrtx[1-dir];
+      sind1 = i1wk[v0];
       if (sind1 > -1) {
-         tside[tind].side[0] = sind1;
-         tside[tind].sign[0] = 1;
+         td[tind].side[0] = sind1;
+         td[tind].sign[0] = 1;
          
-         stri[sind1][0] = tind;
-         tin = stri[sind1][1];
-         ttri[tind][0] = tin;
+         sd[sind1].tri[0] = tind;
+         tin = sd[sind1].tri[1];
+         td[tind].tri[0] = tin;
          if (tin > -1) {
             for(j=0;j<3;++j) {
-               if (tside[tin].side[j] == sind1) {
-                  ttri[tin][j] = tind;
+               if (td[tin].side[j] == sind1) {
+                  td[tin].tri[j] = tind;
                   break;
                }
             }
@@ -436,62 +431,58 @@ template<int ND> void mesh<ND>::bdry_insert(int tind, int snum, int vnum) {
       }
       else {
          sind1 = sdel[sct++];
-         tside[tind].side[0] = sind1;
-         tside[tind].sign[0] = -1;
+         td[tind].side[0] = sind1;
+         td[tind].sign[0] = -1;
          
-         stri[sind1][1] = tind;
+         sd[sind1].tri[1] = tind;
          
-         svrtx[sind1][0] = vnum;
-         svrtx[sind1][1] = v0;
-         intwk1[v0] = sind1;
+         sd[sind1].vrtx[0] = vnum;
+         sd[sind1].vrtx[1] = v0;
+         i1wk[v0] = sind1;
       }
    }
 
-   /* RESET INTWK1 */   
+   /* RESET i1wk */   
    for(i=0;i<nskeep;++i) {
       sind = skeep[i];
-      intwk1[svrtx[sind][0]] = -1;
-      intwk1[svrtx[sind][1]] = -1;
+      i1wk[sd[sind].vrtx[0]] = -1;
+      i1wk[sd[sind].vrtx[1]] = -1;
    } 
    
-   sind = tside[tbdry].side[snum];
-   intwk1[svrtx[sind][0]] = -1;
-   intwk1[svrtx[nside-1][1]] = -1;
+   sind = td[tbdry].side[snum];
+   i1wk[sd[sind].vrtx[0]] = -1;
+   i1wk[sd[nside-1].vrtx[1]] = -1;
 
    return;
 }
 
-template<int ND> int mesh<ND>::maxsrch = MAXLST*3/4;
-
-template int mesh<2>::findtri(FLT x[2], int vnear) const;
-template int mesh<3>::findtri(FLT x[3], int vnear) const;
-
-template<int ND> int mesh<ND>::findtri(FLT x[ND], int vnear) const {
+int mesh::findtri(FLT x[ND], int vnear) const {
    int i,j,vn,dir,stoptri,tin,tind;
+   int ntdel, tdel[maxlst];
 
-   /* HERE WE USE INTWK1 THIS MUST BE -1 BEFORE USING */
-   tind = vtri[vnear];
+   /* HERE WE USE i1wk THIS MUST BE -1 BEFORE USING */
+   tind = vd[vnear].tri;
    stoptri = tind;
    dir = 1;
    ntdel = 0;
    do {
       for(vn=0;vn<3;++vn) 
-         if (tvrtx[tind][vn] == vnear) break;
+         if (td[tind].vrtx[vn] == vnear) break;
       
       assert(vn != 3);
       
-      tind = ttri[tind][(vn +dir)%3];
+      tind = td[tind].tri[(vn +dir)%3];
       if (tind < 0) {
          if (dir > 1) break;
          /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
-         tind = vtri[vnear];
+         tind = vd[vnear].tri;
          stoptri = -1;
       }
       
-      intwk1[tind] = 0;
+      i1wk[tind] = 0;
       tdel[ntdel++] = tind;
-      assert(ntdel < MAXLST -1);
+      assert(ntdel < maxlst -1);
 
       if (intri(tind,x) < EPSILON) goto FOUND;
          
@@ -502,22 +493,22 @@ template<int ND> int mesh<ND>::findtri(FLT x[ND], int vnear) const {
    for(i=0;i<ntdel;++i) {
       tin = tdel[i];
       for(j=0;j<3;++j) {
-         tind = ttri[tin][j];
+         tind = td[tin].tri[j];
          if (tind < 0) continue;
-         if (intwk1[tind] == 0) continue;
-         intwk1[tind] = 0;
+         if (i1wk[tind] == 0) continue;
+         i1wk[tind] = 0;
          tdel[ntdel++] = tind;         
          if (intri(tind,x) < EPSILON) goto FOUND;
       }
       if (i >= maxsrch) break;
    }
    tind = -1;
-   
+   // std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
 FOUND:
 
    /* RESET INTWKW1 TO -1 */
    for(i=0;i<ntdel;++i)
-      intwk1[tdel[i]] = -1;
+      i1wk[tdel[i]] = -1;
 
    return(tind);
 }

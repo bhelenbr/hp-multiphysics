@@ -2,6 +2,12 @@
 #define _r_mesh_h_
 
 #include "mesh.h"
+#include "block.h"
+#include <map>
+#include <string>
+#include <sstream>
+#include <iostream>
+
 /* AN R-DEFORMABLE MULTI-GRID MESH OBJECT */
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
@@ -9,41 +15,25 @@
 #define NO_FOURTH
 #define GEOMETRIC
 
-/* MESH DEFORMATION VARIABLES */
-class rbdry_interface;
+class r_side_bdry;
 
-class r_mesh : public mesh<2> {
-      public:
-         /* THINGS SHARED BY ALL BLOCKS */
-         static FLT vnn, fadd;
-         static const int ND = 2;
+class r_mesh : public mesh {
+      protected:         
+         FLT vnn;
+         FLT fadd;
          
-         /* MESH INDEPENDENT VARIABLES FOR MGRID SEQUENCE */
-         struct gbl : public mesh<2>::gbl {
-            FLT (*work)[ND];
-            FLT (*res)[ND];
-            FLT *diag;
-         } *rg;
-         
-      private:         
          /* MESH VARIABLES */
          FLT *ksprg;
          FLT (*src)[ND];
          FLT *kvol;
          FLT (*vrtx_frst)[ND];
          bool isfrst;
+         int mp_phase;
          
-         rbdry_interface *rbdry[MAXSB];
-         void getnewsideobject(int bnum, int type);
+         r_side_bdry *r_sbdry[MAXSB];
+         r_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata);
          
-         /* SETUP FUNCTION */
-         /* CALLED BY ALLOCATE WHEN COARSE IS FALSE */
-         void gbl_alloc(r_mesh::gbl *store);
-                  
-      public:
-         void allocate(bool coarse, r_mesh::gbl *rginit);
-
-         /* SETUP SPRING CONSTANTS */
+          /* SETUP SPRING CONSTANTS */
          /* LAPLACE CONSTANTS */
          void rklaplace();
 
@@ -56,13 +46,11 @@ class r_mesh : public mesh<2> {
          /* CALCULATE COARSE SPRING CONSTANTS */
          /* USING INTERPOLATION OPERATORS */
          /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
-         void rkmgrid();
+         void rkmgrid(mesh::transfer *fv_to_ct, r_mesh *fmesh);
    
          /* CALCULATE RESIDUAL */
          void rsdl();
          void rsdl_finalrcv();
-         void update();
-         void maxres();
 
          /* CALCLATE SOURCE TERM */
          void zero_source();
@@ -77,22 +65,34 @@ class r_mesh : public mesh<2> {
          void rsdl1();
          void vddt1();
 #endif
+         void moveboundaries();
 
-         /* MGRID TRANSFER */
-         void mg_getfres();
-         void mg_getcchng();
+      public:
+         /* POINTER TO STABLE THINGS SHARED IN BLOCK CONTAINER */
+         /* EMPTY BECAUSE R_MESH DOESN'T NEED TO SHARE ANY STABLE INFORMATION */
+         struct gbl {} *rg;  
+         /* SCRATCH VARIABLES FOR MGRID SEQUENCE */
+         /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
+         /* ALLOCATED FROM scratch */
+         /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
+         FLT (*res)[ND];
+         FLT (*work)[ND];
+         FLT *diag;
          
-         /* TESTS */
-         void tadvance();
+         /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
+         sharedmem* init(bool coarse, std::map <std::string,std::string>& input, gbl *rgin, sharedmem *wkin = 0);
+         void load_scratch_pointers();
+         void output(char *filename, ftype::name filetype) {
+            mesh::output(filename,filetype);
+         }        
+         block::ctrl mg_getfres(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *fmesh);
+         block::ctrl mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *cmesh);
+         block::ctrl tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,mesh::transfer *cv_to_ft, r_mesh *fmesh);
+         block::ctrl rsdl(int excpt);
+         block::ctrl update(int excpt);
+         block::ctrl setup_preconditioner(int excpt);
+         void maxres();
 };
-
-#include "rboundary.h"
-
-inline void r_mesh::tadvance() {
-   for(int i=0;i<nsbd;++i) 
-      sbdry[i]->tadvance();
-      
-   for(int i=0;i<nvbd;++i)
-      vbdry[i]->tadvance();
-}
 #endif
+
+

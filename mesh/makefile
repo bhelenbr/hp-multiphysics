@@ -1,7 +1,7 @@
-OBJ = blocks.o connect.o insert.o out_mesh.o r_mesh.o tprims.o \
+OBJ = blocks.o connect.o insert.o output.o r_mesh.o tprims.o \
 copy.o setup.o triangulate.o \
 coarsen.o findmatch.o rebay.o swap.o yaber.o \
-collapse.o in_mesh.o refineby2.o tprims3d.o generate.o
+collapse.o input.o refineby2.o tprims3d.o generate.o
 
 MAINOBJ = main.o locals.o dummy.o 
 

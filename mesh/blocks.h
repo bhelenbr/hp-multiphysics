@@ -2,6 +2,8 @@
 #include <fstream>
 
 /* THIS IS A MULTIBLOCK MESH */
+/* CAN DRIVE MULTIGRID OR STANDARD ITERATION */
+
 class blocks {
    private:
       int nproc, myid;  // MPI INFO

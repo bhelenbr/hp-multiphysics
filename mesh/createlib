@@ -10,7 +10,7 @@ cp -f blocks.h ~/Codes/include
 #cd build/intermediates/mblock.build/Objects/ppc/
 cd build/mesh.build/mblock.build/Objects-normal/ppc
 libtool -o libmesh.a coarsen.o collapse.o connect.o copy.o \
-findmatch.o in_mesh.o insert.o out_mesh.o r_mesh.o rebay.o \
+findmatch.o input.o insert.o output.o r_mesh.o rebay.o \
 setup.o swap.o tprims.o triangulate.o yaber.o blocks.o
 mv -f libmesh.a ~/Codes/lib
 

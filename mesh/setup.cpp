@@ -1,25 +1,23 @@
-#include"mesh.h"
-#include"utilities.h"
-#include<float.h>
+#include "mesh.h"
+#include "boundary.h"
+#include "utilities.h"
+#include <float.h>
 
 /* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
 /* USES VINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-template void mesh<2>::createsideinfo(void);
-template void mesh<3>::createsideinfo(void);
-
-template<int ND> void mesh<ND>::createsideinfo(void) {
+void mesh::createsideinfo(void) {
    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
    
    for(i=0;i<nvrtx;++i)
-      vinfo[i] = -1;
+      vd[i].info = -1;
       
    nside = 0;
    for(tind=0;tind<ntri;++tind) {
-      vout = tvrtx[tind][0];
-      v1 = tvrtx[tind][1];
-      v2 = tvrtx[tind][2];
+      vout = td[tind].vrtx[0];
+      v1 = td[tind].vrtx[1];
+      v2 = td[tind].vrtx[2];
       for(j=0;j<3;++j) {
          /* CHECK IF SIDE HAS BEEN CREATED ALREADY */
          if (v2 > v1) {
@@ -32,34 +30,34 @@ template<int ND> void mesh<ND>::createsideinfo(void) {
             maxv = v1;
             order = 1;
          }
-         sind = vinfo[minv];
+         sind = vd[minv].info;
          while (sind >= 0) {
-            if (maxv == svrtx[sind][order]) {
-               if (stri[sind][1] >= 0) {
+            if (maxv == sd[sind].vrtx[order]) {
+               if (sd[sind].tri[1] >= 0) {
                   *log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                  exit(1);
                }
                else {
-                  stri[sind][1] = tind;
-                  tside[tind].side[j] = sind;
-                  tside[tind].sign[j] = -1;
+                  sd[sind].tri[1] = tind;
+                  td[tind].side[j] = sind;
+                  td[tind].sign[j] = -1;
                   goto NEXTTRISIDE;
                }
             }
             sindprev = sind;
-            sind = sinfo[sind];
+            sind = sd[sind].info;
          }
          /* NEW SIDE */
-         svrtx[nside][0] = v1;
-         svrtx[nside][1] = v2;
-         stri[nside][0] = tind;
-         stri[nside][1] = -1;
-         tside[tind].side[j] = nside;
-         tside[tind].sign[j] = 1;
-         sinfo[nside] = -1;
-         if (vinfo[minv] < 0)
-            vinfo[minv] = nside;
+         sd[nside].vrtx[0] = v1;
+         sd[nside].vrtx[1] = v2;
+         sd[nside].tri[0] = tind;
+         sd[nside].tri[1] = -1;
+         td[tind].side[j] = nside;
+         td[tind].sign[j] = 1;
+         sd[nside].info = -1;
+         if (vd[minv].info < 0)
+            vd[minv].info = nside;
          else 
-            sinfo[sindprev] = nside;
+            sd[sindprev].info = nside;
          ++nside;
 NEXTTRISIDE:
          temp = vout;
@@ -72,38 +70,35 @@ NEXTTRISIDE:
    return;
 }
 
-template void mesh<2>::createtsidestri(void);
-template void mesh<3>::createtsidestri(void);
-
-template<int ND> void mesh<ND>::createtsidestri(void) {
+void mesh::createtdstri(void) {
    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
    
    for(i=0;i<nvrtx;++i)
-      vinfo[i] = -1;
+      vd[i].info = -1;
       
    for(i=0;i<nside;++i) {
-      v1 = svrtx[i][0];
-      v2 = svrtx[i][1];
+      v1 = sd[i].vrtx[0];
+      v2 = sd[i].vrtx[1];
       minv = (v1 < v2 ? v1 : v2);
-      sind = vinfo[minv];
+      sind = vd[minv].info;
       while (sind >= 0) {
          sindprev = sind;
-         sind = sinfo[sind];
+         sind = sd[sind].info;
       }
-      if (vinfo[minv] < 0)
-         vinfo[minv] = i;
+      if (vd[minv].info < 0)
+         vd[minv].info = i;
       else 
-         sinfo[sindprev] = i;
-      sinfo[i] = -1;
+         sd[sindprev].info = i;
+      sd[i].info = -1;
    }
 
    for(i=0;i<nside;++i)
-      stri[i][1] = -1;
+      sd[i].tri[1] = -1;
 
    for(tind=0;tind<ntri;++tind) {
-      vout = tvrtx[tind][0];
-      v1 = tvrtx[tind][1];
-      v2 = tvrtx[tind][2];
+      vout = td[tind].vrtx[0];
+      v1 = td[tind].vrtx[1];
+      v2 = td[tind].vrtx[2];
       for(j=0;j<3;++j) {
          /* CHECK IF SIDE HAS BEEN CREATED ALREADY */
          if (v2 > v1) {
@@ -116,21 +111,21 @@ template<int ND> void mesh<ND>::createtsidestri(void) {
             maxv = v1;
             order = 1;
          }
-         sind = vinfo[minv];
+         sind = vd[minv].info;
          while (sind >= 0) {
-            if (maxv == svrtx[sind][1]) {
-               stri[sind][order] = tind;
-               tside[tind].side[j] = sind;
-               tside[tind].sign[j] = 1 -2*order;
+            if (maxv == sd[sind].vrtx[1]) {
+               sd[sind].tri[order] = tind;
+               td[tind].side[j] = sind;
+               td[tind].sign[j] = 1 -2*order;
                goto NEXTTRISIDE;
             }
-            if (maxv == svrtx[sind][0]) {
-               stri[sind][1-order] = tind;
-               tside[tind].side[j] = sind;
-               tside[tind].sign[j] = 2*order -1;
+            if (maxv == sd[sind].vrtx[0]) {
+               sd[sind].tri[1-order] = tind;
+               td[tind].side[j] = sind;
+               td[tind].sign[j] = 2*order -1;
                goto NEXTTRISIDE;
             }
-            sind = sinfo[sind];
+            sind = sd[sind].info;
          }
          *log << "didn't match side: " << v1 << v2 << std::endl;
          exit(1);
@@ -147,60 +142,48 @@ NEXTTRISIDE:
 }
 
 
-template void mesh<2>::createvtri(void);
-template void mesh<3>::createvtri(void);
-
-template<int ND> void mesh<ND>::createvtri(void) {
+void mesh::createvtri(void) {
    int i,tind;
    
    /* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
    for (tind=0;tind<ntri;++tind)
       for(i=0;i<3;++i)
-         vtri[tvrtx[tind][i]] = tind;
+         vd[td[tind].vrtx[i]].tri = tind;
    
    return;
 }
 
 /* CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
-template void mesh<2>::cnt_nbor(void);
-template void mesh<3>::cnt_nbor(void);
-
-template<int ND> void mesh<ND>::cnt_nbor(void) {
+void mesh::cnt_nbor(void) {
    int i;
    
    for (i=0;i<nvrtx;++i)
-      nnbor[i] = 0;
+      vd[i].nnbor = 0;
    
    for(i=0;i<nside;++i) {
-      ++nnbor[svrtx[i][0]];
-      ++nnbor[svrtx[i][1]];
+      ++vd[sd[i].vrtx[0]].nnbor;
+      ++vd[sd[i].vrtx[1]].nnbor;
    }
 
    return;
 }
 
-template void mesh<2>::createttri(void);
-template void mesh<3>::createttri(void);
-
 /* CREATES TRIANGLE TO TRIANGLE POINTER */
-template<int ND> void mesh<ND>::createttri(void) {
+void mesh::createttri(void) {
    int tind,sind,j,flip;
    
    for(tind=0;tind<ntri;++tind) {
       for(j=0;j<3;++j) {
-         sind = tside[tind].side[j];
-         flip = (1 +tside[tind].sign[j])/2;
-         ttri[tind][j] = stri[sind][flip];
+         sind = td[tind].side[j];
+         flip = (1 +td[tind].sign[j])/2;
+         td[tind].tri[j] = sd[sind].tri[flip];
       }
    }
    
    return;
 }
 
-template void mesh<2>::treeinit();
-template void mesh<3>::treeinit();
-
-template<int ND> void mesh<ND>::treeinit() {
+void mesh::treeinit() {
    int i,j,n,sind,v0;
    FLT x1[ND], x2[ND], dx;
    
@@ -211,9 +194,9 @@ template<int ND> void mesh<ND>::treeinit() {
 
    
    for (i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         sind = sbdry[i]->sd(j);
-         v0 = svrtx[sind][0];
+      for(j=0;j<sbdry[i]->nel;++j) {
+         sind = sbdry[i]->el[j];
+         v0 = sd[sind].vrtx[0];
          for(n=0;n<ND;++n) {
             x1[n] = MIN(x1[n],vrtx[v0][n]);
             x2[n] = MAX(x2[n],vrtx[v0][n]);
@@ -227,7 +210,9 @@ template<int ND> void mesh<ND>::treeinit() {
       x2[n] += 0.25*dx;
    }
       
-
+   // *log << nsbd << "max:" << maxvst << std::endl;
+   // *log << x1[0] << "," << x1[1] << std::endl;
+   // *log << x2[0] << "," << x2[1] << std::endl;
    qtree.init(x1,x2);
       
    for(i=0;i<nvrtx;++i) 
@@ -236,32 +221,26 @@ template<int ND> void mesh<ND>::treeinit() {
    return;
 }
 
-template void mesh<2>::bdrylabel();
-template void mesh<3>::bdrylabel();
-
 /* FIX STRI TTRI TO POINT TO GROUP/SIDE ON BOUNDARY */
-template<int ND> void mesh<ND>::bdrylabel() {
+void mesh::bdrylabel() {
    int i,j,k,sind,tind;
    
    for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         sind = sbdry[i]->sd(j);
-         stri[sind][1] = -(((i+1)<<16) +j);
-         tind = stri[sind][0];
+      for(j=0;j<sbdry[i]->nel;++j) {
+         sind = sbdry[i]->el[j];
+         sd[sind].tri[1] = -(((i+1)<<16) +j);
+         tind = sd[sind].tri[0];
          for(k=0;k<3;++k)
-            if (tside[tind].side[k] == sind) break;
+            if (td[tind].side[k] == sind) break;
             
-         ttri[tind][k] = stri[sind][1];
+         td[tind].tri[k] = sd[sind].tri[1];
       }
    }
    
    return;
 }
 
-template void mesh<2>::initvlngth();
-template void mesh<3>::initvlngth();
-
-template<int ND> void mesh<ND>::initvlngth() {
+void mesh::initvlngth() {
    int i,j,v0,v1;
    FLT l;
    
@@ -269,28 +248,28 @@ template<int ND> void mesh<ND>::initvlngth() {
       vlngth[i] = 0.0;
       
    for(i=0;i<nside;++i) {
-      v0 = svrtx[i][0];
-      v1 = svrtx[i][1];
-      l = distance(svrtx[i][0],svrtx[i][1]);
+      v0 = sd[i].vrtx[0];
+      v1 = sd[i].vrtx[1];
+      l = distance(sd[i].vrtx[0],sd[i].vrtx[1]);
       vlngth[v0] += l;
       vlngth[v1] += l;
    }
    
    for(i=0;i<nvrtx;++i)
-      vlngth[i] /= nnbor[i];
+      vlngth[i] /= vd[i].nnbor;
       
    
    for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         v0 = svrtx[sbdry[i]->sd(j)][0];
+      for(j=0;j<sbdry[i]->nel;++j) {
+         v0 = sd[sbdry[i]->el[j]].vrtx[0];
          vlngth[v0] = 1.0e32;
       }
    }
            
    for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i]->nsd();++j) {
-         v0 = svrtx[sbdry[i]->sd(j)][0];
-         v1 = svrtx[sbdry[i]->sd(j)][1];
+      for(j=0;j<sbdry[i]->nel;++j) {
+         v0 = sd[sbdry[i]->el[j]].vrtx[0];
+         v1 = sd[sbdry[i]->el[j]].vrtx[1];
          l = distance(v0,v1);
          vlngth[v0] = MIN(l,vlngth[v0]);
          vlngth[v1] = MIN(l,vlngth[v1]);
@@ -300,52 +279,49 @@ template<int ND> void mesh<ND>::initvlngth() {
    return;
 }
 
-template void mesh<2>::settrim();
-template void mesh<3>::settrim();
-
-template<int ND> void mesh<ND>::settrim() {
-   int i,j,n,bsd,tin,tind,nsrch;
+void mesh::settrim() {
+   int i,j,n,bsd,tin,tind,nsrch,ntdel;
    
    for(i=0;i<ntri;++i)
-      tinfo[i] = 0;
+      td[i].info = 0;
 
    ntdel = 0;
 
-   for (bsd=0;bsd<sbdry[0]->nsd();++bsd) {
-      tind = stri[sbdry[0]->sd(bsd)][0];
-      if (tinfo[tind] > 0) continue;
+   for (bsd=0;bsd<sbdry[0]->nel;++bsd) {
+      tind = sd[sbdry[0]->el[bsd]].tri[0];
+      if (td[tind].info > 0) continue;
       
-      intwk1[0] = tind;
-      tinfo[tind] = 1;
+      i1wk[0] = tind;
+      td[tind].info = 1;
       nsrch = ntdel+1;
       
       /* NEED TO SEARCH SURROUNDING TRIANGLES */
       for(i=ntdel;i<nsrch;++i) {
-         tin = intwk1[i];
+         tin = i1wk[i];
          for (n=0;n<3;++n)
-            if (fltwk[tvrtx[tin][n]] < 0.0) goto NEXT;
+            if (fwk[td[tin].vrtx[n]] < 0.0) goto NEXT;
             
-         intwk1[ntdel++] = tin;
+         i1wk[ntdel++] = tin;
 
          for(j=0;j<3;++j) {
-            tind = ttri[tin][j];
+            tind = td[tin].tri[j];
             if (tind < 0) continue;
-            if (tinfo[tind] > 0) continue; 
-            tinfo[tind] = 1;        
-            intwk1[nsrch++] = tind;
+            if (td[tind].info > 0) continue; 
+            td[tind].info = 1;        
+            i1wk[nsrch++] = tind;
          }
          NEXT: continue;
       }
    }
    
    for(i=0;i<ntri;++i)
-      tinfo[i] = 0;
+      td[i].info = 0;
       
    for(i=0;i<ntdel;++i)
-      tinfo[intwk1[i]] = 1;
+      td[i1wk[i]].info = 1;
       
    for(i=0;i<maxvst;++i)
-      intwk1[i] = -1;
+      i1wk[i] = -1;
 
    return;
 }
