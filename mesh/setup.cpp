@@ -3,12 +3,15 @@
 #include<cstdio>
 
 /*	CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
-/*	USES INTWK1 TO STORE FIRST SIND FROM VERTEX */
-/* USES INTWK2 TO STORE NEXT SIND FROM SIND */
+/*	USES VINFO TO STORE FIRST SIND FROM VERTEX */
+/* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
 void mesh::createsideinfo(void) {
    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
    
+   for(i=0;i<nvrtx;++i)
+      vinfo[i] = -1;
+      
    nside = 0;
    for(tind=0;tind<ntri;++tind) {
       vout = tvrtx[tind][0];
@@ -26,7 +29,7 @@ void mesh::createsideinfo(void) {
             maxv = v1;
             order = 1;
          }
-         sind = intwk1[minv];
+         sind = vinfo[minv];
          while (sind >= 0) {
             if (maxv == svrtx[sind][order]) {
                if (stri[sind][1] >= 0) {
@@ -41,7 +44,7 @@ void mesh::createsideinfo(void) {
                }
             }
             sindprev = sind;
-            sind = intwk2[sind];
+            sind = sinfo[sind];
          }
 /*			NEW SIDE */
          svrtx[nside][0] = v1;
@@ -50,11 +53,11 @@ void mesh::createsideinfo(void) {
          stri[nside][1] = -1;
          tside[tind].side[j] = nside;
          tside[tind].sign[j] = 1;
-         intwk2[nside] = -1;
-         if (intwk1[minv] < 0)
-            intwk1[minv] = nside;
+         sinfo[nside] = -1;
+         if (vinfo[minv] < 0)
+            vinfo[minv] = nside;
          else 
-            intwk2[sindprev] = nside;
+            sinfo[sindprev] = nside;
          ++nside;
 NEXTTRISIDE:
          temp = vout;
@@ -63,13 +66,6 @@ NEXTTRISIDE:
          v2 = temp;
       }
    }
-   
-/*	KEEP INTWK INITIALIZED TO -1 */
-   for(i=0;i<nvrtx;++i)
-      intwk1[i] = -1;
-      
-   for(i=0;i<nside;++i)
-      intwk2[i] = -1;
 
    return;
 }

@@ -12,7 +12,6 @@
 /*	r_mesh.cpp: different perturb functions for deformed mesh */
 /*	r_mesh.cpp: vnn/fadd - jacobi/multigrid parameters */
 
-#include<quadtree.h>
 #include<cstring>
 #include<math.h>
 
@@ -108,13 +107,11 @@ int main(int argc, char *argv[]) {
 //   x.bcinfo();
 //   x.out_mesh("test");
 //   exit(0);
-/*     x.in_mesh("test",easymesh,10.0);
-     x.density();
-     x.yaber(1.2);
-     x.bcinfo();
-     x.out_mesh("retest");
+   x.in_mesh("../../data264",gambit,2.0);
+   x.out_mesh("test");
+   x.swap();
+   x.out_mesh("test1");
    exit(0);
-*/
 #ifdef SKIP
       y.in_mesh("../../grids/TIM/tim",easymesh,100.0);
       y.density();

@@ -69,7 +69,7 @@
 		0249A662FF388D9811CA2CEA = {
 			children = (
 				F5D40DCA01948889012E171D,
-				F50E0B4E0190451F01990B20,
+				F5F3507B019A14BD012DA41C,
 				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
@@ -369,9 +369,9 @@
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F50E0B500190452A01990B20,
 				0249A664FF388D9811CA2CEA,
 				F5D40DCB01948889012E171D,
+				F5F3507C019A14BD012DA41C,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -416,18 +416,6 @@
 			isa = PBXExecutableFileReference;
 			path = createlib;
 			refType = 4;
-		};
-		F50E0B4E0190451F01990B20 = {
-			isa = PBXFileReference;
-			name = xmalloc.o;
-			path = ../lib/xmalloc.o;
-			refType = 4;
-		};
-		F50E0B500190452A01990B20 = {
-			fileRef = F50E0B4E0190451F01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		F50FCD7F0128AA9801000001 = {
 			isa = PBXFileReference;
@@ -503,6 +491,18 @@
 		};
 		F5D40DCB01948889012E171D = {
 			fileRef = F5D40DCA01948889012E171D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5F3507B019A14BD012DA41C = {
+			isa = PBXFileReference;
+			name = utilities.o;
+			path = ../lib/utilities.o;
+			refType = 2;
+		};
+		F5F3507C019A14BD012DA41C = {
+			fileRef = F5F3507B019A14BD012DA41C;
 			isa = PBXBuildFile;
 			settings = {
 			};
