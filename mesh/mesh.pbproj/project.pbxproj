@@ -68,7 +68,7 @@
 		};
 		0249A662FF388D9811CA2CEA = {
 			children = (
-				F5121122019050BC01990B20,
+				F5D40DCA01948889012E171D,
 				F50E0B4E0190451F01990B20,
 				0249A663FF388D9811CA2CEA,
 			);
@@ -369,9 +369,9 @@
 		08FB77A3FE84155DC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F5121123019050BC01990B20,
 				F50E0B500190452A01990B20,
 				0249A664FF388D9811CA2CEA,
+				F5D40DCB01948889012E171D,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -434,18 +434,6 @@
 			path = triangulate.cpp;
 			refType = 4;
 		};
-		F5121122019050BC01990B20 = {
-			isa = PBXFileReference;
-			name = quad.o;
-			path = /Volumes/work/helenbrk/Codes/lib/quad.o;
-			refType = 0;
-		};
-		F5121123019050BC01990B20 = {
-			fileRef = F5121122019050BC01990B20;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F543FC18014FCBC901000001 = {
 			isa = PBXFileReference;
 			path = rebay.cpp;
@@ -503,6 +491,18 @@
 		};
 		F5CED4B0015630AA01000001 = {
 			fileRef = F5CED4AF015630AA01000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5D40DCA01948889012E171D = {
+			isa = PBXFileReference;
+			name = quad.o;
+			path = ../lib/quad.o;
+			refType = 2;
+		};
+		F5D40DCB01948889012E171D = {
+			fileRef = F5D40DCA01948889012E171D;
 			isa = PBXBuildFile;
 			settings = {
 			};
