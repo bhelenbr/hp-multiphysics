@@ -40,14 +40,10 @@ class blocks {
       
       /* SETUP COMMUNICATION BOUNDARIES */
       void findmatch(int mglvl);
-      
-      /* PERFORM ADAPTION ON READIN FILE */
-      /* OR SET UP COARSE GRIDS FOR NON ADAPT */
-      void firstadapt();
 
    public:
       /* INITIALIZE MULTIBLOCK/MGRID MESH */
-      void init(char *filename, int firstadapt = 1);
+      void init(char *filename, int start_sim = 1);
       
       /* START SIMULATION */
       void go();

@@ -10,7 +10,7 @@ extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO AD
 
 static int iter;
 
-void blocks::init(char *file, int adptnxt = 1) {
+void blocks::init(char *file, int start_sim = 1) {
    int i,j,p;
    FILE *fp;
    char blockname[100],outname[20], bname[20];
@@ -172,46 +172,40 @@ void blocks::init(char *file, int adptnxt = 1) {
    }
    
    /* DO ADAPTATION FOR CONTINUATION OF NEXT TIME STEP */
-   if (adptnxt) firstadapt();
+   if (start_sim)  {
+      if (readin) {
+         if (adapt) {
+            /* DO ADAPTATION FOR NEXT TIME STEP */
+            adaptation();
+      
+            /* REFIND BOUNDARIES FOR COARSE MESHES */
+            /* JUST IN CASE BDRY ORDERING CHANGED */            
+            for(i=1;i<mgrids;++i) 
+               findmatch(i);
+         }
+         else {
+            /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
+            for(i = 1; i < mgrids; ++i)
+               for(j=0;j<nblocks;++j)
+                  blk[j].grd[i].r_mesh::mg_getfres();
+         }
+      }
+      
+      for(i=0;i<nblocks;++i) {
+         number_str(bname,"multigrid.",i,1);
+         strcat(bname,".");
+         blk[i].coarsenchk(bname);
+      }
+   }
    
 #ifdef PV3
-   if (!adptnxt)
+   if (!start_sim)
       viz_init(0);
    else if(adapt)
       viz_init(-3);
    else
       viz_init(-2);
 #endif
-   
-   return;
-}
-
-
-void blocks::firstadapt() {
-   int i,j;
-   char bname[100];
-   
-   /* DO ADAPTATION FOR NEXT TIME STEP */      
-   if (adapt) {
-      adaptation();
-
-      /* REFIND BOUNDARIES FOR COARSE MESHES */
-      /* JUST IN CASE BDRY ORDERING CHANGED */            
-      for(i=1;i<mgrids;++i) 
-         findmatch(i);
-   }
-   else {
-      /* THIS MOVES THE COARSE MESH VERTICES TO NEW POSITIONS */
-      for(i = 1; i < mgrids; ++i)
-         for(j=0;j<nblocks;++j)
-            blk[j].grd[i].r_mesh::mg_getfres();
-   }
-      
-   for(i=0;i<nblocks;++i) {
-      number_str(bname,"multigrid.",i,1);
-      strcat(bname,".");
-      blk[i].coarsenchk(bname);
-   }
    
    return;
 }
