@@ -109,7 +109,6 @@ void mesh::rebay(FLT tolsize) {
          ntnew = ntdel +1;
       }
       else {
-         printf("interior insert\n");
 /*			USE REBAY'S ALGORITHM FOR INSERT POINT */
          dx = vrtx[v0][0] -vrtx[v1][0];
          dy = vrtx[v0][1] -vrtx[v1][1];
