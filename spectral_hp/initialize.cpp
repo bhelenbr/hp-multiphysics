@@ -14,6 +14,7 @@
 #include<myblas.h>
 
 int hpbasis::wkpmax = 0;
+const int hpbasis::sbwth;
 FLT **hpbasis::wk0, **hpbasis::wk1, **hpbasis::wk2, **hpbasis::wk3;
 
 void hpbasis::initialize(int pdegree) {

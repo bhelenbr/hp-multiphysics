@@ -14,7 +14,7 @@
 #define NV 3
 
 class spectral_hp : public mesh  {
-   private:
+   protected:
       int size;
       
       hpbasis b;

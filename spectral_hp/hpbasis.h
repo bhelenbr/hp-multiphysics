@@ -12,7 +12,7 @@
 #define MXTM 100
 
 class hpbasis {
-   protected:
+   public:
       int p;
 /*		NUMBER OF MODES : SIDE/INTERIOR/TOTAL/BOUNDARY */
       int sm,im,tm,bm;
@@ -76,20 +76,7 @@ class hpbasis {
       FLT **vfms1d;
 /*		DIAGONAL FOR SIDES */      
       FLT **sdiag1d;
-      
-/*		LOCAL STORAGE/WORK */
-      static int wkpmax;
-      static FLT **wk0,**wk1,**wk2,**wk3;
-      
-/*		SETUP FUNCTIONS */
-      void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
-      void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
-      void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
-      void ptvalues(FLT *pgx, FLT *pgn, FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
-      void ptvalues_bdry(FLT **pgx, FLT **pgn, FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
-      void ptvalues1d(FLT *pgx, FLT x);
          
-   public:
       void initialize(int pdegree);
 /*		PROJECT WITH R & S DERIVATIVES */
       void proj(FLT *lin, FLT **f, FLT **dr, FLT **ds);
@@ -144,8 +131,19 @@ class hpbasis {
       void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s, FLT *pgx, FLT *pgn);
       void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT **pgx, FLT **pgn);
       void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x, FLT *pgx);
-
-      friend class spectral_hp;
+      
+/*	LOCAL STORAGE/WORK */
+   private:
+      static int wkpmax;
+      static FLT **wk0,**wk1,**wk2,**wk3;
+      
+/*		SETUP FUNCTIONS */
+      void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
+      void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
+      void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
+      void ptvalues(FLT *pgx, FLT *pgn, FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
+      void ptvalues_bdry(FLT **pgx, FLT **pgn, FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      void ptvalues1d(FLT *pgx, FLT x);
 };
 
 #if (FLT == double)
