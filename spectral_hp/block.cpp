@@ -139,7 +139,7 @@ void block::tadvance() {
    }
 }
 
-#define OLDRECONNECT
+#define NEWRECONNECT
 
 #ifdef OLDRECONNECT
 void block::reconnect() {
