@@ -16,10 +16,10 @@
 					ActiveTab = 0;
 					Frame = "{{0, 23}, {1350, 936}}";
 					Split0 = {
-						ActiveTab = 2;
+						ActiveTab = 3;
 						Frame = "{{298, 0}, {1052, 936}}";
 						Split0 = {
-							Frame = "{{0, 296}, {1052, 640}}";
+							Frame = "{{0, 298}, {1052, 638}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
@@ -144,7 +144,7 @@
 	};
 	F5125C1001728F7501000001 = {
 		uiCtxt = {
-			sepNavWindowFrame = "{{194, 552}, {750, 502}}";
+			sepNavWindowFrame = "{{871, 139}, {750, 502}}";
 		};
 	};
 	F525D077017F63DC01990B20 = {
@@ -216,6 +216,11 @@
 	F5D77C310191A7BB01990B20 = {
 		uiCtxt = {
 			sepNavWindowFrame = "{{538, 14}, {895, 951}}";
+		};
+	};
+	F5F1F649026CB83001990B20 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{171, 581}, {750, 502}}";
 		};
 	};
 }
