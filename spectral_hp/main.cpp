@@ -28,10 +28,18 @@ int main() {
    m2.bcinfo();
    m2.out_mesh("tim2",easymesh);
    exit(1);
-   
+#endif
+
+   base.initialize(2);
+   x.in_mesh("../../grids/REMESH/data264",easymesh,5);
+   x.convertbtypes();
    x.allocate(base);
-   x.tobasis(&f1);
-   exit(0);
+   x.input("../../data264",text);
+   x.output("out1",tecplot);
+   x.adapt(y,0.75);
+   x.output("out2",tecplot);
+
+   exit(1);
    
    for(i=0;i<2;++i) {
       x.output("hope",tecplot);
@@ -42,7 +50,6 @@ int main() {
    }
 
    return(0);
-#endif
    
 //   myblock.init(1, 1, 0, "../../grids/TIM/tim2",easymesh,5);
 

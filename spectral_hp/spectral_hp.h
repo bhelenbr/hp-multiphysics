@@ -28,7 +28,6 @@ class spectral_hp : public mesh  {
       struct bistruct {
          FLT flx[NV];
          FLT curv[ND];
-         FLT sfct;
       };
       struct bistruct *binfo[MAXSB];
       

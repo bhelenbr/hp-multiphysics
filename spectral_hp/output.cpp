@@ -27,7 +27,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
          }
          
 /*			HEADER INFORMATION */
-         fprintf(out,"sm = %d\n",sm0);
+         fprintf(out,"p0 = %d\n",p0);
          fprintf(out,"nvrtx = %d, nside = %d, ntri = %d\n",nvrtx,nside,ntri);
          fprintf(out,"nsbd = %d\n",nsbd);
          for(i=0;i<nsbd;++i)
@@ -57,7 +57,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
          for(i=0;i<nsbd;++i) {
             fprintf(out,"Boundary %d, type %d, num %d\n",i,sbdry[i].type,sbdry[i].num);
             for(j=0;j<sbdry[i].num*sm0;++j)
-               fprintf(out,"%15.8e %15.8e %15.8e\n",binfo[i][j].curv[0],binfo[i][j].curv[1],binfo[i][j].sfct);
+               fprintf(out,"%15.8e %15.8e\n",binfo[i][j].curv[0],binfo[i][j].curv[1]);
          }
          fclose(out);
          break;
@@ -219,4 +219,136 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
  	return;
 }
 
+void spectral_hp::input(char *name, FILETYPE typ = text) {
+   int i,j,k,m,n,pin,indx;
+   int bnum,bind,ierr;
+   FILE *in;
+   char buffer[200];
+   
+   switch(typ) {
+   
+#ifdef NEW
+      case (text):
+         in = fopen(name,"r");
+         if (in == NULL ) {
+            printf("couldn't open output file\n");
+            exit(1);
+         }
+         
+/*			HEADER INFORMATION */
+/*			INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
+         fscanf(in,"p0 = %d\n",&pin);
+         
+         do {
+            fscanf(in,"%[^\n]",buffer);
+            fscanf(in,"\n");
+         } while (buffer[0] != 'E');  // END OF HEADER
 
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<NV;++n)
+               fscanf(in,"%le ",&vug[i][n]);
+            fscanf(in,"\n");
+         }
+         
+         indx = 0;
+         for(i=0;i<nside;++i) {
+            for(m=0;m<(pin-1);++m) {
+               for(n=0;n<NV;++n)
+                  fscanf(in,"%le ",&sug[indx][n]);
+               fscanf(in,"\n");
+               ++indx;
+            }
+            indx += p0 -pin;
+         }
+         
+         indx = 0;
+         for(i=0;i<ntri;++i) {
+            for(m=1;m<pin-1;++m) {
+               for(k=0;k<pin-1-m;++k) {
+                  for(n=0;n<NV;++n) 
+                     fscanf(in,"%le ",&iug[indx][n]);
+                  fscanf(in,"\n");
+                  ++indx;
+               }
+               indx += p0 -pin;
+            }
+         }
+         
+
+/*			BOUNDARY INFO */
+         for(i=0;i<nsbd;++i) {
+            fscanf(in,"Boundary %*d, type %*d, num %*d\n");
+            indx = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               for(m=0;m<pin -1;++m) {
+                  fscanf(in,"%le %le\n",&binfo[i][indx].curv[0],&binfo[i][indx].curv[1]);
+                  ++indx;
+               }
+               indx += p0 -pin;
+            }
+         }
+         fclose(in);
+         break;
+#else
+      case (text):
+         in = fopen(name,"r");
+         if (in == NULL ) {
+            printf("couldn't open output file\n");
+            exit(1);
+         }
+         
+/*			SKIP FIRST LINE */
+         fscanf(in,"%*[^\n]");
+         
+         for(i=0;i<nvrtx;++i) {
+            ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
+            &vrtx[i][0],&vrtx[i][1],&vug[i][0],&vug[i][1],&vug[i][2]);
+            if(ierr != 5) {
+               printf("error in read file %d\n",i);
+               exit(1);
+            }
+         }
+      
+         for(i=0;i<nside;++i) {
+            indx = b.sm*i;
+            if (sinfo[i] > -1) {
+               bnum = -stri[i][1]/maxsbel -1;
+               bind = (-stri[i][1] -(bnum+1)*maxsbel)*sm0;
+               for(m=0;m<b.sm;++m) {
+                  ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
+                  &binfo[bnum][bind+m].curv[0],&binfo[bnum][bind+m].curv[0],
+                  &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
+                  if(ierr != 5) {
+                     printf("error in read file2\n");
+                     exit(1);
+                  }
+               }
+            }
+            else {
+               for(m=0;m<b.sm;++m) {
+                  ierr = fscanf(in,"%le %le %le\n",
+                  &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
+                  if(ierr != 3) {
+                     printf("error in read file2\n");
+                     exit(1);
+                  }
+               }
+            }
+         }
+      
+         if (b.im > 0) {
+            for(i=0;i<b.im*ntri;++i) {
+               ierr = fscanf(in,"%le %le %le\n",
+               &iug[i][0],&iug[i][1],&iug[i][2]);
+               if(ierr != 3) {
+                  printf("error in read file6\n");
+                  exit(1);
+               }
+            }
+         }
+         break;
+#endif
+   }
+   
+   return;
+}
