@@ -45,7 +45,7 @@ void quadtree::allocate(FLT (*v)[ND], int mxv) {
    }
    else {
       if (size > maxsrch) { 
-         printf("Better to allocate largest quadtree to smallest\n");
+         printf("#Warning: Better to allocate largest quadtree to smallest\n");
          delete []srchlst;
          srchlst = new class quad*[size];
          maxsrch = size;
@@ -128,8 +128,8 @@ void quadtree::copy(const class quadtree& tgt) {
 void quadtree::addpt(int v0, class quad* start = NULL) {
    int i,j;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    class quad *qpt;  // SAME
-   static int store[5];
-   static FLT avoid0,xshift,yshift,x1,y1,dx,dy;
+   int store[5];
+   FLT avoid0,xshift,yshift,x1,y1,dx,dy;
    
    if (start == NULL) 
       qpt = base;
@@ -500,8 +500,8 @@ void quadtree::update(int v0) {
 
 /*		CHECK IF WE ARE AT THE TOP LEVEL */
       if (topbox == NULL) {
-         printf("quadtree error: point is outside of global domain\n");
-         printf("(%f,%f) (%f,%f): (%f, %f)\n",base[0].xmin,base[0].ymin,base[0].xmax,base[0].ymax,x,y);
+         printf("#Warning: point is outside of quadtree domain\n");
+         printf("#(%f,%f) (%f,%f): (%f, %f)\n",base[0].xmin,base[0].ymin,base[0].xmax,base[0].ymax,x,y);
          addpt(v0);
          return;
       }
