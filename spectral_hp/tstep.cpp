@@ -5,9 +5,9 @@
 #ifdef CONSERV
 void hp_mgrid::tstep1(void) {
    int tind,i,j,n,sind,count,bnum,side,v0,*v;
-   FLT jcb,h,hmax,q,qmax,lam1,c,gam;
+   FLT jcb,h,hmax,q,qmax,lam1,gam;
    class mesh *tgt;
-
+   
    /***************************************/
    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
    /***************************************/
@@ -43,8 +43,9 @@ void hp_mgrid::tstep1(void) {
          out_mesh("negative",grid);
          exit(1);
       }
-      
-      h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      // h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax); THIS IS WRONG BY FACTOR OF 2
+      h = 4.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
+      hmax = hmax/(0.25*(b.p +1)*(b.p+1));
       
       qmax = 0.0;
       for(j=0;j<3;++j) {
@@ -54,21 +55,25 @@ void hp_mgrid::tstep1(void) {
          qmax = MAX(qmax,q);
       }
 #ifndef TIMEACCURATE
-      gam = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);
+      gam = 3.0*qmax +(0.5*hmax*bd[0] +2.*gbl->nu/hmax)*(0.5*hmax*bd[0] +2.*gbl->nu/hmax);
+      // gam = MAX(gam,0.01); // TEMPORARY FOR INVISCID ONLY
 #endif
+
       q = sqrt(qmax);
-      c = sqrt(qmax +gam);
-      lam1  = (q+c);
-
-#ifdef INERTIALESS
-      gam = pow(gbl->nu/h,2); 
-      c = gbl->nu/h;
-      lam1 = c; 	
-#endif
-
+      lam1 = q + sqrt(qmax +gam);
+      
       /* SET UP DISSIPATIVE COEFFICIENTS */
       gbl->tau[tind]  = adis*h/(jcb*sqrt(gam));
       gbl->delt[tind] = qmax*gbl->tau[tind];
+      
+#ifdef INERTIALESS
+      gam = pow(2.*gbl->nu/hmax,2); 
+      lam1 = sqrt(gam);
+      
+      /* SET UP DISSIPATIVE COEFFICIENTS */
+      gbl->tau[tind]  = adis*h/(jcb*sqrt(gam));
+      gbl->delt[tind] = 0.0;
+#endif
       
       /* SET UP DIAGONAL PRECONDITIONER */
 #ifdef TIMEACCURATE
@@ -76,9 +81,9 @@ void hp_mgrid::tstep1(void) {
 #else
 
 #ifndef INERTIALESS
-      jcb *= (gbl->nu/(h*h) +lam1/h +bd[0]);
+      jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +bd[0];
 #else
-      jcb *= gbl->nu/(h*h);
+      jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
       
 #ifdef AXISYMMETRIC
