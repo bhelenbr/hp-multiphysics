@@ -116,7 +116,7 @@ template<int ND> void mesh<ND>::triangulate(int nsd) {
             /* ABOVE THE EDGE MID-POINT IS MINIMIZED (MINIMIZES RADIUS) */
             height = dx2[0]*(xcen[1] -xmid[1]) -dx2[1]*(xcen[0] -xmid[0]);
 
-            if (height > hmin +100.*EPSILON*fabs(hmin)) continue;
+            if (height > hmin) continue;
             
             /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
             /* WITH ALL OTHER BOUNDARY SIDES */
@@ -185,7 +185,7 @@ next_vrt:      continue;
             }
       
             /* CHECK IF DEGENERATE */
-            if (height > hmin-100.*EPSILON*fabs(hmin)) {
+            if (height > hmin-200.0*EPSILON*sqrt(xcen[0]*xcen[0]+xcen[1]*xcen[1])) {
                good[ngood++] = vtry;
                assert(ngood < MAXGOOD);
                continue;
@@ -193,7 +193,7 @@ next_vrt:      continue;
             
             ngood = 0;
             good[ngood++] = vtry;
-            hmin = height;
+            hmin = height+100.0*EPSILON*sqrt(xcen[0]*xcen[0]+xcen[1]*xcen[1]);
 vtry_failed:continue;
          }
          
@@ -248,7 +248,7 @@ vtry_failed:continue;
       intwk1[i] = -1;
       intwk2[i] = -1;
    }
-   
+      
    return;
 
 }
