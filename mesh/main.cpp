@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 /*	THIS DEFORMS A MESH */
 //	inname[0] = "../../grids/TIM/tim";
 //	inname[0] = "/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5";
-   inname[0] = "/Users/helenbrk/Codes/grids/WIND/PRDC/bot1";
-   inname[1] = "/Users/helenbrk/Codes/grids/WIND/PRDC/top1";
+   inname[0] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/bot1";
+   inname[1] = "/Volumes/work/helenbrk/Codes/grids/WIND/PRDC/top1";
    
    z.init(2,3,inname,easymesh,50.0);
 

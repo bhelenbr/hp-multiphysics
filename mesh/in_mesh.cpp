@@ -30,7 +30,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                     printf("error in side file: %s\n",grd_app);
                     exit(1);
             }
-
+           
             if (!initialized) {
                allocate(nside + (int) (grwfac*nside));
                vin = vrtx;
@@ -39,12 +39,8 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                printf("mesh is too large\n");
                exit(1);
             }
-               
-            for(i=0;i<maxvst;++i) {
-                    stri[i][0] = -1;
-                    stri[i][1] = -1;
-            }
-    
+           
+            count = 0;
             for(i=0;i<nside;++i) {
                ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
                ,&svrtx[i][0],&svrtx[i][1],&sinfo[i]);
@@ -52,20 +48,25 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                   printf("error in side file %s\n",grd_app);
                   exit(1);
                }
+               if (sinfo[i]) ++count;
             }
             fclose(grd);
-
-/*          FIGURE OUT HOW MANY BOUNDARY GROUPS THERE ARE & HOW MANY OF EACH */
+            
+            for(i=0;i<maxvst;++i) {
+               stri[i][0] = -1;
+               stri[i][1] = -1;
+            }
+            
+/*          ALLOCATE BOUNDARY STORAGE */
+            bdryalloc(count + (int) (grwfac*count));
+            
+/*				ORGANIZE BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
                if (sinfo[i]) {
                   for (j = 0; j <nsbd;++j) {
                      if (sinfo[i] == sbdry[j].type) {
                         sbdry[j].el[sbdry[j].num++]= i;
-                        if (sbdry[j].num > maxsbel) {
-                           printf("Boundaries are too big? %d %d\n",sbdry[j].type,maxsbel);
-                           exit(1);
-                        }
                         goto next1;
                      }
                   }
@@ -73,6 +74,10 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
                   sbdry[nsbd].type = sinfo[i];
                   sbdry[nsbd].num = 1;
                   sbdry[nsbd++].el[0]= i;
+                  if (nsbd > MAXSB) {
+                     printf("too many different side boundaries: increase MAXSB\n");
+                     exit(1);
+                  }
                }
 next1:      continue;
             }
@@ -107,7 +112,7 @@ next1:      continue;
                   vbdry[nvbd].el[0] = i;
                   ++nvbd;
                   if (nvbd >= MAXSB) {
-                     printf("Too many vertex boundary conditions: %d\n",nvbd);
+                     printf("Too many vertex boundary conditions: increase MAXSB %d\n",nvbd);
                      exit(1);
                   }
                }
@@ -224,6 +229,8 @@ next1:      continue;
             count = 0;
             for(i=0;i<nsbd;++i) 
                count += sbdry[i].num;
+               
+            bdryalloc(count + (int) (grwfac*count));
 
 /*				CREATE SIDE INFORMATION */
             createsideinfo();
@@ -404,7 +411,6 @@ void mesh::convertbtypes(const int (*old)[2] = NULL, int nold = 0) {
 }
 
 void mesh::allocate(int mxsize) {
-   int i;
    
 /*	SIDE INFO */
    maxvst = mxsize;
@@ -412,10 +418,6 @@ void mesh::allocate(int mxsize) {
    stri   = (int (*)[2]) xmalloc(maxvst*2*sizeof(int));
    sinfo = new int[maxvst+1];
    ++sinfo; // ALLOWS US TO ACCESS SINFO[-1]
-   
-   maxsbel = MAX((int) sqrt(maxvst),10);
-   for(i=0;i<MAXSB;++i)
-      sbdry[i].el = new int[maxsbel];
 
 /*	VERTEX INFO */                  
    vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
@@ -425,10 +427,6 @@ void mesh::allocate(int mxsize) {
    nnbor = new int[maxvst];
    vtri = new int[maxvst];
    
-   maxvbel = 2;
-   for(i=0;i<MAXSB;++i)
-      vbdry[i].el = new int[maxvbel];
-   
 /*	TRI INFO */               
    tvrtx = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
    ttri = (int (*)[3]) xmalloc(maxvst*3*sizeof(int));
@@ -436,5 +434,19 @@ void mesh::allocate(int mxsize) {
    tinfo = new int[maxvst+1];
    ++tinfo; // ALLOWS US TO ACCESS TINFO[-1]
    
+   return;
+}
+
+void mesh::bdryalloc(int mxbel) {
+   int i;
+   
+   maxsbel = mxbel;
+   for(i=0;i<MAXSB;++i)
+      sbdry[i].el = new int[maxsbel];
+      
+   maxvbel = 2;
+   for(i=0;i<MAXSB;++i)
+      vbdry[i].el = new int[maxvbel];
+      
    return;
 }

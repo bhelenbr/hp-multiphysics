@@ -8,11 +8,15 @@ void mesh::copy(const mesh& tgt) {
       
    if (!initialized) {
       allocate(tgt.maxvst);
+      bdryalloc(tgt.maxsbel);
       initialized = 1;
    }
    else {
 /*		CHECK IF BIG ENOUGH */
-      assert(maxvst >= tgt.nside);
+      if (tgt.nside > maxvst) {
+         printf("mesh is too big to copy\n");
+         exit(1);
+      }
    }
    
 /*	COPY VERTEX INFO OVER */
@@ -60,6 +64,10 @@ void mesh::copy(const mesh& tgt) {
    for(i=0;i<nsbd;++i) {
       sbdry[i].type = tgt.sbdry[i].type;
       sbdry[i].num = tgt.sbdry[i].num;
+      if (sbdry[i].num > maxsbel) {
+         printf("too many side elements to copy\n");
+         exit(1);
+      }
       for(j=0;j<sbdry[i].num;++j) 
          sbdry[i].el[j] = tgt.sbdry[i].el[j];
    }

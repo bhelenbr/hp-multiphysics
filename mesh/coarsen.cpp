@@ -16,7 +16,9 @@ int mesh::coarsen(const class mesh& inmesh) {
    if (!initialized) {
 /*		VERTEX STORAGE ALLOCATION */
       maxvst =  MAX((int) (inmesh.maxvst/3.5),10);
+      maxsbel = MAX(inmesh.maxsbel/2,10);
       allocate(maxvst);
+      bdryalloc(maxsbel);
       nsbd = inmesh.nsbd;
       nvbd = inmesh.nvbd;
       qtree.allocate(vrtx,maxvst);

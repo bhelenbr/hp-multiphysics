@@ -172,6 +172,7 @@ class mesh {
 /*		DEFAULT INITIALIZATION */
       mesh() : initialized(0), fine(NULL), coarse(NULL) {};
       void allocate(int mxsize);
+      void bdryalloc(int mxbel);
       void copy(const mesh& tgt);
       
 /*		ALLOCATE COMMUNICATION BUFFERS */
