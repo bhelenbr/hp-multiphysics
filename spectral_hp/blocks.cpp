@@ -218,14 +218,11 @@ void blocks::init(char *file, int start_sim) {
                   blk[j].grd[i].r_mesh::mg_getfres();
          }
       }
-#ifdef DEBUG
       for(i=0;i<nblocks;++i) {
          number_str(bname,"multigrid.",i,1);
          strcat(bname,".");
-         blk[i].coarsenchk(bname);
+         blk[i].coarsenchk(bname);         
       }
-      output(-1,text);
-#endif
    }
    
 #ifdef PV3
@@ -403,7 +400,7 @@ void blocks::cycle(int vw, int lvl) {
             
             emax = MAX(emax,err);
             --vcount;
-            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > 100) {
+            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > SOLVECOARSE) {
                printf("# Coarsest grid iterations %d\n",crscntr);
                vcount+=2;
             }

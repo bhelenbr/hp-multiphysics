@@ -75,7 +75,7 @@ void blocks::r_cycle(int vw, int lvl) {
             
             emax = MAX(emax,err);
             --vcount;
-            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > 100) {
+            if (err/emax < 3.0e-1 || err < 1.0e-11 || crscntr > SOLVECOARSE) {
                // printf("# r_mesh coarsest grid iterations %d\n",crscntr);
                vcount+=2;
             }
