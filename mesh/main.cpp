@@ -15,6 +15,7 @@
 #include<cstring>
 #include<math.h>
 #include<utilities.h>
+#include<time.h>
 
 #define WAVE
 
@@ -83,10 +84,12 @@ void r_mesh::perturb(int step) {
 int main(int argc, char *argv[]) {
    int i,step = 0;
    char name[100];
-
-/* THIS READS IN A MESH THEN COARSENS IT & OUTPUTS */
+   clock_t cpu_time;
    class mesh x, y;
 
+/*	START CLOCK TIMER */
+   clock();
+   
 /*   
    x.in_mesh("/Network/Servers/shelob.camp.clarkson.edu/home/helenbrk/codes/grids/WAVE/PRDC/wave5",easymesh,5.0);//   y = x;
 */
@@ -101,8 +104,8 @@ int main(int argc, char *argv[]) {
    exit(10);
 */
 
-   x.in_mesh("start",easymesh);
-   x.out_mesh("start",tecplot);
+//   x.in_mesh("start",easymesh);
+//   x.out_mesh("start",tecplot);
 
 //   y.out_mesh("test");
 //   exit(0);
@@ -160,6 +163,8 @@ int main(int argc, char *argv[]) {
    z.out_mesh("deform",tecplot);
    z.restructure(0.66);
 #endif
+   cpu_time = clock();
+   printf("that took %ld cpu time\n",cpu_time);
 
    return(0);
 }
