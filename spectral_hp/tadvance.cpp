@@ -187,7 +187,6 @@ void hp_mgrid::tadvance() {
    /* ALSO ELIMINATES ERROR FOR NEW ADAPTATION POINTS ON ANALYTICALLY DEFINED SURFACE */
    curvinit(EULR_MASK+INFL_MASK);
    
-   /* TESTING TEMPORARY */
 //   for(i=0;i<nvrtx;++i)
 //      vrtx[i][0] += 0.1;
 
@@ -204,7 +203,6 @@ void hp_mgrid::getfdvrtdt() {
    int i,j,n,tind;
    class hp_mgrid *fmesh;
 
-   /* TEMPORARY */   
 //   for(i=0;i<nvrtx;++i)
 //      vrtx[i][0] += 0.1;
    
