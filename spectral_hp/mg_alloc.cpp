@@ -16,7 +16,7 @@ FLT **hp_mgrid::e00,**hp_mgrid::e01,**hp_mgrid::e10,**hp_mgrid::e11;
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-FLT hp_mgrid::trncerr, hp_mgrid::invbdryerr, hp_mgrid::tol;
+FLT hp_mgrid::trncerr, hp_mgrid::invbdryerr, hp_mgrid::vlngth_tol, hp_mgrid::adapt_tol;
 class hp_mgrid hp_mgrid::hpstr; // STORAGE FOR ADAPTATION 
 int hp_mgrid::changed = 1; //FLAG FOR PV3 TO INDICATE STRUCTURE CHANGED
 struct vsi hp_mgrid::ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO

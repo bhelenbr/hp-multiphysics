@@ -36,8 +36,8 @@ void blocks::init(char *file) {
    printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
    
    /* LOAD ADAPTATION INFORMATION */
-   fscanf(fp,"%*[^\n]%d %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::invbdryerr,&hp_mgrid::tol);
-   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tTOLERANCE\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::invbdryerr,hp_mgrid::tol);
+   fscanf(fp,"%*[^\n]%d %lf %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::invbdryerr,&hp_mgrid::vlngth_tol,&hp_mgrid::adapt_tol);
+   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tVLNGTH_TOL\t\tADAPT_TOL\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::invbdryerr,hp_mgrid::vlngth_tol,hp_mgrid::adapt_tol);
  
    /* READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
@@ -460,7 +460,7 @@ void blocks::adaptation() {
       blk[i].grd[0].length2();
       
    for(i=0;i<nblocks;++i)
-      blk[i].grd[0].adapt(temp_hp,0.66);
+      blk[i].grd[0].adapt(temp_hp);
 
 
    return;

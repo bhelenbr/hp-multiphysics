@@ -17,7 +17,7 @@ void hp_mgrid::length1() {
    FLT sum,u,v,ruv,lgtol,lgf,ratio;
    class mesh *tgt;
    
-   lgtol = -log(tol);
+   lgtol = -log(vlngth_tol);
    
    for(i=0;i<nvrtx;++i)
       fltwk[i] = 0.0;
@@ -85,7 +85,7 @@ void hp_mgrid::length1() {
    
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
-      if (fltwk[i] <= tol || fltwk[i] >= 1./tol) {
+      if (fltwk[i] <= vlngth_tol || fltwk[i] >= 1./vlngth_tol) {
          lgf = log(fltwk[i]);
          fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
          vlngth[i] /= fltwk[i];

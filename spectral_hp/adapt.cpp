@@ -15,7 +15,7 @@
 /* THIS IS USED IN THE MVPTTOBDRY FUNCTION */
 extern class spectral_hp *tgt;
 
-void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
+void hp_mgrid::adapt(class hp_mgrid& str) {
    int i,j,m,n,v0,v1,sind,stgt,ttgt,info,indx,indx1,indx2,nvrt0,tind,touchd,snum,step;
    FLT r,s,x,y,psi,upt[NV];
    char uplo[] = "U";
@@ -57,7 +57,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    
 	/* SWAP & COARSEN */ 
    nvrt0 = nvrtx;
-   yaber(1.0/tolerance,1,0.0);
+   yaber(1.0/adapt_tol,1,0.0);
       
    /* MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
    for(i=nvrt0-1;i>=nvrtx;--i) {
@@ -78,7 +78,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
  
    /* REFINE */
    nvrt0 = nvrtx;
-   rebay(tolerance);
+   rebay(adapt_tol);
    
    /* TO SEE MESH MANIPULATION */
    for(i=0;i<nside;++i)

@@ -70,7 +70,7 @@ class hp_mgrid : public spectral_hp {
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-      static FLT trncerr, invbdryerr, tol;  //   ADAPTATION CONSTANTS  
+      static FLT trncerr, invbdryerr, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
       static class hp_mgrid hpstr; // STORAGE FOR ADAPTATION 
       static int changed; // FLAG TO TELL WHEN MESH HAS CHANGED FOR PV3
       static struct vsi ugstr[MXSTEPM1]; // STORAGE FOR UNSTEADY ADAPTATION BD FLOW INFO
@@ -177,7 +177,7 @@ class hp_mgrid : public spectral_hp {
       void length2(); 
       void outlength(char *name, FILETYPE type);
       void inlength(char *name);
-      void adapt(class hp_mgrid& bgn, FLT tolerance);
+      void adapt(class hp_mgrid& bgn);
       
       friend class block;
       friend class blocks;
