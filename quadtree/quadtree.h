@@ -7,8 +7,6 @@
  *
  */
 
-#include<cstdio>
-#include<math.h>
 #ifndef _quadtree_h_
 #define _quadtree_h_
 
@@ -20,17 +18,18 @@
 #define FLT double
 #endif
 
-class quad {
+template<int ND> class quadtree;
+
+template<int ND> class quad {
    private:
-      static const int ND = 2;
-      friend class quadtree;
+      friend class quadtree<ND>;
       int num; 			// NUMBER OF POINTS
-      class quad *prnt;	// POINTER TO PARENT QUAD
+      class quad<ND> *prnt;	// POINTER TO PARENT QUAD
       int pind; 			// DAUGHTER NUMBER OF PARENT
       FLT xmin[ND], xmax[ND];
       union {
          int node[(1<<ND)];    	// STORES EITHER NODES OR POINTER TO DAUGHTERS
-         class quad *dghtr[(1<<ND)];
+         class quad<ND> *dghtr[(1<<ND)];
       };
       
    public:
@@ -44,18 +43,17 @@ class quad {
          
 };
 
-class quadtree {
+template<int ND> class quadtree {
    private:
-      static const int ND = 2;
       int maxvrtx;
       FLT (*vrtx)[ND];
-      class quad *base;
-      class quad **indx;
+      class quad<ND> *base;
+      class quad<ND> **indx;
       int size;
       int current;
 
 /*		THIS IS USED BY ALL QUADS FOR SEARCHING */      
-      static class quad **srchlst;
+      static class quad<ND> **srchlst;
       static int maxsrch;
 
    public:
@@ -71,7 +69,7 @@ class quadtree {
       inline FLT xmin(int i) {return(base[0].xmin[i]);}
       inline FLT xmax(int i) {return(base[0].xmax[i]);}
            
-      void addpt(int v0, class quad *start = 0);
+      void addpt(int v0, class quad<ND> *start = 0);
       
       FLT nearpt(int v0, int& pt) const;
       FLT nearpt(FLT x[ND], int& pt) const;
