@@ -12,6 +12,11 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    FLT grwfac;
    
    fp = fopen(inputfile,"r");
+   if (fp == NULL) {
+      printf("couldn't open file %s\n",inputfile);
+      exit(1);
+   }
+   
    fscanf(fp,"%*[^\n]%s\n",grd_nm);
 	printf("#GRIDNAME\n#%s\n",grd_nm);
    fscanf(fp,"%*[^\n]%d %lf\n",&fmt,&grwfac);
@@ -26,7 +31,9 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
 /*    grd[i].smooth_cofa(2); */
       grd[i].setfine(grd[i-1]);
       grd[i-1].setcoarse(grd[i]);
+      grd[i].out_mesh("test",tecplot);
    }
+   exit(1);
 
 /*	INITIALIZE SPECTRAL_HP VECTORS */
    hpbase = bin;
@@ -48,21 +55,6 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
    grd[0].loadbasis(hpbase[lg2pmax]);
    for(i=1;i<ngrid;++i)
       grd[i].allocate(1,&gbl);
-
-/*	LOAD ITERATIVE CONSTANTS FOR BLOCK */
-/*	ITERATION CFL NUMBERS */
-   fscanf(fp,"%*[^\n]");
-   printf("#FLOWCFL\n#");
-   for(i=0;i<=lg2pmax;++i) {
-      fscanf(fp,"%lf",&gbl.cfl[i]);
-      printf("%.2f\t",gbl.cfl[i]);
-   }
-   fscanf(fp,"%*[^\n]\n");
-   printf("\n");
-
-/*	LOAD FADD, ADIS, CHARACTERITIC FLAG */   
-   fscanf(fp,"%*[^\n]%lf %lf %d\n",&gbl.fadd,&gbl.adis,&gbl.charyes);
-   printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",gbl.fadd,gbl.adis,gbl.charyes);
 
 /*	LOADS RHO, MU */
    fscanf(fp,"%*[^\n]%lf %lf\n",&gbl.rho,&gbl.mu);
@@ -111,37 +103,32 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
          grd[j].srf[i].alloc(grd[j].maxsbel, 0, 1, 0, &sgbl[i]);
          grd[j].sbdry[i].misc = static_cast<void *>(&grd[j].srf[i]);
       }
-
-/*		READ ITERATIVE INFORMATION */
-      fscanf(fp,"%*[^\n]");
-      printf("#TANGENT/NORMAL SURFCFLS\n#");
-      for(i=0;i<=lg2pmax;++i) {
-         fscanf(fp,"%lf,%lf ",&sgbl[i].cfl[i][0],&sgbl[i].cfl[i][1]);
-         printf("%.2f,%.2f\t",sgbl[i].cfl[i][0],sgbl[i].cfl[i][1]);
-      }
-      fscanf(fp,"%*[^\n]\n");
-      printf("\n");
-      
-      fscanf(fp,"%*[^\n]%lf %lf\n",&sgbl[i].fadd[0],&sgbl[i].fadd[1]);
-      printf("#TANGENT/NORMAL FADD\n#%0.2f\t%0.2f\n",sgbl[i].fadd[0],sgbl[i].fadd[1]);
       
 /*		READ SURFACE PHYSICS INFO */
       fscanf(fp,"%*[^\n]%lf %lf %lf\n",&sgbl[i].sigma,&sgbl[i].rho2,&sgbl[i].mu2);
       printf("#SIGMA\t\tRHO2\t\tMU2\n#%f\t\t%f\t\t%f\n",sgbl[i].sigma,sgbl[i].rho2,sgbl[i].mu2);
    }
 
+//	scanf("%*[^\n]%d %d\n",&rf, &rfnum);
+//	printf("#READ FILE?\tFILE #\n#%1d\t\t%d\n",rf,rfnum);
 
-/*   
-	scanf("%*[^\n]%d %d\n",&rf, &rfnum);
-	printf("#READ FILE?\tFILE #\n#%1d\t\t%d\n",rf,rfnum);		
-	scanf("%*[^\n]%lf %d %d\n",&dt,&nstep,&skip);
-	printf("#1/DT\t\tNSTEP\t\tSKIP\n#%.6le\t%04d\t\t%03d\n",dt,nstep,skip);
-	scanf("%*[^\n]%d %d\n",&i_cyc,&iskip);
-*/
+   grd[0].loadbasis(hpbase[lg2pmax]);
+   grd[0].curvinit();
+   grd[0].tobasis(&f1);
+   grd[0].surfvrttoug();
 
    return;
 }
 
+void block::tadvance() {
+   int j;
+   
+   grd[0].tadvance();
+   
+   for(j=0;j<ngrid;++j)
+      grd[j].setksprg1d();
+   
+}
 
 void block::reconnect() {
    int i;

@@ -13,6 +13,19 @@
 
 #define NV 3
 
+/* SOLUTION VECTOR */
+struct vsi {
+   FLT (*v)[NV];
+   FLT (*s)[NV];
+   FLT (*i)[NV];
+};
+
+/* BOUNDARY INFORMATION */
+struct bistruct {
+   FLT flx[NV];
+   FLT curv[ND];
+};
+
 class spectral_hp : public mesh  {
    protected:
       int size;
@@ -21,14 +34,10 @@ class spectral_hp : public mesh  {
       int p0, sm0, im0;  // INITIALIZATION VALUES 
       
 /*		SOLUTION INFORMATION */
-      FLT (*vug)[NV], (*sug)[NV], (*iug)[NV];
+      struct vsi ug;
       
 /*		BOUNDARY INFORMATION */
 /*		NOT ALL BOUNDARIES NEED THIS INFO, BUT EXTRA STORAGE IS MINISCULE */
-      struct bistruct {
-         FLT flx[NV];
-         FLT curv[ND];
-      };
       struct bistruct *binfo[MAXSB];
       
 /*		STATIC WORK ARRAYS */
@@ -39,13 +48,16 @@ class spectral_hp : public mesh  {
       
 /*		FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
       void ugtouht(int tind);
+      void ugtouht(int tind, struct vsi ug);
       void ugtouht_bdry(int tind);
       void ugtouht1d(int sind);
-      void crdtouht1d(int sind);
       void crdtouht(int tind);
+      void crdtouht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo);
+      void crdtouht1d(int sind);
+      void crdtouht1d(int sind, FLT (*vrtx)[ND], struct bistruct **binfo);
 
 /*		THIS FUNCTION ADDS LF TO GLOBAL VECTORS */
-      void lftog(int tind, FLT (*v)[NV], FLT (*s)[NV], FLT (*i)[NV]);
+      void lftog(int tind, struct vsi);
 
 /*		SETUP V/S/T INFO */
       void setbcinfo();
@@ -56,15 +68,16 @@ class spectral_hp : public mesh  {
       spectral_hp& operator=(const spectral_hp& copy);
       void allocate(class hpbasis& bas);
       inline void loadbasis(class hpbasis& bas) { b = bas;}
-      void tobasis(FLT (*func)(int, FLT, FLT));
+      void tobasis(struct vsi g, FLT (*func)(int, FLT, FLT));
+      inline void tobasis(FLT (*func)(int, FLT, FLT)) {tobasis(ug,func);}
       void curvinit();
-      void input(char *name, FILETYPE type);
-      void output(char *name, FILETYPE type);
-      void density1(FLT terr, FLT min, FLT max);
-      void density2();
-      void outdensity(char *name);
+      void input(struct vsi g, char *name, FILETYPE type);
+      inline void input(char *name, FILETYPE type) {input(ug,name,type);}
+      void output(struct vsi g, char *name, FILETYPE type);
+      inline void output(char *name, FILETYPE type) {output(ug,name,type);}
       void adapt(class spectral_hp& bgn, FLT tolerance);
-      int ptprobe(FLT xp, FLT yp, FLT u[NV]);
-      int ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
-      FLT bdry_locate(int type, FLT& x, FLT &y, int& sind);
+      void ptprobe(FLT xp, FLT yp, FLT u[NV]);
+      void ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
+      int findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s);
+      int findbdrypt(int typ, FLT &x, FLT &y, FLT &psi);
 };

@@ -12,6 +12,7 @@
 
 #define MXLG2P 5
 #define NSTAGE 5
+#define NSTEP 2
 
 #define HP_MGRID_MP (COMX_MASK +COMY_MASK)
 
@@ -19,24 +20,16 @@
 struct hp_mgrid_glbls {
 
 /*	SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-   FLT (*vug0)[NV];
-   FLT (*sug0)[NV];
-   FLT (*iug0)[NV];
+   struct vsi ug0;
 
 /*	RESIDUAL STORAGE */
-   FLT (*vres)[NV];
-   FLT (*sres)[NV];
-   FLT (*ires)[NV];
+   struct vsi res;
 
 /*	VISCOUS FORCE RESIDUAL STORAGE */
-   FLT (*vvf)[NV];
-   FLT (*svf)[NV];
-   FLT (*ivf)[NV];   
+   struct vsi vf;  
    
 /*	RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
-   FLT (*vres0)[NV];
-   FLT (*sres0)[NV];
-   FLT (*ires0)[NV];
+   struct vsi res0;
 
 /*	PRECONDITIONER  */
    FLT *gam,*dtstar;
@@ -44,20 +37,21 @@ struct hp_mgrid_glbls {
    FLT *sdiagv, *sdiagp;
    
 /* STABILIZATION */
-   FLT *tau,*delt,adis;
+   FLT *tau,*delt;
 
-/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) */
-   FLT (*ug0)[NV], (*ug1)[NV], (*ug2)[NV], *jcb1, *jcb2;
-   FLT ***dudt[ND], ***cdjdt;
-
-/*	ITERATION PARAMETERS */
-   FLT fadd, cfl[MXLG2P];  
+/*	UNSTEADY SOURCE TERMS (NEEDED ON FINE MESH ONLY) FOR BACKWARDS DIFFERENCE */
+   struct vsi ugbd[NSTEP-1]; // BACKWARDS DIFFERENCE FLOW INFO
+   FLT (*vrtxbd[NSTEP-1])[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
+   struct bistruct *binfobd[NSTEP-1][MAXSB];  /* BACKWARDS CURVED BDRY INFORMATION (FINE MESH ONLY) */
+   FLT ***dugdt[NV];  // UNSTEADY SOURCE FOR FLOW (ONLY NEEDED ON FINEST MESH)
+   struct bistruct *dbinfodt[MAXSB]; // UNSTEADY CURVED SIDE VELOCITY (ONLY NEEDED ON FINEST MESH)
+/*	MESH DVRTDT IS NEEDED ON EACH MESH FOR NONLINEAR TERM IN NAVIER-STOKES */
       
 /*	PHYSICAL CONSTANTS */
    FLT rho, rhoi, mu, nu;
-   
-/*	OTHER CONSTANTS */
-   int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
+
+/*	ADAPTION CONSTANTS */   
+   FLT trncerr, tol, minlength, maxlength;
 
 /*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
    FLT (*func)(int n, FLT x, FLT y);
@@ -70,7 +64,10 @@ class hp_mgrid : public spectral_hp {
       static const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0};
       static FLT **cv00,**cv01,**cv10,**cv11;
       static FLT **e00,**e01,**e10,**e11;
-      static FLT g, dti, time, dt0, dt1, dt2, dt3;
+      static FLT g, dti, time, bd[NSTEP+1];
+      static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
+      static FLT adis;
+      static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
       static int size;
 
 /*		TELLS WHICH P WE ARE ON FOR P MULTIGRID */
@@ -80,11 +77,10 @@ class hp_mgrid : public spectral_hp {
       struct hp_mgrid_glbls *gbl;
       
 /*		THINGS NEEDED ON EACH HP_MGRID MESH FOR MGRID */
-      FLT (*vug_frst)[NV];
-      FLT (*vdres[MXLG2P])[NV];
-      FLT (*sdres[MXLG2P])[NV];
-      FLT (*idres[MXLG2P])[NV];
-      bool isfrst;
+      FLT (*dvrtdt)[ND]; // BACKWARDS DIFFERENCE MESH INFO (TO CALCULATE MESH VELOCITY)
+      FLT (*vug_frst)[NV]; // SOLUTION ON FIRST ENTRY TO COARSE MESH
+      struct vsi dres[MXLG2P]; // DRIVING TERM FOR MULTIGRID
+      bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
       
 /*    SURFACE BOUNDARY CONDITION STUFF */
       class surface *srf;
@@ -103,10 +99,10 @@ class hp_mgrid : public spectral_hp {
          dti = dtiin;
          time = timein;
          g = gin;
-         dt0 = 1.5*dti;
-         dt1 = -2.*dti;
-         dt2 = 0.5*dti;
-         dt3 = 0.0;
+         bd[0] = 1.5*dti;
+         bd[1] = -2.*dti;
+         bd[2] = 0.5*dti;
+         bd[3] = 0.0;
       }
       void inline loadbasis(class hpbasis& bas) { 
          b = bas;
@@ -165,9 +161,18 @@ class hp_mgrid : public spectral_hp {
       void getfres();
       void getcchng();
       int setfine(class hp_mgrid& tgt);
-      int setcoarse(class hp_mgrid& tgt);  
+      int setcoarse(class hp_mgrid& tgt); 
+
+/*		SETUP MESH DENSITY FUNCTION FOR ADAPTION */      
+      void density1();
+      void density2();
+      void outdensity(char *name);
+      
+/*		FOR FINEST MESH ONLY ADVANCE TIME SOLUTION */
+      void tadvance();
       
       friend class block;
+      friend class blocks;
 };
 
 

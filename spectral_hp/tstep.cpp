@@ -35,31 +35,23 @@ void hp_mgrid::tstep1(void) {
 		h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
 		
 		qmax = 0.0;
-#ifdef MOVING_MESH
 		for(j=0;j<3;++j) {
 			v0 = v[j];
-			q = pow(vug[v0][0]-0.5*mv[v0][0],2.0) 
-				+pow(vug[v0][1]-0.5*mv[v0][1],2.0);
+			q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] -dvrtdt[v0][0]),2.0) 
+				+pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] -dvrtdt[v0][1]),2.0);
 			qmax = MAX(qmax,q);
 		}
-#else
-		for(j=0;j<3;++j) {
-			v0 = v[j];
-			q = vug[v0][0]*vug[v0][0] +vug[v0][1]*vug[v0][1];
-			qmax = MAX(qmax,q);
-		}
-#endif
-		gbl->gam[tind] = qmax +(0.25*h*dt0 + gbl->nu/h)*(0.25*h*dt0 + gbl->nu/h);  
+		gbl->gam[tind] = qmax +(0.25*h*bd[0] + gbl->nu/h)*(0.25*h*bd[0] + gbl->nu/h);  
 		
 		q = sqrt(qmax);
 		c = sqrt(qmax+gbl->gam[tind]);
 		lam1  = (q+c);
 		
-		gbl->dtstar[tind]  = gbl->nu/(h*h) +lam1/h +dt0;
+		gbl->dtstar[tind]  = gbl->nu/(h*h) +lam1/h +bd[0];
 		gbl->dtstar[tind] *= jcb*gbl->rho;
 
 /*		SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau[tind]  = gbl->adis*h/(jcb*sqrt(gbl->gam[tind]));
+		gbl->tau[tind]  = adis*h/(jcb*sqrt(gbl->gam[tind]));
 		gbl->delt[tind] = qmax*gbl->tau[tind];
 		gbl->gam[tind] =  1.0/gbl->gam[tind];
 		for(i=0;i<3;++i) {

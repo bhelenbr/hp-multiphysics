@@ -130,22 +130,23 @@ class hpbasis {
       void intgrtx1d(FLT *f, FLT *rslt);
       
 /*		POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
-      void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s, FLT *pgx, FLT *pgn);
-      void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT **pgx, FLT **pgn);
-      void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x, FLT *pgx);
+      void ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s);
+      void ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s);
+      void ptprobe1d(int nv, FLT **lin, FLT *f, FLT x);
       
 /*	LOCAL STORAGE/WORK */
    private:
       static int wkpmax;
       static FLT **wk0,**wk1,**wk2,**wk3;
+      static FLT *pgx, *dpgx, *pgn, *dpgn; // FOR POINT PROBE
       
 /*		SETUP FUNCTIONS */
       void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
       void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
       void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
-      void ptvalues(FLT *pgx, FLT *pgn, FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
-      void ptvalues_bdry(FLT **pgx, FLT **pgn, FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
-      void ptvalues1d(FLT *pgx, FLT x);
+      void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
+      void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      void ptvalues1d(FLT x);
 };
 
 #if (FLT == double)

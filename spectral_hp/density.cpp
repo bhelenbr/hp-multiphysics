@@ -11,21 +11,12 @@
 #include<math.h>
 #include<utilities.h>
 
-FLT rhotemporary;
+/* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
-/* THIS FUNCTION WILL SET THE vlngth VALUES BASED ON THE TRUNCATION ERROR */
-
-void spectral_hp::density1(FLT trncerr, FLT min, FLT max) {
+void hp_mgrid::density1() {
    int i,j,v0,v1,indx,sind,bnum,count;
    FLT sum,u,v,ruv;
    class mesh *tgt;
-
-//   for(i=0;i<nvrtx;++i)
-//      vlngth[i] = 1.05*3.1415/20.0*(1.0  - 0.875*exp(-((vrtx[i][0] - center)*(vrtx[i][0] -center) + vrtx[i][1]*vrtx[i][1]) +0.5*0.5));
-//
-//   for(i=0;i<nvrtx;++i)
-//      vlngth[i] = 0.5;
-
    
    for(i=0;i<nvrtx;++i)
       fltwk[i] = 0.0;
@@ -35,10 +26,10 @@ void spectral_hp::density1(FLT trncerr, FLT min, FLT max) {
          for(i=0;i<nside;++i) {
             v0 = svrtx[i][0];
             v1 = svrtx[i][1];
-            u = fabs(vug[v0][0] +vug[v1][0]);
-            v = fabs(vug[v0][1] +vug[v1][1]);
-            ruv = rhotemporary*0.5*(u + v);
-            sum = ruv*(fabs(vug[v0][0] -vug[v1][0]) +fabs(vug[v0][1] -vug[v1][1])) +fabs(vug[v0][2] -vug[v1][2]);
+            u = fabs(ug.v[v0][0] +ug.v[v1][0]);
+            v = fabs(ug.v[v0][1] +ug.v[v1][1]);
+            ruv = gbl->rho*0.5*(u + v);
+            sum = ruv*(fabs(ug.v[v0][0] -ug.v[v1][0]) +fabs(ug.v[v0][1] -ug.v[v1][1])) +fabs(ug.v[v0][2] -ug.v[v1][2]);
             fltwk[v0] += sum;
             fltwk[v1] += sum;
          }
@@ -49,10 +40,10 @@ void spectral_hp::density1(FLT trncerr, FLT min, FLT max) {
          for(i=0;i<nside;++i) {
             v0 = svrtx[i][0];
             v1 = svrtx[i][1];
-            u = fabs(vug[v0][0] +vug[v1][0]);
-            v = fabs(vug[v0][1] +vug[v1][1]);
-            ruv = rhotemporary*0.5*(u + v);
-            sum = ruv*(fabs(sug[indx+b.sm -1][0]) +fabs(sug[indx+b.sm -1][1])) +fabs(sug[indx+b.sm -1][2]);
+            u = fabs(ug.v[v0][0] +ug.v[v1][0]);
+            v = fabs(ug.v[v0][1] +ug.v[v1][1]);
+            ruv = gbl->rho*0.5*(u + v);
+            sum = ruv*(fabs(ug.s[indx+b.sm -1][0]) +fabs(ug.s[indx+b.sm -1][1])) +fabs(ug.s[indx+b.sm -1][2]);
             fltwk[v0] += sum;
             fltwk[v1] += sum;
             indx += sm0;
@@ -61,12 +52,14 @@ void spectral_hp::density1(FLT trncerr, FLT min, FLT max) {
    }
    
    for(i=0;i<nvrtx;++i) {
-      fltwk[i] = pow(fltwk[i]/(nnbor[i]*trncerr),1./(b.p+1));
-//      fltwk[i] = MAX(0.5,fltwk[i]);
-//      fltwk[i] = MIN(2.0,fltwk[i]);
-      vlngth[i] /= fltwk[i];
-      vlngth[i] = MIN(vlngth[i],max);
-      vlngth[i] = MAX(vlngth[i],min);
+      fltwk[i] = pow(fltwk[i]/(nnbor[i]*gbl->trncerr),1./(b.p+1));
+      if (fltwk[i] <= gbl->tol || fltwk[i] >= 1./gbl->tol) {
+//      	fltwk[i] = MAX(0.5,fltwk[i]);
+//      	fltwk[i] = MIN(2.0,fltwk[i]);
+         vlngth[i] /= fltwk[i];
+         vlngth[i] = MIN(vlngth[i],gbl->maxlength);
+         vlngth[i] = MAX(vlngth[i],gbl->minlength);
+      }
    }
 
 /*	SEND COMMUNICATIONS TO ADJACENT MESHES */
@@ -90,7 +83,7 @@ void spectral_hp::density1(FLT trncerr, FLT min, FLT max) {
    
 }
 
-void spectral_hp::density2() {
+void hp_mgrid::density2() {
    int i,j,v0,sind,count;
 
    for(i=0;i<nsbd;++i) {
@@ -112,7 +105,7 @@ void spectral_hp::density2() {
 
 #include<string.h>
 
-void spectral_hp::outdensity(char *name) {
+void hp_mgrid::outdensity(char *name) {
    char fnmapp[100];
 	FILE *out;
 	int i,n,tind;

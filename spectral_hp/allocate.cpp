@@ -57,9 +57,9 @@ void spectral_hp::allocate(class hpbasis& bas) {
       pmax = b.p;
    }
    
-   vug = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-   sug = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
-   iug = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
+   ug.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+   ug.s = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
+   ug.i = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
    
    size = maxvst;
    

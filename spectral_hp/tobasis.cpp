@@ -10,14 +10,14 @@
 #include"spectral_hp.h"
 #include<myblas.h>
 
-void spectral_hp::tobasis(FLT (*func)(int, FLT, FLT)) {
+void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
 	int tind,i,j,m,n,indx,v0,v1,sind,info;
    char uplo[] = "U";
    
 /*	LOOP THROUGH VERTICES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         vug[i][n] = func(n,vrtx[i][0],vrtx[i][1]);
+         g.v[i][n] = func(n,vrtx[i][0],vrtx[i][1]);
          
    if (b.sm <= 0) return;
 
@@ -38,7 +38,7 @@ void spectral_hp::tobasis(FLT (*func)(int, FLT, FLT)) {
       }
       
       for(n=0;n<NV;++n)
-         b.proj1d(vug[v0][n],vug[v1][n],res[n][0]);
+         b.proj1d(g.v[v0][n],g.v[v1][n],res[n][0]);
 
       for(i=0;i<b.gpx; ++i)
          for(n=0;n<NV;++n)
@@ -51,7 +51,7 @@ void spectral_hp::tobasis(FLT (*func)(int, FLT, FLT)) {
       for(n=0;n<NV;++n) {
          PBTRS(uplo,b.sm,b.sbwth,1,b.sdiag1d[0],b.sbwth+1,&lf[n][2],b.sm,info);
          for(m=0;m<b.sm;++m) 
-            sug[indx+m][n] = -lf[n][2+m];
+            g.s[indx+m][n] = -lf[n][2+m];
       }
 	}
 	
@@ -82,7 +82,7 @@ void spectral_hp::tobasis(FLT (*func)(int, FLT, FLT)) {
 			b.intgrt(u[n],lf[n]);
 			DPBTRS(uplo,b.im,b.ibwth,1,b.idiag[0],b.ibwth+1,&lf[n][b.bm],b.im,info);
 			for(i=0;i<b.im;++i)
-				iug[indx+i][n] = -lf[n][b.bm+i];
+				g.i[indx+i][n] = -lf[n][b.bm+i];
 		}
 	}
    

@@ -24,9 +24,9 @@ spectral_hp& spectral_hp::operator=(const spectral_hp& tgt) {
    im0 = tgt.im0;
    
    if (size == 0) {
-      vug = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-      sug = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
-      iug = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
+      ug.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
+      ug.s = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
+      ug.i = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
       size = maxvst;
       
 /*	ALLOCATE STORAGE FOR BOUNDARIES */
@@ -40,15 +40,15 @@ spectral_hp& spectral_hp::operator=(const spectral_hp& tgt) {
       
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         vug[i][n] = tgt.vug[i][n];
+         ug.v[i][n] = tgt.ug.v[i][n];
          
    for(i=0;i<nside*sm0;++i)
       for(n=0;n<NV;++n)
-         sug[i][n] = tgt.sug[i][n];
+         ug.s[i][n] = tgt.ug.s[i][n];
          
    for(i=0;i<ntri*im0;++i)
       for(n=0;n<NV;++n)
-         iug[i][n] = tgt.iug[i][n];
+         ug.i[i][n] = tgt.ug.i[i][n];
          
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry[i].num*(1+sm0) +1;++j)

@@ -21,7 +21,7 @@ void hp_mgrid::getfres() {
 /* 	TRANSFER IS ON FINE MESH */
 		for(i=0;i<nvrtx;++i)
 			for(n=0;n<NV;++n)
-				gbl->vres0[i][n] = gbl->vres[i][n];
+				gbl->res0.v[i][n] = gbl->res.v[i][n];
 
       if (b.p > 1) {
          indx = 0;
@@ -29,7 +29,7 @@ void hp_mgrid::getfres() {
          for(i=0;i<nside;++i) {
             for (j=0;j<b.sm;++j) {
                for(n=0;n<NV;++n)
-                  gbl->sres0[indx][n] = gbl->sres[indx1][n];
+                  gbl->res0.s[indx][n] = gbl->res.s[indx1][n];
                ++indx;
                ++indx1;
             }
@@ -43,7 +43,7 @@ void hp_mgrid::getfres() {
 					for(m=1;m<b.sm;++m) {
 						for(k=0;k<b.sm-m;++k) {
 							for(n=0; n<NV; ++n)
-								gbl->ires0[indx][n] = gbl->ires[indx1][n];
+								gbl->res0.i[indx][n] = gbl->res.i[indx1][n];
 							++indx;
                      ++indx1;
 						}
@@ -59,7 +59,7 @@ void hp_mgrid::getfres() {
 /* TRANSFER IS BETWEEN DIFFERENT MESHES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         gbl->vres0[i][n] = 0.0;
+         gbl->res0.v[i][n] = 0.0;
          
 /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
    for(i=0;i<fmesh->nvrtx;++i) {
@@ -67,7 +67,7 @@ void hp_mgrid::getfres() {
       for(j=0;j<3;++j) {
          v0 = tvrtx[tind][j];
          for(n=0;n<NV;++n)
-            gbl->vres0[v0][n] += fmesh->coarse[i].wt[j]*gbl->vres[i][n];
+            gbl->res0.v[v0][n] += fmesh->coarse[i].wt[j]*gbl->res.v[i][n];
       }
    }
    
@@ -77,15 +77,15 @@ void hp_mgrid::getfres() {
       tind = fine[i].tri;
 
       for(n=0;n<NV;++n)
-         vug[i][n] = 0.0;
+         ug.v[i][n] = 0.0;
          
       for(j=0;j<3;++j) {
          for(n=0;n<NV;++n)
-            vug[i][n] += fine[i].wt[j]*fmesh->vug[fmesh->tvrtx[tind][j]][n];
+            ug.v[i][n] += fine[i].wt[j]*fmesh->ug.v[fmesh->tvrtx[tind][j]][n];
       }
       
       for(n=0;n<NV;++n)
-         vug_frst[i][n] = vug[i][n];
+         vug_frst[i][n] = ug.v[i][n];
    }
 
    return;

@@ -74,17 +74,11 @@ int main(int argc, char **argv) {
 //   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
 //   9  7.569496e-05  3.783905e-05  1.604564e-04
 
-   myblock.init(1,2,0,argv[1]);
-   myblock.tadvance();
-   for(i=0;i<10;++i) {
-      myblock.cycle(1);
-      printf("%d ",i);
-      myblock.print_maxres();
-      printf("\n");
-   }
+   myblock.init(argv[1]);
+   myblock.go();
    
-   myblock.output("hope1",tecplot);
-
+   
+   
    return(0);
 }
 

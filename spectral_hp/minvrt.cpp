@@ -17,7 +17,7 @@ void hp_mgrid::minvrt1(void) {
             for (i=0; i<2; ++i) {
                v0 = svrtx[sind][i];
 					for(n=0;n<NV;++n)
-						gbl->vres[v0][n] -= b.sfmv[i][k]*gbl->sres[indx][n];
+						gbl->res.v[v0][n] -= b.sfmv[i][k]*gbl->res.s[indx][n];
             }
             ++indx;
 			}
@@ -32,7 +32,7 @@ void hp_mgrid::minvrt1(void) {
 					v0 = tvrtx[tind][i];
 					for (k=0;k<b.im;++k)
 						for(n=0;n<NV;++n)
-							gbl->vres[v0][n] -= b.ifmb[i][k]*gbl->ires[indx +k][n];
+							gbl->res.v[v0][n] -= b.ifmb[i][k]*gbl->res.i[indx +k][n];
 
 					indx1 = tside[tind].side[(i+2)%3]*b.sm;
 					sgn = tside[tind].sign[(i+2)%3];
@@ -40,7 +40,7 @@ void hp_mgrid::minvrt1(void) {
 					for (j=0;j<b.sm;++j) {
 						for (k=0;k<b.im;++k) 
 							for(n=0;n<NV;++n)
-								gbl->sres[indx1][n] -= msgn*b.ifmb[indx2][k]*gbl->ires[indx+k][n];
+								gbl->res.s[indx1][n] -= msgn*b.ifmb[indx2][k]*gbl->res.i[indx+k][n];
 						msgn *= sgn;
                   ++indx1;
                   ++indx2;
@@ -48,11 +48,11 @@ void hp_mgrid::minvrt1(void) {
 				}
 
 /*				MULTIPLY INTERIOR MATRIX * LOCAL FORCING FOR INTERIOR MODES */		
-				DPBSLN(b.idiag,b.im,b.ibwth,&(gbl->ires[indx][0]),NV);
+				DPBSLN(b.idiag,b.im,b.ibwth,&(gbl->res.i[indx][0]),NV);
 				for(i=0;i<b.im;++i) {
-					gbl->ires[indx][0] /= gbl->dtstar[tind];
-					gbl->ires[indx][1] /= gbl->dtstar[tind];
-					gbl->ires[indx][2] /= gbl->gam[tind]*gbl->dtstar[tind]*gbl->rhoi;
+					gbl->res.i[indx][0] /= gbl->dtstar[tind];
+					gbl->res.i[indx][1] /= gbl->dtstar[tind];
+					gbl->res.i[indx][2] /= gbl->gam[tind]*gbl->dtstar[tind]*gbl->rhoi;
                ++indx;
 				}
 			}
@@ -83,9 +83,9 @@ void hp_mgrid::minvrt2(void) {
 
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
-		gbl->vres[i][0] *= gbl->vdiagv[i];
-		gbl->vres[i][1] *= gbl->vdiagv[i];
-		gbl->vres[i][2] *= gbl->vdiagp[i];
+		gbl->res.v[i][0] *= gbl->vdiagv[i];
+		gbl->res.v[i][1] *= gbl->vdiagv[i];
+		gbl->res.v[i][2] *= gbl->vdiagp[i];
 	}
    
 /*	REMOVE VERTEX CONTRIBUTION FROM INTERIOR & SIDE MODES */
@@ -95,9 +95,9 @@ void hp_mgrid::minvrt2(void) {
 		for(tind=0;tind<ntri;++tind) {
 			for(i=0;i<3;++i) {
             v0 = tvrtx[tind][i];
-				uht[0][i] = gbl->vres[v0][0]*gbl->dtstar[tind];
-				uht[1][i] = gbl->vres[v0][1]*gbl->dtstar[tind];
-				uht[2][i] = gbl->vres[v0][2]*gbl->dtstar[tind]*gbl->gam[tind]*gbl->rhoi;
+				uht[0][i] = gbl->res.v[v0][0]*gbl->dtstar[tind];
+				uht[1][i] = gbl->res.v[v0][1]*gbl->dtstar[tind];
+				uht[2][i] = gbl->res.v[v0][2]*gbl->dtstar[tind]*gbl->gam[tind]*gbl->rhoi;
 			}
 
 			for(i=0;i<3;++i) {
@@ -107,9 +107,9 @@ void hp_mgrid::minvrt2(void) {
 					indx1 = (i+j+1)%3;  // BASIS AND GLOBAL HAVE DIFFERENT ORDERING!
 					msgn = 1;
 					for(k=0;k<b.sm;++k) {
-						gbl->sres[indx +k][0] -= msgn*b.vfms[j][k]*uht[0][indx1];
-						gbl->sres[indx +k][1] -= msgn*b.vfms[j][k]*uht[1][indx1];
-						gbl->sres[indx +k][2] -= msgn*b.vfms[j][k]*uht[2][indx1];
+						gbl->res.s[indx +k][0] -= msgn*b.vfms[j][k]*uht[0][indx1];
+						gbl->res.s[indx +k][1] -= msgn*b.vfms[j][k]*uht[1][indx1];
+						gbl->res.s[indx +k][2] -= msgn*b.vfms[j][k]*uht[2][indx1];
 						msgn *= sgn;
 					}
 				}
@@ -125,7 +125,7 @@ void hp_mgrid::minvrt2(void) {
          surfinvrt2(i);
          
 //   for(i=0;i<nvrtx;++i)
-//      printf("%d %f %f %f\n",i,gbl->vres[i][0],gbl->vres[i][1],gbl->vres[i][2]);
+//      printf("%d %f %f %f\n",i,gbl->res.v[i][0],gbl->res.v[i][1],gbl->res.v[i][2]);
 
    return;
 }
@@ -145,9 +145,9 @@ void hp_mgrid::minvrt3(int mode) {
 /*	SOLVE FOR MODE */
    indx = mode;
    for(sind = 0; sind < nside; ++sind) {
-      gbl->sres[indx][0] *= gbl->sdiagv[sind]*b.sdiag[mode];
-      gbl->sres[indx][1] *= gbl->sdiagv[sind]*b.sdiag[mode];
-      gbl->sres[indx][2] *= gbl->sdiagp[sind]*b.sdiag[mode];
+      gbl->res.s[indx][0] *= gbl->sdiagv[sind]*b.sdiag[mode];
+      gbl->res.s[indx][1] *= gbl->sdiagv[sind]*b.sdiag[mode];
+      gbl->res.s[indx][2] *= gbl->sdiagp[sind]*b.sdiag[mode];
       indx += b.sm;
    }
 
@@ -157,9 +157,9 @@ void hp_mgrid::minvrt3(int mode) {
          side[i] = tside[tind].side[i]*b.sm;
          sign[i] = tside[tind].sign[i];
          sgn     = (mode % 2 ? sign[i] : 1);
-         uht[0][i] = sgn*gbl->sres[side[i]+mode][0]*gbl->dtstar[tind];
-         uht[1][i] = sgn*gbl->sres[side[i]+mode][1]*gbl->dtstar[tind];
-         uht[2][i] = sgn*gbl->sres[side[i]+mode][2]*gbl->dtstar[tind]*gbl->gam[tind]*gbl->rhoi;
+         uht[0][i] = sgn*gbl->res.s[side[i]+mode][0]*gbl->dtstar[tind];
+         uht[1][i] = sgn*gbl->res.s[side[i]+mode][1]*gbl->dtstar[tind];
+         uht[2][i] = sgn*gbl->res.s[side[i]+mode][2]*gbl->dtstar[tind]*gbl->gam[tind]*gbl->rhoi;
       }
       
 /*		REMOVE MODES J,K FROM MODE I,M */
@@ -169,7 +169,7 @@ void hp_mgrid::minvrt3(int mode) {
             for(j=0;j<3;++j) {
                indx = (i+j)%3;
                for(n=0;n<NV;++n) 
-                  gbl->sres[side[i]+m][n] -= msgn*b.sfms[mode][m][j]*uht[n][indx];
+                  gbl->res.s[side[i]+m][n] -= msgn*b.sfms[mode][m][j]*uht[n][indx];
             }
             msgn *= sign[i];
          }
@@ -192,9 +192,9 @@ void hp_mgrid::minvrt4() {
    bdry_rcvandzero(indx);
 
    for(sind = 0; sind < nside; ++sind) {
-      gbl->sres[indx][0] *= gbl->sdiagv[sind]*b.sdiag[b.sm-1];
-      gbl->sres[indx][1] *= gbl->sdiagv[sind]*b.sdiag[b.sm-1];
-      gbl->sres[indx][2] *= gbl->sdiagp[sind]*b.sdiag[b.sm-1];
+      gbl->res.s[indx][0] *= gbl->sdiagv[sind]*b.sdiag[b.sm-1];
+      gbl->res.s[indx][1] *= gbl->sdiagv[sind]*b.sdiag[b.sm-1];
+      gbl->res.s[indx][2] *= gbl->sdiagp[sind]*b.sdiag[b.sm-1];
       indx += b.sm;
    }
    
@@ -206,7 +206,7 @@ void hp_mgrid::minvrt4() {
          for(k=0;k<b.im;++k) {
             for (i=0;i<b.bm;++i) 
                for(n=0;n<NV;++n) 
-                  gbl->ires[indx][n] -= b.bfmi[i][k]*uht[n][i];
+                  gbl->res.i[indx][n] -= b.bfmi[i][k]*uht[n][i];
             ++indx;
          }
       }
@@ -222,7 +222,7 @@ void hp_mgrid::restouht_bdry(int tind) {
 	for (i=0; i<3; ++i) {
 		indx = tvrtx[tind][i];
 		for(n=0; n<NV; ++n)
-			uht[n][i] = gbl->vres[indx][n];
+			uht[n][i] = gbl->res.v[indx][n];
 	}
 
 /* SIDE ORDERING OF MESH IS DIFFERENT THAN BASIS BASIS 0,1,2 = MESH 2,0,1 */
@@ -232,7 +232,7 @@ void hp_mgrid::restouht_bdry(int tind) {
    msgn = 1;
    for (m = 0; m < b.sm; ++m) {
       for(n=0; n<NV; ++n)
-         uht[n][cnt] = msgn*gbl->sres[indx +m][n];
+         uht[n][cnt] = msgn*gbl->res.s[indx +m][n];
       msgn *= sign;
       ++cnt;
    }
@@ -242,7 +242,7 @@ void hp_mgrid::restouht_bdry(int tind) {
    msgn = 1;
    for (m = 0; m < b.sm; ++m) {
       for(n=0; n<NV; ++n)
-         uht[n][cnt] = msgn*gbl->sres[indx +m][n];
+         uht[n][cnt] = msgn*gbl->res.s[indx +m][n];
       msgn *= sign;
       ++cnt;
    }
@@ -252,7 +252,7 @@ void hp_mgrid::restouht_bdry(int tind) {
    msgn = 1;
    for (m = 0; m < b.sm; ++m) {
       for(n=0; n<NV; ++n)
-         uht[n][cnt] = msgn*gbl->sres[indx +m][n];
+         uht[n][cnt] = msgn*gbl->res.s[indx +m][n];
       msgn *= sign;
       ++cnt;
    }

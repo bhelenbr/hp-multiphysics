@@ -11,7 +11,7 @@
 #include<math.h>
 
 /* RETURNS VALUES OF GX POLYNOMIALS & GS POLYNOMIALS AT POINT */
-void hpbasis::ptvalues(FLT *pgx, FLT *pgn, FLT x, FLT eta) {
+void hpbasis::ptvalues(FLT x, FLT eta) {
 	static FLT pkp,pk,pkm;
 	static int k,m,ind;
    
@@ -82,19 +82,19 @@ void hpbasis::ptvalues(FLT *pgx, FLT *pgn, FLT x, FLT eta) {
 }
 
 /*	CALCULATE VALUE OF G(X) & DG/DX, G(eta), DG/Deta AT POINT FOR ONLY BOUNDARY MODES */
-void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
+void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
 	FLT pkp,pk,pkm,dpk,dpkm,dpkp;
 	int m,n,ind;
 
 /*	CALCULATE VALUES OF PSI POLYNOMIALS AT POINT */
-   pgx[0][0] = .5*(1-x);
-   pgx[1][0] = -0.5;
+   pgx[0] = .5*(1-x);
+   dpgx[0] = -0.5;
    
-   pgx[0][1] = .5*(1+x);
-   pgx[1][1] = 0.5;
+   dpgx[1] = .5*(1+x);
+   dpgx[1] = 0.5;
    
-   pgx[0][2] = 1.0;
-   pgx[1][2] = 0.0;
+   pgx[2] = 1.0;
+   dpgx[2] = 0.0;
 
 /*	SIDE 1	*/
 /*	CALCULATE P, P' USING RECURSION RELATION */
@@ -103,8 +103,8 @@ void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
    dpk = 0.0;
    dpkm = 0.0;
    for (m = 0;m < sm;++m) {
-      pgx[0][m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
-      pgx[1][m+3] = (-x*.5*pk +(1.+x)*(1.-x)*.25*dpk)*norm[m+2];
+      pgx[m+3] = (1.+x)*(1.-x)*.25*pk*norm[m+3];
+      dpgx[m+3] = (-x*.5*pk +(1.+x)*(1.-x)*.25*dpk)*norm[m+2];
       pkp = (x-a0[0][m])*pk - b0[0][m]*pkm;
       dpkp = pk + (x-a0[0][m])*dpk - b0[0][m]*dpkm;
       dpkm = dpk;
@@ -119,24 +119,24 @@ void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
    ind = 0;
 
 /*	VERTEX A	*/
-   pgn[0][ind] = (1-eta)*.5;
-   pgn[1][ind] = -.5;
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind] = -.5;
    ++ind;
    
 /*	VERTEX B  */
-   pgn[0][ind] = (1-eta)*.5;
-   pgn[1][ind] = -.5;
+   pgn[ind] = (1-eta)*.5;
+   dpgn[ind] = -.5;
    ++ind;
 
 /*	VERTEX C	 */	
-   pgn[0][ind] = (1+eta)*.5;
-   pgn[1][ind] = .5;
+   pgn[ind] = (1+eta)*.5;
+   dpgn[ind] = .5;
    ++ind;
 
 /*	SIDE 1 (s)		*/
    for(m = 2; m <= sm+1; ++m) {
-      pgn[0][ind] = pow(.5*(1-eta),m);
-      pgn[1][ind] = -.5*m*pow(.5*(1.-eta),m-1);
+      pgn[ind] = pow(.5*(1-eta),m);
+      dpgn[ind] = -.5*m*pow(.5*(1.-eta),m-1);
       ++ind;
    }
 
@@ -146,8 +146,8 @@ void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
    dpk = 0.0;
    dpkm = 0.0;
    for(n=0;n<sm;++n) {
-      pgn[0][ind] = (1.-eta)*(1.+eta)*.25*pk*norm[n+3];;		
-      pgn[1][ind] = -.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk;
+      pgn[ind] = (1.-eta)*(1.+eta)*.25*pk*norm[n+3];;		
+      dpgn[ind] = -.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk;
       pkp = (eta-a0[1][n])*pk - b0[1][n]*pkm;
       dpkp = pk + (eta-a0[1][n])*dpk - b0[1][n]*dpkm;
       dpkm = dpk;
@@ -164,8 +164,8 @@ void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
    dpkm = 0.0;
 
    for(n=0;n<sm;++n) {
-      pgn[0][ind] = (n % 2 ? -1 : 1)*(1.-eta)*(1.+eta)*.25*pk;
-      pgn[1][ind] = (n % 2 ? -1 : 1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk);
+      pgn[ind] = (n % 2 ? -1 : 1)*(1.-eta)*(1.+eta)*.25*pk;
+      dpgn[ind] = (n % 2 ? -1 : 1)*(-.5*eta*pk +(1.-eta)*(1.+eta)*.25*dpk);
       pkp = (eta-a0[1][n])*pk - b0[1][n]*pkm;
       dpkp = pk + (eta-a0[1][n])*dpk - b0[1][n]*dpkm;
       dpkm = dpk;
@@ -178,7 +178,7 @@ void hpbasis::ptvalues_bdry(FLT **pgx, FLT **pgn, FLT x, FLT eta) {
    return;
 }
 
-void hpbasis::ptvalues1d(FLT *pgx, FLT x) {
+void hpbasis::ptvalues1d(FLT x) {
 	static FLT pkp,pk,pkm;
 	static int m;
    
@@ -201,14 +201,14 @@ void hpbasis::ptvalues1d(FLT *pgx, FLT x) {
 }
 
 
-void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s, FLT *pgx, FLT *pgn) {
+void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s) {
    static int k,m,n,ind;
    static FLT x,eta;
    
    x = 2.0*(1+r)/(1-s) -1.0;
    eta = s;
    
-   ptvalues(pgx,pgn,x,eta);
+   ptvalues(x,eta);
    
    for(n=0;n<nv;++n) {
    
@@ -254,14 +254,14 @@ void hpbasis::ptprobe(int nv, FLT **lin, FLT *f, FLT r, FLT s, FLT *pgx, FLT *pg
    return;
 }
 
-void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT **pgx, FLT **pgn) {
+void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s) {
    static int k,m,n;
    static FLT n0,x0,x,eta;
    
    x = 2.0*(1+r)/(1-s) -1.0;
    eta = s;
    
-   ptvalues_bdry(pgx,pgn,x,eta);
+   ptvalues_bdry(x,eta);
    
    for(n=0;n<nv;++n) {
 
@@ -270,39 +270,39 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
 		
 /*		SUM FOR N=1		*/
 /*		VERTEX A			*/
-		wk0[0][0] = lin[n][0]*pgn[0][0];
-		wk1[0][0] = lin[n][0]*pgn[1][0];
+		wk0[0][0] = lin[n][0]*pgn[0];
+		wk1[0][0] = lin[n][0]*dpgn[0];
 
 /*		SIDE 3		*/
 		for(m = 2*sm+3; m < bm; ++m ) {
-			wk0[0][0] += lin[n][m]*pgn[0][m];
-			wk1[0][0] += lin[n][m]*pgn[1][m];
+			wk0[0][0] += lin[n][m]*pgn[m];
+			wk1[0][0] += lin[n][m]*dpgn[m];
 		}			
 		wk2[0][0] = wk0[0][0]*n0;
 			
   
 /*		SUM FOR N=2		*/
 /*		VERTEX B			*/
-		wk0[1][0] = lin[n][1]*pgn[0][1];
-		wk1[1][0] = lin[n][1]*pgn[1][1];
+		wk0[1][0] = lin[n][1]*pgn[1];
+		wk1[1][0] = lin[n][1]*dpgn[1];
 
 /*		SIDE 2		*/
 		for (m = sm+3; m < 2*sm+3; ++m) {
-			wk0[1][0] += lin[n][m]*pgn[0][m];
-			wk1[1][0] += lin[n][m]*pgn[1][m];
+			wk0[1][0] += lin[n][m]*pgn[m];
+			wk1[1][0] += lin[n][m]*dpgn[m];
 		}			
  		wk2[1][0] = wk0[1][0]*n0;
 
 /*		SUM FOR N=3		*/
 /*		VERTEX C			*/
-		wk0[2][0] = lin[n][2]*pgn[0][2];
-		wk1[2][0] = lin[n][2]*pgn[1][2];
+		wk0[2][0] = lin[n][2]*pgn[2];
+		wk1[2][0] = lin[n][2]*dpgn[2];
 		wk2[2][0] = wk0[2][0]*n0;
 
 		for(m = 3; m < sm+3; ++m) {
 /*			SIDE 1		*/
-			wk0[m][0] = lin[n][m]*pgn[0][m];
-			wk1[m][0] = lin[n][m]*pgn[1][m];
+			wk0[m][0] = lin[n][m]*pgn[m];
+			wk1[m][0] = lin[n][m]*dpgn[m];
 	 		wk2[m][0] = wk0[m][0]*n0;
 		}
 	 	
@@ -313,19 +313,19 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
       dy[n] = 0.0;
 
       for(k=0; k < nmodx; ++k ) {	  
-         f[n]	+= wk0[k][0]*pgx[0][k];
-         dy[n] += wk1[k][0]*pgx[0][k];
-         dx[n] += wk2[k][0]*pgx[1][k];
+         f[n]	+= wk0[k][0]*pgx[k];
+         dy[n] += wk1[k][0]*pgx[k];
+         dx[n] += wk2[k][0]*dpgx[k];
       }
       dy[n] += x0*dx[n];
 	}
    return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x, FLT *pgx) {
+void hpbasis::ptprobe1d(int nv, FLT **lin, FLT *f, FLT x) {
    static int k,n;
     
-   ptvalues1d(pgx,x);
+   ptvalues1d(x);
 /*	SUM OVER N X MODES	*/  	
    
    for(n=0;n<nv;++n) {

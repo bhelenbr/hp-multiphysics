@@ -22,27 +22,27 @@ void hp_mgrid::getcchng(void) {
 /* DETERMINE CORRECTIONS ON COARSE MESH   */   
    for(i=0;i<cmesh->nvrtx;++i)
       for(n=0;n<NV;++n) 
-         cmesh->vug_frst[i][n] -= cmesh->vug[i][n];
+         cmesh->vug_frst[i][n] -= cmesh->ug.v[i][n];
 
 /* LOOP THROUGH FINE VERTICES   */
 /* TO DETERMINE CHANGE IN SOLUTION */   
    for(i=0;i<nvrtx;++i) {
       
       for(n=0;n<NV;++n)
-         gbl->vres[i][n] = 0.0;
+         gbl->res.v[i][n] = 0.0;
       
       tind = coarse[i].tri;
       
       for(j=0;j<3;++j) {
          ind = cmesh->tvrtx[tind][j];
          for(n=0;n<NV;++n) 
-            gbl->vres[i][n] -= coarse[i].wt[j]*cmesh->vug_frst[ind][n];
+            gbl->res.v[i][n] -= coarse[i].wt[j]*cmesh->vug_frst[ind][n];
       }
    }
    
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n) 
-         vug[i][n] += gbl->vres[i][n];
+         ug.v[i][n] += gbl->res.v[i][n];
 
    return;
 }

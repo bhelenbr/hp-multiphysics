@@ -10,7 +10,7 @@
 #include "spectral_hp.h"
 #include<cstring>
 
-void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
+void spectral_hp::output(struct vsi g, char *name, FILETYPE typ = tecplot) {
    char fnmapp[100];
 	FILE *out;
 	int i,j,k,n,v0,v1,sind,tind,indx,sgn;
@@ -37,19 +37,19 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
 
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",vug[i][n]);
+               fprintf(out,"%15.8e ",g.v[i][n]);
             fprintf(out,"\n");
          }
          
          for(i=0;i<nside*sm0;++i) {
             for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",sug[i][n]);
+               fprintf(out,"%15.8e ",g.s[i][n]);
             fprintf(out,"\n");
          }
          
          for(i=0;i<ntri*im0;++i) {
             for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",iug[i][n]);
+               fprintf(out,"%15.8e ",g.i[i][n]);
             fprintf(out,"\n");
          }
 
@@ -78,7 +78,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
             for(n=0;n<ND;++n)
                fprintf(out,"%e ",vrtx[i][n]);
             for(n=0;n<NV;++n)
-               fprintf(out,"%.6e ",vug[i][n]);					
+               fprintf(out,"%.6e ",g.v[i][n]);					
             fprintf(out,"\n");
          }
          
@@ -219,7 +219,7 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
  	return;
 }
 
-void spectral_hp::input(char *name, FILETYPE typ = text) {
+void spectral_hp::input(struct vsi g, char *name, FILETYPE typ = text) {
    int i,j,k,m,n,pin,indx;
    int bnum,bind,ierr;
    FILE *in;
@@ -246,7 +246,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
 
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n)
-               fscanf(in,"%le ",&vug[i][n]);
+               fscanf(in,"%le ",&g.v[i][n]);
             fscanf(in,"\n");
          }
          
@@ -254,7 +254,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
          for(i=0;i<nside;++i) {
             for(m=0;m<(pin-1);++m) {
                for(n=0;n<NV;++n)
-                  fscanf(in,"%le ",&sug[indx][n]);
+                  fscanf(in,"%le ",&g.s[indx][n]);
                fscanf(in,"\n");
                ++indx;
             }
@@ -266,7 +266,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
             for(m=1;m<pin-1;++m) {
                for(k=0;k<pin-1-m;++k) {
                   for(n=0;n<NV;++n) 
-                     fscanf(in,"%le ",&iug[indx][n]);
+                     fscanf(in,"%le ",&g.i[indx][n]);
                   fscanf(in,"\n");
                   ++indx;
                }
@@ -302,7 +302,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
          
          for(i=0;i<nvrtx;++i) {
             ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
-            &vrtx[i][0],&vrtx[i][1],&vug[i][0],&vug[i][1],&vug[i][2]);
+            &vrtx[i][0],&vrtx[i][1],&g.v[i][0],&g.v[i][1],&g.v[i][2]);
             if(ierr != 5) {
                printf("error in read file %d\n",i);
                exit(1);
@@ -317,7 +317,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le %le %le %*e %*e\n",
                   &binfo[bnum][bind+m].curv[0],&binfo[bnum][bind+m].curv[1],
-                  &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
+                  &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
                   if(ierr != 5) {
                      printf("error in reading curved side %d\n",i);
                      exit(1);
@@ -327,7 +327,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
             else {
                for(m=0;m<b.sm;++m) {
                   ierr = fscanf(in,"%le %le %le\n",
-                  &sug[indx+m][0],&sug[indx+m][1],&sug[indx+m][2]);
+                  &g.s[indx+m][0],&g.s[indx+m][1],&g.s[indx+m][2]);
                   if(ierr != 3) {
                      printf("error in reading straight side %d\n",i);
                      exit(1);
@@ -339,7 +339,7 @@ void spectral_hp::input(char *name, FILETYPE typ = text) {
          if (b.im > 0) {
             for(i=0;i<b.im*ntri;++i) {
                ierr = fscanf(in,"%le %le %le\n",
-               &iug[i][0],&iug[i][1],&iug[i][2]);
+               &g.i[i][0],&g.i[i][1],&g.i[i][2]);
                if(ierr != 3) {
                   printf("error in read file6\n");
                   exit(1);

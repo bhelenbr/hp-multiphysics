@@ -3,6 +3,9 @@
 #include<assert.h>
 #include<utilities.h>
 
+FLT surface::fadd[ND];
+FLT surface::cfl[MXLG2P][ND];
+
 void surface::alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls *store) {
    int i,p;
    
@@ -93,7 +96,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
    drhor = (gbl->rho -srf->gbl->rho2)/(gbl->rho +srf->gbl->rho2);
       
 /*	CONSERVE AREA FOR STEADY CLOSED BDRY PROBLEMS */	
-//   if (dt0 == 0.0) dnormdt = srf->gbl->lamv*cnsrvarea(bnum);
+//   if (bd[0] == 0.0) dnormdt = srf->gbl->lamv*cnsrvarea(bnum);
 //   else dnormdt = 0.0;
 
 /**************************************************/
@@ -113,7 +116,7 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 //      for(n=0;n<ND;++n)
 //         b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
 
-/*		UG STORES THE CURRENT BOUNDARY POSITION */         
+/*		UG STORES THE CURRENT BOUNDARY POSITION */
 		for(n=0;n<ND;++n) {
          uht[n][0] = srf->vug[indx][n];
          uht[n][1] = srf->vug[indx+1][n];
@@ -127,6 +130,10 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
 
       for(n=0;n<ND;++n)
          b.proj1d(uht[n],crd[n][0],dcrd[n][0][0]);
+         
+      crdtouht1d(sind,dvrtdt,gbl->dbinfodt);
+      for(n=0;n<ND;++n)
+         b.proj1d(uht[n],crd[n][1]);
 
       ugtouht1d(sind);
       for(n=0;n<ND;++n)
@@ -138,12 +145,12 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
          jcb = sqrt(norm[0]*norm[0] +norm[1]*norm[1]);
 /*			FIGURE OUT WHAT TO DO HERE FOR RELATIVE VELOCITY STORED IN CRD[N][1]*/
          for(n=0;n<ND;++n)
-            crd[n][1][i] = u[n][0][i] -(dt0*crd[n][0][i] +dnormdt*norm[n]/jcb); // PLUS DX/DT TERMS!!?? 
+            crd[n][1][i] = u[n][0][i] -(bd[0]*crd[n][0][i] +crd[n][1][i] +dnormdt*norm[n]/jcb); 
             
          hsm = jcb/(.25*(b.p+1)*(b.p+1));
          tau = (crd[0][1][i]*dcrd[0][0][0][i] +crd[1][1][i]*dcrd[1][0][0][i])/jcb;
-         tabs = fabs(tau) + FLT_EPSILON;  // TEMPORARY CHANGE TO EPSILON
-         tau = tau/(jcb*(tabs/hsm +dt0 +(sigor/(hsm*hsm) +drhor*g*fabs(norm[1]/jcb))/tabs));
+         tabs = fabs(tau) + EPSILON;
+         tau = tau/(jcb*(tabs/hsm +bd[0] +(sigor/(hsm*hsm) +drhor*g*fabs(norm[1]/jcb))/tabs));
 
 /*			TANGENTIAL SPACING & NORMAL FLUX */            
          res[0][0][i] = srf->ksprg[indx]*jcb;
@@ -201,11 +208,11 @@ void hp_mgrid::surfrsdl(int bnum, int mgrid) {
       if (isfrst) {
          for(i=0;i<sbdry[bnum].num+1;++i) {
             for(n=0;n<ND;++n)
-               srf->vdres[log2p][i][n] = srf->gbl->fadd[n]*srf->gbl->vres0[i][n] -srf->gbl->vres[i][n];
+               srf->vdres[log2p][i][n] = surface::fadd[n]*srf->gbl->vres0[i][n] -srf->gbl->vres[i][n];
          }
          for(i=0;i<sbdry[bnum].num*b.sm;++i) {
             for(n=0;n<ND;++n)
-               srf->sdres[log2p][i][n] = srf->gbl->fadd[n]*srf->gbl->sres0[i][n] -srf->gbl->sres[i][n];
+               srf->sdres[log2p][i][n] = surface::fadd[n]*srf->gbl->sres0[i][n] -srf->gbl->sres[i][n];
          }
       }
       for(i=0;i<sbdry[bnum].num+1;++i) {
@@ -422,17 +429,14 @@ void hp_mgrid::surfdt1(int bnum) {
 		nrm[1] = -0.5*(vrtx[v1][0] -vrtx[v0][0]);
 		h = 2.0*sqrt(nrm[0]*nrm[0] +nrm[1]*nrm[1]);
  
-#ifdef MOVING_MESH
-		vslp = fabs(-((vug[v0][0]-mv[v0][0])+(ug[v1][0]-mv[v1][0]))*nrm[1]/h
-				   +((ug[v0][1]-mv[v0][1])+(ug[v1][1]-mv[v1][1]))*nrm[0]/h);
-#else
-      vslp = fabs(-(vug[v0][0] +vug[v1][0])*nrm[1]/h +(vug[v0][1]+vug[v1][1])*nrm[0]/h);
-#endif
+		vslp = fabs(-((ug.v[v0][0]-(bd[0]*vrtx[v0][0] -dvrtdt[v0][0]))+(ug.v[v1][0]-(bd[0]*vrtx[v1][0] -dvrtdt[v1][0])))*nrm[1]/h
+				   +((ug.v[v0][1]-(bd[0]*vrtx[v0][1] -dvrtdt[v0][1]))+(ug.v[v1][1]-(bd[0]*vrtx[v1][1] -dvrtdt[v1][1])))*nrm[0]/h);
+
 		hsm = h/(.25*(b.p+1)*(b.p+1));
 
 		strss = srf->gbl->sigma/(hsm*hsm) + drho*g*2.*fabs(nrm[1]/h);
-		cnvct = dt0 + vslp/hsm;
-		dtfli = smu/(srho*hsm*hsm) +vslp/hsm +dt0;
+		cnvct = bd[0] + vslp/hsm;
+		dtfli = smu/(srho*hsm*hsm) +vslp/hsm +bd[0];
 		dttang  = 2.*srf->ksprg[indx]*(.25*(b.p+1)*(b.p+1))/hsm;
 		dtnorm  = srho*hsm*cnvct*dtfli +strss;
 		srf->gbl->normc[indx] = srho*hsm*cnvct*dtfli/dtnorm;
@@ -541,11 +545,11 @@ void hp_mgrid::surfdt2(int bnum) {
 		jcbi = 1.0/(srf->gbl->vdt[indx][0][0]*srf->gbl->vdt[indx][1][1] 
 					  -srf->gbl->vdt[indx][0][1]*srf->gbl->vdt[indx][1][0]);
 
-		temp = srf->gbl->vdt[indx][0][0]*jcbi*srf->gbl->cfl[log2p][1];
-		srf->gbl->vdt[indx][0][0] = srf->gbl->vdt[indx][1][1]*jcbi*srf->gbl->cfl[log2p][0];
+		temp = srf->gbl->vdt[indx][0][0]*jcbi*surface::cfl[log2p][1];
+		srf->gbl->vdt[indx][0][0] = srf->gbl->vdt[indx][1][1]*jcbi*surface::cfl[log2p][0];
 		srf->gbl->vdt[indx][1][1] = temp;
-		srf->gbl->vdt[indx][0][1] *= -jcbi*srf->gbl->cfl[log2p][1];
-		srf->gbl->vdt[indx][1][0] *= -jcbi*srf->gbl->cfl[log2p][0];
+		srf->gbl->vdt[indx][0][1] *= -jcbi*surface::cfl[log2p][1];
+		srf->gbl->vdt[indx][1][0] *= -jcbi*surface::cfl[log2p][0];
 	}
 /*	INVERT SIDE MATRIX */   
    if (b.sm > 0) {
@@ -554,11 +558,11 @@ void hp_mgrid::surfdt2(int bnum) {
 			jcbi = 1.0/(srf->gbl->sdt[indx][0][0]*srf->gbl->sdt[indx][1][1] 
 						  -srf->gbl->sdt[indx][0][1]*srf->gbl->sdt[indx][1][0]);
 
-			temp = srf->gbl->sdt[indx][0][0]*jcbi*srf->gbl->cfl[log2p][1];
-			srf->gbl->sdt[indx][0][0] = srf->gbl->sdt[indx][1][1]*jcbi*srf->gbl->cfl[log2p][0];
+			temp = srf->gbl->sdt[indx][0][0]*jcbi*surface::cfl[log2p][1];
+			srf->gbl->sdt[indx][0][0] = srf->gbl->sdt[indx][1][1]*jcbi*surface::cfl[log2p][0];
 			srf->gbl->sdt[indx][1][1] = temp;
-			srf->gbl->sdt[indx][0][1] *= -jcbi*srf->gbl->cfl[log2p][1];
-			srf->gbl->sdt[indx][1][0] *= -jcbi*srf->gbl->cfl[log2p][0];
+			srf->gbl->sdt[indx][0][1] *= -jcbi*surface::cfl[log2p][1];
+			srf->gbl->sdt[indx][1][0] *= -jcbi*surface::cfl[log2p][0];
 		}
    }
 	

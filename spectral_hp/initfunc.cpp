@@ -35,10 +35,12 @@ FLT f1(int n, FLT x, FLT y) {
 #endif
 
 #ifdef FREESTREAM
+extern FLT outertime;
+
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0);
+         return(1.0 +0.1*outertime);
       case(1):
          return(0.0);
       case(2):
@@ -180,8 +182,8 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 class spectral_hp *tgt;
 
 void mvpttobdry(int typ, FLT& x, FLT &y) {
-   int sind,iter;
-   FLT mag, delt_dist;
+   int iter;
+   FLT mag, delt_dist,psi;
    
    if (typ&(EULR_MASK +INFL_MASK)) {
       iter = 0;
@@ -201,7 +203,7 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {
 
-      tgt->bdry_locate(typ,x,y,sind);
+      tgt->findbdrypt(typ,x,y,psi);
       
       return;
    }

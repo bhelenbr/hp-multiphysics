@@ -17,9 +17,6 @@ struct surface_glbls {
    FLT sigma;
    FLT rho2;
    FLT mu2;
-/*	ITERATIVE CONSTANTS */
-   FLT fadd[ND];
-   FLT cfl[MXLG2P][ND];
 /*	RESIDUALS */
    FLT (*vres)[ND];
    FLT (*sres)[ND];
@@ -42,10 +39,16 @@ class surface {
       FLT (*sdres[MXLG2P])[ND];
       struct surface_glbls *gbl;
       
+/*		THINGS USED BY ALL SURFACES */
+      static FLT fadd[ND];
+      static FLT cfl[MXLG2P][ND];
+      
 /*		FINE MESH GLBL ALLOCATION */
       void gbl_alloc(int maxside, int p, struct surface_glbls *store);
 
    public:
       void alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls *store);
       friend class hp_mgrid;
+      friend class block;
+      friend class blocks;
 };

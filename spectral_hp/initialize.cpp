@@ -16,6 +16,8 @@
 int hpbasis::wkpmax = 0;
 const int hpbasis::sbwth;
 FLT **hpbasis::wk0, **hpbasis::wk1, **hpbasis::wk2, **hpbasis::wk3;
+FLT *hpbasis::pgx, *hpbasis::dpgx, *hpbasis::pgn, *hpbasis::dpgn;
+
 
 void hpbasis::initialize(int pdegree) {
 
@@ -44,12 +46,21 @@ void hpbasis::initialize(int pdegree) {
          free(wk1);
          free(wk2);
          free(wk3);
+         free(pgx);
+         free(dpgx);
+         free(pgn);
+         free(dpgn);  
          printf("warning: better to allocate hpbasis from largest to smallest\n");
       }
       mat_alloc(wk0,nmodx,gpn,FLT);
       mat_alloc(wk1,nmodx,gpn,FLT);
       mat_alloc(wk2,nmodx,gpn,FLT);
       mat_alloc(wk3,nmodx,gpn,FLT);
+      vect_alloc(pgx,nmodx,FLT);
+      vect_alloc(dpgx,nmodx,FLT);
+      vect_alloc(pgn,tm,FLT);      
+      vect_alloc(dpgn,tm,FLT);
+      
       wkpmax = p;
    }
    

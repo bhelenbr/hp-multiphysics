@@ -13,21 +13,22 @@ class block {
       
    public:
       void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
+      void tadvance();
       void reconnect();
 };
 
 /*	THIS IS A MULTIBLOCK MESH */
 class blocks {
    private:
-      int lg2pmax;
-      int nblocks;
-      int mgrids;
-      int mglvls;
-      class block *blk;
+      int lg2pmax;  // HP PARAMETER
       class hpbasis base[MXLG2P];
       
-/*		THINGS FOR ALL BLOCKS */
-      FLT time, dt;
+      int nblocks;  // NUMBER OF BLOCKS
+      class block *blk;
+
+      int ntstep,out_intrvl; // TIME STEP STUFF
+      int mglvls,mgrids,vwcycle,ncycle;  //MULTIGRID PARAMETERS
+
       FLT mxr[NV];  /* STORES MAXIMUM RESIDUAL */
       
 /*		5 STAGE UPDATE ON ALL BLOCKS */  
@@ -39,6 +40,10 @@ class blocks {
    public:
 /*		INITIALIZE MULTIBLOCK/MGRID MESH */
       void init(int nb, int mg, int lg2p, char *filename);
+      void init(char *filename);
+      
+/*		START SIMULATION */
+      void go();
       
 /*		PREPARE FOR NEW TIMESTEP */
       void tadvance();
@@ -54,6 +59,7 @@ class blocks {
 
 /*		OUTPUT FINE MESH SOLUTION */
       void output(char *filename, FILETYPE filetype = text);
+      void output(int number, FILETYPE filetype = text);
 
 /*		MESH REFINEMENT */
 };

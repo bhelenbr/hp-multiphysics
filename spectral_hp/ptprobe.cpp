@@ -1,8 +1,27 @@
 #include"spectral_hp.h"
 #include<assert.h>
 
-int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
-	static FLT r,s,dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
+void spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
+   FLT r,s;
+   int tind;
+   
+   tind = findinteriorpt(xp,yp,r,s);
+   ugtouht(tind);  
+   b.ptprobe(NV,uht,uout,r,s);
+}
+
+void spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
+   FLT psi;
+   int sind;
+   
+   sind = findbdrypt(typ,xp,yp,psi);
+   ugtouht1d(sind);  
+   b.ptprobe1d(NV,uht,uout,psi);
+
+}
+
+int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
+	static FLT dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det,psi;
 	static int iter,tind,sind,v0,vn,stoptri,typ;
 
    qtree.nearpt(xp,yp,v0);
@@ -11,7 +30,7 @@ int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
 
    if (tind == -1) {
 /*		THIS SHOULD RARELY HAPPEN I HOPE */
-/*		POINT IS PROBABLY IN CURVED TRIANGLE ON BOUNDARY */
+/*		POINT IS PROBABLY IN CURVED TRIANGLE NEAR BOUNDARY */
       tind = vtri[v0];
       stoptri = tind;
       do {
@@ -34,9 +53,9 @@ int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
 
       if (tind == stoptri) {
          printf("uh-oh %d %f %f\n",v0,xp,yp);
-         return(1);
+         return(-1);
       }
-      bdry_locate(typ,xp,yp,sind);
+      sind = findbdrypt(typ,xp,yp,psi);
       tind = stri[sind][0];
       wgt[1] = 0.5;
       wgt[2] = 0.5;
@@ -52,7 +71,7 @@ int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
       crdtouht(tind);
       iter = 0;
       do {
-         b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s,lf,lf1);
+         b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
          det = 1.0/(ddr[0]*dds[1] - ddr[1]*dds[0]);
             
          dx = xp-x[0];
@@ -68,15 +87,13 @@ int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
          }
       } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
    }
-   ugtouht(tind);  
-   b.ptprobe(NV,uht,uout,r,s,lf[0],lf[1]);
 
-   return(0);
+   return(tind);
 }
 		
-FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
-   int vnear,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
-   FLT psi,dpsi,xp[ND],dx,dy,ol;
+int spectral_hp::findbdrypt(int typ, FLT &x, FLT &y, FLT &psi) {
+   int vnear,sind,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
+   FLT dpsi,xp[ND],dx,dy,ol;
    
 /*	SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
    qtree.nearpt(x,y,vnear);
@@ -172,7 +189,7 @@ FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
       dy *= ol;
       iter = 0;
       do {
-         b.ptprobe1d(ND,uht,xp,psi,lf[0]);
+         b.ptprobe1d(ND,uht,xp,psi);
          
          dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
          psi += dpsi;
@@ -198,16 +215,5 @@ FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
       y = vrtx[v0][1] +dy*(psi +1.)*.5;
    }
    
-   return(psi);
-}
-
-int spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
-   FLT psi;
-   int sind;
-   
-   psi = bdry_locate(typ,xp,yp,sind);
-   ugtouht1d(sind);  
-   b.ptprobe1d(NV,uht,uout,psi,lf[0]);
-
-   return(0);
+   return(sind);
 }
