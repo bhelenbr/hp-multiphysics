@@ -16,7 +16,7 @@ class block {
       
    public:
       void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
-      void tadvance();
+      void tadvance(int stage = 0);
       void reconnect();
       void coarsenchk(const char *name);
 };
@@ -51,7 +51,7 @@ class blocks {
       void go();
       
       /* PREPARE FOR NEW TIMESTEP */
-      void tadvance();
+      void tadvance(int stage = 0);
 
       /* MGRID CYCLE vw = 1: v-cycle vw =2 w-cycle (CALLED RECURSIVELY) */
       void cycle(int vw, int lvl = 0);

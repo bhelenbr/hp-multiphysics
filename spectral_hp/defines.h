@@ -7,7 +7,7 @@
 /* KOVASZNAY TEST CYLINDER SPHERE FREESTREAM CONVDIFF */
 /* UNSTEADY_DROP DROP TWOLAYER TWOLAYERNOINERTIA WAVE */
 /* THREELAYER */
-#define THREELAYER
+#define UNSTEADY_DROP 
 
 /* CIRCLE SIN COS NACA */
 #define CIRCLE
@@ -15,8 +15,23 @@
 /* 1 2 3 */
 #define NV 3
 
-/* 1 2 3 */
-#define MXSTEP 2
+/* BACKDIFF DIRK */
+#define BACKDIFF
+#ifdef DIRK
+#define TMSCHEME 3
+#define TMSTORE TMSCHEME
+#define TMADAPT 1
+#endif
+#ifdef BACKDIFF
+/* 1 2 3 FOR BACKWARDS DIFFERENCES */
+#define TMSCHEME 2
+#if (TMSCHEME == 1)
+#define TMSTORE 1
+#else
+#define TMSTORE TMSCHEME-1
+#endif
+#define TMADAPT TMSTORE
+#endif
 
 /* CONSERV  NONCONSERV */
 #define CONSERV
@@ -64,14 +79,6 @@
 #define CENTERY 0.0;
 #endif
 
-#define AMP 0.01;
-#define LAM 1.0;
-
-#ifdef COS
-#define AMP 0.375;
-#define LAM 1.0;
-#endif
-
 #if (defined(SPHERE) || defined(KOVASZNAY) || defined(CYLINDER) || defined(CONVDIFF) || defined(TEST) || defined(FREESTREAM))
 #undef DEFORM
 #define NO_DEFORM
@@ -85,10 +92,6 @@
 #if (defined(DROP) || defined(UNSTEADY_DROP))
 #undef NO_ENERGY
 #define ENERGY
-#endif
-
-#ifdef UNSTEADY_DROP
-#define AMP 0.0
 #endif
 
 #ifdef DROP
@@ -121,8 +124,6 @@
 #ifdef CONVDIFF
 #define NV 1
 #define CASE 0
-#define AMP 1.0
-#define LAM 0.0
 #if (CASE == 2)
 #undef NO_TIMEACCURATE
 #define TIMEACCURATE
@@ -133,8 +134,13 @@
 #undef CIRCLE
 #undef DEFORM
 #define NO_DEFORM
-#undef AMP
-#define AMP 0.0001
 #define FREESTREAM
+#endif
+
+#ifdef SHEAR
+#undef CIRCLE
+#define WAVE
+#undef DEFORM
+#define NO_DEFORM
 #endif
 
