@@ -12,6 +12,8 @@
 #define MXLG2P 5
 #define NSTAGE 5
 
+#define HP_MGRID_MP (PRDX_MASK +PRDY_MASK +COMX_MASK +COMY_MASK)
+
 /* THESE THINGS ARE SHARED BY ALL MESHES OF THE SAME BLOCK */
 struct hp_mgrid_glbls {
 
@@ -51,7 +53,7 @@ struct hp_mgrid_glbls {
    FLT fadd, flowcfl[MXLG2P];  
       
 /*	PHYSICAL CONSTANTS */
-   FLT rho, rhoi, mu, nu, sigma;
+   FLT rho, rhoi, mu, nu, sigma, g;
 
 /*	INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
    FLT (*func)(int n, FLT x, FLT y);
@@ -90,7 +92,7 @@ class hp_mgrid : public spectral_hp {
       
 /*		SOME PRIVATE UTILITY FUNCTIONS */
       void restouht_bdry(int tind); // USED IN MINVRT
-
+      
    public:
       void allocate(struct hp_mgrid_glbls& ginit, int mgrid);
       void inline loadbasis(class hpbasis& bas) { 
@@ -124,6 +126,10 @@ class hp_mgrid : public spectral_hp {
       void setinflow();
       void addbflux(int mgrid);
       void bdry_rcvandzero(int mode);
+      void bdry_snd(int mode);
+
+/*		SURFACE BOUNDARY ROUTINES */      
+      void surfrsdl(int bnum, int mgrid);
       
 /*		PARTS FOR 5 STEP UPDATE */
       void nstage1();
@@ -134,10 +140,6 @@ class hp_mgrid : public spectral_hp {
       void getcchng();
       int setfine(class hp_mgrid& tgt);
       int setcoarse(class hp_mgrid& tgt);  
-      
-/*		COMMUNICATION BOUNDARIES */
-      void send(int MASK, FLT *base,int bgn,int end, int stride);
-      void rcv(int MASK, FLT *base,int bgn,int end, int stride);
 };
 
 

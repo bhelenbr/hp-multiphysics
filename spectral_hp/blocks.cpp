@@ -57,7 +57,7 @@ void blocks::init(int nb, int mg, int lg2p, char *filename, FILETYPE filetype = 
 
 /*	WHERE IS THIS GOING TO BE STORED? */   
 /*	LOAD PHYSICAL CONSTANTS & ITERATIVE THINGS FOR EACH BLOCK */
-   blk[0].setphysics(1.0, 1.0, 0.0, &f1);
+   blk[0].setphysics(1.0, 0.025, 0.0, &f1);
    cfl[0] = 2.5;
    cfl[1] = 1.5;
    cfl[2] = 1.0;

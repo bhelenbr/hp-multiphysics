@@ -300,14 +300,41 @@ void hp_mgrid::addbflux(int mgrid) {
 	
 void hp_mgrid::bdry_rcvandzero(int mode) {
 	static int i,j,n;
-	static int sind,v0;
+	static int sind,v0,count,indx;
    
    if (mode < 0) {
-/*		THIS PART IS TO RECIEVE AND ZERO FOR VERTICES */
-
+/*		THIS PART IS TO RECEIVE AND ZERO FOR VERTICES */
 /*		RECEIVE VRTX MESSAGES */
 /* 	CALCULATE AVERAGE RESIDUAL */
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type & HP_MGRID_MP) {
+            count = 0;
+   /*			RECV VERTEX INFO */
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][1];
+               for(n=0;n<NV;++n)
+                  gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+            }
+            v0 = svrtx[sind][0];
+            for(n=0;n<NV;++n)
+               gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+         }
 
+         if (sbdry[i].type & IFCE_MASK) {
+            count = 0;
+   /*			RECV VERTEX INFO */
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][1];
+               for(n=0;n<ND;++n)
+                  gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+            }
+            v0 = svrtx[sind][0];
+            for(n=0;n<ND;++n)
+               gbl.vres[v0][n] = 0.5*(gbl.vres[v0][n] +sbuff[i][count++]);
+         }         
+      }
    
 /*		APPLY VRTX DIRICHLET CONDITIONS TO RES */
       for(i=0;i<nvbd;++i) {
@@ -354,10 +381,27 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
    else {
    
 /*		THIS PART TO RECIEVE AND ZERO FOR SIDES */
-
 /*		RECEIVE P'TH SIDE MODE MESSAGES */
 /* 	CALCULATE AVERAGE RESIDUAL */
-   
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type & HP_MGRID_MP) {
+            count = 0;
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               indx = sbdry[i].el[j]*b.sm +mode;
+               for(n=0;n<NV;++n)
+                  gbl.sres[indx][n] = 0.5*(gbl.sres[indx][n] +sbuff[i][count++]);
+            }
+         }
+         if (sbdry[i].type & IFCE_MASK) {
+            count = 0;
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               indx = sbdry[i].el[j]*b.sm +mode;
+               for(n=0;n<ND;++n)
+                  gbl.sres[indx][n] = 0.5*(gbl.sres[indx][n] +sbuff[i][count++]);
+            }
+         }         
+      }
+
 /*		APPLY SIDE DIRICHLET CONDITIONS TO MODE */
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&INFL_MASK) {
@@ -379,6 +423,77 @@ void hp_mgrid::bdry_rcvandzero(int mode) {
    
 	return;
 }
+
+
+void hp_mgrid::bdry_snd(int mode) {
+   int i,j,n,sind,count,indx,v0,bnum;
+   class mesh *tgt;
+   
+   if (mode < 0) {
+/*		SEND VERTEX INFO */
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type & HP_MGRID_MP) {
+            bnum = sbdry[i].adjbnum;
+            tgt = sbdry[i].adjmesh;
+            count = 0;
+/*				SEND VERTEX INFO */
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               for (n=0;n<NV;++n) 
+                  tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+            }
+            v0 = svrtx[sind][1];
+            for (n=0;n<NV;++n) 
+               tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+         }
+         if (sbdry[i].type & IFCE_MASK) {
+            bnum = sbdry[i].adjbnum;
+            tgt = sbdry[i].adjmesh;
+            count = 0;
+/*				SEND VERTEX INFO */
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               v0 = svrtx[sind][0];
+               for (n=0;n<ND;++n) 
+                  tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+            }
+            v0 = svrtx[sind][1];
+            for (n=0;n<ND;++n) 
+               tgt->sbuff[bnum][count++] = gbl.vres[v0][n];
+         }
+      }
+   }
+   else {
+/*    SEND SIDE INFO */
+      for(i=0;i<nsbd;++i) {
+         if (sbdry[i].type & HP_MGRID_MP) {
+            bnum = sbdry[i].adjbnum;
+            tgt = sbdry[i].adjmesh;
+            count = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               indx = sbdry[i].el[j]*b.sm +mode;
+               for (n=0;n<NV;++n) 
+                  tgt->sbuff[bnum][count++] = gbl.sres[indx][n];
+            }
+         } 
+
+         if (sbdry[i].type & IFCE_MASK) {
+            bnum = sbdry[i].adjbnum;
+            tgt = sbdry[i].adjmesh;
+            count = 0;
+            for(j=0;j<sbdry[i].num;++j) {
+               indx = sbdry[i].el[j]*b.sm +mode;
+               for (n=0;n<ND;++n) 
+                  tgt->sbuff[bnum][count++] = gbl.sres[indx][n];
+            }
+         }         
+      }
+   }
+   
+   return;
+}
+
 
 void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]) {
 	static FLT ul,vl,ur,vr,pl,pr,rhoi;

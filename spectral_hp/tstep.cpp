@@ -3,8 +3,9 @@
 #include<utilities.h>
 
 void hp_mgrid::tstep1(void) {
-	static int tind,i,j,side,v0,*v;
+	static int tind,i,j,sind,count,bnum,side,v0,*v;
 	static FLT jcb,h,hmax,q,qmax,lam1,c;
+   class mesh *tgt;
 
 /***************************************/
 /** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -71,17 +72,111 @@ void hp_mgrid::tstep1(void) {
 			}
 		}
 	}
+   
+/*	SEND BOUNDARY INFORMATION */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & HP_MGRID_MP) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+            tgt->sbuff[bnum][count++] = gbl.vdiagp[v0];
+         }
+         v0 = svrtx[sind][1];
+         tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+         tgt->sbuff[bnum][count++] = gbl.vdiagp[v0];
 
-/*	SEND COMMUNICATION PACKETS TO OTHER MESHES HERE */
+/*			SEND SIDE INFO */
+         if (b.sm) {
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               tgt->sbuff[bnum][count++] = gbl.sdiagv[sind];
+               tgt->sbuff[bnum][count++] = gbl.sdiagp[sind];
+            }
+         }
+      }
+      
+      if (sbdry[i].type & IFCE_MASK) {
+         bnum = sbdry[i].adjbnum;
+         tgt = sbdry[i].adjmesh;
+         count = 0;
+/*			SEND VERTEX INFO */
+         for(j=0;j<sbdry[i].num;++j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][0];
+            tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+         }
+         v0 = svrtx[sind][1];
+         tgt->sbuff[bnum][count++] = gbl.vdiagv[v0];
+
+/*			SEND SIDE INFO */
+         if (b.sm) {
+            for(j=0;j<sbdry[i].num;++j) {
+               sind = sbdry[i].el[j];
+               tgt->sbuff[bnum][count++] = gbl.sdiagv[sind];
+            }
+         }
+      }
+   }
+
    
    return;
 }
 
 void hp_mgrid::tstep2(void) {
-   static int i;
+   static int i,j,sind,v0,count;
    
 /*	RECEIVE COMMUNCATION PACKETS FROM OTHER MESHES */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & HP_MGRID_MP) {
+         count = 0;
+/*			RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+            gbl.vdiagp[v0] = 0.5*(gbl.vdiagp[v0] +sbuff[i][count++]);
+         }
+         v0 = svrtx[sind][0];
+         gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+         gbl.vdiagp[v0] = 0.5*(gbl.vdiagp[v0] +sbuff[i][count++]);
 
+/*			RECV SIDE INFO */
+         if (b.sm > 0) {
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               sind = sbdry[i].el[j];
+               gbl.sdiagv[sind] = 0.5*(gbl.sdiagv[sind] +sbuff[i][count++]);
+               gbl.sdiagp[sind] = 0.5*(gbl.sdiagp[sind] +sbuff[i][count++]);
+            }
+         }
+      }
+
+/*		ONLY SEND & RECEIVE DIAGV'S FOR INTERFACE */
+      if (sbdry[i].type & IFCE_MASK) {
+         count = 0;
+/*			RECV VERTEX INFO */
+         for(j=sbdry[i].num-1;j>=0;--j) {
+            sind = sbdry[i].el[j];
+            v0 = svrtx[sind][1];
+            gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+         }
+         v0 = svrtx[sind][0];
+         gbl.vdiagv[v0] = 0.5*(gbl.vdiagv[v0] +sbuff[i][count++]);
+
+/*			RECV SIDE INFO */
+         if (b.sm > 0) {
+            for(j=sbdry[i].num-1;j>=0;--j) {
+               sind = sbdry[i].el[j];
+               gbl.sdiagv[sind] = 0.5*(gbl.sdiagv[sind] +sbuff[i][count++]);
+            }
+         }
+      }
+   }
+   
 /*	FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
       gbl.vdiagv[i]  = 1.0/gbl.vdiagv[i];

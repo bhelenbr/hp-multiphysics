@@ -62,6 +62,7 @@ void hp_mgrid::minvrt1(void) {
 /*********************************************/
 /*	SEND MESSAGES FOR VERTICES 					*/	
 /*********************************************/
+   bdry_snd(-1);
 
    return;
 }
@@ -74,6 +75,19 @@ void hp_mgrid::minvrt2(void) {
 /* APPLY DIRCHLET B.C.S TO VERTICES */
 /**********************************/
    bdry_rcvandzero(-1);
+   
+#ifdef SKIP      
+   for(i=0;i<nsbd;++i) {
+      if (sbdry[i].type & PRDY_MASK) {
+         for(j=0;j<sbdry[i].num;++j) {
+            v0 = svrtx[sbdry[i].el[j]][0];
+            printf("%d %f %f %f\n",v0,gbl.vres[v0][0],gbl.vres[v0][1],gbl.vres[v0][2]);
+         }
+      }
+   }
+   
+   exit(10);
+#endif
 
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
@@ -109,9 +123,9 @@ void hp_mgrid::minvrt2(void) {
 				}
 			}
 		}
+/* 	SEND MESSAGE FOR LOWEST ORDER MODE */
+      bdry_snd(0);
    }
-
-/* SEND MESSAGE FOR LOWEST ORDER MODE */
 
    return;
 }
@@ -163,7 +177,9 @@ void hp_mgrid::minvrt3(int mode) {
    }
    
 /* SEND MESSAGES FOR NEXT MODE */
-      
+   ++mode;
+	bdry_snd(mode);
+         
    return;
 }
 
@@ -182,7 +198,7 @@ void hp_mgrid::minvrt4() {
       indx += b.sm;
    }
    
-/*	SOLVE FOR INTERIOR MODES */			
+/*	SOLVE FOR INTERIOR MODES */
    if (b.im > 0) {
       indx = 0;
       for(tind = 0; tind < ntri; ++tind) {

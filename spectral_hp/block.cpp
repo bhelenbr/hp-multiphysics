@@ -25,9 +25,11 @@ void block::hpinit(class hpbasis *bin, int lg2p) {
 
 /*	INITIALIZE SPECTRAL_HP'S */
    grd[0].spectral_hp::allocate(hpbase[lg2pmax]);
-   for(i=1;i<ngrid;++i)
+   grd[0].init_comm_buf(NV*(hpbase[lg2pmax].sm +2));
+   for(i=1;i<ngrid;++i) {
       grd[i].spectral_hp::allocate(hpbase[0]);
-      
+      grd[i].init_comm_buf(NV*2);
+   }
 
 /*	ALLOCATE GLOBAL STORAGE */
    maxvst = grd[0].max();

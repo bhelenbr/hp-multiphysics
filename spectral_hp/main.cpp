@@ -45,7 +45,9 @@ int main() {
    return(0);
 #endif
    
-   myblock.init(1, 3, 2, "../../grids/TIM/tim2",easymesh,5);
+//   myblock.init(1, 1, 0, "../../grids/TIM/tim2",easymesh,5);
+
+   myblock.init(1, 1, 1, "../../grids/KOVA/kova16",easymesh,5);
    myblock.output("hope0",tecplot);
 
    myblock.tadvance();

@@ -66,8 +66,3 @@ class spectral_hp : public mesh  {
       int ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]);
       FLT bdry_locate(int type, FLT& x, FLT &y, int& sind);
 };
-      
-
-      
-      
-

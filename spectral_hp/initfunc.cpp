@@ -13,10 +13,13 @@
 #include "math.h"
 #include<assert.h>
 
+#define KOVASZNAY
+
 /***************************/
 /* INITIALIZATION FUNCTION */
 /***************************/
-FLT f2(int n, FLT x, FLT y) {
+#ifdef TEST
+FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
          return(1 +exp(-10.*x*x));
@@ -27,7 +30,9 @@ FLT f2(int n, FLT x, FLT y) {
    }
    return(0.0);
 }
+#endif
 
+#ifdef CYLINDER
 FLT f1(int n, FLT x, FLT y) {
    FLT r;
    
@@ -46,6 +51,62 @@ FLT f1(int n, FLT x, FLT y) {
    }
    return(0.0);
 }
+#endif
+
+#ifdef KOVASZNAY
+FLT kovamu = 0.025;
+
+double f1(int n, double x, double y) { 
+	double re, lda;
+
+	if (kovamu > 0.0) {
+		re = 1/kovamu;
+		lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
+	}
+	else
+		lda = 0.0;
+
+   switch (n) {
+      case(0):
+         return(1 - cos(2*M_PI*y)*exp(lda*x));
+      case(1):
+      	return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
+      case(2):
+         return(-.5*exp(2.*lda*x)+.5*exp(2.*lda*1.0));
+   }
+   return(0.0);
+}
+
+
+double df1d(int n, double x, double y, int dir) {
+	double re, lda;
+
+	if (kovamu > 0.0) {
+		re = 1/kovamu;
+		lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
+	}
+	else
+		lda = 0.0;
+
+   switch(n) {
+      case(0):
+         if (dir == 0)
+            return( -lda*cos(2*M_PI*y)*exp(lda*x));
+         else
+            return( 2*M_PI*sin(2*M_PI*y)*exp(lda*x));
+      case(1):
+      	if (dir == 0) 
+            return(lda/(2*M_PI)*lda*sin(2*M_PI*y)*exp(lda*x));
+         else
+            return(lda*cos(2*M_PI*y)*exp(lda*x));
+   }
+   return(0.0);
+}
+#endif
+
+
+
+
 
 /***************************/
 /*	CURVED SIDE DEFINITIONS */
