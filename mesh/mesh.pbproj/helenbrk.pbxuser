@@ -29,15 +29,14 @@
 		);
 		perUserDictionary = {
 			PBXWorkspaceConfiguration = {
-				ContentSize = "{1253, 941}";
+				ContentSize = "{1327, 826}";
 				LeftSlideOut = {
-					ActiveTab = 0;
-					Frame = "{{0, 23}, {1253, 918}}";
+					ActiveTab = 3;
+					Frame = "{{0, 23}, {1327, 803}}";
 					Split0 = {
-						ActiveTab = 3;
-						Frame = "{{225, 0}, {1028, 918}}";
+						Frame = "{{224, 0}, {1103, 803}}";
 						Split0 = {
-							Frame = "{{0, 320}, {1028, 598}}";
+							Frame = "{{0, 24}, {1103, 779}}";
 						};
 						SplitCount = 1;
 						Tab0 = {
@@ -45,12 +44,12 @@
 								ActiveTab = 0;
 								Frame = "{{0, 0}, {1028, 319}}";
 								Split0 = {
-									Frame = "{{0, 159}, {1028, 160}}";
+									Frame = "{{0, 158}, {1028, 161}}";
 									Split0 = {
-										Frame = "{{0, 0}, {487, 160}}";
+										Frame = "{{0, 0}, {487, 161}}";
 									};
 									Split1 = {
-										Frame = "{{496, 0}, {532, 160}}";
+										Frame = "{{496, 0}, {532, 161}}";
 									};
 									SplitCount = 2;
 								};
@@ -74,18 +73,18 @@
 							};
 						};
 						Tab2 = {
-							BuildMessageFrame = "{{0, 0}, {1030, 104}}";
-							BuildTranscriptFrame = "{{0, 113}, {1030, 124}}";
-							Frame = "{{0, 0}, {1028, 235}}";
+							BuildMessageFrame = "{{0, 0}, {1105, 104}}";
+							BuildTranscriptFrame = "{{0, 113}, {1105, 124}}";
+							Frame = "{{0, 0}, {1103, 235}}";
 						};
 						Tab3 = {
-							Frame = "{{0, 0}, {1028, 295}}";
+							Frame = "{{0, 0}, {1103, 295}}";
 						};
 						TabCount = 4;
 					};
 					SplitCount = 1;
 					Tab0 = {
-						Frame = "{{0, 0}, {200, 918}}";
+						Frame = "{{0, 0}, {200, 803}}";
 					};
 					Tab1 = {
 						ClassesFrame = "{{0, 0}, {202, 555}}";
@@ -97,12 +96,12 @@
 						Frame = "{{0, 0}, {200, 100}}";
 					};
 					Tab3 = {
-						Frame = "{{0, 0}, {200, 761}}";
+						Frame = "{{0, 0}, {200, 803}}";
 						Split0 = {
-							Frame = "{{0, 0}, {200, 367}}";
+							Frame = "{{0, 0}, {200, 386}}";
 						};
 						Split1 = {
-							Frame = "{{0, 376}, {200, 385}}";
+							Frame = "{{0, 395}, {200, 408}}";
 						};
 						SplitCount = 2;
 					};
