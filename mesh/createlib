@@ -1,0 +1,9 @@
+#! /bin/csh
+
+cp -f mesh.h ~/Codes/include
+cp -f r_mesh.h ~/Codes/include
+#cd build/intermediates/mblock.build/Objects/ppc/
+cd build/mesh.build/mblock.build/Objects-normal/ppc
+libtool -o libmesh.a coarsen.o collapse.o copy.o findmatch.o in_mesh.o insert.o out_mesh.o rebay.o setup.o swap.o tprims.o triangulate.o yaber.o mvpttobdry.o connect.o r_mesh.o
+mv -f libmesh.a ~/Codes/lib
+
