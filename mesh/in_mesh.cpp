@@ -58,7 +58,7 @@ int mesh::in_mesh(FLT (*vin)[ND], char *filename, FILETYPE filetype = easymesh, 
             }
             
 /*          ALLOCATE BOUNDARY STORAGE */
-            bdryalloc(count + (int) (grwfac*count));
+            if (!initialized) bdryalloc(count + (int) (grwfac*count));
             
 /*				ORGANIZE BOUNDARY GROUPS */
             nsbd = 0;
@@ -230,7 +230,7 @@ next1:      continue;
             for(i=0;i<nsbd;++i) 
                count += sbdry[i].num;
                
-            bdryalloc(count + (int) (grwfac*count));
+            if (!initialized) bdryalloc(count + (int) (grwfac*count));
 
 /*				CREATE SIDE INFORMATION */
             createsideinfo();
