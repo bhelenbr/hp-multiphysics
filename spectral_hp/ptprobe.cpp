@@ -73,8 +73,7 @@ int spectral_hp::findinteriorpt(FLT xp, FLT yp, FLT &r, FLT &s) {
       iter = 0;
       do {
          b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s);
-         det = 1.0/(ddr[0]*dds[1] - ddr[1]*dds[0]);
-            
+         det = 1.0/(fabs(ddr[0]*dds[1] - ddr[1]*dds[0]) +10.0*EPSILON);
          dx = xp-x[0];
          dy = yp-x[1];
          dr =  (dds[1]*dx -dds[0]*dy)*det;

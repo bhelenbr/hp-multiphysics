@@ -114,7 +114,7 @@ void blocks::init(char *file) {
          strcat(bname, ".");
          number_str(outname, bname, i, 1);
          printf("#Reading mesh: %s\n",outname);
-         blk[i].grd[0].in_mesh(outname,easymesh);  
+         blk[i].grd[0].in_mesh(outname,grid);  
          blk[i].grd[0].spectral_hp::setbcinfo();
 
 /*			FOR ADAPTIVE MESH */ 
@@ -429,7 +429,7 @@ void blocks::output(int number, FILETYPE type=text) {
       strcat(bname, ".");
       number_str(outname, bname, i, 1);         
       blk[i].grd[0].mesh::setbcinfo();
-      blk[i].grd[0].out_mesh(outname,easymesh);  // THIS MUST BE EASYMESH OTHERWISE SIDE ORDERING WILL CHANGE
+      blk[i].grd[0].out_mesh(outname,grid);
       blk[i].grd[0].spectral_hp::setbcinfo();
       
       if (adapt) {

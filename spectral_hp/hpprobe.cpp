@@ -9,6 +9,7 @@
 
 #include"hpbasis.h"
 #include<math.h>
+#include<utilities.h>
 
 /* RETURNS VALUES OF GX POLYNOMIALS & GS POLYNOMIALS AT POINT */
 void hpbasis::ptvalues(FLT x, FLT eta) {
@@ -251,7 +252,8 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
    static int k,m,n;
    static FLT n0,x0,x,eta;
    
-   x = 2.0*(1+r)/(1-s+10.*EPSILON) -1.0;
+   s = MIN(1.0-10.*EPSILON,s);
+   x = 2.0*(1+r)/(1-s) -1.0;
    eta = s;
    
    ptvalues_bdry(x,eta);
@@ -259,7 +261,7 @@ void hpbasis::ptprobe_bdry(int nv, FLT **lin, FLT *f, FLT *dx, FLT *dy, FLT r, F
    for(n=0;n<nv;++n) {
 
 /*		PART I - sum u*g_mn for each n, s_j	*/
-		n0 = 2./(1-eta);
+		n0 = 2./(1 -eta);
 		
 /*		SUM FOR N=1		*/
 /*		VERTEX A			*/

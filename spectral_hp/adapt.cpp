@@ -110,7 +110,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
    for(i=nvrt0;i<nvrtx;++i) {
       if (vinfo[i] < 0) {
          tind = str.findinteriorpt(vrtx[i][0],vrtx[i][1],r,s);
-         assert(tind != -1);
+         assert(tind >= 0);
          str.ugtouht(tind);
          str.b.ptprobe(NV,uht,ug.v[i],r,s);
 
@@ -143,6 +143,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          v0 = svrtx[sbdry[i].el[j]][0];
          if (v0 >= nvrt0) {
             stgt = str.findbdrypt(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],psi);
+            assert(stgt >= 0);
             str.ugtouht1d(stgt);  
             str.b.ptprobe1d(NV,uht,ug.v[v0],psi);
             
@@ -198,6 +199,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
          
                for(i=0;i<b.gpx;++i) {
                   tind = str.findinteriorpt(crd[0][0][i],crd[1][0][i],r,s);
+                  assert(tind >= 0);
                   str.ugtouht(tind);  
                   str.b.ptprobe(NV,uht,upt,r,s);
                   for(n=0;n<NV;++n)
@@ -297,6 +299,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
       
    /*   						THIS MOVES X,Y PT TO BOUNDRY */            
                         stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
+                        assert(stgt >= 0);
                         crd[0][0][m] -= x;
                         crd[1][0][m] -= y;
       
@@ -358,7 +361,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                         
 /*	   						FIND PSI */            
                         stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
-                        
+                        assert(stgt >= 0);
 /*	   						CALCULATE VALUE OF SOLUTION AT POINT */
                         str.ugtouht1d(stgt);
                         str.b.ptprobe1d(NV,uht,upt,psi);
@@ -461,6 +464,7 @@ void hp_mgrid::adapt(class hp_mgrid& str, FLT tolerance) {
                for (i=0; i < b.gpx; ++i ) {
                   for (j=0; j < b.gpn; ++j ) {
                      ttgt = str.findinteriorpt(crd[0][i][j],crd[1][i][j],r,s);
+                     assert(ttgt >= 0);
                      str.ugtouht(ttgt);
                      str.b.ptprobe(NV,uht,upt,r,s);
                      for(n=0;n<NV;++n)
