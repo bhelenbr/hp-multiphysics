@@ -24,7 +24,7 @@ class r_mesh :public mesh {
    /* MESH DEFORMATION VARIABLES */
       protected:
 /*			STRUCTURE CONTAINING ALL MESH INDEPENDENT VARIABLES */
-         struct r_mesh_glbls rg;
+         struct r_mesh_glbls *rg;
          
 /*    	MESH VARIABLES */
          FLT *ksprg;
@@ -38,7 +38,7 @@ class r_mesh :public mesh {
          class r_mesh *fmesh;
 
       public:
-         void init(bool coarse, struct r_mesh_glbls rginit);
+         void init(bool coarse, struct r_mesh_glbls *rginit);
 
 /*    	SETUP SPRING CONSTANTS */
 /*			LAPLACE CONSTANTS */
