@@ -2,6 +2,10 @@
 #include<math.h>
 #include<utilities.h>
 
+#ifdef DROP
+extern FLT dydt;
+#endif
+
 #ifdef CONSERV
 void hp_mgrid::tstep1(void) {
    int tind,i,j,n,sind,count,bnum,side,v0,*v;
@@ -43,15 +47,19 @@ void hp_mgrid::tstep1(void) {
          out_mesh("negative",grid);
          exit(1);
       }
-      // h = 2.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax); THIS IS WRONG BY FACTOR OF 2
       h = 4.*jcb/(0.25*(b.p +1)*(b.p+1)*hmax);
       hmax = hmax/(0.25*(b.p +1)*(b.p+1));
       
       qmax = 0.0;
       for(j=0;j<3;++j) {
          v0 = v[j];
+#ifndef DROP
          q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]),2.0) 
             +pow(ug.v[v0][1]-0.5*(bd[0]*vrtx[v0][1] +dvrtdt[v0][1]),2.0);
+#else
+         q = pow(ug.v[v0][0]-0.5*(bd[0]*vrtx[v0][0] +dvrtdt[v0][0]),2.0) 
+            +pow(ug.v[v0][1]-0.5*(dydt +bd[0]*vrtx[v0][1] +dvrtdt[v0][1]),2.0); 
+#endif
          qmax = MAX(qmax,q);
       }
 #ifndef TIMEACCURATE
