@@ -165,8 +165,9 @@ void spectral_hp::crdtouht(int tind) {
 		for(n=0; n<NV; ++n)
 			uht[n][i] = vrtx[indx][n];
 	}
-	
 
+	if (b.sm == 0) return;
+   
 /* SIDES */
    cnt = 3;
    for (i=0; i<3;++i) {	

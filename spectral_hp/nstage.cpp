@@ -78,6 +78,7 @@ void hp_mgrid::nstage2(int stage) {
       if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
          surfnstage2(i,stage);
    }
+   surfugtovrt1();
          
    return;
 }

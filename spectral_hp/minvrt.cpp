@@ -80,19 +80,6 @@ void hp_mgrid::minvrt2(void) {
 /* APPLY DIRCHLET B.C.S TO VERTICES */
 /**********************************/
    bdry_rcvandzero(-1);
-   
-#ifdef SKIP      
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & PRDY_MASK) {
-         for(j=0;j<sbdry[i].num;++j) {
-            v0 = svrtx[sbdry[i].el[j]][0];
-            printf("%d %f %f %f\n",v0,gbl.vres[v0][0],gbl.vres[v0][1],gbl.vres[v0][2]);
-         }
-      }
-   }
-   
-   exit(10);
-#endif
 
 /* SOLVE FOR VERTEX MODES */
 	for(i=0;i<nvrtx;++i) {
@@ -137,6 +124,9 @@ void hp_mgrid::minvrt2(void) {
       if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
          surfinvrt2(i);
          
+   for(i=0;i<nvrtx;++i)
+      printf("%d %f %f %f\n",i,gbl.vres[i][0],gbl.vres[i][1],gbl.vres[i][2]);
+      
    return;
 }
 

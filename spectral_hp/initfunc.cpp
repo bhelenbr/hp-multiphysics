@@ -38,11 +38,11 @@ FLT f1(int n, FLT x, FLT y) {
 FLT f1(int n, FLT x, FLT y) {
    switch(n) {
       case(0):
-         return(1.0);
+         return(1.0 +x*(1-x));
       case(1):
-         return(0.0);
+         return(x*(1-x)*y*(1-y));
       case(2):
-         return(0.0);
+         return(y*(1-y));
    }
    return(0.0);
 }

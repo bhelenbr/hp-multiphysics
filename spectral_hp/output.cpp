@@ -206,6 +206,14 @@ void spectral_hp::output(char *name, FILETYPE typ = tecplot) {
             }
          }
          break;
+         
+      case(easymesh):
+         out_mesh(name,easymesh);
+         break;
+      
+      case(gambit):
+         out_mesh(name,gambit);
+         break;
   	}
    
  	return;

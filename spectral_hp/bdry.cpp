@@ -162,10 +162,10 @@ void hp_mgrid::addbflux(int mgrid) {
          for(j=0;j<sbdry[i].num;++j) {
             sind=sbdry[i].el[j];
             v0 = svrtx[sind][0];
-            indx1 = sind*b.sm;
             for(n=0;n<ND;++n)
                gbl.vres[v0][n] += binfo[i][indx].flx[n];
             ++indx;
+            indx1 = sind*b.sm;
             for(k=0;k<b.sm;++k) {
                for(n=0;n<ND;++n)
                   gbl.sres[indx1][n] += binfo[i][indx].flx[n];

@@ -37,7 +37,6 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
     for(i=0;i<ntri*b.im;++i)
       for(n=0;n<NV;++n)
          gbl.ivf[i][n]  *= (1. -beta[stage]);          
-         
 
 	for(tind = 0; tind<ntri;++tind) {
    
@@ -165,15 +164,17 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
    
                   e11[i][j] = +viscI1II0II1II0I*du[0][0][i][j] +viscI1II1II1II0I*du[1][0][i][j]
                               +viscI1II0II1II1I*du[0][1][i][j] +visc[1][1][1][1]*du[1][1][i][j];
-   
-   
+                              
+                  printf("%d %f %f %f %f\n",tind,e00[i][j],e01[i][j],e11[i][j],e10[i][j]);
+
+                              
                   cv00[i][j] = -cv00[i][j] -e00[i][j];
                   cv01[i][j] = -cv01[i][j] -e01[i][j];
                   cv10[i][j] = -cv10[i][j] -e10[i][j];
                   cv11[i][j] = -cv11[i][j] -e11[i][j];
    
 #ifdef MOVING_MESH
-                  res[2][i][j] += rho*
+                  res[2][i][j] += gbl.rho*
                                  (dcrd[1][1][i][j]*(du[0][0][i][j] -dlmvx[0][i][j])
                                  -dcrd[0][1][i][j]*(du[1][0][i][j] -dlmvx[1][i][j])
                                  -dcrd[1][0][i][j]*(du[0][1][i][j] -dlmvy[0][i][j])
@@ -189,6 +190,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
             b.derivs(cv01,res[0]);
             b.derivr(cv10,res[1]);
             b.derivs(cv11,res[1]);
+            
 
 /*				THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
             for(i=0;i<b.gpx;++i) {
@@ -252,6 +254,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       }
 	}
    
+   for(i=0;i<nvrtx;++i)
+      printf("%d %f %f %f\n",i,gbl.vvf[i][0],gbl.vvf[i][1],gbl.vvf[i][2]);   
+      
 /*	ADD IN VISCOUS/DISSIPATIVE FLUX */
 	for(i=0;i<nvrtx;++i)
 		for(n=0;n<NV;++n)
@@ -264,7 +269,9 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 	for(i=0;i<ntri*b.im;++i)
 		for(n=0;n<NV;++n)
 			gbl.ires[i][n] += gbl.ivf[i][n];         
+         
 
+      
 /*	ADD IN BOUNDARY FLUXES */
    addbflux(mgrid);
 
@@ -301,10 +308,14 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
 			for(n=0;n<NV;++n)		
 				gbl.sres[i][n] += sdres[log2p][i][n];  
 	}
+
+
+      
+   exit(1);
       
 //   bdry_rcvandzero(-1);
 //   for(i=0;i<b.sm;++i)
 //      bdry_rcvandzero(i);
-      
+
 	return;
 }
