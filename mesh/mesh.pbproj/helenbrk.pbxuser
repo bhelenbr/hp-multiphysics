@@ -1,0 +1,131 @@
+// !$*UTF8*$!
+{
+	07F2E94000974C6B80990B20 = {
+		activeArgIndex = 0;
+		argumentStrings = (
+			"",
+			../../grids/WAVE/PRDC/wave5,
+			../../grids/WIND/PRDC2/wind5,
+			../../grids/CY/VISC/cy_b2,
+		);
+		debuggerPlugin = GDBDebugging;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		isa = PBXExecutable;
+		shlibInfoDictList = (
+		);
+		sourceDirectories = (
+		);
+	};
+	08FB7793FE84155DC02AAC07 = {
+		activeBuildStyle = 014CEA460018CE2711CA2923;
+		activeTarget = 08FB779FFE84155DC02AAC07;
+		addToTargets = (
+			08FB779FFE84155DC02AAC07,
+		);
+		breakpoints = (
+		);
+		perUserDictionary = {
+			PBXWorkspaceConfiguration = {
+				ContentSize = "{974, 605}";
+				LeftSlideOut = {
+					ActiveTab = 0;
+					Frame = "{{0, 23}, {974, 582}}";
+					Split0 = {
+						Frame = "{{225, 0}, {749, 582}}";
+						Split0 = {
+							Frame = "{{0, 25}, {749, 557}}";
+						};
+						SplitCount = 1;
+						Tab0 = {
+							Debugger = {
+								ActiveTab = 0;
+								Frame = "{{0, 0}, {749, 319}}";
+								Split0 = {
+									Frame = "{{0, 135}, {749, 184}}";
+									Split0 = {
+										Frame = "{{0, 0}, {355, 184}}";
+									};
+									Split1 = {
+										Frame = "{{364, 0}, {385, 184}}";
+									};
+									SplitCount = 2;
+								};
+								SplitCount = 1;
+								Tab0 = {
+									Frame = "{{0, 0}, {749, 110}}";
+								};
+								Tab1 = {
+									Frame = "{{0, 0}, {781, 173}}";
+								};
+								TabCount = 2;
+							};
+							Frame = "{{0, 0}, {749, 319}}";
+							LauncherConfigVersion = 4;
+						};
+						Tab1 = {
+							Frame = "{{0, 0}, {749, 238}}";
+							LauncherConfigVersion = 3;
+							Runner = {
+								Frame = "{{0, 0}, {749, 238}}";
+							};
+						};
+						Tab2 = {
+							BuildMessageFrame = "{{0, 0}, {751, 102}}";
+							BuildTranscriptFrame = "{{0, 111}, {751, 103}}";
+							Frame = "{{0, 0}, {749, 212}}";
+						};
+						Tab3 = {
+							Frame = "{{0, 0}, {749, 295}}";
+						};
+						TabCount = 4;
+					};
+					SplitCount = 1;
+					Tab0 = {
+						Frame = "{{0, 0}, {200, 582}}";
+					};
+					Tab1 = {
+						ClassesFrame = "{{0, 0}, {202, 351}}";
+						Frame = "{{0, 0}, {200, 582}}";
+						MembersFrame = "{{0, 360}, {202, 222}}";
+						OptionsSetName = "Flat, all classes";
+					};
+					Tab2 = {
+						Frame = "{{0, 0}, {200, 100}}";
+					};
+					Tab3 = {
+						Frame = "{{0, 0}, {200, 582}}";
+						Split0 = {
+							Frame = "{{0, 0}, {200, 282}}";
+						};
+						Split1 = {
+							Frame = "{{0, 291}, {200, 291}}";
+						};
+						SplitCount = 2;
+					};
+					Tab4 = {
+						Frame = "{{0, 0}, {250, 100}}";
+					};
+					TabCount = 5;
+				};
+			};
+		};
+		wantsIndex = 1;
+		wantsSCM = -1;
+	};
+	08FB779FFE84155DC02AAC07 = {
+		activeExec = 0;
+		targetExecs = {
+			macosx = (
+				07F2E94000974C6B80990B20,
+			);
+		};
+	};
+	F5121122019050BC01990B20 = {
+		uiCtxt = {
+			sepNavWindowFrame = "{{102, 650}, {750, 502}}";
+		};
+	};
+}

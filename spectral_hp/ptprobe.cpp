@@ -1,0 +1,174 @@
+#include"spectral_hp.h"
+#include<assert.h>
+
+int spectral_hp::ptprobe(FLT xp, FLT yp, FLT uout[NV]) {
+	static FLT r,s,dr,ds,dx,dy,x[ND],ddr[3],dds[3],wgt[3],det;
+	static int iter,tind,v0;
+
+   qtree.nearpt(xp,yp,v0);
+   tind = findtri(xp,yp,v0);
+   if (tind == -1) return(-1);
+   
+   getwgts(wgt);
+
+/* TRIANGLE COORDINATES */	
+   s = wgt[2]*2 -1.0;
+   r = wgt[1]*2 -1.0;
+
+   if (tinfo[tind] > -1) {
+/*		DEAL WITH CURVED SIDES */
+      crdtouht(tind);
+      iter = 0;
+      do {
+         b.ptprobe_bdry(ND,uht,x,ddr,dds,r,s,lf,lf1);
+         det = 1.0/(ddr[0]*dds[1] - ddr[1]*dds[0]);
+            
+         dx = xp-x[0];
+         dy = yp-x[1];
+         dr =  (dds[1]*dx -dds[0]*dy)*det;
+         ds = -(ddr[1]*dx -ddr[0]*dy)*det;
+
+         r += dr;
+         s += ds;
+         if (iter++ > 50) {
+            printf("max iterations for curved triangle %d loc: %f,%f (r,s) %f,%f \n",tind,xp,yp,r,s);
+            break;
+         }
+      } while (fabs(dr) +fabs(ds) > 100.*EPSILON);
+   }
+   ugtouht(tind);  
+   b.ptprobe(NV,uht,uout,r,s,lf[0],lf[1]);
+
+   return(0);
+}
+		
+FLT spectral_hp::bdry_locate(int typ, FLT &x, FLT &y, int &sind) {
+   int vnear,tind,stoptri,vn,told,snum,snumnew,v0,v1,iter,bnum,dir;
+   FLT psi,dpsi,xp[ND],dx,dy,ol;
+   
+/*	SEARCH FOR TRI ADJACENT TO BOUNDARY NEAR POINT */
+   qtree.nearpt(x,y,vnear);
+   tind = vtri[vnear];
+   stoptri = tind;
+   dir = 1;
+   for(;;) {
+      told = tind;
+      for(vn=0;vn<3;++vn) 
+         if (tvrtx[tind][vn] == vnear) break;
+      
+      assert(vn != 3);
+      
+      if (ttri[tind][vn] < 0) {
+         bnum = -ttri[tind][vn]/maxsbel -1;
+         if (sbdry[bnum].type == typ) {
+            sind = tside[tind].side[vn];
+            break;
+         }
+      }
+      
+      tind = ttri[tind][(vn +dir)%3];
+      if (tind < 0) {
+         bnum = -tind/maxsbel -1;
+         if (sbdry[bnum].type == typ) {
+            sind = tside[told].side[(vn+dir)%3];
+            break; 
+         }
+         if (dir > 1) {
+            printf("couldn't find sidetype %d around vertex %d\n",typ,vnear);
+            exit(1);
+         }
+/*			REVERSE DIRECTION AND GO BACK TO START */
+         ++dir;
+         tind = vtri[vnear];
+         stoptri = -1;
+      }
+      
+      if (tind == stoptri) {
+         printf("couldn't find sidetype %d around vertex %d\n",typ,vnear);
+         exit(1);
+      }
+   }
+
+/*	SEARCH AROUND THIS SIDE */
+   snumnew = -stri[sind][1] -(bnum+1)*maxsbel;
+   snum = snumnew;
+   for(;;) {
+      sind = sbdry[bnum].el[snumnew];
+      v0 = svrtx[sind][0];
+      v1 = svrtx[sind][1];
+      dx = vrtx[v1][0] - vrtx[v0][0];
+      dy = vrtx[v1][1] - vrtx[v0][1];
+      ol = 2./(dx*dx +dy*dy);
+      psi = ol*((x -vrtx[v0][0])*dx +(y -vrtx[v0][1])*dy) -1.;
+
+      if (psi < -1.) {
+         if (snumnew <= snum) {
+            snum = snumnew;
+            snumnew -= 1;
+            if (snumnew == -1) snumnew = sbdry[bnum].num-1;
+            continue;
+         }
+         else {
+            psi = -1.;
+         }
+      }
+      else if (psi >  1.) {
+         if (snumnew >= snum) {
+            snum = snumnew;
+            snumnew += 1;
+            if (snumnew == sbdry[bnum].num) snumnew = 0;
+            continue;
+         }
+         else {
+            psi = 1.;
+         }
+      }
+      break;
+   };
+
+/*	FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+   if (typ&CURV_MASK) {
+      crdtouht1d(sind);
+      dx *= ol;
+      dy *= ol;
+      iter = 0;
+      do {
+         b.ptprobe1d(ND,uht,xp,psi,lf[0]);
+         
+         dpsi = (x -xp[0])*dx +(y -xp[1])*dy;
+         psi += dpsi;
+         if (iter++ > 100) {
+            printf("max iterations for curved triangle in bdry_locate tri: %d type: %d loc: %f,%f\n",tind,typ,x,y);
+            break;
+         }
+/*         
+         if (psi > 1.0) {
+            psi = 1.0;
+            break;
+         }
+         if (psi < -1.0) {
+            psi = 1.0;
+            break;
+         }   */     
+      } while (fabs(dpsi) > 100.*EPSILON);
+      x = xp[0];
+      y = xp[1]; 
+   }
+   else {
+      x = vrtx[v0][0] +dx*(psi +1.)*.5;
+      y = vrtx[v0][1] +dy*(psi +1.)*.5;
+   }
+   
+   return(psi);
+}
+
+int spectral_hp::ptprobe1d(int typ, FLT xp, FLT yp, FLT uout[NV]) {
+   FLT psi;
+   int sind;
+   
+   psi = bdry_locate(typ,xp,yp,sind);
+   ugtouht1d(sind);  
+   b.ptprobe1d(NV,uht,uout,psi,lf[0]);
+
+   return(0);
+}
