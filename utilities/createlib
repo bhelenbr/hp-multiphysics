@@ -2,9 +2,9 @@
 
 cp -f utilities.h ~/Codes/include
 cp -f myblas.h ~/Codes/include
-cp -f multiD.h ~/Codes/include
 cp -f parseargs.h ~/Codes/include
 cp -f gtypes.h ~/Codes/include
+
 #cd build/intermediates/utilities.build/Objects/ppc/
 cd build/utilities.build/utilities.build/Objects-normal/ppc
 libtool -o libutil.a utilities.o
