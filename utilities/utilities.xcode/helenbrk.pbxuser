@@ -1,0 +1,170 @@
+// !$*UTF8*$!
+{
+	08FB7793FE84155DC02AAC07 = {
+		activeBuildStyle = 014CEA530018CE5811CA2923;
+		activeExecutable = 6F4949B9084C088500C7F857;
+		activeTarget = 8DD76FA90486AB0100D96B5E;
+		addToTargets = (
+			8DD76FA90486AB0100D96B5E,
+		);
+		codeSenseManager = 6F4949C0084C088800C7F857;
+		executables = (
+			6F4949B9084C088500C7F857,
+		);
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					372,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXConfiguration.PBXTargetDataSource.PBXTargetDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					200,
+					192,
+					20,
+					48,
+					43,
+					43,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXTargetDataSource_PrimaryAttribute,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 139202639;
+			PBXWorkspaceStateSaveDate = 139202639;
+		};
+		perUserProjectItems = {
+			6F494A1E084C106B00C7F857 = 6F494A1E084C106B00C7F857;
+			6F494A1F084C106B00C7F857 = 6F494A1F084C106B00C7F857;
+			6F494A20084C106B00C7F857 = 6F494A20084C106B00C7F857;
+			6F494A24084C106B00C7F857 = 6F494A24084C106B00C7F857;
+		};
+		sourceControlManager = 6F4949BF084C088800C7F857;
+		userBuildSettings = {
+		};
+	};
+	6F4949B9084C088500C7F857 = {
+		activeArgIndex = 2147483647;
+		activeArgIndices = (
+		);
+		argumentStrings = (
+		);
+		configStateDict = {
+		};
+		cppStopOnCatchEnabled = 0;
+		cppStopOnThrowEnabled = 0;
+		customDataFormattersEnabled = 1;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		enableDebugStr = 1;
+		environmentEntries = (
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		isa = PBXExecutable;
+		libgmallocEnabled = 0;
+		name = utilities;
+		shlibInfoDictList_v2 = (
+		);
+		sourceDirectories = (
+		);
+	};
+	6F4949BF084C088800C7F857 = {
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		isa = PBXSourceControlManager;
+		scmConfiguration = {
+		};
+		scmType = "";
+	};
+	6F4949C0084C088800C7F857 = {
+		indexTemplatePath = "";
+		isa = PBXCodeSenseManager;
+	};
+	6F4949C1084C097A00C7F857 = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {570, 420}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRect = "{{0, 0}, {570, 217}}";
+		};
+	};
+	6F4949C3084C097A00C7F857 = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {570, 12250}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRect = "{{0, 8302}, {570, 217}}";
+		};
+	};
+	6F494A1E084C106B00C7F857 = {
+		fRef = 6F4949C3084C097A00C7F857;
+		isa = PBXTextBookmark;
+		name = "myblas.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 192;
+		vrLoc = 14835;
+	};
+	6F494A1F084C106B00C7F857 = {
+		fRef = 6F4949C1084C097A00C7F857;
+		isa = PBXTextBookmark;
+		name = "gtypes.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 262;
+		vrLoc = 0;
+	};
+	6F494A20084C106B00C7F857 = {
+		fRef = 6F4949C3084C097A00C7F857;
+		isa = PBXTextBookmark;
+		name = "myblas.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 192;
+		vrLoc = 14835;
+	};
+	6F494A24084C106B00C7F857 = {
+		fRef = 6F4949C1084C097A00C7F857;
+		isa = PBXTextBookmark;
+		name = "gtypes.h: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 262;
+		vrLoc = 0;
+	};
+	8DD76FA90486AB0100D96B5E = {
+		activeExec = 0;
+		executables = (
+			6F4949B9084C088500C7F857,
+		);
+	};
+}
