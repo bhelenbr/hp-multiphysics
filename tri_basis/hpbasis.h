@@ -170,12 +170,12 @@ class hpbasis {
       void ptprobe_bdry(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT *lin, int stride); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
       
       /* 1D SIDE PROBE FUNCTIONS */
-      inline void hpbasis::ptprobe1d(int nv, FLT *f, FLT x, FLT *sin, int stride) {    
+      inline void ptprobe1d(int nv, FLT *f, FLT x, FLT *sin, int stride) {    
          ptvalues1d(x);
          ptprobe1d(nv,f,sin,stride);
       }
       void ptprobe1d(int nv, FLT *f, FLT *sin, int stride);  // REUSES OLD VALUES OF X
-      inline void hpbasis::ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, FLT *sin, int stride) {    
+      inline void ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, FLT *sin, int stride) {    
          ptvalues1d_deriv(x);
          ptprobe1d(nv,f,dx,sin,stride);
       }

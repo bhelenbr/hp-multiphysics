@@ -1,7 +1,7 @@
 OBJ = initialize.o intgrt.o intgrt1d.o proj.o \
 proj1d.o ptvalues.o hpprobe.o
 
-CPPFLAGS = -I$(HOME)/Codes/include/
+CPPFLAGS = -I$(HOME)/Codes/include/ 
 DEFINES = -Df2cFortran
 LIB = -L$(HOME)/Codes/lib -lmyblas -lm
 
@@ -11,15 +11,18 @@ LIB = -L$(HOME)/Codes/lib -lmyblas -lm
 ## Machine specific for OS X
 #AR = libtool
 #ARFLAGS = -o
-#CPPFLAGS += -O3
+#CPPFLAGS += -O3 -funroll-loops -falign-loops=16
 #LIB += -framework veclib
  
 ## Linux:
 ##  Machine specific for Linux
-#CXX=icpc #(cares)
-CXX=g++3 #(shelob)
-CPPFLAGS += -O3
-LIB += -llapack -lblas -lg2c
+CXX=icpc #(cares)
+#CXX=g++3 #(shelob)
+#CPPFLAGS += -O3
+CPPFLAGS += -O3 -cxxlib-icc
+#LIB += -llapack -lblas -lg2c #(shelob)
+LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+#DEFINES = -DpgiFortran
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
