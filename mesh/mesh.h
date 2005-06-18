@@ -96,19 +96,23 @@ class mesh {
       void load_scratch_pointers();
       void copy(const mesh& tgt);
       void coarsen_substructured(const class mesh &tgt,int p);
+	   void symmetrize();
+      void append(const mesh &z);
       void shift(FLT s[ND]);
       void scale(FLT s[ND]);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
       int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
+      void bdry_output(const char *filename) const;
+
       void setbcinfo();
 
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      void length1();
-      void length2(); 
+      void length1(int phase) {msgload(phase,vlngth,0,0,1);}
+      int length2(int phase) {return(msgwait_rcv(phase,vlngth,0,0,1));} 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void coarsen3();
@@ -137,9 +141,13 @@ class mesh {
       void partition(const class mesh& xmesh, int npart);
       int comm_entity_size();
       int comm_entity_list(int *list);
-      int msgpass(int phase);
-      void matchboundaries1();
-      void matchboundaries2();
+      void msgload(int phase,FLT *base,int bgn, int end, int stride);
+      void msgpass(int phase);
+      int msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride);
+      int msgrcv(int phase,FLT *base,int bgn, int end, int stride);
+
+      void matchboundaries1(int phase);
+      int matchboundaries2(int phase);
       
       /* THIS IS AN INTERPOLATION DATA STRUCTURE */
       struct transfer {
@@ -173,6 +181,7 @@ class mesh {
       void createttri(void);
       void createvtri(void);
       void treeinit();
+      void treeinit(FLT x1[ND], FLT x2[ND]);
 
       /* MESH MODIFICATION FUNCTIONS */
       /* TO CREATE AN INITIAL TRIANGUlATION */
@@ -188,8 +197,8 @@ class mesh {
       void fltwkreb();
       
       /* FOR COARSENING A SIDE */
-      int collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *nsdel);
-      int collapse1(int sind,int bgnend, int& ntdel,int *tdel,int& nsdel,int *nsdel);
+      int collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel);
+      int collapse1(int sind,int bgnend, int& ntdel,int *tdel,int& nsdel,int *sdel);
 
       void dltvrtx(int vind);
       void dltd(int sind);

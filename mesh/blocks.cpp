@@ -16,7 +16,7 @@
 #include <map>
 #include <string>
 #include <sstream>
-
+#include <utilities.h>
 #ifdef MPISRC
 #include <mpi.h>
 #endif
@@ -26,43 +26,14 @@
 #endif
 
 void blocks::init(const char *infile, const char *outfile) {
-   int i,nb,total;
-   char ctemp[100];
    std::map<std::string,std::string> maptemp;
-   
-#ifdef MPISRC
-   MPI_Comm_size(MPI_COMM_WORLD,&nproc);
-	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif   
 
    input_map(maptemp,infile);
    
-   /* EXTRACT NBLOCKS FOR MYID */
-   /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
-   /* TO AVOID BUGS IN GCC 2.97 */
-   total = 0;
-   std::istringstream data(maptemp["nblock"]);
-   for (i=0;i<myid;++i) {
-      std::cout << i << std::endl;
-      if (!(data >> nb)) {
-         std::cout << "error reading blocks\n"; 
-         exit(1);
-      }
-      total += nb;
-   }
-   if (!(data >> ctemp)) {
-      std::cout << "error reading blocks\n"; 
-      exit(1);
-   }
-   maptemp["nblock"] = ctemp;  // NUMBER OF BLOCKS FOR THIS PROCESSOR */
-   data.clear();
-   maptemp["bstart"] = total; // BLOCK NUMBER TO START FROM FOR THIS PROCESSOR
-
-      
    if (outfile) {
       maptemp["logfile"] = outfile;
    }
-
+   
    init(maptemp);
    
    return;
@@ -71,18 +42,17 @@ void blocks::init(const char *infile, const char *outfile) {
 
 
 void blocks::init(std::map<std::string,std::string> input) {
-   int i;
+   int i,nb;
    char outfile[100];
+
    std::map<std::string,std::string>::const_iterator mi;
    std::map<std::string,std::string> merge;
+   std::istringstream data;
    
 #ifdef MPISRC
    MPI_Comm_size(MPI_COMM_WORLD,&nproc);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
-   
-   
-   std::istringstream data;
 
    /* OPEN LOGFILES FOR EACH PROCESSOR */
    mi = input.find("logfile");
@@ -116,7 +86,25 @@ void blocks::init(std::map<std::string,std::string> input) {
       *log << mi->second << ": gi_uLoadPart status = " << status << std::endl;
       if (status != CAPRI_SUCCESS) exit(1);
    }
-#endif   
+#endif 
+
+   /* EXTRACT NBLOCKS FOR MYID */
+   /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
+   int bstart = 0;
+   data.str(input["nblock"]);
+   for (i=0;i<myid;++i) {
+      if (!(data >> nb)) {
+         std::cerr << "error reading blocks\n"; 
+         exit(1);
+      }
+      bstart += nb;
+   }
+   if (!(data >> nblock)) {
+      std::cerr << "error reading blocks\n"; 
+      exit(1);
+   }
+   *log << "#starting block index: " << bstart << std::endl;
+   *log << "#nblocks for this processor: " << nblock << std::endl;
    
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
    data.str(input["itercrsn"]);   
@@ -164,11 +152,6 @@ void blocks::init(std::map<std::string,std::string> input) {
    if (!(data >> mglvls)) mglvls = 1;
    *log << "#mglvls: " << mglvls << std::endl;
    data.clear();
-   
-   int bstart;
-   data.str(input["bstart"]);   
-   if (!(data >> bstart)) bstart = 0;
-   data.clear();
 
    blk = new block *[nblock];
 
@@ -181,7 +164,9 @@ void blocks::init(std::map<std::string,std::string> input) {
    }
    
    findmatch();
-   matchboundaries();
+   matchboundaries();  // ONLY DOES FIRST LEVEL
+   output("matched",ftype::grid);
+
    for(lvl=1;lvl<ngrid;++lvl) {
       excpt = 0;
       do {
@@ -192,41 +177,37 @@ void blocks::init(std::map<std::string,std::string> input) {
          excpt += state;
       } while (state != block::stop);
    }
-   output("matched",ftype::grid);
    
    for(i=0;i<nblock;++i) {
       number_str(outfile,"coarsenchk",i,1);
       strcat(outfile,".");
       blk[i]->coarsenchk(outfile);
    }
-   
+      
    return;
 }
 
 static int maxblock,maxbdry,pdig,bdig,ndig;
 
 int tagid(int vsf,int p1,int p2,int b1,int b2,int n1,int n2) {
-   int tag = vsf;
-   int shift =2;
-   tag += (p1+p2)<<shift;
-   shift += pdig;
-   tag += (b1+b2)<<shift;
-   shift += bdig;
-   tag += (n1+n2)<<shift;
-   shift += ndig;
-   tag += abs(p1-p2)<<shift;
-   shift += pdig;
-   tag += abs(b1-b2)<<shift;
-   shift += bdig;
-   tag += abs(n1-n2)<<shift;
+   int tag,lefttag,righttag;
+   
+   lefttag = (p1<<(bdig+ndig)) +(b1<<(ndig)) +n1;
+   righttag = (p2<<(bdig+ndig)) +(b2<<(ndig)) +n2;
+
+   if (lefttag > righttag) {
+      tag = (vsf<<(2*(bdig+ndig+pdig))) +(lefttag<<(bdig+ndig+pdig)) +righttag;
+   }
+   else {
+      tag = (vsf<<(2*(bdig+ndig+pdig)))+(righttag<<(bdig+ndig+pdig)) +lefttag;
+   }
+   
    return(tag);
 }
 
-void blocks::findmatch() {
-   int b,b1,b2,i,j,k,grdlvl,p,count,tsize;
-   int *entitylist, *sndentitylist, *size, *sndsize;
-      
-   struct commblocks {
+/* THIS IS A DATA STRUCTURE FOR STORING COMM INFO */
+class commblocks {
+   public:
       int nblock;
       struct commblock {
          int nvcomm;
@@ -236,29 +217,104 @@ void blocks::findmatch() {
          
          int nscomm;
          struct sid {
-            int nsbd, idnum, vid0, vid1;
+            int nsbd, idnum; // , vid0, vid1;
          } *scomm;
          
          int nfcomm;
          struct fid {
-            int nfbd, idnum, nsds;
-            int *sids;
+            int nfbd, idnum; // , nsds;
+            // int *sids;
          } *fcomm;
       } *blkinfo;
-   } *blksinfo;
-   commblocks::commblock *bp, *bp1, *bp2;
-   blksinfo = new commblocks[nproc];
-   sndsize = new int[nproc];
-   for(i=0;i<nproc;++i)
-      sndsize[i] = 0;
+      
+      commblocks() : nblock(0) {}
+      void output(std::ostream *log) {
+         *log << "# number of blocks: " << nblock << std::endl;
+         for (int i=0;i<nblock;++i) {
+            *log << "#\tblock: " << i << std::endl;
+            
+            *log << "#\t\tnvcomm: " << blkinfo[i].nvcomm << std::endl;
+            for (int v=0;v<blkinfo[i].nvcomm;++v)
+               *log << "#\t\t\tnvbd: " << blkinfo[i].vcomm[v].nvbd << " idnum: " << blkinfo[i].vcomm[v].idnum << std::endl;
+            
+            *log << "#\t\tnscomm: " << blkinfo[i].nscomm << std::endl;
+            for (int v=0;v<blkinfo[i].nscomm;++v)
+               *log << "#\t\t\tnsbd: " << blkinfo[i].scomm[v].nsbd << " idnum: " << blkinfo[i].scomm[v].idnum << std::endl;
+            
+            *log << "#\t\tnfcomm: " << blkinfo[i].nfcomm << std::endl;
+            for (int v=0;v<blkinfo[i].nfcomm;++v)
+               *log << "#\t\t\tnfbd: " << blkinfo[i].fcomm[v].nfbd << " idnum: " << blkinfo[i].fcomm[v].idnum << std::endl;
+         }
+      }
+      
+      int unpack(int *entitylist) {
+         int count = 0;
+         nblock = entitylist[count++];
+         blkinfo = new commblock[nblock];
+         for(int b=0;b<nblock;++b) {
+            blkinfo[b].nvcomm = entitylist[count++];
+            blkinfo[b].vcomm = new commblock::vid[blkinfo[b].nvcomm];
+            for(int i=0;i<blkinfo[b].nvcomm;++i) {
+               blkinfo[b].vcomm[i].nvbd = entitylist[count++];
+               blkinfo[b].vcomm[i].idnum = entitylist[count++];
+            }
+            
+            blkinfo[b].nscomm = entitylist[count++];
+            blkinfo[b].scomm = new commblock::sid[blkinfo[b].nscomm];
+            for(int i=0;i<blkinfo[b].nscomm;++i) {
+               blkinfo[b].scomm[i].nsbd = entitylist[count++];
+               blkinfo[b].scomm[i].idnum = entitylist[count++];
+               // blkinfo[b].scomm[i].vid0 = entitylist[count++];
+               // blkinfo[b].scomm[i].vid1 = entitylist[count++];
+            }
+            
+            blkinfo[b].nfcomm = entitylist[count++];
+            blkinfo[b].fcomm = new commblock::fid[blkinfo[b].nfcomm];
+            for(int i=0;i<blkinfo[b].nfcomm;++i) {
+               blkinfo[b].fcomm[i].nfbd = entitylist[count++];
+               blkinfo[b].fcomm[i].idnum = entitylist[count++];
+               // bp->fcomm[i].nsds = entitylist[count++];
+               // bp->fcomm[i].sids = new int[bp->fcomm[i].nsds];
+               // for (j=0;j<bp->fcomm[i].nsds;++j)
+                  // bp->fcomm[i].sids[j] = entitylist[count++];
+            }
+         }
+         return(count);
+      }
+      ~commblocks() {
+         for(int i=0;i<nblock;++i) {
+            delete []blkinfo[i].vcomm;
+            delete []blkinfo[i].scomm;
+//            for(k=0;k<blkinfo[i].nfcomm;++k)
+//               delete []blkinfo[i].fcomm[k].sids;
+            delete []blkinfo[i].fcomm;
+         }
+         delete []blkinfo;
+      }
+};   
+   
 
+void blocks::findmatch() {
+   int b,b1,b2,i,j,grdlvl,p,count,tsize;
+   int *entitylist, *sndentitylist, *size, *sndsize;
+   commblocks *blksinfo;
+   commblocks::commblock *bp1, *bp2;
+   
    /* FIRST DETERMINE TOTAL SIZE OF LIST */
    for(grdlvl=0;grdlvl<ngrid;++grdlvl) {
+      blksinfo = new commblocks[nproc];
+
+      *log << "# finding matches at multigrid level " << grdlvl << " for processor " << myid << std::endl;
       
+      sndsize = new int[nproc];
+      for(i=0;i<nproc;++i)
+         sndsize[i] = 0;
+         
       sndsize[myid] = 1;  // 1 INT FOR # OF BLOCKS 
       for(b=0;b<nblock;++b) {
          sndsize[myid] += blk[b]->comm_entity_size(grdlvl);
       }
+      
 #ifdef MPISRC
       size = new int[nproc];
       for(i=0;i<nproc;++i)
@@ -302,42 +358,20 @@ void blocks::findmatch() {
       maxbdry = 0; // SO I CAN GENERATE UNIQUE TAGS
       count = 0;
       for(p=0;p<nproc;++p) {
-         blksinfo[p].nblock = entitylist[count++];
+         entitylist += blksinfo[p].unpack(entitylist);
          maxblock = MAX(maxblock,blksinfo[p].nblock);
-         blksinfo[p].blkinfo = new commblocks::commblock[blksinfo[p].nblock];
-         for(b=0;b<blksinfo[p].nblock;++b) {
-            bp = &blksinfo[p].blkinfo[b];
-            bp->nvcomm = entitylist[count++];
-            maxbdry = MAX(maxbdry,bp->nvcomm);
-            bp->vcomm = new commblocks::commblock::vid[bp->nvcomm];
-            for(i=0;i<bp->nvcomm;++i) {
-               bp->vcomm[i].nvbd = entitylist[count++];
-               bp->vcomm[i].idnum = entitylist[count++];
-            }
-            
-            bp->nscomm = entitylist[count++];
-            maxbdry = MAX(maxbdry,bp->nscomm);
-            bp->scomm = new commblocks::commblock::sid[bp->nscomm];
-            for(i=0;i<bp->nscomm;++i) {
-               bp->scomm[i].nsbd = entitylist[count++];
-               bp->scomm[i].idnum = entitylist[count++];
-               bp->scomm[i].vid0 = entitylist[count++];
-               bp->scomm[i].vid1 = entitylist[count++];
-            }
-            
-            bp->nfcomm = entitylist[count++];
-            maxbdry = MAX(maxbdry,bp->nfcomm);
-            bp->fcomm = new commblocks::commblock::fid[bp->nfcomm];
-            for(i=0;i<bp->nfcomm;++i) {
-               bp->fcomm[i].nfbd = entitylist[count++];
-               bp->fcomm[i].idnum = entitylist[count++];
-               bp->fcomm[i].nsds = entitylist[count++];
-               bp->fcomm[i].sids = new int[bp->fcomm[i].nsds];
-               for (j=0;j<bp->fcomm[i].nsds;++j)
-                  bp->fcomm[i].sids[j] = entitylist[count++];
-            }
+         for(int b=0;b<blksinfo[p].nblock;++b) {
+            maxbdry = MAX(maxbdry,blksinfo[p].blkinfo[b].nvcomm);
+            maxbdry = MAX(maxbdry,blksinfo[p].blkinfo[b].nscomm);
+            maxbdry = MAX(maxbdry,blksinfo[p].blkinfo[b].nfcomm);
          }
+         /* OUTPUT LIST FOR DEBUGGING */
+         *log << "# processor " << p << " block data" << std::endl;
+         blksinfo[p].output(log);
       }
+      entitylist -= tsize;
+      delete []entitylist;
+      
       
       /* CALCULATE NUMBER OF BINARY DIGITS NEEDED TO MAKE TAGS */
       pdig = 1;
@@ -346,22 +380,23 @@ void blocks::findmatch() {
       while ((maxblock>>bdig) > 0) ++bdig;
       ndig = 1;
       while ((maxbdry>>ndig) > 0) ++ndig;
-      if (2*(pdig+bdig+ndig)+2 > 32) *log << "can't guarantee unique tags\n";
-      
+      if (2*(pdig+bdig+ndig)+2 > 32) *log << "can't guarantee unique tags\n"; 
+
       /* CAN NOW START TO LOOK FOR MATCHES */
       /* FOR NOW ALL COMMUNICATION IN 1 PHASE */
       /* LATER DO SOMETHING FANCY WITH ALL THIS INFO ? */
       
       for(b1=0;b1<blksinfo[myid].nblock;++b1) {
          bp1 = &blksinfo[myid].blkinfo[b1];
+         *log << "# finding matches for block " << b1 << std::endl;
 
-         for (p=0;p<nproc;++p) {
-            for(b2=0;b2<blksinfo[p].nblock;++b2) {
-               
-               bp2 = &blksinfo[p].blkinfo[b2];
-               /* LOOK FOR VERTEX MATCHES */
-               for(i=0;i<bp1->nvcomm;++i) {
-                  bool first_found = false;
+         /* LOOK FOR VERTEX MATCHES */
+         for(i=0;i<bp1->nvcomm;++i) {
+            bool first_found = false;
+            *log << "#\tvertex " << bp1->vcomm[i].nvbd << " idnum: " << bp1->vcomm[i].idnum << std::endl;
+            for (p=0;p<nproc;++p) {
+               for(b2=0;b2<blksinfo[p].nblock;++b2) {
+                  bp2 = &blksinfo[p].blkinfo[b2];
                   for(j=0;j<bp2->nvcomm;++j) {
                      if (bp1->vcomm[i].idnum == bp2->vcomm[j].idnum) {
                         if (p == myid) {
@@ -376,7 +411,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false; 
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "vrtx local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+                           *log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -386,17 +421,23 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "vrtx mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+                           *log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << std::endl;
                         }
 #endif
                         
                      }
                   }
                }
+            }
+         }
                
-               /* LOOK FOR SIDE MATCHES */
-               for(i=0;i<bp1->nscomm;++i) {
-                  bool first_found = false;
+         /* LOOK FOR SIDE MATCHES */
+         for(i=0;i<bp1->nscomm;++i) {
+            bool first_found = false;
+            *log << "#\tside " << bp1->scomm[i].nsbd << " idnum: " << bp1->scomm[i].idnum << std::endl;
+            for (p=0;p<nproc;++p) {
+               for(b2=0;b2<blksinfo[p].nblock;++b2) {
+                  bp2 = &blksinfo[p].blkinfo[b2];
                   for(j=0;j<bp2->nscomm;++j) {
                      if (bp1->scomm[i].idnum == bp2->scomm[j].idnum) {
                         if (p == myid) {
@@ -411,8 +452,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "side local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
-
+                           *log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -422,17 +462,22 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "side mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
-
+                           *log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << std::endl;
                         }
 #endif
                      }
                   }
                }
-               
-               /* LOOK FOR FACE MATCHES */
-               for(i=0;i<bp1->nfcomm;++i) {
-                  bool first_found = false;
+            }
+         }
+         
+         /* LOOK FOR FACE MATCHES */
+         for(i=0;i<bp1->nfcomm;++i) {
+            bool first_found = false;
+            *log << "#\tface " << bp1->fcomm[i].nfbd << " idnum: " << bp1->fcomm[i].idnum << std::endl;
+            for (p=0;p<nproc;++p) {
+               for(b2=0;b2<blksinfo[p].nblock;++b2) {
+                  bp2 = &blksinfo[p].blkinfo[b2];
                   for(j=0;j<bp2->nfcomm;++j) {
                      if (bp1->fcomm[i].idnum == bp2->fcomm[j].idnum) {
                         if (p == myid) {
@@ -447,7 +492,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "face local match id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+                           *log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << std::endl;
 
                         }
 #ifdef MPISRC
@@ -458,7 +503,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#mgrid " << grdlvl << "face mpi match " << "p: " << p << " id: " << v1->idnum << " b1: " << b1 << " b2: " << b2 << " n1: " << bp1->vcomm[i].nvbd << " n2: " << bp2->vcomm[j].nvbd << "\n";
+                           *log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << std::endl;
 
                         }
 #endif
@@ -470,21 +515,8 @@ void blocks::findmatch() {
       }
                
       /* DELETE DATA STRUCTURE */
-      for(i=0;i<nproc;++i) {
-         for(j=0;j<blksinfo[i].nblock;++j) {
-            bp = &blksinfo[i].blkinfo[j];
-            delete []bp->vcomm;
-            delete []bp->scomm;
-            for(k=0;k<bp->nfcomm;++k)
-               delete []bp->fcomm[k].sids;
-            delete []bp->fcomm;
-         }
-         delete []blksinfo[i].blkinfo;
-      }
-      delete []entitylist;
+      delete []blksinfo;
    }
-   
-   delete []blksinfo;
    delete []size;
 
    return;
@@ -497,12 +529,13 @@ void blocks::matchboundaries() {
    int i,lvl,excpt;
    int state;
    
-   for (lvl=0;lvl<1;++lvl) {
+   for (lvl=0;lvl<1;++lvl) {  // TEMPORARY
       excpt = 0;
       do {
          state = block::stop;
-         for(i=0;i<nblock;++i)
+         for(i=0;i<nblock;++i) {
             state &= blk[i]->matchboundaries(lvl,excpt);
+         }
          excpt += state;
       } while (state != block::stop);
    }
@@ -638,7 +671,7 @@ void blocks::go() {
          *log << '\n';
       }
       number_str(outname, "end", step, 3);
-      output(outname,ftype::tecplot);
+      output(outname,ftype::grid);
       restructure();
    }
    cpu_time = clock();
@@ -669,6 +702,7 @@ void blocks::tadvance() {
 void blocks::restructure() {
    int i,lvl,excpt;
    int state;
+   char outfile[120];
    
    matchboundaries();
    
@@ -689,6 +723,12 @@ void blocks::restructure() {
          }
          excpt += state;
       } while (state != block::stop);
+   }
+   
+   for(i=0;i<nblock;++i) {
+      number_str(outfile,"coarsenchk",i,1);
+      strcat(outfile,".");
+      blk[i]->coarsenchk(outfile);
    }
             
    return;

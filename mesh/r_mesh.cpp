@@ -6,6 +6,8 @@
 #include <iostream>
 #include <cmath>
 #include <input_map.h>
+#include <fstream>
+
 
 sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, r_mesh::gbl *rgin, sharedmem *wkin) {
    std::string keyword;
@@ -14,7 +16,12 @@ sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, 
    
    keyword = prefix + ".fadd";
    data.str(input[keyword]);
-   if (!(data >> fadd)) fadd = 1.0;
+   if (!(data >> fadd)) {
+      data.clear();
+      keyword = "fadd";
+      data.str(input[keyword]);
+      if (!(data >> fadd)) fadd = 1.0;
+   }
    *log << "#fadd: " << fadd << std::endl;
    data.clear();
 
@@ -44,10 +51,22 @@ sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, 
    std::map<std::string,std::string> bdrymap;
    keyword = prefix + ".bdryfile";
    data.str(input[keyword]);
-   data >> bdryfile;
+   if (data >> bdryfile) {
+      if (!(strncmp("${HOME}",bdryfile.c_str(), 7))) {
+         filename = getenv("HOME");
+         filename = filename + (bdryfile.c_str()+7);
+      }
+      else 
+         filename = bdryfile;
+   }
+   else {
+      keyword = prefix + ".mesh";
+      data.str(input[keyword]);
+      filename = filename +"_bdry.inpt";
+   }
+   input_map(bdrymap,filename.c_str());
    data.clear();
 
-   input_map(bdrymap,bdryfile.c_str());
    for(int i=0;i<nsbd;++i)
       r_sbdry[i] = getnewsideobject(i,&bdrymap);
    
@@ -58,6 +77,24 @@ void r_mesh::load_scratch_pointers() {
    work = static_cast<FLT (*)[ND]>(scratch->p);
    res = work+maxvst;
    diag = static_cast<FLT *>(scratch->p) +2*ND*maxvst;
+}
+
+void r_mesh::bdry_output(const char *filename) const {
+   char fnmapp[120];
+   std::ofstream bout;
+   int i;
+   
+   strcpy(fnmapp,filename);
+   strcat(fnmapp,"_bdry.inpt");
+   bout.open(fnmapp);
+   for(i=0;i<nvbd;++i) 
+      vbdry[i]->output(bout);
+      
+   for(i=0;i<nsbd;++i) {
+      sbdry[i]->output(bout);
+      r_sbdry[i]->output(bout);
+   }
+   bout.close();
 }
 
 
@@ -121,17 +158,6 @@ void r_mesh::calc_kvol() {
    for(tind=0;tind<ntri;++tind) 
       for(i=0;i<3;++i) 
          kvol[td[tind].vrtx[i]] += area(tind);
-                  
-   /* SEND COMMUNICATION PACKETS IN XFIRST */
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff(kvol,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(kvol,0,0,1);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
            
    return;
 }
@@ -139,11 +165,6 @@ void r_mesh::calc_kvol() {
 void r_mesh::kvoli() {
    int i;
 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->finalrcv(kvol,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv(kvol,0,0,1);  
-   
    for(i=0;i<nvrtx;++i)
       kvol[i] = 1./kvol[i];
 }
@@ -229,17 +250,6 @@ void r_mesh::rkmgrid(mesh::transfer *fv_to_ct, r_mesh *fmesh) {
       }
    }
 
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff(kvol,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(kvol,0,0,1);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
-
    return;
 }
 
@@ -287,31 +297,20 @@ void r_mesh::rsdl() {
    for(i=0;i<nsbd;++i)
       r_sbdry[i]->dirichlet();
       
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff((FLT *) res,0,1,2);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff((FLT *) res,0,1,2);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
+         
+   /* TESTING 
+   for(i=0;i<nvrtx;++i) {
+      res[i][0] = 0.525*vrtx[i][0]+0.7*i;
+      res[i][1] = 0.525*vrtx[i][1]+0.7*i;
+   }
+   
+   std::cout << "74 " << res[nvrtx-17][0] << " " <<  res[nvrtx-17][1] << std::endl;
+   std::cout << "90 " << res[nvrtx-1][0] << " " <<  res[nvrtx-1][1] << std::endl;
+   */
    
    return;
 }
 #endif
-
-void r_mesh::rsdl_finalrcv() {
-   int i;
-   
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->finalrcv((FLT *) res,0,1,2);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv((FLT *) res,0,1,2);  
-
-	return;
-}
 
 #ifndef FOURTH
 void r_mesh::vddt(void)
@@ -331,17 +330,6 @@ void r_mesh::vddt(void)
       diag[v0] += fabs(ksprg[sind]);
       diag[v1] += fabs(ksprg[sind]);
    }
-
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff(diag,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(diag,0,0,1);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
    
    return;
 }
@@ -349,12 +337,7 @@ void r_mesh::vddt(void)
 
 void r_mesh::vddti() {
    int i;
-   
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->finalrcv(diag,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv(diag,0,0,1);
-   
+
    for(i=0;i<nvrtx;++i)
       diag[i] = vnn/diag[i];
 }
@@ -436,7 +419,7 @@ block::ctrl r_mesh::mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transf
    
    switch (excpt) {
       case(0):
-         mp_phase = 0;
+         mp_phase = -1;
          /* DETERMINE CORRECTIONS ON COARSE MESH   */   
          for(i=0;i<cmesh->nvrtx;++i)
             for(n=0;n<ND;++n) 
@@ -457,36 +440,43 @@ block::ctrl r_mesh::mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transf
                   res[i][n] -= fv_to_ct[i].wt[j]*cmesh->vrtx_frst[ind][n];
             }
          }
-                    
-         /* SEND COMMUNICATION PACKETS  */ 
-         mp_phase = 0;
-         for(i=0;i<nsbd;++i)
-            if (sbdry[i]->group()&0x1) sbdry[i]->loadbuff((FLT *) res,0,1,2);
-            
-         for(i=0;i<nsbd;++i) 
-            if (sbdry[i]->group()&0x1) sbdry[i]->comm_prepare(0);
-         
          return(block::advance);
-         
+            
       case(1):
-         for(i=0;i<nsbd;++i) 
-            if (sbdry[i]->group()&0x1) stop &= sbdry[i]->comm_transmit(mp_phase);
+         /* SEND COMMUNICATION PACKETS  */ 
          ++mp_phase;
-                
-         if (!stop) {
-            for(i=0;i<nsbd;++i)
-               if (sbdry[i]->group()&0x1) sbdry[i]->comm_prepare(mp_phase);
+
+         switch(mp_phase%3) {
+            case(0):
+               for(i=0;i<nsbd;++i)
+                  if (sbdry[i]->group()&0x1) sbdry[i]->loadbuff((FLT *) res,0,1,2);
+                  
+               for(i=0;i<nsbd;++i) 
+                  if (sbdry[i]->group()&0x1) sbdry[i]->comm_prepare(mp_phase/3);
+               
+               return(block::stay);
+            case(1):
+               for(i=0;i<nsbd;++i) 
+                  if (sbdry[i]->group()&0x1) sbdry[i]->comm_transmit(mp_phase/3);
+               return(block::stay);
+            case(2):
+               stop = 1;
+               for(i=0;i<nsbd;++i) {
+                  if (sbdry[i]->group()&0x1) {
+                     stop &= sbdry[i]->comm_wait(mp_phase/3);
+                     sbdry[i]->finalrcv(mp_phase/3,(FLT *) res,0,1,2);
+                  }
+               }
+               return(static_cast<block::ctrl>(stop));
          }
-         return(static_cast<block::ctrl>(stop));
 
       case(2):
-         for(i=0;i<nsbd;++i)
-            if (sbdry[i]->group()&0x1) sbdry[i]->finalrcv((FLT *) res,0,1,2);
-            
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n) 
                vrtx[i][n] += res[i][n];
+         return(block::stop);
    }
+   *log << "Flow control error\n" << std::endl;
    return(block::stop);
 }
 
@@ -540,28 +530,12 @@ void r_mesh::rsdl1() {
    for(i=0;i<nsbd;++i)
       r_sbdry[i]->fixdx2();
 
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff((FLT *) work,0,1,2);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff((FLT *) work,0,1,2);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
-
    return;
 }
 
 void r_mesh::rsdl() {
    int i,n,v0,v1,sind;
    FLT dx,dy;
-   
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->finalrcv((FLT *) work,0,1,2);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv((FLT *) work,0,1,2);  
   
    /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
    for(i=0;i<nvrtx;++i)
@@ -604,17 +578,6 @@ void r_mesh::rsdl() {
    for(i=0;i<nsbd;++i)
       r_sbdry[i]->dirichlet();
    
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff((FLT *) res,0,1,2);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff((FLT *) res,0,1,2);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
-   
    return;
 }
 
@@ -634,29 +597,13 @@ void r_mesh::vddt1(void)
       diag[v0] += fabs(ksprg[sind]);
       diag[v1] += fabs(ksprg[sind]);
    }
-   
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff(diag,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(diag,0,0,1);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
-   
+
    return;
 }
 
 void r_mesh::vddt() {
    int i,v0,v1,sind;
 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->finalrcv(diag,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv(diag,0,0,1);
-   
    for(i=0;i<nvrtx;++i)
       work[i][0] = diag[i]*kvol[i];
       
@@ -670,17 +617,6 @@ void r_mesh::vddt() {
       diag[v1] += fabs(ksprg[sind])*(work[v1][0] +fabs(ksprg[sind])*kvol[v0]);
    }
 
-   /* SEND COMMUNICATION PACKETS  */ 
-   for(i=0;i<nsbd;++i)
-      sbdry[i]->loadbuff(diag,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(diag,0,0,1);
-      
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->comm_prepare(0);
-   for(i=0;i<nvbd;++i) 
-      vbdry[i]->comm_prepare(0);
-   
    return;
 }
 #endif
@@ -691,12 +627,23 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,
       switch (execpoint) {
          case (0):
             /* SETUP SPRING CONSTANTS  */
-            mp_phase = 0;
+            mp_phase = -1;
             rklaplace();
             return(block::advance);
             
          case (1):
-            return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+           ++mp_phase;
+            /* MESSAGE PASSING SEQUENCE */
+            switch(mp_phase%3) {
+               case(0):
+                  msgload(mp_phase/3,kvol,0,0,1);
+                  return(block::stay);
+               case(1):
+                  msgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol,0,0,1)));
+            }
             
          case (2):
             kvoli();
@@ -706,25 +653,46 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,
 #define P2 2
          case (3):
             rsdl1();
-            mp_phase = 0;
+            mp_phase = -1;
             return(block::advance);
             
          case (4):
-            return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+            ++mp_phase;
+            /* MESSAGE PASSING SEQUENCE */
+            switch(mp_phase%3) {
+               case(0):
+                  msgload(mp_phase/3,(FLT *) work,0,1,2);
+                  return(block::stay);
+               case(1):
+                  msgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) work,0,1,2));
+            }
 #else
 #define P2 0
 #endif            
          case (3+P2):
-            mp_phase = 0;
+            mp_phase = -1;
             zero_source();
             rsdl();
             return(block::advance);
 
          case (4+P2):
-            return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+            ++mp_phase;
+            /* MESSAGE PASSING SEQUENCE */
+            switch(mp_phase%3) {
+               case(0):
+                  msgload(mp_phase/3,(FLT *) res,0,1,2);
+                  return(block::stay);
+               case(1):
+                  msgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) res,0,1,2)));
+            }
          
          case (5+P2):
-            rsdl_finalrcv();
             sumsrc();
             moveboundaries();
             return(block::stop);
@@ -739,13 +707,22 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,
       switch (execpoint) {
          case (0):
             /* SETUP SPRING CONSTANTS  */
-            mp_phase = 0;
+            mp_phase = -1;
             rklaplace();
             return(block::advance);
             
          case (1):
-            return(static_cast<block::ctrl>(msgpass(mp_phase++)));
-            
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  msgload(mp_phase/3,kvol,0,0,1);
+                  return(block::stay);
+               case(1):
+                  msgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol,0,0,1)));
+            }
          case (2):
             kvoli();
             return(block::stop);
@@ -761,11 +738,21 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,
    /* SETUP FIRST MESH */
       switch (phase) {
          case(0):
-            mp_phase = 0;
+            mp_phase = -1;
             rkmgrid(fv_to_ct,fmesh);
             return(block::advance);
          case(1):
-            return(static_cast<ctrl>(msgpass(mp_phase++)));
+            ++mp_phase
+            switch(mp_phase%3) {
+               case(0):
+                  msgload(mp_phase/3,kvol,0,0,1);
+                  return(block::stay);
+               case(1):
+                  msgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol,0,0,1)));
+            }
          case(2):
             grd[lvl].kvoli();
             return(block::stop);
@@ -788,22 +775,44 @@ block::ctrl r_mesh::rsdl(int excpt) {
    switch (excpt) {
 #ifdef FOURTH
       case(0):
-         mp_phase = 0;
+         mp_phase = -1;
          rsdl1();
          return(block::advance);
       case(1):
-         return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               msgload(mp_phase/3,(FLT *) work,0,1,2);
+               return(block::stay);
+            case(1):
+               msgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) work,0,1,2));
+         }
 #endif
       case(0+P2):
-         mp_phase = 0;
+         mp_phase = -1;
          rsdl();
          return(block::advance);
+
          
       case(1+P2):
-         return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               msgload(mp_phase/3,(FLT *) res,0,1,2);
+               return(block::stay);
+            case(1):
+               msgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) res,0,1,2)));
+         }
          
       case(2+P2):
-         rsdl_finalrcv();
          return(block::stop);
          
       default:
@@ -819,19 +828,41 @@ block::ctrl r_mesh::setup_preconditioner(int excpt) {
    switch (excpt) {
 #ifdef FOURTH
       case(0):
-         mp_phase = 0;
+         mp_phase = -1;
          vddt1();
          return(block::advance);
       case(1):
-         return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               msgload(mp_phase/3,diag,0,0,1);
+               return(block::stay);
+            case(1):
+               msgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,diag,0,0,1));
+         }
 #endif
       case(0+P2):
-         mp_phase = 0;
+         mp_phase = -1;
          vddt();
          return(block::advance);
          
       case(1+P2):
-         return(static_cast<block::ctrl>(msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               msgload(mp_phase/3,diag,0,0,1);
+               return(block::stay);
+            case(1):
+               msgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,diag,0,0,1)));
+         }
          
       case(2+P2):
          vddti();

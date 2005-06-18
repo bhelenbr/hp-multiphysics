@@ -385,7 +385,8 @@ next1a:     continue;
             for(i=0;i<nvbd;++i) {
                fscanf(grd,"%*[^:]:%d",&temp);
                vbdry[i] = getnewvrtxobject(temp,pbdrymap);
-               fscanf(grd,"point: %d\n",&vbdry[i]->v0);
+               vbdry[i]->alloc(1);
+               fscanf(grd,"%*[^:]:%d\n",&vbdry[i]->v0);
             }
             
             break;
@@ -665,15 +666,6 @@ next1c:     continue;
                *log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
-                
-                
-//            /* SKIP FIRST ZONE? */
-//            char mychar;
-//            do {
-//                fscanf(grd,"%*[^\n]\n");
-//                mychar = fgetc(grd);
-//            } while (mychar != 'Z');
-            
             
             /* HEADER LINES */
             fscanf(grd,"%*[^,],%*[^,],%*[^=]=%d%*[^=]=%d\n",&nvrtx,&ntri);
@@ -741,7 +733,6 @@ next1c:     continue;
 
             maxvst = static_cast<int>(grwfac*pow(nvrtx,2));
             allocate(maxvst,win);
-            qtree.allocate(vrtx,maxvst);
             initialized = 1;
 
             for(i=0;i<nvrtx;++i) {
@@ -834,7 +825,6 @@ next1c:     continue;
    createttri();
    createvtri();
    cnt_nbor();
-   if (!initialized) qtree.allocate(vrtx,maxvst);
    treeinit(); 
    if (filetype != ftype::boundary) initvlngth();
    checkintegrity();
@@ -861,6 +851,9 @@ sharedmem* mesh::allocate(int mxsize, sharedmem* wkin) {
    /* TRI INFO */ 
    td = new tstruct[maxvst+1];
    ++td;
+   
+   qtree.allocate(vrtx,maxvst);
+
                  
    /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */ 
@@ -892,7 +885,8 @@ sharedmem* mesh::allocate(int mxsize, sharedmem* wkin) {
       
       
    }
-      
+   initialized = 1;
+   
    return(scratch);
 }
 

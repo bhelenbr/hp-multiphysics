@@ -36,14 +36,14 @@ class r_fixed : public r_side_bdry {
       void input(std::map <std::string,std::string>& inmap) {
          r_side_bdry::input(inmap);
          
-         std::istringstream data(inmap[base.idprefix+".r_dirfixed"]);
+         std::istringstream data(inmap[base.idprefix+".r_dir"]);
          if (!(data >> dstart >> dstop)) {dstart = 0; dstop = 1;}
          data.clear();
       }  
       
       void output(std::ostream& fout) {
          r_side_bdry::output(fout);
-         fout << base.idprefix << ".r_dirfixed: " << dstart << '\t' << dstop << std::endl;
+         fout << base.idprefix << ".r_dir: " << dstart << '\t' << dstop << std::endl;
       }
            
       void dirichlet() {         

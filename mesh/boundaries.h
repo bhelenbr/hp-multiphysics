@@ -6,6 +6,8 @@
 #include <sstream>
 #include <fstream>
 
+#define NO_MPDEBUG
+
 /* TEMPLATE CLASS TO MAKE A COMMUNCIATION BOUNDARY */
 template<class BASE> class comm_bdry : public BASE {
    protected:
@@ -37,17 +39,22 @@ template<class BASE> class comm_bdry : public BASE {
 #endif
             
    public:
-      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {}
-      comm_bdry<BASE>* create(mesh &xin) const {
-         comm_bdry<BASE> *temp = new comm_bdry<BASE>(idnum,xin);
-         temp->grouping = grouping;
-         return(temp);
-      }
+      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = 0;}
+      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(1), grouping(inbdry.grouping), maxphase(inbdry.maxphase), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = inbdry.phase[m];} 
+     
+      comm_bdry<BASE>* create(mesh &xin) const {return(new comm_bdry<BASE>(*this,xin));}
+
       void output(std::ostream& fout) {
          BASE::output(fout);
          fout << BASE::idprefix << ".group" << ": " << grouping << std::endl;  
+         
+         fout << BASE::idprefix << ".phase" << ": ";
+         for (int m=0;m<nmatch;++m)
+            fout << phase[m] << " ";
+         fout << std::endl;
       }
       void input(std::map <std::string,std::string>& inmap) {
+         int m;
          std::string keyword;
          std::map<std::string,std::string>::const_iterator mi;
          std::istringstream data;
@@ -61,6 +68,22 @@ template<class BASE> class comm_bdry : public BASE {
             data >> grouping;
             data.clear();
          }
+         
+         for (m=0;m<maxmatch;++m)
+            phase[m] = 0;
+            
+         keyword = BASE::idprefix + ".phase";
+         mi = inmap.find(keyword);
+         if (mi != inmap.end()) {
+            data.str(mi->second);
+            m = 0;
+            maxphase = 0;
+            while(data >> phase[m]) {
+               maxphase = MAX(maxphase,phase[m]);
+               ++m;
+            }
+            data.clear();
+         }
       }
       bool is_comm() {return(true);}
       bool& is_frst() {return(first);}
@@ -70,7 +93,7 @@ template<class BASE> class comm_bdry : public BASE {
       void *psndbuf() {return(sndbuf);}
       int& isndbuf(int n) {return(static_cast<int *>(sndbuf)[n]);}
       FLT& fsndbuf(int n) {return(static_cast<FLT *>(sndbuf)[n]);}
-      void *prcvbuf(int match) {return(rcvbuff);}
+      void *prcvbuf(int match) {return(rcvbuf);}
       int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf[match])[n]);}
       FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf[match])[n]);}
       
@@ -97,17 +120,16 @@ template<class BASE> class comm_bdry : public BASE {
       }
 
       int local_cnnct(boundary *bin, int msg_tag) {
-         if (bin->idnum == idnum) {
+         if (bin->idnum == BASE::idnum) {
             mtype[nmatch] = local;
             local_match[nmatch] = bin->psndbuf();
             tags[nmatch] = msg_tag;
-            phase[nmatch] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
             rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
             
             ++nmatch;
             return(0);
          }
-         *x.log << "error: not local match" << idnum << bin->idnum << std::endl;
+         *BASE::x.log << "error: not local match" << BASE::idnum << bin->idnum << std::endl;
          return(1);
       }
       
@@ -116,8 +138,7 @@ template<class BASE> class comm_bdry : public BASE {
          mtype[nmatch] = mpi;
          mpi_match[nmatch] = nproc;
          tags[nmatch] = msg_tag;
-         phase[nmatch] = 0; // DEFAULT ALL MESSAGE PASSING IN ONE PHASE
-         rcv_buf[nmatch] = xmalloc(buffsize*sizeof(FLT));
+         rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
          ++nmatch;
          return(0);
       }
@@ -127,7 +148,7 @@ template<class BASE> class comm_bdry : public BASE {
       void comm_prepare(int phi) {         
          int m;
          switch(msgtype) {
-            case(flt_msg):
+            case(boundary::flt_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
                   if (phi != phase[m]) continue;
@@ -151,7 +172,7 @@ template<class BASE> class comm_bdry : public BASE {
                }
                break;
                
-            case(int_msg):
+            case(boundary::int_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
                   if (phi != phase[m]) continue;
@@ -173,7 +194,7 @@ template<class BASE> class comm_bdry : public BASE {
          }
       }
       
-      int comm_transmit(int phi) {
+      void comm_transmit(int phi) {
          int i,m;
          
          switch(msgtype) {
@@ -181,10 +202,15 @@ template<class BASE> class comm_bdry : public BASE {
                /* LOCAL PASSES */
                for(m=0;m<nmatch;++m) {
                   if (phi != phase[m]) continue;
-             
+#ifdef MPDEBUG
+                  *(BASE::x.log) << "sending message: " << BASE::idnum << " " << tags[m] << " first:" <<  is_frst()  << " with type: " << mtype[m] << std::endl;
+                  for(i=0;i<msgsize;++i) 
+                     *(BASE::x.log) << "\t" << fsndbuf(i) << std::endl;
+#endif     
                   switch(mtype[m]) {
+                  
                      case(local):
-                        for(i=0;i<msgsize;++i)
+                        for(i=0;i<msgsize;++i) 
                            frcvbuf(m,i) = static_cast<FLT *>(local_match[m])[i];
                         break;
 #ifdef MPISRC
@@ -224,11 +250,10 @@ template<class BASE> class comm_bdry : public BASE {
                break;              
          }
          
-         /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
-         return((phi-maxphase >= 0 ? 1 : 0));
+         return;
       }
       
-      void comm_wait(int phi) {
+      int comm_wait(int phi) {
 
          for(int m=0;m<nmatch;++m) {
             if (phi != phase[m]) continue;
@@ -243,8 +268,15 @@ template<class BASE> class comm_bdry : public BASE {
                   break;
 #endif
             }
+            
+#ifdef MPDEBUG
+            *(BASE::x.log) << "received message: " << BASE::idnum << " " << tags[m] << " with type: " << mtype[m] << std::endl;
+            for(int i=0;i<msgsize;++i) 
+               *(BASE::x.log) << "\t" << frcvbuf(m,i) << std::endl;
+#endif  
          }
-         return;
+         /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
+         return((phi-maxphase >= 0 ? 1 : 0));
       }
       
       /* MECHANISM FOR MASTER SLAVE COMMUNICATIONS */
@@ -252,7 +284,7 @@ template<class BASE> class comm_bdry : public BASE {
          if (first) return;
 
          switch(msgtype) {
-            case(flt_msg):
+            case(boundary::flt_msg):
                 switch(mtype[0]) {
                   case(local):
                      /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
@@ -272,7 +304,7 @@ template<class BASE> class comm_bdry : public BASE {
                }
 
                      
-            case(int_msg):
+            case(boundary::int_msg):
                switch(mtype[0]) {
                   case(local):
                      /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
@@ -362,7 +394,7 @@ template<class BASE> class comm_bdry : public BASE {
  
          int m;
          switch(msgtype) {
-            case(flt_msg):
+            case(boundary::flt_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
                   switch(mtype[m]) {
@@ -384,7 +416,7 @@ template<class BASE> class comm_bdry : public BASE {
                }
                break;
                
-            case(int_msg):
+            case(boundary::int_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
                   switch(mtype[m]) {
@@ -441,8 +473,7 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                   case(mpi):
                      /* MPI PASSES */
-                     MPI_Isend(&isndbuf(0) msgsize, MPI_INT, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+                     MPI_Isend(&isndbuf(0), msgsize, MPI_INT, mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
                      break;
 #endif
                }
@@ -473,29 +504,35 @@ template<class BASE> class comm_bdry : public BASE {
 class vcomm : public comm_bdry<vrtx_bdry> {
    public:
       vcomm(int inid, mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {mytype="comm";}
-      vcomm* create(mesh& xin) const {return new vcomm(idnum,xin);}
+      vcomm(const vcomm &inbdry, mesh& xin) : comm_bdry<vrtx_bdry>(inbdry,xin) {}
+      
+      vcomm* create(mesh& xin) const {return new vcomm(*this,xin);}
 
       /* GENERIC VERTEX COMMUNICATIONS */
       void loadbuff(FLT *base,int bgn,int end, int stride);
-      void finalrcv(FLT *base,int bgn,int end, int stride);
+      void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
 class scomm : public comm_bdry<class side_bdry> {
    public:            
       /* CONSTRUCTOR */
       scomm(int inid, mesh& xin) : comm_bdry<side_bdry>(inid,xin) {mytype="comm";}
-      scomm* create(mesh& xin) const {return new scomm(idnum,xin);}
+      scomm(const scomm &inbdry, mesh& xin) : comm_bdry<side_bdry>(inbdry,xin) {}
+      
+      scomm* create(mesh& xin) const {return new scomm(*this,xin);}
       
       /* GENERIC COMMUNICATIONS */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride);
-      virtual void finalrcv(FLT *base,int bgn,int end, int stride);
+      virtual void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
 class spartition : public scomm {
    public:
       /* CONSTRUCTOR */
       spartition(int inid, mesh& xin) : scomm(inid,xin) {grouping = 1;mytype="partition";}
-      spartition* create(mesh& xin) const {return new spartition(idnum,xin);}
+      spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
+
+      spartition* create(mesh& xin) const {return new spartition(*this,xin);}
       block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
 };
 
@@ -506,12 +543,11 @@ template<class BASE> class prdc_template : public BASE {
       int dir;
    public:      
       /* CONSTRUCTOR */
-      prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {mytype="prdc";}
-      prdc_template<BASE>* create(mesh& xin) const {
-         prdc_template<BASE> *temp = new prdc_template<BASE>(idnum,xin);
-         temp->setdir()=dir;
-         return(temp);
-      }
+      prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {BASE::mytype="prdc";}
+      prdc_template(const prdc_template<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin), dir(inbdry.dir) {}
+      
+      prdc_template<BASE>* create(mesh& xin) const {return(new prdc_template<BASE>(*this,xin));}
+
       int& setdir() {return(dir);}
       void output(std::ostream& fout) {
          BASE::output(fout);
@@ -538,8 +574,8 @@ template<class BASE> class prdc_template : public BASE {
       } 
 
       /* SEND/RCV VRTX POSITION */
-      void sndpositions() { loadbuff(&(x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
-      void rcvpositions() { finalrcv(&(x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
+      void loadpositions() { loadbuff(&(BASE::x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
+      void rcvpositions(int phase) { finalrcv(phase,&(BASE::x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
 };
 
 class curved_analytic : public side_bdry {
@@ -550,7 +586,9 @@ class curved_analytic : public side_bdry {
    public:      
       /* CONSTRUCTOR */
       curved_analytic(int idin, mesh &xin) : side_bdry(idin,xin) {mytype="curved_analytic";}
-      curved_analytic* create(mesh& xin) const {return new curved_analytic(idnum,xin);}
+      curved_analytic(const curved_analytic &inbdry, mesh &xin) : side_bdry(inbdry,xin) {}
+
+      curved_analytic* create(mesh& xin) const {return new curved_analytic(*this,xin);}
 
       void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
 };
@@ -570,7 +608,9 @@ class sinewave : public curved_analytic {
       }
    public:
       sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {mytype="sinewave";}
-      sinewave* create(mesh& xin) const {return new sinewave(idnum,xin);}
+      sinewave(const sinewave &inbdry, mesh &xin) : curved_analytic(inbdry,xin), h_or_v(inbdry.h_or_v), amp(inbdry.amp), lam(inbdry.lam), phase(inbdry.phase), offset(inbdry.offset) {}
+
+      sinewave* create(mesh& xin) const {return(new sinewave(*this,xin));}
 
       void output(std::ostream& fout) {         
          curved_analytic::output(fout);
@@ -621,7 +661,9 @@ class circle : public curved_analytic {
       }
       
       circle(int inid, mesh &xin) : curved_analytic(inid,xin), radius(0.5) {center[0] = 0.0; center[1] = 0.0; mytype="circle";}
-      circle* create(mesh& xin) const {return new circle(idnum,xin);}
+      circle(const circle &inbdry, mesh &xin) : curved_analytic(inbdry,xin), radius(inbdry.radius) {center[0] = inbdry.center[0]; center[1] = inbdry.center[1];}
+ 
+      circle* create(mesh& xin) const {return(new circle(idnum,xin));}
 
       void output(std::ostream& fout) {
          curved_analytic::output(fout);

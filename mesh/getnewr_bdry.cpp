@@ -45,10 +45,8 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
       }
       else {
          *log << "couldn't find type for r_side: " << sbdry[bnum]->idnum << std::endl;
-         *log << "using type: " << type << std::endl;
       }
    }
-   *log << "making r_side " << sbdry[bnum]->idnum << std::endl;
 
    // *log << "making side " << idnum << std::endl;
 
@@ -76,6 +74,9 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
    }
    
    if (bdrydata) temp->input(*bdrydata);
+   
+   temp->output(*log);
+
    
    return(temp);
 }

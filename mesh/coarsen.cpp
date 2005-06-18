@@ -215,7 +215,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    *log << "#MAXVST:" << maxvst << " VERTICES:" << nvrtx << " SIDES:" << nside << " ELEMENTS:" << ntri << std::endl;   
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      *log << "#" << sbdry[i]->idprefix << " " << typeid(*sbdry[i]).name() << " " << sbdry[i]->nel << std::endl;
+      *log << "#" << sbdry[i]->idprefix << " " << sbdry[i]->mytype << " " << sbdry[i]->nel << std::endl;
 
    return(1);
 }
@@ -296,6 +296,7 @@ void mesh::coarsen3() {
    
    /* COARSEN SIDE EDGES FIRST */
    for(i=0;i<nsbd;++i) {
+      *log << "coarsening boundary " << i << ": type " << sbdry[i]->mytype << " sides " << sbdry[i]->nel << std::endl;
       for(j=0;j<sbdry[i]->nel;++j) {
          sind = sbdry[i]->el[j];
          v0 = sd[sind].vrtx[0];
@@ -396,6 +397,8 @@ void mesh::coarsen3() {
    }
    
    *log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
+   for(i=0;i<nsbd;++i)
+      *log << "boundary " << i << ": type " << sbdry[i]->mytype << " sides " << sbdry[i]->nel << std::endl;
    
    return;
 }

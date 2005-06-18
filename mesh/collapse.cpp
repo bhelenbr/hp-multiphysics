@@ -555,6 +555,7 @@ void mesh::dltvrtx(int v0) {
    
    vrtx[v0][0] = vrtx[nvrtx][0];
    vrtx[v0][1] = vrtx[nvrtx][1];
+   vd[v0].nnbor = vd[nvrtx].nnbor;
    vd[v0].tri = vd[nvrtx].tri;
    vlngth[v0] = vlngth[nvrtx];
    

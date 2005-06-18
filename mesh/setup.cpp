@@ -30,6 +30,7 @@ void mesh::createsideinfo(void) {
             maxv = v1;
             order = 1;
          }
+         
          sind = vd[minv].info;
          while (sind >= 0) {
             if (maxv == sd[sind].vrtx[order]) {
@@ -209,15 +210,19 @@ void mesh::treeinit() {
       x1[n] -= 0.25*dx;
       x2[n] += 0.25*dx;
    }
-      
-   // *log << nsbd << "max:" << maxvst << std::endl;
-   // *log << x1[0] << "," << x1[1] << std::endl;
-   // *log << x2[0] << "," << x2[1] << std::endl;
+   
+   treeinit(x1,x2);
+
+   return;
+}
+
+void mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
+   
    qtree.init(x1,x2);
       
-   for(i=0;i<nvrtx;++i) 
+   for(int i=0;i<nvrtx;++i) 
       qtree.addpt(i);
-
+   
    return;
 }
 

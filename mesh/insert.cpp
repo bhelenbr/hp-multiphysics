@@ -513,7 +513,7 @@ int mesh::findtri(FLT x[ND], int vnear) const {
       }
       if (ntdel >= maxsrch-4) break;
    }
-   std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
+//   std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
    tind = tdel[0];
    minclosest = intri(tind,x)/area(tind);
    tclose = tind;

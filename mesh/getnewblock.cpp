@@ -22,6 +22,13 @@ block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockda
          data >> type;  
          data.clear(); 
       }
+      else {
+         keyword = "blocktype";
+         data.str((*blockdata)[keyword]);
+         if (!(data >> type)) {
+            *log << "couldn't find block type" << std::endl;
+         }
+      }
    }
    
    switch(type) {

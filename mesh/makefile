@@ -18,9 +18,11 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 
 ## Linux:
 ##  Machine specific for Linux
-#CXX=icpc #(cares)
-CXX=g++3 #(shelob)
-CPPFLAGS += -O3
+#CXX=g++3 #(shelob)
+CXX=/opt/mpich/myrinet/intel/bin/mpicxx
+# CPPFLAGS += -O3 -DMPISRC -cxxlib-icc -lstdc++
+CPPFLAGS += -O3 -DMPISRC
+#CPPFLAGS += -O3
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -42,7 +44,7 @@ libmesh.a: $(OBJ)
 	cp -f r_mesh.h $(HOME)/Codes/include/
 	
 mblock: $(OBJ) $(MAINOBJ)
-	${CXX} -o $@ $(MAINOBJ) $(OBJ) $(LIB)
+	${CXX} -o $@ $(MAINOBJ) $(OBJ) $(LIB) -lstdc++
 
 $(OBJ): mesh.h r_mesh.h
 

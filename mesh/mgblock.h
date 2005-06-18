@@ -64,7 +64,7 @@ template<class GRD> class mgrid : public block {
          }
          return(stop);
       }
-      block::ctrl mgrid<GRD>::rsdl(int lvl, int excpt) {
+      block::ctrl rsdl(int lvl, int excpt) {
          return(grd[lvl].rsdl(excpt));
       }
       void maxres() {grd[0].maxres();}
@@ -101,7 +101,12 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    
    keyword = idprefix + ".adapt";
    data.str(input[keyword]);
-   if (!(data >> adapt_flag)) adapt_flag = 0;
+   if (!(data >> adapt_flag)) {
+      data.clear();
+      keyword = "adapt";
+      data.str(input[keyword]);
+      if (!(data >> adapt_flag)) adapt_flag = 0;
+   }
    *log << "#adapt: " << adapt_flag << std::endl;
    data.clear();  
    
@@ -115,27 +120,47 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    FLT grwfac;
    keyword = idprefix + ".growth factor";
    data.str(input[keyword]);
-   if (!(data >> grwfac)) grwfac = 2.0;
+   if (!(data >> grwfac)) {
+      data.clear();
+      keyword = "growth factor";
+      data.str(input[keyword]);
+      if (!(data >> grwfac)) grwfac = 2.0;
+   }
    *log << "#growth factor: " << grwfac << std::endl;
    data.clear();
    
    int filetype;
    keyword = idprefix + ".filetype";
    data.str(input[keyword]);
-   if (!(data >> filetype)) filetype = ftype::grid;
+   if (!(data >> filetype)) {
+      data.clear();
+      keyword = "filetype";
+      data.str(input[keyword]);
+      if (!(data >> filetype)) filetype = ftype::grid;
+   }
    *log << "#filetype: " << filetype << std::endl;
    data.clear();
    
    keyword = idprefix + ".mesh";
    data.str(input[keyword]);
-   if (!(data >> filename)) {*log << "no mesh name\n"; exit(1);}
+   if (!(data >> filename)) {
+      data.clear();
+      keyword = "mesh";
+      data.str(input[keyword]);
+      if (data >> filename) {
+         filename = filename +"_" +idprefix;
+      }
+      else {
+         *log << "no mesh name\n"; exit(1);
+      }
+   }
    *log << "#mesh: " << filename << std::endl;
    data.clear();   
 
    keyword = idprefix + ".bdryfile";
    data.str(input[keyword]);
    if (!(data >> bdryfile)) {
-      bdryfile = filename +".bdry.inpt";
+      bdryfile = filename +"_bdry.inpt";
       input[keyword] = bdryfile;
    }
    *log << "#bdryfile: " << bdryfile << std::endl;
@@ -144,12 +169,17 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    
    keyword = idprefix + ".tolerance";
    data.str(input[keyword]);
-   if (!(data >> tolerance)) tolerance = 0.6; 
+   if (!(data >> tolerance)) {
+      data.clear();
+      keyword = "tolerance";
+      data.str(input[keyword]);
+      if (!(data >> tolerance)) tolerance = 0.6; 
+   }
    *log << "#tolerance: " << tolerance << std::endl;
    data.clear();
    
    grd[0].init(0,input,idprefix,&gstorage);
-#define NOOLDRECONNECT
+#define OLDRECONNECT
    for(int lvl=1;lvl<ngrid;++lvl) {
 #ifdef OLDRECONNECT
       grd[lvl].allocate_duplicate(2.0,grd[lvl-1]);
@@ -209,13 +239,22 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
    
    switch (excpt) {
       case(0):
-         mp_phase = 0;
-         grd[lvl].matchboundaries1();
-         return(advance);
+         mp_phase = -1;
+         return(block::advance);
       case(1):
-         return(static_cast<ctrl>(grd[lvl].msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               grd[lvl].matchboundaries1(mp_phase/3);
+               return(stay);
+            case(1):
+               grd[lvl].msgpass(mp_phase/3);
+               return(stay);
+            case(2):
+               return(static_cast<ctrl>(grd[lvl].matchboundaries2(mp_phase/3)));
+         }
       case(2):
-         grd[lvl].matchboundaries2();
          return(stop);
    }
    
@@ -226,20 +265,28 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
-
+   
    if (!adapt_flag) return(stop);
    
    switch(excpt) {
       case(0):
-         mp_phase = 0;
-         grd[0].length1();
+         mp_phase =-1;
+         // grd[0].length();
          return(advance);
       case(1):
-         return(static_cast<ctrl>(grd[0].msgpass(mp_phase++)));
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0):
+               grd[0].length1(mp_phase/3);
+               return(stay);
+            case(1):
+               grd[0].msgpass(mp_phase/3);
+               return(stay);
+            case(2):
+               return(static_cast<ctrl>(grd[0].length2(mp_phase/3)));
+         }
       case(2):
-         grd[0].length2();
-         return(advance);
-      case(3):
          grd[0].adapt(tolerance);
          return(stop);
    }

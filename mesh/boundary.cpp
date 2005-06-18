@@ -23,19 +23,27 @@ void vcomm::loadbuff(FLT *base,int bgn,int end, int stride) {
       fsndbuf(i) = base[offset+i];
 }
 
-void vcomm::finalrcv(FLT *base,int bgn,int end, int stride) {
+void vcomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    int i,m,offset;
-
-   /* REMINDER DON'T OVERWRITE SEND BUFFER */
-   offset = v0*stride +bgn;
-   for(i=0;i<end-bgn+1;++i) {
-      base[offset] = fsndbuf(i);  // ELIMINATES UNDESIRABLE SIDE/VRTX INTERACTIONS
-      for(m=0;m<nmatch;++m)
-         base[offset] += frcvbuf(m,i);
-
-      base[offset++] /= (1 +nmatch);
+   int matches = 1;
+   
+   for(m=0;m<nmatch;++m) {
+      if (phase[m] != phi) continue;
+      ++matches;
+      
+      for(i=0;i<end-bgn+1;++i) 
+         fsndbuf(i) += frcvbuf(m,i);
    }
+   
+   if (matches > 1) {
+      offset = v0*stride +bgn;
+      for(i=0;i<end-bgn+1;++i) 
+         base[offset++] = fsndbuf(i)/matches;
+   }
+
+   return;
 }
+
 
 
 /**************************************/
@@ -272,52 +280,59 @@ void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::finalrcv(FLT *base,int bgn,int end, int stride) {
-   int j,k,m,count,offset,sind;
-#ifdef MPISRC
-   MPI_Status status;
-#endif
+void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+   int j,k,m,count,countdn,countup,offset,sind;
+   FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
    /* WON'T WORK IN 3D */
    
+   int matches = 1;
+   
    /* RELOAD FROM BUFFER */
    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */
-   count = 0;
-   for(j=0;j<nel;++j) {
-      sind = el[j];
-      offset = x.sd[sind].vrtx[0]*stride;
-      for (k=bgn;k<=end;++k)
-         base[offset+k] = fsndbuf(count++);
-   }
-   offset = x.sd[sind].vrtx[1]*stride;
-   for (k=bgn;k<=end;++k)
-      base[offset+k] = fsndbuf(count++);
-   
-   for(m=0;m<nmatch;++m) {            
-      count = 0;
-      for(j=nel-1;j>=0;--j) {
-         sind = el[j];
-         offset = x.sd[sind].vrtx[1]*stride;
-         for (k=bgn;k<=end;++k) {
-            base[offset+k] += frcvbuf(m,count++);
-         }
+   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+   for(m=0;m<nmatch;++m) {   
+      if (phase[m] != phi) continue;
+      
+      ++matches;
+      
+      int ebp1 = end-bgn+1;
+      countdn = nel*ebp1;
+      countup = 0;
+      for(j=0;j<nel+1;++j) {
+         for(k=0;k<ebp1;++k)
+            fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+         countup += ebp1;
+         countdn -= ebp1;
       }
-      offset = x.sd[sind].vrtx[0]*stride;
-      for (k=bgn;k<=end;++k) 
-            base[offset+k] += frcvbuf(m,count++);            
    }
    
-   count = 0;
-   for(j=0;j<nel;++j) {
-      sind = el[j];
-      offset = x.sd[sind].vrtx[0]*stride;
-      for (k=bgn;k<=end;++k)
-         base[offset+k] /= (1 +nmatch);
+   if (matches > 1) {
+      mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+      std::cout << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+      count = 0;
+      for(j=0;j<nel;++j) {
+         sind = el[j];
+         offset = x.sd[sind].vrtx[0]*stride;
+         for (k=bgn;k<=end;++k) {
+            base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+            std::cout << "\t" << base[offset+k] << std::endl;
+#endif
+         }
+
+      }
+      offset = x.sd[sind].vrtx[1]*stride;
+      for (k=bgn;k<=end;++k) {
+         base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+         std::cout << "\t" << base[offset+k] << std::endl;
+#endif
+      }
    }
-   offset = x.sd[sind].vrtx[1]*stride;
-   for (k=bgn;k<=end;++k)
-      base[offset+k] /= (1 +nmatch);
 }
 
 block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
@@ -410,3 +425,4 @@ void curved_analytic::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
    
    return;
 }
+

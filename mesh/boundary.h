@@ -41,6 +41,7 @@ class boundary {
          std::string keyname;
          sprintf(buffer,"%d",idnum);
          idprefix = std::string(buffer);
+         mytype = "boundary";
       }
       virtual boundary* create(mesh &xin) const = 0;
       virtual void alloc(int n) {}
@@ -75,16 +76,17 @@ class boundary {
       virtual int& sndsize() {return(dummy.idum=0);}
       virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
       virtual void comm_prepare(int phase) {}
-      virtual int comm_transmit(int phase) {return 1;}
-      virtual void comm_wait(int phase) {}
+      virtual void comm_transmit(int phase) {}
+      virtual int comm_wait(int phase) {return 1;}
+      virtual int comm_nowait(int phase) {return 1;}
       virtual void master_slave_prepare() {}
       virtual void master_slave_transmit() {}
       virtual void master_slave_wait() {}
+      virtual void master_slave_nowait() {}
       virtual void slave_master_prepare() {}
       virtual void slave_master_transmit() {}
       virtual void slave_master_wait() {}
-      virtual void sndpositions() {}
-      virtual void rcvpositions() {}
+      virtual void slave_master_nowait() {}
       virtual ~boundary() {}
 };
 
@@ -97,19 +99,18 @@ class vrtx_bdry : public boundary {
       
       /* CONSTRUCTOR */
       vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = "v" +idprefix; mytype="plain";}
-      
+      vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype;}
+
       /* OTHER USEFUL STUFF */
-      vrtx_bdry* create(mesh &xin) const { return(new vrtx_bdry(idnum,xin));}
+      vrtx_bdry* create(mesh &xin) const { return(new vrtx_bdry(*this,xin));}
       void copy(const boundary& bin) {
          boundary::copy(bin);
          v0 = dynamic_cast<const vrtx_bdry&>(bin).v0;
       }
-      
-      /* MORE SPECIFIC SENDING FOR VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
-      virtual void finalrcv(FLT *base,int bgn,int end, int stride) {}
-      void sndpositions() {loadbuff(&(x.vrtx[0][0]),0,1,mesh::DIM);}
-      void rcvpositions() {finalrcv(&(x.vrtx[0][0]),0,1,mesh::DIM);}
+      virtual void finalrcv(int phase,FLT *base,int bgn,int end, int stride) {}
+      virtual void loadpositions() {loadbuff(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
+      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
 };
 
 
@@ -123,10 +124,13 @@ class side_bdry : public boundary {
       
       /* CONSTRUCTOR */
       side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix; mytype="plain";}
+      side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype;}
       
       /* BASIC B.C. STUFF */
       void alloc(int n);
-      virtual side_bdry* create(mesh &xin) const {return(new side_bdry(idnum,xin));}
+      side_bdry* create(mesh &xin) const {
+         return(new side_bdry(*this,xin));
+      }
       void copy(const boundary& bin);
       
       /* ADDITIONAL STUFF FOR SIDES */
@@ -138,9 +142,9 @@ class side_bdry : public boundary {
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
-      virtual void finalrcv(FLT *base,int bgn,int end, int stride) {}
-      void sndpositions() {loadbuff(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
-      void rcvpositions() {finalrcv(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM); }
+      virtual void finalrcv(int phase,FLT *base,int bgn,int end, int stride) {}
+      virtual void loadpositions() {loadbuff(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
+      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
 };
 
 class vtype {
@@ -168,4 +172,5 @@ class stype {
 };
 
 #endif
+
 

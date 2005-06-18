@@ -17,15 +17,16 @@ int mesh::comm_entity_size() {
    for(i=0;i<nsbd;++i)
       if (sbdry[i]->is_comm()) ++nscomm; 
    
-   tsize += 1 +4*nscomm; // bdry number, id, v0id, v1id
-   
+   // tsize += 1 +4*nscomm; // bdry number, id, v0id, v1id
+   tsize += 1 +2*nscomm; // bdry number, id
+
    tsize += 1;  // nfcomm = 0
    
    return(tsize);
 }
 
 int mesh::comm_entity_list(int *list) {
-   int i,j,nvcomm,nscomm,tsize,v0,v0id;
+   int i,nvcomm,nscomm,tsize;
    
    /* MAKE 1D PACKED LIST OF ALL INFORMATION ON COMMUNICATION BOUNDARIES */
    tsize = 0;
@@ -55,6 +56,7 @@ int mesh::comm_entity_list(int *list) {
       if (sbdry[i]->is_comm()) {
          list[tsize++] = i;
          list[tsize++] = sbdry[i]->idnum;
+#ifdef SKIP
          v0 = sd[sbdry[i]->el[0]].vrtx[0];
          v0id = -1;
          for(j=0;j<nvbd;++j) {
@@ -73,6 +75,7 @@ int mesh::comm_entity_list(int *list) {
             }
          }
          list[tsize++] = v0id;
+#endif
       }
    }
    
@@ -82,76 +85,100 @@ int mesh::comm_entity_list(int *list) {
    return(tsize);
 }
 
-int mesh::msgpass(int phase) {
-   int stop=1;
-
-   for(int i=0;i<nsbd;++i) 
-      stop &= sbdry[i]->comm_transmit(phase);
-   for(int i=0;i<nvbd;++i) 
-      stop &= vbdry[i]->comm_transmit(phase);
-   
-   
-   if (!stop) {
-      for(int i=0;i<nsbd;++i)
-         sbdry[i]->comm_prepare(phase+1);
-      for(int i=0;i<nvbd;++i)
-         vbdry[i]->comm_prepare(phase+1);
-   }
-   
-   return(stop);
-}
-
-/*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
-void mesh::matchboundaries1() {
-   
-   for(int i=0;i<nvbd;++i)
-      vbdry[i]->sndpositions();
-   for(int i=0;i<nsbd;++i) 
-      sbdry[i]->sndpositions();
-   
-   /* FIRST PHASE OF SENDING */
-   for(int i=0;i<nsbd;++i)
-      sbdry[i]->comm_prepare(0);
-   for(int i=0;i<nvbd;++i)
-      vbdry[i]->comm_prepare(0);
-}
-
-void mesh::matchboundaries2() {
-   for(int i=0;i<nsbd;++i)
-      sbdry[i]->rcvpositions();
-   for(int i=0;i<nvbd;++i)
-      vbdry[i]->rcvpositions();
-}
-
-void mesh::length1() {
+void mesh::msgload(int phase,FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      sbdry[i]->loadbuff(vlngth,0,0,1);
+      sbdry[i]->loadbuff(base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry[i]->loadbuff(vlngth,0,0,1);
+      vbdry[i]->loadbuff(base,bgn,end,stride);
    
-
    for(i=0;i<nsbd;++i)
-      sbdry[i]->comm_prepare(0);
+      sbdry[i]->comm_prepare(phase);
    for(i=0;i<nvbd;++i)
-      vbdry[i]->comm_prepare(0);
-
-   return;
+      vbdry[i]->comm_prepare(phase);
    
+   return;
 }
 
-void mesh::length2() {
-   int i;
-   
-   /* SEND COMMUNICATIONS TO ADJACENT MESHES */
-   for(i=0;i<nsbd;++i) 
-      sbdry[i]->finalrcv(vlngth,0,0,1);
-   for(i=0;i<nvbd;++i)
-      vbdry[i]->finalrcv(vlngth,0,0,1);
+void mesh::msgpass(int phase) {
+
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->comm_transmit(phase);
+   for(int i=0;i<nvbd;++i) 
+      vbdry[i]->comm_transmit(phase);
 
    return;
+}
+
+int mesh::msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
+   int stop = 1;
+   int i;
+   
+   for(i=0;i<nsbd;++i)
+      stop &= sbdry[i]->comm_wait(phase);
+   for(i=0;i<nvbd;++i)
+      stop &= vbdry[i]->comm_wait(phase);
+      
+
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->finalrcv(phase,base,bgn,end,stride);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv(phase,base,bgn,end,stride);
+      
+   return(stop);
+}
+
+int mesh::msgrcv(int phase,FLT *base,int bgn, int end, int stride) {
+   int stop = 1,i;
+   
+   for(i=0;i<nsbd;++i)
+      stop &= sbdry[i]->comm_nowait(phase);
+   for(i=0;i<nvbd;++i)
+      stop &= vbdry[i]->comm_nowait(phase);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry[i]->finalrcv(phase,base,bgn,end,stride);
+   for(i=0;i<nvbd;++i)
+      vbdry[i]->finalrcv(phase,base,bgn,end,stride);
+      
+   return(stop);
+}
+   
+
+
+/*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
+void mesh::matchboundaries1(int phase) {
+   
+   /* LOAD POSITIONS INTO BUFFERS */
+   for(int i=0;i<nvbd;++i)
+      vbdry[i]->loadpositions();
+   for(int i=0;i<nsbd;++i) 
+      sbdry[i]->loadpositions();
+   
+   /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
+   for(int i=0;i<nsbd;++i)
+      sbdry[i]->comm_prepare(phase);
+   for(int i=0;i<nvbd;++i)
+      vbdry[i]->comm_prepare(phase);
+}
+
+int mesh::matchboundaries2(int phase) {
+   int stop=1;
+
+   /* FINAL PHASE OF SENDING */
+   for(int i=0;i<nsbd;++i)
+      stop &= sbdry[i]->comm_wait(phase);
+   for(int i=0;i<nvbd;++i)
+      stop &= vbdry[i]->comm_wait(phase);
+      
+   for(int i=0;i<nsbd;++i)
+      sbdry[i]->rcvpositions(phase);
+   for(int i=0;i<nvbd;++i)
+      vbdry[i]->rcvpositions(phase);
+            
+   return(stop);
 }
 
 #ifdef METIS
@@ -186,6 +213,9 @@ void mesh::partition(const class mesh& xin, int npart) {
    int bcntr[MAXSB];
    int bnum,bel,match;
    
+   for(i=0;i<xin.nvrtx;++i)
+      xin.vd[i].info = -1;
+      
    ntri = 0;
    for(i=0;i<xin.ntri;++i) {
       if (xin.td[i].info == npart) {
@@ -332,9 +362,12 @@ void mesh::partition(const class mesh& xin, int npart) {
    createttri();
    createvtri();
    cnt_nbor();
-   if (!initialized) qtree.allocate(vrtx,maxvst);
-   treeinit();
-   initvlngth();
+   FLT xmin[ND], xmax[ND];
+   for(n=0;n<ND;++n) {
+      xmin[n] = xin.qtree.xmin(n);
+      xmax[n] = xin.qtree.xmax(n);
+   }
+   treeinit(xmin,xmax);
 
    initialized = 1;
 

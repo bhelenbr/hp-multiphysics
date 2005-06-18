@@ -268,14 +268,20 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          break;
    }
    
+   return(1);
+}
+
+void mesh::bdry_output(const char *filename) const {
+   char fnmapp[120];
+   ofstream out;
+   int i;
+   
    strcpy(fnmapp,filename);
    strcat(fnmapp,"_bdry.inpt");
    out.open(fnmapp);
    for(i=0;i<nvbd;++i) vbdry[i]->output(out);
    for(i=0;i<nsbd;++i) sbdry[i]->output(out);
    out.close();
-
-   return(1);
 }
 
 void mesh::setbcinfo() {

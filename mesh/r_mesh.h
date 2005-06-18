@@ -50,7 +50,6 @@ class r_mesh : public mesh {
    
          /* CALCULATE RESIDUAL */
          void rsdl();
-         void rsdl_finalrcv();
 
          /* CALCLATE SOURCE TERM */
          void zero_source();
@@ -82,9 +81,7 @@ class r_mesh : public mesh {
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
          sharedmem* init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin, sharedmem *wkin = 0);
          void load_scratch_pointers();
-         void output(char *filename, ftype::name filetype) {
-            mesh::output(filename,filetype);
-         }        
+         void bdry_output(const char *filename) const;
          block::ctrl mg_getfres(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *fmesh);
          block::ctrl mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *cmesh);
          block::ctrl tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,mesh::transfer *cv_to_ft, r_mesh *fmesh);

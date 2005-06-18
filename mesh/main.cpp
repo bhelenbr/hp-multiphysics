@@ -60,9 +60,11 @@ static ArgDesc argDesc[] = {
 int main(int argc, char *argv[]) {
    GBool ok;
    
+   
+   
   // parse args
    ok = parseArgs(argDesc, &argc, argv);
-   if (!ok || argc < 2 || printHelp) {
+   if (!ok || printHelp) {
       fprintf(stderr, "mesh utility ");
       printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
       exit(1);
@@ -71,6 +73,10 @@ int main(int argc, char *argv[]) {
    class mesh zx, zy;
    ftype::name in = static_cast<ftype::name>(informat);
    ftype::name out = static_cast<ftype::name>(outformat);
+   
+   //zx.input(argv[1],ftype::grid);
+   //zx.symmetrize();
+  //return 0;
    
    if (Refineby2) {
       zx.input(argv[1],in,8.0);
@@ -82,7 +88,7 @@ int main(int argc, char *argv[]) {
    if (Coarsen_hp) {
       int p;
       zx.input(argv[1],in);
-      printf("input # of times to unrefineby2\n");
+      printf("input p\n");
       scanf("%d",&p);
       zy.coarsen_substructured(zx,p);
       zy.output(argv[2],out);
@@ -126,12 +132,13 @@ int main(int argc, char *argv[]) {
       zx.setpartition(p);
       mesh zpart[p];
       
-      strcat(argv[2],".");
+      strcat(argv[2],"_b");
 
       for(int i=0;i<p;++i) {
          number_str(outappend,argv[2],i,1);
          zpart[i].partition(zx,i);
          zpart[i].output(outappend,out);
+		 zpart[i].bdry_output(outappend);
       }
 #else
       printf("Need metis package to partition\n");
@@ -180,15 +187,15 @@ int main(int argc, char *argv[]) {
       /* CREATE INPUT MAPS HERE*/
       map<string,string> input;
       
-      input["mglvls"] = "2";
-      input["ngrid"] = "2";
+      input["mglvls"] = "3";
+      input["ngrid"] = "3";
       input["ntstep"] = "1";
-      input["fadd"] = "0.0";
-      input["vnn"] = "0.5";
+      input["fadd"] = "1.0";
+      input["vnn"] = "0.9";
       input["itercrsn"] = "1";
       input["iterrfne"] = "0";
       input["njacobi"] = "1";
-      input["ncycle"] = "10";
+      input["ncycle"] = "100";
       input["vwcycle"] = "1";
       input["tolerance"] = "0.66";
       input["nologfile"] = "duh";
@@ -201,14 +208,18 @@ int main(int argc, char *argv[]) {
 #endif
       input["b0.type"] = "1";
       input["b0.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/top8";
-      input["b0.filetype"] = "0";
+      input["b0.filetype"] = "3";
       input["b0.growth factor"] = "4.0";
-      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top.bdry.inpt";
+      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top_bdry.inpt";
+      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top_bdry_phased.inpt";
+
       input["b1.type"] = "1";
       input["b1.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/bot8";
-      input["b1.filetype"] = "0";
+      input["b1.filetype"] = "3";
       input["b1.growth factor"] = "4.0";
-      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot.bdry.inpt";
+      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry.inpt";
+      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry_phased.inpt";
+
       output_map(input,std::cout);
       z.init(input);
    }

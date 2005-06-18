@@ -50,7 +50,7 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
          break;
       }
       default: {
-         std::cout << "unrecognizable vrtx type: " <<  type << std::endl;
+         std::cout << "unrecognizable vrtx type: " <<  type << " idnum: " << idnum << std::endl;
          temp = new vrtx_bdry(idnum,*this);
          break;
       }
@@ -58,6 +58,8 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
    
    if (bdrydata) temp->input(*bdrydata);
    
+   temp->output(*log);
+
    return(temp);
 }
 
@@ -84,12 +86,10 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
          }
       }
       else {
-         *log << "couldn't find type for side: " << idnum << std::endl;
-         *log << "using type: plain" << std::endl;
+         *log << "#couldn't find type for side: " << idnum << std::endl;
          type = stype::plain;
       }
    }
-   *log << "making side " << idnum << std::endl;
 
    switch(type) {
       case stype::plain: {
@@ -128,6 +128,8 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
    }
    
    if (bdrydata) temp->input(*bdrydata);
+   
+   temp->output(*log);
 
    return(temp);
 }
