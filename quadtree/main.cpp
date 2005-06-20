@@ -113,9 +113,14 @@ int main() {
    vtest[0][1] = 0.9;
    testtree.update(0,10);
    
+ 
+   
    printf("update ok\n");
    
    testtree.reinit();
+   
+   dist = testtree.nearpt(vtest[0], i); 
+   printf("%d %f\n",i,dist);  
    
    dist = testtree.nearpt(0, i); 
    printf("%d %f\n",i,dist);

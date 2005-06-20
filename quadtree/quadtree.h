@@ -68,13 +68,13 @@ template<int ND> class quadtree {
       void reinit(); // ERASES TREE AND REINSERTS POINTS THUS REMOVING UNUSED boxS
       
       inline void change_vptr(FLT (*v)[ND]) { vrtx = v;}
-      inline FLT xmin(int i) {return(base[0].xmin[i]);}
-      inline FLT xmax(int i) {return(base[0].xmax[i]);}
+      inline FLT xmin(int i) const {return(base[0].xmin[i]);}
+      inline FLT xmax(int i) const {return(base[0].xmax[i]);}
            
       void addpt(int v0, class box<ND> *start = 0);
       
-      FLT nearpt(int v0, int& pt) const;
-      FLT nearpt(FLT x[ND], int& pt) const;
+      FLT nearpt(int const v0, int& pt) const;
+      FLT nearpt(FLT const x[ND], int& pt) const;
       
       void dltpt(int v0);
       

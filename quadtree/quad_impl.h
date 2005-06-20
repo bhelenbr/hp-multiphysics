@@ -223,7 +223,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 }
 
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
-template<int ND> FLT quadtree<ND>::nearpt(int v0, int& pt) const {
+template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
    int i,n,nsrch,exclude;
    class box<ND> *topbox;
    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
@@ -297,7 +297,7 @@ template<int ND> FLT quadtree<ND>::nearpt(int v0, int& pt) const {
 }
 
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
-template<int ND> FLT quadtree<ND>::nearpt(FLT x[ND], int& pt) const {
+template<int ND> FLT quadtree<ND>::nearpt(FLT const x[ND], int& pt) const {
    int i,n,nsrch,exclude;
    class box<ND> *topbox;
    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
@@ -503,12 +503,12 @@ template<int ND> void quadtree<ND>::movept(int from, int to) {
    qpt = indx[from];
    
    if (qpt == NULL) {
-      printf("error: moving point which isn't in tree %d\n",from);
+      printf("error: moving point %d which isn't in tree to %d\n",from,to);
       exit(1);
    }
    
    if (indx[to] != NULL) {
-      printf("error: moving to a point which exists %d\n",to);
+      printf("error: moving %d to a point which exists %d\n",from,to);
       exit(1);
    }
    
