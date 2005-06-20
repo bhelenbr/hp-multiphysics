@@ -39,20 +39,11 @@
 //024
 		0249A662FF388D9811CA2CEA = {
 			children = (
-				0249A663FF388D9811CA2CEA,
 			);
 			isa = PBXGroup;
 			name = "External Frameworks and Libraries";
 			refType = 4;
 			sourceTree = "<group>";
-		};
-		0249A663FF388D9811CA2CEA = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = "libstdc++.a";
-			path = "/usr/lib/libstdc++.a";
-			refType = 0;
-			sourceTree = "<absolute>";
 		};
 //020
 //021
@@ -143,10 +134,11 @@
 			buildRules = (
 			);
 			buildSettings = {
-				CC = "/usr/bin/gcc-3.3";
-				CPLUSPLUS = "/usr/bin/g++-3.3";
+				CC = /usr/bin/gcc;
+				CPLUSPLUS = "/usr/bin/g++";
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				HEADER_SEARCH_PATHS = ../include;
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = ../lib;
@@ -212,16 +204,9 @@
 		6FFC0D4105AE0B7900A78095 = {
 			buildActionMask = 2147483647;
 			files = (
-				6FFC0D4205AE0B7900A78095,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FFC0D4205AE0B7900A78095 = {
-			fileRef = 0249A663FF388D9811CA2CEA;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		6FFC0D4305AE0B7900A78095 = {
 			buildActionMask = 2147483647;
