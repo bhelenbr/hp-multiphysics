@@ -1,6 +1,6 @@
 #include "mesh.h"
 #include "boundary.h"
-#include "utilities.h"
+#include <utilities.h>
 #include <assert.h>
 #include <float.h>
 
@@ -18,9 +18,9 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
    /* FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
    /* EXCLUDES TRIANGLES ADJACENT TO DELETED SIDE */
    for(i=0;i<2;++i) {
-      vnear = sd[sind].vrtx[i];
-      tind = vd[vnear].tri;
-      if (tind != sd[sind].tri[0] && tind != sd[sind].tri[1])
+      vnear = sd(sind).vrtx(i);
+      tind = vd(vnear).tri;
+      if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
          prev = 0;
       else 
          prev = 1;
@@ -30,25 +30,25 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
       nssrnd[i] = 0;
       do {
          for(vn=0;vn<3;++vn) 
-            if (td[tind].vrtx[vn] == vnear) break;
+            if (td(tind).vrtx(vn) == vnear) break;
          assert(vn != 3);
          
-         tind1 = td[tind].tri[(vn +dir[i])%3];
+         tind1 = td(tind).tri((vn +dir[i])%3);
          if (tind1 < 0) {
-            bside[i][dir[i]-1] = td[tind].side[(vn +dir[i])%3];
+            bside[i][dir[i]-1] = td(tind).side((vn +dir[i])%3);
             if (dir[i] > 1) break;
             /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir[i];
-            tind1 = vd[vnear].tri;
+            tind1 = vd(vnear).tri;
             prev = 1;
             stoptri = -1;
          }
          
          
-         if (tind1 != sd[sind].tri[0] && tind1 != sd[sind].tri[1]) {
+         if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
             tsrnd[i][ntsrnd[i]++] = tind1;
             if (!prev) {
-               ssrnd[i][nssrnd[i]++] = td[tind].side[(vn +dir[i])%3];
+               ssrnd[i][nssrnd[i]++] = td(tind).side((vn +dir[i])%3);
             }
             assert(ntsrnd[i] < maxlst);
             assert(nssrnd[i] < maxlst);
@@ -80,28 +80,28 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
       else {         
          /* BOTH ON BOUNDARY */
          /* IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
-         if (sd[sind].tri[1] > -1 || vd[sd[sind].vrtx[0]].info +vd[sd[sind].vrtx[1]].info == 2) return(-1);
+         if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == 2) return(-1);
 
          /* CHECK IF CORNER POINT */
-         if (vd[sd[sind].vrtx[0]].info == 1) {
+         if (vd(sd(sind).vrtx(0)).info == 1) {
             delt = 1;
             goto DELETE;
          }
-         if (vd[sd[sind].vrtx[1]].info == 1) {
+         if (vd(sd(sind).vrtx(1)).info == 1) {
             delt = 0;
             goto DELETE;
          }
 
          /* CHECK IF TWO EDGES OF TRIANGLE ARE ON BOUNDARY */         
-         tind = sd[sind].tri[0];
+         tind = sd(sind).tri(0);
          for (i=0;i<3;++i)
-            if(td[tind].side[i] == sind) break;
+            if(td(tind).side(i) == sind) break;
          assert(i != 3);
-         if (td[tind].tri[(i+1)%3] < 0) {
+         if (td(tind).tri((i+1)%3) < 0) {
             delt = 0;
             goto DELETE;
          }
-         if (td[tind].tri[(i+2)%3] < 0) {
+         if (td(tind).tri((i+2)%3) < 0) {
             delt = 1;
             goto DELETE;
          }
@@ -111,28 +111,28 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
          sd1 = bside[0][0];
          sd2 = bside[1][1];
          
-         v0 = sd[sd1].vrtx[0];
-         v1 = sd[sd2].vrtx[1];
-         x = 0.5*(vrtx[v0][0] +vrtx[v1][0]);
-         y = 0.5*(vrtx[v0][1] +vrtx[v1][1]);
+         v0 = sd(sd1).vrtx(0);
+         v1 = sd(sd2).vrtx(1);
+         x = 0.5*(vrtx(v0)(0) +vrtx(v1)(0));
+         y = 0.5*(vrtx(v0)(1) +vrtx(v1)(1));
          
-         v0 = sd[sind].vrtx[0];
-         dx = vrtx[v0][0]-x;
-         dy = vrtx[v0][1]-y;
+         v0 = sd(sind).vrtx(0);
+         dx = vrtx(v0)(0)-x;
+         dy = vrtx(v0)(1)-y;
          l0 = dx*dx +dy*dy;
          
-         v0 = sd[sind].vrtx[1];
-         dx = vrtx[v0][0]-x;
-         dy = vrtx[v0][1]-y;
+         v0 = sd(sind).vrtx(1);
+         dx = vrtx(v0)(0)-x;
+         dy = vrtx(v0)(1)-y;
          l1 = dx*dx +dy*dy;
          delt = (l0 < l1 ? 1 : 0);
 
          if (fabs(l0 - l1)/(l0 +l1) < 10.*EPSILON) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
-            bnum = (-sd[sind].tri[1]>>16) -1;
-            delt = sbdry[bnum]->is_frst();
-               *log << "#Warning: degenerate case in edge collapse for bdry" << bnum << sbdry[bnum]->idnum << "picking "
-                << delt << "(" << vrtx[sd[sind].vrtx[delt]][0] << "," << vrtx[sd[sind].vrtx[delt]][1] << ")" << std::endl;
+            bnum = (-sd(sind).tri(1)>>16) -1;
+            delt = sbdry(bnum)->is_frst();
+               *log << "#Warning: degenerate case in edge collapse for bdry" << bnum << sbdry(bnum)->idnum << "picking "
+                << delt << "(" << vrtx(sd(sind).vrtx(delt))(0) << "," << vrtx(sd(sind).vrtx(delt))(1) << ")" << std::endl;
          }
       }
    }
@@ -143,13 +143,13 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
       y = 0.0;
       asum = 0.0;
       for(i=0;i<2;++i) {
-         tind = sd[sind].tri[i];
+         tind = sd(sind).tri(i);
          if (tind > -1) {
             a = area(tind);
             asum += a;
             for(vn=0;vn<3;++vn) {
-               x += a*vrtx[td[tind].vrtx[vn]][0];
-               y += a*vrtx[td[tind].vrtx[vn]][1];
+               x += a*vrtx(td(tind).vrtx(vn))(0);
+               y += a*vrtx(td(tind).vrtx(vn))(1);
             }
          }            
          for(j=0;j<ntsrnd[i];++j) {
@@ -157,21 +157,21 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
             a = area(tind);
             asum += a;
             for(vn=0;vn<3;++vn) {
-               x += a*vrtx[td[tind].vrtx[vn]][0];
-               y += a*vrtx[td[tind].vrtx[vn]][1];
+               x += a*vrtx(td(tind).vrtx(vn))(0);
+               y += a*vrtx(td(tind).vrtx(vn))(1);
             }
          }
       }
       asum = 1./(3.*asum);
       x = x*asum;
       y = y*asum;
-      v0 = sd[sind].vrtx[0];
-      v1 = sd[sind].vrtx[1];
-      dx = vrtx[v0][0] -x;
-      dy = vrtx[v0][1] -y;
+      v0 = sd(sind).vrtx(0);
+      v1 = sd(sind).vrtx(1);
+      dx = vrtx(v0)(0) -x;
+      dy = vrtx(v0)(1) -y;
       l0 = dx*dx +dy*dy;   
-      dx = vrtx[v1][0] -x;
-      dy = vrtx[v1][1] -y;
+      dx = vrtx(v1)(0) -x;
+      dy = vrtx(v1)(1) -y;
       l1 = dx*dx +dy*dy;
       
       delt = (l0 > l1 ? 0 : 1);
@@ -180,24 +180,24 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
 DELETE:
    
    /* UPDATE TVRTX & SVRTX */
-   v0 = sd[sind].vrtx[1-delt];
-   v1 = sd[sind].vrtx[delt];
+   v0 = sd(sind).vrtx(1-delt);
+   v1 = sd(sind).vrtx(delt);
    
    for(i=0;i<ntsrnd[delt];++i) {
       tind = tsrnd[delt][i];
       for(j=0;j<3;++j) {
-         if (td[tind].vrtx[j] == v1) {
-            td[tind].vrtx[j] = v0;
-            sd3 = td[tind].side[(j+1)%3];
-            sd[sd3].info = -2;
-            pt = (1 +td[tind].sign[(j+1)%3])/2;
-            assert(sd[sd3].vrtx[pt] == v1 || sd[sd3].vrtx[pt] == v0);
-            sd[sd3].vrtx[pt] = v0;
-            sd3 = td[tind].side[(j+2)%3];
-            sd[sd3].info = -2;
-            pt = (1 -td[tind].sign[(j+2)%3])/2;
-            assert(sd[sd3].vrtx[pt] == v1 || sd[sd3].vrtx[pt] == v0);
-            sd[sd3].vrtx[pt] = v0;
+         if (td(tind).vrtx(j) == v1) {
+            td(tind).vrtx(j) = v0;
+            sd3 = td(tind).side((j+1)%3);
+            sd(sd3).info = -2;
+            pt = (1 +td(tind).sign((j+1)%3))/2;
+            assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
+            sd(sd3).vrtx(pt) = v0;
+            sd3 = td(tind).side((j+2)%3);
+            sd(sd3).info = -2;
+            pt = (1 -td(tind).sign((j+2)%3))/2;
+            assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
+            sd(sd3).vrtx(pt) = v0;
             break;
          }
       }
@@ -205,84 +205,84 @@ DELETE:
    }
 
    /* MARK SIDE AS DELETED */      
-   sd[sind].info = -3;
+   sd(sind).info = -3;
 
    /* CLOSE THE GAP */
    for(i=0;i<2;++i) {
-      tind = sd[sind].tri[i];
+      tind = sd(sind).tri(i);
       if (tind < 0) continue;
 
       /* MARK TRI AS DELETED TO BE REMOVED LATER */
-      td[tind].info = -1;  
+      td(tind).info = -1;  
       
       for(sd1=0;sd1<3;++sd1)
-         if(td[tind].vrtx[sd1] == v1) break;
+         if(td(tind).vrtx(sd1) == v1) break;
          
       assert(sd1 != 3);
                
-      if (td[tind].side[(sd1+1)%3] == sind)
+      if (td(tind).side((sd1+1)%3) == sind)
          sd2 = (sd1+2)%3;
       else
          sd2 = (sd1+1)%3;
          
       /* MARK SIDE AS DELETED TO BE REMOVED LATER */
       
-      sind1 = td[tind].side[sd2];
-      if (sd[sind1].tri[1] < 0) {
+      sind1 = td(tind).side(sd2);
+      if (sd(sind1).tri(1) < 0) {
          /* BOUNDARY SIDE SO DELETE OTHER ONE */
          /* ANOMALY OF TRIANGLE WITH 2 EDGES ON BOUNDARY */
-         sd[sind1].info = -2;
-         if (sd[sind1].vrtx[0] == v1) 
-            sd[sind1].vrtx[0] = v0;
-         if (sd[sind1].vrtx[1] == v1) 
-            sd[sind1].vrtx[1] = v0;   
+         sd(sind1).info = -2;
+         if (sd(sind1).vrtx(0) == v1) 
+            sd(sind1).vrtx(0) = v0;
+         if (sd(sind1).vrtx(1) == v1) 
+            sd(sind1).vrtx(1) = v0;   
          sind1 = sd2;
          sd2 = sd1;
          sd1 = sind1;
-         sind1 = td[tind].side[sd2];
+         sind1 = td(tind).side(sd2);
       }
-      sd[sind1].info = -3;
+      sd(sind1).info = -3;
       sdel[nsdel++] = sind1;
             
-      t1 = td[tind].tri[sd1];
-      t2 = td[tind].tri[sd2];
+      t1 = td(tind).tri(sd1);
+      t2 = td(tind).tri(sd2);
 
       /* UPDATE TTRI FOR T1 */  
       if (t1 > -1) {
          for(j=0;j<3;++j) {
-            if(td[t1].tri[j] == tind) {
-               td[t1].tri[j] = t2;
+            if(td(t1).tri(j) == tind) {
+               td(t1).tri(j) = t2;
                break;
             }
          }
          assert(j != 3);
          for(j=0;j<3;++j)
-            vd[td[tind].vrtx[j]].tri = t1;
+            vd(td(tind).vrtx(j)).tri = t1;
       }
       /* UPDATE STRI FOR KEPT SIDE */
-      sind1 = td[tind].side[sd1];
-      pt = (1 -td[tind].sign[sd1])/2;
-      sd[sind1].tri[pt] = t2;
+      sind1 = td(tind).side(sd1);
+      pt = (1 -td(tind).sign(sd1))/2;
+      sd(sind1).tri(pt) = t2;
 
       /* UPDATE TTRI/TSIDE FOR T2 */
       if (t2 > -1) {
          for(j=0;j<3;++j) {
-            if(td[t2].tri[j] == tind) {
-               td[t2].tri[j] = t1;
-               td[t2].side[j] = sind1;
-               td[t2].sign[j] = td[tind].sign[sd1];
+            if(td(t2).tri(j) == tind) {
+               td(t2).tri(j) = t1;
+               td(t2).side(j) = sind1;
+               td(t2).sign(j) = td(tind).sign(sd1);
                break;
             }
          }
          assert(j != 3);
          for(j=0;j<3;++j)
-            vd[td[tind].vrtx[j]].tri = t2;
+            vd(td(tind).vrtx(j)).tri = t2;
       }
    }
    
    /* NEED TO REMOVE LEFTOVERS */
    qtree.dltpt(v1);
-   vd[v1].info = -1;
+   vd(v1).info = -1;
    
    /* STORE LIST OF AFFECTED TRIANGLES */
    ntdel = ntsrnd[delt];
@@ -304,9 +304,9 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
    /* FIND TRIANGLES / SIDES SURROUNDING BOTH ENDPOINTS */
    /* EXCLUDES TRIANGLES ADJACENT TO DELETED SIDE */
    for(i=0;i<2;++i) {
-      vnear = sd[sind].vrtx[i];
-      tind = vd[vnear].tri;
-      if (tind != sd[sind].tri[0] && tind != sd[sind].tri[1])
+      vnear = sd(sind).vrtx(i);
+      tind = vd(vnear).tri;
+      if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
          prev = 0;
       else 
          prev = 1;
@@ -316,25 +316,25 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
       nssrnd[i] = 0;
       do {
          for(vn=0;vn<3;++vn) 
-            if (td[tind].vrtx[vn] == vnear) break;
+            if (td(tind).vrtx(vn) == vnear) break;
          assert(vn != 3);
          
-         tind1 = td[tind].tri[(vn +dir[i])%3];
+         tind1 = td(tind).tri((vn +dir[i])%3);
          if (tind1 < 0) {
-            bside[i][dir[i]-1] = td[tind].side[(vn +dir[i])%3];
+            bside[i][dir[i]-1] = td(tind).side((vn +dir[i])%3);
             if (dir[i] > 1) break;
             /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir[i];
-            tind1 = vd[vnear].tri;
+            tind1 = vd(vnear).tri;
             prev = 1;
             stoptri = -1;
          }
          
          
-         if (tind1 != sd[sind].tri[0] && tind1 != sd[sind].tri[1]) {
+         if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
             tsrnd[i][ntsrnd[i]++] = tind1;
             if (!prev) {
-               ssrnd[i][nssrnd[i]++] = td[tind].side[(vn +dir[i])%3];
+               ssrnd[i][nssrnd[i]++] = td(tind).side((vn +dir[i])%3);
             }
             assert(ntsrnd[i] < maxlst);
             assert(nssrnd[i] < maxlst);
@@ -356,28 +356,28 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
    
    if (dir[0] + dir[1] == 4) {
       /* BOTH POINTS OF EDGE ARE ON BOUNDARY */
-      if (sd[sind].tri[1] > -1 || vd[sd[sind].vrtx[0]].info +vd[sd[sind].vrtx[1]].info == 2) return(-1);
+      if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == 2) return(-1);
    }
    
    /* UPDATE TVRTX & SVRTX */
-   v0 = sd[sind].vrtx[1-delt];
-   v1 = sd[sind].vrtx[delt];
+   v0 = sd(sind).vrtx(1-delt);
+   v1 = sd(sind).vrtx(delt);
    
    for(i=0;i<ntsrnd[delt];++i) {
       tind = tsrnd[delt][i];
       for(j=0;j<3;++j) {
-         if (td[tind].vrtx[j] == v1) {
-            td[tind].vrtx[j] = v0;
-            sd3 = td[tind].side[(j+1)%3];
-            sd[sd3].info = -2;
-            pt = (1 +td[tind].sign[(j+1)%3])/2;
-            assert(sd[sd3].vrtx[pt] == v1 || sd[sd3].vrtx[pt] == v0);
-            sd[sd3].vrtx[pt] = v0;
-            sd3 = td[tind].side[(j+2)%3];
-            sd[sd3].info = -2;
-            pt = (1 -td[tind].sign[(j+2)%3])/2;
-            assert(sd[sd3].vrtx[pt] == v1 || sd[sd3].vrtx[pt] == v0);
-            sd[sd3].vrtx[pt] = v0;
+         if (td(tind).vrtx(j) == v1) {
+            td(tind).vrtx(j) = v0;
+            sd3 = td(tind).side((j+1)%3);
+            sd(sd3).info = -2;
+            pt = (1 +td(tind).sign((j+1)%3))/2;
+            assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
+            sd(sd3).vrtx(pt) = v0;
+            sd3 = td(tind).side((j+2)%3);
+            sd(sd3).info = -2;
+            pt = (1 -td(tind).sign((j+2)%3))/2;
+            assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
+            sd(sd3).vrtx(pt) = v0;
             break;
          }
       }
@@ -385,84 +385,84 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
    }
 
    /* MARK SIDE AS DELETED */      
-   sd[sind].info = -3;
+   sd(sind).info = -3;
 
    /* CLOSE THE GAP */
    for(i=0;i<2;++i) {
-      tind = sd[sind].tri[i];
+      tind = sd(sind).tri(i);
       if (tind < 0) continue;
 
       /* MARK TRI AS DELETED TO BE REMOVED LATER */
-      td[tind].info = -1;  
+      td(tind).info = -1;  
       
       for(sd1=0;sd1<3;++sd1)
-         if(td[tind].vrtx[sd1] == v1) break;
+         if(td(tind).vrtx(sd1) == v1) break;
          
       assert(sd1 != 3);
                
-      if (td[tind].side[(sd1+1)%3] == sind)
+      if (td(tind).side((sd1+1)%3) == sind)
          sd2 = (sd1+2)%3;
       else
          sd2 = (sd1+1)%3;
          
       /* MARK SIDE AS DELETED TO BE REMOVED LATER */
-      sind1 = td[tind].side[sd2];
-      if (sd[sind1].tri[1] < 0) {
+      sind1 = td(tind).side(sd2);
+      if (sd(sind1).tri(1) < 0) {
          /* BOUNDARY SIDE SO DELETE OTHER ONE */
          /* ANOMALY OF TRIANGLE WITH 2 EDGES ON BOUNDARY */
-         sd[sind1].info = -2;
-         if (sd[sind1].vrtx[0] == v1) 
-            sd[sind1].vrtx[0] = v0;
-         if (sd[sind1].vrtx[1] == v1) 
-            sd[sind1].vrtx[1] = v0;   
+         sd(sind1).info = -2;
+         if (sd(sind1).vrtx(0) == v1) 
+            sd(sind1).vrtx(0) = v0;
+         if (sd(sind1).vrtx(1) == v1) 
+            sd(sind1).vrtx(1) = v0;   
          sind1 = sd2;
          sd2 = sd1;
          sd1 = sind1;
-         sind1 = td[tind].side[sd2];
+         sind1 = td(tind).side(sd2);
       }
-      sd[sind1].info = -3;
+      sd(sind1).info = -3;
       sdel[nsdel++] = sind1;
             
-      t1 = td[tind].tri[sd1];
-      t2 = td[tind].tri[sd2];
+      t1 = td(tind).tri(sd1);
+      t2 = td(tind).tri(sd2);
 
       /* UPDATE TTRI FOR T1 */  
       if (t1 > -1) {
          for(j=0;j<3;++j) {
-            if(td[t1].tri[j] == tind) {
-               td[t1].tri[j] = t2;
+            if(td(t1).tri(j) == tind) {
+               td(t1).tri(j) = t2;
                break;
             }
          }
          assert(j != 3);
          for(j=0;j<3;++j)
-            vd[td[tind].vrtx[j]].tri = t1;
+            vd(td(tind).vrtx(j)).tri = t1;
       }
       /* UPDATE STRI FOR KEPT SIDE */
-      sind1 = td[tind].side[sd1];
-      pt = (1 -td[tind].sign[sd1])/2;
-      sd[sind1].tri[pt] = t2;
+      sind1 = td(tind).side(sd1);
+      pt = (1 -td(tind).sign(sd1))/2;
+      sd(sind1).tri(pt) = t2;
 
       /* UPDATE TTRI/TSIDE FOR T2 */
       if (t2 > -1) {
          for(j=0;j<3;++j) {
-            if(td[t2].tri[j] == tind) {
-               td[t2].tri[j] = t1;
-               td[t2].side[j] = sind1;
-               td[t2].sign[j] = td[tind].sign[sd1];
+            if(td(t2).tri(j) == tind) {
+               td(t2).tri(j) = t1;
+               td(t2).side(j) = sind1;
+               td(t2).sign(j) = td(tind).sign(sd1);
                break;
             }
          }
          assert(j != 3);
          for(j=0;j<3;++j)
-            vd[td[tind].vrtx[j]].tri = t2;
+            vd(td(tind).vrtx(j)).tri = t2;
       }
    }
 
    
    /* NEED TO REMOVE LEFTOVERS */
    qtree.dltpt(v1);
-   vd[v1].info = -1;
+   vd(v1).info = -1;
    
    /* STORE LIST OF AFFECTED TRIANGLES */
    ntdel = ntsrnd[delt];
@@ -491,21 +491,21 @@ void mesh::dlttri(int tind) {
    if (tind == ntri) return;
    
    for (j=0;j<3;++j) {
-      v0 = td[ntri].vrtx[j];
-      td[tind].vrtx[j] = v0;
-      vd[v0].tri = tind;
-      td[tind].side[j] = td[ntri].side[j];
-      td[tind].sign[j] = td[ntri].sign[j];
-      sind = td[ntri].side[j];
-      flip = (1 -td[ntri].sign[j])/2;
-      sd[sind].tri[flip] = tind;
+      v0 = td(ntri).vrtx(j);
+      td(tind).vrtx(j) = v0;
+      vd(v0).tri = tind;
+      td(tind).side(j) = td(ntri).side(j);
+      td(tind).sign(j) = td(ntri).sign(j);
+      sind = td(ntri).side(j);
+      flip = (1 -td(ntri).sign(j))/2;
+      sd(sind).tri(flip) = tind;
       
-      t1 = td[ntri].tri[j];
-      td[tind].tri[j] = t1;
+      t1 = td(ntri).tri(j);
+      td(tind).tri(j) = t1;
       if (t1 > -1) {
          for(i=0;i<3;++i) {
-            if(td[t1].tri[i] == ntri) {
-               td[t1].tri[i] = tind;
+            if(td(t1).tri(i) == ntri) {
+               td(t1).tri(i) = tind;
                break;
             }
          }
@@ -524,18 +524,18 @@ void mesh::dltd(int sind) {
    
    if (sind == nside) return;
    
-   sd[sind].vrtx[0] = sd[nside].vrtx[0];
-   sd[sind].vrtx[1] = sd[nside].vrtx[1];
-   sd[sind].tri[0] = sd[nside].tri[0];
-   sd[sind].tri[1] = sd[nside].tri[1];
+   sd(sind).vrtx(0) = sd(nside).vrtx(0);
+   sd(sind).vrtx(1) = sd(nside).vrtx(1);
+   sd(sind).tri(0) = sd(nside).tri(0);
+   sd(sind).tri(1) = sd(nside).tri(1);
 
    for(j=0;j<2;++j) {
-      tind = sd[nside].tri[j];
+      tind = sd(nside).tri(j);
       if (tind > -1) {
          for(k=0;k<3;++k)
-            if (td[tind].side[k] == nside) break;
+            if (td(tind).side(k) == nside) break;
          assert(k != 3);
-         td[tind].side[k] = sind;
+         td(tind).side(k) = sind;
       }
    }
    
@@ -553,36 +553,36 @@ void mesh::dltvrtx(int v0) {
    
    qtree.movept(nvrtx,v0);
    
-   vrtx[v0][0] = vrtx[nvrtx][0];
-   vrtx[v0][1] = vrtx[nvrtx][1];
-   vd[v0].nnbor = vd[nvrtx].nnbor;
-   vd[v0].tri = vd[nvrtx].tri;
-   vlngth[v0] = vlngth[nvrtx];
+   vrtx(v0)(0) = vrtx(nvrtx)(0);
+   vrtx(v0)(1) = vrtx(nvrtx)(1);
+   vd(v0).nnbor = vd(nvrtx).nnbor;
+   vd(v0).tri = vd(nvrtx).tri;
+   vlngth(v0) = vlngth(nvrtx);
    
-   tind = vd[nvrtx].tri;   
+   tind = vd(nvrtx).tri;   
    stoptri = tind;
    dir = 1;
    do {
       for(vn=0;vn<3;++vn) 
-         if (td[tind].vrtx[vn] == nvrtx) break; 
+         if (td(tind).vrtx(vn) == nvrtx) break; 
          
       assert(vn != 3);
       
-      td[tind].vrtx[vn] = v0;
-      sind = td[tind].side[(vn +dir)%3];
-      flip = (1 +(3-2*dir)*td[tind].sign[(vn +dir)%3])/2;
-      assert(sd[sind].vrtx[flip] == nvrtx);
-      sd[sind].vrtx[flip] = v0;
+      td(tind).vrtx(vn) = v0;
+      sind = td(tind).side((vn +dir)%3);
+      flip = (1 +(3-2*dir)*td(tind).sign((vn +dir)%3))/2;
+      assert(sd(sind).vrtx(flip) == nvrtx);
+      sd(sind).vrtx(flip) = v0;
 
-      tind = td[tind].tri[(vn +dir)%3];
+      tind = td(tind).tri((vn +dir)%3);
       if (tind < 0) {
          if (dir > 1) break;
          /* REVERSE DIRECTION AND GO BACK TO START */
          ++dir;
-         tind = vd[nvrtx].tri;
+         tind = vd(nvrtx).tri;
          for(vn=0;vn<3;++vn) {
-            if (td[tind].vrtx[vn] == v0) {
-               td[tind].vrtx[vn] = nvrtx;
+            if (td(tind).vrtx(vn) == v0) {
+               td(tind).vrtx(vn) = nvrtx;
                break;
             }
          }

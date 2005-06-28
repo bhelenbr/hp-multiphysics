@@ -8,7 +8,7 @@
  */
 
 #include "mesh.h"
-#include "utilities.h"
+#include <utilities.h>
 #include<assert.h>
 #include<float.h>
 
@@ -16,82 +16,82 @@ int mesh::swap(int sind, FLT tol) {
    int j,t1,t2,s1p,s2p,snum1,snum2,tind,sind1,v0,v1,vt1,vt2,dir;
          
    
-   t1 = sd[sind].tri[0];
-   t2 = sd[sind].tri[1];
+   t1 = sd(sind).tri(0);
+   t2 = sd(sind).tri(1);
    
    if (t1 < 0 || t2 < 0) return(0);
 
    for(snum1 = 0; snum1 < 3; ++snum1)
-      if (td[t1].side[snum1] == sind) break;
+      if (td(t1).side(snum1) == sind) break;
    assert(snum1 != 3);
 
    for(snum2 = 0; snum2 < 3; ++snum2)
-      if (td[t2].side[snum2] == sind) break;
+      if (td(t2).side(snum2) == sind) break;
    assert(snum2 != 3); 
    
-   v0 = sd[sind].vrtx[0];
-   v1 = sd[sind].vrtx[1];
-   vt1 = td[t1].vrtx[snum1];
-   vt2 = td[t2].vrtx[snum2];
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
+   vt1 = td(t1).vrtx(snum1);
+   vt2 = td(t2).vrtx(snum2);
    
    if (MIN(minangle(v0,v1,vt1),minangle(v1,v0,vt2)) >
        MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol -10.0*EPSILON) return(0);
        
-   sd[sind].info = -2; /* MARK SIDE AS TOUCHED */   
+   sd(sind).info = -2; /* MARK SIDE AS TOUCHED */   
    
    /* SWAP SIDE */
-   sd[sind].vrtx[0] = vt2;
-   sd[sind].vrtx[1] = vt1;
+   sd(sind).vrtx(0) = vt2;
+   sd(sind).vrtx(1) = vt1;
 
    /* KEEP 2/3 VERTICES IN SAME SPOT */
-   td[t1].vrtx[(snum1 +2)%3] = vt2;
-   td[t2].vrtx[(snum2 +2)%3] = vt1;
+   td(t1).vrtx((snum1 +2)%3) = vt2;
+   td(t2).vrtx((snum2 +2)%3) = vt1;
 
    s1p = (snum1 +1)%3;
    s2p = (snum2 +1)%3;
    
    /* FIX 2 CHANGED EXTERIOR SIDES */
-   td[t1].side[snum1] = td[t2].side[s2p];
-   td[t1].sign[snum1] = td[t2].sign[s2p];
-   td[t1].tri[snum1] = td[t2].tri[s2p];
+   td(t1).side(snum1) = td(t2).side(s2p);
+   td(t1).sign(snum1) = td(t2).sign(s2p);
+   td(t1).tri(snum1) = td(t2).tri(s2p);
 
-   td[t2].side[snum2] = td[t1].side[s1p];
-   td[t2].sign[snum2] = td[t1].sign[s1p];
-   td[t2].tri[snum2] = td[t1].tri[s1p];
+   td(t2).side(snum2) = td(t1).side(s1p);
+   td(t2).sign(snum2) = td(t1).sign(s1p);
+   td(t2).tri(snum2) = td(t1).tri(s1p);
    
    /* FIX STRI/TTRI FOR 2 CHANGED EXTERIOR SIDES */
-   sind1 = td[t1].side[snum1];
-   dir = (1 -td[t1].sign[snum1])/2;
-   sd[sind1].tri[dir] = t1;
-   tind = td[t1].tri[snum1];
+   sind1 = td(t1).side(snum1);
+   dir = (1 -td(t1).sign(snum1))/2;
+   sd(sind1).tri(dir) = t1;
+   tind = td(t1).tri(snum1);
    if (tind > -1) {
       for(j=0;j<3;++j)
-         if (td[tind].side[j] == sind1) break;
+         if (td(tind).side(j) == sind1) break;
       assert(j != 3);
-      td[tind].tri[j] = t1;
+      td(tind).tri(j) = t1;
    }
    
-   sind1 = td[t2].side[snum2];
-   dir = (1 -td[t2].sign[snum2])/2;
-   sd[sind1].tri[dir] = t2;
-   tind = td[t2].tri[snum2];
+   sind1 = td(t2).side(snum2);
+   dir = (1 -td(t2).sign(snum2))/2;
+   sd(sind1).tri(dir) = t2;
+   tind = td(t2).tri(snum2);
    if (tind > -1) {
       for(j=0;j<3;++j)
-         if (td[tind].side[j] == sind1) break;
+         if (td(tind).side(j) == sind1) break;
       assert(j != 3);
-      td[tind].tri[j] = t2;
+      td(tind).tri(j) = t2;
    } 
 
-   vd[v0].tri = t1;
-   vd[v1].tri = t2;  
+   vd(v0).tri = t1;
+   vd(v1).tri = t2;  
    
-   td[t1].tri[s1p] = t2;
-   td[t2].tri[s2p] = t1;
+   td(t1).tri(s1p) = t2;
+   td(t2).tri(s2p) = t1;
    
-   td[t1].side[s1p] = sind;
-   td[t2].side[s2p] = sind;  
-   td[t1].sign[s1p] =  1;
-   td[t2].sign[s2p] = -1;
+   td(t1).side(s1p) = sind;
+   td(t2).side(s2p) = sind;  
+   td(t1).sign(s1p) =  1;
+   td(t2).sign(s2p) = -1;
 
    return(1);
 }

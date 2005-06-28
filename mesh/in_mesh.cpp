@@ -1,11 +1,11 @@
 #include "mesh.h"
 #include "boundary.h"
-#include "utilities.h"
+#include <utilities.h>
 #include <cstdlib>
 #include <cstring>
 #include <input_map.h>
 
-int *mesh::i1wk = 0, *mesh::i2wk = 0, *mesh::i3wk = 0;
+Array<int,1> mesh::i1wk,mesh::i2wk,mesh::i3wk;
 int mesh::maxlst, mesh::maxsrch;
 
 sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile, sharedmem *win) {
@@ -14,7 +14,6 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
    char grd_nm[120], grd_app[120];
    FILE *grd;
    int v[3],s[3],e[3];
-   int bcntr[MAXSB];
    std::map<std::string,std::string> bdrymap;
    std::map<std::string,std::string> *pbdrymap = &bdrymap;
          
@@ -73,7 +72,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
            
             for(i=0;i<nside;++i) {
                ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
-               ,&sd[i].vrtx[0],&sd[i].vrtx[1],&sd[i].info);
+               ,&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).info);
                if(ierr != 3) {
                   *log << "error: in side file " << grd_app << std::endl;
                   exit(1);
@@ -82,42 +81,42 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
             fclose(grd);
             
             for(i=0;i<maxvst;++i) {
-               sd[i].tri[0] = -1;
-               sd[i].tri[1] = -1;
+               sd(i).tri(0) = -1;
+               sd(i).tri(1) = -1;
             }
             
             /* COUNT BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
-               if (sd[i].info) {
+               if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == sbdry[j]->idnum) {
-                        ++bcntr[j];
+                     if (sd(i).info == i1wk(j)) {
+                        ++i2wk(j);
                         goto next1;
                      }
                   }
                   /* NEW SIDE */
-                  sbdry[nsbd] = getnewsideobject(sd[i].info,pbdrymap);
-                  bcntr[nsbd++] = 1;
-                  if (nsbd > MAXSB) {
-                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
-                     exit(1);
-                  }
+                  i1wk(nsbd) = sd(i).info;
+                  i2wk(nsbd++) = 1;
                }
 next1:      continue;
             }
             
+            sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
-               sbdry[i]->nel = 0;
+               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+               sbdry(i)->nel = 0;
+               i1wk(i) = -1;
+               i2wk(i) = -1;
             }
             
             
             for(i=0;i<nside;++i) {
-               if (sd[i].info) {
+               if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == sbdry[j]->idnum) {
-                        sbdry[j]->el[sbdry[j]->nel++] = i;
+                     if (sd(i).info == sbdry(j)->idnum) {
+                        sbdry(j)->el[sbdry(j)->nel++] = i;
                         goto next1a;
                      }
                   }
@@ -142,20 +141,20 @@ next1a:     continue;
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d:");
-               if (DIM == 3) {
+               if (ND == 3) {
                   fgets(grd_app,100,grd);
-                  ierr = sscanf(grd_app,"%lf%lf%lf%d",&vrtx[i][0],&vrtx[i][1],&vrtx[i][2],&vd[i].info);
+                  ierr = sscanf(grd_app,"%lf%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vrtx(i)(2),&vd(i).info);
                   if (ierr != ND+1) {
-                     ierr = sscanf(grd_app,"%lf%lf%d",&vrtx[i][0],&vrtx[i][1],&vd[i].info);
+                     ierr = sscanf(grd_app,"%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vd(i).info);
                      if (ierr != ND) { *log << "2a: error in grid" << std::endl; exit(1); }
                   }
                }
                else {
                   ierr = 0;
                   for(n=0;n<ND;++n) {
-                     ierr += fscanf(grd,"%lf",&vrtx[i][n]);
+                     ierr += fscanf(grd,"%lf",&vrtx(i)(n));
                   }
-                  ierr += fscanf(grd,"%d",&vd[i].info);
+                  ierr += fscanf(grd,"%d",&vd(i).info);
                   if (ierr != ND+1)  { *log << "2b: error in grid" << std::endl; exit(1); }
                }
             }
@@ -163,17 +162,18 @@ next1a:     continue;
 
             /* COUNT VERTEX BOUNDARY GROUPS  */
             nvbd = 0;
+            for(i=0;i<nvrtx;++i)
+               if (vd(i).info) ++nvbd;
+            vbdry.resize(nvbd);
+            
+            nvbd = 0;
             for(i=0;i<nvrtx;++i) {
-               if (vd[i].info) {
+               if (vd(i).info) {
                   /* NEW VRTX B.C. */
-                  vbdry[nvbd] = getnewvrtxobject(vd[i].info,pbdrymap);
-                  vbdry[nvbd]->alloc(1);
-                  vbdry[nvbd]->v0 = i;
+                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,pbdrymap);
+                  vbdry(nvbd)->alloc(1);
+                  vbdry(nvbd)->v0 = i;
                   ++nvbd;
-                  if (nvbd >= MAXVB) {
-                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
-                     exit(1);
-                  }
                }
             }
                         
@@ -193,21 +193,21 @@ next1a:     continue;
     
             for(i=0;i<ntri;++i) {
                 ierr = fscanf(grd,"%*d:%d%d%d%d%d%d%d%d%d%*f%*f%d\n"
-                ,v,v+1,v+2,e,e+1,e+2,s,s+1,s+2,&td[i].info);
+                ,v,v+1,v+2,e,e+1,e+2,s,s+1,s+2,&td(i).info);
     
                 for (j=0;j<3;++j) {
-                    td[i].vrtx[j] = v[j];
-                    if(sd[s[j]].vrtx[0] == v[(j+1)%3]) {
+                    td(i).vrtx(j) = v[j];
+                    if(sd(s[j]).vrtx(0) == v[(j+1)%3]) {
                         /* SIDE DEFINED IN SAME DIRECTION */
-                        sd[s[j]].tri[0] = i;
-                        td[i].side[j] = s[j];
-                        td[i].sign[j] = 1;
+                        sd(s[j]).tri(0) = i;
+                        td(i).side(j) = s[j];
+                        td(i).sign(j) = 1;
                     }
                     else {
                         /* SIDE DEFINED IN OPPOSITE DIRECTION */
-                        sd[s[j]].tri[1] = i;
-                        td[i].side[j] = s[j];
-                        td[i].sign[j] = -1;
+                        sd(s[j]).tri(1) = i;
+                        td(i).side(j) = s[j];
+                        td(i).sign(j) = -1;
                     }
                 }
             }
@@ -227,6 +227,7 @@ next1a:     continue;
                 
             fscanf(grd,"%d%d%d\n",&nvrtx,&i,&nsbd);
             nsbd -= 1;
+            sbdry.resize(nsbd);
             /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
             /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
             if (!initialized) {
@@ -245,9 +246,9 @@ next1a:     continue;
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d");
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%le ",&vrtx[i][n]);
+                  fscanf(grd,"%le ",&vrtx(i)(n));
                fscanf(grd,"\n");
-               vd[i].info = -1;
+               vd(i).info = -1;
             }
                 
             for(i=0;i<2;++i)
@@ -258,35 +259,35 @@ next1a:     continue;
             fscanf(grd,"%*[^\n]");
                     
             for(i=0;i<ntri;++i) {
-                fscanf(grd,"%*d %d %d %d",&td[i].vrtx[0],&td[i].vrtx[1],&td[i].vrtx[2]);
-                --td[i].vrtx[0];
-                --td[i].vrtx[1];
-                --td[i].vrtx[2];
-                td[i].info = 0;
+                fscanf(grd,"%*d %d %d %d",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
+                --td(i).vrtx(0);
+                --td(i).vrtx(1);
+                --td(i).vrtx(2);
+                td(i).info = 0;
             }
 
             /* READ BOUNDARY DATA STORE TEMPORARILY */            
-            int (*svrtxbtemp[MAXSB])[2];
+            int (*svrtxbtemp[10])[2];
     
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
                   ,&count,&temp);
                
-               sbdry[i] = getnewsideobject(temp,pbdrymap);
-               sbdry[i]->alloc(static_cast<int>(count*grwfac));
-               sbdry[i]->nel = count;
+               sbdry(i) = getnewsideobject(temp,pbdrymap);
+               sbdry(i)->alloc(static_cast<int>(count*grwfac));
+               sbdry(i)->nel = count;
                
                fscanf(grd,"%*[^\n]\n");
                
-               svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry[i]->nel*2*sizeof(int));
+               svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry(i)->nel*2*sizeof(int));
                     
-               for(j=0;j<sbdry[i]->nel;++j) {
+               for(j=0;j<sbdry(i)->nel;++j) {
                   fscanf(grd,"%*d %d %d\n"
                      ,&svrtxbtemp[i][j][0],&svrtxbtemp[i][j][1]);
                   --svrtxbtemp[i][j][0];
                   --svrtxbtemp[i][j][1];
-                  vd[svrtxbtemp[i][j][0]].info = sbdry[i]->idnum;
-                  vd[svrtxbtemp[i][j][1]].info = sbdry[i]->idnum;
+                  vd(svrtxbtemp[i][j][0]).info = sbdry(i)->idnum;
+                  vd(svrtxbtemp[i][j][1]).info = sbdry(i)->idnum;
                }
             }
 
@@ -296,24 +297,24 @@ next1a:     continue;
             /* FIND ALL BOUNDARY SIDES */
             /* STORE LOCATION BY VERTEX NUMBER */
             for(i=0;i<nside;++i) 
-               if (sd[i].tri[1] < 0)
-                  vd[sd[i].vrtx[0]].info = i;
+               if (sd(i).tri(1) < 0)
+                  vd(sd(i).vrtx(0)).info = i;
                   
             for(i=0;i<nside;++i)
-               sd[i].info = 0;
+               sd(i).info = 0;
 
             /* MATCH BOUNDARY SIDES TO GROUPS */    
             for(i=0;i<nsbd;++i) {
-               for(j=0;j<sbdry[i]->nel;++j) {
-                  sind = vd[svrtxbtemp[i][j][0]].info;
+               for(j=0;j<sbdry(i)->nel;++j) {
+                  sind = vd(svrtxbtemp[i][j][0]).info;
                   if (sind < 0) {
                      *log << "error in boundary information " << i << j << std::endl;
                      exit(1);
                   }
-                  if (sd[sind].vrtx[1] == svrtxbtemp[i][j][1]) {
-                     sd[sind].info = sbdry[i]->idnum;
-                     sbdry[i]->el[j] = sind;
-                     vd[sd[sind].vrtx[0]].info = 0;
+                  if (sd(sind).vrtx(1) == svrtxbtemp[i][j][1]) {
+                     sd(sind).info = sbdry(i)->idnum;
+                     sbdry(i)->el[j] = sind;
+                     vd(sd(sind).vrtx(0)).info = 0;
                   }
                   else {
                      *log << "Error: boundary sides are not counterclockwise " << 
@@ -324,7 +325,7 @@ next1a:     continue;
             }
             
             for(i=0;i<nvrtx;++i)
-               vd[i].info = 0;
+               vd(i).info = 0;
 
             break;
             
@@ -351,42 +352,44 @@ next1a:     continue;
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d:");
                for(n=0;n<ND;++n)
-               	fscanf(grd,"%lf",&vrtx[i][n]);
+               	fscanf(grd,"%lf",&vrtx(i)(n));
                fscanf(grd,"\n");
             }
                      
             /* SIDE INFO */
             for(i=0;i<nside;++i)
-               fscanf(grd,"%*d: %d %d\n",&sd[i].vrtx[0],&sd[i].vrtx[1]);
+               fscanf(grd,"%*d: %d %d\n",&sd(i).vrtx(0),&sd(i).vrtx(1));
    
             /* THEN TRI INFO */
             for(i=0;i<ntri;++i)
-               fscanf(grd,"%*d: %d %d %d\n",&td[i].vrtx[0],&td[i].vrtx[1],&td[i].vrtx[2]);
+               fscanf(grd,"%*d: %d %d %d\n",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
                
             /* CREATE TSIDE & STRI */
             createtdstri();
    
             /* SIDE BOUNDARY INFO HEADER */
             fscanf(grd,"%*[^:]:%d",&nsbd);
+            sbdry.resize(nsbd);
             count = 0;
             for(i=0;i<nsbd;++i) {
                fscanf(grd,"%*[^:]:%d",&temp);
-               sbdry[i] = getnewsideobject(temp,pbdrymap);
-               fscanf(grd,"%*[^:]:%d\n",&sbdry[i]->nel);
-               if (!sbdry[i]->maxel) sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nel));
-               else assert(sbdry[i]->nel < sbdry[i]->maxel);
-               for(int j=0;j<sbdry[i]->nel;++j) {
-                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry[i]->el[j]);
+               sbdry(i) = getnewsideobject(temp,pbdrymap);
+               fscanf(grd,"%*[^:]:%d\n",&sbdry(i)->nel);
+               if (!sbdry(i)->maxel) sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
+               else assert(sbdry(i)->nel < sbdry(i)->maxel);
+               for(int j=0;j<sbdry(i)->nel;++j) {
+                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry(i)->el[j]);
                }
             }
             
             /* VERTEX BOUNDARY INFO HEADER */
             fscanf(grd,"%*[^:]:%d",&nvbd);
+            vbdry.resize(nvbd);
             for(i=0;i<nvbd;++i) {
                fscanf(grd,"%*[^:]:%d",&temp);
-               vbdry[i] = getnewvrtxobject(temp,pbdrymap);
-               vbdry[i]->alloc(1);
-               fscanf(grd,"%*[^:]:%d\n",&vbdry[i]->v0);
+               vbdry(i) = getnewvrtxobject(temp,pbdrymap);
+               vbdry(i)->alloc(1);
+               fscanf(grd,"%*[^:]:%d\n",&vbdry(i)->v0);
             }
             
             break;
@@ -422,83 +425,84 @@ next1a:     continue;
             
             fscanf(grd,"%*d%d%*d%d%*d%*d\n",&temp,&count);
             
+            sbdry.resize(nsbd+1);
             /* EXTERNAL BOUNDARY */
-            sbdry[0] = getnewsideobject(1,pbdrymap);
-            sbdry[0]->alloc(static_cast<int>(grwfac*temp));
-            sbdry[0]->nel = temp;
-            for(i=0;i<sbdry[0]->nel;++i)
-               sbdry[0]->el[i] = i;
+            sbdry(0) = getnewsideobject(1,pbdrymap);
+            sbdry(0)->alloc(static_cast<int>(grwfac*temp));
+            sbdry(0)->nel = temp;
+            for(i=0;i<sbdry(0)->nel;++i)
+               sbdry(0)->el[i] = i;
             
             ++nsbd;
             
             for(i=1;i<nsbd;++i) {
-               sbdry[i] = getnewsideobject(i+1,pbdrymap);
+               sbdry(i) = getnewsideobject(i+1,pbdrymap);
                fscanf(grd,"%*[^\n]\n");
-               fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry[i]->nel);
-               sbdry[i]->alloc(static_cast<int>(grwfac*sbdry[i]->nel));
-               sbdry[i]->el[0] = temp-1;
-               sbdry[i]->nel -= sbdry[i]->el[0];
-               for(j=1;j<sbdry[i]->nel;++j)
-                  sbdry[i]->el[j] = j +sbdry[i]->el[0];
+               fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry(i)->nel);
+               sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
+               sbdry(i)->el[0] = temp-1;
+               sbdry(i)->nel -= sbdry(i)->el[0];
+               for(j=1;j<sbdry(i)->nel;++j)
+                  sbdry(i)->el[j] = j +sbdry(i)->el[0];
             }
             
             fscanf(grd,"%*[^\n]\n");
                
             for(i=0;i<nside;++i) {
-               fscanf(grd,"%d%d%d%d%*d\n",&sd[i].vrtx[0],&sd[i].vrtx[1],&sd[i].tri[0],&sd[i].tri[1]);
-               --sd[i].vrtx[0];--sd[i].vrtx[1];--sd[i].tri[0];--sd[i].tri[1];
+               fscanf(grd,"%d%d%d%d%*d\n",&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).tri(0),&sd(i).tri(1));
+               --sd(i).vrtx(0);--sd(i).vrtx(1);--sd(i).tri(0);--sd(i).tri(1);
                
-               if (sd[i].tri[1] >= ntri) sd[i].tri[1] = -1;
+               if (sd(i).tri(1) >= ntri) sd(i).tri(1) = -1;
             }
             
             for(i=0;i<nvrtx;++i) {
                for(n=0;n<ND;++n)
-               	fscanf(grd,"%lf",&vrtx[i][n]);
+               	fscanf(grd,"%lf",&vrtx(i)(n));
                fscanf(grd,"%*[^\n]\n");
             }
                
             for(i=0;i<ntri;++i)
                for(j=0;j<3;++j)
-                  td[i].side[j] = -1;
+                  td(i).side(j) = -1;
                   
             for(i=0;i<nside;++i) {
-               tind = sd[i].tri[0];
+               tind = sd(i).tri(0);
                j = 0;
-               while (td[tind].side[j] > 0)
+               while (td(tind).side(j) > 0)
                   ++j;
-               td[tind].side[j] = i;
-               td[tind].sign[j] = 1;
+               td(tind).side(j) = i;
+               td(tind).sign(j) = 1;
                
-               tind = sd[i].tri[1];
+               tind = sd(i).tri(1);
                if (tind > -1) {
                   j = 0;
-                  while (td[tind].side[j] > 0)
+                  while (td(tind).side(j) > 0)
                      ++j;
-                  td[tind].side[j] = i;
-                  td[tind].sign[j] = -1;
+                  td(tind).side(j) = i;
+                  td(tind).sign(j) = -1;
                }
             }
             
             /* REORDER SIDES TO BE COUNTERCLOCKWISE */
             /* FILL IN TVRTX */
             for(tind=0;tind<ntri;++tind) {
-               v0 = sd[td[tind].side[0]].vrtx[(td[tind].sign[0]+1)/2];
-               v1 = sd[td[tind].side[1]].vrtx[(1-td[tind].sign[1])/2];
+               v0 = sd(td(tind).side(0)).vrtx((td(tind).sign(0)+1)/2);
+               v1 = sd(td(tind).side(1)).vrtx((1-td(tind).sign(1))/2);
                if (v0 != v1) {
                   /* SWITCH SIDES */
-                  j = td[tind].side[1];
-                  td[tind].side[1] = td[tind].side[2];
-                  td[tind].side[2] = j;
-                  j = td[tind].sign[1];
-                  td[tind].sign[1] = td[tind].sign[2];
-                  td[tind].sign[2] = j;
+                  j = td(tind).side(1);
+                  td(tind).side(1) = td(tind).side(2);
+                  td(tind).side(2) = j;
+                  j = td(tind).sign(1);
+                  td(tind).sign(1) = td(tind).sign(2);
+                  td(tind).sign(2) = j;
                }
                
-               td[tind].vrtx[2] = v0;
-               sind = td[tind].side[2];
-               sign = td[tind].sign[2];
-               td[tind].vrtx[1] = sd[sind].vrtx[(sign+1)/2];
-               td[tind].vrtx[0] = sd[sind].vrtx[(1-sign)/2];
+               td(tind).vrtx(2) = v0;
+               sind = td(tind).side(2);
+               sign = td(tind).sign(2);
+               td(tind).vrtx(1) = sd(sind).vrtx((sign+1)/2);
+               td(tind).vrtx(0) = sd(sind).vrtx((1-sign)/2);
             }
             nvbd = 0;
                         
@@ -531,7 +535,7 @@ next1a:     continue;
                fscanf(grd,"%*d:");
                ierr = 0;
                for(n=0;n<ND;++n)
-                  ierr = fscanf(grd,"%lf",&vrtx[i][n]);
+                  ierr = fscanf(grd,"%lf",&vrtx(i)(n));
                fscanf(grd,"\n");
                if (ierr != ND) { *log << "2c: error in grid" << std::endl; exit(1); }
             }
@@ -539,7 +543,7 @@ next1a:     continue;
             
             treeinit();
             
-            return(scratch);
+            return(&scratch);
 
 #ifdef CAPRI         
          case(ftype::BRep):
@@ -572,23 +576,29 @@ next1a:     continue;
             /* LOAD VERTEX INFO */
             for (i=0;i<nvrtx;++i)
                for(n=0;n<ND;++n)
-                  vrtx[i][n] = cpri_points[i*3+n];
+                  vrtx(i)(n) = cpri_points[i*3+n];
             
             /* LOAD TRI INFORMATION */
             for (i=0;i<ntri;++i)
                for(n=0;n<3;++n)
-                  td[i].vrtx[n] = cpri_tris[i*3+n] -1;
+                  td(i).vrtx(n) = cpri_tris[i*3+n] -1;
                               
             /* CREATE SIDE INFORMATION */
             createsideinfo();
             
             nvbd = 0;
+            for(i=0;i<nvrtx;++i) 
+               if (cpri_ptype[i] == 0)
+                  ++nvbd;
+            vbdry.resize(nvbd);
+            
+            nvbd = 0;
             /* CREATE VERTEX BOUNDARIES */
             for(i=0;i<nvrtx;++i) {
                if (cpri_ptype[i] == 0) {
-                  vbdry[nvbd] = getnewvrtxobject(cpri_pindex[i],pbdrymap);
-                  vbdry[nvbd]->alloc(1);
-                  vbdry[nvbd]->v0 = i;
+                  vbdry(nvbd) = getnewvrtxobject(cpri_pindex[i],pbdrymap);
+                  vbdry(nvbd)->alloc(1);
+                  vbdry(nvbd)->v0 = i;
                   ++nvbd;
                   if (nvbd >= MAXVB) {
                      *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
@@ -598,21 +608,21 @@ next1a:     continue;
             }
             
             for(i=0;i<nside;++i)
-               sd[i].info = 0;
+               sd(i).info = 0;
             
             /* COUNT BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
-               if (sd[i].tri[1] < 0) {
-                  v0 = sd[i].vrtx[0];
+               if (sd(i).tri(1) < 0) {
+                  v0 = sd(i).vrtx(0);
                   /* FIGURE OUT EDGE INDEX */
                   if (cpri_ptype[v0] > 0) {
-                     sd[i].info = cpri_pindex[v0];
+                     sd(i).info = cpri_pindex[v0];
                   }
                   else {
-                     v0 = sd[i].vrtx[1];
+                     v0 = sd(i).vrtx(1);
                      if (cpri_ptype[v0] > 0) {
-                        sd[i].info = cpri_pindex[v0];
+                        sd(i).info = cpri_pindex[v0];
                      }
                      else {
                         *log << "Error in BRep Boundary Groups\n";
@@ -620,32 +630,32 @@ next1a:     continue;
                      }
                   }
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == (sbdry[j]->idnum&0xFFFF)) {
-                        ++bcntr[j];
+                     if (sd(i).info == (i1wk(j)&0xFFFF)) {
+                        ++i2wk(j);
                         goto next1b;
                      }
                   }
                   /* NEW SIDE */
-                  sbdry[nsbd] = getnewsideobject(sd[i].info,pbdrymap);
-                  bcntr[nsbd++] = 1;
-                  if (nsbd > MAXSB) {
-                     *log << "error: too many different side boundaries: increase MAXSB" << nsbd << std::endl;
-                     exit(1);
-                  }
+                  i1wk(nsbd) = sd(i).info;
+                  i2wk(nsbd++) = 1;
                }
 next1b:      continue;
             }
             
+            sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
-               sbdry[i]->nel = 0;
+               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+               sbdry(i)->nel = 0;
+               i1wk(i) = -1;
+               i2wk(i) = -1;
             }
             
             for(i=0;i<nside;++i) {
-               if (sd[i].info) {
+               if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == (sbdry[j]->idnum&0xFFFF)) {
-                        sbdry[j]->el[sbdry[j]->nel++] = i;
+                     if (sd(i).info == (sbdry(j)->idnum&0xFFFF)) {
+                        sbdry(j)->el[sbdry(j)->nel++] = i;
                         goto next1c;
                      }
                   }
@@ -684,19 +694,19 @@ next1c:     continue;
             /* READ VERTEX DATA */
             for(i=0;i<nvrtx;++i) {
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%le ",&vrtx[i][n]);
+                  fscanf(grd,"%le ",&vrtx(i)(n));
                fscanf(grd,"%*[^\n]\n");
-               vd[i].info = -1;
+               vd(i).info = -1;
             }
 
             fscanf(grd,"%*[^0-9]");
 
             for(i=0;i<ntri;++i) {
-               fscanf(grd,"%d %d %d",&td[i].vrtx[0],&td[i].vrtx[1],&td[i].vrtx[2]);
-               --td[i].vrtx[0];
-               --td[i].vrtx[1];
-               --td[i].vrtx[2];
-               td[i].info = 0;
+               fscanf(grd,"%d %d %d",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
+               --td(i).vrtx(0);
+               --td(i).vrtx(1);
+               --td(i).vrtx(2);
+               td(i).info = 0;
             }
 
             /* CREATE SIDE INFORMATION */
@@ -705,15 +715,16 @@ next1c:     continue;
             /* FIND ALL BOUNDARY SIDES */
             count = 0;
             for(i=0;i<nside;++i)
-               if (sd[i].tri[1] < 0) ++count;
+               if (sd(i).tri(1) < 0) ++count;
 
             nsbd = 0;
-            sbdry[nsbd] = getnewsideobject(nsbd+1,pbdrymap);
-            sbdry[0]->alloc(static_cast<int>(grwfac*count));
-            sbdry[0]->nel = count;
+            sbdry.resize(1);
+            sbdry(nsbd) = getnewsideobject(nsbd+1,pbdrymap);
+            sbdry(0)->alloc(static_cast<int>(grwfac*count));
+            sbdry(0)->nel = count;
             count = 0;
             for(i=0;i<nside;++i)
-               if (sd[i].tri[1] < 0) sbdry[0]->el[count++] = i;
+               if (sd(i).tri(1) < 0) sbdry(0)->el[count++] = i;
             ++nsbd;
             nvbd = 0;
             
@@ -731,68 +742,71 @@ next1c:     continue;
 
             fscanf(grd,"%d\n",&nvrtx);
 
-            maxvst = static_cast<int>(grwfac*pow(nvrtx,2));
+            maxvst = static_cast<int>(grwfac*nvrtx*nvrtx);
             allocate(maxvst,win);
             initialized = 1;
 
             for(i=0;i<nvrtx;++i) {
                fscanf(grd,"%*d:");
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%lf",&vrtx[i][n]);
-               fscanf(grd,"%lf%d\n",&vlngth[i],&vd[i].info);
+                  fscanf(grd,"%lf",&vrtx(i)(n));
+               fscanf(grd,"%lf%d\n",&vlngth(i),&vd(i).info);
             }
 
             /* COUNT VERTEX BOUNDARY GROUPS  */
             nvbd = 0;
-            for(i=0;i<nvrtx;++i) {
-               if (vd[i].info) {
-                  /* NEW VRTX B.C. */
-                  vbdry[nvbd] = getnewvrtxobject(vd[i].info,pbdrymap);
-                  vbdry[nvbd]->v0 = i;
+            for(i=0;i<nvrtx;++i) 
+               if (vd(i).info)
                   ++nvbd;
-                  if (nvbd >= MAXVB) {
-                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
-                     exit(1);
-                  }
+            vbdry.resize(nvbd);
+               
+            nvbd = 0;
+            for(i=0;i<nvrtx;++i) {
+               if (vd(i).info) {
+                  /* NEW VRTX B.C. */
+                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,pbdrymap);
+                  vbdry(nvbd)->v0 = i;
+                  ++nvbd;
                }
             }
 
             fscanf(grd,"%d\n",&nside);
 
             for(i=0;i<nside;++i)
-               fscanf(grd,"%*d:%d%d%d\n",&sd[i].vrtx[0],&sd[i].vrtx[1],&sd[i].info);
+               fscanf(grd,"%*d:%d%d%d\n",&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).info);
                
             /* COUNT BOUNDARY GROUPS */
             nsbd = 0;
             for(i=0;i<nside;++i) {
-               if (sd[i].info) {
+               if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == sbdry[j]->idnum) {
-                        ++bcntr[j];
+                     if (sd(i).info == i1wk(j)) {
+                        ++i2wk(j);
                         goto bdnext1;
                      }
                   }
                   /* NEW SIDE */
-                  sbdry[nsbd] = getnewsideobject(sd[i].info,pbdrymap);
-                  bcntr[nsbd++] = 1;
-                  if (nsbd > MAXSB) {
-                     *log << "error: too many different side boundaries: increase MAXSB" << std::endl;
-                     exit(1);
-                  }
+                  i1wk(nsbd) = sd(i).info;
+                  i2wk(nsbd++) = 1;
                }
             bdnext1:      continue;
             }
 
+
+            sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry[i]->alloc(static_cast<int>(bcntr[i]*grwfac));
-               sbdry[i]->nel = 0;
+               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+               sbdry(i)->nel = 0;
+               i1wk(i) = -1;
+               i2wk(i) = -1;
             }
 
             for(i=0;i<nside;++i) {
-               if (sd[i].info) {
+               if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
-                     if (sd[i].info == sbdry[j]->idnum) {
-                        sbdry[j]->el[sbdry[j]->nel++] = i;
+                     if (sd(i).info == sbdry(j)->idnum) {
+                        sbdry(j)->el[sbdry(j)->nel++] = i;
                         goto bdnext1a;
                      }
                   }
@@ -803,7 +817,7 @@ next1c:     continue;
             }
             
             for(i=0;i<nside;++i)
-               i1wk[i] = i+1;
+               i1wk(i) = i+1;
               
             ntri = 0;
             triangulate(nside);
@@ -816,8 +830,8 @@ next1c:     continue;
     
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-      sbdry[i]->reorder();
-      sbdry[i]->setupcoordinates();
+      sbdry(i)->reorder();
+      sbdry(i)->setupcoordinates();
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
@@ -831,69 +845,53 @@ next1c:     continue;
 
    initialized = 1;
    
-   return(scratch);
+   return(&scratch);
 }
 
-sharedmem* mesh::allocate(int mxsize, sharedmem* wkin) {
-   int i;
+sharedmem* mesh::allocate(int mxsize,const sharedmem* wkin) {
    
    /* SIDE INFO */
    maxvst = mxsize;
-   sd = new sstruct[maxvst+1];
-   ++sd; // ALLOWS US TO ACCESS SINFO[-1]
+   sd.resize(Range(-1,maxvst));
 
    /* VERTEX INFO */                  
-   vrtx = (FLT (*)[ND]) xmalloc(maxvst*ND*sizeof(FLT));
-   vlngth = new FLT[maxvst];
-   vd = new vstruct[maxvst+1];
-   ++vd;
+   vrtx.resize(maxvst);
+   vlngth.resize(maxvst);
+   vd.resize(Range(-1,maxvst));
    
    /* TRI INFO */ 
-   td = new tstruct[maxvst+1];
-   ++td;
+   td.resize(Range(-1,maxvst));
    
-   qtree.allocate(vrtx,maxvst);
+   qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
 
                  
    /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */ 
    if (wkin) {   
-      scratch = wkin;
-      if (wkin->size < maxvst*sizeof(FLT)) {
-         *log << "Warning: work variable is not large enough for mesh: " << wkin->size << ' ' << maxvst*sizeof(FLT) << std::endl;
-      }
+      scratch.reference(*wkin);
+      if (scratch.size() < maxvst*sizeof(FLT)) scratch.resize(maxvst*sizeof(FLT));
    }
    else {
-      scratch = new sharedmem;
-      scratch->allocate(maxvst*sizeof(FLT));
+      scratch.resize(maxvst*sizeof(FLT));
    }
-   load_scratch_pointers();
+   get_scratch_pointers();
 
-   if (!i1wk) {
-      i1wk = new int[maxvst];
-      i2wk = new int[maxvst];
-      i3wk = new int[maxvst];
+
+   if (i1wk.ubound(firstDim) < maxvst) {
+      i1wk.resize(maxvst);
+      i2wk.resize(maxvst);
+      i3wk.resize(maxvst);
       maxlst = 100;
       maxsrch = 100;
    
-      for(i=0;i<maxvst;++i)
-         i1wk[i] = -1;
-      for(i=0;i<maxvst;++i)
-         i2wk[i] = -1;
-      for(i=0;i<maxvst;++i)
-         i3wk[i] = -1;
-      
-      
+      i1wk = -1;
+      i2wk = -1;
+      i3wk = -1;
+
    }
    initialized = 1;
    
-   return(scratch);
-}
-
-void mesh::load_scratch_pointers() {
-   /* USE BASE FOR FWK */
-   fwk = static_cast<FLT *>(scratch->p);
-   return;
+   return(&scratch);
 }
 
 void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
@@ -901,18 +899,20 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
 
    if (!initialized) {
       maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
-      allocate(maxvst,inmesh.scratch);
+      allocate(maxvst,&inmesh.scratch);
       nsbd = inmesh.nsbd;
+      sbdry.resize(nsbd);
       for(i=0;i<nsbd;++i) {
-         sbdry[i] = inmesh.sbdry[i]->create(*this);
-         sbdry[i]->alloc(MAX(static_cast<int>(inmesh.sbdry[i]->maxel/sizereduce1d)+1,10));
+         sbdry(i) = inmesh.sbdry(i)->create(*this);
+         sbdry(i)->alloc(MAX(static_cast<int>(inmesh.sbdry(i)->maxel/sizereduce1d)+1,10));
       }
       nvbd = inmesh.nvbd;
+      vbdry.resize(nvbd);
       for(i=0;i<nvbd;++i) {
-         vbdry[i] = inmesh.vbdry[i]->create(*this);
-         vbdry[i]->alloc(1);
+         vbdry(i) = inmesh.vbdry(i)->create(*this);
+         vbdry(i)->alloc(1);
       }
-      qtree.allocate(vrtx,maxvst);
+      qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
       initialized = 1;
    }
 }

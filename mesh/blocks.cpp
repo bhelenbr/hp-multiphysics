@@ -596,7 +596,7 @@ void blocks::iterate(int lvl) {
    excpt = 0;
    do {
       state = block::stop;
-      for(i=0;i<nblock;++i)
+      for(i=0;i<nblock;++i) 
          state &= blk[i]->setup_preconditioner(lvl,excpt);
       excpt += state;
    } while (state != block::stop);
@@ -612,7 +612,7 @@ void blocks::iterate(int lvl) {
          excpt += state;
       } while (state != block::stop);
    }
-
+   
    return;
 }
 

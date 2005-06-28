@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <blitz/array.h>
 #include "block.h"
 
 #ifdef SINGLE
@@ -23,6 +24,7 @@
 #endif
 #endif
 
+using namespace blitz;
 
 class side_bdry;
 class vrtx_bdry;
@@ -35,63 +37,69 @@ class mesh {
    public:
       int initialized, maxvst;
       static const int ND = 2;
-      static const int DIM = ND;
       std::ostream *log;
       
       /* VERTEX DATA */
       int nvrtx;
-      FLT (*vrtx)[ND];
-      FLT *vlngth;
+      Array<TinyVector<FLT,ND>,1> vrtx;
+      Array<FLT,1> vlngth;
       struct vstruct {
          int tri;
          int nnbor;
          int info;
-      } *vd;
+      };
+      Array<vstruct,1> vd;
       class quadtree<ND> qtree;
    
       /* VERTEX BOUNDARY INFO */
-      static const int MAXVB = 8;
       int nvbd;
-      vrtx_bdry *vbdry[MAXVB];
+      Array<vrtx_bdry *,1> vbdry;
       vrtx_bdry* getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata);
 
       /* SIDE DATA */      
       int nside;
       struct sstruct {
-         int vrtx[2];
-         int tri[2];
+         TinyVector<int,2> vrtx;
+         TinyVector<int,2> tri;
          int info;
-      } *sd;
+      };
+      Array<sstruct,1> sd;
       
       /* SIDE BOUNDARY INFO */
-      static const int MAXSB = 30;
       int nsbd;
-      side_bdry *sbdry[MAXSB]; 
+      Array<side_bdry *,1> sbdry;
       side_bdry* getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata);
 
       /* TRIANGLE DATA */      
       int ntri;
       struct tstruct {
-         int vrtx[3];
-         int side[3];
-         int sign[3];
-         int tri[3];
+         TinyVector<int,3> vrtx;
+         TinyVector<int,3> side;
+         TinyVector<int,3> sign;
+         TinyVector<int,3> tri;
          int info;
-      } *td;
+      };
+      Array<tstruct,1> td;
       
       /* THESE ARE NOT SHARED BECAUSE THEY HAVE TO BE KEPT INITIALIZED TO -1 */
       static int maxsrch, maxlst;
-      static int *i1wk, *i2wk, *i3wk;
-      /* THIS SHARED FLOATING WORK */
-      sharedmem *scratch;
-      FLT *fwk;
-      
+      static Array<int,1> i1wk,i2wk,i3wk;
+      /* THIS IS SHARED WORK SPACE */
+      /* ONLY SHARE WITH BLOCKS THAT WORK TOTALLY INDEPENDENTLY */
+      /* (DIFFERENT LEVELS OF MULTIGRID) */
+      sharedmem scratch;
+      Array<FLT,1> fscr1;
+      void get_scratch_pointers() {
+         Array<FLT,1> tmp(static_cast<FLT *>(scratch.data()), shape(scratch.size()/sizeof(FLT)), neverDeleteData);
+         fscr1.reference(tmp);
+      }
+
       /**************/
       /*  INTERFACE */
       /**************/
       /* DEFAULT INITIALIZATION */
       mesh() : initialized(0), log(&std::cout) {}
-      sharedmem* allocate(int mxsize, sharedmem *wkin = 0);
+      sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
       void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void load_scratch_pointers();
       void copy(const mesh& tgt);
@@ -111,8 +119,8 @@ class mesh {
       /* MESH MODIFICATION */  
       /* TO SET UP ADAPTATION VLENGTH */
       void initvlngth();
-      void length1(int phase) {msgload(phase,vlngth,0,0,1);}
-      int length2(int phase) {return(msgwait_rcv(phase,vlngth,0,0,1));} 
+      void length1(int phase) {msgload(phase,vlngth.data(),0,0,1);}
+      int length2(int phase) {return(msgwait_rcv(phase,vlngth.data(),0,0,1));} 
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void coarsen3();
@@ -138,7 +146,7 @@ class mesh {
 #ifdef METIS
       void setpartition(int nparts); 
 #endif 
-      void partition(const class mesh& xmesh, int npart);
+      void partition(class mesh& xmesh, int npart);
       int comm_entity_size();
       int comm_entity_list(int *list);
       void msgload(int phase,FLT *base,int bgn, int end, int stride);
@@ -152,13 +160,13 @@ class mesh {
       /* THIS IS AN INTERPOLATION DATA STRUCTURE */
       struct transfer {
          int tri;
-         FLT wt[3];
+         TinyVector<FLT,3> wt;
       };
-      block::ctrl mgconnect(int excpt, transfer *cnnct, const class mesh& tgt);
-      void testconnect(char *fname,transfer *cnnct, mesh *cmesh);
+      block::ctrl mgconnect(int excpt, Array<transfer,1> &cnnct, const class mesh& tgt);
+      void testconnect(char *fname,Array<transfer,1> &cnnct, mesh *cmesh);
       
       /* SOME DEGUGGING FUNCTIONS */
-      void checkintegrity() const;
+      void checkintegrity();
       void checkintwk() const;
       
       /* NEW ADAPTATION ROUTINES */
@@ -167,7 +175,7 @@ class mesh {
       FLT side_lngth_ratio(int i) {   
          /* CALCULATE SIDE TO TARGET LENGTH RATIO */
          /* ERROR ON THE CONSERVATIVE SIDE (OVER-REFINED) BY TAKING MAX VLNGTH */
-         return(MAX(vlngth[sd[i].vrtx[0]],vlngth[sd[i].vrtx[1]])/distance(sd[i].vrtx[0],sd[i].vrtx[1]));
+         return(MAX(vlngth(sd(i).vrtx(0)),vlngth(sd(i).vrtx(1)))/distance(sd(i).vrtx(0),sd(i).vrtx(1)));
       }
       
    protected:
@@ -189,10 +197,10 @@ class mesh {
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
-      int insert(FLT x[ND]);
+      int insert(const TinyVector<FLT,2> &x);
       int insert(int tind, int vnum, FLT theta, int &ntdel, int *tdel, int &nsdel, int *sdel);
       void bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int &nsdel, int *sdel);
-      int findtri(FLT x[ND], int vnear) const;
+      int findtri(TinyVector<FLT,ND> x, int vnear) const;
       void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
       void fltwkreb();
       
@@ -219,26 +227,26 @@ class mesh {
       inline FLT distance(int v0, int v1) const {
          FLT d = 0.0;
          for(int n = 0; n<ND;++n)
-            d += pow(vrtx[v0][n] -vrtx[v1][n],2);
+            d += pow(vrtx(v0)(n) -vrtx(v1)(n),2);
          return(sqrt(d));
       }
       inline FLT distance2(int v0, int v1) const {
          FLT d = 0.0;
          for(int n = 0; n<ND;++n)
-            d += pow(vrtx[v0][n] -vrtx[v1][n],2);
+            d += pow(vrtx(v0)(n) -vrtx(v1)(n),2);
          return(d);
       }  
-      FLT incircle(int tind, FLT *a) const;
-      FLT insidecircle(int sind, FLT *a) const;
+      FLT incircle(int tind, const TinyVector<FLT,2> &x) const;
+      FLT insidecircle(int sind, const TinyVector<FLT,2> &x) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
       FLT area(int tind) const;
       FLT minangle(int v0, int v1, int v2) const;
       FLT angle(int v0, int v1, int v2) const;
       FLT tradius(int tind) const;
-      void tcenter(int tind, FLT x[ND]) const;
+      void tcenter(int tind, TinyVector<FLT,2> &x) const;
       FLT aspect(int tind) const;
-      FLT intri(int tind, FLT x[ND]) const;
-      void getwgts(FLT *) const;
+      FLT intri(int tind, const TinyVector<FLT,2> &x) const;
+      void getwgts(TinyVector<FLT,3> &wgt) const;
 };
 #endif

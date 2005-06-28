@@ -31,18 +31,18 @@ void mesh::refineby2(const class mesh& inmesh) {
    count = nvrtx;
    for(sind=0;sind<nside;++sind) {
    
-      if (sd[sind].tri[1] < 0) continue;
+      if (sd(sind).tri(1) < 0) continue;
       
-      v0 = sd[sind].vrtx[0];
-      v1 = sd[sind].vrtx[1];
+      v0 = sd(sind).vrtx(0);
+      v1 = sd(sind).vrtx(1);
       
       /* MIDPOINT */
       for(n=0;n<ND;++n)
-         xpt[n] = 0.5*(vrtx[v0][n] +vrtx[v1][n]);
+         xpt[n] = 0.5*(vrtx(v0)(n) +vrtx(v1)(n));
                
       /* INSERT POINT */
       for(n=0;n<ND;++n)
-         vrtx[count][n] = xpt[n];
+         vrtx(count)(n) = xpt[n];
       ++count;
    }
    
@@ -50,7 +50,7 @@ void mesh::refineby2(const class mesh& inmesh) {
    for(i=nvrtx;i<count;++i) { 
       qtree.addpt(nvrtx);
       qtree.nearpt(nvrtx,vnear);
-      tind = findtri(vrtx[nvrtx],vnear);
+      tind = findtri(vrtx(nvrtx),vnear);
       err = insert(tind,nvrtx,0.0,ntdel,tdel,nsdel,sdel);
       ++nvrtx;
    }
@@ -58,15 +58,15 @@ void mesh::refineby2(const class mesh& inmesh) {
    
    /* INSERT BOUNDARY POINTS */
    for(i=0;i<nsbd;++i) {
-      initialsidenumber = sbdry[i]->nel;
+      initialsidenumber = sbdry(i)->nel;
       for(j=0;j<initialsidenumber;++j) {
-         sind = sbdry[i]->el[j];
-         sbdry[i]->mvpttobdry(j,0.5,vrtx[nvrtx]);
+         sind = sbdry(i)->el[j];
+         sbdry(i)->mvpttobdry(j,0.5,vrtx(nvrtx));
          
-         tind = sd[sind].tri[0];
+         tind = sd(sind).tri(0);
          snum = -2;
          for(k=0;k<3;++k) {
-            if (td[tind].side[k] == sind) {
+            if (td(tind).side(k) == sind) {
                snum = k;
                break;
             }
@@ -79,7 +79,7 @@ void mesh::refineby2(const class mesh& inmesh) {
    }
       
    for (i=0;i<nsbd;++i)
-      sbdry[i]->reorder();
+      sbdry(i)->reorder();
       
    cnt_nbor();
    

@@ -30,7 +30,7 @@ class r_mesh : public mesh {
          bool isfrst;
          int mp_phase;
          
-         r_side_bdry *r_sbdry[MAXSB];
+         Array<r_side_bdry *,1> r_sbdry;
          r_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata);
          
           /* SETUP SPRING CONSTANTS */
@@ -46,7 +46,7 @@ class r_mesh : public mesh {
          /* CALCULATE COARSE SPRING CONSTANTS */
          /* USING INTERPOLATION OPERATORS */
          /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
-         void rkmgrid(mesh::transfer *fv_to_ct, r_mesh *fmesh);
+         void rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh);
    
          /* CALCULATE RESIDUAL */
          void rsdl();
@@ -74,17 +74,15 @@ class r_mesh : public mesh {
          /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
          /* ALLOCATED FROM scratch */
          /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-         FLT (*res)[ND];
-         FLT (*work)[ND];
-         FLT *diag;
+         void get_scratch_pointers();
+         FLT (*fscr2)[ND], (*fscr3)[ND];
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
          sharedmem* init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin, sharedmem *wkin = 0);
-         void load_scratch_pointers();
          void bdry_output(const char *filename) const;
-         block::ctrl mg_getfres(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *fmesh);
-         block::ctrl mg_getcchng(int excpt,mesh::transfer *fv_to_ct, mesh::transfer *cv_to_ft, r_mesh *cmesh);
-         block::ctrl tadvance(bool coarse,int execpoint,mesh::transfer *fv_to_ct,mesh::transfer *cv_to_ft, r_mesh *fmesh);
+         block::ctrl mg_getfres(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+         block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
+         block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
          block::ctrl rsdl(int excpt);
          block::ctrl update(int excpt);
          block::ctrl setup_preconditioner(int excpt);

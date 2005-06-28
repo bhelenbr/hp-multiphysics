@@ -109,8 +109,8 @@ class vrtx_bdry : public boundary {
       }
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
       virtual void finalrcv(int phase,FLT *base,int bgn,int end, int stride) {}
-      virtual void loadpositions() {loadbuff(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
-      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
+      virtual void loadpositions() {loadbuff(&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
 };
 
 
@@ -136,15 +136,15 @@ class side_bdry : public boundary {
       /* ADDITIONAL STUFF FOR SIDES */
       virtual void swap(int s1, int s2);
       virtual void reorder();
-      virtual void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
-      virtual block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
+      virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
+      virtual block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
       virtual void findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const;
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}
       virtual void finalrcv(int phase,FLT *base,int bgn,int end, int stride) {}
-      virtual void loadpositions() {loadbuff(&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
-      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx[0][0]),0,mesh::DIM-1,mesh::DIM);}
+      virtual void loadpositions() {loadbuff(&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+      virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
 };
 
 class vtype {

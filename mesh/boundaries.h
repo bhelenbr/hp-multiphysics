@@ -99,7 +99,7 @@ template<class BASE> class comm_bdry : public BASE {
       
       void alloc(int size) {
          BASE::alloc(size);
-         buffsize = size*3;   // should be mesh::DIM;
+         buffsize = size*3;   // should be mesh::ND;
          sndbuf = xmalloc(buffsize*sizeof(FLT)); 
       }
       void resize_buffers(int size) {
@@ -533,7 +533,7 @@ class spartition : public scomm {
       spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
 
       spartition* create(mesh& xin) const {return new spartition(*this,xin);}
-      block::ctrl mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum);
+      block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
 };
 
 
@@ -574,14 +574,14 @@ template<class BASE> class prdc_template : public BASE {
       } 
 
       /* SEND/RCV VRTX POSITION */
-      void loadpositions() { loadbuff(&(BASE::x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
-      void rcvpositions(int phase) { finalrcv(phase,&(BASE::x.vrtx[0][0]),1-dir,1-dir +mesh::DIM-2,mesh::DIM); }
+      void loadpositions() { loadbuff(&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+      void rcvpositions(int phase) { finalrcv(phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
 };
 
 class curved_analytic : public side_bdry {
    protected:
-      virtual FLT hgt(FLT x[mesh::DIM]) {return(0.0);}
-      virtual FLT dhgt(int dir, FLT x[mesh::DIM]) {return(1.0);}
+      virtual FLT hgt(FLT x[mesh::ND]) {return(0.0);}
+      virtual FLT dhgt(int dir, FLT x[mesh::ND]) {return(1.0);}
 
    public:      
       /* CONSTRUCTOR */
@@ -590,17 +590,17 @@ class curved_analytic : public side_bdry {
 
       curved_analytic* create(mesh& xin) const {return new curved_analytic(*this,xin);}
 
-      void mvpttobdry(int nel,FLT psi, FLT pt[mesh::DIM]);
+      void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
 };
 
 class sinewave : public curved_analytic {
    protected:
       int h_or_v;
       FLT amp, lam, phase, offset;
-      FLT hgt(FLT pt[mesh::DIM]) {
+      FLT hgt(FLT pt[mesh::ND]) {
          return(pt[1-h_or_v] -offset -amp*sin(2.*M_PI*pt[h_or_v]/lam +phase));
       }
-      FLT dhgt(int dir, FLT pt[mesh::DIM]) {
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
          if (dir == h_or_v) 
             return(-amp*2.*M_PI/lam*cos(2.*M_PI*pt[h_or_v]/lam+phase));
          
@@ -651,12 +651,12 @@ class sinewave : public curved_analytic {
 
 class circle : public curved_analytic {
    public:
-      FLT center[mesh::DIM];
+      FLT center[mesh::ND];
       FLT radius;
-      FLT hgt(FLT pt[mesh::DIM]) {
+      FLT hgt(FLT pt[mesh::ND]) {
          return(radius*radius -pow(pt[0]-center[0],2) -pow(pt[1]-center[1],2));
       }
-      FLT dhgt(int dir, FLT pt[mesh::DIM]) {
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
          return(-2.*(pt[dir]-center[dir]));
       }
       

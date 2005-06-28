@@ -150,8 +150,8 @@ int main(int argc, char *argv[]) {
       zx.input(argv[1],in);
       FILE *fp = fopen(argv[3],"r");
       for(int i=0;i<zx.nvrtx;++i) {
-         fscanf(fp,"%d\n",&zx.i3wk[i]);
-         zx.i3wk[i] = 1-zx.i3wk[i];
+         fscanf(fp,"%d\n",&zx.i3wk(i));
+         zx.i3wk(i) = 1-zx.i3wk(i);
       }
       zx.checkintegrity();
       zx.coarsen3();
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
       
       input["mglvls"] = "3";
       input["ngrid"] = "3";
-      input["ntstep"] = "1";
+      input["ntstep"] = "2";
       input["fadd"] = "1.0";
       input["vnn"] = "0.9";
       input["itercrsn"] = "1";
@@ -199,6 +199,7 @@ int main(int argc, char *argv[]) {
       input["vwcycle"] = "1";
       input["tolerance"] = "0.66";
       input["nologfile"] = "duh";
+      input["adapt"] = "1";
       
 #ifdef MPISRC
       /* LIST OF NBLOCKS FOR EACH PROCESSOR */

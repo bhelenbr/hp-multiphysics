@@ -35,7 +35,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
    int type = 2;
 
    if (bdrydata) {
-      mi = (*bdrydata).find(sbdry[bnum]->idprefix + ".r_type");
+      mi = (*bdrydata).find(sbdry(bnum)->idprefix + ".r_type");
       if (mi != (*bdrydata).end()) {
          type = r_stype::getid((*mi).second.c_str());
          if (type < 0)  {
@@ -44,7 +44,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
          }
       }
       else {
-         *log << "couldn't find type for r_side: " << sbdry[bnum]->idnum << std::endl;
+         *log << "couldn't find type for r_side: " << sbdry(bnum)->idnum << std::endl;
       }
    }
 
@@ -52,23 +52,23 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
 
    switch(type) {
       case r_stype::plain: {
-         temp = new r_side_bdry(*this,*sbdry[bnum]);
+         temp = new r_side_bdry(*this,*sbdry(bnum));
          break;
       }
       case r_stype::fixed: {
-         temp = new r_fixed(*this,*sbdry[bnum]); 
+         temp = new r_fixed(*this,*sbdry(bnum)); 
          break;
       }
       case r_stype::translating: {
-         temp = new r_translating(*this,*sbdry[bnum]); 
+         temp = new r_translating(*this,*sbdry(bnum)); 
          break;
       }
       case r_stype::oscillating: {
-         temp = new r_oscillating(*this,*sbdry[bnum]); 
+         temp = new r_oscillating(*this,*sbdry(bnum)); 
          break;
       }      
       default: {
-         temp = new r_fixed(*this,*sbdry[bnum]);
+         temp = new r_fixed(*this,*sbdry(bnum));
          std::cout << "Don't know this r_side_bdry type\n";
       }
    }

@@ -70,12 +70,12 @@ void side_bdry::copy(const boundary& b) {
    return;
 }
 
-void side_bdry::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
+void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    /* FOR A LINEAR SIDE */
    int n;
    
-   for (n=0;n<mesh::DIM;++n)
-      pt[n] = (1. -psi)*x.vrtx[x.sd[el[indx]].vrtx[0]][n] +psi*x.vrtx[x.sd[el[indx]].vrtx[1]][n];
+   for (n=0;n<mesh::ND;++n)
+      pt(n) = (1. -psi)*x.vrtx(x.sd(el[indx]).vrtx(0))(n) +psi*x.vrtx(x.sd(el[indx]).vrtx(1))(n);
    
    return;
 }
@@ -86,16 +86,16 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
    FLT psiprev,normdistprev;
    FLT mindist = 1.0e32;
       
-   if (x.sd[el[0]].vrtx[0] == x.sd[el[nel-1]].vrtx[1]) {
+   if (x.sd(el[0]).vrtx(0) == x.sd(el[nel-1]).vrtx(1)) {
       /* BOUNDARY IS A LOOP */
       sind = el[nel-1];
-      v0 = x.sd[sind].vrtx[0];
-      v1 = x.sd[sind].vrtx[1];
-      dx = x.vrtx[v1][0] - x.vrtx[v0][0];
-      dy = x.vrtx[v1][1] - x.vrtx[v0][1];
+      v0 = x.sd(sind).vrtx(0);
+      v1 = x.sd(sind).vrtx(1);
+      dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
+      dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
       ol = 2./(dx*dx +dy*dy);
-      psi = ol*((xpt[0] -x.vrtx[v0][0])*dx +(xpt[1] -x.vrtx[v0][1])*dy) -1.;
-      normdist = dx*(xpt[1]-x.vrtx[v0][1])-dy*(xpt[0]-x.vrtx[v1][0]);
+      psi = ol*((xpt[0] -x.vrtx(v0)(0))*dx +(xpt[1] -x.vrtx(v0)(1))*dy) -1.;
+      normdist = dx*(xpt[1]-x.vrtx(v0)(1))-dy*(xpt[0]-x.vrtx(v1)(0));
       normdist *= sqrt(ol/2.);
       psiprev = psi;
       normdistprev = normdist;
@@ -107,13 +107,13 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
    
    for(k=0;k<nel;++k) {
       sind = el[k];
-      v0 = x.sd[sind].vrtx[0];
-      v1 = x.sd[sind].vrtx[1];
-      dx = x.vrtx[v1][0] - x.vrtx[v0][0];
-      dy = x.vrtx[v1][1] - x.vrtx[v0][1];
+      v0 = x.sd(sind).vrtx(0);
+      v1 = x.sd(sind).vrtx(1);
+      dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
+      dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
       ol = 2./(dx*dx +dy*dy);
-      psi = ol*((xpt[0] -x.vrtx[v0][0])*dx +(xpt[1] -x.vrtx[v0][1])*dy) -1.;
-      normdist = dx*(xpt[1]-x.vrtx[v0][1])-dy*(xpt[0]-x.vrtx[v1][0]);
+      psi = ol*((xpt[0] -x.vrtx(v0)(0))*dx +(xpt[1] -x.vrtx(v0)(1))*dy) -1.;
+      normdist = dx*(xpt[1]-x.vrtx(v0)(1))-dy*(xpt[0]-x.vrtx(v1)(0));
       normdist *= sqrt(ol/2.);
       
       if (psi <= -1.0 && psiprev >= 1.0) {
@@ -147,24 +147,24 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
 
 
 
-block::ctrl side_bdry::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
+block::ctrl side_bdry::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
    int j,k,sind,tind,v0,sidloc;
    FLT psiloc;
    
    if (excpt != 0) return(block::stop);
    
    for(k=1;k<nel;++k) {
-      v0 = x.sd[el[k]].vrtx[0];
-      tgt.sbdry[bnum]->findbdryside(x.vrtx[v0], sidloc, psiloc);
-      sind = tgt.sbdry[bnum]->el[sidloc];
-      tind = tgt.sd[sind].tri[0];                     
-      cnnct[v0].tri = tind;
+      v0 = x.sd(el[k]).vrtx(0);
+      tgt.sbdry(bnum)->findbdryside(x.vrtx(v0).data(), sidloc, psiloc);
+      sind = tgt.sbdry(bnum)->el[sidloc];
+      tind = tgt.sd(sind).tri(0);                     
+      cnnct(v0).tri = tind;
       for (j=0;j<3;++j) 
-         if (tgt.td[tind].side[j] == sind) break;
+         if (tgt.td(tind).side(j) == sind) break;
       assert(j < 3);
-      cnnct[v0].wt[j] = 0.0;
-      cnnct[v0].wt[(j+1)%3] = 0.5*(1.-psiloc);
-      cnnct[v0].wt[(j+2)%3] = 0.5*(1.+psiloc);
+      cnnct(v0).wt(j) = 0.0;
+      cnnct(v0).wt((j+1)%3) = 0.5*(1.-psiloc);
+      cnnct(v0).wt((j+2)%3) = 0.5*(1.+psiloc);
    } 
    
    return(block::stop);
@@ -193,15 +193,15 @@ void side_bdry::reorder() {
    /* STORE SIDE INDICES BY VERTEX NUMBER */
    for(i=0; i < nel; ++i) {
       sind = el[i];
-      x.i1wk[x.sd[sind].vrtx[1]] = i;
-      x.i2wk[x.sd[sind].vrtx[0]] = i;
+      x.i1wk(x.sd(sind).vrtx(1)) = i;
+      x.i2wk(x.sd(sind).vrtx(0)) = i;
    }
 
    /* FIND FIRST SIDE */   
    first = -1;
    for(i=0;i<nel;++i) {
       sind = el[i];
-      if (x.i1wk[x.sd[sind].vrtx[0]] == -1) {
+      if (x.i1wk(x.sd(sind).vrtx(0)) == -1) {
          first = i;
          break;
       }
@@ -213,9 +213,9 @@ void side_bdry::reorder() {
       minv = x.nvrtx;
       for(i=0;i<nel;++i) {
          sind = el[i];
-         if (x.sd[sind].vrtx[1] < minv) {
+         if (x.sd(sind).vrtx(1) < minv) {
             first = i;
-            minv = x.sd[sind].vrtx[1];
+            minv = x.sd(sind).vrtx(1);
          }
       }
    }
@@ -223,38 +223,38 @@ void side_bdry::reorder() {
    /* SWAP FIRST SIDE */
    count = 0;
    swap(count,first);
-   x.i1wk[x.sd[el[first]].vrtx[1]] = first;
-   x.i2wk[x.sd[el[first]].vrtx[0]] = first;
-   x.i1wk[x.sd[el[count]].vrtx[1]] = count;
-   x.i2wk[x.sd[el[count]].vrtx[0]] = -1;  // TO MAKE SURE LOOP STOPS
+   x.i1wk(x.sd(el[first]).vrtx(1)) = first;
+   x.i2wk(x.sd(el[first]).vrtx(0)) = first;
+   x.i1wk(x.sd(el[count]).vrtx(1)) = count;
+   x.i2wk(x.sd(el[count]).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
    /* REORDER LIST */
-   while ((first = x.i2wk[x.sd[el[count++]].vrtx[1]]) >= 0) {
+   while ((first = x.i2wk(x.sd(el[count++]).vrtx(1))) >= 0) {
       swap(count,first);
-      x.i1wk[x.sd[el[first]].vrtx[1]] = first;
-      x.i2wk[x.sd[el[first]].vrtx[0]] = first;
-      x.i1wk[x.sd[el[count]].vrtx[1]] = count;
-      x.i2wk[x.sd[el[count]].vrtx[0]] = count;
+      x.i1wk(x.sd(el[first]).vrtx(1)) = first;
+      x.i2wk(x.sd(el[first]).vrtx(0)) = first;
+      x.i1wk(x.sd(el[count]).vrtx(1)) = count;
+      x.i2wk(x.sd(el[count]).vrtx(0)) = count;
    }
    
    /* RESET INTWK TO -1 */
    for(i=0; i <total; ++i) {
       sind = el[i];
-      x.i1wk[x.sd[sind].vrtx[1]] = -1;
-      x.i2wk[x.sd[sind].vrtx[0]] = -1;
+      x.i1wk(x.sd(sind).vrtx(1)) = -1;
+      x.i2wk(x.sd(sind).vrtx(0)) = -1;
    }
    
    if (count < total) {
-
       ++x.nsbd;
-      x.sbdry[x.nsbd-1] = create(x);
-      x.sbdry[x.nsbd-1]->copy(*this);
+      x.sbdry.resizeAndPreserve(x.nsbd);
+      x.sbdry(x.nsbd-1) = create(x);
+      x.sbdry(x.nsbd-1)->copy(*this);
       nel = count;
 
       for(i=0;i<total-nel;++i)
-         x.sbdry[x.nsbd-1]->swap(i,i+nel);
-      x.sbdry[x.nsbd-1]->nel = total-nel;
-      *x.log << "#creating new boundary: " << idnum << " num: " << x.sbdry[x.nsbd-1]->nel << std::endl;
+         x.sbdry(x.nsbd-1)->swap(i,i+nel);
+      x.sbdry(x.nsbd-1)->nel = total-nel;
+      *x.log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
       return;
    }
    
@@ -267,12 +267,12 @@ void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
    count = 0;
    for(j=0;j<nel;++j) {
       sind = el[j];
-      offset = x.sd[sind].vrtx[0]*stride;
+      offset = x.sd(sind).vrtx(0)*stride;
       for (k=bgn;k<=end;++k) {
          fsndbuf(count++) = base[offset+k];
       }
    }
-   offset = x.sd[sind].vrtx[1]*stride;
+   offset = x.sd(sind).vrtx(1)*stride;
    for (k=bgn;k<=end;++k) 
       fsndbuf(count++) = base[offset+k]; 
       
@@ -316,7 +316,7 @@ void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
       count = 0;
       for(j=0;j<nel;++j) {
          sind = el[j];
-         offset = x.sd[sind].vrtx[0]*stride;
+         offset = x.sd(sind).vrtx(0)*stride;
          for (k=bgn;k<=end;++k) {
             base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
@@ -325,7 +325,7 @@ void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
          }
 
       }
-      offset = x.sd[sind].vrtx[1]*stride;
+      offset = x.sd(sind).vrtx(1)*stride;
       for (k=bgn;k<=end;++k) {
          base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
@@ -335,29 +335,29 @@ void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    }
 }
 
-block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class mesh& tgt, int bnum) {
+block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
    int i,j,k,v0;
    
    switch(excpt) {
       case(0):
          /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
          /* MAKE SURE ENDPOINTS ARE OK */
-         i = x.sd[el[0]].vrtx[0];
-         if (cnnct[i].tri < 0) {
-            tgt.qtree.nearpt(x.vrtx[i],v0);
-            cnnct[i].tri=tgt.vd[v0].tri;
+         i = x.sd(el[0]).vrtx(0);
+         if (cnnct(i).tri < 0) {
+            tgt.qtree.nearpt(x.vrtx(i).data(),v0);
+            cnnct(i).tri=tgt.vd(v0).tri;
             for(j=0;j<3;++j) {
-               cnnct[i].wt[j] = 0.0;
-               if (tgt.td[cnnct[i].tri].vrtx[j] == v0) cnnct[i].wt[j] = 1.0;
+               cnnct(i).wt(j) = 0.0;
+               if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
             }
          }
-         i = x.sd[el[nel-1]].vrtx[1];
-         if (cnnct[i].tri < 0) {
-            tgt.qtree.nearpt(x.vrtx[i],v0);
-            cnnct[i].tri=tgt.vd[v0].tri;
+         i = x.sd(el[nel-1]).vrtx(1);
+         if (cnnct(i).tri < 0) {
+            tgt.qtree.nearpt(x.vrtx(i).data(),v0);
+            cnnct(i).tri=tgt.vd(v0).tri;
             for(j=0;j<3;++j) {
-               cnnct[i].wt[j] = 0.0;
-               if (tgt.td[cnnct[i].tri].vrtx[j] == v0) cnnct[i].wt[j] = 1.0;
+               cnnct(i).wt(j) = 0.0;
+               if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
             }
          }
          
@@ -365,15 +365,15 @@ block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class 
             sndsize() = 0;
             sndtype() = int_msg;
             for(k=1;k<nel;++k) {
-               v0 = x.sd[el[k]].vrtx[0];
-               if (cnnct[v0].tri > 0) {
+               v0 = x.sd(el[k]).vrtx(0);
+               if (cnnct(v0).tri > 0) {
                   isndbuf(sndsize()++) = -1;
                }
                else {
                   isndbuf(sndsize()++) = +1;
-                  cnnct[v0].tri = 0;
+                  cnnct(v0).tri = 0;
                   for(j=0;j<3;++j)
-                     cnnct[v0].wt[j] = 0.0;
+                     cnnct(v0).wt(j) = 0.0;
                }
             }
             slave_master_prepare(); 
@@ -387,11 +387,11 @@ block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class 
          if (!first) {
             i = 0;
             for(k=nel-1;k>0;--k) {
-               v0 = x.sd[el[k]].vrtx[1];
+               v0 = x.sd(el[k]).vrtx(1);
                if (ircvbuf(0,i) < 0) {
-                  cnnct[v0].tri = 0;
+                  cnnct(v0).tri = 0;
                   for(j=0;j<3;++j)
-                     cnnct[v0].wt[j] = 0.0;
+                     cnnct(v0).wt(j) = 0.0;
                }
             }
          }               
@@ -399,7 +399,7 @@ block::ctrl spartition::mgconnect(int excpt, mesh::transfer *cnnct, const class 
    return(block::stop);
 }
 
-void curved_analytic::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
+void curved_analytic::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    
    /* GET LINEAR APPROXIMATION */
    side_bdry::mvpttobdry(indx,psi,pt);
@@ -411,14 +411,14 @@ void curved_analytic::mvpttobdry(int indx, FLT psi, FLT pt[mesh::DIM]) {
    iter = 0;
    do {
       mag = 0.0;
-      for(n=0;n<mesh::DIM;++n)
-         mag += pow(dhgt(n,pt),2);
+      for(n=0;n<mesh::ND;++n)
+         mag += pow(dhgt(n,pt.data()),2);
       mag = sqrt(mag);
-      delt_dist = -hgt(pt)/mag;
-      for(n=0;n<mesh::DIM;++n)
-         pt[n] += delt_dist*dhgt(n,pt)/mag;
+      delt_dist = -hgt(pt.data())/mag;
+      for(n=0;n<mesh::ND;++n)
+         pt(n) += delt_dist*dhgt(n,pt.data())/mag;
       if (++iter > 100) {
-         *x.log << "iterations exceeded curved boundary " << idnum << ' ' << pt[0] << ' ' << pt[1] << '\n';
+         *x.log << "iterations exceeded curved boundary " << idnum << ' ' << pt(0) << ' ' << pt(1) << '\n';
          exit(1);
       }
    } while (fabs(delt_dist) > 10.*EPSILON);

@@ -21,8 +21,8 @@ template<class GRD> class mgrid : public block {
       GRD *grd;
       typedef typename GRD::transfer gtrans;
       typedef typename GRD::gbl ggbl;
-      gtrans **cv_to_ft;
-      gtrans **fv_to_ct;
+      Array<Array<gtrans,1>,1> cv_to_ft;
+      Array<Array<gtrans,1>,1> fv_to_ct;
       ggbl gstorage;
       
       bool adapt_flag;
@@ -46,10 +46,10 @@ template<class GRD> class mgrid : public block {
          return(grd[grdlvl].comm_entity_list(list));
       }
       boundary* vbdry(int grdlvl, int num) {
-         return(grd[grdlvl].vbdry[num]);
+         return(grd[grdlvl].vbdry(num));
       }
       boundary* sbdry(int grdlvl, int num) {
-         return(grd[grdlvl].sbdry[num]);
+         return(grd[grdlvl].sbdry(num));
       }
       boundary* fbdry(int grdlvl, int num) {
          return(0);
@@ -58,9 +58,9 @@ template<class GRD> class mgrid : public block {
       
       block::ctrl tadvance(int lvl, int excpt) {
          if (lvl == 0) {
-            return(grd[lvl].tadvance(0,excpt,0,0,0));
+            return(grd[lvl].tadvance(0,excpt,fv_to_ct(0),cv_to_ft(0),0));
          } else {
-            return(grd[lvl].tadvance(1,excpt,fv_to_ct[lvl-1],cv_to_ft[lvl-1], &grd[lvl-1]));
+            return(grd[lvl].tadvance(1,excpt,fv_to_ct(lvl-1),cv_to_ft(lvl-1), &grd[lvl-1]));
          }
          return(stop);
       }
@@ -75,10 +75,10 @@ template<class GRD> class mgrid : public block {
          return(grd[lvl].update(excpt));
       }
       block::ctrl mg_getfres(int lvl, int excpt) {
-         return(grd[lvl].mg_getfres(excpt,fv_to_ct[lvl-1],cv_to_ft[lvl-1], &grd[lvl-1]));
+         return(grd[lvl].mg_getfres(excpt,fv_to_ct(lvl-1),cv_to_ft(lvl-1), &grd[lvl-1]));
       }
       block::ctrl mg_getcchng(int lvl, int excpt) {
-         return(grd[lvl].mg_getcchng(excpt,fv_to_ct[lvl], cv_to_ft[lvl], &grd[lvl+1]));
+         return(grd[lvl].mg_getcchng(excpt,fv_to_ct(lvl), cv_to_ft(lvl), &grd[lvl+1]));
       }
       block::ctrl adapt(int excpt);
 };
@@ -114,8 +114,8 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    for(int i = 0; i<ngrid;++i)
       grd[i].log = log;
       
-   cv_to_ft = new gtrans *[ngrid-1];
-   fv_to_ct = new gtrans *[ngrid-1];
+   cv_to_ft.resize(ngrid-1);
+   fv_to_ct.resize(ngrid-1);
    
    FLT grwfac;
    keyword = idprefix + ".growth factor";
@@ -189,8 +189,8 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       grd[lvl].allocate_duplicate(size_reduce,grd[lvl-1]);
 #endif
       grd[lvl].init(1,input,idprefix,&gstorage);
-      cv_to_ft[lvl-1] = new gtrans[grd[lvl].maxvst];
-      fv_to_ct[lvl-1] = new gtrans[grd[lvl-1].maxvst];
+      cv_to_ft(lvl-1).resize(grd[lvl].maxvst);
+      fv_to_ct(lvl-1).resize(grd[lvl-1].maxvst);
    }
    return;
 }
@@ -208,8 +208,8 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, int excpt) {
          grd[lvl].coarsen2(1.5,grd[lvl-1],size_reduce);
 #endif
       default:
-         state &= grd[lvl].mgconnect(excpt,cv_to_ft[lvl-1],grd[lvl-1]);
-         state &= grd[lvl-1].mgconnect(excpt,fv_to_ct[lvl-1],grd[lvl]);
+         state &= grd[lvl].mgconnect(excpt,cv_to_ft(lvl-1),grd[lvl-1]);
+         state &= grd[lvl-1].mgconnect(excpt,fv_to_ct(lvl-1),grd[lvl]);
    }
 
    return(static_cast<block::ctrl>(state));
@@ -225,10 +225,10 @@ template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
       grd[i].checkintegrity();
       grd[i].output(name,ftype::grid);
       strcat(name,"_fv_to_ct");
-      grd[i-1].testconnect(name,fv_to_ct[i-1],&grd[i]);
+      grd[i-1].testconnect(name,fv_to_ct(i-1),&grd[i]);
       number_str(name,fname,i,1);
       strcat(name,"_cv_to_ft");
-      grd[i].testconnect(name,cv_to_ft[i-1],&grd[i-1]);         
+      grd[i].testconnect(name,cv_to_ft(i-1),&grd[i-1]);         
       grd[i].setbcinfo();
    }
    
