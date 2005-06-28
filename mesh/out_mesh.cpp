@@ -186,8 +186,8 @@ int mesh::output(const char *filename, ftype::name filetype) const {
             out << "ENTITY NAME:   surface.1\n";
             for(j=0;j<sbdry(i)->nel;++j) {
                out << setw(8) << count++;
-               out << setw(8) << sd(sbdry(i)->el[j]).vrtx(0)+1;
-               out << setw(8) << sd(sbdry(i)->el[j]).vrtx(1)+1 << endl;
+               out << setw(8) << sd(sbdry(i)->el(j)).vrtx(0)+1;
+               out << setw(8) << sd(sbdry(i)->el(j)).vrtx(1)+1 << endl;
             }
          }
          out.close();
@@ -249,7 +249,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
             out << "idnum: " << sbdry(i)->idnum << endl;
          	out << "number: " << sbdry(i)->nel << endl;
             for(int j=0;j<sbdry(i)->nel;++j)
-               out << j << ": " << sbdry(i)->el[j] << std::endl;
+               out << j << ": " << sbdry(i)->el(j) << std::endl;
          }
 
          /* VERTEX BOUNDARY INFO HEADER */
@@ -300,7 +300,7 @@ void mesh::setbcinfo() {
    
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j)
-         sd(sbdry(i)->el[j]).info = sbdry(i)->idnum;
+         sd(sbdry(i)->el(j)).info = sbdry(i)->idnum;
 
    /* SET UP TRI INFO FOR EASYMESH OUTPUT */         
    for(i=0;i<ntri;++i)

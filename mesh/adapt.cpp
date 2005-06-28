@@ -31,8 +31,8 @@ void mesh::setup_for_adapt() {
    /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
-      v0 = sd(sbdry(i)->el[0]).vrtx(0);
-      v1 = sd(sbdry(i)->el[sbdry(i)->nel-1]]).vrtx(1);
+      v0 = sd(sbdry(i)->el(0)).vrtx(0);
+      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)]).vrtx(1);
       vd(v0).info = 1;
       vd(v1).info = 1;
    }
@@ -67,7 +67,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
             
             nslst = 0;
             for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
-               sind = sbdry(bnum)->el[indx];
+               sind = sbdry(bnum)->el(indx);
                if (fscr1(sind) < tolsize) {
                   putinlst(sind);
                }
@@ -133,7 +133,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
             /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */
             count = 0;
             for(j=0;j<nel;++j) {
-               sind = el[j];
+               sind = el(j);
                offset = x.sd(sind).vrtx(0)*stride;
                for (k=bgn;k<=end;++k)
                   base[offset+k] = fsndbuf(count++);
@@ -145,7 +145,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
             for(m=0;m<nlocal_match;++m) {            
                count = 0;
                for(j=nel-1;j>=0;--j) {
-                  sind = el[j];
+                  sind = el(j);
                   offset = x.sd(sind).vrtx(1)*stride;
                   for (k=bgn;k<=end;++k) 
                      base[offset+k] += static_cast<FLT *>(local_rcv_buf[m])[count++];
@@ -162,7 +162,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
                MPI_Wait(&mpi_rcvrqst[m], &status);
                count = 0;
                for(j=nel-1;j>=0;--j) {
-                  sind = el[j];
+                  sind = el(j);
                   offset = x.sd(sind).vrtx(1)*stride;
                   for (k=bgn;k<=end;++k) 
                      base[offset+k] += static_cast<FLT *>(mpi_rcv_buf[m])[count++];
@@ -175,7 +175,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
 
             count = 0;
             for(j=0;j<nel;++j) {
-               sind = el[j];
+               sind = el(j);
                offset = x.sd(sind).vrtx(0)*stride;
                for (k=bgn;k<=end;++k)
                   base[offset+k] /= (1 +nlocal_match +nmpi_match);

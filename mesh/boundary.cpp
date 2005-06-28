@@ -51,7 +51,7 @@ void vcomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
 /**************************************/
 void side_bdry::alloc(int n) {
    maxel = n;
-   el = new int[n];
+   el.resize(n);
 }
      
 void side_bdry::copy(const boundary& b) {
@@ -65,7 +65,7 @@ void side_bdry::copy(const boundary& b) {
    nel = bin.nel;
    
    for(i=0;i<nel;++i)
-      el[i] = bin.el[i];
+      el(i) = bin.el(i);
       
    return;
 }
@@ -75,7 +75,7 @@ void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    int n;
    
    for (n=0;n<mesh::ND;++n)
-      pt(n) = (1. -psi)*x.vrtx(x.sd(el[indx]).vrtx(0))(n) +psi*x.vrtx(x.sd(el[indx]).vrtx(1))(n);
+      pt(n) = (1. -psi)*x.vrtx(x.sd(el(indx)).vrtx(0))(n) +psi*x.vrtx(x.sd(el(indx)).vrtx(1))(n);
    
    return;
 }
@@ -86,9 +86,9 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
    FLT psiprev,normdistprev;
    FLT mindist = 1.0e32;
       
-   if (x.sd(el[0]).vrtx(0) == x.sd(el[nel-1]).vrtx(1)) {
+   if (x.sd(el(0)).vrtx(0) == x.sd(el(nel-1)).vrtx(1)) {
       /* BOUNDARY IS A LOOP */
-      sind = el[nel-1];
+      sind = el(nel-1);
       v0 = x.sd(sind).vrtx(0);
       v1 = x.sd(sind).vrtx(1);
       dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
@@ -106,7 +106,7 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
    }
    
    for(k=0;k<nel;++k) {
-      sind = el[k];
+      sind = el(k);
       v0 = x.sd(sind).vrtx(0);
       v1 = x.sd(sind).vrtx(1);
       dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
@@ -154,9 +154,9 @@ block::ctrl side_bdry::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, cons
    if (excpt != 0) return(block::stop);
    
    for(k=1;k<nel;++k) {
-      v0 = x.sd(el[k]).vrtx(0);
+      v0 = x.sd(el(k)).vrtx(0);
       tgt.sbdry(bnum)->findbdryside(x.vrtx(v0).data(), sidloc, psiloc);
-      sind = tgt.sbdry(bnum)->el[sidloc];
+      sind = tgt.sbdry(bnum)->el(sidloc);
       tind = tgt.sd(sind).tri(0);                     
       cnnct(v0).tri = tind;
       for (j=0;j<3;++j) 
@@ -175,9 +175,9 @@ void side_bdry::swap(int s1, int s2) {
    int ind;
    
    /* TEMPORARY NOT SURE HOW TO SWAP S VALUES */   
-   ind = el[s1];
-   el[s1] = el[s2];
-   el[s2] = ind;
+   ind = el(s1);
+   el(s1) = el(s2);
+   el(s2) = ind;
 
    return;
 }
@@ -192,7 +192,7 @@ void side_bdry::reorder() {
    
    /* STORE SIDE INDICES BY VERTEX NUMBER */
    for(i=0; i < nel; ++i) {
-      sind = el[i];
+      sind = el(i);
       x.i1wk(x.sd(sind).vrtx(1)) = i;
       x.i2wk(x.sd(sind).vrtx(0)) = i;
    }
@@ -200,7 +200,7 @@ void side_bdry::reorder() {
    /* FIND FIRST SIDE */   
    first = -1;
    for(i=0;i<nel;++i) {
-      sind = el[i];
+      sind = el(i);
       if (x.i1wk(x.sd(sind).vrtx(0)) == -1) {
          first = i;
          break;
@@ -212,7 +212,7 @@ void side_bdry::reorder() {
    if (first < 0) {
       minv = x.nvrtx;
       for(i=0;i<nel;++i) {
-         sind = el[i];
+         sind = el(i);
          if (x.sd(sind).vrtx(1) < minv) {
             first = i;
             minv = x.sd(sind).vrtx(1);
@@ -223,23 +223,23 @@ void side_bdry::reorder() {
    /* SWAP FIRST SIDE */
    count = 0;
    swap(count,first);
-   x.i1wk(x.sd(el[first]).vrtx(1)) = first;
-   x.i2wk(x.sd(el[first]).vrtx(0)) = first;
-   x.i1wk(x.sd(el[count]).vrtx(1)) = count;
-   x.i2wk(x.sd(el[count]).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
+   x.i1wk(x.sd(el(first)).vrtx(1)) = first;
+   x.i2wk(x.sd(el(first)).vrtx(0)) = first;
+   x.i1wk(x.sd(el(count)).vrtx(1)) = count;
+   x.i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
    /* REORDER LIST */
-   while ((first = x.i2wk(x.sd(el[count++]).vrtx(1))) >= 0) {
+   while ((first = x.i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
       swap(count,first);
-      x.i1wk(x.sd(el[first]).vrtx(1)) = first;
-      x.i2wk(x.sd(el[first]).vrtx(0)) = first;
-      x.i1wk(x.sd(el[count]).vrtx(1)) = count;
-      x.i2wk(x.sd(el[count]).vrtx(0)) = count;
+      x.i1wk(x.sd(el(first)).vrtx(1)) = first;
+      x.i2wk(x.sd(el(first)).vrtx(0)) = first;
+      x.i1wk(x.sd(el(count)).vrtx(1)) = count;
+      x.i2wk(x.sd(el(count)).vrtx(0)) = count;
    }
    
    /* RESET INTWK TO -1 */
    for(i=0; i <total; ++i) {
-      sind = el[i];
+      sind = el(i);
       x.i1wk(x.sd(sind).vrtx(1)) = -1;
       x.i2wk(x.sd(sind).vrtx(0)) = -1;
    }
@@ -266,7 +266,7 @@ void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
 
    count = 0;
    for(j=0;j<nel;++j) {
-      sind = el[j];
+      sind = el(j);
       offset = x.sd(sind).vrtx(0)*stride;
       for (k=bgn;k<=end;++k) {
          fsndbuf(count++) = base[offset+k];
@@ -315,7 +315,7 @@ void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
 #endif
       count = 0;
       for(j=0;j<nel;++j) {
-         sind = el[j];
+         sind = el(j);
          offset = x.sd(sind).vrtx(0)*stride;
          for (k=bgn;k<=end;++k) {
             base[offset+k] = fsndbuf(count++)*mtchinv;
@@ -342,7 +342,7 @@ block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, con
       case(0):
          /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
          /* MAKE SURE ENDPOINTS ARE OK */
-         i = x.sd(el[0]).vrtx(0);
+         i = x.sd(el(0)).vrtx(0);
          if (cnnct(i).tri < 0) {
             tgt.qtree.nearpt(x.vrtx(i).data(),v0);
             cnnct(i).tri=tgt.vd(v0).tri;
@@ -351,7 +351,7 @@ block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, con
                if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
             }
          }
-         i = x.sd(el[nel-1]).vrtx(1);
+         i = x.sd(el(nel-1)).vrtx(1);
          if (cnnct(i).tri < 0) {
             tgt.qtree.nearpt(x.vrtx(i).data(),v0);
             cnnct(i).tri=tgt.vd(v0).tri;
@@ -365,7 +365,7 @@ block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, con
             sndsize() = 0;
             sndtype() = int_msg;
             for(k=1;k<nel;++k) {
-               v0 = x.sd(el[k]).vrtx(0);
+               v0 = x.sd(el(k)).vrtx(0);
                if (cnnct(v0).tri > 0) {
                   isndbuf(sndsize()++) = -1;
                }
@@ -387,7 +387,7 @@ block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, con
          if (!first) {
             i = 0;
             for(k=nel-1;k>0;--k) {
-               v0 = x.sd(el[k]).vrtx(1);
+               v0 = x.sd(el(k)).vrtx(1);
                if (ircvbuf(0,i) < 0) {
                   cnnct(v0).tri = 0;
                   for(j=0;j<3;++j)

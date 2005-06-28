@@ -39,10 +39,10 @@ void mesh::coarsen_substructured(const class mesh &zx,int p) {
    }
    sbdry(0)->nel = zx.sbdry(0)->nel/p;
    i = 0;
-   if (zx.sd(zx.sbdry(0)->el[0]).vrtx(0) < nvrtx) ++i;
+   if (zx.sd(zx.sbdry(0)->el(0)).vrtx(0) < nvrtx) ++i;
    for(;i<zx.sbdry(0)->nel;i+=p) {
-      sind = (zx.sd(zx.sbdry(0)->el[i]).vrtx(0) -nvrtx)/(p-1);
-      sbdry(0)->el[i/p] = sind;
+      sind = (zx.sd(zx.sbdry(0)->el(i)).vrtx(0) -nvrtx)/(p-1);
+      sbdry(0)->el(i/p) = sind;
    }
    
    return;
@@ -72,7 +72,7 @@ void mesh::symmetrize() {
 	zpart[0].partition(*this,1);
 
 	for(j=0;j<zpart[0].sbdry(zpart[0].nsbd-1)->nel;++j) {
-		sind = zpart[0].sbdry(zpart[0].nsbd-1)->el[j];
+		sind = zpart[0].sbdry(zpart[0].nsbd-1)->el(j);
 		for(vct=0;vct<2;++vct) 
 			zpart[0].vrtx(zpart[0].sd(sind).vrtx(vct))(1) = 0.0;
 	}

@@ -57,7 +57,7 @@ int mesh::comm_entity_list(int *list) {
          list[tsize++] = i;
          list[tsize++] = sbdry(i)->idnum;
 #ifdef SKIP
-         v0 = sd(sbdry(i)->el[0]).vrtx(0);
+         v0 = sd(sbdry(i)->el(0)).vrtx(0);
          v0id = -1;
          for(j=0;j<nvbd;++j) {
             if (vbdry(j)->v0 == v0) {
@@ -66,7 +66,7 @@ int mesh::comm_entity_list(int *list) {
             }
          }
          list[tsize++] = v0id;
-         v0 = sd(sbdry(i)->el[sbdry(i)->nel-1]]).vrtx(1);
+         v0 = sd(sbdry(i)->el(sbdry(i)->nel-1)]).vrtx(1);
          v0id = -1;
          for(j=0;j<nvbd;++j) {
             if (vbdry(j)->v0 == v0) {
@@ -342,7 +342,7 @@ void mesh::partition(class mesh& xin, int npart) {
    
    for(i=0;i<nside;++i) {
       if (sd(i).info > -1) 
-         sbdry(sd(i).info)->el[sbdry(sd(i).info)->nel++] = i;
+         sbdry(sd(i).info)->el(sbdry(sd(i).info)->nel++) = i;
    }
    
    /* i1wk,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */

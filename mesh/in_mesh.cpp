@@ -116,7 +116,7 @@ next1:      continue;
                if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
                      if (sd(i).info == sbdry(j)->idnum) {
-                        sbdry(j)->el[sbdry(j)->nel++] = i;
+                        sbdry(j)->el(sbdry(j)->nel++) = i;
                         goto next1a;
                      }
                   }
@@ -313,7 +313,7 @@ next1a:     continue;
                   }
                   if (sd(sind).vrtx(1) == svrtxbtemp[i][j][1]) {
                      sd(sind).info = sbdry(i)->idnum;
-                     sbdry(i)->el[j] = sind;
+                     sbdry(i)->el(j) = sind;
                      vd(sd(sind).vrtx(0)).info = 0;
                   }
                   else {
@@ -378,7 +378,7 @@ next1a:     continue;
                if (!sbdry(i)->maxel) sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
                else assert(sbdry(i)->nel < sbdry(i)->maxel);
                for(int j=0;j<sbdry(i)->nel;++j) {
-                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry(i)->el[j]);
+                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry(i)->el(j));
                }
             }
             
@@ -431,7 +431,7 @@ next1a:     continue;
             sbdry(0)->alloc(static_cast<int>(grwfac*temp));
             sbdry(0)->nel = temp;
             for(i=0;i<sbdry(0)->nel;++i)
-               sbdry(0)->el[i] = i;
+               sbdry(0)->el(i) = i;
             
             ++nsbd;
             
@@ -440,10 +440,10 @@ next1a:     continue;
                fscanf(grd,"%*[^\n]\n");
                fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry(i)->nel);
                sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
-               sbdry(i)->el[0] = temp-1;
-               sbdry(i)->nel -= sbdry(i)->el[0];
+               sbdry(i)->el(0) = temp-1;
+               sbdry(i)->nel -= sbdry(i)->el(0);
                for(j=1;j<sbdry(i)->nel;++j)
-                  sbdry(i)->el[j] = j +sbdry(i)->el[0];
+                  sbdry(i)->el(j) = j +sbdry(i)->el(0);
             }
             
             fscanf(grd,"%*[^\n]\n");
@@ -655,7 +655,7 @@ next1b:      continue;
                if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
                      if (sd(i).info == (sbdry(j)->idnum&0xFFFF)) {
-                        sbdry(j)->el[sbdry(j)->nel++] = i;
+                        sbdry(j)->el(sbdry(j)->nel++) = i;
                         goto next1c;
                      }
                   }
@@ -724,7 +724,7 @@ next1c:     continue;
             sbdry(0)->nel = count;
             count = 0;
             for(i=0;i<nside;++i)
-               if (sd(i).tri(1) < 0) sbdry(0)->el[count++] = i;
+               if (sd(i).tri(1) < 0) sbdry(0)->el(count++) = i;
             ++nsbd;
             nvbd = 0;
             
@@ -806,7 +806,7 @@ next1c:     continue;
                if (sd(i).info) {
                   for (j = 0; j <nsbd;++j) {
                      if (sd(i).info == sbdry(j)->idnum) {
-                        sbdry(j)->el[sbdry(j)->nel++] = i;
+                        sbdry(j)->el(sbdry(j)->nel++) = i;
                         goto bdnext1a;
                      }
                   }

@@ -49,7 +49,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       }
 
       /* CHECK IF FIRST POINT INSERTED*/
-      v0 = inmesh.sd(inmesh.sbdry(i)->el[0]).vrtx(0);
+      v0 = inmesh.sd(inmesh.sbdry(i)->el(0)).vrtx(0);
       if (i2wk(v0) < 0) {
          for(n=0;n<ND;++n)
             vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
@@ -65,12 +65,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       odd = inmesh.sbdry(i)->nel%2;
       if (odd) {
          for(j=2;j<inmesh.sbdry(i)->nel/2;j+=2) {
-            v0 = inmesh.sd(inmesh.sbdry(i)->el[j]).vrtx(0);
+            v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
             i2wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
-            sbdry(i)->el[sbdry(i)->nel] = nside;
+            sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
             ++nside; 
             ++sbdry(i)->nel;
@@ -84,14 +84,14 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          /* MIDDLE POINT OF ODD NUMBERED SIDE */
          if (inmesh.sbdry(i)->nel > 1) {
             j = inmesh.sbdry(i)->nel/2;
-            v0 = inmesh.sd(inmesh.sbdry(i)->el[j]).vrtx(0);
-            v1 = inmesh.sd(inmesh.sbdry(i)->el[j]).vrtx(1);
+            v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
+            v1 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(1);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = 0.5*(inmesh.vrtx(v0)(n) +inmesh.vrtx(v1)(n));
             i2wk(v0) = nvrtx;
             i2wk(v1)= nvrtx;
             sd(nside).vrtx(1) = nvrtx;
-            sbdry(i)->el[sbdry(i)->nel] = nside;
+            sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
             ++nside; 
             ++sbdry(i)->nel;
@@ -103,12 +103,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          }
          
          for(j = inmesh.sbdry(i)->nel -((inmesh.sbdry(i)->nel-2)/4)*2;j<inmesh.sbdry(i)->nel;j+=2) {
-            v0 = inmesh.sd(inmesh.sbdry(i)->el[j]).vrtx(0);
+            v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
             i2wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
-            sbdry(i)->el[sbdry(i)->nel] = nside;
+            sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
             ++nside; 
             ++sbdry(i)->nel;
@@ -121,12 +121,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       }
       else {
          for(j=2;j<inmesh.sbdry(i)->nel;j+=2) {
-            v0 = inmesh.sd(inmesh.sbdry(i)->el[j]).vrtx(0);
+            v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
             i2wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
-            sbdry(i)->el[sbdry(i)->nel] = nside;
+            sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
             ++nside; 
             ++sbdry(i)->nel;
@@ -139,13 +139,13 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       }
       
       /* INSERT LAST POINT */
-      v0 = inmesh.sd(inmesh.sbdry(i)->el[inmesh.sbdry(i)->nel-1]).vrtx(1);
+      v0 = inmesh.sd(inmesh.sbdry(i)->el(inmesh.sbdry(i)->nel-1)).vrtx(1);
       if (i2wk(v0) < 0) {
          for(n=0;n<ND;++n)
             vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
          i2wk(v0) = nvrtx;
          sd(nside).vrtx(1) = nvrtx;
-         sbdry(i)->el[sbdry(i)->nel] = nside;
+         sbdry(i)->el(sbdry(i)->nel) = nside;
          sd(nside).tri(1) = -1;
          ++nside;
          ++sbdry(i)->nel;
@@ -153,7 +153,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       }
       else {
          sd(nside).vrtx(1) = i2wk(v0);
-         sbdry(i)->el[sbdry(i)->nel] = nside;
+         sbdry(i)->el(sbdry(i)->nel) = nside;
          sd(nside).tri(1) = -1;
          ++nside;
          ++sbdry(i)->nel;
@@ -182,7 +182,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    /* MARK ALL FINE MESH BOUNDARY NODES SO WE KNOW NOT TO INSERT */
    for(i=0;i<inmesh.nsbd;++i) {
       for(j=0;j<inmesh.sbdry(i)->nel;++j) {
-         sind = inmesh.sbdry(i)->el[j];
+         sind = inmesh.sbdry(i)->el(j);
          i2wk(inmesh.sd(sind).vrtx(0)) = 0;
          i2wk(inmesh.sd(sind).vrtx(1)) = 0;
       }
@@ -201,7 +201,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    /* RESET i2wk */
    for(i=0;i<inmesh.nsbd;++i) {
       for(j=0;j<inmesh.sbdry(i)->nel;++j) {
-         sind = inmesh.sbdry(i)->el[j];
+         sind = inmesh.sbdry(i)->el(j);
          i2wk(inmesh.sd(sind).vrtx(0)) = -1;
          i2wk(inmesh.sd(sind).vrtx(1)) = -1;
       }
@@ -229,7 +229,7 @@ int mesh::smooth_cofa(int niter) {
       
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
-         sind = sbdry(i)->el[j];
+         sind = sbdry(i)->el(j);
          vd(sd(sind).vrtx(0)).info = -1;
          vd(sd(sind).vrtx(1)).info = -1;
       }
@@ -298,7 +298,7 @@ void mesh::coarsen3() {
    for(i=0;i<nsbd;++i) {
       *log << "coarsening boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
       for(j=0;j<sbdry(i)->nel;++j) {
-         sind = sbdry(i)->el[j];
+         sind = sbdry(i)->el(j);
          v0 = sd(sind).vrtx(0);
          if (i3wk(v0) > 0) {
             /* COARSEN SIDE */
@@ -352,8 +352,8 @@ void mesh::coarsen3() {
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       for(j=sbdry(i)->nel-1;j>=0;--j) 
-         if (sd(sbdry(i)->el[j]).info == -3) 
-            sbdry(i)->el[j] = sbdry(i)->el[--sbdry(i)->nel];
+         if (sd(sbdry(i)->el(j)).info == -3) 
+            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
@@ -372,8 +372,8 @@ void mesh::coarsen3() {
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el[j] >= nside) 
-            sbdry(i)->el[j] = sd(sbdry(i)->el[j]).info; 
+         while (sbdry(i)->el(j) >= nside) 
+            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {
       sbdry(i)->reorder();

@@ -53,8 +53,8 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
-      v0 = sd(sbdry(i)->el[0]).vrtx(0);
-      v1 = sd(sbdry(i)->el[sbdry(i)->nel-1]).vrtx(1);
+      v0 = sd(sbdry(i)->el(0)).vrtx(0);
+      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)).vrtx(1);
       vd(v0).info = 1;
       vd(v1).info = 1;
    }
@@ -136,8 +136,8 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
       for(j=sbdry(i)->nel-1;j>=0;--j) 
-         if (sd(sbdry(i)->el[j]).info == -3) 
-            sbdry(i)->el[j] = sbdry(i)->el[--sbdry(i)->nel];
+         if (sd(sbdry(i)->el(j)).info == -3) 
+            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
@@ -156,8 +156,8 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el[j] >= nside) 
-            sbdry(i)->el[j] = sd(sbdry(i)->el[j]).info; 
+         while (sbdry(i)->el(j) >= nside) 
+            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {
       sbdry(i)->reorder();

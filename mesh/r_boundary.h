@@ -48,7 +48,7 @@ class r_fixed : public r_side_bdry {
            
       void dirichlet() {         
          for(int j=0;j<base.nel;++j) {
-            int sind = base.el[j];
+            int sind = base.el(j);
                for(int n=dstart;n<=dstop;++n) {
                   x.fscr3[x.sd(sind).vrtx(0)][n] = 0.0;
                   x.fscr3[x.sd(sind).vrtx(1)][n] = 0.0;
@@ -67,7 +67,7 @@ class r_fixed4 : public r_fixed {
       
       void fixdx2() {
          for(int j=0;j<base.nel;++j) {
-            int sind = base.el[j];
+            int sind = base.el(j);
                for(int n=d2start;n<=d2stop;++n) {
                   x.fscr2[x.sd(sind).vrtx(0)][n] = 0.0;
                   x.fscr2[x.sd(sind).vrtx(1)][n] = 0.0;
@@ -101,7 +101,7 @@ class r_translating : public r_fixed {
       void tadvance() {
          int n,v0;
          for(int j=0;j<base.nel;++j) {
-            v0 = x.sd(base.el[j]).vrtx(0);
+            v0 = x.sd(base.el(j)).vrtx(0);
             for(n=0;n<2;++n)
                x.vrtx(v0)(n) += dx[n];
          }
@@ -146,7 +146,7 @@ class r_oscillating : public r_fixed {
          dtheta = theta1-theta;
                   
          for(int j=0;j<base.nel;++j) {
-            vrt = x.sd(base.el[j]).vrtx(0);
+            vrt = x.sd(base.el(j)).vrtx(0);
             xp[0] = x.vrtx(vrt)(0)-center[0];
             xp[1] = x.vrtx(vrt)(1)-center[1];         
             dx[0] = center1[0]-center[0] +xp[0]*cos(dtheta)-xp[1]*sin(dtheta) -xp[0];

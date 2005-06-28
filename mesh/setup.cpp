@@ -196,7 +196,7 @@ void mesh::treeinit() {
    
    for (i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
-         sind = sbdry(i)->el[j];
+         sind = sbdry(i)->el(j);
          v0 = sd(sind).vrtx(0);
          for(n=0;n<ND;++n) {
             x1[n] = MIN(x1[n],vrtx(v0)(n));
@@ -232,7 +232,7 @@ void mesh::bdrylabel() {
    
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
-         sind = sbdry(i)->el[j];
+         sind = sbdry(i)->el(j);
          sd(sind).tri(1) = -(((i+1)<<16) +j);
          tind = sd(sind).tri(0);
          for(k=0;k<3;++k)
@@ -266,15 +266,15 @@ void mesh::initvlngth() {
    
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
-         v0 = sd(sbdry(i)->el[j]).vrtx(0);
+         v0 = sd(sbdry(i)->el(j)).vrtx(0);
          vlngth(v0) = 1.0e32;
       }
    }
            
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
-         v0 = sd(sbdry(i)->el[j]).vrtx(0);
-         v1 = sd(sbdry(i)->el[j]).vrtx(1);
+         v0 = sd(sbdry(i)->el(j)).vrtx(0);
+         v1 = sd(sbdry(i)->el(j)).vrtx(1);
          l = distance(v0,v1);
          vlngth(v0) = MIN(l,vlngth(v0));
          vlngth(v1) = MIN(l,vlngth(v1));
@@ -295,7 +295,7 @@ void mesh::settrim() {
    ntdel = 0;
 
    for (bsd=0;bsd<sbdry(0)->nel;++bsd) {
-      tind = sd(sbdry(0)->el[bsd]).tri(0);
+      tind = sd(sbdry(0)->el(bsd)).tri(0);
       if (td(tind).info > 0) continue;
       
       i1wk(0) = tind;

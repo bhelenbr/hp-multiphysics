@@ -111,7 +111,7 @@ void mesh::append(const mesh &z) {
       sbdry(nsbd-1)->alloc(z.sbdry(i)->maxel);
       sbdry(nsbd-1)->nel = z.sbdry(i)->nel;
 		for(j=0;j<z.sbdry(i)->nel;++j)
-			sbdry(nsbd-1)->el[j] = z.sbdry(i)->el[j] +nside;
+			sbdry(nsbd-1)->el(j) = z.sbdry(i)->el(j) +nside;
 	}
 
    /* MOVE TRI INFO */
@@ -151,10 +151,10 @@ void mesh::append(const mesh &z) {
             nel = sbdry(i)->nel;
             
             /* FIRST POINT DONE REVERSE */
-            sind1 = sbdry(i)->el[nel-1];
+            sind1 = sbdry(i)->el(nel-1);
             tind1 = sd(sind1).tri(0);            
             v1b = sd(sind1).vrtx(1);
-            sind2 = z.sbdry(j)->el[0];
+            sind2 = z.sbdry(j)->el(0);
             tind2 = z.sd(sind2).tri(0) +ntriold;
             v2a = z.sd(sind2).vrtx(0) +nvrtxold;
             vd(v1b).nnbor += z.vd(v2a-nvrtxold).nnbor-1;
@@ -175,10 +175,10 @@ void mesh::append(const mesh &z) {
             } while(tind2 > 0); 
             
             for(k=0;k<nel;++k) {
-               sind1 = sbdry(i)->el[nel-k-1];
+               sind1 = sbdry(i)->el(nel-k-1);
                tind1 = sd(sind1).tri(0);
                v1a = sd(sind1).vrtx(0);
-               sind2 = z.sbdry(j)->el[k];
+               sind2 = z.sbdry(j)->el(k);
                tind2 = z.sd(sind2).tri(0) +ntriold;
                v2b = z.sd(sind2).vrtx(1) +nvrtxold;
                sind2 += nsideold;               
@@ -260,8 +260,8 @@ void mesh::append(const mesh &z) {
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=nsbd-z.nsbd+1;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el[j] >= nside) 
-            sbdry(i)->el[j] = sd(sbdry(i)->el[j]).info; 
+         while (sbdry(i)->el(j) >= nside) 
+            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {
       sbdry(i)->reorder();

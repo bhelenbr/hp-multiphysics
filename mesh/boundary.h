@@ -120,7 +120,7 @@ class side_bdry : public boundary {
       mesh &x;
       int maxel;
       int nel;
-      int *el;
+      Array<int,1> el;
       
       /* CONSTRUCTOR */
       side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix; mytype="plain";}
