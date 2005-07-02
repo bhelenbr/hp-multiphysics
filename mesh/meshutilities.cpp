@@ -117,21 +117,21 @@ void mesh::symmetrize() {
 			
 	
 
-void mesh::shift(FLT s[ND]) {
+void mesh::shift(TinyVector<FLT,ND>& s) {
    int n;
    
    for(int i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
-         vrtx(i)(1) += s[n];
+         vrtx(i)(1) += s(n);
 
    return;
 }
 
-void mesh::scale(FLT s[ND]) {
+void mesh::scale(TinyVector<FLT,ND>& s) {
    int n;
    for(int i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
-         vrtx(i)(1) *= s[n];
+         vrtx(i)(1) *= s(n);
 
    return;
 }

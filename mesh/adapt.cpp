@@ -32,7 +32,7 @@ void mesh::setup_for_adapt() {
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
       v0 = sd(sbdry(i)->el(0)).vrtx(0);
-      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)]).vrtx(1);
+      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1).vrtx(1);
       vd(v0).info = 1;
       vd(v1).info = 1;
    }

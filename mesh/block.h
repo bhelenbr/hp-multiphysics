@@ -2,6 +2,7 @@
 #include <string>
 #include <sstream>
 #include <ftype.h>
+#include <blitz/array.h>
 #ifndef _block_h_
 #define _block_h_
 
@@ -34,7 +35,7 @@ class block {
       
       /* STUFF TO MATCH COMMUNICATION BOUNDARIES */
       virtual int comm_entity_size(int grdlvl) = 0;
-      virtual int comm_entity_list(int grdlvl, int *list) = 0;
+      virtual int comm_entity_list(int grdlvl, blitz::Array<int,1>& list) = 0;
       virtual boundary* vbdry(int grdlvl,int num) = 0;
       virtual boundary* sbdry(int grdlvl,int num) = 0;
       virtual boundary* fbdry(int grdlvl,int num) = 0;

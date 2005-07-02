@@ -137,29 +137,29 @@ FLT mesh::minangle(int v0, int v1, int v2) const {
    i1 = (i+1)%3;
    i2 = (i+2)%3;
    
-   crossprod = -dx[i2]*dy[i1] +dy[i2]*dx[i1];
+   crossprod = -dx(i2)*dy(i1) +dy(i2)*dx(i1);
 
-   return(crossprod/sqrt(l[i1]*l[i2]));
+   return(crossprod/sqrt(l(i1)*l(i2)));
    
 }
    
 FLT mesh::angle(int v0, int v1, int v2) const {
-   FLT l[3];
+   TinyVector<FLT,3> l;
    FLT dx, dy;
    
    dx = vrtx(v1)(0) -vrtx(v0)(0);
    dy = vrtx(v1)(1) -vrtx(v0)(1);
-   l[0] = dx*dx +dy*dy;
+   l(0) = dx*dx +dy*dy;
 
    dx = vrtx(v2)(0) -vrtx(v1)(0);
    dy = vrtx(v2)(1) -vrtx(v1)(1);
-   l[1] = dx*dx +dy*dy;   
+   l(1) = dx*dx +dy*dy;   
 
    dx = vrtx(v0)(0) -vrtx(v2)(0);
    dy = vrtx(v0)(1) -vrtx(v2)(1);
-   l[2] = dx*dx +dy*dy;  
+   l(2) = dx*dx +dy*dy;  
          
-   return((l[0] +l[1] -l[2])/(2.*sqrt(l[0]*l[1])));
+   return((l(0) +l(1) -l(2))/(2.*sqrt(l(0)*l(1))));
    
 }
 

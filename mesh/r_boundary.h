@@ -50,8 +50,8 @@ class r_fixed : public r_side_bdry {
          for(int j=0;j<base.nel;++j) {
             int sind = base.el(j);
                for(int n=dstart;n<=dstop;++n) {
-                  x.fscr3[x.sd(sind).vrtx(0)][n] = 0.0;
-                  x.fscr3[x.sd(sind).vrtx(1)][n] = 0.0;
+                  x.fscr3(x.sd(sind).vrtx(0))(n) = 0.0;
+                  x.fscr3(x.sd(sind).vrtx(1))(n) = 0.0;
                }
          }
          return;
@@ -69,8 +69,8 @@ class r_fixed4 : public r_fixed {
          for(int j=0;j<base.nel;++j) {
             int sind = base.el(j);
                for(int n=d2start;n<=d2stop;++n) {
-                  x.fscr2[x.sd(sind).vrtx(0)][n] = 0.0;
-                  x.fscr2[x.sd(sind).vrtx(1)][n] = 0.0;
+                  x.fscr2(x.sd(sind).vrtx(0))(n) = 0.0;
+                  x.fscr2(x.sd(sind).vrtx(1))(n) = 0.0;
                }
          }
          return;

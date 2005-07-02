@@ -90,7 +90,7 @@ class mesh {
       sharedmem scratch;
       Array<FLT,1> fscr1;
       void get_scratch_pointers() {
-         Array<FLT,1> tmp(static_cast<FLT *>(scratch.data()), shape(scratch.size()/sizeof(FLT)), neverDeleteData);
+         Array<FLT,1> tmp(static_cast<FLT *>(scratch.data()), maxvst, neverDeleteData);
          fscr1.reference(tmp);
       }
 
@@ -98,16 +98,17 @@ class mesh {
       /*  INTERFACE */
       /**************/
       /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), log(&std::cout) {}
+      mesh() : initialized(0), log(&std::cout), nvbd(0), nsbd(0) {}
       sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
       void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void load_scratch_pointers();
       void copy(const mesh& tgt);
+      ~mesh();
       void coarsen_substructured(const class mesh &tgt,int p);
 	   void symmetrize();
       void append(const mesh &z);
-      void shift(FLT s[ND]);
-      void scale(FLT s[ND]);
+      void shift(TinyVector<FLT,ND>& s);
+      void scale(TinyVector<FLT,ND>& s);
 
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
@@ -148,7 +149,7 @@ class mesh {
 #endif 
       void partition(class mesh& xmesh, int npart);
       int comm_entity_size();
-      int comm_entity_list(int *list);
+      int comm_entity_list(Array<int,1>& list);
       void msgload(int phase,FLT *base,int bgn, int end, int stride);
       void msgpass(int phase);
       int msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride);

@@ -15,14 +15,22 @@
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
-/* THESE TELL WHICH SIDES/TRIS WERE DELETED */
-/* ntdel, tdel[maxlst+1]; */
-/* nsdel, sdel[maxlst+1]; */
-
-/* nslst IS THE NUMER OF SIDES NEEDING COARSENING */
-/* STORED IN i2wk WITH BACK REFERENCE IN i3wk */
-
 extern int nslst;  // (THIS NEEDS TO BE FIXED)
+
+/* SUMMARY OF VARIABLE USAGE
+i1wk = not used!
+nslst is the numer of sides needing coarsening 
+i2wk = ordered list of sides requiring modification
+i3wk = pointer from side into i2wk list
+sdel[] = sides deleted during local operation
+tdel[] = triangles affected by local operation
+td[].info = -1 deleted tri, 0 no refinement needed, +n sides of triangle needing coarsening
+td[].info = i < ntri stores index of original tri or tinfo = 0 for unmoved, i > ntri stores movment history
+sd[].info = during process: -3 deleted sides, -2 touched sides, -1 untouched sides
+sd[].info = after clean-up: i < nside -2, -1 or index of original, i > nside movement history
+vd[].info = during process: -1 deleted vrtx, +1 special vrtx
+vd[].info = after cleanup: i < nvrtx -1 deleted, 0 not deleted, i > nvrtx movement history
+*/
 
 void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    int i,j,tind,sind,nfail,v0,v1,cnt;
@@ -141,13 +149,11 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-   /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
+   /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */  /* TEMPORARY HAVEN"T TESTED THIS */
    for(i=nside-1;i>=0;--i) {
       if (sd(i).info == -3) {
-         if (sd(nside-1).info >= -1)
-            sd(i).info = MAX(nside-1,sd(nside-1).info);
-         else 
-            sd(i).info = -2;
+         if (sd(nside-1).info == -1) sd(i).info = nside-1;
+         else sd(i).info = sd(nside-1).info;
          sd(nside-1).info = i;
          dltd(i);
       }

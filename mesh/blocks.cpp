@@ -247,36 +247,36 @@ class commblocks {
          }
       }
       
-      int unpack(int *entitylist) {
+      int unpack(Array<int,1> entitylist) {
          int count = 0;
-         nblock = entitylist[count++];
+         nblock = entitylist(count++);
          blkinfo = new commblock[nblock];
          for(int b=0;b<nblock;++b) {
-            blkinfo[b].nvcomm = entitylist[count++];
+            blkinfo[b].nvcomm = entitylist(count++);
             blkinfo[b].vcomm = new commblock::vid[blkinfo[b].nvcomm];
             for(int i=0;i<blkinfo[b].nvcomm;++i) {
-               blkinfo[b].vcomm[i].nvbd = entitylist[count++];
-               blkinfo[b].vcomm[i].idnum = entitylist[count++];
+               blkinfo[b].vcomm[i].nvbd = entitylist(count++);
+               blkinfo[b].vcomm[i].idnum = entitylist(count++);
             }
             
-            blkinfo[b].nscomm = entitylist[count++];
+            blkinfo[b].nscomm = entitylist(count++);
             blkinfo[b].scomm = new commblock::sid[blkinfo[b].nscomm];
             for(int i=0;i<blkinfo[b].nscomm;++i) {
-               blkinfo[b].scomm[i].nsbd = entitylist[count++];
-               blkinfo[b].scomm[i].idnum = entitylist[count++];
-               // blkinfo[b].scomm[i].vid0 = entitylist[count++];
-               // blkinfo[b].scomm[i].vid1 = entitylist[count++];
+               blkinfo[b].scomm[i].nsbd = entitylist(count++);
+               blkinfo[b].scomm[i].idnum = entitylist(count++);
+               // blkinfo[b].scomm[i].vid0 = entitylist(count++);
+               // blkinfo[b].scomm[i].vid1 = entitylist(count++);
             }
             
-            blkinfo[b].nfcomm = entitylist[count++];
+            blkinfo[b].nfcomm = entitylist(count++);
             blkinfo[b].fcomm = new commblock::fid[blkinfo[b].nfcomm];
             for(int i=0;i<blkinfo[b].nfcomm;++i) {
-               blkinfo[b].fcomm[i].nfbd = entitylist[count++];
-               blkinfo[b].fcomm[i].idnum = entitylist[count++];
-               // bp->fcomm[i].nsds = entitylist[count++];
+               blkinfo[b].fcomm[i].nfbd = entitylist(count++);
+               blkinfo[b].fcomm[i].idnum = entitylist(count++);
+               // bp->fcomm[i].nsds = entitylist(count++);
                // bp->fcomm[i].sids = new int[bp->fcomm[i].nsds];
                // for (j=0;j<bp->fcomm[i].nsds;++j)
-                  // bp->fcomm[i].sids[j] = entitylist[count++];
+                  // bp->fcomm[i].sids[j] = entitylist(count++);
             }
          }
          return(count);
@@ -296,7 +296,8 @@ class commblocks {
 
 void blocks::findmatch() {
    int b,b1,b2,i,j,grdlvl,p,count,tsize;
-   int *entitylist, *sndentitylist, *size, *sndsize;
+   Array<int,1> entitylist, sndentitylist, sublist;
+   int *size, *sndsize;
    commblocks *blksinfo;
    commblocks::commblock *bp1, *bp2;
    
@@ -329,36 +330,37 @@ void blocks::findmatch() {
       for(p=0;p<nproc;++p)
          tsize += size[p];
          
-      sndentitylist = new int[tsize];
-      for(i=0;i<tsize;++i)
-         sndentitylist[i] = 0;
+      sndentitylist.resize(tsize);
+      sndentitylist = 0;
 
       /* BEGIN ASSEMBLING COMMUNICATION GRAPH LIST*/
       count = 0;
       for(p=0;p<myid;++p)
          count += size[p];
          
-      sndentitylist[count++] = nblock;
-      for(b=0;b<nblock;++b)
-         count += blk[b]->comm_entity_list(grdlvl,&sndentitylist[count]);
+      sndentitylist(count++) = nblock;
+      for(b=0;b<nblock;++b) {
+         sublist.reference(sndentitylist(Range(count,toEnd)));
+         count += blk[b]->comm_entity_list(grdlvl,sublist);
+      }
+      ~sublist;
 
 #ifdef MPISRC   
-      entitylist = new int[tsize];
-      for(i=0;i<tsize;++i)
-         entitylist[i] = 0;
+      entitylist.resize(tsize);
+      entitylist = 0;
         
-      MPI_Allreduce(sndentitylist,entitylist,tsize,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-      delete []sndentitylist;
+      MPI_Allreduce(sndentitylist.data(),entitylist.data(),tsize,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
 #else
-      entitylist = sndentitylist;
+      entitylist.reference(sndentitylist);
 #endif
+      ~sndentitylist;
 
       /* UNPACK ENTITY LIST INTO MORE USABLE FORM */
       maxblock = 0; // SO I CAN GENERATE UNIQUE TAGS
       maxbdry = 0; // SO I CAN GENERATE UNIQUE TAGS
       count = 0;
       for(p=0;p<nproc;++p) {
-         entitylist += blksinfo[p].unpack(entitylist);
+         count += blksinfo[p].unpack(entitylist(Range(count,toEnd)));
          maxblock = MAX(maxblock,blksinfo[p].nblock);
          for(int b=0;b<blksinfo[p].nblock;++b) {
             maxbdry = MAX(maxbdry,blksinfo[p].blkinfo[b].nvcomm);
@@ -369,8 +371,7 @@ void blocks::findmatch() {
          *log << "# processor " << p << " block data" << std::endl;
          blksinfo[p].output(log);
       }
-      entitylist -= tsize;
-      delete []entitylist;
+      ~entitylist;
       
       
       /* CALCULATE NUMBER OF BINARY DIGITS NEEDED TO MAKE TAGS */

@@ -15,7 +15,7 @@ void mesh::refineby2(const class mesh& inmesh) {
    int i,j,k,n,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
    int ntdel, tdel[maxlst];
    int nsdel, sdel[maxlst];
-   FLT xpt[ND];
+   TinyVector<FLT,ND> xpt;
    
    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
    /* BECAUSE OF INTWK USAGE */
@@ -38,11 +38,11 @@ void mesh::refineby2(const class mesh& inmesh) {
       
       /* MIDPOINT */
       for(n=0;n<ND;++n)
-         xpt[n] = 0.5*(vrtx(v0)(n) +vrtx(v1)(n));
+         xpt(n) = 0.5*(vrtx(v0)(n) +vrtx(v1)(n));
                
       /* INSERT POINT */
       for(n=0;n<ND;++n)
-         vrtx(count)(n) = xpt[n];
+         vrtx(count)(n) = xpt(n);
       ++count;
    }
    

@@ -42,7 +42,7 @@ template<class GRD> class mgrid : public block {
       int comm_entity_size(int grdlvl) {
          return(grd[grdlvl].comm_entity_size());
       }
-      int comm_entity_list(int grdlvl, int *list) {
+      int comm_entity_list(int grdlvl, Array<int,1>& list) {
          return(grd[grdlvl].comm_entity_list(list));
       }
       boundary* vbdry(int grdlvl, int num) {

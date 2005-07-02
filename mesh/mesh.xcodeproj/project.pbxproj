@@ -722,8 +722,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				DEPLOYMENT_LOCATION = NO;
-				DSTROOT = "$(HOME)";
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
@@ -737,7 +737,7 @@
 					"${HOME}/Codes/include",
 					"${HOME}/packages/metis-4.0/Lib",
 				);
-				INSTALL_PATH = /bin;
+				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"${HOME}/Codes/lib",
 					"${HOME}/Packages/metis-4.0",

@@ -23,10 +23,10 @@ class r_mesh : public mesh {
          FLT fadd;
          
          /* MESH VARIABLES */
-         FLT *ksprg;
-         FLT (*src)[ND];
-         FLT *kvol;
-         FLT (*vrtx_frst)[ND];
+         Array<FLT,1> ksprg;
+         Array<FLT,1> kvol;
+         Array<TinyVector<FLT,ND>,1> src;
+         Array<TinyVector<FLT,ND>,1> vrtx_frst;
          bool isfrst;
          int mp_phase;
          
@@ -75,7 +75,8 @@ class r_mesh : public mesh {
          /* ALLOCATED FROM scratch */
          /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
          void get_scratch_pointers();
-         FLT (*fscr2)[ND], (*fscr3)[ND];
+         Array<TinyVector<FLT,ND>,1> fscr2, fscr3;
+         ~r_mesh();
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
          sharedmem* init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin, sharedmem *wkin = 0);

@@ -25,7 +25,7 @@ int mesh::comm_entity_size() {
    return(tsize);
 }
 
-int mesh::comm_entity_list(int *list) {
+int mesh::comm_entity_list(Array<int,1>& list) {
    int i,nvcomm,nscomm,tsize;
    
    /* MAKE 1D PACKED LIST OF ALL INFORMATION ON COMMUNICATION BOUNDARIES */
@@ -36,12 +36,12 @@ int mesh::comm_entity_list(int *list) {
    for(i=0;i<nvbd;++i) 
       if (vbdry(i)->is_comm()) ++nvcomm;
       
-   list[tsize++] = nvcomm;
+   list(tsize++) = nvcomm;
    
    for(i=0;i<nvbd;++i) {
       if (vbdry(i)->is_comm()) {
-         list[tsize++] = i;
-         list[tsize++] = vbdry(i)->idnum;
+         list(tsize++) = i;
+         list(tsize++) = vbdry(i)->idnum;
       }
    }
    
@@ -50,12 +50,12 @@ int mesh::comm_entity_list(int *list) {
    for(i=0;i<nsbd;++i)
       if (sbdry(i)->is_comm()) ++nscomm;
       
-   list[tsize++] = nscomm;
+   list(tsize++) = nscomm;
    
    for(i=0;i<nsbd;++i) {
       if (sbdry(i)->is_comm()) {
-         list[tsize++] = i;
-         list[tsize++] = sbdry(i)->idnum;
+         list(tsize++) = i;
+         list(tsize++) = sbdry(i)->idnum;
 #ifdef SKIP
          v0 = sd(sbdry(i)->el(0)).vrtx(0);
          v0id = -1;
@@ -65,7 +65,7 @@ int mesh::comm_entity_list(int *list) {
                break;
             }
          }
-         list[tsize++] = v0id;
+         list(tsize++) = v0id;
          v0 = sd(sbdry(i)->el(sbdry(i)->nel-1)]).vrtx(1);
          v0id = -1;
          for(j=0;j<nvbd;++j) {
@@ -74,13 +74,13 @@ int mesh::comm_entity_list(int *list) {
                break;
             }
          }
-         list[tsize++] = v0id;
+         list(tsize++) = v0id;
 #endif
       }
    }
    
    /* FACE BOUNDARIES */
-   list[tsize++] = 0;
+   list(tsize++) = 0;
    
    return(tsize);
 }

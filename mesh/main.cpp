@@ -96,9 +96,9 @@ int main(int argc, char *argv[]) {
    }
 
    if (Scale) {    
-      FLT s[2];
+      TinyVector<FLT,2> s;
       printf("Enter x and y scaling\n");
-      scanf("%le%le",s,s+1);
+      scanf("%le%le",&s(0),&s(1));
       zx.input(argv[1],in);
       zx.scale(s);
       zx.output(argv[2],out);
@@ -106,9 +106,9 @@ int main(int argc, char *argv[]) {
    }
    
    if (Shift) {    
-      FLT s[2];
+      TinyVector<FLT,2> s;
       printf("Enter x and y shift\n");
-      scanf("%le%le",s,s+1);
+      scanf("%le%le",&s(0),&s(1));
       zx.input(argv[1],in);
       zx.shift(s);
       zx.output(argv[2],out);
@@ -130,15 +130,15 @@ int main(int argc, char *argv[]) {
       scanf("%d",&p);
       zx.input(argv[1],in);
       zx.setpartition(p);
-      mesh zpart[p];
+      Array<mesh,1> zpart(p);
       
       strcat(argv[2],"_b");
 
       for(int i=0;i<p;++i) {
          number_str(outappend,argv[2],i,1);
-         zpart[i].partition(zx,i);
-         zpart[i].output(outappend,out);
-		 zpart[i].bdry_output(outappend);
+         zpart(i).partition(zx,i);
+         zpart(i).output(outappend,out);
+		 zpart(i).bdry_output(outappend);
       }
 #else
       printf("Need metis package to partition\n");

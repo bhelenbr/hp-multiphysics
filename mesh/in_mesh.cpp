@@ -13,7 +13,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
    int ierr;
    char grd_nm[120], grd_app[120];
    FILE *grd;
-   int v[3],s[3],e[3];
+   TinyVector<int,3> v,s,e;
    std::map<std::string,std::string> bdrymap;
    std::map<std::string,std::string> *pbdrymap = &bdrymap;
          
@@ -193,20 +193,20 @@ next1a:     continue;
     
             for(i=0;i<ntri;++i) {
                 ierr = fscanf(grd,"%*d:%d%d%d%d%d%d%d%d%d%*f%*f%d\n"
-                ,v,v+1,v+2,e,e+1,e+2,s,s+1,s+2,&td(i).info);
+                ,&v(0),&v(1),&v(2),&e(0),&e(1),&e(2),&s(0),&s(1),&s(2),&td(i).info);
     
                 for (j=0;j<3;++j) {
-                    td(i).vrtx(j) = v[j];
-                    if(sd(s[j]).vrtx(0) == v[(j+1)%3]) {
+                    td(i).vrtx(j) = v(j);
+                    if(sd(s(j)).vrtx(0) == v((j+1)%3)) {
                         /* SIDE DEFINED IN SAME DIRECTION */
-                        sd(s[j]).tri(0) = i;
-                        td(i).side(j) = s[j];
+                        sd(s(j)).tri(0) = i;
+                        td(i).side(j) = s(j);
                         td(i).sign(j) = 1;
                     }
                     else {
                         /* SIDE DEFINED IN OPPOSITE DIRECTION */
-                        sd(s[j]).tri(1) = i;
-                        td(i).side(j) = s[j];
+                        sd(s(j)).tri(1) = i;
+                        td(i).side(j) = s(j);
                         td(i).sign(j) = -1;
                     }
                 }
@@ -915,6 +915,13 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
       qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
       initialized = 1;
    }
+}
+
+mesh::~mesh() {
+   for(int i=0;i<nvbd;++i)
+      delete vbdry(i);
+   for(int i=0;i<nsbd;++i)
+      delete sbdry(i);
 }
    
 

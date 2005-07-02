@@ -17,16 +17,27 @@
 #define REBAY
 
 /* MEMORY USAGE */
+/* SUMMARY OF VARIABLE USAGE
+i1wk = used in findtri for triangle searches
+nslst is the numer of sides needing refinement 
+i2wk = ordered list of sides requiring modification
+i3wk = pointer from side into i2wk list
+sdel[] = sides added/deleted during local operation
+tdel[] = triangles affected by local operation
+td[].info = output from yaber left intact - triangles changed can be determined from sd[].info
+sd[].info = output from yaber left intact - -3 deleted sides, -2 touched sides, -1 untouched sides
+vd[].info = +n sides of triangle needing coarsening
+*/
+
+
+
 /* i2wk - LIST OF SIDES TO BE REFINED */
 /* i3wk - BACK REFERENCE FROM SIDE INTO LIST */
-/* vinfo - TRIANGLE ACCEPTANCE INDICATOR >= 0 */
+/* vd.info - TRIANGLE ACCEPTANCE INDICATOR >= 0 */
 
 /* nslst KEEPS TRACK OF HOW MANY SIDES NEED REFINEMENT */
 /* SIDES ARE STORED IN i2wk WITH BACK REFERENCE IN i3wk */
 
-/* THESE TELL WHICH SIDES/TRIS WERE DELETED */
-/* ntdel, tdel[maxlst+1]; */
-/* nsdel, sdel[maxlst+1]; */
 
 int nslst;
 
