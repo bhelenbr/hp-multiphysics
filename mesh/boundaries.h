@@ -28,7 +28,7 @@ template<class BASE> class comm_bdry : public BASE {
       enum matchtype {local};
 #endif
       matchtype mtype[maxmatch]; // LOCAL OR MPI OR ?
-      void *local_match[maxmatch]; // POINTERS TO REMOTE BUFFERS
+      boundary *local_match[maxmatch]; // POINTERS TO LOCAL MATCHES
       int tags[maxmatch]; //IDENTIFIES EACH CONNECTION UNIQUELY
       int phase[maxmatch];  // TO SET-UP STAGGERED SEQUENCE OF SYMMETRIC PASSES
       void *rcvbuf[maxmatch]; //LOCAL BUFFERS TO STORE INCOMING MESSAGES
@@ -93,7 +93,7 @@ template<class BASE> class comm_bdry : public BASE {
       void *psndbuf() {return(sndbuf);}
       int& isndbuf(int n) {return(static_cast<int *>(sndbuf)[n]);}
       FLT& fsndbuf(int n) {return(static_cast<FLT *>(sndbuf)[n]);}
-      void *prcvbuf(int match) {return(rcvbuf);}
+      void *prcvbuf(int match) {return(rcvbuf[match]);}
       int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf[match])[n]);}
       FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf[match])[n]);}
       
@@ -122,7 +122,7 @@ template<class BASE> class comm_bdry : public BASE {
       int local_cnnct(boundary *bin, int msg_tag) {
          if (bin->idnum == BASE::idnum) {
             mtype[nmatch] = local;
-            local_match[nmatch] = bin->psndbuf();
+            local_match[nmatch] = bin;
             tags[nmatch] = msg_tag;
             rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
             
@@ -211,7 +211,7 @@ template<class BASE> class comm_bdry : public BASE {
                   
                      case(local):
                         for(i=0;i<msgsize;++i) 
-                           frcvbuf(m,i) = static_cast<FLT *>(local_match[m])[i];
+                           frcvbuf(m,i) = local_match[m]->fsndbuf(i);
                         break;
 #ifdef MPISRC
                      case(mpi):
@@ -236,7 +236,7 @@ template<class BASE> class comm_bdry : public BASE {
                   switch(mtype[m]) {
                      case(local):
                         for(i=0;i<msgsize;++i)
-                           ircvbuf(m,i) = static_cast<int *>(local_match[m])[i];
+                           ircvbuf(m,i) = local_match[m]->isndbuf(i);
                         break;
 #ifdef MPISRC
                      case(mpi):
@@ -287,7 +287,6 @@ template<class BASE> class comm_bdry : public BASE {
             case(boundary::flt_msg):
                 switch(mtype[0]) {
                   case(local):
-                     /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                      return;
 #ifdef MPISRC
                   case(mpi):
@@ -321,53 +320,65 @@ template<class BASE> class comm_bdry : public BASE {
       }
       
       void master_slave_transmit() {
-         if (!first) return;
-         
          int i,m;
-         switch(msgtype) {
-            case(boundary::flt_msg):
-               /* LOCAL PASSES */
-               for(m=0;m<nmatch;++m) {   
-                  switch(mtype[m]) {
-                     case(local):
-                        for(i=0;i<msgsize;++i)
-                           frcvbuf(m,i) = static_cast<FLT *>(local_match[m])[i];
-                        break;
-#ifdef MPISRC
-                     case(mpi):
-               /* MPI PASSES */
-#ifdef SINGLE
-                        MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-#else
-                        MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-#endif
-                        break;
-#endif         
-                  }
+
+         if (!first) {
+            /* GO GET LOCAL MESSAGES FROM MASTER */
+            if (mtype[0] == local) {
+               switch(local_match[0]->sndtype()) {
+                  case(boundary::flt_msg):
+                     for(i=0;i<local_match[0]->sndsize();++i)
+                        frcvbuf(0,i) = local_match[0]->fsndbuf(i);
+                  
+                  case(boundary::int_msg):
+                     for(i=0;i<local_match[0]->sndsize();++i)
+                        ircvbuf(0,i) = local_match[0]->isndbuf(i);
                }
-               break;
-               
-            case(boundary::int_msg):
-               /* LOCAL PASSES */
-               for(m=0;m<nmatch;++m) {   
-                  switch(mtype[m]) {
-                     case(local):
-                        for(i=0;i<msgsize;++i)
-                           ircvbuf(m,i) = static_cast<int *>(local_match[m])[i];
-                        break;
-#ifdef MPISRC
-                     case(mpi):
-                        /* MPI PASSES */
-                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-                        break;
-#endif
-                  }
-               }
-               break;              
+            }
          }
+         else {
+            switch(msgtype) {
+               case(boundary::flt_msg):
+                  /* LOCAL PASSES */
+                  for(m=0;m<nmatch;++m) {   
+                     switch(mtype[m]) {
+                        case(local):
+                           break;
+   #ifdef MPISRC
+                        case(mpi):
+                  /* MPI PASSES */
+   #ifdef SINGLE
+                           MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+   #else
+                           MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+   #endif
+                           break;
+   #endif         
+                     }
+                  }
+                  break;
+                  
+               case(boundary::int_msg):
+                  /* LOCAL PASSES */
+                  for(m=0;m<nmatch;++m) {   
+                     switch(mtype[m]) {
+                        case(local):
+                           break;
+   #ifdef MPISRC
+                        case(mpi):
+                           /* MPI PASSES */
+                           MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
+                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                           break;
+   #endif
+                     }
+                  }
+                  break;              
+            }
+         }
+         
          return;
       }
 
@@ -436,49 +447,60 @@ template<class BASE> class comm_bdry : public BASE {
       }
             
       void slave_master_transmit() {
-         if (first) return;
-         
-         int i;
-         
-         switch(msgtype) {
-            case(boundary::flt_msg):
-               switch(mtype[0]) {
-                  case(local):
-                     /* LOCAL PASSES */
-                     for(i=0;i<msgsize;++i)
-                        frcvbuf(0,i) = static_cast<FLT *>(local_match[0])[i];
-                     break;
-#ifdef MPISRC
-                  case(mpi):
-               /* MPI PASSES */
-#ifdef SINGLE
-                     MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
-#else
-                     MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);             
-#endif
-                     break;
-#endif
+         int i,m;
+
+         if (first) {
+            /* Go get messages from local slaves */
+            for(m=0;m<nmatch;++m) {
+               if (mtype[m] == local) {
+                  switch(local_match[m]->sndtype()) {
+                     case(boundary::flt_msg):
+                        for(i=0;i<local_match[0]->sndsize();++i)
+                           frcvbuf(m,i) = local_match[m]->fsndbuf(i);
+                     
+                     case(boundary::int_msg):
+                        for(i=0;i<local_match[m]->sndsize();++i)
+                           ircvbuf(m,i) = local_match[m]->isndbuf(i);
+                  }
                }
-               break;
-               
-            case(boundary::int_msg):
-               switch(mtype[0]) {
-                  case(local):
-                     /* LOCAL PASSES */
-                     for(i=0;i<msgsize;++i)
-                        ircvbuf(0,0) = static_cast<int *>(local_match[0])[i];
-                     break;
-#ifdef MPISRC
-                  case(mpi):
-                     /* MPI PASSES */
-                     MPI_Isend(&isndbuf(0), msgsize, MPI_INT, mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
-                     break;
-#endif
-               }
-               break;              
+            }
          }
+         else {
+            switch(msgtype) {
+               case(boundary::flt_msg):
+                  switch(mtype[0]) {
+                     case(local):
+                        break;
+   #ifdef MPISRC
+                     case(mpi):
+                  /* MPI PASSES */
+   #ifdef SINGLE
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                           mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+   #else
+                        MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                           mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);             
+   #endif
+                        break;
+   #endif
+                  }
+                  break;
+                  
+               case(boundary::int_msg):
+                  switch(mtype[0]) {
+                     case(local):
+                        break;
+   #ifdef MPISRC
+                     case(mpi):
+                        /* MPI PASSES */
+                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+                        break;
+   #endif
+                  }
+                  break;              
+            }
+         }
+         
          return;
       }
 
