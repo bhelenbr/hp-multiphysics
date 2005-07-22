@@ -293,8 +293,8 @@ void mesh::partition(class mesh& xin, int npart) {
          indx = xin.td(tind).tri(n);
          if (indx < 0) {
             /* BOUNDARY SIDE */
-            bnum = (-indx>>16) -1;
-            bel = -indx&0xFFFF;
+            bnum = getbdrynum(indx);
+            bel = getbdryel(indx);
 
             for (j = 0; j <nsbd;++j) {
                if (bnum == bcntr(j,0)) {

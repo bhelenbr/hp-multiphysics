@@ -210,7 +210,7 @@ class mesh {
       int collapse1(int sind,int bgnend, int& ntdel,int *tdel,int& nsdel,int *sdel);
 
       void dltvrtx(int vind);
-      void dltd(int sind);
+      void dltsd(int sind);
       void dlttri(int tind);
       void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
       void fltwkyab();
@@ -249,5 +249,9 @@ class mesh {
       FLT aspect(int tind) const;
       FLT intri(int tind, const TinyVector<FLT,2> &x) const;
       void getwgts(TinyVector<FLT,3> &wgt) const;
+      /* tri numbers at boundary point to el and group */
+      int getbdrynum(int trinum) const { return((-trinum>>16) -1);}
+      int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
+      int trinumatbdry(int bnum, int bel) { return(-(((bnum+1)<<16) +bel));}
 };
 #endif

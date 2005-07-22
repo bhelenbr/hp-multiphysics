@@ -233,7 +233,7 @@ void mesh::bdrylabel() {
    for(i=0;i<nsbd;++i) {
       for(j=0;j<sbdry(i)->nel;++j) {
          sind = sbdry(i)->el(j);
-         sd(sind).tri(1) = -(((i+1)<<16) +j);
+         sd(sind).tri(1) = trinumatbdry(i,j);
          tind = sd(sind).tri(0);
          for(k=0;k<3;++k)
             if (td(tind).side(k) == sind) break;
