@@ -33,7 +33,7 @@ void mesh::setup_for_adapt() {
       sd(i).info = -1;
       
    /* Back reference into list of entities needing refinement */
-   for(i=0;i<nvrtx;++i)
+   for(i=0;i<maxvst;++i)
       vd(i).info = -1;
       
    /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
@@ -103,7 +103,6 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
                
                /* RECACULCULATE SIDE RATIO FOR AFFECTED SIDES */
                /* FIND ADJACENT NON-DELETED SIDE */
-               dir = endpt*2-1;
                if (endpt > 0) {
                   for(next = el+1;next<sbdry(bnum)->nel;++next) {
                      if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) goto found;
@@ -134,7 +133,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
          
       case(2):
          /* RECEIVE ADAPTATION INFO FOR COMM BOUNDARIES AND ADAPT SECOND SIDES */
-         for(int i=0;i<nsbd;++i)
+         for(int i=0;i<nsbd;++i) 
             sbdry(i)->master_slave_wait();
             
          int j,k,m,count,offset,sind;
@@ -145,8 +144,15 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
          for(int bnum=0;bnum<nsbd;++bnum) {
             
             if (sbdry(bnum)->is_frst()) continue;
+            
+            sbdry(bnum)->master_slave_wait();
+            
+            
+            
             /* ASSUMES REVERSE ORDERING OF SIDES */
             /* WON'T WORK IN 3D */
+            
+            
             
             /* RELOAD FROM BUFFER */
             /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
