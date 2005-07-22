@@ -25,18 +25,9 @@ i3wk = pointer from side into i2wk list
 sdel[] = sides added/deleted during local operation
 tdel[] = triangles affected by local operation
 td[].info = output from yaber left intact - triangles changed can be determined from sd[].info
-sd[].info = output from yaber left intact - -3 deleted sides, -2 touched sides, -1 untouched sides
+sd[].info = output from yaber (-3 deleted sides, -2 touched sides, -1 untouched sides) change to -2 for sides touched
 vd[].info = +n sides of triangle needing coarsening
 */
-
-
-
-/* i2wk - LIST OF SIDES TO BE REFINED */
-/* i3wk - BACK REFERENCE FROM SIDE INTO LIST */
-/* vd.info - TRIANGLE ACCEPTANCE INDICATOR >= 0 */
-
-/* nslst KEEPS TRACK OF HOW MANY SIDES NEED REFINEMENT */
-/* SIDES ARE STORED IN i2wk WITH BACK REFERENCE IN i3wk */
 
 
 int nslst;
@@ -103,8 +94,8 @@ void mesh::rebay(FLT tolsize) {
       
       /* CHECK IF IT IS A BOUNDARY EDGE */
       if (sd(sind).tri(1) < 0) {
-         bnum = (-sd(sind).tri(1)>>16) -1;
-         bel = -sd(sind).tri(1)&0xFFFF;
+         bnum = getbdrynum(sd(sind).tri(1));
+         bel = getbdryel(sd(sind).tri(1));
          sbdry(bnum)->mvpttobdry(bel,0.5,vrtx(nvrtx));
                   
          /* INSERT POINT */

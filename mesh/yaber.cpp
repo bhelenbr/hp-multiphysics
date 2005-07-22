@@ -24,12 +24,12 @@ i2wk = ordered list of sides requiring modification
 i3wk = pointer from side into i2wk list
 sdel[] = sides deleted during local operation
 tdel[] = triangles affected by local operation
-td[].info = -1 deleted tri, 0 no refinement needed, +n sides of triangle needing coarsening
-td[].info = i < ntri stores index of original tri or tinfo = 0 for unmoved, i > ntri stores movment history
+td[].info = -3 deleted tri, -1 no refinement needed, +n sides of triangle needing coarsening
+td[].info = i < ntri stores index of original tri or tinfo = -2 touched, tinfo = -1 for untouched, i > ntri stores movment location
 sd[].info = during process: -3 deleted sides, -2 touched sides, -1 untouched sides
-sd[].info = after clean-up: i < nside -2, -1 or index of original, i > nside movement history
-vd[].info = during process: -1 deleted vrtx, +1 special vrtx
-vd[].info = after cleanup: i < nvrtx -1 deleted, 0 not deleted, i > nvrtx movement history
+sd[].info = after clean-up: i < nside -2, -1 or index of original, i > nside movement location
+vd[].info = during process: -3 deleted vrtx, -2 special vrtx, -1 untouched vertex
+vd[].info = after cleanup: i < nvrtx: > 0 original location, i > nvrtx movement location
 */
 
 void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
@@ -42,33 +42,33 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    
    cnt = 0;
    
-   /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
+   /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-3) */
    /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
    for(i=0;i<ntri;++i)
-      td(i).info = 0;
+      td(i).info = -1;
 
    /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
    for(i=0;i<nside;++i)
       sd(i).info = -1;
       
-   /* SWAP SIDES AND MARK SWAPPED SIDES TOUCHED */
-   if (yes_swap) swap(swaptol);
-      
-   /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
+   /* VINFO TO KEEP TRACK OF UNTOUCHED (-1), SPECIAL VERTICES (-2), DELETED VERTICES (-3) */
    for(i=0;i<nvrtx;++i)
-      vd(i).info = 0;
+      vd(i).info = -1;
       
    /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
       v0 = sd(sbdry(i)->el(0)).vrtx(0);
       v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)).vrtx(1);
-      vd(v0).info = 1;
-      vd(v1).info = 1;
+      vd(v0).info = -2;
+      vd(v1).info = -2;
    }
    
    for(i=0;i<nvbd;++i)
-      vd(vbdry(i)->v0).info = 1;
+      vd(vbdry(i)->v0).info = -2;
+      
+   /* SWAP SIDES AND MARK SWAPPED SIDES TOUCHED */
+   if (yes_swap) swap(swaptol);
    
    /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
    nslst = 0;
@@ -80,18 +80,18 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
       }
    }
 
-   td(-1).info = 0;
+   td(-1).info = -1;
    
    /* BEGIN COARSENING ALGORITHM */
    while (nslst > 0) {
       sind = -1;
       for(i=nslst-1;i>=0;--i) {  // START WITH LARGEST SIDE TO DENSITY RATIO
-         if (td(sd(i2wk(i)).tri(0)).info +td(MAX(sd(i2wk(i)).tri(1),-1)).info == 6) continue;
+         if (td(sd(i2wk(i)).tri(0)).info +td(MAX(sd(i2wk(i)).tri(1),-1)).info == 4) continue;
          sind = i2wk(i);
          break;
       }
       assert(sind != -1);
-      
+   
       /* COLLAPSE EDGE */
       nfail = collapse(sind,ntdel,tdel,nsdel,sdel);
       ++cnt;
@@ -106,7 +106,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
          for(i=0;i<2;++i) {
             tind = sd(sind).tri(i);
             if (tind < 0) continue;
-            if (td(tind).info > 0) --td(tind).info;
+            if (td(tind).info > -1) --td(tind).info;
          }
          continue;
       }
@@ -114,7 +114,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
       /* RECONSTRUCT AFFECTED TINFO ARRAY */
       for(i=0;i<ntdel;++i) {
          tind = tdel[i];
-         td(tind).info = 0;
+         td(tind).info = -1;
          for(j=0;j<3;++j) {
             sind = td(tind).side(j);
             if (i3wk(sind) > -1) tkoutlst(sind);
@@ -129,16 +129,13 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    
    /* DELETE LEFTOVER VERTICES */
    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
-   for(i=nvrtx-1;i>=0;--i) {
-      if (vd(i).info < 0) {
-         vd(nvrtx-1).info = i;
+   for(i=0;i<nvrtx;++i) 
+      if (vd(i).info == -3) 
          dltvrtx(i);
-      }
-   }
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nvbd;++i)
-      while (vbdry(i)->v0 >= nvrtx) 
+      if (vbdry(i)->v0 >= nvrtx) 
          vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
    
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
@@ -149,20 +146,14 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-   /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */  /* TEMPORARY HAVEN"T TESTED THIS */
-   for(i=nside-1;i>=0;--i) {
-      if (sd(i).info == -3) {
-         if (sd(nside-1).info == -1) sd(i).info = nside-1;
-         else sd(i).info = sd(nside-1).info;
-         sd(nside-1).info = i;
-         dltd(i);
-      }
-   }
-   
+   /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
+   for(i=0;i<nside;++i) 
+      if (sd(i).info == -3) dltsd(i);
+         
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el(j) >= nside) 
+         if (sbdry(i)->el(j) >= nside) 
             sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {
@@ -176,15 +167,7 @@ void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
    /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
    /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
    for(i=0;i<ntri;++i)
-      assert(td(i).info <= 0);  
-      
-   for(i=ntri-1;i>=0;--i) {
-      if (td(i).info < 0) {  // DELETED TRI
-         td(i).info = MAX(ntri-1,td(ntri-1).info);  // TINFO STORES ORIGINAL TRI INDEX
-         td(ntri-1).info = i; // RECORD MOVEMENT HISTORY FOR TRI'S > NTRI
-         dlttri(i);
-      }
-   }
+      if (td(i).info == -3)  dlttri(i);
       
    *log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
 

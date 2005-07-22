@@ -138,9 +138,9 @@ void mesh::append(const mesh &z) {
    for(i=nsideold;i<nside;++i)
       sd(i).info = -1;
 
-   /* VINFO TO KEEP TRACK OF DELETED VERTICES (-1) */
+   /* VINFO TO KEEP TRACK OF DELETED VERTICES (-3) */
    for(i=nvrtxold;i<nvrtx;++i)
-      vd(i).info = 0;
+      vd(i).info = -1;
    
    /* FIND MATCHING COMMUNICATION BOUNDARIES */
    for(i=0;i<nsbd -z.nsbd;++i) {
@@ -159,7 +159,7 @@ void mesh::append(const mesh &z) {
             v2a = z.sd(sind2).vrtx(0) +nvrtxold;
             vd(v1b).nnbor += z.vd(v2a-nvrtxold).nnbor-1;
             qtree.dltpt(v2a);
-            vd(v2a).info = -1;
+            vd(v2a).info = -3;
             do {
                for(vrt=0;vrt<3;++vrt) 
                   if (td(tind2).vrtx(vrt) == v2a) break; 
@@ -197,7 +197,7 @@ void mesh::append(const mesh &z) {
                td(tind2).sign((vrt+1)%3) = -1;
                td(tind2).tri((vrt+1)%3) = tind1;
                sd(sind2).info = -3;
-               vd(v2b).info = -1;
+               vd(v2b).info = -3;
                qtree.dltpt(v2b);
                
                for(;;) {
@@ -231,36 +231,25 @@ void mesh::append(const mesh &z) {
    
       /* DELETE LEFTOVER VERTICES */
    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
-   for(i=nvrtx-1;i>=nvrtxold;--i) {
-      if (vd(i).info < 0) {
-         vd(nvrtx-1).info = i;
+   for(i=0;i<nvrtx;++i) 
+      if (vd(i).info == -3) 
          dltvrtx(i);
-      }
-   }
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=nvbd-z.nvbd;i<nvbd;++i)
-      while (vbdry(i)->v0 >= nvrtx) 
+      if (vbdry(i)->v0 >= nvrtx) 
          vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
    /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
-   for(i=nside-1;i>=nsideold;--i) {
-      if (sd(i).info == -3) {
-         if (sd(nside-1).info >= -1)
-            sd(i).info = MAX(nside-1,sd(nside-1).info);
-         else 
-            sd(i).info = -2;
-         sd(nside-1).info = i;
-         dltd(i);
-      }
-   }
+   for(i=nsideold;i<nside;++i) 
+      if (sd(i).info == -3) dltsd(i);
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=nsbd-z.nsbd+1;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el(j) >= nside) 
+         if (sbdry(i)->el(j) >= nside) 
             sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {

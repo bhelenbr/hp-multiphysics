@@ -304,8 +304,8 @@ void mesh::bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int 
    sd(sind).vrtx(1) = vnum;
    /* ADD NEW SIDE TO BOUNDARY GROUP */
    /* NEED TO REORDER WHEN FINISHED */
-   i = (-sd(sind).tri(1)>>16) -1;
-   sd(nside).tri(1) = -(((i+1)<<16) +sbdry(i)->nel);
+   i = getbdrynum(sd(sind).tri(1));
+   sd(nside).tri(1) = trinumatbdry(i,sbdry(i)->nel);
    sbdry(i)->el(sbdry(i)->nel++) = nside;
    if (sbdry(i)->nel > sbdry(i)->maxel) {
       *log << "too many boundary elements" <<  sbdry(i)->idnum  << ' ' << sbdry(i)->maxel << std::endl;

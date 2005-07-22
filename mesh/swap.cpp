@@ -36,8 +36,15 @@ int mesh::swap(int sind, FLT tol) {
    
    if (MIN(minangle(v0,v1,vt1),minangle(v1,v0,vt2)) >
        MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol -10.0*EPSILON) return(0);
-       
-   sd(sind).info = -2; /* MARK SIDE AS TOUCHED */   
+
+#ifdef NEWADAPT
+   td(sind).info |= STOUC; /* MARK TOUCHED */
+   td(t1).info |= TTOUC;
+   td(t2).info |= TTOUC;
+#else
+   sd(sind).info = -2; /* MARK SIDE AS TOUCHED */
+#endif
+
    
    /* SWAP SIDE */
    sd(sind).vrtx(0) = vt2;

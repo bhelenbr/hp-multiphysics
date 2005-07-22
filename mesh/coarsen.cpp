@@ -284,7 +284,7 @@ void mesh::coarsen3() {
       /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
    /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
    for(i=0;i<ntri;++i)
-      td(i).info = 0;
+      td(i).info = -1;
 
    /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
    for(i=0;i<nside;++i)
@@ -292,7 +292,7 @@ void mesh::coarsen3() {
       
    /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
    for(i=0;i<nvrtx;++i)
-      vd(i).info = 0;
+      vd(i).info = -1;
    
    /* COARSEN SIDE EDGES FIRST */
    for(i=0;i<nsbd;++i) {
@@ -337,17 +337,13 @@ void mesh::coarsen3() {
 
    /* DELETE LEFTOVER VERTICES */
    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
-   for(i=nvrtx-1;i>=0;--i) {
-      if (vd(i).info < 0) {
-         vd(nvrtx-1).info = i;
+   for(i=0;i<nvrtx;++i) 
+      if (vd(i).info == -3) 
          dltvrtx(i);
-      }
-   }
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nvbd;++i)
-      while (vbdry(i)->v0 >= nvrtx) 
-         vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
+      if (vbdry(i)->v0 >= nvrtx) vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
    
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i)
@@ -358,21 +354,13 @@ void mesh::coarsen3() {
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
    /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
-   for(i=nside-1;i>=0;--i) {
-      if (sd(i).info == -3) {
-         if (sd(nside-1).info >= -1)
-            sd(i).info = MAX(nside-1,sd(nside-1).info);
-         else 
-            sd(i).info = -2;
-         sd(nside-1).info = i;
-         dltd(i);
-      }
-   }
+   for(i=0;i<nside;++i) 
+      if (sd(i).info == -3) dltsd(i);
    
    /* FIX BOUNDARY CONDITION POINTERS */
    for(i=0;i<nsbd;++i)
       for(j=0;j<sbdry(i)->nel;++j) 
-         while (sbdry(i)->el(j) >= nside) 
+         if (sbdry(i)->el(j) >= nside) 
             sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
    for (i=0;i<nsbd;++i) {
@@ -386,15 +374,7 @@ void mesh::coarsen3() {
    /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
    /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
    for(i=0;i<ntri;++i)
-      assert(td(i).info <= 0);  
-      
-   for(i=ntri-1;i>=0;--i) {
-      if (td(i).info < 0) {  // DELETED TRI
-         td(i).info = MAX(ntri-1,td(ntri-1).info);  // TINFO STORES ORIGINAL TRI INDEX
-         td(ntri-1).info = i; // RECORD MOVEMENT HISTORY FOR TRI'S > NTRI
-         dlttri(i);
-      }
-   }
+      if (td(i).info == -3) dlttri(i);
    
    *log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
    for(i=0;i<nsbd;++i)

@@ -12,36 +12,44 @@
 
 extern int nslst;  // (THIS NEEDS TO BE FIXED)
 
+#define VDLTE 0x10
+#define VSPEC 0x01
+#define SDLTE 0x1000
+#define STOUC 0x0100
+#define TDLTE 0x100000
+#define TTOUC 0x010000
+
 void mesh::setup_for_adapt() {
    int i,v0,v1;
    
-   /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
-   /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
-   for(i=0;i<ntri;++i)
+   /* For vertices 0 = untouched, 1 = special, 2 = deleted */
+   /* For sides 0 = untouced, 1 = touched, 2 = deleted */
+   /* For triangles 0 = untouched, 1 = touched, 2 = deleted */
+   for(i=0;i<maxvst;++i)
       td(i).info = 0;
 
-   /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
-   for(i=0;i<nside;++i)
+   /* List of entities needing refinement  */
+   for(i=0;i<maxvst;++i)
       sd(i).info = -1;
       
-   /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
+   /* Back reference into list of entities needing refinement */
    for(i=0;i<nvrtx;++i)
-      vd(i).info = 0;
+      vd(i).info = -1;
       
    /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
       v0 = sd(sbdry(i)->el(0)).vrtx(0);
       v1 = sd(sbdry(i)->el(sbdry(i)->nel-1).vrtx(1);
-      vd(v0).info = 1;
-      vd(v1).info = 1;
+      td(v0).info |=  VSPEC;
+      td(v1).info |=  VSPEC;
    }
    
    for(i=0;i<nvbd;++i)
-      vd(vbdry(i)->v0).info = 1;
+      td(vbdry(i)->v0).info |= VSPEC;
             
    for(i=0;i<nside;++i)
-      fscr1(i) = side_lngth_ratio(i);
+      
          
    return;
 }
@@ -58,8 +66,8 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
    switch (excpt) {
       case(0):
          mp_phase = 0;
+         
          for(int bnum=0;bnum<nsbd;++bnum) {
-            
             if (!sbdry(bnum)->is_frst()) {
                sbdry(bnum)->master_slave_prepare();
                continue;
@@ -68,6 +76,7 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
             nslst = 0;
             for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
                sind = sbdry(bnum)->el(indx);
+               fscr1(sind) = side_lngth_ratio(sind);
                if (fscr1(sind) < tolsize) {
                   putinlst(sind);
                }
@@ -75,10 +84,12 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
             
             sbdry(bnum)->sndsize() = 0;
             while (nslst > 0) {
-               // START WITH LARGEST SIDE TO DENSITY RATIO
+               // START WITH LARGEST SIDE LENGTH RATIO
                sind = i2wk(nslst-1);
+               el = getbdryel(sd(sind).tri(1));
                
                /* COLLAPSE EDGE */
+               /* ASSUME COLLAPSE WILL MARK SIDES AS DELETED OR AFFECTED */
                endpt = collapse(sind,ntdel,tdel,nsdel,sdel);
                
                tkoutlst(sind);
@@ -87,21 +98,30 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
                   continue;
                }
                /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
-               sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = sind;
+               sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = el;
                sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = endpt;
                
-               /* LOOP THROUGH AFFECTED TRIANGLES */
-               for(int i=0;i<ntdel;++i) {
-                  tind = tdel[i];
-                  for(int j=0;j<3;++j) {
-                     sind = td(tind).side(j);
-                     if (i3wk(sind) > -1) tkoutlst(sind);
-                     fscr1(sind) = side_lngth_ratio(sind);
-                     if (fscr1(sind) > tolsize && (-sd(sind).tri(1))>>16 == bnum+1) {
-                        putinlst(sind);
-                     }
+               /* RECACULCULATE SIDE RATIO FOR AFFECTED SIDES */
+               /* FIND ADJACENT NON-DELETED SIDE */
+               dir = endpt*2-1;
+               if (endpt > 0) {
+                  for(next = el+1;next<sbdry(bnum)->nel;++next) {
+                     if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) goto found;
                   }
+                  continue;
                }
+               else {
+                  for(next = el-1;next>=0;--next) {
+                     if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) goto found;
+                  }
+                  continue;
+               }
+               
+               found: 
+               sind = sbdry(bnum)->el(next);
+               if (i3wk(sind) > -1) tkoutlst(sind);
+               fscr1(sind) = side_lngth_ratio(sind);
+               if (fscr1(sind) > tolsize) putinlst(sind);
             }
          }
          return(block::advance);
@@ -185,7 +205,6 @@ block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
                base[offset+k] /= (1 +nlocal_match +nmpi_match);
          }
 
-      checkin_scratch();
    return;
 }
       

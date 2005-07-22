@@ -80,14 +80,14 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
       else {         
          /* BOTH ON BOUNDARY */
          /* IF NOT BOUNDARY EDGE OR TWO ENDPOINTS RETURN */
-         if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == 2) return(-1);
+         if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == -4) return(-1);
 
          /* CHECK IF CORNER POINT */
-         if (vd(sd(sind).vrtx(0)).info == 1) {
+         if (vd(sd(sind).vrtx(0)).info == -2) {
             delt = 1;
             goto DELETE;
          }
-         if (vd(sd(sind).vrtx(1)).info == 1) {
+         if (vd(sd(sind).vrtx(1)).info == -2) {
             delt = 0;
             goto DELETE;
          }
@@ -129,7 +129,7 @@ int mesh::collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel) {
 
          if (fabs(l0 - l1)/(l0 +l1) < 10.*EPSILON) {
             /* CONSISTENT WAY TO PICK IN DEGENERATE CASE? */
-            bnum = (-sd(sind).tri(1)>>16) -1;
+            bnum = getbdrynum(sd(sind).tri(1));
             delt = sbdry(bnum)->is_frst();
                *log << "#Warning: degenerate case in edge collapse for bdry" << bnum << sbdry(bnum)->idnum << "picking "
                 << delt << "(" << vrtx(sd(sind).vrtx(delt))(0) << "," << vrtx(sd(sind).vrtx(delt))(1) << ")" << std::endl;
@@ -213,7 +213,7 @@ DELETE:
       if (tind < 0) continue;
 
       /* MARK TRI AS DELETED TO BE REMOVED LATER */
-      td(tind).info = -1;  
+      td(tind).info = -3;  
       
       for(sd1=0;sd1<3;++sd1)
          if(td(tind).vrtx(sd1) == v1) break;
@@ -282,7 +282,7 @@ DELETE:
    
    /* NEED TO REMOVE LEFTOVERS */
    qtree.dltpt(v1);
-   vd(v1).info = -1;
+   vd(v1).info = -3;
    
    /* STORE LIST OF AFFECTED TRIANGLES */
    ntdel = ntsrnd[delt];
@@ -356,7 +356,7 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
    
    if (dir[0] + dir[1] == 4) {
       /* BOTH POINTS OF EDGE ARE ON BOUNDARY */
-      if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == 2) return(-1);
+      if (sd(sind).tri(1) > -1 || vd(sd(sind).vrtx(0)).info +vd(sd(sind).vrtx(1)).info == -4) return(-1);
    }
    
    /* UPDATE TVRTX & SVRTX */
@@ -393,7 +393,7 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
       if (tind < 0) continue;
 
       /* MARK TRI AS DELETED TO BE REMOVED LATER */
-      td(tind).info = -1;  
+      td(tind).info = -3;  
       
       for(sd1=0;sd1<3;++sd1)
          if(td(tind).vrtx(sd1) == v1) break;
@@ -462,7 +462,7 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
    
    /* NEED TO REMOVE LEFTOVERS */
    qtree.dltpt(v1);
-   vd(v1).info = -1;
+   vd(v1).info = -3;
    
    /* STORE LIST OF AFFECTED TRIANGLES */
    ntdel = ntsrnd[delt];
@@ -487,8 +487,17 @@ int mesh::collapse1(int sind,int delt,int& ntdel,int *tdel,int& nsdel,int *sdel)
 void mesh::dlttri(int tind) {
    int i,j,v0,t1,sind,flip;
    
+   
+   /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED TRI */
+   while(td(ntri-1).info == -3)
+      --ntri;
+   
+   if (tind >= ntri) return;
+   
    --ntri;
-   if (tind == ntri) return;
+
+   td(tind).info = ntri;
+   td(ntri).info = tind;
    
    for (j=0;j<3;++j) {
       v0 = td(ntri).vrtx(j);
@@ -516,25 +525,35 @@ void mesh::dlttri(int tind) {
 }
 
 /* DELETE UNREFERENCED SIDE */
-void mesh::dltd(int sind) {
+void mesh::dltsd(int sind) {
    int j,k,tind;
+
+   /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED SIDE */
+   while(sd(nside-1).info == -3)
+      --nside;
+   
+   if (sind >= nside) return;
    
    /* DELETE SIDE */
    --nside;
-   
-   if (sind == nside) return;
    
    sd(sind).vrtx(0) = sd(nside).vrtx(0);
    sd(sind).vrtx(1) = sd(nside).vrtx(1);
    sd(sind).tri(0) = sd(nside).tri(0);
    sd(sind).tri(1) = sd(nside).tri(1);
+   if (sd(nside).info == -1) {
+      sd(sind).info = nside;
+   }
+   else {
+      sd(sind).info = -2;
+   }
+   sd(nside).info = sind;
 
    for(j=0;j<2;++j) {
       tind = sd(nside).tri(j);
       if (tind > -1) {
          for(k=0;k<3;++k)
             if (td(tind).side(k) == nside) break;
-         assert(k != 3);
          td(tind).side(k) = sind;
       }
    }
@@ -546,10 +565,17 @@ void mesh::dltd(int sind) {
 void mesh::dltvrtx(int v0) {
    int vn,stoptri,dir;
    int tind, sind, flip;
+         
+   /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED VERTEX */
+   while(vd(nvrtx-1).info == -3)
+      --nvrtx;
       
-   --nvrtx;
+   if (v0 >= nvrtx) return;   
    
-   if (v0 == nvrtx) return;
+   --nvrtx;
+
+   vd(v0).info = nvrtx;
+   vd(nvrtx).info = v0;
    
    qtree.movept(nvrtx,v0);
    
