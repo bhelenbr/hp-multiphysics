@@ -170,7 +170,6 @@
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = SOURCE_ROOT; };
-		F50AF9AC0188A63E01990B20 /* createlib */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.csh; path = createlib; sourceTree = "<group>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
 		F515EA5602B7E15B012A8EDA /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = SOURCE_ROOT; };
 		F51A5D6802B541FB012A8EDA /* r_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_boundary.h; sourceTree = SOURCE_ROOT; };
@@ -288,7 +287,6 @@
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
-				F50AF9AC0188A63E01990B20 /* createlib */,
 				F556D7CC0226C8DC01990B20 /* makefile */,
 			);
 			name = Scripts;
