@@ -1152,13 +1152,6 @@
 		vrLen = 1346;
 		vrLoc = 1484;
 	};
-	F50AF9AC0188A63E01990B20 /* createlib */ = {
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {818, 699}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRect = "{{0, 0}, {818, 699}}";
-		};
-	};
 	F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {892, 5236}}";
