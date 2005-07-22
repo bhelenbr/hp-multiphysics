@@ -187,8 +187,6 @@
 		F5CED4AF015630AA01000001 /* swap.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = swap.cpp; sourceTree = SOURCE_ROOT; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = /Users/helenbrk/Codes/lib/libinput_map.a; sourceTree = "<absolute>"; };
 		F5DD977303A7C78201990B69 /* blocks.inpt */ = {isa = PBXFileReference; lastKnownFileType = text; path = blocks.inpt; sourceTree = "<group>"; };
-		F5DD977403A7C89401990B69 /* blk.0.inpt */ = {isa = PBXFileReference; lastKnownFileType = text; path = blk.0.inpt; sourceTree = "<group>"; };
-		F5DD977503A7CB2801990B69 /* blk.1.inpt */ = {isa = PBXFileReference; lastKnownFileType = text; path = blk.1.inpt; sourceTree = "<group>"; };
 		F5F975AB0152459801000001 /* yaber.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = yaber.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -300,8 +298,6 @@
 			isa = PBXGroup;
 			children = (
 				F5DD977303A7C78201990B69 /* blocks.inpt */,
-				F5DD977403A7C89401990B69 /* blk.0.inpt */,
-				F5DD977503A7CB2801990B69 /* blk.1.inpt */,
 			);
 			name = Inputs;
 			sourceTree = "<group>";
