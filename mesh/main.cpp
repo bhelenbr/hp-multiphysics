@@ -25,6 +25,8 @@ static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
 static GBool Format = gFalse;
 static GBool Coarsen_Marks = gFalse;
+static GBool Symmetrize = gFalse;
+static GBool Vlngth = gFalse;
 GBool printHelp = gFalse;
 
 
@@ -53,14 +55,16 @@ static ArgDesc argDesc[] = {
    "change format"},
   {"-l"  ,argFlag,    &Coarsen_Marks,         0,
    "Coarsen vertices based on list of marks"},
+  {"-y"  ,argFlag,    &Symmetrize,         0,
+   "Make mesh symmetric about y = 0"},
+  {"-v"  ,argFlag,    &Vlngth,         0,
+   "Create a mesh resolution file"},
   {NULL}
 };
 
 
 int main(int argc, char *argv[]) {
    GBool ok;
-   
-   
    
   // parse args
    ok = parseArgs(argDesc, &argc, argv);
@@ -74,9 +78,23 @@ int main(int argc, char *argv[]) {
    ftype::name in = static_cast<ftype::name>(informat);
    ftype::name out = static_cast<ftype::name>(outformat);
    
-   //zx.input(argv[1],ftype::grid);
-   //zx.symmetrize();
-  //return 0;
+   /* TO SYMMETRIZE A MESH */
+   if (Symmetrize) {
+      zx.input(argv[1],in,8.0);
+      zx.symmetrize();
+      return 0;
+   }
+   
+   if (Vlngth) {
+      zx.input(argv[1],in,8.0);
+      char name[100];
+      strcpy(name,argv[1]);
+      strcat(name,".vlngth");
+      FILE *fp = fopen(name,"w");
+      for(int i=0;i<zx.nvrtx;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.vlngth(i));
+      fclose(fp);
+      return 0;
+   }
    
    if (Refineby2) {
       zx.input(argv[1],in,8.0);
@@ -150,10 +168,9 @@ int main(int argc, char *argv[]) {
       zx.input(argv[1],in);
       FILE *fp = fopen(argv[3],"r");
       for(int i=0;i<zx.nvrtx;++i) {
-         fscanf(fp,"%d\n",&zx.i3wk(i));
-         zx.i3wk(i) = 1-zx.i3wk(i);
+         fscanf(fp,"%d\n",&zx.vd(i).info);
+         zx.vd(i).info = 1-zx.vd(i).info;
       }
-      zx.checkintegrity();
       zx.coarsen3();
       zx.output(argv[2],out); 
       return(0);     
@@ -163,9 +180,9 @@ int main(int argc, char *argv[]) {
    class blocks z;
    if (Generate) {
       z.init(argv[1]);
-      for (int i=0;i<2;++i)
+      for (int i=0;i<1;++i)
          z.restructure();
-      z.output(argv[2],out);
+      z.output(argv[1],out);
       return(0);
    }
 
@@ -197,7 +214,7 @@ int main(int argc, char *argv[]) {
       input["njacobi"] = "1";
       input["ncycle"] = "100";
       input["vwcycle"] = "1";
-      input["tolerance"] = "0.66";
+      input["tolerance"] = "2.2";
       input["nologfile"] = "duh";
       input["adapt"] = "1";
       

@@ -24,6 +24,8 @@
 #endif
 #endif
 
+#define NO_DEBUG_ADAPT
+
 using namespace blitz;
 
 class side_bdry;
@@ -35,10 +37,9 @@ class mesh {
    /* DATA        */
    /***************/
    public:
-      int initialized, maxvst;
+      int maxvst;
       static const int ND = 2;
-      std::ostream *log;
-      
+            
       /* VERTEX DATA */
       int nvrtx;
       Array<TinyVector<FLT,ND>,1> vrtx;
@@ -81,69 +82,57 @@ class mesh {
       };
       Array<tstruct,1> td;
       
-      /* THESE ARE NOT SHARED BECAUSE THEY HAVE TO BE KEPT INITIALIZED TO -1 */
-      static int maxsrch, maxlst;
-      static Array<int,1> i1wk,i2wk,i3wk;
+      /* SOME SCRATCH VARIABLES */
+      /* ANY ROUTINE THAT USES i1wk SHOULD RESET IT TO -1 */
+      static Array<int,1> i1wk,i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
+
       /* THIS IS SHARED WORK SPACE */
       /* ONLY SHARE WITH BLOCKS THAT WORK TOTALLY INDEPENDENTLY */
       /* (DIFFERENT LEVELS OF MULTIGRID) */
       sharedmem scratch;
       Array<FLT,1> fscr1;
+      
+      int initialized;
+      std::ostream *log;
+      static int maxsrch;
+      
+   public:
+      /**************/
+      /*  INTERFACE */
+      /**************/
+      /* INITIALIZATION & ALLOCATION */
+      mesh() : nvbd(0), nsbd(0), initialized(0), log(&std::cout)  {}
+      sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
+      void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void get_scratch_pointers() {
          Array<FLT,1> tmp(static_cast<FLT *>(scratch.data()), maxvst, neverDeleteData);
          fscr1.reference(tmp);
       }
-
-      /**************/
-      /*  INTERFACE */
-      /**************/
-      /* DEFAULT INITIALIZATION */
-      mesh() : initialized(0), log(&std::cout), nvbd(0), nsbd(0) {}
-      sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
-      void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
-      void load_scratch_pointers();
       void copy(const mesh& tgt);
       ~mesh();
+      
+      /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
+      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
+      int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
+      void bdry_output(const char *filename) const;
+      void setbcinfo();  // FOR EASYMESH OUTPUT (NOT USED)
+
+      /* MESH MODIFICATION UTILTIES */
       void coarsen_substructured(const class mesh &tgt,int p);
 	   void symmetrize();
       void append(const mesh &z);
       void shift(TinyVector<FLT,ND>& s);
       void scale(TinyVector<FLT,ND>& s);
-
-      /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
-      int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
-      void bdry_output(const char *filename) const;
-
-      void setbcinfo();
-
-      /* MESH MODIFICATION */  
-      /* TO SET UP ADAPTATION VLENGTH */
+      int smooth_cofa(int niter);
+      void refineby2(const class mesh& xmesh);
+      void settrim();
       void initvlngth();
-      void length1(int phase) {msgload(phase,vlngth.data(),0,0,1);}
-      int length2(int phase) {return(msgwait_rcv(phase,vlngth.data(),0,0,1));} 
+      block::ctrl adapt(int excpt, FLT tolsize);
       int coarsen(FLT factor, const class mesh& xmesh);
       void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void coarsen3();
-      void refineby2(const class mesh& xmesh);
-      void swap(FLT swaptol = EPSILON);
-      void yaber(FLT tolsize, int yes_swap, FLT swaptol = EPSILON);
-      inline void treeupdate() { qtree.update(0,nvrtx);}
-      void rebay(FLT tolsize);
-      void trebay(FLT tolsize);
-      inline void adapt(FLT tolerance) {
-         treeinit(); // TEMPORARY
-         yaber(1.0/tolerance,1,EPSILON);
-         treeupdate();
-         rebay(tolerance);
-         return;
-      }
-      
-      /* CENTER OF AREA MESH SMOOTHING */
-      int smooth_cofa(int niter);
 
-      /* FIND MATCHING MESH BOUNDARIES */
-      void settrim();
+      /* UTILITIES FOR PARALLEL COMPUTATIONS */
 #ifdef METIS
       void setpartition(int nparts); 
 #endif 
@@ -154,11 +143,11 @@ class mesh {
       void msgpass(int phase);
       int msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride);
       int msgrcv(int phase,FLT *base,int bgn, int end, int stride);
-
       void matchboundaries1(int phase);
       int matchboundaries2(int phase);
       
-      /* THIS IS AN INTERPOLATION DATA STRUCTURE */
+      
+      /* UTILITIES FOR INTERPOLATION BETWEEN MESHES */
       struct transfer {
          int tri;
          TinyVector<FLT,3> wt;
@@ -170,16 +159,8 @@ class mesh {
       void checkintegrity();
       void checkintwk() const;
       
-      /* NEW ADAPTATION ROUTINES */
-      void setup_for_adapt();
-      void coarsen_bdry(FLT tolsize);
-      FLT side_lngth_ratio(int i) {   
-         /* CALCULATE SIDE TO TARGET LENGTH RATIO */
-         /* ERROR ON THE CONSERVATIVE SIDE (OVER-REFINED) BY TAKING MAX VLNGTH */
-         return(MAX(vlngth(sd(i).vrtx(0)),vlngth(sd(i).vrtx(1)))/distance(sd(i).vrtx(0),sd(i).vrtx(1)));
-      }
-      
    protected:
+   
       /*******************/
       /* INTERNAL FUNCTIONS */
       /*******************/  
@@ -193,27 +174,41 @@ class mesh {
       void treeinit(FLT x1[ND], FLT x2[ND]);
 
       /* MESH MODIFICATION FUNCTIONS */
+      /* 4 binary digits for vertex, side, tri */
+      const static int VSPEC = 0x4, VDLTE = 0x2, VTOUC=0x1;
+      const static int SDLTE = 0x10*0x2, STOUC=0x10*0x1;
+      const static int TSRCH = 0x100*0x4, TDLTE = 0x100*0x2, TTOUC=0x100*0x1;
+      void setup_for_adapt();
+      void swap(FLT swaptol = EPSILON);
+      void bdry_yaber(FLT tolsize);
+      void bdry_yaber1();
+      void yaber(FLT tolsize);
+      void bdry_rebay(FLT tolsize);
+      void bdry_rebay1();
+      void rebay(FLT tolsize);
+      void cleanup_after_adapt();
+
+      FLT stgt_to_actual(int i) {   
+         /* CALCULATE SIDE TO TARGET LENGTH RATIO */
+         /* ERROR ON THE CONSERVATIVE SIDE (OVER-REFINED) BY TAKING MAX VLNGTH */
+         return(MAX(vlngth(sd(i).vrtx(0)),vlngth(sd(i).vrtx(1)))/distance(sd(i).vrtx(0),sd(i).vrtx(1)));
+      }      
       /* TO CREATE AN INITIAL TRIANGUlATION */
       void triangulate(int nside);
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
       int insert(const TinyVector<FLT,2> &x);
-      int insert(int tind, int vnum, FLT theta, int &ntdel, int *tdel, int &nsdel, int *sdel);
-      void bdry_insert(int tind, int snum, int vnum, int &ntdel, int *tdel, int &nsdel, int *sdel);
+      int insert(int vnum, int tnum);
+      void bdry_insert(int vnum, int sind, int endpt = 0);
       int findtri(TinyVector<FLT,ND> x, int vnear) const;
-      void fltwkreb(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR REBAY
-      void fltwkreb();
-      
+
       /* FOR COARSENING A SIDE */
-      int collapse(int sind,int& ntdel,int *tdel,int& nsdel,int *sdel);
-      int collapse1(int sind,int bgnend, int& ntdel,int *tdel,int& nsdel,int *sdel);
+      void collapse(int sind, int endpt);
 
       void dltvrtx(int vind);
       void dltsd(int sind);
       void dlttri(int tind);
-      void fltwkyab(int sind);  //FUNCTIONS FOR SETTUPING UP FLTWK FOR YABER
-      void fltwkyab();
       
       /* ORDERED LIST FUNCTIONS */
       void putinlst(int sind);
@@ -244,14 +239,15 @@ class mesh {
       FLT area(int tind) const;
       FLT minangle(int v0, int v1, int v2) const;
       FLT angle(int v0, int v1, int v2) const;
-      FLT tradius(int tind) const;
-      void tcenter(int tind, TinyVector<FLT,2> &x) const;
+      FLT circumradius(int tind) const;
+      void circumcenter(int tind, TinyVector<FLT,2> &x) const;
+      FLT inscribedradius(int tind) const;
       FLT aspect(int tind) const;
       FLT intri(int tind, const TinyVector<FLT,2> &x) const;
       void getwgts(TinyVector<FLT,3> &wgt) const;
       /* tri numbers at boundary point to el and group */
       int getbdrynum(int trinum) const { return((-trinum>>16) -1);}
       int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
-      int trinumatbdry(int bnum, int bel) { return(-(((bnum+1)<<16) +bel));}
+      int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));}
 };
 #endif

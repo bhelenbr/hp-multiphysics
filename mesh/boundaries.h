@@ -292,10 +292,10 @@ template<class BASE> class comm_bdry : public BASE {
                   case(mpi):
                      /* MPI POST RECEIVES FIRST */
 #ifdef SINGLE
-                     MPI_Irecv(&frcvbuf(0,0), msgsize, MPI_FLOAT, 
+                     MPI_Irecv(&frcvbuf(0,0), buffsize, MPI_FLOAT, 
                         mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
 #else
-                     MPI_Irecv(&frcvbuf(0,0), msgsize, MPI_DOUBLE, 
+                     MPI_Irecv(&frcvbuf(0,0), buffsize, MPI_DOUBLE, 
                         mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);             
 #endif
                      break;
@@ -311,7 +311,7 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                   case(mpi):
                      /* MPI POST RECEIVES FIRST */
-                     MPI_Irecv(&ircvbuf(0,0), msgsize, MPI_INT, 
+                     MPI_Irecv(&ircvbuf(0,0), buffsize, MPI_INT, 
                         mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
                      break;    
 #endif
@@ -326,6 +326,7 @@ template<class BASE> class comm_bdry : public BASE {
             /* GO GET LOCAL MESSAGES FROM MASTER */
             if (mtype[0] == local) {
                switch(local_match[0]->sndtype()) {
+                  sndsize() = local_match[0]->sndsize();
                   case(boundary::flt_msg):
                      for(i=0;i<local_match[0]->sndsize();++i)
                         frcvbuf(0,i) = local_match[0]->fsndbuf(i);
@@ -415,10 +416,10 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                      case(mpi):
 #ifdef SINGLE
-                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_FLOAT, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_FLOAT, 
                            mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
 #else
-                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_DOUBLE, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_DOUBLE, 
                            mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);  
 #endif
                         break;

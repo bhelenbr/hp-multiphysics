@@ -5,8 +5,8 @@
 #include <cstring>
 #include <input_map.h>
 
-Array<int,1> mesh::i1wk,mesh::i2wk,mesh::i3wk;
-int mesh::maxlst, mesh::maxsrch;
+Array<int,1> mesh::i1wk,mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2wk_lst3;
+int mesh::maxsrch;
 
 sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile, sharedmem *win) {
    int i,j,n,sind,count,temp,tind,v0,v1,sign;
@@ -120,7 +120,7 @@ next1:      continue;
                         goto next1a;
                      }
                   }
-                  printf("Big error\n");
+                  *log << "Big error\n";
                   exit(1);
                }
 next1a:     continue;
@@ -659,7 +659,7 @@ next1b:      continue;
                         goto next1c;
                      }
                   }
-                  printf("Big error\n");
+                  *log << "Big error\n";
                   exit(1);
                }
 next1c:     continue;
@@ -736,7 +736,7 @@ next1c:     continue;
             strcat(grd_app,".d");
             grd = fopen(grd_app,"r");
             if (grd == NULL) { 
-               printf("couldn't open %s for reading\n",grd_app);
+               *log << "couldn't open " << grd_app << "for reading\n";
                exit(1);
             }
 
@@ -810,14 +810,14 @@ next1c:     continue;
                         goto bdnext1a;
                      }
                   }
-                  printf("Big error\n");
+                  *log << "Big error\n";
                   exit(1);
                }
             bdnext1a:     continue;
             }
             
             for(i=0;i<nside;++i)
-               i1wk(i) = i+1;
+               i2wk_lst1(i) = i+1;
               
             ntri = 0;
             triangulate(nside);
@@ -840,7 +840,16 @@ next1c:     continue;
    createvtri();
    cnt_nbor();
    treeinit(); 
-   if (filetype != ftype::boundary) initvlngth();
+   
+   strcpy(grd_app,grd_nm);
+   strcat(grd_app,".vlngth");
+   grd = fopen(grd_app,"r");
+   if (grd) {
+      for(i=0;i<nvrtx;++i) fscanf(grd,"%lf\n",&vlngth(i));
+      fclose(grd);
+   }
+   else if (filetype != ftype::boundary) initvlngth();
+   
    checkintegrity();
 
    initialized = 1;
@@ -878,16 +887,26 @@ sharedmem* mesh::allocate(int mxsize,const sharedmem* wkin) {
 
 
    if (i1wk.ubound(firstDim) < maxvst) {
-      i1wk.resize(maxvst);
-      i2wk.resize(maxvst);
-      i3wk.resize(maxvst);
-      maxlst = 100;
-      maxsrch = 100;
-   
+      // i1wk should always be kept initialized to -1
+      i1wk.resize(Range(-1,maxvst));
       i1wk = -1;
-      i2wk = -1;
-      i3wk = -1;
 
+      // i2wk can be used as a list doesn't need to be reinitizalized
+      i2wk.resize(Range(-1,maxvst));
+      // some smaller lists using i2 storage
+      int mvst3 = maxvst/3;
+      Array<int,1> temp1(i2wk.data(),mvst3,neverDeleteData);
+      i2wk_lst1.reference(temp1);
+      i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+      Array<int,1> temp2(i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+      i2wk_lst2.reference(temp2);
+      i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+      Array<int,1> temp3(i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+      i2wk_lst3.reference(temp3);
+      i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+
+      maxsrch = 100;
+      
    }
    initialized = 1;
    

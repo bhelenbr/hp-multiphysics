@@ -73,6 +73,8 @@ class boundary {
       virtual void *psndbuf() {return(&dummy);}
       virtual int& isndbuf(int indx) {return(dummy.idum);}
       virtual FLT& fsndbuf(int indx) {return(dummy.fdum);}
+      virtual int& ircvbuf(int m,int indx) {return(dummy.idum);}
+      virtual FLT& frcvbuf(int m,int indx) {return(dummy.fdum);}
       virtual int& sndsize() {return(dummy.idum=0);}
       virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
       virtual void comm_prepare(int phase) {}

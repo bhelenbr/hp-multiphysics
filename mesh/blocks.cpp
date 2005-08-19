@@ -27,8 +27,11 @@
 
 void blocks::init(const char *infile, const char *outfile) {
    std::map<std::string,std::string> maptemp;
-
-   input_map(maptemp,infile);
+   char name[100];
+   
+   strcpy(name,infile);
+   strcat(name,".inpt");
+   input_map(maptemp,name);
    
    if (outfile) {
       maptemp["logfile"] = outfile;

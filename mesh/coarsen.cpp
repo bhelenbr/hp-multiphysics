@@ -22,7 +22,6 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    log = inmesh.log;
    
    /* PREPARE FOR COARSENING */
-   /* USE GLOBAL i2wk TO KEEP TRACK OF WHETHER VERTICES ARE IN */   
    for(i=0;i<inmesh.nvrtx;++i)
       fscr1(i) = 1.0e8;
    
@@ -35,11 +34,13 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
    for(i=0;i<inmesh.nvrtx;++i)
       fscr1(i) *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
-
+      
    nvrtx = 0;
    nside = 0;
    ntri  = 0;
 
+   /* USE I1WK TO KEEP TRACK OF INDICES */
+   
    /* COARSEN SIDES   */
    for(i=0;i<nsbd;++i) {
       sbdry(i)->nel = 0;
@@ -50,16 +51,15 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
       /* CHECK IF FIRST POINT INSERTED*/
       v0 = inmesh.sd(inmesh.sbdry(i)->el(0)).vrtx(0);
-      if (i2wk(v0) < 0) {
+      if (i1wk(v0) < 0) {
          for(n=0;n<ND;++n)
             vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-         i2wk(v0) = nvrtx;
+         i1wk(v0) = nvrtx;
          sd(nside).vrtx(0) = nvrtx;
          ++nvrtx;
-         assert(nvrtx < maxvst-1);
       }
       else { 
-         sd(nside).vrtx(0) = i2wk(v0);
+         sd(nside).vrtx(0) = i1wk(v0);
       }
 
       odd = inmesh.sbdry(i)->nel%2;
@@ -68,7 +68,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-            i2wk(v0) = nvrtx;
+            i1wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
@@ -76,9 +76,6 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             ++sbdry(i)->nel;
             sd(nside).vrtx(0) = nvrtx;
             ++nvrtx;
-            assert(sbdry(i)->nel < sbdry(i)->maxel -1);
-            assert(nside < maxvst -1);
-            assert(nvrtx < maxvst -1);
          } 
 
          /* MIDDLE POINT OF ODD NUMBERED SIDE */
@@ -88,8 +85,8 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             v1 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(1);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = 0.5*(inmesh.vrtx(v0)(n) +inmesh.vrtx(v1)(n));
-            i2wk(v0) = nvrtx;
-            i2wk(v1)= nvrtx;
+            i1wk(v0) = nvrtx;
+            i1wk(v1)= nvrtx;
             sd(nside).vrtx(1) = nvrtx;
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
@@ -97,16 +94,13 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             ++sbdry(i)->nel;
             sd(nside).vrtx(0) = nvrtx;
             ++nvrtx;
-            assert(sbdry(i)->nel < sbdry(i)->maxel -1);
-            assert(nside < maxvst -1);
-            assert(nvrtx < maxvst -1); 
          }
          
          for(j = inmesh.sbdry(i)->nel -((inmesh.sbdry(i)->nel-2)/4)*2;j<inmesh.sbdry(i)->nel;j+=2) {
             v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-            i2wk(v0) = nvrtx;
+            i1wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
@@ -114,9 +108,6 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             ++sbdry(i)->nel;
             sd(nside).vrtx(0) = nvrtx;
             ++nvrtx;
-            assert(sbdry(i)->nel < sbdry(i)->maxel -1);
-            assert(nside < maxvst -1);
-            assert(nvrtx < maxvst -1);
          }
       }
       else {
@@ -124,7 +115,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
             for(n=0;n<ND;++n)
                vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-            i2wk(v0) = nvrtx;
+            i1wk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
@@ -132,18 +123,15 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
             ++sbdry(i)->nel;
             sd(nside).vrtx(0) = nvrtx;
             ++nvrtx;
-            assert(sbdry(i)->nel < sbdry(i)->maxel -1);
-            assert(nside < maxvst -1);
-            assert(nvrtx < maxvst -1);
          }
       }
       
       /* INSERT LAST POINT */
       v0 = inmesh.sd(inmesh.sbdry(i)->el(inmesh.sbdry(i)->nel-1)).vrtx(1);
-      if (i2wk(v0) < 0) {
+      if (i1wk(v0) < 0) {
          for(n=0;n<ND;++n)
             vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-         i2wk(v0) = nvrtx;
+         i1wk(v0) = nvrtx;
          sd(nside).vrtx(1) = nvrtx;
          sbdry(i)->el(sbdry(i)->nel) = nside;
          sd(nside).tri(1) = -1;
@@ -152,42 +140,39 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          ++nvrtx;
       }
       else {
-         sd(nside).vrtx(1) = i2wk(v0);
+         sd(nside).vrtx(1) = i1wk(v0);
          sbdry(i)->el(sbdry(i)->nel) = nside;
          sd(nside).tri(1) = -1;
          ++nside;
          ++sbdry(i)->nel;
       }
-      assert(sbdry(i)->nel < sbdry(i)->maxel -1);
-      assert(nside < maxvst -1);
-      assert(nvrtx < maxvst -1);      
    }
    
    /* MOVE VERTEX BDRY INFORMATION */
    for(i=0;i<inmesh.nvbd;++i) {
       vbdry(i)->copy(*inmesh.vbdry(i));
-      vbdry(i)->v0 = i2wk(inmesh.vbdry(i)->v0);
+      vbdry(i)->v0 = i1wk(inmesh.vbdry(i)->v0);
+   }
+   
+   /* RESET i1wk */
+   for(i=0;i<inmesh.nsbd;++i) {
+      for(j=0;j<inmesh.sbdry(i)->nel;++j) {
+         sind = inmesh.sbdry(i)->el(j);
+         i1wk(inmesh.sd(sind).vrtx(0)) = -1;
+         i1wk(inmesh.sd(sind).vrtx(1)) = -1;
+      }
    }
    
    treeinit();
 
    for(i=0;i<nside;++i)
-      i1wk(i) = i+1;
+      i2wk_lst1(i) = i+1;
       
    triangulate(nside);
 
    /****************************************************/         
    /* Boyer-Watson Algorithm to insert interior points */
    /****************************************************/
-   /* MARK ALL FINE MESH BOUNDARY NODES SO WE KNOW NOT TO INSERT */
-   for(i=0;i<inmesh.nsbd;++i) {
-      for(j=0;j<inmesh.sbdry(i)->nel;++j) {
-         sind = inmesh.sbdry(i)->el(j);
-         i2wk(inmesh.sd(sind).vrtx(0)) = 0;
-         i2wk(inmesh.sd(sind).vrtx(1)) = 0;
-      }
-   }
-
    for(i=0;i<inmesh.nvrtx;++i) {
       if (i2wk(i) == 0) continue;
       
@@ -270,29 +255,21 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
    for(i=0;i<nvrtx;++i)
       vlngth(i) = factor*vlngth(i);
       
-   yaber(1.414, 0);
+   yaber(1.414);
    qtree.reinit();  // REMOVES UNUSED QUADS
    
    return;
 }
 
 void mesh::coarsen3() {
-   int i,j,v0,nfail,tind,sind,node,cnt=0;
-   int ntdel,tdel[maxlst];
-   int nsdel,sdel[maxlst];
+   int i,j,v0,tind,sind,node,cnt=0;
    
-      /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-1) */
-   /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
-   for(i=0;i<ntri;++i)
-      td(i).info = -1;
-
-   /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
-   for(i=0;i<nside;++i)
-      sd(i).info = -1;
-      
-   /* VINFO TO KEEP TRACK OF SPECIAL VERTICES (1) DELETED VERTICES (-1) */
-   for(i=0;i<nvrtx;++i)
-      vd(i).info = -1;
+   /* SET-UP ADAPTION TRACKING STUFF */
+   /* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
+   /* For sides 0 = untouced, 1 = touched, 2 = deleted */
+   /* For triangles 0 = untouched, 1 = touched, 2 = deleted, 3 = searched */
+   for(i=0;i<maxvst;++i)
+      td(i).info = 0;
    
    /* COARSEN SIDE EDGES FIRST */
    for(i=0;i<nsbd;++i) {
@@ -300,81 +277,34 @@ void mesh::coarsen3() {
       for(j=0;j<sbdry(i)->nel;++j) {
          sind = sbdry(i)->el(j);
          v0 = sd(sind).vrtx(0);
-         if (i3wk(v0) > 0) {
+         if (vd(v0).info > 0) {
             /* COARSEN SIDE */
-            nfail = collapse1(sind,0,ntdel,tdel,nsdel,sdel);
-            if (nfail < 0) {
-               *log << "#Warning: side collapse failed sind v0 v1:" << sind << ' ' << sd(sind).vrtx(0) <<  ' ' << sd(sind).vrtx(1) << std::endl;
-            }
+            collapse(sind,0);
+            vd(v0).info = -1;
             ++cnt;
-            i3wk(v0) = -1;
          }
       }
    }
    
    
    for(i=0;i<nvrtx;++i) {
-      if (i3wk(i) > 0) {
+      if (vd(i).info > 0) {
          tind = vd(i).tri;
          for(j=0;j<3;++j) {
             if (td(tind).vrtx(j) == i) {
                break;
             }
          }
-         assert(j < 3);
          j = (j+1)%3;
          sind = td(tind).side(j);
          node = (1+td(tind).sign(j))/2;
-         nfail = collapse1(sind,node,ntdel,tdel,nsdel,sdel);
+         collapse(sind,node);
+         vd(v0).info = -1;
          ++cnt;
-         if (nfail < 0) {
-            *log << "#Warning: side collapse failed sind v0 v1:" << sind << ' ' << sd(sind).vrtx(0) <<  ' ' << sd(sind).vrtx(1) << std::endl;
-         }
-         i3wk(v0) = -1;
       }
    }
    
-
-   /* DELETE LEFTOVER VERTICES */
-   /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
-   for(i=0;i<nvrtx;++i) 
-      if (vd(i).info == -3) 
-         dltvrtx(i);
-   
-   /* FIX BOUNDARY CONDITION POINTERS */
-   for(i=0;i<nvbd;++i)
-      if (vbdry(i)->v0 >= nvrtx) vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
-   
-   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i)
-      for(j=sbdry(i)->nel-1;j>=0;--j) 
-         if (sd(sbdry(i)->el(j)).info == -3) 
-            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
-                        
-   /* CLEAN UP SIDES */
-   /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-   /* SINFO > NSIDE WILL STORE MOVEMENT HISTORY */
-   for(i=0;i<nside;++i) 
-      if (sd(i).info == -3) dltsd(i);
-   
-   /* FIX BOUNDARY CONDITION POINTERS */
-   for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry(i)->nel;++j) 
-         if (sbdry(i)->el(j) >= nside) 
-            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
-
-   for (i=0;i<nsbd;++i) {
-      sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
-   }
-      
-   bdrylabel();
-   
-   /* CLEAN UP DELETED TRIS */
-   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
-   /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
-   for(i=0;i<ntri;++i)
-      if (td(i).info == -3) dlttri(i);
+   cleanup_after_adapt();
    
    *log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
    for(i=0;i<nsbd;++i)

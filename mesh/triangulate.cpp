@@ -33,22 +33,21 @@ void mesh::triangulate(int nsd) {
    FLT det,s,t;
 
    /* CREATE VERTEX LIST */
-   /* STORE IN NNBOR SINCE THIS IS UNUSED RIGHT NOW */
    nv = 0;
    for(i=0;i<nsd;++i) {
-      sind = abs(i1wk(i)) -1;
-      dir = (1 -SIGN(i1wk(i)))/2;
+      sind = abs(i2wk_lst1(i)) -1;
+      dir = (1 -SIGN(i2wk_lst1(i)))/2;
       sd(sind).tri(dir) = -1;
-      i2wk(nv++) = sd(sind).vrtx(dir);
+      i2wk_lst2(nv++) = sd(sind).vrtx(dir);
       assert(nv < maxvst-1);
    }
 
    /* SETUP SIDE POINTER INFO */
    for(i=0;i<nv;++i)
-      vd(i2wk(i)).info = -1;
+      vd(i2wk_lst2(i)).info = -1;
       
    for(i=0;i<nsd;++i) {
-      sind = abs(i1wk(i)) -1;
+      sind = abs(i2wk_lst1(i)) -1;
       v[0] = sd(sind).vrtx(0);
       v[1] = sd(sind).vrtx(1);
       if (v[1] > v[0]) {
@@ -77,8 +76,8 @@ void mesh::triangulate(int nsd) {
    while(bgn < end) {
       nsidebefore = nside;
       for(sind2=bgn;sind2<end;++sind2) {
-         sind = abs(i1wk(sind2)) -1;
-         dir =  (1 -SIGN(i1wk(sind2)))/2;
+         sind = abs(i2wk_lst1(sind2)) -1;
+         dir =  (1 -SIGN(i2wk_lst1(sind2)))/2;
          
          if (sd(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
          
@@ -94,7 +93,7 @@ void mesh::triangulate(int nsd) {
          
          /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
          for(i=0;i<nv;++i) {
-            vtry = i2wk(i);
+            vtry = i2wk_lst2(i);
             if (vtry == v[0] || vtry == v[1]) continue;
       
             for(n=0;n<ND;++n)
@@ -134,9 +133,9 @@ void mesh::triangulate(int nsd) {
                }
                
                for(sck=0;sck<ntest;++sck) {
-                  stest = abs(i1wk(sck))-1;
+                  stest = abs(i2wk_lst1(sck))-1;
                   if (stest == sind) continue;
-                  dirck =  (1 -SIGN(i1wk(sck)))/2;
+                  dirck =  (1 -SIGN(i2wk_lst1(sck)))/2;
                   v2 = sd(stest).vrtx(dirck);
                   v3 = sd(stest).vrtx(1-dirck);
                   if (v2 == minv || v3 == minv) {
@@ -210,7 +209,7 @@ vtry_failed:continue;
             for(i=0;i<ngood-1;++i) {
                for(j=i+1;j<ngood;++j) {
       
-                  /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN i2wk */
+                  /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN i2wk_lst2 */
                   if (good[i] == good[j]) {
                      good[j] = good[ngood-1];
                      --ngood;
@@ -238,12 +237,9 @@ vtry_failed:continue;
       bgn = end;
       end += nside -nsidebefore;
       for(i=nsidebefore;i<nside;++i)
-         i1wk(bgn+i-nsidebefore) = -(i + 1);
+         i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
    }
-   
-   i1wk = -1;
-   i2wk = -1;
-      
+         
    return;
 
 }

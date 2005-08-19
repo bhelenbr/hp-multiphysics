@@ -76,9 +76,9 @@ sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, 
 
 void r_mesh::get_scratch_pointers() {
    mesh::get_scratch_pointers();
-   Array<TinyVector<FLT,2>,1> tmp1((TinyVector<FLT,2> *)(&fscr1(maxvst)+1), maxvst, neverDeleteData);
+   Array<TinyVector<FLT,2>,1> tmp1((TinyVector<FLT,2> *)(&fscr1(maxvst-1)+1), maxvst, neverDeleteData);
    fscr2.reference(tmp1);
-   Array<TinyVector<FLT,2>,1> tmp2((TinyVector<FLT,2> *)(&fscr2(maxvst)(1)+1), maxvst, neverDeleteData);
+   Array<TinyVector<FLT,2>,1> tmp2((TinyVector<FLT,2> *)(&fscr2(maxvst-1)(1)+1), maxvst, neverDeleteData);
    fscr3.reference(tmp2);
 }
 

@@ -163,7 +163,7 @@ FLT mesh::angle(int v0, int v1, int v2) const {
    
 }
 
-FLT mesh::tradius(int tind) const {
+FLT mesh::circumradius(int tind) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2,xcen,ycen;
    FLT dx1,dy1,dx2,dy2,area;
@@ -193,7 +193,7 @@ FLT mesh::tradius(int tind) const {
    return(sqrt(xcen*xcen +ycen*ycen));
 }
 
-void mesh::tcenter(int tind, TinyVector<FLT,2> &x) const {
+void mesh::circumcenter(int tind, TinyVector<FLT,2> &x) const {
    FLT alpha,beta;
    FLT xmid1,ymid1,xmid2,ymid2;
    FLT dx1,dy1,dx2,dy2,area;
@@ -222,6 +222,27 @@ void mesh::tcenter(int tind, TinyVector<FLT,2> &x) const {
    
    return;
 }
+
+FLT mesh::inscribedradius(int tind) const {
+   int v0,v1,v2;
+   FLT dx1,dy1,dx2,dy2,area,perim;
+   
+   v0 = td(tind).vrtx(0);
+   v1 = td(tind).vrtx(1);
+   v2 = td(tind).vrtx(2);
+   
+   dx1 =  (vrtx(v0)(0)-vrtx(v2)(0));
+   dy1 =  (vrtx(v0)(1)-vrtx(v2)(1));
+   dx2 =  (vrtx(v1)(0)-vrtx(v0)(0));
+   dy2 =  (vrtx(v1)(1)-vrtx(v0)(1));
+   
+   area = (dx1*dy2 -dy1*dx2);
+   perim = sqrt(dx1*dx1 +dy1*dy1) +sqrt(dx2*dx2 +dy2*dy2)
+      +sqrt((dx1+dx2)*(dx1+dx2) +(dy1+dy2)*(dy1+dy2));
+      
+   return(area/perim);
+}
+
 
 FLT mesh::aspect(int tind) const {
    int v0,v1,v2;

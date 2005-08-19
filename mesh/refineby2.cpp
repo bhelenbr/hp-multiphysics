@@ -12,9 +12,7 @@
 #include <assert.h>
 
 void mesh::refineby2(const class mesh& inmesh) {
-   int i,j,k,n,sind,tind,v0,v1,count,snum,vnear,err,initialsidenumber;
-   int ntdel, tdel[maxlst];
-   int nsdel, sdel[maxlst];
+   int i,j,n,sind,tind,v0,v1,count,vnear,err,initialsidenumber;
    TinyVector<FLT,ND> xpt;
    
    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
@@ -51,7 +49,7 @@ void mesh::refineby2(const class mesh& inmesh) {
       qtree.addpt(nvrtx);
       qtree.nearpt(nvrtx,vnear);
       tind = findtri(vrtx(nvrtx),vnear);
-      err = insert(tind,nvrtx,0.0,ntdel,tdel,nsdel,sdel);
+      err = insert(nvrtx,tind);
       ++nvrtx;
    }
 
@@ -62,18 +60,7 @@ void mesh::refineby2(const class mesh& inmesh) {
       for(j=0;j<initialsidenumber;++j) {
          sind = sbdry(i)->el(j);
          sbdry(i)->mvpttobdry(j,0.5,vrtx(nvrtx));
-         
-         tind = sd(sind).tri(0);
-         snum = -2;
-         for(k=0;k<3;++k) {
-            if (td(tind).side(k) == sind) {
-               snum = k;
-               break;
-            }
-         }
-         assert(snum > -2);
-         qtree.addpt(nvrtx);
-         bdry_insert(tind,snum,nvrtx,ntdel,tdel,nsdel,sdel);
+         bdry_insert(nvrtx,sind);
          ++nvrtx;
       }
    }

@@ -15,160 +15,91 @@
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
-extern int nslst;  // (THIS NEEDS TO BE FIXED)
+#ifdef DEBUG_ADAPT
+extern int adapt_count;
+extern char adapt_file[100];
+#endif
 
-/* SUMMARY OF VARIABLE USAGE
-i1wk = not used!
-nslst is the numer of sides needing coarsening 
-i2wk = ordered list of sides requiring modification
-i3wk = pointer from side into i2wk list
-sdel[] = sides deleted during local operation
-tdel[] = triangles affected by local operation
-td[].info = -3 deleted tri, -1 no refinement needed, +n sides of triangle needing coarsening
-td[].info = i < ntri stores index of original tri or tinfo = -2 touched, tinfo = -1 for untouched, i > ntri stores movment location
-sd[].info = during process: -3 deleted sides, -2 touched sides, -1 untouched sides
-sd[].info = after clean-up: i < nside -2, -1 or index of original, i > nside movement location
-vd[].info = during process: -3 deleted vrtx, -2 special vrtx, -1 untouched vertex
-vd[].info = after cleanup: i < nvrtx: > 0 original location, i > nvrtx movement location
-*/
+extern int nlst; 
 
-void mesh::yaber(FLT tolsize, int yes_swap, FLT swaptol) {
-   int i,j,tind,sind,nfail,v0,v1,cnt;
-   int ntdel,tdel[maxlst];
-   int nsdel,sdel[maxlst];
+void mesh::yaber(FLT tolsize) {
+   int i,j,tind,sind,v0,cnt,endpt;
+   FLT minvl;
 
+   /* TO ADJUST FOR INSCRIBED RADIUS */
+   tolsize *= 6./sqrt(3.);
+   
    /* SET UP FLTWK */
-   fltwkyab();
-   
-   cnt = 0;
-   
-   /* NEED TO INITIALIZE TO ZERO TO KEEP TRACK OF DELETED TRIS (-3) */
-   /* ALSO TO DETERMINE TRI'S ON BOUNDARY OF COARSENING REGION */
-   for(i=0;i<ntri;++i)
-      td(i).info = -1;
-
-   /* KEEPS TRACK OF DELETED SIDES = -3, TOUCHED SIDES =-2, UNTOUCHED SIDES =-1 */
-   for(i=0;i<nside;++i)
-      sd(i).info = -1;
+   nlst = 0;
+   for(i=0;i<ntri;++i) {
+      if (td(i).info&TDLTE) continue;
+      minvl = vlngth(td(i).vrtx(0));
+      minvl = MIN(minvl,vlngth(td(i).vrtx(1)));
+      minvl = MIN(minvl,vlngth(td(i).vrtx(2)));
+      fscr1(i) = minvl/inscribedradius(i);
+      if (fscr1(i) > tolsize) putinlst(i);
+   }
       
-   /* VINFO TO KEEP TRACK OF UNTOUCHED (-1), SPECIAL VERTICES (-2), DELETED VERTICES (-3) */
-   for(i=0;i<nvrtx;++i)
-      vd(i).info = -1;
-      
-   /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
+   /* MARK BOUNDARY VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
-      v0 = sd(sbdry(i)->el(0)).vrtx(0);
-      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)).vrtx(1);
-      vd(v0).info = -2;
-      vd(v1).info = -2;
+      for(j=0;j<sbdry(i)->nel;++j) {
+         sind = sbdry(i)->el(j);
+         v0 = sd(sind).vrtx(0);
+         td(v0).info |= VSPEC;
+      }      
    }
    
-   for(i=0;i<nvbd;++i)
-      vd(vbdry(i)->v0).info = -2;
-      
-   /* SWAP SIDES AND MARK SWAPPED SIDES TOUCHED */
-   if (yes_swap) swap(swaptol);
-   
-   /* CLASSIFY SIDES AS ACCEPTED OR UNACCEPTED */
-   nslst = 0;
-   for(i=0;i<nside;++i) {
-      if (fscr1(i) > tolsize) {
-         td(sd(i).tri(0)).info += 1;
-         td(MAX(sd(i).tri(1),-1)).info += 1;
-         putinlst(i);
-      }
-   }
-
-   td(-1).info = -1;
-   
+   cnt = 0;
    /* BEGIN COARSENING ALGORITHM */
-   while (nslst > 0) {
-      sind = -1;
-      for(i=nslst-1;i>=0;--i) {  // START WITH LARGEST SIDE TO DENSITY RATIO
-         if (td(sd(i2wk(i)).tri(0)).info +td(MAX(sd(i2wk(i)).tri(1),-1)).info == 4) continue;
-         sind = i2wk(i);
-         break;
-      }
-      assert(sind != -1);
-   
-      /* COLLAPSE EDGE */
-      nfail = collapse(sind,ntdel,tdel,nsdel,sdel);
-      ++cnt;
-            
-      for(i=0;i<nsdel;++i) {
-         if (i3wk(sdel[i]) > -1) tkoutlst(sdel[i]);
-      }
-         
-      if (nfail < 0) {
-         *log << "#Warning: side collapse failed" << sind << std::endl;
-         /* MARK SIDE AS ACCEPTED AND MOVE ON */
-         for(i=0;i<2;++i) {
-            tind = sd(sind).tri(i);
-            if (tind < 0) continue;
-            if (td(tind).info > -1) --td(tind).info;
+   while (nlst > 0) {
+      for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
+         for(j=0;j<3;++j) {
+            tind = td(sd(i).info).tri(j);
+            if (tind < 0 || vd(tind).info == -1)  goto TFOUND;
          }
+      }
+      
+      TFOUND:
+      tind = sd(i).info;
+      if (td(td(tind).vrtx(j)).info&VSPEC) {
+         tkoutlst(tind);
          continue;
       }
-         
-      /* RECONSTRUCT AFFECTED TINFO ARRAY */
-      for(i=0;i<ntdel;++i) {
-         tind = tdel[i];
-         td(tind).info = -1;
-         for(j=0;j<3;++j) {
-            sind = td(tind).side(j);
-            if (i3wk(sind) > -1) tkoutlst(sind);
-            fltwkyab(sind);
-            if (fscr1(sind) > tolsize) {
-               putinlst(sind);
-               ++td(tind).info;
-            }
+
+      sind = td(tind).side((j+1)%3);
+      endpt = (1+td(tind).sign((j+1)%3))/2;
+      
+      /* REMOVE TRIANGLES THAT WILL BE DELETED */
+      tind = sd(sind).tri(0);
+      if (vd(tind).info > -1) tkoutlst(tind);
+      tind = sd(sind).tri(1);
+      if (vd(tind).info > -1) tkoutlst(tind);
+   
+      /* COLLAPSE EDGE */
+      collapse(sind,endpt);
+      ++cnt;
+      
+      /* RECLASSIFY AFFECTED TRIANGLES */
+      for(i=0;i<i2wk_lst1(-1);++i) {
+         tind = i2wk_lst1(i);
+         if (vd(tind).info > -1) {
+            tkoutlst(tind);
+            minvl = vlngth(td(tind).vrtx(0));
+            minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
+            minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
+            fscr1(tind) = minvl/inscribedradius(tind);
+            if (fscr1(tind) > tolsize) putinlst(tind);
          }
       }
+      
+#ifdef DEBUG_ADAPT
+      std::cout << "collapsed " << sind << " endpt " << endpt << std::endl;
+      number_str(adapt_file,"adapt",adapt_count++,5);
+      output(adapt_file,ftype::grid);
+#endif
    }
-   
-   /* DELETE LEFTOVER VERTICES */
-   /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */
-   for(i=0;i<nvrtx;++i) 
-      if (vd(i).info == -3) 
-         dltvrtx(i);
-   
-   /* FIX BOUNDARY CONDITION POINTERS */
-   for(i=0;i<nvbd;++i)
-      if (vbdry(i)->v0 >= nvrtx) 
-         vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
-   
-   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i)
-      for(j=sbdry(i)->nel-1;j>=0;--j) 
-         if (sd(sbdry(i)->el(j)).info == -3) 
-            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
-                        
-   /* CLEAN UP SIDES */
-   /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-   /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
-   for(i=0;i<nside;++i) 
-      if (sd(i).info == -3) dltsd(i);
-         
-   /* FIX BOUNDARY CONDITION POINTERS */
-   for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry(i)->nel;++j) 
-         if (sbdry(i)->el(j) >= nside) 
-            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
 
-   for (i=0;i<nsbd;++i) {
-      sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
-   }
-      
-   bdrylabel();
-   
-   /* CLEAN UP DELETED TRIS */
-   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
-   /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
-   for(i=0;i<ntri;++i)
-      if (td(i).info == -3)  dlttri(i);
-      
    *log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
 
    return;
@@ -233,45 +164,136 @@ void mesh::checkintegrity() {
    return;
 }
 
+void mesh::bdry_yaber(FLT tolsize) {
+   int sind,endpt,v0,v1,count;
+   int el, nel, pel, next, sindprev, sindnext, saffect;
+
+   /* COARSEN FIRST BOUNDARIES */
+   count = 0;
+   for(int bnum=0;bnum<nsbd;++bnum) {
+      if (!sbdry(bnum)->is_frst()) {
+         sbdry(bnum)->master_slave_prepare();
+         continue;
+      }
+      
+      nlst = 0;
+      for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
+         sind = sbdry(bnum)->el(indx);
+         if (td(sind).info&SDLTE) continue;
+         fscr1(sind) = stgt_to_actual(sind);
+         if (fscr1(sind) > tolsize) {
+            putinlst(sind);
+         }
+      }
+      
+      /* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
+      sbdry(bnum)->sndsize() = 1;
+      while (nlst > 0) {
+         // START WITH LARGEST SIDE LENGTH RATIO
+         sind = sd(nlst-1).info;
+         el = getbdryel(sd(sind).tri(1));
+         
+         /* FIND ADJACENT NON-DELETED SIDES */
+         nel = -1;
+         for(next = el+1;next<sbdry(bnum)->nel;++next) {
+            if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) {
+               nel = next;
+               sindnext = sbdry(bnum)->el(nel);
+               break;
+            }
+         }
+         pel = -1;
+         for(next = el-1;next>=0;--next) {
+            if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) {
+               pel = next;
+               sindprev = sbdry(bnum)->el(pel);
+               break;
+            }
+         }
+         
+         /* PICK ENDPT */
+         v0 = sd(sind).vrtx(0);
+         v1 = sd(sind).vrtx(1);
+
+         if (td(v0).info&VSPEC && td(v1).info&VSPEC) {
+            tkoutlst(sind);
+            continue;
+         }
+         else if (td(v0).info&VSPEC) {
+            endpt = 1;
+            saffect = sindnext;
+         }
+         else if (td(v1).info&VSPEC) {
+            endpt = 0;
+            saffect = sindprev;
+         }
+         else {
+            /* PICK MORE ARPROPRIATE VERTEX TO DELETE */
+            if (fscr1(sindprev) > fscr1(sindnext)) {
+               endpt = 0;
+               saffect = sindprev;
+            }
+            else {
+               endpt = 1;
+               saffect = sindnext;
+            }
+         }
+         
+         collapse(sind,endpt);
+         tkoutlst(sind);
+         
+         /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
+         sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = el;
+         sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = endpt;
+         
+         /* UPDATE AFFECTED SIDE */
+         if (vd(saffect).info > -1) tkoutlst(saffect);
+         fscr1(saffect) = stgt_to_actual(saffect);
+         if (fscr1(saffect) > tolsize) putinlst(saffect);
+         ++count;
+   #ifdef DEBUG_ADAPT
+         std::cout << "collapsed boundary side " << sind << " endpt " << endpt << std::endl; 
+         number_str(adapt_file,"adapt",adapt_count++,5);
+         output(adapt_file,ftype::grid);
+   #endif            
+      }
+      sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
+   }
+   *log << "#Boundary coarsening finished, " << count << " sides coarsened" << std::endl;
+   return;
+}
+
+void mesh::bdry_yaber1() {
+   int i,el,endpt,sind,sndsize;
+   
+   for(int bnum=0;bnum<nsbd;++bnum) {
+      
+      if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
+      
+      sbdry(bnum)->master_slave_wait();
+      
+      sndsize = sbdry(bnum)->ircvbuf(0,0);
+      
+      for(i=1;i<sndsize;i+=2) {
+         el = sbdry(bnum)->nel -1 -sbdry(bnum)->ircvbuf(0,i);
+         endpt = 1 -sbdry(bnum)->ircvbuf(0,i+1);
+         sind = sbdry(bnum)->el(el);
+         collapse(sind,endpt);
+#ifdef DEBUG_ADAPT
+         number_str(adapt_file,"adapt",adapt_count++,5);
+         output(adapt_file,ftype::grid);
+#endif
+      }
+   }
+   return;
+}
+
+
 void mesh::checkintwk() const {
    int i;
    
    for(i=0;i<maxvst;++i)
       if (i1wk(i) != -1) *log << "failed intwk1 check" << i << i1wk(i) << std::endl;
-      
-   for(i=0;i<maxvst;++i)
-      if (i2wk(i) != -1) *log << "failed intwk2 check" << i << i2wk(i) << std::endl;
-   
-   for(i=0;i<maxvst;++i)
-      if (i3wk(i) != -1) *log << "failed intwk3 check" << i << i3wk(i) << std::endl;
    
    return;
 }
-
-void mesh::fltwkyab(int i) {
-   FLT dif,av;
-   
-   /* CALCULATE SIDE LENGTH RATIO FOR YABER */
-   /* HAS TO BE A CONTINUOUS FUNCTION SO COMMUNICATION BDRY'S ARE COARSENED PROPERLY */
-   /* OTHERWISE 2 BDRY SIDES CAN HAVE SAME EXACT FLTWK (NOT SURE WHICH TO DO FIRST) */
-   /*(THIS ESSENTIALLY TAKES THE MINUMUM) */
-   dif = 0.5*(vlngth(sd(i).vrtx(0)) -vlngth(sd(i).vrtx(1)));
-   av = 0.5*(vlngth(sd(i).vrtx(0)) +vlngth(sd(i).vrtx(1)));
-   fscr1(i) = (av -(dif*dif/(0.1*av +fabs(dif))))/distance(sd(i).vrtx(0),sd(i).vrtx(1));
-   
-   return;
-}
-
-void mesh::fltwkyab() {
-   int i;
-   
-   for(i=0;i<nside;++i)
-      fltwkyab(i);
-   return;
-}
-      
-      
-      
-   
-   
-

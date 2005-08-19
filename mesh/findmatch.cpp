@@ -203,9 +203,7 @@ void mesh::setpartition(int nparts) {
    
    for(i=0;i<ntri;++i)
       td(i).info = i1wk(i);
-      
-   scratch.checkin();
-            
+                  
    return;
 }
 #endif
@@ -227,7 +225,7 @@ void mesh::partition(class mesh& xin, int npart) {
       }
    }
    
-   printf("New mesh with %d of %d tris\n",ntri,xin.ntri);
+   *log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
    
    if (!initialized) {
       maxvst = 3*ntri;
@@ -287,7 +285,7 @@ void mesh::partition(class mesh& xin, int npart) {
          v0 = sd(i).vrtx(0);
          for(n=0;n<3;++n)
             if (i1wk(xin.td(tind).vrtx(n)) == v0) break;
-         if (n==3) printf("error in partitioning\n");
+         if (n==3) *log << "error in partitioning\n";
          n = (n+2)%3;
 
          indx = xin.td(tind).tri(n);
@@ -345,12 +343,10 @@ void mesh::partition(class mesh& xin, int npart) {
          sbdry(sd(i).info)->el(sbdry(sd(i).info)->nel++) = i;
    }
    
-   /* i1wk,2 SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
+   /* i1wk SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
    for(i=0;i<xin.maxvst;++i)
       i1wk(i) = -1;
-   for(i=0;i<xin.maxvst;++i)
-      i2wk(i) = -1;
-    
+
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
       sbdry(i)->reorder();

@@ -173,7 +173,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.clear();
       keyword = "tolerance";
       data.str(input[keyword]);
-      if (!(data >> tolerance)) tolerance = 0.6; 
+      if (!(data >> tolerance)) tolerance = 2.2; 
    }
    *log << "#tolerance: " << tolerance << std::endl;
    data.clear();
@@ -221,7 +221,6 @@ template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
 
    for(i = 1; i< ngrid; ++i) {
       number_str(name,fname,i,1);
-      grd[i].setbcinfo();
       grd[i].checkintegrity();
       grd[i].output(name,ftype::grid);
       strcat(name,"_fv_to_ct");
@@ -229,7 +228,6 @@ template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
       number_str(name,fname,i,1);
       strcat(name,"_cv_to_ft");
       grd[i].testconnect(name,cv_to_ft(i-1),&grd[i-1]);         
-      grd[i].setbcinfo();
    }
    
    return;
@@ -278,17 +276,16 @@ template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               grd[0].length1(mp_phase/3);
+               grd[0].msgload(mp_phase/3,grd[0].vlngth.data(),0,0,1);
                return(stay);
             case(1):
                grd[0].msgpass(mp_phase/3);
                return(stay);
             case(2):
-               return(static_cast<ctrl>(grd[0].length2(mp_phase/3)));
+               return(static_cast<ctrl>(grd[0].msgwait_rcv(mp_phase/3,grd[0].vlngth.data(),0,0,1)));
          }
-      case(2):
-         grd[0].adapt(tolerance);
-         return(stop);
+      default:
+         return(grd[0].adapt(excpt-2,tolerance));
    }
    
    *log << "control flow error: adapt" << std::endl;

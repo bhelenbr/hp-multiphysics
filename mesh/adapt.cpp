@@ -10,27 +10,78 @@
 #include "mesh.h"
 #include "boundary.h"
 
-extern int nslst;  // (THIS NEEDS TO BE FIXED)
+int nlst; 
 
-#define VDLTE 0x10
-#define VSPEC 0x01
-#define SDLTE 0x1000
-#define STOUC 0x0100
-#define TDLTE 0x100000
-#define TTOUC 0x010000
+block::ctrl mesh::adapt(int excpt, FLT tolsize) {
+   int i;
+#ifdef MPISRC
+   MPI_Status status;
+#endif
+
+   switch (excpt) {
+      case(0):         
+         setup_for_adapt();
+         return(block::advance);
+         
+      case(1):
+         /* SWAP EDGES */
+         swap(1.0e-10); 
+         return(block::advance);
+         
+      case(2):         
+         bdry_yaber(tolsize);
+         return(block::advance);
+
+      case(3):
+         for(i=0;i<nsbd;++i) 
+            sbdry(i)->master_slave_transmit();
+         return(block::advance);
+         
+      case(4):
+         /* COARSEN MATCHING BOUNDARIES */
+         bdry_yaber1();
+         return(block::advance);
+         
+      case(5):
+         /* INTERIOR SIDE COARSENING */
+         yaber(tolsize);
+         return(block::advance);
+         
+      case(6):
+         bdry_rebay(tolsize);
+         return(block::advance);
+         
+      case(7):
+         for(i=0;i<nsbd;++i) 
+            sbdry(i)->master_slave_transmit();
+         return(block::advance);
+         
+      case(8):
+         bdry_rebay1();
+         return(block::advance);
+         
+      case(9):
+         rebay(tolsize);
+         return(block::advance);
+         
+      case(10):
+         cleanup_after_adapt();
+         return(block::stop);
+   }
+ 
+   return(block::stop);
+}
+
 
 void mesh::setup_for_adapt() {
-   int i,v0,v1;
+   int i, v0, v1;
    
-   /* For vertices 0 = untouched, 1 = special, 2 = deleted */
+   /* SET-UP ADAPTION TRACKING STUFF */
+   /* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
    /* For sides 0 = untouced, 1 = touched, 2 = deleted */
-   /* For triangles 0 = untouched, 1 = touched, 2 = deleted */
+   /* For triangles 0 = untouched, 1 = touched, 2 = deleted, 3 = searched */
    for(i=0;i<maxvst;++i)
       td(i).info = 0;
-
-   /* List of entities needing refinement  */
-   for(i=0;i<maxvst;++i)
-      sd(i).info = -1;
       
    /* Back reference into list of entities needing refinement */
    for(i=0;i<maxvst;++i)
@@ -40,180 +91,126 @@ void mesh::setup_for_adapt() {
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
       v0 = sd(sbdry(i)->el(0)).vrtx(0);
-      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1).vrtx(1);
+      v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)).vrtx(1);
       td(v0).info |=  VSPEC;
       td(v1).info |=  VSPEC;
    }
    
    for(i=0;i<nvbd;++i)
       td(vbdry(i)->v0).info |= VSPEC;
-            
-   for(i=0;i<nside;++i)
       
-         
-   return;
-}
-
-/* NEXT STEP IS TO SWAP EDGES */
-
-/* THEN COARSEN BOUNDARIES */
-block::ctrl mesh::coarsen_bdry(int excpt,FLT tolsize) {
-   int i,tind,sind,endpt;
-   int ntdel,tdel[maxlst];
-   int nsdel,sdel[maxlst];
-   
-   
-   switch (excpt) {
-      case(0):
-         mp_phase = 0;
-         
-         for(int bnum=0;bnum<nsbd;++bnum) {
-            if (!sbdry(bnum)->is_frst()) {
-               sbdry(bnum)->master_slave_prepare();
-               continue;
-            }
-            
-            nslst = 0;
-            for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
-               sind = sbdry(bnum)->el(indx);
-               fscr1(sind) = side_lngth_ratio(sind);
-               if (fscr1(sind) < tolsize) {
-                  putinlst(sind);
-               }
-            }
-            
-            sbdry(bnum)->sndsize() = 0;
-            while (nslst > 0) {
-               // START WITH LARGEST SIDE LENGTH RATIO
-               sind = i2wk(nslst-1);
-               el = getbdryel(sd(sind).tri(1));
-               
-               /* COLLAPSE EDGE */
-               /* ASSUME COLLAPSE WILL MARK SIDES AS DELETED OR AFFECTED */
-               endpt = collapse(sind,ntdel,tdel,nsdel,sdel);
-               
-               tkoutlst(sind);
-               if (endpt < 0) {
-                  *log << "#Warning: boundary side collapse failed" << sind << std::endl;
-                  continue;
-               }
-               /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
-               sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = el;
-               sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = endpt;
-               
-               /* RECACULCULATE SIDE RATIO FOR AFFECTED SIDES */
-               /* FIND ADJACENT NON-DELETED SIDE */
-               if (endpt > 0) {
-                  for(next = el+1;next<sbdry(bnum)->nel;++next) {
-                     if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) goto found;
-                  }
-                  continue;
-               }
-               else {
-                  for(next = el-1;next>=0;--next) {
-                     if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) goto found;
-                  }
-                  continue;
-               }
-               
-               found: 
-               sind = sbdry(bnum)->el(next);
-               if (i3wk(sind) > -1) tkoutlst(sind);
-               fscr1(sind) = side_lngth_ratio(sind);
-               if (fscr1(sind) > tolsize) putinlst(sind);
-            }
-         }
-         return(block::advance);
-
-      case(1):
-         for(int i=0;i<nsbd;++i) 
-            sbdry(i)->master_slave_transmit();
-         
-         return(block::advance);
-         
-      case(2):
-         /* RECEIVE ADAPTATION INFO FOR COMM BOUNDARIES AND ADAPT SECOND SIDES */
-         for(int i=0;i<nsbd;++i) 
-            sbdry(i)->master_slave_wait();
-            
-         int j,k,m,count,offset,sind;
-#ifdef MPISRC
-         MPI_Status status;
-#endif
-
-         for(int bnum=0;bnum<nsbd;++bnum) {
-            
-            if (sbdry(bnum)->is_frst()) continue;
-            
-            sbdry(bnum)->master_slave_wait();
-            
-            
-            
-            /* ASSUMES REVERSE ORDERING OF SIDES */
-            /* WON'T WORK IN 3D */
-            
-            
-            
-            /* RELOAD FROM BUFFER */
-            /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-            /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */
-            count = 0;
-            for(j=0;j<nel;++j) {
-               sind = el(j);
-               offset = x.sd(sind).vrtx(0)*stride;
-               for (k=bgn;k<=end;++k)
-                  base[offset+k] = fsndbuf(count++);
-            }
-            offset = x.sd(sind).vrtx(1)*stride;
-            for (k=bgn;k<=end;++k)
-               base[offset+k] = fsndbuf(count++);
-            
-            for(m=0;m<nlocal_match;++m) {            
-               count = 0;
-               for(j=nel-1;j>=0;--j) {
-                  sind = el(j);
-                  offset = x.sd(sind).vrtx(1)*stride;
-                  for (k=bgn;k<=end;++k) 
-                     base[offset+k] += static_cast<FLT *>(local_rcv_buf[m])[count++];
-               }
-               offset = x.sd(sind).vrtx(0)*stride;
-               for (k=bgn;k<=end;++k) 
-                     base[offset+k] += static_cast<FLT *>(local_rcv_buf[m])[count++];            
-            }
-            
-
-         #ifdef MPISRC
-            /* MPI PASSES */
-            for(m=0;m<nmpi_match;++m) {
-               MPI_Wait(&mpi_rcvrqst[m], &status);
-               count = 0;
-               for(j=nel-1;j>=0;--j) {
-                  sind = el(j);
-                  offset = x.sd(sind).vrtx(1)*stride;
-                  for (k=bgn;k<=end;++k) 
-                     base[offset+k] += static_cast<FLT *>(mpi_rcv_buf[m])[count++];
-               }
-               offset = x.sd(sind).vrtx(0)*stride;
-               for (k=bgn;k<=end;++k) 
-                     base[offset+k] += static_cast<FLT *>(mpi_rcv_buf[m])[count++];
-            }
-         #endif
-
-            count = 0;
-            for(j=0;j<nel;++j) {
-               sind = el(j);
-               offset = x.sd(sind).vrtx(0)*stride;
-               for (k=bgn;k<=end;++k)
-                  base[offset+k] /= (1 +nlocal_match +nmpi_match);
-            }
-            offset = x.sd(sind).vrtx(1)*stride;
-            for (k=bgn;k<=end;++k)
-               base[offset+k] /= (1 +nlocal_match +nmpi_match);
-         }
-
    return;
 }
       
+      
+void mesh::cleanup_after_adapt() {
+   int i,j;
+   
+   /* DELETE LEFTOVER VERTICES */
+   /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */         
+   for(i=0;i<nvrtx;++i) {
+      if (td(i).info&VTOUC) vd(i).info = -2;
+      if (td(i).info&VDLTE) dltvrtx(i);
+   }
+   
+   /* FIX BOUNDARY CONDITION POINTERS */
+   for(i=0;i<nvbd;++i)
+      if (vd(vbdry(i)->v0).info > -1) 
+         vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
+   
+   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i)
+      for(j=sbdry(i)->nel-1;j>=0;--j) 
+         if (td(sbdry(i)->el(j)).info&SDLTE) 
+            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
+                        
+   /* CLEAN UP SIDES */
+   /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
+   /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
+   for(i=0;i<nside;++i) {
+      sd(i).info = -1;
+      if (td(i).info&SDLTE) dltsd(i);
+   }
+         
+   /* FIX BOUNDARY CONDITION POINTERS */
+   for(i=0;i<nsbd;++i)
+      for(j=0;j<sbdry(i)->nel;++j) 
+         if (sbdry(i)->el(j) >= nside) 
+            sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
+
+   for (i=0;i<nsbd;++i) {
+      sbdry(i)->reorder();
+      sbdry(i)->setupcoordinates();
+   }
+      
+   /* CLEAN UP DELETED TRIS */
+   /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
+   /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
+   for(i=0;i<ntri;++i)
+      if (td(i).info&TDLTE) dlttri(i);
+      
+   bdrylabel();
+         
+   cnt_nbor();
+      
+   return;
+}
+
+void mesh::putinlst(int sind) {
+   int i, temp, top, bot, mid;
+      
+   /* CREATE ORDERED LIST OF SIDES SMALLEST FSCR1 TO LARGEST */
+   bot = 0;
+   if (nlst > 0) {
+      top = 0;
+      bot = nlst-1;
+      if (fscr1(sind) < fscr1(sd(top).info)) {
+         bot = 0;
+      }
+      else if (fscr1(sind) > fscr1(sd(bot).info)) {
+         bot = nlst;
+      }
+      else {
+         while(top < bot-1) {
+            mid = top + (bot -top)/2;
+            if (fscr1(sind) > fscr1(sd(mid).info))
+               top = mid;
+            else
+               bot = mid;
+         }
+      }
+      for(i=nlst-1;i>=bot;--i) {
+         temp = sd(i).info;
+         sd(i+1).info = temp;
+         vd(temp).info = i+1;
+      }
+   }
+   sd(bot).info= sind;
+   vd(sind).info = bot;
+   ++nlst;
+
+   assert(nlst < maxvst -1);
+   
+   return;
+}
+
+void mesh::tkoutlst(int sind) {
+   int bgn,temp,i;
+   
+   bgn = vd(sind).info;
+   for(i=bgn+1;i<nlst;++i) {
+      temp = sd(i).info;
+      sd(i-1).info = temp;
+      vd(temp).info = i-1;
+   }
+   vd(sind).info = -1;
+   --nlst;
+   sd(nlst).info = -1;
+   
+   return;
+}
+
+
       
 
    

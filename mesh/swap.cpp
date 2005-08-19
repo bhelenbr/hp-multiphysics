@@ -12,10 +12,14 @@
 #include<assert.h>
 #include<float.h>
 
+#ifdef DEBUG_ADAPT
+extern int adapt_count;
+extern char adapt_file[100];
+#endif
+
 int mesh::swap(int sind, FLT tol) {
    int j,t1,t2,s1p,s2p,snum1,snum2,tind,sind1,v0,v1,vt1,vt2,dir;
          
-   
    t1 = sd(sind).tri(0);
    t2 = sd(sind).tri(1);
    
@@ -23,11 +27,9 @@ int mesh::swap(int sind, FLT tol) {
 
    for(snum1 = 0; snum1 < 3; ++snum1)
       if (td(t1).side(snum1) == sind) break;
-   assert(snum1 != 3);
 
    for(snum2 = 0; snum2 < 3; ++snum2)
       if (td(t2).side(snum2) == sind) break;
-   assert(snum2 != 3); 
    
    v0 = sd(sind).vrtx(0);
    v1 = sd(sind).vrtx(1);
@@ -37,14 +39,10 @@ int mesh::swap(int sind, FLT tol) {
    if (MIN(minangle(v0,v1,vt1),minangle(v1,v0,vt2)) >
        MIN(minangle(vt2,vt1,v0),minangle(vt1,vt2,v1)) -tol -10.0*EPSILON) return(0);
 
-#ifdef NEWADAPT
-   td(sind).info |= STOUC; /* MARK TOUCHED */
+   /* MARK TOUCHED */
+   td(sind).info |= STOUC; 
    td(t1).info |= TTOUC;
    td(t2).info |= TTOUC;
-#else
-   sd(sind).info = -2; /* MARK SIDE AS TOUCHED */
-#endif
-
    
    /* SWAP SIDE */
    sd(sind).vrtx(0) = vt2;
@@ -74,7 +72,6 @@ int mesh::swap(int sind, FLT tol) {
    if (tind > -1) {
       for(j=0;j<3;++j)
          if (td(tind).side(j) == sind1) break;
-      assert(j != 3);
       td(tind).tri(j) = t1;
    }
    
@@ -85,7 +82,6 @@ int mesh::swap(int sind, FLT tol) {
    if (tind > -1) {
       for(j=0;j<3;++j)
          if (td(tind).side(j) == sind1) break;
-      assert(j != 3);
       td(tind).tri(j) = t2;
    } 
 
@@ -99,6 +95,11 @@ int mesh::swap(int sind, FLT tol) {
    td(t2).side(s2p) = sind;  
    td(t1).sign(s1p) =  1;
    td(t2).sign(s2p) = -1;
+   
+#ifdef DEBUG_ADAPT
+   number_str(adapt_file,"adapt",adapt_count++,5);
+   output(adapt_file,ftype::grid);
+#endif
 
    return(1);
 }
@@ -122,8 +123,9 @@ void mesh::swap(FLT tol) {
    /* PERFORM EDGE SWAPPING */
    do {
       nswap = 0;
-      for(i=0;i<nside;++i)
+      for(i=0;i<nside;++i) {
          nswap += swap(i,tol);
+      }
       *log << "#Swap cycle finished: " << nswap << " sides swapped" << std::endl;
    } while(nswap > 0);
    

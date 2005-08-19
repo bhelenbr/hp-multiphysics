@@ -190,6 +190,13 @@ void side_bdry::reorder() {
 
    total = nel;
    
+   /* DON'T ASSUME wk INITIALIZED TO -1 */
+   for(i=0;i<nel;++i) {
+      sind = el(i);
+      x.i1wk(x.sd(sind).vrtx(0)) = -1;
+      x.i2wk(x.sd(sind).vrtx(1)) = -1;
+   }
+   
    /* STORE SIDE INDICES BY VERTEX NUMBER */
    for(i=0; i < nel; ++i) {
       sind = el(i);
@@ -241,7 +248,6 @@ void side_bdry::reorder() {
    for(i=0; i <total; ++i) {
       sind = el(i);
       x.i1wk(x.sd(sind).vrtx(1)) = -1;
-      x.i2wk(x.sd(sind).vrtx(0)) = -1;
    }
    
    if (count < total) {
