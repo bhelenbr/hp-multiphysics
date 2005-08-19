@@ -154,14 +154,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       vbdry(i)->v0 = i1wk(inmesh.vbdry(i)->v0);
    }
    
-   /* RESET i1wk */
-   for(i=0;i<inmesh.nsbd;++i) {
-      for(j=0;j<inmesh.sbdry(i)->nel;++j) {
-         sind = inmesh.sbdry(i)->el(j);
-         i1wk(inmesh.sd(sind).vrtx(0)) = -1;
-         i1wk(inmesh.sd(sind).vrtx(1)) = -1;
-      }
-   }
+
    
    treeinit();
 
@@ -173,8 +166,25 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    /****************************************************/         
    /* Boyer-Watson Algorithm to insert interior points */
    /****************************************************/
+   /* MARK BOUNDARY SO DON'T GET INSERTED */
+   /* FUNNY WAY OF MARKING SO CAN LEAVE i1wk initialized to -1 */
+   for(i=0;i<inmesh.nsbd;++i) {
+      for(j=0;j<inmesh.sbdry(i)->nel;++j) {
+         sind = inmesh.sbdry(i)->el(j);
+         i1wk(inmesh.sd(sind).vrtx(0)) = (-1)^VSPEC;
+         i1wk(inmesh.sd(sind).vrtx(1)) = (-1)^VSPEC;
+      }
+   }
+   
+/* FUNNY WAY OF MARKING */
+#if (((-1)^VPEC)&VPEC)
+#define NOT 
+#else
+#define NOT !
+#endif
+   
    for(i=0;i<inmesh.nvrtx;++i) {
-      if (i2wk(i) == 0) continue;
+      if (NOT(i1wk(i)&VSPEC)) continue;
       
       mindist = qtree.nearpt(inmesh.vrtx(i).data(),j);
       if (sqrt(mindist) < fscr1(i)) continue;
@@ -183,12 +193,12 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    }
    cnt_nbor();
    
-   /* RESET i2wk */
+   /* RESET i1wk */
    for(i=0;i<inmesh.nsbd;++i) {
       for(j=0;j<inmesh.sbdry(i)->nel;++j) {
          sind = inmesh.sbdry(i)->el(j);
-         i2wk(inmesh.sd(sind).vrtx(0)) = -1;
-         i2wk(inmesh.sd(sind).vrtx(1)) = -1;
+         i1wk(inmesh.sd(sind).vrtx(0)) = -1;
+         i1wk(inmesh.sd(sind).vrtx(1)) = -1;
       }
    }
    
@@ -206,59 +216,48 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 }
 
 
-int mesh::smooth_cofa(int niter) {
-   int iter,sind,i,j,n,v0,v1;
-      
-   for(i=0;i<nvrtx;++i)
-      vd(i).info = 0;
-      
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry(i)->nel;++j) {
-         sind = sbdry(i)->el(j);
-         vd(sd(sind).vrtx(0)).info = -1;
-         vd(sd(sind).vrtx(1)).info = -1;
-      }
-   }
-   
-   for(iter=0; iter< niter; ++iter) {
-      /* SMOOTH POINT DISTRIBUTION X*/
-      for(n=0;n<ND;++n) {
-         for(i=0;i<nvrtx;++i)
-            fscr1(i) = 0.0;
-   
-         for(i=0;i<nside;++i) {
-            v0 = sd(i).vrtx(0);
-            v1 = sd(i).vrtx(1);
-            fscr1(v0) += vrtx(v1)(n);
-            fscr1(v1) += vrtx(v0)(n);
-         }
-   
-         for(i=0;i<nvrtx;++i) {
-            if (vd(i).info == 0) {
-               vrtx(i)(n) = fscr1(i)/vd(i).nnbor;
-            }
-         }
-      }
-   }
-   
-   return(1);
-}
-
-void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
+block::ctrl mesh::coarsen2(int excpt, FLT factor, const class mesh &inmesh, FLT size_reduce) {
    int i;
-   
-   if (!initialized) {
-      allocate_duplicate(size_reduce,inmesh);
-   }      
-   copy(inmesh);
-   initvlngth();
-   for(i=0;i<nvrtx;++i)
-      vlngth(i) = factor*vlngth(i);
       
-   yaber(1.414);
-   qtree.reinit();  // REMOVES UNUSED QUADS
-   
-   return;
+   switch (excpt) {
+      case(0):    
+         if (!initialized) {
+            allocate_duplicate(size_reduce,inmesh);
+         }      
+         copy(inmesh);
+         initvlngth();
+         for(i=0;i<nvrtx;++i)
+            vlngth(i) = factor*vlngth(i);     
+         setup_for_adapt();
+         return(block::advance);
+
+      case(1):         
+         bdry_yaber(1.414);
+         return(block::advance);
+
+      case(2):
+         for(i=0;i<nsbd;++i) 
+            sbdry(i)->master_slave_transmit();
+         return(block::advance);
+         
+      case(3):
+         /* COARSEN MATCHING BOUNDARIES */
+         bdry_yaber1();
+         return(block::advance);
+         
+      case(4):
+         /* INTERIOR SIDE COARSENING */
+         yaber(1.414);
+         return(block::advance);
+         
+      case(5):
+         cleanup_after_adapt();
+         qtree.reinit();  // REMOVES UNUSED QUADS
+
+         return(block::stop);
+   }
+ 
+   return(block::stop);
 }
 
 void mesh::coarsen3() {

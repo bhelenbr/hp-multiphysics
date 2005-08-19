@@ -140,7 +140,7 @@ INSRT:
          vrtx(nvrtx)(n) = xpt(n);
 
 #ifdef DEBUG_ADAPT
-      *log << "Inserting interior side " << intrcnt << ' ';
+      *log << "Inserting interior side " << intrcnt << ' ' << adapt_count << ' ';
       for(n=0;n<ND;++n)
          *log << vrtx(nvrtx)(n) << ' ';
       *log << std::endl;
@@ -258,7 +258,12 @@ void mesh::bdry_rebay(FLT tolsize) {
          sbdry(bnum)->mvpttobdry(el,psi,vrtx(nvrtx));
          vlngth(nvrtx) = (1.-psi)*vlngth(sd(sind).vrtx(0)) +psi*vlngth(sd(sind).vrtx(1));
 
-         checkintegrity();
+#ifdef DEBUG_ADAPT
+         *log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
+         for(int n=0;n<ND;++n)
+            *log << vrtx(nvrtx)(n) << ' ';
+         *log << std::endl;
+#endif
          /* INSERT POINT */
          bdry_insert(nvrtx,sind);
          ++nvrtx;

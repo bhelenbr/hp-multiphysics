@@ -129,7 +129,7 @@ class mesh {
       void initvlngth();
       block::ctrl adapt(int excpt, FLT tolsize);
       int coarsen(FLT factor, const class mesh& xmesh);
-      void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+      block::ctrl coarsen2(int excpt, FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void coarsen3();
 
       /* UTILITIES FOR PARALLEL COMPUTATIONS */

@@ -68,6 +68,7 @@ int mesh::insert(int vnum, int tnum) {
    
    if (tnxt < 0) {
       i2wk_lst2(nskeep++) = sind;
+      i2wk_lst2(nskeep++) = dir;
       v0 = sd(sind).vrtx(dir);
       snum = (snum+1)%3;
    }
@@ -84,6 +85,7 @@ int mesh::insert(int vnum, int tnum) {
    }
    else {
       i2wk_lst2(nskeep++) = sind;
+      i2wk_lst2(nskeep++) = dir;
       v0 = sd(sind).vrtx(dir);
       snum = (snum+1)%3;
    }
@@ -97,6 +99,7 @@ int mesh::insert(int vnum, int tnum) {
       do  {
          if (tnxt < 0) {
             i2wk_lst2(nskeep++) = sind;
+            i2wk_lst2(nskeep++) = dir;
             v0 = sd(sind).vrtx(dir);
             snum = (snum+1)%3;
          }
@@ -120,6 +123,7 @@ int mesh::insert(int vnum, int tnum) {
          }
          else {
             i2wk_lst2(nskeep++) = sind;
+            i2wk_lst2(nskeep++) = dir;
             v0 = sd(sind).vrtx(dir);
             snum = (snum+1)%3;
          }
@@ -132,6 +136,8 @@ int mesh::insert(int vnum, int tnum) {
    /* RESET TSRCH FLAGS */
    for(i=0;i<ntdel;++i)
       td(i2wk_lst1(i)).info &= ~TSRCH;
+      
+   nskeep = nskeep >> 1;
          
    /*	CHECK THAT WE AREN'T INSERTING POINT VERY CLOSE TO BOUNDARY */
    for(i=0;i<nskeep;++i) {
@@ -162,21 +168,17 @@ int mesh::insert(int vnum, int tnum) {
    
    for(i=0;i<nskeep;++i) {
       tind = i2wk_lst1(i);
-      tnxt = i2wk_lst1(i+1);
-      sind = i2wk_lst2(i);
       td(tind).info &= TTOUC;
-      
-      /* CHECK SIDE DIRECTION  */
-      if (area(sind,vnum) > 0.0) 
-         dir = 0;
-      else 
-         dir = 1;
+
+      tnxt = i2wk_lst1(i+1);
+      sind = i2wk_lst2(i<<1);
+      dir = i2wk_lst2((i<<1) +1);
          
       /* CREATE NEW INFO */
-      v0 = sd(sind).vrtx(dir);
+      v0 = sd(sind).vrtx(1-dir);
       td(tind).vrtx(0) = v0;
       vd(v0).tri = tind;
-      v0 = sd(sind).vrtx(1-dir);
+      v0 = sd(sind).vrtx(dir);
       td(tind).vrtx(1) = v0;
       vd(v0).tri = tind;
       td(tind).vrtx(2) = vnum;
@@ -184,10 +186,10 @@ int mesh::insert(int vnum, int tnum) {
 
       /* SIDE 2 INFO */      
       td(tind).side(2) = sind;
-      td(tind).sign(2) = 1 -2*dir;
+      td(tind).sign(2) = -1 +2*dir;
       
-      sd(sind).tri(dir) = tind;
-      tin = sd(sind).tri(1-dir);
+      sd(sind).tri(1-dir) = tind;
+      tin = sd(sind).tri(dir);
       td(tind).tri(2) = tin;
       if (tin > -1) {
          for(j=0;j<3;++j) {
@@ -199,7 +201,7 @@ int mesh::insert(int vnum, int tnum) {
       }
          
       /* CREATE SIDE 0 */
-      v0 = sd(sind).vrtx(1-dir);
+      v0 = sd(sind).vrtx(dir);
       sind1 = i2wk_lst3(i);
       sd(sind1).tri(0) = tind;
       sd(sind1).vrtx(0) = v0;
@@ -226,81 +228,75 @@ int mesh::insert(int vnum, int tnum) {
 
 void mesh::bdry_insert(int vnum, int sind, int endpt) {
    int ntdel, nsdel, nskeep;
-   int i,j,tin,tind,v0,dir,tbdry;
-   int sct;
+   int sstart;
+   int i,j,tin,tind,tnxt,v0,dir;
    int snum, sind1;
    
    /* ADD POINT TO QUADTREE */
    qtree.addpt(nvrtx);
    td(vnum).info &= VTOUC;
    
-   /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES i2wk_lst1*/
-   /* SIDES ON BOUNDARY OF HOLE (SKEEP) i2wk_lst2 */
-   /* SIDES IN INTERIOR OF HOLE (SDEL) i2wk_lst3  */
+   /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
+   /* SIDES ON BOUNDARY OF HOLE (SKEEP) */
+   /* SIDES IN INTERIOR OF HOLE (SDEL) (STARTS AT HALFWAY THROUGH LIST) */
    ntdel = 0;
    nskeep = 0;
    nsdel = 0;
 
-   tbdry = sd(sind).tri(0);
+   tind = sd(sind).tri(0);
+   i2wk_lst1(ntdel++) = tind;
+   td(tind).info |= TSRCH;
    for(snum=0;snum<3;++snum)
-      if (td(tbdry).side(snum) == sind) break;
+      if (td(tind).side(snum) == sind) break;
+
+   sstart = sind;
+   v0 = sd(sind).vrtx(1);
+   snum = (snum+1)%3;
+   tnxt = td(tind).tri(snum);
+   sind = td(tind).side(snum);
+   dir = (1+td(tind).sign(snum))/2;
    
-   i2wk_lst3(nsdel++) = td(tbdry).side(snum);
-   i2wk_lst1(ntdel++) = tbdry;
-   td(tbdry).info |= TSRCH;
-
-   /* DO FIRST ONE SEPARATELY SO THAT SIND IS SKIPPED */
-   tin = tbdry;
-   for(j=(snum+1)%3;j!=snum;j=(j+1)%3) {
-      tind = td(tin).tri(j);
-      if (tind < 0) {
-         i2wk_lst2(nskeep++) = td(tin).side(j);
-         continue;
+   /* GO COUNTER-CLOCKWISE AROUND VERTICES OF HOLE */
+   do  {
+      if (tnxt < 0) {
+         i2wk_lst2(nskeep++) = sind;
+         i2wk_lst2(nskeep++) = dir;
+         v0 = sd(sind).vrtx(dir);
+         snum = (snum+1)%3;
       }
-      if (td(tind).info&TSRCH) {
-         if (td(tin).sign(j) > 0) i2wk_lst3(nsdel++) = td(tin).side(j);
-         continue;
+      else if (td(tnxt).info&TSRCH) {
+         if (dir > 0) i2wk_lst3(nsdel++) = sind;
+         tind = tnxt;
+         for(snum=0;snum<3;++snum) {
+            if (td(tind).vrtx(snum) == v0) break;
+         }
+         snum = (snum+2)%3;
       }
-
-      if (incircle(tind,vrtx(vnum)) > 0.0) {
-         i2wk_lst1(ntdel++) = tind;
-         td(tind).info |= TSRCH;
-         if (td(tin).sign(j) > 0) i2wk_lst3(nsdel++) = td(tin).side(j);
+      else if (incircle(tnxt,vrtx(vnum)) > 0.0) {
+         if (dir > 0) i2wk_lst3(nsdel++) = sind;
+         i2wk_lst1(ntdel++) = tnxt;
+         td(tnxt).info |= TSRCH;
+         tind = tnxt;
+         for(snum=0;snum<3;++snum) {
+            if (td(tind).vrtx(snum) == v0) break;
+         }
+         snum = (snum+2)%3;
       }
       else {
-         i2wk_lst2(nskeep++) = td(tin).side(j);
+         i2wk_lst2(nskeep++) = sind;
+         i2wk_lst2(nskeep++) = dir;
+         v0 = sd(sind).vrtx(dir);
+         snum = (snum+1)%3;
       }
-   }
-   
-   /* DO THE REST */
-   for(i=1;i<ntdel;++i) {
-      tin = i2wk_lst1(i);
-      for(j=0;j<3;++j) {
-         tind = td(tin).tri(j);
-          if (tind < 0) {
-            i2wk_lst2(nskeep++) = td(tin).side(j);
-            continue;
-         }
-         if (td(tind).info&TSRCH) {
-            if (td(tin).sign(j) > 0) i2wk_lst3(nsdel++) = td(tin).side(j);
-            continue;
-         }
+      tnxt = td(tind).tri(snum);
+      sind = td(tind).side(snum);
+      dir = (1+td(tind).sign(snum))/2;   
+   } while (sind != sstart);
 
-         if (incircle(tind,vrtx(vnum)) > 0.0) {
-            i2wk_lst1(ntdel++) = tind;
-            td(tind).info |= TSRCH;
-            if (td(tin).sign(j) > 0) i2wk_lst3(nsdel++) = td(tin).side(j);
-         }
-         else {
-            i2wk_lst2(nskeep++) = td(tin).side(j);
-         }
-      }
-   }
-   
    /* RESET TSRCH FLAGS */
    for(i=0;i<ntdel;++i)
       td(i2wk_lst1(i)).info &= ~TSRCH;
-      
+
    /* ALTER OLD BOUNDARY SIDE & CREATE NEW SIDE */
    sd(nside).vrtx(endpt) = vnum;
    sd(nside).vrtx(1-endpt) = sd(sind).vrtx(1-endpt);
@@ -315,17 +311,15 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    sbdry(i)->el(sbdry(i)->nel++) = nside;
    ++nside;
    
+   nskeep = nskeep>>1;
+      
    /* APPEND NEW INDICES TO LIST OF INDICES TO USE FOR NEW SIDES & TRIS*/
    for(i=nsdel;i<nskeep;++i)
       i2wk_lst3(i) = nside +(i-nsdel);
    
    for(i=ntdel;i<nskeep;++i) 
       i2wk_lst1(i) = ntri +(i-ntdel);
-
-   /* USE i1wk TO FIND SIDES */
-   i1wk(sd(sind).vrtx(endpt)) = sind;
-   i1wk(sd(nside-1).vrtx(1-endpt)) = nside-1;
-      
+         
    ++ntri;
    ++nside;  
    
@@ -333,24 +327,50 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
       *log << "need to use bigger growth factor: too many sides/tris:" << nside << ntri << std::endl;
       exit(1);
    }
-
-   sct = 1;   // SKIP FIRST SIDE 
-   for(i=0;i<nskeep;++i) {
-      sind = i2wk_lst2(i);      
+   
+   /* FIX FIRST AND LAST TRIANGLE BOUNDARY SIDE */
+   if (endpt) {
+      tind = i2wk_lst1(0);
+      td(tind).side(1) = sind;
+      td(tind).sign(1) = 1;
+      td(tind).tri(1) = sd(sind).tri(1);
+      sd(sind).tri(0) = tind;
+      
+      tind = i2wk_lst1(nskeep-1);
+      td(tind).side(0) = nside-2;
+      td(tind).sign(0) = 1;
+      td(tind).tri(0) = sd(nside-2).tri(1);
+      sd(nside-2).tri(0) = tind;
+ 
+   }
+   else {
+      tind = i2wk_lst1(0);
+      td(tind).side(1) = nside-2;
+      td(tind).sign(1) = 1;
+      td(tind).tri(1) = sd(nside-2).tri(1);  
+      sd(nside-2).tri(0) = tind;
+      
+      tind = i2wk_lst1(nskeep-1);
+      td(tind).side(0) = sind;
+      td(tind).sign(0) = 1;
+      td(tind).tri(0) = sd(sind).tri(1);
+      sd(sind).tri(0) = tind;
+   }
+   
+   
+   for(i=0;i<nskeep-1;++i) {
       tind = i2wk_lst1(i);
       td(tind).info &= TTOUC;
-      
-      /* CHECK SIDE DIRECTION  */
-      if (area(sind,vnum) > 0.0) 
-         dir = 0;
-      else 
-         dir = 1;
+
+      tnxt = i2wk_lst1(i+1);
+      sind = i2wk_lst2(i<<1);
+      dir = i2wk_lst2((i<<1) +1);
          
       /* CREATE NEW INFO */
-      v0 = sd(sind).vrtx(dir);
+      v0 = sd(sind).vrtx(1-dir);
       td(tind).vrtx(0) = v0;
       vd(v0).tri = tind;
-      v0 = sd(sind).vrtx(1-dir);
+      v0 = sd(sind).vrtx(dir);
       td(tind).vrtx(1) = v0;
       vd(v0).tri = tind;
       td(tind).vrtx(2) = vnum;
@@ -358,10 +378,10 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
 
       /* SIDE 2 INFO */      
       td(tind).side(2) = sind;
-      td(tind).sign(2) = 1 -2*dir;
+      td(tind).sign(2) = -1 +2*dir;
       
-      sd(sind).tri(dir) = tind;
-      tin = sd(sind).tri(1-dir);
+      sd(sind).tri(1-dir) = tind;
+      tin = sd(sind).tri(dir);
       td(tind).tri(2) = tin;
       if (tin > -1) {
          for(j=0;j<3;++j) {
@@ -371,89 +391,60 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
             }
          }
       }
-
-      /* CREATE SIDE 1 INFO */
-      /* CREATE IN OPPOSITE DIRECTION */
-      /* IF CREATED IT IS IN SAME DIRECTION */
+         
+      /* CREATE SIDE 0 */
       v0 = sd(sind).vrtx(dir);
-      sind1 = i1wk(v0);
-      if (sind1 > -1) {
-         td(tind).side(1) = sind1;
-         td(tind).sign(1) = 1;
-         
-         sd(sind1).tri(0) = tind;
-         tin = sd(sind1).tri(1);
-         td(tind).tri(1) = tin;
-         if (tin > -1) {
-            for(j=0;j<3;++j) {
-               if (td(tin).side(j) == sind1) {
-                  td(tin).tri(j) = tind;
-                  break;
-               }
-            }
-         }
-      }
-      else {
-         sind1 = i2wk_lst3(sct++);
-         td(sind1).info &= STOUC;
-         
-         td(tind).side(1) = sind1;
-         td(tind).sign(1) = -1;
-         
-         sd(sind1).tri(1) = tind;
-         sd(sind1).vrtx(0) = v0;
-         sd(sind1).vrtx(1) = vnum;
-         i1wk(v0) = sind1;
-      }
-      
+      sind1 = i2wk_lst3(i);
+      sd(sind1).tri(0) = tind;
+      sd(sind1).vrtx(0) = v0;
+      sd(sind1).vrtx(1) = vnum;
+      td(sind1).info &= STOUC;
 
-      /* CREATE SIDE 0 INFO */
-      /* CREATE IN OPPOSITE DIRECTION */
-      /* IF CREATED IT IS IN SAME DIRECTION */
-      v0 = sd(sind).vrtx(1-dir);
-      sind1 = i1wk(v0);
-      if (sind1 > -1) {
-         td(tind).side(0) = sind1;
-         td(tind).sign(0) = 1;
-         
-         sd(sind1).tri(0) = tind;
-         tin = sd(sind1).tri(1);
-         td(tind).tri(0) = tin;
-         if (tin > -1) {
-            for(j=0;j<3;++j) {
-               if (td(tin).side(j) == sind1) {
-                  td(tin).tri(j) = tind;
-                  break;
-               }
-            }
+
+      td(tind).side(0) = sind1;
+      td(tind).sign(0) = 1;
+      td(tind).tri(0) = tnxt;
+
+      sd(sind1).tri(1) = tnxt;
+      td(tnxt).side(1) = sind1;
+      td(tnxt).sign(1) = -1;
+      td(tnxt).tri(1) = tind;
+   }
+   
+   /* LAST TRIANGLE */
+   i = nskeep-1;
+   tind = i2wk_lst1(i);
+   td(tind).info &= TTOUC;
+
+   sind = i2wk_lst2(i<<1);
+   dir = i2wk_lst2((i<<1) +1);
+      
+   /* CREATE NEW INFO */
+   v0 = sd(sind).vrtx(1-dir);
+   td(tind).vrtx(0) = v0;
+   vd(v0).tri = tind;
+   v0 = sd(sind).vrtx(dir);
+   td(tind).vrtx(1) = v0;
+   vd(v0).tri = tind;
+   td(tind).vrtx(2) = vnum;
+   vd(vnum).tri = tind;
+
+   /* SIDE 2 INFO */      
+   td(tind).side(2) = sind;
+   td(tind).sign(2) = -1 +2*dir;
+   
+   sd(sind).tri(1-dir) = tind;
+   tin = sd(sind).tri(dir);
+   td(tind).tri(2) = tin;
+   if (tin > -1) {
+      for(j=0;j<3;++j) {
+         if (td(tin).side(j) == sind) {
+            td(tin).tri(j) = tind;
+            break;
          }
-      }
-      else {
-         sind1 = i2wk_lst3(sct++);
-         td(sind1).info &= STOUC;
-         
-         td(tind).side(0) = sind1;
-         td(tind).sign(0) = -1;
-         
-         sd(sind1).tri(1) = tind;
-         
-         sd(sind1).vrtx(0) = vnum;
-         sd(sind1).vrtx(1) = v0;
-         i1wk(v0) = sind1;
       }
    }
-
-   /* RESET i1wk */   
-   for(i=0;i<nskeep;++i) {
-      sind = i2wk_lst2(i);
-      i1wk(sd(sind).vrtx(0)) = -1;
-      i1wk(sd(sind).vrtx(1)) = -1;
-   } 
    
-   sind = td(tbdry).side(snum);
-   i1wk(sd(sind).vrtx(0)) = -1;
-   i1wk(sd(nside-1).vrtx(1)) = -1;
-
    return;
 }
 
@@ -463,6 +454,12 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
    int tclose,nsurround;
    FLT minclosest,closest;
    
+#if (((-1)^TSRCH)&TSRCH)
+#define NOT 
+#else
+#define NOT !
+#endif
+   
    /* HERE WE USE i1wk & i2wk THIS MUST BE -1 BEFORE USING */
    tind = vd(vnear).tri;
    stoptri = tind;
@@ -470,7 +467,7 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
    ntdel = 0;
    do {
       if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
-      i1wk(tind) = 0;
+      i1wk(tind) ^= TSRCH;
       i2wk(ntdel++) = tind;
    
       for(vn=0;vn<3;++vn) 
@@ -500,8 +497,8 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
       for(j=0;j<3;++j) {
          tind = td(tin).tri(j);
          if (tind < 0) continue;
-         if (i1wk(tind) == 0) continue;
-         i1wk(tind) = 0;
+         if (NOT(i1wk(tind)&TSRCH)) continue;
+         i1wk(tind) ^= TSRCH;
          i2wk(ntdel++) = tind;         
          if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
       }

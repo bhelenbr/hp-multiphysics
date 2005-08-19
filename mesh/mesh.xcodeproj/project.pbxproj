@@ -66,8 +66,13 @@
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E5086730B3001017D0 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
+		6F514ED208B2E767001B7BED /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F514ED108B2E767001B7BED /* libblitz.a */; };
+		6F514ED308B2E767001B7BED /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F514ED108B2E767001B7BED /* libblitz.a */; };
 		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
+		6F975ADA0892C41800941A1D /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
+		6F975B2B0895BF4400941A1D /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
 		6FADD857086EF32D00350FA2 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
 		6FADD858086EF32D00350FA2 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
 		6FADD859086EF32D00350FA2 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; };
@@ -85,11 +90,9 @@
 		6FADD865086EF36A00350FA2 /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94B00974D3D80990B20 /* tprims.cpp */; };
 		6FADD866086EF36A00350FA2 /* coarsen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94200974D3D80990B20 /* coarsen.cpp */; };
 		6FADD867086EF36A00350FA2 /* triangulate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50FCD7F0128AA9801000001 /* triangulate.cpp */; };
-		6FADD868086EF36A00350FA2 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
 		6FADD869086EF36A00350FA2 /* rebay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F543FC18014FCBC901000001 /* rebay.cpp */; };
 		6FADD86A086EF36A00350FA2 /* collapse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00E0854300CAD1857F000001 /* collapse.cpp */; };
 		6FADD86B086EF36A00350FA2 /* swap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5CED4AF015630AA01000001 /* swap.cpp */; };
-		6FADD86C086EF36A00350FA2 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
 		6FADD86D086EF36A00350FA2 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
 		6FADD86E086EF36A00350FA2 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
 		6FADD86F086EF36A00350FA2 /* boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* boundary.cpp */; };
@@ -160,6 +163,7 @@
 		07F2E95000974D3D80990B20 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = SOURCE_ROOT; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F514ED108B2E767001B7BED /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F5F76680760062A0026BE93 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
@@ -194,6 +198,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F514ED308B2E767001B7BED /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -206,6 +211,7 @@
 				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
 				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
 				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
+				6F514ED208B2E767001B7BED /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +226,7 @@
 				6F8509B207A5381400343685 /* libutil.a */,
 				6FC6A54203CC99B700990B69 /* libmetis.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
+				6F514ED108B2E767001B7BED /* libblitz.a */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -239,7 +246,6 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				6F5F76680760062A0026BE93 /* adapt.cpp */,
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				07F2E95000974D3D80990B20 /* mesh.h */,
 				07F2E94600974D3D80990B20 /* in_mesh.cpp */,
@@ -251,11 +257,12 @@
 				07F2E94B00974D3D80990B20 /* tprims.cpp */,
 				07F2E94200974D3D80990B20 /* coarsen.cpp */,
 				F50FCD7F0128AA9801000001 /* triangulate.cpp */,
-				F5BDAB54014068AC01000001 /* insert.cpp */,
+				6F5F76680760062A0026BE93 /* adapt.cpp */,
 				F543FC18014FCBC901000001 /* rebay.cpp */,
+				F5F975AB0152459801000001 /* yaber.cpp */,
+				F5BDAB54014068AC01000001 /* insert.cpp */,
 				00E0854300CAD1857F000001 /* collapse.cpp */,
 				F5CED4AF015630AA01000001 /* swap.cpp */,
-				F5F975AB0152459801000001 /* yaber.cpp */,
 				07F2E94300974D3D80990B20 /* connect.cpp */,
 				6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */,
 				F528820602B1545D012A8EDA /* boundary.h */,
@@ -496,11 +503,9 @@
 				6FADD865086EF36A00350FA2 /* tprims.cpp in Sources */,
 				6FADD866086EF36A00350FA2 /* coarsen.cpp in Sources */,
 				6FADD867086EF36A00350FA2 /* triangulate.cpp in Sources */,
-				6FADD868086EF36A00350FA2 /* insert.cpp in Sources */,
 				6FADD869086EF36A00350FA2 /* rebay.cpp in Sources */,
 				6FADD86A086EF36A00350FA2 /* collapse.cpp in Sources */,
 				6FADD86B086EF36A00350FA2 /* swap.cpp in Sources */,
-				6FADD86C086EF36A00350FA2 /* yaber.cpp in Sources */,
 				6FADD86D086EF36A00350FA2 /* meshutilities.cpp in Sources */,
 				6FADD86E086EF36A00350FA2 /* connect.cpp in Sources */,
 				6FADD86F086EF36A00350FA2 /* boundary.cpp in Sources */,
@@ -509,6 +514,9 @@
 				6FADD872086EF36A00350FA2 /* getnewr_bdry.cpp in Sources */,
 				6FADD873086EF36A00350FA2 /* blocks.cpp in Sources */,
 				6FADD874086EF36A00350FA2 /* getnewblock.cpp in Sources */,
+				6F975ADA0892C41800941A1D /* adapt.cpp in Sources */,
+				6F975B2B0895BF4400941A1D /* yaber.cpp in Sources */,
+				6F446DB708B291D1004FF284 /* insert.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -540,7 +548,10 @@
 				);
 				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
 				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = "$(HOME)/Codes/lib";
+				LIBRARY_SEARCH_PATHS = (
+					"$(HOME)/Codes/lib",
+					"$(SRCROOT)/../lib",
+				);
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -571,7 +582,10 @@
 				);
 				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
 				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = "$(HOME)/Codes/lib";
+				LIBRARY_SEARCH_PATHS = (
+					"$(HOME)/Codes/lib",
+					"$(SRCROOT)/../lib",
+				);
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -601,7 +615,10 @@
 				);
 				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
 				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = "$(HOME)/Codes/lib";
+				LIBRARY_SEARCH_PATHS = (
+					"$(HOME)/Codes/lib",
+					"$(SRCROOT)/../lib",
+				);
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -686,6 +703,7 @@
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
 					METIS,
 					NO_MPISRC,
 				);

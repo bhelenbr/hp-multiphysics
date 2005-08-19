@@ -135,3 +135,41 @@ void mesh::scale(TinyVector<FLT,ND>& s) {
 
    return;
 }
+
+int mesh::smooth_cofa(int niter) {
+   int iter,sind,i,j,n,v0,v1;
+      
+   for(i=0;i<nvrtx;++i)
+      vd(i).info = 0;
+      
+   for(i=0;i<nsbd;++i) {
+      for(j=0;j<sbdry(i)->nel;++j) {
+         sind = sbdry(i)->el(j);
+         vd(sd(sind).vrtx(0)).info = -1;
+         vd(sd(sind).vrtx(1)).info = -1;
+      }
+   }
+   
+   for(iter=0; iter< niter; ++iter) {
+      /* SMOOTH POINT DISTRIBUTION X*/
+      for(n=0;n<ND;++n) {
+         for(i=0;i<nvrtx;++i)
+            fscr1(i) = 0.0;
+   
+         for(i=0;i<nside;++i) {
+            v0 = sd(i).vrtx(0);
+            v1 = sd(i).vrtx(1);
+            fscr1(v0) += vrtx(v1)(n);
+            fscr1(v1) += vrtx(v0)(n);
+         }
+   
+         for(i=0;i<nvrtx;++i) {
+            if (vd(i).info == 0) {
+               vrtx(i)(n) = fscr1(i)/vd(i).nnbor;
+            }
+         }
+      }
+   }
+   
+   return(1);
+}
