@@ -536,7 +536,7 @@ class vcomm : public comm_bdry<vrtx_bdry> {
       void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
-class scomm : public comm_bdry<class side_bdry> {
+class scomm : public comm_bdry<side_bdry> {
    public:            
       /* CONSTRUCTOR */
       scomm(int inid, mesh& xin) : comm_bdry<side_bdry>(inid,xin) {mytype="comm";}

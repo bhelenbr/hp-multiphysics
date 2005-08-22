@@ -168,7 +168,7 @@ int mesh::insert(int vnum, int tnum) {
    
    for(i=0;i<nskeep;++i) {
       tind = i2wk_lst1(i);
-      td(tind).info &= TTOUC;
+      td(tind).info |= TTOUC;
 
       tnxt = i2wk_lst1(i+1);
       sind = i2wk_lst2(i<<1);
@@ -206,7 +206,7 @@ int mesh::insert(int vnum, int tnum) {
       sd(sind1).tri(0) = tind;
       sd(sind1).vrtx(0) = v0;
       sd(sind1).vrtx(1) = vnum;
-      td(sind1).info &= STOUC;
+      td(sind1).info |= STOUC;
 
 
       td(tind).side(0) = sind1;
@@ -234,7 +234,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    
    /* ADD POINT TO QUADTREE */
    qtree.addpt(nvrtx);
-   td(vnum).info &= VTOUC;
+   td(vnum).info |= VTOUC;
    
    /* SEARCH SURROUNDING FOR NONDELAUNEY TRIANGLES */
    /* SIDES ON BOUNDARY OF HOLE (SKEEP) */
@@ -301,8 +301,8 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    sd(nside).vrtx(endpt) = vnum;
    sd(nside).vrtx(1-endpt) = sd(sind).vrtx(1-endpt);
    sd(sind).vrtx(1-endpt) = vnum;
-   td(sind).info &= STOUC;
-   td(nside).info &= STOUC;
+   td(sind).info |= STOUC;
+   td(nside).info |= STOUC;
    
    /* ADD NEW SIDE TO BOUNDARY GROUP */
    /* NEED TO REORDER WHEN FINISHED */
@@ -360,7 +360,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    
    for(i=0;i<nskeep-1;++i) {
       tind = i2wk_lst1(i);
-      td(tind).info &= TTOUC;
+      td(tind).info |= TTOUC;
 
       tnxt = i2wk_lst1(i+1);
       sind = i2wk_lst2(i<<1);
@@ -398,7 +398,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
       sd(sind1).tri(0) = tind;
       sd(sind1).vrtx(0) = v0;
       sd(sind1).vrtx(1) = vnum;
-      td(sind1).info &= STOUC;
+      td(sind1).info |= STOUC;
 
 
       td(tind).side(0) = sind1;
@@ -414,7 +414,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    /* LAST TRIANGLE */
    i = nskeep-1;
    tind = i2wk_lst1(i);
-   td(tind).info &= TTOUC;
+   td(tind).info |= TTOUC;
 
    sind = i2wk_lst2(i<<1);
    dir = i2wk_lst2((i<<1) +1);

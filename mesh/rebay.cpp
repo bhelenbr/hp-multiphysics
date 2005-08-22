@@ -179,7 +179,7 @@ INSRT:
       err = insert(nvrtx,tfind);
       if (!err) {
          /* ADD POINT TO QUADTREE */
-         td(nvrtx).info &= VTOUC;
+         td(nvrtx).info |= VTOUC;
          qtree.addpt(nvrtx);
          nsnew = i2wk_lst3(-1) +3;
          ntnew = i2wk_lst1(-1) +2;
@@ -239,7 +239,7 @@ void mesh::bdry_rebay(FLT tolsize) {
       for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
          sind = sbdry(bnum)->el(indx);
          if (td(sind).info&SDLTE) continue;
-         fscr1(sind) = 1./stgt_to_actual(sind);
+         fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
          if (fscr1(sind) > tolsize) putinlst(sind);
       }
       
@@ -275,12 +275,12 @@ void mesh::bdry_rebay(FLT tolsize) {
 
          /* UPDATE MODIFIED SIDE */
          tkoutlst(sind);
-         fscr1(sind) = 1./stgt_to_actual(sind);
+         fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
          if (fscr1(sind) > tolsize) putinlst(sind);
          
          /* UPDATE NEW BOUNDARY SIDE */
          sind = sbdry(bnum)->el(sbdry(bnum)->nel -1);
-         fscr1(sind) = 1./stgt_to_actual(sind);
+         fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
          if (fscr1(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);

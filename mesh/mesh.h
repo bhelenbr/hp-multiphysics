@@ -31,6 +31,9 @@ using namespace blitz;
 class side_bdry;
 class vrtx_bdry;
 
+/** This is an unstructured triangular mesh class which has adaptation and 
+parallel communication capabilities */
+
 class mesh {
 
    /***************/
@@ -41,7 +44,7 @@ class mesh {
       static const int ND = 2;
             
       /* VERTEX DATA */
-      int nvrtx;
+      int nvrtx;  /**< This is the total number of vertices in the mesh */
       Array<TinyVector<FLT,ND>,1> vrtx;
       Array<FLT,1> vlngth;
       struct vstruct {
@@ -187,12 +190,7 @@ class mesh {
       void bdry_rebay1();
       void rebay(FLT tolsize);
       void cleanup_after_adapt();
-
-      FLT stgt_to_actual(int i) {   
-         /* CALCULATE SIDE TO TARGET LENGTH RATIO */
-         /* ERROR ON THE CONSERVATIVE SIDE (OVER-REFINED) BY TAKING MAX VLNGTH */
-         return(MAX(vlngth(sd(i).vrtx(0)),vlngth(sd(i).vrtx(1)))/distance(sd(i).vrtx(0),sd(i).vrtx(1)));
-      }      
+    
       /* TO CREATE AN INITIAL TRIANGUlATION */
       void triangulate(int nside);
       void addtri(int v0,int v1,int v2,int sind,int dir);

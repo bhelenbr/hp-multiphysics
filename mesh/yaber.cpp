@@ -15,15 +15,40 @@
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
+#define CTROFAREA
+#define NO_SIDE_BASED
+
+
+
+#define NO_DEBUG_ADAPT
+
 #ifdef DEBUG_ADAPT
-extern int adapt_count;
-extern char adapt_file[100];
+static int adapt_count;
+static char adapt_file[100];
 #endif
 
 extern int nlst; 
 
 void mesh::yaber(FLT tolsize) {
-   int i,j,tind,sind,v0,cnt,endpt;
+   int i,j,tind,sind,sind1,v0,cnt,endpt,sum;
+   FLT x,y,a,asum,dx,dy,l0,l1;
+   int ntsrnd, nssrnd, nperim;
+   int vn,vnear,prev,tind1,stoptri,dir;
+   int v1;
+
+#ifdef SIDE_BASED
+   /* SET UP FLTWK */
+   nlst = 0;
+   for(sind=0;sind<nside;++sind) {
+      if (td(sind).info&SDLTE) continue;
+      fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+      if (sd(sind).tri(1) > -1 && fscr1(sind) > tolsize) {
+         putinlst(sind);
+         i1wk(sd(sind).tri(0)) += 1;
+         i1wk(sd(sind).tri(1)) += 1;
+      }
+   }
+#else
    FLT minvl;
 
    /* TO ADJUST FOR INSCRIBED RADIUS */
@@ -39,7 +64,9 @@ void mesh::yaber(FLT tolsize) {
       fscr1(i) = minvl/inscribedradius(i);
       if (fscr1(i) > tolsize) putinlst(i);
    }
-      
+#endif
+
+   
    /* MARK BOUNDARY VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
    for(i=0;i<nsbd;++i) {
@@ -53,6 +80,18 @@ void mesh::yaber(FLT tolsize) {
    cnt = 0;
    /* BEGIN COARSENING ALGORITHM */
    while (nlst > 0) {
+#ifdef SIDE_BASED
+      sind = -1;
+      for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST SIDE TO DENSITY RATIO
+         sind = sd(i).info;
+         if (i1wk(sd(sind).tri(0)) +i1wk(sd(sind).tri(1)) == 4) continue;
+         break;
+      }
+      assert(sind != -1);
+      
+      tkoutlst(sind);
+
+#else
       for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
          for(j=0;j<3;++j) {
             tind = td(sd(i).info).tri(j);
@@ -62,39 +101,163 @@ void mesh::yaber(FLT tolsize) {
       
       TFOUND:
       tind = sd(i).info;
-      if (td(td(tind).vrtx(j)).info&VSPEC) {
-         tkoutlst(tind);
-         continue;
+      tkoutlst(tind);
+      
+      /* FIND SIDE ON TRIANGLE WITH LARGEST TARGET TO LENGTH RATIO */
+      minvl = 0.0;
+      for(j=0;j<3;++j) {
+         sind = td(tind).side(j);
+         if (sd(sind).tri(1) < 0) continue;
+         if (MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1)) > minvl) {
+            sind1 = sind;
+            minvl = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+         }
       }
 
-      sind = td(tind).side((j+1)%3);
-      endpt = (1+td(tind).sign((j+1)%3))/2;
-      
+      sind = sind1;
+
       /* REMOVE TRIANGLES THAT WILL BE DELETED */
       tind = sd(sind).tri(0);
       if (vd(tind).info > -1) tkoutlst(tind);
       tind = sd(sind).tri(1);
       if (vd(tind).info > -1) tkoutlst(tind);
-   
+#endif
+
+      /* DON'T DELETE BOUNDARY POINT */
+      sum = (td(sd(sind).vrtx(0)).info&VSPEC) +(td(sd(sind).vrtx(1)).info&VSPEC);
+      if (sum > 0) {
+         if (sum > VSPEC) {
+            std::cout << "Big oops near point" << vrtx(sd(sind).vrtx(0)) << std::endl;
+            continue;
+         }
+         if (td(sd(sind).vrtx(0)).info&VSPEC) endpt = 1;
+         else endpt = 0;
+      }
+      else {
+         /* OLD WAY OF DETERMING POINT TO DELETE */
+         /* THIS IS AN INTERIOR EDGE WITH NO CONNECTION TO BOUNDARY */      
+         /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
+         x = 0.0;
+         y = 0.0;
+         asum = 0.0;
+         for(endpt=0;endpt<2;++endpt) {
+            vnear = sd(sind).vrtx(endpt);
+            tind = vd(vnear).tri;
+            if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
+               prev = 0;
+            else 
+               prev = 1;
+            stoptri = tind;
+            dir = 1;
+            ntsrnd = 0;
+            nssrnd = 0;
+            nperim = 0;
+            do {
+               for(vn=0;vn<3;++vn) 
+                  if (td(tind).vrtx(vn) == vnear) break;
+                        
+               tind1 = td(tind).tri((vn +dir)%3);
+               if (tind1 < 0) {
+                  if (dir > 1) break;
+                  /* REVERSE DIRECTION AND GO BACK TO START */
+                  ++dir;
+                  tind1 = vd(vnear).tri;
+                  prev = 1;
+                  stoptri = -1;
+               }
+               
+               if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
+                  i2wk_lst1(ntsrnd++) = tind1;
+                  if (!prev) {
+                     i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                  }
+                  prev = 0;
+               }
+               else {
+                  prev = 1;
+               }
+
+               tind = tind1;
+
+            } while(tind != stoptri); 
+            
+            tind = sd(sind).tri(endpt);
+            if (tind > -1) {
+               a = area(tind);
+               asum += a;
+               for(vn=0;vn<3;++vn) {
+                  x += a*vrtx(td(tind).vrtx(vn))(0);
+                  y += a*vrtx(td(tind).vrtx(vn))(1);
+               }
+            }            
+            for(j=0;j<ntsrnd;++j) {
+               tind = i2wk_lst1(j);
+               a = area(tind);
+               asum += a;
+               for(vn=0;vn<3;++vn) {
+                  x += a*vrtx(td(tind).vrtx(vn))(0);
+                  y += a*vrtx(td(tind).vrtx(vn))(1);
+               }
+            }
+         }
+
+         asum = 1./(3.*asum);
+         x = x*asum;
+         y = y*asum;
+         v0 = sd(sind).vrtx(0);
+         v1 = sd(sind).vrtx(1);
+         dx = vrtx(v0)(0) -x;
+         dy = vrtx(v0)(1) -y;
+         l0 = dx*dx +dy*dy;   
+         dx = vrtx(v1)(0) -x;
+         dy = vrtx(v1)(1) -y;
+         l1 = dx*dx +dy*dy;
+         
+         endpt = (l0 > l1 ? 0 : 1);
+      }
+
+#ifdef DEBUG_ADAPT
+      std::cout << "collapsing interior" << cnt << ' ' << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
+#endif
+      
       /* COLLAPSE EDGE */
       collapse(sind,endpt);
       ++cnt;
       
+#ifdef SIDE_BASED
+      /* RECALCULATE fscr1 */
+      for (i=0;i<i2wk_lst2(-1)-2;++i) {
+         sind = i2wk_lst2(i);
+         fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+         if (vd(sind).info > -1) tkoutlst(sind);
+         if (fscr1(sind) > tolsize && sd(sind).tri(1) > -1) putinlst(sind);
+      }
+      sind = i2wk_lst2(i2wk_lst2(-1)-2);  // Index of deleted side
+      if (vd(sind).info > -1) tkoutlst(sind);
+      sind = i2wk_lst2(i2wk_lst2(-1)-1);
+      if (vd(sind).info > -1) tkoutlst(sind);
+
+    /* RECONSTRUCT AFFECTED TINFO ARRAY */
+      for(i=0;i<i2wk_lst1(-1);++i) {
+         tind = i2wk_lst1(i);
+         i1wk(tind) = -1;
+         for(j=0;j<3;++j) 
+            if (vd(td(tind).side(j)).info > -1) ++i1wk(tind);
+      }
+#else
       /* RECLASSIFY AFFECTED TRIANGLES */
       for(i=0;i<i2wk_lst1(-1);++i) {
          tind = i2wk_lst1(i);
-         if (vd(tind).info > -1) {
-            tkoutlst(tind);
-            minvl = vlngth(td(tind).vrtx(0));
-            minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
-            minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
-            fscr1(tind) = minvl/inscribedradius(tind);
-            if (fscr1(tind) > tolsize) putinlst(tind);
-         }
+         if (vd(tind).info > -1) tkoutlst(tind);
+         minvl = vlngth(td(tind).vrtx(0));
+         minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
+         minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
+         fscr1(tind) = minvl/inscribedradius(tind);
+         if (fscr1(tind) > tolsize) putinlst(tind);
       }
+#endif
       
 #ifdef DEBUG_ADAPT
-      std::cout << "collapsed " << sind << " endpt " << endpt << std::endl;
       number_str(adapt_file,"adapt",adapt_count++,5);
       output(adapt_file,ftype::grid);
 #endif
@@ -180,7 +343,7 @@ void mesh::bdry_yaber(FLT tolsize) {
       for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
          sind = sbdry(bnum)->el(indx);
          if (td(sind).info&SDLTE) continue;
-         fscr1(sind) = stgt_to_actual(sind);
+         fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
          if (fscr1(sind) > tolsize) {
             putinlst(sind);
          }
@@ -238,7 +401,10 @@ void mesh::bdry_yaber(FLT tolsize) {
                saffect = sindnext;
             }
          }
-         
+
+#ifdef DEBUG_ADAPT
+      std::cout << "collapsing boundary"  << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
+#endif
          collapse(sind,endpt);
          tkoutlst(sind);
          
@@ -248,14 +414,13 @@ void mesh::bdry_yaber(FLT tolsize) {
          
          /* UPDATE AFFECTED SIDE */
          if (vd(saffect).info > -1) tkoutlst(saffect);
-         fscr1(saffect) = stgt_to_actual(saffect);
+         fscr1(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
          if (fscr1(saffect) > tolsize) putinlst(saffect);
          ++count;
-   #ifdef DEBUG_ADAPT
-         std::cout << "collapsed boundary side " << sind << " endpt " << endpt << std::endl; 
+#ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);
          output(adapt_file,ftype::grid);
-   #endif            
+#endif            
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
    }
@@ -278,6 +443,9 @@ void mesh::bdry_yaber1() {
          el = sbdry(bnum)->nel -1 -sbdry(bnum)->ircvbuf(0,i);
          endpt = 1 -sbdry(bnum)->ircvbuf(0,i+1);
          sind = sbdry(bnum)->el(el);
+#ifdef DEBUG_ADAPT
+         std::cout << "collapsing boundary" << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
+#endif
          collapse(sind,endpt);
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);

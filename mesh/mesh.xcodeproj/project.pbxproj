@@ -7,17 +7,18 @@
 	objects = {
 
 /* Begin PBXAggregateTarget section */
-		6F2AE431086ECDBA003172BE /* All */ = {
+		6F27980608B9FA49007BECA9 /* Documentation */ = {
 			isa = PBXAggregateTarget;
-			buildConfigurationList = 6F2AE436086ECDDE003172BE /* Build configuration list for PBXAggregateTarget "All" */;
+			buildConfigurationList = 6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */;
 			buildPhases = (
+				6F27980508B9FA49007BECA9 /* ShellScript */,
 			);
 			buildSettings = {
 				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = Documentation;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -26,11 +27,9 @@
 				);
 			};
 			dependencies = (
-				6F2AE435086ECDC9003172BE /* PBXTargetDependency */,
-				6F2AE433086ECDC6003172BE /* PBXTargetDependency */,
 			);
-			name = All;
-			productName = All;
+			name = Documentation;
+			productName = Documentation;
 		};
 /* End PBXAggregateTarget section */
 
@@ -131,23 +130,6 @@
 		};
 /* End PBXBuildStyle section */
 
-/* Begin PBXContainerItemProxy section */
-		6F2AE432086ECDC6003172BE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6FC7DED805B30C6E001FE736;
-			remoteInfo = main;
-		};
-		6F2AE434086ECDC9003172BE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6F2262BF08672FAE001017D0;
-			remoteInfo = lib;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		00E0854300CAD1857F000001 /* collapse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = collapse.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94200974D3D80990B20 /* coarsen.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = coarsen.cpp; sourceTree = SOURCE_ROOT; };
@@ -167,6 +149,8 @@
 		6F5F76680760062A0026BE93 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
+		6F92F9F108B94B60006F9C2C /* index.html */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.html; name = index.html; path = html/index.html; sourceTree = "<group>"; };
+		6F92F9F308B94BB8006F9C2C /* index.html.documentation */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = index.html.documentation; path = html/index.html.documentation; sourceTree = "<group>"; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
 		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = /Users/helenbrk/Codes/lib/libparseargs.a; sourceTree = "<absolute>"; };
 		6FC6A54203CC99B700990B69 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = "/Users/helenbrk/Packages/metis-4.0/libmetis.a"; sourceTree = "<absolute>"; };
@@ -234,6 +218,7 @@
 		08FB7794FE84155DC02AAC07 /* test2 */ = {
 			isa = PBXGroup;
 			children = (
+				6F92F9F008B94B22006F9C2C /* Documentation */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				F5DD976E03A78D2301990B69 /* Inputs */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
@@ -289,6 +274,15 @@
 				6F2262C008672FAE001017D0 /* libmesh.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6F92F9F008B94B22006F9C2C /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				6F92F9F308B94BB8006F9C2C /* index.html.documentation */,
+				6F92F9F108B94B60006F9C2C /* index.html */,
+			);
+			name = Documentation;
 			sourceTree = "<group>";
 		};
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
@@ -442,9 +436,9 @@
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
 			targets = (
-				6F2AE431086ECDBA003172BE /* All */,
 				6F2262BF08672FAE001017D0 /* lib */,
 				6FC7DED805B30C6E001FE736 /* main */,
+				6F27980608B9FA49007BECA9 /* Documentation */,
 			);
 		};
 /* End PBXProject section */
@@ -458,6 +452,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6F27980508B9FA49007BECA9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6F2262BD08672FAE001017D0 /* Sources */ = {
@@ -521,19 +531,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		6F2AE433086ECDC6003172BE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6FC7DED805B30C6E001FE736 /* main */;
-			targetProxy = 6F2AE432086ECDC6003172BE /* PBXContainerItemProxy */;
-		};
-		6F2AE435086ECDC9003172BE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6F2262BF08672FAE001017D0 /* lib */;
-			targetProxy = 6F2AE434086ECDC9003172BE /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6F2262C208672FD1001017D0 /* Development */ = {
@@ -637,16 +634,16 @@
 			};
 			name = Default;
 		};
-		6F2AE437086ECDDE003172BE /* Development */ = {
+		6F27981008B9FA5A007BECA9 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				OPTIMIZATION_CFLAGS = "-O0";
+				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = Documentation;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -656,16 +653,16 @@
 			};
 			name = Development;
 		};
-		6F2AE438086ECDDE003172BE /* Deployment */ = {
+		6F27981108B9FA5A007BECA9 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				OPTIMIZATION_CFLAGS = "-O0";
+				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = Documentation;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -675,14 +672,14 @@
 			};
 			name = Deployment;
 		};
-		6F2AE439086ECDDE003172BE /* Default */ = {
+		6F27981208B9FA5A007BECA9 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OPTIMIZATION_CFLAGS = "-O0";
+				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
+				PRODUCT_NAME = Documentation;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -830,12 +827,12 @@
 			);
 			defaultConfigurationIsVisible = 0;
 		};
-		6F2AE436086ECDDE003172BE /* Build configuration list for PBXAggregateTarget "All" */ = {
+		6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F2AE437086ECDDE003172BE /* Development */,
-				6F2AE438086ECDDE003172BE /* Deployment */,
-				6F2AE439086ECDDE003172BE /* Default */,
+				6F27981008B9FA5A007BECA9 /* Development */,
+				6F27981108B9FA5A007BECA9 /* Deployment */,
+				6F27981208B9FA5A007BECA9 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};

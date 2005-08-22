@@ -5,7 +5,7 @@
 #include <float.h>
 
 void mesh::collapse(int sind, int delt) {
-   int ntsrnd, nssrnd;
+   int ntsrnd, nssrnd, nperim;
    int i,j,vn,vnear,prev,tind,tind1,sind1,stoptri,dir;
    int v0,v1,pt,sd1,sd2,sd3,t1,t2;
 
@@ -26,10 +26,11 @@ void mesh::collapse(int sind, int delt) {
    dir = 1;
    ntsrnd = 0;
    nssrnd = 0;
+   nperim = 0;
    do {
       for(vn=0;vn<3;++vn) 
          if (td(tind).vrtx(vn) == vnear) break;
-      
+               
       tind1 = td(tind).tri((vn +dir)%3);
       if (tind1 < 0) {
          if (dir > 1) break;
@@ -77,6 +78,7 @@ void mesh::collapse(int sind, int delt) {
             pt = (1 -td(tind).sign((j+2)%3))/2;
             assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
             sd(sd3).vrtx(pt) = v0;
+            i2wk_lst3(nperim++) = td(tind).side(j);
             break;
          }
       }
@@ -118,6 +120,7 @@ void mesh::collapse(int sind, int delt) {
          sind1 = td(tind).side(sd2);
       }
       td(sind1).info |= SDLTE;
+      i2wk_lst2(nssrnd++) = sind1;
             
       t1 = td(tind).tri(sd1);
       t2 = td(tind).tri(sd2);
@@ -137,6 +140,7 @@ void mesh::collapse(int sind, int delt) {
       sind1 = td(tind).side(sd1);
       pt = (1 -td(tind).sign(sd1))/2;
       sd(sind1).tri(pt) = t2;
+      i2wk_lst3(nperim++) = sind1;
 
       /* UPDATE TTRI/TSIDE FOR T2 */
       if (t2 > -1) {
@@ -159,6 +163,8 @@ void mesh::collapse(int sind, int delt) {
       
    /* SWAP AFFECTED SIDES */      
    swap(i2wk_lst2(-1),&i2wk_lst2(0));
+   i2wk_lst2(-1) = nssrnd;
+   i2wk_lst3(-1) = nperim;
 
    return;
 }
