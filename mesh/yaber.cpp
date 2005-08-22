@@ -15,11 +15,7 @@
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
-#define CTROFAREA
 #define NO_SIDE_BASED
-
-
-
 #define NO_DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
@@ -35,6 +31,9 @@ void mesh::yaber(FLT tolsize) {
    int ntsrnd, nssrnd, nperim;
    int vn,vnear,prev,tind1,stoptri,dir;
    int v1;
+   int snum;
+   FLT sratio;
+   TinyVector<int,3> badside;
 
 #ifdef SIDE_BASED
    /* SET UP FLTWK */
@@ -107,10 +106,21 @@ void mesh::yaber(FLT tolsize) {
       minvl = 0.0;
       for(j=0;j<3;++j) {
          sind = td(tind).side(j);
-         if (sd(sind).tri(1) < 0) continue;
-         if (MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1)) > minvl) {
+         if (sd(sind).tri(1) < 0) {
+            badside(j) = false;
+            continue;
+         }
+         sratio = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+         if (sratio > tolsize*sqrt(3.)/6.) {
+            badside(j) = true;
+         }
+         else {
+            badside(j) = false;
+         }
+         if (sratio > minvl) {
             sind1 = sind;
-            minvl = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+            snum = j;
+            minvl =sratio;
          }
       }
 
@@ -134,86 +144,96 @@ void mesh::yaber(FLT tolsize) {
          else endpt = 0;
       }
       else {
-         /* OLD WAY OF DETERMING POINT TO DELETE */
-         /* THIS IS AN INTERIOR EDGE WITH NO CONNECTION TO BOUNDARY */      
-         /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
-         x = 0.0;
-         y = 0.0;
-         asum = 0.0;
-         for(endpt=0;endpt<2;++endpt) {
-            vnear = sd(sind).vrtx(endpt);
-            tind = vd(vnear).tri;
-            if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
-               prev = 0;
-            else 
-               prev = 1;
-            stoptri = tind;
-            dir = 1;
-            ntsrnd = 0;
-            nssrnd = 0;
-            nperim = 0;
-            do {
-               for(vn=0;vn<3;++vn) 
-                  if (td(tind).vrtx(vn) == vnear) break;
-                        
-               tind1 = td(tind).tri((vn +dir)%3);
-               if (tind1 < 0) {
-                  if (dir > 1) break;
-                  /* REVERSE DIRECTION AND GO BACK TO START */
-                  ++dir;
-                  tind1 = vd(vnear).tri;
-                  prev = 1;
-                  stoptri = -1;
-               }
-               
-               if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
-                  i2wk_lst1(ntsrnd++) = tind1;
-                  if (!prev) {
-                     i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
-                  }
+         /* TRY TO FIND DIRECTION OF ACCEPTED TRIS AND DELETE AWAY FROM THAT DIRECTION */
+//         if (vd(td(tind).tri((snum+1)%3)).info == -1  && vd(td(tind).tri((snum+2)%3)).info > -1) {
+//            endpt = (1-td(tind).sign(snum))/2;
+//         }
+//         else if (vd(td(tind).tri((snum+1)%3)).info > -1  && vd(td(tind).tri((snum+2)%3)).info == -1) {
+//            endpt = (1+td(tind).sign(snum))/2;
+//         }
+//         else {
+         {
+            /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
+            /* THIS WAY WORKS BEST BUT COSTS MORE */
+            x = 0.0;
+            y = 0.0;
+            asum = 0.0;
+            for(endpt=0;endpt<2;++endpt) {
+               vnear = sd(sind).vrtx(endpt);
+               tind = vd(vnear).tri;
+               if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
                   prev = 0;
-               }
-               else {
+               else 
                   prev = 1;
-               }
+               stoptri = tind;
+               dir = 1;
+               ntsrnd = 0;
+               nssrnd = 0;
+               nperim = 0;
+               do {
+                  for(vn=0;vn<3;++vn) 
+                     if (td(tind).vrtx(vn) == vnear) break;
+                           
+                  tind1 = td(tind).tri((vn +dir)%3);
+                  if (tind1 < 0) {
+                     if (dir > 1) break;
+                     /* REVERSE DIRECTION AND GO BACK TO START */
+                     ++dir;
+                     tind1 = vd(vnear).tri;
+                     prev = 1;
+                     stoptri = -1;
+                  }
+                  
+                  if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
+                     i2wk_lst1(ntsrnd++) = tind1;
+                     if (!prev) {
+                        i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                     }
+                     prev = 0;
+                  }
+                  else {
+                     prev = 1;
+                  }
 
-               tind = tind1;
+                  tind = tind1;
 
-            } while(tind != stoptri); 
-            
-            tind = sd(sind).tri(endpt);
-            if (tind > -1) {
-               a = area(tind);
-               asum += a;
-               for(vn=0;vn<3;++vn) {
-                  x += a*vrtx(td(tind).vrtx(vn))(0);
-                  y += a*vrtx(td(tind).vrtx(vn))(1);
-               }
-            }            
-            for(j=0;j<ntsrnd;++j) {
-               tind = i2wk_lst1(j);
-               a = area(tind);
-               asum += a;
-               for(vn=0;vn<3;++vn) {
-                  x += a*vrtx(td(tind).vrtx(vn))(0);
-                  y += a*vrtx(td(tind).vrtx(vn))(1);
+               } while(tind != stoptri); 
+               
+               tind = sd(sind).tri(endpt);
+               if (tind > -1) {
+                  a = area(tind);
+                  asum += a;
+                  for(vn=0;vn<3;++vn) {
+                     x += a*vrtx(td(tind).vrtx(vn))(0);
+                     y += a*vrtx(td(tind).vrtx(vn))(1);
+                  }
+               }            
+               for(j=0;j<ntsrnd;++j) {
+                  tind = i2wk_lst1(j);
+                  a = area(tind);
+                  asum += a;
+                  for(vn=0;vn<3;++vn) {
+                     x += a*vrtx(td(tind).vrtx(vn))(0);
+                     y += a*vrtx(td(tind).vrtx(vn))(1);
+                  }
                }
             }
-         }
 
-         asum = 1./(3.*asum);
-         x = x*asum;
-         y = y*asum;
-         v0 = sd(sind).vrtx(0);
-         v1 = sd(sind).vrtx(1);
-         dx = vrtx(v0)(0) -x;
-         dy = vrtx(v0)(1) -y;
-         l0 = dx*dx +dy*dy;   
-         dx = vrtx(v1)(0) -x;
-         dy = vrtx(v1)(1) -y;
-         l1 = dx*dx +dy*dy;
-         
-         endpt = (l0 > l1 ? 0 : 1);
+            asum = 1./(3.*asum);
+            x = x*asum;
+            y = y*asum;
+            v0 = sd(sind).vrtx(0);
+            v1 = sd(sind).vrtx(1);
+            dx = vrtx(v0)(0) -x;
+            dy = vrtx(v0)(1) -y;
+            l0 = dx*dx +dy*dy;   
+            dx = vrtx(v1)(0) -x;
+            dy = vrtx(v1)(1) -y;
+            l1 = dx*dx +dy*dy;
+            
+            endpt = (l0 > l1 ? 0 : 1);
+            
+         }
       }
 
 #ifdef DEBUG_ADAPT

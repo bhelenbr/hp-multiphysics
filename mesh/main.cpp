@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
    class blocks z;
    if (Generate) {
       z.init(argv[1]);
-      for (int i=0;i<2;++i)
+      for (int i=0;i<1;++i)
          z.restructure();
       z.output(argv[1],out);
       return(0);
