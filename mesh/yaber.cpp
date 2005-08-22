@@ -15,7 +15,6 @@
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
 
-#define NO_SIDE_BASED
 #define NO_DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
@@ -35,19 +34,6 @@ void mesh::yaber(FLT tolsize) {
    FLT sratio;
    TinyVector<int,3> badside;
 
-#ifdef SIDE_BASED
-   /* SET UP FLTWK */
-   nlst = 0;
-   for(sind=0;sind<nside;++sind) {
-      if (td(sind).info&SDLTE) continue;
-      fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
-      if (sd(sind).tri(1) > -1 && fscr1(sind) > tolsize) {
-         putinlst(sind);
-         i1wk(sd(sind).tri(0)) += 1;
-         i1wk(sd(sind).tri(1)) += 1;
-      }
-   }
-#else
    FLT minvl;
 
    /* TO ADJUST FOR INSCRIBED RADIUS */
@@ -63,8 +49,6 @@ void mesh::yaber(FLT tolsize) {
       fscr1(i) = minvl/inscribedradius(i);
       if (fscr1(i) > tolsize) putinlst(i);
    }
-#endif
-
    
    /* MARK BOUNDARY VERTEX POINTS */
    /* THESE SHOULD NOT BE DELETED */
@@ -79,18 +63,6 @@ void mesh::yaber(FLT tolsize) {
    cnt = 0;
    /* BEGIN COARSENING ALGORITHM */
    while (nlst > 0) {
-#ifdef SIDE_BASED
-      sind = -1;
-      for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST SIDE TO DENSITY RATIO
-         sind = sd(i).info;
-         if (i1wk(sd(sind).tri(0)) +i1wk(sd(sind).tri(1)) == 4) continue;
-         break;
-      }
-      assert(sind != -1);
-      
-      tkoutlst(sind);
-
-#else
       for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
          for(j=0;j<3;++j) {
             tind = td(sd(i).info).tri(j);
@@ -131,7 +103,6 @@ void mesh::yaber(FLT tolsize) {
       if (vd(tind).info > -1) tkoutlst(tind);
       tind = sd(sind).tri(1);
       if (vd(tind).info > -1) tkoutlst(tind);
-#endif
 
       /* DON'T DELETE BOUNDARY POINT */
       sum = (td(sd(sind).vrtx(0)).info&VSPEC) +(td(sd(sind).vrtx(1)).info&VSPEC);
@@ -244,27 +215,6 @@ void mesh::yaber(FLT tolsize) {
       collapse(sind,endpt);
       ++cnt;
       
-#ifdef SIDE_BASED
-      /* RECALCULATE fscr1 */
-      for (i=0;i<i2wk_lst2(-1)-2;++i) {
-         sind = i2wk_lst2(i);
-         fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
-         if (vd(sind).info > -1) tkoutlst(sind);
-         if (fscr1(sind) > tolsize && sd(sind).tri(1) > -1) putinlst(sind);
-      }
-      sind = i2wk_lst2(i2wk_lst2(-1)-2);  // Index of deleted side
-      if (vd(sind).info > -1) tkoutlst(sind);
-      sind = i2wk_lst2(i2wk_lst2(-1)-1);
-      if (vd(sind).info > -1) tkoutlst(sind);
-
-    /* RECONSTRUCT AFFECTED TINFO ARRAY */
-      for(i=0;i<i2wk_lst1(-1);++i) {
-         tind = i2wk_lst1(i);
-         i1wk(tind) = -1;
-         for(j=0;j<3;++j) 
-            if (vd(td(tind).side(j)).info > -1) ++i1wk(tind);
-      }
-#else
       /* RECLASSIFY AFFECTED TRIANGLES */
       for(i=0;i<i2wk_lst1(-1);++i) {
          tind = i2wk_lst1(i);
@@ -275,7 +225,6 @@ void mesh::yaber(FLT tolsize) {
          fscr1(tind) = minvl/inscribedradius(tind);
          if (fscr1(tind) > tolsize) putinlst(tind);
       }
-#endif
       
 #ifdef DEBUG_ADAPT
       number_str(adapt_file,"adapt",adapt_count++,5);
