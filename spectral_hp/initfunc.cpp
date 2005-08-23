@@ -20,6 +20,10 @@ FLT centerx = CENTERX;
 FLT centery = CENTERY;
 
 FLT amp,lam,theta;
+FLT mux[4];
+FLT rhox[4];
+FLT sigmax[4];
+FLT body[ND] = {0.0, -9.81};
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -212,10 +216,6 @@ FLT f1(int n, FLT x, FLT y) {
 #endif
 
 #ifdef DROP
-FLT mux[2];
-FLT rhox[2];
-FLT sigmax;
-
 FLT f1(int n, FLT x, FLT y) {
    FLT r,sint,cost,k;
    FLT ur,ut;
@@ -264,7 +264,7 @@ FLT f2(int n, FLT x, FLT y) {
       case(1):
          return(-ur*cost+ut*sint);
       case(2):
-         return(4*sigmax -5*mux[1]*r*cost*4/(1+k)); 
+         return(4*sigmax[1] -5*mux[1]*r*cost*4/(1+k)); 
    }
    return(0.0);
 }
@@ -296,13 +296,11 @@ FLT f1(int n, FLT x, FLT y) {
 #endif
 
 #ifdef KOVASZNAY
-FLT kovamu = 0.025;
-
 double f1(int n, double x, double y) { 
    double re, lda;
    
    if (kovamu > 0.0) {
-      re = 1/kovamu;
+      re = 1/mux[0];
       lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
    }
    else
@@ -324,7 +322,7 @@ double df1d(int n, double x, double y, int dir) {
    double re, lda;
    
    if (kovamu > 0.0) {
-      re = 1/kovamu;
+      re = 1/mux[0];
       lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
    }
    else
@@ -400,11 +398,7 @@ FLT df1d(int n, FLT x, FLT y) {
 
 #ifdef TWOLAYER
 
-FLT body[2];
 static FLT h = 2.0;
-FLT mux[2];
-FLT rhox[2];
-
 
 double f1(int n, double x, double y) { 
    FLT bf,re,g1,g2,n1,n2,q1,q2;
@@ -449,10 +443,6 @@ double f1(int n, double x, double y) {
 #endif
 
 #ifdef THREELAYER
-
-FLT body[ND];
-FLT mux[3];
-FLT rhox[3];
 
 double f1(int n, double x, double y) { 
    FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
@@ -512,6 +502,49 @@ double f1(int n, double x, double y) {
 }
 #endif
 
+#ifdef TWOSPHERE
+FLT f1(int n, FLT x, FLT y) {
+   double r = sqrt(x*x+y*y);
+   
+   switch(n) {
+      case(0):
+         if (r < 31.0*12.0*2.54/100.0) 
+            return(30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI/lam*outertime)*x/r);
+         break;
+      case(1):
+         if (r < 31.0*12.0*2.54/100.0) 
+            return(30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI/lam*outertime)*y/r);
+         break;
+      case(2):
+         return(rhox[0]*body[1]*(y-9.9690870000e+00));
+         break;
+   }
+
+   return(0.0);
+}
+#endif
+
+#ifdef COLUMN
+FLT f1(int n, FLT x, FLT y) {
+   FLT wallv,position,rad;
+   
+   switch(n) {
+      case(0):
+         rad = 30.75*12.0*2.54/100.0*amp*(1-cos(2.*M_PI*outertime/lam));
+         wallv = 30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI*outertime/lam);
+         position = (x-rad)/(1.277112e+00-rad);
+         return((1.0-position)*wallv);
+      case(1):
+         return(0.0);
+         // return(1.0  +0.1*(y +1.064971e+01)*(1.277112e+00 -x)*x);  
+      case(2):
+         return(rhox[0]*body[1]*y);
+   }
+
+   return(0.0);
+}
+#endif
+   
 
 /***************************/
 /* CURVED SIDE DEFINITIONS */
@@ -670,6 +703,27 @@ FLT dhgtdy(int type, FLT x, FLT y) {
 }
 #endif
 
+#ifdef MOVING_WALL
+FLT hgt(int type, FLT x, FLT y) { 
+   if (type&CURV_MASK && type&EULR_MASK) {
+      rad = 30.75*12.0*2.54/100.0*amp*(1-cos(2.*M_PI*outertime/lam));
+      return(x-rad);
+   }   
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   return(1.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   return(0.0);
+}
+#endif
+      
+      
+
+
 
 /* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
 class spectral_hp *tgt;
@@ -681,8 +735,17 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
    /* MOVING VERTEX POINTS */
    if (typ&MVPT_MASK) {
       /* MOVE POINT IF YOU WANT TO */
-      return;
+#ifdef TWOSPHERE
+      typ = INFL_MASK +CURV_MASK;
+#endif
    }
+   
+#ifdef TWOSPHERE
+   if (typ == 66564) 
+      rad = 30.75*12.0*2.54/100.0*(1.0 +amp*(1-cos(2.*M_PI*outertime/lam)));
+   else
+      rad = 34.94*12.0*2.54/100.0;
+#endif
    
    if (typ&(EULR_MASK +INFL_MASK)) {
       iter = 0;
@@ -736,6 +799,18 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       return;
    }
    
+#endif
+
+#ifdef TWOSPHERE
+   if (typ & (FSRF_MASK+IFCE_MASK)) {
+      if (startup) {
+         return;
+      }
+      else
+         tgt->findbdrypt(typ,x,y,psi);
+
+      return;
+   }
 #endif
 
    if (typ&(FSRF_MASK +IFCE_MASK)) {

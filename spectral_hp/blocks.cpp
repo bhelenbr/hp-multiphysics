@@ -11,19 +11,13 @@ extern FLT f1(int n, FLT x, FLT y); //INITIALIZATION FUNCTIONS
 extern FLT f2(int n, FLT x, FLT y);
 extern int startup;  // USED IN MOVEPTTOBDRY TO SWITCH FROM INITIALIZATION TO ADAPTION
 
-#ifdef LAYER
-extern FLT mux[LAYER];
-extern FLT rhox[LAYER];
-#endif
 static int iter;
 extern FLT amp,lam,theta;
 
-#ifdef DROP
 static FLT factor;
-extern FLT mux[2];
-extern FLT rhox[2];
-extern FLT sigmax;
-#endif
+extern FLT mux[4];
+extern FLT rhox[4];
+extern FLT sigmax[4];
 
 void blocks::init(char *file, int start_sim) {
    int i,j,p;
@@ -137,15 +131,11 @@ void blocks::init(char *file, int start_sim) {
    for(i=0;i<mgrids;++i) 
       findmatch(i);
    
-#if (defined(LAYER) || defined(DROP))
    for(i=0;i<nblocks;++i) {
       rhox[i] = blk[i].gbl.rho;
       mux[i] = blk[i].gbl.mu;
+      if (blk[i].sgbl) sigmax[i] = blk[i].sgbl->sigma;
    }
-#ifdef DROP
-   sigmax = blk[1].sgbl->sigma;
-#endif
-#endif
 
    /* INITIALIZE SOLUTION FOR EACH BLOCK */
    if (readin > 0) {
@@ -467,7 +457,7 @@ void blocks::cycle(int vw, int lvl) {
    int crscntr = 0;
 #endif
    char fname[100];
-   static int count[3] = {0, 0, 0};
+   static int count = 0;
 
 
    /* ASSUMES WE ENTER WITH THE CORRECT BASIS LOADED */ 
@@ -479,6 +469,16 @@ void blocks::cycle(int vw, int lvl) {
       grid = lvl -lg2pmax;
       bsnum =0;
    }
+   
+#ifdef FILEOUTPUT
+      for (j=0;j<nblocks;++j) {
+         number_str(fname,"debug",j,1);
+         strcat(fname,".");
+         number_str(fname,fname,count,6);
+         blk[j].grd[grid].output(fname,tecplot);
+      }
+      ++count;
+#endif
 
 
    for (vcount=0;vcount<vw;++vcount) {
@@ -498,18 +498,8 @@ void blocks::cycle(int vw, int lvl) {
 #ifdef DEFORM
          r_jacobi(1,grid);
 #endif
-#ifdef FILEOUTPUT
-         for (j=0;j<nblocks;++j) {
-            number_str(fname,"debug",lvl,1);
-            strcat(fname,".");
-            number_str(fname,fname,j,1);
-            strcat(fname,".");
-            number_str(fname,fname,count[lvl],3);
-            blk[j].grd[grid].output(fname,tecplot);
-         }
-         ++count[lvl];
-#endif
       }
+
 
 #ifdef TWO_LEVEL
       if (lvl == 1) {
@@ -543,6 +533,16 @@ void blocks::cycle(int vw, int lvl) {
 #endif
          continue;
       }
+      
+#ifdef FILEOUTPUT
+      for (j=0;j<nblocks;++j) {
+         number_str(fname,"debug",j,1);
+         strcat(fname,".");
+         number_str(fname,fname,count,6);
+         blk[j].grd[grid].output(fname,tecplot);
+      }
+      ++count;
+#endif
       
       for(j=0;j<nblocks;++j)
          blk[j].grd[grid].surfrsdl(lvl);
@@ -608,37 +608,33 @@ void blocks::cycle(int vw, int lvl) {
       
       for (j=0;j<nblocks;++j)
          blk[j].grd[grid].surfugtovrt2();
-   }
-   
+         
 #ifdef FILEOUTPUT
-   for (j=0;j<nblocks;++j) {
-      number_str(fname,"debug",lvl,1);
-      strcat(fname,".");
-      number_str(fname,fname,j,1);
-      strcat(fname,".");
-      number_str(fname,fname,count[lvl],3);
-      blk[j].grd[grid].output(fname,tecplot);
-   }
-   ++count[lvl];
+      for (j=0;j<nblocks;++j) {
+         number_str(fname,"debug",j,1);
+         strcat(fname,".");
+         number_str(fname,fname,count,6);
+         blk[j].grd[grid].output(fname,tecplot);
+      }
+      ++count;
 #endif
+   }
 
    for (int i=nup;i--;) {
       nstage(grid,base[bsnum].sm,lvl);
 #ifdef DEFORM
       r_jacobi(1,grid);
 #endif
-#ifdef FILEOUTPUT
-      for (j=0;j<nblocks;++j) {
-         number_str(fname,"debug",lvl,1);
-         strcat(fname,".");
-         number_str(fname,fname,j,1);
-         strcat(fname,".");
-         number_str(fname,fname,count[lvl],3);
-         blk[j].grd[grid].output(fname,tecplot);
-      }
-      ++count[lvl];
-#endif
    }
+#ifdef FILEOUTPUT
+   for (j=0;j<nblocks;++j) {
+      number_str(fname,"debug",j,1);
+      strcat(fname,".");
+      number_str(fname,fname,count,6);
+      blk[j].grd[grid].output(fname,tecplot);
+   }
+   ++count;
+#endif
 
 
       

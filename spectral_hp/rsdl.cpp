@@ -10,7 +10,7 @@
 #include "hp_mgrid.h"
 #include <stdlib.h>
 
-#ifdef LAYER
+#ifdef BODY
 extern FLT body[2];
 #endif
 
@@ -197,7 +197,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= RAD(i,j)*cjcb*amp*pow(crd[0][i][j]-0.5,amp-1.);
 #endif
 
-#ifdef LAYER
+#ifdef BODY
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb*body[1];
 #ifdef INERTIALESS
@@ -387,7 +387,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                   res[0][i][j] -= RAD(i,j)*cjcb*amp*pow(crd[0][i][j]-0.5,amp-1.);
 #endif
 
-#ifdef LAYER
+#ifdef BODY
                   res[0][i][j] -= gbl->rho*RAD(i,j)*cjcb*body[0];
                   res[1][i][j] -= gbl->rho*RAD(i,j)*cjcb*body[1];
 #ifdef INERTIALESS
