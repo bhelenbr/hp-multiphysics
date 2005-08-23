@@ -6,13 +6,13 @@ VIZ = pv3routines.o
 
 LIB = -L$(HOME)/Codes/lib -lutil -lmyblas -lmesh -lquad -lbasis -lm
 DEFINES = -Df2cFortran
-CPPFLAGS = -Wno-long-double -I$(HOME)/Codes/include/
+CPPFLAGS = -I$(HOME)/Codes/include/
 
 ### Begin machine dependent
 
 ## Darwin:
 ## Machine specific for OS X
-#CPPFLAGS += -O3
+#CPPFLAGS += -O3 -Wno-long-double 
 #LIB += -framework veclib
 #DEFINES += -DNOUNDERSCORE -DPOINTERLONG -DNOUNS
 #PV3HOME = ${HOME}/Packages/pV3/
@@ -22,15 +22,17 @@ CPPFLAGS = -Wno-long-double -I$(HOME)/Codes/include/
 
 ## Linux:
 ##  Machine specific for Linux
-#CXX=icpc #(cares)
-CXX=g++3 #(shelob)
+CXX=icpc #(cares)
+#CXX=g++3 #(shelob)
 CPPFLAGS += -O3
-LIB += -llapack -lblas -lg2c
-PV3HOME = /usr/local/pV3/
-DEFINES += -DUNDERSCORE -DPOINTERLONG
-FORTRTL = /usr/local/pgi/linux86/lib#(shelob)
-FORTMAIN = $(FORTRTL)/pgfmain.o #(shelob)
-FORTLIB = -lpgftnrtl -lpgc #(shelob)
+CPPFLAGS += -cxxlib-icc #(cares)
+#LIB += -llapack -lblas -lg2c #(shelob)
+LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+#PV3HOME = /usr/local/pV3/
+#DEFINES += -DUNDERSCORE -DPOINTERLONG
+#FORTRTL = /usr/local/pgi/linux86/lib#(shelob)
+#FORTMAIN = $(FORTRTL)/pgfmain.o #(shelob)
+#FORTLIB = -lpgftnrtl -lpgc #(shelob)
 
 
 ## IRIX64:
@@ -51,7 +53,7 @@ CPPFLAGS += $(DEFINES)
 PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3 -lgpvm3 -lpvm3 -L$(FORTRTL) $(FORTLIB)
 
 hp: $(OBJ)
-	${CXX} -o $@ $(OBJ) $(LIB)
+	${CXX} -o $@ $(CPPFLAGS) $(OBJ) $(LIB)
 	
 hp.pV3: $(OBJ) $(VIZ)
 	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
