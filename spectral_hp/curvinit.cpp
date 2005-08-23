@@ -32,8 +32,8 @@ void spectral_hp::curvinit(int MASK) {
 
       if (!(typ&CURV_MASK) || !(typ&MASK)) continue;
 
-      /* DON'T MESH WITH END VERTICES */
-      for(j=1;j<sbdry[bind].num;++j) {
+      /* MESS WITH END VERTICES? */
+      for(j=0;j<sbdry[bind].num;++j) {
          sind = sbdry[bind].el[j];
          v0 = svrtx[sind][0];
          x = vrtx[v0][0];
@@ -42,6 +42,12 @@ void spectral_hp::curvinit(int MASK) {
          vrtx[v0][0] = x;
          vrtx[v0][1] = y;
       }
+      v0 = svrtx[sind][1];
+      x = vrtx[v0][0];
+      y = vrtx[v0][1];
+      mvpttobdry(sbdry[bind].type,x,y);
+      vrtx[v0][0] = x;
+      vrtx[v0][1] = y;
    }
 
    if (b->p == 1) return;

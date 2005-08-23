@@ -7,6 +7,8 @@
 FLT surface::fadd[ND];
 FLT surface::cfl[MXLG2P][ND];
 
+extern FLT body[ND];
+
 void surface::alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls *store) {
    int i,p;
    
@@ -60,7 +62,7 @@ void hp_mgrid::setksprg1d() {
    class surface *srf;
 
    for(i=0;i<nsbd;++i) {
-      if(sbdry[i].type&(CURV_MASK+IFCE_MASK)) {
+      if(sbdry[i].type&(FSRF_MASK+IFCE_MASK)) {
          srf = static_cast<class surface *>(sbdry[i].misc);
          if (srf != NULL) {
             for(j=0;j<sbdry[i].num;++j) {
@@ -79,7 +81,7 @@ void hp_mgrid::surfksrc1d() {
    class surface *srf;   
 
    for(bnum=0;bnum<nsbd;++bnum) {
-      if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
+      if(sbdry[bnum].type&(FSRF_MASK+IFCE_MASK)) {
          srf = static_cast<class surface *>(sbdry[bnum].misc);
          if (srf != NULL) {
             /* ZERO TANGENTIAL MESH MOVEMENT SOURCE */   
@@ -94,7 +96,7 @@ void hp_mgrid::surfksrc1d() {
    surfrsdl(0);
    
    for(bnum=0;bnum<nsbd;++bnum) {
-      if(sbdry[bnum].type&(CURV_MASK+IFCE_MASK)) {
+      if(sbdry[bnum].type&(FSRF_MASK+IFCE_MASK)) {
          srf = static_cast<class surface *>(sbdry[bnum].misc);
          if (srf != NULL) {         
             /* TANGENTIAL MESH MOVEMENT SOURCE */   
@@ -492,7 +494,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v0) continue;
             
-      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK +PRDY_MASK)) {
+      if (vbdry[i].type&(PRDX_MASK +SYMM_MASK +PRDY_MASK +CURV_MASK)) {
          srf->gbl->vres[0][0] = 0.0;
       }
       if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {  // TOTALLY FIXED POINT
@@ -513,7 +515,7 @@ void hp_mgrid::surfinvrt2(int bnum) {
    for(i=0;i<nvbd;++i) {
       if (vbdry[i].el[0] != v1) continue;
             
-      if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK)) {
+      if (vbdry[i].type&(PRDX_MASK +PRDY_MASK +SYMM_MASK +CURV_MASK)) {
          srf->gbl->vres[end][0] = 0.0;
       }
       if (vbdry[i].type&PRDX_MASK && vbdry[i].type&PRDY_MASK) {  // TOTALLY FIXED POINT
@@ -638,7 +640,12 @@ void hp_mgrid::surfdt1(int bnum) {
       hsm = h/(.25*(b->p+1)*(b->p+1));
             
       dttang = 2.*srf->ksprg[indx]*(.25*(b->p+1)*(b->p+1))/hsm;
+#ifndef BODY
       strss =  4.*srf->gbl->sigma/(hsm*hsm) +fabs(drho*g*nrm[1]/h);
+#else
+      strss =  4.*srf->gbl->sigma/(hsm*hsm) +fabs(drho*(-body[0]*nrm[0] +(g-body[1])*nrm[1])/h);
+#endif
+
       gam1 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu1/hsm)*(0.5*hsm*bd[0] + 2.*nu1/hsm);
       gam2 = 3.0*qmax +(0.5*hsm*bd[0] + 2.*nu2/hsm)*(0.5*hsm*bd[0] + 2.*nu2/hsm);
 #ifdef INERTIALESS
@@ -810,7 +817,7 @@ void hp_mgrid::surfnstage1(int bnum) {
 }
 
 void hp_mgrid::surfnstage2(int bnum, int stage) {
-   int i,m,n,indx,indx1;
+   int i,m,n,indx,indx1,end,v0,v1;
    class surface *srf;
    
    srf = static_cast<class surface *>(sbdry[bnum].misc);
@@ -821,6 +828,24 @@ void hp_mgrid::surfnstage2(int bnum, int stage) {
          srf->vug[i][n] = srf->gbl->vug0[i][n] -alpha[stage]*srf->gbl->vres[i][n];
       }
    }
+   
+   /* FIX POINTS THAT SLIDE ON CURVE HERE? */
+   end = sbdry[bnum].num;
+   v0 = svrtx[sbdry[bnum].el[0]][0];
+   v1 = svrtx[sbdry[bnum].el[end-1]][1];
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v0) continue;
+      if (vbdry[i].type&(CURV_MASK)) {
+         mvpttobdry(vbdry[i].type, srf->vug[0][0], srf->vug[0][1]);
+      }
+   }  
+   for(i=0;i<nvbd;++i) {
+      if (vbdry[i].el[0] != v1) continue;
+      if (vbdry[i].type&(CURV_MASK)) {
+         mvpttobdry(vbdry[i].type, srf->vug[end][0], srf->vug[end][1]);
+      }
+   }       
+   
 
    if (b->sm > 0) {
       indx = 0;

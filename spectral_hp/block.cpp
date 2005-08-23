@@ -77,7 +77,7 @@ void block::initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p) 
       
       /* SET SURFACE POINTERS TO NULL FOR UNUSED SURFACES */
       for(i=0;i<grd[0].nsbd;++i) 
-         if(grd[0].sbdry[i].type&(CURV_MASK+IFCE_MASK))
+         if(grd[0].sbdry[i].type&(FSRF_MASK+IFCE_MASK))
             for(j=0;j<ngrid;++j)
                grd[j].sbdry[i].misc = NULL;
    
