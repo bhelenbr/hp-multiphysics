@@ -126,6 +126,7 @@ void mesh::yaber(FLT tolsize) {
          {
             /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
             /* THIS WAY WORKS BEST BUT COSTS MORE */
+            /* TEMPORARY:: NEED TO ELIMINATE DUPLICATION OF WORK BETWEEN THIS & COLLAPSE */
             x = 0.0;
             y = 0.0;
             asum = 0.0;

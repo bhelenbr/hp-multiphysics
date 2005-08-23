@@ -150,7 +150,6 @@
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
 		6F92F9F108B94B60006F9C2C /* index.html */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.html; name = index.html; path = html/index.html; sourceTree = "<group>"; };
-		6F92F9F308B94BB8006F9C2C /* index.html.documentation */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; name = index.html.documentation; path = html/index.html.documentation; sourceTree = "<group>"; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
 		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = /Users/helenbrk/Codes/lib/libparseargs.a; sourceTree = "<absolute>"; };
 		6FC6A54203CC99B700990B69 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = "/Users/helenbrk/Packages/metis-4.0/libmetis.a"; sourceTree = "<absolute>"; };
@@ -279,7 +278,6 @@
 		6F92F9F008B94B22006F9C2C /* Documentation */ = {
 			isa = PBXGroup;
 			children = (
-				6F92F9F308B94BB8006F9C2C /* index.html.documentation */,
 				6F92F9F108B94B60006F9C2C /* index.html */,
 			);
 			name = Documentation;
@@ -639,7 +637,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				OPTIMIZATION_CFLAGS = "";
+				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -658,7 +656,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				OPTIMIZATION_CFLAGS = "";
+				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -675,7 +673,7 @@
 		6F27981208B9FA5A007BECA9 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OPTIMIZATION_CFLAGS = "";
+				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";

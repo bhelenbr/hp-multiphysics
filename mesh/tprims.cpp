@@ -23,7 +23,7 @@ FLT mesh::incircle(int tind, const TinyVector<FLT,ND> &a) const {
    return(determ);
 }
 
-FLT mesh::insidecircle(int sind, const TinyVector<FLT,2> &a) const {
+FLT mesh::insidecircle(int sind, const TinyVector<FLT,ND> &a) const {
    int v0,v1;
    TinyVector<FLT,2> ctr;
    FLT dist2;

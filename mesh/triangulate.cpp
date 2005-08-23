@@ -12,8 +12,6 @@
 #include<float.h>
 #include<assert.h>
 
-#define MAXGOOD 100
-
 void mesh::triangulate(int nsd) {
    int i,j,n,vcnt,sck,dirck,stest,nv,vtry;
    int sind2;
@@ -21,15 +19,17 @@ void mesh::triangulate(int nsd) {
    int sind,dir;
    int sind1,sindprev;
    int nsidebefore,ntest;
-   int ngood,good[MAXGOOD];
+   int ngood;
    int minv,maxv,itemp;
-   int v[2],v2,v3;
-   FLT xmid[2],xcen[2];
+   TinyVector<int,2> v;
+   int v2,v3;
+   TinyVector<FLT,2> xmid,xcen;
    FLT xm1dx1,xm2dx2;
    FLT hmin,height;
-   FLT temp,ang[MAXGOOD],ds1,ds2;
-   FLT xmax[ND],xmin[ND],xmax1[ND],xmin1[ND];
-   FLT dx1[ND],dx2[ND],dx3[ND],dx4[ND];
+   FLT temp;
+   FLT ds1,ds2;
+   TinyVector<FLT,ND> xmax,xmin,xmax1,xmin1;
+   TinyVector<FLT,ND> dx1,dx2,dx3,dx4;
    FLT det,s,t;
 
    /* CREATE VERTEX LIST */
@@ -48,15 +48,15 @@ void mesh::triangulate(int nsd) {
       
    for(i=0;i<nsd;++i) {
       sind = abs(i2wk_lst1(i)) -1;
-      v[0] = sd(sind).vrtx(0);
-      v[1] = sd(sind).vrtx(1);
-      if (v[1] > v[0]) {
-         minv = v[0];
-         maxv = v[1];
+      v(0) = sd(sind).vrtx(0);
+      v(1) = sd(sind).vrtx(1);
+      if (v(1) > v(0)) {
+         minv = v(0);
+         maxv = v(1);
       }
       else {
-         minv = v[1];
-         maxv = v[0];
+         minv = v(1);
+         maxv = v(0);
       }
       sind1 = vd(minv).info;
       while (sind1 >= 0) {
@@ -81,44 +81,44 @@ void mesh::triangulate(int nsd) {
          
          if (sd(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
          
-         v[0] = sd(sind).vrtx(dir);
-         v[1] = sd(sind).vrtx(1 -dir);
+         v(0) = sd(sind).vrtx(dir);
+         v(1) = sd(sind).vrtx(1 -dir);
 
          /* SEARCH FOR GOOD POINTS */
          for(n=0;n<ND;++n) {
-            dx2[n] = vrtx(v[1])(n) -vrtx(v[0])(n);
-            xmid[n] = 0.5*(vrtx(v[1])(n) -vrtx(v[0])(n));
+            dx2(n) = vrtx(v(1))(n) -vrtx(v(0))(n);
+            xmid(n) = 0.5*(vrtx(v(1))(n) -vrtx(v(0))(n));
          }
          hmin = 1.0e99;
          
          /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
          for(i=0;i<nv;++i) {
             vtry = i2wk_lst2(i);
-            if (vtry == v[0] || vtry == v[1]) continue;
+            if (vtry == v(0) || vtry == v(1)) continue;
       
             for(n=0;n<ND;++n)
-               dx1[n] = vrtx(v[0])(n) -vrtx(vtry)(n);
-            det        = dx1[0]*dx2[1] -dx1[1]*dx2[0];
+               dx1(n) = vrtx(v(0))(n) -vrtx(vtry)(n);
+            det        = dx1(0)*dx2(1) -dx1(1)*dx2(0);
             if (det <= 0.0) continue;
             
             /* CIRCUMCENTER IS AT INTERSECTION OF NORMAL TO SIDES THROUGH MIDPOINT */
             det = 1./det;
-            xm1dx1       = -0.5*(dx1[0]*dx1[0] +dx1[1]*dx1[1]);
-            xm2dx2       =  0.5*(dx2[0]*dx2[0] +dx2[1]*dx2[1]);
-            xcen[0] = det*(xm1dx1*dx2[1] -xm2dx2*dx1[1]);
-            xcen[1] = det*(xm2dx2*dx1[0] -xm1dx1*dx2[0]);
+            xm1dx1       = -0.5*(dx1(0)*dx1(0) +dx1(1)*dx1(1));
+            xm2dx2       =  0.5*(dx2(0)*dx2(0) +dx2(1)*dx2(1));
+            xcen(0) = det*(xm1dx1*dx2(1) -xm2dx2*dx1(1));
+            xcen(1) = det*(xm2dx2*dx1(0) -xm1dx1*dx2(0));
                   
             /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
             /* ABOVE THE EDGE MID-POINT IS MINIMIZED (MINIMIZES RADIUS) */
-            height = dx2[0]*(xcen[1] -xmid[1]) -dx2[1]*(xcen[0] -xmid[0]);
+            height = dx2(0)*(xcen(1) -xmid(1)) -dx2(1)*(xcen(0) -xmid(0));
 
             if (height > hmin) continue;
             
             /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
             /* WITH ALL OTHER BOUNDARY SIDES */
             for(vcnt=0;vcnt<2;++vcnt) {
-               minv = MIN(vtry,v[vcnt]);
-               maxv = MAX(vtry,v[vcnt]);
+               minv = MIN(vtry,v(vcnt));
+               maxv = MAX(vtry,v(vcnt));
                /* LOOK THROUGH ALL SIDES CONNECTED TO MINV FOR DUPLICATE */
                /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
                sind1 = vd(minv).info;
@@ -128,8 +128,8 @@ void mesh::triangulate(int nsd) {
                }
                
                for(n=0;n<ND;++n) {
-                  xmin[n]      = MIN(vrtx(v[0])(n),vrtx(v[1])(n));
-                  xmax[n]      = MAX(vrtx(v[0])(n),vrtx(v[1])(n));
+                  xmin(n)      = MIN(vrtx(v(0))(n),vrtx(v(1))(n));
+                  xmax(n)      = MAX(vrtx(v(0))(n),vrtx(v(1))(n));
                }
                
                for(sck=0;sck<ntest;++sck) {
@@ -141,34 +141,34 @@ void mesh::triangulate(int nsd) {
                   if (v2 == minv || v3 == minv) {
                      /* SPECIAL TEST FOR CONNECTED SIDES */
                      /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
-                     if (area(v2,v3,v[vcnt]) > 0.0 && area(v2,v3,maxv) <= 0.0) goto vtry_failed;
+                     if (area(v2,v3,v(vcnt)) > 0.0 && area(v2,v3,maxv) <= 0.0) goto vtry_failed;
                      continue;
                   }
                   if (v2 == maxv || v3 == maxv) {
                      /* SPECIAL TEST FOR CONNECTED SIDES */
                      /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
-                     if (area(v2,v3,v[vcnt]) > 0.0 && area(v2,v3,minv) <= 0.0) goto vtry_failed;
+                     if (area(v2,v3,v(vcnt)) > 0.0 && area(v2,v3,minv) <= 0.0) goto vtry_failed;
                      continue;
                   }
                   for(n=0;n<ND;++n) {
-                     xmin1[n]      = MIN(vrtx(v2)(n),vrtx(v3)(n));
-                     xmax1[n]      = MAX(vrtx(v2)(n),vrtx(v3)(n));
+                     xmin1(n)      = MIN(vrtx(v2)(n),vrtx(v3)(n));
+                     xmax1(n)      = MAX(vrtx(v2)(n),vrtx(v3)(n));
                   }
                   for(n=0;n<ND;++n)
-                     if (xmax[n] < xmin1[n] || xmin[n] > xmax1[n]) goto next_bdry_side;
+                     if (xmax(n) < xmin1(n) || xmin(n) > xmax1(n)) goto next_bdry_side;
       
                   for(n=0;n<ND;++n) {
-                     dx1[n] = vrtx(maxv)(n) -vrtx(minv)(n);
-                     dx3[n] = vrtx(v3)(n)-vrtx(v2)(n);
-                     dx4[n] = vrtx(minv)(n)-vrtx(v2)(n);
+                     dx1(n) = vrtx(maxv)(n) -vrtx(minv)(n);
+                     dx3(n) = vrtx(v3)(n)-vrtx(v2)(n);
+                     dx4(n) = vrtx(minv)(n)-vrtx(v2)(n);
                   }
                   
-                  det = -dx1[0]*dx3[1] +dx1[1]*dx3[0];
-                  if (det < EPSILON*100.0*(fabs(xmax[0])+fabs(xmax[1]))) continue;
+                  det = -dx1(0)*dx3(1) +dx1(1)*dx3(0);
+                  if (det < EPSILON*100.0*(fabs(xmax(0))+fabs(xmax(1)))) continue;
                   
                   det = 1./det;
-                  s = det*(dx4[0]*dx3[1] -dx3[0]*dx4[1]);
-                  t = det*(-dx1[0]*dx4[1] +dx4[0]*dx1[1]);
+                  s = det*(dx4(0)*dx3(1) -dx3(0)*dx4(1));
+                  t = det*(-dx1(0)*dx4(1) +dx4(0)*dx1(1));
                   
                   if (s < 0.0 || s > 1.0) continue;
                   if (t < 0.0 || t > 1.0) continue;
@@ -181,28 +181,27 @@ next_vrt:      continue;
             }
       
             /* CHECK IF DEGENERATE */
-            if (height > hmin-200.0*EPSILON*sqrt(xcen[0]*xcen[0]+xcen[1]*xcen[1])) {
-               good[ngood++] = vtry;
-               assert(ngood < MAXGOOD);
+            if (height > hmin-200.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1))) {
+               i2wk_lst3(ngood++) = vtry;
                continue;
             }
             
             ngood = 0;
-            good[ngood++] = vtry;
-            hmin = height+100.0*EPSILON*sqrt(xcen[0]*xcen[0]+xcen[1]*xcen[1]);
+            i2wk_lst3(ngood++) = vtry;
+            hmin = height+100.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1));
 vtry_failed:continue;
          }
          
          if (ngood > 1) {
             /* ORDER COCIRCULAR POINTS */   
             /* CALCULATE SIDE ANGLE */
-            ds2 = 1./sqrt(dx2[0]*dx2[0] +dx2[1]*dx2[1]);
+            ds2 = 1./sqrt(dx2(0)*dx2(0) +dx2(1)*dx2(1));
             for(i=0;i<ngood;++i) {
-               vtry = good[i];
-               dx1[0] = vrtx(v[0])(0) -vrtx(vtry)(0);
-               dx1[1] = vrtx(v[0])(1) -vrtx(vtry)(1);
-               ds1 = 1./sqrt(dx1[0]*dx1[0] +dx1[1]*dx1[1]);
-               ang[i] = -(dx2[0]*dx1[0]  +dx2[1]*dx1[1])*ds2*ds1;
+               vtry = i2wk_lst3(i);
+               dx1(0) = vrtx(v(0))(0) -vrtx(vtry)(0);
+               dx1(1) = vrtx(v(0))(1) -vrtx(vtry)(1);
+               ds1 = 1./sqrt(dx1(0)*dx1(0) +dx1(1)*dx1(1));
+               fscr1(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
             }
          
             /* ORDER POINTS BY ANGLE */      
@@ -210,28 +209,28 @@ vtry_failed:continue;
                for(j=i+1;j<ngood;++j) {
       
                   /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN i2wk_lst2 */
-                  if (good[i] == good[j]) {
-                     good[j] = good[ngood-1];
+                  if (i2wk_lst3(i) == i2wk_lst3(j)) {
+                     i2wk_lst3(j) = i2wk_lst3(ngood-1);
                      --ngood;
                   }
       
                   /* ORDER BY ANGLE */
-                  if(ang[i] > ang[j]) {
-                     temp = ang[i];
-                     ang[i] = ang[j];
-                     ang[j] = temp;
-                     itemp = good[i];
-                     good[i] = good[j];
-                     good[j] = itemp;
+                  if(fscr1(i) > fscr1(j)) {
+                     temp = fscr1(i);
+                     fscr1(i) = fscr1(j);
+                     fscr1(j) = temp;
+                     itemp = i2wk_lst3(i);
+                     i2wk_lst3(i) = i2wk_lst3(j);
+                     i2wk_lst3(j) = itemp;
                   }
                }
-               // *log << "degenerate case" << v[0] << ' ' << v[1] << std::endl;
+               // *log << "degenerate case" << v(0) << ' ' << v(1) << std::endl;
             }
          }
-         addtri(v[0],v[1],good[0],sind,dir);
+         addtri(v(0),v(1),i2wk_lst3(0),sind,dir);
          /* ADD ANY DEGENERATE TRIANGLES */           
          for(i=1;i<ngood;++i)
-            addtri(good[i-1],v[1],good[i],-1,-1);
+            addtri(i2wk_lst3(i-1),v(1),i2wk_lst3(i),-1,-1);
       }
      
       bgn = end;

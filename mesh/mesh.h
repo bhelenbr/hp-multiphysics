@@ -196,7 +196,7 @@ class mesh {
       void addtri(int v0,int v1,int v2,int sind,int dir);
 
       /* TO INSERT A POINT */
-      int insert(const TinyVector<FLT,2> &x);
+      int insert(const TinyVector<FLT,ND> &x);
       int insert(int vnum, int tnum);
       void bdry_insert(int vnum, int sind, int endpt = 0);
       int findtri(TinyVector<FLT,ND> x, int vnear) const;
@@ -230,8 +230,8 @@ class mesh {
             d += pow(vrtx(v0)(n) -vrtx(v1)(n),2);
          return(d);
       }  
-      FLT incircle(int tind, const TinyVector<FLT,2> &x) const;
-      FLT insidecircle(int sind, const TinyVector<FLT,2> &x) const;
+      FLT incircle(int tind, const TinyVector<FLT,ND> &x) const;
+      FLT insidecircle(int sind, const TinyVector<FLT,ND> &x) const;
       FLT area(int sind, int vind) const;
       FLT area(int v0, int v1, int v2) const;
       FLT area(int tind) const;

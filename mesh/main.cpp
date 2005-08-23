@@ -12,9 +12,6 @@
 
 using namespace std;
 
-/* GENERATE CONVERT MAXMIN HEIGHT SHIFT COARSEN_TECPLOT SCALE REFINEBY2 */
-#define RUN
-
 static int informat = 3;
 static int outformat = 3;
 static GBool Generate = gFalse;
