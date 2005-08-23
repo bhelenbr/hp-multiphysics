@@ -164,6 +164,70 @@ FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
    return(max);
 }
 
+void spectral_hp::findintercept(int type, FLT (*fxy)(FLT x[ND])) {
+   FLT ddpsi1, ddpsi2, psil, psir;
+   FLT xp[ND], dx[ND];
+   FLT maxloc[ND],minloc[ND],max,min;
+   int bnum, v0, v1, sind;
+   
+   max = -1.0e99;
+   min = 1.0e99;
+   
+   for(bnum=0;bnum<nsbd;++bnum) {
+      if (!(sbdry[bnum].type&type)) continue;
+      
+      v0 = svrtx[sbdry[bnum].el[0]][0];
+      v1 = svrtx[sbdry[bnum].el[sbdry[bnum].num-1]][1];
+      /* CHECK IF PERIODIC */
+      ddpsi2 = 0.0;
+      if (v0 == v1) {
+         sind = sbdry[bnum].el[sbdry[bnum].num-1];
+         crdtocht(sind);
+         b->ptprobe1d(ND, xp, dx, 1.0,cht[0], MXTM);
+         ddpsi2 = (*fxy)(xp);
+      }
+      else {
+         for(int i=0;i<nvbd;++i) {
+            if (vbdry[i].type&(COMX_MASK+COMY_MASK) && vbdry[i].el[0] == v0) {
+               sind = sbdry[bnum].el[sbdry[bnum].num-1];
+               crdtocht1d(sind);
+               b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
+               ddpsi2 = (*fxy)(xp);
+            }
+         } 
+      }
+
+      for(int indx=0;indx<sbdry[bnum].num;++indx) {
+         sind = sbdry[bnum].el[indx];
+         crdtocht1d(sind);
+         b->ptprobe1d(ND, xp, dx, -1.0, cht[0], MXTM);
+         ddpsi1 = (*fxy)(xp);
+         if (ddpsi1 * ddpsi2 <= 0.0) {
+            v0 = svrtx[sbdry[bnum].el[indx]][0];
+            printf("#INTERSECTION: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
+         }
+         b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
+         ddpsi2 = (*fxy)(xp);
+         if (ddpsi1 *ddpsi2 <= 0.0) {
+            /* INTERIOR INTERCEPT */
+            psil = -1.0;
+            psir = 1.0;
+            while (psir-psil > 1.0e-10) {
+               b->ptprobe1d(ND, xp, dx, 0.5*(psil +psir), cht[0], MXTM);
+               if ((*fxy)(xp)*ddpsi1 < 0.0) 
+                  psir = 0.5*(psil+psir);
+               else
+                  psil = 0.5*(psil+psir);
+            }
+			printf("#INTERSECTION: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
+         }  
+      }
+   }
+   
+   return;
+}
+
+
 static FLT fx(FLT xp[ND]) { return(xp[0]);}
 static FLT fy(FLT xp[ND]) { return(xp[1]);}
 FLT spectral_hp::findmaxx(int type) {return(findmax(type,&fx));}

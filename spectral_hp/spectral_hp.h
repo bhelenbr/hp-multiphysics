@@ -82,6 +82,7 @@ class spectral_hp : public r_mesh  {
       FLT findmax(int type, FLT (*fxy)(FLT x[ND]));
       FLT findmaxx(int type);
       FLT findmaxy(int type);
+      void findintercept(int type, FLT (*fxy)(FLT x[ND]));
       inline void tobasis(FLT (*func)(int, FLT, FLT)) {tobasis(ug,func);}
       void curvinit(int MASK = ~0);
       void input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE type);
