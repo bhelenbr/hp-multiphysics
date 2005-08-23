@@ -3,13 +3,12 @@
 
 /* SIMULATION PV3VIEWER FINDMAX */
 #define SIMULATION
-#define PV3
 
 /* KOVASZNAY TEST CYLINDER SPHERE FREESTREAM CONVDIFF */
 /* UNSTEADY_DROP DROP TWOLAYER TWOLAYERNOINERTIA WAVE */
 /* THREELAYER TAYLOR MOVING_TAYLOR ACCELERATING SOURCETERM*/
-/* BOUNDARY_LAYER */
-#define DROP
+/* BOUNDARY_LAYER TWOSPHERE */
+#define COLUMN
 
 /* CIRCLE SIN COS NACA */
 #define CIRCLE
@@ -18,8 +17,8 @@
 #define NV 3
 
 /* BACKDIFF DIRK */
-#define BACKDIFF
-#define TMSCHEME 2
+#define DIRK
+#define TMSCHEME 4
 
 #ifdef DIRK
 #define DIRKSOLVES 3
@@ -79,6 +78,9 @@
 /* ENERGY NO_ENERGY */
 #define NO_ENERGY
 
+/* BODY NO_BODY */
+#define NO_BODY
+
 /* PARAMETERLOOP NO_PARAMETERLOOP */
 #define NO_PARAMETERLOOP
 
@@ -86,24 +88,38 @@
 #define CVGTOLREL 1.0e-12
 #define CVGTOLABS 1.0e-12
 
-/* AUTOMATIC SWITCHES FOR PARTICULAR CASES */
 #ifdef CIRCLE
 #define RADIUS 0.5;
 #define CENTERX 0.0;
 #define CENTERY 0.0;
 #endif
 
-#if (defined(SPHERE) || defined(KOVASZNAY) || defined(CYLINDER) || defined(CONVDIFF) || defined(TEST) || defined(FREESTREAM) || defined(BOUNDARY_LAYER))
+/* AUTOMATIC SWITCHES FOR PARTICULAR CASES */
+#ifdef SPHERE
 #undef DEFORM
 #define NO_DEFORM
-#endif
-
-#if (defined(SPHERE) || defined(DROP) || defined(UNSTEADY_DROP))
 #undef NO_AXISYMMETRIC
 #define AXISYMMETRIC
 #endif
 
-#if (defined(UNSTEADY_DROP) || defined(DROP))
+#ifdef TEST
+#undef DEFORM
+#define NO_DEFORM
+#endif
+
+#ifdef CYLINDER
+#undef DEFORM
+#define NO_DEFORM
+#endif
+
+#ifdef BOUNDARY_LAYER
+#undef DEFORM
+#define NO_DEFORM
+#endif
+
+#ifdef UNSTEADY_DROP
+#undef NO_AXISYMMETRIC
+#define AXISYMMETRIC
 #undef NO_ENERGY
 #define ENERGY
 #endif
@@ -111,12 +127,18 @@
 #ifdef DROP
 #undef NO_PARAMETERLOOP
 #define PARAMETERLOOP
+#undef NO_AXISYMMETRIC
+#define AXISYMMETRIC
+#undef NO_ENERGY
+#define ENERGY
 #endif
 
 #ifdef TWOLAYER
 #undef CIRCLE
 #define SIN
 #define LAYER 2
+#undef NO_BODY
+#define BODY
 #endif
 
 #ifdef TWOLAYERNOINERTIA
@@ -125,6 +147,8 @@
 #define INERTIALESS
 #undef CIRCLE
 #define SIN
+#undef NO_BODY
+#define BODY
 #endif
 
 #ifdef THREELAYER
@@ -133,6 +157,8 @@
 #undef CIRCLE
 #define SIN
 #define LAYER 3
+#undef NO_BODY
+#define BODY
 #endif
 
 #ifdef CONVDIFF
@@ -142,6 +168,8 @@
 #undef NO_TIMEACCURATE
 #define TIMEACCURATE
 #endif
+#undef DEFORM
+#define NO_DEFORM
 #endif
 
 #ifdef WAVE
@@ -189,6 +217,8 @@
 #define OUTF_STRESS
 #define ANALYTIC
 #define ALIGNSQUARE
+#undef DEFORM
+#define NO_DEFORM
 #endif
 
 #ifdef SOURCETERM
@@ -203,5 +233,22 @@
 #define AXISYMMETRIC
 #undef CIRCLE
 #define VSIN
+#endif
+
+#ifdef TWOSPHERE
+#undef NO_BODY
+#define BODY
+#undef NO_AXISYMMETRIC
+#define AXISYMMETRIC
+#endif
+
+#ifdef COLUMN
+#undef NO_BODY
+#define BODY
+#undef DEFORM
+#define NO_DEFORM
+#define NO_FRICTION
+#undef CIRCLE
+#define MOVING_WALL
 #endif
 
