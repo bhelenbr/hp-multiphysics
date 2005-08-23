@@ -17,6 +17,13 @@
 #include "pV3.h"
 #endif
 
+#ifdef FINDMAX
+   FLT ydist(FLT xp[2]) {
+      return(xp[1]-0.1/xp[0] +0.002);
+   }
+#endif
+
+
 void ctrlc(int signal);
 static class blocks myblock;
 
@@ -65,13 +72,14 @@ int main(int argc, char **argv) {
    hp_mgrid hp;
    b.initialize(4,5);
    hp.in_mesh(argv[1],grid,1.0);
-   hp.spectral_hp::allocate(b);
+   hp.spectral_hp::allocate(&b);
    hp.input(argv[1],tecplot);
-//   hp.findmaxy(CURV_MASK);
-   hp.findmaxx(CURV_MASK);
-   FLT avg[5];
-   hp.integrated_averages(avg);
-   printf("%e %e %e %e %e\n",avg[0],avg[1],avg[2],avg[3],avg[4]);
+   hp.findintercept(CURV_MASK,&ydist);
+   //hp.findmaxy(CURV_MASK);
+   // hp.findmaxx(CURV_MASK);
+   //FLT avg[5];
+   //hp.integrated_averages(avg);
+   //printf("%e %e %e %e %e\n",avg[0],avg[1],avg[2],avg[3],avg[4]);
 #endif
 
 }
