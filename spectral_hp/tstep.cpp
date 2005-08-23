@@ -49,7 +49,7 @@ void hp_mgrid::tstep1(void) {
       }
       h = 4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
       hmax = hmax/(0.25*(b->p +1)*(b->p+1));
-      
+   
       qmax = 0.0;
       for(j=0;j<3;++j) {
          v0 = v[j];
@@ -64,7 +64,8 @@ void hp_mgrid::tstep1(void) {
       }
 #ifndef TIMEACCURATE
       gam = 3.0*qmax +(0.5*hmax*bd[0] +2.*gbl->nu/hmax)*(0.5*hmax*bd[0] +2.*gbl->nu/hmax);
-      // gam = MAX(gam,0.01); // TEMPORARY FOR INVISCID ONLY
+      if (gbl->mu + bd[0] == 0.0) gam = MAX(gam,0.01);
+      gam=1e-3;
 #endif
 
       q = sqrt(qmax);
