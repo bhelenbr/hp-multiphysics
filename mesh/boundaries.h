@@ -739,15 +739,15 @@ class naca : public curved_analytic {
       FLT coeff[5];
       
       FLT hgt(FLT pt[mesh::ND]) {
-         return(thickness*(coeff[0]*sqrt(pt[0]) -coeff[1]*pt[0] -coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) -coeff[4]*pow(pt[0],4)) - sign*pt[1]);
+         return(thickness*(coeff[0]*sqrt(pt[0]) +coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4)) - sign*pt[1]);
       }
       FLT dhgt(int dir, FLT pt[mesh::ND]) {
          if (dir == 0) {
             if (pt[0] <= 0.0) return(1.0);
-            return(thickness*(0.5*coeff[0]/sqrt(pt[0]) -coeff[1] -2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) -4*coeff[4]*pow(pt[0],3)));
+            return(thickness*(0.5*coeff[0]/sqrt(pt[0]) +coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3)));
          }
          else {
-            return(sign);
+            return(-sign);
          }
          return(0.0);
       }
@@ -755,7 +755,7 @@ class naca : public curved_analytic {
       naca(int inid, mesh &xin) : curved_analytic(inid,xin), sign(1.0), thickness(0.12) {
          /* NACA 0012 is the default */
          sign = 1;
-         coeff[0] = 1.4845; coeff[1] = 0.63; coeff[2] = 1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
+         coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
          mytype="naca";
       }
       naca(const naca &inbdry, mesh &xin) : curved_analytic(inbdry,xin), sign(inbdry.sign), thickness(inbdry.thickness) {
@@ -778,7 +778,7 @@ class naca : public curved_analytic {
          curved_analytic::input(inmap);
          
          std::istringstream data(inmap[idprefix+".sign"]);
-         if (!(data >> thickness)) sign = 1.0;
+         if (!(data >> sign)) sign = 1.0;
          data.clear();
          
          data.str(inmap[idprefix+".thickness"]);

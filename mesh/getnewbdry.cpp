@@ -120,6 +120,10 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
          temp = new spartition(idnum,*this);
          break;
       }
+      case stype::naca: {
+         temp = new naca(idnum,*this);
+         break;
+      }
       default: {
          temp = new side_bdry(idnum,*this);
          std::cout << "unrecognizable side type: " << idnum << "type " << type << std::endl;

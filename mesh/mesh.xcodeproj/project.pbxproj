@@ -34,6 +34,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
 		6F2262C70867302A001017D0 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
@@ -494,6 +495,7 @@
 				6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */,
 				6F2262E4086730AF001017D0 /* blocks.cpp in Sources */,
 				6F2262E5086730B3001017D0 /* getnewblock.cpp in Sources */,
+				6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
