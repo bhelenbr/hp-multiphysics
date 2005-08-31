@@ -12,7 +12,7 @@
 #include <string>
 #include <sstream>
 #include <blitz/array.h>
-#include "block.h"
+#include "blocks.h"
 
 #ifdef SINGLE
 #define FLT float
@@ -96,7 +96,6 @@ class mesh {
       Array<FLT,1> fscr1;
       
       int initialized;
-      std::ostream *log;
       static int maxsrch;
       
    public:
@@ -104,7 +103,7 @@ class mesh {
       /*  INTERFACE */
       /**************/
       /* INITIALIZATION & ALLOCATION */
-      mesh() : nvbd(0), nsbd(0), initialized(0), log(&std::cout)  {}
+      mesh() : nvbd(0), nsbd(0), initialized(0)  {}
       sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
       void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void get_scratch_pointers() {

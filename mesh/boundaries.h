@@ -8,34 +8,43 @@
 
 #define NO_MPDEBUG
 
-/* TEMPLATE CLASS TO MAKE A COMMUNCIATION BOUNDARY */
+/** \brief Template class to make a communciation boundary 
+ *
+ * \ingroup boundary
+ * Contains variables and routines for communciation boundaries.
+ * Can be applied to vrtx_bdry or side_bdry to make specific type
+ */
 template<class BASE> class comm_bdry : public BASE {
    protected:
       static const int maxmatch = 8;
-      bool first; // FOR MASTER-SLAVE COMMUNICATION
-      int grouping;  // TO MAKE GROUPS THAT ONLY COMMUNICATE IN RESTRICTED SITUATIONS GROUP 1 ALL, GROUP 2 PARTITIONS 
-      int maxphase; //  FOR SYMMETRIC MESSAGE PASSING
-      int buffsize; // SIZE OF BUFFER (TIMES SIZEOF(FLT))
-      void *sndbuf; // OUTGOING MESSAGE BUFFER
-      int msgsize; // OUTGOING SIZE
-      boundary::msg_type msgtype; // OUTGOING TYPE
+      bool first; //!< For master-slave communication. Only one boundary of matching boundaries is first
+      int grouping;  //!< To make groups that only communicate in restricted situations group 1 all, group 2 partitions 
+      int maxphase; //!<  For phased symmetric message passing
+      int buffsize; //!< Size of buffer (times sizeof(flt))
+      void *sndbuf; //!< Outgoing message buffer
+      int msgsize; //!< Outgoing size
+      boundary::msg_type msgtype; //!< Outgoing type
       
-      /* MATCHES */
-      int nmatch; // NUMBER OF LOCAL MATCHING BOUNDARIES
+      /** Different types of matching boundaries,
+       * local is same processor same thread
+       * mpi is different processor
+       * someday have threads but not yet
+       */
 #ifdef MPISRC
-      enum matchtype {local, mpi};
+      enum matchtype {local, mpi};  
 #else
       enum matchtype {local};
 #endif
-      matchtype mtype[maxmatch]; // LOCAL OR MPI OR ?
-      boundary *local_match[maxmatch]; // POINTERS TO LOCAL MATCHES
-      int tags[maxmatch]; //IDENTIFIES EACH CONNECTION UNIQUELY
-      int phase[maxmatch];  // TO SET-UP STAGGERED SEQUENCE OF SYMMETRIC PASSES
-      void *rcvbuf[maxmatch]; //LOCAL BUFFERS TO STORE INCOMING MESSAGES
-#ifdef MPISRC
-      int mpi_match[maxmatch]; //PROCESSOR NUMBERS FOR MPI
-      MPI_Request mpi_rcvrqst[maxmatch]; // IDENTIFIER RETURNED FROM MPI TO MONITOR SUCCESS OF RECV
-      MPI_Request mpi_sndrqst[maxmatch]; // IDENTIFIER RETURNED FROM MPI TO MONITOR SUCCESS OF SEND
+      int nmatch; //!< Number of matching boundaries
+      matchtype mtype[maxmatch]; //!< Local or mpi or ?
+      boundary *local_match[maxmatch]; //!< Pointers to local matches
+      int tags[maxmatch]; //!< Identifies each connection uniquely
+      int phase[maxmatch];  //!< To set-up staggered sequence of symmetric passes
+      void *rcvbuf[maxmatch]; //!< Local buffers to store incoming messages
+#ifdef mpisrc
+      int mpi_match[maxmatch]; //!< Processor numbers for mpi
+      mpi_request mpi_rcvrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of recv
+      mpi_request mpi_sndrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of send
 #endif
             
    public:
@@ -129,7 +138,7 @@ template<class BASE> class comm_bdry : public BASE {
             ++nmatch;
             return(0);
          }
-         *BASE::x.log << "error: not local match" << BASE::idnum << bin->idnum << std::endl;
+         *sim::log << "error: not local match" << BASE::idnum << bin->idnum << std::endl;
          return(1);
       }
       
@@ -203,9 +212,9 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nmatch;++m) {
                   if (phi != phase[m]) continue;
 #ifdef MPDEBUG
-                  *(BASE::x.log) << "sending message: " << BASE::idnum << " " << tags[m] << " first:" <<  is_frst()  << " with type: " << mtype[m] << std::endl;
+                  *(sim::log) << "sending message: " << BASE::idnum << " " << tags[m] << " first:" <<  is_frst()  << " with type: " << mtype[m] << std::endl;
                   for(i=0;i<msgsize;++i) 
-                     *(BASE::x.log) << "\t" << fsndbuf(i) << std::endl;
+                     *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif     
                   switch(mtype[m]) {
                   
@@ -270,9 +279,9 @@ template<class BASE> class comm_bdry : public BASE {
             }
             
 #ifdef MPDEBUG
-            *(BASE::x.log) << "received message: " << BASE::idnum << " " << tags[m] << " with type: " << mtype[m] << std::endl;
+            *(sim::log) << "received message: " << BASE::idnum << " " << tags[m] << " with type: " << mtype[m] << std::endl;
             for(int i=0;i<msgsize;++i) 
-               *(BASE::x.log) << "\t" << frcvbuf(m,i) << std::endl;
+               *(sim::log) << "\t" << frcvbuf(m,i) << std::endl;
 #endif  
          }
          /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
@@ -524,6 +533,10 @@ template<class BASE> class comm_bdry : public BASE {
       }
 };
 
+/** \brief Specialization for a communiation vertex 
+ *
+ * \ingroup boundary
+ */
 class vcomm : public comm_bdry<vrtx_bdry> {
    public:
       vcomm(int inid, mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {mytype="comm";}
@@ -531,11 +544,16 @@ class vcomm : public comm_bdry<vrtx_bdry> {
       
       vcomm* create(mesh& xin) const {return new vcomm(*this,xin);}
 
-      /* GENERIC VERTEX COMMUNICATIONS */
+      /** Generic routine to load buffers from array */
       void loadbuff(FLT *base,int bgn,int end, int stride);
+      /** Generic routine to receive into array */
       void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
+/** \brief Specialization for a communiation side 
+ *
+ * \ingroup boundary
+ */
 class scomm : public comm_bdry<side_bdry> {
    public:            
       /* CONSTRUCTOR */
@@ -549,6 +567,13 @@ class scomm : public comm_bdry<side_bdry> {
       virtual void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
+/** \brief Specialization for a parition side 
+ *
+ * \ingroup boundary
+ * This is specifically for partitions that are not smooth boundaries
+ * as typically created by metis.  Because they are not smooth it 
+ * changes what happens between different levels of multigrid.
+ */
 class spartition : public scomm {
    public:
       /* CONSTRUCTOR */
@@ -668,7 +693,7 @@ class sinewave : public curved_analytic {
          if (!(data >> offset)) offset = 0.0;
          data.clear();
          
-         // *(x.log) << amp << ' ' << lam << ' ' << phase << ' ' << offset/M_PI*180.0 << std::endl;
+         // *(sim::log) << amp << ' ' << lam << ' ' << phase << ' ' << offset/M_PI*180.0 << std::endl;
       }
 };
 
@@ -705,7 +730,73 @@ class circle : public curved_analytic {
          if (!(data >> radius)) radius = 0.5;
          data.clear();
       }
-};         
+};  
+
+class naca : public curved_analytic {
+   public:
+      FLT sign;
+      FLT thickness;
+      FLT coeff[5];
+      
+      FLT hgt(FLT pt[mesh::ND]) {
+         return(thickness*(coeff[0]*sqrt(pt[0]) -coeff[1]*pt[0] -coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) -coeff[4]*pow(pt[0],4)) - sign*pt[1]);
+      }
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+         if (dir == 0) {
+            if (pt[0] <= 0.0) return(1.0);
+            return(thickness*(0.5*coeff[0]/sqrt(pt[0]) -coeff[1] -2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) -4*coeff[4]*pow(pt[0],3)));
+         }
+         else {
+            return(sign);
+         }
+         return(0.0);
+      }
+      
+      naca(int inid, mesh &xin) : curved_analytic(inid,xin), sign(1.0), thickness(0.12) {
+         /* NACA 0012 is the default */
+         sign = 1;
+         coeff[0] = 1.4845; coeff[1] = 0.63; coeff[2] = 1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
+         mytype="naca";
+      }
+      naca(const naca &inbdry, mesh &xin) : curved_analytic(inbdry,xin), sign(inbdry.sign), thickness(inbdry.thickness) {
+         for(int i=0;i<5;++i) 
+            coeff[i] = inbdry.coeff[i];
+      }
+      naca* create(mesh& xin) const {return(new naca(idnum,xin));}
+
+      void output(std::ostream& fout) {
+         curved_analytic::output(fout);
+         fout << idprefix << ".sign: " << sign << std::endl;
+         fout << idprefix << ".thickness: " << thickness << std::endl;
+         fout << idprefix << ".coeff: ";
+         for(int i=0;i<5;++i) 
+            fout << coeff[i] << " ";
+         fout << std::endl;
+      }
+     
+       void input(std::map <std::string,std::string>& inmap) {
+         curved_analytic::input(inmap);
+         
+         std::istringstream data(inmap[idprefix+".sign"]);
+         if (!(data >> thickness)) sign = 1.0;
+         data.clear();
+         
+         data.str(inmap[idprefix+".thickness"]);
+         if (!(data >> thickness)) thickness = 0.12;
+         data.clear();
+         
+         std::map<std::string,std::string>::const_iterator mi;
+         std::string keyword;
+         keyword = idprefix + ".coeff";
+         mi = inmap.find(keyword);
+         if (mi != inmap.end()) {
+            data.str(mi->second);
+            for(int i=0;i<5;++i)
+               data >> coeff[i];
+            data.clear();
+         }
+      }
+};       
 
 typedef prdc_template<vcomm> vprdc;
 typedef prdc_template<scomm> sprdc;

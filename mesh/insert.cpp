@@ -32,7 +32,7 @@ int mesh::insert(const TinyVector<FLT,ND> &x) {
       exit(1);
    }    
    if (nvrtx >= maxvst) {
-      *log << "need to use larger growth factor: too many vertices" << std::endl;
+      *sim::log << "need to use larger growth factor: too many vertices" << std::endl;
       exit(1);
    }
    err = insert(nvrtx,tind);
@@ -143,7 +143,7 @@ int mesh::insert(int vnum, int tnum) {
    for(i=0;i<nskeep;++i) {
       sind = i2wk_lst2(i);
       if(fabs(minangle(vnum, sd(sind).vrtx(0) , sd(sind).vrtx(1))) < 1.0e-3*M_PI/180.0) {
-         *log << "#Warning: inserting too close to boundary" << std::endl;
+         *sim::log << "#Warning: inserting too close to boundary" << std::endl;
          return(1);
       }
    }
@@ -162,7 +162,7 @@ int mesh::insert(int vnum, int tnum) {
    nside += 3;
    
    if (ntri > maxvst || nside > maxvst) {
-      *log << "need to use bigger growth factor: too many sides/tris" << nside << ntri << std::endl;
+      *sim::log << "need to use bigger growth factor: too many sides/tris" << nside << ntri << std::endl;
       exit(1);
    }
    
@@ -324,7 +324,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    ++nside;  
    
    if (ntri > maxvst || nside > maxvst) {
-      *log << "need to use bigger growth factor: too many sides/tris:" << nside << ntri << std::endl;
+      *sim::log << "need to use bigger growth factor: too many sides/tris:" << nside << ntri << std::endl;
       exit(1);
    }
    

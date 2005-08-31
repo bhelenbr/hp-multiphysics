@@ -25,6 +25,33 @@
 #include <capri.h>
 #endif
 
+std::ostream *sim::log = &std::cout;
+double sim::time, sim::dti, sim::g;
+#ifdef BACKDIFF
+FLT sim::bd[BACKDIFF+1];
+#endif
+#ifdef DIRK
+FLT sim::bd[1];
+#if (DIRK == 3)
+/* THIS IS THE STANDARD FORM */
+// FLT sim::adirk[DIRK][DIRK] = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
+// FLT sim::bdirk[DIRK] = {1-B2RK3-GRK3,B2RK3,GRK3};
+// FLT sim::cdirk[DIRK] = {GRK3,C2RK3,1.0};
+/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+FLT sim::adirk[DIRK][DIRK] = { {1./GRK3,0.0,0.0}, {C2RK3-GRK3,1./GRK3,0.0}, {1.-B2RK3-C2RK3,B2RK3,1./GRK3} };
+FLT sim::cdirk[DIRK] = {GRK3,C2RK3-GRK3,1.0-C2RK3};
+#else
+/* THIS IS THE STANDARD FORM */
+// FLT sim::adirk[DIRK][DIRK] = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}} 
+// FLT sim::bdirk[DIRK] = {B1RK4,B2RK4,B3RK4,GRK4};
+// FLT sim::cdirk[DIRK] = {0.0,2.*GRK4,C3RK4,1.0};
+/* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
+FLT sim::adirk[DIRK][DIRK] = {{1./GRK4,0.0,0.0,0.0},{GRK4,1./GRK4,0.0,0.0},{C3RK4-A32RK4-2.*GRK4,A32RK4,1./GRK4,0.0},{B1RK4-(C3RK4-A32RK4-GRK4),B2RK4-A32RK4,B3RK4,1./GRK4}}; 
+FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
+#endif
+#endif
+
+
 void blocks::init(const char *infile, const char *outfile) {
    std::map<std::string,std::string> maptemp;
    char name[100];
@@ -66,19 +93,20 @@ void blocks::init(std::map<std::string,std::string> input) {
       strcat(outfile,".");
       number_str(outfile,outfile,myid,1);
       strcat(outfile,".log");
-      filelog.setf(std::ios::scientific, std::ios::floatfield);
-      filelog.precision(3);
-      filelog.open(outfile);
-      log = &filelog;
+      std::ofstream *filelog = new std::ofstream;
+      filelog->setf(std::ios::scientific, std::ios::floatfield);
+      filelog->precision(3);
+      filelog->open(outfile);
+      sim::log = filelog;
    }
    else {
       std::cout.setf(std::ios::scientific, std::ios::floatfield);
       std::cout.precision(3);
-      log = &std::cout;
+      sim::log = &std::cout;
    }
 #ifdef CAPRI
    int status = gi_uStart();
-   *log << "gi_uStart status = ", status, "\n";
+   *sim::log << "gi_uStart status = ", status, "\n";
    if (status != CAPRI_SUCCESS) exit(1);
    
    mi = input.find("BRep");
@@ -86,7 +114,7 @@ void blocks::init(std::map<std::string,std::string> input) {
       char temp[100];
       strcpy(temp,mi->second.c_str());
       status = gi_uLoadPart(temp);
-      *log << mi->second << ": gi_uLoadPart status = " << status << std::endl;
+      *sim::log << mi->second << ": gi_uLoadPart status = " << status << std::endl;
       if (status != CAPRI_SUCCESS) exit(1);
    }
 #endif 
@@ -106,54 +134,72 @@ void blocks::init(std::map<std::string,std::string> input) {
       std::cerr << "error reading blocks\n"; 
       exit(1);
    }
-   *log << "#starting block index: " << bstart << std::endl;
-   *log << "#nblocks for this processor: " << nblock << std::endl;
+   *sim::log << "#starting block index: " << bstart << std::endl;
+   *sim::log << "#nblocks for this processor: " << nblock << std::endl;
    
-   /* LOAD BASIC CONSTANTS FOR MULTIGRID */
-   data.str(input["itercrsn"]);   
-   if (!(data >> itercrsn)) itercrsn = 1;
-   *log << "#itercrsn: " << itercrsn << std::endl;
+   /* LOAD TIME STEPPING INFO */
+   sim::time = 0.0;  // Simulation starts at t = 0
+   data.str(input["dti"]);   
+   if (!(data >> sim::dti)) sim::dti=1.0;
+   *sim::log << "#dti: " << sim::dti << std::endl;
+   data.clear();
+   
+   /* OTHER UNIVERSAL CONSTANTS */
+   data.str(input["gravity"]);   
+   if (!(data >> sim::g)) sim::g = 0.0;
+   *sim::log << "#gravity: " << sim::g << std::endl;
    data.clear();
    
    data.str(input["iterrfne"]);   
    if (!(data >> iterrfne)) iterrfne = 0;
-   *log << "#iterrfne: " << iterrfne << std::endl;
+   *sim::log << "#iterrfne: " << iterrfne << std::endl;
+   data.clear();
+   
+   /* LOAD BASIC CONSTANTS FOR MULTIGRID */
+   data.str(input["itercrsn"]);   
+   if (!(data >> itercrsn)) itercrsn = 1;
+   *sim::log << "#itercrsn: " << itercrsn << std::endl;
+   data.clear();
+   
+   data.str(input["iterrfne"]);   
+   if (!(data >> iterrfne)) iterrfne = 0;
+   *sim::log << "#iterrfne: " << iterrfne << std::endl;
    data.clear();
       
    data.str(input["njacobi"]);   
    if (!(data >> njacobi)) njacobi = 1;
-   *log << "#njacobi: " << njacobi << std::endl;
+   *sim::log << "#njacobi: " << njacobi << std::endl;
    data.clear();
    
    data.str(input["ncycle"]);   
    if (!(data >> ncycle)) ncycle = 20;
-   *log << "#ncycle: " << ncycle << std::endl;
+   *sim::log << "#ncycle: " << ncycle << std::endl;
    data.clear();
    
    data.str(input["vwcycle"]);   
    if (!(data >> vw)) vw = 2;
-   *log << "#vwcycle: " << vw << std::endl;
+   *sim::log << "#vwcycle: " << vw << std::endl;
    data.clear();
    
    data.str(input["ntstep"]);   
    if (!(data >> ntstep)) ntstep = 1;
-   *log << "#ntstep: " << ntstep << std::endl;
+   *sim::log << "#ntstep: " << ntstep << std::endl;
    data.clear();
    
    /* LOAD NUMBER OF GRIDS */
    data.str(input["nblock"]);
    if (!(data >> nblock)) nblock = 1;
-   *log << "#nblock: " << nblock << std::endl;
+   *sim::log << "#nblock: " << nblock << std::endl;
    data.clear();
    
    data.str(input["ngrid"]);   
    if (!(data >> ngrid)) ngrid = 1;
-   *log << "#ngrid: " << ngrid << std::endl;
+   *sim::log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
    data.str(input["mglvls"]);   
    if (!(data >> mglvls)) mglvls = 1;
-   *log << "#mglvls: " << mglvls << std::endl;
+   *sim::log << "#mglvls: " << mglvls << std::endl;
    data.clear();
 
    blk = new block *[nblock];
@@ -163,7 +209,7 @@ void blocks::init(std::map<std::string,std::string> input) {
    int state = block::stop;
    for (i=0;i<nblock;++i) {
       blk[i] = getnewblock(bstart+i,&input);
-      blk[i]->init(input,log);
+      blk[i]->init(input);
    }
    
    findmatch();
@@ -208,94 +254,60 @@ int tagid(int vsf,int p1,int p2,int b1,int b2,int n1,int n2) {
    return(tag);
 }
 
-/* THIS IS A DATA STRUCTURE FOR STORING COMM INFO */
-class commblocks {
-   public:
-      int nblock;
-      struct commblock {
-         int nvcomm;
-         struct vid {
-            int nvbd, idnum;
-         } *vcomm;
-         
-         int nscomm;
-         struct sid {
-            int nsbd, idnum; // , vid0, vid1;
-         } *scomm;
-         
-         int nfcomm;
-         struct fid {
-            int nfbd, idnum; // , nsds;
-            // int *sids;
-         } *fcomm;
-      } *blkinfo;
+void blocks::commblocks::output() {
+   *sim::log << "# number of blocks: " << nblock << std::endl;
+   for (int i=0;i<nblock;++i) {
+      *sim::log << "#\tblock: " << i << std::endl;
       
-      commblocks() : nblock(0) {}
-      void output(std::ostream *log) {
-         *log << "# number of blocks: " << nblock << std::endl;
-         for (int i=0;i<nblock;++i) {
-            *log << "#\tblock: " << i << std::endl;
-            
-            *log << "#\t\tnvcomm: " << blkinfo[i].nvcomm << std::endl;
-            for (int v=0;v<blkinfo[i].nvcomm;++v)
-               *log << "#\t\t\tnvbd: " << blkinfo[i].vcomm[v].nvbd << " idnum: " << blkinfo[i].vcomm[v].idnum << std::endl;
-            
-            *log << "#\t\tnscomm: " << blkinfo[i].nscomm << std::endl;
-            for (int v=0;v<blkinfo[i].nscomm;++v)
-               *log << "#\t\t\tnsbd: " << blkinfo[i].scomm[v].nsbd << " idnum: " << blkinfo[i].scomm[v].idnum << std::endl;
-            
-            *log << "#\t\tnfcomm: " << blkinfo[i].nfcomm << std::endl;
-            for (int v=0;v<blkinfo[i].nfcomm;++v)
-               *log << "#\t\t\tnfbd: " << blkinfo[i].fcomm[v].nfbd << " idnum: " << blkinfo[i].fcomm[v].idnum << std::endl;
-         }
+      *sim::log << "#\t\tnvcomm: " << blkinfo[i].nvcomm << std::endl;
+      for (int v=0;v<blkinfo[i].nvcomm;++v)
+         *sim::log << "#\t\t\tnvbd: " << blkinfo[i].vcomm[v].nvbd << " idnum: " << blkinfo[i].vcomm[v].idnum << std::endl;
+      
+      *sim::log << "#\t\tnscomm: " << blkinfo[i].nscomm << std::endl;
+      for (int v=0;v<blkinfo[i].nscomm;++v)
+         *sim::log << "#\t\t\tnsbd: " << blkinfo[i].scomm[v].nsbd << " idnum: " << blkinfo[i].scomm[v].idnum << std::endl;
+      
+      *sim::log << "#\t\tnfcomm: " << blkinfo[i].nfcomm << std::endl;
+      for (int v=0;v<blkinfo[i].nfcomm;++v)
+         *sim::log << "#\t\t\tnfbd: " << blkinfo[i].fcomm[v].nfbd << " idnum: " << blkinfo[i].fcomm[v].idnum << std::endl;
+   }
+}
+
+int blocks::commblocks::unpack(blitz::Array<int,1> entitylist) {
+   int count = 0;
+   nblock = entitylist(count++);
+   blkinfo = new commblock[nblock];
+   for(int b=0;b<nblock;++b) {
+      blkinfo[b].nvcomm = entitylist(count++);
+      blkinfo[b].vcomm = new commblock::vid[blkinfo[b].nvcomm];
+      for(int i=0;i<blkinfo[b].nvcomm;++i) {
+         blkinfo[b].vcomm[i].nvbd = entitylist(count++);
+         blkinfo[b].vcomm[i].idnum = entitylist(count++);
       }
       
-      int unpack(Array<int,1> entitylist) {
-         int count = 0;
-         nblock = entitylist(count++);
-         blkinfo = new commblock[nblock];
-         for(int b=0;b<nblock;++b) {
-            blkinfo[b].nvcomm = entitylist(count++);
-            blkinfo[b].vcomm = new commblock::vid[blkinfo[b].nvcomm];
-            for(int i=0;i<blkinfo[b].nvcomm;++i) {
-               blkinfo[b].vcomm[i].nvbd = entitylist(count++);
-               blkinfo[b].vcomm[i].idnum = entitylist(count++);
-            }
-            
-            blkinfo[b].nscomm = entitylist(count++);
-            blkinfo[b].scomm = new commblock::sid[blkinfo[b].nscomm];
-            for(int i=0;i<blkinfo[b].nscomm;++i) {
-               blkinfo[b].scomm[i].nsbd = entitylist(count++);
-               blkinfo[b].scomm[i].idnum = entitylist(count++);
-               // blkinfo[b].scomm[i].vid0 = entitylist(count++);
-               // blkinfo[b].scomm[i].vid1 = entitylist(count++);
-            }
-            
-            blkinfo[b].nfcomm = entitylist(count++);
-            blkinfo[b].fcomm = new commblock::fid[blkinfo[b].nfcomm];
-            for(int i=0;i<blkinfo[b].nfcomm;++i) {
-               blkinfo[b].fcomm[i].nfbd = entitylist(count++);
-               blkinfo[b].fcomm[i].idnum = entitylist(count++);
-               // bp->fcomm[i].nsds = entitylist(count++);
-               // bp->fcomm[i].sids = new int[bp->fcomm[i].nsds];
-               // for (j=0;j<bp->fcomm[i].nsds;++j)
-                  // bp->fcomm[i].sids[j] = entitylist(count++);
-            }
-         }
-         return(count);
+      blkinfo[b].nscomm = entitylist(count++);
+      blkinfo[b].scomm = new commblock::sid[blkinfo[b].nscomm];
+      for(int i=0;i<blkinfo[b].nscomm;++i) {
+         blkinfo[b].scomm[i].nsbd = entitylist(count++);
+         blkinfo[b].scomm[i].idnum = entitylist(count++);
+         // blkinfo[b].scomm[i].vid0 = entitylist(count++);
+         // blkinfo[b].scomm[i].vid1 = entitylist(count++);
       }
-      ~commblocks() {
-         for(int i=0;i<nblock;++i) {
-            delete []blkinfo[i].vcomm;
-            delete []blkinfo[i].scomm;
-//            for(k=0;k<blkinfo[i].nfcomm;++k)
-//               delete []blkinfo[i].fcomm[k].sids;
-            delete []blkinfo[i].fcomm;
-         }
-         delete []blkinfo;
+      
+      blkinfo[b].nfcomm = entitylist(count++);
+      blkinfo[b].fcomm = new commblock::fid[blkinfo[b].nfcomm];
+      for(int i=0;i<blkinfo[b].nfcomm;++i) {
+         blkinfo[b].fcomm[i].nfbd = entitylist(count++);
+         blkinfo[b].fcomm[i].idnum = entitylist(count++);
+         // bp->fcomm[i].nsds = entitylist(count++);
+         // bp->fcomm[i].sids = new int[bp->fcomm[i].nsds];
+         // for (j=0;j<bp->fcomm[i].nsds;++j)
+            // bp->fcomm[i].sids[j] = entitylist(count++);
       }
-};   
-   
+   }
+   return(count);
+}
+
 
 void blocks::findmatch() {
    int b,b1,b2,i,j,grdlvl,p,count,tsize;
@@ -308,7 +320,7 @@ void blocks::findmatch() {
    for(grdlvl=0;grdlvl<ngrid;++grdlvl) {
       blksinfo = new commblocks[nproc];
 
-      *log << "# finding matches at multigrid level " << grdlvl << " for processor " << myid << std::endl;
+      *sim::log << "# finding matches at multigrid level " << grdlvl << " for processor " << myid << std::endl;
       
       sndsize = new int[nproc];
       for(i=0;i<nproc;++i)
@@ -371,8 +383,8 @@ void blocks::findmatch() {
             maxbdry = MAX(maxbdry,blksinfo[p].blkinfo[b].nfcomm);
          }
          /* OUTPUT LIST FOR DEBUGGING */
-         *log << "# processor " << p << " block data" << std::endl;
-         blksinfo[p].output(log);
+         *sim::log << "# processor " << p << " block data" << std::endl;
+         blksinfo[p].output();
       }
       ~entitylist;
       
@@ -384,7 +396,7 @@ void blocks::findmatch() {
       while ((maxblock>>bdig) > 0) ++bdig;
       ndig = 1;
       while ((maxbdry>>ndig) > 0) ++ndig;
-      if (2*(pdig+bdig+ndig)+2 > 32) *log << "can't guarantee unique tags\n"; 
+      if (2*(pdig+bdig+ndig)+2 > 32) *sim::log << "can't guarantee unique tags\n"; 
 
       /* CAN NOW START TO LOOK FOR MATCHES */
       /* FOR NOW ALL COMMUNICATION IN 1 PHASE */
@@ -392,12 +404,12 @@ void blocks::findmatch() {
       
       for(b1=0;b1<blksinfo[myid].nblock;++b1) {
          bp1 = &blksinfo[myid].blkinfo[b1];
-         *log << "# finding matches for block " << b1 << std::endl;
+         *sim::log << "# finding matches for block " << b1 << std::endl;
 
          /* LOOK FOR VERTEX MATCHES */
          for(i=0;i<bp1->nvcomm;++i) {
             bool first_found = false;
-            *log << "#\tvertex " << bp1->vcomm[i].nvbd << " idnum: " << bp1->vcomm[i].idnum << std::endl;
+            *sim::log << "#\tvertex " << bp1->vcomm[i].nvbd << " idnum: " << bp1->vcomm[i].idnum << std::endl;
             for (p=0;p<nproc;++p) {
                for(b2=0;b2<blksinfo[p].nblock;++b2) {
                   bp2 = &blksinfo[p].blkinfo[b2];
@@ -415,7 +427,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false; 
                               first_found = true;
                            }
-                           *log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -425,7 +437,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << std::endl;
                         }
 #endif
                         
@@ -438,7 +450,7 @@ void blocks::findmatch() {
          /* LOOK FOR SIDE MATCHES */
          for(i=0;i<bp1->nscomm;++i) {
             bool first_found = false;
-            *log << "#\tside " << bp1->scomm[i].nsbd << " idnum: " << bp1->scomm[i].idnum << std::endl;
+            *sim::log << "#\tside " << bp1->scomm[i].nsbd << " idnum: " << bp1->scomm[i].idnum << std::endl;
             for (p=0;p<nproc;++p) {
                for(b2=0;b2<blksinfo[p].nblock;++b2) {
                   bp2 = &blksinfo[p].blkinfo[b2];
@@ -456,7 +468,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -466,7 +478,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << std::endl;
                         }
 #endif
                      }
@@ -478,7 +490,7 @@ void blocks::findmatch() {
          /* LOOK FOR FACE MATCHES */
          for(i=0;i<bp1->nfcomm;++i) {
             bool first_found = false;
-            *log << "#\tface " << bp1->fcomm[i].nfbd << " idnum: " << bp1->fcomm[i].idnum << std::endl;
+            *sim::log << "#\tface " << bp1->fcomm[i].nfbd << " idnum: " << bp1->fcomm[i].idnum << std::endl;
             for (p=0;p<nproc;++p) {
                for(b2=0;b2<blksinfo[p].nblock;++b2) {
                   bp2 = &blksinfo[p].blkinfo[b2];
@@ -496,7 +508,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << std::endl;
 
                         }
 #ifdef MPISRC
@@ -507,7 +519,7 @@ void blocks::findmatch() {
                               v1->is_frst() = false;
                               first_found = true;
                            }
-                           *log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << std::endl;
 
                         }
 #endif
@@ -665,28 +677,83 @@ void blocks::go() {
 
    clock();
    for(step = 1;step<=ntstep;++step) {
-      tadvance();
+      tadvance(step);
       matchboundaries();
 
       for(i=0;i<ncycle;++i) {
          cycle(vw);
-         *log << i << ' ';
+         *sim::log << i << ' ';
          maxres();
-         *log << '\n';
+         *sim::log << '\n';
       }
       number_str(outname, "end", step, 3);
       output(outname,ftype::grid);
       restructure();
    }
    cpu_time = clock();
-   *log << "that took " << cpu_time << " cpu time" << std::endl;
+   *sim::log << "that took " << cpu_time << " cpu time" << std::endl;
    
    return;
 }
 
-void blocks::tadvance() {
+void blocks::tadvance(int step) {
    int i,lvl,excpt;
    int state;
+   
+   if (sim::dti > 0.0) sim::time += 1./sim::dti;
+
+#ifdef BACKDIFF
+   for(i=0;i<BACKDIFF+1;++i)
+      sim::bd[i] = 0.0;
+   
+   switch(step) {
+      case(1):
+         sim::bd[0] =  sim::dti;
+         sim::bd[1] = -sim::dti;
+         break;
+#if (BACKDIFF > 1)
+      case(2):
+         sim::bd[0] =  1.5*sim::dti;
+         sim::bd[1] = -2.0*sim::dti;
+         sim::bd[2] =  0.5*sim::dti;
+         break;
+#endif
+#if (BACKDIFF > 2)
+      case(3):
+         sim::bd[0] = 11./6*sim::dti;
+         sim::bd[1] = -3.*sim::dti;
+         sim::bd[2] = 1.5*sim::dti;
+         sim::bd[3] = -1./3.*sim::dti;
+         break;
+#endif
+   }
+#endif
+
+#if (DIRK == 4)
+   /* STARTUP SEQUENCE */
+   if (step == 1) {
+      sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+      sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+      sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
+      sim::adirk[3][0] = 0.0; sim::adirk[3][1] = 1.-sim::B2RK3-sim::C2RK3; sim::adirk[3][2] = sim::B2RK3;   sim::adirk[3][3] = 1./sim::GRK3;
+      sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
+   } 
+   else if (step == 2) {
+      sim::adirk[0][0] = 1./sim::GRK3;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+      sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+      sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
+      sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
+      sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+   }
+   else {
+      sim::adirk[0][0] = 1./sim::GRK4;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+      sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+      sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
+      sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
+      sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+   }
+#endif
+
    
    for (lvl=0;lvl<ngrid;++lvl) {
       excpt = 0;

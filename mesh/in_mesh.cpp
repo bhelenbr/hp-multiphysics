@@ -53,12 +53,12 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
             strcat(grd_app,".s");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    *log << "error: couldn't open file: " << grd_app << std::endl;
+                    *sim::log << "error: couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
             ierr = fscanf(grd,"%d\n",&nside);
             if(ierr != 1) {
-                    *log << "error: in side file: " << grd_app << std::endl;
+                    *sim::log << "error: in side file: " << grd_app << std::endl;
                     exit(1);
             }
            
@@ -66,7 +66,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
                allocate(nside + (int) (grwfac*nside),win);
             }
             else if (nside > maxvst) {
-               *log << "error: mesh is too large" << std::endl;
+               *sim::log << "error: mesh is too large" << std::endl;
                exit(1);
             }
            
@@ -74,7 +74,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
                ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
                ,&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).info);
                if(ierr != 3) {
-                  *log << "error: in side file " << grd_app << std::endl;
+                  *sim::log << "error: in side file " << grd_app << std::endl;
                   exit(1);
                }
             }
@@ -120,7 +120,7 @@ next1:      continue;
                         goto next1a;
                      }
                   }
-                  *log << "Big error\n";
+                  *sim::log << "Big error\n";
                   exit(1);
                }
 next1a:     continue;
@@ -130,11 +130,11 @@ next1a:     continue;
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".n");
             grd = fopen(grd_app,"r");
-            if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            if (!grd) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             ierr = fscanf(grd,"%d\n",&nvrtx);
             if(ierr != 1) {
-               *log << "1: error in grid: " << grd_app << std::endl;
+               *sim::log << "1: error in grid: " << grd_app << std::endl;
                exit(1);
             }
             
@@ -146,7 +146,7 @@ next1a:     continue;
                   ierr = sscanf(grd_app,"%lf%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vrtx(i)(2),&vd(i).info);
                   if (ierr != ND+1) {
                      ierr = sscanf(grd_app,"%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vd(i).info);
-                     if (ierr != ND) { *log << "2a: error in grid" << std::endl; exit(1); }
+                     if (ierr != ND) { *sim::log << "2a: error in grid" << std::endl; exit(1); }
                   }
                }
                else {
@@ -155,7 +155,7 @@ next1a:     continue;
                      ierr += fscanf(grd,"%lf",&vrtx(i)(n));
                   }
                   ierr += fscanf(grd,"%d",&vd(i).info);
-                  if (ierr != ND+1)  { *log << "2b: error in grid" << std::endl; exit(1); }
+                  if (ierr != ND+1)  { *sim::log << "2b: error in grid" << std::endl; exit(1); }
                }
             }
             fclose(grd);
@@ -182,12 +182,12 @@ next1a:     continue;
             strcat(grd_app,".e");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-               *log << "trouble opening " << grd_app << std::endl;
+               *sim::log << "trouble opening " << grd_app << std::endl;
                exit(1);
             }
             ierr = fscanf(grd,"%d\n",&ntri);
             if(ierr != 1) {
-               *log << "error in file " << grd_app << std::endl;
+               *sim::log << "error in file " << grd_app << std::endl;
                exit(1);
             }
     
@@ -218,7 +218,7 @@ next1a:     continue;
             strcat(grd_app,".FDNEUT");
             grd = fopen(grd_app,"r");
             if (grd == NULL) {
-                    *log << "trouble opening " << grd_nm << std::endl;
+                    *sim::log << "trouble opening " << grd_nm << std::endl;
                     exit(1);
             }
             
@@ -235,7 +235,7 @@ next1a:     continue;
                allocate(maxvst,win);
             }
             else if ((3*i)/2 > maxvst) {
-               *log << "mesh is too large" << std::endl;
+               *sim::log << "mesh is too large" << std::endl;
                exit(1);
             }
     
@@ -308,7 +308,7 @@ next1a:     continue;
                for(j=0;j<sbdry(i)->nel;++j) {
                   sind = vd(svrtxbtemp[i][j][0]).info;
                   if (sind < 0) {
-                     *log << "error in boundary information " << i << j << std::endl;
+                     *sim::log << "error in boundary information " << i << j << std::endl;
                      exit(1);
                   }
                   if (sd(sind).vrtx(1) == svrtxbtemp[i][j][1]) {
@@ -317,7 +317,7 @@ next1a:     continue;
                      vd(sd(sind).vrtx(0)).info = 0;
                   }
                   else {
-                     *log << "Error: boundary sides are not counterclockwise " << 
+                     *sim::log << "Error: boundary sides are not counterclockwise " << 
                      svrtxbtemp[i][j][0] << svrtxbtemp[i][j][1] << std::endl;
                      exit(1);
                   }
@@ -334,7 +334,7 @@ next1a:     continue;
             strcat(grd_app,".grd");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-               *log << "couldn't open grid file: " << grd_app << std::endl;
+               *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
             /* HEADER LINES */
@@ -344,7 +344,7 @@ next1a:     continue;
                allocate(nside + (int) (grwfac*nside),win);
             }
             else if (nside > maxvst) {
-               *log << "mesh is too large" << std::endl;
+               *sim::log << "mesh is too large" << std::endl;
                exit(1);
             }
    
@@ -399,7 +399,7 @@ next1a:     continue;
             strcat(grd_app,".mvp");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-                    *log << "couldn't open file: " << grd_app << std::endl;
+                    *sim::log << "couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
               
@@ -409,7 +409,7 @@ next1a:     continue;
 
             ierr = fscanf(grd,"%d%d%d%*d%*d%d\n",&nsbd,&nvrtx,&nside,&ntri);
             if (ierr != 4) {
-               *log << "trouble with mavriplis format" << std::endl;
+               *sim::log << "trouble with mavriplis format" << std::endl;
                exit(1);
             }
             
@@ -417,7 +417,7 @@ next1a:     continue;
                allocate(nside + (int) (grwfac*nside),win);
             }
             else if (nside > maxvst) {
-               *log << "mesh is too large" << std::endl;
+               *sim::log << "mesh is too large" << std::endl;
                exit(1);
             }
             
@@ -510,7 +510,7 @@ next1a:     continue;
             
          case(ftype::text):
             if (!initialized) {
-               *log << "to read in vertex positions only must first load mesh structure" << std::endl;
+               *sim::log << "to read in vertex positions only must first load mesh structure" << std::endl;
                exit(1);
             }
 
@@ -518,15 +518,15 @@ next1a:     continue;
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".txt");
             grd = fopen(grd_app,"r");
-            if (!grd) { *log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            if (!grd) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             ierr = fscanf(grd,"%d\n",&temp);
             if(ierr != 1) {
-               *log << "1: error in grid " << grd_app << std::endl;
+               *sim::log << "1: error in grid " << grd_app << std::endl;
                exit(1);
             }
             if (temp != nvrtx) {
-               *log << "grid doesn't match vertex list" << std::endl;
+               *sim::log << "grid doesn't match vertex list" << std::endl;
                exit(1);
             }
     
@@ -537,7 +537,7 @@ next1a:     continue;
                for(n=0;n<ND;++n)
                   ierr = fscanf(grd,"%lf",&vrtx(i)(n));
                fscanf(grd,"\n");
-               if (ierr != ND) { *log << "2c: error in grid" << std::endl; exit(1); }
+               if (ierr != ND) { *sim::log << "2c: error in grid" << std::endl; exit(1); }
             }
             fclose(grd);
             
@@ -552,14 +552,14 @@ next1a:     continue;
             sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
                         
             status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
-            *log << " gi_uGetVolume status =" << status << std::endl;
+            *sim::log << " gi_uGetVolume status =" << status << std::endl;
             if (status != CAPRI_SUCCESS) exit(1);
-            *log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
+            *sim::log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
 
             status = gi_dTesselFace(cpri_vol, cpri_face, &ntri, &cpri_tris, &cpri_tric, &nvrtx, &cpri_points, 
                &cpri_ptype, &cpri_pindex, &cpri_uv);
             if (status != CAPRI_SUCCESS) {
-               *log << "gi_dTesselFace status = " << status << std::endl;
+               *sim::log << "gi_dTesselFace status = " << status << std::endl;
                exit(1);
             }
 
@@ -569,7 +569,7 @@ next1a:     continue;
                allocate(maxvst,win);
             }
             else if ((3*ntri)/2 > maxvst) {
-               *log << "mesh is too large" << std::endl;
+               *sim::log << "mesh is too large" << std::endl;
                exit(1);
             }
             
@@ -601,7 +601,7 @@ next1a:     continue;
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
                   if (nvbd >= MAXVB) {
-                     *log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
+                     *sim::log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
                      exit(1);
                   }
                }
@@ -625,7 +625,7 @@ next1a:     continue;
                         sd(i).info = cpri_pindex[v0];
                      }
                      else {
-                        *log << "Error in BRep Boundary Groups\n";
+                        *sim::log << "Error in BRep Boundary Groups\n";
                         exit(1);
                      }
                   }
@@ -659,7 +659,7 @@ next1b:      continue;
                         goto next1c;
                      }
                   }
-                  *log << "Big error\n";
+                  *sim::log << "Big error\n";
                   exit(1);
                }
 next1c:     continue;
@@ -673,7 +673,7 @@ next1c:     continue;
             strcat(grd_app,".dat");
             grd = fopen(grd_app,"r");
             if (grd==NULL) {
-               *log << "couldn't open grid file: " << grd_app << std::endl;
+               *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
             
@@ -687,7 +687,7 @@ next1c:     continue;
                allocate(maxvst,win);
             }
             else if ((3*ntri) > maxvst) {
-               *log << "mesh is too large" << std::endl;
+               *sim::log << "mesh is too large" << std::endl;
                exit(1);
             }
                
@@ -736,7 +736,7 @@ next1c:     continue;
             strcat(grd_app,".d");
             grd = fopen(grd_app,"r");
             if (grd == NULL) { 
-               *log << "couldn't open " << grd_app << "for reading\n";
+               *sim::log << "couldn't open " << grd_app << "for reading\n";
                exit(1);
             }
 
@@ -810,7 +810,7 @@ next1c:     continue;
                         goto bdnext1a;
                      }
                   }
-                  *log << "Big error\n";
+                  *sim::log << "Big error\n";
                   exit(1);
                }
             bdnext1a:     continue;
@@ -824,7 +824,7 @@ next1c:     continue;
             break;
        
          default:
-            *log << "That filetype is not supported" << std::endl;
+            *sim::log << "That filetype is not supported" << std::endl;
             exit(1);
    }
     

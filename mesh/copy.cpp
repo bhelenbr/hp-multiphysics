@@ -12,12 +12,10 @@ void mesh::copy(const mesh& tgt) {
    else {
       /* CHECK IF BIG ENOUGH */
       if (tgt.nside > maxvst) {
-         *log << "mesh is too big to copy" << std::endl;
+         *sim::log << "mesh is too big to copy" << std::endl;
          exit(1);
       }
    }
-   
-   log = tgt.log;
    
    /* COPY VERTEX INFO OVER */
    nvrtx = tgt.nvrtx;

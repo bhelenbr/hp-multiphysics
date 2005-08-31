@@ -16,7 +16,6 @@
 
 template<class GRD> class mgrid : public block {
    protected:
-      std::ostream *log;
       int ngrid, mp_phase;
       GRD *grd;
       typedef typename GRD::transfer gtrans;
@@ -29,8 +28,8 @@ template<class GRD> class mgrid : public block {
       FLT tolerance;
    
    public:
-      mgrid(int idnum) : block(idnum), log(&std::cout), adapt_flag(0) {}
-      void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0);
+      mgrid(int idnum) : block(idnum), adapt_flag(0) {}
+      void init(std::map <std::string,std::string>& input);
       void output(char *filename, ftype::name filetype) {
          grd[0].output(filename, filetype);
       }
@@ -83,20 +82,16 @@ template<class GRD> class mgrid : public block {
       block::ctrl adapt(int excpt);
 };
 
-template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& input, std::ostream *inlog) {
+template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& input) {
    std::string keyword;
    std::istringstream data;
    std::string filename;
    std::string bdryfile;
 
-   if (inlog) {
-      log = inlog;
-   } 
-
    /* LOAD NUMBER OF GRIDS */
    data.str(input["ngrid"]);
    if (!(data >> ngrid)) ngrid = 1;
-   *log << "#ngrid: " << ngrid << std::endl;
+   *sim::log << "#ngrid: " << ngrid << std::endl;
    data.clear();
    
    keyword = idprefix + ".adapt";
@@ -107,12 +102,10 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.str(input[keyword]);
       if (!(data >> adapt_flag)) adapt_flag = 0;
    }
-   *log << "#adapt: " << adapt_flag << std::endl;
+   *sim::log << "#adapt: " << adapt_flag << std::endl;
    data.clear();  
    
    grd = new GRD[ngrid];
-   for(int i = 0; i<ngrid;++i)
-      grd[i].log = log;
       
    cv_to_ft.resize(ngrid-1);
    fv_to_ct.resize(ngrid-1);
@@ -126,7 +119,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.str(input[keyword]);
       if (!(data >> grwfac)) grwfac = 2.0;
    }
-   *log << "#growth factor: " << grwfac << std::endl;
+   *sim::log << "#growth factor: " << grwfac << std::endl;
    data.clear();
    
    int filetype;
@@ -138,7 +131,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.str(input[keyword]);
       if (!(data >> filetype)) filetype = ftype::grid;
    }
-   *log << "#filetype: " << filetype << std::endl;
+   *sim::log << "#filetype: " << filetype << std::endl;
    data.clear();
    
    keyword = idprefix + ".mesh";
@@ -151,10 +144,10 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
          filename = filename +"_" +idprefix;
       }
       else {
-         *log << "no mesh name\n"; exit(1);
+         *sim::log << "no mesh name\n"; exit(1);
       }
    }
-   *log << "#mesh: " << filename << std::endl;
+   *sim::log << "#mesh: " << filename << std::endl;
    data.clear();   
 
    keyword = idprefix + ".bdryfile";
@@ -163,7 +156,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       bdryfile = filename +"_bdry.inpt";
       input[keyword] = bdryfile;
    }
-   *log << "#bdryfile: " << bdryfile << std::endl;
+   *sim::log << "#bdryfile: " << bdryfile << std::endl;
    grd[0].mesh::input(filename.c_str(),static_cast<ftype::name>(filetype),grwfac,bdryfile.c_str());
    data.clear();   
    
@@ -175,7 +168,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.str(input[keyword]);
       if (!(data >> tolerance)) tolerance = 2.2; 
    }
-   *log << "#tolerance: " << tolerance << std::endl;
+   *sim::log << "#tolerance: " << tolerance << std::endl;
    data.clear();
    
    grd[0].init(0,input,idprefix,&gstorage);
@@ -256,7 +249,7 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
          return(stop);
    }
    
-   *log << "control flow error matchboundaries\n";
+   *sim::log << "control flow error matchboundaries\n";
    exit(1);
    
    return(stop);
@@ -288,7 +281,7 @@ template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
          return(grd[0].adapt(excpt-2,tolerance));
    }
    
-   *log << "control flow error: adapt" << std::endl;
+   *sim::log << "control flow error: adapt" << std::endl;
    exit(1);
    
    return(stop);

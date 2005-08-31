@@ -224,7 +224,7 @@ vtry_failed:continue;
                      i2wk_lst3(j) = itemp;
                   }
                }
-               // *log << "degenerate case" << v(0) << ' ' << v(1) << std::endl;
+               // *sim::log << "degenerate case" << v(0) << ' ' << v(1) << std::endl;
             }
          }
          addtri(v(0),v(1),i2wk_lst3(0),sind,dir);
@@ -292,7 +292,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          if (maxv == sd(sind1).vrtx(order)) {
             /* SIDE IN SAME DIRECTION */
             if (sd(sind1).tri(0) >= 0) {
-               *log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+               *sim::log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
                output("error",ftype::tecplot);
                output("error",ftype::grid);
                exit(1);
@@ -315,7 +315,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          else if(maxv == sd(sind1).vrtx(1-order)) {
             /* SIDE IN OPPOSITE DIRECTION */
             if (sd(sind1).tri(1) >= 0) {
-               *log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+               *sim::log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
                output("error",ftype::tecplot);
                output("error",ftype::grid);
                exit(1);

@@ -35,7 +35,7 @@ void mesh::createsideinfo(void) {
          while (sind >= 0) {
             if (maxv == sd(sind).vrtx(order)) {
                if (sd(sind).tri(1) >= 0) {
-                  *log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                  exit(1);
+                  *sim::log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                  exit(1);
                }
                else {
                   sd(sind).tri(1) = tind;
@@ -128,7 +128,7 @@ void mesh::createtdstri(void) {
             }
             sind = sd(sind).info;
          }
-         *log << "didn't match side: " << v1 << v2 << std::endl;
+         *sim::log << "didn't match side: " << v1 << v2 << std::endl;
          exit(1);
          
 NEXTTRISIDE:

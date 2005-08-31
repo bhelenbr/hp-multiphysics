@@ -64,7 +64,7 @@ void mesh::rebay(FLT tolsize) {
       TFOUND:
       
       if (nvrtx > maxvst -2) {
-         *log << "too many vertices" << std::endl;
+         *sim::log << "too many vertices" << std::endl;
          exit(1);
       }
       
@@ -140,10 +140,10 @@ INSRT:
          vrtx(nvrtx)(n) = xpt(n);
 
 #ifdef DEBUG_ADAPT
-      *log << "Inserting interior side " << intrcnt << ' ' << adapt_count << ' ';
+      *sim::log << "Inserting interior side " << intrcnt << ' ' << adapt_count << ' ';
       for(n=0;n<ND;++n)
-         *log << vrtx(nvrtx)(n) << ' ';
-      *log << std::endl;
+         *sim::log << vrtx(nvrtx)(n) << ' ';
+      *sim::log << std::endl;
 #endif
       
       dist = qtree.nearpt(vrtx(nvrtx).data(),vnear);
@@ -151,22 +151,22 @@ INSRT:
       for (n=0;n<ND;++n)
          norm += fabs(vrtx(nvrtx)(n));
       if (dist < 100.0*EPSILON*norm) {
-         *log << "#Point to close to insert " << dist << ' ';
+         *sim::log << "#Point to close to insert " << dist << ' ';
          for(n=0;n<ND;++n)
-            *log << vrtx(nvrtx)(n) << ' ';
-         *log << std::endl;
+            *sim::log << vrtx(nvrtx)(n) << ' ';
+         *sim::log << std::endl;
          tkoutlst(tind);
          continue;
       }
          
       tfind = findtri(xpt,vnear);
       if (tfind < 0) {
-         *log << "#Warning: Trying to insert outside domain ";
+         *sim::log << "#Warning: Trying to insert outside domain ";
          for(n=0;n<ND;++n)
-            *log << vrtx(v0)(n) << ' '; 
+            *sim::log << vrtx(v0)(n) << ' '; 
          for(n=0;n<ND;++n)
-            *log << vrtx(v1)(n) << ' ';
-         *log << std::endl;
+            *sim::log << vrtx(v1)(n) << ' ';
+         *sim::log << std::endl;
          tkoutlst(tind);
          continue;
       }
@@ -186,12 +186,12 @@ INSRT:
          ++intrcnt;
       }
       else {
-         *log << "#Warning: Makes Bad Triangle ";
+         *sim::log << "#Warning: Makes Bad Triangle ";
          for(n=0;n<ND;++n)
-            *log << vrtx(v0)(n) << ' ';
+            *sim::log << vrtx(v0)(n) << ' ';
          for(n=0;n<ND;++n)
-            *log << vrtx(v1)(n) << ' ';
-         *log << std::endl;
+            *sim::log << vrtx(v1)(n) << ' ';
+         *sim::log << std::endl;
          tkoutlst(tind);
          continue;
       }
@@ -218,7 +218,7 @@ INSRT:
       
    }
       
-   *log << "#Rebay finished: new interior points " << intrcnt << std::endl;
+   *sim::log << "#Rebay finished: new interior points " << intrcnt << std::endl;
 
    return;
 }
@@ -259,10 +259,10 @@ void mesh::bdry_rebay(FLT tolsize) {
          vlngth(nvrtx) = (1.-psi)*vlngth(sd(sind).vrtx(0)) +psi*vlngth(sd(sind).vrtx(1));
 
 #ifdef DEBUG_ADAPT
-         *log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
+         *sim::log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
          for(int n=0;n<ND;++n)
-            *log << vrtx(nvrtx)(n) << ' ';
-         *log << std::endl;
+            *sim::log << vrtx(nvrtx)(n) << ' ';
+         *sim::log << std::endl;
 #endif
          /* INSERT POINT */
          bdry_insert(nvrtx,sind);
@@ -289,7 +289,7 @@ void mesh::bdry_rebay(FLT tolsize) {
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
    }
-   *log << "#Boundary refinement finished, " << count << " sides added" << std::endl;
+   *sim::log << "#Boundary refinement finished, " << count << " sides added" << std::endl;
    
    return;
 }

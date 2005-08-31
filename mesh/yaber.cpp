@@ -233,7 +233,7 @@ void mesh::yaber(FLT tolsize) {
 #endif
    }
 
-   *log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
+   *sim::log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
 
    return;
 }
@@ -244,14 +244,14 @@ void mesh::checkintegrity() {
    for(i=0;i<ntri;++i) {
       if (td(i).info < 0) continue;
       
-      if (area(i) < 0.0) *log << "negative area" << i << std::endl;
+      if (area(i) < 0.0) *sim::log << "negative area" << i << std::endl;
       
       for(j=0;j<3;++j) {
          sind = td(i).side(j);
          dir = -(td(i).sign(j) -1)/2;
          
          if (sd(sind).info == -3) {
-            *log << "references deleted side" <<  i << sind << std::endl;
+            *sim::log << "references deleted side" <<  i << sind << std::endl;
             for(i=0;i<nside;++i)
                sd(i).info += 2;
             output("error");
@@ -259,7 +259,7 @@ void mesh::checkintegrity() {
          }
 
          if (sd(sind).vrtx(dir) != td(i).vrtx((j+1)%3) && sd(sind).vrtx(1-dir) != td(i).vrtx((j+2)%3)) {
-            *log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
+            *sim::log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sd(i).info += 2;
             output("error"); 
@@ -267,7 +267,7 @@ void mesh::checkintegrity() {
          }    
          
          if (sd(sind).tri(dir) != i) {
-            *log << "failed side check tind" << i << "sind" << sind << std::endl;
+            *sim::log << "failed side check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sd(i).info += 2;
             output("error"); 
@@ -275,7 +275,7 @@ void mesh::checkintegrity() {
          }
          
          if (td(i).tri(j) != sd(sind).tri(1-dir)) {
-            *log << "failed ttri check tind" << i << "sind" << sind << std::endl;
+            *sim::log << "failed ttri check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sd(i).info += 2;
             output("error"); 
@@ -284,7 +284,7 @@ void mesh::checkintegrity() {
          
          if (td(i).tri(j) > 0) {
             if(td(td(i).tri(j)).info < 0) {
-               *log << "references deleted tri" << std::endl;
+               *sim::log << "references deleted tri" << std::endl;
                for(i=0;i<nside;++i)
                   sd(i).info += 2;
                output("error"); 
@@ -394,7 +394,7 @@ void mesh::bdry_yaber(FLT tolsize) {
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
    }
-   *log << "#Boundary coarsening finished, " << count << " sides coarsened" << std::endl;
+   *sim::log << "#Boundary coarsening finished, " << count << " sides coarsened" << std::endl;
    return;
 }
 
@@ -431,7 +431,7 @@ void mesh::checkintwk() const {
    int i;
    
    for(i=0;i<maxvst;++i)
-      if (i1wk(i) != -1) *log << "failed intwk1 check" << i << i1wk(i) << std::endl;
+      if (i1wk(i) != -1) *sim::log << "failed intwk1 check" << i << i1wk(i) << std::endl;
    
    return;
 }

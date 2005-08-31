@@ -23,7 +23,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".n");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
          
@@ -41,7 +41,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".s");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
          out << nside << endl;   
@@ -55,7 +55,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".e");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
          out << ntri << endl;
@@ -73,7 +73,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".dat");
          out.open(fnmapp);
          if (out == NULL ) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
 
@@ -98,7 +98,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".GDS");
          out.open(fnmapp);
          if (out == NULL ) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
 
@@ -126,7 +126,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".FDNEUT");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file " << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
 
@@ -199,7 +199,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".txt");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file" << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
          }
          out << nvrtx << endl;
@@ -218,7 +218,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          strcat(fnmapp,".grd");
          out.open(fnmapp);
          if (!out) {
-            *log << "couldn't open output file" << fnmapp << "for output" << endl;
+            *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
          }
          
@@ -264,7 +264,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          break;
 
       default:
-         *log << "That filetype is not supported yet" << endl;
+         *sim::log << "That filetype is not supported yet" << endl;
          break;
    }
    

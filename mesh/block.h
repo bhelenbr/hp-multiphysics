@@ -19,7 +19,7 @@ class block {
          sprintf(buffer,"b%d",idnum);
          idprefix = std::string(buffer);
       }
-      virtual void init(std::map <std::string,std::string>& input, std::ostream *inlog = 0) = 0;
+      virtual void init(std::map <std::string,std::string>& input) = 0;
       virtual void output(char *filename, ftype::name filetype = ftype::easymesh) = 0;
       virtual ctrl matchboundaries(int lvl, int excpt) = 0;
       virtual ctrl rsdl(int lvl, int excpt) = 0;

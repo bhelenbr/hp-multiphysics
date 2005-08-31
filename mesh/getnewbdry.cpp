@@ -11,7 +11,7 @@
 #include "boundaries.h"
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
-const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition"};
+const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca"};
 
 vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata) {
    std::string keyword;
@@ -30,7 +30,7 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
       if (mi != (*bdrydata).end()) {
          type = vtype::getid((*mi).second.c_str());
          if (type < 0)  {
-            *log << "unknown vertex type:" << (*mi).second << std::endl;
+            *sim::log << "unknown vertex type:" << (*mi).second << std::endl;
             exit(1);
          }
       }
@@ -58,7 +58,7 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
    
    if (bdrydata) temp->input(*bdrydata);
    
-   temp->output(*log);
+   temp->output(*sim::log);
 
    return(temp);
 }
@@ -81,12 +81,12 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
       if (mi != (*bdrydata).end()) {
          type = stype::getid((*mi).second.c_str());
          if (type < 0)  {
-            *log << "unknown side type:" << (*mi).second << std::endl;
+            *sim::log << "unknown side type:" << (*mi).second << std::endl;
             exit(1);
          }
       }
       else {
-         *log << "#couldn't find type for side: " << idnum << std::endl;
+         *sim::log << "#couldn't find type for side: " << idnum << std::endl;
          type = stype::plain;
       }
    }
@@ -129,7 +129,7 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
    
    if (bdrydata) temp->input(*bdrydata);
    
-   temp->output(*log);
+   temp->output(*sim::log);
 
    return(temp);
 }

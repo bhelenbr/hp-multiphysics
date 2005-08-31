@@ -22,13 +22,13 @@ sharedmem* r_mesh::init(bool coarse, std::map <std::string,std::string>& input, 
       data.str(input[keyword]);
       if (!(data >> fadd)) fadd = 1.0;
    }
-   *log << "#fadd: " << fadd << std::endl;
+   *sim::log << "#fadd: " << fadd << std::endl;
    data.clear();
 
    keyword = prefix + ".vnn";
    data.str(input[keyword]);
    if (!(data >> vnn)) vnn = 0.5; 
-   *log << "#vnn: " << vnn << std::endl;
+   *sim::log << "#vnn: " << vnn << std::endl;
    data.clear();
    
    /* local storage */   
@@ -488,7 +488,7 @@ block::ctrl r_mesh::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
                
          return(block::stop);
    }
-   *log << "Flow control error\n" << std::endl;
+   *sim::log << "Flow control error\n" << std::endl;
    return(block::stop);
 }
 
@@ -504,7 +504,7 @@ void r_mesh::maxres() {
          mxr[n] = MAX(mxr[n],fabs(fscr3(i)(n)));
          
    for(n=0;n<ND;++n)
-      *log << ' ' << mxr[n] << ' ';
+      *sim::log << ' ' << mxr[n] << ' ';
          
    return;
 }
@@ -710,7 +710,7 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             return(block::stop);
 
          default:
-            *log << "error in control flow tadvance 1" << std::endl;
+            *sim::log << "error in control flow tadvance 1" << std::endl;
             exit(1);
       }
    }
@@ -740,7 +740,7 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             return(block::stop);
          
          default:
-            *log << "error in control flow tadvance 2" << std::endl;
+            *sim::log << "error in control flow tadvance 2" << std::endl;
             exit(1);
       }
    }
@@ -828,7 +828,7 @@ block::ctrl r_mesh::rsdl(int excpt) {
          return(block::stop);
          
       default:
-         *log << "flow control error, rsdl" << std::endl;
+         *sim::log << "flow control error, rsdl" << std::endl;
          exit(1);
    }
    
@@ -881,7 +881,7 @@ block::ctrl r_mesh::setup_preconditioner(int excpt) {
          return(block::stop);
    }
    
-   *log << "flow control error: vddt" << std::endl;
+   *sim::log << "flow control error: vddt" << std::endl;
    exit(1);
    
    return(block::stop);

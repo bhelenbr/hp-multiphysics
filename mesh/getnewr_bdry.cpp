@@ -39,16 +39,16 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
       if (mi != (*bdrydata).end()) {
          type = r_stype::getid((*mi).second.c_str());
          if (type < 0)  {
-            *log << "unknown type:" << (*mi).second << std::endl;
+            *sim::log << "unknown type:" << (*mi).second << std::endl;
             exit(1);
          }
       }
       else {
-         *log << "couldn't find type for r_side: " << sbdry(bnum)->idnum << std::endl;
+         *sim::log << "couldn't find type for r_side: " << sbdry(bnum)->idnum << std::endl;
       }
    }
 
-   // *log << "making side " << idnum << std::endl;
+   // *sim::log << "making side " << idnum << std::endl;
 
    switch(type) {
       case r_stype::plain: {
@@ -75,7 +75,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string
    
    if (bdrydata) temp->input(*bdrydata);
    
-   temp->output(*log);
+   temp->output(*sim::log);
 
    
    return(temp);

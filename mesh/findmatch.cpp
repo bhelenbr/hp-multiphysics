@@ -225,14 +225,14 @@ void mesh::partition(class mesh& xin, int npart) {
       }
    }
    
-   *log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
+   *sim::log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
    
    if (!initialized) {
       maxvst = 3*ntri;
       allocate(maxvst,&xin.scratch);
    }
    else if (3*ntri > maxvst) {
-      *log << "mesh is too large" << std::endl;
+      *sim::log << "mesh is too large" << std::endl;
       exit(1);
    }
 
@@ -285,7 +285,7 @@ void mesh::partition(class mesh& xin, int npart) {
          v0 = sd(i).vrtx(0);
          for(n=0;n<3;++n)
             if (i1wk(xin.td(tind).vrtx(n)) == v0) break;
-         if (n==3) *log << "error in partitioning\n";
+         if (n==3) *sim::log << "error in partitioning\n";
          n = (n+2)%3;
 
          indx = xin.td(tind).tri(n);

@@ -260,7 +260,7 @@ void side_bdry::reorder() {
       for(i=0;i<total-nel;++i)
          x.sbdry(x.nsbd-1)->swap(i,i+nel);
       x.sbdry(x.nsbd-1)->nel = total-nel;
-      *x.log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
+      *sim::log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
       return;
    }
    
@@ -424,7 +424,7 @@ void curved_analytic::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt
       for(n=0;n<mesh::ND;++n)
          pt(n) += delt_dist*dhgt(n,pt.data())/mag;
       if (++iter > 100) {
-         *x.log << "iterations exceeded curved boundary " << idnum << ' ' << pt(0) << ' ' << pt(1) << '\n';
+         *sim::log << "iterations exceeded curved boundary " << idnum << ' ' << pt(0) << ' ' << pt(1) << '\n';
          exit(1);
       }
    } while (fabs(delt_dist) > 10.*EPSILON);

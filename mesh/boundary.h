@@ -29,7 +29,15 @@
 #endif
 #endif
 
-/* GENERIC INTERFACE FOR A B.C. */
+/** \defgroup boundary Mesh Boundary Objects 
+ *  This group contains object for dealing with mesh boundaries
+ */
+ 
+/** \brief Generic interface for a b.c. 
+ *
+ *  \ingroup boundary
+ *  Contains all the basic functions for parallel communications
+ */
 class boundary {
    public:
       int idnum;
@@ -92,7 +100,12 @@ class boundary {
       virtual ~boundary() {}
 };
 
-/* SPECIALIZATION FOR A VERTEX */
+/** \brief Specialization for a vertex 
+ *
+ * \ingroup boundary
+ * Specialization of communication routines and 
+ * and storage for a vertex boundary 
+ */
 class vrtx_bdry : public boundary {
    
    public:
@@ -116,7 +129,12 @@ class vrtx_bdry : public boundary {
 };
 
 
-/* SPECIALIAZATION FOR A SIDE */
+/** \brief Specialization for a side 
+ *
+ * \ingroup boundary
+ * Specialization of communication routines and 
+ * and storage for a side boundary 
+ */
 class side_bdry : public boundary {
    public:
       mesh &x;
@@ -149,6 +167,13 @@ class side_bdry : public boundary {
       virtual void rcvpositions(int phase) {finalrcv(phase,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
 };
 
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
 class vtype {
    public:
       static const int ntypes = 3;
@@ -161,10 +186,17 @@ class vtype {
       }
 };
 
+/** \brief Helper object for side_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all side_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
 class stype {
    public:
-      static const int ntypes = 7;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition};
+      static const int ntypes = 8;
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)

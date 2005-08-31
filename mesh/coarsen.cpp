@@ -18,9 +18,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       /* VERTEX STORAGE ALLOCATION */
       allocate_duplicate(1.9,inmesh);
    }
-   
-   log = inmesh.log;
-   
+
    /* PREPARE FOR COARSENING */
    for(i=0;i<inmesh.nvrtx;++i)
       fscr1(i) = 1.0e8;
@@ -45,7 +43,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    for(i=0;i<nsbd;++i) {
       sbdry(i)->nel = 0;
       if (typeid(sbdry(i)) != typeid(inmesh.sbdry(i))) {
-         *log << "can't coarsen into object with different boundaries" << std::endl;
+         *sim::log << "can't coarsen into object with different boundaries" << std::endl;
          exit(1);
       }
 
@@ -206,11 +204,11 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    initvlngth();
    
    /* PRINT SOME GENERAL DEBUGGING INFO */
-   *log << "#" << std::endl << "#COARSE MESH " << std::endl;
-   *log << "#MAXVST:" << maxvst << " VERTICES:" << nvrtx << " SIDES:" << nside << " ELEMENTS:" << ntri << std::endl;   
+   *sim::log << "#" << std::endl << "#COARSE MESH " << std::endl;
+   *sim::log << "#MAXVST:" << maxvst << " VERTICES:" << nvrtx << " SIDES:" << nside << " ELEMENTS:" << ntri << std::endl;   
    /* PRINT BOUNDARY INFO */
    for(i=0;i<nsbd;++i)
-      *log << "#" << sbdry(i)->idprefix << " " << sbdry(i)->mytype << " " << sbdry(i)->nel << std::endl;
+      *sim::log << "#" << sbdry(i)->idprefix << " " << sbdry(i)->mytype << " " << sbdry(i)->nel << std::endl;
 
    return(1);
 }
@@ -272,7 +270,7 @@ void mesh::coarsen3() {
    
    /* COARSEN SIDE EDGES FIRST */
    for(i=0;i<nsbd;++i) {
-      *log << "coarsening boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
+      *sim::log << "coarsening boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
       for(j=0;j<sbdry(i)->nel;++j) {
          sind = sbdry(i)->el(j);
          v0 = sd(sind).vrtx(0);
@@ -305,9 +303,9 @@ void mesh::coarsen3() {
    
    cleanup_after_adapt();
    
-   *log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
+   *sim::log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
    for(i=0;i<nsbd;++i)
-      *log << "boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
+      *sim::log << "boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
    
    return;
 }

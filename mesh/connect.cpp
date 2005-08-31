@@ -24,7 +24,7 @@ block::ctrl mesh::mgconnect(int excpt, Array<transfer,1> &cnnct, const class mes
          for(bnum=0;bnum<nsbd;++bnum) {
             /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
             if(sbdry(bnum)->idnum != tgt.sbdry(bnum)->idnum) {
-               *log << "error: sides are not numbered the same" << std::endl;
+               *sim::log << "error: sides are not numbered the same" << std::endl;
                exit(1);
             }
             state &= sbdry(bnum)->mgconnect(excpt,cnnct,tgt,bnum);

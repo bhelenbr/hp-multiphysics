@@ -111,10 +111,9 @@ class r_translating : public r_fixed {
 class r_oscillating : public r_fixed {
    public:
       FLT v0, amp, omega;
-      FLT time;
       
       r_oscillating(r_mesh &xin, side_bdry &bin) : 
-         r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0), time(0.0) {mytype="oscillating";}
+         r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
          
       void input(std::map <std::string,std::string>& inmap) {
          r_fixed::input(inmap);
@@ -134,15 +133,13 @@ class r_oscillating : public r_fixed {
          FLT center[2], center1[2], dx[2],xp[2];
          FLT theta, theta1,dtheta;
          
-         center[0] = v0*time;
-         center[1] = amp*(1-cos(omega*time));
-         theta = atan(omega*amp*sin(omega*time)/v0);         
-
-         time = time +1.0;
+         center[0] = v0*sim::time;
+         center[1] = amp*(1-cos(omega*sim::time));
+         theta = atan(omega*amp*sin(omega*sim::time)/v0);         
          
-         center1[0] = v0*time;
-         center1[1] = amp*(1-cos(omega*time));
-         theta1 = atan(omega*amp*sin(omega*time)/v0);
+         center1[0] = v0*sim::time;
+         center1[1] = amp*(1-cos(omega*sim::time));
+         theta1 = atan(omega*amp*sin(omega*sim::time)/v0);
          dtheta = theta1-theta;
                   
          for(int j=0;j<base.nel;++j) {
