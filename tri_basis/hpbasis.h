@@ -27,6 +27,8 @@
 
 using namespace blitz;
 
+
+
 class hpbasis {
    public:
       int p;
@@ -201,5 +203,11 @@ class hpbasis {
       void ptvalues1d(FLT x);
       void ptvalues1d_deriv(FLT x);
 };
+
+/** This is an array for bases of various orders for general use 
+    The polynomial degree increases by factors of 2 for multigrid */
+namespace basis {
+   extern Array<hpbasis,1> tri;
+}
 
 

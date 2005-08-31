@@ -15,6 +15,8 @@
 
 const int hpbasis::sbwth;
 
+Array<hpbasis,1> basis::tri;
+
 void hpbasis::initialize(int pdegree, int gpoints) {   
    if (pdegree < 1) {
       printf("error can't use 0th order basis with vertex based modes\n");
