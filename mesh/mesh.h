@@ -85,16 +85,18 @@ class mesh {
       };
       Array<tstruct,1> td;
       
-      /* SOME SCRATCH VARIABLES */
+      /* SOME WORK VARIABLES */
       /* ANY ROUTINE THAT USES i1wk SHOULD RESET IT TO -1 */
-      static Array<int,1> i1wk,i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
+      /* THIS IS ONLY SHARED BETWEEN MESH OBJECTS */
+      /* BECAUSE IT MUST BE KEPT AT -1 */
+      static Array<int,1> i1wk;
 
-      /* THIS IS SHARED WORK SPACE */
-      /* ONLY SHARE WITH BLOCKS THAT WORK TOTALLY INDEPENDENTLY */
-      /* (DIFFERENT LEVELS OF MULTIGRID) */
-      sharedmem scratch;
-      Array<FLT,1> fscr1;
-      
+      /* THESE ARE WORK VARIABLES. */
+      /* THEY POINT TO GLOBALLY SHARED MEMORY AND THUS ARE */
+      /* NOT GUARANTEED TO BE STABLE AFTER CALLS TO OTHER BLOCKS */
+      static Array<FLT,1> fscr1;
+      static Array<int,1> i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
+
       int initialized;
       static int maxsrch;
       
@@ -104,17 +106,15 @@ class mesh {
       /**************/
       /* INITIALIZATION & ALLOCATION */
       mesh() : nvbd(0), nsbd(0), initialized(0)  {}
-      sharedmem* allocate(int mxsize, const sharedmem *wkin = 0);
+      void allocate(int mxsize);
       void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
-      void get_scratch_pointers() {
-         Array<FLT,1> tmp(static_cast<FLT *>(scratch.data()), maxvst, neverDeleteData);
-         fscr1.reference(tmp);
-      }
+      void reload_scratch_pointers();
+      size_t needed_scratch_size();
       void copy(const mesh& tgt);
       ~mesh();
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      sharedmem* input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0,sharedmem *win = 0);
+      void input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0);
       int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
       void bdry_output(const char *filename) const;
       void setbcinfo();  // FOR EASYMESH OUTPUT (NOT USED)

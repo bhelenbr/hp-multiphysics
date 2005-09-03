@@ -27,6 +27,8 @@
 
 std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
+sharedmem sim::scratch;
+
 #ifdef BACKDIFF
 FLT sim::bd[BACKDIFF+1];
 #endif
@@ -51,6 +53,13 @@ FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
 #endif
 #endif
 
+blitz::Array<FLT,1> sim::cfl;  
+
+#ifdef PV3
+int sim::pv3_mesh_changed;
+#endif
+   
+FLT sim::fadd;  
 
 void blocks::init(const char *infile, const char *outfile) {
    std::map<std::string,std::string> maptemp;
@@ -211,6 +220,9 @@ void blocks::init(std::map<std::string,std::string> input) {
       blk[i] = getnewblock(bstart+i,&input);
       blk[i]->init(input);
    }
+   
+   for (i=0;i<nblock;++i)
+      blk[i]->reload_scratch_pointers();
    
    findmatch();
    matchboundaries();  // ONLY DOES FIRST LEVEL

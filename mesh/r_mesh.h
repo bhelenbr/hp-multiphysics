@@ -67,19 +67,19 @@ class r_mesh : public mesh {
          void moveboundaries();
 
       public:
-         /* POINTER TO STABLE THINGS SHARED IN BLOCK CONTAINER */
-         /* EMPTY BECAUSE R_MESH DOESN'T NEED TO SHARE ANY STABLE INFORMATION */
-         struct gbl {} *rg;  
+         /* POINTER TO THINGS SHARED IN BLOCK CONTAINER */
          /* SCRATCH VARIABLES FOR MGRID SEQUENCE */
          /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
-         /* ALLOCATED FROM scratch */
          /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-         void get_scratch_pointers();
-         Array<TinyVector<FLT,ND>,1> fscr2, fscr3;
+         struct gbl {
+            Array<FLT,1> diag;
+            Array<TinyVector<FLT,2>,1> res;
+            Array<TinyVector<FLT,2>,1> res1;
+         } *rg;  
          ~r_mesh();
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-         sharedmem* init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin, sharedmem *wkin = 0);
+         void init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
          void bdry_output(const char *filename) const;
          block::ctrl mg_getfres(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
          block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);

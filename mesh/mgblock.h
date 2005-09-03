@@ -30,6 +30,11 @@ template<class GRD> class mgrid : public block {
    public:
       mgrid(int idnum) : block(idnum), adapt_flag(0) {}
       void init(std::map <std::string,std::string>& input);
+      void reload_scratch_pointers() {
+         for(int i=0;i<ngrid;++i) {
+            grd[i].reload_scratch_pointers();
+         }
+      }
       void output(char *filename, ftype::name filetype) {
          grd[0].output(filename, filetype);
       }
@@ -172,6 +177,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    data.clear();
    
    grd[0].init(0,input,idprefix,&gstorage);
+
 #define OLDRECONNECT
    for(int lvl=1;lvl<ngrid;++lvl) {
 #ifdef OLDRECONNECT

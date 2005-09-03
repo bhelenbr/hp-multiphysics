@@ -1,6 +1,7 @@
 #include "block.h"
 #include <fstream>
 #include <blitz/array.h>
+#include <utilities.h>
 
 /* THIS IS A MULTIBLOCK MESH */
 /* CAN DRIVE MULTIGRID OR STANDARD ITERATION */
@@ -28,6 +29,7 @@ namespace sim {
    extern FLT time; /**< Simulation time */
    extern FLT g;  /**< gravity */
    extern std::ostream *log; /**< log file stream */
+   extern sharedmem scratch; /**< Shared work memory for all blocks */
    
    /** Time stepping for simulation */
 #ifdef BACKDIFF
@@ -78,9 +80,23 @@ namespace sim {
     */
    //@{
    const int NSTAGE = 5; /**< Number of stages */
+   extern blitz::Array<FLT,1> cfl;  /**< Global array of cfl numbers (can use how you see fit) */
    const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0}; /**< Multistage time step constants (imaginary) */
    const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; /**< Multistage time step constants (real) */
    //@}
+
+#ifdef PV3
+   /** Flag for pV3 to tell when to reload meshes */
+   extern int pv3_mesh_changed;
+#endif
+   
+   /** @name Multigrid Parameters 
+    *  Constants controlling multigrid iteration 
+    */
+   //@{
+   extern FLT fadd;   //!< Multiplicative factor for multigrid (default = 1.0)
+   //@}
+
 }
 
 class blocks {

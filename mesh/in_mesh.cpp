@@ -5,10 +5,11 @@
 #include <cstring>
 #include <input_map.h>
 
-Array<int,1> mesh::i1wk,mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2wk_lst3;
+Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2wk_lst3;
+Array<FLT,1> mesh::fscr1;
 int mesh::maxsrch;
 
-sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile, sharedmem *win) {
+void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile) {
    int i,j,n,sind,count,temp,tind,v0,v1,sign;
    int ierr;
    char grd_nm[120], grd_app[120];
@@ -63,7 +64,7 @@ sharedmem* mesh::input(const char *filename, ftype::name filetype, FLT grwfac, c
             }
            
             if (!initialized) {
-               allocate(nside + (int) (grwfac*nside),win);
+               allocate(nside + (int) (grwfac*nside));
             }
             else if (nside > maxvst) {
                *sim::log << "error: mesh is too large" << std::endl;
@@ -232,7 +233,7 @@ next1a:     continue;
             /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
             if (!initialized) {
                maxvst = static_cast<int>((grwfac*3*i)/2); 
-               allocate(maxvst,win);
+               allocate(maxvst);
             }
             else if ((3*i)/2 > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -341,7 +342,7 @@ next1a:     continue;
             fscanf(grd,"nvrtx: %d\t nside: %d\t ntri: %d\n",&nvrtx,&nside,&ntri);
             
             if (!initialized) {
-               allocate(nside + (int) (grwfac*nside),win);
+               allocate(nside + (int) (grwfac*nside));
             }
             else if (nside > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -414,7 +415,7 @@ next1a:     continue;
             }
             
             if (!initialized) {
-               allocate(nside + (int) (grwfac*nside),win);
+               allocate(nside + (int) (grwfac*nside));
             }
             else if (nside > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -543,7 +544,7 @@ next1a:     continue;
             
             treeinit();
             
-            return(&scratch);
+            return;
 
 #ifdef CAPRI         
          case(ftype::BRep):
@@ -566,7 +567,7 @@ next1a:     continue;
             /* ALLOCATE BASIC STORAGE */
             if (!initialized) {
                maxvst = static_cast<int>((grwfac*3*ntri)/2); 
-               allocate(maxvst,win);
+               allocate(maxvst);
             }
             else if ((3*ntri)/2 > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -684,7 +685,7 @@ next1c:     continue;
             /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
             if (!initialized) {
                maxvst = static_cast<int>(grwfac*3*ntri);
-               allocate(maxvst,win);
+               allocate(maxvst);
             }
             else if ((3*ntri) > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -743,7 +744,7 @@ next1c:     continue;
             fscanf(grd,"%d\n",&nvrtx);
 
             maxvst = static_cast<int>(grwfac*nvrtx*nvrtx);
-            allocate(maxvst,win);
+            allocate(maxvst);
             initialized = 1;
 
             for(i=0;i<nvrtx;++i) {
@@ -854,10 +855,10 @@ next1c:     continue;
 
    initialized = 1;
    
-   return(&scratch);
+   return;
 }
 
-sharedmem* mesh::allocate(int mxsize,const sharedmem* wkin) {
+void mesh::allocate(int mxsize) {
    
    /* SIDE INFO */
    maxvst = mxsize;
@@ -876,41 +877,22 @@ sharedmem* mesh::allocate(int mxsize,const sharedmem* wkin) {
                  
    /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */ 
-   if (wkin) {   
-      scratch.reference(*wkin);
-      if (scratch.size() < maxvst*sizeof(FLT)) scratch.resize(maxvst*sizeof(FLT));
+#ifdef USE_SIMSCRATCH
+   if (sim::scratch.size() < needed_scratch_size()) {
+      sim::scratch.resize(needed_scratch_size());
    }
-   else {
-      scratch.resize(maxvst*sizeof(FLT));
-   }
-   get_scratch_pointers();
-
+#endif
+   reload_scratch_pointers();
 
    if (i1wk.ubound(firstDim) < maxvst) {
       // i1wk should always be kept initialized to -1
       i1wk.resize(Range(-1,maxvst));
       i1wk = -1;
-
-      // i2wk can be used as a list doesn't need to be reinitizalized
-      i2wk.resize(Range(-1,maxvst));
-      // some smaller lists using i2 storage
-      int mvst3 = maxvst/3;
-      Array<int,1> temp1(i2wk.data(),mvst3,neverDeleteData);
-      i2wk_lst1.reference(temp1);
-      i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-      Array<int,1> temp2(i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-      i2wk_lst2.reference(temp2);
-      i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-      Array<int,1> temp3(i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-      i2wk_lst3.reference(temp3);
-      i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
-
       maxsrch = 100;
-      
    }
    initialized = 1;
    
-   return(&scratch);
+   return;
 }
 
 void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
@@ -918,7 +900,7 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
 
    if (!initialized) {
       maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
-      allocate(maxvst,&inmesh.scratch);
+      allocate(maxvst);
       nsbd = inmesh.nsbd;
       sbdry.resize(nsbd);
       for(i=0;i<nsbd;++i) {
@@ -934,6 +916,51 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
       qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
       initialized = 1;
    }
+}
+
+void mesh::reload_scratch_pointers() {
+   
+#ifdef USE_SIMSCRATCH
+   /* THIS PLACES IT IN GLOBALLY SHARED MEMORY (RISKY BECAUSE CAN OVERLAP) */
+   if (fscr1.data() != (FLT *) sim::scratch.data() || maxvst > fscr1.extent(firstDim)) {
+
+      /* THIS IS PLACEMENT NEW. IT STICKS THE OBJECT AT THE ADDRESS IN MEMORY */
+      FLT *base = new(sim::scratch.data()) FLT;
+      Array<FLT,1> temp(base, maxvst, neverDeleteData);
+      fscr1.reference(temp);
+      
+      /* TEMPORARY NOT SURE IF THIS GUARANTEES ALIGNMENT??? */
+      int *ibase = new(sim::scratch.data()+sizeof(FLT)*maxvst) int;
+      Array<int,1> temp0(ibase, maxvst+1, neverDeleteData);
+      i2wk.reference(temp0);
+      i2wk.reindexSelf(TinyVector<int,1>(-1));
+   }
+#else
+   /* THIS IS A MORE STANDARD STATIC ALLOCATION */;
+   if (maxvst > fscr1.extent(firstDim)) {
+      fscr1.resize(maxvst);
+      i2wk.resize(maxvst+1);
+      i2wk.reindexSelf(TinyVector<int,1>(-1));
+   }
+#endif
+
+   // some smaller lists using i2 storage
+   int mvst3 = maxvst/3;
+   Array<int,1> temp1(i2wk.data(),mvst3,neverDeleteData);
+   i2wk_lst1.reference(temp1);
+   i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+   Array<int,1> temp2(i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+   i2wk_lst2.reference(temp2);
+   i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+   Array<int,1> temp3(i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+   i2wk_lst3.reference(temp3);
+   i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+   
+   return;
+}
+
+size_t mesh::needed_scratch_size() {
+   return(maxvst*(sizeof(FLT)+sizeof(int)));
 }
 
 mesh::~mesh() {

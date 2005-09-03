@@ -1,6 +1,7 @@
 #include "mesh.h"
 #include "boundary.h"
 #include <stdlib.h>
+#include <new>
 
 int mesh::comm_entity_size() {
    int i,tsize,nvcomm,nscomm;
@@ -193,13 +194,21 @@ void mesh::setpartition(int nparts) {
    int edgecut;
    
    /* CREATE ISOLATED TVRTX ARRAY */
-   int (*tvrtx)[3] = static_cast<int (*)[3]>(scratch.data());
+#ifdef USE_SIMSCRATCH
+   TinyVector<int,3> *base = new (sim::scratch.data()) TinyVector<int,3>;
+   Array<TinyVector<int,3>,1> tvrtx(base, maxvst, neverDeleteData);
+#else
+   Array<TinyVector<int,3>,1> tvrtx(maxvst);
+#endif
+   
    for(i=0;i<ntri;++i)
       for(n=0;n<3;++n)
-         tvrtx[i][n] = td(i).vrtx(n);
+         tvrtx(i)(n) = td(i).vrtx(n);
          
-   METIS_PartMeshNodal(&ntri, &nvrtx, static_cast<int *>(&tvrtx[0][0]), &etype, &numflag, &nparts, &edgecut,i1wk.data(),i2wk.data());
-   delete []tvrtx;
+   METIS_PartMeshNodal(&ntri, &nvrtx, static_cast<int *>(&tvrtx(0)(0)), &etype, &numflag, &nparts, &edgecut,i1wk.data(),i2wk.data());
+#ifdef USE_SIMSCRATCH
+   base->~TinyVector<int,3>();
+#endif
    
    for(i=0;i<ntri;++i)
       td(i).info = i1wk(i);
@@ -229,7 +238,7 @@ void mesh::partition(class mesh& xin, int npart) {
    
    if (!initialized) {
       maxvst = 3*ntri;
-      allocate(maxvst,&xin.scratch);
+      allocate(maxvst);
    }
    else if (3*ntri > maxvst) {
       *sim::log << "mesh is too large" << std::endl;
