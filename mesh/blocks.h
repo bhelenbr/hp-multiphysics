@@ -27,6 +27,7 @@
 namespace sim {
    extern FLT dti; /**< Inverse time step */
    extern FLT time; /**< Simulation time */
+   extern FLT tstep; /**< Simulation time step */
    extern FLT g;  /**< gravity */
    extern std::ostream *log; /**< log file stream */
    extern sharedmem scratch; /**< Shared work memory for all blocks */

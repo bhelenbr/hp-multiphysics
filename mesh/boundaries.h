@@ -41,10 +41,10 @@ template<class BASE> class comm_bdry : public BASE {
       int tags[maxmatch]; //!< Identifies each connection uniquely
       int phase[maxmatch];  //!< To set-up staggered sequence of symmetric passes
       void *rcvbuf[maxmatch]; //!< Local buffers to store incoming messages
-#ifdef mpisrc
+#ifdef MPISRC
       int mpi_match[maxmatch]; //!< Processor numbers for mpi
-      mpi_request mpi_rcvrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of recv
-      mpi_request mpi_sndrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of send
+      MPI_Request mpi_rcvrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of recv
+      MPI_Request mpi_sndrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of send
 #endif
             
    public:
@@ -800,4 +800,15 @@ class naca : public curved_analytic {
 
 typedef prdc_template<vcomm> vprdc;
 typedef prdc_template<scomm> sprdc;
+
+template<class EXT, class BASE> class solution_geometry : public BASE {
+   EXT *bptr;
+   solution_geometry(int inid, mesh &xin) : BASE(inid,xin) {}
+   virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+      if (sim::tstep <= 0) BASE::mvpttobdry(nel,psi,pt);
+      else bptr->mvpttobdry(nel,psi,pt);
+      return;
+   }
+};
+
 

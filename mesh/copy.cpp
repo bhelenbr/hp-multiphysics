@@ -252,7 +252,6 @@ void mesh::append(const mesh &z) {
 
    for (i=0;i<nsbd;++i) {
       sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
    }
    
   	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT               

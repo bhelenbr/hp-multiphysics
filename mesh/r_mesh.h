@@ -79,7 +79,7 @@ class r_mesh : public mesh {
          ~r_mesh();
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-         void init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
+         void init(std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
          void bdry_output(const char *filename) const;
          block::ctrl mg_getfres(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
          block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);

@@ -359,7 +359,6 @@ void mesh::partition(class mesh& xin, int npart) {
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
       sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT

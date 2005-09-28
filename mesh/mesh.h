@@ -111,7 +111,7 @@ class mesh {
       void reload_scratch_pointers();
       size_t needed_scratch_size();
       void copy(const mesh& tgt);
-      ~mesh();
+      virtual ~mesh();
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       void input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0);
@@ -204,8 +204,18 @@ class mesh {
       void collapse(int sind, int endpt);
 
       void dltvrtx(int vind);
+      virtual void movevdata(int frm, int to) {}
+      virtual void movevdata_bdry(int bnum,int bel,int endpt) {}
+      virtual void updatevdata(int v) {}
+      virtual void updatevdata_bdry(int bnum,int bel,int endpt) {}
       void dltsd(int sind);
+      virtual void movesdata(int frm, int to) {}
+      virtual void movesdata_bdry(int bnum,int bel) {}
+      virtual void updatesdata(int s) {}
+      virtual void updatesdata_bdry(int bnum,int bel) {}
       void dlttri(int tind);
+      virtual void movetdata(int frm, int to) {}
+      virtual void updatetdata(int t) {}
       
       /* ORDERED LIST FUNCTIONS */
       void putinlst(int sind);

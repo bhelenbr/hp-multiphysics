@@ -9,10 +9,18 @@
 #include <fstream>
 
 
-void r_mesh::init(bool coarse, std::map <std::string,std::string>& input, std::string prefix, r_mesh::gbl *rgin) {
+void r_mesh::init(std::map <std::string,std::string>& input, std::string prefix, r_mesh::gbl *rgin) {
    std::string keyword;
    std::istringstream data;
    std::string filename;
+   int coarse;
+   
+   keyword = prefix + ".coarse";
+   data.str(input[keyword]);
+   if (!(data >> coarse)) {
+      *sim::log << "#Error: not sure whether to initialize for r_mesh for multigrid" << std::endl;
+   }
+   data.clear();
    
    keyword = prefix + ".fadd";
    data.str(input[keyword]);

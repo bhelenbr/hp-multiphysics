@@ -1,7 +1,7 @@
 OBJ = coarsen.o copy.o getnewblock.o insert.o out_mesh.o r_mesh.o \
 tprims.o collapse.o findmatch.o getnewr_bdry.o rebay.o setup.o\
 triangulate.o boundary.o connect.o getnewbdry.o in_mesh.o meshutilities.o \
-refineby2.o swap.o yaber.o
+refineby2.o swap.o yaber.o adapt.o
 
 MAINOBJ = blocks.o main.o 
 
@@ -18,11 +18,11 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 
 ## Linux:
 ##  Machine specific for Linux
+CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
-CXX=/opt/mpich/myrinet/intel/bin/mpicxx
-# CPPFLAGS += -O3 -DMPISRC -cxxlib-icc -lstdc++
-CPPFLAGS += -O3 -DMPISRC
 #CPPFLAGS += -O3
+CPPFLAGS += -O3 -DMPISRC -I/opt/mpich/myrinet/intel/include #(cares)
+LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -44,7 +44,7 @@ libmesh.a: $(OBJ)
 	cp -f r_mesh.h $(HOME)/Codes/include/
 	
 mblock: $(OBJ) $(MAINOBJ)
-	${CXX} -o $@ $(MAINOBJ) $(OBJ) $(LIB) -lstdc++
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 
 $(OBJ): mesh.h r_mesh.h
 

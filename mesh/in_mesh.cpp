@@ -4,19 +4,21 @@
 #include <cstdlib>
 #include <cstring>
 #include <input_map.h>
+#include <iostream>
 
 Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2wk_lst3;
 Array<FLT,1> mesh::fscr1;
 int mesh::maxsrch;
 
 void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile) {
-   int i,j,n,sind,count,temp,tind,v0,v1,sign;
-   int ierr;
+   int i,j,n,sind,count,temp;
    char grd_nm[120], grd_app[120];
-   FILE *grd;
    TinyVector<int,3> v,s,e;
+   ifstream in;
    std::map<std::string,std::string> bdrymap;
    std::map<std::string,std::string> *pbdrymap = &bdrymap;
+   FLT fltskip;
+   int intskip;
          
    if (!(strncmp("${HOME}",filename, 7))) {
       strcpy(grd_nm,getenv("HOME"));
@@ -37,30 +39,29 @@ void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const c
    else {
       strcpy(grd_app,grd_nm);
       strcat(grd_app,"_bdry.inpt");
-      grd = fopen(grd_app,"r");
-      if (grd) {
-         fclose(grd);
+      in.open(grd_app);
+      if (in) {
+         in.close();
          input_map(bdrymap,grd_app);
       }
       else {
          pbdrymap = 0;
       }
    }
-        
+   
     switch (filetype) {            
         case(ftype::easymesh):
             /* LOAD SIDE INFORMATION */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".s");
-            grd = fopen(grd_app,"r");
-            if (grd==NULL) {
+            in.open(grd_app);
+            if (!in) {
                     *sim::log << "error: couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
-            ierr = fscanf(grd,"%d\n",&nside);
-            if(ierr != 1) {
-                    *sim::log << "error: in side file: " << grd_app << std::endl;
-                    exit(1);
+            if (!(in >> nside)) { 
+               *sim::log << "error: in side file: " << grd_app << std::endl;
+               exit(1);
             }
            
             if (!initialized) {
@@ -72,15 +73,15 @@ void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const c
             }
            
             for(i=0;i<nside;++i) {
-               ierr = fscanf(grd,"%*d:%d%d%*d%*d%d\n"
-               ,&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).info);
-               if(ierr != 3) {
+               in.ignore(80,':');
+               in >> sd(i).vrtx(0) >> sd(i).vrtx(1) >> sd(i).tri(0) >> sd(i).tri(1) >> sd(i).info;
+               if(in.fail()) {
                   *sim::log << "error: in side file " << grd_app << std::endl;
                   exit(1);
                }
             }
-            fclose(grd);
             
+            /* Don't Trust File So Will Calculate tri myself */
             for(i=0;i<maxvst;++i) {
                sd(i).tri(0) = -1;
                sd(i).tri(1) = -1;
@@ -126,40 +127,28 @@ next1:      continue;
                }
 next1a:     continue;
             }
+            in.close();
                
             /* LOAD VERTEX INFORMATION               */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".n");
-            grd = fopen(grd_app,"r");
-            if (!grd) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            in.open(grd_app);
+            if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
-            ierr = fscanf(grd,"%d\n",&nvrtx);
-            if(ierr != 1) {
+            if(!(in >> nvrtx)) {
                *sim::log << "1: error in grid: " << grd_app << std::endl;
                exit(1);
             }
             
-            /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
-               fscanf(grd,"%*d:");
-               if (ND == 3) {
-                  fgets(grd_app,100,grd);
-                  ierr = sscanf(grd_app,"%lf%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vrtx(i)(2),&vd(i).info);
-                  if (ierr != ND+1) {
-                     ierr = sscanf(grd_app,"%lf%lf%d",&vrtx(i)(0),&vrtx(i)(1),&vd(i).info);
-                     if (ierr != ND) { *sim::log << "2a: error in grid" << std::endl; exit(1); }
-                  }
+               in.ignore(80,':');
+               for(n=0;n<ND;++n) {
+                  in >> vrtx(i)(n);
                }
-               else {
-                  ierr = 0;
-                  for(n=0;n<ND;++n) {
-                     ierr += fscanf(grd,"%lf",&vrtx(i)(n));
-                  }
-                  ierr += fscanf(grd,"%d",&vd(i).info);
-                  if (ierr != ND+1)  { *sim::log << "2b: error in grid" << std::endl; exit(1); }
-               }
+               in >> vd(i).info;
+               if (in.fail())  { *sim::log << "2b: error in grid" << std::endl; exit(1); }
             }
-            fclose(grd);
+            in.close();
 
             /* COUNT VERTEX BOUNDARY GROUPS  */
             nvbd = 0;
@@ -181,20 +170,19 @@ next1a:     continue;
             /* LOAD ELEMENT INFORMATION */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".e");
-            grd = fopen(grd_app,"r");
-            if (grd==NULL) {
+            in.open(grd_app);
+            if (!in) {
                *sim::log << "trouble opening " << grd_app << std::endl;
                exit(1);
             }
-            ierr = fscanf(grd,"%d\n",&ntri);
-            if(ierr != 1) {
+            if(!(in >> ntri)) {
                *sim::log << "error in file " << grd_app << std::endl;
                exit(1);
             }
     
             for(i=0;i<ntri;++i) {
-                ierr = fscanf(grd,"%*d:%d%d%d%d%d%d%d%d%d%*f%*f%d\n"
-                ,&v(0),&v(1),&v(2),&e(0),&e(1),&e(2),&s(0),&s(1),&s(2),&td(i).info);
+               in.ignore(80,':');
+                in >> v(0) >> v(1) >> v(2) >> e(0) >> e(1) >> e(2) >> s(0) >> s(1) >> s(2) >> fltskip >> fltskip >> td(i).info;
     
                 for (j=0;j<3;++j) {
                     td(i).vrtx(j) = v(j);
@@ -212,21 +200,22 @@ next1a:     continue;
                     }
                 }
             }
+            in.close();
             break;
         
         case(ftype::gambit):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".FDNEUT");
-            grd = fopen(grd_app,"r");
-            if (grd == NULL) {
+            in.open(grd_app);
+            if (!in) {
                     *sim::log << "trouble opening " << grd_nm << std::endl;
                     exit(1);
             }
             
             for(i=0;i<5;++i)
-                fscanf(grd,"%*[^\n]\n");
+               in.ignore(160,'\n');
                 
-            fscanf(grd,"%d%d%d\n",&nvrtx,&i,&nsbd);
+            in >> nvrtx >> i >> nsbd;
             nsbd -= 1;
             sbdry.resize(nsbd);
             /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
@@ -241,26 +230,25 @@ next1a:     continue;
             }
     
             for(i=0;i<8;++i)
-                fscanf(grd,"%*[^\n]\n");
+               in.ignore(160,'\n');
 
             /* READ VERTEX DATA */    
             for(i=0;i<nvrtx;++i) {
-               fscanf(grd,"%*d");
+               in >> intskip;
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%le ",&vrtx(i)(n));
-               fscanf(grd,"\n");
+                  in >> vrtx(i)(n);
                vd(i).info = -1;
             }
                 
-            for(i=0;i<2;++i)
-                fscanf(grd,"%*[^\n]\n");
+            for(i=0;i<3;++i)
+                in.ignore(160,'\n');
 
             /* READ ELEMENT DATA */
-            fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^\n]\n",&ntri);
-            fscanf(grd,"%*[^\n]");
-                    
+            // fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^\n]\n",&ntri); TEMPORARY
+            in.ignore(160,'\n'); 
+                               
             for(i=0;i<ntri;++i) {
-                fscanf(grd,"%*d %d %d %d",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
+               in >> intskip >> td(i).vrtx(0) >> td(i).vrtx(1) >> td(i).vrtx(2);
                 --td(i).vrtx(0);
                 --td(i).vrtx(1);
                 --td(i).vrtx(2);
@@ -271,20 +259,18 @@ next1a:     continue;
             int (*svrtxbtemp[10])[2];
     
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n"
-                  ,&count,&temp);
+               //fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); TEMPORARY
                
                sbdry(i) = getnewsideobject(temp,pbdrymap);
                sbdry(i)->alloc(static_cast<int>(count*grwfac));
                sbdry(i)->nel = count;
                
-               fscanf(grd,"%*[^\n]\n");
-               
+               in.ignore(160,'\n');
+                              
                svrtxbtemp[i] = (int (*)[2]) xmalloc(sbdry(i)->nel*2*sizeof(int));
                     
                for(j=0;j<sbdry(i)->nel;++j) {
-                  fscanf(grd,"%*d %d %d\n"
-                     ,&svrtxbtemp[i][j][0],&svrtxbtemp[i][j][1]);
+                  in >> intskip >> svrtxbtemp[i][j][0] >> svrtxbtemp[i][j][1];
                   --svrtxbtemp[i][j][0];
                   --svrtxbtemp[i][j][1];
                   vd(svrtxbtemp[i][j][0]).info = sbdry(i)->idnum;
@@ -327,19 +313,26 @@ next1a:     continue;
             
             for(i=0;i<nvrtx;++i)
                vd(i).info = 0;
+               
+            in.close();
 
             break;
             
          case(ftype::grid):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".grd");
-            grd = fopen(grd_app,"r");
-            if (grd==NULL) {
+            in.open(grd_app);
+            if (!in) {
                *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
             /* HEADER LINES */
-            fscanf(grd,"nvrtx: %d\t nside: %d\t ntri: %d\n",&nvrtx,&nside,&ntri);
+            in.ignore(10,':');
+            in >> nvrtx;
+            in.ignore(10,':');
+            in >> nside;
+            in.ignore(10,':');
+            in >> ntri;
             
             if (!initialized) {
                allocate(nside + (int) (grwfac*nside));
@@ -351,164 +344,62 @@ next1a:     continue;
    
             /* VRTX INFO */                        
             for(i=0;i<nvrtx;++i) {
-               fscanf(grd,"%*d:");
+               in.ignore(80,':');
                for(n=0;n<ND;++n)
-               	fscanf(grd,"%lf",&vrtx(i)(n));
-               fscanf(grd,"\n");
+               	in >> vrtx(i)(n);
             }
                      
             /* SIDE INFO */
-            for(i=0;i<nside;++i)
-               fscanf(grd,"%*d: %d %d\n",&sd(i).vrtx(0),&sd(i).vrtx(1));
-   
+            for(i=0;i<nside;++i) {
+               in.ignore(80,':');
+               in >> sd(i).vrtx(0) >> sd(i).vrtx(1);
+            }
+            
             /* THEN TRI INFO */
-            for(i=0;i<ntri;++i)
-               fscanf(grd,"%*d: %d %d %d\n",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
+            for(i=0;i<ntri;++i) {
+               in.ignore(80,':');
+               in >> td(i).vrtx(0) >> td(i).vrtx(1) >> td(i).vrtx(2);
+            }
                
             /* CREATE TSIDE & STRI */
             createtdstri();
    
             /* SIDE BOUNDARY INFO HEADER */
-            fscanf(grd,"%*[^:]:%d",&nsbd);
+            in.ignore(80,':');
+            in >> nsbd;
             sbdry.resize(nsbd);
             count = 0;
             for(i=0;i<nsbd;++i) {
-               fscanf(grd,"%*[^:]:%d",&temp);
+               in.ignore(80,':');
+               in >> temp;
                sbdry(i) = getnewsideobject(temp,pbdrymap);
-               fscanf(grd,"%*[^:]:%d\n",&sbdry(i)->nel);
+               in.ignore(80,':');
+               in >> sbdry(i)->nel;
                if (!sbdry(i)->maxel) sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
                else assert(sbdry(i)->nel < sbdry(i)->maxel);
                for(int j=0;j<sbdry(i)->nel;++j) {
-                  fscanf(grd,"%*d:%d%*[^\n]",&sbdry(i)->el(j));
+                  in.ignore(80,':');
+                  in >> sbdry(i)->el(j);
+                  in.ignore(80,'\n');
                }
             }
             
             /* VERTEX BOUNDARY INFO HEADER */
-            fscanf(grd,"%*[^:]:%d",&nvbd);
+            in.ignore(80,':');
+            in >> nvbd;
             vbdry.resize(nvbd);
             for(i=0;i<nvbd;++i) {
-               fscanf(grd,"%*[^:]:%d",&temp);
+               in.ignore(80,':');
+               in >> temp;
                vbdry(i) = getnewvrtxobject(temp,pbdrymap);
                vbdry(i)->alloc(1);
-               fscanf(grd,"%*[^:]:%d\n",&vbdry(i)->v0);
+               in.ignore(80,':');
+               in >> vbdry(i)->v0;
             }
+            in.close();
             
             break;
-            
-         case(ftype::mavriplis):
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".mvp");
-            grd = fopen(grd_app,"r");
-            if (grd==NULL) {
-                    *sim::log << "couldn't open file: " << grd_app << std::endl;
-                    exit(1);
-            }
-              
-            for(i=0;i<12;++i) {
-               fscanf(grd,"%*[^\n]\n");
-            }          
-
-            ierr = fscanf(grd,"%d%d%d%*d%*d%d\n",&nsbd,&nvrtx,&nside,&ntri);
-            if (ierr != 4) {
-               *sim::log << "trouble with mavriplis format" << std::endl;
-               exit(1);
-            }
-            
-            if (!initialized) {
-               allocate(nside + (int) (grwfac*nside));
-            }
-            else if (nside > maxvst) {
-               *sim::log << "mesh is too large" << std::endl;
-               exit(1);
-            }
-            
-            fscanf(grd,"%*[^\n]\n");
-            
-            fscanf(grd,"%*d%d%*d%d%*d%*d\n",&temp,&count);
-            
-            sbdry.resize(nsbd+1);
-            /* EXTERNAL BOUNDARY */
-            sbdry(0) = getnewsideobject(1,pbdrymap);
-            sbdry(0)->alloc(static_cast<int>(grwfac*temp));
-            sbdry(0)->nel = temp;
-            for(i=0;i<sbdry(0)->nel;++i)
-               sbdry(0)->el(i) = i;
-            
-            ++nsbd;
-            
-            for(i=1;i<nsbd;++i) {
-               sbdry(i) = getnewsideobject(i+1,pbdrymap);
-               fscanf(grd,"%*[^\n]\n");
-               fscanf(grd,"%d%d%*[^\n]\n",&temp,&sbdry(i)->nel);
-               sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
-               sbdry(i)->el(0) = temp-1;
-               sbdry(i)->nel -= sbdry(i)->el(0);
-               for(j=1;j<sbdry(i)->nel;++j)
-                  sbdry(i)->el(j) = j +sbdry(i)->el(0);
-            }
-            
-            fscanf(grd,"%*[^\n]\n");
-               
-            for(i=0;i<nside;++i) {
-               fscanf(grd,"%d%d%d%d%*d\n",&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).tri(0),&sd(i).tri(1));
-               --sd(i).vrtx(0);--sd(i).vrtx(1);--sd(i).tri(0);--sd(i).tri(1);
-               
-               if (sd(i).tri(1) >= ntri) sd(i).tri(1) = -1;
-            }
-            
-            for(i=0;i<nvrtx;++i) {
-               for(n=0;n<ND;++n)
-               	fscanf(grd,"%lf",&vrtx(i)(n));
-               fscanf(grd,"%*[^\n]\n");
-            }
-               
-            for(i=0;i<ntri;++i)
-               for(j=0;j<3;++j)
-                  td(i).side(j) = -1;
-                  
-            for(i=0;i<nside;++i) {
-               tind = sd(i).tri(0);
-               j = 0;
-               while (td(tind).side(j) > 0)
-                  ++j;
-               td(tind).side(j) = i;
-               td(tind).sign(j) = 1;
-               
-               tind = sd(i).tri(1);
-               if (tind > -1) {
-                  j = 0;
-                  while (td(tind).side(j) > 0)
-                     ++j;
-                  td(tind).side(j) = i;
-                  td(tind).sign(j) = -1;
-               }
-            }
-            
-            /* REORDER SIDES TO BE COUNTERCLOCKWISE */
-            /* FILL IN TVRTX */
-            for(tind=0;tind<ntri;++tind) {
-               v0 = sd(td(tind).side(0)).vrtx((td(tind).sign(0)+1)/2);
-               v1 = sd(td(tind).side(1)).vrtx((1-td(tind).sign(1))/2);
-               if (v0 != v1) {
-                  /* SWITCH SIDES */
-                  j = td(tind).side(1);
-                  td(tind).side(1) = td(tind).side(2);
-                  td(tind).side(2) = j;
-                  j = td(tind).sign(1);
-                  td(tind).sign(1) = td(tind).sign(2);
-                  td(tind).sign(2) = j;
-               }
-               
-               td(tind).vrtx(2) = v0;
-               sind = td(tind).side(2);
-               sign = td(tind).sign(2);
-               td(tind).vrtx(1) = sd(sind).vrtx((sign+1)/2);
-               td(tind).vrtx(0) = sd(sind).vrtx((1-sign)/2);
-            }
-            nvbd = 0;
                         
-            break;
-            
          case(ftype::text):
             if (!initialized) {
                *sim::log << "to read in vertex positions only must first load mesh structure" << std::endl;
@@ -518,11 +409,10 @@ next1a:     continue;
             /* LOAD VERTEX POSITIONS               */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".txt");
-            grd = fopen(grd_app,"r");
-            if (!grd) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            in.open(grd_app);
+            if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
-            ierr = fscanf(grd,"%d\n",&temp);
-            if(ierr != 1) {
+            if(!(in >> temp)) {
                *sim::log << "1: error in grid " << grd_app << std::endl;
                exit(1);
             }
@@ -533,14 +423,12 @@ next1a:     continue;
     
             /* ERROR %lf SHOULD BE FLT */
             for(i=0;i<nvrtx;++i) {
-               fscanf(grd,"%*d:");
-               ierr = 0;
+               in.ignore(80,':');
                for(n=0;n<ND;++n)
-                  ierr = fscanf(grd,"%lf",&vrtx(i)(n));
-               fscanf(grd,"\n");
-               if (ierr != ND) { *sim::log << "2c: error in grid" << std::endl; exit(1); }
+                  in >> vrtx(i)(n);
+               if (in.fail()) { *sim::log << "2c: error in grid" << std::endl; exit(1); }
             }
-            fclose(grd);
+            in.close();
             
             treeinit();
             
@@ -551,7 +439,6 @@ next1a:     continue;
 
             /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
             sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
-                        
             status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
             *sim::log << " gi_uGetVolume status =" << status << std::endl;
             if (status != CAPRI_SUCCESS) exit(1);
@@ -672,14 +559,19 @@ next1c:     continue;
          case(ftype::tecplot):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".dat");
-            grd = fopen(grd_app,"r");
-            if (grd==NULL) {
+            in.open(grd_app);
+            if (!in) {
                *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
             
             /* HEADER LINES */
-            fscanf(grd,"%*[^,],%*[^,],%*[^=]=%d%*[^=]=%d\n",&nvrtx,&ntri);
+            in.ignore(80,',');
+            in.ignore(80,',');
+            in.ignore(80,'=');
+            in >> nvrtx;
+            in.ignore(80,'=');
+            in >> ntri;
             
             /* MAXVST IS APPROXIMATELY THE NUMBER OF ELEMENTS  */
             /* FOR EACH ELEMENT THERE ARE APPROXIMATELY 3/2 SIDES */
@@ -695,15 +587,15 @@ next1c:     continue;
             /* READ VERTEX DATA */
             for(i=0;i<nvrtx;++i) {
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%le ",&vrtx(i)(n));
-               fscanf(grd,"%*[^\n]\n");
+                  in >> vrtx(i)(n);
                vd(i).info = -1;
             }
-
-            fscanf(grd,"%*[^0-9]");
-
+            in.ignore(80,'\n');
+            while (in.get() == '#');
+               in.ignore(80,'\n');
+      
             for(i=0;i<ntri;++i) {
-               fscanf(grd,"%d %d %d",&td(i).vrtx(0),&td(i).vrtx(1),&td(i).vrtx(2));
+               in >> td(i).vrtx(0) >> td(i).vrtx(1) >> td(i).vrtx(2);
                --td(i).vrtx(0);
                --td(i).vrtx(1);
                --td(i).vrtx(2);
@@ -728,6 +620,7 @@ next1c:     continue;
                if (sd(i).tri(1) < 0) sbdry(0)->el(count++) = i;
             ++nsbd;
             nvbd = 0;
+            in.close();
             
             break;
             
@@ -735,23 +628,23 @@ next1c:     continue;
             /* LOAD BOUNDARY INFORMATION */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".d");
-            grd = fopen(grd_app,"r");
-            if (grd == NULL) { 
+            in.open(grd_app);
+            if (!in) { 
                *sim::log << "couldn't open " << grd_app << "for reading\n";
                exit(1);
             }
 
-            fscanf(grd,"%d\n",&nvrtx);
+            in >> nvrtx;
 
             maxvst = static_cast<int>(grwfac*nvrtx*nvrtx);
             allocate(maxvst);
             initialized = 1;
 
             for(i=0;i<nvrtx;++i) {
-               fscanf(grd,"%*d:");
+               in.ignore(80,':');
                for(n=0;n<ND;++n)
-                  fscanf(grd,"%lf",&vrtx(i)(n));
-               fscanf(grd,"%lf%d\n",&vlngth(i),&vd(i).info);
+                  in >> vrtx(i)(n);
+               in >> vlngth(i) >> vd(i).info;
             }
 
             /* COUNT VERTEX BOUNDARY GROUPS  */
@@ -771,10 +664,12 @@ next1c:     continue;
                }
             }
 
-            fscanf(grd,"%d\n",&nside);
+            in >> nside;
 
-            for(i=0;i<nside;++i)
-               fscanf(grd,"%*d:%d%d%d\n",&sd(i).vrtx(0),&sd(i).vrtx(1),&sd(i).info);
+            for(i=0;i<nside;++i) {
+               in.ignore(80,':');
+               in >> sd(i).vrtx(0) >> sd(i).vrtx(1) >> sd(i).info;
+            }
                
             /* COUNT BOUNDARY GROUPS */
             nsbd = 0;
@@ -822,6 +717,9 @@ next1c:     continue;
               
             ntri = 0;
             triangulate(nside);
+            
+            in.close();
+            
             break;
        
          default:
@@ -832,7 +730,6 @@ next1c:     continue;
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
       sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
@@ -844,10 +741,10 @@ next1c:     continue;
    
    strcpy(grd_app,grd_nm);
    strcat(grd_app,".vlngth");
-   grd = fopen(grd_app,"r");
-   if (grd) {
-      for(i=0;i<nvrtx;++i) fscanf(grd,"%lf\n",&vlngth(i));
-      fclose(grd);
+   in.open(grd_app);
+   if (in) {
+      for(i=0;i<nvrtx;++i) in >> vlngth(i);
+      in.close();
    }
    else if (filetype != ftype::boundary) initvlngth();
    

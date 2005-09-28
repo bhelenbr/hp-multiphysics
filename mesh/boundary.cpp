@@ -80,7 +80,7 @@ void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    return;
 }
 
-void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
+void side_bdry::findbdrypt(TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const {
    int k,sind,v0,v1,sidlocprev;
    FLT dx,dy,ol,psi,normdist;
    FLT psiprev,normdistprev;
@@ -94,8 +94,8 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
       dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
       dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
       ol = 2./(dx*dx +dy*dy);
-      psi = ol*((xpt[0] -x.vrtx(v0)(0))*dx +(xpt[1] -x.vrtx(v0)(1))*dy) -1.;
-      normdist = dx*(xpt[1]-x.vrtx(v0)(1))-dy*(xpt[0]-x.vrtx(v1)(0));
+      psi = ol*((xpt(0) -x.vrtx(v0)(0))*dx +(xpt(1) -x.vrtx(v0)(1))*dy) -1.;
+      normdist = dx*(xpt(1)-x.vrtx(v0)(1))-dy*(xpt(0)-x.vrtx(v1)(0));
       normdist *= sqrt(ol/2.);
       psiprev = psi;
       normdistprev = normdist;
@@ -112,8 +112,8 @@ void side_bdry::findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const {
       dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
       dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
       ol = 2./(dx*dx +dy*dy);
-      psi = ol*((xpt[0] -x.vrtx(v0)(0))*dx +(xpt[1] -x.vrtx(v0)(1))*dy) -1.;
-      normdist = dx*(xpt[1]-x.vrtx(v0)(1))-dy*(xpt[0]-x.vrtx(v1)(0));
+      psi = ol*((xpt(0) -x.vrtx(v0)(0))*dx +(xpt(1) -x.vrtx(v0)(1))*dy) -1.;
+      normdist = dx*(xpt(1)-x.vrtx(v0)(1))-dy*(xpt(0)-x.vrtx(v1)(0));
       normdist *= sqrt(ol/2.);
       
       if (psi <= -1.0 && psiprev >= 1.0) {
@@ -155,7 +155,7 @@ block::ctrl side_bdry::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, cons
    
    for(k=1;k<nel;++k) {
       v0 = x.sd(el(k)).vrtx(0);
-      tgt.sbdry(bnum)->findbdryside(x.vrtx(v0).data(), sidloc, psiloc);
+      tgt.sbdry(bnum)->findbdrypt(x.vrtx(v0), sidloc, psiloc);
       sind = tgt.sbdry(bnum)->el(sidloc);
       tind = tgt.sd(sind).tri(0);                     
       cnnct(v0).tri = tind;

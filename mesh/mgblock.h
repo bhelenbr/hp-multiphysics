@@ -176,8 +176,11 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    *sim::log << "#tolerance: " << tolerance << std::endl;
    data.clear();
    
-   grd[0].init(0,input,idprefix,&gstorage);
-
+   keyword = idprefix + ".coarse";
+   input[keyword] = "0";
+   grd[0].init(input,idprefix,&gstorage);
+   
+   input[keyword] = "1";
 #define OLDRECONNECT
    for(int lvl=1;lvl<ngrid;++lvl) {
 #ifdef OLDRECONNECT
@@ -187,10 +190,12 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       if (lvl > 1) size_reduce = 2.0;
       grd[lvl].allocate_duplicate(size_reduce,grd[lvl-1]);
 #endif
-      grd[lvl].init(1,input,idprefix,&gstorage);
+      grd[lvl].init(input,idprefix,&gstorage);
       cv_to_ft(lvl-1).resize(grd[lvl].maxvst);
       fv_to_ct(lvl-1).resize(grd[lvl-1].maxvst);
    }
+   input[keyword] = "0";
+   
    return;
 }
 

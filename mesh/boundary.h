@@ -58,7 +58,6 @@ class boundary {
          fout << idprefix << ".type: " << mytype << std::endl;         
       }
       virtual void input(std::map<std::string,std::string>& bdrydata) {}
-      virtual void setupcoordinates() {}
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
       enum msg_type {flt_msg, int_msg};
@@ -158,7 +157,7 @@ class side_bdry : public boundary {
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
       virtual block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
-      virtual void findbdryside(FLT *xpt, int &sidloc, FLT &psiloc) const;
+      virtual void findbdrypt(TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void loadbuff(FLT *base,int bgn,int end, int stride) {}

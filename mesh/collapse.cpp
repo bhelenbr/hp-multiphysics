@@ -182,13 +182,6 @@ void mesh::dlttri(int tind) {
    
    --ntri;
 
-   if (td(ntri).info&TTOUC) td(tind).info = -2;
-   else td(tind).info = ntri;
-   /* THIS IS TO PREVENT ROLL BACK NEAR END */
-   td(tind).info &= ~TDLTE;
-   
-   td(ntri).info = tind;
-   
    for (j=0;j<3;++j) {
       v0 = td(ntri).vrtx(j);
       td(tind).vrtx(j) = v0;
@@ -211,6 +204,19 @@ void mesh::dlttri(int tind) {
       }
    }
    
+   if (td(ntri).info&TTOUC) {
+      td(tind).info = -2;
+      updatetdata(tind);
+   }
+   else {
+      td(tind).info = ntri;
+      movetdata(ntri,tind);
+   }
+   /* THIS IS TO PREVENT ROLL BACK NEAR END */
+   td(tind).info &= ~TDLTE;
+
+   td(ntri).info = tind;
+   
    return;
 }
 
@@ -231,14 +237,6 @@ void mesh::dltsd(int sind) {
    sd(sind).vrtx(1) = sd(nside).vrtx(1);
    sd(sind).tri(0) = sd(nside).tri(0);
    sd(sind).tri(1) = sd(nside).tri(1);
-   
-   if (td(nside).info&STOUC) sd(sind).info = -2;
-   else sd(sind).info = nside;
-   /* THIS IS TO PREVENT ROLL BACK NEAR END */
-   td(sind).info &= ~SDLTE;
-
-   
-   sd(nside).info = sind;
 
    for(j=0;j<2;++j) {
       tind = sd(nside).tri(j);
@@ -248,6 +246,19 @@ void mesh::dltsd(int sind) {
          td(tind).side(k) = sind;
       }
    }
+   
+   if (td(nside).info&STOUC) {
+      sd(sind).info = -2;
+      updatesdata(sind);
+   }
+   else {
+      sd(sind).info = nside;
+      movesdata(nside,sind);
+   }
+   /* THIS IS TO PREVENT ROLL BACK NEAR END */
+   td(sind).info &= ~SDLTE;   
+   
+   sd(nside).info = sind;
    
    return;
 }
@@ -265,21 +276,17 @@ void mesh::dltvrtx(int v0) {
    if (v0 >= nvrtx) return;
    
    --nvrtx;
-
-   if (td(nvrtx).info&VTOUC) vd(v0).info = -2;
-   else vd(v0).info = nvrtx;
-   vd(nvrtx).info = v0;
+   
+   vrtx(v0)(0) = vrtx(nvrtx)(0);
+   vrtx(v0)(1) = vrtx(nvrtx)(1);
+   vlngth(v0) = vlngth(nvrtx);
+   vd(v0).nnbor = vd(nvrtx).nnbor;
+   vd(v0).tri = vd(nvrtx).tri;
 
    /* THIS IS TO PREVENT ROLL BACK NEAR END */
    td(v0).info &= ~VDLTE;
    
    qtree.movept(nvrtx,v0);
-   
-   vrtx(v0)(0) = vrtx(nvrtx)(0);
-   vrtx(v0)(1) = vrtx(nvrtx)(1);
-   vd(v0).nnbor = vd(nvrtx).nnbor;
-   vd(v0).tri = vd(nvrtx).tri;
-   vlngth(v0) = vlngth(nvrtx);
    
    tind = vd(nvrtx).tri;   
    stoptri = tind;
@@ -312,8 +319,16 @@ void mesh::dltvrtx(int v0) {
       }
       
    } while(tind != stoptri); 
+   
+   if (td(nvrtx).info&VTOUC) {
+      vd(v0).info = -2;
+      updatevdata(v0);
+   }
+   else {
+      vd(v0).info = nvrtx;
+      movevdata(nvrtx,v0);
+   }
+   vd(nvrtx).info = v0;
 
    return;
 }
-
-

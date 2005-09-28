@@ -76,6 +76,10 @@ block::ctrl mesh::adapt(int excpt, FLT tolsize) {
 void mesh::setup_for_adapt() {
    int i, v0, v1;
    
+#ifdef PV3
+   sim::pv3_mesh_changed = true;
+#endif
+
    /* SET-UP ADAPTION TRACKING STUFF */
    /* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
    /* For sides 0 = untouced, 1 = touched, 2 = deleted */
@@ -104,12 +108,52 @@ void mesh::setup_for_adapt() {
       
       
 void mesh::cleanup_after_adapt() {
-   int i,j;
+   int i,j,sind,v0;
+   
+   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
+   for(i=0;i<nsbd;++i) {
+      for(j=sbdry(i)->nel-1;j>=0;--j) {
+         if (td(sbdry(i)->el(j)).info&SDLTE) 
+            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
+      }
+      sbdry(i)->reorder();
+   }
+   
+   /* UPDATE BOUNDARY CONDITION DATA */
+   for (i=0;i<nsbd;++i) {
+      /* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
+      /* & LAST VERTEX SHOULD NEVER BE CHANGED */
+      sind = sbdry(i)->el(0);
+      v0 = sd(sind).vrtx(0);
+      if (td(v0).info&VTOUC) {
+         updatevdata_bdry(i,0,0);
+         td(v0).info &= ~VTOUC;
+      }
+      else movevdata_bdry(i,0,0);
+      
+      for(j=0;j<sbdry(i)->nel;++j) {
+         sind = sbdry(i)->el(j);
+         v0 = sd(sind).vrtx(1);
+         if (td(v0).info&VTOUC) {
+            updatevdata_bdry(i,j,1);
+            td(v0).info &= ~VTOUC;
+         }
+         else movevdata_bdry(i,j,1);
+         if (td(sind).info&STOUC) {
+            updatesdata_bdry(i,j);
+            td(sind).info &= ~STOUC;
+         }
+         else movesdata_bdry(i,j);
+      }      
+   }
    
    /* DELETE LEFTOVER VERTICES */
    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */         
    for(i=0;i<nvrtx;++i) {
-      if (td(i).info&VTOUC) vd(i).info = -2;
+      if (td(i).info&VTOUC) {
+         vd(i).info = -2;
+         updatevdata(i);
+      }
       if (td(i).info&VDLTE) dltvrtx(i);
    }
    
@@ -117,18 +161,16 @@ void mesh::cleanup_after_adapt() {
    for(i=0;i<nvbd;++i)
       if (vd(vbdry(i)->v0).info > -1) 
          vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
-   
-   /* DELETE SIDES FROM BOUNDARY CONDITIONS */
-   for(i=0;i<nsbd;++i)
-      for(j=sbdry(i)->nel-1;j>=0;--j) 
-         if (td(sbdry(i)->el(j)).info&SDLTE) 
-            sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
                         
    /* CLEAN UP SIDES */
    /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
    /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
    for(i=0;i<nside;++i) {
       sd(i).info = -1;
+      if (td(i).info&STOUC) {
+         updatesdata(i);
+         sd(i).info = -2;
+      }
       if (td(i).info&SDLTE) dltsd(i);
    }
          
@@ -137,24 +179,25 @@ void mesh::cleanup_after_adapt() {
       for(j=0;j<sbdry(i)->nel;++j) 
          if (sbdry(i)->el(j) >= nside) 
             sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
-
-   for (i=0;i<nsbd;++i) {
-      sbdry(i)->reorder();
-      sbdry(i)->setupcoordinates();
-   }
       
    /* CLEAN UP DELETED TRIS */
    /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
    /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
-   for(i=0;i<ntri;++i)
+   for(i=0;i<ntri;++i) {
+      if (td(i).info&TTOUC) {
+         td(i).info = -2;
+         updatetdata(i);
+      }
       if (td(i).info&TDLTE) dlttri(i);
+   }
       
    bdrylabel();
-         
+   
    cnt_nbor();
       
    return;
 }
+
 
 void mesh::putinlst(int sind) {
    int i, temp, top, bot, mid;

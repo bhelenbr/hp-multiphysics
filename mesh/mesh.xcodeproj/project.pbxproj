@@ -34,8 +34,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		6F14D30E08C8A080008EFB72 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
-		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
+		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
 		6F2262C70867302A001017D0 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
 		6F2262C80867302B001017D0 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
@@ -52,19 +53,18 @@
 		6F2262D308673048001017D0 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
 		6F2262D408673049001017D0 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
 		6F2262D50867304A001017D0 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
-		6F2262D808673092001017D0 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
-		6F2262D908673093001017D0 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; };
+		6F2262D808673092001017D0 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262D908673093001017D0 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262DA08673095001017D0 /* boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* boundary.cpp */; };
 		6F2262DC086730A5001017D0 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
-		6F2262DD086730A6001017D0 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; };
+		6F2262DD086730A6001017D0 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262DE086730A6001017D0 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
-		6F2262DF086730A7001017D0 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; };
+		6F2262DF086730A7001017D0 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
-		6F2262E1086730AC001017D0 /* mgblock.h in Headers */ = {isa = PBXBuildFile; fileRef = F573B1BB0379A61301990B69 /* mgblock.h */; };
-		6F2262E2086730AD001017D0 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; };
-		6F2262E3086730AE001017D0 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; };
+		6F2262E1086730AC001017D0 /* mgblock.h in Headers */ = {isa = PBXBuildFile; fileRef = F573B1BB0379A61301990B69 /* mgblock.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262E2086730AD001017D0 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262E3086730AE001017D0 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
-		6F2262E5086730B3001017D0 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
 		6F514ED208B2E767001B7BED /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F514ED108B2E767001B7BED /* libblitz.a */; };
@@ -101,6 +101,7 @@
 		6FADD872086EF36A00350FA2 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
 		6FADD873086EF36A00350FA2 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6FADD874086EF36A00350FA2 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
+		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		6FC7DEFE05B30C6E001FE736 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC6A54203CC99B700990B69 /* libmetis.a */; };
@@ -494,8 +495,9 @@
 				6F2262DE086730A6001017D0 /* r_mesh.cpp in Sources */,
 				6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */,
 				6F2262E4086730AF001017D0 /* blocks.cpp in Sources */,
-				6F2262E5086730B3001017D0 /* getnewblock.cpp in Sources */,
 				6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */,
+				6F14D30E08C8A080008EFB72 /* getnewblock.cpp in Sources */,
+				6FC0044C08CD33CF0030E073 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -571,23 +573,23 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
+				GCC_MODEL_TUNING = G4;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METIS,
 					NO_MPISRC,
 				);
 				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				INSTALL_PATH = "$(HOME)/Codes/";
+				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = (
 					"$(HOME)/Codes/lib",
 					"$(SRCROOT)/../lib",
 				);
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
 				PREBINDING = NO;
 				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
 				PRODUCT_NAME = mesh;
