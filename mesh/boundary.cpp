@@ -11,7 +11,7 @@
 /********************/
    
 /* GENERIC VERTEX COMMUNICATIONS */
-void vcomm::loadbuff(FLT *base,int bgn,int end, int stride) {
+void vcomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
    int i,offset;
    
    sndsize()=end-bgn+1;
@@ -23,7 +23,7 @@ void vcomm::loadbuff(FLT *base,int bgn,int end, int stride) {
       fsndbuf(i) = base[offset+i];
 }
 
-void vcomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+void vcomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    int i,m,offset;
    int matches = 1;
    
@@ -267,7 +267,7 @@ void side_bdry::reorder() {
    return;
 }
 
-void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
+void scomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
    int j,k,count,sind,offset;
 
    count = 0;
@@ -286,7 +286,7 @@ void scomm::loadbuff(FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+void scomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    int j,k,m,count,countdn,countup,offset,sind;
    FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
@@ -340,6 +340,71 @@ void scomm::finalrcv(int phi, FLT *base,int bgn,int end, int stride) {
       }
    }
 }
+
+void scomm::sloadbuff(FLT *base,int bgn,int end, int stride) {
+   int j,k,count,sind,offset;
+
+   count = 0;
+   for(j=0;j<nel;++j) {
+      sind = el(j);
+      offset = sind*stride;
+      for (k=bgn;k<=end;++k) {
+         fsndbuf(count++) = base[offset+k];
+      }
+   }
+      
+   sndsize() = count;
+   sndtype() = boundary::flt_msg;
+}
+
+void scomm::sfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+   int j,k,m,count,countdn,countup,offset,sind;
+   FLT mtchinv;
+   /* ASSUMES REVERSE ORDERING OF SIDES */
+   /* WON'T WORK IN 3D */
+   
+   int matches = 1;
+   
+   /* RELOAD FROM BUFFER */
+   /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+   for(m=0;m<nmatch;++m) {   
+      if (phase[m] != phi) continue;
+      
+      ++matches;
+      
+      int ebp1 = end-bgn+1;
+      countdn = nel*ebp1;
+      countup = 0;
+      for(j=0;j<nel+1;++j) {
+         for(k=0;k<ebp1;++k)
+            fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+         countup += ebp1;
+         countdn -= ebp1;
+      }
+   }
+   
+   if (matches > 1) {
+      mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+      std::cout << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+      count = 0;
+      for(j=0;j<nel;++j) {
+         sind = el(j);
+         offset = sind*stride;
+         for (k=bgn;k<=end;++k) {
+            base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+            std::cout << "\t" << base[offset+k] << std::endl;
+#endif
+         }
+
+      }
+   }
+}
+
 
 block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
    int i,j,k,v0;

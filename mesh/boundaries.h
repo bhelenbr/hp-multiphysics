@@ -545,9 +545,9 @@ class vcomm : public comm_bdry<vrtx_bdry> {
       vcomm* create(mesh& xin) const {return new vcomm(*this,xin);}
 
       /** Generic routine to load buffers from array */
-      void loadbuff(FLT *base,int bgn,int end, int stride);
+      void vloadbuff(FLT *base,int bgn,int end, int stride);
       /** Generic routine to receive into array */
-      void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
+      void vfinalrcv(int phase, FLT *base,int bgn,int end, int stride);
 };
 
 /** \brief Specialization for a communiation side 
@@ -563,8 +563,10 @@ class scomm : public comm_bdry<side_bdry> {
       scomm* create(mesh& xin) const {return new scomm(*this,xin);}
       
       /* GENERIC COMMUNICATIONS */
-      virtual void loadbuff(FLT *base,int bgn,int end, int stride);
-      virtual void finalrcv(int phase, FLT *base,int bgn,int end, int stride);
+      virtual void vloadbuff(FLT *base,int bgn,int end, int stride);
+      virtual void vfinalrcv(int phase, FLT *base,int bgn,int end, int stride);
+      virtual void sloadbuff(FLT *base,int bgn,int end, int stride);
+      virtual void sfinalrcv(int phase,FLT *base,int bgn,int end, int stride);
 };
 
 /** \brief Specialization for a parition side 
@@ -622,8 +624,8 @@ template<class BASE> class prdc_template : public BASE {
       } 
 
       /* SEND/RCV VRTX POSITION */
-      void loadpositions() { loadbuff(&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
-      void rcvpositions(int phase) { finalrcv(phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+      void loadpositions() { BASE::vloadbuff(&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+      void rcvpositions(int phase) { BASE::vfinalrcv(phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
 };
 
 class curved_analytic : public side_bdry {

@@ -86,14 +86,14 @@ int mesh::comm_entity_list(Array<int,1>& list) {
    return(tsize);
 }
 
-void mesh::msgload(int phase,FLT *base,int bgn, int end, int stride) {
+void mesh::vmsgload(int phase,FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->loadbuff(base,bgn,end,stride);
+      sbdry(i)->vloadbuff(base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->loadbuff(base,bgn,end,stride);
+      vbdry(i)->vloadbuff(base,bgn,end,stride);
    
    for(i=0;i<nsbd;++i)
       sbdry(i)->comm_prepare(phase);
@@ -103,7 +103,7 @@ void mesh::msgload(int phase,FLT *base,int bgn, int end, int stride) {
    return;
 }
 
-void mesh::msgpass(int phase) {
+void mesh::vmsgpass(int phase) {
 
    for(int i=0;i<nsbd;++i) 
       sbdry(i)->comm_transmit(phase);
@@ -113,7 +113,7 @@ void mesh::msgpass(int phase) {
    return;
 }
 
-int mesh::msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
    int stop = 1;
    int i;
    
@@ -124,14 +124,14 @@ int mesh::msgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
       
 
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->finalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->finalrcv(phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
       
    return(stop);
 }
 
-int mesh::msgrcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgrcv(int phase,FLT *base,int bgn, int end, int stride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
@@ -140,12 +140,60 @@ int mesh::msgrcv(int phase,FLT *base,int bgn, int end, int stride) {
       stop &= vbdry(i)->comm_nowait(phase);
       
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->finalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->finalrcv(phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
       
    return(stop);
 }
+
+
+void mesh::smsgload(int phase,FLT *base,int bgn, int end, int stride) {
+   int i;
+      
+   /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
+   for(i=0;i<nsbd;++i) 
+      sbdry(i)->sloadbuff(base,bgn,end,stride);
+   
+   for(i=0;i<nsbd;++i)
+      sbdry(i)->comm_prepare(phase);
+   
+   return;
+}
+
+void mesh::smsgpass(int phase) {
+
+   for(int i=0;i<nsbd;++i) 
+      sbdry(i)->comm_transmit(phase);
+
+   return;
+}
+
+int mesh::smsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
+   int stop = 1;
+   int i;
+   
+   for(i=0;i<nsbd;++i)
+      stop &= sbdry(i)->comm_wait(phase);
+
+   for(i=0;i<nsbd;++i) 
+      sbdry(i)->sfinalrcv(phase,base,bgn,end,stride);
+      
+   return(stop);
+}
+
+int mesh::smsgrcv(int phase,FLT *base,int bgn, int end, int stride) {
+   int stop = 1,i;
+   
+   for(i=0;i<nsbd;++i)
+      stop &= sbdry(i)->comm_nowait(phase);
+      
+   for(i=0;i<nsbd;++i) 
+      sbdry(i)->sfinalrcv(phase,base,bgn,end,stride);
+      
+   return(stop);
+}
+
    
 
 

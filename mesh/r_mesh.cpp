@@ -485,7 +485,7 @@ block::ctrl r_mesh::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
          switch(mp_phase%3) {
             case(0):
                for(i=0;i<nsbd;++i)
-                  if (sbdry(i)->group()&0x1) sbdry(i)->loadbuff((FLT *) res.data(),0,1,2);
+                  if (sbdry(i)->group()&0x1) sbdry(i)->vloadbuff((FLT *) res.data(),0,1,2);
                   
                for(i=0;i<nsbd;++i) 
                   if (sbdry(i)->group()&0x1) sbdry(i)->comm_prepare(mp_phase/3);
@@ -500,7 +500,7 @@ block::ctrl r_mesh::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
                for(i=0;i<nsbd;++i) {
                   if (sbdry(i)->group()&0x1) {
                      stop &= sbdry(i)->comm_wait(mp_phase/3);
-                     sbdry(i)->finalrcv(mp_phase/3,(FLT *) res.data(),0,1,2);
+                     sbdry(i)->vfinalrcv(mp_phase/3,(FLT *) res.data(),0,1,2);
                   }
                }
                return(static_cast<block::ctrl>(stop));
@@ -692,13 +692,13 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  msgload(mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(mp_phase/3,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  msgpass(mp_phase/3);
+                  vmsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
             }
             
          case (2):
@@ -717,13 +717,13 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  msgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
+                  vmsgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
                   return(block::stay);
                case(1):
-                  msgpass(mp_phase/3);
+                  vmsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
             }
 #else
 #define P2 0
@@ -739,13 +739,13 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  msgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+                  vmsgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
                   return(block::stay);
                case(1):
-                  msgpass(mp_phase/3);
+                  vmsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
             }
          
          case (5+P2):
@@ -771,13 +771,13 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  msgload(mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(mp_phase/3,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  msgpass(mp_phase/3);
+                  vmsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
             }
          case (2):
             kvoli();
@@ -801,13 +801,13 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             ++mp_phase
             switch(mp_phase%3) {
                case(0):
-                  msgload(mp_phase/3,kvol,0,0,1);
+                  vmsgload(mp_phase/3,kvol,0,0,1);
                   return(block::stay);
                case(1):
-                  msgpass(mp_phase/3);
+                  vmsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,kvol,0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol,0,0,1)));
             }
          case(2):
             grd[lvl].kvoli();
@@ -839,13 +839,13 @@ block::ctrl r_mesh::rsdl(int excpt) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               msgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
+               vmsgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
                return(block::stay);
             case(1):
-               msgpass(mp_phase/3);
+               vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
          }
 #endif
       case(0+P2):
@@ -859,13 +859,13 @@ block::ctrl r_mesh::rsdl(int excpt) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               msgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+               vmsgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
                return(block::stay);
             case(1):
-               msgpass(mp_phase/3);
+               vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
          }
          
       case(2+P2):
@@ -892,13 +892,13 @@ block::ctrl r_mesh::setup_preconditioner(int excpt) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               msgload(mp_phase/3,rg->diag,0,0,1);
+               vmsgload(mp_phase/3,rg->diag,0,0,1);
                return(block::stay);
             case(1):
-               msgpass(mp_phase/3);
+               vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,rg->diag,0,0,1));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,rg->diag,0,0,1));
          }
 #endif
       case(0+P2):
@@ -911,13 +911,13 @@ block::ctrl r_mesh::setup_preconditioner(int excpt) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               msgload(mp_phase/3,rg->diag.data(),0,0,1);
+               vmsgload(mp_phase/3,rg->diag.data(),0,0,1);
                return(block::stay);
             case(1):
-               msgpass(mp_phase/3);
+               vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(msgwait_rcv(mp_phase/3,rg->diag.data(),0,0,1)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,rg->diag.data(),0,0,1)));
          }
          
       case(2+P2):

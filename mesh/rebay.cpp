@@ -251,7 +251,7 @@ void mesh::bdry_rebay(FLT tolsize) {
          el = getbdryel(sd(sind).tri(1));
          
          /* FOR NOW INSERTION POINT IN MIDDLE */
-         /* FIXED POINT ARITHMETIC SO I CAN MSGPASS AN INTEGER */
+         /* FIXED POINT ARITHMETIC SO I CAN vmsgpass AN INTEGER */
          psi = 0.5;
          psifxpt = static_cast<int>(256*psi);
          psi = psifxpt/256.0;
