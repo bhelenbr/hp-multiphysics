@@ -190,8 +190,8 @@ else
             alphay = 0;
         end
         
-        %alphax = alphax*4;
-        %alphay = alphay*4;
+%        alphax = alphax*4;
+%        alphay = alphay*4;
         
 		PM = +alphax*(lr2d +rl2d)*dy +alphay*(bt2d +tb2d)*dx;
 		PL = -alphax*ll2d*dy;
@@ -641,9 +641,9 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 % CONSTRUCT STIFFNESS MATRIX
 % if (lvl == 1)
 %     Nel = 7;
-%     Kbigx = zeros(Nel*size(KB{lvl,3},1),Nel*size(KB{lvl,3},1));
+%     Kbigx = zeros(Nel*size(KB{lvl,3,3},1),Nel*size(KB{lvl,3,3},1));
 %     Mbigx = zeros(size(Kbigx));
-%     Rbigx = zeros(Nel*size(RB{lvl,2},1),Nel*size(RB{lvl,2},2));
+%     Rbigx = zeros(Nel*size(RB{lvl,2,2},1),Nel*size(RB{lvl,2,2},2));
 %     for m = 1:5
 %         position = (m-2);
 %         if (position <= 0) 
@@ -651,8 +651,8 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 %         end
 %         pvect = zeros(1,Nel);
 %         pvect(position) = 1;
-%         Kbigx = Kbigx + blktimes(gallery('circul',pvect),KB{lvl,m});
-%         Mbigx = Mbigx + blktimes(gallery('circul',pvect),MB{lvl,m});
+%         Kbigx = Kbigx + blktimes(gallery('circul',pvect),KB{lvl,3,m});
+%         Mbigx = Mbigx + blktimes(gallery('circul',pvect),MB{lvl,3,m});
 %     end
 %     for m = 1:3
 %         position = (m-1);
@@ -661,18 +661,48 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 %         end
 %         pvect = zeros(1,Nel);
 %         pvect(position) = 1;
-%         Rbigx = Rbigx + blktimes(gallery('circul',pvect),RB{lvl,m});
+%         Rbigx = Rbigx + blktimes(gallery('circul',pvect),RB{lvl,2,m});
 %     end
+%     
+%     % PLACE X MATRICES ON DIAGONAL
+%     pvect = zeros(1,Nel);
+%     pvect(1) = 1;
+%     Kbig = blktimes(gallery('circul',pvect),Kbigx);
+%     Mbig = blktimes(gallery('circul',pvect),Mbigx);
+%     Rbig = blktimes(gallery('circul',pvect),Rbigx);
+% 
+%     for m = 1:5
+%         if (m==3)
+%             continue
+%         end
+%         pvect = zeros(1,Nel);
+%         pvect(1) = 1;
+%         Kbigy = blktimes(gallery('circul',pvect),KB{lvl,m,3});
+%         Mbigy = blktimes(gallery('circul',pvect),MB{lvl,m,3});
+%         position = (m-2);
+%         if (position <= 0) 
+%             position = position +Nel;
+%         end
+%         pvect = zeros(1,Nel);
+%         pvect(position) = 1;
+%         Kbig = Kbig + blktimes(gallery('circul',pvect),Kbigy);
+%         Mbig = Mbig + blktimes(gallery('circul',pvect),Mbigy);
+%     end    
+%     
+%     
 %     % TEST TO SEE IF I'VE GOT THIS RIGHT
-%     Kbigc = Rbigx*Kbigx*(Rbigx');
-%     fine = (eye(size(Kbigx)) -inv(Mbigx)*Kbigx);
+%     Kbigc = Rbig*Kbig*(Rbig');
+%     fine = (eye(size(Kbig)) -inv(Mbig)*Kbig);
 %     [finevect,fineeig] = eig(fine);
-%     wholething = (eye(size(Kbigx)) -Rbigx'*lscov(Kbigc,Rbigx*Kbigx))*fine;
+%     wholething = (eye(size(Kbig)) -Rbig'*lscov(Kbigc,Rbig*Kbig))*fine;
 %     eigswt =eig(wholething);
 %     figure
 %     plot(real(fineeig),imag(fineeig),'x');
 %     title('amplification factor (direct)');
 %     axis equal
+%     fineeig = diag(fineeig);
+%     afactordirect =max(abs(fineeig(2:size(fineeig,1))))
+% 
 %     figure
 %     plot(real(eigswt),imag(eigswt),'x')
 %     title('multigrid amplification factor (direct)');
