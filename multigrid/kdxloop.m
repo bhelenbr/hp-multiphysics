@@ -50,7 +50,8 @@ for kcnt=1:NDIV
     
     % FINE GRID EIGENVALUES
     ea = eig(a);
-    ea = sort(ea);
+    [tmp,ind] = sort(abs(ea));
+    ea = ea(ind);
     
     % FINE GRID AMPLIFICATION FACTOR
     if (sys_flag == 1 || rlx_flag == 2)
@@ -94,7 +95,7 @@ for kcnt=1:NDIV
 
 		for vct = 1:size(vmg,1);
             subplot(size(vmg,1),3,3*vct-2);
-%            sublot(size(vmg,1),1,vct);
+%            subplot(size(vmg,1),1,vct);
             hold on;
 			mode = basissave*vmg(:,vct);
 			syms lx
@@ -104,10 +105,10 @@ for kcnt=1:NDIV
                 NX = 2*pi/kdx;
 			end
 			for ex=0:NX-1
-                ezplot(real(subs(mode*exp(-i*ex*kdx),x,lx-ex*2)),[-1+ex*2,1+ex*2]);
-
+                ezplot(real(subs(mode*exp(-i*ex*kdx),x,(2*(lx-1/2)-ex*2))),1/2 +[-1+ex*2,1+ex*2]/2);
+                xlabel('x/\Deltax');
 			end
-            axis auto;
+            axis auto;            
             title(['damping factor:' num2str(abs(emg(vct))) ' theta/pi:' num2str(kdx/pi)] );
             
             subplot(size(vmg,1),3,3*vct-1);

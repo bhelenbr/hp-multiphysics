@@ -142,12 +142,12 @@ else
 		elseif (scheme == 2 || scheme == 6)
 			% PENALTY COEFFICIENT FOR Brezzi et al. [22] / Bassi [13]
 			alpha = ((inv(ms)*bright)'*bright +(inv(ms)*bleft)'*bleft)/4;
-            alpha = 2*alpha;  % TO GET P=0 EXACTLY RIGHT
+            % alpha = 2*alpha;  % TO GET P=0 EXACTLY RIGHT
 		else
 			alpha = 0;
 		end
         
-        %alpha = alpha/2;
+%        alpha = alpha*4;
         
 		PM = +alpha*leftr +alpha*rightl;
 		PL = -alpha*leftl;
@@ -450,7 +450,13 @@ MB{lvl,3} = M;
 MB{lvl,4} = MR;
 MB{lvl,5} = MRR;
 
-% RESCALE PRECONDITIONER DIAGONAL BY MAXEIG
+
+% FOR DIFFUSION AT P=1, BLOCK JACOBI, WITH NO SWEEPING
+if (P == 1  && sys_flag == 1 && rlx_flag == 2 && sweep_flag == 0) 
+    omega = 2/3*omega
+end
+    
+% RESCALE PRECONDITIONER DIAGONAL BY MAXEIG    
 MB{lvl,3} = MB{lvl,3}/abs(omega)*maxeig;
 vmaxeig{lvl} = maxeig;
 vrestrict{lvl} = restrict;
@@ -554,7 +560,6 @@ for el=1:Nel
     end
 end
 kbigc = rbig*kbig*rbig.';
-kbigc
 %mbigc = rbig*mbig*rbig.';
 %biglam = eig(-inv(mbig)*kbig);
 % figure;

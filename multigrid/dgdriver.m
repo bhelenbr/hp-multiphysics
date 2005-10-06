@@ -97,7 +97,7 @@ global KB MB RB vrestrict vmaxeig nvar;
 
 
 cgswitch = 0;
-if (P == 1) 
+if (P/2^(maxlvl-1) <  1) 
     cgswitch = input('cgswitch');
 end
     

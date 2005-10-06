@@ -1,4 +1,4 @@
-Nel = 5;
+Nel = 7;
 
 dx = 1.0/2.0;
 dy = 1.0/2.0;
@@ -65,7 +65,7 @@ else
     	%%%%%%%%%%%%%%
 		% CONVECTION
 		%%%%%%%%%%%%%%
-		angle = -135.0*pi/180.0;
+		angle = 10.0*pi/180.0;
 		ax = cos(angle);
 		ay = sin(angle);
 		
@@ -189,7 +189,6 @@ else
 			alphax = 0;
             alphay = 0;
         end
-        
 %        alphax = alphax*4;
 %        alphay = alphay*4;
         
@@ -624,6 +623,12 @@ for m=1:5
 end
 vmaxeig(lvl) = maxeig;
 vrestrict{lvl} = blktimes(eye(nvar,nvar),restrict2d);
+
+% FOR DIFFUSION AT P=1, BLOCK JACOBI, WITH NO SWEEPING
+if (P == 1  && sys_flag == 1 && rlx_flag == 2 && sweep_flag == 0) 
+    omega = 2/3*omega
+end
+
 % RESCALE DIAGONAL TERM OF PRECONDITIONER
 MB{lvl,3,3} = MB{lvl,3,3}/abs(omega)*maxeig;
 
@@ -638,9 +643,10 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TESTING TO CHECK RESULTS %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CONSTRUCT STIFFNESS MATRIX
 % if (lvl == 1)
-%     Nel = 7;
+%    Nel = 8;
+% 
+%     % CONSTRUCT STIFFNESS MATRIX
 %     Kbigx = zeros(Nel*size(KB{lvl,3,3},1),Nel*size(KB{lvl,3,3},1));
 %     Mbigx = zeros(size(Kbigx));
 %     Rbigx = zeros(Nel*size(RB{lvl,2,2},1),Nel*size(RB{lvl,2,2},2));
@@ -663,7 +669,7 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 %         pvect(position) = 1;
 %         Rbigx = Rbigx + blktimes(gallery('circul',pvect),RB{lvl,2,m});
 %     end
-%     
+% 
 %     % PLACE X MATRICES ON DIAGONAL
 %     pvect = zeros(1,Nel);
 %     pvect(1) = 1;
@@ -688,19 +694,19 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 %         Kbig = Kbig + blktimes(gallery('circul',pvect),Kbigy);
 %         Mbig = Mbig + blktimes(gallery('circul',pvect),Mbigy);
 %     end    
-%     
-%     
+% 
+% 
 %     % TEST TO SEE IF I'VE GOT THIS RIGHT
 %     Kbigc = Rbig*Kbig*(Rbig');
 %     fine = (eye(size(Kbig)) -inv(Mbig)*Kbig);
-%     [finevect,fineeig] = eig(fine);
+%     fineeig = eig(fine);
 %     wholething = (eye(size(Kbig)) -Rbig'*lscov(Kbigc,Rbig*Kbig))*fine;
+%     
 %     eigswt =eig(wholething);
 %     figure
 %     plot(real(fineeig),imag(fineeig),'x');
 %     title('amplification factor (direct)');
 %     axis equal
-%     fineeig = diag(fineeig);
 %     afactordirect =max(abs(fineeig(2:size(fineeig,1))))
 % 
 %     figure
@@ -711,20 +717,20 @@ RB{lvl,2,2} = blktimes(eye(nvar,nvar),restrict2d);
 % end
 
 
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% FOLLOWING LINES ARE FOR COARSENING TO CONTINUOUS SPACE AFTER P = 1 %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (~continuous_flag) 
     return;
 end
 
-
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FOLLOWING LINES ARE FOR COARSENING TO CONTINUOUS SPACE AFTER P = 1 %
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('switching to continuous space');
     
 bsz = size(K,1);
 nvar = bsz/(P+1)^2;
 bszc = nvar*P^2;
 rbig = zeros(size(kbig,1)/4,size(kbig,2));
+rbig2 = zeros(size(kbig,1)/4,size(kbig,1)/4);
 
 % COARSEN TO CONTINUOUS SPACE
 % ASSUMES MODES ARE ORGANIZED IN STRIPS IN X (NOT CCW)
@@ -758,6 +764,40 @@ for elx = 1:Nel
     end
 end
 
+
+% HAROLD'S IDEA OF TRYING TO FORCE IT TO BE CELL-CENTERED
+% rbig2 = zeros(size(kbig,1)/4,size(kbig,1)/4);
+% for elx = 1:Nel
+%     lelx = elx-1;
+%     if (lelx == 0)
+%         lelx = Nel;
+%     end
+%     lind = 1 +(lelx-1)*bszc:lelx*bszc;
+%     mindx = 1+(elx-1)*bszc:elx*bszc;
+%     
+%     for ely = 1:Nel
+%         lely = ely-1;
+%         if (lely == 0)
+%             lely = Nel;
+%         end
+% 		lindy = (lely-1)*bszc*Nel +mindx;
+%         lindxy = (lely-1)*bszc*Nel +lind;
+% 
+% 		mind = mindx +(ely-1)*bszc*Nel;
+%         lindx = lind +(ely-1)*bszc*Nel;
+%         
+% 		mindc = +(ely-1)*bszc*Nel +mindx;
+%         
+%         for indx=1:nvar
+%             rbig2(mind,lindx) = 1.0;
+%             rbig2(mind,mind) = 1.0;
+%             rbig2(mind,lindy) = 1.0;
+%             rbig2(mind,lindxy) = 1.0;
+%         end
+%     end
+% end
+% rbig = rbig2*rbig;
+
 % FORM COARSE GRID STIFFNESS MATRIX
 kbigc = rbig*kbig*rbig.';
 
@@ -780,17 +820,17 @@ end
 
 
 % % TEST TO SEE IF I'VE GOT THIS RIGHT
-% fine = (eye(size(kbig)) -inv(mbig)*kbig);
-% [finevect,fineeig] = eig(fine);
-% wholething = (eye(size(kbig)) -rbig'*lscov(kbigc,rbig*kbig))*fine;
-% %wholething = (eye(size(kbig)) -rbig'*inv(kbigc)*rbig*kbig)*fine;
-% eigs=eig(wholething);
-% figure
-% plot(real(fineeig),imag(fineeig),'x');
-% title('amplification factor (direct)');
-% axis equal
-% figure
-% plot(real(eigs),imag(eigs),'x')
-% title('multigrid amplification factor (direct)');
-% axis equal
-% dfactor=max(abs(eigs(2:size(eigs,1))))
+fine = (eye(size(kbig)) -inv(mbig)*kbig);
+[finevect,fineeig] = eig(fine);
+wholething = (eye(size(kbig)) -rbig'*lscov(kbigc,rbig*kbig))*fine;
+%wholething = (eye(size(kbig)) -rbig'*inv(kbigc)*rbig*kbig)*fine;
+eigs=eig(wholething);
+figure
+plot(real(fineeig),imag(fineeig),'x');
+title('amplification factor (direct)');
+axis equal
+figure
+plot(real(eigs),imag(eigs),'x')
+title('multigrid amplification factor (direct)');
+axis equal
+dfactordirect=max(abs(eigs(2:size(eigs,1))))
