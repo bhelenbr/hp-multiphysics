@@ -800,6 +800,69 @@ class naca : public curved_analytic {
       }
 };       
 
+class gaussian : public curved_analytic {
+   public:
+      FLT width,amp,power;
+      TinyVector<FLT,2> intercept, normal;
+      
+      FLT hgt(FLT pt[mesh::ND]) {
+         FLT vert = pt[0]*normal(0) +pt[1]*normal(1);
+         FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
+         return(vert -amp*exp(-horz*horz));
+      }
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+         FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
+         if (dir == 0) {
+            return(normal(0) -amp*exp(-horz*horz)*2*horz*normal(1)/width);
+         }
+         else {
+            return(normal(1) +amp*exp(-horz*horz)*2*horz*normal(0)/width);
+         }
+         return(0.0);
+      }
+      
+      gaussian(int inid, mesh &xin) : curved_analytic(inid,xin), width(1.0), amp(0.1), intercept(0.0,0.0), normal(0.0,1.0) {
+         /* NACA 0012 is the default */
+         mytype="gaussian";
+      }
+      gaussian(const gaussian &inbdry, mesh &xin) : curved_analytic(inbdry,xin), width(inbdry.width), amp(inbdry.amp), intercept(inbdry.intercept), normal(inbdry.normal) {}
+      gaussian* create(mesh& xin) const {return(new gaussian(idnum,xin));}
+
+      void output(std::ostream& fout) {
+         curved_analytic::output(fout);
+         fout << idprefix << ".amp: " << amp << std::endl;
+         fout << idprefix << ".width: " << width << std::endl;
+         fout << idprefix << ".intercept: " << intercept << std::endl;
+         fout << idprefix << ".normal: " << normal << std::endl;
+      }
+     
+       void input(std::map <std::string,std::string>& inmap) {
+         curved_analytic::input(inmap);
+         
+         std::istringstream data(inmap[idprefix+".amp"]);
+         if (!(data >> amp)) amp = 0.1;
+         data.clear();
+         
+         data.str(inmap[idprefix+".width"]);
+         if (!(data >> width)) width = 1.0;
+         data.clear();
+    
+         data.str(inmap[idprefix+".intercept"]);
+         if (!(data >> intercept)) intercept = 0.0;
+         data.clear();     
+         
+         normal = 0.0;
+         data.str(inmap[idprefix+".normal"]);
+         if (!(data >> intercept)) normal(1) = 1.0;
+         data.clear();     
+         
+         FLT length = sqrt(normal(0)*normal(0) +normal(1)*normal(1));
+         normal /= length;
+      }
+};       
+
+
+
 typedef prdc_template<vcomm> vprdc;
 typedef prdc_template<scomm> sprdc;
 

@@ -18,6 +18,7 @@ template<class GRD> class mgrid : public block {
    protected:
       int ngrid, mp_phase;
       GRD *grd;
+      typedef typename GRD::filetype outtype;
       typedef typename GRD::transfer gtrans;
       typedef typename GRD::gbl ggbl;
       Array<Array<gtrans,1>,1> cv_to_ft;
@@ -35,8 +36,8 @@ template<class GRD> class mgrid : public block {
             grd[i].reload_scratch_pointers();
          }
       }
-      void output(char *filename, ftype::name filetype) {
-         grd[0].output(filename, filetype);
+      void output(char *filename, block::output_purpose why) {
+         grd[0].output(filename);
       }
       void coarsenchk(const char *fname);
       block::ctrl reconnect(int lvl, int excpt);
@@ -134,7 +135,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       data.clear();
       keyword = "filetype";
       data.str(input[keyword]);
-      if (!(data >> filetype)) filetype = ftype::grid;
+      if (!(data >> filetype)) filetype = 3;  // mesh::grid input type
    }
    *sim::log << "#filetype: " << filetype << std::endl;
    data.clear();
@@ -162,7 +163,7 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
       input[keyword] = bdryfile;
    }
    *sim::log << "#bdryfile: " << bdryfile << std::endl;
-   grd[0].mesh::input(filename.c_str(),static_cast<ftype::name>(filetype),grwfac,bdryfile.c_str());
+   grd[0].mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,bdryfile.c_str());
    data.clear();   
    
    keyword = idprefix + ".tolerance";
@@ -226,7 +227,7 @@ template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
    for(i = 1; i< ngrid; ++i) {
       number_str(name,fname,i,1);
       grd[i].checkintegrity();
-      grd[i].output(name,ftype::grid);
+      grd[i].output(name);
       strcat(name,"_fv_to_ct");
       grd[i-1].testconnect(name,fv_to_ct(i-1),&grd[i]);
       number_str(name,fname,i,1);
@@ -267,15 +268,27 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
+   static int lastlength = 1;
+   block::ctrl state;
    
    if (!adapt_flag) return(stop);
    
+   /* CALCULATE TARGET LENGTH FUNCTION */
+   if (excpt < lastlength) {
+      state = grd[0].length(excpt);
+      lastlength = excpt +1;
+      if (state != block::stop) {
+         return(state);
+      }
+      --lastlength;
+      mp_phase = -1;
+   }
+   
+   excpt -= lastlength;
+   
+   /* THIS PART TAKES CARES OF MAKEING SURE LENGTH IS THE SAME ACROSS BLOCK BOUNDARIES */
    switch(excpt) {
       case(0):
-         mp_phase =-1;
-         // grd[0].length();
-         return(advance);
-      case(1):
          ++mp_phase;
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
@@ -289,7 +302,7 @@ template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
                return(static_cast<ctrl>(grd[0].vmsgwait_rcv(mp_phase/3,grd[0].vlngth.data(),0,0,1)));
          }
       default:
-         return(grd[0].adapt(excpt-2,tolerance));
+         return(grd[0].adapt(excpt-1,tolerance));
    }
    
    *sim::log << "control flow error: adapt" << std::endl;

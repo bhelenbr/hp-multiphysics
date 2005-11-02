@@ -64,7 +64,7 @@ void mesh::symmetrize() {
 		else
 			td(i).info = 1;
 	}
-   output("symmetry_pt1",ftype::easymesh);
+   output("symmetry_pt1",easymesh);
    td(185).info = 0;
 	
 	mesh zpart[2];
@@ -110,7 +110,7 @@ void mesh::symmetrize() {
    zpart[0].append(zpart[1]);
    
    zpart[0].smooth_cofa(2);
-   zpart[0].output("symmetry",ftype::grid);
+   zpart[0].output("symmetry",grid);
    
    return;
 }	

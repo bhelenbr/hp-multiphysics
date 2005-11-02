@@ -25,6 +25,7 @@
 #include <capri.h>
 #endif
 
+blocks sim::blks;
 std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
 sharedmem sim::scratch;
@@ -146,6 +147,10 @@ void blocks::init(std::map<std::string,std::string> input) {
    *sim::log << "#starting block index: " << bstart << std::endl;
    *sim::log << "#nblocks for this processor: " << nblock << std::endl;
    
+   /* RESIZE ALLREDUCE BUFFER POINTERS ARRAYS */
+   sndbufs.resize(nblock);
+   rcvbufs.resize(nblock);
+   
    /* LOAD TIME STEPPING INFO */
    sim::time = 0.0;  // Simulation starts at t = 0
    data.str(input["dti"]);   
@@ -159,11 +164,6 @@ void blocks::init(std::map<std::string,std::string> input) {
    *sim::log << "#gravity: " << sim::g << std::endl;
    data.clear();
    
-   data.str(input["iterrfne"]);   
-   if (!(data >> iterrfne)) iterrfne = 0;
-   *sim::log << "#iterrfne: " << iterrfne << std::endl;
-   data.clear();
-   
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
    data.str(input["itercrsn"]);   
    if (!(data >> itercrsn)) itercrsn = 1;
@@ -175,14 +175,14 @@ void blocks::init(std::map<std::string,std::string> input) {
    *sim::log << "#iterrfne: " << iterrfne << std::endl;
    data.clear();
       
-   data.str(input["njacobi"]);   
-   if (!(data >> njacobi)) njacobi = 1;
-   *sim::log << "#njacobi: " << njacobi << std::endl;
-   data.clear();
-   
    data.str(input["ncycle"]);   
    if (!(data >> ncycle)) ncycle = 20;
    *sim::log << "#ncycle: " << ncycle << std::endl;
+   data.clear();
+   
+   data.str(input["preconditioner_interval"]);   
+   if (!(data >> prcndtn_intrvl)) prcndtn_intrvl = -1;
+   *sim::log << "#preconditioner_interval: " << prcndtn_intrvl << std::endl;
    data.clear();
    
    data.str(input["vwcycle"]);   
@@ -210,6 +210,16 @@ void blocks::init(std::map<std::string,std::string> input) {
    if (!(data >> mglvls)) mglvls = 1;
    *sim::log << "#mglvls: " << mglvls << std::endl;
    data.clear();
+   
+   data.str(input["output_interval"]);   
+   if (!(data >> out_intrvl)) out_intrvl = 1;
+   *sim::log << "#output_interval: " << out_intrvl << std::endl;
+   data.clear();
+   
+   data.str(input["restart_interval"]);   
+   if (!(data >> rstrt_intrvl)) rstrt_intrvl = 1;
+   *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
+   data.clear();
 
    blk = new block *[nblock];
 
@@ -226,7 +236,7 @@ void blocks::init(std::map<std::string,std::string> input) {
    
    findmatch();
    matchboundaries();  // ONLY DOES FIRST LEVEL
-   output("matched",ftype::grid);
+   output("matched");
 
    for(lvl=1;lvl<ngrid;++lvl) {
       excpt = 0;
@@ -570,7 +580,7 @@ void blocks::matchboundaries() {
 }
 
 
-void blocks::output(char *filename, ftype::name filetype) {
+void blocks::output(char *filename, block::output_purpose why) {
    int i;   
    char fnmcat[80], fnmcat1[80];
    
@@ -586,11 +596,11 @@ void blocks::output(char *filename, ftype::name filetype) {
       strcat(fnmcat,".");
       for (i=0;i<nblock;++i) {
          number_str(fnmcat1, fnmcat, i, 1);
-         blk[i]->output(fnmcat1,filetype);
+         blk[i]->output(fnmcat1,why);
       }
    }
    else {
-      blk[0]->output(fnmcat,filetype);
+      blk[0]->output(fnmcat,why);
    }
    
    return;
@@ -612,13 +622,8 @@ void blocks::rsdl(int lvl) {
 }
       
       
-
-
-void blocks::iterate(int lvl) {
-/*****************************************/
-/* JACOBI-ITERATION FOR MESH POSITION ****/
-/*****************************************/
-   int i,iter,excpt;
+void blocks::setup_preconditioner(int lvl) {
+   int i,excpt;
    int state;
    
    excpt = 0;
@@ -628,10 +633,19 @@ void blocks::iterate(int lvl) {
          state &= blk[i]->setup_preconditioner(lvl,excpt);
       excpt += state;
    } while (state != block::stop);
-
-   for(iter=0;iter<njacobi;++iter) {
-      rsdl(lvl);
    
+   return;
+}
+
+
+void blocks::iterate(int lvl, int niter) {
+/*****************************************/
+/* JACOBI-ITERATION FOR MESH POSITION ****/
+/*****************************************/
+   int i,iter,excpt;
+   int state;
+
+   for(iter=0;iter<niter;++iter) {   
       excpt = 0;
       do {
          state = block::stop;
@@ -645,13 +659,14 @@ void blocks::iterate(int lvl) {
 }
 
 void blocks::cycle(int vw, int lvl) {
-   int i,vcount,iter,excpt;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
+   int i,vcount,excpt;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
    int state;
    
    for (vcount=0;vcount<vw;++vcount) {
    
-      for(iter=0;iter<itercrsn;++iter)
-         iterate(lvl);
+      if (!(vcount%abs(prcndtn_intrvl)) && itercrsn) setup_preconditioner(lvl);
+      
+      iterate(lvl,itercrsn);
       
       if (lvl == mglvls-1) return;
       
@@ -674,9 +689,10 @@ void blocks::cycle(int vw, int lvl) {
             state &= blk[i]->mg_getcchng(lvl,excpt);
          excpt += state;
       } while (state != block::stop);
-         
-      for(iter=0;iter<iterrfne;++iter)
-         iterate(lvl);
+      
+      if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(lvl);
+      
+      iterate(lvl,iterrfne);
    }
 
    return;
@@ -698,8 +714,16 @@ void blocks::go() {
          maxres();
          *sim::log << '\n';
       }
-      number_str(outname, "end", step, 3);
-      output(outname,ftype::grid);
+      
+      if (!(step%out_intrvl)) {
+         number_str(outname, "data", step, 3);
+         output(outname); 
+
+         if (!(step%(rstrt_intrvl*out_intrvl))) {
+            number_str(outname, "rstrt", step, 3);
+            output(outname,block::restart);         
+         }
+      }
       restructure();
    }
    cpu_time = clock();
@@ -817,3 +841,96 @@ void blocks::restructure() {
    return;
 }
 
+static int ncalls = 0;
+
+void blocks::allreduce1(void *sendbuf, void *recvbuf) {
+   static Array<void *,1> sends(nblock), recvs(nblock);
+
+   
+   sndbufs(ncalls) = sendbuf;
+   rcvbufs(ncalls) = recvbuf;
+   ++ncalls;
+   
+   return;
+}
+
+void blocks::allreduce2(int count, msg_type datatype, operations op) {
+   int i,j;
+   Array<FLT,1> fsendbuf(count);
+   int *ircvbuf;
+   FLT *frcvbuf;
+   
+   if (ncalls) {      
+      switch(datatype) {
+         case(int_msg): {
+         
+            Array<int,1> isendbuf(count);
+            
+            switch(op) {
+               case(sum): {
+                  isendbuf = 0;
+                  for(j=0;j<ncalls;++j) {
+                     for(i=0;i<count;++i) {
+                        isendbuf(i) += static_cast<int *>(sndbufs(j))[i];
+                     }
+                  }
+#ifdef MPISRC
+                  MPI_Allreduce(isendbuf.data(),rcvbufs(0),nproc,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+                  
+                  for(i=1;i<ncalls;++i) {
+                     ircvbuf = static_cast<int *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        ircvbuf[j] =  static_cast<int *>(rcvbufs(0));
+                  }
+#else
+                  for(i=0;i<ncalls;++i) {
+                     ircvbuf = static_cast<int *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        ircvbuf[j] = isendbuf(i);
+                  }
+#endif
+               }            
+            }
+            
+                  
+         } 
+         
+         
+        case(flt_msg): {
+         
+            Array<FLT,1> fsendbuf(count);
+            
+            switch(op) {
+               case(sum): {
+                  fsendbuf = 0;
+                  for(j=0;j<ncalls;++j) {
+                     for(i=0;i<count;++i) {
+                        fsendbuf(i) += static_cast<FLT *>(sndbufs(j))[i];
+                     }
+                  }
+#ifdef MPISRC
+                  MPI_Allreduce(fsendbuf.data(),rcvbufs(0),nproc,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+                  
+                  for(i=1;i<ncalls;++i) {
+                     frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0));
+                  }
+#else
+                  for(i=0;i<ncalls;++i) {
+                     frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        frcvbuf[j] = fsendbuf(i);
+                  }
+#endif
+               }            
+            }
+         }
+      }
+
+      ncalls = 0;
+   }
+   return;
+}
+      
+      

@@ -28,7 +28,7 @@ int mesh::insert(const TinyVector<FLT,ND> &x) {
    if (tind < 0) {
       std::cerr << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " vnear: " << vnear << std::endl;
       std::cerr << "maxsrch: " << maxsrch << "vtri: " << vd(vnear).tri << std::endl;
-      output("error",ftype::grid);
+      output("error",grid);
       exit(1);
    }    
    if (nvrtx >= maxvst) {

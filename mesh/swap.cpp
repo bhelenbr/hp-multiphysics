@@ -98,7 +98,7 @@ int mesh::swap(int sind, FLT tol) {
    
 #ifdef DEBUG_ADAPT
    number_str(adapt_file,"adapt",adapt_count++,5);
-   output(adapt_file,ftype::grid);
+   output(adapt_file,grid);
 #endif
 
    return(1);

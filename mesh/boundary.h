@@ -196,8 +196,8 @@ class vtype {
  */
 class stype {
    public:
-      static const int ntypes = 8;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca};
+      static const int ntypes = 9;
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)

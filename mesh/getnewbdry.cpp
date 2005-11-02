@@ -11,7 +11,7 @@
 #include "boundaries.h"
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
-const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca"};
+const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca","gaussian"};
 
 vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata) {
    std::string keyword;
@@ -122,6 +122,10 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
       }
       case stype::naca: {
          temp = new naca(idnum,*this);
+         break;
+      }
+      case stype::gaussian: {
+         temp = new gaussian(idnum,*this);
          break;
       }
       default: {

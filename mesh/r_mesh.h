@@ -87,6 +87,7 @@ class r_mesh : public mesh {
          block::ctrl rsdl(int excpt);
          block::ctrl update(int excpt);
          block::ctrl setup_preconditioner(int excpt);
+         block::ctrl length(int excpt) {return(block::stop);}
          void maxres();
 };
 #endif

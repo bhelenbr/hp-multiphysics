@@ -367,6 +367,11 @@ void r_mesh::vddti() {
 
 block::ctrl r_mesh::update(int excpt) {
    int i,n;
+   block::ctrl state;
+   
+   state = rsdl(excpt);
+   if (state != block::stop) return(state);
+   
    
    Array<FLT,1> diag;
    diag.reference(rg->diag);

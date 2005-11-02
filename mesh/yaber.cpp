@@ -229,7 +229,7 @@ void mesh::yaber(FLT tolsize) {
       
 #ifdef DEBUG_ADAPT
       number_str(adapt_file,"adapt",adapt_count++,5);
-      output(adapt_file,ftype::grid);
+      output(adapt_file,grid);
 #endif
    }
 
@@ -389,7 +389,7 @@ void mesh::bdry_yaber(FLT tolsize) {
          ++count;
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,ftype::grid);
+         output(adapt_file,grid);
 #endif            
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
@@ -419,7 +419,7 @@ void mesh::bdry_yaber1() {
          collapse(sind,endpt);
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,ftype::grid);
+         output(adapt_file,grid);
 #endif
       }
    }

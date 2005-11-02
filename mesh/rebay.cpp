@@ -213,7 +213,7 @@ INSRT:
       }
 #ifdef DEBUG_ADAPT
       number_str(adapt_file,"adapt",adapt_count++,5);
-      output(adapt_file,ftype::grid);
+      output(adapt_file,grid);
 #endif
       
    }
@@ -284,7 +284,7 @@ void mesh::bdry_rebay(FLT tolsize) {
          if (fscr1(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,ftype::grid);
+         output(adapt_file,grid);
 #endif
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
@@ -324,7 +324,7 @@ void mesh::bdry_rebay1() {
          
 #ifdef DEBUG_ADAPT
          number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,ftype::grid);
+         output(adapt_file,grid);
 #endif
       }
    }

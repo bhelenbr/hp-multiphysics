@@ -59,7 +59,7 @@ block::ctrl mesh::mgconnect(int excpt, Array<transfer,1> &cnnct, const class mes
       }
       Array<TinyVector<FLT,2>,1> storevrtx(vrtx);
       vrtx.reference(work);
-      output(fname, ftype::grid);
+      output(fname, grid);
       vrtx.reference(storevrtx);
    }
       

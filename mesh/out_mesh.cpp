@@ -7,7 +7,7 @@
 
 using namespace std;
 
-int mesh::output(const char *filename, ftype::name filetype) const {
+int mesh::output(const char *filename, mesh::filetype filetype) const {
    char fnmapp[100];
    int i,j,n,tind,count;
    ofstream out;
@@ -17,7 +17,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          
    switch (filetype) {
    
-      case (ftype::easymesh):
+      case (easymesh):
          /* CREATE EASYMESH OUTPUT FILES */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".n");
@@ -68,7 +68,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          out.close();
          break;
       
-      case (ftype::tecplot):
+      case (tecplot):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".dat");
          out.open(fnmapp);
@@ -93,7 +93,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          out.close();
          break;
 
-      case (ftype::mavriplis):
+      case (mavriplis):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".GDS");
          out.open(fnmapp);
@@ -121,7 +121,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
             out.close();
          break; 
          
-      case (ftype::gambit):
+      case (gambit):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".FDNEUT");
          out.open(fnmapp);
@@ -193,7 +193,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          out.close();
          break;
 
-      case(ftype::text):
+      case(text):
          /* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
          strcpy(fnmapp,filename);
          strcat(fnmapp,".txt");
@@ -213,7 +213,7 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          out.close();
          break;
          
-      case(ftype::grid):
+      case(grid):
          strcpy(fnmapp,filename);
          strcat(fnmapp,".grd");
          out.open(fnmapp);
@@ -262,6 +262,19 @@ int mesh::output(const char *filename, ftype::name filetype) const {
          out.close();
          
          break;
+         
+      case(vlength): {
+         strcpy(fnmapp,filename);
+         strcat(fnmapp,".vlngth");
+         out.open(fnmapp);
+         if (!out) {
+            *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+            exit(1);
+         }
+
+         for(i=0;i<nvrtx;++i)
+            out << vlngth(i) << endl;
+      }
 
       default:
          *sim::log << "That filetype is not supported yet" << endl;

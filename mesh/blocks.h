@@ -20,11 +20,152 @@
 #endif
 #endif
 
+class blocks {
+   protected:
+      int nproc; /**< Number of processors in simulation */
+      int myid;  /**< Processor number of myself for MPI */
+      int nblock; /**< Number of blocks on this processor */
+
+      /** @name Multigrid parameters 
+       *  constants defining multigrid iteratoin 
+      */
+      //@{
+      int mglvls; /**< Number of levels of multigrid */
+      int ngrid; /**< Number of grids (could be more or less than mglvls) */
+      int ncycle; /**< Number of iterations per timestep */
+      /** Number of cycles between re-evaluation of preconditioner.
+       *  negative mean reevaluate for both refinement and coarsening sweeps 
+       */
+      int prcndtn_intrvl; 
+      int itercrsn; /**< Number of iterations to performing on coarsening */
+      int iterrfne; /**< Number of iteration to perform on moving to finer mesh */
+      int vw; /**< V-cycle = 1, W-cycle = 2 */
+      //@}
+      int ntstep;  /**< Number of time steps to perform */
+      block **blk; /**< Array containing pointers to blocks */
+      
+      /** @name Output parameters
+       *  constants determining when and what to output 
+       */
+      //@{
+      int out_intrvl; /**< Number of time-steps between data outputs */
+      int rstrt_intrvl; /**< Number of output intervals between restart files */
+      //@}
+      
+      /** This is a data structure for storing communication info
+       *  only used temporarily to sort things out in findmatch
+       */
+      class commblocks {
+         public:
+            int nblock;
+            struct commblock {
+               int nvcomm;
+               struct vid {
+                  int nvbd, idnum;
+               } *vcomm;
+               
+               int nscomm;
+               struct sid {
+                  int nsbd, idnum; // , vid0, vid1;
+               } *scomm;
+               
+               int nfcomm;
+               struct fid {
+                  int nfbd, idnum; // , nsds;
+                  // int *sids;
+               } *fcomm;
+            } *blkinfo;
+            
+            commblocks() : nblock(0) {}
+            void output();             
+            int unpack(blitz::Array<int,1> entitylist); 
+            ~commblocks() {
+               for(int i=0;i<nblock;++i) {
+                  delete []blkinfo[i].vcomm;
+                  delete []blkinfo[i].scomm;
+                  // for(k=0;k<blkinfo[i].nfcomm;++k)
+                  //    delete []blkinfo[i].fcomm[k].sids;
+                  delete []blkinfo[i].fcomm;
+               }
+               delete []blkinfo;
+            }
+      };
+      
+      /** @name allreduce buffer pointer storage
+       *  used in allreduce for block communication
+       */
+      //@{
+      blitz::Array<void *,1> sndbufs, rcvbufs;
+      //@}
+
+   public:
+      /** Initialize multiblock/mgrid mesh */
+      blocks() : nproc(1), myid(0) {}
+      
+      /** Initializes blocks using data from map */
+      void init(std::map<std::string,std::string> input);
+      
+      /** Loads map from file then initialize */
+      void init(const char *infile, const char *outfile = 0);
+      
+      /** Makes sure vertex positions on boundaries coinside */
+      void matchboundaries();
+      
+      /** Outputs solution in various filetypes */
+      void output(char *filename, block::output_purpose = block::standard);
+      
+      /** Inputs solution */
+      void input(char *filename) {}
+      
+      /** Routine that starts simulation */
+      void go();
+      
+      /** Adapt mesh */
+      void restructure(); 
+      
+      /** Function to allow blocks to perform global sums, averages, etc.. */
+      enum operations {sum}; /** Only summing for now */
+      enum msg_type {flt_msg, int_msg};
+      void allreduce1(void *sendbuf, void *recvbuf);
+      void allreduce2(int count, msg_type datatype, operations op);
+      
+   protected:
+      /** Allocates blocks, called by init to generate blocks from initialization file */
+      block* getnewblock(int idnum, std::map<std::string,std::string> *blockdata);
+            
+      /** Sets-up parallel communications, called by init */
+      void findmatch();
+ 
+      /** Calculate residuals */
+      void rsdl(int);
+      
+      /** Setup preconditioner */
+      void setup_preconditioner(int mglvl);
+
+      /** Iterate on all blocks */  
+      void iterate(int mglvl, int niter);
+
+      /** Multigrid cycle */
+      void cycle(int vw, int lvl = 0);
+      
+      /** Shift to next implicit time step */
+      void tadvance(int step); 
+            
+      /** Print errors */
+      inline void maxres() {
+         for(int i=0;i<nblock;++i)
+            blk[i]->maxres();
+      }
+
+};
+
+
 /** \brief Global variables for simulation
  *
  * This namespace contains global variables needed by all blocks of the simulation 
  */
 namespace sim {
+   extern blocks blks; /**< Contains all blocks for this processor */
    extern FLT dti; /**< Inverse time step */
    extern FLT time; /**< Simulation time */
    extern FLT tstep; /**< Simulation time step */
@@ -97,119 +238,8 @@ namespace sim {
    //@{
    extern FLT fadd;   //!< Multiplicative factor for multigrid (default = 1.0)
    //@}
-
 }
 
-class blocks {
-   protected:
-      int nproc; /**< Number of processors in simulation */
-      int myid;  /**< Processor number of myself for MPI */
-      int nblock; /**< Number of blocks on this processor */
-
-      /** @name Multigrid parameters 
-       *  constants defining multigrid iteratoin 
-      */
-      //@{
-      int mglvls; /**< Number of levels of multigrid */
-      int ngrid; /**< Number of grids (could be more or less than mglvls) */
-      int ncycle; /**< Number of iterations per timestep */
-      int njacobi; /**< Number of iterations comprising a single smoothing */
-      int itercrsn; /**< Number of iterations to performing on coarsening */
-      int iterrfne; /**< Number of iteration to perform on moving to finer mesh */
-      int vw; /**< V-cycle = 1, W-cycle = 2 */
-      //@}
-      int ntstep;  /**< Number of time steps to perform */
-      block **blk; /**< Array containing pointers to blocks */
-      
-      /** This is a data structure for storing communication info
-       *  only used temporarily to sort things out in findmatch
-       */
-      class commblocks {
-         public:
-            int nblock;
-            struct commblock {
-               int nvcomm;
-               struct vid {
-                  int nvbd, idnum;
-               } *vcomm;
-               
-               int nscomm;
-               struct sid {
-                  int nsbd, idnum; // , vid0, vid1;
-               } *scomm;
-               
-               int nfcomm;
-               struct fid {
-                  int nfbd, idnum; // , nsds;
-                  // int *sids;
-               } *fcomm;
-            } *blkinfo;
-            
-            commblocks() : nblock(0) {}
-            void output();             
-            int unpack(blitz::Array<int,1> entitylist); 
-            ~commblocks() {
-               for(int i=0;i<nblock;++i) {
-                  delete []blkinfo[i].vcomm;
-                  delete []blkinfo[i].scomm;
-                  // for(k=0;k<blkinfo[i].nfcomm;++k)
-                  //    delete []blkinfo[i].fcomm[k].sids;
-                  delete []blkinfo[i].fcomm;
-               }
-               delete []blkinfo;
-            }
-      };
-
-   public:
-      /** Initialize multiblock/mgrid mesh */
-      blocks() : nproc(1), myid(0) {}
-      
-      /** Initializes blocks using data from map */
-      void init(std::map<std::string,std::string> input);
-      
-      /** Loads map from file then initialize */
-      void init(const char *infile, const char *outfile = 0);
-      
-      /** Makes sure vertex positions on boundaries coinside */
-      void matchboundaries();
-      
-      /** Outputs solution in various filetypes */
-      void output(char *filename, ftype::name filetype);
-      
-      /** Inputs solution */
-      void input(char *filename) {}
-      
-      /** Routine that starts simulation */
-      void go();
-      
-      /** Adapt mesh */
-      void restructure(); 
-      
-   protected:
-      /** Allocates blocks, called by init to generate blocks from initialization file */
-      block* getnewblock(int idnum, std::map<std::string,std::string> *blockdata);
-            
-      /** Sets-up parallel communications, called by init */
-      void findmatch();
- 
-      /** Calculate residuals */
-      void rsdl(int);
-
-      /** Iterate on all blocks */  
-      void iterate(int mglvl);
-
-      /** Multigrid cycle */
-      void cycle(int vw, int lvl = 0);
-      
-      /** Shift to next implicit time step */
-      void tadvance(int step); 
-            
-      /** Print errors */
-      inline void maxres() {
-         for(int i=0;i<nblock;++i)
-            blk[i]->maxres();
-      }
-};
 #endif
 
 

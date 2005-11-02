@@ -178,7 +178,10 @@ void mesh::dlttri(int tind) {
    while(td(ntri-1).info&TDLTE)
       --ntri;
    
-   if (tind >= ntri) return;
+   if (ntri <=  tind)  {
+      ntri = tind;
+      return;
+   }
    
    --ntri;
 
@@ -228,7 +231,10 @@ void mesh::dltsd(int sind) {
    while(td(nside-1).info&SDLTE)
       --nside;
    
-   if (sind >= nside) return;
+   if (nside <= sind) {
+      nside = sind;
+      return;
+   }
    
    /* DELETE SIDE */
    --nside;
@@ -255,9 +261,6 @@ void mesh::dltsd(int sind) {
       sd(sind).info = nside;
       movesdata(nside,sind);
    }
-   /* THIS IS TO PREVENT ROLL BACK NEAR END */
-   td(sind).info &= ~SDLTE;   
-   
    sd(nside).info = sind;
    
    return;
@@ -273,7 +276,10 @@ void mesh::dltvrtx(int v0) {
       --nvrtx;
    }
       
-   if (v0 >= nvrtx) return;
+   if (nvrtx <= v0) {
+      nvrtx = v0;
+      return;
+   }
    
    --nvrtx;
    
@@ -283,9 +289,6 @@ void mesh::dltvrtx(int v0) {
    vd(v0).nnbor = vd(nvrtx).nnbor;
    vd(v0).tri = vd(nvrtx).tri;
 
-   /* THIS IS TO PREVENT ROLL BACK NEAR END */
-   td(v0).info &= ~VDLTE;
-   
    qtree.movept(nvrtx,v0);
    
    tind = vd(nvrtx).tri;   

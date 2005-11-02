@@ -21,7 +21,8 @@ class block {
       }
       virtual void init(std::map <std::string,std::string>& input) = 0;
       virtual void reload_scratch_pointers() = 0;
-      virtual void output(char *filename, ftype::name filetype = ftype::easymesh) = 0;
+      enum output_purpose {standard, display, restart, debug};
+      virtual void output(char *filename, output_purpose why) = 0;
       virtual ctrl matchboundaries(int lvl, int excpt) = 0;
       virtual ctrl rsdl(int lvl, int excpt) = 0;
       virtual ctrl setup_preconditioner(int lvl, int excpt) = 0;

@@ -184,11 +184,11 @@ void mesh::cleanup_after_adapt() {
    /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
    /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
    for(i=0;i<ntri;++i) {
-      if (td(i).info&TTOUC) {
+      if (td(i).info&TDLTE) dlttri(i);
+      else if (td(i).info&TTOUC) {
          td(i).info = -2;
          updatetdata(i);
       }
-      if (td(i).info&TDLTE) dlttri(i);
    }
       
    bdrylabel();

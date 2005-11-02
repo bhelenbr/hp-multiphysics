@@ -293,8 +293,8 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
             /* SIDE IN SAME DIRECTION */
             if (sd(sind1).tri(0) >= 0) {
                *sim::log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               output("error",ftype::tecplot);
-               output("error",ftype::grid);
+               output("error",tecplot);
+               output("error",grid);
                exit(1);
             }
             sd(sind1).tri(0) = ntri;
@@ -316,8 +316,8 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
             /* SIDE IN OPPOSITE DIRECTION */
             if (sd(sind1).tri(1) >= 0) {
                *sim::log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
-               output("error",ftype::tecplot);
-               output("error",ftype::grid);
+               output("error",tecplot);
+               output("error",grid);
                exit(1);
             }
             sd(sind1).tri(1) = ntri;

@@ -72,8 +72,8 @@ int main(int argc, char *argv[]) {
    }
    
    class mesh zx, zy;
-   ftype::name in = static_cast<ftype::name>(informat);
-   ftype::name out = static_cast<ftype::name>(outformat);
+   mesh::filetype in = static_cast<mesh::filetype>(informat);
+   mesh::filetype out = static_cast<mesh::filetype>(outformat);
    
    /* TO SYMMETRIZE A MESH */
    if (Symmetrize) {
@@ -174,12 +174,11 @@ int main(int argc, char *argv[]) {
    }
       
 
-   class blocks z;
    if (Generate) {
-      z.init(argv[1]);
+      sim::blks.init(argv[1]);
       for (int i=0;i<1;++i)
-         z.restructure();
-      z.output(argv[1],out);
+         sim::blks.restructure();
+      sim::blks.output(argv[1]);
       return(0);
    }
 
@@ -191,11 +190,11 @@ int main(int argc, char *argv[]) {
    
    if (argc == 2) {
       /* READ INPUT MAP FROM FILE */
-      z.init(argv[1]);
+      sim::blks.init(argv[1]);
    }
    else if (argc == 3) {
       /* READ INPUT MAP FROM FILE & OUTPUT TO FILE */
-      z.init(argv[1],argv[2]);
+      sim::blks.init(argv[1],argv[2]);
    }
    else {
       /* CREATE INPUT MAPS HERE*/
@@ -236,10 +235,10 @@ int main(int argc, char *argv[]) {
       input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry_phased.inpt";
 
       output_map(input,std::cout);
-      z.init(input);
+      sim::blks.init(input);
    }
 
-   z.go();
+   sim::blks.go();
    
 #ifdef MPISRC
    MPI_Finalize();

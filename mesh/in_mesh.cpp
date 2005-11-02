@@ -10,7 +10,7 @@ Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2w
 Array<FLT,1> mesh::fscr1;
 int mesh::maxsrch;
 
-void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const char *bdryfile) {
+void mesh::input(const char *filename, mesh::filetype filetype, FLT grwfac, const char *bdryfile) {
    int i,j,n,sind,count,temp;
    char grd_nm[120], grd_app[120];
    TinyVector<int,3> v,s,e;
@@ -50,7 +50,7 @@ void mesh::input(const char *filename, ftype::name filetype, FLT grwfac, const c
    }
    
     switch (filetype) {            
-        case(ftype::easymesh):
+        case(easymesh):
             /* LOAD SIDE INFORMATION */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".s");
@@ -203,7 +203,7 @@ next1a:     continue;
             in.close();
             break;
         
-        case(ftype::gambit):
+        case(gambit):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".FDNEUT");
             in.open(grd_app);
@@ -318,7 +318,7 @@ next1a:     continue;
 
             break;
             
-         case(ftype::grid):
+         case(grid):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".grd");
             in.open(grd_app);
@@ -400,7 +400,7 @@ next1a:     continue;
             
             break;
                         
-         case(ftype::text):
+         case(text):
             if (!initialized) {
                *sim::log << "to read in vertex positions only must first load mesh structure" << std::endl;
                exit(1);
@@ -435,7 +435,7 @@ next1a:     continue;
             return;
 
 #ifdef CAPRI         
-         case(ftype::BRep):
+         case(BRep):
 
             /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
             sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
@@ -556,7 +556,7 @@ next1c:     continue;
             break;
 #endif
 
-         case(ftype::tecplot):
+         case(tecplot):
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".dat");
             in.open(grd_app);
@@ -624,7 +624,7 @@ next1c:     continue;
             
             break;
             
-         case(ftype::boundary):
+         case(boundary):
             /* LOAD BOUNDARY INFORMATION */
             strcpy(grd_app,grd_nm);
             strcat(grd_app,".d");
@@ -659,6 +659,7 @@ next1c:     continue;
                if (vd(i).info) {
                   /* NEW VRTX B.C. */
                   vbdry(nvbd) = getnewvrtxobject(vd(i).info,pbdrymap);
+                  vbdry(nvbd)->alloc(1);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
                }
@@ -746,7 +747,7 @@ next1c:     continue;
       for(i=0;i<nvrtx;++i) in >> vlngth(i);
       in.close();
    }
-   else if (filetype != ftype::boundary) initvlngth();
+   else if (filetype != boundary) initvlngth();
    
    checkintegrity();
 

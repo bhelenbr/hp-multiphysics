@@ -3,7 +3,6 @@
 
 #include <math.h>
 #include <quadtree.h>
-#include <ftype.h>
 #include <iostream>
 #include <float.h>
 #include <utilities.h>
@@ -114,8 +113,9 @@ class mesh {
       virtual ~mesh();
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      void input(const char *filename, ftype::name filetype = ftype::easymesh,  FLT grwfac = 1, const char *bdrymap = 0);
-      int output(const char *filename, ftype::name filetype = ftype::easymesh) const;
+      enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength};
+      void input(const char *filename, filetype ftype = grid,  FLT grwfac = 1, const char *bdrymap = 0);
+      int output(const char *filename, filetype ftype = grid) const;
       void bdry_output(const char *filename) const;
       void setbcinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 
