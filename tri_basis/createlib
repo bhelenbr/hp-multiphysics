@@ -1,8 +1,0 @@
-#! /bin/csh
-
-cp -f hpbasis.h ~/Codes/include
-#cd build/intermediates/mblock.build/Objects/ppc/
-cd build/tri_basis.build/tri_basis.build/Objects-normal/ppc
-libtool -o libbasis.a initialize.o intgrt.o intgrt1d.o proj.o proj1d.o ptvalues.o hpprobe.o
-mv -f libbasis.a ~/Codes/lib
-
