@@ -127,6 +127,7 @@ template<class BASE> class comm_bdry : public BASE {
          }
          return;
       }
+      int& matchphase(int matchnum) {return(phase[matchnum]);}
 
       int local_cnnct(boundary *bin, int msg_tag) {
          if (bin->idnum == BASE::idnum) {

@@ -76,6 +76,7 @@ class boundary {
       virtual int mpi_cnnct(int proc_tgt, int msg_tag) {return 1;}
 #endif
       virtual void setphase(int phase, int msg_tag) {}
+      virtual int& matchphase(int matchnum) {return(dummy.idum=0);}
       virtual void resize_buffers(int size) {}
       virtual void *psndbuf() {return(&dummy);}
       virtual int& isndbuf(int indx) {return(dummy.idum);}

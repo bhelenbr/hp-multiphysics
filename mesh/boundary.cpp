@@ -374,9 +374,9 @@ void scomm::sfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
       ++matches;
       
       int ebp1 = end-bgn+1;
-      countdn = nel*ebp1;
+      countdn = (nel-1)*ebp1;
       countup = 0;
-      for(j=0;j<nel+1;++j) {
+      for(j=0;j<nel;++j) {
          for(k=0;k<ebp1;++k)
             fsndbuf(countup +k) += frcvbuf(m,countdn +k);
          countup += ebp1;
