@@ -7,53 +7,42 @@
  *
  */
 
-#include"spectral_hp.h"
-#include"utilities.h"
+#include "tri_hp.h"
+#include "utilities.h"
+#include "hp_boundary.h"
 
-void spectral_hp::copy(const spectral_hp& tgt) {
-   int i,n,j;
+ void tri_hp::copy_data(const tri_hp& tgt) {
+   int i,n,t,state;
    
    /* COPY MESH INFORMATION */
-   this->mesh::copy(tgt);
+   state = mesh::initialized;
+   mesh::copy(tgt);
+
+   if (!state) {
+      map<std::string,std::string> input;
+      std::string prefix = "blk";
+      std::string keyword = prefix + ".adapt_storage";
+      input[keyword] = "1";
       
-   /* SHALLOW COPY BASIS */   
-   b = tgt.b;
-   
-   p0 = tgt.p0;
-   sm0 = tgt.sm0;
-   im0 = tgt.im0;
-   
-   if (size == 0) {
-      ug.v = (FLT (*)[NV]) xmalloc(NV*maxvst*sizeof(FLT));
-      ug.s = (FLT (*)[NV]) xmalloc(NV*maxvst*sm0*sizeof(FLT));
-      ug.i = (FLT (*)[NV]) xmalloc(NV*maxvst*im0*sizeof(FLT));
-      size = maxvst;
-      
-      /* ALLOCATE STORAGE FOR BOUNDARIES */
-      for(i=0;i<nsbd;++i)
-         binfo[i] = new struct bistruct[maxsbel+1 +maxsbel*sm0];
-   }
-   else if (size < tgt.maxvst) {
-      printf("spectral_hp object is not big enough for tgt\n");
-      exit(1);
+      ostringstream myStream;
+      myStream << log2p << flush;
+      input[prefix+".log2p"] = myStream.str();
+      init(input, prefix, tgt.hp_gbl);
    }
       
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ug.v[i][n] = tgt.ug.v[i][n];
-         
-   for(i=0;i<nside*sm0;++i)
-      for(n=0;n<NV;++n)
-         ug.s[i][n] = tgt.ug.s[i][n];
-         
-   for(i=0;i<ntri*im0;++i)
-      for(n=0;n<NV;++n)
-         ug.i[i][n] = tgt.ug.i[i][n];
-         
+   for(t=0;t<sim::nhist+1;++t) {
+      ugbd(t).v(Range(0,nvrtx),Range::all()) = tgt.ugbd(t).v(Range(0,nvrtx),Range::all());
+      ugbd(t).s(Range(0,nside),Range::all(),Range::all()) = tgt.ugbd(t).s(Range(0,nside),Range::all(),Range::all());
+      ugbd(t).i(Range(0,ntri),Range::all(),Range::all()) = tgt.ugbd(t).i(Range(0,ntri),Range::all(),Range::all());
+      
+      for(i=0;i<nvrtx;++i)
+         for(n=0;n<ND;++n)
+            vrtxbd(t)(i)(n) = tgt.vrtxbd(t)(i)(n);
+   }
+
    for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry[i].num*(1+sm0) +1;++j)
-         binfo[i][j] = tgt.binfo[i][j];
-         
+      hp_sbdry(i)->copy_data(tgt.hp_sbdry(i));
+      
    return;
 }
          

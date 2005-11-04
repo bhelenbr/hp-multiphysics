@@ -7,540 +7,319 @@
  *
  */
 
-#include"hp_mgrid.h"
-#include"utilities.h"
-#include<assert.h>
-#include<myblas.h>
+#include "tri_hp.h"
+#include "hp_boundary.h"
+#include <myblas.h>
 
-/* THIS IS USED IN THE MVPTTOBDRY FUNCTION */
-extern class spectral_hp *tgt;
-
-void hp_mgrid::adapt(class hp_mgrid& str, char *adaptfile) {
-   int i,j,m,n,v0,v1,sind,stgt,ttgt,info,indx,indx1,indx2,nvrt0,tind,touchd,snum,step;
-   FLT r,s,x,y,psi,upt[NV];
-   char uplo[] = "U";
+ block::ctrl tri_hp::adapt(int excpt,FLT tol) {
    
-#ifdef PV3
-   changed = 1;  // FLAG TO TELL OTHER ROUTINES (PV3) THAT MESH HAS CHANGED 
-#endif
-   
-   /* UPDATE QUADTREE FOR MOVING MESH */
-   // treeupdate(); // USE TREE UPDATE IF DOMAIN DOESN'T MOVE ONLY MESH DEFORMATION
-   treeinit();  // (REINITIALIZES ENTIRE TREE - NECESSARY FOR MOVING DOMAINS)
-   
-   /* COPY SOLUTION & MESH TO BEGIN */
-   str.spectral_hp::copy(*this);
-   
-   /* COPY UNSTEADY SOURCE TERMS TOO */
-   for(step=0;step<TMADAPT;++step) {
-      for(i=0;i<nvrtx;++i)
-         for(n=0;n<NV;++n)
-            ugwk[step].v[i][n] = gbl->ugbd[step].v[i][n];
-      
-      for(i=0;i<nside*b->sm;++i)
-         for(n=0;n<NV;++n)
-            ugwk[step].s[i][n] = gbl->ugbd[step].s[i][n];
-
-      for(i=0;i<ntri*b->im;++i)
-         for(n=0;n<NV;++n)
-            ugwk[step].i[i][n] = gbl->ugbd[step].i[i][n];            
-               
-      for(i=0;i<nvrtx;++i)
-         for(n=0;n<ND;++n)
-            vrtxwk[step][i][n] = gbl->vrtxbd[step][i][n];
-            
-      for(i=0;i<nsbd;++i)
-         if (sbdry[i].type&CURV_MASK) 
-            for (j=0;j<sbdry[i].num*b->sm;++j)
-               binfowk[step][i][j] = gbl->binfobd[step][i][j];
-   }
-
-   /* SET TARGET POINTER: USED IN EXTERNAL FUNCTION MVPTTOBDRY PROVIDED TO MESH */
-   tgt = &str;
-   
-   /* REDUCE maxsrch (KEEP FAILED TRIANGLE SEARCHES LOCAL) */
-   // mesh::maxsrch = 15;
-   
-	/* SWAP & COARSEN */ 
-   nvrt0 = nvrtx;
-   yaber(1.0/adapt_tol,1,0.0);
-      
-   /* MOVE KEPT VERTEX VALUES TO NEW POSITIONS */
-   for(i=nvrt0-1;i>=nvrtx;--i) {
-      if (vinfo[i] < 0) continue;
-      
-      v0 = vinfo[i];
-      for(n=0;n<NV;++n)
-         ug.v[v0][n] = ug.v[i][n];
-         
-      for(step=0;step<TMADAPT;++step)
-         for(n=0;n<NV;++n)
-            gbl->ugbd[step].v[v0][n] = gbl->ugbd[step].v[i][n];
-            
-      for(step=0;step<TMADAPT;++step)
-         for(n=0;n<ND;++n)
-            gbl->vrtxbd[step][v0][n] = gbl->vrtxbd[step][i][n];
-   }
- 
-   /* REFINE */
-   nvrt0 = nvrtx;
-   rebay(adapt_tol);
-   
-   /* TO SEE MESH MANIPULATION */
-   for(i=0;i<nside;++i)
-      sinfo[i] += 2;
-
-   out_mesh(adaptfile);
-
-   for(i=0;i<nside;++i)
-      sinfo[i] -= 2;
-   
-   /* PRINT SOME GENERAL DEBUGGING INFO */
-   printf("#\n#\n#REFINED MESH\n");
-   printf("#MAXVST %d VERTICES %d SIDES %d ELEMENTS %d UNKNOWNS %d\n",maxvst,nvrtx,nside,ntri,nvrtx+b->sm*nside+b->im*ntri);
-   
-   /* PRINT BOUNDARY INFO */
-   for(i=0;i<nsbd;++i)
-      printf("#MAX %d BDRY %d TYPE %d SIDES %d\n",maxsbel,i,sbdry[i].type,sbdry[i].num);
-
-   /* MARK BOUNDARY VERTICES */
-   for(i=nvrt0;i<nvrtx;++i)
-      vinfo[i] = -1;
-
-   for(i=0;i<nsbd;++i)
-      for(j=0;j<sbdry[i].num;++j)
-         vinfo[svrtx[sbdry[i].el[j]][0]] = 0;
-      
-   /* ASSIGN NEW VALUES */
-   for(i=nvrt0;i<nvrtx;++i) {
-      if (vinfo[i] < 0) {
-         tind = str.findandmvptincurved(vrtx[i][0],vrtx[i][1],r,s);
-         assert(tind >= 0);
-         str.ugtouht(tind);
-         str.b->ptprobe(NV,ug.v[i],r,s,uht[0],MXTM);
-
-         for(step=0;step<TMADAPT;++step) {
-            str.ugtouht(tind,ugwk[step]);
-            str.b->ptprobe(NV,gbl->ugbd[step].v[i],uht[0],MXTM);
-         }
-
-         if (str.tinfo[tind] > -1) {
-            for(step=0;step<TMADAPT;++step) {
-               str.crdtocht(tind,vrtxwk[step],binfowk[step]);
-               str.b->ptprobe_bdry(ND,gbl->vrtxbd[step][i],cht[0],MXTM);
-            }
-         }
-         else {
-            for(step=0;step<TMADAPT;++step) {
-               for(n=0;n<ND;++n) 
-                  gbl->vrtxbd[step][i][n] = vrtxwk[step][str.tvrtx[tind][0]][n]*(s +1.)/2.
-                                           +vrtxwk[step][str.tvrtx[tind][1]][n]*(-r -s)/2.
-                                           +vrtxwk[step][str.tvrtx[tind][2]][n]*(r +1.)/2.;
-            }
-         }
-      }
-   }
-         
-
-   /* ASSIGN NEW BOUNDARY VERTEX VALUES */
-   for(i=0;i<nsbd;++i) {
-      for(j=0;j<sbdry[i].num;++j) {
-         v0 = svrtx[sbdry[i].el[j]][0];
-         if (v0 >= nvrt0) {
-            stgt = str.findbdrypt(sbdry[i].type,vrtx[v0][0],vrtx[v0][1],psi);
-            assert(stgt >= 0);
-            str.ugtouht1d(stgt);  
-            str.b->ptprobe1d(NV,ug.v[v0],psi,uht[0],MXTM);
-            
-            for(step=0;step<TMADAPT;++step) {
-               str.ugtouht1d(stgt,ugwk[step]);
-               str.b->ptprobe1d(NV,gbl->ugbd[step].v[v0],uht[0],MXTM);
-            }
-
-            if (str.sinfo[stgt] > -1) {
-               for(step=0;step<TMADAPT;++step) {
-                  str.crdtocht1d(stgt,vrtxwk[step],binfowk[step]);
-                  str.b->ptprobe1d(ND,gbl->vrtxbd[step][v0],cht[0],MXTM);
-               }
-            }
-            else {
-               for(step=0;step<TMADAPT;++step) {
-                  for(n=0;n<ND;++n) 
-                     gbl->vrtxbd[step][v0][n] = vrtxwk[step][str.svrtx[stgt][0]][n]*(1. -psi)/2.
-                                              +vrtxwk[step][str.svrtx[stgt][1]][n]*(1. +psi)/2.;
-               }
-            }
-         }
-      }
+   /* ASSUMES STEPS FOR SETTING UP VLENGTH HAVE BEEN TAKEN ALREADY */
+   if (excpt == 0) {
+      hp_gbl->pstr->copy_data(*this);
+      treeinit();
    }
    
-   if (b->sm > 0) {
-      
-      /* ASSIGN NEW SIDE VALUES */
-      indx = 0;
-      indx1 = 0;
-      for(sind=0;sind<nside;++sind) {
-         switch (sinfo[sind]) {
-            case(-1): 
-               /* UNTOUCHED/UNMOVED */            
-               break;
-   
-            case(-2):
-               /* TOUCHED */
-               if (stri[sind][1] < 0) break; // DO BOUNDARY SIDES SEPARATELY
-   
-               v0 = svrtx[sind][0];
-               v1 = svrtx[sind][1];
-   
-               for(n=0;n<ND;++n)
-                  b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
-   
-               for(n=0;n<NV;++n)
-                  b->proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
-                  
-               for(step=0;step<TMADAPT;++step)
-                  for(n=0;n<NV;++n)
-                     b->proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
-         
-               for(i=0;i<b->gpx;++i) {
-                  tind = str.findinteriorpt(crd[0][0][i],crd[1][0][i],r,s);
-                  assert(tind >= 0);
-                  str.ugtouht(tind);  
-                  str.b->ptprobe(NV,upt,r,s,uht[0],MXTM);
-                  for(n=0;n<NV;++n)
-                     res[n][0][i] -= upt[n];
-                  
-                  for(step=0;step<TMADAPT;++step) {
-                     str.ugtouht(tind,ugwk[step]);
-                     str.b->ptprobe(NV,upt,uht[0],MXTM);
-                     for(n=0;n<NV;++n)   
-                        bdwk[step][n][0][i] -= upt[n];
-                  }
-               }            
-                     
-               for(n=0;n<NV;++n)
-                  b->intgrt1d(lf[n],res[n][0]);
-            
-               for(n=0;n<NV;++n) {
-                  PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                  for(m=0;m<b->sm;++m) 
-                     ug.s[indx+m][n] = -lf[n][2+m];
-               }
-               
-               for(step=0;step<TMADAPT;++step) {
-                  for(n=0;n<NV;++n)
-                     b->intgrt1d(lf[n],bdwk[step][n][0]);
-            
-                  for(n=0;n<NV;++n) {
-                     PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                     for(m=0;m<b->sm;++m) 
-                        gbl->ugbd[step].s[indx+m][n] = -lf[n][2+m];
-                  }
-               }
-               
-               break;
-   
-            default:
-               /* SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
-               assert(sinfo[sind] > -1);
-               
-               indx2 = sinfo[sind]*str.sm0;
-               for(m=0;m<b->sm;++m)
-                  for(n=0;n<NV;++n)
-                     ug.s[indx+m][n] = str.ug.s[indx2+m][n];
-                     
-               for(step=0;step<TMADAPT;++step)
-                  for(m=0;m<b->sm;++m)
-                     for(n=0;n<NV;++n)
-                        gbl->ugbd[step].s[indx+m][n] = gbl->ugbd[step].s[indx2+m][n];
-                     
-               break;
-         }     
-         indx1 += str.sm0;
-         indx += sm0;
-      }
-      
-      /* UPDATE BOUNDARY SIDES */
-      for(i=0;i<nsbd;++i) {
-         indx = 0;
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            
-            switch(sinfo[sind]) {
-               case(-1): // UNTOUCHED
-                  indx1 = (-str.stri[sind][1]&0xFFFF)*str.sm0;
-                  for(m=0;m<b->sm;++m)
-                     binfo[i][indx+m] = str.binfo[i][indx1+m];
-                  
-                  for(step=0;step<TMADAPT;++step)
-                     for(m=0;m<b->sm;++m)
-                        gbl->binfobd[step][i][indx+m] = binfowk[step][i][indx1+m];   
-                  
-                  break;
-                  
-               case(-2): // TOUCHED
-                  v0 = svrtx[sind][0];
-                  v1 = svrtx[sind][1];
-      
-                  for(n=0;n<ND;++n)
-                     b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
-      
-                  for(n=0;n<NV;++n)
-                     b->proj1d(ug.v[v0][n],ug.v[v1][n],res[n][0]);
-                     
-                  for(step=0;step<TMADAPT;++step)
-                     for(n=0;n<NV;++n)
-                        b->proj1d(gbl->ugbd[step].v[v0][n],gbl->ugbd[step].v[v1][n],bdwk[step][n][0]);
-                        
-                  if (sbdry[i].type&CURV_MASK) {
-                  
-                     for(step=0;step<TMADAPT;++step)
-                        for(n=0;n<ND;++n)
-                           b->proj1d(gbl->vrtxbd[step][v0][n],gbl->vrtxbd[step][v1][n],bdwk[step][n][1]);      
-                     
-                     for(m=0;m<b->gpx;++m) {
-                        x = crd[0][0][m];
-                        y = crd[1][0][m];
-      
-                        /* THIS MOVES X,Y PT TO BOUNDRY */            
-                        stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
-                        assert(stgt >= 0);
-                        crd[0][0][m] -= x;
-                        crd[1][0][m] -= y;
-      
-                        /* CALCULATE VALUE OF SOLUTION AT POINT */
-                        str.ugtouht1d(stgt);
-                        str.b->ptprobe1d(NV,upt,psi,uht[0],MXTM);
-                        for(n=0;n<NV;++n)
-                           res[n][0][m] -= upt[n]; 
-                        
-                        for(step=0;step<TMADAPT;++step) {
-                           str.ugtouht1d(stgt,ugwk[step]);
-                           str.b->ptprobe1d(NV,upt,uht[0],MXTM);
-                           for(n=0;n<NV;++n)   
-                              bdwk[step][n][0][m] -= upt[n];
-                        }
-                        
-                        for(step=0;step<TMADAPT;++step) {
-                           str.crdtocht1d(stgt,vrtxwk[step],binfowk[step]);
-                           str.b->ptprobe1d(ND,upt,cht[0],MXTM);
-                           for(n=0;n<ND;++n)   
-                              bdwk[step][n][1][m] -= upt[n];
-                        }                    
-                     }     
-                  
-                     for(n=0;n<ND;++n) {
-                        b->intgrt1d(lf[n],crd[n][0]);
-                        PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                     
-                        for(m=0;m<b->sm;++m)
-                           binfo[i][indx+m].curv[n] = -lf[n][m+2];
-                     }
-         
-                     for(step=0;step<TMADAPT;++step) {
-                        for(n=0;n<ND;++n) {
-                           b->intgrt1d(bdwk[step][n][1],lf[n]);
-                           PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                        
-                           for(m=0;m<b->sm;++m)
-                              gbl->binfobd[step][i][indx+m].curv[n] = -lf[n][m+2];
-                        }
-                     }
-                  }
-                  else {
-                     for(n=0;n<ND;++n)
-                        for(m=0;m<b->sm;++m)
-                           binfo[i][indx+m].curv[n] = 0.0;
+   return(mesh::adapt(excpt,tol));
+   //setbcinfo();
+}
 
-                     for(step=0;step<TMADAPT;++step) {
-                        for(n=0;n<ND;++n) {
-                           for(m=0;m<b->sm;++m)
-                              gbl->binfobd[step][i][indx+m].curv[n] = 0.0;
-                        }
-                     }                           
-                     
-                           
-                     for(m=0;m<b->gpx;++m) {
-                        x = crd[0][0][m];
-                        y = crd[1][0][m];
-                        
-                        /* FIND PSI */            
-                        stgt = str.findbdrypt(sbdry[i].type,x,y,psi);
-                        assert(stgt >= 0);
-                        /* CALCULATE VALUE OF SOLUTION AT POINT */
-                        str.ugtouht1d(stgt);
-                        str.b->ptprobe1d(NV,upt,psi,uht[0],MXTM);
-                        for(n=0;n<NV;++n)
-                           res[n][0][m] -= upt[n]; 
-                        
-                        for(step=0;step<TMADAPT;++step) {
-                           str.ugtouht1d(stgt,ugwk[step]);
-                           str.b->ptprobe1d(NV,upt,uht[0],MXTM);
-                           for(n=0;n<NV;++n)   
-                              bdwk[step][n][0][m] -= upt[n];
-                        }
-                     }
-                  }
-
-                  indx1 = sind*sm0;      
-                  for(n=0;n<NV;++n)
-                     b->intgrt1d(lf[n],res[n][0]);
-               
-                  for(n=0;n<NV;++n) {
-                     PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                     for(m=0;m<b->sm;++m) 
-                        ug.s[indx1+m][n] = -lf[n][2+m];
-                  }
-                  
-                  for(step=0;step<TMADAPT;++step) {
-                     for(n=0;n<NV;++n)
-                        b->intgrt1d(lf[n],bdwk[step][n][0]);
-               
-                     for(n=0;n<NV;++n) {
-                        PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-                        for(m=0;m<b->sm;++m) 
-                           gbl->ugbd[step].s[indx1+m][n] = -lf[n][2+m];
-                     }
-                  }
-                  break;
-                  
-               default:
-                  /* SIDE INTACT BUT MOVED FROM IT'S ORIGINAL LOCATION */
-                  /* ALREADY MOVED UG INFO JUST NEED TO MOVE BINFO */
-                  assert(sinfo[sind] > -1);
-                  indx1 = (-str.stri[sinfo[sind]][1]&0xFFFF)*str.sm0;
-                  for(m=0;m<b->sm;++m)
-                     binfo[i][indx+m] = str.binfo[i][indx1+m];
-                     
-                  for(step=0;step<TMADAPT;++step) 
-                     for(m=0;m<b->sm;++m)
-                        gbl->binfobd[step][i][indx+m] = binfowk[step][i][indx1+m];
-                        
-                  break;
-            }
-            indx += sm0;
-         }
-      }
-    }  
-
-   if (b->im > 0) {
-
-      /* FIGURE OUT WHICH TRIANGLES HAVE BEEN TOUCHED */
-      for(tind=0;tind<ntri;++tind) {
-         touchd = 0;
-         for(snum=0;snum<3;++snum)
-            touchd = MIN(touchd,sinfo[tside[tind].side[snum]]);
-            
-         if (touchd == -2) intwk2[tind] = -2;
-         else intwk2[tind] = tinfo[tind];  // 0 -> UNTOUCHED/UNMOVED OR > 0 -> ORIGINAL LOCATION
-      }
+void tri_hp::updatevdata(int v0) {
+   int n,tind,step; 
+   FLT r,s;     
       
-      /* SET UP BDRY CONDITION INFO */
-      setbcinfo();
-         
-      /* RESET INTERIOR VALUES */
-      indx = 0;
-      for(tind=0;tind<ntri;++tind) {
-         switch (intwk2[tind]) {
-            case(0): // UNTOUCHED & UNMOVED
-               break;
-               
-            case(-2): // TOUCHED
-               ugtouht_bdry(tind);
-               for(n=0;n<NV;++n)
-                  b->proj_bdry(uht[n],u[n][0],MXGP);
-                  
-               for(step=0;step<TMADAPT;++step) {
-                  ugtouht_bdry(tind,gbl->ugbd[step]);
-                  for(n=0;n<NV;++n)
-                     b->proj_bdry(uht[n],bdwk[step][n][0],MXGP);
-               }
-                  
-               if (tinfo[tind] < 0) {
-                  for(n=0;n<ND;++n)
-                     b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
-               }
-               else {
-                  crdtocht(tind);
-                  for(n=0;n<ND;++n)
-                     b->proj_bdry(cht[n],crd[n][0],MXGP);
-               }
-                  
-               for (i=0; i < b->gpx; ++i ) {
-                  for (j=0; j < b->gpn; ++j ) {
-                     ttgt = str.findinteriorpt(crd[0][i][j],crd[1][i][j],r,s);
-                     assert(ttgt >= 0);
-                     str.ugtouht(ttgt);
-                     str.b->ptprobe(NV,upt,r,s,uht[0],MXTM);
-                     for(n=0;n<NV;++n)
-                        u[n][i][j] -= upt[n];
-                     
-                     for(step=0;step<TMADAPT;++step) {
-                        str.ugtouht(ttgt,ugwk[step]);
-                        str.b->ptprobe(NV,upt,uht[0],MXTM);
-                        for(n=0;n<NV;++n)
-                           bdwk[step][n][i][j] -= upt[n];
-                     }
-                  }
-               }
-                              
-               for(n=0;n<NV;++n) {
-                  b->intgrt(lf[n],u[n][0],MXGP);
-                  PBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
-                  for(i=0;i<b->im;++i)
-                     ug.i[indx+i][n] = -lf[n][b->bm+i];
-               }
-               
-               for(step=0;step<TMADAPT;++step) {
-                  for(n=0;n<NV;++n) {
-                     b->intgrt(lf[n],bdwk[step][n][0],MXGP);
-                     PBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
-                     for(i=0;i<b->im;++i)
-                        gbl->ugbd[step].i[indx+i][n] = -lf[n][b->bm+i];
-                  }
-               }
-               
-               break;
+   hp_gbl->pstr->findandmvptincurved(vrtx(v0),tind,r,s);
+   basis::tri(log2p).ptvalues(r,s);
    
-            default:  // MOVED BUT NOT TOUCHED
-               
-               indx1 = intwk2[tind]*str.im0;
-               
-               for(i=0;i<b->im;++i)
-                  for(n=0;n<NV;++n)
-                     ug.i[indx+i][n] = str.ug.i[indx1+i][n];
-               
-               for(step=0;step<TMADAPT;++step) {
-                  for(n=0;n<NV;++n)
-                     for(i=0;i<b->im;++i)
-                        gbl->ugbd[step].i[indx+i][n] = ugwk[step].i[indx1+i][n];
-               }
-               
-               break;
-         }
-         indx += im0;
+   for(step=0;step<sim::nhist+1;++step) {
+      hp_gbl->pstr->ugtouht(tind,step);
+      basis::tri(log2p).ptprobe(NV,&ugbd(step).v(v0,0),&uht(0)(0),MXTM);
+   }
+   
+   if (hp_gbl->pstr->td(tind).info > -1) {
+      for(step=1;step<sim::nhist+1;++step) {
+         hp_gbl->pstr->crdtocht(tind,step);
+         basis::tri(log2p).ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&cht(0,0),MXTM);
       }
-      
-      /* RESET intwk2 */
-      for(i=0;i<ntri;++i)
-         intwk2[i] = -1;
    }
    else {
-      setbcinfo();
+      for(step=1;step<sim::nhist+1;++step) {
+         for(n=0;n<ND;++n) 
+            vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->td(tind).vrtx(0))(n)*(s +1.)/2.
+                                 +hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->td(tind).vrtx(1))(n)*(-r -s)/2.
+                                 +hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->td(tind).vrtx(2))(n)*(r +1.)/2.;
+      }
    }
-   
-   output(adaptfile,tecplot);
-   
-   /* RESTORE maxsrch in findtri */
-   // mesh::maxsrch = 3*MAXLST/4;
-     
+
    return;
 }
+
+void tri_hp::updatevdata_bdry(int bnum, int bel, int endpt) {
+   int n,sind,v0,step;
+   FLT psi;
    
+   sind = sbdry(bnum)->el(bel);
+   v0 = sd(sind).vrtx(endpt);
+   hp_gbl->pstr->hp_sbdry(bnum)->findbdrypt(vrtx(v0),sind,psi);
+
+   for(step=0;step<sim::nhist+1;++step) {
+      hp_gbl->pstr->ugtouht1d(sind,step);
+      basis::tri(log2p).ptprobe1d(NV,&ugbd(step).v(v0,0),&uht(0)(0),MXTM);
+   }
+
+   if (hp_sbdry(bnum)->is_curved()) {
+      for(step=1;step<sim::nhist+1;++step) {
+         hp_gbl->pstr->crdtocht1d(sind,step);
+         basis::tri(log2p).ptprobe1d(ND,&vrtxbd(step)(v0)(0),&cht(0,0),MXTM);
+      }
+   }
+   else {
+      for(step=1;step<sim::nhist+1;++step) {
+         for(n=0;n<ND;++n) 
+            vrtxbd(step)(v0)(n) = hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->sd(sind).vrtx(0))(n)*(1. -psi)/2.
+                                     +hp_gbl->pstr->vrtxbd(step)(hp_gbl->pstr->sd(sind).vrtx(1))(n)*(1. +psi)/2.;
+      }
+   }
    
+   /* FOR INTERNALLY STORED DATA */
+   hp_sbdry(bnum)->updatevdata_bdry(bel,endpt,hp_gbl->pstr->hp_sbdry(bnum));
    
+   return;
+}
+
+void tri_hp::movevdata(int from, int to) {
+   int n,step;
+      
+   for(step=0;step<sim::nhist+1;++step) {
+      for(n=0;n<NV;++n)
+         ugbd(step).v(to,n) = hp_gbl->pstr->ugbd(step).v(from,n);
+         
+      for(n=0;n<ND;++n)
+         vrtxbd(step)(to)(n) = hp_gbl->pstr->vrtxbd(step)(from)(n);
+   }
    
+   return;
+}
+
+void tri_hp::movevdata_bdry(int bnum,int bel,int endpt) {
+   /* This is just for internal data (if any) */
+   hp_sbdry(bnum)->movevdata_bdry(bel,endpt,hp_gbl->pstr->hp_sbdry(bnum));
+}
+
+void tri_hp::updatesdata(int sind) {
+   int i,m,n,v0,v1,tind,step,info;
+   FLT r,s,upt[NV];
+   char uplo[] = "U";
+   TinyVector<FLT,2> pt;
    
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
+   
+   for(n=0;n<ND;++n)
+      basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
+
+   for(step=0;step<sim::nhist+1;++step)
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).proj1d(ugbd(step).v(v0,n),ugbd(step).v(v1,n),&bdwk(step,n)(0,0));
+      
+   for(i=0;i<basis::tri(log2p).gpx;++i) {
+      pt(0) = crd(0)(0,i);
+      pt(1) = crd(1)(0,i);
+      hp_gbl->pstr->findinteriorpt(pt,tind,r,s);
+      basis::tri(log2p).ptvalues(r,s);
+         
+      for(step=0;step<sim::nhist+1;++step) {
+         hp_gbl->pstr->ugtouht(tind,step);
+         basis::tri(log2p).ptprobe(NV,upt,&uht(0)(0),MXTM);
+         for(n=0;n<NV;++n)   
+            bdwk(step,n)(0,i) -= upt[n];
+      }
+   }            
+
+   for(step=0;step<sim::nhist+1;++step) {
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(0,0));
+
+      for(n=0;n<NV;++n) {
+         PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
+         for(m=0;m<basis::tri(log2p).sm;++m) 
+            ugbd(step).s(sind,m,n) = -lf(n)(2+m);
+      }
+   }
+   return;
+}
+
+void tri_hp::updatesdata_bdry(int bnum,int bel) {
+   int m,n,sind,v0,v1,step,stgt,info;
+   TinyVector<FLT,2> pt;
+   FLT psi;
+   FLT upt[NV];
+   char uplo[] = "U";
+   
+   sind = sbdry(bnum)->el(bel);
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
+
+   for(n=0;n<ND;++n)
+      basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
+
+   for(step=0;step<sim::nhist+1;++step)
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).proj1d(ugbd(step).v(v0,n),ugbd(step).v(v1,n),&bdwk(step,n)(0,0));
+         
+   for(step=0;step<sim::nhist+1;++step)
+      for(n=0;n<ND;++n)
+         basis::tri(log2p).proj1d(vrtxbd(step)(v0)(n),vrtxbd(step)(v1)(n),&bdwk(step,n)(1,0));
+         
+   if (hp_sbdry(bnum)->is_curved()) {
+
+      for(m=0;m<basis::tri(log2p).gpx;++m) {
+         pt(0) = bdwk(0,0)(1,m);
+         pt(1) = bdwk(0,1)(1,m);
+         hp_gbl->pstr->hp_sbdry(bnum)->findbdrypt(pt,stgt,psi);
+
+         for(step=0;step<sim::nhist+1;++step) {
+            hp_gbl->pstr->ugtouht1d(stgt,step);
+            basis::tri(log2p).ptprobe1d(NV,upt,&uht(0)(0),MXTM);
+            for(n=0;n<NV;++n)   
+               bdwk(step,n)(0,m) -= upt[n];
+        
+            hp_gbl->pstr->crdtocht1d(stgt,step);
+            basis::tri(log2p).ptprobe1d(ND,upt,&cht(0,0),MXTM);
+            for(n=0;n<ND;++n)   
+               bdwk(step,n)(1,m) -= upt[n];
+         }                    
+      }     
+
+      for(step=0;step<sim::nhist+1;++step) {
+         for(n=0;n<ND;++n) {
+            basis::tri(log2p).intgrt1d(&bdwk(step,n)(1,0),&lf(n)(0));
+            PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
+         
+            for(m=0;m<basis::tri(log2p).sm;++m)
+               hp_sbdry(bnum)->crdsbdin(bel,m,n,step) = -lf(n)(m+2);
+         }
+      }
+   }
+   else {
+      for(m=0;m<basis::tri(log2p).gpx;++m) {
+         pt(0) = crd(0)(0,m);
+         pt(1) = crd(1)(0,m);
+         
+         /* FIND PSI */            
+         hp_gbl->pstr->hp_sbdry(bnum)->findbdrypt(pt,stgt,psi);
+
+         /* CALCULATE VALUE OF SOLUTION AT POINT */
+         for(step=0;step<sim::nhist+1;++step) {
+            hp_gbl->pstr->ugtouht1d(stgt,step);
+            basis::tri(log2p).ptprobe1d(NV,upt,&uht(0)(0),MXTM);
+            for(n=0;n<NV;++n)   
+               bdwk(step,n)(0,m) -= upt[n];
+         }
+      }
+   }
+
+   for(step=0;step<sim::nhist+1;++step) {
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(0,0));
+
+      for(n=0;n<NV;++n) {
+         PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
+         for(m=0;m<basis::tri(log2p).sm;++m) 
+            ugbd(step).s(sind,m,n) = -lf(n)(2+m);
+      }
+   }
+   
+   /* UPDATE INTERNAL INFORMATION */
+   hp_sbdry(bnum)->updatesdata_bdry(bel,hp_gbl->pstr->hp_sbdry(bnum));
+   
+   return;
+}
+
+void tri_hp::movesdata(int from, int to) {
+   int indx,indx1,step;
+   
+   indx = sm0*to;
+   indx1 = sm0*from;
+   
+   for(step=0;step<sim::nhist+1;++step)
+      ugbd(step).s(to,Range::all(),Range::all()) = hp_gbl->pstr->ugbd(step).s(from,Range::all(),Range::all());
+            
+   return;
+}
+
+void tri_hp::movesdata_bdry(int bnum,int bel) {
+   int m,n,sind,tgtel,step;
+   
+   if (hp_sbdry(bnum)->is_curved()) {
+      sind = sbdry(bnum)->el(bel);
+      tgtel = hp_gbl->pstr->getbdryel(sind);
+      for(step=0;step<sim::nhist;++step) {
+         for(m=0;m<sm0;++m) {
+            for(n=0;n<ND;++n) {
+               hp_sbdry(bnum)->crdsbdin(bel,m,n,step) = hp_gbl->pstr->hp_sbdry(bnum)->crdsbd(tgtel,m,n,step);
+            }
+         }
+      }
+   }
+   
+   hp_sbdry(bnum)->movesdata_bdry(bel,hp_gbl->pstr->hp_sbdry(bnum));
+
+   return;
+}
+
+void tri_hp::updatetdata(int tind) {
+   int i,j,n,ttgt,step,info;
+   FLT r,s;
+   FLT upt[NV];
+   char uplo[] = "U";
+   TinyVector<FLT,2> pt;
+      
+   for(step=0;step<sim::nhist+1;++step) {
+      ugtouht_bdry(tind,step);
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).proj_bdry(&uht(n)(0),&bdwk(step,n)(0,0),MXGP);
+   }
+   
+   crdtocht(tind);
+   for(n=0;n<ND;++n)
+      basis::tri(log2p).proj_bdry(&cht(n,0),&crd(n)(0,0),MXGP);
+      
+   for (i=0; i < basis::tri(log2p).gpx; ++i ) {
+      for (j=0; j < basis::tri(log2p).gpn; ++j ) {
+         pt(0) = crd(0)(i,j);
+         pt(1) = crd(1)(i,j);
+         hp_gbl->pstr->findinteriorpt(pt,ttgt,r,s);
+         
+         for(step=0;step<sim::nhist+1;++step) {
+            hp_gbl->pstr->ugtouht(ttgt,step);
+            basis::tri(log2p).ptprobe(NV,upt,&uht(0)(0),MXTM);
+            for(n=0;n<NV;++n)
+               bdwk(step,n)(i,j) -= upt[n];
+         }
+      }
+   }
+                  
+   for(step=0;step<sim::nhist+1;++step) {
+      for(n=0;n<NV;++n) {
+         basis::tri(log2p).intgrt(lf(n).data(),&bdwk(step,n)(0,0),MXGP);
+         PBTRS(uplo,basis::tri(log2p).im,basis::tri(log2p).ibwth,1,&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,&lf(n)(basis::tri(log2p).bm),basis::tri(log2p).im,info);
+         for(i=0;i<basis::tri(log2p).im;++i)
+            ugbd(step).i(tind,i,n) = -lf(n)(basis::tri(log2p).bm+i);
+      }
+   }
+   return;
+}
+
+void tri_hp::movetdata(int from, int to) {
+   int step;
+      
+   for(step=0;step<sim::nhist+1;++step) {
+      ugbd(step).i(to,Range::all(),Range::all()) = hp_gbl->pstr->ugbd(step).i(from,Range::all(),Range::all());
+   }
+            
+   return;
+}
+      
 
    
 

@@ -1,90 +1,77 @@
-#include"hp_mgrid.h"
+#include "tri_hp.h"
+#include "hp_boundary.h"
 
-void hp_mgrid::getcchng(void) {
-   int i,j,n,ind,tind;
-   class hp_mgrid *cmesh;
+block::ctrl tri_hp::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh) {
+   int i,j,ind,tind;
+   int stop = 1;
    
-   if(b->p > 1) {
-      return;
+   if(basis::tri(log2p).p > 1) {
+      return(block::stop);
    }
-   
-   cmesh = static_cast<class hp_mgrid *>(cmpt);
-   
-   /* TRANFER COUPLED BOUNDARY RESIDUALS */
-   for(i=0;i<nsbd;++i)
-      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
-         surfgetcchng(i);
-
-   /* DETERMINE CORRECTIONS ON COARSE MESH   */   
-   for(i=0;i<cmesh->nvrtx;++i)
-      for(n=0;n<NV;++n) 
-         cmesh->vug_frst[i][n] -= cmesh->ug.v[i][n];
-   
-#ifdef SKIP
-   /* SMOOTH CORRECTIONS??? */
-   int iter,sind,v0,v1; 
-   int niter = 10;  
-   for(iter=0; iter< niter; ++iter) {
-      /* SMOOTH POINT DISTRIBUTION X*/
-      for(i=0;i<cmesh->nvrtx;++i)
-         for(n=0;n<NV;++n)
-            gbl->res0.v[i][n] = 0.0;
-
-      for(i=0;i<cmesh->nside;++i) {
-         v0 = cmesh->svrtx[i][0];
-         v1 = cmesh->svrtx[i][1];
-         for(n=0;n<NV;++n) {
-            gbl->res0.v[v0][n] += cmesh->vug_frst[v1][n];
-            gbl->res0.v[v1][n] += cmesh->vug_frst[v0][n];
-         }
-      }
       
-      /* RESET BOUNDARY VALUES SO THEY DON'T CHANGE */
-      for(i=0;i<cmesh->nsbd;++i) {
-         for(j=0;j<cmesh->sbdry[i].num;++j) {
-            sind = cmesh->sbdry[i].el[j];
-            v0 = cmesh->svrtx[sind][0];
-            for(n=0;n<NV;++n) {
-               gbl->res0.v[v0][n] = cmesh->vug_frst[v0][n]*cmesh->nnbor[i];
+   switch (excpt) {
+      case(0): {
+         mp_phase = -1;
+   
+         /* TRANFER COUPLED BOUNDARY RESIDUALS */
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->mg_getcchng(excpt, fv_to_ct, cv_to_ft, cmesh->hp_sbdry(i));
+
+         /* DETERMINE CORRECTIONS ON COARSE MESH   */   
+         cmesh->vug_frst(Range(0,nvrtx),Range::all()) -= cmesh->ug.v(Range(0,nvrtx),Range::all());
+   
+         /* LOOP THROUGH FINE VERTICES   */
+         /* TO DETERMINE CHANGE IN SOLUTION */   
+         for(i=0;i<nvrtx;++i) {
+            tind = fv_to_ct(i).tri;
+
+            hp_gbl->res.v(i,Range::all()) = 0.0;
+            
+            for(j=0;j<3;++j) {
+               ind = cmesh->td(tind).vrtx(j);
+               hp_gbl->res.v(i,Range::all()) -= fv_to_ct(i).wt(j)*cmesh->vug_frst(ind,Range::all());
             }
          }
+         return(block::advance);
       }
-      
+         
+      case(1): {
+         /* SEND COMMUNICATION PACKETS  */ 
+         ++mp_phase;
 
-      for(i=0;i<cmesh->nvrtx;++i) {
-         for(n=0;n<NV;++n) {
-            cmesh->vug_frst[i][n] = gbl->res0.v[i][n]/cmesh->nnbor[i];
+         switch(mp_phase%3) {
+            case(0):
+               for(i=0;i<nsbd;++i)
+                  if (sbdry(i)->group()&0x1) sbdry(i)->vloadbuff((FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
+                  
+               for(i=0;i<nsbd;++i) 
+                  if (sbdry(i)->group()&0x1) sbdry(i)->comm_prepare(mp_phase/3);
+               
+               return(block::stay);
+            case(1):
+               for(i=0;i<nsbd;++i) 
+                  if (sbdry(i)->group()&0x1) sbdry(i)->comm_transmit(mp_phase/3);
+               return(block::stay);
+            case(2):
+               stop = 1;
+               for(i=0;i<nsbd;++i) {
+                  if (sbdry(i)->group()&0x1) {
+                     stop &= sbdry(i)->comm_wait(mp_phase/3);
+                     sbdry(i)->vfinalrcv(mp_phase/3,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
+                  }
+               }
+               return(static_cast<block::ctrl>(stop));
          }
       }
-   }
-#endif
-
-   /* LOOP THROUGH FINE VERTICES   */
-   /* TO DETERMINE CHANGE IN SOLUTION */   
-   for(i=0;i<nvrtx;++i) {
-      
-      for(n=0;n<NV;++n)
-         gbl->res.v[i][n] = 0.0;
-      
-      tind = coarse[i].tri;
-      
-      for(j=0;j<3;++j) {
-         ind = cmesh->tvrtx[tind][j];
-         for(n=0;n<NV;++n) 
-            gbl->res.v[i][n] -= coarse[i].wt[j]*cmesh->vug_frst[ind][n];
+      case(2): {
+         /* ADD CORRECTION */
+         ug.v(Range(0,nvrtx),Range::all()) += hp_gbl->res.v(Range(0,nvrtx),Range::all());               
+         return(block::stop);
       }
    }
-   
-   
-   /* ADD CORRECTION */
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n) 
-         ug.v[i][n] += gbl->res.v[i][n];
-
-   return;
+   *sim::log << "Flow control error\n" << std::endl;
+   return(block::stop);
 }
-
-
    
    
    

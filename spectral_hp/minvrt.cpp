@@ -1,324 +1,347 @@
-#include"hp_mgrid.h"
-#include<myblas.h>
+#include "tri_hp.h"
+#include "hp_boundary.h"
+#include <myblas.h>
 
-/* THIS REQUIRES MESSAGE PASSING FOR EACH P SIDE MODE */
-void hp_mgrid::minvrt1(void) {
-    int tind,sind,i,j,k,n,indx,indx1,indx2,v0,sgn,msgn;
-         
-   /************************************************/
-   /**********      INVERT MASS MATRIX      **********/
-   /************************************************/
-   /* LOOP THROUGH SIDES */
-   if (b->sm > 0) {
-      indx = 0;
-      for(sind = 0; sind<nside;++sind) {
-         /* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */         
-         for (k=0; k <b->sm; ++k) {
-            for (i=0; i<2; ++i) {
-               v0 = svrtx[sind][i];
-               for(n=0;n<NV;++n)
-                  gbl->res.v[v0][n] -= b->sfmv(i,k)*gbl->res.s[indx][n];
-            }
-            ++indx;
-         }
-      }
-         
-      if (b->im > 0) {
-         /* SUBTRACT INTERIORS */
-         indx = 0;
-         for(tind = 0; tind<ntri;++tind) {
-            indx2 = 3;
-            for (i=0; i<3; ++i) {
-               v0 = tvrtx[tind][i];
-               for (k=0;k<b->im;++k)
-                  for(n=0;n<NV;++n)
-                     gbl->res.v[v0][n] -= b->ifmb(i,k)*gbl->res.i[indx +k][n];
+/************************************************/
+/**********      INVERT MASS MATRIX    **********/
+/************************************************/
+block::ctrl tri_hp::minvrt(int excpt) {
+   int i,j,k,m,n,tind,sind,v0,indx,indx1,indx2,sgn,msgn;
+   TinyVector<int,3> sign,side;
+   static int mode;
+   Array<FLT,2> tinv(NV,NV);
+   Array<FLT,1> temp(NV);
 
-               indx1 = tside[tind].side[i]*b->sm;
-               sgn = tside[tind].sign[i];
-               msgn = 1;
-               for (j=0;j<b->sm;++j) {
-                  for (k=0;k<b->im;++k)
+   switch(excpt) {
+      case(0): {
+         /* LOOP THROUGH SIDES */
+         if (basis::tri(log2p).sm > 0) {
+            indx = 0;
+            for(sind = 0; sind<nside;++sind) {
+               /* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */         
+               for (k=0; k <basis::tri(log2p).sm; ++k) {
+                  for (i=0; i<2; ++i) {
+                     v0 = sd(sind).vrtx(i);
                      for(n=0;n<NV;++n)
-                        gbl->res.s[indx1][n] -= msgn*b->ifmb(indx2,k)*gbl->res.i[indx+k][n];
-                  msgn *= sgn;
-                  ++indx1;
-                  ++indx2;
+                        hp_gbl->res.v(v0,n) -= basis::tri(log2p).sfmv(i,k)*hp_gbl->res.s(sind,k,n);
+                  }
+                  ++indx;
                }
             }
-           indx += b->im;
+               
+            if (basis::tri(log2p).im > 0) {
+               /* SUBTRACT INTERIORS */
+               indx = 0;
+               for(tind = 0; tind<ntri;++tind) {
+                  indx2 = 3;
+                  for (i=0; i<3; ++i) {
+                     v0 = td(tind).vrtx(i);
+                     for (k=0;k<basis::tri(log2p).im;++k)
+                        for(n=0;n<NV;++n)
+                           hp_gbl->res.v(v0,n) -= basis::tri(log2p).ifmb(i,k)*hp_gbl->res.i(tind,k,n);
+
+                     sind = td(tind).side(i);
+                     sgn = td(tind).sign(i);
+                     msgn = 1;
+                     for (j=0;j<basis::tri(log2p).sm;++j) {
+                        for (k=0;k<basis::tri(log2p).im;++k)
+                           for(n=0;n<NV;++n)
+                              hp_gbl->res.s(sind,j,n) -= msgn*basis::tri(log2p).ifmb(indx2,k)*hp_gbl->res.i(tind,k,n);
+                        msgn *= sgn;
+                        ++indx2;
+                     }
+                  }
+                 indx += basis::tri(log2p).im;
+               }
+            }
          }
-      }
-   }
-   
-   /* SOLVE FOR VERTEX MODES */
-#ifdef CONSERV
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.v[i][n] *= gbl->vprcn[i][n][n];
-#else
-   for(i=0;i<nvrtx;++i) {
-      gbl->res.v[i][0] = gbl->res.v[i][0]*gbl->vprcn[i][0][0] +gbl->res.v[i][2]*gbl->vprcn[i][0][NV-1];
-      gbl->res.v[i][1] = gbl->res.v[i][1]*gbl->vprcn[i][0][0] +gbl->res.v[i][2]*gbl->vprcn[i][1][NV-1];
-      gbl->res.v[i][0] *= gbl->vprcn[i][NV-1][NV-1];
-   }
-#endif
-      
-   /* INVERT MATRICES FOR COUPLED BOUNDARY EQUATIONS */
-   for(i=0;i<nsbd;++i)
-      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
-         surfinvrt1(i);
-   
-   /*********************************************/
-   /* SEND MESSAGES FOR VERTICES                */   
-   /*********************************************/
-   bdry_vsnd();
-   
-   return;
-}
-
-   /* CALL bdry_mp() here */
-
-void hp_mgrid::minvrt2(void) {
-   int i,k,n,sind,tind,v0,indx,j,indx1,sgn,msgn;
-   
-   /**********************************/
-   /*  RECEIVE MESSAGES FOR VERTICES */
-   /* APPLY DIRCHLET B.C.S TO VERTICES */
-   /**********************************/
-   bdry_vrcvandzero();
-
-   /* FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
-   for(i=0;i<nsbd;++i)
-      if (sbdry[i].type&(FSRF_MASK+IFCE_MASK))
-         surfinvrt2(i);
          
-   if(b->sm == 0) return;
-   
-   /* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
-   /* SOLVE FOR SIDE MODES */
-   /* PART 1 REMOVE VERTEX CONTRIBUTIONS */
-   for(tind=0;tind<ntri;++tind) {
-   
-#ifdef CONSERV
-      for(i=0;i<3;++i) {
-         v0 = tvrtx[tind][i];
-         for(n=0;n<NV;++n)
-            uht[n][i] = gbl->res.v[v0][n]*gbl->tprcn[tind][n][n];
-      }
-
-      for(i=0;i<3;++i) {
-         indx = tside[tind].side[i]*b->sm;
-         sgn  = tside[tind].sign[i];
-         for(j=0;j<3;++j) {
-            indx1 = (i+j)%3;
-            msgn = 1;
-            for(k=0;k<b->sm;++k) {
-               for(n=0;n<NV;++n)
-                  gbl->res.s[indx +k][n] -= msgn*b->vfms(j,k)*uht[n][indx1];
-               msgn *= sgn;
-            }
-         }
-      }
+         /* SOLVE FOR VERTEX MODES */
+#ifdef DIAGONAL_PRECONDITIONER
+         hp_gbl->res.v(Range(0,nvrtx),Range::all()) *= hp_gbl->vprcn(Range(0,nvrtx),Range::all());
 #else
-      /* THIS IS TO USE THE NONCONSERVATIVE FORM */
-      for(i=0;i<3;++i) {
-         v0 = tvrtx[tind][i];
-         uht[0][i] = gbl->res.v[v0][0]*gbl->tprcn[tind][0][0];
-         uht[1][i] = gbl->res.v[v0][1]*gbl->tprcn[tind][0][0];
-         uht[2][i] = gbl->res.v[v0][2];
-      }
-
-      for(i=0;i<3;++i) {
-         indx = tside[tind].side[i]*b->sm;
-         sgn  = tside[tind].sign[i];
-         for(j=0;j<3;++j) {
-            indx1 = (i+j)%3;
-            msgn = 1;
-            for(k=0;k<b->sm;++k) {
-               gbl->res.s[indx +k][0] -= msgn*b->vfms[j][k]*(uht[0][indx1] +gbl->tprcn[tind][0][NV-1]*uht[2][indx1]);
-               gbl->res.s[indx +k][1] -= msgn*b->vfms[j][k]*(uht[1][indx1] +gbl->tprcn[tind][1][NV-1]*uht[2][indx1]);
-               gbl->res.s[indx +k][2] -= msgn*b->vfms[j][k]*(uht[2][indx1]*gbl->tprcn[tind][NV-1][NV-1]);
-               msgn *= sgn;
-            }
-         }
-      } 
-#endif
-   }
-   
-   /* SOLVE FOR LOWEST ORDER MODE */
-#ifdef CONSERV
-   indx = 0;
-   for(sind = 0; sind < nside; ++sind) {
-      for(n=0;n<NV;++n)
-         gbl->res.s[indx][n] *= gbl->sprcn[sind][n][n]*b->sdiag(0);
-      indx += b->sm;
-   }
-#else
-   indx = 0;
-   for(sind = 0; sind < nside; ++sind) {
-      gbl->res.s[indx][0] = b->sdiag[0]*(gbl->res.s[indx][0]*gbl->sprcn[sind][0][0] +gbl->res.s[indx][2]*gbl->sprcn[sind][0][NV-1]);
-      gbl->res.s[indx][1] = b->sdiag[0]*(gbl->res.s[indx][1]*gbl->sprcn[sind][0][0] +gbl->res.s[indx][2]*gbl->sprcn[sind][1][NV-1]);
-      gbl->res.s[indx][2] *= b->sdiag[0]*gbl->sprcn[sind][NV-1][NV-1];
-      indx += b->sm;
-   }
-#endif
-   
-   /* SEND MESSAGE FOR LOWEST ORDER MODE */
-   bdry_ssnd(0);
-
-   return;
-}
-
-/* call inline void hp_mgrid::minvrt3_mp() here */
-
-void hp_mgrid::minvrt3(int mode) {  
-   int i,j,m,n,indx,sind,tind;
-   int sign[3],msgn,sgn,side[3];
-   
-   /* RECEIVE MESSAGE FOR MODE */
-   /* APPLY DIRCHLET B.C.S TO MODE */
-   bdry_srcvandzero(mode);
-
-   /* REMOVE MODE FROM HIGHER MODES */
-   for(tind=0;tind<ntri;++tind) {
-
-#ifdef CONSERV
-      for(i=0;i<3;++i) {
-         side[i] = tside[tind].side[i]*b->sm;
-         sign[i] = tside[tind].sign[i];
-         sgn     = (mode % 2 ? sign[i] : 1);
-         for(n=0;n<NV;++n)
-            uht[n][i] = sgn*gbl->res.s[side[i]+mode][n]*gbl->tprcn[tind][n][n];
-      }
-      
-      /* REMOVE MODES J,K FROM MODE I,M */
-      for(i=0;i<3;++i) {
-         msgn = ( (mode +1) % 2 ? sign[i] : 1);
-         for(m=mode+1;m<b->sm;++m) {
-            for(j=0;j<3;++j) {
-               indx = (i+j)%3;
-               for(n=0;n<NV;++n) {
-                  gbl->res.s[side[i]+m][n] -= msgn*b->sfms(mode,m,j)*uht[n][indx];
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<NV;++n) {
+               temp(n) = hp_gbl->vprcn(i,n,0)*hp_gbl->res.v(i,0);
+               for(m=1;m<NV;++m) {
+                  temp(n) += hp_gbl->vprcn(i,n,m)*hp_gbl->res.v(i,m);
                }
             }
-            msgn *= sign[i];
+            hp_gbl->res.v(i,Range::all()) = temp(Range::all());
          }
-      }
-#else
-      for(i=0;i<3;++i) {
-         side[i] = tside[tind].side[i]*b->sm;
-         sign[i] = tside[tind].sign[i];
-         sgn     = (mode % 2 ? sign[i] : 1);
-         uht[0][i] = sgn*gbl->res.s[side[i]+mode][0]*gbl->tprcn[tind][0][0];
-         uht[1][i] = sgn*gbl->res.s[side[i]+mode][1]*gbl->tprcn[tind][0][0];
-         uht[2][i] = sgn*gbl->res.s[side[i]+mode][2];
+#endif
+            
+         
+         /* START MASS MATRIX INVERSION FOR COUPLED BOUNDARY EQUATIONS */
+         /* TEMPORARY NEED TO UNDERSTAND HOW ENDPOINT MESSAGE PASSING WILL WORK */
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->minvrt(0);
+
+         /* PREPARE MESSAGE PASSING */
+         mp_phase = -1;
+         return(block::advance);
       }
       
-      /* REMOVE MODES J,K FROM MODE I,M */
-      for(i=0;i<3;++i) {
-         msgn = ( (mode +1) % 2 ? sign[i] : 1);
-         for(m=mode+1;m<b->sm;++m) {
-            for(j=0;j<3;++j) {
-               indx = (i+j)%3;
-               gbl->res.s[side[i]+m][0] -= msgn*b->sfms[mode][m][j]*(uht[0][indx] +gbl->tprcn[tind][0][NV-1]*uht[2][indx]);
-               gbl->res.s[side[i]+m][1] -= msgn*b->sfms[mode][m][j]*(uht[1][indx] +gbl->tprcn[tind][1][NV-1]*uht[2][indx]);
-               gbl->res.s[side[i]+m][1] -= msgn*b->sfms[mode][m][j]*(uht[2][indx]*gbl->tprcn[tind][NV-1][NV-1]);            
-            }
-            msgn *= sign[i];
+      case(1): {
+         ++mp_phase;
+         switch(mp_phase%3) {
+            case(0):
+               vmsgload(mp_phase/3,hp_gbl->res.v.data());
+               return(block::stay);
+            case(1):
+               vmsgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,hp_gbl->res.v.data())));
          }
       }
-#endif
-   }
-   
-      /* SOLVE FOR NEXT MODE */
-#ifdef CONSERV
-      indx = mode +1;
-      for(sind = 0; sind < nside; ++sind) {
-         for(n=0;n<NV;++n)
-            gbl->res.s[indx][n] *= gbl->sprcn[sind][n][n]*b->sdiag(mode+1);
-         indx += b->sm;
-      }
+      
+      case(2): {
+         /* APPLY VERTEX DIRICHLET B.C.'S */
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->vdirichlet();
+            
+         /* FINISH INVERSION FOR COUPLED BOUNDARY EQUATIONS */
+         /* TEMPORARY NEED TO UNDERSTAND HOW ENDPOINT MESSAGE PASSING WILL WORK */
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->minvrt(1);
+               
+         if(basis::tri(log2p).sm == 0) return(block::stop);
+         
+         /* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
+         /* SOLVE FOR SIDE MODES */
+         /* PART 1 REMOVE VERTEX CONTRIBUTIONS */
+         for(tind=0;tind<ntri;++tind) {
+         
+#ifndef MATRIX_PRECONDITIONER
+            for(i=0;i<3;++i) {
+               v0 = td(tind).vrtx(i);
+               for(n=0;n<NV;++n)
+                  uht(n)(i) = hp_gbl->res.v(v0,n)*hp_gbl->tprcn(tind,n);
+            }
+
+            for(i=0;i<3;++i) {
+               sind = td(tind).side(i);
+               sgn  = td(tind).sign(i);
+               for(j=0;j<3;++j) {
+                  indx1 = (i+j)%3;
+                  msgn = 1;
+                  for(k=0;k<basis::tri(log2p).sm;++k) {
+                     for(n=0;n<NV;++n)
+                        hp_gbl->res.s(sind,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*uht(n)(indx1);
+                     msgn *= sgn;
+                  }
+               }
+            }
 #else
-      indx = mode +1;
-      for(sind = 0; sind < nside; ++sind) {
-         gbl->res.s[indx][0] = b->sdiag[mode+1]*(gbl->res.s[indx][0]*gbl->sprcn[sind][0][0] +gbl->res.s[indx][2]*gbl->sprcn[sind][0][NV-1]);
-         gbl->res.s[indx][1] = b->sdiag[mode+1]*(gbl->res.s[indx][1]*gbl->sprcn[sind][0][0] +gbl->res.s[indx][2]*gbl->sprcn[sind][1][NV-1]);
-         gbl->res.s[indx][2] *= b->sdiag[mode+1]*gbl->sprcn[sind][NV-1][NV-1];
-         indx += b->sm;
-      }
-#endif
-
-   return;
-}
-
-/* call inline void hp_mgrid::minvrt3_mp() here */
-
-
-void hp_mgrid::minvrt4() {  
-   int i,k,n,indx,tind;
-   
-   /* RECEIVE MESSAGE FOR LAST MODE */
-   /* APPLY DIRICHLET B.C.'S */
-   bdry_srcvandzero(b->sm-1);
-
-   /* SOLVE FOR INTERIOR MODES */
-   if (b->im > 0) {
-      indx = 0;
-      for(tind = 0; tind < ntri; ++tind) {
-         DPBTRSNU2(&b->idiag(0,0),b->ibwth+1,b->im,b->ibwth,&(gbl->res.i[indx][0]),NV);
-         restouht_bdry(tind);
-#ifdef CONSERV
-         for(k=0;k<b->im;++k) {
-            for(n=0;n<NV;++n)
-               gbl->res.i[indx][n] /= gbl->tprcn[tind][n][n];
-            
-            for (i=0;i<b->bm;++i)
-               for(n=0;n<NV;++n) 
-                  gbl->res.i[indx][n] -= b->bfmi(i,k)*uht[n][i];
-           
-             ++indx;            
-         }
-#else      
-         for(k=0;k<b->im;++k) {
-            /* SUBTRACT BOUNDARY MODES (bfmi is multipled by interior inverse matrix so do this after DPBSLN) */
-            for (i=0;i<b->bm;++i) {
-                  gbl->res.i[indx][0] -= b->bfmi[i][k]*(uht[0][i]*gbl->tprcn[tind][0][0] +gbl->tprcn[tind][0][NV-1]*uht[2][i]);
-                  gbl->res.i[indx][1] -= b->bfmi[i][k]*(uht[1][i]*gbl->tprcn[tind][0][0] +gbl->tprcn[tind][1][NV-1]*uht[2][i]);
-                  gbl->res.i[indx][2] -= b->bfmi[i][k]*(uht[2][i]*gbl->tprcn[tind][NV-1][NV-1]);
+            /* THIS IS TO USE A MATRIX PRECONDITIONER */
+            for(i=0;i<3;++i) {
+               v0 = td(tind).vrtx(i);
+               for(n=0;n<NV;++n)
+                  uht(n)(i) = hp_gbl->res.v(v0,n);
             }
-            
-            /* INVERT PRECONDITIONER (Warning: tprcn is not preinverted like sprcn and vprcn) */
-            gbl->res.i[indx][0] = (gbl->res.i[indx][0] -gbl->res.i[indx][2]*gbl->tprcn[tind][0][NV-1]/gbl->tprcn[tind][NV-1][NV-1])/gbl->tprcn[tind][0][0];
-            gbl->res.i[indx][1] = (gbl->res.i[indx][1] -gbl->res.i[indx][2]*gbl->tprcn[tind][1][NV-1]/gbl->tprcn[tind][NV-1][NV-1])/gbl->tprcn[tind][0][0];
-            gbl->res.i[indx][2] /= gbl->tprcn[tind][NV-1][NV-1];
-            ++indx;            
+
+            for(i=0;i<3;++i) {
+               indx = td(tind).side(i);
+               sgn  = td(tind).sign(i);
+               for(j=0;j<3;++j) {
+                  indx1 = (i+j)%3;
+                  msgn = 1;
+                  for(k=0;k<basis::tri(log2p).sm;++k) {
+                     for(n=0;n<NV;++n) {
+                        for(m=0;m<NV;++m) {
+                           hp_gbl->res.s(indx,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*hp_gbl->tprcn(tind,n,m)*uht(m)(indx1);
+                        }
+                     }
+                     msgn *= sgn;
+                  }
+               }
+            } 
+#endif
+         }
+         
+         /* SOLVE FOR LOWEST ORDER MODE */
+#ifndef MATRIXPRECONDITIONER
+         hp_gbl->res.s(Range(0,nside),0,Range::all()) *= hp_gbl->sprcn(Range(0,nside),Range::all())*basis::tri(log2p).sdiag(0);
+#else
+         for(sind = 0; sind < nside; ++sind) {
+            for(n=0;n<NV;++n) {
+               temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,0,0);
+               for(m=1;m<NV;++m) {
+                  temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,0,m);
+               }
+            }
+            hp_gbl->res.s(sind,0,Range::all()) = temp(Range::all());
          }
 #endif
+         mode = 0;
+         return(block::advance);
       }
    }
+   
+   /* INTERNALLY RESET TO ZERO FOR EASIER THINKING */
+   excpt -= 2;
+   
+   /* THIS PART MUST BE REPEATED FOR EACH MODE EXCEPT FOR PHASE 2 OF LAST */
+   if (excpt < 2*(basis::tri(log2p).sm-1)+1) {
+      excpt = excpt%2;
+      switch(excpt) {  
+         case(0): {
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  smsgload(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+                  return(block::stay);
+               case(1):
+                  smsgpass(mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(smsgwait_rcv(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim))));
+            }
+         }
+         
+         case(1): {
+         
+            /* APPLY DIRCHLET B.C.S TO MODE */
+            for(i=0;i<nsbd;++i)
+               hp_sbdry(i)->sdirichlet(mode);
 
-   return;
+            /* REMOVE MODE FROM HIGHER MODES */
+            for(tind=0;tind<ntri;++tind) {
+
+#ifndef MATRIX_PRECONDITIONER
+               for(i=0;i<3;++i) {
+                  side(i) = td(tind).side(i);
+                  sign(i) = td(tind).sign(i);
+                  sgn     = (mode % 2 ? sign(i) : 1);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n)*hp_gbl->tprcn(tind,n);
+               }
+               
+               /* REMOVE MODES J,K FROM MODE I,M */
+               for(i=0;i<3;++i) {
+                  msgn = ( (mode +1) % 2 ? sign(i) : 1);
+                  for(m=mode+1;m<basis::tri(log2p).sm;++m) {
+                     for(j=0;j<3;++j) {
+                        indx = (i+j)%3;
+                        for(n=0;n<NV;++n) {
+                           hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*uht(n)(indx);
+                        }
+                     }
+                     msgn *= sign(i);
+                  }
+               }
+#else
+               for(i=0;i<3;++i) {
+                  side(i) = td(tind).side(i);
+                  sign(i) = td(tind).sign(i);
+                  sgn     = (mode % 2 ? sign[i] : 1);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n)
+               }
+               
+               /* REMOVE MODES J,K FROM MODE I,M */
+               for(i=0;i<3;++i) {
+                  msgn = ( (mode +1) % 2 ? sign(i) : 1);
+                  for(m=mode+1;m<basis::tri(log2p).sm;++m) {
+                     for(j=0;j<3;++j) {
+                        indx = (i+j)%3;
+                        for(n=0;n<NV;++n) {
+                           hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*hp_gbl->tprcn(tind,n,0)*uht(0)(indx);
+                           for(k=1;k<NV;++k) {
+                              hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*hp_gbl->tprcn(tind,n,k)*uht(k)(indx);
+                           }
+                        }
+                     }
+                     msgn *= sign(i);
+                  }
+               }
+#endif
+            }
+            
+            /* SOLVE FOR NEXT MODE */
+#ifndef MATRIX_PRECONDITIONER
+            for(sind = 0;sind < nside;++sind)
+               for (n=0;n<NV;++n)
+                  hp_gbl->res.s(sind,mode+1,n) *= hp_gbl->sprcn(sind,n)*basis::tri(log2p).sdiag(mode+1);
+#else
+            for(sind = 0; sind < nside; ++sind) {
+               for(n=0;n<NV;++n) {
+                  temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,mode+1,0);
+                  for(m=1;m<NV;++m) {
+                     temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,mode+1,m);
+                  }
+               }
+               hp_gbl->res.s(sind,mode+1,Range::all()) = temp(Range::all());
+            }
+#endif
+            ++mode;
+            return(block::advance);
+         }
+      }
+   }
+   
+   /* IF FALL THROUGH TO HERE THEN MUST BE TIME TO SOLVE FOR INTERIOR MODES */
+   if (excpt == 2*(basis::tri(log2p).sm-1)+1) {
+      /* APPLY DIRCHLET B.C.S TO MODE */
+      for(i=0;i<nsbd;++i)
+         hp_sbdry(i)->sdirichlet(mode);
+         
+         /* SOLVE FOR INTERIOR MODES */
+         if (basis::tri(log2p).im > 0) {
+            for(tind = 0; tind < ntri; ++tind) {
+               DPBTRSNU2(&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,basis::tri(log2p).im,basis::tri(log2p).ibwth,&(hp_gbl->res.i(tind,0,0)),NV);
+               restouht_bdry(tind);
+#ifndef MATRIX_PRECONDITIONER
+               for(k=0;k<basis::tri(log2p).im;++k) {
+                  hp_gbl->res.i(tind,k,Range::all()) /= hp_gbl->tprcn(tind,Range::all());
+                  
+                  for (i=0;i<basis::tri(log2p).bm;++i)
+                     for(n=0;n<NV;++n) 
+                        hp_gbl->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
+               }
+#else      
+               /* INVERT PRECONDITIONER (tprcn is not preinverted like sprcn and vprcn) */
+               tinv = tprcn(tind,Range::all(),Range::all())
+               GETRF(NV,NV,tinv.data(),NV,ipiv,info);
+                  
+               for(k=0;k<basis::tri(log2p).im;++k) {
+                  /* SUBTRACT BOUNDARY MODES (bfmi is multipled by interior inverse matrix so do this after DPBSLN) */
+                  for (i=0;i<basis::tri(log2p).bm;++i) {
+                     for(n=0;n<NV;++n) {
+                        for(m=0;m<NV;++m) {
+                           hp_gbl->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(m)(i)*hp_gbl->tprcn(tind,n,m);
+                        }
+                     }
+                  }
+                  GETRS(trans,NV,1,tinv.data(),NV,ipiv,&hp_gbl->res.i(tind,k,0),NV,info);
+               }
+#endif
+            }
+         }
+      }
+      
+      return(block::stop);
 }
 
-void hp_mgrid::restouht_bdry(int tind) {
+void tri_hp::restouht_bdry(int tind) {
     int i,m,n,indx,cnt;
     int sign, msgn;
    
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht[n][i] = gbl->res.v[indx][n];
+         uht(n)(i) = hp_gbl->res.v(indx,n);
    }
 
    cnt = 3;
    for(i=0;i<3;++i) {
-      indx = tside[tind].side[i]*b->sm;
-      sign = tside[tind].sign[i];
+      indx = td(tind).side(i);
+      sign = td(tind).sign(i);
       msgn = 1;
-      for (m = 0; m < b->sm; ++m) {
+      for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht[n][cnt] = msgn*gbl->res.s[indx +m][n];
+            uht(n)(cnt) = msgn*hp_gbl->res.s(indx,m,n);
          msgn *= sign;
          ++cnt;
       }
@@ -327,204 +350,174 @@ void hp_mgrid::restouht_bdry(int tind) {
    return;
 }
 
-void hp_mgrid::minvrt_test_bgn(FLT (*func)(int, FLT, FLT)) {
-   int i,j,n,tind;
-   
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.v[i][n] = 0.0;
+block::ctrl tri_hp::setup_preconditioner(int excpt) {
+   int i,tind,side;
+   TinyVector<int,3> v;
+   FLT jcb,dtstari;
 
-    for(i=0;i<nside*b->sm;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.s[i][n] = 0.0;
-                 
-    for(i=0;i<ntri*b->im;++i)
-      for(n=0;n<NV;++n)
-         gbl->res.i[i][n] = 0.0;  
-     
+   switch (excpt) {
+      case(0): {
+         /*	SET TIME STEP TO BE 1 */
+         
+         for(tind = 0; tind < ntri; ++tind) {
+            jcb = 0.25*area(tind);
+            v = td(tind).vrtx;
 
-   for(tind = 0; tind<ntri;++tind) {
-   
-      if (tinfo[tind] > -1) {
-         crdtocht(tind);
-         for(n=0;n<ND;++n)
-            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
-
-      }
-      else {
-         for(n=0;n<ND;++n)
-            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
-
-         for(i=0;i<b->gpx;++i) {
-            for(j=0;j<b->gpn;++j) {
-               for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][1]][n] -vrtx[tvrtx[tind][0]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][0]][n]);
+            /* SET UP DIAGONAL PRECONDITIONER */
+            dtstari = jcb*1;
+#ifdef AXISYMMETRIC
+            dtstari *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
+#endif
+            hp_gbl->tprcn(tind,Range::all()) = dtstari;      
+            
+            for(i=0;i<3;++i) {
+               hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+               if (basis::tri(log2p).sm > 0) {
+                  side = td(tind).side(i);
+                  hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
                }
             }
          }
+         mp_phase = -1;
+         return(block::advance);
       }
       
-      ugtouht(tind);
-      for(n=0;n<NV;++n)
-         b->proj(uht[n],u[n][0],MXGP);
-       
-      for(n=0;n<NV;++n)
-         for(i=0;i<b->tm;++i)
-            lf[n][i] = 0.0;
-
-      for(i=0;i<b->gpx;++i) {
-         for(j=0;j<b->gpn;++j) {
-            cjcb[i][j] = dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j];
-            for(n=0;n<NV;++n)
-               res[n][i][j] = RAD(i,j)*(u[n][i][j] -(*func)(n,crd[0][i][j],crd[1][i][j]))*cjcb[i][j];
+      case(1): {
+         ++mp_phase;
+         switch(mp_phase%3) {
+            case(0):
+               vmsgload(mp_phase/3,hp_gbl->vprcn.data());
+               return(block::stay);
+            case(1):
+               vmsgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
          }
       }
-      for(n=0;n<NV;++n)
-         b->intgrt(lf[n],res[n][0],MXGP);
-                    
-      lftog(tind,gbl->res);
-   }
-   
-   return;
-}
-
-void hp_mgrid::minvrt_test_tstep() {
-   int tind,i,j,n,sind,count,bnum,side,v0,*v;
-   FLT jcb,dtstari;
-   class mesh *tgt;
-   
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ug.v[i][n] = 0.0;
-
-    for(i=0;i<nside*b->sm;++i)
-      for(n=0;n<NV;++n)
-         ug.s[i][n] = 0.0;
-                 
-    for(i=0;i<ntri*b->im;++i)
-      for(n=0;n<NV;++n)
-         ug.i[i][n] = 0.0;
-         
-   setinflow();
-         
-   /*	SET TIME STEP TO BE 1 */
-   for(tind = 0; tind < ntri; ++tind) {
-      jcb = 0.25*area(tind);
-      v = tvrtx[tind];
-
-      /* SET UP DIAGONAL PRECONDITIONER */
-      dtstari = jcb*1;
-#ifdef AXISYMMETRIC
-      dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
+      
+      case(2): {
+         ++mp_phase;
+         switch(mp_phase%3) {
+            case(0):
+               smsgload(mp_phase/3,hp_gbl->sprcn.data(),0,0,1);
+               return(block::stay);
+            case(1):
+               smsgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(smsgwait_rcv(mp_phase/3,hp_gbl->sprcn.data(),0,0,1)));
+         }
+      }
+      
+      case(3): 
+#ifndef MATRIX_PRECONDITIONER
+         /* PREINVERT PRECONDITIONER FOR VERTICES */
+         hp_gbl->vprcn(Range(0,nvrtx),Range::all()) = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn(Range(0,nvrtx),Range::all()));
+        
+         if (basis::tri(log2p).sm > 0) {
+            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
+            hp_gbl->sprcn(Range(0,nside),Range::all()) = 1.0/hp_gbl->sprcn(Range(0,nside),Range::all());
+         }
+#else
+         /* NEED MATRIX INVERSION HERE */
 #endif
-      for(n=0;n<NV;++n)
-         gbl->tprcn[tind][n][n] = dtstari;      
-      for(i=0;i<3;++i) {
-         gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
-         gbl->vprcn[v[i]][NV-1][NV-1]  += gbl->tprcn[tind][NV-1][NV-1];
-         if (b->sm > 0) {
-            side = tside[tind].side[i];
-            gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
-            gbl->sprcn[side][NV-1][NV-1] += gbl->tprcn[tind][NV-1][NV-1];
-         }
-      }
    }
-   
-   /* SEND Y-DIRECTION BOUNDARY INFORMATION */
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type & COMY_MASK) {
-         bnum = sbdry[i].adjbnum;
-         tgt = sbdry[i].adjmesh;
-         count = 0;
-         /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
-            tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
-         }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
-         tgt->sbuff[bnum][count++] = gbl->vprcn[v0][NV-1][NV-1];
-
-         /* SEND SIDE INFO */
-         if (b->sm) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
-               tgt->sbuff[bnum][count++] = gbl->sprcn[sind][NV-1][NV-1];
-            }
-         }
-      }
-      
-      if (sbdry[i].type & IFCE_MASK) {
-         bnum = sbdry[i].adjbnum;
-         tgt = sbdry[i].adjmesh;
-         count = 0;
-         /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
-         }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
-
-         /* SEND SIDE INFO */
-         if (b->sm) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
-            }
-         }
-      }
-   }
-
-   return;
+   return(block::stop);
 }
 
-void hp_mgrid::minvrt_test_end()  {
-   int i,m,k,n,indx,indx1;
-   FLT cflalpha;
-
-   cflalpha = 1.0;
    
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ug.v[i][n] -= cflalpha*gbl->res.v[i][n];
 
-   if (b->sm > 0) {
-      indx = 0;
-      indx1 = 0;
-      for(i=0;i<nside;++i) {
-         for (m=0;m<b->sm;++m) {
+block::ctrl tri_hp::minvrt_test(int excpt) {
+   int i,j,k,m,n,tind,indx,indx1;
+   TinyVector<int,3> v;
+   block::ctrl step;
+   
+
+   if (excpt < 3) {
+      return(setup_preconditioner(excpt));
+   }
+   
+   switch(excpt) {
+      case(3): {
+         hp_gbl->res.v(Range(0,nvrtx),Range::all()) = 0.0;
+         hp_gbl->res.s(Range(0,nside),Range::all(),Range::all()) = 0.0;
+         hp_gbl->res.i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
+         
+         ug.v(Range(0,nvrtx),Range::all()) = 0.0;
+         ug.s(Range(0,nside),Range::all(),Range::all()) = 0.0;
+         ug.i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
+
+         for(tind = 0; tind<ntri;++tind) {
+         
+            if (td(tind).info > -1) {
+               crdtocht(tind);
+               for(n=0;n<ND;++n)
+                  basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+
+            }
+            else {
+               for(n=0;n<ND;++n)
+                  basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+
+               for(i=0;i<basis::tri(log2p).gpx;++i) {
+                  for(j=0;j<basis::tri(log2p).gpn;++j) {
+                     for(n=0;n<ND;++n) {
+                        dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(1))(n) -vrtx(td(tind).vrtx(0))(n));
+                        dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(0))(n));
+                     }
+                  }
+               }
+            }
+             
             for(n=0;n<NV;++n)
-               ug.s[indx1][n] -= cflalpha*gbl->res.s[indx][n];
-            ++indx;
-            ++indx1;
-         }
-         indx1 += sm0 -b->sm;
-      }         
+               for(i=0;i<basis::tri(log2p).tm;++i)
+                  lf(n)(i) = 0.0;
 
-      if (b->im > 0) {
-         indx = 0;
-         indx1 = 0;
+            for(i=0;i<basis::tri(log2p).gpx;++i) {
+               for(j=0;j<basis::tri(log2p).gpn;++j) {
+                  cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+                  for(n=0;n<NV;++n)
+                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->func)(n,crd(0)(i,j),crd(1)(i,j))*cjcb(i,j);
+               }
+            }
+            for(n=0;n<NV;++n)
+               basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
+                          
+            lftog(tind,hp_gbl->res);
+         }
+      }
+   }
+   
+   
+   step = minvrt(excpt-4);
+   if(step != block::stop) return(step);
+   
+   /* Inversion finished */
+   ug.v(Range(0,nvrtx),Range::all()) = hp_gbl->res.v(Range(0,nvrtx),Range::all());
+
+   if (basis::tri(log2p).sm > 0) {
+      ug.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
+ 
+      if (basis::tri(log2p).im > 0) {
+
          for(i=0;i<ntri;++i) {
-            for(m=1;m<b->sm;++m) {
-               for(k=0;k<b->sm-m;++k) {
+            indx = 0;
+            indx1 = 0;
+            for(m=1;m<basis::tri(log2p).sm;++m) {
+               for(k=0;k<basis::tri(log2p).sm-m;++k) {
                   for(n=0;n<NV;++n) {
-                     ug.i[indx1][n] -= cflalpha*gbl->res.i[indx][n];
+                     ug.i(i,indx1,n) = hp_gbl->res.i(i,indx,n);
                   }
                   ++indx; ++indx1;
                }
-               indx1 += sm0 -b->sm;
+               indx1 += sm0 -basis::tri(log2p).sm;
             }
          }
       }
    }
    
-   return;
+   return(block::stop);
 }
 
 

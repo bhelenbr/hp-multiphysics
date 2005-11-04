@@ -13,12 +13,12 @@ void hp_mgrid::tstep1(void) {
    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
    /***************************************/
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0] = 0.0;
+      hp_gbl->vprcn[i][0][0] = 0.0;
    }
 
-   if (b->sm > 0) {
+   if (basis::tri(log2p).sm > 0) {
       for(i=0;i<nside;++i) {
-         gbl->sprcn[i][0][0] = 0.0;
+         hp_gbl->sprcn[i][0][0] = 0.0;
       }
    }
    
@@ -41,17 +41,17 @@ void hp_mgrid::tstep1(void) {
          exit(1);
       }
       
-      h   =  4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
-      lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*bd[0]);
+      h   =  4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
+      lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*sim::bd[0]);
 
       /* SET UP DISSIPATIVE COEFFICIENTS */
-      gbl->tau[tind]  = adis*h/(jcb*lam1);
+      hp_gbl->tau(tind)  = adis*h/(jcb*lam1);
       
       /* SET UP DIAGONAL PRECONDITIONER */
       dtstari = MAX(lam1/h,dtstari);
    }
    
-   printf("#iterative to physical time step ratio: %f %e %e\n",bd[0]/dtstari,bd[0],dtstari);
+   printf("#iterative to physical time step ratio: %f %e %e\n",sim::bd[0]/dtstari,sim::bd[0],dtstari);
       
    for(tind=0;tind<ntri;++tind) {
       v = tvrtx[tind];
@@ -59,12 +59,12 @@ void hp_mgrid::tstep1(void) {
 #ifdef AXISYMMETRIC
       jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
-      gbl->tprcn[tind][0][0] = jcb;      
+      hp_gbl->tprcn[tind][0][0] = jcb;      
       for(i=0;i<3;++i) {
-         gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
-         if (b->sm > 0) {
-            side = tside[tind].side[i];
-            gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
+         hp_gbl->vprcn[v[i]][0][0]  += hp_gbl->tprcn[tind][0][0];
+         if (basis::tri(log2p).sm > 0) {
+            side = td(tind).side(i);
+            hp_gbl->sprcn[side][0][0] += hp_gbl->tprcn[tind][0][0];
          }
       }
    } 
@@ -91,13 +91,13 @@ void hp_mgrid::tstep1(void) {
 
       /* SMALLEST LENGTH FOR CALCULATING EIGENVALUES */
       /* MOST RESTRICTIVE */
-      h   =  4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
+      h   =  4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
       
       /* 1.5 IS BASED ON COMPARISON TO R_MESH FOR LAPLACE */
-      lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*bd[0]);
+      lam1  = (sqrt(axext*axext +ayext*ayext) +1.5*nuext/h +h*sim::bd[0]);
 
       /* SET UP DISSIPATIVE COEFFICIENTS */
-      gbl->tau[tind]  = adis*h/(jcb*lam1);
+      hp_gbl->tau(tind)  = adis*h/(jcb*lam1);
       
       /* SET UP DIAGONAL PRECONDITIONER */
       dtstari = jcb*lam1/h;
@@ -105,13 +105,13 @@ void hp_mgrid::tstep1(void) {
 #ifdef AXISYMMETRIC
       dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
 #endif
-      gbl->tprcn[tind][0][0] = dtstari;      
+      hp_gbl->tprcn[tind][0][0] = dtstari;      
       for(i=0;i<3;++i) {
-         gbl->vprcn[v[i]][0][0]  += gbl->tprcn[tind][0][0];
+         hp_gbl->vprcn[v[i]][0][0]  += hp_gbl->tprcn[tind][0][0];
 
-         if (b->sm > 0) {
-            side = tside[tind].side[i];
-            gbl->sprcn[side][0][0] += gbl->tprcn[tind][0][0];
+         if (basis::tri(log2p).sm > 0) {
+            side = td(tind).side(i);
+            hp_gbl->sprcn[side][0][0] += hp_gbl->tprcn[tind][0][0];
          }
       }
    }
@@ -124,19 +124,19 @@ void hp_mgrid::tstep1(void) {
          tgt = sbdry[i].adjmesh;
          count = 0;
          /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
+         for(j=0;j<sbdry(i)->nel;++j) {
+            sind = sbdry(i)->el(j);
+            v0 = sd(sind).vrtx(0);
+            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
          }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
+         v0 = sd(sind).vrtx(1);
+         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b->sm) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
+         if (basis::tri(log2p).sm) {
+            for(j=0;j<sbdry(i)->nel;++j) {
+               sind = sbdry(i)->el(j);
+               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][0];
             }
          }
       }
@@ -154,19 +154,19 @@ void hp_mgrid::tstep_mp() {
       if (sbdry[i].type & COMY_MASK) {
          count = 0;
          /* RECV VERTEX INFO */
-         for(j=sbdry[i].num-1;j>=0;--j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][1];
-            gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+         for(j=sbdry(i)->nel-1;j>=0;--j) {
+            sind = sbdry(i)->el(j);
+            v0 = sd(sind).vrtx(1);
+            hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
          }
-         v0 = svrtx[sind][0];
-         gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+         v0 = sd(sind).vrtx(0);
+         hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b->sm > 0) {
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               sind = sbdry[i].el[j];
-               gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
+         if (basis::tri(log2p).sm > 0) {
+            for(j=sbdry(i)->nel-1;j>=0;--j) {
+               sind = sbdry(i)->el(j);
+               hp_gbl->sprcn[sind][0][0] = 0.5*(hp_gbl->sprcn[sind][0][0] +sbuff[i][count++]);
             }
          }
       }
@@ -179,19 +179,19 @@ void hp_mgrid::tstep_mp() {
          tgt = sbdry[i].adjmesh;
          count = 0;
          /* SEND VERTEX INFO */
-         for(j=0;j<sbdry[i].num;++j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][0];
-            tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
+         for(j=0;j<sbdry(i)->nel;++j) {
+            sind = sbdry(i)->el(j);
+            v0 = sd(sind).vrtx(0);
+            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
          }
-         v0 = svrtx[sind][1];
-         tgt->sbuff[bnum][count++] = gbl->vprcn[v0][0][0];
+         v0 = sd(sind).vrtx(1);
+         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
-         if (b->sm) {
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               tgt->sbuff[bnum][count++] = gbl->sprcn[sind][0][0];
+         if (basis::tri(log2p).sm) {
+            for(j=0;j<sbdry(i)->nel;++j) {
+               sind = sbdry(i)->el(j);
+               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][0];
             }
          }
       }
@@ -208,19 +208,19 @@ void hp_mgrid::tstep2(void) {
       if (sbdry[i].type & COMX_MASK) {
          count = 0;
          /* RECV VERTEX INFO */
-         for(j=sbdry[i].num-1;j>=0;--j) {
-            sind = sbdry[i].el[j];
-            v0 = svrtx[sind][1];
-            gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+         for(j=sbdry(i)->nel-1;j>=0;--j) {
+            sind = sbdry(i)->el(j);
+            v0 = sd(sind).vrtx(1);
+            hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
          }
-         v0 = svrtx[sind][0];
-         gbl->vprcn[v0][0][0] = 0.5*(gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+         v0 = sd(sind).vrtx(0);
+         hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
-         if (b->sm > 0) {
-            for(j=sbdry[i].num-1;j>=0;--j) {
-               sind = sbdry[i].el[j];
-               gbl->sprcn[sind][0][0] = 0.5*(gbl->sprcn[sind][0][0] +sbuff[i][count++]);
+         if (basis::tri(log2p).sm > 0) {
+            for(j=sbdry(i)->nel-1;j>=0;--j) {
+               sind = sbdry(i)->el(j);
+               hp_gbl->sprcn[sind][0][0] = 0.5*(hp_gbl->sprcn[sind][0][0] +sbuff[i][count++]);
             }
          }
       }
@@ -228,13 +228,13 @@ void hp_mgrid::tstep2(void) {
       
    /* FORM DIAGANOL PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      gbl->vprcn[i][0][0]  = 1.0/(b->vdiag*gbl->vprcn[i][0][0]);
+      hp_gbl->vprcn[i][0][0]  = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn[i][0][0]);
    }
 
-   if (b->sm > 0) {
+   if (basis::tri(log2p).sm > 0) {
       /* FORM DIAGANOL PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
-         gbl->sprcn[i][0][0] = 1.0/gbl->sprcn[i][0][0];
+         hp_gbl->sprcn[i][0][0] = 1.0/hp_gbl->sprcn[i][0][0];
       }
    }
    

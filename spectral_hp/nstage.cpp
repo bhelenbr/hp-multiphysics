@@ -1,93 +1,100 @@
-#include"hp_mgrid.h"
+#include "tri_hp.h"
+#include "hp_boundary.h"
 
-void hp_mgrid::nstage1(void)
-{
-    int i,n;
-   /******************************************************************/
-   /* BEGINNING OF MULTISTAGE PSEUDO-TIME-UPDATE OF FLOW & MESH POSITION ****/
-   /******************************************************************/
-   for(i=0;i<nvrtx;++i) 
-      for(n=0;n<NV;++n)
-         gbl->ug0.v[i][n] = ug.v[i][n];
-
-   if (b->p > 1) {
-      for(i=0;i<nside*sm0;++i) 
-         for(n=0;n<NV;++n)
-            gbl->ug0.s[i][n] = ug.s[i][n];
-      
-      if (b->p > 2) {
-         for(i=0;i<ntri*im0;++i)
-            for(n=0;n<NV;++n)
-               gbl->ug0.i[i][n] = ug.i[i][n];
-      }   
-   }
-
-   /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
-   for(i=0;i<nsbd;++i)
-      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
-         surfnstage1(i);
-         
-   return;
-}
-
-/********************************/
-/* INTERMEDIATE & FINAL STEPS ***/
-/********************************/
-void hp_mgrid::nstage2(int stage) {
+block::ctrl tri_hp::update(int excpt) {
    int i,m,k,n,indx,indx1;
    FLT cflalpha;
-
-   cflalpha = cfl[log2p]*alpha[stage];
+   int unshiftedexcpt;
+   static int lastresidual,lastminvrt,laststage,addtostage,stage;
+   block::ctrl state;
    
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ug.v[i][n] = gbl->ug0.v[i][n] -cflalpha*gbl->res.v[i][n];
+   if (excpt == 0) {
 
-   if (b->sm > 0) {
-      indx = 0;
-      indx1 = 0;
-      for(i=0;i<nside;++i) {
-         for (m=0;m<b->sm;++m) {
-            for(n=0;n<NV;++n)
-               ug.s[indx1][n] = gbl->ug0.s[indx1][n] -cflalpha*gbl->res.s[indx][n];
-            ++indx;
-            ++indx1;
-         }
-         indx1 += sm0 -b->sm;
-      }         
+      /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
+      hp_gbl->ug0.v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
 
-      if (b->im > 0) {
-         indx = 0;
-         indx1 = 0;
-         for(i=0;i<ntri;++i) {
-            for(m=1;m<b->sm;++m) {
-               for(k=0;k<b->sm-m;++k) {
-                  for(n=0;n<NV;++n) {
-                     ug.i[indx1][n] =  gbl->ug0.i[indx1][n] -cflalpha*gbl->res.i[indx][n];
+      if (basis::tri(log2p).p > 1) {
+         hp_gbl->ug0.s(Range(0,nside),Range(0,sm0),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
+         
+         if (basis::tri(log2p).p > 2) {
+            hp_gbl->ug0.i(Range(0,ntri),Range(0,im0),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
+         }   
+      }
+
+      /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+      for(i=0;i<nsbd;++i)
+         hp_sbdry(i)->update(0);
+      
+      lastresidual = excpt +1;
+      laststage = 0;
+      stage = 0;
+   }
+   
+   unshiftedexcpt = excpt;
+   excpt -= laststage;
+   
+   /* CALCULATE RESIDUAL */
+   if (excpt < lastresidual) {
+      state = rsdl(excpt);
+      if (state != block::stop) {
+         lastresidual = excpt +1;
+         return(state);
+      }
+      lastminvrt = excpt +1;
+   }
+   
+   /* INVERT MASS MATRIX */
+   if (excpt < lastminvrt) {
+      state = minvrt(excpt-lastresidual);
+      if(state != block::stop) {
+         lastminvrt = excpt +1;
+         return(state);
+      }
+   }
+
+   if (excpt < lastminvrt+1) {
+      cflalpha = 2.0; // cfl[log2p]*alpha[stage];
+      
+      ug.v(Range(0,nvrtx),Range::all()) = hp_gbl->ug0.v(Range(0,nvrtx),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,nvrtx),Range::all());
+
+      if (basis::tri(log2p).sm > 0) {
+         ug.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = hp_gbl->ug0.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) -cflalpha*hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
+
+         if (basis::tri(log2p).im > 0) {
+
+            for(i=0;i<ntri;++i) {
+               indx = 0;
+               indx1 = 0;
+               for(m=1;m<basis::tri(log2p).sm;++m) {
+                  for(k=0;k<basis::tri(log2p).sm-m;++k) {
+                     for(n=0;n<NV;++n) {
+                        ug.i(i,indx1,n) =  hp_gbl->ug0.i(i,indx1,n) -cflalpha*hp_gbl->res.i(i,indx,n);
+                     }
+                     ++indx; ++indx1;
                   }
-                  ++indx; ++indx1;
+                  indx1 += sm0 -basis::tri(log2p).sm;
                }
-               indx1 += sm0 -b->sm;
             }
          }
       }
-   }
-   
-   /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
-   for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type&(FSRF_MASK +IFCE_MASK))
-         surfnstage2(i,stage);
-   }
-   
-   /* for(i=0;i<nsbd;++i) {
-      if (sbdry[i].type&FSRF_MASK) {
-         for(k=0;k<sbdry[i].num;++k) {
-            indx = sbdry[i].el[k];
-            printf("%d %f %f %f %f\n",k,vrtx[svrtx[indx][0]][0],vrtx[svrtx[indx][0]][1],vrtx[svrtx[indx][1]][0],vrtx[svrtx[indx][1]][1]);
-         }
+      
+      /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
+      for(i=0;i<nsbd;++i) {
+         hp_sbdry(i)->update(stage);
       }
+      
+      addtostage = 1;
+      return(block::advance);
    }
-   */
-            
-   return;
+   
+   /* UPDATE STAGE & REPEAT */
+   laststage = unshiftedexcpt;
+   stage += addtostage;
+   addtostage = 0;
+      
+   if (stage < sim::NSTAGE) {
+      return(block::advance);
+   }
+   
+   return(block::stop);
 }

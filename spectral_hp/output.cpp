@@ -7,136 +7,140 @@
  *
  */
 
-#include "spectral_hp.h"
-#include<cstring>
-#include<assert.h>
-#include<stdlib.h>
+#include "tri_hp.h"
+#include "hp_boundary.h"
+#include <cstring>
+#include <assert.h>
+#include <stdlib.h>
 #include <utilities.h>
 #include <myblas.h>
 
-void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ) {
+ void tri_hp::output(char *name, filetype typ, int tlvl) {
+   ofstream out;
    char fnmapp[100];
-   FILE *out;
-   int i,j,k,n,v0,v1,sind,tind,indx,sgn;
+   int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
    int ijind[MXTM][MXTM];
    
+   out.setf(std::ios::scientific, std::ios::floatfield);
+   out.precision(10);
+         
    switch (typ) {
       case (text):
          strcpy(fnmapp,name);
          strcat(fnmapp,".txt");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open text output file %s\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *sim::log << "couldn't open text output file " << fnmapp;
             exit(1);
          }
          
          /* HEADER INFORMATION */
-         fprintf(out,"p0 = %d\n",p0);
-         fprintf(out,"nvrtx = %d, nside = %d, ntri = %d\n",nvrtx,nside,ntri);
-         fprintf(out,"nsbd = %d\n",nsbd);
-         for(i=0;i<nsbd;++i)
-            fprintf(out," type = %d, number = %d\n",sbdry[i].type,sbdry[i].num);
-         /* END HEADER */
-         fprintf(out,"END OF HEADER\n");
+         out << "p0 = " << p0 << std::endl;
+         out << "nvrtx = " << nvrtx << ", nside = " << nside << ", ntri = " << ntri << std::endl;
+         out << "END OF HEADER" << std::endl;
 
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",g.v[i][n]);
-            fprintf(out,"\n");
+               out << ugbd(tlvl).v(i,n) << '\t';
+            out << std::endl;
          }
          
-         for(i=0;i<nside*sm0;++i) {
-            for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",g.s[i][n]);
-            fprintf(out,"\n");
+         for(i=0;i<nside;++i) {
+            for(m=0;m<sm0;++m) {
+               for(n=0;n<NV;++n)
+                  out << ugbd(tlvl).s(i,m,n) << '\t';
+               out << std::endl;
+            }
          }
          
-         for(i=0;i<ntri*im0;++i) {
-            for(n=0;n<NV;++n)
-               fprintf(out,"%15.8e ",g.i[i][n]);
-            fprintf(out,"\n");
+         for(i=0;i<ntri;++i) {
+            for(m=0;m<im0;++m) {
+               for(n=0;n<NV;++n)
+                  out << ugbd(tlvl).i(i,m,n) << '\t';
+               out << std::endl;
+            }
          }
 
          /* BOUNDARY INFO */
          for(i=0;i<nsbd;++i) {
-            fprintf(out,"Boundary %d, type %d, num %d, frstvrtx %d\n",i,sbdry[i].type,sbdry[i].num,svrtx[sbdry[i].el[0]][0]);
-            for(j=0;j<sbdry[i].num*sm0;++j)
-               fprintf(out,"%15.8e %15.8e\n",bin[i][j].curv[0],bin[i][j].curv[1]);
+            hp_sbdry(i)->output(out,typ,tlvl);
          }
-         fclose(out);
+         
+         out.close();
          break;
       
       case(tecplot):
          strcpy(fnmapp,name);
          strcat(fnmapp,".dat");
-         out = fopen(fnmapp,"w");
-         if (out == NULL ) {
-            printf("couldn't open tecplot output file %s\n",fnmapp);
+         out.open(fnmapp);
+         if (!out) {
+            *sim::log << "couldn't open tecplot output file " << fnmapp;
             exit(1);
          }
       
-         fprintf(out,"ZONE F=FEPOINT, ET=TRIANGLE, N=%d, E=%d\n",nvrtx+b->sm*nside+b->im*ntri,ntri*(b->sm+1)*(b->sm+1));
+         out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx+basis::tri(log2p).sm*nside+basis::tri(log2p).im*ntri << ", E = " << ntri*(basis::tri(log2p).sm+1)*(basis::tri(log2p).sm+1) << std::endl;
 
          /* VERTEX MODES */
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<ND;++n)
-               fprintf(out,"%e ",vin[i][n]);
+               out << vrtxbd(tlvl)(i)(n) << ' ';
             for(n=0;n<NV;++n)
-               fprintf(out,"%.6e ",g.v[i][n]);               
-            fprintf(out,"\n");
+               out << ugbd(tlvl).v(i,n) << ' ';               
+            out << std::endl;
          }
          
-         if (b->p > 1) {
+         if (basis::tri(log2p).p > 1) {
             /* SIDE MODES */
             for(sind=0;sind<nside;++sind) {
-               if (sinfo[sind] < 0) {
-                  v0 = svrtx[sind][0];
-                  v1 = svrtx[sind][1];
+               if (sd(sind).info < 0) {
+                  v0 = sd(sind).vrtx(0);
+                  v1 = sd(sind).vrtx(1);
                   for(n=0;n<ND;++n)
-                     b->proj1d_leg(vin[v0][n],vin[v1][n],crd[n][0]);
+                     basis::tri(log2p).proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
                }
                else {
-                  crdtocht1d(sind,vin,bin);
+                  crdtocht1d(sind,tlvl);
+   
                   for(n=0;n<ND;++n)
-                  	b->proj1d_leg(cht[n],crd[n][0]);
+                  	basis::tri(log2p).proj1d_leg(&cht(n,0),&crd(n)(0,0));
                }
-               ugtouht1d(sind,g);
+               ugtouht1d(sind,tlvl);
                for(n=0;n<NV;++n)
-                  b->proj1d_leg(uht[n],u[n][0]);
+                  basis::tri(log2p).proj1d_leg(&uht(n)(0),&u(n)(0,0));
 
-               for(i=1;i<b->sm+1;++i) {
+               for(i=1;i<basis::tri(log2p).sm+1;++i) {
                   for(n=0;n<ND;++n)
-                     fprintf(out,"%e ",crd[n][0][i]);
+                     out << crd(n)(0,i) << ' ';
                   for(n=0;n<NV;++n)
-                     fprintf(out,"%.6e ",u[n][0][i]);               
-                  fprintf(out,"\n");
+                     out << u(n)(0,i) << ' ';               
+                  out << std::endl;
                }
             }
    
             /* INTERIOR MODES */
-            if (b->p > 2) {
+            if (basis::tri(log2p).p > 2) {
                for(tind = 0; tind < ntri; ++tind) {
-                  ugtouht(tind,g);
+                  ugtouht(tind,tlvl);
                   for(n=0;n<NV;++n)
-                     b->proj_leg(uht[n],u[n][0],MXGP);
+                     basis::tri(log2p).proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
                      
-                  if (tinfo[tind] < 0) {
+                  if (td(tind).info < 0) {
                      for(n=0;n<ND;++n)
-                        b->proj_leg(vin[tvrtx[tind][0]][n],vin[tvrtx[tind][1]][n],vin[tvrtx[tind][2]][n],crd[n][0],MXGP);
+                        basis::tri(log2p).proj_leg(vrtxbd(tlvl)(td(tind).vrtx(0))(n),vrtxbd(tlvl)(td(tind).vrtx(1))(n),vrtxbd(tlvl)(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
                   }
                   else {
-                     crdtocht(tind,vin,bin);
+                     crdtocht(tind,tlvl);
                      for(n=0;n<ND;++n)
-                        b->proj_bdry_leg(cht[n],crd[n][0],MXGP);
+                        basis::tri(log2p).proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
                   }
                   
-                  for(i=1;i<b->sm;++i) {
-                     for(j=1;j<b->sm-(i-1);++j) {
+                  for(i=1;i<basis::tri(log2p).sm;++i) {
+                     for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
                         for(n=0;n<ND;++n)
-                           fprintf(out,"%e ",crd[n][i][j]);
+                           out << crd(n)(i,j) << ' ';
                         for(n=0;n<NV;++n)
-                           fprintf(out,"%.6e ",u[n][i][j]);               
-                        fprintf(out,"\n");
+                           out << u(n)(i,j) << ' ';               
+                        out << std::endl;
                      }
                   }
                }
@@ -144,338 +148,324 @@ void spectral_hp::output(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, ch
          }
       
          /* OUTPUT CONNECTIVY INFO */
-         fprintf(out,"\n#CONNECTION DATA#\n");
+         out << std::endl << "#CONNECTION DATA#" << std::endl;
          
          for(tind=0;tind<ntri;++tind) {
 
              /* VERTICES */
-            ijind[0][b->sm+1] = tvrtx[tind][0];
-            ijind[0][0] = tvrtx[tind][1];
-            ijind[b->sm+1][0] = tvrtx[tind][2];
+            ijind[0][basis::tri(log2p).sm+1] = td(tind).vrtx(0);
+            ijind[0][0] = td(tind).vrtx(1);
+            ijind[basis::tri(log2p).sm+1][0] = td(tind).vrtx(2);
 
             /* SIDES */
-            indx = tside[tind].side[0];
-            sgn = tside[tind].sign[0];
+            indx = td(tind).side(0);
+            sgn = td(tind).sign(0);
             if (sgn < 0) {
-               for(i=0;i<b->sm;++i)
-                  ijind[i+1][0] = nvrtx +(indx+1)*b->sm -(i+1);
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[i+1][0] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
             }
             else {
-               for(i=0;i<b->sm;++i)
-                  ijind[i+1][0] = nvrtx +indx*b->sm +i;
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[i+1][0] = nvrtx +indx*basis::tri(log2p).sm +i;
             }
             
-            indx = tside[tind].side[1];
-            sgn = tside[tind].sign[1];
+            indx = td(tind).side(1);
+            sgn = td(tind).sign(1);
             if (sgn > 0) {
-               for(i=0;i<b->sm;++i)
-                  ijind[b->sm-i][i+1] = nvrtx +indx*b->sm +i;
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
             }
             else {
-               for(i=0;i<b->sm;++i)
-                  ijind[b->sm-i][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
             }
 
-            indx = tside[tind].side[2];
-            sgn = tside[tind].sign[2];
+            indx = td(tind).side(2);
+            sgn = td(tind).sign(2);
             if (sgn > 0) {
-               for(i=0;i<b->sm;++i)
-                  ijind[0][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[0][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
             }
             else {
-               for(i=0;i<b->sm;++i)
-                  ijind[0][i+1] = nvrtx +indx*b->sm +i;
+               for(i=0;i<basis::tri(log2p).sm;++i)
+                  ijind[0][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
             }
    
             /* INTERIOR VERTICES */
             k = 0;
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
-                  ijind[i][j] = nvrtx +nside*b->sm +tind*b->im +k;
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
+                  ijind[i][j] = nvrtx +nside*basis::tri(log2p).sm +tind*basis::tri(log2p).im +k;
                   ++k;
                }
             }
    
             /* OUTPUT CONNECTION LIST */      
-            for(i=0;i<b->sm+1;++i) {
-               for(j=0;j<b->sm-i;++j) {
-                  fprintf(out,"%d %d %d\n"
-                  ,ijind[i][j]+1,ijind[i+1][j]+1,ijind[i][j+1]+1);
-                  fprintf(out,"%d %d %d\n"
-                  ,ijind[i+1][j]+1,ijind[i+1][j+1]+1,ijind[i][j+1]+1);
+            for(i=0;i<basis::tri(log2p).sm+1;++i) {
+               for(j=0;j<basis::tri(log2p).sm-i;++j) {
+                  out << ijind[i][j]+1 << ' ' << ijind[i+1][j]+1 << ' ' << ijind[i][j+1]+1 << std::endl;
+                  out << ijind[i+1][j]+1 << ' ' << ijind[i+1][j+1]+1 << ' ' << ijind[i][j+1]+1 << std::endl;
                }
-               fprintf(out,"%d %d %d\n"
-               ,ijind[i][b->sm-i]+1,ijind[i+1][b->sm-i]+1,ijind[i][b->sm+1-i]+1);
+               out << ijind[i][basis::tri(log2p).sm-i]+1 << ' ' << ijind[i+1][basis::tri(log2p).sm-i]+1 << ' ' << ijind[i][basis::tri(log2p).sm+1-i]+1 << std::endl;
             }
          }
-         fclose(out);
+         out.close();
          break; 
-                 
+               
+      case(adapt_diagnostic): {         
+         strcpy(fnmapp,name);
+         strcat(fnmapp,".dat");
+         out.open(fnmapp);
+         if (!out) {
+            *sim::log << "couldn't open tecplot output file " << fnmapp;
+            exit(1);
+         }
+      
+         out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << std::endl;
+         for(i=0;i<nvrtx;++i) {
+            for(n=0;n<ND;++n)
+               out << vrtx(i)(n) << ' ';
+            out << vlngth(i) << ' ' << log10(fscr1(i)) << std::endl;               
+         }
+
+         /* OUTPUT CONNECTIVY INFO */
+         out << std::endl << "#CONNECTION DATA#" << std::endl;
+         
+         for(tind=0;tind<ntri;++tind)
+            out << td(tind).vrtx(0)+1 << ' ' << td(tind).vrtx(1)+1 << ' ' << td(tind).vrtx(2)+1 << std::endl;
+         
+         break;
+      }
+      
       default:
-         out_mesh(name,typ);
+         *sim::log << "can't output a tri_hp to that filetype" << std::endl;
+         exit(1);
          break;
      }
    
     return;
 }
 
-void spectral_hp::input(struct vsi g, FLT (*vin)[ND], struct bistruct **bin, char *name, FILETYPE typ = text) {
+ void tri_hp::input(char *name, filetype typ, int tlvl) {
    int i,j,k,m,n,pin,pmin,indx;
-   int bnum,innum,intyp,v0;
-   FILE *in;
+   int bnum;
    char buffer[200];
    char trans[] = "T";
+   ifstream in;
+   FLT fltskip;
 
-   
    switch(typ) {
    
       case (text):
          strcpy(buffer,name);
          strcat(buffer,".txt");
-         in = fopen(buffer,"r");
-         if (in == NULL ) {
+         in.open(buffer);
+         if (!in ) {
             printf("couldn't open text input file %s\n",name);
             exit(1);
          }
          
          /* HEADER INFORMATION */
          /* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
-         fscanf(in,"p0 = %d\n",&pin);
+         in.ignore(80,'=');
+         in >> pin;
          pmin = MIN(p0,pin);
 
          do {
-            fscanf(in,"%[^\n]",buffer);
-            fscanf(in,"\n");
+            in.ignore(80,'\n');
+            buffer[0] = in.get();
          } while (buffer[0] != 'E');  // END OF HEADER
+         in.ignore(80,'\n');
 
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n)
-               fscanf(in,"%le ",&g.v[i][n]);
-            fscanf(in,"\n");
+               in >> ugbd(tlvl).v(i,n);
          }
          
-         indx = 0;
          for(i=0;i<nside;++i) {
             for(m=0;m<(pmin-1);++m) {
                for(n=0;n<NV;++n)
-                  fscanf(in,"%le ",&g.s[indx][n]);
-               fscanf(in,"\n");
-               ++indx;
+                  in >> ugbd(tlvl).s(i,m,n);
             }
             indx += p0 -pmin;
 
             for(m=0;m<(pin-p0);++m) {
                for(n=0;n<NV;++n)
-                  fscanf(in,"%*e ");
-               fscanf(in,"\n");
+                  in >> fltskip;
             }           
          }
          
-         indx = 0;
          for(i=0;i<ntri;++i) {
+            indx = 0;
             for(m=1;m<pmin-1;++m) {
                for(k=0;k<pmin-1-m;++k) {
                   for(n=0;n<NV;++n) 
-                     fscanf(in,"%le ",&g.i[indx][n]);
-                  fscanf(in,"\n");
+                     in >> ugbd(tlvl).i(i,indx,n);
                   ++indx;
                }
                indx += p0 -pmin;
                
                for(k=0;k<pin-p0;++k) {
                   for(n=0;n<NV;++n) 
-                     fscanf(in,"%*e ");
-                  fscanf(in,"\n");
+                     in >> fltskip;
                }
             }
             
             for(m=pmin-1;m<pin-1;++m) {
                for(k=0;k<pin-1-m;++k) {
                   for(n=0;n<NV;++n) 
-                     fscanf(in,"%*e ");
-                  fscanf(in,"\n");
+                     in >> fltskip; 
                }
             }           
          }
          
 
          /* BOUNDARY INFO */
-         for(i=0;i<nsbd;++i) {
-            fscanf(in,"Boundary %*d, type %d, num %d, frstvrtx %d\n",&intyp,&innum,&v0);
-            /* FIND MATCHING BOUNDARY (CAN CHANGE NUMBER/ORDER) */
-            for(bnum=0;bnum<nsbd;++bnum)
-               if (svrtx[sbdry[bnum].el[0]][0] == v0) 
-                  break;
-            
-            if (bnum == nsbd || innum != sbdry[bnum].num) {
-               printf("Trouble reading boundary info %d %d %d %d\n",innum,sbdry[bnum].num,sbdry[bnum].type,intyp);
-               exit(1);
-            }
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->input(in,typ,tlvl);
 
-            indx = 0;
-            for(j=0;j<sbdry[bnum].num;++j) {
-               for(m=0;m<pmin -1;++m) {
-                  fscanf(in,"%le %le\n",&bin[bnum][indx].curv[0],&bin[bnum][indx].curv[1]);
-                  ++indx;
-               }               
-               indx += p0 -pmin;
-
-               for(m=0;m<(pin-p0);++m) 
-                  fscanf(in,"%*e %*e\n");
-            }
-         }
-         fclose(in);
+         in.close();
          break;
 
       case(tecplot):
          /* CAN ONLY DO THIS IF HAVE MESH FILE */
          strcpy(buffer,name);
          strcat(buffer,".dat");
-         in = fopen(buffer,"r");
-         if (in == NULL ) {
-            printf("couldn't open tecplot input file %s\n",name);
+         in.open(buffer);
+         if (!in) {
+            *sim::log << "couldn't open tecplot input file " << name << std::endl;
             exit(1);
          }
-         fscanf(in,"%*[^\n]\n");
+         in.ignore(80,'\n');
 
          for(i=0;i<nvrtx;++i) {
-            fscanf(in,"%*e %*e");
+            in >> fltskip >> fltskip;
             for(n=0;n<NV;++n)
-               fscanf(in,"%le ",&g.v[i][n]);
-            fscanf(in,"\n");
+               in >> ugbd(tlvl).v(i,n);
          }
          
-         if (b->sm < 1) return;
+         if (basis::tri(log2p).sm < 1) return;
             
          FLT temp,matrix[MXTM][MXTM];
          int sind,info,ipiv[2*MXTM];
             
          /* REVERSE OUTPUTING PROCESS */
-         for(m=0;m<b->sm;++m)
-            for(n=0;n<b->sm;++n)
-               matrix[n][m] = b->lgrnge1d(m+2,n+1);
+         for(m=0;m<basis::tri(log2p).sm;++m)
+            for(n=0;n<basis::tri(log2p).sm;++n)
+               matrix[n][m] = basis::tri(log2p).lgrnge1d(m+2,n+1);
             
-         GETRF(b->sm,b->sm,matrix[0],MXTM,ipiv,info);
+         GETRF(basis::tri(log2p).sm,basis::tri(log2p).sm,matrix[0],MXTM,ipiv,info);
          if (info != 0) {
             printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
             exit(1);
          }
             
          for(sind=0;sind<nside;++sind) {
-            if (sinfo[sind] < 0) {
-               ugtouht1d(sind,g);
+            if (sd(sind).info < 0) {
+               ugtouht1d(sind,tlvl);
                for(n=0;n<NV;++n)
-                  b->proj1d_leg(uht[n],u[n][0]);
+                  basis::tri(log2p).proj1d_leg(&uht(n)(0),&u(n)(0,0));
                
-               for(m=0;m<b->sm;++m) {
-                  fscanf(in,"%*e %*e");
+               for(m=0;m<basis::tri(log2p).sm;++m) {
+                  in >> fltskip >> fltskip;
                   for(n=0;n<NV;++n) {
-                     fscanf(in,"%le ",&temp);
-                     u[n][0][m+1] -= temp;
+                     in >> temp;
+                     u(n)(0,m+1) -= temp;
                   }
-                  fscanf(in,"\n");
                }
                for(n=0;n<NV;++n) {
-                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
-                  indx = sind*b->sm;
-                  for(m=0;m<b->sm;++m)
-                     g.s[indx+m][n] = -u[n][0][1+m];
+                  GETRS(trans,basis::tri(log2p).sm,1,matrix[0],MXTM,ipiv,&u(n)(0,1),MXTM,info);
+                  for(m=0;m<basis::tri(log2p).sm;++m)
+                     ugbd(tlvl).s(sind,m,n) = -u(n)(0,1+m);
                }
             }
             else {
-               crdtocht1d(sind,vin,bin);
+               crdtocht1d(sind,tlvl);
                for(n=0;n<ND;++n)
-                  b->proj1d_leg(cht[n],crd[n][0]);
+                  basis::tri(log2p).proj1d_leg(&cht(n,0),&crd(n)(0,0));
                
-               ugtouht1d(sind,g);
+               ugtouht1d(sind,tlvl);
                for(n=0;n<NV;++n)
-                  b->proj1d_leg(uht[n],u[n][0]);
+                  basis::tri(log2p).proj1d_leg(&uht(n)(0),&u(n)(0,0));
                
-               for(m=0;m<b->sm;++m) {
+               for(m=0;m<basis::tri(log2p).sm;++m) {
                   for(n=0;n<ND;++n) {
-                     fscanf(in,"%le",&temp);
-                     crd[n][0][m+1] -= temp;
+                     in >> temp;
+                     crd(n)(0,m+1) -= temp;
                   }
                   
                   for(n=0;n<NV;++n) {
-                     fscanf(in,"%le",&temp);
-                     u[n][0][m+1] -= temp;
+                     in >> temp;
+                     u(n)(0,m+1) -= temp;
                   }
-                  fscanf(in,"\n");
                }
                for(n=0;n<NV;++n) {
-                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&u[n][0][1],MXTM,info);
-                  indx = sind*b->sm;
-                  for(m=0;m<b->sm;++m)
-                     g.s[indx+m][n] = -u[n][0][1+m];
+                  GETRS(trans,basis::tri(log2p).sm,1,matrix[0],MXTM,ipiv,&u(n)(0,1),MXTM,info);
+                  for(m=0;m<basis::tri(log2p).sm;++m)
+                     ugbd(tlvl).s(sind,m,n) = -u(n)(0,1+m);
                }
                
-               bnum = (-stri[sind][1]>>16) -1;
-               indx = (-stri[sind][1]&0xFFFF)*sm0;
+               bnum = getbdrynum(sd(sind).tri(1));
+               indx = getbdryel(sd(sind).tri(1));
                for(n=0;n<ND;++n) {
-                  GETRS(trans,b->sm,1,matrix[0],MXTM,ipiv,&crd[n][0][1],MXTM,info);
-                  for(m=0;m<b->sm;++m)
-                     binfo[bnum][indx+m].curv[n] = -crd[n][0][1+m];
+                  GETRS(trans,basis::tri(log2p).sm,1,matrix[0],MXTM,ipiv,&crd(n)(0,1),MXTM,info);
+                  for(m=0;m<basis::tri(log2p).sm;++m)
+                     hp_sbdry(bnum)->crdsbdin(indx,m,n,tlvl) = -crd(n)(0,1+m);
                }
             }
          }
             
-         if (b->im < 1) return;
+         if (basis::tri(log2p).im < 1) return;
          
          int tind;
          
-         for(i=0;i<ntri*b->im;++i)
-            for(n=0;n<NV;++n)
-               g.i[i][n] = 0.0;
+         ugbd(tlvl).i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
          
          /* REVERSE OUTPUTING PROCESS */
-         for(m=0;m<b->im;++m) {
+         for(m=0;m<basis::tri(log2p).im;++m) {
             n = 0;
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
-                  matrix[n++][m] = b->lgrnge(m+b->bm,i,j);
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
+                  matrix[n++][m] = basis::tri(log2p).lgrnge(m+basis::tri(log2p).bm,i,j);
                }
             }
          }
     
-         GETRF(b->im,b->im,matrix[0],MXTM,ipiv,info);
+         GETRF(basis::tri(log2p).im,basis::tri(log2p).im,matrix[0],MXTM,ipiv,info);
          if (info != 0) {
             printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
             exit(1);
          }
 
          for(tind=0;tind<ntri;++tind) {
-            ugtouht(tind);
+            ugtouht(tind,tlvl);
             for(n=0;n<NV;++n)
-               b->proj_leg(uht[n],u[n][0],MXGP);
+               basis::tri(log2p).proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
             
             m = 0;
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
                   for(n=0;n<ND;++n)
-                     uht[n][m] = u[n][i][j];
-                  for(n=0;n<ND;++n)
-                     fscanf(in,"%*e ");
+                     uht(n)(m) = u(n)(i,j);
+                  in >> fltskip >> fltskip;
                   for(n=0;n<NV;++n) {
-                     fscanf(in,"%le ",&temp);   
-                     uht[n][m] -= temp;
+                     in >> temp;   
+                     uht(n)(m) -= temp;
                   }
-                  fscanf(in,"\n");
                   ++m;
                }
             }
             for(n=0;n<NV;++n) {
-               GETRS(trans,b->im,1,matrix[0],MXTM,ipiv,uht[n],MXTM,info);
-               indx = tind*b->im;
-               for(m=0;m<b->im;++m)
-                  g.i[indx+m][n] = -uht[n][m];
+               GETRS(trans,basis::tri(log2p).im,1,matrix[0],MXTM,ipiv,&uht(n)(0),MXTM,info);
+               for(m=0;m<basis::tri(log2p).im;++m)
+                  ugbd(tlvl).i(tind,m,n) = -uht(n)(m);
             }
          }            
                
          break;
                
       default:
-         printf("Spectral_hp input of that filetype is not supported\n");
+         *sim::log << "can't input a tri_hp from that filetype" << std::endl;
          exit(1);
          break;
    }

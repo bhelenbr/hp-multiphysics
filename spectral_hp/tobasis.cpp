@@ -7,82 +7,89 @@
  *
  */
 
-#include"spectral_hp.h"
+#include"tri_hp.h"
 #include<myblas.h>
 
-void spectral_hp::tobasis(struct vsi g, FLT (*func)(int, FLT, FLT)) {
+ void tri_hp::tobasis(FLT (*func)(int var, TinyVector<FLT,2> &x), int tlvl) {
    int tind,i,j,m,n,indx,v0,v1,sind,info;
    char uplo[] = "U";
+   TinyVector<FLT,2> pt;
    
    /* LOOP THROUGH VERTICES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         g.v[i][n] = func(n,vrtx[i][0],vrtx[i][1]);
+         ugbd(tlvl).v(i,n) = func(n,vrtx(i));
          
-   if (b->sm <= 0) return;
+   if (basis::tri(log2p).sm <= 0) return;
 
    /* LOOP THROUGH SIDES */   
    for(sind=0;sind<nside;++sind) {
             
-      v0 = svrtx[sind][0];
-      v1 = svrtx[sind][1];
+      v0 = sd(sind).vrtx(0);
+      v1 = sd(sind).vrtx(1);
       
-      if (sinfo[sind] < 0) {
+      if (sd(sind).info < 0) {
          for(n=0;n<ND;++n)
-            b->proj1d(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+            basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
       }
       else {
-         crdtocht1d(sind);
+         crdtocht1d(sind,tlvl);
          for(n=0;n<ND;++n)
-            b->proj1d(cht[n],crd[n][0]);
+            basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(0,0));
       }
       
       for(n=0;n<NV;++n)
-         b->proj1d(g.v[v0][n],g.v[v1][n],res[n][0]);
+         basis::tri(log2p).proj1d(ugbd(tlvl).v(v0,n),ugbd(tlvl).v(v1,n),&res(n)(0,0));
 
-      for(i=0;i<b->gpx; ++i)
+      for(i=0;i<basis::tri(log2p).gpx; ++i) {
+         pt(0) = crd(0)(0,i);
+         pt(1) = crd(1)(0,i);
          for(n=0;n<NV;++n)
-            res[n][0][i] -= (*func)(n,crd[0][0][i],crd[1][0][i]);
+            res(n)(0,i) -= (*func)(n,pt);
+      }
             
       for(n=0;n<NV;++n)
-         b->intgrt1d(lf[n],res[n][0]);
+         basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
    
-      indx = sind*sm0;
+      indx = sind;
       for(n=0;n<NV;++n) {
-         PBTRS(uplo,b->sm,b->sbwth,1,&b->sdiag1d(0,0),b->sbwth+1,&lf[n][2],b->sm,info);
-         for(m=0;m<b->sm;++m) 
-            g.s[indx+m][n] = -lf[n][2+m];
+         PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
+         for(m=0;m<basis::tri(log2p).sm;++m) 
+            ugbd(tlvl).s(sind,m,n) = -lf(n)(2+m);
       }
    }
    
-   if (b->im <= 0) return;
+   if (basis::tri(log2p).im <= 0) return;
    
    for(tind = 0; tind < ntri; ++tind) {
-      ugtouht_bdry(tind);
+      ugtouht_bdry(tind,tlvl);
       for(n=0;n<NV;++n)
-         b->proj_bdry(uht[n],u[n][0],MXGP);
+         basis::tri(log2p).proj_bdry(&uht(n)(0),&u(n)(0,0),MXGP);
          
-      if (tinfo[tind] < 0) {
+      if (td(tind).info < 0) {
          for(n=0;n<ND;++n)
-            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
+            basis::tri(log2p).proj(vrtxbd(tlvl)(td(tind).vrtx(0))(n),vrtxbd(tlvl)(td(tind).vrtx(1))(n),vrtxbd(tlvl)(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
       }
       else {
-         crdtocht(tind);
+         crdtocht(tind,tlvl);
          for(n=0;n<ND;++n)
-            b->proj_bdry(cht[n],crd[n][0],MXGP);
+            basis::tri(log2p).proj_bdry(&cht(n,0),&crd(n)(0,0),MXGP);
       }
          
-      for(n=0;n<NV;++n)
-         for (i=0; i < b->gpx; ++i )
-            for (j=0; j < b->gpn; ++j )
-               u[n][i][j] -= (*func)(n,crd[0][i][j],crd[1][i][j]);
+      for (i=0; i < basis::tri(log2p).gpx; ++i ) {
+         for (j=0; j < basis::tri(log2p).gpn; ++j ) {
+            pt(0) = crd(0)(0,i);
+            pt(1) = crd(1)(0,i);
+            for(n=0;n<NV;++n)
+               u(n)(i,j) -= (*func)(n,pt);
+         }
+      }
                      
-      indx = tind*im0;
       for(n=0;n<NV;++n) {
-         b->intgrt(lf[n],u[n][0],MXGP);
-         DPBTRS(uplo,b->im,b->ibwth,1,&b->idiag(0,0),b->ibwth+1,&lf[n][b->bm],b->im,info);
-         for(i=0;i<b->im;++i)
-            g.i[indx+i][n] = -lf[n][b->bm+i];
+         basis::tri(log2p).intgrt(&lf(n)(0),&u(n)(0,0),MXGP);
+         DPBTRS(uplo,basis::tri(log2p).im,basis::tri(log2p).ibwth,1,&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,&lf(n)(basis::tri(log2p).bm),basis::tri(log2p).im,info);
+         for(i=0;i<basis::tri(log2p).im;++i)
+            ugbd(tlvl).i(tind,i,n) = -lf(n)(basis::tri(log2p).bm+i);
       }
    }
    

@@ -160,9 +160,9 @@ void blocks::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3
 
 /*   if (first) {
       for(i=0;i<nblocks;++i) {
-         knode += 2*blk[i].grd[0].maxvst*(1 +blk[i].grd[0].b->sm +blk[i].grd[0].b->im);
-         kcel3 += blk[i].grd[0].maxvst*(blk[i].grd[0].b->sm+1)*(blk[i].grd[0].b->sm+1);
-         ksurf += blk[i].grd[0].maxvst*(blk[i].grd[0].b->sm+1)*(blk[i].grd[0].b->sm+1);;
+         knode += 2*blk[i].grd[0].maxvst*(1 +blk[i].grd[0].basis::tri(log2p).sm +blk[i].grd[0].basis::tri(log2p).im);
+         kcel3 += blk[i].grd[0].maxvst*(blk[i].grd[0].basis::tri(log2p).sm+1)*(blk[i].grd[0].basis::tri(log2p).sm+1);
+         ksurf += blk[i].grd[0].maxvst*(blk[i].grd[0].basis::tri(log2p).sm+1)*(blk[i].grd[0].basis::tri(log2p).sm+1);;
       }
       first = 0;
    } 
@@ -180,17 +180,17 @@ void hp_mgrid::pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kce
    int i;
    
    if (changed) {
-      knode  += 2*(nvrtx +b->sm*nside+b->im*ntri);
+      knode  += 2*(nvrtx +basis::tri(log2p).sm*nside+basis::tri(log2p).im*ntri);
    }
    else {
       knode = -1;
       return;
    }
 
-   kcel3 += ntri*(b->sm+1)*(b->sm+1);
-   ksurf += 2*ntri*(b->sm+1)*(b->sm+1);
+   kcel3 += ntri*(basis::tri(log2p).sm+1)*(basis::tri(log2p).sm+1);
+   ksurf += 2*ntri*(basis::tri(log2p).sm+1)*(basis::tri(log2p).sm+1);
    for(i=0;i<nsbd;++i)
-      ksurf += sbdry[i].num*(b->sm+1);
+      ksurf += sbdry(i)->nel*(basis::tri(log2p).sm+1);
    
    return;
 }
@@ -224,7 +224,7 @@ void blocks::pvcell(int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], 
 void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]) {
    static int i, j, k, ijind[30][30], dkp, tind, sgn, indx;
 
-   dkp = (nvrtx +b->sm*nside +b->im*ntri);
+   dkp = (nvrtx +basis::tri(log2p).sm*nside +basis::tri(log2p).im*ntri);
    
    /* FRONT FACE OF 2D MESH */
    for(tind=0;tind<ntri;++tind) {
@@ -232,55 +232,55 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
 
 
       /* VERTICES */
-      ijind[0][b->sm+1] = tvrtx[tind][0];
-      ijind[0][0] = tvrtx[tind][1];
-      ijind[b->sm+1][0] = tvrtx[tind][2];
+      ijind[0][basis::tri(log2p).sm+1] = td(tind).vrtx(0);
+      ijind[0][0] = td(tind).vrtx(1);
+      ijind[basis::tri(log2p).sm+1][0] = td(tind).vrtx(2);
 
       /* SIDES */
-      indx = tside[tind].side[0];
-      sgn = tside[tind].sign[0];
+      indx = td(tind).side(0);
+      sgn = td(tind).sign(0);
       if (sgn < 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[i+1][0] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[i+1][0] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[i+1][0] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[i+1][0] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
 
-      indx = tside[tind].side[1];
-      sgn = tside[tind].sign[1];
+      indx = td(tind).side(1);
+      sgn = td(tind).sign(1);
       if (sgn > 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[b->sm-i][i+1] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[b->sm-i][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
 
-      indx = tside[tind].side[2];
-      sgn = tside[tind].sign[2];
+      indx = td(tind).side(2);
+      sgn = td(tind).sign(2);
       if (sgn > 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[0][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[0][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[0][i+1] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[0][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
 
       /* INTERIOR VERTICES */
       k = 0;
-      for(i=1;i<b->sm;++i) {
-         for(j=1;j<b->sm-(i-1);++j) {
-            ijind[i][j] = nvrtx +nside*b->sm +tind*b->im +k;
+      for(i=1;i<basis::tri(log2p).sm;++i) {
+         for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
+            ijind[i][j] = nvrtx +nside*basis::tri(log2p).sm +tind*basis::tri(log2p).im +k;
             ++k;
          }
       }
       /* OUTPUT CONNECTION LIST */      
-      for(i=0;i<b->sm+1;++i) {
-         for(j=0;j<b->sm-i;++j) {
+      for(i=0;i<basis::tri(log2p).sm+1;++i) {
+         for(j=0;j<basis::tri(log2p).sm-i;++j) {
             cel3[kn][0] = ijind[i][j]+1 +kpoffset;
             cel3[kn][1] = ijind[i][j]+1 +dkp +kpoffset;
             cel3[kn][2] = ijind[i+1][j]+1 +dkp +kpoffset;
@@ -295,12 +295,12 @@ void hp_mgrid::pvcell(int &kn,int &kpoffset, int cel1[][4], int cel2[][5], int c
             cel3[kn][4] = ijind[i][j+1]+1 +dkp +kpoffset;
             cel3[kn++][5] = ijind[i][j+1]+1 +kpoffset;   
          }
-         cel3[kn][0] = ijind[i][b->sm-i]+1 +kpoffset;
-         cel3[kn][1] = ijind[i][b->sm-i]+1 +dkp +kpoffset;
-         cel3[kn][2] = ijind[i+1][b->sm-i]+1 +dkp +kpoffset;
-         cel3[kn][3] = ijind[i+1][b->sm-i]+1 +kpoffset;
-         cel3[kn][4] = ijind[i][b->sm+1-i]+1 +dkp +kpoffset;
-         cel3[kn++][5] = ijind[i][b->sm+1-i]+1 +kpoffset;
+         cel3[kn][0] = ijind[i][basis::tri(log2p).sm-i]+1 +kpoffset;
+         cel3[kn][1] = ijind[i][basis::tri(log2p).sm-i]+1 +dkp +kpoffset;
+         cel3[kn][2] = ijind[i+1][basis::tri(log2p).sm-i]+1 +dkp +kpoffset;
+         cel3[kn][3] = ijind[i+1][basis::tri(log2p).sm-i]+1 +kpoffset;
+         cel3[kn][4] = ijind[i][basis::tri(log2p).sm+1-i]+1 +dkp +kpoffset;
+         cel3[kn++][5] = ijind[i][basis::tri(log2p).sm+1-i]+1 +kpoffset;
 
       }      
    }
@@ -343,55 +343,55 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
    for(tind=0;tind<ntri;++tind) {
 
       /* VERTICES */
-      ijind[0][b->sm+1] = tvrtx[tind][0];
-      ijind[0][0] = tvrtx[tind][1];
-      ijind[b->sm+1][0] = tvrtx[tind][2];
+      ijind[0][basis::tri(log2p).sm+1] = td(tind).vrtx(0);
+      ijind[0][0] = td(tind).vrtx(1);
+      ijind[basis::tri(log2p).sm+1][0] = td(tind).vrtx(2);
 
       /* SIDES */
-      indx = tside[tind].side[0];
-      sgn = tside[tind].sign[0];
+      indx = td(tind).side(0);
+      sgn = td(tind).sign(0);
       if (sgn < 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[i+1][0] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[i+1][0] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[i+1][0] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[i+1][0] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
 
-      indx = tside[tind].side[1];
-      sgn = tside[tind].sign[1];
+      indx = td(tind).side(1);
+      sgn = td(tind).sign(1);
       if (sgn > 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[b->sm-i][i+1] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[b->sm-i][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
 
-      indx = tside[tind].side[2];
-      sgn = tside[tind].sign[2];
+      indx = td(tind).side(2);
+      sgn = td(tind).sign(2);
       if (sgn > 0) {
-         for(i=0;i<b->sm;++i)
-            ijind[0][i+1] = nvrtx +(indx+1)*b->sm -(i+1);
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[0][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
       }
       else {
-         for(i=0;i<b->sm;++i)
-            ijind[0][i+1] = nvrtx +indx*b->sm +i;
+         for(i=0;i<basis::tri(log2p).sm;++i)
+            ijind[0][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
       }
 
       /* INTERIOR VERTICES */
       k = 0;
-      for(i=1;i<b->sm;++i) {
-         for(j=1;j<b->sm-(i-1);++j) {
-            ijind[i][j] = nvrtx +nside*b->sm +tind*b->im +k;
+      for(i=1;i<basis::tri(log2p).sm;++i) {
+         for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
+            ijind[i][j] = nvrtx +nside*basis::tri(log2p).sm +tind*basis::tri(log2p).im +k;
             ++k;
          }
       }
       /* OUTPUT CONNECTION LIST */      
-      for(i=0;i<b->sm+1;++i) {
-         for(j=0;j<b->sm-i;++j) {
+      for(i=0;i<basis::tri(log2p).sm+1;++i) {
+         for(j=0;j<basis::tri(log2p).sm-i;++j) {
             scel[kn][0] = ijind[i][j]+1 +offset;
             scel[kn][1] = ijind[i+1][j]+1 +offset;
             scel[kn][2] = ijind[i][j+1]+1 +offset;
@@ -404,9 +404,9 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
             scel[kn][3] = 0;
             scon[kn++] = 0;   
          }
-         scel[kn][0] = ijind[i][b->sm-i]+1 +offset;
-         scel[kn][1] = ijind[i+1][b->sm-i]+1 +offset;
-         scel[kn][2] = ijind[i][b->sm+1-i]+1 +offset;
+         scel[kn][0] = ijind[i][basis::tri(log2p).sm-i]+1 +offset;
+         scel[kn][1] = ijind[i+1][basis::tri(log2p).sm-i]+1 +offset;
+         scel[kn][2] = ijind[i][basis::tri(log2p).sm+1-i]+1 +offset;
          scel[kn][3] = 0;
          scon[kn++] = 0;   
       }
@@ -418,7 +418,7 @@ void hp_mgrid::pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int 
    number_str(sname,"block",snum,1);
    strcpb(tsurf[snum],sname,20);
    
-   offset += 2*(nvrtx +b->sm*nside +b->im*ntri);
+   offset += 2*(nvrtx +basis::tri(log2p).sm*nside +basis::tri(log2p).im*ntri);
    
    return;
 }
@@ -455,49 +455,49 @@ void hp_mgrid::pvgrid(int &kn, float (*xyz)[3]) {
    /* VERTEX MODES */
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<ND;++n)
-         xyz[kn][n] = vrtx[i][n];
+         xyz[kn][n] = vrtx(i)(n);
       xyz[kn++][2] = zplane;
    }
          
-   if (b->p > 1) {
+   if (basis::tri(log2p).p > 1) {
       /* SIDE MODES */
       for(sind=0;sind<nside;++sind) {
-         if (sinfo[sind] < 0) {
-            v0 = svrtx[sind][0];
-            v1 = svrtx[sind][1];
+         if (sd(sind).info < 0) {
+            v0 = sd(sind).vrtx(0);
+            v1 = sd(sind).vrtx(1);
             for(n=0;n<ND;++n)
-               b->proj1d_leg(vrtx[v0][n],vrtx[v1][n],crd[n][0]);
+               basis::tri(log2p).proj1d_leg(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
          }
          else {
             crdtocht1d(sind);
             for(n=0;n<ND;++n)
-               b->proj1d_leg(cht[n],crd[n][0]);
+               basis::tri(log2p).proj1d_leg(&cht(n,0),&crd(n)(0,0));
          }
-         for(i=1;i<b->sm+1;++i) {
+         for(i=1;i<basis::tri(log2p).sm+1;++i) {
             for(n=0;n<ND;++n)
-               xyz[kn][n] = crd[n][0][i];
+               xyz[kn][n] = crd(n)(0,i);
             xyz[kn++][2] = zplane;
          }
       }
 
       /* INTERIOR MODES */
-      if (b->p > 2) {
+      if (basis::tri(log2p).p > 2) {
          for(tind = 0; tind < ntri; ++tind) {
          
-            if (tinfo[tind] < 0) {
+            if (td(tind).info < 0) {
                for(n=0;n<ND;++n)
-                  b->proj_leg(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
+                  basis::tri(log2p).proj_leg(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
             }
             else {
                crdtocht(tind);
                for(n=0;n<ND;++n)
-                  b->proj_bdry_leg(cht[n],crd[n][0],MXGP);
+                  basis::tri(log2p).proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
             }
             
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
                   for(n=0;n<ND;++n)
-                     xyz[kn][n] = crd[n][i][j];
+                     xyz[kn][n] = crd(n)(i,j);
                   xyz[kn++][2] = zplane;
                }
             }
@@ -557,10 +557,10 @@ void blocks::pvscal(int *key, float *v) {
       }         
       switch (*key) {
          case 1:case 2:case 3: /* flow */
-            blk[i].grd[0].flotov(offset,myvsi,(*key-1),v);
+            blk[i].grd[0].flotov(offset,(*key-1),v);
             break;
          case 5:case 6: /* mesh positions */
-            blk[i].grd[0].meshtov(offset,myvrtx,mybinfo,(*key-5),v);
+            blk[i].grd[0].meshtov(offset,(*key-5),v);
             break;
          case 7:
             running_subtract = 1;
@@ -587,27 +587,27 @@ void hp_mgrid::flotov(int &kn, struct vsi flo, int nvar, float *v) {
    knstart = kn;
    /* VERTEX MODES */
    for(i=0;i<nvrtx;++i)
-      v[kn++] = flo.v[i][nvar];
+      v[kn++] = flo.v(i,nvar);
    
-   if (b->p > 1) {
+   if (basis::tri(log2p).p > 1) {
       /* SIDE MODES */
       for(sind=0;sind<nside;++sind) {
          ugtouht1d(sind,flo);
-         b->proj1d_leg(uht[nvar],u[nvar][0]);
+         basis::tri(log2p).proj1d_leg(&uht(nvar)(0),&u(nvar)(0,0));
 
-         for(i=1;i<b->sm+1;++i)
-            v[kn++] = u[nvar][0][i];   
+         for(i=1;i<basis::tri(log2p).sm+1;++i)
+            v[kn++] = u(nvar)(0,i);   
       }
 
       /* INTERIOR MODES */
-      if (b->p > 2) {
+      if (basis::tri(log2p).p > 2) {
          for(tind = 0; tind < ntri; ++tind) {
             ugtouht(tind,flo);
-            b->proj_leg(uht[nvar],u[nvar][0],MXGP);
+            basis::tri(log2p).proj_leg(&uht(nvar)(0),&u(nvar)(0,0),MXGP);
                
-            for(i=1;i<b->sm;++i)
-               for(j=1;j<b->sm-(i-1);++j)
-                  v[kn++] = u[nvar][i][j];               
+            for(i=1;i<basis::tri(log2p).sm;++i)
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j)
+                  v[kn++] = u(nvar)(i,j);               
          }
       }
    }
@@ -620,7 +620,7 @@ void hp_mgrid::flotov(int &kn, struct vsi flo, int nvar, float *v) {
    return;
 }
 
-void hp_mgrid::meshtov(int &kn, FLT (*vin)[ND], struct bistruct **bin, int nvar, float *v) {
+void hp_mgrid::meshtov(int &kn, int nvar, float *v) {
    static int i,j,tind,sind,knstart;
    static int v0, v1;
    
@@ -633,38 +633,38 @@ void hp_mgrid::meshtov(int &kn, FLT (*vin)[ND], struct bistruct **bin, int nvar,
    for(i=0;i<nvrtx;++i)
       v[kn++] = vin[i][nvar];
       
-   if (b->p > 1) {
+   if (basis::tri(log2p).p > 1) {
       /* SIDE MODES */
       for(sind=0;sind<nside;++sind) {
-         if (sinfo[sind] < 0) {
-            v0 = svrtx[sind][0];
-            v1 = svrtx[sind][1];
-            b->proj1d_leg(vin[v0][nvar],vin[v1][nvar],crd[nvar][0]);
+         if (sd(sind).info < 0) {
+            v0 = sd(sind).vrtx(0);
+            v1 = sd(sind).vrtx(1);
+            basis::tri(log2p).proj1d_leg(vin[v0][nvar],vin[v1][nvar],&crd(nvar)(0,0));
          }
          else {
             crdtocht1d(sind,vin,bin);
-            b->proj1d_leg(cht[nvar],crd[nvar][0]);
+            basis::tri(log2p).proj1d_leg(&cht(nvar,0),&crd(nvar)(0,0));
          }
-         for(i=1;i<b->sm+1;++i) {
-             v[kn++] = crd[nvar][0][i];
+         for(i=1;i<basis::tri(log2p).sm+1;++i) {
+             v[kn++] = crd(nvar)(0,i);
          }
       }
 
       /* INTERIOR MODES */
-      if (b->p > 2) {
+      if (basis::tri(log2p).p > 2) {
          for(tind = 0; tind < ntri; ++tind) {
          
-            if (tinfo[tind] < 0) {
-               b->proj_leg(vin[tvrtx[tind][0]][nvar],vin[tvrtx[tind][1]][nvar],vin[tvrtx[tind][2]][nvar],crd[nvar][0],MXGP);
+            if (td(tind).info < 0) {
+               basis::tri(log2p).proj_leg(vin[td(tind).vrtx(0)][nvar],vin[td(tind).vrtx(1)][nvar],vin[td(tind).vrtx(2)][nvar],&crd(nvar)(0,0),MXGP);
             }
             else {
                crdtocht(tind,vin,bin);
-               b->proj_bdry_leg(cht[nvar],crd[nvar][0],MXGP);
+               basis::tri(log2p).proj_bdry_leg(&cht(nvar,0),&crd(nvar)(0,0),MXGP);
             }
             
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
-                  v[kn++] = crd[nvar][i][j];
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
+                  v[kn++] = crd(nvar)(i,j);
                }
             }
          }
@@ -686,25 +686,17 @@ void hp_mgrid::meshtov(int &kn, FLT (*vin)[ND], struct bistruct **bin, int nvar,
 void hp_mgrid::pv3subtract(int running) {
    int i,j,n;
          
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ugwk[0].v[i][n] = ug.v[i][n]-ugpv3.v[i][n];
-   
-   for(i=0;i<nside*b->sm;++i)
-      for(n=0;n<NV;++n)
-         ugwk[0].s[i][n] = ug.s[i][n]-ugpv3.s[i][n];
-
-   for(i=0;i<ntri*b->im;++i)
-      for(n=0;n<NV;++n)
-         ugwk[0].i[i][n] = ug.i[i][n]-ugpv3.i[i][n];            
+   ugwk(0).v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all())-ugpv3.v(Range(0,nvrtx),Range::all());
+   ugwk(0).s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all())-ugpv3.s(Range(0,nside),Range::all(),Range::all());
+   ugwk(0).i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all())-ugpv3.i(Range(0,ntri),Range::all(),Range::all());
             
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
-         vrtxwk[0][i][n] = vrtx[i][n]-vrtxpv3[i][n];
+         vrtxwk(0)(i)(n) = vrtx(i)(n)-vrtxpv3(i)(n);
          
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK) 
-         for (j=0;j<sbdry[i].num*b->sm;++j)
+         for (j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j)
             for(n=0;n<ND;++n)
                binfowk[0][i][j].curv[n] = binfo[i][j].curv[n] -binfopv3[i][j].curv[n];
             
@@ -717,25 +709,17 @@ void hp_mgrid::pv3subtract(int running) {
 void hp_mgrid::pv3freeze() {
    int i,j,n;
    
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
-         ugpv3.v[i][n] = ug.v[i][n];
-   
-   for(i=0;i<nside*b->sm;++i)
-      for(n=0;n<NV;++n)
-         ugpv3.s[i][n] = ug.s[i][n];
+   ugpv3.v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
+   ugpv3.s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
+   ugpv3.i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
 
-   for(i=0;i<ntri*b->im;++i)
-      for(n=0;n<NV;++n)
-         ugpv3.i[i][n] = ug.i[i][n];            
-            
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
-         vrtxpv3[i][n] = vrtx[i][n];
+         vrtxpv3[i][n] = vrtx(i)(n);
          
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK) 
-         for (j=0;j<sbdry[i].num*b->sm;++j)
+         for (j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j)
             binfopv3[i][j] = binfo[i][j];
             
    return;
@@ -766,36 +750,36 @@ void hp_mgrid::pvvect(int &kn,FLOAT v[][3]) {
 
    /* VERTEX MODES */
    for(i=0;i<nvrtx;++i) {
-      v[kn][0] = ug.v[i][0];
-        v[kn][1] = ug.v[i][1];
+      v[kn][0] = ug.v(i,0);
+        v[kn][1] = ug.v(i,1);
         v[kn++][2] = 0.0;
    }
    
-   if (b->p > 1) {
+   if (basis::tri(log2p).p > 1) {
       /* SIDE MODES */
       for(sind=0;sind<nside;++sind) {
          ugtouht1d(sind);
          for(n=0;n<ND;++n)
-            b->proj1d_leg(uht[n],u[n][0]);
+            basis::tri(log2p).proj1d_leg(&uht(n)(0),&u(n)(0,0));
 
-         for(i=1;i<b->sm+1;++i) {
+         for(i=1;i<basis::tri(log2p).sm+1;++i) {
             for(n=0;n<ND;++n)
-               v[kn][n] = u[n][0][i];   
+               v[kn][n] = u(n)(0,i);   
             v[kn++][2] = 0.0;
          }
       }
 
       /* INTERIOR MODES */
-      if (b->p > 2) {
+      if (basis::tri(log2p).p > 2) {
          for(tind = 0; tind < ntri; ++tind) {
             ugtouht(tind);
             for(n=0;n<ND;++n)
-               b->proj_leg(uht[n],u[n][0],MXGP);
+               basis::tri(log2p).proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
                
-            for(i=1;i<b->sm;++i) {
-               for(j=1;j<b->sm-(i-1);++j) {
+            for(i=1;i<basis::tri(log2p).sm;++i) {
+               for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
                   for(n=0;n<ND;++n)
-                     v[kn][n] = u[n][i][j];               
+                     v[kn][n] = u(n)(i,j);               
                   v[kn++][2] = 0.0;
                }
             }

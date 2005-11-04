@@ -1,6 +1,6 @@
 /*
  *  tadvance.cpp
- *  spectral_hp
+ *  tri_hp
  *
  *  Created by helenbrk on Wed Dec 05 2001.
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
@@ -20,47 +20,39 @@ void hp_mgrid::unsteady_sources(int mgrid) {
 
    if (!mgrid) {
    /* ON FINEST LEVEL MOVE BD INFO TO WORK */
-      for(step=0;step<TMSCHEME-1;++step) {  
+      for(step=0;step<TMSCHEME-1;++step) { 
+         ugwk(step).v(Range(0,nvrtx),Range::all()) = ugbd(step).v(Range(0,nvrtx),Range::all());
+         ugwk(step).s(Range(0,nside),Range::all(),Range::all()) = ugbd(step).s(Range(0,nside),Range::all(),Range::all());
+         ugwk(step).i(Range(0,ntri),Range::all(),Range::all()) = ugbd(step).i(Range(0,ntri),Range::all(),Range::all());
+
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
-               ugwk[step].v[i][n] = gbl->ugbd[step].v[i][n];
-
-         for(i=0;i<nside*b->sm;++i)
-            for(n=0;n<ND;++n)
-               ugwk[step].s[i][n] = gbl->ugbd[step].s[i][n];            
-
-         for(i=0;i<ntri*b->im;++i)
-            for(n=0;n<ND;++n)
-               ugwk[step].i[i][n] = gbl->ugbd[step].i[i][n]; 
-               
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n)
-               vrtxwk[step][i][n] = gbl->vrtxbd[step][i][n];
+               vrtxwk[step][i][n] = hp_gbl->vrtxbd[step][i][n];
                
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b->sm;++j) 
+               for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
                      for(n=0;n<ND;++n)
-                        binfowk[step][i][j].curv[n] = gbl->binfobd[step][i][j].curv[n];
+                        binfowk[step][i][j].curv[n] = hp_gbl->binfobd[step][i][j].curv[n];
       }
                      
                      
       /* CALCULATE MESH VELOCITY SOURCE TERM */
       for(i=0;i<nvrtx;++i) {
          for(n=0;n<ND;++n) {
-            dvrtdt[i][n] = bd[1]*vrtx[i][n];
+            dvrtdt[i][n] = bd[1]*vrtx(i)(n);
             for(step=0;step<TMSCHEME-1;++step)
-               dvrtdt[i][n] += bd[step+2]*gbl->vrtxbd[step][i][n];
+               dvrtdt[i][n] += bd[step+2]*hp_gbl->vrtxbd[step][i][n];
          }
       }
       
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&CURV_MASK) {
-            for(j=0;j<sbdry[i].num*b->sm;++j) {
+            for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) {
                for(n=0;n<ND;++n) {
-                  gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
+                  hp_gbl->dbinfodt[i][j].curv[n] = bd[1]*binfo[i][j].curv[n];
                   for(step=0;step<TMSCHEME-1;++step)
-                     gbl->dbinfodt[i][j].curv[n] += bd[step+2]*gbl->binfobd[step][i][j].curv[n];
+                     hp_gbl->dbinfodt[i][j].curv[n] += bd[step+2]*hp_gbl->binfobd[step][i][j].curv[n];
                }
             }
          }
@@ -80,23 +72,23 @@ void hp_mgrid::unsteady_sources(int mgrid) {
          tind = fine[i].tri;
 
          for(n=0;n<ND;++n)
-            vrtx[i][n] = 0.0;
+            vrtx(i)(n) = 0.0;
             
          for(n=0;n<ND;++n)
             dvrtdt[i][n] = 0.0;
          
          for(n=0;n<NV;++n)
-            ug.v[i][n] = 0.0;
+            ug.v(i,n) = 0.0;
             
          for(j=0;j<3;++j) {
             for(n=0;n<ND;++n)
-               vrtx[i][n] += fine[i].wt[j]*fmesh->vrtx[fmesh->tvrtx[tind][j]][n];
+               vrtx(i)(n) += fine[i].wt[j]*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
                
             for(n=0;n<ND;++n)
-               dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
+               dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->td(tind).vrtx(j)][n];
                
             for(n=0;n<NV;++n)
-               ug.v[i][n] += fine[i].wt[j]*fmesh->ug.v[fmesh->tvrtx[tind][j]][n];
+               ug.v(i,n) += fine[i].wt[j]*fmesh->ug.v(fmesh->td(tind).vrtx(j))(n);
          }
       }
       
@@ -113,10 +105,10 @@ void hp_mgrid::unsteady_sources(int mgrid) {
                
             for(j=0;j<3;++j) {
                for(n=0;n<ND;++n)
-                  vrtx_frst[i][n] += fine[i].wt[j]*vrtxwk[step][fmesh->tvrtx[tind][j]][n];
+                  vrtx_frst[i][n] += fine[i].wt[j]*vrtxwk[step][fmesh->td(tind).vrtx(j)][n];
                   
                for(n=0;n<NV;++n)
-                  vug_frst[i][n] += fine[i].wt[j]*ugwk[step].v[fmesh->tvrtx[tind][j]][n];
+                  vug_frst[i][n] += fine[i].wt[j]*ugwk[step].v(fmesh->td(tind).vrtx(j))(n);
             }
          }
          
@@ -125,7 +117,7 @@ void hp_mgrid::unsteady_sources(int mgrid) {
                vrtxwk[step][i][n] = vrtx_frst[i][n];
             
             for(n=0;n<NV;++n)
-               ugwk[step].v[i][n] = vug_frst[i][n];
+               ugwk[step].v(i,n) = vug_frst[i][n];
          }
       }
 
@@ -136,35 +128,35 @@ void hp_mgrid::unsteady_sources(int mgrid) {
    
    /* CALCULATE SOURCE TERMS AT GAUSS POINTS */
    for(tind=0;tind<ntri;++tind) {
-      if (tinfo[tind] > -1) {
+      if (td(tind).info > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
+            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
+            basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
             
-         for(i=0;i<b->gpx;++i) {
-            for(j=0;j<b->gpn;++j) {
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][1]][n] -vrtx[tvrtx[tind][0]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][0]][n]);
+                  dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(1))(n) -vrtx(td(tind).vrtx(0))(n));
+                  dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(0))(n));
                }
             }
          }
       }
       ugtouht(tind);
       for(n=0;n<ND;++n)
-         b->proj(uht[n],u[n][0],MXGP);
+         basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
                   
-      for(i=0;i<b->gpx;++i) {
-         for(j=0;j<b->gpn;++j) {   
-            cjcb[i][j] = bd[1]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
+      for(i=0;i<basis::tri(log2p).gpx;++i) {
+         for(j=0;j<basis::tri(log2p).gpn;++j) {   
+            cjcb(i,j) = bd[1]*hp_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
             for(n=0;n<ND;++n) {
-               dugdt[log2p][n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
+               dugdt[log2p][n][tind][i][j]  = u(n)(i,j)*cjcb(i,j);
             }
-            dugdt[log2p][ND][tind][i][j] = cjcb[i][j];
+            dugdt[log2p][ND][tind][i][j] = cjcb(i,j);
          }            
       }
    }
@@ -172,35 +164,35 @@ void hp_mgrid::unsteady_sources(int mgrid) {
    /* NOW DO ADDITIONAL TERMS FOR HIGHER-ORDER BD */
    for(step=0;step<TMSCHEME-1;++step) {
       for(tind=0;tind<ntri;++tind) {
-         if (tinfo[tind] > -1) {
+         if (td(tind).info > -1) {
             crdtocht(tind,vrtxwk[step],binfowk[step]);
             for(n=0;n<ND;++n)
-               b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
+               basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
          }
          else {
             for(n=0;n<ND;++n)
-               b->proj(vrtxwk[step][tvrtx[tind][0]][n],vrtxwk[step][tvrtx[tind][1]][n],vrtxwk[step][tvrtx[tind][2]][n],crd[n][0],MXGP);
+               basis::tri(log2p).proj(vrtxwk[step][td(tind).vrtx(0)][n],vrtxwk[step][td(tind).vrtx(1)][n],vrtxwk[step][td(tind).vrtx(2)][n],&crd(n)(0,0),MXGP);
                
-            for(i=0;i<b->gpx;++i) {
-               for(j=0;j<b->gpn;++j) {
+            for(i=0;i<basis::tri(log2p).gpx;++i) {
+               for(j=0;j<basis::tri(log2p).gpn;++j) {
                   for(n=0;n<ND;++n) {
-                     dcrd[n][0][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][1]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
-                     dcrd[n][1][i][j] = 0.5*(vrtxwk[step][tvrtx[tind][2]][n] -vrtxwk[step][tvrtx[tind][0]][n]);
+                     dcrd(n,0)(i,j) = 0.5*(vrtxwk[step][td(tind).vrtx(1)][n] -vrtxwk[step][td(tind).vrtx(0)][n]);
+                     dcrd(n,1)(i,j) = 0.5*(vrtxwk[step][td(tind).vrtx(2)][n] -vrtxwk[step][td(tind).vrtx(0)][n]);
                   }
                }
             }
          }
          ugtouht(tind,ugwk[step]);
          for(n=0;n<ND;++n)
-            b->proj(uht[n],u[n][0],MXGP);
+            basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
                      
-         for(i=0;i<b->gpx;++i) {
-            for(j=0;j<b->gpn;++j) {   
-               cjcb[i][j] = bd[step+2]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {   
+               cjcb(i,j) = bd[step+2]*hp_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND;++n) {
-                  dugdt[log2p][n][tind][i][j]  += u[n][i][j]*cjcb[i][j];
+                  dugdt[log2p][n][tind][i][j]  += u(n)(i,j)*cjcb(i,j);
                }
-               dugdt[log2p][ND][tind][i][j] += cjcb[i][j];
+               dugdt[log2p][ND][tind][i][j] += cjcb(i,j);
             }            
          }
       }
@@ -214,43 +206,38 @@ void hp_mgrid::shift() {
    FLT temp;
    
    /* SHIFT BACKWARDS DIFFERENCE STORAGE */
-   for(i=0;i<nvrtx;++i)
-      for(step=TMSCHEME-2;step>=1;--step)
-         for(n=0;n<ND;++n)
-            gbl->ugbd[step].v[i][n] = gbl->ugbd[step-1].v[i][n];
-
-   for(i=0;i<nside*b->sm;++i)
-      for(step=TMSCHEME-2;step>=1;--step)
-         for(n=0;n<ND;++n)
-            gbl->ugbd[step].s[i][n] = gbl->ugbd[step-1].s[i][n];            
-
-   for(i=0;i<ntri*b->im;++i)
-      for(step=TMSCHEME-2;step>=1;--step)
-         for(n=0;n<ND;++n)
-            gbl->ugbd[step].i[i][n] = gbl->ugbd[step-1].i[i][n];    
+   for(step=TMSCHEME-2;step>=1;--step) {
+      ugbd(step).v(Range(0,nvrtx),Range::all()) = ugbd(step-1).v(Range(0,nvrtx),Range::all());
+      ugbd(step).s(Range(0,nside),Range::all(),Range::all()) = ugbd(step-1).s(Range(0,nside),Range::all(),Range::all());            
+      ugbd(step).i(Range(0,ntri),Range::all(),Range::all()) = ugbd(step-1).i(Range(0,ntri),Range::all(),Range::all());            
+   }
    
    /* SHIFT & EXTRAPOLATE N+1 VALUE */
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<NV;++n) {
-         temp = ug.v[i][n] -gbl->ugbd[0].v[i][n];
-         gbl->ugbd[0].v[i][n] = ug.v[i][n];
-         ug.v[i][n] += extrap*temp;
+         temp = ug.v(i,n) -ugbd(0).v(i,n);
+         hp_gbl->ugbd[0].v(i,n) = ug.v(i,n);
+         ug.v(i,n) += extrap*temp;
       }
    }
 
-   for(i=0;i<nside*b->sm;++i) {
-      for(n=0;n<NV;++n) {
-         temp = ug.s[i][n] -gbl->ugbd[0].s[i][n];
-         gbl->ugbd[0].s[i][n] = ug.s[i][n];
-         ug.s[i][n] += extrap*temp;
+   for(i=0;i<nside;++i) {
+      for(m=0;m<basis::tri(log2p).sm;++m) {
+         for(n=0;n<NV;++n) {
+            temp = ug.s(i,m,n) -hp_gbl->ugbd[0].s(i,m,n);
+            hp_gbl->ugbd[0].s(i,m,n) = ug.s(i,m,n);
+            ug.s(i,m,n) += extrap*temp;
+         }
       }
    } 
 
-   for(i=0;i<ntri*b->im;++i) {
-      for(n=0;n<NV;++n) {
-         temp = ug.i[i][n] -gbl->ugbd[0].i[i][n];
-         gbl->ugbd[0].i[i][n] = ug.i[i][n];
-         ug.i[i][n] += extrap*temp;
+   for(i=0;i<ntri;++i) {
+      for(m=0;m<basis::tri(log2p).im;++m) {
+         for(n=0;n<NV;++n) {
+            temp = ug.i(i,m,n) -hp_gbl->ugbd[0].i(i,m,n);
+            hp_gbl->ugbd[0].i(i,m,n) = ug.i(i,m,n);
+            ug.i(i,m,n) += extrap*temp;
+         }
       }
    }   
    
@@ -258,30 +245,30 @@ void hp_mgrid::shift() {
    for(i=0;i<nvrtx;++i)
       for(step=TMSCHEME-2;step>=1;--step)
          for(n=0;n<ND;++n)
-            gbl->vrtxbd[step][i][n] = gbl->vrtxbd[step-1][i][n];
+            hp_gbl->vrtxbd[step][i][n] = hp_gbl->vrtxbd[step-1][i][n];
             
    for(i=0;i<nsbd;++i)
       if (sbdry[i].type&CURV_MASK)
-         for(j=0;j<sbdry[i].num*b->sm;++j) 
+         for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
             for(step=TMSCHEME-2;step>=1;--step)
                   for(n=0;n<ND;++n)
-                     gbl->binfobd[step][i][j].curv[n] = gbl->binfobd[step-1][i][j].curv[n];
+                     hp_gbl->binfobd[step][i][j].curv[n] = hp_gbl->binfobd[step-1][i][j].curv[n];
 
    /* SHIFT & EXTRAPOLATE N+1 VALUE */                     
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<ND;++n) {
-         temp = vrtx[i][n] -gbl->vrtxbd[0][i][n];
-         gbl->vrtxbd[0][i][n] = vrtx[i][n];
-         vrtx[i][n] += extrap*temp;
+         temp = vrtx(i)(n) -hp_gbl->vrtxbd[0][i][n];
+         hp_gbl->vrtxbd[0][i][n] = vrtx(i)(n);
+         vrtx(i)(n) += extrap*temp;
       }
    }
             
    for(i=0;i<nsbd;++i) {
       if (sbdry[i].type&CURV_MASK) {
-         for(j=0;j<sbdry[i].num*b->sm;++j) {
+         for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) {
             for(n=0;n<ND;++n) {
-               temp = binfo[i][j].curv[n] -gbl->binfobd[0][i][j].curv[n];
-               gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
+               temp = binfo[i][j].curv[n] -hp_gbl->binfobd[0][i][j].curv[n];
+               hp_gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
                binfo[i][j].curv[n] += extrap*temp;
             }
          }
@@ -300,83 +287,11 @@ void hp_mgrid::shift() {
    return;
 }
 
-
-void hp_mgrid::setbd(int nsteps) {
-   int i;
-   
-   for(i=0;i<TMSCHEME+1;++i)
-      hp_mgrid::bd[i] = 0.0;
-   
-   switch(nsteps) {
-      case(1):
-         hp_mgrid::bd[0] =  hp_mgrid::dti;
-         hp_mgrid::bd[1] = -hp_mgrid::dti;
-         break;
-#if (TMSCHEME > 1)
-      case(2):
-         hp_mgrid::bd[0] =  1.5*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -2.0*hp_mgrid::dti;
-         hp_mgrid::bd[2] =  0.5*hp_mgrid::dti;
-         hp_mgrid::extrap = 1;
-         break;
-#if (TMSCHEME > 2)
-      case(3):
-         hp_mgrid::bd[0] = 11./6*hp_mgrid::dti;
-         hp_mgrid::bd[1] = -3.*hp_mgrid::dti;
-         hp_mgrid::bd[2] = 1.5*hp_mgrid::dti;
-         hp_mgrid::bd[3] = -1./3.*hp_mgrid::dti;
-         hp_mgrid::extrap = 1;
-         break;
-#endif
-#endif
-   }
-
-   
-   return;
-}
-
 #else 
 
 /* DIRK SCHEMES */
 
 
-FLT hp_mgrid::bd[1];
-int hp_mgrid::extrap=0;
-
-/* 3-STAGE SDIRK */
-#define GRK3 0.43586652150845899941601945
-#define C2RK3 (2.-9*GRK3+6.*GRK3*GRK3)/(3*(1-4*GRK3+2*GRK3*GRK3))
-#define B2RK3 -3*(1-4*GRK3+2*GRK3*GRK3)*(1-4*GRK3+2*GRK3*GRK3)/(4*(-1+6*GRK3-9*GRK3*GRK3+3*GRK3*GRK3*GRK3))
-
-/* 4-STAGE ESDIRK */
-/* GRK4 L-STABLE SCHEME 0.43586652 ERROR-PREDICTION 0.5 */
-// #define GRK4 0.43586652150845899941601945
-#define GRK4 0.5
-#define C3RK4 2*GRK4*(GRK4-1./4.)*(GRK4-1.)/((GRK4-0.5)*(GRK4-0.5)-1./12.)
-#define A32RK4 (C3RK4*C3RK4-2*C3RK4*GRK4)/(4.*GRK4)
-#define B1RK4 (1./6. +GRK4*GRK4-GRK4*GRK4*C3RK4+3./2.*GRK4*C3RK4-GRK4-1./4.*C3RK4)/(GRK4*C3RK4)
-#define B2RK4 (1./3.-GRK4-1./2.*C3RK4+GRK4*C3RK4)/(2.*GRK4*(2.*GRK4-C3RK4))
-#define B3RK4 (1./3.-2*GRK4+2*GRK4*GRK4)/(C3RK4*(C3RK4-2*GRK4))
-
-#if (TMSCHEME == 3)
-/* THIS IS THE STANDARD FORM */
-// FLT hp_mgrid::adirk[TMSCHEME][TMSCHEME] = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
-// FLT hp_mgrid::bdirk[TMSCHEME] = {1-B2RK3-GRK3,B2RK3,GRK3};
-// FLT hp_mgrid::cdirk[TMSCHEME] = {GRK3,C2RK3,1.0};
-/* THIS IS THE INCREMENTAL FORM */
-/* DIAGONAL TERM IS INVERTED */
-FLT hp_mgrid::adirk[TMSCHEME][TMSCHEME] = { {1./GRK3,0.0,0.0}, {C2RK3-GRK3,1./GRK3,0.0}, {1.-B2RK3-C2RK3,B2RK3,1./GRK3} };
-FLT hp_mgrid::cdirk[TMSCHEME] = {GRK3,C2RK3-GRK3,1.0-C2RK3};
-#else
-/* THIS IS THE STANDARD FORM */
-// FLT hp_mgrid::adirk[TMSCHEME][TMSCHEME] = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}} 
-// FLT hp_mgrid::bdirk[TMSCHEME] = {B1RK4,B2RK4,B3RK4,GRK4};
-// FLT hp_mgrid::cdirk[TMSCHEME] = {0.0,2.*GRK4,C3RK4,1.0};
-/* THIS IS THE INCREMENTAL FORM */
-/* DIAGONAL TERM IS INVERTED */
-FLT hp_mgrid::adirk[TMSCHEME][TMSCHEME] = {{1./GRK4,0.0,0.0,0.0},{GRK4,1./GRK4,0.0,0.0},{C3RK4-A32RK4-2.*GRK4,A32RK4,1./GRK4,0.0},{B1RK4-(C3RK4-A32RK4-GRK4),B2RK4-A32RK4,B3RK4,1./GRK4}}; 
-FLT hp_mgrid::cdirk[DIRKSOLVES] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4};
-#endif
 
 void hp_mgrid::unsteady_sources(int stage, int mgrid) {
    int i,j,n,s,tind;
@@ -392,53 +307,37 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
 #endif
       {
          /* BACK CALCULATE K TERM */
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[stage].v[i][n] = (ug.v[i][n] -gbl->ugbd[0].v[i][n])*adirk[stage-1][stage-1];
-      
-         for(i=0;i<nside*b->sm;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[stage].s[i][n] = (ug.s[i][n] -gbl->ugbd[0].s[i][n])*adirk[stage-1][stage-1];
-         
-         for(i=0;i<ntri*b->im;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[stage].i[i][n] = (ug.i[i][n] -gbl->ugbd[0].i[i][n])*adirk[stage-1][stage-1];
+         ugbd(stage).v(Range(0,nvrtx),Range::all()) = (ug.v(Range(0,nvrtx),Range::all()) -hp_gbl->ugbd[0].v(Range(0,nvrtx),Range::all()))*adirk[stage-1][stage-1];
+         ugbd(stage).s(Range(0,nside),Range::all(),Range::all()) = (ug.s(Range(0,nside),Range::all(),Range::all()) -hp_gbl->ugbd(0).s(Range(0,nside),Range::all(),Range::all()))*adirk[stage-1][stage-1];
+         ugbd(stage).i(Range(0,ntri),Range::all(),Range::all()) = (ug.i(Range(0,ntri),Range::all(),Range::all()) -hp_gbl->ugbd(0).i(Range(0,ntri),Range::all(),Range::all()))*adirk[stage-1][stage-1];
          
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
-               gbl->vrtxbd[stage][i][n] = (vrtx[i][n]-gbl->vrtxbd[0][i][n])*adirk[stage-1][stage-1];
+               hp_gbl->vrtxbd[stage][i][n] = (vrtx(i)(n)-hp_gbl->vrtxbd[0][i][n])*adirk[stage-1][stage-1];
                         
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b->sm;++j) 
+               for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
                   for(n=0;n<ND;++n)
-                     gbl->binfobd[stage][i][j].curv[n] = (binfo[i][j].curv[n]-gbl->binfobd[0][i][j].curv[n])*adirk[stage-1][stage-1];
+                     hp_gbl->binfobd[stage][i][j].curv[n] = (binfo[i][j].curv[n]-hp_gbl->binfobd[0][i][j].curv[n])*adirk[stage-1][stage-1];
       }
    
       if (stage == TMSCHEME-3) {
          /* STORE W0 */
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].v[i][n] = ug.v[i][n];
-         
-         for(i=0;i<nside*b->sm;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].s[i][n] = ug.s[i][n];
-         
-         for(i=0;i<ntri*b->im;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].i[i][n] = ug.i[i][n];
-         
+         ugbd(0).v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
+         ugbd(0).s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all();
+         ugbd(0).i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all();
+
          /* SAME FOR MESH INFORMATION */
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
-               gbl->vrtxbd[0][i][n] = vrtx[i][n];
+               hp_gbl->vrtxbd[0][i][n] = vrtx(i)(n);
          
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b->sm;++j) 
+               for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
                   for(n=0;n<ND;++n)
-                     gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
+                     hp_gbl->binfobd[0][i][j].curv[n] = binfo[i][j].curv[n];
          
          /* CALCULATE 1D MESH SOURCE FIRST STAGE ON FINE MESH */
          surfvrttoug();
@@ -448,66 +347,50 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
          
       /* RECALCULATE TILDE W */
       for (s=0;s<stage;++s) {         
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].v[i][n] += adirk[stage][s]*gbl->ugbd[s+1].v[i][n];
-         
-         for(i=0;i<nside*b->sm;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].s[i][n] += adirk[stage][s]*gbl->ugbd[s+1].s[i][n];
-         
-         for(i=0;i<ntri*b->im;++i)
-            for(n=0;n<NV;++n)
-               gbl->ugbd[0].i[i][n] += adirk[stage][s]*gbl->ugbd[s+1].i[i][n];
-         
+         ugbd(0).v(Range(0,nvrtx),Range::all()) += adirk[stage][s]*ugbd(s+1).v(Range(0,nvrtx),Range::all());
+         ugbd(0).s(Range(0,nside),Range::all(),Range::all()) += adirk[stage][s]*ugbd(s+1).s(Range(0,nside),Range::all(),Range::all());
+         ugbd(0).i(Range(0,ntri),Range::all(),Range::all()) += adirk[stage][s]*ugbd(s+1).i(Range(0,ntri),Range::all(),Range::all());
+
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
-               gbl->vrtxbd[0][i][n] += adirk[stage][s]*gbl->vrtxbd[s+1][i][n];
+               hp_gbl->vrtxbd[0][i][n] += adirk[stage][s]*hp_gbl->vrtxbd[s+1][i][n];
          
          for(i=0;i<nsbd;++i)
             if (sbdry[i].type&CURV_MASK)
-               for(j=0;j<sbdry[i].num*b->sm;++j) 
+               for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
                   for(n=0;n<ND;++n)
-                     gbl->binfobd[0][i][j].curv[n] += adirk[stage][s]*gbl->binfobd[s+1][i][j].curv[n];
+                     hp_gbl->binfobd[0][i][j].curv[n] += adirk[stage][s]*hp_gbl->binfobd[s+1][i][j].curv[n];
                      
          
       }
       
       /* STORE TILDE(W) IN WORK FOR TRANSFER TO COARSER MESHES */
-      for(i=0;i<nvrtx;++i)
-         for(n=0;n<ND;++n)
-            ugwk[0].v[i][n] = gbl->ugbd[0].v[i][n];
-
-      for(i=0;i<nside*b->sm;++i)
-         for(n=0;n<ND;++n)
-            ugwk[0].s[i][n] = gbl->ugbd[0].s[i][n];            
-
-      for(i=0;i<ntri*b->im;++i)
-         for(n=0;n<ND;++n)
-            ugwk[0].i[i][n] = gbl->ugbd[0].i[i][n]; 
+      ugwk(0).v(Range(0,nvrtx),Range::all()) = ugbd(0).v(Range(0,nvrtx),Range::all());
+      ugwk(0).s(Range(0,nside),Range::all(),Range::all()) = ugbd(0).s(Range(0,nside),Range::all(),Range::all());
+      ugwk(0).i(Range(0,ntri),Range::all(),Range::all()) = ugbd(0).i(Range(0,ntri),Range::all(),Range::all());
             
       for(i=0;i<nvrtx;++i)
          for(n=0;n<ND;++n)
-            vrtxwk[0][i][n] = gbl->vrtxbd[0][i][n];
+            vrtxwk[0][i][n] = hp_gbl->vrtxbd[0][i][n];
             
       for(i=0;i<nsbd;++i)
          if (sbdry[i].type&CURV_MASK)
-            for(j=0;j<sbdry[i].num*b->sm;++j) 
+            for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) 
                   for(n=0;n<ND;++n)
-                     binfowk[0][i][j].curv[n] = gbl->binfobd[0][i][j].curv[n];
+                     binfowk[0][i][j].curv[n] = hp_gbl->binfobd[0][i][j].curv[n];
                      
       /* CALCULATE MESH VELOCITY SOURCE TERM */
       for(i=0;i<nvrtx;++i) {
          for(n=0;n<ND;++n) {
-            dvrtdt[i][n] = -bd[0]*gbl->vrtxbd[0][i][n];
+            dvrtdt[i][n] = -sim::bd[0]*hp_gbl->vrtxbd[0][i][n];
          }
       }
             
       for(i=0;i<nsbd;++i) {
          if (sbdry[i].type&CURV_MASK) {
-            for(j=0;j<sbdry[i].num*b->sm;++j) {
+            for(j=0;j<sbdry(i)->nel*basis::tri(log2p).sm;++j) {
                for(n=0;n<ND;++n) {
-                  gbl->dbinfodt[i][j].curv[n] = -bd[0]*gbl->binfobd[0][i][j].curv[n];
+                  hp_gbl->dbinfodt[i][j].curv[n] = -sim::bd[0]*hp_gbl->binfobd[0][i][j].curv[n];
                }
             }
          }
@@ -530,23 +413,23 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
          tind = fine[i].tri;
 
          for(n=0;n<ND;++n)
-            vrtx[i][n] = 0.0;
+            vrtx(i)(n) = 0.0;
             
          for(n=0;n<ND;++n)
             dvrtdt[i][n] = 0.0;
          
          for(n=0;n<NV;++n)
-            ug.v[i][n] = 0.0;
+            ug.v(i,n) = 0.0;
             
          for(j=0;j<3;++j) {
             for(n=0;n<ND;++n)
-               vrtx[i][n] += fine[i].wt[j]*fmesh->vrtx[fmesh->tvrtx[tind][j]][n];
+               vrtx(i)(n) += fine[i].wt[j]*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
                
             for(n=0;n<ND;++n)
-               dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->tvrtx[tind][j]][n];
+               dvrtdt[i][n] += fine[i].wt[j]*fmesh->dvrtdt[fmesh->td(tind).vrtx(j)][n];
                
             for(n=0;n<NV;++n)
-               ug.v[i][n] += fine[i].wt[j]*fmesh->ug.v[fmesh->tvrtx[tind][j]][n];
+               ug.v(i,n) += fine[i].wt[j]*fmesh->ug.v(fmesh->td(tind).vrtx(j))(n);
          }
       }
       
@@ -562,10 +445,10 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             
          for(j=0;j<3;++j) {
             for(n=0;n<ND;++n)
-               vrtx_frst[i][n] += fine[i].wt[j]*vrtxwk[0][fmesh->tvrtx[tind][j]][n];
+               vrtx_frst[i][n] += fine[i].wt[j]*vrtxwk[0][fmesh->td(tind).vrtx(j)][n];
                
             for(n=0;n<NV;++n)
-               vug_frst[i][n] += fine[i].wt[j]*ugwk[0].v[fmesh->tvrtx[tind][j]][n];
+               vug_frst[i][n] += fine[i].wt[j]*ugwk[0].v(fmesh->td(tind).vrtx(j))(n);
          }
       }
       
@@ -574,7 +457,7 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
             vrtxwk[0][i][n] = vrtx_frst[i][n];
          
          for(n=0;n<NV;++n)
-            ugwk[0].v[i][n] = vug_frst[i][n];
+            ugwk[0].v(i,n) = vug_frst[i][n];
       }
 
       /* SET SPRING CONSTANTS FOR COARSER MESHES */
@@ -586,69 +469,38 @@ void hp_mgrid::unsteady_sources(int stage, int mgrid) {
    /* CALCULATE TIME DERIVATIVE SOURCE TERM  */
    /*********************************************************/    
    for(tind=0;tind<ntri;++tind) {
-      if (tinfo[tind] > -1) {
+      if (td(tind).info > -1) {
          crdtocht(tind,vrtxwk[0],binfowk[0]);
          for(n=0;n<ND;++n)
-            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
+            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b->proj(vrtxwk[0][tvrtx[tind][0]][n],vrtxwk[0][tvrtx[tind][1]][n],vrtxwk[0][tvrtx[tind][2]][n],crd[n][0],MXGP);
+            basis::tri(log2p).proj(vrtxwk[0][td(tind).vrtx(0)][n],vrtxwk[0][td(tind).vrtx(1)][n],vrtxwk[0][td(tind).vrtx(2)][n],&crd(n)(0,0),MXGP);
             
-         for(i=0;i<b->gpx;++i) {
-            for(j=0;j<b->gpn;++j) {
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtxwk[0][tvrtx[tind][1]][n] -vrtxwk[0][tvrtx[tind][0]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtxwk[0][tvrtx[tind][2]][n] -vrtxwk[0][tvrtx[tind][0]][n]);
+                  dcrd(n,0)(i,j) = 0.5*(vrtxwk[0][td(tind).vrtx(1)][n] -vrtxwk[0][td(tind).vrtx(0)][n]);
+                  dcrd(n,1)(i,j) = 0.5*(vrtxwk[0][td(tind).vrtx(2)][n] -vrtxwk[0][td(tind).vrtx(0)][n]);
                }
             }
          }
       }
       ugtouht(tind,ugwk[0]);
       for(n=0;n<ND;++n)
-         b->proj(uht[n],u[n][0],MXGP);
+         basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
                   
-      for(i=0;i<b->gpx;++i) {
-         for(j=0;j<b->gpn;++j) {   
-            cjcb[i][j] = -bd[0]*gbl->rho*RAD(i,j)*(dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
+      for(i=0;i<basis::tri(log2p).gpx;++i) {
+         for(j=0;j<basis::tri(log2p).gpn;++j) {   
+            cjcb(i,j) = -sim::bd[0]*hp_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
             for(n=0;n<ND;++n)
-               dugdt[log2p][n][tind][i][j]  = u[n][i][j]*cjcb[i][j];
-            dugdt[log2p][ND][tind][i][j] = cjcb[i][j];
+               dugdt[log2p][n][tind][i][j]  = u(n)(i,j)*cjcb(i,j);
+            dugdt[log2p][ND][tind][i][j] = cjcb(i,j);
          }            
       }
    }
    
-   return;
-}
-
-void hp_mgrid::setbd(int step) {
-
-      
-#if (TMSCHEME == 4)
-   /* STARTUP SEQUENCE */
-   if (step == 1) {
-      adirk[0][0] = 0.0; adirk[0][1] = 0.0;            adirk[0][2] = 0.0;     adirk[0][3] = 0.0;
-      adirk[1][0] = 0.0; adirk[1][1] = 1./GRK3;        adirk[1][2] = 0.0;     adirk[1][3] = 0.0;
-      adirk[2][0] = 0.0; adirk[2][1] = C2RK3-GRK3;     adirk[2][2] = 1./GRK3; adirk[2][3] = 0.0;
-      adirk[3][0] = 0.0; adirk[3][1] = 1.-B2RK3-C2RK3; adirk[3][2] = B2RK3;   adirk[3][3] = 1./GRK3;
-      cdirk[0] = GRK3; cdirk[1] = C2RK3-GRK3; cdirk[2] = 1.0-C2RK3;
-   } 
-   else if (step == 2) {
-      adirk[0][0] = 1./GRK3;                   adirk[0][1] = 0.0;          adirk[0][2] = 0.0;     adirk[0][3] = 0.0;
-      adirk[1][0] = GRK4;                      adirk[1][1] = 1./GRK4;      adirk[1][2] = 0.0;     adirk[1][3] = 0.0;
-      adirk[2][0] = C3RK4-A32RK4-2.*GRK4;      adirk[2][1] = A32RK4;       adirk[2][2] = 1./GRK4; adirk[2][3] = 0.0;
-      adirk[3][0] = B1RK4-(C3RK4-A32RK4-GRK4); adirk[3][1] = B2RK4-A32RK4; adirk[3][2] = B3RK4;   adirk[3][3] = 1./GRK4; 
-      cdirk[0] = 2.*GRK4; cdirk[1] = C3RK4-2.*GRK4; cdirk[2] = 1.0-C3RK4;
-   }
-   else {
-      adirk[0][0] = 1./GRK4;                   adirk[0][1] = 0.0;          adirk[0][2] = 0.0;     adirk[0][3] = 0.0;
-      adirk[1][0] = GRK4;                      adirk[1][1] = 1./GRK4;      adirk[1][2] = 0.0;     adirk[1][3] = 0.0;
-      adirk[2][0] = C3RK4-A32RK4-2.*GRK4;      adirk[2][1] = A32RK4;       adirk[2][2] = 1./GRK4; adirk[2][3] = 0.0;
-      adirk[3][0] = B1RK4-(C3RK4-A32RK4-GRK4); adirk[3][1] = B2RK4-A32RK4; adirk[3][2] = B3RK4;   adirk[3][3] = 1./GRK4; 
-      cdirk[0] = 2.*GRK4; cdirk[1] = C3RK4-2.*GRK4; cdirk[2] = 1.0-C3RK4;
-   }
-#endif
-
    return;
 }
 

@@ -1,6 +1,6 @@
 /*
  *  surface.h
- *  spectral_hp
+ *  tri_hp
  *
  *  Created by helenbrk on Tue Nov 06 2001.
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
@@ -49,8 +49,22 @@ class surface {
 
    public:
       void alloc(int maxside, int log2p, int mgrid, int fmesh, struct surface_glbls *store);
-      friend class hp_mgrid;
-      friend class block;
-      friend class blocks;
+      /* COUPLED SURFACE BOUNDARY ROUTINES */ 
+      void surfvrttoug();
+      void surfugtovrt1();
+      void surfugtovrt2();
+      /* SETUP SURFACE 1D SPRING CONSTANTS */
+      void setksprg1d();
+      void surfksrc1d();
+      void surfrsdl(int mgrid);
+      void surfinvrt1(int bnum);
+      void surfinvrt2(int bnum);
+      void surfdt1(int bnum);
+      void surfdt2(int bnum);
+      void surfnstage1(int bnum);
+      void surfnstage2(int bnum, int stage);
+      void surfgetfres(int bnum);
+      void surfgetcchng(int bnum);
+      void surfmaxres();
 };
 

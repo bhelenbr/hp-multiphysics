@@ -1,18 +1,21 @@
 /*
  *  l2error.cpp
- *  spectral_hp
+ *  tri_hp
  *
  *  Created by Brian Helenbrook on Tue Jun 11 2002.
  *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
  *
  */
 
-#include "spectral_hp.h"
+#include "tri_hp.h"
 #include <utilities.h>
+#include <boundary.h>
+#include "hp_boundary.h"
 
-void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
+ void tri_hp::l2error(FLT (*func)(int, TinyVector<FLT,2> &x)) {
 	int i,j,n,tind,loc[NV];
 	FLT err,mxr[NV],l2r[NV];
+   TinyVector<FLT,2> pt;
    
 #ifdef TAYLOR
    extern FLT ppipi;
@@ -22,7 +25,7 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
    
 /* MATCH PRESSURE AT ONE POINT */
    ppipi = 0.0;
-   ppipi = -(*func)(2,vrtx[0][0],vrtx[0][1])+ug.v[0][2];
+   ppipi = -(*func)(2,vrtx(0)(0),vrtx(0)(1))+ug.v(0,2);
 #endif
    
 	for(n=0;n<NV;++n) {
@@ -32,20 +35,20 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 	
 	for(tind=0;tind<ntri;++tind) {
       
-      if (tinfo[tind] > -1) {
+      if (td(tind).info > -1) {
          crdtocht(tind);
          for(n=0;n<ND;++n)
-            b->proj_bdry(cht[n], crd[n][0], dcrd[n][0][0], dcrd[n][1][0],MXGP);
+            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
       }
       else {
          for(n=0;n<ND;++n)
-            b->proj(vrtx[tvrtx[tind][0]][n],vrtx[tvrtx[tind][1]][n],vrtx[tvrtx[tind][2]][n],crd[n][0],MXGP);
+            basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
 
-         for(i=0;i<b->gpx;++i) {
-            for(j=0;j<b->gpn;++j) {
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd[n][0][i][j] = 0.5*(vrtx[tvrtx[tind][1]][n] -vrtx[tvrtx[tind][0]][n]);
-                  dcrd[n][1][i][j] = 0.5*(vrtx[tvrtx[tind][2]][n] -vrtx[tvrtx[tind][0]][n]);
+                  dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(1))(n) -vrtx(td(tind).vrtx(0))(n));
+                  dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(0))(n));
                }
             }
          }
@@ -53,18 +56,20 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 
       ugtouht(tind);
 		for(n=0;n<NV;++n)
-			b->proj(uht[n],u[n][0],MXGP);
+			basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
 		
- 		for (i=0;i<b->gpx;++i) {	
-			for (j=0;j<b->gpn;++j) {
-            cjcb[i][j] = (dcrd[0][0][i][j]*dcrd[1][1][i][j] -dcrd[1][0][i][j]*dcrd[0][1][i][j]);
+ 		for (i=0;i<basis::tri(log2p).gpx;++i) {	
+			for (j=0;j<basis::tri(log2p).gpn;++j) {
+            cjcb(i,j) = (dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+            pt(0) = crd(0)(i,j);
+            pt(1) = crd(1)(i,j);
             for(n=0;n<NV;++n) {
-               err =  fabs(u[n][i][j]-func(n,crd[0][i][j],crd[1][i][j]));
+               err =  fabs(u(n)(i,j)-func(n,pt));
                if (err > mxr[n]) {
                   mxr[n] = err;
                   loc[n] = tind;
                }
-               l2r[n] += err*err*b->wtx(i)*b->wtn(j)*cjcb[i][j];
+               l2r[n] += err*err*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
             }
          }
       }	
@@ -79,158 +84,118 @@ void spectral_hp::l2error(FLT (*func)(int, FLT, FLT)) {
 	return;
 }
 
-FLT spectral_hp::findmax(int type, FLT (*fxy)(FLT x[ND])) {
+ block::ctrl tri_hp::findmax(int excpt, int bnum, FLT (*fxy)(TinyVector<FLT,2> &x)) {
    FLT ddpsi1, ddpsi2, psil, psir;
-   FLT xp[ND], dx[ND];
-   FLT maxloc[ND],minloc[ND],max,min;
-   int bnum, v0, v1, sind;
+   TinyVector<FLT,2> xp, dx, maxloc, minloc;
+   FLT max,min;
+   int v0, sind;
    
-   max = -1.0e99;
-   min = 1.0e99;
-   
-   for(bnum=0;bnum<nsbd;++bnum) {
-      if (!(sbdry[bnum].type&type)) continue;
-      
-      v0 = svrtx[sbdry[bnum].el[0]][0];
-      v1 = svrtx[sbdry[bnum].el[sbdry[bnum].num-1]][1];
-      /* CHECK IF PERIODIC */
-      ddpsi2 = 0.0;
-      if (v0 == v1) {
-         sind = sbdry[bnum].el[sbdry[bnum].num-1];
-         crdtocht(sind);
-         b->ptprobe1d(ND, xp, dx, 1.0,cht[0], MXTM);
-         ddpsi2 = (*fxy)(dx);
-      }
-      else {
-         for(int i=0;i<nvbd;++i) {
-            if (vbdry[i].type&(COMX_MASK+COMY_MASK) && vbdry[i].el[0] == v0) {
-               sind = sbdry[bnum].el[sbdry[bnum].num-1];
-               crdtocht1d(sind);
-               b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
-               ddpsi2 = (*fxy)(dx);
-            }
-         } 
-      }
-
-      for(int indx=0;indx<sbdry[bnum].num;++indx) {
-         sind = sbdry[bnum].el[indx];
+   switch (excpt) {
+      case(0):
+         /* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
+         sind = sbdry(bnum)->el(sbdry(bnum)->nel-1);
          crdtocht1d(sind);
-         b->ptprobe1d(ND, xp, dx, -1.0, cht[0], MXTM);
-         ddpsi1 = (*fxy)(dx);
-         if (ddpsi1 * ddpsi2 <= 0.0) {
-            v0 = svrtx[sbdry[bnum].el[indx]][0];
-            if ((*fxy)(vrtx[v0]) > max) {
-               maxloc[0] = vrtx[v0][0];
-               maxloc[1] = vrtx[v0][1];
-               max = (*fxy)(vrtx[v0]);
-            }
-            if ((*fxy)(vrtx[v0]) < min) {
-               minloc[0] = vrtx[v0][0];
-               minloc[1] = vrtx[v0][1];
-               min = (*fxy)(vrtx[v0]);
-            }
-            printf("#LOCAL EXTREMA: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
-         }
-         b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
+         basis::tri(log2p).ptprobe1d(ND,&xp(0),&dx(0),1.0,&cht(0,0),MXTM);
          ddpsi2 = (*fxy)(dx);
-         if (ddpsi1 *ddpsi2 <= 0.0) {
-            /* INTERIOR MAXIMUM */
-            psil = -1.0;
-            psir = 1.0;
-            while (psir-psil > 1.0e-10) {
-               b->ptprobe1d(ND, xp, dx, 0.5*(psil +psir), cht[0], MXTM);
-               if ((*fxy)(dx)*ddpsi1 < 0.0) 
-                  psir = 0.5*(psil+psir);
-               else
-                  psil = 0.5*(psil+psir);
+         hp_sbdry(bnum)->msgload_vrtx(1,&ddpsi2,0,1,1);
+         return(block::advance);
+      
+      case(1):
+         hp_sbdry(bnum)->msgpass_vrtx(1);
+         return(block::advance);
+      
+      case(2):
+         ddpsi2 = 0.0;
+         hp_sbdry(bnum)->msgwait_rcv_vrtx(0,&ddpsi2,0,1,1);
+
+         max = -1.0e99;
+         min = 1.0e99;
+         for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
+            sind = sbdry(bnum)->el(indx);
+            crdtocht1d(sind);
+            basis::tri(log2p).ptprobe1d(ND, &xp(0), &dx(0), -1.0, &cht(0,0), MXTM);
+            ddpsi1 = (*fxy)(dx);
+            if (ddpsi1 * ddpsi2 <= 0.0) {
+               v0 = sd(sbdry(bnum)->el(indx)).vrtx(0);
+               if ((*fxy)(vrtx(v0)) > max) {
+                  maxloc[0] = vrtx(v0)(0);
+                  maxloc[1] = vrtx(v0)(1);
+                  max = (*fxy)(vrtx(v0));
+               }
+               if ((*fxy)(vrtx(v0)) < min) {
+                  minloc[0] = vrtx(v0)(0);
+                  minloc[1] = vrtx(v0)(1);
+                  min = (*fxy)(vrtx(v0));
+               }
+               *sim::log << "#LOCAL EXTREMA: " << vrtx(v0)(0) << ' ' << vrtx(v0)(1) << ' ' <<(*fxy)(vrtx(v0)) << std::endl;
             }
-            if ((*fxy)(xp) > max) {
-               maxloc[0] = xp[0];
-               maxloc[1] = xp[1];
-               max = (*fxy)(xp);
-            }
-            if ((*fxy)(xp) < min) {
-               minloc[0] = xp[0];
-               minloc[1] = xp[1];
-               min = (*fxy)(xp);
-            }
-            printf("#LOCAL EXTREMA: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
-         }  
+            basis::tri(log2p).ptprobe1d(ND, &xp(0), &dx(0), 1.0, &cht(0,0), MXTM);
+            ddpsi2 = (*fxy)(dx);
+            if (ddpsi1 *ddpsi2 <= 0.0) {
+               /* INTERIOR MAXIMUM */
+               psil = -1.0;
+               psir = 1.0;
+               while (psir-psil > 1.0e-10) {
+                  basis::tri(log2p).ptprobe1d(ND, &xp(0), &dx(0), 0.5*(psil +psir), &cht(0,0), MXTM);
+                  if ((*fxy)(dx)*ddpsi1 < 0.0) 
+                     psir = 0.5*(psil+psir);
+                  else
+                     psil = 0.5*(psil+psir);
+               }
+               if ((*fxy)(xp) > max) {
+                  maxloc[0] = xp[0];
+                  maxloc[1] = xp[1];
+                  max = (*fxy)(xp);
+               }
+               if ((*fxy)(xp) < min) {
+                  minloc[0] = xp[0];
+                  minloc[1] = xp[1];
+                  min = (*fxy)(xp);
+               }
+               *sim::log << "#LOCAL EXTREMA: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+            }  
       }
+      *sim::log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
+      *sim::log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
+      return(block::stop);
    }
-   printf("#EXTREMA %e %e %e\n",maxloc[0],maxloc[1],max);
-   printf("#EXTREMA %e %e %e\n",minloc[0],minloc[1],min);
    
-   return(max);
+   *sim::log << "flow control error" << std::endl;
+   return(block::stop);
 }
 
-void spectral_hp::findintercept(int type, FLT (*fxy)(FLT x[ND])) {
-   FLT ddpsi1, ddpsi2, psil, psir;
-   FLT xp[ND], dx[ND];
-   FLT maxloc[ND],minloc[ND],max,min;
-   int bnum, v0, v1, sind;
+ void tri_hp::findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,2> &x)) {
+   FLT psil, psir;
+   TinyVector<FLT,2> xp, dx;
+   int v0, sind;
+   FLT vl, vr;
    
-   max = -1.0e99;
-   min = 1.0e99;
-   
-   for(bnum=0;bnum<nsbd;++bnum) {
-      if (!(sbdry[bnum].type&type)) continue;
-      
-      v0 = svrtx[sbdry[bnum].el[0]][0];
-      v1 = svrtx[sbdry[bnum].el[sbdry[bnum].num-1]][1];
-      /* CHECK IF PERIODIC */
-      ddpsi2 = 0.0;
-      if (v0 == v1) {
-         sind = sbdry[bnum].el[sbdry[bnum].num-1];
-         crdtocht(sind);
-         b->ptprobe1d(ND, xp, dx, 1.0,cht[0], MXTM);
-         ddpsi2 = (*fxy)(xp);
-      }
-      else {
-         for(int i=0;i<nvbd;++i) {
-            if (vbdry[i].type&(COMX_MASK+COMY_MASK) && vbdry[i].el[0] == v0) {
-               sind = sbdry[bnum].el[sbdry[bnum].num-1];
-               crdtocht1d(sind);
-               b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
-               ddpsi2 = (*fxy)(xp);
-            }
-         } 
-      }
+   sind = sbdry(bnum)->el(0);
+   crdtocht1d(sind);
+   v0 = sd(sind).vrtx(0);
+   vl = (*fxy)(vrtx(v0));
 
-      for(int indx=0;indx<sbdry[bnum].num;++indx) {
-         sind = sbdry[bnum].el[indx];
-         crdtocht1d(sind);
-         b->ptprobe1d(ND, xp, dx, -1.0, cht[0], MXTM);
-         ddpsi1 = (*fxy)(xp);
-         if (ddpsi1 * ddpsi2 <= 0.0) {
-            v0 = svrtx[sbdry[bnum].el[indx]][0];
-            printf("#INTERSECTION: %e %e %e\n",vrtx[v0][0],vrtx[v0][1],(*fxy)(vrtx[v0]));
+   for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
+      sind = sbdry(bnum)->el(indx);
+      crdtocht1d(sind);
+      v0 = sd(sind).vrtx(1);
+      vr = (*fxy)(vrtx(v0));
+
+      if (vl*vr <= 0.0) {
+         /* INTERIOR INTERCEPT */
+         psil = -1.0;
+         psir = 1.0;
+         while (psir-psil > 1.0e-10) {
+            basis::tri(log2p).ptprobe1d(ND,&xp(0),&dx(0),0.5*(psil+psir),&cht(0,0),MXTM);
+            if ((*fxy)(xp)*vl < 0.0) 
+               psir = 0.5*(psil+psir);
+            else
+               psil = 0.5*(psil+psir);
          }
-         b->ptprobe1d(ND, xp, dx, 1.0, cht[0], MXTM);
-         ddpsi2 = (*fxy)(xp);
-         if (ddpsi1 *ddpsi2 <= 0.0) {
-            /* INTERIOR INTERCEPT */
-            psil = -1.0;
-            psir = 1.0;
-            while (psir-psil > 1.0e-10) {
-               b->ptprobe1d(ND, xp, dx, 0.5*(psil +psir), cht[0], MXTM);
-               if ((*fxy)(xp)*ddpsi1 < 0.0) 
-                  psir = 0.5*(psil+psir);
-               else
-                  psil = 0.5*(psil+psir);
-            }
-			printf("#INTERSECTION: %e %e %e\n",xp[0],xp[1],(*fxy)(xp));
-         }  
+         *sim::log << "#INTERSECTION: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
       }
+      vl = vr; 
    }
    
    return;
 }
-
-
-static FLT fx(FLT xp[ND]) { return(xp[0]);}
-static FLT fy(FLT xp[ND]) { return(xp[1]);}
-FLT spectral_hp::findmaxx(int type) {return(findmax(type,&fx));}
-FLT spectral_hp::findmaxy(int type) {return(findmax(type,&fy));} 
-   
-

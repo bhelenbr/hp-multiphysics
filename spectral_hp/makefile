@@ -59,4 +59,4 @@ hp: $(OBJ)
 hp.pV3: $(OBJ) $(VIZ)
 	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
 
-$(OBJ): spectral_hp.h hp_mgrid.h blocks.h defines.h surface.h
+$(OBJ): tri_hp.h hp_mgrid.h blocks.h defines.h surface.h

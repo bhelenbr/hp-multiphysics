@@ -7,115 +7,115 @@
  *
  */
 
-#include "spectral_hp.h"
-#include<assert.h>
+#include "tri_hp.h"
+#include "hp_boundary.h"
+#include <assert.h>
 
-void spectral_hp::ugtouht(int tind) {
-    int i,k,m,n,indx,cnt;
+ void tri_hp::ugtouht(int tind) {
+    int i,k,m,n,indx,sind,cnt;
     int sign, msgn;
 
    /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
    /* VERTICES */   
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht[n][i] = ug.v[indx][n];
+         uht(n)(i) = ug.v(indx,n);
    }
    
 
    /* SIDES */
    cnt = 3;
    for(i=0;i<3;++i) {
-      indx = tside[tind].side[i]*sm0;
-      sign = tside[tind].sign[i];
+      sind = td(tind).side(i);
+      sign = td(tind).sign(i);
       msgn = 1;
-      for (m = 0; m < b->sm; ++m) {
+      for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht[n][cnt] = msgn*ug.s[indx +m][n];
+            uht(n)(cnt) = msgn*ug.s(sind,m,n);
          msgn *= sign;
          ++cnt;
       }
    }
  
    /* INTERIORS */   
-   if (b->im > 0) {   
-      indx = tind*im0;
-      for(m = 1; m < b->sm; ++m) {
-         for(k = 0; k < b->sm-m; ++k) {
+   if (basis::tri(log2p).im > 0) {
+      indx = 0;
+      for(m = 1; m < basis::tri(log2p).sm; ++m) {
+         for(k = 0; k < basis::tri(log2p).sm-m; ++k) {
             for(n=0; n<NV; ++n)
-               uht[n][cnt] = ug.i[indx][n];
+               uht(n)(cnt) = ug.i(tind,indx,n);
             ++cnt; ++indx;
          }
-         indx += sm0 -b->sm;
+         indx += sm0 -basis::tri(log2p).sm;
       }
    }
    
    return;
 }
 
-void spectral_hp::ugtouht(int tind, struct vsi ug) {
-    int i,k,m,n,indx,cnt;
+ void tri_hp::ugtouht(int tind, int tlvl) {
+    int i,k,m,n,sind,indx,cnt;
     int sign, msgn;
-
+    vsi &ug = ugbd(tlvl);
+    
    /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
    /* VERTICES */   
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht[n][i] = ug.v[indx][n];
+         uht(n)(i) = ug.v(indx,n);
    }
    
-
-   /* SIDES */
    /* SIDES */
    cnt = 3;
    for(i=0;i<3;++i) {
-      indx = tside[tind].side[i]*sm0;
-      sign = tside[tind].sign[i];
+      sind = td(tind).side(i);
+      sign = td(tind).sign(i);
       msgn = 1;
-      for (m = 0; m < b->sm; ++m) {
+      for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht[n][cnt] = msgn*ug.s[indx +m][n];
+            uht(n)(cnt) = msgn*ug.s(sind,m,n);
          msgn *= sign;
          ++cnt;
       }
    }
 
    /* INTERIORS */   
-   if (b->im > 0) {   
-      indx = tind*im0;
-      for(m = 1; m < b->sm; ++m) {
-         for(k = 0; k < b->sm-m; ++k) {
+   if (basis::tri(log2p).im > 0) {   
+      indx = 0;
+      for(m = 1; m < basis::tri(log2p).sm; ++m) {
+         for(k = 0; k < basis::tri(log2p).sm-m; ++k) {
             for(n=0; n<NV; ++n)
-               uht[n][cnt] = ug.i[indx][n];
+               uht(n)(cnt) = ug.i(tind,indx,n);
             ++cnt; ++indx;
          }
-         indx += sm0 -b->sm;
+         indx += sm0 -basis::tri(log2p).sm;
       }
    }
    
    return;
 }
 
-void spectral_hp::ugtouht_bdry(int tind) {
-    int i,m,n,indx,cnt;
+ void tri_hp::ugtouht_bdry(int tind) {
+    int i,m,n,indx,sind,cnt;
     int sign, msgn;
    
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht[n][i] = ug.v[indx][n];
+         uht(n)(i) = ug.v(indx,n);
    }
 
    /* SIDES */
    cnt = 3;
    for(i=0;i<3;++i) {
-      indx = tside[tind].side[i]*sm0;
-      sign = tside[tind].sign[i];
+      sind = td(tind).side(i);
+      sign = td(tind).sign(i);
       msgn = 1;
-      for (m = 0; m < b->sm; ++m) {
+      for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht[n][cnt] = msgn*ug.s[indx +m][n];
+            uht(n)(cnt) = msgn*ug.s(sind,m,n);
          msgn *= sign;
          ++cnt;
       }
@@ -124,25 +124,26 @@ void spectral_hp::ugtouht_bdry(int tind) {
    return;
 }
 
-void spectral_hp::ugtouht_bdry(int tind,struct vsi ug) {
-    int i,m,n,indx,cnt;
+ void tri_hp::ugtouht_bdry(int tind, int tlvl) {
+    int i,m,n,indx,sind,cnt;
     int sign, msgn;
+    vsi &ug = ugbd(tlvl);
    
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht[n][i] = ug.v[indx][n];
+         uht(n)(i) = ug.v(indx,n);
    }
 
    /* SIDES */
    cnt = 3;
    for(i=0;i<3;++i) {
-      indx = tside[tind].side[i]*sm0;
-      sign = tside[tind].sign[i];
+      sind = td(tind).side(i);
+      sign = td(tind).sign(i);
       msgn = 1;
-      for (m = 0; m < b->sm; ++m) {
+      for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht[n][cnt] = msgn*ug.s[indx +m][n];
+            uht(n)(cnt) = msgn*ug.s(sind,m,n);
          msgn *= sign;
          ++cnt;
       }
@@ -152,74 +153,70 @@ void spectral_hp::ugtouht_bdry(int tind,struct vsi ug) {
 }
 
 
-void spectral_hp::ugtouht1d(int sind) {
-   int m,n,indx,v0,v1;
+ void tri_hp::ugtouht1d(int sind) {
+   int m,n,v0,v1;
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
    for(n=0;n<NV;++n) {
-      uht[n][0] = ug.v[v0][n];
-      uht[n][1] = ug.v[v1][n];
+      uht(n)(0) = ug.v(v0,n);
+      uht(n)(1) = ug.v(v1,n);
    }
     
-   indx = sind*sm0;
-   for(m=0;m<b->sm;++m)
+   for(m=0;m<basis::tri(log2p).sm;++m)
     for(n=0;n<NV;++n) 
-      uht[n][m+2] = ug.s[indx+m][n];
+      uht(n)(m+2) = ug.s(sind,m,n);
          
    return;
 }
 
-void spectral_hp::ugtouht1d(int sind, struct vsi ug) {
-   int m,n,indx,v0,v1;
+ void tri_hp::ugtouht1d(int sind, int tlvl) {
+   int m,n,v0,v1;
+   vsi &ug = ugbd(tlvl);
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
    for(n=0;n<NV;++n) {
-      uht[n][0] = ug.v[v0][n];
-      uht[n][1] = ug.v[v1][n];
+      uht(n)(0) = ug.v(v0,n);
+      uht(n)(1) = ug.v(v1,n);
    }
     
-   indx = sind*sm0;
-   for(m=0;m<b->sm;++m)
+   for(m=0;m<basis::tri(log2p).sm;++m)
     for(n=0;n<NV;++n) 
-      uht[n][m+2] = ug.s[indx+m][n];
+      uht(n)(m+2) = ug.s(sind,m,n);
          
    return;
 }
 
-void spectral_hp::crdtocht(int tind) {
+ void tri_hp::crdtocht(int tind) {
    int i,m,n,cnt,bnum,sind,indx;
    
    /* VERTICES */   
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<ND; ++n)
-         cht[n][i] = vrtx[indx][n];
+         cht(n,i) = vrtx(indx)(n);
    }
 
-   if (b->sm == 0) return;
+   if (basis::tri(log2p).sm == 0) return;
    
    /* SIDES */
    cnt = 3;
    for (i=0; i<3;++i) {   
-      sind = tside[tind].side[i];
-      if (sinfo[sind] < 0) {
-         for(m=0;m<b->sm;++m) {
+      sind = td(tind).side(i);
+      if (sd(sind).tri(1) >= 0) {
+         for(m=0;m<basis::tri(log2p).sm;++m) {
             for(n=0;n<ND;++n)
-               cht[n][cnt] = 0.0;
+               cht(n,cnt) = 0.0;
             ++cnt;
          }
       }
       else {
-         bnum = (-stri[sind][1]>>16) -1;
-         indx = (-stri[sind][1]&0xFFFF)*sm0;
-         assert(bnum > -1 && bnum < nsbd);
-         assert(indx > -1 && indx < sbdry[bnum].num*sm0);
-         
-         for (m = 0; m < b->sm; ++m) {
+         bnum = getbdrynum(sd(sind).tri(1));
+         indx = getbdryel(sd(sind).tri(1));
+         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<ND; ++n)
-               cht[n][cnt] = binfo[bnum][indx+m].curv[n];
+               cht(n,cnt) = hp_sbdry(bnum)->crds(indx,m,n);
             ++cnt;
          }
       }
@@ -228,38 +225,36 @@ void spectral_hp::crdtocht(int tind) {
    return;
 }
 
-void spectral_hp::crdtocht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
+ void tri_hp::crdtocht(int tind, int tlvl) {
    int i,m,n,cnt,bnum,sind,indx;
-   
+      
    /* VERTICES */   
    for (i=0; i<3; ++i) {
-      indx = tvrtx[tind][i];
+      indx = td(tind).vrtx(i);
       for(n=0; n<ND; ++n)
-         cht[n][i] = vrtx[indx][n];
+         cht(n,i) = vrtxbd(tlvl)(indx)(n);
    }
 
-   if (b->sm == 0) return;
+   if (basis::tri(log2p).sm == 0) return;
    
    /* SIDES */
    cnt = 3;
    for (i=0; i<3;++i) {   
-      sind = tside[tind].side[i];
-      if (sinfo[sind] < 0) {
-         for(m=0;m<b->sm;++m) {
+      sind = td(tind).side(i);
+      if (sd(sind).tri(1) >= 0) {
+         for(m=0;m<basis::tri(log2p).sm;++m) {
             for(n=0;n<ND;++n)
-               cht[n][cnt] = 0.0;
+               cht(n,cnt) = 0.0;
             ++cnt;
          }
       }
       else {
-         bnum = (-stri[sind][1]>>16) -1;
-         indx = (-stri[sind][1]&0xFFFF)*sm0;
-         assert(bnum > -1 && bnum < nsbd);
-         assert(indx > -1 && indx < sbdry[bnum].num*sm0);
+         bnum = getbdrynum(sd(sind).tri(1));
+         indx = getbdryel(sd(sind).tri(1));
          
-         for (m = 0; m < b->sm; ++m) {
+         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<ND; ++n)
-               cht[n][cnt] = binfo[bnum][indx+m].curv[n];
+               cht(n,cnt) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);
             ++cnt;
          }
       }
@@ -268,82 +263,92 @@ void spectral_hp::crdtocht(int tind, FLT (*vrtx)[ND], struct bistruct **binfo) {
    return;
 }
 
-void spectral_hp::crdtocht1d(int sind) {
+ void tri_hp::crdtocht1d(int sind) {
    int m,n,bnum,indx,v0,v1;
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
    for(n=0;n<ND;++n) {
-      cht[n][0] = vrtx[v0][n];
-      cht[n][1] = vrtx[v1][n];
+      cht(n,0) = vrtx(v0)(n);
+      cht(n,1) = vrtx(v1)(n);
    }
    
-   bnum = (-stri[sind][1]>>16) -1;
-   indx = (-stri[sind][1]&0xFFFF)*sm0;
-   assert(bnum > -1 && bnum < nsbd);
-   assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
-   
-   for(m=0;m<b->sm;++m)
-    for(n=0;n<ND;++n) 
-         cht[n][m+2] = binfo[bnum][indx+m].curv[n];
+   if (sd(sind).tri(1) >= 0) {
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         for(n=0;n<ND;++n) 
+            cht(n,m+2) = 0.0;
+   }
+   else {
+      bnum = getbdrynum(sd(sind).tri(1));
+      indx = getbdryel(sd(sind).tri(1));
+      
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         for(n=0;n<ND;++n) 
+            cht(n,m+2) = hp_sbdry(bnum)->crds(indx,m,n);
+   }
          
    return;
 }
 
-void spectral_hp::crdtocht1d(int sind,FLT (*vrtx)[ND], struct bistruct **binfo) {
+ void tri_hp::crdtocht1d(int sind,int tlvl) {
    int m,n,bnum,indx,v0,v1;
    
-   v0 = svrtx[sind][0];
-   v1 = svrtx[sind][1];
+   v0 = sd(sind).vrtx(0);
+   v1 = sd(sind).vrtx(1);
    for(n=0;n<ND;++n) {
-      cht[n][0] = vrtx[v0][n];
-      cht[n][1] = vrtx[v1][n];
+      cht(n,0) = vrtxbd(tlvl)(v0)(n);
+      cht(n,1) = vrtxbd(tlvl)(v1)(n);
    }
    
-   bnum = (-stri[sind][1]>>16) -1;
-   indx = (-stri[sind][1]&0xFFFF)*sm0;
-   assert(bnum > -1 && bnum < nsbd);
-   assert(indx > -1 && indx <= sbdry[bnum].num*sm0);
-   
-   for(m=0;m<b->sm;++m)
-    for(n=0;n<ND;++n) 
-         cht[n][m+2] = binfo[bnum][indx+m].curv[n];
+   if (sd(sind).tri(1) >= 0) {
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         for(n=0;n<ND;++n) 
+            cht(n,m+2) = 0.0;
+   }
+   else {
+      bnum = getbdrynum(sd(sind).tri(1));
+      indx = getbdryel(sd(sind).tri(1));
+      
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         for(n=0;n<ND;++n) 
+            cht(n,m+2) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);
+   }
          
    return;
 }
 
-void spectral_hp::lftog(int tind, struct vsi g) {
-   int i,m,n,indx,gindx,sgn,msgn;
+ void tri_hp::lftog(int tind, struct vsi g) {
+   int i,m,n,indx,gindx,sind,sgn,msgn;
    
    /* VERTEX MODES */
    for (m=0; m<3; ++m) {
-      gindx = tvrtx[tind][m];
+      gindx = td(tind).vrtx(m);
       for(n=0;n<NV;++n)
-         g.v[gindx][n] += lf[n][m];
+         g.v(gindx,n) += lf(n)(m);
    }
 
 
-   if (b->p > 1) {
+   if (basis::tri(log2p).p > 1) {
       /* SIDE MODES */
       indx = 3;
       for(i=0;i<3;++i) {
-         gindx = tside[tind].side[i]*b->sm;
-         sgn = tside[tind].sign[i];
+         sind = td(tind).side(i);
+         sgn = td(tind).sign(i);
          msgn = 1;
-         for (m = 0; m < b->sm; ++m) {
+         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0;n<NV;++n)
-               g.s[gindx][n] += msgn*lf[n][indx];
+               g.s(sind,m,n) += msgn*lf(n)(indx);
             msgn *= sgn;
             ++gindx;
             ++indx;
          }
       }
 
-      gindx = tind*b->im;
-      indx = b->bm;
-      for(m=0;m<b->im;++m) {
+      gindx = 0;
+      indx = basis::tri(log2p).bm;
+      for(m=0;m<basis::tri(log2p).im;++m) {
          for(n=0;n<NV;++n)
-            g.i[gindx][n] += lf[n][indx];
+            g.i(tind,gindx,n) += lf(n)(indx);
          ++gindx;
          ++indx;
       }
