@@ -44,7 +44,6 @@
 		6FA5714B05AE030D003EC856 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F52FE4DC02180FA201990B20 /* libutil.a */; };
 		6FA5714C05AE030D003EC856 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F51291FA0336051D01990B69 /* vecLib.framework */; };
 		6FA94078086D79410014B542 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50AF9AF0188AC3601990B20 /* length.cpp */; };
-		6FA9407B086D795D0014B542 /* pV3.h in Headers */ = {isa = PBXBuildFile; fileRef = F5A11A6A029ABBE001990B20 /* pV3.h */; };
 		6FA9407C086D795D0014B542 /* pv3routines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F52FE4D0021429E601990B20 /* pv3routines.cpp */; };
 		6FA9407D086D795F0014B542 /* libpV3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEE25FF08102DAB003F8292 /* libpV3.a */; };
 		6FA9407E086D79600014B542 /* libfpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5605E1D02C2C26901AA3076 /* libfpvm3.a */; };
@@ -119,7 +118,6 @@
 		F581CD2901989D4B01990B20 /* surface.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = surface.h; sourceTree = "<group>"; };
 		F58209B601808CC201990B20 /* libmesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmesh.a; path = ../lib/libmesh.a; sourceTree = SOURCE_ROOT; };
 		F58BA1070176870001990B20 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
-		F5A11A6A029ABBE001990B20 /* pV3.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = pV3.h; sourceTree = "<group>"; };
 		F5A17FF3017CD50401990B20 /* curvinit.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = curvinit.cpp; sourceTree = "<group>"; };
 		F5A85EFB0186FF6101990B20 /* initfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initfunc.cpp; sourceTree = "<group>"; };
 		F5AC61740252568D01990B20 /* drag.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = drag.cpp; sourceTree = "<group>"; };
@@ -227,7 +225,6 @@
 				F581CD2901989D4B01990B20 /* surface.h */,
 				F581CD240198731301990B20 /* surface.cpp */,
 				F5AC61740252568D01990B20 /* drag.cpp */,
-				F5A11A6A029ABBE001990B20 /* pV3.h */,
 				F505FF0F0192F1EB01990B20 /* blocks.h */,
 				F505FF100192F1EB01990B20 /* block.cpp */,
 				F505FF110192F1EB01990B20 /* blocks.cpp */,
@@ -280,7 +277,6 @@
 				6FA5712805AE030D003EC856 /* hp_mgrid.h in Headers */,
 				6FA5712905AE030D003EC856 /* surface.h in Headers */,
 				6FA5712A05AE030D003EC856 /* defines.h in Headers */,
-				6FA9407B086D795D0014B542 /* pV3.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
