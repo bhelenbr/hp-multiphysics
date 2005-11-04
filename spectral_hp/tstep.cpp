@@ -27,7 +27,6 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
          FLT dtstari = 0.0;
 #endif
 
-<<<<<<< tstep.cpp
          for(tind = 0; tind < ntri; ++tind) {
             jcb = 0.25*area(tind);  // area is 2 x triangle area
             v = td(tind).vrtx;
@@ -51,34 +50,6 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             qmax = 0.0;
             for(j=0;j<3;++j) {
                v0 = v(j);
-=======
-   for(tind = 0; tind < ntri; ++tind) {
-      jcb = 0.25*area(tind);  // area is 2 x triangle area
-      v = tvrtx[tind];
-      hmax = 0.0;
-      for(j=0;j<3;++j) {
-         h = pow(vrtx[v[j]][1] -vrtx[v[(j+1)%3]][1],2.0) + 
-         pow(vrtx[v[j]][0] -vrtx[v[(j+1)%3]][0],2.0);
-         hmax = (h > hmax ? h : hmax);
-      }
-      hmax = sqrt(hmax);
-      
-      if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-         printf("negative triangle area caught in tstep %d %d %e\n",nvrtx,ntri,jcb);
-         printf("tind: %d\n",tind);
-         for(j=0;j<3;++j) 
-            printf("%e %e\n",vrtx[v[j]][0],vrtx[v[j]][1]);
-         output("negative",tecplot);
-         out_mesh("negative",grid);
-         exit(1);
-      }
-      h = 4.*jcb/(0.25*(b->p +1)*(b->p+1)*hmax);
-      hmax = hmax/(0.25*(b->p +1)*(b->p+1));
-   
-      qmax = 0.0;
-      for(j=0;j<3;++j) {
-         v0 = v[j];
->>>>>>> 1.25
 #ifndef DROP
                q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +dvrtdt(v0)(0)),2.0) 
                   +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +dvrtdt(v0)(1)),2.0);
@@ -89,13 +60,8 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
                qmax = MAX(qmax,q);
             }
 #ifndef TIMEACCURATE
-<<<<<<< tstep.cpp
             gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax);
             if (ins_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
-=======
-      gam = 3.0*qmax +(0.5*hmax*bd[0] +2.*gbl->nu/hmax)*(0.5*hmax*bd[0] +2.*gbl->nu/hmax);
-      if (gbl->mu + bd[0] == 0.0) gam = MAX(gam,0.01);
->>>>>>> 1.25
 #endif
 
             q = sqrt(qmax);
@@ -120,14 +86,8 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
 #else
 
 #ifndef INERTIALESS
-<<<<<<< tstep.cpp
             // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
             jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-
-=======
-      // jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +bd[0];
-      jcb *= 2.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
->>>>>>> 1.25
 #else
             jcb *= 8.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
