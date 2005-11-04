@@ -48,9 +48,12 @@ void hp_mgrid::energy(FLT& esum, FLT& asum) {
 }
 
 void hp_mgrid::length1(FLT norm) {
-   int i,j,v0,v1,indx,sind,bnum,count;
+   int i,j,k,v0,v1,v2,indx,sind,tind,bnum,count;
    FLT sum,u,v,ruv,lgtol,lgf,ratio;
    class mesh *tgt;
+   FLT dx0[2],dx1[2],dx2[2],dedpsi[2],ep[2];
+   FLT length0,length1,length2,lengthept;
+   FLT ang1,curved1,ang2,curved2;
 
    lgtol = -log(vlngth_tol);
    
@@ -72,21 +75,6 @@ void hp_mgrid::length1(FLT norm) {
             fltwk[v0] += sum;
             fltwk[v1] += sum;
          }
-         
-         /* BOUNDARY CURVATURE (FOR LINEAR THIS IS DIFFICULT TO TEST)
-         for(i=0;i<nsbd;++i) {
-            if (!(sbdry[i].type&CURV_MASK)) continue;
-            for(j=0;j<sbdry[i].num;++j) {
-               sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               v1 = svrtx[sind][1];
-               sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
-               fltwk[v0] += sum;
-               fltwk[v1] += sum;
-            }
-         }
-         */
-                     
          break;
          
       default:
@@ -107,26 +95,54 @@ void hp_mgrid::length1(FLT norm) {
             
          }
 
-         /* BOUNDARY CURVATURE? */
+        /* BOUNDARY CURVATURE */
          for(i=0;i<nsbd;++i) {
             if (!(sbdry[i].type&CURV_MASK)) continue;
-            indx = b->sm-1;
             for(j=0;j<sbdry[i].num;++j) {
                sind = sbdry[i].el[j];
-               v0 = svrtx[sind][0];
-               v1 = svrtx[sind][1];
-               /* THIS LIMITS BOUNDARY CURVATURE TO 1/invbdryerr VARIATION */
-               sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b->p+1)/2.0);
-               fltwk[v0] += sum*trncerr*nnbor[v0];
-               fltwk[v1] += sum*trncerr*nnbor[v1];
-               indx += sm0;
+               v1 = svrtx[sind][0];
+               v2 = svrtx[sind][1];
+               
+               crdtocht1d(sind);
+                                    
+               /* FIND ANGLE BETWEEN LINEAR SIDES */
+               tind = stri[sind][0];
+               for(k=0;k<3;++k)
+                  if (tside[tind].side[k] == sind) break;
+               
+               v0 = tvrtx[tind][k];
+               
+               dx0[0] = vrtx[v2][0]-vrtx[v1][0];
+               dx0[1] = vrtx[v2][1]-vrtx[v1][1];
+               length0 = dx0[0]*dx0[0] +dx0[1]*dx0[1];
+               
+               dx1[0] = vrtx[v0][0]-vrtx[v2][0];
+               dx1[1] = vrtx[v0][1]-vrtx[v2][1];
+               length1 = dx1[0]*dx1[0] +dx1[1]*dx1[1];
+               
+               dx2[0] = vrtx[v1][0]-vrtx[v0][0];
+               dx2[1] = vrtx[v1][1]-vrtx[v0][1];
+               length2 = dx2[0]*dx2[0] +dx2[1]*dx2[1];
+               
+               b->ptprobe1d(2,ep,dedpsi,-1.0,cht[0],MXTM);
+               lengthept = dedpsi[0]*dedpsi[0] +dedpsi[1]*dedpsi[1];
+               
+               ang1 = acos(-(dx0[0]*dx2[0] +dx0[1]*dx2[1])/sqrt(length0*length2));
+               curved1 = acos((dx0[0]*dedpsi[0] +dx0[1]*dedpsi[1])/sqrt(length0*lengthept));
+               
+               b->ptprobe1d(2,ep,dedpsi,1.0,cht[0],MXTM);
+               lengthept = dedpsi[0]*dedpsi[0] +dedpsi[1]*dedpsi[1];
+               
+               ang2 = acos(-(dx0[0]*dx1[0] +dx0[1]*dx1[1])/sqrt(length0*length1));
+               curved2 = acos((dx0[0]*dedpsi[0] +dx0[1]*dedpsi[1])/sqrt(length0*lengthept));                     
+
+               sum = bdrysensitivity*(curved1/ang1 +curved2/ang2);
+               fltwk[v0] += sum*trncerr*norm*nnbor[v0];
+               fltwk[v1] += sum*trncerr*norm*nnbor[v1];
             }
          }
          break;
    }
-
-
-         
 
    for(i=0;i<nvrtx;++i) {
       fltwk[i] = pow(fltwk[i]/(norm*nnbor[i]*trncerr),1./(b->p+1+ND));
@@ -134,7 +150,10 @@ void hp_mgrid::length1(FLT norm) {
       lgf = log(fltwk[i]);
       fltwk[i] = exp(lgtol*lgf/(lgtol +fabs(lgf)));
 #endif
-      vlngth[i] /= fltwk[i];      
+      vlngth[i] /= fltwk[i];
+#ifdef ONELAYER
+      vlngth[i] = MIN(vlngth[i],0.5);
+#endif
 #ifdef THREELAYER
 #define TRES 0.025/THREELAYER
       if (vrtx[i][1] > 0.525) {
@@ -256,7 +275,7 @@ void hp_mgrid::length2() {
 
 void hp_mgrid::outlength(char *name, FILETYPE type) {
    char fnmapp[100];
-   int j,v0,v1,indx,sind;
+   int v0,v1,indx;
    FLT sum,u,v,ruv;
    FILE *out;
    int i,n,tind;
@@ -299,19 +318,6 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                   fltwk[v0] += sum;
                   fltwk[v1] += sum;
                }
-               
-               /* BOUNDARY CURVATURE? */
-               for(i=0;i<nsbd;++i) {
-                  if (!(sbdry[i].type&CURV_MASK)) continue;
-                  for(j=0;j<sbdry[i].num;++j) {
-                     sind = sbdry[i].el[j];
-                     v0 = svrtx[sind][0];
-                     v1 = svrtx[sind][1];
-                     sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
-                     fltwk[v0] += sum;
-                     fltwk[v1] += sum;
-                  }
-               }
                break;
                
             default:
@@ -328,20 +334,6 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                   indx += sm0;
                }
                
-               /* BOUNDARY CURVATURE? */
-               for(i=0;i<nsbd;++i) {
-                  if (!(sbdry[i].type&CURV_MASK)) continue;
-                  indx = 0;
-                  for(j=0;j<sbdry[i].num;++j) {
-                     sind = sbdry[i].el[j];
-                     v0 = svrtx[sind][0];
-                     v1 = svrtx[sind][1];
-                     sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b->sm-1].curv[0]) +fabs(binfo[i][indx+b->sm-1].curv[1]));
-                     fltwk[v0] += sum;
-                     fltwk[v1] += sum;
-                     indx += sm0;
-                  }
-               }
                break;
          }
             

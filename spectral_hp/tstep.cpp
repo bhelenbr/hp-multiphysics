@@ -42,7 +42,10 @@ void hp_mgrid::tstep1(void) {
       hmax = sqrt(hmax);
       
       if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-         printf("negative triangle area caught in tstep %d %d\n",nvrtx,ntri);
+         printf("negative triangle area caught in tstep %d %d %e\n",nvrtx,ntri,jcb);
+         printf("tind: %d\n",tind);
+         for(j=0;j<3;++j) 
+            printf("%e %e\n",vrtx[v[j]][0],vrtx[v[j]][1]);
          output("negative",tecplot);
          out_mesh("negative",grid);
          exit(1);
@@ -65,7 +68,6 @@ void hp_mgrid::tstep1(void) {
 #ifndef TIMEACCURATE
       gam = 3.0*qmax +(0.5*hmax*bd[0] +2.*gbl->nu/hmax)*(0.5*hmax*bd[0] +2.*gbl->nu/hmax);
       if (gbl->mu + bd[0] == 0.0) gam = MAX(gam,0.01);
-      gam=1e-3;
 #endif
 
       q = sqrt(qmax);
@@ -92,7 +94,6 @@ void hp_mgrid::tstep1(void) {
 #ifndef INERTIALESS
       // jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +bd[0];
       jcb *= 2.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-
 #else
       jcb *= 8.*gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif

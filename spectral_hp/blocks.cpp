@@ -45,8 +45,8 @@ void blocks::init(char *file, int start_sim) {
    printf("#FADD\t\tADIS\t\tCHRCTR\n#%.2f\t\t%.2f\t\t%d\n",hp_mgrid::fadd,hp_mgrid::adis,hp_mgrid::charyes);
    
    /* LOAD ADAPTATION INFORMATION */
-   fscanf(fp,"%*[^\n]%d %lf %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::invbdryerr,&hp_mgrid::vlngth_tol,&hp_mgrid::adapt_tol);
-   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tVLNGTH_TOL\t\tADAPT_TOL\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::invbdryerr,hp_mgrid::vlngth_tol,hp_mgrid::adapt_tol);
+   fscanf(fp,"%*[^\n]%d %lf %lf %lf %lf\n",&adapt,&hp_mgrid::trncerr,&hp_mgrid::bdrysensitivity,&hp_mgrid::vlngth_tol,&hp_mgrid::adapt_tol);
+   printf("#ADAPT\t\tTRNCERR\t\tBDRYERR\t\tVLNGTH_TOL\t\tADAPT_TOL\n#%d\t\t%.2e\t\t%.2e\t\t%.2f\t\t%.2f\n",adapt,hp_mgrid::trncerr,hp_mgrid::bdrysensitivity,hp_mgrid::vlngth_tol,hp_mgrid::adapt_tol);
  
    /* READ SURFACE ITERATIVE INFORMATION */
    fscanf(fp,"%*[^\n]");
@@ -738,15 +738,20 @@ void blocks::go() {
 
          // output(tstep*TMSCHEME +s,tecplot);
       }
-      
       blk[0].grd[0].drag(1028);
+#ifdef NACA
+      blk[0].grd[0].drag(66564);
+      blk[0].grd[0].drag(132100);
+#endif
+
+      
 #ifdef ANALYTIC
       blk[0].grd[0].l2error(&f1);
 #endif
 
       if (!(tstep%out_intrvl)) {
          output(tstep+1,tecplot,0); 
-#ifdef PARAMETERLOOP
+#if (defined(DROP) && defined(PARAMETERLOOP))
          /* FIND MAXIMUM WIDTH */
          int scap;
          scap = 0;
@@ -762,7 +767,8 @@ void blocks::go() {
 #endif
          if (!(tstep%(rstrt_intrvl*out_intrvl))) {
             output(tstep+1,text,1);         
-#ifdef PARAMETERLOOP            
+#ifdef PARAMETERLOOP   
+#ifdef DROP         
             ratio = fabs((aratioold-aratio)/aratio);
             if (ratio > 0.05 && tstep > 0) {
                factor = pow(factor,0.5);
@@ -770,6 +776,20 @@ void blocks::go() {
             }
             aratioold = aratio;
             hp_mgrid::g=hp_mgrid::g*factor;
+#endif
+#ifdef IMPINGINGJET
+            /* INCREASE SIGMA */
+            blk[1].sgbl[0].sigma = blk[1].sgbl[0].sigma - 1.0e-4 ; 
+            blk[0].sgbl[0].sigma = blk[0].sgbl[0].sigma - 1.0e-4;
+            printf("sigma is %e\n",blk[0].sgbl[0].sigma) - 1.0e-4;
+           /* INCREASE REYNOLDS NUMBER */
+           //blk[2].gbl.mu = (blk[2].gbl.mu)/2 ;        
+           //blk[1].gbl.mu = (blk[1].gbl.mu)/2 ;
+           //blk[0].gbl.mu = (blk[0].gbl.mu)/2 ;
+           //blk[1].sgbl[0].mu2 = (blk[1].sgbl[0].mu2)/2 ;
+           //blk[0].sgbl[0].mu2 = (blk[0].sgbl[0].mu2)/2 ;  
+           printf("Re is %e\n",0.1/(blk[2].gbl.mu)) ;
+#endif
 #endif
          }
       }

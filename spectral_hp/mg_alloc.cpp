@@ -17,7 +17,7 @@ FLT hp_mgrid::mvel[ND][MXGP][MXGP]; // for local mesh velocity info
 FLT hp_mgrid::fadd, hp_mgrid::cfl[MXLG2P];   // ITERATION PARAMETERS  
 FLT hp_mgrid::adis; // STABILIZATION
 int hp_mgrid::charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-FLT hp_mgrid::trncerr, hp_mgrid::invbdryerr, hp_mgrid::vlngth_tol, hp_mgrid::adapt_tol;
+FLT hp_mgrid::trncerr, hp_mgrid::bdrysensitivity, hp_mgrid::vlngth_tol, hp_mgrid::adapt_tol;
 #ifdef PV3
 int hp_mgrid::changed = 1; //FLAG FOR PV3 TO INDICATE STRUCTURE CHANGED
 #endif
@@ -41,9 +41,13 @@ void hp_mgrid::allocate(int mgrid, struct hp_mgrid_glbls *store) {
    
 #if (defined(DROP) || defined(UNSTEADY_DROP))
    r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK -INFL_MASK;
+#elif (defined(IMPINGINGJET))
+   r_mesh::fixy_mask = 0xfffff -SYMM_MASK -OUTF_MASK -PRDX_MASK -INFL_MASK;
 #else
    r_mesh::fixy_mask = 0xff -SYMM_MASK -OUTF_MASK -PRDX_MASK;
 #endif
+
+
    
    if (spectral_hp::size == 0 || mesh::initialized == 0) {
       printf("must initialize mesh/spectral_hp first\n");

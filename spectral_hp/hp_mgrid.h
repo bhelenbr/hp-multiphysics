@@ -69,7 +69,7 @@ class hp_mgrid : public spectral_hp {
       static FLT fadd, cfl[MXLG2P];   // ITERATION PARAMETERS  
       static FLT adis; // DISSIPATION CONSTANT
       static int charyes;  // USE CHARACTERISTIC FAR-FIELD B.C'S
-      static FLT trncerr, invbdryerr, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
+      static FLT trncerr, bdrysensitivity, vlngth_tol, adapt_tol;  //   ADAPTATION CONSTANTS  
       static int extrap; 
 #ifdef BACKDIFF
       static FLT bd[TMSCHEME+1];  // BACKWARDS DIFFERENCE CONSTANTS

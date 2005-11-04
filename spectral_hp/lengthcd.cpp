@@ -56,7 +56,7 @@ void hp_mgrid::length1(FLT norm) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+               sum = trncerr*bdrysensitivity*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
                fltwk[v0] += sum;
                fltwk[v1] += sum;
             }
@@ -85,8 +85,8 @@ void hp_mgrid::length1(FLT norm) {
                sind = sbdry[i].el[j];
                v0 = svrtx[sind][0];
                v1 = svrtx[sind][1];
-               /* THIS LIMITS BOUNDARY CURVATURE TO 1/invbdryerr VARIATION */
-               sum = pow(invbdryerr*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b->p+1)/2.0);
+               /* THIS LIMITS BOUNDARY CURVATURE TO 1/bdrysensitivity VARIATION */
+               sum = pow(bdrysensitivity*0.5*(fabs(binfo[i][indx].curv[0]) +fabs(binfo[i][indx].curv[1]))/distance(v0,v1),(b->p+1)/2.0);
                fltwk[v0] += sum*trncerr*nnbor[v0];
                fltwk[v1] += sum*trncerr*nnbor[v1];
                indx += sm0;
@@ -253,7 +253,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                      sind = sbdry[i].el[j];
                      v0 = svrtx[sind][0];
                      v1 = svrtx[sind][1];
-                     sum = trncerr*invbdryerr*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
+                     sum = trncerr*bdrysensitivity*(fabs(vrtx[v0][0] -vrtx[v1][0]) +fabs(vrtx[v0][1] -vrtx[v1][1]));
                      fltwk[v0] += sum;
                      fltwk[v1] += sum;
                   }
@@ -279,7 +279,7 @@ void hp_mgrid::outlength(char *name, FILETYPE type) {
                      sind = sbdry[i].el[j];
                      v0 = svrtx[sind][0];
                      v1 = svrtx[sind][1];
-                     sum = trncerr*invbdryerr*(fabs(binfo[i][indx+b->sm-1].curv[0]) +fabs(binfo[i][indx+b->sm-1].curv[1]));
+                     sum = trncerr*bdrysensitivity*(fabs(binfo[i][indx+b->sm-1].curv[0]) +fabs(binfo[i][indx+b->sm-1].curv[1]));
                      fltwk[v0] += sum;
                      fltwk[v1] += sum;
                      indx += sm0;

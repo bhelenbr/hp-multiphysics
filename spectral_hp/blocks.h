@@ -15,6 +15,7 @@ class block {
       friend class blocks;
       
    public:
+      block() : sgbl(0) {}
       void initialize(char *inputfile, int grds, class hpbasis *bin, int lg2p);
       void tadvance(int stage = 0);
       void reconnect();

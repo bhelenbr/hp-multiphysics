@@ -54,9 +54,9 @@ FLT f1(int n, FLT x, FLT y) {
 
    switch(n) {
       case(0):
-         return(lam +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
+         return(lam*cos(theta) +startup*amp*x*(1.-x)*((sin(xx) +sin(13*xx))*(sin(yx)+sin(5*yx))));
       case(1):
-         return(+startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
+         return(lam*sin(theta) +startup*amp*x*(1.-x)*((sin(xx) +sin(5*xx))*(sin(yx)+sin(12*yx))));
       case(2):
          return(startup*amp*x*(1.-x)*((sin(xx) +sin(8*xx))*(sin(yx)+sin(8*yx))));
    }
@@ -158,6 +158,36 @@ FLT f1(int n, FLT x, FLT y) {
    return(0.0);
 }
 #endif
+
+#ifdef NACA
+FLT f1(int n, FLT x, FLT y) {
+   FLT r;
+   
+   r = sqrt(x*x +y*y);
+   
+   switch(n) {
+      case(0):
+         if (r < 5.0) 
+            return(0.0);
+         else if (r < 10.0 && r > 5.0)
+            return((r-5.0)/5.0*lam*cos(theta));
+         else
+            return(lam*cos(theta));
+      case(1):
+         if (r < 5.0) 
+            return(0.0);
+         else if (r < 10.0 && r > 5.0)
+            return((r-5.0)/5.0*lam*sin(theta));
+         else
+            return(lam*sin(theta));
+      case(2):
+         return(0.0);
+   }
+   return(0.0);
+}
+#endif
+
+
 
 #ifdef NOZZLE
 FLT f1(int n, FLT x, FLT y) { 
@@ -442,6 +472,33 @@ double f1(int n, double x, double y) {
 }
 #endif
 
+#ifdef ONELAYER
+double f1(int n, double x, double y) { 
+   FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
+   int mid,nonmid;
+   
+   /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+   /* THETA DEFINED + CLOCKWISE */
+   bf = 2.*mux[0]/(rhox[0]*sin(theta));
+   body[0] = bf*sin(theta);
+   body[1] = -bf*cos(theta);
+   
+   re = rhox[0]/mux[0];
+   switch (n) {
+      case(0):
+         return(-(y+1.0)*(y-1.0) -1.0);
+      case(1):
+         return(0.0);
+      case(2):
+         return(-2.*cos(theta)/(sin(theta)*re)*y);
+   }
+
+   return(0.0);
+}
+#endif
+
+
+
 #ifdef THREELAYER
 
 double f1(int n, double x, double y) { 
@@ -542,6 +599,20 @@ FLT f1(int n, FLT x, FLT y) {
    }
 
    return(0.0);
+}
+#endif
+
+#ifdef IMPINGINGJET
+ FLT f1(int n, FLT x, FLT y) {
+    switch(n) {
+       case(0):
+          return(1);
+       case(1):
+          return(-y/x);
+       case(2):
+          return(0);
+    }
+    return(0.0);
 }
 #endif
    
@@ -720,8 +791,46 @@ FLT dhgtdy(int type, FLT x, FLT y) {
    return(0.0);
 }
 #endif
+
+#ifdef GAUSSIAN
+FLT hgt(int type, FLT x, FLT y) { 
+   if (type&FSRF_MASK) {
+      return(y-amp*exp(-x*x/(lam*lam)));
+   }   
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   return(amp*2*x/(lam*lam)*exp(-x*x/(lam*lam)));
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   return(1.0);
+}
+#endif
       
-      
+#ifdef PARABOLA
+FLT hgt(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(y - .1/x);
+   }
+   return(0.0);
+}
+
+FLT dhgtdx(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(.1/(x*x));
+   }
+   return(0.0);
+}
+
+FLT dhgtdy(int type, FLT x, FLT y) {   
+   if (type&(CURV_MASK)) {
+      return(1.0);
+   }
+   return(0.0);
+}
+#endif
 
 
 
@@ -737,6 +846,28 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       /* MOVE POINT IF YOU WANT TO */
 #ifdef TWOSPHERE
       typ = INFL_MASK +CURV_MASK;
+#endif
+#ifdef IMPINGINGJET
+      if (y < 0.0) { 
+         if (outertime < theta || outertime > theta+lam) { 
+            y =-0.1; 
+            return; 
+         } 
+         else if (outertime > theta && outertime < theta+lam) { 
+            y=-0.1-amp*(1.0-cos(2.*M_PI*(outertime-theta)/lam)); 
+            return; 
+          } 
+      } 
+      else {
+         if (outertime < theta || outertime > theta+lam) {
+            y = 0.1;
+            return;
+          }
+         else if (outertime > theta && outertime < theta+lam) {
+            y=0.1+fabs(amp)*(1.0-cos(2.*M_PI*(outertime-theta)/lam));
+            return;
+         }
+      }
 #endif
    }
    
@@ -763,6 +894,47 @@ void mvpttobdry(int typ, FLT& x, FLT &y) {
       
       return;
    }
+#ifdef IMPINGINGJET
+    if (typ == 1026) {
+       if (startup) {
+          iter = 0;
+          do {
+             mag = dhgtdx(typ,x,-y)*dhgtdx(typ,x,-y) +dhgtdy(typ,x,-y)*dhgtdy(typ,x,-y);
+             delt_dist = -(hgt(typ,x,-y) +0.0001*sin(2*M_PI*(x-1.0)/5.0))/mag;
+             x += delt_dist*dhgtdx(typ,x,-y);
+             y -= delt_dist*dhgtdy(typ,x,-y);
+             if (++iter > 100) {
+                printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
+                exit(1);
+             }
+          } while (fabs(delt_dist) > 10.*EPSILON);
+       }
+       else 
+          tgt->findbdrypt(typ,x,y,psi);
+ 
+       return;
+    }
+ 
+    if (typ == 66562) {
+       if (startup) {
+          iter = 0;
+          do {
+             mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
+             delt_dist = -hgt(typ,x,y)/mag;
+             x += delt_dist*dhgtdx(typ,x,y);
+             y += delt_dist*dhgtdy(typ,x,y);
+             if (++iter > 100) {
+                printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
+                exit(1);
+             }
+          } while (fabs(delt_dist) > 10.*EPSILON);
+       }
+       else 
+          tgt->findbdrypt(typ,x,y,psi);
+ 
+       return;
+    }
+#endif
 
 #ifdef LAYER
    if (typ == 1026) {

@@ -28,6 +28,7 @@ CPPFLAGS += -O3
 CPPFLAGS += -cxxlib-icc #(cares)
 #LIB += -llapack -lblas -lg2c #(shelob)
 LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+LDFLAGS += -static #(cares)
 #PV3HOME = /usr/local/pV3/
 #DEFINES += -DUNDERSCORE -DPOINTERLONG
 #FORTRTL = /usr/local/pgi/linux86/lib#(shelob)
@@ -53,7 +54,7 @@ CPPFLAGS += $(DEFINES)
 PVLIB = -L$(PV3HOME)/clients/$(PVM_ARCH) -L$(PVM_ROOT)/lib/$(PVM_ARCH) -lpV3 -lgpvm3 -lpvm3 -L$(FORTRTL) $(FORTLIB)
 
 hp: $(OBJ)
-	${CXX} -o $@ $(CPPFLAGS) $(OBJ) $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(LIB)
 	
 hp.pV3: $(OBJ) $(VIZ)
 	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
