@@ -7,55 +7,53 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6F1C35D307E5D90600E90F5F /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1C35D207E5D90500E90F5F /* libblitz.a */; };
-		6F8DE128088C362700CD7C59 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F533C5CF01938985017C3E7F /* bdry.cpp */; };
-		6FA5712605AE030D003EC856 /* spectral_hp.h in Headers */ = {isa = PBXBuildFile; fileRef = F5125C0D01728F7501000001 /* spectral_hp.h */; };
-		6FA5712705AE030D003EC856 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = F505FF0F0192F1EB01990B20 /* blocks.h */; settings = {ATTRIBUTES = (); }; };
-		6FA5712805AE030D003EC856 /* hp_mgrid.h in Headers */ = {isa = PBXBuildFile; fileRef = F5D49A36018E4DE001601E15 /* hp_mgrid.h */; };
-		6FA5712905AE030D003EC856 /* surface.h in Headers */ = {isa = PBXBuildFile; fileRef = F581CD2901989D4B01990B20 /* surface.h */; };
-		6FA5712A05AE030D003EC856 /* defines.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F1BFA3C04F401C300990B69 /* defines.h */; };
-		6FA5712C05AE030D003EC856 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53AD9AF0173E34A01000001 /* main.cpp */; };
-		6FA5712D05AE030D003EC856 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F58BA1070176870001990B20 /* allocate.cpp */; };
-		6FA5712E05AE030D003EC856 /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5D29C8B017777F4015A943B /* tobasis.cpp */; };
-		6FA5712F05AE030D003EC856 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5573A45017A8DCA01844834 /* gtol.cpp */; };
-		6FA5713005AE030D003EC856 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F454CE017B8027012831FF /* output.cpp */; };
-		6FA5713105AE030D003EC856 /* curvinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5A17FF3017CD50401990B20 /* curvinit.cpp */; };
-		6FA5713205AE030D003EC856 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F525D077017F63DC01990B20 /* ptprobe.cpp */; };
-		6FA5713305AE030D003EC856 /* initfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5A85EFB0186FF6101990B20 /* initfunc.cpp */; };
-		6FA5713405AE030D003EC856 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50AF9AD0188A79101990B20 /* copy.cpp */; };
-		6FA5713505AE030D003EC856 /* mg_alloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5EF233C018F35F701990B20 /* mg_alloc.cpp */; };
-		6FA5713605AE030D003EC856 /* movfin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512112C01908E7201990B20 /* movfin.cpp */; };
-		6FA5713705AE030D003EC856 /* movco.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512112A01908E3801990B20 /* movco.cpp */; };
-		6FA5713805AE030D003EC856 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F51211320190A2DE01990B20 /* minvrt.cpp */; };
-		6FA5713905AE030D003EC856 /* nstage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5D77C330191A7E901990B20 /* nstage.cpp */; };
-		6FA5713A05AE030D003EC856 /* block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F505FF100192F1EB01990B20 /* block.cpp */; };
-		6FA5713B05AE030D003EC856 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F505FF110192F1EB01990B20 /* blocks.cpp */; };
-		6FA5713C05AE030D003EC856 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F581CD240198731301990B20 /* surface.cpp */; };
-		6FA5713D05AE030D003EC856 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F564AD060185F05601990B20 /* adapt.cpp */; };
-		6FA5713E05AE030D003EC856 /* rblocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F54BE4D201E1038D01990B20 /* rblocks.cpp */; };
-		6FA5713F05AE030D003EC856 /* drag.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AC61740252568D01990B20 /* drag.cpp */; };
-		6FA5714005AE030D003EC856 /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512923C03362F0701990B69 /* l2error.cpp */; };
-		6FA5714105AE030D003EC856 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5D49A38018E525101601E15 /* rsdl.cpp */; };
-		6FA5714305AE030D003EC856 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5D77C310191A7BB01990B20 /* tstep.cpp */; };
-		6FA5714705AE030D003EC856 /* libbasis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5EACF8102C2B7D4015D0A1B /* libbasis.a */; };
-		6FA5714805AE030D003EC856 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F52FE4D802180CBB01990B20 /* libmyblas.a */; };
-		6FA5714905AE030D003EC856 /* libmesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F58209B601808CC201990B20 /* libmesh.a */; };
-		6FA5714A05AE030D003EC856 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F52FE4D902180CBB01990B20 /* libquad.a */; };
-		6FA5714B05AE030D003EC856 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F52FE4DC02180FA201990B20 /* libutil.a */; };
-		6FA5714C05AE030D003EC856 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F51291FA0336051D01990B69 /* vecLib.framework */; };
-		6FA94078086D79410014B542 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50AF9AF0188AC3601990B20 /* length.cpp */; };
-		6FA9407C086D795D0014B542 /* pv3routines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F52FE4D0021429E601990B20 /* pv3routines.cpp */; };
-		6FA9407D086D795F0014B542 /* libpV3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEE25FF08102DAB003F8292 /* libpV3.a */; };
-		6FA9407E086D79600014B542 /* libfpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5605E1D02C2C26901AA3076 /* libfpvm3.a */; };
-		6FA9407F086D79600014B542 /* libgpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F51A851D02DDC6D7012A8EDA /* libgpvm3.a */; };
-		6FA94080086D79610014B542 /* libpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5605E1E02C2C26901AA3076 /* libpvm3.a */; };
-		6FA94081086D79610014B542 /* libxlf90.A.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEE25980810046E003F8292 /* libxlf90.A.dylib */; };
-		6FA94082086D79620014B542 /* libxlfmath.A.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEE25A60810096B003F8292 /* libxlfmath.A.dylib */; };
-		6FADFA2906710E7700BDB7F9 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F52FC80E01BE791F01990B20 /* tadvance.cpp */; };
+		6FB40AF3091AF517002BAA09 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
+		6FB40AF4091AF517002BAA09 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACA091AF516002BAA09 /* allocate.cpp */; };
+		6FB40AF5091AF517002BAA09 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACB091AF516002BAA09 /* bdry.cpp */; };
+		6FB40AF6091AF517002BAA09 /* bdrycd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* bdrycd.cpp */; };
+		6FB40AF7091AF517002BAA09 /* blkinput.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ACD091AF516002BAA09 /* blkinput.1 */; };
+		6FB40AF8091AF517002BAA09 /* blkinput.2 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ACE091AF516002BAA09 /* blkinput.2 */; };
+		6FB40AF9091AF517002BAA09 /* blkinput.3 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ACF091AF516002BAA09 /* blkinput.3 */; };
+		6FB40AFA091AF517002BAA09 /* blksinput in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AD0091AF516002BAA09 /* blksinput */; };
+		6FB40AFB091AF517002BAA09 /* block.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD1091AF516002BAA09 /* block.cpp */; };
+		6FB40AFC091AF517002BAA09 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD2091AF516002BAA09 /* blocks.cpp */; };
+		6FB40AFD091AF517002BAA09 /* blocks.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AD3091AF516002BAA09 /* blocks.h */; };
+		6FB40AFE091AF517002BAA09 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
+		6FB40B00091AF517002BAA09 /* defines.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AD6091AF516002BAA09 /* defines.h */; };
+		6FB40B01091AF517002BAA09 /* drag.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD7091AF516002BAA09 /* drag.cpp */; };
+		6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
+		6FB40B03091AF517002BAA09 /* hp_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */; };
+		6FB40B04091AF517002BAA09 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
+		6FB40B05091AF517002BAA09 /* initfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */; };
+		6FB40B06091AF517002BAA09 /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		6FB40B07091AF517002BAA09 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADD091AF516002BAA09 /* length.cpp */; };
+		6FB40B08091AF517002BAA09 /* lengthcd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADE091AF516002BAA09 /* lengthcd.cpp */; };
+		6FB40B09091AF517002BAA09 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADF091AF516002BAA09 /* makefile */; };
+		6FB40B0A091AF517002BAA09 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
+		6FB40B0B091AF517002BAA09 /* movco.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* movco.cpp */; };
+		6FB40B0C091AF517002BAA09 /* movfin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* movfin.cpp */; };
+		6FB40B0D091AF517002BAA09 /* nstage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* nstage.cpp */; };
+		6FB40B0E091AF517002BAA09 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE4091AF516002BAA09 /* output.cpp */; };
+		6FB40B0F091AF517002BAA09 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		6FB40B10091AF517002BAA09 /* pv3routines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE6091AF516002BAA09 /* pv3routines.cpp */; };
+		6FB40B11091AF517002BAA09 /* rblocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE7091AF516002BAA09 /* rblocks.cpp */; };
+		6FB40B12091AF517002BAA09 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE8091AF516002BAA09 /* rsdl.cpp */; };
+		6FB40B13091AF517002BAA09 /* rsdlcd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE9091AF516002BAA09 /* rsdlcd.cpp */; };
+		6FB40B14091AF517002BAA09 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
+		6FB40B15091AF517002BAA09 /* surface.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEB091AF516002BAA09 /* surface.h */; };
+		6FB40B16091AF517002BAA09 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
+		6FB40B17091AF517002BAA09 /* tadvancecd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AED091AF516002BAA09 /* tadvancecd.cpp */; };
+		6FB40B18091AF517002BAA09 /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
+		6FB40B19091AF517002BAA09 /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
+		6FB40B1A091AF517002BAA09 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
+		6FB40B1B091AF517002BAA09 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF1091AF516002BAA09 /* tstep.cpp */; };
+		6FB40B1C091AF517002BAA09 /* tstepcd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF2091AF516002BAA09 /* tstepcd.cpp */; };
+		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		8DD76F6A0486A84900D96B5E /* spectral_hp.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* spectral_hp.1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildStyle section */
-		014CEA460018CE2711CA2923 /* Development */ = {
+		014CEA460018CE2711CA2923 /* Debug */ = {
 			isa = PBXBuildStyle;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
@@ -63,172 +61,144 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				OPTIMIZATION_CFLAGS = "-O0";
 				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		014CEA470018CE2711CA2923 /* Deployment */ = {
+		014CEA470018CE2711CA2923 /* Release */ = {
 			isa = PBXBuildStyle;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
 /* End PBXBuildStyle section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD76F690486A84900D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				8DD76F6A0486A84900D96B5E /* spectral_hp.1 in CopyFiles */,
+				6FB40AF7091AF517002BAA09 /* blkinput.1 in CopyFiles */,
+				6FB40AF8091AF517002BAA09 /* blkinput.2 in CopyFiles */,
+				6FB40AF9091AF517002BAA09 /* blkinput.3 in CopyFiles */,
+				6FB40AFA091AF517002BAA09 /* blksinput in CopyFiles */,
+				6FB40AFD091AF517002BAA09 /* blocks.h in CopyFiles */,
+				6FB40B00091AF517002BAA09 /* defines.h in CopyFiles */,
+				6FB40B04091AF517002BAA09 /* hp_boundary.h in CopyFiles */,
+				6FB40B15091AF517002BAA09 /* surface.h in CopyFiles */,
+				6FB40B19091AF517002BAA09 /* tri_hp_ins.h in CopyFiles */,
+				6FB40B1A091AF517002BAA09 /* tri_hp.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		6F1BFA3C04F401C300990B69 /* defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = defines.h; sourceTree = "<group>"; };
-		6F1C35D207E5D90500E90F5F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = /Users/helenbrk/Codes/lib/libblitz.a; sourceTree = "<absolute>"; };
-		6F48973704867DAD00990B69 /* lengthcd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lengthcd.cpp; sourceTree = "<group>"; };
-		6FA5715005AE030D003EC856 /* sphp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sphp; sourceTree = BUILT_PRODUCTS_DIR; };
-		6FBDE2450752894300545747 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		6FEE25980810046E003F8292 /* libxlf90.A.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxlf90.A.dylib; path = /opt/ibmcmp/lib/libxlf90.A.dylib; sourceTree = "<absolute>"; };
-		6FEE25A60810096B003F8292 /* libxlfmath.A.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxlfmath.A.dylib; path = /opt/ibmcmp/lib/libxlfmath.A.dylib; sourceTree = "<absolute>"; };
-		6FEE25FF08102DAB003F8292 /* libpV3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpV3.a; path = /Users/helenbrk/Packages/pV3/clients/DARWIN/libpV3.a; sourceTree = "<absolute>"; };
-		F505FF0F0192F1EB01990B20 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = "<group>"; };
-		F505FF100192F1EB01990B20 /* block.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = block.cpp; sourceTree = "<group>"; };
-		F505FF110192F1EB01990B20 /* blocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = blocks.cpp; sourceTree = "<group>"; };
-		F50AF9AD0188A79101990B20 /* copy.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = copy.cpp; sourceTree = "<group>"; };
-		F50AF9AF0188AC3601990B20 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = length.cpp; sourceTree = "<group>"; };
-		F512112A01908E3801990B20 /* movco.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movco.cpp; sourceTree = "<group>"; };
-		F512112C01908E7201990B20 /* movfin.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movfin.cpp; sourceTree = "<group>"; };
-		F51211320190A2DE01990B20 /* minvrt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = minvrt.cpp; sourceTree = "<group>"; };
-		F5125C0D01728F7501000001 /* spectral_hp.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = spectral_hp.h; sourceTree = "<group>"; };
-		F51291FA0336051D01990B69 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
-		F51292300336253E01990B69 /* blkinput.3 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blkinput.3; sourceTree = "<group>"; };
-		F512923C03362F0701990B69 /* l2error.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = l2error.cpp; sourceTree = "<group>"; };
-		F51A851D02DDC6D7012A8EDA /* libgpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgpvm3.a; path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libgpvm3.a; sourceTree = "<absolute>"; };
-		F525D077017F63DC01990B20 /* ptprobe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptprobe.cpp; sourceTree = "<group>"; };
-		F52FC80E01BE791F01990B20 /* tadvance.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tadvance.cpp; sourceTree = "<group>"; };
-		F52FE4D0021429E601990B20 /* pv3routines.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = pv3routines.cpp; sourceTree = "<group>"; };
-		F52FE4D802180CBB01990B20 /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
-		F52FE4D902180CBB01990B20 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
-		F52FE4DC02180FA201990B20 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
-		F533C5CF01938985017C3E7F /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = bdry.cpp; sourceTree = "<group>"; };
-		F53AD9AF0173E34A01000001 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		F54BE4D201E1038D01990B20 /* rblocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rblocks.cpp; sourceTree = "<group>"; };
-		F5573A45017A8DCA01844834 /* gtol.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = gtol.cpp; sourceTree = "<group>"; };
-		F5605E1D02C2C26901AA3076 /* libfpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfpvm3.a; path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libfpvm3.a; sourceTree = "<absolute>"; };
-		F5605E1E02C2C26901AA3076 /* libpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpvm3.a; path = /Users/helenbrk/Packages/pvm3/lib/DARWIN/libpvm3.a; sourceTree = "<absolute>"; };
-		F564AD060185F05601990B20 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
-		F581CD240198731301990B20 /* surface.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = surface.cpp; sourceTree = "<group>"; };
-		F581CD2901989D4B01990B20 /* surface.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = surface.h; sourceTree = "<group>"; };
-		F58209B601808CC201990B20 /* libmesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmesh.a; path = ../lib/libmesh.a; sourceTree = SOURCE_ROOT; };
-		F58BA1070176870001990B20 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
-		F5A17FF3017CD50401990B20 /* curvinit.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = curvinit.cpp; sourceTree = "<group>"; };
-		F5A85EFB0186FF6101990B20 /* initfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initfunc.cpp; sourceTree = "<group>"; };
-		F5AC61740252568D01990B20 /* drag.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = drag.cpp; sourceTree = "<group>"; };
-		F5ACCDA501BFCB8401990B20 /* blksinput */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blksinput; sourceTree = "<group>"; };
-		F5C7542701B9E9E501115962 /* blkinput.1 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.man; path = blkinput.1; sourceTree = "<group>"; };
-		F5CA0FBF01E5DB2201990B20 /* blkinput.2 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blkinput.2; sourceTree = "<group>"; };
-		F5D29C8B017777F4015A943B /* tobasis.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tobasis.cpp; sourceTree = "<group>"; };
-		F5D49A36018E4DE001601E15 /* hp_mgrid.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = hp_mgrid.h; sourceTree = "<group>"; };
-		F5D49A38018E525101601E15 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rsdl.cpp; sourceTree = "<group>"; };
-		F5D77C310191A7BB01990B20 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tstep.cpp; sourceTree = "<group>"; };
-		F5D77C330191A7E901990B20 /* nstage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = nstage.cpp; sourceTree = "<group>"; };
-		F5EACF8102C2B7D4015D0A1B /* libbasis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbasis.a; path = ../lib/libbasis.a; sourceTree = SOURCE_ROOT; };
-		F5EF233C018F35F701990B20 /* mg_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = mg_alloc.cpp; sourceTree = "<group>"; };
-		F5F454CE017B8027012831FF /* output.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = output.cpp; sourceTree = "<group>"; };
-		F5FA3CCF0353483101990B69 /* rsdlcd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rsdlcd.cpp; sourceTree = "<group>"; };
-		F5FA3CD103534B8901990B69 /* tstepcd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tstepcd.cpp; sourceTree = "<group>"; };
-		F5FA3CD303534B9701990B69 /* tadvancecd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tadvancecd.cpp; sourceTree = "<group>"; };
-		F5FA3CD503534BA801990B69 /* bdrycd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = bdrycd.cpp; sourceTree = "<group>"; };
+		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6FB40AC9091AF516002BAA09 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
+		6FB40ACA091AF516002BAA09 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
+		6FB40ACB091AF516002BAA09 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = bdry.cpp; sourceTree = "<group>"; };
+		6FB40ACC091AF516002BAA09 /* bdrycd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = bdrycd.cpp; sourceTree = "<group>"; };
+		6FB40ACD091AF516002BAA09 /* blkinput.1 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.man; path = blkinput.1; sourceTree = "<group>"; };
+		6FB40ACE091AF516002BAA09 /* blkinput.2 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blkinput.2; sourceTree = "<group>"; };
+		6FB40ACF091AF516002BAA09 /* blkinput.3 */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blkinput.3; sourceTree = "<group>"; };
+		6FB40AD0091AF516002BAA09 /* blksinput */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = blksinput; sourceTree = "<group>"; };
+		6FB40AD1091AF516002BAA09 /* block.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = block.cpp; sourceTree = "<group>"; };
+		6FB40AD2091AF516002BAA09 /* blocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = blocks.cpp; sourceTree = "<group>"; };
+		6FB40AD3091AF516002BAA09 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = "<group>"; };
+		6FB40AD4091AF516002BAA09 /* copy.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = copy.cpp; sourceTree = "<group>"; };
+		6FB40AD6091AF516002BAA09 /* defines.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = defines.h; sourceTree = "<group>"; };
+		6FB40AD7091AF516002BAA09 /* drag.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = drag.cpp; sourceTree = "<group>"; };
+		6FB40AD8091AF516002BAA09 /* gtol.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = gtol.cpp; sourceTree = "<group>"; };
+		6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = hp_boundary.cpp; sourceTree = "<group>"; };
+		6FB40ADA091AF516002BAA09 /* hp_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = hp_boundary.h; sourceTree = "<group>"; };
+		6FB40ADB091AF516002BAA09 /* initfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initfunc.cpp; sourceTree = "<group>"; };
+		6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = l2error.cpp; sourceTree = "<group>"; };
+		6FB40ADD091AF516002BAA09 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = length.cpp; sourceTree = "<group>"; };
+		6FB40ADE091AF516002BAA09 /* lengthcd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = lengthcd.cpp; sourceTree = "<group>"; };
+		6FB40ADF091AF516002BAA09 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		6FB40AE0091AF516002BAA09 /* minvrt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = minvrt.cpp; sourceTree = "<group>"; };
+		6FB40AE1091AF516002BAA09 /* movco.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movco.cpp; sourceTree = "<group>"; };
+		6FB40AE2091AF516002BAA09 /* movfin.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = movfin.cpp; sourceTree = "<group>"; };
+		6FB40AE3091AF516002BAA09 /* nstage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = nstage.cpp; sourceTree = "<group>"; };
+		6FB40AE4091AF516002BAA09 /* output.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = output.cpp; sourceTree = "<group>"; };
+		6FB40AE5091AF516002BAA09 /* ptprobe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptprobe.cpp; sourceTree = "<group>"; };
+		6FB40AE6091AF516002BAA09 /* pv3routines.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = pv3routines.cpp; sourceTree = "<group>"; };
+		6FB40AE7091AF516002BAA09 /* rblocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rblocks.cpp; sourceTree = "<group>"; };
+		6FB40AE8091AF516002BAA09 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rsdl.cpp; sourceTree = "<group>"; };
+		6FB40AE9091AF516002BAA09 /* rsdlcd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rsdlcd.cpp; sourceTree = "<group>"; };
+		6FB40AEA091AF516002BAA09 /* surface.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = surface.cpp; sourceTree = "<group>"; };
+		6FB40AEB091AF516002BAA09 /* surface.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = surface.h; sourceTree = "<group>"; };
+		6FB40AEC091AF516002BAA09 /* tadvance.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tadvance.cpp; sourceTree = "<group>"; };
+		6FB40AED091AF516002BAA09 /* tadvancecd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tadvancecd.cpp; sourceTree = "<group>"; };
+		6FB40AEE091AF516002BAA09 /* tobasis.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tobasis.cpp; sourceTree = "<group>"; };
+		6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_hp_ins.h; sourceTree = "<group>"; };
+		6FB40AF0091AF516002BAA09 /* tri_hp.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_hp.h; sourceTree = "<group>"; };
+		6FB40AF1091AF516002BAA09 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tstep.cpp; sourceTree = "<group>"; };
+		6FB40AF2091AF516002BAA09 /* tstepcd.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tstepcd.cpp; sourceTree = "<group>"; };
+		8DD76F6C0486A84900D96B5E /* spectral_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spectral_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6859E8B029090EE04C91782 /* spectral_hp.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spectral_hp.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		6FA5714605AE030D003EC856 /* Frameworks */ = {
+		8DD76F660486A84900D96B5E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FA5714705AE030D003EC856 /* libbasis.a in Frameworks */,
-				6FA5714805AE030D003EC856 /* libmyblas.a in Frameworks */,
-				6FA5714905AE030D003EC856 /* libmesh.a in Frameworks */,
-				6FA5714A05AE030D003EC856 /* libquad.a in Frameworks */,
-				6FA5714B05AE030D003EC856 /* libutil.a in Frameworks */,
-				6FA5714C05AE030D003EC856 /* vecLib.framework in Frameworks */,
-				6F1C35D307E5D90600E90F5F /* libblitz.a in Frameworks */,
-				6FA9407D086D795F0014B542 /* libpV3.a in Frameworks */,
-				6FA9407E086D79600014B542 /* libfpvm3.a in Frameworks */,
-				6FA9407F086D79600014B542 /* libgpvm3.a in Frameworks */,
-				6FA94080086D79610014B542 /* libpvm3.a in Frameworks */,
-				6FA94081086D79610014B542 /* libxlf90.A.dylib in Frameworks */,
-				6FA94082086D79620014B542 /* libxlfmath.A.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
+		08FB7794FE84155DC02AAC07 /* spectral_hp */ = {
 			isa = PBXGroup;
 			children = (
-				6F1C35D207E5D90500E90F5F /* libblitz.a */,
-				F5EACF8102C2B7D4015D0A1B /* libbasis.a */,
-				F52FE4D902180CBB01990B20 /* libquad.a */,
-				F52FE4D802180CBB01990B20 /* libmyblas.a */,
-				F52FE4DC02180FA201990B20 /* libutil.a */,
-				F58209B601808CC201990B20 /* libmesh.a */,
-				6FEE25FF08102DAB003F8292 /* libpV3.a */,
-				F5605E1D02C2C26901AA3076 /* libfpvm3.a */,
-				F51A851D02DDC6D7012A8EDA /* libgpvm3.a */,
-				F5605E1E02C2C26901AA3076 /* libpvm3.a */,
-				6FEE25980810046E003F8292 /* libxlf90.A.dylib */,
-				6FEE25A60810096B003F8292 /* libxlfmath.A.dylib */,
-				F51291FA0336051D01990B69 /* vecLib.framework */,
-			);
-			name = "External Frameworks and Libraries";
-			sourceTree = "<group>";
-		};
-		08FB7794FE84155DC02AAC07 /* planar++ */ = {
-			isa = PBXGroup;
-			children = (
-				F52FE4CF0214251601990B20 /* Inputs */,
 				08FB7795FE84155DC02AAC07 /* Source */,
-				F5FA3CD703534BC501990B69 /* Conv Diff */,
-				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
+				6FB40B1E091AF5F2002BAA09 /* incompressible */,
+				6FB40B1F091AF64E002BAA09 /* Conv-Diff */,
+				C6859E8C029090F304C91782 /* Documentation */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
-			name = "planar++";
+			name = spectral_hp;
 			sourceTree = "<group>";
 		};
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				6F1BFA3C04F401C300990B69 /* defines.h */,
-				F53AD9AF0173E34A01000001 /* main.cpp */,
-				F5A85EFB0186FF6101990B20 /* initfunc.cpp */,
-				F5125C0D01728F7501000001 /* spectral_hp.h */,
-				F58BA1070176870001990B20 /* allocate.cpp */,
-				F5EF233C018F35F701990B20 /* mg_alloc.cpp */,
-				F50AF9AD0188A79101990B20 /* copy.cpp */,
-				F5D29C8B017777F4015A943B /* tobasis.cpp */,
-				F512923C03362F0701990B69 /* l2error.cpp */,
-				F5573A45017A8DCA01844834 /* gtol.cpp */,
-				F5F454CE017B8027012831FF /* output.cpp */,
-				F5A17FF3017CD50401990B20 /* curvinit.cpp */,
-				F525D077017F63DC01990B20 /* ptprobe.cpp */,
-				F51211320190A2DE01990B20 /* minvrt.cpp */,
-				F564AD060185F05601990B20 /* adapt.cpp */,
-				F512112A01908E3801990B20 /* movco.cpp */,
-				F512112C01908E7201990B20 /* movfin.cpp */,
-				F5D77C330191A7E901990B20 /* nstage.cpp */,
-				F52FE4D0021429E601990B20 /* pv3routines.cpp */,
-				F5D49A36018E4DE001601E15 /* hp_mgrid.h */,
-				F5D49A38018E525101601E15 /* rsdl.cpp */,
-				F533C5CF01938985017C3E7F /* bdry.cpp */,
-				F5D77C310191A7BB01990B20 /* tstep.cpp */,
-				F52FC80E01BE791F01990B20 /* tadvance.cpp */,
-				F50AF9AF0188AC3601990B20 /* length.cpp */,
-				F581CD2901989D4B01990B20 /* surface.h */,
-				F581CD240198731301990B20 /* surface.cpp */,
-				F5AC61740252568D01990B20 /* drag.cpp */,
-				F505FF0F0192F1EB01990B20 /* blocks.h */,
-				F505FF100192F1EB01990B20 /* block.cpp */,
-				F505FF110192F1EB01990B20 /* blocks.cpp */,
-				F54BE4D201E1038D01990B20 /* rblocks.cpp */,
+				08FB7796FE84155DC02AAC07 /* main.cpp */,
+				6FB40AD6091AF516002BAA09 /* defines.h */,
+				6FB40ADB091AF516002BAA09 /* initfunc.cpp */,
+				6FB40AF0091AF516002BAA09 /* tri_hp.h */,
+				6FB40ACA091AF516002BAA09 /* allocate.cpp */,
+				6FB40AD8091AF516002BAA09 /* gtol.cpp */,
+				6FB40AD4091AF516002BAA09 /* copy.cpp */,
+				6FB40AE4091AF516002BAA09 /* output.cpp */,
+				6FB40AEE091AF516002BAA09 /* tobasis.cpp */,
+				6FB40ADC091AF516002BAA09 /* l2error.cpp */,
+				6FB40AC9091AF516002BAA09 /* adapt.cpp */,
+				6FB40AE5091AF516002BAA09 /* ptprobe.cpp */,
+				6FB40AE3091AF516002BAA09 /* nstage.cpp */,
+				6FB40AE0091AF516002BAA09 /* minvrt.cpp */,
+				6FB40AE1091AF516002BAA09 /* movco.cpp */,
+				6FB40AE2091AF516002BAA09 /* movfin.cpp */,
+				6FB40AE6091AF516002BAA09 /* pv3routines.cpp */,
+				6FB40ACD091AF516002BAA09 /* blkinput.1 */,
+				6FB40ACE091AF516002BAA09 /* blkinput.2 */,
+				6FB40ACF091AF516002BAA09 /* blkinput.3 */,
+				6FB40AD0091AF516002BAA09 /* blksinput */,
+				6FB40AD1091AF516002BAA09 /* block.cpp */,
+				6FB40AD2091AF516002BAA09 /* blocks.cpp */,
+				6FB40AD3091AF516002BAA09 /* blocks.h */,
+				6FB40AE7091AF516002BAA09 /* rblocks.cpp */,
+				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
+				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -236,110 +206,76 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6FA5715005AE030D003EC856 /* sphp */,
-				6FBDE2450752894300545747 /* makefile */,
+				6FB40ADF091AF516002BAA09 /* makefile */,
+				8DD76F6C0486A84900D96B5E /* spectral_hp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		F52FE4CF0214251601990B20 /* Inputs */ = {
+		6FB40B1E091AF5F2002BAA09 /* incompressible */ = {
 			isa = PBXGroup;
 			children = (
-				F5ACCDA501BFCB8401990B20 /* blksinput */,
-				F5C7542701B9E9E501115962 /* blkinput.1 */,
-				F5CA0FBF01E5DB2201990B20 /* blkinput.2 */,
-				F51292300336253E01990B69 /* blkinput.3 */,
+				6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */,
+				6FB40AEC091AF516002BAA09 /* tadvance.cpp */,
+				6FB40AF1091AF516002BAA09 /* tstep.cpp */,
+				6FB40AE8091AF516002BAA09 /* rsdl.cpp */,
+				6FB40ADD091AF516002BAA09 /* length.cpp */,
+				6FB40ACB091AF516002BAA09 /* bdry.cpp */,
+				6FB40AEB091AF516002BAA09 /* surface.h */,
+				6FB40AEA091AF516002BAA09 /* surface.cpp */,
+				6FB40AD7091AF516002BAA09 /* drag.cpp */,
 			);
-			name = Inputs;
+			name = incompressible;
 			sourceTree = "<group>";
 		};
-		F5FA3CD703534BC501990B69 /* Conv Diff */ = {
+		6FB40B1F091AF64E002BAA09 /* Conv-Diff */ = {
 			isa = PBXGroup;
 			children = (
-				F5FA3CCF0353483101990B69 /* rsdlcd.cpp */,
-				F5FA3CD503534BA801990B69 /* bdrycd.cpp */,
-				F5FA3CD103534B8901990B69 /* tstepcd.cpp */,
-				F5FA3CD303534B9701990B69 /* tadvancecd.cpp */,
-				6F48973704867DAD00990B69 /* lengthcd.cpp */,
+				6FB40AED091AF516002BAA09 /* tadvancecd.cpp */,
+				6FB40AF2091AF516002BAA09 /* tstepcd.cpp */,
+				6FB40AE9091AF516002BAA09 /* rsdlcd.cpp */,
+				6FB40ADE091AF516002BAA09 /* lengthcd.cpp */,
+				6FB40ACC091AF516002BAA09 /* bdrycd.cpp */,
 			);
-			name = "Conv Diff";
+			name = "Conv-Diff";
+			sourceTree = "<group>";
+		};
+		C6859E8C029090F304C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				C6859E8B029090EE04C91782 /* spectral_hp.1 */,
+			);
+			name = Documentation;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		6FA5712505AE030D003EC856 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6FA5712605AE030D003EC856 /* spectral_hp.h in Headers */,
-				6FA5712705AE030D003EC856 /* blocks.h in Headers */,
-				6FA5712805AE030D003EC856 /* hp_mgrid.h in Headers */,
-				6FA5712905AE030D003EC856 /* surface.h in Headers */,
-				6FA5712A05AE030D003EC856 /* defines.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		6FA5712405AE030D003EC856 /* sphp */ = {
+		8DD76F620486A84900D96B5E /* spectral_hp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6F7EB58C0866EDD80044EA5B /* Build configuration list for PBXNativeTarget "sphp" */;
+			buildConfigurationList = 6FB40AC1091AF4FA002BAA09 /* Build configuration list for PBXNativeTarget "spectral_hp" */;
 			buildPhases = (
-				6FA5712505AE030D003EC856 /* Headers */,
-				6FA5712B05AE030D003EC856 /* Sources */,
-				6FA5714605AE030D003EC856 /* Frameworks */,
-				6FA5714E05AE030D003EC856 /* Rez */,
+				8DD76F640486A84900D96B5E /* Sources */,
+				8DD76F660486A84900D96B5E /* Frameworks */,
+				8DD76F690486A84900D96B5E /* CopyFiles */,
 			);
 			buildRules = (
 			);
 			buildSettings = {
-				CC = /usr/bin/gcc;
-				CPLUSPLUS = "/usr/bin/g++";
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_MODEL_CPU = G5;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					PV3,
-					NOUNDERSCORE,
-					NOUNS,
-				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(HOME)/Packages/pV3",
-					"$(HOME)/Packages/pvm3/lib/DARWIN",
-					"$(HOME)/Packages/pV3/clients/DARWIN",
-					/Users/helenbrk/Packages/pV3/clients/DARWIN,
-					/Users/helenbrk/Packages/pvm3/lib/DARWIN,
-					/opt/ibmcmp/lib,
-				);
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = (
-					"-falign-loops=16",
-					"-funroll-loops",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = sphp;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"-Wno-long-double",
-				);
-				WARNING_LDFLAGS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = "$(HOME)/bin";
+				PREBINDING = NO;
+				PRODUCT_NAME = spectral_hp;
 			};
 			dependencies = (
 			);
-			name = sphp;
-			productName = "planar++";
-			productReference = 6FA5715005AE030D003EC856 /* sphp */;
+			name = spectral_hp;
+			productInstallPath = "$(HOME)/bin";
+			productName = spectral_hp;
+			productReference = 8DD76F6C0486A84900D96B5E /* spectral_hp */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -347,222 +283,125 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 6F7EB5900866EDD80044EA5B /* Build configuration list for PBXProject "spectral_hp" */;
+			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "spectral_hp" */;
 			buildSettings = {
 			};
 			buildStyles = (
-				014CEA460018CE2711CA2923 /* Development */,
-				014CEA470018CE2711CA2923 /* Deployment */,
+				014CEA460018CE2711CA2923 /* Debug */,
+				014CEA470018CE2711CA2923 /* Release */,
 			);
 			hasScannedForEncodings = 1;
-			mainGroup = 08FB7794FE84155DC02AAC07 /* planar++ */;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* spectral_hp */;
 			projectDirPath = "";
 			targets = (
-				6FA5712405AE030D003EC856 /* sphp */,
+				8DD76F620486A84900D96B5E /* spectral_hp */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXRezBuildPhase section */
-		6FA5714E05AE030D003EC856 /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXRezBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		6FA5712B05AE030D003EC856 /* Sources */ = {
+		8DD76F640486A84900D96B5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FA5712C05AE030D003EC856 /* main.cpp in Sources */,
-				6FA5712D05AE030D003EC856 /* allocate.cpp in Sources */,
-				6FA5712E05AE030D003EC856 /* tobasis.cpp in Sources */,
-				6FA5712F05AE030D003EC856 /* gtol.cpp in Sources */,
-				6FA5713005AE030D003EC856 /* output.cpp in Sources */,
-				6FA5713105AE030D003EC856 /* curvinit.cpp in Sources */,
-				6FA5713205AE030D003EC856 /* ptprobe.cpp in Sources */,
-				6FA5713305AE030D003EC856 /* initfunc.cpp in Sources */,
-				6FA5713405AE030D003EC856 /* copy.cpp in Sources */,
-				6FA5713505AE030D003EC856 /* mg_alloc.cpp in Sources */,
-				6FA5713605AE030D003EC856 /* movfin.cpp in Sources */,
-				6FA5713705AE030D003EC856 /* movco.cpp in Sources */,
-				6FA5713805AE030D003EC856 /* minvrt.cpp in Sources */,
-				6FA5713905AE030D003EC856 /* nstage.cpp in Sources */,
-				6FA5713A05AE030D003EC856 /* block.cpp in Sources */,
-				6FA5713B05AE030D003EC856 /* blocks.cpp in Sources */,
-				6FA5713C05AE030D003EC856 /* surface.cpp in Sources */,
-				6FA5713D05AE030D003EC856 /* adapt.cpp in Sources */,
-				6FA5713E05AE030D003EC856 /* rblocks.cpp in Sources */,
-				6FA5713F05AE030D003EC856 /* drag.cpp in Sources */,
-				6FA5714005AE030D003EC856 /* l2error.cpp in Sources */,
-				6FA5714105AE030D003EC856 /* rsdl.cpp in Sources */,
-				6FA5714305AE030D003EC856 /* tstep.cpp in Sources */,
-				6FADFA2906710E7700BDB7F9 /* tadvance.cpp in Sources */,
-				6FA94078086D79410014B542 /* length.cpp in Sources */,
-				6FA9407C086D795D0014B542 /* pv3routines.cpp in Sources */,
-				6F8DE128088C362700CD7C59 /* bdry.cpp in Sources */,
+				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
+				6FB40AF3091AF517002BAA09 /* adapt.cpp in Sources */,
+				6FB40AF4091AF517002BAA09 /* allocate.cpp in Sources */,
+				6FB40AF5091AF517002BAA09 /* bdry.cpp in Sources */,
+				6FB40AF6091AF517002BAA09 /* bdrycd.cpp in Sources */,
+				6FB40AFB091AF517002BAA09 /* block.cpp in Sources */,
+				6FB40AFC091AF517002BAA09 /* blocks.cpp in Sources */,
+				6FB40AFE091AF517002BAA09 /* copy.cpp in Sources */,
+				6FB40B01091AF517002BAA09 /* drag.cpp in Sources */,
+				6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */,
+				6FB40B03091AF517002BAA09 /* hp_boundary.cpp in Sources */,
+				6FB40B05091AF517002BAA09 /* initfunc.cpp in Sources */,
+				6FB40B06091AF517002BAA09 /* l2error.cpp in Sources */,
+				6FB40B07091AF517002BAA09 /* length.cpp in Sources */,
+				6FB40B08091AF517002BAA09 /* lengthcd.cpp in Sources */,
+				6FB40B09091AF517002BAA09 /* makefile in Sources */,
+				6FB40B0A091AF517002BAA09 /* minvrt.cpp in Sources */,
+				6FB40B0B091AF517002BAA09 /* movco.cpp in Sources */,
+				6FB40B0C091AF517002BAA09 /* movfin.cpp in Sources */,
+				6FB40B0D091AF517002BAA09 /* nstage.cpp in Sources */,
+				6FB40B0E091AF517002BAA09 /* output.cpp in Sources */,
+				6FB40B0F091AF517002BAA09 /* ptprobe.cpp in Sources */,
+				6FB40B10091AF517002BAA09 /* pv3routines.cpp in Sources */,
+				6FB40B11091AF517002BAA09 /* rblocks.cpp in Sources */,
+				6FB40B12091AF517002BAA09 /* rsdl.cpp in Sources */,
+				6FB40B13091AF517002BAA09 /* rsdlcd.cpp in Sources */,
+				6FB40B14091AF517002BAA09 /* surface.cpp in Sources */,
+				6FB40B16091AF517002BAA09 /* tadvance.cpp in Sources */,
+				6FB40B17091AF517002BAA09 /* tadvancecd.cpp in Sources */,
+				6FB40B18091AF517002BAA09 /* tobasis.cpp in Sources */,
+				6FB40B1B091AF517002BAA09 /* tstep.cpp in Sources */,
+				6FB40B1C091AF517002BAA09 /* tstepcd.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		6F7EB58D0866EDD80044EA5B /* Development */ = {
+		6FB40AC2091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_CPU = G4;
-				GCC_MODEL_TUNING = G4;
+				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					PV3,
-					NOUNDERSCORE,
-					NOUNS,
-				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(HOME)/Packages/pV3",
-					"$(HOME)/Packages/pvm3/lib/DARWIN",
-					"$(HOME)/Packages/pV3/clients/DARWIN",
-					/Users/helenbrk/Packages/pV3/clients/DARWIN,
-					/Users/helenbrk/Packages/pvm3/lib/DARWIN,
-					/opt/ibmcmp/lib,
-				);
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = (
-					"-falign-loops=16",
-					"-funroll-loops",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = sphp;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"-Wno-long-double",
-				);
-				WARNING_LDFLAGS = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = "$(HOME)/bin";
+				PREBINDING = NO;
+				PRODUCT_NAME = spectral_hp;
 				ZERO_LINK = YES;
 			};
-			name = Development;
+			name = Debug;
 		};
-		6F7EB58E0866EDD80044EA5B /* Deployment */ = {
+		6FB40AC3091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_DYNAMIC_NO_PIC = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_MODEL_CPU = G4;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					PV3,
-					NOUNDERSCORE,
-					NOUNS,
-				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(HOME)/Packages/pV3",
-					"$(HOME)/Packages/pvm3/lib/DARWIN",
-					"$(HOME)/Packages/pV3/clients/DARWIN",
-					/Users/helenbrk/Packages/pV3/clients/DARWIN,
-					/Users/helenbrk/Packages/pvm3/lib/DARWIN,
-					/opt/ibmcmp/lib,
-				);
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = (
-					"-falign-loops=16",
-					"-funroll-loops",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = sphp;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"-Wno-long-double",
-				);
-				WARNING_LDFLAGS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = "$(HOME)/bin";
+				PREBINDING = NO;
+				PRODUCT_NAME = spectral_hp;
 				ZERO_LINK = NO;
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6F7EB58F0866EDD80044EA5B /* Default */ = {
+		6FB40AC4091AF4FA002BAA09 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_MODEL_CPU = G4;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					PV3,
-					NOUNDERSCORE,
-					NOUNS,
-				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(HOME)/Packages/pV3",
-					"$(HOME)/Packages/pvm3/lib/DARWIN",
-					"$(HOME)/Packages/pV3/clients/DARWIN",
-					/Users/helenbrk/Packages/pV3/clients/DARWIN,
-					/Users/helenbrk/Packages/pvm3/lib/DARWIN,
-					/opt/ibmcmp/lib,
-				);
-				OTHER_CFLAGS = "";
-				OTHER_CPLUSPLUSFLAGS = (
-					"-falign-loops=16",
-					"-funroll-loops",
-				);
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = sphp;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-					"-Wno-long-double",
-				);
-				WARNING_LDFLAGS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = "$(HOME)/bin";
+				PREBINDING = NO;
+				PRODUCT_NAME = spectral_hp;
 			};
 			name = Default;
 		};
-		6F7EB5910866EDD80044EA5B /* Development */ = {
+		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
-			name = Development;
+			name = Debug;
 		};
-		6F7EB5920866EDD80044EA5B /* Deployment */ = {
+		6FB40AC7091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
-			name = Deployment;
+			name = Release;
 		};
-		6F7EB5930866EDD80044EA5B /* Default */ = {
+		6FB40AC8091AF4FA002BAA09 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 			};
@@ -571,22 +410,22 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6F7EB58C0866EDD80044EA5B /* Build configuration list for PBXNativeTarget "sphp" */ = {
+		6FB40AC1091AF4FA002BAA09 /* Build configuration list for PBXNativeTarget "spectral_hp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F7EB58D0866EDD80044EA5B /* Development */,
-				6F7EB58E0866EDD80044EA5B /* Deployment */,
-				6F7EB58F0866EDD80044EA5B /* Default */,
+				6FB40AC2091AF4FA002BAA09 /* Debug */,
+				6FB40AC3091AF4FA002BAA09 /* Release */,
+				6FB40AC4091AF4FA002BAA09 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		6F7EB5900866EDD80044EA5B /* Build configuration list for PBXProject "spectral_hp" */ = {
+		6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "spectral_hp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F7EB5910866EDD80044EA5B /* Development */,
-				6F7EB5920866EDD80044EA5B /* Deployment */,
-				6F7EB5930866EDD80044EA5B /* Default */,
+				6FB40AC6091AF4FA002BAA09 /* Debug */,
+				6FB40AC7091AF4FA002BAA09 /* Release */,
+				6FB40AC8091AF4FA002BAA09 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
