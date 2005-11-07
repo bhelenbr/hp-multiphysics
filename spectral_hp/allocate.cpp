@@ -45,7 +45,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    data.clear();
 
    /* Initialize stuff for r_mesh */
-   if (!adapt_storage) r_mesh::init(input,prefix,hp_in);
+   if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(input,prefix,hp_in);
    
    keyword = prefix + ".nvariable";
    data.str(input[keyword]);
@@ -63,6 +63,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       if (!(data >> log2p)) log2p = 0;
    }
    *sim::log << "#" << prefix << ".log2p: " << log2p << std::endl;
+   log2pmax = log2p;
    data.clear();
    
    int npts;
@@ -155,17 +156,24 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       ugbd(0).s.reference(ug.s);
       ugbd(0).i.reference(ug.i);
       vrtxbd(0).reference(vrtx);
-      for(i=1;i<sim::nhist+1;++i) {
-         ugbd(i).v.resize(maxvst,NV);
-         ugbd(i).s.resize(maxvst,sm0,NV);
-         ugbd(i).i.resize(maxvst,im0,NV);
-         vrtxbd(i).resize(maxvst);
-      }
-
-      if (adapt_storage) return;
       
-      dvrtdt.resize(maxvst);
-      dugdt.resize(maxvst,NV);
+      if (!adapt_storage) {
+         for(i=1;i<sim::nhist+1;++i) {
+            ugbd(i).v.resize(maxvst,NV);
+            ugbd(i).s.resize(maxvst,sm0,NV);
+            ugbd(i).i.resize(maxvst,im0,NV);
+            vrtxbd(i).resize(maxvst);
+         }
+      }
+      else {
+         for(i=1;i<sim::nadapt+1;++i) {
+            ugbd(i).v.resize(maxvst,NV);
+            ugbd(i).s.resize(maxvst,sm0,NV);
+            ugbd(i).i.resize(maxvst,im0,NV);
+            vrtxbd(i).resize(maxvst);
+         }
+         return;
+      }
 
 #ifdef PV3
       /** Variables to understand iterative convergence using pV3 */
@@ -222,10 +230,26 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       reload_scratch_pointers();
    }
    else {
+      ugbd(0).v.reference(ug.v);
+      ugbd(0).s.reference(ug.s);
+      ugbd(0).i.reference(ug.i);
+      vrtxbd(0).reference(vrtx);
+      
+      /* HERE I MAKE 1 REFERENCE 0 BECAUSE I DON'T NEED TO STORE SOURCE TERMS ON COARSE MESHES */
+      /* I JUST USE BD(1) TO CALCULATE UNSTEADY SOURCES (DUGDT,DVRTDT) IN TADVANCE */
+      ugbd(1).v.reference(ug.v);
+      ugbd(1).s.reference(ug.s);
+      ugbd(1).i.reference(ug.i);
+      vrtxbd(1).reference(vrtx);
+      
       dres.resize(1);
       dres(0).v.resize(maxvst,NV);
       vrtx_frst.resize(maxvst);
    }
+   
+   /* UNSTEADY SOURCE TERMS */
+   dugdt.resize(log2p+1,maxvst,NV);
+   dxdt.resize(log2p+1,maxvst,ND);
    
       
    return;

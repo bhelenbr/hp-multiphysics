@@ -5,9 +5,21 @@ block::ctrl tri_hp::update(int excpt) {
    int i,m,k,n,indx,indx1;
    FLT cflalpha;
    int unshiftedexcpt;
-   static int lastresidual,lastminvrt,laststage,addtostage,stage;
+   static int lastresidual,lastminvrt,laststage,addtostage,stage,last_r_mesh;
    block::ctrl state;
    
+   if (excpt == 0) last_r_mesh = 0;
+   
+   /* COUPLED MESH MOVMEMENT */
+   if (mmovement == coupled_deformable) {
+      state = r_mesh::update(excpt);
+      if (state != block::stop) {
+         last_r_mesh = excpt+1;
+         return(state);
+      }
+   }
+   excpt -= last_r_mesh;
+         
    if (excpt == 0) {
 
       /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
@@ -35,7 +47,7 @@ block::ctrl tri_hp::update(int excpt) {
    
    /* CALCULATE RESIDUAL */
    if (excpt < lastresidual) {
-      state = rsdl(excpt);
+      state = rsdl(excpt,stage);
       if (state != block::stop) {
          lastresidual = excpt +1;
          return(state);
@@ -52,6 +64,7 @@ block::ctrl tri_hp::update(int excpt) {
       }
    }
 
+   /* UPDATE SOLUTION */
    if (excpt < lastminvrt+1) {
       cflalpha = 2.0; // cfl[log2p]*alpha[stage];
       

@@ -410,7 +410,7 @@
                for(n=0;n<ND;++n) {
                   GETRS(trans,basis::tri(log2p).sm,1,matrix[0],MXTM,ipiv,&crd(n)(0,1),MXTM,info);
                   for(m=0;m<basis::tri(log2p).sm;++m)
-                     hp_sbdry(bnum)->crdsbdin(indx,m,n,tlvl) = -crd(n)(0,1+m);
+                     hp_sbdry(bnum)->crdsbd(indx,m,n,tlvl) = -crd(n)(0,1+m);
                }
             }
          }

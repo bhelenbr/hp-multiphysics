@@ -3,17 +3,30 @@
 
 block::ctrl tri_hp::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh) {
    int i,j,ind,tind;
+   block::ctrl state;
    int stop = 1;
+   static int last_r_mesh;
    
    if(basis::tri(log2p).p > 1) {
       return(block::stop);
    }
+   if (excpt == 0) last_r_mesh = 0;
+   
+   if (mmovement == coupled_deformable) {
+      state = r_mesh::mg_getcchng(excpt,fv_to_ct,cv_to_ft,cmesh);
+      if (state != block::stop) {
+         last_r_mesh = excpt +1;
+         return(state);
+      }
+   }
+   excpt -= last_r_mesh;
+
       
    switch (excpt) {
       case(0): {
          mp_phase = -1;
    
-         /* TRANFER COUPLED BOUNDARY RESIDUALS */
+         /* TRANFER COUPLED BOUNDARY UPDATES */
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->mg_getcchng(excpt, fv_to_ct, cv_to_ft, cmesh->hp_sbdry(i));
 

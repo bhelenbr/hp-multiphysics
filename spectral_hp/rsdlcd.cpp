@@ -7,63 +7,73 @@
  *
  */
 
-#include "hp_mgrid.h"
-   
-extern FLT forcing(FLT x,FLT y);
-extern FLT axext, ayext, nuext;
+#include "tri_hp_cd.h"
+#include "hp_boundary.h"
 
-void hp_mgrid::rsdl(int stage, int mgrid) {
+   
+block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
    int i,j,n,tind;
    FLT fluxx,fluxy;
    FLT visc[ND][ND][ND][ND], tres[NV];
+   FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
+   FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
+   FLT oneminusbeta;
+   TinyVector<int,3> v;
+   int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+
    
    hp_gbl->res.v(Range(0,nvrtx),Range::all()) = 0.0;
    hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = 0.0;
    hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) = 0.0;
          
-   oneminusbeta = 1.0-beta[stage];
-   hp_gbl->vf.v(Range(0,nvrtx),Range::all()) *= oneminusbeta;
-   hp_gbl->vf.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) *= oneminusbeta;
-   hp_gbl->vf.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) *= oneminusbeta;
+   oneminusbeta = 1.0-sim::beta[stage];
+   hp_gbl->res_r.v(Range(0,nvrtx),Range::all()) *= oneminusbeta;
+   hp_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) *= oneminusbeta;
+   hp_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) *= oneminusbeta;
 
+   for(i=0;i<nsbd;++i)
+      hp_sbdry(i)->addbflux(mgrid);
+      
    for(tind = 0; tind<ntri;++tind) {
+      /* LOAD INDICES OF VERTEX POINTS */
+      v = td(tind).vrtx;
    
+      /* IF TINFO > -1 IT IS CURVED ELEMENT */
       if (td(tind).info > -1) {
+         /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
          crdtocht(tind);
+         
+         /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
          for(n=0;n<ND;++n)
-            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), dcrd[n][1],MXGP);
-            
-         crdtocht(tind,dvrtdt,hp_gbl->dbinfodt);
-         for(n=0;n<ND;++n)
-            basis::tri(log2p).proj_bdry(&cht(n,0),&u(n)(0,0),MXGP);
+            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
       }
-      else {
+   	else {
+         /* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
          for(n=0;n<ND;++n)
-            basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
-            
-         for(n=0;n<ND;++n)
-            basis::tri(log2p).proj(dvrtdt[td(tind).vrtx(0)][n],dvrtdt[td(tind).vrtx(1)][n],dvrtdt[td(tind).vrtx(2)][n],u(n)(0,0),MXGP);
-            
+            basis::tri(log2p).proj(vrtx(v(0))(n),vrtx(v(1))(n),vrtx(v(2))(n),&crd(n)(0,0),MXGP);
+
+         /* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {
                for(n=0;n<ND;++n) {
-                  dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(1))(n));
-                  dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(0))(n) -vrtx(td(tind).vrtx(1))(n));
+                  dcrd(n,0)(i,j) = 0.5*(vrtx(v(2))(n) -vrtx(v(1))(n));
+                  dcrd(n,1)(i,j) = 0.5*(vrtx(v(0))(n) -vrtx(v(1))(n));
                }
             }
          }
       }
 
       /* CALCULATE MESH VELOCITY */
-      for(i=0;i<basis::tri(log2p).gpx;++i)
-         for(j=0;j<basis::tri(log2p).gpn;++j)
-            for(n=0;n<ND;++n)
-               mvel(n)(i,j) = sim::bd[0]*crd(n)(i,j) +u(n)(i,j);
+      for(i=0;i<lgpx;++i) {
+         for(j=0;j<lgpn;++j) {
+            mvel(0)(i,j) = sim::bd[0]*crd(0)(i,j) +dxdt(log2p,tind,0)(i,j);
+            mvel(1)(i,j) = sim::bd[0]*crd(1)(i,j) +dxdt(log2p,tind,1)(i,j);
+         }
+      }
 
       ugtouht(tind);
       basis::tri(log2p).proj(&uht(0)(0),&u(0)(0,0),&du(0,0)(0,0),&du(0,1)(0,0),MXGP);
-
-
+      
       for(n=0;n<NV;++n)
          for(i=0;i<basis::tri(log2p).tm;++i)
             lf(n)(i) = 0.0;
@@ -72,37 +82,27 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       for(i=0;i<basis::tri(log2p).gpx;++i) {
          for(j=0;j<basis::tri(log2p).gpn;++j) {
 
-            fluxx = RAD(i,j)*(axext -mvel(0)(i,j))*u(0)(i,j);
-            fluxy = RAD(i,j)*(ayext -mvel(1)(i,j))*u(0)(i,j);
+            fluxx = RAD(i,j)*(cd_gbl->ax -mvel(0)(i,j))*u(0)(i,j);
+            fluxy = RAD(i,j)*(cd_gbl->ay -mvel(1)(i,j))*u(0)(i,j);
 
             cv00[i][j] = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
             cv01[i][j] = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
          }
       }
-      basis::tri(log2p).intgrtrs(&lf(0)(0),cv00,cv01,MXGP);
+      basis::tri(log2p).intgrtrs(&lf(0)(0),&cv00[0][0],&cv01[0][0],MXGP);
 
       /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
       lftog(tind,hp_gbl->res);
 
       /* NEGATIVE REAL TERMS */
-      if (beta[stage] > 0.0) {
+      if (sim::beta[stage] > 0.0) {
             
          /* TIME DERIVATIVE TERMS */
-         if (!mgrid) {         
-            for(i=0;i<basis::tri(log2p).gpx;++i) {
-               for(j=0;j<basis::tri(log2p).gpn;++j) {
-                  cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                  res(0)(i,j) = RAD(i,j)*sim::bd[0]*u(0)(i,j)*cjcb(i,j) +hp_gbl->dugdt[0][tind][i][j];
-                  res(0)(i,j) += RAD(i,j)*cjcb(i,j)*forcing(crd(0)(i,j),crd(1)(i,j));
-               }
-            }
-         }
-         else {
-            for(i=0;i<basis::tri(log2p).gpx;++i) {
-               for(j=0;j<basis::tri(log2p).gpn;++j) {
-                  cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                  res(0)(i,j) = RAD(i,j)*sim::bd[0]*u(0)(i,j)*cjcb(i,j);
-               }
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {
+               cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+               res(0)(i,j) = RAD(i,j)*sim::bd[0]*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
+               res(0)(i,j) += RAD(i,j)*cjcb(i,j)*(*cd_gbl->src)(crd(0)(i,j),crd(1)(i,j));
             }
          }
          basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);
@@ -111,7 +111,7 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {
 
-               cjcb(i,j) = nuext*RAD(i,j)/cjcb(i,j);
+               cjcb(i,j) = cd_gbl->nu*RAD(i,j)/cjcb(i,j);
                
                /* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
                /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -127,39 +127,36 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
                cv01[i][j] += e01[i][j];
              }
          }
-         basis::tri(log2p).derivr(cv00,&res(0),(0,0),MXGP);
-         basis::tri(log2p).derivs(cv01,&res(0),(0,0),MXGP);
+         basis::tri(log2p).derivr(cv00[0],&res(0)(0,0),MXGP);
+         basis::tri(log2p).derivs(cv01[0],&res(0)(0,0),MXGP);
 
          /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {
 
-               tres[0] = hp_gbl->tau(tind)*res(0)(i,j);
+               tres[0] = cd_gbl->tau(tind)*res(0)(i,j);
 
-               e00[i][j] -= (dcrd(1,1)(i,j)*(axext-mvel(0)(i,j))
-                            -dcrd(0,1)(i,j)*(ayext-mvel(1)(i,j)))*tres[0];
-               e01[i][j] -= (-dcrd(1,0)(i,j)*(axext-mvel(0)(i,j))
-                             +dcrd(0,0)(i,j)*(ayext-mvel(1)(i,j)))*tres[0];
+               e00[i][j] -= (dcrd(1,1)(i,j)*(cd_gbl->ax-mvel(0)(i,j))
+                            -dcrd(0,1)(i,j)*(cd_gbl->ay-mvel(1)(i,j)))*tres[0];
+               e01[i][j] -= (-dcrd(1,0)(i,j)*(cd_gbl->ax-mvel(0)(i,j))
+                             +dcrd(0,0)(i,j)*(cd_gbl->ay-mvel(1)(i,j)))*tres[0];
            }
          }
-         basis::tri(log2p).intgrtrs(&lf(0)(0),e00,e01,MXGP); 
+         basis::tri(log2p).intgrtrs(&lf(0)(0),e00[0],e01[0],MXGP); 
 
          for(n=0;n<NV;++n)
             for(i=0;i<basis::tri(log2p).tm;++i)
-               lf(n)(i) *= beta[stage];
+               lf(n)(i) *= sim::beta[stage];
                
-         lftog(tind,hp_gbl->vf);
+         lftog(tind,hp_gbl->res_r);
       }
    }
 
    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-   hp_gbl->res.v(Range(0,nvrtx),Range::all()) += hp_gbl->vf.v(Range(0,nvrtx),Range::all());
-   hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += hp_gbl->vf.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());        
-   hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += hp_gbl->vf.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());     
+   hp_gbl->res.v(Range(0,nvrtx),Range::all()) += hp_gbl->res_r.v(Range(0,nvrtx),Range::all());
+   hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += hp_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());        
+   hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += hp_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());     
       
-   /* ADD IN BOUNDARY FLUXES */
-   addbflux(mgrid);
-
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
 /*********************************************/   
@@ -177,5 +174,5 @@ void hp_mgrid::rsdl(int stage, int mgrid) {
       hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += dres(log2p).i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());  
    }
 
-   return;
+   return(block::stop);
 }

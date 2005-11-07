@@ -51,11 +51,11 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             for(j=0;j<3;++j) {
                v0 = v(j);
 #ifndef DROP
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +dvrtdt(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +dvrtdt(v0)(1)),2.0);
+               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(sim::nhist)(v0)(0)),2.0) 
+                  +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +vrtxbd(sim::nhist)(v0)(1)),2.0);
 #else
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +dvrtdt(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*vrtx(v0)(1) +dvrtdt(v0)(1)),2.0); 
+               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(sim::nhist)(v0)(0)),2.0) 
+                  +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*vrtx(v0)(1) +vrtxbd(sim::nhist)(v0)(1)),2.0); 
 #endif
                qmax = MAX(qmax,q);
             }

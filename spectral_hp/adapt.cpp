@@ -196,7 +196,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
             PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
          
             for(m=0;m<basis::tri(log2p).sm;++m)
-               hp_sbdry(bnum)->crdsbdin(bel,m,n,step) = -lf(n)(m+2);
+               hp_sbdry(bnum)->crdsbd(bel,m,n,step) = -lf(n)(m+2);
          }
       }
    }
@@ -256,7 +256,7 @@ void tri_hp::movesdata_bdry(int bnum,int bel) {
       for(step=0;step<sim::nhist;++step) {
          for(m=0;m<sm0;++m) {
             for(n=0;n<ND;++n) {
-               hp_sbdry(bnum)->crdsbdin(bel,m,n,step) = hp_gbl->pstr->hp_sbdry(bnum)->crdsbd(tgtel,m,n,step);
+               hp_sbdry(bnum)->crdsbd(bel,m,n,step) = hp_gbl->pstr->hp_sbdry(bnum)->crdsbd(tgtel,m,n,step);
             }
          }
       }

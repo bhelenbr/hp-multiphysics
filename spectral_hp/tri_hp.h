@@ -25,10 +25,13 @@ class hp_side_bdry;
 
 /** This class is just the data storage and nothing for multigrid */
 class tri_hp : public r_mesh  {
-   protected:
+   public:
       int NV;
       int p0, sm0, im0;  /**> Initialization values */
       int log2p; /**> index of basis to use in global basis::tri array */
+      int log2pmax; /**> Initialization value of log2p */
+      bool mgrid; /**> tells whether we are coarse level of multigrid or not */
+      enum {fixed,rigid_moving,uncoupled_deformable,coupled_deformable} mmovement;
       
       /* STATIC WORK ARRAYS */
       static Array<TinyMatrix<FLT,MXGP,MXGP>,1> u,res;
@@ -50,17 +53,17 @@ class tri_hp : public r_mesh  {
       
       /** vertex boundary information */
       Array<hp_vrtx_bdry *,1> hp_vbdry;
-      hp_vrtx_bdry* getnewvrtxobject(int bnum, std::map<std::string,std::string> *bdrydata);
+      virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, std::map<std::string,std::string> *bdrydata) = 0;
 
       /** side boundary information */
       Array<hp_side_bdry *,1> hp_sbdry;
-      hp_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata);
+      virtual hp_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata) = 0;
       
       /** Array for time history information */
       TinyVector<vsi,sim::nhist+1> ugbd;
-      TinyVector<Array<TinyVector<FLT,ND>,1>,sim::nhist+1> vrtxbd;
-      Array<TinyVector<FLT,r_mesh::ND>,1> dvrtdt; //!< Precalculated backwards difference mesh info at vertices
-      Array<TinyMatrix<FLT,MXGP,MXGP>,2> dugdt; //!< Precalculated unsteady sources at Gauss points
+      TinyVector<Array<TinyVector<FLT,ND>,1>,sim::nhist+1> vrtxbd; //!< Highest level contains pre-summed unsteady mesh velocity source
+      Array<TinyMatrix<FLT,MXGP,MXGP>,3> dugdt; //!< Precalculated unsteady sources at Gauss points
+      Array<TinyMatrix<FLT,MXGP,MXGP>,3> dxdt; //!< Precalculated mesh velocity sources at Gauss points
       
 #ifdef PV3
       /** Variables to understand iterative convergence using pV3 */
@@ -171,10 +174,18 @@ class tri_hp : public r_mesh  {
 
       /* Routines to do explicit update of solution */
       virtual block::ctrl setup_preconditioner(int excpt);
-      virtual block::ctrl rsdl(int excpt) {return(block::stop);}
+      virtual block::ctrl rsdl(int excpt, int stage = sim::NSTAGE) {   
+         /* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES */
+         if (mmovement == coupled_deformable && stage == sim::NSTAGE && log2p == 0) {
+            return(r_mesh::rsdl(excpt));            
+         }
+         return(block::stop);
+      }
+      
       block::ctrl update(int excpt);
       block::ctrl minvrt(int excpt);
       block::ctrl minvrt_test(int excpt);
+      FLT maxres(FLT *err);
       
       /* MGRID TRANSFER */
       inline void setlog2p(int value) { tri_hp::log2p = value; } /* To switch polynomial degree */
@@ -182,8 +193,9 @@ class tri_hp : public r_mesh  {
       block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh);
 
       /* ADVANCE TIME SOLUTION */
-      virtual block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {return(block::stop);}
-
+      block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+      virtual void calculate_unsteady_sources();
+      
       /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
       void vmsgload(int phase, FLT *vdata);
       int vmsgwait_rcv(int phase,FLT *vdata);
@@ -191,15 +203,7 @@ class tri_hp : public r_mesh  {
       void smsgload(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
       int smsgwait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
       int smsgrcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
-
-#ifdef BACKDIFF
-      void unsteady_sources(int mgrid);
-      void shift();
-#else
-      void unsteady_sources(int stage, int mgrid);
-#endif             
-      FLT maxres(FLT *err);
-      
+         
 #ifdef PV3
       void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
       void pvcell(int &kn, int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);

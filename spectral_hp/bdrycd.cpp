@@ -1,5 +1,5 @@
-#include"hp_mgrid.h"
-#include<myblas.h>
+#include "hp_mgrid.h"
+#include <myblas.h>
 
 extern FLT axext, ayext;
 /*************************************************/
@@ -20,71 +20,7 @@ void hp_mgrid::setinflow() {
       if (sbdry[i].type&INFL_MASK) {
          /* INFLOW BOUNDARIES */
          /* SET VERTEX VALUES OF U,V */   
-         for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(0);
-   
-            x = vrtx(v0)(0);      
-            y = vrtx(v0)(1);
-            ug.v(v0,0) = (*(hp_gbl->func))(0,x,y);
-         }
-         v0 = sd(sind).vrtx(1);
-         x = vrtx(v0)(0);      
-         y = vrtx(v0)(1);
-         ug.v(v0,0) = (*(hp_gbl->func))(0,x,y);
-         
-         /**********************************/   
-         /* SET SIDE VALUES & FLUXES */
-         /**********************************/
-         /* ZERO FLUX FOR FIRST VERTEX */
-         for(n=0;n<NV;++n)
-            binfo[i][0].flx[n] = 0.0;
-            
-         for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(0);
-            v1 = sd(sind).vrtx(1);
-            
-            if (sbdry[i].type&CURV_MASK) {
-               crdtocht1d(sind);
-               for(n=0;n<ND;++n)
-                  basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(0,0),&dcrd(n,0)(0,0));
-               
-               crdtocht1d(sind,dvrtdt,hp_gbl->dbinfodt);
-               for(n=0;n<ND;++n)
-                  basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(1,0));
-            }
-            else {
-               for(n=0;n<ND;++n) {
-                  basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
-                  
-                  for(k=0;k<basis::tri(log2p).gpx;++k)
-                     dcrd(n,0)(0,k) = 0.5*(vrtx(v1)(n)-vrtx(v0)(n));
-               
-                  basis::tri(log2p).proj1d(dvrtdt[v0][n],dvrtdt[v1][n],&crd(n)(1,0));
-               }
-            }
-
-            if (basis::tri(log2p).sm) {
-               for(n=0;n<NV;++n)
-                  basis::tri(log2p).proj1d(ug.v(v0,n),ug.v(v1,n),&res(n)(0,0));
-         
-               for(k=0;k<basis::tri(log2p).gpx; ++k)
-                  for(n=0;n<NV;++n)
-                     res(n)(0,k) -= (*(hp_gbl->func))(n,crd(0)(0,k),crd(1)(0,k));
-                     
-               for(n=0;n<NV;++n)
-                  basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
-         
-               indx = sind*sm0;
-               for(n=0;n<NV;++n) {
-                  PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,basis::tri(log2p).sdiag1d[0],basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
-                  for(m=0;m<basis::tri(log2p).sm;++m) 
-                     ug.s(indx+m)(n) = -lf(n)(2+m);
-               }
-            }
-         }
-      }
+       }
       
       if (sbdry[i].type&OUTF_MASK) {
          for(n=0;n<NV;++n)
