@@ -366,8 +366,9 @@ void mesh::partition(class mesh& xin, int npart) {
          else {
             /* PARTITION SIDE */
             match = xin.td(indx).info;
-            if (match < npart) bnum = (match<<16) + (npart << 24) + stype::partition;
-            else bnum = (npart<<16) + (match << 24) + stype::partition;
+            /* 7 is stype::partition.  Not sure why necessary */
+            if (match < npart) bnum = (match<<16) + (npart << 24) + 7;
+            else bnum = (npart<<16) + (match << 24) + 7;
             for (j = 0; j <nsbd;++j) {
                if (bcntr(j,0) == -bnum) {
                   ++bcntr(j,1);

@@ -23,8 +23,8 @@ template<class GRD> class mgrid : public block {
       typedef typename GRD::gbl ggbl;
       Array<Array<gtrans,1>,1> cv_to_ft;
       Array<Array<gtrans,1>,1> fv_to_ct;
+   public:
       ggbl gstorage;
-      
       bool adapt_flag;
       FLT tolerance;
    
@@ -202,13 +202,13 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
 
 template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, int excpt) {
    int state = block::stop;
-   FLT size_reduce = 1;
    
    switch(excpt) {
       case(0):
 #ifdef OLDRECONNECT
          grd[lvl].coarsen(1.6,grd[lvl-1]);
 #else
+         FLT size_reduce = 1.0;
          if (lvl > 1) size_reduce = 2.0;
          grd[lvl].coarsen2(1.5,grd[lvl-1],size_reduce);
 #endif

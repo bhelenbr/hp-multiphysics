@@ -169,43 +169,6 @@ class side_bdry : public boundary {
       virtual void rcvpositions(int phase) {vfinalrcv(phase,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
 };
 
-/** \brief Helper object for vrtx_bdry 
- *
- * \ingroup boundary
- * Contains list of all vrtx_bdys's by name 
- * and has routine to return integer so can
- * allocate by name rather than by number
- */
-class vtype {
-   public:
-      static const int ntypes = 3;
-      enum ids {plain=1,comm,prdc};
-      const static char names[ntypes][40];
-      static int getid(const char *nin) {
-         for(int i=0;i<ntypes;++i) 
-            if (!strcmp(nin,names[i])) return(i+1);
-         return(-1);
-      }
-};
-
-/** \brief Helper object for side_bdry 
- *
- * \ingroup boundary
- * Contains list of all side_bdys's by name 
- * and has routine to return integer so can
- * allocate by name rather than by number
- */
-class stype {
-   public:
-      static const int ntypes = 9;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian};
-      static const char names[ntypes][40];
-      static int getid(const char *nin) {
-         for(int i=0;i<ntypes;++i)
-            if (!strcmp(nin,names[i])) return(i+1);
-         return(-1);
-      }
-};
 
 #endif
 

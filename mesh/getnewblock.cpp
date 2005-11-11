@@ -3,6 +3,11 @@
 #include "mgblock.h"
 #include "r_mesh.h"
 
+class btype {
+   public:
+      enum ids {plain=1};
+};
+
 block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockdata) {
    std::string keyword;
    std::istringstream data;

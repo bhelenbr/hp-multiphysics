@@ -10,8 +10,26 @@
 #include "mesh.h"
 #include "boundaries.h"
 
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class vtype {
+   public:
+      static const int ntypes = 3;
+      enum ids {plain=1,comm,prdc};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
+};
+
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
-const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca","gaussian"};
 
 vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata) {
    std::string keyword;
@@ -62,6 +80,28 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
 
    return(temp);
 }
+
+
+/** \brief Helper object for side_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all side_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class stype {
+   public:
+      static const int ntypes = 9;
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian};
+      static const char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i)
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
+};
+
+const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca","gaussian"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata) {

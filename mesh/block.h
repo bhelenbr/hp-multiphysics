@@ -43,9 +43,4 @@ class block {
       virtual boundary* fbdry(int grdlvl,int num) = 0;
       virtual ~block() {}
 };
-
-class btype {
-   public:
-      enum ids {plain=1};
-};
 #endif

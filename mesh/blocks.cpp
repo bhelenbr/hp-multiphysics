@@ -35,6 +35,7 @@ FLT sim::bd[BACKDIFF+1];
 #endif
 #ifdef DIRK
 FLT sim::bd[1];
+int sim::dirkstage;
 #if (DIRK == 3)
 /* THIS IS THE STANDARD FORM */
 // FLT sim::adirk[DIRK][DIRK] = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
@@ -144,6 +145,7 @@ void blocks::init(std::map<std::string,std::string> input) {
       std::cerr << "error reading blocks\n"; 
       exit(1);
    }
+   data.clear();
    *sim::log << "#starting block index: " << bstart << std::endl;
    *sim::log << "#nblocks for this processor: " << nblock << std::endl;
    
@@ -153,11 +155,11 @@ void blocks::init(std::map<std::string,std::string> input) {
    
    /* LOAD TIME STEPPING INFO */
    sim::time = 0.0;  // Simulation starts at t = 0
-   data.str(input["dti"]);   
+   data.str(input["dtinv"]);   
    if (!(data >> sim::dti)) sim::dti=1.0;
-   *sim::log << "#dti: " << sim::dti << std::endl;
+   *sim::log << "#dtinv: " << sim::dti << std::endl;
    data.clear();
-   
+      
    /* OTHER UNIVERSAL CONSTANTS */
    data.str(input["gravity"]);   
    if (!(data >> sim::g)) sim::g = 0.0;
@@ -195,6 +197,11 @@ void blocks::init(std::map<std::string,std::string> input) {
    *sim::log << "#ntstep: " << ntstep << std::endl;
    data.clear();
    
+   data.str(input["nstart"]);   
+   if (!(data >> nstart)) nstart = 1;
+   *sim::log << "#nstart: " << nstart << std::endl;
+   data.clear();
+
    /* LOAD NUMBER OF GRIDS */
    data.str(input["nblock"]);
    if (!(data >> nblock)) nblock = 1;
@@ -220,7 +227,13 @@ void blocks::init(std::map<std::string,std::string> input) {
    if (!(data >> rstrt_intrvl)) rstrt_intrvl = 1;
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    data.clear();
-
+   
+#ifdef DIRK
+   nstart *= sim::dirksolves;
+   ntstep *= sim::dirksolves;
+   out_intrvl *= sim::dirksolves;
+#endif
+   
    blk = new block *[nblock];
 
    int lvl = 0;
@@ -704,7 +717,7 @@ void blocks::go() {
    clock_t cpu_time;
 
    clock();
-   for(step = 1;step<=ntstep;++step) {
+   for(step=nstart;step<=ntstep;++step) {
       tadvance(step);
       matchboundaries();
 
@@ -765,29 +778,38 @@ void blocks::tadvance(int step) {
    }
 #endif
 
+#ifdef DIRK
+   sim::dirkstage = step % sim::dirksolves;
+
 #if (DIRK == 4)
+   step = step/3;
    /* STARTUP SEQUENCE */
-   if (step == 1) {
-      sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
-      sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
-      sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
-      sim::adirk[3][0] = 0.0; sim::adirk[3][1] = 1.-sim::B2RK3-sim::C2RK3; sim::adirk[3][2] = sim::B2RK3;   sim::adirk[3][3] = 1./sim::GRK3;
-      sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
-   } 
-   else if (step == 2) {
-      sim::adirk[0][0] = 1./sim::GRK3;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
-      sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
-      sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
-      sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
-      sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+   switch(step/3) {
+      case(1): {
+         sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+         sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+         sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
+         sim::adirk[3][0] = 0.0; sim::adirk[3][1] = 1.-sim::B2RK3-sim::C2RK3; sim::adirk[3][2] = sim::B2RK3;   sim::adirk[3][3] = 1./sim::GRK3;
+         sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
+         break;
+      }
+      case(2): {
+         sim::adirk[0][0] = 1./sim::GRK3;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+         sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+         sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
+         sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
+         sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+         break;
+      }
+      default : {
+         sim::adirk[0][0] = 1./sim::GRK4;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
+         sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
+         sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
+         sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
+         sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+      }
    }
-   else {
-      sim::adirk[0][0] = 1./sim::GRK4;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
-      sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
-      sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
-      sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
-      sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
-   }
+#endif
 #endif
 
    

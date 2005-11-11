@@ -875,10 +875,6 @@ block::ctrl r_mesh::rsdl(int excpt) {
          
       case(2+P2):
          return(block::stop);
-         
-      default:
-         *sim::log << "flow control error, rsdl" << std::endl;
-         exit(1);
    }
    
    return(block::stop);

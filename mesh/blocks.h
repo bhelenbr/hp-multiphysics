@@ -42,6 +42,7 @@ class blocks {
       int vw; /**< V-cycle = 1, W-cycle = 2 */
       //@}
       int ntstep;  /**< Number of time steps to perform */
+      int nstart; /**< Starting step (for restart from file */
       block **blk; /**< Array containing pointers to blocks */
       
       /** @name Output parameters
@@ -181,6 +182,7 @@ namespace sim {
    //@{
    extern FLT bd[BACKDIFF+1];  /**< backwards difference constants */
    const int nhist = BACKDIFF; /**< number of backwards difference steps */
+   const int nadapt = BACKDIFF; /**< number of backwards difference steps that require adaptation */
    //@}
 #endif
 #ifdef DIRK
@@ -213,7 +215,11 @@ namespace sim {
    const FLT B1RK4 = (1./6. +GRK4*GRK4-GRK4*GRK4*C3RK4+3./2.*GRK4*C3RK4-GRK4-1./4.*C3RK4)/(GRK4*C3RK4);
    const FLT B2RK4 = (1./3.-GRK4-1./2.*C3RK4+GRK4*C3RK4)/(2.*GRK4*(2.*GRK4-C3RK4));
    const FLT B3RK4 =( 1./3.-2*GRK4+2*GRK4*GRK4)/(C3RK4*(C3RK4-2*GRK4));
-   const int nhist = 1; 
+   const int nadapt = 1; /**< number of backwards difference steps that require adaptation */
+   const int nhist = 4; /**< number of backwards difference steps to be stored during a time step */
+   const int dirksolves = 3; /**< Number of DIRK implicit solutions required */
+   const bool esdirk = true; /**< Flag to be set when using an explicit 1'st stage */
+   extern int dirkstage; /**< Counter that tells which stage of DIRK is in process */
    //@}
 #endif
 
