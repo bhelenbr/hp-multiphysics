@@ -86,13 +86,13 @@ block::ctrl tri_hp::minvrt(int excpt) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,hp_gbl->res.v.data());
+               vc0load(mp_phase/3,hp_gbl->res.v.data());
                return(block::stay);
             case(1):
                vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,hp_gbl->res.v.data())));
+               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->res.v.data())));
          }
       }
       
@@ -190,13 +190,13 @@ block::ctrl tri_hp::minvrt(int excpt) {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  smsgload(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+                  sc0load(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
                   return(block::stay);
                case(1):
                   smsgpass(mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(smsgwait_rcv(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim))));
+                  return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim))));
             }
          }
          
@@ -386,13 +386,13 @@ block::ctrl tri_hp::setup_preconditioner(int excpt) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,hp_gbl->vprcn.data());
+               vc0load(mp_phase/3,hp_gbl->vprcn.data());
                return(block::stay);
             case(1):
                vmsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
+               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
          }
       }
       
@@ -400,13 +400,13 @@ block::ctrl tri_hp::setup_preconditioner(int excpt) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               smsgload(mp_phase/3,hp_gbl->sprcn.data(),0,0,1);
+               sc0load(mp_phase/3,hp_gbl->sprcn.data(),0,0,1);
                return(block::stay);
             case(1):
                smsgpass(mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(smsgwait_rcv(mp_phase/3,hp_gbl->sprcn.data(),0,0,1)));
+               return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->sprcn.data(),0,0,1)));
          }
       }
       
@@ -478,7 +478,7 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
                for(j=0;j<basis::tri(log2p).gpn;++j) {
                   cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                   for(n=0;n<NV;++n)
-                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->func)(n,crd(0)(i,j),crd(1)(i,j))*cjcb(i,j);
+                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->initfunc)(n,crd(0)(i,j),crd(1)(i,j))*cjcb(i,j);
                }
             }
             for(n=0;n<NV;++n)

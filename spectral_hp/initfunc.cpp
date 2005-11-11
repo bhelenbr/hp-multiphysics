@@ -9,21 +9,14 @@
 
 /* THESE ARE FUNCTIONS WHICH MUST BE SET UP FOR INDIVIDUAL PROBLEMS */
 
-#include "spectral_hp.h"
 #include "math.h"
-#include<assert.h>
-#include<stdlib.h>
-
-/* FOR A CIRCLE */
-FLT rad = RADIUS;
-FLT centerx = CENTERX;
-FLT centery = CENTERY;
+#include "tri_hp.h"
 
 FLT amp,lam,theta;
 FLT mux[4];
 FLT rhox[4];
 FLT sigmax[4];
-FLT body[ND] = {0.0, -9.81};
+FLT body[mesh::ND] = {0.0, -9.81};
 
 /***************************/
 /* INITIALIZATION FUNCTION */
@@ -31,7 +24,6 @@ FLT body[ND] = {0.0, -9.81};
 
 /* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
 int startup = 1;
-extern FLT outertime;
 
 #ifdef TEST
 FLT f1(int n, FLT x, FLT y) {
@@ -616,393 +608,71 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
    
+#include "blocks.h"
+#include "block.h"
+#include "mgblock.h"
+#include "r_mesh.h"
+#include "tri_hp_cd.h"
 
-/***************************/
-/* CURVED SIDE DEFINITIONS */
-/***************************/
-#ifdef CIRCLE
-FLT hgt(int type, FLT x, FLT y) {
-   if (type&(CURV_MASK)) {
-      x -= centerx;
-      y -= centery;
-      return(x*x + y*y - rad*rad);
-   }
-   return(0.0);
+FLT linear_src(FLT x, FLT y) {
+   return(x);
 }
 
-FLT dhgtdx(int type, FLT x, FLT y) {
-   if (type&(CURV_MASK)) {
-      x -= centerx;
-      y -= centery;
-      return(2*x);
-   }
-   return(0.0);
+FLT xcubed(int n, FLT x, FLT y) { 
+return(x*x*x);
 }
 
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      x -= centerx;
-      y -= centery;
-      return(2*y);
-   }
-   return(0.0);
-}
-#endif
+class btype {
+   public:
+      enum ids {plain=1, cd, ins};
+};
 
-#ifdef SIN
-FLT hgt(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(y -amp*sin(2.*M_PI*x/lam));
-   }
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(-2.*amp*M_PI/lam*cos(2.*M_PI*x/lam));
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(1.0);
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef VSIN
-FLT hgt(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(x -(amp*cos(2.*M_PI*y/lam) +0.55));
-   }
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(1.0);
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(+2.*amp*M_PI/lam*sin(2.*M_PI*y/lam));
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef COS
-FLT hgt(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(y -amp*cos(2.*M_PI*x));
-   }
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(2.*amp*M_PI*sin(2.*M_PI*x));
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(1.0);
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef WAVE
-FLT hgt(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(y -amp*(sin(2.*M_PI*x) +sin(15.*M_PI*x)));
-      
-   }
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(-2.*amp*M_PI*cos(2.*M_PI*x) -15.*amp*M_PI*cos(15.*M_PI*x));
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(1.0);
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef NACA
-FLT hgt(int type, FLT x, FLT y) { 
-   double thickness = 0.12;
-   if (type&(CURV_MASK)) {
-      if (x < 0.0) return(x);
-      
-      return(thickness*(1.4845*sqrt(x) -0.63*x -1.758*pow(x,2) +1.4215*pow(x,3) -0.5180*pow(x,4)) - fabs(y));
-      // return(thickness*(1.4845*sqrt(x) -0.63*x -1.758*pow(x,2) +1.4215*pow(x,3) -0.5075*pow(x,4)) - fabs(y));
-   }
+block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockdata) {
+   std::string keyword;
+   std::istringstream data;
+   std::map<std::string,std::string>::const_iterator mi;
+   char idntystring[10];
+   int type;        
    
-   return(0.0);
-}
+   type = idnum&0xffff;
 
-FLT dhgtdx(int type, FLT x, FLT y) {
-   double thickness = 0.12;
-   
-   if (type&(CURV_MASK)) {
-   
-      if (x <= 0.0) return(1.0);
-      return(thickness*(0.5*1.4845/sqrt(x) -0.63 -2*1.758*x +3*1.4215*pow(x,2) -4*0.5180*pow(x,3)));
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return((y > 0 ? -1 : 1));
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef MOVING_WALL
-FLT hgt(int type, FLT x, FLT y) { 
-   if (type&CURV_MASK && type&EULR_MASK) {
-      rad = 30.75*12.0*2.54/100.0*amp*(1-cos(2.*M_PI*outertime/lam));
-      return(x-rad);
-   }   
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   return(1.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   return(0.0);
-}
-#endif
-
-#ifdef GAUSSIAN
-FLT hgt(int type, FLT x, FLT y) { 
-   if (type&FSRF_MASK) {
-      return(y-amp*exp(-x*x/(lam*lam)));
-   }   
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   return(amp*2*x/(lam*lam)*exp(-x*x/(lam*lam)));
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   return(1.0);
-}
-#endif
-      
-#ifdef PARABOLA
-FLT hgt(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(y - .1/x);
-   }
-   return(0.0);
-}
-
-FLT dhgtdx(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(.1/(x*x));
-   }
-   return(0.0);
-}
-
-FLT dhgtdy(int type, FLT x, FLT y) {   
-   if (type&(CURV_MASK)) {
-      return(1.0);
-   }
-   return(0.0);
-}
-#endif
-
-
-
-/* TO USE IFCE/FSRF FROM A DIFFERENT MESH */
-class spectral_hp *tgt;
-
-void mvpttobdry(int typ, FLT& x, FLT &y) {
-   int iter;
-   FLT mag, delt_dist,psi;
-   
-   /* MOVING VERTEX POINTS */
-   if (typ&MVPT_MASK) {
-      /* MOVE POINT IF YOU WANT TO */
-#ifdef TWOSPHERE
-      typ = INFL_MASK +CURV_MASK;
-#endif
-#ifdef IMPINGINGJET
-      if (y < 0.0) { 
-         if (outertime < theta || outertime > theta+lam) { 
-            y =-0.1; 
-            return; 
-         } 
-         else if (outertime > theta && outertime < theta+lam) { 
-            y=-0.1-amp*(1.0-cos(2.*M_PI*(outertime-theta)/lam)); 
-            return; 
-          } 
-      } 
+   if (blockdata) {
+      sprintf(idntystring,"b%d",idnum);
+      keyword = std::string(idntystring) + ".type";
+      mi = (*blockdata).find(keyword);
+      if (mi != (*blockdata).end()) {
+         data.str((*blockdata)[keyword]);
+         data >> type;  
+         data.clear(); 
+      }
       else {
-         if (outertime < theta || outertime > theta+lam) {
-            y = 0.1;
-            return;
-          }
-         else if (outertime > theta && outertime < theta+lam) {
-            y=0.1+fabs(amp)*(1.0-cos(2.*M_PI*(outertime-theta)/lam));
-            return;
+         keyword = "blocktype";
+         data.str((*blockdata)[keyword]);
+         if (!(data >> type)) {
+            *sim::log << "couldn't find block type" << std::endl;
          }
       }
-#endif
    }
    
-#ifdef TWOSPHERE
-   if (typ == 66564) 
-      rad = 30.75*12.0*2.54/100.0*(1.0 +amp*(1-cos(2.*M_PI*outertime/lam)));
-   else
-      rad = 34.94*12.0*2.54/100.0;
-#endif
-   
-   if (typ&(EULR_MASK +INFL_MASK)) {
-      iter = 0;
-      do {
-         mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-         delt_dist = -hgt(typ,x,y)/mag;
-         x += delt_dist*dhgtdx(typ,x,y);
-         y += delt_dist*dhgtdy(typ,x,y);
-         if (++iter > 100) {
-            printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
-            break;
-            //exit(1);
-         }
-      } while (fabs(delt_dist) > 10.*EPSILON);
+   switch(type) {
+      case btype::plain: {
+         mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
+         return(temp);
+      }
       
-      return;
-   }
-#ifdef IMPINGINGJET
-    if (typ == 1026) {
-       if (startup) {
-          iter = 0;
-          do {
-             mag = dhgtdx(typ,x,-y)*dhgtdx(typ,x,-y) +dhgtdy(typ,x,-y)*dhgtdy(typ,x,-y);
-             delt_dist = -(hgt(typ,x,-y) +0.0001*sin(2*M_PI*(x-1.0)/5.0))/mag;
-             x += delt_dist*dhgtdx(typ,x,-y);
-             y -= delt_dist*dhgtdy(typ,x,-y);
-             if (++iter > 100) {
-                printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
-                exit(1);
-             }
-          } while (fabs(delt_dist) > 10.*EPSILON);
-       }
-       else 
-          tgt->findbdrypt(typ,x,y,psi);
- 
-       return;
-    }
- 
-    if (typ == 66562) {
-       if (startup) {
-          iter = 0;
-          do {
-             mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-             delt_dist = -hgt(typ,x,y)/mag;
-             x += delt_dist*dhgtdx(typ,x,y);
-             y += delt_dist*dhgtdy(typ,x,y);
-             if (++iter > 100) {
-                printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
-                exit(1);
-             }
-          } while (fabs(delt_dist) > 10.*EPSILON);
-       }
-       else 
-          tgt->findbdrypt(typ,x,y,psi);
- 
-       return;
-    }
-#endif
-
-#ifdef LAYER
-   if (typ == 1026) {
-      if (startup) {
-         iter = 0;
-         do {
-            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-#ifdef TWOLAYER
-            delt_dist = -(hgt(typ,x,y)-1.0)/mag;
-#else
-            delt_dist = -(hgt(typ,x,y)-0.475)/mag;
-#endif
-            x += delt_dist*dhgtdx(typ,x,y);
-            y += delt_dist*dhgtdy(typ,x,y);
-            if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
-               exit(1);
-            }
-         } while (fabs(delt_dist) > 10.*EPSILON);
+      case btype::cd: {
+         mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
+         (*temp).gstorage.src = &linear_src;
+         (*temp).gstorage.initfunc = &xcubed;
+         return(temp);
       }
-      else 
-         tgt->findbdrypt(typ,x,y,psi);
+      default: {
+         std::cout << "unrecognizable block type: " <<  type << std::endl;
+         mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
+         return(temp);
+      }
+   } 
       
-      return;
-   }
-
-   if (typ & (FSRF_MASK+IFCE_MASK)) {
-      if (startup) {
-         return;
-      }
-      else
-         tgt->findbdrypt(typ,x,y,psi);
-
-      return;
-   }
-   
-#endif
-
-#ifdef TWOSPHERE
-   if (typ & (FSRF_MASK+IFCE_MASK)) {
-      if (startup) {
-         return;
-      }
-      else
-         tgt->findbdrypt(typ,x,y,psi);
-
-      return;
-   }
-#endif
-
-   if (typ&(FSRF_MASK +IFCE_MASK)) {
-      if (startup) {
-         iter = 0;
-         do {
-            mag = dhgtdx(typ,x,y)*dhgtdx(typ,x,y) +dhgtdy(typ,x,y)*dhgtdy(typ,x,y);
-            delt_dist = -hgt(typ,x,y)/mag;
-            x += delt_dist*dhgtdx(typ,x,y);
-            y += delt_dist*dhgtdy(typ,x,y);
-            if (++iter > 100) {
-               printf("#Warning: iterations exceeded curved boundary %d %f %f %f\n",typ,x,y,delt_dist);
-               exit(1);
-            }
-         } while (fabs(delt_dist) > 10.*EPSILON);
-      }
-      else 
-         tgt->findbdrypt(typ,x,y,psi);
-      
-      return;
-   }
-
+   return(0);
 }
+

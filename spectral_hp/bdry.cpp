@@ -52,14 +52,14 @@ void hp_mgrid::setinflow() {
    
             x = vrtx(v0)(0);      
             y = vrtx(v0)(1);
-            ug.v(v0,0) = (*(hp_gbl->func))(0,x,y);
-            ug.v(v0,1) = (*(hp_gbl->func))(1,x,y);
+            ug.v(v0,0) = (*(hp_gbl->initfunc))(0,x,y);
+            ug.v(v0,1) = (*(hp_gbl->initfunc))(1,x,y);
          }
          v0 = sd(sind).vrtx(1);
          x = vrtx(v0)(0);      
          y = vrtx(v0)(1);
-         ug.v(v0,0) = (*(hp_gbl->func))(0,x,y);
-         ug.v(v0,1) = (*(hp_gbl->func))(1,x,y);
+         ug.v(v0,0) = (*(hp_gbl->initfunc))(0,x,y);
+         ug.v(v0,1) = (*(hp_gbl->initfunc))(1,x,y);
          
          /**********************************/   
          /* SET SIDE VALUES & FLUXES */
@@ -98,7 +98,7 @@ void hp_mgrid::setinflow() {
          
                for(k=0;k<basis::tri(log2p).gpx; ++k)
                   for(n=0;n<ND;++n)
-                     res(n)(0,k) -= (*(hp_gbl->func))(n,crd(0)(0,k),crd(1)(0,k));
+                     res(n)(0,k) -= (*(hp_gbl->initfunc))(n,crd(0)(0,k),crd(1)(0,k));
                      
                for(n=0;n<ND;++n)
                   basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
@@ -306,7 +306,7 @@ void hp_mgrid::addbflux(int mgrid) {
             for(k=0;k<basis::tri(log2p).gpx;++k) {
                for(n=0;n<NV;++n) {
                   wl[n] = u(n)(0,k);
-                  wr[n] = (hp_gbl->func)(n,crd(0)(0,k),crd(1)(0,k));
+                  wr[n] = (hp_gbl->initfunc)(n,crd(0)(0,k),crd(1)(0,k));
                }
                nrm[0] = dcrd(1,0)(0,k);
                nrm[1] = -dcrd(0,0)(0,k);
@@ -384,8 +384,8 @@ void hp_mgrid::addbflux(int mgrid) {
             basis::tri(log2p).proj1d(&uht(2)(0)&u(2)(0,0));
                
             for(k=0;k<basis::tri(log2p).gpx;++k) {
-               wl[0] = (hp_gbl->func)(0,crd(0)(0,k),crd(1)(0,k));
-               wl[1] = (hp_gbl->func)(1,crd(0)(0,k),crd(1)(0,k));
+               wl[0] = (hp_gbl->initfunc)(0,crd(0)(0,k),crd(1)(0,k));
+               wl[1] = (hp_gbl->initfunc)(1,crd(0)(0,k),crd(1)(0,k));
                for(n=0;n<ND;++n)
                   mvel[n] = sim::bd[0]*crd(n)(0,k) +crd(n)(1,k);
                res(2)(0,k) = hp_gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*dcrd(1,0)(0,k) -(wl[1] -mvel[1])*dcrd(0,0)(0,k));

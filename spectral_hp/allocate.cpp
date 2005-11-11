@@ -36,6 +36,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       coarse = 0;
    }
    data.clear();
+   *sim::log << "#" << keyword << ": " << coarse << std::endl;
    
    keyword = prefix + ".adapt_storage";
    data.str(input[keyword]);
@@ -43,6 +44,16 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       adapt_storage = 0;
    }
    data.clear();
+      
+   keyword = prefix + ".mesh_movement";
+   int mmin;
+   data.str(input[keyword]);
+   if (!(data >> mmin)) {
+      mmin = 0;
+   }
+   mmovement = static_cast<movementtype>(mmin);
+   data.clear();
+   *sim::log << "#" << keyword << ": " << mmovement << std::endl;
 
    /* Initialize stuff for r_mesh */
    if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(input,prefix,hp_in);
@@ -53,6 +64,8 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       NV = 1;
    }
    data.clear();
+   *sim::log << "#" << keyword << ": " << NV << std::endl;
+
    
    keyword = prefix + ".log2p";
    data.str(input[keyword]);
@@ -62,9 +75,10 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       data.str(input[keyword]);
       if (!(data >> log2p)) log2p = 0;
    }
-   *sim::log << "#" << prefix << ".log2p: " << log2p << std::endl;
+   *sim::log << "#" << keyword << ": " << log2p << std::endl;
    log2pmax = log2p;
    data.clear();
+   
    
    int npts;
    keyword = prefix + ".ngaussx";
@@ -75,7 +89,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       data.str(input[keyword]);
       if (!(data >> npts)) npts = 0;
    }
-   *sim::log << "#" << prefix << ".ngaussx: " << npts << std::endl;
+   *sim::log << "#" << keyword << ": " << npts << std::endl;
    data.clear();
 
    /* Check that global basis has been allocated & allocate if necessary */
@@ -83,7 +97,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       basis::tri.resize(log2p+1);
       
       p = 1;
-      for(i=0;i<log2p;++i) {
+      for(i=0;i<log2p+1;++i) {
          basis::tri(i).initialize(p,p+1+npts);
          p = p<<1;
       }
@@ -100,7 +114,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       sm0 = basis::tri(log2p).sm;
       im0 = basis::tri(log2p).im;
    }
-      
+         
    /* Check that static work arrays are big enough */
    if (u.extent(firstDim) < NV) {
       u.resize(NV);
@@ -251,6 +265,29 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    dugdt.resize(log2p+1,maxvst,NV);
    dxdt.resize(log2p+1,maxvst,ND);
    
+   if (!coarse && !adapt_storage) {
+      int adapt_flag;
+      keyword = prefix + ".adapt";
+      data.str(input[keyword]);
+      if (!(data >> adapt_flag)) {
+         data.clear();
+         keyword = "adapt";
+         data.str(input[keyword]);
+         if (!(data >> adapt_flag)) adapt_flag = 0;
+      }
+      *sim::log << "#adapt: " << adapt_flag << std::endl;
+      data.clear();  
+   
+      if (adapt_flag) {
+         /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
+         hp_gbl->pstr = create();
+         hp_gbl->pstr->mesh::copy(*this);
+         keyword = prefix + ".adapt_storage";
+         input[keyword] = "1";
+         (*hp_gbl->pstr).init(input, prefix, hp_in);
+         input[keyword] = "0";
+      }
+   }
       
    return;
 }
@@ -290,21 +327,21 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    return;
 }
 
- FLT tri_hp::maxres(FLT *mxr) {
+ void tri_hp::maxres() {
    int i,n;
-   FLT emax = 0.0;
+   Array<FLT,1> mxr(NV);
+   
+   if (mmovement == coupled_deformable) r_mesh::maxres();
    
    for(n=0;n<NV;++n)
-      mxr[n] = 0.0;
-   
+      mxr(n) = 0.0;
+
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
-         mxr[n] = MAX(mxr[n],fabs(hp_gbl->res.v(i,n)));
-
+         mxr(n) = MAX(mxr(n),fabs(hp_gbl->res.v(i,n)));
+         
    for(n=0;n<NV;++n)
-      emax = MAX(emax,mxr[n]);
-      
-   return(emax);
-}   
+      *sim::log << ' ' << mxr(n) << ' ';
+}
 
 

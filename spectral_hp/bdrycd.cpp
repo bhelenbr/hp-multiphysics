@@ -1,12 +1,142 @@
-#include "hp_mgrid.h"
+#include "tri_hp_cd.h"
+#include "cd_bdry.h"
+#include "hp_boundary.h"
 #include <myblas.h>
+#include <input_map.h>
 
-extern FLT axext, ayext;
-/*************************************************/
-/* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
-/* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
-/* BUT NOT INDEPENDENT OF TIME/MESH POSITION    */
-/*************************************************/
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tri_hp_cd_vtype {
+   public:
+      static const int ntypes = 1;
+      enum ids {plain=1};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
+};
+
+const char tri_hp_cd_vtype::names[ntypes][40] = {"plain"};
+
+hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, std::map<std::string,std::string> *bdrydata) {
+   std::string keyword;
+   std::istringstream data;
+   std::map<std::string,std::string>::const_iterator mi;
+   char idntystring[10];
+   int type;        
+   hp_vrtx_bdry *temp;  
+   int idnum = vbdry(bnum)->idnum;
+   
+   type = idnum&0xffff;
+
+   if (bdrydata) {
+      sprintf(idntystring,"v%d",idnum);
+      keyword = std::string(idntystring) + ".type";
+      mi = (*bdrydata).find(keyword);
+      if (mi != (*bdrydata).end()) {
+         type = tri_hp_cd_vtype::getid((*mi).second.c_str());
+         if (type < 0)  {
+            *sim::log << "unknown vertex type:" << (*mi).second << std::endl;
+            exit(1);
+         }
+      }
+   }
+   
+   switch(type) {
+      case tri_hp_cd_vtype::plain: {
+         temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
+         break;
+      }
+      default: {
+         std::cout << "unrecognizable vrtx type: " <<  type << " idnum: " << idnum << std::endl;
+         temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
+         break;
+      }
+   } 
+   
+   if (bdrydata) temp->input(*bdrydata);
+   
+   return(temp);
+}
+
+
+/** \brief Helper object for side_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all side_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tri_hp_cd_stype {
+   public:
+      static const int ntypes = 2;
+      enum ids {dirichlet=1,curved_dirichlet};
+      static const char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i)
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
+};
+
+const char tri_hp_cd_stype::names[ntypes][40] = {"dirichlet","curved_dirichlet"};
+
+/* FUNCTION TO CREATE BOUNDARY OBJECTS */
+hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata) {
+   std::string keyword;
+   std::istringstream data;
+   std::map<std::string,std::string>::const_iterator mi;
+   char idntystring[10];
+   int type;        
+   hp_side_bdry *temp;  
+   int idnum = sbdry(bnum)->idnum;
+
+   type = idnum&0xff;
+
+   if (bdrydata) {
+      sprintf(idntystring,"s%d",idnum);
+      keyword = std::string(idntystring) + ".cd_type";
+      mi = (*bdrydata).find(keyword);
+      if (mi != (*bdrydata).end()) {
+         type = tri_hp_cd_stype::getid((*mi).second.c_str());
+         if (type < 0)  {
+            *sim::log << "unknown side type:" << (*mi).second << std::endl;
+            exit(1);
+         }
+      }
+      else {
+         *sim::log << "#couldn't find " << keyword << std::endl;
+         type = tri_hp_cd_stype::dirichlet;
+      }
+   }
+
+   switch(type) {
+      case tri_hp_cd_stype::dirichlet: {
+         temp = new dirichlet_cd<hp_side_bdry>(*this,*sbdry(bnum));
+         break;
+      }
+      case tri_hp_cd_stype::curved_dirichlet: {
+         temp = new dirichlet_cd<hp_curved>(*this,*sbdry(bnum));
+         break;
+      }
+   }
+   
+   if (bdrydata) temp->input(*bdrydata);
+   
+   return(temp);
+}
+
+
+#ifdef SKIP
+
+
 extern FLT df1d(int,FLT,FLT);
 void chrctr(FLT ax, FLT ay, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
 
@@ -134,7 +264,7 @@ void hp_mgrid::addbflux(int mgrid) {
             for(k=0;k<basis::tri(log2p).gpx;++k) {
                for(n=0;n<NV;++n) {
                   wl[n] = u(n)(0,k);
-                  wr[n] = (hp_gbl->func)(n,crd(0)(0,k),crd(1)(0,k));
+                  wr[n] = (hp_gbl->initfunc)(n,crd(0)(0,k),crd(1)(0,k));
                }
                nrm[0] = dcrd(1,0)(0,k);
                nrm[1] = -dcrd(0,0)(0,k);
@@ -452,6 +582,6 @@ void hp_mgrid::bdrycheck2() {
    return;
 }
 
-
+#endif
 
 

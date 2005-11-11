@@ -36,25 +36,27 @@
       cd_gbl->ax = 1.0;
    }
    data.clear();
+   *sim::log << "#" << keyword << ": " << cd_gbl->ax << std::endl;
+
    
    keyword = prefix + ".ay";
    data.str(input[keyword]);
    if (!(data >> cd_gbl->ay)) {
-      cd_gbl->ax = 0.0;
+      cd_gbl->ay = 0.0;
    }
    data.clear();
-   
+   *sim::log << "#" << keyword << ": " << cd_gbl->ay << std::endl;
+
    keyword = prefix + ".nu";
    data.str(input[keyword]);
    if (!(data >> cd_gbl->nu)) {
       cd_gbl->nu = 1.0;
    }
    data.clear();
+   *sim::log << "#" << keyword << ": " << cd_gbl->nu << std::endl;
+
    
    cd_gbl->tau.resize(maxvst);
    
    return;
 }
-   
-   
-         

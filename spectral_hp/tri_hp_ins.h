@@ -37,6 +37,7 @@ class tri_hp_ins : public tri_hp {
       
    public:
       void init(std::map <std::string,std::string>& input, std::string prefix, gbl *gin);
+      tri_hp_ins* create() {return(new tri_hp_ins);}
       block::ctrl length(int excpt);
       block::ctrl setup_preconditioner(int excpt);
       block::ctrl rsdl(int excpt, int stage);

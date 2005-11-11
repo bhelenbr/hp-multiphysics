@@ -15,6 +15,8 @@
    char uplo[] = "U";
    TinyVector<FLT,2> pt;
    
+   *sim::log << "************ " << nvrtx << std::endl;
+   
    /* LOOP THROUGH VERTICES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)

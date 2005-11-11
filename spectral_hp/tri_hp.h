@@ -6,6 +6,9 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
+ 
+#ifndef _tri_hp_h_
+#define _tri_hp_h_
 
 #include <r_mesh.h>
 #include <float.h>
@@ -31,7 +34,7 @@ class tri_hp : public r_mesh  {
       int log2p; /**> index of basis to use in global basis::tri array */
       int log2pmax; /**> Initialization value of log2p */
       bool mgrid; /**> tells whether we are coarse level of multigrid or not */
-      enum {fixed,rigid_moving,uncoupled_deformable,coupled_deformable} mmovement;
+      enum movementtype {fixed,rigid_moving,uncoupled_deformable,coupled_deformable} mmovement;
       
       /* STATIC WORK ARRAYS */
       static Array<TinyMatrix<FLT,MXGP,MXGP>,1> u,res;
@@ -108,7 +111,7 @@ class tri_hp : public r_mesh  {
 #endif
          
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
-         FLT (*func)(int n, FLT x, FLT y);
+         FLT (*initfunc)(int n, FLT x, FLT y);
       } *hp_gbl;
 
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -135,6 +138,7 @@ class tri_hp : public r_mesh  {
       virtual ~tri_hp();
       void init(std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
       void copy_data(const tri_hp &tgt);
+      virtual tri_hp* create() = 0;
       
       /* Initialization functions */
       inline void tobasis(FLT (*func)(int var, TinyVector<FLT,ND> &x), int tlvl = 0);
@@ -181,11 +185,10 @@ class tri_hp : public r_mesh  {
          }
          return(block::stop);
       }
-      
+      void maxres();      
       block::ctrl update(int excpt);
       block::ctrl minvrt(int excpt);
       block::ctrl minvrt_test(int excpt);
-      FLT maxres(FLT *err);
       
       /* MGRID TRANSFER */
       inline void setlog2p(int value) { tri_hp::log2p = value; } /* To switch polynomial degree */
@@ -193,16 +196,16 @@ class tri_hp : public r_mesh  {
       block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh);
 
       /* ADVANCE TIME SOLUTION */
-      block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+      block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
       virtual void calculate_unsteady_sources();
       
       /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
-      void vmsgload(int phase, FLT *vdata);
-      int vmsgwait_rcv(int phase,FLT *vdata);
-      int vmsgrcv(int phase,FLT *vdata);
-      void smsgload(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
-      int smsgwait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
-      int smsgrcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
+      void vc0load(int phase, FLT *vdata);
+      int vc0wait_rcv(int phase,FLT *vdata);
+      int vc0rcv(int phase,FLT *vdata);
+      void sc0load(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
+      int sc0wait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
+      int sc0rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
          
 #ifdef PV3
       void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
@@ -218,4 +221,4 @@ class tri_hp : public r_mesh  {
 
 };
 
-
+#endif

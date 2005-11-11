@@ -305,8 +305,8 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
 
          /* BACK CALCULATE K TERM */
          ugbd(stage+1).v(Range(0,nvrtx),Range::all()) = (ug.v(Range(0,nvrtx),Range::all()) -ugbd(1).v(Range(0,nvrtx),Range::all()))*sim::adirk[stage-1][stage-1];
-         ugbd(stage+1).s(Range(0,nside),Range::all(),Range::all()) = (ug.s(Range(0,nside),Range::all(),Range::all()) -ugbd(1).s(Range(0,nside),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
-         ugbd(stage+1).i(Range(0,ntri),Range::all(),Range::all()) = (ug.i(Range(0,ntri),Range::all(),Range::all()) -ugbd(1).i(Range(0,ntri),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
+         if (sm0) ugbd(stage+1).s(Range(0,nside),Range::all(),Range::all()) = (ug.s(Range(0,nside),Range::all(),Range::all()) -ugbd(1).s(Range(0,nside),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
+         if (im0) ugbd(stage+1).i(Range(0,ntri),Range::all(),Range::all()) = (ug.i(Range(0,ntri),Range::all(),Range::all()) -ugbd(1).i(Range(0,ntri),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
          
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
@@ -316,8 +316,8 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
       if (sim::dirkstage == 0) {
          /* STORE TILDE W */
          ugbd(1).v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
-         ugbd(1).s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
-         ugbd(1).i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
+         if (sm0) ugbd(1).s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
+         if (im0) ugbd(1).i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
 
          /* SAME FOR MESH INFORMATION */
          for(i=0;i<nvrtx;++i)
@@ -328,8 +328,8 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
       /* UPDATE TILDE W */
       for (s=0;s<stage;++s) {         
          ugbd(1).v(Range(0,nvrtx),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).v(Range(0,nvrtx),Range::all());
-         ugbd(1).s(Range(0,nside),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).s(Range(0,nside),Range::all(),Range::all());
-         ugbd(1).i(Range(0,ntri),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).i(Range(0,ntri),Range::all(),Range::all());
+         if (sm0) ugbd(1).s(Range(0,nside),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).s(Range(0,nside),Range::all(),Range::all());
+         if (im0) ugbd(1).i(Range(0,ntri),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).i(Range(0,ntri),Range::all(),Range::all());
 
          for(i=0;i<nvrtx;++i)
             for(n=0;n<ND;++n)
@@ -397,7 +397,7 @@ void tri_hp::calculate_unsteady_sources() {
       
       
       ugtouht(tind,1);
-      for(n=0;n<ND;++n)
+      for(n=0;n<NV;++n)
          basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
                   
       for(i=0;i<basis::tri(log2p).gpx;++i) {

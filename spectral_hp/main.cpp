@@ -6,25 +6,15 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#include "tri_hp.h"
-#include <stdio.h>
-#include <utilities.h>
-#include <string.h>
-#include <time.h>
+#include <blocks.h>
 #include <signal.h>
 #ifdef PV3
 #include <pV3.h>
 #endif
 
-#ifdef FINDMAX
-   FLT ydist(FLT xp[2]) {
-      return(xp[1]-0.1/xp[0] +0.002);
-   }
-#endif
-
+#define SIMULATION
 
 void ctrlc(int signal);
-static class blocks myblock;
 
 #ifdef PV3
 extern "C" int MAINPROG(int argc, char **argv);
@@ -32,7 +22,6 @@ int MAINPROG(int argc, char**argv) {
 #else
 int main(int argc, char **argv) {
 #endif
-   clock_t cpu_time;
    struct sigaction action;
 	struct sigaction o_action;
 
@@ -43,14 +32,22 @@ int main(int argc, char **argv) {
 	if (sigaction(SIGTERM,&action,&o_action)) printf("interrupt handler failed\n");
    
 
-//#ifdef SIMULATION   
-//   /* NORMAL SIMULATION */
-//   myblock.init(argv[1]);
-//   myblock.go();
-//   cpu_time = clock();
-//   printf("#that took %ld cpu time\n",cpu_time);
-//   return(0);
-//#endif
+#ifdef SIMULATION   
+#ifdef MPISRC
+   int myid;
+   MPI_Init(&argc,&argv);
+   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+
+   /* NORMAL SIMULATION */
+   sim::blks.init(argv[1]);
+   sim::blks.go();
+
+#ifdef MPISRC
+   MPI_Finalize();
+#endif
+#endif
+
 //
 //#ifdef DEBUG
 //   extern FLT f1(int n, FLT x, FLT y);
@@ -88,10 +85,8 @@ void ctrlc(int signal)
 {  
    /* THIS ALLOWS FILES TO CLOSE */
    /* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
-   printf("# exiting gracefully\n");
-//   myblocks.output(-1,ftype::text);
-//   myblocks.output(-1,ftype::tecplot);
-
+   *sim::log << "# exiting gracefully" << std::endl;
+   sim::blks.output("interupt",block::restart);
    exit(1);
 }
 
