@@ -7,7 +7,7 @@
 #include <float.h>
 #include <utilities.h>
 #include <iostream>
-#include <map>
+#include <input_map.h>
 #include <string>
 #include <sstream>
 #include <blitz/array.h>
@@ -57,7 +57,7 @@ class mesh {
       /* VERTEX BOUNDARY INFO */
       int nvbd;
       Array<vrtx_bdry *,1> vbdry;
-      vrtx_bdry* getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata);
+      vrtx_bdry* getnewvrtxobject(int idnum, input_map *bdrydata);
 
       /* SIDE DATA */      
       int nside;
@@ -71,7 +71,7 @@ class mesh {
       /* SIDE BOUNDARY INFO */
       int nsbd;
       Array<side_bdry *,1> sbdry;
-      side_bdry* getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata);
+      side_bdry* getnewsideobject(int idnum, input_map *bdrydata);
 
       /* TRIANGLE DATA */      
       int ntri;
@@ -114,10 +114,10 @@ class mesh {
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength};
-      void input(const char *filename, filetype ftype = grid,  FLT grwfac = 1, const char *bdrymap = 0);
-      int output(const char *filename, filetype ftype = grid) const;
-      void bdry_output(const char *filename) const;
-      void setbcinfo();  // FOR EASYMESH OUTPUT (NOT USED)
+      void input(const std::string &filename, filetype ftype = grid,  FLT grwfac = 1, const std::string &bdrymap = std::string());
+      int output(const std::string &filename, filetype ftype = grid) const;
+      void bdry_output(const std::string &filename) const;
+      virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 
       /* MESH MODIFICATION UTILTIES */
       void coarsen_substructured(const class mesh &tgt,int p);
@@ -159,7 +159,7 @@ class mesh {
          TinyVector<FLT,3> wt;
       };
       block::ctrl mgconnect(int excpt, Array<transfer,1> &cnnct, const class mesh& tgt);
-      void testconnect(char *fname,Array<transfer,1> &cnnct, mesh *cmesh);
+      void testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh);
       
       /* SOME DEGUGGING FUNCTIONS */
       void checkintegrity();

@@ -1,10 +1,12 @@
+#ifndef _block_h_
+#define _block_h_
+
 #include <map>
 #include <string>
 #include <sstream>
 #include <ftype.h>
 #include <blitz/array.h>
-#ifndef _block_h_
-#define _block_h_
+#include <input_map.h>
 
 class boundary;
 
@@ -19,19 +21,18 @@ class block {
          sprintf(buffer,"b%d",idnum);
          idprefix = std::string(buffer);
       }
-      virtual void init(std::map <std::string,std::string>& input) = 0;
+      virtual void init(input_map& input) = 0;
       virtual void reload_scratch_pointers() = 0;
-      enum output_purpose {standard, display, restart, debug};
-      virtual void output(char *filename, output_purpose why) = 0;
+      enum output_purpose {display, restart, debug};
+      virtual void output(const std::string &filename, output_purpose why) = 0;
       virtual ctrl matchboundaries(int lvl, int excpt) = 0;
       virtual ctrl rsdl(int lvl, int excpt) = 0;
       virtual ctrl setup_preconditioner(int lvl, int excpt) = 0;
       virtual ctrl update(int lvl, int excpt) = 0;
       virtual void maxres() = 0;
-      virtual ctrl mg_getfres(int lvl, int excpt) = 0;
-      virtual ctrl mg_getcchng(int lvl, int excpt) = 0;
+      virtual ctrl mg_getfres(int lvl, int lvlm, int excpt) = 0;
+      virtual ctrl mg_getcchng(int lvl, int lvlp, int excpt) = 0;
       virtual ctrl reconnect(int lvl, int excpt) = 0;
-      virtual void coarsenchk(const char *fname) = 0;
       virtual ctrl tadvance(int lvl, int excpt) = 0;
       virtual ctrl adapt(int excpt) = 0;
       

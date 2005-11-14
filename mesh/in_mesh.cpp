@@ -10,39 +10,36 @@ Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2w
 Array<FLT,1> mesh::fscr1;
 int mesh::maxsrch;
 
-void mesh::input(const char *filename, mesh::filetype filetype, FLT grwfac, const char *bdryfile) {
+void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac, const std::string &bdryfile) {
    int i,j,n,sind,count,temp;
-   char grd_nm[120], grd_app[120];
+   std::string grd_nm, bdry_nm, grd_app;
    TinyVector<int,3> v,s,e;
    ifstream in;
-   std::map<std::string,std::string> bdrymap;
-   std::map<std::string,std::string> *pbdrymap = &bdrymap;
+   input_map bdrymap;
+   input_map *pbdrymap = &bdrymap;
    FLT fltskip;
    int intskip;
          
-   if (!(strncmp("${HOME}",filename, 7))) {
-      strcpy(grd_nm,getenv("HOME"));
-      strcat(grd_nm, filename+7);
+   if (filename.substr(0,7) == "${HOME}") {
+      grd_nm = getenv("HOME") +filename.substr(7,filename.length());
    }
    else 
-      strcpy(grd_nm,filename);
+      grd_nm = filename;
    
-   if (bdryfile) {
-      if (!(strncmp("${HOME}",bdryfile, 7))) {
-         strcpy(grd_app,getenv("HOME"));
-         strcat(grd_app, bdryfile+7);
-         input_map(bdrymap,grd_app);
+   if (!bdryfile.empty()) {
+      if (bdryfile.substr(0,7) == "${HOME}") {
+         bdry_nm = getenv("HOME") +bdryfile.substr(7,bdryfile.length());
+         bdrymap.input(bdry_nm);
       }
       else 
-         input_map(bdrymap,bdryfile);
+         bdrymap.input(bdryfile);
    }
    else {
-      strcpy(grd_app,grd_nm);
-      strcat(grd_app,"_bdry.inpt");
-      in.open(grd_app);
+      bdry_nm = grd_nm +"_bdry.inpt";
+      in.open(bdry_nm.c_str());
       if (in) {
          in.close();
-         input_map(bdrymap,grd_app);
+         bdrymap.input(bdry_nm);
       }
       else {
          pbdrymap = 0;
@@ -52,9 +49,8 @@ void mesh::input(const char *filename, mesh::filetype filetype, FLT grwfac, cons
     switch (filetype) {            
         case(easymesh):
             /* LOAD SIDE INFORMATION */
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".s");
-            in.open(grd_app);
+            grd_app = grd_nm + ".s";
+            in.open(grd_app.c_str());
             if (!in) {
                     *sim::log << "error: couldn't open file: " << grd_app << std::endl;
                     exit(1);
@@ -130,9 +126,8 @@ next1a:     continue;
             in.close();
                
             /* LOAD VERTEX INFORMATION               */
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".n");
-            in.open(grd_app);
+            grd_app = grd_nm + ".n";
+            in.open(grd_app.c_str());
             if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             if(!(in >> nvrtx)) {
@@ -168,9 +163,8 @@ next1a:     continue;
             }
                         
             /* LOAD ELEMENT INFORMATION */
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".e");
-            in.open(grd_app);
+            grd_app = grd_nm + ".e";
+            in.open(grd_app.c_str());
             if (!in) {
                *sim::log << "trouble opening " << grd_app << std::endl;
                exit(1);
@@ -204,9 +198,8 @@ next1a:     continue;
             break;
         
         case(gambit):
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".FDNEUT");
-            in.open(grd_app);
+            grd_app = grd_nm +".FDNEUT";
+            in.open(grd_app.c_str());
             if (!in) {
                     *sim::log << "trouble opening " << grd_nm << std::endl;
                     exit(1);
@@ -319,9 +312,8 @@ next1a:     continue;
             break;
             
          case(grid):
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".grd");
-            in.open(grd_app);
+            grd_app = grd_nm + ".grd";
+            in.open(grd_app.c_str());
             if (!in) {
                *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
@@ -407,9 +399,8 @@ next1a:     continue;
             }
 
             /* LOAD VERTEX POSITIONS               */
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".txt");
-            in.open(grd_app);
+            grd_app = grd_nm + ".txt";
+            in.open(grd_app.c_str());
             if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             if(!(in >> temp)) {
@@ -557,9 +548,8 @@ next1c:     continue;
 #endif
 
          case(tecplot):
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".dat");
-            in.open(grd_app);
+            grd_app = grd_nm +".dat";
+            in.open(grd_app.c_str());
             if (!in) {
                *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
@@ -626,9 +616,8 @@ next1c:     continue;
             
          case(boundary):
             /* LOAD BOUNDARY INFORMATION */
-            strcpy(grd_app,grd_nm);
-            strcat(grd_app,".d");
-            in.open(grd_app);
+            grd_app = grd_nm +".d";
+            in.open(grd_app.c_str());
             if (!in) { 
                *sim::log << "couldn't open " << grd_app << "for reading\n";
                exit(1);
@@ -740,9 +729,8 @@ next1c:     continue;
    cnt_nbor();
    treeinit(); 
    
-   strcpy(grd_app,grd_nm);
-   strcat(grd_app,".vlngth");
-   in.open(grd_app);
+   grd_app = grd_nm + ".vlngth";
+   in.open(grd_app.c_str());
    if (in) {
       for(i=0;i<nvrtx;++i) in >> vlngth(i);
       in.close();
@@ -803,7 +791,7 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
       sbdry.resize(nsbd);
       for(i=0;i<nsbd;++i) {
          sbdry(i) = inmesh.sbdry(i)->create(*this);
-         sbdry(i)->alloc(MAX(static_cast<int>(inmesh.sbdry(i)->maxel/sizereduce1d)+1,10));
+         sbdry(i)->alloc(MAX(static_cast<int>(inmesh.sbdry(i)->maxel/sizereduce1d),10));
       }
       nvbd = inmesh.nvbd;
       vbdry.resize(nvbd);

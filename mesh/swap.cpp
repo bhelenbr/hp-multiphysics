@@ -14,7 +14,7 @@
 
 #ifdef DEBUG_ADAPT
 extern int adapt_count;
-extern char adapt_file[100];
+static std::string adapt_file;
 #endif
 
 int mesh::swap(int sind, FLT tol) {
@@ -97,8 +97,11 @@ int mesh::swap(int sind, FLT tol) {
    td(t2).sign(s2p) = -1;
    
 #ifdef DEBUG_ADAPT
-   number_str(adapt_file,"adapt",adapt_count++,5);
-   output(adapt_file,grid);
+      std::ostringstream nstr;
+      nstr << adapt_count++ << std::flush;
+      adapt_file = "adapt" +nstr.str();
+      nstr.str("");
+      output(adapt_file,grid);
 #endif
 
    return(1);

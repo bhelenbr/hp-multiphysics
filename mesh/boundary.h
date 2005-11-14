@@ -9,8 +9,7 @@
 #include "mesh.h"
 #include <utilities.h>
 #include <stdio.h>
-#include <map>
-#include <typeinfo>
+#include <input_map.h>
 
 #ifdef MPISRC
 #include <mpi.h>
@@ -57,7 +56,7 @@ class boundary {
       virtual void output(std::ostream& fout) {
          fout << idprefix << ".type: " << mytype << std::endl;         
       }
-      virtual void input(std::map<std::string,std::string>& bdrydata) {}
+      virtual void input(input_map& bdrydata) {}
       
       /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
       enum msg_type {flt_msg, int_msg};

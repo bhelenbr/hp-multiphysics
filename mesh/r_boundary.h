@@ -6,7 +6,8 @@
  *  Copyright (c) 2002 __MyCompanyName__. All rights reserved.
  *
  */
- #include "boundary.h"
+ 
+#include "boundary.h"
 
 class r_side_bdry {
    protected:
@@ -20,7 +21,7 @@ class r_side_bdry {
       virtual void output(std::ostream& fout) {
          fout << base.idprefix << ".r_type: " << mytype << std::endl;         
       }
-      virtual void input(std::map<std::string,std::string>& bdrydata) {}
+      virtual void input(input_map& bdrydata) {}
       virtual void tadvance() {}
       virtual void dirichlet() {}
       virtual void fixdx2() {}
@@ -33,12 +34,19 @@ class r_fixed : public r_side_bdry {
       
       r_fixed(r_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";} 
          
-      void input(std::map <std::string,std::string>& inmap) {
+      void input(input_map& inmap) {
          r_side_bdry::input(inmap);
          
-         std::istringstream data(inmap[base.idprefix+".r_dir"]);
-         if (!(data >> dstart >> dstop)) {dstart = 0; dstop = 1;}
-         data.clear();
+         std::string line;
+         if(inmap.getline(base.idprefix+".r_dir",line)) {
+            std::istringstream data(line);
+            data >> dstart >> dstop;
+            data.clear();
+         }
+         else {
+            dstart = 0;
+            dstop = 1;
+         }
       }  
       
       void output(std::ostream& fout) {
@@ -86,12 +94,19 @@ class r_translating : public r_fixed {
             dx[n] = 0.0;
          mytype = "translating";
       }
-      void input(std::map <std::string,std::string>& inmap) {
+      void input(input_map& inmap) {
          r_fixed::input(inmap);
          
-         std::istringstream data(inmap[base.idprefix+".r_translate"]);
-         if (!(data >> dx[0] >> dx[1])) {dx[0] = 0; dx[1] = 1;}
-         data.clear();
+         std::string line;
+         if(inmap.getline(base.idprefix+".r_translate",line)) {
+            std::istringstream data(line);
+            data >> dx[0] >> dx[1];
+            data.clear();
+         }
+         else {
+            dx[0] = 0;
+            dx[1] = 1;
+         }
       }  
       
       void output(std::ostream& fout) {
@@ -115,12 +130,20 @@ class r_oscillating : public r_fixed {
       r_oscillating(r_mesh &xin, side_bdry &bin) : 
          r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
          
-      void input(std::map <std::string,std::string>& inmap) {
+      void input(input_map& inmap) {
          r_fixed::input(inmap);
          
-         std::istringstream data(inmap[base.idprefix+".r_oscillate"]);
-         if (!(data >> v0 >> amp >> omega)) {v0 = 0.0; amp = 0.0; omega = 0.0;}
-         data.clear();
+         std::string line;
+         if(inmap.getline(base.idprefix+".r_oscillate",line)) {
+            std::istringstream data(line);
+            data >> v0 >> amp >> omega;
+            data.clear();
+         }
+         else {
+            v0 = 0.0;
+            amp = 0.0;
+            omega = 0.0;
+         }
       }  
       
       void output(std::ostream& fout) {

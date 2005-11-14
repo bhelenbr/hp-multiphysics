@@ -1,7 +1,7 @@
 #include "boundary.h"
 
 #include <iostream>
-#include <map>
+#include <input_map.h>
 #include <string>
 #include <sstream>
 #include <fstream>
@@ -62,7 +62,7 @@ template<class BASE> class comm_bdry : public BASE {
             fout << phase[m] << " ";
          fout << std::endl;
       }
-      void input(std::map <std::string,std::string>& inmap) {
+      void input(input_map& inmap) {
          int m;
          std::string keyword;
          std::map<std::string,std::string>::const_iterator mi;
@@ -604,7 +604,7 @@ template<class BASE> class prdc_template : public BASE {
          BASE::output(fout);
          fout << BASE::idprefix << ".dir" << ": " << dir << std::endl;  
       }
-      void input(std::map <std::string,std::string>& inmap) {
+      void input(input_map& inmap) {
          std::string keyword;
          std::map<std::string,std::string>::const_iterator mi;
          std::istringstream data;
@@ -672,7 +672,7 @@ class sinewave : public curved_analytic {
          fout << idprefix << ".offset: " << offset << std::endl;
       }
          
-      void input(std::map <std::string,std::string>& inmap) {   
+      void input(input_map& inmap) {   
          curved_analytic::input(inmap);
          
          std::istringstream data(inmap[idprefix+".h_or_v"]);
@@ -722,7 +722,7 @@ class circle : public curved_analytic {
          fout << idprefix << ".radius: " << radius << std::endl;
       }
      
-       void input(std::map <std::string,std::string>& inmap) {
+       void input(input_map& inmap) {
          curved_analytic::input(inmap);
          
          std::istringstream data(inmap[idprefix+".center"]);
@@ -777,7 +777,7 @@ class naca : public curved_analytic {
          fout << std::endl;
       }
      
-       void input(std::map <std::string,std::string>& inmap) {
+       void input(input_map& inmap) {
          curved_analytic::input(inmap);
          
          std::istringstream data(inmap[idprefix+".sign"]);
@@ -837,7 +837,7 @@ class gaussian : public curved_analytic {
          fout << idprefix << ".normal: " << normal << std::endl;
       }
      
-       void input(std::map <std::string,std::string>& inmap) {
+       void input(input_map& inmap) {
          curved_analytic::input(inmap);
          
          std::istringstream data(inmap[idprefix+".amp"]);

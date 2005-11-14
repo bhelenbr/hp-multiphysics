@@ -7,8 +7,8 @@
 
 using namespace std;
 
-int mesh::output(const char *filename, mesh::filetype filetype) const {
-   char fnmapp[100];
+int mesh::output(const std::string &filename, mesh::filetype filetype) const {
+   std::string fnmapp;
    int i,j,n,tind,count;
    ofstream out;
    
@@ -19,9 +19,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
    
       case (easymesh):
          /* CREATE EASYMESH OUTPUT FILES */
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".n");
-         out.open(fnmapp);
+         fnmapp = filename +".n";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -37,9 +36,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          out.close();
 
          /* SIDE FILE */      
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".s");
-         out.open(fnmapp);
+         fnmapp = filename +".s";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -51,9 +49,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          }
          out.close();
    
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".e");
-         out.open(fnmapp);
+         fnmapp = filename +".e";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -69,9 +66,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          break;
       
       case (tecplot):
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".dat");
-         out.open(fnmapp);
+         fnmapp = filename +".dat";
+         out.open(fnmapp.c_str());
          if (out == NULL ) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -94,9 +90,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          break;
 
       case (mavriplis):
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".GDS");
-         out.open(fnmapp);
+         fnmapp = filename +".GDS";
+         out.open(fnmapp.c_str());
          if (out == NULL ) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -122,9 +117,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          break; 
          
       case (gambit):
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".FDNEUT");
-         out.open(fnmapp);
+         fnmapp = filename +".FDNEUT";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
@@ -195,9 +189,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
 
       case(text):
          /* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".txt");
-         out.open(fnmapp);
+         fnmapp = filename +".txt";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
@@ -214,9 +207,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          break;
          
       case(grid):
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".grd");
-         out.open(fnmapp);
+         fnmapp = filename +".grd";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
@@ -264,9 +256,8 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
          break;
          
       case(vlength): {
-         strcpy(fnmapp,filename);
-         strcat(fnmapp,".vlngth");
-         out.open(fnmapp);
+         fnmapp = filename +".vlngth";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
             exit(1);
@@ -284,20 +275,19 @@ int mesh::output(const char *filename, mesh::filetype filetype) const {
    return(1);
 }
 
-void mesh::bdry_output(const char *filename) const {
-   char fnmapp[120];
+void mesh::bdry_output(const std::string &filename) const {
+   std::string fnmapp;
    ofstream out;
    int i;
    
-   strcpy(fnmapp,filename);
-   strcat(fnmapp,"_bdry.inpt");
-   out.open(fnmapp);
+   fnmapp = filename +"_bdry.inpt";
+   out.open(fnmapp.c_str());
    for(i=0;i<nvbd;++i) vbdry(i)->output(out);
    for(i=0;i<nsbd;++i) sbdry(i)->output(out);
    out.close();
 }
 
-void mesh::setbcinfo() {
+void mesh::setinfo() {
    int i,j;
    
    /* SET UP VRTX BC INFORMATION FOR OUTPUT */

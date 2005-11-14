@@ -21,6 +21,7 @@ class r_mesh : public mesh {
       protected:         
          FLT vnn;
          FLT fadd;
+         mesh::filetype output_type;
          
          /* MESH VARIABLES */
          Array<FLT,1> ksprg;
@@ -31,7 +32,7 @@ class r_mesh : public mesh {
          int mp_phase;
          
          Array<r_side_bdry *,1> r_sbdry;
-         r_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata);
+         r_side_bdry* getnewsideobject(int bnum, input_map *bdrydata);
          
           /* SETUP SPRING CONSTANTS */
          /* LAPLACE CONSTANTS */
@@ -79,8 +80,9 @@ class r_mesh : public mesh {
          ~r_mesh();
          
          /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-         void init(std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
-         void bdry_output(const char *filename) const;
+         void init(input_map& input, std::string prefix, gbl *rgin);
+         void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type); }
+         void bdry_output(const std::string &filename) const;
          block::ctrl mg_getfres(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
          block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
          block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);

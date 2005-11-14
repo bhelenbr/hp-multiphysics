@@ -9,35 +9,39 @@
 #include <fstream>
 
 
-void r_mesh::init(std::map <std::string,std::string>& input, std::string prefix, r_mesh::gbl *rgin) {
+void r_mesh::init(input_map& input, std::string prefix, r_mesh::gbl *rgin) {
    std::string keyword;
    std::istringstream data;
    std::string filename;
-   int coarse;
+   int coarse,ival;
    
    keyword = prefix + ".coarse";
-   data.str(input[keyword]);
-   if (!(data >> coarse)) {
+   if (!input.get(keyword,coarse)) {
       *sim::log << "#Error: not sure whether to initialize for r_mesh for multigrid" << std::endl;
    }
-   data.clear();
    
    keyword = prefix + ".fadd";
-   data.str(input[keyword]);
-   if (!(data >> fadd)) {
-      data.clear();
-      keyword = "fadd";
-      data.str(input[keyword]);
-      if (!(data >> fadd)) fadd = 1.0;
+   if (!input.get(keyword,fadd)) {
+      input.getwdefault("fadd",fadd,1.0);
    }
    *sim::log << "#fadd: " << fadd << std::endl;
-   data.clear();
 
    keyword = prefix + ".vnn";
-   data.str(input[keyword]);
-   if (!(data >> vnn)) vnn = 0.5; 
+   input.getwdefault(keyword,vnn,0.5); 
    *sim::log << "#vnn: " << vnn << std::endl;
-   data.clear();
+   
+   keyword = prefix + ".r_output_type";
+   if (input.get(keyword,ival)) {
+      output_type = static_cast<mesh::filetype>(ival);
+   }
+   else {
+      if (input.get("r_output_type",ival)) {
+         output_type = static_cast<mesh::filetype>(ival);
+      }
+      else {
+         output_type = mesh::grid;
+      }
+   }
    
    /* local storage */   
    ksprg.resize(maxvst);
@@ -55,10 +59,9 @@ void r_mesh::init(std::map <std::string,std::string>& input, std::string prefix,
    }
          
    std::string bdryfile;
-   std::map<std::string,std::string> bdrymap;
+   input_map bdrymap;
    keyword = prefix + ".bdryfile";
-   data.str(input[keyword]);
-   if (data >> bdryfile) {
+   if (input.get(keyword,bdryfile)) {
       if (!(strncmp("${HOME}",bdryfile.c_str(), 7))) {
          filename = getenv("HOME");
          filename = filename + (bdryfile.c_str()+7);
@@ -68,11 +71,10 @@ void r_mesh::init(std::map <std::string,std::string>& input, std::string prefix,
    }
    else {
       keyword = prefix + ".mesh";
-      data.str(input[keyword]);
+      input.get(keyword,filename);
       filename = filename +"_bdry.inpt";
    }
-   input_map(bdrymap,filename.c_str());
-   data.clear();
+   bdrymap.input(filename);
 
    r_sbdry.resize(nsbd);
    for(int i=0;i<nsbd;++i)
@@ -87,14 +89,13 @@ r_mesh::~r_mesh() {
 }
       
 
-void r_mesh::bdry_output(const char *filename) const {
-   char fnmapp[120];
+void r_mesh::bdry_output(const std::string &filename) const {
+   std::string fnmapp;
    std::ofstream bout;
    int i;
    
-   strcpy(fnmapp,filename);
-   strcat(fnmapp,"_bdry.inpt");
-   bout.open(fnmapp);
+   fnmapp = filename + "_bdry.inpt";
+   bout.open(fnmapp.c_str());
    for(i=0;i<nvbd;++i) 
       vbdry(i)->output(bout);
       

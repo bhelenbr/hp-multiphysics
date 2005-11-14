@@ -34,7 +34,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		6F14D30E08C8A080008EFB72 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
@@ -496,7 +495,6 @@
 				6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */,
 				6F2262E4086730AF001017D0 /* blocks.cpp in Sources */,
 				6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */,
-				6F14D30E08C8A080008EFB72 /* getnewblock.cpp in Sources */,
 				6FC0044C08CD33CF0030E073 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -828,6 +826,7 @@
 				6F2262C408672FD1001017D0 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
 		};
 		6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */ = {
 			isa = XCConfigurationList;
@@ -837,6 +836,7 @@
 				6F27981208B9FA5A007BECA9 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
 		};
 		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "main" */ = {
 			isa = XCConfigurationList;

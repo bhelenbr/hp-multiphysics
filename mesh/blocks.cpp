@@ -13,7 +13,6 @@
 #include <input_map.h>
 #include <utilities.h>
 #include <iostream>
-#include <map>
 #include <string>
 #include <sstream>
 #include <utilities.h>
@@ -63,15 +62,14 @@ int sim::pv3_mesh_changed;
    
 FLT sim::fadd;  
 
-void blocks::init(const char *infile, const char *outfile) {
-   std::map<std::string,std::string> maptemp;
-   char name[100];
+void blocks::init(const std::string &infile, const std::string &outfile) {
+   input_map maptemp;
+   std::string name;
    
-   strcpy(name,infile);
-   strcat(name,".inpt");
-   input_map(maptemp,name);
+   name = infile + ".inpt";
+   maptemp.input(name);
    
-   if (outfile) {
+   if (!outfile.empty()) {
       maptemp["logfile"] = outfile;
    }
    
@@ -82,13 +80,13 @@ void blocks::init(const char *infile, const char *outfile) {
    
 
 
-void blocks::init(std::map<std::string,std::string> input) {
+void blocks::init(input_map input) {
    int i,nb;
-   char outfile[100];
-
-   std::map<std::string,std::string>::const_iterator mi;
-   std::map<std::string,std::string> merge;
+   input_map merge;
+   std::string mystring;
+   std::ostringstream nstr;
    std::istringstream data;
+
    
 #ifdef MPISRC
    MPI_Comm_size(MPI_COMM_WORLD,&nproc);
@@ -96,18 +94,16 @@ void blocks::init(std::map<std::string,std::string> input) {
 #endif
 
    /* OPEN LOGFILES FOR EACH PROCESSOR */
-   mi = input.find("logfile");
-   if (mi != input.end()) {
-      data.str(mi->second);
-      data >> outfile;
-      data.clear();
-      strcat(outfile,".");
-      number_str(outfile,outfile,myid,1);
-      strcat(outfile,".log");
+   if (input.get("logfile",mystring)) {
+      mystring += ".";
+      nstr << myid << std::flush;
+      mystring += nstr.str();
+      nstr.str("");
+      mystring += ".log";
       std::ofstream *filelog = new std::ofstream;
       filelog->setf(std::ios::scientific, std::ios::floatfield);
       filelog->precision(3);
-      filelog->open(outfile);
+      filelog->open(mystring.c_str());
       sim::log = filelog;
    }
    else {
@@ -115,17 +111,15 @@ void blocks::init(std::map<std::string,std::string> input) {
       std::cout.precision(3);
       sim::log = &std::cout;
    }
+   
 #ifdef CAPRI
    int status = gi_uStart();
    *sim::log << "gi_uStart status = ", status, "\n";
    if (status != CAPRI_SUCCESS) exit(1);
    
-   mi = input.find("BRep");
-   if (mi != input.end()) {
-      char temp[100];
-      strcpy(temp,mi->second.c_str());
-      status = gi_uLoadPart(temp);
-      *sim::log << mi->second << ": gi_uLoadPart status = " << status << std::endl;
+   if (input.get("BRep",mystring)) {
+      status = gi_uLoadPart(mystring.c_str());
+      *sim::log << mystring << ": gi_uLoadPart status = " << status << std::endl;
       if (status != CAPRI_SUCCESS) exit(1);
    }
 #endif 
@@ -133,19 +127,25 @@ void blocks::init(std::map<std::string,std::string> input) {
    /* EXTRACT NBLOCKS FOR MYID */
    /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
    int bstart = 0;
-   data.str(input["nblock"]);
-   for (i=0;i<myid;++i) {
-      if (!(data >> nb)) {
+   if (input.getline("nblock",mystring)) {
+      data.str(mystring);
+      for (i=0;i<myid;++i) {
+         if (!(data >> nb)) {
+            std::cerr << "error reading blocks\n"; 
+            exit(1);
+         }
+         bstart += nb;
+      }
+      if (!(data >> nblock)) {
          std::cerr << "error reading blocks\n"; 
          exit(1);
       }
-      bstart += nb;
+      data.clear();
    }
-   if (!(data >> nblock)) {
-      std::cerr << "error reading blocks\n"; 
-      exit(1);
+   else {
+      bstart = 0;
+      nb = 1;
    }
-   data.clear();
    *sim::log << "#starting block index: " << bstart << std::endl;
    *sim::log << "#nblocks for this processor: " << nblock << std::endl;
    
@@ -155,78 +155,54 @@ void blocks::init(std::map<std::string,std::string> input) {
    
    /* LOAD TIME STEPPING INFO */
    sim::time = 0.0;  // Simulation starts at t = 0
-   data.str(input["dtinv"]);   
-   if (!(data >> sim::dti)) sim::dti=1.0;
+   input.getwdefault("dtinv",sim::dti,0.0);
    *sim::log << "#dtinv: " << sim::dti << std::endl;
-   data.clear();
       
    /* OTHER UNIVERSAL CONSTANTS */
-   data.str(input["gravity"]);   
-   if (!(data >> sim::g)) sim::g = 0.0;
+   input.getwdefault("gravity",sim::g,0.0);
    *sim::log << "#gravity: " << sim::g << std::endl;
-   data.clear();
    
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
-   data.str(input["itercrsn"]);   
-   if (!(data >> itercrsn)) itercrsn = 1;
+   input.getwdefault("itercrsn",itercrsn,1);
    *sim::log << "#itercrsn: " << itercrsn << std::endl;
-   data.clear();
    
-   data.str(input["iterrfne"]);   
-   if (!(data >> iterrfne)) iterrfne = 0;
+   input.getwdefault("iterrfne",iterrfne,0);
    *sim::log << "#iterrfne: " << iterrfne << std::endl;
-   data.clear();
       
-   data.str(input["ncycle"]);   
-   if (!(data >> ncycle)) ncycle = 20;
+   input.getwdefault("ncycle",ncycle,20);
    *sim::log << "#ncycle: " << ncycle << std::endl;
-   data.clear();
    
-   data.str(input["preconditioner_interval"]);   
-   if (!(data >> prcndtn_intrvl)) prcndtn_intrvl = -1;
+   input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
    *sim::log << "#preconditioner_interval: " << prcndtn_intrvl << std::endl;
-   data.clear();
    
-   data.str(input["vwcycle"]);   
-   if (!(data >> vw)) vw = 2;
+   input.getwdefault("vwcycle",vw,2);
    *sim::log << "#vwcycle: " << vw << std::endl;
-   data.clear();
    
-   data.str(input["ntstep"]);   
-   if (!(data >> ntstep)) ntstep = 1;
+   input.getwdefault("ntstep",ntstep,1);
    *sim::log << "#ntstep: " << ntstep << std::endl;
-   data.clear();
    
-   data.str(input["nstart"]);   
-   if (!(data >> nstart)) nstart = 1;
+   input.getwdefault("nstart",nstart,1);
    *sim::log << "#nstart: " << nstart << std::endl;
-   data.clear();
 
    /* LOAD NUMBER OF GRIDS */
-   data.str(input["nblock"]);
-   if (!(data >> nblock)) nblock = 1;
+   input.getwdefault("nblock",nblock,1);
    *sim::log << "#nblock: " << nblock << std::endl;
-   data.clear();
    
-   data.str(input["ngrid"]);   
-   if (!(data >> ngrid)) ngrid = 1;
+   input.getwdefault("ngrid",ngrid,1);
    *sim::log << "#ngrid: " << ngrid << std::endl;
-   data.clear();
    
-   data.str(input["mglvls"]);   
-   if (!(data >> mglvls)) mglvls = 1;
-   *sim::log << "#mglvls: " << mglvls << std::endl;
-   data.clear();
+   input.getwdefault("ntop",ntop,0);
+   *sim::log << "#ntop: " << ntop << std::endl;
    
-   data.str(input["output_interval"]);   
-   if (!(data >> out_intrvl)) out_intrvl = 1;
+   input.getwdefault("nbottom",nbottom,0);
+   *sim::log << "#nbottom: " << nbottom << std::endl;
+   mglvls = ngrid+ntop+nbottom;
+   
+   input.getwdefault("output_interval", out_intrvl,1);
    *sim::log << "#output_interval: " << out_intrvl << std::endl;
-   data.clear();
    
-   data.str(input["restart_interval"]);   
-   if (!(data >> rstrt_intrvl)) rstrt_intrvl = 1;
+   input.getwdefault("restart_interval",rstrt_intrvl,1);
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
-   data.clear();
    
 #ifdef DIRK
    nstart *= sim::dirksolves;
@@ -261,13 +237,7 @@ void blocks::init(std::map<std::string,std::string> input) {
          excpt += state;
       } while (state != block::stop);
    }
-   
-   for(i=0;i<nblock;++i) {
-      number_str(outfile,"coarsenchk",i,1);
-      strcat(outfile,".");
-      blk[i]->coarsenchk(outfile);
-   }
-      
+
    return;
 }
 
@@ -593,22 +563,26 @@ void blocks::matchboundaries() {
 }
 
 
-void blocks::output(char *filename, block::output_purpose why) {
+void blocks::output(const std::string &filename, block::output_purpose why) {
    int i;   
-   char fnmcat[80], fnmcat1[80];
+   std::string fnmcat, fnmcat1;
+   ostringstream nstr;
    
-   strcpy(fnmcat,filename);
+   fnmcat = filename;
 #ifdef MPISRC
-   strcat(fnmcat,".");
-   number_str(fnmcat, fnmcat, myid, 1);
+   nstr << myid << flush;
+   nstr.str("");
+   fnmcat += "." +mynumber.str();
 #endif
 
    /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
    /* I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
    if (nblock > 1) {
-      strcat(fnmcat,".");
+      fnmcat += ".";
       for (i=0;i<nblock;++i) {
-         number_str(fnmcat1, fnmcat, i, 1);
+         nstr << i << std::flush;
+         fnmcat1 = fnmcat + nstr.str();
+         nstr.str("");
          blk[i]->output(fnmcat1,why);
       }
    }
@@ -673,13 +647,18 @@ void blocks::iterate(int lvl, int niter) {
 
 void blocks::cycle(int vw, int lvl) {
    int i,vcount,excpt;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
-   int state;
+   int state,gridlevel,gridlevelp;
    
+   /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
+   /* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */
+   gridlevel = MIN(MAX(lvl-nbottom,0),ngrid-1);
+   gridlevelp = MIN(MAX(lvl-nbottom+1,0),ngrid-1);
+      
    for (vcount=0;vcount<vw;++vcount) {
    
-      if (!(vcount%abs(prcndtn_intrvl)) && itercrsn) setup_preconditioner(lvl);
-      
-      iterate(lvl,itercrsn);
+      if (!(vcount%abs(prcndtn_intrvl)) && itercrsn) setup_preconditioner(gridlevel);
+                  
+      iterate(gridlevel,itercrsn);
       
       if (lvl == mglvls-1) return;
       
@@ -689,7 +668,7 @@ void blocks::cycle(int vw, int lvl) {
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->mg_getfres(lvl+1,excpt);
+            state &= blk[i]->mg_getfres(gridlevelp,gridlevel,excpt);
          excpt += state;
       } while (state != block::stop);
           
@@ -699,13 +678,13 @@ void blocks::cycle(int vw, int lvl) {
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->mg_getcchng(lvl,excpt);
+            state &= blk[i]->mg_getcchng(gridlevel,gridlevelp,excpt);
          excpt += state;
       } while (state != block::stop);
       
-      if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(lvl);
+      if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(gridlevel);
       
-      iterate(lvl,iterrfne);
+      iterate(gridlevel,iterrfne);
    }
 
    return;
@@ -713,7 +692,8 @@ void blocks::cycle(int vw, int lvl) {
 
 void blocks::go() {
    int i,step;
-   char outname[100];
+   std::string outname;
+   std::ostringstream nstr;
    clock_t cpu_time;
 
    clock();
@@ -729,13 +709,16 @@ void blocks::go() {
       }
       
       if (!(step%out_intrvl)) {
-         number_str(outname, "data", step, 3);
+      
+         nstr << step/sim::dirksolves << std::flush;
+         outname = "data" +nstr.str();
          output(outname); 
 
          if (!(step%(rstrt_intrvl*out_intrvl))) {
-            number_str(outname, "rstrt", step, 3);
+            outname = "rstrt" +nstr.str();
             output(outname,block::restart);         
          }
+         nstr.str("");
       }
       restructure();
    }
@@ -831,7 +814,6 @@ void blocks::tadvance(int step) {
 void blocks::restructure() {
    int i,lvl,excpt;
    int state;
-   char outfile[120];
    
    matchboundaries();
    
@@ -853,13 +835,7 @@ void blocks::restructure() {
          excpt += state;
       } while (state != block::stop);
    }
-   
-   for(i=0;i<nblock;++i) {
-      number_str(outfile,"coarsenchk",i,1);
-      strcat(outfile,".");
-      blk[i]->coarsenchk(outfile);
-   }
-            
+       
    return;
 }
 

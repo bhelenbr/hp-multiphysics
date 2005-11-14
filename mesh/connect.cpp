@@ -37,7 +37,7 @@ block::ctrl mesh::mgconnect(int excpt, Array<transfer,1> &cnnct, const class mes
 /*	 THIS ROUTINE DETERMINES THE POSITION OF COARSE VERTICES  */
 /*  TO TEST USING MULTI-GRID CONNECTION */
 /* THE MULTIGRID CONNECTIONS */
- void mesh::testconnect(char *fname,Array<transfer,1> &cnnct, mesh *cmesh) {
+ void mesh::testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh) {
    int i,j,n,tind;
    Array<TinyVector<FLT,2>,1> work;
 

@@ -30,16 +30,15 @@ template<class GRD> class mgrid : public block {
    
    public:
       mgrid(int idnum) : block(idnum), adapt_flag(0) {}
-      void init(std::map <std::string,std::string>& input);
+      void init(input_map& input);
       void reload_scratch_pointers() {
          for(int i=0;i<ngrid;++i) {
             grd[i].reload_scratch_pointers();
          }
       }
-      void output(char *filename, block::output_purpose why) {
-         grd[0].output(filename);
+      void output(const std::string &filename, block::output_purpose why) {
+         grd[0].output(filename,why);
       }
-      void coarsenchk(const char *fname);
       block::ctrl reconnect(int lvl, int excpt);
       block::ctrl matchboundaries(int lvl, int excpt);
      
@@ -79,103 +78,75 @@ template<class GRD> class mgrid : public block {
       block::ctrl update(int lvl, int excpt) {
          return(grd[lvl].update(excpt));
       }
-      block::ctrl mg_getfres(int lvl, int excpt) {
-         return(grd[lvl].mg_getfres(excpt,fv_to_ct(lvl-1),cv_to_ft(lvl-1), &grd[lvl-1]));
+      block::ctrl mg_getfres(int lvl, int lvlm, int excpt) {
+         return(grd[lvl].mg_getfres(excpt,fv_to_ct(lvlm),fv_to_ct(lvlm),&grd[lvlm]));
       }
-      block::ctrl mg_getcchng(int lvl, int excpt) {
-         return(grd[lvl].mg_getcchng(excpt,fv_to_ct(lvl), cv_to_ft(lvl), &grd[lvl+1]));
+      block::ctrl mg_getcchng(int lvl, int lvlp, int excpt) {
+         return(grd[lvl].mg_getcchng(excpt,fv_to_ct(lvl), cv_to_ft(lvl), &grd[lvlp]));
       }
       block::ctrl adapt(int excpt);
 };
 
-template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& input) {
+template<class GRD> void mgrid<GRD>::init(input_map& input) {
    std::string keyword;
    std::istringstream data;
    std::string filename;
    std::string bdryfile;
 
    /* LOAD NUMBER OF GRIDS */
-   data.str(input["ngrid"]);
-   if (!(data >> ngrid)) ngrid = 1;
+   input.getwdefault("ngrid",ngrid,1);
    *sim::log << "#ngrid: " << ngrid << std::endl;
-   data.clear();
    
    keyword = idprefix + ".adapt";
-   data.str(input[keyword]);
-   if (!(data >> adapt_flag)) {
-      data.clear();
-      keyword = "adapt";
-      data.str(input[keyword]);
-      if (!(data >> adapt_flag)) adapt_flag = 0;
+   if (!input.get(keyword,adapt_flag)) {
+      input.getwdefault("adapt",adapt_flag,false);
    }
    *sim::log << "#adapt: " << adapt_flag << std::endl;
-   data.clear();  
    
    grd = new GRD[ngrid];
       
-   cv_to_ft.resize(ngrid-1);
-   fv_to_ct.resize(ngrid-1);
+   cv_to_ft.resize(ngrid);
+   fv_to_ct.resize(ngrid);
    
    FLT grwfac;
    keyword = idprefix + ".growth factor";
-   data.str(input[keyword]);
-   if (!(data >> grwfac)) {
-      data.clear();
-      keyword = "growth factor";
-      data.str(input[keyword]);
-      if (!(data >> grwfac)) grwfac = 2.0;
+   if (!input.get(keyword,grwfac)) {
+      input.getwdefault("growth factor",grwfac,2.0);
    }
    *sim::log << "#growth factor: " << grwfac << std::endl;
-   data.clear();
    
    int filetype;
    keyword = idprefix + ".filetype";
-   data.str(input[keyword]);
-   if (!(data >> filetype)) {
-      data.clear();
-      keyword = "filetype";
-      data.str(input[keyword]);
-      if (!(data >> filetype)) filetype = 3;  // mesh::grid input type
+   if (!input.get(keyword,filetype)) {
+      input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
    }
    *sim::log << "#filetype: " << filetype << std::endl;
-   data.clear();
    
    keyword = idprefix + ".mesh";
-   data.str(input[keyword]);
-   if (!(data >> filename)) {
-      data.clear();
-      keyword = "mesh";
-      data.str(input[keyword]);
-      if (data >> filename) {
+   if (!input.get(keyword,filename)) {
+      if (input.get("mesh",filename)) {
          filename = filename +"_" +idprefix;
       }
       else {
-         *sim::log << "no mesh name\n"; exit(1);
+         *sim::log << "no mesh name\n";
+         exit(1);
       }
    }
    *sim::log << "#mesh: " << filename << std::endl;
-   data.clear();   
 
    keyword = idprefix + ".bdryfile";
-   data.str(input[keyword]);
-   if (!(data >> bdryfile)) {
+   if (!input.get(keyword,bdryfile)) {
       bdryfile = filename +"_bdry.inpt";
       input[keyword] = bdryfile;
    }
    *sim::log << "#bdryfile: " << bdryfile << std::endl;
    grd[0].mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,bdryfile.c_str());
-   data.clear();   
    
    keyword = idprefix + ".tolerance";
-   data.str(input[keyword]);
-   if (!(data >> tolerance)) {
-      data.clear();
-      keyword = "tolerance";
-      data.str(input[keyword]);
-      if (!(data >> tolerance)) tolerance = 2.2; 
+   if (!input.get(keyword,tolerance)) {
+      input.getwdefault("tolerance",tolerance,2.2);
    }
    *sim::log << "#tolerance: " << tolerance << std::endl;
-   data.clear();
    
    keyword = idprefix + ".coarse";
    input[keyword] = "0";
@@ -200,9 +171,14 @@ template<class GRD> void mgrid<GRD>::init(std::map <std::string,std::string>& in
    return;
 }
 
+
 template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, int excpt) {
    int state = block::stop;
+   std::string name,fname;
+   std::ostringstream nstr;
    
+   name = idprefix + "_coarsen";
+
    switch(excpt) {
       case(0):
 #ifdef OLDRECONNECT
@@ -212,30 +188,26 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, int excpt) {
          if (lvl > 1) size_reduce = 2.0;
          grd[lvl].coarsen2(1.5,grd[lvl-1],size_reduce);
 #endif
+         
       default:
          state &= grd[lvl].mgconnect(excpt,cv_to_ft(lvl-1),grd[lvl-1]);
          state &= grd[lvl-1].mgconnect(excpt,fv_to_ct(lvl-1),grd[lvl]);
+         
+         /* THIS IS FOR POST-MORTEM DIAGNOSIS OF MULTI-GRID FAILURES */
+         grd[lvl].checkintegrity();
+         nstr << lvl << flush;
+         fname = name +nstr.str();
+         grd[lvl].mesh::output(fname,mesh::grid);
+         fname = name +nstr.str() + "_ft_to_cv";
+         grd[lvl-1].testconnect(fname,fv_to_ct(lvl-1),&grd[lvl]);
+         fname = name +nstr.str() + "_cv_to_ft";
+         grd[lvl].testconnect(fname,cv_to_ft(lvl-1),&grd[lvl-1]);      
+         nstr.str("");
+
+         grd[lvl].setinfo();
    }
 
    return(static_cast<block::ctrl>(state));
-}
-
-template<class GRD> void mgrid<GRD>::coarsenchk(const char *fname) {
-   int i;
-   char name[100];
-
-   for(i = 1; i< ngrid; ++i) {
-      number_str(name,fname,i,1);
-      grd[i].checkintegrity();
-      grd[i].output(name);
-      strcat(name,"_fv_to_ct");
-      grd[i-1].testconnect(name,fv_to_ct(i-1),&grd[i]);
-      number_str(name,fname,i,1);
-      strcat(name,"_cv_to_ft");
-      grd[i].testconnect(name,cv_to_ft(i-1),&grd[i-1]);         
-   }
-   
-   return;
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) {

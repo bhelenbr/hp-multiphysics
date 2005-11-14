@@ -8,8 +8,8 @@ class btype {
       enum ids {plain=1};
 };
 
-block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockdata) {
-   std::string keyword;
+block* blocks::getnewblock(int idnum, input_map *blockdata) {
+   std::string keyword,val;
    std::istringstream data;
    std::map<std::string,std::string>::const_iterator mi;
    char idntystring[10];
@@ -21,16 +21,13 @@ block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockda
    if (blockdata) {
       sprintf(idntystring,"b%d",idnum);
       keyword = std::string(idntystring) + ".type";
-      mi = (*blockdata).find(keyword);
-      if (mi != (*blockdata).end()) {
-         data.str((*blockdata)[keyword]);
+      if ((*blockdata).get(keyword,val)) {
+         data.str(val);
          data >> type;  
          data.clear(); 
       }
       else {
-         keyword = "blocktype";
-         data.str((*blockdata)[keyword]);
-         if (!(data >> type)) {
+         if (!(*blockdata).get("blocktype",val)) {
             *sim::log << "couldn't find block type" << std::endl;
          }
       }

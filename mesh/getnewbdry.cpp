@@ -31,10 +31,9 @@ class vtype {
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
 
-vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *bdrydata) {
-   std::string keyword;
+vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
+   std::string keyword,val;
    std::istringstream data;
-   std::map<std::string,std::string>::const_iterator mi;
    char idntystring[10];
    int type;        
    vrtx_bdry *temp;  
@@ -44,11 +43,11 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, std::map<std::string,std::string> *
    if (bdrydata) {
       sprintf(idntystring,"v%d",idnum);
       keyword = std::string(idntystring) + ".type";
-      mi = (*bdrydata).find(keyword);
-      if (mi != (*bdrydata).end()) {
-         type = vtype::getid((*mi).second.c_str());
+      
+      if ((*bdrydata).get(keyword,val)) {
+         type = vtype::getid(val.c_str());
          if (type < 0)  {
-            *sim::log << "unknown vertex type:" << (*mi).second << std::endl;
+            *sim::log << "unknown vertex type:" << val << std::endl;
             exit(1);
          }
       }
@@ -104,10 +103,9 @@ class stype {
 const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca","gaussian"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *bdrydata) {
-   std::string keyword;
+side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
+   std::string keyword,val;
    std::istringstream data;
-   std::map<std::string,std::string>::const_iterator mi;
    char idntystring[10];
    int type;        
    side_bdry *temp;  
@@ -117,11 +115,10 @@ side_bdry* mesh::getnewsideobject(int idnum, std::map<std::string,std::string> *
    if (bdrydata) {
       sprintf(idntystring,"s%d",idnum);
       keyword = std::string(idntystring) + ".type";
-      mi = (*bdrydata).find(keyword);
-      if (mi != (*bdrydata).end()) {
-         type = stype::getid((*mi).second.c_str());
+      if ((*bdrydata).get(keyword,val)) {
+         type = stype::getid(val.c_str());
          if (type < 0)  {
-            *sim::log << "unknown side type:" << (*mi).second << std::endl;
+            *sim::log << "unknown side type:" << val << std::endl;
             exit(1);
          }
       }

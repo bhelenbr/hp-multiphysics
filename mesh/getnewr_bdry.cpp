@@ -28,7 +28,7 @@
 const char r_stype::names[ntypes][40] = {"plain", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-r_side_bdry* r_mesh::getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata) {
+r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map *bdrydata) {
    std::istringstream data;
    std::map<std::string,std::string>::const_iterator mi;
    r_side_bdry *temp;  

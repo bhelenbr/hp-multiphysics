@@ -1,5 +1,4 @@
 #include "blocks.h"
-#include <map>
 #include <string>
 #include <parseargs.h>
 #include "mesh.h"
@@ -84,10 +83,9 @@ int main(int argc, char *argv[]) {
    
    if (Vlngth) {
       zx.input(argv[1],in,8.0);
-      char name[100];
-      strcpy(name,argv[1]);
-      strcat(name,".vlngth");
-      FILE *fp = fopen(name,"w");
+      std::string name;
+      name = std::string(argv[1]) +".vlngth";
+      FILE *fp = fopen(name.c_str(),"w");
       for(int i=0;i<zx.nvrtx;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.vlngth(i));
       fclose(fp);
       return 0;
@@ -140,20 +138,21 @@ int main(int argc, char *argv[]) {
    if (Partition) {
 #ifdef METIS
       int p;
-      char outappend[100];
-      printf("input # of partitions\n");
-      scanf("%d",&p);
+      std::string fname;
+      ostringstream nstr;
+      std::cout << "input # of partitions" << std::endl;
+      std::cin >> p;
       zx.input(argv[1],in);
       zx.setpartition(p);
       Array<mesh,1> zpart(p);
       
-      strcat(argv[2],"_b");
-
       for(int i=0;i<p;++i) {
-         number_str(outappend,argv[2],i,1);
+         nstr << i << std::flush;
+         fname = argv[1] +nstr.str();
+         nstr.str("");
          zpart(i).partition(zx,i);
-         zpart(i).output(outappend,out);
-		 zpart(i).bdry_output(outappend);
+         zpart(i).output(fname,out);
+         zpart(i).bdry_output(fname);
       }
 #else
       printf("Need metis package to partition\n");
@@ -198,7 +197,7 @@ int main(int argc, char *argv[]) {
    }
    else {
       /* CREATE INPUT MAPS HERE*/
-      map<string,string> input;
+      input_map input;
       
       input["mglvls"] = "3";
       input["ngrid"] = "3";
@@ -234,7 +233,7 @@ int main(int argc, char *argv[]) {
       input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry.inpt";
       input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry_phased.inpt";
 
-      output_map(input,std::cout);
+      std::cout << input;
       sim::blks.init(input);
    }
 

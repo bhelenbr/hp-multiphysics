@@ -1,6 +1,7 @@
 #include "block.h"
 #include <fstream>
 #include <blitz/array.h>
+#include <input_map.h>
 #include <utilities.h>
 
 /* THIS IS A MULTIBLOCK MESH */
@@ -30,8 +31,10 @@ class blocks {
        *  constants defining multigrid iteratoin 
       */
       //@{
-      int mglvls; /**< Number of levels of multigrid */
+      int mglvls; /**< Total number of levels of multigrid */
       int ngrid; /**< Number of grids (could be more or less than mglvls) */
+      int nbottom; /**< Number of extra levels to included on finest grid */
+      int ntop; /**< Number of extra levels to be include on coarsest grid */
       int ncycle; /**< Number of iterations per timestep */
       /** Number of cycles between re-evaluation of preconditioner.
        *  negative mean reevaluate for both refinement and coarsening sweeps 
@@ -104,16 +107,16 @@ class blocks {
       blocks() : nproc(1), myid(0) {}
       
       /** Initializes blocks using data from map */
-      void init(std::map<std::string,std::string> input);
+      void init(input_map input);
       
       /** Loads map from file then initialize */
-      void init(const char *infile, const char *outfile = 0);
+      void init(const std::string &infile, const std::string &outfile = std::string());
       
       /** Makes sure vertex positions on boundaries coinside */
       void matchboundaries();
       
       /** Outputs solution in various filetypes */
-      void output(char *filename, block::output_purpose = block::standard);
+      void output(const std::string &filename, block::output_purpose = block::display);
       
       /** Inputs solution */
       void input(char *filename) {}
@@ -132,7 +135,7 @@ class blocks {
       
    protected:
       /** Allocates blocks, called by init to generate blocks from initialization file */
-      block* getnewblock(int idnum, std::map<std::string,std::string> *blockdata);
+      block* getnewblock(int idnum, input_map *blockdata);
             
       /** Sets-up parallel communications, called by init */
       void findmatch();

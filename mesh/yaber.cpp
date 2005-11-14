@@ -18,8 +18,8 @@
 #define NO_DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
-static int adapt_count;
-static char adapt_file[100];
+int adapt_count;
+static std::string adapt_file;
 #endif
 
 extern int nlst; 
@@ -228,7 +228,10 @@ void mesh::yaber(FLT tolsize) {
       }
       
 #ifdef DEBUG_ADAPT
-      number_str(adapt_file,"adapt",adapt_count++,5);
+      std::ostringstream nstr;
+      nstr << adapt_count++ << std::flush;
+      adapt_file = "adapt" +nstr.str();
+      nstr.str("");
       output(adapt_file,grid);
 #endif
    }

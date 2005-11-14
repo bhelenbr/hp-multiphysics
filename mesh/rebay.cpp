@@ -17,8 +17,8 @@
 #define NO_DEBUG_ADAPT
 
 #ifdef DEBUG_ADAPT
-int adapt_count;
-char adapt_file[100];
+extern int adapt_count;
+static std::string adapt_file;
 #endif
 
 extern int nlst;
@@ -212,7 +212,10 @@ INSRT:
          if (fscr1(tind) > tolsize) putinlst(tind);
       }
 #ifdef DEBUG_ADAPT
-      number_str(adapt_file,"adapt",adapt_count++,5);
+      std::ostringstream nstr;
+      nstr << adapt_count++ << std::flush;
+      adapt_file = "adapt" +nstr.str();
+      nstr.str("");
       output(adapt_file,grid);
 #endif
       
