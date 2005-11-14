@@ -119,7 +119,7 @@ class blocks {
       void output(const std::string &filename, block::output_purpose = block::display);
       
       /** Inputs solution */
-      void input(char *filename) {}
+      void input(std::string &filename) {}
       
       /** Routine that starts simulation */
       void go();

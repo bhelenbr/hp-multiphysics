@@ -36,8 +36,15 @@ template<class GRD> class mgrid : public block {
             grd[i].reload_scratch_pointers();
          }
       }
+      void input(const std::string &filename) {
+         std::string fapp;
+         fapp = idprefix +filename;
+         grd[0].input(fapp);
+      }
       void output(const std::string &filename, block::output_purpose why) {
-         grd[0].output(filename,why);
+         std::string fapp;
+         fapp = idprefix +"_" +filename;
+         grd[0].output(fapp,why);
       }
       block::ctrl reconnect(int lvl, int excpt);
       block::ctrl matchboundaries(int lvl, int excpt);
@@ -150,7 +157,8 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    
    keyword = idprefix + ".coarse";
    input[keyword] = "0";
-   grd[0].init(input,idprefix,&gstorage);
+   grd[0].idprefix = idprefix;
+   grd[0].init(input,&gstorage);
    
    input[keyword] = "1";
 #define OLDRECONNECT
@@ -162,7 +170,8 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
       if (lvl > 1) size_reduce = 2.0;
       grd[lvl].allocate_duplicate(size_reduce,grd[lvl-1]);
 #endif
-      grd[lvl].init(input,idprefix,&gstorage);
+      grd[lvl].idprefix = idprefix;
+      grd[lvl].init(input,&gstorage);
       cv_to_ft(lvl-1).resize(grd[lvl].maxvst);
       fv_to_ct(lvl-1).resize(grd[lvl-1].maxvst);
    }

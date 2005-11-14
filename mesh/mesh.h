@@ -38,7 +38,8 @@ class mesh {
    /***************/
    /* DATA        */
    /***************/
-   public:
+   public: 
+      std::string idprefix;
       int maxvst;
       static const int ND = 2;
             

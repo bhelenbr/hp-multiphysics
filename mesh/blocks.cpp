@@ -568,26 +568,8 @@ void blocks::output(const std::string &filename, block::output_purpose why) {
    std::string fnmcat, fnmcat1;
    ostringstream nstr;
    
-   fnmcat = filename;
-#ifdef MPISRC
-   nstr << myid << flush;
-   nstr.str("");
-   fnmcat += "." +mynumber.str();
-#endif
-
-   /* ASSUME FOR NOW MESHES ARE LABELED a,b,c... */
-   /* I HAVEN'T FIGURED OUT HOW THIS IS GOING TO WORK IN THE TOTALLY GENERAL CASE */
-   if (nblock > 1) {
-      fnmcat += ".";
-      for (i=0;i<nblock;++i) {
-         nstr << i << std::flush;
-         fnmcat1 = fnmcat + nstr.str();
-         nstr.str("");
-         blk[i]->output(fnmcat1,why);
-      }
-   }
-   else {
-      blk[0]->output(fnmcat,why);
+   for (i=0;i<nblock;++i) {
+      blk[i]->output(filename,why);
    }
    
    return;

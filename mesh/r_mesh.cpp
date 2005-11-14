@@ -9,28 +9,28 @@
 #include <fstream>
 
 
-void r_mesh::init(input_map& input, std::string prefix, r_mesh::gbl *rgin) {
+void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
    std::string keyword;
    std::istringstream data;
    std::string filename;
    int coarse,ival;
-   
-   keyword = prefix + ".coarse";
+      
+   keyword = idprefix + ".coarse";
    if (!input.get(keyword,coarse)) {
       *sim::log << "#Error: not sure whether to initialize for r_mesh for multigrid" << std::endl;
    }
    
-   keyword = prefix + ".fadd";
+   keyword = idprefix + ".fadd";
    if (!input.get(keyword,fadd)) {
       input.getwdefault("fadd",fadd,1.0);
    }
    *sim::log << "#fadd: " << fadd << std::endl;
 
-   keyword = prefix + ".vnn";
+   keyword = idprefix + ".vnn";
    input.getwdefault(keyword,vnn,0.5); 
    *sim::log << "#vnn: " << vnn << std::endl;
    
-   keyword = prefix + ".r_output_type";
+   keyword = idprefix + ".r_output_type";
    if (input.get(keyword,ival)) {
       output_type = static_cast<mesh::filetype>(ival);
    }
@@ -60,7 +60,7 @@ void r_mesh::init(input_map& input, std::string prefix, r_mesh::gbl *rgin) {
          
    std::string bdryfile;
    input_map bdrymap;
-   keyword = prefix + ".bdryfile";
+   keyword = idprefix + ".bdryfile";
    if (input.get(keyword,bdryfile)) {
       if (!(strncmp("${HOME}",bdryfile.c_str(), 7))) {
          filename = getenv("HOME");
@@ -70,7 +70,7 @@ void r_mesh::init(input_map& input, std::string prefix, r_mesh::gbl *rgin) {
          filename = bdryfile;
    }
    else {
-      keyword = prefix + ".mesh";
+      keyword = idprefix + ".mesh";
       input.get(keyword,filename);
       filename = filename +"_bdry.inpt";
    }
