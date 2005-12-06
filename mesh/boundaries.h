@@ -49,8 +49,19 @@ template<class BASE> class comm_bdry : public BASE {
             
    public:
       comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = 0;}
-      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(1), grouping(inbdry.grouping), maxphase(inbdry.maxphase), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = inbdry.phase[m];} 
-     
+      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), grouping(inbdry.grouping), maxphase(inbdry.maxphase), buffsize(0), nmatch(0) {         
+         for(int i=0;i<inbdry.nmatch;++i) {
+            mtype[i] = inbdry.mtype[i];
+            local_match[i] = 0;  /* This must point to address of new matching side */
+            tags[i] = inbdry.tags[i];
+            phase[i] = inbdry.phase[i];
+#ifdef MPISRC
+            mpi_match[i] = inbdry.mpi_match[i];
+#endif
+         }
+         return;
+      }
+           
       comm_bdry<BASE>* create(mesh &xin) const {return(new comm_bdry<BASE>(*this,xin));}
 
       void output(std::ostream& fout) {
@@ -619,11 +630,7 @@ template<class BASE> class prdc_template : public BASE {
             data.clear();
          }
       }
-      void copy(const boundary& bin) {
-         BASE::copy(bin);
-         dir = dynamic_cast<const prdc_template<BASE>& >(bin).dir;
-      } 
-
+      
       /* SEND/RCV VRTX POSITION */
       void loadpositions() { BASE::vloadbuff(&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
       void rcvpositions(int phase) { BASE::vfinalrcv(phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }

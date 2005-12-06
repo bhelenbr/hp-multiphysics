@@ -38,7 +38,7 @@ template<class GRD> class mgrid : public block {
       }
       void input(const std::string &filename) {
          std::string fapp;
-         fapp = idprefix +filename;
+         fapp = idprefix +"_" +filename;
          grd[0].input(fapp);
       }
       void output(const std::string &filename, block::output_purpose why) {
@@ -249,22 +249,27 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, int excpt) 
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::adapt(int excpt) {
-   static int lastlength = 1;
+   static int lastlength;
    block::ctrl state;
+   
    
    if (!adapt_flag) return(stop);
    
+   if (excpt == 0) lastlength = 0;
+   
    /* CALCULATE TARGET LENGTH FUNCTION */
-   if (excpt < lastlength) {
+   if (excpt <= lastlength) {
       state = grd[0].length(excpt);
       lastlength = excpt +1;
       if (state != block::stop) {
          return(state);
       }
-      --lastlength;
-      mp_phase = -1;
+      else {
+         --lastlength;
+         mp_phase = -1;
+         return(block::advance);
+      }
    }
-   
    excpt -= lastlength;
    
    /* THIS PART TAKES CARES OF MAKEING SURE LENGTH IS THE SAME ACROSS BLOCK BOUNDARIES */

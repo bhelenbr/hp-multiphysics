@@ -244,6 +244,14 @@ void mesh::yaber(FLT tolsize) {
 void mesh::checkintegrity() {
    int i,j,sind,dir;
    
+   for(i=0;i<maxvst;++i) {
+      if (i1wk(i) > -1) {
+         *sim::log << "i1wk check failed" << std::endl;
+         exit(1);
+      }
+   }
+   
+   
    for(i=0;i<ntri;++i) {
       if (td(i).info < 0) continue;
       

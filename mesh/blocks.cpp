@@ -178,10 +178,13 @@ void blocks::init(input_map input) {
    input.getwdefault("vwcycle",vw,2);
    *sim::log << "#vwcycle: " << vw << std::endl;
    
+   input.getwdefault("fadd",sim::fadd,1.0);
+   *sim::log << "#fadd: " << sim::fadd << std::endl;
+   
    input.getwdefault("ntstep",ntstep,1);
    *sim::log << "#ntstep: " << ntstep << std::endl;
    
-   input.getwdefault("nstart",nstart,1);
+   input.getwdefault("nstart",nstart,0);
    *sim::log << "#nstart: " << nstart << std::endl;
 
    /* LOAD NUMBER OF GRIDS */
@@ -205,7 +208,6 @@ void blocks::init(input_map input) {
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    
 #ifdef DIRK
-   nstart *= sim::dirksolves;
    ntstep *= sim::dirksolves;
    out_intrvl *= sim::dirksolves;
 #endif
@@ -644,7 +646,7 @@ void blocks::cycle(int vw, int lvl) {
       
       if (lvl == mglvls-1) return;
       
-      rsdl(lvl);
+      rsdl(gridlevel);
       
       excpt = 0;
       do {
@@ -679,7 +681,7 @@ void blocks::go() {
    clock_t cpu_time;
 
    clock();
-   for(step=nstart;step<=ntstep;++step) {
+   for(step=nstart;step<ntstep;++step) {
       tadvance(step);
       matchboundaries();
 
@@ -690,19 +692,24 @@ void blocks::go() {
          *sim::log << '\n';
       }
       
-      if (!(step%out_intrvl)) {
+      /* OUTPUT DISPLAY FILES */
+      if (!((step+1)%sim::dirksolves)) {
+         if (!((step+1)%out_intrvl)) {
+            nstr.str("");
+            nstr << step/sim::dirksolves << std::flush;
+            outname = "data" +nstr.str();
+            output(outname);
+         }
       
-         nstr << step/sim::dirksolves << std::flush;
-         outname = "data" +nstr.str();
-         output(outname); 
-
-         if (!(step%(rstrt_intrvl*out_intrvl))) {
+         /* ADAPT MESH */
+         restructure();
+      
+         /* OUTPUT RESTART FILES */
+         if (!((step+1)%(rstrt_intrvl*out_intrvl))) {
             outname = "rstrt" +nstr.str();
             output(outname,block::restart);         
          }
-         nstr.str("");
       }
-      restructure();
    }
    cpu_time = clock();
    *sim::log << "that took " << cpu_time << " cpu time" << std::endl;
@@ -714,26 +721,27 @@ void blocks::tadvance(int step) {
    int i,lvl,excpt;
    int state;
    
-   if (sim::dti > 0.0) sim::time += 1./sim::dti;
 
 #ifdef BACKDIFF
+   if (sim::dti > 0.0) sim::time += 1./sim::dti;
+
    for(i=0;i<BACKDIFF+1;++i)
       sim::bd[i] = 0.0;
    
    switch(step) {
-      case(1):
+      case(0):
          sim::bd[0] =  sim::dti;
          sim::bd[1] = -sim::dti;
          break;
 #if (BACKDIFF > 1)
-      case(2):
+      case(1):
          sim::bd[0] =  1.5*sim::dti;
          sim::bd[1] = -2.0*sim::dti;
          sim::bd[2] =  0.5*sim::dti;
          break;
 #endif
 #if (BACKDIFF > 2)
-      case(3):
+      case(2):
          sim::bd[0] = 11./6*sim::dti;
          sim::bd[1] = -3.*sim::dti;
          sim::bd[2] = 1.5*sim::dti;
@@ -750,7 +758,7 @@ void blocks::tadvance(int step) {
    step = step/3;
    /* STARTUP SEQUENCE */
    switch(step/3) {
-      case(1): {
+      case(0): {
          sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
          sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
@@ -758,7 +766,7 @@ void blocks::tadvance(int step) {
          sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
          break;
       }
-      case(2): {
+      case(1): {
          sim::adirk[0][0] = 1./sim::GRK3;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
          sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
@@ -774,9 +782,11 @@ void blocks::tadvance(int step) {
          sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
       }
    }
+   
+   sim::bd[0] = sim::dti*sim::adirk[(step%3)+1][(step%3)+1];
+   if (sim::dti > 0.0) sim::time += sim::cdirk[step%3]/sim::dti;
 #endif
 #endif
-
    
    for (lvl=0;lvl<ngrid;++lvl) {
       excpt = 0;
@@ -817,7 +827,7 @@ void blocks::restructure() {
          excpt += state;
       } while (state != block::stop);
    }
-       
+   
    return;
 }
 

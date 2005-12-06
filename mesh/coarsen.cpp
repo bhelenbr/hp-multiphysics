@@ -18,6 +18,9 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       /* VERTEX STORAGE ALLOCATION */
       allocate_duplicate(1.9,inmesh);
    }
+   
+   for(i=0;i<maxvst;++i)
+      td(i).info = 0;
 
    /* PREPARE FOR COARSENING */
    for(i=0;i<inmesh.nvrtx;++i)
@@ -173,7 +176,7 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          i1wk(inmesh.sd(sind).vrtx(1)) = (-1)^VSPEC;
       }
    }
-   
+    
 /* FUNNY WAY OF MARKING */
 #if (((-1)^VPEC)&VPEC)
 #define NOT 
