@@ -38,11 +38,11 @@ class tri_hp_cd : public tri_hp {
       
       FLT adis; // DISSIPATION CONSTANT
       
-      hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, std::map<std::string,std::string> *bdrydata);
-      hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata);
+      hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata);
+      hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map *bdrydata);
       
    public:
-      void init(std::map <std::string,std::string>& input, std::string prefix, gbl *gin); 
+      void init(input_map& input, gbl *gin); 
       tri_hp_cd* create() { return new tri_hp_cd(); }
       block::ctrl length(int excpt);
       block::ctrl setup_preconditioner(int excpt);

@@ -21,18 +21,23 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
    TinyVector<int,3> v;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
 
-   
-   hp_gbl->res.v(Range(0,nvrtx),Range::all()) = 0.0;
-   hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = 0.0;
-   hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) = 0.0;
-         
    oneminusbeta = 1.0-sim::beta[stage];
-   hp_gbl->res_r.v(Range(0,nvrtx),Range::all()) *= oneminusbeta;
-   hp_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) *= oneminusbeta;
-   hp_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) *= oneminusbeta;
+   
+   hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+   hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
 
+   if (basis::tri(log2p).sm) {
+      hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
+      hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
+      
+      if (basis::tri(log2p).im) {
+         hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
+         hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
+      }
+   }
+   
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->addbflux(mgrid);
+      hp_sbdry(i)->addbflux();
       
    for(tind = 0; tind<ntri;++tind) {
       /* LOAD INDICES OF VERTEX POINTS */
@@ -70,14 +75,14 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
             mvel(1)(i,j) = sim::bd[0]*crd(1)(i,j) +dxdt(log2p,tind,1)(i,j);
          }
       }
-
+      
       ugtouht(tind);
       basis::tri(log2p).proj(&uht(0)(0),&u(0)(0,0),&du(0,0)(0,0),&du(0,1)(0,0),MXGP);
-      
+
       for(n=0;n<NV;++n)
          for(i=0;i<basis::tri(log2p).tm;++i)
             lf(n)(i) = 0.0;
-
+            
       /* CONVECTION */
       for(i=0;i<basis::tri(log2p).gpx;++i) {
          for(j=0;j<basis::tri(log2p).gpn;++j) {
@@ -104,7 +109,7 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
                res(0)(i,j) = RAD(i,j)*sim::bd[0]*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
                res(0)(i,j) += RAD(i,j)*cjcb(i,j)*(*cd_gbl->src)(crd(0)(i,j),crd(1)(i,j));
             }
-         }
+         }         
          basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);
 
          /* DIFFUSIVE TERMS  */
@@ -153,25 +158,28 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
    }
 
    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-   hp_gbl->res.v(Range(0,nvrtx),Range::all()) += hp_gbl->res_r.v(Range(0,nvrtx),Range::all());
-   hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += hp_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());        
-   hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += hp_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());     
-      
+   hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all());
+   if (basis::tri(log2p).sm) {
+      hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
+      if (basis::tri(log2p).im) {
+         hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
+      }
+   }
+   
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
 /*********************************************/   
-   if(mgrid) {
+   if(coarse) {
    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
       if(isfrst) {
-         dres(log2p).v(Range(0,nvrtx),Range::all()) = fadd*hp_gbl->res0.v(Range(0,nvrtx),Range::all()) -hp_gbl->res.v(Range(0,nvrtx),Range::all());
-         dres(log2p).s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) -hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());     
-         dres(log2p).i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) -hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());
-               
+         dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+         if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+         if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
          isfrst = false;
       }
-      hp_gbl->res.v(Range(0,nvrtx),Range::all()) += dres(log2p).v(Range(0,nvrtx),Range::all()); 
-      hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += dres(log2p).s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
-      hp_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += dres(log2p).i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());  
+      hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
+      if (basis::tri(log2p).sm) hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+      if (basis::tri(log2p).im) hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
    }
 
    return(block::stop);

@@ -24,73 +24,66 @@ TinyMatrix<FLT,tri_hp::ND,MXTM> tri_hp::cht, tri_hp::cf;
 TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_hp::ND> tri_hp::mvel;
 Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
 
- void tri_hp::init(std::map <std::string,std::string>& input, std::string prefix, tri_hp::gbl *hp_in) {
-   int i,p,coarse,adapt_storage;
-   std::string keyword;
+ void tri_hp::init(input_map& inmap, tri_hp::gbl *hp_in) {
+   int i,ival,p,adapt_storage;
+   std::string keyword, line;
    std::istringstream data;
    std::string filename;
    
-   keyword = prefix + ".coarse";
-   data.str(input[keyword]);
-   if (!(data >> coarse)) {
-      coarse = 0;
-   }
-   data.clear();
+   keyword = idprefix + ".coarse";
+   inmap.getwdefault(keyword,coarse,false);
    *sim::log << "#" << keyword << ": " << coarse << std::endl;
    
-   keyword = prefix + ".adapt_storage";
-   data.str(input[keyword]);
-   if (!(data >> adapt_storage)) {
-      adapt_storage = 0;
-   }
-   data.clear();
+   keyword = idprefix + ".adapt_storage";
+   inmap.getwdefault(keyword,adapt_storage,0);
       
-   keyword = prefix + ".mesh_movement";
+   keyword = idprefix + ".mesh_movement";
    int mmin;
-   data.str(input[keyword]);
-   if (!(data >> mmin)) {
-      mmin = 0;
-   }
+   inmap.getwdefault(keyword,mmin,0);
    mmovement = static_cast<movementtype>(mmin);
-   data.clear();
    *sim::log << "#" << keyword << ": " << mmovement << std::endl;
 
    /* Initialize stuff for r_mesh */
-   if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(input,prefix,hp_in);
+   if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(inmap,hp_in);
    
-   keyword = prefix + ".nvariable";
-   data.str(input[keyword]);
-   if (!(data >> NV)) {
-      NV = 1;
-   }
-   data.clear();
+   keyword = idprefix + ".nvariable";
+   inmap.getwdefault(keyword,NV,1);
    *sim::log << "#" << keyword << ": " << NV << std::endl;
 
-   
-   keyword = prefix + ".log2p";
-   data.str(input[keyword]);
-   if (!(data >> log2p)) {
-      data.clear();
-      keyword = "log2p";
-      data.str(input[keyword]);
-      if (!(data >> log2p)) log2p = 0;
+   keyword = idprefix + ".log2p";
+   if (!inmap.get(keyword,log2p)) {
+      inmap.getwdefault("log2p",log2p,0);
    }
    *sim::log << "#" << keyword << ": " << log2p << std::endl;
-   log2pmax = log2p;
-   data.clear();
-   
    
    int npts;
-   keyword = prefix + ".ngaussx";
-   data.str(input[keyword]);
-   if (!(data >> npts)) {
-      data.clear();
-      keyword = "ngaussx";
-      data.str(input[keyword]);
-      if (!(data >> npts)) npts = 0;
+   keyword = idprefix + ".ngaussx";
+   if (!inmap.get(keyword,npts)) {
+      inmap.getwdefault("ngaussx",npts,0);
    }
    *sim::log << "#" << keyword << ": " << npts << std::endl;
-   data.clear();
+   
+   keyword = idprefix + ".hp_output_type";
+   if (inmap.getline(keyword,line)) {
+      data.str(line);
+      for(i=0;i<3;++i) {
+         data >> ival;
+         output_type(i) = static_cast<tri_hp::filetype>(ival);
+      }
+   }
+   else {
+      if (inmap.getline("hp_output_type",line)) {
+         data.str(line);
+         for(i=0;i<3;++i) {
+            data >> ival;
+            output_type(i) = static_cast<tri_hp::filetype>(ival);
+         }
+      }
+      else {
+         for(i=0;i<3;++i)
+            output_type(i) = static_cast<tri_hp::filetype>(i);
+      }
+   }
 
    /* Check that global basis has been allocated & allocate if necessary */
    if (basis::tri.extent(firstDim) < log2p +1) {
@@ -114,6 +107,8 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       sm0 = basis::tri(log2p).sm;
       im0 = basis::tri(log2p).im;
    }
+   log2pmax = log2p;
+
          
    /* Check that static work arrays are big enough */
    if (u.extent(firstDim) < NV) {
@@ -121,8 +116,8 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       res.resize(NV);
       du.resize(NV,ND);
       uht.resize(NV);
-      lf.resize(NV);
-      bdwk.resize(sim::nhist+1,NV);
+      lf.resize(MAX(NV,ND));
+      bdwk.resize(sim::nhist+1,MAX(NV,ND));
    }
    
     
@@ -131,39 +126,35 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    ug.s.resize(maxvst,sm0,NV);
    ug.i.resize(maxvst,im0,NV);
    
-   /* Find bdryfile name in input map */
+   /* Find bdryfile name in inmap map */
    std::string bdryfile;
-   std::map<std::string,std::string> bdrymap;
-   keyword = prefix + ".bdryfile";
-   data.str(input[keyword]);
-   if (data >> bdryfile) {
-      if (!(strncmp("${HOME}",bdryfile.c_str(), 7))) {
-         filename = getenv("HOME");
-         filename = filename + (bdryfile.c_str()+7);
-      }
-      else 
-         filename = bdryfile;
+   input_map bdrymap;
+   keyword = idprefix + ".bdryfile";
+   if (!inmap.get(keyword,bdryfile)) {
+      keyword = idprefix + ".mesh";
+      inmap.get(keyword,bdryfile);
+      bdryfile += "_bdry.inpt";
+   }
+   if (bdryfile.substr(0,7) == "${HOME}") {
+      filename  = getenv("HOME") +bdryfile.substr(7,bdryfile.length());
    }
    else {
-      keyword = prefix + ".mesh";
-      data.str(input[keyword]);
-      filename = filename +"_bdry.inpt";
+      filename = bdryfile;
    }
-   input_map(bdrymap,filename.c_str());
-   data.clear();
+   bdrymap.input(filename);
       
    hp_sbdry.resize(nsbd);
    for(i=0;i<nsbd;++i) {
       hp_sbdry(i) = getnewsideobject(i,&bdrymap);
-      hp_sbdry(i)->init(input,prefix);
+      hp_sbdry(i)->init(inmap);
    }
-         
-   setbcinfo();
-      
+               
    /* Load pointer to block stuff */
    hp_gbl = hp_in;
    
    if (!coarse) {
+      setinfo();
+      
       /* Allocate time history stuff */
       /* For ease of access have level 0 reference ug */
       ugbd(0).v.reference(ug.v);
@@ -209,7 +200,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       hp_gbl->ug0.v.resize(maxvst,NV);
       hp_gbl->ug0.s.resize(maxvst,sm0,NV);
       hp_gbl->ug0.i.resize(maxvst,im0,NV);
-      
+             
       hp_gbl->res.v.resize(maxvst,NV);
       hp_gbl->res.s.resize(maxvst,sm0,NV);
       hp_gbl->res.i.resize(maxvst,im0,NV);
@@ -256,9 +247,9 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       ugbd(1).i.reference(ug.i);
       vrtxbd(1).reference(vrtx);
       
+      vug_frst.resize(maxvst,NV);     
       dres.resize(1);
       dres(0).v.resize(maxvst,NV);
-      vrtx_frst.resize(maxvst);
    }
    
    /* UNSTEADY SOURCE TERMS */
@@ -266,29 +257,45 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    dxdt.resize(log2p+1,maxvst,ND);
    
    if (!coarse && !adapt_storage) {
-      int adapt_flag;
-      keyword = prefix + ".adapt";
-      data.str(input[keyword]);
-      if (!(data >> adapt_flag)) {
-         data.clear();
-         keyword = "adapt";
-         data.str(input[keyword]);
-         if (!(data >> adapt_flag)) adapt_flag = 0;
+      keyword = idprefix + ".adapt";
+      if (!inmap.get(keyword,adapt_flag)) {
+         inmap.getwdefault("adapt",adapt_flag,false);
       }
       *sim::log << "#adapt: " << adapt_flag << std::endl;
-      data.clear();  
    
       if (adapt_flag) {
+         inmap.getwdefault("error",trncerr,1.0e-2);
+         inmap.getwdefault("bdryangle",bdrysensitivity,5.0);
+         bdrysensitivity *= M_PI/180.0;
+         inmap.getwdefault("length_tol", vlngth_tol,0.25);
+
          /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
          hp_gbl->pstr = create();
+         hp_gbl->pstr->idprefix = idprefix;
          hp_gbl->pstr->mesh::copy(*this);
-         keyword = prefix + ".adapt_storage";
-         input[keyword] = "1";
-         (*hp_gbl->pstr).init(input, prefix, hp_in);
-         input[keyword] = "0";
+         keyword = idprefix + ".adapt_storage";
+         inmap[keyword] = "1";
+         (*hp_gbl->pstr).init(inmap, hp_in);
+         inmap[keyword] = "0";
       }
    }
-      
+   
+   /* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
+   if (!coarse) {
+      int restartfile;
+      if (inmap.get("restart",restartfile)) {
+         std::ostringstream nstr;
+         std::string fname;
+         nstr << restartfile << std::flush;
+         fname = idprefix +"rstrt" +nstr.str();
+         input(fname);
+      } 
+      else {
+         /* USE TOBASIS TO INITALIZE SOLUTION */
+         tobasis(hp_gbl->initfunc);
+      }
+   }
+   
    return;
 }
 
@@ -297,7 +304,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       delete hp_sbdry(i);
 }
 
- void tri_hp::setbcinfo() {
+ void tri_hp::setinfo() {
    int i,j,sind;
    
    /* SET UP VRTX BC INFORMATION FOR OUTPUT */

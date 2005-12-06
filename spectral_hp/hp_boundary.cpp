@@ -86,22 +86,16 @@ void hp_side_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
    return;
 }
 
-void hp_side_bdry::input(std::map<std::string,std::string>& inmap) {         
+void hp_side_bdry::input(input_map& inmap) {         
    int tlvl;
-   std::istringstream data(inmap[base.idprefix+".hp_tlvl"]);
-   if (!(data >> tlvl)) tlvl = 0;
-   data.clear();
+   inmap.getwdefault(base.idprefix+".hp_tlvl",tlvl,0);
    
    std::string filename;
    bool readfile = true;
-   data.str(inmap[base.idprefix+".hp_datafile"]);
-   if (!(data >> filename)) readfile = false;
-   data.clear();
+   readfile = inmap.get(base.idprefix+".hp_datafile",filename);
    
    int typ;
-   data.str(inmap["hp_inputtype"]);
-   if (!(data >> typ)) typ = tri_hp::text;
-   data.clear();
+   inmap.getwdefault("hp_inputtype",typ,static_cast<int>(tri_hp::text));
    
    if (readfile) {
       ifstream fin;
@@ -116,28 +110,27 @@ void hp_side_bdry::input(std::map<std::string,std::string>& inmap) {
 void hp_curved::copy_data(const hp_side_bdry &tgt) {
    hp_side_bdry::copy_data(tgt);
    const hp_curved &bin = dynamic_cast<const hp_curved&>(tgt);
-   if (x.sm0) {
-      for(int i=0;i<sim::nadapt; ++i)
-         crvbd(i)(Range(0,base.nel),Range::all()) = bin.crvbd(i)(Range(0,base.nel),Range::all());
-   }
+   
+   for(int i=0;i<sim::nadapt; ++i)
+      crvbd(i)(Range(0,base.nel-1),Range::all()) = bin.crvbd(i)(Range(0,base.nel-1),Range::all());
 }
 
-void hp_curved::init(std::map <std::string,std::string>& input, std::string prefix) {
+void hp_curved::init(input_map& input) {
    int i,coarse;
    std::string keyword;
    std::istringstream data;
    std::string filename;
    
-   hp_side_bdry::init(input,prefix);
+   hp_side_bdry::init(input);
 
-   keyword = prefix + ".coarse";
+   keyword = base.idprefix + ".coarse";
    data.str(input[keyword]);
    if (!(data >> coarse)) {
       coarse = 0;
    }
    data.clear();
    
-   keyword = prefix + ".coupled";
+   keyword = base.idprefix + ".coupled";
    data.str(input[keyword]);
    if (!(data >> coupled)) {
       coupled = false;
@@ -298,9 +291,11 @@ void hp_curved::findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi) {
    } while (fabs(dpsi) > roundoff);
 }
 
-block::ctrl hp_curved::tadvance(int excpt) {
-   int stage = sim::dirkstage +sim::esdirk;
-
+block::ctrl hp_curved::tadvance(bool coarse, int excpt) {
+   int stage = sim::dirkstage +sim::esdirk;  
+   
+   if (coarse) return(block::stop);
+   
    switch(excpt) {
       case(0): {
          if (stage) {
@@ -308,7 +303,7 @@ block::ctrl hp_curved::tadvance(int excpt) {
             for(int j=0;j<base.nel;++j) {
                for(int m=0;m<basis::tri(x.log2p).sm;++m) {
                   for(int n=0;n<mesh::ND;++n)
-                     crvbd(stage)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*sim::adirk[sim::dirkstage][sim::dirkstage];
+                     crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*sim::adirk[sim::dirkstage][sim::dirkstage];
                }
             }
          }

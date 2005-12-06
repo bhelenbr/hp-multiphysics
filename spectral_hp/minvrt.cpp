@@ -11,6 +11,8 @@ block::ctrl tri_hp::minvrt(int excpt) {
    static int mode;
    Array<FLT,2> tinv(NV,NV);
    Array<FLT,1> temp(NV);
+   
+   if(basis::tri(log2p).sm == 0 && excpt > 2) return(block::stop);
 
    switch(excpt) {
       case(0): {
@@ -57,8 +59,8 @@ block::ctrl tri_hp::minvrt(int excpt) {
          }
          
          /* SOLVE FOR VERTEX MODES */
-#ifdef DIAGONAL_PRECONDITIONER
-         hp_gbl->res.v(Range(0,nvrtx),Range::all()) *= hp_gbl->vprcn(Range(0,nvrtx),Range::all());
+#ifndef MATRIX_PRECONDITIONER
+         hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) *= hp_gbl->vprcn(Range(0,nvrtx-1),Range::all());
 #else
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n) {
@@ -162,7 +164,7 @@ block::ctrl tri_hp::minvrt(int excpt) {
          
          /* SOLVE FOR LOWEST ORDER MODE */
 #ifndef MATRIXPRECONDITIONER
-         hp_gbl->res.s(Range(0,nside),0,Range::all()) *= hp_gbl->sprcn(Range(0,nside),Range::all())*basis::tri(log2p).sdiag(0);
+         hp_gbl->res.s(Range(0,nside-1),0,Range::all()) *= hp_gbl->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(0);
 #else
          for(sind = 0; sind < nside; ++sind) {
             for(n=0;n<NV;++n) {
@@ -413,11 +415,11 @@ block::ctrl tri_hp::setup_preconditioner(int excpt) {
       case(3): 
 #ifndef MATRIX_PRECONDITIONER
          /* PREINVERT PRECONDITIONER FOR VERTICES */
-         hp_gbl->vprcn(Range(0,nvrtx),Range::all()) = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn(Range(0,nvrtx),Range::all()));
+         hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()));
         
          if (basis::tri(log2p).sm > 0) {
             /* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
-            hp_gbl->sprcn(Range(0,nside),Range::all()) = 1.0/hp_gbl->sprcn(Range(0,nside),Range::all());
+            hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 1.0/hp_gbl->sprcn(Range(0,nside-1),Range::all());
          }
 #else
          /* NEED MATRIX INVERSION HERE */
@@ -432,6 +434,7 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
    int i,j,k,m,n,tind,indx,indx1;
    TinyVector<int,3> v;
    block::ctrl step;
+   TinyVector<FLT,mesh::ND> pt;
    
 
    if (excpt < 3) {
@@ -440,13 +443,13 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
    
    switch(excpt) {
       case(3): {
-         hp_gbl->res.v(Range(0,nvrtx),Range::all()) = 0.0;
-         hp_gbl->res.s(Range(0,nside),Range::all(),Range::all()) = 0.0;
-         hp_gbl->res.i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
+         hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+         hp_gbl->res.s(Range(0,nside-1),Range::all(),Range::all()) = 0.0;
+         hp_gbl->res.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
          
-         ug.v(Range(0,nvrtx),Range::all()) = 0.0;
-         ug.s(Range(0,nside),Range::all(),Range::all()) = 0.0;
-         ug.i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
+         ug.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+         ug.s(Range(0,nside-1),Range::all(),Range::all()) = 0.0;
+         ug.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
          for(tind = 0; tind<ntri;++tind) {
          
@@ -476,9 +479,11 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
 
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                for(j=0;j<basis::tri(log2p).gpn;++j) {
+                  pt(0) = crd(0)(i,j);
+                  pt(1) = crd(1)(i,j);
                   cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                   for(n=0;n<NV;++n)
-                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->initfunc)(n,crd(0)(i,j),crd(1)(i,j))*cjcb(i,j);
+                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->initfunc)(n,pt)*cjcb(i,j);
                }
             }
             for(n=0;n<NV;++n)
@@ -494,10 +499,10 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
    if(step != block::stop) return(step);
    
    /* Inversion finished */
-   ug.v(Range(0,nvrtx),Range::all()) = hp_gbl->res.v(Range(0,nvrtx),Range::all());
+   ug.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
 
    if (basis::tri(log2p).sm > 0) {
-      ug.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
+      ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
  
       if (basis::tri(log2p).im > 0) {
 

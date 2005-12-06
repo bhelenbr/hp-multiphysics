@@ -7,7 +7,9 @@ block::ctrl tri_hp::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
    int stop = 1;
    static int last_r_mesh;
    
-   if(basis::tri(log2p).p > 1) {
+   if(cmesh == this) {
+      ++log2p;
+      if (log2p == log2pmax) coarse = false;
       return(block::stop);
    }
    if (excpt == 0) last_r_mesh = 0;
@@ -31,7 +33,7 @@ block::ctrl tri_hp::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
             hp_sbdry(i)->mg_getcchng(excpt, fv_to_ct, cv_to_ft, cmesh->hp_sbdry(i));
 
          /* DETERMINE CORRECTIONS ON COARSE MESH   */   
-         cmesh->vug_frst(Range(0,nvrtx),Range::all()) -= cmesh->ug.v(Range(0,nvrtx),Range::all());
+         cmesh->vug_frst(Range(0,nvrtx-1),Range::all()) -= cmesh->ug.v(Range(0,nvrtx-1),Range::all());
    
          /* LOOP THROUGH FINE VERTICES   */
          /* TO DETERMINE CHANGE IN SOLUTION */   
@@ -78,7 +80,7 @@ block::ctrl tri_hp::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Arr
       }
       case(2): {
          /* ADD CORRECTION */
-         ug.v(Range(0,nvrtx),Range::all()) += hp_gbl->res.v(Range(0,nvrtx),Range::all());               
+         ug.v(Range(0,nvrtx-1),Range::all()) += hp_gbl->res.v(Range(0,nvrtx-1),Range::all());               
          return(block::stop);
       }
    }

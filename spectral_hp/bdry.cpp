@@ -49,17 +49,13 @@ void hp_mgrid::setinflow() {
          for(j=0;j<sbdry(i)->nel;++j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
-   
-            x = vrtx(v0)(0);      
-            y = vrtx(v0)(1);
-            ug.v(v0,0) = (*(hp_gbl->initfunc))(0,x,y);
-            ug.v(v0,1) = (*(hp_gbl->initfunc))(1,x,y);
+            
+            ug.v(v0,0) = (*(hp_gbl->initfunc))(0,vrtx(v0));
+            ug.v(v0,1) = (*(hp_gbl->initfunc))(1,vrtx(v0));
          }
          v0 = sd(sind).vrtx(1);
-         x = vrtx(v0)(0);      
-         y = vrtx(v0)(1);
-         ug.v(v0,0) = (*(hp_gbl->initfunc))(0,x,y);
-         ug.v(v0,1) = (*(hp_gbl->initfunc))(1,x,y);
+         ug.v(v0,0) = (*(hp_gbl->initfunc))(0,vrtx(v0));
+         ug.v(v0,1) = (*(hp_gbl->initfunc))(1,vrtx(v0));
          
          /**********************************/   
          /* SET SIDE VALUES & FLUXES */
@@ -96,9 +92,12 @@ void hp_mgrid::setinflow() {
                for(n=0;n<ND;++n)
                   basis::tri(log2p).proj1d(ug.v(v0,n),ug.v(v1,n),&res(n)(0,0));
          
-               for(k=0;k<basis::tri(log2p).gpx; ++k)
+               for(k=0;k<basis::tri(log2p).gpx; ++k) {
+                  pt(0) = crd(0)(0,k);
+                  pt(1) = crd(1)(0,k);
                   for(n=0;n<ND;++n)
-                     res(n)(0,k) -= (*(hp_gbl->initfunc))(n,crd(0)(0,k),crd(1)(0,k));
+                     res(n)(0,k) -= (*(hp_gbl->initfunc))(n,pt);
+               }
                      
                for(n=0;n<ND;++n)
                   basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
@@ -197,7 +196,7 @@ void hp_mgrid::setinflow() {
    return;
 }
 
-void hp_mgrid::addbflux(int mgrid) {
+void hp_mgrid::addbflux(int coarse) {
    int i,j,k,n,indx,indx1;
    int sind,v0,v1;
    FLT gam, nrm[ND], wl[NV], wr[NV];
@@ -304,9 +303,12 @@ void hp_mgrid::addbflux(int mgrid) {
             
             gam = hp_gbl->rhoi*hp_gbl->tprcn[sd(sind).tri(0)][0][0]/hp_gbl->tprcn[sd(sind).tri(0)][NV-1][NV-1];
             for(k=0;k<basis::tri(log2p).gpx;++k) {
+               pt(0) = crd(0)(0,k);
+               pt(1) = crd(1)(0,k);
+
                for(n=0;n<NV;++n) {
                   wl[n] = u(n)(0,k);
-                  wr[n] = (hp_gbl->initfunc)(n,crd(0)(0,k),crd(1)(0,k));
+                  wr[n] = (hp_gbl->initfunc)(n,pt);
                }
                nrm[0] = dcrd(1,0)(0,k);
                nrm[1] = -dcrd(0,0)(0,k);
@@ -384,8 +386,11 @@ void hp_mgrid::addbflux(int mgrid) {
             basis::tri(log2p).proj1d(&uht(2)(0)&u(2)(0,0));
                
             for(k=0;k<basis::tri(log2p).gpx;++k) {
-               wl[0] = (hp_gbl->initfunc)(0,crd(0)(0,k),crd(1)(0,k));
-               wl[1] = (hp_gbl->initfunc)(1,crd(0)(0,k),crd(1)(0,k));
+               pt(0) = crd(0)(0,k);
+               pt(1) = crd(1)(0,k);
+
+               wl[0] = (hp_gbl->initfunc)(0,pt);
+               wl[1] = (hp_gbl->initfunc)(1,pt);
                for(n=0;n<ND;++n)
                   mvel[n] = sim::bd[0]*crd(n)(0,k) +crd(n)(1,k);
                res(2)(0,k) = hp_gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*dcrd(1,0)(0,k) -(wl[1] -mvel[1])*dcrd(0,0)(0,k));

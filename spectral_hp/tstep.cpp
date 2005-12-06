@@ -17,9 +17,9 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
          /***************************************/
          /** DETERMINE FLOW PSEUDO-TIME STEP ****/
          /***************************************/
-         ins_gbl->vprcn(Range(0,nvrtx),Range::all()) = 0.0;
+         ins_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
          if (basis::tri(log2p).sm > 0) {
-            ins_gbl->sprcn(Range(0,nside),Range::all()) = 0.0;
+            ins_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
          }
          
 #ifdef TIMEACCURATE

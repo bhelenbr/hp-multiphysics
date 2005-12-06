@@ -41,18 +41,18 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
    FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
-   ins_gbl->res.v(Range(0,nvrtx),Range::all()) = 0.0;
-   ins_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = 0.0;
-   ins_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) = 0.0;
+   ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+   ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
+   ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
          
    FLT oneminusbeta = 1.0-sim::beta[stage];
-   ins_gbl->res_r.v(Range(0,nvrtx),Range::all()) *= oneminusbeta;
-   ins_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) *= oneminusbeta;
-   ins_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) *= oneminusbeta;
+   ins_gbl->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
+   ins_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
+   ins_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
          
    /* ADD IN BOUNDARY FLUXES */
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->addbflux(mgrid);
+      hp_sbdry(i)->addbflux(coarse);
 
    for(tind = 0; tind<ntri;++tind) {
       /* LOAD INDICES OF VERTEX POINTS */
@@ -435,25 +435,25 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
    }
 
    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-   ins_gbl->res.v(Range(0,nvrtx),Range::all()) += ins_gbl->res_r.v(Range(0,nvrtx),Range::all());
-   ins_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += ins_gbl->res_r.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());        
-   ins_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += ins_gbl->res_r.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());     
+   ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) += ins_gbl->res_r.v(Range(0,nvrtx-1),Range::all());
+   ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += ins_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
+   ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += ins_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
       
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
 /*********************************************/   
-   if(mgrid) {
+   if(coarse) {
    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
       if(isfrst) {
-         dres(log2p).v(Range(0,nvrtx),Range::all()) = fadd*ins_gbl->res0.v(Range(0,nvrtx),Range::all()) -ins_gbl->res.v(Range(0,nvrtx),Range::all());
-         dres(log2p).s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = fadd*ins_gbl->res0.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) -ins_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());     
-         dres(log2p).i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) = fadd*ins_gbl->res0.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) -ins_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());
+         dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*ins_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -ins_gbl->res.v(Range(0,nvrtx-1),Range::all());
+         dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*ins_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+         dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*ins_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
                
          isfrst = false;
       }
-      ins_gbl->res.v(Range(0,nvrtx),Range::all()) += dres(log2p).v(Range(0,nvrtx),Range::all()); 
-      ins_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) += dres(log2p).s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
-      ins_gbl->res.i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all()) += dres(log2p).i(Range(0,ntri),Range(0,basis::tri(log2p).im),Range::all());  
+      ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
+      ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+      ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
    }
 
 

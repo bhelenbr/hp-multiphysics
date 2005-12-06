@@ -15,9 +15,51 @@
 #include <utilities.h>
 #include <myblas.h>
 
- void tri_hp::output(char *name, filetype typ, int tlvl) {
+void tri_hp::output(const std::string& fname, block::output_purpose why) {
+   int i;
+   std::string fnmapp, namewdot;
+   std::ostringstream nstr;
    ofstream out;
-   char fnmapp[100];
+   out.setf(std::ios::scientific, std::ios::floatfield);
+   out.precision(10);
+   
+   switch(why) {
+      case(block::display): {
+         output(fname,output_type(0));
+         return;
+      }
+      case(block::restart): {
+         namewdot = fname +".d";
+         for(i=0;i<sim::nadapt;++i) {
+            nstr.str("");
+            nstr << i << std::flush;
+            fnmapp = namewdot +nstr.str();
+            output(fnmapp,output_type(1),i);
+         }
+         if (mmovement != fixed || adapt_flag) {
+            namewdot = fname +".v";
+            mesh::output(fname,mesh::grid);
+            for(i=1;i<sim::nadapt;++i) {
+               nstr.str("");
+               nstr << i << std::flush;
+               fnmapp = namewdot +nstr.str();
+               out.open(fnmapp.c_str());
+               out << vrtxbd(i) << std::endl;
+               out.close();
+            }
+         }         
+         return;
+      }
+      case(block::debug): {
+         output(fname,output_type(2));
+      }
+   }
+   return;
+}
+
+ void tri_hp::output(const std::string& fname, filetype typ, int tlvl) {
+   ofstream out;
+   std::string fnmapp;
    int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
    int ijind[MXTM][MXTM];
    
@@ -26,9 +68,8 @@
          
    switch (typ) {
       case (text):
-         strcpy(fnmapp,name);
-         strcat(fnmapp,".txt");
-         out.open(fnmapp);
+         fnmapp = fname +".txt";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open text output file " << fnmapp;
             exit(1);
@@ -70,9 +111,8 @@
          break;
       
       case(tecplot):
-         strcpy(fnmapp,name);
-         strcat(fnmapp,".dat");
-         out.open(fnmapp);
+         fnmapp = fname +".dat";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open tecplot output file " << fnmapp;
             exit(1);
@@ -213,9 +253,8 @@
          break; 
                
       case(adapt_diagnostic): {         
-         strcpy(fnmapp,name);
-         strcat(fnmapp,".dat");
-         out.open(fnmapp);
+         fnmapp = fname +".dat";
+         out.open(fnmapp.c_str());
          if (!out) {
             *sim::log << "couldn't open tecplot output file " << fnmapp;
             exit(1);
@@ -246,10 +285,40 @@
     return;
 }
 
- void tri_hp::input(char *name, filetype typ, int tlvl) {
+void tri_hp::input(const std::string& fname) {
+   int i;
+   std::string fnmapp, namewdot;
+   std::ostringstream nstr;
+   ifstream in;
+
+   namewdot = fname +".d";
+   for(i=0;i<sim::nadapt;++i) {
+      nstr.str("");
+      nstr << i << std::flush;
+      fnmapp = namewdot +nstr.str();
+      input(fnmapp,output_type(1),i);
+   }
+   if (mmovement != fixed || adapt_flag) {
+      namewdot = fname +".v";
+      mesh::input(fname,mesh::grid);
+      for(i=1;i<sim::nadapt;++i) {
+         nstr.str("");
+         nstr << i << std::flush;
+         fnmapp = namewdot +nstr.str();
+         in.open(fnmapp.c_str());
+         in >> vrtxbd(i);
+         in.close();
+      }
+   }         
+   return;
+
+}
+
+ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
    int i,j,k,m,n,pin,pmin,indx;
    int bnum;
-   char buffer[200];
+   std::string fnapp;
+   char buffer[80];
    char trans[] = "T";
    ifstream in;
    FLT fltskip;
@@ -257,11 +326,10 @@
    switch(typ) {
    
       case (text):
-         strcpy(buffer,name);
-         strcat(buffer,".txt");
-         in.open(buffer);
-         if (!in ) {
-            printf("couldn't open text input file %s\n",name);
+         fnapp = filename +".txt";
+         in.open(fnapp.c_str());
+         if (!in) {
+            *sim::log << "couldn't open text input file " << fnapp << std::endl;
             exit(1);
          }
          
@@ -329,11 +397,10 @@
 
       case(tecplot):
          /* CAN ONLY DO THIS IF HAVE MESH FILE */
-         strcpy(buffer,name);
-         strcat(buffer,".dat");
-         in.open(buffer);
+         fnapp = filename +".dat";
+         in.open(fnapp.c_str());
          if (!in) {
-            *sim::log << "couldn't open tecplot input file " << name << std::endl;
+            *sim::log << "couldn't open tecplot input file " << fnapp << std::endl;
             exit(1);
          }
          in.ignore(80,'\n');
@@ -419,7 +486,7 @@
          
          int tind;
          
-         ugbd(tlvl).i(Range(0,ntri),Range::all(),Range::all()) = 0.0;
+         ugbd(tlvl).i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
          
          /* REVERSE OUTPUTING PROCESS */
          for(m=0;m<basis::tri(log2p).im;++m) {

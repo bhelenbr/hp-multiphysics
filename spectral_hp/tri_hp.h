@@ -33,8 +33,9 @@ class tri_hp : public r_mesh  {
       int p0, sm0, im0;  /**> Initialization values */
       int log2p; /**> index of basis to use in global basis::tri array */
       int log2pmax; /**> Initialization value of log2p */
-      bool mgrid; /**> tells whether we are coarse level of multigrid or not */
+      bool coarse; /**> tells whether we are coarse level of multigrid or not */
       enum movementtype {fixed,rigid_moving,uncoupled_deformable,coupled_deformable} mmovement;
+      bool adapt_flag;
       
       /* STATIC WORK ARRAYS */
       static Array<TinyMatrix<FLT,MXGP,MXGP>,1> u,res;
@@ -56,11 +57,11 @@ class tri_hp : public r_mesh  {
       
       /** vertex boundary information */
       Array<hp_vrtx_bdry *,1> hp_vbdry;
-      virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, std::map<std::string,std::string> *bdrydata) = 0;
+      virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map *bdrydata) = 0;
 
       /** side boundary information */
       Array<hp_side_bdry *,1> hp_sbdry;
-      virtual hp_side_bdry* getnewsideobject(int bnum, std::map<std::string,std::string> *bdrydata) = 0;
+      virtual hp_side_bdry* getnewsideobject(int bnum, input_map *bdrydata) = 0;
       
       /** Array for time history information */
       TinyVector<vsi,sim::nhist+1> ugbd;
@@ -111,7 +112,7 @@ class tri_hp : public r_mesh  {
 #endif
          
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
-         FLT (*initfunc)(int n, FLT x, FLT y);
+         FLT (*initfunc)(int n, TinyVector<FLT,ND> pt);
       } *hp_gbl;
 
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -131,23 +132,26 @@ class tri_hp : public r_mesh  {
       void lftog(int tind, vsi gvect);
 
       /* SETUP V/S/T INFO */
-      void setbcinfo();
+      void setinfo();
       
    public:
       tri_hp() : r_mesh() {}
       virtual ~tri_hp();
-      void init(std::map <std::string,std::string>& input, std::string prefix, gbl *rgin);
+      void init(input_map& input, gbl *rgin);
       void copy_data(const tri_hp &tgt);
       virtual tri_hp* create() = 0;
       
       /* Initialization functions */
-      inline void tobasis(FLT (*func)(int var, TinyVector<FLT,ND> &x), int tlvl = 0);
+      void tobasis(FLT (*func)(int var, TinyVector<FLT,ND> x), int tlvl = 0);
       void curvinit();
       
       /* Input / Output functions */
       enum filetype {tecplot, text, binary, adapt_diagnostic};
-      void input(char *name, filetype type, int tlvl = 0);
-      void output(char *name, filetype type = tecplot, int tlvl = 0);
+      TinyVector<filetype,3> output_type;
+      void input(const std::string &name);
+      void input(const std::string &name, filetype type, int tlvl = 0);
+      void output(const std::string &name, block::output_purpose why);
+      void output(const std::string &name, filetype type = tecplot, int tlvl = 0);
 
       /* Some other handy utilities */
       void l2error(FLT (*func)(int, TinyVector<FLT,ND> &x));
@@ -163,7 +167,7 @@ class tri_hp : public r_mesh  {
       void findandmvptincurved(TinyVector<FLT,2> pt,int &tind, FLT &r, FLT &s);
       
       /* FUNCTIONS FOR ADAPTION */ 
-      virtual block::ctrl length(int excpt) {return(block::stop);}
+      virtual block::ctrl length(int excpt) {*sim::log << "here\n"; return(block::stop);}
       block::ctrl adapt(int excpt,FLT tol);
       void movevdata(int frm, int to);
       void movevdata_bdry(int bnum,int bel,int endpt);
@@ -197,7 +201,7 @@ class tri_hp : public r_mesh  {
 
       /* ADVANCE TIME SOLUTION */
       block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
-      virtual void calculate_unsteady_sources();
+      virtual void calculate_unsteady_sources(bool coarse);
       
       /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
       void vc0load(int phase, FLT *vdata);

@@ -8,15 +8,15 @@ block::ctrl tri_hp_cd::setup_preconditioner(int excpt) {
    int tind,i,j,side,v0;
    FLT jcb,h,hmax,q,qmax,lam1;
    TinyVector<int,3> v;
-
+   
    switch(excpt) {
       case(0): {
          /***************************************/
          /** DETERMINE FLOW PSEUDO-TIME STEP ****/
          /***************************************/
-         hp_gbl->vprcn(Range(0,nvrtx),Range::all()) = 0.0;
+         hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
          if (basis::tri(log2p).sm > 0) {
-            hp_gbl->sprcn(Range(0,nside),Range::all()) = 0.0;
+            hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
          }
          
 #ifdef TIMEACCURATE
@@ -46,37 +46,31 @@ block::ctrl tri_hp_cd::setup_preconditioner(int excpt) {
             qmax = 0.0;
             for(j=0;j<3;++j) {
                v0 = v(j);
-               q = pow(cd_gbl->ax -(sim::bd[0]*vrtx(v0)(0) +vrtxbd(1)(v0)(0)),2.0) 
-                  +pow(cd_gbl->ay -(sim::bd[0]*vrtx(v0)(1) +vrtxbd(1)(v0)(1)),2.0);
+               q = pow(cd_gbl->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+                  +pow(cd_gbl->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
                qmax = MAX(qmax,q);
             }
             q = sqrt(qmax);
             
             lam1  = (q +1.5*cd_gbl->nu/h +h*sim::bd[0]);
-            
+                        
             /* SET UP DISSIPATIVE COEFFICIENTS */
             cd_gbl->tau(tind)  = adis*h/(jcb*lam1);
       
             /* SET UP DIAGONAL PRECONDITIONER */
 #ifdef TIMEACCURATE
             dtstari = MAX(lam1/h,dtstari);
-#else
-            jcb *= lam1/h;
-#endif
-#ifdef AXISYMMETRIC
-            jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
-#endif
-
-#ifdef TIMEACCURATE
          }
          printf("#iterative to physical time step ratio: %f\n",sim::bd[0]/dtstari);
             
          for(tind=0;tind<ntri;++tind) {
             v = td(tind).vrtx;
             jcb = 0.25*area(tind)*dtstari;
+#else
+            jcb *= lam1/h;
+#endif
 #ifdef AXISYMMETRIC
             jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
-#endif
 #endif
             hp_gbl->tprcn(tind,0) = jcb;   
             for(i=0;i<3;++i) {

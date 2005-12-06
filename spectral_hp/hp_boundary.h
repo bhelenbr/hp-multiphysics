@@ -20,7 +20,7 @@ class hp_vrtx_bdry {
 
    public:
       hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
-      virtual void init(std::map <std::string,std::string>& input, std::string prefix) {}
+      virtual void init(input_map& input) {}
       virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(xin,bin);}
       virtual void copy_data(const hp_vrtx_bdry& tgt) {}
       virtual ~hp_vrtx_bdry() {}
@@ -51,22 +51,17 @@ class hp_vrtx_bdry {
          return;
       }
 
-      virtual void input(std::map<std::string,std::string>& inmap) {         
+      virtual void input(input_map& inmap) {         
          int tlvl;
-         std::istringstream data(inmap[base.idprefix+".hp_tlvl"]);
-         if (!(data >> tlvl)) tlvl = 0;
-         data.clear();
+         
+         inmap.getwdefault(base.idprefix+".hp_tlvl",tlvl,0);
          
          std::string filename;
          bool readfile = true;
-         data.str(inmap[base.idprefix+".hp_datafile"]);
-         if (!(data >> filename)) readfile = false;
-         data.clear();
+         readfile = inmap.get(base.idprefix+".hp_datafile",filename);
          
          int typ;
-         data.str(inmap["hp_filetype"]);
-         if (!(data >> typ)) typ = tri_hp::text;
-         data.clear();
+         inmap.getwdefault("hp_filetype",typ,static_cast<int>(tri_hp::text));
          
          if (readfile) {
             ifstream fin;
@@ -90,7 +85,7 @@ class hp_side_bdry {
 
    public:
       hp_side_bdry(tri_hp& xin, side_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
-      virtual void init(std::map <std::string,std::string>& input, std::string prefix) {
+      virtual void init(input_map& input) {
          dxdt.resize(x.log2pmax,base.maxel);
       }
       virtual hp_side_bdry* create(tri_hp& xin, side_bdry &bin) const {return(new hp_side_bdry(xin,bin));}
@@ -104,7 +99,7 @@ class hp_side_bdry {
       virtual void curvinit(int tlvl) {}
       
       /* BOUNDARY CONDITION FUNCTIONS */
-      virtual void addbflux(bool mgrid) {}
+      virtual void addbflux() {}
       virtual void vdirichlet() {}
       virtual void sdirichlet(int mode) {}
       void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(vdata,0,x.NV-1,x.NV);}
@@ -118,7 +113,7 @@ class hp_side_bdry {
             
       /* FOR COUPLED DYNAMIC BOUNDARIES */
       virtual block::ctrl setup_preconditioner(int excpt) {return(block::stop);}
-      virtual block::ctrl tadvance(int excpt) {return(block::stop);}
+      virtual block::ctrl tadvance(bool coarse, int excpt) {return(block::stop);}
       virtual block::ctrl rsdl(int excpt) {return(block::stop);}
       virtual block::ctrl update(int excpt) {return(block::stop);}
       virtual block::ctrl minvrt(int excpt) {return(block::stop);}
@@ -139,7 +134,7 @@ class hp_side_bdry {
       
       /* input output functions */
       virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
-      virtual void input(std::map<std::string,std::string>& inmap);
+      virtual void input(input_map& inmap);
       virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0) {}
 
         
@@ -169,12 +164,34 @@ class hp_curved : public hp_side_bdry {
       FLT& crds(int ind, int mode, int dir) {return(crv(ind,mode)(dir));}
       FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(crvbd(tlvl)(ind,mode)(dir));}
       
-      void init(std::map <std::string,std::string>& input, std::string prefix);      
+      void init(input_map& input);      
       void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);         
       virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);      
       void curv_init(int tlvl = 0);
             
       void findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi);      
-      block::ctrl tadvance(int excpt);
+      block::ctrl tadvance(bool coarse, int excpt);
+      
+      void movesdata_bdry(int bel,hp_side_bdry *bin) {
+         int sind,tgtel,step,m,n;
+         
+         hp_curved *tgt = dynamic_cast<hp_curved *>(bin);
+         
+         hp_side_bdry::movesdata_bdry(bel,bin);
+         
+         if (!x.sm0) return;
+   
+         sind = base.el(bel);
+         tgtel = tgt->x.getbdryel(tgt->x.sd(sind).tri(1));
+                  
+         for(step=0;step<sim::nadapt;++step) {
+            for(m=0;m<x.sm0;++m) {
+               for(n=0;n<x.ND;++n) {
+                  crdsbd(step,bel,m,n) = tgt->crdsbd(step,tgtel,m,n);
+               }
+            }
+         }
+         return;
+      }
 };
 

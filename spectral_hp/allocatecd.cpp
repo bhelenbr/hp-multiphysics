@@ -9,53 +9,38 @@
 
 #include "tri_hp_cd.h"
 
- void tri_hp_cd::init(std::map <std::string,std::string>& input, std::string prefix, gbl *gin) {
+ void tri_hp_cd::init(input_map& input, gbl *gin) {
    int coarse;
    std::string keyword;
    std::istringstream data;
    std::string filename;
    
-   
-   tri_hp::init(input,prefix,gin);
-   
-   keyword = prefix + ".coarse";
-   data.str(input[keyword]);
-   if (!(data >> coarse)) {
-      coarse = 0;
-   }
-   data.clear();
-   
-   if (coarse) return;
+   tri_hp::init(input,gin);
    
    /* Load pointer to block stuff */
    cd_gbl = gin;
+   
+   keyword = idprefix + ".coarse";
+   input.getwdefault(keyword,coarse,0);
+   
+   if (coarse) return;
   
-   keyword = prefix + ".ax";
-   data.str(input[keyword]);
-   if (!(data >> cd_gbl->ax)) {
-      cd_gbl->ax = 1.0;
-   }
-   data.clear();
+   keyword = idprefix + ".ax";
+   input.getwdefault(keyword,cd_gbl->ax,1.0);
    *sim::log << "#" << keyword << ": " << cd_gbl->ax << std::endl;
 
-   
-   keyword = prefix + ".ay";
-   data.str(input[keyword]);
-   if (!(data >> cd_gbl->ay)) {
-      cd_gbl->ay = 0.0;
-   }
-   data.clear();
+   keyword = idprefix + ".ay";
+   input.getwdefault(keyword,cd_gbl->ay,0.0);
    *sim::log << "#" << keyword << ": " << cd_gbl->ay << std::endl;
 
-   keyword = prefix + ".nu";
-   data.str(input[keyword]);
-   if (!(data >> cd_gbl->nu)) {
-      cd_gbl->nu = 1.0;
-   }
-   data.clear();
+   keyword = idprefix + ".nu";
+   input.getwdefault(keyword,cd_gbl->nu,1.0);
    *sim::log << "#" << keyword << ": " << cd_gbl->nu << std::endl;
-
    
+   keyword = idprefix + ".dissipation";
+   input.getwdefault(keyword,adis,1.0);
+   *sim::log << "#" << keyword << ": " << adis << std::endl;
+
    cd_gbl->tau.resize(maxvst);
    
    return;

@@ -66,7 +66,7 @@ block::ctrl tri_hp_ins::length(int excpt) {
       case(2): {
          lgtol = -log(vlngth_tol);
          norm = ins_gbl->eanda_recv(0)/ins_gbl->eanda_recv(1);
-         fscr1(Range(0,nvrtx)) = 0.0;
+         fscr1(Range(0,nvrtx-1)) = 0.0;
 
          switch(basis::tri(log2p).p) {
             case(1): {

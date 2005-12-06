@@ -18,9 +18,9 @@
    mesh::copy(tgt);
 
    for(t=0;t<sim::nadapt+1;++t) {
-      ugbd(t).v(Range(0,nvrtx),Range::all()) = tgt.ugbd(t).v(Range(0,nvrtx),Range::all());
-      if (tgt.sm0) ugbd(t).s(Range(0,nside),Range::all(),Range::all()) = tgt.ugbd(t).s(Range(0,nside),Range::all(),Range::all());
-      if (tgt.im0) ugbd(t).i(Range(0,ntri),Range::all(),Range::all()) = tgt.ugbd(t).i(Range(0,ntri),Range::all(),Range::all());
+      ugbd(t).v(Range(0,nvrtx-1),Range::all()) = tgt.ugbd(t).v(Range(0,nvrtx-1),Range::all());
+      ugbd(t).s(Range(0,nside-1),Range::all(),Range::all()) = tgt.ugbd(t).s(Range(0,nside-1),Range::all(),Range::all());
+      ugbd(t).i(Range(0,ntri-1),Range::all(),Range::all()) = tgt.ugbd(t).i(Range(0,ntri-1),Range::all(),Range::all());
       
       for(i=0;i<nvrtx;++i)
          for(n=0;n<ND;++n)

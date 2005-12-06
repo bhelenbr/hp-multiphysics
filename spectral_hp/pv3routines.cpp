@@ -686,9 +686,9 @@ void hp_mgrid::meshtov(int &kn, int nvar, float *v) {
 void hp_mgrid::pv3subtract(int running) {
    int i,j,n;
          
-   ugwk(0).v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all())-ugpv3.v(Range(0,nvrtx),Range::all());
-   ugwk(0).s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all())-ugpv3.s(Range(0,nside),Range::all(),Range::all());
-   ugwk(0).i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all())-ugpv3.i(Range(0,ntri),Range::all(),Range::all());
+   ugwk(0).v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all())-ugpv3.v(Range(0,nvrtx-1),Range::all());
+   ugwk(0).s(Range(0,nside-1),Range::all(),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all())-ugpv3.s(Range(0,nside-1),Range::all(),Range::all());
+   ugwk(0).i(Range(0,ntri-1),Range::all(),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all())-ugpv3.i(Range(0,ntri-1),Range::all(),Range::all());
             
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)
@@ -709,9 +709,9 @@ void hp_mgrid::pv3subtract(int running) {
 void hp_mgrid::pv3freeze() {
    int i,j,n;
    
-   ugpv3.v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
-   ugpv3.s(Range(0,nside),Range::all(),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
-   ugpv3.i(Range(0,ntri),Range::all(),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
+   ugpv3.v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
+   ugpv3.s(Range(0,nside-1),Range::all(),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
+   ugpv3.i(Range(0,ntri-1),Range::all(),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
 
    for(i=0;i<nvrtx;++i)
       for(n=0;n<ND;++n)

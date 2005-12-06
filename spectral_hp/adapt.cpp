@@ -12,6 +12,7 @@
 #include <myblas.h>
 
  block::ctrl tri_hp::adapt(int excpt,FLT tol) {
+   block::ctrl state;
    
    /* ASSUMES STEPS FOR SETTING UP VLENGTH HAVE BEEN TAKEN ALREADY */
    if (excpt == 0) {
@@ -19,8 +20,9 @@
       treeinit();
    }
    
-   return(mesh::adapt(excpt,tol));
-   //setbcinfo();
+   state = mesh::adapt(excpt,tol);
+   if (state == block::stop) setinfo();
+   return(state);
 }
 
 void tri_hp::updatevdata(int v0) {
@@ -254,21 +256,6 @@ void tri_hp::movesdata(int from, int to) {
 }
 
 void tri_hp::movesdata_bdry(int bnum,int bel) {
-   int m,n,sind,tgtel,step;
-   
-   if (!sm0) return;
-   
-   if (hp_sbdry(bnum)->is_curved()) {
-      sind = sbdry(bnum)->el(bel);
-      tgtel = hp_gbl->pstr->getbdryel(sind);
-      for(step=0;step<sim::nadapt;++step) {
-         for(m=0;m<sm0;++m) {
-            for(n=0;n<ND;++n) {
-               hp_sbdry(bnum)->crdsbd(bel,m,n,step) = hp_gbl->pstr->hp_sbdry(bnum)->crdsbd(tgtel,m,n,step);
-            }
-         }
-      }
-   }
    
    hp_sbdry(bnum)->movesdata_bdry(bel,hp_gbl->pstr->hp_sbdry(bnum));
 

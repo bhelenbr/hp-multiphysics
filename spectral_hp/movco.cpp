@@ -5,17 +5,20 @@ block::ctrl tri_hp::mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Arr
    int i,j,k,m,n,tind,v0,indx,indx1;
    
    isfrst = true;
-   
+   coarse = true;
+         
    if (excpt == 0) {
       for(i=0;i<nsbd;++i)
          hp_sbdry(i)->mg_getfres(excpt, fv_to_ct, cv_to_ft, fmesh->hp_sbdry(i));
    
       if(p0 > 1) {
+         --log2p;
+         
          /* TRANSFER IS ON FINE MESH */
-         hp_gbl->res0.v(Range(0,nvrtx),Range::all()) = hp_gbl->res.v(Range(0,nvrtx),Range::all());
+         hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
 
          if (basis::tri(log2p).p > 1) {
-            hp_gbl->res0.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
+            hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
             
             if (basis::tri(log2p).p > 2) {
            
@@ -45,7 +48,7 @@ block::ctrl tri_hp::mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Arr
       if (state != block::stop) return(state);
    }
 
-   hp_gbl->res0.v(Range(0,nvrtx),Range::all()) = 0.0;
+   hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) = 0.0;
          
    /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
    for(i=0;i<fmesh->nvrtx;++i) {
@@ -53,7 +56,7 @@ block::ctrl tri_hp::mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Arr
       for(j=0;j<3;++j) {
          v0 = td(tind).vrtx(j);
          for(n=0;n<NV;++n)
-            hp_gbl->res0.v(v0,n) += fadd*fv_to_ct(i).wt(j)*hp_gbl->res.v(i,n);
+            hp_gbl->res0.v(v0,n) += fv_to_ct(i).wt(j)*hp_gbl->res.v(i,n);
       }
    }
    

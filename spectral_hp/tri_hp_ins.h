@@ -36,7 +36,7 @@ class tri_hp_ins : public tri_hp {
       FLT adis; // DISSIPATION CONSTANT
       
    public:
-      void init(std::map <std::string,std::string>& input, std::string prefix, gbl *gin);
+      void init(input_map& input, gbl *gin);
       tri_hp_ins* create() {return(new tri_hp_ins);}
       block::ctrl length(int excpt);
       block::ctrl setup_preconditioner(int excpt);

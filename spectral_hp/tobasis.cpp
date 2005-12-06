@@ -10,13 +10,11 @@
 #include"tri_hp.h"
 #include<myblas.h>
 
- void tri_hp::tobasis(FLT (*func)(int var, TinyVector<FLT,2> &x), int tlvl) {
+ void tri_hp::tobasis(FLT (*func)(int var, TinyVector<FLT,ND> pt), int tlvl) {
    int tind,i,j,m,n,indx,v0,v1,sind,info;
    char uplo[] = "U";
    TinyVector<FLT,2> pt;
-   
-   *sim::log << "************ " << nvrtx << std::endl;
-   
+      
    /* LOOP THROUGH VERTICES */
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
@@ -80,8 +78,8 @@
          
       for (i=0; i < basis::tri(log2p).gpx; ++i ) {
          for (j=0; j < basis::tri(log2p).gpn; ++j ) {
-            pt(0) = crd(0)(0,i);
-            pt(1) = crd(1)(0,i);
+            pt(0) = crd(0)(i,j);
+            pt(1) = crd(1)(i,j);
             for(n=0;n<NV;++n)
                u(n)(i,j) -= (*func)(n,pt);
          }

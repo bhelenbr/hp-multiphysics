@@ -618,8 +618,17 @@ FLT linear_src(FLT x, FLT y) {
    return(x);
 }
 
-FLT xcubed(int n, FLT x, FLT y) { 
-return(x*x*x);
+static FLT apow;
+FLT xpower(int n, TinyVector<FLT,2> x) { 
+   return(pow(x(0),apow));
+}
+
+FLT sinewave(int n, TinyVector<FLT,2> x) { 
+   return(sin(M_PI*x(0)));
+}
+
+FLT zero_src(FLT x, FLT y) {
+   return(0.0);
 }
 
 class btype {
@@ -627,33 +636,29 @@ class btype {
       enum ids {plain=1, cd, ins};
 };
 
-block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockdata) {
-   std::string keyword;
+block* blocks::getnewblock(int idnum, input_map *blockdata) {
+   std::string keyword,val;
    std::istringstream data;
-   std::map<std::string,std::string>::const_iterator mi;
    char idntystring[10];
    int type;        
    
    type = idnum&0xffff;
 
-   if (blockdata) {
+  if (blockdata) {
       sprintf(idntystring,"b%d",idnum);
       keyword = std::string(idntystring) + ".type";
-      mi = (*blockdata).find(keyword);
-      if (mi != (*blockdata).end()) {
-         data.str((*blockdata)[keyword]);
+      if ((*blockdata).get(keyword,val)) {
+         data.str(val);
          data >> type;  
          data.clear(); 
       }
       else {
-         keyword = "blocktype";
-         data.str((*blockdata)[keyword]);
-         if (!(data >> type)) {
+         if (!(*blockdata).get("blocktype",val)) {
             *sim::log << "couldn't find block type" << std::endl;
          }
       }
    }
-   
+      
    switch(type) {
       case btype::plain: {
          mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
@@ -662,8 +667,9 @@ block* blocks::getnewblock(int idnum, std::map<std::string,std::string> *blockda
       
       case btype::cd: {
          mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
-         (*temp).gstorage.src = &linear_src;
-         (*temp).gstorage.initfunc = &xcubed;
+         (*temp).gstorage.src = &zero_src;
+         (*temp).gstorage.initfunc = &xpower;
+         apow = 1.0;
          return(temp);
       }
       default: {

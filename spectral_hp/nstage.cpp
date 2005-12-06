@@ -1,6 +1,8 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
+#define NODEBUG
+
 block::ctrl tri_hp::update(int excpt) {
    int i,m,k,n,indx,indx1;
    FLT cflalpha;
@@ -21,18 +23,19 @@ block::ctrl tri_hp::update(int excpt) {
    excpt -= last_r_mesh;
          
    if (excpt == 0) {
+   
+#ifdef DEBUG 
+      *sim::log << "loading ug0 last_r_mesh: " << last_r_mesh << std::endl;
+#endif
 
       /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-      hp_gbl->ug0.v(Range(0,nvrtx),Range::all()) = ug.v(Range(0,nvrtx),Range::all());
-
-      if (basis::tri(log2p).p > 1) {
-         hp_gbl->ug0.s(Range(0,nside),Range(0,sm0),Range::all()) = ug.s(Range(0,nside),Range::all(),Range::all());
-         
-         if (basis::tri(log2p).p > 2) {
-            hp_gbl->ug0.i(Range(0,ntri),Range(0,im0),Range::all()) = ug.i(Range(0,ntri),Range::all(),Range::all());
-         }   
+      hp_gbl->ug0.v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
+      if (basis::tri(log2p).sm) {
+         hp_gbl->ug0.s(Range(0,nside-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
+         if (basis::tri(log2p).im) {
+            hp_gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
+         }
       }
-
       /* COUPLED BOUNDARY MOVEMENT EQUATIONS */   
       for(i=0;i<nsbd;++i)
          hp_sbdry(i)->update(0);
@@ -47,6 +50,9 @@ block::ctrl tri_hp::update(int excpt) {
    
    /* CALCULATE RESIDUAL */
    if (excpt < lastresidual) {
+#ifdef DEBUG
+      *sim::log << "performing residual step " << excpt << ' ' << stage << std::endl;
+#endif
       state = rsdl(excpt,stage);
       if (state != block::stop) {
          lastresidual = excpt +1;
@@ -54,24 +60,31 @@ block::ctrl tri_hp::update(int excpt) {
       }
       lastminvrt = excpt +1;
    }
-   
+      
    /* INVERT MASS MATRIX */
    if (excpt < lastminvrt) {
-      state = minvrt(excpt-lastresidual);
+#ifdef DEBUG
+      *sim::log << "performing minvrt step " << excpt -lastresidual +1 << std::endl;
+#endif
+      state = minvrt(excpt-lastresidual +1);
       if(state != block::stop) {
-         lastminvrt = excpt +1;
+         lastminvrt = excpt +2;
          return(state);
       }
    }
 
    /* UPDATE SOLUTION */
-   if (excpt < lastminvrt+1) {
-      cflalpha = 2.0; // cfl[log2p]*alpha[stage];
+   if (excpt == lastminvrt-1) {
+      cflalpha = sim::alpha[stage]; // cfl[log2p]*alpha[stage];
+
+#ifdef DEBUG 
+      *sim::log << "updating solution: " << stage << std::endl;
+#endif
       
-      ug.v(Range(0,nvrtx),Range::all()) = hp_gbl->ug0.v(Range(0,nvrtx),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,nvrtx),Range::all());
+      ug.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->ug0.v(Range(0,nvrtx-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
 
       if (basis::tri(log2p).sm > 0) {
-         ug.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) = hp_gbl->ug0.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all()) -cflalpha*hp_gbl->res.s(Range(0,nside),Range(0,basis::tri(log2p).sm),Range::all());
+         ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->ug0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -cflalpha*hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 
          if (basis::tri(log2p).im > 0) {
 
@@ -101,7 +114,7 @@ block::ctrl tri_hp::update(int excpt) {
    }
    
    /* UPDATE STAGE & REPEAT */
-   laststage = unshiftedexcpt;
+   laststage = unshiftedexcpt+1;
    stage += addtostage;
    addtostage = 0;
       
