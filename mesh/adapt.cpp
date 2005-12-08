@@ -118,8 +118,10 @@ void mesh::cleanup_after_adapt() {
       }
       sbdry(i)->reorder();
    }
+   bdrylabel();
+
    
-   /* UPDATE BOUNDARY CONDITION DATA */
+   /* UPDATE BOUNDARY DATA */
    for (i=0;i<nsbd;++i) {
       /* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
       /* & LAST VERTEX SHOULD NEVER BE CHANGED */
@@ -150,11 +152,11 @@ void mesh::cleanup_after_adapt() {
    /* DELETE LEFTOVER VERTICES */
    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */         
    for(i=0;i<nvrtx;++i) {
-      if (td(i).info&VTOUC) {
+      if (td(i).info&VDLTE) dltvrtx(i);
+      else if (td(i).info&VTOUC) {
          vd(i).info = -2;
          updatevdata(i);
       }
-      if (td(i).info&VDLTE) dltvrtx(i);
    }
    
    /* FIX BOUNDARY CONDITION POINTERS */
@@ -167,11 +169,11 @@ void mesh::cleanup_after_adapt() {
    /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
    for(i=0;i<nside;++i) {
       sd(i).info = -1;
-      if (td(i).info&STOUC) {
-         updatesdata(i);
-         sd(i).info = -2;
-      }
       if (td(i).info&SDLTE) dltsd(i);
+      else if (td(i).info&STOUC) {
+         sd(i).info = -2;
+         updatesdata(i);
+      }
    }
          
    /* FIX BOUNDARY CONDITION POINTERS */
@@ -190,8 +192,6 @@ void mesh::cleanup_after_adapt() {
          updatetdata(i);
       }
    }
-      
-   bdrylabel();
    
    cnt_nbor();
       

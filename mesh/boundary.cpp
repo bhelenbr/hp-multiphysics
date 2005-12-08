@@ -80,7 +80,7 @@ void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    return;
 }
 
-void side_bdry::findbdrypt(TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const {
+void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const {
    int k,sind,v0,v1,sidlocprev;
    FLT dx,dy,ol,psi,normdist;
    FLT psiprev,normdistprev;

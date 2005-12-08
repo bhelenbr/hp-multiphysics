@@ -15,6 +15,7 @@
 #define REBAY
 
 #define NO_DEBUG_ADAPT
+#define VERBOSE
 
 #ifdef DEBUG_ADAPT
 extern int adapt_count;
@@ -60,6 +61,7 @@ void mesh::rebay(FLT tolsize) {
             }
          }
       }
+      *sim::log << "Didn't find triangle???" << std::endl;
             
       TFOUND:
       
@@ -151,22 +153,38 @@ INSRT:
       for (n=0;n<ND;++n)
          norm += fabs(vrtx(nvrtx)(n));
       if (dist < 100.0*EPSILON*norm) {
-         *sim::log << "#Point to close to insert " << dist << ' ';
-         for(n=0;n<ND;++n)
-            *sim::log << vrtx(nvrtx)(n) << ' ';
-         *sim::log << std::endl;
+#ifdef VERBOSE
+         *sim::log << "#Point to close to insert " << dist << std::endl;
+         *sim::log << vrtx(v0) << std::endl; 
+         *sim::log << vrtx(v1) << std::endl;
+         *sim::log << vrtx(v2) << std::endl;
+         *sim::log << vrtx(nvrtx) << std::endl;
+         *sim::log << td(tind).vrtx <<  snum << std::endl;
+         for(j=0;j<3;++j) {
+            if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
+               *sim::log << "side " << j << " is accepted\n";
+            }
+         }         
+#endif
          tkoutlst(tind);
          continue;
       }
          
       tfind = findtri(xpt,vnear);
       if (tfind < 0) {
-         *sim::log << "#Warning: Trying to insert outside domain ";
-         for(n=0;n<ND;++n)
-            *sim::log << vrtx(v0)(n) << ' '; 
-         for(n=0;n<ND;++n)
-            *sim::log << vrtx(v1)(n) << ' ';
-         *sim::log << std::endl;
+#ifdef VERBOSE
+         *sim::log << "#Warning: Trying to insert outside domain " << std::endl;
+         *sim::log << vrtx(v0) << std::endl; 
+         *sim::log << vrtx(v1) << std::endl;
+         *sim::log << vrtx(v2) << std::endl;
+         *sim::log << vrtx(nvrtx) << std::endl;
+         *sim::log << td(tind).vrtx << snum << std::endl;
+         for(j=0;j<3;++j) {
+            if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
+               *sim::log << "side " << j << " is accepted\n";
+            }
+         }         
+#endif
          tkoutlst(tind);
          continue;
       }
@@ -186,12 +204,19 @@ INSRT:
          ++intrcnt;
       }
       else {
-         *sim::log << "#Warning: Makes Bad Triangle ";
-         for(n=0;n<ND;++n)
-            *sim::log << vrtx(v0)(n) << ' ';
-         for(n=0;n<ND;++n)
-            *sim::log << vrtx(v1)(n) << ' ';
-         *sim::log << std::endl;
+#ifdef VERBOSE
+         *sim::log << "#Warning: Makes Bad Triangle " << std::endl;
+         *sim::log << vrtx(v0) << std::endl; 
+         *sim::log << vrtx(v1) << std::endl;
+         *sim::log << vrtx(v2) << std::endl;
+         *sim::log << vrtx(nvrtx) << std::endl;
+         *sim::log << td(tind).vrtx << snum << std::endl;
+         for(j=0;j<3;++j) {
+            if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
+               *sim::log << "side " << j << " is accepted\n";
+            }
+         }         
+#endif
          tkoutlst(tind);
          continue;
       }
@@ -333,9 +358,6 @@ void mesh::bdry_rebay1() {
    }
    
    return;
-}
+}   
 
-
-
-      
    

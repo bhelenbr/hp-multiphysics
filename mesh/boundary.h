@@ -157,7 +157,7 @@ class side_bdry : public boundary {
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
       virtual block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
-      virtual void findbdrypt(TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
+      virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
       
       /* DEFAULT SENDING FOR SIDE VERTICES */
       virtual void vloadbuff(FLT *base,int bgn,int end, int stride) {}
