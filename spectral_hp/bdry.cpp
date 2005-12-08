@@ -50,12 +50,12 @@ void hp_mgrid::setinflow() {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
             
-            ug.v(v0,0) = (*(hp_gbl->initfunc))(0,vrtx(v0));
-            ug.v(v0,1) = (*(hp_gbl->initfunc))(1,vrtx(v0));
+            ug.v(v0,0) = hp_gbl->ibc->f(0,vrtx(v0));
+            ug.v(v0,1) = hp_gbl->ibc->f(1,vrtx(v0));
          }
          v0 = sd(sind).vrtx(1);
-         ug.v(v0,0) = (*(hp_gbl->initfunc))(0,vrtx(v0));
-         ug.v(v0,1) = (*(hp_gbl->initfunc))(1,vrtx(v0));
+         ug.v(v0,0) = hp_gbl->ibc->f(0,vrtx(v0));
+         ug.v(v0,1) = hp_gbl->ibc->f(1,vrtx(v0));
          
          /**********************************/   
          /* SET SIDE VALUES & FLUXES */
@@ -96,7 +96,7 @@ void hp_mgrid::setinflow() {
                   pt(0) = crd(0)(0,k);
                   pt(1) = crd(1)(0,k);
                   for(n=0;n<ND;++n)
-                     res(n)(0,k) -= (*(hp_gbl->initfunc))(n,pt);
+                     res(n)(0,k) -= hp_gbl->ibc->f(n,pt);
                }
                      
                for(n=0;n<ND;++n)
@@ -308,7 +308,7 @@ void hp_mgrid::addbflux(int coarse) {
 
                for(n=0;n<NV;++n) {
                   wl[n] = u(n)(0,k);
-                  wr[n] = (hp_gbl->initfunc)(n,pt);
+                  wr[n] = hp_gbl->ibc->f(n,pt);
                }
                nrm[0] = dcrd(1,0)(0,k);
                nrm[1] = -dcrd(0,0)(0,k);
@@ -389,8 +389,8 @@ void hp_mgrid::addbflux(int coarse) {
                pt(0) = crd(0)(0,k);
                pt(1) = crd(1)(0,k);
 
-               wl[0] = (hp_gbl->initfunc)(0,pt);
-               wl[1] = (hp_gbl->initfunc)(1,pt);
+               wl[0] = hp_gbl->ibc->f(0,pt);
+               wl[1] = hp_gbl->ibc->f(1,pt);
                for(n=0;n<ND;++n)
                   mvel[n] = sim::bd[0]*crd(n)(0,k) +crd(n)(1,k);
                res(2)(0,k) = hp_gbl->rho*RAD1D(k)*((wl[0] -mvel[0])*dcrd(1,0)(0,k) -(wl[1] -mvel[1])*dcrd(0,0)(0,k));

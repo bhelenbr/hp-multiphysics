@@ -12,6 +12,8 @@
 #include "math.h"
 #include "tri_hp.h"
 
+
+
 FLT amp,lam,theta;
 FLT mux[4];
 FLT rhox[4];
@@ -617,45 +619,109 @@ FLT f1(int n, FLT x, FLT y) {
 FLT linear_src(FLT x, FLT y) {
    return(x);
 }
-
-static FLT apow;
-FLT xpower(int n, TinyVector<FLT,2> x) { 
-   return(pow(x(0),apow));
-}
-
-FLT sinewave(int n, TinyVector<FLT,2> x) { 
-   return(sin(M_PI*x(0)));
-}
-
 FLT zero_src(FLT x, FLT y) {
    return(0.0);
 }
+
+class power_ibc_cd : public init_bdry_cndtn {
+   private:
+      TinyVector<FLT,mesh::ND> a;
+   public:
+      FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+         return(pow(x(0),a(0))*pow(x(1),a(1)));
+      }
+      void input(input_map &blockdata,std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
+
+         keyword = idnty +".powers";
+         if (blockdata.getline(keyword,val)) {
+            data.str(val);
+            data >> a(0) >> a(1);  
+            data.clear(); 
+         }
+         else {
+            if (blockdata.get("powers",val)) {
+               data.str(val);
+               data >> a(0) >> a(1);  
+               data.clear(); 
+            }
+            else {
+               a(0) = 0.0;
+               a(1) = 0.0;
+               *sim::log << "couldn't find powers" << std::endl;
+            }
+         }
+      }
+};
+
+class sinusoidal_ibc_cd : public init_bdry_cndtn {
+   private:
+      TinyVector<FLT,mesh::ND> a;
+   public:
+      FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+         return(pow(x(0),a(0)) +pow(x(1),a(1)));
+      }
+      void input(input_map &blockdata,std::string idnty) {}
+};
+
+class tri_hp_cd_ibctype {
+   public:
+      const static int ntypes = 3;
+      enum ids {power,sinusoidal};
+      const static char names[ntypes][40];
+      static init_bdry_cndtn* getibc(const char *nin) {
+         int i;
+         for(i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) break;
+         
+         if (i > ntypes -1) {
+            *sim::log << "Don't know that conv-diff initial condition" << std::endl;
+            exit(1);
+         }
+         switch(i) {
+            case(power):
+               return new power_ibc_cd;
+            case(sinusoidal):
+               return new sinusoidal_ibc_cd;
+         }
+         return(0);
+      }
+};
+const char tri_hp_cd_ibctype::names[ntypes][40] = {"power","sinusoidal"};
+
+
 
 class btype {
    public:
       enum ids {plain=1, cd, ins};
 };
 
-block* blocks::getnewblock(int idnum, input_map *blockdata) {
-   std::string keyword,val;
+block* blocks::getnewblock(int idnum, input_map& blockdata) {
+   std::string keyword,val,ibcname;
    std::istringstream data;
    char idntystring[10];
    int type;        
    
    type = idnum&0xffff;
 
-  if (blockdata) {
-      sprintf(idntystring,"b%d",idnum);
-      keyword = std::string(idntystring) + ".type";
-      if ((*blockdata).get(keyword,val)) {
-         data.str(val);
-         data >> type;  
-         data.clear(); 
+   sprintf(idntystring,"b%d",idnum);
+   keyword = std::string(idntystring) + ".type";
+   if (blockdata.get(keyword,val)) {
+      data.str(val);
+      data >> type;  
+      data.clear(); 
+   }
+   else {
+      if (!blockdata.get("blocktype",val)) {
+         *sim::log << "couldn't find block type" << std::endl;
       }
-      else {
-         if (!(*blockdata).get("blocktype",val)) {
-            *sim::log << "couldn't find block type" << std::endl;
-         }
+   }
+   
+   keyword = std::string(idntystring) + ".ibc";
+   if (!blockdata.get(keyword,ibcname)) {
+      if (!blockdata.get("ibc",ibcname)) {
+         *sim::log << "couldn't find initial condition type" << std::endl;
       }
    }
       
@@ -668,8 +734,8 @@ block* blocks::getnewblock(int idnum, input_map *blockdata) {
       case btype::cd: {
          mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
          (*temp).gstorage.src = &zero_src;
-         (*temp).gstorage.initfunc = &xpower;
-         apow = 3.0;
+         (*temp).gstorage.ibc = tri_hp_cd_ibctype::getibc(ibcname.c_str());
+         (*temp).gstorage.ibc->input(blockdata,idntystring);
          return(temp);
       }
       default: {

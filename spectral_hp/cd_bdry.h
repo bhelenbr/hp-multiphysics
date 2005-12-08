@@ -49,10 +49,10 @@ template<class BASE> class dirichlet_cd : public BASE {
             for(j=0;j<BASE::base.nel;++j) {
                sind = BASE::base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.ug.v(v0,0) = (*(x.hp_gbl->initfunc))(0,x.vrtx(v0));
+               x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
             }
             v0 = x.sd(sind).vrtx(1);
-            x.ug.v(v0,0) = (*(x.hp_gbl->initfunc))(0,x.vrtx(v0));
+            x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
             
             /*******************/   
             /* SET SIDE VALUES */
@@ -84,7 +84,7 @@ template<class BASE> class dirichlet_cd : public BASE {
                      pt(0) = x.crd(0)(0,k);
                      pt(1) = x.crd(1)(0,k);
                      for(n=0;n<x.NV;++n)
-                        x.res(n)(0,k) -= (*(x.hp_gbl->initfunc))(n,pt);
+                        x.res(n)(0,k) -= x.hp_gbl->ibc->f(n,pt);
                   }
                   for(n=0;n<x.NV;++n)
                      basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
@@ -171,7 +171,7 @@ template<class BASE> class char_cd : public neumann_cd<BASE> {
          if (vel > 0.0)
             return(vel*u);
 
-         return((*neumann_cd<BASE>::x.cd_gbl->initfunc)(0, pt)*vel);
+         return(neumann_cd<BASE>::x.hp_gbl->ibc->f(0, pt)*vel);
       }
       char_cd(tri_hp_cd &xin, side_bdry &bin) : neumann_cd<BASE>(xin,bin) {BASE::mytype = "char_cd";}
       char_cd* create(tri_hp_cd& xin, side_bdry &bin) const {return new char_cd(xin,bin);}

@@ -292,7 +292,7 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       } 
       else {
          /* USE TOBASIS TO INITALIZE SOLUTION */
-         tobasis(hp_gbl->initfunc);
+         tobasis(hp_gbl->ibc);
       }
    }
    

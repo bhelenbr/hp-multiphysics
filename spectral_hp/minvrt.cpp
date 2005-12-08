@@ -483,7 +483,7 @@ block::ctrl tri_hp::minvrt_test(int excpt) {
                   pt(1) = crd(1)(i,j);
                   cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                   for(n=0;n<NV;++n)
-                     res(n)(i,j) = RAD(i,j)*(*hp_gbl->initfunc)(n,pt)*cjcb(i,j);
+                     res(n)(i,j) = RAD(i,j)*hp_gbl->ibc->f(n,pt)*cjcb(i,j);
                }
             }
             for(n=0;n<NV;++n)

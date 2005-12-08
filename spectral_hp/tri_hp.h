@@ -26,6 +26,12 @@ class hp_side_bdry;
 #define RAD1D(I) 1
 #endif
 
+class init_bdry_cndtn {
+   public:
+      virtual FLT f(int n, TinyVector<FLT,mesh::ND> x) = 0;
+      virtual void input(input_map &blkdata, std::string idnty) = 0;
+};
+
 /** This class is just the data storage and nothing for multigrid */
 class tri_hp : public r_mesh  {
    public:
@@ -112,7 +118,8 @@ class tri_hp : public r_mesh  {
 #endif
          
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
-         FLT (*initfunc)(int n, TinyVector<FLT,ND> pt);
+         init_bdry_cndtn *ibc;
+         
       } *hp_gbl;
 
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -142,7 +149,7 @@ class tri_hp : public r_mesh  {
       virtual tri_hp* create() = 0;
       
       /* Initialization functions */
-      void tobasis(FLT (*func)(int var, TinyVector<FLT,ND> x), int tlvl = 0);
+      void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);
       void curvinit();
       
       /* Input / Output functions */
@@ -224,5 +231,7 @@ class tri_hp : public r_mesh  {
 #endif
 
 };
+
+
 
 #endif
