@@ -111,6 +111,8 @@ void hp_curved::copy_data(const hp_side_bdry &tgt) {
    hp_side_bdry::copy_data(tgt);
    const hp_curved &bin = dynamic_cast<const hp_curved&>(tgt);
    
+   if (!x.sm0) return;
+   
    for(int i=0;i<sim::nadapt; ++i)
       crvbd(i)(Range(0,base.nel-1),Range::all()) = bin.crvbd(i)(Range(0,base.nel-1),Range::all());
 }
@@ -146,15 +148,14 @@ void hp_curved::init(input_map& input) {
       
    return;
 }
-
 void hp_curved::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
    int j,m,n;
    
    hp_side_bdry::output(fout,typ,tlvl);
    
    switch(typ) {
-      case(text):
-         fout << "p0: " << x.p0;
+      case(tri_hp::text):
+         fout << "p0: " << x.p0 << std::endl;
          for(j=0;j<base.nel;++j) {
             for(m=0;m<x.sm0;++m) {
                for(n=0;n<mesh::ND;++n)
@@ -259,7 +260,7 @@ void hp_curved::curv_init(int tlvl) {
    return;
 }
 
-void hp_curved::findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi) {
+void hp_curved::findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
    int sind,v0,v1,iter;
    FLT dx,dy,ol,roundoff,dpsi;
    TinyVector<FLT,2> pt;
@@ -277,15 +278,15 @@ void hp_curved::findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi) {
    /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
    /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */ 
    x.crdtocht1d(sind);
-
+   
    iter = 0;
    roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
    do {
       basis::tri(x.log2p).ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
       dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
-      psi += dpsi;
+      psi -= dpsi;
       if (iter++ > 100) {
-         *sim::log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " loc: " << xp << std::endl;
+         *sim::log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " el: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
          break;
       }  
    } while (fabs(dpsi) > roundoff);

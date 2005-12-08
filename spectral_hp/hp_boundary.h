@@ -95,7 +95,7 @@ class hp_side_bdry {
       /* CURVATURE FUNCTIONS */
       virtual bool is_curved() {return(false);}
       virtual FLT& crds(int ind, int mode, int dir) {return(dummy=0);}
-      virtual FLT& crdsbd(int ind, int mode, int dir, int tlvl) {return(dummy=0);}
+      virtual FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(dummy=0);}
       virtual void curvinit(int tlvl) {}
       
       /* BOUNDARY CONDITION FUNCTIONS */
@@ -127,7 +127,7 @@ class hp_side_bdry {
       virtual void movesdata_bdry(int bel,hp_side_bdry *bin) {}
       
       /* SEARCH FUNCTIONS */
-      virtual void findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi) {
+      virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
          base.findbdrypt(xp,bel,psi);
          basis::tri(x.log2p).ptvalues1d(psi);
       }
@@ -169,7 +169,7 @@ class hp_curved : public hp_side_bdry {
       virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);      
       void curv_init(int tlvl = 0);
             
-      void findbdrypt(TinyVector<FLT,2> xp,int &bel,FLT &psi);      
+      void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);      
       block::ctrl tadvance(bool coarse, int excpt);
       
       void movesdata_bdry(int bel,hp_side_bdry *bin) {

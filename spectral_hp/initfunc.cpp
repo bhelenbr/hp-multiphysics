@@ -669,7 +669,7 @@ block* blocks::getnewblock(int idnum, input_map *blockdata) {
          mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
          (*temp).gstorage.src = &zero_src;
          (*temp).gstorage.initfunc = &xpower;
-         apow = 1.0;
+         apow = 3.0;
          return(temp);
       }
       default: {
