@@ -138,6 +138,7 @@ template<class BASE> class comm_bdry : public BASE {
          }
          return;
       }
+      int matches() {return(nmatch);}
       int& matchphase(int matchnum) {return(phase[matchnum]);}
 
       int local_cnnct(boundary *bin, int msg_tag) {

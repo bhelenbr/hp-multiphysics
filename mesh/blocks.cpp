@@ -218,7 +218,7 @@ void blocks::init(input_map input) {
    int excpt = 0;
    int state = block::stop;
    for (i=0;i<nblock;++i) {
-      blk[i] = getnewblock(bstart+i,&input);
+      blk[i] = getnewblock(bstart+i,input);
       blk[i]->init(input);
    }
    
@@ -755,7 +755,6 @@ void blocks::tadvance(int step) {
    sim::dirkstage = step % sim::dirksolves;
 
 #if (DIRK == 4)
-   step = step/3;
    /* STARTUP SEQUENCE */
    switch(step/3) {
       case(0): {
@@ -782,7 +781,6 @@ void blocks::tadvance(int step) {
          sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
       }
    }
-   
    sim::bd[0] = sim::dti*sim::adirk[(step%3)+1][(step%3)+1];
    if (sim::dti > 0.0) sim::time += sim::cdirk[step%3]/sim::dti;
 #endif

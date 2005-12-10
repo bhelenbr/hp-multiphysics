@@ -135,7 +135,7 @@ class blocks {
       
    protected:
       /** Allocates blocks, called by init to generate blocks from initialization file */
-      block* getnewblock(int idnum, input_map *blockdata);
+      block* getnewblock(int idnum, input_map& blockdata);
             
       /** Sets-up parallel communications, called by init */
       void findmatch();
