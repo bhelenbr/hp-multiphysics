@@ -35,7 +35,7 @@ else
 		K = ax*cvx +ay*cvy;
 		if (ksupg)
             tau = 2/(2*1*(P+1)^2);
-			K = K +tau*ax^2*dfx +ay^2*dfy +ax*ay*dxy +ay*ax*dyx;
+			K = K +tau*(ax^2*dfx +ay^2*dfy +ax*ay*dxy +ay*ax*dyx);
 		end
 	elseif (sys_flag == 1)
 	%%%%%%%%%%%%%

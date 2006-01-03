@@ -1,6 +1,6 @@
-Nel = 7;
+Nel = 5;
 
-dx = 1.0/2.0;
+dx = 0.1/2.0;
 dy = 1.0/2.0;
 
 disp(['p = ' num2str(P)]);
@@ -68,11 +68,21 @@ else
 		angle = 10.0*pi/180.0;
 		ax = cos(angle);
 		ay = sin(angle);
+        
+        ax = ax*dy;
+        ay = ay*dx;
+        
+        % DETERMINE TAU FOR SUPG UPWINDING
+        tau = inv(abs(ax) +abs(ay))/(P+1)^2;
 		
 		% STIFFNESS MATRICES
 		K = ax*cvx +ay*cvy ...
             +(abs(ax)+ax)/2*rl2d -(-abs(ax)+ax)/2*lr2d ...
             +(abs(ay)+ay)/2*tb2d -(-abs(ay)+ay)/2*bt2d;
+        
+        if (ksupg)  
+            K = K + ax*tau*ax*dfx +ay*tau*ay*dfy +ax*tau*ay*dxy +ay*tau*ax*dyx;
+        end
 		KL = -(abs(ax)+ax)/2*ll2d;
 		KR = (-abs(ax)+ax)/2*rr2d;
 		KU = (-abs(ay)+ay)/2*tt2d;
@@ -257,11 +267,24 @@ else
         Af = double(subs(Af));
 		absAf = double(subs(absAf));
         disp('finished in symbolic land');
+        
+        Ae = Ae*dy;
+        absAe = absAe*dy;
+        
+        Af = Af*dx;
+        absAf = absAf*dy;
+        
+        % DETERMINE TAU FOR SUPG UPWINDING
+        tau = inv(absAe +absAf)/(P+1)^2;
 		
 		% STIFFNESS MATRICES
 		K = blktimes(Ae,cvx) +blktimes(Af,cvy) ...
             +blktimes((absAe+Ae)/2,rl2d) -blktimes((-absAe+Ae)/2,lr2d) ...
             +blktimes((absAf+Af)/2,tb2d) -blktimes((-absAf+Af)/2,bt2d);
+        
+        if (ksupg)  
+            K = K + blktimes(Ae*tau*Ae,dfx) +blktimes(Af*tau*Af,dfy) +blktimes(Ae*tau*Af,dxy) +blktimes(Af*tau*Ae,dyx);
+        end
 		KL = -blktimes((absAe+Ae)/2,ll2d);
 		KR =  blktimes((-absAe+Ae)/2,rr2d);
 		KU =  blktimes((-absAf+Af)/2,tt2d);
@@ -270,6 +293,7 @@ else
 		KRR = zeros(size(KR));
 		KDD = zeros(size(KD));
 		KUU = zeros(size(KU));
+   
 	end
 end
 
@@ -279,8 +303,9 @@ if (sys_flag == 0)
         case 0
             % MASS MATRIX
 	        M = ms2d;
-			% ADD SUPG UPWINDING?
-			% M = M - 2.0/(P+1)^2*cv;
+            if (msupg)
+                M = M -ax*tau*cvx -ay*tau*cvy;
+            end
         case 1
 			% JACOBI
 			M = diag(diag(K));
@@ -438,6 +463,10 @@ else
         case 0
             % MASS MATRIX
 	        M = blktimes(eye(size(Ae)),ms2d);
+            if (msupg)
+                M = M -blktimes(Ae*tau,cvx) -blktimes(Af*tau*Af,cvy);
+            end
+
         case 1
 			% JACOBI
 			M = diag(diag(K));
@@ -593,10 +622,10 @@ for elx = 1:Nel
     end
 end
 if (omega > 0)
-	mtemp = blktimes(eye(Nel*Nel),0.5*(M+M'));
-	maxeig = eigs(kbig,mtemp,1);
-	% biglam = eig(kbig,-mbig);
-	% maxeig = max(abs(biglam))
+	%mtemp = blktimes(eye(Nel*Nel),0.5*(M+M'));
+	%maxeig = eigs(kbig,mtemp,1);
+	biglam = eig(kbig,-mbig);
+	maxeig = max(abs(biglam))
 	if (isinf(maxeig))
         biglam = sort(biglam);
         count = size(biglam,1);
@@ -625,12 +654,21 @@ vmaxeig(lvl) = maxeig;
 vrestrict{lvl} = blktimes(eye(nvar,nvar),restrict2d);
 
 % FOR DIFFUSION AT P=1, BLOCK JACOBI, WITH NO SWEEPING
-if (P == 1  && sys_flag == 1 && rlx_flag == 2 && sweep_flag == 0) 
+if (P == 1  && sys_flag == 1  && rlx_flag == 2 && (sweep_flag == 0 || sweep_flag == 3)) 
     omega = 2/3*omega
 end
 
 % RESCALE DIAGONAL TERM OF PRECONDITIONER
-MB{lvl,3,3} = MB{lvl,3,3}/abs(omega)*maxeig;
+if (sweep_flag < 3)
+    % FOR NON-LINE SOLVES
+    MB{lvl,3,3} = MB{lvl,3,3}/abs(omega)*maxeig;
+else
+    % FOR LINE SOLVES
+    for m = 1:5
+        MB{lvl,3,m} = MB{lvl,3,m}/abs(omega)*maxeig;
+    end
+end
+    
 
 for m=1:3
     for n=1:3
@@ -730,7 +768,6 @@ bsz = size(K,1);
 nvar = bsz/(P+1)^2;
 bszc = nvar*P^2;
 rbig = zeros(size(kbig,1)/4,size(kbig,2));
-rbig2 = zeros(size(kbig,1)/4,size(kbig,1)/4);
 
 % COARSEN TO CONTINUOUS SPACE
 % ASSUMES MODES ARE ORGANIZED IN STRIPS IN X (NOT CCW)
@@ -820,17 +857,17 @@ end
 
 
 % % TEST TO SEE IF I'VE GOT THIS RIGHT
-fine = (eye(size(kbig)) -inv(mbig)*kbig);
-[finevect,fineeig] = eig(fine);
-wholething = (eye(size(kbig)) -rbig'*lscov(kbigc,rbig*kbig))*fine;
-%wholething = (eye(size(kbig)) -rbig'*inv(kbigc)*rbig*kbig)*fine;
-eigs=eig(wholething);
-figure
-plot(real(fineeig),imag(fineeig),'x');
-title('amplification factor (direct)');
-axis equal
-figure
-plot(real(eigs),imag(eigs),'x')
-title('multigrid amplification factor (direct)');
-axis equal
-dfactordirect=max(abs(eigs(2:size(eigs,1))))
+% fine = (eye(size(kbig)) -inv(mbig)*kbig);
+% [finevect,fineeig] = eig(fine);
+% wholething = (eye(size(kbig)) -rbig'*lscov(kbigc,rbig*kbig))*fine;
+% %wholething = (eye(size(kbig)) -rbig'*inv(kbigc)*rbig*kbig)*fine;
+% eigs=eig(wholething);
+% figure
+% plot(real(fineeig),imag(fineeig),'x');
+% title('amplification factor (direct)');
+% axis equal
+% figure
+% plot(real(eigs),imag(eigs),'x')
+% title('multigrid amplification factor (direct)');
+% axis equal
+% dfactordirect=max(abs(eigs(2:size(eigs,1))))
