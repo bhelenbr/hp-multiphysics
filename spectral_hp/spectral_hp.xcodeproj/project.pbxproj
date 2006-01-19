@@ -14,7 +14,7 @@
 		6F0044B3091FD9CF00A6F21E /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE9091AF516002BAA09 /* rsdl.cpp */; };
 		6F0044E9091FE0CB00A6F21E /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADE091AF516002BAA09 /* length.cpp */; };
 		6F004510091FE27600A6F21E /* bdry_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00450F091FE27600A6F21E /* bdry_cd.h */; };
-		6F00469F092047C500A6F21E /* initfunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */; };
+		6F00469F092047C500A6F21E /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
 		6F3F39030977E75D006DA1BC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
 		6F3F39370977F1E4006DA1BC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACB091AF516002BAA09 /* bdry.cpp */; };
 		6F3F39540977F337006DA1BC /* bdry_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FEA199709770C4B001A5F7F /* bdry_ins.h */; };
@@ -131,7 +131,7 @@
 		6FB40AD8091AF516002BAA09 /* gtol.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = gtol.cpp; sourceTree = "<group>"; };
 		6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = hp_boundary.cpp; sourceTree = "<group>"; };
 		6FB40ADA091AF516002BAA09 /* hp_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = hp_boundary.h; sourceTree = "<group>"; };
-		6FB40ADB091AF516002BAA09 /* initfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initfunc.cpp; sourceTree = "<group>"; };
+		6FB40ADB091AF516002BAA09 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
 		6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = l2error.cpp; sourceTree = "<group>"; };
 		6FB40ADD091AF516002BAA09 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = ins/length.cpp; sourceTree = "<group>"; };
 		6FB40ADE091AF516002BAA09 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = cd/length.cpp; sourceTree = "<group>"; };
@@ -165,6 +165,7 @@
 		6FE792BA097F39D9002316DA /* cd_bdry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cd_bdry.h; path = cd/cd_bdry.h; sourceTree = "<group>"; };
 		6FE792BB097F39FE002316DA /* cd_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cd_bdry.cpp; path = cd/cd_bdry.cpp; sourceTree = "<group>"; };
 		6FE792BC097F3A09002316DA /* getnewcd_bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = getnewcd_bdry.cpp; path = cd/getnewcd_bdry.cpp; sourceTree = "<group>"; };
+		6FE792D8097F3B3D002316DA /* initfunc.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initfunc.cpp; sourceTree = "<group>"; };
 		6FEA195B09770892001A5F7F /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
 		6FEA199709770C4B001A5F7F /* bdry_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_ins.h; path = ins/bdry_ins.h; sourceTree = "<group>"; };
 		6FEA199B09770C96001A5F7F /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = ins/getnewbdry.cpp; sourceTree = "<group>"; };
@@ -216,7 +217,8 @@
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				6FB40AD6091AF516002BAA09 /* defines.h */,
-				6FB40ADB091AF516002BAA09 /* initfunc.cpp */,
+				6FE792D8097F3B3D002316DA /* initfunc.cpp */,
+				6FB40ADB091AF516002BAA09 /* getnewblock.cpp */,
 				6FB40AF0091AF516002BAA09 /* tri_hp.h */,
 				6FB40ACA091AF516002BAA09 /* allocate.cpp */,
 				6FB40AD8091AF516002BAA09 /* gtol.cpp */,
@@ -403,7 +405,7 @@
 				6F004497091FD80400A6F21E /* tstep.cpp in Sources */,
 				6F0044B3091FD9CF00A6F21E /* rsdl.cpp in Sources */,
 				6F0044E9091FE0CB00A6F21E /* length.cpp in Sources */,
-				6F00469F092047C500A6F21E /* initfunc.cpp in Sources */,
+				6F00469F092047C500A6F21E /* getnewblock.cpp in Sources */,
 				6F5BDEAD092053BF0025AC72 /* getnewbdry.cpp in Sources */,
 				6FFA307A0976AEEC008E427F /* tstep.cpp in Sources */,
 				6FFA308C0976B248008E427F /* rsdl.cpp in Sources */,

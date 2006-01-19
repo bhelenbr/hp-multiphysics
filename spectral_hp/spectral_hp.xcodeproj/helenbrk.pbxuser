@@ -1000,7 +1000,7 @@
 	};
 	6F07A0CD097BDB1C005F408B /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */;
+		fRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */;
 		name = "initfunc.cpp: 871";
 		rLen = 0;
 		rLoc = 20262;
@@ -1020,7 +1020,7 @@
 	};
 	6F07A0D4097BDBE8005F408B /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */;
+		fRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */;
 		name = "initfunc.cpp: 27";
 		rLen = 0;
 		rLoc = 585;
@@ -1107,7 +1107,7 @@
 	};
 	6F63E2CF097857B900768591 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */;
+		fRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */;
 		name = "initfunc.cpp: 9";
 		rLen = 0;
 		rLoc = 280;
@@ -1203,9 +1203,9 @@
 	};
 	6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {880, 2016}}";
-			sepNavSelRange = "{40, 0}";
-			sepNavVisRect = "{{0, 0}, {880, 293}}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 2016}}";
+			sepNavSelRange = "{33, 0}";
+			sepNavVisRect = "{{0, 0}, {878, 699}}";
 		};
 	};
 	6FB40AD4091AF516002BAA09 /* copy.cpp */ = {
@@ -1217,9 +1217,9 @@
 	};
 	6FB40AD6091AF516002BAA09 /* defines.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {984, 3822}}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 3822}}";
 			sepNavSelRange = "{0, 0}";
-			sepNavVisRect = "{{0, 0}, {984, 944}}";
+			sepNavVisRect = "{{0, 0}, {878, 699}}";
 		};
 	};
 	6FB40AD7091AF516002BAA09 /* drag.cpp */ = {
@@ -1247,15 +1247,15 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {1034, 2184}}";
 			sepNavSelRange = "{4031, 33}";
-			sepNavVisRect = "{{0, 1176}, {844, 682}}";
+			sepNavVisRect = "{{0, 0}, {878, 699}}";
 			sepNavWindowFrame = "{{105, 89}, {617, 684}}";
 		};
 	};
-	6FB40ADB091AF516002BAA09 /* initfunc.cpp */ = {
+	6FB40ADB091AF516002BAA09 /* getnewblock.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {968, 13076}}";
+			sepNavIntBoundsRect = "{{0, 0}, {878, 13076}}";
 			sepNavSelRange = "{585, 0}";
-			sepNavVisRect = "{{0, 168}, {968, 699}}";
+			sepNavVisRect = "{{0, 12377}, {878, 699}}";
 		};
 	};
 	6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {
@@ -1447,7 +1447,7 @@
 	};
 	6FE7929C097F3320002316DA /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = 6FB40ADB091AF516002BAA09 /* initfunc.cpp */;
+		fRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */;
 		name = "initfunc.cpp: 27";
 		rLen = 0;
 		rLoc = 585;
@@ -1676,6 +1676,13 @@
 		rType = 0;
 		vrLen = 562;
 		vrLoc = 0;
+	};
+	6FE792D8097F3B3D002316DA /* initfunc.cpp */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {968, 13076}}";
+			sepNavSelRange = "{585, 0}";
+			sepNavVisRect = "{{0, 168}, {968, 699}}";
+		};
 	};
 	6FEA195B09770892001A5F7F /* allocate.cpp */ = {
 		uiCtxt = {
