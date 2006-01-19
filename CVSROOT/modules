@@ -26,3 +26,5 @@
 # spread out over the entire source repository.
 
 multigrid	multigrid
+
+tri_hp	tri_hp
