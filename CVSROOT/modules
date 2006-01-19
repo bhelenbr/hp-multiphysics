@@ -30,4 +30,3 @@ spectral_hp spectral_hp
 mesh mesh
 utilities utilities
 quadtree quadtree
-tri_hp tri_hp
