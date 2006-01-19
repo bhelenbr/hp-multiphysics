@@ -10,6 +10,8 @@
 #include "mesh.h"
 #include "boundary.h"
 
+#define DEBUG_ADAPT
+
 int nlst; 
 
 block::ctrl mesh::adapt(int excpt, FLT tolsize) {
@@ -109,6 +111,15 @@ void mesh::setup_for_adapt() {
       
 void mesh::cleanup_after_adapt() {
    int i,j,sind,v0;
+   
+#ifdef DEBUG_ADAPT
+   std::string adapt_file;
+   std::ostringstream nstr;
+   nstr << sim::tstep << std::flush;
+   adapt_file = idprefix +"_adapt" +nstr.str();
+   nstr.str("");
+   output(adapt_file.c_str(),debug_adapt);
+#endif
    
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {

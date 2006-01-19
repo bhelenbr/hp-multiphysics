@@ -230,9 +230,9 @@ void mesh::yaber(FLT tolsize) {
 #ifdef DEBUG_ADAPT
       std::ostringstream nstr;
       nstr << adapt_count++ << std::flush;
-      adapt_file = "adapt" +nstr.str();
+      adapt_file = idprefix +"_adapt" +nstr.str();
       nstr.str("");
-      output(adapt_file,grid);
+      output(adapt_file.c_str(),debug_adapt);
 #endif
    }
 
@@ -281,7 +281,7 @@ void mesh::checkintegrity() {
             *sim::log << "failed side check tind" << i << "sind" << sind << std::endl;
             for(i=0;i<nside;++i)
                sd(i).info += 2;
-            output("error"); 
+            output("error",tecplot); 
             exit(1);
          }
          
@@ -313,8 +313,9 @@ void mesh::bdry_yaber(FLT tolsize) {
    int el, nel, pel, next, sindprev, sindnext, saffect;
 
    /* COARSEN FIRST BOUNDARIES */
-   count = 0;
    for(int bnum=0;bnum<nsbd;++bnum) {
+      count = 0;
+
       if (!sbdry(bnum)->is_frst()) {
          sbdry(bnum)->master_slave_prepare();
          continue;
@@ -399,13 +400,17 @@ void mesh::bdry_yaber(FLT tolsize) {
          if (fscr1(saffect) > tolsize) putinlst(saffect);
          ++count;
 #ifdef DEBUG_ADAPT
-         number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,grid);
+         std::ostringstream nstr;
+         nstr << adapt_count++ << std::flush;
+         adapt_file = idprefix +"_adapt" +nstr.str();
+         nstr.str("");
+         output(adapt_file.c_str(),debug_adapt);
 #endif            
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
+      *sim::log << "#Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
    }
-   *sim::log << "#Boundary coarsening finished, " << count << " sides coarsened" << std::endl;
+   
    return;
 }
 
@@ -429,10 +434,14 @@ void mesh::bdry_yaber1() {
 #endif
          collapse(sind,endpt);
 #ifdef DEBUG_ADAPT
-         number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,grid);
+         std::ostringstream nstr;
+         nstr << adapt_count++ << std::flush;
+         adapt_file = idprefix +"_adapt" +nstr.str();
+         nstr.str("");
+         output(adapt_file.c_str(),debug_adapt);
 #endif
       }
+      *sim::log << "#Slave Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;
    }
    return;
 }

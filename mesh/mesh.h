@@ -114,7 +114,7 @@ class mesh {
       virtual ~mesh();
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength};
+      enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt};
       void input(const std::string &filename, filetype ftype = grid,  FLT grwfac = 1, const std::string &bdrymap = std::string());
       int output(const std::string &filename, filetype ftype = grid) const;
       void bdry_output(const std::string &filename) const;

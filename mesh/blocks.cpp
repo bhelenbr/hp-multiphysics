@@ -27,14 +27,15 @@
 blocks sim::blks;
 std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
+int sim::tstep, sim::substep;
 sharedmem sim::scratch;
 
 #ifdef BACKDIFF
 FLT sim::bd[BACKDIFF+1];
+int sim::stepsolves = 1;
 #endif
 #ifdef DIRK
 FLT sim::bd[1];
-int sim::dirkstage;
 #if (DIRK == 3)
 /* THIS IS THE STANDARD FORM */
 // FLT sim::adirk[DIRK][DIRK] = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
@@ -43,6 +44,7 @@ int sim::dirkstage;
 /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
 FLT sim::adirk[DIRK][DIRK] = { {1./GRK3,0.0,0.0}, {C2RK3-GRK3,1./GRK3,0.0}, {1.-B2RK3-C2RK3,B2RK3,1./GRK3} };
 FLT sim::cdirk[DIRK] = {GRK3,C2RK3-GRK3,1.0-C2RK3};
+int sim::stepsolves = 3;
 #else
 /* THIS IS THE STANDARD FORM */
 // FLT sim::adirk[DIRK][DIRK] = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}} 
@@ -207,11 +209,6 @@ void blocks::init(input_map input) {
    input.getwdefault("restart_interval",rstrt_intrvl,1);
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    
-#ifdef DIRK
-   ntstep *= sim::dirksolves;
-   out_intrvl *= sim::dirksolves;
-#endif
-   
    blk = new block *[nblock];
 
    int lvl = 0;
@@ -226,8 +223,8 @@ void blocks::init(input_map input) {
       blk[i]->reload_scratch_pointers();
    
    findmatch();
-   matchboundaries();  // ONLY DOES FIRST LEVEL
-   output("matched");
+   matchboundaries(0);
+   output("matched0");
 
    for(lvl=1;lvl<ngrid;++lvl) {
       excpt = 0;
@@ -238,6 +235,10 @@ void blocks::init(input_map input) {
          }
          excpt += state;
       } while (state != block::stop);
+      matchboundaries(lvl);
+      nstr << lvl << flush;
+      mystring = "matched" +nstr.str();
+      output(mystring,block::display,lvl);
    }
 
    return;
@@ -548,30 +549,28 @@ void blocks::findmatch() {
             
             
    /* MATCH BOUNDARIES */
-void blocks::matchboundaries() {
-   int i,lvl,excpt;
+void blocks::matchboundaries(int lvl) {
+   int i,excpt;
    int state;
    
-   for (lvl=0;lvl<1;++lvl) {  // TEMPORARY
-      excpt = 0;
-      do {
-         state = block::stop;
-         for(i=0;i<nblock;++i) {
-            state &= blk[i]->matchboundaries(lvl,excpt);
-         }
-         excpt += state;
-      } while (state != block::stop);
-   }
+   excpt = 0;
+   do {
+      state = block::stop;
+      for(i=0;i<nblock;++i) {
+         state &= blk[i]->matchboundaries(lvl,excpt);
+      }
+      excpt += state;
+   } while (state != block::stop);
 }
 
 
-void blocks::output(const std::string &filename, block::output_purpose why) {
+void blocks::output(const std::string &filename, block::output_purpose why, int lvl) {
    int i;   
    std::string fnmcat, fnmcat1;
    ostringstream nstr;
    
    for (i=0;i<nblock;++i) {
-      blk[i]->output(filename,why);
+      blk[i]->output(filename,why,lvl);
    }
    
    return;
@@ -675,40 +674,39 @@ void blocks::cycle(int vw, int lvl) {
 }
 
 void blocks::go() {
-   int i,step;
+   int i;
    std::string outname;
    std::ostringstream nstr;
    clock_t cpu_time;
 
    clock();
-   for(step=nstart;step<ntstep;++step) {
-      tadvance(step);
-      matchboundaries();
+   for(sim::tstep=nstart;sim::tstep<ntstep;++sim::tstep) {
+      for(sim::substep=0;sim::substep<sim::stepsolves;++sim::substep) {
+         tadvance();
 
-      for(i=0;i<ncycle;++i) {
-         cycle(vw);
-         *sim::log << i << ' ';
-         maxres();
-         *sim::log << '\n';
+         for(i=0;i<ncycle;++i) {
+            cycle(vw);
+            *sim::log << i << ' ';
+            maxres();
+            *sim::log << '\n';
+         }
       }
       
       /* OUTPUT DISPLAY FILES */
-      if (!((step+1)%sim::dirksolves)) {
-         if (!((step+1)%out_intrvl)) {
-            nstr.str("");
-            nstr << step/sim::dirksolves << std::flush;
-            outname = "data" +nstr.str();
-            output(outname);
-         }
-      
-         /* ADAPT MESH */
-         restructure();
-      
-         /* OUTPUT RESTART FILES */
-         if (!((step+1)%(rstrt_intrvl*out_intrvl))) {
-            outname = "rstrt" +nstr.str();
-            output(outname,block::restart);         
-         }
+      if (!((sim::tstep+1)%out_intrvl)) {
+         nstr.str("");
+         nstr << sim::tstep << std::flush;
+         outname = "data" +nstr.str();
+         output(outname);
+      }
+   
+      /* ADAPT MESH */
+      restructure();
+   
+      /* OUTPUT RESTART FILES */
+      if (!((sim::tstep+1)%(rstrt_intrvl*out_intrvl))) {
+         outname = "rstrt" +nstr.str();
+         output(outname,block::restart);         
       }
    }
    cpu_time = clock();
@@ -717,7 +715,7 @@ void blocks::go() {
    return;
 }
 
-void blocks::tadvance(int step) {
+void blocks::tadvance() {
    int i,lvl,excpt;
    int state;
    
@@ -728,7 +726,7 @@ void blocks::tadvance(int step) {
    for(i=0;i<BACKDIFF+1;++i)
       sim::bd[i] = 0.0;
    
-   switch(step) {
+   switch(sim::tstep) {
       case(0):
          sim::bd[0] =  sim::dti;
          sim::bd[1] = -sim::dti;
@@ -752,11 +750,9 @@ void blocks::tadvance(int step) {
 #endif
 
 #ifdef DIRK
-   sim::dirkstage = step % sim::dirksolves;
-
 #if (DIRK == 4)
    /* STARTUP SEQUENCE */
-   switch(step/3) {
+   switch(sim::substep) {
       case(0): {
          sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
@@ -781,8 +777,8 @@ void blocks::tadvance(int step) {
          sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
       }
    }
-   sim::bd[0] = sim::dti*sim::adirk[(step%3)+1][(step%3)+1];
-   if (sim::dti > 0.0) sim::time += sim::cdirk[step%3]/sim::dti;
+   sim::bd[0] = sim::dti*sim::adirk[sim::substep+1][sim::substep+1];
+   if (sim::dti > 0.0) sim::time += sim::cdirk[sim::substep]/sim::dti;
 #endif
 #endif
    
@@ -796,7 +792,7 @@ void blocks::tadvance(int step) {
       } while (state != block::stop);
    }
    
-   matchboundaries();
+   matchboundaries(0);
 
    return;
 }
@@ -805,7 +801,7 @@ void blocks::restructure() {
    int i,lvl,excpt;
    int state;
    
-   matchboundaries();
+   matchboundaries(0);
    
    excpt = 0;
    do {
@@ -859,7 +855,7 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                   isendbuf = 0;
                   for(j=0;j<ncalls;++j) {
                      for(i=0;i<count;++i) {
-                        isendbuf(i) += static_cast<int *>(sndbufs(j))[i];
+                        isendbuf(i) += static_cast<int *>(sndbufs(j))[i];  /* NOT SURE ABOUT THIS TEMPORARY !!!! */
                      }
                   }
 #ifdef MPISRC
@@ -868,7 +864,7 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                   for(i=1;i<ncalls;++i) {
                      ircvbuf = static_cast<int *>(rcvbufs(i));
                      for(j=0;j<count;++j)
-                        ircvbuf[j] =  static_cast<int *>(rcvbufs(0));
+                        ircvbuf[j] =  static_cast<int *>(rcvbufs(0))[j]; /* NOT SURE ABOUT THIS TEMPORARY !!!! */
                   }
 #else
                   for(i=0;i<ncalls;++i) {
@@ -902,7 +898,7 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                   for(i=1;i<ncalls;++i) {
                      frcvbuf = static_cast<FLT *>(rcvbufs(i));
                      for(j=0;j<count;++j)
-                        frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0));
+                        frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0))[j];
                   }
 #else
                   for(i=0;i<ncalls;++i) {

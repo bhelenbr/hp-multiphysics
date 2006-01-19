@@ -41,10 +41,10 @@ template<class GRD> class mgrid : public block {
          fapp = idprefix +"_" +filename;
          grd[0].input(fapp);
       }
-      void output(const std::string &filename, block::output_purpose why) {
+      void output(const std::string &filename, block::output_purpose why, int level = 0) {
          std::string fapp;
          fapp = idprefix +"_" +filename;
-         grd[0].output(fapp,why);
+         grd[level].output(fapp,why);
       }
       block::ctrl reconnect(int lvl, int excpt);
       block::ctrl matchboundaries(int lvl, int excpt);
@@ -86,7 +86,7 @@ template<class GRD> class mgrid : public block {
          return(grd[lvl].update(excpt));
       }
       block::ctrl mg_getfres(int lvl, int lvlm, int excpt) {
-         return(grd[lvl].mg_getfres(excpt,fv_to_ct(lvlm),fv_to_ct(lvlm),&grd[lvlm]));
+         return(grd[lvl].mg_getfres(excpt,fv_to_ct(lvlm),cv_to_ft(lvlm),&grd[lvlm]));
       }
       block::ctrl mg_getcchng(int lvl, int lvlp, int excpt) {
          return(grd[lvl].mg_getcchng(excpt,fv_to_ct(lvl), cv_to_ft(lvl), &grd[lvlp]));

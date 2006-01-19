@@ -266,6 +266,56 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
          for(i=0;i<nvrtx;++i)
             out << vlngth(i) << endl;
       }
+      
+      case(debug_adapt):
+         /* CREATE EASYMESH OUTPUT FILES */
+         fnmapp = filename +".n";
+         out.open(fnmapp.c_str());
+         if (!out) {
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         
+         out << nvrtx << endl;
+         for(i=0;i<nvrtx;++i) {
+            out << i << ": ";
+            for(n=0;n<ND;++n)
+               out << vrtx(i)(n) << ' ';
+            out << (td(i).info&VDLTE != 0 ? -1 : 0) +(td(i).info&VTOUC != 0 ? 1 : 0) << endl;
+         }            
+         out.close();
+
+         /* SIDE FILE */      
+         fnmapp = filename +".s";
+         out.open(fnmapp.c_str());
+         if (!out) {
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         out << nside << endl;   
+         for(i=0;i<nside;++i) {
+            out << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << ' ';
+            out << sd(i).tri(0) << ' ' << sd(i).tri(1) << ' ' << (td(i).info&SDLTE ? -1 : (td(i).info&STOUC ? 2 : 0)) << endl;
+         }
+         out.close();
+   
+         fnmapp = filename +".e";
+         out.open(fnmapp.c_str());
+         if (!out) {
+            *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         out << ntri << endl;
+         for(i=0;i<ntri;++i) {
+            out << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2);
+            out << ' ' << td(i).tri(0) << ' ' << td(i).tri(1) << ' ' << td(i).tri(2);
+            out << ' ' << td(i).side(0) << ' ' << td(i).side(1) << ' ' << td(i).side(2);
+            out << " 0.0 0.0 " << (td(i).info&TDLTE != 0 ? -1 : 0) +(td(i).info&TTOUC != 0 ? 1 : 0) << endl;
+         }   
+         out.close();
+
+         break;
+
 
       default:
          *sim::log << "That filetype is not supported yet" << endl;

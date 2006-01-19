@@ -8,7 +8,7 @@ class btype {
       enum ids {plain=1};
 };
 
-block* blocks::getnewblock(int idnum, input_map blockdata) {
+block* blocks::getnewblock(int idnum, input_map& blockdata) {
    std::string keyword,val;
    std::istringstream data;
    std::map<std::string,std::string>::const_iterator mi;

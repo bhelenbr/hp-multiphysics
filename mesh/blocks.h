@@ -113,10 +113,10 @@ class blocks {
       void init(const std::string &infile, const std::string &outfile = std::string());
       
       /** Makes sure vertex positions on boundaries coinside */
-      void matchboundaries();
+      void matchboundaries(int lvl);
       
       /** Outputs solution in various filetypes */
-      void output(const std::string &filename, block::output_purpose = block::display);
+      void output(const std::string &filename, block::output_purpose = block::display, int level = 0);
       
       /** Inputs solution */
       void input(std::string &filename) {}
@@ -153,7 +153,7 @@ class blocks {
       void cycle(int vw, int lvl = 0);
       
       /** Shift to next implicit time step */
-      void tadvance(int step); 
+      void tadvance(); 
             
       /** Print errors */
       inline void maxres() {
@@ -172,7 +172,8 @@ namespace sim {
    extern blocks blks; /**< Contains all blocks for this processor */
    extern FLT dti; /**< Inverse time step */
    extern FLT time; /**< Simulation time */
-   extern FLT tstep; /**< Simulation time step */
+   extern int tstep; /**< Simulation time step */
+   extern int substep; /**< For schemes requiring multiple solves per step */
    extern FLT g;  /**< gravity */
    extern std::ostream *log; /**< log file stream */
    extern sharedmem scratch; /**< Shared work memory for all blocks */
@@ -186,6 +187,7 @@ namespace sim {
    extern FLT bd[BACKDIFF+1];  /**< backwards difference constants */
    const int nhist = BACKDIFF; /**< number of backwards difference steps */
    const int nadapt = BACKDIFF; /**< number of backwards difference steps that require adaptation */
+   const int stepsolves = 1;
    //@}
 #endif
 #ifdef DIRK
@@ -220,9 +222,8 @@ namespace sim {
    const FLT B3RK4 =( 1./3.-2*GRK4+2*GRK4*GRK4)/(C3RK4*(C3RK4-2*GRK4));
    const int nadapt = 1; /**< number of backwards difference steps that require adaptation */
    const int nhist = 4; /**< number of backwards difference steps to be stored during a time step */
-   const int dirksolves = 3; /**< Number of DIRK implicit solutions required */
+   const int stepsolves = 3; /**< Number of DIRK implicit solutions required */
    const bool esdirk = true; /**< Flag to be set when using an explicit 1'st stage */
-   extern int dirkstage; /**< Counter that tells which stage of DIRK is in process */
    //@}
 #endif
 

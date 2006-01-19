@@ -239,9 +239,9 @@ INSRT:
 #ifdef DEBUG_ADAPT
       std::ostringstream nstr;
       nstr << adapt_count++ << std::flush;
-      adapt_file = "adapt" +nstr.str();
+      adapt_file = idprefix +"_adapt" +nstr.str();
       nstr.str("");
-      output(adapt_file,grid);
+      output(adapt_file.c_str(),debug_adapt);
 #endif
       
    }
@@ -256,8 +256,9 @@ void mesh::bdry_rebay(FLT tolsize) {
    FLT psi;
    
    /* REFINE BOUNDARY SIDES */
-   count = 0;
    for(int bnum=0;bnum<nsbd;++bnum) {
+      count = 0;
+
       if (!sbdry(bnum)->is_frst()) {
          sbdry(bnum)->master_slave_prepare();
          continue;
@@ -311,13 +312,17 @@ void mesh::bdry_rebay(FLT tolsize) {
          fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
          if (fscr1(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
-         number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,grid);
+         std::ostringstream nstr;
+         nstr << adapt_count++ << std::flush;
+         adapt_file = idprefix +"_adapt" +nstr.str();
+         nstr.str("");
+         output(adapt_file.c_str(),debug_adapt);
 #endif
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
+      *sim::log << "#Boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << count << " sides added" << std::endl;
+
    }
-   *sim::log << "#Boundary refinement finished, " << count << " sides added" << std::endl;
    
    return;
 }
@@ -351,10 +356,15 @@ void mesh::bdry_rebay1() {
          ++nvrtx;
          
 #ifdef DEBUG_ADAPT
-         number_str(adapt_file,"adapt",adapt_count++,5);
-         output(adapt_file,grid);
+         std::ostringstream nstr;
+         nstr << adapt_count++ << std::flush;
+         adapt_file = idprefix +"_adapt" +nstr.str();
+         nstr.str("");
+         output(adapt_file.c_str(),debug_adapt);
 #endif
       }
+      *sim::log << "#Slave boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;
+
    }
    
    return;

@@ -50,9 +50,10 @@ template<class BASE> class comm_bdry : public BASE {
    public:
       comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = 0;}
       comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), grouping(inbdry.grouping), maxphase(inbdry.maxphase), buffsize(0), nmatch(0) {         
-         for(int i=0;i<inbdry.nmatch;++i) {
+         for(int i=0;i<maxmatch;++i) {
+            /* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
             mtype[i] = inbdry.mtype[i];
-            local_match[i] = 0;  /* This must point to address of new matching side */
+            local_match[i] = local_match[i];
             tags[i] = inbdry.tags[i];
             phase[i] = inbdry.phase[i];
 #ifdef MPISRC
@@ -219,6 +220,9 @@ template<class BASE> class comm_bdry : public BASE {
       void comm_transmit(int phi) {
          int i,m;
          
+#ifdef MPDEBUG
+         *(sim::log) << "sending message: " << BASE::idnum << " " << nmatch << " first:" <<  is_frst()  << ' ' << phase[0] <<  std::endl;
+#endif
          switch(msgtype) {
             case(boundary::flt_msg):
                /* LOCAL PASSES */
@@ -722,7 +726,7 @@ class circle : public curved_analytic {
       circle(int inid, mesh &xin) : curved_analytic(inid,xin), radius(0.5) {center[0] = 0.0; center[1] = 0.0; mytype="circle";}
       circle(const circle &inbdry, mesh &xin) : curved_analytic(inbdry,xin), radius(inbdry.radius) {center[0] = inbdry.center[0]; center[1] = inbdry.center[1];}
  
-      circle* create(mesh& xin) const {return(new circle(idnum,xin));}
+      circle* create(mesh& xin) const {return(new circle(*this,xin));}
 
       void output(std::ostream& fout) {
          curved_analytic::output(fout);
@@ -773,7 +777,7 @@ class naca : public curved_analytic {
          for(int i=0;i<5;++i) 
             coeff[i] = inbdry.coeff[i];
       }
-      naca* create(mesh& xin) const {return(new naca(idnum,xin));}
+      naca* create(mesh& xin) const {return(new naca(*this,xin));}
 
       void output(std::ostream& fout) {
          curved_analytic::output(fout);
@@ -835,7 +839,7 @@ class gaussian : public curved_analytic {
          mytype="gaussian";
       }
       gaussian(const gaussian &inbdry, mesh &xin) : curved_analytic(inbdry,xin), width(inbdry.width), amp(inbdry.amp), intercept(inbdry.intercept), normal(inbdry.normal) {}
-      gaussian* create(mesh& xin) const {return(new gaussian(idnum,xin));}
+      gaussian* create(mesh& xin) const {return(new gaussian(*this,xin));}
 
       void output(std::ostream& fout) {
          curved_analytic::output(fout);

@@ -158,10 +158,10 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
    
    treeinit();
-
+   
    for(i=0;i<nside;++i)
       i2wk_lst1(i) = i+1;
-      
+         
    triangulate(nside);
 
    /****************************************************/         

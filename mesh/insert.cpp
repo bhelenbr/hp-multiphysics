@@ -33,6 +33,7 @@ int mesh::insert(const TinyVector<FLT,ND> &x) {
    }    
    if (nvrtx >= maxvst) {
       *sim::log << "need to use larger growth factor: too many vertices" << std::endl;
+      output("error");
       exit(1);
    }
    err = insert(nvrtx,tind);
@@ -163,6 +164,7 @@ int mesh::insert(int vnum, int tnum) {
    
    if (ntri > maxvst || nside > maxvst) {
       *sim::log << "need to use bigger growth factor: too many sides/tris" << nside << ntri << std::endl;
+      output("error");
       exit(1);
    }
    
@@ -308,6 +310,11 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    /* NEED TO REORDER WHEN FINISHED */
    i = getbdrynum(sd(sind).tri(1));
    sd(nside).tri(1) = trinumatbdry(i,sbdry(i)->nel);
+   if (sbdry(i)->nel >= sbdry(i)->maxel) {
+      output("error");
+      *sim::log << "need to use bigger growth factor (too many boundary sides)" << std::endl;
+      exit(1);
+   }
    sbdry(i)->el(sbdry(i)->nel++) = nside;
    ++nside;
    
@@ -325,6 +332,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
    
    if (ntri > maxvst || nside > maxvst) {
       *sim::log << "need to use bigger growth factor: too many sides/tris:" << nside << ntri << std::endl;
+      output("error");
       exit(1);
    }
    
