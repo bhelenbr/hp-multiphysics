@@ -66,13 +66,14 @@ block::ctrl tri_hp::mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Arr
       tind = cv_to_ft(i).tri;
 
       ug.v(i,Range::all()) = 0.0;
-         
+
       for(j=0;j<3;++j) {
          ug.v(i,Range::all()) += cv_to_ft(i).wt(j)*fmesh->ug.v(fmesh->td(tind).vrtx(j),Range::all());
       }
 
       vug_frst(i,Range::all()) = ug.v(i,Range::all());
    }
+
 
    return(block::stop);
 }

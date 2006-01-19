@@ -161,34 +161,38 @@ block::ctrl tri_hp::minvrt(int excpt) {
             } 
 #endif
          }
-         
-         /* SOLVE FOR LOWEST ORDER MODE */
-#ifndef MATRIXPRECONDITIONER
-         hp_gbl->res.s(Range(0,nside-1),0,Range::all()) *= hp_gbl->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(0);
-#else
-         for(sind = 0; sind < nside; ++sind) {
-            for(n=0;n<NV;++n) {
-               temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,0,0);
-               for(m=1;m<NV;++m) {
-                  temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,0,m);
-               }
-            }
-            hp_gbl->res.s(sind,0,Range::all()) = temp(Range::all());
-         }
-#endif
-         mode = 0;
          return(block::advance);
       }
    }
    
    /* INTERNALLY RESET TO ZERO FOR EASIER THINKING */
-   excpt -= 2;
+   excpt -= 3;
    
-   /* THIS PART MUST BE REPEATED FOR EACH MODE EXCEPT FOR PHASE 2 OF LAST */
-   if (excpt < 2*(basis::tri(log2p).sm-1)+1) {
-      excpt = excpt%2;
+   /* THIS PART MUST BE REPEATED FOR EACH MODE */
+   if (excpt < 3*basis::tri(log2p).sm) {
+      mode = excpt/3;
+      excpt = excpt%3;
       switch(excpt) {  
          case(0): {
+            /* SOLVE FOR SIDE MODE */
+#ifndef MATRIXPRECONDITIONER
+            hp_gbl->res.s(Range(0,nside-1),mode,Range::all()) *= hp_gbl->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
+#else
+            for(sind = 0; sind < nside; ++sind) {
+               for(n=0;n<NV;++n) {
+                  temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,mode,0);
+                  for(m=1;m<NV;++m) {
+                     temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,mode,m);
+                  }
+               }
+               hp_gbl->res.s(sind,mode,Range::all()) = temp(Range::all());
+            }
+#endif
+            mp_phase = -1;
+            return(block::advance);
+         }
+      
+         case(1): {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
@@ -202,11 +206,13 @@ block::ctrl tri_hp::minvrt(int excpt) {
             }
          }
          
-         case(1): {
+         case(2): {
          
             /* APPLY DIRCHLET B.C.S TO MODE */
             for(i=0;i<nsbd;++i)
                hp_sbdry(i)->sdirichlet(mode);
+               
+            if (mode == basis::tri(log2p).sm-1) return(block::advance);
 
             /* REMOVE MODE FROM HIGHER MODES */
             for(tind=0;tind<ntri;++tind) {
@@ -260,31 +266,15 @@ block::ctrl tri_hp::minvrt(int excpt) {
                }
 #endif
             }
-            
-            /* SOLVE FOR NEXT MODE */
-#ifndef MATRIX_PRECONDITIONER
-            for(sind = 0;sind < nside;++sind)
-               for (n=0;n<NV;++n)
-                  hp_gbl->res.s(sind,mode+1,n) *= hp_gbl->sprcn(sind,n)*basis::tri(log2p).sdiag(mode+1);
-#else
-            for(sind = 0; sind < nside; ++sind) {
-               for(n=0;n<NV;++n) {
-                  temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,mode+1,0);
-                  for(m=1;m<NV;++m) {
-                     temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,mode+1,m);
-                  }
-               }
-               hp_gbl->res.s(sind,mode+1,Range::all()) = temp(Range::all());
-            }
-#endif
-            ++mode;
             return(block::advance);
          }
       }
    }
    
+   excpt -= 3*basis::tri(log2p).sm;
+   
    /* IF FALL THROUGH TO HERE THEN MUST BE TIME TO SOLVE FOR INTERIOR MODES */
-   if (excpt == 2*(basis::tri(log2p).sm-1)+1) {
+   if (excpt == 0  && basis::tri(log2p).im > 0) {
       /* APPLY DIRCHLET B.C.S TO MODE */
       for(i=0;i<nsbd;++i)
          hp_sbdry(i)->sdirichlet(mode);
@@ -397,8 +387,12 @@ block::ctrl tri_hp::setup_preconditioner(int excpt) {
                return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
          }
       }
-      
       case(2): {
+         mp_phase = -1;
+         return(block::advance);
+      }
+      
+      case(3): {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
@@ -412,7 +406,7 @@ block::ctrl tri_hp::setup_preconditioner(int excpt) {
          }
       }
       
-      case(3): 
+      case(4): 
 #ifndef MATRIX_PRECONDITIONER
          /* PREINVERT PRECONDITIONER FOR VERTICES */
          hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()));

@@ -11,17 +11,65 @@
 #include "hp_boundary.h"
 
 /* DIRK SCHEMES */
-block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {
+block::ctrl tri_hp::tadvance(bool coarse,int excpt,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {
    int i,j,n,s,tind;
+   static int last_r_mesh;
    block::ctrl state;
    
    /* DO STUFF FOR DEFORMABLE MESH FIRST */
-   if (log2p == log2pmax && sim::dirkstage == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
-      state = r_mesh::tadvance(coarse,execpoint,fv_to_ct,cv_to_ft,fmesh);
-      if (state != block::stop) return(state);
+   if (excpt == 0) last_r_mesh = 1;
+   
+   if (excpt < last_r_mesh) {
+      if (log2p == log2pmax && sim::substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
+         state = r_mesh::tadvance(coarse,excpt,fv_to_ct,cv_to_ft,fmesh);
+         if (state != block::stop) {
+            last_r_mesh = excpt+2;
+            return(state);
+         }
+      }
+      mp_phase=-1;
+      return(block::advance);
+   } 
+   
+   excpt -= last_r_mesh;
+
+   /* MAKE SURE SOLUTION IS CONTINUOUS */
+   switch(excpt) {
+      case(0): {
+         ++mp_phase;
+         switch(mp_phase%3) {
+            case(0):
+               vc0load(mp_phase/3,ug.v.data());
+               return(block::stay);
+            case(1):
+               vmsgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,ug.v.data())));
+         }
+      }
+      case(1): {
+         mp_phase = -1;
+         return(block::advance);
+      }
+      case(2): {
+         if (!sm0) return(block::advance);
+         
+         ++mp_phase;
+         switch(mp_phase%3) {
+            case(0):
+               sc0load(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+               return(block::stay);
+            case(1):
+               smsgpass(mp_phase/3);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim))));
+         }
+      }
    }
 
-   int stage = sim::dirkstage +sim::esdirk;
+   int stage = sim::substep +sim::esdirk;
 
    if (!coarse) {
       if (stage > 0) {
@@ -39,7 +87,7 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
                vrtxbd(stage+1)(i)(n) = (vrtx(i)(n)-vrtxbd(1)(i)(n))*sim::adirk[stage-1][stage-1];
       }
       
-      if (sim::dirkstage == 0) {
+      if (sim::substep == 0) {
          /* STORE TILDE W */
          ugbd(1).v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
          if (basis::tri(log2p).sm) {
@@ -70,7 +118,7 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
       }
       
       for(i=0;i<nsbd;++i)
-         hp_sbdry(i)->tadvance(coarse,0);
+         hp_sbdry(i)->tadvance(0);
    
    }
    else if (p0 == 1) {
@@ -97,7 +145,7 @@ block::ctrl tri_hp::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
    
    /* EXTRAPOLATE HERE?? */
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->tadvance(coarse,2);
+      hp_sbdry(i)->tadvance(2);
    
    return(block::stop);
 }
@@ -146,7 +194,7 @@ void tri_hp::calculate_unsteady_sources(bool coarse) {
    }
    
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->tadvance(coarse,1);
+      hp_sbdry(i)->tadvance(1);
    
    return;
 }

@@ -15,14 +15,12 @@
 block::ctrl tri_hp_cd::length(int excpt) {
    int i,j,k,v0,v1,v2,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
-   FLT sum,lgtol,lgf,ratio;
+   FLT sum,ratio;
    FLT length0,length1,length2,lengthept;
    FLT ang1,curved1,ang2,curved2;
-   FLT flimited;
       
    switch(excpt) {      
       case(0): {
-         lgtol = -log(vlngth_tol);
          fscr1(Range(0,nvrtx-1)) = 0.0;
 
          switch(basis::tri(log2p).p) {
@@ -30,7 +28,7 @@ block::ctrl tri_hp_cd::length(int excpt) {
                for(i=0;i<nside;++i) {
                   v0 = sd(i).vrtx(0);
                   v1 = sd(i).vrtx(1);
-                  sum = fabs(ug.v(v0,0) -ug.v(v1,0));
+                  sum = distance2(v0,v1)*fabs(ug.v(v0,0) -ug.v(v1,0));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
                }
@@ -41,7 +39,7 @@ block::ctrl tri_hp_cd::length(int excpt) {
                for(i=0;i<nside;++i) {
                   v0 = sd(i).vrtx(0);
                   v1 = sd(i).vrtx(1);
-                  sum = fabs(ug.s(i,sm0-1,0));
+                  sum = distance2(v0,v1)*fabs(ug.s(i,sm0-1,0));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
                }
@@ -99,9 +97,7 @@ block::ctrl tri_hp_cd::length(int excpt) {
 
          for(i=0;i<nvrtx;++i) {
             fscr1(i) = pow(fscr1(i)/(vd(i).nnbor*trncerr),1./(basis::tri(log2p).p+1+ND));
-            lgf = log(fscr1(i));
-            flimited = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-            vlngth(i) /= flimited;      
+            vlngth(i) /= fscr1(i);  
          }
    
          /* AVOID HIGH ASPECT RATIOS */

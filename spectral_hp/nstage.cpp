@@ -25,7 +25,7 @@ block::ctrl tri_hp::update(int excpt) {
    if (excpt == 0) {
    
 #ifdef DEBUG 
-      *sim::log << "loading ug0 last_r_mesh: " << last_r_mesh << std::endl;
+      *sim::log << idprefix << "loading ug0 last_r_mesh: " << last_r_mesh << std::endl;
 #endif
 
       /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
@@ -40,18 +40,20 @@ block::ctrl tri_hp::update(int excpt) {
       for(i=0;i<nsbd;++i)
          hp_sbdry(i)->update(0);
       
-      lastresidual = excpt +1;
-      laststage = 0;
+      lastresidual = 1;
+      laststage = 10000;
       stage = 0;
    }
    
    unshiftedexcpt = excpt;
-   excpt -= laststage;
+   if (excpt >= laststage) {
+      excpt -= laststage;
+   }
    
    /* CALCULATE RESIDUAL */
    if (excpt < lastresidual) {
 #ifdef DEBUG
-      *sim::log << "performing residual step " << excpt << ' ' << stage << std::endl;
+      *sim::log << idprefix << "performing residual step " << excpt << ' ' << stage << std::endl;
 #endif
       state = rsdl(excpt,stage);
       if (state != block::stop) {
@@ -64,7 +66,7 @@ block::ctrl tri_hp::update(int excpt) {
    /* INVERT MASS MATRIX */
    if (excpt < lastminvrt) {
 #ifdef DEBUG
-      *sim::log << "performing minvrt step " << excpt -lastresidual +1 << std::endl;
+      *sim::log << idprefix << "performing minvrt step " << excpt -lastresidual +1 << std::endl;
 #endif
       state = minvrt(excpt-lastresidual +1);
       if(state != block::stop) {
@@ -78,7 +80,7 @@ block::ctrl tri_hp::update(int excpt) {
       cflalpha = sim::alpha[stage]; // cfl[log2p]*alpha[stage];
 
 #ifdef DEBUG 
-      *sim::log << "updating solution: " << stage << std::endl;
+      *sim::log << idprefix << "updating solution: " << stage << std::endl;
 #endif
       
       ug.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->ug0.v(Range(0,nvrtx-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
@@ -113,10 +115,12 @@ block::ctrl tri_hp::update(int excpt) {
       return(block::advance);
    }
    
-   /* UPDATE STAGE & REPEAT */
-   laststage = unshiftedexcpt+1;
    stage += addtostage;
    addtostage = 0;
+   laststage = unshiftedexcpt+1;
+#ifdef DEBUG 
+      *sim::log << idprefix << "finished stage: " << stage-1 << std::endl;
+#endif
       
    if (stage < sim::NSTAGE) {
       return(block::advance);

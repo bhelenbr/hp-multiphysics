@@ -8,172 +8,107 @@
  */
 
 #include "tri_hp_cd.h"
+#include "hp_boundary.h"
 #include "myblas.h"
 
-template<class BASE> class dirichlet_cd : public BASE {
-   tri_hp_cd &x;
-   
-   public:
-      dirichlet_cd(tri_hp_cd &xin, side_bdry &bin) : BASE(xin,bin), x(xin) {BASE::mytype = "dirichlet_cd";}
-      dirichlet_cd* create(tri_hp_cd& xin, side_bdry &bin) const {return new dirichlet_cd(xin,bin);}
-      void vdirichlet() {
-         int sind,v0;
-                  
-         for(int j=0;j<BASE::base.nel;++j) {
-            sind = BASE::base.el(j);
-            v0 = x.sd(sind).vrtx(0);
-            x.hp_gbl->res.v(v0,0) = 0.0;
-         }
-         v0 = x.sd(sind).vrtx(1);
-         x.hp_gbl->res.v(v0,0) = 0.0;
-      }
+namespace cd_bdry {
+   class dirichlet : public hp_side_bdry {
+      tri_hp_cd &x;
       
-      void sdirichlet(int mode) {
-         int sind;
-                  
-         for(int j=0;j<BASE::base.nel;++j) {
-            sind = BASE::base.el(j);
-            x.hp_gbl->res.s(sind,mode,0) = 0.0;
-         }
-      }
-         
-      block::ctrl tadvance(int excpt) {
-         int j,k,m,n,v0,v1,sind,indx,info;
-         TinyVector<FLT,mesh::ND> pt;
-         char uplo[] = "U";
-         
-         BASE::tadvance(excpt);
-         
-         if (excpt == 2) {
-            /* UPDATE BOUNDARY CONDITION VALUES */
-            for(j=0;j<BASE::base.nel;++j) {
-               sind = BASE::base.el(j);
+      public:
+         dirichlet(tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(xin,bin), x(xin) {mytype = "dirichlet";}
+         dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(inbdry,xin,bin), x(xin) {}
+         dirichlet* create(tri_hp& xin, side_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+         void vdirichlet() {
+            int sind,v0;
+                     
+            for(int j=0;j<base.nel;++j) {
+               sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
+               x.hp_gbl->res.v(v0,0) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
-            
-            /*******************/   
-            /* SET SIDE VALUES */
-            /*******************/
-            for(j=0;j<BASE::base.nel;++j) {
-               sind = BASE::base.el(j);
-               v0 = x.sd(sind).vrtx(0);
-               v1 = x.sd(sind).vrtx(1);
-               
-               if (BASE::is_curved()) {
-                  x.crdtocht1d(sind);
-                  for(n=0;n<mesh::ND;++n)
-                     basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-               }
-               else {
-                  for(n=0;n<mesh::ND;++n) {
-                     basis::tri(x.log2p).proj1d(x.vrtx(v0)(n),x.vrtx(v1)(n),&x.crd(n)(0,0));
-                     
-                     for(k=0;k<basis::tri(x.log2p).gpx;++k)
-                        x.dcrd(n,0)(0,k) = 0.5*(x.vrtx(v1)(n)-x.vrtx(v0)(n));
-                  }
-               }
+            x.hp_gbl->res.v(v0,0) = 0.0;
+         }
+         
+         void sdirichlet(int mode) {
+            int sind;
 
-               if (basis::tri(x.log2p).sm) {
-                  for(n=0;n<x.NV;++n)
-                     basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
-            
-                  for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
-                     pt(0) = x.crd(0)(0,k);
-                     pt(1) = x.crd(1)(0,k);
-                     for(n=0;n<x.NV;++n)
-                        x.res(n)(0,k) -= x.hp_gbl->ibc->f(n,pt);
-                  }
-                  for(n=0;n<x.NV;++n)
-                     basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-            
-                  indx = sind*x.sm0;
-                  for(n=0;n<x.NV;++n) {
-                     PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-                     for(m=0;m<basis::tri(x.log2p).sm;++m) 
-                        x.ug.s(sind,m,n) = -x.lf(n)(2+m);
-                  }
-               }
+            for(int j=0;j<base.nel;++j) {
+               sind = base.el(j);
+               x.hp_gbl->res.s(sind,mode,0) = 0.0;
             }
          }
-         return(block::advance);
-      }
-};
+            
+         block::ctrl tadvance(int excpt); 
+   };
 
-template<class BASE> class neumann_cd : public BASE {
-   protected:
-      tri_hp_cd &x;
-      virtual FLT flux(FLT u, TinyVector<FLT,mesh::ND> x, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {return(0.0);}
-   
-   public:
-      neumann_cd(tri_hp_cd &xin, side_bdry &bin) : BASE(xin,bin), x(xin) {BASE::mytype = "neumann_cd";}
-      neumann_cd* create(tri_hp_cd& xin, side_bdry &bin) const {return new neumann_cd(xin,bin);}
-      void addbflux() {
-         int j,k,n,v0,v1,sind;
-         TinyVector<FLT,2> pt,mvel,nrm;
-   
-         for(j=0;j<BASE::base.nel;++j) {
-            sind = BASE::base.el(j);
-            v0 = x.sd(sind).vrtx(0);
-            v1 = x.sd(sind).vrtx(1);
-            
-            x.crdtocht1d(sind);
-            for(n=0;n<mesh::ND;++n)
-               basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-            
-            x.crdtocht1d(sind,1);
-            for(n=0;n<mesh::ND;++n)
-               basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
-            
-            x.ugtouht1d(sind);
-            for(n=0;n<x.NV;++n)
-               basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+   class neumann : public hp_side_bdry {
+      protected:
+         tri_hp_cd &x;
+         virtual FLT flux(FLT u, TinyVector<FLT,mesh::ND> x, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {return(0.0);}
       
-            for(k=0;k<basis::tri(x.log2p).gpx;++k) {
-               pt(0) = x.crd(0)(0,k);
-               pt(1) = x.crd(1)(0,k);
-               nrm(0) = x.dcrd(1,0)(0,k);
-               nrm(1) = -x.dcrd(0,0)(0,k);
-               for(n=0;n<mesh::ND;++n)
-                  mvel(n) = sim::bd[0]*(x.crd(n)(0,k) -x.crd(n)(1,k));
-   
-               x.res(0)(0,k) = RAD1D(k)*flux(x.u(0)(0,k),pt,mvel,nrm);
-            }
-      
-            for(n=0;n<x.NV;++n)
-               basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-            
-            for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+      public:
+         neumann(tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(xin,bin), x(xin) {mytype = "neumann";}
+         neumann(const neumann& inbdry, tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(inbdry,xin,bin), x(xin) {}
+         neumann* create(tri_hp& xin, side_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+         void addbflux();
+   };
 
-            for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
-            
-            for(k=0;k<basis::tri(x.log2p).sm;++k) {
-               for(n=0;n<x.NV;++n)
-                  x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
-            }
+
+   class characteristic : public neumann {
+      public:
+         FLT flux(FLT u, TinyVector<FLT,mesh::ND> pt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {
+            FLT vel;
+
+            vel =  (x.cd_gbl->ax-mv(0))*norm(0) +(x.cd_gbl->ay -mv(1))*norm(1);      
+
+
+            if (vel > 0.0)
+               return(vel*u);
+
+            return(x.hp_gbl->ibc->f(0, pt)*vel);
          }
-         return;
-      }
-};
+         characteristic(tri_hp_cd &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
+         characteristic(const characteristic &inbdry, tri_hp_cd &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
+         characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+   };
 
-template<class BASE> class char_cd : public neumann_cd<BASE> {
-   public:
-      FLT flux(FLT u, TinyVector<FLT,mesh::ND> pt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {
-         FLT vel;
+   class mixed : public neumann {
+      public:
+         TinyVector<FLT,5> c;
+         
+         FLT flux(FLT u, TinyVector<FLT,mesh::ND> pt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {
+            
+            FLT fout = 0.0;
+            for(int i=0;i<5;++i)
+               fout += c(i)*pow(u,i);
+            
+            return(fout);
+         }
+         mixed(tri_hp_cd &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "mixed";}
+         mixed(const mixed& inbdry, tri_hp_cd &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
+         mixed* create(tri_hp& xin, side_bdry &bin) const {return new mixed(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+         
+         void init(input_map& inmap) {
+            std::string keyword;
+            std::istringstream data;
+            std::string val;
+            
+            neumann::init(inmap);
 
-         vel =  (neumann_cd<BASE>::x.cd_gbl->ax-mv(0))*norm(0) +(neumann_cd<BASE>::x.cd_gbl->ay -mv(1))*norm(1);      
-
-
-         if (vel > 0.0)
-            return(vel*u);
-
-         return(neumann_cd<BASE>::x.hp_gbl->ibc->f(0, pt)*vel);
-      }
-      char_cd(tri_hp_cd &xin, side_bdry &bin) : neumann_cd<BASE>(xin,bin) {BASE::mytype = "char_cd";}
-      char_cd* create(tri_hp_cd& xin, side_bdry &bin) const {return new char_cd(xin,bin);}
-};
+            keyword = base.idprefix + ".cd_mixed_coefficients";
+            
+            if (inmap.getline(keyword,val)) {
+                  data.str(val);
+                  data >> c(0) >> c(1) >> c(2) >> c(3) >> c(4);  
+                  data.clear(); 
+            }
+            else {
+               *sim::log << "couldn't find coefficients" << std::endl;
+            }
+            return;
+         }
+   };
+}
 

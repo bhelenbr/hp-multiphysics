@@ -32,14 +32,14 @@ class tri_hp_cd : public tri_hp {
          FLT ax, ay, nu;
          
          /* SOURCE FUNCTION */
-         FLT (*src)(FLT x, FLT y);
+         init_bdry_cndtn *src;
 
       } *cd_gbl;
       
       FLT adis; // DISSIPATION CONSTANT
       
-      hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata);
-      hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map *bdrydata);
+      hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map *bdrydata);
+      hp_side_bdry* getnewsideobject(int bnum, input_map *bdrydata);
       
    public:
       void init(input_map& input, gbl *gin); 
@@ -48,5 +48,4 @@ class tri_hp_cd : public tri_hp {
       block::ctrl setup_preconditioner(int excpt);
       block::ctrl rsdl(int excpt, int stage=sim::NSTAGE);
 };
-
 #endif

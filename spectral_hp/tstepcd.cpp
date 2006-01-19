@@ -56,6 +56,9 @@ block::ctrl tri_hp_cd::setup_preconditioner(int excpt) {
                         
             /* SET UP DISSIPATIVE COEFFICIENTS */
             cd_gbl->tau(tind)  = adis*h/(jcb*lam1);
+            
+            jcb *= lam1/h;
+
       
             /* SET UP DIAGONAL PRECONDITIONER */
 #ifdef TIMEACCURATE
@@ -66,8 +69,6 @@ block::ctrl tri_hp_cd::setup_preconditioner(int excpt) {
          for(tind=0;tind<ntri;++tind) {
             v = td(tind).vrtx;
             jcb = 0.25*area(tind)*dtstari;
-#else
-            jcb *= lam1/h;
 #endif
 #ifdef AXISYMMETRIC
             jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
@@ -86,6 +87,7 @@ block::ctrl tri_hp_cd::setup_preconditioner(int excpt) {
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->setup_preconditioner(0);
    
+         mp_phase = -1;
          return(block::advance);
       }
    }

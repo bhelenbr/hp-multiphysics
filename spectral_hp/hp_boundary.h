@@ -6,6 +6,9 @@
  *  Copyright 2005 __MyCompanyName__. All rights reserved.
  *
  */
+
+#ifndef _hp_boundary_h_
+#define _hp_boundary_h_
  
 #include <boundary.h>
 #include <hpbasis.h>
@@ -20,10 +23,37 @@ class hp_vrtx_bdry {
 
    public:
       hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
-      virtual void init(input_map& input) {}
-      virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(xin,bin);}
+      hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
+      virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
+      virtual void init(input_map& input) {} /**< This is to read definition data only (not solution data) */
       virtual void copy_data(const hp_vrtx_bdry& tgt) {}
       virtual ~hp_vrtx_bdry() {}
+      
+      /* input output functions */
+      virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
+         switch(typ) {
+            case(text):
+               fout << base.idprefix << " " << mytype << std::endl;
+               break;
+            default:
+               break;
+         }
+         return;
+      }
+      /** This is to read solution data **/
+      virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0) {
+         std::string idin,mytypein;
+
+         switch(typ) {
+            case(text):
+               fin >> idin >> mytypein;
+               break;
+            default:
+               break;
+         }
+         return;
+      }
+      
             
       /* BOUNDARY CONDITION FUNCTIONS */
       virtual void vdirichlet() {}
@@ -38,41 +68,6 @@ class hp_vrtx_bdry {
       virtual block::ctrl minvrt(int excpt) {return(block::stop);}
       virtual void mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, hp_side_bdry *fbdry) {} 
       virtual void mg_getcchng(int excpt, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, hp_side_bdry *fbdry) {}   
-      
-      /* input output functions */
-      virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-         switch(typ) {
-            case(text):
-               fout << base.idprefix << " " << mytype << std::endl;
-               break;
-            default:
-               break;
-         }
-         return;
-      }
-
-      virtual void input(input_map& inmap) {         
-         int tlvl;
-         
-         inmap.getwdefault(base.idprefix+".hp_tlvl",tlvl,0);
-         
-         std::string filename;
-         bool readfile = true;
-         readfile = inmap.get(base.idprefix+".hp_datafile",filename);
-         
-         int typ;
-         inmap.getwdefault("hp_filetype",typ,static_cast<int>(tri_hp::text));
-         
-         if (readfile) {
-            ifstream fin;
-            fin.open(filename.c_str());
-            input(fin,static_cast<tri_hp::filetype>(typ),tlvl);
-            fin.close();
-         }
-         
-         return;
-      }
-      virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0) {} 
 };
 
 class hp_side_bdry {
@@ -80,24 +75,30 @@ class hp_side_bdry {
       std::string mytype;
       tri_hp& x;
       side_bdry &base;
+      bool curved, coupled;
+      Array<TinyVector<FLT,mesh::ND>,2> crv;
+      TinyVector<Array<TinyVector<FLT,mesh::ND>,2>,sim::nhist+1> crvbd;
       Array<TinyMatrix<FLT,mesh::ND,MXGP>,2> dxdt;
-      static FLT dummy;
 
    public:
-      hp_side_bdry(tri_hp& xin, side_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
-      virtual void init(input_map& input) {
-         dxdt.resize(x.log2pmax,base.maxel);
-      }
-      virtual hp_side_bdry* create(tri_hp& xin, side_bdry &bin) const {return(new hp_side_bdry(xin,bin));}
-      virtual void copy_data(const hp_side_bdry& tgt) {}
+      hp_side_bdry(tri_hp& xin, side_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";}
+      hp_side_bdry(const hp_side_bdry &inbdry, tri_hp& xin, side_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {}
+      virtual hp_side_bdry* create(tri_hp& xin, side_bdry &bin) const {return(new hp_side_bdry(*this,xin,bin));}
+      virtual void init(input_map& input); 
+      virtual void copy_data(const hp_side_bdry& tgt);
       virtual ~hp_side_bdry() {}
+            
+      /* input output functions */
+      virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+      /** This is to read solution data **/
+      virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0); 
       
       /* CURVATURE FUNCTIONS */
-      virtual bool is_curved() {return(false);}
-      virtual FLT& crds(int ind, int mode, int dir) {return(dummy=0);}
-      virtual FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(dummy=0);}
-      virtual void curvinit(int tlvl) {}
-      
+      bool is_curved() {return(curved);}
+      FLT& crds(int ind, int mode, int dir) {return(crv(ind,mode)(dir));}
+      FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(crvbd(tlvl)(ind,mode)(dir));}
+      void curv_init(int tlvl = 0);
+                  
       /* BOUNDARY CONDITION FUNCTIONS */
       virtual void addbflux() {}
       virtual void vdirichlet() {}
@@ -113,7 +114,7 @@ class hp_side_bdry {
             
       /* FOR COUPLED DYNAMIC BOUNDARIES */
       virtual block::ctrl setup_preconditioner(int excpt) {return(block::stop);}
-      virtual block::ctrl tadvance(bool coarse, int excpt) {return(block::stop);}
+      virtual block::ctrl tadvance(int excpt);
       virtual block::ctrl rsdl(int excpt) {return(block::stop);}
       virtual block::ctrl update(int excpt) {return(block::stop);}
       virtual block::ctrl minvrt(int excpt) {return(block::stop);}
@@ -124,62 +125,10 @@ class hp_side_bdry {
       virtual void updatevdata_bdry(int bel,int endpt,hp_side_bdry *bin) {}
       virtual void movevdata_bdry(int bel,int endpt,hp_side_bdry *bin) {}
       virtual void updatesdata_bdry(int bel,hp_side_bdry *bin) {}
-      virtual void movesdata_bdry(int bel,hp_side_bdry *bin) {}
-      
-      /* SEARCH FUNCTIONS */
-      virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
-         base.findbdrypt(xp,bel,psi);
-         basis::tri(x.log2p).ptvalues1d(psi);
-      }
-      
-      /* input output functions */
-      virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
-      virtual void input(input_map& inmap);
-      virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0) {}
-
-        
-      /* ENPOINT COMMUNICATION ROUTINES */
-      virtual void findendpts(class mesh& x) {}
-      virtual void msgload_vrtx(int endpt,FLT *base,int bgn,int end,int stride) {}
-      virtual void msgpass_vrtx(int endpt) {}
-      virtual void msgwait_rcv_vrtx(int endpt,FLT *base,int bgn,int end,int stride) {}
-};
-
-
-class hp_curved : public hp_side_bdry {
-   protected:
-      bool coupled;
-      Array<TinyVector<FLT,mesh::ND>,2> crv;
-      TinyVector<Array<TinyVector<FLT,mesh::ND>,2>,sim::nhist+1> crvbd;
-   public:
-
-      hp_curved(tri_hp& hpin, side_bdry &bin) : hp_side_bdry(hpin,bin) { 
-         mytype = "curved";
-      }
-      hp_curved* create(tri_hp& xin, side_bdry &bin) const {return(new hp_curved(xin,bin));}
-      void copy_data(const hp_side_bdry &tgt);
-
-      /* CURVATURE FUNCTIONS */
-      bool is_curved() {return(true);}
-      FLT& crds(int ind, int mode, int dir) {return(crv(ind,mode)(dir));}
-      FLT& crdsbd(int tlvl, int ind, int mode, int dir) {return(crvbd(tlvl)(ind,mode)(dir));}
-      
-      void init(input_map& input);      
-      void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);         
-      virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0);      
-      void curv_init(int tlvl = 0);
-            
-      void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);      
-      block::ctrl tadvance(bool coarse, int excpt);
-      
-      void movesdata_bdry(int bel,hp_side_bdry *bin) {
+      virtual void movesdata_bdry(int bel,hp_side_bdry *tgt) {
          int sind,tgtel,step,m,n;
          
-         hp_curved *tgt = dynamic_cast<hp_curved *>(bin);
-         
-         hp_side_bdry::movesdata_bdry(bel,bin);
-         
-         if (!x.sm0) return;
+         if (!curved || !x.sm0) return;
    
          sind = base.el(bel);
          tgtel = tgt->x.getbdryel(tgt->x.sd(sind).tri(1));
@@ -193,5 +142,15 @@ class hp_curved : public hp_side_bdry {
          }
          return;
       }
-};
+      
+      /* SEARCH FUNCTIONS */
+      virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);            
 
+        
+      /* ENPOINT COMMUNICATION ROUTINES */
+      virtual void findendpts(class mesh& x) {}
+      virtual void msgload_vrtx(int endpt,FLT *base,int bgn,int end,int stride) {}
+      virtual void msgpass_vrtx(int endpt) {}
+      virtual void msgwait_rcv_vrtx(int endpt,FLT *base,int bgn,int end,int stride) {}
+};
+#endif

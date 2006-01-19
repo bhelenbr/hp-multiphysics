@@ -19,7 +19,7 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
          /***************************************/
          ins_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
          if (basis::tri(log2p).sm > 0) {
-            ins_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+            hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
          }
          
 #ifdef TIMEACCURATE
@@ -51,11 +51,11 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             for(j=0;j<3;++j) {
                v0 = v(j);
 #ifndef DROP
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(sim::nhist)(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +vrtxbd(sim::nhist)(v0)(1)),2.0);
+               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(1)(v0)(0)),2.0) 
+                  +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +vrtxbd(1)(v0)(1)),2.0);
 #else
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(sim::nhist)(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*vrtx(v0)(1) +vrtxbd(sim::nhist)(v0)(1)),2.0); 
+               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(1)(v0)(0)),2.0) 
+                  +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*vrtx(v0)(1) +vrtxbd(1)(v0)(1)),2.0); 
 #endif
                qmax = MAX(qmax,q);
             }
@@ -63,7 +63,6 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax);
             if (ins_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
 #endif
-
             q = sqrt(qmax);
             lam1 = q + sqrt(qmax +gam);
             
@@ -71,6 +70,11 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             ins_gbl->tau(tind) = adis*h/(jcb*sqrt(gam));
             ins_gbl->delt(tind) = qmax*ins_gbl->tau(tind);
             
+            /* SET UP DIAGONAL PRECONDITIONER */
+            // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
+            jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+
+
 #ifdef INERTIALESS
             gam = pow(2.*hp_gbl->nu/hmax,2); 
             lam1 = sqrt(gam);
@@ -78,36 +82,26 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
             /* SET UP DISSIPATIVE COEFFICIENTS */
             ins_gbl->tau(tind)  = adis*h/(jcb*sqrt(gam));
             ins_gbl->delt(tind) = 0.0;
-#endif
-            
-            /* SET UP DIAGONAL PRECONDITIONER */
-#ifdef TIMEACCURATE
-            dtstari = MAX((ins_gbl->nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
-#else
 
-#ifndef INERTIALESS
-            // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-            jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-#else
             jcb *= 8.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
-            
-#ifdef AXISYMMETRIC
-            jcb *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
-#endif
-#endif
 
 #ifdef TIMEACCURATE
+            dtstari = MAX((ins_gbl->nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
+
          }
          printf("#iterative to physical time step ratio: %f\n",sim::bd[0]/dtstari);
             
          for(tind=0;tind<ntri;++tind) {
             v = td(tind).vrtx;
             jcb = 0.25*area(tind)*dtstari;
+
+#endif
+
 #ifdef AXISYMMETRIC
             jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
 #endif
-#endif
+
             ins_gbl->tprcn(tind,0) = ins_gbl->rho*jcb;   
             ins_gbl->tprcn(tind,1) = ins_gbl->rho*jcb;     
             ins_gbl->tprcn(tind,2) =  jcb/gam;
@@ -124,6 +118,7 @@ block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->setup_preconditioner(0);
    
+         mp_phase = -1;
          return(block::advance);
       }
    }

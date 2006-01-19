@@ -1,10 +1,16 @@
-OBJ = allocate.o copy.o tobasis.o gtol.o output.o curvinit.o ptprobe.o mg_alloc.o \
-rsdl.o minvrt.o movco.o movfin.o tstep.o nstage.o bdry.o tadvance.o length.o adapt.o \
-surface.o drag.o block.o blocks.o rblocks.o main.o initfunc.o l2error.o
+BASE = adapt.o allocate.o copy.o gtol.o \
+hp_boundary.o initfunc.o l2error.o main.o minvrt.o \
+movco.o movfin.o nstage.o output.o ptprobe.o \
+tadvance.o tobasis.o
+OBJINS =  tstep.o surface.o bdry.o drag.o length.o rsdl.o
+OBJCD = allocatecd.o getnewcd_bdry.o rsdlcd.o tstepcd.o lengthcd.o
+
+OBJ = $(BASE)
+OBJ += $(OBJCD)
 
 VIZ = pv3routines.o
 
-LIB = -L$(HOME)/Codes/lib -lutil -lmyblas -lmesh -lquad -lbasis -lm
+LIB = -L$(HOME)/Codes/lib -lmesh -lquad -lbasis -lmyblas -lutil -linput_map -lm
 DEFINES = -Df2cFortran
 CPPFLAGS = -I$(HOME)/Codes/include/
 
@@ -25,10 +31,12 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
 CPPFLAGS += -O3
-CPPFLAGS += -cxxlib-icc #(cares)
+CPPFLAGS += -O3 -cxxlib-icc -DMPISRC -I/opt/mpich/myrinet/intel/include #(cares)
+#CPPFLAGS += -cxxlib-icc #(cares)
 #LIB += -llapack -lblas -lg2c #(shelob)
 LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
-LDFLAGS += -static #(cares)
+LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
+#LDFLAGS += -static #(cares)
 #PV3HOME = /usr/local/pV3/
 #DEFINES += -DUNDERSCORE -DPOINTERLONG
 #FORTRTL = /usr/local/pgi/linux86/lib#(shelob)
@@ -59,4 +67,4 @@ hp: $(OBJ)
 hp.pV3: $(OBJ) $(VIZ)
 	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
 
-$(OBJ): tri_hp.h hp_mgrid.h blocks.h defines.h surface.h
+$(OBJ): *.h

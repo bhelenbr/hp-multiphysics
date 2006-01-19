@@ -6,42 +6,70 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
+ 
+#include "blocks.h"
+#include "block.h"
+#include "mgblock.h"
+#include "r_mesh.h"
+#include "tri_hp_cd.h"
+#include "tri_hp_ins.h"
 
-/* THESE ARE FUNCTIONS WHICH MUST BE SET UP FOR INDIVIDUAL PROBLEMS */
 
-#include "math.h"
-#include "tri_hp.h"
+class freestream_ins : public init_bdry_cndtn {
+   private:
+      FLT alpha, speed;
+   public:
+      FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+         switch(n) {
+            case(0):
+               return(speed*cos(alpha) +x(0)*(1.-x(0)));
+            case(1):
+               return(speed*sin(alpha));
+         }
+         return(0.0);
+      }
+      
+      void input(input_map &blockdata,std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
 
+         keyword = idnty +".flowspeed";
+         if (!blockdata.get(keyword,speed)) 
+            blockdata.getwdefault("flowspeed",speed,1.0);
+ 
+          keyword = idnty +".flowangle";
+         if (!blockdata.get(keyword,alpha)) 
+            blockdata.getwdefault("flowangle",alpha,0.0);   
+            
+         alpha *= M_PI/180.0;
+      }
+};
 
+class tri_hp_ins_ibctype {
+   public:
+      const static int ntypes = 1;
+      enum ids {freestream};
+      const static char names[ntypes][40];
+      static init_bdry_cndtn* getibc(const char *nin) {
+         int i;
+         for(i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) break;
+         
+         if (i > ntypes -1) {
+            *sim::log << "Don't know that ins initial condition" << std::endl;
+            exit(1);
+         }
+         switch(i) {
+            case(freestream):
+               return new freestream_ins;
+         }
+         return(0);
+      }
+};
+const char tri_hp_ins_ibctype::names[ntypes][40] = {"freestream"};
 
-FLT amp,lam,theta;
-FLT mux[4];
-FLT rhox[4];
-FLT sigmax[4];
-FLT body[mesh::ND] = {0.0, -9.81};
-
-/***************************/
-/* INITIALIZATION FUNCTION */
-/***************************/
-
-/* FOR INITIALIZATION STARTUP WILL BE 1 AFTER THAT IT WILL ALWAYS BE 0 */
-int startup = 1;
 
 #ifdef TEST
-FLT f1(int n, FLT x, FLT y) {
-   switch(n) {
-      case(0):
-         return(pow(x,amp));
-      case(1):
-         return(pow(y,amp));
-      case(2):
-         return(pow(x*y,amp));
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef FREESTREAM
 FLT f1(int n, FLT x, FLT y) {
    FLT xx = x*2.*M_PI;
    FLT yx = y*2.*M_PI;
@@ -610,25 +638,16 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
    
-#include "blocks.h"
-#include "block.h"
-#include "mgblock.h"
-#include "r_mesh.h"
-#include "tri_hp_cd.h"
 
-FLT linear_src(FLT x, FLT y) {
-   return(x);
-}
-FLT zero_src(FLT x, FLT y) {
-   return(0.0);
-}
+
 
 class power_ibc_cd : public init_bdry_cndtn {
    private:
       TinyVector<FLT,mesh::ND> a;
+      TinyVector<FLT,mesh::ND> spd;
    public:
       FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-         return(pow(x(0),a(0))*pow(x(1),a(1)));
+         return(pow(x(0)-spd(0)*sim::time,a(0))*pow(x(1)-spd(1)*sim::time,a(1)));
       }
       void input(input_map &blockdata,std::string idnty) {
          std::string keyword,val;
@@ -641,7 +660,7 @@ class power_ibc_cd : public init_bdry_cndtn {
             data.clear(); 
          }
          else {
-            if (blockdata.get("powers",val)) {
+            if (blockdata.getline("powers",val)) {
                data.str(val);
                data >> a(0) >> a(1);  
                data.clear(); 
@@ -652,17 +671,87 @@ class power_ibc_cd : public init_bdry_cndtn {
                *sim::log << "couldn't find powers" << std::endl;
             }
          }
+         
+         keyword = idnty +".letmove";
+         if (blockdata.get(keyword,val)) {
+            keyword = idnty +".ax";
+            blockdata.getwdefault(keyword,spd(0),1.0);
+
+            keyword = idnty + ".ay";
+            blockdata.getwdefault(keyword,spd(1),0.0);
+         }
+         else {
+            spd(0) = 0.0;
+            spd(1) = 0.0;
+         }
       }
 };
 
 class sinusoidal_ibc_cd : public init_bdry_cndtn {
    private:
-      TinyVector<FLT,mesh::ND> a;
+      TinyVector<FLT,mesh::ND> lam,amp,offset;
    public:
       FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-         return(pow(x(0),a(0)) +pow(x(1),a(1)));
+         return(amp(0)*sin((x(0)-offset(0))*2*M_PI/lam(0)) +amp(1)*sin((x(1)-offset(1))*2*M_PI/lam(1)));
       }
-      void input(input_map &blockdata,std::string idnty) {}
+      void input(input_map &blockdata,std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
+
+         keyword = idnty +".lambda";
+         if (blockdata.getline(keyword,val)) {
+            data.str(val);
+            data >> lam(0) >> lam(1);  
+            data.clear(); 
+         }
+         else {
+            if (blockdata.getline("lambda",val)) {
+               data.str(val);
+               data >> lam(0) >> lam(1);  
+               data.clear(); 
+            }
+            else {
+               lam(0) = 1.0;
+               lam(1) = 1.0;
+            }
+         }
+         
+         keyword = idnty +".amplitude";
+         if (blockdata.getline(keyword,val)) {
+            data.str(val);
+            data >> amp(0) >> amp(1);  
+            data.clear(); 
+         }
+         else {
+            if (blockdata.getline("amplitude",val)) {
+               data.str(val);
+               data >> amp(0) >> amp(1);  
+               data.clear(); 
+            }
+            else {
+               amp(0) = 1.0;
+               amp(1) = 0.0;
+            }
+         }
+         
+         keyword = idnty +".offset";
+         if (blockdata.getline(keyword,val)) {
+            data.str(val);
+            data >> offset(0) >> offset(1);  
+            data.clear(); 
+         }
+         else {
+            if (blockdata.getline("offset",val)) {
+               data.str(val);
+               data >> offset(0) >> offset(1);  
+               data.clear(); 
+            }
+            else {
+               offset(0) = 0.0;
+               offset(1) = 0.0;
+            }
+         }
+      }
 };
 
 class tri_hp_cd_ibctype {
@@ -690,34 +779,108 @@ class tri_hp_cd_ibctype {
 };
 const char tri_hp_cd_ibctype::names[ntypes][40] = {"power","sinusoidal"};
 
+class power_src_cd : public init_bdry_cndtn {
+   private:
+      double c;
+      TinyVector<FLT,mesh::ND> a;
+   public:
+      FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+         return(c*pow(x(0),a(0))*pow(x(1),a(1)));
+      }
+      void input(input_map &blockdata,std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
+         
+         keyword = idnty +".src_strength";
+         if (!blockdata.get(keyword,c)) {
+            blockdata.getwdefault("src_strength",c,0.0);
+         }
+
+         keyword = idnty +".src_powers";
+         if (blockdata.getline(keyword,val)) {
+            data.str(val);
+            data >> a(0) >> a(1);  
+            data.clear(); 
+         }
+         else {
+            if (blockdata.getline("src_powers",val)) {
+               data.str(val);
+               data >> a(0) >> a(1);  
+               data.clear(); 
+            }
+            else {
+               c = 0.0;
+               a(0) = 0.0;
+               a(1) = 0.0;
+               *sim::log << idnty << " couldn't find src_powers" << std::endl;
+            }
+         }
+      }
+};
+
+
+
+class tri_hp_cd_srctype {
+   public:
+      const static int ntypes = 1;
+      enum ids {power};
+      const static char names[ntypes][40];
+      static init_bdry_cndtn* getsrc(const char *nin) {
+         int i;
+         for(i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) break;
+         
+         if (i > ntypes -1) {
+            *sim::log << "Don't know that conv-diff source type" << std::endl;
+            exit(1);
+         }
+         switch(i) {
+            case(power):
+               return new power_src_cd;
+         }
+         return(0);
+      }
+};
+const char tri_hp_cd_srctype::names[ntypes][40] = {"power"};
 
 
 class btype {
    public:
-      enum ids {plain=1, cd, ins};
+      const static int ntypes = 3;
+      enum ids {r_mesh,cd,ins};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         int i;
+         for(i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i);
+         return(-1);
+      }
 };
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins"};
+
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
-   std::string keyword,val,ibcname;
+   std::string keyword,val,ibcname,srcname;
    std::istringstream data;
    char idntystring[10];
    int type;        
    
-   type = idnum&0xffff;
-
+   /* FIND BLOCK TYPE */
    sprintf(idntystring,"b%d",idnum);
    keyword = std::string(idntystring) + ".type";
+   *sim::log << keyword << std::endl;
    if (blockdata.get(keyword,val)) {
-      data.str(val);
-      data >> type;  
-      data.clear(); 
+      type = btype::getid(val.c_str());
    }
    else {
       if (!blockdata.get("blocktype",val)) {
          *sim::log << "couldn't find block type" << std::endl;
+         exit(1);
       }
+      type = btype::getid(val.c_str());
    }
    
+   /* FIND INITIAL CONDITION TYPE */
    keyword = std::string(idntystring) + ".ibc";
    if (!blockdata.get(keyword,ibcname)) {
       if (!blockdata.get("ibc",ibcname)) {
@@ -726,18 +889,38 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
    }
       
    switch(type) {
-      case btype::plain: {
+      case btype::r_mesh: {
          mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
          return(temp);
       }
       
       case btype::cd: {
          mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
-         (*temp).gstorage.src = &zero_src;
+         keyword = std::string(idntystring) + ".src";
+         if (!blockdata.get(keyword,srcname)) {
+            if (!blockdata.get("src",srcname)) {
+               srcname = "power";
+            }
+         }
+         /* LOAD SOURCE OBJECT & INPUT PARAMETERS */
+         (*temp).gstorage.src = tri_hp_cd_srctype::getsrc(srcname.c_str());
+         (*temp).gstorage.src->input(blockdata,idntystring);
+
+         /* LOAD INITIAL CONDITION OBJECT & INPUT PARAMETERS */
          (*temp).gstorage.ibc = tri_hp_cd_ibctype::getibc(ibcname.c_str());
          (*temp).gstorage.ibc->input(blockdata,idntystring);
          return(temp);
       }
+      
+      case btype::ins: {
+         mgrid<tri_hp_ins> *temp = new mgrid<tri_hp_ins>(idnum);
+
+         /* LOAD INITIAL CONDITION OBJECT & INPUT PARAMETERS */
+         (*temp).gstorage.ibc = tri_hp_ins_ibctype::getibc(ibcname.c_str());
+         (*temp).gstorage.ibc->input(blockdata,idntystring);
+         return(temp);
+      }
+
       default: {
          std::cout << "unrecognizable block type: " <<  type << std::endl;
          mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);

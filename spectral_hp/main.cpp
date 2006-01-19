@@ -11,6 +11,9 @@
 #ifdef PV3
 #include <pV3.h>
 #endif
+#ifdef MPISRC
+#include <mpi.h>
+#endif
 
 #define SIMULATION
 
@@ -38,7 +41,7 @@ int main(int argc, char **argv) {
    MPI_Init(&argc,&argv);
    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
-
+   
    /* NORMAL SIMULATION */
    sim::blks.init(argv[1]);
    sim::blks.go();

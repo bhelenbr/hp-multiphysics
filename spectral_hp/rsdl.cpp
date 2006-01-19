@@ -10,25 +10,11 @@
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
 
-#ifdef BODY
-extern FLT body[2];
-#endif
-
-#ifdef SOURCETERM
-extern FLT amp;
-#endif
-
 #ifdef DROP
 extern FLT dydt;
 #endif
    
 block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
-   
-   if (excpt > 0) {
-      *sim::log << "flow control error in residual" << std::endl;
-      return(block::stop);
-   }
-   
    int i,j,n,tind;
    FLT fluxx,fluxy;
    const int NV = 3;
@@ -36,23 +22,29 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
    TinyMatrix<FLT,ND,ND> ldcrd;
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-   FLT rhobd0 = ins_gbl->rho*sim::bd[0], lmu = ins_gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi;
+   FLT rhobd0 = ins_gbl->rho*sim::bd[0], lmu = ins_gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
    FLT visc[ND][ND][ND][ND], tres[NV];
    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
    FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
-   ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
-   ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
-   ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
-         
-   FLT oneminusbeta = 1.0-sim::beta[stage];
-   ins_gbl->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
-   ins_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
-   ins_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
-         
+   oneminusbeta = 1.0-sim::beta[stage];
+   
+   hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+   hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
+
+   if (basis::tri(log2p).sm) {
+      hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
+      hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
+      
+      if (basis::tri(log2p).im) {
+         hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
+         hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
+      }
+   }
+            
    /* ADD IN BOUNDARY FLUXES */
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->addbflux(coarse);
+      hp_sbdry(i)->addbflux();
 
    for(tind = 0; tind<ntri;++tind) {
       /* LOAD INDICES OF VERTEX POINTS */
@@ -156,6 +148,7 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
                   res(0)(i,j) = rhorbd0*u(0)(i,j) +dugdt(log2p,tind,0)(i,j);
                   res(1)(i,j) = rhorbd0*u(1)(i,j) +dugdt(log2p,tind,1)(i,j);
                   res(2)(i,j) = rhorbd0 +dugdt(log2p,tind,2)(i,j);
+                  
                   
 #ifdef AXISYMMETRIC
                   res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
@@ -301,6 +294,7 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
          basis::tri(log2p).intgrtrs(&lf(0)(0),cv00[0],cv01[0],MXGP);
          basis::tri(log2p).intgrtrs(&lf(1)(0),cv10[0],cv11[0],MXGP);
          basis::tri(log2p).intgrtrs(&lf(2)(0),&du(2,0)(0,0),&du(2,1)(0,0),MXGP);
+         
 
          /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
          lftog(tind,ins_gbl->res);
@@ -370,14 +364,15 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
 
                   e11[i][j] = RAD(i,j)*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
                                         +viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j));
-                              
+                  
                   cv00[i][j] += e00[i][j];
                   cv01[i][j] += e01[i][j];
                   cv10[i][j] += e10[i][j];
                   cv11[i][j] += e11[i][j];
-                  
                 }
             }
+
+            
             basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);
             basis::tri(log2p).intgrt(&lf(1)(0),&res(1)(0,0),MXGP);
             basis::tri(log2p).intgrt(&lf(2)(0),&res(2)(0,0),MXGP);
@@ -388,9 +383,8 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
             basis::tri(log2p).derivr(cv10[0],&res(1)(0,0),MXGP);
             basis::tri(log2p).derivs(cv11[0],&res(1)(0,0),MXGP);
             basis::tri(log2p).derivr(&du(2,0)(0,0),&res(2)(0,0),MXGP);
-            basis::tri(log2p).derivs(&du(2,0)(1,0),&res(2)(0,0),MXGP);
+            basis::tri(log2p).derivs(&du(2,1)(0,0),&res(2)(0,0),MXGP);
             
-
             /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
             for(i=0;i<lgpx;++i) {
                for(j=0;j<lgpn;++j) {
@@ -424,7 +418,7 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
             basis::tri(log2p).intgrtrs(&lf(0)(0),e00[0],e01[0],MXGP);
             basis::tri(log2p).intgrtrs(&lf(1)(0),e10[0],e11[0],MXGP);
             basis::tri(log2p).intgrtrs(&lf(2)(0),&du(2,0)(0,0),&du(2,1)(0,0),MXGP);
-
+            
             for(n=0;n<NV;++n)
                for(i=0;i<basis::tri(log2p).tm;++i)
                   lf(n)(i) *= sim::beta[stage];
@@ -435,29 +429,31 @@ block::ctrl tri_hp_ins::rsdl(int excpt, int stage) {
    }
 
    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-   ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) += ins_gbl->res_r.v(Range(0,nvrtx-1),Range::all());
-   ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += ins_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
-   ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += ins_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
-      
+   hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all());
+   if (basis::tri(log2p).sm) {
+      hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
+      if (basis::tri(log2p).im) {
+         hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
+      }
+   }
+         
 /*********************************************/
    /* MODIFY RESIDUALS ON COARSER MESHES         */
 /*********************************************/   
    if(coarse) {
    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
       if(isfrst) {
-         dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*ins_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -ins_gbl->res.v(Range(0,nvrtx-1),Range::all());
-         dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*ins_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
-         dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*ins_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
-               
+         dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+         if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+         if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
          isfrst = false;
       }
-      ins_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
-      ins_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
-      ins_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
+      hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
+      if (basis::tri(log2p).sm) hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+      if (basis::tri(log2p).im) hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
    }
 
-
-//      std::cout << ins_gbl->res.v;
+//     std::cout << ins_gbl->res.v(Range(0,nvrtx),Range::all());
 //      std::cout << ins_gbl->res.s;
 //      std::cout << ins_gbl->res.i;
 //      exit(1);

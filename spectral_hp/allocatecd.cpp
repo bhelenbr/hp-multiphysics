@@ -9,7 +9,7 @@
 
 #include "tri_hp_cd.h"
 
- void tri_hp_cd::init(input_map& input, gbl *gin) {
+void tri_hp_cd::init(input_map& input, gbl *gin) {
    int coarse;
    std::string keyword;
    std::istringstream data;

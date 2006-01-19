@@ -146,7 +146,6 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    hp_sbdry.resize(nsbd);
    for(i=0;i<nsbd;++i) {
       hp_sbdry(i) = getnewsideobject(i,&bdrymap);
-      hp_sbdry(i)->init(inmap);
    }
                
    /* Load pointer to block stuff */

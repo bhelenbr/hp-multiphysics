@@ -9,7 +9,7 @@
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
 #include <math.h>
-// #include<utilities.h>
+#include<utilities.h>
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
@@ -21,11 +21,10 @@ block::ctrl tri_hp_ins::length(int excpt) {
    int i,j,k,v0,v1,v2,indx,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
    FLT q,p,duv,um,vm,u,v;
-   FLT sum,ruv,lgtol,lgf,ratio;
+   FLT sum,ruv,ratio;
    FLT length0,length1,length2,lengthept;
    FLT ang1,curved1,ang2,curved2;
    FLT norm;
-   FLT flimited;
    
    switch(excpt) {
       case(0): {
@@ -64,7 +63,6 @@ block::ctrl tri_hp_ins::length(int excpt) {
       }
       
       case(2): {
-         lgtol = -log(vlngth_tol);
          norm = ins_gbl->eanda_recv(0)/ins_gbl->eanda_recv(1);
          fscr1(Range(0,nvrtx-1)) = 0.0;
 
@@ -155,14 +153,7 @@ block::ctrl tri_hp_ins::length(int excpt) {
 
          for(i=0;i<nvrtx;++i) {
             fscr1(i) = pow(fscr1(i)/(norm*vd(i).nnbor*trncerr),1./(basis::tri(log2p).p+1+ND));
-
-#ifndef DROP
-            lgf = log(fscr1(i));
-            flimited = exp(lgtol*lgf/(lgtol +fabs(lgf)));
-#else
-            flimited = fscr1(i);
-#endif
-            vlngth(i) /= flimited;      
+            vlngth(i) /= fscr1(i);      
 
 #ifdef THREELAYER
 #define TRES 0.025/THREELAYER

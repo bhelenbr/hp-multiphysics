@@ -18,6 +18,7 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
    FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
    FLT oneminusbeta;
+   TinyVector<FLT,ND> pt;
    TinyVector<int,3> v;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
 
@@ -105,9 +106,11 @@ block::ctrl tri_hp_cd::rsdl(int excpt, int stage) {
          /* TIME DERIVATIVE TERMS */
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {
+               pt(0) = crd(0)(i,j);
+               pt(1) = crd(1)(i,j);
                cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                res(0)(i,j) = RAD(i,j)*sim::bd[0]*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
-               res(0)(i,j) += RAD(i,j)*cjcb(i,j)*(*cd_gbl->src)(crd(0)(i,j),crd(1)(i,j));
+               res(0)(i,j) -= RAD(i,j)*cjcb(i,j)*cd_gbl->src->f(0,pt);
             }
          }         
          basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);

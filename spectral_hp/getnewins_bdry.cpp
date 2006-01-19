@@ -1,8 +1,16 @@
-#include "tri_hp_cd.h"
-#include "cd_bdry.h"
-#include "hp_boundary.h"
-#include <myblas.h>
+/*
+ *  getnewins_bdry.cpp
+ *  spectral_hp
+ *
+ *  Created by Brian Helenbrook on 1/12/06.
+ *  Copyright 2006 __MyCompanyName__. All rights reserved.
+ *
+ */
+#include "tri_hp_ins.h"
+#include "ins_bdry.h"
 #include <input_map.h>
+
+using namespace ins_bdry;
 
 /** \brief Helper object for vrtx_bdry 
  *
@@ -11,7 +19,7 @@
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_cd_vtype {
+class tri_hp_ins_vtype {
    public:
       static const int ntypes = 1;
       enum ids {plain=1};
@@ -23,9 +31,9 @@ class tri_hp_cd_vtype {
       }
 };
 
-const char tri_hp_cd_vtype::names[ntypes][40] = {"plain"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"plain"};
 
-hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata) {
+hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map *bdrydata) {
    std::string keyword,val;
    std::istringstream data;
    char idntystring[10];
@@ -37,10 +45,10 @@ hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata) {
 
    if (bdrydata) {
       sprintf(idntystring,"v%d",idnum);
-      keyword = std::string(idntystring) + ".cd_type";
+      keyword = std::string(idntystring) + ".ins_type";
       
       if ((*bdrydata).get(keyword,val)) {
-         type = tri_hp_cd_vtype::getid(val.c_str());
+         type = tri_hp_ins_vtype::getid(val.c_str());
          if (type < 0)  {
             *sim::log << "unknown vertex type:" << val << std::endl;
             exit(1);
@@ -49,7 +57,7 @@ hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata) {
    }
    
    switch(type) {
-      case tri_hp_cd_vtype::plain: {
+      case tri_hp_ins_vtype::plain: {
          temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
          break;
       }
@@ -60,7 +68,7 @@ hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata) {
       }
    } 
    
-   if (bdrydata) temp->input(*bdrydata);
+   if (bdrydata) temp->init(*bdrydata);
    
    return(temp);
 }
@@ -73,10 +81,10 @@ hp_vrtx_bdry* tri_hp_cd::getnewvrtxobject(int bnum, input_map *bdrydata) {
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class tri_hp_cd_stype {
+class tri_hp_ins_stype {
    public:
-      static const int ntypes = 6;
-      enum ids {dirichlet=1,curved_dirichlet,adiabatic,curved_adiabatic,characteristic,curved_characteristic};
+      static const int ntypes = 5;
+      enum ids {plain=1,inflow,outflow,characteristic,euler};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -85,10 +93,10 @@ class tri_hp_cd_stype {
       }
 };
 
-const char tri_hp_cd_stype::names[ntypes][40] = {"dirichlet","curved_dirichlet","adiabatic","curved_adiabatic","characteristic","curved_characteristic"};
+const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map *bdrydata) {
+hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map *bdrydata) {
    std::string keyword,val;
    std::istringstream data;
    char idntystring[10];
@@ -100,49 +108,46 @@ hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map *bdrydata) {
    
    if (bdrydata) {
       sprintf(idntystring,"s%d",idnum);
-      keyword = std::string(idntystring) + ".cd_type";
+      keyword = std::string(idntystring) + ".ins_type";
       
       if ((*bdrydata).get(keyword,val)) {
-         type = tri_hp_cd_stype::getid(val.c_str());
+         type = tri_hp_ins_stype::getid(val.c_str());
          if (type < 0)  {
             *sim::log << "unknown side type:" << val << std::endl;
             exit(1);
          }
       }
       else {
-         *sim::log << "#couldn't find " << keyword << std::endl;
-         type = tri_hp_cd_stype::dirichlet;
+         type = tri_hp_ins_stype::plain;
       }
    }
 
    switch(type) {
-      case tri_hp_cd_stype::dirichlet: {
-         temp = new dirichlet_cd<hp_side_bdry>(*this,*sbdry(bnum));
+      case tri_hp_ins_stype::plain: {
+         temp = new hp_side_bdry(*this,*sbdry(bnum));
          break;
       }
-      case tri_hp_cd_stype::curved_dirichlet: {
-         temp = new dirichlet_cd<hp_curved>(*this,*sbdry(bnum));
+      case tri_hp_ins_stype::inflow: {
+         temp = new inflow(*this,*sbdry(bnum));
          break;
       }
-      case tri_hp_cd_stype::adiabatic: {
-         temp = new neumann_cd<hp_side_bdry>(*this,*sbdry(bnum));
+      case tri_hp_ins_stype::outflow: {
+         temp = new neumann(*this,*sbdry(bnum));
          break;
       }
-      case tri_hp_cd_stype::curved_adiabatic: {
-         temp = new neumann_cd<hp_curved>(*this,*sbdry(bnum));
+      case tri_hp_ins_stype::characteristic: {
+         temp = new neumann(*this,*sbdry(bnum));  // TEMPORARY NOT WORKING YET
          break;
       }
-      case tri_hp_cd_stype::characteristic: {
-         temp = new char_cd<hp_side_bdry>(*this,*sbdry(bnum));
-         break;
-      }
-      case tri_hp_cd_stype::curved_characteristic: {
-         temp = new char_cd<hp_curved>(*this,*sbdry(bnum));
+      case tri_hp_ins_stype::euler: {
+         temp = new euler(*this,*sbdry(bnum));
          break;
       }
    }
-   
-   if (bdrydata) temp->input(*bdrydata);
+
+   if (bdrydata) temp->init(*bdrydata);
    
    return(temp);
 }
+
+
