@@ -1215,13 +1215,6 @@
 			sepNavVisRect = "{{0, 0}, {980, 458}}";
 		};
 	};
-	6FB40AD6091AF516002BAA09 /* defines.h */ = {
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {878, 3822}}";
-			sepNavSelRange = "{0, 0}";
-			sepNavVisRect = "{{0, 0}, {878, 699}}";
-		};
-	};
 	6FB40AD7091AF516002BAA09 /* drag.cpp */ = {
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {968, 1120}}";
@@ -1255,7 +1248,7 @@
 		uiCtxt = {
 			sepNavIntBoundsRect = "{{0, 0}, {878, 13076}}";
 			sepNavSelRange = "{585, 0}";
-			sepNavVisRect = "{{0, 12377}, {878, 699}}";
+			sepNavVisRect = "{{0, 11428}, {878, 699}}";
 		};
 	};
 	6FB40ADC091AF516002BAA09 /* l2error.cpp */ = {
@@ -1676,13 +1669,6 @@
 		rType = 0;
 		vrLen = 562;
 		vrLoc = 0;
-	};
-	6FE792D8097F3B3D002316DA /* initfunc.cpp */ = {
-		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {968, 13076}}";
-			sepNavSelRange = "{585, 0}";
-			sepNavVisRect = "{{0, 168}, {968, 699}}";
-		};
 	};
 	6FEA195B09770892001A5F7F /* allocate.cpp */ = {
 		uiCtxt = {
