@@ -752,7 +752,7 @@ void blocks::tadvance() {
 #ifdef DIRK
 #if (DIRK == 4)
    /* STARTUP SEQUENCE */
-   switch(sim::substep) {
+   switch(sim::tstep) {
       case(0): {
          sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;

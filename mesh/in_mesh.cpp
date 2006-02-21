@@ -19,7 +19,7 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
    input_map *pbdrymap = &bdrymap;
    FLT fltskip;
    int intskip;
-         
+
    if (filename.substr(0,7) == "${HOME}") {
       grd_nm = getenv("HOME") +filename.substr(7,filename.length());
    }
@@ -37,21 +37,22 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
    else {
       bdry_nm = grd_nm +"_bdry.inpt";
       in.open(bdry_nm.c_str());
-      if (in) {
+      if (in.good()) {
          in.close();
          bdrymap.input(bdry_nm);
       }
       else {
          pbdrymap = 0;
+         in.clear();
       }
    }
-   
+      
     switch (filetype) {            
         case(easymesh):
             /* LOAD SIDE INFORMATION */
             grd_app = grd_nm + ".s";
             in.open(grd_app.c_str());
-            if (!in) {
+            if (!in.good()) {
                     *sim::log << "error: couldn't open file: " << grd_app << std::endl;
                     exit(1);
             }
@@ -128,7 +129,7 @@ next1a:     continue;
             /* LOAD VERTEX INFORMATION               */
             grd_app = grd_nm + ".n";
             in.open(grd_app.c_str());
-            if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            if (!in.good()) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             if(!(in >> nvrtx)) {
                *sim::log << "1: error in grid: " << grd_app << std::endl;
@@ -165,7 +166,7 @@ next1a:     continue;
             /* LOAD ELEMENT INFORMATION */
             grd_app = grd_nm + ".e";
             in.open(grd_app.c_str());
-            if (!in) {
+            if (!in.good()) {
                *sim::log << "trouble opening " << grd_app << std::endl;
                exit(1);
             }
@@ -200,7 +201,7 @@ next1a:     continue;
         case(gambit):
             grd_app = grd_nm +".FDNEUT";
             in.open(grd_app.c_str());
-            if (!in) {
+            if (!in.good()) {
                     *sim::log << "trouble opening " << grd_nm << std::endl;
                     exit(1);
             }
@@ -314,7 +315,7 @@ next1a:     continue;
          case(grid):
             grd_app = grd_nm + ".grd";
             in.open(grd_app.c_str());
-            if (!in) {
+            if (!in.good()) {
                *sim::log << "couldn't open grid file: " << grd_app << std::endl;
                exit(1);
             }
@@ -401,7 +402,7 @@ next1a:     continue;
             /* LOAD VERTEX POSITIONS               */
             grd_app = grd_nm + ".txt";
             in.open(grd_app.c_str());
-            if (!in) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+            if (!in.good()) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
     
             if(!(in >> temp)) {
                *sim::log << "1: error in grid " << grd_app << std::endl;
@@ -550,8 +551,8 @@ next1c:     continue;
          case(tecplot):
             grd_app = grd_nm +".dat";
             in.open(grd_app.c_str());
-            if (!in) {
-               *sim::log << "couldn't open grid file: " << grd_app << std::endl;
+            if (!in.good()) {
+               *sim::log << "couldn't open tecplot file: " << grd_app << std::endl;
                exit(1);
             }
             
@@ -578,6 +579,7 @@ next1c:     continue;
             for(i=0;i<nvrtx;++i) {
                for(n=0;n<ND;++n)
                   in >> vrtx(i)(n);
+               in.ignore(80,'\n');
                vd(i).info = -1;
             }
             in.ignore(80,'\n');
@@ -591,6 +593,8 @@ next1c:     continue;
                --td(i).vrtx(2);
                td(i).info = 0;
             }
+            
+
 
             /* CREATE SIDE INFORMATION */
             createsideinfo();
@@ -618,7 +622,7 @@ next1c:     continue;
             /* LOAD BOUNDARY INFORMATION */
             grd_app = grd_nm +".d";
             in.open(grd_app.c_str());
-            if (!in) { 
+            if (!in.good()) { 
                *sim::log << "couldn't open " << grd_app << "for reading\n";
                exit(1);
             }
