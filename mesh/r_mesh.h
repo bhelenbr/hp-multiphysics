@@ -28,8 +28,6 @@ class r_mesh : public mesh {
          Array<FLT,1> kvol;
          Array<TinyVector<FLT,ND>,1> src;
          Array<TinyVector<FLT,ND>,1> vrtx_frst;
-         bool isfrst;
-         int mp_phase;
          
          Array<r_side_bdry *,1> r_sbdry;
          r_side_bdry* getnewsideobject(int bnum, input_map *bdrydata);
@@ -84,14 +82,18 @@ class r_mesh : public mesh {
          void input(const std::string &fname) {mesh::input(fname,mesh::grid); }
          void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type); }
          void bdry_output(const std::string &filename) const;
-         block::ctrl mg_getfres(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
-         block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
-         block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
-         block::ctrl rsdl(int excpt);
-         block::ctrl update(int excpt);
-         block::ctrl setup_preconditioner(int excpt);
-         block::ctrl length(int excpt) {return(block::stop);}
+         block::ctrl mg_getfres(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+         block::ctrl mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
+         block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+         block::ctrl rsdl(block::ctrl ctrl_message);
+         block::ctrl update(block::ctrl ctrl_message);
+         block::ctrl setup_preconditioner(block::ctrl ctrl_message);
+         block::ctrl length(block::ctrl ctrl_message) {return(block::stop);}
          void maxres();
+      private:
+         int excpt,excpt1;
+         bool isfrst;
+         int mp_phase;
 };
 #endif
 

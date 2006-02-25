@@ -366,22 +366,26 @@ void r_mesh::vddti() {
       diag(i) = vnn/diag(i);
 }
 
-block::ctrl r_mesh::update(int excpt) {
+block::ctrl r_mesh::update(block::ctrl ctrl_message) {
    int i,n;
    block::ctrl state;
    
-   state = rsdl(excpt);
-   if (state != block::stop) return(state);
+   if (ctrl_message == block::begin) excpt1 = 0;
    
-   
-   Array<FLT,1> diag;
-   diag.reference(rg->diag);
-   Array<TinyVector<FLT,ND>,1> res;
-   res.reference(rg->res);
+   if (excpt1 == 0) {
+      state = rsdl(ctrl_message);
+      if (state != block::stop) return(state);
+      
+      Array<FLT,1> diag;
+      diag.reference(rg->diag);
+      Array<TinyVector<FLT,ND>,1> res;
+      res.reference(rg->res);
 
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n)
-         vrtx(i)(n) -= diag(i)*res(i)(n);
+      for(i=0;i<nvrtx;++i)
+         for(n=0;n<ND;++n)
+            vrtx(i)(n) -= diag(i)*res(i)(n);
+      ++excpt1;
+   }
       
    return(block::stop);
 }
@@ -409,51 +413,56 @@ void r_mesh::sumsrc() {
    return;
 }
 
-block::ctrl r_mesh::mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
+block::ctrl r_mesh::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
    int i,j,n,tind,v0;
    
-   Array<TinyVector<FLT,ND>,1> fres;
-   fres.reference(rg->res);
-      
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<ND;++n)
-         src(i)(n) = 0.0;
+   if (ctrl_message == block::begin) {
+      Array<TinyVector<FLT,ND>,1> fres;
+      fres.reference(rg->res);
          
-   /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
-   for(i=0;i<fmesh->nvrtx;++i) {
-      tind = fv_to_ct(i).tri;
-      for(j=0;j<3;++j) {
-         v0 = td(tind).vrtx(j);
+      for(i=0;i<nvrtx;++i)
          for(n=0;n<ND;++n)
-            src(v0)(n) += fadd*fv_to_ct(i).wt(j)*fres(i)(n);
-      }
-   }
-   
-   /* LOOP THROUGH fv_to_ct VERTICES   */
-   /* TO CALCULATE VRTX ON fv_to_ct MESH */
-   for(i=0;i<nvrtx;++i) {
-      tind = cv_to_ft(i).tri;
-
-      for(n=0;n<ND;++n)
-         vrtx(i)(n) = 0.0;
-         
-      for(j=0;j<3;++j) {
-         for(n=0;n<ND;++n)
-            vrtx(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
+            src(i)(n) = 0.0;
+            
+      /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
+      for(i=0;i<fmesh->nvrtx;++i) {
+         tind = fv_to_ct(i).tri;
+         for(j=0;j<3;++j) {
+            v0 = td(tind).vrtx(j);
+            for(n=0;n<ND;++n)
+               src(v0)(n) += fadd*fv_to_ct(i).wt(j)*fres(i)(n);
+         }
       }
       
-      for(n=0;n<ND;++n)
-         vrtx_frst(i)(n) = vrtx(i)(n);
-   }
+      /* LOOP THROUGH fv_to_ct VERTICES   */
+      /* TO CALCULATE VRTX ON fv_to_ct MESH */
+      for(i=0;i<nvrtx;++i) {
+         tind = cv_to_ft(i).tri;
 
-   isfrst = true;
+         for(n=0;n<ND;++n)
+            vrtx(i)(n) = 0.0;
+            
+         for(j=0;j<3;++j) {
+            for(n=0;n<ND;++n)
+               vrtx(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
+         }
+         
+         for(n=0;n<ND;++n)
+            vrtx_frst(i)(n) = vrtx(i)(n);
+      }
+
+      isfrst = true;
+   }
    
    return(block::stop);
 }
 
-block::ctrl r_mesh::mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh) {
+block::ctrl r_mesh::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh) {
    int i,j,n,ind,tind;  
    int stop=1;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
    
    Array<TinyVector<FLT,ND>,1> res;
    res.reference(rg->res);
@@ -684,9 +693,13 @@ void r_mesh::vddt() {
 #endif
 
 
-block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
+block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
+   
    if (!coarse) {
-      switch (execpoint) {
+      switch (excpt) {
          case (0):
             /* SETUP SPRING CONSTANTS  */
             mp_phase = -1;
@@ -758,15 +771,11 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
             sumsrc();
             moveboundaries();
             return(block::stop);
-
-         default:
-            *sim::log << "error in control flow tadvance 1" << std::endl;
-            exit(1);
       }
    }
    else {
 #ifdef GEOMETRIC
-      switch (execpoint) {
+      switch (excpt) {
          case (0):
             /* SETUP SPRING CONSTANTS  */
             mp_phase = -1;
@@ -821,7 +830,8 @@ block::ctrl r_mesh::tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &
       }
    }
 #endif  
-}    
+   return(block::stop);
+}
 
 void r_mesh::moveboundaries() {
    
@@ -832,8 +842,11 @@ void r_mesh::moveboundaries() {
    return;
 }
 
-block::ctrl r_mesh::rsdl(int excpt) {
+block::ctrl r_mesh::rsdl(block::ctrl ctrl_message) {
 
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
+   
    switch (excpt) {
 #ifdef FOURTH
       case(0):
@@ -882,7 +895,11 @@ block::ctrl r_mesh::rsdl(int excpt) {
 }
 
 
-block::ctrl r_mesh::setup_preconditioner(int excpt) {
+block::ctrl r_mesh::setup_preconditioner(block::ctrl ctrl_message) {
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
+   
    switch (excpt) {
 #ifdef FOURTH
       case(0):

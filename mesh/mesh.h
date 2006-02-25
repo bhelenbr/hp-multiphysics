@@ -100,7 +100,6 @@ class mesh {
       int initialized;
       static int maxsrch;
       
-   public:
       /**************/
       /*  INTERFACE */
       /**************/
@@ -130,9 +129,9 @@ class mesh {
       void refineby2(const class mesh& xmesh);
       void settrim();
       void initvlngth();
-      block::ctrl adapt(int excpt, FLT tolsize);
+      block::ctrl adapt(block::ctrl ctrl_message, FLT tolsize);
       int coarsen(FLT factor, const class mesh& xmesh);
-      block::ctrl coarsen2(int excpt, FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+      block::ctrl coarsen2(block::ctrl ctrl_message, FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
       void coarsen3();
 
       /* UTILITIES FOR PARALLEL COMPUTATIONS */
@@ -159,7 +158,7 @@ class mesh {
          int tri;
          TinyVector<FLT,3> wt;
       };
-      block::ctrl mgconnect(int excpt, Array<transfer,1> &cnnct, const class mesh& tgt);
+      block::ctrl mgconnect(block::ctrl ctrl_message, Array<transfer,1> &cnnct, const class mesh& tgt);
       void testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh);
       
       /* SOME DEGUGGING FUNCTIONS */
@@ -261,5 +260,7 @@ class mesh {
       int getbdrynum(int trinum) const { return((-trinum>>16) -1);}
       int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
       int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));}
+   private:
+      int excpt, excpt1;
 };
 #endif

@@ -147,11 +147,11 @@ void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
 
 
 
-block::ctrl side_bdry::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
+block::ctrl side_bdry::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
    int j,k,sind,tind,v0,sidloc;
    FLT psiloc;
    
-   if (excpt != 0) return(block::stop);
+   if (ctrl_message != block::begin) return(block::stop);
    
    for(k=1;k<nel;++k) {
       v0 = x.sd(el(k)).vrtx(0);
@@ -406,8 +406,11 @@ void scomm::sfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
 }
 
 
-block::ctrl spartition::mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
+block::ctrl spartition::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
    int i,j,k,v0;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else ++excpt;
    
    switch(excpt) {
       case(0):

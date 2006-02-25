@@ -217,8 +217,11 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 }
 
 
-block::ctrl mesh::coarsen2(int excpt, FLT factor, const class mesh &inmesh, FLT size_reduce) {
+block::ctrl mesh::coarsen2(block::ctrl ctrl_message, FLT factor, const class mesh &inmesh, FLT size_reduce) {
    int i;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else ++excpt;
       
    switch (excpt) {
       case(0):    
@@ -254,7 +257,6 @@ block::ctrl mesh::coarsen2(int excpt, FLT factor, const class mesh &inmesh, FLT 
       case(5):
          cleanup_after_adapt();
          qtree.reinit();  // REMOVES UNUSED QUADS
-
          return(block::stop);
    }
  

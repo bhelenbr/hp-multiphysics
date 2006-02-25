@@ -7,9 +7,12 @@
 #include <string.h>
 #include "block.h"
 
-block::ctrl mesh::mgconnect(int excpt, Array<transfer,1> &cnnct, const class mesh& tgt) {
+block::ctrl mesh::mgconnect(block::ctrl ctrl_message, Array<transfer,1> &cnnct, const class mesh& tgt) {
    int i,bnum,v0;
-   int state = block::stop;
+   block::ctrl state = block::stop;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else ++excpt;
    
    switch(excpt) {
       case(0):
@@ -27,10 +30,10 @@ block::ctrl mesh::mgconnect(int excpt, Array<transfer,1> &cnnct, const class mes
                *sim::log << "error: sides are not numbered the same" << std::endl;
                exit(1);
             }
-            state &= sbdry(bnum)->mgconnect(excpt,cnnct,tgt,bnum);
+            state &= sbdry(bnum)->mgconnect(ctrl_message,cnnct,tgt,bnum);
          }
    }
-   return(static_cast<block::ctrl>(state));
+   return(state);
 }
 
 

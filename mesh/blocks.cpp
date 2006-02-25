@@ -210,10 +210,6 @@ void blocks::init(input_map input) {
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    
    blk = new block *[nblock];
-
-   int lvl = 0;
-   int excpt = 0;
-   int state = block::stop;
    for (i=0;i<nblock;++i) {
       blk[i] = getnewblock(bstart+i,input);
       blk[i]->init(input);
@@ -225,15 +221,16 @@ void blocks::init(input_map input) {
    findmatch();
    matchboundaries(0);
    output("matched0");
-
-   for(lvl=1;lvl<ngrid;++lvl) {
-      excpt = 0;
+   
+   block::ctrl ctrl_message, state;
+   for(int lvl=1;lvl<ngrid;++lvl) {
+      ctrl_message = block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i) {
-            state &= blk[i]->reconnect(lvl,excpt);
+            state &= blk[i]->reconnect(lvl,ctrl_message);
          }
-         excpt += state;
+         ctrl_message = state;
       } while (state != block::stop);
       matchboundaries(lvl);
       nstr << lvl << flush;
@@ -550,16 +547,16 @@ void blocks::findmatch() {
             
    /* MATCH BOUNDARIES */
 void blocks::matchboundaries(int lvl) {
-   int i,excpt;
-   int state;
+   int i;
+   block::ctrl state,ctrl_message;
    
-   excpt = 0;
+   ctrl_message = block::begin;
    do {
       state = block::stop;
       for(i=0;i<nblock;++i) {
-         state &= blk[i]->matchboundaries(lvl,excpt);
+         state &= blk[i]->matchboundaries(lvl,ctrl_message);
       }
-      excpt += state;
+      ctrl_message = state;
    } while (state != block::stop);
 }
 
@@ -577,15 +574,15 @@ void blocks::output(const std::string &filename, block::output_purpose why, int 
 }
 
 void blocks::rsdl(int lvl) {
-   int i,excpt;
-   int state;
+   int i;
+   block::ctrl state, ctrl_message;
    
-   excpt = 0;
+   ctrl_message = block::begin;
    do {
       state = block::stop;
       for(i=0;i<nblock;++i)
-         state &= blk[i]->rsdl(lvl,excpt);
-      excpt += state;
+         state &= blk[i]->rsdl(lvl,ctrl_message);
+      ctrl_message = state;
    } while (state != block::stop);
 
    return;
@@ -593,15 +590,15 @@ void blocks::rsdl(int lvl) {
       
       
 void blocks::setup_preconditioner(int lvl) {
-   int i,excpt;
-   int state;
+   int i;
+   block::ctrl state,ctrl_message;
    
-   excpt = 0;
+   ctrl_message = block::begin;
    do {
       state = block::stop;
       for(i=0;i<nblock;++i) 
-         state &= blk[i]->setup_preconditioner(lvl,excpt);
-      excpt += state;
+         state &= blk[i]->setup_preconditioner(lvl,ctrl_message);
+      ctrl_message = state;
    } while (state != block::stop);
    
    return;
@@ -612,16 +609,16 @@ void blocks::iterate(int lvl, int niter) {
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
 /*****************************************/
-   int i,iter,excpt;
-   int state;
+   int i,iter;
+   block::ctrl state,ctrl_message;
 
    for(iter=0;iter<niter;++iter) {   
-      excpt = 0;
+      ctrl_message=block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->update(lvl,excpt);
-         excpt += state;
+            state &= blk[i]->update(lvl,ctrl_message);
+         ctrl_message = state;
       } while (state != block::stop);
    }
    
@@ -629,8 +626,9 @@ void blocks::iterate(int lvl, int niter) {
 }
 
 void blocks::cycle(int vw, int lvl) {
-   int i,vcount,excpt;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
-   int state,gridlevel,gridlevelp;
+   int i,vcount; 
+   int gridlevel,gridlevelp;
+   block::ctrl state,ctrl_message;
    
    /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
    /* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */
@@ -647,22 +645,22 @@ void blocks::cycle(int vw, int lvl) {
       
       rsdl(gridlevel);
       
-      excpt = 0;
+      ctrl_message = block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->mg_getfres(gridlevelp,gridlevel,excpt);
-         excpt += state;
+            state &= blk[i]->mg_getfres(gridlevelp,gridlevel,ctrl_message);
+         ctrl_message = state;
       } while (state != block::stop);
           
       cycle(vw, lvl+1);
 
-      excpt = 0;
+      ctrl_message = block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->mg_getcchng(gridlevel,gridlevelp,excpt);
-         excpt += state;
+            state &= blk[i]->mg_getcchng(gridlevel,gridlevelp,ctrl_message);
+         ctrl_message = state;
       } while (state != block::stop);
       
       if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(gridlevel);
@@ -716,8 +714,8 @@ void blocks::go() {
 }
 
 void blocks::tadvance() {
-   int i,lvl,excpt;
-   int state;
+   int i,lvl;
+   block::ctrl state,ctrl_message;
    
 
 #ifdef BACKDIFF
@@ -783,12 +781,12 @@ void blocks::tadvance() {
 #endif
    
    for (lvl=0;lvl<ngrid;++lvl) {
-      excpt = 0;
+      ctrl_message = block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i)
-            state &= blk[i]->tadvance(lvl,excpt);
-         excpt += state;
+            state &= blk[i]->tadvance(lvl,ctrl_message);
+         ctrl_message = state;
       } while (state != block::stop);
    }
    
@@ -798,27 +796,27 @@ void blocks::tadvance() {
 }
 
 void blocks::restructure() {
-   int i,lvl,excpt;
-   int state;
+   int i,lvl;
+   block::ctrl state,ctrl_message;
    
    matchboundaries(0);
    
-   excpt = 0;
+   ctrl_message = block::begin;
    do {
       state = block::stop;
       for(i=0;i<nblock;++i)
-         state &= blk[i]->adapt(excpt);
-      excpt += state;
+         state &= blk[i]->adapt(ctrl_message);
+      ctrl_message = state;
    } while (state != block::stop);
    
    for(lvl=1;lvl<ngrid;++lvl) {
-      excpt = 0;
+      ctrl_message = block::begin;
       do {
          state = block::stop;
          for(i=0;i<nblock;++i) {
-            state &= blk[i]->reconnect(lvl,excpt);
+            state &= blk[i]->reconnect(lvl,ctrl_message);
          }
-         excpt += state;
+         ctrl_message = state;
       } while (state != block::stop);
    }
    

@@ -97,6 +97,8 @@ class boundary {
       virtual void slave_master_wait() {}
       virtual void slave_master_nowait() {}
       virtual ~boundary() {}
+   protected:
+      int excpt;
 };
 
 /** \brief Specialization for a vertex 
@@ -156,7 +158,7 @@ class side_bdry : public boundary {
       virtual void swap(int s1, int s2);
       virtual void reorder();
       virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
-      virtual block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
+      virtual block::ctrl mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
       virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
       
       /* DEFAULT SENDING FOR SIDE VERTICES */

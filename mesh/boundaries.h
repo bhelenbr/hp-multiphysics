@@ -600,7 +600,7 @@ class spartition : public scomm {
       spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
 
       spartition* create(mesh& xin) const {return new spartition(*this,xin);}
-      block::ctrl mgconnect(int excpt, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
+      block::ctrl mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
 };
 
 
