@@ -207,24 +207,24 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, block::ctrl ctrl_
          state = grd[lvl].mgconnect(block::begin,cv_to_ft(lvl-1),grd[lvl-1]);
          ++excpt1;
          if (state != block::stop) return(state);
-         else return(block::advance2);
+         else return(block::advance1);
       case(2):
-         if (ctrl_message != block::advance2) {
+         if (ctrl_message != block::advance1) {
             state = grd[lvl].mgconnect(ctrl_message,cv_to_ft(lvl-1),grd[lvl-1]);
             if (state != block::stop) return(state);
-            else return(block::advance2);
+            else return(block::advance1);
          }
          else ++excpt1;
       case(3):
          state = grd[lvl-1].mgconnect(block::begin,fv_to_ct(lvl-1),grd[lvl]);
          ++excpt1;
          if (state != block::stop) return(state);
-         else return(block::advance2);
+         else return(block::advance1);
       case(4):
-         if (ctrl_message != block::advance2) {
+         if (ctrl_message != block::advance1) {
             state = grd[lvl-1].mgconnect(ctrl_message,fv_to_ct(lvl-1),grd[lvl]);
             if (state != block::stop) return(state);
-            else return(block::advance2);
+            else return(block::advance1);
          }
          else {
             /* THIS IS FOR DIAGNOSIS OF MULTI-GRID FAILURES */
