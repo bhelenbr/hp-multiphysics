@@ -12,12 +12,15 @@
 #include <math.h>
 #include <utilities.h>
 
-block::ctrl tri_hp_cd::length(int excpt) {
+block::ctrl tri_hp_cd::length(block::ctrl ctrl_message) {
    int i,j,k,v0,v1,v2,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
    FLT sum,ratio;
    FLT length0,length1,length2,lengthept;
    FLT ang1,curved1,ang2,curved2;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
       
    switch(excpt) {      
       case(0): {

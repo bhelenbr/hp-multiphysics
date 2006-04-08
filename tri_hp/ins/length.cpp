@@ -17,7 +17,7 @@
 extern FLT dydt;
 #endif
 
-block::ctrl tri_hp_ins::length(int excpt) {
+block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
    int i,j,k,v0,v1,v2,indx,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
    FLT q,p,duv,um,vm,u,v;
@@ -25,6 +25,9 @@ block::ctrl tri_hp_ins::length(int excpt) {
    FLT length0,length1,length2,lengthept;
    FLT ang1,curved1,ang2,curved2;
    FLT norm;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
    
    switch(excpt) {
       case(0): {

@@ -15,6 +15,9 @@ void tri_hp_cd::init(input_map& input, gbl *gin) {
    std::istringstream data;
    std::string filename;
    
+   keyword = idprefix + ".nvariable";
+   input[keyword] = "1";
+   
    tri_hp::init(input,gin);
    
    /* Load pointer to block stuff */
@@ -22,6 +25,10 @@ void tri_hp_cd::init(input_map& input, gbl *gin) {
    
    keyword = idprefix + ".coarse";
    input.getwdefault(keyword,coarse,0);
+   
+   keyword = idprefix + ".dissipation";
+   input.getwdefault(keyword,adis,1.0);
+   *sim::log << "#" << keyword << ": " << adis << std::endl;
    
    if (coarse) return;
   
@@ -36,12 +43,11 @@ void tri_hp_cd::init(input_map& input, gbl *gin) {
    keyword = idprefix + ".nu";
    input.getwdefault(keyword,cd_gbl->nu,1.0);
    *sim::log << "#" << keyword << ": " << cd_gbl->nu << std::endl;
-   
-   keyword = idprefix + ".dissipation";
-   input.getwdefault(keyword,adis,1.0);
-   *sim::log << "#" << keyword << ": " << adis << std::endl;
 
    cd_gbl->tau.resize(maxvst);
+   
+   cd_gbl->src = getnewsrc(input);
+   cd_gbl->src->input(input,idprefix);
    
    return;
 }

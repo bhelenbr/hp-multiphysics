@@ -15,21 +15,29 @@
 #include <hpbasis.h>
 #include <blocks.h>
 
+#ifdef AXISYMMETRIC
+#define RAD(r) (r)
+#else
+#define RAD(r) 1
+#endif
+
 class hp_vrtx_bdry;
 class hp_side_bdry;
-
-#ifdef AXISYMMETRIC
-#define RAD(I,J) crd(0)(I,J)
-#define RAD1D(I) crd(0)(0,I)
-#else
-#define RAD(I,J) 1
-#define RAD1D(I) 1
-#endif
 
 class init_bdry_cndtn {
    public:
       virtual FLT f(int n, TinyVector<FLT,mesh::ND> x) = 0;
       virtual void input(input_map &blkdata, std::string idnty) = 0;
+};
+
+class mesh_mover {
+   public:
+      virtual void init(input_map& input, std::string idnty) {}
+      virtual mesh_mover* create() { return new mesh_mover; }
+      virtual block::ctrl tadvance(block::ctrl ctrl_message, int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {return(block::stop);}
+      virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
+      virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {return(block::stop);}
+      virtual block::ctrl update(block::ctrl ctrl_message, int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {return(block::stop);}
 };
 
 /** This class is just the data storage and nothing for multigrid */
@@ -40,7 +48,7 @@ class tri_hp : public r_mesh  {
       int log2p; /**> index of basis to use in global basis::tri array */
       int log2pmax; /**> Initialization value of log2p */
       bool coarse; /**> tells whether we are coarse level of multigrid or not */
-      enum movementtype {fixed,rigid_moving,uncoupled_deformable,coupled_deformable} mmovement;
+      enum movementtype {fixed,uncoupled_rigid,coupled_rigid,uncoupled_deformable,coupled_deformable} mmovement;
       bool adapt_flag;
       
       /* STATIC WORK ARRAYS */
@@ -63,11 +71,10 @@ class tri_hp : public r_mesh  {
       
       /** vertex boundary information */
       Array<hp_vrtx_bdry *,1> hp_vbdry;
-      virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map *bdrydata) = 0;
-
+      virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
       /** side boundary information */
       Array<hp_side_bdry *,1> hp_sbdry;
-      virtual hp_side_bdry* getnewsideobject(int bnum, input_map *bdrydata) = 0;
+      virtual hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata); 
       
       /** Array for time history information */
       TinyVector<vsi,sim::nhist+1> ugbd;
@@ -120,7 +127,21 @@ class tri_hp : public r_mesh  {
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
          init_bdry_cndtn *ibc;
          
+         /* OBJECT TO PERFORM RIGID MESH MOVEMENT */
+         mesh_mover *mover;
+         
+         /* Pointers to block storage objects for side boundary conditions */
+         Array<void *,1> sbdry_gbls;
+         
+         /* Pointers to block storage objects for vrtx boundary conditions */
+         Array<void *,1> vbdry_gbls;
+         
+         /* Time step factor for different polynomial degree */
+         TinyVector<FLT,MXGP> cfl;
+         
       } *hp_gbl;
+      virtual init_bdry_cndtn* getnewibc(input_map& inmap);
+      virtual mesh_mover* getnewmesh_mover(input_map& inmap);
 
       /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
       void ugtouht(int tind);
@@ -162,7 +183,7 @@ class tri_hp : public r_mesh  {
 
       /* Some other handy utilities */
       void l2error(FLT (*func)(int, TinyVector<FLT,ND> &x));
-      block::ctrl findmax(int excpt, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
+      block::ctrl findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
       void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
       
       /* Routines for point probe */
@@ -174,8 +195,8 @@ class tri_hp : public r_mesh  {
       void findandmvptincurved(TinyVector<FLT,2> pt,int &tind, FLT &r, FLT &s);
       
       /* FUNCTIONS FOR ADAPTION */ 
-      virtual block::ctrl length(int excpt) {*sim::log << "here\n"; return(block::stop);}
-      block::ctrl adapt(int excpt,FLT tol);
+      virtual block::ctrl length(block::ctrl ctrl_message) {*sim::log << "here\n"; return(block::stop);}
+      block::ctrl adapt(block::ctrl ctrl_message,FLT tol);
       void movevdata(int frm, int to);
       void movevdata_bdry(int bnum,int bel,int endpt);
       void updatevdata(int v);
@@ -188,26 +209,26 @@ class tri_hp : public r_mesh  {
       void updatetdata(int t);
 
       /* Routines to do explicit update of solution */
-      virtual block::ctrl setup_preconditioner(int excpt);
-      virtual block::ctrl rsdl(int excpt, int stage = sim::NSTAGE) {   
+      virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message);
+      virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage = sim::NSTAGE) {   
          /* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES */
          if (mmovement == coupled_deformable && stage == sim::NSTAGE && log2p == 0) {
-            return(r_mesh::rsdl(excpt));            
+            return(r_mesh::rsdl(ctrl_message));            
          }
          return(block::stop);
       }
       void maxres();      
-      block::ctrl update(int excpt);
-      block::ctrl minvrt(int excpt);
-      block::ctrl minvrt_test(int excpt);
+      block::ctrl update(block::ctrl ctrl_message);
+      block::ctrl minvrt(block::ctrl ctrl_message);
+      block::ctrl minvrt_test(block::ctrl ctrl_message);
       
       /* MGRID TRANSFER */
       inline void setlog2p(int value) { tri_hp::log2p = value; } /* To switch polynomial degree */
-      block::ctrl mg_getfres(int excpt, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
-      block::ctrl mg_getcchng(int excpt,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh);
+      block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+      block::ctrl mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh);
 
       /* ADVANCE TIME SOLUTION */
-      block::ctrl tadvance(bool coarse,int execpoint,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+      block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
       virtual void calculate_unsteady_sources(bool coarse);
       
       /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
@@ -229,7 +250,8 @@ class tri_hp : public r_mesh  {
       void pv3freeze();
       void pv3subtract(int frozen);
 #endif
-
+   private:
+      int excpt,excpt1,stage,mp_phase,mode;
 };
 
 

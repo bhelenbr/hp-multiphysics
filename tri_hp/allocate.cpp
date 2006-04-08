@@ -24,6 +24,10 @@ TinyMatrix<FLT,tri_hp::ND,MXTM> tri_hp::cht, tri_hp::cf;
 TinyVector<TinyMatrix<FLT,MXGP,MXGP>,tri_hp::ND> tri_hp::mvel;
 Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
 
+const int nmovetypes = 5;
+const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid","uncoupled_deformable","coupled_deformable"};
+
+
  void tri_hp::init(input_map& inmap, tri_hp::gbl *hp_in) {
    int i,ival,p,adapt_storage;
    std::string keyword, line;
@@ -38,10 +42,19 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    inmap.getwdefault(keyword,adapt_storage,0);
       
    keyword = idprefix + ".mesh_movement";
-   int mmin;
-   inmap.getwdefault(keyword,mmin,0);
-   mmovement = static_cast<movementtype>(mmin);
-   *sim::log << "#" << keyword << ": " << mmovement << std::endl;
+   if (!inmap.get(keyword,line)) {
+      keyword = "mesh_movement";
+      inmap.getwdefault(keyword,line,std::string("fixed"));
+   }
+   
+   for (i=0;i<nmovetypes;++i)
+      if (line == movetypes[i]) break;
+      
+   if (i == nmovetypes) 
+      *sim::log << "unrecognized mesh movement type" << std::endl;
+   
+   mmovement = static_cast<movementtype>(i);
+   *sim::log << "#" << keyword << ": " << line << std::endl;
 
    /* Initialize stuff for r_mesh */
    if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(inmap,hp_in);
@@ -56,34 +69,11 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
    }
    *sim::log << "#" << keyword << ": " << log2p << std::endl;
    
-   int npts;
-   keyword = idprefix + ".ngaussx";
-   if (!inmap.get(keyword,npts)) {
-      inmap.getwdefault("ngaussx",npts,0);
-   }
-   *sim::log << "#" << keyword << ": " << npts << std::endl;
-   
-   keyword = idprefix + ".hp_output_type";
-   if (inmap.getline(keyword,line)) {
-      data.str(line);
-      for(i=0;i<3;++i) {
-         data >> ival;
-         output_type(i) = static_cast<tri_hp::filetype>(ival);
-      }
-   }
-   else {
-      if (inmap.getline("hp_output_type",line)) {
-         data.str(line);
-         for(i=0;i<3;++i) {
-            data >> ival;
-            output_type(i) = static_cast<tri_hp::filetype>(ival);
-         }
-      }
-      else {
-         for(i=0;i<3;++i)
-            output_type(i) = static_cast<tri_hp::filetype>(i);
-      }
-   }
+#ifdef AXISYMMETRIC
+   int npts = 1;
+#else
+   int npts = 0;
+#endif
 
    /* Check that global basis has been allocated & allocate if necessary */
    if (basis::tri.extent(firstDim) < log2p +1) {
@@ -108,6 +98,30 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       im0 = basis::tri(log2p).im;
    }
    log2pmax = log2p;
+   
+   TinyVector<std::string,3> output_purposes;
+   TinyVector<filetype,3> defaults;
+   output_purposes(0) = "display_type";
+   defaults(0) = tri_hp::tecplot;
+   output_purposes(1) = "restart_type";
+   defaults(1) = tri_hp::text;
+   output_purposes(2) = "debug_type";
+   defaults(2) = tri_hp::tecplot;
+
+   for(int i=0 ;i<3;++i) {
+      keyword = idprefix + "." + output_purposes(i);
+      if (inmap.get(keyword,ival)) {
+         output_type(i) = static_cast<filetype>(ival);
+      }
+      else {
+         if (inmap.get(output_purposes(i),ival)) {
+            output_type(i) = static_cast<filetype>(ival);
+         }
+         else {
+            output_type(i) = defaults(i);
+         }
+      }
+   }
 
          
    /* Check that static work arrays are big enough */
@@ -142,15 +156,22 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       filename = bdryfile;
    }
    bdrymap.input(filename);
-      
-   hp_sbdry.resize(nsbd);
-   for(i=0;i<nsbd;++i) {
-      hp_sbdry(i) = getnewsideobject(i,&bdrymap);
-   }
-               
+   
    /* Load pointer to block stuff */
    hp_gbl = hp_in;
    
+   /* ALLOCATE BOUNDARY CONDITION STUFF */
+   if (!coarse) {
+      hp_gbl->sbdry_gbls.resize(nsbd);
+      hp_gbl->vbdry_gbls.resize(nvbd);
+   }
+   hp_sbdry.resize(nsbd);
+   hp_vbdry.resize(nvbd);
+   for(i=0;i<nsbd;++i) hp_sbdry(i) = getnewsideobject(i,bdrymap);
+   for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,bdrymap);
+   for(i=0;i<nsbd;++i) hp_sbdry(i)->init(bdrymap,hp_gbl->sbdry_gbls(i));
+   for(i=0;i<nvbd;++i) hp_vbdry(i)->init(bdrymap,hp_gbl->vbdry_gbls(i));
+         
    if (!coarse) {
       setinfo();
       
@@ -160,6 +181,14 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       ugbd(0).s.reference(ug.s);
       ugbd(0).i.reference(ug.i);
       vrtxbd(0).reference(vrtx);
+      
+      /* GET INITIAL CONDITION FUNCTION */
+      hp_gbl->ibc = getnewibc(inmap);
+      hp_gbl->ibc->input(inmap,idprefix);
+      
+      /* GET MESH MOVEMENT FUNCTION */
+      hp_gbl->mover = getnewmesh_mover(inmap);
+      hp_gbl->mover->init(inmap,idprefix);
       
       if (!adapt_storage) {
          for(i=1;i<sim::nhist+1;++i) {
@@ -212,7 +241,6 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       hp_gbl->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
       hp_gbl->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
       
-      
 #ifndef MATRIX_PRECONDITIONER
       hp_gbl->vprcn.resize(maxvst,NV);
       hp_gbl->sprcn.resize(maxvst,NV);
@@ -222,7 +250,20 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
       hp_gbl->sprcn.resize(maxvst,NV,NV);
       hp_gbl->tprcn.resize(maxvst,NV,NV);
 #endif
-      
+
+      keyword = idprefix +"cfl";
+      if (!inmap.getline(keyword,line)) {
+         if (!inmap.getline("cfl",line)) {
+            line = "2.5 1.5 1.0";
+         }
+      }
+      data.str(line);
+      for(i=0;i<log2pmax+1;++i) {
+         data >> hp_gbl->cfl(i);
+      }
+      data.clear();
+ 
+
       /* Use global scratch for adaptation work */
       /* resize if necessary */
       /* Total scratch size needed for adaptation */
@@ -290,6 +331,9 @@ Array<TinyMatrix<FLT,MXGP,MXGP>,2> tri_hp::bdwk;
          input(fname);
       } 
       else {
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->curv_init();
+            
          /* USE TOBASIS TO INITALIZE SOLUTION */
          tobasis(hp_gbl->ibc);
       }

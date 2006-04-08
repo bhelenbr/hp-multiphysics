@@ -22,39 +22,38 @@ using namespace bdry_ins;
 class tri_hp_ins_vtype {
    public:
       static const int ntypes = 1;
-      enum ids {plain=1};
+      enum ids {unknown=-1,plain};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i) 
-            if (!strcmp(nin,names[i])) return(i+1);
-         return(-1);
+            if (!strcmp(nin,names[i])) return(i);
+         return(unknown);
       }
 };
 
 const char tri_hp_ins_vtype::names[ntypes][40] = {"plain"};
 
-hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map *bdrydata) {
+hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
    std::istringstream data;
    char idntystring[10];
    int type;        
    hp_vrtx_bdry *temp;  
-   int idnum = vbdry(bnum)->idnum;
    
-   type = idnum&0xffff;
-
-   if (bdrydata) {
-      sprintf(idntystring,"v%d",idnum);
-      keyword = std::string(idntystring) + ".ins_type";
-      
-      if ((*bdrydata).get(keyword,val)) {
-         type = tri_hp_ins_vtype::getid(val.c_str());
-         if (type < 0)  {
-            *sim::log << "unknown vertex type:" << val << std::endl;
-            exit(1);
-         }
+   int idnum = vbdry(bnum)->idnum;
+   sprintf(idntystring,"v%d",idnum);
+   keyword = std::string(idntystring) + ".ins_type";
+   if (bdrydata.get(keyword,val)) {
+      type = tri_hp_ins_vtype::getid(val.c_str());
+      if (type == tri_hp_ins_vtype::unknown)  {
+         *sim::log << "unknown vertex type:" << val << std::endl;
+         exit(1);
       }
    }
+   else {
+      type = tri_hp_ins_vtype::unknown;
+   }
+   
    
    switch(type) {
       case tri_hp_ins_vtype::plain: {
@@ -62,14 +61,10 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map *bdrydata) {
          break;
       }
       default: {
-         std::cout << "unrecognizable vrtx type: " <<  type << " idnum: " << idnum << std::endl;
-         temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
+         temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
          break;
       }
    } 
-   
-   if (bdrydata) temp->init(*bdrydata);
-   
    return(temp);
 }
 
@@ -83,43 +78,39 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map *bdrydata) {
  */
 class tri_hp_ins_stype {
    public:
-      static const int ntypes = 5;
-      enum ids {plain=1,inflow,outflow,characteristic,euler};
+      static const int ntypes = 6;
+      enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,symmetry};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
-            if (!strcmp(nin,names[i])) return(i+1);
+            if (!strcmp(nin,names[i])) return(i);
          return(-1);
       }
 };
 
-const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler"};
+const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler","symmetry"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map *bdrydata) {
+hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
    std::istringstream data;
    char idntystring[10];
    int type;        
    hp_side_bdry *temp;  
-   int idnum = sbdry(bnum)->idnum;
-
-   type = idnum&0xff;
    
-   if (bdrydata) {
-      sprintf(idntystring,"s%d",idnum);
-      keyword = std::string(idntystring) + ".ins_type";
-      
-      if ((*bdrydata).get(keyword,val)) {
-         type = tri_hp_ins_stype::getid(val.c_str());
-         if (type < 0)  {
-            *sim::log << "unknown side type:" << val << std::endl;
-            exit(1);
-         }
+   int idnum = sbdry(bnum)->idnum;
+   sprintf(idntystring,"s%d",idnum);
+   keyword = std::string(idntystring) + ".ins_type";
+   
+   if (bdrydata.get(keyword,val)) {
+      type = tri_hp_ins_stype::getid(val.c_str());
+      if (type == tri_hp_ins_stype::unknown)  {
+         *sim::log << "unknown side type:" << val << std::endl;
+         exit(1);
       }
-      else {
-         type = tri_hp_ins_stype::plain;
-      }
+   }
+   else {
+      type = tri_hp_ins_stype::unknown;
    }
 
    switch(type) {
@@ -143,10 +134,15 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map *bdrydata) {
          temp = new euler(*this,*sbdry(bnum));
          break;
       }
-   }
-
-   if (bdrydata) temp->init(*bdrydata);
-   
+      case tri_hp_ins_stype::symmetry: {
+         temp = new symmetry(*this,*sbdry(bnum));
+         break;
+      }
+      default: {
+         temp = tri_hp::getnewsideobject(bnum,bdrydata);
+         break;
+      }
+   }   
    return(temp);
 }
 

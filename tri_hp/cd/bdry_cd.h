@@ -40,7 +40,7 @@ namespace bdry_cd {
             }
          }
             
-         block::ctrl tadvance(int excpt); 
+         block::ctrl tadvance(bool coarse, block::ctrl ctrl_message); 
    };
 
    class neumann : public hp_side_bdry {
@@ -52,7 +52,7 @@ namespace bdry_cd {
          neumann(tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(xin,bin), x(xin) {mytype = "neumann";}
          neumann(const neumann& inbdry, tri_hp_cd &xin, side_bdry &bin) : hp_side_bdry(inbdry,xin,bin), x(xin) {}
          neumann* create(tri_hp& xin, side_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-         void addbflux();
+         block::ctrl rsdl(block::ctrl ctrl_message);
    };
 
 
@@ -90,12 +90,12 @@ namespace bdry_cd {
          mixed(const mixed& inbdry, tri_hp_cd &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
          mixed* create(tri_hp& xin, side_bdry &bin) const {return new mixed(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
          
-         void init(input_map& inmap) {
+         void init(input_map& inmap, void* &gbl_in) {
             std::string keyword;
             std::istringstream data;
             std::string val;
             
-            neumann::init(inmap);
+            neumann::init(inmap,gbl_in);
 
             keyword = base.idprefix + ".cd_mixed_coefficients";
             

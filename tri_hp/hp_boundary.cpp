@@ -12,6 +12,16 @@
 
 #define NO_MPDEBUG
 
+hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
+   hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));   
+   return(temp);
+}
+
+hp_side_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
+   hp_side_bdry *temp = new hp_side_bdry(*this,*sbdry(bnum));
+   return(temp);
+}
+
 FLT hp_vrtx_bdry::dummy;
 
 void hp_side_bdry::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride) {
@@ -33,7 +43,7 @@ void hp_side_bdry::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int
    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
    for(m=0;m<base.matches();++m) {   
-      if (base.matchphase(m) != phi) continue;
+      if (base.matchphase(boundary::all,m) != phi) continue;
       
       ++matches;
       
@@ -84,7 +94,7 @@ void hp_side_bdry::copy_data(const hp_side_bdry &bin) {
       crvbd(i)(Range(0,base.nel-1),Range::all()) = bin.crvbd(i)(Range(0,base.nel-1),Range::all());
 }
 
-void hp_side_bdry::init(input_map& inmap) {
+void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
    int i,coarse;
    std::string keyword;
    std::istringstream data;
@@ -267,59 +277,67 @@ void hp_side_bdry::findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
    } while (fabs(dpsi) > roundoff);
 }
 
-block::ctrl hp_side_bdry::tadvance(int excpt) {
+block::ctrl hp_side_bdry::tadvance(bool coarse, block::ctrl ctrl_message) {
    int stage = sim::substep +sim::esdirk;  
    
    if (x.p0 == 1 || !curved) return(block::stop);
    
-   switch(excpt) {
-      case(0): {
-         if (stage) {
-            /* BACK CALCULATE K TERM */
-            for(int j=0;j<base.nel;++j) {
-               for(int m=0;m<basis::tri(x.log2p).sm;++m) {
-                  for(int n=0;n<mesh::ND;++n)
-                     crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*sim::adirk[sim::substep][sim::substep];
-               }
+   if (ctrl_message == block::begin) {
+      if (stage) {
+         /* BACK CALCULATE K TERM */
+         for(int j=0;j<base.nel;++j) {
+            for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+               for(int n=0;n<mesh::ND;++n)
+                  crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*sim::adirk[sim::substep][sim::substep];
             }
          }
-         
-         if (sim::substep == 0) {
-            /* STORE TILDE W */
-            for(int j=0;j<base.nel;++j) {
-               for(int m=0;m<basis::tri(x.log2p).sm;++m) {
-                  for(int n=0;n<mesh::ND;++n)
-                     crvbd(1)(j,m)(n) = crvbd(0)(j,m)(n);
-               }
+      }
+      
+      if (sim::substep == 0) {
+         /* STORE TILDE W */
+         for(int j=0;j<base.nel;++j) {
+            for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+               for(int n=0;n<mesh::ND;++n)
+                  crvbd(1)(j,m)(n) = crvbd(0)(j,m)(n);
             }
          }
-         
-         /* UPDATE TILDE W */
-         for (int s=0;s<stage;++s) {         
-            for(int j=0;j<base.nel;++j) {
-               for(int m=0;m<basis::tri(x.log2p).sm;++m) {
-                  for(int n=0;n<mesh::ND;++n)
-                     crvbd(1)(j,m)(n) += sim::adirk[stage][s]*crvbd(s+2)(j,m)(n);
-               }
+      }
+      
+      /* UPDATE TILDE W */
+      for (int s=0;s<stage;++s) {         
+         for(int j=0;j<base.nel;++j) {
+            for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+               for(int n=0;n<mesh::ND;++n)
+                  crvbd(1)(j,m)(n) += sim::adirk[stage][s]*crvbd(s+2)(j,m)(n);
             }
          }
-         return(block::advance);
       }
-   
-      case(1): {
-         /* CALCULATE MESH VELOCITY SOURCE TERMS ON BOUNDARY? */
-         return(block::advance);
-      }
-      case(2): {
-         /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
-         if (!coupled) curv_init();
-         return(block::advance);
-      }
+      
+      calculate_unsteady_sources(coarse);
+      
+      /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
+      if (!coupled) curv_init();
    }
-   
    return(block::stop);
 }
 
+void hp_side_bdry::calculate_unsteady_sources(bool coarse) {
+   int i,j,n,v0,v1,sind;
+   
+   for(i=0;i<x.log2pmax;++i) {
+      for(j=0;j<base.nel;++j) {
+         sind = base.el(j);
+         v0 = x.sd(sind).vrtx(0);
+         v1 = x.sd(sind).vrtx(1);
+         
+         x.crdtocht1d(sind,1);
+         for(n=0;n<mesh::ND;++n)
+            basis::tri(x.log2p).proj1d(&x.cht(n,0),&dxdt(i,j)(n,0));
+      }
+   }
+   
+   return;
+}
 
 
 
@@ -334,9 +352,9 @@ void tri_hp::vc0load(int phase, FLT *vdata) {
       hp_vbdry(i)->vmatchsolution_snd(phase,vdata);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(phase);
+      sbdry(i)->comm_prepare(boundary::all,phase);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(phase);
+      vbdry(i)->comm_prepare(boundary::all,phase);
    
    return;
 }
@@ -345,9 +363,9 @@ int tri_hp::vc0wait_rcv(int phase, FLT *vdata) {
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(phase);
+      stop &= sbdry(i)->comm_wait(boundary::all,phase);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(phase);
+      stop &= vbdry(i)->comm_wait(boundary::all,phase);
       
 
    for(i=0;i<nsbd;++i) 
@@ -362,9 +380,9 @@ int tri_hp::vc0rcv(int phase, FLT *vdata) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(phase);
+      stop &= sbdry(i)->comm_nowait(boundary::all,phase);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_nowait(phase);
+      stop &= vbdry(i)->comm_nowait(boundary::all,phase);
       
    for(i=0;i<nsbd;++i) 
       hp_sbdry(i)->vmatchsolution_rcv(phase,vdata);
@@ -382,7 +400,7 @@ void tri_hp::sc0load(int phase, FLT *sdata, int bgnmode, int endmode, int modest
       hp_sbdry(i)->smatchsolution_snd(phase,sdata,bgnmode,endmode,modestride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(phase);
+      sbdry(i)->comm_prepare(boundary::all,phase);
    
    return;
 }
@@ -392,7 +410,7 @@ int tri_hp::sc0wait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int mode
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(phase);
+      stop &= sbdry(i)->comm_wait(boundary::all,phase);
 
    for(i=0;i<nsbd;++i) 
       hp_sbdry(i)->smatchsolution_rcv(phase,sdata,bgnmode,endmode,modestride);
@@ -404,7 +422,7 @@ int tri_hp::sc0rcv(int phase, FLT *sdata, int bgnmode, int endmode, int modestri
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(phase);
+      stop &= sbdry(i)->comm_nowait(boundary::all,phase);
       
    for(i=0;i<nsbd;++i) 
       hp_sbdry(i)->smatchsolution_rcv(phase,sdata,bgnmode,endmode,modestride);

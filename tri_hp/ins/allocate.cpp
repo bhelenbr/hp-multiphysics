@@ -27,6 +27,10 @@
    keyword = idprefix + ".coarse";
    input.getwdefault(keyword,coarse,0);
    
+   keyword = idprefix + ".dissipation";
+   input.getwdefault(keyword,adis,1.0);
+   *sim::log << "#" << keyword << ": " << adis << std::endl;
+   
    if (coarse) return;
    
    ins_gbl->tau.resize(maxvst);
@@ -42,9 +46,7 @@
 
    ins_gbl->nu = ins_gbl->mu/ins_gbl->rho;
    
-   keyword = idprefix + ".dissipation";
-   input.getwdefault(keyword,adis,1.0);
-   *sim::log << "#" << keyword << ": " << adis << std::endl;
+
    
    return;
 }
@@ -81,7 +83,7 @@ void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
                      
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               cjcb(i,j) = -sim::bd[0]*ins_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+               cjcb(i,j) = -sim::bd[0]*ins_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                dugdt(log2p,tind,ND)(i,j) = cjcb(i,j);
@@ -92,9 +94,6 @@ void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
          }
       }
    }
-   
-   for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->tadvance(1);
    
    return;
 }

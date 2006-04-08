@@ -107,6 +107,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             hp_sbdry(i)->output(out,typ,tlvl);
          }
          
+         for(i=0;i<nvbd;++i) {
+            hp_vbdry(i)->output(out,typ,tlvl);
+         }
+         
          out.close();
          break;
       
@@ -250,6 +254,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             }
          }
          out.close();
+         
+         for(i=0;i<nsbd;++i)   // TEMPORARY NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
+            hp_sbdry(i)->output(*sim::log, typ);
+            
          break; 
                
       case(adapt_diagnostic): {         
@@ -281,6 +289,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
          exit(1);
          break;
      }
+     
+
+      
    
     return;
 }
@@ -391,6 +402,9 @@ void tri_hp::input(const std::string& fname) {
          /* BOUNDARY INFO */
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->input(in,typ,tlvl);
+            
+         for(i=0;i<nvbd;++i)
+            hp_vbdry(i)->input(in,typ,tlvl);
 
          in.close();
          break;

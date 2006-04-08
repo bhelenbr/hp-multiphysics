@@ -30,6 +30,9 @@
    for(i=0;i<nsbd;++i)
       hp_sbdry(i)->copy_data(*tgt.hp_sbdry(i));
       
+   for(i=0;i<nvbd;++i)
+      hp_vbdry(i)->copy_data(*tgt.hp_vbdry(i));
+      
    return;
 }
          

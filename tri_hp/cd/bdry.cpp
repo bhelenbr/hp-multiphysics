@@ -21,14 +21,18 @@
 
 using namespace bdry_cd;
 
-block::ctrl dirichlet::tadvance(int excpt) {
+block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
    int j,k,m,n,v0,v1,sind,indx,info;
    TinyVector<FLT,mesh::ND> pt;
    char uplo[] = "U";
+   block::ctrl state;
    
-   hp_side_bdry::tadvance(excpt);
+   if (ctrl_message == block::begin) excpt1 = 0;
    
-   if (excpt == 2) {
+   if (excpt1 == 0) {
+      if ((state = hp_side_bdry::tadvance(coarse,ctrl_message)) != block::stop) return(state); 
+      ++excpt1;  
+
       /* UPDATE BOUNDARY CONDITION VALUES */
       for(j=0;j<base.nel;++j) {
          sind = base.el(j);
@@ -82,54 +86,57 @@ block::ctrl dirichlet::tadvance(int excpt) {
          }
       }
    }
-   return(block::advance);
+   return(block::stop);
 }
 
-void neumann::addbflux() {
+block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
    int j,k,n,v0,v1,sind;
    TinyVector<FLT,2> pt,mvel,nrm;
 
-   for(j=0;j<base.nel;++j) {
-      sind = base.el(j);
-      v0 = x.sd(sind).vrtx(0);
-      v1 = x.sd(sind).vrtx(1);
-      
-      x.crdtocht1d(sind);
-      for(n=0;n<mesh::ND;++n)
-         basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-      
-      x.crdtocht1d(sind,1);
-      for(n=0;n<mesh::ND;++n)
-         basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
-      
-      x.ugtouht1d(sind);
-      for(n=0;n<x.NV;++n)
-         basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+   if (ctrl_message == block::begin) {
+      for(j=0;j<base.nel;++j) {
+         sind = base.el(j);
+         v0 = x.sd(sind).vrtx(0);
+         v1 = x.sd(sind).vrtx(1);
+         
+         x.crdtocht1d(sind);
+         for(n=0;n<mesh::ND;++n)
+            basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+         
+         x.crdtocht1d(sind,1);
+         for(n=0;n<mesh::ND;++n)
+            basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
+         
+         x.ugtouht1d(sind);
+         for(n=0;n<x.NV;++n)
+            basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 
-      for(k=0;k<basis::tri(x.log2p).gpx;++k) {
-         nrm(0) = x.dcrd(1,0)(0,k);
-         nrm(1) = -x.dcrd(0,0)(0,k);            
-         for(n=0;n<mesh::ND;++n) {
-            pt(n) = x.crd(n)(0,k);
-            mvel(n) = sim::bd[0]*(x.crd(n)(0,k) -x.crd(n)(1,k));
+         for(k=0;k<basis::tri(x.log2p).gpx;++k) {
+            nrm(0) = x.dcrd(1,0)(0,k);
+            nrm(1) = -x.dcrd(0,0)(0,k);            
+            for(n=0;n<mesh::ND;++n) {
+               pt(n) = x.crd(n)(0,k);
+               mvel(n) = sim::bd[0]*(x.crd(n)(0,k) -x.crd(n)(1,k));
+            }
+
+            x.res(0)(0,k) = RAD(x.crd(0)(0,k))*flux(x.u(0)(0,k),pt,mvel,nrm);
          }
 
-         x.res(0)(0,k) = RAD1D(k)*flux(x.u(0)(0,k),pt,mvel,nrm);
-      }
-
-      for(n=0;n<x.NV;++n)
-         basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-      
-      for(n=0;n<x.NV;++n)
-         x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
-
-      for(n=0;n<x.NV;++n)
-         x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
-      
-      for(k=0;k<basis::tri(x.log2p).sm;++k) {
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+            basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
+         
+         for(n=0;n<x.NV;++n)
+            x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+
+         for(n=0;n<x.NV;++n)
+            x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
+         
+         for(k=0;k<basis::tri(x.log2p).sm;++k) {
+            for(n=0;n<x.NV;++n)
+               x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+         }
       }
    }
-   return;
+   
+   return(block::begin);
 }

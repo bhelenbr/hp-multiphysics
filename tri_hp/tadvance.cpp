@@ -11,142 +11,156 @@
 #include "hp_boundary.h"
 
 /* DIRK SCHEMES */
-block::ctrl tri_hp::tadvance(bool coarse,int excpt,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {
-   int i,j,n,s,tind;
-   static int last_r_mesh;
-   block::ctrl state;
+block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {
+   int i,j,n,s,tind,stage;
+   int state;
    
-   /* DO STUFF FOR DEFORMABLE MESH FIRST */
-   if (excpt == 0) last_r_mesh = 1;
+   if (ctrl_message == block::begin) excpt = 0;
    
-   if (excpt < last_r_mesh) {
-      if (log2p == log2pmax && sim::substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
-         state = r_mesh::tadvance(coarse,excpt,fv_to_ct,cv_to_ft,fmesh);
-         if (state != block::stop) {
-            last_r_mesh = excpt+2;
-            return(state);
-         }
-      }
-      mp_phase=-1;
-      return(block::advance);
-   } 
-   
-   excpt -= last_r_mesh;
-
-   /* MAKE SURE SOLUTION IS CONTINUOUS */
+   /* DO STUFF FOR DEFORMABLE MESH FIRST */   
    switch(excpt) {
-      case(0): {
+      case 0: 
+         if (log2p == log2pmax && sim::substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
+            state = r_mesh::tadvance(coarse,excpt,fv_to_ct,cv_to_ft,fmesh);
+            if (state != block::stop) return(state);
+         }
+         ++excpt;
+      case 1: {
+         if (ctrl_message == block::advance1) {
+            ++excpt;
+            ctrl_message = block::stay;
+            mp_phase = -1;
+         }
+         else return(block::advance1);
+      }
+      case 2: {
          ++mp_phase;
+         excpt += ctrl_message;
          switch(mp_phase%3) {
             case(0):
                vc0load(mp_phase/3,ug.v.data());
                return(block::stay);
             case(1):
-               vmsgpass(mp_phase/3);
+               vmsgpass(boundary::all,mp_phase/3);
                return(block::stay);
             case(2):
                return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,ug.v.data())));
          }
       }
-      case(1): {
+      case 3: {
          mp_phase = -1;
-         return(block::advance);
+         ++excpt;
+         ctrl_message = block::stay;
       }
-      case(2): {
-         if (!sm0) return(block::advance);
-         
-         ++mp_phase;
-         switch(mp_phase%3) {
-            case(0):
-               sc0load(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
-               return(block::stay);
-            case(1):
-               smsgpass(mp_phase/3);
-               return(block::stay);
-            case(2):
-               return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim))));
-         }
-      }
-   }
-
-   int stage = sim::substep +sim::esdirk;
-
-   if (!coarse) {
-      if (stage > 0) {
-
-         /* BACK CALCULATE K TERM */
-         ugbd(stage+1).v(Range(0,nvrtx-1),Range::all()) = (ug.v(Range(0,nvrtx-1),Range::all()) -ugbd(1).v(Range(0,nvrtx-1),Range::all()))*sim::adirk[stage-1][stage-1];
-         if (basis::tri(log2p).sm) {
-            ugbd(stage+1).s(Range(0,nside-1),Range::all(),Range::all()) = (ug.s(Range(0,nside-1),Range::all(),Range::all()) -ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
-            if (basis::tri(log2p).im) {
-               ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all()) = (ug.i(Range(0,ntri-1),Range::all(),Range::all()) -ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
-            }
-         }
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n)
-               vrtxbd(stage+1)(i)(n) = (vrtx(i)(n)-vrtxbd(1)(i)(n))*sim::adirk[stage-1][stage-1];
-      }
-      
-      if (sim::substep == 0) {
-         /* STORE TILDE W */
-         ugbd(1).v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
-         if (basis::tri(log2p).sm) {
-            ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
-            if (basis::tri(log2p).im) {
-               ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
-            }
-         }
-
-         /* SAME FOR MESH INFORMATION */
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n)
-               vrtxbd(1)(i)(n) = vrtx(i)(n);
-      }
-         
-      /* UPDATE TILDE W */
-      for (s=0;s<stage;++s) {         
-         ugbd(1).v(Range(0,nvrtx-1),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).v(Range(0,nvrtx-1),Range::all());
-         if (basis::tri(log2p).sm) {
-            ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).s(Range(0,nside-1),Range::all(),Range::all());
-            if (basis::tri(log2p).im) {
-               ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).i(Range(0,ntri-1),Range::all(),Range::all());
-            }
-         }
-         for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n)
-               vrtxbd(1)(i)(n) += sim::adirk[stage][s]*vrtxbd(s+2)(i)(n);
-      }
-      
-      for(i=0;i<nsbd;++i)
-         hp_sbdry(i)->tadvance(0);
-   
-   }
-   else if (p0 == 1) {
-      
-      /* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
-      for(i=0;i<nvrtx;++i) {
-         tind = cv_to_ft(i).tri;
-
-         ugbd(1).v(i,Range::all()) = 0.0;
-
-         for(n=0;n<ND;++n)
-            vrtxbd(1)(i)(n) = 0.0;
-         
+      case 4: {
+         if (ctrl_message == block::stay) {
+               
+            if (!sm0) return(block::advance);
             
-         for(j=0;j<3;++j) {
-            ugbd(1).v(i,Range::all()) += cv_to_ft(i).wt(j)*fmesh->ugbd(1).v(fmesh->td(tind).vrtx(j),Range::all());
-            for(n=0;n<ND;++n)
-               vrtxbd(1)(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtxbd(1)(fmesh->td(tind).vrtx(j))(n);
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  sc0load(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+                  return(block::stay);
+               case(1):
+                  smsgpass(boundary::all,mp_phase/3);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim))));
+            }
          }
+         else
+            ++excpt;
+      }
+      case 5: {
+          stage = sim::substep +sim::esdirk;
+          if (!coarse) {
+            if (stage > 0) {
+
+               /* BACK CALCULATE K TERM */
+               ugbd(stage+1).v(Range(0,nvrtx-1),Range::all()) = (ug.v(Range(0,nvrtx-1),Range::all()) -ugbd(1).v(Range(0,nvrtx-1),Range::all()))*sim::adirk[stage-1][stage-1];
+               if (basis::tri(log2p).sm) {
+                  ugbd(stage+1).s(Range(0,nside-1),Range::all(),Range::all()) = (ug.s(Range(0,nside-1),Range::all(),Range::all()) -ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
+                  if (basis::tri(log2p).im) {
+                     ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all()) = (ug.i(Range(0,ntri-1),Range::all(),Range::all()) -ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()))*sim::adirk[stage-1][stage-1];
+                  }
+               }
+               for(i=0;i<nvrtx;++i)
+                  for(n=0;n<ND;++n)
+                     vrtxbd(stage+1)(i)(n) = (vrtx(i)(n)-vrtxbd(1)(i)(n))*sim::adirk[stage-1][stage-1];
+            }
+            
+            if (sim::substep == 0) {
+               /* STORE TILDE W */
+               ugbd(1).v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) {
+                  ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
+                  if (basis::tri(log2p).im) {
+                     ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
+                  }
+               }
+
+               /* SAME FOR MESH INFORMATION */
+               for(i=0;i<nvrtx;++i)
+                  for(n=0;n<ND;++n)
+                     vrtxbd(1)(i)(n) = vrtx(i)(n);
+            }
+               
+            /* UPDATE TILDE W */
+            for (s=0;s<stage;++s) {         
+               ugbd(1).v(Range(0,nvrtx-1),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) {
+                  ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).s(Range(0,nside-1),Range::all(),Range::all());
+                  if (basis::tri(log2p).im) {
+                     ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).i(Range(0,ntri-1),Range::all(),Range::all());
+                  }
+               }
+               for(i=0;i<nvrtx;++i)
+                  for(n=0;n<ND;++n)
+                     vrtxbd(1)(i)(n) += sim::adirk[stage][s]*vrtxbd(s+2)(i)(n);
+            }
+         }
+         else if (p0 == 1) {
+            
+            /* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
+            for(i=0;i<nvrtx;++i) {
+               tind = cv_to_ft(i).tri;
+
+               ugbd(1).v(i,Range::all()) = 0.0;
+
+               for(n=0;n<ND;++n)
+                  vrtxbd(1)(i)(n) = 0.0;
+               
+                  
+               for(j=0;j<3;++j) {
+                  ugbd(1).v(i,Range::all()) += cv_to_ft(i).wt(j)*fmesh->ugbd(1).v(fmesh->td(tind).vrtx(j),Range::all());
+                  for(n=0;n<ND;++n)
+                     vrtxbd(1)(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtxbd(1)(fmesh->td(tind).vrtx(j))(n);
+               }
+            }
+         }
+         ++excpt;
+         ctrl_message = block::begin;
+      }   
+      
+      case 6: {
+         if (ctrl_message != block::advance1) {
+            state = block::stop;
+            for(i=0;i<nsbd;++i)
+               state &= hp_sbdry(i)->tadvance(coarse,ctrl_message);
+            
+            if (!coarse) state &= hp_gbl->mover->tadvance(ctrl_message,nvrtx,vrtx,vrtxbd(1));
+
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else 
+            ++excpt;
+      }
+      case 7: {
+         calculate_unsteady_sources(coarse);
       }
    }
-      
-   calculate_unsteady_sources(coarse);
-   
-   /* EXTRAPOLATE HERE?? */
-   for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->tadvance(2);
-   
    return(block::stop);
 }
 
@@ -183,7 +197,7 @@ void tri_hp::calculate_unsteady_sources(bool coarse) {
                      
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               cjcb(i,j) = -sim::bd[0]*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+               cjcb(i,j) = -sim::bd[0]*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<NV;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                for(n=0;n<ND;++n)
@@ -194,7 +208,7 @@ void tri_hp::calculate_unsteady_sources(bool coarse) {
    }
    
    for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->tadvance(1);
+      hp_sbdry(i)->calculate_unsteady_sources(coarse);
    
    return;
 }
@@ -339,7 +353,7 @@ void hp_mgrid::unsteady_sources(int mgrid) {
                   
       for(i=0;i<basis::tri(log2p).gpx;++i) {
          for(j=0;j<basis::tri(log2p).gpn;++j) {   
-            cjcb(i,j) = bd[1]*hp_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+            cjcb(i,j) = bd[1]*hp_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
             for(n=0;n<ND;++n) {
                dugdt[log2p][n][tind][i][j]  = u(n)(i,j)*cjcb(i,j);
             }
@@ -375,7 +389,7 @@ void hp_mgrid::unsteady_sources(int mgrid) {
                      
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               cjcb(i,j) = bd[step+2]*hp_gbl->rho*RAD(i,j)*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+               cjcb(i,j) = bd[step+2]*hp_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND;++n) {
                   dugdt[log2p][n][tind][i][j]  += u(n)(i,j)*cjcb(i,j);
                }

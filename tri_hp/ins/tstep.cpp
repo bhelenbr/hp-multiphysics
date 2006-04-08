@@ -7,123 +7,116 @@ extern FLT dydt;
 #endif
 
 #ifndef MATRIX_PRECONDITIONER
-block::ctrl tri_hp_ins::setup_preconditioner(int excpt) {
+block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
    FLT jcb,h,hmax,q,qmax,lam1,gam;
    TinyVector<int,3> v;
-
-   switch(excpt) {
-      case(0): {
-         /***************************************/
-         /** DETERMINE FLOW PSEUDO-TIME STEP ****/
-         /***************************************/
-         ins_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
-         if (basis::tri(log2p).sm > 0) {
-            hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
-         }
          
+   if (ctrl_message == block::begin) {
+#ifdef CTRL_DEBUG
+      *sim::log << "ins setup_preconditioner: ctrl_message: " << ctrl_message  << std::endl;
+#endif
+
+      /***************************************/
+      /** DETERMINE FLOW PSEUDO-TIME STEP ****/
+      /***************************************/
+      ins_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
+      if (basis::tri(log2p).sm > 0) {
+         hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+      }
+      
 #ifdef TIMEACCURATE
-         gam = 10.0;
-         FLT dtstari = 0.0;
+      gam = 10.0;
+      FLT dtstari = 0.0;
 #endif
 
-         for(tind = 0; tind < ntri; ++tind) {
-            jcb = 0.25*area(tind);  // area is 2 x triangle area
-            v = td(tind).vrtx;
-            hmax = 0.0;
-            for(j=0;j<3;++j) {
-               h = pow(vrtx(v(j))(0) -vrtx(v((j+1)%3))(0),2.0) + 
-               pow(vrtx(v(j))(1) -vrtx(v((j+1)%3))(1),2.0);
-               hmax = (h > hmax ? h : hmax);
-            }
-            hmax = sqrt(hmax);
-            
-            if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-               *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
-               *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
-               mesh::output("negative",grid);
-               exit(1);
-            }
-            h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-            hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+      for(tind = 0; tind < ntri; ++tind) {
+         jcb = 0.25*area(tind);  // area is 2 x triangle area
+         v = td(tind).vrtx;
+         hmax = 0.0;
+         for(j=0;j<3;++j) {
+            h = pow(vrtx(v(j))(0) -vrtx(v((j+1)%3))(0),2.0) + 
+            pow(vrtx(v(j))(1) -vrtx(v((j+1)%3))(1),2.0);
+            hmax = (h > hmax ? h : hmax);
+         }
+         hmax = sqrt(hmax);
          
-            qmax = 0.0;
-            for(j=0;j<3;++j) {
-               v0 = v(j);
+         if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
+            *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
+            *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
+            mesh::output("negative",grid);
+            exit(1);
+         }
+         h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
+         hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+      
+         qmax = 0.0;
+         for(j=0;j<3;++j) {
+            v0 = v(j);
 #ifndef DROP
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(1)(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(sim::bd[0]*vrtx(v0)(1) +vrtxbd(1)(v0)(1)),2.0);
+            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
 #else
-               q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*vrtx(v0)(0) +vrtxbd(1)(v0)(0)),2.0) 
-                  +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*vrtx(v0)(1) +vrtxbd(1)(v0)(1)),2.0); 
+            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+               +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0); 
 #endif
-               qmax = MAX(qmax,q);
-            }
+            qmax = MAX(qmax,q);
+         }
+
 #ifndef TIMEACCURATE
-            gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax);
-            if (ins_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
+         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax);
+         if (ins_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
 #endif
-            q = sqrt(qmax);
-            lam1 = q + sqrt(qmax +gam);
-            
-            /* SET UP DISSIPATIVE COEFFICIENTS */
-            ins_gbl->tau(tind) = adis*h/(jcb*sqrt(gam));
-            ins_gbl->delt(tind) = qmax*ins_gbl->tau(tind);
-            
-            /* SET UP DIAGONAL PRECONDITIONER */
-            // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-            jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+         q = sqrt(qmax);
+         lam1 = q + sqrt(qmax +gam);
+         
+         /* SET UP DISSIPATIVE COEFFICIENTS */
+         ins_gbl->tau(tind) = adis*h/(jcb*sqrt(gam));
+         ins_gbl->delt(tind) = qmax*ins_gbl->tau(tind);
+         
+         /* SET UP DIAGONAL PRECONDITIONER */
+         // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
+         jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 
 
 #ifdef INERTIALESS
-            gam = pow(2.*hp_gbl->nu/hmax,2); 
-            lam1 = sqrt(gam);
-            
-            /* SET UP DISSIPATIVE COEFFICIENTS */
-            ins_gbl->tau(tind)  = adis*h/(jcb*sqrt(gam));
-            ins_gbl->delt(tind) = 0.0;
+         gam = pow(2.*hp_gbl->nu/hmax,2); 
+         lam1 = sqrt(gam);
+         
+         /* SET UP DISSIPATIVE COEFFICIENTS */
+         ins_gbl->tau(tind)  = adis*h/(jcb*sqrt(gam));
+         ins_gbl->delt(tind) = 0.0;
 
-            jcb *= 8.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
+         jcb *= 8.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
 
 #ifdef TIMEACCURATE
-            dtstari = MAX((ins_gbl->nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
+         dtstari = MAX((ins_gbl->nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
 
-         }
-         printf("#iterative to physical time step ratio: %f\n",sim::bd[0]/dtstari);
-            
-         for(tind=0;tind<ntri;++tind) {
-            v = td(tind).vrtx;
-            jcb = 0.25*area(tind)*dtstari;
-
+      }
+      printf("#iterative to physical time step ratio: %f\n",sim::bd[0]/dtstari);
+         
+      for(tind=0;tind<ntri;++tind) {
+         v = td(tind).vrtx;
+         jcb = 0.25*area(tind)*dtstari;
 #endif
 
-#ifdef AXISYMMETRIC
-            jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
-#endif
+         jcb *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
 
-            ins_gbl->tprcn(tind,0) = ins_gbl->rho*jcb;   
-            ins_gbl->tprcn(tind,1) = ins_gbl->rho*jcb;     
-            ins_gbl->tprcn(tind,2) =  jcb/gam;
-            for(i=0;i<3;++i) {
-               hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
-               if (basis::tri(log2p).sm > 0) {
-                  side = td(tind).side(i);
-                  hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
-               }
+         ins_gbl->tprcn(tind,0) = ins_gbl->rho*jcb;   
+         ins_gbl->tprcn(tind,1) = ins_gbl->rho*jcb;     
+         ins_gbl->tprcn(tind,2) =  jcb/gam;
+         for(i=0;i<3;++i) {
+            hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+            if (basis::tri(log2p).sm > 0) {
+               side = td(tind).side(i);
+               hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
             }
          }
-            
-         /* SET UP TSTEP FOR ACTIVE BOUNDARIES */   
-         for(i=0;i<nsbd;++i)
-            hp_sbdry(i)->setup_preconditioner(0);
-   
-         mp_phase = -1;
-         return(block::advance);
       }
    }
    
-   return(tri_hp::setup_preconditioner(excpt));
+   return(tri_hp::setup_preconditioner(ctrl_message));
 }
 
 #else
@@ -195,10 +188,8 @@ void hp_mgrid::tstep1(void) {
       hp_gbl->delt(tind) = qmax*hp_gbl->tau(tind);
 
       /* STORE PRECONDITIONER (THIS IS TO DRIVE ITERATION USING NONCONSERVATIVE SYSTEM) */
-      dtstari = jcb*(hp_gbl->nu/(h*h) +lam1/h +sim::bd[0]);
-#ifdef AXISYMMETRIC
-      dtstari *= (vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.;
-#endif
+      dtstari = jcb*(hp_gbl->nu/(h*h) +lam1/h +sim::bd[0])*RAD((vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.);
+
       hp_gbl->tprcn[tind][0][0]  = dtstari*hp_gbl->rho;
    	/* hp_gbl->tprcn[tind][1][1] = hp_gbl->tprcn[tind][0][0]; */
       hp_gbl->tprcn[tind][NV-1][NV-1] =  dtstari/gam;

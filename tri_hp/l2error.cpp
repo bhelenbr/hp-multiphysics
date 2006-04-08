@@ -84,11 +84,14 @@
 	return;
 }
 
- block::ctrl tri_hp::findmax(int excpt, int bnum, FLT (*fxy)(TinyVector<FLT,2> &x)) {
+ block::ctrl tri_hp::findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,2> &x)) {
    FLT ddpsi1, ddpsi2, psil, psir;
    TinyVector<FLT,2> xp, dx, maxloc, minloc;
    FLT max,min;
    int v0, sind;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else ++excpt;
    
    switch (excpt) {
       case(0):
@@ -97,17 +100,21 @@
          crdtocht1d(sind);
          basis::tri(log2p).ptprobe1d(ND,&xp(0),&dx(0),1.0,&cht(0,0),MXTM);
          ddpsi2 = (*fxy)(dx);
-         hp_sbdry(bnum)->msgload_vrtx(1,&ddpsi2,0,1,1);
+         vbdry(sbdry(bnum)->vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
+         vbdry(sbdry(bnum)->vbdry(0))->master_slave_prepare(boundary::manifolds);
          return(block::advance);
       
-      case(1):
-         hp_sbdry(bnum)->msgpass_vrtx(1);
+      case(1): 
+         vbdry(sbdry(bnum)->vbdry(1))->master_slave_transmit(boundary::manifolds);
          return(block::advance);
       
       case(2):
-         ddpsi2 = 0.0;
-         hp_sbdry(bnum)->msgwait_rcv_vrtx(0,&ddpsi2,0,1,1);
-
+         vbdry(sbdry(bnum)->vbdry(0))->master_slave_wait(boundary::manifolds);
+         if (vbdry(sbdry(bnum)->vbdry(0))->is_comm()) 
+            ddpsi2 = vbdry(sbdry(bnum)->vbdry(0))->frcvbuf(0,0);
+         else
+            ddpsi2 = 0.0;
+            
          max = -1.0e99;
          min = 1.0e99;
          for(int indx=0;indx<sbdry(bnum)->nel;++indx) {

@@ -11,18 +11,25 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
- block::ctrl tri_hp::adapt(int excpt,FLT tol) {
+ block::ctrl tri_hp::adapt(block::ctrl ctrl_message,FLT tol) {
    block::ctrl state;
    
-   /* ASSUMES STEPS FOR SETTING UP VLENGTH HAVE BEEN TAKEN ALREADY */
-   if (excpt == 0) {
+   if (ctrl_message == block::begin) {
+      /* ASSUMES STEPS FOR SETTING UP VLENGTH HAVE BEEN TAKEN ALREADY */
       hp_gbl->pstr->copy_data(*this);
       treeinit();
+      excpt = 0;
    }
    
-   state = mesh::adapt(excpt,tol);
-   if (state == block::stop) setinfo();
-   return(state);
+   if (excpt == 0) {
+      state = mesh::adapt(ctrl_message,tol);
+      if (state == block::stop) {
+         setinfo();
+         ++excpt;
+      }
+      return(state);
+   }
+   return(block::stop);
 }
 
 void tri_hp::updatevdata(int v0) {
