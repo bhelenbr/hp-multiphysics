@@ -141,14 +141,14 @@ class mesh {
       void partition(class mesh& xmesh, int npart);
       int comm_entity_size();
       int comm_entity_list(Array<int,1>& list);
-      void vmsgload(int phase,FLT *base,int bgn, int end, int stride);
-      void vmsgpass(int phase);
-      int vmsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride);
-      int vmsgrcv(int phase,FLT *base,int bgn, int end, int stride);
-      void smsgload(int phase,FLT *base,int bgn, int end, int stride);
-      void smsgpass(int phase);
-      int smsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride);
-      int smsgrcv(int phase,FLT *base,int bgn, int end, int stride);
+      void vmsgload(int group,int phase,FLT *base,int bgn, int end, int stride);
+      void vmsgpass(int group,int phase);
+      int vmsgwait_rcv(int group,int phase,FLT *base,int bgn, int end, int stride);
+      int vmsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride);
+      void smsgload(int group,int phase,FLT *base,int bgn, int end, int stride);
+      void smsgpass(int group,int phase);
+      int smsgwait_rcv(int group,int phase,FLT *base,int bgn, int end, int stride);
+      int smsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride);
       void matchboundaries1(int phase);
       int matchboundaries2(int phase);
       

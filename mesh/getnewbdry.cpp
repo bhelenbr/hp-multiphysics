@@ -37,8 +37,6 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
    char idntystring[10];
    int type;        
    vrtx_bdry *temp;  
-   
-   type = idnum&0xffff;
 
    if (bdrydata) {
       sprintf(idntystring,"v%d",idnum);
@@ -51,8 +49,11 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
             exit(1);
          }
       }
-   }
-   
+      else {
+         type = vtype::plain;
+      }
+   }  
+      
    switch(type) {
       case vtype::plain: {
          temp = new vrtx_bdry(idnum,*this);
@@ -90,8 +91,8 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
  */
 class stype {
    public:
-      static const int ntypes = 9;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian};
+      static const int ntypes = 13;
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian,coupled_sinewave,coupled_circle,coupled_sinewave_comm,coupled_circle_comm};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -100,7 +101,8 @@ class stype {
       }
 };
 
-const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline", "partition","naca","gaussian"};
+const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline",
+   "partition","naca","gaussian","coupled_sinewave","coupled_circle","coupled_sinewave_comm","coupled_circle_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
@@ -110,7 +112,7 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
    int type;        
    side_bdry *temp;  
    
-   type = idnum&0xff;
+   type = stype::plain;
 
    if (bdrydata) {
       sprintf(idntystring,"s%d",idnum);
@@ -123,7 +125,6 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
          }
       }
       else {
-         *sim::log << "#couldn't find type for side: " << idnum << std::endl;
          type = stype::plain;
       }
    }
@@ -142,11 +143,11 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
          break;
       }
       case stype::sinewave: {
-         temp = new sinewave(idnum,*this);
+         temp = new analytic_geometry<side_bdry,sinewave>(idnum,*this);
          break;
       }
       case stype::circle: {
-         temp = new circle(idnum,*this);
+         temp = new analytic_geometry<side_bdry,circle>(idnum,*this);
          break;
       }
       case stype::spline: {
@@ -158,13 +159,30 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
          break;
       }
       case stype::naca: {
-         temp = new naca(idnum,*this);
+         temp = new analytic_geometry<side_bdry,naca>(idnum,*this);
          break;
       }
       case stype::gaussian: {
-         temp = new gaussian(idnum,*this);
+         temp = new analytic_geometry<side_bdry,gaussian>(idnum,*this);
          break;
       }
+      case stype::coupled_sinewave: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,sinewave> >(idnum,*this);
+         break;
+      }
+      case stype::coupled_circle: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,circle> >(idnum,*this);
+         break;
+      }
+      case stype::coupled_sinewave_comm: {
+         temp = new ssolution_geometry<analytic_geometry<scomm,sinewave> >(idnum,*this);
+         break;
+      }
+      case stype::coupled_circle_comm: {
+         temp = new ssolution_geometry<analytic_geometry<scomm,circle> >(idnum,*this);
+         break;
+      }
+      
       default: {
          temp = new side_bdry(idnum,*this);
          std::cout << "unrecognizable side type: " << idnum << "type " << type << std::endl;

@@ -195,48 +195,7 @@ int main(int argc, char *argv[]) {
       /* READ INPUT MAP FROM FILE & OUTPUT TO FILE */
       sim::blks.init(argv[1],argv[2]);
    }
-   else {
-      /* CREATE INPUT MAPS HERE*/
-      input_map input;
-      
-      input["mglvls"] = "3";
-      input["ngrid"] = "3";
-      input["ntstep"] = "2";
-      input["fadd"] = "1.0";
-      input["vnn"] = "0.9";
-      input["itercrsn"] = "1";
-      input["iterrfne"] = "0";
-      input["njacobi"] = "1";
-      input["ncycle"] = "100";
-      input["vwcycle"] = "1";
-      input["tolerance"] = "2.2";
-      input["nologfile"] = "duh";
-      input["adapt"] = "1";
-      
-#ifdef MPISRC
-      /* LIST OF NBLOCKS FOR EACH PROCESSOR */
-      input["nblock"] = "1 1";
-#else
-      input["nblock"] = "2";
-#endif
-      input["b0.type"] = "1";
-      input["b0.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/top8";
-      input["b0.filetype"] = "3";
-      input["b0.growth factor"] = "4.0";
-      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top_bdry.inpt";
-      input["b0.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/top_bdry_phased.inpt";
-
-      input["b1.type"] = "1";
-      input["b1.mesh"] = "${HOME}/Codes/grids/WIND/PRDC/bot8";
-      input["b1.filetype"] = "3";
-      input["b1.growth factor"] = "4.0";
-      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry.inpt";
-      input["b1.bdryfile"] = "${HOME}/Codes/grids/WIND/PRDC/bot_bdry_phased.inpt";
-
-      std::cout << input;
-      sim::blks.init(input);
-   }
-
+   
    sim::blks.go();
    
 #ifdef MPISRC

@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include "boundary.h"
+#include "boundaries.h"
 #include <stdlib.h>
 #include <new>
 
@@ -86,110 +87,110 @@ int mesh::comm_entity_list(Array<int,1>& list) {
    return(tsize);
 }
 
-void mesh::vmsgload(int phase,FLT *base,int bgn, int end, int stride) {
+void mesh::vmsgload(int group, int phase,FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->vloadbuff(base,bgn,end,stride);
+      sbdry(i)->vloadbuff(group,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->vloadbuff(base,bgn,end,stride);
+      vbdry(i)->vloadbuff(group,base,bgn,end,stride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(phase);
+      sbdry(i)->comm_prepare(group,phase);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(phase);
+      vbdry(i)->comm_prepare(group,phase);
    
    return;
 }
 
-void mesh::vmsgpass(int phase) {
+void mesh::vmsgpass(int group, int phase) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(phase);
+      sbdry(i)->comm_transmit(group,phase);
    for(int i=0;i<nvbd;++i) 
-      vbdry(i)->comm_transmit(phase);
+      vbdry(i)->comm_transmit(group,phase);
 
    return;
 }
 
-int mesh::vmsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgwait_rcv(int group, int phase,FLT *base,int bgn, int end, int stride) {
    int stop = 1;
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(phase);
+      stop &= sbdry(i)->comm_wait(group,phase);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(phase);
+      stop &= vbdry(i)->comm_wait(group,phase);
       
 
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
       
    return(stop);
 }
 
-int mesh::vmsgrcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgrcv(int group, int phase,FLT *base,int bgn, int end, int stride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(phase);
+      stop &= sbdry(i)->comm_nowait(group,phase);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_nowait(phase);
+      stop &= vbdry(i)->comm_nowait(group,phase);
       
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->vfinalrcv(phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
       
    return(stop);
 }
 
 
-void mesh::smsgload(int phase,FLT *base,int bgn, int end, int stride) {
+void mesh::smsgload(int group, int phase,FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->sloadbuff(base,bgn,end,stride);
+      sbdry(i)->sloadbuff(group,base,bgn,end,stride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(phase);
+      sbdry(i)->comm_prepare(group,phase);
    
    return;
 }
 
-void mesh::smsgpass(int phase) {
+void mesh::smsgpass(int group, int phase) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(phase);
+      sbdry(i)->comm_transmit(group,phase);
 
    return;
 }
 
-int mesh::smsgwait_rcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::smsgwait_rcv(int group, int phase, FLT *base,int bgn, int end, int stride) {
    int stop = 1;
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(phase);
+      stop &= sbdry(i)->comm_wait(group,phase);
 
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->sfinalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->sfinalrcv(group,phase,base,bgn,end,stride);
       
    return(stop);
 }
 
-int mesh::smsgrcv(int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::smsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(phase);
+      stop &= sbdry(i)->comm_nowait(group,phase);
       
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->sfinalrcv(phase,base,bgn,end,stride);
+      sbdry(i)->sfinalrcv(group,phase,base,bgn,end,stride);
       
    return(stop);
 }
@@ -208,9 +209,9 @@ void mesh::matchboundaries1(int phase) {
    
    /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
    for(int i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(phase);
+      sbdry(i)->comm_prepare(boundary::all,phase);
    for(int i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(phase);
+      vbdry(i)->comm_prepare(boundary::all,phase);
 }
 
 int mesh::matchboundaries2(int phase) {
@@ -218,9 +219,9 @@ int mesh::matchboundaries2(int phase) {
 
    /* FINAL PHASE OF SENDING */
    for(int i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(phase);
+      stop &= sbdry(i)->comm_wait(boundary::all,phase);
    for(int i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(phase);
+      stop &= vbdry(i)->comm_wait(boundary::all,phase);
       
    for(int i=0;i<nsbd;++i)
       sbdry(i)->rcvpositions(phase);
@@ -253,26 +254,28 @@ void mesh::setpartition(int nparts) {
       for(n=0;n<3;++n)
          tvrtx(i)(n) = td(i).vrtx(n);
          
-   METIS_PartMeshNodal(&ntri, &nvrtx, static_cast<int *>(&tvrtx(0)(0)), &etype, &numflag, &nparts, &edgecut,i1wk.data(),i2wk.data());
+  METIS_PartMeshNodal(&ntri, &nvrtx, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&i1wk(0),&i2wk(0));
 #ifdef USE_SIMSCRATCH
    base->~TinyVector<int,3>();
 #endif
    
    for(i=0;i<ntri;++i)
       td(i).info = i1wk(i);
-                  
+      
+   i1wk = -1;
+
    return;
 }
 #endif
 
 void mesh::partition(class mesh& xin, int npart) {
-   int i,j,n,tind,v0,indx;
+   int i,j,n,tind,sind,v0,indx;
    Array<int,2> bcntr(xin.nsbd +5,3); 
    int bnum,bel,match;
    
    for(i=0;i<xin.nvrtx;++i)
       xin.vd(i).info = -1;
-      
+
    ntri = 0;
    for(i=0;i<xin.ntri;++i) {
       if (xin.td(i).info == npart) {
@@ -298,50 +301,34 @@ void mesh::partition(class mesh& xin, int npart) {
       if (xin.vd(i).info == npart) {
          for(n=0;n<ND;++n)
             vrtx(nvrtx)(n) = xin.vrtx(i)(n);
-         i1wk(i) = nvrtx;
+         xin.vd(i).info = nvrtx;
          ++nvrtx;
       }
+      else
+         xin.vd(i).info = -1;
    }
 
    ntri = 0;
    for(i=0;i<xin.ntri;++i) {
       if (xin.td(i).info == npart) {
          for(n=0;n<3;++n)
-            td(ntri).vrtx(n) = i1wk(xin.td(i).vrtx(n));
-         i2wk(ntri) = i;
+            td(ntri).vrtx(n) = xin.vd(xin.td(i).vrtx(n)).info;
+         td(ntri).info = i;
          ++ntri;
       }
    }
 
    createsideinfo();
    
-   /* MOVE BOUNDARY INFO */
-   nvbd = 0;
-   for(i=0;i<xin.nvbd;++i) 
-      if (xin.vd(vbdry(i)->v0).info == npart)
-         ++nvbd;
-   vbdry.resize(nvbd);
-   
-   nvbd = 0;
-   for(i=0;i<xin.nvbd;++i) {
-      if (xin.vd(vbdry(i)->v0).info == npart) {
-         vbdry(nvbd) = xin.vbdry(i)->create(*this);
-         vbdry(nvbd)->alloc(1);
-         vbdry(nvbd)->v0 = xin.vd(vbdry(i)->v0).info;
-         ++nvbd;
-      }
-   }
-   
-   
    nsbd = 0;
    for(i=0;i<nside;++i) {
       sd(i).info = -1;
       if (sd(i).tri(1) < 0) {
-         tind = i2wk(sd(i).tri(0));
+         tind = td(sd(i).tri(0)).info;
 
          v0 = sd(i).vrtx(0);
          for(n=0;n<3;++n)
-            if (i1wk(xin.td(tind).vrtx(n)) == v0) break;
+            if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
          if (n==3) *sim::log << "error in partitioning\n";
          n = (n+2)%3;
 
@@ -366,9 +353,8 @@ void mesh::partition(class mesh& xin, int npart) {
          else {
             /* PARTITION SIDE */
             match = xin.td(indx).info;
-            /* 7 is stype::partition.  Not sure why necessary */
-            if (match < npart) bnum = (match<<16) + (npart << 24) + 7;
-            else bnum = (npart<<16) + (match << 24) + 7;
+            if (match < npart) bnum = (match<<16) + (npart << 24);
+            else bnum = (npart<<16) + (match << 24);
             for (j = 0; j <nsbd;++j) {
                if (bcntr(j,0) == -bnum) {
                   ++bcntr(j,1);
@@ -388,7 +374,7 @@ void mesh::partition(class mesh& xin, int npart) {
    sbdry.resize(nsbd);
    for(i=0;i<nsbd;++i) {
       if (bcntr(i,0) < 0) 
-         sbdry(i) = getnewsideobject(abs(bcntr(i,0)),0);
+         sbdry(i) = new spartition(abs(bcntr(i,0)),*this);
       else
          sbdry(i) = xin.sbdry(bcntr(i,0))->create(*this);
       sbdry(i)->alloc(static_cast<int>(bcntr(i,1)*2));
@@ -400,14 +386,65 @@ void mesh::partition(class mesh& xin, int npart) {
       if (sd(i).info > -1) 
          sbdry(sd(i).info)->el(sbdry(sd(i).info)->nel++) = i;
    }
-   
-   /* i1wk SHOULD ALWAYS BE RESET TO NEGATIVE 1 AFTER USE */
-   for(i=0;i<xin.maxvst;++i)
-      i1wk(i) = -1;
 
    for(i=0;i<nsbd;++i) {
       /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
       sbdry(i)->reorder();
+   }
+   
+   /* MOVE VERTEX BOUNDARY INFO */
+   nvbd = 0;
+   for(i=0;i<xin.nvbd;++i) 
+      if (xin.vd(xin.vbdry(i)->v0).info > -1)
+         ++nvbd;
+   vbdry.resize(nvbd+2*nsbd);
+   
+   nvbd = 0;
+   for(i=0;i<xin.nvbd;++i) {
+      if (xin.vd(xin.vbdry(i)->v0).info > -1) {
+         vbdry(nvbd) = xin.vbdry(i)->create(*this);
+         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->v0 = xin.vd(xin.vbdry(i)->v0).info;
+         ++nvbd;
+      }
+   }
+   
+   
+   /* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
+   for(i=0;i<nsbd;++i) {
+      if (sbdry(i)->mytype == "partition") {
+         sind = sbdry(i)->el(0);
+         v0 = sd(sind).vrtx(0);
+         for(j=0;j<nvbd;++j)
+            if (vbdry(j)->v0 == v0) goto nextv0;
+       
+         /* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
+         tind = td(sd(sind).tri(0)).info;
+         for(n=0;n<3;++n)
+            if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
+         vbdry(nvbd) = new vcomm(xin.td(tind).vrtx(n),*this);
+         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->v0 = v0;
+         ++nvbd;
+      
+         nextv0:
+         sind = sbdry(i)->el(sbdry(i)->nel-1);
+         v0 = sd(sind).vrtx(1);
+         for(j=0;j<nvbd;++j)
+            if (vbdry(j)->v0 == v0) goto nextv1;
+       
+         /* NEW ENDPOINT */
+         tind = td(sd(sind).tri(0)).info;
+         for(n=0;n<3;++n)
+            if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
+         vbdry(nvbd) = new vcomm(xin.td(tind).vrtx(n),*this);
+         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->v0 = v0;
+         ++nvbd;
+
+         nextv1:
+         continue;
+      }
    }
    
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT

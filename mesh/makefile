@@ -42,7 +42,7 @@ libmesh.a: $(OBJ)
 	mv -f libmesh.a $(HOME)/Codes/lib/
 	cp -f *.h $(HOME)/Codes/include/
 	
-mblock: $(OBJ) $(MAINOBJ)
+mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 
 $(OBJ): *.h

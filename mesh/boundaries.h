@@ -18,8 +18,11 @@ template<class BASE> class comm_bdry : public BASE {
    protected:
       static const int maxmatch = 8;
       bool first; //!< For master-slave communication. Only one boundary of matching boundaries is first
-      int grouping;  //!< To make groups that only communicate in restricted situations group 1 all, group 2 partitions 
-      int maxphase; //!<  For phased symmetric message passing
+      int maxgroup;
+      int groupmask;  //!< To make groups that only communicate in restricted situations group 0 all, group 1 partitions, group 2 manifolds 
+      Array<int,1> maxphase; //!<  For phased symmetric message passing for each group
+      Array<TinyVector<int,maxmatch>,1> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
+
       int buffsize; //!< Size of buffer (times sizeof(flt))
       void *sndbuf; //!< Outgoing message buffer
       int msgsize; //!< Outgoing size
@@ -36,30 +39,36 @@ template<class BASE> class comm_bdry : public BASE {
       enum matchtype {local};
 #endif
       int nmatch; //!< Number of matching boundaries
-      matchtype mtype[maxmatch]; //!< Local or mpi or ?
-      boundary *local_match[maxmatch]; //!< Pointers to local matches
-      int tags[maxmatch]; //!< Identifies each connection uniquely
-      int phase[maxmatch];  //!< To set-up staggered sequence of symmetric passes
-      void *rcvbuf[maxmatch]; //!< Local buffers to store incoming messages
+      TinyVector<matchtype,maxmatch> mtype; //!< Local or mpi or ?
+      TinyVector<boundary *,maxmatch> local_match; //!< Pointers to local matches
+      TinyVector<int,maxmatch> tags; //!< Identifies each connection uniquely
+      TinyVector<void *,maxmatch> rcvbuf; //!< Local buffers to store incoming messages
 #ifdef MPISRC
-      int mpi_match[maxmatch]; //!< Processor numbers for mpi
-      MPI_Request mpi_rcvrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of recv
-      MPI_Request mpi_sndrqst[maxmatch]; //!< Identifier returned from mpi to monitor success of send
+      TinyVector<int,maxmatch> mpi_match; //!< Processor numbers for mpi
+      TinyVector<MPI_Request,maxmatch> mpi_rcvrqst; //!< Identifier returned from mpi to monitor success of recv
+      TinyVector<MPI_Request,maxmatch> mpi_sndrqst; //!< Identifier returned from mpi to monitor success of send
 #endif
             
    public:
-      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), grouping(0), maxphase(0), buffsize(0), nmatch(0) {for(int m=0;m<maxmatch;++m) phase[m] = 0;}
-      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), grouping(inbdry.grouping), maxphase(inbdry.maxphase), buffsize(0), nmatch(0) {         
-         for(int i=0;i<maxmatch;++i) {
-            /* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
-            mtype[i] = inbdry.mtype[i];
-            local_match[i] = local_match[i];
-            tags[i] = inbdry.tags[i];
-            phase[i] = inbdry.phase[i];
+      comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), maxgroup(0), groupmask(1), buffsize(0), nmatch(0) {
+         maxphase.resize(maxgroup+1);
+         phase.resize(maxgroup+1);
+         for(int m=0;m<maxmatch;++m) phase(0)(m) = 0;
+      }
+      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {         
+         maxphase.resize(maxgroup+1);
+         phase.resize(maxgroup+1);
+         maxphase = inbdry.maxphase;
+         for(int k=0;k<maxgroup+1;++k)
+            phase(k) = inbdry.phase(k);
+         
+         /* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
+         mtype = inbdry.mtype;
+         local_match = local_match;
+         tags = inbdry.tags;
 #ifdef MPISRC
-            mpi_match[i] = inbdry.mpi_match[i];
+         mpi_match = inbdry.mpi_match;
 #endif
-         }
          return;
       }
            
@@ -67,56 +76,81 @@ template<class BASE> class comm_bdry : public BASE {
 
       void output(std::ostream& fout) {
          BASE::output(fout);
-         fout << BASE::idprefix << ".group" << ": " << grouping << std::endl;  
          
-         fout << BASE::idprefix << ".phase" << ": ";
-         for (int m=0;m<nmatch;++m)
-            fout << phase[m] << " ";
-         fout << std::endl;
+         fout << BASE::idprefix << ".group" << ": ";
+         for(int k=0;k<maxgroup+1;++k)
+            if (groupmask&(1<<k)) fout << k << ' ';
+         fout << std::endl;  
+         
+         for(int k=0;k<maxgroup+1;++k) {
+            if (groupmask&(1<<k)) {
+               fout << BASE::idprefix << ".phase" << k << ": ";
+               for (int m=0;m<nmatch;++m)
+                  fout << phase(k)(m) << " ";
+               fout << std::endl;
+            }
+         }
       }
+      
       void input(input_map& inmap) {
-         int m;
-         std::string keyword;
+         int j,k,m,maxgroup;
+         std::string keyword,val;
          std::map<std::string,std::string>::const_iterator mi;
          std::istringstream data;
+         std::ostringstream nstr;
          
          BASE::input(inmap);
-         grouping = 0;
+         maxgroup = 0;
+         
          keyword = BASE::idprefix + ".group";
          mi = inmap.find(keyword);
-         if (mi != inmap.end()) {
-            data.str(mi->second);
-            data >> grouping;
-            data.clear();
-         }
-         
-         for (m=0;m<maxmatch;++m)
-            phase[m] = 0;
-            
-         keyword = BASE::idprefix + ".phase";
-         mi = inmap.find(keyword);
-         if (mi != inmap.end()) {
-            data.str(mi->second);
-            m = 0;
-            maxphase = 0;
-            while(data >> phase[m]) {
-               maxphase = MAX(maxphase,phase[m]);
-               ++m;
+         if (inmap.getline(keyword,val)) {
+            data.str(val);
+            while(data >> m) {
+               groupmask = groupmask|(1<<m);
+               maxgroup = MAX(maxgroup,m);
             }
             data.clear();
+         }
+         else {
+            groupmask = 1;
+         }
+                  
+         /* LOAD PHASES */
+         maxphase.resize(maxgroup+1);
+         maxphase = 0;
+         phase.resize(maxgroup+1);
+         for(k=0;k<maxgroup+1;++k) {
+            if (!(groupmask&(1<<k))) continue;
+            
+            phase(k) = 0;
+            
+            nstr.str("");
+            nstr << BASE::idprefix << ".phase" << k << std::flush;
+            mi = inmap.find(keyword);
+            if (inmap.getline(nstr.str(),val)) {
+               data.str(val);
+               m = 0;
+               while(data >> j) {
+                  phase(k)(m) = j;
+                  maxphase(k) = MAX(maxphase(k),phase(k)(m));
+                  ++m;
+               }
+               data.clear();
+            }
          }
       }
       bool is_comm() {return(true);}
       bool& is_frst() {return(first);}
-      int& group() {return(grouping);}
+      int& group() {return(groupmask);}
       int& sndsize() {return(msgsize);}
       boundary::msg_type& sndtype() {return(msgtype);}
       void *psndbuf() {return(sndbuf);}
       int& isndbuf(int n) {return(static_cast<int *>(sndbuf)[n]);}
       FLT& fsndbuf(int n) {return(static_cast<FLT *>(sndbuf)[n]);}
-      void *prcvbuf(int match) {return(rcvbuf[match]);}
-      int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf[match])[n]);}
-      FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf[match])[n]);}
+      void *prcvbuf(int match) {return(rcvbuf(match));}
+      int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf(match))[n]);}
+      FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf(match))[n]);}
       
       void alloc(int size) {
          BASE::alloc(size);
@@ -129,25 +163,15 @@ template<class BASE> class comm_bdry : public BASE {
          sndbuf = xmalloc(buffsize*sizeof(FLT)); 
       }
       
-      void setphase(int newphase, int msg_tag) {
-         int i;
-         for(i=0;i<nmatch;++i) {
-            if (tags[i] == msg_tag) {
-               phase[i] = newphase;
-               maxphase = MAX(maxphase,newphase);
-            }
-         }
-         return;
-      }
       int matches() {return(nmatch);}
-      int& matchphase(int matchnum) {return(phase[matchnum]);}
+      int& matchphase(int group, int matchnum) {return(phase(group)(matchnum));}
 
       int local_cnnct(boundary *bin, int msg_tag) {
          if (bin->idnum == BASE::idnum) {
-            mtype[nmatch] = local;
-            local_match[nmatch] = bin;
-            tags[nmatch] = msg_tag;
-            rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
+            mtype(nmatch) = local;
+            local_match(nmatch) = bin;
+            tags(nmatch) = msg_tag;
+            rcvbuf(nmatch) = xmalloc(buffsize*sizeof(FLT));
             
             ++nmatch;
             return(0);
@@ -158,25 +182,28 @@ template<class BASE> class comm_bdry : public BASE {
       
 #ifdef MPISRC
       int mpi_cnnct(int nproc, int msg_tag) {
-         mtype[nmatch] = mpi;
-         mpi_match[nmatch] = nproc;
-         tags[nmatch] = msg_tag;
-         rcvbuf[nmatch] = xmalloc(buffsize*sizeof(FLT));
+         mtype(nmatch) = mpi;
+         mpi_match(nmatch) = nproc;
+         tags(nmatch) = msg_tag;
+         rcvbuf(nmatch) = xmalloc(buffsize*sizeof(FLT));
          ++nmatch;
          return(0);
       }
 #endif
 
       /* MECHANISM FOR SYMMETRIC SENDING */
-      void comm_prepare(int phi) {         
+      void comm_prepare(int grp, int phi) {         
          int m;
+         
+         if (!((1<<grp)&groupmask)) return;
+         
          switch(msgtype) {
             case(boundary::flt_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
-                  if (phi != phase[m]) continue;
+                  if (phi != phase(grp)(m)) continue;
                   
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                      case(local):
                         /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                         break;  
@@ -184,10 +211,10 @@ template<class BASE> class comm_bdry : public BASE {
                      case(mpi):
 #ifdef SINGLE
                         MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_FLOAT, 
-                           mpi_match[m], tags[m], MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                           mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
                         MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_DOUBLE, 
-                           mpi_match[m], tags[m], MPI_COMM_WORLD, &mpi_rcvrqst[m]); 
+                           mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m)); 
                         break;
 #endif   
 #endif      
@@ -198,16 +225,16 @@ template<class BASE> class comm_bdry : public BASE {
             case(boundary::int_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
-                  if (phi != phase[m]) continue;
+                  if (phi != phase(grp)(m)) continue;
                   
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                      case(local):
                         /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                         break;  
 #ifdef MPISRC
                      case(mpi):
                         MPI_Irecv(&ircvbuf(m,0), msgsize, MPI_INT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
                         break;
 #endif         
                   }
@@ -217,36 +244,38 @@ template<class BASE> class comm_bdry : public BASE {
          }
       }
       
-      void comm_transmit(int phi) {
+      void comm_transmit(int grp, int phi) {
          int i,m;
          
+         if (!((1<<grp)&groupmask)) return;
+         
 #ifdef MPDEBUG
-         *(sim::log) << "sending message: " << BASE::idnum << " " << nmatch << " first:" <<  is_frst()  << ' ' << phase[0] <<  std::endl;
+         *(sim::log) << "sending message: " << BASE::idnum << " " << nmatch << " first:" <<  is_frst()  << ' ' << phase(0) <<  std::endl;
 #endif
          switch(msgtype) {
             case(boundary::flt_msg):
                /* LOCAL PASSES */
                for(m=0;m<nmatch;++m) {
-                  if (phi != phase[m]) continue;
+                  if (phi != phase(grp)(m)) continue;
 #ifdef MPDEBUG
-                  *(sim::log) << "sending message: " << BASE::idnum << " " << tags[m] << " first:" <<  is_frst()  << " with type: " << mtype[m] << std::endl;
+                  *(sim::log) << "sending message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif     
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                   
                      case(local):
                         for(i=0;i<msgsize;++i) 
-                           frcvbuf(m,i) = local_match[m]->fsndbuf(i);
+                           frcvbuf(m,i) = local_match(m)->fsndbuf(i);
                         break;
 #ifdef MPISRC
                      case(mpi):
 #ifdef SINGLE
                         MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
 #else
                         MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);             
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));             
 #endif
                         break;
 #endif
@@ -257,18 +286,18 @@ template<class BASE> class comm_bdry : public BASE {
             case(boundary::int_msg):
                /* LOCAL PASSES */
                for(m=0;m<nmatch;++m) {
-                  if (phi != phase[m]) continue;
+                  if (phi != phase(grp)(m)) continue;
                   
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                      case(local):
                         for(i=0;i<msgsize;++i)
-                           ircvbuf(m,i) = local_match[m]->isndbuf(i);
+                           ircvbuf(m,i) = local_match(m)->isndbuf(i);
                         break;
 #ifdef MPISRC
                      case(mpi):
                      /* MPI PASSES */                  
                         MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
                         break;
 #endif
                   }
@@ -279,39 +308,42 @@ template<class BASE> class comm_bdry : public BASE {
          return;
       }
       
-      int comm_wait(int phi) {
-
+      int comm_wait(int grp, int phi) {
+         
+         if (!((1<<grp)&groupmask)) return(1);
+         
          for(int m=0;m<nmatch;++m) {
-            if (phi != phase[m]) continue;
+            if (phi != phase(grp)(m)) continue;
             
-            switch(mtype[m]) {
+            switch(mtype(m)) {
                case(local):
                   break;
 #ifdef MPISRC
                case(mpi):
                   MPI_Status status;
-                  MPI_Wait(&mpi_rcvrqst[m], &status); 
+                  MPI_Wait(&mpi_rcvrqst(m), &status); 
                   break;
 #endif
             }
             
 #ifdef MPDEBUG
-            *(sim::log) << "received message: " << BASE::idnum << " " << tags[m] << " with type: " << mtype[m] << std::endl;
+            *(sim::log) << "received message: " << BASE::idnum << " " << tags(m) << " with type: " << mtype(m) << std::endl;
             for(int i=0;i<msgsize;++i) 
                *(sim::log) << "\t" << frcvbuf(m,i) << std::endl;
 #endif  
          }
+                  
          /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
-         return((phi-maxphase >= 0 ? 1 : 0));
+         return((phi-maxphase(grp) >= 0 ? 1 : 0));
       }
       
       /* MECHANISM FOR MASTER SLAVE COMMUNICATIONS */
-      void master_slave_prepare() {
-         if (first) return;
+      void master_slave_prepare(int grp=0) {
+         if (first || !((1<<grp)&groupmask)) return;
 
          switch(msgtype) {
             case(boundary::flt_msg):
-                switch(mtype[0]) {
+                switch(mtype(0)) {
                   case(local):
                      return;
 #ifdef MPISRC
@@ -319,10 +351,10 @@ template<class BASE> class comm_bdry : public BASE {
                      /* MPI POST RECEIVES FIRST */
 #ifdef SINGLE
                      MPI_Irecv(&frcvbuf(0,0), buffsize, MPI_FLOAT, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
+                        mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_rcvrqst(0));
 #else
                      MPI_Irecv(&frcvbuf(0,0), buffsize, MPI_DOUBLE, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);             
+                        mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_rcvrqst(0));             
 #endif
                      break;
 #endif
@@ -330,7 +362,7 @@ template<class BASE> class comm_bdry : public BASE {
 
                      
             case(boundary::int_msg):
-               switch(mtype[0]) {
+               switch(mtype(0)) {
                   case(local):
                      /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                      return;
@@ -338,28 +370,30 @@ template<class BASE> class comm_bdry : public BASE {
                   case(mpi):
                      /* MPI POST RECEIVES FIRST */
                      MPI_Irecv(&ircvbuf(0,0), buffsize, MPI_INT, 
-                        mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_rcvrqst[0]);
+                        mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_rcvrqst(0));
                      break;    
 #endif
                }
          }
       }
       
-      void master_slave_transmit() {
+      void master_slave_transmit(int grp=0) {
          int i,m;
+         
+         if (!((1<<grp)&groupmask)) return;
 
          if (!first) {
             /* GO GET LOCAL MESSAGES FROM MASTER */
-            if (mtype[0] == local) {
-               switch(local_match[0]->sndtype()) {
-                  sndsize() = local_match[0]->sndsize();
+            if (mtype(0) == local) {
+               switch(local_match(0)->sndtype()) {
+                  sndsize() = local_match(0)->sndsize();
                   case(boundary::flt_msg):
-                     for(i=0;i<local_match[0]->sndsize();++i)
-                        frcvbuf(0,i) = local_match[0]->fsndbuf(i);
+                     for(i=0;i<local_match(0)->sndsize();++i)
+                        frcvbuf(0,i) = local_match(0)->fsndbuf(i);
                   
                   case(boundary::int_msg):
-                     for(i=0;i<local_match[0]->sndsize();++i)
-                        ircvbuf(0,i) = local_match[0]->isndbuf(i);
+                     for(i=0;i<local_match(0)->sndsize();++i)
+                        ircvbuf(0,i) = local_match(0)->isndbuf(i);
                }
             }
          }
@@ -368,21 +402,21 @@ template<class BASE> class comm_bdry : public BASE {
                case(boundary::flt_msg):
                   /* LOCAL PASSES */
                   for(m=0;m<nmatch;++m) {   
-                     switch(mtype[m]) {
+                     switch(mtype(m)) {
                         case(local):
                            break;
-   #ifdef MPISRC
+#ifdef MPISRC
                         case(mpi):
                   /* MPI PASSES */
-   #ifdef SINGLE
+#ifdef SINGLE
                            MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-   #else
+                              mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
+#else
                            MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
-   #endif
+                              mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
+#endif
                            break;
-   #endif         
+#endif         
                      }
                   }
                   break;
@@ -390,16 +424,16 @@ template<class BASE> class comm_bdry : public BASE {
                case(boundary::int_msg):
                   /* LOCAL PASSES */
                   for(m=0;m<nmatch;++m) {   
-                     switch(mtype[m]) {
+                     switch(mtype(m)) {
                         case(local):
                            break;
-   #ifdef MPISRC
+#ifdef MPISRC
                         case(mpi):
                            /* MPI PASSES */
                            MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
-                              mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_sndrqst[m]);
+                              mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
                            break;
-   #endif
+#endif
                      }
                   }
                   break;              
@@ -409,16 +443,16 @@ template<class BASE> class comm_bdry : public BASE {
          return;
       }
 
-      void master_slave_wait() {
-         if (first) return;
+      void master_slave_wait(int grp=0) {
+         if (first || !((1<<grp)&groupmask)) return;
 
-         switch(mtype[0]) {
+         switch(mtype(0)) {
             case(local):
                return;
 #ifdef MPISRC
             case(mpi):
                MPI_Status status;
-               MPI_Wait(&mpi_rcvrqst[0], &status); 
+               MPI_Wait(&mpi_rcvrqst(0), &status); 
                return;
 #endif
          }
@@ -426,16 +460,16 @@ template<class BASE> class comm_bdry : public BASE {
       }
 
       /* MECHANISM FOR MASTER SLAVE COMMUNICATIONS */
-      void slave_master_prepare() {
+      void slave_master_prepare(int grp=0) {
          
-         if (!first) return;
+         if (!first || !((1<<grp)&groupmask)) return;
  
          int m;
          switch(msgtype) {
             case(boundary::flt_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                      case(local):
                         /* NOTHING TO DO */
                         break;
@@ -443,10 +477,10 @@ template<class BASE> class comm_bdry : public BASE {
                      case(mpi):
 #ifdef SINGLE
                         MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_FLOAT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
                         MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_DOUBLE, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);  
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));  
 #endif
                         break;
 #endif
@@ -457,14 +491,14 @@ template<class BASE> class comm_bdry : public BASE {
             case(boundary::int_msg):
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nmatch;++m) {
-                  switch(mtype[m]) {
+                  switch(mtype(m)) {
                      case(local):
                         /* NOTHING TO DO */
                         break;
 #ifdef MPISRC
                      case(mpi):
                         MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_INT, 
-                           mpi_match[m], tags[m],MPI_COMM_WORLD, &mpi_rcvrqst[m]);
+                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
                         break;
 #endif
                   }
@@ -473,21 +507,23 @@ template<class BASE> class comm_bdry : public BASE {
          }
       }
             
-      void slave_master_transmit() {
+      void slave_master_transmit(int grp=0) {
          int i,m;
+         
+         if (!((1<<grp)&groupmask)) return;
 
          if (first) {
             /* Go get messages from local slaves */
             for(m=0;m<nmatch;++m) {
-               if (mtype[m] == local) {
-                  switch(local_match[m]->sndtype()) {
+               if (mtype(m) == local) {
+                  switch(local_match(m)->sndtype()) {
                      case(boundary::flt_msg):
-                        for(i=0;i<local_match[0]->sndsize();++i)
-                           frcvbuf(m,i) = local_match[m]->fsndbuf(i);
+                        for(i=0;i<local_match(0)->sndsize();++i)
+                           frcvbuf(m,i) = local_match(m)->fsndbuf(i);
                      
                      case(boundary::int_msg):
-                        for(i=0;i<local_match[m]->sndsize();++i)
-                           ircvbuf(m,i) = local_match[m]->isndbuf(i);
+                        for(i=0;i<local_match(m)->sndsize();++i)
+                           ircvbuf(m,i) = local_match(m)->isndbuf(i);
                   }
                }
             }
@@ -495,34 +531,34 @@ template<class BASE> class comm_bdry : public BASE {
          else {
             switch(msgtype) {
                case(boundary::flt_msg):
-                  switch(mtype[0]) {
+                  switch(mtype(0)) {
                      case(local):
                         break;
-   #ifdef MPISRC
+#ifdef MPISRC
                      case(mpi):
                   /* MPI PASSES */
-   #ifdef SINGLE
+#ifdef SINGLE
                         MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                           mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
-   #else
+                           mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_sndrqst(0));
+#else
                         MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                           mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);             
-   #endif
+                           mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_sndrqst(0));             
+#endif
                         break;
-   #endif
+#endif
                   }
                   break;
                   
                case(boundary::int_msg):
-                  switch(mtype[0]) {
+                  switch(mtype(0)) {
                      case(local):
                         break;
-   #ifdef MPISRC
+#ifdef MPISRC
                      case(mpi):
                         /* MPI PASSES */
-                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, mpi_match[0], tags[0],MPI_COMM_WORLD, &mpi_sndrqst[0]);
+                        MPI_Isend(&isndbuf(0), msgsize, MPI_INT, mpi_match(0), tags(0),MPI_COMM_WORLD, &mpi_sndrqst(0));
                         break;
-   #endif
+#endif
                   }
                   break;              
             }
@@ -531,17 +567,17 @@ template<class BASE> class comm_bdry : public BASE {
          return;
       }
 
-      void slave_master_wait() {
-         if (!first) return;
+      void slave_master_wait(int grp=0) {
+         if (!first || !((1<<grp)&groupmask)) return;         
 
          for(int m=0;m<nmatch;++m) {
-            switch(mtype[m]) {
+            switch(mtype(m)) {
                case(local):
                   break;
 #ifdef MPISRC
                case(mpi):
                   MPI_Status status;
-                  MPI_Wait(&mpi_rcvrqst[m], &status); 
+                  MPI_Wait(&mpi_rcvrqst(m), &status); 
                   break;
 #endif
             }
@@ -562,9 +598,9 @@ class vcomm : public comm_bdry<vrtx_bdry> {
       vcomm* create(mesh& xin) const {return new vcomm(*this,xin);}
 
       /** Generic routine to load buffers from array */
-      void vloadbuff(FLT *base,int bgn,int end, int stride);
+      void vloadbuff(int group,FLT *base,int bgn,int end, int stride);
       /** Generic routine to receive into array */
-      void vfinalrcv(int phase, FLT *base,int bgn,int end, int stride);
+      void vfinalrcv(int group,int phase,FLT *base,int bgn,int end, int stride);
 };
 
 /** \brief Specialization for a communiation side 
@@ -580,10 +616,10 @@ class scomm : public comm_bdry<side_bdry> {
       scomm* create(mesh& xin) const {return new scomm(*this,xin);}
       
       /* GENERIC COMMUNICATIONS */
-      virtual void vloadbuff(FLT *base,int bgn,int end, int stride);
-      virtual void vfinalrcv(int phase, FLT *base,int bgn,int end, int stride);
-      virtual void sloadbuff(FLT *base,int bgn,int end, int stride);
-      virtual void sfinalrcv(int phase,FLT *base,int bgn,int end, int stride);
+      void vloadbuff(int group,FLT *base,int bgn,int end, int stride);
+      void vfinalrcv(int group,int phase, FLT *base,int bgn,int end, int stride);
+      void sloadbuff(int group,FLT *base,int bgn,int end, int stride);
+      void sfinalrcv(int group,int phase,FLT *base,int bgn,int end, int stride);
 };
 
 /** \brief Specialization for a parition side 
@@ -596,7 +632,7 @@ class scomm : public comm_bdry<side_bdry> {
 class spartition : public scomm {
    public:
       /* CONSTRUCTOR */
-      spartition(int inid, mesh& xin) : scomm(inid,xin) {grouping = 1;mytype="partition";}
+      spartition(int inid, mesh& xin) : scomm(inid,xin) {groupmask = 1;mytype="partition";}
       spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
 
       spartition* create(mesh& xin) const {return new spartition(*this,xin);}
@@ -637,26 +673,24 @@ template<class BASE> class prdc_template : public BASE {
       }
       
       /* SEND/RCV VRTX POSITION */
-      void loadpositions() { BASE::vloadbuff(&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
-      void rcvpositions(int phase) { BASE::vfinalrcv(phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+      void loadpositions() { BASE::vloadbuff(BASE::all,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+      void rcvpositions(int phase) { BASE::vfinalrcv(BASE::all,phase,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
 };
 
-class curved_analytic : public side_bdry {
+class curved_analytic_interface {
    protected:
       virtual FLT hgt(FLT x[mesh::ND]) {return(0.0);}
       virtual FLT dhgt(int dir, FLT x[mesh::ND]) {return(1.0);}
 
    public:      
-      /* CONSTRUCTOR */
-      curved_analytic(int idin, mesh &xin) : side_bdry(idin,xin) {mytype="curved_analytic";}
-      curved_analytic(const curved_analytic &inbdry, mesh &xin) : side_bdry(inbdry,xin) {}
-
-      curved_analytic* create(mesh& xin) const {return new curved_analytic(*this,xin);}
-
-      void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt);
+      curved_analytic_interface* create() const {return(new curved_analytic_interface);}
+      void mvpttobdry(TinyVector<FLT,mesh::ND> &pt);
+      virtual void input(input_map& inmap, std::string idprefix) {}
+      virtual void output(std::ostream& fout, std::string idprefix) {}
+      virtual ~curved_analytic_interface() {}
 };
 
-class sinewave : public curved_analytic {
+class sinewave : public curved_analytic_interface {
    protected:
       int h_or_v;
       FLT amp, lam, phase, offset;
@@ -670,13 +704,12 @@ class sinewave : public curved_analytic {
          return(1.0);
       }
    public:
-      sinewave(int inid, mesh &xin) : curved_analytic(inid,xin), h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {mytype="sinewave";}
-      sinewave(const sinewave &inbdry, mesh &xin) : curved_analytic(inbdry,xin), h_or_v(inbdry.h_or_v), amp(inbdry.amp), lam(inbdry.lam), phase(inbdry.phase), offset(inbdry.offset) {}
+      sinewave() : h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {}
+      sinewave(const sinewave &inbdry) : curved_analytic_interface(inbdry), h_or_v(inbdry.h_or_v), amp(inbdry.amp), lam(inbdry.lam), phase(inbdry.phase), offset(inbdry.offset) {}
+      sinewave* create() const {return(new sinewave(*this));}
 
-      sinewave* create(mesh& xin) const {return(new sinewave(*this,xin));}
-
-      void output(std::ostream& fout) {         
-         curved_analytic::output(fout);
+      void output(std::ostream& fout,std::string idprefix) {         
+         curved_analytic_interface::output(fout,idprefix);
          fout << idprefix << ".h_or_v" << h_or_v << std::endl;
          fout << idprefix << ".amp: " << amp << std::endl;
          fout << idprefix << ".lam: " << lam << std::endl;
@@ -684,8 +717,8 @@ class sinewave : public curved_analytic {
          fout << idprefix << ".offset: " << offset << std::endl;
       }
          
-      void input(input_map& inmap) {   
-         curved_analytic::input(inmap);
+      void input(input_map& inmap, std::string idprefix) {   
+         curved_analytic_interface::input(inmap,idprefix);
          
          std::istringstream data(inmap[idprefix+".h_or_v"]);
          if (!(data >> h_or_v)) h_or_v = 0;
@@ -707,12 +740,10 @@ class sinewave : public curved_analytic {
          data.str(inmap[idprefix +".offset"]);
          if (!(data >> offset)) offset = 0.0;
          data.clear();
-         
-         // *(sim::log) << amp << ' ' << lam << ' ' << phase << ' ' << offset/M_PI*180.0 << std::endl;
       }
 };
 
-class circle : public curved_analytic {
+class circle : public curved_analytic_interface {
    public:
       FLT center[mesh::ND];
       FLT radius;
@@ -723,19 +754,18 @@ class circle : public curved_analytic {
          return(-2.*(pt[dir]-center[dir]));
       }
       
-      circle(int inid, mesh &xin) : curved_analytic(inid,xin), radius(0.5) {center[0] = 0.0; center[1] = 0.0; mytype="circle";}
-      circle(const circle &inbdry, mesh &xin) : curved_analytic(inbdry,xin), radius(inbdry.radius) {center[0] = inbdry.center[0]; center[1] = inbdry.center[1];}
- 
-      circle* create(mesh& xin) const {return(new circle(*this,xin));}
+      circle() : curved_analytic_interface(), radius(0.5) {center[0] = 0.0; center[1] = 0.0;}
+      circle(const circle &inbdry) : curved_analytic_interface(inbdry), radius(inbdry.radius) {center[0] = inbdry.center[0]; center[1] = inbdry.center[1];}
+      circle* create() const {return(new circle(*this));}
 
-      void output(std::ostream& fout) {
-         curved_analytic::output(fout);
+      void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
          fout << idprefix << ".center: " << center[0] << '\t' << center[1] << std::endl;
          fout << idprefix << ".radius: " << radius << std::endl;
       }
      
-       void input(input_map& inmap) {
-         curved_analytic::input(inmap);
+       void input(input_map& inmap,std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
          
          std::istringstream data(inmap[idprefix+".center"]);
          if (!(data >> center[0] >> center[1])) {center[0] = 0.0; center[1] = 0.0;}
@@ -747,7 +777,7 @@ class circle : public curved_analytic {
       }
 };  
 
-class naca : public curved_analytic {
+class naca : public curved_analytic_interface {
    public:
       FLT sign;
       FLT thickness;
@@ -767,20 +797,19 @@ class naca : public curved_analytic {
          return(0.0);
       }
       
-      naca(int inid, mesh &xin) : curved_analytic(inid,xin), sign(1.0), thickness(0.12) {
+      naca() : curved_analytic_interface(), sign(1.0), thickness(0.12) {
          /* NACA 0012 is the default */
          sign = 1;
          coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
-         mytype="naca";
       }
-      naca(const naca &inbdry, mesh &xin) : curved_analytic(inbdry,xin), sign(inbdry.sign), thickness(inbdry.thickness) {
+      naca(const naca &inbdry) : curved_analytic_interface(inbdry), sign(inbdry.sign), thickness(inbdry.thickness) {
          for(int i=0;i<5;++i) 
             coeff[i] = inbdry.coeff[i];
       }
-      naca* create(mesh& xin) const {return(new naca(*this,xin));}
+      naca* create() const {return(new naca(*this));}
 
-      void output(std::ostream& fout) {
-         curved_analytic::output(fout);
+      void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
          fout << idprefix << ".sign: " << sign << std::endl;
          fout << idprefix << ".thickness: " << thickness << std::endl;
          fout << idprefix << ".coeff: ";
@@ -789,8 +818,8 @@ class naca : public curved_analytic {
          fout << std::endl;
       }
      
-       void input(input_map& inmap) {
-         curved_analytic::input(inmap);
+       void input(input_map& inmap,std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
          
          std::istringstream data(inmap[idprefix+".sign"]);
          if (!(data >> sign)) sign = 1.0;
@@ -813,7 +842,7 @@ class naca : public curved_analytic {
       }
 };       
 
-class gaussian : public curved_analytic {
+class gaussian : public curved_analytic_interface {
    public:
       FLT width,amp,power;
       TinyVector<FLT,2> intercept, normal;
@@ -834,23 +863,20 @@ class gaussian : public curved_analytic {
          return(0.0);
       }
       
-      gaussian(int inid, mesh &xin) : curved_analytic(inid,xin), width(1.0), amp(0.1), intercept(0.0,0.0), normal(0.0,1.0) {
-         /* NACA 0012 is the default */
-         mytype="gaussian";
-      }
-      gaussian(const gaussian &inbdry, mesh &xin) : curved_analytic(inbdry,xin), width(inbdry.width), amp(inbdry.amp), intercept(inbdry.intercept), normal(inbdry.normal) {}
-      gaussian* create(mesh& xin) const {return(new gaussian(*this,xin));}
+      gaussian() : curved_analytic_interface(), width(1.0), amp(0.1), intercept(0.0,0.0), normal(0.0,1.0) {}
+      gaussian(const gaussian &inbdry) : curved_analytic_interface(inbdry), width(inbdry.width), amp(inbdry.amp), intercept(inbdry.intercept), normal(inbdry.normal) {}
+      gaussian* create() const {return(new gaussian(*this));}
 
-      void output(std::ostream& fout) {
-         curved_analytic::output(fout);
+      void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
          fout << idprefix << ".amp: " << amp << std::endl;
          fout << idprefix << ".width: " << width << std::endl;
          fout << idprefix << ".intercept: " << intercept << std::endl;
          fout << idprefix << ".normal: " << normal << std::endl;
       }
      
-       void input(input_map& inmap) {
-         curved_analytic::input(inmap);
+       void input(input_map& inmap,std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
          
          std::istringstream data(inmap[idprefix+".amp"]);
          if (!(data >> amp)) amp = 0.1;
@@ -879,14 +905,52 @@ class gaussian : public curved_analytic {
 typedef prdc_template<vcomm> vprdc;
 typedef prdc_template<scomm> sprdc;
 
-template<class EXT, class BASE> class solution_geometry : public BASE {
-   EXT *bptr;
-   solution_geometry(int inid, mesh &xin) : BASE(inid,xin) {}
-   virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-      if (sim::tstep <= 0) BASE::mvpttobdry(nel,psi,pt);
-      else bptr->mvpttobdry(nel,psi,pt);
-      return;
-   }
+
+template<class BASE,class GEOM> class analytic_geometry : public BASE {
+   public:
+      GEOM geometry_object;
+      
+   public: 
+      analytic_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+      analytic_geometry(const analytic_geometry<BASE,GEOM> &inbdry, mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+      analytic_geometry* create(mesh& xin) const {return(new analytic_geometry<BASE,GEOM>(*this,xin));}
+
+      void output(std::ostream& fout) {
+         BASE::output(fout);
+         geometry_object.output(fout,BASE::idprefix);
+      }
+      void input(input_map& inmap) {
+         BASE::input(inmap);
+         geometry_object.input(inmap,BASE::idprefix);
+      }
+      
+      void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+         /* GET LINEAR APPROXIMATION FIRST */
+         BASE::mvpttobdry(nel,psi,pt);
+         geometry_object.mvpttobdry(pt);
+         return;
+      }
 };
+
+
+template<class BASE> class ssolution_geometry : public sgeometry_pointer, public BASE {
+  public: 
+      ssolution_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
+      ssolution_geometry(const ssolution_geometry<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin) {}
+      ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
+
+      virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+         if (sim::tstep <= 0) BASE::mvpttobdry(nel,psi,pt);
+         else solution_data->mvpttobdry(nel,psi,pt);
+         return;
+      }
+};
+
+
+
+
+
+
+
 
 

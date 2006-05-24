@@ -223,6 +223,7 @@ void mesh::append(const mesh &z) {
             for(k=nsbd-z.nsbd+j-1;k<nsbd-2;++k)
                sbdry(k) = sbdry(k+1);
             nsbd -= 2;
+            break;
          }
       }
    }

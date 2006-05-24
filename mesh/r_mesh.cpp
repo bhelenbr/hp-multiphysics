@@ -20,11 +20,11 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
       *sim::log << "#Error: not sure whether to initialize for r_mesh for multigrid" << std::endl;
    }
    
-   keyword = idprefix + ".fadd";
+   keyword = idprefix + ".r_fadd";
    if (!input.get(keyword,fadd)) {
-      input.getwdefault("fadd",fadd,1.0);
+      input.getwdefault("r_fadd",fadd,1.0);
    }
-   *sim::log << "#fadd: " << fadd << std::endl;
+   *sim::log << "#r_fadd: " << fadd << std::endl;
 
    keyword = idprefix + ".vnn";
    input.getwdefault(keyword,vnn,0.5); 
@@ -373,7 +373,7 @@ block::ctrl r_mesh::update(block::ctrl ctrl_message) {
    if (ctrl_message == block::begin) excpt1 = 0;
    
    if (excpt1 == 0) {
-      state = rsdl(ctrl_message);
+      state = r_mesh::rsdl(ctrl_message);
       if (state != block::stop) return(state);
       
       Array<FLT,1> diag;
@@ -500,23 +500,21 @@ block::ctrl r_mesh::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
          switch(mp_phase%3) {
             case(0):
                for(i=0;i<nsbd;++i)
-                  if (sbdry(i)->group()&0x1) sbdry(i)->vloadbuff((FLT *) res.data(),0,1,2);
+                  sbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
                   
                for(i=0;i<nsbd;++i) 
-                  if (sbdry(i)->group()&0x1) sbdry(i)->comm_prepare(mp_phase/3);
+                  sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3);
                
                return(block::stay);
             case(1):
                for(i=0;i<nsbd;++i) 
-                  if (sbdry(i)->group()&0x1) sbdry(i)->comm_transmit(mp_phase/3);
+                  sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3);
                return(block::stay);
             case(2):
                stop = 1;
                for(i=0;i<nsbd;++i) {
-                  if (sbdry(i)->group()&0x1) {
-                     stop &= sbdry(i)->comm_wait(mp_phase/3);
-                     sbdry(i)->vfinalrcv(mp_phase/3,(FLT *) res.data(),0,1,2);
-                  }
+                  stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3);
+                  sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,(FLT *) res.data(),0,1,2);
                }
                return(static_cast<block::ctrl>(stop));
          }
@@ -711,13 +709,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(boundary::all,mp_phase/3,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  vmsgpass(mp_phase/3);
+                  vmsgpass(boundary::all,mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,kvol.data(),0,0,1)));
             }
             
          case (2):
@@ -758,13 +756,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+                  vmsgload(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2);
                   return(block::stay);
                case(1):
-                  vmsgpass(mp_phase/3);
+                  vmsgpass(boundary::all,mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
             }
          
          case (5+P2):
@@ -786,13 +784,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(boundary::all,mp_phase/3,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  vmsgpass(mp_phase/3);
+                  vmsgpass(boundary::all,mp_phase/3);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,kvol.data(),0,0,1)));
             }
          case (2):
             kvoli();
@@ -878,13 +876,13 @@ block::ctrl r_mesh::rsdl(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+               vmsgload(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2);
                return(block::stay);
             case(1):
-               vmsgpass(mp_phase/3);
+               vmsgpass(boundary::all,mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
          }
          
       case(2+P2):
@@ -930,13 +928,13 @@ block::ctrl r_mesh::setup_preconditioner(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,rg->diag.data(),0,0,1);
+               vmsgload(boundary::all,mp_phase/3,rg->diag.data(),0,0,1);
                return(block::stay);
             case(1):
-               vmsgpass(mp_phase/3);
+               vmsgpass(boundary::all,mp_phase/3);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,rg->diag.data(),0,0,1)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,rg->diag.data(),0,0,1)));
          }
          
       case(2+P2):

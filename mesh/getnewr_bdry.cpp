@@ -10,21 +10,6 @@
 #include "r_mesh.h"
 #include "r_boundary.h"
 
-/* OLD BOUNDARY TYPES */
-#define FSRF_MASK (1<<0)
-#define IFCE_MASK (1<<1)
-#define INFL_MASK (1<<2)
-#define OUTF_MASK (1<<3)
-#define SYMM_MASK (1<<4)
-#define EULR_MASK (1<<5)
-#define PRDX_MASK (1<<6)   
-#define PRDY_MASK (1<<7)
-#define COMX_MASK (1<<8)
-#define COMY_MASK (1<<9)
-#define CURV_MASK (1<<10)
-
-#define MAPPING
-
 const char r_stype::names[ntypes][40] = {"plain", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
@@ -44,11 +29,9 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map *bdrydata) {
          }
       }
       else {
-         *sim::log << "couldn't find type for r_side: " << sbdry(bnum)->idnum << std::endl;
+         type = r_stype::fixed;
       }
    }
-
-   // *sim::log << "making side " << idnum << std::endl;
 
    switch(type) {
       case r_stype::plain: {

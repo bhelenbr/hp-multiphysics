@@ -261,7 +261,7 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, block::ctrl
                grd[lvl].matchboundaries1(mp_phase/3);
                return(stay);
             case(1):
-               grd[lvl].vmsgpass(mp_phase/3);
+               grd[lvl].vmsgpass(boundary::all,mp_phase/3);
                return(stay);
             case(2):
                return(static_cast<ctrl>(grd[lvl].matchboundaries2(mp_phase/3)));
@@ -299,13 +299,13 @@ template<class GRD> block::ctrl mgrid<GRD>::adapt(block::ctrl ctrl_message) {
       /* MESSAGE PASSING SEQUENCE */
       switch(mp_phase%3) {
          case(0):
-            grd[0].vmsgload(mp_phase/3,grd[0].vlngth.data(),0,0,1);
+            grd[0].vmsgload(boundary::all,mp_phase/3,grd[0].vlngth.data(),0,0,1);
             return(stay);
          case(1):
-            grd[0].vmsgpass(mp_phase/3);
+            grd[0].vmsgpass(boundary::all,mp_phase/3);
             return(stay);
          case(2):
-            return(static_cast<ctrl>(grd[0].vmsgwait_rcv(mp_phase/3,grd[0].vlngth.data(),0,0,1)));
+            return(static_cast<ctrl>(grd[0].vmsgwait_rcv(boundary::all,mp_phase/3,grd[0].vlngth.data(),0,0,1)));
       }
    }
    else if(excpt == 2) {

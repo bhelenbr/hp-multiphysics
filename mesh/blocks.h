@@ -54,6 +54,7 @@ class blocks {
       //@{
       int out_intrvl; /**< Number of time-steps between data outputs */
       int rstrt_intrvl; /**< Number of output intervals between restart files */
+      bool debug_output; /**< Output file every iteration */
       //@}
       
       /** This is a data structure for storing communication info
@@ -241,13 +242,6 @@ namespace sim {
    /** Flag for pV3 to tell when to reload meshes */
    extern int pv3_mesh_changed;
 #endif
-   
-   /** @name Multigrid Parameters 
-    *  Constants controlling multigrid iteration 
-    */
-   //@{
-   extern FLT fadd;   //!< Multiplicative factor for multigrid (default = 1.0)
-   //@}
 }
 
 #endif

@@ -27,7 +27,7 @@
 blocks sim::blks;
 std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
-int sim::tstep, sim::substep;
+int sim::tstep = -1, sim::substep = -1;
 sharedmem sim::scratch;
 
 #ifdef BACKDIFF
@@ -62,8 +62,6 @@ blitz::Array<FLT,1> sim::cfl;
 int sim::pv3_mesh_changed;
 #endif
    
-FLT sim::fadd;  
-
 void blocks::init(const std::string &infile, const std::string &outfile) {
    input_map maptemp;
    std::string name;
@@ -180,9 +178,6 @@ void blocks::init(input_map input) {
    input.getwdefault("vwcycle",vw,2);
    *sim::log << "#vwcycle: " << vw << std::endl;
    
-   input.getwdefault("fadd",sim::fadd,1.0);
-   *sim::log << "#fadd: " << sim::fadd << std::endl;
-   
    input.getwdefault("ntstep",ntstep,1);
    *sim::log << "#ntstep: " << ntstep << std::endl;
    
@@ -209,6 +204,9 @@ void blocks::init(input_map input) {
    input.getwdefault("restart_interval",rstrt_intrvl,1);
    *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    
+   input.getwdefault("debug_output",debug_output,false);
+   *sim::log << "#debug_output: " << debug_output << std::endl;
+   
    blk = new block *[nblock];
    for (i=0;i<nblock;++i) {
       blk[i] = getnewblock(bstart+i,input);
@@ -233,6 +231,7 @@ void blocks::init(input_map input) {
          ctrl_message = state;
       } while (state != block::stop);
       matchboundaries(lvl);
+      nstr.str("");
       nstr << lvl << flush;
       mystring = "matched" +nstr.str();
       output(mystring,block::display,lvl);
@@ -680,6 +679,7 @@ void blocks::go() {
    clock();
    for(sim::tstep=nstart;sim::tstep<ntstep;++sim::tstep) {
       for(sim::substep=0;sim::substep<sim::stepsolves;++sim::substep) {
+         *sim::log << "#TIMESTEP: " << sim::tstep << " SUBSTEP: " << sim::substep << std::endl;
          tadvance();
 
          for(i=0;i<ncycle;++i) {
@@ -687,6 +687,12 @@ void blocks::go() {
             *sim::log << i << ' ';
             maxres();
             *sim::log << '\n';
+            if (debug_output) {
+               nstr.str("");
+               nstr << sim::tstep << '_' << sim::substep << '_' << i << std::flush;
+               outname = "debug" +nstr.str();
+               output(outname,block::debug);
+            }
          }
       }
       

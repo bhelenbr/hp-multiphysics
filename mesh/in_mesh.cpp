@@ -604,15 +604,16 @@ next1c:     continue;
             for(i=0;i<nside;++i)
                if (sd(i).tri(1) < 0) ++count;
 
-            nsbd = 0;
+            nsbd = 1;
             sbdry.resize(1);
-            sbdry(nsbd) = getnewsideobject(nsbd+1,pbdrymap);
+            if (pbdrymap) sbdry(0) = getnewsideobject(1,pbdrymap);
+            else sbdry(0) = getnewsideobject(1025,pbdrymap);
             sbdry(0)->alloc(static_cast<int>(grwfac*count));
             sbdry(0)->nel = count;
             count = 0;
             for(i=0;i<nside;++i)
                if (sd(i).tri(1) < 0) sbdry(0)->el(count++) = i;
-            ++nsbd;
+            
             nvbd = 0;
             in.close();
             
@@ -726,7 +727,25 @@ next1c:     continue;
       sbdry(i)->reorder();
    }
    
+   /* FIND ENDPOINT MATCHES */
+   for(i=0;i<nvbd;++i) {
+      /* Find two connecting boundary sides */
+      for(j=0;j<nsbd;++j) {
+         if (sd(sbdry(j)->el(0)).vrtx(0) == vbdry(i)->v0) {
+            vbdry(i)->sbdry(1) = j;
+            sbdry(j)->vbdry(0) = i;
+         }
+         if (sd(sbdry(j)->el(sbdry(j)->nel-1)).vrtx(1) == vbdry(i)->v0) {
+            vbdry(i)->sbdry(0) = j;
+            sbdry(j)->vbdry(1) = i;
+         }
+      }
+   }
+
+
+   
    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+   
 
    createttri();
    createvtri();

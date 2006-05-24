@@ -11,9 +11,11 @@
 /********************/
    
 /* GENERIC VERTEX COMMUNICATIONS */
-void vcomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
+void vcomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
    int i,offset;
-   
+      
+   if (!((1<<grp)&groupmask)) return;
+
    sndsize()=end-bgn+1;
    sndtype()=flt_msg;
    
@@ -23,12 +25,14 @@ void vcomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
       fsndbuf(i) = base[offset+i];
 }
 
-void vcomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+void vcomm::vfinalrcv(int grp,int phi,FLT *base,int bgn,int end, int stride) {
    int i,m,offset;
    int matches = 1;
    
+   if (!((1<<grp)&groupmask)) return;
+   
    for(m=0;m<nmatch;++m) {
-      if (phase[m] != phi) continue;
+      if (phase(grp)(m) != phi) continue;
       ++matches;
       
       for(i=0;i<end-bgn+1;++i) 
@@ -54,13 +58,13 @@ void side_bdry::alloc(int n) {
    el.resize(n);
 }
      
-void side_bdry::copy(const boundary& b) {
+void side_bdry::copy(const side_bdry& bin) {
    int i;
    
-   const side_bdry& bin = dynamic_cast<const side_bdry&>(b);
       
    if (!maxel) alloc(bin.maxel);
-	else assert(bin.nel < maxel);
+	else assert(bin.nel <= maxel);
+   vbdry = bin.vbdry;
    
    nel = bin.nel;
    
@@ -267,8 +271,10 @@ void side_bdry::reorder() {
    return;
 }
 
-void scomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
+void scomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
    int j,k,count,sind,offset;
+   
+   if (!((1<<grp)&groupmask)) return;
 
    count = 0;
    for(j=0;j<nel;++j) {
@@ -286,11 +292,13 @@ void scomm::vloadbuff(FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+void scomm::vfinalrcv(int grp, int phi, FLT *base,int bgn,int end, int stride) {
    int j,k,m,count,countdn,countup,offset,sind;
    FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
    /* WON'T WORK IN 3D */
+      
+   if (!((1<<grp)&groupmask)) return;
    
    int matches = 1;
    
@@ -298,7 +306,7 @@ void scomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
    for(m=0;m<nmatch;++m) {   
-      if (phase[m] != phi) continue;
+      if (phase(grp)(m) != phi) continue;
       
       ++matches;
       
@@ -341,8 +349,10 @@ void scomm::vfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
    }
 }
 
-void scomm::sloadbuff(FLT *base,int bgn,int end, int stride) {
+void scomm::sloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
    int j,k,count,sind,offset;
+   
+   if (!((1<<grp)&groupmask)) return;
 
    count = 0;
    for(j=0;j<nel;++j) {
@@ -357,19 +367,21 @@ void scomm::sloadbuff(FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::sfinalrcv(int phi, FLT *base,int bgn,int end, int stride) {
+void scomm::sfinalrcv(int grp, int phi, FLT *base,int bgn,int end, int stride) {
    int j,k,m,count,countdn,countup,offset,sind;
    FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
    /* WON'T WORK IN 3D */
    
+   if (!((1<<grp)&groupmask)) return;
+
    int matches = 1;
    
    /* RELOAD FROM BUFFER */
    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
    for(m=0;m<nmatch;++m) {   
-      if (phase[m] != phi) continue;
+      if (phase(grp)(m) != phi) continue;
       
       ++matches;
       
@@ -473,11 +485,7 @@ block::ctrl spartition::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer
    return(block::stop);
 }
 
-void curved_analytic::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-   
-   /* GET LINEAR APPROXIMATION */
-   side_bdry::mvpttobdry(indx,psi,pt);
-   
+void curved_analytic_interface::mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
    int iter,n;
    FLT mag, delt_dist;
       
@@ -492,7 +500,7 @@ void curved_analytic::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt
       for(n=0;n<mesh::ND;++n)
          pt(n) += delt_dist*dhgt(n,pt.data())/mag;
       if (++iter > 100) {
-         *sim::log << "iterations exceeded curved boundary " << idnum << ' ' << pt(0) << ' ' << pt(1) << '\n';
+         *sim::log << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';
          exit(1);
       }
    } while (fabs(delt_dist) > 10.*EPSILON);
