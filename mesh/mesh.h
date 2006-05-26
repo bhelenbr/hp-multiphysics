@@ -12,6 +12,7 @@
 #include <sstream>
 #include <blitz/array.h>
 #include "blocks.h"
+#include "boundary.h"
 
 #ifdef SINGLE
 #define FLT float
@@ -141,14 +142,14 @@ class mesh {
       void partition(class mesh& xmesh, int npart);
       int comm_entity_size();
       int comm_entity_list(Array<int,1>& list);
-      void vmsgload(int group,int phase,FLT *base,int bgn, int end, int stride);
-      void vmsgpass(int group,int phase);
-      int vmsgwait_rcv(int group,int phase,FLT *base,int bgn, int end, int stride);
-      int vmsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride);
-      void smsgload(int group,int phase,FLT *base,int bgn, int end, int stride);
-      void smsgpass(int group,int phase);
-      int smsgwait_rcv(int group,int phase,FLT *base,int bgn, int end, int stride);
-      int smsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride);
+      void vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base, int bgn, int end, int stride);
+      void vmsgpass(boundary::groups group,int phase, boundary::comm_type type);
+      int vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride);
+      int vmsgrcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation, FLT *base,int bgn, int end, int stride);
+      void smsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride);
+      void smsgpass(boundary::groups group, int phase, boundary::comm_type type);
+      int smsgwait_rcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride);
+      int smsgrcv(boundary::groups group,int phase, boundary::comm_type type,  boundary::operation op, FLT *base,int bgn, int end, int stride);
       void matchboundaries1(int phase);
       int matchboundaries2(int phase);
       
@@ -263,4 +264,100 @@ class mesh {
    private:
       int excpt, excpt1;
 };
+
+class vgeometry_interface {
+   public:
+      virtual void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {}
+      virtual ~vgeometry_interface() {}
+};
+
+class vgeometry_pointer {
+   public:
+      vgeometry_interface *solution_data;
+};
+
+class sgeometry_interface {
+   public:
+      virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt) {}
+      virtual ~sgeometry_interface() {}
+};
+
+class sgeometry_pointer {
+   public:
+      sgeometry_interface *solution_data;
+};
+
+
+/** \brief Specialization for a vertex 
+ *
+ * \ingroup boundary
+ * Specialization of communication routines and 
+ * and storage for a vertex boundary 
+ */
+class vrtx_bdry : public boundary, public vgeometry_interface {
+   public:
+      mesh &x;
+      TinyVector<int,2> sbdry;
+      int v0;
+      
+      /* CONSTRUCTOR */
+      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = "v" +idprefix; mytype="plain";}
+      vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
+
+      /* OTHER USEFUL STUFF */
+      virtual vrtx_bdry* create(mesh &xin) const { return(new vrtx_bdry(*this,xin));}
+      virtual void copy(const vrtx_bdry& bin) {
+         v0 = bin.v0;
+         sbdry = bin.sbdry;
+      }
+      virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
+      virtual void vfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
+
+      virtual void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {}
+      virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+      virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+};
+
+
+/** \brief Specialization for a side 
+ *
+ * \ingroup boundary
+ * Specialization of communication routines and 
+ * and storage for a side boundary 
+ */
+class side_bdry : public boundary, public sgeometry_interface {
+   public:
+      mesh &x;
+      TinyVector<int,2> vbdry;
+      int maxel;
+      int nel;
+      Array<int,1> el;
+      
+      /* CONSTRUCTOR */
+      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix; mytype="plain";}
+      side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
+      
+      /* BASIC B.C. STUFF */
+      void alloc(int n);
+      virtual side_bdry* create(mesh &xin) const {
+         return(new side_bdry(*this,xin));
+      }
+      virtual void copy(const side_bdry& bin);
+      
+      /* ADDITIONAL STUFF FOR SIDES */
+      virtual void swap(int s1, int s2);
+      virtual void reorder();
+      virtual block::ctrl mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
+      virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
+      virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
+      
+      /* DEFAULT SENDING FOR SIDE VERTICES */
+      virtual void vloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride) {}
+      virtual void vfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
+      virtual void sloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride) {}
+      virtual void sfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
+      virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+      virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+};
+
 #endif

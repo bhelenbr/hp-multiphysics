@@ -19,6 +19,10 @@
 #ifdef MPISRC
 #include <mpi.h>
 #endif
+#include <blitz/array.h>
+
+using namespace std;
+using namespace blitz;
 
 #ifdef CAPRI
 #include <capri.h>

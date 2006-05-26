@@ -8,7 +8,6 @@
  */
 
 #include "mesh.h"
-#include "boundary.h"
 #include <utilities.h>
 #include <assert.h>
 
@@ -317,7 +316,7 @@ void mesh::bdry_yaber(FLT tolsize) {
       count = 0;
 
       if (!sbdry(bnum)->is_frst()) {
-         sbdry(bnum)->master_slave_prepare();
+         sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
          continue;
       }
       
@@ -421,7 +420,7 @@ void mesh::bdry_yaber1() {
       
       if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
       
-      sbdry(bnum)->master_slave_wait();
+      sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
       
       sndsize = sbdry(bnum)->ircvbuf(0,0);
       

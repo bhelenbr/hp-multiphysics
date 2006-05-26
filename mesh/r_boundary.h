@@ -7,7 +7,7 @@
  *
  */
  
-#include "boundary.h"
+#include "mesh.h"
 
 class r_side_bdry {
    protected:
@@ -115,11 +115,22 @@ class r_translating : public r_fixed {
       }
       void tadvance() {
          int n,v0;
-         for(int j=0;j<base.nel;++j) {
+         for(int j=1;j<base.nel;++j) {
             v0 = x.sd(base.el(j)).vrtx(0);
             for(n=0;n<2;++n)
                x.vrtx(v0)(n) += dx[n];
          }
+         
+         
+         /* TEMPORARY */
+            v0 = x.sd(base.el(0)).vrtx(0);
+            for(n=0;n<2;++n)
+               x.vrtx(v0)(n) += dx[n]/2;
+               
+            v0 = x.sd(base.el(base.nel-1)).vrtx(1);
+            for(n=0;n<2;++n)
+               x.vrtx(v0)(n) += dx[n]/2;
+            
       }
 };
 

@@ -11,7 +11,7 @@
 /********************/
    
 /* GENERIC VERTEX COMMUNICATIONS */
-void vcomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
+void vcomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
    int i,offset;
       
    if (!((1<<grp)&groupmask)) return;
@@ -25,30 +25,82 @@ void vcomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
       fsndbuf(i) = base[offset+i];
 }
 
-void vcomm::vfinalrcv(int grp,int phi,FLT *base,int bgn,int end, int stride) {
+void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {
    int i,m,offset;
    int matches = 1;
    
+   
    if (!((1<<grp)&groupmask)) return;
-   
-   for(m=0;m<nmatch;++m) {
-      if (phase(grp)(m) != phi) continue;
-      ++matches;
-      
-      for(i=0;i<end-bgn+1;++i) 
-         fsndbuf(i) += frcvbuf(m,i);
-   }
-   
-   if (matches > 1) {
-      offset = v0*stride +bgn;
-      for(i=0;i<end-bgn+1;++i) 
-         base[offset++] = fsndbuf(i)/matches;
-   }
 
-   return;
+   switch(type) {
+      case(slave_master): {
+         if (!first) return;
+      }
+      case(master_slave): {
+         if (first || phase(grp)(0) != phi) return;
+         
+         offset = v0*stride +bgn;
+         for(i=0;i<end-bgn+1;++i) 
+            base[offset++] = frcvbuf(0,i);
+            
+         return;
+      }
+         
+      default: {
+         switch(op) {
+            case(average):
+               for(m=0;m<nmatch;++m) {
+                  if (phase(grp)(m) != phi) continue;
+                  ++matches;
+                  
+                  for(i=0;i<end-bgn+1;++i) 
+                     fsndbuf(i) += frcvbuf(m,i);
+               }
+               
+               if (matches > 1) {
+                  offset = v0*stride +bgn;
+                  for(i=0;i<end-bgn+1;++i) 
+                     base[offset++] = fsndbuf(i)/matches;
+               }
+               return;
+            case(sum): 
+               for(m=0;m<nmatch;++m) {
+                  if (phase(grp)(m) != phi) continue;
+                  ++matches;
+                                    
+                  for(i=0;i<end-bgn+1;++i) 
+                     fsndbuf(i) += frcvbuf(m,i);
+               }
+               
+               if (matches > 1) {
+                  offset = v0*stride +bgn;
+                  for(i=0;i<end-bgn+1;++i) 
+                     base[offset++] = fsndbuf(i);
+               }
+               return;
+            case(maximum): 
+               for(m=0;m<nmatch;++m) {
+                  if (phase(grp)(m) != phi) continue;
+                  ++matches;
+                                    
+                  for(i=0;i<end-bgn+1;++i) 
+                     fsndbuf(i) = MAX(fsndbuf(i),frcvbuf(m,i));
+               }
+               
+               if (matches > 1) {
+                  offset = v0*stride +bgn;
+                  for(i=0;i<end-bgn+1;++i) 
+                     base[offset++] = fsndbuf(i);
+               }
+               return;
+            default: 
+               *sim::log << "replacement with symmetric sending?" << std::endl;
+               exit(1);
+         }
+         break;
+      }
+   }
 }
-
-
 
 /**************************************/
 /* GENERIC FUNCTIONS FOR SIDES        */
@@ -271,7 +323,7 @@ void side_bdry::reorder() {
    return;
 }
 
-void scomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
+void scomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
    int j,k,count,sind,offset;
    
    if (!((1<<grp)&groupmask)) return;
@@ -292,64 +344,205 @@ void scomm::vloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::vfinalrcv(int grp, int phi, FLT *base,int bgn,int end, int stride) {
+void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
    int j,k,m,count,countdn,countup,offset,sind;
+   int matches = 1;
    FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
    /* WON'T WORK IN 3D */
       
    if (!((1<<grp)&groupmask)) return;
    
-   int matches = 1;
-   
-   /* RELOAD FROM BUFFER */
-   /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
-   for(m=0;m<nmatch;++m) {   
-      if (phase(grp)(m) != phi) continue;
-      
-      ++matches;
-      
-      int ebp1 = end-bgn+1;
-      countdn = nel*ebp1;
-      countup = 0;
-      for(j=0;j<nel+1;++j) {
-         for(k=0;k<ebp1;++k)
-            fsndbuf(countup +k) += frcvbuf(m,countdn +k);
-         countup += ebp1;
-         countdn -= ebp1;
+   switch(type) {
+      case(slave_master): {
+         if (!first) return;
       }
-   }
-   
-   if (matches > 1) {
-      mtchinv = 1./matches;
-
+      
+      case(master_slave): {
+         if (first || phase(grp)(0) != phi) return;
+         
 #ifdef MPDEBUG
-      std::cout << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+         *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
-      count = 0;
-      for(j=0;j<nel;++j) {
-         sind = el(j);
-         offset = x.sd(sind).vrtx(0)*stride;
-         for (k=bgn;k<=end;++k) {
-            base[offset+k] = fsndbuf(count++)*mtchinv;
+         int ebp1 = end-bgn+1;
+         countdn = nel*ebp1;
+         for(j=0;j<nel;++j) {
+            sind = el(j);
+            offset = x.sd(sind).vrtx(0)*stride +bgn;
+            for(k=0;k<ebp1;++k) {
+               base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-            std::cout << "\t" << base[offset+k] << std::endl;
+               *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+            }
+            countdn -= ebp1;
+         }
+         offset = x.sd(sind).vrtx(1)*stride +bgn;
+         for(k=0;k<ebp1;++k) {
+            base[offset+k] = frcvbuf(0,countdn+k);
+#ifdef MPDEBUG
+            *sim::log << "\t" << base[offset+k] << std::endl;
 #endif
          }
-
+         return;
       }
-      offset = x.sd(sind).vrtx(1)*stride;
-      for (k=bgn;k<=end;++k) {
-         base[offset+k] = fsndbuf(count++)*mtchinv;
+         
+      default: {
+         switch(op) {
+            case(average):
+   
+               /* RELOAD FROM BUFFER */
+               /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+               /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = nel*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel+1;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+
+               if (matches > 1) {
+                  mtchinv = 1./matches;
+
 #ifdef MPDEBUG
-         std::cout << "\t" << base[offset+k] << std::endl;
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = x.sd(sind).vrtx(0)*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+                  offset = x.sd(sind).vrtx(1)*stride;
+                  for (k=bgn;k<=end;++k) {
+                     base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+                     *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                  }
+               }
+               return;
+            case(sum): 
+                matches = 1;
+   
+               /* RELOAD FROM BUFFER */
+               /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+               /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = nel*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel+1;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+
+               if (matches > 1) {
+#ifdef MPDEBUG
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = x.sd(sind).vrtx(0)*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+                  offset = x.sd(sind).vrtx(1)*stride;
+                  for (k=bgn;k<=end;++k) {
+                     base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                     *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                  }
+               }
+               return;
+            
+            case(maximum):               
+               matches = 1;
+   
+               /* RELOAD FROM BUFFER */
+               /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+               /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = nel*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel+1;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) = MAX(fsndbuf(countup+k),frcvbuf(m,countdn +k));
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+
+               if (matches > 1) {
+#ifdef MPDEBUG
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = x.sd(sind).vrtx(0)*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+                  offset = x.sd(sind).vrtx(1)*stride;
+                  for (k=bgn;k<=end;++k) {
+                     base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                     *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                  }
+               }
+               return;
+            
+            default: 
+               *sim::log << "replacement with symmetric sending?" << std::endl;
+               exit(1);
+         }
+         break;
       }
    }
 }
-
-void scomm::sloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
+   
+void scomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
    int j,k,count,sind,offset;
    
    if (!((1<<grp)&groupmask)) return;
@@ -367,52 +560,161 @@ void scomm::sloadbuff(int grp,FLT *base,int bgn,int end, int stride) {
    sndtype() = boundary::flt_msg;
 }
 
-void scomm::sfinalrcv(int grp, int phi, FLT *base,int bgn,int end, int stride) {
+void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
    int j,k,m,count,countdn,countup,offset,sind;
+   int matches = 1;
    FLT mtchinv;
    /* ASSUMES REVERSE ORDERING OF SIDES */
    /* WON'T WORK IN 3D */
    
    if (!((1<<grp)&groupmask)) return;
-
-   int matches = 1;
    
-   /* RELOAD FROM BUFFER */
-   /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
-   for(m=0;m<nmatch;++m) {   
-      if (phase(grp)(m) != phi) continue;
-      
-      ++matches;
-      
-      int ebp1 = end-bgn+1;
-      countdn = (nel-1)*ebp1;
-      countup = 0;
-      for(j=0;j<nel;++j) {
-         for(k=0;k<ebp1;++k)
-            fsndbuf(countup +k) += frcvbuf(m,countdn +k);
-         countup += ebp1;
-         countdn -= ebp1;
+   switch(type) {
+      case(slave_master): {
+         if (!first) return;
       }
-   }
-   
-   if (matches > 1) {
-      mtchinv = 1./matches;
-
+         
+      case(master_slave): {
+         if (first || phase(grp)(0) != phi) return;
 #ifdef MPDEBUG
-      std::cout << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+         *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
-      count = 0;
-      for(j=0;j<nel;++j) {
-         sind = el(j);
-         offset = sind*stride;
-         for (k=bgn;k<=end;++k) {
-            base[offset+k] = fsndbuf(count++)*mtchinv;
+         int ebp1 = end-bgn+1;
+         countdn = (nel-1)*ebp1;
+         countup = 0;
+         for(j=0;j<nel;++j) {
+            sind = el(j);
+            offset = sind*stride +bgn;
+            for (k=0;k<ebp1;++k) {
+               base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-            std::cout << "\t" << base[offset+k] << std::endl;
+               *sim::log << "\t" << base[offset+k] << std::endl;
 #endif
+            }
+            countdn -= ebp1;
          }
+         return;
+      }
+      
+      default: {
+         switch(op) {
+            case(average):
+               /* RELOAD FROM BUFFER */
+               /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+               /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = (nel-1)*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+               
+               if (matches > 1) {
+                  mtchinv = 1./matches;
 
+#ifdef MPDEBUG
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = sind*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+               }
+               return;
+            case(sum): 
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = (nel-1)*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) += frcvbuf(m,countdn +k);
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+               
+               if (matches > 1) {
+                  mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = sind*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+               }
+               return;
+            case(maximum):               
+               for(m=0;m<nmatch;++m) {   
+                  if (phase(grp)(m) != phi) continue;
+                  
+                  ++matches;
+                  
+                  int ebp1 = end-bgn+1;
+                  countdn = (nel-1)*ebp1;
+                  countup = 0;
+                  for(j=0;j<nel;++j) {
+                     for(k=0;k<ebp1;++k)
+                        fsndbuf(countup +k) = MAX(fsndbuf(countup+k),frcvbuf(m,countdn +k));
+                     countup += ebp1;
+                     countdn -= ebp1;
+                  }
+               }
+               
+               if (matches > 1) {
+#ifdef MPDEBUG
+                  *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+#endif
+                  count = 0;
+                  for(j=0;j<nel;++j) {
+                     sind = el(j);
+                     offset = sind*stride;
+                     for (k=bgn;k<=end;++k) {
+                        base[offset+k] = fsndbuf(count++);
+#ifdef MPDEBUG
+                        *sim::log << "\t" << base[offset+k] << std::endl;
+#endif
+                     }
+
+                  }
+               }
+               return;
+               
+            case(replace):
+               *sim::log << "Should only call replace with master_slave messages\n" << std::endl;
+               exit(1);
+         }
       }
    }
 }
@@ -462,14 +764,14 @@ block::ctrl spartition::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer
                      cnnct(v0).wt(j) = 0.0;
                }
             }
-            slave_master_prepare(); 
+            comm_prepare(boundary::all,0,slave_master); 
          }
          return(block::advance);                       
       case(1):
-         slave_master_transmit();
+         comm_transmit(boundary::all,0,slave_master);
          return(block::advance);
       case(2):
-         slave_master_wait();
+         comm_wait(boundary::all,0,slave_master);
          if (!first) {
             i = 0;
             for(k=nel-1;k>0;--k) {

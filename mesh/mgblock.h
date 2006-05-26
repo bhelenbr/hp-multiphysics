@@ -1,6 +1,5 @@
 #include "r_mesh.h"
 #include "block.h"
-#include "boundary.h"
 
 #include <map>
 #include <string>
@@ -248,7 +247,7 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, block::ctrl
 
    if (ctrl_message == block::begin) excpt = 0;
    else excpt += ctrl_message;
-   
+
    switch (excpt) {
       case(0):
          mp_phase = -1;
@@ -261,7 +260,7 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, block::ctrl
                grd[lvl].matchboundaries1(mp_phase/3);
                return(stay);
             case(1):
-               grd[lvl].vmsgpass(boundary::all,mp_phase/3);
+               grd[lvl].vmsgpass(boundary::all_phased,mp_phase/3,boundary::master_slave);
                return(stay);
             case(2):
                return(static_cast<ctrl>(grd[lvl].matchboundaries2(mp_phase/3)));
@@ -269,7 +268,7 @@ template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, block::ctrl
       case(2):
          return(stop);
    }
-   
+      
    *sim::log << "control flow error matchboundaries\n";
    exit(1);
    
@@ -299,13 +298,13 @@ template<class GRD> block::ctrl mgrid<GRD>::adapt(block::ctrl ctrl_message) {
       /* MESSAGE PASSING SEQUENCE */
       switch(mp_phase%3) {
          case(0):
-            grd[0].vmsgload(boundary::all,mp_phase/3,grd[0].vlngth.data(),0,0,1);
+            grd[0].vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,grd[0].vlngth.data(),0,0,1);
             return(stay);
          case(1):
-            grd[0].vmsgpass(boundary::all,mp_phase/3);
+            grd[0].vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
             return(stay);
          case(2):
-            return(static_cast<ctrl>(grd[0].vmsgwait_rcv(boundary::all,mp_phase/3,grd[0].vlngth.data(),0,0,1)));
+            return(static_cast<ctrl>(grd[0].vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, grd[0].vlngth.data(),0,0,1)));
       }
    }
    else if(excpt == 2) {

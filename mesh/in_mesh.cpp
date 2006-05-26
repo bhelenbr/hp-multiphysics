@@ -1,5 +1,5 @@
 #include "mesh.h"
-#include "boundary.h"
+#include "boundaries.h"
 #include <utilities.h>
 #include <cstdlib>
 #include <cstring>

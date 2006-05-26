@@ -3,7 +3,6 @@
 #include <fstream>
 #include <iomanip>
 #include "mesh.h"
-#include "boundary.h"
 
 using namespace std;
 

@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include "boundary.h"
 #include <cfloat>
 #include <iostream>
 #include <stdlib.h>

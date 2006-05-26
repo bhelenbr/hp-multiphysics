@@ -1,6 +1,5 @@
 #include "r_mesh.h"
 #include "r_boundary.h"
-#include "boundary.h"
 #include "block.h"
 #include <utilities.h>
 #include <iostream>
@@ -503,18 +502,18 @@ block::ctrl r_mesh::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
                   sbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
                   
                for(i=0;i<nsbd;++i) 
-                  sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3);
+                  sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3, boundary::symmetric);
                
                return(block::stay);
             case(1):
                for(i=0;i<nsbd;++i) 
-                  sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3);
+                  sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3, boundary::symmetric);
                return(block::stay);
             case(2):
                stop = 1;
                for(i=0;i<nsbd;++i) {
-                  stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3);
-                  sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,(FLT *) res.data(),0,1,2);
+                  stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3, boundary::symmetric);
+                  sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
                }
                return(static_cast<block::ctrl>(stop));
          }
@@ -709,13 +708,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(boundary::all,mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(boundary::all_phased,mp_phase/3,boundary::symmetric,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  vmsgpass(boundary::all,mp_phase/3);
+                  vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, kvol.data(),0,0,1)));
             }
             
          case (2):
@@ -734,13 +733,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
+                  vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,(FLT *) rg->res1,0,1,2);
                   return(block::stay);
                case(1):
-                  vmsgpass(mp_phase/3);
+                  vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res1,0,1,2));
             }
 #else
 #define P2 0
@@ -756,13 +755,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             /* MESSAGE PASSING SEQUENCE */
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+                  vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,(FLT *) rg->res.data(),0,1,2);
                   return(block::stay);
                case(1):
-                  vmsgpass(boundary::all,mp_phase/3);
+                  vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res.data(),0,1,2)));
             }
          
          case (5+P2):
@@ -784,13 +783,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(boundary::all,mp_phase/3,kvol.data(),0,0,1);
+                  vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,kvol.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  vmsgpass(boundary::all,mp_phase/3);
+                  vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,kvol.data(),0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric,  boundary::average, kvol.data(),0,0,1)));
             }
          case (2):
             kvoli();
@@ -814,13 +813,13 @@ block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             ++mp_phase
             switch(mp_phase%3) {
                case(0):
-                  vmsgload(mp_phase/3,kvol,0,0,1);
+                  vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,kvol,0,0,1);
                   return(block::stay);
                case(1):
-                  vmsgpass(mp_phase/3);
+                  vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,kvol,0,0,1)));
+                  return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, kvol,0,0,1)));
             }
          case(2):
             grd[lvl].kvoli();
@@ -856,13 +855,13 @@ block::ctrl r_mesh::rsdl(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,(FLT *) rg->res1,0,1,2);
+               vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,(FLT *) rg->res1,0,1,2);
                return(block::stay);
             case(1):
-               vmsgpass(mp_phase/3);
+               vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,(FLT *) rg->res1,0,1,2));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res1,0,1,2));
          }
 #endif
       case(0+P2):
@@ -876,13 +875,13 @@ block::ctrl r_mesh::rsdl(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2);
+               vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,(FLT *) rg->res.data(),0,1,2);
                return(block::stay);
             case(1):
-               vmsgpass(boundary::all,mp_phase/3);
+               vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,(FLT *) rg->res.data(),0,1,2)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, (FLT *) rg->res.data(),0,1,2)));
          }
          
       case(2+P2):
@@ -909,13 +908,13 @@ block::ctrl r_mesh::setup_preconditioner(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(mp_phase/3,rg->diag,0,0,1);
+               vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,rg->diag,0,0,1);
                return(block::stay);
             case(1):
-               vmsgpass(mp_phase/3);
+               vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(mp_phase/3,rg->diag,0,0,1));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, rg->diag,0,0,1));
          }
 #endif
       case(0+P2):
@@ -928,13 +927,13 @@ block::ctrl r_mesh::setup_preconditioner(block::ctrl ctrl_message) {
          /* MESSAGE PASSING SEQUENCE */
          switch(mp_phase%3) {
             case(0):
-               vmsgload(boundary::all,mp_phase/3,rg->diag.data(),0,0,1);
+               vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,rg->diag.data(),0,0,1);
                return(block::stay);
             case(1):
-               vmsgpass(boundary::all,mp_phase/3);
+               vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all,mp_phase/3,rg->diag.data(),0,0,1)));
+               return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, rg->diag.data(),0,0,1)));
          }
          
       case(2+P2):

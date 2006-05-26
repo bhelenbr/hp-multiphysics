@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include "boundary.h"
 #include <utilities.h>
 
 void mesh::coarsen_substructured(const class mesh &zx,int p) {

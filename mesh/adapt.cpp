@@ -8,7 +8,6 @@
  */
 
 #include "mesh.h"
-#include "boundary.h"
 
 #define DEBUG_ADAPT
 
@@ -39,7 +38,7 @@ block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
 
       case(3):
          for(i=0;i<nsbd;++i) 
-            sbdry(i)->master_slave_transmit();
+            sbdry(i)->comm_transmit(boundary::all,0,boundary::master_slave);
          return(block::advance);
          
       case(4):
@@ -58,7 +57,7 @@ block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
          
       case(7):
          for(i=0;i<nsbd;++i) 
-            sbdry(i)->master_slave_transmit();
+            sbdry(i)->comm_transmit(boundary::all,0,boundary::master_slave);
          return(block::advance);
          
       case(8):

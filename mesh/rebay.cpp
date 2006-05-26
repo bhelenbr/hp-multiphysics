@@ -7,7 +7,6 @@
  *
  */
 #include "mesh.h"
-#include "boundary.h"
 #include <utilities.h>
 #include <assert.h>
 #include <math.h>
@@ -258,11 +257,10 @@ void mesh::bdry_rebay(FLT tolsize) {
    /* REFINE BOUNDARY SIDES */
    for(int bnum=0;bnum<nsbd;++bnum) {
       count = 0;
+         
+      sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
 
-      if (!sbdry(bnum)->is_frst()) {
-         sbdry(bnum)->master_slave_prepare();
-         continue;
-      }
+      if (!sbdry(bnum)->is_frst()) continue;
       
       nlst = 0;
       for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
@@ -338,7 +336,7 @@ void mesh::bdry_rebay1() {
       
       if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
       
-      sbdry(bnum)->master_slave_wait();
+      sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
       
       nel_bgn = sbdry(bnum)->nel;
       

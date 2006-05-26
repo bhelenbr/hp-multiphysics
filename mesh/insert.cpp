@@ -8,7 +8,6 @@
  */
 
 #include "mesh.h"
-#include "boundary.h"
 #include <math.h>
 #include <float.h>   
 #include <assert.h>

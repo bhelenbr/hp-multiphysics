@@ -1,5 +1,4 @@
 #include "mesh.h"
-#include "boundary.h"
 #include "boundaries.h"
 #include <stdlib.h>
 #include <new>
@@ -87,7 +86,7 @@ int mesh::comm_entity_list(Array<int,1>& list) {
    return(tsize);
 }
 
-void mesh::vmsgload(int group, int phase,FLT *base,int bgn, int end, int stride) {
+void mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
@@ -97,59 +96,59 @@ void mesh::vmsgload(int group, int phase,FLT *base,int bgn, int end, int stride)
       vbdry(i)->vloadbuff(group,base,bgn,end,stride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(group,phase);
+      sbdry(i)->comm_prepare(group,phase,type);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(group,phase);
+      vbdry(i)->comm_prepare(group,phase,type);
    
    return;
 }
 
-void mesh::vmsgpass(int group, int phase) {
+void mesh::vmsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(group,phase);
+      sbdry(i)->comm_transmit(group,phase,type);
    for(int i=0;i<nvbd;++i) 
-      vbdry(i)->comm_transmit(group,phase);
+      vbdry(i)->comm_transmit(group,phase,type);
 
    return;
 }
 
-int mesh::vmsgwait_rcv(int group, int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
    int stop = 1;
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(group,phase);
+      stop &= sbdry(i)->comm_wait(group,phase,type);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(group,phase);
+      stop &= vbdry(i)->comm_wait(group,phase,type);
       
 
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(group,phase,type,op,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(group,phase,type,op,base,bgn,end,stride);
       
    return(stop);
 }
 
-int mesh::vmsgrcv(int group, int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::vmsgrcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(group,phase);
+      stop &= sbdry(i)->comm_nowait(group,phase,type);
    for(i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_nowait(group,phase);
+      stop &= vbdry(i)->comm_nowait(group,phase,type);
       
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
+      sbdry(i)->vfinalrcv(group,phase,type,op,base,bgn,end,stride);
    for(i=0;i<nvbd;++i)
-      vbdry(i)->vfinalrcv(group,phase,base,bgn,end,stride);
+      vbdry(i)->vfinalrcv(group,phase,type,op,base,bgn,end,stride);
       
    return(stop);
 }
 
 
-void mesh::smsgload(int group, int phase,FLT *base,int bgn, int end, int stride) {
+void mesh::smsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
@@ -157,40 +156,40 @@ void mesh::smsgload(int group, int phase,FLT *base,int bgn, int end, int stride)
       sbdry(i)->sloadbuff(group,base,bgn,end,stride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(group,phase);
+      sbdry(i)->comm_prepare(group,phase,type);
    
    return;
 }
 
-void mesh::smsgpass(int group, int phase) {
+void mesh::smsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(group,phase);
+      sbdry(i)->comm_transmit(group,phase,type);
 
    return;
 }
 
-int mesh::smsgwait_rcv(int group, int phase, FLT *base,int bgn, int end, int stride) {
+int mesh::smsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
    int stop = 1;
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(group,phase);
+      stop &= sbdry(i)->comm_wait(group,phase,type);
 
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->sfinalrcv(group,phase,base,bgn,end,stride);
+      sbdry(i)->sfinalrcv(group,phase,type,op,base,bgn,end,stride);
       
    return(stop);
 }
 
-int mesh::smsgrcv(int group,int phase,FLT *base,int bgn, int end, int stride) {
+int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(group,phase);
+      stop &= sbdry(i)->comm_nowait(group,phase,type);
       
    for(i=0;i<nsbd;++i) 
-      sbdry(i)->sfinalrcv(group,phase,base,bgn,end,stride);
+      sbdry(i)->sfinalrcv(group,phase,type,op,base,bgn,end,stride);
       
    return(stop);
 }
@@ -209,9 +208,9 @@ void mesh::matchboundaries1(int phase) {
    
    /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
    for(int i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(boundary::all,phase);
+      sbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::master_slave);
    for(int i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(boundary::all,phase);
+      vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::master_slave);
 }
 
 int mesh::matchboundaries2(int phase) {
@@ -219,9 +218,9 @@ int mesh::matchboundaries2(int phase) {
 
    /* FINAL PHASE OF SENDING */
    for(int i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(boundary::all,phase);
+      stop &= sbdry(i)->comm_wait(boundary::all_phased,phase,boundary::master_slave);
    for(int i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(boundary::all,phase);
+      stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::master_slave);
       
    for(int i=0;i<nsbd;++i)
       sbdry(i)->rcvpositions(phase);
