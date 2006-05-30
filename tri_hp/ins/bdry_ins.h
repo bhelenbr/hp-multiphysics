@@ -19,6 +19,7 @@
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
 #include "myblas.h"
+#include <blitz/tinyvec-et.h>
 
 namespace bdry_ins {
 
@@ -153,13 +154,14 @@ namespace bdry_ins {
          surface_slave(tri_hp_ins &xin, side_bdry &bin) : generic(xin,bin) {mytype = "surface_slave";}
          surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, side_bdry &bin) : generic(inbdry,xin,bin) {}
          surface_slave* create(tri_hp& xin, side_bdry &bin) const {return new surface_slave(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& inmap,void* &gbl_in);
 
          /* FOR COUPLED DYNAMIC BOUNDARIES */
          block::ctrl rsdl(block::ctrl ctrl_message);
          block::ctrl update(block::ctrl ctrl_message);
                  
          void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
-         void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all,phase,vdata,0,x.NV-2,x.NV);}
+         void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
          void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
             base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*(x.NV-2),x.NV*modestride);
             return;
@@ -180,7 +182,7 @@ namespace bdry_ins {
                 
       public:
          struct gbl {            
-            bool is_interface, is_loop;
+            bool is_loop;
             /* FLUID PROPERTIES */
             FLT sigma,rho2,mu2;
             
@@ -214,49 +216,158 @@ namespace bdry_ins {
          /* FOR COUPLED DYNAMIC BOUNDARIES */
          block::ctrl tadvance(bool coarse,block::ctrl ctrl_message);
          block::ctrl rsdl(block::ctrl ctrl_message);
+         void maxres();
          block::ctrl setup_preconditioner(block::ctrl ctrl_message);
          block::ctrl minvrt(block::ctrl ctrl_message);
          block::ctrl update(block::ctrl ctrl_message);
          block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum); 
    };
    
-   class surface_outflow_endpt : public hp_vrtx_bdry {
+   class surface_fixed_pt : public hp_vrtx_bdry {
       protected:
          tri_hp_ins &x;
          surface *surf;
-         int endpt;
+         int surfbdry;
+         int dirstart,dirstop;
          
        public:
-         surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "surface_outflow_endpt";}
-         surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
-         surface_outflow_endpt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_endpt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-         void init(input_map& input,void* &gbl_in) {
+         surface_fixed_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "surface_fixed_pt";}
+         surface_fixed_pt(const surface_fixed_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), 
+            surfbdry(inbdry.surfbdry), dirstart(inbdry.dirstart), dirstop(inbdry.dirstop) {}
+         surface_fixed_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_fixed_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& inmap,void* &gbl_in) {
+            std::string keyword,val;
+            std::istringstream data;
+            std::string filename;
+
+            hp_vrtx_bdry::init(inmap,gbl_in);
+            
             if (surf = dynamic_cast<surface *>(x.hp_sbdry(base.sbdry(0)))) {
-               endpt = 0;
+               surfbdry = 0;
             }
             else if (surf = dynamic_cast<surface *>(x.hp_sbdry(base.sbdry(1)))) {
-               endpt = 1;
+               surfbdry = 1;
             }
             else {
                *sim::log << "something's wrong neither side is a surface boundary" << std::endl;
                exit(1);
             }
+            
+            keyword = base.idprefix + ".dirstart";
+            inmap.getwdefault(keyword,dirstart,0);
+            
+            keyword = base.idprefix + ".dirstop";
+            inmap.getwdefault(keyword,dirstop,1);
+         }
+         
+         block::ctrl rsdl(block::ctrl ctrl_message) {
+            if (ctrl_message == block::begin) {
+               if (surfbdry == 0) {
+                  /* SET TANGENT RESIDUAL TO ZERO */
+                  surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(0) = 0.0;
+                  if (dirstop > 0) {
+                     /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
+                     x.hp_gbl->res.v(base.v0,2) += surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1)*x.ins_gbl->rho;
+                     /* AND ZERO RESIDUAL */
+                     surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1) = 0.0;
+                  }
+               }
+               else {
+                  /* SET TANGENT RESIDUAL TO ZERO */
+                  surf->surf_gbl->vres(0)(0) = 0.0;
+                  if (dirstop > 0) {
+                     /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
+                     x.hp_gbl->res.v(base.v0,2) += surf->surf_gbl->vres(0)(1)*x.ins_gbl->rho;
+                     /* AND ZERO RESIDUAL */
+                     surf->surf_gbl->vres(0)(1) = 0.0;
+                  }
+               }
+            }
+            return(block::stop);
+         }
+         
+         void vdirichlet() {
+            if (surfbdry == 0) {
+               for(int n=dirstart;n<=dirstop;++n) 
+                  surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(n) = 0.0;
+            }
+            else {
+               for(int n=dirstart;n<=dirstop;++n) 
+                  surf->surf_gbl->vres(0)(n) = 0.0;
+            }
+         }
+         
+         void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            
+            if (surfbdry == 0) {
+               x.sbdry(base.sbdry(1))->mvpttobdry(0,0.0,pt);
+            }
+            else {
+               x.sbdry(base.sbdry(0))->mvpttobdry(x.sbdry(base.sbdry(0))->nel-1,1.0,pt);
+            }
+         }
+   };
+
+   
+   class surface_outflow_endpt : public surface_fixed_pt {
+       public:
+         surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow_endpt";}
+         surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {}
+         surface_outflow_endpt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_endpt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& input,void* &gbl_in) {
+            surface_fixed_pt::init(input,gbl_in);
+            dirstart = 0;
+            dirstop = 0;
          }
             
          /* FOR COUPLED DYNAMIC BOUNDARIES */
          block::ctrl rsdl(block::ctrl ctrl_message);
+   };
+   
+   class surface_outflow_planar : public surface_outflow_endpt {
+      protected:
+         bool vertical;
+         FLT location;
          
-         /* THIS IS VERY COMPLICATED TO DO THIS WAY */
+      public:
+         surface_outflow_planar(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin) {mytype = "surface_outflow_planar";}
+         surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin), vertical(inbdry.vertical), location(inbdry.location) {}
+         surface_outflow_planar* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_planar(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& inmap,void* &gbl_in) {
+            std::string keyword;
+            std::ostringstream nstr;
+            
+            surface_outflow_endpt::init(inmap,gbl_in);
+
+            keyword = base.idprefix + ".vertical";
+            inmap.getwdefault(keyword,vertical,true);    
+            
+            keyword = base.idprefix + ".location";
+            inmap.getwdefault(keyword,location,0.0);
+         }
+            
+         void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            pt(1-vertical) = location;
+         }
+   };
+   
+   
+   
+   
+/*   clase surface_vertex_comm : public hp_vrtx_bdry { */
+                    /* THIS IS VERY COMPLICATED TO DO THIS WAY */
          /* FOR NOW USE PHASED SWEEPING OF BOUNDARY SIDES (NO COMMUNICATION THROUGH VERTICES) */
          /*
          void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
-         void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all,phase,vdata,0,x.NV-2,x.NV);}
+         void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
          void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
             base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*(x.NV-2),x.NV*modestride);
             return;
          }
          void smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride);
          */
-   };
+/*   };*/
+
+
 
 }

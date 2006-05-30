@@ -101,15 +101,15 @@
          basis::tri(log2p).ptprobe1d(ND,&xp(0),&dx(0),1.0,&cht(0,0),MXTM);
          ddpsi2 = (*fxy)(dx);
          vbdry(sbdry(bnum)->vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
-         vbdry(sbdry(bnum)->vbdry(0))->master_slave_prepare(boundary::manifolds);
+         vbdry(sbdry(bnum)->vbdry(0))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
          return(block::advance);
       
       case(1): 
-         vbdry(sbdry(bnum)->vbdry(1))->master_slave_transmit(boundary::manifolds);
+         vbdry(sbdry(bnum)->vbdry(1))->comm_transmit(boundary::manifolds,0,boundary::master_slave);
          return(block::advance);
       
       case(2):
-         vbdry(sbdry(bnum)->vbdry(0))->master_slave_wait(boundary::manifolds);
+         vbdry(sbdry(bnum)->vbdry(0))->comm_wait(boundary::manifolds,0,boundary::master_slave);
          if (vbdry(sbdry(bnum)->vbdry(0))->is_comm()) 
             ddpsi2 = vbdry(sbdry(bnum)->vbdry(0))->frcvbuf(0,0);
          else

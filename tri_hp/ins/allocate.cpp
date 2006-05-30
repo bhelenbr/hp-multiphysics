@@ -54,8 +54,8 @@
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
    int i,j,n,tind;
-   
-   for (int log2p=0;log2p<=log2pmax;++log2p) {
+      
+   for (log2p=0;log2p<=log2pmax;++log2p) {
       for(tind=0;tind<ntri;++tind) {
          if (td(tind).info > -1) {
             crdtocht(tind,1);
@@ -76,24 +76,24 @@ void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
             }
          }
          
-         
          ugtouht(tind,1);
          for(n=0;n<NV;++n)
             basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
-                     
+
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
                cjcb(i,j) = -sim::bd[0]*ins_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                dugdt(log2p,tind,ND)(i,j) = cjcb(i,j);
-               
+
                for(n=0;n<ND;++n)
-                  dxdt(log2p,tind,n)(i,j) = -sim::bd[0]*crd(n)(i,j);
+                  dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);
             }            
          }
       }
    }
+   log2p=log2pmax;
    
    return;
 }

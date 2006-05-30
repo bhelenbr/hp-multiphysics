@@ -55,6 +55,22 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
 #ifdef CTRL_DEBUG
          *sim::log << "step 0 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
+         /* THIS IS FOR DEFORMING MESH STUFF */
+         if (ctrl_message != block::advance1) {
+            state = tri_hp::rsdl(ctrl_message,stage);
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else {
+            ++excpt;
+            ctrl_message = block::begin;
+         }
+      }
+      
+      case 1: {
+#ifdef CTRL_DEBUG
+         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+#endif
          if (ctrl_message != block::advance1) {
             state = block::stop;
             for(i=0;i<nsbd;++i)
@@ -67,9 +83,9 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             ++excpt;
       }
       
-      case 1: {
+      case 2: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << "step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          for(tind = 0; tind<ntri;++tind) {
             /* LOAD INDICES OF VERTEX POINTS */
@@ -99,8 +115,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             /* CALCULATE MESH VELOCITY */
             for(i=0;i<lgpx;++i) {
                for(j=0;j<lgpn;++j) {
-                  mvel(0)(i,j) = sim::bd[0]*crd(0)(i,j) +dxdt(log2p,tind,0)(i,j);
-                  mvel(1)(i,j) = sim::bd[0]*crd(1)(i,j) +dxdt(log2p,tind,1)(i,j);
+                  mvel(0)(i,j) = sim::bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                  mvel(1)(i,j) = sim::bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
 #ifdef DROP
                   mvel(1)(i,j) += dydt;
 #endif
@@ -173,8 +189,6 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                         res(0)(i,j) = rhorbd0*u(0)(i,j) +dugdt(log2p,tind,0)(i,j);
                         res(1)(i,j) = rhorbd0*u(1)(i,j) +dugdt(log2p,tind,1)(i,j);
                         res(2)(i,j) = rhorbd0 +dugdt(log2p,tind,2)(i,j);
-                        
-                        
 #ifdef AXISYMMETRIC
                         res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
@@ -189,8 +203,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                         res(0)(i,j) = -ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*body[0];
                         res(1)(i,j) = -ins_gbl->rho*RAD(crd(0)(i,j))*cjcb*body[1];
 #endif
-#endif
-                        
+#endif              
+                                                
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                         /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
                         visc[0][0][0][0] = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
@@ -246,10 +260,13 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                   basis::tri(log2p).derivs(cv11[0],&res(1)(0,0),MXGP);
                   basis::tri(log2p).derivr(&du(2,0)(0,0),&res(2)(0,0),MXGP);
                   basis::tri(log2p).derivs(&du(2,1)(0,0),&res(2)(0,0),MXGP);
+                  
+
 
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
+                                 
                         tres[0] = ins_gbl->tau(tind)*res(0)(i,j);
                         tres[1] = ins_gbl->tau(tind)*res(1)(i,j);
                         tres[2] = ins_gbl->delt(tind)*res(2)(i,j);
@@ -460,16 +477,30 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
             }
          }
-                 
+         
+//         if (isfrst) {
+//                  printf("isfrst %d log2p %d stage %d\n",isfrst,log2p,stage);
+//
+//            for(i=0;i<nvrtx;++i)
+//               printf("ug.v %d %e %e %e\n",i,ug.v(i,0),ug.v(i,1),ug.v(i,2));
+//               
+//                        
+//         
+//
+//   for(i=0;i<nvrtx;++i)
+//      printf("res: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
+//                 
+//         }
+
       /*********************************************/
          /* MODIFY RESIDUALS ON COARSER MESHES         */
       /*********************************************/   
          if(coarse) {
          /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
             if(isfrst) {
-               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
-               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
-               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
+               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
                isfrst = false;
             }
             hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
@@ -479,10 +510,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
 
          }
          
-//   printf("%d\n",isfrst);
-//   for(i=0;i<nvrtx;++i)
-//      printf("res: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
-         
+
+//         
 //         std::cout << ins_gbl->res.s(Range(0,nside-1),Range::all(),Range::all());
 //         std::cout << ins_gbl->res.i(Range(0,ntri-1),Range::all(),Range::all());
 //         exit(1);

@@ -40,23 +40,16 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
             }
          }
          ++excpt1;
-         ctrl_message = block::begin;
       }
       
       case(2): {
 #ifdef CTRL_DEBUG
          *sim::log << "step 2 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
-         if (ctrl_message != block::advance1) {
-            state = block::stop; 
-            for(i=0;i<nsbd;++i)
-               state &= hp_sbdry(i)->update(ctrl_message);
-            
-            state &= hp_gbl->mover->update(ctrl_message,nvrtx,vrtx,vrtxbd(1));
-
-            if (state != block::stop) return(state);
-            else return(block::advance1);
-         }
+         for(i=0;i<nsbd;++i)
+            hp_sbdry(i)->update(block::begin);
+         
+         hp_gbl->mover->update(block::begin,nvrtx,vrtx,vrtxbd(1));
          ++excpt1;
          stage = 0;
       }
@@ -75,11 +68,6 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 #endif
          if (ctrl_message != block::advance2) {
             state = rsdl(ctrl_message,stage); 
-            
-
-
-                    
-         
             if (state != block::stop) return(state);
             return(block::advance2);
          }
@@ -97,27 +85,41 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
             return(block::advance1);
          }
          ++excpt1;
-         ctrl_message = block::begin;
       }
      
       case(6): {
+   
       
-//            for(i=0;i<nvrtx;++i)
-//               printf("nstage: %d %e %e %e %e %e\n", i,hp_gbl->vprcn(i,0),hp_gbl->vprcn(i,2),hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));      
+   printf("nstage: %d nvrtx: %d log2p: %d\n",stage,nvrtx,log2p);
 
-//         for(i=0;i<nvrtx;++i)
-//      printf("v: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
-//      
-//   for(i=0;i<nside*b->sm;++i)
-//      printf("s: %d %e %e %e\n",i,gbl->res.s[i][0],gbl->res.s[i][1],gbl->res.s[i][2]);
-//
-//   for(i=0;i<ntri*b->im;++i)
-//      printf("i: %d %e %e %e\n",i,gbl->res.i[i][0],gbl->res.i[i][1],gbl->res.i[i][2]); 
-//      
-////         std::cout << hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
-//         std::cout << hp_gbl->res.s(Range(0,nside-1),Range::all(),Range::all());
-//         std::cout << hp_gbl->res.i(Range(0,ntri-1),Range::all(),Range::all());
-//         exit(1);
+   for(i=0;i<nvrtx;++i)
+      printf("nstage: %d %e %e\n", i,hp_gbl->vprcn(i,0),hp_gbl->vprcn(i,2));
+
+   for(i=0;i<nvrtx;++i)
+      printf("v: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
+      
+   for(i=0;i<nside;++i)
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         printf("s: %d %d %e %e %e\n",i,m,hp_gbl->res.s(i,m,0),hp_gbl->res.s(i,m,1),hp_gbl->res.s(i,m,2));
+
+   for(i=0;i<ntri;++i)
+      for(m=0;m<basis::tri(log2p).im;++m)
+         printf("i: %d %d %e %e %e\n",i,m,hp_gbl->res.i(i,m,0),hp_gbl->res.i(i,m,1),hp_gbl->res.i(i,m,2));
+
+   for(i=0;i<nvrtx;++i)
+      printf("ug.v: %d %e %e %e\n",i,ug.v(i,0),ug.v(i,1),ug.v(i,2));
+      
+   for(i=0;i<nside;++i)
+      for(m=0;m<basis::tri(log2p).sm;++m)
+         printf("ug.s: %d %d %e %e %e\n",i,m,ug.s(i,m,0),ug.s(i,m,1),ug.s(i,m,2));
+
+   for(i=0;i<ntri;++i)
+      for(m=0;m<basis::tri(log2p).im;++m)
+         printf("ug.i: %d %d %e %e %e\n",i,m,ug.i(i,m,0),ug.i(i,m,1),ug.i(i,m,2));
+
+
+
+//   exit(1);
          
          cflalpha = sim::alpha[stage]*hp_gbl->cfl(log2p);
 #ifdef CTRL_DEBUG
@@ -147,14 +149,14 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
             }
          }
          ++excpt1;
-         ctrl_message = block::advance2;
+         ctrl_message = block::advance;
       }
       
       case(7): {
 #ifdef CTRL_DEBUG
          *sim::log << "step 7 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
-         if (ctrl_message != block::advance1) {
+         if (ctrl_message != block::advance2) {
             state = block::stop;
             for(i=0;i<nsbd;++i) {
                state &= hp_sbdry(i)->update(ctrl_message);
@@ -162,7 +164,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
             state &= hp_gbl->mover->update(ctrl_message,nvrtx,vrtx,vrtxbd(1));
             
             if (state != block::stop) return(state);
-            return(block::advance1);
+            return(block::advance2);
          }
          ++excpt1;
       }

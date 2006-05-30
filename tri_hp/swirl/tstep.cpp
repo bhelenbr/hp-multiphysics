@@ -41,6 +41,7 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
             v0 = v(j);
             q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
                +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+				q += pow(ug.v(v0,2),2.0);
             qmax = MAX(qmax,q);
          }
          gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*swirl_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*swirl_gbl->nu/hmax);

@@ -46,6 +46,20 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
    
    switch(excpt) {
       case 0: {
+         /* THIS IS FOR DEFORMING MESH STUFF */
+         if (ctrl_message != block::advance1) {
+            state = tri_hp::rsdl(ctrl_message,stage);
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else {
+            ++excpt;
+            ctrl_message = block::begin;
+         }
+      }
+
+
+      case 1: {
          if (ctrl_message != block::advance1) {
             state = block::stop;
             for(i=0;i<nsbd;++i)
@@ -58,7 +72,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
             ++excpt;
       }
       
-      case 1: {
+      case 2: {
 
 
          for(tind = 0; tind<ntri;++tind) {
@@ -356,9 +370,9 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
          if(coarse) {
          /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
             if(isfrst) {
-               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
-               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
-               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
+               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
                isfrst = false;
             }
             hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 

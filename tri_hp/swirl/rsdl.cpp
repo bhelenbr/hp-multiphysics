@@ -48,6 +48,19 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
    
    switch(excpt) {
       case 0: {
+         /* THIS IS FOR DEFORMING MESH STUFF */
+         if (ctrl_message != block::advance1) {
+            state = tri_hp::rsdl(ctrl_message,stage);
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else {
+            ++excpt;
+            ctrl_message = block::begin;
+         }
+      }
+      
+      case 1: {
          if (ctrl_message != block::advance1) {
             state = block::stop;
             for(i=0;i<nsbd;++i)
@@ -60,7 +73,7 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
             ++excpt;
       }
       
-      case 1: {
+      case 2: {
 
           for(tind = 0; tind<ntri;++tind) {
             /* LOAD INDICES OF VERTEX POINTS */
@@ -90,8 +103,8 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
             /* CALCULATE MESH VELOCITY */
             for(i=0;i<lgpx;++i) {
                for(j=0;j<lgpn;++j) {
-                  mvel(0)(i,j) = sim::bd[0]*crd(0)(i,j) +dxdt(log2p,tind,0)(i,j);
-                  mvel(1)(i,j) = sim::bd[0]*crd(1)(i,j) +dxdt(log2p,tind,1)(i,j);
+                  mvel(0)(i,j) = sim::bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                  mvel(1)(i,j) = sim::bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
                 }
             }
 
@@ -167,7 +180,9 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
                         res(0)(i,j) -= cjcb*(u(3)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +swirl_gbl->rho*u(2)(i,j)*u(2)(i,j));
                         //res(2)(i,j) -= cjcb*(lmu*((dcrd(1,1)(i,j)*du(2,1)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb -u(2)(i,j)/crd(0)(i,j)) -swirl_gbl->rho*u(0)(i,j)*u(2)(i,j));	
 								//res(2)(i,j) += lmu*(dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j))-lmu*cjcb*u(2)(i,j)/crd(0)(i,j) +cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j);
-								res(2)(i,j) += cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
+								//res(2)(i,j) += cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
+								res(2)(i,j) += cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
+
 						
                         
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
@@ -187,9 +202,9 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
                         visc[0][1][0][1] = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
                         visc[0][1][1][0] = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
                     
-								visc[2][2][0][0] = cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][0][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][1][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
+								visc[2][2][0][0] = -cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
+								visc[2][2][0][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
+								visc[2][2][1][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
 #define						viscI2II2II1II0I visc[2][2][0][1]
 
                            /* OTHER SYMMETRIES    */            
@@ -211,9 +226,9 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
                         e11[i][j] = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
 												+viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j);
                     
-								e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) -lmu*dcrd(1,1)(i,j)*u(2)(i,j);
+								e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) +lmu*dcrd(1,1)(i,j)*u(2)(i,j);
 						
-								e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) +lmu*dcrd(1,0)(i,j)*u(2)(i,j);
+								e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) -lmu*dcrd(1,0)(i,j)*u(2)(i,j);
 						
                                     
                         cv00[i][j] += e00[i][j];
@@ -310,9 +325,9 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
          if(coarse) {
          /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
             if(isfrst) {
-               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = sim::fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
-               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = sim::fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
-               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = sim::fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
+               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
                isfrst = false;
             }
             hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
@@ -321,8 +336,8 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
          }
 
 //              std::cout << swirl_gbl->res.v(Range(0,nvrtx),Range::all());
-//              std::cout << swirl_gbl->res.s;
-//				std::cout << swirl_gbl->res.i;
+//              std::cout << swirl_gbl->res.s(Range(0,nside),Range::all(),Range::all());
+//				std::cout << swirl_gbl->res.i(Range(0,ntri),Range::all(),Range::all());
 //               exit(1);
          ++excpt;
       }

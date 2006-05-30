@@ -89,7 +89,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                vc0load(mp_phase/3,hp_gbl->res.v.data());
                return(block::stay);
             case(1):
-               vmsgpass(boundary::all,mp_phase/3);
+               vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
                return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->res.v.data())));
@@ -196,7 +196,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                sc0load(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
                return(block::stay);
             case(1):
-               smsgpass(boundary::all,mp_phase/3);
+               smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
                return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim))));
@@ -371,7 +371,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
                   vc0load(mp_phase/3,hp_gbl->vprcn.data());
                   return(block::stay);
                case(1):
-                  vmsgpass(boundary::all,mp_phase/3);
+                  vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
                   return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
@@ -395,7 +395,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
                   sc0load(mp_phase/3,hp_gbl->sprcn.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  smsgpass(boundary::all,mp_phase/3);
+                  smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
                   return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->sprcn.data(),0,0,1)));

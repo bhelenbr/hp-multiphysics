@@ -53,7 +53,7 @@
 void tri_hp_swirl::calculate_unsteady_sources(bool coarse) {
    int i,j,n,tind;
    
-   for (int log2p=0;log2p<=log2pmax;++log2p) {
+   for (log2p=0;log2p<=log2pmax;++log2p) {
       for(tind=0;tind<ntri;++tind) {
          if (td(tind).info > -1) {
             crdtocht(tind,1);
@@ -87,11 +87,12 @@ void tri_hp_swirl::calculate_unsteady_sources(bool coarse) {
                dugdt(log2p,tind,ND+1)(i,j) = cjcb(i,j);
                
                for(n=0;n<ND;++n)
-                  dxdt(log2p,tind,n)(i,j) = -sim::bd[0]*crd(n)(i,j);
+                  dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);
             }            
          }
       }
    }
+   log2p = log2pmax;
    
    return;
 }

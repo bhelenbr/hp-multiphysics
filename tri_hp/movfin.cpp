@@ -73,18 +73,18 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
                      sbdry(i)->vloadbuff(boundary::partitions,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
                      
                   for(i=0;i<nsbd;++i) 
-                     sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3);
+                     sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3,boundary::symmetric);
                   
                   return(block::stay);
                case(1):
                   for(i=0;i<nsbd;++i) 
-                     sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3);
+                     sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
                   stop = 1;
                   for(i=0;i<nsbd;++i) {
-                     stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3);
-                     sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
+                     stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3,boundary::symmetric);
+                     sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
                   }
                   return(static_cast<block::ctrl>(stop));
             }

@@ -21,8 +21,8 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
    public:
-      static const int ntypes = 1;
-      enum ids {unknown=-1,plain};
+      static const int ntypes = 3;
+      enum ids {unknown=-1,surface_inflow,surface_outflow,surface_outflow_planar};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i) 
@@ -31,7 +31,7 @@ class tri_hp_ins_vtype {
       }
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"plain"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","surface_outflow_planar"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
@@ -56,8 +56,16 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    
    
    switch(type) {
-      case tri_hp_ins_vtype::plain: {
-         temp = new hp_vrtx_bdry(*this,*vbdry(bnum));
+      case tri_hp_ins_vtype::surface_inflow: {
+         temp = new surface_fixed_pt(*this,*vbdry(bnum));
+         break;
+      }
+      case tri_hp_ins_vtype::surface_outflow: {
+         temp = new surface_outflow_endpt(*this,*vbdry(bnum));
+         break;
+      }
+      case tri_hp_ins_vtype::surface_outflow_planar: {
+         temp = new surface_outflow_planar(*this,*vbdry(bnum));
          break;
       }
       default: {
@@ -78,8 +86,8 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
    public:
-      static const int ntypes = 6;
-      enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,symmetry};
+      static const int ntypes = 8;
+      enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,symmetry,surface,surface_slave};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -88,7 +96,7 @@ class tri_hp_ins_stype {
       }
 };
 
-const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler","symmetry"};
+const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler","symmetry","surface","surface_slave"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -136,6 +144,15 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
       }
       case tri_hp_ins_stype::symmetry: {
          temp = new symmetry(*this,*sbdry(bnum));
+         break;
+      }
+      case tri_hp_ins_stype::surface: {
+         temp = new surface(*this,*sbdry(bnum));
+         dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
+         break;
+      }
+      case tri_hp_ins_stype::surface_slave: {
+         temp = new surface_slave(*this,*sbdry(bnum));
          break;
       }
       default: {

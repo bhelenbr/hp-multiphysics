@@ -92,6 +92,7 @@ class tri_hp : public r_mesh  {
       bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
       Array<vsi,1> dres; //!< Driving term for multigrid
       Array<FLT,2> vug_frst; //!< Solution on first entry to coarse mesh
+      FLT fadd; //!< Controls addition of residuals on coarse mesh
       
       /** Adaptation constants */
       FLT trncerr, bdrysensitivity, vlngth_tol;  //!<   Adaptation constants  

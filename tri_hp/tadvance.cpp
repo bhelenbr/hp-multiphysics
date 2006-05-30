@@ -21,7 +21,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
    switch(excpt) {
       case 0: 
          if (log2p == log2pmax && sim::substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
-            state = r_mesh::tadvance(coarse,excpt,fv_to_ct,cv_to_ft,fmesh);
+            state = r_mesh::tadvance(coarse,ctrl_message,fv_to_ct,cv_to_ft,fmesh);
             if (state != block::stop) return(state);
          }
          ++excpt;
@@ -41,7 +41,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                vc0load(mp_phase/3,ug.v.data());
                return(block::stay);
             case(1):
-               vmsgpass(boundary::all,mp_phase/3);
+               vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
                return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,ug.v.data())));
@@ -63,7 +63,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                   sc0load(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
                   return(block::stay);
                case(1):
-                  smsgpass(boundary::all,mp_phase/3);
+                  smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
                   return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim))));
@@ -115,12 +115,12 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                      ugbd(1).i(Range(0,ntri-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).i(Range(0,ntri-1),Range::all(),Range::all());
                   }
                }
-               for(i=0;i<nvrtx;++i)
+               for(i=0;i<nvrtx;++i) 
                   for(n=0;n<ND;++n)
                      vrtxbd(1)(i)(n) += sim::adirk[stage][s]*vrtxbd(s+2)(i)(n);
             }
          }
-         else if (p0 == 1) {
+         else {
             
             /* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
             for(i=0;i<nvrtx;++i) {
@@ -141,10 +141,11 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
          }
          ++excpt;
          ctrl_message = block::begin;
-      }   
+      } 
       
       case 6: {
-         if (ctrl_message != block::advance1) {
+         if (ctrl_message != block::advance2) {
+            
             state = block::stop;
             for(i=0;i<nsbd;++i)
                state &= hp_sbdry(i)->tadvance(coarse,ctrl_message);
@@ -152,15 +153,16 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             if (!coarse) state &= hp_gbl->mover->tadvance(ctrl_message,nvrtx,vrtx,vrtxbd(1));
 
             if (state != block::stop) return(state);
-            return(block::advance1);
+            return(block::advance2);
          }
-         else 
+         else {
+            calculate_unsteady_sources(coarse);
             ++excpt;
+         }
       }
-      case 7: {
-         calculate_unsteady_sources(coarse);
-      }
+
    }
+   
    return(block::stop);
 }
 
@@ -169,7 +171,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
 void tri_hp::calculate_unsteady_sources(bool coarse) {
    int i,j,n,tind;
    
-   for (int log2p=0;log2p<=log2pmax;++log2p) {
+   for (log2p=0;log2p<=log2pmax;++log2p) {
       for(tind=0;tind<ntri;++tind) {
          if (td(tind).info > -1) {
             crdtocht(tind,1);
@@ -195,20 +197,19 @@ void tri_hp::calculate_unsteady_sources(bool coarse) {
          for(n=0;n<NV;++n)
             basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
                      
+                     
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
                cjcb(i,j) = -sim::bd[0]*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<NV;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                for(n=0;n<ND;++n)
-                  dxdt(log2p,tind,n)(i,j) = -sim::bd[0]*crd(n)(i,j);
+                  dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);
             }            
          }
       }
    }
-   
-   for(i=0;i<nsbd;++i)
-      hp_sbdry(i)->calculate_unsteady_sources(coarse);
+   log2p = log2pmax;
    
    return;
 }

@@ -62,6 +62,9 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    keyword = idprefix + ".nvariable";
    inmap.getwdefault(keyword,NV,1);
    *sim::log << "#" << keyword << ": " << NV << std::endl;
+   
+   inmap.getwdefault("hp_fadd",fadd,1.0);
+   *sim::log << "#hp_fadd: " << fadd << std::endl;
 
    keyword = idprefix + ".log2p";
    if (!inmap.get(keyword,log2p)) {
@@ -251,7 +254,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       hp_gbl->tprcn.resize(maxvst,NV,NV);
 #endif
 
-      keyword = idprefix +"cfl";
+      keyword = idprefix +".cfl";
       if (!inmap.getline(keyword,line)) {
          if (!inmap.getline("cfl",line)) {
             line = "2.5 1.5 1.0";
@@ -280,12 +283,9 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       ugbd(0).i.reference(ug.i);
       vrtxbd(0).reference(vrtx);
       
-      /* HERE I MAKE 1 REFERENCE 0 BECAUSE I DON'T NEED TO STORE SOURCE TERMS ON COARSE MESHES */
-      /* I JUST USE BD(1) TO CALCULATE UNSTEADY SOURCES (DUGDT,DVRTDT) IN TADVANCE */
-      ugbd(1).v.reference(ug.v);
-      ugbd(1).s.reference(ug.s);
-      ugbd(1).i.reference(ug.i);
-      vrtxbd(1).reference(vrtx);
+      /* THESE STORE BACKWARDS DIFFERENCE SOURCE TERM AT VERTICES */
+      ugbd(1).v.resize(maxvst,NV);
+      vrtxbd(1).resize(maxvst);
       
       vug_frst.resize(maxvst,NV);     
       dres.resize(1);
@@ -327,12 +327,12 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
          std::ostringstream nstr;
          std::string fname;
          nstr << restartfile << std::flush;
-         fname = idprefix +"rstrt" +nstr.str();
+         fname = idprefix +"_rstrt" +nstr.str();
          input(fname);
       } 
       else {
          for(i=0;i<nsbd;++i)
-            hp_sbdry(i)->curv_init();
+            hp_sbdry(i)->curv_init();  /* TEMPO WILL NEED TO CHANGE THIS TO "tobasis" */
             
          /* USE TOBASIS TO INITALIZE SOLUTION */
          tobasis(hp_gbl->ibc);
@@ -377,7 +377,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    return;
 }
 
- void tri_hp::maxres() {
+void tri_hp::maxres() {
    int i,n;
    Array<FLT,1> mxr(NV);
    
@@ -392,6 +392,10 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
          
    for(n=0;n<NV;++n)
       *sim::log << ' ' << mxr(n) << ' ';
+      
+   for(i=0;i<nsbd;++i)
+      hp_sbdry(i)->maxres();
+   
 }
 
 

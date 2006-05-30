@@ -16,7 +16,7 @@
 
 class hp_side_bdry;
 
-class hp_vrtx_bdry {
+class hp_vrtx_bdry : public vgeometry_interface {
    protected:
       std::string mytype;
       tri_hp& x;
@@ -61,7 +61,7 @@ class hp_vrtx_bdry {
       /* BOUNDARY CONDITION FUNCTIONS */
       virtual void vdirichlet() {}
       virtual void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV);}
-      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all,phase,vdata,0,x.NV-1,x.NV);}
+      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV);}
             
       /* FOR COUPLED DYNAMIC BOUNDARIES */
       virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
@@ -74,7 +74,7 @@ class hp_vrtx_bdry {
 };
 
 
-class hp_side_bdry {
+class hp_side_bdry : public sgeometry_interface {
    protected:
       std::string mytype;
       tri_hp& x;
@@ -106,10 +106,11 @@ class hp_side_bdry {
                   
       /* BOUNDARY CONDITION FUNCTIONS */
       virtual block::ctrl rsdl(block::ctrl ctrl_message) {return(block::stop);}
+      virtual void maxres() {}
       virtual void vdirichlet() {}
       virtual void sdirichlet(int mode) {}
       virtual void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV);}
-      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all,phase,vdata,0,x.NV-1,x.NV);}
+      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV);}
       virtual void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
          base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
          return;
@@ -149,6 +150,8 @@ class hp_side_bdry {
       
       /* SEARCH FUNCTIONS */
       virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);
+      virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
+
 };
 
 #endif

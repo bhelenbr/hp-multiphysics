@@ -124,7 +124,7 @@ namespace bdry_swirl {
    
    class euler : public neumann {
       protected:
-         void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
+         void flux(TinyVector<FLT,4> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,4>& flx) {
             TinyVector<FLT,3> ub;
             for(int n=0;n<x.NV;++n)
                ub(n) = x.hp_gbl->ibc->f(n,xpt);
