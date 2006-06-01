@@ -150,8 +150,7 @@ class mesh {
       void smsgpass(boundary::groups group, int phase, boundary::comm_type type);
       int smsgwait_rcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride);
       int smsgrcv(boundary::groups group,int phase, boundary::comm_type type,  boundary::operation op, FLT *base,int bgn, int end, int stride);
-      void matchboundaries1(int phase);
-      int matchboundaries2(int phase);
+      block::ctrl matchboundaries(block::ctrl ctrl_message);
       
       
       /* UTILITIES FOR INTERPOLATION BETWEEN MESHES */
@@ -262,7 +261,7 @@ class mesh {
       int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
       int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));}
    private:
-      int excpt, excpt1;
+      int excpt, excpt1, mp_phase;
 };
 
 class vgeometry_interface {

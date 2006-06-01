@@ -194,39 +194,64 @@ int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, bo
    return(stop);
 }
 
+block::ctrl mesh::matchboundaries(block::ctrl ctrl_message) {
+   int stop;
    
+   if (ctrl_message == block::begin) excpt = 0;
+   else excpt += ctrl_message;
 
+   switch (excpt) {
+      case(0):
+         mp_phase = -1;
+         return(block::advance);
+      case(1):
+         ++mp_phase;
+         /* MESSAGE PASSING SEQUENCE */
+         switch(mp_phase%3) {
+            case(0): {
+               /* LOAD POSITIONS INTO BUFFERS */
+               for(int i=0;i<nvbd;++i)
+                  vbdry(i)->loadpositions();
+               for(int i=0;i<nsbd;++i) 
+                  sbdry(i)->loadpositions();
+               
+               /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
+               for(int i=0;i<nsbd;++i)
+                  sbdry(i)->comm_prepare(boundary::all_phased,mp_phase/3,boundary::master_slave);
+               for(int i=0;i<nvbd;++i)
+                  vbdry(i)->comm_prepare(boundary::all_phased,mp_phase/3,boundary::master_slave);
+               
+               return(block::stay);
+            }
+            case(1): {
+               vmsgpass(boundary::all_phased,mp_phase/3,boundary::master_slave);
+               return(block::stay);
+            }
+            case(2): {
+               stop=block::advance;
 
-/*	MAKE SURE MATCHING BOUNDARIES ARE AT EXACTLY THE SAME POSITIONS */
-void mesh::matchboundaries1(int phase) {
-   
-   /* LOAD POSITIONS INTO BUFFERS */
-   for(int i=0;i<nvbd;++i)
-      vbdry(i)->loadpositions();
-   for(int i=0;i<nsbd;++i) 
-      sbdry(i)->loadpositions();
-   
-   /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
-   for(int i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::master_slave);
-   for(int i=0;i<nvbd;++i)
-      vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::master_slave);
-}
-
-int mesh::matchboundaries2(int phase) {
-   int stop=1;
-
-   /* FINAL PHASE OF SENDING */
-   for(int i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(boundary::all_phased,phase,boundary::master_slave);
-   for(int i=0;i<nvbd;++i)
-      stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::master_slave);
+               /* FINAL PHASE OF SENDING */
+               for(int i=0;i<nsbd;++i)
+                  stop &= sbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
+               for(int i=0;i<nvbd;++i)
+                  stop &= vbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
+                  
+               for(int i=0;i<nsbd;++i)
+                  sbdry(i)->rcvpositions(mp_phase/3);
+               for(int i=0;i<nvbd;++i)
+                  vbdry(i)->rcvpositions(mp_phase/3);
+                        
+               return(stop);
+            }
+         }
+      case(2): {
+         return(block::stop);
+      }
+   }
       
-   for(int i=0;i<nsbd;++i)
-      sbdry(i)->rcvpositions(phase);
-   for(int i=0;i<nvbd;++i)
-      vbdry(i)->rcvpositions(phase);
-            
+   *sim::log << "control flow error matchboundaries\n";
+   exit(1);
+   
    return(stop);
 }
 

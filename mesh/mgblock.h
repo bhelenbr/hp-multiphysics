@@ -48,7 +48,7 @@ template<class GRD> class mgrid : public block {
          grd[level].output(fapp,why);
       }
       block::ctrl reconnect(int lvl, block::ctrl ctrl_message);
-      block::ctrl matchboundaries(int lvl, block::ctrl ctrl_message);
+      block::ctrl matchboundaries(int lvl, block::ctrl ctrl_message) {return(grd[lvl].matchboundaries(ctrl_message));}
      
       /* PASS THROUGH ROUTINES FOR MATCHING BOUNDARIES*/
       int comm_entity_size(int grdlvl) {
@@ -241,38 +241,6 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, block::ctrl ctrl_
          }
    }
    return(block::stop);
-}
-
-template<class GRD> block::ctrl mgrid<GRD>::matchboundaries(int lvl, block::ctrl ctrl_message) {
-
-   if (ctrl_message == block::begin) excpt = 0;
-   else excpt += ctrl_message;
-
-   switch (excpt) {
-      case(0):
-         mp_phase = -1;
-         return(block::advance);
-      case(1):
-         ++mp_phase;
-         /* MESSAGE PASSING SEQUENCE */
-         switch(mp_phase%3) {
-            case(0):
-               grd[lvl].matchboundaries1(mp_phase/3);
-               return(stay);
-            case(1):
-               grd[lvl].vmsgpass(boundary::all_phased,mp_phase/3,boundary::master_slave);
-               return(stay);
-            case(2):
-               return(static_cast<ctrl>(grd[lvl].matchboundaries2(mp_phase/3)));
-         }
-      case(2):
-         return(stop);
-   }
-      
-   *sim::log << "control flow error matchboundaries\n";
-   exit(1);
-   
-   return(stop);
 }
 
 template<class GRD> block::ctrl mgrid<GRD>::adapt(block::ctrl ctrl_message) {
