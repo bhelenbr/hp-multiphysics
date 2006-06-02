@@ -768,7 +768,7 @@ block::ctrl spartition::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer
          }
          return(block::advance);                       
       case(1):
-         comm_transmit(boundary::all,0,slave_master);
+         comm_exchange(boundary::all,0,slave_master);
          return(block::advance);
       case(2):
          comm_wait(boundary::all,0,slave_master);

@@ -223,9 +223,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                  for(int i=0;i<msgsize;++i) 
-                     *(sim::log) << "\t" << fsndbuf(i) << std::endl;
+                  *(sim::log) << "preparing for message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif     
                   
                   switch(mtype(m)) {
@@ -235,10 +233,10 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                      case(mpi):
 #ifdef SINGLE
-                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_FLOAT, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_FLOAT, 
                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
-                        MPI_Irecv(&frcvbuf(m,0), msgsize, MPI_DOUBLE, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_DOUBLE, 
                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m)); 
                         break;
 #endif   
@@ -259,7 +257,7 @@ template<class BASE> class comm_bdry : public BASE {
                         break;  
 #ifdef MPISRC
                      case(mpi):
-                        MPI_Irecv(&ircvbuf(m,0), msgsize, MPI_INT, 
+                        MPI_Irecv(&ircvbuf(m,0), buffsize, MPI_INT, 
                            mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
                         break;
 #endif         
@@ -271,7 +269,7 @@ template<class BASE> class comm_bdry : public BASE {
          }
       }
       
-      void comm_transmit(boundary::groups grp, int phi, boundary::comm_type type) {
+      void comm_exchange(boundary::groups grp, int phi, boundary::comm_type type) {
          int i,m;
          int nlocalmessages = nmatch, nmpimessages = nmatch;
          
@@ -311,11 +309,11 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                  *(sim::log) << "sending message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                  for(i=0;i<msgsize;++i) 
-                     *(sim::log) << "\t" << fsndbuf(i) << std::endl;
+                  *(sim::log) << "exchanging message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  for(i=0;i<local_match(m)->sndsize();++i) 
+                     *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif     
-                  for(i=0;i<msgsize;++i) 
+                  for(i=0;i<local_match(m)->sndsize();++i) 
                      frcvbuf(m,i) = local_match(m)->fsndbuf(i);
                }
   
@@ -325,7 +323,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "sending message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif  
@@ -347,7 +345,7 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
   
-                  for(i=0;i<msgsize;++i) 
+                  for(i=0;i<local_match(m)->sndsize();++i) 
                      ircvbuf(m,i) = local_match(m)->isndbuf(i);
                }
   

@@ -106,9 +106,9 @@ void mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type,
 void mesh::vmsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(group,phase,type);
+      sbdry(i)->comm_exchange(group,phase,type);
    for(int i=0;i<nvbd;++i) 
-      vbdry(i)->comm_transmit(group,phase,type);
+      vbdry(i)->comm_exchange(group,phase,type);
 
    return;
 }
@@ -164,7 +164,7 @@ void mesh::smsgload(boundary::groups group, int phase, boundary::comm_type type,
 void mesh::smsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
    for(int i=0;i<nsbd;++i) 
-      sbdry(i)->comm_transmit(group,phase,type);
+      sbdry(i)->comm_exchange(group,phase,type);
 
    return;
 }

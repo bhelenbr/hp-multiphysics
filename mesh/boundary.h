@@ -84,7 +84,7 @@ class boundary {
       virtual int& sndsize() {return(dummy.idum=0);}
       virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
       virtual void comm_prepare(boundary::groups group, int phase, comm_type type) {}
-      virtual void comm_transmit(boundary::groups group, int phase, comm_type type) {}
+      virtual void comm_exchange(boundary::groups group, int phase, comm_type type) {}
       virtual int comm_wait(boundary::groups group, int phase, comm_type type) {return 1;}
       virtual int comm_nowait(boundary::groups group, int phase, comm_type type) {return 1;}
       virtual ~boundary() {}

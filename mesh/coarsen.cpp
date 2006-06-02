@@ -240,7 +240,7 @@ block::ctrl mesh::coarsen2(block::ctrl ctrl_message, FLT factor, const class mes
 
       case(2):
          for(i=0;i<nsbd;++i) 
-            sbdry(i)->comm_transmit(boundary::all,0,boundary::master_slave);
+            sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
          return(block::advance);
          
       case(3):

@@ -38,7 +38,7 @@ block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
 
       case(3):
          for(i=0;i<nsbd;++i) 
-            sbdry(i)->comm_transmit(boundary::all,0,boundary::master_slave);
+            sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
          return(block::advance);
          
       case(4):
@@ -57,7 +57,7 @@ block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
          
       case(7):
          for(i=0;i<nsbd;++i) 
-            sbdry(i)->comm_transmit(boundary::all,0,boundary::master_slave);
+            sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
          return(block::advance);
          
       case(8):
