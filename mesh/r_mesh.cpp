@@ -23,11 +23,9 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
    if (!input.get(keyword,fadd)) {
       input.getwdefault("r_fadd",fadd,1.0);
    }
-   *sim::log << "#r_fadd: " << fadd << std::endl;
 
    keyword = idprefix + ".vnn";
    input.getwdefault(keyword,vnn,0.5); 
-   *sim::log << "#vnn: " << vnn << std::endl;
    
    keyword = idprefix + ".r_output_type";
    if (input.get(keyword,ival)) {
@@ -56,28 +54,10 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
       rg->res.resize(maxvst);
       rg->res1.resize(maxvst);
    }
-         
-   std::string bdryfile;
-   input_map bdrymap;
-   keyword = idprefix + ".bdryfile";
-   if (input.get(keyword,bdryfile)) {
-      if (!(strncmp("${HOME}",bdryfile.c_str(), 7))) {
-         filename = getenv("HOME");
-         filename = filename + (bdryfile.c_str()+7);
-      }
-      else 
-         filename = bdryfile;
-   }
-   else {
-      keyword = idprefix + ".mesh";
-      input.get(keyword,filename);
-      filename = filename +"_bdry.inpt";
-   }
-   bdrymap.input(filename);
 
    r_sbdry.resize(nsbd);
    for(int i=0;i<nsbd;++i)
-      r_sbdry(i) = getnewsideobject(i,&bdrymap);
+      r_sbdry(i) = getnewsideobject(i,input);
    
    return;
 }

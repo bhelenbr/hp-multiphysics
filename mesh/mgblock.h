@@ -37,11 +37,6 @@ template<class GRD> class mgrid : public block {
             grd[i].reload_scratch_pointers();
          }
       }
-      void input(const std::string &filename) {
-         std::string fapp;
-         fapp = idprefix +"_" +filename;
-         grd[0].input(fapp);
-      }
       void output(const std::string &filename, block::output_purpose why, int level = 0) {
          std::string fapp;
          fapp = idprefix +"_" +filename;
@@ -103,13 +98,11 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
 
    /* LOAD NUMBER OF GRIDS */
    input.getwdefault("ngrid",ngrid,1);
-   *sim::log << "#ngrid: " << ngrid << std::endl;
    
    keyword = idprefix + ".adapt";
    if (!input.get(keyword,adapt_flag)) {
       input.getwdefault("adapt",adapt_flag,false);
    }
-   *sim::log << "#adapt: " << adapt_flag << std::endl;
    
    grd = new GRD[ngrid];
       
@@ -121,14 +114,12 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    if (!input.get(keyword,grwfac)) {
       input.getwdefault("growth factor",grwfac,2.0);
    }
-   *sim::log << "#growth factor: " << grwfac << std::endl;
    
    int filetype;
    keyword = idprefix + ".filetype";
    if (!input.get(keyword,filetype)) {
       input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
    }
-   *sim::log << "#filetype: " << filetype << std::endl;
    
    keyword = idprefix + ".mesh";
    if (!input.get(keyword,filename)) {
@@ -140,30 +131,22 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
          exit(1);
       }
    }
-   *sim::log << "#mesh: " << filename << std::endl;
-
-   keyword = idprefix + ".bdryfile";
-   if (!input.get(keyword,bdryfile)) {
-      bdryfile = filename +"_bdry.inpt";
-      input[keyword] = bdryfile;
-   }
-   *sim::log << "#bdryfile: " << bdryfile << std::endl;
-   grd[0].mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,bdryfile.c_str());
+   grd[0].idprefix = idprefix;
+   grd[0].mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,input);
    
    keyword = idprefix + ".tolerance";
    if (!input.get(keyword,tolerance)) {
       input.getwdefault("tolerance",tolerance,2.2);
    }
-   *sim::log << "#tolerance: " << tolerance << std::endl;
    
    keyword = idprefix + ".coarse";
    input[keyword] = "0";
-   grd[0].idprefix = idprefix;
    grd[0].init(input,&gstorage);
    
    input[keyword] = "1";
 #define OLDRECONNECT
    for(int lvl=1;lvl<ngrid;++lvl) {
+      grd[lvl].idprefix = idprefix;
 #ifdef OLDRECONNECT
       grd[lvl].allocate_duplicate(2.0,grd[lvl-1]);
 #else
@@ -171,7 +154,6 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
       if (lvl > 1) size_reduce = 2.0;
       grd[lvl].allocate_duplicate(size_reduce,grd[lvl-1]);
 #endif
-      grd[lvl].idprefix = idprefix;
       grd[lvl].init(input,&gstorage);
       cv_to_ft(lvl-1).resize(grd[lvl].maxvst);
       fv_to_ct(lvl-1).resize(grd[lvl-1].maxvst);

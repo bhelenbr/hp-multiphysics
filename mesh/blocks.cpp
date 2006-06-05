@@ -86,7 +86,6 @@ void blocks::init(const std::string &infile, const std::string &outfile) {
 
 void blocks::init(input_map input) {
    int i,nb;
-   input_map merge;
    std::string mystring;
    std::ostringstream nstr;
    std::istringstream data;
@@ -115,6 +114,9 @@ void blocks::init(input_map input) {
       std::cout.precision(3);
       sim::log = &std::cout;
    }
+   input.echo = true;
+   input.log = sim::log;
+   input.echoprefix = "#";
    
 #ifdef CAPRI
    int status = gi_uStart();
@@ -160,56 +162,42 @@ void blocks::init(input_map input) {
    /* LOAD TIME STEPPING INFO */
    sim::time = 0.0;  // Simulation starts at t = 0
    input.getwdefault("dtinv",sim::dti,0.0);
-   *sim::log << "#dtinv: " << sim::dti << std::endl;
       
    /* OTHER UNIVERSAL CONSTANTS */
    input.getwdefault("gravity",sim::g,0.0);
-   *sim::log << "#gravity: " << sim::g << std::endl;
    
    /* LOAD BASIC CONSTANTS FOR MULTIGRID */
    input.getwdefault("itercrsn",itercrsn,1);
-   *sim::log << "#itercrsn: " << itercrsn << std::endl;
    
    input.getwdefault("iterrfne",iterrfne,0);
-   *sim::log << "#iterrfne: " << iterrfne << std::endl;
       
    input.getwdefault("ncycle",ncycle,20);
-   *sim::log << "#ncycle: " << ncycle << std::endl;
    
    input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
-   *sim::log << "#preconditioner_interval: " << prcndtn_intrvl << std::endl;
    
    input.getwdefault("vwcycle",vw,2);
-   *sim::log << "#vwcycle: " << vw << std::endl;
    
    input.getwdefault("ntstep",ntstep,1);
-   *sim::log << "#ntstep: " << ntstep << std::endl;
    
    input.getwdefault("nstart",nstart,0);
-   *sim::log << "#nstart: " << nstart << std::endl;
 
    /* LOAD NUMBER OF GRIDS */
    input.getwdefault("nblock",nblock,1);
-   *sim::log << "#nblock: " << nblock << std::endl;
    
    input.getwdefault("ngrid",ngrid,1);
-   *sim::log << "#ngrid: " << ngrid << std::endl;
    
-   input.getwdefault("ntop",ntop,0);
-   *sim::log << "#ntop: " << ntop << std::endl;
+   input.getwdefault("extra_coarsest_levels",extra_coarsest_levels,0);
    
-   input.getwdefault("nbottom",nbottom,0);
-   *sim::log << "#nbottom: " << nbottom << std::endl;
-   mglvls = ngrid+ntop+nbottom;
+   input.getwdefault("extra_finest_levels",extra_finest_levels,0);
+   mglvls = ngrid+extra_coarsest_levels+extra_finest_levels;
    
    input.getwdefault("output_interval", out_intrvl,1);
-   *sim::log << "#output_interval: " << out_intrvl << std::endl;
    
    input.getwdefault("restart_interval",rstrt_intrvl,1);
-   *sim::log << "#restart_interval: " << rstrt_intrvl << std::endl;
    
    input.getwdefault("debug_output",debug_output,false);
-   *sim::log << "#debug_output: " << debug_output << std::endl;
+   
+   input.getwdefault("adapt",adapt_flag,0);
    
    blk = new block *[nblock];
    for (i=0;i<nblock;++i) {
@@ -635,8 +623,8 @@ void blocks::cycle(int vw, int lvl) {
    
    /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
    /* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */
-   gridlevel = MIN(MAX(lvl-nbottom,0),ngrid-1);
-   gridlevelp = MIN(MAX(lvl-nbottom+1,0),ngrid-1);
+   gridlevel = MIN(MAX(lvl-extra_finest_levels,0),ngrid-1);
+   gridlevelp = MIN(MAX(lvl-extra_finest_levels+1,0),ngrid-1);
       
    for (vcount=0;vcount<vw;++vcount) {
    
@@ -709,7 +697,7 @@ void blocks::go() {
       }
    
       /* ADAPT MESH */
-      restructure();
+      if (adapt_flag) restructure();
    
       /* OUTPUT RESTART FILES */
       if (!((sim::tstep+1)%(rstrt_intrvl*out_intrvl))) {

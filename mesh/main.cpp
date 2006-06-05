@@ -74,15 +74,29 @@ int main(int argc, char *argv[]) {
    mesh::filetype in = static_cast<mesh::filetype>(informat);
    mesh::filetype out = static_cast<mesh::filetype>(outformat);
    
+   std::string bdry_nm;
+   ifstream intest;
+
+   input_map bdrymap;
+   bdry_nm = std::string(argv[1]) +"_bdry.inpt";
+   intest.open(bdry_nm.c_str());
+   if (intest.good()) {
+      intest.close();
+      bdrymap.input(bdry_nm);
+   }
+
+
+
+   
    /* TO SYMMETRIZE A MESH */
    if (Symmetrize) {
-      zx.input(argv[1],in,8.0);
+      zx.input(argv[1],in,8.0,bdrymap);
       zx.symmetrize();
       return 0;
    }
    
    if (Vlngth) {
-      zx.input(argv[1],in,8.0);
+      zx.input(argv[1],in,8.0,bdrymap);
       std::string name;
       name = std::string(argv[1]) +".vlngth";
       FILE *fp = fopen(name.c_str(),"w");
@@ -92,7 +106,7 @@ int main(int argc, char *argv[]) {
    }
    
    if (Refineby2) {
-      zx.input(argv[1],in,8.0);
+      zx.input(argv[1],in,8.0,bdrymap);
       zy.refineby2(zx);
       zy.output(argv[2],out);
       return 0;
@@ -100,7 +114,7 @@ int main(int argc, char *argv[]) {
 
    if (Coarsen_hp) {
       int p;
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       printf("input p\n");
       scanf("%d",&p);
       zy.coarsen_substructured(zx,p);
@@ -112,7 +126,7 @@ int main(int argc, char *argv[]) {
       TinyVector<FLT,2> s;
       printf("Enter x and y scaling\n");
       scanf("%le%le",&s(0),&s(1));
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       zx.scale(s);
       zx.output(argv[2],out);
       return 0;
@@ -122,7 +136,7 @@ int main(int argc, char *argv[]) {
       TinyVector<FLT,2> s;
       printf("Enter x and y shift\n");
       scanf("%le%le",&s(0),&s(1));
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       zx.shift(s);
       zx.output(argv[2],out);
       return 0;
@@ -130,7 +144,7 @@ int main(int argc, char *argv[]) {
    
    if (Format) {
       class mesh zx;
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       zx.output(argv[2],out);
       return(0);
    }
@@ -142,7 +156,7 @@ int main(int argc, char *argv[]) {
       ostringstream nstr;
       std::cout << "input # of partitions" << std::endl;
       std::cin >> p;
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       zx.setpartition(p);
       Array<mesh,1> zpart(p);
       
@@ -161,7 +175,7 @@ int main(int argc, char *argv[]) {
    }
    
    if (Coarsen_Marks) {
-      zx.input(argv[1],in);
+      zx.input(argv[1],in,1.0,bdrymap);
       FILE *fp = fopen(argv[3],"r");
       for(int i=0;i<zx.nvrtx;++i) {
          fscanf(fp,"%d\n",&zx.vd(i).info);

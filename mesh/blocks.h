@@ -33,8 +33,8 @@ class blocks {
       //@{
       int mglvls; /**< Total number of levels of multigrid */
       int ngrid; /**< Number of grids (could be more or less than mglvls) */
-      int nbottom; /**< Number of extra levels to included on finest grid */
-      int ntop; /**< Number of extra levels to be include on coarsest grid */
+      int extra_finest_levels; /**< Number of extra levels to included on finest grid */
+      int extra_coarsest_levels; /**< Number of extra levels to be include on coarsest grid */
       int ncycle; /**< Number of iterations per timestep */
       /** Number of cycles between re-evaluation of preconditioner.
        *  negative mean reevaluate for both refinement and coarsening sweeps 
@@ -55,6 +55,13 @@ class blocks {
       int out_intrvl; /**< Number of time-steps between data outputs */
       int rstrt_intrvl; /**< Number of output intervals between restart files */
       bool debug_output; /**< Output file every iteration */
+      //@}
+      
+      /** @name Adaptation parameters 
+       *  constants controlling adaptation 
+       */
+      //@{
+      int adapt_flag; /**< Completely turns adaptation off (can also shut off blocks individiually)  */
       //@}
       
       /** This is a data structure for storing communication info

@@ -13,24 +13,22 @@
 const char r_stype::names[ntypes][40] = {"plain", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map *bdrydata) {
+r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
    std::istringstream data;
    std::map<std::string,std::string>::const_iterator mi;
    r_side_bdry *temp;  
    int type = 2;
 
-   if (bdrydata) {
-      mi = (*bdrydata).find(sbdry(bnum)->idprefix + ".r_type");
-      if (mi != (*bdrydata).end()) {
-         type = r_stype::getid((*mi).second.c_str());
-         if (type < 0)  {
-            *sim::log << "unknown type:" << (*mi).second << std::endl;
-            exit(1);
-         }
+   mi = in_map.find(sbdry(bnum)->idprefix + ".r_type");
+   if (mi != in_map.end()) {
+      type = r_stype::getid((*mi).second.c_str());
+      if (type < 0)  {
+         *sim::log << "unknown type:" << (*mi).second << std::endl;
+         exit(1);
       }
-      else {
-         type = r_stype::fixed;
-      }
+   }
+   else {
+      type = r_stype::fixed;
    }
 
    switch(type) {
@@ -56,10 +54,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map *bdrydata) {
       }
    }
    
-   if (bdrydata) temp->input(*bdrydata);
-   
-   temp->output(*sim::log);
-
+   temp->input(in_map);
    
    return(temp);
 }

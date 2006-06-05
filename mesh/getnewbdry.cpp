@@ -31,28 +31,26 @@ class vtype {
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
 
-vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
+vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
    std::string keyword,val;
    std::istringstream data;
-   char idntystring[10];
+   ostringstream nstr;
    int type;        
    vrtx_bdry *temp;  
 
-   if (bdrydata) {
-      sprintf(idntystring,"v%d",idnum);
-      keyword = std::string(idntystring) + ".type";
-      
-      if ((*bdrydata).get(keyword,val)) {
-         type = vtype::getid(val.c_str());
-         if (type < 0)  {
-            *sim::log << "unknown vertex type:" << val << std::endl;
-            exit(1);
-         }
+   nstr.str("");
+   nstr << idnum << std::flush;      
+   keyword = idprefix +".v" +nstr.str() + ".type";
+   if (bdrydata.get(keyword,val)) {
+      type = vtype::getid(val.c_str());
+      if (type < 0)  {
+         *sim::log << "unknown vertex type:" << val << std::endl;
+         exit(1);
       }
-      else {
-         type = vtype::plain;
-      }
-   }  
+   }
+   else {
+      type = vtype::plain;
+   }
       
    switch(type) {
       case vtype::plain: {
@@ -74,10 +72,8 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map *bdrydata) {
       }
    } 
    
-   if (bdrydata) temp->input(*bdrydata);
+   temp->input(bdrydata);
    
-   temp->output(*sim::log);
-
    return(temp);
 }
 
@@ -105,28 +101,28 @@ const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "cir
    "partition","naca","gaussian","coupled_sinewave","coupled_circle","coupled_sinewave_comm","coupled_circle_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
+side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
    std::string keyword,val;
    std::istringstream data;
-   char idntystring[10];
+   ostringstream nstr;
    int type;        
    side_bdry *temp;  
    
    type = stype::plain;
 
-   if (bdrydata) {
-      sprintf(idntystring,"s%d",idnum);
-      keyword = std::string(idntystring) + ".type";
-      if ((*bdrydata).get(keyword,val)) {
-         type = stype::getid(val.c_str());
-         if (type < 0)  {
-            *sim::log << "unknown side type:" << val << std::endl;
-            exit(1);
-         }
+   nstr.str("");
+   nstr << idnum << std::flush;      
+   keyword = idprefix +".s" +nstr.str() + ".type";
+   std::cout << keyword << std::endl;
+   if (bdrydata.get(keyword,val)) {
+      type = stype::getid(val.c_str());
+      if (type < 0)  {
+         *sim::log << "unknown side type:" << val << std::endl;
+         exit(1);
       }
-      else {
-         type = stype::plain;
-      }
+   }
+   else {
+      type = stype::plain;
    }
 
    switch(type) {
@@ -190,10 +186,8 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map *bdrydata) {
       }
    }
    
-   if (bdrydata) temp->input(*bdrydata);
+   temp->input(bdrydata);
    
-   temp->output(*sim::log);
-
    return(temp);
 }
 

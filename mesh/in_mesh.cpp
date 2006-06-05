@@ -10,13 +10,11 @@ Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2w
 Array<FLT,1> mesh::fscr1;
 int mesh::maxsrch;
 
-void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac, const std::string &bdryfile) {
+void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
    int i,j,n,sind,count,temp;
    std::string grd_nm, bdry_nm, grd_app;
    TinyVector<int,3> v,s,e;
    ifstream in;
-   input_map bdrymap;
-   input_map *pbdrymap = &bdrymap;
    FLT fltskip;
    int intskip;
 
@@ -25,28 +23,7 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
    }
    else 
       grd_nm = filename;
-   
-   if (!bdryfile.empty()) {
-      if (bdryfile.substr(0,7) == "${HOME}") {
-         bdry_nm = getenv("HOME") +bdryfile.substr(7,bdryfile.length());
-         bdrymap.input(bdry_nm);
-      }
-      else 
-         bdrymap.input(bdryfile);
-   }
-   else {
-      bdry_nm = grd_nm +"_bdry.inpt";
-      in.open(bdry_nm.c_str());
-      if (in.good()) {
-         in.close();
-         bdrymap.input(bdry_nm);
-      }
-      else {
-         pbdrymap = 0;
-         in.clear();
-      }
-   }
-      
+
     switch (filetype) {            
         case(easymesh):
             /* LOAD SIDE INFORMATION */
@@ -103,7 +80,7 @@ next1:      continue;
             
             sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
                sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
                sbdry(i)->nel = 0;
                i1wk(i) = -1;
@@ -156,7 +133,7 @@ next1a:     continue;
             for(i=0;i<nvrtx;++i) {
                if (vd(i).info) {
                   /* NEW VRTX B.C. */
-                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,pbdrymap);
+                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,bdrymap);
                   vbdry(nvbd)->alloc(1);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
@@ -255,7 +232,7 @@ next1a:     continue;
             for(i=0;i<nsbd;++i) {
                //fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); TEMPORARY
                
-               sbdry(i) = getnewsideobject(temp,pbdrymap);
+               sbdry(i) = getnewsideobject(temp,bdrymap);
                sbdry(i)->alloc(static_cast<int>(count*grwfac));
                sbdry(i)->nel = count;
                
@@ -365,7 +342,7 @@ next1a:     continue;
             for(i=0;i<nsbd;++i) {
                in.ignore(80,':');
                in >> temp;
-               sbdry(i) = getnewsideobject(temp,pbdrymap);
+               sbdry(i) = getnewsideobject(temp,bdrymap);
                in.ignore(80,':');
                in >> sbdry(i)->nel;
                if (!sbdry(i)->maxel) sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
@@ -384,7 +361,7 @@ next1a:     continue;
             for(i=0;i<nvbd;++i) {
                in.ignore(80,':');
                in >> temp;
-               vbdry(i) = getnewvrtxobject(temp,pbdrymap);
+               vbdry(i) = getnewvrtxobject(temp,bdrymap);
                vbdry(i)->alloc(1);
                in.ignore(80,':');
                in >> vbdry(i)->v0;
@@ -476,7 +453,7 @@ next1a:     continue;
             /* CREATE VERTEX BOUNDARIES */
             for(i=0;i<nvrtx;++i) {
                if (cpri_ptype[i] == 0) {
-                  vbdry(nvbd) = getnewvrtxobject(cpri_pindex[i],pbdrymap);
+                  vbdry(nvbd) = getnewvrtxobject(cpri_pindex[i],bdrymap);
                   vbdry(nvbd)->alloc(1);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
@@ -524,7 +501,7 @@ next1b:      continue;
             
             sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
                sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
                sbdry(i)->nel = 0;
                i1wk(i) = -1;
@@ -606,8 +583,7 @@ next1c:     continue;
 
             nsbd = 1;
             sbdry.resize(1);
-            if (pbdrymap) sbdry(0) = getnewsideobject(1,pbdrymap);
-            else sbdry(0) = getnewsideobject(1025,pbdrymap);
+            sbdry(0) = getnewsideobject(1,bdrymap);
             sbdry(0)->alloc(static_cast<int>(grwfac*count));
             sbdry(0)->nel = count;
             count = 0;
@@ -652,7 +628,7 @@ next1c:     continue;
             for(i=0;i<nvrtx;++i) {
                if (vd(i).info) {
                   /* NEW VRTX B.C. */
-                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,pbdrymap);
+                  vbdry(nvbd) = getnewvrtxobject(vd(i).info,bdrymap);
                   vbdry(nvbd)->alloc(1);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
@@ -686,7 +662,7 @@ next1c:     continue;
 
             sbdry.resize(nsbd);
             for(i=0;i<nsbd;++i) {
-               sbdry(i) = getnewsideobject(i1wk(i),pbdrymap);
+               sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
                sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
                sbdry(i)->nel = 0;
                i1wk(i) = -1;

@@ -59,7 +59,7 @@ class mesh {
       /* VERTEX BOUNDARY INFO */
       int nvbd;
       Array<vrtx_bdry *,1> vbdry;
-      vrtx_bdry* getnewvrtxobject(int idnum, input_map *bdrydata);
+      vrtx_bdry* getnewvrtxobject(int idnum, input_map& bdrydata);
 
       /* SIDE DATA */      
       int nside;
@@ -73,7 +73,7 @@ class mesh {
       /* SIDE BOUNDARY INFO */
       int nsbd;
       Array<side_bdry *,1> sbdry;
-      side_bdry* getnewsideobject(int idnum, input_map *bdrydata);
+      side_bdry* getnewsideobject(int idnum, input_map& bdrydata);
 
       /* TRIANGLE DATA */      
       int ntri;
@@ -105,7 +105,7 @@ class mesh {
       /*  INTERFACE */
       /**************/
       /* INITIALIZATION & ALLOCATION */
-      mesh() : nvbd(0), nsbd(0), initialized(0)  {}
+      mesh() : idprefix(""), nvbd(0), nsbd(0), initialized(0)  {}
       void allocate(int mxsize);
       void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
       void reload_scratch_pointers();
@@ -115,7 +115,7 @@ class mesh {
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt};
-      void input(const std::string &filename, filetype ftype = grid,  FLT grwfac = 1, const std::string &bdrymap = std::string());
+      void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map& bdrymap);
       int output(const std::string &filename, filetype ftype = grid) const;
       void bdry_output(const std::string &filename) const;
       virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
@@ -300,7 +300,7 @@ class vrtx_bdry : public boundary, public vgeometry_interface {
       int v0;
       
       /* CONSTRUCTOR */
-      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = "v" +idprefix; mytype="plain";}
+      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.idprefix +".v" +idprefix; mytype="plain";}
       vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
 
       /* OTHER USEFUL STUFF */
@@ -333,7 +333,7 @@ class side_bdry : public boundary, public sgeometry_interface {
       Array<int,1> el;
       
       /* CONSTRUCTOR */
-      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = "s" +idprefix; mytype="plain";}
+      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +".s" +idprefix; mytype="plain";}
       side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
       
       /* BASIC B.C. STUFF */

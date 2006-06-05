@@ -25,7 +25,6 @@ class block {
       virtual void init(input_map& input) = 0;
       virtual void reload_scratch_pointers() = 0;
       enum output_purpose {display, restart, debug};
-      virtual void input(const std::string &filename) = 0;
       virtual void output(const std::string &filename, output_purpose why, int lvl = 0) = 0;
       virtual ctrl matchboundaries(int lvl, block::ctrl ctrl_message) = 0;
       virtual ctrl rsdl(int lvl, block::ctrl ctrl_message) = 0;
