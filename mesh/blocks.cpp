@@ -413,14 +413,14 @@ void blocks::findmatch() {
                      if (bp1->vcomm[i].idnum == bp2->vcomm[j].idnum) {
                         if (p == myid) {
                            if (bp1 == bp2 && i == j) {
-                              if (!first_found) first_found = true;  // BOUNDARY'S FIRST FLAG SHOULD ALREADY BE SET
+                              if (!first_found) first_found = true;  // Leave first flag alone
                               continue;  // CAN"T MATCH TO MYSELF
                            }
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
                            boundary *v2 = blk[b2]->vbdry(grdlvl,bp2->vcomm[j].nvbd);
                            v1->local_cnnct(v2,tagid(1,myid,myid,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false; 
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
                            *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << std::endl;
@@ -430,7 +430,7 @@ void blocks::findmatch() {
                            boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
                            v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false;
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
                            *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << std::endl;
@@ -461,7 +461,7 @@ void blocks::findmatch() {
                            boundary *v2 = blk[b2]->sbdry(grdlvl,bp2->scomm[j].nsbd);
                            v1->local_cnnct(v2,tagid(2,myid,myid,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false;
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
                            *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << std::endl;
@@ -471,7 +471,7 @@ void blocks::findmatch() {
                            boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
                            v1->mpi_cnnct(p,tagid(2,myid,p,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false;
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
                            *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << std::endl;
@@ -501,7 +501,7 @@ void blocks::findmatch() {
                            boundary *v2 = blk[b2]->fbdry(grdlvl,bp2->fcomm[j].nfbd);
                            v1->local_cnnct(v2,tagid(3,myid,myid,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false;
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
                            *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << std::endl;
@@ -512,7 +512,7 @@ void blocks::findmatch() {
                            boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
                            v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
                            if (!first_found) {
-                              v1->is_frst() = false;
+                              v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
                            *sim::log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << std::endl;

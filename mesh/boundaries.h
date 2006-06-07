@@ -101,6 +101,9 @@ template<class BASE> class comm_bdry : public BASE {
          
          BASE::input(inmap);
          
+         keyword = BASE::idprefix +".first";
+         inmap.getwdefault(keyword,first,true);
+         
          /* SET GROUP MEMBERSHIP FLAGS */
          /* ALWAYS BELONG TO FIRST 2 GROUPS */
          maxgroup = 1;

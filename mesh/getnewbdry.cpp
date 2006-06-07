@@ -113,7 +113,6 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
    nstr.str("");
    nstr << idnum << std::flush;      
    keyword = idprefix +".s" +nstr.str() + ".type";
-   std::cout << keyword << std::endl;
    if (bdrydata.get(keyword,val)) {
       type = stype::getid(val.c_str());
       if (type < 0)  {

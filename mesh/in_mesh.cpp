@@ -306,6 +306,8 @@ next1a:     continue;
             
             if (!initialized) {
                allocate(nside + (int) (grwfac*nside));
+               nsbd = 0;
+               nvbd = 0;
             }
             else if (nside > maxvst) {
                *sim::log << "mesh is too large" << std::endl;
@@ -336,13 +338,23 @@ next1a:     continue;
    
             /* SIDE BOUNDARY INFO HEADER */
             in.ignore(80,':');
-            in >> nsbd;
-            sbdry.resize(nsbd);
+            int newnsbd;
+            in >> newnsbd;
+            if (nsbd == 0) {
+               nsbd = newnsbd;
+               sbdry.resize(nsbd);
+               sbdry = 0;
+            }
+            else if (nsbd != newnsbd) {
+               *sim::log << "reloading incompatible meshes" << std::endl;
+               exit(1);
+            }
+            
             count = 0;
             for(i=0;i<nsbd;++i) {
                in.ignore(80,':');
                in >> temp;
-               sbdry(i) = getnewsideobject(temp,bdrymap);
+               if (!sbdry(i)) sbdry(i) = getnewsideobject(temp,bdrymap);
                in.ignore(80,':');
                in >> sbdry(i)->nel;
                if (!sbdry(i)->maxel) sbdry(i)->alloc(static_cast<int>(grwfac*sbdry(i)->nel));
@@ -356,13 +368,25 @@ next1a:     continue;
             
             /* VERTEX BOUNDARY INFO HEADER */
             in.ignore(80,':');
-            in >> nvbd;
-            vbdry.resize(nvbd);
+            int newnvbd;
+            in >> newnvbd;
+            if (nvbd == 0) {
+               nvbd = newnvbd;
+               vbdry.resize(nvbd);
+               vbdry = 0;
+            }
+            else if (nvbd != newnvbd) {
+               *sim::log << "re-inputting into incompatible mesh object" << std::endl;
+               exit(1);
+            }
+            
             for(i=0;i<nvbd;++i) {
                in.ignore(80,':');
                in >> temp;
-               vbdry(i) = getnewvrtxobject(temp,bdrymap);
-               vbdry(i)->alloc(1);
+               if (!vbdry(i)) {
+                  vbdry(i) = getnewvrtxobject(temp,bdrymap);
+                  vbdry(i)->alloc(1);
+               }
                in.ignore(80,':');
                in >> vbdry(i)->v0;
             }
