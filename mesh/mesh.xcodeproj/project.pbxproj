@@ -13,19 +13,6 @@
 			buildPhases = (
 				6F27980508B9FA49007BECA9 /* ShellScript */,
 			);
-			buildSettings = {
-				OPTIMIZATION_CFLAGS = "";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = Documentation;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = Documentation;
@@ -66,8 +53,7 @@
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
-		6F514ED208B2E767001B7BED /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F514ED108B2E767001B7BED /* libblitz.a */; };
-		6F514ED308B2E767001B7BED /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F514ED108B2E767001B7BED /* libblitz.a */; };
+		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
 		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6F975ADA0892C41800941A1D /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
@@ -106,31 +92,6 @@
 		6FC7DEFE05B30C6E001FE736 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC6A54203CC99B700990B69 /* libmetis.a */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXBuildStyle section */
-		014CEA460018CE2711CA2923 /* Development */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				OPTIMIZATION_CFLAGS = "-O0";
-				ZERO_LINK = NO;
-			};
-			name = Development;
-		};
-		014CEA470018CE2711CA2923 /* Deployment */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				ZERO_LINK = NO;
-			};
-			name = Deployment;
-		};
-/* End PBXBuildStyle section */
-
 /* Begin PBXFileReference section */
 		00E0854300CAD1857F000001 /* collapse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = collapse.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94200974D3D80990B20 /* coarsen.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = coarsen.cpp; sourceTree = SOURCE_ROOT; };
@@ -146,7 +107,7 @@
 		07F2E95000974D3D80990B20 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = SOURCE_ROOT; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6F514ED108B2E767001B7BED /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../lib/libblitz.a; sourceTree = SOURCE_ROOT; };
+		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F5F76680760062A0026BE93 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
@@ -182,7 +143,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F514ED308B2E767001B7BED /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,7 +155,7 @@
 				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
 				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
 				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
-				6F514ED208B2E767001B7BED /* libblitz.a in Frameworks */,
+				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,12 +165,12 @@
 		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				6F56D55C09EEE7F900C97501 /* libblitz.a */,
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
 				6FC6A54203CC99B700990B69 /* libmetis.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
-				6F514ED108B2E767001B7BED /* libblitz.a */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -346,24 +306,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = lib;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
 			dependencies = (
 			);
 			name = lib;
@@ -382,36 +324,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				CC = /usr/bin/gcc;
-				CPLUSPLUS = "/usr/bin/g++";
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NOMPISRC,
-					METIS,
-				);
-				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/packages/metis-4.0/Lib",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/metis-4.0",
-				);
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = mesh;
-				REZ_EXECUTABLE = YES;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				ZERO_LINK = NO;
-			};
 			dependencies = (
 			);
 			name = main;
@@ -425,12 +337,6 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				014CEA460018CE2711CA2923 /* Development */,
-				014CEA470018CE2711CA2923 /* Deployment */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
@@ -579,7 +485,7 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_DEBUGGING_SYMBOLS = default;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G4;
+				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METIS,
@@ -758,6 +664,7 @@
 					"${HOME}/Packages/metis-4.0",
 					"$(SRCROOT)/../lib",
 				);
+				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = NO;

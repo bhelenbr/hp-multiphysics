@@ -35,7 +35,7 @@ LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -l
 
 ### End machine dependent
 
-all: libmesh.a mblock
+all: libmesh.a mesh
 
 libmesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)

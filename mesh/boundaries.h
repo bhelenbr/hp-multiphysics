@@ -23,8 +23,10 @@ template<class BASE> class comm_bdry : public BASE {
       Array<int,1> maxphase; //!<  For phased symmetric message passing for each group
       Array<TinyVector<int,maxmatch>,1> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
 
-      int buffsize; //!< Size of buffer (times sizeof(flt))
-      void *sndbuf; //!< Outgoing message buffer
+      int buffsize; //!< Size in bytes of buffer
+      void *sndbuf; //!< Raw memory for outgoing message buffer
+      Array<FLT,1> fsndbufarray; //!< Access to outgoing message buffer for floats
+      Array<int,1> isndbufarray; //!< Access to outgoing message buffer for ints
       int msgsize; //!< Outgoing size
       boundary::msg_type msgtype; //!< Outgoing type
       
@@ -42,7 +44,10 @@ template<class BASE> class comm_bdry : public BASE {
       TinyVector<matchtype,maxmatch> mtype; //!< Local or mpi or ?
       TinyVector<boundary *,maxmatch> local_match; //!< Pointers to local matches
       TinyVector<int,maxmatch> tags; //!< Identifies each connection uniquely
-      TinyVector<void *,maxmatch> rcvbuf; //!< Local buffers to store incoming messages
+      TinyVector<void *,maxmatch> rcvbuf; //!< Raw memory to store incoming messages
+      TinyVector<Array<FLT,1>,maxmatch> frcvbufarray; //!< Access to incoming message buffer for floats
+      TinyVector<Array<int,1>,maxmatch> ircvbufarray; //!< Access to incoming message buffer for ints
+      
 #ifdef MPISRC
       TinyVector<int,maxmatch> mpi_match; //!< Processor numbers for mpi
       TinyVector<MPI_Request,maxmatch> mpi_rcvrqst; //!< Identifier returned from mpi to monitor success of recv
@@ -73,25 +78,33 @@ template<class BASE> class comm_bdry : public BASE {
       }
            
       comm_bdry<BASE>* create(mesh &xin) const {return(new comm_bdry<BASE>(*this,xin));}
-
-      void output(std::ostream& fout) {
-         BASE::output(fout);
-         
-         fout << BASE::idprefix << ".group" << ": ";
-         for(int k=0;k<maxgroup+1;++k)
-            if (groupmask&(1<<k)) fout << k << ' ';
-         fout << std::endl;  
-         
-         for(int k=0;k<maxgroup+1;++k) {
-            if (groupmask&(1<<k)) {
-               fout << BASE::idprefix << ".phase (not set yet so this is dumb)" << k << ": ";
-               for (int m=0;m<nmatch;++m)
-                  fout << phase(k)(m) << " ";
-               fout << std::endl;
-            }
-         }
+      bool is_comm() {return(true);}
+      bool& is_frst() {return(first);}
+      int& group() {return(groupmask);}
+      int& sndsize() {return(msgsize);}
+      boundary::msg_type& sndtype() {return(msgtype);}
+      int matches() {return(nmatch);}
+      int& matchphase(boundary::groups group, int matchnum) {return(phase(group)(matchnum));}  
+      int& isndbuf(int indx) {return(isndbufarray(indx));}
+      FLT& fsndbuf(int indx) {return(fsndbufarray(indx));}
+      int& ircvbuf(int m,int indx) {return(ircvbufarray(m)(indx));}
+      FLT& frcvbuf(int m,int indx) {return(frcvbufarray(m)(indx));}
+      
+      void resize_buffers(int nfloats) {
+         if (buffsize) free(sndbuf);
+         buffsize = nfloats*sizeof(FLT);
+         sndbuf = xmalloc(buffsize); 
+         Array<FLT,1> temp(static_cast<FLT *>(sndbuf), buffsize/sizeof(FLT), neverDeleteData);
+         fsndbufarray.reference(temp);
+         Array<int,1> temp1(static_cast<int *>(sndbuf), buffsize/sizeof(int), neverDeleteData);
+         isndbufarray.reference(temp1);
       }
       
+      void alloc(int nels) {
+         BASE::alloc(nels);
+         resize_buffers(nels*3);   // should be mesh::ND;
+      }
+
       void input(input_map& inmap) {
          int j,k,m,maxgroup;
          std::string keyword,val;
@@ -143,39 +156,35 @@ template<class BASE> class comm_bdry : public BASE {
             }
          }
       }
-      bool is_comm() {return(true);}
-      bool& is_frst() {return(first);}
-      int& group() {return(groupmask);}
-      int& sndsize() {return(msgsize);}
-      boundary::msg_type& sndtype() {return(msgtype);}
-      void *psndbuf() {return(sndbuf);}
-      int& isndbuf(int n) {return(static_cast<int *>(sndbuf)[n]);}
-      FLT& fsndbuf(int n) {return(static_cast<FLT *>(sndbuf)[n]);}
-      void *prcvbuf(int match) {return(rcvbuf(match));}
-      int& ircvbuf(int match,int n) {return(static_cast<int *>(rcvbuf(match))[n]);}
-      FLT& frcvbuf(int match,int n) {return(static_cast<FLT *>(rcvbuf(match))[n]);}
       
-      void alloc(int size) {
-         BASE::alloc(size);
-         buffsize = size*3;   // should be mesh::ND;
-         sndbuf = xmalloc(buffsize*sizeof(FLT)); 
+      void output(std::ostream& fout) {
+         BASE::output(fout);
+         
+         fout << BASE::idprefix << ".group" << ": ";
+         for(int k=0;k<maxgroup+1;++k)
+            if (groupmask&(1<<k)) fout << k << ' ';
+         fout << std::endl;  
+         
+         for(int k=0;k<maxgroup+1;++k) {
+            if (groupmask&(1<<k)) {
+               fout << BASE::idprefix << ".phase (not set yet so this is dumb)" << k << ": ";
+               for (int m=0;m<nmatch;++m)
+                  fout << phase(k)(m) << " ";
+               fout << std::endl;
+            }
+         }
       }
-      void resize_buffers(int size) {
-         if (sndbuf) free(sndbuf);
-         buffsize = size;
-         sndbuf = xmalloc(buffsize*sizeof(FLT)); 
-      }
-      
-      int matches() {return(nmatch);}
-      int& matchphase(boundary::groups group, int matchnum) {return(phase(group)(matchnum));}
 
       int local_cnnct(boundary *bin, int msg_tag) {
          if (bin->idnum == BASE::idnum) {
             mtype(nmatch) = local;
             local_match(nmatch) = bin;
             tags(nmatch) = msg_tag;
-            rcvbuf(nmatch) = xmalloc(buffsize*sizeof(FLT));
-            
+            rcvbuf(nmatch) = xmalloc(buffsize);
+            Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+            frcvbufarray(nmatch).reference(temp);
+            Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+            ircvbufarray(nmatch).reference(temp1);
             ++nmatch;
             return(0);
          }
@@ -188,7 +197,11 @@ template<class BASE> class comm_bdry : public BASE {
          mtype(nmatch) = mpi;
          mpi_match(nmatch) = nproc;
          tags(nmatch) = msg_tag;
-         rcvbuf(nmatch) = xmalloc(buffsize*sizeof(FLT));
+         rcvbuf(nmatch) = xmalloc(buffsize);
+         Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
+         frcvbufarray(nmatch).reference(temp);
+         Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
+         ircvbufarray(nmatch).reference(temp1);
          ++nmatch;
          return(0);
       }
@@ -236,10 +249,10 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                      case(mpi):
 #ifdef SINGLE
-                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_FLOAT, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_FLOAT, 
                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
-                        MPI_Irecv(&frcvbuf(m,0), buffsize, MPI_DOUBLE, 
+                        MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_DOUBLE, 
                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m)); 
                         break;
 #endif   
@@ -260,7 +273,7 @@ template<class BASE> class comm_bdry : public BASE {
                         break;  
 #ifdef MPISRC
                      case(mpi):
-                        MPI_Irecv(&ircvbuf(m,0), buffsize, MPI_INT, 
+                        MPI_Irecv(&ircvbuf(m,0), buffsize/sizeof(int), MPI_INT, 
                            mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
                         break;
 #endif         
