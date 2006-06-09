@@ -264,6 +264,8 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
 
          for(i=0;i<nvrtx;++i)
             out << vlngth(i) << endl;
+            
+         break;
       }
       
       case(debug_adapt):

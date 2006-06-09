@@ -178,8 +178,9 @@ void blocks::init(input_map input) {
    input.getwdefault("vwcycle",vw,2);
    
    input.getwdefault("ntstep",ntstep,1);
-   
-   input.getwdefault("nstart",nstart,0);
+   input.getwdefault("restart",nstart,0);
+   ntstep += nstart +1;
+   if (sim::dti > 0.0) sim::time = nstart/sim::dti;
 
    /* LOAD NUMBER OF GRIDS */
    input.getwdefault("nblock",nblock,1);
@@ -669,7 +670,7 @@ void blocks::go() {
    clock_t cpu_time;
 
    clock();
-   for(sim::tstep=nstart;sim::tstep<ntstep;++sim::tstep) {
+   for(sim::tstep=nstart+1;sim::tstep<ntstep;++sim::tstep) {
       for(sim::substep=0;sim::substep<sim::stepsolves;++sim::substep) {
          *sim::log << "#TIMESTEP: " << sim::tstep << " SUBSTEP: " << sim::substep << std::endl;
          tadvance();
@@ -681,7 +682,7 @@ void blocks::go() {
             *sim::log << '\n';
             if (debug_output) {
                nstr.str("");
-               nstr << sim::tstep << '_' << sim::substep << '_' << i << std::flush;
+               nstr << sim::tstep+1 << '_' << sim::substep << '_' << i << std::flush;
                outname = "debug" +nstr.str();
                output(outname,block::debug);
             }

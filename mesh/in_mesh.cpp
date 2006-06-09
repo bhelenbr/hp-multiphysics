@@ -716,7 +716,21 @@ next1c:     continue;
             in.close();
             
             break;
-       
+            
+         case(vlength): {
+            grd_app = grd_nm +".vlngth";
+            in.open(grd_app.c_str());
+            if (!in) {
+               *sim::log << "couldn't open vlength input file" << grd_app  << endl;
+               exit(1);
+            }
+
+            for(i=0;i<nvrtx;++i)
+               in >> vlngth(i);
+
+            return;
+         }
+          
          default:
             *sim::log << "That filetype is not supported" << std::endl;
             exit(1);
@@ -760,6 +774,8 @@ next1c:     continue;
    }
    else if (filetype != boundary) initvlngth();
    
+   
+   mesh::setinfo();
    checkintegrity();
 
    initialized = 1;
