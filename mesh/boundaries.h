@@ -239,7 +239,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing for message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "preparing for float message: " << BASE::idnum << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif     
                   
                   switch(mtype(m)) {
@@ -266,6 +266,10 @@ template<class BASE> class comm_bdry : public BASE {
                /* MPI POST RECEIVES FIRST */
                for(m=0;m<nrecvs_to_post;++m) {
                   if (phi != phase(grp)(m)) continue;
+                  
+#ifdef MPDEBUG
+                  *(sim::log) << "preparing for int message: " << BASE::idnum << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+#endif   
                   
                   switch(mtype(m)) {
                      case(local):
@@ -325,7 +329,7 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging local float message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<local_match(m)->sndsize();++i) 
                      *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif     
@@ -339,7 +343,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging message: " << BASE::idnum << " " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging mpi float message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif  
@@ -360,6 +364,12 @@ template<class BASE> class comm_bdry : public BASE {
                /* LOCAL PASSES */
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
+                  
+#ifdef MPDEBUG
+                  *(sim::log) << "exchanging local int message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  for(i=0;i<local_match(m)->sndsize();++i) 
+                     *sim::log << "\t" << local_match(m)->isndbuf(i) << std::endl;
+#endif 
   
                   for(i=0;i<local_match(m)->sndsize();++i) 
                      ircvbuf(m,i) = local_match(m)->isndbuf(i);
@@ -369,6 +379,12 @@ template<class BASE> class comm_bdry : public BASE {
                /* MPI PASSES */
                for(m=0;m<nmpimessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
+                  
+#ifdef MPDEBUG
+                  *(sim::log) << "exchanging mpi int message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  for(i=0;i<msgsize;++i) 
+                     *(sim::log) << "\t" << isndbuf(i) << std::endl;
+#endif  
 
                   MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
                      mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
@@ -422,9 +438,12 @@ template<class BASE> class comm_bdry : public BASE {
             }
             
 #ifdef MPDEBUG
-            *(sim::log) << "received message: " << BASE::idnum << " " << tags(m) << " with type: " << mtype(m) << std::endl;
-            for(int i=0;i<msgsize;++i) 
-               *(sim::log) << "\t" << frcvbuf(m,i) << std::endl;
+            if (msgtype == boundary::flt_msg) {
+               *(sim::log) << "received float message: " << BASE::idnum << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+            }
+            else {
+               *(sim::log) << "received int message: " << BASE::idnum << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+            }
 #endif  
          }
                   

@@ -258,7 +258,11 @@ void mesh::bdry_rebay(FLT tolsize) {
    for(int bnum=0;bnum<nsbd;++bnum) {
       count = 0;
 
-      if (!sbdry(bnum)->is_frst()) continue;
+      if (!sbdry(bnum)->is_frst()) {
+         sbdry(bnum)->sndtype() = boundary::int_msg;
+         sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
+         continue;
+      }
       
       nlst = 0;
       for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
@@ -316,6 +320,7 @@ void mesh::bdry_rebay(FLT tolsize) {
 #endif
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
+      sbdry(bnum)->sndtype() = boundary::int_msg;
       sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
       *sim::log << "#Boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << count << " sides added" << std::endl;
 

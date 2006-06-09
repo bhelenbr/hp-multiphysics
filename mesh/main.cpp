@@ -61,7 +61,7 @@ static ArgDesc argDesc[] = {
 
 int main(int argc, char *argv[]) {
    GBool ok;
-   
+
   // parse args
    ok = parseArgs(argDesc, &argc, argv);
    if (!ok || printHelp) {
@@ -74,20 +74,15 @@ int main(int argc, char *argv[]) {
    mesh::filetype in = static_cast<mesh::filetype>(informat);
    mesh::filetype out = static_cast<mesh::filetype>(outformat);
    
-   std::string bdry_nm;
+   std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
    ifstream intest;
-
    input_map bdrymap;
-   bdry_nm = std::string(argv[1]) +"_bdry.inpt";
    intest.open(bdry_nm.c_str());
    if (intest.good()) {
       intest.close();
       bdrymap.input(bdry_nm);
    }
 
-
-
-   
    /* TO SYMMETRIZE A MESH */
    if (Symmetrize) {
       zx.input(argv[1],in,8.0,bdrymap);

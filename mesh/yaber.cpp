@@ -316,6 +316,7 @@ void mesh::bdry_yaber(FLT tolsize) {
       count = 0;
 
       if (!sbdry(bnum)->is_frst()) {
+         sbdry(bnum)->sndtype() = boundary::int_msg;
          sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
          continue;
       }
@@ -407,6 +408,8 @@ void mesh::bdry_yaber(FLT tolsize) {
 #endif            
       }
       sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
+      sbdry(bnum)->sndtype() = boundary::int_msg;
+      sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
       *sim::log << "#Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
    }
    
@@ -421,9 +424,9 @@ void mesh::bdry_yaber1() {
       if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
       
       sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
-      
+   
       sndsize = sbdry(bnum)->ircvbuf(0,0);
-      
+            
       for(i=1;i<sndsize;i+=2) {
          el = sbdry(bnum)->nel -1 -sbdry(bnum)->ircvbuf(0,i);
          endpt = 1 -sbdry(bnum)->ircvbuf(0,i+1);
