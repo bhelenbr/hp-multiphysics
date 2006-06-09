@@ -77,30 +77,6 @@
 		FDA0ECEB09994E32003A3089 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDA0ECEA09994E32003A3089 /* getnewibc.cpp */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXBuildStyle section */
-		014CEA460018CE2711CA2923 /* Debug */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		014CEA470018CE2711CA2923 /* Release */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				ZERO_LINK = NO;
-			};
-			name = Release;
-		};
-/* End PBXBuildStyle section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		8DD76F690486A84900D96B5E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -193,7 +169,7 @@
 		6FEA195B09770892001A5F7F /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
 		6FEA199709770C4B001A5F7F /* bdry_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_ins.h; path = ins/bdry_ins.h; sourceTree = "<group>"; };
 		6FEA199B09770C96001A5F7F /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = ins/getnewbdry.cpp; sourceTree = "<group>"; };
-		8DD76F6C0486A84900D96B5E /* tri_hp */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76F6C0486A84900D96B5E /* tri_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -204,8 +180,8 @@
 			files = (
 				6F661FFA091AFB3500FB5D82 /* libbasis.a in Frameworks */,
 				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
-				6F661FFC091AFB3500FB5D82 /* libinput_map.a in Frameworks */,
 				6F661FFD091AFB3500FB5D82 /* libmesh.a in Frameworks */,
+				6F661FFC091AFB3500FB5D82 /* libinput_map.a in Frameworks */,
 				6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */,
 				6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */,
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
@@ -293,8 +269,8 @@
 			children = (
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F661FF4091AFB3500FB5D82 /* libbasis.a */,
-				6F661FF6091AFB3500FB5D82 /* libinput_map.a */,
 				6F661FF7091AFB3500FB5D82 /* libmesh.a */,
+				6F661FF6091AFB3500FB5D82 /* libinput_map.a */,
 				6F661FF8091AFB3500FB5D82 /* libmyblas.a */,
 				6F661FF9091AFB3500FB5D82 /* libquad.a */,
 				6F662036091AFC8D00FB5D82 /* libutil.a */,
@@ -376,15 +352,6 @@
 			);
 			buildRules = (
 			);
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				INSTALL_PATH = "$(HOME)/bin";
-				PREBINDING = NO;
-				PRODUCT_NAME = spectral_hp;
-			};
 			dependencies = (
 			);
 			name = tri_hp;
@@ -399,12 +366,6 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tri_hp" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				014CEA460018CE2711CA2923 /* Debug */,
-				014CEA470018CE2711CA2923 /* Release */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* spectral_hp */;
 			projectDirPath = "";
@@ -482,11 +443,9 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
-					PV3,
-					NOUNDERSCORE,
-					NOUNS,
 					BZ_DEBUG,
-					CTRL_DEBUG,
+					AXISYMMETRIC,
+					DROP,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -503,7 +462,6 @@
 					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
-				OTHER_LDFLAGS = "-lSystem";
 				PREBINDING = NO;
 				PRODUCT_NAME = tri_hp;
 				ZERO_LINK = NO;
@@ -513,16 +471,17 @@
 		6FB40AC3091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)\"";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					AXISYMMETRIC,
-					PV3,
+					DROP,
+					NO_PV3,
 					NOUNDERSCORE,
 					NOUNS,
 				);
@@ -538,7 +497,6 @@
 					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
-				OTHER_LDFLAGS = "-lSystem";
 				PREBINDING = NO;
 				PRODUCT_NAME = tri_hp;
 				ZERO_LINK = NO;
@@ -569,7 +527,6 @@
 					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
-				OTHER_LDFLAGS = "-lSystem";
 				PREBINDING = NO;
 				PRODUCT_NAME = tri_hp;
 			};

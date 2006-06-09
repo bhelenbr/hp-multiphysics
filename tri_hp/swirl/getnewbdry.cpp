@@ -37,14 +37,10 @@ const char tri_hp_swirl_stype::names[ntypes][40] = {"plain","inflow","outflow","
 hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
    std::string keyword,val;
    std::istringstream data;
-   char idntystring[10];
    int type;        
    hp_side_bdry *temp;  
    
-   int idnum = sbdry(bnum)->idnum;
-   sprintf(idntystring,"s%d",idnum);
-   keyword = std::string(idntystring) + ".swirl_type";
-   
+   keyword =  sbdry(bnum)->idprefix + ".swirl_type";   
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_swirl_stype::getid(val.c_str());
       if (type == tri_hp_swirl_stype::unknown)  {

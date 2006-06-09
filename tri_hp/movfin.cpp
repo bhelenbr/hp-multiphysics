@@ -78,7 +78,7 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
                   return(block::stay);
                case(1):
                   for(i=0;i<nsbd;++i) 
-                     sbdry(i)->comm_transmit(boundary::partitions,mp_phase/3,boundary::symmetric);
+                     sbdry(i)->comm_exchange(boundary::partitions,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
                   stop = 1;

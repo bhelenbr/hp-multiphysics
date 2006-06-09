@@ -162,11 +162,8 @@ namespace bdry_ins {
                  
          void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
          void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
-         void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
-            base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*(x.NV-2),x.NV*modestride);
-            return;
-         }
-         void smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride);
+         void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
+         void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
    };
    
 
@@ -185,7 +182,7 @@ namespace bdry_ins {
             bool is_loop;
             /* FLUID PROPERTIES */
             FLT sigma,rho2,mu2;
-            
+
             /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
             Array<TinyVector<FLT,mesh::ND>,1> vug0;
             Array<TinyVector<FLT,mesh::ND>,2> sug0;
@@ -195,6 +192,11 @@ namespace bdry_ins {
             Array<TinyVector<FLT,mesh::ND>,2> sres;
             Array<TinyVector<FLT,mesh::ND>,1> vres0;
             Array<TinyVector<FLT,mesh::ND>,2> sres0;
+#ifdef DROP
+            FLT penalty,vflux;
+            Array<FLT,1> vvolumeflux;
+            Array<FLT,2> svolumeflux;
+#endif
             
             /* PRECONDITIONER */
             Array<TinyMatrix<FLT,mesh::ND,mesh::ND>,1> vdt;
@@ -360,11 +362,6 @@ namespace bdry_ins {
          /*
          void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
          void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
-         void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
-            base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*(x.NV-2),x.NV*modestride);
-            return;
-         }
-         void smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride);
          */
 /*   };*/
 

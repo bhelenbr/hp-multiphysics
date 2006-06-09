@@ -12,7 +12,7 @@
 
  void tri_hp_ps::init(input_map& input, gbl *gin) {
    FLT nu, E;
-   int coarse;
+   bool coarse, adapt_storage;
    std::string keyword;
    std::istringstream data;
    std::string filename;
@@ -24,13 +24,16 @@
    
    /* Load pointer to block stuff */
    ps_gbl = gin;
+     
+   keyword = idprefix + ".adapt_storage";
+   input.getwdefault(keyword,adapt_storage,false);
+   if (adapt_storage) return;
    
    keyword = idprefix + ".coarse";
-   input.getwdefault(keyword,coarse,0);
+   input.getwdefault(keyword,coarse,false);
    
    keyword = idprefix + ".dissipation";
    input.getwdefault(keyword,adis,1.0);
-   *sim::log << "#" << keyword << ": " << adis << std::endl;
    
    if (coarse) return;
    
@@ -38,11 +41,9 @@
 
    keyword = idprefix + ".nu";
    input.getwdefault(keyword,nu,0.0);
-   *sim::log << "#" << keyword << ": " << nu << std::endl;
    
    keyword = idprefix + ".E";
    input.getwdefault(keyword,E,0.0);
-   *sim::log << "#" << keyword << ": " << E << std::endl;
    
    ps_gbl->mu = E/(2.*(1.+nu));
    ps_gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);

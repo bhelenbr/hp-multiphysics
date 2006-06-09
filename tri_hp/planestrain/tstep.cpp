@@ -7,7 +7,14 @@ block::ctrl tri_hp_ps::setup_preconditioner(block::ctrl ctrl_message) {
    FLT jcb,h,hmax,lam1,gam,gami;
    TinyVector<int,3> v;
 
-   if (ctrl_message == block::begin) {
+   if (ctrl_message == block::begin) excpt = 0;
+   ctrl_message = tri_hp::setup_preconditioner(ctrl_message);
+   
+   if (ctrl_message == block::advance1) ++excpt;
+   
+   if (excpt == 2) {
+      ++excpt;
+
       /***************************************/
       /** DETERMINE PSEUDO-TIME STEP ****/
       /***************************************/
@@ -56,5 +63,5 @@ block::ctrl tri_hp_ps::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
    }
-   return(tri_hp::setup_preconditioner(ctrl_message));
+   return(ctrl_message);
 }

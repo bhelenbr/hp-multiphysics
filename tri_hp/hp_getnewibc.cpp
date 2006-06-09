@@ -277,7 +277,10 @@ init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
       
       
 class translating : public mesh_mover {
-   TinyVector<FLT,2> velocity;
+   public: 
+      tri_hp &x;
+      TinyVector<FLT,2> velocity;
+      translating(tri_hp &xin) :mesh_mover(xin), x(xin) {}
    void move(int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {
       int i,n;
       FLT dt;
@@ -337,11 +340,11 @@ mesh_mover *tri_hp::getnewmesh_mover(input_map& inmap) {
       
    switch(type) {
       case mesh_mover_type::translating: {
-         mesh_mover *temp = new translating;
+         mesh_mover *temp = new translating(*this);
          return(temp);
       }
       default: {
-         mesh_mover *temp = new mesh_mover;
+         mesh_mover *temp = new mesh_mover(*this);
          return(temp);
       }
    }

@@ -41,7 +41,7 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
    /* FIND BLOCK TYPE */
    sprintf(idntystring,"b%d",idnum);
    keyword = std::string(idntystring) + ".type";
-   *sim::log << keyword << std::endl;
+
    if (blockdata.get(keyword,val)) {
       type = btype::getid(val.c_str());
    }

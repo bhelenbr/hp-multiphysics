@@ -36,13 +36,10 @@ const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outf
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
    std::istringstream data;
-   char idntystring[10];
    int type;        
    hp_vrtx_bdry *temp;  
    
-   int idnum = vbdry(bnum)->idnum;
-   sprintf(idntystring,"v%d",idnum);
-   keyword = std::string(idntystring) + ".ins_type";
+   keyword = vbdry(bnum)->idprefix + ".ins_type";
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_ins_vtype::getid(val.c_str());
       if (type == tri_hp_ins_vtype::unknown)  {
@@ -102,14 +99,11 @@ const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","ch
 hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
    std::istringstream data;
-   char idntystring[10];
    int type;        
    hp_side_bdry *temp;  
    
-   int idnum = sbdry(bnum)->idnum;
-   sprintf(idntystring,"s%d",idnum);
-   keyword = std::string(idntystring) + ".ins_type";
-   
+
+   keyword =  sbdry(bnum)->idprefix + ".ins_type";
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_ins_stype::getid(val.c_str());
       if (type == tri_hp_ins_stype::unknown)  {
@@ -153,6 +147,7 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
       }
       case tri_hp_ins_stype::surface_slave: {
          temp = new surface_slave(*this,*sbdry(bnum));
+         dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
          break;
       }
       default: {

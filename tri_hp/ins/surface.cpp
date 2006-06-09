@@ -3,6 +3,8 @@
 #include <blitz/tinyvec-et.h>
 
 // #define CTRL_DEBUG
+// #define MPDEBUG
+// #define DEBUG
 
 using namespace bdry_ins;
 
@@ -42,12 +44,26 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       keyword = base.idprefix + ".sigma";
       inmap.getwdefault(keyword,surf_gbl->sigma,0.0);
       
-      keyword = base.idprefix + ".rho2";
-      inmap.getwdefault(keyword,surf_gbl->rho2,0.0);
+      keyword = base.idprefix + ".matching_block";
+      if (!inmap.get(keyword,val)) {
+         surf_gbl->mu2 = 0.0;
+         surf_gbl->rho2 = 0.0;
+      }
+      else {
+         keyword = val +".mu";
+         if (!inmap.get(keyword,surf_gbl->mu2)) {
+            *sim::log << "couldn't find matching blocks viscosity" << std::endl;
+            exit(1);
+         }
+         
+         keyword = val +".rho";
+         if (!inmap.get(keyword,surf_gbl->rho2)) {
+            *sim::log << "couldn't find matching blocks density" << std::endl;
+            exit(1);
+         }
+      }
       
-      keyword = base.idprefix + ".mu2";
-      inmap.getwdefault(keyword,surf_gbl->mu2,0.0);
-      
+        
       if (x.sd(base.el(0)).vrtx(0) == x.sd(base.el(base.nel-1)).vrtx(1)) surf_gbl->is_loop = true;
       else surf_gbl->is_loop = false;
    
@@ -58,6 +74,15 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       surf_gbl->sres.resize(base.maxel,x.sm0); 
       surf_gbl->vres0.resize(base.maxel+1);
       surf_gbl->sres0.resize(base.maxel,x.sm0); 
+      
+#ifdef DROP
+      keyword = base.idprefix + ".penalty_parameter";
+      inmap.getwdefault(keyword,surf_gbl->penalty,0.5);
+      
+      surf_gbl->vvolumeflux.resize(base.maxel+1);
+      surf_gbl->svolumeflux.resize(base.maxel,x.sm0);
+#endif
+
            
       surf_gbl->vdt.resize(base.maxel+1);
       surf_gbl->sdt.resize(base.maxel);   
@@ -160,19 +185,13 @@ block::ctrl surface::tadvance(bool coarse, block::ctrl ctrl_message) {
    return(block::stop);
 }
 
-
-#ifdef DROP
-extern FLT amp;
-FLT dydt = 0.0;
-#endif
-
 block::ctrl surface::rsdl(block::ctrl ctrl_message) {
    int i,j,m,n,sind,indx,count,v0,v1;
    TinyVector<FLT,mesh::ND> ubar, norm, rp;
    FLT sigor,drhor,jcb;
    Array<TinyVector<FLT,MXGP>,1> u(x.NV);
    TinyMatrix<FLT,mesh::ND,MXGP> crd, dcrd, mvel;
-   TinyMatrix<FLT,7,MXGP> res;
+   TinyMatrix<FLT,8,MXGP> res;
    TinyMatrix<FLT,3,MXGP> lf,lf1;
    block::ctrl state;   
    
@@ -187,41 +206,26 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 #endif
          sigor = surf_gbl->sigma/x.ins_gbl->rho;
          drhor = (x.ins_gbl->rho -surf_gbl->rho2)/(x.ins_gbl->rho +surf_gbl->rho2);
-#ifdef DROP
-         /* DETRMINE DX CORRECTION TO CONSERVE AREA */
-         /* IMPORTANT FOR STEADY SOLUTIONS */
-         /* SINCE THERE ARE MULTIPLE STEADY-STATES */
-         /* TO ENSURE GET CORRECT VOLUME */
-         TinyVector<FLT,5> avg;
-         FLT rbar, vflux, kc; 
-         kc = surf_gbl->sigma/ins_gbl->mu;
-         integrated_averages(avg.data());
-         rbar  = pow(3.*0.5*avg(0),1.0/3.0);
-         vflux =  amp*kc*(rbar -0.5);
-         dydt = amp*kc*avg(2) +avg(4);
-         /* C_D TO G CONVERSION REMINDER 
-         re = 1.0/surf_gbl->mu2;
-         cd = 24./re*(1 +0.1935*pow(re,0.6305));
-         cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-         g = amp*(avg +avg) +12.*cd/(ins_gbl->rho -surf_gbl->rho2);
-         */
-#endif
 
          /**************************************************/
          /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
          /**************************************************/
          for(n=0;n<mesh::ND;++n)
             surf_gbl->vres(0)(n) = 0.0;
-       
-         for(indx=0;indx<base.nel;++indx) {
+            
+#ifdef DROP
+         surf_gbl->vvolumeflux(0) = 0.0;
+#endif
+
+          for(indx=0;indx<base.nel;++indx) {
             sind = base.el(indx);
             v0 = x.sd(sind).vrtx(0);
             v1 = x.sd(sind).vrtx(1);
-
+            
             x.crdtocht1d(sind);
             for(n=0;n<mesh::ND;++n)
                basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
+               
             x.ugtouht1d(sind);
             for(n=0;n<mesh::ND;++n)
                basis::tri(x.log2p).proj1d(&x.uht(n)(0),&u(n)(0));   
@@ -232,11 +236,12 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
                jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
                
                /* RELATIVE VELOCITY STORED IN MVEL(N)*/
-               for(n=0;n<mesh::ND;++n)
+               for(n=0;n<mesh::ND;++n) {
                   mvel(n,i) = u(n)(i) -(sim::bd[0]*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef DROP
-               mvel(1,i) -= dydt;
-#endif                                        
+                  mvel(n,i) -= tri_hp_ins::mesh_ref_vel(n);
+#endif   
+               }
                /* TANGENTIAL SPACING */            
                res(0,i) = -ksprg(indx)*jcb;
                /* NORMAL FLUX */
@@ -245,7 +250,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
                res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*surf_gbl->meshc(indx);
                
 #ifdef DROP
-               res(3,i) = +RAD(crd(0,i))*vflux*jcb;
+               res(3,i) = +RAD(crd(0,i))*surf_gbl->vflux*jcb;
 #endif 
           
                /* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
@@ -271,7 +276,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrt1d(&lf(1,0),&res(1,0));
             basis::tri(x.log2p).intgrtx1d(&lf(1,0),&res(2,0));
 #ifdef DROP
-            basis::tri(x.log2p).intgrt1d(&lf(2)(0),&res(3,0));
+            basis::tri(x.log2p).intgrt1d(&lf(2,0),&res(3,0));
 #endif
             
             /* TO LEAVE TANGENTIAL POSITION TOTALLY FREE */
@@ -290,7 +295,12 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
             surf_gbl->vres(indx)(1) += lf(2,0);
             surf_gbl->vres(indx+1)(1) += lf(2,1);
             for(m=0;m<basis::tri(x.log2p).sm;++m)
-               surf_gbl->sres(indx,m)(1) += lf(2,m+2);
+               surf_gbl->sres(indx,m)(1) += lf(2,m+2);      
+               
+            surf_gbl->vvolumeflux(indx) += lf(2,0);
+            surf_gbl->vvolumeflux(indx+1) = lf(2,1);
+            for(m=0;m<basis::tri(x.log2p).sm;++m)
+               surf_gbl->svolumeflux(indx,m) = lf(2,m+2);               
 #endif
             
             /* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
@@ -325,7 +335,8 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
             for(m=0;m<basis::tri(x.log2p).sm;++m) {
                for(n=0;n<x.NV;++n)
                   x.hp_gbl->res.s(sind,m,n) += lf1(n,m+2);
-            }
+            }            
+
          }
 
           /* CALL VERTEX RESIDUAL HERE */
@@ -366,25 +377,31 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
                   surf_gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
          }
 
-         if (base.is_comm()) {            
+         if (base.is_comm()) { 
             count = 0;
             for(j=0;j<base.nel+1;++j) {
                base.fsndbuf(count++) = surf_gbl->vres(j)(1)*surf_gbl->rho2;
+#ifdef DROP
+               base.fsndbuf(count-1) -= surf_gbl->vvolumeflux(j)*surf_gbl->rho2;
+#endif
             }
             for(j=0;j<base.nel;++j) {
                for(m=0;m<basis::tri(x.log2p).sm;++m) {
                   base.fsndbuf(count++) = surf_gbl->sres(j,m)(1)*surf_gbl->rho2;
+#ifdef DROP
+                  base.fsndbuf(count-1) -= surf_gbl->svolumeflux(j,m)*surf_gbl->rho2;
+#endif
                }
             }
             base.sndsize() = count;
             base.sndtype() = boundary::flt_msg;
             base.comm_prepare(boundary::all,0,boundary::master_slave);
-         }
+         }         
          ++excpt;
          return(block::advance);
       }
       case(1): {
-         base.comm_transmit(boundary::all,0,boundary::master_slave);
+         base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
       }
@@ -399,7 +416,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 }
 
 block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
-   int i,m,msgn,vcount,scount,sind,v0;
+   int i,m,msgn,count,sind,v0;
    
    if (ctrl_message == block::begin) {
       excpt = 0;
@@ -412,29 +429,31 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
          return(block::advance);
       }
       case(1): {
-         base.comm_transmit(boundary::all,0,boundary::master_slave);
+         base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
       }
       case(2): {
          base.comm_wait(boundary::all,0,boundary::master_slave);
          
-         vcount = 0;
-         scount = base.nel+1;
+         count = 0;
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,vcount++);
-
-            msgn = 1;
-            for(m=0;m<basis::tri(x.log2p).sm;++m) {
-               x.hp_gbl->res.s(sind,m,2) += msgn*base.frcvbuf(0,scount+m);
-               msgn *= -1;
-            }
-            scount += basis::tri(x.log2p).sm;
+            x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,count++);
          }
          v0 = x.sd(sind).vrtx(0);
-         x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,vcount++);
+         x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,count++);
+         
+         for(i=base.nel-1;i>=0;--i) {
+            sind = base.el(i);
+            msgn = 1;
+            for(m=0;m<basis::tri(x.log2p).sm;++m) {
+               x.hp_gbl->res.s(sind,m,2) += msgn*base.frcvbuf(0,count++);
+               msgn *= -1;
+            }
+         }
+
          ++excpt;
       }
    }
@@ -512,8 +531,8 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
                x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(1):
-               x.vbdry(base.vbdry(0))->comm_transmit(boundary::manifolds,mp_phase/3,boundary::symmetric);
-               x.vbdry(base.vbdry(1))->comm_transmit(boundary::manifolds,mp_phase/3,boundary::symmetric);
+               x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase/3,boundary::symmetric);
+               x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
                i = x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
@@ -614,18 +633,21 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
             nrm(1) = -(x.vrtx(v1)(0) -x.vrtx(v0)(0));
             h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
             
-            uvel = x.ug.v(v0,0)-sim::bd[0]*(x.vrtx(v0)(0) -x.vrtxbd(1)(v0)(0));
-            vvel = x.ug.v(v0,1)-sim::bd[0]*(x.vrtx(v0)(1) -x.vrtxbd(1)(v0)(1));
+            uvel = x.ug.v(v0,0)-(sim::bd[0]*(x.vrtx(v0)(0) -x.vrtxbd(1)(v0)(0)));
+            vvel = x.ug.v(v0,1)-(sim::bd[0]*(x.vrtx(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef DROP
-            vvel  -= dydt;
+            uvel -= tri_hp_ins::mesh_ref_vel(0);
+            vvel -= tri_hp_ins::mesh_ref_vel(1);
 #endif
+
             qmax = uvel*uvel+vvel*vvel;
             vslp = fabs(-uvel*nrm(1)/h +vvel*nrm(0)/h);
 
-            uvel = x.ug.v(v1,0)-sim::bd[0]*(x.vrtx(v1)(0) -x.vrtxbd(1)(v1)(0));
-            vvel = x.ug.v(v1,1)-sim::bd[0]*(x.vrtx(v1)(1) -x.vrtxbd(1)(v1)(1));
+            uvel = x.ug.v(v1,0)-(sim::bd[0]*(x.vrtx(v1)(0) -x.vrtxbd(1)(v1)(0)));
+            vvel = x.ug.v(v1,1)-(sim::bd[0]*(x.vrtx(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef DROP
-            vvel  -= dydt;
+            uvel -= tri_hp_ins::mesh_ref_vel(0);
+            vvel -= tri_hp_ins::mesh_ref_vel(1);
 #endif
             qmax = MAX(qmax,uvel*uvel+vvel*vvel);
             vslp = MAX(vslp,fabs(-uvel*nrm(1)/h +vvel*nrm(0)/h));
@@ -655,7 +677,7 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
             /* |a| dv/dpsi  dpsi */
             surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5);
             /* surf_gbl->meshc = adis/(h*vslp/hsm); */
-
+            
             dtnorm *= RAD(0.5*(x.vrtx(v0)(0) +x.vrtx(v1)(0)));
 
             nrm *= 0.5;
@@ -693,8 +715,8 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
                x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(1):
-               x.vbdry(base.vbdry(0))->comm_transmit(boundary::manifolds,mp_phase/3,boundary::symmetric);
-               x.vbdry(base.vbdry(1))->comm_transmit(boundary::manifolds,mp_phase/3,boundary::symmetric);
+               x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase/3,boundary::symmetric);
+               x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
                i = x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
@@ -805,6 +827,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
          *sim::log << "In step 3 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
 
+#ifdef DEBUG
       for(i=0;i<base.nel+1;++i)
          printf("vdt: %d %e %e %e %e\n",i,surf_gbl->vdt(i)(0,0),surf_gbl->vdt(i)(0,1),surf_gbl->vdt(i)(1,0),surf_gbl->vdt(i)(1,1));
             
@@ -829,8 +852,9 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
 //      for(i=0;i<base.nel;++i)
 //         for(m=0;m<basis::tri(x.log2p).sm;++m)
 //            printf("spos: %d %d %e %e\n",i,m,crv(i,m)(0),crv(i,m)(1));
-//
+
 //      exit(1);
+#endif
          
          for(i=0;i<base.nel;++i) {
             sind = base.el(i);
@@ -848,6 +872,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
          v0 = x.sd(sind).vrtx(0);
          x.hp_vbdry(base.vbdry(0))->mvpttobdry(x.vrtx(v0));
          
+#ifdef DEBUG
          for(i=0;i<base.nel;++i) {
             sind = base.el(i);
             v0 = x.sd(sind).vrtx(0);
@@ -859,6 +884,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
          for(i=0;i<base.nel;++i)
             for(m=0;m<basis::tri(x.log2p).sm;++m)
                printf("spos: %d %d %e %e\n",i,m,crv(i,m)(0),crv(i,m)(1));
+#endif
          
          if (base.is_comm()) {            
             count = 0;
@@ -890,7 +916,13 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "In step 4 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
-         base.comm_transmit(boundary::all,0,boundary::master_slave);
+         base.comm_exchange(boundary::all,0,boundary::master_slave);
+         ++excpt1;
+         return(block::advance);
+      }
+      
+      case(5): {
+         base.comm_wait(boundary::all,0,boundary::master_slave);
          ++stage;
          ++excpt1;
          if (stage < sim::NSTAGE) excpt1 = 1;
@@ -936,14 +968,13 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
          }
          ++excpt1;
          ctrl_message = block::begin;
-         base.comm_prepare(boundary::all,0,boundary::master_slave);
       }
       
       case(3): {
 #ifdef CTRL_DEBUG
          *sim::log << "In step 3 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
-         base.comm_transmit(boundary::all,0,boundary::master_slave);
+         base.comm_prepare(boundary::all,0,boundary::master_slave);
          ++excpt1;
          return(block::advance);
       }
@@ -951,6 +982,12 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "In step 4 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
+         base.comm_exchange(boundary::all,0,boundary::master_slave);
+         ++excpt1;
+         return(block::advance);
+      }
+      case(5): {
+
          base.comm_wait(boundary::all,0,boundary::master_slave);
          
          count = 0;
@@ -970,7 +1007,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
                msgn = 1;
                for(m=0;m<basis::tri(x.log2p).sm;++m) {
                   for(n=0;n<mesh::ND;++n)
-                     crv(i,m,n) = msgn*base.frcvbuf(0,count++);
+                     crds(i,m,n) = msgn*base.frcvbuf(0,count++);
                   msgn *= -1;
                }
             }
@@ -1005,7 +1042,7 @@ block::ctrl surface::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1
             /* CALCULATE COARSE RESIDUALS */
             /* DO ENDPOINTS FIRST */
             surf_gbl->vres0(0) = surf_gbl->vres(0);
-            surf_gbl->vres0(base.nel) = surf_gbl->vres(base.nel);
+            surf_gbl->vres0(base.nel) = surf_gbl->vres(fbdry->base.nel);
                
             for(i=1;i<fbdry->base.nel;++i) {
                sind = fbdry->base.el(i);
@@ -1027,7 +1064,34 @@ block::ctrl surface::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1
    return(block::stop);
 }
 
-void surface_slave::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride) {
+void surface_slave::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
+   int j,k,n,countup,offset;
+   
+   if (!base.is_comm()) return;
+   
+#ifdef MPDEBUG
+      *sim::log << "surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+   
+   countup = 0;
+   for(j=0;j<base.nel;++j) {
+      offset = base.el(j)*stride*x.NV;
+      for(k=bgn;k<=end;++k) {
+         for(n=0;n<x.NV-1;++n) {
+            base.fsndbuf(countup++) = sdata[offset +k*x.NV +n];
+#ifdef MPDEBUG
+               *sim::log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+         }
+      }
+   }
+   base.sndsize() = countup;
+   base.sndtype() = boundary::flt_msg;
+   return;
+}
+
+
+void surface_slave::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
    
    if (!base.is_comm()) return;
       
@@ -1045,22 +1109,22 @@ void surface_slave::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, in
    /* RELOAD FROM BUFFER */
    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
-   for(m=0;m<base.matches();++m) {   
-      if (base.matchphase(boundary::all,m) != phi) continue;
-      
+   for(m=0;m<base.matches();++m) {         
       ++matches;
       
       int ebp1 = end-bgn+1;
+
       countdn = (base.nel-1)*ebp1*(x.NV-1);
       countup = 0;
       for(j=0;j<base.nel;++j) {
          sign = bgnsign;
          for(k=0;k<ebp1;++k) {
-            for(n=0;n<x.NV-1;++n)
-               base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn +k);
+            for(n=0;n<x.NV-1;++n) {
+               base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+            }
             sign *= -1;
          }
-         countdn -= ebp1*(x.NV-1);
+         countdn -= 2*ebp1*(x.NV-1);
       }
    }
    
@@ -1068,19 +1132,18 @@ void surface_slave::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, in
       mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-      *sim::log << "finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
+      *sim::log << "surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
       count = 0;
       for(j=0;j<base.nel;++j) {
          sind = base.el(j);
-         offset = (sind*stride +bgn)*x.NV;
+         offset = sind*stride*x.NV;
          for (k=bgn;k<=end;++k) {
             for(n=0;n<x.NV-1;++n) {
-               sdata[offset] = base.fsndbuf(count++)*mtchinv;
+               sdata[offset +k*x.NV +n] = base.fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-               *sim::log << "\t" << sdata[offset] << std::endl;
+               *sim::log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
 #endif
-               ++offset;
             }
          }
 
@@ -1105,86 +1168,3 @@ void surface::maxres() {
    
    return;
 }
-
-#ifdef SKIP
-
-/* CALCULATE AREA/CIRCUMFERENCE/YBAR */
-void hp_mgrid:: d_averages(FLT a[]) {
-   int i,j,n,tind;
-
-   /* a = area */
-   /* a = xbar */
-   /* a = ybar */
-   /* a = ubar */
-   /* a = vbar */
-   for (i = 0; i <5; ++i)
-      a = 0.0;
-   
-   for(tind=0;tind<ntri;++tind) {
-      if (td(tind).info > -1) {
-         crdtocht(tind);
-         for(n=0;n<mesh::ND;++n)
-            basis::tri(x.log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-      }
-      else {
-         for(n=0;n<mesh::ND;++n)
-            basis::tri(x.log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
-
-         for(i=0;i<basis::tri(x.log2p).gpx;++i) {
-            for(j=0;j<basis::tri(x.log2p).gpn;++j) {
-               for(n=0;n<mesh::ND;++n) {
-                  dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(1))(n));
-                  dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(0))(n) -vrtx(td(tind).vrtx(1))(n));
-               }
-            }
-         }
-      }
-      
-      ugtouht(tind);
-      basis::tri(x.log2p).proj(&uht(0)(0),&u(0)(0,0),MXGP);
-      basis::tri(x.log2p).proj(&uht(1)(0)&u(1)(0,0),MXGP);
-      for(i=0;i<basis::tri(x.log2p).gpx;++i) {
-         for(j=0;j<basis::tri(x.log2p).gpn;++j) {
-            cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-            a += RAD(crd(0)(i,j))*basis::tri(x.log2p).wtx(i)*basis::tri(x.log2p).wtn(j)*cjcb(i,j);
-            a += crd(0)(i,j)*RAD(crd(0)(i,j))*basis::tri(x.log2p).wtx(i)*basis::tri(x.log2p).wtn(j)*cjcb(i,j);
-            a += crd(1)(i,j)*RAD(crd(0)(i,j))*basis::tri(x.log2p).wtx(i)*basis::tri(x.log2p).wtn(j)*cjcb(i,j);
-            a += u(0)(i,j)*RAD(crd(0)(i,j))*basis::tri(x.log2p).wtx(i)*basis::tri(x.log2p).wtn(j)*cjcb(i,j);
-            a += u(1)(i,j)*RAD(crd(0)(i,j))*basis::tri(x.log2p).wtx(i)*basis::tri(x.log2p).wtn(j)*cjcb(i,j);
-         }
-      }
-   }
-   for (i=1;i<5;++i)
-      a /= a;
-      
-//   /* CALCULATE CIRCUMFERENCE */
-//   FLT circ = 0.0;
-//   for(indx=0;indx<base.nel;++indx) {
-//      sind = sbdry(bnum)->el(indx);
-//      
-//      /* UG STORES THE CURRENT BOUNDARY POSITION */
-//      for(n=0;n<mesh::ND;++n) {
-//         uht(n)(0) = vug;
-//         uht(n)(1) = vug;
-//      }
-//      if (basis::tri(x.log2p).sm > 0) {
-//         indx1 = indx*sm0;
-//         for(m=0;m<basis::tri(x.log2p).sm;++m)
-//            for(n=0;n<mesh::ND;++n)
-//               uht(n)(m+2) = sug;
-//      }
-//      
-//      for(n=0;n<mesh::ND;++n)
-//         basis::tri(x.log2p).proj1d(&uht(n)(0),&crd(n)(0,0),&dcrd(n,0)(0,0));
-//      
-//      for(i=0;i<basis::tri(x.log2p).gpx;++i) {
-//         norm =  dcrd(1,0)(0,i);
-//         norm = -dcrd(0,0)(0,i);
-//         jcb = RAD(x.crd(0)(0,i))*sqrt(norm*norm +norm*norm);
-//         circ += jcb*basis::tri(x.log2p).wtx;
-//      }
-//   }
-   
-   return;
-}
-#endif

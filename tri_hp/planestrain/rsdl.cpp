@@ -58,10 +58,22 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
          }
       }
 
-
       case 1: {
          if (ctrl_message != block::advance1) {
+            state = mover->rsdl(ctrl_message);
+   
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else 
+            ++excpt;
+            ctrl_message = block::begin;
+      }
+      
+      case 2: {
+         if (ctrl_message != block::advance1) {
             state = block::stop;
+            
             for(i=0;i<nsbd;++i)
                state &= hp_sbdry(i)->rsdl(ctrl_message);
    
@@ -72,7 +84,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
             ++excpt;
       }
       
-      case 2: {
+      case 3: {
 
 
          for(tind = 0; tind<ntri;++tind) {

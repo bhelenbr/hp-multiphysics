@@ -24,27 +24,19 @@ hp_side_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
 
 FLT hp_vrtx_bdry::dummy;
 
-void hp_side_bdry::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride) {
-   
-   if (!base.is_comm()) return;
-      
+void hp_side_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
    int j,k,m,n,count,countdn,countup,offset,sind,sign;
    FLT mtchinv;
    
-   /* ASSUMES REVERSE ORDERING OF SIDES */
-   /* WON'T WORK IN 3D */
-   
+   if (!base.is_comm()) return;
+
    int matches = 1;
-   
    int bgnsign = (bgn % 2 ? -1 : 1);
    
-   /* RELOAD FROM BUFFER */
-   /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-   /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */   
+   /* ASSUMES REVERSE ORDERING OF SIDES */
    for(m=0;m<base.matches();++m) {   
-      if (base.matchphase(boundary::all,m) != phi) continue;
-      
+         
       ++matches;
       
       int ebp1 = end-bgn+1;
@@ -80,7 +72,6 @@ void hp_side_bdry::smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int
                ++offset;
             }
          }
-
       }
    }
    return;
@@ -95,7 +86,8 @@ void hp_side_bdry::copy_data(const hp_side_bdry &bin) {
 }
 
 void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
-   int i,coarse;
+   int i;
+   bool coarse;
    std::string keyword;
    std::istringstream data;
    std::string filename;
@@ -105,8 +97,8 @@ void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
    keyword = base.idprefix + ".curved";
    inmap.getwdefault(keyword,curved,false);
 
-   keyword = base.idprefix + ".coarse";
-   inmap.getwdefault(keyword,coarse,0);
+   keyword = x.idprefix + ".coarse";
+   inmap.getwdefault(keyword,coarse,false);
    
    keyword = base.idprefix + ".coupled";
    inmap.getwdefault(keyword,coupled,false);
@@ -117,6 +109,8 @@ void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
          crvbd(i).resize(base.maxel,x.sm0);
       crvbd(0).reference(crv);
    }
+   
+   base.resize_buffers(base.maxel*(x.sm0+2)*x.NV);
 
    return;
 }
@@ -148,9 +142,9 @@ void hp_side_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 void hp_side_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
    int j,m,n,pmin;
    std::string idin, mytypein;
-
+   
    switch(typ) {
-      case(text):
+      case(tri_hp::text):
          fin >> idin >> mytypein;
          if (curved) {
             fin.ignore(80,':');
@@ -399,40 +393,164 @@ int tri_hp::vc0rcv(int phase, FLT *vdata) {
    return(stop);
 }
 
-void tri_hp::sc0load(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
+void tri_hp::sc0load(FLT *sdata, int bgnmode, int endmode, int modestride) {
    int i;
       
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->smatchsolution_snd(phase,sdata,bgnmode,endmode,modestride);
+      hp_sbdry(i)->smatchsolution_snd(sdata,bgnmode,endmode,modestride);
    
    for(i=0;i<nsbd;++i)
-      sbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+      sbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
    
    return;
 }
 
-int tri_hp::sc0wait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride) {
+int tri_hp::sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
    int stop = 1;
    int i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+      stop &= sbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
 
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->smatchsolution_rcv(phase,sdata,bgnmode,endmode,modestride);
+      hp_sbdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
       
    return(stop);
 }
 
-int tri_hp::sc0rcv(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
+int tri_hp::sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
-      stop &= sbdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
+      stop &= sbdry(i)->comm_nowait(boundary::all,0,boundary::symmetric);
       
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->smatchsolution_rcv(phase,sdata,bgnmode,endmode,modestride);
+      hp_sbdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
       
    return(stop);
+}
+   
+
+block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
+   int i, m, n, msgn, bnum, count;
+   block::ctrl state;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   
+   switch(excpt) {
+      case 0: {
+         /* Match boundary vertices */
+         state = mesh::matchboundaries(ctrl_message);
+         if (state != block::stop) return(state);
+         else {
+            ++excpt;
+            mp_phase = -1;
+            ctrl_message = block::stay;
+         }
+      }
+      case 1: {
+         if (ctrl_message == block::stay) {
+            
+            if (!sm0) {
+               excpt += 2;
+            }
+            else {
+               /* Match curved sides */
+               for(bnum=0;bnum<nsbd;++bnum) {
+                  if (sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
+                     count = 0;
+                     for(i=0;i<sbdry(bnum)->nel;++i) {
+                        for(m=0;m<basis::tri(log2p).sm;++m) {
+                           for(n=0;n<ND;++n)
+                              sbdry(bnum)->fsndbuf(count++) = hp_sbdry(bnum)->crds(i,m,n);
+                        }
+                     }
+                  }
+                  sbdry(bnum)->sndsize() = count;
+                  sbdry(bnum)->sndtype() = boundary::flt_msg;
+                  sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
+               }
+            }
+         }
+         ++excpt;
+         return(block::advance);
+      }
+      
+      case 2: {
+         for(bnum=0;bnum<nsbd;++bnum) {
+            if (sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
+               sbdry(bnum)->comm_exchange(boundary::all,0,boundary::master_slave);
+            }
+         }
+         ++excpt;
+         return(block::advance);
+      }
+      case 3: {
+         for(bnum=0;bnum<nsbd;++bnum) {
+            if (!sbdry(bnum)->is_frst() && hp_sbdry(bnum)->is_curved()) {            
+               sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
+               
+               count = 0;
+               for(i=sbdry(bnum)->nel-1;i>=0;--i) {
+                  msgn = 1;
+                  for(m=0;m<basis::tri(log2p).sm;++m) {
+                     for(n=0;n<ND;++n)
+                        hp_sbdry(bnum)->crds(i,m,n) = msgn*sbdry(bnum)->frcvbuf(0,count++);
+                     msgn *= -1;
+                  }
+               }
+            }
+         }
+      }
+      
+      case 4: {
+         mp_phase = -1;
+         ++excpt;
+         ctrl_message = block::stay;
+      }
+            
+      case 5: {
+         ++mp_phase;
+         excpt += ctrl_message;
+         switch(mp_phase%3) {
+            case(0):
+               vc0load(mp_phase/3,ug.v.data());
+               return(block::stay);
+            case(1):
+               vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+               return(block::stay);
+            case(2):
+               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,ug.v.data())));
+         }
+      }
+      case 6: {
+         mp_phase = -1;
+         ++excpt;
+         ctrl_message = block::stay;
+      }
+      case 7: {
+         if (ctrl_message == block::stay) {
+               
+            if (!sm0) return(block::advance);
+            
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+                  return(block::stay);
+               case(1):
+                  smsgpass(boundary::all,0,boundary::symmetric);
+                  return(block::stay);
+               case(2):
+                  sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+                  return(block::advance);
+            }
+         }
+         else
+            ++excpt;
+      }
+   }
+   
+   return(block::stop);
 }

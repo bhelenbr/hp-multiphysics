@@ -2,21 +2,20 @@
 #include "hp_boundary.h"
 #include <math.h>
 
-#ifdef DROP
-extern FLT dydt;
-#endif
-
 #ifndef MATRIX_PRECONDITIONER
 block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
    FLT jcb,h,hmax,q,qmax,lam1,gam;
    TinyVector<int,3> v;
-         
-   if (ctrl_message == block::begin) {
-#ifdef CTRL_DEBUG
-      *sim::log << "ins setup_preconditioner: ctrl_message: " << ctrl_message  << std::endl;
-#endif
-
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   ctrl_message = tri_hp::setup_preconditioner(ctrl_message);
+   
+   if (ctrl_message == block::advance1) ++excpt;
+   
+   if (excpt == 2) {
+      ++excpt;
+   
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
@@ -53,12 +52,12 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
          qmax = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-#ifndef DROP
-            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+#ifdef DROP
+            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)) +mesh_ref_vel(0)),2.0) 
+               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)) +mesh_ref_vel(1)),2.0);
 #else
             q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-               +pow(ug.v(v0,1)-0.5*(dydt +sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0); 
+               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);  
 #endif
             qmax = MAX(qmax,q);
          }
@@ -116,7 +115,7 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
       }
    }
    
-   return(tri_hp::setup_preconditioner(ctrl_message));
+   return(ctrl_message);
 }
 
 #else

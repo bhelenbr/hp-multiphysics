@@ -11,7 +11,7 @@
 #include "hp_boundary.h"
 
  void tri_hp_swirl::init(input_map& input, gbl *gin) {
-   int coarse;
+   bool coarse, adapt_storage;
    std::string keyword;
    std::istringstream data;
    std::string filename;
@@ -24,12 +24,15 @@
    /* Load pointer to block stuff */
    swirl_gbl = gin;
    
+   keyword = idprefix + ".adapt_storage";
+   input.getwdefault(keyword,adapt_storage,false);
+   if (adapt_storage) return;
+   
    keyword = idprefix + ".coarse";
-   input.getwdefault(keyword,coarse,0);
+   input.getwdefault(keyword,coarse,false);
    
    keyword = idprefix + ".dissipation";
    input.getwdefault(keyword,adis,1.0);
-   *sim::log << "#" << keyword << ": " << adis << std::endl;
    
    if (coarse) return;
    
@@ -38,11 +41,9 @@
   
    keyword = idprefix + ".rho";
    input.getwdefault(keyword,swirl_gbl->rho,1.0);
-   *sim::log << "#" << keyword << ": " << swirl_gbl->rho << std::endl;
 
    keyword = idprefix + ".mu";
    input.getwdefault(keyword,swirl_gbl->mu,0.0);
-   *sim::log << "#" << keyword << ": " << swirl_gbl->mu << std::endl;
 
    swirl_gbl->nu = swirl_gbl->mu/swirl_gbl->rho;
    

@@ -193,13 +193,14 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               sc0load(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+               sc0load(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
                return(block::stay);
             case(1):
-               smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+               smsgpass(boundary::all,0,boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim))));
+               sc0wait_rcv(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+               return(block::advance);
          }
       }
       
@@ -353,6 +354,40 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
    switch (excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
+         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+#endif
+         if (ctrl_message != block::advance1) {
+            /* SET UP TSTEP FOR ACTIVE BOUNDARIES */
+            state = mover->setup_preconditioner(ctrl_message);   
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else {
+            ctrl_message = block::begin;
+            ++excpt;
+         }
+      }
+      
+      case(1): {
+#ifdef CTRL_DEBUG
+         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+#endif
+         if (ctrl_message != block::advance1) {
+            state = block::stop;
+            /* SET UP TSTEP FOR ACTIVE BOUNDARIES */            
+            for(i=0;i<nsbd;++i)
+               state &= hp_sbdry(i)->setup_preconditioner(ctrl_message);
+
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else {
+            ++excpt;
+         }
+      }
+      
+      case(2): {
+#ifdef CTRL_DEBUG
          *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;;
 #endif
          mp_phase = -1;
@@ -360,7 +395,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          ctrl_message = block::stay;
       }
       
-      case(1): {
+      case(3): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 1 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -384,7 +419,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(2): {
+      case(4): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 2 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -392,13 +427,14 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  sc0load(mp_phase/3,hp_gbl->sprcn.data(),0,0,1);
+                  sc0load(hp_gbl->sprcn.data(),0,0,1);
                   return(block::stay);
                case(1):
-                  smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+                  smsgpass(boundary::all,0,boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,hp_gbl->sprcn.data(),0,0,1)));
+                  sc0wait_rcv(hp_gbl->sprcn.data(),0,0,1);
+                  return(block::advance);
             }
          }
          else {
@@ -406,7 +442,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(3): {
+      case(5): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 3 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -424,26 +460,6 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 #endif
          ++excpt;
          ctrl_message = block::begin;
-      }
-      
-      case(4): {
-#ifdef CTRL_DEBUG
-         *sim::log << "Step 4 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
-#endif
-         if (ctrl_message != block::advance1) {
-            state = block::stop;
-            /* SET UP TSTEP FOR ACTIVE BOUNDARIES */   
-            for(i=0;i<nsbd;++i)
-               state &= hp_sbdry(i)->setup_preconditioner(ctrl_message);
-               
-            state &= hp_gbl->mover->setup_preconditioner(ctrl_message);
-
-            if (state != block::stop) return(state);
-            return(block::advance1);
-         }
-         else {
-            ++excpt;
-         }
       }
    }
    return(block::stop);

@@ -30,15 +30,7 @@ class init_bdry_cndtn {
       virtual void input(input_map &blkdata, std::string idnty) = 0;
 };
 
-class mesh_mover {
-   public:
-      virtual void init(input_map& input, std::string idnty) {}
-      virtual mesh_mover* create() { return new mesh_mover; }
-      virtual block::ctrl tadvance(block::ctrl ctrl_message, int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {return(block::stop);}
-      virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
-      virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {return(block::stop);}
-      virtual block::ctrl update(block::ctrl ctrl_message, int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {return(block::stop);}
-};
+class mesh_mover;
 
 /** This class is just the data storage and nothing for multigrid */
 class tri_hp : public r_mesh  {
@@ -75,6 +67,8 @@ class tri_hp : public r_mesh  {
       /** side boundary information */
       Array<hp_side_bdry *,1> hp_sbdry;
       virtual hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata); 
+      /** object to perform rigid mesh movement */
+      mesh_mover *mover;
       
       /** Array for time history information */
       TinyVector<vsi,sim::nhist+1> ugbd;
@@ -127,10 +121,7 @@ class tri_hp : public r_mesh  {
          
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
          init_bdry_cndtn *ibc;
-         
-         /* OBJECT TO PERFORM RIGID MESH MOVEMENT */
-         mesh_mover *mover;
-         
+                  
          /* Pointers to block storage objects for side boundary conditions */
          Array<void *,1> sbdry_gbls;
          
@@ -186,6 +177,7 @@ class tri_hp : public r_mesh  {
       void l2error(FLT (*func)(int, TinyVector<FLT,ND> &x));
       block::ctrl findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
       void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
+      void integrated_averages(Array<FLT,1> a);
       
       /* Routines for point probe */
       void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
@@ -236,9 +228,10 @@ class tri_hp : public r_mesh  {
       void vc0load(int phase, FLT *vdata);
       int vc0wait_rcv(int phase,FLT *vdata);
       int vc0rcv(int phase,FLT *vdata);
-      void sc0load(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
-      int sc0wait_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
-      int sc0rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride);
+      void sc0load(FLT *sdata, int bgnmode, int endmode, int modestride);
+      int sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
+      int sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
+      block::ctrl matchboundaries(block::ctrl ctrl_message);
          
 #ifdef PV3
       void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
@@ -255,6 +248,16 @@ class tri_hp : public r_mesh  {
       int excpt,excpt1,stage,mp_phase,mode;
 };
 
+class mesh_mover {
+   public:
+      mesh_mover(tri_hp& xin) {}
+      virtual void init(input_map& input, std::string idnty) {}
+      virtual mesh_mover* create(tri_hp& xin) { return new mesh_mover(xin); }
+      virtual block::ctrl tadvance(block::ctrl ctrl_message) {return(block::stop);}
+      virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
+      virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {return(block::stop);}
+      virtual block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
+};
 
 
 #endif

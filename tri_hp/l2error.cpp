@@ -105,7 +105,7 @@
          return(block::advance);
       
       case(1): 
-         vbdry(sbdry(bnum)->vbdry(1))->comm_transmit(boundary::manifolds,0,boundary::master_slave);
+         vbdry(sbdry(bnum)->vbdry(1))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
          return(block::advance);
       
       case(2):
@@ -203,6 +203,56 @@
       }
       vl = vr; 
    }
+   
+   return;
+}
+
+/* CALCULATE AREA/CIRCUMFERENCE/YBAR */
+void tri_hp::integrated_averages(Array<FLT,1> a) {
+   int i,j,n,tind;
+
+   /* a(0) = area */
+   /* a(1) = xbar */
+   /* a(2) = ybar */
+   /* a(3-...) variable averages */
+   a = 0.0;
+   
+   for(tind=0;tind<ntri;++tind) {
+      if (td(tind).info > -1) {
+         crdtocht(tind);
+         for(n=0;n<mesh::ND;++n)
+            basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+      }
+      else {
+         for(n=0;n<mesh::ND;++n)
+            basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+
+         for(i=0;i<basis::tri(log2p).gpx;++i) {
+            for(j=0;j<basis::tri(log2p).gpn;++j) {
+               for(n=0;n<mesh::ND;++n) {
+                  dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(1))(n));
+                  dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(0))(n) -vrtx(td(tind).vrtx(1))(n));
+               }
+            }
+         }
+      }
+      
+      ugtouht(tind);
+      for(n=0;n<NV;++n)
+         basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
+
+      for(i=0;i<basis::tri(log2p).gpx;++i) {
+         for(j=0;j<basis::tri(log2p).gpn;++j) {
+            cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
+            a(0) += RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+            a(1) += crd(0)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+            a(2) += crd(1)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+            for(n=0;n<NV;++n) 
+               a(3+n) += u(n)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+         }
+      }
+   }
+   a(Range(1,2+NV)) /= a(0);
    
    return;
 }

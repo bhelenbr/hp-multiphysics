@@ -10,8 +10,12 @@
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
 
+#ifdef DROP
+TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
+#endif
+
  void tri_hp_ins::init(input_map& input, gbl *gin) {
-   int coarse;
+   bool coarse, adapt_storage;
    std::string keyword;
    std::istringstream data;
    std::string filename;
@@ -23,13 +27,16 @@
    
    /* Load pointer to block stuff */
    ins_gbl = gin;
-   
+  
+   keyword = idprefix + ".adapt_storage";
+   input.getwdefault(keyword,adapt_storage,false);
+   if (adapt_storage) return;
+
    keyword = idprefix + ".coarse";
-   input.getwdefault(keyword,coarse,0);
+   input.getwdefault(keyword,coarse,false);
    
    keyword = idprefix + ".dissipation";
    input.getwdefault(keyword,adis,1.0);
-   *sim::log << "#" << keyword << ": " << adis << std::endl;
    
    if (coarse) return;
    
@@ -38,16 +45,12 @@
   
    keyword = idprefix + ".rho";
    input.getwdefault(keyword,ins_gbl->rho,1.0);
-   *sim::log << "#" << keyword << ": " << ins_gbl->rho << std::endl;
 
    keyword = idprefix + ".mu";
    input.getwdefault(keyword,ins_gbl->mu,0.0);
-   *sim::log << "#" << keyword << ": " << ins_gbl->mu << std::endl;
 
    ins_gbl->nu = ins_gbl->mu/ins_gbl->rho;
-   
-
-   
+      
    return;
 }
 

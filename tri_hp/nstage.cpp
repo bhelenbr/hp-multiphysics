@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define NODEBUG
+// #define DEBUG
 
 block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    int i,m,k,n,indx,indx1;
@@ -46,10 +46,11 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "step 2 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
+         mover->update(block::begin);
+         
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->update(block::begin);
          
-         hp_gbl->mover->update(block::begin,nvrtx,vrtx,vrtxbd(1));
          ++excpt1;
          stage = 0;
       }
@@ -88,8 +89,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       }
      
       case(6): {
-   
-      
+ #ifdef DEBUG     
    printf("nstage: %d nvrtx: %d log2p: %d\n",stage,nvrtx,log2p);
 
    for(i=0;i<nvrtx;++i)
@@ -117,9 +117,8 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       for(m=0;m<basis::tri(log2p).im;++m)
          printf("ug.i: %d %d %e %e %e\n",i,m,ug.i(i,m,0),ug.i(i,m,1),ug.i(i,m,2));
 
-
-
 //   exit(1);
+#endif
          
          cflalpha = sim::alpha[stage]*hp_gbl->cfl(log2p);
 #ifdef CTRL_DEBUG
@@ -153,15 +152,23 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       }
       
       case(7): {
+         if (ctrl_message != block::advance2) {
+            state = mover->update(ctrl_message);
+            if (state != block::stop) return(state);
+            return(block::advance2);
+         }
+         ++excpt1;
+         ctrl_message = block::advance;
+      }
+      case(8): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 7 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << "step 8 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          if (ctrl_message != block::advance2) {
             state = block::stop;
             for(i=0;i<nsbd;++i) {
                state &= hp_sbdry(i)->update(ctrl_message);
             }
-            state &= hp_gbl->mover->update(ctrl_message,nvrtx,vrtx,vrtxbd(1));
             
             if (state != block::stop) return(state);
             return(block::advance2);
@@ -169,9 +176,9 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
          ++excpt1;
       }
       
-      case(8): {
+      case(9): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 8 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << "step 9 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          stage += 1;
          if (stage < sim::NSTAGE) {

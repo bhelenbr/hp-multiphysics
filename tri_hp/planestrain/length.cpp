@@ -13,10 +13,6 @@
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
-#ifdef DROP
-extern FLT dydt;
-#endif
-
 block::ctrl tri_hp_ps::length(block::ctrl ctrl_message) {
    int i,j,k,v0,v1,v2,indx,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;

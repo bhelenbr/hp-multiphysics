@@ -75,7 +75,7 @@ class hp_vrtx_bdry : public vgeometry_interface {
 
 
 class hp_side_bdry : public sgeometry_interface {
-   protected:
+   public:
       std::string mytype;
       tri_hp& x;
       side_bdry &base;
@@ -111,11 +111,11 @@ class hp_side_bdry : public sgeometry_interface {
       virtual void sdirichlet(int mode) {}
       virtual void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV);}
       virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV);}
-      virtual void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
+      virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
          base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
          return;
       }
-      virtual void smatchsolution_rcv(int phi, FLT *sdata, int bgn, int end, int stride);
+      virtual void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
    
             
       /* FOR COUPLED DYNAMIC BOUNDARIES */

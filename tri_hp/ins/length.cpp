@@ -13,10 +13,6 @@
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 
-#ifdef DROP
-extern FLT dydt;
-#endif
-
 block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
    int i,j,k,v0,v1,v2,indx,sind,tind,count;
    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
@@ -38,14 +34,17 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
             um = ug.v(td(tind).vrtx(2),0);
             vm = ug.v(td(tind).vrtx(2),1);
 #ifdef DROP
-            vm -= dydt;
+            um -= mesh_ref_vel(0);
+            vm -= mesh_ref_vel(1);
 #endif
+
             for(j=0;j<3;++j) {
                v0 = td(tind).vrtx(j);
                u = ug.v(v0,0);
                v = ug.v(v0,1);
 #ifdef DROP
-               v -= dydt;
+               u -= mesh_ref_vel(0);
+               v -= mesh_ref_vel(1);
 #endif
                q += pow(u,2) +pow(v,2);
                p += fabs(ug.v(v0,2));
@@ -77,7 +76,8 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u = fabs(ug.v(v0,0) +ug.v(v1,0));
                   v = fabs(ug.v(v0,1) +ug.v(v1,1));
 #ifdef DROP
-                  v -= dydt;
+                  u -= mesh_ref_vel(0);
+                  v -= mesh_ref_vel(1);
 #endif
                   ruv = ins_gbl->rho*0.5*(u + v) +ins_gbl->mu/distance(v0,v1);
                   sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,2) -ug.v(v1,2)));
@@ -95,7 +95,8 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u = fabs(ug.v(v0,0) +ug.v(v1,0));
                   v = fabs(ug.v(v0,1) +ug.v(v1,1));
 #ifdef DROP
-                  v -= dydt;
+                  u -= mesh_ref_vel(0);
+                  v -= mesh_ref_vel(1);
 #endif
                   ruv = ins_gbl->rho*0.5*(u + v) +ins_gbl->mu/distance(v0,v1);
                   sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,2)));

@@ -9,10 +9,6 @@
 
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
-
-#ifdef DROP
-extern FLT dydt;
-#endif
    
 block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;
@@ -72,7 +68,23 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
          *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
+            state = mover->rsdl(ctrl_message);
+   
+            if (state != block::stop) return(state);
+            return(block::advance1);
+         }
+         else 
+            ++excpt;
+            ctrl_message = block::begin;
+      }
+      
+      case 2: {
+#ifdef CTRL_DEBUG
+         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+#endif
+         if (ctrl_message != block::advance1) {
             state = block::stop;
+            
             for(i=0;i<nsbd;++i)
                state &= hp_sbdry(i)->rsdl(ctrl_message);
    
@@ -83,10 +95,10 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             ++excpt;
       }
       
-      case 2: {
+      case 3: {
 #ifdef CTRL_DEBUG
          *sim::log << "step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
-#endif
+#endif         
          for(tind = 0; tind<ntri;++tind) {
             /* LOAD INDICES OF VERTEX POINTS */
             v = td(tind).vrtx;
@@ -118,7 +130,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                   mvel(0)(i,j) = sim::bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
                   mvel(1)(i,j) = sim::bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
 #ifdef DROP
-                  mvel(1)(i,j) += dydt;
+                  mvel(0)(i,j) += mesh_ref_vel(0);
+                  mvel(1)(i,j) += mesh_ref_vel(1);
 #endif
                }
             }
@@ -477,20 +490,6 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
             }
          }
-         
-//         if (isfrst) {
-//                  printf("isfrst %d log2p %d stage %d\n",isfrst,log2p,stage);
-//
-//            for(i=0;i<nvrtx;++i)
-//               printf("ug.v %d %e %e %e\n",i,ug.v(i,0),ug.v(i,1),ug.v(i,2));
-//               
-//                        
-//         
-//
-//   for(i=0;i<nvrtx;++i)
-//      printf("res: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
-//                 
-//         }
 
       /*********************************************/
          /* MODIFY RESIDUALS ON COARSER MESHES         */
@@ -509,12 +508,6 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             
 
          }
-         
-
-//         
-//         std::cout << ins_gbl->res.s(Range(0,nside-1),Range::all(),Range::all());
-//         std::cout << ins_gbl->res.i(Range(0,ntri-1),Range::all(),Range::all());
-//         exit(1);
          
          ++excpt;
       }

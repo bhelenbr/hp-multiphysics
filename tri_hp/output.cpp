@@ -16,7 +16,7 @@
 #include <myblas.h>
 
 void tri_hp::output(const std::string& fname, block::output_purpose why) {
-   int i;
+   int i,j;
    std::string fnmapp, namewdot;
    std::ostringstream nstr;
    ofstream out;
@@ -30,7 +30,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
       }
       case(block::restart): {
          namewdot = fname +".d";
-         for(i=0;i<sim::nadapt;++i) {
+         for(i=0;i<sim::nadapt+1;++i) {
             nstr.str("");
             nstr << i << std::flush;
             fnmapp = namewdot +nstr.str();
@@ -39,12 +39,14 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
          if (mmovement != fixed || adapt_flag) {
             namewdot = fname +".v";
             mesh::output(fname,mesh::grid);
-            for(i=1;i<sim::nadapt;++i) {
+            mesh::output(fname,mesh::vlength);
+            for(i=1;i<sim::nadapt+1;++i) {
                nstr.str("");
                nstr << i << std::flush;
                fnmapp = namewdot +nstr.str();
                out.open(fnmapp.c_str());
-               out << vrtxbd(i) << std::endl;
+               for (j=0;j<nvrtx;++j) 
+                  out << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
                out.close();
             }
          }         
@@ -297,30 +299,34 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 }
 
 void tri_hp::input(const std::string& fname) {
-   int i;
+   int i,j;
    std::string fnmapp, namewdot;
    std::ostringstream nstr;
    ifstream in;
 
+   if (mmovement != fixed || adapt_flag) {
+      fnmapp = fname +".v";
+      input_map blank;
+      mesh::input(fname,mesh::grid,1,blank);
+      for(i=1;i<sim::nadapt+1;++i) {
+         nstr.str("");
+         nstr << i << std::flush;
+         fnmapp = namewdot +nstr.str();
+         in.open(fnmapp.c_str());
+         for (j=0;j<nvrtx;++j) 
+            in >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
+         in.close();
+      }
+   }         
+   
    namewdot = fname +".d";
-   for(i=0;i<sim::nadapt;++i) {
+   for(i=0;i<sim::nadapt+1;++i) {
       nstr.str("");
       nstr << i << std::flush;
       fnmapp = namewdot +nstr.str();
       input(fnmapp,output_type(1),i);
    }
-   if (mmovement != fixed || adapt_flag) {
-      namewdot = fname +".v";
-      mesh::input(fname,mesh::grid);
-      for(i=1;i<sim::nadapt;++i) {
-         nstr.str("");
-         nstr << i << std::flush;
-         fnmapp = namewdot +nstr.str();
-         in.open(fnmapp.c_str());
-         in >> vrtxbd(i);
-         in.close();
-      }
-   }         
+
    return;
 
 }

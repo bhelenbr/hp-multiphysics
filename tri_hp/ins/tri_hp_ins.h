@@ -27,12 +27,19 @@ class tri_hp_ins : public tri_hp {
          TinyVector<FLT,2> eanda, eanda_recv;
 
       } *ins_gbl;
+
+#ifdef DROP
+      /** Rigid Mesh Motion for Finding Steady Translating Solutions */
+      static TinyVector<FLT,ND> mesh_ref_vel;
+#endif
       
       FLT adis; // DISSIPATION CONSTANT
       
       hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
       hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
       init_bdry_cndtn* getnewibc(input_map& inmap);
+      mesh_mover* getnewmesh_mover(input_map& inmap);
+
    
    private:
       int excpt;

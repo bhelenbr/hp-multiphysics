@@ -8,10 +8,6 @@
 /*************************************************/
 //void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
 
-#ifdef DROP
-extern FLT dydt;
-#endif
-
 using namespace bdry_ins;
 
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
@@ -94,7 +90,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                norm(0) = x.dcrd(1,0)(0,i);
                norm(1) = -x.dcrd(0,0)(0,i);            
                for(n=0;n<mesh::ND;++n) {
-                  mvel(n) = sim::bd[0]*(x.crd(n)(0,i) -x.crd(n)(1,i));
+                  mvel(n) = sim::bd[0]*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+#ifdef DROP
+                  mvel(n) += tri_hp_ins::mesh_ref_vel(n);
+#endif
                }
 
                
@@ -120,7 +119,7 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
    int j,k,n,v0,v1,sind;
    TinyVector<FLT,2> pt,mvel,nrm;
    TinyVector<FLT,3> u,flx;
-
+   
    if (ctrl_message == block::begin) {
       for(j=0;j<base.nel;++j) {
          sind = base.el(j);
@@ -144,11 +143,11 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
             nrm(1) = -x.dcrd(0,0)(0,k);            
             for(n=0;n<mesh::ND;++n) {
                pt(n) = x.crd(n)(0,k);
-               mvel(n) = sim::bd[0]*(x.crd(n)(0,k) -x.crd(n)(1,k));
-            }
+               mvel(n) = sim::bd[0]*(x.crd(n)(0,k) -dxdt(x.log2p,j)(n,k));
 #ifdef DROP
-            mvel(1) += dydt;
+               mvel(n) += tri_hp_ins::mesh_ref_vel(n);
 #endif
+            }
             for(n=0;n<x.NV;++n)
                u(n) = x.u(n)(0,k);
             
@@ -331,9 +330,6 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
 
                for(n=0;n<ND;++n)
                   mvel[n] = sim::bd[0]*crd(n)(0,k) +crd(n)(1,k);
-#ifdef DROP
-               mvel[1] += dydt;
-#endif
                   
                if (!charyes)
                   wl[2] = wr[2];

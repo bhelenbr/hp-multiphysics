@@ -29,48 +29,40 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
 
 
  void tri_hp::init(input_map& inmap, tri_hp::gbl *hp_in) {
-   int i,ival,p,adapt_storage;
+   int i,ival,p;
+   bool adapt_storage, fine_mesh;
    std::string keyword, line;
    std::istringstream data;
    std::string filename;
    
    keyword = idprefix + ".coarse";
    inmap.getwdefault(keyword,coarse,false);
-   *sim::log << "#" << keyword << ": " << coarse << std::endl;
    
    keyword = idprefix + ".adapt_storage";
-   inmap.getwdefault(keyword,adapt_storage,0);
+   inmap.getwdefault(keyword,adapt_storage,false);
+   
+   fine_mesh = false;
+   if (!adapt_storage && !coarse) fine_mesh = true;
       
    keyword = idprefix + ".mesh_movement";
    if (!inmap.get(keyword,line)) {
       keyword = "mesh_movement";
       inmap.getwdefault(keyword,line,std::string("fixed"));
    }
-   
    for (i=0;i<nmovetypes;++i)
       if (line == movetypes[i]) break;
-      
    if (i == nmovetypes) 
       *sim::log << "unrecognized mesh movement type" << std::endl;
-   
    mmovement = static_cast<movementtype>(i);
-   *sim::log << "#" << keyword << ": " << line << std::endl;
-
-   /* Initialize stuff for r_mesh */
-   if (!adapt_storage && ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) r_mesh::init(inmap,hp_in);
    
    keyword = idprefix + ".nvariable";
    inmap.getwdefault(keyword,NV,1);
-   *sim::log << "#" << keyword << ": " << NV << std::endl;
    
-   inmap.getwdefault("hp_fadd",fadd,1.0);
-   *sim::log << "#hp_fadd: " << fadd << std::endl;
-
    keyword = idprefix + ".log2p";
    if (!inmap.get(keyword,log2p)) {
       inmap.getwdefault("log2p",log2p,0);
    }
-   *sim::log << "#" << keyword << ": " << log2p << std::endl;
+   if (coarse) log2p = 0;
    
 #ifdef AXISYMMETRIC
    int npts = 1;
@@ -89,17 +81,9 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       }
    }
    
-   if (coarse) {
-      log2p = 0;
-      p0 = 1;
-      sm0 = 0;
-      im0 = 0;
-   }
-   else {
-      p0 = basis::tri(log2p).p;
-      sm0 = basis::tri(log2p).sm;
-      im0 = basis::tri(log2p).im;
-   }
+   p0 = basis::tri(log2p).p;
+   sm0 = basis::tri(log2p).sm;
+   im0 = basis::tri(log2p).im;
    log2pmax = log2p;
    
    TinyVector<std::string,3> output_purposes;
@@ -110,7 +94,6 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    defaults(1) = tri_hp::text;
    output_purposes(2) = "debug_type";
    defaults(2) = tri_hp::tecplot;
-
    for(int i=0 ;i<3;++i) {
       keyword = idprefix + "." + output_purposes(i);
       if (inmap.get(keyword,ival)) {
@@ -125,7 +108,6 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
          }
       }
    }
-
          
    /* Check that static work arrays are big enough */
    if (u.extent(firstDim) < NV) {
@@ -136,148 +118,66 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       lf.resize(MAX(NV,ND));
       bdwk.resize(sim::nhist+1,MAX(NV,ND));
    }
-   
     
    /* Allocate solution vector storage */
    ug.v.resize(maxvst,NV);
    ug.s.resize(maxvst,sm0,NV);
    ug.i.resize(maxvst,im0,NV);
-   
-   /* Find bdryfile name in inmap map */
-   std::string bdryfile;
-   input_map bdrymap;
-   keyword = idprefix + ".bdryfile";
-   if (!inmap.get(keyword,bdryfile)) {
-      keyword = idprefix + ".mesh";
-      inmap.get(keyword,bdryfile);
-      bdryfile += "_bdry.inpt";
-   }
-   if (bdryfile.substr(0,7) == "${HOME}") {
-      filename  = getenv("HOME") +bdryfile.substr(7,bdryfile.length());
-   }
-   else {
-      filename = bdryfile;
-   }
-   bdrymap.input(filename);
-   
+      
    /* Load pointer to block stuff */
    hp_gbl = hp_in;
    
    /* ALLOCATE BOUNDARY CONDITION STUFF */
-   if (!coarse) {
+   if (fine_mesh) {
       hp_gbl->sbdry_gbls.resize(nsbd);
       hp_gbl->vbdry_gbls.resize(nvbd);
    }
    hp_sbdry.resize(nsbd);
    hp_vbdry.resize(nvbd);
-   for(i=0;i<nsbd;++i) hp_sbdry(i) = getnewsideobject(i,bdrymap);
-   for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,bdrymap);
-   for(i=0;i<nsbd;++i) hp_sbdry(i)->init(bdrymap,hp_gbl->sbdry_gbls(i));
-   for(i=0;i<nvbd;++i) hp_vbdry(i)->init(bdrymap,hp_gbl->vbdry_gbls(i));
-         
-   if (!coarse) {
-      setinfo();
-      
-      /* Allocate time history stuff */
-      /* For ease of access have level 0 reference ug */
-      ugbd(0).v.reference(ug.v);
-      ugbd(0).s.reference(ug.s);
-      ugbd(0).i.reference(ug.i);
-      vrtxbd(0).reference(vrtx);
-      
-      /* GET INITIAL CONDITION FUNCTION */
-      hp_gbl->ibc = getnewibc(inmap);
-      hp_gbl->ibc->input(inmap,idprefix);
-      
-      /* GET MESH MOVEMENT FUNCTION */
-      hp_gbl->mover = getnewmesh_mover(inmap);
-      hp_gbl->mover->init(inmap,idprefix);
-      
-      if (!adapt_storage) {
-         for(i=1;i<sim::nhist+1;++i) {
-            ugbd(i).v.resize(maxvst,NV);
-            ugbd(i).s.resize(maxvst,sm0,NV);
-            ugbd(i).i.resize(maxvst,im0,NV);
-            vrtxbd(i).resize(maxvst);
-         }
-      }
-      else {
-         for(i=1;i<sim::nadapt+1;++i) {
-            ugbd(i).v.resize(maxvst,NV);
-            ugbd(i).s.resize(maxvst,sm0,NV);
-            ugbd(i).i.resize(maxvst,im0,NV);
-            vrtxbd(i).resize(maxvst);
-         }
-         return;
-      }
+   for(i=0;i<nsbd;++i) hp_sbdry(i) = getnewsideobject(i,inmap);
+   for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
+   for(i=0;i<nsbd;++i) hp_sbdry(i)->init(inmap,hp_gbl->sbdry_gbls(i));
+   for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,hp_gbl->vbdry_gbls(i));
+   setinfo();
 
-#ifdef PV3
-      /** Variables to understand iterative convergence using pV3 */
-      ugpv3.v.resize(maxvst,NV);
-      ugpv3.s.resize(maxvst,sm0,NV);
-      ugpv3.i.resize(maxvst,im0,NV);
-      vrtxpv3.resize(maxvst);
-#endif
-
-      /* Multigrid Storage all except highest order (log2p+1)*/
-      dres.resize(log2p);
-      for(i=0;i<log2p;++i) {
-         dres(i).v.resize(maxvst,NV);
-         dres(i).s.resize(maxvst,basis::tri(i).sm,NV);
-         dres(i).i.resize(maxvst,basis::tri(i).im,NV);
+   /* For ease of access have level 0 in time history reference ug */
+   ugbd(0).v.reference(ug.v);
+   ugbd(0).s.reference(ug.s);
+   ugbd(0).i.reference(ug.i);
+   vrtxbd(0).reference(vrtx); 
+   
+   /***************************************/
+   /* ALLOCATE JUST ENOUGH FOR ADAPTATION */
+   /* NO MORE ADAPT STORAGE AFTER HERE */
+   /************************************/
+   if (adapt_storage) {
+      for(i=1;i<sim::nadapt+1;++i) {
+         ugbd(i).v.resize(maxvst,NV);
+         ugbd(i).s.resize(maxvst,sm0,NV);
+         ugbd(i).i.resize(maxvst,im0,NV);
+         vrtxbd(i).resize(maxvst);
       }
-            
-      /* Allocate block stuff */
-      hp_gbl->ug0.v.resize(maxvst,NV);
-      hp_gbl->ug0.s.resize(maxvst,sm0,NV);
-      hp_gbl->ug0.i.resize(maxvst,im0,NV);
-             
-      hp_gbl->res.v.resize(maxvst,NV);
-      hp_gbl->res.s.resize(maxvst,sm0,NV);
-      hp_gbl->res.i.resize(maxvst,im0,NV);
-      
-      hp_gbl->res_r.v.resize(maxvst,NV);
-      hp_gbl->res_r.s.resize(maxvst,sm0,NV);
-      hp_gbl->res_r.i.resize(maxvst,im0,NV);
-
-      hp_gbl->res0.v.resize(maxvst,NV);
-      hp_gbl->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
-      hp_gbl->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
-      
-#ifndef MATRIX_PRECONDITIONER
-      hp_gbl->vprcn.resize(maxvst,NV);
-      hp_gbl->sprcn.resize(maxvst,NV);
-      hp_gbl->tprcn.resize(maxvst,NV);
-#else
-      hp_gbl->vprcn.resize(maxvst,NV,NV);
-      hp_gbl->sprcn.resize(maxvst,NV,NV);
-      hp_gbl->tprcn.resize(maxvst,NV,NV);
-#endif
-
-      keyword = idprefix +".cfl";
-      if (!inmap.getline(keyword,line)) {
-         if (!inmap.getline("cfl",line)) {
-            line = "2.5 1.5 1.0";
-         }
-      }
-      data.str(line);
-      for(i=0;i<log2pmax+1;++i) {
-         data >> hp_gbl->cfl(i);
-      }
-      data.clear();
- 
-
-      /* Use global scratch for adaptation work */
-      /* resize if necessary */
-      /* Total scratch size needed for adaptation */
-#ifdef USE_SIMSCRATCH
-      if (sim::scratch.size() < needed_scratch_size()) {
-         sim::scratch.resize(size);
-      }
-#endif
-      reload_scratch_pointers();
+      return;
    }
-   else {
+
+   inmap.getwdefault("hp_fadd",fadd,1.0);
+      
+   /* Initialize stuff for r_mesh */
+   if ((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable)) r_mesh::init(inmap,hp_in);
+             
+   /* GET MESH MOVEMENT FUNCTION */
+   mover = getnewmesh_mover(inmap);
+   mover->init(inmap,idprefix);
+   
+   /* UNSTEADY SOURCE TERMS */
+   dugdt.resize(log2p+1,maxvst,NV);
+   dxdt.resize(log2p+1,maxvst,ND);
+   
+   /***************************************/
+   /* ALLOCATE FOR COARSE MESH */
+   /* NO MORE COARSE MESH AFTER HERE */
+   /************************************/
+   if (coarse) {
       ugbd(0).v.reference(ug.v);
       ugbd(0).s.reference(ug.s);
       ugbd(0).i.reference(ug.i);
@@ -290,55 +190,132 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       vug_frst.resize(maxvst,NV);     
       dres.resize(1);
       dres(0).v.resize(maxvst,NV);
+      return;
    }
-   
-   /* UNSTEADY SOURCE TERMS */
-   dugdt.resize(log2p+1,maxvst,NV);
-   dxdt.resize(log2p+1,maxvst,ND);
-   
-   if (!coarse && !adapt_storage) {
-      keyword = idprefix + ".adapt";
-      if (!inmap.get(keyword,adapt_flag)) {
-         inmap.getwdefault("adapt",adapt_flag,false);
-      }
-      *sim::log << "#adapt: " << adapt_flag << std::endl;
-   
-      if (adapt_flag) {
-         inmap.getwdefault("error",trncerr,1.0e-2);
-         inmap.getwdefault("bdryangle",bdrysensitivity,5.0);
-         bdrysensitivity *= M_PI/180.0;
-         inmap.getwdefault("length_tol", vlngth_tol,0.25);
+      
+   /****************************/
+   /* STUFF FOR FINE MESH ONLY */
+   /***************************/
+   /* GET INITIAL CONDITION FUNCTION */
+   hp_gbl->ibc = getnewibc(inmap);
+   hp_gbl->ibc->input(inmap,idprefix);
 
-         /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
-         hp_gbl->pstr = create();
-         hp_gbl->pstr->idprefix = idprefix;
-         hp_gbl->pstr->mesh::copy(*this);
-         keyword = idprefix + ".adapt_storage";
-         inmap[keyword] = "1";
-         (*hp_gbl->pstr).init(inmap, hp_in);
-         inmap[keyword] = "0";
+   for(i=1;i<sim::nhist+1;++i) {
+      ugbd(i).v.resize(maxvst,NV);
+      ugbd(i).s.resize(maxvst,sm0,NV);
+      ugbd(i).i.resize(maxvst,im0,NV);
+      vrtxbd(i).resize(maxvst);
+   }
+
+#ifdef PV3
+   /** Variables to understand iterative convergence using pV3 */
+   ugpv3.v.resize(maxvst,NV);
+   ugpv3.s.resize(maxvst,sm0,NV);
+   ugpv3.i.resize(maxvst,im0,NV);
+   vrtxpv3.resize(maxvst);
+#endif
+
+   /* Multigrid Storage all except highest order (log2p+1)*/
+   dres.resize(log2p);
+   for(i=0;i<log2p;++i) {
+      dres(i).v.resize(maxvst,NV);
+      dres(i).s.resize(maxvst,basis::tri(i).sm,NV);
+      dres(i).i.resize(maxvst,basis::tri(i).im,NV);
+   }
+         
+   /* Allocate block stuff */
+   hp_gbl->ug0.v.resize(maxvst,NV);
+   hp_gbl->ug0.s.resize(maxvst,sm0,NV);
+   hp_gbl->ug0.i.resize(maxvst,im0,NV);
+          
+   hp_gbl->res.v.resize(maxvst,NV);
+   hp_gbl->res.s.resize(maxvst,sm0,NV);
+   hp_gbl->res.i.resize(maxvst,im0,NV);
+   
+   hp_gbl->res_r.v.resize(maxvst,NV);
+   hp_gbl->res_r.s.resize(maxvst,sm0,NV);
+   hp_gbl->res_r.i.resize(maxvst,im0,NV);
+
+   hp_gbl->res0.v.resize(maxvst,NV);
+   hp_gbl->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
+   hp_gbl->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
+   
+#ifndef MATRIX_PRECONDITIONER
+   hp_gbl->vprcn.resize(maxvst,NV);
+   hp_gbl->sprcn.resize(maxvst,NV);
+   hp_gbl->tprcn.resize(maxvst,NV);
+#else
+   hp_gbl->vprcn.resize(maxvst,NV,NV);
+   hp_gbl->sprcn.resize(maxvst,NV,NV);
+   hp_gbl->tprcn.resize(maxvst,NV,NV);
+#endif
+
+   keyword = idprefix +".cfl";
+   if (!inmap.getline(keyword,line)) {
+      if (!inmap.getline("cfl",line)) {
+         line = "2.5 1.5 1.0";
       }
    }
+   data.str(line);
+   for(i=0;i<log2pmax+1;++i) {
+      data >> hp_gbl->cfl(i);
+   }
+   data.clear();
+
+
+   /* Use global scratch for adaptation work */
+   /* resize if necessary */
+   /* Total scratch size needed for adaptation */
+#ifdef USE_SIMSCRATCH
+   if (sim::scratch.size() < needed_scratch_size()) {
+      sim::scratch.resize(size);
+   }
+#endif
+   reload_scratch_pointers();
    
+   /*********************************/
+   /* ALLOCATE ADAPTATION STORAGE   */
+   /* BY CALLING THIS ROUTINE AGAIN */
+   /*********************************/
+   keyword = idprefix + ".adapt";
+   if (!inmap.get(keyword,adapt_flag)) {
+      inmap.getwdefault("adapt",adapt_flag,false);
+   }
+   if (adapt_flag) {
+      inmap.getwdefault("error",trncerr,1.0e-2);
+      inmap.getwdefault("bdryangle",bdrysensitivity,5.0);
+      bdrysensitivity *= M_PI/180.0;
+      inmap.getwdefault("length_tol", vlngth_tol,0.25);
+
+      /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
+      hp_gbl->pstr = create();
+      hp_gbl->pstr->idprefix = idprefix;
+      hp_gbl->pstr->mesh::copy(*this);
+      keyword = idprefix + ".adapt_storage";
+      inmap[keyword] = "1";
+      (*hp_gbl->pstr).init(inmap, hp_in);
+      inmap[keyword] = "0";
+   }
+
+   /***************************************************/
    /* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
-   if (!coarse) {
-      int restartfile;
-      if (inmap.get("restart",restartfile)) {
-         std::ostringstream nstr;
-         std::string fname;
-         nstr << restartfile << std::flush;
-         fname = idprefix +"_rstrt" +nstr.str();
-         input(fname);
-      } 
-      else {
-         for(i=0;i<nsbd;++i)
-            hp_sbdry(i)->curv_init();  /* TEMPO WILL NEED TO CHANGE THIS TO "tobasis" */
-            
-         /* USE TOBASIS TO INITALIZE SOLUTION */
-         tobasis(hp_gbl->ibc);
-      }
+   /**************************************************/
+   int restartfile;
+   if (inmap.get("restart",restartfile)) {
+      std::ostringstream nstr;
+      std::string fname;
+      nstr << restartfile << std::flush;
+      fname = idprefix +"_rstrt" +nstr.str();
+      input(fname);
+   } 
+   else {
+      for(i=0;i<nsbd;++i)
+         hp_sbdry(i)->curv_init();  /* TEMPO WILL NEED TO CHANGE THIS TO "tobasis" */
+         
+      /* USE TOBASIS TO INITALIZE SOLUTION */
+      tobasis(hp_gbl->ibc);
    }
-   
+
    return;
 }
 
@@ -364,14 +341,16 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    for(i=0;i<ntri;++i)
       td(i).info = -1;
    
-   for(i=0;i<nsbd;++i) {
-      if (hp_sbdry(i)->is_curved()) {
-         for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            sd(sind).info = 0;
-            td(sd(sind).tri(0)).info = 0;
-         }
-      } 
+   if (log2p > 0) {
+      for(i=0;i<nsbd;++i) {
+         if (hp_sbdry(i)->is_curved()) {
+            for(j=0;j<sbdry(i)->nel;++j) {
+               sind = sbdry(i)->el(j);
+               sd(sind).info = 0;
+               td(sd(sind).tri(0)).info = 0;
+            }
+         } 
+      }
    }
    
    return;

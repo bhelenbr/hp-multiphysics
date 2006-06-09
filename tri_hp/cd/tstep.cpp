@@ -9,7 +9,14 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
    FLT jcb,h,hmax,q,qmax,lam1;
    TinyVector<int,3> v;
    
-   if (ctrl_message == block::begin) {
+   if (ctrl_message == block::begin) excpt = 0;
+   ctrl_message = tri_hp::setup_preconditioner(ctrl_message);
+   
+   if (ctrl_message == block::advance1) ++excpt;
+   
+   if (excpt == 2) {
+      ++excpt;
+
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
@@ -45,8 +52,8 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
          qmax = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(cd_gbl->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-               +pow(cd_gbl->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+            q = pow(cd_gbl->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)) +(0)),2.0) 
+               +pow(cd_gbl->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)) +(1)),2.0);
             qmax = MAX(qmax,q);
          }
          q = sqrt(qmax);
@@ -81,5 +88,5 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
       }
    }
 
-   return(tri_hp::setup_preconditioner(ctrl_message));
+   return(ctrl_message);
 }

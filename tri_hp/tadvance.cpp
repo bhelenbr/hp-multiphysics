@@ -25,54 +25,8 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
             if (state != block::stop) return(state);
          }
          ++excpt;
+
       case 1: {
-         if (ctrl_message == block::advance1) {
-            ++excpt;
-            ctrl_message = block::stay;
-            mp_phase = -1;
-         }
-         else return(block::advance1);
-      }
-      case 2: {
-         ++mp_phase;
-         excpt += ctrl_message;
-         switch(mp_phase%3) {
-            case(0):
-               vc0load(mp_phase/3,ug.v.data());
-               return(block::stay);
-            case(1):
-               vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
-               return(block::stay);
-            case(2):
-               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,ug.v.data())));
-         }
-      }
-      case 3: {
-         mp_phase = -1;
-         ++excpt;
-         ctrl_message = block::stay;
-      }
-      case 4: {
-         if (ctrl_message == block::stay) {
-               
-            if (!sm0) return(block::advance);
-            
-            ++mp_phase;
-            switch(mp_phase%3) {
-               case(0):
-                  sc0load(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
-                  return(block::stay);
-               case(1):
-                  smsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
-                  return(block::stay);
-               case(2):
-                  return(static_cast<block::ctrl>(sc0wait_rcv(mp_phase/3,ug.s.data(),0,sm0-1,ug.s.extent(secondDim))));
-            }
-         }
-         else
-            ++excpt;
-      }
-      case 5: {
           stage = sim::substep +sim::esdirk;
           if (!coarse) {
             if (stage > 0) {
@@ -143,14 +97,28 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
          ctrl_message = block::begin;
       } 
       
-      case 6: {
+      case 2: {
          if (ctrl_message != block::advance2) {
             
             state = block::stop;
-            for(i=0;i<nsbd;++i)
+            state = mover->tadvance(ctrl_message);
+
+            if (state != block::stop) return(state);
+            return(block::advance2);
+         }
+         else {
+            ++excpt;
+            ctrl_message=block::begin;
+         }
+      }
+      
+      case 3: {
+         if (ctrl_message != block::advance2) {
+
+            state = block::stop;
+            for(i=0;i<nsbd;++i) {
                state &= hp_sbdry(i)->tadvance(coarse,ctrl_message);
-            
-            if (!coarse) state &= hp_gbl->mover->tadvance(ctrl_message,nvrtx,vrtx,vrtxbd(1));
+            }
 
             if (state != block::stop) return(state);
             return(block::advance2);
