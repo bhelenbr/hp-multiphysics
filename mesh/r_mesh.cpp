@@ -509,9 +509,10 @@ block::ctrl r_mesh::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
    return(block::stop);
 }
 
-void r_mesh::maxres() {
+FLT r_mesh::maxres() {
    int i,n;
    FLT mxr[ND];
+   FLT sum;
    
    Array<TinyVector<FLT,ND>,1> res;
    res.reference(rg->res);
@@ -523,10 +524,14 @@ void r_mesh::maxres() {
       for(n=0;n<ND;++n)
          mxr[n] = MAX(mxr[n],fabs(res(i)(n)));
          
-   for(n=0;n<ND;++n)
+   sum = 0.0;
+   for(n=0;n<ND;++n) {
       *sim::log << ' ' << mxr[n] << ' ';
+      sum += mxr[n];
+   }
+   
          
-   return;
+   return(sum);
 }
 
 

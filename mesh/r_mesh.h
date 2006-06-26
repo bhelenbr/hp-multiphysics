@@ -88,7 +88,7 @@ class r_mesh : public mesh {
          block::ctrl update(block::ctrl ctrl_message);
          block::ctrl setup_preconditioner(block::ctrl ctrl_message);
          block::ctrl length(block::ctrl ctrl_message) {return(block::stop);}
-         void maxres();
+         FLT maxres();
       private:
          int excpt,excpt1;
          bool isfrst;
