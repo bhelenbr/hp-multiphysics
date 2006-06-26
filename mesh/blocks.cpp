@@ -59,7 +59,6 @@ FLT sim::adirk[DIRK][DIRK] = {{1./GRK4,0.0,0.0,0.0},{GRK4,1./GRK4,0.0,0.0},{C3RK
 FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
 #endif
 #endif
-
 blitz::Array<FLT,1> sim::cfl;  
 
 #ifdef PV3
@@ -176,6 +175,11 @@ void blocks::init(input_map input) {
    input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
    
    input.getwdefault("vwcycle",vw,2);
+   
+   input.getwdefault("absolute_tolerance",absolute_tolerance,1.0e-12);
+   
+   input.getwdefault("relative_tolerance",relative_tolerance,-1.0);
+
    
    input.getwdefault("ntstep",ntstep,1);
    input.getwdefault("restart",nstart,0);
@@ -668,6 +672,7 @@ void blocks::go() {
    std::string outname;
    std::ostringstream nstr;
    clock_t cpu_time;
+   FLT maxerror,error;
 
    clock();
    for(sim::tstep=nstart+1;sim::tstep<ntstep;++sim::tstep) {
@@ -675,22 +680,25 @@ void blocks::go() {
          *sim::log << "#TIMESTEP: " << sim::tstep << " SUBSTEP: " << sim::substep << std::endl;
          tadvance();
 
+         maxerror = 0.0;
          for(i=0;i<ncycle;++i) {
             cycle(vw);
             *sim::log << i << ' ';
-            maxres();
+            error = maxres();
+            maxerror = MAX(error,maxerror);
             *sim::log << '\n';
             if (debug_output) {
                nstr.str("");
-               nstr << sim::tstep+1 << '_' << sim::substep << '_' << i << std::flush;
+               nstr << sim::tstep << '_' << sim::substep << '_' << i << std::flush;
                outname = "debug" +nstr.str();
                output(outname,block::debug);
             }
+            if (error/maxerror < relative_tolerance || error < absolute_tolerance) break;
          }
       }
       
       /* OUTPUT DISPLAY FILES */
-      if (!((sim::tstep+1)%out_intrvl)) {
+      if (!((sim::tstep)%out_intrvl)) {
          nstr.str("");
          nstr << sim::tstep << std::flush;
          outname = "data" +nstr.str();
@@ -701,7 +709,7 @@ void blocks::go() {
       if (adapt_flag) restructure();
    
       /* OUTPUT RESTART FILES */
-      if (!((sim::tstep+1)%(rstrt_intrvl*out_intrvl))) {
+      if (!((sim::tstep)%(rstrt_intrvl*out_intrvl))) {
          outname = "rstrt" +nstr.str();
          output(outname,block::restart);         
       }
@@ -724,19 +732,19 @@ void blocks::tadvance() {
       sim::bd[i] = 0.0;
    
    switch(sim::tstep) {
-      case(0):
+      case(1):
          sim::bd[0] =  sim::dti;
          sim::bd[1] = -sim::dti;
          break;
 #if (BACKDIFF > 1)
-      case(1):
+      case(2):
          sim::bd[0] =  1.5*sim::dti;
          sim::bd[1] = -2.0*sim::dti;
          sim::bd[2] =  0.5*sim::dti;
          break;
 #endif
 #if (BACKDIFF > 2)
-      case(2):
+      case(3):
          sim::bd[0] = 11./6*sim::dti;
          sim::bd[1] = -3.*sim::dti;
          sim::bd[2] = 1.5*sim::dti;
@@ -750,7 +758,7 @@ void blocks::tadvance() {
 #if (DIRK == 4)
    /* STARTUP SEQUENCE */
    switch(sim::tstep) {
-      case(0): {
+      case(1): {
          sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
          sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
@@ -758,7 +766,7 @@ void blocks::tadvance() {
          sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
          break;
       }
-      case(1): {
+      case(2): {
          sim::adirk[0][0] = 1./sim::GRK3;                   sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
          sim::adirk[1][0] = sim::GRK4;                      sim::adirk[1][1] = 1./sim::GRK4;      sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
          sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;

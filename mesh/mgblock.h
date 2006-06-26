@@ -74,7 +74,7 @@ template<class GRD> class mgrid : public block {
       block::ctrl rsdl(int lvl, block::ctrl ctrl_message) {
          return(grd[lvl].rsdl(ctrl_message));
       }
-      void maxres() {grd[0].maxres();}
+      FLT maxres() {return(grd[0].maxres());}
       block::ctrl setup_preconditioner(int lvl, block::ctrl ctrl_message) {
          return(grd[lvl].setup_preconditioner(ctrl_message));
       }
@@ -142,6 +142,7 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    keyword = idprefix + ".coarse";
    input[keyword] = "0";
    grd[0].init(input,&gstorage);
+   grd[0].setinfo();
    
    input[keyword] = "1";
 #define OLDRECONNECT

@@ -36,6 +36,8 @@ class blocks {
       int extra_finest_levels; /**< Number of extra levels to included on finest grid */
       int extra_coarsest_levels; /**< Number of extra levels to be include on coarsest grid */
       int ncycle; /**< Number of iterations per timestep */
+      FLT absolute_tolerance; /**< Absolute error tolerance for iterative loop (negative means don't use) */
+      FLT relative_tolerance; /**< Relative error tolerance for iterative loop (negative means don't use) */
       /** Number of cycles between re-evaluation of preconditioner.
        *  negative mean reevaluate for both refinement and coarsening sweeps 
        */
@@ -164,9 +166,11 @@ class blocks {
       void tadvance(); 
             
       /** Print errors */
-      inline void maxres() {
+      inline FLT maxres() {
+         FLT sum = 0.0;
          for(int i=0;i<nblock;++i)
-            blk[i]->maxres();
+            sum += blk[i]->maxres();
+         return(sum);
       }
 
 };
@@ -244,6 +248,7 @@ namespace sim {
    const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0}; /**< Multistage time step constants (imaginary) */
    const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; /**< Multistage time step constants (real) */
    //@}
+   
 
 #ifdef PV3
    /** Flag for pV3 to tell when to reload meshes */
