@@ -162,6 +162,18 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       i2wk_lst1(i) = i+1;
          
    triangulate(nside);
+   
+/* FUNNY WAY OF MARKING BECAUSE OF -1 AS UNMARKED */
+/* VSPEC IS 0x4 */
+#if ((-1)&0x4)
+#define ISSPEC(A) (!((A)&VSPEC))
+#define SETSPEC ((-1)&(~VSPEC))
+#else
+#define ISSPEC(A) (((A)&VSPEC))
+#define SETSPEC ((-1)|(VSPEC))
+#endif
+
+   
 
    /****************************************************/         
    /* Boyer-Watson Algorithm to insert interior points */
@@ -171,20 +183,13 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
    for(i=0;i<inmesh.nsbd;++i) {
       for(j=0;j<inmesh.sbdry(i)->nel;++j) {
          sind = inmesh.sbdry(i)->el(j);
-         i1wk(inmesh.sd(sind).vrtx(0)) = (-1)^VSPEC;
-         i1wk(inmesh.sd(sind).vrtx(1)) = (-1)^VSPEC;
+         i1wk(inmesh.sd(sind).vrtx(0)) = SETSPEC;
+         i1wk(inmesh.sd(sind).vrtx(1)) = SETSPEC;
       }
    }
-    
-/* FUNNY WAY OF MARKING */
-#if (((-1)^VPEC)&VPEC)
-#define NOT 
-#else
-#define NOT !
-#endif
    
    for(i=0;i<inmesh.nvrtx;++i) {
-      if (NOT(i1wk(i)&VSPEC)) continue;
+      if (ISSPEC(i1wk(i))) continue;
       
       mindist = qtree.nearpt(inmesh.vrtx(i).data(),j);
       if (sqrt(mindist) < fscr1(i)) continue;
@@ -201,7 +206,6 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
          i1wk(inmesh.sd(sind).vrtx(1)) = -1;
       }
    }
-   
    bdrylabel();
    initvlngth();
    

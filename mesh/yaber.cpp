@@ -452,8 +452,8 @@ void mesh::bdry_yaber1() {
 void mesh::checkintwk() const {
    int i;
    
-   for(i=0;i<maxvst;++i)
-      if (i1wk(i) != -1) *sim::log << "failed intwk1 check" << i << i1wk(i) << std::endl;
+   for(i=0;i<i1wk.extent(firstDim)-1;++i)
+      if (i1wk(i) != -1) *sim::log << "failed i1wk check " << i << ' ' << i1wk(i) << std::endl;
    
    return;
 }

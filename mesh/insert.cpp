@@ -461,10 +461,15 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
    int tclose,nsurround;
    FLT minclosest,closest;
    
-#if (((-1)^TSRCH)&TSRCH)
-#define NOT 
+/* TSRCH = 0x100*0x4 */
+#if ((-1)&(0x100*0x4))
+#define ISSRCH(A) (!((A)&TSRCH))
+#define SETSRCH(A) A&=(~TSRCH)
+#define CLRSRCH(A) A|=(TSRCH)
 #else
-#define NOT !
+#define ISSRCH(A) (((A)&TSRCH))
+#define SETSRCH(A) A|=(TSRCH)
+#define CLRSRCH(A) A&=(~TSRCH)
 #endif
    
    /* HERE WE USE i1wk & i2wk THIS MUST BE -1 BEFORE USING */
@@ -474,7 +479,7 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
    ntdel = 0;
    do {
       if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
-      i1wk(tind) ^= TSRCH;
+      SETSRCH(i1wk(tind));
       i2wk(ntdel++) = tind;
    
       for(vn=0;vn<3;++vn) 
@@ -504,8 +509,8 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
       for(j=0;j<3;++j) {
          tind = td(tin).tri(j);
          if (tind < 0) continue;
-         if (NOT(i1wk(tind)&TSRCH)) continue;
-         i1wk(tind) ^= TSRCH;
+         if (ISSRCH(i1wk(tind))) continue;
+         SETSRCH(i1wk(tind));
          i2wk(ntdel++) = tind;         
          if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
       }
@@ -528,7 +533,7 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) const {
 FOUND:
    /* RESET INTWKW1 TO -1 */
    for(i=0;i<ntdel;++i) {
-      i1wk(i2wk(i)) = -1;
+      CLRSRCH(i1wk(i2wk(i)));
    }
  
    return(tind);
