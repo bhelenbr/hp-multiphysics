@@ -806,7 +806,7 @@ template<class BASE> class ssolution_geometry : public sgeometry_pointer, public
       ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
 
       virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-         if (sim::tstep <= 0) BASE::mvpttobdry(nel,psi,pt);
+         if (sim::tstep < 0) BASE::mvpttobdry(nel,psi,pt);
          else solution_data->mvpttobdry(nel,psi,pt);
          return;
       }
