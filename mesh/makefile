@@ -21,7 +21,7 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
 #CPPFLAGS += -O3
-CPPFLAGS += -O3 -cxxlib-icc -DMPISRC -I/opt/mpich/myrinet/intel/include #(cares)
+CPPFLAGS += -O3 -cxxlib-icc -DNO_MPISRC -I/opt/mpich/myrinet/intel/include #(cares)
 LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 
 ## IRIX64:
@@ -45,4 +45,4 @@ libmesh.a: $(OBJ)
 mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 
-$(OBJ): *.h
+$(OBJ): *.h makefile

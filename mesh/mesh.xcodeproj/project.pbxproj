@@ -92,6 +92,23 @@
 		6FC7DEFE05B30C6E001FE736 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC6A54203CC99B700990B69 /* libmetis.a */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildStyle section */
+		6F81C5540A48E0BA00753B05 /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Development;
+		};
+		6F81C5550A48E0BA00753B05 /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
+
 /* Begin PBXFileReference section */
 		00E0854300CAD1857F000001 /* collapse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = collapse.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94200974D3D80990B20 /* coarsen.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = coarsen.cpp; sourceTree = SOURCE_ROOT; };
@@ -337,6 +354,12 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				6F81C5540A48E0BA00753B05 /* Development */,
+				6F81C5550A48E0BA00753B05 /* Deployment */,
+			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
