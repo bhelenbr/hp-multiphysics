@@ -210,7 +210,7 @@ class tri_hp : public r_mesh  {
          }
          return(block::stop);
       }
-      void maxres();      
+      FLT maxres();      
       block::ctrl update(block::ctrl ctrl_message);
       block::ctrl minvrt(block::ctrl ctrl_message);
       block::ctrl minvrt_test(block::ctrl ctrl_message);

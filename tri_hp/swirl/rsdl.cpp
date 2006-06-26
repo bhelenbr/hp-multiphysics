@@ -192,8 +192,15 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
 								//res(2)(i,j) += cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
 								res(2)(i,j) += cjcb*swirl_gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
 
-						
-                        
+								
+								/* Source Terms for Test Function */
+								//res(0)(i,j) -= crd(0)(i,j)*cjcb*(swirl_gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
+								
+								//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*swirl_gbl->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
+								
+								//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*swirl_gbl->rho*pow(crd(0)(i,j),3.0) -3*lmu);
+								
+
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
                         /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S) */
                         visc[0][0][0][0] = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));

@@ -43,10 +43,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             for(i=1;i<sim::nadapt+1;++i) {
                nstr.str("");
                nstr << i << std::flush;
-               fnmapp = namewdot +nstr.str();
+               fnmapp = namewdot +nstr.str() +".txt";
                out.open(fnmapp.c_str());
+               out << nvrtx << std::endl;
                for (j=0;j<nvrtx;++j) 
-                  out << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
+                  out << j << ':' << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
                out.close();
             }
          }         
@@ -300,7 +301,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 void tri_hp::input(const std::string& fname) {
    int i,j;
-   std::string fnmapp, namewdot;
+   std::string fnmapp;
    std::ostringstream nstr;
    ifstream in;
 
@@ -311,19 +312,25 @@ void tri_hp::input(const std::string& fname) {
       for(i=1;i<sim::nadapt+1;++i) {
          nstr.str("");
          nstr << i << std::flush;
-         fnmapp = namewdot +nstr.str();
+         fnmapp = fname +".v" +nstr.str() +".txt";
          in.open(fnmapp.c_str());
-         for (j=0;j<nvrtx;++j) 
+         if (!in) {
+            *sim::log << "couldn't open input file " << fnmapp << std::endl;
+            exit(1);
+         }
+         in.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
+         for (j=0;j<nvrtx;++j) {
+            in.ignore(80,':');
             in >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
+         }
          in.close();
       }
    }         
    
-   namewdot = fname +".d";
    for(i=0;i<sim::nadapt+1;++i) {
       nstr.str("");
       nstr << i << std::flush;
-      fnmapp = namewdot +nstr.str();
+      fnmapp = fname +".d" +nstr.str();
       input(fnmapp,output_type(1),i);
    }
 
@@ -403,6 +410,7 @@ void tri_hp::input(const std::string& fname) {
                }
             }           
          }
+         in.ignore(80,'\n');
          
 
          /* BOUNDARY INFO */

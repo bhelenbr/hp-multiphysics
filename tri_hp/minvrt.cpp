@@ -423,7 +423,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 2 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
-         if (ctrl_message == block::stay) {
+         if (ctrl_message == block::stay && log2p > 0) {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):

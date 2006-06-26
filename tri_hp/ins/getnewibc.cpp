@@ -319,12 +319,12 @@ FLT f1(int n, FLT x, FLT y) {
          }
    };
    
-#ifdef DROP
    class translating_drop : public mesh_mover {
       private:
          tri_hp_ins &x;
          Array<FLT,1> avg;
          bdry_ins::surface *surf;
+         FLT penalty;
 
       public:
          translating_drop(tri_hp_ins& xin) : mesh_mover(xin), x(xin) {
@@ -334,39 +334,60 @@ FLT f1(int n, FLT x, FLT y) {
                if (surf = dynamic_cast<bdry_ins::surface *>(x.hp_sbdry(bnum))) break;
             assert(bnum < x.nsbd);
          }
-         void init(input_map& input, std::string idnty) {}
+         void init(input_map& input, std::string idnty) {
+            std::string keyword;
+            keyword = idnty + ".penalty_parameter";
+            input.getwdefault(keyword,penalty,0.5);
+         }
          mesh_mover* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
+         void calculate_stuff() {
+            bdry_ins::surface::gbl *surf_gbl = surf->surf_gbl;
+            
+            /* DETRMINE CORRECTION TO CONSERVE AREA */
+            /* IMPORTANT FOR STEADY SOLUTIONS */
+            /* SINCE THERE ARE MULTIPLE STEADY-STATES */
+            /* TO ENSURE GET CORRECT VOLUME */
+            FLT rbar, kc; 
+            kc = surf_gbl->sigma/(x.ins_gbl->mu +surf_gbl->mu2);
+            x.integrated_averages(avg);
+            rbar  = pow(3.*0.5*avg(0),1.0/3.0);
+#ifdef DROP
+            surf_gbl->vflux =  penalty*kc*(rbar -0.5);
+            tri_hp_ins::mesh_ref_vel(1) = penalty*kc*avg(2) +avg(4);   
+#endif
+
+            /* C_D TO G CONVERSION REMINDER 
+            re = 1.0/surf_gbl->mu2;
+            cd = 24./re*(1 +0.1935*pow(re,0.6305));
+            cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
+            g = amp*(avg +avg) +12.*cd/(ins_gbl->rho -surf_gbl->rho2);
+            */
+            return;
+         }
+
          
          block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {
-            
-            if (ctrl_message == block::begin) {
-               bdry_ins::surface::gbl *surf_gbl = surf->surf_gbl;
-               
-               /* DETRMINE CORRECTION TO CONSERVE AREA */
-               /* IMPORTANT FOR STEADY SOLUTIONS */
-               /* SINCE THERE ARE MULTIPLE STEADY-STATES */
-               /* TO ENSURE GET CORRECT VOLUME */
-               FLT rbar, kc; 
-               kc = surf_gbl->sigma/(x.ins_gbl->mu +surf_gbl->mu2);
-               x.integrated_averages(avg);
-               rbar  = pow(3.*0.5*avg(0),1.0/3.0);
-               surf_gbl->vflux =  surf_gbl->penalty*kc*(rbar -0.5);
-               tri_hp_ins::mesh_ref_vel(1) = surf_gbl->penalty*kc*avg(2) +avg(4);               
-
-               /* C_D TO G CONVERSION REMINDER 
-               re = 1.0/surf_gbl->mu2;
-               cd = 24./re*(1 +0.1935*pow(re,0.6305));
-               cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-               g = amp*(avg +avg) +12.*cd/(ins_gbl->rho -surf_gbl->rho2);
-               */
-            }
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */ ) calculate_stuff();
             return(block::stop);
          }
          
          block::ctrl setup_preconditioner(block::ctrl ctrl_message) {
-            return(rsdl(ctrl_message));
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */ ) calculate_stuff();
+            return(block::stop);
          }
+         
+         block::ctrl tadvance(block::ctrl ctrl_message) {
+            if (ctrl_message == block::begin && !x.coarse) {
+               calculate_stuff();
+#ifdef DROP
+               // if (sim::dti > 0.0) surf->surf_gbl->vflux = 0.0;
+#endif
+            }
+            return(block::stop);
+         }
+         
    };
+
 
    class mesh_mover_type {
       public:
@@ -381,7 +402,6 @@ FLT f1(int n, FLT x, FLT y) {
          }
    };
    const char mesh_mover_type::names[ntypes][40] = {"translating_drop"};
-#endif
 
 #ifdef UNSTEADY_DROP
 FLT f1(int n, FLT x, FLT y) {

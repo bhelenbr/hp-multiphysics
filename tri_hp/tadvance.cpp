@@ -30,6 +30,8 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
           stage = sim::substep +sim::esdirk;
           if (!coarse) {
             if (stage > 0) {
+            
+
 
                /* BACK CALCULATE K TERM */
                ugbd(stage+1).v(Range(0,nvrtx-1),Range::all()) = (ug.v(Range(0,nvrtx-1),Range::all()) -ugbd(1).v(Range(0,nvrtx-1),Range::all()))*sim::adirk[stage-1][stage-1];
@@ -42,6 +44,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                for(i=0;i<nvrtx;++i)
                   for(n=0;n<ND;++n)
                      vrtxbd(stage+1)(i)(n) = (vrtx(i)(n)-vrtxbd(1)(i)(n))*sim::adirk[stage-1][stage-1];
+
             }
             
             if (sim::substep == 0) {

@@ -138,7 +138,6 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
    for(i=0;i<nsbd;++i) hp_sbdry(i)->init(inmap,hp_gbl->sbdry_gbls(i));
    for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,hp_gbl->vbdry_gbls(i));
-   setinfo();
 
    /* For ease of access have level 0 in time history reference ug */
    ugbd(0).v.reference(ug.v);
@@ -284,7 +283,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    if (adapt_flag) {
       inmap.getwdefault("error",trncerr,1.0e-2);
       inmap.getwdefault("bdryangle",bdrysensitivity,5.0);
-      bdrysensitivity *= M_PI/180.0;
+      bdrysensitivity *= 180.0/M_PI;
       inmap.getwdefault("length_tol", vlngth_tol,0.25);
 
       /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
@@ -315,7 +314,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       /* USE TOBASIS TO INITALIZE SOLUTION */
       tobasis(hp_gbl->ibc);
    }
-
+   
    return;
 }
 
@@ -356,24 +355,32 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    return;
 }
 
-void tri_hp::maxres() {
+FLT tri_hp::maxres() {
    int i,n;
    Array<FLT,1> mxr(NV);
+   FLT mesherror, flowerror;
    
-   if (mmovement == coupled_deformable) r_mesh::maxres();
+   /* THIS ROUTINE WILL HAVE TO BE OVERWRITTEN TO GET CORRECT DIMENSIONAL NORM FOR EACH SYSTEM */
+   if (mmovement == coupled_deformable) mesherror = r_mesh::maxres();
    
    for(n=0;n<NV;++n)
       mxr(n) = 0.0;
 
-   for(i=0;i<nvrtx;++i)
-      for(n=0;n<NV;++n)
+   flowerror = 0.0;
+   for(i=0;i<nvrtx;++i) {
+      for(n=0;n<NV;++n) {
          mxr(n) = MAX(mxr(n),fabs(hp_gbl->res.v(i,n)));
+         flowerror += mxr(n);
+      }
+   }
          
    for(n=0;n<NV;++n)
       *sim::log << ' ' << mxr(n) << ' ';
       
    for(i=0;i<nsbd;++i)
       hp_sbdry(i)->maxres();
+      
+   return(flowerror);
    
 }
 

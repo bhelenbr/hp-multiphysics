@@ -46,10 +46,10 @@ void hp_side_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
          sign = bgnsign;
          for(k=0;k<ebp1;++k) {
             for(n=0;n<x.NV;++n)
-               base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn +k);
+               base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
             sign *= -1;
          }
-         countdn -= ebp1*x.NV;
+         countdn -= 2*ebp1*x.NV;
       }
    }
    
@@ -57,7 +57,7 @@ void hp_side_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
       mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-      *sim::log << "finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
+      *sim::log << "side finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
       count = 0;
       for(j=0;j<base.nel;++j) {
@@ -65,11 +65,10 @@ void hp_side_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
          offset = (sind*stride +bgn)*x.NV;
          for (k=bgn;k<=end;++k) {
             for(n=0;n<x.NV;++n) {
-               sdata[offset] = base.fsndbuf(count++)*mtchinv;
+               sdata[offset++] = base.fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-               *sim::log << "\t" << sdata[offset] << std::endl;
+               *sim::log << "\t" << sdata[offset-1] << std::endl;
 #endif
-               ++offset;
             }
          }
       }
@@ -138,17 +137,28 @@ void hp_side_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
    }
    return;
 }
-   
+
+#define RESTARTFROMOLD
 void hp_side_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
    int j,m,n,pmin;
    std::string idin, mytypein;
+   char buff[100];
    
    switch(typ) {
       case(tri_hp::text):
+#ifdef RESTARTFROMOLD
+         fin.getline(buff,100);
+//         std::cout << "STARTING " << buff << std::endl;
+         pmin = x.p0;
+#else
          fin >> idin >> mytypein;
-         if (curved) {
+#endif
+         if (curved) { 
+#ifndef RESTARTFROMOLD
             fin.ignore(80,':');
             fin >>  pmin;
+#endif
+            pmin = x.p0;
             for(j=0;j<base.nel;++j) {
                for(m=0;m<pmin -1;++m) {
                   for(n=0;n<mesh::ND;++n)
@@ -160,6 +170,14 @@ void hp_side_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
                }
             }
          }
+#ifdef RESTARTFROMOLD
+         else {
+            while (fin.get(buff[0])) {
+               if (buff[0] == 'B') break;
+               fin.ignore(80,'\n');
+            }
+         }
+#endif
          break;
          
       default:

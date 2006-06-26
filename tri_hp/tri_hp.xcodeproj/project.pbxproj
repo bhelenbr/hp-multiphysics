@@ -44,10 +44,6 @@
 		6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
 		6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
-		6F66203E091AFC8D00FB5D82 /* libpV3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662037091AFC8D00FB5D82 /* libpV3.a */; };
-		6F66203F091AFC8D00FB5D82 /* libfpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662038091AFC8D00FB5D82 /* libfpvm3.a */; };
-		6F662040091AFC8D00FB5D82 /* libgpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662039091AFC8D00FB5D82 /* libgpvm3.a */; };
-		6F662041091AFC8D00FB5D82 /* libpvm3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66203A091AFC8D00FB5D82 /* libpvm3.a */; };
 		6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
 		6F68254F099850E600F57688 /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
@@ -76,6 +72,23 @@
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		FDA0ECEB09994E32003A3089 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FDA0ECEA09994E32003A3089 /* getnewibc.cpp */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+		6F05DDE30A4B75E200F3CDF1 /* Development */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+			};
+			name = Development;
+		};
+		6F05DDE40A4B75E200F3CDF1 /* Deployment */ = {
+			isa = PBXBuildStyle;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+			};
+			name = Deployment;
+		};
+/* End PBXBuildStyle section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8DD76F690486A84900D96B5E /* CopyFiles */ = {
@@ -128,10 +141,6 @@
 		6F661FF8091AFB3500FB5D82 /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
 		6F661FF9091AFB3500FB5D82 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
 		6F662036091AFC8D00FB5D82 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
-		6F662037091AFC8D00FB5D82 /* libpV3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpV3.a; path = ../../Packages/pV3/clients/DARWIN/libpV3.a; sourceTree = SOURCE_ROOT; };
-		6F662038091AFC8D00FB5D82 /* libfpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfpvm3.a; path = ../../Packages/pvm3/lib/DARWIN/libfpvm3.a; sourceTree = SOURCE_ROOT; };
-		6F662039091AFC8D00FB5D82 /* libgpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgpvm3.a; path = ../../Packages/pvm3/lib/DARWIN/libgpvm3.a; sourceTree = SOURCE_ROOT; };
-		6F66203A091AFC8D00FB5D82 /* libpvm3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpvm3.a; path = ../../Packages/pvm3/lib/DARWIN/libpvm3.a; sourceTree = SOURCE_ROOT; };
 		6F662044091AFCEF00FB5D82 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6F66205C091AFFC500FB5D82 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = "../../Packages/metis-4.0/libmetis.a"; sourceTree = SOURCE_ROOT; };
 		6F68254D099850E600F57688 /* hp_getnewibc.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = hp_getnewibc.cpp; sourceTree = "<group>"; };
@@ -179,17 +188,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F661FFA091AFB3500FB5D82 /* libbasis.a in Frameworks */,
-				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
 				6F661FFD091AFB3500FB5D82 /* libmesh.a in Frameworks */,
 				6F661FFC091AFB3500FB5D82 /* libinput_map.a in Frameworks */,
 				6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */,
 				6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */,
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
+				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
 				6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */,
-				6F66203E091AFC8D00FB5D82 /* libpV3.a in Frameworks */,
-				6F66203F091AFC8D00FB5D82 /* libfpvm3.a in Frameworks */,
-				6F662040091AFC8D00FB5D82 /* libgpvm3.a in Frameworks */,
-				6F662041091AFC8D00FB5D82 /* libpvm3.a in Frameworks */,
 				6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -267,18 +272,14 @@
 		6F661FF3091AFADC00FB5D82 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F661FF4091AFB3500FB5D82 /* libbasis.a */,
 				6F661FF7091AFB3500FB5D82 /* libmesh.a */,
 				6F661FF6091AFB3500FB5D82 /* libinput_map.a */,
 				6F661FF8091AFB3500FB5D82 /* libmyblas.a */,
 				6F661FF9091AFB3500FB5D82 /* libquad.a */,
 				6F662036091AFC8D00FB5D82 /* libutil.a */,
+				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
-				6F662037091AFC8D00FB5D82 /* libpV3.a */,
-				6F662038091AFC8D00FB5D82 /* libfpvm3.a */,
-				6F662039091AFC8D00FB5D82 /* libgpvm3.a */,
-				6F66203A091AFC8D00FB5D82 /* libpvm3.a */,
 				6F662044091AFCEF00FB5D82 /* vecLib.framework */,
 			);
 			name = "External Frameworks and Libraries";
@@ -366,6 +367,12 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tri_hp" */;
+			buildSettings = {
+			};
+			buildStyles = (
+				6F05DDE30A4B75E200F3CDF1 /* Development */,
+				6F05DDE40A4B75E200F3CDF1 /* Deployment */,
+			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* spectral_hp */;
 			projectDirPath = "";
@@ -444,22 +451,14 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					BZ_DEBUG,
-					AXISYMMETRIC,
-					DROP,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					.,
-				);
+				HEADER_SEARCH_PATHS = "${HOME}/Codes/include";
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/../lib",
 					"$(SRCROOT)",
-					"$(SRCROOT)/../../Packages/pV3/clients/DARWIN",
-					"$(SRCROOT)/../../Packages/pvm3/lib/DARWIN",
-					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
 				PREBINDING = NO;
@@ -477,14 +476,7 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					AXISYMMETRIC,
-					DROP,
-					NO_PV3,
-					NOUNDERSCORE,
-					NOUNS,
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "${HOME}/Codes/include";
@@ -492,9 +484,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/../lib",
 					"$(SRCROOT)",
-					"$(SRCROOT)/../../Packages/pV3/clients/DARWIN",
-					"$(SRCROOT)/../../Packages/pvm3/lib/DARWIN",
-					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
 				PREBINDING = NO;
@@ -522,9 +511,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(SRCROOT)/../lib",
 					"$(SRCROOT)",
-					"$(SRCROOT)/../../Packages/pV3/clients/DARWIN",
-					"$(SRCROOT)/../../Packages/pvm3/lib/DARWIN",
-					/opt/ibmcmp/lib,
 					"$(SRCROOT)/../../Packages/metis-4.0",
 				);
 				PREBINDING = NO;

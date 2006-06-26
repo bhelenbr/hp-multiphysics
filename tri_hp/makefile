@@ -12,7 +12,7 @@ VIZ = pv3routines.o
 
 LIB = -L$(HOME)/Codes/lib -lmesh -lquad -lbasis -lmyblas -lutil -linput_map -lm
 DEFINES = -Df2cFortran
-CPPFLAGS = -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl 
+CPPFLAGS = -AXISYMMETRIC -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl 
 
 ### Begin machine dependent
 

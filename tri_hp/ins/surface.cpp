@@ -75,10 +75,7 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       surf_gbl->vres0.resize(base.maxel+1);
       surf_gbl->sres0.resize(base.maxel,x.sm0); 
       
-#ifdef DROP
-      keyword = base.idprefix + ".penalty_parameter";
-      inmap.getwdefault(keyword,surf_gbl->penalty,0.5);
-      
+#ifdef DROP      
       surf_gbl->vvolumeflux.resize(base.maxel+1);
       surf_gbl->svolumeflux.resize(base.maxel,x.sm0);
 #endif

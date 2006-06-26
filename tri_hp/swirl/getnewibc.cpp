@@ -78,7 +78,7 @@ namespace ibc_swirl {
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
 				double R,H,A,B,C,D;
 				R=1.0;
-				H=2.0;
+				H=1.75;
 				A=-omega*R*(-R*R*R+3*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
 				B=omega*(-3*R*R*R+6*R*R*epsilon-3*R*epsilon*epsilon+epsilon*epsilon*epsilon)/(epsilon*epsilon*epsilon);
 				C=-3*(-R+epsilon)*R*omega/(epsilon*epsilon*epsilon);
@@ -114,14 +114,72 @@ namespace ibc_swirl {
 				
 				keyword = idnty +".offset";
             if (!blockdata.get(keyword,epsilon)) 
-               blockdata.getwdefault("offset",epsilon,0.1); 
+               blockdata.getwdefault("offset",epsilon,0.01); 
+         }
+   };
+	
+		class spinninglid2 : public init_bdry_cndtn {
+      private:
+         FLT w,H;
+      public:
+         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            switch(n) {
+               case(0):
+                  return(0);
+               case(1):
+                  return(0);
+					case(2):
+						if(x(1)<H) {
+							return(0.0);
+						}
+						else {
+							return(x(0)*w);
+						}
+            }
+            return(0.0);
+         }
+         
+         void input(input_map &blockdata,std::string idnty) {
+            std::string keyword,val;
+            std::istringstream data;
+				
+				keyword = idnty +".rotationalspeed";
+            if (!blockdata.get(keyword,w)) 
+               blockdata.getwdefault("rotationalspeed",w,1.0); 
+				
+				keyword = idnty +".height";
+            if (!blockdata.get(keyword,H)) 
+               blockdata.getwdefault("height",H,2.0); 
          }
    };
 
+		class testFunc : public init_bdry_cndtn {
+			public:
+         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            switch(n) {
+               case(0):
+                  return(x(0)*x(0));
+               case(1):
+                  return(-3*x(0)*x(1));
+					case(2):
+						return(x(0)*x(0));
+					case(3):
+						return(x(0)*x(0));
+			}
+            return(0.0);
+         }
+			
+		void input(input_map &blockdata,std::string idnty) {
+			std::string keyword,val;
+			std::istringstream data;
+		}
+   };
+	
+	
    class ibc_type {
       public:
-         const static int ntypes = 3;
-         enum ids {spinning,jet,spinninglid};
+         const static int ntypes = 5;
+         enum ids {spinning,jet,spinninglid,spinninglid2,testFunc};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -130,7 +188,7 @@ namespace ibc_swirl {
             return(-1);
       }
    };
-   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid"};
+   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2","testFunc"};
 
 }
 
@@ -163,6 +221,18 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 		case ibc_swirl::ibc_type::spinninglid: {
 			init_bdry_cndtn *temp = new ibc_swirl::spinninglid;
 			return(temp);
+			
+		}
+		
+		case ibc_swirl::ibc_type::spinninglid2: {
+		init_bdry_cndtn *temp = new ibc_swirl::spinninglid2;
+		return(temp);
+			
+		}
+		
+		case ibc_swirl::ibc_type::testFunc: {
+		init_bdry_cndtn *temp = new ibc_swirl::testFunc;
+		return(temp);
 			
 		}
 		default: {

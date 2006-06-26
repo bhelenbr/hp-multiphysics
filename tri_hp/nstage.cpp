@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-// #define DEBUG
+#define NO_DEBUG
 
 block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    int i,m,k,n,indx,indx1;
@@ -117,7 +117,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       for(m=0;m<basis::tri(log2p).im;++m)
          printf("ug.i: %d %d %e %e %e\n",i,m,ug.i(i,m,0),ug.i(i,m,1),ug.i(i,m,2));
 
-//   exit(1);
+   exit(1);
 #endif
          
          cflalpha = sim::alpha[stage]*hp_gbl->cfl(log2p);

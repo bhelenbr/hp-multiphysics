@@ -87,7 +87,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             
             for(i=0;i<nsbd;++i)
                state &= hp_sbdry(i)->rsdl(ctrl_message);
-   
+                  
             if (state != block::stop) return(state);
             return(block::advance1);
          }
@@ -98,7 +98,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
       case 3: {
 #ifdef CTRL_DEBUG
          *sim::log << "step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
-#endif         
+#endif                  
+         
          for(tind = 0; tind<ntri;++tind) {
             /* LOAD INDICES OF VERTEX POINTS */
             v = td(tind).vrtx;
@@ -107,7 +108,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             if (td(tind).info > -1) {
                /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
                crdtocht(tind);
-               
+
                /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
                for(n=0;n<ND;++n)
                   basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
@@ -510,6 +511,18 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
          }
          
          ++excpt;
+         
+//         for(i=0;i<nvrtx;++i)
+//            printf("rsdl v: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
+//            
+//         for(i=0;i<nside;++i)
+//            for(int m=0;m<basis::tri(log2p).sm;++m)
+//               printf("rsdl s: %d %d %e %e %e\n",i,m,hp_gbl->res.s(i,m,0),hp_gbl->res.s(i,m,1),hp_gbl->res.s(i,m,2));
+//
+//         for(i=0;i<ntri;++i)
+//            for(int m=0;m<basis::tri(log2p).im;++m)
+//               printf("rsdl i: %d %d %e %e %e\n",i,m,hp_gbl->res.i(i,m,0),hp_gbl->res.i(i,m,1),hp_gbl->res.i(i,m,2));
+
       }
    }
 
