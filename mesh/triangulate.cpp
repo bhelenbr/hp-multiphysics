@@ -30,8 +30,8 @@ void mesh::triangulate(int nsd) {
    FLT ds1,ds2;
    TinyVector<FLT,ND> xmax,xmin,xmax1,xmin1;
    TinyVector<FLT,ND> dx1,dx2,dx3,dx4;
-   FLT det,s,t;
-
+   FLT det,det13,det14,det34,h1,h3;
+   
    /* CREATE VERTEX LIST */
    nv = 0;
    for(i=0;i<nsd;++i) {
@@ -95,6 +95,7 @@ void mesh::triangulate(int nsd) {
          for(i=0;i<nv;++i) {
             vtry = i2wk_lst2(i);
             if (vtry == v(0) || vtry == v(1)) continue;
+            
       
             for(n=0;n<ND;++n)
                dx1(n) = vrtx(v(0))(n) -vrtx(vtry)(n);
@@ -111,25 +112,29 @@ void mesh::triangulate(int nsd) {
             /* FIND TRIANGLE FOR WHICH THE HEIGHT OF THE CIRCUMCENTER */
             /* ABOVE THE EDGE MID-POINT IS MINIMIZED (MINIMIZES RADIUS) */
             height = dx2(0)*(xcen(1) -xmid(1)) -dx2(1)*(xcen(0) -xmid(0));
-
-            if (height > hmin) continue;
             
+            if (height > hmin) continue;
+   
             /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
             /* WITH ALL OTHER BOUNDARY SIDES */
             for(vcnt=0;vcnt<2;++vcnt) {
                minv = MIN(vtry,v(vcnt));
                maxv = MAX(vtry,v(vcnt));
+               
                /* LOOK THROUGH ALL SIDES CONNECTED TO MINV FOR DUPLICATE */
                /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
                sind1 = vd(minv).info;
                while (sind1 >= 0) {
-                  if (maxv == sd(sind1).vrtx(0) || maxv == sd(sind1).vrtx(1)) goto next_vrt;
+                  if (maxv == sd(sind1).vrtx(0) || maxv == sd(sind1).vrtx(1)) {
+                     goto next_vrt;
+                  }
                   sind1 = sd(sind1).info;
                }
                
+               /* FIND BOUNDING BOX OF POTENTIAL SIDE */
                for(n=0;n<ND;++n) {
-                  xmin(n)      = MIN(vrtx(v(0))(n),vrtx(v(1))(n));
-                  xmax(n)      = MAX(vrtx(v(0))(n),vrtx(v(1))(n));
+                  xmin(n)      = MIN(vrtx(vtry)(n),vrtx(v(vcnt))(n));
+                  xmax(n)      = MAX(vrtx(vtry)(n),vrtx(v(vcnt))(n));
                }
                
                for(sck=0;sck<ntest;++sck) {
@@ -138,40 +143,44 @@ void mesh::triangulate(int nsd) {
                   dirck =  (1 -SIGN(i2wk_lst1(sck)))/2;
                   v2 = sd(stest).vrtx(dirck);
                   v3 = sd(stest).vrtx(1-dirck);
-                  if (v2 == minv || v3 == minv) {
-                     /* SPECIAL TEST FOR CONNECTED SIDES */
-                     /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
-                     if (area(v2,v3,v(vcnt)) > 0.0 && area(v2,v3,maxv) <= 0.0) goto vtry_failed;
-                     continue;
-                  }
-                  if (v2 == maxv || v3 == maxv) {
-                     /* SPECIAL TEST FOR CONNECTED SIDES */
-                     /* CAN ONLY FAIL IF CONVEX BOUNDARY (LOOKING FROM OUTSIDE) */
-                     if (area(v2,v3,v(vcnt)) > 0.0 && area(v2,v3,minv) <= 0.0) goto vtry_failed;
-                     continue;
-                  }
+                  
+                  /* NO NEED TO CHECK FOR INTERSECTIONS IF CONNECTED TO ENDPOINT */
+                  if (v2 == minv || v3 == minv) continue;
+                  if (v2 == maxv || v3 == maxv) continue;
+                  
+                  /* FIND BOUNDING BOX OF SIDE TO CHECK AGAINST */
                   for(n=0;n<ND;++n) {
                      xmin1(n)      = MIN(vrtx(v2)(n),vrtx(v3)(n));
                      xmax1(n)      = MAX(vrtx(v2)(n),vrtx(v3)(n));
                   }
+                  /* IF BOUNDING BOXES DON'T OVERLAP THEN NO INTERSECTION */
                   for(n=0;n<ND;++n)
                      if (xmax(n) < xmin1(n) || xmin(n) > xmax1(n)) goto next_bdry_side;
-      
+                  
+                  /* CHECK FOR INTERSECTION OF SIDES */
                   for(n=0;n<ND;++n) {
                      dx1(n) = vrtx(maxv)(n) -vrtx(minv)(n);
                      dx3(n) = vrtx(v3)(n)-vrtx(v2)(n);
-                     dx4(n) = vrtx(minv)(n)-vrtx(v2)(n);
+                     dx4(n) = vrtx(v2)(n)-vrtx(minv)(n);
                   }
+                  /* DETERMINANT IS POSITIVE IF CCW FROM VECTOR DX1 TO DX3 */
+                  /* AREA OF TRIANGLE FORMED BY JOINING BASE OF VECTORS */
+                  det13 = dx1(0)*dx3(1) -dx1(1)*dx3(0);
+                  /* CHECK FOR PARALLELISM */
+                  if (fabs(det13) < EPSILON*100.0*(fabs(xmax(0))+fabs(xmax(1)))) continue;
                   
-                  det = -dx1(0)*dx3(1) +dx1(1)*dx3(0);
-                  if (det < EPSILON*100.0*(fabs(xmax(0))+fabs(xmax(1)))) continue;
-                  
-                  det = 1./det;
-                  s = det*(dx4(0)*dx3(1) -dx3(0)*dx4(1));
-                  t = det*(-dx1(0)*dx4(1) +dx4(0)*dx1(1));
-                  
-                  if (s < 0.0 || s > 1.0) continue;
-                  if (t < 0.0 || t > 1.0) continue;
+                  det14 = dx1(0)*dx4(1) -dx4(0)*dx1(1);
+                  det34 = dx3(0)*dx4(1) -dx4(0)*dx3(1);
+                 
+                  det13 = 1./det13;
+                  /* Height ratio relative to side 1 frame of reference*/
+                  h1 = det14*det13;
+                  /* Height ratio relative to side 3 frame of reference */
+                  h3 = det34*det13;
+          
+                  /* FIRST & SECOND PART CHECKS WHETHER HEIGHTS ARE IN SAME DIRECTION */
+                  /* SECOND & THIRD CHECKS WHETHER HEIGHT MOVING AWAY IS GREATER THAN RETURNING */    
+                  if (h1 > 0.0 || h3 > 0.0 || h1 < -1.0 || h3 < -1.0) continue;
                   
                   goto vtry_failed;
                   
@@ -287,6 +296,7 @@ void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
          maxv = v1;
          order = 0;
       }
+      
       sind1 = vd(minv).info;
       while (sind1 >= 0) {
          if (maxv == sd(sind1).vrtx(order)) {
