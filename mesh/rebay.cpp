@@ -280,7 +280,7 @@ void mesh::bdry_rebay(FLT tolsize) {
          el = getbdryel(sd(sind).tri(1));
          
          /* FOR NOW INSERTION POINT IN MIDDLE */
-         /* FIXED POINT ARITHMETIC SO I CAN vmsgpass AN INTEGER */
+         /* FIXED POINT ARITHMETIC SO I CAN PASS AN INTEGER */
          psi = 0.5;
          psifxpt = static_cast<int>(256*psi);
          psi = psifxpt/256.0;
@@ -291,7 +291,7 @@ void mesh::bdry_rebay(FLT tolsize) {
          *sim::log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
          for(int n=0;n<ND;++n)
             *sim::log << vrtx(nvrtx)(n) << ' ';
-         *sim::log << std::endl;
+         *sim::log << " el " << el << " psi " << psi << std::endl;
 #endif
          /* INSERT POINT */
          bdry_insert(nvrtx,sind);
@@ -354,6 +354,12 @@ void mesh::bdry_rebay1() {
          psi = psifxpt/256.0;
          sbdry(bnum)->mvpttobdry(el,psi,vrtx(nvrtx));
          vlngth(nvrtx) = (1.-psi)*vlngth(sd(sind).vrtx(0)) +psi*vlngth(sd(sind).vrtx(1));
+#ifdef DEBUG_ADAPT
+         *sim::log << "Inserting boundary side " << i << ' ' << adapt_count << ' ';
+         for(int n=0;n<ND;++n)
+            *sim::log << vrtx(nvrtx)(n) << ' ';
+         *sim::log << " el " << el << " psi " << psi << std::endl;
+#endif
          bdry_insert(nvrtx,sind,1);
          ++nvrtx;
          
