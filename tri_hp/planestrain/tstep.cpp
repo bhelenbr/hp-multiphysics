@@ -12,7 +12,7 @@ block::ctrl tri_hp_ps::setup_preconditioner(block::ctrl ctrl_message) {
    
    if (ctrl_message == block::advance1) ++excpt;
    
-   if (excpt == 2) {
+   if (excpt == 3) {
       ++excpt;
 
       /***************************************/

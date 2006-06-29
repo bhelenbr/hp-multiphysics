@@ -71,7 +71,7 @@ block::ctrl tri_hp::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1>
       
       case(1): {
          if (ctrl_message != block::advance1) {
-            if (mmovement == coupled_deformable && p0 == 1) { 
+            if (mmovement == coupled_deformable && log2pmax == 0) { 
                block::ctrl state = r_mesh::mg_getfres(ctrl_message, fv_to_ct, cv_to_ft, fmesh);
                if (state != block::stop) return(state);
             }

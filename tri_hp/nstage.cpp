@@ -17,7 +17,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 #endif
          /* COUPLED MESH MOVMEMENT */
          if (ctrl_message != block::advance1) {
-            if (mmovement == coupled_deformable) {
+            if (mmovement == coupled_deformable  && log2p == 0) {
                state = r_mesh::update(ctrl_message);
                if (state != block::stop) return(state);
             }

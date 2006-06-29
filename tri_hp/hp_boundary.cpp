@@ -292,6 +292,7 @@ void hp_side_bdry::findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
 void hp_side_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
    int sind;
    sind = base.el(bel);
+   psi = 2*psi -1;
    basis::tri(x.log2p).ptvalues1d(psi);
    x.crdtocht1d(sind);
    basis::tri(x.log2p).ptprobe1d(x.ND,xp.data(),psi,&x.cht(0,0),MXTM);

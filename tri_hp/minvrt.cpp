@@ -358,6 +358,24 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 #endif
          if (ctrl_message != block::advance1) {
             /* SET UP TSTEP FOR ACTIVE BOUNDARIES */
+            if (mmovement == coupled_deformable && log2p == 0) {
+               state = r_mesh::setup_preconditioner(ctrl_message);   
+               if (state != block::stop) return(state);
+            }
+            return(block::advance1);
+         }
+         else {
+            ctrl_message = block::begin;
+            ++excpt;
+         }
+      }
+      
+      case(1): {
+#ifdef CTRL_DEBUG
+         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+#endif
+         if (ctrl_message != block::advance1) {
+            /* SET UP TSTEP FOR ACTIVE BOUNDARIES */
             state = mover->setup_preconditioner(ctrl_message);   
             if (state != block::stop) return(state);
             return(block::advance1);
@@ -368,7 +386,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(1): {
+      case(2): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -386,7 +404,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(2): {
+      case(3): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;;
 #endif
@@ -395,7 +413,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          ctrl_message = block::stay;
       }
       
-      case(3): {
+      case(4): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 1 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -419,7 +437,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(4): {
+      case(5): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 2 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
@@ -442,7 +460,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          }
       }
       
-      case(5): {
+      case(6): {
 #ifdef CTRL_DEBUG
          *sim::log << "Step 3 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
