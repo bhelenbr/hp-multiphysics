@@ -282,7 +282,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    }
    if (adapt_flag) {
       inmap.getwdefault("error",trncerr,1.0e-2);
-      inmap.getwdefault("bdryangle",bdrysensitivity,5.0);
+      inmap.getwdefault("bdryangle",bdrysensitivity,0.1);
       bdrysensitivity *= 180.0/M_PI;
       inmap.getwdefault("length_tol", vlngth_tol,0.25);
 
