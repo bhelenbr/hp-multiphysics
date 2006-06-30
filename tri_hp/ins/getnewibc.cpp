@@ -325,6 +325,8 @@ FLT f1(int n, FLT x, FLT y) {
          Array<FLT,1> avg;
          bdry_ins::surface *surf;
          FLT penalty;
+         FLT delta_g_factor;
+         int delta_interval;
 
       public:
          translating_drop(tri_hp_ins& xin) : mesh_mover(xin), x(xin) {
@@ -338,6 +340,12 @@ FLT f1(int n, FLT x, FLT y) {
             std::string keyword;
             keyword = idnty + ".penalty_parameter";
             input.getwdefault(keyword,penalty,0.5);
+            
+            keyword = idnty + ".delta_g_factor";
+            input.getwdefault(keyword,delta_g_factor,1.0);
+            
+            keyword = idnty + ".delta_interval";
+            input.getwdefault(keyword,delta_interval,100);
          }
          mesh_mover* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
          void calculate_stuff() {
@@ -367,12 +375,12 @@ FLT f1(int n, FLT x, FLT y) {
 
          
          block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {
-            if (ctrl_message == block::begin /* && sim::dti == 0.0 */ ) calculate_stuff();
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */) calculate_stuff();
             return(block::stop);
          }
          
          block::ctrl setup_preconditioner(block::ctrl ctrl_message) {
-            if (ctrl_message == block::begin /* && sim::dti == 0.0 */ ) calculate_stuff();
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */) calculate_stuff();
             return(block::stop);
          }
          
@@ -380,7 +388,10 @@ FLT f1(int n, FLT x, FLT y) {
             if (ctrl_message == block::begin && !x.coarse) {
                calculate_stuff();
 #ifdef DROP
-               // if (sim::dti > 0.0) surf->surf_gbl->vflux = 0.0;
+//               if (sim::dti > 0.0) surf->surf_gbl->vflux = 0.0;
+               if ( (sim::tstep % delta_interval) == 0) {
+                  sim::g *= delta_g_factor;
+               }
 #endif
             }
             return(block::stop);
