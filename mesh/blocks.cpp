@@ -845,7 +845,6 @@ void blocks::allreduce1(void *sendbuf, void *recvbuf) {
 
 void blocks::allreduce2(int count, msg_type datatype, operations op) {
    int i,j;
-   Array<FLT,1> fsendbuf(count);
    int *ircvbuf;
    FLT *frcvbuf;
    
@@ -892,9 +891,9 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
             switch(op) {
                case(sum): {
                   fsendbuf = 0;
-                  for(j=0;j<ncalls;++j) {
-                     for(i=0;i<count;++i) {
-                        fsendbuf(i) += static_cast<FLT *>(sndbufs(j))[i];
+                  for(i=0;i<ncalls;++i) {
+                     for(j=0;j<count;++j) {
+                        fsendbuf(j) += static_cast<FLT *>(sndbufs(i))[j];
                      }
                   }
 #ifdef MPISRC
@@ -909,7 +908,7 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                   for(i=0;i<ncalls;++i) {
                      frcvbuf = static_cast<FLT *>(rcvbufs(i));
                      for(j=0;j<count;++j)
-                        frcvbuf[j] = fsendbuf(i);
+                        frcvbuf[j] = fsendbuf(j);
                   }
 #endif
                }            
