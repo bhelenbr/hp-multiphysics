@@ -24,8 +24,10 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
       input.getwdefault("r_fadd",fadd,1.0);
    }
 
-   keyword = idprefix + ".vnn";
-   input.getwdefault(keyword,vnn,0.5); 
+   keyword = idprefix + ".r_cfl";
+   if (!input.get(keyword,r_cfl)) {
+      input.getwdefault("r_cfl",r_cfl,0.5);
+   }
    
    keyword = idprefix + ".r_output_type";
    if (input.get(keyword,ival)) {
@@ -342,7 +344,7 @@ void r_mesh::vddti() {
    diag.reference(rg->diag);
       
    for(i=0;i<nvrtx;++i)
-      diag(i) = vnn/diag(i);
+      diag(i) = r_cfl/diag(i);
 }
 
 block::ctrl r_mesh::update(block::ctrl ctrl_message) {

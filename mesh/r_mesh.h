@@ -19,7 +19,7 @@ class r_side_bdry;
 
 class r_mesh : public mesh {
       protected:         
-         FLT vnn;
+         FLT r_cfl;
          FLT fadd;
          mesh::filetype output_type;
          
