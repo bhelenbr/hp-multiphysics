@@ -586,26 +586,12 @@ class sinewave : public curved_analytic_interface {
       void input(input_map& inmap, std::string idprefix) {   
          curved_analytic_interface::input(inmap,idprefix);
          
-         std::istringstream data(inmap[idprefix+".h_or_v"]);
-         if (!(data >> h_or_v)) h_or_v = 0;
-         data.clear();
-
-         data.str(inmap[idprefix+".amp"]);
-         if (!(data >> amp)) amp = 0.0;
-         data.clear();
-         
-         data.str(inmap[idprefix +".lam"]);
-         if (!(data >> lam)) lam = 1.0;
-         data.clear();
-         
-         data.str(inmap[idprefix +".phase"]);
-         if (!(data >> phase)) phase = 0.0;
+         inmap.getwdefault(idprefix+".h_or_v",h_or_v,0);
+         inmap.getwdefault(idprefix+".amp",amp,0.0);
+         inmap.getwdefault(idprefix+".lam",lam,1.0);
+         inmap.getwdefault(idprefix+".phase",lam,0.0);
          phase = phase/360.0*2.0*M_PI;
-         data.clear();
-         
-         data.str(inmap[idprefix +".offset"]);
-         if (!(data >> offset)) offset = 0.0;
-         data.clear();
+         inmap.getwdefault(idprefix+".offset",offset,0.0);
       }
 };
 
@@ -633,13 +619,18 @@ class circle : public curved_analytic_interface {
        void input(input_map& inmap,std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
          
-         std::istringstream data(inmap[idprefix+".center"]);
-         if (!(data >> center[0] >> center[1])) {center[0] = 0.0; center[1] = 0.0;}
+         std::string line;
+         if (!inmap.getline(idprefix+".center",line)) {
+            line = "0.0 0.0";
+         }
+         std::istringstream data;
+         data.str(line);
+         for(int i=0;i<mesh::ND;++i) {
+            data >> center[i];
+         }
          data.clear();
          
-         data.str(inmap[idprefix+".radius"]);
-         if (!(data >> radius)) radius = 0.5;
-         data.clear();
+         inmap.getwdefault(idprefix+".radius",radius,0.5);
       }
 };  
 
@@ -764,9 +755,31 @@ class gaussian : public curved_analytic_interface {
          FLT length = sqrt(normal(0)*normal(0) +normal(1)*normal(1));
          normal /= length;
       }
-};       
+};  
 
+class hyperbola : public curved_analytic_interface {
+   protected:
+      FLT c;
+      FLT hgt(FLT pt[mesh::ND]) {
+         return(pt[0]*pt[1] -c);
+      }
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+         return(pt[1-dir]);
+      }
+   public:
+      hyperbola() : c(1.0) {}
+      hyperbola(const hyperbola &inbdry) : curved_analytic_interface(inbdry), c(inbdry.c) {}
+      hyperbola* create() const {return(new hyperbola(*this));}
 
+      void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
+         fout << idprefix << ".c" << c << std::endl;
+      }
+      void input(input_map& inmap, std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
+         inmap.getwdefault(idprefix+".c",c,1.0);
+      }
+};
 
 typedef prdc_template<vcomm> vprdc;
 typedef prdc_template<scomm> sprdc;
