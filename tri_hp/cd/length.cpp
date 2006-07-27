@@ -122,7 +122,7 @@ block::ctrl tri_hp_cd::length(block::ctrl ctrl_message) {
                }
             }
             ++nsweep;
-            printf("#aspect ratio fixes %d: %d\n",nsweep,count);
+            *sim::log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
          } while(count > 0 && nsweep < 5);
       }
    }

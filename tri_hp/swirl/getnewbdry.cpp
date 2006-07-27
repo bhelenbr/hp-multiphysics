@@ -9,6 +9,7 @@
 #include "tri_hp_swirl.h"
 #include "bdry_swirl.h"
 #include <input_map.h>
+#include "bdry_ins.h"
 
 using namespace bdry_swirl;
 
@@ -72,9 +73,9 @@ hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
 		case tri_hp_swirl_stype::symmetry: {
          temp = new symmetry(*this,*sbdry(bnum));
          break;
-      }
+      }	
       default: {
-         temp = tri_hp::getnewsideobject(bnum,bdrydata);
+         temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
          break;
       }
    }

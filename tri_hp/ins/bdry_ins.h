@@ -44,9 +44,9 @@ namespace bdry_ins {
    class neumann : public generic {
       protected:
          virtual void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
-            flx(2) = x.ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-            flx(0) = flx(2)*u(0) +x.ins_gbl->ibc->f(2, xpt)*norm(0);
-            flx(1) = flx(2)*u(1) +x.ins_gbl->ibc->f(2, xpt)*norm(1);
+            flx(2) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+            flx(0) = flx(2)*u(0) +x.gbl_ptr->ibc->f(2, xpt)*norm(0);
+            flx(1) = flx(2)*u(1) +x.gbl_ptr->ibc->f(2, xpt)*norm(1);
             return;
          }
       
@@ -65,7 +65,7 @@ namespace bdry_ins {
          flx(0) = 0.0;
          flx(1) = 0.0;
          /* MASS FLUX */
-         flx(2) = x.ins_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+         flx(2) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
          return;
       }
       
@@ -79,10 +79,10 @@ namespace bdry_ins {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
+            x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -90,7 +90,7 @@ namespace bdry_ins {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
             }
          }
             
@@ -102,9 +102,9 @@ namespace bdry_ins {
          void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
             TinyVector<FLT,3> ub;
             for(int n=0;n<x.NV;++n)
-               ub(n) = x.hp_gbl->ibc->f(n,xpt);
+               ub(n) = x.gbl_ptr->ibc->f(n,xpt);
             
-            flx(2) = x.ins_gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+            flx(2) = x.gbl_ptr->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
             flx(0) = flx(2)*ub(0) +u(2)*norm(0);
             flx(1) = flx(2)*ub(1) +u(2)*norm(1);
             
@@ -128,10 +128,10 @@ namespace bdry_ins {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,0) = 0.0;
+               x.gbl_ptr->res.v(v0,0) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,0) = 0.0;
+            x.gbl_ptr->res.v(v0,0) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -139,7 +139,7 @@ namespace bdry_ins {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,0) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,0) = 0.0;
             }
          }
             
@@ -269,7 +269,7 @@ namespace bdry_ins {
                   surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(0) = 0.0;
                   if (dirstop > 0) {
                      /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
-                     x.hp_gbl->res.v(base.v0,2) += surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1)*x.ins_gbl->rho;
+                     x.gbl_ptr->res.v(base.v0,x.NV-1) += surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1)*x.gbl_ptr->rho;
                      /* AND ZERO RESIDUAL */
                      surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1) = 0.0;
                   }
@@ -279,7 +279,7 @@ namespace bdry_ins {
                   surf->surf_gbl->vres(0)(0) = 0.0;
                   if (dirstop > 0) {
                      /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
-                     x.hp_gbl->res.v(base.v0,2) += surf->surf_gbl->vres(0)(1)*x.ins_gbl->rho;
+                     x.gbl_ptr->res.v(base.v0,x.NV-1) += surf->surf_gbl->vres(0)(1)*x.gbl_ptr->rho;
                      /* AND ZERO RESIDUAL */
                      surf->surf_gbl->vres(0)(1) = 0.0;
                   }
@@ -300,7 +300,6 @@ namespace bdry_ins {
          }
          
          void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
-            
             if (surfbdry == 0) {
                x.sbdry(base.sbdry(1))->mvpttobdry(0,0.0,pt);
             }

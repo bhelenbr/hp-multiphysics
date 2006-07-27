@@ -25,10 +25,10 @@ namespace bdry_cd {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,0) = 0.0;
+               x.gbl_ptr->res.v(v0,0) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,0) = 0.0;
+            x.gbl_ptr->res.v(v0,0) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -36,7 +36,7 @@ namespace bdry_cd {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,0) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,0) = 0.0;
             }
          }
             
@@ -61,13 +61,13 @@ namespace bdry_cd {
          FLT flux(FLT u, TinyVector<FLT,mesh::ND> pt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm) {
             FLT vel;
 
-            vel =  (x.cd_gbl->ax-mv(0))*norm(0) +(x.cd_gbl->ay -mv(1))*norm(1);      
+            vel =  (x.gbl_ptr->ax-mv(0))*norm(0) +(x.gbl_ptr->ay -mv(1))*norm(1);      
 
 
             if (vel > 0.0)
                return(vel*u);
 
-            return(x.hp_gbl->ibc->f(0, pt)*vel);
+            return(x.gbl_ptr->ibc->f(0, pt)*vel);
          }
          characteristic(tri_hp_cd &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
          characteristic(const characteristic &inbdry, tri_hp_cd &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}

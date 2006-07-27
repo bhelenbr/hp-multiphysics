@@ -65,6 +65,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    if (coarse) log2p = 0;
    
 #ifdef AXISYMMETRIC
+   *sim::log << "#AXISYMMETRIC is defined" << std::endl;
    int npts = 1;
 #else
    int npts = 0;
@@ -118,26 +119,28 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       lf.resize(MAX(NV,ND));
       bdwk.resize(sim::nhist+1,MAX(NV,ND));
    }
-    
+       
    /* Allocate solution vector storage */
    ug.v.resize(maxvst,NV);
    ug.s.resize(maxvst,sm0,NV);
    ug.i.resize(maxvst,im0,NV);
       
    /* Load pointer to block stuff */
-   hp_gbl = hp_in;
-   
+   gbl_ptr = hp_in;
+
    /* ALLOCATE BOUNDARY CONDITION STUFF */
    if (fine_mesh) {
-      hp_gbl->sbdry_gbls.resize(nsbd);
-      hp_gbl->vbdry_gbls.resize(nvbd);
+      gbl_ptr->sbdry_gbls.resize(nsbd);
+      gbl_ptr->vbdry_gbls.resize(nvbd);
    }
+   
+
    hp_sbdry.resize(nsbd);
    hp_vbdry.resize(nvbd);
    for(i=0;i<nsbd;++i) hp_sbdry(i) = getnewsideobject(i,inmap);
    for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
-   for(i=0;i<nsbd;++i) hp_sbdry(i)->init(inmap,hp_gbl->sbdry_gbls(i));
-   for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,hp_gbl->vbdry_gbls(i));
+   for(i=0;i<nsbd;++i) hp_sbdry(i)->init(inmap,gbl_ptr->sbdry_gbls(i));
+   for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl_ptr->vbdry_gbls(i));
 
    /* For ease of access have level 0 in time history reference ug */
    ugbd(0).v.reference(ug.v);
@@ -196,8 +199,8 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    /* STUFF FOR FINE MESH ONLY */
    /***************************/
    /* GET INITIAL CONDITION FUNCTION */
-   hp_gbl->ibc = getnewibc(inmap);
-   hp_gbl->ibc->input(inmap,idprefix);
+   gbl_ptr->ibc = getnewibc(inmap);
+   gbl_ptr->ibc->input(inmap,idprefix);
 
    for(i=1;i<sim::nhist+1;++i) {
       ugbd(i).v.resize(maxvst,NV);
@@ -223,30 +226,30 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    }
          
    /* Allocate block stuff */
-   hp_gbl->ug0.v.resize(maxvst,NV);
-   hp_gbl->ug0.s.resize(maxvst,sm0,NV);
-   hp_gbl->ug0.i.resize(maxvst,im0,NV);
+   gbl_ptr->ug0.v.resize(maxvst,NV);
+   gbl_ptr->ug0.s.resize(maxvst,sm0,NV);
+   gbl_ptr->ug0.i.resize(maxvst,im0,NV);
           
-   hp_gbl->res.v.resize(maxvst,NV);
-   hp_gbl->res.s.resize(maxvst,sm0,NV);
-   hp_gbl->res.i.resize(maxvst,im0,NV);
+   gbl_ptr->res.v.resize(maxvst,NV);
+   gbl_ptr->res.s.resize(maxvst,sm0,NV);
+   gbl_ptr->res.i.resize(maxvst,im0,NV);
    
-   hp_gbl->res_r.v.resize(maxvst,NV);
-   hp_gbl->res_r.s.resize(maxvst,sm0,NV);
-   hp_gbl->res_r.i.resize(maxvst,im0,NV);
+   gbl_ptr->res_r.v.resize(maxvst,NV);
+   gbl_ptr->res_r.s.resize(maxvst,sm0,NV);
+   gbl_ptr->res_r.i.resize(maxvst,im0,NV);
 
-   hp_gbl->res0.v.resize(maxvst,NV);
-   hp_gbl->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
-   hp_gbl->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
+   gbl_ptr->res0.v.resize(maxvst,NV);
+   gbl_ptr->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
+   gbl_ptr->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
    
 #ifndef MATRIX_PRECONDITIONER
-   hp_gbl->vprcn.resize(maxvst,NV);
-   hp_gbl->sprcn.resize(maxvst,NV);
-   hp_gbl->tprcn.resize(maxvst,NV);
+   gbl_ptr->vprcn.resize(maxvst,NV);
+   gbl_ptr->sprcn.resize(maxvst,NV);
+   gbl_ptr->tprcn.resize(maxvst,NV);
 #else
-   hp_gbl->vprcn.resize(maxvst,NV,NV);
-   hp_gbl->sprcn.resize(maxvst,NV,NV);
-   hp_gbl->tprcn.resize(maxvst,NV,NV);
+   gbl_ptr->vprcn.resize(maxvst,NV,NV);
+   gbl_ptr->sprcn.resize(maxvst,NV,NV);
+   gbl_ptr->tprcn.resize(maxvst,NV,NV);
 #endif
 
    keyword = idprefix +".cfl";
@@ -257,7 +260,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    }
    data.str(line);
    for(i=0;i<log2pmax+1;++i) {
-      data >> hp_gbl->cfl(i);
+      data >> gbl_ptr->cfl(i);
    }
    data.clear();
 
@@ -287,12 +290,12 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       inmap.getwdefault("length_tol", vlngth_tol,0.25);
 
       /* NOW ALLOCATE A COPY SO CAN PERFORM ADAPTATION */
-      hp_gbl->pstr = create();
-      hp_gbl->pstr->idprefix = idprefix;
-      hp_gbl->pstr->mesh::copy(*this);
+      gbl_ptr->pstr = create();
+      gbl_ptr->pstr->idprefix = idprefix;
+      gbl_ptr->pstr->mesh::copy(*this);
       keyword = idprefix + ".adapt_storage";
       inmap[keyword] = "1";
-      (*hp_gbl->pstr).init(inmap, hp_in);
+      gbl_ptr->pstr->tri_hp::init(inmap, hp_in);
       inmap[keyword] = "0";
    }
 
@@ -312,7 +315,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
          hp_sbdry(i)->curv_init();  /* TEMPO WILL NEED TO CHANGE THIS TO "tobasis" */
          
       /* USE TOBASIS TO INITALIZE SOLUTION */
-      tobasis(hp_gbl->ibc);
+      tobasis(gbl_ptr->ibc);
    }
    
    return;
@@ -366,11 +369,9 @@ FLT tri_hp::maxres() {
    for(n=0;n<NV;++n)
       mxr(n) = 0.0;
 
-   flowerror = 0.0;
    for(i=0;i<nvrtx;++i) {
       for(n=0;n<NV;++n) {
-         mxr(n) = MAX(mxr(n),fabs(hp_gbl->res.v(i,n)));
-         flowerror += mxr(n);
+         mxr(n) = MAX(mxr(n),fabs(gbl_ptr->res.v(i,n)));
       }
    }
          
@@ -379,6 +380,10 @@ FLT tri_hp::maxres() {
       
    for(i=0;i<nsbd;++i)
       hp_sbdry(i)->maxres();
+      
+   flowerror = 0.0;
+   for(n=0;n<NV;++n)
+      flowerror = MAX(flowerror,mxr(n));
       
    return(flowerror);
    

@@ -52,10 +52,10 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                um = u;
                vm = v;
             }
-            ins_gbl->eanda(0) += 1./3.*( (0.5*ins_gbl->rho*q +p)*area(tind) +duv*ins_gbl->mu*sqrt(area(tind)) );
-            ins_gbl->eanda(1) += area(tind);
+            gbl_ptr->eanda(0) += 1./3.*( (0.5*gbl_ptr->rho*q +p)*area(tind) +duv*gbl_ptr->mu*sqrt(area(tind)) );
+            gbl_ptr->eanda(1) += area(tind);
          }
-         sim::blks.allreduce1(ins_gbl->eanda.data(),ins_gbl->eanda_recv.data());
+         sim::blks.allreduce1(gbl_ptr->eanda.data(),gbl_ptr->eanda_recv.data());
          return(block::advance);
       }
       
@@ -65,7 +65,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
       }
       
       case(2): {
-         norm = ins_gbl->eanda_recv(0)/ins_gbl->eanda_recv(1);
+         norm = gbl_ptr->eanda_recv(0)/gbl_ptr->eanda_recv(1);
          fscr1(Range(0,nvrtx-1)) = 0.0;
 
          switch(basis::tri(log2p).p) {
@@ -79,7 +79,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u -= mesh_ref_vel(0);
                   v -= mesh_ref_vel(1);
 #endif
-                  ruv = ins_gbl->rho*0.5*(u + v) +ins_gbl->mu/distance(v0,v1);
+                  ruv = gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1);
                   sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,2) -ug.v(v1,2)));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
@@ -98,7 +98,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u -= mesh_ref_vel(0);
                   v -= mesh_ref_vel(1);
 #endif
-                  ruv = ins_gbl->rho*0.5*(u + v) +ins_gbl->mu/distance(v0,v1);
+                  ruv = gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1);
                   sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,2)));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
@@ -195,7 +195,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                }
             }
             ++nsweep;
-            printf("#aspect ratio fixes %d: %d\n",nsweep,count);
+            *sim::log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
          } while(count > 0 && nsweep < 5);
       }
    }

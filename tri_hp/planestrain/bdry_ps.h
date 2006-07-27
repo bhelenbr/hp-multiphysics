@@ -62,10 +62,10 @@ namespace bdry_ps {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,Range(0,x.ND-1)) = 0.0;
+            x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -73,7 +73,7 @@ namespace bdry_ps {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
             }
          }
             
@@ -127,10 +127,10 @@ namespace bdry_ps {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,dir) = 0.0;
+               x.gbl_ptr->res.v(v0,dir) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,dir) = 0.0;
+            x.gbl_ptr->res.v(v0,dir) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -138,7 +138,7 @@ namespace bdry_ps {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,dir) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,dir) = 0.0;
             }
          }
 

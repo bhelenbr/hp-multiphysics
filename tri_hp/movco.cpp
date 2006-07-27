@@ -16,10 +16,10 @@ block::ctrl tri_hp::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1>
             --log2p;
             
             /* TRANSFER IS ON FINE MESH */
-            hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+            gbl_ptr->res0.v(Range(0,nvrtx-1),Range::all()) = gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());
 
             if (basis::tri(log2p).p > 1) {
-               hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+               gbl_ptr->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
                
                if (basis::tri(log2p).p > 2) {
               
@@ -28,7 +28,7 @@ block::ctrl tri_hp::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1>
                      indx1 = 0;
                      for(m=1;m<basis::tri(log2p).sm;++m) {
                         for(k=0;k<basis::tri(log2p).sm-m;++k) {
-                           hp_gbl->res0.i(tind,indx,Range::all()) = hp_gbl->res.i(tind,indx1,Range::all());
+                           gbl_ptr->res0.i(tind,indx,Range::all()) = gbl_ptr->res.i(tind,indx1,Range::all());
                            ++indx;
                            ++indx1;
                         }
@@ -40,7 +40,7 @@ block::ctrl tri_hp::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1>
          }
          else {
 
-            hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+            gbl_ptr->res0.v(Range(0,nvrtx-1),Range::all()) = 0.0;
                   
             /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
             for(i=0;i<fmesh->nvrtx;++i) {
@@ -48,7 +48,7 @@ block::ctrl tri_hp::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1>
                for(j=0;j<3;++j) {
                   v0 = td(tind).vrtx(j);
                   for(n=0;n<NV;++n)
-                     hp_gbl->res0.v(v0,n) += fv_to_ct(i).wt(j)*hp_gbl->res.v(i,n);
+                     gbl_ptr->res0.v(v0,n) += fv_to_ct(i).wt(j)*gbl_ptr->res.v(i,n);
                }
             }
             

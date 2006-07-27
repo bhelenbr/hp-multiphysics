@@ -91,8 +91,6 @@ void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
    std::istringstream data;
    std::string filename;
    
-   dxdt.resize(x.log2pmax+1,base.maxel);
-   
    keyword = base.idprefix + ".curved";
    inmap.getwdefault(keyword,curved,false);
 
@@ -109,6 +107,8 @@ void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
       crvbd(0).reference(crv);
    }
    
+   dxdt.resize(x.log2pmax+1,base.maxel);
+      
    base.resize_buffers(base.maxel*(x.sm0+2)*x.NV);
 
    return;
@@ -138,17 +138,18 @@ void hp_side_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
    return;
 }
 
-#define RESTARTFROMOLD
+#define NO_RESTARTFROMOLD
 void hp_side_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
    int j,m,n,pmin;
    std::string idin, mytypein;
+#ifdef RESTARTFROMOLD
    char buff[100];
+#endif
    
    switch(typ) {
       case(tri_hp::text):
 #ifdef RESTARTFROMOLD
          fin.getline(buff,100);
-//         std::cout << "STARTING " << buff << std::endl;
          pmin = x.p0;
 #else
          fin >> idin >> mytypein;
@@ -572,4 +573,136 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
    }
    
    return(block::stop);
+}
+
+block::ctrl hp_side_bdry::findmax(block::ctrl ctrl_message, FLT (*fxy)(TinyVector<FLT,2> &x)) {
+   FLT ddpsi1, ddpsi2, psil, psir;
+   TinyVector<FLT,2> xp, dx, maxloc, minloc;
+   FLT max,min;
+   int v0, sind;
+   
+   if (ctrl_message == block::begin) excpt = 0;
+   else ++excpt;
+   
+   switch (excpt) {
+      case(0):
+         /* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
+         sind = base.el(base.nel-1);
+         x.crdtocht1d(sind);
+         basis::tri(x.log2p).ptprobe1d(mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
+         ddpsi2 = (*fxy)(dx);
+         if (base.vbdry(1) >= 0) {
+            x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
+            x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
+         }
+         if (base.vbdry(0) >= 0) {
+            x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
+         }
+         return(block::advance);
+      
+      case(1):
+         if (base.vbdry(1) >= 0) 
+            x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
+         if (base.vbdry(0) >= 0)
+            x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
+         return(block::advance);
+      
+      case(2):
+         if (base.vbdry(1) >= 0) 
+            x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,0,boundary::master_slave);
+         if (base.vbdry(0) >= 0) {
+            x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,0,boundary::master_slave);
+            if (x.vbdry(base.vbdry(0))->is_comm()) 
+               ddpsi2 = x.vbdry(base.vbdry(0))->frcvbuf(0,0);
+            else
+               ddpsi2 = 0.0;
+         }
+            
+         max = -1.0e99;
+         min = 1.0e99;
+         for(int indx=0;indx<base.nel;++indx) {
+            sind = base.el(indx);
+            x.crdtocht1d(sind);
+            basis::tri(x.log2p).ptprobe1d(mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
+            ddpsi1 = (*fxy)(dx);
+            if (ddpsi1 * ddpsi2 <= 0.0) {
+               v0 = x.sd(base.el(indx)).vrtx(0);
+               if ((*fxy)(x.vrtx(v0)) > max) {
+                  maxloc[0] = x.vrtx(v0)(0);
+                  maxloc[1] = x.vrtx(v0)(1);
+                  max = (*fxy)(x.vrtx(v0));
+               }
+               if ((*fxy)(x.vrtx(v0)) < min) {
+                  minloc[0] = x.vrtx(v0)(0);
+                  minloc[1] = x.vrtx(v0)(1);
+                  min = (*fxy)(x.vrtx(v0));
+               }
+               *sim::log << "#LOCAL EXTREMA: " << x.vrtx(v0)(0) << ' ' << x.vrtx(v0)(1) << ' ' <<(*fxy)(x.vrtx(v0)) << std::endl;
+            }
+            basis::tri(x.log2p).ptprobe1d(mesh::ND, &xp(0), &dx(0), 1.0, &x.cht(0,0), MXTM);
+            ddpsi2 = (*fxy)(dx);
+            if (ddpsi1 *ddpsi2 <= 0.0) {
+               /* INTERIOR MAXIMUM */
+               psil = -1.0;
+               psir = 1.0;
+               while (psir-psil > 1.0e-10) {
+                  basis::tri(x.log2p).ptprobe1d(mesh::ND, &xp(0), &dx(0), 0.5*(psil +psir), &x.cht(0,0), MXTM);
+                  if ((*fxy)(dx)*ddpsi1 < 0.0) 
+                     psir = 0.5*(psil+psir);
+                  else
+                     psil = 0.5*(psil+psir);
+               }
+               if ((*fxy)(xp) > max) {
+                  maxloc[0] = xp[0];
+                  maxloc[1] = xp[1];
+                  max = (*fxy)(xp);
+               }
+               if ((*fxy)(xp) < min) {
+                  minloc[0] = xp[0];
+                  minloc[1] = xp[1];
+                  min = (*fxy)(xp);
+               }
+               *sim::log << "#LOCAL EXTREMA: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+            }  
+         }
+         *sim::log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
+         *sim::log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
+   }
+   return(block::stop);
+}
+
+ void hp_side_bdry::findintercept(FLT (*fxy)(TinyVector<FLT,2> &x)) {
+   FLT psil, psir;
+   TinyVector<FLT,2> xp, dx;
+   int v0, sind;
+   FLT vl, vr;
+   
+   sind = base.el(0);
+   x.crdtocht1d(sind);
+   v0 = x.sd(sind).vrtx(0);
+   vl = (*fxy)(x.vrtx(v0));
+
+   for(int indx=0;indx<base.nel;++indx) {
+      sind = base.el(indx);
+      x.crdtocht1d(sind);
+      v0 = x.sd(sind).vrtx(1);
+      vr = (*fxy)(x.vrtx(v0));
+
+      if (vl*vr <= 0.0) {
+         /* INTERIOR INTERCEPT */
+         psil = -1.0;
+         psir = 1.0;
+         while (psir-psil > 1.0e-10) {
+            basis::tri(x.log2p).ptprobe1d(mesh::ND,&xp(0),&dx(0),0.5*(psil+psir),&x.cht(0,0),MXTM);
+            if ((*fxy)(xp)*vl < 0.0) 
+               psir = 0.5*(psil+psir);
+            else
+               psil = 0.5*(psil+psir);
+         }
+         *sim::log << "#INTERSECTION: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
+      }
+      vl = vr; 
+   }
+   
+   return;
 }

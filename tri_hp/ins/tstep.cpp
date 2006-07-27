@@ -16,12 +16,14 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
    if (excpt == 3) {
       ++excpt;
    
+      FLT nu = gbl_ptr->mu/gbl_ptr->rho;
+      
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
-      ins_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
+      gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
       if (basis::tri(log2p).sm > 0) {
-         hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+         gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 0.0;
       }
       
 #ifdef TIMEACCURATE
@@ -63,34 +65,34 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
          }
 
 #ifndef TIMEACCURATE
-         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*ins_gbl->nu/hmax);
-         if (ins_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
+         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
+         if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.1);
 #endif
          q = sqrt(qmax);
          lam1 = q + sqrt(qmax +gam);
          
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         ins_gbl->tau(tind) = adis*h/(jcb*sqrt(gam));
-         ins_gbl->delt(tind) = qmax*ins_gbl->tau(tind);
+         gbl_ptr->tau(tind) = adis*h/(jcb*sqrt(gam));
+         gbl_ptr->delt(tind) = qmax*gbl_ptr->tau(tind);
          
          /* SET UP DIAGONAL PRECONDITIONER */
-         // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-         jcb *= 2.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+         // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
+         jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 
 
 #ifdef INERTIALESS
-         gam = pow(2.*hp_gbl->nu/hmax,2); 
+         gam = pow(2.*nu/hmax,2); 
          lam1 = sqrt(gam);
          
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         ins_gbl->tau(tind)  = adis*h/(jcb*sqrt(gam));
-         ins_gbl->delt(tind) = 0.0;
+         gbl_ptr->tau(tind)  = adis*h/(jcb*sqrt(gam));
+         gbl_ptr->delt(tind) = 0.0;
 
-         jcb *= 8.*ins_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
+         jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
 
 #ifdef TIMEACCURATE
-         dtstari = MAX((ins_gbl->nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
+         dtstari = MAX((nu/(h*h) +lam1/h +sim::bd[0]),dtstari);
 
       }
       printf("#iterative to physical time step ratio: %f\n",sim::bd[0]/dtstari);
@@ -102,14 +104,14 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
 
          jcb *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
 
-         ins_gbl->tprcn(tind,0) = ins_gbl->rho*jcb;   
-         ins_gbl->tprcn(tind,1) = ins_gbl->rho*jcb;     
-         ins_gbl->tprcn(tind,2) =  jcb/gam;
+         gbl_ptr->tprcn(tind,0) = gbl_ptr->rho*jcb;   
+         gbl_ptr->tprcn(tind,1) = gbl_ptr->rho*jcb;     
+         gbl_ptr->tprcn(tind,2) =  jcb/gam;
          for(i=0;i<3;++i) {
-            hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+            gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
             if (basis::tri(log2p).sm > 0) {
                side = td(tind).side(i);
-               hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
             }
          }
       }
@@ -130,13 +132,13 @@ void hp_mgrid::tstep1(void) {
    for(i=0;i<nvrtx;++i)
       for(n=0;n<NV;++n)
          for(m=0;m<NV;++m)
-            hp_gbl->vprcn[i][n][m] = 0.0;
+            gbl_ptr->vprcn[i][n][m] = 0.0;
 
    if (basis::tri(log2p).sm > 0) {
       for(i=0;i<nside;++i)
          for(n=0;n<NV;++n)
             for(m=0;m<NV;++m)
-               hp_gbl->sprcn[i][n][m] = 0.0;
+               gbl_ptr->sprcn[i][n][m] = 0.0;
    }
 
    for(tind = 0; tind < ntri; ++tind) {
@@ -177,40 +179,40 @@ void hp_mgrid::tstep1(void) {
       u[1] *= 1./3.;
 
       /* THIS IS GAMMA (DIAGONAL PRECONDITIONER FOR CONTINUITY) */
-      gam = qmax +(0.25*h*sim::bd[0] + hp_gbl->nu/h)*(0.25*h*sim::bd[0] + hp_gbl->nu/h); 
+      gam = qmax +(0.25*h*sim::bd[0] + nu/h)*(0.25*h*sim::bd[0] +nu/h); 
       q = sqrt(qmax);
       c = sqrt(qmax+gam);
       lam1  = (q+c);
 
       /* SET UP DISSIPATIVE COEFFICIENTS */
-      hp_gbl->tau(tind)  = adis*h/(jcb*sqrt(gam));
-      hp_gbl->delt(tind) = qmax*hp_gbl->tau(tind);
+      gbl_ptr->tau(tind)  = adis*h/(jcb*sqrt(gam));
+      gbl_ptr->delt(tind) = qmax*gbl_ptr->tau(tind);
 
       /* STORE PRECONDITIONER (THIS IS TO DRIVE ITERATION USING NONCONSERVATIVE SYSTEM) */
-      dtstari = jcb*(hp_gbl->nu/(h*h) +lam1/h +sim::bd[0])*RAD((vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.);
+      dtstari = jcb*(nu/(h*h) +lam1/h +sim::bd[0])*RAD((vrtx[v[0]][0] +vrtx[v[1]][0] +vrtx[v[2]][0])/3.);
 
-      hp_gbl->tprcn[tind][0][0]  = dtstari*hp_gbl->rho;
-   	/* hp_gbl->tprcn[tind][1][1] = hp_gbl->tprcn[tind][0][0]; */
-      hp_gbl->tprcn[tind][NV-1][NV-1] =  dtstari/gam;
-      hp_gbl->tprcn[tind][0][NV-1] = u[0]/gam*dtstari;
-      hp_gbl->tprcn[tind][1][NV-1] = u[1]/gam*dtstari;
+      gbl_ptr->tprcn[tind][0][0]  = dtstari*gbl_ptr->rho;
+   	/* gbl_ptr->tprcn[tind][1][1] = gbl_ptr->tprcn[tind][0][0]; */
+      gbl_ptr->tprcn[tind][NV-1][NV-1] =  dtstari/gam;
+      gbl_ptr->tprcn[tind][0][NV-1] = u[0]/gam*dtstari;
+      gbl_ptr->tprcn[tind][1][NV-1] = u[1]/gam*dtstari;
       
       for(i=0;i<3;++i) {
          /* ASSEMBLE VERTEX PRECONDITIONER */
-         hp_gbl->vprcn[v[i]][0][0]  += hp_gbl->tprcn[tind][0][0];
-         /* hp_gbl->vprcn[v[i]][1][1]  += hp_gbl->tprcn[tind][0][0];  */
-         hp_gbl->vprcn[v[i]][NV-1][NV-1]  += hp_gbl->tprcn[tind][NV-1][NV-1];
-         hp_gbl->vprcn[v[i]][0][NV-1]  += hp_gbl->tprcn[tind][0][NV-1];
-         hp_gbl->vprcn[v[i]][1][NV-1]  += hp_gbl->tprcn[tind][1][NV-1];
+         gbl_ptr->vprcn[v[i]][0][0]  += gbl_ptr->tprcn[tind][0][0];
+         /* gbl_ptr->vprcn[v[i]][1][1]  += gbl_ptr->tprcn[tind][0][0];  */
+         gbl_ptr->vprcn[v[i]][NV-1][NV-1]  += gbl_ptr->tprcn[tind][NV-1][NV-1];
+         gbl_ptr->vprcn[v[i]][0][NV-1]  += gbl_ptr->tprcn[tind][0][NV-1];
+         gbl_ptr->vprcn[v[i]][1][NV-1]  += gbl_ptr->tprcn[tind][1][NV-1];
 
          if (basis::tri(log2p).sm > 0) {
             /* ASSEMBLE SIDE PRECONDITIONER */
             side = td(tind).side(i);
-            hp_gbl->sprcn[side][0][0]  += hp_gbl->tprcn[tind][0][0];
-            /* hp_gbl->sprcn[side][1][1]  += hp_gbl->tprcn[tind][0][0];  */
-            hp_gbl->sprcn[side][NV-1][NV-1]  += hp_gbl->tprcn[tind][NV-1][NV-1];
-            hp_gbl->sprcn[side][0][NV-1]  += hp_gbl->tprcn[tind][0][NV-1];
-            hp_gbl->sprcn[side][1][NV-1]  += hp_gbl->tprcn[tind][1][NV-1];
+            gbl_ptr->sprcn[side][0][0]  += gbl_ptr->tprcn[tind][0][0];
+            /* gbl_ptr->sprcn[side][1][1]  += gbl_ptr->tprcn[tind][0][0];  */
+            gbl_ptr->sprcn[side][NV-1][NV-1]  += gbl_ptr->tprcn[tind][NV-1][NV-1];
+            gbl_ptr->sprcn[side][0][NV-1]  += gbl_ptr->tprcn[tind][0][NV-1];
+            gbl_ptr->sprcn[side][1][NV-1]  += gbl_ptr->tprcn[tind][1][NV-1];
          }
       }
    }
@@ -225,25 +227,25 @@ void hp_mgrid::tstep1(void) {
          for(j=0;j<sbdry(i)->nel;++j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][NV-1];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][1][NV-1];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][NV-1][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][1][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][NV-1][NV-1];
          }
          v0 = sd(sind).vrtx(1);
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][NV-1];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][1][NV-1];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][NV-1][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][1][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
          if (basis::tri(log2p).sm) {
             for(j=0;j<sbdry(i)->nel;++j) {
                sind = sbdry(i)->el(j);
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][0];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][NV-1];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][1][NV-1];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][NV-1][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][0][0];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][0][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][1][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][NV-1][NV-1];
             }
          }
       }
@@ -256,16 +258,16 @@ void hp_mgrid::tstep1(void) {
          for(j=0;j<sbdry(i)->nel;++j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
          }
          v0 = sd(sind).vrtx(1);
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
 
          /* SEND SIDE INFO */
          if (basis::tri(log2p).sm) {
             for(j=0;j<sbdry(i)->nel;++j) {
                sind = sbdry(i)->el(j);
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][0];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][0][0];
             }
          }
       }
@@ -291,25 +293,25 @@ void hp_mgrid::tstep_mp() {
          for(j=sbdry(i)->nel-1;j>=0;--j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(1);
-            hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][0][NV-1] = 0.5*(hp_gbl->vprcn[v0][0][NV-1] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][1][NV-1] = 0.5*(hp_gbl->vprcn[v0][1][NV-1] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][NV-1][NV-1] = 0.5*(hp_gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][0][NV-1] = 0.5*(gbl_ptr->vprcn[v0][0][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][1][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][NV-1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
          }
          v0 = sd(sind).vrtx(0);
-         hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][0][NV-1] = 0.5*(hp_gbl->vprcn[v0][0][NV-1] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][1][NV-1] = 0.5*(hp_gbl->vprcn[v0][1][NV-1] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][NV-1][NV-1] = 0.5*(hp_gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][0][NV-1] = 0.5*(gbl_ptr->vprcn[v0][0][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][1][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][NV-1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
          if (basis::tri(log2p).sm > 0) {
             for(j=sbdry(i)->nel-1;j>=0;--j) {
                sind = sbdry(i)->el(j);
-               hp_gbl->sprcn[sind][0][0] = 0.5*(hp_gbl->sprcn[sind][0][0] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][0][NV-1] = 0.5*(hp_gbl->sprcn[sind][0][NV-1] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][1][NV-1] = 0.5*(hp_gbl->sprcn[sind][1][NV-1] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][NV-1][NV-1] = 0.5*(hp_gbl->sprcn[sind][NV-1][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][0][0] = 0.5*(gbl_ptr->sprcn[sind][0][0] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][0][NV-1] = 0.5*(gbl_ptr->sprcn[sind][0][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][1][NV-1] = 0.5*(gbl_ptr->sprcn[sind][1][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][NV-1][NV-1] = 0.5*(gbl_ptr->sprcn[sind][NV-1][NV-1] +sbuff[i][count++]);
             }
          }
       }
@@ -321,16 +323,16 @@ void hp_mgrid::tstep_mp() {
          for(j=sbdry(i)->nel-1;j>=0;--j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(1);
-            hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
          }
          v0 = sd(sind).vrtx(0);
-         hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
          if (basis::tri(log2p).sm > 0) {
             for(j=sbdry(i)->nel-1;j>=0;--j) {
                sind = sbdry(i)->el(j);
-               hp_gbl->sprcn[sind][0][0] = 0.5*(hp_gbl->sprcn[sind][0][0] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][0][0] = 0.5*(gbl_ptr->sprcn[sind][0][0] +sbuff[i][count++]);
             }
          }
       }
@@ -346,25 +348,25 @@ void hp_mgrid::tstep_mp() {
          for(j=0;j<sbdry(i)->nel;++j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][NV-1];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][1][NV-1];
-            tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][NV-1][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][1][NV-1];
+            tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][NV-1][NV-1];
          }
          v0 = sd(sind).vrtx(1);
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][0];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][0][NV-1];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][1][NV-1];
-         tgt->sbuff[bnum][count++] = hp_gbl->vprcn[v0][NV-1][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][0];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][0][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][1][NV-1];
+         tgt->sbuff[bnum][count++] = gbl_ptr->vprcn[v0][NV-1][NV-1];
 
          /* SEND SIDE INFO */
          if (basis::tri(log2p).sm) {
             for(j=0;j<sbdry(i)->nel;++j) {
                sind = sbdry(i)->el(j);
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][0];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][0][NV-1];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][1][NV-1];
-               tgt->sbuff[bnum][count++] = hp_gbl->sprcn[sind][NV-1][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][0][0];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][0][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][1][NV-1];
+               tgt->sbuff[bnum][count++] = gbl_ptr->sprcn[sind][NV-1][NV-1];
             }
          }
       }
@@ -384,25 +386,25 @@ void hp_mgrid::tstep2(void) {
          for(j=sbdry(i)->nel-1;j>=0;--j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(1);
-            hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][0][NV-1] = 0.5*(hp_gbl->vprcn[v0][0][NV-1] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][1][NV-1] = 0.5*(hp_gbl->vprcn[v0][1][NV-1] +sbuff[i][count++]);
-            hp_gbl->vprcn[v0][NV-1][NV-1] = 0.5*(hp_gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][0][NV-1] = 0.5*(gbl_ptr->vprcn[v0][0][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][1][NV-1] +sbuff[i][count++]);
+            gbl_ptr->vprcn[v0][NV-1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
          }
          v0 = sd(sind).vrtx(0);
-         hp_gbl->vprcn[v0][0][0] = 0.5*(hp_gbl->vprcn[v0][0][0] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][0][NV-1] = 0.5*(hp_gbl->vprcn[v0][0][NV-1] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][1][NV-1] = 0.5*(hp_gbl->vprcn[v0][1][NV-1] +sbuff[i][count++]);
-         hp_gbl->vprcn[v0][NV-1][NV-1] = 0.5*(hp_gbl->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][0][0] = 0.5*(gbl_ptr->vprcn[v0][0][0] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][0][NV-1] = 0.5*(gbl_ptr->vprcn[v0][0][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][1][NV-1] +sbuff[i][count++]);
+         gbl_ptr->vprcn[v0][NV-1][NV-1] = 0.5*(gbl_ptr->vprcn[v0][NV-1][NV-1] +sbuff[i][count++]);
 
          /* RECV SIDE INFO */
          if (basis::tri(log2p).sm > 0) {
             for(j=sbdry(i)->nel-1;j>=0;--j) {
                sind = sbdry(i)->el(j);
-               hp_gbl->sprcn[sind][0][0] = 0.5*(hp_gbl->sprcn[sind][0][0] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][0][NV-1] = 0.5*(hp_gbl->sprcn[sind][0][NV-1] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][1][NV-1] = 0.5*(hp_gbl->sprcn[sind][1][NV-1] +sbuff[i][count++]);
-               hp_gbl->sprcn[sind][NV-1][NV-1] = 0.5*(hp_gbl->sprcn[sind][NV-1][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][0][0] = 0.5*(gbl_ptr->sprcn[sind][0][0] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][0][NV-1] = 0.5*(gbl_ptr->sprcn[sind][0][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][1][NV-1] = 0.5*(gbl_ptr->sprcn[sind][1][NV-1] +sbuff[i][count++]);
+               gbl_ptr->sprcn[sind][NV-1][NV-1] = 0.5*(gbl_ptr->sprcn[sind][NV-1][NV-1] +sbuff[i][count++]);
             }
          }
       }
@@ -410,19 +412,19 @@ void hp_mgrid::tstep2(void) {
    
    /* INVERT PRECONDITIONER FOR VERTICES */
    for(i=0;i<nvrtx;++i) {
-      hp_gbl->vprcn[i][0][0]  = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn[i][0][0]);
-      hp_gbl->vprcn[i][NV-1][NV-1]  = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn[i][NV-1][NV-1]);
-      hp_gbl->vprcn[i][0][NV-1] = -basis::tri(log2p).vdiag*hp_gbl->vprcn[i][0][NV-1]*hp_gbl->vprcn[i][0][0]*hp_gbl->vprcn[i][NV-1][NV-1];
-      hp_gbl->vprcn[i][1][NV-1] = -basis::tri(log2p).vdiag*hp_gbl->vprcn[i][1][NV-1]*hp_gbl->vprcn[i][0][0]*hp_gbl->vprcn[i][NV-1][NV-1];      
+      gbl_ptr->vprcn[i][0][0]  = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn[i][0][0]);
+      gbl_ptr->vprcn[i][NV-1][NV-1]  = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn[i][NV-1][NV-1]);
+      gbl_ptr->vprcn[i][0][NV-1] = -basis::tri(log2p).vdiag*gbl_ptr->vprcn[i][0][NV-1]*gbl_ptr->vprcn[i][0][0]*gbl_ptr->vprcn[i][NV-1][NV-1];
+      gbl_ptr->vprcn[i][1][NV-1] = -basis::tri(log2p).vdiag*gbl_ptr->vprcn[i][1][NV-1]*gbl_ptr->vprcn[i][0][0]*gbl_ptr->vprcn[i][NV-1][NV-1];      
    }
    
    if (basis::tri(log2p).sm > 0) {
       /* INVERT PRECONDITIONER FOR SIDES */            
       for(i=0;i<nside;++i) {
-         hp_gbl->sprcn[i][0][0] = 1.0/hp_gbl->sprcn[i][0][0];
-         hp_gbl->sprcn[i][NV-1][NV-1] = 1.0/hp_gbl->sprcn[i][NV-1][NV-1];
-         hp_gbl->sprcn[i][0][NV-1] = -hp_gbl->sprcn[i][0][NV-1]*hp_gbl->sprcn[i][0][0]*hp_gbl->sprcn[i][NV-1][NV-1];
-         hp_gbl->sprcn[i][1][NV-1] = -hp_gbl->sprcn[i][1][NV-1]*hp_gbl->sprcn[i][0][0]*hp_gbl->sprcn[i][NV-1][NV-1];
+         gbl_ptr->sprcn[i][0][0] = 1.0/gbl_ptr->sprcn[i][0][0];
+         gbl_ptr->sprcn[i][NV-1][NV-1] = 1.0/gbl_ptr->sprcn[i][NV-1][NV-1];
+         gbl_ptr->sprcn[i][0][NV-1] = -gbl_ptr->sprcn[i][0][NV-1]*gbl_ptr->sprcn[i][0][0]*gbl_ptr->sprcn[i][NV-1][NV-1];
+         gbl_ptr->sprcn[i][1][NV-1] = -gbl_ptr->sprcn[i][1][NV-1]*gbl_ptr->sprcn[i][0][0]*gbl_ptr->sprcn[i][NV-1][NV-1];
       }
    }
    

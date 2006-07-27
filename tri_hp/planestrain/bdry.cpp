@@ -50,14 +50,14 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
                   
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+            x.gbl_ptr->res.v(v0,n) += x.lf(n)(0);
 
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
+            x.gbl_ptr->res.v(v1,n) += x.lf(n)(1);
          
          for(k=0;k<basis::tri(x.log2p).sm;++k) {
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+               x.gbl_ptr->res.s(sind,k,n) += x.lf(n)(k+2);
          }
       }
    }
@@ -85,11 +85,11 @@ block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
          sind = base.el(j);
          v0 = x.sd(sind).vrtx(0);
          for(n=0;n<x.ND;++n)
-            x.ug.v(v0,n) = x.hp_gbl->ibc->f(n,x.vrtx(v0));
+            x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
       }
       v0 = x.sd(sind).vrtx(1);
       for(n=0;n<x.ND;++n)
-         x.ug.v(v0,n) = x.hp_gbl->ibc->f(n,x.vrtx(v0));
+         x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
       
       /*******************/   
       /* SET SIDE VALUES */
@@ -121,7 +121,7 @@ block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
                pt(0) = x.crd(0)(0,k);
                pt(1) = x.crd(1)(0,k);
                for(n=0;n<x.ND;++n)
-                  x.res(n)(0,k) -= x.hp_gbl->ibc->f(n,pt);
+                  x.res(n)(0,k) -= x.gbl_ptr->ibc->f(n,pt);
             }
             for(n=0;n<x.ND;++n)
                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
@@ -169,7 +169,7 @@ block::ctrl friction_wall::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).proj_side(sd,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
          for (k=0;k<basis::tri(x.log2p).gpx;++k) {
-            x.cjcb(0,k) = x.ps_gbl->mu/(x.dcrd(0,0)(0,k)*x.dcrd(1,1)(0,k) -x.dcrd(1,0)(0,k)*x.dcrd(0,1)(0,k));
+            x.cjcb(0,k) = x.gbl_ptr->mu/(x.dcrd(0,0)(0,k)*x.dcrd(1,1)(0,k) -x.dcrd(1,0)(0,k)*x.dcrd(0,1)(0,k));
             
             /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
             /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -221,14 +221,14 @@ block::ctrl friction_wall::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
                   
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+            x.gbl_ptr->res.v(v0,n) += x.lf(n)(0);
 
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
+            x.gbl_ptr->res.v(v1,n) += x.lf(n)(1);
          
          for(k=0;k<basis::tri(x.log2p).sm;++k) {
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+               x.gbl_ptr->res.s(sind,k,n) += x.lf(n)(k+2);
          }
       }
    }

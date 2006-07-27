@@ -15,7 +15,7 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
 #endif
 
  void tri_hp_ins::init(input_map& input, gbl *gin) {
-   bool coarse, adapt_storage;
+   bool coarse;
    std::string keyword;
    std::istringstream data;
    std::string filename;
@@ -26,11 +26,7 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    tri_hp::init(input,gin);
    
    /* Load pointer to block stuff */
-   ins_gbl = gin;
-  
-   keyword = idprefix + ".adapt_storage";
-   input.getwdefault(keyword,adapt_storage,false);
-   if (adapt_storage) return;
+   gbl_ptr = gin;
 
    keyword = idprefix + ".coarse";
    input.getwdefault(keyword,coarse,false);
@@ -40,16 +36,18 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    
    if (coarse) return;
    
-   ins_gbl->tau.resize(maxvst);
-   ins_gbl->delt.resize(maxvst);
+   gbl_ptr->tau.resize(maxvst);
+   gbl_ptr->delt.resize(maxvst);
   
    keyword = idprefix + ".rho";
-   input.getwdefault(keyword,ins_gbl->rho,1.0);
+   input.getwdefault(keyword,gbl_ptr->rho,1.0);
 
    keyword = idprefix + ".mu";
-   input.getwdefault(keyword,ins_gbl->mu,0.0);
-
-   ins_gbl->nu = ins_gbl->mu/ins_gbl->rho;
+   input.getwdefault(keyword,gbl_ptr->mu,0.0);
+   
+#ifdef DROP
+   *sim::log << "#DROP is defined" << std::endl;
+#endif
       
    return;
 }
@@ -85,7 +83,7 @@ void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
 
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               cjcb(i,j) = -sim::bd[0]*ins_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+               cjcb(i,j) = -sim::bd[0]*gbl_ptr->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                dugdt(log2p,tind,ND)(i,j) = cjcb(i,j);

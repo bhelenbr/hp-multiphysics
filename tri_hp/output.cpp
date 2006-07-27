@@ -303,9 +303,12 @@ void tri_hp::input(const std::string& fname) {
    int i,j;
    std::string fnmapp;
    std::ostringstream nstr;
-   ifstream in;
-
-   if (mmovement != fixed || adapt_flag) {
+   ifstream fin;
+   
+   fnmapp = fname +".grd";
+   fin.open(fnmapp.c_str(),ios::in);
+   if(fin.is_open()) {
+      fin.close();
       fnmapp = fname +".v";
       input_map blank;
       mesh::input(fname,mesh::grid,1,blank);
@@ -313,17 +316,17 @@ void tri_hp::input(const std::string& fname) {
          nstr.str("");
          nstr << i << std::flush;
          fnmapp = fname +".v" +nstr.str() +".txt";
-         in.open(fnmapp.c_str());
-         if (!in) {
+         fin.open(fnmapp.c_str());
+         if (!fin.is_open()) {
             *sim::log << "couldn't open input file " << fnmapp << std::endl;
             exit(1);
          }
-         in.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
+         fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
          for (j=0;j<nvrtx;++j) {
-            in.ignore(80,':');
-            in >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
+            fin.ignore(80,':');
+            fin >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
          }
-         in.close();
+         fin.close();
       }
    }         
    

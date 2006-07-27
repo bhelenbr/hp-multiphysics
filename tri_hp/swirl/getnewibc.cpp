@@ -18,9 +18,9 @@ namespace ibc_swirl {
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
             switch(n) {
                case(0):
-                  return(0);
+                  return(0.0);
                case(1):
-                  return(0);
+                  return(0.0);
 					case(2):
 						return(x(0)*omega);
 					//case(3):
@@ -39,7 +39,7 @@ namespace ibc_swirl {
          }
    };
 	
-	   class jet : public init_bdry_cndtn {
+	class jet : public init_bdry_cndtn {
       private:
          FLT omega,speed;
       public:
@@ -71,7 +71,7 @@ namespace ibc_swirl {
          }
    };
 	
-		class spinninglid : public init_bdry_cndtn {
+	class spinninglid : public init_bdry_cndtn {
       private:
          FLT omega,epsilon;
       public:
@@ -85,9 +85,9 @@ namespace ibc_swirl {
 				D=-R*omega/(epsilon*epsilon*epsilon);
             switch(n) {
                case(0):
-                  return(0);
+                  return(0.0);
                case(1):
-                  return(0);
+                  return(0.0);
 					case(2):
 						if(x(1)<H) {
 							return(0.0);
@@ -118,16 +118,16 @@ namespace ibc_swirl {
          }
    };
 	
-		class spinninglid2 : public init_bdry_cndtn {
+	class spinninglid2 : public init_bdry_cndtn {
       private:
          FLT w,H;
       public:
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
             switch(n) {
                case(0):
-                  return(0);
+                  return(0.0);
                case(1):
-                  return(0);
+                  return(0.0);
 					case(2):
 						if(x(1)<H) {
 							return(0.0);
@@ -153,7 +153,7 @@ namespace ibc_swirl {
          }
    };
 
-		class testFunc : public init_bdry_cndtn {
+	class testFunc : public init_bdry_cndtn {
 			public:
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
             switch(n) {
@@ -175,11 +175,71 @@ namespace ibc_swirl {
 		}
    };
 	
+	class freespin : public init_bdry_cndtn {
+      private:
+         FLT w,R;
+      public:
+         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            switch(n) {
+               case(0):
+                  return(0.0);
+               case(1):
+                  return(0.0);
+					case(2):
+						//if(x(1)==-2.0 || x(0)==R) {
+							return(x(0)*w);
+						//}
+						//else {
+							//return(0.0);
+						//}
+					case(3):
+						return(x(0)*x(0)*w*w/2.0);
+						
+            }
+            return(0.0);
+         }
+         
+         void input(input_map &blockdata,std::string idnty) {
+            std::string keyword,val;
+            std::istringstream data;
+				
+				keyword = idnty +".rotationalspeed";
+            if (!blockdata.get(keyword,w)) 
+               blockdata.getwdefault("rotationalspeed",w,1.0); 
+				
+				keyword = idnty +".radius";
+            if (!blockdata.get(keyword,R)) 
+               blockdata.getwdefault("radius",R,1.0); 
+         }
+   };
+	
+	class stationary : public init_bdry_cndtn {
+      public:
+         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            switch(n) {
+               case(0):
+                  return(0.0);
+               case(1):
+                  return(0.0);
+					case(2):
+						return(0.0);
+					case(3):
+						return(0.0);
+            }
+            return(0.0);
+         }
+         
+         void input(input_map &blockdata,std::string idnty) {
+            std::string keyword,val;
+            std::istringstream data;
+         }
+   };	
+	
 	
    class ibc_type {
       public:
-         const static int ntypes = 5;
-         enum ids {spinning,jet,spinninglid,spinninglid2,testFunc};
+         const static int ntypes = 7;
+         enum ids {spinning,jet,spinninglid,spinninglid2,testFunc,freespin,stationary};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -188,7 +248,7 @@ namespace ibc_swirl {
             return(-1);
       }
    };
-   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2","testFunc"};
+   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2","testFunc","freespin","stationary"};
 
 }
 
@@ -235,6 +295,19 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 		return(temp);
 			
 		}
+		
+		case ibc_swirl::ibc_type::freespin: {
+		init_bdry_cndtn *temp = new ibc_swirl::freespin;
+		return(temp);
+			
+		}
+		
+		case ibc_swirl::ibc_type::stationary: {
+		init_bdry_cndtn *temp = new ibc_swirl::stationary;
+		return(temp);
+			
+		}
+		
 		default: {
          return(tri_hp::getnewibc(inmap));
       }

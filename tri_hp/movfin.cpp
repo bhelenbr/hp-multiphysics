@@ -50,11 +50,11 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
          for(i=0;i<nvrtx;++i) {
             tind = fv_to_ct(i).tri;
 
-            hp_gbl->res.v(i,Range::all()) = 0.0;
+            gbl_ptr->res.v(i,Range::all()) = 0.0;
             
             for(j=0;j<3;++j) {
                ind = cmesh->td(tind).vrtx(j);
-               hp_gbl->res.v(i,Range::all()) -= fv_to_ct(i).wt(j)*cmesh->vug_frst(ind,Range::all());
+               gbl_ptr->res.v(i,Range::all()) -= fv_to_ct(i).wt(j)*cmesh->vug_frst(ind,Range::all());
             }
          }
          ++excpt;
@@ -70,7 +70,7 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
             switch(mp_phase%3) {
                case(0):
                   for(i=0;i<nsbd;++i)
-                     sbdry(i)->vloadbuff(boundary::partitions,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
+                     sbdry(i)->vloadbuff(boundary::partitions,(FLT *) gbl_ptr->res.v.data(),0,NV-1,NV);
                      
                   for(i=0;i<nsbd;++i) 
                      sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3,boundary::symmetric);
@@ -84,7 +84,7 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
                   stop = 1;
                   for(i=0;i<nsbd;++i) {
                      stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3,boundary::symmetric);
-                     sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,(FLT *) hp_gbl->res.v.data(),0,NV-1,NV);
+                     sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,(FLT *) gbl_ptr->res.v.data(),0,NV-1,NV);
                   }
                   return(static_cast<block::ctrl>(stop));
             }
@@ -93,7 +93,7 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
       }
       case(4): {
          /* ADD CORRECTION */
-         ug.v(Range(0,nvrtx-1),Range::all()) += hp_gbl->res.v(Range(0,nvrtx-1),Range::all());     
+         ug.v(Range(0,nvrtx-1),Range::all()) += gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());     
          ++excpt;          
       }
    }

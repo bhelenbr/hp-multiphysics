@@ -14,13 +14,15 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
    
    if (excpt == 3) {
       ++excpt;
+      
+      FLT nu = gbl_ptr->mu/gbl_ptr->rho;
 
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
-      swirl_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
+      gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
       if (basis::tri(log2p).sm > 0) {
-         hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+         gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 0.0;
       }
 
       for(tind = 0; tind < ntri; ++tind) {
@@ -51,29 +53,29 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
 				q += pow(ug.v(v0,2),2.0);
             qmax = MAX(qmax,q);
          }
-         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*swirl_gbl->nu/hmax)*(0.5*hmax*sim::bd[0] +2.*swirl_gbl->nu/hmax);
-         if (swirl_gbl->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
+         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
+         if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
          q = sqrt(qmax);
          lam1 = q + sqrt(qmax +gam);
          
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         swirl_gbl->tau(tind) = adis*h/(jcb*sqrt(gam));
-         swirl_gbl->delt(tind) = qmax*swirl_gbl->tau(tind);
+         gbl_ptr->tau(tind) = adis*h/(jcb*sqrt(gam));
+         gbl_ptr->delt(tind) = qmax*gbl_ptr->tau(tind);
          
          /* SET UP DIAGONAL PRECONDITIONER */
-         // jcb *= 8.*hp_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-         jcb *= 2.*swirl_gbl->nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+         // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
+         jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
          jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
 
-         swirl_gbl->tprcn(tind,0) = swirl_gbl->rho*jcb;   
-         swirl_gbl->tprcn(tind,1) = swirl_gbl->rho*jcb;  
-         swirl_gbl->tprcn(tind,2) = swirl_gbl->rho*jcb;     
-         swirl_gbl->tprcn(tind,3) =  jcb/gam;
+         gbl_ptr->tprcn(tind,0) = gbl_ptr->rho*jcb;   
+         gbl_ptr->tprcn(tind,1) = gbl_ptr->rho*jcb;  
+         gbl_ptr->tprcn(tind,2) = gbl_ptr->rho*jcb;     
+         gbl_ptr->tprcn(tind,3) =  jcb/gam;
          for(i=0;i<3;++i) {
-            hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+            gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
             if (basis::tri(log2p).sm > 0) {
                side = td(tind).side(i);
-               hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
             }
          }
       }

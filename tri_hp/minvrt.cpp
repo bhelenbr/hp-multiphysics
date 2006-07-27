@@ -28,7 +28,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                   for (i=0; i<2; ++i) {
                      v0 = sd(sind).vrtx(i);
                      for(n=0;n<NV;++n)
-                        hp_gbl->res.v(v0,n) -= basis::tri(log2p).sfmv(i,k)*hp_gbl->res.s(sind,k,n);
+                        gbl_ptr->res.v(v0,n) -= basis::tri(log2p).sfmv(i,k)*gbl_ptr->res.s(sind,k,n);
                   }
                   ++indx;
                }
@@ -43,7 +43,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                      v0 = td(tind).vrtx(i);
                      for (k=0;k<basis::tri(log2p).im;++k)
                         for(n=0;n<NV;++n)
-                           hp_gbl->res.v(v0,n) -= basis::tri(log2p).ifmb(i,k)*hp_gbl->res.i(tind,k,n);
+                           gbl_ptr->res.v(v0,n) -= basis::tri(log2p).ifmb(i,k)*gbl_ptr->res.i(tind,k,n);
 
                      sind = td(tind).side(i);
                      sgn = td(tind).sign(i);
@@ -51,7 +51,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                      for (j=0;j<basis::tri(log2p).sm;++j) {
                         for (k=0;k<basis::tri(log2p).im;++k)
                            for(n=0;n<NV;++n)
-                              hp_gbl->res.s(sind,j,n) -= msgn*basis::tri(log2p).ifmb(indx2,k)*hp_gbl->res.i(tind,k,n);
+                              gbl_ptr->res.s(sind,j,n) -= msgn*basis::tri(log2p).ifmb(indx2,k)*gbl_ptr->res.i(tind,k,n);
                         msgn *= sgn;
                         ++indx2;
                      }
@@ -62,16 +62,16 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          }
          
 #ifndef MATRIX_PRECONDITIONER
-         hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) *= hp_gbl->vprcn(Range(0,nvrtx-1),Range::all());
+         gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) *= gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all());
 #else
          for(i=0;i<nvrtx;++i) {
             for(n=0;n<NV;++n) {
-               temp(n) = hp_gbl->vprcn(i,n,0)*hp_gbl->res.v(i,0);
+               temp(n) = gbl_ptr->vprcn(i,n,0)*gbl_ptr->res.v(i,0);
                for(m=1;m<NV;++m) {
-                  temp(n) += hp_gbl->vprcn(i,n,m)*hp_gbl->res.v(i,m);
+                  temp(n) += gbl_ptr->vprcn(i,n,m)*gbl_ptr->res.v(i,m);
                }
             }
-            hp_gbl->res.v(i,Range::all()) = temp(Range::all());
+            gbl_ptr->res.v(i,Range::all()) = temp(Range::all());
          }
 #endif
          /* PREPARE MESSAGE PASSING */
@@ -86,13 +86,13 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               vc0load(mp_phase/3,hp_gbl->res.v.data());
+               vc0load(mp_phase/3,gbl_ptr->res.v.data());
                return(block::stay);
             case(1):
                vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                return(block::stay);
             case(2):
-               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->res.v.data())));
+               return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->res.v.data())));
          }
       }
       
@@ -118,7 +118,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
             for(i=0;i<3;++i) {
                v0 = td(tind).vrtx(i);
                for(n=0;n<NV;++n)
-                  uht(n)(i) = hp_gbl->res.v(v0,n)*hp_gbl->tprcn(tind,n);
+                  uht(n)(i) = gbl_ptr->res.v(v0,n)*gbl_ptr->tprcn(tind,n);
             }
 
             for(i=0;i<3;++i) {
@@ -129,7 +129,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                   msgn = 1;
                   for(k=0;k<basis::tri(log2p).sm;++k) {
                      for(n=0;n<NV;++n)
-                        hp_gbl->res.s(sind,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*uht(n)(indx1);
+                        gbl_ptr->res.s(sind,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*uht(n)(indx1);
                      msgn *= sgn;
                   }
                }
@@ -139,7 +139,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
             for(i=0;i<3;++i) {
                v0 = td(tind).vrtx(i);
                for(n=0;n<NV;++n)
-                  uht(n)(i) = hp_gbl->res.v(v0,n);
+                  uht(n)(i) = gbl_ptr->res.v(v0,n);
             }
 
             for(i=0;i<3;++i) {
@@ -151,7 +151,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                   for(k=0;k<basis::tri(log2p).sm;++k) {
                      for(n=0;n<NV;++n) {
                         for(m=0;m<NV;++m) {
-                           hp_gbl->res.s(indx,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*hp_gbl->tprcn(tind,n,m)*uht(m)(indx1);
+                           gbl_ptr->res.s(indx,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*gbl_ptr->tprcn(tind,n,m)*uht(m)(indx1);
                         }
                      }
                      msgn *= sgn;
@@ -170,16 +170,16 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
 #endif
          /* SOLVE FOR SIDE MODE */
 #ifndef MATRIXPRECONDITIONER
-         hp_gbl->res.s(Range(0,nside-1),mode,Range::all()) *= hp_gbl->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
+         gbl_ptr->res.s(Range(0,nside-1),mode,Range::all()) *= gbl_ptr->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
 #else
          for(sind = 0; sind < nside; ++sind) {
             for(n=0;n<NV;++n) {
-               temp(n) = hp_gbl->sprcn(sind,n,0)*hp_gbl->res.s(sind,mode,0);
+               temp(n) = gbl_ptr->sprcn(sind,n,0)*gbl_ptr->res.s(sind,mode,0);
                for(m=1;m<NV;++m) {
-                  temp(n) += hp_gbl->sprcn(sind,n,m)*hp_gbl->res.s(sind,mode,m);
+                  temp(n) += gbl_ptr->sprcn(sind,n,m)*gbl_ptr->res.s(sind,mode,m);
                }
             }
-            hp_gbl->res.s(sind,mode,Range::all()) = temp(Range::all());
+            gbl_ptr->res.s(sind,mode,Range::all()) = temp(Range::all());
          }
 #endif
          mp_phase = -1;
@@ -193,13 +193,13 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               sc0load(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+               sc0load(gbl_ptr->res.s.data(),mode,mode,gbl_ptr->res.s.extent(secondDim));
                return(block::stay);
             case(1):
                smsgpass(boundary::all,0,boundary::symmetric);
                return(block::stay);
             case(2):
-               sc0wait_rcv(hp_gbl->res.s.data(),mode,mode,hp_gbl->res.s.extent(secondDim));
+               sc0wait_rcv(gbl_ptr->res.s.data(),mode,mode,gbl_ptr->res.s.extent(secondDim));
                return(block::advance);
          }
       }
@@ -225,7 +225,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                sign(i) = td(tind).sign(i);
                sgn     = (mode % 2 ? sign(i) : 1);
                for(n=0;n<NV;++n)
-                  uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n)*hp_gbl->tprcn(tind,n);
+                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n)*gbl_ptr->tprcn(tind,n);
             }
             
             /* REMOVE MODES J,K FROM MODE I,M */
@@ -235,7 +235,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                   for(j=0;j<3;++j) {
                      indx = (i+j)%3;
                      for(n=0;n<NV;++n) {
-                        hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*uht(n)(indx);
+                        gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*uht(n)(indx);
                      }
                   }
                   msgn *= sign(i);
@@ -247,7 +247,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                sign(i) = td(tind).sign(i);
                sgn     = (mode % 2 ? sign[i] : 1);
                for(n=0;n<NV;++n)
-                  uht(n)(i) = sgn*hp_gbl->res.s(side(i),mode,n)
+                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n)
             }
             
             /* REMOVE MODES J,K FROM MODE I,M */
@@ -257,9 +257,9 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                   for(j=0;j<3;++j) {
                      indx = (i+j)%3;
                      for(n=0;n<NV;++n) {
-                        hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*hp_gbl->tprcn(tind,n,0)*uht(0)(indx);
+                        gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn(tind,n,0)*uht(0)(indx);
                         for(k=1;k<NV;++k) {
-                           hp_gbl->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*hp_gbl->tprcn(tind,n,k)*uht(k)(indx);
+                           gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn(tind,n,k)*uht(k)(indx);
                         }
                      }
                   }
@@ -283,15 +283,15 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          
          /* SOLVE FOR INTERIOR MODES */
          for(tind = 0; tind < ntri; ++tind) {
-            DPBTRSNU2(&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,basis::tri(log2p).im,basis::tri(log2p).ibwth,&(hp_gbl->res.i(tind,0,0)),NV);
+            DPBTRSNU2(&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,basis::tri(log2p).im,basis::tri(log2p).ibwth,&(gbl_ptr->res.i(tind,0,0)),NV);
             restouht_bdry(tind);
 #ifndef MATRIX_PRECONDITIONER
             for(k=0;k<basis::tri(log2p).im;++k) {
-               hp_gbl->res.i(tind,k,Range::all()) /= hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->res.i(tind,k,Range::all()) /= gbl_ptr->tprcn(tind,Range::all());
                
                for (i=0;i<basis::tri(log2p).bm;++i)
                   for(n=0;n<NV;++n) 
-                     hp_gbl->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
+                     gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
             }
 #else      
             /* INVERT PRECONDITIONER (tprcn is not preinverted like sprcn and vprcn) */
@@ -303,11 +303,11 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                for (i=0;i<basis::tri(log2p).bm;++i) {
                   for(n=0;n<NV;++n) {
                      for(m=0;m<NV;++m) {
-                        hp_gbl->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(m)(i)*hp_gbl->tprcn(tind,n,m);
+                        gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(m)(i)*gbl_ptr->tprcn(tind,n,m);
                      }
                   }
                }
-               GETRS(trans,NV,1,tinv.data(),NV,ipiv,&hp_gbl->res.i(tind,k,0),NV,info);
+               GETRS(trans,NV,1,tinv.data(),NV,ipiv,&gbl_ptr->res.i(tind,k,0),NV,info);
             }
 #endif
          }
@@ -323,7 +323,7 @@ void tri_hp::restouht_bdry(int tind) {
    for (i=0; i<3; ++i) {
       indx = td(tind).vrtx(i);
       for(n=0; n<NV; ++n)
-         uht(n)(i) = hp_gbl->res.v(indx,n);
+         uht(n)(i) = gbl_ptr->res.v(indx,n);
    }
 
    cnt = 3;
@@ -333,7 +333,7 @@ void tri_hp::restouht_bdry(int tind) {
       msgn = 1;
       for (m = 0; m < basis::tri(log2p).sm; ++m) {
          for(n=0; n<NV; ++n)
-            uht(n)(cnt) = msgn*hp_gbl->res.s(indx,m,n);
+            uht(n)(cnt) = msgn*gbl_ptr->res.s(indx,m,n);
          msgn *= sign;
          ++cnt;
       }
@@ -421,13 +421,13 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  vc0load(mp_phase/3,hp_gbl->vprcn.data());
+                  vc0load(mp_phase/3,gbl_ptr->vprcn.data());
                   return(block::stay);
                case(1):
                   vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
                   return(block::stay);
                case(2):
-                  return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,hp_gbl->vprcn.data())));
+                  return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn.data())));
             }
          }
          else {
@@ -445,13 +445,13 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
             ++mp_phase;
             switch(mp_phase%3) {
                case(0):
-                  sc0load(hp_gbl->sprcn.data(),0,0,1);
+                  sc0load(gbl_ptr->sprcn.data(),0,0,1);
                   return(block::stay);
                case(1):
                   smsgpass(boundary::all,0,boundary::symmetric);
                   return(block::stay);
                case(2):
-                  sc0wait_rcv(hp_gbl->sprcn.data(),0,0,1);
+                  sc0wait_rcv(gbl_ptr->sprcn.data(),0,0,1);
                   return(block::advance);
             }
          }
@@ -467,11 +467,11 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 
 #ifndef MATRIX_PRECONDITIONER
          /* PREINVERT PRECONDITIONER FOR VERTICES */
-         hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()));
+         gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()));
         
          if (basis::tri(log2p).sm > 0) {
             /* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
-            hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 1.0/hp_gbl->sprcn(Range(0,nside-1),Range::all());
+            gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 1.0/gbl_ptr->sprcn(Range(0,nside-1),Range::all());
          }
 #else
          /* NEED MATRIX INVERSION HERE */
@@ -503,13 +503,13 @@ block::ctrl tri_hp::minvrt_test(block::ctrl ctrl_message) {
 
             /* SET UP DIAGONAL PRECONDITIONER */
             dtstari = jcb*RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
-            hp_gbl->tprcn(tind,Range::all()) = dtstari;      
+            gbl_ptr->tprcn(tind,Range::all()) = dtstari;      
             
             for(i=0;i<3;++i) {
-               hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
                if (basis::tri(log2p).sm > 0) {
                   side = td(tind).side(i);
-                  hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+                  gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
                }
             }
          }
@@ -524,9 +524,9 @@ block::ctrl tri_hp::minvrt_test(block::ctrl ctrl_message) {
       }
          
       case(2): {
-         hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
-         hp_gbl->res.s(Range(0,nside-1),Range::all(),Range::all()) = 0.0;
-         hp_gbl->res.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
+         gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+         gbl_ptr->res.s(Range(0,nside-1),Range::all(),Range::all()) = 0.0;
+         gbl_ptr->res.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
          
          ug.v(Range(0,nvrtx-1),Range::all()) = 0.0;
          ug.s(Range(0,nside-1),Range::all(),Range::all()) = 0.0;
@@ -564,13 +564,13 @@ block::ctrl tri_hp::minvrt_test(block::ctrl ctrl_message) {
                   pt(1) = crd(1)(i,j);
                   cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                   for(n=0;n<NV;++n)
-                     res(n)(i,j) = RAD(crd(0)(i,j))*hp_gbl->ibc->f(n,pt)*cjcb(i,j);
+                     res(n)(i,j) = RAD(crd(0)(i,j))*gbl_ptr->ibc->f(n,pt)*cjcb(i,j);
                }
             }
             for(n=0;n<NV;++n)
                basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
                           
-            lftog(tind,hp_gbl->res);
+            lftog(tind,gbl_ptr->res);
          }
          ctrl_message = block::begin;
          ++excpt1;
@@ -585,10 +585,10 @@ block::ctrl tri_hp::minvrt_test(block::ctrl ctrl_message) {
          
       case(4): {
          /* Inversion finished */
-         ug.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+         ug.v(Range(0,nvrtx-1),Range::all()) = gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());
 
          if (basis::tri(log2p).sm > 0) {
-            ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+            ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
        
             if (basis::tri(log2p).im > 0) {
 
@@ -598,7 +598,7 @@ block::ctrl tri_hp::minvrt_test(block::ctrl ctrl_message) {
                   for(m=1;m<basis::tri(log2p).sm;++m) {
                      for(k=0;k<basis::tri(log2p).sm-m;++k) {
                         for(n=0;n<NV;++n) {
-                           ug.i(i,indx1,n) = hp_gbl->res.i(i,indx,n);
+                           ug.i(i,indx1,n) = gbl_ptr->res.i(i,indx,n);
                         }
                         ++indx; ++indx1;
                      }

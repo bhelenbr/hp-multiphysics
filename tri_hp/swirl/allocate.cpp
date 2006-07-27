@@ -22,7 +22,7 @@
    tri_hp::init(input,gin);
    
    /* Load pointer to block stuff */
-   swirl_gbl = gin;
+   gbl_ptr = gin;
    
    keyword = idprefix + ".adapt_storage";
    input.getwdefault(keyword,adapt_storage,false);
@@ -36,16 +36,14 @@
    
    if (coarse) return;
    
-   swirl_gbl->tau.resize(maxvst);
-   swirl_gbl->delt.resize(maxvst);
+   gbl_ptr->tau.resize(maxvst);
+   gbl_ptr->delt.resize(maxvst);
   
    keyword = idprefix + ".rho";
-   input.getwdefault(keyword,swirl_gbl->rho,1.0);
+   input.getwdefault(keyword,gbl_ptr->rho,1.0);
 
    keyword = idprefix + ".mu";
-   input.getwdefault(keyword,swirl_gbl->mu,0.0);
-
-   swirl_gbl->nu = swirl_gbl->mu/swirl_gbl->rho;
+   input.getwdefault(keyword,gbl_ptr->mu,0.0);
    
    return;
 }
@@ -82,7 +80,7 @@ void tri_hp_swirl::calculate_unsteady_sources(bool coarse) {
                      
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               cjcb(i,j) = -sim::bd[0]*swirl_gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+               cjcb(i,j) = -sim::bd[0]*gbl_ptr->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                for(n=0;n<ND+1;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
                dugdt(log2p,tind,ND+1)(i,j) = cjcb(i,j);

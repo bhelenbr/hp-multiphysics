@@ -26,7 +26,7 @@ class tri_hp_ps : public tri_hp {
          /* STORAGE FOR CALCULATION OF ENERGY AND AREA */
          TinyVector<FLT,2> eanda, eanda_recv;
 
-      } *ps_gbl;
+      } *gbl_ptr;
       
       FLT adis; // DISSIPATION CONSTANT
       

@@ -82,7 +82,7 @@ namespace ibc_ins {
     
             keyword = idnty +".angle";
             if (!blockdata.get(keyword,angle)) 
-               blockdata.getwdefault("orientation",angle,0.0);
+               blockdata.getwdefault("angle",angle,0.0);
             angle *= M_PI/180.0;
             
             keyword = idnty +".inner_radius";
@@ -133,6 +133,28 @@ namespace ibc_ins {
                blockdata.getwdefault("power",alpha,0.0); 
          }
    };   
+   
+   	class impinge : public init_bdry_cndtn {
+  
+      public:
+         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            switch(n) {
+               case(0):
+                  return(1.0);
+               case(1):
+                  return(-x(1)/x(0));
+			   case(2):
+					return(0.0);
+				
+            }
+            return(0.0);
+         }
+         
+         void input(input_map &blockdata,std::string idnty){
+		             std::string keyword,val;
+            std::istringstream data;
+			}
+   };
    
 
 #ifdef TAYLOR
@@ -318,35 +340,158 @@ FLT f1(int n, FLT x, FLT y) {
             kappa = mu_l/mu_g;
          }
    };
-   
-   class translating_drop : public mesh_mover {
-      private:
+      
+   class parameter_changer : public mesh_mover {
+      protected:
          tri_hp_ins &x;
-         Array<FLT,1> avg;
          bdry_ins::surface *surf;
-         FLT penalty;
-         FLT delta_g_factor;
-         int delta_interval;
+         FLT delta_rho, rho_factor;
+         FLT delta_mu, mu_factor;
+         FLT delta_g, delta_g_factor;
+         FLT delta_rho2, rho2_factor;
+         FLT delta_mu2, mu2_factor;
+         FLT delta_sigma, sigma_factor;
+         int interval;
 
       public:
-         translating_drop(tri_hp_ins& xin) : mesh_mover(xin), x(xin) {
+         parameter_changer(tri_hp_ins& xin) : mesh_mover(xin), x(xin) {
             int bnum;
-            avg.resize(1+x.ND+x.NV);
+            
             for(bnum=0;bnum<x.nsbd;++bnum) 
                if (surf = dynamic_cast<bdry_ins::surface *>(x.hp_sbdry(bnum))) break;
-            assert(bnum < x.nsbd);
+            
+            if (bnum > x.nsbd -1) surf = 0;
          }
          void init(input_map& input, std::string idnty) {
+            std::string keyword, val;
+			
+            keyword = idnty + ".delta_rho";
+            if (!input.get(keyword,delta_rho)) {
+               input.getwdefault("delta_rho",delta_rho,0.0);
+            }
+
+            keyword = idnty + ".rho_factor";
+            if (!input.get(keyword,rho_factor)) {
+               input.getwdefault("rho_factor",rho_factor,1.0);
+            }
+            
+            keyword = idnty + ".delta_mu";
+            if (!input.get(keyword,delta_mu)) {
+               input.getwdefault("delta_mu",delta_mu,0.0);
+            }
+            
+            keyword = idnty + ".mu_factor";
+            if (!input.get(keyword,mu_factor)) {
+               input.getwdefault("mu_factor",mu_factor,1.0);
+            }
+
+            keyword = "delta_g";
+            input.getwdefault(keyword,delta_g,0.0);
+            input[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+
+            keyword = "delta_g_factor";
+            input.getwdefault(keyword,delta_g_factor,1.0);
+            input[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
+
+            input.getwdefault("parameter_interval",interval,1);
+            
+            if (surf) {
+               std::string surfidnty = surf->base.idprefix;
+               
+               keyword = surfidnty + ".delta_sigma";
+               input.getwdefault(keyword,delta_sigma,0.0);
+
+               keyword = surfidnty + ".sigma_factor";
+               input.getwdefault(keyword,sigma_factor,1.0);
+               
+               keyword = surfidnty + ".matching_block";
+               if (!input.get(keyword,val)) {
+                  delta_rho2 = 0.0;
+                  rho2_factor = 1.0;
+                  delta_mu2 = 0.0;
+                  mu2_factor = 1.0;
+               }
+               else {                   
+                  keyword = val + ".delta_rho";               
+                  if (!input.get(keyword,delta_rho2)) {
+                     input.getwdefault("delta_rho",delta_rho2,0.0);
+                  }
+
+                  keyword = val + ".rho_factor";
+                  if (!input.get(keyword,rho2_factor)) {
+                     input.getwdefault("rho_factor",rho2_factor,1.0);
+                  }
+                  
+                  keyword = val + ".delta_mu";
+                  if (!input.get(keyword,delta_mu2)) {
+                     input.getwdefault("delta_mu",delta_mu2,0.0);
+                  }
+                  
+                  keyword = val + ".mu_factor";
+                  if (!input.get(keyword,mu2_factor)) {
+                     input.getwdefault("mu_factor",mu2_factor,1.0);
+                  }
+               }
+            }
+         }
+         mesh_mover* create(tri_hp& xin) { return new parameter_changer(dynamic_cast<tri_hp_ins&>(xin)); }
+   
+         
+
+         block::ctrl tadvance(block::ctrl ctrl_message) {
+            if (ctrl_message == block::begin && !x.coarse) {
+               if ( (sim::tstep % interval) +sim::substep == 0) {
+                  
+                  x.gbl_ptr->rho += delta_rho;
+                  x.gbl_ptr->rho *= rho_factor;
+                  
+                  x.gbl_ptr->mu  += delta_mu;
+                  x.gbl_ptr->mu  *= mu_factor;
+                  
+                  sim::g += delta_g;
+                  sim::g *= delta_g_factor;
+                  
+                  *sim::log << "new density, viscosity, and gravity are " << x.gbl_ptr->rho << ' ' << x.gbl_ptr->mu << ' ' << sim::g << std::endl;
+
+                  
+                  if (surf) {
+                     surf->surf_gbl->rho2 += delta_rho2;
+                     surf->surf_gbl->rho2 *= rho2_factor;
+                     
+                     surf->surf_gbl->mu2  += delta_mu2;
+                     surf->surf_gbl->mu2  *= mu2_factor;
+                     
+                     surf->surf_gbl->sigma  += delta_sigma;
+                     surf->surf_gbl->sigma  *= sigma_factor;
+                     
+                     *sim::log << "matching block density, viscosity, and surface tension are " << surf->surf_gbl->rho2 << ' ' << surf->surf_gbl->mu2 << ' ' << surf->surf_gbl->sigma << std::endl;
+                  }
+               }
+            }
+            return(block::stop);
+         }
+   };
+   
+   FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
+   
+   class translating_drop : public parameter_changer {
+      private:
+         Array<FLT,1> avg;
+         FLT penalty;
+
+      public:
+         translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {
+            avg.resize(1+x.ND+x.NV);
+         }
+         
+         void init(input_map& input, std::string idnty) {
+            parameter_changer::init(input,idnty);
+            
             std::string keyword;
             keyword = idnty + ".penalty_parameter";
             input.getwdefault(keyword,penalty,0.5);
-            
-            keyword = idnty + ".delta_g_factor";
-            input.getwdefault(keyword,delta_g_factor,1.0);
-            
-            keyword = idnty + ".delta_interval";
-            input.getwdefault(keyword,delta_interval,100);
          }
+         
          mesh_mover* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
          void calculate_stuff() {
             bdry_ins::surface::gbl *surf_gbl = surf->surf_gbl;
@@ -356,7 +501,7 @@ FLT f1(int n, FLT x, FLT y) {
             /* SINCE THERE ARE MULTIPLE STEADY-STATES */
             /* TO ENSURE GET CORRECT VOLUME */
             FLT rbar, kc; 
-            kc = surf_gbl->sigma/(x.ins_gbl->mu +surf_gbl->mu2);
+            kc = surf_gbl->sigma/(x.gbl_ptr->mu +surf_gbl->mu2);
             x.integrated_averages(avg);
             rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 #ifdef DROP
@@ -368,42 +513,54 @@ FLT f1(int n, FLT x, FLT y) {
             re = 1.0/surf_gbl->mu2;
             cd = 24./re*(1 +0.1935*pow(re,0.6305));
             cd /= 16.0; // (1/2 rho u^2 * Pi r^2 / 2 pi);
-            g = amp*(avg +avg) +12.*cd/(ins_gbl->rho -surf_gbl->rho2);
+            g = amp*(avg +avg) +12.*cd/(gbl_ptr->rho -surf_gbl->rho2);
             */
             return;
          }
 
          
          block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {
-            if (ctrl_message == block::begin /* && sim::dti == 0.0 */) calculate_stuff();
+            if (ctrl_message == block::begin) calculate_stuff();
             return(block::stop);
          }
          
          block::ctrl setup_preconditioner(block::ctrl ctrl_message) {
-            if (ctrl_message == block::begin /* && sim::dti == 0.0 */) calculate_stuff();
+            if (ctrl_message == block::begin) calculate_stuff();
             return(block::stop);
          }
          
          block::ctrl tadvance(block::ctrl ctrl_message) {
-            if (ctrl_message == block::begin && !x.coarse) {
+            
+            if (x.coarse) return(block::stop);
+            
+            if (ctrl_message == block::begin) {
+               
                calculate_stuff();
 #ifdef DROP
-//               if (sim::dti > 0.0) surf->surf_gbl->vflux = 0.0;
-               if ( (sim::tstep % delta_interval) == 0) {
-                  sim::g *= delta_g_factor;
+               if ( (sim::tstep % interval) +sim::substep == 0) {
+                  *sim::log << "#gravity, velocity, height: " << sim::g << ' ' << tri_hp_ins::mesh_ref_vel(1) << ' ';                  
+                  int v0 = x.sd(surf->base.el(0)).vrtx(0);
+                  int v1 = x.sd(surf->base.el(surf->base.nel-1)).vrtx(1);
+                  FLT height = x.vrtx(v0)(1)-x.vrtx(v1)(1);
+                  *sim::log << height << std::endl;
                }
+               
+               parameter_changer::tadvance(ctrl_message);
 #endif
             }
-            return(block::stop);
+            return(surf->findmax(ctrl_message, xmax));
          }
          
    };
 
+   
+   
+   
 
    class mesh_mover_type {
       public:
-         const static int ntypes = 1;
-         enum ids {translating_drop};
+         const static int ntypes = 2;
+         enum ids {translating_drop,parameter_changer};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -412,7 +569,7 @@ FLT f1(int n, FLT x, FLT y) {
             return(-1);
          }
    };
-   const char mesh_mover_type::names[ntypes][40] = {"translating_drop"};
+   const char mesh_mover_type::names[ntypes][40] = {"translating_drop","parameter_changer"};
 
 #ifdef UNSTEADY_DROP
 FLT f1(int n, FLT x, FLT y) {
@@ -681,8 +838,8 @@ FLT f1(int n, FLT x, FLT y) {
 
    class ibc_type {
       public:
-         const static int ntypes = 5;
-         enum ids {freestream,sphere,accelerating,stokes_drop_gas,stokes_drop_liquid};
+         const static int ntypes = 6;
+         enum ids {freestream,sphere,accelerating,impinge,stokes_drop_gas,stokes_drop_liquid};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -691,7 +848,7 @@ FLT f1(int n, FLT x, FLT y) {
             return(-1);
       }
    };
-   const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","stokes_drop_gas","stokes_drop_liquid"};
+   const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","impinge","stokes_drop_gas","stokes_drop_liquid"};
 
 }
 
@@ -721,6 +878,10 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(input_map& inmap) {
       }
       case ibc_ins::ibc_type::accelerating: {
          init_bdry_cndtn *temp = new ibc_ins::accelerating;
+         return(temp);
+      }
+      case ibc_ins::ibc_type::impinge: {
+         init_bdry_cndtn *temp = new ibc_ins::impinge;
          return(temp);
       }
       case ibc_ins::ibc_type::stokes_drop_gas: {
@@ -754,6 +915,10 @@ mesh_mover *tri_hp_ins::getnewmesh_mover(input_map& inmap) {
    switch(type) {
       case ibc_ins::mesh_mover_type::translating_drop: {
          mesh_mover *temp = new ibc_ins::translating_drop(*this);
+         return(temp);
+      }
+      case ibc_ins::mesh_mover_type::parameter_changer: {
+         mesh_mover *temp = new ibc_ins::parameter_changer(*this);
          return(temp);
       }
       default: {

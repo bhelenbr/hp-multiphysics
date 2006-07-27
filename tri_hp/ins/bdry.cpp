@@ -19,7 +19,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
    
    switch(typ) {
       case(tri_hp::text): {
-         hp_side_bdry::output(fout,typ);
+         hp_side_bdry::output(fout,typ,tlvl);
          break;
       }
       case(tri_hp::tecplot): {
@@ -52,7 +52,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
             for (i=0;i<basis::tri(x.log2p).gpx;++i) {
                circ += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
-               x.cjcb(0,i) = x.ins_gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+               x.cjcb(0,i) = x.gbl_ptr->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
                
                /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -162,14 +162,14 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
                   
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+            x.gbl_ptr->res.v(v0,n) += x.lf(n)(0);
 
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
+            x.gbl_ptr->res.v(v1,n) += x.lf(n)(1);
          
          for(k=0;k<basis::tri(x.log2p).sm;++k) {
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+               x.gbl_ptr->res.s(sind,k,n) += x.lf(n)(k+2);
          }
       }
    }
@@ -196,11 +196,11 @@ block::ctrl inflow::tadvance(bool coarse, block::ctrl ctrl_message) {
          sind = base.el(j);
          v0 = x.sd(sind).vrtx(0);
          for(n=0;n<x.ND;++n)
-            x.ug.v(v0,n) = x.hp_gbl->ibc->f(n,x.vrtx(v0));
+            x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
       }
       v0 = x.sd(sind).vrtx(1);
       for(n=0;n<x.ND;++n)
-         x.ug.v(v0,n) = x.hp_gbl->ibc->f(n,x.vrtx(v0));
+         x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
 
       /*******************/   
       /* SET SIDE VALUES */
@@ -232,7 +232,7 @@ block::ctrl inflow::tadvance(bool coarse, block::ctrl ctrl_message) {
                pt(0) = x.crd(0)(0,k);
                pt(1) = x.crd(1)(0,k);
                for(n=0;n<x.ND;++n)
-                  x.res(n)(0,k) -= x.hp_gbl->ibc->f(n,pt);
+                  x.res(n)(0,k) -= x.gbl_ptr->ibc->f(n,pt);
             }
             for(n=0;n<x.ND;++n)
                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
@@ -297,7 +297,7 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
                for(n=0;n<ND;++n)
                   basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(0,0),&dcrd(n,0)(0,0));
                
-               crdtocht1d(sind,dvrtdt,hp_gbl->dbinfodt);
+               crdtocht1d(sind,dvrtdt,gbl_ptr->dbinfodt);
                for(n=0;n<ND;++n)
                   basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(1,0));
             }
@@ -316,14 +316,14 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
             for(n=0;n<NV;++n)
                basis::tri(log2p).proj1d(&uht(n)(0),&u(n)(0,0));
             
-            gam = hp_gbl->rhoi*hp_gbl->tprcn[sd(sind).tri(0)][0][0]/hp_gbl->tprcn[sd(sind).tri(0)][NV-1][NV-1];
+            gam = gbl_ptr->rhoi*gbl_ptr->tprcn[sd(sind).tri(0)][0][0]/gbl_ptr->tprcn[sd(sind).tri(0)][NV-1][NV-1];
             for(k=0;k<basis::tri(log2p).gpx;++k) {
                pt(0) = crd(0)(0,k);
                pt(1) = crd(1)(0,k);
 
                for(n=0;n<NV;++n) {
                   wl[n] = u(n)(0,k);
-                  wr[n] = hp_gbl->ibc->f(n,pt);
+                  wr[n] = gbl_ptr->ibc->f(n,pt);
                }
                nrm[0] = dcrd(1,0)(0,k);
                nrm[1] = -dcrd(0,0)(0,k);
@@ -334,9 +334,9 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
                if (!charyes)
                   wl[2] = wr[2];
                else 
-                  chrctr(hp_gbl->rho,gam,wl,wr,nrm,mvel);
+                  chrctr(gbl_ptr->rho,gam,wl,wr,nrm,mvel);
                
-               res(2)(0,k) = hp_gbl->rho*RAD(x.crd(0)(0,k))*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
+               res(2)(0,k) = gbl_ptr->rho*RAD(x.crd(0)(0,k))*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
 #ifndef INERTIALESS
                res(0)(0,k) = res(2)(0,k)*wl[0] +wl[2]*RAD(x.crd(0)(0,k))*nrm[0];
                res(1)(0,k) = res(2)(0,k)*wl[1] +wl[2]*RAD(x.crd(0)(0,k))*nrm[1];
@@ -350,16 +350,16 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
                basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
             
             for(n=0;n<NV;++n)
-               hp_gbl->res.v(v0,n) += lf(n)(0);
+               gbl_ptr->res.v(v0,n) += lf(n)(0);
 
             for(n=0;n<NV;++n)
-               hp_gbl->res.v(v1,n) += lf(n)(1);
+               gbl_ptr->res.v(v1,n) += lf(n)(1);
             
             indx1 = sind*basis::tri(log2p).sm;
             indx = 2;
             for(k=0;k<basis::tri(log2p).sm;++k) {
                for(n=0;n<NV;++n)
-                  hp_gbl->res.s(indx1)(n) += lf(n)(indx);
+                  gbl_ptr->res.s(indx1)(n) += lf(n)(indx);
                ++indx1;
                ++indx;
             }

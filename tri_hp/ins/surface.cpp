@@ -29,9 +29,13 @@ void surface::init(input_map& inmap,void* &gbl_in) {
    std::string keyword,val;
    std::istringstream data;
    std::string filename;
+   bool adapt_storage;
 
    surface_slave::init(inmap,gbl_in);
    
+   keyword = x.idprefix + ".adapt_storage";
+   inmap.getwdefault(keyword,adapt_storage,false);
+   if (adapt_storage) return;
    
    ksprg.resize(base.maxel);
    if (!x.coarse) {
@@ -184,12 +188,13 @@ block::ctrl surface::tadvance(bool coarse, block::ctrl ctrl_message) {
 
 block::ctrl surface::rsdl(block::ctrl ctrl_message) {
    int i,j,m,n,sind,indx,count,v0,v1;
-   TinyVector<FLT,mesh::ND> ubar, norm, rp;
+   TinyVector<FLT,mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV);
    FLT sigor,drhor,jcb;
    Array<TinyVector<FLT,MXGP>,1> u(x.NV);
    TinyMatrix<FLT,mesh::ND,MXGP> crd, dcrd, mvel;
    TinyMatrix<FLT,8,MXGP> res;
-   TinyMatrix<FLT,3,MXGP> lf,lf1;
+   TinyMatrix<FLT,4,MXGP> lf,lf1;
    block::ctrl state;   
    
    if (ctrl_message == block::begin) {
@@ -201,8 +206,8 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "surface::rsdl step 0 with ctrl_message " << ctrl_message << std::endl;
 #endif
-         sigor = surf_gbl->sigma/x.ins_gbl->rho;
-         drhor = (x.ins_gbl->rho -surf_gbl->rho2)/(x.ins_gbl->rho +surf_gbl->rho2);
+         sigor = surf_gbl->sigma/x.gbl_ptr->rho;
+         drhor = (x.gbl_ptr->rho -surf_gbl->rho2)/(x.gbl_ptr->rho +surf_gbl->rho2);
 
          /**************************************************/
          /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
@@ -251,7 +256,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 #endif 
           
                /* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
-               res(4,i) = +RAD(crd(0,i))*(x.ins_gbl->rho -surf_gbl->rho2)*sim::g*crd(1,i)*norm(0);
+               res(4,i) = +RAD(crd(0,i))*(x.gbl_ptr->rho -surf_gbl->rho2)*sim::g*crd(1,i)*norm(0);
 #ifdef AXISYMMETRIC
                res(4,i) += surf_gbl->sigma*jcb;
 #endif
@@ -260,11 +265,11 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 
 
                /* SURFACE TENSION SOURCE TERM Y-DIRECTION */
-               res(6,i) = +RAD(crd(0,i))*(x.ins_gbl->rho -surf_gbl->rho2)*sim::g*crd(1,i)*norm(1);            
+               res(6,i) = +RAD(crd(0,i))*(x.gbl_ptr->rho -surf_gbl->rho2)*sim::g*crd(1,i)*norm(1);            
                /* AND INTEGRATION BY PARTS TERM */
                res(7,i) = -RAD(crd(0,i))*surf_gbl->sigma*norm(0)/jcb;
             }
-            
+				
             for(m=0;m<basis::tri(x.log2p).sm+2;++m)
                lf(0,m) = 0.0;
 
@@ -305,35 +310,37 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrtx1d(&lf1(0,0),&res(5,0));
             basis::tri(x.log2p).intgrt1d(&lf1(1,0),&res(6,0));
             basis::tri(x.log2p).intgrtx1d(&lf1(1,0),&res(7,0));
-            
-            /* MASS FLUX PRECONDITIONER */
+				
+				/* MASS FLUX PRECONDITIONER */				
+				for(n=2;n<x.NV-1;++n) /* For swirling case */
+					for(m=0;m<basis::tri(x.log2p).sm+2;++m)
+						lf1(n,m) = 0.0;
+
             for(m=0;m<basis::tri(x.log2p).sm+2;++m)
-               lf1(2,m) = -x.ins_gbl->rho*lf(1,m); 
+               lf1(x.NV-1,m) = -x.gbl_ptr->rho*lf(1,m); 
 
 #ifndef INERTIALESS
-            for (n=0;n<mesh::ND;++n) 
+            for (n=0;n<x.NV-1;++n) 
                ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
-               
-            for (n=0;n<mesh::ND;++n) {
-               lf1(n,0) -= x.uht(n)(0)*(x.ins_gbl->rho -surf_gbl->rho2)*lf(1,0);
-               lf1(n,1) -= x.uht(n)(1)*(x.ins_gbl->rho -surf_gbl->rho2)*lf(1,1);
+					               
+            for (n=0;n<x.NV-1;++n) {
+               lf1(n,0) -= x.uht(n)(0)*(x.gbl_ptr->rho -surf_gbl->rho2)*lf(1,0);
+               lf1(n,1) -= x.uht(n)(1)*(x.gbl_ptr->rho -surf_gbl->rho2)*lf(1,1);
                for(m=0;m<basis::tri(x.log2p).sm;++m)
-                  lf1(n,m+2) -= ubar(n)*(x.ins_gbl->rho -surf_gbl->rho2)*lf(1,m+2);
+                  lf1(n,m+2) -= ubar(n)*(x.gbl_ptr->rho -surf_gbl->rho2)*lf(1,m+2);
             }
 #endif
-
             /* ADD TO RESIDUAL */
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.v(v0,n) += lf1(n,0);
+               x.gbl_ptr->res.v(v0,n) += lf1(n,0);
 
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.v(v1,n) += lf1(n,1);
+               x.gbl_ptr->res.v(v1,n) += lf1(n,1);
             
             for(m=0;m<basis::tri(x.log2p).sm;++m) {
                for(n=0;n<x.NV;++n)
-                  x.hp_gbl->res.s(sind,m,n) += lf1(n,m+2);
-            }            
-
+                  x.gbl_ptr->res.s(sind,m,n) += lf1(n,m+2);
+            }  
          }
 
           /* CALL VERTEX RESIDUAL HERE */
@@ -437,16 +444,16 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,count++);
+            x.gbl_ptr->res.v(v0,2) += base.frcvbuf(0,count++);
          }
          v0 = x.sd(sind).vrtx(0);
-         x.hp_gbl->res.v(v0,2) += base.frcvbuf(0,count++);
+         x.gbl_ptr->res.v(v0,2) += base.frcvbuf(0,count++);
          
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             msgn = 1;
             for(m=0;m<basis::tri(x.log2p).sm;++m) {
-               x.hp_gbl->res.s(sind,m,2) += msgn*base.frcvbuf(0,count++);
+               x.gbl_ptr->res.s(sind,m,2) += msgn*base.frcvbuf(0,count++);
                msgn *= -1;
             }
          }
@@ -471,16 +478,16 @@ block::ctrl surface_outflow_endpt::rsdl(block::ctrl ctrl_message) {
          x.crdtocht1d(sind);
          basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
          jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-         x.hp_gbl->res.v(base.v0,0) += -RAD(rp(0))*surf->surf_gbl->sigma*tangent(0)/jcb;
-         x.hp_gbl->res.v(base.v0,1) += -RAD(rp(0))*surf->surf_gbl->sigma*tangent(1)/jcb;
+         x.gbl_ptr->res.v(base.v0,0) += -RAD(rp(0))*surf->surf_gbl->sigma*tangent(0)/jcb;
+         x.gbl_ptr->res.v(base.v0,1) += -RAD(rp(0))*surf->surf_gbl->sigma*tangent(1)/jcb;
       }
       else {
          sind = x.sbdry(bnum)->el(0);
          x.crdtocht1d(sind);
          basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
          jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-         x.hp_gbl->res.v(base.v0,0) -= -RAD(rp(0))*surf->surf_gbl->sigma*tangent(0)/jcb;
-         x.hp_gbl->res.v(base.v0,1) -= -RAD(rp(0))*surf->surf_gbl->sigma*tangent(1)/jcb;
+         x.gbl_ptr->res.v(base.v0,0) -= -RAD(rp(0))*surf->surf_gbl->sigma*tangent(0)/jcb;
+         x.gbl_ptr->res.v(base.v0,1) -= -RAD(rp(0))*surf->surf_gbl->sigma*tangent(1)/jcb;
       }
    }
    return(block::stop);
@@ -601,10 +608,10 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
    if (ctrl_message == block::begin) excpt = 0;
    else excpt += ctrl_message;
 
-   drho = x.ins_gbl->rho -surf_gbl->rho2;
-   srho = x.ins_gbl->rho +surf_gbl->rho2;
-   smu = x.ins_gbl->mu +surf_gbl->mu2;
-   nu1 = x.ins_gbl->mu/x.ins_gbl->rho;
+   drho = x.gbl_ptr->rho -surf_gbl->rho2;
+   srho = x.gbl_ptr->rho +surf_gbl->rho2;
+   smu = x.gbl_ptr->mu +surf_gbl->mu2;
+   nu1 = x.gbl_ptr->mu/x.gbl_ptr->rho;
    if (surf_gbl->rho2 > 0.0) 
       nu2 = surf_gbl->mu2/surf_gbl->rho2;
    else
@@ -660,11 +667,14 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
 
             gam1 = 3.0*qmax +(0.5*hsm*sim::bd[0] + 2.*nu1/hsm)*(0.5*hsm*sim::bd[0] + 2.*nu1/hsm);
             gam2 = 3.0*qmax +(0.5*hsm*sim::bd[0] + 2.*nu2/hsm)*(0.5*hsm*sim::bd[0] + 2.*nu2/hsm);
+
+            if (sim::bd[0] + x.gbl_ptr->mu == 0.0) gam1 = MAX(gam1,0.1);
+
 #ifdef INERTIALESS
             gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
             gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-            dtnorm = 2.*vslp/hsm +sim::bd[0] +1.*strss/(x.ins_gbl->rho*sqrt(qmax +gam1) +surf_gbl->rho2*sqrt(qmax +gam2));            
+            dtnorm = 2.*vslp/hsm +sim::bd[0] +1.*strss/(x.gbl_ptr->rho*sqrt(qmax +gam1) +surf_gbl->rho2*sqrt(qmax +gam2));            
             
             /* SET UP DISSIPATIVE COEFFICIENT */
             /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -826,29 +836,46 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
 
 #ifdef DEBUG
       for(i=0;i<base.nel+1;++i)
-         printf("vdt: %d %e %e %e %e\n",i,surf_gbl->vdt(i)(0,0),surf_gbl->vdt(i)(0,1),surf_gbl->vdt(i)(1,0),surf_gbl->vdt(i)(1,1));
+         printf("vdt: %d %8.4e %8.4e %8.4e %8.4e\n",i,surf_gbl->vdt(i)(0,0),surf_gbl->vdt(i)(0,1),surf_gbl->vdt(i)(1,0),surf_gbl->vdt(i)(1,1));
             
       for(i=0;i<base.nel;++i)
-         printf("sdt: %d %e %e %e %e\n",i,surf_gbl->sdt(i)(0,0),surf_gbl->sdt(i)(0,1),surf_gbl->sdt(i)(1,0),surf_gbl->sdt(i)(1,1));
+         printf("sdt: %d %8.4e %8.4e %8.4e %8.4e\n",i,surf_gbl->sdt(i)(0,0),surf_gbl->sdt(i)(0,1),surf_gbl->sdt(i)(1,0),surf_gbl->sdt(i)(1,1));
 
-      for(i=0;i<base.nel+1;++i)
-         printf("vres: %d %e %e\n",i,surf_gbl->vres(i)(0),surf_gbl->vres(i)(1));
+      for(i=0;i<base.nel+1;++i) {
+         printf("vres: %d ",i);
+         for(n=0;n<mesh::ND;++n) {
+            if (fabs(surf_gbl->vres(i)(n)) > 1.0e-9) printf("%8.4e ",surf_gbl->vres(i)(n));
+            else printf("%8.4e ",0.0);
+         }
+         printf("\n");
+      }
          
+      for(i=0;i<base.nel;++i) {
+         for(m=0;m<basis::tri(x.log2p).sm;++m) {
+            printf("sres: %d ",i);
+            for(n=0;n<mesh::ND;++n) {
+               if (fabs(surf_gbl->sres(i,m)(n)) > 1.0e-9) printf("%8.4e ",surf_gbl->sres(i,m)(n));
+               else printf("%8.4e ",0.0);
+            }
+            printf("\n");
+         }
+      }
+                  
+      for(i=0;i<base.nel;++i) {
+         sind = base.el(i);
+         v0 = x.sd(sind).vrtx(0);
+         printf("vertex positions %d %8.4e %8.4e\n",v0,x.vrtx(v0)(0),x.vrtx(v0)(1));
+      }
+      v0 = x.sd(sind).vrtx(1);
+      printf("vertex positions %d %8.4e %8.4e\n",v0,x.vrtx(v0)(0),x.vrtx(v0)(1));
+      
       for(i=0;i<base.nel;++i)
          for(m=0;m<basis::tri(x.log2p).sm;++m)
-            printf("sres: %d %d %e %e\n",i,m,surf_gbl->sres(i,m)(0),surf_gbl->sres(i,m)(1));
+            printf("spos: %d %d %8.4e %8.4e\n",i,m,crv(i,m)(0),crv(i,m)(1));
             
-//      for(i=0;i<base.nel;++i) {
-//         sind = base.el(i);
-//         v0 = x.sd(sind).vrtx(0);
-//         printf("vertex positions %d %e %e\n",v0,x.vrtx(v0)(0),x.vrtx(v0)(1));
-//      }
-//      v0 = x.sd(sind).vrtx(1);
-//      printf("vertex positions %d %e %e\n",v0,x.vrtx(v0)(0),x.vrtx(v0)(1));
-//      
-//      for(i=0;i<base.nel;++i)
-//         for(m=0;m<basis::tri(x.log2p).sm;++m)
-//            printf("spos: %d %d %e %e\n",i,m,crv(i,m)(0),crv(i,m)(1));
+      for(i=0;i<base.nel;++i)
+         for(m=0;m<basis::tri(x.log2p).sm;++m)
+            printf("spos2: %d %d %8.4e %8.4e\n",i,m,crvbd(1)(i,m)(0),crvbd(1)(i,m)(1));
 
 //      exit(1);
 #endif

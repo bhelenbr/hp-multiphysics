@@ -21,12 +21,12 @@ class tri_hp_ins : public tri_hp {
          Array<FLT,1> tau,delt;
             
          /* PHYSICAL CONSTANTS */
-         FLT rho, mu, nu;
+         FLT rho, mu;
          
          /* STORAGE FOR CALCULATION OF ENERGY AND AREA */
          TinyVector<FLT,2> eanda, eanda_recv;
 
-      } *ins_gbl;
+      } *gbl_ptr;
 
 #ifdef DROP
       /** Rigid Mesh Motion for Finding Steady Translating Solutions */

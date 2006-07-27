@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define NO_DEBUG
+// #define DEBUG
 
 block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    int i,m,k,n,indx,indx1;
@@ -32,11 +32,11 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 #endif
 
          /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-         hp_gbl->ug0.v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
+         gbl_ptr->ug0.v(Range(0,nvrtx-1),Range::all()) = ug.v(Range(0,nvrtx-1),Range::all());
          if (basis::tri(log2p).sm) {
-            hp_gbl->ug0.s(Range(0,nside-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
+            gbl_ptr->ug0.s(Range(0,nside-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nside-1),Range::all(),Range::all());
             if (basis::tri(log2p).im) {
-               hp_gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
+               gbl_ptr->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
             }
          }
          ++excpt1;
@@ -92,43 +92,90 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
  #ifdef DEBUG     
    printf("nstage: %d nvrtx: %d log2p: %d\n",stage,nvrtx,log2p);
 
-   for(i=0;i<nvrtx;++i)
-      printf("nstage: %d %e %e\n", i,hp_gbl->vprcn(i,0),hp_gbl->vprcn(i,2));
+   for(i=0;i<nvrtx;++i) {
+      printf("nstage: %d ",i);
+      for(n=0;n<NV;++n) {
+         if (fabs(gbl_ptr->vprcn(i,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->vprcn(i,n));
+         else printf("%8.5e ",0.0);
+      }
+      printf("\n");
+   }
 
-   for(i=0;i<nvrtx;++i)
-      printf("v: %d %e %e %e\n",i,hp_gbl->res.v(i,0),hp_gbl->res.v(i,1),hp_gbl->res.v(i,2));
-      
-   for(i=0;i<nside;++i)
-      for(m=0;m<basis::tri(log2p).sm;++m)
-         printf("s: %d %d %e %e %e\n",i,m,hp_gbl->res.s(i,m,0),hp_gbl->res.s(i,m,1),hp_gbl->res.s(i,m,2));
+   for(i=0;i<nvrtx;++i) {
+      printf("v: %d ",i);
+      for(n=0;n<NV;++n) {
+         if (fabs(gbl_ptr->res.v(i,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.v(i,n));
+         else printf("%8.5e ",0.0);
+      }
+      printf("\n");
+   }
 
-   for(i=0;i<ntri;++i)
-      for(m=0;m<basis::tri(log2p).im;++m)
-         printf("i: %d %d %e %e %e\n",i,m,hp_gbl->res.i(i,m,0),hp_gbl->res.i(i,m,1),hp_gbl->res.i(i,m,2));
+   for(i=0;i<nside;++i) {
+      for(m=0;m<basis::tri(log2p).sm;++m) {
+         printf("s: %d ",i);
+         for(n=0;n<NV;++n) {
+            if (fabs(gbl_ptr->res.s(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.s(i,m,n));
+            else printf("%8.5e ",0.0);
+         }
+         printf("\n");
+      }
+   }
+   
+   
+   for(i=0;i<ntri;++i) {
+      for(m=0;m<basis::tri(log2p).im;++m) {
+         printf("i: %d ",i);
+         for(n=0;n<NV;++n) {
+            if (fabs(gbl_ptr->res.i(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.i(i,m,n));
+            else printf("%8.5e ",0.0);
+         }
+         printf("\n");
+      }
+   }
+   
+   for(i=0;i<nvrtx;++i) {
+      printf("v: %d ",i);
+      for(n=0;n<NV;++n) {
+         if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
+         else printf("%8.5e ",0.0);
+      }
+      printf("\n");
+   }
 
-   for(i=0;i<nvrtx;++i)
-      printf("ug.v: %d %e %e %e\n",i,ug.v(i,0),ug.v(i,1),ug.v(i,2));
-      
-   for(i=0;i<nside;++i)
-      for(m=0;m<basis::tri(log2p).sm;++m)
-         printf("ug.s: %d %d %e %e %e\n",i,m,ug.s(i,m,0),ug.s(i,m,1),ug.s(i,m,2));
-
-   for(i=0;i<ntri;++i)
-      for(m=0;m<basis::tri(log2p).im;++m)
-         printf("ug.i: %d %d %e %e %e\n",i,m,ug.i(i,m,0),ug.i(i,m,1),ug.i(i,m,2));
-
-   exit(1);
+   for(i=0;i<nside;++i) {
+      for(m=0;m<basis::tri(log2p).sm;++m) {
+         printf("s: %d ",i);
+         for(n=0;n<NV;++n) {
+            if (fabs(ug.s(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.s(i,m,n));
+            else printf("%8.5e ",0.0);
+         }
+         printf("\n");
+      }
+   }
+   
+   
+   for(i=0;i<ntri;++i) {
+      for(m=0;m<basis::tri(log2p).im;++m) {
+         printf("i: %d ",i);
+         for(n=0;n<NV;++n) {
+            if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
+            else printf("%8.5e ",0.0);
+         }
+         printf("\n");
+      }
+   }
+    // exit(1);
 #endif
          
-         cflalpha = sim::alpha[stage]*hp_gbl->cfl(log2p);
+         cflalpha = sim::alpha[stage]*gbl_ptr->cfl(log2p);
 #ifdef CTRL_DEBUG
          *sim::log << "step 6 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
       
-         ug.v(Range(0,nvrtx-1),Range::all()) = hp_gbl->ug0.v(Range(0,nvrtx-1),Range::all()) -cflalpha*hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
+         ug.v(Range(0,nvrtx-1),Range::all()) = gbl_ptr->ug0.v(Range(0,nvrtx-1),Range::all()) -cflalpha*gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());
 
          if (basis::tri(log2p).sm > 0) {
-            ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = hp_gbl->ug0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -cflalpha*hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+            ug.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl_ptr->ug0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -cflalpha*gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 
             if (basis::tri(log2p).im > 0) {
 
@@ -138,7 +185,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
                   for(m=1;m<basis::tri(log2p).sm;++m) {
                      for(k=0;k<basis::tri(log2p).sm-m;++k) {
                         for(n=0;n<NV;++n) {
-                           ug.i(i,indx1,n) =  hp_gbl->ug0.i(i,indx1,n) -cflalpha*hp_gbl->res.i(i,indx,n);
+                           ug.i(i,indx1,n) =  gbl_ptr->ug0.i(i,indx1,n) -cflalpha*gbl_ptr->res.i(i,indx,n);
                         }
                         ++indx; ++indx1;
                      }

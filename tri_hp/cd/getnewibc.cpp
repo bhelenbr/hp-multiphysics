@@ -148,24 +148,30 @@ FLT df1d(int n, FLT x, FLT y) {
             }
          }
    };
-   
+
    class soi_src : public init_bdry_cndtn {
+
        private:
          double xpl,xpr,xpeak,yp,lamda_y,lamda_x,c,pd0;
 
        public:
-          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+          FLT f(int n, TinyVector<FLT,mesh::ND> x){
+/*
             double ppeak;
             
-            if( x(0) > xpl || x(0) < xpeak || x(1) > 0 || x(1) < yp )		//xdl < xdr < xgl < xj < xgr < xsl < xsr
-               return (pd0+c*exp((x(0)-xpl)/lamda_x)*exp(-pow(x(1),2)/lamda_y));
-            else if ( x(0) > xpeak || x(0) < xpr || x(1) > 0 || x(1) < yp )
+            if( x(0) > xpl && x(0) <= xpeak && x(1) < 0 && x(1) > yp )		//xdl < xdr < xgl < xj < xgr < xsl < xsr
+               return 1E24*(pd0+c*exp((x(0)-xpl)/lamda_x)*exp(-pow(x(1),2)/lamda_y));
+            else if ( x(0) > xpeak && x(0) < xpr && x(1) < 0 && x(1) > yp )
             {
                ppeak=pd0+c*exp((xpeak-xpl)/lamda_x);
-               return ((ppeak+(0-ppeak)/(xpr-xpeak)*(x(0)-xpeak))*exp(-pow(x(1),2)/lamda_y));
+               return 1E24*((ppeak+(0-ppeak)/(xpr-xpeak)*(x(0)-xpeak))*exp(-pow(x(1),2)/lamda_y));
             }
+*/
+		if( x(0) > 0.6 && x(0) < 0.7 && x(1) < -0.01 && x(1) > -0.05 )
+			return 1e24;
             else
-               return 0;
+               return 1E6;
+
           }
 
 
@@ -176,11 +182,14 @@ FLT df1d(int n, FLT x, FLT y) {
             keyword = idnty+".xpl";
             blockdata.getwdefault(keyword,xpl,0.6);
             
-            keyword = idnty+".ypl";
-            blockdata.getwdefault(keyword,xpl,0.007);
+            keyword = idnty+".xpr";
+            blockdata.getwdefault(keyword,xpr,0.7);
+
+            keyword = idnty+".yp";
+            blockdata.getwdefault(keyword,yp,-0.07);
             
             keyword = idnty+".xpeak";
-            blockdata.getwdefault(keyword,xpeak,0.6);
+            blockdata.getwdefault(keyword,xpeak,0.68);
             
             keyword = idnty+".lambdax";
             blockdata.getwdefault(keyword,lamda_x,0.01249);
@@ -246,7 +255,7 @@ init_bdry_cndtn *tri_hp_cd::getnewsrc(input_map& inmap) {
          *sim::log << "couldn't find source type" << std::endl;
       }
    }
-   type = ibc_cd::ibc_type::getid(ibcname.c_str());
+   type = ibc_cd::src_type::getid(ibcname.c_str());
    
    
 

@@ -20,9 +20,9 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
-      hp_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
+      gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
       if (basis::tri(log2p).sm > 0) {
-         hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+         gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 0.0;
       }
       
 #ifdef TIMEACCURATE
@@ -52,16 +52,16 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
          qmax = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(cd_gbl->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)) +(0)),2.0) 
-               +pow(cd_gbl->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)) +(1)),2.0);
+            q = pow(gbl_ptr->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)) +(0)),2.0) 
+               +pow(gbl_ptr->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)) +(1)),2.0);
             qmax = MAX(qmax,q);
          }
          q = sqrt(qmax);
          
-         lam1  = (q +1.5*cd_gbl->nu/h +h*sim::bd[0]);
+         lam1  = (q +1.5*gbl_ptr->nu/h +h*sim::bd[0]);
                      
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         cd_gbl->tau(tind)  = adis*h/(jcb*lam1);
+         gbl_ptr->tau(tind)  = adis*h/(jcb*lam1);
          
          jcb *= lam1/h;
 
@@ -77,12 +77,12 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
          jcb = 0.25*area(tind)*dtstari;
 #endif
          jcb *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
-         hp_gbl->tprcn(tind,0) = jcb;   
+         gbl_ptr->tprcn(tind,0) = jcb;   
          for(i=0;i<3;++i) {
-            hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+            gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
             if (basis::tri(log2p).sm > 0) {
                side = td(tind).side(i);
-               hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
             }
          }
       }

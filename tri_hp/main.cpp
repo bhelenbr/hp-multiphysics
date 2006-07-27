@@ -15,16 +15,9 @@
 #include <mpi.h>
 #endif
 
-#define SIMULATION
-
 void ctrlc(int signal);
 
-#ifdef PV3
-extern "C" int MAINPROG(int argc, char **argv);
-int MAINPROG(int argc, char**argv) {
-#else
 int main(int argc, char **argv) {
-#endif
    struct sigaction action;
 	struct sigaction o_action;
 
@@ -35,7 +28,6 @@ int main(int argc, char **argv) {
 	if (sigaction(SIGTERM,&action,&o_action)) printf("interrupt handler failed\n");
    
 
-#ifdef SIMULATION   
 #ifdef MPISRC
    int myid;
    MPI_Init(&argc,&argv);
@@ -49,7 +41,6 @@ int main(int argc, char **argv) {
 #ifdef MPISRC
    MPI_Finalize();
 #endif
-#endif
 
 //
 //#ifdef DEBUG
@@ -61,11 +52,6 @@ int main(int argc, char **argv) {
 //   myblock.go();
 //#endif
 //
-//#ifdef PV3VIEWER   
-//   /* PV3 STATIC VIEWER */
-//   myblock.init(argv[1],0);
-//   return(0);
-//#endif
 //
 //#ifdef FINDMAX
 //   hpbasis b;
@@ -89,7 +75,8 @@ void ctrlc(int signal)
    /* THIS ALLOWS FILES TO CLOSE */
    /* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
    *sim::log << "# exiting gracefully" << std::endl;
-   sim::blks.output("interupt",block::restart);
+   sim::blks.output("interrupt",block::restart);
+   sim::blks.output("interrupt",block::display);
    exit(1);
 }
 

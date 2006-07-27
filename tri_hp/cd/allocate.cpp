@@ -21,7 +21,7 @@ void tri_hp_cd::init(input_map& input, gbl *gin) {
    tri_hp::init(input,gin);
    
    /* Load pointer to block stuff */
-   cd_gbl = gin;
+   gbl_ptr = gin;
      
    keyword = idprefix + ".adapt_storage";
    input.getwdefault(keyword,adapt_storage,false);
@@ -36,18 +36,18 @@ void tri_hp_cd::init(input_map& input, gbl *gin) {
    if (coarse) return;
   
    keyword = idprefix + ".ax";
-   input.getwdefault(keyword,cd_gbl->ax,1.0);
+   if (!input.get(keyword,gbl_ptr->ax)) input.getwdefault("ax",gbl_ptr->ax,1.0);
 
    keyword = idprefix + ".ay";
-   input.getwdefault(keyword,cd_gbl->ay,0.0);
+   if (!input.get(keyword,gbl_ptr->ay)) input.getwdefault("ay",gbl_ptr->ay,0.0);
 
    keyword = idprefix + ".nu";
-   input.getwdefault(keyword,cd_gbl->nu,1.0);
+   if (!input.get(keyword,gbl_ptr->nu)) input.getwdefault("nu",gbl_ptr->nu,0.0);
 
-   cd_gbl->tau.resize(maxvst);
+   gbl_ptr->tau.resize(maxvst);
    
-   cd_gbl->src = getnewsrc(input);
-   cd_gbl->src->input(input,idprefix);
+   gbl_ptr->src = getnewsrc(input);
+   gbl_ptr->src->input(input,idprefix);
    
    return;
 }

@@ -10,25 +10,11 @@
 #ifndef _tri_hp_swirl_h_
 #define _tri_hp_swirl_h_
 
-#include "tri_hp.h"
+#include "tri_hp_ins.h"
 #include <blocks.h>
 
-class tri_hp_swirl : public tri_hp {
+class tri_hp_swirl : public tri_hp_ins {
    public:
-      /* THINGS SHARED BY ALL tri_hp_swirl in same multigrid block */
-      struct gbl : public tri_hp::gbl {
-         /* STABILIZATION */
-         Array<FLT,1> tau,delt;
-            
-         /* PHYSICAL CONSTANTS */
-         FLT rho, mu, nu;
-         
-         /* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-         TinyVector<FLT,2> eanda, eanda_recv;
-
-      } *swirl_gbl;
-      
-      FLT adis; // DISSIPATION CONSTANT
 		hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(input_map& inmap);
    

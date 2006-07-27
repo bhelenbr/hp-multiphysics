@@ -151,7 +151,10 @@ class hp_side_bdry : public sgeometry_interface {
       /* SEARCH FUNCTIONS */
       virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);
       virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
-
+      
+      /* SOME UTILITIES */
+      block::ctrl findmax(block::ctrl ctrl_message, FLT (*fxy)(TinyVector<FLT,2> &x));
+      void hp_side_bdry::findintercept(FLT (*fxy)(TinyVector<FLT,2> &x));
 };
 
 #endif

@@ -19,7 +19,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
    TinyMatrix<FLT,ND,ND> ldcrd;
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-   FLT lmu = ps_gbl->mu, cjcb, cjcbi, oneminusbeta;
+   FLT lmu = gbl_ptr->mu, cjcb, cjcbi, oneminusbeta;
    FLT visc[ND][ND][ND][ND], tres[NV];
    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
    FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
@@ -28,16 +28,16 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
    if (ctrl_message == block::begin) {
       oneminusbeta = 1.0-sim::beta[stage];
       
-      hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
-      hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
+      gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) = 0.0;
+      gbl_ptr->res_r.v(Range(0,nvrtx-1),Range::all()) *= oneminusbeta;
 
       if (basis::tri(log2p).sm) {
-         hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
-         hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
+         gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
+         gbl_ptr->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
          
          if (basis::tri(log2p).im) {
-            hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
-            hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
+            gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
+            gbl_ptr->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
          }
       }
       excpt = 0;
@@ -155,7 +155,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                basis::tri(log2p).intgrtrs(&lf(2)(0),&du(2,0)(0,0),&du(2,1)(0,0),MXGP);
 
                /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-               lftog(tind,ps_gbl->res);
+               lftog(tind,gbl_ptr->res);
 
                /* NEGATIVE REAL TERMS */
                if (sim::beta[stage] > 0.0) {
@@ -168,7 +168,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                         /* UNSTEADY TERMS */
                         res(0)(i,j) = 0.0;
                         res(1)(i,j) = 0.0;
-                        res(2)(i,j) = ps_gbl->lami*u(2)(i,j)*cjcb;
+                        res(2)(i,j) = gbl_ptr->lami*u(2)(i,j)*cjcb;
                         
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                         /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -230,8 +230,8 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = ps_gbl->tau(tind)*res(0)(i,j);
-                        tres[1] = ps_gbl->tau(tind)*res(1)(i,j);
+                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
+                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
                                                       
                         du(2,0)(i,j) = -(dcrd(1,1)(i,j)*tres[0] -dcrd(0,1)(i,j)*tres[1]);
                         du(2,1)(i,j) = -(-dcrd(1,0)(i,j)*tres[0] +dcrd(0,0)(i,j)*tres[1]);
@@ -245,7 +245,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                      for(i=0;i<basis::tri(log2p).tm;++i)
                         lf(n)(i) *= sim::beta[stage];
                         
-                  lftog(tind,ps_gbl->res_r);
+                  lftog(tind,gbl_ptr->res_r);
                }
             }
             else {
@@ -273,7 +273,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                
 
                /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-               lftog(tind,ps_gbl->res);
+               lftog(tind,gbl_ptr->res);
 
                /* NEGATIVE REAL TERMS */
                if (sim::beta[stage] > 0.0) {
@@ -310,7 +310,7 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                         /* UNSTEADY TERMS */
                         res(0)(i,j) = 0.0;
                         res(1)(i,j) = 0.0;
-                        res(2)(i,j) = ps_gbl->lami*u(2)(i,j)*cjcb;
+                        res(2)(i,j) = gbl_ptr->lami*u(2)(i,j)*cjcb;
                         
                         e00[i][j] = RAD(crd(0)(i,j))*(+visc[0][0][0][0]*du(0,0)(i,j) +visc[0][1][0][0]*du(1,0)(i,j)
                                               +visc[0][0][0][1]*du(0,1)(i,j) +visc[0][1][0][1]*du(1,1)(i,j));
@@ -347,8 +347,8 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = ps_gbl->tau(tind)*res(0)(i,j);
-                        tres[1] = ps_gbl->tau(tind)*res(1)(i,j);
+                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
+                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
                                     
                         du(2,0)(i,j) = -(ldcrd(1,1)*tres[0] -ldcrd(0,1)*tres[1]);
                         du(2,1)(i,j) = -(-ldcrd(1,0)*tres[0] +ldcrd(0,0)*tres[1]);
@@ -362,17 +362,17 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
                      for(i=0;i<basis::tri(log2p).tm;++i)
                         lf(n)(i) *= sim::beta[stage];
                         
-                  lftog(tind,ps_gbl->res_r);
+                  lftog(tind,gbl_ptr->res_r);
                }
             }
          }
 
          /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-         hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += hp_gbl->res_r.v(Range(0,nvrtx-1),Range::all());
+         gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) += gbl_ptr->res_r.v(Range(0,nvrtx-1),Range::all());
          if (basis::tri(log2p).sm) {
-            hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += hp_gbl->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
+            gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl_ptr->res_r.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());        
             if (basis::tri(log2p).im) {
-               hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += hp_gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
+               gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl_ptr->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
             }
          }
                
@@ -382,19 +382,19 @@ block::ctrl tri_hp_ps::rsdl(block::ctrl ctrl_message, int stage) {
          if(coarse) {
          /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
             if(isfrst) {
-               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = fadd*hp_gbl->res0.v(Range(0,nvrtx-1),Range::all()) -hp_gbl->res.v(Range(0,nvrtx-1),Range::all());
-               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*hp_gbl->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
-               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*hp_gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
+               dres(log2p).v(Range(0,nvrtx-1),Range::all()) = fadd*gbl_ptr->res0.v(Range(0,nvrtx-1),Range::all()) -gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());
+               if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*gbl_ptr->res0.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());     
+               if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*gbl_ptr->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
                isfrst = false;
             }
-            hp_gbl->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
-            if (basis::tri(log2p).sm) hp_gbl->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
-            if (basis::tri(log2p).im) hp_gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
+            gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
+            if (basis::tri(log2p).sm) gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+            if (basis::tri(log2p).im) gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
          }
 
-         //     std::cout << ps_gbl->res.v(Range(0,nvrtx),Range::all());
-         //      std::cout << ps_gbl->res.s;
-         //      std::cout << ps_gbl->res.i;
+         //     std::cout << gbl_ptr->res.v(Range(0,nvrtx),Range::all());
+         //      std::cout << gbl_ptr->res.s;
+         //      std::cout << gbl_ptr->res.i;
          //      exit(1);
          ++excpt;
       }

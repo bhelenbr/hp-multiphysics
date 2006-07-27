@@ -131,7 +131,7 @@ class tri_hp : public r_mesh  {
          /* Time step factor for different polynomial degree */
          TinyVector<FLT,MXGP> cfl;
          
-      } *hp_gbl;
+      } *gbl_ptr;
       virtual init_bdry_cndtn* getnewibc(input_map& inmap);
       virtual mesh_mover* getnewmesh_mover(input_map& inmap);
 

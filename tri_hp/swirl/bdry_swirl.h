@@ -26,7 +26,7 @@ namespace bdry_swirl {
       protected:
          tri_hp_swirl &x;
          virtual void flux(TinyVector<FLT,4> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,4>& flx) {
-            flx(3) = x.swirl_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+            flx(3) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
             flx(0) = flx(3)*u(0);
             flx(1) = flx(3)*u(1);
 				flx(2) = flx(3)*u(2);
@@ -49,7 +49,7 @@ namespace bdry_swirl {
          flx(1) = 0.0;
 			flx(2) = 0.0;
          /* MASS FLUX */
-         flx(3) = x.swirl_gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+         flx(3) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
          return;
       }
       
@@ -63,10 +63,10 @@ namespace bdry_swirl {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,Range(0,x.ND)) = 0.0;
+               x.gbl_ptr->res.v(v0,Range(0,x.ND)) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,Range(0,x.ND)) = 0.0;
+            x.gbl_ptr->res.v(v0,Range(0,x.ND)) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -74,7 +74,7 @@ namespace bdry_swirl {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,Range(0,x.ND)) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,Range(0,x.ND)) = 0.0;
             }
          }
             
@@ -101,12 +101,12 @@ namespace bdry_swirl {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.hp_gbl->res.v(v0,0) = 0.0;
-					x.hp_gbl->res.v(v0,2) = 0.0;
+               x.gbl_ptr->res.v(v0,0) = 0.0;
+					x.gbl_ptr->res.v(v0,2) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.hp_gbl->res.v(v0,0) = 0.0;
-				x.hp_gbl->res.v(v0,2) = 0.0;
+            x.gbl_ptr->res.v(v0,0) = 0.0;
+				x.gbl_ptr->res.v(v0,2) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -114,7 +114,7 @@ namespace bdry_swirl {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.hp_gbl->res.s(sind,mode,0) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,0) = 0.0;
             }
          }
             
@@ -125,14 +125,14 @@ namespace bdry_swirl {
    class euler : public neumann {
       protected:
          void flux(TinyVector<FLT,4> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,4>& flx) {
-            TinyVector<FLT,3> ub;
+            TinyVector<FLT,4> ub;
             for(int n=0;n<x.NV;++n)
-               ub(n) = x.hp_gbl->ibc->f(n,xpt);
+               ub(n) = x.gbl_ptr->ibc->f(n,xpt);
             
-            flx(3) = x.swirl_gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+            flx(3) = x.gbl_ptr->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
             flx(0) = flx(3)*ub(0) +u(3)*norm(0);
             flx(1) = flx(3)*ub(1) +u(3)*norm(1);
-            flx(2) = flx(3)*ub(2) +u(3)*norm(2);
+            flx(2) = flx(3)*ub(2);
 
             return;
          }

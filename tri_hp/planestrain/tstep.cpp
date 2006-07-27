@@ -18,9 +18,9 @@ block::ctrl tri_hp_ps::setup_preconditioner(block::ctrl ctrl_message) {
       /***************************************/
       /** DETERMINE PSEUDO-TIME STEP ****/
       /***************************************/
-      ps_gbl->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
+      gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
       if (basis::tri(log2p).sm > 0) {
-         hp_gbl->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+         gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 0.0;
       }
 
       for(tind = 0; tind < ntri; ++tind) {
@@ -43,22 +43,22 @@ block::ctrl tri_hp_ps::setup_preconditioner(block::ctrl ctrl_message) {
          h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
          hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
 
-         gami = pow(hmax/(2.*ps_gbl->mu),2.0) +ps_gbl->lami*hmax*hmax/ps_gbl->mu;
+         gami = pow(hmax/(2.*gbl_ptr->mu),2.0) +gbl_ptr->lami*hmax*hmax/gbl_ptr->mu;
          gam = 1./gami; 
          lam1 = sqrt(gam);
          
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         ps_gbl->tau(tind)  = adis*h/(jcb*lam1);
-         jcb *= (8.*ps_gbl->mu*(1./(hmax*hmax) +1./(h*h))) ;
+         gbl_ptr->tau(tind)  = adis*h/(jcb*lam1);
+         jcb *= (8.*gbl_ptr->mu*(1./(hmax*hmax) +1./(h*h))) ;
 
-         ps_gbl->tprcn(tind,0) = jcb;   
-         ps_gbl->tprcn(tind,1) = jcb;     
-         ps_gbl->tprcn(tind,2) =  jcb/gam;
+         gbl_ptr->tprcn(tind,0) = jcb;   
+         gbl_ptr->tprcn(tind,1) = jcb;     
+         gbl_ptr->tprcn(tind,2) =  jcb/gam;
          for(i=0;i<3;++i) {
-            hp_gbl->vprcn(v(i),Range::all())  += hp_gbl->tprcn(tind,Range::all());
+            gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
             if (basis::tri(log2p).sm > 0) {
                side = td(tind).side(i);
-               hp_gbl->sprcn(side,Range::all()) += hp_gbl->tprcn(tind,Range::all());
+               gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
             }
          }
       }

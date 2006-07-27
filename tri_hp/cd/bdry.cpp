@@ -37,10 +37,10 @@ block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
       for(j=0;j<base.nel;++j) {
          sind = base.el(j);
          v0 = x.sd(sind).vrtx(0);
-         x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
+         x.ug.v(v0,0) = x.gbl_ptr->ibc->f(0,x.vrtx(v0));
       }
       v0 = x.sd(sind).vrtx(1);
-      x.ug.v(v0,0) = x.hp_gbl->ibc->f(0,x.vrtx(v0));
+      x.ug.v(v0,0) = x.gbl_ptr->ibc->f(0,x.vrtx(v0));
       
       /*******************/   
       /* SET SIDE VALUES */
@@ -72,7 +72,7 @@ block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
                pt(0) = x.crd(0)(0,k);
                pt(1) = x.crd(1)(0,k);
                for(n=0;n<x.NV;++n)
-                  x.res(n)(0,k) -= x.hp_gbl->ibc->f(n,pt);
+                  x.res(n)(0,k) -= x.gbl_ptr->ibc->f(n,pt);
             }
             for(n=0;n<x.NV;++n)
                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
@@ -126,14 +126,14 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
             basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
          
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v0,n) += x.lf(n)(0);
+            x.gbl_ptr->res.v(v0,n) += x.lf(n)(0);
 
          for(n=0;n<x.NV;++n)
-            x.hp_gbl->res.v(v1,n) += x.lf(n)(1);
+            x.gbl_ptr->res.v(v1,n) += x.lf(n)(1);
          
          for(k=0;k<basis::tri(x.log2p).sm;++k) {
             for(n=0;n<x.NV;++n)
-               x.hp_gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+               x.gbl_ptr->res.s(sind,k,n) += x.lf(n)(k+2);
          }
       }
    }

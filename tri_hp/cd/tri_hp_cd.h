@@ -26,7 +26,7 @@ class tri_hp_cd : public tri_hp {
          /* SOURCE FUNCTION */
          init_bdry_cndtn *src;
 
-      } *cd_gbl;
+      } *gbl_ptr;
       
       FLT adis; // DISSIPATION CONSTANT
       

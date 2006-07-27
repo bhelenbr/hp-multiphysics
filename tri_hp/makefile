@@ -12,7 +12,7 @@ VIZ = pv3routines.o
 
 LIB = -L$(HOME)/Codes/lib -lmesh -lquad -lbasis -lmyblas -lutil -linput_map -lm
 DEFINES = -Df2cFortran
-CPPFLAGS = -AXISYMMETRIC -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl 
+CPPFLAGS = -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl 
 
 ### Begin machine dependent
 
@@ -67,5 +67,5 @@ hp: $(OBJ)
 hp.pV3: $(OBJ) $(VIZ)
 	${CXX} -o $@ $(OBJ) $(FORTMAIN) $(LIB) $(VIZ) $(PVLIB)
 
-$(OBJ): *.h
+$(OBJ): *.h makefile
 
