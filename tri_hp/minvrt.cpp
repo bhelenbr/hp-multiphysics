@@ -2,6 +2,8 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
+#define NO_CTRL_DEBUG
+
 /************************************************/
 /**********      INVERT MASS MATRIX    **********/
 /************************************************/
@@ -17,7 +19,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
    switch(excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 0 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << " step 0 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* LOOP THROUGH SIDES */
          if (basis::tri(log2p).sm > 0) {
@@ -81,7 +83,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 1 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          ++mp_phase;
          switch(mp_phase%3) {
@@ -98,7 +100,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 2 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 2 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* APPLY VERTEX DIRICHLET B.C.'S */
          for(i=0;i<nsbd;++i)
@@ -166,7 +168,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(3): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 3 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 3 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* SOLVE FOR SIDE MODE */
 #ifndef MATRIXPRECONDITIONER
@@ -188,7 +190,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(4): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 4 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 4 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          ++mp_phase;
          switch(mp_phase%3) {
@@ -206,7 +208,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(5): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 5 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 5 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* APPLY DIRCHLET B.C.S TO MODE */
          for(i=0;i<nsbd;++i)
@@ -277,7 +279,7 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
       
       case(6): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 6 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
+         *sim::log << idprefix << "step 6 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          if (basis::tri(log2p).im == 0) return(block::advance);
          
@@ -354,7 +356,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
    switch (excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             /* SET UP TSTEP FOR ACTIVE BOUNDARIES */
@@ -372,7 +374,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 1 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             /* SET UP TSTEP FOR ACTIVE BOUNDARIES */
@@ -388,7 +390,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 2 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = block::stop;
@@ -406,7 +408,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(3): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 0 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;;
+         *sim::log << idprefix << "Step 3 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;;
 #endif
          mp_phase = -1;
          ++excpt;
@@ -415,7 +417,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(4): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 1 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 4 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
          if (ctrl_message == block::stay) {
             ++mp_phase;
@@ -439,7 +441,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(5): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 2 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 5 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
          if (ctrl_message == block::stay && log2p > 0) {
             ++mp_phase;
@@ -462,7 +464,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(6): {
 #ifdef CTRL_DEBUG
-         *sim::log << "Step 3 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
+         *sim::log << idprefix << "Step 6 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
 
 #ifndef MATRIX_PRECONDITIONER

@@ -10,13 +10,11 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
    TinyVector<int,3> v;
    
    if (ctrl_message == block::begin) excpt = 0;
-   ctrl_message = tri_hp::setup_preconditioner(ctrl_message);
-   
-   if (ctrl_message == block::advance1) ++excpt;
+   if (ctrl_message == block::advance1) ++excpt;  
    
    if (excpt == 3) {
       ++excpt;
-
+      
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
@@ -52,14 +50,14 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
          qmax = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(gbl_ptr->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)) +(0)),2.0) 
-               +pow(gbl_ptr->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)) +(1)),2.0);
+            q = pow(gbl_ptr->ax -(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+               +pow(gbl_ptr->ay -(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
             qmax = MAX(qmax,q);
          }
          q = sqrt(qmax);
          
          lam1  = (q +1.5*gbl_ptr->nu/h +h*sim::bd[0]);
-                     
+                              
          /* SET UP DISSIPATIVE COEFFICIENTS */
          gbl_ptr->tau(tind)  = adis*h/(jcb*lam1);
          
@@ -86,6 +84,9 @@ block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {
             }
          }
       }
+   }
+   else {
+      ctrl_message = tri_hp::setup_preconditioner(ctrl_message);  
    }
 
    return(ctrl_message);

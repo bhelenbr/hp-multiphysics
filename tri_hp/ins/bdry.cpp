@@ -283,142 +283,67 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
    return(block::stop);
 }
 
-#ifdef SKIP
-      /* OUTFLOW BOUNDARY CONDITION    */
-      if (sbdry[i].type&OUTF_MASK) {
-         indx = 0;
-         for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(0);
-            v1 = sd(sind).vrtx(1);
-            
-            if (sbdry[i].type&CURV_MASK) {
-               crdtocht1d(sind);
-               for(n=0;n<ND;++n)
-                  basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(0,0),&dcrd(n,0)(0,0));
-               
-               crdtocht1d(sind,dvrtdt,gbl_ptr->dbinfodt);
-               for(n=0;n<ND;++n)
-                  basis::tri(log2p).proj1d(&cht(n,0),&crd(n)(1,0));
-            }
-            else {
-               for(n=0;n<ND;++n) {
-                  basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
-                  
-                  for(k=0;k<basis::tri(log2p).gpx;++k)
-                     dcrd(n,0)(0,k) = 0.5*(vrtx(v1)(n)-vrtx(v0)(n));
-               
-                  basis::tri(log2p).proj1d(dvrtdt[v0][n],dvrtdt[v1][n],&crd(n)(1,0));
-               }
-            }
-            
-            ugtouht1d(sind);
-            for(n=0;n<NV;++n)
-               basis::tri(log2p).proj1d(&uht(n)(0),&u(n)(0,0));
-            
-            gam = gbl_ptr->rhoi*gbl_ptr->tprcn[sd(sind).tri(0)][0][0]/gbl_ptr->tprcn[sd(sind).tri(0)][NV-1][NV-1];
-            for(k=0;k<basis::tri(log2p).gpx;++k) {
-               pt(0) = crd(0)(0,k);
-               pt(1) = crd(1)(0,k);
 
-               for(n=0;n<NV;++n) {
-                  wl[n] = u(n)(0,k);
-                  wr[n] = gbl_ptr->ibc->f(n,pt);
-               }
-               nrm[0] = dcrd(1,0)(0,k);
-               nrm[1] = -dcrd(0,0)(0,k);
-
-               for(n=0;n<ND;++n)
-                  mvel[n] = sim::bd[0]*crd(n)(0,k) +crd(n)(1,k);
-                  
-               if (!charyes)
-                  wl[2] = wr[2];
-               else 
-                  chrctr(gbl_ptr->rho,gam,wl,wr,nrm,mvel);
-               
-               res(2)(0,k) = gbl_ptr->rho*RAD(x.crd(0)(0,k))*((wl[0] -mvel[0])*nrm[0] +(wl[1] -mvel[1])*nrm[1]);
-#ifndef INERTIALESS
-               res(0)(0,k) = res(2)(0,k)*wl[0] +wl[2]*RAD(x.crd(0)(0,k))*nrm[0];
-               res(1)(0,k) = res(2)(0,k)*wl[1] +wl[2]*RAD(x.crd(0)(0,k))*nrm[1];
-#else
-               res(0)(0,k) = wl[2]*RAD(x.crd(0)(0,k))*nrm[0];
-               res(1)(0,k) = wl[2]*RAD(x.crd(0)(0,k))*nrm[1]; 
-#endif
-            }
-            
-            for(n=0;n<NV;++n)
-               basis::tri(log2p).intgrt1d(&lf(n)(0),&res(n)(0,0));
-            
-            for(n=0;n<NV;++n)
-               gbl_ptr->res.v(v0,n) += lf(n)(0);
-
-            for(n=0;n<NV;++n)
-               gbl_ptr->res.v(v1,n) += lf(n)(1);
-            
-            indx1 = sind*basis::tri(log2p).sm;
-            indx = 2;
-            for(k=0;k<basis::tri(log2p).sm;++k) {
-               for(n=0;n<NV;++n)
-                  gbl_ptr->res.s(indx1)(n) += lf(n)(indx);
-               ++indx1;
-               ++indx;
-            }
-         }
-      }
-
-void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]) {
-   FLT ul,vl,ur,vr,pl,pr,cl,cr,rhoi;
-   FLT u,um,v,c,den,lam0,lam1,lam2,uvp[3],mag;
+void characteristic::flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
+   FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
+   FLT s,um,v,c,den,lam0,lam1,lam2,mag;
+   FLT nu,gam,qmax;
+   TinyVector<FLT,3> ub, uvp;
    
-   rhoi = 1./rho;
-
    /* CHARACTERISTIC FAR-FIELD B.C. */   
-   mag = sqrt(norm[0]*norm[0] + norm[1]*norm[1]);
+   rho = x.gbl_ptr->rho;
+   nu = x.gbl_ptr->mu/x.gbl_ptr->rho;
+   rhoi = 1./rho;
+   mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+   qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
+   gam = 3.0*qmax +(0.5*mag*sim::bd[0] +2.*nu/mag)*(0.5*mag*sim::bd[0] +2.*nu/mag);
+
+   norm(0) /= mag;
+   norm(1) /= mag;
    
-   norm[0] /= mag;
-   norm[1] /= mag;
+   ul =  u(0)*norm(0) +u(1)*norm(1);
+   vl = -u(0)*norm(1) +u(1)*norm(0);
+   pl =  u(2);
    
-   ul =  wl[0]*norm[0] +wl[1]*norm[1];
-   vl = -wl[0]*norm[1] +wl[1]*norm[0];
-   pl =  wl[2];
+   /* FREESTREAM CONDITIONS */
+   for(int n=0;n<x.NV;++n)
+      ub(n) = x.gbl_ptr->ibc->f(n,xpt);
       
-   /* DEPENDENT ON FREESTREAM CONDITIONS */
-   ur =  wr[0]*norm[0] +wr[1]*norm[1];
-   vr = -wr[0]*norm[1] +wr[1]*norm[0];
-   pr =  wr[2];
+   ur =  ub(0)*norm(0) +ub(1)*norm(1);
+   vr = -ub(0)*norm(1) +ub(1)*norm(0);
+   pr =  ub(2);
       
-   um = mv[0]*norm[0] +mv[1]*norm[1];
+   um = mv(0)*norm(0) +mv(1)*norm(1);
    
    cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
    cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
    c = 0.5*(cl+cr);
-   u = 0.5*(ul+ur);
+   s = 0.5*(ul+ur);
    v = 0.5*(vl+vr);
    
    den = 1./(2*c);
-   lam0 = u -um;
-   lam1 = u-.5*um +c; /* always positive */
-   lam2 = u-.5*um -c; /* always negative */
+   lam0 = s -um;
+   lam1 = s-.5*um +c; /* always positive */
+   lam2 = s-.5*um -c; /* always negative */
       
    /* PERFORM CHARACTERISTIC SWAP */
    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
-   uvp[0] = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
+   uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
    if (lam0 > 0.0)
-      uvp[1] = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
+      uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
    else
-      uvp[1] = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-   uvp[2] = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+      uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
+   uvp(2) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
    
    /* CHANGE BACK TO X,Y COORDINATES */
-   wl[0] =  uvp[0]*norm[0] -uvp[1]*norm[1];
-   wl[1] =  uvp[0]*norm[1] +uvp[1]*norm[0];
-   wl[2] =  uvp[2];
-
-   /* SHOULDN'T CHANGE NORM */   
-   norm[0] *= mag;
-   norm[1] *= mag;
+   ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
+   ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
+   ub(2) =  uvp(2);
+   
+   norm *= mag;
+   flx(2) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+   flx(0) = flx(2)*ub(0) +ub(2)*norm(0);
+   flx(1) = flx(2)*ub(1) +ub(2)*norm(1);   
       
    return;
- 
 }
-#endif

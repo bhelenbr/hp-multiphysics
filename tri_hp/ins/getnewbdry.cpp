@@ -129,7 +129,7 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
          break;
       }
       case tri_hp_ins_stype::characteristic: {
-         temp = new neumann(*this,*sbdry(bnum));  // TEMPORARY NOT WORKING YET
+         temp = new characteristic(*this,*sbdry(bnum));
          break;
       }
       case tri_hp_ins_stype::euler: {

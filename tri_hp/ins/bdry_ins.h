@@ -364,6 +364,13 @@ namespace bdry_ins {
          */
 /*   };*/
 
-
+   class characteristic : public neumann {
+      protected:
+         void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx);
+      public:
+         characteristic(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
+         characteristic(const characteristic& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
+         characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+   };
 
 }

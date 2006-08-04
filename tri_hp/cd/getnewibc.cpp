@@ -152,25 +152,16 @@ FLT df1d(int n, FLT x, FLT y) {
    class soi_src : public init_bdry_cndtn {
 
        private:
-         double xpl,xpr,xpeak,yp,lamda_y,lamda_x,c,pd0;
+         double xl,xr,yt,yb,c;
 
        public:
           FLT f(int n, TinyVector<FLT,mesh::ND> x){
-/*
-            double ppeak;
+
             
-            if( x(0) > xpl && x(0) <= xpeak && x(1) < 0 && x(1) > yp )		//xdl < xdr < xgl < xj < xgr < xsl < xsr
-               return 1E24*(pd0+c*exp((x(0)-xpl)/lamda_x)*exp(-pow(x(1),2)/lamda_y));
-            else if ( x(0) > xpeak && x(0) < xpr && x(1) < 0 && x(1) > yp )
-            {
-               ppeak=pd0+c*exp((xpeak-xpl)/lamda_x);
-               return 1E24*((ppeak+(0-ppeak)/(xpr-xpeak)*(x(0)-xpeak))*exp(-pow(x(1),2)/lamda_y));
-            }
-*/
-		if( x(0) > 0.6 && x(0) < 0.7 && x(1) < -0.01 && x(1) > -0.05 )
-			return 1e24;
+            if( x(0) >= xl && x(0) <= xr && x(1) <= yt && x(1) >= yb )		//xdl < xdr < xgl < xj < xgr < xsl < xsr
+               return c;
             else
-               return 1E6;
+               return 0;
 
           }
 
@@ -179,28 +170,20 @@ FLT df1d(int n, FLT x, FLT y) {
              std::string keyword,val;
              std::istringstream data;
             
-            keyword = idnty+".xpl";
-            blockdata.getwdefault(keyword,xpl,0.6);
+            keyword = idnty+".xl";
+            blockdata.getwdefault(keyword,xl,0.68);
             
-            keyword = idnty+".xpr";
-            blockdata.getwdefault(keyword,xpr,0.7);
+            keyword = idnty+".xr";
+            blockdata.getwdefault(keyword,xr,0.7);
 
-            keyword = idnty+".yp";
-            blockdata.getwdefault(keyword,yp,-0.07);
-            
-            keyword = idnty+".xpeak";
-            blockdata.getwdefault(keyword,xpeak,0.68);
-            
-            keyword = idnty+".lambdax";
-            blockdata.getwdefault(keyword,lamda_x,0.01249);
-            
-            keyword = idnty+".lambday";
-            blockdata.getwdefault(keyword,lamda_y,0.00065);
+            keyword = idnty+".yt";
+            blockdata.getwdefault(keyword,yt,0.0);
+
+            keyword = idnty+".yb";
+            blockdata.getwdefault(keyword,yb,-0.07);
             
             keyword = idnty+".constant";
-            blockdata.getwdefault(keyword,c,4.627e9);
-
-            pd0=0.0-c;
+            blockdata.getwdefault(keyword,c,0.41);
 
           }
 
