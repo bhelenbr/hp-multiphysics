@@ -16,11 +16,12 @@
 #include "tri_hp_ins.h"
 #include "tri_hp_ps.h"
 #include "tri_hp_swirl.h"
+#include "pod/pod.h"
 
 class btype {
    public:
-      const static int ntypes = 5;
-      enum ids {r_mesh,cd,ins,ps,swirl};
+      const static int ntypes = 6;
+      enum ids {r_mesh,cd,ins,ps,swirl,pod_ins};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -29,7 +30,7 @@ class btype {
          return(-1);
       }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl"};
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","pod_ins"};
 
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
@@ -76,6 +77,10 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
 		
 		case btype::swirl: {
          mgrid<tri_hp_swirl> *temp = new mgrid<tri_hp_swirl>(idnum);
+         return(temp);
+      }
+      case btype::pod_ins: {
+         mgrid<pod<tri_hp_ins> > *temp = new mgrid<pod<tri_hp_ins> >(idnum);
          return(temp);
       }
 

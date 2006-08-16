@@ -21,7 +21,9 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    std::string filename;
    
    keyword = idprefix + ".nvariable";
-   input[keyword] = "3";
+   if (input.find(keyword) == input.end()) {
+      input[keyword] = "3";
+   }
    
    tri_hp::init(input,gin);
    
@@ -84,9 +86,9 @@ void tri_hp_ins::calculate_unsteady_sources(bool coarse) {
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
                cjcb(i,j) = -sim::bd[0]*gbl_ptr->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
-               for(n=0;n<ND;++n)
+               for(n=0;n<NV-1;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
-               dugdt(log2p,tind,ND)(i,j) = cjcb(i,j);
+               dugdt(log2p,tind,NV-1)(i,j) = cjcb(i,j);
 
                for(n=0;n<ND;++n)
                   dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);

@@ -6,8 +6,6 @@
 /* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
 /* BUT NOT INDEPENDENT OF TIME/MESH POSITION    */
 /*************************************************/
-//void chrctr(FLT rho, FLT gam, double wl[NV], double wr[NV], double norm[ND], double mv[ND]);
-
 using namespace bdry_ins;
 
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
@@ -118,7 +116,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
    int j,k,n,v0,v1,sind;
    TinyVector<FLT,2> pt,mvel,nrm;
-   TinyVector<FLT,3> u,flx;
+   Array<FLT,1> u(x.NV),flx(x.NV);
    
    if (ctrl_message == block::begin) {
       for(j=0;j<base.nel;++j) {
@@ -195,11 +193,11 @@ block::ctrl inflow::tadvance(bool coarse, block::ctrl ctrl_message) {
       for(j=0;j<base.nel;++j) {
          sind = base.el(j);
          v0 = x.sd(sind).vrtx(0);
-         for(n=0;n<x.ND;++n)
+         for(n=0;n<x.NV-1;++n)
             x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
       }
       v0 = x.sd(sind).vrtx(1);
-      for(n=0;n<x.ND;++n)
+      for(n=0;n<x.NV-1;++n)
          x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
 
       /*******************/   
@@ -225,20 +223,20 @@ block::ctrl inflow::tadvance(bool coarse, block::ctrl ctrl_message) {
          }
 
          if (basis::tri(x.log2p).sm) {
-            for(n=0;n<x.ND;++n)
+            for(n=0;n<x.NV-1;++n)
                basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 
             for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
                pt(0) = x.crd(0)(0,k);
                pt(1) = x.crd(1)(0,k);
-               for(n=0;n<x.ND;++n)
+               for(n=0;n<x.NV-1;++n)
                   x.res(n)(0,k) -= x.gbl_ptr->ibc->f(n,pt);
             }
-            for(n=0;n<x.ND;++n)
+            for(n=0;n<x.NV-1;++n)
                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
             indx = sind*x.sm0;
-            for(n=0;n<x.ND;++n) {
+            for(n=0;n<x.NV-1;++n) {
                PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
                for(m=0;m<basis::tri(x.log2p).sm;++m) 
                   x.ug.s(sind,m,n) = -x.lf(n)(2+m);
@@ -284,11 +282,11 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
 }
 
 
-void characteristic::flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
+void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
    FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
    FLT s,um,v,c,den,lam0,lam1,lam2,mag;
    FLT nu,gam,qmax;
-   TinyVector<FLT,3> ub, uvp;
+   Array<FLT,1> ub(x.NV), uvp(x.NV);
    
    /* CHARACTERISTIC FAR-FIELD B.C. */   
    rho = x.gbl_ptr->rho;
@@ -303,7 +301,7 @@ void characteristic::flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, Tin
    
    ul =  u(0)*norm(0) +u(1)*norm(1);
    vl = -u(0)*norm(1) +u(1)*norm(0);
-   pl =  u(2);
+   pl =  u(x.NV-1);
    
    /* FREESTREAM CONDITIONS */
    for(int n=0;n<x.NV;++n)
@@ -311,7 +309,7 @@ void characteristic::flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, Tin
       
    ur =  ub(0)*norm(0) +ub(1)*norm(1);
    vr = -ub(0)*norm(1) +ub(1)*norm(0);
-   pr =  ub(2);
+   pr =  ub(x.NV-1);
       
    um = mv(0)*norm(0) +mv(1)*norm(1);
    
@@ -329,21 +327,36 @@ void characteristic::flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, Tin
    /* PERFORM CHARACTERISTIC SWAP */
    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
    uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-   if (lam0 > 0.0)
+   if (lam0 > 0.0) {
       uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
-   else
+      for(int n=mesh::ND;n<x.NV-1;++n)
+         uvp(n) = u(n);
+   }
+   else {
       uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-   uvp(2) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+      for(int n=mesh::ND;n<x.NV-1;++n)
+         uvp(n) = ub(n);
+   }
+   uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
    
    /* CHANGE BACK TO X,Y COORDINATES */
    ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
    ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
-   ub(2) =  uvp(2);
+   
+   for(int n=mesh::ND;n<x.NV-1;++n)
+      ub(n) =uvp(n);
+   
+   ub(x.NV-1) =  uvp(x.NV-1);
    
    norm *= mag;
-   flx(2) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-   flx(0) = flx(2)*ub(0) +ub(2)*norm(0);
-   flx(1) = flx(2)*ub(1) +ub(2)*norm(1);   
+   
+   flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+   
+   for(int n=0;n<mesh::ND;++n)
+      flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
+      
+   for(int n=mesh::ND;n<x.NV-1;++n)
+      flx(n) = flx(x.NV-1)*ub(n);
       
    return;
 }

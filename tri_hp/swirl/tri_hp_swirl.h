@@ -27,6 +27,5 @@ class tri_hp_swirl : public tri_hp_ins {
       block::ctrl length(block::ctrl ctrl_message);
       block::ctrl setup_preconditioner(block::ctrl ctrl_message);
       block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-      void calculate_unsteady_sources(bool coarse);
 };
 #endif

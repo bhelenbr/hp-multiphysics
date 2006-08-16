@@ -22,8 +22,8 @@ using namespace bdry_swirl;
  */
 class tri_hp_swirl_stype {
    public:
-      static const int ntypes = 5;
-      enum ids {unknown=-1,plain,inflow,outflow,euler,symmetry};
+      static const int ntypes = 1;
+      enum ids {unknown=-1,symmetry};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -32,7 +32,7 @@ class tri_hp_swirl_stype {
       }
 };
 
-const char tri_hp_swirl_stype::names[ntypes][40] = {"plain","inflow","outflow","euler","symmetry"};
+const char tri_hp_swirl_stype::names[ntypes][40] = {"symmetry"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
@@ -54,22 +54,6 @@ hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
    }
 
    switch(type) {
-      case tri_hp_swirl_stype::plain: {
-         temp = new hp_side_bdry(*this,*sbdry(bnum));
-         break;
-      }
-      case tri_hp_swirl_stype::inflow: {
-         temp = new inflow(*this,*sbdry(bnum));
-         break;
-      }
-      case tri_hp_swirl_stype::outflow: {
-         temp = new neumann(*this,*sbdry(bnum));
-         break;
-      }
-      case tri_hp_swirl_stype::euler: {
-         temp = new euler(*this,*sbdry(bnum));
-         break;
-      }
 		case tri_hp_swirl_stype::symmetry: {
          temp = new symmetry(*this,*sbdry(bnum));
          break;

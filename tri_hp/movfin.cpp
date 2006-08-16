@@ -43,7 +43,7 @@ block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1>
          
       case(2): {
          /* DETERMINE CORRECTIONS ON COARSE MESH   */   
-         cmesh->vug_frst(Range(0,nvrtx-1),Range::all()) -= cmesh->ug.v(Range(0,nvrtx-1),Range::all());
+         cmesh->vug_frst(Range(0,cmesh->nvrtx-1),Range::all()) -= cmesh->ug.v(Range(0,cmesh->nvrtx-1),Range::all());
    
          /* LOOP THROUGH FINE VERTICES   */
          /* TO DETERMINE CHANGE IN SOLUTION */   

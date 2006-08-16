@@ -15,6 +15,10 @@
  *  Copyright 2005 __MyCompanyName__. All rights reserved.
  *
  */
+ 
+#ifndef _bdry_ins_h_
+#define _bdry_ins_h_
+
 
 #include "tri_hp_ins.h"
 #include "hp_boundary.h"
@@ -43,10 +47,19 @@ namespace bdry_ins {
 
    class neumann : public generic {
       protected:
-         virtual void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
-            flx(2) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-            flx(0) = flx(2)*u(0) +x.gbl_ptr->ibc->f(2, xpt)*norm(0);
-            flx(1) = flx(2)*u(1) +x.gbl_ptr->ibc->f(2, xpt)*norm(1);
+         virtual void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            
+            /* CONTINUITY */
+            flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+           
+            /* X&Y MOMENTUM */
+            for (int n=0;n<mesh::ND;++n)
+               flx(n) = flx(x.NV-1)*u(n) +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+           
+            /* EVERYTHING ELSE */
+             for (int n=mesh::ND;n<x.NV-1;++n)
+               flx(n) = flx(x.NV-1)*u(n);
+               
             return;
          }
       
@@ -60,12 +73,15 @@ namespace bdry_ins {
 
 
    class inflow : public neumann {      
-      void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
-         /* THESE DON'T GET USED */
-         flx(0) = 0.0;
-         flx(1) = 0.0;
-         /* MASS FLUX */
-         flx(2) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+      void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {
+         
+         /* CONTINUITY */
+         flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+
+         /* EVERYTHING ELSE */
+          for (int n=0;n<x.NV-1;++n)
+            flx(n) = 0.0;
+            
          return;
       }
       
@@ -79,10 +95,10 @@ namespace bdry_ins {
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
                v0 = x.sd(sind).vrtx(0);
-               x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.v(v0,Range(0,x.NV-2)) = 0.0;
             }
             v0 = x.sd(sind).vrtx(1);
-            x.gbl_ptr->res.v(v0,Range(0,x.ND-1)) = 0.0;
+            x.gbl_ptr->res.v(v0,Range(0,x.NV-2)) = 0.0;
          }
          
          void sdirichlet(int mode) {
@@ -90,7 +106,7 @@ namespace bdry_ins {
 
             for(int j=0;j<base.nel;++j) {
                sind = base.el(j);
-               x.gbl_ptr->res.s(sind,mode,Range(0,x.ND-1)) = 0.0;
+               x.gbl_ptr->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
             }
          }
             
@@ -99,14 +115,21 @@ namespace bdry_ins {
    
    class euler : public neumann {
       protected:
-         void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx) {
-            TinyVector<FLT,3> ub;
+         void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {
+            Array<FLT,1> ub(x.NV);
+            
             for(int n=0;n<x.NV;++n)
                ub(n) = x.gbl_ptr->ibc->f(n,xpt);
             
-            flx(2) = x.gbl_ptr->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-            flx(0) = flx(2)*ub(0) +u(2)*norm(0);
-            flx(1) = flx(2)*ub(1) +u(2)*norm(1);
+            flx(x.NV-1) = x.gbl_ptr->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+            
+            /* X&Y MOMENTUM */
+            for (int n=0;n<mesh::ND;++n)
+               flx(n) = flx(x.NV-1)*ub(n) +u(x.NV-1)*norm(n);
+           
+            /* EVERYTHING ELSE */
+             for (int n=mesh::ND;n<x.NV-1;++n)
+               flx(n) = flx(x.NV-1)*ub(n);
             
             return;
          }
@@ -114,6 +137,15 @@ namespace bdry_ins {
          euler(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "euler";}
          euler(const euler& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
          euler* create(tri_hp& xin, side_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+   };
+   
+   class characteristic : public neumann {
+      protected:
+         void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx);
+      public:
+         characteristic(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
+         characteristic(const characteristic& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
+         characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
    };
    
    class symmetry : public generic {
@@ -364,13 +396,5 @@ namespace bdry_ins {
          */
 /*   };*/
 
-   class characteristic : public neumann {
-      protected:
-         void flux(TinyVector<FLT,3> u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, TinyVector<FLT,3>& flx);
-      public:
-         characteristic(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
-         characteristic(const characteristic& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-         characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-   };
-
 }
+#endif
