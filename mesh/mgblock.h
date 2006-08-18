@@ -74,7 +74,7 @@ template<class GRD> class mgrid : public block {
       block::ctrl rsdl(int lvl, block::ctrl ctrl_message) {
          return(grd[lvl].rsdl(ctrl_message));
       }
-      FLT maxres() {return(grd[0].maxres());}
+      FLT maxres(int lvl = 0) {return(grd[lvl].maxres());}
       block::ctrl setup_preconditioner(int lvl, block::ctrl ctrl_message) {
          return(grd[lvl].setup_preconditioner(ctrl_message));
       }
@@ -173,7 +173,7 @@ template<class GRD> block::ctrl mgrid<GRD>::reconnect(int lvl, block::ctrl ctrl_
    if (ctrl_message == block::begin) excpt1 = 0;
    
    name = idprefix + "_coarsen";
-
+   
    switch(excpt1) {
       case(0):
 #ifdef OLDRECONNECT

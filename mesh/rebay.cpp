@@ -17,7 +17,7 @@
 #define VERBOSE
 
 #ifdef DEBUG_ADAPT
-extern int adapt_count;
+int adapt_count = 0;
 static std::string adapt_file;
 #endif
 
@@ -251,8 +251,9 @@ INSRT:
 }
 
 void mesh::bdry_rebay(FLT tolsize) {
-   int sind,count,el,psifxpt;
+   int sind,v0,count,el,psifxpt;
    FLT psi;
+   TinyVector<FLT,mesh::ND> endpt;
    
    /* REFINE BOUNDARY SIDES */
    for(int bnum=0;bnum<nsbd;++bnum) {
@@ -262,6 +263,25 @@ void mesh::bdry_rebay(FLT tolsize) {
          sbdry(bnum)->sndtype() = boundary::int_msg;
          sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
          continue;
+      }
+      
+      /* CHECK THAT ENDPOINTS ARE ON CURVE JUST TO BE SURE */
+      sind = sbdry(bnum)->el(0);
+      v0 = sd(sind).vrtx(0);
+      endpt = vrtx(v0);
+      sbdry(bnum)->mvpttobdry(0,0.0,endpt);
+      endpt -= vrtx(v0);
+      if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
+         *sim::log << "first endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
+      }
+      
+      sind = sbdry(bnum)->el(sbdry(bnum)->nel-1);
+      v0 = sd(sind).vrtx(1);
+      endpt = vrtx(v0);
+      sbdry(bnum)->mvpttobdry(sbdry(bnum)->nel-1,1.0,endpt);
+      endpt -= vrtx(v0);
+      if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
+         *sim::log << "last endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
       }
       
       nlst = 0;

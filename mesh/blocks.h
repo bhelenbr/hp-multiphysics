@@ -38,6 +38,9 @@ class blocks {
       int ncycle; /**< Number of iterations per timestep */
       FLT absolute_tolerance; /**< Absolute error tolerance for iterative loop (negative means don't use) */
       FLT relative_tolerance; /**< Relative error tolerance for iterative loop (negative means don't use) */
+      /** This for running a two-level iteration on performing extra iterations on coarsest mesh **/
+      int error_control_level; /**< Level of multigrid to repeat iterations until convergence (negative means don't use) */
+      FLT error_control_tolerance; /**< Relative error tolerance for error_control_level */
       /** Number of cycles between re-evaluation of preconditioner.
        *  negative mean reevaluate for both refinement and coarsening sweeps 
        */
@@ -166,11 +169,11 @@ class blocks {
       void tadvance(); 
             
       /** Print errors */
-      inline FLT maxres() {
-         FLT sum = 0.0;
+      inline FLT maxres(int lvl = 0) {
+         FLT maxerror = 0.0;
          for(int i=0;i<nblock;++i)
-            sum += blk[i]->maxres();
-         return(sum);
+            maxerror = MAX(maxerror,blk[i]->maxres(lvl));
+         return(maxerror);
       }
 
 };

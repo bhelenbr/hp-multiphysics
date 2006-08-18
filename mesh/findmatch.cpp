@@ -312,11 +312,11 @@ void mesh::partition(class mesh& xin, int npart) {
    *sim::log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
    
    if (!initialized) {
-      maxvst = 3*ntri;
+      maxvst = static_cast<int>(static_cast<FLT>(ntri*xin.maxvst)/xin.ntri);
       allocate(maxvst);
    }
    else if (3*ntri > maxvst) {
-      *sim::log << "mesh is too large" << std::endl;
+      *sim::log << "mesh is too small" << std::endl;
       exit(1);
    }
 

@@ -333,7 +333,7 @@ class side_bdry : public boundary, public sgeometry_interface {
       Array<int,1> el;
       
       /* CONSTRUCTOR */
-      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +".s" +idprefix; mytype="plain";}
+      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +".s" +idprefix; mytype="plain"; vbdry = -1;}
       side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
       
       /* BASIC B.C. STUFF */

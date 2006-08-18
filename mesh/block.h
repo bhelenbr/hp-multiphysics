@@ -30,7 +30,7 @@ class block {
       virtual ctrl rsdl(int lvl, block::ctrl ctrl_message) = 0;
       virtual ctrl setup_preconditioner(int lvl, block::ctrl ctrl_message) = 0;
       virtual ctrl update(int lvl, block::ctrl ctrl_message) = 0;
-      virtual double maxres() = 0;
+      virtual double maxres(int lvl = 0) = 0;
       virtual ctrl mg_getfres(int lvl, int lvlm, block::ctrl ctrl_message) = 0;
       virtual ctrl mg_getcchng(int lvl, int lvlp, block::ctrl ctrl_message) = 0;
       virtual ctrl reconnect(int lvl, block::ctrl ctrl_message) = 0;

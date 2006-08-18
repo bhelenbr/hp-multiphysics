@@ -179,7 +179,10 @@ void blocks::init(input_map input) {
    input.getwdefault("absolute_tolerance",absolute_tolerance,1.0e-12);
    
    input.getwdefault("relative_tolerance",relative_tolerance,-1.0);
-
+   
+   input.getwdefault("error_control_level",error_control_level,-1);
+   
+   input.getwdefault("error_control_tolerance",error_control_tolerance,0.33);
    
    input.getwdefault("ntstep",ntstep,1);
    input.getwdefault("restart",nstart,0);
@@ -199,6 +202,7 @@ void blocks::init(input_map input) {
    input.getwdefault("output_interval", out_intrvl,1);
    
    input.getwdefault("restart_interval",rstrt_intrvl,1);
+   rstrt_intrvl = MAX(1,rstrt_intrvl);
    
    input.getwdefault("debug_output",debug_output,false);
    
@@ -428,7 +432,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
-                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -438,7 +442,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
-                           *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
                         }
 #endif
                         
@@ -469,7 +473,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                               first_found = true;
                            }
-                           *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << " idnum: " << bp2->scomm[j].idnum << std::endl;
                         }
 #ifdef MPISRC
                         else {
@@ -479,7 +483,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
-                           *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << " idnum: " << bp2->scomm[j].idnum << std::endl;
                         }
 #endif
                      }
@@ -509,7 +513,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
-                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << std::endl;
+                           *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
 
                         }
 #ifdef MPISRC
@@ -520,7 +524,7 @@ void blocks::findmatch() {
                               v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                               first_found = true;
                            }
-                           *sim::log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << std::endl;
+                           *sim::log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
 
                         }
 #endif
@@ -625,6 +629,7 @@ void blocks::cycle(int vw, int lvl) {
    int i,vcount; 
    int gridlevel,gridlevelp;
    block::ctrl state,ctrl_message;
+   FLT error,maxerror = 0.0;
    
    /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
    /* SO I CAN DO P-MULTIGRID & ALGEBRAIC STUFF */
@@ -636,6 +641,17 @@ void blocks::cycle(int vw, int lvl) {
       if (!(vcount%abs(prcndtn_intrvl)) && itercrsn) setup_preconditioner(gridlevel);
                   
       iterate(gridlevel,itercrsn);
+      
+      /* THIS IS TO RUN A TWO-LEVEL ITERATION */
+      /* OR TO CONVERGE THE SOLUTION ON THE COARSEST MESH */
+      if (error_control_level == lvl) {
+         *sim::log << "#error_control ";
+         error = maxres(gridlevel);
+         maxerror = MAX(error,maxerror);
+         *sim::log << ' ' << error/maxerror << std::endl;
+         if (error/maxerror > error_control_tolerance) vcount = vw-2;
+         if (lvl == mglvls-1) continue;
+      }
       
       if (lvl == mglvls-1) return;
       

@@ -589,7 +589,7 @@ class sinewave : public curved_analytic_interface {
          inmap.getwdefault(idprefix+".h_or_v",h_or_v,0);
          inmap.getwdefault(idprefix+".amp",amp,0.0);
          inmap.getwdefault(idprefix+".lam",lam,1.0);
-         inmap.getwdefault(idprefix+".phase",lam,0.0);
+         inmap.getwdefault(idprefix+".phase",phase,0.0);
          phase = phase/360.0*2.0*M_PI;
          inmap.getwdefault(idprefix+".offset",offset,0.0);
       }
@@ -639,29 +639,53 @@ class naca : public curved_analytic_interface {
       FLT sign;
       FLT thickness;
       FLT coeff[5];
+      FLT scale;
+      FLT theta;
+      TinyVector<FLT,2> pos;
       
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(FLT x[mesh::ND]) {
+         TinyVector<FLT,mesh::ND> pt;
+         for(int n=0;n<mesh::ND;++n)
+            pt[n] = x[n] -pos(n);
+         
+         FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
+         pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
+         pt[0] = temp;
+         pt *= scale;
          return(thickness*(coeff[0]*sqrt(pt[0]) +coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4)) - sign*pt[1]);
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
-         if (dir == 0) {
-            if (pt[0] <= 0.0) return(1.0);
-            return(thickness*(0.5*coeff[0]/sqrt(pt[0]) +coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3)));
-         }
-         else {
-            return(-sign);
-         }
-         return(0.0);
+      FLT dhgt(int dir, FLT x[mesh::ND]) {
+         TinyVector<FLT,mesh::ND> pt;
+         for(int n=0;n<mesh::ND;++n)
+            pt[n] = x[n] -pos(n);
+         
+         FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
+         pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
+         pt[0] = temp;
+         pt *= scale;
+         
+         TinyVector<FLT,mesh::ND> ddx; 
+      
+         if (pt[0] <= 0.0) ddx(0) = 1.0;
+         else ddx(0) = thickness*(0.5*coeff[0]/sqrt(pt[0]) +coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3));
+         ddx(1) = -sign;
+         ddx *= scale;
+         
+         if (dir == 0) return(ddx(0)*cos(theta) +ddx(1)*sin(theta));
+         return(ddx(0)*(-sin(theta)) +ddx(1)*cos(theta));
       }
       
-      naca() : curved_analytic_interface(), sign(1.0), thickness(0.12) {
+      naca() : curved_analytic_interface(), sign(1.0), thickness(0.12), scale(1.0), theta(0.0) {
          /* NACA 0012 is the default */
          sign = 1;
          coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
+         pos = 0.0;
       }
-      naca(const naca &inbdry) : curved_analytic_interface(inbdry), sign(inbdry.sign), thickness(inbdry.thickness) {
+      naca(const naca &inbdry) : curved_analytic_interface(inbdry), sign(inbdry.sign), thickness(inbdry.thickness), scale(inbdry.scale), theta(inbdry.theta) {
          for(int i=0;i<5;++i) 
             coeff[i] = inbdry.coeff[i];
+            
+         pos = inbdry.pos;
       }
       naca* create() const {return(new naca(*this));}
 
@@ -673,29 +697,34 @@ class naca : public curved_analytic_interface {
          for(int i=0;i<5;++i) 
             fout << coeff[i] << " ";
          fout << std::endl;
+         fout << idprefix << ".scale: " << scale << std::endl;
+         fout << idprefix << ".theta: " << theta << std::endl;
+         fout << idprefix << ".center: " << pos << std::endl;
       }
      
        void input(input_map& inmap,std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
+
+         inmap.getwdefault(idprefix+".sign",sign,1.0);
+         inmap.getwdefault(idprefix+".thickness",thickness,0.12);
+         inmap.getwdefault(idprefix+".scale",scale,1.0);
+         inmap.getwdefault(idprefix+".theta",theta,0.0);
+         scale = 1./scale;
+         theta = theta*M_PI/180.0;
          
-         std::istringstream data(inmap[idprefix+".sign"]);
-         if (!(data >> sign)) sign = 1.0;
-         data.clear();
+         std::string linebuf;
+         istringstream datastream;
+         inmap.getwdefault(idprefix+".coeff",linebuf,std::string("1.4845 -0.63 -1.758 1.4215 -0.5180"));
+         datastream.str(linebuf);
+         for(int i=0;i<5;++i)
+            datastream >> coeff[i];
+         datastream.clear();
          
-         data.str(inmap[idprefix+".thickness"]);
-         if (!(data >> thickness)) thickness = 0.12;
-         data.clear();
-         
-         std::map<std::string,std::string>::const_iterator mi;
-         std::string keyword;
-         keyword = idprefix + ".coeff";
-         mi = inmap.find(keyword);
-         if (mi != inmap.end()) {
-            data.str(mi->second);
-            for(int i=0;i<5;++i)
-               data >> coeff[i];
-            data.clear();
-         }
+         inmap.getwdefault(idprefix+".center",linebuf,std::string("0.0 0.0"));
+         datastream.str(linebuf);
+         for(int i=0;i<mesh::ND;++i)
+            datastream >> pos(i);
+         datastream.clear();         
       }
 };       
 
@@ -778,6 +807,36 @@ class hyperbola : public curved_analytic_interface {
       void input(input_map& inmap, std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
          inmap.getwdefault(idprefix+".c",c,1.0);
+      }
+};
+
+class parabola : public curved_analytic_interface {
+   protected:
+      FLT curvature,offset;
+      FLT hgt(FLT pt[mesh::ND]) {
+         return(curvature*pt[0]*pt[0] -pt[1] +offset);
+      }
+      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+			if (dir==0)
+				return(2.0*curvature*pt[0]);
+			else 
+				return(-1.0);
+		}
+   public:
+      parabola() : curved_analytic_interface(), curvature(1.0), offset(0.0) {}
+		parabola(const parabola &inbdry) : curved_analytic_interface(inbdry), curvature(inbdry.curvature), offset(inbdry.offset) {}
+      parabola* create() const {return(new parabola(*this));}
+		
+		void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
+         fout << idprefix << ".curvature: " << curvature << std::endl;
+         fout << idprefix << ".offset: " << offset << std::endl;
+      }
+     
+       void input(input_map& inmap,std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
+         inmap.getwdefault(idprefix+".curvature",curvature,1.0);
+			inmap.getwdefault(idprefix+".offset",offset,0.0);
       }
 };
 

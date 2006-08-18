@@ -41,6 +41,11 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
    /* USE I1WK TO KEEP TRACK OF INDICES */
    
+   int inmeshbdrysides = 2*inmesh.nside -3*inmesh.ntri;
+   if (maxvst < inmeshbdrysides/2) {
+      *sim::log << "coarse mesh is not big enough: " << inmeshbdrysides/2 << ' ' << maxvst << std::endl;
+   }
+   
    /* COARSEN SIDES   */
    for(i=0;i<nsbd;++i) {
       sbdry(i)->nel = 0;
@@ -154,6 +159,9 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       vbdry(i)->v0 = i1wk(inmesh.vbdry(i)->v0);
    }
    
+   if (maxvst < nside/2+nside) {
+      *sim::log << "coarse mesh is not large enough: " << nside/2 +nside << ' ' << maxvst << std::endl;
+   }
 
    
    treeinit();

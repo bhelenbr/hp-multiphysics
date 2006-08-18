@@ -39,9 +39,12 @@ void mesh::triangulate(int nsd) {
       dir = (1 -SIGN(i2wk_lst1(i)))/2;
       sd(sind).tri(dir) = -1;
       i2wk_lst2(nv++) = sd(sind).vrtx(dir);
-      assert(nv < maxvst-1);
    }
-
+   if (nv > maxvst -2) {
+         *sim::log << idprefix << " coarse mesh is not big enough " << nv << ' ' << maxvst << std::endl;
+         exit(1);
+   }
+   
    /* SETUP SIDE POINTER INFO */
    for(i=0;i<nv;++i)
       vd(i2wk_lst2(i)).info = -1;

@@ -87,8 +87,8 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
  */
 class stype {
    public:
-      static const int ntypes = 13;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian,coupled_sinewave,coupled_circle,coupled_sinewave_comm,coupled_circle_comm};
+      static const int ntypes = 18;
+      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian,parabola,hyperbola,coupled_sinewave,coupled_circle,coupled_sinewave_comm,coupled_circle_comm,coupled_parabola,coupled_hyperbola,coupled_hyperbola_comm};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -98,7 +98,9 @@ class stype {
 };
 
 const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline",
-   "partition","naca","gaussian","coupled_sinewave","coupled_circle","coupled_sinewave_comm","coupled_circle_comm"};
+   "partition","naca","gaussian","parabola","hyperbola","coupled_sinewave","coupled_circle",
+	"coupled_sinewave_comm","coupled_circle_comm","coupled_parabola","coupled_hyperbola",
+	"coupled_hyperbola_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
@@ -161,6 +163,14 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new analytic_geometry<side_bdry,gaussian>(idnum,*this);
          break;
       }
+		case stype::parabola: {
+         temp = new analytic_geometry<side_bdry,parabola>(idnum,*this);
+         break;
+      }
+		case stype::hyperbola: {
+         temp = new analytic_geometry<side_bdry,hyperbola>(idnum,*this);
+         break;
+      }
       case stype::coupled_sinewave: {
          temp = new ssolution_geometry<analytic_geometry<side_bdry,sinewave> >(idnum,*this);
          break;
@@ -177,6 +187,18 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new ssolution_geometry<analytic_geometry<scomm,circle> >(idnum,*this);
          break;
       }
+		case stype::coupled_parabola: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,parabola> >(idnum,*this);
+         break;
+      }
+		case stype::coupled_hyperbola: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,hyperbola> >(idnum,*this);
+         break;
+      }
+		case stype::coupled_hyperbola_comm: {
+         temp = new ssolution_geometry<analytic_geometry<scomm,hyperbola> >(idnum,*this);
+         break;
+      }		
       
       default: {
          temp = new side_bdry(idnum,*this);
