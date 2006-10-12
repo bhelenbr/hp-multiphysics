@@ -76,12 +76,6 @@ class tri_hp : public r_mesh  {
       Array<TinyMatrix<FLT,MXGP,MXGP>,3> dugdt; //!< Precalculated unsteady sources at Gauss points
       Array<TinyMatrix<FLT,MXGP,MXGP>,3> dxdt; //!< Precalculated mesh velocity sources at Gauss points
       
-#ifdef PV3
-      /** Variables to understand iterative convergence using pV3 */
-      struct vsi ugpv3; // STORAGE FOR pV3 to see mode change
-      Array<TinyVector<FLT,r_mesh::ND>,1> vrtxpv3; // STORAGE FOR pV3 to see mode change
-#endif
-      
       /* Multigrid stuff needed on each mesh */
       bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
       Array<vsi,1> dres; //!< Driving term for multigrid
@@ -185,7 +179,7 @@ class tri_hp : public r_mesh  {
       
       /* Adaptation Routines */
       void findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
-      void findandmvptincurved(TinyVector<FLT,2> pt,int &tind, FLT &r, FLT &s);
+      void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
       
       /* FUNCTIONS FOR ADAPTION */ 
       virtual block::ctrl length(block::ctrl ctrl_message) {*sim::log << "here\n"; return(block::stop);}
@@ -232,18 +226,7 @@ class tri_hp : public r_mesh  {
       int sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
       int sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
       block::ctrl matchboundaries(block::ctrl ctrl_message);
-         
-#ifdef PV3
-      void pvstruc(int& knode, int& kequiv, int& kcel1, int& kcel2, int& kcel3, int& kcel4, int& knptet, int &kptet,int& knblock,int &blocks,int &kphedra, int& ksurf,int& knsurf,int& hint);
-      void pvcell(int &kn, int &kpoffset, int cel1[][4], int cel2[][5], int cel3[][6], int cel4[][8], int nptet[][8], int ptet[]);
-      void pvgrid(int &kn, float (*xyz)[3]);
-      void pvsurface(int snum, int &offset, int nsurf[][3], int scon[], int scel[][4], char tsurf[][20]);
-      void pvvect(int &offset, float v[][3]);
-      void flotov(int &kn, struct vsi flo,int nvar, float *v);
-      void meshtov(int &kn, FLT (*vin)[r_mesh::ND], struct bistruct **bin, int nvar, float *v);
-      void pv3freeze();
-      void pv3subtract(int frozen);
-#endif
+      
    private:
       int excpt,excpt1,stage,mp_phase,mode;
 };

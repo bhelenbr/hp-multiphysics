@@ -133,9 +133,7 @@ class power_ibc : public init_bdry_cndtn {
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "powers" << n << std::flush;
-               if (!inmap.getline(nstr.str(),val)) {
-                  val = "0.0 0.0";
-               }
+               inmap.getlinewdefault(nstr.str(),val,"0.0 0.0");
             }            
             data.str(val);
             data >> a(n,0) >> a(n,1);  
@@ -146,9 +144,7 @@ class power_ibc : public init_bdry_cndtn {
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "speeds" << n << std::flush;
-               if (!inmap.getline(nstr.str(),val)) {
-                  val = "0.0 0.0";
-               }
+               inmap.getlinewdefault(nstr.str(),val,"0.0 0.0");
             }            
             data.str(val);
             data >> spd(n,0) >> spd(n,1);  
@@ -186,9 +182,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "lambda" << n << std::flush;
-               if (!inmap.getline(nstr.str(),val)) {
-                  val = "1.0 1.0";
-               }
+               inmap.getlinewdefault(nstr.str(),val,"1.0 1.0");
             }            
             data.str(val);
             data >> lam(n,0) >> lam(n,1);  
@@ -199,9 +193,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "amplitude" << n << std::flush;
-               if (!inmap.getline(nstr.str(),val)) {
-                  val = "1.0 0.0";
-               }
+               inmap.getlinewdefault(nstr.str(),val,"1.0 0.0");
             }            
             data.str(val);
             data >> amp(n,0) >> amp(n,1);  
@@ -212,9 +204,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "offset" << n << std::flush;
-               if (!inmap.getline(nstr.str(),val)) {
-                  val = "0.0 0.0";
-               }
+               inmap.getlinewdefault(nstr.str(),val,"0.0 0.0");
             }            
             data.str(val);
             data >> offset(n,0) >> offset(n,1);  
@@ -299,10 +289,7 @@ class translating : public mesh_mover {
       std::ostringstream nstr;
       
       keyword = idnty +".velocity";
-      if (!inmap.getline(keyword,val)) 
-         if (!inmap.getline("velocity",val))
-            val = "0.0 0.0";
-     
+      if (!inmap.getline(keyword,val)) inmap.getlinewdefault("velocity",val,"0.0 0.0");
       data.str(val);
       data >> velocity(0) >> velocity(1);  
       data.clear(); 

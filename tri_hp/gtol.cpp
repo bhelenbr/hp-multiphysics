@@ -333,8 +333,9 @@
       indx = getbdryel(sd(sind).tri(1));
       if (hp_sbdry(bnum)->is_curved()) {
          for(m=0;m<basis::tri(log2p).sm;++m)
-            for(n=0;n<ND;++n) 
-               cht(n,m+2) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);
+            for(n=0;n<ND;++n) {
+               cht(n,m+2) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);               
+            }
       }
       else {
          for(m=0;m<basis::tri(log2p).sm;++m)

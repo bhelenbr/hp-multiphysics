@@ -125,9 +125,7 @@ FLT df1d(int n, FLT x, FLT y) {
                if (!inmap.getline(nstr.str(),val)) {
                   nstr.str("");
                   nstr << "src_powers" << n << std::flush;
-                  if (!inmap.getline(nstr.str(),val)) {
-                     val = "0.0 0.0";
-                  }
+                  inmap.getlinewdefault(nstr.str(),val,"0.0 0.0");
                }            
                data.str(val);
                data >> a(n,0) >> a(n,1);  
@@ -138,9 +136,7 @@ FLT df1d(int n, FLT x, FLT y) {
                if (!inmap.getline(nstr.str(),val)) {
                   nstr.str("");
                   nstr << "src_speeds" << n << std::flush;
-                  if (!inmap.getline(nstr.str(),val)) {
-                     val = "0.0 0.0";
-                  }
+                  inmap.getlinewdefault(nstr.str(),val,"0.0 0.0");
                }            
                data.str(val);
                data >> spd(n,0) >> spd(n,1);  

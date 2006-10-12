@@ -8,9 +8,6 @@
  */
 #include <blocks.h>
 #include <signal.h>
-#ifdef PV3
-#include <pV3.h>
-#endif
 #ifdef MPISRC
 #include <mpi.h>
 #endif
@@ -26,7 +23,6 @@ int main(int argc, char **argv) {
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
 	if (sigaction(SIGTERM,&action,&o_action)) printf("interrupt handler failed\n");
-   
 
 #ifdef MPISRC
    int myid;
@@ -77,6 +73,9 @@ void ctrlc(int signal)
    *sim::log << "# exiting gracefully" << std::endl;
    sim::blks.output("interrupt",block::restart);
    sim::blks.output("interrupt",block::display);
+#ifdef MPISRC
+   MPI_Finalize();
+#endif
    exit(1);
 }
 

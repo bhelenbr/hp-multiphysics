@@ -80,7 +80,7 @@ void hp_side_bdry::copy_data(const hp_side_bdry &bin) {
    
    if (!curved || !x.sm0) return;
    
-   for(int i=0;i<sim::nadapt; ++i)
+   for(int i=0;i<sim::nadapt+1; ++i)
       crvbd(i)(Range(0,base.nel-1),Range::all()) = bin.crvbd(i)(Range(0,base.nel-1),Range::all());
 }
 
@@ -208,7 +208,7 @@ void hp_side_bdry::curv_init(int tlvl) {
    for(j=0;j<base.nel;++j) {
       sind = base.el(j);
       v0 = x.sd(sind).vrtx(0);
-      base.mvpttobdry(j,0.0, x.vrtx(v0));
+      base.mvpttobdry(j,-1.0, x.vrtx(v0));
    }
    v0 = x.sd(sind).vrtx(1);
    base.mvpttobdry(base.nel-1,1.0, x.vrtx(v0));
@@ -230,7 +230,7 @@ void hp_side_bdry::curv_init(int tlvl) {
       for(i=0;i<basis::tri(x.log2p).gpx;++i) {
          pt(0) = x.crd(0)(0,i);
          pt(1) = x.crd(1)(0,i);
-         base.mvpttobdry(j,basis::tri(x.log2p).gx(i,2),pt);
+         base.mvpttobdry(j,basis::tri(x.log2p).xp(i),pt);
          x.crd(0)(0,i) -= pt(0);
          x.crd(1)(0,i) -= pt(1);
       }
@@ -253,13 +253,14 @@ void hp_side_bdry::curv_init(int tlvl) {
    return;
 }
 
-void hp_side_bdry::findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
+void hp_side_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
    int sind,v0,v1,iter;
    FLT dx,dy,ol,roundoff,dpsi;
    TinyVector<FLT,2> pt;
       
    base.findbdrypt(xp,bel,psi);
    if (!curved) {
+      base.side_bdry::mvpttobdry(bel,psi,xp);
       basis::tri(x.log2p).ptvalues1d(psi);
       return;
    }
@@ -288,15 +289,16 @@ void hp_side_bdry::findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi) {
          break;
       }  
    } while (fabs(dpsi) > roundoff);
+   xp = pt;
 }
 
 void hp_side_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
-   int sind;
-   sind = base.el(bel);
-   psi = 2*psi -1;
-   basis::tri(x.log2p).ptvalues1d(psi);
-   x.crdtocht1d(sind);
-   basis::tri(x.log2p).ptprobe1d(x.ND,xp.data(),psi,&x.cht(0,0),MXTM);
+
+   /* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
+   /* FIRST GET LINEAR APPROXIMATION TO LOCATION */
+   base.side_bdry::mvpttobdry(bel, psi, xp);
+   adapt_storage->findandmovebdrypt(xp,bel,psi);
+   
    return;
 }
 
@@ -330,8 +332,9 @@ block::ctrl hp_side_bdry::tadvance(bool coarse, block::ctrl ctrl_message) {
          for (int s=0;s<stage;++s) {         
             for(int j=0;j<base.nel;++j) {
                for(int m=0;m<basis::tri(x.log2p).sm;++m) {
-                  for(int n=0;n<mesh::ND;++n)
+                  for(int n=0;n<mesh::ND;++n) {
                      crvbd(1)(j,m)(n) += sim::adirk[stage][s]*crvbd(s+2)(j,m)(n);
+                  }
                }
             }
          }
@@ -382,11 +385,14 @@ void tri_hp::vc0load(int phase, FLT *vdata) {
 int tri_hp::vc0wait_rcv(int phase, FLT *vdata) {
    int stop = 1;
    int i;
-   
-   for(i=0;i<nsbd;++i)
+      
+   for(i=0;i<nsbd;++i) {
       stop &= sbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
-   for(i=0;i<nvbd;++i)
+   }
+         
+   for(i=0;i<nvbd;++i) {
       stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+   }
       
 
    for(i=0;i<nsbd;++i) 
@@ -430,8 +436,9 @@ int tri_hp::sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
    int stop = 1;
    int i;
    
-   for(i=0;i<nsbd;++i)
+   for(i=0;i<nsbd;++i) {
       stop &= sbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+   }
 
    for(i=0;i<nsbd;++i) 
       hp_sbdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
@@ -457,6 +464,11 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
    block::ctrl state;
    
    if (ctrl_message == block::begin) excpt = 0;
+
+#define NO_CTRL_DEBUG
+#ifdef CTRL_DEBUG
+   *sim::log << "In tri_hp::matchboundares with excpt " << excpt << std::endl;
+#endif
    
    switch(excpt) {
       case 0: {
@@ -469,7 +481,7 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
             ctrl_message = block::stay;
          }
       }
-      case 1: {
+      case 1: {         
          if (ctrl_message == block::stay) {
             
             if (!sm0) {
@@ -486,10 +498,10 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
                               sbdry(bnum)->fsndbuf(count++) = hp_sbdry(bnum)->crds(i,m,n);
                         }
                      }
+                     sbdry(bnum)->sndsize() = count;
+                     sbdry(bnum)->sndtype() = boundary::flt_msg;
+                     sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
                   }
-                  sbdry(bnum)->sndsize() = count;
-                  sbdry(bnum)->sndtype() = boundary::flt_msg;
-                  sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
                }
             }
          }
@@ -508,7 +520,7 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
       }
       case 3: {
          for(bnum=0;bnum<nsbd;++bnum) {
-            if (!sbdry(bnum)->is_frst() && hp_sbdry(bnum)->is_curved()) {            
+            if (!sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
                sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
                
                count = 0;
@@ -522,6 +534,8 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
                }
             }
          }
+         ++excpt;
+         return(block::advance);
       }
       
       case 4: {
@@ -551,7 +565,7 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
       }
       case 7: {
          if (ctrl_message == block::stay) {
-               
+
             if (!sm0) return(block::advance);
             
             ++mp_phase;

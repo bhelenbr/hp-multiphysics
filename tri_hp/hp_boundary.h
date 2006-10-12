@@ -79,6 +79,7 @@ class hp_side_bdry : public sgeometry_interface {
       std::string mytype;
       tri_hp& x;
       side_bdry &base;
+      const hp_side_bdry *adapt_storage;
       bool curved, coupled;
       Array<TinyVector<FLT,mesh::ND>,2> crv;
       TinyVector<Array<TinyVector<FLT,mesh::ND>,2>,sim::nhist+1> crvbd;
@@ -149,7 +150,7 @@ class hp_side_bdry : public sgeometry_interface {
       }
       
       /* SEARCH FUNCTIONS */
-      virtual void findbdrypt(const TinyVector<FLT,2> xp,int &bel,FLT &psi);
+      virtual void findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const;
       virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
       
       /* SOME UTILITIES */

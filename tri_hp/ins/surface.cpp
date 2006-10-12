@@ -95,26 +95,20 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       sdres.resize(x.log2p+1,base.maxel,x.sm0);
       
       keyword = base.idprefix + ".fadd";
-      if (!inmap.getline(keyword,val)) {
-         val = "1.0 1.0";
-      }
+      inmap.getlinewdefault(keyword,val,"1.0 1.0");
       data.str(val);
       data >> surf_gbl->fadd(0) >> surf_gbl->fadd(1);  
       data.clear(); 
       
       keyword = base.idprefix + ".cfltangent";
-      if (!inmap.getline(keyword,val)) {
-         val = "2.5 1.5 1.0";
-      }
+      inmap.getlinewdefault(keyword,val,"2.5 1.5 1.0");
       data.str(val);
       for(i=0;i<x.log2pmax+1;++i)
       data >> surf_gbl->cfl(0,i);  
       data.clear(); 
       
       keyword = base.idprefix + ".cflnormal";
-      if (!inmap.getline(keyword,val)) {
-         val = "2.0 1.25 0.75";
-      }
+      inmap.getlinewdefault(keyword,val,"2.0 1.25 0.75");
       data.str(val);
       for(i=0;i<x.log2pmax+1;++i)
       data >> surf_gbl->cfl(1,i);  
@@ -529,8 +523,8 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               x.vbdry(base.vbdry(0))->vloadbuff(boundary::partitions,&surf_gbl->vres(0)(0),0,1,0);
-               x.vbdry(base.vbdry(1))->vloadbuff(boundary::partitions,&surf_gbl->vres(base.nel+1)(0),0,1,0);
+               x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&surf_gbl->vres(0)(0),0,1,0);
+               x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&surf_gbl->vres(base.nel)(0),0,1,0);
                x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
@@ -541,8 +535,8 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
             case(2):
                i = x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
                i &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
-               x.vbdry(base.vbdry(0))->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vres(0)(0),0,1,0);
-               x.vbdry(base.vbdry(1))->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vres(base.nel+1)(0),0,1,0);
+               x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vres(0)(0),0,1,0);
+               x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vres(base.nel)(0),0,1,0);
                return(static_cast<block::ctrl>(i));
          }
       }
@@ -716,8 +710,8 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
          ++mp_phase;
          switch(mp_phase%3) {
             case(0):
-               x.vbdry(base.vbdry(0))->vloadbuff(boundary::partitions,&surf_gbl->vdt(0)(0,0),0,3,0);
-               x.vbdry(base.vbdry(1))->vloadbuff(boundary::partitions,&surf_gbl->vdt(base.nel+1)(0,0),0,3,0);
+               x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&surf_gbl->vdt(0)(0,0),0,3,0);
+               x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&surf_gbl->vdt(base.nel)(0,0),0,3,0);
                x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase/3,boundary::symmetric);
                return(block::stay);
@@ -728,8 +722,8 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
             case(2):
                i = x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
                i &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase/3,boundary::symmetric);
-               x.vbdry(base.vbdry(0))->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vdt(0)(0,0),0,3,0);
-               x.vbdry(base.vbdry(1))->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vdt(base.nel+1)(0,0),0,3,0);
+               x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vdt(0)(0,0),0,3,0);
+               x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase/3,boundary::symmetric,boundary::average,&surf_gbl->vdt(base.nel)(0,0),0,3,0);
                return(static_cast<block::ctrl>(i));
          }
       }
@@ -877,7 +871,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
          for(m=0;m<basis::tri(x.log2p).sm;++m)
             printf("spos2: %d %d %8.4e %8.4e\n",i,m,crvbd(1)(i,m)(0),crvbd(1)(i,m)(1));
 
-//      exit(1);
+      exit(1);
 #endif
          
          for(i=0;i<base.nel;++i) {

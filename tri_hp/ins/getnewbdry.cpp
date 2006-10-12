@@ -21,8 +21,8 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
    public:
-      static const int ntypes = 3;
-      enum ids {unknown=-1,surface_inflow,surface_outflow,surface_outflow_planar};
+      static const int ntypes = 4;
+      enum ids {unknown=-1,surface_inflow,surface_outflow,surface_outflow_planar,inflow};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i) 
@@ -31,7 +31,7 @@ class tri_hp_ins_vtype {
       }
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","surface_outflow_planar"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","surface_outflow_planar","inflow"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    std::string keyword,val;
@@ -63,6 +63,10 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
       }
       case tri_hp_ins_vtype::surface_outflow_planar: {
          temp = new surface_outflow_planar(*this,*vbdry(bnum));
+         break;
+      }
+      case tri_hp_ins_vtype::inflow: {
+         temp = new inflow_pt(*this,*vbdry(bnum));
          break;
       }
       default: {
@@ -117,7 +121,7 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 
    switch(type) {
       case tri_hp_ins_stype::plain: {
-         temp = new hp_side_bdry(*this,*sbdry(bnum));
+         temp = new generic(*this,*sbdry(bnum));
          break;
       }
       case tri_hp_ins_stype::inflow: {

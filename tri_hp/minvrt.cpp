@@ -105,6 +105,9 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          /* APPLY VERTEX DIRICHLET B.C.'S */
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->vdirichlet();
+            
+//         for(i=0;i<nvbd;++i)   /* TEMPORARY */
+//            hp_vbdry(i)->vdirichlet();
                
          if(basis::tri(log2p).sm == 0) {
             excpt = 7;

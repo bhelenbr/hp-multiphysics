@@ -158,6 +158,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
          for(i=0;i<nvrtx;++i) {
             fscr1(i) = pow(fscr1(i)/(norm*vd(i).nnbor*trncerr),1./(basis::tri(log2p).p+1+ND));
             vlngth(i) /= fscr1(i);      
+//            vlngth(i) /= 2.0;   For testing
 
 #ifdef THREELAYER
 #define TRES 0.025/THREELAYER

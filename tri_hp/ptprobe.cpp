@@ -16,13 +16,13 @@
    FLT psi;
    int sind;
    
-   hp_sbdry(bnum)->findbdrypt(xp,sind,psi);
+   hp_sbdry(bnum)->findandmovebdrypt(xp,sind,psi);
    sind = sbdry(bnum)->el(sind);
    ugtouht1d(sind,tlvl);  
    basis::tri(log2p).ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
 }
 
- void tri_hp::findandmvptincurved(TinyVector<FLT,2> xp, int &tind, FLT &r, FLT &s) {
+ void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
    TinyVector<FLT,3> wgt;
    int v0;
    
@@ -49,6 +49,9 @@
    /* MOVE POINT WITH SIDE CURVATURE */
    crdtocht(tind);
    basis::tri(log2p).ptprobe_bdry(ND,xp.data(),r,s,&cht(0,0),MXTM);
+      
+   /* need to do this because ptprobe_bdry only calculates boundary function */
+   basis::tri(log2p).ptvalues_rs(r,s);
 
    return;
 }
@@ -101,6 +104,9 @@
          break;
       }
    } while (fabs(dr) +fabs(ds) > roundoff);
+   
+   /* need to do this because ptprobe_bdry only calculates boundary function */
+   basis::tri(log2p).ptvalues_rs(r,s);
 
    return;
 }

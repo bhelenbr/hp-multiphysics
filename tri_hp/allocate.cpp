@@ -68,6 +68,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    *sim::log << "#AXISYMMETRIC is defined" << std::endl;
    int npts = 1;
 #else
+   *sim::log << "#AXISYMMETRIC is NOT defined" << std::endl;
    int npts = 0;
 #endif
 
@@ -209,14 +210,6 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       vrtxbd(i).resize(maxvst);
    }
 
-#ifdef PV3
-   /** Variables to understand iterative convergence using pV3 */
-   ugpv3.v.resize(maxvst,NV);
-   ugpv3.s.resize(maxvst,sm0,NV);
-   ugpv3.i.resize(maxvst,im0,NV);
-   vrtxpv3.resize(maxvst);
-#endif
-
    /* Multigrid Storage all except highest order (log2p+1)*/
    dres.resize(log2p);
    for(i=0;i<log2p;++i) {
@@ -252,12 +245,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    gbl_ptr->tprcn.resize(maxvst,NV,NV);
 #endif
 
-   keyword = idprefix +".cfl";
-   if (!inmap.getline(keyword,line)) {
-      if (!inmap.getline("cfl",line)) {
-         line = "2.5 1.5 1.0";
-      }
-   }
+   if (!inmap.getline(idprefix +".cfl",line)) inmap.getlinewdefault("cfl",line,"2.5 1.5 1.0"); 
    data.str(line);
    for(i=0;i<log2pmax+1;++i) {
       data >> gbl_ptr->cfl(i);
@@ -297,6 +285,11 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       inmap[keyword] = "1";
       gbl_ptr->pstr->tri_hp::init(inmap, hp_in);
       inmap[keyword] = "0";
+      
+      /* LET EACH BOUNDARY CONDITION DIRECTLY FIND ITS ADAPTATION STORAGE */
+      for(i=0;i<nsbd;++i)
+         hp_sbdry(i)->adapt_storage = gbl_ptr->pstr->hp_sbdry(i);
+         
    }
 
    /***************************************************/

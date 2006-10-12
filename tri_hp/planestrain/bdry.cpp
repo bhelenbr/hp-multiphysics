@@ -135,7 +135,7 @@ block::ctrl dirichlet::tadvance(bool coarse, block::ctrl ctrl_message) {
          }
       }
    }
-   return(block::advance);
+   return(block::stop);
 }
 
 block::ctrl friction_wall::rsdl(block::ctrl ctrl_message) {

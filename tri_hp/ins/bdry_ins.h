@@ -333,7 +333,7 @@ namespace bdry_ins {
          
          void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
             if (surfbdry == 0) {
-               x.sbdry(base.sbdry(1))->mvpttobdry(0,0.0,pt);
+               x.sbdry(base.sbdry(1))->mvpttobdry(0,-1.0,pt);
             }
             else {
                x.sbdry(base.sbdry(0))->mvpttobdry(x.sbdry(base.sbdry(0))->nel-1,1.0,pt);
@@ -383,6 +383,29 @@ namespace bdry_ins {
             pt(1-vertical) = location;
          }
    };
+   
+   class inflow_pt : public hp_vrtx_bdry {
+      protected:
+         tri_hp_ins &x;
+         
+       public:
+         inflow_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "inflow_pt";}
+         inflow_pt(const inflow_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+         inflow_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+
+         block::ctrl tadvance(block::ctrl ctrl_message) { 
+            if (ctrl_message == block::begin) {
+               for(int n=0;n<x.NV-1;++n)
+                  x.ug.v(base.v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(base.v0));  
+            }
+            return(block::stop);
+         }
+                           
+         void vdirichlet() {
+            x.gbl_ptr->res.v(base.v0,Range(0,x.NV-2)) = 0.0;
+         }
+   };
+
    
    
    

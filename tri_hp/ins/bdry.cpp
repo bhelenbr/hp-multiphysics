@@ -13,7 +13,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	FLT visc[mesh::ND][mesh::ND][mesh::ND][mesh::ND];
    TinyVector<FLT,2> drag, norm, mvel;
    TinyVector<FLT,3> flux;
-   FLT circ,moment,convect;
+   FLT circumference,moment,convect,circulation;
    
    switch(typ) {
       case(tri_hp::text): {
@@ -26,7 +26,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
          drag = 0.0;
          flux = 0.0;
          moment = 0.0;
-         circ = 0.0;
+         circumference = 0.0;
+         circulation = 0.0;
          
          for(ind=0; ind < base.nel; ++ind) {
             sind = base.el(ind);
@@ -49,7 +50,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                basis::tri(x.log2p).proj_side(sd,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
             for (i=0;i<basis::tri(x.log2p).gpx;++i) {
-               circ += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+               circumference += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
                x.cjcb(0,i) = x.gbl_ptr->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
                
                /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -93,7 +94,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                   mvel(n) += tri_hp_ins::mesh_ref_vel(n);
 #endif
                }
-
+               
+               circulation += -norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1));
                
                convect = basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
                flux(2) -= convect;
@@ -101,9 +103,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                flux(1) -= x.u(1)(0,i)*convect;
             }				
          }
-         fout << base.idprefix << " circumference: " << circ << std::endl;
+         fout << base.idprefix << " circumference: " << circumference << std::endl;
          fout << base.idprefix << " drag: " << drag << std::endl;
          fout << base.idprefix << " flux: " << flux << std::endl; 
+         fout << base.idprefix << " circulation: " << circulation << std::endl;
       }
    }
    

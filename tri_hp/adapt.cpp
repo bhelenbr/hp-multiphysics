@@ -37,8 +37,7 @@ void tri_hp::updatevdata(int v0) {
    FLT r,s;     
       
    gbl_ptr->pstr->findandmvptincurved(vrtx(v0),tind,r,s);
-   basis::tri(log2p).ptvalues_rs(r,s);
-   
+      
    for(step=0;step<sim::nadapt+1;++step) {
       gbl_ptr->pstr->ugtouht(tind,step);
       basis::tri(log2p).ptprobe(NV,&ugbd(step).v(v0,0),&uht(0)(0),MXTM);
@@ -67,7 +66,7 @@ void tri_hp::updatevdata_bdry(int bnum, int bel, int endpt) {
    FLT psi;
    
    v0 = sd(sbdry(bnum)->el(bel)).vrtx(endpt);
-   gbl_ptr->pstr->hp_sbdry(bnum)->findbdrypt(vrtx(v0),sidloc,psi);
+   gbl_ptr->pstr->hp_sbdry(bnum)->findandmovebdrypt(vrtx(v0),sidloc,psi);
    sind = gbl_ptr->pstr->sbdry(bnum)->el(sidloc);
 
    for(step=0;step<sim::nadapt+1;++step) {
@@ -136,7 +135,6 @@ void tri_hp::updatesdata(int sind) {
       pt(0) = crd(0)(0,i);
       pt(1) = crd(1)(0,i);
       gbl_ptr->pstr->findinteriorpt(pt,tind,r,s);
-      basis::tri(log2p).ptvalues_rs(r,s);
          
       for(step=0;step<sim::nadapt+1;++step) {
          gbl_ptr->pstr->ugtouht(tind,step);
@@ -185,7 +183,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
       for(m=0;m<basis::tri(log2p).gpx;++m) {
          pt(0) = bdwk(0,0)(1,m);
          pt(1) = bdwk(0,1)(1,m);
-         gbl_ptr->pstr->hp_sbdry(bnum)->findbdrypt(pt,stgt,psi);
+         gbl_ptr->pstr->hp_sbdry(bnum)->findandmovebdrypt(pt,stgt,psi);
          stgt = gbl_ptr->pstr->sbdry(bnum)->el(stgt);
 
 
@@ -218,7 +216,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
          pt(1) = bdwk(0,1)(1,m);
          
          /* FIND PSI */            
-         gbl_ptr->pstr->hp_sbdry(bnum)->findbdrypt(pt,stgt,psi);
+         gbl_ptr->pstr->hp_sbdry(bnum)->findandmovebdrypt(pt,stgt,psi);
          stgt = gbl_ptr->pstr->sbdry(bnum)->el(stgt);
          
          /* CALCULATE VALUE OF SOLUTION AT POINT */

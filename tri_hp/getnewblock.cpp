@@ -20,8 +20,8 @@
 
 class btype {
    public:
-      const static int ntypes = 6;
-      enum ids {r_mesh,cd,ins,ps,swirl,pod_ins};
+      const static int ntypes = 7;
+      enum ids {r_mesh,cd,ins,ps,swirl,pod_ins,pod_cd};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -30,7 +30,7 @@ class btype {
          return(-1);
       }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","pod_ins"};
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","pod_ins","pod_cd"};
 
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
@@ -81,6 +81,11 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
       }
       case btype::pod_ins: {
          mgrid<pod<tri_hp_ins> > *temp = new mgrid<pod<tri_hp_ins> >(idnum);
+         return(temp);
+      }
+      
+      case btype::pod_cd: {
+         mgrid<pod<tri_hp_cd> > *temp = new mgrid<pod<tri_hp_cd> >(idnum);
          return(temp);
       }
 

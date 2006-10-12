@@ -41,11 +41,8 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    gbl_ptr->tau.resize(maxvst);
    gbl_ptr->delt.resize(maxvst);
   
-   keyword = idprefix + ".rho";
-   input.getwdefault(keyword,gbl_ptr->rho,1.0);
-
-   keyword = idprefix + ".mu";
-   input.getwdefault(keyword,gbl_ptr->mu,0.0);
+   if (!input.get(idprefix + ".rho",gbl_ptr->rho)) input.getwdefault("rho",gbl_ptr->rho,1.0);
+   if (!input.get(idprefix + ".mu",gbl_ptr->mu)) input.getwdefault("mu",gbl_ptr->mu,0.0);
    
 #ifdef DROP
    *sim::log << "#DROP is defined" << std::endl;
