@@ -13,7 +13,7 @@
 /* GENERIC VERTEX COMMUNICATIONS */
 void vcomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
    int i,offset;
-      
+
    if (!((1<<grp)&groupmask)) return;
 
    sndsize()=end-bgn+1;
@@ -131,7 +131,7 @@ void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
    int n;
    
    for (n=0;n<mesh::ND;++n)
-      pt(n) = (1. -psi)*x.vrtx(x.sd(el(indx)).vrtx(0))(n) +psi*x.vrtx(x.sd(el(indx)).vrtx(1))(n);
+      pt(n) = 0.5*((1. -psi)*x.vrtx(x.sd(el(indx)).vrtx(0))(n) +(1.+psi)*x.vrtx(x.sd(el(indx)).vrtx(1))(n));
    
    return;
 }

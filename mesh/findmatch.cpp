@@ -195,11 +195,16 @@ int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, bo
 }
 
 block::ctrl mesh::matchboundaries(block::ctrl ctrl_message) {
-   int stop;
+   int state;
    
    if (ctrl_message == block::begin) excpt = 0;
    else excpt += ctrl_message;
-
+   
+#define NO_CTRL_DEBUG
+#ifdef CTRL_DEBUG
+   *sim::log << "In mesh::matchboundaries with excpt " << excpt << std::endl;
+#endif
+ 
    switch (excpt) {
       case(0):
          mp_phase = -1;
@@ -228,20 +233,21 @@ block::ctrl mesh::matchboundaries(block::ctrl ctrl_message) {
                return(block::stay);
             }
             case(2): {
-               stop=block::advance;
+               state=block::advance;
 
                /* FINAL PHASE OF SENDING */
                for(int i=0;i<nsbd;++i)
-                  stop &= sbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
+                  state &= sbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
+                              
                for(int i=0;i<nvbd;++i)
-                  stop &= vbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
+                  state &= vbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
                   
                for(int i=0;i<nsbd;++i)
                   sbdry(i)->rcvpositions(mp_phase/3);
                for(int i=0;i<nvbd;++i)
                   vbdry(i)->rcvpositions(mp_phase/3);
                         
-               return(stop);
+               return(state);
             }
          }
       case(2): {
@@ -252,7 +258,7 @@ block::ctrl mesh::matchboundaries(block::ctrl ctrl_message) {
    *sim::log << "control flow error matchboundaries\n";
    exit(1);
    
-   return(stop);
+   return(block::stop);
 }
 
 #ifdef METIS

@@ -196,6 +196,9 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       }
    }
    
+   /* maxsrch must be high for triangulated domain with no interior points */
+   maxsrch = 2*ntri;
+   
    for(i=0;i<inmesh.nvrtx;++i) {
       if (ISSPEC(i1wk(i))) continue;
       
@@ -205,6 +208,9 @@ int mesh::coarsen(FLT factor, const class mesh& inmesh) {
       insert(inmesh.vrtx(i));
    }
    cnt_nbor();
+   
+   /* reset maxsrch */
+   maxsrch = 100;
    
    /* RESET i1wk */
    for(i=0;i<inmesh.nsbd;++i) {

@@ -691,6 +691,10 @@ void blocks::go() {
    FLT maxerror,error;
 
    clock();
+   
+   /* OUTPUT INITIAL CONDITION */
+   if (nstart == 0) output("data0");
+      
    for(sim::tstep=nstart+1;sim::tstep<ntstep;++sim::tstep) {
       for(sim::substep=0;sim::substep<sim::stepsolves;++sim::substep) {
          *sim::log << "#TIMESTEP: " << sim::tstep << " SUBSTEP: " << sim::substep << std::endl;
@@ -702,7 +706,7 @@ void blocks::go() {
             *sim::log << i << ' ';
             error = maxres();
             maxerror = MAX(error,maxerror);
-            *sim::log << '\n';
+            *sim::log << std::endl << std::flush;
             if (debug_output) {
                nstr.str("");
                nstr << sim::tstep << '_' << sim::substep << '_' << i << std::flush;

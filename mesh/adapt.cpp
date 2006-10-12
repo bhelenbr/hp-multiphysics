@@ -15,9 +15,6 @@ int nlst;
 
 block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
    int i;
-#ifdef MPISRC
-   MPI_Status status;
-#endif
 
    if (ctrl_message == block::begin) excpt = 0;
    else ++excpt;

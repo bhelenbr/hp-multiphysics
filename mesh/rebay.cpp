@@ -269,7 +269,7 @@ void mesh::bdry_rebay(FLT tolsize) {
       sind = sbdry(bnum)->el(0);
       v0 = sd(sind).vrtx(0);
       endpt = vrtx(v0);
-      sbdry(bnum)->mvpttobdry(0,0.0,endpt);
+      sbdry(bnum)->mvpttobdry(0,-1.0,endpt);
       endpt -= vrtx(v0);
       if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
          *sim::log << "first endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
@@ -301,11 +301,11 @@ void mesh::bdry_rebay(FLT tolsize) {
          
          /* FOR NOW INSERTION POINT IN MIDDLE */
          /* FIXED POINT ARITHMETIC SO I CAN PASS AN INTEGER */
-         psi = 0.5;
+         psi = 0.0;
          psifxpt = static_cast<int>(256*psi);
          psi = psifxpt/256.0;
          sbdry(bnum)->mvpttobdry(el,psi,vrtx(nvrtx));
-         vlngth(nvrtx) = (1.-psi)*vlngth(sd(sind).vrtx(0)) +psi*vlngth(sd(sind).vrtx(1));
+         vlngth(nvrtx) = 0.5*((1.-psi)*vlngth(sd(sind).vrtx(0)) +(1.+psi)*vlngth(sd(sind).vrtx(1)));
 
 #ifdef DEBUG_ADAPT
          *sim::log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
@@ -370,10 +370,10 @@ void mesh::bdry_rebay1() {
          if (el < nel_bgn) el = nel_bgn -1 -el;
 
          sind = sbdry(bnum)->el(el);
-         psifxpt = 256 -sbdry(bnum)->ircvbuf(0,i+1);
+         psifxpt = -sbdry(bnum)->ircvbuf(0,i+1);
          psi = psifxpt/256.0;
          sbdry(bnum)->mvpttobdry(el,psi,vrtx(nvrtx));
-         vlngth(nvrtx) = (1.-psi)*vlngth(sd(sind).vrtx(0)) +psi*vlngth(sd(sind).vrtx(1));
+         vlngth(nvrtx) = 0.5*((1.-psi)*vlngth(sd(sind).vrtx(0)) +(1.+psi)*vlngth(sd(sind).vrtx(1)));
 #ifdef DEBUG_ADAPT
          *sim::log << "Inserting boundary side " << i << ' ' << adapt_count << ' ';
          for(int n=0;n<ND;++n)

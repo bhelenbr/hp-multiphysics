@@ -107,7 +107,7 @@ void mesh::yaber(FLT tolsize) {
       sum = (td(sd(sind).vrtx(0)).info&VSPEC) +(td(sd(sind).vrtx(1)).info&VSPEC);
       if (sum > 0) {
          if (sum > VSPEC) {
-            std::cout << "Big oops near point" << vrtx(sd(sind).vrtx(0)) << std::endl;
+            std::cout << "Trying to Delete edge with two endpoints on boundary" << vrtx(sd(sind).vrtx(0)) << std::endl;
             continue;
          }
          if (td(sd(sind).vrtx(0)).info&VSPEC) endpt = 1;

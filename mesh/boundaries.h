@@ -209,7 +209,7 @@ template<class BASE> class comm_bdry : public BASE {
 
       /* MECHANISM FOR SYMMETRIC SENDING */
       void comm_prepare(boundary::groups grp, int phi, boundary::comm_type type) {         
-         int m;
+         int m,err;
          int nrecvs_to_post = nmatch;
          
          if (!((1<<grp)&groupmask)) return;
@@ -239,23 +239,29 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing for float message: " << BASE::idnum << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "preparing for float message: " << BASE::idprefix << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif     
                   
                   switch(mtype(m)) {
                      case(local):
+#ifdef MPDEBUG
+                        *sim::log << "local" << std::endl << std::flush;
+#endif
                         /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                         break;  
 #ifdef MPISRC
                      case(mpi):
+#ifdef MPDEBUG
+                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+#endif
 #ifdef SINGLE
-                        MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_FLOAT, 
+                        err = MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_FLOAT, 
                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
-                        MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_DOUBLE, 
-                           mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m)); 
-                        break;
+                        err = MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_DOUBLE, 
+                           mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #endif   
+                        break;
 #endif      
                   }
                }
@@ -268,17 +274,24 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing for int message: " << BASE::idnum << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "preparing for int message: " << BASE::idprefix << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif   
                   
                   switch(mtype(m)) {
                      case(local):
+#ifdef MPDEBUG
+                        *sim::log << "local" << std::endl << std::flush;
+#endif
                         /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
                         break;  
 #ifdef MPISRC
                      case(mpi):
-                        MPI_Irecv(&ircvbuf(m,0), buffsize/sizeof(int), MPI_INT, 
-                           mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_rcvrqst(m));
+#ifdef MPDEBUG
+                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+#endif
+                        err = MPI_Irecv(&ircvbuf(m,0), buffsize/sizeof(int), MPI_INT, 
+                           mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
+                           
                         break;
 #endif         
                   }
@@ -290,7 +303,7 @@ template<class BASE> class comm_bdry : public BASE {
       }
       
       void comm_exchange(boundary::groups grp, int phi, boundary::comm_type type) {
-         int i,m;
+         int i,m,err;
          int nlocalmessages = nmatch, nmpimessages = nmatch;
          
          if (!((1<<grp)&groupmask)) return;
@@ -329,9 +342,9 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging local float message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                  for(i=0;i<local_match(m)->sndsize();++i) 
-                     *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
+                  *(sim::log) << "exchanging local float message: " << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+//                  for(i=0;i<local_match(m)->sndsize();++i) 
+//                     *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif     
                   for(i=0;i<local_match(m)->sndsize();++i) 
                      frcvbuf(m,i) = local_match(m)->fsndbuf(i);
@@ -343,17 +356,17 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging mpi float message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif  
 
 #ifdef SINGLE
-                  MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                     mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
+                  err = MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                     mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
 #else
-                  MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                     mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));             
+                  err = MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                     mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));             
 #endif
                }
 #endif
@@ -366,7 +379,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging local int message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging local int message: " << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<local_match(m)->sndsize();++i) 
                      *sim::log << "\t" << local_match(m)->isndbuf(i) << std::endl;
 #endif 
@@ -381,13 +394,12 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging mpi int message: " << BASE::idnum << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging mpi int message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << isndbuf(i) << std::endl;
 #endif  
-
-                  MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
-                     mpi_match(m), tags(m),MPI_COMM_WORLD, &mpi_sndrqst(m));
+                  err = MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
+                     mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
                }
 #endif
                break;     
@@ -398,30 +410,44 @@ template<class BASE> class comm_bdry : public BASE {
       }
       
       int comm_wait(boundary::groups grp, int phi, boundary::comm_type type) {
-         int nwait = nmatch;
+         int nrecvwait;
+         int nsendwait;
          
          if (!((1<<grp)&groupmask)) return(1);
          
          switch(type) {
             case(boundary::master_slave): {
-               if (first) 
-                  return(1);
-               else
-                  nwait = 1;
+               if (first) {
+                  nrecvwait = 0;
+                  nsendwait = nmatch;
+               }
+               else {
+                  nrecvwait = 1;
+                  nsendwait = 0;
+               }
                break;
             }
             
             case(boundary::slave_master): {
-               if (!first) return(1);
+               if (!first) {
+                  nrecvwait = 0;
+                  nsendwait = 1;
+               }
+               else {
+                  nrecvwait = nmatch;
+                  nsendwait = 0;
+               }
                break;
             }
             
             case(boundary::symmetric): {
+               nrecvwait = nmatch;
+               nsendwait = nmatch;
                break;
             }
          }
-                  
-         for(int m=0;m<nwait;++m) {
+         
+         for(int m=0;m<nsendwait;++m) {
             if (phi != phase(grp)(m)) continue;
             
             switch(mtype(m)) {
@@ -431,6 +457,30 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
                case(mpi): {
                   MPI_Status status;
+#ifdef MPDEBUG
+                  *sim::log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+#endif
+                  MPI_Wait(&mpi_sndrqst(m), &status); 
+                  break;
+               }
+#endif
+            }
+         }
+
+       
+         for(int m=0;m<nrecvwait;++m) {
+            if (phi != phase(grp)(m)) continue;
+            
+            switch(mtype(m)) {
+               case(local): {
+                  break;
+               }
+#ifdef MPISRC
+               case(mpi): {
+                  MPI_Status status;
+#ifdef MPDEBUG
+                  *sim::log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m)  << std::endl;
+#endif
                   MPI_Wait(&mpi_rcvrqst(m), &status); 
                   break;
                }
@@ -439,10 +489,10 @@ template<class BASE> class comm_bdry : public BASE {
             
 #ifdef MPDEBUG
             if (msgtype == boundary::flt_msg) {
-               *(sim::log) << "received float message: " << BASE::idnum << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+               *(sim::log) << "received float message: " << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
             }
             else {
-               *(sim::log) << "received int message: " << BASE::idnum << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+               *(sim::log) << "received int message: " << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
             }
 #endif  
          }
@@ -637,8 +687,7 @@ class circle : public curved_analytic_interface {
 class naca : public curved_analytic_interface {
    public:
       FLT sign;
-      FLT thickness;
-      FLT coeff[5];
+      TinyVector<FLT,5> coeff;
       FLT scale;
       FLT theta;
       TinyVector<FLT,2> pos;
@@ -652,7 +701,8 @@ class naca : public curved_analytic_interface {
          pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
          pt[0] = temp;
          pt *= scale;
-         return(thickness*(coeff[0]*sqrt(pt[0]) +coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4)) - sign*pt[1]);
+         FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];         
+         return(coeff[0]*pt[0] -poly*poly/coeff[0]);
       }
       FLT dhgt(int dir, FLT x[mesh::ND]) {
          TinyVector<FLT,mesh::ND> pt;
@@ -665,23 +715,25 @@ class naca : public curved_analytic_interface {
          pt *= scale;
          
          TinyVector<FLT,mesh::ND> ddx; 
-      
-         if (pt[0] <= 0.0) ddx(0) = 1.0;
-         else ddx(0) = thickness*(0.5*coeff[0]/sqrt(pt[0]) +coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3));
-         ddx(1) = -sign;
+         FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];         
+         FLT dpolydx = coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3);
+         FLT dpolydy = -sign;
+         ddx(0) = coeff[0] -2*poly*dpolydx/coeff[0];
+         ddx(1) = -2*poly*dpolydy/coeff[0];
          ddx *= scale;
          
          if (dir == 0) return(ddx(0)*cos(theta) +ddx(1)*sin(theta));
          return(ddx(0)*(-sin(theta)) +ddx(1)*cos(theta));
       }
       
-      naca() : curved_analytic_interface(), sign(1.0), thickness(0.12), scale(1.0), theta(0.0) {
+      naca() : curved_analytic_interface(), sign(1.0), scale(1.0), theta(0.0) {
          /* NACA 0012 is the default */
          sign = 1;
          coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
+         coeff *= 0.12;
          pos = 0.0;
       }
-      naca(const naca &inbdry) : curved_analytic_interface(inbdry), sign(inbdry.sign), thickness(inbdry.thickness), scale(inbdry.scale), theta(inbdry.theta) {
+      naca(const naca &inbdry) : curved_analytic_interface(inbdry), sign(inbdry.sign), scale(inbdry.scale), theta(inbdry.theta) {
          for(int i=0;i<5;++i) 
             coeff[i] = inbdry.coeff[i];
             
@@ -692,7 +744,6 @@ class naca : public curved_analytic_interface {
       void output(std::ostream& fout,std::string idprefix) {
          curved_analytic_interface::output(fout,idprefix);
          fout << idprefix << ".sign: " << sign << std::endl;
-         fout << idprefix << ".thickness: " << thickness << std::endl;
          fout << idprefix << ".coeff: ";
          for(int i=0;i<5;++i) 
             fout << coeff[i] << " ";
@@ -705,6 +756,7 @@ class naca : public curved_analytic_interface {
        void input(input_map& inmap,std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
 
+         FLT thickness;
          inmap.getwdefault(idprefix+".sign",sign,1.0);
          inmap.getwdefault(idprefix+".thickness",thickness,0.12);
          inmap.getwdefault(idprefix+".scale",scale,1.0);
@@ -719,6 +771,7 @@ class naca : public curved_analytic_interface {
          for(int i=0;i<5;++i)
             datastream >> coeff[i];
          datastream.clear();
+         coeff *= thickness;
          
          inmap.getwdefault(idprefix+".center",linebuf,std::string("0.0 0.0"));
          datastream.str(linebuf);

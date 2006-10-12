@@ -170,9 +170,11 @@ class blocks {
             
       /** Print errors */
       inline FLT maxres(int lvl = 0) {
-         FLT maxerror = 0.0;
-         for(int i=0;i<nblock;++i)
-            maxerror = MAX(maxerror,blk[i]->maxres(lvl));
+         FLT error,maxerror = 0.0;
+         for(int i=0;i<nblock;++i) {
+            error = blk[i]->maxres(lvl);
+            maxerror = MAX(maxerror,error);
+         }
          return(maxerror);
       }
 

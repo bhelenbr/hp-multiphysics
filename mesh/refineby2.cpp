@@ -58,7 +58,7 @@ void mesh::refineby2(const class mesh& inmesh) {
       initialsidenumber = sbdry(i)->nel;
       for(j=0;j<initialsidenumber;++j) {
          sind = sbdry(i)->el(j);
-         sbdry(i)->mvpttobdry(j,0.5,vrtx(nvrtx));
+         sbdry(i)->mvpttobdry(j,0.0,vrtx(nvrtx));
          bdry_insert(nvrtx,sind);
          ++nvrtx;
       }
