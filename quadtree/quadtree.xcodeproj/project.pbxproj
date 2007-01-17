@@ -1,0 +1,412 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6FD8B0240865BD6D005A8B60 /* quadtree.h in Headers */ = {isa = PBXBuildFile; fileRef = F51211000190489701990B20 /* quadtree.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FD8B0250865BD7D005A8B60 /* quad_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = F5129161033258B801990B69 /* quad_impl.h */; settings = {ATTRIBUTES = (); }; };
+		6FD8B0260865BD7E005A8B60 /* quad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F51210FF0190489701990B20 /* quad.cpp */; };
+		6FD8B0270865BDC7005A8B60 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FD8B0150865BC3F005A8B60 /* libquad.a */; };
+		6FFC0D3F05AE0B7900A78095 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512110701904AE101990B20 /* main.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		6FD8B0150865BC3F005A8B60 /* libquad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FFC0D4605AE0B7900A78095 /* quadtree */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = quadtree; sourceTree = BUILT_PRODUCTS_DIR; };
+		F51210FF0190489701990B20 /* quad.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = quad.cpp; sourceTree = "<group>"; };
+		F51211000190489701990B20 /* quadtree.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = quadtree.h; sourceTree = "<group>"; };
+		F512110701904AE101990B20 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		F5129161033258B801990B69 /* quad_impl.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = quad_impl.h; sourceTree = "<group>"; };
+		F5440D5202465FF801990B20 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6FD8B0130865BC3F005A8B60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0D4105AE0B7900A78095 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FD8B0270865BDC7005A8B60 /* libquad.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		08FB7794FE84155DC02AAC07 /* quadtree */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				F5440D5102465FF801990B20 /* Scripts */,
+				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = quadtree;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				F512110701904AE101990B20 /* main.cpp */,
+				F51211000190489701990B20 /* quadtree.h */,
+				F51210FF0190489701990B20 /* quad.cpp */,
+				F5129161033258B801990B69 /* quad_impl.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6FFC0D4605AE0B7900A78095 /* quadtree */,
+				6FD8B0150865BC3F005A8B60 /* libquad.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		F5440D5102465FF801990B20 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				F5440D5202465FF801990B20 /* makefile */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		6FD8B0110865BC3F005A8B60 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FD8B0240865BD6D005A8B60 /* quadtree.h in Headers */,
+				6FD8B0250865BD7D005A8B60 /* quad_impl.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0D3B05AE0B7900A78095 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6FD8B0140865BC3F005A8B60 /* quad */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FD8B0160865BC8A005A8B60 /* Build configuration list for PBXNativeTarget "quad" */;
+			buildPhases = (
+				6FD8B0110865BC3F005A8B60 /* Headers */,
+				6FD8B0120865BC3F005A8B60 /* Sources */,
+				6FD8B0130865BC3F005A8B60 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = quad;
+			productName = libquad;
+			productReference = 6FD8B0150865BC3F005A8B60 /* libquad.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6FFC0D3A05AE0B7900A78095 /* quadtree */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FD8AE7608651561005A8B60 /* Build configuration list for PBXNativeTarget "quadtree" */;
+			buildPhases = (
+				6FFC0D3B05AE0B7900A78095 /* Headers */,
+				6FFC0D3E05AE0B7900A78095 /* Sources */,
+				6FFC0D4105AE0B7900A78095 /* Frameworks */,
+				6FFC0D4305AE0B7900A78095 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = quadtree;
+			productInstallPath = "$(HOME)/bin";
+			productName = quadtree;
+			productReference = 6FFC0D4605AE0B7900A78095 /* quadtree */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* quadtree */;
+			projectDirPath = "";
+			targets = (
+				6FD8B0140865BC3F005A8B60 /* quad */,
+				6FFC0D3A05AE0B7900A78095 /* quadtree */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXRezBuildPhase section */
+		6FFC0D4305AE0B7900A78095 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6FD8B0120865BC3F005A8B60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FD8B0260865BD7E005A8B60 /* quad.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FFC0D3E05AE0B7900A78095 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FFC0D3F05AE0B7900A78095 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6FD8AE7708651561005A8B60 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = /usr/bin/gcc;
+				COPY_PHASE_STRIP = NO;
+				CPLUSPLUS = "/usr/bin/g++";
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = ../include;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = ../lib;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = quadtree;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		6FD8AE7808651561005A8B60 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = /usr/bin/gcc;
+				COPY_PHASE_STRIP = YES;
+				CPLUSPLUS = "/usr/bin/g++";
+				DEPLOYMENT_LOCATION = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = ../include;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = ../lib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = quadtree;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		6FD8AE7908651561005A8B60 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CC = /usr/bin/gcc;
+				CPLUSPLUS = "/usr/bin/g++";
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				HEADER_SEARCH_PATHS = ../include;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = ../lib;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = quadtree;
+				REZ_EXECUTABLE = YES;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+			};
+			name = Default;
+		};
+		6FD8AE7B08651561005A8B60 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		6FD8AE7C08651561005A8B60 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEPLOYMENT_LOCATION = YES;
+			};
+			name = Deployment;
+		};
+		6FD8AE7D08651561005A8B60 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Default;
+		};
+		6FD8B0170865BC8A005A8B60 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/lib";
+				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = libquad;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		6FD8B0180865BC8A005A8B60 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G4;
+				HEADER_SEARCH_PATHS = ../include;
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = ../lib;
+				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = quad;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		6FD8B0190865BC8A005A8B60 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = "$(HOME)/lib";
+				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = libquad;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Default;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6FD8AE7608651561005A8B60 /* Build configuration list for PBXNativeTarget "quadtree" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD8AE7708651561005A8B60 /* Development */,
+				6FD8AE7808651561005A8B60 /* Deployment */,
+				6FD8AE7908651561005A8B60 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD8AE7B08651561005A8B60 /* Development */,
+				6FD8AE7C08651561005A8B60 /* Deployment */,
+				6FD8AE7D08651561005A8B60 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		6FD8B0160865BC8A005A8B60 /* Build configuration list for PBXNativeTarget "quad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD8B0170865BC8A005A8B60 /* Development */,
+				6FD8B0180865BC8A005A8B60 /* Deployment */,
+				6FD8B0190865BC8A005A8B60 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

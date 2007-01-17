@@ -12,8 +12,8 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 
 ## Linux:
 ##  Machine specific for Linux
-#CXX=icpc #(cares)
-CXX=g++3 #(shelob)
+CXX=icpc #(cares)
+#CXX=g++3 #(shelob)
 CPPFLAGS += -O3
 
 ## IRIX64:
