@@ -38,15 +38,10 @@ class r_fixed : public r_side_bdry {
          r_side_bdry::input(inmap);
          
          std::string line;
-         if(inmap.getline(base.idprefix+".r_dir",line)) {
-            std::istringstream data(line);
-            data >> dstart >> dstop;
-            data.clear();
-         }
-         else {
-            dstart = 0;
-            dstop = 1;
-         }
+         inmap.getlinewdefault(base.idprefix+".r_dir",line,"0 1");
+         std::istringstream data(line);
+         data >> dstart >> dstop;
+         data.clear();
       }  
       
       void output(std::ostream& fout) {

@@ -134,7 +134,7 @@ next1a:     continue;
                if (vd(i).info) {
                   /* NEW VRTX B.C. */
                   vbdry(nvbd) = getnewvrtxobject(vd(i).info,bdrymap);
-                  vbdry(nvbd)->alloc(1);
+                  vbdry(nvbd)->alloc(4);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
                }
@@ -385,7 +385,7 @@ next1a:     continue;
                in >> temp;
                if (!vbdry(i)) {
                   vbdry(i) = getnewvrtxobject(temp,bdrymap);
-                  vbdry(i)->alloc(1);
+                  vbdry(i)->alloc(4);
                }
                in.ignore(80,':');
                in >> vbdry(i)->v0;
@@ -478,7 +478,7 @@ next1a:     continue;
             for(i=0;i<nvrtx;++i) {
                if (cpri_ptype[i] == 0) {
                   vbdry(nvbd) = getnewvrtxobject(cpri_pindex[i],bdrymap);
-                  vbdry(nvbd)->alloc(1);
+                  vbdry(nvbd)->alloc(4);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
                   if (nvbd >= MAXVB) {
@@ -653,7 +653,7 @@ next1c:     continue;
                if (vd(i).info) {
                   /* NEW VRTX B.C. */
                   vbdry(nvbd) = getnewvrtxobject(vd(i).info,bdrymap);
-                  vbdry(nvbd)->alloc(1);
+                  vbdry(nvbd)->alloc(4);
                   vbdry(nvbd)->v0 = i;
                   ++nvbd;
                }
@@ -836,7 +836,7 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
       vbdry.resize(nvbd);
       for(i=0;i<nvbd;++i) {
          vbdry(i) = inmesh.vbdry(i)->create(*this);
-         vbdry(i)->alloc(1);
+         vbdry(i)->alloc(4);
       }
       qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
       initialized = 1;

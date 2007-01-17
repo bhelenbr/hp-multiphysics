@@ -5,8 +5,9 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <mathclass.h>
 
-#define NO_MPDEBUG
+// #define MPDEBUG
 
 /** \brief Template class to make a communciation boundary 
  *
@@ -60,7 +61,7 @@ template<class BASE> class comm_bdry : public BASE {
          phase.resize(maxgroup+1);
          for(int m=0;m<maxmatch;++m) phase(0)(m) = 0;
       }
-      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {         
+      comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {   
          maxphase.resize(maxgroup+1);
          phase.resize(maxgroup+1);
          maxphase = inbdry.maxphase;
@@ -106,7 +107,7 @@ template<class BASE> class comm_bdry : public BASE {
       }
 
       void input(input_map& inmap) {
-         int j,k,m,maxgroup;
+         int j,k,m;
          std::string keyword,val;
          std::map<std::string,std::string>::const_iterator mi;
          std::istringstream data;
@@ -118,19 +119,15 @@ template<class BASE> class comm_bdry : public BASE {
          inmap.getwdefault(keyword,first,true);
          
          /* SET GROUP MEMBERSHIP FLAGS */
-         /* ALWAYS BELONG TO FIRST 2 GROUPS */
-         maxgroup = 1;
-         groupmask = 0x3;
-         keyword = BASE::idprefix + ".group";
-         mi = inmap.find(keyword);
-         if (inmap.getline(keyword,val)) {
-            data.str(val);
-            while(data >> m) {
-               groupmask = groupmask|(1<<m);
-               maxgroup = MAX(maxgroup,m);
-            }
-            data.clear();
+         maxgroup = 0;
+         groupmask = 0;
+         inmap.getlinewdefault(BASE::idprefix + ".group",val,"0 1"); // DEFAULT IS FIRST 2 GROUPS
+         data.str(val);
+         while(data >> m) {
+            groupmask = groupmask|(1<<m);
+            maxgroup = MAX(maxgroup,m);
          }
+         data.clear();
                   
          /* LOAD PHASES */
          maxphase.resize(maxgroup+1);
@@ -209,8 +206,11 @@ template<class BASE> class comm_bdry : public BASE {
 
       /* MECHANISM FOR SYMMETRIC SENDING */
       void comm_prepare(boundary::groups grp, int phi, boundary::comm_type type) {         
-         int m,err;
+         int m;
          int nrecvs_to_post = nmatch;
+#ifdef MPISRC
+         int err;
+#endif
          
          if (!((1<<grp)&groupmask)) return;
          
@@ -239,7 +239,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing for float message: " << BASE::idprefix << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                  *(sim::log) << "preparing for float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif     
                   
                   switch(mtype(m)) {
@@ -274,7 +274,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m)) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "preparing for int message: " << BASE::idprefix << "phase " << phi << "tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "preparing for int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif   
                   
                   switch(mtype(m)) {
@@ -303,7 +303,10 @@ template<class BASE> class comm_bdry : public BASE {
       }
       
       void comm_exchange(boundary::groups grp, int phi, boundary::comm_type type) {
-         int i,m,err;
+         int i,m;
+#ifdef MPISRC
+         int err;
+#endif
          int nlocalmessages = nmatch, nmpimessages = nmatch;
          
          if (!((1<<grp)&groupmask)) return;
@@ -342,7 +345,7 @@ template<class BASE> class comm_bdry : public BASE {
                for(m=0;m<nlocalmessages;++m) {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging local float message: " << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 //                  for(i=0;i<local_match(m)->sndsize();++i) 
 //                     *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif     
@@ -356,7 +359,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << fsndbuf(i) << std::endl;
 #endif  
@@ -379,7 +382,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != local) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging local int message: " << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging local int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<local_match(m)->sndsize();++i) 
                      *sim::log << "\t" << local_match(m)->isndbuf(i) << std::endl;
 #endif 
@@ -394,7 +397,7 @@ template<class BASE> class comm_bdry : public BASE {
                   if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                   
 #ifdef MPDEBUG
-                  *(sim::log) << "exchanging mpi int message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                  *(sim::log) << "exchanging mpi int message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
                   for(i=0;i<msgsize;++i) 
                      *(sim::log) << "\t" << isndbuf(i) << std::endl;
 #endif  
@@ -489,10 +492,10 @@ template<class BASE> class comm_bdry : public BASE {
             
 #ifdef MPDEBUG
             if (msgtype == boundary::flt_msg) {
-               *(sim::log) << "received float message: " << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+               *(sim::log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
             }
             else {
-               *(sim::log) << "received int message: " << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+               *(sim::log) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
             }
 #endif  
          }
@@ -595,8 +598,8 @@ template<class BASE> class prdc_template : public BASE {
 
 class curved_analytic_interface {
    protected:
-      virtual FLT hgt(FLT x[mesh::ND]) {return(0.0);}
-      virtual FLT dhgt(int dir, FLT x[mesh::ND]) {return(1.0);}
+      virtual FLT hgt(TinyVector<FLT,mesh::ND> pt) {return(0.0);}
+      virtual FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {return(1.0);}
 
    public:      
       curved_analytic_interface* create() const {return(new curved_analytic_interface);}
@@ -606,14 +609,57 @@ class curved_analytic_interface {
       virtual ~curved_analytic_interface() {}
 };
 
+
+class symbolic_shape : public curved_analytic_interface {
+   protected:
+      symbolic_function<2> h, dhdx0, dhdx1;
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
+         return(h.Eval(pt));
+      } 
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
+         if (dir) return(dhdx1.Eval(pt));
+         return(dhdx0.Eval(pt));
+      }
+   public:
+      void input(input_map& inmap, std::string idprefix) {   
+         curved_analytic_interface::input(inmap,idprefix);
+         if (inmap.find(idprefix +".h.expression") != inmap.end()) {
+            h.init(inmap,idprefix+".h");
+         }
+         else {
+            *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+            exit(1);
+         }
+         
+         if (inmap.find(idprefix +".dhdx0.expression") != inmap.end()) {
+            dhdx0.copy_consts(h);
+            dhdx0.init(inmap,idprefix+".dhdx0");
+         }
+         else {
+            *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+            exit(1);
+         }
+         
+         if (inmap.find(idprefix +".dhdx1.expression") != inmap.end()) {
+            dhdx1.copy_consts(h);
+            dhdx1.init(inmap,idprefix+".dhdx1");
+         }
+         else {
+            *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+            exit(1);
+         }
+      }
+};
+
+      
 class sinewave : public curved_analytic_interface {
    protected:
       int h_or_v;
       FLT amp, lam, phase, offset;
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
          return(pt[1-h_or_v] -offset -amp*sin(2.*M_PI*pt[h_or_v]/lam +phase));
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
          if (dir == h_or_v) 
             return(-amp*2.*M_PI/lam*cos(2.*M_PI*pt[h_or_v]/lam+phase));
          
@@ -649,10 +695,10 @@ class circle : public curved_analytic_interface {
    public:
       FLT center[mesh::ND];
       FLT radius;
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
          return(radius*radius -pow(pt[0]-center[0],2) -pow(pt[1]-center[1],2));
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
          return(-2.*(pt[dir]-center[dir]));
       }
       
@@ -684,6 +730,34 @@ class circle : public curved_analytic_interface {
       }
 };  
 
+class ellipse : public curved_analytic_interface {
+   public:
+      TinyVector<FLT,2> axes;
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
+         return(1 -pow(pt[0]/axes(0),2) -pow(pt[1]/axes(1),2));
+      }
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
+           return(-2.*pt[dir]/pow(axes(dir),2));         
+      }
+      
+         public:
+      ellipse() {}
+      ellipse(const ellipse &inbdry) : curved_analytic_interface(inbdry), axes(inbdry.axes) {}
+      ellipse* create() const {return(new ellipse(*this));}
+
+      void output(std::ostream& fout,std::string idprefix) {
+         curved_analytic_interface::output(fout,idprefix);
+         fout << idprefix << ".a" << axes(0) << std::endl;
+         fout << idprefix << ".b" << axes(1) << std::endl;
+      }
+      void input(input_map& inmap, std::string idprefix) {
+         curved_analytic_interface::input(inmap,idprefix);
+         inmap.getwdefault(idprefix+".a",axes(0),1.0);
+         inmap.getwdefault(idprefix+".b",axes(1),1.0);
+      }
+};
+
+
 class naca : public curved_analytic_interface {
    public:
       FLT sign;
@@ -692,7 +766,7 @@ class naca : public curved_analytic_interface {
       FLT theta;
       TinyVector<FLT,2> pos;
       
-      FLT hgt(FLT x[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> x) {
          TinyVector<FLT,mesh::ND> pt;
          for(int n=0;n<mesh::ND;++n)
             pt[n] = x[n] -pos(n);
@@ -704,7 +778,7 @@ class naca : public curved_analytic_interface {
          FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];         
          return(coeff[0]*pt[0] -poly*poly/coeff[0]);
       }
-      FLT dhgt(int dir, FLT x[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> x) {
          TinyVector<FLT,mesh::ND> pt;
          for(int n=0;n<mesh::ND;++n)
             pt[n] = x[n] -pos(n);
@@ -786,12 +860,16 @@ class gaussian : public curved_analytic_interface {
       FLT width,amp,power;
       TinyVector<FLT,2> intercept, normal;
       
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
+         pt[0] -= intercept(0);
+         pt[1] -= intercept(1);
          FLT vert = pt[0]*normal(0) +pt[1]*normal(1);
          FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
          return(vert -amp*exp(-horz*horz));
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
+         pt[0] -= intercept(0);
+         pt[1] -= intercept(1);
          FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
          if (dir == 0) {
             return(normal(0) -amp*exp(-horz*horz)*2*horz*normal(1)/width);
@@ -842,10 +920,10 @@ class gaussian : public curved_analytic_interface {
 class hyperbola : public curved_analytic_interface {
    protected:
       FLT c;
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
          return(pt[0]*pt[1] -c);
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
          return(pt[1-dir]);
       }
    public:
@@ -866,10 +944,10 @@ class hyperbola : public curved_analytic_interface {
 class parabola : public curved_analytic_interface {
    protected:
       FLT curvature,offset;
-      FLT hgt(FLT pt[mesh::ND]) {
+      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
          return(curvature*pt[0]*pt[0] -pt[1] +offset);
       }
-      FLT dhgt(int dir, FLT pt[mesh::ND]) {
+      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
 			if (dir==0)
 				return(2.0*curvature*pt[0]);
 			else 

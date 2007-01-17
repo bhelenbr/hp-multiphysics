@@ -60,10 +60,7 @@ FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
 #endif
 #endif
 blitz::Array<FLT,1> sim::cfl;  
-
-#ifdef PV3
-int sim::pv3_mesh_changed;
-#endif
+bool sim::adapt_output;
    
 void blocks::init(const std::string &infile, const std::string &outfile) {
    input_map maptemp;
@@ -207,6 +204,8 @@ void blocks::init(input_map input) {
    input.getwdefault("debug_output",debug_output,false);
    
    input.getwdefault("adapt",adapt_flag,0);
+
+   input.getwdefault("adapt_output",sim::adapt_output,false);
    
    blk = new block *[nblock];
    for (i=0;i<nblock;++i) {
@@ -731,7 +730,8 @@ void blocks::go() {
       /* OUTPUT RESTART FILES */
       if (!((sim::tstep)%(rstrt_intrvl*out_intrvl))) {
          outname = "rstrt" +nstr.str();
-         output(outname,block::restart);         
+         output(outname,block::restart);
+         if (sim::adapt_output) output(outname);  // DISPLAY FILES TO DEBUG ADAPTATION CHANGES
       }
    }
    cpu_time = clock();

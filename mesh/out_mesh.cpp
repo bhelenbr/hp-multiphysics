@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iomanip>
 #include "mesh.h"
+#include <bstream.h>
 
 using namespace std;
 
@@ -10,6 +11,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
    std::string fnmapp;
    int i,j,n,tind,count;
    ofstream out;
+   bostream bout;
    
    out.setf(std::ios::scientific, std::ios::floatfield);
    out.precision(10);
@@ -67,7 +69,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
       case (tecplot):
          fnmapp = filename +".dat";
          out.open(fnmapp.c_str());
-         if (out == NULL ) {
+         if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
@@ -91,7 +93,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
       case (mavriplis):
          fnmapp = filename +".GDS";
          out.open(fnmapp.c_str());
-         if (out == NULL ) {
+         if (!out) {
             *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
             exit(1);
          }
@@ -253,6 +255,56 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
          out.close();
          
          break;
+         
+      case(binary):
+         fnmapp = filename +".bin";
+         bout.open(fnmapp.c_str());
+         if (!out) {
+            *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+            exit(1);
+         }
+         
+         /* HEADER LINES */
+         bout << "nvrtx: " << nvrtx;
+         bout << " nside: " << nside;
+         bout << " ntri: " << ntri << endl;
+
+         /* VRTX INFO */                        
+         for(i=0;i<nvrtx;++i) {
+            bout << i << ": ";
+            for(n=0;n<ND;++n)
+               bout << vrtx(i)(n) << ' ';
+            bout << "\n";
+         }
+                    
+         /* SIDE INFO */
+         for(i=0;i<nside;++i)
+            bout << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << endl;
+
+         /* THEN TRI INFO */
+         for(i=0;i<ntri;++i)
+            bout << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2) << endl;
+
+         /* SIDE BOUNDARY INFO HEADER */
+         bout << "nsbd: " << nsbd << endl;
+         for(i=0;i<nsbd;++i) {
+            bout << "idnum: " << sbdry(i)->idnum << endl;
+         	bout << "number: " << sbdry(i)->nel << endl;
+            for(int j=0;j<sbdry(i)->nel;++j)
+               bout << j << ": " << sbdry(i)->el(j) << std::endl;
+         }
+
+         /* VERTEX BOUNDARY INFO HEADER */
+         bout << "nvbd: " << nvbd << endl;
+         for(i=0;i<nvbd;++i) {
+            bout << "idnum: " << vbdry(i)->idnum << endl;
+            bout << "point: " << vbdry(i)->v0 << endl;
+         }
+         
+         bout.close();
+         
+         break;
+
          
       case(vlength): {
          fnmapp = filename +".vlngth";

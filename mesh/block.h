@@ -4,7 +4,6 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include <ftype.h>
 #include <blitz/array.h>
 #include <input_map.h>
 

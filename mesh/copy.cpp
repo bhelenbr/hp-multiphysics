@@ -89,7 +89,7 @@ void mesh::append(const mesh &z) {
    vbdry.resizeAndPreserve(nvbd+z.nvbd);
    for(i=0;i<z.nvbd;++i) {
       vbdry(nvbd) = z.vbdry(i)->create(*this);
-      vbdry(nvbd)->alloc(1);
+      vbdry(nvbd)->alloc(4);
       vbdry(nvbd)->v0 = z.vbdry(i)->v0 +nvrtx;
       ++nvbd;
    }

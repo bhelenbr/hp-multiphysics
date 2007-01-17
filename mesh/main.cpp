@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
    if (Refineby2) {
       zx.input(argv[1],in,8.0,bdrymap);
       zy.refineby2(zx);
+      zy.checkintegrity();
       zy.output(argv[2],out);
       return 0;
    }

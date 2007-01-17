@@ -54,6 +54,10 @@
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
 		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
+		6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
+		6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
+		6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC40B5E9BD300FE5BCE /* libmuparser.a */; };
+		6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC40B5E9BD300FE5BCE /* libmuparser.a */; };
 		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6F975ADA0892C41800941A1D /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
@@ -86,28 +90,81 @@
 		6FADD872086EF36A00350FA2 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
 		6FADD873086EF36A00350FA2 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6FADD874086EF36A00350FA2 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
+		6FB91AB70ACCB10300792B04 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91AB80ACCB10300792B04 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91AB90ACCB10300792B04 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABA0ACCB10300792B04 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABB0ACCB10300792B04 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABC0ACCB10300792B04 /* mgblock.h in Headers */ = {isa = PBXBuildFile; fileRef = F573B1BB0379A61301990B69 /* mgblock.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABD0ACCB10300792B04 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABE0ACCB10300792B04 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91AC00ACCB10300792B04 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
+		6FB91AC10ACCB10300792B04 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
+		6FB91AC20ACCB10300792B04 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
+		6FB91AC30ACCB10300792B04 /* out_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* out_mesh.cpp */; };
+		6FB91AC40ACCB10300792B04 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94500974D3D80990B20 /* findmatch.cpp */; };
+		6FB91AC50ACCB10300792B04 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F515EA5602B7E15B012A8EDA /* refineby2.cpp */; };
+		6FB91AC60ACCB10300792B04 /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94B00974D3D80990B20 /* tprims.cpp */; };
+		6FB91AC70ACCB10300792B04 /* coarsen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94200974D3D80990B20 /* coarsen.cpp */; };
+		6FB91AC80ACCB10300792B04 /* triangulate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50FCD7F0128AA9801000001 /* triangulate.cpp */; };
+		6FB91AC90ACCB10300792B04 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
+		6FB91ACA0ACCB10300792B04 /* rebay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F543FC18014FCBC901000001 /* rebay.cpp */; };
+		6FB91ACB0ACCB10300792B04 /* collapse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00E0854300CAD1857F000001 /* collapse.cpp */; };
+		6FB91ACC0ACCB10300792B04 /* swap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5CED4AF015630AA01000001 /* swap.cpp */; };
+		6FB91ACD0ACCB10300792B04 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
+		6FB91ACE0ACCB10300792B04 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
+		6FB91ACF0ACCB10300792B04 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
+		6FB91AD00ACCB10300792B04 /* boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* boundary.cpp */; };
+		6FB91AD10ACCB10300792B04 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
+		6FB91AD20ACCB10300792B04 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
+		6FB91AD30ACCB10300792B04 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
+		6FB91AD40ACCB10300792B04 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
+		6FB91AD50ACCB10300792B04 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
+		6FB91AD60ACCB10300792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6FB91AE30ACCB1E100792B04 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
+		6FB91AE40ACCB1E100792B04 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
+		6FB91AE50ACCB1E100792B04 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; };
+		6FB91AE60ACCB1E100792B04 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; };
+		6FB91AE70ACCB1E100792B04 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; };
+		6FB91AE80ACCB1E100792B04 /* mgblock.h in Headers */ = {isa = PBXBuildFile; fileRef = F573B1BB0379A61301990B69 /* mgblock.h */; };
+		6FB91AE90ACCB1E100792B04 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; };
+		6FB91AEA0ACCB1E100792B04 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; };
+		6FB91AEC0ACCB1E100792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6FB91AED0ACCB1E100792B04 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
+		6FB91AEE0ACCB1E100792B04 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
+		6FB91AEF0ACCB1E100792B04 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
+		6FB91AF00ACCB1E100792B04 /* out_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* out_mesh.cpp */; };
+		6FB91AF10ACCB1E100792B04 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94500974D3D80990B20 /* findmatch.cpp */; };
+		6FB91AF20ACCB1E100792B04 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F515EA5602B7E15B012A8EDA /* refineby2.cpp */; };
+		6FB91AF30ACCB1E100792B04 /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94B00974D3D80990B20 /* tprims.cpp */; };
+		6FB91AF40ACCB1E100792B04 /* coarsen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94200974D3D80990B20 /* coarsen.cpp */; };
+		6FB91AF50ACCB1E100792B04 /* triangulate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50FCD7F0128AA9801000001 /* triangulate.cpp */; };
+		6FB91AF60ACCB1E100792B04 /* rebay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F543FC18014FCBC901000001 /* rebay.cpp */; };
+		6FB91AF70ACCB1E100792B04 /* collapse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00E0854300CAD1857F000001 /* collapse.cpp */; };
+		6FB91AF80ACCB1E100792B04 /* swap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5CED4AF015630AA01000001 /* swap.cpp */; };
+		6FB91AF90ACCB1E100792B04 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
+		6FB91AFA0ACCB1E100792B04 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
+		6FB91AFB0ACCB1E100792B04 /* boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* boundary.cpp */; };
+		6FB91AFC0ACCB1E100792B04 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
+		6FB91AFD0ACCB1E100792B04 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
+		6FB91AFE0ACCB1E100792B04 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
+		6FB91AFF0ACCB1E100792B04 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
+		6FB91B000ACCB1E100792B04 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
+		6FB91B010ACCB1E100792B04 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
+		6FB91B020ACCB1E100792B04 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
+		6FB91B030ACCB1E100792B04 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
+		6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
+		6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
+		6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
+		6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
+		6FB91B0B0ACCB1E100792B04 /* liblam.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC676970ACC239C00643F70 /* liblam.dylib */; };
+		6FB91B0C0ACCB1E100792B04 /* liblammpi++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC676980ACC239C00643F70 /* liblammpi++.dylib */; };
+		6FB91B0D0ACCB1E100792B04 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC676990ACC239C00643F70 /* libmpi.dylib */; };
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
-		6FC7DEFE05B30C6E001FE736 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC6A54203CC99B700990B69 /* libmetis.a */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildStyle section */
-		6F81C5540A48E0BA00753B05 /* Development */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-			};
-			name = Development;
-		};
-		6F81C5550A48E0BA00753B05 /* Deployment */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-			};
-			name = Deployment;
-		};
-/* End PBXBuildStyle section */
 
 /* Begin PBXFileReference section */
 		00E0854300CAD1857F000001 /* collapse.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = collapse.cpp; sourceTree = SOURCE_ROOT; };
@@ -124,14 +181,20 @@
 		07F2E95000974D3D80990B20 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = SOURCE_ROOT; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../lib/libblitz.a; sourceTree = SOURCE_ROOT; };
+		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
+		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
+		6F584BC40B5E9BD300FE5BCE /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
 		6F5F76680760062A0026BE93 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
 		6F92F9F108B94B60006F9C2C /* index.html */ = {isa = PBXFileReference; explicitFileType = text.html.documentation; fileEncoding = 30; name = index.html; path = html/index.html; sourceTree = "<group>"; };
+		6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB91B130ACCB1E100792B04 /* mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
 		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = /Users/helenbrk/Codes/lib/libparseargs.a; sourceTree = "<absolute>"; };
-		6FC6A54203CC99B700990B69 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = "/Users/helenbrk/Packages/metis-4.0/libmetis.a"; sourceTree = "<absolute>"; };
+		6FC676970ACC239C00643F70 /* liblam.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblam.dylib; path = /usr/local/lib/liblam.dylib; sourceTree = "<absolute>"; };
+		6FC676980ACC239C00643F70 /* liblammpi++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "liblammpi++.dylib"; path = "/usr/local/lib/liblammpi++.dylib"; sourceTree = "<absolute>"; };
+		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };
@@ -163,16 +226,41 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6FB91AD70ACCB10300792B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91B040ACCB1E100792B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */,
+				6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */,
+				6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */,
+				6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */,
+				6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */,
+				6FB91B0B0ACCB1E100792B04 /* liblam.dylib in Frameworks */,
+				6FB91B0C0ACCB1E100792B04 /* liblammpi++.dylib in Frameworks */,
+				6FB91B0D0ACCB1E100792B04 /* libmpi.dylib in Frameworks */,
+				6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
+				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FC7DEF705B30C6E001FE736 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */,
-				6FC7DEFE05B30C6E001FE736 /* libmetis.a in Frameworks */,
 				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
 				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
 				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
 				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
+				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
+				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,8 +274,12 @@
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
-				6FC6A54203CC99B700990B69 /* libmetis.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
+				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
+				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
+				6FC676970ACC239C00643F70 /* liblam.dylib */,
+				6FC676980ACC239C00643F70 /* liblammpi++.dylib */,
+				6FC676990ACC239C00643F70 /* libmpi.dylib */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -247,8 +339,10 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6FC7DF0305B30C6E001FE736 /* mesh */,
 				6F2262C008672FAE001017D0 /* libmesh.a */,
+				6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */,
+				6FC7DF0305B30C6E001FE736 /* mesh */,
+				6FB91B130ACCB1E100792B04 /* mesh_mpi */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -295,6 +389,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6FB91AB60ACCB10300792B04 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AB70ACCB10300792B04 /* mesh.h in Headers */,
+				6FB91AB80ACCB10300792B04 /* boundary.h in Headers */,
+				6FB91AB90ACCB10300792B04 /* boundaries.h in Headers */,
+				6FB91ABA0ACCB10300792B04 /* r_mesh.h in Headers */,
+				6FB91ABB0ACCB10300792B04 /* r_boundary.h in Headers */,
+				6FB91ABC0ACCB10300792B04 /* mgblock.h in Headers */,
+				6FB91ABD0ACCB10300792B04 /* block.h in Headers */,
+				6FB91ABE0ACCB10300792B04 /* blocks.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AE20ACCB1E100792B04 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AE30ACCB1E100792B04 /* mesh.h in Headers */,
+				6FB91AE40ACCB1E100792B04 /* boundary.h in Headers */,
+				6FB91AE50ACCB1E100792B04 /* boundaries.h in Headers */,
+				6FB91AE60ACCB1E100792B04 /* r_mesh.h in Headers */,
+				6FB91AE70ACCB1E100792B04 /* r_boundary.h in Headers */,
+				6FB91AE80ACCB1E100792B04 /* mgblock.h in Headers */,
+				6FB91AE90ACCB1E100792B04 /* block.h in Headers */,
+				6FB91AEA0ACCB1E100792B04 /* blocks.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FC7DED905B30C6E001FE736 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -330,6 +454,41 @@
 			productReference = 6F2262C008672FAE001017D0 /* libmesh.a */;
 			productType = "com.apple.product-type.library.static";
 		};
+		6FB91AB50ACCB10300792B04 /* lib_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "lib_mpi" */;
+			buildPhases = (
+				6FB91AB60ACCB10300792B04 /* Headers */,
+				6FB91ABF0ACCB10300792B04 /* Sources */,
+				6FB91AD70ACCB10300792B04 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = lib_mpi;
+			productName = lib;
+			productReference = 6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6FB91AE10ACCB1E100792B04 /* main_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "main_mpi" */;
+			buildPhases = (
+				6FB91AE20ACCB1E100792B04 /* Headers */,
+				6FB91AEB0ACCB1E100792B04 /* Sources */,
+				6FB91B040ACCB1E100792B04 /* Frameworks */,
+				6FB91B0E0ACCB1E100792B04 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = main_mpi;
+			productName = test2;
+			productReference = 6FB91B130ACCB1E100792B04 /* mesh_mpi */;
+			productType = "com.apple.product-type.tool";
+		};
 		6FC7DED805B30C6E001FE736 /* main */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "main" */;
@@ -354,24 +513,27 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				6F81C5540A48E0BA00753B05 /* Development */,
-				6F81C5550A48E0BA00753B05 /* Deployment */,
-			);
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
 			targets = (
 				6F2262BF08672FAE001017D0 /* lib */,
+				6FB91AB50ACCB10300792B04 /* lib_mpi */,
 				6FC7DED805B30C6E001FE736 /* main */,
+				6FB91AE10ACCB1E100792B04 /* main_mpi */,
 				6F27980608B9FA49007BECA9 /* Documentation */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXRezBuildPhase section */
+		6FB91B0E0ACCB1E100792B04 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FC7DF0005B30C6E001FE736 /* Rez */ = {
 			isa = PBXRezBuildPhase;
 			buildActionMask = 2147483647;
@@ -428,6 +590,67 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6FB91ABF0ACCB10300792B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AC00ACCB10300792B04 /* in_mesh.cpp in Sources */,
+				6FB91AC10ACCB10300792B04 /* copy.cpp in Sources */,
+				6FB91AC20ACCB10300792B04 /* setup.cpp in Sources */,
+				6FB91AC30ACCB10300792B04 /* out_mesh.cpp in Sources */,
+				6FB91AC40ACCB10300792B04 /* findmatch.cpp in Sources */,
+				6FB91AC50ACCB10300792B04 /* refineby2.cpp in Sources */,
+				6FB91AC60ACCB10300792B04 /* tprims.cpp in Sources */,
+				6FB91AC70ACCB10300792B04 /* coarsen.cpp in Sources */,
+				6FB91AC80ACCB10300792B04 /* triangulate.cpp in Sources */,
+				6FB91AC90ACCB10300792B04 /* insert.cpp in Sources */,
+				6FB91ACA0ACCB10300792B04 /* rebay.cpp in Sources */,
+				6FB91ACB0ACCB10300792B04 /* collapse.cpp in Sources */,
+				6FB91ACC0ACCB10300792B04 /* swap.cpp in Sources */,
+				6FB91ACD0ACCB10300792B04 /* yaber.cpp in Sources */,
+				6FB91ACE0ACCB10300792B04 /* meshutilities.cpp in Sources */,
+				6FB91ACF0ACCB10300792B04 /* connect.cpp in Sources */,
+				6FB91AD00ACCB10300792B04 /* boundary.cpp in Sources */,
+				6FB91AD10ACCB10300792B04 /* getnewbdry.cpp in Sources */,
+				6FB91AD20ACCB10300792B04 /* r_mesh.cpp in Sources */,
+				6FB91AD30ACCB10300792B04 /* getnewr_bdry.cpp in Sources */,
+				6FB91AD40ACCB10300792B04 /* blocks.cpp in Sources */,
+				6FB91AD50ACCB10300792B04 /* adapt.cpp in Sources */,
+				6FB91AD60ACCB10300792B04 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AEB0ACCB1E100792B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AEC0ACCB1E100792B04 /* main.cpp in Sources */,
+				6FB91AED0ACCB1E100792B04 /* in_mesh.cpp in Sources */,
+				6FB91AEE0ACCB1E100792B04 /* copy.cpp in Sources */,
+				6FB91AEF0ACCB1E100792B04 /* setup.cpp in Sources */,
+				6FB91AF00ACCB1E100792B04 /* out_mesh.cpp in Sources */,
+				6FB91AF10ACCB1E100792B04 /* findmatch.cpp in Sources */,
+				6FB91AF20ACCB1E100792B04 /* refineby2.cpp in Sources */,
+				6FB91AF30ACCB1E100792B04 /* tprims.cpp in Sources */,
+				6FB91AF40ACCB1E100792B04 /* coarsen.cpp in Sources */,
+				6FB91AF50ACCB1E100792B04 /* triangulate.cpp in Sources */,
+				6FB91AF60ACCB1E100792B04 /* rebay.cpp in Sources */,
+				6FB91AF70ACCB1E100792B04 /* collapse.cpp in Sources */,
+				6FB91AF80ACCB1E100792B04 /* swap.cpp in Sources */,
+				6FB91AF90ACCB1E100792B04 /* meshutilities.cpp in Sources */,
+				6FB91AFA0ACCB1E100792B04 /* connect.cpp in Sources */,
+				6FB91AFB0ACCB1E100792B04 /* boundary.cpp in Sources */,
+				6FB91AFC0ACCB1E100792B04 /* getnewbdry.cpp in Sources */,
+				6FB91AFD0ACCB1E100792B04 /* r_mesh.cpp in Sources */,
+				6FB91AFE0ACCB1E100792B04 /* getnewr_bdry.cpp in Sources */,
+				6FB91AFF0ACCB1E100792B04 /* blocks.cpp in Sources */,
+				6FB91B000ACCB1E100792B04 /* getnewblock.cpp in Sources */,
+				6FB91B010ACCB1E100792B04 /* adapt.cpp in Sources */,
+				6FB91B020ACCB1E100792B04 /* yaber.cpp in Sources */,
+				6FB91B030ACCB1E100792B04 /* insert.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FC7DEE205B30C6E001FE736 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -476,12 +699,12 @@
 					NO_MPISRC,
 					BZ_DEBUG,
 				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(SRCROOT)/../lib",
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -497,6 +720,8 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Development;
 		};
@@ -514,12 +739,12 @@
 					METIS,
 					NO_MPISRC,
 				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(SRCROOT)/../lib",
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -533,6 +758,8 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Deployment;
 		};
@@ -545,12 +772,12 @@
 					METIS,
 					NO_MPISRC,
 				);
-				HEADER_SEARCH_PATHS = "$(HOME)/Codes/include";
-				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = (
-					"$(HOME)/Codes/lib",
-					"$(SRCROOT)/../lib",
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
+				INSTALL_PATH = "$(HOME)/Codes/";
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -566,6 +793,8 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Default;
 		};
@@ -624,6 +853,249 @@
 			};
 			name = Default;
 		};
+		6FB91AD90ACCB10300792B04 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+				);
+				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = mesh;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FB91ADA0ACCB10300792B04 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					MPISRC,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+				);
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = mesh_mpi;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6FB91ADB0ACCB10300792B04 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = "$(HOME)/Codes/";
+				LIBRARY_SEARCH_PATHS = (
+				);
+				LIBRARY_STYLE = STATIC;
+				OPTIMIZATION_CFLAGS = "-O0";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = mesh;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Default;
+		};
+		6FB91B100ACCB1E100792B04 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = "$(HOME)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
+					METIS,
+					NO_MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/usr/share/lib,
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				PREBINDING = YES;
+				PRODUCT_NAME = mesh;
+				SKIP_INSTALL = YES;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FB91B110ACCB1E100792B04 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = NO;
+				DSTROOT = /;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/usr/share/lib,
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				PREBINDING = YES;
+				PRODUCT_NAME = mesh_mpi;
+				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6FB91B120ACCB1E100792B04 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DSTROOT = "$(HOME)";
+				GCC_MODEL_TUNING = G4;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/usr/share/lib,
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				PREBINDING = YES;
+				PRODUCT_NAME = mesh;
+				SKIP_INSTALL = YES;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Default;
+		};
 		6FD540630863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -642,15 +1114,16 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/packages/metis-4.0/Lib",
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/metis-4.0",
-					"$(SRCROOT)/../lib",
+					"$(prefix)/lib",
+					"$(packages)/lib",
 				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;
@@ -659,6 +1132,8 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Development;
 		};
@@ -678,15 +1153,15 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/packages/metis-4.0/Lib",
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/metis-4.0",
-					"$(SRCROOT)/../lib",
+					"$(prefix)/lib",
+					"$(packages)/lib",
 				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
@@ -697,6 +1172,8 @@
 					"-Wno-unknown-pragmas",
 				);
 				ZERO_LINK = NO;
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Deployment;
 		};
@@ -713,15 +1190,16 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${HOME}/Codes/include",
-					"${HOME}/packages/metis-4.0/Lib",
+					"$(prefix)/include",
+					"$(packages)/include",
 				);
 				INSTALL_PATH = /bin;
 				LIBRARY_SEARCH_PATHS = (
-					"${HOME}/Codes/lib",
-					"${HOME}/Packages/metis-4.0",
-					"$(SRCROOT)/../lib",
+					"$(prefix)/lib",
+					"$(packages)/lib",
 				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;
@@ -730,6 +1208,8 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Default;
 		};
@@ -770,6 +1250,26 @@
 				6F27981008B9FA5A007BECA9 /* Development */,
 				6F27981108B9FA5A007BECA9 /* Deployment */,
 				6F27981208B9FA5A007BECA9 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "lib_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB91AD90ACCB10300792B04 /* Development */,
+				6FB91ADA0ACCB10300792B04 /* Deployment */,
+				6FB91ADB0ACCB10300792B04 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "main_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB91B100ACCB1E100792B04 /* Development */,
+				6FB91B110ACCB1E100792B04 /* Deployment */,
+				6FB91B120ACCB1E100792B04 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;

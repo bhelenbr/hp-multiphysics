@@ -254,11 +254,7 @@ namespace sim {
    const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; /**< Multistage time step constants (real) */
    //@}
    
-
-#ifdef PV3
-   /** Flag for pV3 to tell when to reload meshes */
-   extern int pv3_mesh_changed;
-#endif
+   extern bool adapt_output; /**< Flag to tell whether to give detailed adaptation data */
 }
 
 #endif

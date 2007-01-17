@@ -116,7 +116,7 @@ class mesh {
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
       enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt};
       void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map& bdrymap);
-      int output(const std::string &filename, filetype ftype = grid) const;
+      int output(const std::string &filename, filetype ftype = binary) const;
       void bdry_output(const std::string &filename) const;
       virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 

@@ -433,7 +433,7 @@ void mesh::partition(class mesh& xin, int npart) {
    for(i=0;i<xin.nvbd;++i) {
       if (xin.vd(xin.vbdry(i)->v0).info > -1) {
          vbdry(nvbd) = xin.vbdry(i)->create(*this);
-         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->alloc(4);
          vbdry(nvbd)->v0 = xin.vd(xin.vbdry(i)->v0).info;
          ++nvbd;
       }
@@ -453,7 +453,7 @@ void mesh::partition(class mesh& xin, int npart) {
          for(n=0;n<3;++n)
             if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
          vbdry(nvbd) = new vcomm(xin.td(tind).vrtx(n),*this);
-         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->alloc(4);
          vbdry(nvbd)->v0 = v0;
          ++nvbd;
       
@@ -468,7 +468,7 @@ void mesh::partition(class mesh& xin, int npart) {
          for(n=0;n<3;++n)
             if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
          vbdry(nvbd) = new vcomm(xin.td(tind).vrtx(n),*this);
-         vbdry(nvbd)->alloc(1);
+         vbdry(nvbd)->alloc(4);
          vbdry(nvbd)->v0 = v0;
          ++nvbd;
 

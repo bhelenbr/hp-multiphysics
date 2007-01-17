@@ -5,7 +5,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include <ftype.h>
 
 #ifndef _r_block_h_
 #define _r_block_h_

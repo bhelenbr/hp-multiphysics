@@ -76,10 +76,6 @@ block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
 
 void mesh::setup_for_adapt() {
    int i, v0, v1;
-   
-#ifdef PV3
-   sim::pv3_mesh_changed = true;
-#endif
 
    /* SET-UP ADAPTION TRACKING STUFF */
    /* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
@@ -111,14 +107,14 @@ void mesh::setup_for_adapt() {
 void mesh::cleanup_after_adapt() {
    int i,j,sind,v0;
    
-#ifdef DEBUG_ADAPT
-   std::string adapt_file;
-   std::ostringstream nstr;
-   nstr << sim::tstep << std::flush;
-   adapt_file = idprefix +"_adapt" +nstr.str();
-   nstr.str("");
-   output(adapt_file.c_str(),debug_adapt);
-#endif
+   if (sim::adapt_output) {
+      std::string adapt_file;
+      std::ostringstream nstr;
+      nstr << sim::tstep << std::flush;
+      adapt_file = idprefix +"_adapt" +nstr.str();
+      nstr.str("");
+      output(adapt_file.c_str(),debug_adapt);
+   }
    
    /* DELETE SIDES FROM BOUNDARY CONDITIONS */
    for(i=0;i<nsbd;++i) {

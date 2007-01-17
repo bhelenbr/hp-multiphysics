@@ -40,6 +40,7 @@ void mesh::refineby2(const class mesh& inmesh) {
       /* INSERT POINT */
       for(n=0;n<ND;++n)
          vrtx(count)(n) = xpt(n);
+      
       ++count;
    }
    
@@ -48,9 +49,12 @@ void mesh::refineby2(const class mesh& inmesh) {
       qtree.addpt(nvrtx);
       qtree.nearpt(nvrtx,vnear);
       tind = findtri(vrtx(nvrtx),vnear);
+      assert(tind > -1);
       err = insert(nvrtx,tind);
       ++nvrtx;
    }
+   
+   
 
    
    /* INSERT BOUNDARY POINTS */

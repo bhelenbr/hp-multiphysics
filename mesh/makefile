@@ -5,8 +5,10 @@ refineby2.o swap.o yaber.o adapt.o blocks.o
 
 MAINOBJ = main.o 
 
-LIB = -L$(HOME)/Codes/lib -lutil -lquad -lparseargs -linput_map -lm
-CPPFLAGS = -I$(HOME)/Codes/include/
+DEFINES = -DNO_MPISRC -DNO_METIS
+
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/muParser/lib -lutil -lquad -lparseargs -linput_map -lm -lmuparser
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/muParser/include
 
 ### Begin machine dependent
 
@@ -21,7 +23,7 @@ CPPFLAGS = -I$(HOME)/Codes/include/
 CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
 #CPPFLAGS += -O3
-CPPFLAGS += -O3 -cxxlib-icc -DNO_MPISRC -I/opt/mpich/myrinet/intel/include #(cares)
+CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
 LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 
 ## IRIX64:
@@ -34,6 +36,7 @@ LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -l
 #CPPFLAGS += -O3
 
 ### End machine dependent
+CPPFLAGS += $(DEFINES)
 
 all: libmesh.a mesh
 

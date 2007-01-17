@@ -87,8 +87,11 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
  */
 class stype {
    public:
-      static const int ntypes = 18;
-      enum ids {plain=1, comm, prdc, sinewave, circle, spline, partition, naca, gaussian,parabola,hyperbola,coupled_sinewave,coupled_circle,coupled_sinewave_comm,coupled_circle_comm,coupled_parabola,coupled_hyperbola,coupled_hyperbola_comm};
+      static const int ntypes = 24;
+      enum ids {plain=1, comm, partition, prdc, symbolic, coupled_symbolic, coupled_symbolic_comm, spline,
+         sinewave, circle, naca, gaussian,parabola,hyperbola,ellipse,
+         coupled_sinewave,coupled_circle,coupled_parabola,coupled_hyperbola,coupled_ellipse,
+         coupled_sinewave_comm,coupled_circle_comm,coupled_hyperbola_comm,coupled_ellipse_comm};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -97,10 +100,10 @@ class stype {
       }
 };
 
-const char stype::names[ntypes][40] = {"plain", "comm", "prdc", "sinewave", "circle", "spline",
-   "partition","naca","gaussian","parabola","hyperbola","coupled_sinewave","coupled_circle",
-	"coupled_sinewave_comm","coupled_circle_comm","coupled_parabola","coupled_hyperbola",
-	"coupled_hyperbola_comm"};
+const char stype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic","coupled_symbolic","coupled_symbolic_comm", "spline",
+   "sinewave", "circle", "naca","gaussian","parabola","hyperbola","ellipse",
+   "coupled_sinewave","coupled_circle","coupled_parabola","coupled_hyperbola","coupled_ellipse",
+	"coupled_sinewave_comm","coupled_circle_comm",	"coupled_hyperbola_comm","coupled_ellipse_comm"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
@@ -135,24 +138,38 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new scomm(idnum,*this); 
          break;
       }
+      case stype::partition: {
+         temp = new spartition(idnum,*this);
+         break;
+      }
       case stype::prdc: {
          temp = new sprdc(idnum,*this);
          break;
       }
-      case stype::sinewave: {
-         temp = new analytic_geometry<side_bdry,sinewave>(idnum,*this);
+      case stype::symbolic: {
+         temp = new analytic_geometry<side_bdry,symbolic_shape>(idnum,*this);
          break;
       }
-      case stype::circle: {
-         temp = new analytic_geometry<side_bdry,circle>(idnum,*this);
+      case stype::coupled_symbolic: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,symbolic_shape> >(idnum,*this);
+         break;
+      }
+      case stype::coupled_symbolic_comm: {
+         temp = new ssolution_geometry<analytic_geometry<scomm,symbolic_shape> >(idnum,*this);
          break;
       }
       case stype::spline: {
     //     temp = new spline(idnum,*this);
          break;
       }
-      case stype::partition: {
-         temp = new spartition(idnum,*this);
+
+      /* SPECIAL CASES FOLLOW */
+      case stype::sinewave: {
+         temp = new analytic_geometry<side_bdry,sinewave>(idnum,*this);
+         break;
+      }
+      case stype::circle: {
+         temp = new analytic_geometry<side_bdry,circle>(idnum,*this);
          break;
       }
       case stype::naca: {
@@ -171,6 +188,12 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new analytic_geometry<side_bdry,hyperbola>(idnum,*this);
          break;
       }
+      case stype::ellipse: {
+         temp = new analytic_geometry<side_bdry,ellipse>(idnum,*this);
+         break;
+      }
+      
+      /* SPECIAL CASES FOR COUPLED BOUNDARIES (FREE-SURFACES) */
       case stype::coupled_sinewave: {
          temp = new ssolution_geometry<analytic_geometry<side_bdry,sinewave> >(idnum,*this);
          break;
@@ -179,6 +202,20 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new ssolution_geometry<analytic_geometry<side_bdry,circle> >(idnum,*this);
          break;
       }
+      case stype::coupled_parabola: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,parabola> >(idnum,*this);
+         break;
+      }
+		case stype::coupled_hyperbola: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,hyperbola> >(idnum,*this);
+         break;
+      }
+      case stype::coupled_ellipse: {
+         temp = new ssolution_geometry<analytic_geometry<side_bdry,ellipse> >(idnum,*this);
+         break;
+      }
+      
+      /* SPECIAL CASES FOR COUPLED COMMUNICATING BOUNDARIES (INTERFACES) */
       case stype::coupled_sinewave_comm: {
          temp = new ssolution_geometry<analytic_geometry<scomm,sinewave> >(idnum,*this);
          break;
@@ -187,18 +224,14 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
          temp = new ssolution_geometry<analytic_geometry<scomm,circle> >(idnum,*this);
          break;
       }
-		case stype::coupled_parabola: {
-         temp = new ssolution_geometry<analytic_geometry<side_bdry,parabola> >(idnum,*this);
-         break;
-      }
-		case stype::coupled_hyperbola: {
-         temp = new ssolution_geometry<analytic_geometry<side_bdry,hyperbola> >(idnum,*this);
-         break;
-      }
-		case stype::coupled_hyperbola_comm: {
+  		case stype::coupled_hyperbola_comm: {
          temp = new ssolution_geometry<analytic_geometry<scomm,hyperbola> >(idnum,*this);
          break;
       }		
+      case stype::coupled_ellipse_comm: {
+         temp = new ssolution_geometry<analytic_geometry<scomm,ellipse> >(idnum,*this);
+         break;
+      }	
       
       default: {
          temp = new side_bdry(idnum,*this);
