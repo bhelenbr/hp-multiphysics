@@ -5,6 +5,8 @@
  *
  * Copyright 1996-2003 Glyph & Cog, LLC
  */
+ 
+ /* extracted from pdftohtml utility */
 
 #ifndef PARSEARGS_H
 #define PARSEARGS_H

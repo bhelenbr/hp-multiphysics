@@ -12,8 +12,8 @@ OBJP = parseargs.o
  
 ## Linux:
 ##  Machine specific for Linux
-#CC=icc #(cares)
-CC=gcc3 #(shelob)
+CC=icc #(cares)
+#CC=gcc3 #(shelob)
 CFLAGS += -O3
 
 ## IRIX64:

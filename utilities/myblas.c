@@ -1,6 +1,18 @@
 #include<math.h>
 #include<float.h>
 
+void DGETLS(double *abd, int stride, int ordr, double *b) {
+   int i,j;
+   
+   for(i=0;i<ordr;++i) {
+      b[i] /= abd[stride*i +i];
+      for(j=i+1;j<ordr;++j)
+         b[j] -= abd[j*stride+i]*b[i];
+   }
+   
+   return;
+}
+
 void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs) {
 
 	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */

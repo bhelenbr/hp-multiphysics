@@ -43,4 +43,3 @@ void number_str(char *out, const char *in, int n, int dgts) {
    
    return;
 }
-

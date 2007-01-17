@@ -6,12 +6,16 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
+ 
+#ifndef _myblas_h_
+#define _myblas_h_
 
 #include<cfortran.h>
 extern "C" void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
+extern "C" void DGETLS(double *abd, int stride, int ordr, double *b);
 extern "C" void BLCKTRI(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2]);
 extern "C" void BLCKTRI2(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2], double (*e)[2]);
 extern "C" int recur(int n,int ipoly, double al, double be, double *a, double *b);
@@ -78,5 +82,7 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define PBTRF DPBTRF
 #define PBTRS DPBTRS
 #define EPSILON DBL_EPSILON
+#endif
+
 #endif
 
