@@ -10,7 +10,19 @@
 #include "r_mesh.h"
 #include "r_boundary.h"
 
-const char r_stype::names[ntypes][40] = {"plain", "fixed", "translating", "oscillating"};
+class r_stype {
+   public:
+      static const int ntypes = 4;
+      enum ids {free=1, fixed, translating, oscillating};
+      const static char names[ntypes][40];
+      static int getid(const char *nin) {
+         for(int i=0;i<ntypes;++i) 
+            if (!strcmp(nin,names[i])) return(i+1);
+         return(-1);
+      }
+};
+
+const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
@@ -28,11 +40,27 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
       }
    }
    else {
-      type = r_stype::fixed;
+      /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
+      if (sbdry(bnum)->mytype == "scomm") {
+         type = r_stype::free;
+      } else if (sbdry(bnum)->mytype == "partition") {
+         type = r_stype::free;
+      } else if (sbdry(bnum)->mytype == "prdc") {
+         type = r_stype::fixed;
+         int dir;
+         in_map.getwdefault(sbdry(bnum)->idprefix + ".dir",dir,0);
+         if (dir == 0)
+            in_map[sbdry(bnum)->idprefix+".r_dir"] = "0 0";
+         else 
+            in_map[sbdry(bnum)->idprefix+".r_dir"] = "1 1";
+      }
+      else {
+         type = r_stype::fixed;
+      }
    }
 
    switch(type) {
-      case r_stype::plain: {
+      case r_stype::free: {
          temp = new r_side_bdry(*this,*sbdry(bnum));
          break;
       }

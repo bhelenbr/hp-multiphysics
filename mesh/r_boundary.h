@@ -183,17 +183,3 @@ class r_oscillating : public r_fixed {
       }
 };
 
-class r_stype {
-   public:
-      static const int ntypes = 4;
-      enum ids {plain=1, fixed, translating, oscillating};
-      const static char names[ntypes][40];
-      static int getid(const char *nin) {
-         for(int i=0;i<ntypes;++i) 
-            if (!strcmp(nin,names[i])) return(i+1);
-         return(-1);
-      }
-};
-
-
-

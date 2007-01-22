@@ -9,8 +9,6 @@
 
 #include "mesh.h"
 
-#define DEBUG_ADAPT
-
 int nlst; 
 
 block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {

@@ -191,7 +191,7 @@
 		6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
-		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = /Users/helenbrk/Codes/lib/libparseargs.a; sourceTree = "<absolute>"; };
+		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../../Packages/lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FC676970ACC239C00643F70 /* liblam.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblam.dylib; path = /usr/local/lib/liblam.dylib; sourceTree = "<absolute>"; };
 		6FC676980ACC239C00643F70 /* liblammpi++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "liblammpi++.dylib"; path = "/usr/local/lib/liblammpi++.dylib"; sourceTree = "<absolute>"; };
 		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
@@ -214,7 +214,6 @@
 		F5C9C262032CCEAF01990B69 /* block.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = SOURCE_ROOT; };
 		F5CED4AF015630AA01000001 /* swap.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = swap.cpp; sourceTree = SOURCE_ROOT; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = /Users/helenbrk/Codes/lib/libinput_map.a; sourceTree = "<absolute>"; };
-		F5DD977303A7C78201990B69 /* blocks.inpt */ = {isa = PBXFileReference; lastKnownFileType = text; path = blocks.inpt; sourceTree = "<group>"; };
 		F5F975AB0152459801000001 /* yaber.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = yaber.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -289,7 +288,6 @@
 			children = (
 				6F92F9F008B94B22006F9C2C /* Documentation */,
 				08FB7795FE84155DC02AAC07 /* Source */,
-				F5DD976E03A78D2301990B69 /* Inputs */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
 				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -361,14 +359,6 @@
 				F556D7CC0226C8DC01990B20 /* makefile */,
 			);
 			name = Scripts;
-			sourceTree = "<group>";
-		};
-		F5DD976E03A78D2301990B69 /* Inputs */ = {
-			isa = PBXGroup;
-			children = (
-				F5DD977303A7C78201990B69 /* blocks.inpt */,
-			);
-			name = Inputs;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -873,8 +863,7 @@
 					/usr/share/include,
 				);
 				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = (
-				);
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
@@ -916,8 +905,7 @@
 					/usr/share/include,
 				);
 				INSTALL_PATH = /lib;
-				LIBRARY_SEARCH_PATHS = (
-				);
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -951,8 +939,7 @@
 					/usr/share/include,
 				);
 				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = (
-				);
+				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
 				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
