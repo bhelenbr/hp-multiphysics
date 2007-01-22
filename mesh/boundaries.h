@@ -651,45 +651,50 @@ class symbolic_shape : public curved_analytic_interface {
       }
 };
 
-      
-class sinewave : public curved_analytic_interface {
-   protected:
-      int h_or_v;
-      FLT amp, lam, phase, offset;
-      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-         return(pt[1-h_or_v] -offset -amp*sin(2.*M_PI*pt[h_or_v]/lam +phase));
-      }
-      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-         if (dir == h_or_v) 
-            return(-amp*2.*M_PI/lam*cos(2.*M_PI*pt[h_or_v]/lam+phase));
-         
-         return(1.0);
-      }
-   public:
-      sinewave() : h_or_v(0), amp(0.0), lam(1.0), phase(0.0), offset(0.0) {}
-      sinewave(const sinewave &inbdry) : curved_analytic_interface(inbdry), h_or_v(inbdry.h_or_v), amp(inbdry.amp), lam(inbdry.lam), phase(inbdry.phase), offset(inbdry.offset) {}
-      sinewave* create() const {return(new sinewave(*this));}
+typedef prdc_template<vcomm> vprdc;
+typedef prdc_template<scomm> sprdc;
 
-      void output(std::ostream& fout,std::string idprefix) {         
-         curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".h_or_v" << h_or_v << std::endl;
-         fout << idprefix << ".amp: " << amp << std::endl;
-         fout << idprefix << ".lam: " << lam << std::endl;
-         fout << idprefix << ".phase: " << phase << std::endl;
-         fout << idprefix << ".offset: " << offset << std::endl;
+
+template<class BASE,class GEOM> class analytic_geometry : public BASE {
+   public:
+      GEOM geometry_object;
+      
+   public: 
+      analytic_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+      analytic_geometry(const analytic_geometry<BASE,GEOM> &inbdry, mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+      analytic_geometry* create(mesh& xin) const {return(new analytic_geometry<BASE,GEOM>(*this,xin));}
+
+      void output(std::ostream& fout) {
+         BASE::output(fout);
+         geometry_object.output(fout,BASE::idprefix);
       }
-         
-      void input(input_map& inmap, std::string idprefix) {   
-         curved_analytic_interface::input(inmap,idprefix);
-         
-         inmap.getwdefault(idprefix+".h_or_v",h_or_v,0);
-         inmap.getwdefault(idprefix+".amp",amp,0.0);
-         inmap.getwdefault(idprefix+".lam",lam,1.0);
-         inmap.getwdefault(idprefix+".phase",phase,0.0);
-         phase = phase/360.0*2.0*M_PI;
-         inmap.getwdefault(idprefix+".offset",offset,0.0);
+      void input(input_map& inmap) {
+         BASE::input(inmap);
+         geometry_object.input(inmap,BASE::idprefix);
+      }
+      
+      void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+         /* GET LINEAR APPROXIMATION FIRST */
+         BASE::mvpttobdry(nel,psi,pt);
+         geometry_object.mvpttobdry(pt);
+         return;
       }
 };
+
+
+template<class BASE> class ssolution_geometry : public sgeometry_pointer, public BASE {
+  public: 
+      ssolution_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
+      ssolution_geometry(const ssolution_geometry<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin) {}
+      ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
+
+      virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+         if (sim::tstep < 0) BASE::mvpttobdry(nel,psi,pt);
+         else solution_data->mvpttobdry(nel,psi,pt);
+         return;
+      }
+};
+
 
 class circle : public curved_analytic_interface {
    public:
@@ -855,165 +860,6 @@ class naca : public curved_analytic_interface {
       }
 };       
 
-class gaussian : public curved_analytic_interface {
-   public:
-      FLT width,amp,power;
-      TinyVector<FLT,2> intercept, normal;
-      
-      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-         pt[0] -= intercept(0);
-         pt[1] -= intercept(1);
-         FLT vert = pt[0]*normal(0) +pt[1]*normal(1);
-         FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
-         return(vert -amp*exp(-horz*horz));
-      }
-      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-         pt[0] -= intercept(0);
-         pt[1] -= intercept(1);
-         FLT horz = (pt[0]*normal(1) -pt[1]*normal(0))/width;
-         if (dir == 0) {
-            return(normal(0) -amp*exp(-horz*horz)*2*horz*normal(1)/width);
-         }
-         else {
-            return(normal(1) +amp*exp(-horz*horz)*2*horz*normal(0)/width);
-         }
-         return(0.0);
-      }
-      
-      gaussian() : curved_analytic_interface(), width(1.0), amp(0.1), intercept(0.0,0.0), normal(0.0,1.0) {}
-      gaussian(const gaussian &inbdry) : curved_analytic_interface(inbdry), width(inbdry.width), amp(inbdry.amp), intercept(inbdry.intercept), normal(inbdry.normal) {}
-      gaussian* create() const {return(new gaussian(*this));}
-
-      void output(std::ostream& fout,std::string idprefix) {
-         curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".amp: " << amp << std::endl;
-         fout << idprefix << ".width: " << width << std::endl;
-         fout << idprefix << ".intercept: " << intercept << std::endl;
-         fout << idprefix << ".normal: " << normal << std::endl;
-      }
-     
-       void input(input_map& inmap,std::string idprefix) {
-         curved_analytic_interface::input(inmap,idprefix);
-         
-         std::istringstream data(inmap[idprefix+".amp"]);
-         if (!(data >> amp)) amp = 0.1;
-         data.clear();
-         
-         data.str(inmap[idprefix+".width"]);
-         if (!(data >> width)) width = 1.0;
-         data.clear();
-    
-         data.str(inmap[idprefix+".intercept"]);
-         if (!(data >> intercept)) intercept = 0.0;
-         data.clear();     
-         
-         normal = 0.0;
-         data.str(inmap[idprefix+".normal"]);
-         if (!(data >> intercept)) normal(1) = 1.0;
-         data.clear();     
-         
-         FLT length = sqrt(normal(0)*normal(0) +normal(1)*normal(1));
-         normal /= length;
-      }
-};  
-
-class hyperbola : public curved_analytic_interface {
-   protected:
-      FLT c;
-      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-         return(pt[0]*pt[1] -c);
-      }
-      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-         return(pt[1-dir]);
-      }
-   public:
-      hyperbola() : c(1.0) {}
-      hyperbola(const hyperbola &inbdry) : curved_analytic_interface(inbdry), c(inbdry.c) {}
-      hyperbola* create() const {return(new hyperbola(*this));}
-
-      void output(std::ostream& fout,std::string idprefix) {
-         curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".c" << c << std::endl;
-      }
-      void input(input_map& inmap, std::string idprefix) {
-         curved_analytic_interface::input(inmap,idprefix);
-         inmap.getwdefault(idprefix+".c",c,1.0);
-      }
-};
-
-class parabola : public curved_analytic_interface {
-   protected:
-      FLT curvature,offset;
-      FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-         return(curvature*pt[0]*pt[0] -pt[1] +offset);
-      }
-      FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-			if (dir==0)
-				return(2.0*curvature*pt[0]);
-			else 
-				return(-1.0);
-		}
-   public:
-      parabola() : curved_analytic_interface(), curvature(1.0), offset(0.0) {}
-		parabola(const parabola &inbdry) : curved_analytic_interface(inbdry), curvature(inbdry.curvature), offset(inbdry.offset) {}
-      parabola* create() const {return(new parabola(*this));}
-		
-		void output(std::ostream& fout,std::string idprefix) {
-         curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".curvature: " << curvature << std::endl;
-         fout << idprefix << ".offset: " << offset << std::endl;
-      }
-     
-       void input(input_map& inmap,std::string idprefix) {
-         curved_analytic_interface::input(inmap,idprefix);
-         inmap.getwdefault(idprefix+".curvature",curvature,1.0);
-			inmap.getwdefault(idprefix+".offset",offset,0.0);
-      }
-};
-
-typedef prdc_template<vcomm> vprdc;
-typedef prdc_template<scomm> sprdc;
-
-
-template<class BASE,class GEOM> class analytic_geometry : public BASE {
-   public:
-      GEOM geometry_object;
-      
-   public: 
-      analytic_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
-      analytic_geometry(const analytic_geometry<BASE,GEOM> &inbdry, mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
-      analytic_geometry* create(mesh& xin) const {return(new analytic_geometry<BASE,GEOM>(*this,xin));}
-
-      void output(std::ostream& fout) {
-         BASE::output(fout);
-         geometry_object.output(fout,BASE::idprefix);
-      }
-      void input(input_map& inmap) {
-         BASE::input(inmap);
-         geometry_object.input(inmap,BASE::idprefix);
-      }
-      
-      void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-         /* GET LINEAR APPROXIMATION FIRST */
-         BASE::mvpttobdry(nel,psi,pt);
-         geometry_object.mvpttobdry(pt);
-         return;
-      }
-};
-
-
-template<class BASE> class ssolution_geometry : public sgeometry_pointer, public BASE {
-  public: 
-      ssolution_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
-      ssolution_geometry(const ssolution_geometry<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin) {}
-      ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
-
-      virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-         if (sim::tstep < 0) BASE::mvpttobdry(nel,psi,pt);
-         else solution_data->mvpttobdry(nel,psi,pt);
-         return;
-      }
-};
 
 
 
