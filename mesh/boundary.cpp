@@ -2,10 +2,6 @@
 #include <assert.h>
 #include <float.h>
 
-#ifdef MPISRC
-#include <mpi.h>
-#endif
-
 /********************/
 /* VERTEX FUNCTIONS */
 /********************/

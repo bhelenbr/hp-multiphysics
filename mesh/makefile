@@ -5,10 +5,10 @@ refineby2.o swap.o yaber.o adapt.o blocks.o
 
 MAINOBJ = main.o 
 
-DEFINES = -DNO_MPISRC -DNO_METIS
+DEFINES = -DMETIS $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/muParser/lib -lutil -lquad -lparseargs -linput_map -lm -lmuparser
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/muParser/include
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lm -lmuparser -lmetis
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 
 ### Begin machine dependent
 
@@ -36,9 +36,11 @@ LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -l
 #CPPFLAGS += -O3
 
 ### End machine dependent
+
 CPPFLAGS += $(DEFINES)
 
 all: libmesh.a mesh
+all_mpi: libmesh_mpi.a mesh_mpi
 
 libmesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
@@ -47,5 +49,13 @@ libmesh.a: $(OBJ)
 	
 mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
+	mv mesh $(HOME)/bin
+	
+libmesh_mpi.a: $(OBJ) 
+	$(AR) $(ARFLAGS) $@ $(OBJ)
+	mv -f libmesh_mpi.a $(HOME)/Codes/lib/
+	cp -f *.h $(HOME)/Codes/include/
 
-$(OBJ): *.h makefile
+mesh_mpi: $(OBJ) $(MAINOBJ) 
+	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
+	mv mesh_mpi $(HOME)/bin

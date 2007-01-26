@@ -26,7 +26,7 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
    }
    else {
       if (!blockdata.get("blocktype",val)) {
-         *sim::log << "couldn't find block type" << std::endl;
+         type = 1;
       }
    }
    
@@ -36,7 +36,6 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
          break;
       }
       default: {
-         std::cout << "unrecognizable block type: " <<  type << std::endl;
          temp = new mgrid<r_mesh>(idnum);
          break;
       }

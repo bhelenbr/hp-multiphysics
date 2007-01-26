@@ -24,8 +24,6 @@
 #endif
 #endif
 
-#define NO_DEBUG_ADAPT
-
 using namespace blitz;
 
 class side_bdry;

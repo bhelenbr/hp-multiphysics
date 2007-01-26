@@ -135,7 +135,7 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    
    keyword = idprefix + ".tolerance";
    if (!input.get(keyword,tolerance)) {
-      input.getwdefault("tolerance",tolerance,2.2);
+      input.getwdefault("tolerance",tolerance,1.9);
    }
    
    keyword = idprefix + ".coarse";

@@ -141,7 +141,7 @@ class blocks {
       void restructure(); 
       
       /** Function to allow blocks to perform global sums, averages, etc.. */
-      enum operations {sum}; /** Only summing for now */
+      enum operations {sum,max}; /** Only summing and max for now */
       enum msg_type {flt_msg, int_msg};
       void allreduce1(void *sendbuf, void *recvbuf);
       void allreduce2(int count, msg_type datatype, operations op);
@@ -169,15 +169,7 @@ class blocks {
       void tadvance(); 
             
       /** Print errors */
-      inline FLT maxres(int lvl = 0) {
-         FLT error,maxerror = 0.0;
-         for(int i=0;i<nblock;++i) {
-            error = blk[i]->maxres(lvl);
-            maxerror = MAX(maxerror,error);
-         }
-         return(maxerror);
-      }
-
+      FLT maxres(int lvl = 0); 
 };
 
 

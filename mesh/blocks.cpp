@@ -740,6 +740,21 @@ void blocks::go() {
    return;
 }
 
+FLT blocks::maxres(int lvl) {
+   FLT error,maxerror=0.0;
+   FLT globalmax;
+   
+   for(int i=0;i<nblock;++i) {
+      error = blk[i]->maxres(lvl);
+      maxerror = MAX(maxerror,error);
+   }
+   allreduce1(&maxerror,&globalmax);
+   allreduce2(1, flt_msg, max);
+   
+   return(globalmax);
+}
+
+
 void blocks::tadvance() {
    int i,lvl;
    block::ctrl state,ctrl_message;
@@ -853,9 +868,6 @@ void blocks::restructure() {
 static int ncalls = 0;
 
 void blocks::allreduce1(void *sendbuf, void *recvbuf) {
-   static Array<void *,1> sends(nblock), recvs(nblock);
-
-   
    sndbufs(ncalls) = sendbuf;
    rcvbufs(ncalls) = recvbuf;
    ++ncalls;
@@ -883,7 +895,7 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                      }
                   }
 #ifdef MPISRC
-                  MPI_Allreduce(isendbuf.data(),rcvbufs(0),nproc,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+                  MPI_Allreduce(isendbuf.data(),rcvbufs(0),count,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
                   
                   for(i=1;i<ncalls;++i) {
                      ircvbuf = static_cast<int *>(rcvbufs(i));
@@ -897,7 +909,34 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                         ircvbuf[j] = isendbuf(i);
                   }
 #endif
-               }            
+               }
+               
+               case(max): {
+                  for(j=0;j<count;++j) {
+                     isendbuf(j) = static_cast<int *>(sndbufs(0))[j];
+                  }
+
+                  for(i=1;i<ncalls;++i) {
+                     for(j=0;j<count;++j) {
+                        isendbuf(j) = MAX(static_cast<int *>(sndbufs(i))[j],isendbuf(j));
+                     }
+                  }
+#ifdef MPISRC
+                  MPI_Allreduce(isendbuf.data(),rcvbufs(0),count,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+                  
+                  for(i=1;i<ncalls;++i) {
+                     ircvbuf = static_cast<int *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        ircvbuf[j] =  static_cast<int *>(rcvbufs(0))[j];
+                  }
+#else
+                  for(i=0;i<ncalls;++i) {
+                     ircvbuf = static_cast<int *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        ircvbuf[j] = isendbuf(j);
+                  }
+#endif
+               }              
             }
             
                   
@@ -917,7 +956,34 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                      }
                   }
 #ifdef MPISRC
-                  MPI_Allreduce(fsendbuf.data(),rcvbufs(0),nproc,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+                  MPI_Allreduce(fsendbuf.data(),rcvbufs(0),count,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+                  
+                  for(i=1;i<ncalls;++i) {
+                     frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0))[j];
+                  }
+#else
+                  for(i=0;i<ncalls;++i) {
+                     frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                     for(j=0;j<count;++j)
+                        frcvbuf[j] = fsendbuf(j);
+                  }
+#endif            break;
+               }
+               
+               case(max): {
+                  for(j=0;j<count;++j) {
+                     fsendbuf(j) = static_cast<FLT *>(sndbufs(0))[j];
+                  }
+
+                  for(i=1;i<ncalls;++i) {
+                     for(j=0;j<count;++j) {
+                        fsendbuf(j) = MAX(static_cast<FLT *>(sndbufs(i))[j],fsendbuf(j));
+                     }
+                  }
+#ifdef MPISRC
+                  MPI_Allreduce(fsendbuf.data(),rcvbufs(0),count,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
                   
                   for(i=1;i<ncalls;++i) {
                      frcvbuf = static_cast<FLT *>(rcvbufs(i));

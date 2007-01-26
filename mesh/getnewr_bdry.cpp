@@ -41,7 +41,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
    }
    else {
       /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
-      if (sbdry(bnum)->mytype == "scomm") {
+      if (sbdry(bnum)->mytype == "comm") {
          type = r_stype::free;
       } else if (sbdry(bnum)->mytype == "partition") {
          type = r_stype::free;
@@ -57,6 +57,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
       else {
          type = r_stype::fixed;
       }
+      *sim::log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
    }
 
    switch(type) {

@@ -12,6 +12,8 @@
 #include<assert.h>
 #include<float.h>
 
+#define NO_DEBUG_ADAPT
+
 #ifdef DEBUG_ADAPT
 extern int adapt_count;
 static std::string adapt_file;
