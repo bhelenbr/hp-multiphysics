@@ -1,6 +1,5 @@
 OBJU = utilities.o
-OBJM =  myblas.o
-OBJP = parseargs.o
+OBJM = myblas.o
 
 ### Begin machine dependent
 
@@ -28,7 +27,7 @@ CFLAGS += -O3
 ### End machine dependent
 
 
-all:libutil.a libmyblas.a libparseargs.a
+all:libutil.a libmyblas.a
 	rm *.o
 
 libutil.a: utilities.h $(OBJU)
@@ -40,9 +39,3 @@ libmyblas.a: myblas.h $(OBJM)
 	$(AR) $(ARFLAGS) $@ $(OBJ) $(OBJM)
 	cp -f myblas.h $(HOME)/Codes/include/
 	mv -f libmyblas.a $(HOME)/Codes/lib/
-	
-libparseargs.a: parseargs.h $(OBJP)
-	$(AR) $(ARFLAGS) $@ $(OBJ) $(OBJP)
-	cp -f parseargs.h $(HOME)/Codes/include/
-	cp -f gtypes.h $(HOME)/Codes/include/
-	mv -f libparseargs.a $(HOME)/Codes/lib/
