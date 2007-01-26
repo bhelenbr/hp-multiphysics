@@ -21,13 +21,15 @@
 #define RAD(r) 1
 #endif
 
+#define MATRIX_PRECONDITIONER
+
 class hp_vrtx_bdry;
 class hp_side_bdry;
 
 class init_bdry_cndtn {
    public:
       virtual FLT f(int n, TinyVector<FLT,mesh::ND> x) = 0;
-      virtual void input(input_map &blkdata, std::string idnty) = 0;
+      virtual void input(input_map &blkdata, std::string idnty) {};
 };
 
 class mesh_mover;
@@ -219,9 +221,9 @@ class tri_hp : public r_mesh  {
       virtual void calculate_unsteady_sources(bool coarse);
       
       /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
-      void vc0load(int phase, FLT *vdata);
-      int vc0wait_rcv(int phase,FLT *vdata);
-      int vc0rcv(int phase,FLT *vdata);
+      void vc0load(int phase, FLT *vdata, int vrtstride=1);
+      int vc0wait_rcv(int phase,FLT *vdata, int vrtsride=1);
+      int vc0rcv(int phase,FLT *vdata, int vrtstride=1);
       void sc0load(FLT *sdata, int bgnmode, int endmode, int modestride);
       int sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
       int sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride);

@@ -18,10 +18,17 @@ template<class BASE> class pod : public BASE {
       Array<FLT,1> coeffs;
       typedef typename BASE::vsi vsi;
       Array<vsi,1> modes;
+      Array<FLT,1> psimatrix,psimatrix_recv;
+      bool modes_set;
+      
+   private:
+      int excpt;
    
    public:
       void init(input_map& input, gbl *gin); 
       pod<BASE>* create() { return new pod<BASE>();}
+      block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+
 //      block::ctrl setup_preconditioner(block::ctrl ctrl_message);
 //      block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
 //      block::ctrl update(block::ctrl ctrl_message);

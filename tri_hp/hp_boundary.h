@@ -35,7 +35,7 @@ class hp_vrtx_bdry : public vgeometry_interface {
       /* input output functions */
       virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
          switch(typ) {
-            case(text):
+            case(tri_hp::text):
                fout << base.idprefix << " " << mytype << std::endl;
                break;
             default:
@@ -48,7 +48,7 @@ class hp_vrtx_bdry : public vgeometry_interface {
          std::string idin,mytypein;
 
          switch(typ) {
-            case(text):
+            case(tri_hp::text):
                fin >> idin >> mytypein;
                break;
             default:
@@ -60,8 +60,9 @@ class hp_vrtx_bdry : public vgeometry_interface {
             
       /* BOUNDARY CONDITION FUNCTIONS */
       virtual void vdirichlet() {}
-      virtual void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV);}
-      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV);}
+      virtual void vdirichlet2d() {} //!< SPECIAL CASE OF POINT BOUNDARY CONDITION FOR 2D FIELD
+      virtual void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
+      virtual void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
             
       /* FOR COUPLED DYNAMIC BOUNDARIES */
       virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
@@ -110,8 +111,8 @@ class hp_side_bdry : public sgeometry_interface {
       virtual void maxres() {}
       virtual void vdirichlet() {}
       virtual void sdirichlet(int mode) {}
-      virtual void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV);}
-      virtual void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV);}
+      virtual void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
+      virtual void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
       virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
          base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
          return;

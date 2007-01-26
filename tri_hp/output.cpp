@@ -68,7 +68,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
    
    out.setf(std::ios::scientific, std::ios::floatfield);
    out.precision(10);
-         
+            
    switch (typ) {
       case (text):
          fnmapp = fname +".txt";

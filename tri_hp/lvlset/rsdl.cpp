@@ -18,10 +18,10 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
    TinyMatrix<FLT,ND,ND> ldcrd;
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-   FLT rhobd0 = gbl_ptr->rho*sim::bd[0], lmu = gbl_ptr->mu, rhorbd0, cjcb, cjcbi, oneminusbeta;
-   FLT visc[ND+1][ND+1][ND][ND], tres[NV];
-   FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP],cv20[MXGP][MXGP],cv21[MXGP][MXGP]; // LOCAL WORK ARRAYS
-   FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP],e20[MXGP][MXGP],e21[MXGP][MXGP]; // LOCAL WORK ARRAYS
+   FLT rhobd0 = gbl_ptr->rho*sim::bd[0], lmu = gbl_ptr->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
+   TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
+   TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
+   TinyVector<FLT,NV> tres;
    block::ctrl state;
    TinyMatrix<FLT,MXGP,MXGP> rho, mu;
    TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> sigma;
@@ -123,16 +123,13 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
             /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
             ugtouht(tind);
             if (sim::beta[stage] > 0.0) {
-               basis::tri(log2p).proj(&uht(0)(0),&u(0)(0,0),&du(0,0)(0,0),&du(0,1)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(1)(0),&u(1)(0,0),&du(1,0)(0,0),&du(1,1)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(2)(0),&u(2)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(3)(0),&u(3)(0,0),MXGP);
+               for(n=0;n<NV-1;++n)
+                  basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
+               basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
             }
             else {
-               basis::tri(log2p).proj(&uht(0)(0),&u(0)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(1)(0),&u(1)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(2)(0),&u(2)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(3)(0),&u(3)(0,0),MXGP);
+               for(n=0;n<NV;++n)
+                  basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
             }
             
             /* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
@@ -157,6 +154,9 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                      else {
                         rho(i,j) = 0.5*(gbl_ptr->rho +gbl_ptr->rho2 +(gbl_ptr->rho2 -gbl_ptr->rho)*sin(M_PI*u(2)(i,j)/gbl_ptr->width));
                         mu(i,j) = 0.5*(gbl_ptr->mu +gbl_ptr->mu2 +(gbl_ptr->mu2 -gbl_ptr->mu)*sin(M_PI*u(2)(i,j)/gbl_ptr->width));
+//                        delta = gbl_ptr->sigma*(1. +cos(M_PI*u(2)(i,j)/gbl_ptr->width))/gbl_ptr->width;
+//                        
+//                        norm = du(2)(i,j)*
                         sigma(0)(i,j) = gbl_ptr->sigma*sin(M_PI*u(2)(i,j)/gbl_ptr->width);
                         sigma(1)(i,j) = gbl_ptr->sigma*sin(M_PI*u(2)(i,j)/gbl_ptr->width);
                      }
@@ -165,31 +165,27 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                      fluxy = rho(i,j)*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                      
                      /* CONTINUITY EQUATION FLUXES */
-                     du(3,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
-                     du(3,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
+                     du(NV-1,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
+                     du(NV-1,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
+                    
+                     /* CONVECTIVE FLUXES */
+                     for(n=0;n<NV-1;++n) {
+                        cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
+                        cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
+                     }
 
-#ifndef INERTIALESS
+                     /* PRESSURE TERMS */
                      /* U-MOMENTUM */
-                     cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +dcrd(1,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                     cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -dcrd(1,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                     cv(0,0)(i,j) += dcrd(1,1)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(0,1)(i,j) -= dcrd(1,0)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
                      /* V-MOMENTUM */
-                     cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -dcrd(0,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                     cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +dcrd(0,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
-#else
-                     cv00[i][j] =  +dcrd(1,1)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
-                     cv01[i][j] =  -dcrd(1,0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
-                     cv10[i][j] =  -dcrd(0,1)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
-                     cv11[i][j] =  +dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(2)(i,j);
-#endif
-                     /* LEVEL SET CONVECTION */
-                     cv20[i][j] =  u(2)(i,j)*du(3,0)(i,j);
-                     cv21[i][j] =  u(2)(i,j)*du(3,1)(i,j);
+                     cv(1,0)(i,j) -=  dcrd(0,1)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(1,1)(i,j) +=  dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
                   }
                }
-               basis::tri(log2p).intgrtrs(&lf(0)(0),cv00[0],cv01[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(1)(0),cv10[0],cv11[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(2)(0),cv20[0],cv21[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(3)(0),&du(3,0)(0,0),&du(3,1)(0,0),MXGP);
+               for(n=0;n<NV-1;++n)
+                  basis::tri(log2p).intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
+               basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
                /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
                lftog(tind,gbl_ptr->res);
@@ -206,9 +202,9 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                         /* UNSTEADY TERMS */
                         for(n=0;n<NV-1;++n)
                            res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-                        res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,2)(i,j);
+                        res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
 #ifdef AXISYMMETRIC
-                        res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
+                        res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 
 #ifdef BODY
@@ -222,122 +218,97 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
 
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                         /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-                        visc[0][0][0][0] = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[0][0][1][1] = -cjcbi*(2.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[0][0][0][1] =  cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI0II0II1II0I visc[0][0][0][1]
+                        visc(0,0)(0,0) = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
+                        visc(0,0)(1,1) = -cjcbi*(2.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
+                        visc(0,0)(0,1) =  cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+#define                 viscI0II0II1II0I visc(0,0)(0,1)
 
-                        visc[1][1][0][0] = -cjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[1][1][1][1] = -cjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[1][1][0][1] =  cjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI1II1II1II0I visc[1][1][0][1]
+                        visc(1,1)(0,0) = -cjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
+                        visc(1,1)(1,1) = -cjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
+                        visc(1,1)(0,1) =  cjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+#define                 viscI1II1II1II0I visc(1,1)(0,1)
                         
-                        visc[0][1][0][0] =  cjcbi*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
-                        visc[0][1][1][1] =  cjcbi*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][0][1] = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][1][0] = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
+                        visc(0,1)(0,0) =  cjcbi*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
+                        visc(0,1)(1,1) =  cjcbi*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
+                        visc(0,1)(0,1) = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
+                        visc(0,1)(1,0) = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
 
                            /* OTHER SYMMETRIES    */            
-#define                 viscI1II0II0II0I visc[0][1][0][0]
-#define                 viscI1II0II1II1I visc[0][1][1][1]
-#define                 viscI1II0II0II1I visc[0][1][1][0]
-#define                 viscI1II0II1II0I visc[0][1][0][1]
-
-                        /* FOR ENFORCEMENT OF DISTANCE FUNCTION CONSTRAINT */
-								visc[2][2][0][0] = -cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][0][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][1][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
-#define						viscI2II2II1II0I visc[2][2][0][1]
-
-                        
+#define                 viscI1II0II0II0I visc(0,1)(0,0)
+#define                 viscI1II0II1II1I visc(0,1)(1,1)
+#define                 viscI1II0II0II1I visc(0,1)(1,0)
+#define                 viscI1II0II1II0I visc(0,1)(0,1)                        
 
 
-                        e00[i][j] = +visc[0][0][0][0]*du(0,0)(i,j) +visc[0][1][0][0]*du(1,0)(i,j)
-                                    +visc[0][0][0][1]*du(0,1)(i,j) +visc[0][1][0][1]*du(1,1)(i,j);
+                        df(0,0)(i,j) = +visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
+                                    +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j);
 
-                        e01[i][j] = +viscI0II0II1II0I*du(0,0)(i,j) +visc[0][1][1][0]*du(1,0)(i,j)
-                                    +visc[0][0][1][1]*du(0,1)(i,j) +visc[0][1][1][1]*du(1,1)(i,j);
+                        df(0,1)(i,j) = +viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
+                                    +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j);
 
-                        e10[i][j] = +viscI1II0II0II0I*du(0,0)(i,j) +visc[1][1][0][0]*du(1,0)(i,j)
-                                    +viscI1II0II0II1I*du(0,1)(i,j) +visc[1][1][0][1]*du(1,1)(i,j);
+                        df(1,0)(i,j) = +viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
+                                    +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j);
 
-                        e11[i][j] = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-                                    +viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j);
-
-                        /* FOR ENFORCEMENT OF DISTANCE FUNCTION CONSTRAINT */
-								e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) +lmu*dcrd(1,1)(i,j)*u(2)(i,j);
-						
-								e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) -lmu*dcrd(1,0)(i,j)*u(2)(i,j);
-						
+                        df(1,1)(i,j) = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
+                                    +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j);
                                     
-                        cv00[i][j] += e00[i][j];
-                        cv01[i][j] += e01[i][j];
-                        cv10[i][j] += e10[i][j];
-                        cv11[i][j] += e11[i][j];
-//                        cv20[i][j] += e20[i][j];
-//                        cv21[i][j] += e21[i][j];
+                        for(n=0;n<NV-1;++n) {
+                           cv(n,0)(i,j) += df(n,0)(i,j);
+                           cv(n,1)(i,j) += df(n,1)(i,j);
+                        }
                       }
                   }
-                  basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(1)(0),&res(1)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(2)(0),&res(2)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(3)(0),&res(3)(0,0),MXGP);
+                  for(n=0;n<NV;++n)
+                     basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
 
                   /* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
-                  basis::tri(log2p).derivr(cv00[0],&res(0)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv01[0],&res(0)(0,0),MXGP);
-                  basis::tri(log2p).derivr(cv10[0],&res(1)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv11[0],&res(1)(0,0),MXGP);
-                  basis::tri(log2p).derivr(cv20[0],&res(2)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv21[0],&res(2)(0,0),MXGP);
-                  basis::tri(log2p).derivr(&du(3,0)(0,0),&res(3)(0,0),MXGP);
-                  basis::tri(log2p).derivs(&du(3,1)(0,0),&res(3)(0,0),MXGP);
-                  
+                  for(n=0;n<NV-1;++n) {
+                     basis::tri(log2p).derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
+                     basis::tri(log2p).derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
+                  }
+                  basis::tri(log2p).derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
+                  basis::tri(log2p).derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
-                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
-                        tres[2] = gbl_ptr->tau(tind)*res(2)(i,j);
-                        tres[3] = gbl_ptr->delt(tind)*res(3)(i,j);
+                                 
+                        tres(0) = gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres(1) = gbl_ptr->tau(tind,0)*res(1)(i,j);
+                        tres(2) = gbl_ptr->tau(tind,0)*res(2)(i,j);
+                        tres(NV-1) = gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
 
-
-                        e00[i][j] -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                    -dcrd(0,1)(i,j)*u(0)(i,j)*tres[1]
-                                    +dcrd(1,1)(i,j)*tres[3];
-                        e01[i][j] -= (-dcrd(1,0)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                    +dcrd(0,0)(i,j)*u(0)(i,j)*tres[1]
-                                    -dcrd(1,0)(i,j)*tres[3];
-                        e10[i][j] -= +dcrd(1,1)(i,j)*u(1)(i,j)*tres[0]
+                        df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                    -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
+                                    -dcrd(0,1)(i,j)*u(0)(i,j)*tres(1)
+                                    +dcrd(1,1)(i,j)*tres(NV-1);
+                        df(0,1)(i,j) -= (-dcrd(1,0)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                    +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
+                                    +dcrd(0,0)(i,j)*u(0)(i,j)*tres(1)
+                                    -dcrd(1,0)(i,j)*tres(NV-1);
+                        df(1,0)(i,j) -= +dcrd(1,1)(i,j)*u(1)(i,j)*tres(0)
                                     +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                                    -dcrd(0,1)(i,j)*tres[3];
-                        e11[i][j] -= -dcrd(1,0)(i,j)*u(1)(i,j)*tres[0]
+                                    -dcrd(0,1)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
+                                    -dcrd(0,1)(i,j)*tres(NV-1);
+                        df(1,1)(i,j) -= -dcrd(1,0)(i,j)*u(1)(i,j)*tres(0)
                               +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                              +dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                              +dcrd(0,0)(i,j)*tres[3];
-                        e20[i][j] -= +dcrd(1,1)(i,j)*u(2)(i,j)*tres[0]
-                                 -dcrd(0,1)(i,j)*u(2)(i,j)*tres[1]
-                                 +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                 -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
-                        e21[i][j] -= -dcrd(1,0)(i,j)*u(2)(i,j)*tres[0]
-                                 +dcrd(0,0)(i,j)*u(2)(i,j)*tres[1]
-                                 +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                 +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
+                                    +dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
+                                    +dcrd(0,0)(i,j)*tres(NV-1);
+                                    
+                        df(2,0)(i,j) -= +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                 -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
+                        df(2,1)(i,j) -= +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
+                                 +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(2);
 
                                     
-                        du(3,0)(i,j) = -(dcrd(1,1)(i,j)*tres[0] -dcrd(0,1)(i,j)*tres[1]);
-                        du(3,1)(i,j) = -(-dcrd(1,0)(i,j)*tres[0] +dcrd(0,0)(i,j)*tres[1]);
+                        du(NV-1,0)(i,j) = -(dcrd(1,1)(i,j)*tres(0) -dcrd(0,1)(i,j)*tres(1));
+                        du(NV-1,1)(i,j) = -(-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1));
                      }
                   }
-                  basis::tri(log2p).intgrtrs(&lf(0)(0),e00[0],e01[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(1)(0),e10[0],e11[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(2)(0),e20[0],e21[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(3)(0),&du(3,0)(0,0),&du(3,1)(0,0),MXGP);
-
+                  for(n=0;n<NV-1;++n)
+                     basis::tri(log2p).intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
+                  basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+                 
                   for(n=0;n<NV;++n)
                      for(i=0;i<basis::tri(log2p).tm;++i)
                         lf(n)(i) *= sim::beta[stage];
@@ -345,184 +316,162 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                   lftog(tind,gbl_ptr->res_r);
                }
             }
-		
-		
-			else {
-				 /* LINEAR ELEMENT */
-					for(i=0;i<lgpx;++i) {
+            else {
+               /* LINEAR ELEMENT */
+               /* CONVECTIVE TERMS (IMAGINARY FIRST)*/
+               for(i=0;i<lgpx;++i) {
                   for(j=0;j<lgpn;++j) {
 
-                     fluxx = gbl_ptr->rho*crd(0)(i,j)*(u(0)(i,j) -mvel(0)(i,j));
-                     fluxy = gbl_ptr->rho*crd(0)(i,j)*(u(1)(i,j) -mvel(1)(i,j));
+                     fluxx = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+                     fluxy = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                      
                      /* CONTINUITY EQUATION FLUXES */
-                     du(3,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
-                     du(3,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
-
+                     du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
+                     du(NV-1,1)(i,j) = -ldcrd(1,0)*fluxx +ldcrd(0,0)*fluxy;
+                     
+#ifndef INERTIALESS
+                     /* CONVECTIVE FLUXES */
+                     for(n=0;n<NV-1;++n) {
+                        cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
+                        cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
+                     }
+#else
+                     for(n=0;n<NV-1;++n) {
+                        cv(n,0)(i,j) = 0.0;
+                        cv(n,1)(i,j) = 0.0;
+                     }
+#endif
+                     /* PRESSURE TERMS */
                      /* U-MOMENTUM */
-                     cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +dcrd(1,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                     cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -dcrd(1,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                     cv(0,0)(i,j) += ldcrd(1,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(0,1)(i,j) -= ldcrd(1,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
                      /* V-MOMENTUM */
-                     cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -dcrd(0,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                     cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +dcrd(0,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                     /* W-MOMENTUM */
-                     cv20[i][j] =  u(2)(i,j)*du(3,0)(i,j);
-                     cv21[i][j] =  u(2)(i,j)*du(3,1)(i,j);
+                     cv(1,0)(i,j) -=  ldcrd(0,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(1,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
                   }
                }
-               basis::tri(log2p).intgrtrs(&lf(0)(0),cv00[0],cv01[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(1)(0),cv10[0],cv11[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(2)(0),cv20[0],cv21[0],MXGP);
-               basis::tri(log2p).intgrtrs(&lf(3)(0),&du(3,0)(0,0),&du(3,1)(0,0),MXGP);
+               for(n=0;n<NV-1;++n)
+                  basis::tri(log2p).intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
+               basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+               
 
                /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
                lftog(tind,gbl_ptr->res);
 
                /* NEGATIVE REAL TERMS */
                if (sim::beta[stage] > 0.0) {
+                  cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+                  cjcbi = lmu/cjcb;
+                  lrhorbd0 = rhobd0*cjcb;
+                  
+                  /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
+                  /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
+                  visc(0,0)(0,0) = -cjcbi*(2.*ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
+                  visc(0,0)(1,1) = -cjcbi*(2.*ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
+                  visc(0,0)(0,1) =  cjcbi*(2.*ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
+#define           viscI0II0II1II0I visc(0,0)(0,1)
+
+                  visc(1,1)(0,0) = -cjcbi*(ldcrd(1,1)*ldcrd(1,1) +2.*ldcrd(0,1)*ldcrd(0,1));
+                  visc(1,1)(1,1) = -cjcbi*(ldcrd(1,0)*ldcrd(1,0) +2.*ldcrd(0,0)*ldcrd(0,0));
+                  visc(1,1)(0,1) =  cjcbi*(ldcrd(1,1)*ldcrd(1,0) +2.*ldcrd(0,1)*ldcrd(0,0));
+#define           viscI1II1II1II0I visc(1,1)(0,1)
+                  
+                  visc(0,1)(0,0) =  cjcbi*ldcrd(0,1)*ldcrd(1,1);
+                  visc(0,1)(1,1) =  cjcbi*ldcrd(0,0)*ldcrd(1,0);
+                  visc(0,1)(0,1) = -cjcbi*ldcrd(0,1)*ldcrd(1,0);
+                  visc(0,1)(1,0) = -cjcbi*ldcrd(0,0)*ldcrd(1,1);
+
+                  /* OTHER SYMMETRIES    */            
+#define           viscI1II0II0II0I visc(0,1)(0,0)
+#define           viscI1II0II1II1I visc(0,1)(1,1)
+#define           viscI1II0II0II1I visc(0,1)(1,0)
+#define           viscI1II0II1II0I visc(0,1)(0,1)
+
                   /* TIME DERIVATIVE TERMS */ 
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                        rhorbd0 = rhobd0*crd(0)(i,j)*cjcb;
-                        cjcbi = lmu*crd(0)(i,j)/cjcb;
+                        rhorbd0 = RAD(crd(0)(i,j))*lrhorbd0;
                         
                         /* UNSTEADY TERMS */
-                        res(0)(i,j) = rhorbd0*u(0)(i,j) +dugdt(log2p,tind,0)(i,j);
-                        res(1)(i,j) = rhorbd0*u(1)(i,j) +dugdt(log2p,tind,1)(i,j);
-                        res(2)(i,j) = rhorbd0*u(2)(i,j) +dugdt(log2p,tind,2)(i,j);
-                        res(3)(i,j) = rhorbd0 +dugdt(log2p,tind,3)(i,j);
+                        for(n=0;n<NV;++n)
+                           res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
+                        res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
                         
-                        /* SOURCE TERMS */
-                        res(0)(i,j) -= cjcb*(u(3)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +gbl_ptr->rho*u(2)(i,j)*u(2)(i,j));
-                        //res(2)(i,j) -= cjcb*(lmu*((dcrd(1,1)(i,j)*du(2,1)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb -u(2)(i,j)/crd(0)(i,j)) -gbl_ptr->rho*u(0)(i,j)*u(2)(i,j));	
-								//res(2)(i,j) += lmu*(dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j))-lmu*cjcb*u(2)(i,j)/crd(0)(i,j) +cjcb*gbl_ptr->rho*u(0)(i,j)*u(2)(i,j);
-								//res(2)(i,j) += cjcb*gbl_ptr->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
-								res(2)(i,j) += cjcb*gbl_ptr->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
+#ifdef AXISYMMETRIC
+                        res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
+#endif
 
-								
-								/* Source Terms for Test Function */
-								//res(0)(i,j) -= crd(0)(i,j)*cjcb*(gbl_ptr->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
-								
-								//res(1)(i,j) -= crd(0)(i,j)*cjcb*(6*gbl_ptr->rho*pow(crd(0)(i,j),2.0)*crd(1)(i,j) +3/crd(0)(i,j)*lmu*crd(1)(i,j));
-								
-								//res(2)(i,j) -= crd(0)(i,j)*cjcb*(3*gbl_ptr->rho*pow(crd(0)(i,j),3.0) -3*lmu);
-								
+#ifdef BODY
+                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
+                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
+#ifdef INERTIALESS
+                        res(0)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
+                        res(1)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
+#endif
+#endif
+                        df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
+                                              +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
 
-                        /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
-                        /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S) */
-                        visc[0][0][0][0] = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[0][0][1][1] = -cjcbi*(2.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[0][0][0][1] =  cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-      #define           viscI0II0II1II0I visc[0][0][0][1]
+                        df(0,1)(i,j) = RAD(crd(0)(i,j))*(+viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
+                                              +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j));
 
-                        visc[1][1][0][0] = -cjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[1][1][1][1] = -cjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[1][1][0][1] =  cjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-      #define           viscI1II1II1II0I visc[1][1][0][1]
+                        df(1,0)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
+                                              +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j));
+
+                        df(1,1)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
+                                              +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j));
                         
-                        visc[0][1][0][0] =  cjcbi*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
-                        visc[0][1][1][1] =  cjcbi*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][0][1] = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][1][0] = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
-                    
-								visc[2][2][0][0] = -cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][0][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
-								visc[2][2][1][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
-#define						viscI2II2II1II0I visc[2][2][0][1]
-
-                           /* OTHER SYMMETRIES    */            
-      #define           viscI1II0II0II0I visc[0][1][0][0]
-      #define           viscI1II0II1II1I visc[0][1][1][1]
-      #define           viscI1II0II0II1I visc[0][1][1][0]
-      #define           viscI1II0II1II0I visc[0][1][0][1]
-
-
-                        e00[i][j] = +visc[0][0][0][0]*du(0,0)(i,j) +visc[0][1][0][0]*du(1,0)(i,j)
-                                    +visc[0][0][0][1]*du(0,1)(i,j) +visc[0][1][0][1]*du(1,1)(i,j);
-
-                        e01[i][j] = +viscI0II0II1II0I*du(0,0)(i,j) +visc[0][1][1][0]*du(1,0)(i,j)
-                                    +visc[0][0][1][1]*du(0,1)(i,j) +visc[0][1][1][1]*du(1,1)(i,j);
-
-                        e10[i][j] = +viscI1II0II0II0I*du(0,0)(i,j) +visc[1][1][0][0]*du(1,0)(i,j)
-                                    +viscI1II0II0II1I*du(0,1)(i,j) +visc[1][1][0][1]*du(1,1)(i,j);
-
-                        e11[i][j] = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-												+viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j);
-                    
-								e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) +lmu*dcrd(1,1)(i,j)*u(2)(i,j);
-						
-								e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) -lmu*dcrd(1,0)(i,j)*u(2)(i,j);
-						
-                                    
-                        cv00[i][j] += e00[i][j];
-                        cv01[i][j] += e01[i][j];
-                        cv10[i][j] += e10[i][j];
-                        cv11[i][j] += e11[i][j];
-                        cv20[i][j] += e20[i][j];
-                        cv21[i][j] += e21[i][j];
+                        for(n=0;n<NV-1;++n) {
+                           cv(n,0)(i,j) += df(n,0)(i,j);
+                           cv(n,1)(i,j) += df(n,1)(i,j);
+                        } 
                       }
                   }
-                  basis::tri(log2p).intgrt(&lf(0)(0),&res(0)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(1)(0),&res(1)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(2)(0),&res(2)(0,0),MXGP);
-                  basis::tri(log2p).intgrt(&lf(3)(0),&res(3)(0,0),MXGP);
+                  for(n=0;n<NV;++n)
+                     basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
 
                   /* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
-                  basis::tri(log2p).derivr(cv00[0],&res(0)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv01[0],&res(0)(0,0),MXGP);
-                  basis::tri(log2p).derivr(cv10[0],&res(1)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv11[0],&res(1)(0,0),MXGP);
-                  basis::tri(log2p).derivr(cv20[0],&res(2)(0,0),MXGP);
-                  basis::tri(log2p).derivs(cv21[0],&res(2)(0,0),MXGP);
-                  basis::tri(log2p).derivr(&du(3,0)(0,0),&res(3)(0,0),MXGP);
-                  basis::tri(log2p).derivs(&du(3,1)(0,0),&res(3)(0,0),MXGP);
+                  for(n=0;n<NV-1;++n) {
+                     basis::tri(log2p).derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
+                     basis::tri(log2p).derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
+                  }
+                  basis::tri(log2p).derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
+                  basis::tri(log2p).derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
                   
-
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
-                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
-                        tres[2] = gbl_ptr->tau(tind)*res(2)(i,j);
-                        tres[3] = gbl_ptr->delt(tind)*res(3)(i,j);
+                        tres(0) = gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres(1) = gbl_ptr->tau(tind,0)*res(1)(i,j);
+                        tres(NV-1) = gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
 
-
-                        e00[i][j] -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                    -dcrd(0,1)(i,j)*u(0)(i,j)*tres[1]
-                                    +dcrd(1,1)(i,j)*tres[3];
-                        e01[i][j] -= (-dcrd(1,0)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                    +dcrd(0,0)(i,j)*u(0)(i,j)*tres[1]
-                                    -dcrd(1,0)(i,j)*tres[3];
-                        e10[i][j] -= +dcrd(1,1)(i,j)*u(1)(i,j)*tres[0]
-                                    +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                                    -dcrd(0,1)(i,j)*tres[3];
-                        e11[i][j] -= -dcrd(1,0)(i,j)*u(1)(i,j)*tres[0]
-                              +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                              +dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                              +dcrd(0,0)(i,j)*tres[3];
-                        e20[i][j] -= +dcrd(1,1)(i,j)*u(2)(i,j)*tres[0]
-                                 -dcrd(0,1)(i,j)*u(2)(i,j)*tres[1]
-                                 +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                 -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
-                        e21[i][j] -= -dcrd(1,0)(i,j)*u(2)(i,j)*tres[0]
-                                 +dcrd(0,0)(i,j)*u(2)(i,j)*tres[1]
-                                 +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                 +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
-
+#ifndef INERTIALESS
+                        df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                    -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
+                                    -ldcrd(0,1)*u(0)(i,j)*tres(1)
+                                    +ldcrd(1,1)*tres(NV-1);
+                        df(0,1)(i,j) -= (-ldcrd(1,0)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                    +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
+                                    +ldcrd(0,0)*u(0)(i,j)*tres(1)
+                                    -ldcrd(1,0)*tres(NV-1);
+                        df(1,0)(i,j) -= +ldcrd(1,1)*u(1)(i,j)*tres(0)
+                                    +(ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
+                                    -ldcrd(0,1)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
+                                    -ldcrd(0,1)*tres(NV-1);
+                        df(1,1)(i,j) -= -ldcrd(1,0)*u(1)(i,j)*tres(0)
+                                    +(-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
+                                    +ldcrd(0,0)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
+                                    +ldcrd(0,0)*tres(NV-1);
+#endif
                                     
-                        du(3,0)(i,j) = -(dcrd(1,1)(i,j)*tres[0] -dcrd(0,1)(i,j)*tres[1]);
-                        du(3,1)(i,j) = -(-dcrd(1,0)(i,j)*tres[0] +dcrd(0,0)(i,j)*tres[1]);
+                        du(NV-1,0)(i,j) = -(ldcrd(1,1)*tres(0) -ldcrd(0,1)*tres(1));
+                        du(NV-1,1)(i,j) = -(-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1));
                      }
                   }
-                  basis::tri(log2p).intgrtrs(&lf(0)(0),e00[0],e01[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(1)(0),e10[0],e11[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(2)(0),e20[0],e21[0],MXGP);
-                  basis::tri(log2p).intgrtrs(&lf(3)(0),&du(3,0)(0,0),&du(3,1)(0,0),MXGP);
-
+                  for(n=0;n<NV-1;++n)
+                     basis::tri(log2p).intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
+                  basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+                  
                   for(n=0;n<NV;++n)
                      for(i=0;i<basis::tri(log2p).tm;++i)
                         lf(n)(i) *= sim::beta[stage];
@@ -530,11 +479,7 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                   lftog(tind,gbl_ptr->res_r);
                }
             }
-		 
-		 
-		 
-		 
-		 }
+         }
 
          /* ADD IN VISCOUS/DISSIPATIVE FLUX */
          gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) += gbl_ptr->res_r.v(Range(0,nvrtx-1),Range::all());
@@ -544,7 +489,7 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl_ptr->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());     
             }
          }
-               
+
       /*********************************************/
          /* MODIFY RESIDUALS ON COARSER MESHES         */
       /*********************************************/   
@@ -560,13 +505,22 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
             if (basis::tri(log2p).sm) gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
             if (basis::tri(log2p).im) gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
          }
-
-//              std::cout << gbl_ptr->res.v(Range(0,nvrtx),Range::all());
-//              std::cout << gbl_ptr->res.s(Range(0,nside),Range::all(),Range::all());
-//				std::cout << gbl_ptr->res.i(Range(0,ntri),Range::all(),Range::all());
-//               exit(1);
+         
          ++excpt;
+         
+//         for(i=0;i<nvrtx;++i)
+//            printf("rsdl v: %d %e %e %e\n",i,gbl_ptr->res.v(i,0),gbl_ptr->res.v(i,1),gbl_ptr->res.v(i,2));
+//            
+//         for(i=0;i<nside;++i)
+//            for(int m=0;m<basis::tri(log2p).sm;++m)
+//               printf("rsdl s: %d %d %e %e %e\n",i,m,gbl_ptr->res.s(i,m,0),gbl_ptr->res.s(i,m,1),gbl_ptr->res.s(i,m,2));
+//
+//         for(i=0;i<ntri;++i)
+//            for(int m=0;m<basis::tri(log2p).im;++m)
+//               printf("rsdl i: %d %d %e %e %e\n",i,m,gbl_ptr->res.i(i,m,0),gbl_ptr->res.i(i,m,1),gbl_ptr->res.i(i,m,2));
+
       }
    }
+
    return(block::stop);
 }

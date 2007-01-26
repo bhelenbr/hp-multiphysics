@@ -366,14 +366,14 @@ void hp_side_bdry::calculate_unsteady_sources(bool coarse) {
 
 
 
-void tri_hp::vc0load(int phase, FLT *vdata) {
+void tri_hp::vc0load(int phase, FLT *vdata, int vrtstride) {
    int i;
          
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->vmatchsolution_snd(phase,vdata);
+      hp_sbdry(i)->vmatchsolution_snd(phase,vdata,vrtstride);
    for(i=0;i<nvbd;++i)
-      hp_vbdry(i)->vmatchsolution_snd(phase,vdata);
+      hp_vbdry(i)->vmatchsolution_snd(phase,vdata,vrtstride);
    
    for(i=0;i<nsbd;++i)
       sbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
@@ -382,7 +382,7 @@ void tri_hp::vc0load(int phase, FLT *vdata) {
    
    return;
 }
-int tri_hp::vc0wait_rcv(int phase, FLT *vdata) {
+int tri_hp::vc0wait_rcv(int phase, FLT *vdata, int vrtstride) {
    int stop = 1;
    int i;
       
@@ -396,14 +396,14 @@ int tri_hp::vc0wait_rcv(int phase, FLT *vdata) {
       
 
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->vmatchsolution_rcv(phase,vdata);
+      hp_sbdry(i)->vmatchsolution_rcv(phase,vdata,vrtstride);
    for(i=0;i<nvbd;++i)
-      hp_vbdry(i)->vmatchsolution_rcv(phase,vdata);
+      hp_vbdry(i)->vmatchsolution_rcv(phase,vdata,vrtstride);
       
    return(stop);
 }
 
-int tri_hp::vc0rcv(int phase, FLT *vdata) {
+int tri_hp::vc0rcv(int phase, FLT *vdata, int vrtstride) {
    int stop = 1,i;
    
    for(i=0;i<nsbd;++i)
@@ -412,9 +412,9 @@ int tri_hp::vc0rcv(int phase, FLT *vdata) {
       stop &= vbdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
       
    for(i=0;i<nsbd;++i) 
-      hp_sbdry(i)->vmatchsolution_rcv(phase,vdata);
+      hp_sbdry(i)->vmatchsolution_rcv(phase,vdata,vrtstride);
    for(i=0;i<nvbd;++i)
-      hp_vbdry(i)->vmatchsolution_rcv(phase,vdata);
+      hp_vbdry(i)->vmatchsolution_rcv(phase,vdata,vrtstride);
       
    return(stop);
 }
@@ -520,7 +520,7 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
       }
       case 3: {
          for(bnum=0;bnum<nsbd;++bnum) {
-            if (!sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
+            if (sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
                sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
                
                count = 0;

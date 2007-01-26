@@ -134,8 +134,7 @@ namespace ibc_ins {
          }
    };   
    
-   	class impinge : public init_bdry_cndtn {
-  
+   class impinge : public init_bdry_cndtn {
       public:
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
             switch(n) {
@@ -143,17 +142,12 @@ namespace ibc_ins {
                   return(1.0);
                case(1):
                   return(-x(1)/x(0));
-			   case(2):
-					return(0.0);
-				
+            case(2):
+               return(0.0);
+            
             }
             return(0.0);
          }
-         
-         void input(input_map &blockdata,std::string idnty){
-		             std::string keyword,val;
-            std::istringstream data;
-			}
    };
    
 
@@ -820,21 +814,6 @@ FLT f1(int n, FLT x, FLT y) {
    return(0.0);
 }
 #endif
-
-#ifdef IMPINGINGJET
- FLT f1(int n, FLT x, FLT y) {
-    switch(n) {
-       case(0):
-          return(1);
-       case(1):
-          return(-y/x);
-       case(2):
-          return(0);
-    }
-    return(0.0);
-}
-#endif
-
 
    class ibc_type {
       public:

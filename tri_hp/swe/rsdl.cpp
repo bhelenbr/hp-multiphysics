@@ -7,20 +7,21 @@
  *
  */
 
-#include "tri_hp_ins.h"
+#include "tri_hp_swe.h"
 #include "hp_boundary.h"
    
-block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
+block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;
-   FLT fluxx,fluxy;
+   FLT fluxx,fluxy,pres;
    const int NV = 3;
    TinyVector<int,3> v;
    TinyMatrix<FLT,ND,ND> ldcrd;
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-   FLT rhobd0 = gbl_ptr->rho*sim::bd[0], lmu = gbl_ptr->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
+   FLT cjcb, oneminusbeta;
    TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
+   TinyVector<FLT,ND> vel,pt;
    TinyVector<FLT,NV> tres;
    block::ctrl state;
    
@@ -138,15 +139,8 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
             /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
             ugtouht(tind);
-            if (sim::beta[stage] > 0.0) {
-               for(n=0;n<NV-1;++n)
-                  basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
-               basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
-            }
-            else {
-               for(n=0;n<NV;++n)
-                  basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
-            }
+            for(n=0;n<NV;++n)
+               basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
             
             /* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
             for(n=0;n<NV;++n)
@@ -159,38 +153,35 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                for(i=0;i<lgpx;++i) {
                   for(j=0;j<lgpn;++j) {
 
-                     fluxx = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-                     fluxy = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+                     fluxx = u(0)(i,j) -u(NV-1)(i,j)*mvel(0)(i,j);
+                     fluxy = u(1)(i,j) -u(NV-1)(i,j)*mvel(1)(i,j);
+                     vel(0) = u(0)(i,j)/u(NV-1)(i,j);
+                     vel(1) = u(1)(i,j)/u(NV-1)(i,j);
+                     pres = u(NV-1)(i,j)*u(NV-1)(i,j)*sim::g/2.0;
                      
                      /* CONTINUITY EQUATION FLUXES */
                      du(NV-1,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
                      du(NV-1,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
                     
-#ifndef INERTIALESS
                      /* CONVECTIVE FLUXES */
                      for(n=0;n<NV-1;++n) {
-                        cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
-                        cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
+                        cv(n,0)(i,j) = vel(n)*du(NV-1,0)(i,j);
+                        cv(n,1)(i,j) = vel(n)*du(NV-1,1)(i,j);
                      }
-#else
-                     for(n=0;n<NV-1;++n) {
-                        cv(n,0)(i,j) = 0.0;
-                        cv(n,1)(i,j) = 0.0;
-                     }
-#endif
+
                      /* PRESSURE TERMS */
                      /* U-MOMENTUM */
-                     cv(0,0)(i,j) += dcrd(1,1)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-                     cv(0,1)(i,j) -= dcrd(1,0)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(0,0)(i,j) += dcrd(1,1)(i,j)*pres;
+                     cv(0,1)(i,j) -= dcrd(1,0)(i,j)*pres;
                      /* V-MOMENTUM */
-                     cv(1,0)(i,j) -=  dcrd(0,1)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-                     cv(1,1)(i,j) +=  dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(1,0)(i,j) -=  dcrd(0,1)(i,j)*pres;
+                     cv(1,1)(i,j) +=  dcrd(0,0)(i,j)*pres;
                   }
                }
                for(n=0;n<NV-1;++n)
                   basis::tri(log2p).intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
                basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
-
+               
                /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
                lftog(tind,gbl_ptr->res);
 
@@ -200,66 +191,13 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
                         cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                        rhorbd0 = rhobd0*RAD(crd(0)(i,j))*cjcb;
-                        cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-                        
-                        /* UNSTEADY TERMS */
-                        for(n=0;n<NV-1;++n)
-                           res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-                        res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
-#ifdef AXISYMMETRIC
-                        res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
-#endif
-
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#ifdef INERTIALESS
-                        res(0)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#endif
-#endif              
+                        pt(0) = crd(0)(i,j);
+                        pt(1) = crd(1)(i,j);
                                                 
-                        /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-                        /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-                        visc(0,0)(0,0) = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc(0,0)(1,1) = -cjcbi*(2.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc(0,0)(0,1) =  cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI0II0II1II0I visc(0,0)(0,1)
-
-                        visc(1,1)(0,0) = -cjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc(1,1)(1,1) = -cjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc(1,1)(0,1) =  cjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI1II1II1II0I visc(1,1)(0,1)
-                        
-                        visc(0,1)(0,0) =  cjcbi*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
-                        visc(0,1)(1,1) =  cjcbi*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
-                        visc(0,1)(0,1) = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
-                        visc(0,1)(1,0) = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
-
-                           /* OTHER SYMMETRIES    */            
-#define                 viscI1II0II0II0I visc(0,1)(0,0)
-#define                 viscI1II0II1II1I visc(0,1)(1,1)
-#define                 viscI1II0II0II1I visc(0,1)(1,0)
-#define                 viscI1II0II1II0I visc(0,1)(0,1)                        
-
-
-                        df(0,0)(i,j) = +visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-                                    +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j);
-
-                        df(0,1)(i,j) = +viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-                                    +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j);
-
-                        df(1,0)(i,j) = +viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-                                    +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j);
-
-                        df(1,1)(i,j) = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-                                    +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j);
-                        
-                        for(n=0;n<NV-1;++n) {
-                           cv(n,0)(i,j) += df(n,0)(i,j);
-                           cv(n,1)(i,j) += df(n,1)(i,j);
-                        }
+                        /* UNSTEADY TERMS */
+                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
+                        res(NV-1)(i,j) = cjcb*sim::bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
                       }
                   }
                   for(n=0;n<NV;++n)
@@ -277,31 +215,32 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
                                  
-                        tres(0) = gbl_ptr->tau(tind,0)*res(0)(i,j);
-                        tres(1) = gbl_ptr->tau(tind,0)*res(1)(i,j);
-                        tres(NV-1) = gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
+                        tres(0) = -gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres(1) = -gbl_ptr->tau(tind,1)*res(1)(i,j);
+                        tres(NV-1) = -gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
+                        
+                        vel(0) = u(0)(i,j)/u(NV-1)(i,j);
+                        vel(1) = u(1)(i,j)/u(NV-1)(i,j);
 
-#ifndef INERTIALESS
-                        df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-                                    -dcrd(0,1)(i,j)*u(0)(i,j)*tres(1)
-                                    +dcrd(1,1)(i,j)*tres(NV-1);
-                        df(0,1)(i,j) -= (-dcrd(1,0)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-                                    +dcrd(0,0)(i,j)*u(0)(i,j)*tres(1)
-                                    -dcrd(1,0)(i,j)*tres(NV-1);
-                        df(1,0)(i,j) -= +dcrd(1,1)(i,j)*u(1)(i,j)*tres(0)
-                                    +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-                                    -dcrd(0,1)(i,j)*tres(NV-1);
-                        df(1,1)(i,j) -= -dcrd(1,0)(i,j)*u(1)(i,j)*tres(0)
-                                    +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    +dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-                                    +dcrd(0,0)(i,j)*tres(NV-1);
-#endif
+                        df(0,0)(i,j) = (dcrd(1,1)(i,j)*(2*vel(0)-mvel(0)(i,j))
+                                    -dcrd(0,1)(i,j)*(vel(1)-mvel(1)(i,j)))*tres(0)
+                                    -dcrd(0,1)(i,j)*vel(0)*tres(1)
+                                    +dcrd(1,1)(i,j)*(sim::g*u(NV-1)(i,j) -vel(0)*vel(0))*tres(NV-1);
+                        df(0,1)(i,j) = (-dcrd(1,0)(i,j)*(2*vel(0)-mvel(0)(i,j))
+                                    +dcrd(0,0)(i,j)*(vel(1)-mvel(1)(i,j)))*tres(0)
+                                    +dcrd(0,0)(i,j)*vel(0)*tres(1)
+                                    -dcrd(1,0)(i,j)*(sim::g*u(NV-1)(i,j) -vel(0)*vel(0))*tres(NV-1);
+                        df(1,0)(i,j) = +dcrd(1,1)(i,j)*vel(1)*tres(0)
+                                    +(dcrd(1,1)(i,j)*(vel(0)-mvel(0)(i,j))
+                                    -dcrd(0,1)(i,j)*(2.*vel(1)-mvel(1)(i,j)))*tres(1)
+                                    -dcrd(0,1)(i,j)*(sim::g*u(NV-1)(i,j) -vel(1)*vel(1))*tres(NV-1);
+                        df(1,1)(i,j) = -dcrd(1,0)(i,j)*vel(1)*tres(0)
+                                    +(-dcrd(1,0)(i,j)*(vel(0)-mvel(0)(i,j))
+                                    +dcrd(0,0)(i,j)*(2.*vel(1)-mvel(1)(i,j)))*tres(1)
+                                    +dcrd(0,0)(i,j)*(sim::g*u(NV-1)(i,j) -vel(1)*vel(1))*tres(NV-1);
                                     
-                        du(NV-1,0)(i,j) = -(dcrd(1,1)(i,j)*tres(0) -dcrd(0,1)(i,j)*tres(1));
-                        du(NV-1,1)(i,j) = -(-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1));
+                        du(NV-1,0)(i,j) = (dcrd(1,1)(i,j)*tres(0) -dcrd(0,1)(i,j)*tres(1) -(dcrd(1,1)(i,j)*mvel(0)(i,j) -dcrd(0,1)(i,j)*mvel(1)(i,j))*tres(2));
+                        du(NV-1,1)(i,j) = (-dcrd(1,0)(i,j)*tres(0) +dcrd(0,0)(i,j)*tres(1) -(-dcrd(1,0)(i,j)*mvel(0)(i,j) +dcrd(0,0)(i,j)*mvel(1)(i,j))*tres(2));
                      }
                   }
                   for(n=0;n<NV-1;++n)
@@ -321,32 +260,29 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                for(i=0;i<lgpx;++i) {
                   for(j=0;j<lgpn;++j) {
 
-                     fluxx = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-                     fluxy = gbl_ptr->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+                     fluxx = u(0)(i,j) -u(NV-1)(i,j)*mvel(0)(i,j);
+                     fluxy = u(1)(i,j) -u(NV-1)(i,j)*mvel(1)(i,j);
+                     vel(0) = u(0)(i,j)/u(NV-1)(i,j);
+                     vel(1) = u(1)(i,j)/u(NV-1)(i,j);
+                     pres = u(NV-1)(i,j)*u(NV-1)(i,j)*sim::g/2.0;
                      
                      /* CONTINUITY EQUATION FLUXES */
                      du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
                      du(NV-1,1)(i,j) = -ldcrd(1,0)*fluxx +ldcrd(0,0)*fluxy;
-                     
-#ifndef INERTIALESS
+                    
                      /* CONVECTIVE FLUXES */
                      for(n=0;n<NV-1;++n) {
-                        cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
-                        cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
+                        cv(n,0)(i,j) = vel(n)*du(NV-1,0)(i,j);
+                        cv(n,1)(i,j) = vel(n)*du(NV-1,1)(i,j);
                      }
-#else
-                     for(n=0;n<NV-1;++n) {
-                        cv(n,0)(i,j) = 0.0;
-                        cv(n,1)(i,j) = 0.0;
-                     }
-#endif
+
                      /* PRESSURE TERMS */
                      /* U-MOMENTUM */
-                     cv(0,0)(i,j) += ldcrd(1,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-                     cv(0,1)(i,j) -= ldcrd(1,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(0,0)(i,j) += ldcrd(1,1)*pres;
+                     cv(0,1)(i,j) -= ldcrd(1,0)*pres;
                      /* V-MOMENTUM */
-                     cv(1,0)(i,j) -=  ldcrd(0,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-                     cv(1,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
+                     cv(1,0)(i,j) -=  ldcrd(0,1)*pres;
+                     cv(1,1)(i,j) +=  ldcrd(0,0)*pres;
                   }
                }
                for(n=0;n<NV-1;++n)
@@ -360,72 +296,19 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                /* NEGATIVE REAL TERMS */
                if (sim::beta[stage] > 0.0) {
                   cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-                  cjcbi = lmu/cjcb;
-                  lrhorbd0 = rhobd0*cjcb;
                   
-                  /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-                  /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-                  visc(0,0)(0,0) = -cjcbi*(2.*ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
-                  visc(0,0)(1,1) = -cjcbi*(2.*ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
-                  visc(0,0)(0,1) =  cjcbi*(2.*ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
-#define           viscI0II0II1II0I visc(0,0)(0,1)
-
-                  visc(1,1)(0,0) = -cjcbi*(ldcrd(1,1)*ldcrd(1,1) +2.*ldcrd(0,1)*ldcrd(0,1));
-                  visc(1,1)(1,1) = -cjcbi*(ldcrd(1,0)*ldcrd(1,0) +2.*ldcrd(0,0)*ldcrd(0,0));
-                  visc(1,1)(0,1) =  cjcbi*(ldcrd(1,1)*ldcrd(1,0) +2.*ldcrd(0,1)*ldcrd(0,0));
-#define           viscI1II1II1II0I visc(1,1)(0,1)
-                  
-                  visc(0,1)(0,0) =  cjcbi*ldcrd(0,1)*ldcrd(1,1);
-                  visc(0,1)(1,1) =  cjcbi*ldcrd(0,0)*ldcrd(1,0);
-                  visc(0,1)(0,1) = -cjcbi*ldcrd(0,1)*ldcrd(1,0);
-                  visc(0,1)(1,0) = -cjcbi*ldcrd(0,0)*ldcrd(1,1);
-
-                  /* OTHER SYMMETRIES    */            
-#define           viscI1II0II0II0I visc(0,1)(0,0)
-#define           viscI1II0II1II1I visc(0,1)(1,1)
-#define           viscI1II0II0II1I visc(0,1)(1,0)
-#define           viscI1II0II1II0I visc(0,1)(0,1)
-
                   /* TIME DERIVATIVE TERMS */ 
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        rhorbd0 = RAD(crd(0)(i,j))*lrhorbd0;
-                        
+                        pt(0) = crd(0)(i,j);
+                        pt(1) = crd(1)(i,j);
+                                                
                         /* UNSTEADY TERMS */
-                        for(n=0;n<NV-1;++n)
-                           res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-                        res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
-                        
-#ifdef AXISYMMETRIC
-                        res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
-#endif
-
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#ifdef INERTIALESS
-                        res(0)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#endif
-#endif
-                        df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-                                              +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
-
-                        df(0,1)(i,j) = RAD(crd(0)(i,j))*(+viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-                                              +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j));
-
-                        df(1,0)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-                                              +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j));
-
-                        df(1,1)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-                                              +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j));
-                        
-                        for(n=0;n<NV-1;++n) {
-                           cv(n,0)(i,j) += df(n,0)(i,j);
-                           cv(n,1)(i,j) += df(n,1)(i,j);
-                        } 
-                      }
-                  }
+                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
+                        res(NV-1)(i,j) = cjcb*sim::bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+                     }
+                  }                  
                   for(n=0;n<NV;++n)
                      basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
 
@@ -440,33 +323,36 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres(0) = gbl_ptr->tau(tind,0)*res(0)(i,j);
-                        tres(1) = gbl_ptr->tau(tind,0)*res(1)(i,j);
-                        tres(NV-1) = gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
+                                 
+                        tres(0) = -gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres(1) = -gbl_ptr->tau(tind,1)*res(1)(i,j);
+                        tres(NV-1) = -gbl_ptr->tau(tind,NV-1)*res(NV-1)(i,j);
+                        
+                        vel(0) = u(0)(i,j)/u(NV-1)(i,j);
+                        vel(1) = u(1)(i,j)/u(NV-1)(i,j);
 
-#ifndef INERTIALESS
-                        df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-                                    -ldcrd(0,1)*u(0)(i,j)*tres(1)
-                                    +ldcrd(1,1)*tres(NV-1);
-                        df(0,1)(i,j) -= (-ldcrd(1,0)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                    +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-                                    +ldcrd(0,0)*u(0)(i,j)*tres(1)
-                                    -ldcrd(1,0)*tres(NV-1);
-                        df(1,0)(i,j) -= +ldcrd(1,1)*u(1)(i,j)*tres(0)
-                                    +(ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
-                                    -ldcrd(0,1)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-                                    -ldcrd(0,1)*tres(NV-1);
-                        df(1,1)(i,j) -= -ldcrd(1,0)*u(1)(i,j)*tres(0)
-                                    +(-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
-                                    +ldcrd(0,0)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-                                    +ldcrd(0,0)*tres(NV-1);
-#endif
+                        df(0,0)(i,j) = (ldcrd(1,1)*(2*vel(0)-mvel(0)(i,j))
+                                    -ldcrd(0,1)*(vel(1)-mvel(1)(i,j)))*tres(0)
+                                    -ldcrd(0,1)*vel(0)*tres(1)
+                                    +ldcrd(1,1)*(sim::g*u(NV-1)(i,j) -vel(0)*vel(0))*tres(NV-1);
+                        df(0,1)(i,j) = (-ldcrd(1,0)*(2*vel(0)-mvel(0)(i,j))
+                                    +ldcrd(0,0)*(vel(1)-mvel(1)(i,j)))*tres(0)
+                                    +ldcrd(0,0)*vel(0)*tres(1)
+                                    -ldcrd(1,0)*(sim::g*u(NV-1)(i,j) -vel(0)*vel(0))*tres(NV-1);
+                        df(1,0)(i,j) = +ldcrd(1,1)*vel(1)*tres(0)
+                                    +(ldcrd(1,1)*(vel(0)-mvel(0)(i,j))
+                                    -ldcrd(0,1)*(2.*vel(1)-mvel(1)(i,j)))*tres(1)
+                                    -ldcrd(0,1)*(sim::g*u(NV-1)(i,j) -vel(1)*vel(1))*tres(NV-1);
+                        df(1,1)(i,j) = -ldcrd(1,0)*vel(1)*tres(0)
+                                    +(-ldcrd(1,0)*(vel(0)-mvel(0)(i,j))
+                                    +ldcrd(0,0)*(2.*vel(1)-mvel(1)(i,j)))*tres(1)
+                                    +ldcrd(0,0)*(sim::g*u(NV-1)(i,j) -vel(1)*vel(1))*tres(NV-1);
                                     
-                        du(NV-1,0)(i,j) = -(ldcrd(1,1)*tres(0) -ldcrd(0,1)*tres(1));
-                        du(NV-1,1)(i,j) = -(-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1));
+                        du(NV-1,0)(i,j) = (ldcrd(1,1)*tres(0) -ldcrd(0,1)*tres(1) -(ldcrd(1,1)*mvel(0)(i,j) -ldcrd(0,1)*mvel(1)(i,j))*tres(2));
+                        du(NV-1,1)(i,j) = (-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1) -(-ldcrd(1,0)*mvel(0)(i,j) +ldcrd(0,0)*mvel(1)(i,j))*tres(2));
                      }
                   }
+   
                   for(n=0;n<NV-1;++n)
                      basis::tri(log2p).intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
                   basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);

@@ -31,8 +31,6 @@ void tri_hp_lvlset::init(input_map& input, gbl *gin) {
    keyword = idprefix + ".coarse";
    input.getwdefault(keyword,coarse,false);
    if (coarse) return;
-
-   gbl_ptr->tau_lvlset.resize(maxvst);
   
    keyword = idprefix + ".rho2";
    input.getwdefault(keyword,gbl_ptr->rho,1.0);

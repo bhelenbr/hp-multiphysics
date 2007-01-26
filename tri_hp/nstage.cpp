@@ -134,7 +134,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    }
    
    for(i=0;i<nvrtx;++i) {
-      printf("v: %d ",i);
+      printf("ug.v: %d ",i);
       for(n=0;n<NV;++n) {
          if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
          else printf("%8.5e ",0.0);
@@ -144,7 +144,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 
    for(i=0;i<nside;++i) {
       for(m=0;m<basis::tri(log2p).sm;++m) {
-         printf("s: %d ",i);
+         printf("ug.s: %d ",i);
          for(n=0;n<NV;++n) {
             if (fabs(ug.s(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.s(i,m,n));
             else printf("%8.5e ",0.0);
@@ -156,7 +156,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    
    for(i=0;i<ntri;++i) {
       for(m=0;m<basis::tri(log2p).im;++m) {
-         printf("i: %d ",i);
+         printf("ug.i: %d ",i);
          for(n=0;n<NV;++n) {
             if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
             else printf("%8.5e ",0.0);

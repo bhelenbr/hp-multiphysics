@@ -1,20 +1,20 @@
-#include "tri_hp_swirl.h"
+#include "tri_hp_swe.h"
 #include "hp_boundary.h"
 #include <math.h>
 
-block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
+block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
-   FLT jcb,h,hmax,q,qmax,lam1,gam;
+   FLT jcb,h,hmax,q,qmax,umax,vmax,c,pre,fmax,cflnow;
    TinyVector<int,3> v;
-
+   
    if (ctrl_message == block::begin) excpt = 0;
-   if (ctrl_message == block::advance1) ++excpt;  
+   if (ctrl_message == block::advance1) ++excpt;   
+   
+   cflnow = 0.0;
    
    if (excpt == 3) {
       ++excpt;
-      
-      FLT nu = gbl_ptr->mu/gbl_ptr->rho;
-
+   	        
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
       /***************************************/
@@ -41,34 +41,39 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
             exit(1);
          }
          h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-         hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
-      
+               
          qmax = 0.0;
+         hmax = 0.0;
+         umax = 0.0;
+         vmax = 0.0;
+         fmax = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
-				q += pow(ug.v(v0,2),2.0);
+            q = pow(ug.v(v0,0)/ug.v(v0,NV-1) -sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0)),2.0) 
+               +pow(ug.v(v0,1)/ug.v(v0,NV-1) -sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1)),2.0);  
             qmax = MAX(qmax,q);
+            hmax = MAX(hmax,ug.v(v0,NV-1));
+            umax = MAX(umax,ug.v(v0,0)/ug.v(v0,NV-1));
+            vmax = MAX(vmax,ug.v(v0,1)/ug.v(v0,NV-1));
+            fmax = MAX(fmax,fabs(gbl_ptr->f0 +gbl_ptr->beta*vrtx(v0)(1)));
          }
-         gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
-         if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
          q = sqrt(qmax);
-         lam1 = q + sqrt(qmax +gam);
-         
-         /* SET UP DISSIPATIVE COEFFICIENTS */
-         gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-         gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
-         
-         /* SET UP DIAGONAL PRECONDITIONER */
-         // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-         jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-         jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
+         c = sqrt(sim::g*hmax);
+         pre = (pow(h*(sim::bd[0] +fmax),2.0) +2*qmax)/(h*sim::bd[0]*h*sim::bd[0] +c*c +qmax);
 
-         gbl_ptr->tprcn(tind,0) = gbl_ptr->rho*jcb;   
-         gbl_ptr->tprcn(tind,1) = gbl_ptr->rho*jcb;  
-         gbl_ptr->tprcn(tind,2) = gbl_ptr->rho*jcb;     
-         gbl_ptr->tprcn(tind,3) =  jcb/gam;
+         /* SET UP DISSIPATIVE COEFFICIENTS */
+         gbl_ptr->tau(tind,0) = adis*h*1.0/((q +c*sqrt(pre) +sim::bd[0]*h)*jcb);
+         gbl_ptr->tau(tind,1) = gbl_ptr->tau(tind,0);
+         gbl_ptr->tau(tind,NV-1) = adis*h*pre/((q +c*sqrt(pre) +pre*sim::bd[0]*h)*jcb);
+             
+         /* SET UP DIAGONAL PRECONDITIONER */
+         jcb *=  2.*(2.*q/h +sim::bd[0] +fmax);
+         
+         cflnow = MAX((q/h +fmax +c/h)/sim::bd[0],cflnow);
+         
+         gbl_ptr->tprcn(tind,0) = jcb;   
+         gbl_ptr->tprcn(tind,1) = jcb;     
+         gbl_ptr->tprcn(tind,2) =  jcb/pre;
          for(i=0;i<3;++i) {
             gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
             if (basis::tri(log2p).sm > 0) {
@@ -77,6 +82,7 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
             }
          }
       }
+      if (!coarse && log2p == log2pmax) *sim::log << "#cfl is " << cflnow << std::endl;
    }
    else {
       ctrl_message = tri_hp::setup_preconditioner(ctrl_message);  

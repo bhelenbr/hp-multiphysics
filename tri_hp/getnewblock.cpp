@@ -16,12 +16,15 @@
 #include "tri_hp_ins.h"
 #include "tri_hp_ps.h"
 #include "tri_hp_swirl.h"
+#include "tri_hp_buoyancy.h"
 #include "pod/pod.h"
+#include "tri_hp_swe.h"
+
 
 class btype {
    public:
-      const static int ntypes = 7;
-      enum ids {r_mesh,cd,ins,ps,swirl,pod_ins,pod_cd};
+      const static int ntypes = 9;
+      enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins,pod_cd,swe};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -30,7 +33,7 @@ class btype {
          return(-1);
       }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","pod_ins","pod_cd"};
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy","pod_ins","pod_cd","swe"};
 
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
@@ -79,6 +82,12 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
          mgrid<tri_hp_swirl> *temp = new mgrid<tri_hp_swirl>(idnum);
          return(temp);
       }
+      
+      case btype::buoyancy: {
+         mgrid<tri_hp_buoyancy> *temp = new mgrid<tri_hp_buoyancy>(idnum);
+         return(temp);
+      }
+      
       case btype::pod_ins: {
          mgrid<pod<tri_hp_ins> > *temp = new mgrid<pod<tri_hp_ins> >(idnum);
          return(temp);
@@ -86,6 +95,11 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
       
       case btype::pod_cd: {
          mgrid<pod<tri_hp_cd> > *temp = new mgrid<pod<tri_hp_cd> >(idnum);
+         return(temp);
+      }
+      
+      case btype::swe: {
+         mgrid<tri_hp_swe> *temp = new mgrid<tri_hp_swe>(idnum);
          return(temp);
       }
 

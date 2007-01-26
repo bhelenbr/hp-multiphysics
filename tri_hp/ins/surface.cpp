@@ -184,7 +184,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
    int i,j,m,n,sind,indx,count,v0,v1;
    TinyVector<FLT,mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
-   FLT sigor,drhor,jcb;
+   FLT jcb;
    Array<TinyVector<FLT,MXGP>,1> u(x.NV);
    TinyMatrix<FLT,mesh::ND,MXGP> crd, dcrd, mvel;
    TinyMatrix<FLT,8,MXGP> res;
@@ -200,9 +200,6 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << "surface::rsdl step 0 with ctrl_message " << ctrl_message << std::endl;
 #endif
-         sigor = surf_gbl->sigma/x.gbl_ptr->rho;
-         drhor = (x.gbl_ptr->rho -surf_gbl->rho2)/(x.gbl_ptr->rho +surf_gbl->rho2);
-
          /**************************************************/
          /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
          /**************************************************/
@@ -438,16 +435,16 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             v0 = x.sd(sind).vrtx(1);
-            x.gbl_ptr->res.v(v0,2) += base.frcvbuf(0,count++);
+            x.gbl_ptr->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
          }
          v0 = x.sd(sind).vrtx(0);
-         x.gbl_ptr->res.v(v0,2) += base.frcvbuf(0,count++);
+         x.gbl_ptr->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
          
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             msgn = 1;
             for(m=0;m<basis::tri(x.log2p).sm;++m) {
-               x.gbl_ptr->res.s(sind,m,2) += msgn*base.frcvbuf(0,count++);
+               x.gbl_ptr->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
                msgn *= -1;
             }
          }
@@ -866,12 +863,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
       for(i=0;i<base.nel;++i)
          for(m=0;m<basis::tri(x.log2p).sm;++m)
             printf("spos: %d %d %8.4e %8.4e\n",i,m,crv(i,m)(0),crv(i,m)(1));
-            
-      for(i=0;i<base.nel;++i)
-         for(m=0;m<basis::tri(x.log2p).sm;++m)
-            printf("spos2: %d %d %8.4e %8.4e\n",i,m,crvbd(1)(i,m)(0),crvbd(1)(i,m)(1));
 
-      exit(1);
 #endif
          
          for(i=0;i<base.nel;++i) {

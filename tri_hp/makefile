@@ -4,15 +4,19 @@ OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/tstep.o
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/tstep.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
+OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o
+OBJSW = swe/allocate.o swe/getnewbdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL)
+OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW)
 
 VIZ = pv3routines.o
 
-LIB = -L$(HOME)/Codes/lib -lmesh -lquad -lbasis -lmyblas -lutil -linput_map -lm
-DEFINES = -Df2cFortran -DAXISYMMETRIC
-CPPFLAGS = -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl 
+# TO COMPILE VARIOUS VERISONS:
+#make hp_axi_mpi EXTRAFLAGS="-DMPISRC -DAXISYMMETRIC"
+DEFINES = -Df2cFortran $(EXTRAFLAGS)
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include -I. -Iins -Icd -Iplanestrain -Iswirl -Ibuoyancy -Iswe
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
 
 ### Begin machine dependent
 
@@ -24,7 +28,7 @@ CPPFLAGS = -I$(HOME)/Codes/include/ -I. -Iins -Icd -Iplanestrain -Iswirl
 ## Linux:
 ##  Machine specific for Linux
 CXX=icpc #(cares)
-CPPFLAGS += -O3 -cxxlib-icc -DNO_MPISRC -I/opt/mpich/myrinet/intel/include #(cares)
+CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
 LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 LDFLAGS += -static-libcxa #(cares)
@@ -46,7 +50,17 @@ LDFLAGS += -static-libcxa #(cares)
 CPPFLAGS += $(DEFINES)
 
 hp: $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(LIB)
-	
-$(OBJ): *.h makefile
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
+	cp hp $(HOME)/bin/
 
+hp_axi: $(OBJ)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
+	cp hp_axi $(HOME)/bin/
+	
+hp_mpi: $(OBJ)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
+	cp hp_mpi $(HOME)/bin/
+
+hp_axi_mpi: $(OBJ)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
+	cp hp_axi_mpi $(HOME)/bin/

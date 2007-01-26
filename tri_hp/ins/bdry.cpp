@@ -10,9 +10,10 @@ using namespace bdry_ins;
 
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,sd;
-	FLT visc[mesh::ND][mesh::ND][mesh::ND][mesh::ND];
+	FLT visc[mesh::ND+1][mesh::ND+1][mesh::ND][mesh::ND];
    TinyVector<FLT,2> drag, norm, mvel;
    TinyVector<FLT,3> flux;
+   Array<FLT,1> dflux(x.NV);
    FLT circumference,moment,convect,circulation;
    
    switch(typ) {
@@ -28,7 +29,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
          moment = 0.0;
          circumference = 0.0;
          circulation = 0.0;
-         
+         dflux = 0.0;
+                  
          for(ind=0; ind < base.nel; ++ind) {
             sind = base.el(ind);
             tind = x.sd(sind).tri(0);      
@@ -76,7 +78,12 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #define        viscI1II0II0II1I visc[0][1][1][0]
 #define        viscI1II0II1II0I visc[0][1][0][1]
 
+               /* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
+               visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+               visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 
+               for (n=mesh::ND;n<x.NV-1;++n) 
+                  dflux(n) -= x.gbl_ptr->D(n)/x.gbl_ptr->mu*basis::tri(x.log2p).wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
 
                drag(0) -=   basis::tri(x.log2p).wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
                            -viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
@@ -107,6 +114,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
          fout << base.idprefix << " drag: " << drag << std::endl;
          fout << base.idprefix << " flux: " << flux << std::endl; 
          fout << base.idprefix << " circulation: " << circulation << std::endl;
+         for (n=mesh::ND;n<x.NV-1;++n)
+            fout << base.idprefix << " diffusive flux " << n << ": " << dflux(n) << std::endl;
+            
       }
    }
    

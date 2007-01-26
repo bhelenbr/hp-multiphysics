@@ -192,8 +192,8 @@ namespace bdry_ins {
          block::ctrl rsdl(block::ctrl ctrl_message);
          block::ctrl update(block::ctrl ctrl_message);
                  
-         void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
-         void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
+         void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,vrtstride*x.NV);}
+         void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2, x.NV*vrtstride);}
          void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
          void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
    };
@@ -340,8 +340,62 @@ namespace bdry_ins {
             }
          }
    };
-
    
+   class surface_periodic_pt : public surface_fixed_pt {
+      protected:
+         FLT position;
+         bool vertical;
+         
+      public:
+         surface_periodic_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_periodic_pt";}
+         surface_periodic_pt(const surface_periodic_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin), position(inbdry.position), vertical(inbdry.vertical) {*sim::log << position << std::endl;}
+         surface_periodic_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_periodic_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         
+         void init(input_map& inmap,void* &gbl_in) {
+            bool coarse,first;
+            ostringstream nstr;
+            
+            surface_fixed_pt::init(inmap,gbl_in);
+            dirstart = 0;
+            dirstop = 0;
+            inmap.getwdefault(base.idprefix + ".vertical",vertical,true); 
+            inmap.getwdefault(x.idprefix + ".coarse",coarse,false);
+            if (!coarse) {
+               position = x.vrtx(base.v0)(1-vertical);
+               nstr.str("");
+               nstr << position << std::flush;
+               inmap.getwdefault(base.idprefix+".first",first,true);
+               if (first) {
+                  inmap[base.idprefix+".first"] = "0";
+                  inmap[base.idprefix+".prdc_pos_first"] = nstr.str();
+               }
+               else {
+                  inmap[base.idprefix+".first"] = "1";
+                  inmap[base.idprefix+".prdc_pos_second"] = nstr.str();
+               }
+            }
+            else {
+               if (!inmap.get(base.idprefix+".first",first)) {
+                  *sim::log << "Something went wrong finding periodic point position" << std::endl;
+                  exit(1);
+               }
+               if (first) {
+                  inmap[base.idprefix+".first"] = "0";
+                  inmap.get(base.idprefix+".prdc_pos_first",position);
+               }
+               else {
+                  inmap[base.idprefix+".first"] = "1";
+                  inmap.get(base.idprefix+".prdc_pos_second",position);
+               }
+            }
+         }
+         
+         void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            pt(1-vertical) = position;
+         }
+   };
+   
+
    class surface_outflow_endpt : public surface_fixed_pt {
        public:
          surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow_endpt";}
@@ -360,11 +414,11 @@ namespace bdry_ins {
    class surface_outflow_planar : public surface_outflow_endpt {
       protected:
          bool vertical;
-         FLT location;
+         FLT position;
          
       public:
          surface_outflow_planar(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin) {mytype = "surface_outflow_planar";}
-         surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin), vertical(inbdry.vertical), location(inbdry.location) {}
+         surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin), vertical(inbdry.vertical), position(inbdry.position) {}
          surface_outflow_planar* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_planar(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
          void init(input_map& inmap,void* &gbl_in) {
             std::string keyword;
@@ -375,15 +429,14 @@ namespace bdry_ins {
             keyword = base.idprefix + ".vertical";
             inmap.getwdefault(keyword,vertical,true);    
             
-            keyword = base.idprefix + ".location";
-            inmap.getwdefault(keyword,location,0.0);
+            position = x.vrtx(base.v0)(1-vertical);
          }
             
          void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
-            pt(1-vertical) = location;
+            pt(1-vertical) = position;
          }
    };
-   
+
    class inflow_pt : public hp_vrtx_bdry {
       protected:
          tri_hp_ins &x;
@@ -401,7 +454,7 @@ namespace bdry_ins {
             return(block::stop);
          }
                            
-         void vdirichlet() {
+         void vdirichlet2d() {
             x.gbl_ptr->res.v(base.v0,Range(0,x.NV-2)) = 0.0;
          }
    };

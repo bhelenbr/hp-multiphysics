@@ -274,10 +274,10 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
-                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
-                        tres[2] = gbl_ptr->tau(tind)*res(2)(i,j);
-                        tres[3] = gbl_ptr->delt(tind)*res(3)(i,j);
+                        tres[0] = gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres[1] = gbl_ptr->tau(tind,0)*res(1)(i,j);
+                        tres[2] = gbl_ptr->tau(tind,0)*res(2)(i,j);
+                        tres[3] = gbl_ptr->tau(tind,NV-1)*res(3)(i,j);
 
 
                         e00[i][j] -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
@@ -459,10 +459,10 @@ block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
                   /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
                   for(i=0;i<lgpx;++i) {
                      for(j=0;j<lgpn;++j) {
-                        tres[0] = gbl_ptr->tau(tind)*res(0)(i,j);
-                        tres[1] = gbl_ptr->tau(tind)*res(1)(i,j);
-                        tres[2] = gbl_ptr->tau(tind)*res(2)(i,j);
-                        tres[3] = gbl_ptr->delt(tind)*res(3)(i,j);
+                        tres[0] = gbl_ptr->tau(tind,0)*res(0)(i,j);
+                        tres[1] = gbl_ptr->tau(tind,0)*res(1)(i,j);
+                        tres[2] = gbl_ptr->tau(tind,0)*res(2)(i,j);
+                        tres[3] = gbl_ptr->tau(tind,NV-1)*res(3)(i,j);
 
 
                         e00[i][j] -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))

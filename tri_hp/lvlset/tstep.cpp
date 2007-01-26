@@ -57,8 +57,8 @@ block::ctrl tri_hp_lvlset::setup_preconditioner(block::ctrl ctrl_message) {
          lam1 = q + sqrt(qmax +gam);
          
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         gbl_ptr->tau(tind) = adis*h/(jcb*sqrt(gam));
-         gbl_ptr->delt(tind) = qmax*gbl_ptr->tau(tind);
+         gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+         gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
          
          /* SET UP DIAGONAL PRECONDITIONER */
          // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];

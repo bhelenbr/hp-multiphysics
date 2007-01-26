@@ -310,7 +310,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       /* USE TOBASIS TO INITALIZE SOLUTION */
       tobasis(gbl_ptr->ibc);
    }
-   
+      
    return;
 }
 

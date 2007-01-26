@@ -8,6 +8,49 @@
  */
 
 #include "tri_hp.h"
+#include <mathclass.h>
+
+class symbolic_ibc : public init_bdry_cndtn {
+   private:
+      Array<symbolic_function<2>,1> fcn;
+   public:
+      FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+         return(fcn(n).Eval(x));
+      }
+      void input(input_map &inmap,std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
+         std::ostringstream nstr;
+         int nvar;
+         
+         keyword = idnty +".nvariable";
+
+         if (!inmap.get(keyword,nvar))
+            inmap.getwdefault("nvariable",nvar,1);
+         
+         fcn.resize(nvar);
+
+         for(int n=0;n<nvar;++n) {
+            nstr.str("");
+            nstr << idnty << ".ibc" << n << std::flush;
+            if (inmap.find(nstr.str() +".expression") != inmap.end()) {
+               fcn(n).init(inmap,nstr.str());
+            }
+            else {
+               nstr.str("");
+               nstr << "ibc" << n << std::flush;
+               if (inmap.find(nstr.str() +".expression") != inmap.end()) {
+                  fcn(n).init(inmap,nstr.str());
+               }
+               else {
+                  *sim::log << "couldn't find initial condition function\n";
+                  exit(1);
+               }
+            }
+         }
+      }
+};
+
 
 class polynomial_ibc : public init_bdry_cndtn {
    private:
@@ -37,6 +80,10 @@ class polynomial_ibc : public init_bdry_cndtn {
          
          cx.resize(nvar,5);
          cy.resize(nvar,5);
+         cx = 0.0;
+         cy = 0.0;
+         cx(Range::all(),0) = 1.0;
+         cy(Range::all(),0) = 1.0;
 
          for(int n=0;n<nvar;++n) {
             nstr.str("");
@@ -44,7 +91,8 @@ class polynomial_ibc : public init_bdry_cndtn {
    
             if (inmap.getline(nstr.str(),val)) {
                data.str(val);
-               data >> cx(n,0) >> cx(n,1) >> cx(n,2) >> cx(n,3) >> cx(n,4);  
+               for(int m=0;m<5;++m)
+                  if (!(data >> cx(n,m))) break;
                data.clear(); 
             }
             else {
@@ -53,12 +101,9 @@ class polynomial_ibc : public init_bdry_cndtn {
 
                if (inmap.getline(nstr.str(),val)) {
                   data.str(val);
-                  data >> cx(n,0) >> cx(n,1) >> cx(n,2) >> cx(n,3) >> cx(n,4);  
+                  for(int m=0;m<5;++m)
+                     if (!(data >> cx(n,m))) break;
                   data.clear(); 
-               }
-               else {
-                  cx(n,0) = 1.0;
-                  cx(n,Range(1,4)) = 0.0;
                }
             }
             
@@ -69,7 +114,8 @@ class polynomial_ibc : public init_bdry_cndtn {
             
             if (inmap.getline(nstr.str(),val)) {
                data.str(val);
-               data >> cy(n,0) >> cy(n,1) >> cy(n,2) >> cy(n,3) >> cy(n,4);  
+               for(int m=0;m<5;++m)
+                  if (!(data >> cy(n,m))) break;
                data.clear(); 
             }
             else {
@@ -77,12 +123,9 @@ class polynomial_ibc : public init_bdry_cndtn {
                nstr << "coeffy" << n << std::flush;
                if (inmap.getline(nstr.str(),val)) {
                   data.str(val);
-                  data >> cy(n,0) >> cy(n,1) >> cy(n,2) >> cy(n,3) >> cy(n,4);  
+                  for(int m=0;m<5;++m)
+                     if (!(data >> cy(n,m))) break;
                   data.clear(); 
-               }
-               else {
-                  cy(n,0) = 1.0;
-                  cy(n,Range(1,4)) = 0.0;
                }
             }
             
@@ -213,11 +256,10 @@ class sinusoidal_ibc : public init_bdry_cndtn {
       }
 };
 
-
 class ibc_type {
    public:
-      const static int ntypes = 3;
-      enum ids {polynomial,power,sinusoidal};
+      const static int ntypes = 4;
+      enum ids {symbolic,polynomial,power,sinusoidal};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -226,7 +268,7 @@ class ibc_type {
          return(-1);
       }
 };
-const char ibc_type::names[ntypes][40] = {"polynomial","power","sinusoidal"};
+const char ibc_type::names[ntypes][40] = {"symbolic","polynomial","power","sinusoidal"};
 
 
 
@@ -245,6 +287,11 @@ init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
    type = ibc_type::getid(ibcname.c_str());
       
    switch(type) {
+      case ibc_type::symbolic: {
+         init_bdry_cndtn *temp = new symbolic_ibc;
+         return(temp);
+      }
+
       case ibc_type::polynomial: {
          init_bdry_cndtn *temp = new polynomial_ibc;
          return(temp);

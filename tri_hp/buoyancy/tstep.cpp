@@ -1,10 +1,10 @@
-#include "tri_hp_swirl.h"
+#include "tri_hp_buoyancy.h"
 #include "hp_boundary.h"
 #include <math.h>
 
-block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
+block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
-   FLT jcb,h,hmax,q,qmax,lam1,gam;
+   FLT jcb,jcb1,h,hmax,q,qmax,lam1,lam2,gam,rhoav;
    TinyVector<int,3> v;
 
    if (ctrl_message == block::begin) excpt = 0;
@@ -12,8 +12,6 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
    
    if (excpt == 3) {
       ++excpt;
-      
-      FLT nu = gbl_ptr->mu/gbl_ptr->rho;
 
       /***************************************/
       /** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -44,30 +42,38 @@ block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
          hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
       
          qmax = 0.0;
+         rhoav = 0.0;
          for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-               +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
-				q += pow(ug.v(v0,2),2.0);
+            q = pow(ug.v(v0,0) -0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+               +pow(ug.v(v0,1) -0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
             qmax = MAX(qmax,q);
+            rhoav += gbl_ptr->rhovsT.Eval(ug.v(v0,2)); 
          }
+         rhoav /= 3.0;
+         FLT nu = gbl_ptr->mu/rhoav;
+         FLT alpha = gbl_ptr->kcond/(rhoav*gbl_ptr->cv);
+      
          gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
          if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
          q = sqrt(qmax);
          lam1 = q + sqrt(qmax +gam);
-         
+         lam2  = (q +1.5*alpha/h +h*sim::bd[0]);
+
          /* SET UP DISSIPATIVE COEFFICIENTS */
          gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+         gbl_ptr->tau(tind,2)  = adis*h/(jcb*lam2);
          gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
          
          /* SET UP DIAGONAL PRECONDITIONER */
+         jcb1 = jcb*lam1/h;
          // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
          jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-         jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
+         jcb *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
 
-         gbl_ptr->tprcn(tind,0) = gbl_ptr->rho*jcb;   
-         gbl_ptr->tprcn(tind,1) = gbl_ptr->rho*jcb;  
-         gbl_ptr->tprcn(tind,2) = gbl_ptr->rho*jcb;     
+         gbl_ptr->tprcn(tind,0) = rhoav*jcb;   
+         gbl_ptr->tprcn(tind,1) = rhoav*jcb;  
+         gbl_ptr->tprcn(tind,2) =  rhoav*gbl_ptr->cv*jcb1;     
          gbl_ptr->tprcn(tind,3) =  jcb/gam;
          for(i=0;i<3;++i) {
             gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());

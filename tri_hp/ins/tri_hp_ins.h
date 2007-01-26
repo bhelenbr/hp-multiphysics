@@ -18,10 +18,11 @@ class tri_hp_ins : public tri_hp {
       /* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
       struct gbl : public tri_hp::gbl {
          /* STABILIZATION */
-         Array<FLT,1> tau,delt;
+         Array<FLT,2> tau;
             
          /* PHYSICAL CONSTANTS */
          FLT rho, mu;
+         Array<FLT,1> D;
          
          /* STORAGE FOR CALCULATION OF ENERGY AND AREA */
          TinyVector<FLT,2> eanda, eanda_recv;

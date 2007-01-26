@@ -66,14 +66,9 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
 #ifndef MATRIX_PRECONDITIONER
          gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) *= gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all());
 #else
+         /* ASSUMES LOWER TRIANGULAR FOR NOW */
          for(i=0;i<nvrtx;++i) {
-            for(n=0;n<NV;++n) {
-               temp(n) = gbl_ptr->vprcn(i,n,0)*gbl_ptr->res.v(i,0);
-               for(m=1;m<NV;++m) {
-                  temp(n) += gbl_ptr->vprcn(i,n,m)*gbl_ptr->res.v(i,m);
-               }
-            }
-            gbl_ptr->res.v(i,Range::all()) = temp(Range::all());
+            DGETLS(&gbl_ptr->vprcn(i,0,0), NV, NV, &gbl_ptr->res.v(i,0));
          }
 #endif
          /* PREPARE MESSAGE PASSING */
@@ -106,8 +101,8 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          for(i=0;i<nsbd;++i)
             hp_sbdry(i)->vdirichlet();
             
-//         for(i=0;i<nvbd;++i)   /* TEMPORARY */
-//            hp_vbdry(i)->vdirichlet();
+         for(i=0;i<nvbd;++i)
+            hp_vbdry(i)->vdirichlet2d();
                
          if(basis::tri(log2p).sm == 0) {
             excpt = 7;
@@ -174,17 +169,11 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          *sim::log << idprefix << "step 3 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* SOLVE FOR SIDE MODE */
-#ifndef MATRIXPRECONDITIONER
+#ifndef MATRIX_PRECONDITIONER
          gbl_ptr->res.s(Range(0,nside-1),mode,Range::all()) *= gbl_ptr->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
 #else
          for(sind = 0; sind < nside; ++sind) {
-            for(n=0;n<NV;++n) {
-               temp(n) = gbl_ptr->sprcn(sind,n,0)*gbl_ptr->res.s(sind,mode,0);
-               for(m=1;m<NV;++m) {
-                  temp(n) += gbl_ptr->sprcn(sind,n,m)*gbl_ptr->res.s(sind,mode,m);
-               }
-            }
-            gbl_ptr->res.s(sind,mode,Range::all()) = temp(Range::all());
+            DGETLS(&gbl_ptr->sprcn(sind,0,0), NV, NV, &gbl_ptr->res.s(sind,mode,0));
          }
 #endif
          mp_phase = -1;
@@ -250,9 +239,9 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
             for(i=0;i<3;++i) {
                side(i) = td(tind).side(i);
                sign(i) = td(tind).sign(i);
-               sgn     = (mode % 2 ? sign[i] : 1);
+               sgn     = (mode % 2 ? sign(i) : 1);
                for(n=0;n<NV;++n)
-                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n)
+                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n);
             }
             
             /* REMOVE MODES J,K FROM MODE I,M */
@@ -299,9 +288,6 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                      gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
             }
 #else      
-            /* INVERT PRECONDITIONER (tprcn is not preinverted like sprcn and vprcn) */
-            tinv = tprcn(tind,Range::all(),Range::all())
-            GETRF(NV,NV,tinv.data(),NV,ipiv,info);
                
             for(k=0;k<basis::tri(log2p).im;++k) {
                /* SUBTRACT BOUNDARY MODES (bfmi is multipled by interior inverse matrix so do this after DPBSLN) */
@@ -312,7 +298,8 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
                      }
                   }
                }
-               GETRS(trans,NV,1,tinv.data(),NV,ipiv,&gbl_ptr->res.i(tind,k,0),NV,info);
+               /* INVERT PRECONDITIONER (ASSUMES LOWER TRIANGULAR) */
+               DGETLS(&gbl_ptr->tprcn(tind,0,0), NV, NV, &gbl_ptr->res.i(tind,k,0));
             }
 #endif
          }
@@ -414,6 +401,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          *sim::log << idprefix << "Step 3 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;;
 #endif
          mp_phase = -1;
+         stage = 0;
          ++excpt;
          ctrl_message = block::stay;
       }
@@ -422,6 +410,7 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << idprefix << "Step 4 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
+#ifndef MATRIX_PRECONDITIONER
          if (ctrl_message == block::stay) {
             ++mp_phase;
             switch(mp_phase%3) {
@@ -440,12 +429,36 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
             ++excpt;
             ctrl_message = block::stay;
          }
+#else
+         /* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
+         if (ctrl_message == block::stay) {
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  vc0load(mp_phase/3,gbl_ptr->vprcn.data() +stage*NV,NV);
+                  return(block::stay);
+               case(1):
+                  vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+                  return(block::stay);
+               case(2):
+                  return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn.data()+stage*NV,NV)));
+            }
+         }
+         else {
+            mp_phase = -1;
+            ctrl_message = block::stay;
+            if (++stage < NV) return(ctrl_message);
+            ++excpt;
+            stage = 0;
+         }
+#endif
       }
       
       case(5): {
 #ifdef CTRL_DEBUG
          *sim::log << idprefix << "Step 5 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
+#ifndef MATRIX_PRECONDITIONER
          if (ctrl_message == block::stay && log2p > 0) {
             ++mp_phase;
             switch(mp_phase%3) {
@@ -463,6 +476,29 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          else {
             ++excpt;
          }
+#else
+         if (ctrl_message == block::stay && log2p > 0) {
+            ++mp_phase;
+            switch(mp_phase%3) {
+               case(0):
+                  sc0load(gbl_ptr->sprcn.data()+stage*NV,0,0,NV);
+                  return(block::stay);
+               case(1):
+                  smsgpass(boundary::all,0,boundary::symmetric);
+                  return(block::stay);
+               case(2):
+                  sc0wait_rcv(gbl_ptr->sprcn.data()+stage*NV,0,0,NV);
+                  return(block::advance);
+            }
+         }
+         else {
+            mp_phase = -1;
+            ctrl_message = block::stay;
+            if (++stage < NV) return(ctrl_message);
+            ++excpt;
+            stage = 0;
+         }
+#endif
       }
       
       case(6): {
@@ -479,7 +515,18 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
             gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 1.0/gbl_ptr->sprcn(Range(0,nside-1),Range::all());
          }
 #else
-         /* NEED MATRIX INVERSION HERE */
+         /* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
+//         for(i=0;i<nvrtx;++i)
+//            for(int n=0;n<NV;++n)
+//               gbl_ptr->vprcn(i,n,n) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn(i,n,n));
+//        
+//         if (basis::tri(log2p).sm > 0) {
+//            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */    
+//            for(i=0;i<nside;++i)
+//               for(int n=0;n<NV;++n)
+//                  gbl_ptr->sprcn(i,n,n)= 1.0/gbl_ptr->sprcn(i,n,n);
+//         }
+
 #endif
          ++excpt;
          ctrl_message = block::begin;

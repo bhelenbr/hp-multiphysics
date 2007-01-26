@@ -47,12 +47,12 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                v -= mesh_ref_vel(1);
 #endif
                q += pow(u,2) +pow(v,2);
-               p += fabs(ug.v(v0,2));
+               p += fabs(ug.v(v0,NV-1));
                duv += fabs(u-um)+fabs(v-vm);
                um = u;
                vm = v;
             }
-            gbl_ptr->eanda(0) += 1./3.*( (0.5*gbl_ptr->rho*q +p)*area(tind) +duv*gbl_ptr->mu*sqrt(area(tind)) );
+            gbl_ptr->eanda(0) += 1./3.*( (0.5*gbl_ptr->rho*q +p)*area(tind) +duv*gbl_ptr->mu*sqrt(area(tind)) ) /gbl_ptr->rho;  //TEMPO
             gbl_ptr->eanda(1) += area(tind);
          }
          sim::blks.allreduce1(gbl_ptr->eanda.data(),gbl_ptr->eanda_recv.data());
@@ -79,8 +79,8 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u -= mesh_ref_vel(0);
                   v -= mesh_ref_vel(1);
 #endif
-                  ruv = gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1);
-                  sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,2) -ug.v(v1,2)));
+                  ruv = (gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1))/gbl_ptr->rho;// TEMPORARY
+                  sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
                }                     
@@ -98,8 +98,8 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
                   u -= mesh_ref_vel(0);
                   v -= mesh_ref_vel(1);
 #endif
-                  ruv = gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1);
-                  sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,2)));
+                  ruv = (gbl_ptr->rho*0.5*(u + v) +gbl_ptr->mu/distance(v0,v1))/gbl_ptr->rho;// TEMPORARY;
+                  sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
                   fscr1(v0) += sum;
                   fscr1(v1) += sum;
                }
