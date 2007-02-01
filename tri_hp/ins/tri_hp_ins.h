@@ -10,7 +10,7 @@
 #ifndef _tri_hp_ins_h_
 #define _tri_hp_ins_h_
 
-#include "tri_hp.h"
+#include "../tri_hp.h"
 #include <blocks.h>
 
 class tri_hp_ins : public tri_hp {

@@ -15,11 +15,11 @@
  *  Copyright 2005 __MyCompanyName__. All rights reserved.
  *
  */
+#include <myblas.h>
 
 #include "tri_hp_swirl.h"
-#include "bdry_ins.h"
-#include "hp_boundary.h"
-#include "myblas.h"
+#include "../ins/bdry_ins.h"
+#include "../hp_boundary.h"
 
 namespace bdry_swirl {
 	

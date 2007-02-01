@@ -1,6 +1,7 @@
-#include "tri_hp_swe.h"
-#include "hp_boundary.h"
 #include <math.h>
+
+#include "tri_hp_swe.h"
+#include "../hp_boundary.h"
 
 block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;

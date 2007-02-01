@@ -1,6 +1,7 @@
-#include "tri_hp_buoyancy.h"
-#include "hp_boundary.h"
 #include <math.h>
+
+#include "tri_hp_buoyancy.h"
+#include "../hp_boundary.h"
 
 block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
@@ -52,7 +53,7 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
          }
          rhoav /= 3.0;
          FLT nu = gbl_ptr->mu/rhoav;
-         FLT alpha = gbl_ptr->kcond/(rhoav*gbl_ptr->cv);
+         FLT alpha = gbl_ptr->kcond/(rhoav*gbl_ptr->cp);
       
          gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
          if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
@@ -73,7 +74,7 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
 
          gbl_ptr->tprcn(tind,0) = rhoav*jcb;   
          gbl_ptr->tprcn(tind,1) = rhoav*jcb;  
-         gbl_ptr->tprcn(tind,2) =  rhoav*gbl_ptr->cv*jcb1;     
+         gbl_ptr->tprcn(tind,2) =  rhoav*gbl_ptr->cp*jcb1;     
          gbl_ptr->tprcn(tind,3) =  jcb/gam;
          for(i=0;i<3;++i) {
             gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());

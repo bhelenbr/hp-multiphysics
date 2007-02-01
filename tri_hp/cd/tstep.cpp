@@ -1,7 +1,7 @@
 #include "tri_hp_cd.h"
 #include <math.h>
 #include <utilities.h>
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
 
 block::ctrl tri_hp_cd::setup_preconditioner(block::ctrl ctrl_message) {

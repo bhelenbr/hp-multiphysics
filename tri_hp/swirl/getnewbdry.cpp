@@ -6,10 +6,10 @@
  *  Copyright 2006 __MyCompanyName__. All rights reserved.
  *
  */
+#include <input_map.h>
+
 #include "tri_hp_swirl.h"
 #include "bdry_swirl.h"
-#include <input_map.h>
-#include "bdry_ins.h"
 
 using namespace bdry_swirl;
 

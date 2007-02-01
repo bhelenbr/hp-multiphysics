@@ -235,15 +235,16 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    gbl_ptr->res0.s.resize(maxvst,basis::tri(log2p).sm,NV);
    gbl_ptr->res0.i.resize(maxvst,basis::tri(log2p).im,NV); 
    
-#ifndef MATRIX_PRECONDITIONER
-   gbl_ptr->vprcn.resize(maxvst,NV);
-   gbl_ptr->sprcn.resize(maxvst,NV);
-   gbl_ptr->tprcn.resize(maxvst,NV);
-#else
-   gbl_ptr->vprcn.resize(maxvst,NV,NV);
-   gbl_ptr->sprcn.resize(maxvst,NV,NV);
-   gbl_ptr->tprcn.resize(maxvst,NV,NV);
-#endif
+   inmap.getwdefault("diagonal_preconditioner",gbl_ptr->diagonal_preconditioner,true);
+   if (gbl_ptr->diagonal_preconditioner) {
+      gbl_ptr->vprcn.resize(maxvst,NV);
+      gbl_ptr->sprcn.resize(maxvst,NV);
+      gbl_ptr->tprcn.resize(maxvst,NV);
+   } else {
+      gbl_ptr->vprcn_ut.resize(maxvst,NV,NV);
+      gbl_ptr->sprcn_ut.resize(maxvst,NV,NV);
+      gbl_ptr->tprcn_ut.resize(maxvst,NV,NV);
+   }
 
    if (!inmap.getline(idprefix +".cfl",line)) inmap.getlinewdefault("cfl",line,"2.5 1.5 1.0"); 
    data.str(line);

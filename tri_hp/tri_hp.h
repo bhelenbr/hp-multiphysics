@@ -21,8 +21,6 @@
 #define RAD(r) 1
 #endif
 
-#define MATRIX_PRECONDITIONER
-
 class hp_vrtx_bdry;
 class hp_side_bdry;
 
@@ -108,12 +106,10 @@ class tri_hp : public r_mesh  {
          /* RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
          vsi res0;
 
-         /* MATRIX PRECONDITIONER  */
-#ifndef MATRIX_PRECONDITIONER
-         Array<FLT,2> vprcn, sprcn, tprcn;
-#else
-         Array<FLT,3> vprcn, sprcn, tprcn;
-#endif
+         /* PRECONDITIONER  */
+         bool diagonal_preconditioner;
+         Array<FLT,2> vprcn, sprcn, tprcn;  // Diagonal preconditioner
+         Array<FLT,3> vprcn_ut, sprcn_ut, tprcn_ut; // Lower triangle preconditioner
          
          /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
          init_bdry_cndtn *ibc;

@@ -1,6 +1,6 @@
-#include "tri_hp_swirl.h"
-#include "hp_boundary.h"
 #include <math.h>
+#include "tri_hp_swirl.h"
+#include "../hp_boundary.h"
 
 block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;

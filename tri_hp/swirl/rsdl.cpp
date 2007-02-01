@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_swirl.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
    
 block::ctrl tri_hp_swirl::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;

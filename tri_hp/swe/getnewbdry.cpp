@@ -9,7 +9,6 @@
 #include "tri_hp_swe.h"
 #include "bdry_swe.h"
 #include <input_map.h>
-#include "bdry_ins.h"
 
 using namespace bdry_swe;
 

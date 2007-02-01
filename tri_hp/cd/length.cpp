@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_cd.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 #include <math.h>
 #include <utilities.h>
 

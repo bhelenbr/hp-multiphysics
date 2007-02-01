@@ -6,10 +6,11 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
-#include "tri_hp_ins.h"
-#include "hp_boundary.h"
 #include <math.h>
-#include<utilities.h>
+#include <utilities.h>
+
+#include "tri_hp_ins.h"
+#include "../hp_boundary.h"
 
 /* THIS FUNCTION WILL SET THE VLNGTH VALUES BASED ON THE TRUNCATION ERROR */
 

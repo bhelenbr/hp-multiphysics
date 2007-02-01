@@ -63,14 +63,14 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
             }
          }
          
-#ifndef MATRIX_PRECONDITIONER
-         gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) *= gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all());
-#else
-         /* ASSUMES LOWER TRIANGULAR FOR NOW */
-         for(i=0;i<nvrtx;++i) {
-            DGETLS(&gbl_ptr->vprcn(i,0,0), NV, NV, &gbl_ptr->res.v(i,0));
+         if (gbl_ptr->diagonal_preconditioner) {
+            gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) *= gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all());
+         } else {
+            /* ASSUMES LOWER TRIANGULAR FOR NOW */
+            for(i=0;i<nvrtx;++i) {
+               DGETUS(&gbl_ptr->vprcn_ut(i,0,0), NV, NV, &gbl_ptr->res.v(i,0));
+            }
          }
-#endif
          /* PREPARE MESSAGE PASSING */
          mp_phase = -1;
          return(block::advance);
@@ -114,51 +114,52 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          /* PART 1 REMOVE VERTEX CONTRIBUTIONS */
          for(tind=0;tind<ntri;++tind) {
          
-#ifndef MATRIX_PRECONDITIONER
-            for(i=0;i<3;++i) {
-               v0 = td(tind).vrtx(i);
-               for(n=0;n<NV;++n)
-                  uht(n)(i) = gbl_ptr->res.v(v0,n)*gbl_ptr->tprcn(tind,n);
-            }
-
-            for(i=0;i<3;++i) {
-               sind = td(tind).side(i);
-               sgn  = td(tind).sign(i);
-               for(j=0;j<3;++j) {
-                  indx1 = (i+j)%3;
-                  msgn = 1;
-                  for(k=0;k<basis::tri(log2p).sm;++k) {
-                     for(n=0;n<NV;++n)
-                        gbl_ptr->res.s(sind,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*uht(n)(indx1);
-                     msgn *= sgn;
-                  }
+         if (gbl_ptr->diagonal_preconditioner) {
+               for(i=0;i<3;++i) {
+                  v0 = td(tind).vrtx(i);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = gbl_ptr->res.v(v0,n)*gbl_ptr->tprcn(tind,n);
                }
-            }
-#else
-            /* THIS IS TO USE A MATRIX PRECONDITIONER */
-            for(i=0;i<3;++i) {
-               v0 = td(tind).vrtx(i);
-               for(n=0;n<NV;++n)
-                  uht(n)(i) = gbl_ptr->res.v(v0,n);
-            }
 
-            for(i=0;i<3;++i) {
-               indx = td(tind).side(i);
-               sgn  = td(tind).sign(i);
-               for(j=0;j<3;++j) {
-                  indx1 = (i+j)%3;
-                  msgn = 1;
-                  for(k=0;k<basis::tri(log2p).sm;++k) {
-                     for(n=0;n<NV;++n) {
-                        for(m=0;m<NV;++m) {
-                           gbl_ptr->res.s(indx,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*gbl_ptr->tprcn(tind,n,m)*uht(m)(indx1);
-                        }
+               for(i=0;i<3;++i) {
+                  sind = td(tind).side(i);
+                  sgn  = td(tind).sign(i);
+                  for(j=0;j<3;++j) {
+                     indx1 = (i+j)%3;
+                     msgn = 1;
+                     for(k=0;k<basis::tri(log2p).sm;++k) {
+                        for(n=0;n<NV;++n)
+                           gbl_ptr->res.s(sind,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*uht(n)(indx1);
+                        msgn *= sgn;
                      }
-                     msgn *= sgn;
                   }
                }
-            } 
-#endif
+            }
+            else {
+               /* THIS IS TO USE A MATRIX PRECONDITIONER */
+               for(i=0;i<3;++i) {
+                  v0 = td(tind).vrtx(i);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = gbl_ptr->res.v(v0,n);
+               }
+
+               for(i=0;i<3;++i) {
+                  indx = td(tind).side(i);
+                  sgn  = td(tind).sign(i);
+                  for(j=0;j<3;++j) {
+                     indx1 = (i+j)%3;
+                     msgn = 1;
+                     for(k=0;k<basis::tri(log2p).sm;++k) {
+                        for(n=0;n<NV;++n) {
+                           for(m=0;m<NV;++m) {
+                              gbl_ptr->res.s(indx,k,n) -= msgn*basis::tri(log2p).vfms(j,k)*gbl_ptr->tprcn_ut(tind,n,m)*uht(m)(indx1);
+                           }
+                        }
+                        msgn *= sgn;
+                     }
+                  }
+               }
+            }
          }
          mode = 0;
          return(block::advance);
@@ -169,13 +170,15 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          *sim::log << idprefix << "step 3 of tri_hp::minvrt: ctrl_message: " << ctrl_message << " excpt: " << excpt << " mode " << mode << std::endl;
 #endif
          /* SOLVE FOR SIDE MODE */
-#ifndef MATRIX_PRECONDITIONER
-         gbl_ptr->res.s(Range(0,nside-1),mode,Range::all()) *= gbl_ptr->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
-#else
-         for(sind = 0; sind < nside; ++sind) {
-            DGETLS(&gbl_ptr->sprcn(sind,0,0), NV, NV, &gbl_ptr->res.s(sind,mode,0));
+         if (gbl_ptr->diagonal_preconditioner) {
+            gbl_ptr->res.s(Range(0,nside-1),mode,Range::all()) *= gbl_ptr->sprcn(Range(0,nside-1),Range::all())*basis::tri(log2p).sdiag(mode);
          }
-#endif
+         else {
+            for(sind = 0; sind < nside; ++sind) {
+               DGETUS(&gbl_ptr->sprcn_ut(sind,0,0), NV, NV, &gbl_ptr->res.s(sind,mode,0));
+               gbl_ptr->res.s(sind,mode,Range::all()) /= basis::tri(log2p).sdiag(mode);
+            }
+         }
          mp_phase = -1;
          return(block::advance);
       }
@@ -213,54 +216,55 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          /* REMOVE MODE FROM HIGHER MODES */
          for(tind=0;tind<ntri;++tind) {
 
-#ifndef MATRIX_PRECONDITIONER
-            for(i=0;i<3;++i) {
-               side(i) = td(tind).side(i);
-               sign(i) = td(tind).sign(i);
-               sgn     = (mode % 2 ? sign(i) : 1);
-               for(n=0;n<NV;++n)
-                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n)*gbl_ptr->tprcn(tind,n);
-            }
-            
-            /* REMOVE MODES J,K FROM MODE I,M */
-            for(i=0;i<3;++i) {
-               msgn = ( (mode +1) % 2 ? sign(i) : 1);
-               for(m=mode+1;m<basis::tri(log2p).sm;++m) {
-                  for(j=0;j<3;++j) {
-                     indx = (i+j)%3;
-                     for(n=0;n<NV;++n) {
-                        gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*uht(n)(indx);
-                     }
-                  }
-                  msgn *= sign(i);
+         if (gbl_ptr->diagonal_preconditioner) {
+               for(i=0;i<3;++i) {
+                  side(i) = td(tind).side(i);
+                  sign(i) = td(tind).sign(i);
+                  sgn     = (mode % 2 ? sign(i) : 1);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n)*gbl_ptr->tprcn(tind,n);
                }
-            }
-#else
-            for(i=0;i<3;++i) {
-               side(i) = td(tind).side(i);
-               sign(i) = td(tind).sign(i);
-               sgn     = (mode % 2 ? sign(i) : 1);
-               for(n=0;n<NV;++n)
-                  uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n);
-            }
-            
-            /* REMOVE MODES J,K FROM MODE I,M */
-            for(i=0;i<3;++i) {
-               msgn = ( (mode +1) % 2 ? sign(i) : 1);
-               for(m=mode+1;m<basis::tri(log2p).sm;++m) {
-                  for(j=0;j<3;++j) {
-                     indx = (i+j)%3;
-                     for(n=0;n<NV;++n) {
-                        gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn(tind,n,0)*uht(0)(indx);
-                        for(k=1;k<NV;++k) {
-                           gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn(tind,n,k)*uht(k)(indx);
+               
+               /* REMOVE MODES J,K FROM MODE I,M */
+               for(i=0;i<3;++i) {
+                  msgn = ( (mode +1) % 2 ? sign(i) : 1);
+                  for(m=mode+1;m<basis::tri(log2p).sm;++m) {
+                     for(j=0;j<3;++j) {
+                        indx = (i+j)%3;
+                        for(n=0;n<NV;++n) {
+                           gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*uht(n)(indx);
                         }
                      }
+                     msgn *= sign(i);
                   }
-                  msgn *= sign(i);
                }
             }
-#endif
+            else {
+               for(i=0;i<3;++i) {
+                  side(i) = td(tind).side(i);
+                  sign(i) = td(tind).sign(i);
+                  sgn     = (mode % 2 ? sign(i) : 1);
+                  for(n=0;n<NV;++n)
+                     uht(n)(i) = sgn*gbl_ptr->res.s(side(i),mode,n);
+               }
+               
+               /* REMOVE MODES J,K FROM MODE I,M */
+               for(i=0;i<3;++i) {
+                  msgn = ( (mode +1) % 2 ? sign(i) : 1);
+                  for(m=mode+1;m<basis::tri(log2p).sm;++m) {
+                     for(j=0;j<3;++j) {
+                        indx = (i+j)%3;
+                        for(n=0;n<NV;++n) {
+                           gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn_ut(tind,n,0)*uht(0)(indx);
+                           for(k=1;k<NV;++k) {
+                              gbl_ptr->res.s(side(i),m,n) -= msgn*basis::tri(log2p).sfms(mode,m,j)*gbl_ptr->tprcn_ut(tind,n,k)*uht(k)(indx);
+                           }
+                        }
+                     }
+                     msgn *= sign(i);
+                  }
+               }
+            }
          }
          
          /* GO BACK AND DO NEXT MODE */
@@ -279,29 +283,29 @@ block::ctrl tri_hp::minvrt(block::ctrl ctrl_message) {
          for(tind = 0; tind < ntri; ++tind) {
             DPBTRSNU2(&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,basis::tri(log2p).im,basis::tri(log2p).ibwth,&(gbl_ptr->res.i(tind,0,0)),NV);
             restouht_bdry(tind);
-#ifndef MATRIX_PRECONDITIONER
-            for(k=0;k<basis::tri(log2p).im;++k) {
-               gbl_ptr->res.i(tind,k,Range::all()) /= gbl_ptr->tprcn(tind,Range::all());
-               
-               for (i=0;i<basis::tri(log2p).bm;++i)
-                  for(n=0;n<NV;++n) 
-                     gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
+            if (gbl_ptr->diagonal_preconditioner) {
+               for(k=0;k<basis::tri(log2p).im;++k) {
+                  gbl_ptr->res.i(tind,k,Range::all()) /= gbl_ptr->tprcn(tind,Range::all());
+                  
+                  for (i=0;i<basis::tri(log2p).bm;++i)
+                     for(n=0;n<NV;++n) 
+                        gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(n)(i);
+               }
             }
-#else      
-               
-            for(k=0;k<basis::tri(log2p).im;++k) {
-               /* SUBTRACT BOUNDARY MODES (bfmi is multipled by interior inverse matrix so do this after DPBSLN) */
-               for (i=0;i<basis::tri(log2p).bm;++i) {
-                  for(n=0;n<NV;++n) {
-                     for(m=0;m<NV;++m) {
-                        gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(m)(i)*gbl_ptr->tprcn(tind,n,m);
+            else {
+               for(k=0;k<basis::tri(log2p).im;++k) {
+                  /* SUBTRACT BOUNDARY MODES (bfmi is multipled by interior inverse matrix so do this after DPBSLN) */
+                  for (i=0;i<basis::tri(log2p).bm;++i) {
+                     for(n=0;n<NV;++n) {
+                        for(m=0;m<NV;++m) {
+                           gbl_ptr->res.i(tind,k,n) -= basis::tri(log2p).bfmi(i,k)*uht(m)(i)*gbl_ptr->tprcn_ut(tind,n,m);
+                        }
                      }
                   }
+                  /* INVERT PRECONDITIONER (ASSUMES LOWER TRIANGULAR) */
+                  DGETUS(&gbl_ptr->tprcn_ut(tind,0,0), NV, NV, &gbl_ptr->res.i(tind,k,0));
                }
-               /* INVERT PRECONDITIONER (ASSUMES LOWER TRIANGULAR) */
-               DGETLS(&gbl_ptr->tprcn(tind,0,0), NV, NV, &gbl_ptr->res.i(tind,k,0));
             }
-#endif
          }
       }
    }
@@ -410,95 +414,97 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
 #ifdef CTRL_DEBUG
          *sim::log << idprefix << "Step 4 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
-#ifndef MATRIX_PRECONDITIONER
-         if (ctrl_message == block::stay) {
-            ++mp_phase;
-            switch(mp_phase%3) {
-               case(0):
-                  vc0load(mp_phase/3,gbl_ptr->vprcn.data());
-                  return(block::stay);
-               case(1):
-                  vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
-                  return(block::stay);
-               case(2):
-                  return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn.data())));
+         if (gbl_ptr->diagonal_preconditioner) {
+            if (ctrl_message == block::stay) {
+               ++mp_phase;
+               switch(mp_phase%3) {
+                  case(0):
+                     vc0load(mp_phase/3,gbl_ptr->vprcn.data());
+                     return(block::stay);
+                  case(1):
+                     vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+                     return(block::stay);
+                  case(2):
+                     return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn.data())));
+               }
+            }
+            else {
+               mp_phase = -1;
+               ++excpt;
+               ctrl_message = block::stay;
             }
          }
          else {
-            mp_phase = -1;
-            ++excpt;
-            ctrl_message = block::stay;
-         }
-#else
-         /* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
-         if (ctrl_message == block::stay) {
-            ++mp_phase;
-            switch(mp_phase%3) {
-               case(0):
-                  vc0load(mp_phase/3,gbl_ptr->vprcn.data() +stage*NV,NV);
-                  return(block::stay);
-               case(1):
-                  vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
-                  return(block::stay);
-               case(2):
-                  return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn.data()+stage*NV,NV)));
+            /* NEED STUFF HERE FOR CONTINUITY OF MATRIX PRECONDITIONER */
+            if (ctrl_message == block::stay) {
+               ++mp_phase;
+               switch(mp_phase%3) {
+                  case(0):
+                     vc0load(mp_phase/3,gbl_ptr->vprcn_ut.data() +stage*NV,NV);
+                     return(block::stay);
+                  case(1):
+                     vmsgpass(boundary::all_phased,mp_phase/3,boundary::symmetric);
+                     return(block::stay);
+                  case(2):
+                     return(static_cast<block::ctrl>(vc0wait_rcv(mp_phase/3,gbl_ptr->vprcn_ut.data()+stage*NV,NV)));
+               }
+            }
+            else {
+               mp_phase = -1;
+               ctrl_message = block::stay;
+               if (++stage < NV) return(ctrl_message);
+               ++excpt;
+               stage = 0;
             }
          }
-         else {
-            mp_phase = -1;
-            ctrl_message = block::stay;
-            if (++stage < NV) return(ctrl_message);
-            ++excpt;
-            stage = 0;
-         }
-#endif
       }
       
       case(5): {
 #ifdef CTRL_DEBUG
          *sim::log << idprefix << "Step 5 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
-#ifndef MATRIX_PRECONDITIONER
-         if (ctrl_message == block::stay && log2p > 0) {
-            ++mp_phase;
-            switch(mp_phase%3) {
-               case(0):
-                  sc0load(gbl_ptr->sprcn.data(),0,0,1);
-                  return(block::stay);
-               case(1):
-                  smsgpass(boundary::all,0,boundary::symmetric);
-                  return(block::stay);
-               case(2):
-                  sc0wait_rcv(gbl_ptr->sprcn.data(),0,0,1);
-                  return(block::advance);
+         if (gbl_ptr->diagonal_preconditioner) {
+            if (ctrl_message == block::stay && log2p > 0) {
+               ++mp_phase;
+               switch(mp_phase%3) {
+                  case(0):
+                     sc0load(gbl_ptr->sprcn.data(),0,0,1);
+                     return(block::stay);
+                  case(1):
+                     smsgpass(boundary::all,0,boundary::symmetric);
+                     return(block::stay);
+                  case(2):
+                     sc0wait_rcv(gbl_ptr->sprcn.data(),0,0,1);
+                     return(block::advance);
+               }
+            }
+            else {
+               ++excpt;
             }
          }
          else {
-            ++excpt;
-         }
-#else
-         if (ctrl_message == block::stay && log2p > 0) {
-            ++mp_phase;
-            switch(mp_phase%3) {
-               case(0):
-                  sc0load(gbl_ptr->sprcn.data()+stage*NV,0,0,NV);
-                  return(block::stay);
-               case(1):
-                  smsgpass(boundary::all,0,boundary::symmetric);
-                  return(block::stay);
-               case(2):
-                  sc0wait_rcv(gbl_ptr->sprcn.data()+stage*NV,0,0,NV);
-                  return(block::advance);
+            if (ctrl_message == block::stay && log2p > 0) {
+               ++mp_phase;
+               switch(mp_phase%3) {
+                  case(0):
+                     sc0load(gbl_ptr->sprcn_ut.data()+stage*NV,0,0,NV);
+                     return(block::stay);
+                  case(1):
+                     smsgpass(boundary::all,0,boundary::symmetric);
+                     return(block::stay);
+                  case(2):
+                     sc0wait_rcv(gbl_ptr->sprcn_ut.data()+stage*NV,0,0,NV);
+                     return(block::advance);
+               }
+            }
+            else {
+               mp_phase = -1;
+               ctrl_message = block::stay;
+               if (++stage < NV) return(ctrl_message);
+               ++excpt;
+               stage = 0;
             }
          }
-         else {
-            mp_phase = -1;
-            ctrl_message = block::stay;
-            if (++stage < NV) return(ctrl_message);
-            ++excpt;
-            stage = 0;
-         }
-#endif
       }
       
       case(6): {
@@ -506,28 +512,28 @@ block::ctrl tri_hp::setup_preconditioner(block::ctrl ctrl_message) {
          *sim::log << idprefix << "Step 6 of tri_hp::setup_preconditioner" << ctrl_message << " excpt: " << excpt << std::endl;
 #endif
 
-#ifndef MATRIX_PRECONDITIONER
-         /* PREINVERT PRECONDITIONER FOR VERTICES */
-         gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()));
-        
-         if (basis::tri(log2p).sm > 0) {
-            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
-            gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 1.0/gbl_ptr->sprcn(Range(0,nside-1),Range::all());
+         if (gbl_ptr->diagonal_preconditioner) {
+            /* PREINVERT PRECONDITIONER FOR VERTICES */
+            gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()));
+           
+            if (basis::tri(log2p).sm > 0) {
+               /* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
+               gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 1.0/gbl_ptr->sprcn(Range(0,nside-1),Range::all());
+            }
          }
-#else
-         /* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
-//         for(i=0;i<nvrtx;++i)
-//            for(int n=0;n<NV;++n)
-//               gbl_ptr->vprcn(i,n,n) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn(i,n,n));
-//        
-//         if (basis::tri(log2p).sm > 0) {
-//            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */    
-//            for(i=0;i<nside;++i)
-//               for(int n=0;n<NV;++n)
-//                  gbl_ptr->sprcn(i,n,n)= 1.0/gbl_ptr->sprcn(i,n,n);
-//         }
-
-#endif
+         else {
+            /* FACTORIZE PRECONDITIONER FOR VERTICES ASSUMES LOWER TRIANGULAR NOTHING  */
+   //         for(i=0;i<nvrtx;++i)
+   //            for(int n=0;n<NV;++n)
+   //               gbl_ptr->vprcn_ut(i,n,n) = 1.0/(basis::tri(log2p).vdiag*gbl_ptr->vprcn_ut(i,n,n));
+   //        
+   //         if (basis::tri(log2p).sm > 0) {
+   //            /* INVERT DIAGANOL PRECONDITIONER FOR SIDES ASSUMES LOWER TRIANGULAR */    
+   //            for(i=0;i<nside;++i)
+   //               for(int n=0;n<NV;++n)
+   //                  gbl_ptr->sprcn_ut(i,n,n)= 1.0/gbl_ptr->sprcn_ut(i,n,n);
+   //         }
+         }
          ++excpt;
          ctrl_message = block::begin;
       }

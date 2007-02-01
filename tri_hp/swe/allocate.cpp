@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_swe.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
  void tri_hp_swe::init(input_map& input, gbl *gin) {
    std::string keyword;

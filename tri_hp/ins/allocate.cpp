@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_ins.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
 #ifdef DROP
 TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;

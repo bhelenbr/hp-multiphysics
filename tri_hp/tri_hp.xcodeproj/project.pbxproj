@@ -313,7 +313,7 @@
 		6FEA195B09770892001A5F7F /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
 		6FEA199709770C4B001A5F7F /* bdry_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_ins.h; path = ins/bdry_ins.h; sourceTree = "<group>"; };
 		6FEA199B09770C96001A5F7F /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = ins/getnewbdry.cpp; sourceTree = "<group>"; };
-		8DD76F6C0486A84900D96B5E /* tri_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76F6C0486A84900D96B5E /* tri_hp */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 

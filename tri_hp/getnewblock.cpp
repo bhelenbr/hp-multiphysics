@@ -7,18 +7,18 @@
  *
  */
  
-#include "blocks.h"
-#include "block.h"
-#include "mgblock.h"
+#include <blocks.h>
+#include <block.h>
+#include <mgblock.h>
+#include <r_mesh.h>
 
-#include "r_mesh.h"
-#include "tri_hp_cd.h"
-#include "tri_hp_ins.h"
-#include "tri_hp_ps.h"
-#include "tri_hp_swirl.h"
-#include "tri_hp_buoyancy.h"
+#include "cd/tri_hp_cd.h"
+#include "ins/tri_hp_ins.h"
+#include "planestrain/tri_hp_ps.h"
+#include "swirl/tri_hp_swirl.h"
+#include "buoyancy/tri_hp_buoyancy.h"
 #include "pod/pod.h"
-#include "tri_hp_swe.h"
+#include "swe/tri_hp_swe.h"
 
 
 class btype {

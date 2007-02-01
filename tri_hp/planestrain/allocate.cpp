@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_ps.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
  void tri_hp_ps::init(input_map& input, gbl *gin) {
    FLT nu, E;

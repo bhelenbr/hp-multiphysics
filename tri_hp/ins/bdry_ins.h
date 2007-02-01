@@ -21,8 +21,8 @@
 
 
 #include "tri_hp_ins.h"
-#include "hp_boundary.h"
-#include "myblas.h"
+#include "../hp_boundary.h"
+#include <myblas.h>
 #include <blitz/tinyvec-et.h>
 
 namespace bdry_ins {

@@ -1,3 +1,49 @@
+ifeq (,$(filter _%,$(notdir $(CURDIR))))
+
+.SUFFIXES:
+
+MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
+
+all: planar axi
+
+planar: hp hp_mpi
+axi: hp_axi hp_axi_mpi
+
+hp:
+	+@[ -d  _serial ] || mkdir -p _serial
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+
+.PHONY: hp
+
+hp_axi:
+	+@[ -d  _axi_serial ] || mkdir -p _axi_serial
+	+@$(MAKE) -C _axi_serial -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DAXISYMMETRIC
+
+.PHONY: hp_axi
+
+hp_mpi:
+	+@[ -d  _mpi ] || mkdir -p _mpi
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+
+.PHONY: hp_mpi
+
+hp_axi_mpi:
+	+@[ -d  _axi_mpi ] || mkdir -p _axi_mpi
+	+@$(MAKE) -C _axi_mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+
+.PHONY: hp_axi_mpi
+
+makefile : ;
+%.mk :: ;
+
+.PHONY: clean
+clean:
+	rm -rf _serial _mpi _axi_serial _axi_mpi
+
+else
+
+VPATH = ../
+
 BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o minvrt.o movco.o movfin.o \
 nstage.o output.o ptprobe.o tadvance.o tobasis.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o
@@ -10,12 +56,8 @@ OBJSW = swe/allocate.o swe/getnewbdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJ = $(BASE)
 OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW)
 
-VIZ = pv3routines.o
-
-# TO COMPILE VARIOUS VERISONS:
-#make hp_axi_mpi EXTRAFLAGS="-DMPISRC -DAXISYMMETRIC"
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include -I. -Iins -Icd -Iplanestrain -Iswirl -Ibuoyancy -Iswe
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
 
 ### Begin machine dependent
@@ -49,18 +91,28 @@ LDFLAGS += -static-libcxa #(cares)
 ### End machine dependent
 CPPFLAGS += $(DEFINES)
 
-hp: $(OBJ)
+hp: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
 	cp hp $(HOME)/bin/
 
-hp_axi: $(OBJ)
+hp_axi: dirs $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
 	cp hp_axi $(HOME)/bin/
 	
-hp_mpi: $(OBJ)
+hp_mpi: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
 	cp hp_mpi $(HOME)/bin/
 
-hp_axi_mpi: $(OBJ)
+hp_axi_mpi: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
 	cp hp_axi_mpi $(HOME)/bin/
+
+dirs:
+	+@[ -d  ins ] || mkdir -p ins
+	+@[ -d  cd ] || mkdir -p cd
+	+@[ -d  planestrain ] || mkdir -p planestrain
+	+@[ -d  swirl ] || mkdir -p swirl
+	+@[ -d  buoyancy ] || mkdir -p buoyancy
+	+@[ -d  swe ] || mkdir -p swe
+
+endif

@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_buoyancy.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
    
 block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;
@@ -162,7 +162,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
                   for(j=0;j<lgpn;++j) {
                      lrho = gbl_ptr->rhovsT.Eval(u(2)(i,j));
                      rho(i,j) = lrho;
-                     u(2)(i,j) *= gbl_ptr->cv;
+                     u(2)(i,j) *= gbl_ptr->cp;
                      
                      fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
                      fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
@@ -329,7 +329,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
                   for(j=0;j<lgpn;++j) {
                      lrho = gbl_ptr->rhovsT.Eval(u(2)(i,j));
                      rho(i,j) = lrho;
-                     u(2)(i,j) *= gbl_ptr->cv;
+                     u(2)(i,j) *= gbl_ptr->cp;
                      fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
                      fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                      

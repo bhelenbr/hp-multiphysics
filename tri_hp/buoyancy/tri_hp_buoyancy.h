@@ -10,7 +10,7 @@
 #ifndef _tri_hp_buoyancy_h_
 #define _tri_hp_buoyancy_h_
 
-#include "tri_hp_ins.h"
+#include "../ins/tri_hp_ins.h"
 #include <blocks.h>
 #include <mathclass.h>
 
@@ -19,7 +19,7 @@ class tri_hp_buoyancy : public tri_hp_ins {
       struct gbl : public tri_hp_ins::gbl {
       
          /* PHYSICAL CONSTANTS */
-         FLT kcond,cv;
+         FLT kcond,cp;
          symbolic_function<1> rhovsT;
          
       } *gbl_ptr;

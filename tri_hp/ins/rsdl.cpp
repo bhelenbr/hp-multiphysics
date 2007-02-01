@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_ins.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
    
 block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;

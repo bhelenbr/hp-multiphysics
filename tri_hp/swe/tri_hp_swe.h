@@ -10,7 +10,7 @@
 #ifndef _tri_hp_swe_h_
 #define _tri_hp_swe_h_
 
-#include "tri_hp_ins.h"
+#include "../ins/tri_hp_ins.h"
 #include <blocks.h>
 
 class tri_hp_swe : public tri_hp_ins {

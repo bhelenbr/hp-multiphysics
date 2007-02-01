@@ -16,10 +16,11 @@
  *
  */
 
+#include <myblas.h>
+
 #include "tri_hp_swe.h"
-#include "bdry_ins.h"
-#include "hp_boundary.h"
-#include "myblas.h"
+#include "../ins/bdry_ins.h"
+#include "../hp_boundary.h"
 
 namespace bdry_swe {
 	

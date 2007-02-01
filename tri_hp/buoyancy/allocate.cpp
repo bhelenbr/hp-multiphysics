@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp_buoyancy.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
  void tri_hp_buoyancy::init(input_map& input, gbl *gin) {
    std::string keyword;
@@ -23,7 +23,7 @@
    
    if (!input.get(idprefix + ".conductivity",gbl_ptr->kcond)) input.getwdefault("conductivity",gbl_ptr->kcond,0.7*gbl_ptr->mu);
    gbl_ptr->D(2) = gbl_ptr->kcond;
-   if (!input.get(idprefix + ".cv",gbl_ptr->cv)) input.getwdefault("cv",gbl_ptr->cv,1.0);
+   if (!input.get(idprefix + ".cp",gbl_ptr->cp)) input.getwdefault("cp",gbl_ptr->cp,1.0);
    
    if (input.find(idprefix+".rhovsT.expression") != input.end()) {
       gbl_ptr->rhovsT.init(input,idprefix+".rhovsT");
@@ -76,7 +76,7 @@ void tri_hp_buoyancy::calculate_unsteady_sources(bool coarse) {
                lrho = gbl_ptr->rhovsT.Eval(u(2)(i,j));               
                for(n=0;n<NV-2;++n)
                   dugdt(log2p,tind,n)(i,j) = lrho*u(n)(i,j)*cjcb(i,j);
-               dugdt(log2p,tind,NV-2)(i,j) = lrho*gbl_ptr->cv*u(NV-2)(i,j)*cjcb(i,j);
+               dugdt(log2p,tind,NV-2)(i,j) = lrho*gbl_ptr->cp*u(NV-2)(i,j)*cjcb(i,j);
                dugdt(log2p,tind,NV-1)(i,j) = lrho*cjcb(i,j);
 
                for(n=0;n<ND;++n)

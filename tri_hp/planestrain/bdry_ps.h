@@ -17,8 +17,8 @@
  */
 
 #include "tri_hp_ps.h"
-#include "hp_boundary.h"
-#include "myblas.h"
+#include "../hp_boundary.h"
+#include <myblas.h>
 
 namespace bdry_ps {
 
