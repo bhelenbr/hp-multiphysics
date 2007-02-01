@@ -523,13 +523,15 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
             if (sbdry(bnum)->is_comm() && hp_sbdry(bnum)->is_curved()) {            
                sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
                
-               count = 0;
-               for(i=sbdry(bnum)->nel-1;i>=0;--i) {
-                  msgn = 1;
-                  for(m=0;m<basis::tri(log2p).sm;++m) {
-                     for(n=0;n<ND;++n)
-                        hp_sbdry(bnum)->crds(i,m,n) = msgn*sbdry(bnum)->frcvbuf(0,count++);
-                     msgn *= -1;
+               if (!sbdry(bnum)->is_frst()) {
+                  count = 0;
+                  for(i=sbdry(bnum)->nel-1;i>=0;--i) {
+                     msgn = 1;
+                     for(m=0;m<basis::tri(log2p).sm;++m) {
+                        for(n=0;n<ND;++n)
+                           hp_sbdry(bnum)->crds(i,m,n) = msgn*sbdry(bnum)->frcvbuf(0,count++);
+                        msgn *= -1;
+                     }
                   }
                }
             }
