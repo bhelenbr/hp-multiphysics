@@ -12,6 +12,8 @@
 
  void tri_hp_buoyancy::init(input_map& input, gbl *gin) {
    std::string keyword;
+   bool adapt_storage;
+   bool coarse;
    
    keyword = idprefix + ".nvariable";
    input[keyword] = "4";
@@ -20,6 +22,14 @@
    
    /* Load pointer to block stuff */
    gbl_ptr = gin;
+   
+   keyword = idprefix + ".adapt_storage";
+   input.getwdefault(keyword,adapt_storage,false);
+   if (adapt_storage) return;
+   
+   keyword = idprefix + ".coarse";
+   input.getwdefault(keyword,coarse,false);
+   if (coarse) return;
    
    if (!input.get(idprefix + ".conductivity",gbl_ptr->kcond)) input.getwdefault("conductivity",gbl_ptr->kcond,0.7*gbl_ptr->mu);
    gbl_ptr->D(2) = gbl_ptr->kcond;

@@ -68,6 +68,8 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
          
          /* SET UP DIAGONAL PRECONDITIONER */
          jcb1 = jcb*lam1/h;
+         jcb1 *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
+
          // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
          jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
          jcb *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
