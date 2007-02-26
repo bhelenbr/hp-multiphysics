@@ -38,7 +38,7 @@ namespace bdry_ins {
          generic* create(tri_hp& xin, side_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
          void init(input_map& input,void* &gbl_in) {
             hp_side_bdry::init(input,gbl_in);
-            std::string keyword = base.idprefix +".report";
+            std::string keyword = base.idprefix +"_report";
             input.getwdefault(keyword,report_flag,false);
          }
          void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
@@ -287,10 +287,10 @@ namespace bdry_ins {
                exit(1);
             }
             
-            keyword = base.idprefix + ".dirstart";
+            keyword = base.idprefix + "_dirstart";
             inmap.getwdefault(keyword,dirstart,0);
             
-            keyword = base.idprefix + ".dirstop";
+            keyword = base.idprefix + "_dirstop";
             inmap.getwdefault(keyword,dirstop,1);
          }
          
@@ -358,34 +358,34 @@ namespace bdry_ins {
             surface_fixed_pt::init(inmap,gbl_in);
             dirstart = 0;
             dirstop = 0;
-            inmap.getwdefault(base.idprefix + ".vertical",vertical,true); 
-            inmap.getwdefault(x.idprefix + ".coarse",coarse,false);
+            inmap.getwdefault(base.idprefix + "_vertical",vertical,true); 
+            inmap.getwdefault(x.idprefix + "_coarse",coarse,false);
             if (!coarse) {
                position = x.vrtx(base.v0)(1-vertical);
                nstr.str("");
                nstr << position << std::flush;
-               inmap.getwdefault(base.idprefix+".first",first,true);
+               inmap.getwdefault(base.idprefix+"_first",first,true);
                if (first) {
-                  inmap[base.idprefix+".first"] = "0";
-                  inmap[base.idprefix+".prdc_pos_first"] = nstr.str();
+                  inmap[base.idprefix+"_first"] = "0";
+                  inmap[base.idprefix+"_prdc_pos_first"] = nstr.str();
                }
                else {
-                  inmap[base.idprefix+".first"] = "1";
-                  inmap[base.idprefix+".prdc_pos_second"] = nstr.str();
+                  inmap[base.idprefix+"_first"] = "1";
+                  inmap[base.idprefix+"_prdc_pos_second"] = nstr.str();
                }
             }
             else {
-               if (!inmap.get(base.idprefix+".first",first)) {
+               if (!inmap.get(base.idprefix+"_first",first)) {
                   *sim::log << "Something went wrong finding periodic point position" << std::endl;
                   exit(1);
                }
                if (first) {
-                  inmap[base.idprefix+".first"] = "0";
-                  inmap.get(base.idprefix+".prdc_pos_first",position);
+                  inmap[base.idprefix+"_first"] = "0";
+                  inmap.get(base.idprefix+"_prdc_pos_first",position);
                }
                else {
-                  inmap[base.idprefix+".first"] = "1";
-                  inmap.get(base.idprefix+".prdc_pos_second",position);
+                  inmap[base.idprefix+"_first"] = "1";
+                  inmap.get(base.idprefix+"_prdc_pos_second",position);
                }
             }
          }
@@ -426,7 +426,7 @@ namespace bdry_ins {
             
             surface_outflow_endpt::init(inmap,gbl_in);
 
-            keyword = base.idprefix + ".vertical";
+            keyword = base.idprefix + "_vertical";
             inmap.getwdefault(keyword,vertical,true);    
             
             position = x.vrtx(base.v0)(1-vertical);

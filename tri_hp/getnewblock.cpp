@@ -19,12 +19,13 @@
 #include "buoyancy/tri_hp_buoyancy.h"
 #include "pod/pod.h"
 #include "swe/tri_hp_swe.h"
+#include "lvlset/tri_hp_lvlset.h"
 
 
 class btype {
    public:
-      const static int ntypes = 9;
-      enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins,pod_cd,swe};
+      const static int ntypes = 10;
+      enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins,pod_cd,swe,lvlset};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -33,7 +34,7 @@ class btype {
          return(-1);
       }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy","pod_ins","pod_cd","swe"};
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy","pod_ins","pod_cd","swe","lvlset"};
 
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
@@ -44,7 +45,7 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
    
    /* FIND BLOCK TYPE */
    sprintf(idntystring,"b%d",idnum);
-   keyword = std::string(idntystring) + ".type";
+   keyword = std::string(idntystring) + "_type";
 
    if (blockdata.get(keyword,val)) {
       type = btype::getid(val.c_str());
@@ -103,6 +104,11 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
          return(temp);
       }
 
+      case btype::lvlset: {
+         mgrid<tri_hp_lvlset> *temp = new mgrid<tri_hp_lvlset>(idnum);
+         return(temp);
+      }
+      
       default: {
          std::cout << "unrecognizable block type: " <<  type << std::endl;
          mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);

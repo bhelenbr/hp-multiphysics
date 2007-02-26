@@ -40,7 +40,7 @@ hp_side_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
    int type;        
    hp_side_bdry *temp;  
    
-   keyword =  sbdry(bnum)->idprefix + ".swe_type";   
+   keyword =  sbdry(bnum)->idprefix + "_swe_type";   
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_swe_stype::getid(val.c_str());
       if (type == tri_hp_swe_stype::unknown)  {

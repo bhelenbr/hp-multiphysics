@@ -18,8 +18,8 @@
    /* Load pointer to block stuff */
    gbl_ptr = gin;
 
-   if (!input.get(idprefix + ".f0",gbl_ptr->f0)) input.getwdefault("rho",gbl_ptr->f0,0.0);
-   if (!input.get(idprefix + ".beta",gbl_ptr->beta)) input.getwdefault("mu",gbl_ptr->beta,1.0);
+   if (!input.get(idprefix + "_f0",gbl_ptr->f0)) input.getwdefault("rho",gbl_ptr->f0,0.0);
+   if (!input.get(idprefix + "_beta",gbl_ptr->beta)) input.getwdefault("mu",gbl_ptr->beta,1.0);
    
    gbl_ptr->bathy = getnewbathy(input);
    gbl_ptr->bathy->input(input,idprefix);

@@ -15,7 +15,7 @@
    bool adapt_storage;
    bool coarse;
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    input[keyword] = "4";
    
    tri_hp_ins::init(input,gin);
@@ -23,22 +23,22 @@
    /* Load pointer to block stuff */
    gbl_ptr = gin;
    
-   keyword = idprefix + ".adapt_storage";
+   keyword = idprefix + "_adapt_storage";
    input.getwdefault(keyword,adapt_storage,false);
    if (adapt_storage) return;
    
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    input.getwdefault(keyword,coarse,false);
    if (coarse) return;
    
-   if (!input.get(idprefix + ".conductivity",gbl_ptr->kcond)) input.getwdefault("conductivity",gbl_ptr->kcond,0.7*gbl_ptr->mu);
+   if (!input.get(idprefix + "_conductivity",gbl_ptr->kcond)) input.getwdefault("conductivity",gbl_ptr->kcond,0.7*gbl_ptr->mu);
    gbl_ptr->D(2) = gbl_ptr->kcond;
-   if (!input.get(idprefix + ".cp",gbl_ptr->cp)) input.getwdefault("cp",gbl_ptr->cp,1.0);
+   if (!input.get(idprefix + "_cp",gbl_ptr->cp)) input.getwdefault("cp",gbl_ptr->cp,1.0);
    
-   if (input.find(idprefix+".rhovsT.expression") != input.end()) {
-      gbl_ptr->rhovsT.init(input,idprefix+".rhovsT");
+   if (input.find(idprefix+"_rhovsT_expression") != input.end()) {
+      gbl_ptr->rhovsT.init(input,idprefix+"_rhovsT");
    } 
-   else if (input.find("rhovsT.expression") != input.end()){
+   else if (input.find("rhovsT_expression") != input.end()){
       gbl_ptr->rhovsT.init(input,"rhovsT");
    }
    else {

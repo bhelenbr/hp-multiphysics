@@ -8,15 +8,13 @@
  */
 
 #include "tri_hp_lvlset.h"
-#include "hp_boundary.h"
+#include "../hp_boundary.h"
 
 void tri_hp_lvlset::init(input_map& input, gbl *gin) {
    bool coarse, adapt_storage;
    std::string keyword;
-   std::istringstream data;
-   std::string filename;
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    input[keyword] = "4";
    
    tri_hp_ins::init(input,gin);
@@ -24,24 +22,24 @@ void tri_hp_lvlset::init(input_map& input, gbl *gin) {
    /* Load pointer to block stuff */
    gbl_ptr = gin;
    
-   keyword = idprefix + ".adapt_storage";
+   keyword = idprefix + "_adapt_storage";
    input.getwdefault(keyword,adapt_storage,false);
    if (adapt_storage) return;
    
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    input.getwdefault(keyword,coarse,false);
    if (coarse) return;
   
-   keyword = idprefix + ".rho2";
-   input.getwdefault(keyword,gbl_ptr->rho,1.0);
+   keyword = idprefix + "_rho2";
+   input.getwdefault(keyword,gbl_ptr->rho2,1.0);
 
-   keyword = idprefix + ".mu2";
-   input.getwdefault(keyword,gbl_ptr->mu,0.0);
+   keyword = idprefix + "_mu2";
+   input.getwdefault(keyword,gbl_ptr->mu2,0.0);
    
-   keyword = idprefix + ".sigma";
+   keyword = idprefix + "_sigma";
    input.getwdefault(keyword,gbl_ptr->sigma,0.0);
 
-   keyword = idprefix + ".width";
+   keyword = idprefix + "_width";
    input.getwdefault(keyword,gbl_ptr->width,0.02);
    
    return;
@@ -78,12 +76,11 @@ void tri_hp_lvlset::calculate_unsteady_sources(bool coarse) {
 
          for(i=0;i<basis::tri(log2p).gpx;++i) {
             for(j=0;j<basis::tri(log2p).gpn;++j) {   
-               if (u(2)(i,j) < -gbl_ptr->width) rho = gbl_ptr->rho;
-               else if (u(2)(i,j) > gbl_ptr->width) rho = gbl_ptr->rho2;
-               else rho = 0.5*(gbl_ptr->rho +gbl_ptr->rho2 +(gbl_ptr->rho2 -gbl_ptr->rho)*sin(M_PI*u(2)(i,j)/gbl_ptr->width));
+               rho = gbl_ptr->rho +(gbl_ptr->rho2 -gbl_ptr->rho)*heavyside_if(u(2)(i,j)/gbl_ptr->width);
                cjcb(i,j) = -sim::bd[0]*rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
-               for(n=0;n<NV-1;++n)
+               for(n=0;n<NV-2;++n)
                   dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
+               dugdt(log2p,tind,2)(i,j) = u(2)(i,j)*cjcb(i,j)/rho;
                dugdt(log2p,tind,NV-1)(i,j) = cjcb(i,j);
 
                for(n=0;n<ND;++n)

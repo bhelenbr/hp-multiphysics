@@ -2,9 +2,9 @@
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
 
-// #define CTRL_DEBUG
-// #define MPDEBUG
-// #define DEBUG
+//#define CTRL_DEBUG
+//#define MPDEBUG
+//#define DEBUG
 
 using namespace bdry_ins;
 
@@ -13,10 +13,10 @@ using namespace bdry_ins;
 void surface_slave::init(input_map& inmap,void* &gbl_in) {
    std::string keyword;
    
-   keyword = base.idprefix + ".curved";
+   keyword = base.idprefix + "_curved";
    inmap[keyword] = "1";
    
-   keyword = base.idprefix + ".coupled";
+   keyword = base.idprefix + "_coupled";
    inmap[keyword] = "1";
 
    generic::init(inmap,gbl_in);
@@ -33,7 +33,7 @@ void surface::init(input_map& inmap,void* &gbl_in) {
 
    surface_slave::init(inmap,gbl_in);
    
-   keyword = x.idprefix + ".adapt_storage";
+   keyword = x.idprefix + "_adapt_storage";
    inmap.getwdefault(keyword,adapt_storage,false);
    if (adapt_storage) return;
    
@@ -45,22 +45,22 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       surf_gbl = new gbl;      
       gbl_in = surf_gbl;
       
-      keyword = base.idprefix + ".sigma";
+      keyword = base.idprefix + "_sigma";
       inmap.getwdefault(keyword,surf_gbl->sigma,0.0);
       
-      keyword = base.idprefix + ".matching_block";
+      keyword = base.idprefix + "_matching_block";
       if (!inmap.get(keyword,val)) {
          surf_gbl->mu2 = 0.0;
          surf_gbl->rho2 = 0.0;
       }
       else {
-         keyword = val +".mu";
+         keyword = val +"_mu";
          if (!inmap.get(keyword,surf_gbl->mu2)) {
             *sim::log << "couldn't find matching blocks viscosity" << std::endl;
             exit(1);
          }
          
-         keyword = val +".rho";
+         keyword = val +"_rho";
          if (!inmap.get(keyword,surf_gbl->rho2)) {
             *sim::log << "couldn't find matching blocks density" << std::endl;
             exit(1);
@@ -94,20 +94,20 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       vdres.resize(x.log2p+1,base.maxel+1);
       sdres.resize(x.log2p+1,base.maxel,x.sm0);
       
-      keyword = base.idprefix + ".fadd";
+      keyword = base.idprefix + "_fadd";
       inmap.getlinewdefault(keyword,val,"1.0 1.0");
       data.str(val);
       data >> surf_gbl->fadd(0) >> surf_gbl->fadd(1);  
       data.clear(); 
       
-      keyword = base.idprefix + ".cfltangent";
+      keyword = base.idprefix + "_cfltangent";
       inmap.getlinewdefault(keyword,val,"2.5 1.5 1.0");
       data.str(val);
       for(i=0;i<x.log2pmax+1;++i)
       data >> surf_gbl->cfl(0,i);  
       data.clear(); 
       
-      keyword = base.idprefix + ".cflnormal";
+      keyword = base.idprefix + "_cflnormal";
       inmap.getlinewdefault(keyword,val,"2.0 1.25 0.75");
       data.str(val);
       for(i=0;i<x.log2pmax+1;++i)
@@ -396,11 +396,17 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
          return(block::advance);
       }
       case(1): {
+#ifdef CTRL_DEBUG
+         *sim::log << "surface::rsdl step 1 with ctrl_message " << ctrl_message << std::endl;
+#endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
       }
       case(2): {
+#ifdef CTRL_DEBUG
+         *sim::log << "surface::rsdl step 2 with ctrl_message " << ctrl_message << std::endl;
+#endif
          base.comm_wait(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
@@ -419,27 +425,41 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
    
    switch(excpt) {
       case(0): {
+#ifdef CTRL_DEBUG
+         *sim::log << "In step 0 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+#endif
          base.comm_prepare(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
       }
       case(1): {
+#ifdef CTRL_DEBUG
+         *sim::log << "In step 1 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+#endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
          return(block::advance);
       }
       case(2): {
-         base.comm_wait(boundary::all,0,boundary::master_slave);
-         
+#ifdef CTRL_DEBUG
+         *sim::log << "In step 2 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+#endif
+         base.comm_wait(boundary::all,0,boundary::master_slave);        
          count = 0;
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             v0 = x.sd(sind).vrtx(1);
+#ifdef MPDEBUG
+            *sim::log << x.gbl_ptr->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+#endif
             x.gbl_ptr->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
          }
          v0 = x.sd(sind).vrtx(0);
+#ifdef MPDEBUG
+         *sim::log << x.gbl_ptr->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+#endif    
          x.gbl_ptr->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
-         
+    
          for(i=base.nel-1;i>=0;--i) {
             sind = base.el(i);
             msgn = 1;

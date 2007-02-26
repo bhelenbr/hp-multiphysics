@@ -34,7 +34,7 @@ namespace ibc_swe {
          
          void input(input_map &in_map,std::string idnty) {
             
-            if (!in_map.get(idnty + ".rossby_amp",amplitude)) in_map.getwdefault("rossby_amp",amplitude,0.395);
+            if (!in_map.get(idnty + "_rossby_amp",amplitude)) in_map.getwdefault("rossby_amp",amplitude,0.395);
          }
    };
 	
@@ -84,7 +84,7 @@ init_bdry_cndtn *tri_hp_swe::getnewibc(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + ".ibc";
+	keyword = std::string(idprefix) + "_ibc";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("ibc",ibcname)) {
 			*sim::log << "couldn't find initial condition type" << std::endl;
@@ -109,7 +109,7 @@ init_bdry_cndtn *tri_hp_swe::getnewbathy(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + ".bathy";
+	keyword = std::string(idprefix) + "_bathy";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("bathy",ibcname)) {
 			*sim::log << "couldn't find initial condition type" << std::endl;

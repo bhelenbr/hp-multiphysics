@@ -23,7 +23,7 @@ class symbolic_ibc : public init_bdry_cndtn {
          std::ostringstream nstr;
          int nvar;
          
-         keyword = idnty +".nvariable";
+         keyword = idnty +"_nvariable";
 
          if (!inmap.get(keyword,nvar))
             inmap.getwdefault("nvariable",nvar,1);
@@ -32,14 +32,14 @@ class symbolic_ibc : public init_bdry_cndtn {
 
          for(int n=0;n<nvar;++n) {
             nstr.str("");
-            nstr << idnty << ".ibc" << n << std::flush;
-            if (inmap.find(nstr.str() +".expression") != inmap.end()) {
+            nstr << idnty << "_ibc" << n << std::flush;
+            if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
                fcn(n).init(inmap,nstr.str());
             }
             else {
                nstr.str("");
                nstr << "ibc" << n << std::flush;
-               if (inmap.find(nstr.str() +".expression") != inmap.end()) {
+               if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
                   fcn(n).init(inmap,nstr.str());
                }
                else {
@@ -73,7 +73,7 @@ class polynomial_ibc : public init_bdry_cndtn {
          std::istringstream data;
          std::ostringstream nstr;
          
-         keyword = idnty +".nvariable";
+         keyword = idnty +"_nvariable";
 
          if (!inmap.get(keyword,nvar))
             inmap.getwdefault("nvariable",nvar,1);
@@ -87,7 +87,7 @@ class polynomial_ibc : public init_bdry_cndtn {
 
          for(int n=0;n<nvar;++n) {
             nstr.str("");
-            nstr << idnty << ".coeffx" << n << std::flush;
+            nstr << idnty << "_coeffx" << n << std::flush;
    
             if (inmap.getline(nstr.str(),val)) {
                data.str(val);
@@ -110,7 +110,7 @@ class polynomial_ibc : public init_bdry_cndtn {
             
             
             nstr.str("");
-            nstr << idnty << ".coeffy" << n << std::flush;
+            nstr << idnty << "_coeffy" << n << std::flush;
             
             if (inmap.getline(nstr.str(),val)) {
                data.str(val);
@@ -130,8 +130,8 @@ class polynomial_ibc : public init_bdry_cndtn {
             }
             
          }
-         *sim::log << idnty << ".coeffx" << std::endl << cx;
-         *sim::log << idnty << ".coeffy" << std::endl << cy;
+         *sim::log << idnty << "_coeffx" << std::endl << cx;
+         *sim::log << idnty << "_coeffy" << std::endl << cy;
 
       return;
       }
@@ -153,7 +153,7 @@ class power_ibc : public init_bdry_cndtn {
          std::ostringstream nstr;
          int nvar;
          
-         keyword = idnty +".nvariable";
+         keyword = idnty +"_nvariable";
 
          if (!inmap.get(keyword,nvar))
             inmap.getwdefault("nvariable",nvar,1);
@@ -164,7 +164,7 @@ class power_ibc : public init_bdry_cndtn {
 
          for(int n=0;n<nvar;++n) {
             nstr.str("");
-            nstr << idnty << ".coeff" << n << std::flush;
+            nstr << idnty << "_coeff" << n << std::flush;
             if (!inmap.get(nstr.str(),c(n))) {
                nstr.str("");
                nstr << "coeff" << n << std::flush;
@@ -172,7 +172,7 @@ class power_ibc : public init_bdry_cndtn {
             }
 
             nstr.str("");
-            nstr << idnty << ".powers" << n << std::flush;
+            nstr << idnty << "_powers" << n << std::flush;
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "powers" << n << std::flush;
@@ -183,7 +183,7 @@ class power_ibc : public init_bdry_cndtn {
             data.clear(); 
             
             nstr.str("");
-            nstr << idnty << ".speeds" << n << std::flush;
+            nstr << idnty << "_speeds" << n << std::flush;
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "speeds" << n << std::flush;
@@ -210,7 +210,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
          std::ostringstream nstr;
          int nvar;
          
-         keyword = idnty +".nvariable";
+         keyword = idnty +"_nvariable";
 
          if (!inmap.get(keyword,nvar))
             inmap.getwdefault("nvariable",nvar,1);
@@ -221,7 +221,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
 
          for(int n=0;n<nvar;++n) {
             nstr.str("");
-            nstr << idnty << ".lambda" << n << std::flush;
+            nstr << idnty << "_lambda" << n << std::flush;
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "lambda" << n << std::flush;
@@ -232,7 +232,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
             data.clear(); 
             
             nstr.str("");
-            nstr << idnty << ".amplitude" << n << std::flush;
+            nstr << idnty << "_amplitude" << n << std::flush;
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "amplitude" << n << std::flush;
@@ -243,7 +243,7 @@ class sinusoidal_ibc : public init_bdry_cndtn {
             data.clear(); 
             
             nstr.str("");
-            nstr << idnty << ".offset" << n << std::flush;
+            nstr << idnty << "_offset" << n << std::flush;
             if (!inmap.getline(nstr.str(),val)) {
                nstr.str("");
                nstr << "offset" << n << std::flush;
@@ -277,7 +277,7 @@ init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
    int type;
 
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".ibc";
+   keyword = std::string(idprefix) + "_ibc";
    if (!inmap.get(keyword,ibcname)) {
       if (!inmap.get("ibc",ibcname)) {
          *sim::log << "couldn't find initial condition type" << std::endl;
@@ -335,7 +335,7 @@ class translating : public mesh_mover {
       std::istringstream data;
       std::ostringstream nstr;
       
-      keyword = idnty +".velocity";
+      keyword = idnty +"_velocity";
       if (!inmap.getline(keyword,val)) inmap.getlinewdefault("velocity",val,"0.0 0.0");
       data.str(val);
       data >> velocity(0) >> velocity(1);  
@@ -363,7 +363,7 @@ mesh_mover *tri_hp::getnewmesh_mover(input_map& inmap) {
    int type;
    
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".mesh_mover";
+   keyword = std::string(idprefix) + "_mesh_mover";
    if (!inmap.get(keyword,movername)) {
       if (!inmap.get("mesh_mover",movername)) {
          type = -1;

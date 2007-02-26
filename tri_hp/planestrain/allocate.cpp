@@ -17,7 +17,7 @@
    std::istringstream data;
    std::string filename;
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    input[keyword] = "3";
    
    tri_hp::init(input,gin);
@@ -25,20 +25,20 @@
    /* Load pointer to block stuff */
    gbl_ptr = gin;
    
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    input.getwdefault(keyword,coarse,false);
    
-   keyword = idprefix + ".dissipation";
+   keyword = idprefix + "_dissipation";
    input.getwdefault(keyword,adis,1.0);
    
    if (coarse) return;
    
    gbl_ptr->tau.resize(maxvst);
 
-   keyword = idprefix + ".nu";
+   keyword = idprefix + "_nu";
    input.getwdefault(keyword,nu,0.0);
    
-   keyword = idprefix + ".E";
+   keyword = idprefix + "_E";
    input.getwdefault(keyword,E,0.0);
    
    gbl_ptr->mu = E/(2.*(1.+nu));

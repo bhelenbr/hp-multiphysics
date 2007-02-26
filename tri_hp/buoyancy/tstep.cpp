@@ -65,7 +65,7 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
          gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
          gbl_ptr->tau(tind,2)  = adis*h/(jcb*lam2);
          gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
-         
+                  
          /* SET UP DIAGONAL PRECONDITIONER */
          jcb1 = jcb*lam1/h;
          jcb1 *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);

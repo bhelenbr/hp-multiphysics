@@ -20,7 +20,7 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    std::istringstream data;
    std::string filename;
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    if (input.find(keyword) == input.end()) {
       input[keyword] = "3";
    }
@@ -30,18 +30,18 @@ TinyVector<FLT,mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
    /* Load pointer to block stuff */
    gbl_ptr = gin;
 
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    input.getwdefault(keyword,coarse,false);
    
-   keyword = idprefix + ".dissipation";
+   keyword = idprefix + "_dissipation";
    input.getwdefault(keyword,adis,1.0);
    
    if (coarse) return;
    
    gbl_ptr->tau.resize(maxvst,NV);
   
-   if (!input.get(idprefix + ".rho",gbl_ptr->rho)) input.getwdefault("rho",gbl_ptr->rho,1.0);
-   if (!input.get(idprefix + ".mu",gbl_ptr->mu)) input.getwdefault("mu",gbl_ptr->mu,0.0);
+   if (!input.get(idprefix + "_rho",gbl_ptr->rho)) input.getwdefault("rho",gbl_ptr->rho,1.0);
+   if (!input.get(idprefix + "_mu",gbl_ptr->mu)) input.getwdefault("mu",gbl_ptr->mu,0.0);
    
    /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
    gbl_ptr->D.resize(NV);

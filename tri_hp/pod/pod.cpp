@@ -19,22 +19,22 @@ template<class BASE> void pod<BASE>::init(input_map& input, gbl *gin) {
    /* Initialize base class */
    BASE::init(input,gin);
    
-   keyword = BASE::idprefix + ".coarse";
+   keyword = BASE::idprefix + "_coarse";
    input.getwdefault(keyword,coarse,false);
 
    if (coarse) return;
    
-   keyword = BASE::idprefix + ".snapshots";
+   keyword = BASE::idprefix + "_snapshots";
    if (!input.get(keyword,nsnapshots)) {
       input.getwdefault("snapshots",nsnapshots,10);
    }
    
-   if (!input.get(BASE::idprefix + ".podmodes",nsnapshots)) input.getwdefault("podmodes",nmodes,nsnapshots);   
+   if (!input.get(BASE::idprefix + "_podmodes",nsnapshots)) input.getwdefault("podmodes",nmodes,nsnapshots);   
    
    /* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
    scaling.resize(BASE::NV);
    scaling = 1;
-   if (input.getline(BASE::idprefix + ".scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
+   if (input.getline(BASE::idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
       instr.str(linebuff);
       for(i=0;i<BASE::NV;++i)
          instr >> scaling(i);

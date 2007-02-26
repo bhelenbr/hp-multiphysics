@@ -91,13 +91,13 @@ void hp_side_bdry::init(input_map& inmap,void* &gbl_in) {
    std::istringstream data;
    std::string filename;
    
-   keyword = base.idprefix + ".curved";
+   keyword = base.idprefix + "_curved";
    inmap.getwdefault(keyword,curved,false);
 
-   keyword = x.idprefix + ".coarse";
+   keyword = x.idprefix + "_coarse";
    inmap.getwdefault(keyword,coarse,false);
    
-   keyword = base.idprefix + ".coupled";
+   keyword = base.idprefix + "_coupled";
    inmap.getwdefault(keyword,coupled,false);
    
    if (curved && !coarse) {

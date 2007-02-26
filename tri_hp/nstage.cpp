@@ -1,7 +1,8 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define NO_DEBUG
+// #define DEBUG
+// #define CTRL_DEBUG
 
 block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    int i,m,k,n,indx,indx1;

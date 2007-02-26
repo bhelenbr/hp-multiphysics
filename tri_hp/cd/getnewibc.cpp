@@ -104,7 +104,7 @@ FLT df1d(int n, FLT x, FLT y) {
             std::ostringstream nstr;
             int nvar;
             
-            keyword = idnty +".nvariable";
+            keyword = idnty +"_nvariable";
 
             if (!inmap.get(keyword,nvar))
                inmap.getwdefault("nvariable",nvar,1);
@@ -115,13 +115,13 @@ FLT df1d(int n, FLT x, FLT y) {
 
             for(int n=0;n<nvar;++n) {
                nstr.str("");
-               nstr << idnty << ".src_coeff" << n << std::flush;
+               nstr << idnty << "_src_coeff" << n << std::flush;
                if (!inmap.get(nstr.str(),c(n))) {
                   inmap.getwdefault("src_coeff",c(n),0.0);
                }
 
                nstr.str("");
-               nstr << idnty << ".src_powers" << n << std::flush;
+               nstr << idnty << "_src_powers" << n << std::flush;
                if (!inmap.getline(nstr.str(),val)) {
                   nstr.str("");
                   nstr << "src_powers" << n << std::flush;
@@ -132,7 +132,7 @@ FLT df1d(int n, FLT x, FLT y) {
                data.clear(); 
                
                nstr.str("");
-               nstr << idnty << ".src_speeds" << n << std::flush;
+               nstr << idnty << "_src_speeds" << n << std::flush;
                if (!inmap.getline(nstr.str(),val)) {
                   nstr.str("");
                   nstr << "src_speeds" << n << std::flush;
@@ -166,19 +166,19 @@ FLT df1d(int n, FLT x, FLT y) {
              std::string keyword,val;
              std::istringstream data;
             
-            keyword = idnty+".xl";
+            keyword = idnty+"_xl";
             blockdata.getwdefault(keyword,xl,0.68);
             
-            keyword = idnty+".xr";
+            keyword = idnty+"_xr";
             blockdata.getwdefault(keyword,xr,0.7);
 
-            keyword = idnty+".yt";
+            keyword = idnty+"_yt";
             blockdata.getwdefault(keyword,yt,0.0);
 
-            keyword = idnty+".yb";
+            keyword = idnty+"_yb";
             blockdata.getwdefault(keyword,yb,-0.07);
             
-            keyword = idnty+".constant";
+            keyword = idnty+"_constant";
             blockdata.getwdefault(keyword,c,0.41);
 
           }
@@ -207,7 +207,7 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(input_map& inmap) {
    int type;
 
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".ibc";
+   keyword = std::string(idprefix) + "_ibc";
    if (!inmap.get(keyword,ibcname)) {
       if (!inmap.get("ibc",ibcname)) {
          *sim::log << "couldn't find initial condition type" << std::endl;
@@ -228,7 +228,7 @@ init_bdry_cndtn *tri_hp_cd::getnewsrc(input_map& inmap) {
    int type;
 
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".src";
+   keyword = std::string(idprefix) + "_src";
    if (!inmap.get(keyword,ibcname)) {
       if (!inmap.get("src",ibcname)) {
          *sim::log << "couldn't find source type" << std::endl;

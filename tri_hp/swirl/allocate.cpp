@@ -13,7 +13,7 @@
  void tri_hp_swirl::init(input_map& input, gbl *gin) {
    std::string keyword;
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    input[keyword] = "4";
    
    tri_hp_ins::init(input,gin);

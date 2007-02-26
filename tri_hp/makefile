@@ -11,27 +11,45 @@ axi: hp_axi hp_axi_mpi
 
 hp:
 	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile hp
+	cp _serial/hp $(HOME)/bin/$@
 
 .PHONY: hp
 
 hp_axi:
 	+@[ -d  _axi_serial ] || mkdir -p _axi_serial
-	+@$(MAKE) -C _axi_serial -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DAXISYMMETRIC
+	+@$(MAKE) -C _axi_serial -f $(CURDIR)/makefile hp EXTRAFLAGS=-DAXISYMMETRIC
+	cp _axi_serial/hp $(HOME)/bin/$@
 
 .PHONY: hp_axi
 
 hp_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS=-DMPISRC
+	cp _mpi/hp_mpi $(HOME)/bin/$@
 
 .PHONY: hp_mpi
 
 hp_axi_mpi:
 	+@[ -d  _axi_mpi ] || mkdir -p _axi_mpi
-	+@$(MAKE) -C _axi_mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+	+@$(MAKE) -C _axi_mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+	cp _axi_mpi/hp_mpi $(HOME)/bin/$@
 
 .PHONY: hp_axi_mpi
+
+hp_drop:
+	+@[ -d  _drop_serial ] || mkdir -p _drop_serial
+	+@$(MAKE) -C _drop_serial -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
+	cp _drop_serial/hp $(HOME)/bin/$@
+
+.PHONY: hp_drop
+
+hp_drop_mpi:
+	+@[ -d  _drop_mpi ] || mkdir -p _drop_mpi
+	+@$(MAKE) -C _drop_mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
+	cp _drop_mpi/hp_mpi $(HOME)/bin/$@
+
+.PHONY: hp_drop_mpi
 
 makefile : ;
 %.mk :: ;
@@ -52,9 +70,11 @@ OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o plane
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
 OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
+OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o
+
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW)
+OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
@@ -93,19 +113,9 @@ CPPFLAGS += $(DEFINES)
 
 hp: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
-	cp hp $(HOME)/bin/
 
-hp_axi: dirs $(OBJ) 
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
-	cp hp_axi $(HOME)/bin/
-	
 hp_mpi: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
-	cp hp_mpi $(HOME)/bin/
-
-hp_axi_mpi: dirs $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
-	cp hp_axi_mpi $(HOME)/bin/
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
@@ -114,5 +124,6 @@ dirs:
 	+@[ -d  swirl ] || mkdir -p swirl
 	+@[ -d  buoyancy ] || mkdir -p buoyancy
 	+@[ -d  swe ] || mkdir -p swe
+	+@[ -d  lvlset ] || mkdir -p lvlset
 
 endif

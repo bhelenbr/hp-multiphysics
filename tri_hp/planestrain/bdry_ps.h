@@ -110,10 +110,10 @@ namespace bdry_ps {
                         
             hp_side_bdry::init(inmap,gbl_in);
             
-            keyword = base.idprefix + ".friction";
+            keyword = base.idprefix + "_friction";
             inmap.getwdefault(keyword,muwall,0.2);
             
-            keyword = base.idprefix + ".dir";
+            keyword = base.idprefix + "_dir";
             inmap.getwdefault(keyword,dir,0);
             
             return;

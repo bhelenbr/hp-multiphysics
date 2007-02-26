@@ -35,16 +35,16 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    std::istringstream data;
    std::string filename;
    
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    inmap.getwdefault(keyword,coarse,false);
    
-   keyword = idprefix + ".adapt_storage";
+   keyword = idprefix + "_adapt_storage";
    inmap.getwdefault(keyword,adapt_storage,false);
    
    fine_mesh = false;
    if (!adapt_storage && !coarse) fine_mesh = true;
       
-   keyword = idprefix + ".mesh_movement";
+   keyword = idprefix + "_mesh_movement";
    if (!inmap.get(keyword,line)) {
       keyword = "mesh_movement";
       inmap.getwdefault(keyword,line,std::string("fixed"));
@@ -55,10 +55,10 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       *sim::log << "unrecognized mesh movement type" << std::endl;
    mmovement = static_cast<movementtype>(i);
    
-   keyword = idprefix + ".nvariable";
+   keyword = idprefix + "_nvariable";
    inmap.getwdefault(keyword,NV,1);
    
-   keyword = idprefix + ".log2p";
+   keyword = idprefix + "_log2p";
    if (!inmap.get(keyword,log2p)) {
       inmap.getwdefault("log2p",log2p,0);
    }
@@ -97,7 +97,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    output_purposes(2) = "debug_type";
    defaults(2) = tri_hp::tecplot;
    for(int i=0 ;i<3;++i) {
-      keyword = idprefix + "." + output_purposes(i);
+      keyword = idprefix + "_" + output_purposes(i);
       if (inmap.get(keyword,ival)) {
          output_type(i) = static_cast<filetype>(ival);
       }
@@ -246,7 +246,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       gbl_ptr->tprcn_ut.resize(maxvst,NV,NV);
    }
 
-   if (!inmap.getline(idprefix +".cfl",line)) inmap.getlinewdefault("cfl",line,"2.5 1.5 1.0"); 
+   if (!inmap.getline(idprefix +"_cfl",line)) inmap.getlinewdefault("cfl",line,"2.5 1.5 1.0"); 
    data.str(line);
    for(i=0;i<log2pmax+1;++i) {
       data >> gbl_ptr->cfl(i);
@@ -268,7 +268,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    /* ALLOCATE ADAPTATION STORAGE   */
    /* BY CALLING THIS ROUTINE AGAIN */
    /*********************************/
-   keyword = idprefix + ".adapt";
+   keyword = idprefix + "_adapt";
    if (!inmap.get(keyword,adapt_flag)) {
       inmap.getwdefault("adapt",adapt_flag,false);
    }
@@ -282,7 +282,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       gbl_ptr->pstr = create();
       gbl_ptr->pstr->idprefix = idprefix;
       gbl_ptr->pstr->mesh::copy(*this);
-      keyword = idprefix + ".adapt_storage";
+      keyword = idprefix + "_adapt_storage";
       inmap[keyword] = "1";
       gbl_ptr->pstr->tri_hp::init(inmap, hp_in);
       inmap[keyword] = "0";

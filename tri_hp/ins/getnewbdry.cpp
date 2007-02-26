@@ -39,7 +39,7 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
    int type;        
    hp_vrtx_bdry *temp;  
    
-   keyword = vbdry(bnum)->idprefix + ".ins_type";
+   keyword = vbdry(bnum)->idprefix + "_ins_type";
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_ins_vtype::getid(val.c_str());
       if (type == tri_hp_ins_vtype::unknown)  {
@@ -111,7 +111,7 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
    hp_side_bdry *temp;  
    
 
-   keyword =  sbdry(bnum)->idprefix + ".ins_type";
+   keyword =  sbdry(bnum)->idprefix + "_ins_type";
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_ins_stype::getid(val.c_str());
       if (type == tri_hp_ins_stype::unknown)  {

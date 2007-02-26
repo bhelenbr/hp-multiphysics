@@ -33,7 +33,7 @@ hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
    hp_side_bdry *temp;  
    
 
-   keyword =  sbdry(bnum)->idprefix + ".cd_type";
+   keyword =  sbdry(bnum)->idprefix + "_cd_type";
    if (bdrydata.get(keyword,val)) {
       type = tri_hp_cd_stype::getid(val.c_str());
       if (type == tri_hp_cd_stype::unknown)  {

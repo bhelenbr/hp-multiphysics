@@ -33,7 +33,7 @@ namespace ibc_swirl {
             std::string keyword,val;
             std::istringstream data;
 				
-				keyword = idnty +".rotationalspeed";
+				keyword = idnty +"_rotationalspeed";
             if (!blockdata.get(keyword,omega)) 
                blockdata.getwdefault("rotationalspeed",omega,1.0); 
          }
@@ -61,11 +61,11 @@ namespace ibc_swirl {
             std::string keyword,val;
             std::istringstream data;
 				
-				keyword = idnty +".rotationalspeed";
+				keyword = idnty +"_rotationalspeed";
             if (!blockdata.get(keyword,omega)) 
                blockdata.getwdefault("rotationalspeed",omega,1.0); 
 				
-				keyword = idnty +".jetspeed";
+				keyword = idnty +"_jetspeed";
             if (!blockdata.get(keyword,omega)) 
                blockdata.getwdefault("jetspeed",speed,1.0); 
          }
@@ -108,11 +108,11 @@ namespace ibc_swirl {
             std::string keyword,val;
             std::istringstream data;
 				
-				keyword = idnty +".rotationalspeed";
+				keyword = idnty +"_rotationalspeed";
             if (!blockdata.get(keyword,omega)) 
                blockdata.getwdefault("rotationalspeed",omega,1.0); 
 				
-				keyword = idnty +".offset";
+				keyword = idnty +"_offset";
             if (!blockdata.get(keyword,epsilon)) 
                blockdata.getwdefault("offset",epsilon,0.01); 
          }
@@ -143,11 +143,11 @@ namespace ibc_swirl {
             std::string keyword,val;
             std::istringstream data;
 				
-				keyword = idnty +".rotationalspeed";
+				keyword = idnty +"_rotationalspeed";
             if (!blockdata.get(keyword,w)) 
                blockdata.getwdefault("rotationalspeed",w,1.0); 
 				
-				keyword = idnty +".height";
+				keyword = idnty +"_height";
             if (!blockdata.get(keyword,H)) 
                blockdata.getwdefault("height",H,2.0); 
          }
@@ -203,11 +203,11 @@ namespace ibc_swirl {
             std::string keyword,val;
             std::istringstream data;
 				
-				keyword = idnty +".rotationalspeed";
+				keyword = idnty +"_rotationalspeed";
             if (!blockdata.get(keyword,w)) 
                blockdata.getwdefault("rotationalspeed",w,1.0); 
 				
-				keyword = idnty +".radius";
+				keyword = idnty +"_radius";
             if (!blockdata.get(keyword,R)) 
                blockdata.getwdefault("radius",R,1.0); 
          }
@@ -258,7 +258,7 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + ".ibc";
+	keyword = std::string(idprefix) + "_ibc";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("ibc",ibcname)) {
 			*sim::log << "couldn't find initial condition type" << std::endl;

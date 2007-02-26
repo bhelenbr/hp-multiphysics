@@ -163,7 +163,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
                      lrho = gbl_ptr->rhovsT.Eval(u(2)(i,j));
                      rho(i,j) = lrho;
                      u(2)(i,j) *= gbl_ptr->cp;
-                     
+
                      fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
                      fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                      
@@ -520,17 +520,30 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
          
          ++excpt;
          
-//         for(i=0;i<nvrtx;++i)
-//            printf("rsdl v: %d %e %e %e\n",i,gbl_ptr->res.v(i,0),gbl_ptr->res.v(i,1),gbl_ptr->res.v(i,2));
+//         for(i=0;i<nvrtx;++i) {
+//            printf("rsdl v: %d ",i);
+//            for (n=0;n<NV;++n) 
+//               printf("%e ",gbl_ptr->res.v(i,n));
+//            printf("\n");
+//         }
 //            
-//         for(i=0;i<nside;++i)
-//            for(int m=0;m<basis::tri(log2p).sm;++m)
-//               printf("rsdl s: %d %d %e %e %e\n",i,m,gbl_ptr->res.s(i,m,0),gbl_ptr->res.s(i,m,1),gbl_ptr->res.s(i,m,2));
+//         for(i=0;i<nside;++i) {
+//            for(int m=0;m<basis::tri(log2p).sm;++m) {
+//               printf("rsdl s: %d %d ",i,m); 
+//               for(n=0;n<NV;++n)
+//                  printf("%e ",gbl_ptr->res.s(i,m,n));
+//               printf("\n");
+//            }
+//         }
 //
-//         for(i=0;i<ntri;++i)
-//            for(int m=0;m<basis::tri(log2p).im;++m)
-//               printf("rsdl i: %d %d %e %e %e\n",i,m,gbl_ptr->res.i(i,m,0),gbl_ptr->res.i(i,m,1),gbl_ptr->res.i(i,m,2));
-
+//         for(i=0;i<ntri;++i) {
+//            for(int m=0;m<basis::tri(log2p).im;++m) {
+//               printf("rsdl i: %d %d ",i,m);
+//               for(n=0;n<NV;++n) 
+//                  printf("%e ",gbl_ptr->res.i(i,m,n));
+//               printf("\n");
+//            }
+//         }
       }
    }
 

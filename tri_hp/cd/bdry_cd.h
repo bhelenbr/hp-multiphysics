@@ -97,7 +97,7 @@ namespace bdry_cd {
             
             neumann::init(inmap,gbl_in);
 
-            keyword = base.idprefix + ".cd_mixed_coefficients";
+            keyword = base.idprefix + "_cd_mixed_coefficients";
             
             if (inmap.getline(keyword,val)) {
                   data.str(val);

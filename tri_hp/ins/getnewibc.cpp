@@ -34,15 +34,15 @@ namespace ibc_ins {
             std::string keyword,val;
             std::istringstream data;
 
-            keyword = idnty +".flowspeed";
+            keyword = idnty +"_flowspeed";
             if (!blockdata.get(keyword,speed)) 
                blockdata.getwdefault("flowspeed",speed,1.0);
     
-            keyword = idnty +".flowangle";
+            keyword = idnty +"_flowangle";
             if (!blockdata.get(keyword,alpha)) 
                blockdata.getwdefault("flowangle",alpha,0.0);  
                
-            keyword = idnty +".perturb_amplitude";
+            keyword = idnty +"_perturb_amplitude";
             if (!blockdata.get(keyword,perturb_amp)) 
                blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
@@ -76,20 +76,20 @@ namespace ibc_ins {
             std::string keyword,val;
             std::istringstream data;
 
-            keyword = idnty +".flowspeed";
+            keyword = idnty +"_flowspeed";
             if (!blockdata.get(keyword,speed)) 
                blockdata.getwdefault("flowspeed",speed,1.0);
     
-            keyword = idnty +".angle";
+            keyword = idnty +"_angle";
             if (!blockdata.get(keyword,angle)) 
                blockdata.getwdefault("angle",angle,0.0);
             angle *= M_PI/180.0;
             
-            keyword = idnty +".inner_radius";
+            keyword = idnty +"_inner_radius";
             if (!blockdata.get(keyword,inner)) 
                blockdata.getwdefault("inner_radius",inner,1.1);
                
-            keyword = idnty +".outer_radius";
+            keyword = idnty +"_outer_radius";
             if (!blockdata.get(keyword,outer)) 
                blockdata.getwdefault("outer_radius",outer,2.1);
             
@@ -120,15 +120,15 @@ namespace ibc_ins {
             std::string keyword,val;
             std::istringstream data;
 
-            keyword = idnty +".speed";
+            keyword = idnty +"_speed";
             if (!blockdata.get(keyword,speed)) 
                blockdata.getwdefault("speed",speed,1.0);
     
-            keyword = idnty +".coefficient";
+            keyword = idnty +"_coefficient";
             if (!blockdata.get(keyword,c)) 
                blockdata.getwdefault("coefficient",c,0.0);  
                
-            keyword = idnty +".power";
+            keyword = idnty +"_power";
             if (!blockdata.get(keyword,alpha)) 
                blockdata.getwdefault("power",alpha,0.0); 
          }
@@ -245,24 +245,24 @@ FLT f1(int n, FLT x, FLT y) {
             std::string keyword,val;
             std::istringstream data;
 
-            keyword = idnty +".outer_radius";
+            keyword = idnty +"_outer_radius";
             if (!blockdata.get(keyword,outer_limit))
                blockdata.getwdefault("outer_radius",outer_limit,75.0);
                
-            keyword = idnty +".mu";
+            keyword = idnty +"_mu";
             if (!blockdata.get(keyword,mu_g)) {
                *sim::log << "couldn't find mu of gas" << std::endl;
                exit(1);
             }
  
-            keyword = idnty +".liquid";
+            keyword = idnty +"_liquid";
             if (!blockdata.get(keyword,val)) { 
                *sim::log << "couldn't find identity of liquid block" << std::endl;
                exit(1);
             }
             
             FLT mu_l;
-            keyword = val +".mu";
+            keyword = val +"_mu";
             if (!blockdata.get(keyword,mu_l)) {
                *sim::log << "couldn't find mu of liquid" << std::endl;
                exit(1);
@@ -302,31 +302,31 @@ FLT f1(int n, FLT x, FLT y) {
             std::string keyword,val;
             std::istringstream data;
                
-            keyword = idnty +".mu";
+            keyword = idnty +"_mu";
             if (!blockdata.get(keyword,mu_l)) {
                *sim::log << "couldn't find mu of liquid" << std::endl;
                exit(1);
             }
-            keyword = idnty +".liquid_bdry";
+            keyword = idnty +"_liquid_bdry";
             if (!blockdata.get(keyword,val)) { 
                *sim::log << "couldn't find identity of liquid boundary" << std::endl;
                exit(1);
             }
             
-            keyword = val +".sigma";
+            keyword = val +"_sigma";
             if (!blockdata.get(keyword,sigma)) {
                *sim::log << "couldn't find sigma" << std::endl;
                exit(1);
             }            
  
-            keyword = idnty +".gas";
+            keyword = idnty +"_gas";
             if (!blockdata.get(keyword,val)) { 
                *sim::log << "couldn't find identity of gas block" << std::endl;
                exit(1);
             }
             
             FLT mu_g;
-            keyword = val +".mu";
+            keyword = val +"_mu";
             if (!blockdata.get(keyword,mu_g)) {
                *sim::log << "couldn't find mu of gas" << std::endl;
                exit(1);
@@ -359,22 +359,22 @@ FLT f1(int n, FLT x, FLT y) {
          void init(input_map& input, std::string idnty) {
             std::string keyword, val;
 			
-            keyword = idnty + ".delta_rho";
+            keyword = idnty + "_delta_rho";
             if (!input.get(keyword,delta_rho)) {
                input.getwdefault("delta_rho",delta_rho,0.0);
             }
 
-            keyword = idnty + ".rho_factor";
+            keyword = idnty + "_rho_factor";
             if (!input.get(keyword,rho_factor)) {
                input.getwdefault("rho_factor",rho_factor,1.0);
             }
             
-            keyword = idnty + ".delta_mu";
+            keyword = idnty + "_delta_mu";
             if (!input.get(keyword,delta_mu)) {
                input.getwdefault("delta_mu",delta_mu,0.0);
             }
             
-            keyword = idnty + ".mu_factor";
+            keyword = idnty + "_mu_factor";
             if (!input.get(keyword,mu_factor)) {
                input.getwdefault("mu_factor",mu_factor,1.0);
             }
@@ -392,13 +392,13 @@ FLT f1(int n, FLT x, FLT y) {
             if (surf) {
                std::string surfidnty = surf->base.idprefix;
                
-               keyword = surfidnty + ".delta_sigma";
+               keyword = surfidnty + "_delta_sigma";
                input.getwdefault(keyword,delta_sigma,0.0);
 
-               keyword = surfidnty + ".sigma_factor";
+               keyword = surfidnty + "_sigma_factor";
                input.getwdefault(keyword,sigma_factor,1.0);
                
-               keyword = surfidnty + ".matching_block";
+               keyword = surfidnty + "_matching_block";
                if (!input.get(keyword,val)) {
                   delta_rho2 = 0.0;
                   rho2_factor = 1.0;
@@ -406,22 +406,22 @@ FLT f1(int n, FLT x, FLT y) {
                   mu2_factor = 1.0;
                }
                else {                   
-                  keyword = val + ".delta_rho";               
+                  keyword = val + "_delta_rho";               
                   if (!input.get(keyword,delta_rho2)) {
                      input.getwdefault("delta_rho",delta_rho2,0.0);
                   }
 
-                  keyword = val + ".rho_factor";
+                  keyword = val + "_rho_factor";
                   if (!input.get(keyword,rho2_factor)) {
                      input.getwdefault("rho_factor",rho2_factor,1.0);
                   }
                   
-                  keyword = val + ".delta_mu";
+                  keyword = val + "_delta_mu";
                   if (!input.get(keyword,delta_mu2)) {
                      input.getwdefault("delta_mu",delta_mu2,0.0);
                   }
                   
-                  keyword = val + ".mu_factor";
+                  keyword = val + "_mu_factor";
                   if (!input.get(keyword,mu2_factor)) {
                      input.getwdefault("mu_factor",mu2_factor,1.0);
                   }
@@ -482,7 +482,7 @@ FLT f1(int n, FLT x, FLT y) {
             parameter_changer::init(input,idnty);
             
             std::string keyword;
-            keyword = idnty + ".penalty_parameter";
+            keyword = idnty + "_penalty_parameter";
             input.getwdefault(keyword,penalty,0.5);
          }
          
@@ -837,7 +837,7 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(input_map& inmap) {
    int type;
 
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".ibc";
+   keyword = std::string(idprefix) + "_ibc";
    if (!inmap.get(keyword,ibcname)) {
       if (!inmap.get("ibc",ibcname)) {
          *sim::log << "couldn't find initial condition type" << std::endl;
@@ -882,7 +882,7 @@ mesh_mover *tri_hp_ins::getnewmesh_mover(input_map& inmap) {
    int type;
    
    /* FIND INITIAL CONDITION TYPE */
-   keyword = std::string(idprefix) + ".mesh_mover";
+   keyword = std::string(idprefix) + "_mesh_mover";
    if (!inmap.get(keyword,movername)) {
       if (!inmap.get("mesh_mover",movername)) {
          type = -1;
