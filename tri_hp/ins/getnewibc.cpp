@@ -274,7 +274,7 @@ FLT f1(int n, FLT x, FLT y) {
    class stokes_drop_liquid : public init_bdry_cndtn {
       private:
          FLT outer_limit;
-         FLT mu_l, kappa, sigma;
+         FLT rho_l, mu_l, kappa, sigma;
       
       public:
          FLT f(int n, TinyVector<FLT,mesh::ND> x) {
@@ -301,6 +301,12 @@ FLT f1(int n, FLT x, FLT y) {
          void input(input_map &blockdata,std::string idnty) {
             std::string keyword,val;
             std::istringstream data;
+            
+            keyword = idnty +"_rho";
+            if (!blockdata.get(keyword,rho_l)) {
+               *sim::log << "couldn't find rho of liquid" << std::endl;
+               exit(1);
+            }
                
             keyword = idnty +"_mu";
             if (!blockdata.get(keyword,mu_l)) {
@@ -471,7 +477,7 @@ FLT f1(int n, FLT x, FLT y) {
    class translating_drop : public parameter_changer {
       private:
          Array<FLT,1> avg;
-         FLT penalty;
+         FLT penalty1,penalty2;
 
       public:
          translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {
@@ -482,8 +488,11 @@ FLT f1(int n, FLT x, FLT y) {
             parameter_changer::init(input,idnty);
             
             std::string keyword;
-            keyword = idnty + "_penalty_parameter";
-            input.getwdefault(keyword,penalty,0.5);
+            keyword = idnty + "_penalty1_parameter";
+            input.getwdefault(keyword,penalty1,0.5);
+            
+            keyword = idnty + "_penalty2_parameter";
+            input.getwdefault(keyword,penalty2,0.5);
          }
          
          mesh_mover* create(tri_hp& xin) { return new translating_drop(dynamic_cast<tri_hp_ins&>(xin)); }
@@ -499,8 +508,8 @@ FLT f1(int n, FLT x, FLT y) {
             x.integrated_averages(avg);
             rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 #ifdef DROP
-            surf_gbl->vflux =  penalty*kc*(rbar -0.5);
-            tri_hp_ins::mesh_ref_vel(1) = penalty*kc*avg(2) +avg(4);   
+            surf_gbl->vflux =  penalty1*kc*(rbar -0.5);
+            tri_hp_ins::mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);   
 #endif
 
             /* C_D TO G CONVERSION REMINDER 
@@ -514,12 +523,12 @@ FLT f1(int n, FLT x, FLT y) {
 
          
          block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {
-            if (ctrl_message == block::begin) calculate_stuff();
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */ ) calculate_stuff();
             return(block::stop);
          }
          
          block::ctrl setup_preconditioner(block::ctrl ctrl_message) {
-            if (ctrl_message == block::begin) calculate_stuff();
+            if (ctrl_message == block::begin /* && sim::dti == 0.0 */) calculate_stuff();
             return(block::stop);
          }
          
@@ -585,55 +594,6 @@ FLT f1(int n, FLT x, FLT y) {
             return(-y*M_PI/lam*sin(M_PI*sim::time/lam)*0.5*amp);
          else
             return(0.0);
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef KOVASZNAY
-double f1(int n, double x, double y) { 
-   double re, lda;
-   
-   if (kovamu > 0.0) {
-      re = 1/mux[0];
-      lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
-   }
-   else
-      lda = 0.0;
-
-   switch (n) {
-      case(0):
-         return(1.0 - cos(2*M_PI*y)*exp(lda*x));
-      case(1):
-         return(lda/(2*M_PI)*sin(2*M_PI*y)*exp(lda*x));
-      case(2):
-         return(-.5*exp(2.*lda*x));
-   }
-   return(0.0);
-}
-
-
-double df1d(int n, double x, double y, int dir) {
-   double re, lda;
-   
-   if (kovamu > 0.0) {
-      re = 1/mux[0];
-      lda = .5*re - sqrt(re*re*.25 + 4*M_PI*M_PI);
-   }
-   else
-      lda = 0.0;
-
-   switch(n) {
-      case(0):
-         if (dir == 0)
-            return( -lda*cos(2*M_PI*y)*exp(lda*x));
-         else
-            return( 2*M_PI*sin(2*M_PI*y)*exp(lda*x));
-      case(1):
-         if (dir == 0) 
-            return(lda/(2*M_PI)*lda*sin(2*M_PI*y)*exp(lda*x));
-         else
-            return(lda*cos(2*M_PI*y)*exp(lda*x));
    }
    return(0.0);
 }

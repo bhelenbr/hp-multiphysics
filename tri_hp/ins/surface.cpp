@@ -19,13 +19,12 @@ void surface_slave::init(input_map& inmap,void* &gbl_in) {
    keyword = base.idprefix + "_coupled";
    inmap[keyword] = "1";
 
-   generic::init(inmap,gbl_in);
+   neumann::init(inmap,gbl_in);
    
    return;
 }
          
 void surface::init(input_map& inmap,void* &gbl_in) {
-   int i;
    std::string keyword,val;
    std::istringstream data;
    std::string filename;
@@ -100,20 +99,12 @@ void surface::init(input_map& inmap,void* &gbl_in) {
       data >> surf_gbl->fadd(0) >> surf_gbl->fadd(1);  
       data.clear(); 
       
-      keyword = base.idprefix + "_cfltangent";
-      inmap.getlinewdefault(keyword,val,"2.5 1.5 1.0");
-      data.str(val);
-      for(i=0;i<x.log2pmax+1;++i)
-      data >> surf_gbl->cfl(0,i);  
-      data.clear(); 
-      
-      keyword = base.idprefix + "_cflnormal";
-      inmap.getlinewdefault(keyword,val,"2.0 1.25 0.75");
-      data.str(val);
-      for(i=0;i<x.log2pmax+1;++i)
-      data >> surf_gbl->cfl(1,i);  
-      data.clear(); 
-      
+      double CFLtdflt[3] = {2.5, 1.5, 1.0};
+      inmap.getwdefault(base.idprefix + "_cfltangent",&surf_gbl->cfl(0,0),3,CFLtdflt); 
+
+      double CFLndflt[3] = {2.0, 1.25, 0.75};
+      inmap.getwdefault(base.idprefix + "_cflnormal",&surf_gbl->cfl(1,0),3,CFLndflt); 
+       
       surf_gbl->adis = 1.0;  /* TEMPORARY */
    }
    else {
@@ -198,7 +189,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
    switch(excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::rsdl step 0 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::rsdl step 0 with ctrl_message " << ctrl_message << std::endl;
 #endif
          /**************************************************/
          /* DETERMINE MESH RESIDUALS & SURFACE TENSION     */
@@ -283,7 +274,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
                for(m=0;m<basis::tri(x.log2p).sm;++m)
                   surf_gbl->sres(indx,m)(n) = lf(n,m+2);
             }
-            
+                        
 #ifdef DROP
             surf_gbl->vres(indx)(1) += lf(2,0);
             surf_gbl->vres(indx+1)(1) += lf(2,1);
@@ -376,6 +367,9 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
             count = 0;
             for(j=0;j<base.nel+1;++j) {
                base.fsndbuf(count++) = surf_gbl->vres(j)(1)*surf_gbl->rho2;
+#ifdef MPDEBUG 
+               *sim::log << surf_gbl->vres(j)(1)*surf_gbl->rho2 << '\n';
+#endif
 #ifdef DROP
                base.fsndbuf(count-1) -= surf_gbl->vvolumeflux(j)*surf_gbl->rho2;
 #endif
@@ -397,7 +391,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
       }
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::rsdl step 1 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::rsdl step 1 with ctrl_message " << ctrl_message << std::endl;
 #endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
@@ -405,7 +399,7 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
       }
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::rsdl step 2 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::rsdl step 2 with ctrl_message " << ctrl_message << std::endl;
 #endif
          base.comm_wait(boundary::all,0,boundary::master_slave);
          ++excpt;
@@ -426,7 +420,7 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
    switch(excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 0 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 0 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_prepare(boundary::all,0,boundary::master_slave);
          ++excpt;
@@ -434,7 +428,7 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
       }
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 1 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 1 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt;
@@ -442,7 +436,7 @@ block::ctrl surface_slave::rsdl(block::ctrl ctrl_message) {
       }
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 2 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 2 of surface_slave::rsdl with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_wait(boundary::all,0,boundary::master_slave);        
          count = 0;
@@ -514,7 +508,7 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
    switch(excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 0 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 0 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
 #endif
          /* INVERT MASS MATRIX */
          /* LOOP THROUGH SIDES */
@@ -535,7 +529,7 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
       }
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 1 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 1 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
 #endif
          ++mp_phase;
          switch(mp_phase%3) {
@@ -560,7 +554,7 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 2 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 2 of surface::minvrt with ctrl_message: " << ctrl_message << std::endl;
 #endif
          if (surf_gbl->is_loop) {
             surf_gbl->vres(0)(1) = 0.5*(surf_gbl->vres(0)(1) +surf_gbl->vres(base.nel+1)(1));
@@ -631,7 +625,7 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
    switch(excpt) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::setup_preconditioner step 0 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::setup_preconditioner step 0 with ctrl_message " << ctrl_message << std::endl;
 #endif
       
          /**************************************************/
@@ -693,11 +687,11 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
             /* |a| dx/2 dv/dx  dx/2 dpsi */
             /* |a| dx/2 2/dx dv/dpsi  dpsi */
             /* |a| dv/dpsi  dpsi */
-            surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5);
-            /* surf_gbl->meshc = adis/(h*vslp/hsm); */
+            // surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5);
+            surf_gbl->meshc(indx) = surf_gbl->adis/(h*(vslp/hsm +sim::bd[0]));
             
             dtnorm *= RAD(0.5*(x.vrtx(v0)(0) +x.vrtx(v1)(0)));
-
+            
             nrm *= 0.5;
                   
             surf_gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p).vdiag1d;
@@ -722,7 +716,7 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
       }
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::setup_preconditioner step 1 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::setup_preconditioner step 1 with ctrl_message " << ctrl_message << std::endl;
 #endif
          ++mp_phase;
          switch(mp_phase%3) {
@@ -747,7 +741,7 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "surface::setup_preconditioner step 2 with ctrl_message " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In surface::setup_preconditioner step 2 with ctrl_message " << ctrl_message << std::endl;
 #endif
          if (surf_gbl->is_loop) {
             for(m=0;m<mesh::ND;++m)
@@ -798,7 +792,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
    switch(excpt1) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 0 of surface::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 0 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          indx = 0;
          for(i=0;i<base.nel;++i) {
@@ -818,7 +812,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
       
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 1 of surface::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 1 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          if (ctrl_message == block::advance) {
             ++excpt1;
@@ -829,7 +823,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 2 of surface::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 2 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = minvrt(ctrl_message);
@@ -842,7 +836,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
       
       case(3): {       
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 3 of surface::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 3 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
 
 #ifdef DEBUG
@@ -944,7 +938,7 @@ block::ctrl surface::update(block::ctrl ctrl_message) {
       
       case(4): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 4 of surface::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 4 of surface::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt1;
@@ -971,7 +965,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
    switch(excpt1) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 0 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 0 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          ++excpt1;
          stage = 0;
@@ -980,7 +974,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
       
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 1 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 1 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          if (ctrl_message == block::advance) {
             ++excpt1;
@@ -991,7 +985,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 2 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 2 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             return(block::advance1);
@@ -1002,7 +996,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
       
       case(3): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 3 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 3 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_prepare(boundary::all,0,boundary::master_slave);
          ++excpt1;
@@ -1010,7 +1004,7 @@ block::ctrl surface_slave::update(block::ctrl ctrl_message) {
       }
       case(4): {
 #ifdef CTRL_DEBUG
-         *sim::log << "In step 4 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
+         *sim::log << base.idprefix << " In step 4 of surface_slave::update with ctrl_message: " << ctrl_message << std::endl;
 #endif
          base.comm_exchange(boundary::all,0,boundary::master_slave);
          ++excpt1;
@@ -1100,7 +1094,7 @@ void surface_slave::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride)
    if (!base.is_comm()) return;
    
 #ifdef MPDEBUG
-      *sim::log << "surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+      *sim::log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
    
    countup = 0;
@@ -1162,7 +1156,7 @@ void surface_slave::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride)
       mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-      *sim::log << "surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
+      *sim::log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
       count = 0;
       for(j=0;j<base.nel;++j) {

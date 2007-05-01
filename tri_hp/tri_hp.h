@@ -166,7 +166,7 @@ class tri_hp : public r_mesh  {
       void output(const std::string &name, filetype type = tecplot, int tlvl = 0);
 
       /* Some other handy utilities */
-      void l2error(FLT (*func)(int, TinyVector<FLT,ND> &x));
+      void l2error(init_bdry_cndtn *toCompare);
       block::ctrl findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
       void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
       void integrated_averages(Array<FLT,1> a);

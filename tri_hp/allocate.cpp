@@ -246,13 +246,8 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
       gbl_ptr->tprcn_ut.resize(maxvst,NV,NV);
    }
 
-   if (!inmap.getline(idprefix +"_cfl",line)) inmap.getlinewdefault("cfl",line,"2.5 1.5 1.0"); 
-   data.str(line);
-   for(i=0;i<log2pmax+1;++i) {
-      data >> gbl_ptr->cfl(i);
-   }
-   data.clear();
-
+   double CFLdflt[3] = {2.5, 1.5, 1.0};
+   if (!inmap.get(idprefix +"_cfl",gbl_ptr->cfl.data(),3)) inmap.getwdefault("cfl",gbl_ptr->cfl.data(),3,CFLdflt); 
 
    /* Use global scratch for adaptation work */
    /* resize if necessary */

@@ -24,6 +24,8 @@
 #include "../hp_boundary.h"
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
+#include <mathclass.h>
+
 
 namespace bdry_ins {
 
@@ -53,8 +55,14 @@ namespace bdry_ins {
             flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
            
             /* X&Y MOMENTUM */
+#ifdef INERTIALESS
+            for (int n=0;n<mesh::ND;++n)
+               flx(n) = x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+#else
             for (int n=0;n<mesh::ND;++n)
                flx(n) = flx(x.NV-1)*u(n) +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+#endif
+
            
             /* EVERYTHING ELSE */
              for (int n=mesh::ND;n<x.NV-1;++n)
@@ -178,13 +186,45 @@ namespace bdry_ins {
          block::ctrl tadvance(bool coarse, block::ctrl ctrl_message);
    };
    
-   class surface_slave : public generic {
+   class applied_stress : public neumann {
+      Array<symbolic_function<2>,1> stress;
+
+      protected:
+         void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            
+            /* CONTINUITY */
+            flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+           
+            FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+            /* X&Y MOMENTUM */
+#ifdef INERTIALESS
+            for (int n=0;n<mesh::ND;++n)
+               flx(n) = -stress(n).Eval(xpt,sim::time)*length +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+#else
+            for (int n=0;n<mesh::ND;++n)
+               flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,sim::time)*length +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+#endif
+           
+            /* EVERYTHING ELSE */
+             for (int n=mesh::ND;n<x.NV-1;++n)
+               flx(n) = flx(x.NV-1)*u(n);
+               
+            return;
+         }
+      public:
+         applied_stress(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
+         applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
+         applied_stress* create(tri_hp& xin, side_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& inmap,void* &gbl_in);
+   };
+   
+   class surface_slave : public neumann {
       private:
          int excpt, excpt1, stage;
          
       public:
-         surface_slave(tri_hp_ins &xin, side_bdry &bin) : generic(xin,bin) {mytype = "surface_slave";}
-         surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, side_bdry &bin) : generic(inbdry,xin,bin) {}
+         surface_slave(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "surface_slave";}
+         surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
          surface_slave* create(tri_hp& xin, side_bdry &bin) const {return new surface_slave(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
          void init(input_map& inmap,void* &gbl_in);
 
@@ -257,6 +297,47 @@ namespace bdry_ins {
          block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum); 
    };
    
+   class hybrid_surface_levelset : public surface_slave { 
+      protected:
+         virtual void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            
+            /* CONTINUITY */
+            flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+           
+            /* EVERYTHING ELSE */
+             for (int n=0;n<x.NV-1;++n)
+               flx(n) = 0.0;
+               
+            return;
+         }     
+      private:
+         int mp_phase,excpt,excpt1,stage;
+                
+      public:
+         hybrid_surface_levelset(tri_hp_ins &xin, side_bdry &bin) : surface_slave(xin,bin) {mytype = "hybrid_surface_levelset";}
+         hybrid_surface_levelset(const hybrid_surface_levelset& inbdry, tri_hp_ins &xin, side_bdry &bin) : surface_slave(inbdry,xin,bin) {}
+         hybrid_surface_levelset* create(tri_hp& xin, side_bdry &bin) const {return new hybrid_surface_levelset(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+         void init(input_map& inmap,void* &gbl_in) {
+            std::string keyword;
+            
+            keyword = base.idprefix + "_curved";
+            inmap[keyword] = "0";
+
+            neumann::init(inmap,gbl_in);
+            
+            return;
+         }
+         
+         block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
+         block::ctrl rsdl(block::ctrl ctrl_message) {return(neumann::rsdl(ctrl_message));}
+
+   };
+
+
+
+   /*******************************/
+   /* VERTEX BOUNDARY CONDITIONS */
+   /******************************/
    class surface_fixed_pt : public hp_vrtx_bdry {
       protected:
          tri_hp_ins &x;

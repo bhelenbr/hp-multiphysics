@@ -187,6 +187,30 @@ block::ctrl neumann::rsdl(block::ctrl ctrl_message) {
    return(block::stop);
 }
 
+void applied_stress::init(input_map& inmap,void* &gbl_in) {
+   std::string keyword;
+   std::ostringstream nstr;
+
+   neumann::init(inmap,gbl_in);
+   
+   stress.resize(mesh::ND);
+
+   for(int n=0;n<mesh::ND;++n) {
+      nstr.str("");
+      nstr << base.idprefix << "_stress" << n << std::flush;
+      if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
+         stress(n).init(inmap,nstr.str());
+      }
+      else {
+         *sim::log << "couldn't find stress function " << nstr.str() << '\n';
+         exit(1);
+      }
+   }
+   
+   return;
+}
+
+
 
 
 

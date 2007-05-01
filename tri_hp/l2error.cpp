@@ -12,7 +12,7 @@
 #include <boundary.h>
 #include "hp_boundary.h"
 
- void tri_hp::l2error(FLT (*func)(int, TinyVector<FLT,2> &x)) {
+void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	int i,j,n,tind,loc[NV];
 	FLT err,mxr[NV],l2r[NV];
    TinyVector<FLT,2> pt;
@@ -25,7 +25,7 @@
    
 /* MATCH PRESSURE AT ONE POINT */
    ppipi = 0.0;
-   ppipi = -(*func)(2,vrtx(0)(0),vrtx(0)(1))+ug.v(0,2);
+   ppipi = -comparsion->f(2,vrtx(0)(0),vrtx(0)(1))+ug.v(0,2);
 #endif
    
 	for(n=0;n<NV;++n) {
@@ -64,7 +64,7 @@
             pt(0) = crd(0)(i,j);
             pt(1) = crd(1)(i,j);
             for(n=0;n<NV;++n) {
-               err =  fabs(u(n)(i,j)-func(n,pt));
+               err =  fabs(u(n)(i,j)-comparison->f(n,pt));
                if (err > mxr[n]) {
                   mxr[n] = err;
                   loc[n] = tind;

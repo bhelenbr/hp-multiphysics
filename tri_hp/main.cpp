@@ -31,6 +31,10 @@ int main(int argc, char **argv) {
 #endif
    
    /* NORMAL SIMULATION */
+   if (argc < 2) {
+      *sim::log << "# Need to specify input file" << std::endl;
+      exit(1);
+   }
    sim::blks.init(argv[1]);
    sim::blks.go();
 

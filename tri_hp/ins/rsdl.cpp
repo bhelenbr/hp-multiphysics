@@ -10,7 +10,7 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-#define CTRL_DEBUG
+//#define CTRL_DEBUG
    
 block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
    int i,j,n,tind;
@@ -49,7 +49,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
    switch(excpt) {
       case 0: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 0 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 0 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          /* THIS IS FOR DEFORMING MESH STUFF */
          if (ctrl_message != block::advance1) {
@@ -65,7 +65,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 1: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = mover->rsdl(ctrl_message);
@@ -80,7 +80,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 2: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = block::stop;
@@ -97,7 +97,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 3: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif                  
          
          for(tind = 0; tind<ntri;++tind) {
@@ -133,7 +133,7 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
 #ifdef DROP
                   mvel(0)(i,j) += mesh_ref_vel(0);
                   mvel(1)(i,j) += mesh_ref_vel(1);
-#endif
+#endif                  
                }
             }
 
@@ -209,17 +209,16 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                         for(n=0;n<NV-1;++n)
                            res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+#ifdef INERTIALESS
+                        res(0)(i,j) = 0.0;
+                        res(1)(i,j) = 0.0;
+#endif
 #ifdef AXISYMMETRIC
                         res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
-
 #ifdef BODY
                         res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
                         res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#ifdef INERTIALESS
-                        res(0)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#endif
 #endif              
                                                 
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -397,18 +396,16 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
                         for(n=0;n<NV-1;++n)
                            res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
-                        
+#ifdef INERTIALESS
+                        res(0)(i,j) = 0.0;
+                        res(1)(i,j) = 0.0;
+#endif
 #ifdef AXISYMMETRIC
                         res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
-
 #ifdef BODY
                         res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
                         res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#ifdef INERTIALESS
-                        res(0)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) = -gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#endif
 #endif
                         df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                                               +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));

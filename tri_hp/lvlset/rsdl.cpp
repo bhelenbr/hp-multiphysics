@@ -245,7 +245,7 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                            res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
 #ifdef AXISYMMETRIC
-                        res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
+                        res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));
 #endif
 
 #ifdef BODY
@@ -499,7 +499,7 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
             
 #ifdef AXISYMMETRIC
-                        res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
+                        res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));
 #endif
 
 #ifdef BODY

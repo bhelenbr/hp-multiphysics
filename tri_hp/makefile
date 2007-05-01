@@ -10,46 +10,60 @@ planar: hp hp_mpi
 axi: hp_axi hp_axi_mpi
 
 hp:
-	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile hp
-	cp _serial/hp $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp
+	cp _$@/hp $(HOME)/bin/$@
 
 .PHONY: hp
 
 hp_axi:
-	+@[ -d  _axi_serial ] || mkdir -p _axi_serial
-	+@$(MAKE) -C _axi_serial -f $(CURDIR)/makefile hp EXTRAFLAGS=-DAXISYMMETRIC
-	cp _axi_serial/hp $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS=-DAXISYMMETRIC
+	cp _$@/hp $(HOME)/bin/$@
 
 .PHONY: hp_axi
 
 hp_mpi:
-	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS=-DMPISRC
-	cp _mpi/hp_mpi $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS=-DMPISRC
+	cp _$@/hp_mpi $(HOME)/bin/$@
 
 .PHONY: hp_mpi
 
 hp_axi_mpi:
-	+@[ -d  _axi_mpi ] || mkdir -p _axi_mpi
-	+@$(MAKE) -C _axi_mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
-	cp _axi_mpi/hp_mpi $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+	cp _$@/hp_mpi $(HOME)/bin/$@
 
 .PHONY: hp_axi_mpi
 
 hp_drop:
-	+@[ -d  _drop_serial ] || mkdir -p _drop_serial
-	+@$(MAKE) -C _drop_serial -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
-	cp _drop_serial/hp $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
+	cp _$@/hp $(HOME)/bin/$@
 
 .PHONY: hp_drop
 
 hp_drop_mpi:
-	+@[ -d  _drop_mpi ] || mkdir -p _drop_mpi
-	+@$(MAKE) -C _drop_mpi -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
-	cp _drop_mpi/hp_mpi $(HOME)/bin/$@
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
+	cp _$@/hp_mpi $(HOME)/bin/$@
 
 .PHONY: hp_drop_mpi
+
+hp_drop_stokes:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS'
+	cp _$@/hp $(HOME)/bin/$@
+
+.PHONY: hp_drop_stokes
+
+hp_drop_stokes_mpi:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC'
+	cp _$@/hp_mpi $(HOME)/bin/$@
+
+.PHONY: hp_drop_stokes_mpi
 
 makefile : ;
 %.mk :: ;
@@ -79,6 +93,7 @@ OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET)
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
+CXXMPI = ${CXX}
 
 ### Begin machine dependent
 
@@ -89,11 +104,14 @@ LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil 
 
 ## Linux:
 ##  Machine specific for Linux
-CXX=icpc #(cares)
-CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
-LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-LDFLAGS += -static-libcxa #(cares)
+#CXX=icpc #(cares)
+#CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
+#LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+#LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
+#LDFLAGS += -static-libcxa #(cares)
+CPPFLAGS += -O3 -I/opt/mpich/myrinet/gnu/include #(cares)
+LIB += -L$(HOME) -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -115,7 +133,7 @@ hp: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
 
 hp_mpi: dirs $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins

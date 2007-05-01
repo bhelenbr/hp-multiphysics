@@ -59,7 +59,7 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
          if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
          q = sqrt(qmax);
          lam1 = q + sqrt(qmax +gam);
-         lam2  = (q +1.5*alpha/h +h*sim::bd[0]);
+         lam2  = (q +1.5*alpha/h +hmax*sim::bd[0]);
 
          /* SET UP DISSIPATIVE COEFFICIENTS */
          gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
@@ -67,7 +67,7 @@ block::ctrl tri_hp_buoyancy::setup_preconditioner(block::ctrl ctrl_message) {
          gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
                   
          /* SET UP DIAGONAL PRECONDITIONER */
-         jcb1 = jcb*lam1/h;
+         jcb1 = 2.5*jcb*lam1/h;
          jcb1 *= RAD((vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.);
 
          // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];

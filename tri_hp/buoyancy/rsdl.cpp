@@ -49,7 +49,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
    switch(excpt) {
       case 0: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 0 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 0 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          /* THIS IS FOR DEFORMING MESH STUFF */
          if (ctrl_message != block::advance1) {
@@ -65,7 +65,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 1: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = mover->rsdl(ctrl_message);
@@ -80,7 +80,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 2: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = block::stop;
@@ -97,7 +97,7 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 3: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 2 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 2 of heat::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif                  
          
          for(tind = 0; tind<ntri;++tind) {

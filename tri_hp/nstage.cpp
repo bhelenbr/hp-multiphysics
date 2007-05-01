@@ -14,7 +14,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    switch (excpt1) {
       case(0): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 0 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 0 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          /* COUPLED MESH MOVMEMENT */
          if (ctrl_message != block::advance1) {
@@ -29,7 +29,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       
       case(1): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 1 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
 
          /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
@@ -45,7 +45,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       
       case(2): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 2 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 2 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          mover->update(block::begin);
          
@@ -58,7 +58,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       
       case(3): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 3 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 3 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          ctrl_message = block::begin;
          ++excpt1;
@@ -66,7 +66,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       
       case(4): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 4 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 4 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          if (ctrl_message != block::advance2) {
             state = rsdl(ctrl_message,stage); 
@@ -79,7 +79,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       
       case(5): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 5 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 5 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = minvrt(ctrl_message);
@@ -91,10 +91,10 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
      
       case(6): {
  #ifdef DEBUG     
-   printf("nstage: %d nvrtx: %d log2p: %d\n",stage,nvrtx,log2p);
+   printf("%s nstage: %d nvrtx: %d log2p: %d\n",idprefix.c_str(),stage,nvrtx,log2p);
 
    for(i=0;i<nvrtx;++i) {
-      printf("nstage: %d ",i);
+      printf("%s nstage: %d ",idprefix.c_str(),i);
       for(n=0;n<NV;++n) {
          if (fabs(gbl_ptr->vprcn(i,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->vprcn(i,n));
          else printf("%8.5e ",0.0);
@@ -103,7 +103,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    }
 
    for(i=0;i<nvrtx;++i) {
-      printf("v: %d ",i);
+      printf("%s v: %d ",idprefix.c_str(),i);
       for(n=0;n<NV;++n) {
          if (fabs(gbl_ptr->res.v(i,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.v(i,n));
          else printf("%8.5e ",0.0);
@@ -113,7 +113,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 
    for(i=0;i<nside;++i) {
       for(m=0;m<basis::tri(log2p).sm;++m) {
-         printf("s: %d ",i);
+         printf("%s s: %d ",idprefix.c_str(),i);
          for(n=0;n<NV;++n) {
             if (fabs(gbl_ptr->res.s(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.s(i,m,n));
             else printf("%8.5e ",0.0);
@@ -125,7 +125,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    
    for(i=0;i<ntri;++i) {
       for(m=0;m<basis::tri(log2p).im;++m) {
-         printf("i: %d ",i);
+         printf("%s i: %d ",idprefix.c_str(),i);
          for(n=0;n<NV;++n) {
             if (fabs(gbl_ptr->res.i(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl_ptr->res.i(i,m,n));
             else printf("%8.5e ",0.0);
@@ -135,7 +135,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    }
    
    for(i=0;i<nvrtx;++i) {
-      printf("ug.v: %d ",i);
+      printf("%s ug.v: %d ",idprefix.c_str(),i);
       for(n=0;n<NV;++n) {
          if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
          else printf("%8.5e ",0.0);
@@ -145,7 +145,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
 
    for(i=0;i<nside;++i) {
       for(m=0;m<basis::tri(log2p).sm;++m) {
-         printf("ug.s: %d ",i);
+         printf("%s ug.s: %d ",idprefix.c_str(),i);
          for(n=0;n<NV;++n) {
             if (fabs(ug.s(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.s(i,m,n));
             else printf("%8.5e ",0.0);
@@ -157,7 +157,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
    
    for(i=0;i<ntri;++i) {
       for(m=0;m<basis::tri(log2p).im;++m) {
-         printf("ug.i: %d ",i);
+         printf("%s ug.i: %d ",idprefix.c_str(),i);
          for(n=0;n<NV;++n) {
             if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
             else printf("%8.5e ",0.0);
@@ -165,12 +165,11 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
          printf("\n");
       }
    }
-   exit(1);
 #endif
          
          cflalpha = sim::alpha[stage]*gbl_ptr->cfl(log2p);
 #ifdef CTRL_DEBUG
-         *sim::log << "step 6 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 6 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
       
          ug.v(Range(0,nvrtx-1),Range::all()) = gbl_ptr->ug0.v(Range(0,nvrtx-1),Range::all()) -cflalpha*gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());
@@ -200,6 +199,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       }
       
       case(7): {
+
          if (ctrl_message != block::advance2) {
             state = mover->update(ctrl_message);
             if (state != block::stop) return(state);
@@ -210,7 +210,7 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
       }
       case(8): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 8 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 8 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          if (ctrl_message != block::advance2) {
             state = block::stop;
@@ -221,12 +221,15 @@ block::ctrl tri_hp::update(block::ctrl ctrl_message) {
             if (state != block::stop) return(state);
             return(block::advance2);
          }
+#ifdef DEBUG
+         exit(1);
+#endif
          ++excpt1;
       }
       
       case(9): {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 9 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
+         *sim::log << idprefix << " step 9 of tri_hp::update: ctrl_message: " << ctrl_message << " excpt1: " << excpt1 << std::endl;
 #endif
          stage += 1;
          if (stage < sim::NSTAGE) {

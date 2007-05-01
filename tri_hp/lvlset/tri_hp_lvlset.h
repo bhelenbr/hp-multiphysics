@@ -35,11 +35,22 @@ class tri_hp_lvlset : public tri_hp_ins {
       void calculate_unsteady_sources(bool coarse);
       
       FLT heavyside(FLT phidw) {
-         return(0.5*(phidw +sin(M_PI*phidw)/M_PI));
+         FLT onemphi2 = (1-phidw*phidw);
+         FLT term = 0.5;
+         FLT sum = term;
+         FLT r = 2.0;
+         for (int i=1;i<6;++i) {
+            term *= onemphi2*(r-1.)/r;
+            sum += term;
+            r += 2.0;
+         }
+         return(0.5 +phidw*sum);
+         // return(0.5*(phidw +sin(M_PI*phidw)/M_PI));
       }
       
       FLT delta(FLT phidw) {
-         return(0.5/gbl_ptr->width*(1.+cos(M_PI*phidw)));
+         return(693./512./gbl_ptr->width*pow(1.-phidw*phidw,5));
+         // return(0.5/gbl_ptr->width*(1.+cos(M_PI*phidw)));
       }
       
       FLT heavyside_if(FLT phidw) {

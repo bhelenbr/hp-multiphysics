@@ -23,8 +23,8 @@ namespace ibc_swirl {
                   return(0.0);
 					case(2):
 						return(x(0)*omega);
-					//case(3):
-						//return(0.995*x(0)*x(0)*omega*omega/2);
+               case(3):
+						return(x(0)*x(0)*omega*omega/2);
             }
             return(0.0);
          }
@@ -152,94 +152,11 @@ namespace ibc_swirl {
                blockdata.getwdefault("height",H,2.0); 
          }
    };
-
-	class testFunc : public init_bdry_cndtn {
-			public:
-         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-            switch(n) {
-               case(0):
-                  return(x(0)*x(0));
-               case(1):
-                  return(-3*x(0)*x(1));
-					case(2):
-						return(x(0)*x(0));
-					case(3):
-						return(x(0)*x(0));
-			}
-            return(0.0);
-         }
-			
-		void input(input_map &blockdata,std::string idnty) {
-			std::string keyword,val;
-			std::istringstream data;
-		}
-   };
-	
-	class freespin : public init_bdry_cndtn {
-      private:
-         FLT w,R;
-      public:
-         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-            switch(n) {
-               case(0):
-                  return(0.0);
-               case(1):
-                  return(0.0);
-					case(2):
-						//if(x(1)==-2.0 || x(0)==R) {
-							return(x(0)*w);
-						//}
-						//else {
-							//return(0.0);
-						//}
-					case(3):
-						return(x(0)*x(0)*w*w/2.0);
-						
-            }
-            return(0.0);
-         }
-         
-         void input(input_map &blockdata,std::string idnty) {
-            std::string keyword,val;
-            std::istringstream data;
-				
-				keyword = idnty +"_rotationalspeed";
-            if (!blockdata.get(keyword,w)) 
-               blockdata.getwdefault("rotationalspeed",w,1.0); 
-				
-				keyword = idnty +"_radius";
-            if (!blockdata.get(keyword,R)) 
-               blockdata.getwdefault("radius",R,1.0); 
-         }
-   };
-	
-	class stationary : public init_bdry_cndtn {
-      public:
-         FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-            switch(n) {
-               case(0):
-                  return(0.0);
-               case(1):
-                  return(0.0);
-					case(2):
-						return(0.0);
-					case(3):
-						return(0.0);
-            }
-            return(0.0);
-         }
-         
-         void input(input_map &blockdata,std::string idnty) {
-            std::string keyword,val;
-            std::istringstream data;
-         }
-   };	
-	
-	
+		
    class ibc_type {
       public:
-         const static int ntypes = 7;
-         enum ids {spinning,jet,spinninglid,spinninglid2,testFunc,freespin,stationary};
+         const static int ntypes = 4;
+         enum ids {spinning,jet,spinninglid,spinninglid2};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -248,7 +165,7 @@ namespace ibc_swirl {
             return(-1);
       }
    };
-   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2","testFunc","freespin","stationary"};
+   const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2"};
 
 }
 
@@ -286,24 +203,6 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 		
 		case ibc_swirl::ibc_type::spinninglid2: {
 		init_bdry_cndtn *temp = new ibc_swirl::spinninglid2;
-		return(temp);
-			
-		}
-		
-		case ibc_swirl::ibc_type::testFunc: {
-		init_bdry_cndtn *temp = new ibc_swirl::testFunc;
-		return(temp);
-			
-		}
-		
-		case ibc_swirl::ibc_type::freespin: {
-		init_bdry_cndtn *temp = new ibc_swirl::freespin;
-		return(temp);
-			
-		}
-		
-		case ibc_swirl::ibc_type::stationary: {
-		init_bdry_cndtn *temp = new ibc_swirl::stationary;
 		return(temp);
 			
 		}

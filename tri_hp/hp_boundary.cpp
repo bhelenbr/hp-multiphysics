@@ -193,25 +193,14 @@ void hp_side_bdry::curv_init(int tlvl) {
 
    if (!curved) return;
    
-//   for(bind=0;bind<nvbd;++bind) {
-//      if (!(vbdry[bind].type&MVPT_MASK)) continue;
-//      
-//      v0 = vbdry[bind].el[0];
-//      x = vrtx(v0)(0);
-//      y = vrtx(v0)(1);
-//      mvpttobdry(vbdry[bind].type,x,y);
-//      vrtx(v0)(0) = x;
-//      vrtx(v0)(1) = y;
-//   }
-
-   /* MESS WITH END VERTICES? */
-   for(j=0;j<base.nel;++j) {
+   /* SKIP END VERTICES */
+   for(j=1;j<base.nel;++j) {
       sind = base.el(j);
       v0 = x.sd(sind).vrtx(0);
       base.mvpttobdry(j,-1.0, x.vrtx(v0));
    }
-   v0 = x.sd(sind).vrtx(1);
-   base.mvpttobdry(base.nel-1,1.0, x.vrtx(v0));
+//   v0 = x.sd(sind).vrtx(1);
+//   base.mvpttobdry(base.nel-1,1.0, x.vrtx(v0));
 
    if (basis::tri(x.log2p).p == 1) return;
       
@@ -467,7 +456,7 @@ block::ctrl tri_hp::matchboundaries(block::ctrl ctrl_message) {
 
 #define NO_CTRL_DEBUG
 #ifdef CTRL_DEBUG
-   *sim::log << "In tri_hp::matchboundares with excpt " << excpt << std::endl;
+   *sim::log << idprefix << " In tri_hp::matchboundares with excpt " << excpt << std::endl;
 #endif
    
    switch(excpt) {

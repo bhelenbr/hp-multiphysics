@@ -91,8 +91,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
    public:
-      static const int ntypes = 8;
-      enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,symmetry,surface,surface_slave};
+      static const int ntypes = 10;
+      enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
+         symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -101,7 +102,8 @@ class tri_hp_ins_stype {
       }
 };
 
-const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler","symmetry","surface","surface_slave"};
+const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
+   "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -148,6 +150,10 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
          temp = new symmetry(*this,*sbdry(bnum));
          break;
       }
+      case tri_hp_ins_stype::applied_stress: {
+         temp = new applied_stress(*this,*sbdry(bnum));
+         break;
+      }
       case tri_hp_ins_stype::surface: {
          temp = new surface(*this,*sbdry(bnum));
          dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
@@ -156,6 +162,10 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
       case tri_hp_ins_stype::surface_slave: {
          temp = new surface_slave(*this,*sbdry(bnum));
          dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
+         break;
+      }
+      case tri_hp_ins_stype::hybrid_surface_levelset: {
+         temp = new hybrid_surface_levelset(*this,*sbdry(bnum));
          break;
       }
       default: {

@@ -15,7 +15,7 @@ class symbolic_ibc : public init_bdry_cndtn {
       Array<symbolic_function<2>,1> fcn;
    public:
       FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-         return(fcn(n).Eval(x));
+         return(fcn(n).Eval(x,sim::time));
       }
       void input(input_map &inmap,std::string idnty) {
          std::string keyword,val;
@@ -318,35 +318,78 @@ class translating : public mesh_mover {
       tri_hp &x;
       TinyVector<FLT,2> velocity;
       translating(tri_hp &xin) :mesh_mover(xin), x(xin) {}
-   void move(int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {
-      int i,n;
-      FLT dt;
+      void move(int nvrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtx, Array<TinyVector<FLT,mesh::ND>,1>& vrtxbd) {
+
+         
+      }
+      virtual void init(input_map& input, std::string idnty) {
+         std::string keyword,val;
+         std::istringstream data;
+         std::ostringstream nstr;
+         
+         FLT vdflt[2] = {0.0, 0.0};
+         if (!input.get(idnty +"_velocity",velocity.data(),2)) input.getwdefault("velocity",velocity.data(),2,vdflt);
+      }
       
-      /* CALCULATE TIME INCREMENT */
-      dt = sim::cdirk[sim::substep]/sim::dti;
-      for(i=0;i<nvrtx;++i)
-         for(n=0;n<mesh::ND;++n)
-            //vrtx(i)(n) += dt*velocity(n);
-            vrtx(i)(n) = vrtxbd(i)(n) +velocity(n)/(sim::bd[0]);
-   
-   }
-   void input(input_map &inmap, std::string idnty) {
-      std::string keyword,val;
-      std::istringstream data;
-      std::ostringstream nstr;
-      
-      keyword = idnty +"_velocity";
-      if (!inmap.getline(keyword,val)) inmap.getlinewdefault("velocity",val,"0.0 0.0");
-      data.str(val);
-      data >> velocity(0) >> velocity(1);  
-      data.clear(); 
-   }
+      block::ctrl tadvance(block::ctrl ctrl_message) {
+         
+         if (x.coarse) return(block::stop);
+         
+         if (ctrl_message == block::begin) {
+            if (sim::substep == 0) x.l2error(x.gbl_ptr->ibc);
+            
+            TinyVector<FLT,2> dx;
+            for (int n=0;n<mesh::ND;++n)
+               dx(n) = sim::cdirk[sim::substep]/sim::dti*velocity(n);
+            
+            for(int i=0;i<x.nvrtx;++i)
+               x.vrtx(i) += dx;
+         }
+         
+         return(block::stop);
+      }
+};
+
+class l2_error : public mesh_mover {
+   public: 
+      tri_hp &x;
+      l2_error(tri_hp &xin) :mesh_mover(xin), x(xin) {}
+      block::ctrl tadvance(block::ctrl ctrl_message) {
+         
+         if (x.coarse) return(block::stop);
+         
+         if (ctrl_message == block::begin && sim::substep == 0) {
+            x.l2error(x.gbl_ptr->ibc);
+         }
+         return(block::stop);
+      }
+};
+
+class print_averages : public mesh_mover {
+   public: 
+      tri_hp &x;
+      print_averages(tri_hp &xin) :mesh_mover(xin), x(xin) {}
+      block::ctrl tadvance(block::ctrl ctrl_message) {
+         
+         if (x.coarse) return(block::stop);
+         
+         if (ctrl_message == block::begin && sim::substep == 0) {
+            Array<FLT,1> av(x.NV+3);
+            x.integrated_averages(av);
+            *sim::log << "# area: " << av(0) << " xbar: " << av(1) << " ybar: " << av(2);
+            for(int n=0;n<x.NV;++n) 
+               *sim::log << " V" << n << ": " << av(n+3);
+            *sim::log << std::endl;
+         }
+         
+         return(block::stop);
+      }
 };
 
 class mesh_mover_type {
    public:
-      const static int ntypes = 1;
-      enum ids {translating};
+      const static int ntypes = 3;
+      enum ids {translating,print_averages,l2error};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -355,7 +398,7 @@ class mesh_mover_type {
          return(-1);
       }
 };
-const char mesh_mover_type::names[ntypes][40] = {"translating"};
+const char mesh_mover_type::names[ntypes][40] = {"translating","print_averages","l2error"};
 
 
 mesh_mover *tri_hp::getnewmesh_mover(input_map& inmap) {
@@ -375,6 +418,14 @@ mesh_mover *tri_hp::getnewmesh_mover(input_map& inmap) {
    switch(type) {
       case mesh_mover_type::translating: {
          mesh_mover *temp = new translating(*this);
+         return(temp);
+      }
+      case mesh_mover_type::print_averages: {
+         mesh_mover *temp = new print_averages(*this);
+         return(temp);
+      }
+      case mesh_mover_type::l2error: {
+         mesh_mover *temp = new l2_error(*this);
          return(temp);
       }
       default: {

@@ -15,6 +15,13 @@
 #include <utilities.h>
 #include <myblas.h>
 
+// #define DATATANK
+
+#ifdef DATATANK
+#include <DTSource.h>
+#endif
+
+
 void tri_hp::output(const std::string& fname, block::output_purpose why) {
    int i,j;
    std::string fnmapp, namewdot;
@@ -262,6 +269,48 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             hp_sbdry(i)->output(*sim::log, typ);
             
          break; 
+         
+      case (datatank): {
+#ifdef DATATANK
+         DTMutableIntArray dt_tvrtx(3,ntri);
+         DTMutableDoubleArray dt_vrtx(2,nvrtx);
+
+         for (int tind=0;tind<ntri;++tind)
+            for (int j=0;j<3;++j)
+               dt_tvrtx(j,tind) = td(tind).vrtx(j);
+
+         for (int vind=0;vind<nvrtx;++vind)
+            for (int j=0;j<2;++j)
+               dt_vrtx(j,vind) = vrtx(vind)(j);
+               
+         dt_grid = DTTriangularGrid(dt_tvrtx,dt_vrtx);
+         DTMutableDoubleArray dt_values(nvrtx);
+         for (int vind=0;vind<nvrtx;++vind) {
+            dt_values1(vind) = 0.1;
+            dt_values2(vind) = 0.2;
+         }
+            
+         dt_mesh1 = DTTriangularMesh(dt_grid,dt_values1);
+         dt_mesh2 = DTTriangularMesh(dt_grid,dt_values2);
+         
+         std::string outputFilename("Output.dtbin");
+         DTDataFile outputFile(outputFilename.c_str(),DTFile::NewReadWrite);
+         // Output from computation
+         Write(outputFile,"V1",dt_mesh1,DTTriangularGrid2D_SaveInfo &shared)
+
+         DTTriangularGrid2D_SaveInfo dt_grid_save;
+
+         Write(outputFile,"grid",dt_grid,dt_grid_save);
+         outputFile.Save("TriangularGrid2D","Seq_grid");
+         Write(outputFile,"Var1",dt_mesh1,dt_grid_save);
+         outputFile.Save("TriangularMesh2D","Seq_Var1");
+         Write(outputFile,"Var2",dt_mesh2,dt_grid_save);
+         outputFile.Save("TriangularMesh2D","Seq_Var1");
+#else
+         *sim::log << "Not supported on this platform\n";
+#endif
+         break;
+      }
                
       case(adapt_diagnostic): {         
          fnmapp = fname +".dat";

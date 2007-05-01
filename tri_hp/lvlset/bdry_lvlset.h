@@ -150,5 +150,22 @@ namespace bdry_lvlset {
          characteristic(const characteristic& inbdry, tri_hp_lvlset &xin, side_bdry &bin) : neumann(inbdry,xin,bin)  {}
          characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
    };
+   
+//   class surface_levelset_hybrid : public bdry_ins::surface_slave {      
+//      private:
+//         int mp_phase,excpt,excpt1,stage;
+//                
+//      public:
+//         surface_levelset_hybrid(tri_hp_ins &xin, side_bdry &bin) : surface_slave(xin,bin) {mytype = "surface_levelset_hybrid";}
+//         surface_levelset_hybrid(const surface_levelset_hybrid& inbdry, tri_hp_ins &xin, side_bdry &bin) : surface_slave(inbdry,xin,bin) {}
+//         surface_levelset_hybrid* create(tri_hp& xin, side_bdry &bin) const {return new surface_levelset_hybrid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+//
+//         void init(input_map& input,void* &gbl_in); 
+//
+//         /* FOR COUPLED DYNAMIC BOUNDARIES */
+//         block::ctrl rsdl(block::ctrl ctrl_message);
+//         block::ctrl update(block::ctrl ctrl_message);
+//   };
+   
 }
 #endif

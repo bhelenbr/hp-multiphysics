@@ -48,7 +48,7 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
    switch(excpt) {
       case 0: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 0 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 0 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          /* THIS IS FOR DEFORMING MESH STUFF */
          if (ctrl_message != block::advance1) {
@@ -64,7 +64,7 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 1: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = mover->rsdl(ctrl_message);
@@ -79,7 +79,7 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 2: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 1 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif
          if (ctrl_message != block::advance1) {
             state = block::stop;
@@ -96,7 +96,7 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
       
       case 3: {
 #ifdef CTRL_DEBUG
-         *sim::log << "step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
+         *sim::log << idprefix << " step 2 of ins::rsdl: ctrl_message: " << ctrl_message << " excpt: " << excpt << " stage: " << stage << std::endl;
 #endif                  
          
          for(tind = 0; tind<ntri;++tind) {
@@ -129,10 +129,6 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
                for(j=0;j<lgpn;++j) {
                   mvel(0)(i,j) = sim::bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
                   mvel(1)(i,j) = sim::bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
-#ifdef DROP
-                  mvel(0)(i,j) += mesh_ref_vel(0);
-                  mvel(1)(i,j) += mesh_ref_vel(1);
-#endif
                }
             }
 

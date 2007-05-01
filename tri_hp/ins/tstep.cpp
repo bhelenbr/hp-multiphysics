@@ -64,6 +64,8 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
                qmax = MAX(qmax,q);
             }
 
+#ifndef INERTIALESS
+
 #ifndef TIMEACCURATE
             gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
             if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.1);
@@ -78,9 +80,7 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
             /* SET UP DIAGONAL PRECONDITIONER */
             // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
             jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-
-
-#ifdef INERTIALESS
+#else
             gam = pow(2.*nu/hmax,2); 
             lam1 = sqrt(gam);
             
@@ -90,6 +90,9 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
 
             jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
+
+
+
 
 #ifdef TIMEACCURATE
             dtstari = MAX((nu/(h*h) +lam1/h +sim::bd[0]),dtstari);

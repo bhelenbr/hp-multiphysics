@@ -20,12 +20,13 @@
 #include "pod/pod.h"
 #include "swe/tri_hp_swe.h"
 #include "lvlset/tri_hp_lvlset.h"
+#include "hp_boundary.h"
 
 
 class btype {
    public:
-      const static int ntypes = 10;
-      enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins,pod_cd,swe,lvlset};
+      const static int ntypes = 12;
+      enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset};
       const static char names[ntypes][40];
       static int getid(const char *nin) {
          int i;
@@ -34,7 +35,8 @@ class btype {
          return(-1);
       }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy","pod_ins","pod_cd","swe","lvlset"};
+const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy",
+   "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset"};
 
 
 block* blocks::getnewblock(int idnum, input_map& blockdata) {
@@ -89,13 +91,23 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
          return(temp);
       }
       
-      case btype::pod_ins: {
-         mgrid<pod<tri_hp_ins> > *temp = new mgrid<pod<tri_hp_ins> >(idnum);
+      case btype::pod_ins_gen: {
+         mgrid<pod_generate<tri_hp_ins> > *temp = new mgrid<pod_generate<tri_hp_ins> >(idnum);
          return(temp);
       }
       
-      case btype::pod_cd: {
-         mgrid<pod<tri_hp_cd> > *temp = new mgrid<pod<tri_hp_cd> >(idnum);
+      case btype::pod_cd_gen: {
+         mgrid<pod_generate<tri_hp_cd> > *temp = new mgrid<pod_generate<tri_hp_cd> >(idnum);
+         return(temp);
+      }
+      
+      case btype::pod_ins_sim: {
+         mgrid<pod_simulate<tri_hp_ins> > *temp = new mgrid<pod_simulate<tri_hp_ins> >(idnum);
+         return(temp);
+      }
+      
+      case btype::pod_cd_sim: {
+         mgrid<pod_simulate<tri_hp_cd> > *temp = new mgrid<pod_simulate<tri_hp_cd> >(idnum);
          return(temp);
       }
       
