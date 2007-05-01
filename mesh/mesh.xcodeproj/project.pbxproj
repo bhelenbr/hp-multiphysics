@@ -21,6 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		6F1616020B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
+		6F1616030B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
@@ -180,6 +182,7 @@
 		07F2E94E00974D3D80990B20 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = SOURCE_ROOT; };
 		07F2E95000974D3D80990B20 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = SOURCE_ROOT; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
+		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
@@ -246,6 +249,7 @@
 				6FB91B0D0ACCB1E100792B04 /* libmpi.dylib in Frameworks */,
 				6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
+				6F1616030B974E67006CA043 /* libDT.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,6 +264,7 @@
 				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
 				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
+				6F1616020B974E67006CA043 /* libDT.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -269,6 +274,7 @@
 		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				6F1616010B974E67006CA043 /* libDT.a */,
 				6F56D55C09EEE7F900C97501 /* libblitz.a */,
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
@@ -987,9 +993,13 @@
 					"$(prefix)/lib",
 					"$(packages)/lib",
 					/usr/share/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;
@@ -1028,8 +1038,12 @@
 					"$(prefix)/lib",
 					"$(packages)/lib",
 					/usr/share/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh_mpi;
@@ -1067,9 +1081,13 @@
 					"$(prefix)/lib",
 					"$(packages)/lib",
 					/usr/share/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;
@@ -1108,9 +1126,13 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(prefix)/lib",
 					"$(packages)/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;
@@ -1142,11 +1164,13 @@
 				HEADER_SEARCH_PATHS = (
 					"$(prefix)/include",
 					"$(packages)/include",
+					/Library/DataTank/DTHeaders,
 				);
 				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
 					"$(prefix)/lib",
 					"$(packages)/lib",
+					/Library/DataTank,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
@@ -1184,9 +1208,13 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(prefix)/lib",
 					"$(packages)/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;

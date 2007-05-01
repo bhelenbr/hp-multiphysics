@@ -112,9 +112,9 @@ class mesh {
       virtual ~mesh();
       
       /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-      enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt};
+      enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
       void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map& bdrymap);
-      int output(const std::string &filename, filetype ftype = binary) const;
+      int output(const std::string &filename, filetype ftype = grid) const;
       void bdry_output(const std::string &filename) const;
       virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 
@@ -298,7 +298,7 @@ class vrtx_bdry : public boundary, public vgeometry_interface {
       int v0;
       
       /* CONSTRUCTOR */
-      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.idprefix +".v" +idprefix; mytype="plain";}
+      vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.idprefix +"_v" +idprefix; mytype="plain";}
       vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
 
       /* OTHER USEFUL STUFF */
@@ -331,7 +331,7 @@ class side_bdry : public boundary, public sgeometry_interface {
       Array<int,1> el;
       
       /* CONSTRUCTOR */
-      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +".s" +idprefix; mytype="plain"; vbdry = -1;}
+      side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
       side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
       
       /* BASIC B.C. STUFF */

@@ -40,7 +40,7 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
 
    nstr.str("");
    nstr << idnum << std::flush;      
-   keyword = idprefix +".v" +nstr.str() + ".type";
+   keyword = idprefix +"_v" +nstr.str() + "_type";
    if (bdrydata.get(keyword,val)) {
       type = vtype::getid(val.c_str());
       if (type < 0)  {
@@ -113,7 +113,7 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
 
    nstr.str("");
    nstr << idnum << std::flush;      
-   keyword = idprefix +".s" +nstr.str() + ".type";
+   keyword = idprefix +"_s" +nstr.str() + "_type";
    if (bdrydata.get(keyword,val)) {
       type = stype::getid(val.c_str());
       if (type < 0)  {

@@ -19,7 +19,7 @@ class r_side_bdry {
       r_side_bdry(r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
       /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
       virtual void output(std::ostream& fout) {
-         fout << base.idprefix << ".r_type: " << mytype << std::endl;         
+         fout << base.idprefix << "_r_type: " << mytype << std::endl;         
       }
       virtual void input(input_map& bdrydata) {}
       virtual void tadvance() {}
@@ -38,7 +38,7 @@ class r_fixed : public r_side_bdry {
          r_side_bdry::input(inmap);
          
          std::string line;
-         inmap.getlinewdefault(base.idprefix+".r_dir",line,"0 1");
+         inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
          std::istringstream data(line);
          data >> dstart >> dstop;
          data.clear();
@@ -46,7 +46,7 @@ class r_fixed : public r_side_bdry {
       
       void output(std::ostream& fout) {
          r_side_bdry::output(fout);
-         fout << base.idprefix << ".r_dir: " << dstart << '\t' << dstop << std::endl;
+         fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
       }
            
       void dirichlet() {         
@@ -93,7 +93,7 @@ class r_translating : public r_fixed {
          r_fixed::input(inmap);
          
          std::string line;
-         if(inmap.getline(base.idprefix+".r_translate",line)) {
+         if(inmap.getline(base.idprefix+"_r_translate",line)) {
             std::istringstream data(line);
             data >> dx[0] >> dx[1];
             data.clear();
@@ -106,7 +106,7 @@ class r_translating : public r_fixed {
       
       void output(std::ostream& fout) {
          r_fixed::output(fout);
-         fout << base.idprefix << ".r_translate: " << dx[0] << '\t' << dx[1] << std::endl;
+         fout << base.idprefix << "_r_translate: " << dx[0] << '\t' << dx[1] << std::endl;
       }
       void tadvance() {
          int n,v0;
@@ -140,7 +140,7 @@ class r_oscillating : public r_fixed {
          r_fixed::input(inmap);
          
          std::string line;
-         if(inmap.getline(base.idprefix+".r_oscillate",line)) {
+         if(inmap.getline(base.idprefix+"_r_oscillate",line)) {
             std::istringstream data(line);
             data >> v0 >> amp >> omega;
             data.clear();
@@ -154,7 +154,7 @@ class r_oscillating : public r_fixed {
       
       void output(std::ostream& fout) {
          r_fixed::output(fout);
-         fout << base.idprefix << ".r_oscillate: " << v0 << '\t' << amp << '\t' << omega << std::endl;
+         fout << base.idprefix << "_r_oscillate: " << v0 << '\t' << amp << '\t' << omega << std::endl;
       }
          
       void tadvance() {

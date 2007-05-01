@@ -18,7 +18,7 @@ block* blocks::getnewblock(int idnum, input_map& blockdata) {
    
 
    sprintf(idntystring,"b%d",idnum);
-   keyword = std::string(idntystring) + ".type";
+   keyword = std::string(idntystring) + "_type";
    if (blockdata.get(keyword,val)) {
       data.str(val);
       data >> type;  

@@ -59,6 +59,7 @@ FLT sim::adirk[DIRK][DIRK] = {{1./GRK4,0.0,0.0,0.0},{GRK4,1./GRK4,0.0,0.0},{C3RK
 FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
 #endif
 #endif
+bool sim::esdirk = false;  // SET FALSE FOR FIRST TIME STEP
 blitz::Array<FLT,1> sim::cfl;  
 bool sim::adapt_output;
    
@@ -794,11 +795,11 @@ void blocks::tadvance() {
    /* STARTUP SEQUENCE */
    switch(sim::tstep) {
       case(1): {
-         sim::adirk[0][0] = 0.0; sim::adirk[0][1] = 0.0;            sim::adirk[0][2] = 0.0;     sim::adirk[0][3] = 0.0;
-         sim::adirk[1][0] = 0.0; sim::adirk[1][1] = 1./sim::GRK3;   sim::adirk[1][2] = 0.0;     sim::adirk[1][3] = 0.0;
-         sim::adirk[2][0] = 0.0; sim::adirk[2][1] = sim::C2RK3-sim::GRK3;     sim::adirk[2][2] = 1./sim::GRK3; sim::adirk[2][3] = 0.0;
-         sim::adirk[3][0] = 0.0; sim::adirk[3][1] = 1.-sim::B2RK3-sim::C2RK3; sim::adirk[3][2] = sim::B2RK3;   sim::adirk[3][3] = 1./sim::GRK3;
+         sim::adirk[0][0] = 1./sim::GRK3;             sim::adirk[0][1] = 0.0;          sim::adirk[0][2] = 0.0;
+         sim::adirk[1][0] = sim::C2RK3-sim::GRK3;     sim::adirk[1][1] = 1./sim::GRK3; sim::adirk[1][2] = 0.0;
+         sim::adirk[2][0] = 1.-sim::B2RK3-sim::C2RK3; sim::adirk[2][1] = sim::B2RK3;   sim::adirk[2][2] = 1./sim::GRK3;
          sim::cdirk[0] = sim::GRK3; sim::cdirk[1] = sim::C2RK3-sim::GRK3; sim::cdirk[2] = 1.0-sim::C2RK3;
+         sim::esdirk = false;
          break;
       }
       case(2): {
@@ -807,6 +808,7 @@ void blocks::tadvance() {
          sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
          sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
          sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+         sim::esdirk = true;
          break;
       }
       default : {
@@ -815,9 +817,10 @@ void blocks::tadvance() {
          sim::adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;      sim::adirk[2][1] = sim::A32RK4;       sim::adirk[2][2] = 1./sim::GRK4; sim::adirk[2][3] = 0.0;
          sim::adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); sim::adirk[3][1] = sim::B2RK4-sim::A32RK4; sim::adirk[3][2] = sim::B3RK4;   sim::adirk[3][3] = 1./sim::GRK4; 
          sim::cdirk[0] = 2.*sim::GRK4; sim::cdirk[1] = sim::C3RK4-2.*sim::GRK4; sim::cdirk[2] = 1.0-sim::C3RK4;
+         sim::esdirk = true;
       }
    }
-   sim::bd[0] = sim::dti*sim::adirk[sim::substep+1][sim::substep+1];
+   sim::bd[0] = sim::dti*sim::adirk[sim::substep +sim::esdirk][sim::substep +sim::esdirk];
    if (sim::dti > 0.0) sim::time += sim::cdirk[sim::substep]/sim::dti;
 #endif
 #endif
@@ -969,7 +972,8 @@ void blocks::allreduce2(int count, msg_type datatype, operations op) {
                      for(j=0;j<count;++j)
                         frcvbuf[j] = fsendbuf(j);
                   }
-#endif            break;
+#endif            
+                  break;
                }
                
                case(max): {

@@ -115,13 +115,13 @@ template<class BASE> class comm_bdry : public BASE {
          
          BASE::input(inmap);
          
-         keyword = BASE::idprefix +".first";
+         keyword = BASE::idprefix +"_first";
          inmap.getwdefault(keyword,first,true);
          
          /* SET GROUP MEMBERSHIP FLAGS */
          maxgroup = 0;
          groupmask = 0;
-         inmap.getlinewdefault(BASE::idprefix + ".group",val,"0 1"); // DEFAULT IS FIRST 2 GROUPS
+         inmap.getlinewdefault(BASE::idprefix + "_group",val,"0 1"); // DEFAULT IS FIRST 2 GROUPS
          data.str(val);
          while(data >> m) {
             groupmask = groupmask|(1<<m);
@@ -139,8 +139,7 @@ template<class BASE> class comm_bdry : public BASE {
             if (!(groupmask&(1<<k))) continue;
             
             nstr.str("");
-            nstr << BASE::idprefix << ".phase" << k << std::flush;
-            mi = inmap.find(keyword);
+            nstr << BASE::idprefix << "_phase" << k << std::flush;
             if (inmap.getline(nstr.str(),val)) {
                data.str(val);
                m = 0;
@@ -157,14 +156,14 @@ template<class BASE> class comm_bdry : public BASE {
       void output(std::ostream& fout) {
          BASE::output(fout);
          
-         fout << BASE::idprefix << ".group" << ": ";
+         fout << BASE::idprefix << "_group" << ": ";
          for(int k=0;k<maxgroup+1;++k)
             if (groupmask&(1<<k)) fout << k << ' ';
          fout << std::endl;  
          
          for(int k=0;k<maxgroup+1;++k) {
             if (groupmask&(1<<k)) {
-               fout << BASE::idprefix << ".phase (not set yet so this is dumb)" << k << ": ";
+               fout << BASE::idprefix << "_phase (not set yet so this is dumb)" << k << ": ";
                for (int m=0;m<nmatch;++m)
                   fout << phase(k)(m) << " ";
                fout << std::endl;
@@ -217,14 +216,23 @@ template<class BASE> class comm_bdry : public BASE {
          /* SWITCHES FOR MASTER_SLAVE */
          switch(type) {
             case(boundary::master_slave): {
-               if (first) 
+               if (first) {
+#ifdef MPDEBUG
+                  *(sim::log) << "master prepared for message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " first:" <<  is_frst()  << "\n";
+#endif     
                   return;
+               }
                else
                   nrecvs_to_post = 1;
                break;
             }
             case(boundary::slave_master): {
-               if (!first) return;
+               if (!first) {
+#ifdef MPDEBUG
+                  *(sim::log) << "slave prepared for message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " first:" <<  is_frst()  << "\n";
+#endif   
+                  return;
+               }
                break;
             }
             case(boundary::symmetric): {
@@ -573,7 +581,7 @@ template<class BASE> class prdc_template : public BASE {
       int& setdir() {return(dir);}
       void output(std::ostream& fout) {
          BASE::output(fout);
-         fout << BASE::idprefix << ".dir" << ": " << dir << std::endl;  
+         fout << BASE::idprefix << "_dir" << ": " << dir << std::endl;  
       }
       void input(input_map& inmap) {
          std::string keyword;
@@ -582,7 +590,7 @@ template<class BASE> class prdc_template : public BASE {
          
          BASE::input(inmap);
 
-         keyword = BASE::idprefix + ".dir";
+         keyword = BASE::idprefix + "_dir";
          mi = inmap.find(keyword);
          if (mi != inmap.end()) {
             data.str(mi->second);
@@ -614,35 +622,35 @@ class symbolic_shape : public curved_analytic_interface {
    protected:
       symbolic_function<2> h, dhdx0, dhdx1;
       FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-         return(h.Eval(pt));
+         return(h.Eval(pt,sim::time));
       } 
       FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-         if (dir) return(dhdx1.Eval(pt));
-         return(dhdx0.Eval(pt));
+         if (dir) return(dhdx1.Eval(pt,sim::time));
+         return(dhdx0.Eval(pt,sim::time));
       }
    public:
       void input(input_map& inmap, std::string idprefix) {   
          curved_analytic_interface::input(inmap,idprefix);
-         if (inmap.find(idprefix +".h.expression") != inmap.end()) {
-            h.init(inmap,idprefix+".h");
+         if (inmap.find(idprefix +"_h_expression") != inmap.end()) {
+            h.init(inmap,idprefix+"_h");
          }
          else {
             *sim::log << "couldn't find shape function for " << idprefix << std::endl;
             exit(1);
          }
          
-         if (inmap.find(idprefix +".dhdx0.expression") != inmap.end()) {
+         if (inmap.find(idprefix +"_dhdx0_expression") != inmap.end()) {
             dhdx0.copy_consts(h);
-            dhdx0.init(inmap,idprefix+".dhdx0");
+            dhdx0.init(inmap,idprefix+"_dhdx0");
          }
          else {
             *sim::log << "couldn't find shape function for " << idprefix << std::endl;
             exit(1);
          }
          
-         if (inmap.find(idprefix +".dhdx1.expression") != inmap.end()) {
+         if (inmap.find(idprefix +"_dhdx1_expression") != inmap.end()) {
             dhdx1.copy_consts(h);
-            dhdx1.init(inmap,idprefix+".dhdx1");
+            dhdx1.init(inmap,idprefix+"_dhdx1");
          }
          else {
             *sim::log << "couldn't find shape function for " << idprefix << std::endl;
@@ -713,25 +721,16 @@ class circle : public curved_analytic_interface {
 
       void output(std::ostream& fout,std::string idprefix) {
          curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".center: " << center[0] << '\t' << center[1] << std::endl;
-         fout << idprefix << ".radius: " << radius << std::endl;
+         fout << idprefix << "_center: " << center[0] << '\t' << center[1] << std::endl;
+         fout << idprefix << "_radius: " << radius << std::endl;
       }
      
        void input(input_map& inmap,std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
          
-         std::string line;
-         if (!inmap.getline(idprefix+".center",line)) {
-            line = "0.0 0.0";
-         }
-         std::istringstream data;
-         data.str(line);
-         for(int i=0;i<mesh::ND;++i) {
-            data >> center[i];
-         }
-         data.clear();
-         
-         inmap.getwdefault(idprefix+".radius",radius,0.5);
+         FLT dflt[2] = {0.0, 0.0};
+         inmap.getwdefault(idprefix+"_center",center,mesh::ND,dflt);
+         inmap.getwdefault(idprefix+"_radius",radius,0.5);
       }
 };  
 
@@ -752,13 +751,13 @@ class ellipse : public curved_analytic_interface {
 
       void output(std::ostream& fout,std::string idprefix) {
          curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".a" << axes(0) << std::endl;
-         fout << idprefix << ".b" << axes(1) << std::endl;
+         fout << idprefix << "_a" << axes(0) << std::endl;
+         fout << idprefix << "_b" << axes(1) << std::endl;
       }
       void input(input_map& inmap, std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
-         inmap.getwdefault(idprefix+".a",axes(0),1.0);
-         inmap.getwdefault(idprefix+".b",axes(1),1.0);
+         inmap.getwdefault(idprefix+"_a",axes(0),1.0);
+         inmap.getwdefault(idprefix+"_b",axes(1),1.0);
       }
 };
 
@@ -822,37 +821,37 @@ class naca : public curved_analytic_interface {
 
       void output(std::ostream& fout,std::string idprefix) {
          curved_analytic_interface::output(fout,idprefix);
-         fout << idprefix << ".sign: " << sign << std::endl;
-         fout << idprefix << ".coeff: ";
+         fout << idprefix << "_sign: " << sign << std::endl;
+         fout << idprefix << "_coeff: ";
          for(int i=0;i<5;++i) 
             fout << coeff[i] << " ";
          fout << std::endl;
-         fout << idprefix << ".scale: " << scale << std::endl;
-         fout << idprefix << ".theta: " << theta << std::endl;
-         fout << idprefix << ".center: " << pos << std::endl;
+         fout << idprefix << "_scale: " << scale << std::endl;
+         fout << idprefix << "_theta: " << theta << std::endl;
+         fout << idprefix << "_center: " << pos << std::endl;
       }
      
        void input(input_map& inmap,std::string idprefix) {
          curved_analytic_interface::input(inmap,idprefix);
 
          FLT thickness;
-         inmap.getwdefault(idprefix+".sign",sign,1.0);
-         inmap.getwdefault(idprefix+".thickness",thickness,0.12);
-         inmap.getwdefault(idprefix+".scale",scale,1.0);
-         inmap.getwdefault(idprefix+".theta",theta,0.0);
+         inmap.getwdefault(idprefix+"_sign",sign,1.0);
+         inmap.getwdefault(idprefix+"_thickness",thickness,0.12);
+         inmap.getwdefault(idprefix+"_scale",scale,1.0);
+         inmap.getwdefault(idprefix+"_theta",theta,0.0);
          scale = 1./scale;
          theta = theta*M_PI/180.0;
          
          std::string linebuf;
          istringstream datastream;
-         inmap.getwdefault(idprefix+".coeff",linebuf,std::string("1.4845 -0.63 -1.758 1.4215 -0.5180"));
+         inmap.getwdefault(idprefix+"_coeff",linebuf,std::string("1.4845 -0.63 -1.758 1.4215 -0.5180"));
          datastream.str(linebuf);
          for(int i=0;i<5;++i)
             datastream >> coeff[i];
          datastream.clear();
          coeff *= thickness;
          
-         inmap.getwdefault(idprefix+".center",linebuf,std::string("0.0 0.0"));
+         inmap.getwdefault(idprefix+"_center",linebuf,std::string("0.0 0.0"));
          datastream.str(linebuf);
          for(int i=0;i<mesh::ND;++i)
             datastream >> pos(i);

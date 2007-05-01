@@ -232,7 +232,7 @@ namespace sim {
    const int nadapt = 1; /**< number of backwards difference steps that require adaptation */
    const int nhist = 4; /**< number of backwards difference steps to be stored during a time step */
    const int stepsolves = 3; /**< Number of DIRK implicit solutions required */
-   const bool esdirk = true; /**< Flag to be set when using an explicit 1'st stage */
+   extern bool esdirk; /**< Flag to be set when using an explicit 1'st stage */
    //@}
 #endif
 

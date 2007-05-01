@@ -14,7 +14,7 @@ class block {
       std::string idprefix; 
       int idnum;
       typedef int ctrl;
-      static const ctrl begin = -1, stay = 0, advance = 1, advance1 = 3, advance2 = 7, stop = 15;
+      static const ctrl begin = -1, stay = 0, advance = 1, advance1 = 3, advance2 = 7, advance3  = 15, stop = 31;
       block(int idin) : idnum(idin) {
          char buffer[100];
          std::string keyname;

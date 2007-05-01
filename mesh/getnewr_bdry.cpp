@@ -31,7 +31,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
    r_side_bdry *temp;  
    int type = 2;
 
-   mi = in_map.find(sbdry(bnum)->idprefix + ".r_type");
+   mi = in_map.find(sbdry(bnum)->idprefix + "_r_type");
    if (mi != in_map.end()) {
       type = r_stype::getid((*mi).second.c_str());
       if (type < 0)  {
@@ -48,11 +48,11 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
       } else if (sbdry(bnum)->mytype == "prdc") {
          type = r_stype::fixed;
          int dir;
-         in_map.getwdefault(sbdry(bnum)->idprefix + ".dir",dir,0);
+         in_map.getwdefault(sbdry(bnum)->idprefix + "_dir",dir,0);
          if (dir == 0)
-            in_map[sbdry(bnum)->idprefix+".r_dir"] = "0 0";
+            in_map[sbdry(bnum)->idprefix+"_r_dir"] = "0 0";
          else 
-            in_map[sbdry(bnum)->idprefix+".r_dir"] = "1 1";
+            in_map[sbdry(bnum)->idprefix+"_r_dir"] = "1 1";
       }
       else {
          type = r_stype::fixed;

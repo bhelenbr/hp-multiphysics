@@ -5,6 +5,12 @@
 #include "mesh.h"
 #include <bstream.h>
 
+// #define DATATANK
+
+#ifdef DATATANK
+#include <DTSource.h>
+#endif
+
 using namespace std;
 
 int mesh::output(const std::string &filename, mesh::filetype filetype) const {
@@ -304,7 +310,32 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
          bout.close();
          
          break;
+         
+      case (datatank): {
+#ifdef DATATANK
+         DTMutableIntArray dt_tvrtx(3,ntri);
+         DTMutableDoubleArray dt_vrtx(2,nvrtx);
 
+         for (int tind=0;tind<ntri;++tind)
+            for (int j=0;j<3;++j)
+               dt_tvrtx(j,tind) = td(tind).vrtx(j);
+
+         for (int vind=0;vind<nvrtx;++vind)
+            for (int j=0;j<2;++j)
+               dt_vrtx(j,vind) = vrtx(vind)(j);
+               
+         DTTriangularGrid2D dt_grid(dt_tvrtx,dt_vrtx);
+         
+         std::string outputFilename(filename +".dt");
+         DTDataFile outputFile(outputFilename.c_str(),DTFile::NewReadWrite);
+         // Output from computation
+         Write(outputFile,"grid",dt_grid);
+         outputFile.Save("TriangularGrid2D","Seq_grid");
+ #else
+         *sim::log << "Not supported on this platform\n";
+#endif
+         break;
+      }
          
       case(vlength): {
          fnmapp = filename +".vlngth";

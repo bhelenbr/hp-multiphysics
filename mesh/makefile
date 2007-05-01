@@ -1,3 +1,45 @@
+ifeq (,$(filter _%,$(notdir $(CURDIR))))
+
+.SUFFIXES:
+
+MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
+
+all: libmesh.a libmesh_mpi.a mesh mesh_mpi
+
+libmesh.a:
+	+@[ -d  _serial ] || mkdir -p _serial
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+
+.PHONY: libmesh.a
+
+mesh:
+	+@[ -d  _serial ] || mkdir -p _serial
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+
+.PHONY: mesh
+
+libmesh_mpi.a:
+	+@[ -d  _mpi ] || mkdir -p _mpi
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+
+.PHONY: libmesh_mpi.a
+
+mesh_mpi:
+	+@[ -d  _mpi ] || mkdir -p _mpi
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+
+.PHONY: mesh_mpi
+
+makefile : ;
+%.mk :: ;
+
+.PHONY: clean
+clean:
+	rm -rf _serial _mpi
+else
+
+VPATH = ../
+
 OBJ = coarsen.o copy.o getnewblock.o insert.o out_mesh.o r_mesh.o \
 tprims.o collapse.o findmatch.o getnewr_bdry.o rebay.o setup.o\
 triangulate.o boundary.o connect.o getnewbdry.o in_mesh.o meshutilities.o \
@@ -9,6 +51,7 @@ DEFINES = -DMETIS $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lm -lmuparser -lmetis
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+CXXMPI = ${CXX}
 
 ### Begin machine dependent
 
@@ -16,15 +59,17 @@ CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 ## Machine specific for Darwin
 #AR = libtool
 #ARFLAGS = -o
-#CPPFLAGS += -O3
+CPPFLAGS += -O3
 
 ## Linux:
 ##  Machine specific for Linux
-CXX=icpc #(cares)
+#CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
 #CPPFLAGS += -O3
-CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
+#CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
+#LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
+CPPFLAGS += -O3 -I/opt/mpich/myrinet/gnu/include #(cares)
+CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
@@ -39,13 +84,10 @@ LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -l
 
 CPPFLAGS += $(DEFINES)
 
-all: libmesh.a mesh
-all_mpi: libmesh_mpi.a mesh_mpi
-
 libmesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libmesh.a $(HOME)/Codes/lib/
-	cp -f *.h $(HOME)/Codes/include/
+	cp -f ../*.h $(HOME)/Codes/include/
 	
 mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
@@ -54,8 +96,10 @@ mesh: $(OBJ) $(MAINOBJ)
 libmesh_mpi.a: $(OBJ) 
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libmesh_mpi.a $(HOME)/Codes/lib/
-	cp -f *.h $(HOME)/Codes/include/
+	cp -f ../*.h $(HOME)/Codes/include/
 
 mesh_mpi: $(OBJ) $(MAINOBJ) 
-	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
+	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 	mv mesh_mpi $(HOME)/bin
+
+ endif

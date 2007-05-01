@@ -51,7 +51,7 @@ class boundary {
       }
       virtual void alloc(int n) {}
       virtual void output(std::ostream& fout) {
-         fout << idprefix << ".type: " << mytype << std::endl;         
+         fout << idprefix << "_type: " << mytype << std::endl;         
       }
       virtual void input(input_map& bdrydata) {}
       

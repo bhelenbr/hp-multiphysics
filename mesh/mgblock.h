@@ -98,7 +98,7 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    /* LOAD NUMBER OF GRIDS */
    input.getwdefault("ngrid",ngrid,1);
    
-   keyword = idprefix + ".adapt";
+   keyword = idprefix + "_adapt";
    if (!input.get(keyword,adapt_flag)) {
       input.getwdefault("adapt",adapt_flag,false);
    }
@@ -109,18 +109,18 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    fv_to_ct.resize(ngrid);
    
    FLT grwfac;
-   keyword = idprefix + ".growth factor";
+   keyword = idprefix + "_growth factor";
    if (!input.get(keyword,grwfac)) {
       input.getwdefault("growth factor",grwfac,2.0);
    }
    
    int filetype;
-   keyword = idprefix + ".filetype";
+   keyword = idprefix + "_filetype";
    if (!input.get(keyword,filetype)) {
       input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
    }
    
-   keyword = idprefix + ".mesh";
+   keyword = idprefix + "_mesh";
    if (!input.get(keyword,filename)) {
       if (input.get("mesh",filename)) {
          filename = filename +"_" +idprefix;
@@ -133,12 +133,12 @@ template<class GRD> void mgrid<GRD>::init(input_map& input) {
    grd[0].idprefix = idprefix;
    grd[0].mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,input);
    
-   keyword = idprefix + ".tolerance";
+   keyword = idprefix + "_tolerance";
    if (!input.get(keyword,tolerance)) {
       input.getwdefault("tolerance",tolerance,1.9);
    }
    
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    input[keyword] = "0";
    grd[0].init(input,&gstorage);
    grd[0].setinfo();

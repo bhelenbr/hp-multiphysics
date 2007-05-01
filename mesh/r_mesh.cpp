@@ -14,22 +14,22 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
    std::string filename;
    int coarse,ival;
       
-   keyword = idprefix + ".coarse";
+   keyword = idprefix + "_coarse";
    if (!input.get(keyword,coarse)) {
       *sim::log << "#Error: not sure whether to initialize for r_mesh for multigrid" << std::endl;
    }
    
-   keyword = idprefix + ".r_fadd";
+   keyword = idprefix + "_r_fadd";
    if (!input.get(keyword,fadd)) {
       input.getwdefault("r_fadd",fadd,1.0);
    }
 
-   keyword = idprefix + ".r_cfl";
+   keyword = idprefix + "_r_cfl";
    if (!input.get(keyword,r_cfl)) {
       input.getwdefault("r_cfl",r_cfl,0.5);
    }
    
-   keyword = idprefix + ".r_output_type";
+   keyword = idprefix + "_r_output_type";
    if (input.get(keyword,ival)) {
       output_type = static_cast<mesh::filetype>(ival);
    }
