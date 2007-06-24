@@ -89,26 +89,16 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    log2pmax = log2p;
    
    TinyVector<std::string,3> output_purposes;
-   TinyVector<filetype,3> defaults;
+   TinyVector<int,3> defaults;
    output_purposes(0) = "display_type";
    defaults(0) = tri_hp::tecplot;
    output_purposes(1) = "restart_type";
    defaults(1) = tri_hp::text;
    output_purposes(2) = "debug_type";
    defaults(2) = tri_hp::tecplot;
-   for(int i=0 ;i<3;++i) {
-      keyword = idprefix + "_" + output_purposes(i);
-      if (inmap.get(keyword,ival)) {
-         output_type(i) = static_cast<filetype>(ival);
-      }
-      else {
-         if (inmap.get(output_purposes(i),ival)) {
-            output_type(i) = static_cast<filetype>(ival);
-         }
-         else {
-            output_type(i) = defaults(i);
-         }
-      }
+   for(int i=0;i<3;++i) {
+      if (!inmap.get(idprefix + "_" + output_purposes(i),ival)) inmap.getwdefault(output_purposes(i),ival,defaults(i));
+      output_type(i) = static_cast<filetype>(ival);
    }
          
    /* Check that static work arrays are big enough */
@@ -154,7 +144,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
    /* NO MORE ADAPT STORAGE AFTER HERE */
    /************************************/
    if (adapt_storage) {
-      for(i=1;i<sim::nadapt+1;++i) {
+      for(i=1;i<sim::nadapt;++i) {
          ugbd(i).v.resize(maxvst,NV);
          ugbd(i).s.resize(maxvst,sm0,NV);
          ugbd(i).i.resize(maxvst,im0,NV);

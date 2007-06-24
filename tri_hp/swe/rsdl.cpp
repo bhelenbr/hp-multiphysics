@@ -23,6 +23,7 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
    TinyVector<FLT,ND> vel,pt;
    TinyVector<FLT,NV> tres;
+   FLT drag;
    block::ctrl state;
    
    if (ctrl_message == block::begin) {
@@ -189,12 +190,21 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
                         cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
                         pt(0) = crd(0)(i,j);
                         pt(1) = crd(1)(i,j);
-                                                
+                        
+                        drag = gbl_ptr->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
+                        
                         /* UNSTEADY TERMS */
-                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j)) +dugdt(log2p,tind,0)(i,j);
-                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
+                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
                         res(NV-1)(i,j) = cjcb*sim::bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
-                      }
+                        
+                        /* TEMPORARY TO MAINTAIN FREE-STREAM SOLUTION */
+//                        TinyVector<FLT,mesh::ND> xtemp;
+//                        xtemp(0) = 0.0;
+//                        xtemp(1) = 0.0;
+//                        res(0)(i,j) += cjcb*(-gbl_ptr->cd*pow(gbl_ptr->ibc->f(0,xtemp),2));
+//                        res(1)(i,j) += cjcb*(-(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j)))*gbl_ptr->ibc->f(0,xtemp);                        
+                     }
                   }
                   for(n=0;n<NV;++n)
                      basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
@@ -298,11 +308,21 @@ block::ctrl tri_hp_swe::rsdl(block::ctrl ctrl_message, int stage) {
                      for(j=0;j<lgpn;++j) {
                         pt(0) = crd(0)(i,j);
                         pt(1) = crd(1)(i,j);
-                                                
+
+                        drag = gbl_ptr->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
                         /* UNSTEADY TERMS */
-                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j)) +dugdt(log2p,tind,0)(i,j);
-                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
+                        res(0)(i,j) = cjcb*(sim::bd[0]*u(0)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(0,pt) -(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(sim::bd[0]*u(1)(i,j) -u(NV-1)(i,j)*sim::g*gbl_ptr->bathy->f(1,pt) +(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                        
                         res(NV-1)(i,j) = cjcb*sim::bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+              
+                        
+                        /* TEMPORARY TO MAINTAIN FREE-STREAM SOLUTION */
+//                        TinyVector<FLT,mesh::ND> xtemp;
+//                        xtemp(0) = 0.0;
+//                        xtemp(1) = 0.0;
+//                        res(0)(i,j) += cjcb*(-gbl_ptr->cd*pow(gbl_ptr->ibc->f(0,xtemp),2));
+//                        res(1)(i,j) += cjcb*(-(gbl_ptr->f0 +gbl_ptr->beta*crd(1)(i,j)))*gbl_ptr->ibc->f(0,xtemp);    
+                        
                      }
                   }                  
                   for(n=0;n<NV;++n)

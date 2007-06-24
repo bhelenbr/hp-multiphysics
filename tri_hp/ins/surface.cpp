@@ -6,6 +6,8 @@
 //#define MPDEBUG
 //#define DEBUG
 
+#define BODYFORCE
+
 using namespace bdry_ins;
 
 // extern FLT body[ND];
@@ -573,7 +575,6 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
             surf_gbl->vres(i)(0) = temp;
          }
          
-         
          /* SOLVE FOR SIDE MODES */
          if (basis::tri(x.log2p).sm > 0) {
             for(indx = 0; indx<base.nel; ++indx) {
@@ -664,10 +665,10 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
             hsm = h/(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1));
                   
             dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1))/hsm;
-#ifndef BODY
+#ifndef BODYFORCE
             strss =  4.*surf_gbl->sigma/(hsm*hsm) +fabs(drho*sim::g*nrm(1)/h);
 #else
-            strss =  4.*surf_gbl->sigma/(hsm*hsm) +fabs(drho*(-body(0)*nrm(0) +(sim::g-body(1))*nrm(1))/h);
+            strss =  4.*surf_gbl->sigma/(hsm*hsm) +fabs(drho*(-sim::body(0)*nrm(0) +(sim::g-sim::body(1))*nrm(1))/h);
 #endif
 
             gam1 = 3.0*qmax +(0.5*hsm*sim::bd[0] + 2.*nu1/hsm)*(0.5*hsm*sim::bd[0] + 2.*nu1/hsm);

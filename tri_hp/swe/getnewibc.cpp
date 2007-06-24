@@ -112,7 +112,7 @@ init_bdry_cndtn *tri_hp_swe::getnewbathy(input_map& inmap) {
 	keyword = std::string(idprefix) + "_bathy";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("bathy",ibcname)) {
-			*sim::log << "couldn't find initial condition type" << std::endl;
+			*sim::log << "couldn't find bathy  type" << std::endl;
 		}
 	}
 	

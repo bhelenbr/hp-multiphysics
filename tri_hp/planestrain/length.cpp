@@ -29,6 +29,7 @@ block::ctrl tri_hp_ps::length(block::ctrl ctrl_message) {
    
    switch(excpt) {
       case(0): {
+         gbl_ptr->eanda = 0.0;
          for(tind=0;tind<ntri;++tind) {
             q = 0.0;
             p = 0.0;

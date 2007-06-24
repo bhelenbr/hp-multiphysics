@@ -248,9 +248,9 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                         res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));
 #endif
 
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
+#ifdef BODYFORCE
+                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
+                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
 #endif
 
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -502,9 +502,9 @@ block::ctrl tri_hp_lvlset::rsdl(block::ctrl ctrl_message, int stage) {
                         res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*mu(i,j)*u(0)(i,j)/crd(0)(i,j));
 #endif
 
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
+#ifdef BODYFORCE
+                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
+                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
 #endif
                         df(0,0)(i,j) = mu(i,j)*RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                                               +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));

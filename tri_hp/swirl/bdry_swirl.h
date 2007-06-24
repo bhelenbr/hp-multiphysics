@@ -15,7 +15,6 @@
  *  Copyright 2005 __MyCompanyName__. All rights reserved.
  *
  */
-#include <myblas.h>
 
 #include "tri_hp_swirl.h"
 #include "../ins/bdry_ins.h"

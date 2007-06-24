@@ -169,43 +169,6 @@ FLT f1(int n, FLT x, FLT y) {
 }
 #endif
 
-
-#ifdef NOZZLE
-FLT f1(int n, FLT x, FLT y) { 
-   switch(n) {
-      case(0):
-         return(0.0);
-      case(1):
-         if (y==0.0)
-            return(-pow(1.0-x,1./7.));
-         else
-            return(0.0);
-      case(2):
-         return(0.0);
-   }
-   return(0.0);
-}
-#endif
-
-#ifdef BOUNDARY_LAYER
-FLT f1(int n, FLT x, FLT y) {   
-   
-   switch(n) {
-      case(0):
-         if (y < 1.0e-4) 
-            return(1.0 -(1-y/1.0e-4)*(1-y/1.0e-4));
-         else
-            return(1.0);
-      case(1):
-         return(0.0);
-      case(2):
-         return(0.0);
-   }
-   return(0.0);
-}
-#endif
-
-
    class stokes_drop_gas : public init_bdry_cndtn {
       private:
          FLT outer_limit;
@@ -472,6 +435,48 @@ FLT f1(int n, FLT x, FLT y) {
          }
    };
    
+   
+   class unsteady_body_force : public mesh_mover {
+      protected:
+        TinyVector<symbolic_function<1>,2> fcn;
+
+      public:
+         unsteady_body_force(tri_hp_ins& xin) : mesh_mover(xin) {}
+
+         void init(input_map& input, std::string idnty) {            
+            std::string keyword,val;
+            std::ostringstream nstr;
+      
+            for(int n=0;n<2;++n) {
+               nstr.str("");
+               nstr << idnty << "_forcing" << n << std::flush;
+               if (input.find(nstr.str() +"_expression") != input.end()) {
+                  fcn(n).init(input,nstr.str());
+               }
+               else {
+                  nstr.str("");
+                  nstr << "forcing" << n << std::flush;
+                  if (input.find(nstr.str() +"_expression") != input.end()) {
+                     fcn(n).init(input,nstr.str());
+                  }
+                  else {
+                     *sim::log << "couldn't find forcing function\n";
+                     exit(1);
+                  }
+               }
+            }
+         }
+         mesh_mover* create(tri_hp& xin) { return new unsteady_body_force(dynamic_cast<tri_hp_ins&>(xin));}         
+
+         block::ctrl tadvance(block::ctrl ctrl_message) {
+            if (ctrl_message == block::begin) {
+               sim::body(0) = fcn(0).Eval(0,sim::time);
+               sim::body(1) = fcn(1).Eval(0,sim::time);
+            }
+            return(block::stop);
+         }
+   };
+   
    FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
    
    class translating_drop : public parameter_changer {
@@ -562,8 +567,8 @@ FLT f1(int n, FLT x, FLT y) {
 
    class mesh_mover_type {
       public:
-         const static int ntypes = 2;
-         enum ids {translating_drop,parameter_changer};
+         const static int ntypes = 3;
+         enum ids {translating_drop,parameter_changer,unsteady_body_force};
          const static char names[ntypes][40];
          static int getid(const char *nin) {
             int i;
@@ -572,32 +577,8 @@ FLT f1(int n, FLT x, FLT y) {
             return(-1);
          }
    };
-   const char mesh_mover_type::names[ntypes][40] = {"translating_drop","parameter_changer"};
+   const char mesh_mover_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force"};
 
-#ifdef UNSTEADY_DROP
-FLT f1(int n, FLT x, FLT y) {
-   FLT r;
-   
-   r = sqrt(x*x +y*y);
-   
-   switch(n) {
-      case(0):
-         return(0.0);
-      case(1):
-         // return(lam+amp*sin(2.*M_PI*sim::time/theta));
-         if (sim::time/lam < 1.0)
-            return((1.-cos(M_PI*sim::time/lam))*0.5*amp);
-         else
-            return(amp);
-      case(2):
-         if (sim::time/lam < 1.0)
-            return(-y*M_PI/lam*sin(M_PI*sim::time/lam)*0.5*amp);
-         else
-            return(0.0);
-   }
-   return(0.0);
-}
-#endif
 
 #ifdef TWOLAYER
 
@@ -732,48 +713,6 @@ double f1(int n, double x, double y) {
 }
 #endif
 
-#ifdef TWOSPHERE
-FLT f1(int n, FLT x, FLT y) {
-   double r = sqrt(x*x+y*y);
-   
-   switch(n) {
-      case(0):
-         if (r < 31.0*12.0*2.54/100.0) 
-            return(30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI/lam*sim::time)*x/r);
-         break;
-      case(1):
-         if (r < 31.0*12.0*2.54/100.0) 
-            return(30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI/lam*sim::time)*y/r);
-         break;
-      case(2):
-         return(rhox[0]*body[1]*(y-9.9690870000e+00));
-         break;
-   }
-
-   return(0.0);
-}
-#endif
-
-#ifdef COLUMN
-FLT f1(int n, FLT x, FLT y) {
-   FLT wallv,position,rad;
-   
-   switch(n) {
-      case(0):
-         rad = 30.75*12.0*2.54/100.0*amp*(1-cos(2.*M_PI*sim::time/lam));
-         wallv = 30.75*12.0*2.54/100.0*amp*2.*M_PI/lam*sin(2.*M_PI*sim::time/lam);
-         position = (x-rad)/(1.277112e+00-rad);
-         return((1.0-position)*wallv);
-      case(1):
-         return(0.0);
-         // return(1.0  +0.1*(y +1.064971e+01)*(1.277112e+00 -x)*x);  
-      case(2):
-         return(rhox[0]*body[1]*y);
-   }
-
-   return(0.0);
-}
-#endif
 
    class ibc_type {
       public:
@@ -858,6 +797,10 @@ mesh_mover *tri_hp_ins::getnewmesh_mover(input_map& inmap) {
       }
       case ibc_ins::mesh_mover_type::parameter_changer: {
          mesh_mover *temp = new ibc_ins::parameter_changer(*this);
+         return(temp);
+      }
+      case ibc_ins::mesh_mover_type::unsteady_body_force: {
+         mesh_mover *temp = new ibc_ins::unsteady_body_force(*this);
          return(temp);
       }
       default: {

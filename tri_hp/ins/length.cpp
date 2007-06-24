@@ -28,6 +28,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
    
    switch(excpt) {
       case(0): {
+         gbl_ptr->eanda = 0.0;
          for(tind=0;tind<ntri;++tind) {
             q = 0.0;
             p = 0.0;
@@ -159,7 +160,7 @@ block::ctrl tri_hp_ins::length(block::ctrl ctrl_message) {
          for(i=0;i<nvrtx;++i) {
             fscr1(i) = pow(fscr1(i)/(norm*vd(i).nnbor*trncerr),1./(basis::tri(log2p).p+1+ND));
             vlngth(i) /= fscr1(i);      
-//            vlngth(i) /= 2.0;   For testing
+//            vlngth(i) *= 2.0;  // For testing
 
 #ifdef THREELAYER
 #define TRES 0.025/THREELAYER

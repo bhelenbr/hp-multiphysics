@@ -32,6 +32,7 @@ namespace bdry_ins {
    class generic : public hp_side_bdry {
       protected:
          tri_hp_ins &x;
+         Array<FLT,1> fluxstorage;
          bool report_flag;
       
       public:
@@ -42,6 +43,10 @@ namespace bdry_ins {
             hp_side_bdry::init(input,gbl_in);
             std::string keyword = base.idprefix +"_report";
             input.getwdefault(keyword,report_flag,false);
+            
+            if (report_flag) {
+               fluxstorage.resize(x.NV);
+            }
          }
          void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 };
@@ -508,9 +513,15 @@ namespace bdry_ins {
             surface_outflow_endpt::init(inmap,gbl_in);
 
             keyword = base.idprefix + "_vertical";
-            inmap.getwdefault(keyword,vertical,true);    
-            
-            position = x.vrtx(base.v0)(1-vertical);
+            inmap.getwdefault(keyword,vertical,true);
+                
+            keyword = base.idprefix +"_position";
+            if (!inmap.get(keyword,position)) {
+               position = x.vrtx(base.v0)(1-vertical);
+               nstr.str("");
+               nstr << position;
+               inmap[keyword] = nstr.str();
+            }
          }
             
          void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {

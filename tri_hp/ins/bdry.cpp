@@ -24,99 +24,116 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
       case(tri_hp::tecplot): {
          if (!report_flag) return;
          
-         drag = 0.0;
-         flux = 0.0;
-         moment = 0.0;
-         circumference = 0.0;
-         circulation = 0.0;
-         dflux = 0.0;
-                  
+//         drag = 0.0;
+//         flux = 0.0;
+//         moment = 0.0;
+//         circumference = 0.0;
+//         circulation = 0.0;
+//         dflux = 0.0;
+//                  
+//         for(ind=0; ind < base.nel; ++ind) {
+//            sind = base.el(ind);
+//            tind = x.sd(sind).tri(0);      
+//            
+//            for(sd=0;sd<3;++sd)
+//               if (x.td(tind).side(sd) == sind) break;
+//            assert(sd != 3);
+//            
+//            x.crdtocht(tind);
+//            for(m=basis::tri(x.log2p).bm;m<basis::tri(x.log2p).tm;++m)
+//               for(n=0;n<mesh::ND;++n)
+//                  x.cht(n,m) = 0.0;
+//                  
+//            for(n=0;n<mesh::ND;++n)
+//               basis::tri(x.log2p).proj_side(sd,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+//
+//            x.ugtouht(tind);
+//            for(n=0;n<x.NV;++n)
+//               basis::tri(x.log2p).proj_side(sd,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+//
+//            for (i=0;i<basis::tri(x.log2p).gpx;++i) {
+//               circumference += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+//               x.cjcb(0,i) = x.gbl_ptr->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+//               
+//               /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
+//               /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
+//               visc[0][0][0][0] =  x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+//               visc[0][0][1][1] =  x.cjcb(0,i)*(2.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+//               visc[0][0][0][1] = -x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+//#define        viscI0II0II1II0I visc[0][0][0][1]
+//
+//               visc[1][1][0][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
+//               visc[1][1][1][1] =  x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+//               visc[1][1][0][1] = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+//#define        viscI1II1II1II0I visc[1][1][0][1]
+//               
+//               visc[0][1][0][0] = -x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
+//               visc[0][1][1][1] = -x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
+//               visc[0][1][0][1] =  x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i);
+//               visc[0][1][1][0] =  x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i);
+//
+//               /* OTHER SYMMETRIES    */            
+//#define        viscI1II0II0II0I visc[0][1][0][0]
+//#define        viscI1II0II1II1I visc[0][1][1][1]
+//#define        viscI1II0II0II1I visc[0][1][1][0]
+//#define        viscI1II0II1II0I visc[0][1][0][1]
+//
+//               /* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
+//               visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
+//               visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
+//
+//               for (n=mesh::ND;n<x.NV-1;++n) 
+//                  dflux(n) -= x.gbl_ptr->D(n)/x.gbl_ptr->mu*basis::tri(x.log2p).wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
+//
+//               drag(0) -=   basis::tri(x.log2p).wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
+//                           -viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
+//                           -visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
+//               drag(1) -=   basis::tri(x.log2p).wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+//                           -viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
+//                           -viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
+//                           
+//                           
+//               norm(0) = x.dcrd(1,0)(0,i);
+//               norm(1) = -x.dcrd(0,0)(0,i);            
+//               for(n=0;n<mesh::ND;++n) {
+//                  mvel(n) = sim::bd[0]*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+//#ifdef DROP
+//                  mvel(n) += tri_hp_ins::mesh_ref_vel(n);
+//#endif
+//               }
+//               
+//               circulation += -norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1));
+//               
+//               convect = basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
+//               flux(2) -= convect;
+//               flux(0) -= x.u(0)(0,i)*convect;
+//               flux(1) -= x.u(1)(0,i)*convect;
+//            }				
+//         }
+//         fout << base.idprefix << " circumference: " << circumference << std::endl;
+//         fout << base.idprefix << " drag: " << drag << std::endl;
+//         fout << base.idprefix << " flux: " << flux << std::endl; 
+//         fout << base.idprefix << " circulation: " << circulation << std::endl;
+//         for (n=mesh::ND;n<x.NV-1;++n)
+//            fout << base.idprefix << " diffusive flux " << n << ": " << dflux(n) << std::endl;
+         /* OUTPUT AUXILIARY FLUXES */
+         fout << base.idprefix << "fluxes: " << fluxstorage << std::endl;
+         break;
+      }
+            
+      case(tri_hp::auxiliary): {
+         if (!report_flag) return;            
+         
+         /* AUXILIARY FLUX METHOD */
+         int v0;
+         fluxstorage = 0.0;
          for(ind=0; ind < base.nel; ++ind) {
             sind = base.el(ind);
-            tind = x.sd(sind).tri(0);      
-            
-            for(sd=0;sd<3;++sd)
-               if (x.td(tind).side(sd) == sind) break;
-            assert(sd != 3);
-            
-            x.crdtocht(tind);
-            for(m=basis::tri(x.log2p).bm;m<basis::tri(x.log2p).tm;++m)
-               for(n=0;n<mesh::ND;++n)
-                  x.cht(n,m) = 0.0;
-                  
-            for(n=0;n<mesh::ND;++n)
-               basis::tri(x.log2p).proj_side(sd,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
-
-            x.ugtouht(tind);
-            for(n=0;n<x.NV;++n)
-               basis::tri(x.log2p).proj_side(sd,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
-
-            for (i=0;i<basis::tri(x.log2p).gpx;++i) {
-               circumference += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
-               x.cjcb(0,i) = x.gbl_ptr->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
-               
-               /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-               /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-               visc[0][0][0][0] =  x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-               visc[0][0][1][1] =  x.cjcb(0,i)*(2.*x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-               visc[0][0][0][1] = -x.cjcb(0,i)*(2.*x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-#define        viscI0II0II1II0I visc[0][0][0][1]
-
-               visc[1][1][0][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,1)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,1)(0,i));
-               visc[1][1][1][1] =  x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-               visc[1][1][0][1] = -x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +2.*x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-#define        viscI1II1II1II0I visc[1][1][0][1]
-               
-               visc[0][1][0][0] = -x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,1)(0,i);
-               visc[0][1][1][1] = -x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,0)(0,i);
-               visc[0][1][0][1] =  x.cjcb(0,i)*x.dcrd(0,1)(0,i)*x.dcrd(1,0)(0,i);
-               visc[0][1][1][0] =  x.cjcb(0,i)*x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i);
-
-               /* OTHER SYMMETRIES    */            
-#define        viscI1II0II0II0I visc[0][1][0][0]
-#define        viscI1II0II1II1I visc[0][1][1][1]
-#define        viscI1II0II0II1I visc[0][1][1][0]
-#define        viscI1II0II1II0I visc[0][1][0][1]
-
-               /* DIFFUSIVE FLUXES ( FOR EXTRA VARIABLES) */
-               visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
-               visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
-
-               for (n=mesh::ND;n<x.NV-1;++n) 
-                  dflux(n) -= x.gbl_ptr->D(n)/x.gbl_ptr->mu*basis::tri(x.log2p).wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
-
-               drag(0) -=   basis::tri(x.log2p).wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
-                           -viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
-                           -visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-               drag(1) -=   basis::tri(x.log2p).wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
-                           -viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
-                           -viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
-                           
-                           
-               norm(0) = x.dcrd(1,0)(0,i);
-               norm(1) = -x.dcrd(0,0)(0,i);            
-               for(n=0;n<mesh::ND;++n) {
-                  mvel(n) = sim::bd[0]*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
-#ifdef DROP
-                  mvel(n) += tri_hp_ins::mesh_ref_vel(n);
-#endif
-               }
-               
-               circulation += -norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1));
-               
-               convect = basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
-               flux(2) -= convect;
-               flux(0) -= x.u(0)(0,i)*convect;
-               flux(1) -= x.u(1)(0,i)*convect;
-            }				
+            v0 = x.sd(sind).vrtx(0);
+            fluxstorage += x.gbl_ptr->res.v(v0,Range::all());
          }
-         fout << base.idprefix << " circumference: " << circumference << std::endl;
-         fout << base.idprefix << " drag: " << drag << std::endl;
-         fout << base.idprefix << " flux: " << flux << std::endl; 
-         fout << base.idprefix << " circulation: " << circulation << std::endl;
-         for (n=mesh::ND;n<x.NV-1;++n)
-            fout << base.idprefix << " diffusive flux " << n << ": " << dflux(n) << std::endl;
-            
+         v0 = x.sd(sind).vrtx(1);
+         fluxstorage += x.gbl_ptr->res.v(v0,Range::all());
       }
    }
    

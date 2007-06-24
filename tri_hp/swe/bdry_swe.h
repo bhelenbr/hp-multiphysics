@@ -25,12 +25,7 @@
 namespace bdry_swe {
 	
 	 class wall : public bdry_ins::neumann {      
-      void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {
-         Array<FLT,1> ub(x.NV);
-         
-         for(int n=0;n<x.NV;++n)
-            ub(n) = x.gbl_ptr->ibc->f(n,xpt);
-         
+      void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {         
          flx(x.NV-1) = 0.0;
          
          /* X&Y MOMENTUM */
@@ -39,7 +34,7 @@ namespace bdry_swe {
         
          /* EVERYTHING ELSE */
           for (int n=mesh::ND;n<x.NV-1;++n)
-            flx(n) = flx(x.NV-1)*ub(n);
+            flx(n) = 0.0;
          
          return;
       }
@@ -48,5 +43,16 @@ namespace bdry_swe {
          wall(tri_hp_swe &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "wall";}
          wall(const wall& inbdry, tri_hp_swe &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
          wall* create(tri_hp& xin, side_bdry &bin) const {return new wall(*this,dynamic_cast<tri_hp_swe&>(xin),bin);}
-      };      
+   };   
+      
+   
+   class characteristic : public bdry_ins::neumann {
+      protected:
+         tri_hp_swe &x;
+         void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx);
+      public:
+         characteristic(tri_hp_swe &xin, side_bdry &bin) : neumann(xin,bin), x(xin) {mytype = "characteristic";}
+         characteristic(const characteristic& inbdry, tri_hp_swe &xin, side_bdry &bin) : neumann(inbdry,xin,bin), x(xin) {}
+         characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_swe&>(xin),bin);}
+   };
 }

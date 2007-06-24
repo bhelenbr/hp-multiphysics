@@ -5,7 +5,8 @@
 
 block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
    int tind,i,j,side,v0;
-   FLT jcb,h,hmax,q,qmax,umax,vmax,c,pre,fmax,cflnow;
+   FLT jcb,hmax,q,qmax,umax,vmax,c,c2,pre,rtpre,fmax,cflnow,alpha,alpha2,sigma;
+   FLT dx, dxmax, lambdamax;
    TinyVector<int,3> v;
    
    if (ctrl_message == block::begin) excpt = 0;
@@ -27,21 +28,15 @@ block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
       for(tind = 0; tind < ntri; ++tind) {
          jcb = 0.25*area(tind);  // area is 2 x triangle area
          v = td(tind).vrtx;
-         hmax = 0.0;
+         dxmax = 0.0;
          for(j=0;j<3;++j) {
-            h = pow(vrtx(v(j))(0) -vrtx(v((j+1)%3))(0),2.0) + 
+            dx = pow(vrtx(v(j))(0) -vrtx(v((j+1)%3))(0),2.0) + 
             pow(vrtx(v(j))(1) -vrtx(v((j+1)%3))(1),2.0);
-            hmax = (h > hmax ? h : hmax);
+            dxmax = (dx > dxmax ? dx : dxmax);
          }
-         hmax = sqrt(hmax);
-         
-         if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-            *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
-            *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
-            mesh::output("negative",grid);
-            exit(1);
-         }
-         h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
+         dxmax = sqrt(dxmax);
+         dx = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*dxmax);
+         dxmax /= 0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1);
                
          qmax = 0.0;
          hmax = 0.0;
@@ -58,19 +53,34 @@ block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
             vmax = MAX(vmax,ug.v(v0,1)/ug.v(v0,NV-1));
             fmax = MAX(fmax,fabs(gbl_ptr->f0 +gbl_ptr->beta*vrtx(v0)(1)));
          }
+         if (!(jcb > 0.0) || !(hmax > 0.0)) {  // THIS CATCHES NAN'S TOO
+            *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
+            *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
+            mesh::output("negative",grid);
+            exit(1);
+         }
+         
          q = sqrt(qmax);
-         c = sqrt(sim::g*hmax);
-         pre = (pow(h*(sim::bd[0] +fmax),2.0) +2*qmax)/(h*sim::bd[0]*h*sim::bd[0] +c*c +qmax);
+         c2 = sim::g*hmax;
+         c = sqrt(c2);
+         sigma = MAX((qmax -c2)/qmax,0);
+         alpha = gbl_ptr->cd*dxmax/(2*hmax);
+         alpha2 = alpha*alpha;
+//         pre = gbl_ptr->ptest*(pow(dxmax*(sim::bd[0]+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(sim::bd[0]*sim::bd[0] +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
+         pre = gbl_ptr->ptest*(pow(dxmax*(sim::bd[0]*.5+fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(sim::bd[0]*sim::bd[0]*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
 
+         rtpre = sqrt(pre);
+         lambdamax = ((1. +(2.+sqrt(7)-sqrt(3))/2.*MAX(1 -rtpre,0))*q +rtpre*c +2*alpha*q)/dx +sim::bd[0] +fmax;
+         
          /* SET UP DISSIPATIVE COEFFICIENTS */
-         gbl_ptr->tau(tind,0) = adis*h*1.0/((q +c*sqrt(pre) +sim::bd[0]*h)*jcb);
+         gbl_ptr->tau(tind,0) = adis/(lambdamax*jcb);
          gbl_ptr->tau(tind,1) = gbl_ptr->tau(tind,0);
-         gbl_ptr->tau(tind,NV-1) = adis*h*pre/((q +c*sqrt(pre) +pre*sim::bd[0]*h)*jcb);
+         gbl_ptr->tau(tind,NV-1) = pre*gbl_ptr->tau(tind,0);
              
          /* SET UP DIAGONAL PRECONDITIONER */
-         jcb *=  2.*(2.*q/h +sim::bd[0] +fmax);
+         jcb *=  lambdamax;
          
-         cflnow = MAX((q/h +fmax +c/h)/sim::bd[0],cflnow);
+         cflnow = MAX((q/dx +fmax +c/dx)/sim::bd[0],cflnow);
          
          gbl_ptr->tprcn(tind,0) = jcb;   
          gbl_ptr->tprcn(tind,1) = jcb;     
@@ -83,7 +93,7 @@ block::ctrl tri_hp_swe::setup_preconditioner(block::ctrl ctrl_message) {
             }
          }
       }
-      if (!coarse && log2p == log2pmax) *sim::log << "#cfl is " << cflnow << std::endl;
+      // if (!coarse && log2p == log2pmax) *sim::log << "#cfl is " << cflnow << std::endl;
    }
    else {
       ctrl_message = tri_hp::setup_preconditioner(ctrl_message);  

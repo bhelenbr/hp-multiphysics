@@ -158,7 +158,7 @@ class tri_hp : public r_mesh  {
       void curvinit();
       
       /* Input / Output functions */
-      enum filetype {tecplot, text, binary, adapt_diagnostic};
+      enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary};
       TinyVector<filetype,3> output_type;
       void input(const std::string &name);
       void input(const std::string &name, filetype type, int tlvl = 0);

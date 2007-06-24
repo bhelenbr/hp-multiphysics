@@ -21,8 +21,8 @@ using namespace bdry_swe;
  */
 class tri_hp_swe_stype {
    public:
-      static const int ntypes = 1;
-      enum ids {unknown=-1,wall};
+      static const int ntypes = 2;
+      enum ids {unknown=-1,wall,characteristic};
       static const char names[ntypes][40];
       static int getid(const char *nin) {
          for(int i=0;i<ntypes;++i)
@@ -31,7 +31,7 @@ class tri_hp_swe_stype {
       }
 };
 
-const char tri_hp_swe_stype::names[ntypes][40] = {"wall"};
+const char tri_hp_swe_stype::names[ntypes][40] = {"wall","characteristic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_side_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
@@ -55,6 +55,10 @@ hp_side_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
    switch(type) {
 		case tri_hp_swe_stype::wall: {
          temp = new wall(*this,*sbdry(bnum));
+         break;
+      }	
+      case tri_hp_swe_stype::characteristic: {
+         temp = new characteristic(*this,*sbdry(bnum));
          break;
       }	
       default: {

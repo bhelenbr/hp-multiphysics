@@ -517,6 +517,13 @@ block::ctrl tri_hp_buoyancy::rsdl(block::ctrl ctrl_message, int stage) {
             if (basis::tri(log2p).sm) gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
             if (basis::tri(log2p).im) gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
          }
+         else {
+            if (stage == sim::NSTAGE) {
+               /* TEMPORARY HACK FOR AUXILIARY FLUXES */
+               for (i=0;i<nsbd;++i)
+                  hp_sbdry(i)->output(*sim::log, tri_hp::auxiliary);
+            }
+         }
          
          ++excpt;
          

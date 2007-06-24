@@ -80,7 +80,7 @@ void hp_side_bdry::copy_data(const hp_side_bdry &bin) {
    
    if (!curved || !x.sm0) return;
    
-   for(int i=0;i<sim::nadapt+1; ++i)
+   for(int i=0;i<sim::nadapt; ++i)
       crvbd(i)(Range(0,base.nel-1),Range::all()) = bin.crvbd(i)(Range(0,base.nel-1),Range::all());
 }
 

@@ -27,24 +27,25 @@ block::ctrl tri_hp_swirl::length(block::ctrl ctrl_message) {
    
    switch(excpt) {
       case(0): {
+         gbl_ptr->eanda = 0.0;
          for(tind=0;tind<ntri;++tind) {
             q = 0.0;
             p = 0.0;
             duv = 0.0;
             um = ug.v(td(tind).vrtx(2),0);
             vm = ug.v(td(tind).vrtx(2),1);
-		wm = ug.v(td(tind).vrtx(2),2);
+            wm = ug.v(td(tind).vrtx(2),2);
             for(j=0;j<3;++j) {
                v0 = td(tind).vrtx(j);
                u = ug.v(v0,0);
                v = ug.v(v0,1);
-			   w = ug.v(v0,2);
+               w = ug.v(v0,2);
                q += pow(u,3) +pow(v,3) +pow(w,3);
                p += fabs(ug.v(v0,3));
                duv += fabs(u-um)+fabs(v-vm)+fabs(w-wm);
                um = u;
                vm = v;
-		   wm = w;
+               wm = w;
             }
             gbl_ptr->eanda(0) += 1./3.*( (0.5*gbl_ptr->rho*q +p)*area(tind) +duv*gbl_ptr->mu*sqrt(area(tind)) );
             gbl_ptr->eanda(1) += area(tind);

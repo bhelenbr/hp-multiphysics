@@ -10,6 +10,8 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
+#define BODYFORCE
+
 //#define CTRL_DEBUG
    
 block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
@@ -216,9 +218,9 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
 #ifdef AXISYMMETRIC
                         res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
+#ifdef BODYFORCE
+                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
+                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
 #endif              
                                                 
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -403,10 +405,10 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
 #ifdef AXISYMMETRIC
                         res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
-#ifdef BODY
-                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[0];
-                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*body[1];
-#endif
+#ifdef BODYFORCE
+                        res(0)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
+                        res(1)(i,j) -= gbl_ptr->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
+#endif      
                         df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                                               +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
 
@@ -502,6 +504,13 @@ block::ctrl tri_hp_ins::rsdl(block::ctrl ctrl_message, int stage) {
             gbl_ptr->res.v(Range(0,nvrtx-1),Range::all()) += dres(log2p).v(Range(0,nvrtx-1),Range::all()); 
             if (basis::tri(log2p).sm) gbl_ptr->res.s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nside-1),Range(0,basis::tri(log2p).sm-1),Range::all());
             if (basis::tri(log2p).im) gbl_ptr->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
+         }
+         else {
+            if (stage == sim::NSTAGE) {
+               /* TEMPORARY HACK FOR AUXILIARY FLUXES */
+               for (i=0;i<nsbd;++i)
+                  hp_sbdry(i)->output(*sim::log, tri_hp::auxiliary);
+            }
          }
          
          ++excpt;

@@ -37,7 +37,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
       }
       case(block::restart): {
          namewdot = fname +".d";
-         for(i=0;i<sim::nadapt+1;++i) {
+         for(i=0;i<sim::nadapt;++i) {
             nstr.str("");
             nstr << i << std::flush;
             fnmapp = namewdot +nstr.str();
@@ -47,7 +47,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             namewdot = fname +".v";
             mesh::output(fname,mesh::grid);
             mesh::output(fname,mesh::vlength);
-            for(i=1;i<sim::nadapt+1;++i) {
+            for(i=1;i<sim::nadapt;++i) {
                nstr.str("");
                nstr << i << std::flush;
                fnmapp = namewdot +nstr.str() +".txt";
@@ -361,7 +361,7 @@ void tri_hp::input(const std::string& fname) {
       fnmapp = fname +".v";
       input_map blank;
       mesh::input(fname,mesh::grid,1,blank);
-      for(i=1;i<sim::nadapt+1;++i) {
+      for(i=1;i<sim::nadapt;++i) {
          nstr.str("");
          nstr << i << std::flush;
          fnmapp = fname +".v" +nstr.str() +".txt";
@@ -379,11 +379,12 @@ void tri_hp::input(const std::string& fname) {
       }
    }         
    
-   for(i=0;i<sim::nadapt+1;++i) {
+   for(i=0;i<sim::nadapt;++i) {
       nstr.str("");
       nstr << i << std::flush;
       fnmapp = fname +".d" +nstr.str();
-      input(fnmapp,output_type(1),i);
+      // input(fnmapp,output_type(1),i);
+      input(fnmapp,text,i);
    }
 
    return;

@@ -8,6 +8,7 @@
  */
 
 #include <myblas.h>
+// #include <veclib/clapack.h>
 
 // #define CTRL_DEBUG
 
@@ -60,7 +61,6 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
    std::string filename,keyword,linebuff;
    std::ostringstream nstr;
    std::istringstream instr;
-   char jobz[2] = "V", uplo[2] = "L";
    FLT cjcb;
    block::ctrl state;
    
@@ -88,8 +88,8 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
          ugstore.s.reference(BASE::ugbd(0).s);
          ugstore.i.reference(BASE::ugbd(0).i);
          
-         psimatrix.resize(nsnapshots*(nsnapshots+1)/2);
-         psimatrix_recv.resize(nsnapshots*(nsnapshots+1)/2);
+         psimatrix.resize(nsnapshots*nsnapshots);
+         psimatrix_recv.resize(nsnapshots*nsnapshots);
          
          /* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
          psimatrix = 0.0;
@@ -154,13 +154,33 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
          return(block::advance);
       }
       case(2): {
-         sim::blks.allreduce2(psimatrix.extent(firstDim),blocks::flt_msg,blocks::sum);
+         sim::blks.allreduce2(nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
          
          Array<FLT,1> eigenvalues(nsnapshots);
          Array<FLT,2> eigenvectors(nsnapshots,nsnapshots);
-         Array<FLT,1> work(3*nsnapshots);
          
+/*       
+         char jobz[2] = "V", range[2] = "A", uplo[2] = "L";
+         double vl, vu;
+         int il, iu;
+         double abstol = dlamch_("Safe minimum");
+         int neig;
+         Array<int,1> isuppz(2*nsnapshots);
+         int lwork = 30*nsnapshots;
+         lwork = -1;
+         Array<FLT,1> work(lwork);
+         Array<int,1> iwork(lwork);
+         int info1, info;
+         
+         info1 = dsyevr_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
+         &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
+         std::cout << "optimal sizes:" <<  work(0) << ' ' << iwork(0) << std::endl; 
+         exit(1);
+*/
+         char jobz[2] = "V", uplo[2] = "L";
+         Array<FLT,1> work(3*nsnapshots);
          DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
+         
          if (info != 0) {
             *sim::log << "Failed to find eigenmodes " << info << std::endl;
             exit(1);
@@ -183,9 +203,9 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
                filename = BASE::idprefix +"_rstrt" +nstr.str() +".d0";
                BASE::input(filename, BASE::text);
 
-               modes(k).v += eigenvectors(l,k)*BASE::ug.v;
-               modes(k).s += eigenvectors(l,k)*BASE::ug.s;
-               modes(k).i += eigenvectors(l,k)*BASE::ug.i;
+               modes(k).v += eigenvectors(l,nmodes -k -1)*BASE::ug.v;
+               modes(k).s += eigenvectors(l,nmodes -k -1)*BASE::ug.s;
+               modes(k).i += eigenvectors(l,nmodes -k -1)*BASE::ug.i;
             }
          }
          excpt += 1;
@@ -194,7 +214,7 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
       }
       
       case(3): {
-         /* GENERATE INITIAL CONDITION OF COEFFICIENTS */
+         /* RENORMALIZE MODES */
          vsi ugstore;
          ugstore.v.reference(BASE::ugbd(1).v);
          ugstore.s.reference(BASE::ugbd(1).s);
@@ -216,11 +236,6 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
                for(n=0;n<BASE::ND;++n)
                   basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
                             
-               /* PROJECT INITIAL CONDITION FUNCTION TO GAUSS POINTS */
-               BASE::ugtouht(tind);
-               for(n=0;n<BASE::NV;++n)
-                  basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-                  
                /* PROJECT MODE TO GAUSS POINTS */
                BASE::ugtouht(tind,1);
                for(n=0;n<BASE::NV;++n)
@@ -230,8 +245,7 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
                   for(j=0;j<lgpn;++j) {
                      cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
                      for(n=0;n<BASE::NV;++n) {
-                        psimatrix(2*l) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-                        psimatrix(2*l+1) += BASE::res(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+                        psimatrix(l) += BASE::res(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
                      }
                   }
                }
@@ -248,22 +262,20 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
       case(4): {
          double norm;
 
-         sim::blks.allreduce2(2*nmodes,blocks::flt_msg,blocks::sum);
+         sim::blks.allreduce2(nmodes,blocks::flt_msg,blocks::sum);
          
          vsi ugstore;
-         ugstore.v.reference(BASE::ugbd(1).v);
-         ugstore.s.reference(BASE::ugbd(1).s);
-         ugstore.i.reference(BASE::ugbd(1).i);
+         ugstore.v.reference(BASE::ugbd(0).v);
+         ugstore.s.reference(BASE::ugbd(0).s);
+         ugstore.i.reference(BASE::ugbd(0).i);
          
          /* RENORMALIZE MODES AND OUTPUT COEFFICIENTS */
          for (k=0;k<nmodes;++k) {
-            norm = sqrt(psimatrix_recv(2*k+1));
+            norm = sqrt(psimatrix_recv(k));
             modes(k).v /= norm;
             modes(k).s /= norm;
             modes(k).i /= norm;
             
-            psimatrix_recv(2*k) *= norm;
-         
             nstr.str("");
             nstr << k << std::flush;
             filename = BASE::idprefix +"_mode" +nstr.str();
@@ -277,19 +289,91 @@ template<class BASE> block::ctrl pod_generate<BASE>::tadvance(bool coarse,block:
          BASE::ugbd(0).s.reference(ugstore.s);
          BASE::ugbd(0).i.reference(ugstore.i);
          
-         /* OUTPUT COEFFICIENT VECTOR */
-         filename = BASE::idprefix + "coeff.ic";
-         std::ofstream out;
-         out.open(filename.c_str());
-         if (!out) {
-            *sim::log << "couldn't open coefficient output file " << filename;
-            exit(1);
-         }
-         
-         for (l=0;l<nmodes;++l) 
-            out << psimatrix(2*l) << '\n';
+         excpt += 1;
+         return(block::advance);
+      }
+      
+      case(5): {
+         /* GENERATE COEFFICIENT VECTOR DESCRIBING EACH SNAPSHOT */
+         int psi1dcounter = 0;
+         vsi ugstore;
+         ugstore.v.reference(BASE::ugbd(1).v);
+         ugstore.s.reference(BASE::ugbd(1).s);
+         ugstore.i.reference(BASE::ugbd(1).i);
+
+         psimatrix = 0.0;
+         psimatrix_recv = 0.0;
+         for (k=0;k<nsnapshots;++k) {
+            /* LOAD SNAPSHOT */
+            nstr.str("");
+            nstr << k+1 << std::flush;
+            filename = BASE::idprefix +"_rstrt" +nstr.str() +".d0";
+            BASE::input(filename, BASE::text);
             
-         out.close();
+            for(l=0;l<nmodes;++l) {
+               BASE::ugbd(1).v.reference(modes(l).v);
+               BASE::ugbd(1).s.reference(modes(l).s);
+               BASE::ugbd(1).i.reference(modes(l).i);
+               
+               for(tind=0;tind<BASE::ntri;++tind) {        
+                  /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+                  BASE::crdtocht(tind);
+
+                  /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+                  for(n=0;n<BASE::ND;++n)
+                     basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+                               
+                  /* PROJECT SNAPSHOT TO GAUSS POINTS */
+                  BASE::ugtouht(tind);
+                  for(n=0;n<BASE::NV;++n)
+                     basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+                     
+                  /* PROJECT MODE TO GAUSS POINTS */
+                  BASE::ugtouht(tind,1);
+                  for(n=0;n<BASE::NV;++n)
+                     basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+                  
+                  for(i=0;i<lgpx;++i) {
+                     for(j=0;j<lgpn;++j) {
+                        cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+                        for(n=0;n<BASE::NV;++n) {
+                           psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+                        }
+                     }
+                  }
+               }
+               ++psi1dcounter;
+            }
+         }
+         BASE::ugbd(1).v.reference(ugstore.v);
+         BASE::ugbd(1).s.reference(ugstore.s);
+         BASE::ugbd(1).i.reference(ugstore.i);
+
+         sim::blks.allreduce1(psimatrix.data(),psimatrix_recv.data());
+         excpt += 1;
+         
+         return(block::advance);
+      }
+      case(6): {
+         sim::blks.allreduce2(nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
+         
+         for (k=0;k<nsnapshots;++k) {
+            /* OUTPUT COEFFICIENT VECTOR */
+            nstr.str("");
+            nstr << k+1 << std::flush;
+            filename = BASE::idprefix +"_coeff" +nstr.str() +".txt";
+            std::ofstream out;
+            out.open(filename.c_str());
+            if (!out) {
+               *sim::log << "couldn't open coefficient output file " << filename;
+               exit(1);
+            }
+            
+            for (l=0;l<nmodes;++l) 
+               out << psimatrix_recv(k*nmodes +l) << '\n';
+               
+            out.close();
+         }
          excpt += 1;
          exit(1);
          return(block::stop);
@@ -346,7 +430,11 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, gbl *gin) {
    jacobian.resize(nmodes,nmodes);
    ipiv.resize(nmodes);
    
-   filename = BASE::idprefix + "coeff.ic";
+   int initfile;
+   input.getwdefault("initfile",initfile,1);
+   nstr.str("");
+   nstr << initfile << std::flush;
+   filename = BASE::idprefix +"_coeff" +nstr.str() +".txt";
    std::ifstream in;
    in.open(filename.c_str());
    if (!in) {
@@ -645,12 +733,4 @@ template<class BASE> FLT pod_simulate<BASE>::maxres() {
 
    return(mxr);
 }
-   
-
-
-         
-
-
-
-
 

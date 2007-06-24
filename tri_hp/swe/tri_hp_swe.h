@@ -18,7 +18,7 @@ class tri_hp_swe : public tri_hp_ins {
       struct gbl : public tri_hp_ins::gbl {
       
          /* PHYSICAL CONSTANTS */
-         FLT f0, beta;
+         FLT f0, beta, cd, ptest;
          
          /* BATHYMETRY DATA */
          init_bdry_cndtn *bathy;
