@@ -11,79 +11,79 @@
 #include "r_boundary.h"
 
 class r_stype {
-   public:
-      static const int ntypes = 4;
-      enum ids {free=1, fixed, translating, oscillating};
-      const static char names[ntypes][40];
-      static int getid(const char *nin) {
-         for(int i=0;i<ntypes;++i) 
-            if (!strcmp(nin,names[i])) return(i+1);
-         return(-1);
-      }
+    public:
+        static const int ntypes = 4;
+        enum ids {free=1, fixed, translating, oscillating};
+        const static char names[ntypes][40];
+        static int getid(const char *nin) {
+            for(int i=0;i<ntypes;++i) 
+                if (!strcmp(nin,names[i])) return(i+1);
+            return(-1);
+        }
 };
 
 const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
-   std::istringstream data;
-   std::map<std::string,std::string>::const_iterator mi;
-   r_side_bdry *temp;  
-   int type = 2;
+    std::istringstream data;
+    std::map<std::string,std::string>::const_iterator mi;
+    r_side_bdry *temp;  
+    int type = 2;
 
-   mi = in_map.find(sbdry(bnum)->idprefix + "_r_type");
-   if (mi != in_map.end()) {
-      type = r_stype::getid((*mi).second.c_str());
-      if (type < 0)  {
-         *sim::log << "unknown type:" << (*mi).second << std::endl;
-         exit(1);
-      }
-   }
-   else {
-      /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
-      if (sbdry(bnum)->mytype == "comm") {
-         type = r_stype::free;
-      } else if (sbdry(bnum)->mytype == "partition") {
-         type = r_stype::free;
-      } else if (sbdry(bnum)->mytype == "prdc") {
-         type = r_stype::fixed;
-         int dir;
-         in_map.getwdefault(sbdry(bnum)->idprefix + "_dir",dir,0);
-         if (dir == 0)
-            in_map[sbdry(bnum)->idprefix+"_r_dir"] = "0 0";
-         else 
-            in_map[sbdry(bnum)->idprefix+"_r_dir"] = "1 1";
-      }
-      else {
-         type = r_stype::fixed;
-      }
-      *sim::log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
-   }
+    mi = in_map.find(sbdry(bnum)->idprefix + "_r_type");
+    if (mi != in_map.end()) {
+        type = r_stype::getid((*mi).second.c_str());
+        if (type < 0)  {
+            *sim::log << "unknown type:" << (*mi).second << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
+        if (sbdry(bnum)->mytype == "comm") {
+            type = r_stype::free;
+        } else if (sbdry(bnum)->mytype == "partition") {
+            type = r_stype::free;
+        } else if (sbdry(bnum)->mytype == "prdc") {
+            type = r_stype::fixed;
+            int dir;
+            in_map.getwdefault(sbdry(bnum)->idprefix + "_dir",dir,0);
+            if (dir == 0)
+                in_map[sbdry(bnum)->idprefix+"_r_dir"] = "0 0";
+            else 
+                in_map[sbdry(bnum)->idprefix+"_r_dir"] = "1 1";
+        }
+        else {
+            type = r_stype::fixed;
+        }
+        *sim::log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
+    }
 
-   switch(type) {
-      case r_stype::free: {
-         temp = new r_side_bdry(*this,*sbdry(bnum));
-         break;
-      }
-      case r_stype::fixed: {
-         temp = new r_fixed(*this,*sbdry(bnum)); 
-         break;
-      }
-      case r_stype::translating: {
-         temp = new r_translating(*this,*sbdry(bnum)); 
-         break;
-      }
-      case r_stype::oscillating: {
-         temp = new r_oscillating(*this,*sbdry(bnum)); 
-         break;
-      }      
-      default: {
-         temp = new r_fixed(*this,*sbdry(bnum));
-         std::cout << "Don't know this r_side_bdry type\n";
-      }
-   }
-   
-   temp->input(in_map);
-   
-   return(temp);
+    switch(type) {
+        case r_stype::free: {
+            temp = new r_side_bdry(*this,*sbdry(bnum));
+            break;
+        }
+        case r_stype::fixed: {
+            temp = new r_fixed(*this,*sbdry(bnum)); 
+            break;
+        }
+        case r_stype::translating: {
+            temp = new r_translating(*this,*sbdry(bnum)); 
+            break;
+        }
+        case r_stype::oscillating: {
+            temp = new r_oscillating(*this,*sbdry(bnum)); 
+            break;
+        }        
+        default: {
+            temp = new r_fixed(*this,*sbdry(bnum));
+            std::cout << "Don't know this r_side_bdry type\n";
+        }
+    }
+    
+    temp->input(in_map);
+    
+    return(temp);
 }
