@@ -14,34 +14,34 @@
 #include <blocks.h>
 
 class tri_hp_cd : public tri_hp {
-   public:
-      /* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-      struct gbl : public tri_hp::gbl {
-         /* STABILIZATION */
-         Array<FLT,1> tau;
+    public:
+        /* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
+        struct gbl : public tri_hp::gbl {
+            /* STABILIZATION */
+            Array<FLT,1> tau;
+                
+            /* PHYSICAL CONSTANTS */
+            FLT ax, ay, nu;
             
-         /* PHYSICAL CONSTANTS */
-         FLT ax, ay, nu;
-         
-         /* SOURCE FUNCTION */
-         init_bdry_cndtn *src;
+            /* SOURCE FUNCTION */
+            init_bdry_cndtn *src;
 
-      } *gbl_ptr;
-      
-      FLT adis; // DISSIPATION CONSTANT
-      
-      hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-      init_bdry_cndtn* getnewibc(input_map& inmap);
-      init_bdry_cndtn *getnewsrc(input_map &inmap);
-   
-   private:
-      int excpt;
-      
-   public:
-      void init(input_map& input, gbl *gin); 
-      tri_hp_cd* create() { return new tri_hp_cd(); }
-      block::ctrl length(block::ctrl ctrl_message);
-      block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-      block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
+        } *gbl_ptr;
+        
+        FLT adis; // DISSIPATION CONSTANT
+        
+        hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+        init_bdry_cndtn* getnewibc(input_map& inmap);
+        init_bdry_cndtn *getnewsrc(input_map &inmap);
+    
+    private:
+        int excpt;
+        
+    public:
+        void init(input_map& input, gbl *gin); 
+        tri_hp_cd* create() { return new tri_hp_cd(); }
+        block::ctrl length(block::ctrl ctrl_message);
+        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
+        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
 };
 #endif

@@ -15,23 +15,23 @@
 #include <mathclass.h>
 
 class tri_hp_buoyancy : public tri_hp_ins {
-   public:
-      struct gbl : public tri_hp_ins::gbl {
-      
-         /* PHYSICAL CONSTANTS */
-         FLT kcond,cp;
-         symbolic_function<1> rhovsT;
-         
-      } *gbl_ptr;
-   
-   private:
-      int excpt;
-      
-   public:
-      void init(input_map& input, gbl *gin); 
-      tri_hp_buoyancy* create() { return new tri_hp_buoyancy(); }
-      block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-      block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-      void calculate_unsteady_sources(bool coarse);
+    public:
+        struct gbl : public tri_hp_ins::gbl {
+        
+            /* PHYSICAL CONSTANTS */
+            FLT kcond,cp;
+            symbolic_function<1> rhovsT;
+            
+        } *gbl_ptr;
+    
+    private:
+        int excpt;
+        
+    public:
+        void init(input_map& input, gbl *gin); 
+        tri_hp_buoyancy* create() { return new tri_hp_buoyancy(); }
+        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
+        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
+        void calculate_unsteady_sources(bool coarse);
 };
 #endif

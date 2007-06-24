@@ -290,7 +290,7 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>14</integer>
+									<integer>13</integer>
 									<integer>12</integer>
 								</array>
 							</array>
@@ -318,7 +318,7 @@
 							<real>22</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>429 284 1206 777 0 0 1920 1178 </string>
+						<string>69 55 1206 777 0 0 1280 832 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -334,7 +334,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>quadtree.h</string>
+								<string>makefile</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -342,18 +342,18 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>quadtree.h</string>
+										<string>makefile</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>6F584C110B5EAE0400FE5BCE</string>
+										<string>6FD9FC610B9692D70061DCB5</string>
 										<key>history</key>
 										<array>
 											<string>6F456DB508664AEE00E9E549</string>
 											<string>6F456DB708664AEE00E9E549</string>
-											<string>6FFDA4B808D1C34400BA1DC3</string>
 											<string>6FCF90DD0A954BA7005AE260</string>
-											<string>6F584C100B5EAE0400FE5BCE</string>
+											<string>6F0A48A00B650D270014F7D2</string>
+											<string>6FD9FC600B9692D70061DCB5</string>
 										</array>
 										<key>prevStack</key>
 										<array>
@@ -373,14 +373,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 0}, {889, 512}}</string>
+								<string>{{0, 0}, {889, 731}}</string>
 								<key>RubberWindowFrame</key>
-								<string>429 284 1206 777 0 0 1920 1178 </string>
+								<string>69 55 1206 777 0 0 1280 832 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
 							<key>Proportion</key>
-							<string>512pt</string>
+							<string>731pt</string>
 						</dict>
 						<dict>
 							<key>ContentConfiguration</key>
@@ -393,14 +393,14 @@
 							<key>GeometryConfiguration</key>
 							<dict>
 								<key>Frame</key>
-								<string>{{0, 517}, {889, 219}}</string>
+								<string>{{0, 736}, {889, 0}}</string>
 								<key>RubberWindowFrame</key>
-								<string>429 284 1206 777 0 0 1920 1178 </string>
+								<string>69 55 1206 777 0 0 1280 832 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
 							<key>Proportion</key>
-							<string>219pt</string>
+							<string>0pt</string>
 						</dict>
 					</array>
 					<key>Proportion</key>
@@ -419,9 +419,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>6F584C120B5EAE0400FE5BCE</string>
+				<string>6FD9FC620B9692D70061DCB5</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>6F584C130B5EAE0400FE5BCE</string>
+				<string>6FD9FC630B9692D70061DCB5</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -540,7 +540,7 @@
 	<key>StatusbarIsVisible</key>
 	<true/>
 	<key>TimeStamp</key>
-	<real>190754308.94996399</real>
+	<real>194417313.991761</real>
 	<key>ToolbarDisplayMode</key>
 	<integer>1</integer>
 	<key>ToolbarIsVisible</key>
@@ -555,11 +555,10 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>6FFDA4C308D1C4B900BA1DC3</string>
 		<string>/Users/helenbrk/Codes/quadtree/quadtree.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>429 284 1206 777 0 0 1920 1178 </string>
+	<string>69 55 1206 777 0 0 1280 832 </string>
 	<key>WindowTools</key>
 	<array>
 		<dict>
