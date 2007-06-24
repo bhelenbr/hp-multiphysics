@@ -196,6 +196,7 @@ void hpbasis::initialize_values(void)
    gx.resize(gpx,nmodx);
    dgx.resize(gpx,nmodx);
    wtx.resize(gpx);
+   xp.resize(gpx);
    x0.resize(gpx);
    gxwtx.resize(nmodx,gpx);
    dgxwtx.resize(nmodx,gpx);
@@ -205,6 +206,7 @@ void hpbasis::initialize_values(void)
    gn.resize(gpn,tm);
    dgn.resize(gpn,tm);
    wtn.resize(gpn);
+   np.resize(gpn);
    n0.resize(gpn);
    gnwtn.resize(tm,gpn);
    gnwtnn0.resize(tm,gpn);
@@ -297,6 +299,7 @@ void hpbasis::initialize_values(void)
    
    for(i = 0;i < gpx; ++i) {
       x = x0(i);
+      xp(i) = x;
       x0(i) = 0.5*(1+x);
       
       ptvalues_deriv(x,0.0);
@@ -404,6 +407,7 @@ void hpbasis::initialize_values(void)
    
    for(j=0;j<gpn;++j) {
       eta = n0(j);
+      np(j) = eta;
       n0(j) = 2.0/(1-eta);
 
       ptvalues_deriv(0.0,eta);
@@ -553,7 +557,7 @@ void hpbasis::sideinfoinit() {
    
    /* SIDE 1 */
    for(i=0;i<gpx;++i) {
-      eta = 2.*x0(i) -1.0;
+      eta = xp(i);
       x = 1.0;
       ptvalues_deriv(x,eta);
       oeta = 2.0/(1-eta);
@@ -1180,6 +1184,21 @@ void hpbasis::legpt()
    
    lgrnge1d.resize(nmodx,sm+1);
    lgrnge.resize(tm,sm+1,sm+1);
+   
+//   /* USING LOBATTO SPACING */
+//   int ipoly = 1;
+//   double al = 0.0;
+//   double be = 0.0;
+//   ierr = recur(sm+3,ipoly,al,be,&a0(0),&b0(0));
+//   if (ierr != 0) {
+//      printf("recur #1 error %d\n",ierr);
+//      exit(1);
+//   }
+//   ierr = lob(sm,&a0(0),&b0(0),-1.0,1.0,&pts(0),&e3(0),&e(0),&e1(0),&e2(0));      
+//   if (ierr != 0) {
+//      printf("gauss #3 error %d\n",ierr);
+//      exit(1);
+//   }
 
    /* CALCULATE PROJECTION POINTS IN INTERIOR */
    for(i=1;i<sm;++i) {

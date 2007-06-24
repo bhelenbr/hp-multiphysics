@@ -6,8 +6,11 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
-#include <blitz/array.h>
 
+#ifndef _hpbasis_h_
+#define _hpbasis_h_
+
+#include <blitz/array.h>
 #include <float.h>
 
 #ifdef SINGLE
@@ -46,7 +49,7 @@ class hpbasis {
       /* X FUNCTIONS & DERIVATIVES */
       Array<FLT,2> gx, dgx;
       /* GAUSS WEIGTS & LOCATIONS */
-      Array<FLT,1> wtx, x0;
+      Array<FLT,1> wtx, xp, x0;
       /* COMBINED THINGS FOR FAST INTEGRATION */
       Array<FLT,2> gxwtx, dgxwtx;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
@@ -56,7 +59,7 @@ class hpbasis {
       /* ETA FUNCTIONS & DERIVATIVES */
       Array<FLT,2> gn, dgn;
       /* GAUSS WEIGTS & LOCATIONS */
-      Array<FLT,1> wtn, n0;
+      Array<FLT,1> wtn, np, n0;
       /* COMBINED THINGS FOR FAST INTEGRATION */
       Array<FLT,2> gnwtn, gnwtnn0, dgnwtn;
       /* TO TAKE X,Y DERIVATIVES OF A FUNCTION WITH VALUES ON GAUSS POINTS */
@@ -183,6 +186,21 @@ class hpbasis {
       }
       void ptprobe1d(int nv, FLT *f, FLT *dx, FLT *sin, int stride);
       
+      /* TO CALCULATE BASIS FUNCTIONS & DERIVATIVES */
+      void ptvalues(FLT xi, FLT s); // CALCULATES GX, gn VALUES AT A POINT
+      void ptvalues_deriv(FLT xi, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
+      void ptvalues_bdry(FLT xi, FLT s); // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
+      void ptvalues_deriv_bdry(FLT xi, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      
+      void ptvalues_rs(FLT r, FLT s) {ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT
+      void ptvalues_deriv_rs(FLT r, FLT s) {ptvalues_deriv(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, DGX, GN, DGN AT A POINT
+      void ptvalues_bdry_rs(FLT r, FLT s) {ptvalues_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
+      void ptvalues_deriv_bdry_rs(FLT r, FLT s) {ptvalues_deriv_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+      
+      /* 1D SIDE BASIS FUNCTIONS & DERIVATIVES */
+      void ptvalues1d(FLT x);
+      void ptvalues1d_deriv(FLT x);
+      
    /* LOCAL STORAGE/WORK */
    private:
       Array<FLT,1> pgx, dpgx, pgn, dpgn; // FOR POINT PROBE
@@ -192,16 +210,6 @@ class hpbasis {
       void sideinfoinit(); // SET UP THINGS TO EVALUATE NORMAL DERIVATIVES ALONG SIDE
       void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
       void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
-      
-      /* TO CALCULATE BASIS FUNCTIONS & DERIVATIVES */
-      void ptvalues(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT
-      void ptvalues_deriv(FLT r, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
-      void ptvalues_bdry(FLT r, FLT s); // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
-      void ptvalues_deriv_bdry(FLT r, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
-      
-      /* 1D SIDE BASIS FUNCTIONS & DERIVATIVES */
-      void ptvalues1d(FLT x);
-      void ptvalues1d_deriv(FLT x);
 };
 
 /** This is an array for bases of various orders for general use 
@@ -209,5 +217,7 @@ class hpbasis {
 namespace basis {
    extern Array<hpbasis,1> tri;
 }
+#endif
+
 
 

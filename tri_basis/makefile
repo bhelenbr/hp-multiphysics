@@ -1,9 +1,9 @@
 OBJ = initialize.o intgrt.o intgrt1d.o proj.o \
 proj1d.o ptvalues.o hpprobe.o
 
-CPPFLAGS = -I$(HOME)/Codes/include/ 
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 DEFINES = -Df2cFortran
-LIB = -L$(HOME)/Codes/lib -lmyblas -lm
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
 
 ### Begin machine dependent
 
@@ -50,6 +50,5 @@ libbasis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libbasis.a $(HOME)/Codes/lib/
 	cp -f hpbasis.h $(HOME)/Codes/include/
-	rm *.o
 
 $(OBJ): hpbasis.h
