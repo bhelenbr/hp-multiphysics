@@ -10,7 +10,7 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-#define BODYFORCE
+// #define BODYFORCE
 
 //#define CTRL_DEBUG
     

@@ -6,7 +6,7 @@
 //#define MPDEBUG
 //#define DEBUG
 
-#define BODYFORCE
+//#define BODYFORCE
 
 using namespace bdry_ins;
 
