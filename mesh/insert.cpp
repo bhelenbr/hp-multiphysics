@@ -142,7 +142,7 @@ int mesh::insert(int vnum, int tnum) {
     /*	CHECK THAT WE AREN'T INSERTING POINT VERY CLOSE TO BOUNDARY */
     for(i=0;i<nskeep;++i) {
         sind = i2wk_lst2(i);
-        if(fabs(minangle(vnum, sd(sind).vrtx(0) , sd(sind).vrtx(1))) < 3.0*M_PI/180.0) {
+        if(fabs(minangle(vnum, sd(sind).vrtx(0) , sd(sind).vrtx(1))) < 6.0*M_PI/180.0) {
             *sim::log << "#Warning: inserting close to boundary" << std::endl;
         }
     }
