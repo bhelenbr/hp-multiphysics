@@ -61,6 +61,7 @@ static ArgDesc argDesc[] = {
 
 int main(int argc, char *argv[]) {
     GBool ok;
+    clock_t cpu_time;
 
   // parse args
     ok = parseArgs(argDesc, &argc, argv);
@@ -173,11 +174,16 @@ int main(int argc, char *argv[]) {
     if (Coarsen_Marks) {
         zx.input(argv[1],in,1.0,bdrymap);
         FILE *fp = fopen(argv[3],"r");
+
         for(int i=0;i<zx.nvrtx;++i) {
             fscanf(fp,"%d\n",&zx.vd(i).info);
             zx.vd(i).info = 1-zx.vd(i).info;
         }
+        clock();
         zx.coarsen3();
+        cpu_time = clock();
+        *sim::log << "that took " << cpu_time << " cpu time" << std::endl;
+        
         zx.output(argv[2],out); 
         return(0);      
     }
@@ -185,8 +191,12 @@ int main(int argc, char *argv[]) {
 
     if (Generate) {
         sim::blks.init(argv[1]);
+        clock();
         for (int i=0;i<1;++i)
             sim::blks.restructure();
+        cpu_time = clock();
+        *sim::log << "that took " << cpu_time << " cpu time" << std::endl;
+        
         sim::blks.output(argv[1]);
         return(0);
     }
