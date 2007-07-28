@@ -1,8 +1,10 @@
 #include "block.h"
 #include <fstream>
 #include <blitz/array.h>
+#include <boost/thread.hpp>
 #include <input_map.h>
 #include <utilities.h>
+
 
 /* THIS IS A MULTIBLOCK MESH */
 /* CAN DRIVE MULTIGRID OR STANDARD ITERATION */
@@ -114,6 +116,14 @@ class blocks {
         //@{
         blitz::Array<void *,1> sndbufs, rcvbufs;
         //@}
+        
+         /** @name variables needed for thread message passing
+         */
+        //@{
+        std::map<int,bool> message_list;
+        boost::mutex list_mutex;
+        boost::condition list_change;
+        //@}
 
     public:
         /** Initialize multiblock/mgrid mesh */
@@ -145,6 +155,26 @@ class blocks {
         enum msg_type {flt_msg, int_msg};
         void allreduce1(void *sendbuf, void *recvbuf);
         void allreduce2(int count, msg_type datatype, operations op);
+        
+        /** Functions for thread communication */
+        void waitforslot(int msgid, bool set) {
+            std::map<int,bool>::iterator mi;
+            
+            boost::mutex::scoped_lock lock(list_mutex);
+            mi = message_list.find(msgid);
+            if (mi == message_list.end()) message_list[msgid] = false;
+            
+            while(message_list[msgid] != set) {
+                list_change.wait(lock);
+            }
+        }
+        
+        void notify_change(int msgid, bool set) {
+            boost::mutex::scoped_lock lock(list_mutex);
+            message_list[msgid] = set;
+            list_change.notify_all();
+        }
+
         
     protected:
         /** Allocates blocks, called by init to generate blocks from initialization file */
@@ -186,7 +216,6 @@ namespace sim {
     extern FLT g;  /**< gravity */
     extern blitz::TinyVector<FLT,2> body; /**< General way for body forces */
     extern std::ostream *log; /**< log file stream */
-    extern sharedmem scratch; /**< Shared work memory for all blocks */
     
     /** Time stepping for simulation */
 #ifdef BACKDIFF

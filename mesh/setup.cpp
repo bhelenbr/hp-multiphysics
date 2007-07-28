@@ -286,7 +286,7 @@ void mesh::initvlngth() {
 void mesh::settrim() {
     int i,j,n,bsd,tin,tind,nsrch,ntdel;
     
-    /* ASSUMES fscr1 HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
+    /* ASSUMES gbl_ptr->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
     
     for(i=0;i<ntri;++i)
         td(i).info = 0;
@@ -297,24 +297,24 @@ void mesh::settrim() {
         tind = sd(sbdry(0)->el(bsd)).tri(0);
         if (td(tind).info > 0) continue;
         
-        i1wk(0) = tind;
+        gbl_ptr->intwk(0) = tind;
         td(tind).info = 1;
         nsrch = ntdel+1;
         
         /* NEED TO SEARCH SURROUNDING TRIANGLES */
         for(i=ntdel;i<nsrch;++i) {
-            tin = i1wk(i);
+            tin = gbl_ptr->intwk(i);
             for (n=0;n<3;++n)
-                if (fscr1(td(tin).vrtx(n)) < 0.0) goto NEXT;
+                if (gbl_ptr->fltwk(td(tin).vrtx(n)) < 0.0) goto NEXT;
                 
-            i1wk(ntdel++) = tin;
+            gbl_ptr->intwk(ntdel++) = tin;
 
             for(j=0;j<3;++j) {
                 tind = td(tin).tri(j);
                 if (tind < 0) continue;
                 if (td(tind).info > 0) continue; 
                 td(tind).info = 1;          
-                i1wk(nsrch++) = tind;
+                gbl_ptr->intwk(nsrch++) = tind;
             }
             NEXT: continue;
         }
@@ -324,10 +324,10 @@ void mesh::settrim() {
         td(i).info = 0;
         
     for(i=0;i<ntdel;++i)
-        td(i1wk(i)).info = 1;
+        td(gbl_ptr->intwk(i)).info = 1;
         
     for(i=0;i<maxvst;++i)
-        i1wk(i) = -1;
+        gbl_ptr->intwk(i) = -1;
         
     return;
 }

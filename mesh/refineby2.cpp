@@ -15,11 +15,10 @@ void mesh::refineby2(const class mesh& inmesh) {
     TinyVector<FLT,ND> xpt;
     
     /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
-    /* BECAUSE OF INTWK USAGE */
+    /* BECAUSE OF gbl_ptr->intwk USAGE */
      if (!initialized) {
         /* VERTEX STORAGE ALLOCATION */
-        allocate_duplicate(0.5,inmesh);
-        initialized = 1;
+        init(inmesh,0.5);
     }
     
     this->copy(inmesh);

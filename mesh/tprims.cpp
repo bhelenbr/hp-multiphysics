@@ -79,9 +79,7 @@ FLT mesh::area(int tind) const {
     return(dx1*dy2 -dy1*dx2);
 }
 
-static TinyVector<FLT,3> a;
-
-FLT mesh::intri(int tind, const TinyVector<FLT,2> &x) const {
+FLT mesh::intri(int tind, const TinyVector<FLT,2> &x) {
     int v0,v1,v2;
     FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
@@ -96,11 +94,11 @@ FLT mesh::intri(int tind, const TinyVector<FLT,2> &x) const {
     dx2 =  (x(0) -vrtx(v2)(0));
     dy2 =  (x(1) -vrtx(v2)(1));
     
-    a(0) = (dy2*dx1 -dx2*dy1);
-    a(1) = (dy0*dx2 -dx0*dy2);
-    a(2) = (dy1*dx0 -dx1*dy0);
+    tri_wgt(0) = (dy2*dx1 -dx2*dy1);
+    tri_wgt(1) = (dy0*dx2 -dx0*dy2);
+    tri_wgt(2) = (dy1*dx0 -dx1*dy0);
     
-    return(fabs(a(0)) +fabs(a(1)) +fabs(a(2)) - (a(0) +a(1) +a(2)));
+    return(fabs(tri_wgt(0)) +fabs(tri_wgt(1)) +fabs(tri_wgt(2)) - (tri_wgt(0) +tri_wgt(1) +tri_wgt(2)));
 }
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
@@ -108,9 +106,9 @@ void mesh::getwgts(TinyVector<FLT,3> &wt) const {
     int i;
     FLT sum;
     
-    sum = a(0) +a(1) +a(2);
+    sum = tri_wgt(0) +tri_wgt(1) +tri_wgt(2);
     for(i=0;i<3;++i) 
-        wt(i) = a(i)/sum;
+        wt(i) = tri_wgt(i)/sum;
     
     return;
 }

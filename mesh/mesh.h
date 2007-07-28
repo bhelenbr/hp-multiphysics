@@ -85,30 +85,26 @@ class mesh {
         };
         Array<tstruct,1> td;
         
-        /* SOME WORK VARIABLES */
-        /* ANY ROUTINE THAT USES i1wk SHOULD RESET IT TO -1 */
-        /* THIS IS ONLY SHARED BETWEEN MESH OBJECTS */
-        /* BECAUSE IT MUST BE KEPT AT -1 */
-        static Array<int,1> i1wk;
-
-        /* THESE ARE WORK VARIABLES. */
-        /* THEY POINT TO GLOBALLY SHARED MEMORY AND THUS ARE */
-        /* NOT GUARANTEED TO BE STABLE AFTER CALLS TO OTHER BLOCKS */
-        static Array<FLT,1> fscr1;
-        static Array<int,1> i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
-
+        /* GBL IS FOR INFORMATION SHARED BETWEEN MESHES NOT USED SIMULTANEOUSLY (MG LEVELS) */
+        struct gbl {
+            /* SOME WORK VARIABLES */
+            /* ANY ROUTINE THAT USES INTWK SHOULD RESET IT TO -1 */
+            Array<int,1> intwk;
+            Array<FLT,1> fltwk;
+            Array<int,1> i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
+            int maxsrch;
+        } *gbl_ptr;
+        int nlst; /** VARIABLE TO KEEP TRACK OF NUMBER OF ENTITIES IN LIST */
+        
         int initialized;
-        static int maxsrch;
         
         /**************/
         /*  INTERFACE */
         /**************/
         /* INITIALIZATION & ALLOCATION */
         mesh() : idprefix(""), nvbd(0), nsbd(0), initialized(0)  {}
-        void allocate(int mxsize);
-        void allocate_duplicate(FLT sizereduce1d,const class mesh& xmesh);
-        void reload_scratch_pointers();
-        size_t needed_scratch_size();
+        void init(input_map& input, gbl *gin = 0);
+        void init(const class mesh& xmesh,FLT sizereduce1d = 1);
         void copy(const mesh& tgt);
         virtual ~mesh();
         
@@ -129,9 +125,9 @@ class mesh {
         void refineby2(const class mesh& xmesh);
         void settrim();
         void initvlngth();
-        block::ctrl adapt(block::ctrl ctrl_message, FLT tolsize);
-        int coarsen(FLT factor, const class mesh& xmesh);
-        block::ctrl coarsen2(block::ctrl ctrl_message, FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+        void adapt(FLT tolsize);
+        void coarsen(FLT factor, const class mesh& xmesh);
+        void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
         void coarsen3();
 
         /* UTILITIES FOR PARALLEL COMPUTATIONS */
@@ -149,15 +145,14 @@ class mesh {
         void smsgpass(boundary::groups group, int phase, boundary::comm_type type);
         int smsgwait_rcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride);
         int smsgrcv(boundary::groups group,int phase, boundary::comm_type type,  boundary::operation op, FLT *base,int bgn, int end, int stride);
-        block::ctrl matchboundaries(block::ctrl ctrl_message);
-        
+        void matchboundaries();
         
         /* UTILITIES FOR INTERPOLATION BETWEEN MESHES */
         struct transfer {
             int tri;
             TinyVector<FLT,3> wt;
         };
-        block::ctrl mgconnect(block::ctrl ctrl_message, Array<transfer,1> &cnnct, const class mesh& tgt);
+        void mgconnect(Array<transfer,1> &cnnct, mesh& tgt);
         void testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh);
         
         /* SOME DEGUGGING FUNCTIONS */
@@ -169,6 +164,7 @@ class mesh {
         /*******************/
         /* INTERNAL FUNCTIONS */
         /*******************/  
+        void allocate(int mxsize);
         void cnt_nbor(void);
         void bdrylabel(void);
         void createsideinfo(void);
@@ -201,7 +197,7 @@ class mesh {
         int insert(const TinyVector<FLT,ND> &x);
         int insert(int vnum, int tnum);
         void bdry_insert(int vnum, int sind, int endpt = 0);
-        int findtri(TinyVector<FLT,ND> x, int vnear) const;
+        int findtri(TinyVector<FLT,ND> x, int vnear);
 
         /* FOR COARSENING A SIDE */
         void collapse(int sind, int endpt);
@@ -253,14 +249,16 @@ class mesh {
         void circumcenter(int tind, TinyVector<FLT,2> &x) const;
         FLT inscribedradius(int tind) const;
         FLT aspect(int tind) const;
-        FLT intri(int tind, const TinyVector<FLT,2> &x) const;
+        FLT intri(int tind, const TinyVector<FLT,2> &x);
         void getwgts(TinyVector<FLT,3> &wgt) const;
         /* tri numbers at boundary point to el and group */
         int getbdrynum(int trinum) const { return((-trinum>>16) -1);}
         int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
         int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));}
+    
     private:
-        int excpt, excpt1, mp_phase;
+        /** USED IN INTRI FOR SEARCHING (NORMALIZED VALUE RETURNED BY GETWGTS AFTER SUCCESSFUL SEARCH) */
+        TinyVector<FLT,3> tri_wgt;
 };
 
 class vgeometry_interface {
@@ -345,7 +343,7 @@ class side_bdry : public boundary, public sgeometry_interface {
         /* ADDITIONAL STUFF FOR SIDES */
         virtual void swap(int s1, int s2);
         virtual void reorder();
-        virtual block::ctrl mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
+        virtual void mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum);
         virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
         virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
         

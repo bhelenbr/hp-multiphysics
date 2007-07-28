@@ -7,7 +7,7 @@
 #include <fstream>
 #include <mathclass.h>
 
-// #define MPDEBUG
+//#define MPDEBUG
 
 /** \brief Template class to make a communciation boundary 
  *
@@ -44,7 +44,8 @@ template<class BASE> class comm_bdry : public BASE {
         int nmatch; //!< Number of matching boundaries
         TinyVector<matchtype,maxmatch> mtype; //!< Local or mpi or ?
         TinyVector<boundary *,maxmatch> local_match; //!< Pointers to local matches
-        TinyVector<int,maxmatch> tags; //!< Identifies each connection uniquely
+        TinyVector<int,maxmatch> snd_tags; //!< Identifies each connection uniquely
+        TinyVector<int,maxmatch> rcv_tags; //!< Identifies each connection uniquely
         TinyVector<void *,maxmatch> rcvbuf; //!< Raw memory to store incoming messages
         TinyVector<Array<FLT,1>,maxmatch> frcvbufarray; //!< Access to incoming message buffer for floats
         TinyVector<Array<int,1>,maxmatch> ircvbufarray; //!< Access to incoming message buffer for ints
@@ -71,7 +72,9 @@ template<class BASE> class comm_bdry : public BASE {
             /* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
             mtype = inbdry.mtype;
             local_match = local_match;
-            tags = inbdry.tags;
+            snd_tags = inbdry.snd_tags;
+            rcv_tags = inbdry.rcv_tags;
+
 #ifdef MPISRC
             mpi_match = inbdry.mpi_match;
 #endif
@@ -171,11 +174,12 @@ template<class BASE> class comm_bdry : public BASE {
             }
         }
 
-        int local_cnnct(boundary *bin, int msg_tag) {
+        int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {
             if (bin->idnum == BASE::idnum) {
                 mtype(nmatch) = local;
                 local_match(nmatch) = bin;
-                tags(nmatch) = msg_tag;
+                snd_tags(nmatch) = snd_tag;
+                rcv_tags(nmatch) = rcv_tag;
                 rcvbuf(nmatch) = xmalloc(buffsize);
                 Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
                 frcvbufarray(nmatch).reference(temp);
@@ -189,10 +193,11 @@ template<class BASE> class comm_bdry : public BASE {
         }
         
 #ifdef MPISRC
-        int mpi_cnnct(int nproc, int msg_tag) {
+        int mpi_cnnct(int nproc, int snd_tag, int rcv_tag) {
             mtype(nmatch) = mpi;
             mpi_match(nmatch) = nproc;
-            tags(nmatch) = msg_tag;
+            snd_tags(nmatch) = snd_tag;
+            rcv_tags(nmatch) = rcv_tag;
             rcvbuf(nmatch) = xmalloc(buffsize);
             Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
             frcvbufarray(nmatch).reference(temp);
@@ -206,7 +211,9 @@ template<class BASE> class comm_bdry : public BASE {
         /* MECHANISM FOR SYMMETRIC SENDING */
         void comm_prepare(boundary::groups grp, int phi, boundary::comm_type type) {            
             int m;
-            int nrecvs_to_post = nmatch;
+            int nrecvs_to_post;
+            int nsends_to_post;
+            
 #ifdef MPISRC
             int err;
 #endif
@@ -217,95 +224,97 @@ template<class BASE> class comm_bdry : public BASE {
             switch(type) {
                 case(boundary::master_slave): {
                     if (first) {
-#ifdef MPDEBUG
-                        *(sim::log) << "master prepared for message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " first:" <<  is_frst()  << "\n";
-#endif      
-                        return;
+                        nsends_to_post = nmatch;
+                        nrecvs_to_post = 0;
                     }
-                    else
+                    else {
                         nrecvs_to_post = 1;
+                        nsends_to_post = 0;
+                    }
                     break;
                 }
                 case(boundary::slave_master): {
                     if (!first) {
-#ifdef MPDEBUG
-                        *(sim::log) << "slave prepared for message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " first:" <<  is_frst()  << "\n";
-#endif    
-                        return;
+                        nsends_to_post = 1;
+                        nrecvs_to_post = 0;
+                    }
+                    else {
+                        nrecvs_to_post = nmatch;
+                        nsends_to_post = 0;
                     }
                     break;
                 }
                 case(boundary::symmetric): {
+                    nrecvs_to_post = nmatch;
+                    nsends_to_post = nmatch;
                     break;
                 }
             }
             
-            switch(msgtype) {
-                case(boundary::flt_msg): {
-                    /* MPI POST RECEIVES FIRST */
-                    for(m=0;m<nrecvs_to_post;++m) {
-                        if (phi != phase(grp)(m)) continue;
-                        
+            /* MPI POST RECEIVES FIRST */
+            for(m=0;m<nrecvs_to_post;++m) {
+                if (phi != phase(grp)(m)) continue;
+                
 #ifdef MPDEBUG
-                        *(sim::log) << "preparing for float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                *(sim::log) << "preparing for receipt of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif      
-                        
-                        switch(mtype(m)) {
-                            case(local):
+                
+                switch(mtype(m)) {
+                    case(local):
+                         /* NOTHING TO DO FOR LOCAL RECEIVES */
 #ifdef MPDEBUG
-                                *sim::log << "local" << std::endl << std::flush;
+                        *sim::log << "local" << std::endl << std::flush;
 #endif
-                                /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
-                                break;  
+                        break;  
 #ifdef MPISRC
-                            case(mpi):
+                    case(mpi):
 #ifdef MPDEBUG
-                                *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
+                        switch(msgtype) {
+                            case(boundary::flt_msg): {
 #ifdef SINGLE
                                 err = MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_FLOAT, 
-                                    mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
+                                    mpi_match(m), rcv_tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #else
                                 err = MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_DOUBLE, 
-                                    mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
+                                    mpi_match(m), rcv_tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
 #endif    
                                 break;
-#endif        
-                        }
-                    }
-                    break;
-                }
-                    
-                case(boundary::int_msg): {
-                    /* MPI POST RECEIVES FIRST */
-                    for(m=0;m<nrecvs_to_post;++m) {
-                        if (phi != phase(grp)(m)) continue;
-                        
-#ifdef MPDEBUG
-                        *(sim::log) << "preparing for int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-#endif    
-                        
-                        switch(mtype(m)) {
-                            case(local):
-#ifdef MPDEBUG
-                                *sim::log << "local" << std::endl << std::flush;
-#endif
-                                /* NOTHING TO DO FOR LOCAL PASSES (BUFFER ALREADY LOADED) */
-                                break;  
-#ifdef MPISRC
-                            case(mpi):
-#ifdef MPDEBUG
-                                *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
-#endif
+                            }
+                            case(boundary::int_msg): {
                                 err = MPI_Irecv(&ircvbuf(m,0), buffsize/sizeof(int), MPI_INT, 
-                                    mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
-                                    
+                                    mpi_match(m), rcv_tags(m), MPI_COMM_WORLD, &mpi_rcvrqst(m));
                                 break;
-#endif            
+                            }
                         }
-
-                    }
-                    break; 
+#endif        
+                }
+            }
+            
+            /* LOCAL POST SENDS FIRST */
+            for(m=0;m<nsends_to_post;++m) {
+                if (phi != phase(grp)(m)) continue;
+                
+#ifdef MPDEBUG
+                *(sim::log) << "preparing for send of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " ;
+#endif      
+                
+                switch(mtype(m)) {
+                    case(local):
+#ifdef MPDEBUG
+                        *sim::log << "local" << std::endl << std::flush;
+#endif
+                        sim::blks.notify_change(snd_tags(m),true);
+                        break;  
+#ifdef MPISRC
+                    case(mpi):
+                        /* NOTHING TO DO FOR MPI SENDS */
+#ifdef MPDEBUG
+                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+#endif
+                        break;
+#endif        
                 }
             }
         }
@@ -315,161 +324,146 @@ template<class BASE> class comm_bdry : public BASE {
 #ifdef MPISRC
             int err;
 #endif
-            int nlocalmessages = nmatch, nmpimessages = nmatch;
+            int nrecvs_to_post = nmatch, nsends_to_post = nmatch;
             
             if (!((1<<grp)&groupmask)) return;
             
             switch(type) {
                 case(boundary::master_slave): {
                     if (!first) {
-                        nlocalmessages = 1;
-                        nmpimessages = 0;
+                        nrecvs_to_post = 1;
+                        nsends_to_post = 0;
                     }
                     else {
-                        nlocalmessages = 0;
-                        nmpimessages = nmatch;
+                        nrecvs_to_post = 0;
+                        nsends_to_post = nmatch;
                     }
                     break;
                 }
                 case(boundary::slave_master): {
                     if (first) {
-                        nlocalmessages = nmatch;
-                        nmpimessages = 0;
+                        nrecvs_to_post = nmatch;
+                        nsends_to_post = 0;
                     }
                     else {
-                        nlocalmessages = 0;
-                        nmpimessages = 1;
+                        nrecvs_to_post = 0;
+                        nsends_to_post = 1;
                     }
                     break;
                 }
                 case(boundary::symmetric): {
+                    nrecvs_to_post = nmatch;
+                    nsends_to_post = nmatch;
                     break;
                 }
             }     
             
-            switch(msgtype) {
-                case(boundary::flt_msg): {
-                    /* LOCAL PASSES */
-                    for(m=0;m<nlocalmessages;++m) {
-                        if (phi != phase(grp)(m) || mtype(m) != local) continue;
+
+            /* LOCAL PASSES */
+            for(m=0;m<nrecvs_to_post;++m) {
+                if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                        *(sim::log) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                *(sim::log) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 //                        for(i=0;i<local_match(m)->sndsize();++i) 
 //                            *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif      
+                sim::blks.waitforslot(rcv_tags(m),true);
+                switch(msgtype) {
+                    case(boundary::flt_msg): {
                         for(i=0;i<local_match(m)->sndsize();++i) 
                             frcvbuf(m,i) = local_match(m)->fsndbuf(i);
+                        break;
                     }
-  
-#ifdef MPISRC
-                    /* MPI PASSES */
-                    for(m=0;m<nmpimessages;++m) {
-                        if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
-                        
-#ifdef MPDEBUG
-                        *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                        for(i=0;i<msgsize;++i) 
-                            *(sim::log) << "\t" << fsndbuf(i) << std::endl;
-#endif  
-
-#ifdef SINGLE
-                        err = MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
-                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
-#else
-                        err = MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
-                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));                 
-#endif
-                    }
-#endif
-                    break;
-                }
-                    
-                case(boundary::int_msg): {
-                    /* LOCAL PASSES */
-                    for(m=0;m<nlocalmessages;++m) {
-                        if (phi != phase(grp)(m) || mtype(m) != local) continue;
-                        
-#ifdef MPDEBUG
-                        *(sim::log) << "exchanging local int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                        for(i=0;i<local_match(m)->sndsize();++i) 
-                            *sim::log << "\t" << local_match(m)->isndbuf(i) << std::endl;
-#endif 
-  
+                    case(boundary::int_msg): {
                         for(i=0;i<local_match(m)->sndsize();++i) 
                             ircvbuf(m,i) = local_match(m)->isndbuf(i);
+                        break;   
                     }
+                }
+                sim::blks.notify_change(rcv_tags(m),false);
+            }
   
 #ifdef MPISRC
-                    /* MPI PASSES */
-                    for(m=0;m<nmpimessages;++m) {
-                        if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
-                        
+            /* MPI PASSES */
+            for(m=0;m<nsends_to_post;++m) {
+                if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
+                
 #ifdef MPDEBUG
-                        *(sim::log) << "exchanging mpi int message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tage " << tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
-                        for(i=0;i<msgsize;++i) 
-                            *(sim::log) << "\t" << isndbuf(i) << std::endl;
+                *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif  
-                        err = MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
-                            mpi_match(m), tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
-                    }
+                switch(msgtype) {
+                    case(boundary::flt_msg): {
+#ifdef SINGLE
+                        err = MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
+                            mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
+#else
+                        err = MPI_Isend(&fsndbuf(0), msgsize, MPI_DOUBLE, 
+                            mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));                 
 #endif
-                    break;      
+                        break;
+                    }
+                    case(boundary::int_msg): {
+                        err = MPI_Isend(&isndbuf(0), msgsize, MPI_INT, 
+                            mpi_match(m), snd_tags(m), MPI_COMM_WORLD, &mpi_sndrqst(m));
+                        break;
+                    }
                 }
             }
-            
+#endif
             return;
         }
         
         int comm_wait(boundary::groups grp, int phi, boundary::comm_type type) {
-            int nrecvwait;
-            int nsendwait;
+            int nrecvs_to_post;
+            int nsends_to_post;
             
             if (!((1<<grp)&groupmask)) return(1);
             
             switch(type) {
                 case(boundary::master_slave): {
                     if (first) {
-                        nrecvwait = 0;
-                        nsendwait = nmatch;
+                        nrecvs_to_post = 0;
+                        nsends_to_post = nmatch;
                     }
                     else {
-                        nrecvwait = 1;
-                        nsendwait = 0;
+                        nrecvs_to_post = 1;
+                        nsends_to_post = 0;
                     }
                     break;
                 }
                 
                 case(boundary::slave_master): {
                     if (!first) {
-                        nrecvwait = 0;
-                        nsendwait = 1;
+                        nrecvs_to_post = 0;
+                        nsends_to_post = 1;
                     }
                     else {
-                        nrecvwait = nmatch;
-                        nsendwait = 0;
+                        nrecvs_to_post = nmatch;
+                        nsends_to_post = 0;
                     }
                     break;
                 }
                 
                 case(boundary::symmetric): {
-                    nrecvwait = nmatch;
-                    nsendwait = nmatch;
+                    nrecvs_to_post = nmatch;
+                    nsends_to_post = nmatch;
                     break;
                 }
             }
             
-            for(int m=0;m<nsendwait;++m) {
+            for(int m=0;m<nsends_to_post;++m) {
                 if (phi != phase(grp)(m)) continue;
                 
                 switch(mtype(m)) {
                     case(local): {
+                        sim::blks.waitforslot(snd_tags(m),false);
                         break;
                     }
 #ifdef MPISRC
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *sim::log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+                        *sim::log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << snd_tags(m) << " with type: " << mtype(m) << std::endl;
 #endif
                         MPI_Wait(&mpi_sndrqst(m), &status); 
                         break;
@@ -479,7 +473,7 @@ template<class BASE> class comm_bdry : public BASE {
             }
 
          
-            for(int m=0;m<nrecvwait;++m) {
+            for(int m=0;m<nrecvs_to_post;++m) {
                 if (phi != phase(grp)(m)) continue;
                 
                 switch(mtype(m)) {
@@ -490,7 +484,7 @@ template<class BASE> class comm_bdry : public BASE {
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *sim::log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << tags(m) << " with type: " << mtype(m)  << std::endl;
+                        *sim::log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << rcv_tags(m) << " with type: " << mtype(m)  << std::endl;
 #endif
                         MPI_Wait(&mpi_rcvrqst(m), &status); 
                         break;
@@ -500,10 +494,10 @@ template<class BASE> class comm_bdry : public BASE {
                 
 #ifdef MPDEBUG
                 if (msgtype == boundary::flt_msg) {
-                    *(sim::log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(sim::log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
                 else {
-                    *(sim::log) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(sim::log) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
 #endif  
             }
@@ -563,7 +557,7 @@ class spartition : public scomm {
         spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
 
         spartition* create(mesh& xin) const {return new spartition(*this,xin);}
-        block::ctrl mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum);
+        void mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum);
 };
 
 

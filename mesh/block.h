@@ -13,8 +13,6 @@ class block {
     public:
         std::string idprefix; 
         int idnum;
-        typedef int ctrl;
-        static const ctrl begin = -1, stay = 0, advance = 1, advance1 = 3, advance2 = 7, advance3  = 15, stop = 31;
         block(int idin) : idnum(idin) {
             char buffer[100];
             std::string keyname;
@@ -22,19 +20,18 @@ class block {
             idprefix = std::string(buffer);
         }
         virtual void init(input_map& input) = 0;
-        virtual void reload_scratch_pointers() = 0;
         enum output_purpose {display, restart, debug};
         virtual void output(const std::string &filename, output_purpose why, int lvl = 0) = 0;
-        virtual ctrl matchboundaries(int lvl, block::ctrl ctrl_message) = 0;
-        virtual ctrl rsdl(int lvl, block::ctrl ctrl_message) = 0;
-        virtual ctrl setup_preconditioner(int lvl, block::ctrl ctrl_message) = 0;
-        virtual ctrl update(int lvl, block::ctrl ctrl_message) = 0;
+        virtual void matchboundaries(int lvl) = 0;
+        virtual void rsdl(int lvl) = 0;
+        virtual void setup_preconditioner(int lvl) = 0;
+        virtual void update(int lvl) = 0;
         virtual double maxres(int lvl = 0) = 0;
-        virtual ctrl mg_getfres(int lvl, int lvlm, block::ctrl ctrl_message) = 0;
-        virtual ctrl mg_getcchng(int lvl, int lvlp, block::ctrl ctrl_message) = 0;
-        virtual ctrl reconnect(int lvl, block::ctrl ctrl_message) = 0;
-        virtual ctrl tadvance(int lvl, block::ctrl ctrl_message) = 0;
-        virtual ctrl adapt(block::ctrl ctrl_message) = 0;
+        virtual void mg_getfres(int lvl, int lvlm) = 0;
+        virtual void mg_getcchng(int lvl, int lvlp) = 0;
+        virtual void reconnect(int lvl) = 0;
+        virtual void tadvance(int lvl) = 0;
+        virtual void adapt() = 0;
         
         /* STUFF TO MATCH COMMUNICATION BOUNDARIES */
         virtual int comm_entity_size(int grdlvl) = 0;

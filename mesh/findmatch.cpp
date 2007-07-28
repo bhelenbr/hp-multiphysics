@@ -194,71 +194,43 @@ int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, bo
     return(stop);
 }
 
-block::ctrl mesh::matchboundaries(block::ctrl ctrl_message) {
-    int state;
-    
-    if (ctrl_message == block::begin) excpt = 0;
-    else excpt += ctrl_message;
-    
-#define NO_CTRL_DEBUG
-#ifdef CTRL_DEBUG
-    *sim::log << "In mesh::matchboundaries with excpt " << excpt << std::endl;
-#endif
- 
-    switch (excpt) {
-        case(0):
-            mp_phase = -1;
-            return(block::advance);
-        case(1):
-            ++mp_phase;
-            /* MESSAGE PASSING SEQUENCE */
-            switch(mp_phase%3) {
-                case(0): {
-                    /* LOAD POSITIONS INTO BUFFERS */
-                    for(int i=0;i<nvbd;++i)
-                        vbdry(i)->loadpositions();
-                    for(int i=0;i<nsbd;++i) 
-                        sbdry(i)->loadpositions();
-                    
-                    /* FIRST PHASE OF SENDING, POST ALL RECEIVES */
-                    for(int i=0;i<nsbd;++i)
-                        sbdry(i)->comm_prepare(boundary::all_phased,mp_phase/3,boundary::master_slave);
-                    for(int i=0;i<nvbd;++i)
-                        vbdry(i)->comm_prepare(boundary::all_phased,mp_phase/3,boundary::master_slave);
-                    
-                    return(block::stay);
-                }
-                case(1): {
-                    vmsgpass(boundary::all_phased,mp_phase/3,boundary::master_slave);
-                    return(block::stay);
-                }
-                case(2): {
-                    state=block::advance;
-
-                    /* FINAL PHASE OF SENDING */
-                    for(int i=0;i<nsbd;++i)
-                        state &= sbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
-                                        
-                    for(int i=0;i<nvbd;++i)
-                        state &= vbdry(i)->comm_wait(boundary::all_phased,mp_phase/3,boundary::master_slave);
-                        
-                    for(int i=0;i<nsbd;++i)
-                        sbdry(i)->rcvpositions(mp_phase/3);
-                    for(int i=0;i<nvbd;++i)
-                        vbdry(i)->rcvpositions(mp_phase/3);
-                                
-                    return(state);
-                }
-            }
-        case(2): {
-            return(block::stop);
-        }
-    }
+void mesh::matchboundaries() {
+    int last_phase;
+    int mp_phase;
         
-    *sim::log << "control flow error matchboundaries\n";
-    exit(1);
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
     
-    return(block::stop);
+        /* LOAD POSITIONS INTO BUFFERS */
+        for(int i=0;i<nvbd;++i)
+            vbdry(i)->loadpositions();
+        for(int i=0;i<nsbd;++i) 
+            sbdry(i)->loadpositions();
+            
+        /* FIRST PART OF SENDING, POST ALL RECEIVES */
+        for(int i=0;i<nsbd;++i)
+            sbdry(i)->comm_prepare(boundary::all_phased,mp_phase,boundary::master_slave);
+        for(int i=0;i<nvbd;++i)
+            vbdry(i)->comm_prepare(boundary::all_phased,mp_phase,boundary::master_slave);
+                            
+                
+        /* SECOND PART */
+        vmsgpass(boundary::all_phased,mp_phase,boundary::master_slave);
+      
+        /* FINAL PART OF SENDING */
+        last_phase = true;
+        for(int i=0;i<nsbd;++i)
+            last_phase &= sbdry(i)->comm_wait(boundary::all_phased,mp_phase,boundary::master_slave);
+                            
+        for(int i=0;i<nvbd;++i)
+            last_phase &= vbdry(i)->comm_wait(boundary::all_phased,mp_phase,boundary::master_slave);
+                            
+        for(int i=0;i<nsbd;++i)
+            sbdry(i)->rcvpositions(mp_phase);
+        for(int i=0;i<nvbd;++i)
+            vbdry(i)->rcvpositions(mp_phase);
+    }
+
+    return;
 }
 
 #ifdef METIS
@@ -273,26 +245,17 @@ void mesh::setpartition(int nparts) {
     int edgecut;
     
     /* CREATE ISOLATED TVRTX ARRAY */
-#ifdef USE_SIMSCRATCH
-    TinyVector<int,3> *base = new (sim::scratch.data()) TinyVector<int,3>;
-    Array<TinyVector<int,3>,1> tvrtx(base, maxvst, neverDeleteData);
-#else
-    Array<TinyVector<int,3>,1> tvrtx(maxvst);
-#endif
-    
+    Array<TinyVector<int,3>,1> tvrtx(maxvst);    
     for(i=0;i<ntri;++i)
         for(n=0;n<3;++n)
             tvrtx(i)(n) = td(i).vrtx(n);
             
-  METIS_PartMeshNodal(&ntri, &nvrtx, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&i1wk(0),&i2wk(0));
-#ifdef USE_SIMSCRATCH
-    base->~TinyVector<int,3>();
-#endif
+    METIS_PartMeshNodal(&ntri, &nvrtx, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl_ptr->intwk(0)),&(gbl_ptr->i2wk(0)));
     
     for(i=0;i<ntri;++i)
-        td(i).info = i1wk(i);
+        td(i).info = gbl_ptr->intwk(i);
         
-    i1wk = -1;
+    gbl_ptr->intwk = -1;
 
     return;
 }

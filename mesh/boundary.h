@@ -70,9 +70,9 @@ class boundary {
         virtual bool& is_frst() {return(dummy.bdum=true);}
         virtual int& group() {return(dummy.idum=1);}
         virtual int matches() {return(0);}
-        virtual int local_cnnct(boundary *bin, int msg_tag) {return 1;}
+        virtual int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {return 1;}
 #ifdef MPISRC
-        virtual int mpi_cnnct(int proc_tgt, int msg_tag) {return 1;}
+        virtual int mpi_cnnct(int proc_tgt, int snd_tag, int rcv_tag) {return 1;}
 #endif
         virtual int& matchphase(boundary::groups group, int matchnum) {return(dummy.idum=0);}
         virtual void resize_buffers(int size) {}
@@ -88,8 +88,6 @@ class boundary {
         virtual int comm_wait(boundary::groups group, int phase, comm_type type) {return 1;}
         virtual int comm_nowait(boundary::groups group, int phase, comm_type type) {return 1;}
         virtual ~boundary() {}
-    protected:
-        int excpt;
 };
 #endif
 

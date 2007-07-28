@@ -169,18 +169,18 @@ int mesh::smooth_cofa(int niter) {
         /* SMOOTH POINT DISTRIBUTION X*/
         for(n=0;n<ND;++n) {
             for(i=0;i<nvrtx;++i)
-                fscr1(i) = 0.0;
+                gbl_ptr->fltwk(i) = 0.0;
     
             for(i=0;i<nside;++i) {
                 v0 = sd(i).vrtx(0);
                 v1 = sd(i).vrtx(1);
-                fscr1(v0) += vrtx(v1)(n);
-                fscr1(v1) += vrtx(v0)(n);
+                gbl_ptr->fltwk(v0) += vrtx(v1)(n);
+                gbl_ptr->fltwk(v1) += vrtx(v0)(n);
             }
     
             for(i=0;i<nvrtx;++i) {
                 if (vd(i).info == 0) {
-                    vrtx(i)(n) = fscr1(i)/vd(i).nnbor;
+                    vrtx(i)(n) = gbl_ptr->fltwk(i)/vd(i).nnbor;
                 }
             }
         }

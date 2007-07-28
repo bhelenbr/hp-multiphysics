@@ -8,11 +8,13 @@
 #include <fstream>
 
 
-void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
+void r_mesh::init(input_map& input, r_mesh::gbl *gin) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     int coarse,ival;
+    
+    mesh::init(input,gin);
         
     keyword = idprefix + "_coarse";
     if (!input.get(keyword,coarse)) {
@@ -50,11 +52,11 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
     isfrst = false;
     
     /* BLOCK SHARED INFORMATION */
-    rg = rgin;
+    gbl_ptr = gin;
     if (!coarse) {
-        rg->diag.resize(maxvst);
-        rg->res.resize(maxvst);
-        rg->res1.resize(maxvst);
+        gbl_ptr->diag.resize(maxvst);
+        gbl_ptr->res.resize(maxvst);
+        gbl_ptr->res1.resize(maxvst);
     }
 
     r_sbdry.resize(nsbd);
@@ -67,24 +69,6 @@ void r_mesh::init(input_map& input, r_mesh::gbl *rgin) {
 r_mesh::~r_mesh() {
     for(int i=0;i<nsbd;++i)
         delete r_sbdry(i);
-}
-        
-
-void r_mesh::bdry_output(const std::string &filename) const {
-    std::string fnmapp;
-    std::ofstream bout;
-    int i;
-    
-    fnmapp = filename + "_bdry.inpt";
-    bout.open(fnmapp.c_str());
-    for(i=0;i<nvbd;++i) 
-        vbdry(i)->output(bout);
-        
-    for(i=0;i<nsbd;++i) {
-        sbdry(i)->output(bout);
-        r_sbdry(i)->output(bout);
-    }
-    bout.close();
 }
 
 
@@ -113,13 +97,33 @@ void r_mesh::rklaplace() {
             sind = td(tind).side((k+2)%3);
             ksprg(sind) += l;
         }
-    }        
-
-    calc_kvol();
+    }
     
     return;
 }
 
+#ifdef FOURTH
+void r_mesh::calc_kvol() {
+    int last_phase, mp_phase;
+    
+    for(int i=0;i<nvrtx;++i) 
+        kvol(i) = 0.0;
+
+    for(int tind=0;tind<ntri;++tind) 
+        for(int i=0;i<3;++i) 
+            kvol(td(tind).vrtx(i)) += area(tind);
+
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased,mp_phase,boundary::symmetric,kvol.data(),0,0,1);
+        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, kvol.data(),0,0,1);
+    }
+
+    for(int i=0;i<nvrtx;++i)
+        kvol(i) = 1./kvol(i);
+}
+#endif
 
 void r_mesh::rksprg() {
     int sind,v0,v1;
@@ -134,29 +138,7 @@ void r_mesh::rksprg() {
         ksprg(sind) = 1.0/(dx*dx +dy*dy);
     }
 
-    calc_kvol();
-
     return;
-}
-
-void r_mesh::calc_kvol() {
-    int i,tind;
-    
-    for(i=0;i<nvrtx;++i) 
-        kvol(i) = 0.0;
-
-    for(tind=0;tind<ntri;++tind) 
-        for(i=0;i<3;++i) 
-            kvol(td(tind).vrtx(i)) += area(tind);
-              
-    return;
-}
-
-void r_mesh::kvoli() {
-    int i;
-
-    for(i=0;i<nvrtx;++i)
-        kvol(i) = 1./kvol(i);
 }
 
 void r_mesh::rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh) {
@@ -164,9 +146,9 @@ void r_mesh::rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh) {
     
     /* Load Diag Locally */
     Array<FLT,1> diag;
-    diag.reference(rg->diag);
+    diag.reference(gbl_ptr->diag);
     Array<TinyVector<FLT,ND>,1> res1;
-    res1.reference(rg->res1);
+    res1.reference(gbl_ptr->res1);
     
     /* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
     for(i=0;i<fmesh->nvrtx;++i)
@@ -232,143 +214,24 @@ void r_mesh::rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh) {
             }
         }
     }
-    
-    /* CALCULATE KVOL USING MULTIGRID I VOL I^T*/
-    /* LOOP THROUGH FINE VERTICES TO CALCULATE COARSE VOLUME  */
-    for(i=0;i<nvrtx;++i)
-        kvol(i) = 0.0;
-
-    for(i=0;i<fmesh->nvrtx;++i) {
-        tind = fv_to_ct(i).tri;
-        for(j=0;j<3;++j) {
-            v0 = td(tind).vrtx(j);
-            kvol(v0) += fv_to_ct(i).wt(j)/fmesh->kvol(i);
-        }
-    }
 
     return;
 }
 
-/*************************************/ 
-/* SECOND ORDER MESH MOVEMENT SCHEME */
-/*************************************/
-#ifndef FOURTH
-void r_mesh::rsdl() {
-    int i,n,sind,v0,v1;
-    FLT dx,dy;
-    
-    Array<TinyVector<FLT,ND>,1> res;
-    res.reference(rg->res);
-    
-    for(i=0;i<nvrtx;++i)
-        for(n=0;n<ND;++n)
-            res(i)(n) = 0.0;
 
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-
-        dx = ksprg(sind)*(vrtx(v1)(0)-vrtx(v0)(0));
-        dy = ksprg(sind)*(vrtx(v1)(1)-vrtx(v0)(1));
-
-        res(v0)(0) -= dx;
-        res(v0)(1) -= dy;
-
-        res(v1)(0) += dx;
-        res(v1)(1) += dy;
-    }
-    
-    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-    if (isfrst) {
-        for(i=0;i<nvrtx;++i) 
-            for(n=0;n<ND;++n)
-                src(i)(n) -= res(i)(n);
-
-        isfrst = false;
-    }
-
-    /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
-    for(i=0;i<nvrtx;++i) 
-        for(n=0;n<ND;++n)
-            res(i)(n) += src(i)(n);
-
-    /* APPLY DIRICHLET BOUNDARY CONDITIONS */
-    for(i=0;i<nsbd;++i)
-        r_sbdry(i)->dirichlet();
-        
-            
-    /* TESTING 
-    for(i=0;i<nvrtx;++i) {
-        res(i)(0) = 0.525*vrtx(i)(0)+0.7*i;
-        res(i)(1) = 0.525*vrtx(i)(1)+0.7*i;
-    }
-    
-    std::cout << "74 " << res(nvrtx-17)(0) << " " <<  res(nvrtx-17)(1) << std::endl;
-    std::cout << "90 " << res(nvrtx-1)(0) << " " <<  res(nvrtx-1)(1) << std::endl;
-    */
-    
-    return;
-}
-#endif
-
-#ifndef FOURTH
-void r_mesh::vddt(void)
-{
-    int i,v0,v1,sind;
-    
-    Array<FLT,1> diag;
-    diag.reference(rg->diag);
-
-    /**************************************************/
-    /* DETERMINE MESH MOVEMENT TIME STEP              */
-    /**************************************************/
-    for(i=0;i<nvrtx;++i)
-        diag(i) = 0.0;
-
-    /* FORM TIME STEP FOR MV_UPDATE */
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-        diag(v0) += fabs(ksprg(sind));
-        diag(v1) += fabs(ksprg(sind));
-    }
-    
-    return;
-}
-#endif
-
-void r_mesh::vddti() {
-    int i;
-    
-    Array<FLT,1> diag;
-    diag.reference(rg->diag);
-        
-    for(i=0;i<nvrtx;++i)
-        diag(i) = r_cfl/diag(i);
-}
-
-block::ctrl r_mesh::update(block::ctrl ctrl_message) {
+void r_mesh::update() {
     int i,n;
-    block::ctrl state;
     
-    if (ctrl_message == block::begin) excpt1 = 0;
-    
-    if (excpt1 == 0) {
-        state = r_mesh::rsdl(ctrl_message);
-        if (state != block::stop) return(state);
+    r_mesh::rsdl();
         
-        Array<FLT,1> diag;
-        diag.reference(rg->diag);
-        Array<TinyVector<FLT,ND>,1> res;
-        res.reference(rg->res);
+    Array<FLT,1> diag;
+    diag.reference(gbl_ptr->diag);
+    Array<TinyVector<FLT,ND>,1> res;
+    res.reference(gbl_ptr->res);
 
-        for(i=0;i<nvrtx;++i)
-            for(n=0;n<ND;++n)
-                vrtx(i)(n) -= diag(i)*res(i)(n);
-        ++excpt1;
-    }
-        
-    return(block::stop);
+    for(i=0;i<nvrtx;++i)
+        for(n=0;n<ND;++n)
+            vrtx(i)(n) -= diag(i)*res(i)(n);
 }
 
 void r_mesh::zero_source() {
@@ -385,7 +248,7 @@ void r_mesh::sumsrc() {
     int i,n;
     
     Array<TinyVector<FLT,ND>,1> res;
-    res.reference(rg->res);
+    res.reference(gbl_ptr->res);
 
     for(i=0;i<nvrtx;++i) 
         for(n=0;n<ND;++n)
@@ -394,121 +257,97 @@ void r_mesh::sumsrc() {
     return;
 }
 
-block::ctrl r_mesh::mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
+void r_mesh::mg_getfres(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
     int i,j,n,tind,v0;
     
-    if (ctrl_message == block::begin) {
-        Array<TinyVector<FLT,ND>,1> fres;
-        fres.reference(rg->res);
+    Array<TinyVector<FLT,ND>,1> fres;
+    fres.reference(gbl_ptr->res);
+        
+    for(i=0;i<nvrtx;++i)
+        for(n=0;n<ND;++n)
+            src(i)(n) = 0.0;
             
-        for(i=0;i<nvrtx;++i)
+    /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
+    for(i=0;i<fmesh->nvrtx;++i) {
+        tind = fv_to_ct(i).tri;
+        for(j=0;j<3;++j) {
+            v0 = td(tind).vrtx(j);
             for(n=0;n<ND;++n)
-                src(i)(n) = 0.0;
-                
-        /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
-        for(i=0;i<fmesh->nvrtx;++i) {
-            tind = fv_to_ct(i).tri;
-            for(j=0;j<3;++j) {
-                v0 = td(tind).vrtx(j);
-                for(n=0;n<ND;++n)
-                    src(v0)(n) += fadd*fv_to_ct(i).wt(j)*fres(i)(n);
-            }
+                src(v0)(n) += fadd*fv_to_ct(i).wt(j)*fres(i)(n);
+        }
+    }
+    
+    /* LOOP THROUGH fv_to_ct VERTICES    */
+    /* TO CALCULATE VRTX ON fv_to_ct MESH */
+    for(i=0;i<nvrtx;++i) {
+        tind = cv_to_ft(i).tri;
+
+        for(n=0;n<ND;++n)
+            vrtx(i)(n) = 0.0;
+            
+        for(j=0;j<3;++j) {
+            for(n=0;n<ND;++n)
+                vrtx(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
         }
         
-        /* LOOP THROUGH fv_to_ct VERTICES    */
-        /* TO CALCULATE VRTX ON fv_to_ct MESH */
-        for(i=0;i<nvrtx;++i) {
-            tind = cv_to_ft(i).tri;
-
-            for(n=0;n<ND;++n)
-                vrtx(i)(n) = 0.0;
-                
-            for(j=0;j<3;++j) {
-                for(n=0;n<ND;++n)
-                    vrtx(i)(n) += cv_to_ft(i).wt(j)*fmesh->vrtx(fmesh->td(tind).vrtx(j))(n);
-            }
-            
-            for(n=0;n<ND;++n)
-                vrtx_frst(i)(n) = vrtx(i)(n);
-        }
-
-        isfrst = true;
+        for(n=0;n<ND;++n)
+            vrtx_frst(i)(n) = vrtx(i)(n);
     }
+    isfrst = true;
     
-    return(block::stop);
+    return;
 }
 
-block::ctrl r_mesh::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh) {
-    int i,j,n,ind,tind;  
-    int stop=1;
-    
-    if (ctrl_message == block::begin) excpt = 0;
-    else excpt += ctrl_message;
-    
+void r_mesh::mg_getcchng(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh) {
+    int i,j,n,ind,tind;
+    int last_phase, mp_phase;  
+
     Array<TinyVector<FLT,ND>,1> res;
-    res.reference(rg->res);
+    res.reference(gbl_ptr->res);
     
-    
-    switch (excpt) {
-        case(0):
-            mp_phase = -1;
-            /* DETERMINE CORRECTIONS ON COARSE MESH    */    
-            for(i=0;i<cmesh->nvrtx;++i)
-                for(n=0;n<ND;++n) 
-                    cmesh->vrtx_frst(i)(n) -= cmesh->vrtx(i)(n);
+    /* DETERMINE CORRECTIONS ON COARSE MESH    */    
+    for(i=0;i<cmesh->nvrtx;++i)
+        for(n=0;n<ND;++n) 
+            cmesh->vrtx_frst(i)(n) -= cmesh->vrtx(i)(n);
 
-            /* LOOP THROUGH FINE VERTICES    */
-            /* TO DETERMINE CHANGE IN SOLUTION */    
-            for(i=0;i<nvrtx;++i) {
-                
-                for(n=0;n<ND;++n)
-                    res(i)(n) = 0.0;
-                
-                tind = fv_to_ct(i).tri;
-                
-                for(j=0;j<3;++j) {
-                    ind = cmesh->td(tind).vrtx(j);
-                    for(n=0;n<ND;++n) 
-                        res(i)(n) -= fv_to_ct(i).wt(j)*cmesh->vrtx_frst(ind)(n);
-                }
-            }
-            return(block::advance);
-                
-        case(1):
-            /* SEND COMMUNICATION PACKETS  */ 
-            ++mp_phase;
-
-            switch(mp_phase%3) {
-                case(0):
-                    for(i=0;i<nsbd;++i)
-                        sbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
-                        
-                    for(i=0;i<nsbd;++i) 
-                        sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3, boundary::symmetric);
-                    
-                    return(block::stay);
-                case(1):
-                    for(i=0;i<nsbd;++i) 
-                        sbdry(i)->comm_exchange(boundary::partitions,mp_phase/3, boundary::symmetric);
-                    return(block::stay);
-                case(2):
-                    stop = 1;
-                    for(i=0;i<nsbd;++i) {
-                        stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3, boundary::symmetric);
-                        sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
-                    }
-                    return(static_cast<block::ctrl>(stop));
-            }
-
-        case(2):
-            for(i=0;i<nvrtx;++i)
-                for(n=0;n<ND;++n) 
-                    vrtx(i)(n) += res(i)(n);
-                    
-            return(block::stop);
+    /* LOOP THROUGH FINE VERTICES    */
+    /* TO DETERMINE CHANGE IN SOLUTION */    
+    for(i=0;i<nvrtx;++i) {
+        
+        for(n=0;n<ND;++n)
+            res(i)(n) = 0.0;
+        
+        tind = fv_to_ct(i).tri;
+        
+        for(j=0;j<3;++j) {
+            ind = cmesh->td(tind).vrtx(j);
+            for(n=0;n<ND;++n) 
+                res(i)(n) -= fv_to_ct(i).wt(j)*cmesh->vrtx_frst(ind)(n);
+        }
     }
-    *sim::log << "Flow control error\n" << std::endl;
-    return(block::stop);
+    
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        for(i=0;i<nsbd;++i)
+            sbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
+        
+        for(i=0;i<nsbd;++i) 
+            sbdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
+
+        for(i=0;i<nsbd;++i) 
+            sbdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
+                        
+        last_phase = true;
+        for(i=0;i<nsbd;++i) {
+            last_phase &= sbdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
+            sbdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
+        }
+    }
+
+    for(i=0;i<nvrtx;++i)
+        for(n=0;n<ND;++n) 
+            vrtx(i)(n) += res(i)(n);
+   
+    return;
 }
 
 FLT r_mesh::maxres() {
@@ -517,7 +356,7 @@ FLT r_mesh::maxres() {
     FLT sum;
     
     Array<TinyVector<FLT,ND>,1> res;
-    res.reference(rg->res);
+    res.reference(gbl_ptr->res);
 
     for(n=0;n<ND;++n)
         mxr[n] = 0.0;
@@ -537,18 +376,58 @@ FLT r_mesh::maxres() {
 }
 
 
+void r_mesh::tadvance(bool coarse, Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
+
+    if (!coarse) {
+        rklaplace();
 #ifdef FOURTH
-/*************************************/ 
-/* FOURTH ORDER MESH MOVEMENT SCHEME */
-/* THIS HAS TO BE DONE IN TWO PARTS  */
-/* TO CACLUATE LAPLACIAN                  */
-/*************************************/
-void r_mesh::rsdl1() {
-    int i,n,v0,v1,sind;
-    FLT dx,dy;
+        calc_kvol();
+#endif         
+        zero_source();
+        rsdl();
+        sumsrc();
+        moveboundaries();
+    }
+    else {
+#ifdef GEOMETRIC
+        rklaplace();
+#else
+        /* USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
+        /* MUST BE DONE THIS WAY FOR SPRING METHOD */
+        /* SETUP FIRST MESH */
+        rkmgrid(fv_to_ct,fmesh);
+#endif
+
+#ifdef  FOURTH
+        calc_kvol();
+#endif
+    }
+
+    return;
+}
+
+void r_mesh::moveboundaries() {
     
+    /* MOVE BOUNDARY POSITIONS */
+    for(int i=0;i<nsbd;++i)
+        r_sbdry(i)->tadvance();
+    
+    return;
+}
+
+void r_mesh::rsdl() {
+    int last_phase, mp_phase;
+    int i,n,sind,v0,v1;
+    FLT dx,dy;
+    Array<TinyVector<FLT,ND>,1> res;
+    res.reference(gbl_ptr->res);
+    
+#ifdef FOURTH
+    /*************************************/ 
+    /* FOURTH ORDER MESH MOVEMENT SCHEME */
+    /*************************************/
     Array<TinyVector<FLT,ND>,1> res1;
-    res1.reference(rg->res1);
+    res1.reference(gbl_ptr->res1);
     
     for(i=0;i<nvrtx;++i)
         for(n=0;n<ND;++n)
@@ -572,17 +451,12 @@ void r_mesh::rsdl1() {
     for(i=0;i<nsbd;++i)
         r_sbdry(i)->fixdx2();
 
-    return;
-}
-
-void r_mesh::rsdl() {
-    int i,n,v0,v1,sind;
-    FLT dx,dy;
-    
-    Array<TinyVector<FLT,ND>,1> res1;
-    res1.reference(rg->res1);
-    Array<TinyVector<FLT,ND>,1> res;
-    res.reference(rg->res);
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl_ptr->res1.data(),0,1,2);
+        vmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) gbl_ptr->res1.data(),0,1,2);
+    }
   
     /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
     for(i=0;i<nvrtx;++i)
@@ -606,6 +480,26 @@ void r_mesh::rsdl() {
         res(v1)(0) += dx;
         res(v1)(1) += dy;        
     }
+#else   
+    res(Range(0,nvrtx-1)) = 0.0;
+
+    int lnside = nside;
+    FLT lksprg;
+    for(int sind=0;sind<lnside;++sind) {
+        v0 = sd(sind).vrtx(0);
+        v1 = sd(sind).vrtx(1);
+
+        lksprg = ksprg(sind);
+        dx = lksprg*(vrtx(v1)(0)-vrtx(v0)(0));
+        dy = lksprg*(vrtx(v1)(1)-vrtx(v0)(1));
+
+        res(v0)(0) -= dx;
+        res(v0)(1) -= dy;
+
+        res(v1)(0) += dx;
+        res(v1)(1) += dy;
+    }
+#endif
 
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
     if (isfrst) {
@@ -615,26 +509,34 @@ void r_mesh::rsdl() {
 
         isfrst = false;
     }
-    
+
     /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
     for(i=0;i<nvrtx;++i) 
         for(n=0;n<ND;++n)
-            res(i)(n) += src(i)(n);  
+            res(i)(n) += src(i)(n);
 
     /* APPLY DIRICHLET BOUNDARY CONDITIONS */
     for(i=0;i<nsbd;++i)
         r_sbdry(i)->dirichlet();
-    
+
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl_ptr->res.data(),0,1,2);
+        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl_ptr->res.data(),0,1,2);
+    }    
+
     return;
 }
 
-void r_mesh::vddt1(void)
-{
-    int i,v0,v1,sind;
-    
-    Array<FLT,1> diag;
-    diag.reference(rg->diag);
 
+void r_mesh::setup_preconditioner() {
+    int last_phase, mp_phase;
+    int i,v0,v1,sind;
+    Array<FLT,1> diag;
+    diag.reference(gbl_ptr->diag);
+    
+#ifdef FOURTH
     /**************************************************/
     /* DETERMINE MESH MOVEMENT TIME STEP              */
     /**************************************************/
@@ -648,16 +550,16 @@ void r_mesh::vddt1(void)
         diag(v1) += fabs(ksprg(sind));
     }
 
-    return;
-}
-
-void r_mesh::vddt() {
-    int i,v0,v1,sind;
     
-    Array<FLT,1> diag;
-    diag.reference(rg->diag);
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased, mp_phase, boundary::symmetric,gbl_ptr->diag.data(),0,0,1);
+        vmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased, mp_phase, boundary::symmetric,  boundary::average, gbl_ptr->diag.data(),0,0,1);
+    }
+        
     Array<TinyVector<FLT,ND>,1> res1;
-    res.reference(rg->res1);
+    res1.reference(gbl_ptr->res1);
 
     for(i=0;i<nvrtx;++i)
         res1(i)(0) = diag(i)*kvol(i);
@@ -671,265 +573,31 @@ void r_mesh::vddt() {
         diag(v0) += fabs(ksprg(sind))*(res1(v0)(0) +fabs(ksprg(sind))*kvol(v1));
         diag(v1) += fabs(ksprg(sind))*(res1(v1)(0) +fabs(ksprg(sind))*kvol(v0));
     }
+#else
+    /**************************************************/
+    /* DETERMINE MESH MOVEMENT TIME STEP              */
+    /**************************************************/
+    for(i=0;i<nvrtx;++i)
+        diag(i) = 0.0;
 
-    return;
-}
+    /* FORM TIME STEP FOR MV_UPDATE */
+    for(sind=0;sind<nside;++sind) {
+        v0 = sd(sind).vrtx(0);
+        v1 = sd(sind).vrtx(1);
+        diag(v0) += fabs(ksprg(sind));
+        diag(v1) += fabs(ksprg(sind));
+    }
 #endif
 
+     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased,mp_phase, boundary::symmetric,gbl_ptr->diag.data(),0,0,1);
+        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, gbl_ptr->diag.data(),0,0,1);
+    }   
 
-block::ctrl r_mesh::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh) {
-    
-    if (ctrl_message == block::begin) excpt = 0;
-    else excpt += ctrl_message;
-    
-    if (!coarse) {
-        switch (excpt) {
-            case (0):
-                /* SETUP SPRING CONSTANTS  */
-                mp_phase = -1;
-                rklaplace();
-                return(block::advance);
-                
-            case (1):
-              ++mp_phase;
-                /* MESSAGE PASSING SEQUENCE */
-                switch(mp_phase%3) {
-                    case(0):
-                        vmsgload(boundary::all_phased,mp_phase/3,boundary::symmetric,kvol.data(),0,0,1);
-                        return(block::stay);
-                    case(1):
-                        vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, kvol.data(),0,0,1)));
-                }
-                
-            case (2):
-                kvoli();
-                return(block::advance);
-
-#ifdef FOURTH
-#define P2 2
-            case (3):
-                rsdl1();
-                mp_phase = -1;
-                return(block::advance);
-                
-            case (4):
-                ++mp_phase;
-                /* MESSAGE PASSING SEQUENCE */
-                switch(mp_phase%3) {
-                    case(0):
-                        vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,(FLT *) rg->res1,0,1,2);
-                        return(block::stay);
-                    case(1):
-                        vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res1,0,1,2));
-                }
-#else
-#define P2 0
-#endif                
-            case (3+P2):
-                mp_phase = -1;
-                zero_source();
-                rsdl();
-                return(block::advance);
-
-            case (4+P2):
-                ++mp_phase;
-                /* MESSAGE PASSING SEQUENCE */
-                switch(mp_phase%3) {
-                    case(0):
-                        vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,(FLT *) rg->res.data(),0,1,2);
-                        return(block::stay);
-                    case(1):
-                        vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res.data(),0,1,2)));
-                }
-            
-            case (5+P2):
-                sumsrc();
-                moveboundaries();
-                return(block::stop);
-        }
-    }
-    else {
-#ifdef GEOMETRIC
-        switch (excpt) {
-            case (0):
-                /* SETUP SPRING CONSTANTS  */
-                mp_phase = -1;
-                rklaplace();
-                return(block::advance);
-                
-            case (1):
-                ++mp_phase;
-                switch(mp_phase%3) {
-                    case(0):
-                        vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,kvol.data(),0,0,1);
-                        return(block::stay);
-                    case(1):
-                        vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric,  boundary::average, kvol.data(),0,0,1)));
-                }
-            case (2):
-                kvoli();
-                return(block::stop);
-            
-            default:
-                *sim::log << "error in control flow tadvance 2" << std::endl;
-                exit(1);
-        }
-    }
-#else
-    /* USE MULTIGRID INTERPOLATION (ALGEBRAIC) */
-    /* MUST BE DONE THIS WAY FOR SPRING METHOD */
-    /* SETUP FIRST MESH */
-        switch (phase) {
-            case(0):
-                mp_phase = -1;
-                rkmgrid(fv_to_ct,fmesh);
-                return(block::advance);
-            case(1):
-                ++mp_phase
-                switch(mp_phase%3) {
-                    case(0):
-                        vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,kvol,0,0,1);
-                        return(block::stay);
-                    case(1):
-                        vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, kvol,0,0,1)));
-                }
-            case(2):
-                grd[lvl].kvoli();
-                return(block::stop);
-        }
-    }
-#endif  
-    return(block::stop);
-}
-
-void r_mesh::moveboundaries() {
-    
-    /* MOVE BOUNDARY POSITIONS */
-    for(int i=0;i<nsbd;++i)
-        r_sbdry(i)->tadvance();
+    for(i=0;i<nvrtx;++i)
+        diag(i) = r_cfl/diag(i);
     
     return;
-}
-
-block::ctrl r_mesh::rsdl(block::ctrl ctrl_message) {
-
-    if (ctrl_message == block::begin) excpt = 0;
-    else excpt += ctrl_message;
-    
-    switch (excpt) {
-#ifdef FOURTH
-        case(0):
-            mp_phase = -1;
-            rsdl1();
-            return(block::advance);
-        case(1):
-            ++mp_phase;
-            /* MESSAGE PASSING SEQUENCE */
-            switch(mp_phase%3) {
-                case(0):
-                    vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,(FLT *) rg->res1,0,1,2);
-                    return(block::stay);
-                case(1):
-                    vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
-                    return(block::stay);
-                case(2):
-                    return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) rg->res1,0,1,2));
-            }
-#endif
-        case(0+P2):
-            mp_phase = -1;
-            rsdl();
-            return(block::advance);
-
-            
-        case(1+P2):
-            ++mp_phase;
-            /* MESSAGE PASSING SEQUENCE */
-            switch(mp_phase%3) {
-                case(0):
-                    vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,(FLT *) rg->res.data(),0,1,2);
-                    return(block::stay);
-                case(1):
-                    vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
-                    return(block::stay);
-                case(2):
-                    return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, (FLT *) rg->res.data(),0,1,2)));
-            }
-            
-        case(2+P2):
-            return(block::stop);
-    }
-    
-    return(block::stop);
-}
-
-
-block::ctrl r_mesh::setup_preconditioner(block::ctrl ctrl_message) {
-    
-    if (ctrl_message == block::begin) excpt = 0;
-    else excpt += ctrl_message;
-    
-    switch (excpt) {
-#ifdef FOURTH
-        case(0):
-            mp_phase = -1;
-            vddt1();
-            return(block::advance);
-        case(1):
-            ++mp_phase;
-            /* MESSAGE PASSING SEQUENCE */
-            switch(mp_phase%3) {
-                case(0):
-                    vmsgload(boundary::all_phased, mp_phase/3, boundary::symmetric,rg->diag,0,0,1);
-                    return(block::stay);
-                case(1):
-                    vmsgpass(boundary::all_phased, mp_phase/3, boundary::symmetric);
-                    return(block::stay);
-                case(2):
-                    return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, rg->diag,0,0,1));
-            }
-#endif
-        case(0+P2):
-            mp_phase = -1;
-            vddt();
-            return(block::advance);
-            
-        case(1+P2):
-            ++mp_phase;
-            /* MESSAGE PASSING SEQUENCE */
-            switch(mp_phase%3) {
-                case(0):
-                    vmsgload(boundary::all_phased,mp_phase/3, boundary::symmetric,rg->diag.data(),0,0,1);
-                    return(block::stay);
-                case(1):
-                    vmsgpass(boundary::all_phased,mp_phase/3, boundary::symmetric);
-                    return(block::stay);
-                case(2):
-                    return(static_cast<block::ctrl>(vmsgwait_rcv(boundary::all_phased,mp_phase/3, boundary::symmetric, boundary::average, rg->diag.data(),0,0,1)));
-            }
-            
-        case(2+P2):
-            vddti();
-            return(block::stop);
-    }
-    
-    *sim::log << "flow control error: vddt" << std::endl;
-    exit(1);
-    
-    return(block::stop);
 }

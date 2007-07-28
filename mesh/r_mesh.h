@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 
+
 /* AN R-DEFORMABLE MULTI-GRID MESH OBJECT */
 /* GOOD COMBINATIONS ARE: FIXX & FIX2X, FIXX & !FIX2X, AND !FIXX and !FIX2X */
 /* DON'T DO !FIXX and FIX2X */
@@ -35,10 +36,10 @@ class r_mesh : public mesh {
              /* SETUP SPRING CONSTANTS */
             /* LAPLACE CONSTANTS */
             void rklaplace();
-
+#ifdef FOURTH
             /* NEEDED FOR BIHARMONIC METHOD */
             void calc_kvol();
-            void kvoli();            
+#endif
             /* SPRING METHOD */
             void rksprg();
             
@@ -47,52 +48,36 @@ class r_mesh : public mesh {
             /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
             void rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh);
     
-            /* CALCULATE RESIDUAL */
-            void rsdl();
-
             /* CALCLATE SOURCE TERM */
             void zero_source();
             void sumsrc();
-
-            /* CALCULATE VOL*DT */
-            void vddt();
-            void vddti();
-
-#ifdef FOURTH
-            /* TWO STEP PROCEDURE FOR 4TH ORDER */
-            void rsdl1();
-            void vddt1();
-#endif
+            
             void moveboundaries();
 
         public:
             /* POINTER TO THINGS SHARED IN BLOCK CONTAINER */
-            /* SCRATCH VARIABLES FOR MGRID SEQUENCE */
             /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
             /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-            struct gbl {
+            struct gbl : public mesh::gbl {
                 Array<FLT,1> diag;
                 Array<TinyVector<FLT,2>,1> res;
                 Array<TinyVector<FLT,2>,1> res1;
-            } *rg;  
+            } *gbl_ptr;  
             ~r_mesh();
             
             /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-            void init(input_map& input, gbl *rgin);
+            void init(input_map& input, gbl *gin);
             void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type); }
-            void bdry_output(const std::string &filename) const;
-            block::ctrl mg_getfres(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
-            block::ctrl mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
-            block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
-            block::ctrl rsdl(block::ctrl ctrl_message);
-            block::ctrl update(block::ctrl ctrl_message);
-            block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-            block::ctrl length(block::ctrl ctrl_message) {return(block::stop);}
+            void mg_getfres(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+            void mg_getcchng(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
+            void tadvance(bool coarse,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+            void rsdl();
+            void update();
+            void setup_preconditioner();
+            void length() {}
             FLT maxres();
         private:
-            int excpt,excpt1;
             bool isfrst;
-            int mp_phase;
 };
 #endif
 

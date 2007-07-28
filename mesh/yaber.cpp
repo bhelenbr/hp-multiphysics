@@ -21,8 +21,6 @@ int adapt_count;
 static std::string adapt_file;
 #endif
 
-extern int nlst; 
-
 void mesh::yaber(FLT tolsize) {
     int i,j,tind,sind,sind1,v0,cnt,endpt,sum;
     FLT x,y,a,asum,dx,dy,l0,l1;
@@ -38,15 +36,15 @@ void mesh::yaber(FLT tolsize) {
     /* TO ADJUST FOR INSCRIBED RADIUS */
     tolsize *= 6./sqrt(3.);
     
-    /* SET UP FLTWK */
+    /* SET UP gbl_ptr->fltwk */
     nlst = 0;
     for(i=0;i<ntri;++i) {
         if (td(i).info&TDLTE) continue;
         minvl = vlngth(td(i).vrtx(0));
         minvl = MIN(minvl,vlngth(td(i).vrtx(1)));
         minvl = MIN(minvl,vlngth(td(i).vrtx(2)));
-        fscr1(i) = minvl/inscribedradius(i);
-        if (fscr1(i) > tolsize) putinlst(i);
+        gbl_ptr->fltwk(i) = minvl/inscribedradius(i);
+        if (gbl_ptr->fltwk(i) > tolsize) putinlst(i);
     }
     
     /* MARK BOUNDARY VERTEX POINTS */
@@ -156,9 +154,9 @@ void mesh::yaber(FLT tolsize) {
                         }
                         
                         if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
-                            i2wk_lst1(ntsrnd++) = tind1;
+                            gbl_ptr->i2wk_lst1(ntsrnd++) = tind1;
                             if (!prev) {
-                                i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                                gbl_ptr->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
                             }
                             prev = 0;
                         }
@@ -180,7 +178,7 @@ void mesh::yaber(FLT tolsize) {
                         }
                     }                
                     for(j=0;j<ntsrnd;++j) {
-                        tind = i2wk_lst1(j);
+                        tind = gbl_ptr->i2wk_lst1(j);
                         a = area(tind);
                         asum += a;
                         for(vn=0;vn<3;++vn) {
@@ -216,14 +214,14 @@ void mesh::yaber(FLT tolsize) {
         ++cnt;
         
         /* RECLASSIFY AFFECTED TRIANGLES */
-        for(i=0;i<i2wk_lst1(-1);++i) {
-            tind = i2wk_lst1(i);
+        for(i=0;i<gbl_ptr->i2wk_lst1(-1);++i) {
+            tind = gbl_ptr->i2wk_lst1(i);
             if (vd(tind).info > -1) tkoutlst(tind);
             minvl = vlngth(td(tind).vrtx(0));
             minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
             minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
-            fscr1(tind) = minvl/inscribedradius(tind);
-            if (fscr1(tind) > tolsize) putinlst(tind);
+            gbl_ptr->fltwk(tind) = minvl/inscribedradius(tind);
+            if (gbl_ptr->fltwk(tind) > tolsize) putinlst(tind);
         }
         
 #ifdef DEBUG_ADAPT
@@ -244,8 +242,8 @@ void mesh::checkintegrity() {
     int i,j,sind,dir;
     
     for(i=0;i<maxvst;++i) {
-        if (i1wk(i) > -1) {
-            *sim::log << "i1wk check failed" << std::endl;
+        if (gbl_ptr->intwk(i) > -1) {
+            *sim::log << "gbl_ptr->intwk check failed" << std::endl;
             exit(1);
         }
     }
@@ -325,8 +323,8 @@ void mesh::bdry_yaber(FLT tolsize) {
         for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
             sind = sbdry(bnum)->el(indx);
             if (td(sind).info&SDLTE) continue;
-            fscr1(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
-            if (fscr1(sind) > tolsize) {
+            gbl_ptr->fltwk(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+            if (gbl_ptr->fltwk(sind) > tolsize) {
                 putinlst(sind);
             }
         }
@@ -374,7 +372,7 @@ void mesh::bdry_yaber(FLT tolsize) {
             }
             else {
                 /* PICK MORE ARPROPRIATE VERTEX TO DELETE */
-                if (fscr1(sindprev) > fscr1(sindnext)) {
+                if (gbl_ptr->fltwk(sindprev) > gbl_ptr->fltwk(sindnext)) {
                     endpt = 0;
                     saffect = sindprev;
                 }
@@ -396,8 +394,8 @@ void mesh::bdry_yaber(FLT tolsize) {
             
             /* UPDATE AFFECTED SIDE */
             if (vd(saffect).info > -1) tkoutlst(saffect);
-            fscr1(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
-            if (fscr1(saffect) > tolsize) putinlst(saffect);
+            gbl_ptr->fltwk(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
+            if (gbl_ptr->fltwk(saffect) > tolsize) putinlst(saffect);
             ++count;
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
@@ -421,10 +419,10 @@ void mesh::bdry_yaber1() {
     
     for(int bnum=0;bnum<nsbd;++bnum) {
         
+        sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
+
         if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
         
-        sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
-    
         sndsize = sbdry(bnum)->ircvbuf(0,0);
                 
         for(i=1;i<sndsize;i+=2) {
@@ -452,8 +450,8 @@ void mesh::bdry_yaber1() {
 void mesh::checkintwk() const {
     int i;
     
-    for(i=0;i<i1wk.extent(firstDim)-1;++i)
-        if (i1wk(i) != -1) *sim::log << "failed i1wk check " << i << ' ' << i1wk(i) << std::endl;
+    for(i=0;i<gbl_ptr->intwk.extent(firstDim)-1;++i)
+        if (gbl_ptr->intwk(i) != -1) *sim::log << "failed gbl_ptr->intwk check " << i << ' ' << gbl_ptr->intwk(i) << std::endl;
     
     return;
 }

@@ -20,6 +20,7 @@
 #include <mpi.h>
 #endif
 #include <blitz/array.h>
+#include <boost/bind.hpp>
 
 using namespace std;
 using namespace blitz;
@@ -33,7 +34,6 @@ std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
 TinyVector<FLT,2> sim::body;
 int sim::tstep = -1, sim::substep = -1;
-sharedmem sim::scratch;
 
 #ifdef BACKDIFF
 FLT sim::bd[BACKDIFF+1];
@@ -215,24 +215,20 @@ void blocks::init(input_map input) {
         blk[i]->init(input);
     }
     
-    for (i=0;i<nblock;++i)
-        blk[i]->reload_scratch_pointers();
-    
     findmatch();
     matchboundaries(0);
     
     if (sim::adapt_output) output("matched0");
     
-    block::ctrl ctrl_message, state;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     for(int lvl=1;lvl<ngrid;++lvl) {
-        ctrl_message = block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i) {
-                state &= blk[i]->reconnect(lvl,ctrl_message);
-            }
-            ctrl_message = state;
-        } while (state != block::stop);
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::reconnect,blk[i],lvl);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
+
         matchboundaries(lvl);
         
         if (sim::adapt_output) {
@@ -253,14 +249,7 @@ int tagid(int vsf,int p1,int p2,int b1,int b2,int n1,int n2) {
     
     lefttag = (p1<<(bdig+ndig)) +(b1<<(ndig)) +n1;
     righttag = (p2<<(bdig+ndig)) +(b2<<(ndig)) +n2;
-
-    if (lefttag > righttag) {
-        tag = (vsf<<(2*(bdig+ndig+pdig))) +(lefttag<<(bdig+ndig+pdig)) +righttag;
-    }
-    else {
-        tag = (vsf<<(2*(bdig+ndig+pdig)))+(righttag<<(bdig+ndig+pdig)) +lefttag;
-    }
-    
+    tag = (vsf<<(2*(bdig+ndig+pdig))) +(lefttag<<(bdig+ndig+pdig)) +righttag;    
     return(tag);
 }
 
@@ -432,22 +421,22 @@ void blocks::findmatch() {
                                     }
                                     boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
                                     boundary *v2 = blk[b2]->vbdry(grdlvl,bp2->vcomm[j].nvbd);
-                                    v1->local_cnnct(v2,tagid(1,myid,myid,b1,b2,i,j));
+                                    v1->local_cnnct(v2,tagid(1,myid,myid,b1,b2,i,j),tagid(1,myid,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                                         first_found = true;
                                     }
-                                    *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
+                                    *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << ' ' << tagid(1,myid,myid,b2,b1,j,i) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
                                 }
 #ifdef MPISRC
                                 else {
                                     boundary *v1 = blk[b1]->vbdry(grdlvl,bp1->vcomm[i].nvbd);
-                                    v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
+                                    v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j),tagid(1,p,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                                         first_found = true;
                                     }
-                                    *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,p,b1,b2,i,j) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
+                                    *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " vrtx: " << bp2->vcomm[j].nvbd << " tag: " << tagid(1,myid,myid,b1,b2,i,j) << ' ' << tagid(1,myid,myid,b2,b1,j,i) << " idnum: " << bp2->vcomm[j].idnum << std::endl;
                                 }
 #endif
                                 
@@ -473,22 +462,22 @@ void blocks::findmatch() {
                                     }
                                     boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
                                     boundary *v2 = blk[b2]->sbdry(grdlvl,bp2->scomm[j].nsbd);
-                                    v1->local_cnnct(v2,tagid(2,myid,myid,b1,b2,i,j));
+                                    v1->local_cnnct(v2,tagid(2,myid,myid,b1,b2,i,j),tagid(2,myid,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false by default
                                         first_found = true;
                                     }
-                                    *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << " idnum: " << bp2->scomm[j].idnum << std::endl;
+                                    *sim::log << "#\t\tlocal match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << ' ' << tagid(2,myid,myid,b2,b1,j,i) << " idnum: " << bp2->scomm[j].idnum << std::endl;
                                 }
 #ifdef MPISRC
                                 else {
                                     boundary *v1 = blk[b1]->sbdry(grdlvl,bp1->scomm[i].nsbd);
-                                    v1->mpi_cnnct(p,tagid(2,myid,p,b1,b2,i,j));
+                                    v1->mpi_cnnct(p,tagid(2,myid,p,b1,b2,i,j),tagid(2,p,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                                         first_found = true;
                                     }
-                                    *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,p,b1,b2,i,j) << " idnum: " << bp2->scomm[j].idnum << std::endl;
+                                    *sim::log << "#\t\tmpi match to processor " << p << " block: " << b2 << " side: " << bp2->scomm[j].nsbd << " tag: " << tagid(2,myid,myid,b1,b2,i,j) << ' ' << tagid(2,myid,myid,b2,b1,j,i) << " idnum: " << bp2->scomm[j].idnum << std::endl;
                                 }
 #endif
                             }
@@ -513,23 +502,23 @@ void blocks::findmatch() {
                                     }
                                     boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
                                     boundary *v2 = blk[b2]->fbdry(grdlvl,bp2->fcomm[j].nfbd);
-                                    v1->local_cnnct(v2,tagid(3,myid,myid,b1,b2,i,j));
+                                    v1->local_cnnct(v2,tagid(3,myid,myid,b1,b2,i,j),tagid(3,myid,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                                         first_found = true;
                                     }
-                                    *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
+                                    *sim::log <<  "#\t\tlocal match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << ' ' << tagid(3,myid,myid,b2,b1,j,i) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
 
                                 }
 #ifdef MPISRC
                                 else {
                                     boundary *v1 = blk[b1]->fbdry(grdlvl,bp1->fcomm[i].nfbd);
-                                    v1->mpi_cnnct(p,tagid(1,myid,p,b1,b2,i,j));
+                                    v1->mpi_cnnct(p,tagid(3,myid,p,b1,b2,i,j),tagid(3,p,myid,b2,b1,j,i));
                                     if (!first_found) {
                                         v1->is_frst() = !v1->is_frst(); // Switches true to false unless preset to false
                                         first_found = true;
                                     }
-                                    *sim::log << "#\t\t mpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,p,b1,b2,i,j) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
+                                    *sim::log <<  "#\t\tmpi match to processor " << p << " block: " << b2 << " face: " << bp2->fcomm[j].nfbd << " tag: " << tagid(3,myid,myid,b1,b2,i,j) << ' ' << tagid(3,myid,myid,b2,b1,j,i) << " idnum: " << bp2->fcomm[j].idnum << std::endl;
 
                                 }
 #endif
@@ -552,17 +541,15 @@ void blocks::findmatch() {
                 
     /* MATCH BOUNDARIES */
 void blocks::matchboundaries(int lvl) {
-    int i;
-    block::ctrl state,ctrl_message;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     
-    ctrl_message = block::begin;
-    do {
-        state = block::stop;
-        for(i=0;i<nblock;++i) {
-            state &= blk[i]->matchboundaries(lvl,ctrl_message);
-        }
-        ctrl_message = state;
-    } while (state != block::stop);
+    for(int i=0;i<nblock;++i) {
+        thread_func(i) = boost::bind(&block::matchboundaries,blk[i],lvl);
+        threads.create_thread(thread_func(i));
+    }
+    threads.join_all();
+
 }
 
 
@@ -579,32 +566,27 @@ void blocks::output(const std::string &filename, block::output_purpose why, int 
 }
 
 void blocks::rsdl(int lvl) {
-    int i;
-    block::ctrl state, ctrl_message;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     
-    ctrl_message = block::begin;
-    do {
-        state = block::stop;
-        for(i=0;i<nblock;++i)
-            state &= blk[i]->rsdl(lvl,ctrl_message);
-        ctrl_message = state;
-    } while (state != block::stop);
+    for(int i=0;i<nblock;++i) {
+        thread_func(i) = boost::bind(&block::rsdl,blk[i],lvl);
+        threads.create_thread(thread_func(i));
+    }
+    threads.join_all();
 
     return;
 }
         
-        
 void blocks::setup_preconditioner(int lvl) {
-    int i;
-    block::ctrl state,ctrl_message;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     
-    ctrl_message = block::begin;
-    do {
-        state = block::stop;
-        for(i=0;i<nblock;++i) 
-            state &= blk[i]->setup_preconditioner(lvl,ctrl_message);
-        ctrl_message = state;
-    } while (state != block::stop);
+    for(int i=0;i<nblock;++i) {
+        thread_func(i) = boost::bind(&block::setup_preconditioner,blk[i],lvl);
+        threads.create_thread(thread_func(i));
+    }
+    threads.join_all();
     
     return;
 }
@@ -614,17 +596,17 @@ void blocks::iterate(int lvl, int niter) {
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
 /*****************************************/
-    int i,iter;
-    block::ctrl state,ctrl_message;
-
+    int iter;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
+    
     for(iter=0;iter<niter;++iter) {    
-        ctrl_message=block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i)
-                state &= blk[i]->update(lvl,ctrl_message);
-            ctrl_message = state;
-        } while (state != block::stop);
+
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::update,blk[i],lvl);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
     }
     
     return;
@@ -633,7 +615,8 @@ void blocks::iterate(int lvl, int niter) {
 void blocks::cycle(int vw, int lvl) {
     int i,vcount; 
     int gridlevel,gridlevelp;
-    block::ctrl state,ctrl_message;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     FLT error,maxerror = 0.0;
     
     /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
@@ -662,23 +645,19 @@ void blocks::cycle(int vw, int lvl) {
         
         rsdl(gridlevel);
         
-        ctrl_message = block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i)
-                state &= blk[i]->mg_getfres(gridlevelp,gridlevel,ctrl_message);
-            ctrl_message = state;
-        } while (state != block::stop);
-             
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::mg_getfres,blk[i],gridlevelp,gridlevel);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
+        
         cycle(vw, lvl+1);
 
-        ctrl_message = block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i)
-                state &= blk[i]->mg_getcchng(gridlevel,gridlevelp,ctrl_message);
-            ctrl_message = state;
-        } while (state != block::stop);
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::mg_getcchng,blk[i],gridlevel,gridlevelp);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
         
         if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(gridlevel);
         
@@ -761,9 +740,7 @@ FLT blocks::maxres(int lvl) {
 
 
 void blocks::tadvance() {
-    int i,lvl;
-    block::ctrl state,ctrl_message;
-    
+    int lvl;    
 
 #ifdef BACKDIFF
     if (sim::dti > 0.0) sim::time += 1./sim::dti;
@@ -829,14 +806,14 @@ void blocks::tadvance() {
 #endif
 #endif
     
-    for (lvl=0;lvl<ngrid;++lvl) {
-        ctrl_message = block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i)
-                state &= blk[i]->tadvance(lvl,ctrl_message);
-            ctrl_message = state;
-        } while (state != block::stop);
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
+    for (lvl=0;lvl<ngrid;++lvl) {  
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::tadvance,blk[i],lvl);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
     }
     
     matchboundaries(0);
@@ -845,28 +822,24 @@ void blocks::tadvance() {
 }
 
 void blocks::restructure() {
-    int i,lvl;
-    block::ctrl state,ctrl_message;
+    int lvl;
+    Array<boost::function0<void>,1> thread_func(nblock);
+	boost::thread_group threads;
     
     matchboundaries(0);
     
-    ctrl_message = block::begin;
-    do {
-        state = block::stop;
-        for(i=0;i<nblock;++i)
-            state &= blk[i]->adapt(ctrl_message);
-        ctrl_message = state;
-    } while (state != block::stop);
-    
+    for(int i=0;i<nblock;++i) {
+        thread_func(i) = boost::bind(&block::adapt,blk[i]);
+        threads.create_thread(thread_func(i));
+    }
+    threads.join_all();
+            
     for(lvl=1;lvl<ngrid;++lvl) {
-        ctrl_message = block::begin;
-        do {
-            state = block::stop;
-            for(i=0;i<nblock;++i) {
-                state &= blk[i]->reconnect(lvl,ctrl_message);
-            }
-            ctrl_message = state;
-        } while (state != block::stop);
+        for(int i=0;i<nblock;++i) {
+            thread_func(i) = boost::bind(&block::reconnect,blk[i],lvl);
+            threads.create_thread(thread_func(i));
+        }
+        threads.join_all();
     }
     
     return;

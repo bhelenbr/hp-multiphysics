@@ -6,7 +6,7 @@ void mesh::copy(const mesh& tgt) {
     int i,n;
         
     if (!initialized) {
-        allocate_duplicate(1.0,tgt);
+        init(tgt);
     }
     else {
         /* CHECK IF BIG ENOUGH */

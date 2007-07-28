@@ -20,8 +20,6 @@
 int adapt_count = 0;
 static std::string adapt_file;
 #endif
-
-extern int nlst;
     
 void mesh::rebay(FLT tolsize) {
     int i,j,n,tind,tfind,v0,v1,v2,vnear,nsnew,ntnew,snum,intrcnt,err;
@@ -44,8 +42,8 @@ void mesh::rebay(FLT tolsize) {
         maxvl = vlngth(td(i).vrtx(0));
         maxvl = MAX(maxvl,vlngth(td(i).vrtx(1)));
         maxvl = MAX(maxvl,vlngth(td(i).vrtx(2)));
-        fscr1(i) = circumradius(i)/maxvl;        
-        if (fscr1(i) > tolsize) putinlst(i);
+        gbl_ptr->fltwk(i) = circumradius(i)/maxvl;        
+        if (gbl_ptr->fltwk(i) > tolsize) putinlst(i);
     }
 
     /* BEGIN REFINEMENT ALGORITHM */
@@ -198,8 +196,8 @@ INSRT:
             /* ADD POINT TO QUADTREE */
             td(nvrtx).info |= VTOUC;
             qtree.addpt(nvrtx);
-            nsnew = i2wk_lst3(-1) +3;
-            ntnew = i2wk_lst1(-1) +2;
+            nsnew = gbl_ptr->i2wk_lst3(-1) +3;
+            ntnew = gbl_ptr->i2wk_lst1(-1) +2;
             ++intrcnt;
         }
         else {
@@ -221,19 +219,19 @@ INSRT:
         }
         ++nvrtx;
             
-        for(i=0;i<i2wk_lst1(-1);++i) 
-            if (vd(i2wk_lst1(i)).info > -1) tkoutlst(i2wk_lst1(i));
+        for(i=0;i<gbl_ptr->i2wk_lst1(-1);++i) 
+            if (vd(gbl_ptr->i2wk_lst1(i)).info > -1) tkoutlst(gbl_ptr->i2wk_lst1(i));
         
         if (vd(tind).info > -1) tkoutlst(tind);
             
             
         for(i=0;i<ntnew;++i) {
-            tind = i2wk_lst1(i);
+            tind = gbl_ptr->i2wk_lst1(i);
             maxvl = vlngth(td(tind).vrtx(0));
             maxvl = MAX(maxvl,vlngth(td(tind).vrtx(1)));
             maxvl = MAX(maxvl,vlngth(td(tind).vrtx(2)));
-            fscr1(tind) = circumradius(tind)/maxvl;
-            if (fscr1(tind) > tolsize) putinlst(tind);
+            gbl_ptr->fltwk(tind) = circumradius(tind)/maxvl;
+            if (gbl_ptr->fltwk(tind) > tolsize) putinlst(tind);
         }
 #ifdef DEBUG_ADAPT
         std::ostringstream nstr;
@@ -261,6 +259,7 @@ void mesh::bdry_rebay(FLT tolsize) {
 
         if (!sbdry(bnum)->is_frst()) {
             sbdry(bnum)->sndtype() = boundary::int_msg;
+            sbdry(bnum)->sndsize() = 0;
             sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
             continue;
         }
@@ -288,8 +287,8 @@ void mesh::bdry_rebay(FLT tolsize) {
         for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
             sind = sbdry(bnum)->el(indx);
             if (td(sind).info&SDLTE) continue;
-            fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (fscr1(sind) > tolsize) putinlst(sind);
+            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
         }
         
         /* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
@@ -324,13 +323,13 @@ void mesh::bdry_rebay(FLT tolsize) {
 
             /* UPDATE MODIFIED SIDE */
             tkoutlst(sind);
-            fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (fscr1(sind) > tolsize) putinlst(sind);
+            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
             
             /* UPDATE NEW BOUNDARY SIDE */
             sind = sbdry(bnum)->el(sbdry(bnum)->nel -1);
-            fscr1(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (fscr1(sind) > tolsize) putinlst(sind);
+            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;
@@ -358,9 +357,9 @@ void mesh::bdry_rebay1() {
     /* REFINE MATCHING BOUNDARIES */
     for(int bnum=0;bnum<nsbd;++bnum) {
         
-        if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
-        
         sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
+
+        if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;        
         
         nel_bgn = sbdry(bnum)->nel;
         

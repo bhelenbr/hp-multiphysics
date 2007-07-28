@@ -35,10 +35,10 @@ void mesh::triangulate(int nsd) {
     /* CREATE VERTEX LIST */
     nv = 0;
     for(i=0;i<nsd;++i) {
-        sind = abs(i2wk_lst1(i)) -1;
-        dir = (1 -SIGN(i2wk_lst1(i)))/2;
+        sind = abs(gbl_ptr->i2wk_lst1(i)) -1;
+        dir = (1 -SIGN(gbl_ptr->i2wk_lst1(i)))/2;
         sd(sind).tri(dir) = -1;
-        i2wk_lst2(nv++) = sd(sind).vrtx(dir);
+        gbl_ptr->i2wk_lst2(nv++) = sd(sind).vrtx(dir);
     }
     if (nv > maxvst -2) {
             *sim::log << idprefix << " coarse mesh is not big enough " << nv << ' ' << maxvst << std::endl;
@@ -47,10 +47,10 @@ void mesh::triangulate(int nsd) {
     
     /* SETUP SIDE POINTER INFO */
     for(i=0;i<nv;++i)
-        vd(i2wk_lst2(i)).info = -1;
+        vd(gbl_ptr->i2wk_lst2(i)).info = -1;
         
     for(i=0;i<nsd;++i) {
-        sind = abs(i2wk_lst1(i)) -1;
+        sind = abs(gbl_ptr->i2wk_lst1(i)) -1;
         v(0) = sd(sind).vrtx(0);
         v(1) = sd(sind).vrtx(1);
         if (v(1) > v(0)) {
@@ -79,8 +79,8 @@ void mesh::triangulate(int nsd) {
     while(bgn < end) {
         nsidebefore = nside;
         for(sind2=bgn;sind2<end;++sind2) {
-            sind = abs(i2wk_lst1(sind2)) -1;
-            dir =  (1 -SIGN(i2wk_lst1(sind2)))/2;
+            sind = abs(gbl_ptr->i2wk_lst1(sind2)) -1;
+            dir =  (1 -SIGN(gbl_ptr->i2wk_lst1(sind2)))/2;
             
             if (sd(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
             
@@ -96,7 +96,7 @@ void mesh::triangulate(int nsd) {
             
             /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
             for(i=0;i<nv;++i) {
-                vtry = i2wk_lst2(i);
+                vtry = gbl_ptr->i2wk_lst2(i);
                 if (vtry == v(0) || vtry == v(1)) continue;
                 
         
@@ -141,9 +141,9 @@ void mesh::triangulate(int nsd) {
                     }
                     
                     for(sck=0;sck<ntest;++sck) {
-                        stest = abs(i2wk_lst1(sck))-1;
+                        stest = abs(gbl_ptr->i2wk_lst1(sck))-1;
                         if (stest == sind) continue;
-                        dirck =  (1 -SIGN(i2wk_lst1(sck)))/2;
+                        dirck =  (1 -SIGN(gbl_ptr->i2wk_lst1(sck)))/2;
                         v2 = sd(stest).vrtx(dirck);
                         v3 = sd(stest).vrtx(1-dirck);
                         
@@ -194,12 +194,12 @@ next_vrt:        continue;
         
                 /* CHECK IF DEGENERATE */
                 if (height > hmin-200.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1))) {
-                    i2wk_lst3(ngood++) = vtry;
+                    gbl_ptr->i2wk_lst3(ngood++) = vtry;
                     continue;
                 }
                 
                 ngood = 0;
-                i2wk_lst3(ngood++) = vtry;
+                gbl_ptr->i2wk_lst3(ngood++) = vtry;
                 hmin = height+100.0*EPSILON*sqrt(xcen(0)*xcen(0)+xcen(1)*xcen(1));
 vtry_failed:continue;
             }
@@ -209,46 +209,46 @@ vtry_failed:continue;
                 /* CALCULATE SIDE ANGLE */
                 ds2 = 1./sqrt(dx2(0)*dx2(0) +dx2(1)*dx2(1));
                 for(i=0;i<ngood;++i) {
-                    vtry = i2wk_lst3(i);
+                    vtry = gbl_ptr->i2wk_lst3(i);
                     dx1(0) = vrtx(v(0))(0) -vrtx(vtry)(0);
                     dx1(1) = vrtx(v(0))(1) -vrtx(vtry)(1);
                     ds1 = 1./sqrt(dx1(0)*dx1(0) +dx1(1)*dx1(1));
-                    fscr1(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
+                    gbl_ptr->fltwk(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
                 }
             
                 /* ORDER POINTS BY ANGLE */        
                 for(i=0;i<ngood-1;++i) {
                     for(j=i+1;j<ngood;++j) {
         
-                        /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN i2wk_lst2 */
-                        if (i2wk_lst3(i) == i2wk_lst3(j)) {
-                            i2wk_lst3(j) = i2wk_lst3(ngood-1);
+                        /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN gbl_ptr->i2wk_lst2 */
+                        if (gbl_ptr->i2wk_lst3(i) == gbl_ptr->i2wk_lst3(j)) {
+                            gbl_ptr->i2wk_lst3(j) = gbl_ptr->i2wk_lst3(ngood-1);
                             --ngood;
                         }
         
                         /* ORDER BY ANGLE */
-                        if(fscr1(i) > fscr1(j)) {
-                            temp = fscr1(i);
-                            fscr1(i) = fscr1(j);
-                            fscr1(j) = temp;
-                            itemp = i2wk_lst3(i);
-                            i2wk_lst3(i) = i2wk_lst3(j);
-                            i2wk_lst3(j) = itemp;
+                        if(gbl_ptr->fltwk(i) > gbl_ptr->fltwk(j)) {
+                            temp = gbl_ptr->fltwk(i);
+                            gbl_ptr->fltwk(i) = gbl_ptr->fltwk(j);
+                            gbl_ptr->fltwk(j) = temp;
+                            itemp = gbl_ptr->i2wk_lst3(i);
+                            gbl_ptr->i2wk_lst3(i) = gbl_ptr->i2wk_lst3(j);
+                            gbl_ptr->i2wk_lst3(j) = itemp;
                         }
                     }
                     // *sim::log << "degenerate case" << v(0) << ' ' << v(1) << std::endl;
                 }
             }
-            addtri(v(0),v(1),i2wk_lst3(0),sind,dir);
+            addtri(v(0),v(1),gbl_ptr->i2wk_lst3(0),sind,dir);
             /* ADD ANY DEGENERATE TRIANGLES */              
             for(i=1;i<ngood;++i)
-                addtri(i2wk_lst3(i-1),v(1),i2wk_lst3(i),-1,-1);
+                addtri(gbl_ptr->i2wk_lst3(i-1),v(1),gbl_ptr->i2wk_lst3(i),-1,-1);
         }
       
         bgn = end;
         end += nside -nsidebefore;
         for(i=nsidebefore;i<nside;++i)
-            i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
+            gbl_ptr->i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
     }
             
     return;

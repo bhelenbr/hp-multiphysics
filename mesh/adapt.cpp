@@ -9,66 +9,43 @@
 
 #include "mesh.h"
 
-int nlst; 
-
-block::ctrl mesh::adapt(block::ctrl ctrl_message, FLT tolsize) {
+void mesh::adapt(FLT tolsize) {
     int i;
 
-    if (ctrl_message == block::begin) excpt = 0;
-    else ++excpt;
-
-    switch (excpt) {
-        case(0):            
-            setup_for_adapt();
-            return(block::advance);
+    /* SET FLAGS ETC... */
+    setup_for_adapt();
+    
+    /* SWAP EGES TO MAKE DELAUNAY */
+    swap(1.0e-10); 
+    
+    /* COARSEN FIRST EDGES & SEND MESSAGES */
+    bdry_yaber(tolsize);
+    
+    /* TRANSFER MESSAGES */
+    for(i=0;i<nsbd;++i) 
+        sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+    
+    /* COARSEN MATCHING BOUNDARIES */
+    bdry_yaber1();
+    
+    /* COARSEN INTERIOR */
+    yaber(tolsize);
             
-        case(1):
-            /* SWAP EDGES */
-            swap(1.0e-10); 
-            return(block::advance);
+    /* REFINE FIRST EDGES */
+    bdry_rebay(tolsize);
             
-        case(2):            
-            bdry_yaber(tolsize);
-            return(block::advance);
-
-        case(3):
-            for(i=0;i<nsbd;++i) 
-                sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
-            return(block::advance);
+    /* TRANSFER MESSAGES */
+    for(i=0;i<nsbd;++i) 
+        sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
             
-        case(4):
-            /* COARSEN MATCHING BOUNDARIES */
-            bdry_yaber1();
-            return(block::advance);
+    /* REFINE MATCHING EDGES */
+    bdry_rebay1();
             
-        case(5):
-            /* INTERIOR SIDE COARSENING */
-            yaber(tolsize);
-            return(block::advance);
+    /* REFINE INTERIOR */
+    rebay(tolsize);
             
-        case(6):
-            bdry_rebay(tolsize);
-            return(block::advance);
-            
-        case(7):
-            for(i=0;i<nsbd;++i) 
-                sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
-            return(block::advance);
-            
-        case(8):
-            bdry_rebay1();
-            return(block::advance);
-            
-        case(9):
-            rebay(tolsize);
-            return(block::advance);
-            
-        case(10):
-            cleanup_after_adapt();
-            return(block::stop);
-    }
- 
-    return(block::stop);
+    /* REMOVE DELETED ENTITIES */
+    cleanup_after_adapt();
 }
 
 
@@ -206,21 +183,21 @@ void mesh::cleanup_after_adapt() {
 void mesh::putinlst(int sind) {
     int i, temp, top, bot, mid;
         
-    /* CREATE ORDERED LIST OF SIDES SMALLEST FSCR1 TO LARGEST */
+    /* CREATE ORDERED LIST OF SIDES SMALLEST gbl_ptr->fltwk TO LARGEST */
     bot = 0;
     if (nlst > 0) {
         top = 0;
         bot = nlst-1;
-        if (fscr1(sind) < fscr1(sd(top).info)) {
+        if (gbl_ptr->fltwk(sind) < gbl_ptr->fltwk(sd(top).info)) {
             bot = 0;
         }
-        else if (fscr1(sind) > fscr1(sd(bot).info)) {
+        else if (gbl_ptr->fltwk(sind) > gbl_ptr->fltwk(sd(bot).info)) {
             bot = nlst;
         }
         else {
             while(top < bot-1) {
                 mid = top + (bot -top)/2;
-                if (fscr1(sind) > fscr1(sd(mid).info))
+                if (gbl_ptr->fltwk(sind) > gbl_ptr->fltwk(sd(mid).info))
                     top = mid;
                 else
                     bot = mid;

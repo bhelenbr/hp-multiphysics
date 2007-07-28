@@ -6,9 +6,40 @@
 #include <input_map.h>
 #include <iostream>
 
-Array<int,1> mesh::i1wk, mesh::i2wk, mesh::i2wk_lst1, mesh::i2wk_lst2, mesh::i2wk_lst3;
-Array<FLT,1> mesh::fscr1;
-int mesh::maxsrch;
+void mesh::init(input_map &input, gbl *gin) {
+    std::string keyword;
+    std::istringstream data;
+    std::string filename;
+    std::string bdryfile;
+    
+    gbl_ptr = gin;
+    
+    if (!initialized) {
+        FLT grwfac;
+        keyword = idprefix + "_growth factor";
+        if (!input.get(keyword,grwfac)) {
+            input.getwdefault("growth factor",grwfac,2.0);
+        }
+        
+        int filetype;
+        keyword = idprefix + "_filetype";
+        if (!input.get(keyword,filetype)) {
+            input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
+        }
+        
+        keyword = idprefix + "_mesh";
+        if (!input.get(keyword,filename)) {
+            if (input.get("mesh",filename)) {
+                filename = filename +"_" +idprefix;
+            }
+            else {
+                *sim::log << "no mesh name\n";
+                exit(1);
+            }
+        }
+        mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,input);
+    }
+}
 
 void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
     int i,j,n,sind,count,temp;
@@ -66,25 +97,25 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
                 for(i=0;i<nside;++i) {
                     if (sd(i).info) {
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == i1wk(j)) {
-                                ++i2wk(j);
+                            if (sd(i).info == gbl_ptr->intwk(j)) {
+                                ++gbl_ptr->i2wk(j);
                                 goto next1;
                             }
                         }
                         /* NEW SIDE */
-                        i1wk(nsbd) = sd(i).info;
-                        i2wk(nsbd++) = 1;
+                        gbl_ptr->intwk(nsbd) = sd(i).info;
+                        gbl_ptr->i2wk(nsbd++) = 1;
                     }
 next1:        continue;
                 }
                 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    i1wk(i) = -1;
-                    i2wk(i) = -1;
+                    gbl_ptr->intwk(i) = -1;
+                    gbl_ptr->i2wk(i) = -1;
                 }
                 
                 
@@ -511,25 +542,25 @@ next1a:      continue;
                             }
                         }
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == (i1wk(j)&0xFFFF)) {
-                                ++i2wk(j);
+                            if (sd(i).info == (gbl_ptr->intwk(j)&0xFFFF)) {
+                                ++gbl_ptr->i2wk(j);
                                 goto next1b;
                             }
                         }
                         /* NEW SIDE */
-                        i1wk(nsbd) = sd(i).info;
-                        i2wk(nsbd++) = 1;
+                        gbl_ptr->intwk(nsbd) = sd(i).info;
+                        gbl_ptr->i2wk(nsbd++) = 1;
                     }
 next1b:        continue;
                 }
                 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    i1wk(i) = -1;
-                    i2wk(i) = -1;
+                    gbl_ptr->intwk(i) = -1;
+                    gbl_ptr->i2wk(i) = -1;
                 }
                 
                 for(i=0;i<nside;++i) {
@@ -671,14 +702,14 @@ next1c:      continue;
                 for(i=0;i<nside;++i) {
                     if (sd(i).info) {
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == i1wk(j)) {
-                                ++i2wk(j);
+                            if (sd(i).info == gbl_ptr->intwk(j)) {
+                                ++gbl_ptr->i2wk(j);
                                 goto bdnext1;
                             }
                         }
                         /* NEW SIDE */
-                        i1wk(nsbd) = sd(i).info;
-                        i2wk(nsbd++) = 1;
+                        gbl_ptr->intwk(nsbd) = sd(i).info;
+                        gbl_ptr->i2wk(nsbd++) = 1;
                     }
                 bdnext1:        continue;
                 }
@@ -686,11 +717,11 @@ next1c:      continue;
 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(i1wk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    i1wk(i) = -1;
-                    i2wk(i) = -1;
+                    gbl_ptr->intwk(i) = -1;
+                    gbl_ptr->i2wk(i) = -1;
                 }
 
                 for(i=0;i<nside;++i) {
@@ -708,7 +739,7 @@ next1c:      continue;
                 }
                 
                 for(i=0;i<nside;++i)
-                    i2wk_lst1(i) = i+1;
+                    gbl_ptr->i2wk_lst1(i) = i+1;
                   
                 ntri = 0;
                 triangulate(nside);
@@ -796,31 +827,43 @@ void mesh::allocate(int mxsize) {
     
     /* TRI INFO */ 
     td.resize(Range(-1,maxvst));
-    
+
     qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
 
-                      
-    /* ALLOCATE WORK ARRAYS USED BY ALL MESHES */
-    /* ALWAYS MORE SIDES THAN TRI'S and VERTICES */ 
-#ifdef USE_SIMSCRATCH
-    if (sim::scratch.size() < needed_scratch_size()) {
-        sim::scratch.resize(needed_scratch_size());
+    if (!gbl_ptr) {
+        /* gbl_ptr has not been set */
+        /* so create internal gbl_struct */
+        gbl_ptr = new mesh::gbl;
     }
-#endif
-    reload_scratch_pointers();
-
-    if (i1wk.ubound(firstDim) < maxvst) {
-        // i1wk should always be kept initialized to -1
-        i1wk.resize(Range(-1,maxvst));
-        i1wk = -1;
-        maxsrch = 100;
+    
+    if (gbl_ptr->intwk.ubound(firstDim) < maxvst) {
+        // gbl_ptr->intwk should always be kept initialized to -1
+        gbl_ptr->intwk.resize(Range(-1,maxvst));
+        gbl_ptr->intwk = -1;
+        gbl_ptr->maxsrch = 100;
+        
+        gbl_ptr->fltwk.resize(maxvst);
+        gbl_ptr->i2wk.resize(maxvst+1);
+        gbl_ptr->i2wk.reindexSelf(TinyVector<int,1>(-1));
+        // some smaller lists using i2 storage
+        int mvst3 = maxvst/3;
+        Array<int,1> temp1(gbl_ptr->i2wk.data(),mvst3,neverDeleteData);
+        gbl_ptr->i2wk_lst1.reference(temp1);
+        gbl_ptr->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+        Array<int,1> temp2(gbl_ptr->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+        gbl_ptr->i2wk_lst2.reference(temp2);
+        gbl_ptr->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+        Array<int,1> temp3(gbl_ptr->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+        gbl_ptr->i2wk_lst3.reference(temp3);
+        gbl_ptr->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
     }
+    
     initialized = 1;
     
     return;
 }
 
-void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
+void mesh::init(const class mesh& inmesh, FLT sizereduce1d) {
     int i;
 
     if (!initialized) {
@@ -841,49 +884,6 @@ void mesh::allocate_duplicate(FLT sizereduce1d,const class mesh& inmesh) {
         qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
         initialized = 1;
     }
-}
-
-void mesh::reload_scratch_pointers() {
-    
-#ifdef USE_SIMSCRATCH
-    /* THIS PLACES IT IN GLOBALLY SHARED MEMORY (RISKY BECAUSE CAN OVERLAP) */
-    if (fscr1.data() != (FLT *) sim::scratch.data() || maxvst > fscr1.extent(firstDim)) {
-
-        /* THIS IS PLACEMENT NEW. IT STICKS THE OBJECT AT THE ADDRESS IN MEMORY */
-        FLT *base = new(sim::scratch.data()) FLT;
-        Array<FLT,1> temp(base, maxvst, neverDeleteData);
-        fscr1.reference(temp);
-        
-        /* TEMPORARY NOT SURE IF THIS GUARANTEES ALIGNMENT??? */
-        int *ibase = new(sim::scratch.data()+sizeof(FLT)*maxvst) int;
-        Array<int,1> temp0(ibase, maxvst+1, neverDeleteData);
-        i2wk.reference(temp0);
-        i2wk.reindexSelf(TinyVector<int,1>(-1));
-#else
-    /* THIS IS A MORE STANDARD STATIC ALLOCATION */;
-    if (maxvst > fscr1.extent(firstDim)) {
-        fscr1.resize(maxvst);
-        i2wk.resize(maxvst+1);
-        i2wk.reindexSelf(TinyVector<int,1>(-1));
-#endif
-        // some smaller lists using i2 storage
-        int mvst3 = maxvst/3;
-        Array<int,1> temp1(i2wk.data(),mvst3,neverDeleteData);
-        i2wk_lst1.reference(temp1);
-        i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-        Array<int,1> temp2(i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-        i2wk_lst2.reference(temp2);
-        i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-        Array<int,1> temp3(i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-        i2wk_lst3.reference(temp3);
-        i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
-    }
-
-    return;
-}
-
-size_t mesh::needed_scratch_size() {
-    return(maxvst*(sizeof(FLT)+sizeof(int)));
 }
 
 mesh::~mesh() {

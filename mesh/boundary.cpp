@@ -199,12 +199,10 @@ void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
 
 
 
-block::ctrl side_bdry::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
+void side_bdry::mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum) {
     int j,k,sind,tind,v0,sidloc;
     FLT psiloc;
-    
-    if (ctrl_message != block::begin) return(block::stop);
-    
+        
     for(k=1;k<nel;++k) {
         v0 = x.sd(el(k)).vrtx(0);
         tgt.sbdry(bnum)->findbdrypt(x.vrtx(v0), sidloc, psiloc);
@@ -219,7 +217,7 @@ block::ctrl side_bdry::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,
         cnnct(v0).wt((j+2)%3) = 0.5*(1.+psiloc);
     } 
     
-    return(block::stop);
+    return;
 }
 
 /* SWAP ELEMENTS IN LIST */
@@ -236,7 +234,7 @@ void side_bdry::swap(int s1, int s2) {
 
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL */
-/* USES i1wk & i2wk AS WORK ARRAYS */
+/* USES gbl_ptr->intwk & gbl_ptr->i2wk AS WORK ARRAYS */
 void side_bdry::reorder() {
     int i,count,total,sind,minv,first;
 
@@ -245,22 +243,22 @@ void side_bdry::reorder() {
     /* DON'T ASSUME wk INITIALIZED TO -1 */
     for(i=0;i<nel;++i) {
         sind = el(i);
-        x.i1wk(x.sd(sind).vrtx(0)) = -1;
-        x.i2wk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl_ptr->intwk(x.sd(sind).vrtx(0)) = -1;
+        x.gbl_ptr->i2wk(x.sd(sind).vrtx(1)) = -1;
     }
     
     /* STORE SIDE INDICES BY VERTEX NUMBER */
     for(i=0; i < nel; ++i) {
         sind = el(i);
-        x.i1wk(x.sd(sind).vrtx(1)) = i;
-        x.i2wk(x.sd(sind).vrtx(0)) = i;
+        x.gbl_ptr->intwk(x.sd(sind).vrtx(1)) = i;
+        x.gbl_ptr->i2wk(x.sd(sind).vrtx(0)) = i;
     }
 
     /* FIND FIRST SIDE */    
     first = -1;
     for(i=0;i<nel;++i) {
         sind = el(i);
-        if (x.i1wk(x.sd(sind).vrtx(0)) == -1) {
+        if (x.gbl_ptr->intwk(x.sd(sind).vrtx(0)) == -1) {
             first = i;
             break;
         }
@@ -282,24 +280,24 @@ void side_bdry::reorder() {
     /* SWAP FIRST SIDE */
     count = 0;
     swap(count,first);
-    x.i1wk(x.sd(el(first)).vrtx(1)) = first;
-    x.i2wk(x.sd(el(first)).vrtx(0)) = first;
-    x.i1wk(x.sd(el(count)).vrtx(1)) = count;
-    x.i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
+    x.gbl_ptr->intwk(x.sd(el(first)).vrtx(1)) = first;
+    x.gbl_ptr->i2wk(x.sd(el(first)).vrtx(0)) = first;
+    x.gbl_ptr->intwk(x.sd(el(count)).vrtx(1)) = count;
+    x.gbl_ptr->i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
     /* REORDER LIST */
-    while ((first = x.i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
+    while ((first = x.gbl_ptr->i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
         swap(count,first);
-        x.i1wk(x.sd(el(first)).vrtx(1)) = first;
-        x.i2wk(x.sd(el(first)).vrtx(0)) = first;
-        x.i1wk(x.sd(el(count)).vrtx(1)) = count;
-        x.i2wk(x.sd(el(count)).vrtx(0)) = count;
+        x.gbl_ptr->intwk(x.sd(el(first)).vrtx(1)) = first;
+        x.gbl_ptr->i2wk(x.sd(el(first)).vrtx(0)) = first;
+        x.gbl_ptr->intwk(x.sd(el(count)).vrtx(1)) = count;
+        x.gbl_ptr->i2wk(x.sd(el(count)).vrtx(0)) = count;
     }
     
-    /* RESET INTWK TO -1 */
+    /* RESET gbl_ptr->intwk TO -1 */
     for(i=0; i <total; ++i) {
         sind = el(i);
-        x.i1wk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl_ptr->intwk(x.sd(sind).vrtx(1)) = -1;
     }
     
     if (count < total) {
@@ -716,71 +714,63 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 }
 
 
-block::ctrl spartition::mgconnect(block::ctrl ctrl_message, Array<mesh::transfer,1> &cnnct, const class mesh& tgt, int bnum) {
+void spartition::mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum) {
     int i,j,k,v0;
     
-    if (ctrl_message == block::begin) excpt = 0;
-    else ++excpt;
-    
-    switch(excpt) {
-        case(0):
-            /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
-            /* MAKE SURE ENDPOINTS ARE OK */
-            i = x.sd(el(0)).vrtx(0);
-            if (cnnct(i).tri < 0) {
-                tgt.qtree.nearpt(x.vrtx(i).data(),v0);
-                cnnct(i).tri=tgt.vd(v0).tri;
-                for(j=0;j<3;++j) {
-                    cnnct(i).wt(j) = 0.0;
-                    if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
-                }
-            }
-            i = x.sd(el(nel-1)).vrtx(1);
-            if (cnnct(i).tri < 0) {
-                tgt.qtree.nearpt(x.vrtx(i).data(),v0);
-                cnnct(i).tri=tgt.vd(v0).tri;
-                for(j=0;j<3;++j) {
-                    cnnct(i).wt(j) = 0.0;
-                    if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
-                }
-            }
-            
-            if (first) {
-                sndsize() = 0;
-                sndtype() = int_msg;
-                for(k=1;k<nel;++k) {
-                    v0 = x.sd(el(k)).vrtx(0);
-                    if (cnnct(v0).tri > 0) {
-                        isndbuf(sndsize()++) = -1;
-                    }
-                    else {
-                        isndbuf(sndsize()++) = +1;
-                        cnnct(v0).tri = 0;
-                        for(j=0;j<3;++j)
-                            cnnct(v0).wt(j) = 0.0;
-                    }
-                }
-                comm_prepare(boundary::all,0,slave_master); 
-            }
-            return(block::advance);                              
-        case(1):
-            comm_exchange(boundary::all,0,slave_master);
-            return(block::advance);
-        case(2):
-            comm_wait(boundary::all,0,slave_master);
-            if (!first) {
-                i = 0;
-                for(k=nel-1;k>0;--k) {
-                    v0 = x.sd(el(k)).vrtx(1);
-                    if (ircvbuf(0,i) < 0) {
-                        cnnct(v0).tri = 0;
-                        for(j=0;j<3;++j)
-                            cnnct(v0).wt(j) = 0.0;
-                    }
-                }
-            }                    
+ 
+    /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
+    /* MAKE SURE ENDPOINTS ARE OK */
+    i = x.sd(el(0)).vrtx(0);
+    if (cnnct(i).tri < 0) {
+        tgt.qtree.nearpt(x.vrtx(i).data(),v0);
+        cnnct(i).tri=tgt.vd(v0).tri;
+        for(j=0;j<3;++j) {
+            cnnct(i).wt(j) = 0.0;
+            if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
+        }
     }
-    return(block::stop);
+    i = x.sd(el(nel-1)).vrtx(1);
+    if (cnnct(i).tri < 0) {
+        tgt.qtree.nearpt(x.vrtx(i).data(),v0);
+        cnnct(i).tri=tgt.vd(v0).tri;
+        for(j=0;j<3;++j) {
+            cnnct(i).wt(j) = 0.0;
+            if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
+        }
+    }
+    
+    if (first) {
+        sndsize() = 0;
+        sndtype() = int_msg;
+        for(k=1;k<nel;++k) {
+            v0 = x.sd(el(k)).vrtx(0);
+            if (cnnct(v0).tri > 0) {
+                isndbuf(sndsize()++) = -1;
+            }
+            else {
+                isndbuf(sndsize()++) = +1;
+                cnnct(v0).tri = 0;
+                for(j=0;j<3;++j)
+                    cnnct(v0).wt(j) = 0.0;
+            }
+        }
+    }
+    
+    comm_prepare(boundary::all,0,slave_master); 
+    comm_exchange(boundary::all,0,slave_master);
+    comm_wait(boundary::all,0,slave_master);
+    
+    if (!first) {
+        i = 0;
+        for(k=nel-1;k>0;--k) {
+            v0 = x.sd(el(k)).vrtx(1);
+            if (ircvbuf(0,i) < 0) {
+                cnnct(v0).tri = 0;
+                for(j=0;j<3;++j)
+                    cnnct(v0).wt(j) = 0.0;
+            }
+        }
+    }                    
 }
 
 void curved_analytic_interface::mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {

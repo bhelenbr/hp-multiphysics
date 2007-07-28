@@ -5,34 +5,34 @@
 #include <utilities.h>
 #include <string.h>
 #include "block.h"
+#include <boost/bind.hpp>
 
-block::ctrl mesh::mgconnect(block::ctrl ctrl_message, Array<transfer,1> &cnnct, const class mesh& tgt) {
+void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
     int i,bnum,v0;
-    block::ctrl state = block::stop;
-    
-    if (ctrl_message == block::begin) excpt = 0;
-    else ++excpt;
-    
-    switch(excpt) {
-        case(0):
-            /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
-            for(i=0;i<nvrtx;++i) {
-                tgt.qtree.nearpt(vrtx(i).data(),v0);
-                cnnct(i).tri = abs(tgt.findtri(vrtx(i),v0));
-                tgt.getwgts(cnnct(i).wt);
-            }
-        default:
-            /* REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
-            for(bnum=0;bnum<nsbd;++bnum) {
-                /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
-                if(sbdry(bnum)->idnum != tgt.sbdry(bnum)->idnum) {
-                    *sim::log << "error: sides are not numbered the same" << std::endl;
-                    exit(1);
-                }
-                state &= sbdry(bnum)->mgconnect(ctrl_message,cnnct,tgt,bnum);
-            }
+  
+    /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
+    for(i=0;i<nvrtx;++i) {
+        tgt.qtree.nearpt(vrtx(i).data(),v0);
+        cnnct(i).tri = abs(tgt.findtri(vrtx(i),v0));
+        tgt.getwgts(cnnct(i).wt);
     }
-    return(state);
+    
+    Array<boost::function0<void>,1> thread_func(nsbd);
+    boost::thread_group threads;
+    
+    /* REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
+    for(bnum=0;bnum<nsbd;++bnum) {
+        /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
+        if(sbdry(bnum)->idnum != tgt.sbdry(bnum)->idnum) {
+            *sim::log << "error: sides are not numbered the same" << std::endl;
+            exit(1);
+        }
+        // sbdry(bnum)->mgconnect(cnnct,tgt,bnum);
+        thread_func(bnum) = boost::bind(&side_bdry::mgconnect,sbdry(bnum),boost::ref(cnnct),boost::ref(tgt),bnum);
+        threads.create_thread(thread_func(bnum));
+    }
+    threads.join_all();
+    
 }
 
 
