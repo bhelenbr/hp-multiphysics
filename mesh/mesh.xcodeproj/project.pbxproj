@@ -55,6 +55,8 @@
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
+		6F50F44E0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */; };
+		6F50F44F0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */; };
 		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
 		6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
 		6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
@@ -184,6 +186,7 @@
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_thread-mt-1_34.dylib"; path = "../../Packages/lib/libboost_thread-mt-1_34.dylib"; sourceTree = SOURCE_ROOT; };
 		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
 		6F584BC40B5E9BD300FE5BCE /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
@@ -250,6 +253,7 @@
 				6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
 				6F1616030B974E67006CA043 /* libDT.a in Frameworks */,
+				6F50F44F0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,6 +269,7 @@
 				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
 				6F1616020B974E67006CA043 /* libDT.a in Frameworks */,
+				6F50F44E0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +287,7 @@
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
 				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
 				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
+				6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */,
 				6FC676970ACC239C00643F70 /* liblam.dylib */,
 				6FC676980ACC239C00643F70 /* liblammpi++.dylib */,
 				6FC676990ACC239C00643F70 /* libmpi.dylib */,
@@ -316,9 +322,9 @@
 				07F2E94200974D3D80990B20 /* coarsen.cpp */,
 				F50FCD7F0128AA9801000001 /* triangulate.cpp */,
 				6F5F76680760062A0026BE93 /* adapt.cpp */,
-				F543FC18014FCBC901000001 /* rebay.cpp */,
 				F5F975AB0152459801000001 /* yaber.cpp */,
 				F5BDAB54014068AC01000001 /* insert.cpp */,
+				F543FC18014FCBC901000001 /* rebay.cpp */,
 				00E0854300CAD1857F000001 /* collapse.cpp */,
 				F5CED4AF015630AA01000001 /* swap.cpp */,
 				6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */,
@@ -759,41 +765,6 @@
 			};
 			name = Deployment;
 		};
-		6F2262C408672FD1001017D0 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					METIS,
-					NO_MPISRC,
-				);
-				HEADER_SEARCH_PATHS = (
-					"$(prefix)/include",
-					"$(packages)/include",
-				);
-				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh;
-				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
-			};
-			name = Default;
-		};
 		6F27981008B9FA5A007BECA9 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -831,23 +802,6 @@
 				);
 			};
 			name = Deployment;
-		};
-		6F27981208B9FA5A007BECA9 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = Documentation;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
 		};
 		6FB91AD90ACCB10300792B04 /* Development */ = {
 			isa = XCBuildConfiguration;
@@ -930,42 +884,6 @@
 			};
 			name = Deployment;
 		};
-		6FB91ADB0ACCB10300792B04 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					METIS,
-					NO_MPISRC,
-				);
-				HEADER_SEARCH_PATHS = (
-					"$(prefix)/include",
-					"$(packages)/include",
-					/usr/share/include,
-				);
-				INSTALL_PATH = "$(HOME)/Codes/";
-				LIBRARY_SEARCH_PATHS = "";
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh;
-				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
-			};
-			name = Default;
-		};
 		6FB91B100ACCB1E100792B04 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -995,6 +913,7 @@
 					/usr/share/lib,
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
+					/sw/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
@@ -1040,6 +959,7 @@
 					/usr/share/lib,
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					/sw/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
@@ -1058,48 +978,6 @@
 				prefix = "$(HOME)/Codes";
 			};
 			name = Deployment;
-		};
-		6FB91B120ACCB1E100792B04 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DSTROOT = "$(HOME)";
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					METIS,
-					NO_MPISRC,
-				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(prefix)/include",
-					"$(packages)/include",
-					/usr/share/include,
-				);
-				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(prefix)/lib",
-					"$(packages)/lib",
-					/usr/share/lib,
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
-				PREBINDING = YES;
-				PRODUCT_NAME = mesh;
-				SKIP_INSTALL = YES;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
-			};
-			name = Default;
 		};
 		6FD540630863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
@@ -1128,6 +1006,7 @@
 					"$(packages)/lib",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
+					/sw/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
@@ -1171,6 +1050,7 @@
 					"$(prefix)/lib",
 					"$(packages)/lib",
 					/Library/DataTank,
+					/sw/lib,
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
@@ -1188,46 +1068,6 @@
 			};
 			name = Deployment;
 		};
-		6FD540650863870800D6A762 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DSTROOT = "$(HOME)";
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					METIS,
-					NO_MPISRC,
-				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"$(prefix)/include",
-					"$(packages)/include",
-				);
-				INSTALL_PATH = /bin;
-				LIBRARY_SEARCH_PATHS = (
-					"$(prefix)/lib",
-					"$(packages)/lib",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
-				PREBINDING = YES;
-				PRODUCT_NAME = mesh;
-				SKIP_INSTALL = YES;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-				packages = "$(HOME)/Packages";
-				prefix = "$(HOME)/Codes";
-			};
-			name = Default;
-		};
 		6FD540670863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1240,12 +1080,6 @@
 			};
 			name = Deployment;
 		};
-		6FD540690863870800D6A762 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-			};
-			name = Default;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1254,60 +1088,54 @@
 			buildConfigurations = (
 				6F2262C208672FD1001017D0 /* Development */,
 				6F2262C308672FD1001017D0 /* Deployment */,
-				6F2262C408672FD1001017D0 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6F27981008B9FA5A007BECA9 /* Development */,
 				6F27981108B9FA5A007BECA9 /* Deployment */,
-				6F27981208B9FA5A007BECA9 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "lib_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB91AD90ACCB10300792B04 /* Development */,
 				6FB91ADA0ACCB10300792B04 /* Deployment */,
-				6FB91ADB0ACCB10300792B04 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "main_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB91B100ACCB1E100792B04 /* Development */,
 				6FB91B110ACCB1E100792B04 /* Deployment */,
-				6FB91B120ACCB1E100792B04 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "main" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FD540630863870800D6A762 /* Development */,
 				6FD540640863870800D6A762 /* Deployment */,
-				6FD540650863870800D6A762 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FD540670863870800D6A762 /* Development */,
 				6FD540680863870800D6A762 /* Deployment */,
-				6FD540690863870800D6A762 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 /* End XCConfigurationList section */
 	};
