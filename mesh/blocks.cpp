@@ -7,6 +7,7 @@
  *
  */
 
+
 #include "blocks.h"
 #include "boundary.h"
 #include <time.h>
@@ -20,7 +21,6 @@
 #include <mpi.h>
 #endif
 #include <blitz/array.h>
-#include <boost/bind.hpp>
 
 using namespace std;
 using namespace blitz;
@@ -34,6 +34,10 @@ std::ostream *sim::log = &std::cout;
 double sim::time, sim::dti, sim::g;
 TinyVector<FLT,2> sim::body;
 int sim::tstep = -1, sim::substep = -1;
+
+#ifdef PTH
+int pth_int1, pth_int2;
+#endif
 
 #ifdef BACKDIFF
 FLT sim::bd[BACKDIFF+1];
@@ -63,7 +67,7 @@ FLT sim::cdirk[DIRK] = {2.*GRK4,C3RK4-2.*GRK4,1.0-C3RK4,0.0};
 bool sim::esdirk = false;  // SET FALSE FOR FIRST TIME STEP
 blitz::Array<FLT,1> sim::cfl;  
 bool sim::adapt_output;
-    
+
 void blocks::init(const std::string &infile, const std::string &outfile) {
     input_map maptemp;
     std::string name;
@@ -79,8 +83,6 @@ void blocks::init(const std::string &infile, const std::string &outfile) {
     
     return;
 }
-    
-
 
 void blocks::init(input_map input) {
     int i,nb;
@@ -92,7 +94,7 @@ void blocks::init(input_map input) {
 #ifdef MPISRC
     MPI_Comm_size(MPI_COMM_WORLD,&nproc);
     MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif
+#endif   
 
     /* OPEN LOGFILES FOR EACH PROCESSOR */
     if (input.get("logfile",mystring)) {
@@ -157,9 +159,23 @@ void blocks::init(input_map input) {
     sndbufs.resize(nblock);
     rcvbufs.resize(nblock);
     
+#ifdef PTH
+    threads.resize(nblock);
+    pth_mutex_init(&list_mutex);
+    pth_cond_init(&list_change);
+    attr = PTH_ATTR_DEFAULT;
+    pth_attr_set(attr, PTH_ATTR_JOINABLE, true); 
+#elif defined(BOOST)
+    thread_func.resize(nblock);
+#endif
+ 
     /* LOAD TIME STEPPING INFO */
     sim::time = 0.0;  // Simulation starts at t = 0
     input.getwdefault("dtinv",sim::dti,0.0);
+    input.getwdefault("ntstep",ntstep,1);
+    input.getwdefault("restart",nstart,0);
+    ntstep += nstart +1;
+    if (sim::dti > 0.0) sim::time = nstart/sim::dti;
         
     /* OTHER UNIVERSAL CONSTANTS */
     input.getwdefault("gravity",sim::g,0.0);
@@ -182,15 +198,8 @@ void blocks::init(input_map input) {
     input.getwdefault("error_control_level",error_control_level,-1);
     
     input.getwdefault("error_control_tolerance",error_control_tolerance,0.33);
-    
-    input.getwdefault("ntstep",ntstep,1);
-    input.getwdefault("restart",nstart,0);
-    ntstep += nstart +1;
-    if (sim::dti > 0.0) sim::time = nstart/sim::dti;
 
     /* LOAD NUMBER OF GRIDS */
-    input.getwdefault("nblock",nblock,1);
-    
     input.getwdefault("ngrid",ngrid,1);
     
     input.getwdefault("extra_coarsest_levels",extra_coarsest_levels,0);
@@ -220,14 +229,9 @@ void blocks::init(input_map input) {
     
     if (sim::adapt_output) output("matched0");
     
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
     for(int lvl=1;lvl<ngrid;++lvl) {
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::reconnect,blk[i],lvl);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
+        THREAD_RUN1(reconnect,lvl);
+        THREADS_JOIN();
 
         matchboundaries(lvl);
         
@@ -537,58 +541,33 @@ void blocks::findmatch() {
     return;
 }
 
-                
+       
                 
     /* MATCH BOUNDARIES */
 void blocks::matchboundaries(int lvl) {
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
-    
-    for(int i=0;i<nblock;++i) {
-        thread_func(i) = boost::bind(&block::matchboundaries,blk[i],lvl);
-        threads.create_thread(thread_func(i));
-    }
-    threads.join_all();
-
+   THREAD_RUN1(matchboundaries,lvl);
+   THREADS_JOIN();
+   return;
 }
 
 
 void blocks::output(const std::string &filename, block::output_purpose why, int lvl) {
-    int i;    
-    std::string fnmcat, fnmcat1;
-    ostringstream nstr;
-    
-    for (i=0;i<nblock;++i) {
+    for (int i=0;i<nblock;++i) {
         blk[i]->output(filename,why,lvl);
     }
-    
     return;
 }
 
 void blocks::rsdl(int lvl) {
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
-    
-    for(int i=0;i<nblock;++i) {
-        thread_func(i) = boost::bind(&block::rsdl,blk[i],lvl);
-        threads.create_thread(thread_func(i));
-    }
-    threads.join_all();
-
-    return;
+   THREAD_RUN1(rsdl,lvl);
+   THREADS_JOIN();
+   return;
 }
         
 void blocks::setup_preconditioner(int lvl) {
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
-    
-    for(int i=0;i<nblock;++i) {
-        thread_func(i) = boost::bind(&block::setup_preconditioner,blk[i],lvl);
-        threads.create_thread(thread_func(i));
-    }
-    threads.join_all();
-    
-    return;
+   THREAD_RUN1(setup_preconditioner,lvl);
+   THREADS_JOIN();
+   return;
 }
 
 
@@ -596,27 +575,18 @@ void blocks::iterate(int lvl, int niter) {
 /*****************************************/
 /* JACOBI-ITERATION FOR MESH POSITION ****/
 /*****************************************/
-    int iter;
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
+   int iter;
     
-    for(iter=0;iter<niter;++iter) {    
-
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::update,blk[i],lvl);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
-    }
-    
-    return;
+   for(iter=0;iter<niter;++iter) {    
+      THREAD_RUN1(update,lvl);
+      THREADS_JOIN();
+   }
+   return;
 }
 
 void blocks::cycle(int vw, int lvl) {
-    int i,vcount; 
+    int vcount; 
     int gridlevel,gridlevelp;
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
     FLT error,maxerror = 0.0;
     
     /* THIS ALLOWS FOR EXTRA LEVELS FOR BOTTOM AND TOP GRID */
@@ -645,19 +615,13 @@ void blocks::cycle(int vw, int lvl) {
         
         rsdl(gridlevel);
         
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::mg_getfres,blk[i],gridlevelp,gridlevel);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
+        THREAD_RUN2(mg_getfres,gridlevelp,gridlevel);
+        THREADS_JOIN();
         
         cycle(vw, lvl+1);
 
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::mg_getcchng,blk[i],gridlevel,gridlevelp);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
+        THREAD_RUN2(mg_getcchng,gridlevel,gridlevelp);
+        THREADS_JOIN();
         
         if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) setup_preconditioner(gridlevel);
         
@@ -805,15 +769,10 @@ void blocks::tadvance() {
     if (sim::dti > 0.0) sim::time += sim::cdirk[sim::substep]/sim::dti;
 #endif
 #endif
-    
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
+
     for (lvl=0;lvl<ngrid;++lvl) {  
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::tadvance,blk[i],lvl);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
+        THREAD_RUN1(tadvance,lvl);
+        THREADS_JOIN();
     }
     
     matchboundaries(0);
@@ -823,23 +782,15 @@ void blocks::tadvance() {
 
 void blocks::restructure() {
     int lvl;
-    Array<boost::function0<void>,1> thread_func(nblock);
-	boost::thread_group threads;
     
     matchboundaries(0);
     
-    for(int i=0;i<nblock;++i) {
-        thread_func(i) = boost::bind(&block::adapt,blk[i]);
-        threads.create_thread(thread_func(i));
-    }
-    threads.join_all();
+    THREAD_RUN0(adapt);
+    THREADS_JOIN();
             
     for(lvl=1;lvl<ngrid;++lvl) {
-        for(int i=0;i<nblock;++i) {
-            thread_func(i) = boost::bind(&block::reconnect,blk[i],lvl);
-            threads.create_thread(thread_func(i));
-        }
-        threads.join_all();
+        THREAD_RUN1(reconnect,lvl);
+        THREADS_JOIN();
     }
     
     return;

@@ -5,7 +5,8 @@
 #include <utilities.h>
 #include <string.h>
 #include "block.h"
-#include <boost/bind.hpp>
+// #include <boost/bind.hpp>
+// #include <boost/thread.hpp>
 
 void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
     int i,bnum,v0;
@@ -17,8 +18,8 @@ void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
         tgt.getwgts(cnnct(i).wt);
     }
     
-    Array<boost::function0<void>,1> thread_func(nsbd);
-    boost::thread_group threads;
+    //Array<boost::function0<void>,1> thread_func(nsbd);
+    //boost::thread_group threads;
     
     /* REDO BOUNDARY SIDES TO DEAL WITH CURVATURE */
     for(bnum=0;bnum<nsbd;++bnum) {
@@ -27,11 +28,11 @@ void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
             *sim::log << "error: sides are not numbered the same" << std::endl;
             exit(1);
         }
-        // sbdry(bnum)->mgconnect(cnnct,tgt,bnum);
-        thread_func(bnum) = boost::bind(&side_bdry::mgconnect,sbdry(bnum),boost::ref(cnnct),boost::ref(tgt),bnum);
-        threads.create_thread(thread_func(bnum));
+        sbdry(bnum)->mgconnect(cnnct,tgt,bnum);
+        //thread_func(bnum) = boost::bind(&side_bdry::mgconnect,sbdry(bnum),boost::ref(cnnct),boost::ref(tgt),bnum);
+        //threads.create_thread(thread_func(bnum));
     }
-    threads.join_all();
+    //threads.join_all();
     
 }
 

@@ -1,16 +1,46 @@
-#include "block.h"
-#include <fstream>
-#include <blitz/array.h>
-#include <boost/thread.hpp>
-#include <input_map.h>
-#include <utilities.h>
-
-
 /* THIS IS A MULTIBLOCK MESH */
 /* CAN DRIVE MULTIGRID OR STANDARD ITERATION */
 
 #ifndef _blocks_h_
 #define _blocks_h_
+
+#include "block.h"
+#include <fstream>
+#include <blitz/array.h>
+#include <input_map.h>
+#include <utilities.h>
+
+// #define PTH
+// #define BOOST
+
+
+#ifdef PTH
+#include <pth.h>
+/* COMPLICATED WAY TO GET CORRECT FORM FOR FUNCTION */
+template<class T, void(T::*mem_fn)()> void* thread_proxy(void* p) {
+   (static_cast<T*>(p)->*mem_fn)();
+   return 0;
+}
+
+extern int pth_int1, pth_int2;
+template<class T, void(T::*mem_fn)(int)> void* thread_proxy(void* p) {
+   (static_cast<T*>(p)->*mem_fn)(pth_int1);
+   return 0;
+}
+
+template<class T, void(T::*mem_fn)(int,int)> void* thread_proxy(void* p) {
+   (static_cast<T*>(p)->*mem_fn)(pth_int1,pth_int2);
+   return 0;
+}
+
+#endif
+
+#ifdef BOOST
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
+#endif
+
+
 
 #define DIRK 4
 #ifdef SINGLE
@@ -120,9 +150,31 @@ class blocks {
          /** @name variables needed for thread message passing
          */
         //@{
-        std::map<int,bool> message_list;
+        std::map<int,bool> message_list;  
+#if defined(PTH)
+        blitz::Array<pth_t,1> threads;
+        pth_mutex_t list_mutex;
+        pth_cond_t list_change;
+        pth_attr_t attr;
+#define THREAD_RUN0(f) {for (int b=0;b<nblock;++b) {threads(b) = pth_spawn(attr, thread_proxy<block,&block::f>, blk[b]);} }
+#define THREAD_RUN1(f,arg1) {pth_int1 = arg1; for (int b=0;b<nblock;++b) {threads(b) = pth_spawn(attr, thread_proxy<block,&block::f>, blk[b]);}}
+#define THREAD_RUN2(f,arg1,arg2) {pth_int1 = arg1; pth_int2 = arg2; for (int b=0;b<nblock;++b) {threads(b) = pth_spawn(attr, thread_proxy<block,&block::f>, blk[b]);}}
+#define THREADS_JOIN() {for (int i = 0; i<nblock; ++i) pth_join(threads(i),NULL);}
+#elif defined(BOOST)
+        blitz::Array<boost::function0<void>,1> thread_func;
+        boost::thread_group threads;
         boost::mutex list_mutex;
         boost::condition list_change;
+#define THREAD_RUN0(f) {for (int b=0;b<nblock;++b) {thread_func(b) = boost::bind(&block::f,blk[b]); threads.create_thread(thread_func(b));}}
+#define THREAD_RUN1(f,arg1) {for (int b=0;b<nblock;++b) {thread_func(b) = boost::bind(&block::f,blk[b],arg1); threads.create_thread(thread_func(b));}}
+#define THREAD_RUN2(f,arg1,arg2) {for (int b=0;b<nblock;++b) {thread_func(b) = boost::bind(&block::f,blk[b],arg1,arg2); threads.create_thread(thread_func(b));}}
+#define THREADS_JOIN() threads.join_all()
+#else
+#define THREAD_RUN0(f) {blk[0]->f();}
+#define THREAD_RUN1(f,arg1) {blk[0]->f(arg1);}
+#define THREAD_RUN2(f,arg1,arg2) {blk[0]->f(arg1,arg2);}
+#define THREADS_JOIN() 
+#endif
         //@}
 
     public:
@@ -159,22 +211,40 @@ class blocks {
         /** Functions for thread communication */
         void waitforslot(int msgid, bool set) {
             std::map<int,bool>::iterator mi;
-            
+#if defined(PTH)
+            pth_mutex_acquire(&list_mutex,false,NULL);
+#elif defined(BOOST)
             boost::mutex::scoped_lock lock(list_mutex);
+#endif
             mi = message_list.find(msgid);
             if (mi == message_list.end()) message_list[msgid] = false;
             
             while(message_list[msgid] != set) {
+#if defined(PTH)
+                pth_cond_await(&list_change, &list_mutex, NULL);
+#elif defined(BOOST)
                 list_change.wait(lock);
+#endif
             }
+#if defined(PTH)
+            pth_mutex_release(&list_mutex);
+#endif
         }
         
         void notify_change(int msgid, bool set) {
+#if defined(PTH)
+            pth_mutex_acquire(&list_mutex,false,NULL);
+#elif defined(BOOST)
             boost::mutex::scoped_lock lock(list_mutex);
+#endif
             message_list[msgid] = set;
+#if defined(PTH)
+            pth_cond_notify(&list_change, true);
+            pth_mutex_release(&list_mutex);
+#elif defined(BOOST)
             list_change.notify_all();
+#endif
         }
-
         
     protected:
         /** Allocates blocks, called by init to generate blocks from initialization file */

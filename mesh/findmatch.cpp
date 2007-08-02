@@ -261,6 +261,11 @@ void mesh::setpartition(int nparts) {
 }
 #endif
 
+/* WHEN THIS ROUTINE EXITS */
+/* THE OLD MESH STORES  */
+/* vd(vind).info = new vrtx index or -1 */
+/* THE NEW MESH STORES */
+/* td(tind).info = old tri index */ 
 void mesh::partition(class mesh& xin, int npart) {
     int i,j,n,tind,sind,v0,indx;
     Array<int,2> bcntr(xin.nsbd +5,3); 

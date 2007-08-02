@@ -128,6 +128,95 @@ void mesh::symmetrize() {
     }
 
     return;
+}
+
+void mesh::cut(Array<double,1> indicator) {
+	int i,j,sind,vct,bnum;
+	double vmin, vmax;
+	
+	for(i=0;i<ntri;++i) {
+		vmin = 0.0;
+		vmax = 0.0;
+		for(vct=0;vct<3;++vct) {
+			vmin = MIN(vmin,indicator(td(i).vrtx(vct)));
+			vmax = MAX(vmax,indicator(td(i).vrtx(vct)));
+		}
+		if (vmax > fabs(vmin)) 
+			td(i).info = 0;
+		else
+			td(i).info = 1;
+	}
+    
+    output("testing",easymesh);
+    	
+    for (int m = 0; m < 2; ++m) {
+        mesh zpart[2];
+        zpart[m].allocate(maxvst*4);
+        zpart[m].partition(*this,m);
+
+        /* FIND NEW BOUNDARY */
+        bnum = -1;
+        for(i=0;i<zpart[m].nsbd;++i) {
+            if (zpart[m].sbdry(i)->is_comm()) {
+                for(j=0;j<nsbd;++j)
+                    if (sbdry(j)->idnum == zpart[m].sbdry(i)->idnum) goto next;
+                bnum = i;
+                break;
+                next: continue;
+            }
+        }
+        
+        if (bnum > -1) {
+            TinyVector<FLT,ND> grad,dphi,dx;
+            TinyMatrix<FLT,ND,ND> ldcrd;
+            FLT jcbi,dnorm,mag;
+            int n,tind,vind,tindold, vindold;
+            TinyVector<int,3> v;
+            
+            for(j=0;j<zpart[m].sbdry(bnum)->nel;++j) {
+                sind = zpart[m].sbdry(bnum)->el(j);
+                tind = zpart[m].sd(sind).tri(0);
+                tindold = zpart[m].td(tind).info;
+                
+                /* CALCULATE GRADIENT */
+                v = td(tindold).vrtx;
+                for(n=0;n<ND;++n) {
+                    ldcrd(n,0) = 0.5*(vrtx(v(2))(n) -vrtx(v(1))(n));
+                    ldcrd(n,1) = 0.5*(vrtx(v(0))(n) -vrtx(v(1))(n));
+                }
+                jcbi = 1./(ldcrd(0,0)*ldcrd(1,1) -ldcrd(0,1)*ldcrd(1,0));
+                dphi(0) = 0.5*(indicator(v(2)) -indicator(v(1)));
+                dphi(1) = 0.5*(indicator(v(0)) -indicator(v(1)));
+
+                grad(0) =  dphi(0)*ldcrd(1,1) -dphi(1)*ldcrd(1,0);
+                grad(1) = -dphi(0)*ldcrd(0,1) +dphi(1)*ldcrd(0,0);
+                grad *= jcbi;
+                mag = sqrt(grad(0)*grad(0) +grad(1)*grad(1));
+                
+                /* MOVE FIRST VERTEX OF EACH EDGE */
+                /* THE OLD MESH STORES  */
+                /* vd(vind).info = new vrtx index or -1 */
+                /* THE NEW MESH STORES */
+                /* td(tind).info = old tri index */
+                vind = zpart[m].sd(sind).vrtx(0);
+                for (vindold=0;vindold<3;++vindold) 
+                    if (vd(td(tindold).vrtx(vindold)).info == vind) break;
+                vindold = td(tindold).vrtx(vindold);
+                
+                dnorm = -indicator(vindold)/mag;
+                dx(0) = dnorm*grad(0)/mag;
+                dx(1) = dnorm*grad(1)/mag;
+                
+                zpart[m].vrtx(vind) += dx;
+            }
+        }
+        char buff[100];
+        sprintf(buff,"cut%d",m);
+        zpart[m].output(buff,grid);
+    }
+
+
+    return;
 }	
 			
 	

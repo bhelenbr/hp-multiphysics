@@ -417,7 +417,7 @@ void r_mesh::moveboundaries() {
 
 void r_mesh::rsdl() {
     int last_phase, mp_phase;
-    int i,n,sind,v0,v1;
+    int i,n,v0,v1;
     FLT dx,dy;
     Array<TinyVector<FLT,ND>,1> res;
     res.reference(gbl_ptr->res);
@@ -433,7 +433,7 @@ void r_mesh::rsdl() {
         for(n=0;n<ND;++n)
             res1(i)(n) = 0.0;
 
-    for (sind = 0; sind < nside; ++sind) {
+    for (int sind = 0; sind < nside; ++sind) {
         v0 = sd(sind).vrtx(0);
         v1 = sd(sind).vrtx(1);
 
@@ -467,7 +467,7 @@ void r_mesh::rsdl() {
         for(n=0;n<ND;++n)
             res(i)(n) = 0.0;
 
-    for (sind = 0; sind < nside; ++sind) {
+    for (int sind = 0; sind < nside; ++sind) {
         v0 = sd(sind).vrtx(0);
         v1 = sd(sind).vrtx(1);
 

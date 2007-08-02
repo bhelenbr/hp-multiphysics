@@ -102,7 +102,7 @@ class mesh {
         /*  INTERFACE */
         /**************/
         /* INITIALIZATION & ALLOCATION */
-        mesh() : idprefix(""), nvbd(0), nsbd(0), initialized(0)  {}
+        mesh() : idprefix(""), nvbd(0), nsbd(0), gbl_ptr(0), initialized(0)  {}
         void init(input_map& input, gbl *gin = 0);
         void init(const class mesh& xmesh,FLT sizereduce1d = 1);
         void copy(const mesh& tgt);
@@ -118,6 +118,7 @@ class mesh {
         /* MESH MODIFICATION UTILTIES */
         void coarsen_substructured(const class mesh &tgt,int p);
 	    void symmetrize();
+        void cut(Array<FLT,1> indicator);
         void append(const mesh &z);
         void shift(TinyVector<FLT,ND>& s);
         void scale(TinyVector<FLT,ND>& s);

@@ -22,6 +22,7 @@ static GBool Partition = gFalse;
 static GBool Format = gFalse;
 static GBool Coarsen_Marks = gFalse;
 static GBool Symmetrize = gFalse;
+static GBool Cut = gFalse;
 static GBool Vlngth = gFalse;
 GBool printHelp = gFalse;
 
@@ -53,6 +54,8 @@ static ArgDesc argDesc[] = {
     "Coarsen vertices based on list of marks"},
   {"-y"  ,argFlag,     &Symmetrize,            0,
     "Make mesh symmetric about y = 0"},
+  {"-z"  ,argFlag,     &Cut,            0,
+    "Cut mesh using indicator function"},
   {"-v"  ,argFlag,     &Vlngth,            0,
     "Create a mesh resolution file"},
   {NULL}
@@ -83,6 +86,19 @@ int main(int argc, char *argv[]) {
         intest.close();
         bdrymap.input(bdry_nm);
     }
+ 
+    if (Cut) {
+        zx.input(argv[1],in,1.0,bdrymap);
+        Array<double,1> indicator(zx.nvrtx);
+        
+        for(int i=0;i<zx.nvrtx;++i)
+            indicator(i) = zx.vrtx(i)(0)*zx.vrtx(i)(0) +zx.vrtx(i)(1)*zx.vrtx(i)(1) - 0.25;
+        
+        zx.cut(indicator);
+        
+        return(0);
+    }
+        
 
     /* TO SYMMETRIZE A MESH */
     if (Symmetrize) {
@@ -187,7 +203,18 @@ int main(int argc, char *argv[]) {
         zx.output(argv[2],out); 
         return(0);      
     }
-        
+    
+#ifdef MPISRC
+    int myid;
+    MPI_Init(&argc,&argv);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+#ifdef PTH
+    int rc = pth_init();
+    if (!rc) {
+        std::cerr << "couldn't start pth environment\n";
+    }
+#endif
 
     if (Generate) {
         sim::blks.init(argv[1]);
@@ -201,12 +228,8 @@ int main(int argc, char *argv[]) {
         return(0);
     }
 
-#ifdef MPISRC
-    int myid;
-    MPI_Init(&argc,&argv);
-    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif
-    
+
+
     if (argc == 2) {
         /* READ INPUT MAP FROM FILE */
         sim::blks.init(argv[1]);
@@ -218,9 +241,14 @@ int main(int argc, char *argv[]) {
     
     sim::blks.go();
     
+#ifdef PTH
+    pth_exit(NULL);
+#endif    
 #ifdef MPISRC
     MPI_Finalize();
 #endif
+
+
 
     return(0);
 }
