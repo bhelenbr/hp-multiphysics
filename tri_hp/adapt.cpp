@@ -16,8 +16,8 @@
     
     if (ctrl_message == block::begin) {
         /* ASSUMES STEPS FOR SETTING UP VLENGTH HAVE BEEN TAKEN ALREADY */
-        gbl_ptr->pstr->copy_data(*this);
-        treeinit();
+        treeinit();  // TEMPORARY??
+        gbl_ptr->pstr->copy(*this);
         excpt = 0;
     }
     
