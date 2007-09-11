@@ -45,6 +45,10 @@ block::ctrl tri_hp_cd::length(block::ctrl ctrl_message) {
                         sum = distance2(v0,v1)*fabs(ug.s(i,sm0-1,0));
                         fscr1(v0) += sum;
                         fscr1(v1) += sum;
+                        /* UNCOMMENT FOR SHOCK DETECTION 
+                        sum = abs(ug.s(i,sm0-1,0)/(abs(ug.s(i,0,0))+1.0e-5));
+                        fscr1(v0) = MAX(sum,fscr1(v0));
+                        fscr1(v1) = MAX(sum,fscr1(v1)); */
                     }
 
                   /* BOUNDARY CURVATURE */
@@ -97,6 +101,8 @@ block::ctrl tri_hp_cd::length(block::ctrl ctrl_message) {
                     break;
                 }
             }
+            
+            // output_error(); FOR SHOCK DETECTION
 
             for(i=0;i<nvrtx;++i) {
                 fscr1(i) = pow(fscr1(i)/(vd(i).nnbor*trncerr),1./(basis::tri(log2p).p+1+ND));
