@@ -1,5 +1,4 @@
 #include "bdry_swe.h"
-#include <myblas.h>
 
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
