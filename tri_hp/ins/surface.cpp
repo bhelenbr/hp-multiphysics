@@ -4,9 +4,11 @@
 
 //#define CTRL_DEBUG
 //#define MPDEBUG
+
 //#define DEBUG
 
 //#define BODYFORCE
+
 
 using namespace bdry_ins;
 
@@ -87,9 +89,14 @@ void surface::init(input_map& inmap,void* &gbl_in) {
 
               
         surf_gbl->vdt.resize(base.maxel+1);
-        surf_gbl->sdt.resize(base.maxel);    
-        
+        surf_gbl->sdt.resize(base.maxel);      
         surf_gbl->meshc.resize(base.maxel);
+        
+#ifdef DETAILED_MINV
+        surf_gbl->ms.resize(base.maxel); 
+        surf_gbl->vms.resize(base.maxel,2,2,MAXP,2);
+        surf_gbl->ipiv.resize(base.maxel); 
+#endif
         
         /* Multigrid Storage all except highest order (log2p+1)*/
         vdres.resize(x.log2p+1,base.maxel+1);
@@ -106,8 +113,8 @@ void surface::init(input_map& inmap,void* &gbl_in) {
 
         double CFLndflt[3] = {2.0, 1.25, 0.75};
         inmap.getwdefault(base.idprefix + "_cflnormal",&surf_gbl->cfl(1,0),3,CFLndflt); 
-         
-        surf_gbl->adis = 1.0;  /* TEMPORARY */
+        
+        inmap.getwdefault(base.idprefix +"_adis",surf_gbl->adis,1.0);
     }
     else {
         surf_gbl = reinterpret_cast<gbl *>(gbl_in);
@@ -163,7 +170,7 @@ block::ctrl surface::tadvance(bool coarse, block::ctrl ctrl_message) {
 
                     for(i=0;i<base.nel;++i) 
                         for(m=0;m<basis::tri(x.log2p).sm;++m)
-                            sdres(x.log2p,i,m)(0) = -0.0*surf_gbl->sres(i,m)(0); // TEMPO FOR UNIFORM SPACING OF HIGHER MODES ALONG SIDE
+                            sdres(x.log2p,i,m)(0) = -surf_gbl->sres(i,m)(0)*0;  /* TEMPO TO KEEP SIDE MODES EQUALLY SPACED */
                 }
             }
             ++excpt;
@@ -234,7 +241,6 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
                     res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
                     /* UPWINDING BASED ON TANGENTIAL VELOCITY */
                     res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*surf_gbl->meshc(indx);
-                    
 #ifdef DROP
                     res(3,i) = +RAD(crd(0,i))*surf_gbl->vflux*jcb;
 #endif 
@@ -264,10 +270,6 @@ block::ctrl surface::rsdl(block::ctrl ctrl_message) {
 #ifdef DROP
                 basis::tri(x.log2p).intgrt1d(&lf(2,0),&res(3,0));
 #endif
-                
-                /* TO LEAVE TANGENTIAL POSITION TOTALLY FREE */
-                /* for(m=0;m<basis::tri(x.log2p).sm+2;++m)
-                    cf(0,m) = 0.0; */
                 
                 /* STORE IN RES */
                 for(n=0;n<mesh::ND;++n) {
@@ -577,8 +579,26 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
             
             /* SOLVE FOR SIDE MODES */
             if (basis::tri(x.log2p).sm > 0) {
-                for(indx = 0; indx<base.nel; ++indx) {
-                    
+                for(indx = 0; indx<base.nel; ++indx) {                   
+
+#ifdef DETAILED_MINV
+                    for(m=0;m<basis::tri(x.log2p).sm;++m) {
+                        for(n=0;n<mesh::ND;++n) {
+                            surf_gbl->sres(indx,m)(n) -= surf_gbl->vms(indx,n,0,m,0)*surf_gbl->vres(indx)(0);
+                            surf_gbl->sres(indx,m)(n) -= surf_gbl->vms(indx,n,0,m,1)*surf_gbl->vres(indx+1)(0);
+                            surf_gbl->sres(indx,m)(n) -= surf_gbl->vms(indx,n,1,m,0)*surf_gbl->vres(indx)(1);
+                            surf_gbl->sres(indx,m)(n) -= surf_gbl->vms(indx,n,1,m,1)*surf_gbl->vres(indx+1)(1);                            
+                        }
+                    }
+                    int info;
+                    char trans[] = "T";
+                    GETRS(trans,2*basis::tri(x.log2p).sm,1,&surf_gbl->ms(indx)(0,0),2*MAXP,&surf_gbl->ipiv(indx)(0),&surf_gbl->sres(indx,0)(0),2*MAXP,info);
+                    if (info != 0) {
+                        printf("DGETRS FAILED FOR SIDE MODE UPDATE\n");
+                        exit(1);
+                    }
+#else
+           
                     /* INVERT SIDE MODES */
                     DPBTRSNU2(&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,&(surf_gbl->sres(indx,0)(0)),mesh::ND);
                     for(m=0;m<basis::tri(x.log2p).sm;++m) {
@@ -586,13 +606,14 @@ block::ctrl surface::minvrt(block::ctrl ctrl_message) {
                         surf_gbl->sres(indx,m)(1) = surf_gbl->sres(indx,m)(0)*surf_gbl->sdt(indx)(1,0) +surf_gbl->sres(indx,m)(1)*surf_gbl->sdt(indx)(1,1);         
                         surf_gbl->sres(indx,m)(0) = temp;
                     }
-
+                    
                     for(m=0;m<basis::tri(x.log2p).sm;++m) {
                         for(n=0;n<mesh::ND;++n) {
                             surf_gbl->sres(indx,m)(n) -= basis::tri(x.log2p).vfms1d(0,m)*surf_gbl->vres(indx)(n);
                             surf_gbl->sres(indx,m)(n) -= basis::tri(x.log2p).vfms1d(1,m)*surf_gbl->vres(indx+1)(n);
                         }
                     }
+#endif
                 }
             }
         }
@@ -606,10 +627,16 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
     TinyVector<FLT,mesh::ND> nrm;
     FLT h, hsm;
     FLT dttang, dtnorm;
-    FLT uvel, vvel, vslp, strss;
+    FLT vslp, strss;
     FLT drho, srho, smu;
     FLT nu1, nu2;
     FLT qmax, gam1, gam2;
+    TinyMatrix<FLT,mesh::ND,MXGP> crd, dcrd;
+    TinyMatrix<FLT,4,MXGP> res;
+    TinyMatrix<FLT,4,MXGP> lf;
+    TinyVector<FLT,2> mvel;
+    Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+
     
     if (ctrl_message == block::begin) excpt = 0;
     else excpt += ctrl_message;
@@ -638,29 +665,92 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
                 sind = base.el(indx);
                 v0 = x.sd(sind).vrtx(0);
                 v1 = x.sd(sind).vrtx(1);
+                
+                
+#ifdef DETAILED_DT
+                x.crdtocht1d(sind);
+                for(n=0;n<mesh::ND;++n)
+                    basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+                    
+                x.ugtouht1d(sind);
+                for(n=0;n<mesh::ND;++n)
+                    basis::tri(x.log2p).proj1d(&x.uht(n)(0),&u(n)(0));    
+                
+                dtnorm = 1.0e99;
+                dttang = 1.0e99;
+                surf_gbl->meshc(indx) = 1.0e99;
+                for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+                    nrm(0) =  dcrd(1,i)*2;
+                    nrm(1) = -dcrd(0,i)*2;
+                    h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+                    
+                    /* RELATIVE VELOCITY STORED IN MVEL(N)*/
+                    for(n=0;n<mesh::ND;++n) {
+                        mvel(n) = u(n)(i) -(sim::bd[0]*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef DROP
+                        mvel(n) -= tri_hp_ins::mesh_ref_vel(n);
+#endif    
+                    }
 
+
+
+                    qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
+                    vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
+                    hsm = h/(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1));
+                    
+                    dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1))/hsm);
+#ifndef BODYFORCE
+                    strss =  4.*surf_gbl->sigma/(hsm*hsm) +fabs(drho*sim::g*nrm(1)/h);
+#else
+                    strss =  4.*surf_gbl->sigma/(hsm*hsm) +fabs(drho*(-sim::body(0)*nrm(0) +(sim::g-sim::body(1))*nrm(1))/h);
+#endif
+
+                    gam1 = 3.0*qmax +(0.5*hsm*sim::bd[0] + 2.*nu1/hsm)*(0.5*hsm*sim::bd[0] + 2.*nu1/hsm);
+                    gam2 = 3.0*qmax +(0.5*hsm*sim::bd[0] + 2.*nu2/hsm)*(0.5*hsm*sim::bd[0] + 2.*nu2/hsm);
+
+                    if (sim::bd[0] + x.gbl_ptr->mu == 0.0) gam1 = MAX(gam1,0.1);
+
+#ifdef INERTIALESS
+                    gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
+                    gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
+#endif
+                    dtnorm = MIN(dtnorm,2.*vslp/hsm +sim::bd[0] +1.*strss/(x.gbl_ptr->rho*sqrt(qmax +gam1) +surf_gbl->rho2*sqrt(qmax +gam2)));                
+            
+                    /* SET UP DISSIPATIVE COEFFICIENT */
+                    /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+                    /* RESIDUAL HAS DX/2 WEIGHTING */
+                    /* |a| dx/2 dv/dx  dx/2 dpsi */
+                    /* |a| dx/2 2/dx dv/dpsi  dpsi */
+                    /* |a| dv/dpsi  dpsi */
+                    // surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+                    // surf_gbl->meshc(indx) = MIN(surf_gbl->meshc(indx),surf_gbl->adis/(h*(vslp/hsm +sim::bd[0]))); /* FAILED IN MOVING UP TESTS */
+                    surf_gbl->meshc(indx) = MIN(surf_gbl->meshc(indx),surf_gbl->adis/(h*(sqrt(qmax)/hsm +sim::bd[0]))); /* SEEMS THE BEST I'VE GOT */
+                }
+                nrm(0) =  (x.vrtx(v1)(1) -x.vrtx(v0)(1));
+                nrm(1) = -(x.vrtx(v1)(0) -x.vrtx(v0)(0));
+#else
                 nrm(0) =  (x.vrtx(v1)(1) -x.vrtx(v0)(1));
                 nrm(1) = -(x.vrtx(v1)(0) -x.vrtx(v0)(0));
                 h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
                 
-                uvel = x.ug.v(v0,0)-(sim::bd[0]*(x.vrtx(v0)(0) -x.vrtxbd(1)(v0)(0)));
-                vvel = x.ug.v(v0,1)-(sim::bd[0]*(x.vrtx(v0)(1) -x.vrtxbd(1)(v0)(1)));
+                mvel(0) = x.ug.v(v0,0)-(sim::bd[0]*(x.vrtx(v0)(0) -x.vrtxbd(1)(v0)(0)));
+                mvel(1) = x.ug.v(v0,1)-(sim::bd[0]*(x.vrtx(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef DROP
-                uvel -= tri_hp_ins::mesh_ref_vel(0);
-                vvel -= tri_hp_ins::mesh_ref_vel(1);
+                mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
+                mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
 #endif
 
-                qmax = uvel*uvel+vvel*vvel;
-                vslp = fabs(-uvel*nrm(1)/h +vvel*nrm(0)/h);
+                qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+                vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
 
-                uvel = x.ug.v(v1,0)-(sim::bd[0]*(x.vrtx(v1)(0) -x.vrtxbd(1)(v1)(0)));
-                vvel = x.ug.v(v1,1)-(sim::bd[0]*(x.vrtx(v1)(1) -x.vrtxbd(1)(v1)(1)));
+                mvel(0) = x.ug.v(v1,0)-(sim::bd[0]*(x.vrtx(v1)(0) -x.vrtxbd(1)(v1)(0)));
+                mvel(1) = x.ug.v(v1,1)-(sim::bd[0]*(x.vrtx(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef DROP
-                uvel -= tri_hp_ins::mesh_ref_vel(0);
-                vvel -= tri_hp_ins::mesh_ref_vel(1);
+                mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
+                mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
 #endif
-                qmax = MAX(qmax,uvel*uvel+vvel*vvel);
-                vslp = MAX(vslp,fabs(-uvel*nrm(1)/h +vvel*nrm(0)/h));
+                qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
+                vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
                 
                 hsm = h/(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1));
                         
@@ -688,9 +778,11 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
                 /* |a| dx/2 dv/dx  dx/2 dpsi */
                 /* |a| dx/2 2/dx dv/dpsi  dpsi */
                 /* |a| dv/dpsi  dpsi */
-                // surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5);
-                surf_gbl->meshc(indx) = surf_gbl->adis/(h*(vslp/hsm +sim::bd[0]));
-                
+                // surf_gbl->meshc(indx) = surf_gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+                // surf_gbl->meshc(indx) = surf_gbl->adis/(h*(vslp/hsm +sim::bd[0])); /* FAILED IN MOVING UP TESTS */
+                surf_gbl->meshc(indx) = surf_gbl->adis/(h*(sqrt(qmax)/hsm +sim::bd[0])); /* SEEMS THE BEST I'VE GOT */
+#endif
+
                 dtnorm *= RAD(0.5*(x.vrtx(v0)(0) +x.vrtx(v1)(0)));
                 
                 nrm *= 0.5;
@@ -708,7 +800,64 @@ block::ctrl surface::setup_preconditioner(block::ctrl ctrl_message) {
                     surf_gbl->sdt(indx)(0,0) = -dttang*nrm(1);
                     surf_gbl->sdt(indx)(0,1) =  dttang*nrm(0);
                     surf_gbl->sdt(indx)(1,0) =  dtnorm*nrm(0);
-                    surf_gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);
+                    surf_gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);  
+                
+#ifdef DETAILED_MINV
+                    int lsm = basis::tri(x.log2p).sm;
+                    x.crdtocht1d(sind);
+                    for(n=0;n<mesh::ND;++n)
+                        basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+                          
+                    for(int m = 0; m<lsm; ++m) {
+                        for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+                            nrm(0) =  dcrd(1,i);
+                            nrm(1) = -dcrd(0,i);
+                            res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p).gx(i,m+3);
+                            res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p).gx(i,m+3);
+                            res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p).gx(i,m+3);
+                            res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p).gx(i,m+3); 
+                        }
+                        lf = 0;
+                        basis::tri(x.log2p).intgrt1d(&lf(0,0),&res(0,0));
+                        basis::tri(x.log2p).intgrt1d(&lf(1,0),&res(1,0));
+                        basis::tri(x.log2p).intgrt1d(&lf(2,0),&res(2,0));
+                        basis::tri(x.log2p).intgrt1d(&lf(3,0),&res(3,0));
+        
+                        /* CFL = 0 WON'T WORK THIS WAY */
+                        lf(0,Range(0,lsm+1) /= surf_gbl->cfl(0,x.log2p);
+                        lf(1,Range(0,lsm+1) /= surf_gbl->cfl(0,x.log2p);
+                        lf(2,Range(0,lsm+1) /= surf_gbl->cfl(1,x.log2p);
+                        lf(3,Range(0,lsm+1) /= surf_gbl->cfl(1,x.log2p);                        
+                        
+                        for (n=0;n<lsm;++n) {
+                            surf_gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
+                            surf_gbl->ms(indx)(2*m,2*n+1) = lf(1,n+2);
+                            surf_gbl->ms(indx)(2*m+1,2*n) = lf(2,n+2);
+                            surf_gbl->ms(indx)(2*m+1,2*n+1) = lf(3,n+2);
+                        }
+                        
+                        /* tang/norm, x/y,  mode,  vert */
+                        surf_gbl->vms(indx,0,0,m,0) = lf(0,0);
+                        surf_gbl->vms(indx,0,1,m,0) = lf(1,0);
+                        surf_gbl->vms(indx,0,0,m,1) = lf(0,1);
+                        surf_gbl->vms(indx,0,1,m,1) = lf(1,1);
+                        surf_gbl->vms(indx,1,0,m,0) = lf(2,0);
+                        surf_gbl->vms(indx,1,1,m,0) = lf(3,0);
+                        surf_gbl->vms(indx,1,0,m,1) = lf(2,1);
+                        surf_gbl->vms(indx,1,1,m,1) = lf(3,1);    
+                    }
+
+                    int info;
+                    GETRF(2*lsm,2*lsm,&surf_gbl->ms(indx)(0,0),2*MAXP,&surf_gbl->ipiv(indx)(0),info);
+                    if (info != 0) {
+                        printf("DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
+                        exit(1);
+                    }
+                    /*
+                   \phi_n dx,dy*t = \phi_n Vt
+                    \phi_t dx,dy*n = \phi_t Vn
+                    */
+#endif
                 }
             }
             mp_phase = -1;
