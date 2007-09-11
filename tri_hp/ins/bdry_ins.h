@@ -26,6 +26,9 @@
 #include <blitz/tinyvec-et.h>
 #include <mathclass.h>
 
+//#define DETAILED_DT
+//#define DETAILED_MINV
+
 
 namespace bdry_ins {
 
@@ -162,10 +165,17 @@ namespace bdry_ins {
     };
     
     class symmetry : public generic {
+        int dir;
+        
         public:
             symmetry(tri_hp_ins &xin, side_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
             symmetry(const symmetry& inbdry, tri_hp_ins &xin, side_bdry &bin) : generic(inbdry,xin,bin) {}
             symmetry* create(tri_hp& xin, side_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& input,void* &gbl_in) {
+                generic::init(input,gbl_in);
+                std::string keyword = base.idprefix +"_dir";
+                input.getwdefault(keyword,dir,0);
+            }
 
             void vdirichlet() {
                 int sind,v0;
@@ -173,10 +183,10 @@ namespace bdry_ins {
                 for(int j=0;j<base.nel;++j) {
                     sind = base.el(j);
                     v0 = x.sd(sind).vrtx(0);
-                    x.gbl_ptr->res.v(v0,0) = 0.0;
+                    x.gbl_ptr->res.v(v0,dir) = 0.0;
                 }
                 v0 = x.sd(sind).vrtx(1);
-                x.gbl_ptr->res.v(v0,0) = 0.0;
+                x.gbl_ptr->res.v(v0,dir) = 0.0;
             }
             
             void sdirichlet(int mode) {
@@ -184,7 +194,7 @@ namespace bdry_ins {
 
                 for(int j=0;j<base.nel;++j) {
                     sind = base.el(j);
-                    x.gbl_ptr->res.s(sind,mode,0) = 0.0;
+                    x.gbl_ptr->res.s(sind,mode,dir) = 0.0;
                 }
             }
                 
@@ -279,7 +289,12 @@ namespace bdry_ins {
                 Array<TinyMatrix<FLT,mesh::ND,mesh::ND>,1> vdt;
                 Array<TinyMatrix<FLT,mesh::ND,mesh::ND>,1> sdt;
                 Array<FLT,1> meshc;
-                
+
+#ifdef DETAILED_MINV
+                Array<TinyMatrix<FLT,2*MAXP,2*MAXP>,1> ms;
+                Array<FLT,5> vms;
+                Array<TinyVector<int,2*MAXP>,1> ipiv;
+#endif
                 TinyVector<FLT,mesh::ND> fadd;
                 TinyMatrix<FLT,mesh::ND,MAXP> cfl;
                 FLT adis;
