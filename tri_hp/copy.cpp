@@ -11,7 +11,7 @@
 #include "utilities.h"
 #include "hp_boundary.h"
 
- void tri_hp::copy_data(const tri_hp& tgt) {
+ void tri_hp::copy(const tri_hp& tgt) {
     int i,n,t;
     
     /* COPY MESH INFORMATION */
@@ -28,10 +28,10 @@
     }
 
     for(i=0;i<nsbd;++i)
-        hp_sbdry(i)->copy_data(*tgt.hp_sbdry(i));
+        hp_sbdry(i)->copy(*tgt.hp_sbdry(i));
         
     for(i=0;i<nvbd;++i)
-        hp_vbdry(i)->copy_data(*tgt.hp_vbdry(i));
+        hp_vbdry(i)->copy(*tgt.hp_vbdry(i));
         
     return;
 }
