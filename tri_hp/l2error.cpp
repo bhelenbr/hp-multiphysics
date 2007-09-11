@@ -133,3 +133,42 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
     
     return;
 }
+
+/* UTILITY ROUTINE TO OUTPUT TRUNCATION ERROR ASSUMING STORED IN FSCR1 */
+void tri_hp::output_error() {
+   int i,n,tind;
+   ostringstream fname;
+   ofstream out;
+    
+   fname << idprefix << +"_truncation" << sim::time << ".dat";
+   out.open(fname.str().c_str());
+   if (!out) {
+       *sim::log << "couldn't open tecplot output file " << fname.str();
+       exit(1);
+   }
+
+   out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << std::endl;
+   
+   /* VERTEX MODES */
+   for(i=0;i<nvrtx;++i) {
+      for(n=0;n<ND;++n)
+         out << vrtx(i)(n) << ' ';
+      out << fscr1(i) << '\n';                    
+   }
+   
+   
+
+//   /* TO RENORMALIZE */
+//   for(i=0;i<nvrtx;++i)
+//      fscr1(i) = log10(fscr1(i)/(vd(i).nnbor*trncerr));
+
+   /* OUTPUT CONNECTIVY INFO */
+   out << std::endl << "#CONNECTION DATA#" << std::endl;
+
+   for(tind=0;tind<ntri;++tind)
+      out << td(tind).vrtx(0)+1 << ' ' << td(tind).vrtx(1)+1 << ' ' << td(tind).vrtx(2)+1 << '\n';
+ 
+   out.close();
+   
+   return;
+}
