@@ -29,7 +29,7 @@ class hp_vrtx_bdry : public vgeometry_interface {
         hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
         virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
         virtual void init(input_map& input,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
-        virtual void copy_data(const hp_vrtx_bdry& tgt) {}
+        virtual void copy(const hp_vrtx_bdry& tgt) {}
         virtual ~hp_vrtx_bdry() {}
         
         /* input output functions */
@@ -92,7 +92,7 @@ class hp_side_bdry : public sgeometry_interface {
         hp_side_bdry(const hp_side_bdry &inbdry, tri_hp& xin, side_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {}
         virtual hp_side_bdry* create(tri_hp& xin, side_bdry &bin) const {return(new hp_side_bdry(*this,xin,bin));}
         virtual void init(input_map& input,void* &gbl_in); 
-        virtual void copy_data(const hp_side_bdry& tgt);
+        virtual void copy(const hp_side_bdry& tgt);
         virtual ~hp_side_bdry() {}
                 
         /* input output functions */

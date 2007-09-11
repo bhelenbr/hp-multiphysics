@@ -9,6 +9,7 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
+#include <blitz/tinyvec-et.h>
 
 #define NO_MPDEBUG
 
@@ -76,7 +77,7 @@ void hp_side_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
     return;
 }
 
-void hp_side_bdry::copy_data(const hp_side_bdry &bin) {
+void hp_side_bdry::copy(const hp_side_bdry &bin) {
     
     if (!curved || !x.sm0) return;
     
@@ -327,12 +328,20 @@ block::ctrl hp_side_bdry::tadvance(bool coarse, block::ctrl ctrl_message) {
                     }
                 }
             }
-        }
         
+         /* EXTRAPOLATE GUESS? */
+         if (stage) {
+            FLT constant =  sim::cdirk[sim::substep];
+            crvbd(0)(Range(0,base.nel-1),Range(0,basis::tri(x.log2p).sm-1)) += constant*crvbd(stage+1)(Range(0,base.nel-1),Range(0,basis::tri(x.log2p).sm-1));
+         }
+      }
+
         calculate_unsteady_sources(coarse);
         
         /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
         if (!coupled && curved) curv_init();
+        
+        
     }
     return(block::stop);
 }

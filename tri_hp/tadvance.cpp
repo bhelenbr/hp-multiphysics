@@ -9,6 +9,7 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
+#include <blitz/tinyvec-et.h>
 
 /* DIRK SCHEMES */
 block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh) {
@@ -16,7 +17,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
     int state;
     
     if (ctrl_message == block::begin) excpt = 0;
-    
+
     /* DO STUFF FOR DEFORMABLE MESH FIRST */    
     switch(excpt) {
         case 0: 
@@ -30,9 +31,6 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
              stage = sim::substep +sim::esdirk;
              if (!coarse) {
                 if (stage > 0) {
-                
-
-
                     /* BACK CALCULATE K TERM */
                     ugbd(stage+1).v(Range(0,nvrtx-1),Range::all()) = (ug.v(Range(0,nvrtx-1),Range::all()) -ugbd(1).v(Range(0,nvrtx-1),Range::all()))*sim::adirk[stage-1][stage-1];
                     if (basis::tri(log2p).sm) {
@@ -44,7 +42,6 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                     for(i=0;i<nvrtx;++i)
                         for(n=0;n<ND;++n)
                             vrtxbd(stage+1)(i)(n) = (vrtx(i)(n)-vrtxbd(1)(i)(n))*sim::adirk[stage-1][stage-1];
-
                 }
                 
                 if (sim::substep == 0) {
@@ -64,7 +61,7 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                 }
                     
                 /* UPDATE TILDE W */
-                for (s=0;s<stage;++s) {            
+                for (s=0;s<stage;++s) {
                     ugbd(1).v(Range(0,nvrtx-1),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).v(Range(0,nvrtx-1),Range::all());
                     if (basis::tri(log2p).sm) {
                         ugbd(1).s(Range(0,nside-1),Range::all(),Range::all()) += sim::adirk[stage][s]*ugbd(s+2).s(Range(0,nside-1),Range::all(),Range::all());
@@ -76,6 +73,15 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                         for(n=0;n<ND;++n)
                             vrtxbd(1)(i)(n) += sim::adirk[stage][s]*vrtxbd(s+2)(i)(n);
                 }
+                
+               /* EXTRAPOLATE? */
+               if (stage) {
+                  FLT constant =  sim::cdirk[sim::substep];
+                  ugbd(0).v(Range(0,nvrtx-1),Range::all()) += constant*ugbd(stage+1).v(Range(0,nvrtx-1),Range::all());
+                  ugbd(0).s(Range(0,nside-1),Range::all(),Range::all()) += constant*ugbd(stage+1).s(Range(0,nside-1),Range::all(),Range::all());
+                  ugbd(0).i(Range(0,ntri-1),Range::all(),Range::all()) += constant*ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all());
+                  vrtxbd(0)(Range(0,nvrtx-1)) += constant*vrtxbd(stage+1)(Range(0,nvrtx-1));               
+               }
             }
             else {
                 
@@ -131,7 +137,6 @@ block::ctrl tri_hp::tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::tr
                 ++excpt;
             }
         }
-
     }
     
     return(block::stop);
