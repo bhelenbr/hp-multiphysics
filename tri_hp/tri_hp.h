@@ -149,8 +149,8 @@ class tri_hp : public r_mesh  {
     public:
         tri_hp() : r_mesh() {}
         virtual ~tri_hp();
-        void init(input_map& input, gbl *rgin);
-        void copy_data(const tri_hp &tgt);
+        void init(input_map& input, gbl *gin);
+        void copy(const tri_hp &tgt);
         virtual tri_hp* create() = 0;
         
         /* Initialization functions */
@@ -170,6 +170,7 @@ class tri_hp : public r_mesh  {
         block::ctrl findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
         void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
         void integrated_averages(Array<FLT,1> a);
+        void output_error();
         
         /* Routines for point probe */
         void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
