@@ -316,10 +316,10 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
         for(j=0;j<base.nel;++j) {
             sind = base.el(j);
             v0 = x.sd(sind).vrtx(0);
-            x.ug.v(v0,0) = 0.0;
+            x.ug.v(v0,dir) = 0.0;
         }
         v0 = x.sd(sind).vrtx(1);
-        x.ug.v(v0,0) = 0.0;
+        x.ug.v(v0,dir) = 0.0;
 
         /*******************/    
         /* SET SIDE VALUES */
@@ -327,7 +327,7 @@ block::ctrl symmetry::tadvance(bool coarse, block::ctrl ctrl_message) {
         for(j=0;j<base.nel;++j) {
             sind = base.el(j);
             for(m=0;m<basis::tri(x.log2p).sm;++m) {
-                x.ug.s(sind,m,0) = 0.0;
+                x.ug.s(sind,m,dir) = 0.0;
             }
         }
     }
