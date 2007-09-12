@@ -173,11 +173,15 @@ FLT f1(int n, FLT x, FLT y) {
         private:
             FLT outer_limit;
             FLT mu_g, kappa;
+            TinyVector<FLT,2> center;
+            FLT frame_vel;
         
         public:
             FLT f(int n, TinyVector<FLT,mesh::ND> x) {
                 FLT r,sint,cost;
                 FLT ur,ut;    
+                                
+                x -= center;
                 
                 r = sqrt(x(0)*x(0) +x(1)*x(1));
                 sint = x(0)/r;
@@ -192,9 +196,9 @@ FLT f1(int n, FLT x, FLT y) {
                             return(0.0);
                     case(1):
                         if (r < outer_limit)
-                            return(-ur*cost+ut*sint);
+                            return(-ur*cost+ut*sint -frame_vel);
                         else
-                            return(1.0);
+                            return(1.0 -frame_vel);
                     case(2):
                         if (r < outer_limit)
                             return(mu_g/2*cost*(2+3*kappa)/(2*r*r*(1+kappa))); 
@@ -211,6 +215,15 @@ FLT f1(int n, FLT x, FLT y) {
                 keyword = idnty +"_outer_radius";
                 if (!blockdata.get(keyword,outer_limit))
                     blockdata.getwdefault("outer_radius",outer_limit,75.0);
+                    
+                keyword = idnty +"_frame_velocity";
+                if (!blockdata.get(keyword,frame_vel))
+                    blockdata.getwdefault("frame_velocity",frame_vel,0.0);
+
+                keyword = idnty +"_center";
+                center = 0.0;
+                if (!blockdata.get(keyword,center.data(),2))
+                    blockdata.getwdefault("center",center.data(),2,center.data());
                     
                 keyword = idnty +"_mu";
                 if (!blockdata.get(keyword,mu_g)) {
@@ -238,12 +251,16 @@ FLT f1(int n, FLT x, FLT y) {
         private:
             FLT outer_limit;
             FLT rho_l, mu_l, kappa, sigma;
+            FLT frame_vel;
+            TinyVector<FLT,2> center;
         
         public:
             FLT f(int n, TinyVector<FLT,mesh::ND> x) {
                 FLT r,sint,cost;
                 FLT ur,ut;
                 
+                x -= center;
+
                 r = sqrt(x(0)*x(0) +x(1)*x(1));
 
                 sint = x(0)/(r+FLT_EPSILON);
@@ -254,7 +271,7 @@ FLT f1(int n, FLT x, FLT y) {
                     case(0):
                         return(ur*sint+ut*cost);
                     case(1):
-                        return(-ur*cost+ut*sint);
+                        return(-ur*cost+ut*sint -frame_vel);
                     case(2):
                         return(4*sigma -5*mu_l*r*cost*4/(1+kappa)); 
                 }
@@ -264,6 +281,15 @@ FLT f1(int n, FLT x, FLT y) {
             void input(input_map &blockdata,std::string idnty) {
                 std::string keyword,val;
                 std::istringstream data;
+                
+                keyword = idnty +"_frame_velocity";
+                if (!blockdata.get(keyword,frame_vel))
+                    blockdata.getwdefault("frame_velocity",frame_vel,0.0);
+
+                keyword = idnty +"_center";
+                center = 0.0;
+                if (!blockdata.get(keyword,center.data(),2))
+                    blockdata.getwdefault("center",center.data(),2,center.data());
                 
                 keyword = idnty +"_rho";
                 if (!blockdata.get(keyword,rho_l)) {
