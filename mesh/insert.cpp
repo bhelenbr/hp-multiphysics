@@ -459,6 +459,9 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) {
     int ntdel;
     int tclose,nsurround;
     FLT minclosest,closest;
+    int v0,v1,v2;
+    FLT dx0,dy0,dx1,dy1,dx2,dy2;
+    TinyVector<FLT,3> a;
     
 /* TSRCH = 0x100*0x4 */
 #if ((-1)&(0x100*0x4))
@@ -516,16 +519,47 @@ int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) {
         if (ntdel >= gbl_ptr->maxsrch-4) break;
     }
 //    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << vnear << std::endl;
-    tind = gbl_ptr->i2wk(0);
-    minclosest = intri(tind,x)/area(tind);
-    tclose = tind;
-    for (i=1;i<nsurround;++i) {
-        tind = gbl_ptr->i2wk(i);
-        if ((closest = intri(tind,x)/area(tind)) < minclosest) {
-            minclosest = closest;
-            tclose = tind;
+    minclosest = -1.0e16;
+    tclose = -1;
+    for (i=0;i<ntdel;++i) {
+        tind = i2wk(i);
+        
+        v0 = td(tind).vrtx(0);
+        v1 = td(tind).vrtx(1);
+        v2 = td(tind).vrtx(2);
+        
+        dx0 =  (x(0) -vrtx(v0)(0));
+        dy0 =  (x(1) -vrtx(v0)(1)); 
+        dx1 =  (x(0) -vrtx(v1)(0));
+        dy1 =  (x(1) -vrtx(v1)(1));
+        dx2 =  (x(0) -vrtx(v2)(0));
+        dy2 =  (x(1) -vrtx(v2)(1));
+        
+        a(0) = (dy2*dx1 -dx2*dy1);
+        a(1) = (dy0*dx2 -dx0*dy2);
+        a(2) = (dy1*dx0 -dx1*dy0);
+        
+        /* FIND NEGATIVE SIDE */
+        /* CHECK IF 2 SIDES POSITIVE & 1 NEGATIVE */
+        if (a(0)*a(1)*a(2) < 0) {
+            a(0) /= distance(v2,v1);
+            a(1) /= distance(v0,v2);
+            a(2) /= distance(v1,v0);
+        
+            for (int j=0;j<3;++j) {
+                if (a(j) < 0.0 && a(j) > minclosest) {
+                    minclosest = a(j);
+                    tclose = tind;
+                    break;
+                }
+            }
         }
     }
+    if (tclose < 0) {
+        *sim::log << "Major Trouble in Findtri " << x << ' ' << vnear << '\n';
+        exit(1);
+    }
+
     intri(tclose,x);
     tind = -tclose;
         

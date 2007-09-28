@@ -21,9 +21,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		6F1616020B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6F1616030B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
+		6F1D0C090C62C7A600D52333 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
 		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
 		6F2262C70867302A001017D0 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
@@ -55,7 +55,6 @@
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
-		6F50F44E0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */; };
 		6F50F44F0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */; };
 		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
 		6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
@@ -168,6 +167,8 @@
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		6FDBE9090C6019AB00BFCA72 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
+		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -203,6 +204,7 @@
 		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
+		6FEFFC550C60191700352ED3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };
 		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = SOURCE_ROOT; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
@@ -254,6 +256,7 @@
 				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
 				6F1616030B974E67006CA043 /* libDT.a in Frameworks */,
 				6F50F44F0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */,
+				6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,8 +271,8 @@
 				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
 				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
-				6F1616020B974E67006CA043 /* libDT.a in Frameworks */,
-				6F50F44E0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib in Frameworks */,
+				6FDBE9090C6019AB00BFCA72 /* libDT.a in Frameworks */,
+				6F1D0C090C62C7A600D52333 /* libpth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,6 +291,7 @@
 				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
 				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
 				6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */,
+				6FEFFC550C60191700352ED3 /* libpth.a */,
 				6FC676970ACC239C00643F70 /* liblam.dylib */,
 				6FC676980ACC239C00643F70 /* liblammpi++.dylib */,
 				6FC676990ACC239C00643F70 /* libmpi.dylib */,
@@ -1007,11 +1011,13 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
 					/sw/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_5)",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_5 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
 				PRODUCT_NAME = mesh;
 				SKIP_INSTALL = YES;

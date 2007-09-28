@@ -10,6 +10,7 @@
 #include <utilities.h>
 #include <assert.h>
 #include <math.h>
+#include <blitz/tinyvec-et.h>
 
 #define REBAY
 
@@ -20,6 +21,11 @@
 int adapt_count = 0;
 static std::string adapt_file;
 #endif
+
+/*  fscr1 = ratio of triangle size to target
+    sd(i).info = triangle refinement queue
+    vd(tind).info = back reference from triangle into queue
+*/
     
 void mesh::rebay(FLT tolsize) {
     int i,j,n,tind,tfind,v0,v1,v2,vnear,nsnew,ntnew,snum,intrcnt,err;
@@ -49,9 +55,19 @@ void mesh::rebay(FLT tolsize) {
     /* BEGIN REFINEMENT ALGORITHM */
     while (nlst > 0) {
         for(i=nlst-1;i>=0;--i) {
+             /* FIND TRIANGLE FACES ON BOUNDARY FIRST */
             for(j=0;j<3;++j) {
                 tind = td(sd(i).info).tri(j);
-                if (tind < 0 || vd(tind).info == -1) {
+                if (tind < 0)  {
+                    snum = j;
+                    tind = sd(i).info;
+                    goto TFOUND;
+                }
+            }
+            /* FIND TRIANGLE FACES ON BOUNDARY OF ACCEPTED REGIONS */
+            for(j=0;j<3;++j) {
+                tind = td(sd(i).info).tri(j);
+                if (vd(tind).info == -1)  {
                     snum = j;
                     tind = sd(i).info;
                     goto TFOUND;
@@ -61,6 +77,16 @@ void mesh::rebay(FLT tolsize) {
         *sim::log << "Didn't find triangle???" << std::endl;
                 
         TFOUND:
+        
+        /* CHECK THAT NOT ALL SIDES ARE ACCEPTED */
+        tfind = 0;
+        for (j=0;j<3;++j) 
+            if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) ++tfind;
+
+        if (tfind == 3) {
+            tkoutlst(tind);
+            continue;
+        }
         
         if (nvrtx > maxvst -2) {
             *sim::log << "too many vertices" << std::endl;
@@ -127,10 +153,30 @@ void mesh::rebay(FLT tolsize) {
         if (xdif(0)*rn(0) +xdif(1)*rn(1) < 0.) rsign = -1.;
         for(n=0;n<ND;++n)
             xpt(n) = xmid(n) +rsign*dist*rn(n);
-#else
+#elif defined(MIDPOINT)
             /* MIDPOINT RULE (VERY SIMPLE) */
-            for(n=0;n<ND;++n)
-                xpt(n) = 0.5*(vrtx(v1)(n) +vrtx(v2)(n));
+        for(n=0;n<ND;++n)
+            xpt(n) = 0.5*(vrtx(v1)(n) +vrtx(v2)(n));
+#else
+        densty = (vlngth(v0)  +vlngth(v1))/sqrt(3.0);
+        rs = 0.0;
+        for(n=0;n<ND;++n) {
+            xmid(n) = .5*(vrtx(v0)(n) +vrtx(v1)(n));
+            dx(n) = vrtx(v2)(n) -xmid(n);
+            rs += pow(dx(n),2);
+        }
+        rs = sqrt(rs);
+        if (densty > rs) {
+            *sim::log << "just checking\n";
+            densty = 0.0;
+            for(n=0;n<ND;++n) {
+                densty += pow(vrtx(v1)(n) -vrtx(v0)(n),2);
+            }
+            densty = sqrt(densty);
+        }
+        rs = densty/rs;
+
+        xpt = xmid +rs*dx;
 #endif
 
 INSRT:

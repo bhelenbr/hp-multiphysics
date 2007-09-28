@@ -31,7 +31,7 @@ using namespace blitz;
 
 blocks sim::blks;
 std::ostream *sim::log = &std::cout;
-double sim::time, sim::dti, sim::g;
+double sim::time, sim::dti, sim::dti_prev, sim::g;
 TinyVector<FLT,2> sim::body;
 int sim::tstep = -1, sim::substep = -1;
 
@@ -172,6 +172,7 @@ void blocks::init(input_map input) {
     /* LOAD TIME STEPPING INFO */
     sim::time = 0.0;  // Simulation starts at t = 0
     input.getwdefault("dtinv",sim::dti,0.0);
+    input.getwdefault("dtinv_prev",sim::dti_prev,sim::dti); 
     input.getwdefault("ntstep",ntstep,1);
     input.getwdefault("restart",nstart,0);
     ntstep += nstart +1;
@@ -766,7 +767,14 @@ void blocks::tadvance() {
         }
     }
     sim::bd[0] = sim::dti*sim::adirk[sim::substep +sim::esdirk][sim::substep +sim::esdirk];
-    if (sim::dti > 0.0) sim::time += sim::cdirk[sim::substep]/sim::dti;
+    if (sim::dti > 0.0) {
+        sim::time += sim::cdirk[sim::substep]/sim::dti;
+        if (sim::esdirk) {
+            /* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
+            sim::adirk[0][0] *= sim::dti_prev/sim::dti;
+        }
+        sim::dti_prev = sim::dti;
+    }
 #endif
 #endif
 

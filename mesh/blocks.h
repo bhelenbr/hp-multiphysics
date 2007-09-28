@@ -10,7 +10,7 @@
 #include <input_map.h>
 #include <utilities.h>
 
-// #define PTH
+#define PTH
 // #define BOOST
 
 
@@ -280,6 +280,7 @@ class blocks {
 namespace sim {
     extern blocks blks; /**< Contains all blocks for this processor */
     extern FLT dti; /**< Inverse time step */
+    extern FLT dti_prev; /**< Inverse time step for prior step (allows changes in time step) */
     extern FLT time; /**< Simulation time */
     extern int tstep; /**< Simulation time step */
     extern int substep; /**< For schemes requiring multiple solves per step */

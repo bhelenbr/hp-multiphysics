@@ -117,7 +117,7 @@ void mesh::symmetrize() {
 		zpart[1].td(i).tri(1) = vct;
 	}	
 	
-	for(i=0;i<zpart[1].nsbd;++i)
+   for(i=0;i<zpart[1].nsbd;++i)
 		zpart[1].sbdry(i)->reorder();
         
     zpart[1].output("reflected");
@@ -147,12 +147,16 @@ void mesh::cut(Array<double,1> indicator) {
 			td(i).info = 1;
 	}
     
-    output("testing",easymesh);
+   output("testing",easymesh);
     	
-    for (int m = 0; m < 2; ++m) {
-        mesh zpart[2];
-        zpart[m].allocate(maxvst*4);
-        zpart[m].partition(*this,m);
+   for (int m = 0; m < 2; ++m) {
+      mesh zpart[2];
+      zpart[m].allocate(maxvst*4);
+      zpart[m].partition(*this,m);
+      
+      char buff[100];
+      sprintf(buff,"begin%d",m);
+      zpart[m].output(buff,tecplot);
 
         /* FIND NEW BOUNDARY */
         bnum = -1;
@@ -210,7 +214,6 @@ void mesh::cut(Array<double,1> indicator) {
                 zpart[m].vrtx(vind) += dx;
             }
         }
-        char buff[100];
         sprintf(buff,"cut%d",m);
         zpart[m].output(buff,grid);
     }
