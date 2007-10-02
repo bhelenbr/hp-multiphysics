@@ -11,7 +11,7 @@ OBJM = myblas.o
  
 ## Linux:
 ##  Machine specific for Linux
-CC=icc #(cares)
+# CC=icc #(cares)
 #CC=gcc3 #(shelob)
 CFLAGS += -O3
 

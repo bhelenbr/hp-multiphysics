@@ -14,7 +14,6 @@
 			);
 			dependencies = (
 				6FB150AA086782DC00EAF2E5 /* PBXTargetDependency */,
-				6FB150AC086782E100EAF2E5 /* PBXTargetDependency */,
 				6FB150AE086782E400EAF2E5 /* PBXTargetDependency */,
 				6FB150B0086782E600EAF2E5 /* PBXTargetDependency */,
 			);
@@ -27,11 +26,7 @@
 		6FB150980867818C00EAF2E5 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150990867819100EAF2E5 /* myblas.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C3084C097A00C7F857 /* myblas.c */; };
 		6FB1509A086781A200EAF2E5 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB1507F0867810C00EAF2E5 /* libmyblas.a */; };
-		6FB1509B086781A200EAF2E5 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB150840867812400EAF2E5 /* libparseargs.a */; };
 		6FB1509C086781A200EAF2E5 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB150960867814600EAF2E5 /* libutil.a */; };
-		6FB1509D086781C000EAF2E5 /* gtypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C1084C097A00C7F857 /* gtypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6FB1509E086781C000EAF2E5 /* parseargs.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C6084C097A00C7F857 /* parseargs.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6FB1509F086781CD00EAF2E5 /* parseargs.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C5084C097A00C7F857 /* parseargs.c */; };
 		6FB150A0086781DE00EAF2E5 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150A1086781E400EAF2E5 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
 		8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
@@ -44,13 +39,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 6FB1507E0867810C00EAF2E5;
 			remoteInfo = myblas;
-		};
-		6FB150AB086782E100EAF2E5 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 6FB150830867812400EAF2E5;
-			remoteInfo = parseargs;
 		};
 		6FB150AD086782E400EAF2E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -70,31 +58,18 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		6F4261F7086B855700A6AFC9 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		6F4949C1084C097A00C7F857 /* gtypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = gtypes.h; sourceTree = "<group>"; };
 		6F4949C3084C097A00C7F857 /* myblas.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = myblas.c; sourceTree = "<group>"; };
 		6F4949C4084C097A00C7F857 /* myblas.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = myblas.h; sourceTree = "<group>"; };
-		6F4949C5084C097A00C7F857 /* parseargs.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = parseargs.c; sourceTree = "<group>"; };
-		6F4949C6084C097A00C7F857 /* parseargs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = parseargs.h; sourceTree = "<group>"; };
 		6F4949C7084C097A00C7F857 /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		6F4949C8084C097A00C7F857 /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
-		6F4949D3084C09A500C7F857 /* createlib */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.csh; path = createlib; sourceTree = "<group>"; };
 		6F4949D4084C09A500C7F857 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FB1507F0867810C00EAF2E5 /* libmyblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmyblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6FB150840867812400EAF2E5 /* libparseargs.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libparseargs.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB150960867814600EAF2E5 /* libutil.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libutil.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD76FB20486AB0100D96B5E /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		6FB1507D0867810C00EAF2E5 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FB150820867812400EAF2E5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -113,7 +88,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB1509A086781A200EAF2E5 /* libmyblas.a in Frameworks */,
-				6FB1509B086781A200EAF2E5 /* libparseargs.a in Frameworks */,
 				6FB1509C086781A200EAF2E5 /* libutil.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -134,13 +108,9 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				6F4261F7086B855700A6AFC9 /* main.c */,
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				6F4949C3084C097A00C7F857 /* myblas.c */,
 				6F4949C4084C097A00C7F857 /* myblas.h */,
-				6F4949C1084C097A00C7F857 /* gtypes.h */,
-				6F4949C6084C097A00C7F857 /* parseargs.h */,
-				6F4949C5084C097A00C7F857 /* parseargs.c */,
 				6F4949C7084C097A00C7F857 /* utilities.c */,
 				6F4949C8084C097A00C7F857 /* utilities.h */,
 			);
@@ -152,7 +122,6 @@
 			children = (
 				8DD76FB20486AB0100D96B5E /* main */,
 				6FB1507F0867810C00EAF2E5 /* libmyblas.a */,
-				6FB150840867812400EAF2E5 /* libparseargs.a */,
 				6FB150960867814600EAF2E5 /* libutil.a */,
 			);
 			name = Products;
@@ -161,7 +130,6 @@
 		6F4949D2084C099300C7F857 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
-				6F4949D3084C09A500C7F857 /* createlib */,
 				6F4949D4084C09A500C7F857 /* makefile */,
 			);
 			name = Scripts;
@@ -182,15 +150,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB150980867818C00EAF2E5 /* myblas.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FB150800867812400EAF2E5 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6FB1509D086781C000EAF2E5 /* gtypes.h in Headers */,
-				6FB1509E086781C000EAF2E5 /* parseargs.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,23 +179,6 @@
 			name = myblas;
 			productName = blas;
 			productReference = 6FB1507F0867810C00EAF2E5 /* libmyblas.a */;
-			productType = "com.apple.product-type.library.static";
-		};
-		6FB150830867812400EAF2E5 /* parseargs */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 6FB1508E0867812C00EAF2E5 /* Build configuration list for PBXNativeTarget "parseargs" */;
-			buildPhases = (
-				6FB150800867812400EAF2E5 /* Headers */,
-				6FB150810867812400EAF2E5 /* Sources */,
-				6FB150820867812400EAF2E5 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = parseargs;
-			productName = parseargs;
-			productReference = 6FB150840867812400EAF2E5 /* libparseargs.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FB150950867814600EAF2E5 /* util */ = {
@@ -286,7 +228,6 @@
 			targets = (
 				6FB150A8086782CE00EAF2E5 /* All */,
 				6FB1507E0867810C00EAF2E5 /* myblas */,
-				6FB150830867812400EAF2E5 /* parseargs */,
 				6FB150950867814600EAF2E5 /* util */,
 				8DD76FA90486AB0100D96B5E /* main */,
 			);
@@ -299,14 +240,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB150990867819100EAF2E5 /* myblas.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		6FB150810867812400EAF2E5 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6FB1509F086781CD00EAF2E5 /* parseargs.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -333,11 +266,6 @@
 			isa = PBXTargetDependency;
 			target = 6FB1507E0867810C00EAF2E5 /* myblas */;
 			targetProxy = 6FB150A9086782DC00EAF2E5 /* PBXContainerItemProxy */;
-		};
-		6FB150AC086782E100EAF2E5 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 6FB150830867812400EAF2E5 /* parseargs */;
-			targetProxy = 6FB150AB086782E100EAF2E5 /* PBXContainerItemProxy */;
 		};
 		6FB150AE086782E400EAF2E5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -486,79 +414,6 @@
 				OTHER_REZFLAGS = "";
 				PREBINDING = NO;
 				PRODUCT_NAME = blas;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
-		};
-		6FB1508F0867812C00EAF2E5 /* Development */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = parseargs;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Development;
-		};
-		6FB150900867812C00EAF2E5 /* Deployment */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEPLOYMENT_LOCATION = YES;
-				DSTROOT = "$(HOME)/Codes";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				INSTALL_PATH = /lib;
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = parseargs;
-				PUBLIC_HEADERS_FOLDER_PATH = /include;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Deployment;
-		};
-		6FB150910867812C00EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = parseargs;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -725,16 +580,6 @@
 				6FB1508B0867812C00EAF2E5 /* Development */,
 				6FB1508C0867812C00EAF2E5 /* Deployment */,
 				6FB1508D0867812C00EAF2E5 /* Default */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
-		};
-		6FB1508E0867812C00EAF2E5 /* Build configuration list for PBXNativeTarget "parseargs" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				6FB1508F0867812C00EAF2E5 /* Development */,
-				6FB150900867812C00EAF2E5 /* Deployment */,
-				6FB150910867812C00EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;

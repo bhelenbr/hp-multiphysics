@@ -16,10 +16,12 @@ extern "C" void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBSLN(double **abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DGETLS(double *abd, int stride, int ordr, double *b);
+extern "C" void DGETUS(double *abd, int stride, int ordr, double *b);
 extern "C" void BLCKTRI(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2]);
 extern "C" void BLCKTRI2(int nblck,double (*a)[2], double (*b)[2], double (*c)[2], double (*d)[2], double (*e)[2]);
 extern "C" int recur(int n,int ipoly, double al, double be, double *a, double *b);
 extern "C" int radau(int n,double *alpha,double *beta, double end,double *zero,double *weight,double *e, double *a, double *b);
+extern "C" int lob(int n,double *alpha,double *beta, double left, double right,double *zero,double *weight,double *e, double *a, double *b);
 extern "C" int gauss(int n, const double *alpha,const double *beta, double eps, double *zero, double *weight, double *e);
 
 PROTOCCALLSFSUB6(DGETRF,dgetrf,INT,INT,DOUBLEV,INT,INTV,PINT)

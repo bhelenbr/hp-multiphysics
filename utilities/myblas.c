@@ -13,6 +13,18 @@ void DGETLS(double *abd, int stride, int ordr, double *b) {
    return;
 }
 
+void DGETUS(double *abd, int stride, int ordr, double *b) {
+   int i,j;
+   
+   for(i=ordr-1;i>=0;--i) {
+      b[i] /= abd[stride*i +i];
+      for(j=i-1;j>=0;--j)
+         b[j] -= abd[j*stride+i]*b[i];
+   }
+   
+   return;
+}
+
 void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs) {
 
 	/* ACCEPTS U^TU CHOLESKEY FACTORIZATION AND COMPUTES SOLUTION */
@@ -701,6 +713,58 @@ double *e, *a, *b;
     ierr = gauss(np1, &a[1], &b[1], epsma, &zero[1], &weight[1], &e[1]);
     return ierr;
 } /* radau_ */
+
+
+int lob(int n, double *alpha, double *beta, double left, double right,
+		double *zero, double *weight, double *e, double *a, double *b){
+	
+	int k,np1,np2;	
+    int ierr;
+    double epsma;
+    extern int gauss(int, const double *,const double *, 
+                     double, double *, double *,double *);
+    double dp0l,dp0r,dp1l,dp1r,dpm1l,dpm1r,ddet;
+	
+	epsma = DBL_EPSILON;
+	
+	--b;
+    --a;
+    --e;
+    --weight;
+    --zero;
+    --beta;
+    --alpha;
+
+	np1=n+1;
+	np2=n+2;
+
+	for(k = 1; k <= np2; ++k){
+		a[k]=alpha[k];
+		b[k]=beta[k];
+	}
+	
+	dp0l=0.0;
+	dp0r=0.0;
+	dp1l=1.0;
+	dp1r=1.0;
+	
+	for(k = 1; k <= np1; ++k){
+		dpm1l=dp0l;
+		dp0l=dp1l;
+		dpm1r=dp0r;
+		dp0r=dp1r;
+		dp1l=(left-a[k])*dp0l-b[k]*dpm1l;
+		dp1r=(right-a[k])*dp0r-b[k]*dpm1r;
+	}
+
+	ddet=dp1l*dp0r-dp1r*dp0l;
+	a[np2]=(left*dp1l*dp0r-right*dp1r*dp0l)/ddet;
+	b[np2]=(right-left)*dp1l*dp1r/ddet;
+
+	ierr = gauss(np2, &a[1], &b[1], epsma, &zero[1], &weight[1], &e[1]);
+	return ierr;
+}
+
 
 int gauss(int n, const double *alpha,const double *beta, double eps,
 		   double *zero, double *weight,double *e)
