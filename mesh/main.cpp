@@ -63,152 +63,14 @@ static ArgDesc argDesc[] = {
 
 
 int main(int argc, char *argv[]) {
- //   GBool ok;
-//    clock_t cpu_time;
-//
-//  // parse args
-//    ok = parseArgs(argDesc, &argc, argv);
-//    if (!ok || printHelp) {
-//        fprintf(stderr, "mesh utility ");
-//        printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
-//        exit(1);
-//    }
-//    
-//    class mesh zx, zy;
-//    mesh::filetype in = static_cast<mesh::filetype>(informat);
-//    mesh::filetype out = static_cast<mesh::filetype>(outformat);
-//    
-//    std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
-//    ifstream intest;
-//    input_map bdrymap;
-//    intest.open(bdry_nm.c_str());
-//    if (intest.good()) {
-//        intest.close();
-//        bdrymap.input(bdry_nm);
-//    }
-// 
-//    if (Cut) {
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        Array<double,1> indicator(zx.nvrtx);
-//        
-//        for(int i=0;i<zx.nvrtx;++i)
-//            indicator(i) = zx.vrtx(i)(0)*zx.vrtx(i)(0) +zx.vrtx(i)(1)*zx.vrtx(i)(1) - 0.25;
-//        
-//        zx.cut(indicator);
-//        
-//        return(0);
-//    }
-//        
-//
-//    /* TO SYMMETRIZE A MESH */
-//    if (Symmetrize) {
-//        zx.input(argv[1],in,8.0,bdrymap);
-//        zx.symmetrize();
-//        return 0;
-//    }
-//    
-//    if (Vlngth) {
-//        zx.input(argv[1],in,8.0,bdrymap);
-//        std::string name;
-//        name = std::string(argv[1]) +".vlngth";
-//        FILE *fp = fopen(name.c_str(),"w");
-//        for(int i=0;i<zx.nvrtx;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.vlngth(i));
-//        fclose(fp);
-//        return 0;
-//    }
-//    
-//    if (Refineby2) {
-//        zx.input(argv[1],in,8.0,bdrymap);
-//        zy.refineby2(zx);
-//        zy.checkintegrity();
-//        zy.output(argv[2],out);
-//        return 0;
-//    }
-//
-//    if (Coarsen_hp) {
-//        int p;
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        printf("input p\n");
-//        scanf("%d",&p);
-//        zy.coarsen_substructured(zx,p);
-//        zy.output(argv[2],out);
-//        return 0;
-//    }
-//
-//    if (Scale) {     
-//        TinyVector<FLT,2> s;
-//        printf("Enter x and y scaling\n");
-//        scanf("%le%le",&s(0),&s(1));
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        zx.scale(s);
-//        zx.output(argv[2],out);
-//        return 0;
-//    }
-//    
-//    if (Shift) {     
-//        TinyVector<FLT,2> s;
-//        printf("Enter x and y shift\n");
-//        scanf("%le%le",&s(0),&s(1));
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        zx.shift(s);
-//        zx.output(argv[2],out);
-//        return 0;
-//    }
-//    
-//    if (Format) {
-//        class mesh zx;
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        zx.output(argv[2],out);
-//        return(0);
-//    }
-//    
-//    if (Partition) {
-//#ifdef METIS
-//        int p;
-//        std::string fname;
-//        ostringstream nstr;
-//        std::cout << "input # of partitions" << std::endl;
-//        std::cin >> p;
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        zx.setpartition(p);
-//        Array<mesh,1> zpart(p);
-//        
-//        for(int i=0;i<p;++i) {
-//            nstr << i << std::flush;
-//            fname = argv[1] +nstr.str();
-//            nstr.str("");
-//            zpart(i).partition(zx,i);
-//            zpart(i).output(fname,out);
-//            zpart(i).bdry_output(fname);
-//        }
-//#else
-//        printf("Need metis package to partition\n");
-//#endif
-//        return(0);
-//    }
-//    
-//    if (Coarsen_Marks) {
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        FILE *fp = fopen(argv[3],"r");
-//
-//        for(int i=0;i<zx.nvrtx;++i) {
-//            fscanf(fp,"%d\n",&zx.vd(i).info);
-//            zx.vd(i).info = 1-zx.vd(i).info;
-//        }
-//        clock();
-//        zx.coarsen3();
-//        cpu_time = clock();
-//        std::cout << "that took " << cpu_time << " cpu time" << std::endl;
-//        
-//        zx.output(argv[2],out); 
-//        return(0);      
-//    }
-//    
-//#ifdef MPISRC
-//    int myid;
-//    MPI_Init(&argc,&argv);
-//    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-//#endif
+    GBool ok;
+    clock_t cpu_time;
+
+#ifdef MPISRC
+    int myid;
+    MPI_Init(&argc,&argv);
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
 #ifdef PTH
     // For debugging put interrupt here
     // On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
@@ -219,16 +81,144 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
-//    if (Generate) {
-//        sim::blks.init(argv[1]);
-//        for (int i=0;i<1;++i)
-//            sim::blks.restructure();
-//        cpu_time = clock();        
-//        sim::blks.output(argv[1]);
-//        return(0);
-//     }
+  // parse args
+    ok = parseArgs(argDesc, &argc, argv);
+    if (!ok || printHelp) {
+        fprintf(stderr, "mesh utility ");
+        printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
+        exit(1);
+    }
+    
+    class mesh zx, zy;
+    mesh::filetype in = static_cast<mesh::filetype>(informat);
+    mesh::filetype out = static_cast<mesh::filetype>(outformat);
+    
+    std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
+    ifstream intest;
+    input_map bdrymap;
+    intest.open(bdry_nm.c_str());
+    if (intest.good()) {
+        intest.close();
+        bdrymap.input(bdry_nm);
+    }
+ 
+    if (Cut) {
+        zx.input(argv[1],in,1.0,bdrymap);
+        Array<double,1> indicator(zx.nvrtx);
+        
+        for(int i=0;i<zx.nvrtx;++i)
+            indicator(i) = zx.vrtx(i)(0)*zx.vrtx(i)(0) +zx.vrtx(i)(1)*zx.vrtx(i)(1) - 0.25;
+        
+        zx.cut(indicator);
+        
+        return(0);
+    }
+        
 
+    /* TO SYMMETRIZE A MESH */
+    if (Symmetrize) {
+        zx.input(argv[1],in,8.0,bdrymap);
+        zx.symmetrize();
+        return 0;
+    }
+    
+    if (Vlngth) {
+        zx.input(argv[1],in,8.0,bdrymap);
+        std::string name;
+        name = std::string(argv[1]) +".vlngth";
+        FILE *fp = fopen(name.c_str(),"w");
+        for(int i=0;i<zx.nvrtx;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.vlngth(i));
+        fclose(fp);
+        return 0;
+    }
+    
+    if (Refineby2) {
+        zx.input(argv[1],in,8.0,bdrymap);
+        zy.refineby2(zx);
+        zy.checkintegrity();
+        zy.output(argv[2],out);
+        return 0;
+    }
 
+    if (Coarsen_hp) {
+        int p;
+        zx.input(argv[1],in,1.0,bdrymap);
+        printf("input p\n");
+        scanf("%d",&p);
+        zy.coarsen_substructured(zx,p);
+        zy.output(argv[2],out);
+        return 0;
+    }
+
+    if (Scale) {     
+        TinyVector<FLT,2> s;
+        printf("Enter x and y scaling\n");
+        scanf("%le%le",&s(0),&s(1));
+        zx.input(argv[1],in,1.0,bdrymap);
+        zx.scale(s);
+        zx.output(argv[2],out);
+        return 0;
+    }
+    
+    if (Shift) {     
+        TinyVector<FLT,2> s;
+        printf("Enter x and y shift\n");
+        scanf("%le%le",&s(0),&s(1));
+        zx.input(argv[1],in,1.0,bdrymap);
+        zx.shift(s);
+        zx.output(argv[2],out);
+        return 0;
+    }
+    
+    if (Format) {
+        class mesh zx;
+        zx.input(argv[1],in,1.0,bdrymap);
+        zx.output(argv[2],out);
+        return(0);
+    }
+    
+    if (Partition) {
+#ifdef METIS
+        int p;
+        std::string fname;
+        ostringstream nstr;
+        std::cout << "input # of partitions" << std::endl;
+        std::cin >> p;
+        zx.input(argv[1],in,1.0,bdrymap);
+        zx.setpartition(p);
+        Array<mesh,1> zpart(p);
+        
+        for(int i=0;i<p;++i) {
+            nstr << i << std::flush;
+            fname = argv[1] +nstr.str();
+            nstr.str("");
+            zpart(i).partition(zx,i);
+            zpart(i).output(fname,out);
+            zpart(i).bdry_output(fname);
+        }
+#else
+        printf("Need metis package to partition\n");
+#endif
+        return(0);
+    }
+    
+    if (Coarsen_Marks) {
+        zx.input(argv[1],in,1.0,bdrymap);
+        FILE *fp = fopen(argv[3],"r");
+
+        for(int i=0;i<zx.nvrtx;++i) {
+            fscanf(fp,"%d\n",&zx.vd(i).info);
+            zx.vd(i).info = 1-zx.vd(i).info;
+        }
+        clock();
+        zx.coarsen3();
+        cpu_time = clock();
+        std::cout << "that took " << cpu_time << " cpu time" << std::endl;
+        
+        zx.output(argv[2],out); 
+        return(0);      
+    }
+    
 
     if (argc == 2) {
         /* READ INPUT MAP FROM FILE */
@@ -245,8 +235,6 @@ int main(int argc, char *argv[]) {
 #ifdef MPISRC
     MPI_Finalize();
 #endif
-
-
 
     return(0);
 }
