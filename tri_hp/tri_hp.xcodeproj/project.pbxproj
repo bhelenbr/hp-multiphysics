@@ -155,6 +155,7 @@
 		6F77C44B0B4D63ED006A4504 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		6F77C5110B4D8959006A4504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
+		6F8A178A0C67C4D20093A5BC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F44D3670AF2A444000E8A10 /* bdry.cpp */; };
 		6F9853BA0BDE612700D342F6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		6F9853BB0BDE612700D342F6 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		6F9853BC0BDE612700D342F6 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
@@ -338,7 +339,6 @@
 		6FB40B1A091AF517002BAA09 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
 		6FB901D90A6C782300A4729C /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB901D80A6C782300A4729C /* allocate.cpp */; };
 		6FB913720C0FC45F00F689BF /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F016C3D09818C7100AD7FA3 /* bdry.cpp */; };
-		6FB913830C0FC54000F689BF /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F44D3670AF2A444000E8A10 /* bdry.cpp */; };
 		6FB91A5A0ACCB04500792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		6FB91A5B0ACCB04500792B04 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		6FB91A5C0ACCB04500792B04 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
@@ -1309,7 +1309,7 @@
 				6F77C4470B4D63ED006A4504 /* tstep.cpp in Sources */,
 				6FE412F20B7A77D500FFA5CC /* bdry.cpp in Sources */,
 				6FB913720C0FC45F00F689BF /* bdry.cpp in Sources */,
-				6FB913830C0FC54000F689BF /* bdry.cpp in Sources */,
+				6F8A178A0C67C4D20093A5BC /* bdry.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1675,7 +1675,7 @@
 					/usr/share/lib,
 				);
 				PREBINDING = NO;
-				PRODUCT_NAME = tri_hp;
+				PRODUCT_NAME = tri_hp_mpi;
 				ZERO_LINK = NO;
 			};
 			name = Debug;
@@ -1687,7 +1687,7 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G4;
+				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
