@@ -16,10 +16,10 @@ LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
  
 ## Linux:
 ##  Machine specific for Linux
-CXX=icpc #(cares)
+#CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
-#CPPFLAGS += -O3
-CPPFLAGS += -O3 -cxxlib-icc
+CPPFLAGS += -O3
+#CPPFLAGS += -O3 -cxxlib-icc
 #LIB += -llapack -lblas -lg2c #(shelob)
 LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 #DEFINES = -DpgiFortran
