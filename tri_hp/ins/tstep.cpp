@@ -41,13 +41,6 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
                     hmax = (h > hmax ? h : hmax);
                 }
                 hmax = sqrt(hmax);
-                
-                if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-                    *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
-                    *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
-                    mesh::output("negative",grid);
-                    exit(1);
-                }
                 h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
                 hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
             
@@ -63,6 +56,13 @@ block::ctrl tri_hp_ins::setup_preconditioner(block::ctrl ctrl_message) {
 #endif
                     qmax = MAX(qmax,q);
                 }
+                
+                if (!(jcb > 0.0) || !(qmax > 0.0)) {  // THIS CATCHES NAN'S TOO
+                    *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
+                    *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
+                    mesh::output("negative",grid);
+                    exit(1);
+                }                
 
 #ifndef INERTIALESS
 
