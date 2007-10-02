@@ -8,8 +8,8 @@ void mesh::collapse(int sind, int delt) {
     int i,j,vn,vnear,prev,tind,tind1,sind1,stoptri,dir;
     int v0,v1,pt,sd1,sd2,sd3,t1,t2;
 
-    /* gbl_ptr->i2wk_lst1 = triangles surrounding delete vertex */
-    /* gbl_ptr->i2wk_lst2 = sides surrounding delete vertex */
+    /* gbl->i2wk_lst1 = triangles surrounding delete vertex */
+    /* gbl->i2wk_lst2 = sides surrounding delete vertex */
     /* -1 indx lists how many */
     
     /* FIND TRIANGLES / SIDES SURROUNDING ENDPOINT */
@@ -41,9 +41,9 @@ void mesh::collapse(int sind, int delt) {
         }
         
         if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
-            gbl_ptr->i2wk_lst1(ntsrnd++) = tind1;
+            gbl->i2wk_lst1(ntsrnd++) = tind1;
             if (!prev) {
-                gbl_ptr->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                gbl->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
             }
             prev = 0;
         }
@@ -54,15 +54,15 @@ void mesh::collapse(int sind, int delt) {
         tind = tind1;
 
     } while(tind != stoptri); 
-    gbl_ptr->i2wk_lst1(-1) = ntsrnd;
-    gbl_ptr->i2wk_lst2(-1) = nssrnd;
+    gbl->i2wk_lst1(-1) = ntsrnd;
+    gbl->i2wk_lst2(-1) = nssrnd;
     
     /* UPDATE TVRTX & SVRTX */
     v0 = sd(sind).vrtx(1-delt);
     v1 = sd(sind).vrtx(delt);
     
     for(i=0;i<ntsrnd;++i) {
-        tind = gbl_ptr->i2wk_lst1(i);
+        tind = gbl->i2wk_lst1(i);
         td(tind).info |= TTOUC;
         for(j=0;j<3;++j) {
             if (td(tind).vrtx(j) == v1) {
@@ -77,7 +77,7 @@ void mesh::collapse(int sind, int delt) {
                 pt = (1 -td(tind).sign((j+2)%3))/2;
                 assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
                 sd(sd3).vrtx(pt) = v0;
-                gbl_ptr->i2wk_lst3(nperim++) = td(tind).side(j);
+                gbl->i2wk_lst3(nperim++) = td(tind).side(j);
                 break;
             }
         }
@@ -119,7 +119,7 @@ void mesh::collapse(int sind, int delt) {
             sind1 = td(tind).side(sd2);
         }
         td(sind1).info |= SDLTE;
-        gbl_ptr->i2wk_lst2(nssrnd++) = sind1;
+        gbl->i2wk_lst2(nssrnd++) = sind1;
                 
         t1 = td(tind).tri(sd1);
         t2 = td(tind).tri(sd2);
@@ -139,7 +139,7 @@ void mesh::collapse(int sind, int delt) {
         sind1 = td(tind).side(sd1);
         pt = (1 -td(tind).sign(sd1))/2;
         sd(sind1).tri(pt) = t2;
-        gbl_ptr->i2wk_lst3(nperim++) = sind1;
+        gbl->i2wk_lst3(nperim++) = sind1;
 
         /* UPDATE TTRI/TSIDE FOR T2 */
         if (t2 > -1) {
@@ -161,9 +161,9 @@ void mesh::collapse(int sind, int delt) {
     td(v1).info |= VDLTE;
         
     /* SWAP AFFECTED SIDES */        
-    swap(gbl_ptr->i2wk_lst2(-1),&gbl_ptr->i2wk_lst2(0));
-    gbl_ptr->i2wk_lst2(-1) = nssrnd;
-    gbl_ptr->i2wk_lst3(-1) = nperim;
+    swap(gbl->i2wk_lst2(-1),&gbl->i2wk_lst2(0));
+    gbl->i2wk_lst2(-1) = nssrnd;
+    gbl->i2wk_lst3(-1) = nperim;
 
     return;
 }

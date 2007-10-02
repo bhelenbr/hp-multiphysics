@@ -17,6 +17,8 @@ class r_side_bdry {
 
     public:
         r_side_bdry(r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        r_side_bdry(const r_side_bdry &inbdry, r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        virtual r_side_bdry* create(r_mesh &xin, side_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
         /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
         virtual void output(std::ostream& fout) {
             fout << base.idprefix << "_r_type: " << mytype << std::endl;            
@@ -33,7 +35,9 @@ class r_fixed : public r_side_bdry {
         int dstart, dstop;
         
         r_fixed(r_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";} 
-            
+        r_fixed(const r_fixed &inbdry, r_mesh &xin, side_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
+        r_fixed* create(r_mesh &xin, side_bdry &bin) const {return new r_fixed(*this,xin,bin);}
+                   
         void input(input_map& inmap) {
             r_side_bdry::input(inmap);
             
@@ -53,8 +57,8 @@ class r_fixed : public r_side_bdry {
             for(int j=0;j<base.nel;++j) {
                 int sind = base.el(j);
                     for(int n=dstart;n<=dstop;++n) {
-                        x.gbl_ptr->res(x.sd(sind).vrtx(0))(n) = 0.0;
-                        x.gbl_ptr->res(x.sd(sind).vrtx(1))(n) = 0.0;
+                        x.gbl->res(x.sd(sind).vrtx(0))(n) = 0.0;
+                        x.gbl->res(x.sd(sind).vrtx(1))(n) = 0.0;
                     }
             }
             return;
@@ -67,13 +71,16 @@ class r_fixed4 : public r_fixed {
 
         r_fixed4(r_mesh &xin, side_bdry &bin, int dstr, int dstp, int d2str, int d2stp)
             : r_fixed(xin,bin), d2start(d2str), d2stop(d2stp) {mytype="fixed4";} 
+        r_fixed4(const r_fixed4 &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), d2start(inbdry.d2start), d2stop(inbdry.d2stop) {mytype="fixed4";}
+        r_fixed4* create(r_mesh &xin, side_bdry &bin) const {return new r_fixed4(*this,xin,bin);}
+        
         
         void fixdx2() {
             for(int j=0;j<base.nel;++j) {
                 int sind = base.el(j);
                     for(int n=d2start;n<=d2stop;++n) {
-                        x.gbl_ptr->res1(x.sd(sind).vrtx(0))(n) = 0.0;
-                        x.gbl_ptr->res1(x.sd(sind).vrtx(1))(n) = 0.0;
+                        x.gbl->res1(x.sd(sind).vrtx(0))(n) = 0.0;
+                        x.gbl->res1(x.sd(sind).vrtx(1))(n) = 0.0;
                     }
             }
             return;
@@ -89,6 +96,13 @@ class r_translating : public r_fixed {
                 dx[n] = 0.0;
             mytype = "translating";
         }
+        r_translating(const r_translating &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin){ 
+            for(int n=0;n<mesh::ND;++n)
+                dx[n] = inbdry.dx[n];
+            mytype = "translating";
+        }
+        r_translating* create(r_mesh &xin, side_bdry &bin) const {return new r_translating(*this,xin,bin);}
+
         void input(input_map& inmap) {
             r_fixed::input(inmap);
             
@@ -133,8 +147,10 @@ class r_oscillating : public r_fixed {
     public:
         FLT v0, amp, omega;
         
-        r_oscillating(r_mesh &xin, side_bdry &bin) : 
-            r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
+        r_oscillating(r_mesh &xin, side_bdry &bin) : r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
+        r_oscillating(const r_oscillating &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), v0(inbdry.v0), amp(inbdry.amp), omega(inbdry.omega) {mytype="oscillating";}
+        r_oscillating* create(r_mesh &xin, side_bdry &bin) const {return new r_oscillating(*this,xin,bin);}            
+        
             
         void input(input_map& inmap) {
             r_fixed::input(inmap);
@@ -162,13 +178,13 @@ class r_oscillating : public r_fixed {
             FLT center[2], center1[2], dx[2],xp[2];
             FLT theta, theta1,dtheta;
             
-            center[0] = v0*sim::time;
-            center[1] = amp*(1-cos(omega*sim::time));
-            theta = atan(omega*amp*sin(omega*sim::time)/v0);            
+            center[0] = v0*x.gbl->time;
+            center[1] = amp*(1-cos(omega*x.gbl->time));
+            theta = atan(omega*amp*sin(omega*x.gbl->time)/v0);            
             
-            center1[0] = v0*sim::time;
-            center1[1] = amp*(1-cos(omega*sim::time));
-            theta1 = atan(omega*amp*sin(omega*sim::time)/v0);
+            center1[0] = v0*x.gbl->time;
+            center1[1] = amp*(1-cos(omega*x.gbl->time));
+            theta1 = atan(omega*amp*sin(omega*x.gbl->time)/v0);
             dtheta = theta1-theta;
                         
             for(int j=0;j<base.nel;++j) {

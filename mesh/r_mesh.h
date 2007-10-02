@@ -46,7 +46,7 @@ class r_mesh : public mesh {
             /* CALCULATE COARSE SPRING CONSTANTS */
             /* USING INTERPOLATION OPERATORS */
             /* SHOULD WORK??? FOR BIHARMONIC, LAPLACIAN, & SPRING */
-            void rkmgrid(Array<mesh::transfer,1> &fv_to_ct, r_mesh *fmesh);
+            void rkmgrid();
     
             /* CALCLATE SOURCE TERM */
             void zero_source();
@@ -58,23 +58,24 @@ class r_mesh : public mesh {
             /* POINTER TO THINGS SHARED IN BLOCK CONTAINER */
             /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
             /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-            struct gbl : public mesh::gbl {
+            struct global : public mesh::global {
                 Array<FLT,1> diag;
                 Array<TinyVector<FLT,2>,1> res;
                 Array<TinyVector<FLT,2>,1> res1;
-            } *gbl_ptr;  
+            } *gbl;  
             ~r_mesh();
             
             /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
-            void init(input_map& input, gbl *gin);
-            void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type); }
-            void mg_getfres(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
-            void mg_getcchng(Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, r_mesh *cmesh);
-            void tadvance(bool coarse,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, r_mesh *fmesh);
+            void* create_global_structure() {return new global;}
+            void init(input_map& input, void *gin);
+            void init(const multigrid_interface& in, FLT sizereduce1d);
+            void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type);}
+            void mg_getfres();
+            void mg_getcchng();
+            void tadvance();
             void rsdl();
             void update();
             void setup_preconditioner();
-            void length() {}
             FLT maxres();
         private:
             bool isfrst;

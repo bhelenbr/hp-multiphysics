@@ -34,7 +34,7 @@ void mesh::createsideinfo(void) {
             while (sind >= 0) {
                 if (maxv == sd(sind).vrtx(order)) {
                     if (sd(sind).tri(1) >= 0) {
-                        *sim::log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
+                        *gbl->log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
                     }
                     else {
                         sd(sind).tri(1) = tind;
@@ -127,7 +127,7 @@ void mesh::createtdstri(void) {
                 }
                 sind = sd(sind).info;
             }
-            *sim::log << "didn't match side: " << v1 << v2 << std::endl;
+            *gbl->log << "didn't match side: " << v1 << v2 << std::endl;
             exit(1);
             
 NEXTTRISIDE:
@@ -286,7 +286,7 @@ void mesh::initvlngth() {
 void mesh::settrim() {
     int i,j,n,bsd,tin,tind,nsrch,ntdel;
     
-    /* ASSUMES gbl_ptr->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
+    /* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
     
     for(i=0;i<ntri;++i)
         td(i).info = 0;
@@ -297,24 +297,24 @@ void mesh::settrim() {
         tind = sd(sbdry(0)->el(bsd)).tri(0);
         if (td(tind).info > 0) continue;
         
-        gbl_ptr->intwk(0) = tind;
+        gbl->intwk(0) = tind;
         td(tind).info = 1;
         nsrch = ntdel+1;
         
         /* NEED TO SEARCH SURROUNDING TRIANGLES */
         for(i=ntdel;i<nsrch;++i) {
-            tin = gbl_ptr->intwk(i);
+            tin = gbl->intwk(i);
             for (n=0;n<3;++n)
-                if (gbl_ptr->fltwk(td(tin).vrtx(n)) < 0.0) goto NEXT;
+                if (gbl->fltwk(td(tin).vrtx(n)) < 0.0) goto NEXT;
                 
-            gbl_ptr->intwk(ntdel++) = tin;
+            gbl->intwk(ntdel++) = tin;
 
             for(j=0;j<3;++j) {
                 tind = td(tin).tri(j);
                 if (tind < 0) continue;
                 if (td(tind).info > 0) continue; 
                 td(tind).info = 1;          
-                gbl_ptr->intwk(nsrch++) = tind;
+                gbl->intwk(nsrch++) = tind;
             }
             NEXT: continue;
         }
@@ -324,10 +324,10 @@ void mesh::settrim() {
         td(i).info = 0;
         
     for(i=0;i<ntdel;++i)
-        td(gbl_ptr->intwk(i)).info = 1;
+        td(gbl->intwk(i)).info = 1;
         
     for(i=0;i<maxvst;++i)
-        gbl_ptr->intwk(i) = -1;
+        gbl->intwk(i) = -1;
         
     return;
 }

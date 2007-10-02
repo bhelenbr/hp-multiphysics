@@ -131,7 +131,7 @@ void mesh::swap(FLT tol) {
         for(i=0;i<nside;++i) {
             nswap += swap(i,tol);
         }
-        *sim::log << "#Swap cycle finished: " << nswap << " sides swapped" << std::endl;
+        *gbl->log << "#Swap cycle finished: " << nswap << " sides swapped" << std::endl;
     } while(nswap > 0);
     
     return;

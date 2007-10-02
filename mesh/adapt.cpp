@@ -9,8 +9,17 @@
 
 #include "mesh.h"
 
-void mesh::adapt(FLT tolsize) {
+void mesh::adapt() {
     int i;
+    
+    /* CALCULATE TARGET LENGTH */
+    length();
+    for(bool last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        vmsgload(boundary::all_phased,mp_phase,boundary::symmetric,vlngth.data(),0,0,1);
+        vmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+        last_phase = true;
+        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,vlngth.data(),0,0,1);
+    }    
 
     /* SET FLAGS ETC... */
     setup_for_adapt();
@@ -19,7 +28,7 @@ void mesh::adapt(FLT tolsize) {
     swap(1.0e-10); 
     
     /* COARSEN FIRST EDGES & SEND MESSAGES */
-    bdry_yaber(tolsize);
+    bdry_yaber(gbl->tolerance);
     
     /* TRANSFER MESSAGES */
     for(i=0;i<nsbd;++i) 
@@ -29,10 +38,10 @@ void mesh::adapt(FLT tolsize) {
     bdry_yaber1();
     
     /* COARSEN INTERIOR */
-    yaber(tolsize);
+    yaber(gbl->tolerance);
             
     /* REFINE FIRST EDGES */
-    bdry_rebay(tolsize);
+    bdry_rebay(gbl->tolerance);
             
     /* TRANSFER MESSAGES */
     for(i=0;i<nsbd;++i) 
@@ -42,7 +51,7 @@ void mesh::adapt(FLT tolsize) {
     bdry_rebay1();
             
     /* REFINE INTERIOR */
-    rebay(tolsize);
+    rebay(gbl->tolerance);
             
     /* REMOVE DELETED ENTITIES */
     cleanup_after_adapt();
@@ -82,11 +91,11 @@ void mesh::setup_for_adapt() {
 void mesh::cleanup_after_adapt() {
     int i,j,sind,v0;
     
-    if (sim::adapt_output) {
+    if (gbl->adapt_output) {
         std::string adapt_file;
         std::ostringstream nstr;
-        nstr << sim::tstep << std::flush;
-        adapt_file = idprefix +"_adapt" +nstr.str();
+        nstr << gbl->tstep << std::flush;
+        adapt_file = gbl->idprefix +"_adapt" +nstr.str();
         nstr.str("");
         output(adapt_file.c_str(),debug_adapt);
     }
@@ -183,21 +192,21 @@ void mesh::cleanup_after_adapt() {
 void mesh::putinlst(int sind) {
     int i, temp, top, bot, mid;
         
-    /* CREATE ORDERED LIST OF SIDES SMALLEST gbl_ptr->fltwk TO LARGEST */
+    /* CREATE ORDERED LIST OF SIDES SMALLEST gbl->fltwk TO LARGEST */
     bot = 0;
     if (nlst > 0) {
         top = 0;
         bot = nlst-1;
-        if (gbl_ptr->fltwk(sind) < gbl_ptr->fltwk(sd(top).info)) {
+        if (gbl->fltwk(sind) < gbl->fltwk(sd(top).info)) {
             bot = 0;
         }
-        else if (gbl_ptr->fltwk(sind) > gbl_ptr->fltwk(sd(bot).info)) {
+        else if (gbl->fltwk(sind) > gbl->fltwk(sd(bot).info)) {
             bot = nlst;
         }
         else {
             while(top < bot-1) {
                 mid = top + (bot -top)/2;
-                if (gbl_ptr->fltwk(sind) > gbl_ptr->fltwk(sd(mid).info))
+                if (gbl->fltwk(sind) > gbl->fltwk(sd(mid).info))
                     top = mid;
                 else
                     bot = mid;

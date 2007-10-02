@@ -8,9 +8,49 @@
 // #include <boost/bind.hpp>
 // #include <boost/thread.hpp>
 
-void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
+void mesh::connect(multigrid_interface& in) {
+    mesh &tgt = dynamic_cast<mesh&>(in);
+    
+    /* SET UP MULTIGRID STUFF */
+    fine = &in;
+    tgt.coarse = this;    
+    if (fcnnct.ubound(firstDim) < maxvst-1) fcnnct.resize(maxvst);
+    if (tgt.ccnnct.ubound(firstDim) < tgt.maxvst-1) tgt.ccnnct.resize(tgt.maxvst);
+    
+#define OLDRECONNECT
+#ifdef OLDRECONNECT
+    coarsen(1.6,tgt);
+#else
+    coarsen2(1.5,tgt);
+#endif
+    mgconnect(tgt,fcnnct);
+    tgt.mgconnect(*this,tgt.ccnnct);
+    
+    /* THIS IS FOR DIAGNOSIS OF MULTI-GRID FAILURES */
+    checkintegrity();
+              
+    if (gbl->adapt_output) {
+        std::string name, fname;
+        std::string adapt_file;
+        std::ostringstream nstr;
+        nstr.str("");
+        nstr << gbl->tstep << std::flush;
+        name = "coarsen" +nstr.str() +"_" +gbl->idprefix +".";
+        nstr.str("");
+        nstr << coarse_level << flush;
+        fname = name +nstr.str();
+        output(fname,mesh::grid);
+        fname = name +nstr.str() + "_ft_to_cv";
+        tgt.testconnect(fname,tgt.ccnnct,this);
+        fname = name +nstr.str() + "_cv_to_ft";
+        testconnect(fname,fcnnct,&tgt);
+    }
+    setinfo();
+}
+
+void mesh::mgconnect(mesh &tgt, Array<transfer,1> &cnnct) {   
     int i,bnum,v0;
-  
+
     /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
     for(i=0;i<nvrtx;++i) {
         tgt.qtree.nearpt(vrtx(i).data(),v0);
@@ -25,7 +65,7 @@ void mesh::mgconnect(Array<transfer,1> &cnnct, mesh& tgt) {
     for(bnum=0;bnum<nsbd;++bnum) {
         /* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
         if(sbdry(bnum)->idnum != tgt.sbdry(bnum)->idnum) {
-            *sim::log << "error: sides are not numbered the same" << std::endl;
+            *gbl->log << "error: sides are not numbered the same" << std::endl;
             exit(1);
         }
         sbdry(bnum)->mgconnect(cnnct,tgt,bnum);

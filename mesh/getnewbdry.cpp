@@ -40,11 +40,11 @@ vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
 
     nstr.str("");
     nstr << idnum << std::flush;        
-    keyword = idprefix +"_v" +nstr.str() + "_type";
+    keyword = gbl->idprefix +"_v" +nstr.str() + "_type";
     if (bdrydata.get(keyword,val)) {
         type = vtype::getid(val.c_str());
         if (type < 0)  {
-            *sim::log << "unknown vertex type:" << val << std::endl;
+            *gbl->log << "unknown vertex type:" << val << std::endl;
             exit(1);
         }
     }
@@ -113,11 +113,11 @@ side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
 
     nstr.str("");
     nstr << idnum << std::flush;        
-    keyword = idprefix +"_s" +nstr.str() + "_type";
+    keyword = gbl->idprefix +"_s" +nstr.str() + "_type";
     if (bdrydata.get(keyword,val)) {
         type = stype::getid(val.c_str());
         if (type < 0)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }

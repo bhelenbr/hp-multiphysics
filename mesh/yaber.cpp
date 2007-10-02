@@ -36,15 +36,15 @@ void mesh::yaber(FLT tolsize) {
     /* TO ADJUST FOR INSCRIBED RADIUS */
     tolsize *= 6./sqrt(3.);
     
-    /* SET UP gbl_ptr->fltwk */
+    /* SET UP gbl->fltwk */
     nlst = 0;
     for(i=0;i<ntri;++i) {
         if (td(i).info&TDLTE) continue;
         minvl = vlngth(td(i).vrtx(0));
         minvl = MIN(minvl,vlngth(td(i).vrtx(1)));
         minvl = MIN(minvl,vlngth(td(i).vrtx(2)));
-        gbl_ptr->fltwk(i) = minvl/inscribedradius(i);
-        if (gbl_ptr->fltwk(i) > tolsize) putinlst(i);
+        gbl->fltwk(i) = minvl/inscribedradius(i);
+        if (gbl->fltwk(i) > tolsize) putinlst(i);
     }
     
     /* MARK BOUNDARY VERTEX POINTS */
@@ -105,7 +105,7 @@ void mesh::yaber(FLT tolsize) {
         sum = (td(sd(sind).vrtx(0)).info&VSPEC) +(td(sd(sind).vrtx(1)).info&VSPEC);
         if (sum > 0) {
             if (sum > VSPEC) {
-                *sim::log << "Trying to Delete edge with two endpoints on boundary" << vrtx(sd(sind).vrtx(0)) << std::endl;
+                *gbl->log << "Trying to Delete edge with two endpoints on boundary" << vrtx(sd(sind).vrtx(0)) << std::endl;
                 continue;
             }
             if (td(sd(sind).vrtx(0)).info&VSPEC) endpt = 1;
@@ -154,9 +154,9 @@ void mesh::yaber(FLT tolsize) {
                         }
                         
                         if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
-                            gbl_ptr->i2wk_lst1(ntsrnd++) = tind1;
+                            gbl->i2wk_lst1(ntsrnd++) = tind1;
                             if (!prev) {
-                                gbl_ptr->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                                gbl->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
                             }
                             prev = 0;
                         }
@@ -178,7 +178,7 @@ void mesh::yaber(FLT tolsize) {
                         }
                     }                
                     for(j=0;j<ntsrnd;++j) {
-                        tind = gbl_ptr->i2wk_lst1(j);
+                        tind = gbl->i2wk_lst1(j);
                         a = area(tind);
                         asum += a;
                         for(vn=0;vn<3;++vn) {
@@ -214,14 +214,14 @@ void mesh::yaber(FLT tolsize) {
         ++cnt;
         
         /* RECLASSIFY AFFECTED TRIANGLES */
-        for(i=0;i<gbl_ptr->i2wk_lst1(-1);++i) {
-            tind = gbl_ptr->i2wk_lst1(i);
+        for(i=0;i<gbl->i2wk_lst1(-1);++i) {
+            tind = gbl->i2wk_lst1(i);
             if (vd(tind).info > -1) tkoutlst(tind);
             minvl = vlngth(td(tind).vrtx(0));
             minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
             minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
-            gbl_ptr->fltwk(tind) = minvl/inscribedradius(tind);
-            if (gbl_ptr->fltwk(tind) > tolsize) putinlst(tind);
+            gbl->fltwk(tind) = minvl/inscribedradius(tind);
+            if (gbl->fltwk(tind) > tolsize) putinlst(tind);
         }
         
 #ifdef DEBUG_ADAPT
@@ -233,7 +233,7 @@ void mesh::yaber(FLT tolsize) {
 #endif
     }
 
-    *sim::log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
+    *gbl->log << "#Yaber finished: " << cnt << " sides coarsened" << std::endl;
 
     return;
 }
@@ -242,8 +242,8 @@ void mesh::checkintegrity() {
     int i,j,sind,dir;
     
     for(i=0;i<maxvst;++i) {
-        if (gbl_ptr->intwk(i) > -1) {
-            *sim::log << "gbl_ptr->intwk check failed" << std::endl;
+        if (gbl->intwk(i) > -1) {
+            *gbl->log << "gbl->intwk check failed" << std::endl;
             exit(1);
         }
     }
@@ -252,14 +252,14 @@ void mesh::checkintegrity() {
     for(i=0;i<ntri;++i) {
         if (td(i).info < 0) continue;
         
-        if (area(i) < 0.0) *sim::log << "negative area" << i << std::endl;
+        if (area(i) < 0.0) *gbl->log << "negative area" << i << std::endl;
         
         for(j=0;j<3;++j) {
             sind = td(i).side(j);
             dir = -(td(i).sign(j) -1)/2;
             
             if (sd(sind).info == -3) {
-                *sim::log << "references deleted side" <<  i << sind << std::endl;
+                *gbl->log << "references deleted side" <<  i << sind << std::endl;
                 for(i=0;i<nside;++i)
                     sd(i).info += 2;
                 output("error");
@@ -267,7 +267,7 @@ void mesh::checkintegrity() {
             }
 
             if (sd(sind).vrtx(dir) != td(i).vrtx((j+1)%3) && sd(sind).vrtx(1-dir) != td(i).vrtx((j+2)%3)) {
-                *sim::log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
+                *gbl->log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
                 for(i=0;i<nside;++i)
                     sd(i).info += 2;
                 output("error"); 
@@ -275,7 +275,7 @@ void mesh::checkintegrity() {
             }     
             
             if (sd(sind).tri(dir) != i) {
-                *sim::log << "failed side check tind" << i << "sind" << sind << std::endl;
+                *gbl->log << "failed side check tind" << i << "sind" << sind << std::endl;
                 for(i=0;i<nside;++i)
                     sd(i).info += 2;
                 output("error"); 
@@ -283,7 +283,7 @@ void mesh::checkintegrity() {
             }
             
             if (td(i).tri(j) != sd(sind).tri(1-dir)) {
-                *sim::log << "failed ttri check tind" << i << "sind" << sind << std::endl;
+                *gbl->log << "failed ttri check tind" << i << "sind" << sind << std::endl;
                 for(i=0;i<nside;++i)
                     sd(i).info += 2;
                 output("error"); 
@@ -292,7 +292,7 @@ void mesh::checkintegrity() {
             
             if (td(i).tri(j) > 0) {
                 if(td(td(i).tri(j)).info < 0) {
-                    *sim::log << "references deleted tri" << std::endl;
+                    *gbl->log << "references deleted tri" << std::endl;
                     for(i=0;i<nside;++i)
                         sd(i).info += 2;
                     output("error"); 
@@ -323,8 +323,8 @@ void mesh::bdry_yaber(FLT tolsize) {
         for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
             sind = sbdry(bnum)->el(indx);
             if (td(sind).info&SDLTE) continue;
-            gbl_ptr->fltwk(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
-            if (gbl_ptr->fltwk(sind) > tolsize) {
+            gbl->fltwk(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+            if (gbl->fltwk(sind) > tolsize) {
                 putinlst(sind);
             }
         }
@@ -372,7 +372,7 @@ void mesh::bdry_yaber(FLT tolsize) {
             }
             else {
                 /* PICK MORE ARPROPRIATE VERTEX TO DELETE */
-                if (gbl_ptr->fltwk(sindprev) > gbl_ptr->fltwk(sindnext)) {
+                if (gbl->fltwk(sindprev) > gbl->fltwk(sindnext)) {
                     endpt = 0;
                     saffect = sindprev;
                 }
@@ -394,8 +394,8 @@ void mesh::bdry_yaber(FLT tolsize) {
             
             /* UPDATE AFFECTED SIDE */
             if (vd(saffect).info > -1) tkoutlst(saffect);
-            gbl_ptr->fltwk(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
-            if (gbl_ptr->fltwk(saffect) > tolsize) putinlst(saffect);
+            gbl->fltwk(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
+            if (gbl->fltwk(saffect) > tolsize) putinlst(saffect);
             ++count;
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
@@ -408,7 +408,7 @@ void mesh::bdry_yaber(FLT tolsize) {
         sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
         sbdry(bnum)->sndtype() = boundary::int_msg;
         sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
-        *sim::log << "#Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
+        *gbl->log << "#Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
     }
     
     return;
@@ -441,7 +441,7 @@ void mesh::bdry_yaber1() {
             output(adapt_file.c_str(),debug_adapt);
 #endif
         }
-        *sim::log << "#Slave Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;
+        *gbl->log << "#Slave Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;
     }
     return;
 }
@@ -450,8 +450,8 @@ void mesh::bdry_yaber1() {
 void mesh::checkintwk() const {
     int i;
     
-    for(i=0;i<gbl_ptr->intwk.extent(firstDim)-1;++i)
-        if (gbl_ptr->intwk(i) != -1) *sim::log << "failed gbl_ptr->intwk check " << i << ' ' << gbl_ptr->intwk(i) << std::endl;
+    for(i=0;i<gbl->intwk.extent(firstDim)-1;++i)
+        if (gbl->intwk(i) != -1) *gbl->log << "failed gbl->intwk check " << i << ' ' << gbl->intwk(i) << std::endl;
     
     return;
 }

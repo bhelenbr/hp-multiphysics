@@ -48,8 +48,8 @@ void mesh::rebay(FLT tolsize) {
         maxvl = vlngth(td(i).vrtx(0));
         maxvl = MAX(maxvl,vlngth(td(i).vrtx(1)));
         maxvl = MAX(maxvl,vlngth(td(i).vrtx(2)));
-        gbl_ptr->fltwk(i) = circumradius(i)/maxvl;        
-        if (gbl_ptr->fltwk(i) > tolsize) putinlst(i);
+        gbl->fltwk(i) = circumradius(i)/maxvl;        
+        if (gbl->fltwk(i) > tolsize) putinlst(i);
     }
 
     /* BEGIN REFINEMENT ALGORITHM */
@@ -74,7 +74,7 @@ void mesh::rebay(FLT tolsize) {
                 }
             }
         }
-        *sim::log << "Didn't find triangle???" << std::endl;
+        *gbl->log << "Didn't find triangle???" << std::endl;
                 
         TFOUND:
         
@@ -89,7 +89,7 @@ void mesh::rebay(FLT tolsize) {
         }
         
         if (nvrtx > maxvst -2) {
-            *sim::log << "too many vertices" << std::endl;
+            *gbl->log << "too many vertices" << std::endl;
             exit(1);
         }
         
@@ -167,7 +167,7 @@ void mesh::rebay(FLT tolsize) {
         }
         rs = sqrt(rs);
         if (densty > rs) {
-            *sim::log << "just checking\n";
+            *gbl->log << "just checking\n";
             densty = 0.0;
             for(n=0;n<ND;++n) {
                 densty += pow(vrtx(v1)(n) -vrtx(v0)(n),2);
@@ -185,10 +185,10 @@ INSRT:
             vrtx(nvrtx)(n) = xpt(n);
 
 #ifdef DEBUG_ADAPT
-        *sim::log << "Inserting interior side " << intrcnt << ' ' << adapt_count << ' ';
+        *gbl->log << "Inserting interior side " << intrcnt << ' ' << adapt_count << ' ';
         for(n=0;n<ND;++n)
-            *sim::log << vrtx(nvrtx)(n) << ' ';
-        *sim::log << std::endl;
+            *gbl->log << vrtx(nvrtx)(n) << ' ';
+        *gbl->log << std::endl;
 #endif
         
         dist = qtree.nearpt(vrtx(nvrtx).data(),vnear);
@@ -197,15 +197,15 @@ INSRT:
             norm += fabs(vrtx(nvrtx)(n));
         if (dist < 100.0*EPSILON*norm) {
 #ifdef VERBOSE
-            *sim::log << "#Point to close to insert " << dist << std::endl;
-            *sim::log << vrtx(v0) << std::endl; 
-            *sim::log << vrtx(v1) << std::endl;
-            *sim::log << vrtx(v2) << std::endl;
-            *sim::log << vrtx(nvrtx) << std::endl;
-            *sim::log << td(tind).vrtx <<  snum << std::endl;
+            *gbl->log << "#Point to close to insert " << dist << std::endl;
+            *gbl->log << vrtx(v0) << std::endl; 
+            *gbl->log << vrtx(v1) << std::endl;
+            *gbl->log << vrtx(v2) << std::endl;
+            *gbl->log << vrtx(nvrtx) << std::endl;
+            *gbl->log << td(tind).vrtx <<  snum << std::endl;
             for(j=0;j<3;++j) {
                 if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
-                    *sim::log << "side " << j << " is accepted\n";
+                    *gbl->log << "side " << j << " is accepted\n";
                 }
             }            
 #endif
@@ -216,15 +216,15 @@ INSRT:
         tfind = findtri(xpt,vnear);
         if (tfind < 0) {
 #ifdef VERBOSE
-            *sim::log << "#Warning: Trying to insert outside domain " << std::endl;
-            *sim::log << vrtx(v0) << std::endl; 
-            *sim::log << vrtx(v1) << std::endl;
-            *sim::log << vrtx(v2) << std::endl;
-            *sim::log << vrtx(nvrtx) << std::endl;
-            *sim::log << td(tind).vrtx << snum << std::endl;
+            *gbl->log << "#Warning: Trying to insert outside domain " << std::endl;
+            *gbl->log << vrtx(v0) << std::endl; 
+            *gbl->log << vrtx(v1) << std::endl;
+            *gbl->log << vrtx(v2) << std::endl;
+            *gbl->log << vrtx(nvrtx) << std::endl;
+            *gbl->log << td(tind).vrtx << snum << std::endl;
             for(j=0;j<3;++j) {
                 if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
-                    *sim::log << "side " << j << " is accepted\n";
+                    *gbl->log << "side " << j << " is accepted\n";
                 }
             }            
 #endif
@@ -242,21 +242,21 @@ INSRT:
             /* ADD POINT TO QUADTREE */
             td(nvrtx).info |= VTOUC;
             qtree.addpt(nvrtx);
-            nsnew = gbl_ptr->i2wk_lst3(-1) +3;
-            ntnew = gbl_ptr->i2wk_lst1(-1) +2;
+            nsnew = gbl->i2wk_lst3(-1) +3;
+            ntnew = gbl->i2wk_lst1(-1) +2;
             ++intrcnt;
         }
         else {
 #ifdef VERBOSE
-            *sim::log << "#Warning: Makes Bad Triangle " << std::endl;
-            *sim::log << vrtx(v0) << std::endl; 
-            *sim::log << vrtx(v1) << std::endl;
-            *sim::log << vrtx(v2) << std::endl;
-            *sim::log << vrtx(nvrtx) << std::endl;
-            *sim::log << td(tind).vrtx << snum << std::endl;
+            *gbl->log << "#Warning: Makes Bad Triangle " << std::endl;
+            *gbl->log << vrtx(v0) << std::endl; 
+            *gbl->log << vrtx(v1) << std::endl;
+            *gbl->log << vrtx(v2) << std::endl;
+            *gbl->log << vrtx(nvrtx) << std::endl;
+            *gbl->log << td(tind).vrtx << snum << std::endl;
             for(j=0;j<3;++j) {
                 if (td(tind).tri(j) < 0 || vd(td(tind).tri(j)).info == -1) {
-                    *sim::log << "side " << j << " is accepted\n";
+                    *gbl->log << "side " << j << " is accepted\n";
                 }
             }            
 #endif
@@ -265,19 +265,19 @@ INSRT:
         }
         ++nvrtx;
             
-        for(i=0;i<gbl_ptr->i2wk_lst1(-1);++i) 
-            if (vd(gbl_ptr->i2wk_lst1(i)).info > -1) tkoutlst(gbl_ptr->i2wk_lst1(i));
+        for(i=0;i<gbl->i2wk_lst1(-1);++i) 
+            if (vd(gbl->i2wk_lst1(i)).info > -1) tkoutlst(gbl->i2wk_lst1(i));
         
         if (vd(tind).info > -1) tkoutlst(tind);
             
             
         for(i=0;i<ntnew;++i) {
-            tind = gbl_ptr->i2wk_lst1(i);
+            tind = gbl->i2wk_lst1(i);
             maxvl = vlngth(td(tind).vrtx(0));
             maxvl = MAX(maxvl,vlngth(td(tind).vrtx(1)));
             maxvl = MAX(maxvl,vlngth(td(tind).vrtx(2)));
-            gbl_ptr->fltwk(tind) = circumradius(tind)/maxvl;
-            if (gbl_ptr->fltwk(tind) > tolsize) putinlst(tind);
+            gbl->fltwk(tind) = circumradius(tind)/maxvl;
+            if (gbl->fltwk(tind) > tolsize) putinlst(tind);
         }
 #ifdef DEBUG_ADAPT
         std::ostringstream nstr;
@@ -289,7 +289,7 @@ INSRT:
         
     }
         
-    *sim::log << "#Rebay finished: new interior points " << intrcnt << std::endl;
+    *gbl->log << "#Rebay finished: new interior points " << intrcnt << std::endl;
 
     return;
 }
@@ -317,7 +317,7 @@ void mesh::bdry_rebay(FLT tolsize) {
         sbdry(bnum)->mvpttobdry(0,-1.0,endpt);
         endpt -= vrtx(v0);
         if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
-            *sim::log << "first endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
+            *gbl->log << "first endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
         }
         
         sind = sbdry(bnum)->el(sbdry(bnum)->nel-1);
@@ -326,15 +326,15 @@ void mesh::bdry_rebay(FLT tolsize) {
         sbdry(bnum)->mvpttobdry(sbdry(bnum)->nel-1,1.0,endpt);
         endpt -= vrtx(v0);
         if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
-            *sim::log << "last endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
+            *gbl->log << "last endpoint of boundary " << sbdry(bnum)->idprefix << " does not seem to be on curve\n";
         }
         
         nlst = 0;
         for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
             sind = sbdry(bnum)->el(indx);
             if (td(sind).info&SDLTE) continue;
-            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
+            gbl->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl->fltwk(sind) > tolsize) putinlst(sind);
         }
         
         /* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
@@ -353,10 +353,10 @@ void mesh::bdry_rebay(FLT tolsize) {
             vlngth(nvrtx) = 0.5*((1.-psi)*vlngth(sd(sind).vrtx(0)) +(1.+psi)*vlngth(sd(sind).vrtx(1)));
 
 #ifdef DEBUG_ADAPT
-            *sim::log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
+            *gbl->log << "Inserting boundary side " << count << ' ' << adapt_count << ' ';
             for(int n=0;n<ND;++n)
-                *sim::log << vrtx(nvrtx)(n) << ' ';
-            *sim::log << " el " << el << " psi " << psi << std::endl;
+                *gbl->log << vrtx(nvrtx)(n) << ' ';
+            *gbl->log << " el " << el << " psi " << psi << std::endl;
 #endif
             /* INSERT POINT */
             bdry_insert(nvrtx,sind);
@@ -369,13 +369,13 @@ void mesh::bdry_rebay(FLT tolsize) {
 
             /* UPDATE MODIFIED SIDE */
             tkoutlst(sind);
-            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
+            gbl->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl->fltwk(sind) > tolsize) putinlst(sind);
             
             /* UPDATE NEW BOUNDARY SIDE */
             sind = sbdry(bnum)->el(sbdry(bnum)->nel -1);
-            gbl_ptr->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
-            if (gbl_ptr->fltwk(sind) > tolsize) putinlst(sind);
+            gbl->fltwk(sind) = distance(sd(sind).vrtx(0),sd(sind).vrtx(1))/MAX(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)));
+            if (gbl->fltwk(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;
@@ -387,7 +387,7 @@ void mesh::bdry_rebay(FLT tolsize) {
         sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
         sbdry(bnum)->sndtype() = boundary::int_msg;
         sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
-        *sim::log << "#Boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << count << " sides added" << std::endl;
+        *gbl->log << "#Boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << count << " sides added" << std::endl;
 
     }
     
@@ -420,10 +420,10 @@ void mesh::bdry_rebay1() {
             sbdry(bnum)->mvpttobdry(el,psi,vrtx(nvrtx));
             vlngth(nvrtx) = 0.5*((1.-psi)*vlngth(sd(sind).vrtx(0)) +(1.+psi)*vlngth(sd(sind).vrtx(1)));
 #ifdef DEBUG_ADAPT
-            *sim::log << "Inserting boundary side " << i << ' ' << adapt_count << ' ';
+            *gbl->log << "Inserting boundary side " << i << ' ' << adapt_count << ' ';
             for(int n=0;n<ND;++n)
-                *sim::log << vrtx(nvrtx)(n) << ' ';
-            *sim::log << " el " << el << " psi " << psi << std::endl;
+                *gbl->log << vrtx(nvrtx)(n) << ' ';
+            *gbl->log << " el " << el << " psi " << psi << std::endl;
 #endif
             bdry_insert(nvrtx,sind,1);
             ++nvrtx;
@@ -436,7 +436,7 @@ void mesh::bdry_rebay1() {
             output(adapt_file.c_str(),debug_adapt);
 #endif
         }
-        *sim::log << "#Slave boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;
+        *gbl->log << "#Slave boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;
 
     }
     

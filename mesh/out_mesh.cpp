@@ -13,7 +13,7 @@
 
 using namespace std;
 
-int mesh::output(const std::string &filename, mesh::filetype filetype) const {
+void mesh::output(const std::string &filename, mesh::filetype filetype) const {
     std::string fnmapp;
     int i,j,n,tind,count;
     ofstream out;
@@ -29,7 +29,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".n";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             
@@ -46,7 +46,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".s";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             out << nside << endl;    
@@ -59,7 +59,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".e";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             out << ntri << endl;
@@ -76,7 +76,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".dat";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
 
@@ -100,7 +100,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".GDS";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
 
@@ -127,7 +127,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".FDNEUT";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
 
@@ -199,7 +199,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".txt";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
             out << nvrtx << endl;
@@ -217,7 +217,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".grd";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
             
@@ -266,7 +266,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".bin";
             bout.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
             
@@ -332,7 +332,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             Write(outputFile,"grid",dt_grid);
             outputFile.Save("TriangularGrid2D","Seq_grid");
  #else
-            *sim::log << "Not supported on this platform\n";
+            *gbl->log << "Not supported on this platform\n";
 #endif
             break;
         }
@@ -341,7 +341,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".vlngth";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file" << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
 
@@ -356,7 +356,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".n";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             
@@ -373,7 +373,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".s";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             out << nside << endl;    
@@ -386,7 +386,7 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
             fnmapp = filename +".e";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open output file " << fnmapp << "for output" << endl;
+                *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
             out << ntri << endl;
@@ -402,11 +402,11 @@ int mesh::output(const std::string &filename, mesh::filetype filetype) const {
 
 
         default:
-            *sim::log << "That filetype is not supported yet" << endl;
+            *gbl->log << "That filetype is not supported yet" << endl;
             break;
     }
     
-    return(1);
+    return;
 }
 
 void mesh::bdry_output(const std::string &filename) const {

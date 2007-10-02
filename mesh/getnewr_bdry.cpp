@@ -35,7 +35,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
     if (mi != in_map.end()) {
         type = r_stype::getid((*mi).second.c_str());
         if (type < 0)  {
-            *sim::log << "unknown type:" << (*mi).second << std::endl;
+            *gbl->log << "unknown type:" << (*mi).second << std::endl;
             exit(1);
         }
     }
@@ -57,7 +57,7 @@ r_side_bdry* r_mesh::getnewsideobject(int bnum, input_map& in_map) {
         else {
             type = r_stype::fixed;
         }
-        *sim::log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
+        *gbl->log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
     }
 
     switch(type) {

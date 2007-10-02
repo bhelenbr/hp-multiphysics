@@ -11,7 +11,7 @@ void mesh::copy(const mesh& tgt) {
     else {
         /* CHECK IF BIG ENOUGH */
         if (tgt.nside > maxvst) {
-            *sim::log << "mesh is too big to copy" << std::endl;
+            *gbl->log << "mesh is too big to copy" << std::endl;
             exit(1);
         }
     }

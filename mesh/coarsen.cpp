@@ -23,48 +23,48 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
 
     /* PREPARE FOR COARSENING */
     for(i=0;i<inmesh.nvrtx;++i)
-        gbl_ptr->fltwk(i) = 1.0e8;
+        gbl->fltwk(i) = 1.0e8;
     
     for(i=0;i<inmesh.nside;++i) {
         v0 = inmesh.sd(i).vrtx(0);
         v1 = inmesh.sd(i).vrtx(1);
-        gbl_ptr->fltwk(v0) = MIN(inmesh.distance(v0,v1),gbl_ptr->fltwk(v0));
-        gbl_ptr->fltwk(v1) = MIN(inmesh.distance(v0,v1),gbl_ptr->fltwk(v1));
+        gbl->fltwk(v0) = MIN(inmesh.distance(v0,v1),gbl->fltwk(v0));
+        gbl->fltwk(v1) = MIN(inmesh.distance(v0,v1),gbl->fltwk(v1));
     }
 
     for(i=0;i<inmesh.nvrtx;++i)
-        gbl_ptr->fltwk(i) *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
+        gbl->fltwk(i) *= factor; /* SHOULD BE BETWEEN 1.5 and 2.0 */
         
     nvrtx = 0;
     nside = 0;
     ntri  = 0;
 
-    /* USE gbl_ptr->intwk TO KEEP TRACK OF INDICES */
+    /* USE gbl->intwk TO KEEP TRACK OF INDICES */
     
     int inmeshbdrysides = 2*inmesh.nside -3*inmesh.ntri;
     if (maxvst < inmeshbdrysides/2) {
-        *sim::log << "coarse mesh is not big enough: " << inmeshbdrysides/2 << ' ' << maxvst << std::endl;
+        *gbl->log << "coarse mesh is not big enough: " << inmeshbdrysides/2 << ' ' << maxvst << std::endl;
     }
     
     /* COARSEN SIDES    */
     for(i=0;i<nsbd;++i) {
         sbdry(i)->nel = 0;
         if (typeid(sbdry(i)) != typeid(inmesh.sbdry(i))) {
-            *sim::log << "can't coarsen into object with different boundaries" << std::endl;
+            *gbl->log << "can't coarsen into object with different boundaries" << std::endl;
             exit(1);
         }
 
         /* CHECK IF FIRST POINT INSERTED*/
         v0 = inmesh.sd(inmesh.sbdry(i)->el(0)).vrtx(0);
-        if (gbl_ptr->intwk(v0) < 0) {
+        if (gbl->intwk(v0) < 0) {
             for(n=0;n<ND;++n)
                 vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-            gbl_ptr->intwk(v0) = nvrtx;
+            gbl->intwk(v0) = nvrtx;
             sd(nside).vrtx(0) = nvrtx;
             ++nvrtx;
         }
         else { 
-            sd(nside).vrtx(0) = gbl_ptr->intwk(v0);
+            sd(nside).vrtx(0) = gbl->intwk(v0);
         }
 
         odd = inmesh.sbdry(i)->nel%2;
@@ -73,7 +73,7 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
                 v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
                 for(n=0;n<ND;++n)
                     vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-                gbl_ptr->intwk(v0) = nvrtx;
+                gbl->intwk(v0) = nvrtx;
                 sd(nside).vrtx(1) = nvrtx;
                 sbdry(i)->el(sbdry(i)->nel) = nside;
                 sd(nside).tri(1) = -1;
@@ -90,8 +90,8 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
                 v1 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(1);
                 for(n=0;n<ND;++n)
                     vrtx(nvrtx)(n) = 0.5*(inmesh.vrtx(v0)(n) +inmesh.vrtx(v1)(n));
-                gbl_ptr->intwk(v0) = nvrtx;
-                gbl_ptr->intwk(v1)= nvrtx;
+                gbl->intwk(v0) = nvrtx;
+                gbl->intwk(v1)= nvrtx;
                 sd(nside).vrtx(1) = nvrtx;
                 sbdry(i)->el(sbdry(i)->nel) = nside;
                 sd(nside).tri(1) = -1;
@@ -105,7 +105,7 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
                 v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
                 for(n=0;n<ND;++n)
                     vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-                gbl_ptr->intwk(v0) = nvrtx;
+                gbl->intwk(v0) = nvrtx;
                 sd(nside).vrtx(1) = nvrtx;
                 sbdry(i)->el(sbdry(i)->nel) = nside;
                 sd(nside).tri(1) = -1;
@@ -120,7 +120,7 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
                 v0 = inmesh.sd(inmesh.sbdry(i)->el(j)).vrtx(0);
                 for(n=0;n<ND;++n)
                     vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-                gbl_ptr->intwk(v0) = nvrtx;
+                gbl->intwk(v0) = nvrtx;
                 sd(nside).vrtx(1) = nvrtx;
                 sbdry(i)->el(sbdry(i)->nel) = nside;
                 sd(nside).tri(1) = -1;
@@ -133,10 +133,10 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
         
         /* INSERT LAST POINT */
         v0 = inmesh.sd(inmesh.sbdry(i)->el(inmesh.sbdry(i)->nel-1)).vrtx(1);
-        if (gbl_ptr->intwk(v0) < 0) {
+        if (gbl->intwk(v0) < 0) {
             for(n=0;n<ND;++n)
                 vrtx(nvrtx)(n) = inmesh.vrtx(v0)(n);
-            gbl_ptr->intwk(v0) = nvrtx;
+            gbl->intwk(v0) = nvrtx;
             sd(nside).vrtx(1) = nvrtx;
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
@@ -145,7 +145,7 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
             ++nvrtx;
         }
         else {
-            sd(nside).vrtx(1) = gbl_ptr->intwk(v0);
+            sd(nside).vrtx(1) = gbl->intwk(v0);
             sbdry(i)->el(sbdry(i)->nel) = nside;
             sd(nside).tri(1) = -1;
             ++nside;
@@ -156,18 +156,18 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
     /* MOVE VERTEX BDRY INFORMATION */
     for(i=0;i<inmesh.nvbd;++i) {
         vbdry(i)->copy(*inmesh.vbdry(i));
-        vbdry(i)->v0 = gbl_ptr->intwk(inmesh.vbdry(i)->v0);
+        vbdry(i)->v0 = gbl->intwk(inmesh.vbdry(i)->v0);
     }
     
     if (maxvst < nside/2+nside) {
-        *sim::log << "coarse mesh is not large enough: " << nside/2 +nside << ' ' << maxvst << std::endl;
+        *gbl->log << "coarse mesh is not large enough: " << nside/2 +nside << ' ' << maxvst << std::endl;
     }
 
     
     treeinit();
     
     for(i=0;i<nside;++i)
-        gbl_ptr->i2wk_lst1(i) = i+1;
+        gbl->i2wk_lst1(i) = i+1;
             
     triangulate(nside);
     
@@ -187,48 +187,48 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
     /* Boyer-Watson Algorithm to insert interior points */
     /****************************************************/
     /* MARK BOUNDARY SO DON'T GET INSERTED */
-    /* FUNNY WAY OF MARKING SO CAN LEAVE gbl_ptr->intwk initialized to -1 */
+    /* FUNNY WAY OF MARKING SO CAN LEAVE gbl->intwk initialized to -1 */
     for(i=0;i<inmesh.nsbd;++i) {
         for(j=0;j<inmesh.sbdry(i)->nel;++j) {
             sind = inmesh.sbdry(i)->el(j);
-            gbl_ptr->intwk(inmesh.sd(sind).vrtx(0)) = SETSPEC;
-            gbl_ptr->intwk(inmesh.sd(sind).vrtx(1)) = SETSPEC;
+            gbl->intwk(inmesh.sd(sind).vrtx(0)) = SETSPEC;
+            gbl->intwk(inmesh.sd(sind).vrtx(1)) = SETSPEC;
         }
     }
     
     /* maxsrch must be high for triangulated domain with no interior points */
-    gbl_ptr->maxsrch = MIN(maxvst,inmesh.ntri);
+    gbl->maxsrch = MIN(maxvst,inmesh.ntri);
     
     for(i=0;i<inmesh.nvrtx;++i) {
-        if (ISSPEC(gbl_ptr->intwk(i))) continue;
+        if (ISSPEC(gbl->intwk(i))) continue;
         
         mindist = qtree.nearpt(inmesh.vrtx(i).data(),j);
-        if (sqrt(mindist) < gbl_ptr->fltwk(i)) continue;
+        if (sqrt(mindist) < gbl->fltwk(i)) continue;
                 
         insert(inmesh.vrtx(i));
     }
     cnt_nbor();
     
     /* reset maxsrch */
-    gbl_ptr->maxsrch = 100;
+    gbl->maxsrch = 100;
     
-    /* RESET gbl_ptr->intwk */
+    /* RESET gbl->intwk */
     for(i=0;i<inmesh.nsbd;++i) {
         for(j=0;j<inmesh.sbdry(i)->nel;++j) {
             sind = inmesh.sbdry(i)->el(j);
-            gbl_ptr->intwk(inmesh.sd(sind).vrtx(0)) = -1;
-            gbl_ptr->intwk(inmesh.sd(sind).vrtx(1)) = -1;
+            gbl->intwk(inmesh.sd(sind).vrtx(0)) = -1;
+            gbl->intwk(inmesh.sd(sind).vrtx(1)) = -1;
         }
     }
     bdrylabel();
     initvlngth();
     
     /* PRINT SOME GENERAL DEBUGGING INFO */
-    *sim::log << "#" << std::endl << "#COARSE MESH " << std::endl;
-    *sim::log << "#MAXVST:" << maxvst << " VERTICES:" << nvrtx << " SIDES:" << nside << " ELEMENTS:" << ntri << std::endl;    
+    *gbl->log << "#" << std::endl << "#COARSE MESH " << std::endl;
+    *gbl->log << "#MAXVST:" << maxvst << " VERTICES:" << nvrtx << " SIDES:" << nside << " ELEMENTS:" << ntri << std::endl;    
     /* PRINT BOUNDARY INFO */
     for(i=0;i<nsbd;++i)
-        *sim::log << "#" << sbdry(i)->idprefix << " " << sbdry(i)->mytype << " " << sbdry(i)->nel << std::endl;
+        *gbl->log << "#" << sbdry(i)->idprefix << " " << sbdry(i)->mytype << " " << sbdry(i)->nel << std::endl;
 
     return;
 }
@@ -275,7 +275,7 @@ void mesh::coarsen3() {
     
     /* COARSEN SIDE EDGES FIRST */
     for(i=0;i<nsbd;++i) {
-        *sim::log << "coarsening boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
+        *gbl->log << "coarsening boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
         for(j=0;j<sbdry(i)->nel;++j) {
             sind = sbdry(i)->el(j);
             v0 = sd(sind).vrtx(0);
@@ -308,9 +308,9 @@ void mesh::coarsen3() {
     
     cleanup_after_adapt();
     
-    *sim::log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
+    *gbl->log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
     for(i=0;i<nsbd;++i)
-        *sim::log << "boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
+        *gbl->log << "boundary " << i << ": type " << sbdry(i)->mytype << " sides " << sbdry(i)->nel << std::endl;
     
     return;
 }

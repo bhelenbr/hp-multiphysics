@@ -90,7 +90,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     return;
                 default: 
-                    *sim::log << "replacement with symmetric sending?" << std::endl;
+                    *x.gbl->log << "replacement with symmetric sending?" << std::endl;
                     exit(1);
             }
             break;
@@ -234,7 +234,7 @@ void side_bdry::swap(int s1, int s2) {
 
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL */
-/* USES gbl_ptr->intwk & gbl_ptr->i2wk AS WORK ARRAYS */
+/* USES gbl->intwk & gbl->i2wk AS WORK ARRAYS */
 void side_bdry::reorder() {
     int i,count,total,sind,minv,first;
 
@@ -243,22 +243,22 @@ void side_bdry::reorder() {
     /* DON'T ASSUME wk INITIALIZED TO -1 */
     for(i=0;i<nel;++i) {
         sind = el(i);
-        x.gbl_ptr->intwk(x.sd(sind).vrtx(0)) = -1;
-        x.gbl_ptr->i2wk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl->intwk(x.sd(sind).vrtx(0)) = -1;
+        x.gbl->i2wk(x.sd(sind).vrtx(1)) = -1;
     }
     
     /* STORE SIDE INDICES BY VERTEX NUMBER */
     for(i=0; i < nel; ++i) {
         sind = el(i);
-        x.gbl_ptr->intwk(x.sd(sind).vrtx(1)) = i;
-        x.gbl_ptr->i2wk(x.sd(sind).vrtx(0)) = i;
+        x.gbl->intwk(x.sd(sind).vrtx(1)) = i;
+        x.gbl->i2wk(x.sd(sind).vrtx(0)) = i;
     }
 
     /* FIND FIRST SIDE */    
     first = -1;
     for(i=0;i<nel;++i) {
         sind = el(i);
-        if (x.gbl_ptr->intwk(x.sd(sind).vrtx(0)) == -1) {
+        if (x.gbl->intwk(x.sd(sind).vrtx(0)) == -1) {
             first = i;
             break;
         }
@@ -280,24 +280,24 @@ void side_bdry::reorder() {
     /* SWAP FIRST SIDE */
     count = 0;
     swap(count,first);
-    x.gbl_ptr->intwk(x.sd(el(first)).vrtx(1)) = first;
-    x.gbl_ptr->i2wk(x.sd(el(first)).vrtx(0)) = first;
-    x.gbl_ptr->intwk(x.sd(el(count)).vrtx(1)) = count;
-    x.gbl_ptr->i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
+    x.gbl->intwk(x.sd(el(first)).vrtx(1)) = first;
+    x.gbl->i2wk(x.sd(el(first)).vrtx(0)) = first;
+    x.gbl->intwk(x.sd(el(count)).vrtx(1)) = count;
+    x.gbl->i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
     /* REORDER LIST */
-    while ((first = x.gbl_ptr->i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
+    while ((first = x.gbl->i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
         swap(count,first);
-        x.gbl_ptr->intwk(x.sd(el(first)).vrtx(1)) = first;
-        x.gbl_ptr->i2wk(x.sd(el(first)).vrtx(0)) = first;
-        x.gbl_ptr->intwk(x.sd(el(count)).vrtx(1)) = count;
-        x.gbl_ptr->i2wk(x.sd(el(count)).vrtx(0)) = count;
+        x.gbl->intwk(x.sd(el(first)).vrtx(1)) = first;
+        x.gbl->i2wk(x.sd(el(first)).vrtx(0)) = first;
+        x.gbl->intwk(x.sd(el(count)).vrtx(1)) = count;
+        x.gbl->i2wk(x.sd(el(count)).vrtx(0)) = count;
     }
     
-    /* RESET gbl_ptr->intwk TO -1 */
+    /* RESET gbl->intwk TO -1 */
     for(i=0; i <total; ++i) {
         sind = el(i);
-        x.gbl_ptr->intwk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl->intwk(x.sd(sind).vrtx(1)) = -1;
     }
     
     if (count < total) {
@@ -310,7 +310,7 @@ void side_bdry::reorder() {
         for(i=0;i<total-nel;++i)
             x.sbdry(x.nsbd-1)->swap(i,i+nel);
         x.sbdry(x.nsbd-1)->nel = total-nel;
-        *sim::log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
+        *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
         return;
     }
     
@@ -356,7 +356,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
             if (first || phase(grp)(0) != phi) return;
             
 #ifdef MPDEBUG
-            *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+            *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
             int ebp1 = end-bgn+1;
             countdn = nel*ebp1;
@@ -366,7 +366,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                 for(k=0;k<ebp1;++k) {
                     base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-                    *sim::log << "\t" << base[offset+k] << std::endl;
+                    *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                 }
                 countdn -= ebp1;
@@ -375,7 +375,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
             for(k=0;k<ebp1;++k) {
                 base[offset+k] = frcvbuf(0,countdn+k);
 #ifdef MPDEBUG
-                *sim::log << "\t" << base[offset+k] << std::endl;
+                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
             }
             return;
@@ -408,7 +408,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -417,7 +417,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -426,7 +426,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                            *sim::log << "\t" << base[offset+k] << std::endl;
+                            *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
@@ -455,7 +455,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -464,7 +464,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -473,7 +473,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                            *sim::log << "\t" << base[offset+k] << std::endl;
+                            *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
@@ -503,7 +503,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -512,7 +512,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -521,14 +521,14 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                            *sim::log << "\t" << base[offset+k] << std::endl;
+                            *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
                     return;
                 
                 default: 
-                    *sim::log << "replacement with symmetric sending?" << std::endl;
+                    *x.gbl->log << "replacement with symmetric sending?" << std::endl;
                     exit(1);
             }
             break;
@@ -571,7 +571,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
         case(master_slave): {
             if (first || phase(grp)(0) != phi) return;
 #ifdef MPDEBUG
-            *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+            *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
             int ebp1 = end-bgn+1;
             countdn = (nel-1)*ebp1;
@@ -582,7 +582,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                 for (k=0;k<ebp1;++k) {
                     base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-                    *sim::log << "\t" << base[offset+k] << std::endl;
+                    *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                 }
                 countdn -= ebp1;
@@ -616,7 +616,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -625,7 +625,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -653,7 +653,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -662,7 +662,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -688,7 +688,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *sim::log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
                         for(j=0;j<nel;++j) {
@@ -697,7 +697,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *sim::log << "\t" << base[offset+k] << std::endl;
+                                *gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -706,7 +706,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     return;
                     
                 case(replace):
-                    *sim::log << "Should only call replace with master_slave messages\n" << std::endl;
+                    *x.gbl->log << "Should only call replace with master_slave messages\n" << std::endl;
                     exit(1);
             }
         }
@@ -788,7 +788,7 @@ void curved_analytic_interface::mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
         for(n=0;n<mesh::ND;++n)
             pt(n) += delt_dist*dhgt(n,pt.data())/mag;
         if (++iter > 100) {
-            *sim::log << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';
+            std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // TEMPORARY NEED TO FIX
             exit(1);
         }
     } while (fabs(delt_dist) > 10.*EPSILON);

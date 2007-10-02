@@ -15,7 +15,7 @@ void mesh::refineby2(const class mesh& inmesh) {
     TinyVector<FLT,ND> xpt;
     
     /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
-    /* BECAUSE OF gbl_ptr->intwk USAGE */
+    /* BECAUSE OF gbl->intwk USAGE */
      if (!initialized) {
         /* VERTEX STORAGE ALLOCATION */
         init(inmesh,0.5);

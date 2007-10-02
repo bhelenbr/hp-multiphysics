@@ -32,13 +32,12 @@ class vrtx_bdry;
 /** This is an unstructured triangular mesh class which has adaptation and 
 parallel communication capabilities */
 
-class mesh {
+class mesh : public multigrid_interface {
 
     /***************/
     /* DATA          */
     /***************/
     public: 
-        std::string idprefix;
         int maxvst;
         static const int ND = 2;
                 
@@ -86,14 +85,14 @@ class mesh {
         Array<tstruct,1> td;
         
         /* GBL IS FOR INFORMATION SHARED BETWEEN MESHES NOT USED SIMULTANEOUSLY (MG LEVELS) */
-        struct gbl {
+        struct global : public block_global {
             /* SOME WORK VARIABLES */
             /* ANY ROUTINE THAT USES INTWK SHOULD RESET IT TO -1 */
             Array<int,1> intwk;
             Array<FLT,1> fltwk;
             Array<int,1> i2wk, i2wk_lst1, i2wk_lst2, i2wk_lst3;
             int maxsrch;
-        } *gbl_ptr;
+        } *gbl;
         int nlst; /** VARIABLE TO KEEP TRACK OF NUMBER OF ENTITIES IN LIST */
         
         int initialized;
@@ -102,16 +101,20 @@ class mesh {
         /*  INTERFACE */
         /**************/
         /* INITIALIZATION & ALLOCATION */
-        mesh() : idprefix(""), nvbd(0), nsbd(0), gbl_ptr(0), initialized(0)  {}
-        void init(input_map& input, gbl *gin = 0);
-        void init(const class mesh& xmesh,FLT sizereduce1d = 1);
+        mesh() : nvbd(0), nsbd(0), gbl(0), initialized(0)  {}
+        void* create_global_structure() {return new global;}
+        void init(input_map& input, void *gbl_in);
+        void init(const multigrid_interface& mgin, FLT sizereduce1d = 1.0);
         void copy(const mesh& tgt);
+        
+        /** Outputs solution in various filetypes */
+        enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
+        void output(const std::string &filename, filetype ftype = grid) const;
+
         virtual ~mesh();
         
         /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
-        enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
-        void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map& bdrymap);
-        int output(const std::string &filename, filetype ftype = grid) const;
+        void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
         void bdry_output(const std::string &filename) const;
         virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 
@@ -126,10 +129,8 @@ class mesh {
         void refineby2(const class mesh& xmesh);
         void settrim();
         void initvlngth();
-        void adapt(FLT tolsize);
-        void coarsen(FLT factor, const class mesh& xmesh);
-        void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
-        void coarsen3();
+        virtual void length() {}
+        void adapt();
 
         /* UTILITIES FOR PARALLEL COMPUTATIONS */
 #ifdef METIS
@@ -138,6 +139,8 @@ class mesh {
         void partition(class mesh& xmesh, int npart);
         int comm_entity_size();
         int comm_entity_list(Array<int,1>& list);
+        class boundary* getvbdry(int num);
+        class boundary* getsbdry(int num);
         void vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base, int bgn, int end, int stride);
         void vmsgpass(boundary::groups group,int phase, boundary::comm_type type);
         int vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride);
@@ -148,13 +151,23 @@ class mesh {
         int smsgrcv(boundary::groups group,int phase, boundary::comm_type type,  boundary::operation op, FLT *base,int bgn, int end, int stride);
         void matchboundaries();
         
-        /* UTILITIES FOR INTERPOLATION BETWEEN MESHES */
+        /* UTILITIES FOR MULTIGRID INTERPOLATION BETWEEN MESHES */
+        void coarsen(multigrid_interface *fmesh);
+        void coarsen(FLT factor, const class mesh& xmesh);
+        void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+        void coarsen3();
+        
         struct transfer {
             int tri;
             TinyVector<FLT,3> wt;
         };
-        void mgconnect(Array<transfer,1> &cnnct, mesh& tgt);
+        int coarse_level;
+        multigrid_interface *fine, *coarse;
+        Array<transfer,1> fcnnct, ccnnct;
+        void connect(multigrid_interface& tgt); 
+        void mgconnect(mesh &tgt, Array<transfer,1> &cnnct);      
         void testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh);
+        
         
         /* SOME DEGUGGING FUNCTIONS */
         void checkintegrity();
@@ -298,7 +311,7 @@ class vrtx_bdry : public boundary, public vgeometry_interface {
         int v0;
         
         /* CONSTRUCTOR */
-        vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.idprefix +"_v" +idprefix; mytype="plain";}
+        vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.gbl->idprefix +"_v" +idprefix; mytype="plain";}
         vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
 
         /* OTHER USEFUL STUFF */
@@ -331,7 +344,7 @@ class side_bdry : public boundary, public sgeometry_interface {
         Array<int,1> el;
         
         /* CONSTRUCTOR */
-        side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
+        side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
         side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
         
         /* BASIC B.C. STUFF */

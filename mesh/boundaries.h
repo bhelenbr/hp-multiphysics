@@ -188,7 +188,7 @@ template<class BASE> class comm_bdry : public BASE {
                 ++nmatch;
                 return(0);
             }
-            *sim::log << "error: not local match" << BASE::idnum << bin->idnum << std::endl;
+            *BASE::x.gbl->log << "error: not local match" << BASE::idnum << bin->idnum << std::endl;
             return(1);
         }
         
@@ -256,20 +256,20 @@ template<class BASE> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m)) continue;
                 
 #ifdef MPDEBUG
-                *(sim::log) << "preparing for receipt of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                *(gbl->) << "preparing for receipt of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif      
                 
                 switch(mtype(m)) {
                     case(local):
                          /* NOTHING TO DO FOR LOCAL RECEIVES */
 #ifdef MPDEBUG
-                        *sim::log << "local" << std::endl << std::flush;
+                        *gbl->log << "local" << std::endl << std::flush;
 #endif
                         break;  
 #ifdef MPISRC
                     case(mpi):
 #ifdef MPDEBUG
-                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+                        *gbl->log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
                         switch(msgtype) {
                             case(boundary::flt_msg): {
@@ -297,13 +297,13 @@ template<class BASE> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m)) continue;
                 
 #ifdef MPDEBUG
-                *(sim::log) << "preparing for send of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                *(gbl->) << "preparing for send of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif      
                 
                 switch(mtype(m)) {
                     case(local):
 #ifdef MPDEBUG
-                        *sim::log << "local" << std::endl << std::flush;
+                        *gbl->log << "local" << std::endl << std::flush;
 #endif
                         sim::blks.notify_change(snd_tags(m),true);
                         break;  
@@ -311,7 +311,7 @@ template<class BASE> class comm_bdry : public BASE {
                     case(mpi):
                         /* NOTHING TO DO FOR MPI SENDS */
 #ifdef MPDEBUG
-                        *sim::log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+                        *gbl->log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
                         break;
 #endif        
@@ -363,9 +363,9 @@ template<class BASE> class comm_bdry : public BASE {
             for(m=0;m<nrecvs_to_post;++m) {
                 if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                *(sim::log) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                *(gbl->) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 //                        for(i=0;i<local_match(m)->sndsize();++i) 
-//                            *sim::log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
+//                            *gbl->log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif      
                 sim::blks.waitforslot(rcv_tags(m),true);
                 switch(msgtype) {
@@ -389,7 +389,7 @@ template<class BASE> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                 
 #ifdef MPDEBUG
-                *(sim::log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                *(gbl->) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif  
                 switch(msgtype) {
                     case(boundary::flt_msg): {
@@ -463,7 +463,7 @@ template<class BASE> class comm_bdry : public BASE {
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *sim::log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << snd_tags(m) << " with type: " << mtype(m) << std::endl;
+                        *gbl->log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << snd_tags(m) << " with type: " << mtype(m) << std::endl;
 #endif
                         MPI_Wait(&mpi_sndrqst(m), &status); 
                         break;
@@ -484,7 +484,7 @@ template<class BASE> class comm_bdry : public BASE {
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *sim::log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << rcv_tags(m) << " with type: " << mtype(m)  << std::endl;
+                        *gbl->log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << rcv_tags(m) << " with type: " << mtype(m)  << std::endl;
 #endif
                         MPI_Wait(&mpi_rcvrqst(m), &status); 
                         break;
@@ -494,10 +494,10 @@ template<class BASE> class comm_bdry : public BASE {
                 
 #ifdef MPDEBUG
                 if (msgtype == boundary::flt_msg) {
-                    *(sim::log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(gbl->) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
                 else {
-                    *(sim::log) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(gbl->) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
 #endif  
             }
@@ -600,13 +600,13 @@ template<class BASE> class prdc_template : public BASE {
 
 class curved_analytic_interface {
     protected:
-        virtual FLT hgt(TinyVector<FLT,mesh::ND> pt) {return(0.0);}
-        virtual FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {return(1.0);}
+        virtual FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {return(0.0);}
+        virtual FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {return(1.0);}
 
     public:        
         curved_analytic_interface* create() const {return(new curved_analytic_interface);}
         void mvpttobdry(TinyVector<FLT,mesh::ND> &pt);
-        virtual void input(input_map& inmap, std::string idprefix) {}
+        virtual void input(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
         virtual ~curved_analytic_interface() {}
 };
@@ -615,21 +615,21 @@ class curved_analytic_interface {
 class symbolic_shape : public curved_analytic_interface {
     protected:
         symbolic_function<2> h, dhdx0, dhdx1;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt) {
-            return(h.Eval(pt,sim::time));
+        FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+            return(h.Eval(pt,time));
         } 
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
-            if (dir) return(dhdx1.Eval(pt,sim::time));
-            return(dhdx0.Eval(pt,sim::time));
+        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+            if (dir) return(dhdx1.Eval(pt,time));
+            return(dhdx0.Eval(pt,time));
         }
     public:
-        void input(input_map& inmap, std::string idprefix) {    
-            curved_analytic_interface::input(inmap,idprefix);
+        void input(input_map& inmap, std::string idprefix, std::ostream& log) {    
+            curved_analytic_interface::input(inmap,idprefix,log);
             if (inmap.find(idprefix +"_h_expression") != inmap.end()) {
                 h.init(inmap,idprefix+"_h");
             }
             else {
-                *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function for " << idprefix << std::endl;
                 exit(1);
             }
             
@@ -638,7 +638,7 @@ class symbolic_shape : public curved_analytic_interface {
                 dhdx0.init(inmap,idprefix+"_dhdx0");
             }
             else {
-                *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function for " << idprefix << std::endl;
                 exit(1);
             }
             
@@ -647,7 +647,7 @@ class symbolic_shape : public curved_analytic_interface {
                 dhdx1.init(inmap,idprefix+"_dhdx1");
             }
             else {
-                *sim::log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function for " << idprefix << std::endl;
                 exit(1);
             }
         }
@@ -672,7 +672,7 @@ template<class BASE,class GEOM> class analytic_geometry : public BASE {
         }
         void input(input_map& inmap) {
             BASE::input(inmap);
-            geometry_object.input(inmap,BASE::idprefix);
+            geometry_object.input(inmap,BASE::idprefix,*BASE::x.gbl->log);
         }
         
         void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
@@ -691,7 +691,7 @@ template<class BASE> class ssolution_geometry : public sgeometry_pointer, public
         ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
 
         virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
-            if (sim::tstep < 0) BASE::mvpttobdry(nel,psi,pt);
+            if (BASE::x.gbl->tstep < 0) BASE::mvpttobdry(nel,psi,pt);
             else solution_data->mvpttobdry(nel,psi,pt);
             return;
         }
@@ -702,10 +702,10 @@ class circle : public curved_analytic_interface {
     public:
         FLT center[mesh::ND];
         FLT radius;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt) {
+        FLT hgt(TinyVector<FLT,mesh::ND> pt,FLT time = 0.0) {
             return(radius*radius -pow(pt[0]-center[0],2) -pow(pt[1]-center[1],2));
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
+        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt,FLT time = 0.0) {
             return(-2.*(pt[dir]-center[dir]));
         }
         
@@ -719,8 +719,8 @@ class circle : public curved_analytic_interface {
             fout << idprefix << "_radius: " << radius << std::endl;
         }
       
-         void input(input_map& inmap,std::string idprefix) {
-            curved_analytic_interface::input(inmap,idprefix);
+         void input(input_map& inmap,std::string idprefix, std::ostream& log) {
+            curved_analytic_interface::input(inmap,idprefix,log);
             
             FLT dflt[2] = {0.0, 0.0};
             inmap.getwdefault(idprefix+"_center",center,mesh::ND,dflt);
@@ -731,10 +731,10 @@ class circle : public curved_analytic_interface {
 class ellipse : public curved_analytic_interface {
     public:
         TinyVector<FLT,2> axes;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt) {
+        FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
             return(1 -pow(pt[0]/axes(0),2) -pow(pt[1]/axes(1),2));
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt) {
+        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
               return(-2.*pt[dir]/pow(axes(dir),2));            
         }
         
@@ -748,8 +748,8 @@ class ellipse : public curved_analytic_interface {
             fout << idprefix << "_a" << axes(0) << std::endl;
             fout << idprefix << "_b" << axes(1) << std::endl;
         }
-        void input(input_map& inmap, std::string idprefix) {
-            curved_analytic_interface::input(inmap,idprefix);
+        void input(input_map& inmap, std::string idprefix,std::ostream& log) {
+            curved_analytic_interface::input(inmap,idprefix,log);
             inmap.getwdefault(idprefix+"_a",axes(0),1.0);
             inmap.getwdefault(idprefix+"_b",axes(1),1.0);
         }
@@ -764,7 +764,7 @@ class naca : public curved_analytic_interface {
         FLT theta;
         TinyVector<FLT,2> pos;
         
-        FLT hgt(TinyVector<FLT,mesh::ND> x) {
+        FLT hgt(TinyVector<FLT,mesh::ND> x, FLT time = 0.0) {
             TinyVector<FLT,mesh::ND> pt;
             for(int n=0;n<mesh::ND;++n)
                 pt[n] = x[n] -pos(n);
@@ -776,7 +776,7 @@ class naca : public curved_analytic_interface {
             FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];            
             return(coeff[0]*pt[0] -poly*poly/coeff[0]);
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> x) {
+        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> x, FLT time = 0.0) {
             TinyVector<FLT,mesh::ND> pt;
             for(int n=0;n<mesh::ND;++n)
                 pt[n] = x[n] -pos(n);
@@ -825,8 +825,8 @@ class naca : public curved_analytic_interface {
             fout << idprefix << "_center: " << pos << std::endl;
         }
       
-         void input(input_map& inmap,std::string idprefix) {
-            curved_analytic_interface::input(inmap,idprefix);
+         void input(input_map& inmap,std::string idprefix,std::ostream& log) {
+            curved_analytic_interface::input(inmap,idprefix,log);
 
             FLT thickness;
             inmap.getwdefault(idprefix+"_sign",sign,1.0);

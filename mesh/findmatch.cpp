@@ -86,6 +86,10 @@ int mesh::comm_entity_list(Array<int,1>& list) {
     return(tsize);
 }
 
+boundary* mesh::getvbdry(int num) {return vbdry(num);}
+boundary* mesh::getsbdry(int num) {return sbdry(num);}
+        
+        
 void mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
     int i;
         
@@ -250,12 +254,12 @@ void mesh::setpartition(int nparts) {
         for(n=0;n<3;++n)
             tvrtx(i)(n) = td(i).vrtx(n);
             
-    METIS_PartMeshNodal(&ntri, &nvrtx, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl_ptr->intwk(0)),&(gbl_ptr->i2wk(0)));
+    METIS_PartMeshNodal(&ntri, &nvrtx, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->intwk(0)),&(gbl->i2wk(0)));
     
     for(i=0;i<ntri;++i)
-        td(i).info = gbl_ptr->intwk(i);
+        td(i).info = gbl->intwk(i);
         
-    gbl_ptr->intwk = -1;
+    gbl->intwk = -1;
 
     return;
 }
@@ -283,14 +287,14 @@ void mesh::partition(class mesh& xin, int npart) {
         }
     }
     
-    *sim::log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
+    *gbl->log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
     
     if (!initialized) {
         maxvst = static_cast<int>(static_cast<FLT>(ntri*xin.maxvst)/xin.ntri);
         allocate(maxvst);
     }
     else if (3*ntri > maxvst) {
-        *sim::log << "mesh is too small" << std::endl;
+        *gbl->log << "mesh is too small" << std::endl;
         exit(1);
     }
 
@@ -327,7 +331,7 @@ void mesh::partition(class mesh& xin, int npart) {
             v0 = sd(i).vrtx(0);
             for(n=0;n<3;++n)
                 if (xin.vd(xin.td(tind).vrtx(n)).info == v0) break;
-            if (n==3) *sim::log << "error in partitioning\n";
+            if (n==3) *gbl->log << "error in partitioning\n";
             n = (n+2)%3;
 
             indx = xin.td(tind).tri(n);

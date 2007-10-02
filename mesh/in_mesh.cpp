@@ -6,40 +6,132 @@
 #include <input_map.h>
 #include <iostream>
 
-void mesh::init(input_map &input, gbl *gin) {
+void mesh::init(input_map &input, void *gin) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     std::string bdryfile;
     
-    gbl_ptr = gin;
+    if (gin != 0) {
+        gbl = static_cast<global *>(gin);   
+    }
+    else {
+        /* gbl has not been set */
+        /* so create internal gbl_struct */
+        gbl = new global;
+        gbl->idprefix = "";
+        gbl->log = &std::cout;
+        gbl->adapt_flag = true;
+        gbl->tolerance = 1.9;
+    }
     
     if (!initialized) {
         FLT grwfac;
-        keyword = idprefix + "_growth factor";
+        keyword = gbl->idprefix + "_growth factor";
         if (!input.get(keyword,grwfac)) {
             input.getwdefault("growth factor",grwfac,2.0);
         }
         
         int filetype;
-        keyword = idprefix + "_filetype";
+        keyword = gbl->idprefix + "_filetype";
         if (!input.get(keyword,filetype)) {
             input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
         }
         
-        keyword = idprefix + "_mesh";
+        keyword = gbl->idprefix + "_mesh";
         if (!input.get(keyword,filename)) {
             if (input.get("mesh",filename)) {
-                filename = filename +"_" +idprefix;
+                filename = filename +"_" +gbl->idprefix;
             }
             else {
-                *sim::log << "no mesh name\n";
+                *gbl->log << "no mesh name\n";
                 exit(1);
             }
         }
+        coarse_level = 0;
         mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,input);
     }
 }
+
+void mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
+    int i;
+   
+     if (!initialized) {
+        const mesh& inmesh = dynamic_cast<const mesh &>(in);
+        gbl = inmesh.gbl;
+        maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
+        allocate(maxvst);
+        nsbd = inmesh.nsbd;
+        sbdry.resize(nsbd);
+        for(i=0;i<nsbd;++i) {
+            sbdry(i) = inmesh.sbdry(i)->create(*this);
+            sbdry(i)->alloc(MAX(static_cast<int>(inmesh.sbdry(i)->maxel/sizereduce1d),10));
+        }
+        nvbd = inmesh.nvbd;
+        vbdry.resize(nvbd);
+        for(i=0;i<nvbd;++i) {
+            vbdry(i) = inmesh.vbdry(i)->create(*this);
+            vbdry(i)->alloc(4);
+        }
+        qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
+        coarse_level = inmesh.coarse_level+1;
+        initialized = 1;
+    }
+}
+
+void mesh::allocate(int mxsize) {
+    
+    /* SIDE INFO */
+    maxvst = mxsize;
+    sd.resize(Range(-1,maxvst));
+
+    /* VERTEX INFO */                        
+    vrtx.resize(maxvst);
+    vlngth.resize(maxvst);
+    vd.resize(Range(-1,maxvst));
+    
+    /* TRI INFO */ 
+    td.resize(Range(-1,maxvst));
+
+    qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
+
+    if (!gbl) {
+        /* gbl has not been set */
+        /* so create internal gbl_struct */
+        gbl = new global;
+        gbl->idprefix = "";
+        gbl->log = &std::cout;
+        gbl->adapt_flag = true;
+        gbl->tolerance = 1.9;
+    }
+    
+    if (gbl->intwk.ubound(firstDim) < maxvst) {
+        // gbl->intwk should always be kept initialized to -1
+        gbl->intwk.resize(Range(-1,maxvst));
+        gbl->intwk = -1;
+        gbl->maxsrch = 100;
+        
+        gbl->fltwk.resize(maxvst);
+        gbl->i2wk.resize(maxvst+1);
+        gbl->i2wk.reindexSelf(TinyVector<int,1>(-1));
+        // some smaller lists using i2 storage
+        int mvst3 = maxvst/3;
+        Array<int,1> temp1(gbl->i2wk.data(),mvst3,neverDeleteData);
+        gbl->i2wk_lst1.reference(temp1);
+        gbl->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
+        Array<int,1> temp2(gbl->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
+        gbl->i2wk_lst2.reference(temp2);
+        gbl->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
+        Array<int,1> temp3(gbl->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
+        gbl->i2wk_lst3.reference(temp3);
+        gbl->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
+    }
+    
+    initialized = 1;
+    
+    return;
+}
+
 
 void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
     int i,j,n,sind,count,temp;
@@ -61,11 +153,11 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
                 grd_app = grd_nm + ".s";
                 in.open(grd_app.c_str());
                 if (!in.good()) {
-                          *sim::log << "error: couldn't open file: " << grd_app << std::endl;
+                          *gbl->log << "error: couldn't open file: " << grd_app << std::endl;
                           exit(1);
                 }
                 if (!(in >> nside)) { 
-                    *sim::log << "error: in side file: " << grd_app << std::endl;
+                    *gbl->log << "error: in side file: " << grd_app << std::endl;
                     exit(1);
                 }
               
@@ -73,7 +165,7 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
                     allocate(nside + (int) (grwfac*nside));
                 }
                 else if (nside > maxvst) {
-                    *sim::log << "error: mesh is too large" << std::endl;
+                    *gbl->log << "error: mesh is too large" << std::endl;
                     exit(1);
                 }
               
@@ -81,7 +173,7 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
                     in.ignore(80,':');
                     in >> sd(i).vrtx(0) >> sd(i).vrtx(1) >> sd(i).tri(0) >> sd(i).tri(1) >> sd(i).info;
                     if(in.fail()) {
-                        *sim::log << "error: in side file " << grd_app << std::endl;
+                        *gbl->log << "error: in side file " << grd_app << std::endl;
                         exit(1);
                     }
                 }
@@ -97,25 +189,25 @@ void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfa
                 for(i=0;i<nside;++i) {
                     if (sd(i).info) {
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == gbl_ptr->intwk(j)) {
-                                ++gbl_ptr->i2wk(j);
+                            if (sd(i).info == gbl->intwk(j)) {
+                                ++gbl->i2wk(j);
                                 goto next1;
                             }
                         }
                         /* NEW SIDE */
-                        gbl_ptr->intwk(nsbd) = sd(i).info;
-                        gbl_ptr->i2wk(nsbd++) = 1;
+                        gbl->intwk(nsbd) = sd(i).info;
+                        gbl->i2wk(nsbd++) = 1;
                     }
 next1:        continue;
                 }
                 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    gbl_ptr->intwk(i) = -1;
-                    gbl_ptr->i2wk(i) = -1;
+                    gbl->intwk(i) = -1;
+                    gbl->i2wk(i) = -1;
                 }
                 
                 
@@ -127,7 +219,7 @@ next1:        continue;
                                 goto next1a;
                             }
                         }
-                        *sim::log << "Big error\n";
+                        *gbl->log << "Big error\n";
                         exit(1);
                     }
 next1a:      continue;
@@ -137,10 +229,10 @@ next1a:      continue;
                 /* LOAD VERTEX INFORMATION                    */
                 grd_app = grd_nm + ".n";
                 in.open(grd_app.c_str());
-                if (!in.good()) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+                if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; exit(1);}
      
                 if(!(in >> nvrtx)) {
-                    *sim::log << "1: error in grid: " << grd_app << std::endl;
+                    *gbl->log << "1: error in grid: " << grd_app << std::endl;
                     exit(1);
                 }
                 
@@ -150,7 +242,7 @@ next1a:      continue;
                         in >> vrtx(i)(n);
                     }
                     in >> vd(i).info;
-                    if (in.fail())  { *sim::log << "2b: error in grid" << std::endl; exit(1); }
+                    if (in.fail())  { *gbl->log << "2b: error in grid" << std::endl; exit(1); }
                 }
                 in.close();
 
@@ -175,11 +267,11 @@ next1a:      continue;
                 grd_app = grd_nm + ".e";
                 in.open(grd_app.c_str());
                 if (!in.good()) {
-                    *sim::log << "trouble opening " << grd_app << std::endl;
+                    *gbl->log << "trouble opening " << grd_app << std::endl;
                     exit(1);
                 }
                 if(!(in >> ntri)) {
-                    *sim::log << "error in file " << grd_app << std::endl;
+                    *gbl->log << "error in file " << grd_app << std::endl;
                     exit(1);
                 }
      
@@ -210,7 +302,7 @@ next1a:      continue;
                 grd_app = grd_nm +".FDNEUT";
                 in.open(grd_app.c_str());
                 if (!in.good()) {
-                          *sim::log << "trouble opening " << grd_nm << std::endl;
+                          *gbl->log << "trouble opening " << grd_nm << std::endl;
                           exit(1);
                 }
                 
@@ -227,7 +319,7 @@ next1a:      continue;
                     allocate(maxvst);
                 }
                 else if ((3*i)/2 > maxvst) {
-                    *sim::log << "mesh is too large" << std::endl;
+                    *gbl->log << "mesh is too large" << std::endl;
                     exit(1);
                 }
      
@@ -297,7 +389,7 @@ next1a:      continue;
                     for(j=0;j<sbdry(i)->nel;++j) {
                         sind = vd(svrtxbtemp[i][j][0]).info;
                         if (sind < 0) {
-                            *sim::log << "error in boundary information " << i << j << std::endl;
+                            *gbl->log << "error in boundary information " << i << j << std::endl;
                             exit(1);
                         }
                         if (sd(sind).vrtx(1) == svrtxbtemp[i][j][1]) {
@@ -306,7 +398,7 @@ next1a:      continue;
                             vd(sd(sind).vrtx(0)).info = 0;
                         }
                         else {
-                            *sim::log << "Error: boundary sides are not counterclockwise " << 
+                            *gbl->log << "Error: boundary sides are not counterclockwise " << 
                             svrtxbtemp[i][j][0] << svrtxbtemp[i][j][1] << std::endl;
                             exit(1);
                         }
@@ -324,7 +416,7 @@ next1a:      continue;
                 grd_app = grd_nm + ".grd";
                 in.open(grd_app.c_str());
                 if (!in.good()) {
-                    *sim::log << "couldn't open grid file: " << grd_app << std::endl;
+                    *gbl->log << "couldn't open grid file: " << grd_app << std::endl;
                     exit(1);
                 }
                 /* HEADER LINES */
@@ -341,7 +433,7 @@ next1a:      continue;
                     nvbd = 0;
                 }
                 else if (nside > maxvst) {
-                    *sim::log << "mesh is too large" << std::endl;
+                    *gbl->log << "mesh is too large" << std::endl;
                     exit(1);
                 }
     
@@ -377,7 +469,7 @@ next1a:      continue;
                     sbdry = 0;
                 }
                 else if (nsbd != newnsbd) {
-                    *sim::log << "reloading incompatible meshes" << std::endl;
+                    *gbl->log << "reloading incompatible meshes" << std::endl;
                     exit(1);
                 }
                 
@@ -407,7 +499,7 @@ next1a:      continue;
                     vbdry = 0;
                 }
                 else if (nvbd != newnvbd) {
-                    *sim::log << "re-inputting into incompatible mesh object" << std::endl;
+                    *gbl->log << "re-inputting into incompatible mesh object" << std::endl;
                     exit(1);
                 }
                 
@@ -427,21 +519,21 @@ next1a:      continue;
                                 
             case(text):
                 if (!initialized) {
-                    *sim::log << "to read in vertex positions only must first load mesh structure" << std::endl;
+                    *gbl->log << "to read in vertex positions only must first load mesh structure" << std::endl;
                     exit(1);
                 }
 
                 /* LOAD VERTEX POSITIONS                    */
                 grd_app = grd_nm + ".txt";
                 in.open(grd_app.c_str());
-                if (!in.good()) { *sim::log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+                if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; exit(1);}
      
                 if(!(in >> temp)) {
-                    *sim::log << "1: error in grid " << grd_app << std::endl;
+                    *gbl->log << "1: error in grid " << grd_app << std::endl;
                     exit(1);
                 }
                 if (temp != nvrtx) {
-                    *sim::log << "grid doesn't match vertex list" << std::endl;
+                    *gbl->log << "grid doesn't match vertex list" << std::endl;
                     exit(1);
                 }
      
@@ -450,7 +542,7 @@ next1a:      continue;
                     in.ignore(80,':');
                     for(n=0;n<ND;++n)
                         in >> vrtx(i)(n);
-                    if (in.fail()) { *sim::log << "2c: error in grid" << std::endl; exit(1); }
+                    if (in.fail()) { *gbl->log << "2c: error in grid" << std::endl; exit(1); }
                 }
                 in.close();
                 
@@ -464,14 +556,14 @@ next1a:      continue;
                 /* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
                 sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
                 status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
-                *sim::log << " gi_uGetVolume status =" << status << std::endl;
+                *gbl->log << " gi_uGetVolume status =" << status << std::endl;
                 if (status != CAPRI_SUCCESS) exit(1);
-                *sim::log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
+                *gbl->log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
 
                 status = gi_dTesselFace(cpri_vol, cpri_face, &ntri, &cpri_tris, &cpri_tric, &nvrtx, &cpri_points, 
                     &cpri_ptype, &cpri_pindex, &cpri_uv);
                 if (status != CAPRI_SUCCESS) {
-                    *sim::log << "gi_dTesselFace status = " << status << std::endl;
+                    *gbl->log << "gi_dTesselFace status = " << status << std::endl;
                     exit(1);
                 }
 
@@ -481,7 +573,7 @@ next1a:      continue;
                     allocate(maxvst);
                 }
                 else if ((3*ntri)/2 > maxvst) {
-                    *sim::log << "mesh is too large" << std::endl;
+                    *gbl->log << "mesh is too large" << std::endl;
                     exit(1);
                 }
                 
@@ -513,7 +605,7 @@ next1a:      continue;
                         vbdry(nvbd)->v0 = i;
                         ++nvbd;
                         if (nvbd >= MAXVB) {
-                            *sim::log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
+                            *gbl->log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
                             exit(1);
                         }
                     }
@@ -537,30 +629,30 @@ next1a:      continue;
                                 sd(i).info = cpri_pindex[v0];
                             }
                             else {
-                                *sim::log << "Error in BRep Boundary Groups\n";
+                                *gbl->log << "Error in BRep Boundary Groups\n";
                                 exit(1);
                             }
                         }
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == (gbl_ptr->intwk(j)&0xFFFF)) {
-                                ++gbl_ptr->i2wk(j);
+                            if (sd(i).info == (gbl->intwk(j)&0xFFFF)) {
+                                ++gbl->i2wk(j);
                                 goto next1b;
                             }
                         }
                         /* NEW SIDE */
-                        gbl_ptr->intwk(nsbd) = sd(i).info;
-                        gbl_ptr->i2wk(nsbd++) = 1;
+                        gbl->intwk(nsbd) = sd(i).info;
+                        gbl->i2wk(nsbd++) = 1;
                     }
 next1b:        continue;
                 }
                 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    gbl_ptr->intwk(i) = -1;
-                    gbl_ptr->i2wk(i) = -1;
+                    gbl->intwk(i) = -1;
+                    gbl->i2wk(i) = -1;
                 }
                 
                 for(i=0;i<nside;++i) {
@@ -571,7 +663,7 @@ next1b:        continue;
                                 goto next1c;
                             }
                         }
-                        *sim::log << "Big error\n";
+                        *gbl->log << "Big error\n";
                         exit(1);
                     }
 next1c:      continue;
@@ -584,7 +676,7 @@ next1c:      continue;
                 grd_app = grd_nm +".dat";
                 in.open(grd_app.c_str());
                 if (!in.good()) {
-                    *sim::log << "couldn't open tecplot file: " << grd_app << std::endl;
+                    *gbl->log << "couldn't open tecplot file: " << grd_app << std::endl;
                     exit(1);
                 }
                 
@@ -603,7 +695,7 @@ next1c:      continue;
                     allocate(maxvst);
                 }
                 else if ((3*ntri) > maxvst) {
-                    *sim::log << "mesh is too large" << std::endl;
+                    *gbl->log << "mesh is too large" << std::endl;
                     exit(1);
                 }
                     
@@ -655,7 +747,7 @@ next1c:      continue;
                 grd_app = grd_nm +".d";
                 in.open(grd_app.c_str());
                 if (!in.good()) { 
-                    *sim::log << "couldn't open " << grd_app << "for reading\n";
+                    *gbl->log << "couldn't open " << grd_app << "for reading\n";
                     exit(1);
                 }
 
@@ -702,14 +794,14 @@ next1c:      continue;
                 for(i=0;i<nside;++i) {
                     if (sd(i).info) {
                         for (j = 0; j <nsbd;++j) {
-                            if (sd(i).info == gbl_ptr->intwk(j)) {
-                                ++gbl_ptr->i2wk(j);
+                            if (sd(i).info == gbl->intwk(j)) {
+                                ++gbl->i2wk(j);
                                 goto bdnext1;
                             }
                         }
                         /* NEW SIDE */
-                        gbl_ptr->intwk(nsbd) = sd(i).info;
-                        gbl_ptr->i2wk(nsbd++) = 1;
+                        gbl->intwk(nsbd) = sd(i).info;
+                        gbl->i2wk(nsbd++) = 1;
                     }
                 bdnext1:        continue;
                 }
@@ -717,11 +809,11 @@ next1c:      continue;
 
                 sbdry.resize(nsbd);
                 for(i=0;i<nsbd;++i) {
-                    sbdry(i) = getnewsideobject(gbl_ptr->intwk(i),bdrymap);
-                    sbdry(i)->alloc(static_cast<int>(gbl_ptr->i2wk(i)*grwfac));
+                    sbdry(i) = getnewsideobject(gbl->intwk(i),bdrymap);
+                    sbdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
                     sbdry(i)->nel = 0;
-                    gbl_ptr->intwk(i) = -1;
-                    gbl_ptr->i2wk(i) = -1;
+                    gbl->intwk(i) = -1;
+                    gbl->i2wk(i) = -1;
                 }
 
                 for(i=0;i<nside;++i) {
@@ -732,14 +824,14 @@ next1c:      continue;
                                 goto bdnext1a;
                             }
                         }
-                        *sim::log << "Big error\n";
+                        *gbl->log << "Big error\n";
                         exit(1);
                     }
                 bdnext1a:      continue;
                 }
                 
                 for(i=0;i<nside;++i)
-                    gbl_ptr->i2wk_lst1(i) = i+1;
+                    gbl->i2wk_lst1(i) = i+1;
                   
                 ntri = 0;
                 triangulate(nside);
@@ -752,7 +844,7 @@ next1c:      continue;
                 grd_app = grd_nm +".vlngth";
                 in.open(grd_app.c_str());
                 if (!in) {
-                    *sim::log << "couldn't open vlength input file" << grd_app  << endl;
+                    *gbl->log << "couldn't open vlength input file" << grd_app  << endl;
                     exit(1);
                 }
 
@@ -763,7 +855,7 @@ next1c:      continue;
             }
              
             default:
-                *sim::log << "That filetype is not supported" << std::endl;
+                *gbl->log << "That filetype is not supported" << std::endl;
                 exit(1);
     }
      
@@ -812,78 +904,6 @@ next1c:      continue;
     initialized = 1;
     
     return;
-}
-
-void mesh::allocate(int mxsize) {
-    
-    /* SIDE INFO */
-    maxvst = mxsize;
-    sd.resize(Range(-1,maxvst));
-
-    /* VERTEX INFO */                        
-    vrtx.resize(maxvst);
-    vlngth.resize(maxvst);
-    vd.resize(Range(-1,maxvst));
-    
-    /* TRI INFO */ 
-    td.resize(Range(-1,maxvst));
-
-    qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
-
-    if (!gbl_ptr) {
-        /* gbl_ptr has not been set */
-        /* so create internal gbl_struct */
-        gbl_ptr = new mesh::gbl;
-    }
-    
-    if (gbl_ptr->intwk.ubound(firstDim) < maxvst) {
-        // gbl_ptr->intwk should always be kept initialized to -1
-        gbl_ptr->intwk.resize(Range(-1,maxvst));
-        gbl_ptr->intwk = -1;
-        gbl_ptr->maxsrch = 100;
-        
-        gbl_ptr->fltwk.resize(maxvst);
-        gbl_ptr->i2wk.resize(maxvst+1);
-        gbl_ptr->i2wk.reindexSelf(TinyVector<int,1>(-1));
-        // some smaller lists using i2 storage
-        int mvst3 = maxvst/3;
-        Array<int,1> temp1(gbl_ptr->i2wk.data(),mvst3,neverDeleteData);
-        gbl_ptr->i2wk_lst1.reference(temp1);
-        gbl_ptr->i2wk_lst1.reindexSelf(TinyVector<int,1>(-1));
-        Array<int,1> temp2(gbl_ptr->i2wk.data()+1+mvst3,mvst3-1,neverDeleteData);
-        gbl_ptr->i2wk_lst2.reference(temp2);
-        gbl_ptr->i2wk_lst2.reindexSelf(TinyVector<int,1>(-1));
-        Array<int,1> temp3(gbl_ptr->i2wk.data()+1+2*mvst3,mvst3-1,neverDeleteData);
-        gbl_ptr->i2wk_lst3.reference(temp3);
-        gbl_ptr->i2wk_lst3.reindexSelf(TinyVector<int,1>(-1));
-    }
-    
-    initialized = 1;
-    
-    return;
-}
-
-void mesh::init(const class mesh& inmesh, FLT sizereduce1d) {
-    int i;
-
-    if (!initialized) {
-        maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
-        allocate(maxvst);
-        nsbd = inmesh.nsbd;
-        sbdry.resize(nsbd);
-        for(i=0;i<nsbd;++i) {
-            sbdry(i) = inmesh.sbdry(i)->create(*this);
-            sbdry(i)->alloc(MAX(static_cast<int>(inmesh.sbdry(i)->maxel/sizereduce1d),10));
-        }
-        nvbd = inmesh.nvbd;
-        vbdry.resize(nvbd);
-        for(i=0;i<nvbd;++i) {
-            vbdry(i) = inmesh.vbdry(i)->create(*this);
-            vbdry(i)->alloc(4);
-        }
-        qtree.allocate((FLT (*)[ND]) vrtx(0).data(), maxvst);
-        initialized = 1;
-    }
 }
 
 mesh::~mesh() {
