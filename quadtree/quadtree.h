@@ -54,9 +54,9 @@ template<int ND> class quadtree {
         int size;
         int current;
 
-/*		THIS IS USED BY ALL QUADS FOR SEARCHING */        
-        static class box<ND> **srchlst;
-        static int maxsrch;
+/*		THIS IS USED FOR SEARCHING */        
+        class box<ND> **srchlst;
+        int maxsrch;
 
     public:
         quadtree() : size(0) {};

@@ -44,18 +44,8 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
     base[0] = box<ND>(NULL,0,x1,x2);
     current = 1;
     
-    if (maxsrch == 0) {
-        srchlst = new class box<ND>*[size];
-        maxsrch = size;
-    }
-    else {
-        if (size > maxsrch) { 
-            printf("#Warning: Better to allocate largest quadtree to smallest\n");
-            delete []srchlst;
-            srchlst = new class box<ND>*[size];
-            maxsrch = size;
-        }
-    }
+    srchlst = new class box<ND>*[size];
+    maxsrch = size;
 }
 
 template<int ND> void quadtree<ND>::init(FLT x1[ND], FLT x2[ND]) {
