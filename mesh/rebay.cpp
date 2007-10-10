@@ -13,7 +13,6 @@
 #include <blitz/tinyvec-et.h>
 
 #define REBAY
-
 #define NO_DEBUG_ADAPT
 #define VERBOSE
 
@@ -133,7 +132,7 @@ void mesh::rebay(FLT tolsize) {
         q = sqrt(q);
         if (q < p) goto INSRT;
 
-        densty = (vlngth(v0)  +vlngth(v1))/sqrt(3.0);
+        densty = 0.5*(vlngth(v0)  +vlngth(v1))/sqrt(3.0);
         rad1 = MAX(densty,p);
         rad2 = .5*(p*p  +q*q)/q;
         cirrad = MIN(rad1,rad2);
@@ -158,7 +157,7 @@ void mesh::rebay(FLT tolsize) {
         for(n=0;n<ND;++n)
             xpt(n) = 0.5*(vrtx(v1)(n) +vrtx(v2)(n));
 #else
-        densty = (vlngth(v0)  +vlngth(v1))/sqrt(3.0);
+        densty = 0.5*(vlngth(v0)  +vlngth(v1))/sqrt(3.0);
         rs = 0.0;
         for(n=0;n<ND;++n) {
             xmid(n) = .5*(vrtx(v0)(n) +vrtx(v1)(n));
@@ -282,9 +281,9 @@ INSRT:
 #ifdef DEBUG_ADAPT
         std::ostringstream nstr;
         nstr << adapt_count++ << std::flush;
-        adapt_file = idprefix +"_adapt" +nstr.str();
+        adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
         nstr.str("");
-        output(adapt_file.c_str(),debug_adapt);
+        output(adapt_file.c_str(),grid);
 #endif
         
     }
@@ -379,9 +378,9 @@ void mesh::bdry_rebay(FLT tolsize) {
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;
-            adapt_file = idprefix +"_adapt" +nstr.str();
+            adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
             nstr.str("");
-            output(adapt_file.c_str(),debug_adapt);
+            output(adapt_file.c_str(),grid);
 #endif
         }
         sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
@@ -431,9 +430,9 @@ void mesh::bdry_rebay1() {
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;
-            adapt_file = idprefix +"_adapt" +nstr.str();
+            adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
             nstr.str("");
-            output(adapt_file.c_str(),debug_adapt);
+            output(adapt_file.c_str(),grid);
 #endif
         }
         *gbl->log << "#Slave boundary refinement finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides added" << std::endl;
