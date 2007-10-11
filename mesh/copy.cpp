@@ -2,7 +2,7 @@
 #include <utilities.h>
 #include<assert.h>
 
-void mesh::copy(const mesh& tgt) {
+void tri_mesh::copy(const tri_mesh& tgt) {
     int i,n;
         
     if (!initialized) {
@@ -65,7 +65,7 @@ void mesh::copy(const mesh& tgt) {
     return;  
 }
 
-void mesh::append(const mesh &z) {
+void tri_mesh::append(const tri_mesh &z) {
 	int i,j,k,n,nel,vrt,sind,flip;
     int nvrtxold, nsideold,ntriold;
     int sind1,tind1,v1a,v1b;

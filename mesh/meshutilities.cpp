@@ -1,7 +1,7 @@
 #include "mesh.h"
 #include <utilities.h>
 
-void mesh::coarsen_substructured(const class mesh &zx,int p) {
+void tri_mesh::coarsen_substructured(const class tri_mesh &zx,int p) {
     int i,sind,sign,p2;
 
     copy(zx);
@@ -47,7 +47,7 @@ void mesh::coarsen_substructured(const class mesh &zx,int p) {
     return;
 }
 
-void mesh::symmetrize() {
+void tri_mesh::symmetrize() {
 	int i,j,sind,vct,bnum;
 	double vmin, vmax;
 	
@@ -66,7 +66,7 @@ void mesh::symmetrize() {
     
     output("testing",easymesh);
     	
-	mesh zpart[2];
+	tri_mesh zpart[2];
     zpart[0].allocate(maxvst*4);
 	zpart[0].partition(*this,1);
     
@@ -130,7 +130,7 @@ void mesh::symmetrize() {
     return;
 }
 
-void mesh::cut(Array<double,1> indicator) {
+void tri_mesh::cut(Array<double,1> indicator) {
 	int i,j,sind,vct,bnum;
 	double vmin, vmax;
 	
@@ -150,7 +150,7 @@ void mesh::cut(Array<double,1> indicator) {
    output("testing",easymesh);
     	
    for (int m = 0; m < 2; ++m) {
-      mesh zpart[2];
+      tri_mesh zpart[2];
       zpart[m].allocate(maxvst*4);
       zpart[m].partition(*this,m);
       
@@ -224,7 +224,7 @@ void mesh::cut(Array<double,1> indicator) {
 			
 	
 
-void mesh::shift(TinyVector<FLT,ND>& s) {
+void tri_mesh::shift(TinyVector<FLT,ND>& s) {
     int n;
     
     for(int i=0;i<nvrtx;++i)
@@ -234,7 +234,7 @@ void mesh::shift(TinyVector<FLT,ND>& s) {
     return;
 }
 
-void mesh::scale(TinyVector<FLT,ND>& s) {
+void tri_mesh::scale(TinyVector<FLT,ND>& s) {
     int n;
     for(int i=0;i<nvrtx;++i)
         for(n=0;n<ND;++n)
@@ -243,7 +243,7 @@ void mesh::scale(TinyVector<FLT,ND>& s) {
     return;
 }
 
-int mesh::smooth_cofa(int niter) {
+int tri_mesh::smooth_cofa(int niter) {
     int iter,sind,i,j,n,v0,v1;
         
     for(i=0;i<nvrtx;++i)

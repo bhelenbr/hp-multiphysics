@@ -1,7 +1,7 @@
 #include"mesh.h"
 #include<cmath>
 
-FLT mesh::incircle(int tind, const TinyVector<FLT,ND> &a) const {
+FLT tri_mesh::incircle(int tind, const TinyVector<FLT,ND> &a) const {
     int i;
     TinyMatrix<FLT,3,2> pt;
     TinyVector<FLT,3> l2;
@@ -23,7 +23,7 @@ FLT mesh::incircle(int tind, const TinyVector<FLT,ND> &a) const {
     return(determ);
 }
 
-FLT mesh::insidecircle(int sind, const TinyVector<FLT,ND> &a) const {
+FLT tri_mesh::insidecircle(int sind, const TinyVector<FLT,ND> &a) const {
     int v0,v1;
     TinyVector<FLT,2> ctr;
     FLT dist2;
@@ -37,7 +37,7 @@ FLT mesh::insidecircle(int sind, const TinyVector<FLT,ND> &a) const {
 }
 
 
-FLT mesh::area(int v0, int v1, int v2) const {
+FLT tri_mesh::area(int v0, int v1, int v2) const {
     FLT dx1,dy1,dx2,dy2;
     
     dx1 =  (vrtx(v0)(0)-vrtx(v2)(0));
@@ -48,7 +48,7 @@ FLT mesh::area(int v0, int v1, int v2) const {
     return(dx1*dy2 -dy1*dx2);
 }
 
-FLT mesh::area(int snum, int v2) const {
+FLT tri_mesh::area(int snum, int v2) const {
     FLT dx1,dy1,dx2,dy2;
     int v0, v1;
     
@@ -63,7 +63,7 @@ FLT mesh::area(int snum, int v2) const {
     return(dx1*dy2 -dy1*dx2);
 }
 
-FLT mesh::area(int tind) const {
+FLT tri_mesh::area(int tind) const {
     FLT dx1,dy1,dx2,dy2;
     int v0, v1, v2;
     
@@ -79,7 +79,7 @@ FLT mesh::area(int tind) const {
     return(dx1*dy2 -dy1*dx2);
 }
 
-FLT mesh::intri(int tind, const TinyVector<FLT,2> &x) {
+FLT tri_mesh::intri(int tind, const TinyVector<FLT,2> &x) {
     int v0,v1,v2;
     FLT dx0,dy0,dx1,dy1,dx2,dy2;
 
@@ -102,7 +102,7 @@ FLT mesh::intri(int tind, const TinyVector<FLT,2> &x) {
 }
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
-void mesh::getwgts(TinyVector<FLT,3> &wt) const {
+void tri_mesh::getwgts(TinyVector<FLT,3> &wt) const {
     int i;
     FLT sum;
     
@@ -113,7 +113,7 @@ void mesh::getwgts(TinyVector<FLT,3> &wt) const {
     return;
 }
         
-FLT mesh::minangle(int v0, int v1, int v2) const {
+FLT tri_mesh::minangle(int v0, int v1, int v2) const {
     int i, i1, i2;
     TinyVector<FLT,3> l,dx,dy;
     FLT crossprod;
@@ -141,7 +141,7 @@ FLT mesh::minangle(int v0, int v1, int v2) const {
     
 }
     
-FLT mesh::angle(int v0, int v1, int v2) const {
+FLT tri_mesh::angle(int v0, int v1, int v2) const {
     TinyVector<FLT,3> l;
     FLT dx, dy;
     
@@ -161,7 +161,7 @@ FLT mesh::angle(int v0, int v1, int v2) const {
     
 }
 
-FLT mesh::circumradius(int tind) const {
+FLT tri_mesh::circumradius(int tind) const {
     FLT alpha,beta;
     FLT xmid1,ymid1,xmid2,ymid2,xcen,ycen;
     FLT dx1,dy1,dx2,dy2,area;
@@ -191,7 +191,7 @@ FLT mesh::circumradius(int tind) const {
     return(sqrt(xcen*xcen +ycen*ycen));
 }
 
-void mesh::circumcenter(int tind, TinyVector<FLT,2> &x) const {
+void tri_mesh::circumcenter(int tind, TinyVector<FLT,2> &x) const {
     FLT alpha,beta;
     FLT xmid1,ymid1,xmid2,ymid2;
     FLT dx1,dy1,dx2,dy2,area;
@@ -221,7 +221,7 @@ void mesh::circumcenter(int tind, TinyVector<FLT,2> &x) const {
     return;
 }
 
-FLT mesh::inscribedradius(int tind) const {
+FLT tri_mesh::inscribedradius(int tind) const {
     int v0,v1,v2;
     FLT dx1,dy1,dx2,dy2,area,perim;
     
@@ -242,7 +242,7 @@ FLT mesh::inscribedradius(int tind) const {
 }
 
 
-FLT mesh::aspect(int tind) const {
+FLT tri_mesh::aspect(int tind) const {
     int v0,v1,v2;
     FLT dx1,dy1,dx2,dy2,area,perim;
     

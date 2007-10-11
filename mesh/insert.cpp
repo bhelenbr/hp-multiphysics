@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-int mesh::insert(const TinyVector<FLT,ND> &x) {
+int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
     int n,tind,vnear,err;
     
     for(n=0;n<ND;++n)
@@ -41,7 +41,7 @@ int mesh::insert(const TinyVector<FLT,ND> &x) {
     return(err);
 }
 
-int mesh::insert(int vnum, int tnum) {
+int tri_mesh::insert(int vnum, int tnum) {
     int ntdel, nskeep, nsdel;
     int i,j,tind,tin,tnxt,v0,sstart,dir,rstrt;
     int sind,sind1,snum;
@@ -226,7 +226,7 @@ int mesh::insert(int vnum, int tnum) {
     return(0);
 }
 
-void mesh::bdry_insert(int vnum, int sind, int endpt) {
+void tri_mesh::bdry_insert(int vnum, int sind, int endpt) {
     int ntdel, nsdel, nskeep;
     int sstart;
     int i,j,tin,tind,tnxt,v0,dir;
@@ -454,7 +454,7 @@ void mesh::bdry_insert(int vnum, int sind, int endpt) {
     return;
 }
 
-int mesh::findtri(const TinyVector<FLT,ND> x, int vnear) {
+int tri_mesh::findtri(const TinyVector<FLT,ND> x, int vnear) {
     int i,j,vn,dir,stoptri,tin,tind;
     int ntdel;
     int tclose,nsurround;

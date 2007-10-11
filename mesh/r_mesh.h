@@ -1,5 +1,5 @@
-#ifndef _r_mesh_h_
-#define _r_mesh_h_
+#ifndef _r_tri_mesh_h_
+#define _r_tri_mesh_h_
 
 #include "mesh.h"
 #include "block.h"
@@ -18,11 +18,11 @@
 
 class r_side_bdry;
 
-class r_mesh : public mesh {
+class r_tri_mesh : public tri_mesh {
         protected:            
             FLT r_cfl;
             FLT fadd;
-            mesh::filetype output_type;
+            tri_mesh::filetype output_type;
             
             /* MESH VARIABLES */
             Array<FLT,1> ksprg;
@@ -58,18 +58,18 @@ class r_mesh : public mesh {
             /* POINTER TO THINGS SHARED IN BLOCK CONTAINER */
             /* CAN BE SHARED BETWEEN MGLEVELS BUT NOT DIFFERENT BLOCKS */
             /* NEED TO BE PUBLIC SO THEY CAN BE MANIPULATED BY B.C.'s */
-            struct global : public mesh::global {
+            struct global : public tri_mesh::global {
                 Array<FLT,1> diag;
                 Array<TinyVector<FLT,2>,1> res;
                 Array<TinyVector<FLT,2>,1> res1;
             } *gbl;  
-            ~r_mesh();
+            ~r_tri_mesh();
             
             /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
             void* create_global_structure() {return new global;}
             void init(input_map& input, void *gin);
             void init(const multigrid_interface& in, FLT sizereduce1d);
-            void output(const std::string &outname,block::output_purpose why) {mesh::output(outname,output_type);}
+            void output(const std::string &outname,block::output_purpose why) {tri_mesh::output(outname,output_type);}
             void mg_getfres();
             void mg_getcchng();
             void tadvance();

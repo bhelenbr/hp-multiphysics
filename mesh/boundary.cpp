@@ -122,11 +122,11 @@ void side_bdry::copy(const side_bdry& bin) {
     return;
 }
 
-void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
     /* FOR A LINEAR SIDE */
     int n;
     
-    for (n=0;n<mesh::ND;++n)
+    for (n=0;n<tri_mesh::ND;++n)
         pt(n) = 0.5*((1. -psi)*x.vrtx(x.sd(el(indx)).vrtx(0))(n) +(1.+psi)*x.vrtx(x.sd(el(indx)).vrtx(1))(n));
     
     return;
@@ -199,7 +199,7 @@ void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
 
 
 
-void side_bdry::mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum) {
+void side_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
     int j,k,sind,tind,v0,sidloc;
     FLT psiloc;
         
@@ -714,7 +714,7 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 }
 
 
-void spartition::mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum) {
+void spartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
     int i,j,k,v0;
     
  
@@ -773,7 +773,7 @@ void spartition::mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum) 
     }                    
 }
 
-void curved_analytic_interface::mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+void curved_analytic_interface::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
     int iter,n;
     FLT mag, delt_dist;
         
@@ -781,11 +781,11 @@ void curved_analytic_interface::mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
     iter = 0;
     do {
         mag = 0.0;
-        for(n=0;n<mesh::ND;++n)
+        for(n=0;n<tri_mesh::ND;++n)
             mag += pow(dhgt(n,pt.data()),2);
         mag = sqrt(mag);
         delt_dist = -hgt(pt.data())/mag;
-        for(n=0;n<mesh::ND;++n)
+        for(n=0;n<tri_mesh::ND;++n)
             pt(n) += delt_dist*dhgt(n,pt.data())/mag;
         if (++iter > 100) {
             std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // TEMPORARY NEED TO FIX

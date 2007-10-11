@@ -19,7 +19,7 @@ extern int adapt_count;
 static std::string adapt_file;
 #endif
 
-int mesh::swap(int sind, FLT tol) {
+int tri_mesh::swap(int sind, FLT tol) {
     int j,t1,t2,s1p,s2p,snum1,snum2,tind,sind1,v0,v1,vt1,vt2,dir;
             
     t1 = sd(sind).tri(0);
@@ -110,7 +110,7 @@ int mesh::swap(int sind, FLT tol) {
 }
     
     
-void mesh::swap(int nswp, int *swp, FLT tol) {
+void tri_mesh::swap(int nswp, int *swp, FLT tol) {
     int i,flag;
     
     do {
@@ -122,7 +122,7 @@ void mesh::swap(int nswp, int *swp, FLT tol) {
     return;
 }
 
-void mesh::swap(FLT tol) {
+void tri_mesh::swap(FLT tol) {
     int nswap,i;
     
     /* PERFORM EDGE SWAPPING */

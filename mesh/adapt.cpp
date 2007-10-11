@@ -9,7 +9,7 @@
 
 #include "mesh.h"
 
-void mesh::adapt() {
+void tri_mesh::adapt() {
     int i;
     
     /* CALCULATE TARGET LENGTH */
@@ -58,7 +58,7 @@ void mesh::adapt() {
 }
 
 
-void mesh::setup_for_adapt() {
+void tri_mesh::setup_for_adapt() {
     int i, v0, v1;
 
     /* SET-UP ADAPTION TRACKING STUFF */
@@ -88,7 +88,7 @@ void mesh::setup_for_adapt() {
 }
         
         
-void mesh::cleanup_after_adapt() {
+void tri_mesh::cleanup_after_adapt() {
     int i,j,sind,v0;
     
     if (gbl->adapt_output) {
@@ -189,7 +189,7 @@ void mesh::cleanup_after_adapt() {
 }
 
 
-void mesh::putinlst(int sind) {
+void tri_mesh::putinlst(int sind) {
     int i, temp, top, bot, mid;
         
     /* CREATE ORDERED LIST OF SIDES SMALLEST gbl->fltwk TO LARGEST */
@@ -227,7 +227,7 @@ void mesh::putinlst(int sind) {
     return;
 }
 
-void mesh::tkoutlst(int sind) {
+void tri_mesh::tkoutlst(int sind) {
     int bgn,temp,i;
     
     bgn = vd(sind).info;

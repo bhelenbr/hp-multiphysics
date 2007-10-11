@@ -8,8 +8,8 @@
 // #include <boost/bind.hpp>
 // #include <boost/thread.hpp>
 
-void mesh::connect(multigrid_interface& in) {
-    mesh &tgt = dynamic_cast<mesh&>(in);
+void tri_mesh::connect(multigrid_interface& in) {
+    tri_mesh &tgt = dynamic_cast<tri_mesh&>(in);
     
     /* SET UP MULTIGRID STUFF */
     fine = &in;
@@ -39,7 +39,7 @@ void mesh::connect(multigrid_interface& in) {
         nstr.str("");
         nstr << coarse_level << flush;
         fname = name +nstr.str();
-        output(fname,mesh::grid);
+        output(fname,tri_mesh::grid);
         fname = name +nstr.str() + "_ft_to_cv";
         tgt.testconnect(fname,tgt.ccnnct,this);
         fname = name +nstr.str() + "_cv_to_ft";
@@ -48,7 +48,7 @@ void mesh::connect(multigrid_interface& in) {
     setinfo();
 }
 
-void mesh::mgconnect(mesh &tgt, Array<transfer,1> &cnnct) {   
+void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {   
     int i,bnum,v0;
 
     /* LOOP THROUGH VERTICES AND FIND SURROUNDING TRIANGLE */
@@ -80,7 +80,7 @@ void mesh::mgconnect(mesh &tgt, Array<transfer,1> &cnnct) {
 /*	 THIS ROUTINE DETERMINES THE POSITION OF COARSE VERTICES  */
 /*  TO TEST USING MULTI-GRID CONNECTION */
 /* THE MULTIGRID CONNECTIONS */
- void mesh::testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh) {
+ void tri_mesh::testconnect(const std::string &fname,Array<transfer,1> &cnnct, tri_mesh *cmesh) {
     int i,j,n,tind;
     Array<TinyVector<FLT,2>,1> work;
 

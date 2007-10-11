@@ -12,13 +12,13 @@
 class r_side_bdry {
     protected:
         std::string mytype;
-        r_mesh &x;
+        r_tri_mesh &x;
         side_bdry &base;
 
     public:
-        r_side_bdry(r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
-        r_side_bdry(const r_side_bdry &inbdry, r_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
-        virtual r_side_bdry* create(r_mesh &xin, side_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
+        r_side_bdry(r_tri_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        r_side_bdry(const r_side_bdry &inbdry, r_tri_mesh &xin, side_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        virtual r_side_bdry* create(r_tri_mesh &xin, side_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
         /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
         virtual void output(std::ostream& fout) {
             fout << base.idprefix << "_r_type: " << mytype << std::endl;            
@@ -34,9 +34,9 @@ class r_fixed : public r_side_bdry {
     public:
         int dstart, dstop;
         
-        r_fixed(r_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";} 
-        r_fixed(const r_fixed &inbdry, r_mesh &xin, side_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
-        r_fixed* create(r_mesh &xin, side_bdry &bin) const {return new r_fixed(*this,xin,bin);}
+        r_fixed(r_tri_mesh &xin, side_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";} 
+        r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, side_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
+        r_fixed* create(r_tri_mesh &xin, side_bdry &bin) const {return new r_fixed(*this,xin,bin);}
                    
         void input(input_map& inmap) {
             r_side_bdry::input(inmap);
@@ -69,10 +69,10 @@ class r_fixed4 : public r_fixed {
     public:
         int d2start, d2stop;
 
-        r_fixed4(r_mesh &xin, side_bdry &bin, int dstr, int dstp, int d2str, int d2stp)
+        r_fixed4(r_tri_mesh &xin, side_bdry &bin, int dstr, int dstp, int d2str, int d2stp)
             : r_fixed(xin,bin), d2start(d2str), d2stop(d2stp) {mytype="fixed4";} 
-        r_fixed4(const r_fixed4 &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), d2start(inbdry.d2start), d2stop(inbdry.d2stop) {mytype="fixed4";}
-        r_fixed4* create(r_mesh &xin, side_bdry &bin) const {return new r_fixed4(*this,xin,bin);}
+        r_fixed4(const r_fixed4 &inbdry, r_tri_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), d2start(inbdry.d2start), d2stop(inbdry.d2stop) {mytype="fixed4";}
+        r_fixed4* create(r_tri_mesh &xin, side_bdry &bin) const {return new r_fixed4(*this,xin,bin);}
         
         
         void fixdx2() {
@@ -91,17 +91,17 @@ class r_translating : public r_fixed {
     private:
         FLT dx[2];
     public:
-        r_translating(r_mesh &xin, side_bdry &bin): r_fixed(xin,bin) { 
-            for(int n=0;n<mesh::ND;++n)
+        r_translating(r_tri_mesh &xin, side_bdry &bin): r_fixed(xin,bin) { 
+            for(int n=0;n<tri_mesh::ND;++n)
                 dx[n] = 0.0;
             mytype = "translating";
         }
-        r_translating(const r_translating &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin){ 
-            for(int n=0;n<mesh::ND;++n)
+        r_translating(const r_translating &inbdry, r_tri_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin){ 
+            for(int n=0;n<tri_mesh::ND;++n)
                 dx[n] = inbdry.dx[n];
             mytype = "translating";
         }
-        r_translating* create(r_mesh &xin, side_bdry &bin) const {return new r_translating(*this,xin,bin);}
+        r_translating* create(r_tri_mesh &xin, side_bdry &bin) const {return new r_translating(*this,xin,bin);}
 
         void input(input_map& inmap) {
             r_fixed::input(inmap);
@@ -147,9 +147,9 @@ class r_oscillating : public r_fixed {
     public:
         FLT v0, amp, omega;
         
-        r_oscillating(r_mesh &xin, side_bdry &bin) : r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
-        r_oscillating(const r_oscillating &inbdry, r_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), v0(inbdry.v0), amp(inbdry.amp), omega(inbdry.omega) {mytype="oscillating";}
-        r_oscillating* create(r_mesh &xin, side_bdry &bin) const {return new r_oscillating(*this,xin,bin);}            
+        r_oscillating(r_tri_mesh &xin, side_bdry &bin) : r_fixed(xin,bin), v0(0.0), amp(0.0), omega(0.0) {mytype="oscillating";}
+        r_oscillating(const r_oscillating &inbdry, r_tri_mesh &xin, side_bdry &bin) : r_fixed(inbdry,xin,bin), v0(inbdry.v0), amp(inbdry.amp), omega(inbdry.omega) {mytype="oscillating";}
+        r_oscillating* create(r_tri_mesh &xin, side_bdry &bin) const {return new r_oscillating(*this,xin,bin);}            
         
             
         void input(input_map& inmap) {

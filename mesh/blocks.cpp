@@ -971,7 +971,7 @@ void block::tadvance() {
 //        nstr.str("");
 //        nstr << lvl << flush;
 //        fname = name +nstr.str();
-//        grd[lvl].mesh::output(fname,mesh::grid);
+//        grd[lvl].tri_mesh::output(fname,tri_mesh::grid);
 //        fname = name +nstr.str() + "_ft_to_cv";
 //        grd[lvl-1].testconnect(fname,fv_to_ct(lvl-1),&grd[lvl]);
 //        fname = name +nstr.str() + "_cv_to_ft";

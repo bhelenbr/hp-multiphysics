@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <new>
 
-int mesh::comm_entity_size() {
+int tri_mesh::comm_entity_size() {
     int i,tsize,nvcomm,nscomm;
     
     /*	VERTEX INFO */    
@@ -26,7 +26,7 @@ int mesh::comm_entity_size() {
     return(tsize);
 }
 
-int mesh::comm_entity_list(Array<int,1>& list) {
+int tri_mesh::comm_entity_list(Array<int,1>& list) {
     int i,nvcomm,nscomm,tsize;
     
     /* MAKE 1D PACKED LIST OF ALL INFORMATION ON COMMUNICATION BOUNDARIES */
@@ -86,11 +86,11 @@ int mesh::comm_entity_list(Array<int,1>& list) {
     return(tsize);
 }
 
-boundary* mesh::getvbdry(int num) {return vbdry(num);}
-boundary* mesh::getsbdry(int num) {return sbdry(num);}
+boundary* tri_mesh::getvbdry(int num) {return vbdry(num);}
+boundary* tri_mesh::getsbdry(int num) {return sbdry(num);}
         
         
-void mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
+void tri_mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
     int i;
         
     /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
@@ -107,7 +107,7 @@ void mesh::vmsgload(boundary::groups group, int phase, boundary::comm_type type,
     return;
 }
 
-void mesh::vmsgpass(boundary::groups group, int phase, boundary::comm_type type) {
+void tri_mesh::vmsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
     for(int i=0;i<nsbd;++i) 
         sbdry(i)->comm_exchange(group,phase,type);
@@ -117,7 +117,7 @@ void mesh::vmsgpass(boundary::groups group, int phase, boundary::comm_type type)
     return;
 }
 
-int mesh::vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
+int tri_mesh::vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
     int stop = 1;
     int i;
     
@@ -135,7 +135,7 @@ int mesh::vmsgwait_rcv(boundary::groups group, int phase, boundary::comm_type ty
     return(stop);
 }
 
-int mesh::vmsgrcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
+int tri_mesh::vmsgrcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
     int stop = 1,i;
     
     for(i=0;i<nsbd;++i)
@@ -152,7 +152,7 @@ int mesh::vmsgrcv(boundary::groups group, int phase, boundary::comm_type type, b
 }
 
 
-void mesh::smsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
+void tri_mesh::smsgload(boundary::groups group, int phase, boundary::comm_type type, FLT *base,int bgn, int end, int stride) {
     int i;
         
     /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
@@ -165,7 +165,7 @@ void mesh::smsgload(boundary::groups group, int phase, boundary::comm_type type,
     return;
 }
 
-void mesh::smsgpass(boundary::groups group, int phase, boundary::comm_type type) {
+void tri_mesh::smsgpass(boundary::groups group, int phase, boundary::comm_type type) {
 
     for(int i=0;i<nsbd;++i) 
         sbdry(i)->comm_exchange(group,phase,type);
@@ -173,7 +173,7 @@ void mesh::smsgpass(boundary::groups group, int phase, boundary::comm_type type)
     return;
 }
 
-int mesh::smsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
+int tri_mesh::smsgwait_rcv(boundary::groups group, int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
     int stop = 1;
     int i;
     
@@ -186,7 +186,7 @@ int mesh::smsgwait_rcv(boundary::groups group, int phase, boundary::comm_type ty
     return(stop);
 }
 
-int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
+int tri_mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, boundary::operation op, FLT *base,int bgn, int end, int stride) {
     int stop = 1,i;
     
     for(i=0;i<nsbd;++i)
@@ -198,7 +198,7 @@ int mesh::smsgrcv(boundary::groups group,int phase, boundary::comm_type type, bo
     return(stop);
 }
 
-void mesh::matchboundaries() {
+void tri_mesh::matchboundaries() {
     int last_phase;
     int mp_phase;
         
@@ -242,7 +242,7 @@ void mesh::matchboundaries() {
 extern "C" void METIS_PartMeshNodal(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
 int *epart, int *npart);
 
-void mesh::setpartition(int nparts) {
+void tri_mesh::setpartition(int nparts) {
     int i,n;
     int etype = 1;
     int numflag = 0;
@@ -270,7 +270,7 @@ void mesh::setpartition(int nparts) {
 /* vd(vind).info = new vrtx index or -1 */
 /* THE NEW MESH STORES */
 /* td(tind).info = old tri index */ 
-void mesh::partition(class mesh& xin, int npart) {
+void tri_mesh::partition(class tri_mesh& xin, int npart) {
     int i,j,n,tind,sind,v0,indx;
     Array<int,2> bcntr(xin.nsbd +5,3); 
     int bnum,bel,match;

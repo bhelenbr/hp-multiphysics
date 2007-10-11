@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <float.h>
 
-void mesh::collapse(int sind, int delt) {
+void tri_mesh::collapse(int sind, int delt) {
     int ntsrnd, nssrnd, nperim;
     int i,j,vn,vnear,prev,tind,tind1,sind1,stoptri,dir;
     int v0,v1,pt,sd1,sd2,sd3,t1,t2;
@@ -169,7 +169,7 @@ void mesh::collapse(int sind, int delt) {
 }
 
 /* DELETE UNREFERENCED TRIANGLE */
-void mesh::dlttri(int tind) {
+void tri_mesh::dlttri(int tind) {
     int i,j,v0,t1,sind,flip;
     
     
@@ -223,7 +223,7 @@ void mesh::dlttri(int tind) {
 }
 
 /* DELETE UNREFERENCED SIDE */
-void mesh::dltsd(int sind) {
+void tri_mesh::dltsd(int sind) {
     int j,k,tind;
 
     /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED SIDE */
@@ -266,7 +266,7 @@ void mesh::dltsd(int sind) {
 }
 
 /* DELETE UNREFERENCED VERTEX */
-void mesh::dltvrtx(int v0) {
+void tri_mesh::dltvrtx(int v0) {
     int vn,stoptri,dir;
     int tind, sind, flip;
                 

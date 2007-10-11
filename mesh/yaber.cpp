@@ -21,7 +21,7 @@ int adapt_count;
 static std::string adapt_file;
 #endif
 
-void mesh::yaber(FLT tolsize) {
+void tri_mesh::yaber(FLT tolsize) {
     int i,j,tind,sind,sind1,v0,cnt,endpt,sum;
     FLT x,y,a,asum,dx,dy,l0,l1;
     int ntsrnd, nssrnd, nperim;
@@ -238,7 +238,7 @@ void mesh::yaber(FLT tolsize) {
     return;
 }
 
-void mesh::checkintegrity() {
+void tri_mesh::checkintegrity() {
     int i,j,sind,dir;
     
     for(i=0;i<maxvst;++i) {
@@ -305,7 +305,7 @@ void mesh::checkintegrity() {
     return;
 }
 
-void mesh::bdry_yaber(FLT tolsize) {
+void tri_mesh::bdry_yaber(FLT tolsize) {
     int sind,endpt,v0,v1,count;
     int el, nel, pel, next, sindprev, sindnext, saffect;
 
@@ -414,7 +414,7 @@ void mesh::bdry_yaber(FLT tolsize) {
     return;
 }
 
-void mesh::bdry_yaber1() {
+void tri_mesh::bdry_yaber1() {
     int i,el,endpt,sind,sndsize;
     
     for(int bnum=0;bnum<nsbd;++bnum) {
@@ -447,7 +447,7 @@ void mesh::bdry_yaber1() {
 }
 
 
-void mesh::checkintwk() const {
+void tri_mesh::checkintwk() const {
     int i;
     
     for(i=0;i<gbl->intwk.extent(firstDim)-1;++i)

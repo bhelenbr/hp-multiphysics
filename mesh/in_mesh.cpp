@@ -6,7 +6,7 @@
 #include <input_map.h>
 #include <iostream>
 
-void mesh::init(input_map &input, void *gin) {
+void tri_mesh::init(input_map &input, void *gin) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
@@ -35,7 +35,7 @@ void mesh::init(input_map &input, void *gin) {
         int filetype;
         keyword = gbl->idprefix + "_filetype";
         if (!input.get(keyword,filetype)) {
-            input.getwdefault("filetype",filetype,static_cast<int>(mesh::grid));
+            input.getwdefault("filetype",filetype,static_cast<int>(tri_mesh::grid));
         }
         
         keyword = gbl->idprefix + "_mesh";
@@ -49,15 +49,15 @@ void mesh::init(input_map &input, void *gin) {
             }
         }
         coarse_level = 0;
-        mesh::input(filename.c_str(),static_cast<mesh::filetype>(filetype),grwfac,input);
+        tri_mesh::input(filename.c_str(),static_cast<tri_mesh::filetype>(filetype),grwfac,input);
     }
 }
 
-void mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
+void tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
     int i;
    
      if (!initialized) {
-        const mesh& inmesh = dynamic_cast<const mesh &>(in);
+        const tri_mesh& inmesh = dynamic_cast<const tri_mesh &>(in);
         gbl = inmesh.gbl;
         maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
         allocate(maxvst);
@@ -79,7 +79,7 @@ void mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
     }
 }
 
-void mesh::allocate(int mxsize) {
+void tri_mesh::allocate(int mxsize) {
     
     /* SIDE INFO */
     maxvst = mxsize;
@@ -133,7 +133,7 @@ void mesh::allocate(int mxsize) {
 }
 
 
-void mesh::input(const std::string &filename, mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
+void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
     int i,j,n,sind,count,temp;
     std::string grd_nm, bdry_nm, grd_app;
     TinyVector<int,3> v,s,e;
@@ -898,7 +898,7 @@ next1c:      continue;
     else if (filetype != boundary) initvlngth();
     
     
-    mesh::setinfo();
+    tri_mesh::setinfo();
     checkintegrity();
 
     initialized = 1;
@@ -906,7 +906,7 @@ next1c:      continue;
     return;
 }
 
-mesh::~mesh() {
+tri_mesh::~tri_mesh() {
     for(int i=0;i<nvbd;++i)
         delete vbdry(i);
     for(int i=0;i<nsbd;++i)

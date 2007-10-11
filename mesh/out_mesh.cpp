@@ -13,7 +13,7 @@
 
 using namespace std;
 
-void mesh::output(const std::string &filename, mesh::filetype filetype) const {
+void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) const {
     std::string fnmapp;
     int i,j,n,tind,count;
     ofstream out;
@@ -409,7 +409,7 @@ void mesh::output(const std::string &filename, mesh::filetype filetype) const {
     return;
 }
 
-void mesh::bdry_output(const std::string &filename) const {
+void tri_mesh::bdry_output(const std::string &filename) const {
     std::string fnmapp;
     ofstream out;
     int i;
@@ -421,7 +421,7 @@ void mesh::bdry_output(const std::string &filename) const {
     out.close();
 }
 
-void mesh::setinfo() {
+void tri_mesh::setinfo() {
     int i,j;
     
     /* SET UP VRTX BC INFORMATION FOR OUTPUT */

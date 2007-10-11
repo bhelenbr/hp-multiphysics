@@ -6,7 +6,7 @@
 /* USES VINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-void mesh::createsideinfo(void) {
+void tri_mesh::createsideinfo(void) {
     int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
     
     for(i=0;i<nvrtx;++i)
@@ -70,7 +70,7 @@ NEXTTRISIDE:
     return;
 }
 
-void mesh::createtdstri(void) {
+void tri_mesh::createtdstri(void) {
     int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
     
     for(i=0;i<nvrtx;++i)
@@ -142,7 +142,7 @@ NEXTTRISIDE:
 }
 
 
-void mesh::createvtri(void) {
+void tri_mesh::createvtri(void) {
     int i,tind;
     
     /* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
@@ -154,7 +154,7 @@ void mesh::createvtri(void) {
 }
 
 /* CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
-void mesh::cnt_nbor(void) {
+void tri_mesh::cnt_nbor(void) {
     int i;
     
     for (i=0;i<nvrtx;++i)
@@ -169,7 +169,7 @@ void mesh::cnt_nbor(void) {
 }
 
 /* CREATES TRIANGLE TO TRIANGLE POINTER */
-void mesh::createttri(void) {
+void tri_mesh::createttri(void) {
     int tind,sind,j,flip;
     
     for(tind=0;tind<ntri;++tind) {
@@ -183,7 +183,7 @@ void mesh::createttri(void) {
     return;
 }
 
-void mesh::treeinit() {
+void tri_mesh::treeinit() {
     int i,j,n,sind,v0;
     FLT x1[ND], x2[ND], dx;
     
@@ -215,7 +215,7 @@ void mesh::treeinit() {
     return;
 }
 
-void mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
+void tri_mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
     
     qtree.init(x1,x2);
         
@@ -226,7 +226,7 @@ void mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
 }
 
 /* FIX STRI TTRI TO POINT TO GROUP/SIDE ON BOUNDARY */
-void mesh::bdrylabel() {
+void tri_mesh::bdrylabel() {
     int i,j,k,sind,tind;
     
     for(i=0;i<nsbd;++i) {
@@ -244,7 +244,7 @@ void mesh::bdrylabel() {
     return;
 }
 
-void mesh::initvlngth() {
+void tri_mesh::initvlngth() {
     int i,j,v0,v1;
     FLT l;
     
@@ -283,7 +283,7 @@ void mesh::initvlngth() {
     return;
 }
 
-void mesh::settrim() {
+void tri_mesh::settrim() {
     int i,j,n,bsd,tin,tind,nsrch,ntdel;
     
     /* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */

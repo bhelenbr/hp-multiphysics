@@ -8,7 +8,7 @@
 #include <typeinfo>
 
 
-void mesh::coarsen(FLT factor, const class mesh& inmesh) {
+void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     int i,j,n,sind;
     int v0, v1, odd;
     FLT mindist;
@@ -234,7 +234,7 @@ void mesh::coarsen(FLT factor, const class mesh& inmesh) {
 }
 
 
-void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
+void tri_mesh::coarsen2(FLT factor, const class tri_mesh &inmesh, FLT size_reduce) {
     int i;
   
     if (!initialized) {
@@ -263,7 +263,7 @@ void mesh::coarsen2(FLT factor, const class mesh &inmesh, FLT size_reduce) {
     return;
 }
 
-void mesh::coarsen3() {
+void tri_mesh::coarsen3() {
     int i,j,v0,tind,sind,node,cnt=0;
     
     /* SET-UP ADAPTION TRACKING STUFF */

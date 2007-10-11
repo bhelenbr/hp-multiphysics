@@ -57,12 +57,12 @@ template<class BASE> class comm_bdry : public BASE {
 #endif
                 
     public:
-        comm_bdry(int inid, mesh &xin) : BASE(inid,xin), first(1), maxgroup(1), groupmask(0x3), buffsize(0), nmatch(0) {
+        comm_bdry(int inid, tri_mesh &xin) : BASE(inid,xin), first(1), maxgroup(1), groupmask(0x3), buffsize(0), nmatch(0) {
             maxphase.resize(maxgroup+1);
             phase.resize(maxgroup+1);
             for(int m=0;m<maxmatch;++m) phase(0)(m) = 0;
         }
-        comm_bdry(const comm_bdry<BASE> &inbdry, mesh&xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {    
+        comm_bdry(const comm_bdry<BASE> &inbdry, tri_mesh&xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {    
             maxphase.resize(maxgroup+1);
             phase.resize(maxgroup+1);
             maxphase = inbdry.maxphase;
@@ -81,7 +81,7 @@ template<class BASE> class comm_bdry : public BASE {
             return;
         }
               
-        comm_bdry<BASE>* create(mesh &xin) const {return(new comm_bdry<BASE>(*this,xin));}
+        comm_bdry<BASE>* create(tri_mesh &xin) const {return(new comm_bdry<BASE>(*this,xin));}
         bool is_comm() {return(true);}
         bool& is_frst() {return(first);}
         int& group() {return(groupmask);}
@@ -106,7 +106,7 @@ template<class BASE> class comm_bdry : public BASE {
         
         void alloc(int nels) {
             BASE::alloc(nels);
-            resize_buffers(nels*3);    // should be mesh::ND;
+            resize_buffers(nels*3);    // should be tri_mesh::ND;
         }
 
         void input(input_map& inmap) {
@@ -513,10 +513,10 @@ template<class BASE> class comm_bdry : public BASE {
  */
 class vcomm : public comm_bdry<vrtx_bdry> {
     public:
-        vcomm(int inid, mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {mytype="comm";}
-        vcomm(const vcomm &inbdry, mesh& xin) : comm_bdry<vrtx_bdry>(inbdry,xin) {}
+        vcomm(int inid, tri_mesh& xin) : comm_bdry<vrtx_bdry>(inid,xin) {mytype="comm";}
+        vcomm(const vcomm &inbdry, tri_mesh& xin) : comm_bdry<vrtx_bdry>(inbdry,xin) {}
         
-        vcomm* create(mesh& xin) const {return new vcomm(*this,xin);}
+        vcomm* create(tri_mesh& xin) const {return new vcomm(*this,xin);}
 
         /** Generic routine to load buffers from array */
         void vloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride);
@@ -531,10 +531,10 @@ class vcomm : public comm_bdry<vrtx_bdry> {
 class scomm : public comm_bdry<side_bdry> {
     public:                
         /* CONSTRUCTOR */
-        scomm(int inid, mesh& xin) : comm_bdry<side_bdry>(inid,xin) {mytype="comm";}
-        scomm(const scomm &inbdry, mesh& xin) : comm_bdry<side_bdry>(inbdry,xin) {}
+        scomm(int inid, tri_mesh& xin) : comm_bdry<side_bdry>(inid,xin) {mytype="comm";}
+        scomm(const scomm &inbdry, tri_mesh& xin) : comm_bdry<side_bdry>(inbdry,xin) {}
         
-        scomm* create(mesh& xin) const {return new scomm(*this,xin);}
+        scomm* create(tri_mesh& xin) const {return new scomm(*this,xin);}
         
         /* GENERIC COMMUNICATIONS */
         void vloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride);
@@ -553,11 +553,11 @@ class scomm : public comm_bdry<side_bdry> {
 class spartition : public scomm {
     public:
         /* CONSTRUCTOR */
-        spartition(int inid, mesh& xin) : scomm(inid,xin) {groupmask = 1;mytype="partition";}
-        spartition(const spartition &inbdry, mesh& xin) : scomm(inbdry,xin) {}
+        spartition(int inid, tri_mesh& xin) : scomm(inid,xin) {groupmask = 1;mytype="partition";}
+        spartition(const spartition &inbdry, tri_mesh& xin) : scomm(inbdry,xin) {}
 
-        spartition* create(mesh& xin) const {return new spartition(*this,xin);}
-        void mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum);
+        spartition* create(tri_mesh& xin) const {return new spartition(*this,xin);}
+        void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 };
 
 
@@ -567,10 +567,10 @@ template<class BASE> class prdc_template : public BASE {
         int dir;
     public:        
         /* CONSTRUCTOR */
-        prdc_template(int idin, mesh &xin) : BASE(idin,xin), dir(0) {BASE::mytype="prdc";}
-        prdc_template(const prdc_template<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin), dir(inbdry.dir) {}
+        prdc_template(int idin, tri_mesh &xin) : BASE(idin,xin), dir(0) {BASE::mytype="prdc";}
+        prdc_template(const prdc_template<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), dir(inbdry.dir) {}
         
-        prdc_template<BASE>* create(mesh& xin) const {return(new prdc_template<BASE>(*this,xin));}
+        prdc_template<BASE>* create(tri_mesh& xin) const {return(new prdc_template<BASE>(*this,xin));}
 
         int& setdir() {return(dir);}
         void output(std::ostream& fout) {
@@ -594,18 +594,18 @@ template<class BASE> class prdc_template : public BASE {
         }
         
         /* SEND/RCV VRTX POSITION */
-        void loadpositions() { BASE::vloadbuff(BASE::all,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
-        void rcvpositions(int phase) { BASE::vfinalrcv(BASE::all_phased,phase,BASE::master_slave,boundary::replace,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +mesh::ND-2,mesh::ND); }
+        void loadpositions() { BASE::vloadbuff(BASE::all,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +tri_mesh::ND-2,tri_mesh::ND); }
+        void rcvpositions(int phase) { BASE::vfinalrcv(BASE::all_phased,phase,BASE::master_slave,boundary::replace,&(BASE::x.vrtx(0)(0)),1-dir,1-dir +tri_mesh::ND-2,tri_mesh::ND); }
 };
 
 class curved_analytic_interface {
     protected:
-        virtual FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {return(0.0);}
-        virtual FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {return(1.0);}
+        virtual FLT hgt(TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {return(0.0);}
+        virtual FLT dhgt(int dir, TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {return(1.0);}
 
     public:        
         curved_analytic_interface* create() const {return(new curved_analytic_interface);}
-        void mvpttobdry(TinyVector<FLT,mesh::ND> &pt);
+        void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt);
         virtual void input(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
         virtual ~curved_analytic_interface() {}
@@ -615,10 +615,10 @@ class curved_analytic_interface {
 class symbolic_shape : public curved_analytic_interface {
     protected:
         symbolic_function<2> h, dhdx0, dhdx1;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+        FLT hgt(TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {
             return(h.Eval(pt,time));
         } 
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+        FLT dhgt(int dir, TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {
             if (dir) return(dhdx1.Eval(pt,time));
             return(dhdx0.Eval(pt,time));
         }
@@ -662,9 +662,9 @@ template<class BASE,class GEOM> class analytic_geometry : public BASE {
         GEOM geometry_object;
         
     public: 
-        analytic_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
-        analytic_geometry(const analytic_geometry<BASE,GEOM> &inbdry, mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
-        analytic_geometry* create(mesh& xin) const {return(new analytic_geometry<BASE,GEOM>(*this,xin));}
+        analytic_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+        analytic_geometry(const analytic_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+        analytic_geometry* create(tri_mesh& xin) const {return(new analytic_geometry<BASE,GEOM>(*this,xin));}
 
         void output(std::ostream& fout) {
             BASE::output(fout);
@@ -675,7 +675,7 @@ template<class BASE,class GEOM> class analytic_geometry : public BASE {
             geometry_object.input(inmap,BASE::idprefix,*BASE::x.gbl->log);
         }
         
-        void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+        void mvpttobdry(int nel,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
             /* GET LINEAR APPROXIMATION FIRST */
             BASE::mvpttobdry(nel,psi,pt);
             geometry_object.mvpttobdry(pt);
@@ -686,11 +686,11 @@ template<class BASE,class GEOM> class analytic_geometry : public BASE {
 
 template<class BASE> class ssolution_geometry : public sgeometry_pointer, public BASE {
   public: 
-        ssolution_geometry(int inid, mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
-        ssolution_geometry(const ssolution_geometry<BASE> &inbdry, mesh &xin) : BASE(inbdry,xin) {}
-        ssolution_geometry* create(mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
+        ssolution_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
+        ssolution_geometry(const ssolution_geometry<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin) {}
+        ssolution_geometry* create(tri_mesh& xin) const {return(new ssolution_geometry<BASE>(*this,xin));}
 
-        virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,mesh::ND> &pt) {
+        virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
             if (BASE::x.gbl->tstep < 0) BASE::mvpttobdry(nel,psi,pt);
             else solution_data->mvpttobdry(nel,psi,pt);
             return;
@@ -700,12 +700,12 @@ template<class BASE> class ssolution_geometry : public sgeometry_pointer, public
 
 class circle : public curved_analytic_interface {
     public:
-        FLT center[mesh::ND];
+        FLT center[tri_mesh::ND];
         FLT radius;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt,FLT time = 0.0) {
+        FLT hgt(TinyVector<FLT,tri_mesh::ND> pt,FLT time = 0.0) {
             return(radius*radius -pow(pt[0]-center[0],2) -pow(pt[1]-center[1],2));
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt,FLT time = 0.0) {
+        FLT dhgt(int dir, TinyVector<FLT,tri_mesh::ND> pt,FLT time = 0.0) {
             return(-2.*(pt[dir]-center[dir]));
         }
         
@@ -723,7 +723,7 @@ class circle : public curved_analytic_interface {
             curved_analytic_interface::input(inmap,idprefix,log);
             
             FLT dflt[2] = {0.0, 0.0};
-            inmap.getwdefault(idprefix+"_center",center,mesh::ND,dflt);
+            inmap.getwdefault(idprefix+"_center",center,tri_mesh::ND,dflt);
             inmap.getwdefault(idprefix+"_radius",radius,0.5);
         }
 };  
@@ -731,10 +731,10 @@ class circle : public curved_analytic_interface {
 class ellipse : public curved_analytic_interface {
     public:
         TinyVector<FLT,2> axes;
-        FLT hgt(TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+        FLT hgt(TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {
             return(1 -pow(pt[0]/axes(0),2) -pow(pt[1]/axes(1),2));
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> pt, FLT time = 0.0) {
+        FLT dhgt(int dir, TinyVector<FLT,tri_mesh::ND> pt, FLT time = 0.0) {
               return(-2.*pt[dir]/pow(axes(dir),2));            
         }
         
@@ -764,9 +764,9 @@ class naca : public curved_analytic_interface {
         FLT theta;
         TinyVector<FLT,2> pos;
         
-        FLT hgt(TinyVector<FLT,mesh::ND> x, FLT time = 0.0) {
-            TinyVector<FLT,mesh::ND> pt;
-            for(int n=0;n<mesh::ND;++n)
+        FLT hgt(TinyVector<FLT,tri_mesh::ND> x, FLT time = 0.0) {
+            TinyVector<FLT,tri_mesh::ND> pt;
+            for(int n=0;n<tri_mesh::ND;++n)
                 pt[n] = x[n] -pos(n);
             
             FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
@@ -776,9 +776,9 @@ class naca : public curved_analytic_interface {
             FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];            
             return(coeff[0]*pt[0] -poly*poly/coeff[0]);
         }
-        FLT dhgt(int dir, TinyVector<FLT,mesh::ND> x, FLT time = 0.0) {
-            TinyVector<FLT,mesh::ND> pt;
-            for(int n=0;n<mesh::ND;++n)
+        FLT dhgt(int dir, TinyVector<FLT,tri_mesh::ND> x, FLT time = 0.0) {
+            TinyVector<FLT,tri_mesh::ND> pt;
+            for(int n=0;n<tri_mesh::ND;++n)
                 pt[n] = x[n] -pos(n);
             
             FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
@@ -786,7 +786,7 @@ class naca : public curved_analytic_interface {
             pt[0] = temp;
             pt *= scale;
             
-            TinyVector<FLT,mesh::ND> ddx; 
+            TinyVector<FLT,tri_mesh::ND> ddx; 
             FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];            
             FLT dpolydx = coeff[1] +2*coeff[2]*pt[0] +3*coeff[3]*pow(pt[0],2) +4*coeff[4]*pow(pt[0],3);
             FLT dpolydy = -sign;
@@ -847,7 +847,7 @@ class naca : public curved_analytic_interface {
             
             inmap.getwdefault(idprefix+"_center",linebuf,std::string("0.0 0.0"));
             datastream.str(linebuf);
-            for(int i=0;i<mesh::ND;++i)
+            for(int i=0;i<tri_mesh::ND;++i)
                 datastream >> pos(i);
             datastream.clear();            
         }

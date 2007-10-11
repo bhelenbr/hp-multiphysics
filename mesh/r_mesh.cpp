@@ -8,13 +8,13 @@
 #include <fstream>
 
 
-void r_mesh::init(input_map& input, void *gin) {
+void r_tri_mesh::init(input_map& input, void *gin) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     int ival;
     
-    mesh::init(input,gin);
+    tri_mesh::init(input,gin);
     gbl = static_cast<global *>(gin);
 
     keyword = gbl->idprefix + "_r_fadd";
@@ -29,14 +29,14 @@ void r_mesh::init(input_map& input, void *gin) {
     
     keyword = gbl->idprefix + "_r_output_type";
     if (input.get(keyword,ival)) {
-        output_type = static_cast<mesh::filetype>(ival);
+        output_type = static_cast<tri_mesh::filetype>(ival);
     }
     else {
         if (input.get("r_output_type",ival)) {
-            output_type = static_cast<mesh::filetype>(ival);
+            output_type = static_cast<tri_mesh::filetype>(ival);
         }
         else {
-            output_type = mesh::grid;
+            output_type = tri_mesh::grid;
         }
     }
     
@@ -58,13 +58,13 @@ void r_mesh::init(input_map& input, void *gin) {
     return;
 }
 
-void r_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
+void r_tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     
-    mesh::init(in,sizereduce1d);
-    const r_mesh& inmesh = dynamic_cast<const r_mesh &>(in);
+    tri_mesh::init(in,sizereduce1d);
+    const r_tri_mesh& inmesh = dynamic_cast<const r_tri_mesh &>(in);
     gbl = inmesh.gbl;
     fadd = inmesh.fadd;
     r_cfl = inmesh.r_cfl;
@@ -84,13 +84,13 @@ void r_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
 }
 
 
-r_mesh::~r_mesh() {
+r_tri_mesh::~r_tri_mesh() {
     for(int i=0;i<nsbd;++i)
         delete r_sbdry(i);
 }
 
 
-void r_mesh::rklaplace() {
+void r_tri_mesh::rklaplace() {
     int sind,tind,v0,v1,k;
     FLT dx,dy,l;
     
@@ -121,7 +121,7 @@ void r_mesh::rklaplace() {
 }
 
 #ifdef FOURTH
-void r_mesh::calc_kvol() {
+void r_tri_mesh::calc_kvol() {
     int last_phase, mp_phase;
     
     for(int i=0;i<nvrtx;++i) 
@@ -143,7 +143,7 @@ void r_mesh::calc_kvol() {
 }
 #endif
 
-void r_mesh::rksprg() {
+void r_tri_mesh::rksprg() {
     int sind,v0,v1;
     double dx,dy;
 
@@ -159,10 +159,10 @@ void r_mesh::rksprg() {
     return;
 }
 
-void r_mesh::rkmgrid() {
+void r_tri_mesh::rkmgrid() {
     int i,j,sind,tind,tind0,tind1,v0,v1;    
     
-    r_mesh* fmesh = dynamic_cast<r_mesh *>(fine);
+    r_tri_mesh* fmesh = dynamic_cast<r_tri_mesh *>(fine);
     
     /* Load Diag Locally */
     Array<FLT,1> diag;
@@ -239,10 +239,10 @@ void r_mesh::rkmgrid() {
 }
 
 
-void r_mesh::update() {
+void r_tri_mesh::update() {
     int i,n;
     
-    r_mesh::rsdl();
+    r_tri_mesh::rsdl();
         
     Array<FLT,1> diag;
     diag.reference(gbl->diag);
@@ -254,7 +254,7 @@ void r_mesh::update() {
             vrtx(i)(n) -= diag(i)*res(i)(n);
 }
 
-void r_mesh::zero_source() {
+void r_tri_mesh::zero_source() {
     int i,n;
     
     for(i=0;i<nvrtx;++i) 
@@ -264,7 +264,7 @@ void r_mesh::zero_source() {
     return;
 }
 
-void r_mesh::sumsrc() {
+void r_tri_mesh::sumsrc() {
     int i,n;
     
     Array<TinyVector<FLT,ND>,1> res;
@@ -278,9 +278,9 @@ void r_mesh::sumsrc() {
 }
 
 
-void r_mesh::mg_getfres() {
+void r_tri_mesh::mg_getfres() {
     int i,j,n,tind,v0;
-    r_mesh *fmesh = dynamic_cast<r_mesh *>(fine);
+    r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
     
     Array<TinyVector<FLT,ND>,1> fres(gbl->res);
     Array<transfer,1> fccnnct(fmesh->ccnnct);
@@ -302,7 +302,7 @@ void r_mesh::mg_getfres() {
     
     /* LOOP THROUGH fv_to_ct VERTICES    */
     /* TO CALCULATE VRTX ON fv_to_ct MESH */
-    Array<TinyVector<FLT,mesh::ND>,1> fvrtx(fmesh->vrtx);
+    Array<TinyVector<FLT,tri_mesh::ND>,1> fvrtx(fmesh->vrtx);
     Array<tstruct,1> ftd(fmesh->td);
     for(i=0;i<nvrtx;++i) {
         tind = fcnnct(i).tri;
@@ -323,19 +323,19 @@ void r_mesh::mg_getfres() {
     return;
 }
 
-void r_mesh::mg_getcchng() {
+void r_tri_mesh::mg_getcchng() {
     int i,j,n,ind,tind;
     int last_phase, mp_phase;  
 
-    r_mesh *cmesh = dynamic_cast<r_mesh *>(coarse);
+    r_tri_mesh *cmesh = dynamic_cast<r_tri_mesh *>(coarse);
 
     Array<TinyVector<FLT,ND>,1> res;
     res.reference(gbl->res);
     
     /* DETERMINE CORRECTIONS ON COARSE MESH    */    
     int lcnvrtx = cmesh->nvrtx;
-    Array<TinyVector<FLT,mesh::ND>,1> lcvrtx(cmesh->vrtx);
-    Array<TinyVector<FLT,mesh::ND>,1> lcvrtx_frst(cmesh->vrtx_frst);
+    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx(cmesh->vrtx);
+    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx_frst(cmesh->vrtx_frst);
     for(i=0;i<lcnvrtx;++i)
         for(n=0;n<ND;++n) 
             lcvrtx_frst(i)(n) -= lcvrtx(i)(n);
@@ -380,7 +380,7 @@ void r_mesh::mg_getcchng() {
     return;
 }
 
-FLT r_mesh::maxres() {
+FLT r_tri_mesh::maxres() {
     int i,n;
     FLT mxr[ND];
     FLT sum;
@@ -406,7 +406,7 @@ FLT r_mesh::maxres() {
 }
 
 
-void r_mesh::tadvance() {    
+void r_tri_mesh::tadvance() {    
     if (!coarse_level) {
         rklaplace();
 #ifdef FOURTH
@@ -435,7 +435,7 @@ void r_mesh::tadvance() {
     return;
 }
 
-void r_mesh::moveboundaries() {
+void r_tri_mesh::moveboundaries() {
     
     /* MOVE BOUNDARY POSITIONS */
     for(int i=0;i<nsbd;++i)
@@ -444,7 +444,7 @@ void r_mesh::moveboundaries() {
     return;
 }
 
-void r_mesh::rsdl() {
+void r_tri_mesh::rsdl() {
     int last_phase, mp_phase;
     int i,n,v0,v1;
     FLT dx,dy;
@@ -559,7 +559,7 @@ void r_mesh::rsdl() {
 }
 
 
-void r_mesh::setup_preconditioner() {
+void r_tri_mesh::setup_preconditioner() {
     int last_phase, mp_phase;
     int i,v0,v1,sind;
     Array<FLT,1> diag;

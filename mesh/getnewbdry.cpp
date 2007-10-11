@@ -31,7 +31,7 @@ class vtype {
 
 const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
 
-vrtx_bdry* mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
+vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     ostringstream nstr;
@@ -102,7 +102,7 @@ const char stype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "sy
     "circle", "naca","ellipse"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-side_bdry* mesh::getnewsideobject(int idnum, input_map& bdrydata) {
+side_bdry* tri_mesh::getnewsideobject(int idnum, input_map& bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     ostringstream nstr;

@@ -198,7 +198,7 @@
 		6FC676970ACC239C00643F70 /* liblam.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblam.dylib; path = /usr/local/lib/liblam.dylib; sourceTree = "<absolute>"; };
 		6FC676980ACC239C00643F70 /* liblammpi++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "liblammpi++.dylib"; path = "/usr/local/lib/liblammpi++.dylib"; sourceTree = "<absolute>"; };
 		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
-		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
 		6FEFFC550C60191700352ED3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };

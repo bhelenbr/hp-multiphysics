@@ -12,7 +12,7 @@
 #include<float.h>
 #include<assert.h>
 
-void mesh::triangulate(int nsd) {
+void tri_mesh::triangulate(int nsd) {
     int i,j,n,vcnt,sck,dirck,stest,nv,vtry;
     int sind2;
     int bgn,end;
@@ -255,7 +255,7 @@ vtry_failed:continue;
 
 }
 
-void mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
+void tri_mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
     int i,j,k,end,sind1,tind;
     int minv,maxv,order,sindprev,temp;
         

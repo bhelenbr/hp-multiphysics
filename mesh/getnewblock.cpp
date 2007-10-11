@@ -11,7 +11,7 @@ multigrid_interface* block::getnewlevel(input_map& input) {
     
     switch(type) {
         default: {
-            temp = new r_mesh();
+            temp = new r_tri_mesh();
             break;
         }
     } 

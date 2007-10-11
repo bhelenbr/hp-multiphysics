@@ -32,7 +32,7 @@ class vrtx_bdry;
 /** This is an unstructured triangular mesh class which has adaptation and 
 parallel communication capabilities */
 
-class mesh : public multigrid_interface {
+class tri_mesh : public multigrid_interface {
 
     /***************/
     /* DATA          */
@@ -101,17 +101,17 @@ class mesh : public multigrid_interface {
         /*  INTERFACE */
         /**************/
         /* INITIALIZATION & ALLOCATION */
-        mesh() : nvbd(0), nsbd(0), gbl(0), initialized(0)  {}
+        tri_mesh() : nvbd(0), nsbd(0), gbl(0), initialized(0)  {}
         void* create_global_structure() {return new global;}
         void init(input_map& input, void *gbl_in);
         void init(const multigrid_interface& mgin, FLT sizereduce1d = 1.0);
-        void copy(const mesh& tgt);
+        void copy(const tri_mesh& tgt);
         
         /** Outputs solution in various filetypes */
         enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
         void output(const std::string &filename, filetype ftype = grid) const;
 
-        virtual ~mesh();
+        virtual ~tri_mesh();
         
         /* INPUT/OUTPUT MESH (MAY MODIFY VINFO/SINFO/TINFO) */
         void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
@@ -119,14 +119,14 @@ class mesh : public multigrid_interface {
         virtual void setinfo();  // FOR EASYMESH OUTPUT (NOT USED)
 
         /* MESH MODIFICATION UTILTIES */
-        void coarsen_substructured(const class mesh &tgt,int p);
+        void coarsen_substructured(const class tri_mesh &tgt,int p);
 	    void symmetrize();
         void cut(Array<FLT,1> indicator);
-        void append(const mesh &z);
+        void append(const tri_mesh &z);
         void shift(TinyVector<FLT,ND>& s);
         void scale(TinyVector<FLT,ND>& s);
         int smooth_cofa(int niter);
-        void refineby2(const class mesh& xmesh);
+        void refineby2(const class tri_mesh& xmesh);
         void settrim();
         void initvlngth();
         virtual void length() {}
@@ -136,7 +136,7 @@ class mesh : public multigrid_interface {
 #ifdef METIS
         void setpartition(int nparts); 
 #endif 
-        void partition(class mesh& xmesh, int npart);
+        void partition(class tri_mesh& xmesh, int npart);
         int comm_entity_size();
         int comm_entity_list(Array<int,1>& list);
         class boundary* getvbdry(int num);
@@ -153,8 +153,8 @@ class mesh : public multigrid_interface {
         
         /* UTILITIES FOR MULTIGRID INTERPOLATION BETWEEN MESHES */
         void coarsen(multigrid_interface *fmesh);
-        void coarsen(FLT factor, const class mesh& xmesh);
-        void coarsen2(FLT factor, const class mesh& inmesh, FLT size_reduce = 1.0);
+        void coarsen(FLT factor, const class tri_mesh& xmesh);
+        void coarsen2(FLT factor, const class tri_mesh& inmesh, FLT size_reduce = 1.0);
         void coarsen3();
         
         struct transfer {
@@ -165,8 +165,8 @@ class mesh : public multigrid_interface {
         multigrid_interface *fine, *coarse;
         Array<transfer,1> fcnnct, ccnnct;
         void connect(multigrid_interface& tgt); 
-        void mgconnect(mesh &tgt, Array<transfer,1> &cnnct);      
-        void testconnect(const std::string &fname,Array<transfer,1> &cnnct, mesh *cmesh);
+        void mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct);      
+        void testconnect(const std::string &fname,Array<transfer,1> &cnnct, tri_mesh *cmesh);
         
         
         /* SOME DEGUGGING FUNCTIONS */
@@ -277,7 +277,7 @@ class mesh : public multigrid_interface {
 
 class vgeometry_interface {
     public:
-        virtual void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {}
+        virtual void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {}
         virtual ~vgeometry_interface() {}
 };
 
@@ -288,7 +288,7 @@ class vgeometry_pointer {
 
 class sgeometry_interface {
     public:
-        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt) {}
+        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {}
         virtual ~sgeometry_interface() {}
 };
 
@@ -306,16 +306,16 @@ class sgeometry_pointer {
  */
 class vrtx_bdry : public boundary, public vgeometry_interface {
     public:
-        mesh &x;
+        tri_mesh &x;
         TinyVector<int,2> sbdry;
         int v0;
         
         /* CONSTRUCTOR */
-        vrtx_bdry(int intype, mesh &xin) : boundary(intype), x(xin) {idprefix = x.gbl->idprefix +"_v" +idprefix; mytype="plain";}
-        vrtx_bdry(const vrtx_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
+        vrtx_bdry(int intype, tri_mesh &xin) : boundary(intype), x(xin) {idprefix = x.gbl->idprefix +"_v" +idprefix; mytype="plain";}
+        vrtx_bdry(const vrtx_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; sbdry = inbdry.sbdry;}
 
         /* OTHER USEFUL STUFF */
-        virtual vrtx_bdry* create(mesh &xin) const { return(new vrtx_bdry(*this,xin));}
+        virtual vrtx_bdry* create(tri_mesh &xin) const { return(new vrtx_bdry(*this,xin));}
         virtual void copy(const vrtx_bdry& bin) {
             v0 = bin.v0;
             sbdry = bin.sbdry;
@@ -323,9 +323,9 @@ class vrtx_bdry : public boundary, public vgeometry_interface {
         virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
         virtual void vfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
 
-        virtual void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {}
-        virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
-        virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+        virtual void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {}
+        virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
+        virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
 };
 
 
@@ -337,19 +337,19 @@ class vrtx_bdry : public boundary, public vgeometry_interface {
  */
 class side_bdry : public boundary, public sgeometry_interface {
     public:
-        mesh &x;
+        tri_mesh &x;
         TinyVector<int,2> vbdry;
         int maxel;
         int nel;
         Array<int,1> el;
         
         /* CONSTRUCTOR */
-        side_bdry(int inid, mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
-        side_bdry(const side_bdry &inbdry, mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
+        side_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
+        side_bdry(const side_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
         
         /* BASIC B.C. STUFF */
         void alloc(int n);
-        virtual side_bdry* create(mesh &xin) const {
+        virtual side_bdry* create(tri_mesh &xin) const {
             return(new side_bdry(*this,xin));
         }
         virtual void copy(const side_bdry& bin);
@@ -357,8 +357,8 @@ class side_bdry : public boundary, public sgeometry_interface {
         /* ADDITIONAL STUFF FOR SIDES */
         virtual void swap(int s1, int s2);
         virtual void reorder();
-        virtual void mgconnect(Array<mesh::transfer,1> &cnnct, mesh& tgt, int bnum);
-        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
+        virtual void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
+        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
         virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
         
         /* DEFAULT SENDING FOR SIDE VERTICES */
@@ -366,8 +366,8 @@ class side_bdry : public boundary, public sgeometry_interface {
         virtual void vfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
         virtual void sloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride) {}
         virtual void sfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
-        virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
-        virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,mesh::ND-1,mesh::ND);}
+        virtual void loadpositions() {vloadbuff(all,&(x.vrtx(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
+        virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.vrtx(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
 };
 
 #endif

@@ -10,7 +10,7 @@
 #include <utilities.h>
 #include <assert.h>
 
-void mesh::refineby2(const class mesh& inmesh) {
+void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     int i,j,n,sind,tind,v0,v1,count,vnear,err,initialsidenumber;
     TinyVector<FLT,ND> xpt;
     

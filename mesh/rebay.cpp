@@ -26,7 +26,7 @@ static std::string adapt_file;
     vd(tind).info = back reference from triangle into queue
 */
     
-void mesh::rebay(FLT tolsize) {
+void tri_mesh::rebay(FLT tolsize) {
     int i,j,n,tind,tfind,v0,v1,v2,vnear,nsnew,ntnew,snum,intrcnt,err;
     TinyVector<FLT,ND> xpt,dx,xmid,xdif,rn;
     TinyVector<FLT,3> wt;
@@ -293,10 +293,10 @@ INSRT:
     return;
 }
 
-void mesh::bdry_rebay(FLT tolsize) {
+void tri_mesh::bdry_rebay(FLT tolsize) {
     int sind,v0,count,el,psifxpt;
     FLT psi;
-    TinyVector<FLT,mesh::ND> endpt;
+    TinyVector<FLT,tri_mesh::ND> endpt;
     
     /* REFINE BOUNDARY SIDES */
     for(int bnum=0;bnum<nsbd;++bnum) {
@@ -393,7 +393,7 @@ void mesh::bdry_rebay(FLT tolsize) {
     return;
 }
 
-void mesh::bdry_rebay1() {
+void tri_mesh::bdry_rebay1() {
     int i,sind;
     int el, sndsize;
     int nel_bgn, psifxpt;

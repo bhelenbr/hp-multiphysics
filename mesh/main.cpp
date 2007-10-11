@@ -89,9 +89,9 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    class mesh zx, zy;
-    mesh::filetype in = static_cast<mesh::filetype>(informat);
-    mesh::filetype out = static_cast<mesh::filetype>(outformat);
+    class tri_mesh zx, zy;
+    tri_mesh::filetype in = static_cast<tri_mesh::filetype>(informat);
+    tri_mesh::filetype out = static_cast<tri_mesh::filetype>(outformat);
     
     std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
     ifstream intest;
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
     }
     
     if (Format) {
-        class mesh zx;
+        class tri_mesh zx;
         zx.input(argv[1],in,1.0,bdrymap);
         zx.output(argv[2],out);
         return(0);
@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
         std::cin >> p;
         zx.input(argv[1],in,1.0,bdrymap);
         zx.setpartition(p);
-        Array<mesh,1> zpart(p);
+        Array<tri_mesh,1> zpart(p);
         
         for(int i=0;i<p;++i) {
             nstr << i << std::flush;
