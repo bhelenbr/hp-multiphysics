@@ -1,5 +1,5 @@
-#ifndef _mesh_h_
-#define _mesh_h_
+#ifndef _tri_mesh_h_
+#define _tri_mesh_h_
 
 #include <math.h>
 #include <quadtree.h>

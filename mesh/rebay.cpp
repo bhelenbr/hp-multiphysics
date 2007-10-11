@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#include "mesh.h"
+#include "tri_mesh.h"
 #include <utilities.h>
 #include <assert.h>
 #include <math.h>

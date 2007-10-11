@@ -7,7 +7,7 @@
  *
  */
  
-#include "mesh.h"
+#include "tri_mesh.h"
 
 class r_side_bdry {
     protected:

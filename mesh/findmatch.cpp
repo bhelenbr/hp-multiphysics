@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "tri_mesh.h"
 #include "boundaries.h"
 #include <stdlib.h>
 #include <new>

@@ -1,7 +1,7 @@
 #ifndef _r_tri_mesh_h_
 #define _r_tri_mesh_h_
 
-#include "mesh.h"
+#include "tri_mesh.h"
 #include "block.h"
 #include <map>
 #include <string>

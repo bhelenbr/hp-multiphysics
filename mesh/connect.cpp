@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "tri_mesh.h"
 #include <cfloat>
 #include <iostream>
 #include <stdlib.h>

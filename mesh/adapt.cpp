@@ -7,7 +7,7 @@
  *
  */
 
-#include "mesh.h"
+#include "tri_mesh.h"
 
 void tri_mesh::adapt() {
     int i;

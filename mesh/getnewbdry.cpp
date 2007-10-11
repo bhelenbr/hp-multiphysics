@@ -7,7 +7,7 @@
  *
  */
 
-#include "mesh.h"
+#include "tri_mesh.h"
 #include "boundaries.h"
 
 /** \brief Helper object for vrtx_bdry 

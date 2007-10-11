@@ -1,7 +1,7 @@
 #include "blocks.h"
 #include <string>
 #include <parseargs.h>
-#include "mesh.h"
+#include "tri_mesh.h"
 #include "math.h"
 #include <input_map.h>
 

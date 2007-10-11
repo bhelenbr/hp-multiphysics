@@ -1,6 +1,6 @@
 #include "blocks.h"
 #include "block.h"
-#include "r_mesh.h"
+#include "r_tri_mesh.h"
 
 
 multigrid_interface* block::getnewlevel(input_map& input) {

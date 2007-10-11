@@ -1,4 +1,4 @@
-#include"mesh.h"
+#include"tri_mesh.h"
 #include<cmath>
 
 FLT tri_mesh::incircle(int tind, const TinyVector<FLT,ND> &a) const {

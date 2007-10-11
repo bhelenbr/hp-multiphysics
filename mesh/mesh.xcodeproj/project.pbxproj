@@ -24,7 +24,7 @@
 		6F1616030B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F1D0C090C62C7A600D52333 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
-		6F2262C508673029001017D0 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262C508673029001017D0 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262C60867302A001017D0 /* in_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* in_mesh.cpp */; };
 		6F2262C70867302A001017D0 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
 		6F2262C80867302B001017D0 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
@@ -45,7 +45,7 @@
 		6F2262D908673093001017D0 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262DA08673095001017D0 /* boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* boundary.cpp */; };
 		6F2262DC086730A5001017D0 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
-		6F2262DD086730A6001017D0 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262DD086730A6001017D0 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262DE086730A6001017D0 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
 		6F2262DF086730A7001017D0 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262E0086730AA001017D0 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
@@ -64,10 +64,10 @@
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
 		6F975ADA0892C41800941A1D /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6F975B2B0895BF4400941A1D /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
-		6FADD857086EF32D00350FA2 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
+		6FADD857086EF32D00350FA2 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; };
 		6FADD858086EF32D00350FA2 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
 		6FADD859086EF32D00350FA2 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; };
-		6FADD85A086EF32D00350FA2 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; };
+		6FADD85A086EF32D00350FA2 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; };
 		6FADD85B086EF32D00350FA2 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; };
 		6FADD85D086EF32D00350FA2 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; };
 		6FADD85E086EF33C00350FA2 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; };
@@ -91,10 +91,10 @@
 		6FADD872086EF36A00350FA2 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
 		6FADD873086EF36A00350FA2 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6FADD874086EF36A00350FA2 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
-		6FB91AB70ACCB10300792B04 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91AB70ACCB10300792B04 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91AB80ACCB10300792B04 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91AB90ACCB10300792B04 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6FB91ABA0ACCB10300792B04 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91ABA0ACCB10300792B04 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91ABB0ACCB10300792B04 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91ABD0ACCB10300792B04 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91ABE0ACCB10300792B04 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -121,10 +121,10 @@
 		6FB91AD40ACCB10300792B04 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6FB91AD50ACCB10300792B04 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
 		6FB91AD60ACCB10300792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
-		6FB91AE30ACCB1E100792B04 /* mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* mesh.h */; };
+		6FB91AE30ACCB1E100792B04 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; };
 		6FB91AE40ACCB1E100792B04 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; };
 		6FB91AE50ACCB1E100792B04 /* boundaries.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* boundaries.h */; };
-		6FB91AE60ACCB1E100792B04 /* r_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_mesh.h */; };
+		6FB91AE60ACCB1E100792B04 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; };
 		6FB91AE70ACCB1E100792B04 /* r_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_boundary.h */; };
 		6FB91AE90ACCB1E100792B04 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; };
 		6FB91AEA0ACCB1E100792B04 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; };
@@ -177,9 +177,9 @@
 		07F2E94800974D3D80990B20 /* out_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = out_mesh.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94A00974D3D80990B20 /* r_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = r_mesh.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94B00974D3D80990B20 /* tprims.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tprims.cpp; sourceTree = SOURCE_ROOT; };
-		07F2E94D00974D3D80990B20 /* r_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_mesh.h; sourceTree = SOURCE_ROOT; };
+		07F2E94D00974D3D80990B20 /* r_tri_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_tri_mesh.h; sourceTree = "<group>"; };
 		07F2E94E00974D3D80990B20 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = SOURCE_ROOT; };
-		07F2E95000974D3D80990B20 /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = SOURCE_ROOT; };
+		07F2E95000974D3D80990B20 /* tri_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_mesh.h; sourceTree = "<group>"; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -198,7 +198,7 @@
 		6FC676970ACC239C00643F70 /* liblam.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblam.dylib; path = /usr/local/lib/liblam.dylib; sourceTree = "<absolute>"; };
 		6FC676980ACC239C00643F70 /* liblammpi++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "liblammpi++.dylib"; path = "/usr/local/lib/liblammpi++.dylib"; sourceTree = "<absolute>"; };
 		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
-		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
 		6FEFFC550C60191700352ED3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
 		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };
@@ -310,7 +310,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
-				07F2E95000974D3D80990B20 /* mesh.h */,
+				07F2E95000974D3D80990B20 /* tri_mesh.h */,
 				07F2E94600974D3D80990B20 /* in_mesh.cpp */,
 				F5BE6B500162B73801000001 /* copy.cpp */,
 				07F2E94700974D3D80990B20 /* setup.cpp */,
@@ -332,7 +332,7 @@
 				6FCD4658071240D80003FAD1 /* boundaries.h */,
 				F528820502B1545D012A8EDA /* boundary.cpp */,
 				F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */,
-				07F2E94D00974D3D80990B20 /* r_mesh.h */,
+				07F2E94D00974D3D80990B20 /* r_tri_mesh.h */,
 				07F2E94A00974D3D80990B20 /* r_mesh.cpp */,
 				F51A5D6802B541FB012A8EDA /* r_boundary.h */,
 				6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */,
@@ -378,10 +378,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F2262C508673029001017D0 /* mesh.h in Headers */,
+				6F2262C508673029001017D0 /* tri_mesh.h in Headers */,
 				6F2262D808673092001017D0 /* boundary.h in Headers */,
 				6F2262D908673093001017D0 /* boundaries.h in Headers */,
-				6F2262DD086730A6001017D0 /* r_mesh.h in Headers */,
+				6F2262DD086730A6001017D0 /* r_tri_mesh.h in Headers */,
 				6F2262DF086730A7001017D0 /* r_boundary.h in Headers */,
 				6F2262E2086730AD001017D0 /* block.h in Headers */,
 				6F2262E3086730AE001017D0 /* blocks.h in Headers */,
@@ -392,10 +392,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FB91AB70ACCB10300792B04 /* mesh.h in Headers */,
+				6FB91AB70ACCB10300792B04 /* tri_mesh.h in Headers */,
 				6FB91AB80ACCB10300792B04 /* boundary.h in Headers */,
 				6FB91AB90ACCB10300792B04 /* boundaries.h in Headers */,
-				6FB91ABA0ACCB10300792B04 /* r_mesh.h in Headers */,
+				6FB91ABA0ACCB10300792B04 /* r_tri_mesh.h in Headers */,
 				6FB91ABB0ACCB10300792B04 /* r_boundary.h in Headers */,
 				6FB91ABD0ACCB10300792B04 /* block.h in Headers */,
 				6FB91ABE0ACCB10300792B04 /* blocks.h in Headers */,
@@ -406,10 +406,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FB91AE30ACCB1E100792B04 /* mesh.h in Headers */,
+				6FB91AE30ACCB1E100792B04 /* tri_mesh.h in Headers */,
 				6FB91AE40ACCB1E100792B04 /* boundary.h in Headers */,
 				6FB91AE50ACCB1E100792B04 /* boundaries.h in Headers */,
-				6FB91AE60ACCB1E100792B04 /* r_mesh.h in Headers */,
+				6FB91AE60ACCB1E100792B04 /* r_tri_mesh.h in Headers */,
 				6FB91AE70ACCB1E100792B04 /* r_boundary.h in Headers */,
 				6FB91AE90ACCB1E100792B04 /* block.h in Headers */,
 				6FB91AEA0ACCB1E100792B04 /* blocks.h in Headers */,
@@ -420,10 +420,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FADD857086EF32D00350FA2 /* mesh.h in Headers */,
+				6FADD857086EF32D00350FA2 /* tri_mesh.h in Headers */,
 				6FADD858086EF32D00350FA2 /* boundary.h in Headers */,
 				6FADD859086EF32D00350FA2 /* boundaries.h in Headers */,
-				6FADD85A086EF32D00350FA2 /* r_mesh.h in Headers */,
+				6FADD85A086EF32D00350FA2 /* r_tri_mesh.h in Headers */,
 				6FADD85B086EF32D00350FA2 /* r_boundary.h in Headers */,
 				6FADD85D086EF32D00350FA2 /* block.h in Headers */,
 				6FADD85E086EF33C00350FA2 /* blocks.h in Headers */,

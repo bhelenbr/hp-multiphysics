@@ -7,7 +7,7 @@
  *
  */
 
-#include "mesh.h"
+#include "tri_mesh.h"
 #include <math.h>
 #include <float.h>    
 #include <assert.h>

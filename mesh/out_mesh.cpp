@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
-#include "mesh.h"
+#include "tri_mesh.h"
 #include <bstream.h>
 
 // #define DATATANK
