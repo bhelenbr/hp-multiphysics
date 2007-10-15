@@ -8,7 +8,7 @@
  */
 
 #include "r_tri_mesh.h"
-#include "r_boundary.h"
+#include "r_tri_boundary.h"
 
 class r_stype {
     public:

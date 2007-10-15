@@ -1,4 +1,4 @@
-#include "boundaries.h"
+#include "tri_boundary.h"
 #include <assert.h>
 #include <float.h>
 

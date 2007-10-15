@@ -1,5 +1,5 @@
 /*
- *  r_boundary.h
+ *  r_tri_boundary.h
  *  mesh
  *
  *  Created by Brian Helenbrook on Mon Jun 10 2002.

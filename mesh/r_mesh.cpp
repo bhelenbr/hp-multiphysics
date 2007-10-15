@@ -1,5 +1,5 @@
 #include "r_tri_mesh.h"
-#include "r_boundary.h"
+#include "r_tri_boundary.h"
 #include "block.h"
 #include <utilities.h>
 #include <iostream>

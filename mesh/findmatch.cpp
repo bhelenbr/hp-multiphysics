@@ -1,5 +1,5 @@
 #include "tri_mesh.h"
-#include "boundaries.h"
+#include "tri_boundary.h"
 #include <stdlib.h>
 #include <new>
 
