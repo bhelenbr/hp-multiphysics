@@ -41,19 +41,19 @@ void r_tri_mesh::init(input_map& input, void *gin) {
     }
     
     /* local storage */    
-    ksprg.resize(maxvst);
-    kvol.resize(maxvst);
-    src.resize(maxvst);
+    ksprg.resize(maxpst);
+    kvol.resize(maxpst);
+    src.resize(maxpst);
     isfrst = false;
     
     /* BLOCK SHARED INFORMATION */
-    gbl->diag.resize(maxvst);
-    gbl->res.resize(maxvst);
-    gbl->res1.resize(maxvst);
+    gbl->diag.resize(maxpst);
+    gbl->res.resize(maxpst);
+    gbl->res1.resize(maxpst);
 
-    r_sbdry.resize(nsbd);
-    for(int i=0;i<nsbd;++i)
-        r_sbdry(i) = getnewsideobject(i,input);
+    r_sbdry.resize(nebd);
+    for(int i=0;i<nebd;++i)
+        r_sbdry(i) = getnewedgeobject(i,input);
     
     return;
 }
@@ -70,31 +70,31 @@ void r_tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
     r_cfl = inmesh.r_cfl;
     
     /* local storage */    
-    ksprg.resize(maxvst);
-    kvol.resize(maxvst);
-    src.resize(maxvst);
-    vrtx_frst.resize(maxvst);
+    ksprg.resize(maxpst);
+    kvol.resize(maxpst);
+    src.resize(maxpst);
+    vrtx_frst.resize(maxpst);
     isfrst = false;
 
-    r_sbdry.resize(nsbd);
-    for(int i=0;i<nsbd;++i)
-        r_sbdry(i) = inmesh.r_sbdry(i)->create(*this,*sbdry(i));
+    r_sbdry.resize(nebd);
+    for(int i=0;i<nebd;++i)
+        r_sbdry(i) = inmesh.r_sbdry(i)->create(*this,*ebdry(i));
     
     return;
 }
 
 
 r_tri_mesh::~r_tri_mesh() {
-    for(int i=0;i<nsbd;++i)
+    for(int i=0;i<nebd;++i)
         delete r_sbdry(i);
 }
 
 
 void r_tri_mesh::rklaplace() {
-    int sind,tind,v0,v1,k;
+    int sind,tind,p0,p1,k;
     FLT dx,dy,l;
     
-    for(sind=0;sind<nside;++sind)
+    for(sind=0;sind<nseg;++sind)
         ksprg(sind) = 0.0;
 
     /* COEFFICIENTS FOR LAPLACE EQUATION */
@@ -102,17 +102,17 @@ void r_tri_mesh::rklaplace() {
     /* BUT IS LOGISTICALLY SIMPLE          */            
     for(tind=0;tind<ntri;++tind) {
         for(k=0;k<3;++k) {
-            sind = td(tind).side(k);
-            v0 = sd(sind).vrtx(0);
-            v1 = sd(sind).vrtx(1);
-            dx = vrtx(v1)(0) -vrtx(v0)(0);
-            dy = vrtx(v1)(1) -vrtx(v0)(1);        
+            sind = tri(tind).seg(k);
+            p0 = seg(sind).pnt(0);
+            p1 = seg(sind).pnt(1);
+            dx = pnts(p1)(0) -pnts(p0)(0);
+            dy = pnts(p1)(1) -pnts(p0)(1);        
             l  = (dx*dx +dy*dy)/area(tind);
 
             ksprg(sind) -= l;
-            sind = td(tind).side((k+1)%3);
+            sind = tri(tind).seg((k+1)%3);
             ksprg(sind) += l;
-            sind = td(tind).side((k+2)%3);
+            sind = tri(tind).seg((k+2)%3);
             ksprg(sind) += l;
         }
     }
@@ -124,35 +124,35 @@ void r_tri_mesh::rklaplace() {
 void r_tri_mesh::calc_kvol() {
     int last_phase, mp_phase;
     
-    for(int i=0;i<nvrtx;++i) 
+    for(int i=0;i<npnt;++i) 
         kvol(i) = 0.0;
 
     for(int tind=0;tind<ntri;++tind) 
         for(int i=0;i<3;++i) 
-            kvol(td(tind).vrtx(i)) += area(tind);
+            kvol(tri(tind).pnt(i)) += area(tind);
 
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased,mp_phase,boundary::symmetric,kvol.data(),0,0,1);
-        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        pmsgload(boundary::all_phased,mp_phase,boundary::symmetric,kvol.data(),0,0,1);
+        pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, kvol.data(),0,0,1);
+        last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, kvol.data(),0,0,1);
     }
 
-    for(int i=0;i<nvrtx;++i)
+    for(int i=0;i<npnt;++i)
         kvol(i) = 1./kvol(i);
 }
 #endif
 
 void r_tri_mesh::rksprg() {
-    int sind,v0,v1;
+    int sind,p0,p1;
     double dx,dy;
 
     /* 2D SPRING CONSTANTS FINE MESH*/
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-        dx = vrtx(v1)(0) -vrtx(v0)(0);
-        dy = vrtx(v1)(1) -vrtx(v0)(1);
+    for(sind=0;sind<nseg;++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
+        dx = pnts(p1)(0) -pnts(p0)(0);
+        dy = pnts(p1)(1) -pnts(p0)(1);
         ksprg(sind) = 1.0/(dx*dx +dy*dy);
     }
 
@@ -160,7 +160,7 @@ void r_tri_mesh::rksprg() {
 }
 
 void r_tri_mesh::rkmgrid() {
-    int i,j,sind,tind,tind0,tind1,v0,v1;    
+    int i,j,sind,tind,tind0,tind1,p0,p1;    
     
     r_tri_mesh* fmesh = dynamic_cast<r_tri_mesh *>(fine);
     
@@ -171,64 +171,64 @@ void r_tri_mesh::rkmgrid() {
     res1.reference(gbl->res1);
     
     /* TEMPORARILY USE DIAG TO STORE DIAGONAL SUM */
-    for(i=0;i<fmesh->nvrtx;++i)
+    for(i=0;i<fmesh->npnt;++i)
         diag(i) = 0.0;
 
-    /* FORM KIJ SUM AT VERTICES */
-    for(sind=0;sind<fmesh->nside;++sind) {
-        v0 = fmesh->sd(sind).vrtx(0);
-        v1 = fmesh->sd(sind).vrtx(1);
-        diag(v0) += fmesh->ksprg(sind);
-        diag(v1) += fmesh->ksprg(sind);
+    /* FORM KIJ SUM AT POINTS */
+    for(sind=0;sind<fmesh->nseg;++sind) {
+        p0 = fmesh->seg(sind).pnt(0);
+        p1 = fmesh->seg(sind).pnt(1);
+        diag(p0) += fmesh->ksprg(sind);
+        diag(p1) += fmesh->ksprg(sind);
     }
 
-    for(i=0;i<nside;++i)
+    for(i=0;i<nseg;++i)
         ksprg(i) = 0.0;
 
-    /* LOOP THROUGH FINE VERTICES    */
+    /* LOOP THROUGH FINE POINTS    */
     /* TO CALCULATE KSPRG ON COARSE MESH */    
-    for(i=0;i<fmesh->nvrtx;++i) {
+    for(i=0;i<fmesh->npnt;++i) {
         tind = fmesh->ccnnct(i).tri;
         for(j=0;j<3;++j) {
-            sind = td(tind).side(j);
+            sind = tri(tind).seg(j);
             ksprg(sind) -= fmesh->ccnnct(i).wt(j)*fmesh->ccnnct(i).wt((j+1)%3)*diag(i);
         }
     }
 
     /* LOOP THROUGH FINE SIDES */
-    for(i=0;i<fmesh->nside;++i) {
-        v0 = fmesh->sd(i).vrtx(0);
-        v1 = fmesh->sd(i).vrtx(1);
-        tind0 = fmesh->ccnnct(v0).tri;
-        tind1 = fmesh->ccnnct(v1).tri;
+    for(i=0;i<fmesh->nseg;++i) {
+        p0 = fmesh->seg(i).pnt(0);
+        p1 = fmesh->seg(i).pnt(1);
+        tind0 = fmesh->ccnnct(p0).tri;
+        tind1 = fmesh->ccnnct(p1).tri;
                         
         /* TEMPORARILY STORE WEIGHTS FOR FINE POINTS (0,1) */
         /* FOR EACH COARSE VERTEX */
         for(j=0;j<3;++j)  {
-            res1(td(tind1).vrtx(j))(0) = 0.0;
-            res1(td(tind0).vrtx(j))(1) = 0.0;
+            res1(tri(tind1).pnt(j))(0) = 0.0;
+            res1(tri(tind0).pnt(j))(1) = 0.0;
         }
 
         for(j=0;j<3;++j)  {
-            res1(td(tind0).vrtx(j))(0) = fmesh->ccnnct(v0).wt(j);
-            res1(td(tind1).vrtx(j))(1) = fmesh->ccnnct(v1).wt(j);
+            res1(tri(tind0).pnt(j))(0) = fmesh->ccnnct(p0).wt(j);
+            res1(tri(tind1).pnt(j))(1) = fmesh->ccnnct(p1).wt(j);
         }
         
         /* LOOP THROUGH COARSE TRIANGLE 0 SIDES */
         for(j=0;j<3;++j) {
-            sind = td(tind0).side(j);
+            sind = tri(tind0).seg(j);
             ksprg(sind) += fmesh->ksprg(i)*
-                (res1(sd(sind).vrtx(0))(0)*res1(sd(sind).vrtx(1))(1)
-                +res1(sd(sind).vrtx(1))(0)*res1(sd(sind).vrtx(0))(1));
+                (res1(seg(sind).pnt(0))(0)*res1(seg(sind).pnt(1))(1)
+                +res1(seg(sind).pnt(1))(0)*res1(seg(sind).pnt(0))(1));
         }
 
         if (tind0 != tind1) {
             for(j=0;j<3;++j) {
-                sind = td(tind1).side(j);
-                if (sd(sind).tri(0) +sd(sind).tri(1) != tind0 +tind1) {
+                sind = tri(tind1).seg(j);
+                if (seg(sind).tri(0) +seg(sind).tri(1) != tind0 +tind1) {
                     ksprg(sind) += fmesh->ksprg(i)*
-                        (res1(sd(sind).vrtx(0))(0)*res1(sd(sind).vrtx(1))(1)
-                        +res1(sd(sind).vrtx(1))(0)*res1(sd(sind).vrtx(0))(1));
+                        (res1(seg(sind).pnt(0))(0)*res1(seg(sind).pnt(1))(1)
+                        +res1(seg(sind).pnt(1))(0)*res1(seg(sind).pnt(0))(1));
 
                 }
             }
@@ -249,15 +249,15 @@ void r_tri_mesh::update() {
     Array<TinyVector<FLT,ND>,1> res;
     res.reference(gbl->res);
 
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
-            vrtx(i)(n) -= diag(i)*res(i)(n);
+            pnts(i)(n) -= diag(i)*res(i)(n);
 }
 
 void r_tri_mesh::zero_source() {
     int i,n;
     
-    for(i=0;i<nvrtx;++i) 
+    for(i=0;i<npnt;++i) 
         for(n=0;n<ND;++n) 
             src(i)(n) = 0.0;
                 
@@ -270,7 +270,7 @@ void r_tri_mesh::sumsrc() {
     Array<TinyVector<FLT,ND>,1> res;
     res.reference(gbl->res);
 
-    for(i=0;i<nvrtx;++i) 
+    for(i=0;i<npnt;++i) 
         for(n=0;n<ND;++n)
             src(i)(n) = -1.0*res(i)(n);
     
@@ -279,44 +279,44 @@ void r_tri_mesh::sumsrc() {
 
 
 void r_tri_mesh::mg_getfres() {
-    int i,j,n,tind,v0;
+    int i,j,n,tind,p0;
     r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
     
     Array<TinyVector<FLT,ND>,1> fres(gbl->res);
     Array<transfer,1> fccnnct(fmesh->ccnnct);
-    int fnvrtx = fmesh->nvrtx;
+    int fnvrtx = fmesh->npnt;
         
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
             src(i)(n) = 0.0;
             
-    /* LOOP THROUGH FINE VERTICES TO CALCULATE RESIDUAL  */
+    /* LOOP THROUGH FINE POINTS TO CALCULATE RESIDUAL  */
     for(i=0;i<fnvrtx;++i) {
         tind = fccnnct(i).tri;
         for(j=0;j<3;++j) {
-            v0 = td(tind).vrtx(j);
+            p0 = tri(tind).pnt(j);
             for(n=0;n<ND;++n)
-                src(v0)(n) += fadd*fccnnct(i).wt(j)*fres(i)(n);
+                src(p0)(n) += fadd*fccnnct(i).wt(j)*fres(i)(n);
         }
     }
     
-    /* LOOP THROUGH fv_to_ct VERTICES    */
-    /* TO CALCULATE VRTX ON fv_to_ct MESH */
-    Array<TinyVector<FLT,tri_mesh::ND>,1> fvrtx(fmesh->vrtx);
-    Array<tstruct,1> ftd(fmesh->td);
-    for(i=0;i<nvrtx;++i) {
+    /* LOOP THROUGH fv_to_ct POINTS    */
+    /* TO CALCULATE POINT ON fv_to_ct MESH */
+    Array<TinyVector<FLT,tri_mesh::ND>,1> fpnts(fmesh->pnts);
+    Array<tristruct,1> ftri(fmesh->tri);
+    for(i=0;i<npnt;++i) {
         tind = fcnnct(i).tri;
 
         for(n=0;n<ND;++n)
-            vrtx(i)(n) = 0.0;
+            pnts(i)(n) = 0.0;
             
         for(j=0;j<3;++j) {
             for(n=0;n<ND;++n)
-                vrtx(i)(n) += fcnnct(i).wt(j)*fvrtx(ftd(tind).vrtx(j))(n);
+                pnts(i)(n) += fcnnct(i).wt(j)*fpnts(ftri(tind).pnt(j))(n);
         }
         
         for(n=0;n<ND;++n)
-            vrtx_frst(i)(n) = vrtx(i)(n);
+            vrtx_frst(i)(n) = pnts(i)(n);
     }
     isfrst = true;
     
@@ -333,16 +333,16 @@ void r_tri_mesh::mg_getcchng() {
     res.reference(gbl->res);
     
     /* DETERMINE CORRECTIONS ON COARSE MESH    */    
-    int lcnvrtx = cmesh->nvrtx;
-    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx(cmesh->vrtx);
+    int lcnvrtx = cmesh->npnt;
+    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx(cmesh->pnts);
     Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx_frst(cmesh->vrtx_frst);
     for(i=0;i<lcnvrtx;++i)
         for(n=0;n<ND;++n) 
             lcvrtx_frst(i)(n) -= lcvrtx(i)(n);
 
-    /* LOOP THROUGH FINE VERTICES    */
+    /* LOOP THROUGH FINE POINTS    */
     /* TO DETERMINE CHANGE IN SOLUTION */    
-    for(i=0;i<nvrtx;++i) {
+    for(i=0;i<npnt;++i) {
         
         for(n=0;n<ND;++n)
             res(i)(n) = 0.0;
@@ -350,32 +350,32 @@ void r_tri_mesh::mg_getcchng() {
         tind = ccnnct(i).tri;
         
         for(j=0;j<3;++j) {
-            ind = cmesh->td(tind).vrtx(j);
+            ind = cmesh->tri(tind).pnt(j);
             for(n=0;n<ND;++n) 
                 res(i)(n) -= ccnnct(i).wt(j)*lcvrtx_frst(ind)(n);
         }
     }
     
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        for(i=0;i<nsbd;++i)
-            sbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
+        for(i=0;i<nebd;++i)
+            ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
         
-        for(i=0;i<nsbd;++i) 
-            sbdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
+        for(i=0;i<nebd;++i) 
+            ebdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
 
-        for(i=0;i<nsbd;++i) 
-            sbdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
+        for(i=0;i<nebd;++i) 
+            ebdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
                         
         last_phase = true;
-        for(i=0;i<nsbd;++i) {
-            last_phase &= sbdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
-            sbdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
+        for(i=0;i<nebd;++i) {
+            last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
+            ebdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
         }
     }
 
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n) 
-            vrtx(i)(n) += res(i)(n);
+            pnts(i)(n) += res(i)(n);
    
     return;
 }
@@ -391,7 +391,7 @@ FLT r_tri_mesh::maxres() {
     for(n=0;n<ND;++n)
         mxr[n] = 0.0;
 
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
             mxr[n] = MAX(mxr[n],fabs(res(i)(n)));
             
@@ -438,7 +438,7 @@ void r_tri_mesh::tadvance() {
 void r_tri_mesh::moveboundaries() {
     
     /* MOVE BOUNDARY POSITIONS */
-    for(int i=0;i<nsbd;++i)
+    for(int i=0;i<nebd;++i)
         r_sbdry(i)->tadvance();
     
     return;
@@ -446,7 +446,7 @@ void r_tri_mesh::moveboundaries() {
 
 void r_tri_mesh::rsdl() {
     int last_phase, mp_phase;
-    int i,n,v0,v1;
+    int i,n,p0,p1;
     FLT dx,dy;
     Array<TinyVector<FLT,ND>,1> res;
     res.reference(gbl->res);
@@ -458,81 +458,81 @@ void r_tri_mesh::rsdl() {
     Array<TinyVector<FLT,ND>,1> res1;
     res1.reference(gbl->res1);
     
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
             res1(i)(n) = 0.0;
 
-    for (int sind = 0; sind < nside; ++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
+    for (int sind = 0; sind < nseg; ++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
 
-        dx = ksprg(sind)*(vrtx(v1)(0)-vrtx(v0)(0));
-        dy = ksprg(sind)*(vrtx(v1)(1)-vrtx(v0)(1));
+        dx = ksprg(sind)*(pnts(p1)(0)-pnts(p0)(0));
+        dy = ksprg(sind)*(pnts(p1)(1)-pnts(p0)(1));
 
-        res1(v0)(0) -= dx;
-        res1(v0)(1) -= dy;
+        res1(p0)(0) -= dx;
+        res1(p0)(1) -= dy;
 
-        res1(v1)(0) += dx;
-        res1(v1)(1) += dy;        
+        res1(p1)(0) += dx;
+        res1(p1)(1) += dy;        
     }
     
     /* APPLY DIRICHLET BOUNDARY CONDITIONS */
-    for(i=0;i<nsbd;++i)
+    for(i=0;i<nebd;++i)
         r_sbdry(i)->fixdx2();
 
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
-        vmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
+        pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
+        pmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) gbl->res1.data(),0,1,2);
+        last_phase &= pmsgwait_rcv(boundary::all_phased, mp_phase/3, boundary::symmetric,  boundary::average, (FLT *) gbl->res1.data(),0,1,2);
     }
   
     /* DIVIDE BY VOLUME FOR AN APPROXIMATION TO D^2/DX^2 */
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n) 
             res1(i)(n) *= kvol(i);
     
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
             res(i)(n) = 0.0;
 
-    for (int sind = 0; sind < nside; ++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
+    for (int sind = 0; sind < nseg; ++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
 
-        dx = ksprg(sind)*(res1(v1)(0)-res1(v0)(0));
-        dy = ksprg(sind)*(res1(v1)(1)-res1(v0)(1));
+        dx = ksprg(sind)*(res1(p1)(0)-res1(p0)(0));
+        dy = ksprg(sind)*(res1(p1)(1)-res1(p0)(1));
 
-        res(v0)(0) -= dx;
-        res(v0)(1) -= dy;
+        res(p0)(0) -= dx;
+        res(p0)(1) -= dy;
 
-        res(v1)(0) += dx;
-        res(v1)(1) += dy;        
+        res(p1)(0) += dx;
+        res(p1)(1) += dy;        
     }
 #else   
-    res(Range(0,nvrtx-1)) = 0.0;
+    res(Range(0,npnt-1)) = 0.0;
 
-    int lnside = nside;
+    int lnside = nseg;
     FLT lksprg;
     for(int sind=0;sind<lnside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
 
         lksprg = ksprg(sind);
-        dx = lksprg*(vrtx(v1)(0)-vrtx(v0)(0));
-        dy = lksprg*(vrtx(v1)(1)-vrtx(v0)(1));
+        dx = lksprg*(pnts(p1)(0)-pnts(p0)(0));
+        dy = lksprg*(pnts(p1)(1)-pnts(p0)(1));
 
-        res(v0)(0) -= dx;
-        res(v0)(1) -= dy;
+        res(p0)(0) -= dx;
+        res(p0)(1) -= dy;
 
-        res(v1)(0) += dx;
-        res(v1)(1) += dy;
+        res(p1)(0) += dx;
+        res(p1)(1) += dy;
     }
 #endif
 
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
     if (isfrst) {
-        for(i=0;i<nvrtx;++i) 
+        for(i=0;i<npnt;++i) 
             for(n=0;n<ND;++n)
                 src(i)(n) -= res(i)(n);
 
@@ -540,19 +540,19 @@ void r_tri_mesh::rsdl() {
     }
 
     /* ADD IN MULTIGRID SOURCE OR FMESH SOURCE */
-    for(i=0;i<nvrtx;++i) 
+    for(i=0;i<npnt;++i) 
         for(n=0;n<ND;++n)
             res(i)(n) += src(i)(n);
 
     /* APPLY DIRICHLET BOUNDARY CONDITIONS */
-    for(i=0;i<nsbd;++i)
+    for(i=0;i<nebd;++i)
         r_sbdry(i)->dirichlet();
 
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
-        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);
+        pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl->res.data(),0,1,2);
+        last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, (FLT *) gbl->res.data(),0,1,2);
     }    
 
     return;
@@ -561,7 +561,7 @@ void r_tri_mesh::rsdl() {
 
 void r_tri_mesh::setup_preconditioner() {
     int last_phase, mp_phase;
-    int i,v0,v1,sind;
+    int i,p0,p1,sind;
     Array<FLT,1> diag;
     diag.reference(gbl->diag);
     
@@ -569,63 +569,63 @@ void r_tri_mesh::setup_preconditioner() {
     /**************************************************/
     /* DETERMINE MESH MOVEMENT TIME STEP              */
     /**************************************************/
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         diag(i) = 0.0;
         
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-        diag(v0) += fabs(ksprg(sind));
-        diag(v1) += fabs(ksprg(sind));
+    for(sind=0;sind<nseg;++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
+        diag(p0) += fabs(ksprg(sind));
+        diag(p1) += fabs(ksprg(sind));
     }
 
     
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased, mp_phase, boundary::symmetric,gbl->diag.data(),0,0,1);
-        vmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
+        pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,gbl->diag.data(),0,0,1);
+        pmsgpass(boundary::all_phased, mp_phase, boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased, mp_phase, boundary::symmetric,  boundary::average, gbl->diag.data(),0,0,1);
+        last_phase &= pmsgwait_rcv(boundary::all_phased, mp_phase, boundary::symmetric,  boundary::average, gbl->diag.data(),0,0,1);
     }
         
     Array<TinyVector<FLT,ND>,1> res1;
     res1.reference(gbl->res1);
 
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         res1(i)(0) = diag(i)*kvol(i);
         
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         diag(i) = 0.0;
     
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-        diag(v0) += fabs(ksprg(sind))*(res1(v0)(0) +fabs(ksprg(sind))*kvol(v1));
-        diag(v1) += fabs(ksprg(sind))*(res1(v1)(0) +fabs(ksprg(sind))*kvol(v0));
+    for(sind=0;sind<nseg;++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
+        diag(p0) += fabs(ksprg(sind))*(res1(p0)(0) +fabs(ksprg(sind))*kvol(p1));
+        diag(p1) += fabs(ksprg(sind))*(res1(p1)(0) +fabs(ksprg(sind))*kvol(p0));
     }
 #else
     /**************************************************/
     /* DETERMINE MESH MOVEMENT TIME STEP              */
     /**************************************************/
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         diag(i) = 0.0;
 
     /* FORM TIME STEP FOR MV_UPDATE */
-    for(sind=0;sind<nside;++sind) {
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
-        diag(v0) += fabs(ksprg(sind));
-        diag(v1) += fabs(ksprg(sind));
+    for(sind=0;sind<nseg;++sind) {
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
+        diag(p0) += fabs(ksprg(sind));
+        diag(p1) += fabs(ksprg(sind));
     }
 #endif
 
      for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased,mp_phase, boundary::symmetric,gbl->diag.data(),0,0,1);
-        vmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
+        pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,gbl->diag.data(),0,0,1);
+        pmsgpass(boundary::all_phased,mp_phase, boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, gbl->diag.data(),0,0,1);
+        last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average, gbl->diag.data(),0,0,1);
     }   
 
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         diag(i) = r_cfl/diag(i);
     
     return;

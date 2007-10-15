@@ -33,12 +33,12 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 exit(1);
             }
             
-            out << nvrtx << endl;
-            for(i=0;i<nvrtx;++i) {
+            out << npnt << endl;
+            for(i=0;i<npnt;++i) {
                 out << i << ": ";
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' ';
-                out << vd(i).info << endl;
+                    out << pnts(i)(n) << ' ';
+                out << pnt(i).info << endl;
             }                
             out.close();
 
@@ -49,10 +49,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
-            out << nside << endl;    
-            for(i=0;i<nside;++i) {
-                out << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << ' ';
-                out << sd(i).tri(0) << ' ' << sd(i).tri(1) << ' ' << sd(i).info <<endl;
+            out << nseg << endl;    
+            for(i=0;i<nseg;++i) {
+                out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ';
+                out << seg(i).tri(0) << ' ' << seg(i).tri(1) << ' ' << seg(i).info <<endl;
             }
             out.close();
     
@@ -64,10 +64,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             }
             out << ntri << endl;
             for(i=0;i<ntri;++i) {
-                out << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2);
-                out << ' ' << td(i).tri(0) << ' ' << td(i).tri(1) << ' ' << td(i).tri(2);
-                out << ' ' << td(i).side(0) << ' ' << td(i).side(1) << ' ' << td(i).side(2);
-                out << " 0.0 0.0 " << td(i).info << endl;
+                out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
+                out << ' ' << tri(i).tri(0) << ' ' << tri(i).tri(1) << ' ' << tri(i).tri(2);
+                out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
+                out << " 0.0 0.0 " << tri(i).info << endl;
             }    
             out.close();
             break;
@@ -80,18 +80,18 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 exit(1);
             }
 
-            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << endl;
+            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << endl;
             
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' ';
+                    out << pnts(i)(n) << ' ';
                 out << endl;
             }
 
             out << "\n#CONNECTION DATA#\n";
             
             for(i=0;i<ntri;++i)
-                out << td(i).vrtx(0)+1 << ' ' << td(i).vrtx(1)+1 << ' ' << td(i).vrtx(2)+1 << endl;
+                out << tri(i).pnt(0)+1 << ' ' << tri(i).pnt(1)+1 << ' ' << tri(i).pnt(2)+1 << endl;
                 
             out.close();
             break;
@@ -104,11 +104,11 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 exit(1);
             }
 
-            out << "YIN " << nvrtx << endl;
+            out << "YIN " << npnt << endl;
 
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<ND;++n)
-                    out << "         " << vrtx(i)(n);
+                    out << "         " << pnts(i)(n);
                 if (ND == 2) out << "         " << 0.0;
                 out << endl;
             }
@@ -118,7 +118,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
             for(i=0;i<ntri;++i) {
                 out << "1 Default" << endl;
-                out << 3 << ' ' << td(i).vrtx(0)+1 << ' ' << td(i).vrtx(1)+1 << ' ' << td(i).vrtx(2)+1 << endl;
+                out << 3 << ' ' << tri(i).pnt(0)+1 << ' ' << tri(i).pnt(1)+1 << ' ' << tri(i).pnt(2)+1 << endl;
             }
                 out.close();
             break; 
@@ -132,8 +132,8 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             }
 
             count = ntri;
-            for(i=0;i<nsbd;++i)
-                count += sbdry(i)->nel;
+            for(i=0;i<nebd;++i)
+                count += ebdry(i)->nel;
     
             out << "** FIDAP NEUTRAL FILE\n";
             out << filename << "\n";
@@ -141,7 +141,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             out << "29 Nov 1999     13:23:58\n";
             out << "    NO. OF NODES    NO. ELEMENTS NO. ELT GROUPS             NDFCD             NDFVL\n";
             
-            out << setw(15) << nvrtx << setw(15) << count << setw(15) << nsbd+1 << setw(15) << ND << setw(15) << ND << endl;
+            out << setw(15) << npnt << setw(15) << count << setw(15) << nebd+1 << setw(15) << ND << setw(15) << ND << endl;
             out << "    STEADY/TRANS      TURB. FLAG FREE SURF FLAG     COMPR. FLAG    RESULTS ONLY\n";
             out << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << setw(12) << 0 << endl;
             out << "TEMPERATURE/SPECIES FLAGS\n";
@@ -150,10 +150,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             out << "            1            1            0\n";
             out << "NODAL COORDINATES\n";
             
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 out << setw(10) << i+1;
                 for(n=0;n<ND;++n)
-                    out << setw(20) << vrtx(i)(n);
+                    out << setw(20) << pnts(i)(n);
                 out << '\n';
             }
                 
@@ -169,26 +169,26 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             
             for(tind=0;tind<ntri;++tind) {
                 out << setw(8) << tind+1;
-                out << setw(8) << td(tind).vrtx(0)+1;
-                out << setw(8) << td(tind).vrtx(1)+1;
-                out << setw(8) << td(tind).vrtx(2)+1;
+                out << setw(8) << tri(tind).pnt(0)+1;
+                out << setw(8) << tri(tind).pnt(1)+1;
+                out << setw(8) << tri(tind).pnt(2)+1;
                 out << endl;
             }
           
             count = ntri+1;
           
-            for(i=0;i<nsbd;++i) {
+            for(i=0;i<nebd;++i) {
                 out << "GROUP:" << setw(9) << i+2;
-                out << " ELEMENTS:" << setw(10) << sbdry(i)->nel;
+                out << " ELEMENTS:" << setw(10) << ebdry(i)->nel;
                 out << " NODES:" << setw(13) << 2;
                 out << " GEOMETRY:" << setw(5) << 0;
-                out << " ID:" << setw(4) << sbdry(i)->idnum << endl;
+                out << " ID:" << setw(4) << ebdry(i)->idnum << endl;
 
                 out << "ENTITY NAME:    surface.1\n";
-                for(j=0;j<sbdry(i)->nel;++j) {
+                for(j=0;j<ebdry(i)->nel;++j) {
                     out << setw(8) << count++;
-                    out << setw(8) << sd(sbdry(i)->el(j)).vrtx(0)+1;
-                    out << setw(8) << sd(sbdry(i)->el(j)).vrtx(1)+1 << endl;
+                    out << setw(8) << seg(ebdry(i)->el(j)).pnt(0)+1;
+                    out << setw(8) << seg(ebdry(i)->el(j)).pnt(1)+1 << endl;
                 }
             }
             out.close();
@@ -202,11 +202,11 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
-            out << nvrtx << endl;
-            for(i=0;i<nvrtx;++i) {
+            out << npnt << endl;
+            for(i=0;i<npnt;++i) {
                 out << i << ":";
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' '; 
+                    out << pnts(i)(n) << ' '; 
                 out << "\n";
             }
                 
@@ -222,40 +222,40 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             }
             
             /* HEADER LINES */
-            out << "nvrtx: " << nvrtx;
-            out << " nside: " << nside;
+            out << "npnt: " << npnt;
+            out << " nseg: " << nseg;
             out << " ntri: " << ntri << endl;
 
-            /* VRTX INFO */                                
-            for(i=0;i<nvrtx;++i) {
+            /* POINT INFO */                                
+            for(i=0;i<npnt;++i) {
                 out << i << ": ";
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' ';
+                    out << pnts(i)(n) << ' ';
                 out << "\n";
             }
                           
             /* SIDE INFO */
-            for(i=0;i<nside;++i)
-                out << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << endl;
+            for(i=0;i<nseg;++i)
+                out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << endl;
 
             /* THEN TRI INFO */
             for(i=0;i<ntri;++i)
-                out << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2) << endl;
+                out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << endl;
 
             /* SIDE BOUNDARY INFO HEADER */
-            out << "nsbd: " << nsbd << endl;
-            for(i=0;i<nsbd;++i) {
-                out << "idnum: " << sbdry(i)->idnum << endl;
-            	out << "number: " << sbdry(i)->nel << endl;
-                for(int j=0;j<sbdry(i)->nel;++j)
-                    out << j << ": " << sbdry(i)->el(j) << std::endl;
+            out << "nebd: " << nebd << endl;
+            for(i=0;i<nebd;++i) {
+                out << "idnum: " << ebdry(i)->idnum << endl;
+            	out << "number: " << ebdry(i)->nel << endl;
+                for(int j=0;j<ebdry(i)->nel;++j)
+                    out << j << ": " << ebdry(i)->el(j) << std::endl;
             }
 
             /* VERTEX BOUNDARY INFO HEADER */
             out << "nvbd: " << nvbd << endl;
             for(i=0;i<nvbd;++i) {
                 out << "idnum: " << vbdry(i)->idnum << endl;
-                out << "point: " << vbdry(i)->v0 << endl;
+                out << "point: " << vbdry(i)->p0 << endl;
             }
             
             out.close();
@@ -271,40 +271,40 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             }
             
             /* HEADER LINES */
-            bout << "nvrtx: " << nvrtx;
-            bout << " nside: " << nside;
+            bout << "npnt: " << npnt;
+            bout << " nseg: " << nseg;
             bout << " ntri: " << ntri << endl;
 
-            /* VRTX INFO */                                
-            for(i=0;i<nvrtx;++i) {
+            /* POINT INFO */                                
+            for(i=0;i<npnt;++i) {
                 bout << i << ": ";
                 for(n=0;n<ND;++n)
-                    bout << vrtx(i)(n) << ' ';
+                    bout << pnts(i)(n) << ' ';
                 bout << "\n";
             }
                           
             /* SIDE INFO */
-            for(i=0;i<nside;++i)
-                bout << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << endl;
+            for(i=0;i<nseg;++i)
+                bout << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << endl;
 
             /* THEN TRI INFO */
             for(i=0;i<ntri;++i)
-                bout << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2) << endl;
+                bout << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << endl;
 
             /* SIDE BOUNDARY INFO HEADER */
-            bout << "nsbd: " << nsbd << endl;
-            for(i=0;i<nsbd;++i) {
-                bout << "idnum: " << sbdry(i)->idnum << endl;
-            	bout << "number: " << sbdry(i)->nel << endl;
-                for(int j=0;j<sbdry(i)->nel;++j)
-                    bout << j << ": " << sbdry(i)->el(j) << std::endl;
+            bout << "nebd: " << nebd << endl;
+            for(i=0;i<nebd;++i) {
+                bout << "idnum: " << ebdry(i)->idnum << endl;
+            	bout << "number: " << ebdry(i)->nel << endl;
+                for(int j=0;j<ebdry(i)->nel;++j)
+                    bout << j << ": " << ebdry(i)->el(j) << std::endl;
             }
 
             /* VERTEX BOUNDARY INFO HEADER */
             bout << "nvbd: " << nvbd << endl;
             for(i=0;i<nvbd;++i) {
                 bout << "idnum: " << vbdry(i)->idnum << endl;
-                bout << "point: " << vbdry(i)->v0 << endl;
+                bout << "point: " << vbdry(i)->p0 << endl;
             }
             
             bout.close();
@@ -314,15 +314,15 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
         case (datatank): {
 #ifdef DATATANK
             DTMutableIntArray dt_tvrtx(3,ntri);
-            DTMutableDoubleArray dt_vrtx(2,nvrtx);
+            DTMutableDoubleArray dt_vrtx(2,npnt);
 
             for (int tind=0;tind<ntri;++tind)
                 for (int j=0;j<3;++j)
-                    dt_tvrtx(j,tind) = td(tind).vrtx(j);
+                    dt_tvrtx(j,tind) = tri(tind).pnt(j);
 
-            for (int vind=0;vind<nvrtx;++vind)
+            for (int pind=0;pind<npnt;++pind)
                 for (int j=0;j<2;++j)
-                    dt_vrtx(j,vind) = vrtx(vind)(j);
+                    dt_vrtx(j,pind) = pnts(pind)(j);
                     
             DTTriangularGrid2D dt_grid(dt_tvrtx,dt_vrtx);
             
@@ -338,15 +338,15 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
         }
             
         case(vlength): {
-            fnmapp = filename +".vlngth";
+            fnmapp = filename +".lngth";
             out.open(fnmapp.c_str());
             if (!out) {
                 *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
 
-            for(i=0;i<nvrtx;++i)
-                out << vlngth(i) << endl;
+            for(i=0;i<npnt;++i)
+                out << lngth(i) << endl;
                 
             break;
         }
@@ -360,12 +360,12 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 exit(1);
             }
             
-            out << nvrtx << endl;
-            for(i=0;i<nvrtx;++i) {
+            out << npnt << endl;
+            for(i=0;i<npnt;++i) {
                 out << i << ": ";
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' ';
-                out << (td(i).info&VDLTE != 0 ? -1 : 0) +(td(i).info&VTOUC != 0 ? 1 : 0) << endl;
+                    out << pnts(i)(n) << ' ';
+                out << (tri(i).info&PDLTE != 0 ? -1 : 0) +(tri(i).info&PTOUC != 0 ? 1 : 0) << endl;
             }                
             out.close();
 
@@ -376,10 +376,10 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
                 *gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
                 exit(1);
             }
-            out << nside << endl;    
-            for(i=0;i<nside;++i) {
-                out << i << ": " << sd(i).vrtx(0) << ' ' << sd(i).vrtx(1) << ' ';
-                out << sd(i).tri(0) << ' ' << sd(i).tri(1) << ' ' << (td(i).info&SDLTE ? -1 : (td(i).info&STOUC ? 2 : 0)) << endl;
+            out << nseg << endl;    
+            for(i=0;i<nseg;++i) {
+                out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ';
+                out << seg(i).tri(0) << ' ' << seg(i).tri(1) << ' ' << (tri(i).info&SDLTE ? -1 : (tri(i).info&STOUC ? 2 : 0)) << endl;
             }
             out.close();
     
@@ -391,16 +391,23 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             }
             out << ntri << endl;
             for(i=0;i<ntri;++i) {
-                out << i << ": " << td(i).vrtx(0) << ' ' << td(i).vrtx(1) << ' ' << td(i).vrtx(2);
-                out << ' ' << td(i).tri(0) << ' ' << td(i).tri(1) << ' ' << td(i).tri(2);
-                out << ' ' << td(i).side(0) << ' ' << td(i).side(1) << ' ' << td(i).side(2);
-                out << " 0.0 0.0 " << (td(i).info&TDLTE != 0 ? -1 : 0) +(td(i).info&TTOUC != 0 ? 1 : 0) << endl;
+                out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
+                out << ' ' << tri(i).tri(0) << ' ' << tri(i).tri(1) << ' ' << tri(i).tri(2);
+                out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
+                out << " 0.0 0.0 " << (tri(i).info&TDLTE != 0 ? -1 : 0) +(tri(i).info&TTOUC != 0 ? 1 : 0) << endl;
             }    
             out.close();
 
             break;
-
-
+        case boundary: {
+            fnmapp = filename +"_bdry.inpt";
+            out.open(fnmapp.c_str());
+            for(i=0;i<nvbd;++i) vbdry(i)->output(out);
+            for(i=0;i<nebd;++i) ebdry(i)->output(out);
+            out.close();
+            break;
+        }
+        
         default:
             *gbl->log << "That filetype is not supported yet" << endl;
             break;
@@ -409,39 +416,27 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
     return;
 }
 
-void tri_mesh::bdry_output(const std::string &filename) const {
-    std::string fnmapp;
-    ofstream out;
-    int i;
-    
-    fnmapp = filename +"_bdry.inpt";
-    out.open(fnmapp.c_str());
-    for(i=0;i<nvbd;++i) vbdry(i)->output(out);
-    for(i=0;i<nsbd;++i) sbdry(i)->output(out);
-    out.close();
-}
-
 void tri_mesh::setinfo() {
     int i,j;
     
-    /* SET UP VRTX BC INFORMATION FOR OUTPUT */
-    for(i=0;i<nvrtx;++i)
-        vd(i).info = 0;
+    /* SET UP POINT BC INFORMATION FOR OUTPUT */
+    for(i=0;i<npnt;++i)
+        pnt(i).info = 0;
     
     for(i=0;i<nvbd;++i)
-        vd(vbdry(i)->v0).info = vbdry(i)->idnum;
+        pnt(vbdry(i)->p0).info = vbdry(i)->idnum;
 
     /* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
-    for(i=0;i<nside;++i)
-        sd(i).info = 0;
+    for(i=0;i<nseg;++i)
+        seg(i).info = 0;
     
-    for(i=0;i<nsbd;++i)
-        for(j=0;j<sbdry(i)->nel;++j)
-            sd(sbdry(i)->el(j)).info = sbdry(i)->idnum;
+    for(i=0;i<nebd;++i)
+        for(j=0;j<ebdry(i)->nel;++j)
+            seg(ebdry(i)->el(j)).info = ebdry(i)->idnum;
 
     /* SET UP TRI INFO FOR EASYMESH OUTPUT */            
     for(i=0;i<ntri;++i)
-        td(i).info = 0;
+        tri(i).info = 0;
             
     return;
 }

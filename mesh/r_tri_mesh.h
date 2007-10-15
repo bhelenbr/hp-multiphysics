@@ -31,7 +31,7 @@ class r_tri_mesh : public tri_mesh {
             Array<TinyVector<FLT,ND>,1> vrtx_frst;
             
             Array<r_side_bdry *,1> r_sbdry;
-            r_side_bdry* getnewsideobject(int bnum, input_map& bdrydata);
+            r_side_bdry* getnewedgeobject(int bnum, input_map& bdrydata);
             
              /* SETUP SPRING CONSTANTS */
             /* LAPLACE CONSTANTS */

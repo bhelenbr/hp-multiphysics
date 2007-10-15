@@ -15,10 +15,10 @@ void tri_mesh::adapt() {
     /* CALCULATE TARGET LENGTH */
     length();
     for(bool last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-        vmsgload(boundary::all_phased,mp_phase,boundary::symmetric,vlngth.data(),0,0,1);
-        vmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+        pmsgload(boundary::all_phased,mp_phase,boundary::symmetric,lngth.data(),0,0,1);
+        pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
         last_phase = true;
-        last_phase &= vmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,vlngth.data(),0,0,1);
+        last_phase &= pmsgwait_rcv(boundary::all_phased,mp_phase, boundary::symmetric, boundary::average,lngth.data(),0,0,1);
     }    
 
     /* SET FLAGS ETC... */
@@ -31,8 +31,8 @@ void tri_mesh::adapt() {
     bdry_yaber(gbl->tolerance);
     
     /* TRANSFER MESSAGES */
-    for(i=0;i<nsbd;++i) 
-        sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+    for(i=0;i<nebd;++i) 
+        ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
     
     /* COARSEN MATCHING BOUNDARIES */
     bdry_yaber1();
@@ -44,8 +44,8 @@ void tri_mesh::adapt() {
     bdry_rebay(gbl->tolerance);
             
     /* TRANSFER MESSAGES */
-    for(i=0;i<nsbd;++i) 
-        sbdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+    for(i=0;i<nebd;++i) 
+        ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
             
     /* REFINE MATCHING EDGES */
     bdry_rebay1();
@@ -59,37 +59,37 @@ void tri_mesh::adapt() {
 
 
 void tri_mesh::setup_for_adapt() {
-    int i, v0, v1;
+    int i, p0, p1;
 
     /* SET-UP ADAPTION TRACKING STUFF */
     /* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
     /* For sides 0 = untouced, 1 = touched, 2 = deleted */
     /* For triangles 0 = untouched, 1 = touched, 2 = deleted, 3 = searched */
-    for(i=0;i<maxvst;++i)
-        td(i).info = 0;
+    for(i=0;i<maxpst;++i)
+        tri(i).info = 0;
         
     /* Back reference into list of entities needing refinement */
-    for(i=0;i<maxvst;++i)
-        vd(i).info = -1;
+    for(i=0;i<maxpst;++i)
+        pnt(i).info = -1;
         
     /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
     /* THESE SHOULD NOT BE DELETED */
-    for(i=0;i<nsbd;++i) {
-        v0 = sd(sbdry(i)->el(0)).vrtx(0);
-        v1 = sd(sbdry(i)->el(sbdry(i)->nel-1)).vrtx(1);
-        td(v0).info |=  VSPEC;
-        td(v1).info |=  VSPEC;
+    for(i=0;i<nebd;++i) {
+        p0 = seg(ebdry(i)->el(0)).pnt(0);
+        p1 = seg(ebdry(i)->el(ebdry(i)->nel-1)).pnt(1);
+        tri(p0).info |=  PSPEC;
+        tri(p1).info |=  PSPEC;
     }
     
     for(i=0;i<nvbd;++i)
-        td(vbdry(i)->v0).info |= VSPEC;
+        tri(vbdry(i)->p0).info |= PSPEC;
         
     return;
 }
         
         
 void tri_mesh::cleanup_after_adapt() {
-    int i,j,sind,v0;
+    int i,j,sind,p0;
     
     if (gbl->adapt_output) {
         std::string adapt_file;
@@ -101,84 +101,84 @@ void tri_mesh::cleanup_after_adapt() {
     }
     
     /* DELETE SIDES FROM BOUNDARY CONDITIONS */
-    for(i=0;i<nsbd;++i) {
-        for(j=sbdry(i)->nel-1;j>=0;--j) {
-            if (td(sbdry(i)->el(j)).info&SDLTE) 
-                sbdry(i)->el(j) = sbdry(i)->el(--sbdry(i)->nel);
+    for(i=0;i<nebd;++i) {
+        for(j=ebdry(i)->nel-1;j>=0;--j) {
+            if (tri(ebdry(i)->el(j)).info&SDLTE) 
+                ebdry(i)->el(j) = ebdry(i)->el(--ebdry(i)->nel);
         }
-        sbdry(i)->reorder();
+        ebdry(i)->reorder();
     }
     bdrylabel();
 
     
     /* UPDATE BOUNDARY DATA */
-    for (i=0;i<nsbd;++i) {
+    for (i=0;i<nebd;++i) {
         /* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
         /* & LAST VERTEX SHOULD NEVER BE CHANGED */
-        sind = sbdry(i)->el(0);
-        v0 = sd(sind).vrtx(0);
-        if (td(v0).info&VTOUC) {
-            updatevdata_bdry(i,0,0);
-            td(v0).info &= ~VTOUC;
+        sind = ebdry(i)->el(0);
+        p0 = seg(sind).pnt(0);
+        if (tri(p0).info&PTOUC) {
+            updatepdata_bdry(i,0,0);
+            tri(p0).info &= ~PTOUC;
         }
-        else movevdata_bdry(i,0,0);
+        else movepdata_bdry(i,0,0);
         
-        for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(1);
-            if (td(v0).info&VTOUC) {
-                updatevdata_bdry(i,j,1);
-                td(v0).info &= ~VTOUC;
+        for(j=0;j<ebdry(i)->nel;++j) {
+            sind = ebdry(i)->el(j);
+            p0 = seg(sind).pnt(1);
+            if (tri(p0).info&PTOUC) {
+                updatepdata_bdry(i,j,1);
+                tri(p0).info &= ~PTOUC;
             }
-            else movevdata_bdry(i,j,1);
-            if (td(sind).info&STOUC) {
+            else movepdata_bdry(i,j,1);
+            if (tri(sind).info&STOUC) {
                 updatesdata_bdry(i,j);
-                td(sind).info &= ~STOUC;
+                tri(sind).info &= ~STOUC;
             }
             else movesdata_bdry(i,j);
         }        
     }
     
-    /* DELETE LEFTOVER VERTICES */
-    /* VINFO > NVRTX STORES VRTX MOVEMENT HISTORY */            
-    for(i=0;i<nvrtx;++i) {
-        if (td(i).info&VDLTE) dltvrtx(i);
-        else if (td(i).info&VTOUC) {
-            vd(i).info = -2;
-            updatevdata(i);
+    /* DELETE LEFTOVER POINTS */
+    /* VINFO > NPOINT STORES POINT MOVEMENT HISTORY */            
+    for(i=0;i<npnt;++i) {
+        if (tri(i).info&PDLTE) dltpnt(i);
+        else if (tri(i).info&PTOUC) {
+            pnt(i).info = -2;
+            updatepdata(i);
         }
     }
     
     /* FIX BOUNDARY CONDITION POINTERS */
     for(i=0;i<nvbd;++i)
-        if (vd(vbdry(i)->v0).info > -1) 
-            vbdry(i)->v0 = vd(vbdry(i)->v0).info;  
+        if (pnt(vbdry(i)->p0).info > -1) 
+            vbdry(i)->p0 = pnt(vbdry(i)->p0).info;  
                                 
     /* CLEAN UP SIDES */
     /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
     /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
-    for(i=0;i<nside;++i) {
-        sd(i).info = -1;
-        if (td(i).info&SDLTE) dltsd(i);
-        else if (td(i).info&STOUC) {
-            sd(i).info = -2;
+    for(i=0;i<nseg;++i) {
+        seg(i).info = -1;
+        if (tri(i).info&SDLTE) dltseg(i);
+        else if (tri(i).info&STOUC) {
+            seg(i).info = -2;
             updatesdata(i);
         }
     }
             
     /* FIX BOUNDARY CONDITION POINTERS */
-    for(i=0;i<nsbd;++i)
-        for(j=0;j<sbdry(i)->nel;++j) 
-            if (sbdry(i)->el(j) >= nside) 
-                sbdry(i)->el(j) = sd(sbdry(i)->el(j)).info; 
+    for(i=0;i<nebd;++i)
+        for(j=0;j<ebdry(i)->nel;++j) 
+            if (ebdry(i)->el(j) >= nseg) 
+                ebdry(i)->el(j) = seg(ebdry(i)->el(j)).info; 
         
     /* CLEAN UP DELETED TRIS */
     /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */
     /* TINFO > NTRI STORES TRI MOVEMENT HISTORY */
     for(i=0;i<ntri;++i) {
-        if (td(i).info&TDLTE) dlttri(i);
-        else if (td(i).info&TTOUC) {
-            td(i).info = -2;
+        if (tri(i).info&TDLTE) dlttri(i);
+        else if (tri(i).info&TTOUC) {
+            tri(i).info = -2;
             updatetdata(i);
         }
     }
@@ -194,35 +194,35 @@ void tri_mesh::putinlst(int sind) {
         
     /* CREATE ORDERED LIST OF SIDES SMALLEST gbl->fltwk TO LARGEST */
     bot = 0;
-    if (nlst > 0) {
+    if (gbl->nlst > 0) {
         top = 0;
-        bot = nlst-1;
-        if (gbl->fltwk(sind) < gbl->fltwk(sd(top).info)) {
+        bot = gbl->nlst-1;
+        if (gbl->fltwk(sind) < gbl->fltwk(seg(top).info)) {
             bot = 0;
         }
-        else if (gbl->fltwk(sind) > gbl->fltwk(sd(bot).info)) {
-            bot = nlst;
+        else if (gbl->fltwk(sind) > gbl->fltwk(seg(bot).info)) {
+            bot = gbl->nlst;
         }
         else {
             while(top < bot-1) {
                 mid = top + (bot -top)/2;
-                if (gbl->fltwk(sind) > gbl->fltwk(sd(mid).info))
+                if (gbl->fltwk(sind) > gbl->fltwk(seg(mid).info))
                     top = mid;
                 else
                     bot = mid;
             }
         }
-        for(i=nlst-1;i>=bot;--i) {
-            temp = sd(i).info;
-            sd(i+1).info = temp;
-            vd(temp).info = i+1;
+        for(i=gbl->nlst-1;i>=bot;--i) {
+            temp = seg(i).info;
+            seg(i+1).info = temp;
+            pnt(temp).info = i+1;
         }
     }
-    sd(bot).info= sind;
-    vd(sind).info = bot;
-    ++nlst;
+    seg(bot).info= sind;
+    pnt(sind).info = bot;
+    ++gbl->nlst;
 
-    assert(nlst < maxvst -1);
+    assert(gbl->nlst < maxpst -1);
     
     return;
 }
@@ -230,15 +230,15 @@ void tri_mesh::putinlst(int sind) {
 void tri_mesh::tkoutlst(int sind) {
     int bgn,temp,i;
     
-    bgn = vd(sind).info;
-    for(i=bgn+1;i<nlst;++i) {
-        temp = sd(i).info;
-        sd(i-1).info = temp;
-        vd(temp).info = i-1;
+    bgn = pnt(sind).info;
+    for(i=bgn+1;i<gbl->nlst;++i) {
+        temp = seg(i).info;
+        seg(i-1).info = temp;
+        pnt(temp).info = i-1;
     }
-    vd(sind).info = -1;
-    --nlst;
-    sd(nlst).info = -1;
+    pnt(sind).info = -1;
+    --gbl->nlst;
+    seg(gbl->nlst).info = -1;
     
     return;
 }

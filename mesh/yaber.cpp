@@ -22,11 +22,11 @@ static std::string adapt_file;
 #endif
 
 void tri_mesh::yaber(FLT tolsize) {
-    int i,j,tind,sind,sind1,v0,cnt,endpt,sum;
+    int i,j,tind,sind,sind1,p0,cnt,endpt,sum;
     FLT x,y,a,asum,dx,dy,l0,l1;
     int ntsrnd, nssrnd, nperim;
-    int vn,vnear,prev,tind1,stoptri,dir;
-    int v1;
+    int vn,pnear,prev,tind1,stoptri,dir;
+    int p1;
     int snum;
     FLT sratio;
     TinyVector<int,3> badside;
@@ -37,49 +37,49 @@ void tri_mesh::yaber(FLT tolsize) {
     tolsize *= 6./sqrt(3.);
     
     /* SET UP gbl->fltwk */
-    nlst = 0;
+    gbl->nlst = 0;
     for(i=0;i<ntri;++i) {
-        if (td(i).info&TDLTE) continue;
-        minvl = vlngth(td(i).vrtx(0));
-        minvl = MIN(minvl,vlngth(td(i).vrtx(1)));
-        minvl = MIN(minvl,vlngth(td(i).vrtx(2)));
+        if (tri(i).info&TDLTE) continue;
+        minvl = lngth(tri(i).pnt(0));
+        minvl = MIN(minvl,lngth(tri(i).pnt(1)));
+        minvl = MIN(minvl,lngth(tri(i).pnt(2)));
         gbl->fltwk(i) = minvl/inscribedradius(i);
         if (gbl->fltwk(i) > tolsize) putinlst(i);
     }
     
     /* MARK BOUNDARY VERTEX POINTS */
     /* THESE SHOULD NOT BE DELETED */
-    for(i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(0);
-            td(v0).info |= VSPEC;
+    for(i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            sind = ebdry(i)->el(j);
+            p0 = seg(sind).pnt(0);
+            tri(p0).info |= PSPEC;
         }        
     }
     
     cnt = 0;
     /* BEGIN COARSENING ALGORITHM */
-    while (nlst > 0) {
-        for(i=nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
+    while (gbl->nlst > 0) {
+        for(i=gbl->nlst-1;i>=0;--i) {  // START WITH LARGEST TGT TO ACTUAL RATIO
             for(j=0;j<3;++j) {
-                tind = td(sd(i).info).tri(j);
-                if (tind < 0 || vd(tind).info == -1)  goto TFOUND;
+                tind = tri(seg(i).info).tri(j);
+                if (tind < 0 || pnt(tind).info == -1)  goto TFOUND;
             }
         }
         
         TFOUND:
-        tind = sd(i).info;
+        tind = seg(i).info;
         tkoutlst(tind);
         
         /* FIND SIDE ON TRIANGLE WITH LARGEST TARGET TO LENGTH RATIO */
         minvl = 0.0;
         for(j=0;j<3;++j) {
-            sind = td(tind).side(j);
-            if (sd(sind).tri(1) < 0) {
+            sind = tri(tind).seg(j);
+            if (seg(sind).tri(1) < 0) {
                 badside(j) = false;
                 continue;
             }
-            sratio = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+            sratio = MIN(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)))/distance(seg(sind).pnt(0),seg(sind).pnt(1));
             if (sratio > tolsize*sqrt(3.)/6.) {
                 badside(j) = true;
             }
@@ -96,28 +96,28 @@ void tri_mesh::yaber(FLT tolsize) {
         sind = sind1;
 
         /* REMOVE TRIANGLES THAT WILL BE DELETED */
-        tind = sd(sind).tri(0);
-        if (vd(tind).info > -1) tkoutlst(tind);
-        tind = sd(sind).tri(1);
-        if (vd(tind).info > -1) tkoutlst(tind);
+        tind = seg(sind).tri(0);
+        if (pnt(tind).info > -1) tkoutlst(tind);
+        tind = seg(sind).tri(1);
+        if (pnt(tind).info > -1) tkoutlst(tind);
 
         /* DON'T DELETE BOUNDARY POINT */
-        sum = (td(sd(sind).vrtx(0)).info&VSPEC) +(td(sd(sind).vrtx(1)).info&VSPEC);
+        sum = (tri(seg(sind).pnt(0)).info&PSPEC) +(tri(seg(sind).pnt(1)).info&PSPEC);
         if (sum > 0) {
-            if (sum > VSPEC) {
-                *gbl->log << "Trying to Delete edge with two endpoints on boundary" << vrtx(sd(sind).vrtx(0)) << std::endl;
+            if (sum > PSPEC) {
+                *gbl->log << "Trying to Delete edge with two endpoints on boundary" << pnts(seg(sind).pnt(0)) << std::endl;
                 continue;
             }
-            if (td(sd(sind).vrtx(0)).info&VSPEC) endpt = 1;
+            if (tri(seg(sind).pnt(0)).info&PSPEC) endpt = 1;
             else endpt = 0;
         }
         else {
             /* TRY TO FIND DIRECTION OF ACCEPTED TRIS AND DELETE AWAY FROM THAT DIRECTION */
-//            if (vd(td(tind).tri((snum+1)%3)).info == -1  && vd(td(tind).tri((snum+2)%3)).info > -1) {
-//                endpt = (1-td(tind).sign(snum))/2;
+//            if (pnt(tri(tind).tri((snum+1)%3)).info == -1  && pnt(tri(tind).tri((snum+2)%3)).info > -1) {
+//                endpt = (1-tri(tind).sgn(snum))/2;
 //            }
-//            else if (vd(td(tind).tri((snum+1)%3)).info > -1  && vd(td(tind).tri((snum+2)%3)).info == -1) {
-//                endpt = (1+td(tind).sign(snum))/2;
+//            else if (pnt(tri(tind).tri((snum+1)%3)).info > -1  && pnt(tri(tind).tri((snum+2)%3)).info == -1) {
+//                endpt = (1+tri(tind).sgn(snum))/2;
 //            }
 //            else {
             {
@@ -128,9 +128,9 @@ void tri_mesh::yaber(FLT tolsize) {
                 y = 0.0;
                 asum = 0.0;
                 for(endpt=0;endpt<2;++endpt) {
-                    vnear = sd(sind).vrtx(endpt);
-                    tind = vd(vnear).tri;
-                    if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
+                    pnear = seg(sind).pnt(endpt);
+                    tind = pnt(pnear).tri;
+                    if (tind != seg(sind).tri(0) && tind != seg(sind).tri(1))
                         prev = 0;
                     else 
                         prev = 1;
@@ -141,22 +141,22 @@ void tri_mesh::yaber(FLT tolsize) {
                     nperim = 0;
                     do {
                         for(vn=0;vn<3;++vn) 
-                            if (td(tind).vrtx(vn) == vnear) break;
+                            if (tri(tind).pnt(vn) == pnear) break;
                                     
-                        tind1 = td(tind).tri((vn +dir)%3);
+                        tind1 = tri(tind).tri((vn +dir)%3);
                         if (tind1 < 0) {
                             if (dir > 1) break;
                             /* REVERSE DIRECTION AND GO BACK TO START */
                             ++dir;
-                            tind1 = vd(vnear).tri;
+                            tind1 = pnt(pnear).tri;
                             prev = 1;
                             stoptri = -1;
                         }
                         
-                        if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
+                        if (tind1 != seg(sind).tri(0) && tind1 != seg(sind).tri(1)) {
                             gbl->i2wk_lst1(ntsrnd++) = tind1;
                             if (!prev) {
-                                gbl->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                                gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
                             }
                             prev = 0;
                         }
@@ -168,13 +168,13 @@ void tri_mesh::yaber(FLT tolsize) {
 
                     } while(tind != stoptri); 
                     
-                    tind = sd(sind).tri(endpt);
+                    tind = seg(sind).tri(endpt);
                     if (tind > -1) {
                         a = area(tind);
                         asum += a;
                         for(vn=0;vn<3;++vn) {
-                            x += a*vrtx(td(tind).vrtx(vn))(0);
-                            y += a*vrtx(td(tind).vrtx(vn))(1);
+                            x += a*pnts(tri(tind).pnt(vn))(0);
+                            y += a*pnts(tri(tind).pnt(vn))(1);
                         }
                     }                
                     for(j=0;j<ntsrnd;++j) {
@@ -182,8 +182,8 @@ void tri_mesh::yaber(FLT tolsize) {
                         a = area(tind);
                         asum += a;
                         for(vn=0;vn<3;++vn) {
-                            x += a*vrtx(td(tind).vrtx(vn))(0);
-                            y += a*vrtx(td(tind).vrtx(vn))(1);
+                            x += a*pnts(tri(tind).pnt(vn))(0);
+                            y += a*pnts(tri(tind).pnt(vn))(1);
                         }
                     }
                 }
@@ -191,13 +191,13 @@ void tri_mesh::yaber(FLT tolsize) {
                 asum = 1./(3.*asum);
                 x = x*asum;
                 y = y*asum;
-                v0 = sd(sind).vrtx(0);
-                v1 = sd(sind).vrtx(1);
-                dx = vrtx(v0)(0) -x;
-                dy = vrtx(v0)(1) -y;
+                p0 = seg(sind).pnt(0);
+                p1 = seg(sind).pnt(1);
+                dx = pnts(p0)(0) -x;
+                dy = pnts(p0)(1) -y;
                 l0 = dx*dx +dy*dy;    
-                dx = vrtx(v1)(0) -x;
-                dy = vrtx(v1)(1) -y;
+                dx = pnts(p1)(0) -x;
+                dy = pnts(p1)(1) -y;
                 l1 = dx*dx +dy*dy;
                 
                 endpt = (l0 > l1 ? 0 : 1);
@@ -216,10 +216,10 @@ void tri_mesh::yaber(FLT tolsize) {
         /* RECLASSIFY AFFECTED TRIANGLES */
         for(i=0;i<gbl->i2wk_lst1(-1);++i) {
             tind = gbl->i2wk_lst1(i);
-            if (vd(tind).info > -1) tkoutlst(tind);
-            minvl = vlngth(td(tind).vrtx(0));
-            minvl = MIN(minvl,vlngth(td(tind).vrtx(1)));
-            minvl = MIN(minvl,vlngth(td(tind).vrtx(2)));
+            if (pnt(tind).info > -1) tkoutlst(tind);
+            minvl = lngth(tri(tind).pnt(0));
+            minvl = MIN(minvl,lngth(tri(tind).pnt(1)));
+            minvl = MIN(minvl,lngth(tri(tind).pnt(2)));
             gbl->fltwk(tind) = minvl/inscribedradius(tind);
             if (gbl->fltwk(tind) > tolsize) putinlst(tind);
         }
@@ -241,7 +241,7 @@ void tri_mesh::yaber(FLT tolsize) {
 void tri_mesh::checkintegrity() {
     int i,j,sind,dir;
     
-    for(i=0;i<maxvst;++i) {
+    for(i=0;i<maxpst;++i) {
         if (gbl->intwk(i) > -1) {
             *gbl->log << "gbl->intwk check failed" << std::endl;
             exit(1);
@@ -250,51 +250,51 @@ void tri_mesh::checkintegrity() {
     
     
     for(i=0;i<ntri;++i) {
-        if (td(i).info < 0) continue;
+        if (tri(i).info < 0) continue;
         
         if (area(i) < 0.0) *gbl->log << "negative area" << i << std::endl;
         
         for(j=0;j<3;++j) {
-            sind = td(i).side(j);
-            dir = -(td(i).sign(j) -1)/2;
+            sind = tri(i).seg(j);
+            dir = -(tri(i).sgn(j) -1)/2;
             
-            if (sd(sind).info == -3) {
-                *gbl->log << "references deleted side" <<  i << sind << std::endl;
-                for(i=0;i<nside;++i)
-                    sd(i).info += 2;
+            if (seg(sind).info == -3) {
+                *gbl->log << "references deleted segment" <<  i << sind << std::endl;
+                for(i=0;i<nseg;++i)
+                    seg(i).info += 2;
                 output("error");
                 exit(1);
             }
 
-            if (sd(sind).vrtx(dir) != td(i).vrtx((j+1)%3) && sd(sind).vrtx(1-dir) != td(i).vrtx((j+2)%3)) {
-                *gbl->log << "failed vrtx check tind" << i << "sind" << sind << std::endl;
-                for(i=0;i<nside;++i)
-                    sd(i).info += 2;
+            if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
+                *gbl->log << "failed pnt check tind" << i << "sind" << sind << std::endl;
+                for(i=0;i<nseg;++i)
+                    seg(i).info += 2;
                 output("error"); 
                 exit(1);
             }     
             
-            if (sd(sind).tri(dir) != i) {
-                *gbl->log << "failed side check tind" << i << "sind" << sind << std::endl;
-                for(i=0;i<nside;++i)
-                    sd(i).info += 2;
+            if (seg(sind).tri(dir) != i) {
+                *gbl->log << "failed segment check tind" << i << "sind" << sind << std::endl;
+                for(i=0;i<nseg;++i)
+                    seg(i).info += 2;
                 output("error"); 
                 exit(1);
             }
             
-            if (td(i).tri(j) != sd(sind).tri(1-dir)) {
+            if (tri(i).tri(j) != seg(sind).tri(1-dir)) {
                 *gbl->log << "failed ttri check tind" << i << "sind" << sind << std::endl;
-                for(i=0;i<nside;++i)
-                    sd(i).info += 2;
+                for(i=0;i<nseg;++i)
+                    seg(i).info += 2;
                 output("error"); 
                 exit(1);
             }
             
-            if (td(i).tri(j) > 0) {
-                if(td(td(i).tri(j)).info < 0) {
+            if (tri(i).tri(j) > 0) {
+                if(tri(tri(i).tri(j)).info < 0) {
                     *gbl->log << "references deleted tri" << std::endl;
-                    for(i=0;i<nside;++i)
-                        sd(i).info += 2;
+                    for(i=0;i<nseg;++i)
+                        seg(i).info += 2;
                     output("error"); 
                     exit(1);
                 }
@@ -306,67 +306,67 @@ void tri_mesh::checkintegrity() {
 }
 
 void tri_mesh::bdry_yaber(FLT tolsize) {
-    int sind,endpt,v0,v1,count;
+    int sind,endpt,p0,p1,count;
     int el, nel, pel, next, sindprev, sindnext, saffect;
 
     /* COARSEN FIRST BOUNDARIES */
-    for(int bnum=0;bnum<nsbd;++bnum) {
+    for(int bnum=0;bnum<nebd;++bnum) {
         count = 0;
 
-        if (!sbdry(bnum)->is_frst()) {
-            sbdry(bnum)->sndtype() = boundary::int_msg;
-            sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
+        if (!ebdry(bnum)->is_frst()) {
+            ebdry(bnum)->sndtype() = boundary::int_msg;
+            ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
             continue;
         }
         
-        nlst = 0;
-        for(int indx=0;indx<sbdry(bnum)->nel;++indx) {
-            sind = sbdry(bnum)->el(indx);
-            if (td(sind).info&SDLTE) continue;
-            gbl->fltwk(sind) = MIN(vlngth(sd(sind).vrtx(0)),vlngth(sd(sind).vrtx(1)))/distance(sd(sind).vrtx(0),sd(sind).vrtx(1));
+        gbl->nlst = 0;
+        for(int indx=0;indx<ebdry(bnum)->nel;++indx) {
+            sind = ebdry(bnum)->el(indx);
+            if (tri(sind).info&SDLTE) continue;
+            gbl->fltwk(sind) = MIN(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)))/distance(seg(sind).pnt(0),seg(sind).pnt(1));
             if (gbl->fltwk(sind) > tolsize) {
                 putinlst(sind);
             }
         }
         
         /* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
-        sbdry(bnum)->sndsize() = 1;
-        while (nlst > 0) {
+        ebdry(bnum)->sndsize() = 1;
+        while (gbl->nlst > 0) {
             // START WITH LARGEST SIDE LENGTH RATIO
-            sind = sd(nlst-1).info;
-            el = getbdryel(sd(sind).tri(1));
+            sind = seg(gbl->nlst-1).info;
+            el = getbdryel(seg(sind).tri(1));
             
             /* FIND ADJACENT NON-DELETED SIDES */
             nel = -1;
-            for(next = el+1;next<sbdry(bnum)->nel;++next) {
-                if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) {
+            for(next = el+1;next<ebdry(bnum)->nel;++next) {
+                if(!(tri(ebdry(bnum)->el(next)).info&SDLTE)) {
                     nel = next;
-                    sindnext = sbdry(bnum)->el(nel);
+                    sindnext = ebdry(bnum)->el(nel);
                     break;
                 }
             }
             pel = -1;
             for(next = el-1;next>=0;--next) {
-                if(!(td(sbdry(bnum)->el(next)).info&SDLTE)) {
+                if(!(tri(ebdry(bnum)->el(next)).info&SDLTE)) {
                     pel = next;
-                    sindprev = sbdry(bnum)->el(pel);
+                    sindprev = ebdry(bnum)->el(pel);
                     break;
                 }
             }
             
             /* PICK ENDPT */
-            v0 = sd(sind).vrtx(0);
-            v1 = sd(sind).vrtx(1);
+            p0 = seg(sind).pnt(0);
+            p1 = seg(sind).pnt(1);
 
-            if (td(v0).info&VSPEC && td(v1).info&VSPEC) {
+            if (tri(p0).info&PSPEC && tri(p1).info&PSPEC) {
                 tkoutlst(sind);
                 continue;
             }
-            else if (td(v0).info&VSPEC) {
+            else if (tri(p0).info&PSPEC) {
                 endpt = 1;
                 saffect = sindnext;
             }
-            else if (td(v1).info&VSPEC) {
+            else if (tri(p1).info&PSPEC) {
                 endpt = 0;
                 saffect = sindprev;
             }
@@ -389,12 +389,12 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
             tkoutlst(sind);
             
             /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
-            sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = el;
-            sbdry(bnum)->isndbuf(sbdry(bnum)->sndsize()++) = endpt;
+            ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = el;
+            ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = endpt;
             
             /* UPDATE AFFECTED SIDE */
-            if (vd(saffect).info > -1) tkoutlst(saffect);
-            gbl->fltwk(saffect) = MIN(vlngth(sd(saffect).vrtx(0)),vlngth(sd(saffect).vrtx(1)))/distance(sd(saffect).vrtx(0),sd(saffect).vrtx(1));
+            if (pnt(saffect).info > -1) tkoutlst(saffect);
+            gbl->fltwk(saffect) = MIN(lngth(seg(saffect).pnt(0)),lngth(seg(saffect).pnt(1)))/distance(seg(saffect).pnt(0),seg(saffect).pnt(1));
             if (gbl->fltwk(saffect) > tolsize) putinlst(saffect);
             ++count;
 #ifdef DEBUG_ADAPT
@@ -405,10 +405,10 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
             output(adapt_file.c_str(),debug_adapt);
 #endif                
         }
-        sbdry(bnum)->isndbuf(0) = sbdry(bnum)->sndsize();
-        sbdry(bnum)->sndtype() = boundary::int_msg;
-        sbdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
-        *gbl->log << "#Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
+        ebdry(bnum)->isndbuf(0) = ebdry(bnum)->sndsize();
+        ebdry(bnum)->sndtype() = boundary::int_msg;
+        ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
+        *gbl->log << "#Boundary coarsening finished, " << ebdry(bnum)->idnum << ' ' << count << " sides coarsened" << std::endl;
     }
     
     return;
@@ -417,18 +417,18 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 void tri_mesh::bdry_yaber1() {
     int i,el,endpt,sind,sndsize;
     
-    for(int bnum=0;bnum<nsbd;++bnum) {
+    for(int bnum=0;bnum<nebd;++bnum) {
         
-        sbdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
+        ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
 
-        if (sbdry(bnum)->is_frst() || !sbdry(bnum)->is_comm()) continue;
+        if (ebdry(bnum)->is_frst() || !ebdry(bnum)->is_comm()) continue;
         
-        sndsize = sbdry(bnum)->ircvbuf(0,0);
+        sndsize = ebdry(bnum)->ircvbuf(0,0);
                 
         for(i=1;i<sndsize;i+=2) {
-            el = sbdry(bnum)->nel -1 -sbdry(bnum)->ircvbuf(0,i);
-            endpt = 1 -sbdry(bnum)->ircvbuf(0,i+1);
-            sind = sbdry(bnum)->el(el);
+            el = ebdry(bnum)->nel -1 -ebdry(bnum)->ircvbuf(0,i);
+            endpt = 1 -ebdry(bnum)->ircvbuf(0,i+1);
+            sind = ebdry(bnum)->el(el);
 #ifdef DEBUG_ADAPT
             std::cout << "collapsing boundary" << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
 #endif
@@ -441,7 +441,7 @@ void tri_mesh::bdry_yaber1() {
             output(adapt_file.c_str(),debug_adapt);
 #endif
         }
-        *gbl->log << "#Slave Boundary coarsening finished, " << sbdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;
+        *gbl->log << "#Slave Boundary coarsening finished, " << ebdry(bnum)->idnum << ' ' << (sndsize-1)/2 << " sides coarsened" << std::endl;
     }
     return;
 }

@@ -66,7 +66,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
             break;
         }
         default: {
-            std::cout << "unrecognizable vrtx type: " <<  type << " idnum: " << idnum << std::endl;
+            std::cout << "unrecognizable pnt type: " <<  type << " idnum: " << idnum << std::endl;
             temp = new vrtx_bdry(idnum,*this);
             break;
         }
@@ -78,14 +78,14 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
 }
 
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
  * and has routine to return integer so can
  * allocate by name rather than by number
  */
-class stype {
+class etype {
     public:
         static const int ntypes = 12;
         enum ids {plain=1, comm, partition, prdc, symbolic, coupled_symbolic, coupled_symbolic_comm, spline,
@@ -98,84 +98,84 @@ class stype {
         }
 };
 
-const char stype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic","coupled_symbolic","coupled_symbolic_comm", "spline",
+const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic","coupled_symbolic","coupled_symbolic_comm", "spline",
     "circle", "naca","ellipse"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-side_bdry* tri_mesh::getnewsideobject(int idnum, input_map& bdrydata) {
+edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     ostringstream nstr;
     int type;          
-    side_bdry *temp;  
+    edge_bdry *temp;  
     
-    type = stype::plain;
+    type = etype::plain;
 
     nstr.str("");
     nstr << idnum << std::flush;        
     keyword = gbl->idprefix +"_s" +nstr.str() + "_type";
     if (bdrydata.get(keyword,val)) {
-        type = stype::getid(val.c_str());
+        type = etype::getid(val.c_str());
         if (type < 0)  {
-            *gbl->log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown edge type:" << val << std::endl;
             exit(1);
         }
     }
     else {
-        type = stype::plain;
+        type = etype::plain;
     }
 
     switch(type) {
-        case stype::plain: {
-            temp = new side_bdry(idnum,*this);
+        case etype::plain: {
+            temp = new edge_bdry(idnum,*this);
             break;
         }
-        case stype::comm: {
-            temp = new scomm(idnum,*this); 
+        case etype::comm: {
+            temp = new ecomm(idnum,*this); 
             break;
         }
-        case stype::partition: {
-            temp = new spartition(idnum,*this);
+        case etype::partition: {
+            temp = new epartition(idnum,*this);
             break;
         }
-        case stype::prdc: {
-            temp = new sprdc(idnum,*this);
+        case etype::prdc: {
+            temp = new eprdc(idnum,*this);
             break;
         }
-        case stype::symbolic: {
-            temp = new analytic_geometry<side_bdry,symbolic_shape>(idnum,*this);
+        case etype::symbolic: {
+            temp = new eboundary_with_geometry<edge_bdry,symbolic_shape<2> >(idnum,*this);
             break;
         }
-        case stype::coupled_symbolic: {
-            temp = new ssolution_geometry<analytic_geometry<side_bdry,symbolic_shape> >(idnum,*this);
+        case etype::coupled_symbolic: {
+            temp = new ecoupled_physics<eboundary_with_geometry<edge_bdry,symbolic_shape<2> > >(idnum,*this);
             break;
         }
-        case stype::coupled_symbolic_comm: {
-            temp = new ssolution_geometry<analytic_geometry<scomm,symbolic_shape> >(idnum,*this);
+        case etype::coupled_symbolic_comm: {
+            temp = new ecoupled_physics<eboundary_with_geometry<ecomm,symbolic_shape<2> > >(idnum,*this);
             break;
         }
-        case stype::spline: {
+        case etype::spline: {
      //      temp = new spline(idnum,*this);
             break;
         }
 
         /* SPECIAL CASES FOLLOW (DEPRECATED -- USE SYMBOLIC) */
-        case stype::circle: {
-            temp = new analytic_geometry<side_bdry,circle>(idnum,*this);
+        case etype::circle: {
+            temp = new eboundary_with_geometry<edge_bdry,circle>(idnum,*this);
             break;
         }
-        case stype::naca: {
-            temp = new analytic_geometry<side_bdry,naca>(idnum,*this);
+        case etype::naca: {
+            temp = new eboundary_with_geometry<edge_bdry,naca>(idnum,*this);
             break;
         }
-        case stype::ellipse: {
-            temp = new analytic_geometry<side_bdry,ellipse>(idnum,*this);
+        case etype::ellipse: {
+            temp = new eboundary_with_geometry<edge_bdry,ellipse>(idnum,*this);
             break;
         }
                 
         default: {
-            temp = new side_bdry(idnum,*this);
-            std::cout << "unrecognizable side type: " << idnum << "type " << type << std::endl;
+            temp = new edge_bdry(idnum,*this);
+            std::cout << "unrecognizable edge type: " << idnum << "type " << type << std::endl;
             break;
         }
     }

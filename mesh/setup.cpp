@@ -5,136 +5,136 @@
 /* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
 /* USES VINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
-/* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-void tri_mesh::createsideinfo(void) {
-    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
+/* TRI.PNT MUST BE COUNTERCLOCKWISE ORDERED */
+void tri_mesh::createseg(void) {
+    int i,j,tind,p1,p2,vout,temp,minp,maxp,order,sind,sindprev;
     
-    for(i=0;i<nvrtx;++i)
-        vd(i).info = -1;
+    for(i=0;i<npnt;++i)
+        pnt(i).info = -1;
         
-    nside = 0;
+    nseg = 0;
     for(tind=0;tind<ntri;++tind) {
-        vout = td(tind).vrtx(0);
-        v1 = td(tind).vrtx(1);
-        v2 = td(tind).vrtx(2);
+        vout = tri(tind).pnt(0);
+        p1 = tri(tind).pnt(1);
+        p2 = tri(tind).pnt(2);
         for(j=0;j<3;++j) {
             /* CHECK IF SIDE HAS BEEN CREATED ALREADY */
-            if (v2 > v1) {
-                minv = v1;
-                maxv = v2;
+            if (p2 > p1) {
+                minp = p1;
+                maxp = p2;
                 order = 0;
             }
             else {
-                minv = v2;
-                maxv = v1;
+                minp = p2;
+                maxp = p1;
                 order = 1;
             }
             
-            sind = vd(minv).info;
+            sind = pnt(minp).info;
             while (sind >= 0) {
-                if (maxv == sd(sind).vrtx(order)) {
-                    if (sd(sind).tri(1) >= 0) {
-                        *gbl->log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
+                if (maxp == seg(sind).pnt(order)) {
+                    if (seg(sind).tri(1) >= 0) {
+                        *gbl->log << "Error: seg " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
                     }
                     else {
-                        sd(sind).tri(1) = tind;
-                        td(tind).side(j) = sind;
-                        td(tind).sign(j) = -1;
+                        seg(sind).tri(1) = tind;
+                        tri(tind).seg(j) = sind;
+                        tri(tind).sgn(j) = -1;
                         goto NEXTTRISIDE;
                     }
                 }
                 sindprev = sind;
-                sind = sd(sind).info;
+                sind = seg(sind).info;
             }
             /* NEW SIDE */
-            sd(nside).vrtx(0) = v1;
-            sd(nside).vrtx(1) = v2;
-            sd(nside).tri(0) = tind;
-            sd(nside).tri(1) = -1;
-            td(tind).side(j) = nside;
-            td(tind).sign(j) = 1;
-            sd(nside).info = -1;
-            if (vd(minv).info < 0)
-                vd(minv).info = nside;
+            seg(nseg).pnt(0) = p1;
+            seg(nseg).pnt(1) = p2;
+            seg(nseg).tri(0) = tind;
+            seg(nseg).tri(1) = -1;
+            tri(tind).seg(j) = nseg;
+            tri(tind).sgn(j) = 1;
+            seg(nseg).info = -1;
+            if (pnt(minp).info < 0)
+                pnt(minp).info = nseg;
             else 
-                sd(sindprev).info = nside;
-            ++nside;
+                seg(sindprev).info = nseg;
+            ++nseg;
 NEXTTRISIDE:
             temp = vout;
-            vout = v1;
-            v1 = v2;
-            v2 = temp;
+            vout = p1;
+            p1 = p2;
+            p2 = temp;
         }
     }
 
     return;
 }
 
-void tri_mesh::createtdstri(void) {
-    int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
+void tri_mesh::createsegtri(void) {
+    int i,j,tind,p1,p2,vout,temp,minp,maxp,order,sind,sindprev;
     
-    for(i=0;i<nvrtx;++i)
-        vd(i).info = -1;
+    for(i=0;i<npnt;++i)
+        pnt(i).info = -1;
         
-    for(i=0;i<nside;++i) {
-        v1 = sd(i).vrtx(0);
-        v2 = sd(i).vrtx(1);
-        minv = (v1 < v2 ? v1 : v2);
-        sind = vd(minv).info;
+    for(i=0;i<nseg;++i) {
+        p1 = seg(i).pnt(0);
+        p2 = seg(i).pnt(1);
+        minp = (p1 < p2 ? p1 : p2);
+        sind = pnt(minp).info;
         while (sind >= 0) {
             sindprev = sind;
-            sind = sd(sind).info;
+            sind = seg(sind).info;
         }
-        if (vd(minv).info < 0)
-            vd(minv).info = i;
+        if (pnt(minp).info < 0)
+            pnt(minp).info = i;
         else 
-            sd(sindprev).info = i;
-        sd(i).info = -1;
+            seg(sindprev).info = i;
+        seg(i).info = -1;
     }
 
-    for(i=0;i<nside;++i)
-        sd(i).tri(1) = -1;
+    for(i=0;i<nseg;++i)
+        seg(i).tri(1) = -1;
 
     for(tind=0;tind<ntri;++tind) {
-        vout = td(tind).vrtx(0);
-        v1 = td(tind).vrtx(1);
-        v2 = td(tind).vrtx(2);
+        vout = tri(tind).pnt(0);
+        p1 = tri(tind).pnt(1);
+        p2 = tri(tind).pnt(2);
         for(j=0;j<3;++j) {
             /* CHECK IF SIDE HAS BEEN CREATED ALREADY */
-            if (v2 > v1) {
-                minv = v1;
-                maxv = v2;
+            if (p2 > p1) {
+                minp = p1;
+                maxp = p2;
                 order = 0;
             }
             else {
-                minv = v2;
-                maxv = v1;
+                minp = p2;
+                maxp = p1;
                 order = 1;
             }
-            sind = vd(minv).info;
+            sind = pnt(minp).info;
             while (sind >= 0) {
-                if (maxv == sd(sind).vrtx(1)) {
-                    sd(sind).tri(order) = tind;
-                    td(tind).side(j) = sind;
-                    td(tind).sign(j) = 1 -2*order;
+                if (maxp == seg(sind).pnt(1)) {
+                    seg(sind).tri(order) = tind;
+                    tri(tind).seg(j) = sind;
+                    tri(tind).sgn(j) = 1 -2*order;
                     goto NEXTTRISIDE;
                 }
-                if (maxv == sd(sind).vrtx(0)) {
-                    sd(sind).tri(1-order) = tind;
-                    td(tind).side(j) = sind;
-                    td(tind).sign(j) = 2*order -1;
+                if (maxp == seg(sind).pnt(0)) {
+                    seg(sind).tri(1-order) = tind;
+                    tri(tind).seg(j) = sind;
+                    tri(tind).sgn(j) = 2*order -1;
                     goto NEXTTRISIDE;
                 }
-                sind = sd(sind).info;
+                sind = seg(sind).info;
             }
-            *gbl->log << "didn't match side: " << v1 << v2 << std::endl;
+            *gbl->log << "didn't match seg: " << p1 << p2 << std::endl;
             exit(1);
             
 NEXTTRISIDE:
             temp = vout;
-            vout = v1;
-            v1 = v2;
-            v2 = temp;
+            vout = p1;
+            p1 = p2;
+            p2 = temp;
         }
     }
 
@@ -142,13 +142,13 @@ NEXTTRISIDE:
 }
 
 
-void tri_mesh::createvtri(void) {
+void tri_mesh::createpnttri(void) {
     int i,tind;
     
     /* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
     for (tind=0;tind<ntri;++tind)
         for(i=0;i<3;++i)
-            vd(td(tind).vrtx(i)).tri = tind;
+            pnt(tri(tind).pnt(i)).tri = tind;
     
     return;
 }
@@ -157,26 +157,26 @@ void tri_mesh::createvtri(void) {
 void tri_mesh::cnt_nbor(void) {
     int i;
     
-    for (i=0;i<nvrtx;++i)
-        vd(i).nnbor = 0;
+    for (i=0;i<npnt;++i)
+        pnt(i).nnbor = 0;
     
-    for(i=0;i<nside;++i) {
-        ++vd(sd(i).vrtx(0)).nnbor;
-        ++vd(sd(i).vrtx(1)).nnbor;
+    for(i=0;i<nseg;++i) {
+        ++pnt(seg(i).pnt(0)).nnbor;
+        ++pnt(seg(i).pnt(1)).nnbor;
     }
 
     return;
 }
 
 /* CREATES TRIANGLE TO TRIANGLE POINTER */
-void tri_mesh::createttri(void) {
+void tri_mesh::createtritri(void) {
     int tind,sind,j,flip;
     
     for(tind=0;tind<ntri;++tind) {
         for(j=0;j<3;++j) {
-            sind = td(tind).side(j);
-            flip = (1 +td(tind).sign(j))/2;
-            td(tind).tri(j) = sd(sind).tri(flip);
+            sind = tri(tind).seg(j);
+            flip = (1 +tri(tind).sgn(j))/2;
+            tri(tind).tri(j) = seg(sind).tri(flip);
         }
     }
     
@@ -184,22 +184,22 @@ void tri_mesh::createttri(void) {
 }
 
 void tri_mesh::treeinit() {
-    int i,j,n,sind,v0;
+    int i,j,n,sind,p0;
     FLT x1[ND], x2[ND], dx;
     
     for(n=0;n<ND;++n)	{
-        x1[n] = vrtx(0)(n);
-        x2[n] = vrtx(0)(n);
+        x1[n] = pnts(0)(n);
+        x2[n] = pnts(0)(n);
     }
 
     
-    for (i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            v0 = sd(sind).vrtx(0);
+    for (i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            sind = ebdry(i)->el(j);
+            p0 = seg(sind).pnt(0);
             for(n=0;n<ND;++n) {
-                x1[n] = MIN(x1[n],vrtx(v0)(n));
-                x2[n] = MAX(x2[n],vrtx(v0)(n));
+                x1[n] = MIN(x1[n],pnts(p0)(n));
+                x2[n] = MAX(x2[n],pnts(p0)(n));
             }
         }
     }
@@ -219,7 +219,7 @@ void tri_mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
     
     qtree.init(x1,x2);
         
-    for(int i=0;i<nvrtx;++i) 
+    for(int i=0;i<npnt;++i) 
         qtree.addpt(i);
     
     return;
@@ -229,105 +229,57 @@ void tri_mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
 void tri_mesh::bdrylabel() {
     int i,j,k,sind,tind;
     
-    for(i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            sd(sind).tri(1) = trinumatbdry(i,j);
-            tind = sd(sind).tri(0);
+    for(i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            sind = ebdry(i)->el(j);
+            seg(sind).tri(1) = trinumatbdry(i,j);
+            tind = seg(sind).tri(0);
             for(k=0;k<3;++k)
-                if (td(tind).side(k) == sind) break;
+                if (tri(tind).seg(k) == sind) break;
                 
-            td(tind).tri(k) = sd(sind).tri(1);
+            tri(tind).tri(k) = seg(sind).tri(1);
         }
     }
     
     return;
 }
 
-void tri_mesh::initvlngth() {
-    int i,j,v0,v1;
+void tri_mesh::initlngth() {
+    int i,j,p0,p1;
     FLT l;
     
-    for(i=0;i<nvrtx;++i)
-        vlngth(i) = 0.0;
+    for(i=0;i<npnt;++i)
+        lngth(i) = 0.0;
         
-    for(i=0;i<nside;++i) {
-        v0 = sd(i).vrtx(0);
-        v1 = sd(i).vrtx(1);
-        l = distance(sd(i).vrtx(0),sd(i).vrtx(1));
-        vlngth(v0) += l;
-        vlngth(v1) += l;
+    for(i=0;i<nseg;++i) {
+        p0 = seg(i).pnt(0);
+        p1 = seg(i).pnt(1);
+        l = distance(seg(i).pnt(0),seg(i).pnt(1));
+        lngth(p0) += l;
+        lngth(p1) += l;
     }
     
-    for(i=0;i<nvrtx;++i)
-        vlngth(i) /= vd(i).nnbor;
+    for(i=0;i<npnt;++i)
+        lngth(i) /= pnt(i).nnbor;
         
     
-    for(i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            v0 = sd(sbdry(i)->el(j)).vrtx(0);
-            vlngth(v0) = 1.0e32;
+    for(i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            p0 = seg(ebdry(i)->el(j)).pnt(0);
+            lngth(p0) = 1.0e32;
         }
     }
               
-    for(i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            v0 = sd(sbdry(i)->el(j)).vrtx(0);
-            v1 = sd(sbdry(i)->el(j)).vrtx(1);
-            l = distance(v0,v1);
-            vlngth(v0) = MIN(l,vlngth(v0));
-            vlngth(v1) = MIN(l,vlngth(v1));
+    for(i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            p0 = seg(ebdry(i)->el(j)).pnt(0);
+            p1 = seg(ebdry(i)->el(j)).pnt(1);
+            l = distance(p0,p1);
+            lngth(p0) = MIN(l,lngth(p0));
+            lngth(p1) = MIN(l,lngth(p1));
         }
     }
 
     return;
 }
 
-void tri_mesh::settrim() {
-    int i,j,n,bsd,tin,tind,nsrch,ntdel;
-    
-    /* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
-    
-    for(i=0;i<ntri;++i)
-        td(i).info = 0;
-
-    ntdel = 0;
-
-    for (bsd=0;bsd<sbdry(0)->nel;++bsd) {
-        tind = sd(sbdry(0)->el(bsd)).tri(0);
-        if (td(tind).info > 0) continue;
-        
-        gbl->intwk(0) = tind;
-        td(tind).info = 1;
-        nsrch = ntdel+1;
-        
-        /* NEED TO SEARCH SURROUNDING TRIANGLES */
-        for(i=ntdel;i<nsrch;++i) {
-            tin = gbl->intwk(i);
-            for (n=0;n<3;++n)
-                if (gbl->fltwk(td(tin).vrtx(n)) < 0.0) goto NEXT;
-                
-            gbl->intwk(ntdel++) = tin;
-
-            for(j=0;j<3;++j) {
-                tind = td(tin).tri(j);
-                if (tind < 0) continue;
-                if (td(tind).info > 0) continue; 
-                td(tind).info = 1;          
-                gbl->intwk(nsrch++) = tind;
-            }
-            NEXT: continue;
-        }
-    }
-    
-    for(i=0;i<ntri;++i)
-        td(i).info = 0;
-        
-    for(i=0;i<ntdel;++i)
-        td(gbl->intwk(i)).info = 1;
-        
-    for(i=0;i<maxvst;++i)
-        gbl->intwk(i) = -1;
-        
-    return;
-}

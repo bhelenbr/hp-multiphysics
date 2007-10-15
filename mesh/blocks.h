@@ -10,7 +10,7 @@
 #include <input_map.h>
 #include <utilities.h>
 
-// #define PTH
+#define PTH
 // #define BOOST
 #ifdef PTH
 #include <pth.h>

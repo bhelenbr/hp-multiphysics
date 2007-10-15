@@ -5,19 +5,19 @@
 
 void tri_mesh::collapse(int sind, int delt) {
     int ntsrnd, nssrnd, nperim;
-    int i,j,vn,vnear,prev,tind,tind1,sind1,stoptri,dir;
-    int v0,v1,pt,sd1,sd2,sd3,t1,t2;
+    int i,j,vn,pnear,prev,tind,tind1,sind1,stoptri,dir;
+    int p0,p1,pt,sd1,sd2,sd3,t1,t2;
 
-    /* gbl->i2wk_lst1 = triangles surrounding delete vertex */
-    /* gbl->i2wk_lst2 = sides surrounding delete vertex */
+    /* gbl->i2wk_lst1 = triangles surrounding delete point */
+    /* gbl->i2wk_lst2 = sides surrounding delete point */
     /* -1 indx lists how many */
     
     /* FIND TRIANGLES / SIDES SURROUNDING ENDPOINT */
     /* EXCLUDES TRIANGLES ADJACENT TO DELETED SIDE */
     /* EXCLUDES SIDES OF TRIANGLES ADJACENT TO DELETED SIDE */
-    vnear = sd(sind).vrtx(delt);
-    tind = vd(vnear).tri;
-    if (tind != sd(sind).tri(0) && tind != sd(sind).tri(1))
+    pnear = seg(sind).pnt(delt);
+    tind = pnt(pnear).tri;
+    if (tind != seg(sind).tri(0) && tind != seg(sind).tri(1))
         prev = 0;
     else 
         prev = 1;
@@ -28,22 +28,22 @@ void tri_mesh::collapse(int sind, int delt) {
     nperim = 0;
     do {
         for(vn=0;vn<3;++vn) 
-            if (td(tind).vrtx(vn) == vnear) break;
+            if (tri(tind).pnt(vn) == pnear) break;
                     
-        tind1 = td(tind).tri((vn +dir)%3);
+        tind1 = tri(tind).tri((vn +dir)%3);
         if (tind1 < 0) {
             if (dir > 1) break;
             /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir;
-            tind1 = vd(vnear).tri;
+            tind1 = pnt(pnear).tri;
             prev = 1;
             stoptri = -1;
         }
         
-        if (tind1 != sd(sind).tri(0) && tind1 != sd(sind).tri(1)) {
+        if (tind1 != seg(sind).tri(0) && tind1 != seg(sind).tri(1)) {
             gbl->i2wk_lst1(ntsrnd++) = tind1;
             if (!prev) {
-                gbl->i2wk_lst2(nssrnd++) = td(tind).side((vn +dir)%3);
+                gbl->i2wk_lst2(nssrnd++) = tri(tind).seg((vn +dir)%3);
             }
             prev = 0;
         }
@@ -57,108 +57,108 @@ void tri_mesh::collapse(int sind, int delt) {
     gbl->i2wk_lst1(-1) = ntsrnd;
     gbl->i2wk_lst2(-1) = nssrnd;
     
-    /* UPDATE TVRTX & SVRTX */
-    v0 = sd(sind).vrtx(1-delt);
-    v1 = sd(sind).vrtx(delt);
+    /* UPDATE TRI.PNT & SEG.PNT */
+    p0 = seg(sind).pnt(1-delt);
+    p1 = seg(sind).pnt(delt);
     
     for(i=0;i<ntsrnd;++i) {
         tind = gbl->i2wk_lst1(i);
-        td(tind).info |= TTOUC;
+        tri(tind).info |= TTOUC;
         for(j=0;j<3;++j) {
-            if (td(tind).vrtx(j) == v1) {
-                td(tind).vrtx(j) = v0;
-                sd3 = td(tind).side((j+1)%3);
-                td(sd3).info |= STOUC;
-                pt = (1 +td(tind).sign((j+1)%3))/2;
-                assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
-                sd(sd3).vrtx(pt) = v0;
-                sd3 = td(tind).side((j+2)%3);
-                td(sd3).info |= STOUC;
-                pt = (1 -td(tind).sign((j+2)%3))/2;
-                assert(sd(sd3).vrtx(pt) == v1 || sd(sd3).vrtx(pt) == v0);
-                sd(sd3).vrtx(pt) = v0;
-                gbl->i2wk_lst3(nperim++) = td(tind).side(j);
+            if (tri(tind).pnt(j) == p1) {
+                tri(tind).pnt(j) = p0;
+                sd3 = tri(tind).seg((j+1)%3);
+                tri(sd3).info |= STOUC;
+                pt = (1 +tri(tind).sgn((j+1)%3))/2;
+                assert(seg(sd3).pnt(pt) == p1 || seg(sd3).pnt(pt) == p0);
+                seg(sd3).pnt(pt) = p0;
+                sd3 = tri(tind).seg((j+2)%3);
+                tri(sd3).info |= STOUC;
+                pt = (1 -tri(tind).sgn((j+2)%3))/2;
+                assert(seg(sd3).pnt(pt) == p1 || seg(sd3).pnt(pt) == p0);
+                seg(sd3).pnt(pt) = p0;
+                gbl->i2wk_lst3(nperim++) = tri(tind).seg(j);
                 break;
             }
         }
     }
 
     /* MARK SIDE AS DELETED */ 
-    td(sind).info |= SDLTE; 
+    tri(sind).info |= SDLTE; 
 
     /* CLOSE THE GAP */
     for(i=0;i<2;++i) {
-        tind = sd(sind).tri(i);
+        tind = seg(sind).tri(i);
         if (tind < 0) continue;
 
         /* MARK TRI AS DELETED TO BE REMOVED LATER */
-        td(tind).info |= TDLTE;  
+        tri(tind).info |= TDLTE;  
         
         for(sd1=0;sd1<3;++sd1)
-            if(td(tind).vrtx(sd1) == v1) break;
+            if(tri(tind).pnt(sd1) == p1) break;
             
         assert(sd1 != 3);
                     
-        if (td(tind).side((sd1+1)%3) == sind)
+        if (tri(tind).seg((sd1+1)%3) == sind)
             sd2 = (sd1+2)%3;
         else
             sd2 = (sd1+1)%3;
                     
-        sind1 = td(tind).side(sd2);
-        if (sd(sind1).tri(1) < 0) {
+        sind1 = tri(tind).seg(sd2);
+        if (seg(sind1).tri(1) < 0) {
             /* BOUNDARY SIDE SO DELETE OTHER ONE */
             /* ANOMALY OF TRIANGLE WITH 2 EDGES ON BOUNDARY */
-            td(sind1).info |= STOUC;
-            if (sd(sind1).vrtx(0) == v1) 
-                sd(sind1).vrtx(0) = v0;
-            if (sd(sind1).vrtx(1) == v1) 
-                sd(sind1).vrtx(1) = v0;    
+            tri(sind1).info |= STOUC;
+            if (seg(sind1).pnt(0) == p1) 
+                seg(sind1).pnt(0) = p0;
+            if (seg(sind1).pnt(1) == p1) 
+                seg(sind1).pnt(1) = p0;    
             sind1 = sd2;
             sd2 = sd1;
             sd1 = sind1;
-            sind1 = td(tind).side(sd2);
+            sind1 = tri(tind).seg(sd2);
         }
-        td(sind1).info |= SDLTE;
+        tri(sind1).info |= SDLTE;
         gbl->i2wk_lst2(nssrnd++) = sind1;
                 
-        t1 = td(tind).tri(sd1);
-        t2 = td(tind).tri(sd2);
+        t1 = tri(tind).tri(sd1);
+        t2 = tri(tind).tri(sd2);
 
         /* UPDATE TTRI FOR T1 */  
         if (t1 > -1) {
             for(j=0;j<3;++j) {
-                if(td(t1).tri(j) == tind) {
-                    td(t1).tri(j) = t2;
+                if(tri(t1).tri(j) == tind) {
+                    tri(t1).tri(j) = t2;
                     break;
                 }
             }
             for(j=0;j<3;++j)
-                vd(td(tind).vrtx(j)).tri = t1;
+                pnt(tri(tind).pnt(j)).tri = t1;
         }
         /* UPDATE STRI FOR KEPT SIDE */
-        sind1 = td(tind).side(sd1);
-        pt = (1 -td(tind).sign(sd1))/2;
-        sd(sind1).tri(pt) = t2;
+        sind1 = tri(tind).seg(sd1);
+        pt = (1 -tri(tind).sgn(sd1))/2;
+        seg(sind1).tri(pt) = t2;
         gbl->i2wk_lst3(nperim++) = sind1;
 
         /* UPDATE TTRI/TSIDE FOR T2 */
         if (t2 > -1) {
             for(j=0;j<3;++j) {
-                if(td(t2).tri(j) == tind) {
-                    td(t2).tri(j) = t1;
-                    td(t2).side(j) = sind1;
-                    td(t2).sign(j) = td(tind).sign(sd1);
+                if(tri(t2).tri(j) == tind) {
+                    tri(t2).tri(j) = t1;
+                    tri(t2).seg(j) = sind1;
+                    tri(t2).sgn(j) = tri(tind).sgn(sd1);
                     break;
                 }
             }
             for(j=0;j<3;++j)
-                vd(td(tind).vrtx(j)).tri = t2;
+                pnt(tri(tind).pnt(j)).tri = t2;
         }
     }
     
     /* NEED TO REMOVE LEFTOVERS */
-    qtree.dltpt(v1);
-    td(v1).info |= VDLTE;
+    qtree.dltpt(p1);
+    tri(p1).info |= PDLTE;
         
     /* SWAP AFFECTED SIDES */        
     swap(gbl->i2wk_lst2(-1),&gbl->i2wk_lst2(0));
@@ -170,11 +170,11 @@ void tri_mesh::collapse(int sind, int delt) {
 
 /* DELETE UNREFERENCED TRIANGLE */
 void tri_mesh::dlttri(int tind) {
-    int i,j,v0,t1,sind,flip;
+    int i,j,p0,t1,sind,flip;
     
     
     /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED TRI */
-    while(td(ntri-1).info&TDLTE)
+    while(tri(ntri-1).info&TDLTE)
         --ntri;
     
     if (ntri <=  tind)  {
@@ -185,135 +185,135 @@ void tri_mesh::dlttri(int tind) {
     --ntri;
 
     for (j=0;j<3;++j) {
-        v0 = td(ntri).vrtx(j);
-        td(tind).vrtx(j) = v0;
-        vd(v0).tri = tind;
-        td(tind).side(j) = td(ntri).side(j);
-        td(tind).sign(j) = td(ntri).sign(j);
-        sind = td(ntri).side(j);
-        flip = (1 -td(ntri).sign(j))/2;
-        sd(sind).tri(flip) = tind;
+        p0 = tri(ntri).pnt(j);
+        tri(tind).pnt(j) = p0;
+        pnt(p0).tri = tind;
+        tri(tind).seg(j) = tri(ntri).seg(j);
+        tri(tind).sgn(j) = tri(ntri).sgn(j);
+        sind = tri(ntri).seg(j);
+        flip = (1 -tri(ntri).sgn(j))/2;
+        seg(sind).tri(flip) = tind;
         
-        t1 = td(ntri).tri(j);
-        td(tind).tri(j) = t1;
+        t1 = tri(ntri).tri(j);
+        tri(tind).tri(j) = t1;
         if (t1 > -1) {
             for(i=0;i<3;++i) {
-                if(td(t1).tri(i) == ntri) {
-                    td(t1).tri(i) = tind;
+                if(tri(t1).tri(i) == ntri) {
+                    tri(t1).tri(i) = tind;
                     break;
                 }
             }
         }
     }
     
-    if (td(ntri).info&TTOUC) {
-        td(tind).info = -2;
+    if (tri(ntri).info&TTOUC) {
+        tri(tind).info = -2;
         updatetdata(tind);
     }
     else {
-        td(tind).info = ntri;
+        tri(tind).info = ntri;
         movetdata(ntri,tind);
     }
     /* THIS IS TO PREVENT ROLL BACK NEAR END */
-    td(tind).info &= ~TDLTE;
+    tri(tind).info &= ~TDLTE;
 
-    td(ntri).info = tind;
+    tri(ntri).info = tind;
     
     return;
 }
 
 /* DELETE UNREFERENCED SIDE */
-void tri_mesh::dltsd(int sind) {
+void tri_mesh::dltseg(int sind) {
     int j,k,tind;
 
     /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED SIDE */
-    while(td(nside-1).info&SDLTE)
-        --nside;
+    while(tri(nseg-1).info&SDLTE)
+        --nseg;
     
-    if (nside <= sind) {
-        nside = sind;
+    if (nseg <= sind) {
+        nseg = sind;
         return;
     }
     
     /* DELETE SIDE */
-    --nside;
+    --nseg;
     
-    sd(sind).vrtx(0) = sd(nside).vrtx(0);
-    sd(sind).vrtx(1) = sd(nside).vrtx(1);
-    sd(sind).tri(0) = sd(nside).tri(0);
-    sd(sind).tri(1) = sd(nside).tri(1);
+    seg(sind).pnt(0) = seg(nseg).pnt(0);
+    seg(sind).pnt(1) = seg(nseg).pnt(1);
+    seg(sind).tri(0) = seg(nseg).tri(0);
+    seg(sind).tri(1) = seg(nseg).tri(1);
 
     for(j=0;j<2;++j) {
-        tind = sd(nside).tri(j);
+        tind = seg(nseg).tri(j);
         if (tind > -1) {
             for(k=0;k<3;++k)
-                if (td(tind).side(k) == nside) break;
-            td(tind).side(k) = sind;
+                if (tri(tind).seg(k) == nseg) break;
+            tri(tind).seg(k) = sind;
         }
     }
     
-    if (td(nside).info&STOUC) {
-        sd(sind).info = -2;
+    if (tri(nseg).info&STOUC) {
+        seg(sind).info = -2;
         updatesdata(sind);
     }
     else {
-        sd(sind).info = nside;
-        movesdata(nside,sind);
+        seg(sind).info = nseg;
+        movesdata(nseg,sind);
     }
-    sd(nside).info = sind;
+    seg(nseg).info = sind;
     
     return;
 }
 
 /* DELETE UNREFERENCED VERTEX */
-void tri_mesh::dltvrtx(int v0) {
+void tri_mesh::dltpnt(int p0) {
     int vn,stoptri,dir;
     int tind, sind, flip;
                 
     /* MOVE UP FROM BOTTOM UNTIL FIND UNDELETED VERTEX */
-    while(td(nvrtx-1).info&VDLTE) {
-        --nvrtx;
+    while(tri(npnt-1).info&PDLTE) {
+        --npnt;
     }
         
-    if (nvrtx <= v0) {
-        nvrtx = v0;
+    if (npnt <= p0) {
+        npnt = p0;
         return;
     }
     
-    --nvrtx;
+    --npnt;
     
-    vrtx(v0)(0) = vrtx(nvrtx)(0);
-    vrtx(v0)(1) = vrtx(nvrtx)(1);
-    vlngth(v0) = vlngth(nvrtx);
-    vd(v0).nnbor = vd(nvrtx).nnbor;
-    vd(v0).tri = vd(nvrtx).tri;
+    pnts(p0)(0) = pnts(npnt)(0);
+    pnts(p0)(1) = pnts(npnt)(1);
+    lngth(p0) = lngth(npnt);
+    pnt(p0).nnbor = pnt(npnt).nnbor;
+    pnt(p0).tri = pnt(npnt).tri;
 
-    qtree.movept(nvrtx,v0);
+    qtree.movept(npnt,p0);
     
-    tind = vd(nvrtx).tri;    
+    tind = pnt(npnt).tri;    
     stoptri = tind;
     dir = 1;
     do {
         for(vn=0;vn<3;++vn) 
-            if (td(tind).vrtx(vn) == nvrtx) break; 
+            if (tri(tind).pnt(vn) == npnt) break; 
             
         assert(vn != 3);
         
-        td(tind).vrtx(vn) = v0;
-        sind = td(tind).side((vn +dir)%3);
-        flip = (1 +(3-2*dir)*td(tind).sign((vn +dir)%3))/2;
-        assert(sd(sind).vrtx(flip) == nvrtx);
-        sd(sind).vrtx(flip) = v0;
+        tri(tind).pnt(vn) = p0;
+        sind = tri(tind).seg((vn +dir)%3);
+        flip = (1 +(3-2*dir)*tri(tind).sgn((vn +dir)%3))/2;
+        assert(seg(sind).pnt(flip) == npnt);
+        seg(sind).pnt(flip) = p0;
 
-        tind = td(tind).tri((vn +dir)%3);
+        tind = tri(tind).tri((vn +dir)%3);
         if (tind < 0) {
             if (dir > 1) break;
             /* REVERSE DIRECTION AND GO BACK TO START */
             ++dir;
-            tind = vd(nvrtx).tri;
+            tind = pnt(npnt).tri;
             for(vn=0;vn<3;++vn) {
-                if (td(tind).vrtx(vn) == v0) {
-                    td(tind).vrtx(vn) = nvrtx;
+                if (tri(tind).pnt(vn) == p0) {
+                    tri(tind).pnt(vn) = npnt;
                     break;
                 }
             }
@@ -322,15 +322,15 @@ void tri_mesh::dltvrtx(int v0) {
         
     } while(tind != stoptri); 
     
-    if (td(nvrtx).info&VTOUC) {
-        vd(v0).info = -2;
-        updatevdata(v0);
+    if (tri(npnt).info&PTOUC) {
+        pnt(p0).info = -2;
+        updatepdata(p0);
     }
     else {
-        vd(v0).info = nvrtx;
-        movevdata(nvrtx,v0);
+        pnt(p0).info = npnt;
+        movepdata(npnt,p0);
     }
-    vd(nvrtx).info = v0;
+    pnt(npnt).info = p0;
 
     return;
 }

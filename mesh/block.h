@@ -188,7 +188,7 @@ class multigrid_interface {
         virtual int comm_entity_size() {return 0;}
         virtual int comm_entity_list(blitz::Array<int,1>& list) {return 0;}
         virtual boundary* getvbdry(int num) {return 0;}
-        virtual boundary* getsbdry(int num) {return 0;}
+        virtual boundary* getebdry(int num) {return 0;}
         virtual boundary* getfbdry(int num) {return 0;}
         
         virtual ~multigrid_interface() {}

@@ -321,8 +321,8 @@ class block::comm_info {
         
         int nscomm;
         struct sid {
-            int nsbd, idnum;
-        } *scomm;
+            int nebd, idnum;
+        } *ecomm;
         
         int nfcomm;
         struct fid {
@@ -333,7 +333,7 @@ class block::comm_info {
         int unpack(blitz::Array<int,1> entitylist); 
         ~comm_info() {
             delete []vcomm;
-            delete []scomm;
+            delete []ecomm;
             delete []fcomm;
         }
 };
@@ -350,10 +350,10 @@ int block::comm_info::unpack(blitz::Array<int,1> entitylist) {
     }
         
     nscomm = entitylist(count++);
-    scomm = new comm_info::sid[nscomm];
+    ecomm = new comm_info::sid[nscomm];
     for(int i=0;i<nscomm;++i) {
-        scomm[i].nsbd = entitylist(count++);
-        scomm[i].idnum = entitylist(count++);
+        ecomm[i].nebd = entitylist(count++);
+        ecomm[i].idnum = entitylist(count++);
     }
         
     nfcomm = entitylist(count++);
@@ -447,7 +447,7 @@ void block::findmatch(int grdlvl) {
     
     *gbl->log << "#\t\tnscomm: " << binfo[idnum].nscomm << std::endl;
     for (int i=0;i<binfo[idnum].nscomm;++i)
-        *gbl->log << "#\t\t\tnsbd: " << binfo[idnum].scomm[i].nsbd << " idnum: " << binfo[idnum].scomm[i].idnum << std::endl;
+        *gbl->log << "#\t\t\tnsbd: " << binfo[idnum].ecomm[i].nebd << " idnum: " << binfo[idnum].ecomm[i].idnum << std::endl;
     
     *gbl->log << "#\t\tnfcomm: " << binfo[idnum].nfcomm << std::endl;
     for (int i=0;i<binfo[idnum].nfcomm;++i)
@@ -487,7 +487,7 @@ void block::findmatch(int grdlvl) {
                             bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
                             first_found = true;
                         }
-                        *gbl->log <<  "#\t\tlocal match to block: " << b2 << " vrtx: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
+                        *gbl->log <<  "#\t\tlocal match to block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
                     }
 #ifdef MPISRC
                     else {
@@ -496,7 +496,7 @@ void block::findmatch(int grdlvl) {
                             bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
                             first_found = true;
                         }
-                        *gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " vrtx: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
+                        *gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " pnt: " << binfo[b2].vcomm[j].nvbd << " tag: " << sim::blks.tagid(1,b1,b2,i,j) << ' ' << sim::blks.tagid(1,b2,b1,j,i) << " idnum: " << binfo[b2].vcomm[j].idnum << std::endl;
                     }
 #endif
                     
@@ -508,25 +508,25 @@ void block::findmatch(int grdlvl) {
     /* LOOK FOR SIDE MATCHES */
     for(int i=0;i<binfo[b1].nscomm;++i) {
         bool first_found = false;
-        *gbl->log << "#\tside " << binfo[b1].scomm[i].nsbd << " b1: " << binfo[b1].scomm[i].idnum << std::endl;
+        *gbl->log << "#\tside " << binfo[b1].ecomm[i].nebd << " b1: " << binfo[b1].ecomm[i].idnum << std::endl;
         for(int b2=0;b2<nblock;++b2) {
             for(int j=0;j<binfo[b2].nscomm;++j) {
-                if (binfo[b1].scomm[i].idnum == binfo[b2].scomm[j].idnum) {
+                if (binfo[b1].ecomm[i].idnum == binfo[b2].ecomm[j].idnum) {
                     if (b1 == b2 && i == j) {
                         if (!first_found) first_found = true;  // Leave first flag alone
                         continue;  // CAN"T MATCH TO MYSELF
                     }
                     
-                    boundary *bp1 = grd(grdlvl)->getsbdry(binfo[b1].scomm[i].nsbd);
+                    boundary *bp1 = grd(grdlvl)->getebdry(binfo[b1].ecomm[i].nebd);
                     if (binfo[b1].proc == binfo[b2].proc) {
                         /* local match */
-                        boundary *bp2 = sim::blks.blk(binfo[b2].blk)->grd(grdlvl)->getsbdry(binfo[b2].scomm[j].nsbd);
+                        boundary *bp2 = sim::blks.blk(binfo[b2].blk)->grd(grdlvl)->getebdry(binfo[b2].ecomm[j].nebd);
                         bp1->local_cnnct(bp2,sim::blks.tagid(2,b1,b2,i,j),sim::blks.tagid(2,b2,b1,j,i));
                         if (!first_found) {
                             bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
                             first_found = true;
                         }
-                        *gbl->log <<  "#\t\tlocal match to block: " << b2 << " side: " << binfo[b2].scomm[j].nsbd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].scomm[j].idnum << std::endl;
+                        *gbl->log <<  "#\t\tlocal match to block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << std::endl;
                     }
 #ifdef MPISRC
                     else {
@@ -535,7 +535,7 @@ void block::findmatch(int grdlvl) {
                             bp1->is_frst() = !bp1->is_frst(); // Switches true to false by default
                             first_found = true;
                         }
-                        *gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " side: " << binfo[b2].scomm[j].nsbd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].scomm[j].idnum << std::endl;
+                        *gbl->log <<  "#\t\t  mpi match to  block: " << b2 << " edge: " << binfo[b2].ecomm[j].nebd << " tag: " << sim::blks.tagid(2,b1,b2,i,j) << ' ' << sim::blks.tagid(2,b2,b1,j,i) << " idnum: " << binfo[b2].ecomm[j].idnum << std::endl;
                     }
 #endif
                     
@@ -692,7 +692,7 @@ void block::init(input_map &input) {
     }
     
     if (!input.get(idprefix + "_tolerance",gbl->tolerance)) {
-        input.getwdefault("tolerance",gbl->tolerance,1.9);
+        input.getwdefault("tolerance",gbl->tolerance,1.25);
     }   
     
     if (!input.get(idprefix + "_error_target",gbl->error_target)) {

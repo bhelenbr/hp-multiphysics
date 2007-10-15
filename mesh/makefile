@@ -4,31 +4,31 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
-all: libmesh.a libmesh_mpi.a mesh mesh_mpi
+all: libtri_mesh.a libtri_mesh_mpi.a tri_mesh tri_mesh_mpi
 
-libmesh.a:
+libtri_mesh.a:
 	+@[ -d  _serial ] || mkdir -p _serial
 	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
 
-.PHONY: libmesh.a
+.PHONY: libtri_mesh.a
 
-mesh:
+tri_mesh:
 	+@[ -d  _serial ] || mkdir -p _serial
 	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
 
-.PHONY: mesh
+.PHONY: tri_mesh
 
-libmesh_mpi.a:
+libtri_mesh_mpi.a:
 	+@[ -d  _mpi ] || mkdir -p _mpi
 	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
 
-.PHONY: libmesh_mpi.a
+.PHONY: libtri_mesh_mpi.a
 
-mesh_mpi:
+tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
 	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
 
-.PHONY: mesh_mpi
+.PHONY: tri_mesh_mpi
 
 makefile : ;
 %.mk :: ;
@@ -84,22 +84,22 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
-libmesh.a: $(OBJ)
+libtri_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libmesh.a $(HOME)/Codes/lib/
+	mv -f libtri_mesh.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
 	
-mesh: $(OBJ) $(MAINOBJ)
+tri_mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
-	mv mesh $(HOME)/bin
+	mv tri_mesh $(HOME)/bin
 	
-libmesh_mpi.a: $(OBJ) 
+libtri_mesh_mpi.a: $(OBJ) 
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libmesh_mpi.a $(HOME)/Codes/lib/
+	mv -f libtri_mesh_mpi.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
 
-mesh_mpi: $(OBJ) $(MAINOBJ) 
+tri_mesh_mpi: $(OBJ) $(MAINOBJ) 
 	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
-	mv mesh_mpi $(HOME)/bin
+	mv tri_mesh_mpi $(HOME)/bin
 
  endif

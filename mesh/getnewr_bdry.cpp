@@ -25,13 +25,13 @@ class r_stype {
 const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-r_side_bdry* r_tri_mesh::getnewsideobject(int bnum, input_map& in_map) {
+r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
     std::istringstream data;
     std::map<std::string,std::string>::const_iterator mi;
     r_side_bdry *temp;  
     int type = 2;
 
-    mi = in_map.find(sbdry(bnum)->idprefix + "_r_type");
+    mi = in_map.find(ebdry(bnum)->idprefix + "_r_type");
     if (mi != in_map.end()) {
         type = r_stype::getid((*mi).second.c_str());
         if (type < 0)  {
@@ -41,44 +41,44 @@ r_side_bdry* r_tri_mesh::getnewsideobject(int bnum, input_map& in_map) {
     }
     else {
         /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
-        if (sbdry(bnum)->mytype == "comm") {
+        if (ebdry(bnum)->mytype == "comm") {
             type = r_stype::free;
-        } else if (sbdry(bnum)->mytype == "partition") {
+        } else if (ebdry(bnum)->mytype == "partition") {
             type = r_stype::free;
-        } else if (sbdry(bnum)->mytype == "prdc") {
+        } else if (ebdry(bnum)->mytype == "prdc") {
             type = r_stype::fixed;
             int dir;
-            in_map.getwdefault(sbdry(bnum)->idprefix + "_dir",dir,0);
+            in_map.getwdefault(ebdry(bnum)->idprefix + "_dir",dir,0);
             if (dir == 0)
-                in_map[sbdry(bnum)->idprefix+"_r_dir"] = "0 0";
+                in_map[ebdry(bnum)->idprefix+"_r_dir"] = "0 0";
             else 
-                in_map[sbdry(bnum)->idprefix+"_r_dir"] = "1 1";
+                in_map[ebdry(bnum)->idprefix+"_r_dir"] = "1 1";
         }
         else {
             type = r_stype::fixed;
         }
-        *gbl->log << "# using default r_type of " << r_stype::names[type-1] << " for " << sbdry(bnum)->idprefix << std::endl;
+        *gbl->log << "# using default r_type of " << r_stype::names[type-1] << " for " << ebdry(bnum)->idprefix << std::endl;
     }
 
     switch(type) {
         case r_stype::free: {
-            temp = new r_side_bdry(*this,*sbdry(bnum));
+            temp = new r_side_bdry(*this,*ebdry(bnum));
             break;
         }
         case r_stype::fixed: {
-            temp = new r_fixed(*this,*sbdry(bnum)); 
+            temp = new r_fixed(*this,*ebdry(bnum)); 
             break;
         }
         case r_stype::translating: {
-            temp = new r_translating(*this,*sbdry(bnum)); 
+            temp = new r_translating(*this,*ebdry(bnum)); 
             break;
         }
         case r_stype::oscillating: {
-            temp = new r_oscillating(*this,*sbdry(bnum)); 
+            temp = new r_oscillating(*this,*ebdry(bnum)); 
             break;
         }        
         default: {
-            temp = new r_fixed(*this,*sbdry(bnum));
+            temp = new r_fixed(*this,*ebdry(bnum));
             std::cout << "Don't know this r_side_bdry type\n";
         }
     }

@@ -11,7 +11,7 @@
 #include <assert.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {
-    int i,j,n,sind,tind,v0,v1,count,vnear,err,initialsidenumber;
+    int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber;
     TinyVector<FLT,ND> xpt;
     
     /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
@@ -24,51 +24,51 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     this->copy(inmesh);
     
     /* CALCULATE LOCATION OF NEW INTERIOR POINTS */
-    count = nvrtx;
-    for(sind=0;sind<nside;++sind) {
+    count = npnt;
+    for(sind=0;sind<nseg;++sind) {
     
-        if (sd(sind).tri(1) < 0) continue;
+        if (seg(sind).tri(1) < 0) continue;
         
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
+        p0 = seg(sind).pnt(0);
+        p1 = seg(sind).pnt(1);
         
         /* MIDPOINT */
         for(n=0;n<ND;++n)
-            xpt(n) = 0.5*(vrtx(v0)(n) +vrtx(v1)(n));
+            xpt(n) = 0.5*(pnts(p0)(n) +pnts(p1)(n));
                     
         /* INSERT POINT */
         for(n=0;n<ND;++n)
-            vrtx(count)(n) = xpt(n);
+            pnts(count)(n) = xpt(n);
         
         ++count;
     }
     
     /*	INSERT INTERIOR POINTS */
-    for(i=nvrtx;i<count;++i) { 
-        qtree.addpt(nvrtx);
-        qtree.nearpt(nvrtx,vnear);
-        tind = findtri(vrtx(nvrtx),vnear);
+    for(i=npnt;i<count;++i) { 
+        qtree.addpt(npnt);
+        qtree.nearpt(npnt,pnear);
+        tind = findtri(pnts(npnt),pnear);
         assert(tind > -1);
-        err = insert(nvrtx,tind);
-        ++nvrtx;
+        err = insert(npnt,tind);
+        ++npnt;
     }
     
     
 
     
     /* INSERT BOUNDARY POINTS */
-    for(i=0;i<nsbd;++i) {
-        initialsidenumber = sbdry(i)->nel;
+    for(i=0;i<nebd;++i) {
+        initialsidenumber = ebdry(i)->nel;
         for(j=0;j<initialsidenumber;++j) {
-            sind = sbdry(i)->el(j);
-            sbdry(i)->mvpttobdry(j,0.0,vrtx(nvrtx));
-            bdry_insert(nvrtx,sind);
-            ++nvrtx;
+            sind = ebdry(i)->el(j);
+            ebdry(i)->mvpttobdry(j,0.0,pnts(npnt));
+            bdry_insert(npnt,sind);
+            ++npnt;
         }
     }
         
-    for (i=0;i<nsbd;++i)
-        sbdry(i)->reorder();
+    for (i=0;i<nebd;++i)
+        ebdry(i)->reorder();
         
     cnt_nbor();
     

@@ -2,46 +2,46 @@
 #include <utilities.h>
 
 void tri_mesh::coarsen_substructured(const class tri_mesh &zx,int p) {
-    int i,sind,sign,p2;
+    int i,sind,sgn,p2;
 
     copy(zx);
     
     p2 = p*p;
     ntri = zx.ntri/p2;
-    nside = (ntri*3 +zx.sbdry(0)->nel/p)/2;
-    nvrtx = zx.nvrtx -nside*(p-1) -ntri*((p-1)*(p-2))/2;
+    nseg = (ntri*3 +zx.ebdry(0)->nel/p)/2;
+    npnt = zx.npnt -nseg*(p-1) -ntri*((p-1)*(p-2))/2;
     
     for(i=0;i<zx.ntri;i+=p2) {
-        td(i/p2).vrtx(0) = zx.td(i+2*p-2).vrtx(2);
-        td(i/p2).vrtx(1) = zx.td(i).vrtx(0);
-        td(i/p2).vrtx(2) = zx.td(i+p2-1).vrtx(1);
-        sind = (zx.td(i).vrtx(1) -nvrtx)/(p-1);
-        sign = ((zx.td(i).vrtx(1) -nvrtx)%(p-1) == 0 ? 1 : -1);
-        td(i/p2).side(0) = sind; 
-        td(i/p2).sign(0) = sign;
-        sd(sind).vrtx((1-sign)/2) = td(i/p2).vrtx(1);
-        sd(sind).vrtx((1+sign)/2) = td(i/p2).vrtx(2);
+        tri(i/p2).pnt(0) = zx.tri(i+2*p-2).pnt(2);
+        tri(i/p2).pnt(1) = zx.tri(i).pnt(0);
+        tri(i/p2).pnt(2) = zx.tri(i+p2-1).pnt(1);
+        sind = (zx.tri(i).pnt(1) -npnt)/(p-1);
+        sgn = ((zx.tri(i).pnt(1) -npnt)%(p-1) == 0 ? 1 : -1);
+        tri(i/p2).seg(0) = sind; 
+        tri(i/p2).sgn(0) = sgn;
+        seg(sind).pnt((1-sgn)/2) = tri(i/p2).pnt(1);
+        seg(sind).pnt((1+sgn)/2) = tri(i/p2).pnt(2);
         
-        sind = (zx.td(i+p2-1).vrtx(2) -nvrtx)/(p-1);
-        sign = ((zx.td(i+p2-1).vrtx(2) -nvrtx)%(p-1) == 0 ? 1 : -1);
-        td(i/p2).side(1) = sind;
-        td(i/p2).sign(1) = sign;
-        sd(sind).vrtx((1-sign)/2) = td(i/p2).vrtx(2);
-        sd(sind).vrtx((1+sign)/2) = td(i/p2).vrtx(0);
+        sind = (zx.tri(i+p2-1).pnt(2) -npnt)/(p-1);
+        sgn = ((zx.tri(i+p2-1).pnt(2) -npnt)%(p-1) == 0 ? 1 : -1);
+        tri(i/p2).seg(1) = sind;
+        tri(i/p2).sgn(1) = sgn;
+        seg(sind).pnt((1-sgn)/2) = tri(i/p2).pnt(2);
+        seg(sind).pnt((1+sgn)/2) = tri(i/p2).pnt(0);
         
-        sind = (zx.td(i+2*p-2).vrtx(0) -nvrtx)/(p-1);
-        sign = ((zx.td(i+2*p-2).vrtx(0) -nvrtx)%(p-1) == 0 ? 1 : -1);
-        td(i/p2).side(2) = sind;
-        td(i/p2).sign(2) = sign;
-        sd(sind).vrtx((1-sign)/2) = td(i/p2).vrtx(0);
-        sd(sind).vrtx((1+sign)/2) = td(i/p2).vrtx(1);
+        sind = (zx.tri(i+2*p-2).pnt(0) -npnt)/(p-1);
+        sgn = ((zx.tri(i+2*p-2).pnt(0) -npnt)%(p-1) == 0 ? 1 : -1);
+        tri(i/p2).seg(2) = sind;
+        tri(i/p2).sgn(2) = sgn;
+        seg(sind).pnt((1-sgn)/2) = tri(i/p2).pnt(0);
+        seg(sind).pnt((1+sgn)/2) = tri(i/p2).pnt(1);
     }
-    sbdry(0)->nel = zx.sbdry(0)->nel/p;
+    ebdry(0)->nel = zx.ebdry(0)->nel/p;
     i = 0;
-    if (zx.sd(zx.sbdry(0)->el(0)).vrtx(0) < nvrtx) ++i;
-    for(;i<zx.sbdry(0)->nel;i+=p) {
-        sind = (zx.sd(zx.sbdry(0)->el(i)).vrtx(0) -nvrtx)/(p-1);
-        sbdry(0)->el(i/p) = sind;
+    if (zx.seg(zx.ebdry(0)->el(0)).pnt(0) < npnt) ++i;
+    for(;i<zx.ebdry(0)->nel;i+=p) {
+        sind = (zx.seg(zx.ebdry(0)->el(i)).pnt(0) -npnt)/(p-1);
+        ebdry(0)->el(i/p) = sind;
     }
     
     return;
@@ -55,27 +55,27 @@ void tri_mesh::symmetrize() {
 		vmin = 0.0;
 		vmax = 0.0;
 		for(vct=0;vct<3;++vct) {
-			vmin = MIN(vmin,vrtx(td(i).vrtx(vct))(1));
-			vmax = MAX(vmax,vrtx(td(i).vrtx(vct))(1));
+			vmin = MIN(vmin,pnts(tri(i).pnt(vct))(1));
+			vmax = MAX(vmax,pnts(tri(i).pnt(vct))(1));
 		}
 		if (vmax > fabs(vmin)) 
-			td(i).info = 0;
+			tri(i).info = 0;
 		else
-			td(i).info = 1;
+			tri(i).info = 1;
 	}
     
     output("testing",easymesh);
     	
 	tri_mesh zpart[2];
-    zpart[0].allocate(maxvst*4);
+    zpart[0].allocate(maxpst*4);
 	zpart[0].partition(*this,1);
     
     /* FIND NEW BOUNDARY */
     bnum = -1;
-    for(i=0;i<zpart[0].nsbd;++i) {
-        if (zpart[0].sbdry(i)->is_comm()) {
-            for(j=0;j<nsbd;++j)
-                if (sbdry(j)->idnum == zpart[0].sbdry(i)->idnum) goto next;
+    for(i=0;i<zpart[0].nebd;++i) {
+        if (zpart[0].ebdry(i)->is_comm()) {
+            for(j=0;j<nebd;++j)
+                if (ebdry(j)->idnum == zpart[0].ebdry(i)->idnum) goto next;
             bnum = i;
             break;
             next: continue;
@@ -83,42 +83,42 @@ void tri_mesh::symmetrize() {
     }
     
     if (bnum > -1) {
-        for(j=0;j<zpart[0].sbdry(bnum)->nel;++j) {
-            sind = zpart[0].sbdry(bnum)->el(j);
+        for(j=0;j<zpart[0].ebdry(bnum)->nel;++j) {
+            sind = zpart[0].ebdry(bnum)->el(j);
             for(vct=0;vct<2;++vct) 
-                zpart[0].vrtx(zpart[0].sd(sind).vrtx(vct))(1) = 0.0;
+                zpart[0].pnts(zpart[0].seg(sind).pnt(vct))(1) = 0.0;
         }
         zpart[0].smooth_cofa(2);
     }
     zpart[0].output("cut",grid);
 
 	zpart[1].copy(zpart[0]);
-	for(i=0;i<zpart[1].nvrtx;++i)
-		zpart[1].vrtx(i)(1) *= -1.0;
+	for(i=0;i<zpart[1].npnt;++i)
+		zpart[1].pnts(i)(1) *= -1.0;
     
-	for(i=0;i<zpart[1].nside;++i) {
-		vct = zpart[1].sd(i).vrtx(0);
-		zpart[1].sd(i).vrtx(0) = zpart[1].sd(i).vrtx(1);
-		zpart[1].sd(i).vrtx(1) = vct;
+	for(i=0;i<zpart[1].nseg;++i) {
+		vct = zpart[1].seg(i).pnt(0);
+		zpart[1].seg(i).pnt(0) = zpart[1].seg(i).pnt(1);
+		zpart[1].seg(i).pnt(1) = vct;
 	}
 
 	for(i=0;i<zpart[1].ntri;++i) {
-		vct = zpart[1].td(i).vrtx(0);
-		zpart[1].td(i).vrtx(0) = zpart[1].td(i).vrtx(1);
-		zpart[1].td(i).vrtx(1) = vct;
-        vct = zpart[1].td(i).side(0);
-        zpart[1].td(i).side(0) = zpart[1].td(i).side(1);
-		zpart[1].td(i).side(1) = vct;
-        vct = zpart[1].td(i).sign(0);
-        zpart[1].td(i).sign(0) = zpart[1].td(i).sign(1);
-		zpart[1].td(i).sign(1) = vct;
-        vct = zpart[1].td(i).tri(0);
-        zpart[1].td(i).tri(0) = zpart[1].td(i).tri(1);
-		zpart[1].td(i).tri(1) = vct;
+		vct = zpart[1].tri(i).pnt(0);
+		zpart[1].tri(i).pnt(0) = zpart[1].tri(i).pnt(1);
+		zpart[1].tri(i).pnt(1) = vct;
+        vct = zpart[1].tri(i).seg(0);
+        zpart[1].tri(i).seg(0) = zpart[1].tri(i).seg(1);
+		zpart[1].tri(i).seg(1) = vct;
+        vct = zpart[1].tri(i).sgn(0);
+        zpart[1].tri(i).sgn(0) = zpart[1].tri(i).sgn(1);
+		zpart[1].tri(i).sgn(1) = vct;
+        vct = zpart[1].tri(i).tri(0);
+        zpart[1].tri(i).tri(0) = zpart[1].tri(i).tri(1);
+		zpart[1].tri(i).tri(1) = vct;
 	}	
 	
-   for(i=0;i<zpart[1].nsbd;++i)
-		zpart[1].sbdry(i)->reorder();
+   for(i=0;i<zpart[1].nebd;++i)
+		zpart[1].ebdry(i)->reorder();
         
     zpart[1].output("reflected");
 
@@ -130,7 +130,7 @@ void tri_mesh::symmetrize() {
     return;
 }
 
-void tri_mesh::cut(Array<double,1> indicator) {
+void tri_mesh::cut() {
 	int i,j,sind,vct,bnum;
 	double vmin, vmax;
 	
@@ -138,20 +138,20 @@ void tri_mesh::cut(Array<double,1> indicator) {
 		vmin = 0.0;
 		vmax = 0.0;
 		for(vct=0;vct<3;++vct) {
-			vmin = MIN(vmin,indicator(td(i).vrtx(vct)));
-			vmax = MAX(vmax,indicator(td(i).vrtx(vct)));
+			vmin = MIN(vmin,gbl->fltwk(tri(i).pnt(vct)));
+			vmax = MAX(vmax,gbl->fltwk(tri(i).pnt(vct)));
 		}
 		if (vmax > fabs(vmin)) 
-			td(i).info = 0;
+			tri(i).info = 0;
 		else
-			td(i).info = 1;
+			tri(i).info = 1;
 	}
     
    output("testing",easymesh);
     	
    for (int m = 0; m < 2; ++m) {
       tri_mesh zpart[2];
-      zpart[m].allocate(maxvst*4);
+      zpart[m].allocate(maxpst*4);
       zpart[m].partition(*this,m);
       
       char buff[100];
@@ -160,10 +160,10 @@ void tri_mesh::cut(Array<double,1> indicator) {
 
         /* FIND NEW BOUNDARY */
         bnum = -1;
-        for(i=0;i<zpart[m].nsbd;++i) {
-            if (zpart[m].sbdry(i)->is_comm()) {
-                for(j=0;j<nsbd;++j)
-                    if (sbdry(j)->idnum == zpart[m].sbdry(i)->idnum) goto next;
+        for(i=0;i<zpart[m].nebd;++i) {
+            if (zpart[m].ebdry(i)->is_comm()) {
+                for(j=0;j<nebd;++j)
+                    if (ebdry(j)->idnum == zpart[m].ebdry(i)->idnum) goto next;
                 bnum = i;
                 break;
                 next: continue;
@@ -174,23 +174,23 @@ void tri_mesh::cut(Array<double,1> indicator) {
             TinyVector<FLT,ND> grad,dphi,dx;
             TinyMatrix<FLT,ND,ND> ldcrd;
             FLT jcbi,dnorm,mag;
-            int n,tind,vind,tindold, vindold;
+            int n,tind,pind,tindold, vindold;
             TinyVector<int,3> v;
             
-            for(j=0;j<zpart[m].sbdry(bnum)->nel;++j) {
-                sind = zpart[m].sbdry(bnum)->el(j);
-                tind = zpart[m].sd(sind).tri(0);
-                tindold = zpart[m].td(tind).info;
+            for(j=0;j<zpart[m].ebdry(bnum)->nel;++j) {
+                sind = zpart[m].ebdry(bnum)->el(j);
+                tind = zpart[m].seg(sind).tri(0);
+                tindold = zpart[m].tri(tind).info;
                 
                 /* CALCULATE GRADIENT */
-                v = td(tindold).vrtx;
+                v = tri(tindold).pnt;
                 for(n=0;n<ND;++n) {
-                    ldcrd(n,0) = 0.5*(vrtx(v(2))(n) -vrtx(v(1))(n));
-                    ldcrd(n,1) = 0.5*(vrtx(v(0))(n) -vrtx(v(1))(n));
+                    ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
+                    ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
                 }
                 jcbi = 1./(ldcrd(0,0)*ldcrd(1,1) -ldcrd(0,1)*ldcrd(1,0));
-                dphi(0) = 0.5*(indicator(v(2)) -indicator(v(1)));
-                dphi(1) = 0.5*(indicator(v(0)) -indicator(v(1)));
+                dphi(0) = 0.5*(gbl->fltwk(v(2)) -gbl->fltwk(v(1)));
+                dphi(1) = 0.5*(gbl->fltwk(v(0)) -gbl->fltwk(v(1)));
 
                 grad(0) =  dphi(0)*ldcrd(1,1) -dphi(1)*ldcrd(1,0);
                 grad(1) = -dphi(0)*ldcrd(0,1) +dphi(1)*ldcrd(0,0);
@@ -199,19 +199,19 @@ void tri_mesh::cut(Array<double,1> indicator) {
                 
                 /* MOVE FIRST VERTEX OF EACH EDGE */
                 /* THE OLD MESH STORES  */
-                /* vd(vind).info = new vrtx index or -1 */
+                /* pnt(pind).info = new pnt index or -1 */
                 /* THE NEW MESH STORES */
-                /* td(tind).info = old tri index */
-                vind = zpart[m].sd(sind).vrtx(0);
+                /* tri(tind).info = old tri index */
+                pind = zpart[m].seg(sind).pnt(0);
                 for (vindold=0;vindold<3;++vindold) 
-                    if (vd(td(tindold).vrtx(vindold)).info == vind) break;
-                vindold = td(tindold).vrtx(vindold);
+                    if (pnt(tri(tindold).pnt(vindold)).info == pind) break;
+                vindold = tri(tindold).pnt(vindold);
                 
-                dnorm = -indicator(vindold)/mag;
+                dnorm = -gbl->fltwk(vindold)/mag;
                 dx(0) = dnorm*grad(0)/mag;
                 dx(1) = dnorm*grad(1)/mag;
                 
-                zpart[m].vrtx(vind) += dx;
+                zpart[m].pnts(pind) += dx;
             }
         }
         sprintf(buff,"cut%d",m);
@@ -221,58 +221,115 @@ void tri_mesh::cut(Array<double,1> indicator) {
 
     return;
 }	
+
+void tri_mesh::trim() {
+    int i,j,n,bsd,tin,tind,nsrch,ntdel;
+    
+    /* ASSUMES gbl->fltwk HAS BEEN SET WITH VALUES TO DETERMINE HOW MUCH TO TRIM OFF OF BOUNDARIES */
+    
+    for(i=0;i<ntri;++i)
+        tri(i).info = 0;
+
+    ntdel = 0;
+
+    for (bsd=0;bsd<ebdry(0)->nel;++bsd) {
+        tind = seg(ebdry(0)->el(bsd)).tri(0);
+        if (tri(tind).info > 0) continue;
+        
+        gbl->intwk(0) = tind;
+        tri(tind).info = 1;
+        nsrch = ntdel+1;
+        
+        /* NEED TO SEARCH SURROUNDING TRIANGLES */
+        for(i=ntdel;i<nsrch;++i) {
+            tin = gbl->intwk(i);
+            for (n=0;n<3;++n)
+                if (gbl->fltwk(tri(tin).pnt(n)) < 0.0) goto NEXT;
+                
+            gbl->intwk(ntdel++) = tin;
+
+            for(j=0;j<3;++j) {
+                tind = tri(tin).tri(j);
+                if (tind < 0) continue;
+                if (tri(tind).info > 0) continue; 
+                tri(tind).info = 1;          
+                gbl->intwk(nsrch++) = tind;
+            }
+            NEXT: continue;
+        }
+    }
+    
+    for(i=0;i<ntri;++i)
+        tri(i).info = 0;
+        
+    for(i=0;i<ntdel;++i)
+        tri(gbl->intwk(i)).info = 1;
+        
+    for(i=0;i<maxpst;++i)
+        gbl->intwk(i) = -1;
+        
+    tri_mesh ztrim;
+    ztrim.init(*this);
+    ztrim.partition(*this,0);
+    ztrim.output("trim",grid);
+    ztrim.output("trim",tri_mesh::boundary);
+        
+    return;
+}
+
+
 			
 	
 
 void tri_mesh::shift(TinyVector<FLT,ND>& s) {
     int n;
     
-    for(int i=0;i<nvrtx;++i)
+    for(int i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
-            vrtx(i)(1) += s(n);
+            pnts(i)(1) += s(n);
 
     return;
 }
 
 void tri_mesh::scale(TinyVector<FLT,ND>& s) {
     int n;
-    for(int i=0;i<nvrtx;++i)
+    for(int i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
-            vrtx(i)(1) *= s(n);
+            pnts(i)(1) *= s(n);
 
     return;
 }
 
 int tri_mesh::smooth_cofa(int niter) {
-    int iter,sind,i,j,n,v0,v1;
+    int iter,sind,i,j,n,p0,p1;
         
-    for(i=0;i<nvrtx;++i)
-        vd(i).info = 0;
+    for(i=0;i<npnt;++i)
+        pnt(i).info = 0;
         
-    for(i=0;i<nsbd;++i) {
-        for(j=0;j<sbdry(i)->nel;++j) {
-            sind = sbdry(i)->el(j);
-            vd(sd(sind).vrtx(0)).info = -1;
-            vd(sd(sind).vrtx(1)).info = -1;
+    for(i=0;i<nebd;++i) {
+        for(j=0;j<ebdry(i)->nel;++j) {
+            sind = ebdry(i)->el(j);
+            pnt(seg(sind).pnt(0)).info = -1;
+            pnt(seg(sind).pnt(1)).info = -1;
         }
     }
     
     for(iter=0; iter< niter; ++iter) {
         /* SMOOTH POINT DISTRIBUTION X*/
         for(n=0;n<ND;++n) {
-            for(i=0;i<nvrtx;++i)
+            for(i=0;i<npnt;++i)
                 gbl->fltwk(i) = 0.0;
     
-            for(i=0;i<nside;++i) {
-                v0 = sd(i).vrtx(0);
-                v1 = sd(i).vrtx(1);
-                gbl->fltwk(v0) += vrtx(v1)(n);
-                gbl->fltwk(v1) += vrtx(v0)(n);
+            for(i=0;i<nseg;++i) {
+                p0 = seg(i).pnt(0);
+                p1 = seg(i).pnt(1);
+                gbl->fltwk(p0) += pnts(p1)(n);
+                gbl->fltwk(p1) += pnts(p0)(n);
             }
     
-            for(i=0;i<nvrtx;++i) {
-                if (vd(i).info == 0) {
-                    vrtx(i)(n) = gbl->fltwk(i)/vd(i).nnbor;
+            for(i=0;i<npnt;++i) {
+                if (pnt(i).info == 0) {
+                    pnts(i)(n) = gbl->fltwk(i)/pnt(i).nnbor;
                 }
             }
         }

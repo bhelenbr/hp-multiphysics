@@ -16,7 +16,7 @@ void vcomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     sndtype()=flt_msg;
     
     /* LOAD SEND BUFFER */    
-    offset = v0*stride +bgn;
+    offset = p0*stride +bgn;
     for (i=0;i<end-bgn+1;++i) 
         fsndbuf(i) = base[offset+i];
 }
@@ -35,7 +35,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
         case(master_slave): {
             if (first || phase(grp)(0) != phi) return;
             
-            offset = v0*stride +bgn;
+            offset = p0*stride +bgn;
             for(i=0;i<end-bgn+1;++i) 
                 base[offset++] = frcvbuf(0,i);
                 
@@ -54,7 +54,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = v0*stride +bgn;
+                        offset = p0*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i)/matches;
                     }
@@ -69,7 +69,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = v0*stride +bgn;
+                        offset = p0*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i);
                     }
@@ -84,7 +84,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = v0*stride +bgn;
+                        offset = p0*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i);
                     }
@@ -101,12 +101,12 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 /**************************************/
 /* GENERIC FUNCTIONS FOR SIDES          */
 /**************************************/
-void side_bdry::alloc(int n) {
+void edge_bdry::alloc(int n) {
     maxel = n;
     el.resize(n);
 }
       
-void side_bdry::copy(const side_bdry& bin) {
+void edge_bdry::copy(const edge_bdry& bin) {
     int i;
     
         
@@ -122,32 +122,32 @@ void side_bdry::copy(const side_bdry& bin) {
     return;
 }
 
-void side_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+void edge_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
     /* FOR A LINEAR SIDE */
     int n;
     
     for (n=0;n<tri_mesh::ND;++n)
-        pt(n) = 0.5*((1. -psi)*x.vrtx(x.sd(el(indx)).vrtx(0))(n) +(1.+psi)*x.vrtx(x.sd(el(indx)).vrtx(1))(n));
+        pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(el(indx)).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(el(indx)).pnt(1))(n));
     
     return;
 }
 
-void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const {
-    int k,sind,v0,v1,sidlocprev;
+void edge_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const {
+    int k,sind,p0,p1,sidlocprev;
     FLT dx,dy,ol,psi,normdist;
     FLT psiprev,normdistprev;
     FLT mindist = 1.0e32;
         
-    if (x.sd(el(0)).vrtx(0) == x.sd(el(nel-1)).vrtx(1)) {
+    if (x.seg(el(0)).pnt(0) == x.seg(el(nel-1)).pnt(1)) {
         /* BOUNDARY IS A LOOP */
         sind = el(nel-1);
-        v0 = x.sd(sind).vrtx(0);
-        v1 = x.sd(sind).vrtx(1);
-        dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
-        dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
+        p0 = x.seg(sind).pnt(0);
+        p1 = x.seg(sind).pnt(1);
+        dx = x.pnts(p1)(0) - x.pnts(p0)(0);
+        dy = x.pnts(p1)(1) - x.pnts(p0)(1);
         ol = 2./(dx*dx +dy*dy);
-        psi = ol*((xpt(0) -x.vrtx(v0)(0))*dx +(xpt(1) -x.vrtx(v0)(1))*dy) -1.;
-        normdist = dx*(xpt(1)-x.vrtx(v0)(1))-dy*(xpt(0)-x.vrtx(v1)(0));
+        psi = ol*((xpt(0) -x.pnts(p0)(0))*dx +(xpt(1) -x.pnts(p0)(1))*dy) -1.;
+        normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p1)(0));
         normdist *= sqrt(ol/2.);
         psiprev = psi;
         normdistprev = normdist;
@@ -159,13 +159,13 @@ void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
     
     for(k=0;k<nel;++k) {
         sind = el(k);
-        v0 = x.sd(sind).vrtx(0);
-        v1 = x.sd(sind).vrtx(1);
-        dx = x.vrtx(v1)(0) - x.vrtx(v0)(0);
-        dy = x.vrtx(v1)(1) - x.vrtx(v0)(1);
+        p0 = x.seg(sind).pnt(0);
+        p1 = x.seg(sind).pnt(1);
+        dx = x.pnts(p1)(0) - x.pnts(p0)(0);
+        dy = x.pnts(p1)(1) - x.pnts(p0)(1);
         ol = 2./(dx*dx +dy*dy);
-        psi = ol*((xpt(0) -x.vrtx(v0)(0))*dx +(xpt(1) -x.vrtx(v0)(1))*dy) -1.;
-        normdist = dx*(xpt(1)-x.vrtx(v0)(1))-dy*(xpt(0)-x.vrtx(v1)(0));
+        psi = ol*((xpt(0) -x.pnts(p0)(0))*dx +(xpt(1) -x.pnts(p0)(1))*dy) -1.;
+        normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p1)(0));
         normdist *= sqrt(ol/2.);
         
         if (psi <= -1.0 && psiprev >= 1.0) {
@@ -199,29 +199,29 @@ void side_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
 
 
 
-void side_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
-    int j,k,sind,tind,v0,sidloc;
+void edge_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
+    int j,k,sind,tind,p0,sidloc;
     FLT psiloc;
         
     for(k=1;k<nel;++k) {
-        v0 = x.sd(el(k)).vrtx(0);
-        tgt.sbdry(bnum)->findbdrypt(x.vrtx(v0), sidloc, psiloc);
-        sind = tgt.sbdry(bnum)->el(sidloc);
-        tind = tgt.sd(sind).tri(0);                            
-        cnnct(v0).tri = tind;
+        p0 = x.seg(el(k)).pnt(0);
+        tgt.ebdry(bnum)->findbdrypt(x.pnts(p0), sidloc, psiloc);
+        sind = tgt.ebdry(bnum)->el(sidloc);
+        tind = tgt.seg(sind).tri(0);                            
+        cnnct(p0).tri = tind;
         for (j=0;j<3;++j) 
-            if (tgt.td(tind).side(j) == sind) break;
+            if (tgt.tri(tind).seg(j) == sind) break;
         assert(j < 3);
-        cnnct(v0).wt(j) = 0.0;
-        cnnct(v0).wt((j+1)%3) = 0.5*(1.-psiloc);
-        cnnct(v0).wt((j+2)%3) = 0.5*(1.+psiloc);
+        cnnct(p0).wt(j) = 0.0;
+        cnnct(p0).wt((j+1)%3) = 0.5*(1.-psiloc);
+        cnnct(p0).wt((j+2)%3) = 0.5*(1.+psiloc);
     } 
     
     return;
 }
 
 /* SWAP ELEMENTS IN LIST */
-void side_bdry::swap(int s1, int s2) {
+void edge_bdry::swap(int s1, int s2) {
     int ind;
     
     /* TEMPORARY NOT SURE HOW TO SWAP S VALUES */    
@@ -235,30 +235,30 @@ void side_bdry::swap(int s1, int s2) {
 
 /* REORDERS BOUNDARIES TO BE SEQUENTIAL */
 /* USES gbl->intwk & gbl->i2wk AS WORK ARRAYS */
-void side_bdry::reorder() {
-    int i,count,total,sind,minv,first;
+void edge_bdry::reorder() {
+    int i,count,total,sind,minp,first;
 
     total = nel;
     
     /* DON'T ASSUME wk INITIALIZED TO -1 */
     for(i=0;i<nel;++i) {
         sind = el(i);
-        x.gbl->intwk(x.sd(sind).vrtx(0)) = -1;
-        x.gbl->i2wk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl->intwk(x.seg(sind).pnt(0)) = -1;
+        x.gbl->i2wk(x.seg(sind).pnt(1)) = -1;
     }
     
     /* STORE SIDE INDICES BY VERTEX NUMBER */
     for(i=0; i < nel; ++i) {
         sind = el(i);
-        x.gbl->intwk(x.sd(sind).vrtx(1)) = i;
-        x.gbl->i2wk(x.sd(sind).vrtx(0)) = i;
+        x.gbl->intwk(x.seg(sind).pnt(1)) = i;
+        x.gbl->i2wk(x.seg(sind).pnt(0)) = i;
     }
 
     /* FIND FIRST SIDE */    
     first = -1;
     for(i=0;i<nel;++i) {
         sind = el(i);
-        if (x.gbl->intwk(x.sd(sind).vrtx(0)) == -1) {
+        if (x.gbl->intwk(x.seg(sind).pnt(0)) == -1) {
             first = i;
             break;
         }
@@ -267,12 +267,12 @@ void side_bdry::reorder() {
     /* SPECIAL CONSTRAINT IF LOOP */
     /* THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
     if (first < 0) {
-        minv = x.nvrtx;
+        minp = x.npnt;
         for(i=0;i<nel;++i) {
             sind = el(i);
-            if (x.sd(sind).vrtx(1) < minv) {
+            if (x.seg(sind).pnt(1) < minp) {
                 first = i;
-                minv = x.sd(sind).vrtx(1);
+                minp = x.seg(sind).pnt(1);
             }
         }
     }
@@ -280,44 +280,44 @@ void side_bdry::reorder() {
     /* SWAP FIRST SIDE */
     count = 0;
     swap(count,first);
-    x.gbl->intwk(x.sd(el(first)).vrtx(1)) = first;
-    x.gbl->i2wk(x.sd(el(first)).vrtx(0)) = first;
-    x.gbl->intwk(x.sd(el(count)).vrtx(1)) = count;
-    x.gbl->i2wk(x.sd(el(count)).vrtx(0)) = -1;  // TO MAKE SURE LOOP STOPS
+    x.gbl->intwk(x.seg(el(first)).pnt(1)) = first;
+    x.gbl->i2wk(x.seg(el(first)).pnt(0)) = first;
+    x.gbl->intwk(x.seg(el(count)).pnt(1)) = count;
+    x.gbl->i2wk(x.seg(el(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
     /* REORDER LIST */
-    while ((first = x.gbl->i2wk(x.sd(el(count++)).vrtx(1))) >= 0) {
+    while ((first = x.gbl->i2wk(x.seg(el(count++)).pnt(1))) >= 0) {
         swap(count,first);
-        x.gbl->intwk(x.sd(el(first)).vrtx(1)) = first;
-        x.gbl->i2wk(x.sd(el(first)).vrtx(0)) = first;
-        x.gbl->intwk(x.sd(el(count)).vrtx(1)) = count;
-        x.gbl->i2wk(x.sd(el(count)).vrtx(0)) = count;
+        x.gbl->intwk(x.seg(el(first)).pnt(1)) = first;
+        x.gbl->i2wk(x.seg(el(first)).pnt(0)) = first;
+        x.gbl->intwk(x.seg(el(count)).pnt(1)) = count;
+        x.gbl->i2wk(x.seg(el(count)).pnt(0)) = count;
     }
     
     /* RESET gbl->intwk TO -1 */
     for(i=0; i <total; ++i) {
         sind = el(i);
-        x.gbl->intwk(x.sd(sind).vrtx(1)) = -1;
+        x.gbl->intwk(x.seg(sind).pnt(1)) = -1;
     }
     
     if (count < total) {
-        ++x.nsbd;
-        x.sbdry.resizeAndPreserve(x.nsbd);
-        x.sbdry(x.nsbd-1) = create(x);
-        x.sbdry(x.nsbd-1)->copy(*this);
+        ++x.nebd;
+        x.ebdry.resizeAndPreserve(x.nebd);
+        x.ebdry(x.nebd-1) = create(x);
+        x.ebdry(x.nebd-1)->copy(*this);
         nel = count;
 
         for(i=0;i<total-nel;++i)
-            x.sbdry(x.nsbd-1)->swap(i,i+nel);
-        x.sbdry(x.nsbd-1)->nel = total-nel;
-        *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.sbdry(x.nsbd-1)->nel << std::endl;
+            x.ebdry(x.nebd-1)->swap(i,i+nel);
+        x.ebdry(x.nebd-1)->nel = total-nel;
+        *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nel << std::endl;
         return;
     }
     
     return;
 }
 
-void scomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
+void ecomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int j,k,count,sind,offset;
     
     if (!((1<<grp)&groupmask)) return;
@@ -325,12 +325,12 @@ void scomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     count = 0;
     for(j=0;j<nel;++j) {
         sind = el(j);
-        offset = x.sd(sind).vrtx(0)*stride;
+        offset = x.seg(sind).pnt(0)*stride;
         for (k=bgn;k<=end;++k) {
             fsndbuf(count++) = base[offset+k];
         }
     }
-    offset = x.sd(sind).vrtx(1)*stride;
+    offset = x.seg(sind).pnt(1)*stride;
     for (k=bgn;k<=end;++k) 
         fsndbuf(count++) = base[offset+k]; 
         
@@ -338,7 +338,7 @@ void scomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     sndtype() = boundary::flt_msg;
 }
 
-void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
+void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
     int j,k,m,count,countdn,countup,offset,sind;
     int matches = 1;
     FLT mtchinv;
@@ -362,7 +362,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
             countdn = nel*ebp1;
             for(j=0;j<nel;++j) {
                 sind = el(j);
-                offset = x.sd(sind).vrtx(0)*stride +bgn;
+                offset = x.seg(sind).pnt(0)*stride +bgn;
                 for(k=0;k<ebp1;++k) {
                     base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
@@ -371,7 +371,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                 }
                 countdn -= ebp1;
             }
-            offset = x.sd(sind).vrtx(1)*stride +bgn;
+            offset = x.seg(sind).pnt(1)*stride +bgn;
             for(k=0;k<ebp1;++k) {
                 base[offset+k] = frcvbuf(0,countdn+k);
 #ifdef MPDEBUG
@@ -413,7 +413,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         count = 0;
                         for(j=0;j<nel;++j) {
                             sind = el(j);
-                            offset = x.sd(sind).vrtx(0)*stride;
+                            offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
@@ -422,7 +422,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             }
 
                         }
-                        offset = x.sd(sind).vrtx(1)*stride;
+                        offset = x.seg(sind).pnt(1)*stride;
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
@@ -460,7 +460,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         count = 0;
                         for(j=0;j<nel;++j) {
                             sind = el(j);
-                            offset = x.sd(sind).vrtx(0)*stride;
+                            offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
@@ -469,7 +469,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             }
 
                         }
-                        offset = x.sd(sind).vrtx(1)*stride;
+                        offset = x.seg(sind).pnt(1)*stride;
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
@@ -508,7 +508,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         count = 0;
                         for(j=0;j<nel;++j) {
                             sind = el(j);
-                            offset = x.sd(sind).vrtx(0)*stride;
+                            offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
@@ -517,7 +517,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                             }
 
                         }
-                        offset = x.sd(sind).vrtx(1)*stride;
+                        offset = x.seg(sind).pnt(1)*stride;
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
@@ -536,7 +536,7 @@ void scomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
     }
 }
     
-void scomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
+void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int j,k,count,sind,offset;
     
     if (!((1<<grp)&groupmask)) return;
@@ -554,7 +554,7 @@ void scomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     sndtype() = boundary::flt_msg;
 }
 
-void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
+void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
     int j,k,m,count,countdn,countup,offset,sind;
     int matches = 1;
     FLT mtchinv;
@@ -714,28 +714,28 @@ void scomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 }
 
 
-void spartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
-    int i,j,k,v0;
+void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
+    int i,j,k,p0;
     
  
     /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
     /* MAKE SURE ENDPOINTS ARE OK */
-    i = x.sd(el(0)).vrtx(0);
+    i = x.seg(el(0)).pnt(0);
     if (cnnct(i).tri < 0) {
-        tgt.qtree.nearpt(x.vrtx(i).data(),v0);
-        cnnct(i).tri=tgt.vd(v0).tri;
+        tgt.qtree.nearpt(x.pnts(i).data(),p0);
+        cnnct(i).tri=tgt.pnt(p0).tri;
         for(j=0;j<3;++j) {
             cnnct(i).wt(j) = 0.0;
-            if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
+            if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
         }
     }
-    i = x.sd(el(nel-1)).vrtx(1);
+    i = x.seg(el(nel-1)).pnt(1);
     if (cnnct(i).tri < 0) {
-        tgt.qtree.nearpt(x.vrtx(i).data(),v0);
-        cnnct(i).tri=tgt.vd(v0).tri;
+        tgt.qtree.nearpt(x.pnts(i).data(),p0);
+        cnnct(i).tri=tgt.pnt(p0).tri;
         for(j=0;j<3;++j) {
             cnnct(i).wt(j) = 0.0;
-            if (tgt.td(cnnct(i).tri).vrtx(j) == v0) cnnct(i).wt(j) = 1.0;
+            if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
         }
     }
     
@@ -743,15 +743,15 @@ void spartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
         sndsize() = 0;
         sndtype() = int_msg;
         for(k=1;k<nel;++k) {
-            v0 = x.sd(el(k)).vrtx(0);
-            if (cnnct(v0).tri > 0) {
+            p0 = x.seg(el(k)).pnt(0);
+            if (cnnct(p0).tri > 0) {
                 isndbuf(sndsize()++) = -1;
             }
             else {
                 isndbuf(sndsize()++) = +1;
-                cnnct(v0).tri = 0;
+                cnnct(p0).tri = 0;
                 for(j=0;j<3;++j)
-                    cnnct(v0).wt(j) = 0.0;
+                    cnnct(p0).wt(j) = 0.0;
             }
         }
     }
@@ -763,36 +763,12 @@ void spartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
     if (!first) {
         i = 0;
         for(k=nel-1;k>0;--k) {
-            v0 = x.sd(el(k)).vrtx(1);
+            p0 = x.seg(el(k)).pnt(1);
             if (ircvbuf(0,i) < 0) {
-                cnnct(v0).tri = 0;
+                cnnct(p0).tri = 0;
                 for(j=0;j<3;++j)
-                    cnnct(v0).wt(j) = 0.0;
+                    cnnct(p0).wt(j) = 0.0;
             }
         }
     }                    
 }
-
-void curved_analytic_interface::mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-    int iter,n;
-    FLT mag, delt_dist;
-        
-    /* FOR AN ANALYTIC SURFACE */
-    iter = 0;
-    do {
-        mag = 0.0;
-        for(n=0;n<tri_mesh::ND;++n)
-            mag += pow(dhgt(n,pt.data()),2);
-        mag = sqrt(mag);
-        delt_dist = -hgt(pt.data())/mag;
-        for(n=0;n<tri_mesh::ND;++n)
-            pt(n) += delt_dist*dhgt(n,pt.data())/mag;
-        if (++iter > 100) {
-            std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // TEMPORARY NEED TO FIX
-            exit(1);
-        }
-    } while (fabs(delt_dist) > 10.*EPSILON);
-    
-    return;
-}
-

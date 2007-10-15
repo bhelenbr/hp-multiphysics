@@ -20,9 +20,9 @@ void tri_mesh::triangulate(int nsd) {
     int sind1,sindprev;
     int nsidebefore,ntest;
     int ngood;
-    int minv,maxv,itemp;
+    int minp,maxp,itemp;
     TinyVector<int,2> v;
-    int v2,v3;
+    int p2,v3;
     TinyVector<FLT,2> xmid,xcen;
     FLT xm1dx1,xm2dx2;
     FLT hmin,height;
@@ -37,60 +37,60 @@ void tri_mesh::triangulate(int nsd) {
     for(i=0;i<nsd;++i) {
         sind = abs(gbl->i2wk_lst1(i)) -1;
         dir = (1 -SIGN(gbl->i2wk_lst1(i)))/2;
-        sd(sind).tri(dir) = -1;
-        gbl->i2wk_lst2(nv++) = sd(sind).vrtx(dir);
+        seg(sind).tri(dir) = -1;
+        gbl->i2wk_lst2(nv++) = seg(sind).pnt(dir);
     }
-    if (nv > maxvst -2) {
-            *gbl->log << gbl->idprefix << " coarse mesh is not big enough " << nv << ' ' << maxvst << std::endl;
+    if (nv > maxpst -2) {
+            *gbl->log << gbl->idprefix << " coarse mesh is not big enough " << nv << ' ' << maxpst << std::endl;
             exit(1);
     }
     
     /* SETUP SIDE POINTER INFO */
     for(i=0;i<nv;++i)
-        vd(gbl->i2wk_lst2(i)).info = -1;
+        pnt(gbl->i2wk_lst2(i)).info = -1;
         
     for(i=0;i<nsd;++i) {
         sind = abs(gbl->i2wk_lst1(i)) -1;
-        v(0) = sd(sind).vrtx(0);
-        v(1) = sd(sind).vrtx(1);
+        v(0) = seg(sind).pnt(0);
+        v(1) = seg(sind).pnt(1);
         if (v(1) > v(0)) {
-            minv = v(0);
-            maxv = v(1);
+            minp = v(0);
+            maxp = v(1);
         }
         else {
-            minv = v(1);
-            maxv = v(0);
+            minp = v(1);
+            maxp = v(0);
         }
-        sind1 = vd(minv).info;
+        sind1 = pnt(minp).info;
         while (sind1 >= 0) {
             sindprev = sind1;
-            sind1 = sd(sind1).info;
+            sind1 = seg(sind1).info;
         }
-        sd(sind).info = -1;
-        if (vd(minv).info < 0)
-            vd(minv).info = sind;
+        seg(sind).info = -1;
+        if (pnt(minp).info < 0)
+            pnt(minp).info = sind;
         else 
-            sd(sindprev).info = sind;
+            seg(sindprev).info = sind;
     }
     
     bgn = 0;
     end = nsd;
     ntest = end;
     while(bgn < end) {
-        nsidebefore = nside;
+        nsidebefore = nseg;
         for(sind2=bgn;sind2<end;++sind2) {
             sind = abs(gbl->i2wk_lst1(sind2)) -1;
             dir =  (1 -SIGN(gbl->i2wk_lst1(sind2)))/2;
             
-            if (sd(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
+            if (seg(sind).tri(dir) > -1) continue; // SIDE HAS ALREADY BEEN MATCHED 
             
-            v(0) = sd(sind).vrtx(dir);
-            v(1) = sd(sind).vrtx(1 -dir);
+            v(0) = seg(sind).pnt(dir);
+            v(1) = seg(sind).pnt(1 -dir);
 
             /* SEARCH FOR GOOD POINTS */
             for(n=0;n<ND;++n) {
-                dx2(n) = vrtx(v(1))(n) -vrtx(v(0))(n);
-                xmid(n) = 0.5*(vrtx(v(1))(n) -vrtx(v(0))(n));
+                dx2(n) = pnts(v(1))(n) -pnts(v(0))(n);
+                xmid(n) = 0.5*(pnts(v(1))(n) -pnts(v(0))(n));
             }
             hmin = 1.0e99;
             
@@ -101,7 +101,7 @@ void tri_mesh::triangulate(int nsd) {
                 
         
                 for(n=0;n<ND;++n)
-                    dx1(n) = vrtx(v(0))(n) -vrtx(vtry)(n);
+                    dx1(n) = pnts(v(0))(n) -pnts(vtry)(n);
                 det          = dx1(0)*dx2(1) -dx1(1)*dx2(0);
                 if (det <= 0.0) continue;
                 
@@ -121,40 +121,40 @@ void tri_mesh::triangulate(int nsd) {
                 /* CHECK FOR INTERSECTION OF TWO CREATED SIDES */
                 /* WITH ALL OTHER BOUNDARY SIDES */
                 for(vcnt=0;vcnt<2;++vcnt) {
-                    minv = MIN(vtry,v(vcnt));
-                    maxv = MAX(vtry,v(vcnt));
+                    minp = MIN(vtry,v(vcnt));
+                    maxp = MAX(vtry,v(vcnt));
                     
                     /* LOOK THROUGH ALL SIDES CONNECTED TO MINV FOR DUPLICATE */
                     /* IF DUPLICATE THEN SIDE IS OK - NO NEED TO CHECK */
-                    sind1 = vd(minv).info;
+                    sind1 = pnt(minp).info;
                     while (sind1 >= 0) {
-                        if (maxv == sd(sind1).vrtx(0) || maxv == sd(sind1).vrtx(1)) {
+                        if (maxp == seg(sind1).pnt(0) || maxp == seg(sind1).pnt(1)) {
                             goto next_vrt;
                         }
-                        sind1 = sd(sind1).info;
+                        sind1 = seg(sind1).info;
                     }
                     
                     /* FIND BOUNDING BOX OF POTENTIAL SIDE */
                     for(n=0;n<ND;++n) {
-                        xmin(n)        = MIN(vrtx(vtry)(n),vrtx(v(vcnt))(n));
-                        xmax(n)        = MAX(vrtx(vtry)(n),vrtx(v(vcnt))(n));
+                        xmin(n)        = MIN(pnts(vtry)(n),pnts(v(vcnt))(n));
+                        xmax(n)        = MAX(pnts(vtry)(n),pnts(v(vcnt))(n));
                     }
                     
                     for(sck=0;sck<ntest;++sck) {
                         stest = abs(gbl->i2wk_lst1(sck))-1;
                         if (stest == sind) continue;
                         dirck =  (1 -SIGN(gbl->i2wk_lst1(sck)))/2;
-                        v2 = sd(stest).vrtx(dirck);
-                        v3 = sd(stest).vrtx(1-dirck);
+                        p2 = seg(stest).pnt(dirck);
+                        v3 = seg(stest).pnt(1-dirck);
                         
                         /* NO NEED TO CHECK FOR INTERSECTIONS IF CONNECTED TO ENDPOINT */
-                        if (v2 == minv || v3 == minv) continue;
-                        if (v2 == maxv || v3 == maxv) continue;
+                        if (p2 == minp || v3 == minp) continue;
+                        if (p2 == maxp || v3 == maxp) continue;
                         
                         /* FIND BOUNDING BOX OF SIDE TO CHECK AGAINST */
                         for(n=0;n<ND;++n) {
-                            xmin1(n)        = MIN(vrtx(v2)(n),vrtx(v3)(n));
-                            xmax1(n)        = MAX(vrtx(v2)(n),vrtx(v3)(n));
+                            xmin1(n)        = MIN(pnts(p2)(n),pnts(v3)(n));
+                            xmax1(n)        = MAX(pnts(p2)(n),pnts(v3)(n));
                         }
                         /* IF BOUNDING BOXES DON'T OVERLAP THEN NO INTERSECTION */
                         for(n=0;n<ND;++n)
@@ -162,9 +162,9 @@ void tri_mesh::triangulate(int nsd) {
                         
                         /* CHECK FOR INTERSECTION OF SIDES */
                         for(n=0;n<ND;++n) {
-                            dx1(n) = vrtx(maxv)(n) -vrtx(minv)(n);
-                            dx3(n) = vrtx(v3)(n)-vrtx(v2)(n);
-                            dx4(n) = vrtx(v2)(n)-vrtx(minv)(n);
+                            dx1(n) = pnts(maxp)(n) -pnts(minp)(n);
+                            dx3(n) = pnts(v3)(n)-pnts(p2)(n);
+                            dx4(n) = pnts(p2)(n)-pnts(minp)(n);
                         }
                         /* DETERMINANT IS POSITIVE IF CCW FROM VECTOR DX1 TO DX3 */
                         /* AREA OF TRIANGLE FORMED BY JOINING BASE OF VECTORS */
@@ -176,9 +176,9 @@ void tri_mesh::triangulate(int nsd) {
                         det34 = dx3(0)*dx4(1) -dx4(0)*dx3(1);
                       
                         det13 = 1./det13;
-                        /* Height ratio relative to side 1 frame of reference*/
+                        /* Height ratio relative to segment 1 frame of reference*/
                         h1 = det14*det13;
-                        /* Height ratio relative to side 3 frame of reference */
+                        /* Height ratio relative to segment 3 frame of reference */
                         h3 = det34*det13;
              
                         /* FIRST & SECOND PART CHECKS WHETHER HEIGHTS ARE IN SAME DIRECTION */
@@ -210,8 +210,8 @@ vtry_failed:continue;
                 ds2 = 1./sqrt(dx2(0)*dx2(0) +dx2(1)*dx2(1));
                 for(i=0;i<ngood;++i) {
                     vtry = gbl->i2wk_lst3(i);
-                    dx1(0) = vrtx(v(0))(0) -vrtx(vtry)(0);
-                    dx1(1) = vrtx(v(0))(1) -vrtx(vtry)(1);
+                    dx1(0) = pnts(v(0))(0) -pnts(vtry)(0);
+                    dx1(1) = pnts(v(0))(1) -pnts(vtry)(1);
                     ds1 = 1./sqrt(dx1(0)*dx1(0) +dx1(1)*dx1(1));
                     gbl->fltwk(i) = -(dx2(0)*dx1(0)  +dx2(1)*dx1(1))*ds2*ds1;
                 }
@@ -220,7 +220,7 @@ vtry_failed:continue;
                 for(i=0;i<ngood-1;++i) {
                     for(j=i+1;j<ngood;++j) {
         
-                        /* TO ELIMINATE POSSIBILITY OF REPEATED VERTICES IN gbl->i2wk_lst2 */
+                        /* TO ELIMINATE POSSIBILITY OF REPEATED POINTS IN gbl->i2wk_lst2 */
                         if (gbl->i2wk_lst3(i) == gbl->i2wk_lst3(j)) {
                             gbl->i2wk_lst3(j) = gbl->i2wk_lst3(ngood-1);
                             --ngood;
@@ -246,8 +246,8 @@ vtry_failed:continue;
         }
       
         bgn = end;
-        end += nside -nsidebefore;
-        for(i=nsidebefore;i<nside;++i)
+        end += nseg -nsidebefore;
+        for(i=nsidebefore;i<nseg;++i)
             gbl->i2wk_lst1(bgn+i-nsidebefore) = -(i + 1);
     }
             
@@ -255,31 +255,31 @@ vtry_failed:continue;
 
 }
 
-void tri_mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
+void tri_mesh::addtri(int p0,int p1, int p2, int sind, int dir) {
     int i,j,k,end,sind1,tind;
-    int minv,maxv,order,sindprev,temp;
+    int minp,maxp,order,sindprev,temp;
         
     /* ADD NEW TRIANGLE */
-    td(ntri).vrtx(0) = v0;
-    td(ntri).vrtx(1) = v1;
-    td(ntri).vrtx(2) = v2;
+    tri(ntri).pnt(0) = p0;
+    tri(ntri).pnt(1) = p1;
+    tri(ntri).pnt(2) = p2;
                     
-    vd(v0).tri = ntri;
-    vd(v1).tri = ntri;
-    vd(v2).tri = ntri;
+    pnt(p0).tri = ntri;
+    pnt(p1).tri = ntri;
+    pnt(p2).tri = ntri;
     
     end = 3;
     if (sind > -1) {
         /* SIDE 2 INFO IS KNOWN ALREADY */
-        td(ntri).side(2) = sind;
-        td(ntri).sign(2) = 1 -2*dir;
-        sd(sind).tri(dir) = ntri;
-        tind = sd(sind).tri(1-dir);
-        td(ntri).tri(2) = tind;
+        tri(ntri).seg(2) = sind;
+        tri(ntri).sgn(2) = 1 -2*dir;
+        seg(sind).tri(dir) = ntri;
+        tind = seg(sind).tri(1-dir);
+        tri(ntri).tri(2) = tind;
         if (tind > -1) {
             for(i=0;i<3;++i) {
-                if (td(tind).side(i) == sind) {
-                    td(tind).tri(i) = ntri;
+                if (tri(tind).seg(i) == sind) {
+                    tri(tind).tri(i) = ntri;
                     break;
                 }
             }
@@ -289,59 +289,59 @@ void tri_mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
 
     /* LOOP THROUGH SIDES */
     for(k=0;k<end;++k) {
-        if (v2 > v1) {
-            minv = v1;
-            maxv = v2;
+        if (p2 > p1) {
+            minp = p1;
+            maxp = p2;
             order = 1;
         }
         else {
-            minv = v2;
-            maxv = v1;
+            minp = p2;
+            maxp = p1;
             order = 0;
         }
         
-        sind1 = vd(minv).info;
+        sind1 = pnt(minp).info;
         while (sind1 >= 0) {
-            if (maxv == sd(sind1).vrtx(order)) {
+            if (maxp == seg(sind1).pnt(order)) {
                 /* SIDE IN SAME DIRECTION */
-                if (sd(sind1).tri(0) >= 0) {
-                    *gbl->log << "1:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+                if (seg(sind1).tri(0) >= 0) {
+                    *gbl->log << "1:segment already matched?" << sind1 << ' ' << p1 << ' ' << p2 << std::endl;
                     output("error",tecplot);
                     output("error",grid);
                     exit(1);
                 }
-                sd(sind1).tri(0) = ntri;
-                td(ntri).side(k) = sind1;
-                td(ntri).sign(k) = 1;
-                tind = sd(sind1).tri(1);
-                td(ntri).tri(k) = tind;
+                seg(sind1).tri(0) = ntri;
+                tri(ntri).seg(k) = sind1;
+                tri(ntri).sgn(k) = 1;
+                tind = seg(sind1).tri(1);
+                tri(ntri).tri(k) = tind;
                 if (tind > -1) {
                     for(j=0;j<3;++j) {
-                        if (td(tind).side(j) == sind1) {
-                            td(tind).tri(j) = ntri;
+                        if (tri(tind).seg(j) == sind1) {
+                            tri(tind).tri(j) = ntri;
                             break;
                         }
                     }
                 }
                 goto NEXTTRISIDE;
             }
-            else if(maxv == sd(sind1).vrtx(1-order)) {
+            else if(maxp == seg(sind1).pnt(1-order)) {
                 /* SIDE IN OPPOSITE DIRECTION */
-                if (sd(sind1).tri(1) >= 0) {
-                    *gbl->log << "2:side already matched?" << sind1 << ' ' << v1 << ' ' << v2 << std::endl;
+                if (seg(sind1).tri(1) >= 0) {
+                    *gbl->log << "2:segment already matched?" << sind1 << ' ' << p1 << ' ' << p2 << std::endl;
                     output("error",tecplot);
                     output("error",grid);
                     exit(1);
                 }
-                sd(sind1).tri(1) = ntri;
-                td(ntri).side(k) = sind1;
-                td(ntri).sign(k) = -1;
-                tind = sd(sind1).tri(0);
-                td(ntri).tri(k) = tind;
+                seg(sind1).tri(1) = ntri;
+                tri(ntri).seg(k) = sind1;
+                tri(ntri).sgn(k) = -1;
+                tind = seg(sind1).tri(0);
+                tri(ntri).tri(k) = tind;
                 if (tind > -1) {
                     for(j=0;j<3;++j) {
-                        if (td(tind).side(j) == sind1) {
-                            td(tind).tri(j) = ntri;
+                        if (tri(tind).seg(j) == sind1) {
+                            tri(tind).tri(j) = ntri;
                             break;
                         }
                     }
@@ -349,32 +349,32 @@ void tri_mesh::addtri(int v0,int v1, int v2, int sind, int dir) {
                 goto NEXTTRISIDE;      
             }
             sindprev = sind1;
-            sind1 = sd(sind1).info;
+            sind1 = seg(sind1).info;
         }
         /* NEW SIDE */
-        sd(nside).vrtx(0) = v1;
-        sd(nside).vrtx(1) = v2;
-        sd(nside).tri(0) = ntri;
-        sd(nside).tri(1) = -1;
-        td(ntri).side(k) = nside;
-        td(ntri).sign(k) = 1;
-        sd(nside).info = -1;
-        if (vd(minv).info < 0)
-            vd(minv).info = nside;
+        seg(nseg).pnt(0) = p1;
+        seg(nseg).pnt(1) = p2;
+        seg(nseg).tri(0) = ntri;
+        seg(nseg).tri(1) = -1;
+        tri(ntri).seg(k) = nseg;
+        tri(ntri).sgn(k) = 1;
+        seg(nseg).info = -1;
+        if (pnt(minp).info < 0)
+            pnt(minp).info = nseg;
         else 
-            sd(sindprev).info = nside;
-        ++nside;
-        assert(nside < maxvst -1);
+            seg(sindprev).info = nseg;
+        ++nseg;
+        assert(nseg < maxpst -1);
             
 NEXTTRISIDE:
-        temp = v0;
-        v0 = v1;
-        v1 = v2;
-        v2 = temp;
+        temp = p0;
+        p0 = p1;
+        p1 = p2;
+        p2 = temp;
     }
     ++ntri;
     
-    assert(ntri < maxvst -1);
+    assert(ntri < maxpst -1);
         
     return;
 }

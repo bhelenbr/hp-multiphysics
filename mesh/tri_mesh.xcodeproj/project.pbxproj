@@ -175,14 +175,14 @@
 		07F2E94600974D3D80990B20 /* in_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = in_mesh.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94700974D3D80990B20 /* setup.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = setup.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94800974D3D80990B20 /* out_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = out_mesh.cpp; sourceTree = SOURCE_ROOT; };
-		07F2E94A00974D3D80990B20 /* r_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = r_mesh.cpp; sourceTree = SOURCE_ROOT; };
+		07F2E94A00974D3D80990B20 /* r_mesh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = r_mesh.cpp; sourceTree = "<group>"; };
 		07F2E94B00974D3D80990B20 /* tprims.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = tprims.cpp; sourceTree = SOURCE_ROOT; };
 		07F2E94D00974D3D80990B20 /* r_tri_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_tri_mesh.h; sourceTree = "<group>"; };
-		07F2E94E00974D3D80990B20 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = SOURCE_ROOT; };
+		07F2E94E00974D3D80990B20 /* blocks.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = blocks.h; sourceTree = "<group>"; };
 		07F2E95000974D3D80990B20 /* tri_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_mesh.h; sourceTree = "<group>"; };
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
-		6F2262C008672FAE001017D0 /* libmesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F2262C008672FAE001017D0 /* libtri_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_thread-mt-1_34.dylib"; path = "../../Packages/lib/libboost_thread-mt-1_34.dylib"; sourceTree = SOURCE_ROOT; };
 		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
@@ -191,30 +191,31 @@
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = /Users/helenbrk/Codes/lib/libutil.a; sourceTree = "<absolute>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
 		6F92F9F108B94B60006F9C2C /* index.html */ = {isa = PBXFileReference; explicitFileType = text.html.documentation; fileEncoding = 30; name = index.html; path = html/index.html; sourceTree = "<group>"; };
-		6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6FB91B130ACCB1E100792B04 /* mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
 		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../../Packages/lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
 		6FC676970ACC239C00643F70 /* liblam.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = liblam.dylib; path = /usr/local/lib/liblam.dylib; sourceTree = "<absolute>"; };
 		6FC676980ACC239C00643F70 /* liblammpi++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "liblammpi++.dylib"; path = "/usr/local/lib/liblammpi++.dylib"; sourceTree = "<absolute>"; };
 		6FC676990ACC239C00643F70 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/local/lib/libmpi.dylib; sourceTree = "<absolute>"; };
-		6FC7DF0305B30C6E001FE736 /* mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mesh; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FC7DF0305B30C6E001FE736 /* tri_mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_mesh; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FCD4658071240D80003FAD1 /* boundaries.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = boundaries.h; sourceTree = SOURCE_ROOT; };
 		6FEFFC550C60191700352ED3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
-		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = SOURCE_ROOT; };
-		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = SOURCE_ROOT; };
+		6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = getnewr_bdry.cpp; sourceTree = "<group>"; };
+		6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = getnewblock.cpp; sourceTree = "<group>"; };
+		6FFD05F50CC3DA4C001CE474 /* Doxyfile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text; path = Doxyfile; sourceTree = "<group>"; };
 		F50FCD7F0128AA9801000001 /* triangulate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = triangulate.cpp; sourceTree = SOURCE_ROOT; };
 		F515EA5602B7E15B012A8EDA /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = SOURCE_ROOT; };
-		F51A5D6802B541FB012A8EDA /* r_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_boundary.h; sourceTree = SOURCE_ROOT; };
+		F51A5D6802B541FB012A8EDA /* r_boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = r_boundary.h; sourceTree = "<group>"; };
 		F528820502B1545D012A8EDA /* boundary.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = boundary.cpp; sourceTree = SOURCE_ROOT; };
-		F528820602B1545D012A8EDA /* boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = boundary.h; sourceTree = SOURCE_ROOT; };
-		F53FC7D10343C82E01E186A8 /* blocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = blocks.cpp; sourceTree = SOURCE_ROOT; };
+		F528820602B1545D012A8EDA /* boundary.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = boundary.h; sourceTree = "<group>"; };
+		F53FC7D10343C82E01E186A8 /* blocks.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = blocks.cpp; sourceTree = "<group>"; };
 		F543FC18014FCBC901000001 /* rebay.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = rebay.cpp; sourceTree = SOURCE_ROOT; };
 		F556D7CC0226C8DC01990B20 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewbdry.cpp; sourceTree = SOURCE_ROOT; };
 		F5BDAB54014068AC01000001 /* insert.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = insert.cpp; sourceTree = SOURCE_ROOT; };
 		F5BE6B500162B73801000001 /* copy.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = copy.cpp; sourceTree = SOURCE_ROOT; };
-		F5C9C262032CCEAF01990B69 /* block.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = SOURCE_ROOT; };
+		F5C9C262032CCEAF01990B69 /* block.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = block.h; sourceTree = "<group>"; };
 		F5CED4AF015630AA01000001 /* swap.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = swap.cpp; sourceTree = SOURCE_ROOT; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = /Users/helenbrk/Codes/lib/libinput_map.a; sourceTree = "<absolute>"; };
 		F5F975AB0152459801000001 /* yaber.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = yaber.cpp; sourceTree = SOURCE_ROOT; };
@@ -298,7 +299,9 @@
 			isa = PBXGroup;
 			children = (
 				6F92F9F008B94B22006F9C2C /* Documentation */,
-				08FB7795FE84155DC02AAC07 /* Source */,
+				08FB7795FE84155DC02AAC07 /* tri_mesh */,
+				6FFD05E30CC3D9C6001CE474 /* r_tri_mesh */,
+				6FFD05E20CC3D97F001CE474 /* block */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
 				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -306,18 +309,18 @@
 			name = test2;
 			sourceTree = "<group>";
 		};
-		08FB7795FE84155DC02AAC07 /* Source */ = {
+		08FB7795FE84155DC02AAC07 /* tri_mesh */ = {
 			isa = PBXGroup;
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				07F2E95000974D3D80990B20 /* tri_mesh.h */,
 				07F2E94600974D3D80990B20 /* in_mesh.cpp */,
+				07F2E94800974D3D80990B20 /* out_mesh.cpp */,
 				F5BE6B500162B73801000001 /* copy.cpp */,
 				07F2E94700974D3D80990B20 /* setup.cpp */,
-				07F2E94800974D3D80990B20 /* out_mesh.cpp */,
+				07F2E94B00974D3D80990B20 /* tprims.cpp */,
 				07F2E94500974D3D80990B20 /* findmatch.cpp */,
 				F515EA5602B7E15B012A8EDA /* refineby2.cpp */,
-				07F2E94B00974D3D80990B20 /* tprims.cpp */,
 				07F2E94200974D3D80990B20 /* coarsen.cpp */,
 				F50FCD7F0128AA9801000001 /* triangulate.cpp */,
 				6F5F76680760062A0026BE93 /* adapt.cpp */,
@@ -328,29 +331,20 @@
 				F5CED4AF015630AA01000001 /* swap.cpp */,
 				6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */,
 				07F2E94300974D3D80990B20 /* connect.cpp */,
-				F528820602B1545D012A8EDA /* boundary.h */,
 				6FCD4658071240D80003FAD1 /* boundaries.h */,
 				F528820502B1545D012A8EDA /* boundary.cpp */,
 				F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */,
-				07F2E94D00974D3D80990B20 /* r_tri_mesh.h */,
-				07F2E94A00974D3D80990B20 /* r_mesh.cpp */,
-				F51A5D6802B541FB012A8EDA /* r_boundary.h */,
-				6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */,
-				F5C9C262032CCEAF01990B69 /* block.h */,
-				07F2E94E00974D3D80990B20 /* blocks.h */,
-				F53FC7D10343C82E01E186A8 /* blocks.cpp */,
-				6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */,
 			);
-			name = Source;
+			name = tri_mesh;
 			sourceTree = "<group>";
 		};
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6F2262C008672FAE001017D0 /* libmesh.a */,
-				6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */,
-				6FC7DF0305B30C6E001FE736 /* mesh */,
-				6FB91B130ACCB1E100792B04 /* mesh_mpi */,
+				6F2262C008672FAE001017D0 /* libtri_mesh.a */,
+				6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */,
+				6FC7DF0305B30C6E001FE736 /* tri_mesh */,
+				6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -363,9 +357,33 @@
 			name = Documentation;
 			sourceTree = "<group>";
 		};
+		6FFD05E20CC3D97F001CE474 /* block */ = {
+			isa = PBXGroup;
+			children = (
+				F5C9C262032CCEAF01990B69 /* block.h */,
+				07F2E94E00974D3D80990B20 /* blocks.h */,
+				F528820602B1545D012A8EDA /* boundary.h */,
+				F53FC7D10343C82E01E186A8 /* blocks.cpp */,
+				6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */,
+			);
+			name = block;
+			sourceTree = "<group>";
+		};
+		6FFD05E30CC3D9C6001CE474 /* r_tri_mesh */ = {
+			isa = PBXGroup;
+			children = (
+				07F2E94D00974D3D80990B20 /* r_tri_mesh.h */,
+				07F2E94A00974D3D80990B20 /* r_mesh.cpp */,
+				F51A5D6802B541FB012A8EDA /* r_boundary.h */,
+				6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */,
+			);
+			name = r_tri_mesh;
+			sourceTree = "<group>";
+		};
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				6FFD05F50CC3DA4C001CE474 /* Doxyfile */,
 				F556D7CC0226C8DC01990B20 /* makefile */,
 			);
 			name = Scripts;
@@ -433,9 +451,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		6F2262BF08672FAE001017D0 /* lib */ = {
+		6F2262BF08672FAE001017D0 /* libtri_mesh */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "lib" */;
+			buildConfigurationList = 6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "libtri_mesh" */;
 			buildPhases = (
 				6F2262BC08672FAE001017D0 /* Headers */,
 				6F2262BD08672FAE001017D0 /* Sources */,
@@ -445,14 +463,14 @@
 			);
 			dependencies = (
 			);
-			name = lib;
+			name = libtri_mesh;
 			productName = lib;
-			productReference = 6F2262C008672FAE001017D0 /* libmesh.a */;
+			productReference = 6F2262C008672FAE001017D0 /* libtri_mesh.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		6FB91AB50ACCB10300792B04 /* lib_mpi */ = {
+		6FB91AB50ACCB10300792B04 /* libtri_mesh_mpi */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "lib_mpi" */;
+			buildConfigurationList = 6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "libtri_mesh_mpi" */;
 			buildPhases = (
 				6FB91AB60ACCB10300792B04 /* Headers */,
 				6FB91ABF0ACCB10300792B04 /* Sources */,
@@ -462,14 +480,14 @@
 			);
 			dependencies = (
 			);
-			name = lib_mpi;
+			name = libtri_mesh_mpi;
 			productName = lib;
-			productReference = 6FB91ADC0ACCB10300792B04 /* libmesh_mpi.a */;
+			productReference = 6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		6FB91AE10ACCB1E100792B04 /* main_mpi */ = {
+		6FB91AE10ACCB1E100792B04 /* tri_mesh_mpi */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "main_mpi" */;
+			buildConfigurationList = 6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "tri_mesh_mpi" */;
 			buildPhases = (
 				6FB91AE20ACCB1E100792B04 /* Headers */,
 				6FB91AEB0ACCB1E100792B04 /* Sources */,
@@ -480,14 +498,14 @@
 			);
 			dependencies = (
 			);
-			name = main_mpi;
+			name = tri_mesh_mpi;
 			productName = test2;
-			productReference = 6FB91B130ACCB1E100792B04 /* mesh_mpi */;
+			productReference = 6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */;
 			productType = "com.apple.product-type.tool";
 		};
-		6FC7DED805B30C6E001FE736 /* main */ = {
+		6FC7DED805B30C6E001FE736 /* tri_mesh */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "main" */;
+			buildConfigurationList = 6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "tri_mesh" */;
 			buildPhases = (
 				6FC7DED905B30C6E001FE736 /* Headers */,
 				6FC7DEE205B30C6E001FE736 /* Sources */,
@@ -498,9 +516,9 @@
 			);
 			dependencies = (
 			);
-			name = main;
+			name = tri_mesh;
 			productName = test2;
-			productReference = 6FC7DF0305B30C6E001FE736 /* mesh */;
+			productReference = 6FC7DF0305B30C6E001FE736 /* tri_mesh */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -508,15 +526,15 @@
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */;
+			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */;
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
 			projectDirPath = "";
 			targets = (
-				6F2262BF08672FAE001017D0 /* lib */,
-				6FB91AB50ACCB10300792B04 /* lib_mpi */,
-				6FC7DED805B30C6E001FE736 /* main */,
-				6FB91AE10ACCB1E100792B04 /* main_mpi */,
+				6F2262BF08672FAE001017D0 /* libtri_mesh */,
+				6FB91AB50ACCB10300792B04 /* libtri_mesh_mpi */,
+				6FC7DED805B30C6E001FE736 /* tri_mesh */,
+				6FB91AE10ACCB1E100792B04 /* tri_mesh_mpi */,
 				6F27980608B9FA49007BECA9 /* Documentation */,
 			);
 		};
@@ -708,7 +726,7 @@
 				OTHER_REZFLAGS = "";
 				PREBINDING = NO;
 				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -746,7 +764,7 @@
 				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
 				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -825,7 +843,7 @@
 				OTHER_REZFLAGS = "";
 				PREBINDING = NO;
 				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -865,7 +883,7 @@
 				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
 				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
-				PRODUCT_NAME = mesh_mpi;
+				PRODUCT_NAME = tri_mesh_mpi;
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
@@ -914,7 +932,7 @@
 				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = YES;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -960,7 +978,7 @@
 				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PREBINDING = YES;
-				PRODUCT_NAME = mesh_mpi;
+				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -1009,7 +1027,7 @@
 				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_5 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				PREBINDING = YES;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh;
 				SKIP_INSTALL = YES;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -1051,7 +1069,7 @@
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
 				PREBINDING = YES;
-				PRODUCT_NAME = mesh;
+				PRODUCT_NAME = tri_mesh;
 				SKIP_INSTALL = NO;
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -1079,7 +1097,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "lib" */ = {
+		6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "libtri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6F2262C208672FD1001017D0 /* Development */,
@@ -1097,7 +1115,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
 		};
-		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "lib_mpi" */ = {
+		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "libtri_mesh_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB91AD90ACCB10300792B04 /* Development */,
@@ -1106,7 +1124,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
 		};
-		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "main_mpi" */ = {
+		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "tri_mesh_mpi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB91B100ACCB1E100792B04 /* Development */,
@@ -1115,7 +1133,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
 		};
-		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "main" */ = {
+		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "tri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FD540630863870800D6A762 /* Development */,
@@ -1124,7 +1142,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
 		};
-		6FD540660863870800D6A762 /* Build configuration list for PBXProject "mesh" */ = {
+		6FD540660863870800D6A762 /* Build configuration list for PBXProject "tri_mesh" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FD540670863870800D6A762 /* Development */,

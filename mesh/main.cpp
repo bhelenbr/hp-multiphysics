@@ -103,13 +103,11 @@ int main(int argc, char *argv[]) {
     }
  
     if (Cut) {
-        zx.input(argv[1],in,1.0,bdrymap);
-        Array<double,1> indicator(zx.nvrtx);
+        zx.input(argv[1],in,1.0,bdrymap);        
+        for(int i=0;i<zx.npnt;++i)
+            zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
         
-        for(int i=0;i<zx.nvrtx;++i)
-            indicator(i) = zx.vrtx(i)(0)*zx.vrtx(i)(0) +zx.vrtx(i)(1)*zx.vrtx(i)(1) - 0.25;
-        
-        zx.cut(indicator);
+        zx.cut();
         
         return(0);
     }
@@ -125,9 +123,9 @@ int main(int argc, char *argv[]) {
     if (Vlngth) {
         zx.input(argv[1],in,8.0,bdrymap);
         std::string name;
-        name = std::string(argv[1]) +".vlngth";
+        name = std::string(argv[1]) +".lngth";
         FILE *fp = fopen(name.c_str(),"w");
-        for(int i=0;i<zx.nvrtx;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.vlngth(i));
+        for(int i=0;i<zx.npnt;++i) fprintf(fp,"%e\n",0.3); // 5.*zx.lngth(i));
         fclose(fp);
         return 0;
     }
@@ -194,7 +192,7 @@ int main(int argc, char *argv[]) {
             nstr.str("");
             zpart(i).partition(zx,i);
             zpart(i).output(fname,out);
-            zpart(i).bdry_output(fname);
+            zpart(i).output(fname,tri_mesh::boundary);
         }
 #else
         printf("Need metis package to partition\n");
@@ -206,9 +204,9 @@ int main(int argc, char *argv[]) {
         zx.input(argv[1],in,1.0,bdrymap);
         FILE *fp = fopen(argv[3],"r");
 
-        for(int i=0;i<zx.nvrtx;++i) {
-            fscanf(fp,"%d\n",&zx.vd(i).info);
-            zx.vd(i).info = 1-zx.vd(i).info;
+        for(int i=0;i<zx.npnt;++i) {
+            fscanf(fp,"%d\n",&zx.pnt(i).info);
+            zx.pnt(i).info = 1-zx.pnt(i).info;
         }
         clock();
         zx.coarsen3();
