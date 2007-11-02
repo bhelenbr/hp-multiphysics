@@ -11,13 +11,13 @@
 #include <math.h>
 #include <utilities.h>
 #include <myblas.h>
-#include "hpbasis.h"
+#include "tri_basis.h"
 
-const int hpbasis::sbwth;
+const int tri_basis::sbwth;
 
-Array<hpbasis,1> basis::tri;
+Array<tri_basis,1> basis::tri;
 
-void hpbasis::initialize(int pdegree, int gpoints) {    
+void tri_basis::initialize(int pdegree, int gpoints) {    
     if (pdegree < 1) {
         printf("error can't use 0th order basis with vertex based modes\n");
         exit(1);
@@ -179,7 +179,7 @@ void hpbasis::initialize(int pdegree, int gpoints) {
     return;
 }
 
-void hpbasis::initialize_values(void)
+void tri_basis::initialize_values(void)
 {
 
     FLT al,be,x,eta;
@@ -502,7 +502,7 @@ void hpbasis::initialize_values(void)
 }
     
     
-void hpbasis::sideinfoinit() {
+void tri_basis::sideinfoinit() {
     int i,m,n,ind;
     FLT x,eta,xp1oeta,xp1,oeta;
     
@@ -634,7 +634,7 @@ void hpbasis::sideinfoinit() {
 /************************************************/
 /** CALCULATE THINGS FOR LUMPED MASS INVERSION  */
 /************************************************/
-void hpbasis::lumpinv(void) {
+void tri_basis::lumpinv(void) {
     int i,i1,i2,j,k,m,info,ind,ind1,n;
     Array<int,1> ipiv(2*MXTM);
     Array<FLT,2> mwk(MXTM,MXTM),mm(MXTM,MXTM);
@@ -1177,7 +1177,7 @@ void hpbasis::lumpinv(void) {
     return;
 }            
 
-void hpbasis::legpt()
+void tri_basis::legpt()
 {
     FLT x,eta,r,s;
     int i,j,m,n,ind;

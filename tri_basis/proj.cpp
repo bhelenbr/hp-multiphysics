@@ -7,7 +7,7 @@
  *
  */
 
-#include "hpbasis.h"
+#include "tri_basis.h"
 #include <stdio.h>
 
 #ifndef BZ_DEBUG
@@ -19,7 +19,7 @@
 #define dtan(i) dtan1[i]
 #endif
 
-void hpbasis::proj(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::proj(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
@@ -118,7 +118,7 @@ void hpbasis::proj(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     return;
 }
 
-void hpbasis::proj(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj(FLT *lin1, FLT *f1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
@@ -185,7 +185,7 @@ void hpbasis::proj(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
+void tri_basis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     const int lgpx = gpx, lgpn = gpn;
 #ifdef BZ_DEBUG
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
@@ -198,7 +198,7 @@ void hpbasis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::proj_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::proj_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;
@@ -280,7 +280,7 @@ void hpbasis::proj_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     return;
 }
 
-void hpbasis::proj_bdry(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_bdry(FLT *lin1, FLT *f1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
@@ -336,7 +336,7 @@ void hpbasis::proj_bdry(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::derivr(FLT *f1, FLT *dx1, int stride) {
+void tri_basis::derivr(FLT *f1, FLT *dx1, int stride) {
     TinyVector<FLT,MXGP> wk0;
     const int lgpn = gpn, lgpx = gpx;
     FLT ln0, lcl0;
@@ -362,7 +362,7 @@ void hpbasis::derivr(FLT *f1, FLT *dx1, int stride) {
     return;
 }
 
-void hpbasis::derivs(FLT *f1, FLT *dy1, int stride) {
+void tri_basis::derivs(FLT *f1, FLT *dy1, int stride) {
     TinyVector<FLT,MXGP> wk0;
     const int lgpn = gpn, lgpx = gpx;
     FLT ln0, lcl0;
@@ -401,7 +401,7 @@ void hpbasis::derivs(FLT *f1, FLT *dy1, int stride) {
     return;
 }
     
-void hpbasis::proj_leg(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_leg(FLT *lin1, FLT *f1, int stride) {
     const int lsm = sm, ltm = tm;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -422,7 +422,7 @@ void hpbasis::proj_leg(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
+void tri_basis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     int lsm = sm;
 #ifdef BZ_DEBUG
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
@@ -436,7 +436,7 @@ void hpbasis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::proj_bdry_leg(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_bdry_leg(FLT *lin1, FLT *f1, int stride) {
     int lsm = sm, lbm = bm;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -457,7 +457,7 @@ void hpbasis::proj_bdry_leg(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void hpbasis::proj_side(int side, FLT *lin1, FLT *f1, FLT *dtan1, FLT *dnrm1) {
+void tri_basis::proj_side(int side, FLT *lin1, FLT *f1, FLT *dtan1, FLT *dnrm1) {
     TinyVector<FLT,MXGP> wk0;
     const int lgpx = gpx, lsm = sm, ltm = tm;
 #ifdef BZ_DEBUG

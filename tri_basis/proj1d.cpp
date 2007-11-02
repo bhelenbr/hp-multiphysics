@@ -7,7 +7,7 @@
  *
  */
 
-#include "hpbasis.h"
+#include "tri_basis.h"
 // #include "array2d.h"
 
 #ifndef BZ_DEBUG
@@ -16,7 +16,7 @@
 #define lin(i) lin1[(i)]
 #endif
 
-void hpbasis::proj1d(FLT *lin1, FLT *f1, FLT *dx1) {
+void tri_basis::proj1d(FLT *lin1, FLT *f1, FLT *dx1) {
     const int lgpx = gpx, lsm2 = sm+2;
     FLT lcl0, lcl1;
 #ifdef BZ_DEBUG
@@ -39,7 +39,7 @@ void hpbasis::proj1d(FLT *lin1, FLT *f1, FLT *dx1) {
     return;
 }
 
-void hpbasis::proj1d(FLT *lin1, FLT *f1) {
+void tri_basis::proj1d(FLT *lin1, FLT *f1) {
     const int lgpx = gpx, lsm2 = sm+2;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -58,7 +58,7 @@ void hpbasis::proj1d(FLT *lin1, FLT *f1) {
     return;
 }
 
-void hpbasis::proj1d(FLT u1, FLT u2, FLT *f1) {
+void tri_basis::proj1d(FLT u1, FLT u2, FLT *f1) {
     const int lgpx = gpx;
 #ifdef BZ_DEBUG
     Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
@@ -70,7 +70,7 @@ void hpbasis::proj1d(FLT u1, FLT u2, FLT *f1) {
     return;
 }
 
-void hpbasis::derivx1d(FLT *f1, FLT *dx1) {
+void tri_basis::derivx1d(FLT *f1, FLT *dx1) {
     TinyVector<FLT,MXGP> wk0;
     const int lgpx = gpx;
     FLT lcl0;
@@ -94,7 +94,7 @@ void hpbasis::derivx1d(FLT *f1, FLT *dx1) {
     return;
 }
 
-void hpbasis::proj1d_leg(FLT *lin1, FLT *f1) {
+void tri_basis::proj1d_leg(FLT *lin1, FLT *f1) {
     int i,m;
 #ifdef BZ_DEBUG
     Array<FLT,1> lin(lin1, shape(sm+2), neverDeleteData);
@@ -111,7 +111,7 @@ void hpbasis::proj1d_leg(FLT *lin1, FLT *f1) {
     return;
 }
 
-void hpbasis::proj1d_leg(FLT u1, FLT u2, FLT *f1) {
+void tri_basis::proj1d_leg(FLT u1, FLT u2, FLT *f1) {
     int i;
 #ifdef BZ_DEBUG
     Array<FLT,1> f(f1, shape(sm+1), neverDeleteData);

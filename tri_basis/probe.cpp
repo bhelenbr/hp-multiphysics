@@ -7,7 +7,7 @@
  *
  */
 
-#include"hpbasis.h"
+#include"tri_basis.h"
 #include<math.h>
 #include<utilities.h>
 
@@ -19,7 +19,7 @@
 #define dy(i) dy1[(i)]
 #endif
 
-void hpbasis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
+void tri_basis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
     TinyVector<FLT,MXTM> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lnmodx = nmodx;  
@@ -74,7 +74,7 @@ void hpbasis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
     return;
 }
 
-void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
+void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
     TinyVector<FLT,MXTM> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lnmodx = nmodx;  
@@ -119,7 +119,7 @@ void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
     return;
 }
 
-void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, FLT *lin1, int stride) {
+void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, FLT *lin1, int stride) {
     TinyVector<FLT,MXTM> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     FLT lcl0, lcl1, lcl2;
@@ -197,7 +197,7 @@ void hpbasis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, FL
     return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
+void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
     const int pp=p+1;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -216,7 +216,7 @@ void hpbasis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
     return;
 }
 
-void hpbasis::ptprobe1d(int nv, FLT *f1, FLT *dx1, FLT *sin1, int stride) {
+void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *dx1, FLT *sin1, int stride) {
     const int pp = p+1;
     FLT lcl0,lcl1;
 #ifdef BZ_DEBUG

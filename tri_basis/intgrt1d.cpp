@@ -7,14 +7,14 @@
  *
  */
 
-#include "hpbasis.h"
+#include "tri_basis.h"
 
 #ifndef BZ_DEBUG
 #define f(i) f1[i]
 #define rslt(i) rslt1[i]
 #endif
 
-void hpbasis::intgrt1d(FLT *rslt1, FLT *f1) {
+void tri_basis::intgrt1d(FLT *rslt1, FLT *f1) {
     const int lgpx = gpx, lnmodx = nmodx;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -42,7 +42,7 @@ void hpbasis::intgrt1d(FLT *rslt1, FLT *f1) {
     return;
 }
     
-void hpbasis::intgrtx1d(FLT *rslt1, FLT *f1) {
+void tri_basis::intgrtx1d(FLT *rslt1, FLT *f1) {
     const int lgpx = gpx, lnmodx = nmodx;
     FLT lcl0;
 #ifdef BZ_DEBUG

@@ -7,7 +7,7 @@
  *
  */
 
-#include "hpbasis.h"
+#include "tri_basis.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -19,7 +19,7 @@
 #define rslt(i) rslt1[i]
 #endif
 
-void hpbasis::intgrt(FLT *rslt1, FLT *f1, int stride) {
+void tri_basis::intgrt(FLT *rslt1, FLT *f1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
     const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;
@@ -78,7 +78,7 @@ void hpbasis::intgrt(FLT *rslt1, FLT *f1, int stride) {
 }
 
 /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-void hpbasis::intgrtrs(FLT *rslt1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::intgrtrs(FLT *rslt1, FLT *dx1, FLT *dy1, int stride) {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
     const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;

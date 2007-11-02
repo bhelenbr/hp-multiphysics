@@ -7,11 +7,11 @@
  *
  */
 
-#include "hpbasis.h"
+#include "tri_basis.h"
 #include<math.h>
 
 /* CALCULATES VALUES OF GX POLYNOMIALS & GS POLYNOMIALS AT POINT */
-void hpbasis::ptvalues(FLT x, FLT eta) {
+void tri_basis::ptvalues(FLT x, FLT eta) {
      FLT pkp,pk,pkm;
      int k,m,ind;
     
@@ -81,7 +81,7 @@ void hpbasis::ptvalues(FLT x, FLT eta) {
 }
 
 /* CALCULATE VALUE OF G(X) & DG/DX, G(eta), DG/Deta AT POINT */
-void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
+void tri_basis::ptvalues_deriv(FLT x, FLT eta) {
     FLT pkp,pk,pkm,dpk,dpkm,dpkp;
     int k,m,n,ind;
     
@@ -196,7 +196,7 @@ void hpbasis::ptvalues_deriv(FLT x, FLT eta) {
 
 /* CALCULATES VALUES OF GX POLYNOMIALS & GS POLYNOMIALS AT POINT */
 /* BOUNDARY MODES ONLY */
-void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
+void tri_basis::ptvalues_bdry(FLT x, FLT eta) {
      FLT pkp,pk,pkm;
      int m,ind;
     
@@ -253,7 +253,7 @@ void hpbasis::ptvalues_bdry(FLT x, FLT eta) {
 }
 
 /* CALCULATE VALUE OF G(X) & DG/DX, G(eta), DG/Deta AT POINT FOR ONLY BOUNDARY MODES */
-void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
+void tri_basis::ptvalues_deriv_bdry(FLT x, FLT eta) {
     FLT pkp,pk,pkm,dpk,dpkm,dpkp;
     int m,n,ind;
 
@@ -345,7 +345,7 @@ void hpbasis::ptvalues_deriv_bdry(FLT x, FLT eta) {
     return;
 }
 
-void hpbasis::ptvalues1d(FLT x) {
+void tri_basis::ptvalues1d(FLT x) {
      FLT pkp,pk,pkm;
      int m;
     
@@ -367,7 +367,7 @@ void hpbasis::ptvalues1d(FLT x) {
     return;
 }
 
-void hpbasis::ptvalues1d_deriv(FLT x) {
+void tri_basis::ptvalues1d_deriv(FLT x) {
      FLT pkp,pk,pkm,dpkp,dpk,dpkm;
      int m;
 

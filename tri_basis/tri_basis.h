@@ -1,5 +1,5 @@
 /*
- *  hpbasis.h
+ *  tri_basis.h
  *  planar++
  *
  *  Created by helenbrk on Fri Oct 12 2001.
@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _hpbasis_h_
-#define _hpbasis_h_
+#ifndef _tri_basis_h_
+#define _tri_basis_h_
 
 #include <blitz/array.h>
 #include <float.h>
@@ -32,7 +32,7 @@ using namespace blitz;
 
 
 
-class hpbasis {
+class tri_basis {
     public:
         int p;
         /* NUMBER OF MODES : VERTEX,SIDE/INTERIOR/TOTAL/BOUNDARY */
@@ -215,7 +215,7 @@ class hpbasis {
 /** This is an array for bases of various orders for general use 
      The polynomial degree increases by factors of 2 for multigrid */
 namespace basis {
-    extern Array<hpbasis,1> tri;
+    extern Array<tri_basis,1> tri;
 }
 #endif
 

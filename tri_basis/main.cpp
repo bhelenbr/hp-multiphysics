@@ -1,4 +1,4 @@
-#include "hpbasis.h"
+#include "tri_basis.h"
 #include <stdio.h>
 #include <myblas.h>
 #include <utilities.h>

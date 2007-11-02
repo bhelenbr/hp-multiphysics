@@ -49,6 +49,6 @@ tri_basis: $(OBJ) main.o
 libbasis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libbasis.a $(HOME)/Codes/lib/
-	cp -f hpbasis.h $(HOME)/Codes/include/
+	cp -f tri_basis.h $(HOME)/Codes/include/
 
-$(OBJ): hpbasis.h
+$(OBJ): tri_basis.h

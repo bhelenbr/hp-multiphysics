@@ -8,19 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		6F16F58708BABCBA00DE5BAA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
-		6F33E676086787E60029F2D6 /* hpbasis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FBD8A67084C13780057FD8F /* hpbasis.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6F33E679086787F40029F2D6 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6A084C13780057FD8F /* intgrt.cpp */; };
 		6F33E67A086787F40029F2D6 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */; };
 		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
 		6F33E67C086787F40029F2D6 /* proj1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6D084C13780057FD8F /* proj1d.cpp */; };
 		6F33E67D086787F40029F2D6 /* ptvalues.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6E084C13780057FD8F /* ptvalues.cpp */; };
+		6F4CCC4A0CDAC301009F79DE /* probe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F4CCC490CDAC301009F79DE /* probe.cpp */; };
+		6F4CCC4C0CDAC316009F79DE /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; };
 		6F7BCBCC0CA4AB2A000E4207 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6FBD8A80084C13F20057FD8F /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
 		6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
 		6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
-		6FD9FC6C0B9693AB0061DCB5 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		6FD9FC6E0B9693AC0061DCB5 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6A084C13780057FD8F /* intgrt.cpp */; };
 		6FD9FC6F0B9693AD0061DCB5 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */; };
 		6FD9FC700B9693AD0061DCB5 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
@@ -32,8 +31,8 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6F33E671086787710029F2D6 /* libbasis.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbasis.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6FBD8A67084C13780057FD8F /* hpbasis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = hpbasis.h; sourceTree = "<group>"; };
-		6FBD8A68084C13780057FD8F /* hpprobe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = hpprobe.cpp; sourceTree = "<group>"; };
+		6F4CCC490CDAC301009F79DE /* probe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = probe.cpp; sourceTree = "<group>"; };
+		6F4CCC4B0CDAC316009F79DE /* tri_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_basis.h; sourceTree = "<group>"; };
 		6FBD8A69084C13780057FD8F /* initialize.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initialize.cpp; sourceTree = "<group>"; };
 		6FBD8A6A084C13780057FD8F /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
 		6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt1d.cpp; sourceTree = "<group>"; };
@@ -44,7 +43,7 @@
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
-		8DD76F6C0486A84900D96B5E /* tri_basis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_basis; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76F6C0486A84900D96B5E /* tri_basis */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = tri_basis; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,13 +82,13 @@
 			isa = PBXGroup;
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
-				6FBD8A67084C13780057FD8F /* hpbasis.h */,
-				6FBD8A68084C13780057FD8F /* hpprobe.cpp */,
+				6F4CCC4B0CDAC316009F79DE /* tri_basis.h */,
 				6FBD8A69084C13780057FD8F /* initialize.cpp */,
 				6FBD8A6A084C13780057FD8F /* intgrt.cpp */,
 				6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */,
 				6FBD8A6C084C13780057FD8F /* proj.cpp */,
 				6FBD8A6D084C13780057FD8F /* proj1d.cpp */,
+				6F4CCC490CDAC301009F79DE /* probe.cpp */,
 				6FBD8A6E084C13780057FD8F /* ptvalues.cpp */,
 			);
 			name = Source;
@@ -129,7 +128,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F33E676086787E60029F2D6 /* hpbasis.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +135,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F4CCC4C0CDAC316009F79DE /* tri_basis.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,7 +198,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */,
 				6F33E678086787F40029F2D6 /* initialize.cpp in Sources */,
 				6F33E679086787F40029F2D6 /* intgrt.cpp in Sources */,
 				6F33E67A086787F40029F2D6 /* intgrt1d.cpp in Sources */,
@@ -215,13 +213,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
-				6FD9FC6C0B9693AB0061DCB5 /* hpprobe.cpp in Sources */,
 				6FD9FC6E0B9693AC0061DCB5 /* intgrt.cpp in Sources */,
 				6FD9FC6F0B9693AD0061DCB5 /* intgrt1d.cpp in Sources */,
 				6FD9FC700B9693AD0061DCB5 /* proj.cpp in Sources */,
 				6FD9FC710B9693AE0061DCB5 /* proj1d.cpp in Sources */,
 				6FD9FC720B9693AF0061DCB5 /* ptvalues.cpp in Sources */,
 				6F7BCBCC0CA4AB2A000E4207 /* initialize.cpp in Sources */,
+				6F4CCC4A0CDAC301009F79DE /* probe.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
