@@ -13,7 +13,7 @@
 #include <blitz/tinyvec-et.h>
 
 #define REBAY
-#define NO_DEBUG_ADAPT
+//#define DEBUG_ADAPT
 #define VERBOSE
 
 #ifdef DEBUG_ADAPT
@@ -294,7 +294,7 @@ INSRT:
 }
 
 void tri_mesh::bdry_rebay(FLT tolsize) {
-    int sind,p0,count,el,psifxpt;
+    int sind,p0,count,psifxpt,bseg;
     FLT psi;
     TinyVector<FLT,tri_mesh::ND> endpt;
     
@@ -310,7 +310,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
         }
         
         /* CHECK THAT ENDPOINTS ARE ON CURVE JUST TO BE SURE */
-        sind = ebdry(bnum)->el(0);
+        sind = ebdry(bnum)->seg(0);
         p0 = seg(sind).pnt(0);
         endpt = pnts(p0);
         ebdry(bnum)->mvpttobdry(0,-1.0,endpt);
@@ -319,18 +319,18 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
             *gbl->log << "first endpoint of boundary " << ebdry(bnum)->idprefix << " does not seem to be on curve\n";
         }
         
-        sind = ebdry(bnum)->el(ebdry(bnum)->nel-1);
+        sind = ebdry(bnum)->seg(ebdry(bnum)->nseg-1);
         p0 = seg(sind).pnt(1);
         endpt = pnts(p0);
-        ebdry(bnum)->mvpttobdry(ebdry(bnum)->nel-1,1.0,endpt);
+        ebdry(bnum)->mvpttobdry(ebdry(bnum)->nseg-1,1.0,endpt);
         endpt -= pnts(p0);
         if (fabs(endpt(0)) +fabs(endpt(1)) > FLT_EPSILON*(fabs(qtree.xmax(0)-qtree.xmin(0)) +fabs(qtree.xmax(1)-qtree.xmin(1)))) {
             *gbl->log << "last endpoint of boundary " << ebdry(bnum)->idprefix << " does not seem to be on curve\n";
         }
         
         gbl->nlst = 0;
-        for(int indx=0;indx<ebdry(bnum)->nel;++indx) {
-            sind = ebdry(bnum)->el(indx);
+        for(int indx=0;indx<ebdry(bnum)->nseg;++indx) {
+            sind = ebdry(bnum)->seg(indx);
             if (tri(sind).info&SDLTE) continue;
             gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
             if (gbl->fltwk(sind) > tolsize) putinlst(sind);
@@ -341,21 +341,21 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
         while (gbl->nlst > 0) {
             // START WITH LARGEST SIDE LENGTH RATIO
             sind = seg(gbl->nlst-1).info;
-            el = getbdryel(seg(sind).tri(1));
+            bseg = getbdryseg(seg(sind).tri(1));
             
             /* FOR NOW INSERTION POINT IN MIDDLE */
             /* FIXED POINT ARITHMETIC SO I CAN PASS AN INTEGER */
             psi = 0.0;
             psifxpt = static_cast<int>(256*psi);
             psi = psifxpt/256.0;
-            ebdry(bnum)->mvpttobdry(el,psi,pnts(npnt));
+            ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
             lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));
 
 #ifdef DEBUG_ADAPT
             *gbl->log << "Inserting boundary segment " << count << ' ' << adapt_count << ' ';
             for(int n=0;n<ND;++n)
                 *gbl->log << pnts(npnt)(n) << ' ';
-            *gbl->log << " el " << el << " psi " << psi << std::endl;
+            *gbl->log << " seg " << bseg << " psi " << psi << std::endl;
 #endif
             /* INSERT POINT */
             bdry_insert(npnt,sind);
@@ -363,7 +363,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
             ++count;
             
             /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
-            ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = el;
+            ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = bseg;
             ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = psifxpt;
 
             /* UPDATE MODIFIED SIDE */
@@ -372,7 +372,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
             if (gbl->fltwk(sind) > tolsize) putinlst(sind);
             
             /* UPDATE NEW BOUNDARY SIDE */
-            sind = ebdry(bnum)->el(ebdry(bnum)->nel -1);
+            sind = ebdry(bnum)->seg(ebdry(bnum)->nseg -1);
             gbl->fltwk(sind) = distance(seg(sind).pnt(0),seg(sind).pnt(1))/MAX(lngth(seg(sind).pnt(0)),lngth(seg(sind).pnt(1)));
             if (gbl->fltwk(sind) > tolsize) putinlst(sind);
 #ifdef DEBUG_ADAPT
@@ -395,7 +395,7 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 
 void tri_mesh::bdry_rebay1() {
     int i,sind;
-    int el, sndsize;
+    int bseg, sndsize;
     int nel_bgn, psifxpt;
     FLT psi;
     
@@ -406,23 +406,23 @@ void tri_mesh::bdry_rebay1() {
 
         if (ebdry(bnum)->is_frst() || !ebdry(bnum)->is_comm()) continue;        
         
-        nel_bgn = ebdry(bnum)->nel;
+        nel_bgn = ebdry(bnum)->nseg;
         
         sndsize = ebdry(bnum)->ircvbuf(0,0);
         for(i=1;i<sndsize;i+=2) {
-            el = ebdry(bnum)->ircvbuf(0,i);
-            if (el < nel_bgn) el = nel_bgn -1 -el;
+            bseg = ebdry(bnum)->ircvbuf(0,i);
+            if (bseg < nel_bgn) bseg = nel_bgn -1 -bseg;
 
-            sind = ebdry(bnum)->el(el);
+            sind = ebdry(bnum)->seg(bseg);
             psifxpt = -ebdry(bnum)->ircvbuf(0,i+1);
             psi = psifxpt/256.0;
-            ebdry(bnum)->mvpttobdry(el,psi,pnts(npnt));
+            ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
             lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));
 #ifdef DEBUG_ADAPT
             *gbl->log << "Inserting boundary segment " << i << ' ' << adapt_count << ' ';
             for(int n=0;n<ND;++n)
                 *gbl->log << pnts(npnt)(n) << ' ';
-            *gbl->log << " el " << el << " psi " << psi << std::endl;
+            *gbl->log << " seg " << bseg << " psi " << psi << std::endl;
 #endif
             bdry_insert(npnt,sind,1);
             ++npnt;

@@ -28,7 +28,7 @@ class r_tri_mesh : public tri_mesh {
             Array<FLT,1> ksprg;
             Array<FLT,1> kvol;
             Array<TinyVector<FLT,ND>,1> src;
-            Array<TinyVector<FLT,ND>,1> vrtx_frst;
+            Array<TinyVector<FLT,ND>,1> pnts_frst;
             
             Array<r_side_bdry *,1> r_sbdry;
             r_side_bdry* getnewedgeobject(int bnum, input_map& bdrydata);
@@ -70,8 +70,8 @@ class r_tri_mesh : public tri_mesh {
             void init(input_map& input, void *gin);
             void init(const multigrid_interface& in, FLT sizereduce1d);
             void output(const std::string &outname,block::output_purpose why) {tri_mesh::output(outname,output_type);}
-            void mg_getfres();
-            void mg_getcchng();
+            void mg_restrict();
+            void mg_prolongate();
             void tadvance();
             void rsdl();
             void update();

@@ -71,7 +71,7 @@ void tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
         ebdry.resize(nebd);
         for(i=0;i<nebd;++i) {
             ebdry(i) = inmesh.ebdry(i)->create(*this);
-            ebdry(i)->alloc(MAX(static_cast<int>(inmesh.ebdry(i)->maxel/sizereduce1d),10));
+            ebdry(i)->alloc(MAX(static_cast<int>(inmesh.ebdry(i)->maxseg/sizereduce1d),10));
         }
         nvbd = inmesh.nvbd;
         vbdry.resize(nvbd);
@@ -211,7 +211,7 @@ next1:        continue;
                 for(i=0;i<nebd;++i) {
                     ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
                     ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
-                    ebdry(i)->nel = 0;
+                    ebdry(i)->nseg = 0;
                     gbl->intwk(i) = -1;
                     gbl->i2wk(i) = -1;
                 }
@@ -221,7 +221,7 @@ next1:        continue;
                     if (seg(i).info) {
                         for (j = 0; j <nebd;++j) {
                             if (seg(i).info == ebdry(j)->idnum) {
-                                ebdry(j)->el(ebdry(j)->nel++) = i;
+                                ebdry(j)->seg(ebdry(j)->nseg++) = i;
                                 goto next1a;
                             }
                         }
@@ -264,7 +264,7 @@ next1a:      continue;
                         /* NEW VRTX B.C. */
                         vbdry(nvbd) = getnewvrtxobject(pnt(i).info,bdrymap);
                         vbdry(nvbd)->alloc(4);
-                        vbdry(nvbd)->p0 = i;
+                        vbdry(nvbd)->pnt = i;
                         ++nvbd;
                     }
                 }
@@ -363,13 +363,13 @@ next1a:      continue;
                     
                     ebdry(i) = getnewedgeobject(temp,bdrymap);
                     ebdry(i)->alloc(static_cast<int>(count*grwfac));
-                    ebdry(i)->nel = count;
+                    ebdry(i)->nseg = count;
                     
                     in.ignore(160,'\n');
                                         
-                    svrtxbtemp[i] = (int (*)[2]) xmalloc(ebdry(i)->nel*2*sizeof(int));
+                    svrtxbtemp[i] = (int (*)[2]) xmalloc(ebdry(i)->nseg*2*sizeof(int));
                           
-                    for(j=0;j<ebdry(i)->nel;++j) {
+                    for(j=0;j<ebdry(i)->nseg;++j) {
                         in >> intskip >> svrtxbtemp[i][j][0] >> svrtxbtemp[i][j][1];
                         --svrtxbtemp[i][j][0];
                         --svrtxbtemp[i][j][1];
@@ -392,7 +392,7 @@ next1a:      continue;
 
                 /* MATCH BOUNDARY SIDES TO GROUPS */     
                 for(i=0;i<nebd;++i) {
-                    for(j=0;j<ebdry(i)->nel;++j) {
+                    for(j=0;j<ebdry(i)->nseg;++j) {
                         sind = pnt(svrtxbtemp[i][j][0]).info;
                         if (sind < 0) {
                             *gbl->log << "error in boundary information " << i << j << std::endl;
@@ -400,7 +400,7 @@ next1a:      continue;
                         }
                         if (seg(sind).pnt(1) == svrtxbtemp[i][j][1]) {
                             seg(sind).info = ebdry(i)->idnum;
-                            ebdry(i)->el(j) = sind;
+                            ebdry(i)->seg(j) = sind;
                             pnt(seg(sind).pnt(0)).info = 0;
                         }
                         else {
@@ -485,12 +485,12 @@ next1a:      continue;
                     in >> temp;
                     if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
                     in.ignore(80,':');
-                    in >> ebdry(i)->nel;
-                    if (!ebdry(i)->maxel) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nel));
-                    else assert(ebdry(i)->nel < ebdry(i)->maxel);
-                    for(int j=0;j<ebdry(i)->nel;++j) {
+                    in >> ebdry(i)->nseg;
+                    if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
+                    else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
+                    for(int j=0;j<ebdry(i)->nseg;++j) {
                         in.ignore(80,':');
-                        in >> ebdry(i)->el(j);
+                        in >> ebdry(i)->seg(j);
                         in.ignore(80,'\n');
                     }
                 }
@@ -517,7 +517,7 @@ next1a:      continue;
                         vbdry(i)->alloc(4);
                     }
                     in.ignore(80,':');
-                    in >> vbdry(i)->p0;
+                    in >> vbdry(i)->pnt;
                 }
                 in.close();
                 
@@ -608,7 +608,7 @@ next1a:      continue;
                     if (cpri_ptype[i] == 0) {
                         vbdry(nvbd) = getnewvrtxobject(cpri_pindex[i],bdrymap);
                         vbdry(nvbd)->alloc(4);
-                        vbdry(nvbd)->p0 = i;
+                        vbdry(nvbd)->pnt = i;
                         ++nvbd;
                         if (nvbd >= MAXVB) {
                             *gbl->log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
@@ -656,7 +656,7 @@ next1b:        continue;
                 for(i=0;i<nebd;++i) {
                     ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
                     ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
-                    ebdry(i)->nel = 0;
+                    ebdry(i)->nseg = 0;
                     gbl->intwk(i) = -1;
                     gbl->i2wk(i) = -1;
                 }
@@ -665,7 +665,7 @@ next1b:        continue;
                     if (seg(i).info) {
                         for (j = 0; j <nebd;++j) {
                             if (seg(i).info == (ebdry(j)->idnum&0xFFFF)) {
-                                ebdry(j)->el(ebdry(j)->nel++) = i;
+                                ebdry(j)->seg(ebdry(j)->nseg++) = i;
                                 goto next1c;
                             }
                         }
@@ -738,10 +738,10 @@ next1c:      continue;
                 ebdry.resize(1);
                 ebdry(0) = getnewedgeobject(1,bdrymap);
                 ebdry(0)->alloc(static_cast<int>(grwfac*count));
-                ebdry(0)->nel = count;
+                ebdry(0)->nseg = count;
                 count = 0;
                 for(i=0;i<nseg;++i)
-                    if (seg(i).tri(1) < 0) ebdry(0)->el(count++) = i;
+                    if (seg(i).tri(1) < 0) ebdry(0)->seg(count++) = i;
                 
                 nvbd = 0;
                 in.close();
@@ -783,7 +783,7 @@ next1c:      continue;
                         /* NEW VRTX B.C. */
                         vbdry(nvbd) = getnewvrtxobject(pnt(i).info,bdrymap);
                         vbdry(nvbd)->alloc(4);
-                        vbdry(nvbd)->p0 = i;
+                        vbdry(nvbd)->pnt = i;
                         ++nvbd;
                     }
                 }
@@ -817,7 +817,7 @@ next1c:      continue;
                 for(i=0;i<nebd;++i) {
                     ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
                     ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
-                    ebdry(i)->nel = 0;
+                    ebdry(i)->nseg = 0;
                     gbl->intwk(i) = -1;
                     gbl->i2wk(i) = -1;
                 }
@@ -826,7 +826,7 @@ next1c:      continue;
                     if (seg(i).info) {
                         for (j = 0; j <nebd;++j) {
                             if (seg(i).info == ebdry(j)->idnum) {
-                                ebdry(j)->el(ebdry(j)->nel++) = i;
+                                ebdry(j)->seg(ebdry(j)->nseg++) = i;
                                 goto bdnext1a;
                             }
                         }
@@ -874,11 +874,11 @@ next1c:      continue;
     for(i=0;i<nvbd;++i) {
         /* Find two connecting boundary sides */
         for(j=0;j<nebd;++j) {
-            if (seg(ebdry(j)->el(0)).pnt(0) == vbdry(i)->p0) {
+            if (seg(ebdry(j)->seg(0)).pnt(0) == vbdry(i)->pnt) {
                 vbdry(i)->ebdry(1) = j;
                 ebdry(j)->vbdry(0) = i;
             }
-            if (seg(ebdry(j)->el(ebdry(j)->nel-1)).pnt(1) == vbdry(i)->p0) {
+            if (seg(ebdry(j)->seg(ebdry(j)->nseg-1)).pnt(1) == vbdry(i)->pnt) {
                 vbdry(i)->ebdry(0) = j;
                 ebdry(j)->vbdry(1) = i;
             }

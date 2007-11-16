@@ -174,8 +174,8 @@ class multigrid_interface {
         virtual void update() {}
 
         /** Multigrid cycle */
-        virtual void mg_getfres() {}
-        virtual void mg_getcchng() {}
+        virtual void mg_restrict() {}
+        virtual void mg_prolongate() {}
         virtual void connect(multigrid_interface &fine) {}
                         
         /** Print errors */

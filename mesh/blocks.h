@@ -41,7 +41,9 @@ class blocks {
         int myblock; /**< Number of blocks on this processor */
         Array<block *,1> blk; /**< Array containing pointers to blocks */
     private:
-        block* getnewblock(int idnum, input_map& input);
+        block* getnewblock(int idnum, input_map& input) {
+            return new block(idnum);  /* Only 1 kind of block for now */
+        }
         int max_mycommbdry; /**< Maximum number of communication boundaries for any block */
         int blkdig, bdrydig; /**< Number of digits required to make communication tags */
 

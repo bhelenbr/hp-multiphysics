@@ -58,9 +58,9 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     
     /* INSERT BOUNDARY POINTS */
     for(i=0;i<nebd;++i) {
-        initialsidenumber = ebdry(i)->nel;
+        initialsidenumber = ebdry(i)->nseg;
         for(j=0;j<initialsidenumber;++j) {
-            sind = ebdry(i)->el(j);
+            sind = ebdry(i)->seg(j);
             ebdry(i)->mvpttobdry(j,0.0,pnts(npnt));
             bdry_insert(npnt,sind);
             ++npnt;

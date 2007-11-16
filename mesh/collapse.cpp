@@ -2,6 +2,7 @@
 #include <utilities.h>
 #include <assert.h>
 #include <float.h>
+#include <blitz/tinyvec-et.h>
 
 void tri_mesh::collapse(int sind, int delt) {
     int ntsrnd, nssrnd, nperim;
@@ -159,7 +160,7 @@ void tri_mesh::collapse(int sind, int delt) {
     /* NEED TO REMOVE LEFTOVERS */
     qtree.dltpt(p1);
     tri(p1).info |= PDLTE;
-        
+
     /* SWAP AFFECTED SIDES */        
     swap(gbl->i2wk_lst2(-1),&gbl->i2wk_lst2(0));
     gbl->i2wk_lst2(-1) = nssrnd;

@@ -183,6 +183,8 @@
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 		6F1616010B974E67006CA043 /* libDT.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libDT.a; path = /Library/DataTank/libDT.a; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libtri_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F3627460CD2336E00BF7568 /* libspline.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspline.a; path = ../lib/libspline.a; sourceTree = SOURCE_ROOT; };
+		6F36274E0CD233C100BF7568 /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; };
 		6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_thread-mt-1_34.dylib"; path = "../../Packages/lib/libboost_thread-mt-1_34.dylib"; sourceTree = SOURCE_ROOT; };
 		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
@@ -284,6 +286,8 @@
 				6F8509B607A5383700343685 /* libquad.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
+				6F3627460CD2336E00BF7568 /* libspline.a */,
+				6F36274E0CD233C100BF7568 /* libgfortran.a */,
 				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
 				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
 				6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34.dylib */,

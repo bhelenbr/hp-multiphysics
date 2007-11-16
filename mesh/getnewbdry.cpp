@@ -155,7 +155,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
             break;
         }
         case etype::spline: {
-     //      temp = new spline(idnum,*this);
+//            temp = new eboundary_with_geometry<edge_bdry,spline>(idnum,*this);
             break;
         }
 

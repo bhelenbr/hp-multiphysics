@@ -307,13 +307,13 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
     /* ADD NEW SIDE TO BOUNDARY GROUP */
     /* NEED TO REORDER WHEN FINISHED */
     i = getbdrynum(seg(sind).tri(1));
-    seg(nseg).tri(1) = trinumatbdry(i,ebdry(i)->nel);
-    if (ebdry(i)->nel >= ebdry(i)->maxel) {
+    seg(nseg).tri(1) = trinumatbdry(i,ebdry(i)->nseg);
+    if (ebdry(i)->nseg >= ebdry(i)->maxseg) {
         output("error");
         *gbl->log << "need to use bigger growth factor (too many boundary sides)" << std::endl;
         exit(1);
     }
-    ebdry(i)->el(ebdry(i)->nel++) = nseg;
+    ebdry(i)->seg(ebdry(i)->nseg++) = nseg;
     ++nseg;
     
     nskeep = nskeep>>1;

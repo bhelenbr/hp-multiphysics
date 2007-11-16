@@ -3,7 +3,7 @@
 #include <float.h>
 
 /* CREATE SIDELIST FROM TRIANGLE VERTEX LIST */
-/* USES VINFO TO STORE FIRST SIND FROM VERTEX */
+/* USES PINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TRI.PNT MUST BE COUNTERCLOCKWISE ORDERED */
 void tri_mesh::createseg(void) {
@@ -194,8 +194,8 @@ void tri_mesh::treeinit() {
 
     
     for (i=0;i<nebd;++i) {
-        for(j=0;j<ebdry(i)->nel;++j) {
-            sind = ebdry(i)->el(j);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            sind = ebdry(i)->seg(j);
             p0 = seg(sind).pnt(0);
             for(n=0;n<ND;++n) {
                 x1[n] = MIN(x1[n],pnts(p0)(n));
@@ -230,8 +230,8 @@ void tri_mesh::bdrylabel() {
     int i,j,k,sind,tind;
     
     for(i=0;i<nebd;++i) {
-        for(j=0;j<ebdry(i)->nel;++j) {
-            sind = ebdry(i)->el(j);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            sind = ebdry(i)->seg(j);
             seg(sind).tri(1) = trinumatbdry(i,j);
             tind = seg(sind).tri(0);
             for(k=0;k<3;++k)
@@ -264,16 +264,16 @@ void tri_mesh::initlngth() {
         
     
     for(i=0;i<nebd;++i) {
-        for(j=0;j<ebdry(i)->nel;++j) {
-            p0 = seg(ebdry(i)->el(j)).pnt(0);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            p0 = seg(ebdry(i)->seg(j)).pnt(0);
             lngth(p0) = 1.0e32;
         }
     }
               
     for(i=0;i<nebd;++i) {
-        for(j=0;j<ebdry(i)->nel;++j) {
-            p0 = seg(ebdry(i)->el(j)).pnt(0);
-            p1 = seg(ebdry(i)->el(j)).pnt(1);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            p0 = seg(ebdry(i)->seg(j)).pnt(0);
+            p1 = seg(ebdry(i)->seg(j)).pnt(1);
             l = distance(p0,p1);
             lngth(p0) = MIN(l,lngth(p0));
             lngth(p1) = MIN(l,lngth(p1));

@@ -54,8 +54,8 @@ class r_fixed : public r_side_bdry {
         }
               
         void dirichlet() {            
-            for(int j=0;j<base.nel;++j) {
-                int sind = base.el(j);
+            for(int j=0;j<base.nseg;++j) {
+                int sind = base.seg(j);
                     for(int n=dstart;n<=dstop;++n) {
                         x.gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
                         x.gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
@@ -76,8 +76,8 @@ class r_fixed4 : public r_fixed {
         
         
         void fixdx2() {
-            for(int j=0;j<base.nel;++j) {
-                int sind = base.el(j);
+            for(int j=0;j<base.nseg;++j) {
+                int sind = base.seg(j);
                     for(int n=d2start;n<=d2stop;++n) {
                         x.gbl->res1(x.seg(sind).pnt(0))(n) = 0.0;
                         x.gbl->res1(x.seg(sind).pnt(1))(n) = 0.0;
@@ -124,19 +124,19 @@ class r_translating : public r_fixed {
         }
         void tadvance() {
             int n,p0;
-            for(int j=1;j<base.nel;++j) {
-                p0 = x.seg(base.el(j)).pnt(0);
+            for(int j=1;j<base.nseg;++j) {
+                p0 = x.seg(base.seg(j)).pnt(0);
                 for(n=0;n<2;++n)
                     x.pnts(p0)(n) += dx[n];
             }
             
             
             /* TEMPORARY */
-                p0 = x.seg(base.el(0)).pnt(0);
+                p0 = x.seg(base.seg(0)).pnt(0);
                 for(n=0;n<2;++n)
                     x.pnts(p0)(n) += dx[n]/2;
                     
-                p0 = x.seg(base.el(base.nel-1)).pnt(1);
+                p0 = x.seg(base.seg(base.nseg-1)).pnt(1);
                 for(n=0;n<2;++n)
                     x.pnts(p0)(n) += dx[n]/2;
                 
@@ -187,8 +187,8 @@ class r_oscillating : public r_fixed {
             theta1 = atan(omega*amp*sin(omega*x.gbl->time)/p0);
             dtheta = theta1-theta;
                         
-            for(int j=0;j<base.nel;++j) {
-                vrt = x.seg(base.el(j)).pnt(0);
+            for(int j=0;j<base.nseg;++j) {
+                vrt = x.seg(base.seg(j)).pnt(0);
                 xp[0] = x.pnts(vrt)(0)-center[0];
                 xp[1] = x.pnts(vrt)(1)-center[1];            
                 dx[0] = center1[0]-center[0] +xp[0]*cos(dtheta)-xp[1]*sin(dtheta) -xp[0];

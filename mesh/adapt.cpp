@@ -75,14 +75,14 @@ void tri_mesh::setup_for_adapt() {
     /* MARK BEGINNING/END OF SIDE GROUPS & SPECIAL VERTEX POINTS */
     /* THESE SHOULD NOT BE DELETED */
     for(i=0;i<nebd;++i) {
-        p0 = seg(ebdry(i)->el(0)).pnt(0);
-        p1 = seg(ebdry(i)->el(ebdry(i)->nel-1)).pnt(1);
+        p0 = seg(ebdry(i)->seg(0)).pnt(0);
+        p1 = seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1);
         tri(p0).info |=  PSPEC;
         tri(p1).info |=  PSPEC;
     }
     
     for(i=0;i<nvbd;++i)
-        tri(vbdry(i)->p0).info |= PSPEC;
+        tri(vbdry(i)->pnt).info |= PSPEC;
         
     return;
 }
@@ -102,9 +102,9 @@ void tri_mesh::cleanup_after_adapt() {
     
     /* DELETE SIDES FROM BOUNDARY CONDITIONS */
     for(i=0;i<nebd;++i) {
-        for(j=ebdry(i)->nel-1;j>=0;--j) {
-            if (tri(ebdry(i)->el(j)).info&SDLTE) 
-                ebdry(i)->el(j) = ebdry(i)->el(--ebdry(i)->nel);
+        for(j=ebdry(i)->nseg-1;j>=0;--j) {
+            if (tri(ebdry(i)->seg(j)).info&SDLTE) 
+                ebdry(i)->seg(j) = ebdry(i)->seg(--ebdry(i)->nseg);
         }
         ebdry(i)->reorder();
     }
@@ -115,7 +115,7 @@ void tri_mesh::cleanup_after_adapt() {
     for (i=0;i<nebd;++i) {
         /* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
         /* & LAST VERTEX SHOULD NEVER BE CHANGED */
-        sind = ebdry(i)->el(0);
+        sind = ebdry(i)->seg(0);
         p0 = seg(sind).pnt(0);
         if (tri(p0).info&PTOUC) {
             updatepdata_bdry(i,0,0);
@@ -123,8 +123,8 @@ void tri_mesh::cleanup_after_adapt() {
         }
         else movepdata_bdry(i,0,0);
         
-        for(j=0;j<ebdry(i)->nel;++j) {
-            sind = ebdry(i)->el(j);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            sind = ebdry(i)->seg(j);
             p0 = seg(sind).pnt(1);
             if (tri(p0).info&PTOUC) {
                 updatepdata_bdry(i,j,1);
@@ -151,8 +151,8 @@ void tri_mesh::cleanup_after_adapt() {
     
     /* FIX BOUNDARY CONDITION POINTERS */
     for(i=0;i<nvbd;++i)
-        if (pnt(vbdry(i)->p0).info > -1) 
-            vbdry(i)->p0 = pnt(vbdry(i)->p0).info;  
+        if (pnt(vbdry(i)->pnt).info > -1) 
+            vbdry(i)->pnt = pnt(vbdry(i)->pnt).info;  
                                 
     /* CLEAN UP SIDES */
     /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
@@ -168,9 +168,9 @@ void tri_mesh::cleanup_after_adapt() {
             
     /* FIX BOUNDARY CONDITION POINTERS */
     for(i=0;i<nebd;++i)
-        for(j=0;j<ebdry(i)->nel;++j) 
-            if (ebdry(i)->el(j) >= nseg) 
-                ebdry(i)->el(j) = seg(ebdry(i)->el(j)).info; 
+        for(j=0;j<ebdry(i)->nseg;++j) 
+            if (ebdry(i)->seg(j) >= nseg) 
+                ebdry(i)->seg(j) = seg(ebdry(i)->seg(j)).info; 
         
     /* CLEAN UP DELETED TRIS */
     /* TINFO < NTRI STORES INDEX OF ORIGINAL TRI ( > 0), TINFO = 0 -> UNMOVED */

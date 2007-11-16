@@ -140,6 +140,10 @@ void blocks::go(input_map& input) {
     }
     threads.join_all();
 #else
+    if (nblock != 1) {
+        std::cerr << "Need pth or boost::threads to run mulitple blocks on single processor\n";
+        exit(1);
+    }
     blk(0)->go(input);
 #endif
 
@@ -641,13 +645,13 @@ void block::init(input_map &input) {
     /* SET TIME STEPPING INFO */
     gbl->tstep = -1;
     gbl->substep = -1;
-    gbl->time = 0.0;  // Simulation starts at t = 0
+    gbl->time = -1.0;  // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
     input.getwdefault("dtinv",gbl->dti,0.0);
     input.getwdefault("dtinv_prev",gbl->dti_prev,gbl->dti); 
     input.getwdefault("ntstep",ntstep,1);
     input.getwdefault("restart",nstart,0);
     ntstep += nstart +1;
-    if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
+    if (nstart > 0 && gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
         
     /* OTHER UNIVERSAL CONSTANTS */
     input.getwdefault("gravity",gbl->g,0.0);
@@ -764,11 +768,11 @@ void block::cycle(int vw, int lvl) {
         
         grd(gridlevel)->rsdl();
         
-        grd(gridlevelp)->mg_getfres();
+        grd(gridlevelp)->mg_restrict();
         
         cycle(vw, lvl+1);
 
-        grd(gridlevel)->mg_getcchng();
+        grd(gridlevelp)->mg_prolongate();
         
         if (!(vcount%abs(prcndtn_intrvl)) && prcndtn_intrvl < 0 && iterrfne) grd(gridlevel)->setup_preconditioner();
         
@@ -929,6 +933,9 @@ void block::tadvance() {
             gbl->   adirk[0][0] *= gbl->dti_prev/gbl->dti;
         }
         gbl->dti_prev = gbl->dti;
+    }
+    else {
+        gbl->time = 0.0;
     }
 #endif
 #endif

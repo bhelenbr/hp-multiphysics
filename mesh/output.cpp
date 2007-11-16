@@ -133,7 +133,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
             count = ntri;
             for(i=0;i<nebd;++i)
-                count += ebdry(i)->nel;
+                count += ebdry(i)->nseg;
     
             out << "** FIDAP NEUTRAL FILE\n";
             out << filename << "\n";
@@ -179,16 +179,16 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
           
             for(i=0;i<nebd;++i) {
                 out << "GROUP:" << setw(9) << i+2;
-                out << " ELEMENTS:" << setw(10) << ebdry(i)->nel;
+                out << " ELEMENTS:" << setw(10) << ebdry(i)->nseg;
                 out << " NODES:" << setw(13) << 2;
                 out << " GEOMETRY:" << setw(5) << 0;
                 out << " ID:" << setw(4) << ebdry(i)->idnum << endl;
 
                 out << "ENTITY NAME:    surface.1\n";
-                for(j=0;j<ebdry(i)->nel;++j) {
+                for(j=0;j<ebdry(i)->nseg;++j) {
                     out << setw(8) << count++;
-                    out << setw(8) << seg(ebdry(i)->el(j)).pnt(0)+1;
-                    out << setw(8) << seg(ebdry(i)->el(j)).pnt(1)+1 << endl;
+                    out << setw(8) << seg(ebdry(i)->seg(j)).pnt(0)+1;
+                    out << setw(8) << seg(ebdry(i)->seg(j)).pnt(1)+1 << endl;
                 }
             }
             out.close();
@@ -246,16 +246,16 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             out << "nebd: " << nebd << endl;
             for(i=0;i<nebd;++i) {
                 out << "idnum: " << ebdry(i)->idnum << endl;
-            	out << "number: " << ebdry(i)->nel << endl;
-                for(int j=0;j<ebdry(i)->nel;++j)
-                    out << j << ": " << ebdry(i)->el(j) << std::endl;
+            	out << "number: " << ebdry(i)->nseg << endl;
+                for(int j=0;j<ebdry(i)->nseg;++j)
+                    out << j << ": " << ebdry(i)->seg(j) << std::endl;
             }
 
             /* VERTEX BOUNDARY INFO HEADER */
             out << "nvbd: " << nvbd << endl;
             for(i=0;i<nvbd;++i) {
                 out << "idnum: " << vbdry(i)->idnum << endl;
-                out << "point: " << vbdry(i)->p0 << endl;
+                out << "point: " << vbdry(i)->pnt << endl;
             }
             
             out.close();
@@ -295,16 +295,16 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             bout << "nebd: " << nebd << endl;
             for(i=0;i<nebd;++i) {
                 bout << "idnum: " << ebdry(i)->idnum << endl;
-            	bout << "number: " << ebdry(i)->nel << endl;
-                for(int j=0;j<ebdry(i)->nel;++j)
-                    bout << j << ": " << ebdry(i)->el(j) << std::endl;
+            	bout << "number: " << ebdry(i)->nseg << endl;
+                for(int j=0;j<ebdry(i)->nseg;++j)
+                    bout << j << ": " << ebdry(i)->seg(j) << std::endl;
             }
 
             /* VERTEX BOUNDARY INFO HEADER */
             bout << "nvbd: " << nvbd << endl;
             for(i=0;i<nvbd;++i) {
                 bout << "idnum: " << vbdry(i)->idnum << endl;
-                bout << "point: " << vbdry(i)->p0 << endl;
+                bout << "point: " << vbdry(i)->pnt << endl;
             }
             
             bout.close();
@@ -424,15 +424,15 @@ void tri_mesh::setinfo() {
         pnt(i).info = 0;
     
     for(i=0;i<nvbd;++i)
-        pnt(vbdry(i)->p0).info = vbdry(i)->idnum;
+        pnt(vbdry(i)->pnt).info = vbdry(i)->idnum;
 
     /* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
     for(i=0;i<nseg;++i)
         seg(i).info = 0;
     
     for(i=0;i<nebd;++i)
-        for(j=0;j<ebdry(i)->nel;++j)
-            seg(ebdry(i)->el(j)).info = ebdry(i)->idnum;
+        for(j=0;j<ebdry(i)->nseg;++j)
+            seg(ebdry(i)->seg(j)).info = ebdry(i)->idnum;
 
     /* SET UP TRI INFO FOR EASYMESH OUTPUT */            
     for(i=0;i<ntri;++i)

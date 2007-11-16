@@ -16,7 +16,7 @@ void vcomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     sndtype()=flt_msg;
     
     /* LOAD SEND BUFFER */    
-    offset = p0*stride +bgn;
+    offset = pnt*stride +bgn;
     for (i=0;i<end-bgn+1;++i) 
         fsndbuf(i) = base[offset+i];
 }
@@ -35,7 +35,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
         case(master_slave): {
             if (first || phase(grp)(0) != phi) return;
             
-            offset = p0*stride +bgn;
+            offset = pnt*stride +bgn;
             for(i=0;i<end-bgn+1;++i) 
                 base[offset++] = frcvbuf(0,i);
                 
@@ -54,7 +54,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = p0*stride +bgn;
+                        offset = pnt*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i)/matches;
                     }
@@ -69,7 +69,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = p0*stride +bgn;
+                        offset = pnt*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i);
                     }
@@ -84,7 +84,7 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     }
                     
                     if (matches > 1) {
-                        offset = p0*stride +bgn;
+                        offset = pnt*stride +bgn;
                         for(i=0;i<end-bgn+1;++i) 
                             base[offset++] = fsndbuf(i);
                     }
@@ -102,22 +102,22 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 /* GENERIC FUNCTIONS FOR SIDES          */
 /**************************************/
 void edge_bdry::alloc(int n) {
-    maxel = n;
-    el.resize(n);
+    maxseg = n;
+    seg.resize(n);
 }
       
 void edge_bdry::copy(const edge_bdry& bin) {
     int i;
     
         
-    if (!maxel) alloc(bin.maxel);
-	else assert(bin.nel <= maxel);
+    if (!maxseg) alloc(bin.maxseg);
+	else assert(bin.nseg <= maxseg);
     vbdry = bin.vbdry;
     
-    nel = bin.nel;
+    nseg = bin.nseg;
     
-    for(i=0;i<nel;++i)
-        el(i) = bin.el(i);
+    for(i=0;i<nseg;++i)
+        seg(i) = bin.seg(i);
         
     return;
 }
@@ -127,7 +127,7 @@ void edge_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) 
     int n;
     
     for (n=0;n<tri_mesh::ND;++n)
-        pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(el(indx)).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(el(indx)).pnt(1))(n));
+        pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(seg(indx)).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(seg(indx)).pnt(1))(n));
     
     return;
 }
@@ -138,9 +138,9 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
     FLT psiprev,normdistprev;
     FLT mindist = 1.0e32;
         
-    if (x.seg(el(0)).pnt(0) == x.seg(el(nel-1)).pnt(1)) {
+    if (x.seg(seg(0)).pnt(0) == x.seg(seg(nseg-1)).pnt(1)) {
         /* BOUNDARY IS A LOOP */
-        sind = el(nel-1);
+        sind = seg(nseg-1);
         p0 = x.seg(sind).pnt(0);
         p1 = x.seg(sind).pnt(1);
         dx = x.pnts(p1)(0) - x.pnts(p0)(0);
@@ -151,14 +151,14 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc
         normdist *= sqrt(ol/2.);
         psiprev = psi;
         normdistprev = normdist;
-        sidlocprev = nel-1;
+        sidlocprev = nseg-1;
     } 
     else {
         psiprev = -1.0;
     }
     
-    for(k=0;k<nel;++k) {
-        sind = el(k);
+    for(k=0;k<nseg;++k) {
+        sind = seg(k);
         p0 = x.seg(sind).pnt(0);
         p1 = x.seg(sind).pnt(1);
         dx = x.pnts(p1)(0) - x.pnts(p0)(0);
@@ -203,10 +203,10 @@ void edge_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int
     int j,k,sind,tind,p0,sidloc;
     FLT psiloc;
         
-    for(k=1;k<nel;++k) {
-        p0 = x.seg(el(k)).pnt(0);
+    for(k=1;k<nseg;++k) {
+        p0 = x.seg(seg(k)).pnt(0);
         tgt.ebdry(bnum)->findbdrypt(x.pnts(p0), sidloc, psiloc);
-        sind = tgt.ebdry(bnum)->el(sidloc);
+        sind = tgt.ebdry(bnum)->seg(sidloc);
         tind = tgt.seg(sind).tri(0);                            
         cnnct(p0).tri = tind;
         for (j=0;j<3;++j) 
@@ -225,9 +225,9 @@ void edge_bdry::swap(int s1, int s2) {
     int ind;
     
     /* TEMPORARY NOT SURE HOW TO SWAP S VALUES */    
-    ind = el(s1);
-    el(s1) = el(s2);
-    el(s2) = ind;
+    ind = seg(s1);
+    seg(s1) = seg(s2);
+    seg(s2) = ind;
 
     return;
 }
@@ -238,26 +238,26 @@ void edge_bdry::swap(int s1, int s2) {
 void edge_bdry::reorder() {
     int i,count,total,sind,minp,first;
 
-    total = nel;
+    total = nseg;
     
     /* DON'T ASSUME wk INITIALIZED TO -1 */
-    for(i=0;i<nel;++i) {
-        sind = el(i);
+    for(i=0;i<nseg;++i) {
+        sind = seg(i);
         x.gbl->intwk(x.seg(sind).pnt(0)) = -1;
         x.gbl->i2wk(x.seg(sind).pnt(1)) = -1;
     }
     
     /* STORE SIDE INDICES BY VERTEX NUMBER */
-    for(i=0; i < nel; ++i) {
-        sind = el(i);
+    for(i=0; i < nseg; ++i) {
+        sind = seg(i);
         x.gbl->intwk(x.seg(sind).pnt(1)) = i;
         x.gbl->i2wk(x.seg(sind).pnt(0)) = i;
     }
 
     /* FIND FIRST SIDE */    
     first = -1;
-    for(i=0;i<nel;++i) {
-        sind = el(i);
+    for(i=0;i<nseg;++i) {
+        sind = seg(i);
         if (x.gbl->intwk(x.seg(sind).pnt(0)) == -1) {
             first = i;
             break;
@@ -268,8 +268,8 @@ void edge_bdry::reorder() {
     /* THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
     if (first < 0) {
         minp = x.npnt;
-        for(i=0;i<nel;++i) {
-            sind = el(i);
+        for(i=0;i<nseg;++i) {
+            sind = seg(i);
             if (x.seg(sind).pnt(1) < minp) {
                 first = i;
                 minp = x.seg(sind).pnt(1);
@@ -280,23 +280,23 @@ void edge_bdry::reorder() {
     /* SWAP FIRST SIDE */
     count = 0;
     swap(count,first);
-    x.gbl->intwk(x.seg(el(first)).pnt(1)) = first;
-    x.gbl->i2wk(x.seg(el(first)).pnt(0)) = first;
-    x.gbl->intwk(x.seg(el(count)).pnt(1)) = count;
-    x.gbl->i2wk(x.seg(el(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
+    x.gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
+    x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
+    x.gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
+    x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
 
     /* REORDER LIST */
-    while ((first = x.gbl->i2wk(x.seg(el(count++)).pnt(1))) >= 0) {
+    while ((first = x.gbl->i2wk(x.seg(seg(count++)).pnt(1))) >= 0) {
         swap(count,first);
-        x.gbl->intwk(x.seg(el(first)).pnt(1)) = first;
-        x.gbl->i2wk(x.seg(el(first)).pnt(0)) = first;
-        x.gbl->intwk(x.seg(el(count)).pnt(1)) = count;
-        x.gbl->i2wk(x.seg(el(count)).pnt(0)) = count;
+        x.gbl->intwk(x.seg(seg(first)).pnt(1)) = first;
+        x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
+        x.gbl->intwk(x.seg(seg(count)).pnt(1)) = count;
+        x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = count;
     }
     
     /* RESET gbl->intwk TO -1 */
     for(i=0; i <total; ++i) {
-        sind = el(i);
+        sind = seg(i);
         x.gbl->intwk(x.seg(sind).pnt(1)) = -1;
     }
     
@@ -305,12 +305,12 @@ void edge_bdry::reorder() {
         x.ebdry.resizeAndPreserve(x.nebd);
         x.ebdry(x.nebd-1) = create(x);
         x.ebdry(x.nebd-1)->copy(*this);
-        nel = count;
+        nseg = count;
 
-        for(i=0;i<total-nel;++i)
-            x.ebdry(x.nebd-1)->swap(i,i+nel);
-        x.ebdry(x.nebd-1)->nel = total-nel;
-        *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nel << std::endl;
+        for(i=0;i<total-nseg;++i)
+            x.ebdry(x.nebd-1)->swap(i,i+nseg);
+        x.ebdry(x.nebd-1)->nseg = total-nseg;
+        *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
         return;
     }
     
@@ -323,8 +323,8 @@ void ecomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     if (!((1<<grp)&groupmask)) return;
 
     count = 0;
-    for(j=0;j<nel;++j) {
-        sind = el(j);
+    for(j=0;j<nseg;++j) {
+        sind = seg(j);
         offset = x.seg(sind).pnt(0)*stride;
         for (k=bgn;k<=end;++k) {
             fsndbuf(count++) = base[offset+k];
@@ -356,17 +356,17 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
             if (first || phase(grp)(0) != phi) return;
             
 #ifdef MPDEBUG
-            *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+            *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
             int ebp1 = end-bgn+1;
-            countdn = nel*ebp1;
-            for(j=0;j<nel;++j) {
-                sind = el(j);
+            countdn = nseg*ebp1;
+            for(j=0;j<nseg;++j) {
+                sind = seg(j);
                 offset = x.seg(sind).pnt(0)*stride +bgn;
                 for(k=0;k<ebp1;++k) {
                     base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-                    *gbl->log << "\t" << base[offset+k] << std::endl;
+                    *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                 }
                 countdn -= ebp1;
@@ -375,7 +375,7 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
             for(k=0;k<ebp1;++k) {
                 base[offset+k] = frcvbuf(0,countdn+k);
 #ifdef MPDEBUG
-                *gbl->log << "\t" << base[offset+k] << std::endl;
+                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
             }
             return;
@@ -394,9 +394,9 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = nel*ebp1;
+                        countdn = nseg*ebp1;
                         countup = 0;
-                        for(j=0;j<nel+1;++j) {
+                        for(j=0;j<nseg+1;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) += frcvbuf(m,countdn +k);
                             countup += ebp1;
@@ -408,16 +408,16 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -426,7 +426,7 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                            *gbl->log << "\t" << base[offset+k] << std::endl;
+                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
@@ -443,9 +443,9 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = nel*ebp1;
+                        countdn = nseg*ebp1;
                         countup = 0;
-                        for(j=0;j<nel+1;++j) {
+                        for(j=0;j<nseg+1;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) += frcvbuf(m,countdn +k);
                             countup += ebp1;
@@ -455,16 +455,16 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -473,7 +473,7 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                            *gbl->log << "\t" << base[offset+k] << std::endl;
+                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
@@ -491,9 +491,9 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = nel*ebp1;
+                        countdn = nseg*ebp1;
                         countup = 0;
-                        for(j=0;j<nel+1;++j) {
+                        for(j=0;j<nseg+1;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) = MAX(fsndbuf(countup+k),frcvbuf(m,countdn +k));
                             countup += ebp1;
@@ -503,16 +503,16 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = x.seg(sind).pnt(0)*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -521,7 +521,7 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         for (k=bgn;k<=end;++k) {
                             base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                            *gbl->log << "\t" << base[offset+k] << std::endl;
+                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                         }
                     }
@@ -542,8 +542,8 @@ void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     if (!((1<<grp)&groupmask)) return;
 
     count = 0;
-    for(j=0;j<nel;++j) {
-        sind = el(j);
+    for(j=0;j<nseg;++j) {
+        sind = seg(j);
         offset = sind*stride;
         for (k=bgn;k<=end;++k) {
             fsndbuf(count++) = base[offset+k];
@@ -571,18 +571,18 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
         case(master_slave): {
             if (first || phase(grp)(0) != phi) return;
 #ifdef MPDEBUG
-            *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+            *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
             int ebp1 = end-bgn+1;
-            countdn = (nel-1)*ebp1;
+            countdn = (nseg-1)*ebp1;
             countup = 0;
-            for(j=0;j<nel;++j) {
-                sind = el(j);
+            for(j=0;j<nseg;++j) {
+                sind = seg(j);
                 offset = sind*stride +bgn;
                 for (k=0;k<ebp1;++k) {
                     base[offset+k] = frcvbuf(0,countdn +k);
 #ifdef MPDEBUG
-                    *gbl->log << "\t" << base[offset+k] << std::endl;
+                    *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                 }
                 countdn -= ebp1;
@@ -602,9 +602,9 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = (nel-1)*ebp1;
+                        countdn = (nseg-1)*ebp1;
                         countup = 0;
-                        for(j=0;j<nel;++j) {
+                        for(j=0;j<nseg;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) += frcvbuf(m,countdn +k);
                             countup += ebp1;
@@ -616,16 +616,16 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = sind*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -639,9 +639,9 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = (nel-1)*ebp1;
+                        countdn = (nseg-1)*ebp1;
                         countup = 0;
-                        for(j=0;j<nel;++j) {
+                        for(j=0;j<nseg;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) += frcvbuf(m,countdn +k);
                             countup += ebp1;
@@ -653,16 +653,16 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         mtchinv = 1./matches;
 
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = sind*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -676,9 +676,9 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                         ++matches;
                         
                         int ebp1 = end-bgn+1;
-                        countdn = (nel-1)*ebp1;
+                        countdn = (nseg-1)*ebp1;
                         countup = 0;
-                        for(j=0;j<nel;++j) {
+                        for(j=0;j<nseg;++j) {
                             for(k=0;k<ebp1;++k)
                                 fsndbuf(countup +k) = MAX(fsndbuf(countup+k),frcvbuf(m,countdn +k));
                             countup += ebp1;
@@ -688,16 +688,16 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
                     
                     if (matches > 1) {
 #ifdef MPDEBUG
-                        *gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
 #endif
                         count = 0;
-                        for(j=0;j<nel;++j) {
-                            sind = el(j);
+                        for(j=0;j<nseg;++j) {
+                            sind = seg(j);
                             offset = sind*stride;
                             for (k=bgn;k<=end;++k) {
                                 base[offset+k] = fsndbuf(count++);
 #ifdef MPDEBUG
-                                *gbl->log << "\t" << base[offset+k] << std::endl;
+                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
 #endif
                             }
 
@@ -720,7 +720,7 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
  
     /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
     /* MAKE SURE ENDPOINTS ARE OK */
-    i = x.seg(el(0)).pnt(0);
+    i = x.seg(seg(0)).pnt(0);
     if (cnnct(i).tri < 0) {
         tgt.qtree.nearpt(x.pnts(i).data(),p0);
         cnnct(i).tri=tgt.pnt(p0).tri;
@@ -729,7 +729,7 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
             if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
         }
     }
-    i = x.seg(el(nel-1)).pnt(1);
+    i = x.seg(seg(nseg-1)).pnt(1);
     if (cnnct(i).tri < 0) {
         tgt.qtree.nearpt(x.pnts(i).data(),p0);
         cnnct(i).tri=tgt.pnt(p0).tri;
@@ -742,8 +742,8 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
     if (first) {
         sndsize() = 0;
         sndtype() = int_msg;
-        for(k=1;k<nel;++k) {
-            p0 = x.seg(el(k)).pnt(0);
+        for(k=1;k<nseg;++k) {
+            p0 = x.seg(seg(k)).pnt(0);
             if (cnnct(p0).tri > 0) {
                 isndbuf(sndsize()++) = -1;
             }
@@ -762,8 +762,8 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
     
     if (!first) {
         i = 0;
-        for(k=nel-1;k>0;--k) {
-            p0 = x.seg(el(k)).pnt(1);
+        for(k=nseg-1;k>0;--k) {
+            p0 = x.seg(seg(k)).pnt(1);
             if (ircvbuf(0,i) < 0) {
                 cnnct(p0).tri = 0;
                 for(j=0;j<3;++j)

@@ -80,6 +80,9 @@ class tri_mesh : public multigrid_interface {
         int nebd; /**< number of edge boundaries */
         Array<edge_bdry *,1> ebdry; /**< array of edge boundary objects */
         edge_bdry* getnewedgeobject(int idnum, input_map& bdrydata); /**< function for obtaining different edge boundary objects */
+        int getbdrynum(int trinum) const { return((-trinum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
+        int getbdryseg(int trinum) const { return(-trinum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
+        int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
         //@}
 
         /** @name Variables describing triangles */
@@ -263,6 +266,7 @@ class tri_mesh : public multigrid_interface {
         void tkoutlst(int sind);  /**< For removing from adaption priority queues */ 
         //@}
         
+    public:
         /** @name Some primitive functions */
         //@{
         /** Calculate distance between two points */
@@ -293,10 +297,6 @@ class tri_mesh : public multigrid_interface {
         FLT intri(int tind, const TinyVector<FLT,2> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
         TinyVector<FLT,3> tri_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
         void getwgts(TinyVector<FLT,3> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */
-
-        int getbdrynum(int trinum) const { return((-trinum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
-        int getbdryel(int trinum) const { return(-trinum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
-        int trinumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
         //@}
 
 };
@@ -312,7 +312,7 @@ class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
     public:
         tri_mesh &x;
         TinyVector<int,2> ebdry;
-        int p0;
+        int pnt;
         
         /* CONSTRUCTOR */
         vrtx_bdry(int intype, tri_mesh &xin) : boundary(intype), x(xin) {idprefix = x.gbl->idprefix +"_v" +idprefix; mytype="plain";}
@@ -321,7 +321,7 @@ class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
         /* OTHER USEFUL STUFF */
         virtual vrtx_bdry* create(tri_mesh &xin) const { return(new vrtx_bdry(*this,xin));}
         virtual void copy(const vrtx_bdry& bin) {
-            p0 = bin.p0;
+            pnt = bin.pnt;
             ebdry = bin.ebdry;
         }
         virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
@@ -343,13 +343,13 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
     public:
         tri_mesh &x;
         TinyVector<int,2> vbdry;
-        int maxel;
-        int nel;
-        Array<int,1> el;
+        int maxseg;
+        int nseg;
+        Array<int,1> seg;
         
         /* CONSTRUCTOR */
-        edge_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxel(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
-        edge_bdry(const edge_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxel(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
+        edge_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxseg(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}
+        edge_bdry(const edge_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxseg(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
         
         /* BASIC B.C. STUFF */
         void alloc(int n);
@@ -362,7 +362,7 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
         virtual void swap(int s1, int s2);
         virtual void reorder();
         virtual void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
-        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
+        virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
         virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
         
         /* DEFAULT SENDING FOR SIDE POINTS */

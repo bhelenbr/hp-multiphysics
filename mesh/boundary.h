@@ -1,3 +1,6 @@
+#ifndef _boundary_h_
+#define _boundary_h_
+
 /*
  *  boundary.h
  *  mesh
@@ -11,13 +14,13 @@
 #include <input_map.h>
 #include <mathclass.h>
 #include <float.h>
+#include <blocks.h>
+
+using namespace blitz;
 
 #ifdef MPISRC
 #include <mpi.h>
 #endif
-
-#ifndef _boundary_h_
-#define _boundary_h_
 
 #ifdef SINGLE
 #define FLT float
@@ -28,6 +31,8 @@
 #define EPSILON DBL_EPSILON
 #endif
 #endif
+
+//#define MPDEBUG
 
 /** \defgroup boundary Mesh Boundary Objects 
  *  This group contains object for dealing with mesh boundaries
@@ -153,6 +158,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 phase(k) = inbdry.phase(k);
             
             /* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
+            first = true; // Findmatch sets this
             mtype = inbdry.mtype;
             local_match = local_match;
             snd_tags = inbdry.snd_tags;
@@ -339,20 +345,20 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m)) continue;
                 
 #ifdef MPDEBUG
-                *(gbl->) << "preparing for receipt of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                *(BASE::x.gbl->log) << "preparing for receipt of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif      
                 
                 switch(mtype(m)) {
                     case(local):
                          /* NOTHING TO DO FOR LOCAL RECEIVES */
 #ifdef MPDEBUG
-                        *gbl->log << "local" << std::endl << std::flush;
+                        *(BASE::x.gbl->log) << "local" << std::endl << std::flush;
 #endif
                         break;  
 #ifdef MPISRC
                     case(mpi):
 #ifdef MPDEBUG
-                        *gbl->log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+                        *(BASE::x.gbl->log) << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
                         switch(msgtype) {
                             case(boundary::flt_msg): {
@@ -380,13 +386,13 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m)) continue;
                 
 #ifdef MPDEBUG
-                *(gbl->) << "preparing for send of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " ;
+                *(BASE::x.gbl->log) << "preparing for send of message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " ;
 #endif      
                 
                 switch(mtype(m)) {
                     case(local):
 #ifdef MPDEBUG
-                        *gbl->log << "local" << std::endl << std::flush;
+                        *(BASE::x.gbl->log) << "local" << std::endl << std::flush;
 #endif
                         sim::blks.notify_change(snd_tags(m),true);
                         break;  
@@ -394,7 +400,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                     case(mpi):
                         /* NOTHING TO DO FOR MPI SENDS */
 #ifdef MPDEBUG
-                        *gbl->log << "mpi to process " << mpi_match(m) << std::endl << std::flush;
+                        *(BASE::x.gbl->log) << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
                         break;
 #endif        
@@ -446,9 +452,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             for(m=0;m<nrecvs_to_post;++m) {
                 if (phi != phase(grp)(m) || mtype(m) != local) continue;
 #ifdef MPDEBUG
-                *(gbl->) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                *(BASE::x.gbl->log) << "exchanging local float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 //                        for(i=0;i<local_match(m)->sndsize();++i) 
-//                            *gbl->log << "\t" << local_match(m)->fsndbuf(i) << std::endl;
+//                            *(BASE::x.gbl->log) << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif      
                 sim::blks.waitforslot(rcv_tags(m),true);
                 switch(msgtype) {
@@ -472,7 +478,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
                 
 #ifdef MPDEBUG
-                *(gbl->) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
+                *(BASE::x.gbl->log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif  
                 switch(msgtype) {
                     case(boundary::flt_msg): {
@@ -546,7 +552,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *gbl->log << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << snd_tags(m) << " with type: " << mtype(m) << std::endl;
+                        *(BASE::x.gbl->log) << "waiting for mpi send to complete: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << snd_tags(m) << " with type: " << mtype(m) << std::endl;
 #endif
                         MPI_Wait(&mpi_sndrqst(m), &status); 
                         break;
@@ -567,7 +573,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                     case(mpi): {
                         MPI_Status status;
 #ifdef MPDEBUG
-                        *gbl->log << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << rcv_tags(m) << " with type: " << mtype(m)  << std::endl;
+                        *(BASE::x.gbl->log) << "waiting for mpi message from process: " << mpi_match(m) << ' ' << BASE::idprefix << " phase " << phi << " tag " << rcv_tags(m) << " with type: " << mtype(m)  << std::endl;
 #endif
                         MPI_Wait(&mpi_rcvrqst(m), &status); 
                         break;
@@ -577,10 +583,10 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 
 #ifdef MPDEBUG
                 if (msgtype == boundary::flt_msg) {
-                    *(gbl->) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(BASE::x.gbl->log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
                 else {
-                    *(gbl->) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
+                    *(BASE::x.gbl->log) << "received int message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
 #endif  
             }
@@ -591,18 +597,24 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 };
 
 
-/* SOME GENERIC SHAPES */
+/* GENERIC TEMPLATE FOR SHAPES */
 template<int ND> class geometry {
     protected:
+        //TinyVector<FLT,2> pos;
+        //TinyVector<FLT,3> angle;
         virtual FLT hgt(TinyVector<FLT,ND> pt, FLT time = 0.0) {return(0.0);}
         virtual FLT dhgt(int dir, TinyVector<FLT,ND> pt, FLT time = 0.0) {return(1.0);}
 
     public:        
+//        geometry() {pos = 0.0; angle = 0.0;}
         geometry* create() const {return(new geometry);}
-        virtual void mvpttobdry(TinyVector<FLT,2> &pt) {
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {
             int iter,n;
             FLT mag, delt_dist;
-                
+            
+            /* TEMPO NEED TO PUT RIGID BODY DYNAMICS STUFF HERE */
+            
+                            
             /* FOR AN ANALYTIC SURFACE */
             iter = 0;
             do {
@@ -623,6 +635,8 @@ template<int ND> class geometry {
         }
         virtual void input(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
+        //virtual void translate(TinyVector<FLT,ND> dx) {pos += dx;}
+        //virtual void rotate(TinyVector<FLT,ND> dphi) {angle += dphi;}
         virtual ~geometry() {}
 };
 
@@ -634,13 +648,13 @@ template<int ND> class vgeometry_interface {
 
 template<int ND> class egeometry_interface {
     public:
-        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,ND> &pt) {}
+        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
         virtual ~egeometry_interface() {}
 };
 
 template<int ND> class fgeometry_interface {
     public:
-        virtual void mvpttobdry(int nel, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
+        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
         virtual ~fgeometry_interface() {}
 };
 
@@ -841,7 +855,40 @@ class naca : public geometry<2> {
         }
 };         
 
+#ifdef SPLINE
+#include <cspline.h>
+class spline : public geometry<2> {
+    int curve_id;
+    
+    public:        
+        spline() : geometry<2>() {}
+        spline(const spline &inbdry) : geometry<2>(inbdry) {}
+        spline* create() const {return(new spline(*this));}
 
+        void output(std::ostream& fout,std::string idprefix) {}
+      
+        void input(input_map& inmap,std::string idprefix,std::ostream& log) {
+            std::string filename;
+            if (!inmap.get(idprefix+"_filename",filename)) {
+                std::cerr << "Couldn't find file\n";
+                exit(1);
+            }
+            inmap.getwdefault(idprefix+"_curve",curve_id,1);
+            char fname[100];
+            strcpy(fname,filename.c_str());
+            SPLINR(fname);
+        }
+        
+        void mvpttobdry(TinyVector<FLT,2> &pt) {
+            float s;
+            float x = pt(0);
+            float y = pt(1);
+            INVSPLINE(curve_id,s,x,y);
+            pt(0) = x;
+            pt(1) = y;
+        }        
+};
+#endif
 
 
 

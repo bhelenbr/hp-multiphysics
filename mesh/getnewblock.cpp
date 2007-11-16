@@ -19,7 +19,3 @@ multigrid_interface* block::getnewlevel(input_map& input) {
     return(temp);
 }
 
-block* blocks::getnewblock(int idnum, input_map& input) {
-    return new block(idnum);
-}
-

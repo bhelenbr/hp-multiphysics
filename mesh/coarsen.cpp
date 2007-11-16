@@ -48,14 +48,14 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     
     /* COARSEN SIDES    */
     for(i=0;i<nebd;++i) {
-        ebdry(i)->nel = 0;
+        ebdry(i)->nseg = 0;
         if (typeid(ebdry(i)) != typeid(inmesh.ebdry(i))) {
             *gbl->log << "can't coarsen into object with different boundaries" << std::endl;
             exit(1);
         }
 
         /* CHECK IF FIRST POINT INSERTED*/
-        p0 = inmesh.seg(inmesh.ebdry(i)->el(0)).pnt(0);
+        p0 = inmesh.seg(inmesh.ebdry(i)->seg(0)).pnt(0);
         if (gbl->intwk(p0) < 0) {
             for(n=0;n<ND;++n)
                 pnts(npnt)(n) = inmesh.pnts(p0)(n);
@@ -67,96 +67,96 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
             seg(nseg).pnt(0) = gbl->intwk(p0);
         }
 
-        odd = inmesh.ebdry(i)->nel%2;
+        odd = inmesh.ebdry(i)->nseg%2;
         if (odd) {
-            for(j=2;j<inmesh.ebdry(i)->nel/2;j+=2) {
-                p0 = inmesh.seg(inmesh.ebdry(i)->el(j)).pnt(0);
+            for(j=2;j<inmesh.ebdry(i)->nseg/2;j+=2) {
+                p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
                 for(n=0;n<ND;++n)
                     pnts(npnt)(n) = inmesh.pnts(p0)(n);
                 gbl->intwk(p0) = npnt;
                 seg(nseg).pnt(1) = npnt;
-                ebdry(i)->el(ebdry(i)->nel) = nseg;
+                ebdry(i)->seg(ebdry(i)->nseg) = nseg;
                 seg(nseg).tri(1) = -1;
                 ++nseg; 
-                ++ebdry(i)->nel;
+                ++ebdry(i)->nseg;
                 seg(nseg).pnt(0) = npnt;
                 ++npnt;
             } 
 
             /* MIDDLE POINT OF ODD NUMBERED SIDE */
-            if (inmesh.ebdry(i)->nel > 1) {
-                j = inmesh.ebdry(i)->nel/2;
-                p0 = inmesh.seg(inmesh.ebdry(i)->el(j)).pnt(0);
-                p1 = inmesh.seg(inmesh.ebdry(i)->el(j)).pnt(1);
+            if (inmesh.ebdry(i)->nseg > 1) {
+                j = inmesh.ebdry(i)->nseg/2;
+                p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
+                p1 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(1);
                 for(n=0;n<ND;++n)
                     pnts(npnt)(n) = 0.5*(inmesh.pnts(p0)(n) +inmesh.pnts(p1)(n));
                 gbl->intwk(p0) = npnt;
                 gbl->intwk(p1)= npnt;
                 seg(nseg).pnt(1) = npnt;
-                ebdry(i)->el(ebdry(i)->nel) = nseg;
+                ebdry(i)->seg(ebdry(i)->nseg) = nseg;
                 seg(nseg).tri(1) = -1;
                 ++nseg; 
-                ++ebdry(i)->nel;
+                ++ebdry(i)->nseg;
                 seg(nseg).pnt(0) = npnt;
                 ++npnt;
             }
             
-            for(j = inmesh.ebdry(i)->nel -((inmesh.ebdry(i)->nel-2)/4)*2;j<inmesh.ebdry(i)->nel;j+=2) {
-                p0 = inmesh.seg(inmesh.ebdry(i)->el(j)).pnt(0);
+            for(j = inmesh.ebdry(i)->nseg -((inmesh.ebdry(i)->nseg-2)/4)*2;j<inmesh.ebdry(i)->nseg;j+=2) {
+                p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
                 for(n=0;n<ND;++n)
                     pnts(npnt)(n) = inmesh.pnts(p0)(n);
                 gbl->intwk(p0) = npnt;
                 seg(nseg).pnt(1) = npnt;
-                ebdry(i)->el(ebdry(i)->nel) = nseg;
+                ebdry(i)->seg(ebdry(i)->nseg) = nseg;
                 seg(nseg).tri(1) = -1;
                 ++nseg; 
-                ++ebdry(i)->nel;
+                ++ebdry(i)->nseg;
                 seg(nseg).pnt(0) = npnt;
                 ++npnt;
             }
         }
         else {
-            for(j=2;j<inmesh.ebdry(i)->nel;j+=2) {
-                p0 = inmesh.seg(inmesh.ebdry(i)->el(j)).pnt(0);
+            for(j=2;j<inmesh.ebdry(i)->nseg;j+=2) {
+                p0 = inmesh.seg(inmesh.ebdry(i)->seg(j)).pnt(0);
                 for(n=0;n<ND;++n)
                     pnts(npnt)(n) = inmesh.pnts(p0)(n);
                 gbl->intwk(p0) = npnt;
                 seg(nseg).pnt(1) = npnt;
-                ebdry(i)->el(ebdry(i)->nel) = nseg;
+                ebdry(i)->seg(ebdry(i)->nseg) = nseg;
                 seg(nseg).tri(1) = -1;
                 ++nseg; 
-                ++ebdry(i)->nel;
+                ++ebdry(i)->nseg;
                 seg(nseg).pnt(0) = npnt;
                 ++npnt;
             }
         }
         
         /* INSERT LAST POINT */
-        p0 = inmesh.seg(inmesh.ebdry(i)->el(inmesh.ebdry(i)->nel-1)).pnt(1);
+        p0 = inmesh.seg(inmesh.ebdry(i)->seg(inmesh.ebdry(i)->nseg-1)).pnt(1);
         if (gbl->intwk(p0) < 0) {
             for(n=0;n<ND;++n)
                 pnts(npnt)(n) = inmesh.pnts(p0)(n);
             gbl->intwk(p0) = npnt;
             seg(nseg).pnt(1) = npnt;
-            ebdry(i)->el(ebdry(i)->nel) = nseg;
+            ebdry(i)->seg(ebdry(i)->nseg) = nseg;
             seg(nseg).tri(1) = -1;
             ++nseg;
-            ++ebdry(i)->nel;
+            ++ebdry(i)->nseg;
             ++npnt;
         }
         else {
             seg(nseg).pnt(1) = gbl->intwk(p0);
-            ebdry(i)->el(ebdry(i)->nel) = nseg;
+            ebdry(i)->seg(ebdry(i)->nseg) = nseg;
             seg(nseg).tri(1) = -1;
             ++nseg;
-            ++ebdry(i)->nel;
+            ++ebdry(i)->nseg;
         }
     }
     
     /* MOVE VERTEX BDRY INFORMATION */
     for(i=0;i<inmesh.nvbd;++i) {
         vbdry(i)->copy(*inmesh.vbdry(i));
-        vbdry(i)->p0 = gbl->intwk(inmesh.vbdry(i)->p0);
+        vbdry(i)->pnt = gbl->intwk(inmesh.vbdry(i)->pnt);
     }
     
     if (maxpst < nseg/2+nseg) {
@@ -189,8 +189,8 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     /* MARK BOUNDARY SO DON'T GET INSERTED */
     /* FUNNY WAY OF MARKING SO CAN LEAVE gbl->intwk initialized to -1 */
     for(i=0;i<inmesh.nebd;++i) {
-        for(j=0;j<inmesh.ebdry(i)->nel;++j) {
-            sind = inmesh.ebdry(i)->el(j);
+        for(j=0;j<inmesh.ebdry(i)->nseg;++j) {
+            sind = inmesh.ebdry(i)->seg(j);
             gbl->intwk(inmesh.seg(sind).pnt(0)) = SETSPEC;
             gbl->intwk(inmesh.seg(sind).pnt(1)) = SETSPEC;
         }
@@ -214,8 +214,8 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     
     /* RESET gbl->intwk */
     for(i=0;i<inmesh.nebd;++i) {
-        for(j=0;j<inmesh.ebdry(i)->nel;++j) {
-            sind = inmesh.ebdry(i)->el(j);
+        for(j=0;j<inmesh.ebdry(i)->nseg;++j) {
+            sind = inmesh.ebdry(i)->seg(j);
             gbl->intwk(inmesh.seg(sind).pnt(0)) = -1;
             gbl->intwk(inmesh.seg(sind).pnt(1)) = -1;
         }
@@ -228,7 +228,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     *gbl->log << "#MAXVST:" << maxpst << " POINTS:" << npnt << " SIDES:" << nseg << " ELEMENTS:" << ntri << std::endl;    
     /* PRINT BOUNDARY INFO */
     for(i=0;i<nebd;++i)
-        *gbl->log << "#" << ebdry(i)->idprefix << " " << ebdry(i)->mytype << " " << ebdry(i)->nel << std::endl;
+        *gbl->log << "#" << ebdry(i)->idprefix << " " << ebdry(i)->mytype << " " << ebdry(i)->nseg << std::endl;
 
     return;
 }
@@ -275,9 +275,9 @@ void tri_mesh::coarsen3() {
     
     /* COARSEN SIDE EDGES FIRST */
     for(i=0;i<nebd;++i) {
-        *gbl->log << "coarsening boundary " << i << ": type " << ebdry(i)->mytype << " sides " << ebdry(i)->nel << std::endl;
-        for(j=0;j<ebdry(i)->nel;++j) {
-            sind = ebdry(i)->el(j);
+        *gbl->log << "coarsening boundary " << i << ": type " << ebdry(i)->mytype << " sides " << ebdry(i)->nseg << std::endl;
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            sind = ebdry(i)->seg(j);
             p0 = seg(sind).pnt(0);
             if (pnt(p0).info > 0) {
                 /* COARSEN SIDE */
@@ -310,7 +310,7 @@ void tri_mesh::coarsen3() {
     
     *gbl->log << "#Coarsen finished: " << cnt << " sides coarsened" << std::endl;
     for(i=0;i<nebd;++i)
-        *gbl->log << "boundary " << i << ": type " << ebdry(i)->mytype << " sides " << ebdry(i)->nel << std::endl;
+        *gbl->log << "boundary " << i << ": type " << ebdry(i)->mytype << " sides " << ebdry(i)->nseg << std::endl;
     
     return;
 }

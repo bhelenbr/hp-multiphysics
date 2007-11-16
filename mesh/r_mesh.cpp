@@ -73,7 +73,7 @@ void r_tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
     ksprg.resize(maxpst);
     kvol.resize(maxpst);
     src.resize(maxpst);
-    vrtx_frst.resize(maxpst);
+    pnts_frst.resize(maxpst);
     isfrst = false;
 
     r_sbdry.resize(nebd);
@@ -278,7 +278,7 @@ void r_tri_mesh::sumsrc() {
 }
 
 
-void r_tri_mesh::mg_getfres() {
+void r_tri_mesh::mg_restrict() {
     int i,j,n,tind,p0;
     r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
     
@@ -316,66 +316,63 @@ void r_tri_mesh::mg_getfres() {
         }
         
         for(n=0;n<ND;++n)
-            vrtx_frst(i)(n) = pnts(i)(n);
+            pnts_frst(i)(n) = pnts(i)(n);
     }
     isfrst = true;
     
     return;
 }
 
-void r_tri_mesh::mg_getcchng() {
+void r_tri_mesh::mg_prolongate() {
     int i,j,n,ind,tind;
     int last_phase, mp_phase;  
 
-    r_tri_mesh *cmesh = dynamic_cast<r_tri_mesh *>(coarse);
-
-    Array<TinyVector<FLT,ND>,1> res;
-    res.reference(gbl->res);
-    
-    /* DETERMINE CORRECTIONS ON COARSE MESH    */    
-    int lcnvrtx = cmesh->npnt;
-    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx(cmesh->pnts);
-    Array<TinyVector<FLT,tri_mesh::ND>,1> lcvrtx_frst(cmesh->vrtx_frst);
-    for(i=0;i<lcnvrtx;++i)
+    /* DETERMINE CORRECTIONS    */    
+    for(i=0;i<npnt;++i)
         for(n=0;n<ND;++n) 
-            lcvrtx_frst(i)(n) -= lcvrtx(i)(n);
+            pnts_frst(i)(n) -= pnts(i)(n);
 
     /* LOOP THROUGH FINE POINTS    */
     /* TO DETERMINE CHANGE IN SOLUTION */    
-    for(i=0;i<npnt;++i) {
+    r_tri_mesh *fmesh = dynamic_cast<r_tri_mesh *>(fine);
+    int fnpnt = fmesh->npnt;
+    Array<TinyVector<FLT,ND>,1> res(gbl->res);
+    
+    for(i=0;i<fnpnt;++i) {
         
         for(n=0;n<ND;++n)
             res(i)(n) = 0.0;
         
-        tind = ccnnct(i).tri;
+        tind = fmesh->ccnnct(i).tri;
         
         for(j=0;j<3;++j) {
-            ind = cmesh->tri(tind).pnt(j);
+            ind = tri(tind).pnt(j);
             for(n=0;n<ND;++n) 
-                res(i)(n) -= ccnnct(i).wt(j)*lcvrtx_frst(ind)(n);
+                res(i)(n) -= fmesh->ccnnct(i).wt(j)*pnts_frst(ind)(n);
         }
     }
     
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
         for(i=0;i<nebd;++i)
-            ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
+            fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
         
         for(i=0;i<nebd;++i) 
-            ebdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
+            fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
 
         for(i=0;i<nebd;++i) 
-            ebdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
+            fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
                         
         last_phase = true;
         for(i=0;i<nebd;++i) {
-            last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
-            ebdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
+            last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
+            fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
         }
     }
 
-    for(i=0;i<npnt;++i)
+    Array<TinyVector<FLT,tri_mesh::ND>,1> fpnts(fmesh->pnts);
+    for(i=0;i<fnpnt;++i)
         for(n=0;n<ND;++n) 
-            pnts(i)(n) += res(i)(n);
+            fpnts(i)(n) += res(i)(n);
    
     return;
 }
@@ -413,7 +410,7 @@ void r_tri_mesh::tadvance() {
         calc_kvol();
 #endif         
         zero_source();
-        rsdl();
+        r_tri_mesh::rsdl();
         sumsrc();
         moveboundaries();
     }

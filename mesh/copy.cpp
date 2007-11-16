@@ -66,7 +66,7 @@ void tri_mesh::copy(const tri_mesh& tgt) {
 }
 
 void tri_mesh::append(const tri_mesh &z) {
-	int i,j,k,n,nel,vrt,sind,flip;
+	int i,j,k,n,nseg,vrt,sind,flip;
     int nvrtxold, nsideold,ntriold;
     int sind1,tind1,v1a,v1b;
     int sind2,tind2,v2a,v2b;
@@ -90,7 +90,7 @@ void tri_mesh::append(const tri_mesh &z) {
     for(i=0;i<z.nvbd;++i) {
         vbdry(nvbd) = z.vbdry(i)->create(*this);
         vbdry(nvbd)->alloc(4);
-        vbdry(nvbd)->p0 = z.vbdry(i)->p0 +npnt;
+        vbdry(nvbd)->pnt = z.vbdry(i)->pnt +npnt;
         ++nvbd;
     }
 	
@@ -105,10 +105,10 @@ void tri_mesh::append(const tri_mesh &z) {
     ebdry.resizeAndPreserve(nebd+z.nebd);
     for(i=0;i<z.nebd;++i) {
 		ebdry(nebd++) = z.ebdry(i)->create(*this);
-        ebdry(nebd-1)->alloc(z.ebdry(i)->maxel);
-        ebdry(nebd-1)->nel = z.ebdry(i)->nel;
-		for(j=0;j<z.ebdry(i)->nel;++j)
-			ebdry(nebd-1)->el(j) = z.ebdry(i)->el(j) +nseg;
+        ebdry(nebd-1)->alloc(z.ebdry(i)->maxseg);
+        ebdry(nebd-1)->nseg = z.ebdry(i)->nseg;
+		for(j=0;j<z.ebdry(i)->nseg;++j)
+			ebdry(nebd-1)->seg(j) = z.ebdry(i)->seg(j) +nseg;
 	}
 
     /* MOVE TRI INFO */
@@ -145,13 +145,13 @@ void tri_mesh::append(const tri_mesh &z) {
         
         for(j=0;j<z.nebd;++j) {
             if (ebdry(i)->idnum == z.ebdry(j)->idnum) {
-                nel = ebdry(i)->nel;
+                nseg = ebdry(i)->nseg;
                 
                 /* FIRST POINT DONE REVERSE */
-                sind1 = ebdry(i)->el(nel-1);
+                sind1 = ebdry(i)->seg(nseg-1);
                 tind1 = seg(sind1).tri(0);                
                 v1b = seg(sind1).pnt(1);
-                sind2 = z.ebdry(j)->el(0);
+                sind2 = z.ebdry(j)->seg(0);
                 tind2 = z.seg(sind2).tri(0) +ntriold;
                 v2a = z.seg(sind2).pnt(0) +nvrtxold;
                 pnt(v1b).nnbor += z.pnt(v2a-nvrtxold).nnbor-1;
@@ -171,11 +171,11 @@ void tri_mesh::append(const tri_mesh &z) {
                     
                 } while(tind2 > 0); 
                 
-                for(k=0;k<nel;++k) {
-                    sind1 = ebdry(i)->el(nel-k-1);
+                for(k=0;k<nseg;++k) {
+                    sind1 = ebdry(i)->seg(nseg-k-1);
                     tind1 = seg(sind1).tri(0);
                     v1a = seg(sind1).pnt(0);
-                    sind2 = z.ebdry(j)->el(k);
+                    sind2 = z.ebdry(j)->seg(k);
                     tind2 = z.seg(sind2).tri(0) +ntriold;
                     v2b = z.seg(sind2).pnt(1) +nvrtxold;
                     sind2 += nsideold;                    
@@ -235,8 +235,8 @@ void tri_mesh::append(const tri_mesh &z) {
     
     /* FIX BOUNDARY CONDITION POINTERS */
     for(i=nvbd-z.nvbd;i<nvbd;++i)
-        if (vbdry(i)->p0 >= npnt) 
-            vbdry(i)->p0 = pnt(vbdry(i)->p0).info;  
+        if (vbdry(i)->pnt >= npnt) 
+            vbdry(i)->pnt = pnt(vbdry(i)->pnt).info;  
                                 
     /* CLEAN UP SIDES */
     /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
@@ -246,9 +246,9 @@ void tri_mesh::append(const tri_mesh &z) {
     
     /* FIX BOUNDARY CONDITION POINTERS */
     for(i=nebd-z.nebd+1;i<nebd;++i)
-        for(j=0;j<ebdry(i)->nel;++j) 
-            if (ebdry(i)->el(j) >= nseg) 
-                ebdry(i)->el(j) = seg(ebdry(i)->el(j)).info; 
+        for(j=0;j<ebdry(i)->nseg;++j) 
+            if (ebdry(i)->seg(j) >= nseg) 
+                ebdry(i)->seg(j) = seg(ebdry(i)->seg(j)).info; 
 
     for (i=0;i<nebd;++i) {
         ebdry(i)->reorder();

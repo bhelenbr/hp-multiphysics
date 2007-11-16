@@ -133,30 +133,35 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
             geometry_object.input(inmap,BASE::idprefix,*BASE::x.gbl->log);
         }
         
-        void mvpttobdry(int nel,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+        void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
             /* GET LINEAR APPROXIMATION FIRST */
-            BASE::mvpttobdry(nel,psi,pt);
+            BASE::mvpttobdry(nseg,psi,pt);
             geometry_object.mvpttobdry(pt);
             return;
         }
 };
 
-/** \brief Template to make a boundary that can be coupled to some other geometry object after tstep = 0
+/** \brief Interface & template to make a boundary that can be coupled to some other geometry object after tstep = 0
  *
  * \ingroup boundary
+ * geometry in class is for initial condition, then
+ * Physics object must provide geometry
  * BASE is the boundary object 
- * Physics object must provide physics pointer
  */
-template<class BASE> class ecoupled_physics : public BASE {
-  public: 
+class ecoupled_physics_interface : public geometry<tri_mesh::ND> {
+    public:
         egeometry_interface<2> *physics;
+};
+
+template<class BASE> class ecoupled_physics : public ecoupled_physics_interface, public BASE {
+  public: 
         ecoupled_physics(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
         ecoupled_physics(const ecoupled_physics<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin) {}
         ecoupled_physics* create(tri_mesh& xin) const {return(new ecoupled_physics<BASE>(*this,xin));}
 
-        virtual void mvpttobdry(int nel,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-            if (BASE::x.gbl->tstep < 0) BASE::mvpttobdry(nel,psi,pt);
-            else physics->mvpttobdry(nel,psi,pt);
+        virtual void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+            if (BASE::x.gbl->tstep < 0) BASE::mvpttobdry(nseg,psi,pt);
+            else physics->mvpttobdry(nseg,psi,pt);
             return;
         }
 };

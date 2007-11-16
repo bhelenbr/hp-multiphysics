@@ -8,7 +8,7 @@ void tri_mesh::coarsen_substructured(const class tri_mesh &zx,int p) {
     
     p2 = p*p;
     ntri = zx.ntri/p2;
-    nseg = (ntri*3 +zx.ebdry(0)->nel/p)/2;
+    nseg = (ntri*3 +zx.ebdry(0)->nseg/p)/2;
     npnt = zx.npnt -nseg*(p-1) -ntri*((p-1)*(p-2))/2;
     
     for(i=0;i<zx.ntri;i+=p2) {
@@ -36,12 +36,12 @@ void tri_mesh::coarsen_substructured(const class tri_mesh &zx,int p) {
         seg(sind).pnt((1-sgn)/2) = tri(i/p2).pnt(0);
         seg(sind).pnt((1+sgn)/2) = tri(i/p2).pnt(1);
     }
-    ebdry(0)->nel = zx.ebdry(0)->nel/p;
+    ebdry(0)->nseg = zx.ebdry(0)->nseg/p;
     i = 0;
-    if (zx.seg(zx.ebdry(0)->el(0)).pnt(0) < npnt) ++i;
-    for(;i<zx.ebdry(0)->nel;i+=p) {
-        sind = (zx.seg(zx.ebdry(0)->el(i)).pnt(0) -npnt)/(p-1);
-        ebdry(0)->el(i/p) = sind;
+    if (zx.seg(zx.ebdry(0)->seg(0)).pnt(0) < npnt) ++i;
+    for(;i<zx.ebdry(0)->nseg;i+=p) {
+        sind = (zx.seg(zx.ebdry(0)->seg(i)).pnt(0) -npnt)/(p-1);
+        ebdry(0)->seg(i/p) = sind;
     }
     
     return;
@@ -83,8 +83,8 @@ void tri_mesh::symmetrize() {
     }
     
     if (bnum > -1) {
-        for(j=0;j<zpart[0].ebdry(bnum)->nel;++j) {
-            sind = zpart[0].ebdry(bnum)->el(j);
+        for(j=0;j<zpart[0].ebdry(bnum)->nseg;++j) {
+            sind = zpart[0].ebdry(bnum)->seg(j);
             for(vct=0;vct<2;++vct) 
                 zpart[0].pnts(zpart[0].seg(sind).pnt(vct))(1) = 0.0;
         }
@@ -177,8 +177,8 @@ void tri_mesh::cut() {
             int n,tind,pind,tindold, vindold;
             TinyVector<int,3> v;
             
-            for(j=0;j<zpart[m].ebdry(bnum)->nel;++j) {
-                sind = zpart[m].ebdry(bnum)->el(j);
+            for(j=0;j<zpart[m].ebdry(bnum)->nseg;++j) {
+                sind = zpart[m].ebdry(bnum)->seg(j);
                 tind = zpart[m].seg(sind).tri(0);
                 tindold = zpart[m].tri(tind).info;
                 
@@ -232,8 +232,8 @@ void tri_mesh::trim() {
 
     ntdel = 0;
 
-    for (bsd=0;bsd<ebdry(0)->nel;++bsd) {
-        tind = seg(ebdry(0)->el(bsd)).tri(0);
+    for (bsd=0;bsd<ebdry(0)->nseg;++bsd) {
+        tind = seg(ebdry(0)->seg(bsd)).tri(0);
         if (tri(tind).info > 0) continue;
         
         gbl->intwk(0) = tind;
@@ -307,8 +307,8 @@ int tri_mesh::smooth_cofa(int niter) {
         pnt(i).info = 0;
         
     for(i=0;i<nebd;++i) {
-        for(j=0;j<ebdry(i)->nel;++j) {
-            sind = ebdry(i)->el(j);
+        for(j=0;j<ebdry(i)->nseg;++j) {
+            sind = ebdry(i)->seg(j);
             pnt(seg(sind).pnt(0)).info = -1;
             pnt(seg(sind).pnt(1)).info = -1;
         }

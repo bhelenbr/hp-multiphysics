@@ -58,19 +58,19 @@ int tri_mesh::comm_entity_list(Array<int,1>& list) {
             list(tsize++) = i;
             list(tsize++) = ebdry(i)->idnum;
 #ifdef SKIP
-            p0 = seg(ebdry(i)->el(0)).pnt(0);
+            p0 = seg(ebdry(i)->seg(0)).pnt(0);
             v0id = -1;
             for(j=0;j<nvbd;++j) {
-                if (vbdry(j)->p0 == p0) {
+                if (vbdry(j)->pnt == p0) {
                     v0id = vbdry(j)->idnum;
                     break;
                 }
             }
             list(tsize++) = v0id;
-            p0 = seg(ebdry(i)->el(ebdry(i)->nel-1)]).pnt(1);
+            p0 = seg(ebdry(i)->seg(ebdry(i)->nseg-1)]).pnt(1);
             v0id = -1;
             for(j=0;j<nvbd;++j) {
-                if (vbdry(j)->p0 == p0) {
+                if (vbdry(j)->pnt == p0) {
                     v0id = vbdry(j)->idnum;
                     break;
                 }
@@ -338,7 +338,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
             if (indx < 0) {
                 /* BOUNDARY SIDE */
                 bnum = getbdrynum(indx);
-                bel = getbdryel(indx);
+                bel = getbdryseg(indx);
 
                 for (j = 0; j <nebd;++j) {
                     if (bnum == bcntr(j,0)) {
@@ -380,13 +380,13 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
         else
             ebdry(i) = xin.ebdry(bcntr(i,0))->create(*this);
         ebdry(i)->alloc(static_cast<int>(bcntr(i,1)*2));
-        ebdry(i)->nel = 0;
+        ebdry(i)->nseg = 0;
     }         
     
     
     for(i=0;i<nseg;++i) {
         if (seg(i).info > -1) 
-            ebdry(seg(i).info)->el(ebdry(seg(i).info)->nel++) = i;
+            ebdry(seg(i).info)->seg(ebdry(seg(i).info)->nseg++) = i;
     }
 
     for(i=0;i<nebd;++i) {
@@ -397,16 +397,16 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
     /* MOVE VERTEX BOUNDARY INFO */
     nvbd = 0;
     for(i=0;i<xin.nvbd;++i) 
-        if (xin.pnt(xin.vbdry(i)->p0).info > -1)
+        if (xin.pnt(xin.vbdry(i)->pnt).info > -1)
             ++nvbd;
     vbdry.resize(nvbd+2*nebd);
     
     nvbd = 0;
     for(i=0;i<xin.nvbd;++i) {
-        if (xin.pnt(xin.vbdry(i)->p0).info > -1) {
+        if (xin.pnt(xin.vbdry(i)->pnt).info > -1) {
             vbdry(nvbd) = xin.vbdry(i)->create(*this);
             vbdry(nvbd)->alloc(4);
-            vbdry(nvbd)->p0 = xin.pnt(xin.vbdry(i)->p0).info;
+            vbdry(nvbd)->pnt = xin.pnt(xin.vbdry(i)->pnt).info;
             ++nvbd;
         }
     }
@@ -415,10 +415,10 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
     /* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
     for(i=0;i<nebd;++i) {
         if (ebdry(i)->mytype == "partition") {
-            sind = ebdry(i)->el(0);
+            sind = ebdry(i)->seg(0);
             p0 = seg(sind).pnt(0);
             for(j=0;j<nvbd;++j)
-                if (vbdry(j)->p0 == p0) goto nextv0;
+                if (vbdry(j)->pnt == p0) goto nextv0;
          
             /* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
             tind = tri(seg(sind).tri(0)).info;
@@ -426,14 +426,14 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
                 if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
             vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
             vbdry(nvbd)->alloc(4);
-            vbdry(nvbd)->p0 = p0;
+            vbdry(nvbd)->pnt = p0;
             ++nvbd;
         
             nextv0:
-            sind = ebdry(i)->el(ebdry(i)->nel-1);
+            sind = ebdry(i)->seg(ebdry(i)->nseg-1);
             p0 = seg(sind).pnt(1);
             for(j=0;j<nvbd;++j)
-                if (vbdry(j)->p0 == p0) goto nextv1;
+                if (vbdry(j)->pnt == p0) goto nextv1;
          
             /* NEW ENDPOINT */
             tind = tri(seg(sind).tri(0)).info;
@@ -441,7 +441,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
                 if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
             vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
             vbdry(nvbd)->alloc(4);
-            vbdry(nvbd)->p0 = p0;
+            vbdry(nvbd)->pnt = p0;
             ++nvbd;
 
             nextv1:
