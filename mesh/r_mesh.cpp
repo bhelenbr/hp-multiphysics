@@ -58,12 +58,12 @@ void r_tri_mesh::init(input_map& input, void *gin) {
     return;
 }
 
-void r_tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
+void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     
-    tri_mesh::init(in,sizereduce1d);
+    tri_mesh::init(in,why,sizereduce1d);
     const r_tri_mesh& inmesh = dynamic_cast<const r_tri_mesh &>(in);
     gbl = inmesh.gbl;
     fadd = inmesh.fadd;

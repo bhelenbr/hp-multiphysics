@@ -348,11 +348,12 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
             psi = 0.0;
             psifxpt = static_cast<int>(256*psi);
             psi = psifxpt/256.0;
+            pnts(npnt) = 0.5*((1.-psi)*pnts(seg(sind).pnt(0)) +(1.+psi)*pnts(seg(sind).pnt(1)));
             ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
             lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));
 
 #ifdef DEBUG_ADAPT
-            *gbl->log << "Inserting boundary segment " << count << ' ' << adapt_count << ' ';
+            *gbl->log << "Inserting boundary segment " << count << ' ' << adapt_count << ' ' << npnt << ' ';
             for(int n=0;n<ND;++n)
                 *gbl->log << pnts(npnt)(n) << ' ';
             *gbl->log << " seg " << bseg << " psi " << psi << std::endl;

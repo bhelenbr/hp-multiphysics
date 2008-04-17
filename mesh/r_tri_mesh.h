@@ -68,7 +68,7 @@ class r_tri_mesh : public tri_mesh {
             /* ACCESSOR FUNCTIONS FOR COMPATIBILITY WITH MGBLOCK */
             void* create_global_structure() {return new global;}
             void init(input_map& input, void *gin);
-            void init(const multigrid_interface& in, FLT sizereduce1d);
+            void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
             void output(const std::string &outname,block::output_purpose why) {tri_mesh::output(outname,output_type);}
             void mg_restrict();
             void mg_prolongate();

@@ -715,11 +715,11 @@ void block::init(input_map &input) {
 #define OLDRECONNECT
     for(int lvl=1;lvl<ngrid;++lvl) {
 #ifdef OLDRECONNECT
-        grd(lvl)->init(*grd(lvl-1),2.0);
+        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,2.0);
 #else
         FLT size_reduce = 1.0;
         if (lvl > 1) size_reduce = 2.0;
-        grd(lvl)->init(*grd(lvl-1),size_reduce);
+        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
 #endif
         findmatch(lvl);             // Because this is done second
         grd(lvl)->connect(*grd(lvl-1));
@@ -787,13 +787,13 @@ void block::go(input_map input) {
     int i;
     std::string outname;
     std::ostringstream nstr;
-    clock_t cpu_time;
+    clock_t begin_time, end_time;
     FLT maxerror,error;
 
     
     init(input);
     
-    clock();
+    begin_time = clock();
 
     /* OUTPUT INITIAL CONDITION */
     if (nstart == 0) output("data0",block::display);
@@ -837,8 +837,8 @@ void block::go(input_map input) {
             output(outname,block::restart);
         }
     }
-    cpu_time = clock();
-    *gbl->log << "that took " << cpu_time << " cpu time" << std::endl;
+    end_time = clock();
+    *gbl->log << "that took " << static_cast<double>((end_time - begin_time)/ CLOCKS_PER_SEC) << " cpu time" << std::endl;
     
     return;
 }
@@ -949,45 +949,6 @@ void block::tadvance() {
 
     return;
 }
-
-//void block::reconnect() {
-//    std::string name,fname;
-//    std::ostringstream nstr;
-//        
-//    name = idprefix + "_coarsen";
-//    
-//#ifdef OLDRECONNECT
-//    grd[lvl].coarsen(1.6,grd[lvl-1]);
-//#else
-//    FLT size_reduce = 1.0;
-//    if (lvl > 1) size_reduce = 2.0;
-//    grd[lvl].coarsen2(1.5,grd[lvl-1],size_reduce);
-//#endif
-//
-//    grd[lvl].mgconnect(cv_to_ft(lvl-1),grd[lvl-1]);
-//    grd[lvl-1].mgconnect(fv_to_ct(lvl-1),grd[lvl]);
-//    
-//    /* THIS IS FOR DIAGNOSIS OF MULTI-GRID FAILURES */
-//    grd[lvl].checkintegrity();
-//    if (gbl->adapt_output) {
-//        std::string adapt_file;
-//        std::ostringstream nstr;
-//        nstr.str("");
-//        nstr << gbl->tstep << std::flush;
-//        name = idprefix +"_coarsen" +nstr.str() +".";
-//        nstr.str("");
-//        nstr << lvl << flush;
-//        fname = name +nstr.str();
-//        grd[lvl].tri_mesh::output(fname,tri_mesh::grid);
-//        fname = name +nstr.str() + "_ft_to_cv";
-//        grd[lvl-1].testconnect(fname,fv_to_ct(lvl-1),&grd[lvl]);
-//        fname = name +nstr.str() + "_cv_to_ft";
-//        grd[lvl].testconnect(fname,cv_to_ft(lvl-1),&grd[lvl-1]);
-//    }
-//
-//    return;
-//}
-
 
 void block::output(const std::string &filename, output_purpose why, int level) {
     std::string fapp;

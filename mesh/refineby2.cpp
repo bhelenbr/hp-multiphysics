@@ -18,7 +18,7 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     /* BECAUSE OF gbl->intwk USAGE */
      if (!initialized) {
         /* VERTEX STORAGE ALLOCATION */
-        init(inmesh,0.5);
+        init(inmesh,duplicate,0.5);
     }
     
     this->copy(inmesh);

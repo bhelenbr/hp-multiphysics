@@ -15,7 +15,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     
     if (!initialized) {
         /* VERTEX STORAGE ALLOCATION */
-        init(inmesh,1.9);
+        init(inmesh,duplicate,1.9);
     }
     
     for(i=0;i<maxpst;++i)
@@ -210,7 +210,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
     cnt_nbor();
     
     /* reset maxsrch */
-    gbl->maxsrch = 100;
+    gbl->maxsrch = 1000;
     
     /* RESET gbl->intwk */
     for(i=0;i<inmesh.nebd;++i) {
@@ -238,7 +238,7 @@ void tri_mesh::coarsen2(FLT factor, const class tri_mesh &inmesh, FLT size_reduc
     int i;
   
     if (!initialized) {
-        init(inmesh,size_reduce);
+        init(inmesh,duplicate,size_reduce);
     }        
     copy(inmesh);
     initlngth();

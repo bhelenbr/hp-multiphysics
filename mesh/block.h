@@ -139,7 +139,6 @@ class block {
 
         /** Multigrid cycle */
         void cycle(int vw, int lvl = 0);    
-        void reconnect();
         FLT maxres(int lvl = 0);
         
         /** Mesh adaptation routines */
@@ -153,7 +152,8 @@ class multigrid_interface {
         /** Initialization functions */
         virtual void* create_global_structure() {return 0;}
         virtual void init(input_map& input, void *gbl_in) {}
-        virtual void init(const multigrid_interface& fine, FLT sizereduce1d = 1.0) {}
+        enum init_purpose {duplicate, multigrid, adapt_storage, user_defined};
+        virtual void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0) {}
         
         /** Outputs solution in various filetypes */
         virtual void output(const std::string &filename, block::output_purpose why) {}

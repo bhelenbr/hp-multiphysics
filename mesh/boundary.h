@@ -56,11 +56,12 @@ class boundary {
             idprefix = std::string(buffer);
             mytype = "boundary";
         }
+        virtual void init(input_map& bdrydata) {}
         virtual void alloc(int n) {}
         virtual void output(std::ostream& fout) {
             fout << idprefix << "_type: " << mytype << std::endl;            
         }
-        virtual void input(input_map& bdrydata) {}
+        virtual void input(std::istream& fin) {}
         
         /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
         enum msg_type {flt_msg, int_msg};
@@ -186,7 +187,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         void resize_buffers(int nfloats) {
             if (buffsize) free(sndbuf);
             buffsize = nfloats*sizeof(FLT);
-            sndbuf = xmalloc(buffsize); 
+            sndbuf = malloc(buffsize); 
             Array<FLT,1> temp(static_cast<FLT *>(sndbuf), buffsize/sizeof(FLT), neverDeleteData);
             fsndbufarray.reference(temp);
             Array<int,1> temp1(static_cast<int *>(sndbuf), buffsize/sizeof(int), neverDeleteData);
@@ -198,14 +199,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             resize_buffers(nels*3);
         }
 
-        void input(input_map& inmap) {
+        void init(input_map& inmap) {
             int j,k,m;
             std::string keyword,val;
             std::map<std::string,std::string>::const_iterator mi;
             std::istringstream data;
             std::ostringstream nstr;
             
-            BASE::input(inmap);
+            BASE::init(inmap);
             
             keyword = BASE::idprefix +"_first";
             inmap.getwdefault(keyword,first,true);
@@ -269,7 +270,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 local_match(nmatch) = bin;
                 snd_tags(nmatch) = snd_tag;
                 rcv_tags(nmatch) = rcv_tag;
-                rcvbuf(nmatch) = xmalloc(buffsize);
+                rcvbuf(nmatch) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
                 Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
                 frcvbufarray(nmatch).reference(temp);
                 Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
@@ -287,7 +288,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             mpi_match(nmatch) = nproc;
             snd_tags(nmatch) = snd_tag;
             rcv_tags(nmatch) = rcv_tag;
-            rcvbuf(nmatch) = xmalloc(buffsize);
+            rcvbuf(nmatch) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
             Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(nmatch)), buffsize/sizeof(FLT), neverDeleteData);
             frcvbufarray(nmatch).reference(temp);
             Array<int,1> temp1(static_cast<int *>(rcvbuf(nmatch)), buffsize/sizeof(int), neverDeleteData);
@@ -633,7 +634,7 @@ template<int ND> class geometry {
             
             return;
         }
-        virtual void input(input_map& inmap, std::string idprefix, std::ostream& log) {}
+        virtual void init(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
         //virtual void translate(TinyVector<FLT,ND> dx) {pos += dx;}
         //virtual void rotate(TinyVector<FLT,ND> dphi) {angle += dphi;}
@@ -670,8 +671,8 @@ template<int ND> class symbolic_shape : public geometry<ND> {
             return(dhdx0.Eval(pt,time));
         }
     public:
-        void input(input_map& inmap, std::string idprefix, std::ostream& log) {    
-            geometry<ND>::input(inmap,idprefix,log);
+        void init(input_map& inmap, std::string idprefix, std::ostream& log) {    
+            geometry<ND>::init(inmap,idprefix,log);
             if (inmap.find(idprefix +"_h_expression") != inmap.end()) {
                 h.init(inmap,idprefix+"_h");
             }
@@ -721,8 +722,8 @@ class circle : public geometry<2> {
             fout << idprefix << "_radius: " << radius << std::endl;
         }
       
-         void input(input_map& inmap,std::string idprefix, std::ostream& log) {
-            geometry<2>::input(inmap,idprefix,log);
+         void init(input_map& inmap,std::string idprefix, std::ostream& log) {
+            geometry<2>::init(inmap,idprefix,log);
             
             FLT dflt[2] = {0.0, 0.0};
             inmap.getwdefault(idprefix+"_center",center,2,dflt);
@@ -750,8 +751,8 @@ class ellipse : public geometry<2> {
             fout << idprefix << "_a" << axes(0) << std::endl;
             fout << idprefix << "_b" << axes(1) << std::endl;
         }
-        void input(input_map& inmap, std::string idprefix,std::ostream& log) {
-            geometry<2>::input(inmap,idprefix,log);
+        void init(input_map& inmap, std::string idprefix,std::ostream& log) {
+            geometry<2>::init(inmap,idprefix,log);
             inmap.getwdefault(idprefix+"_a",axes(0),1.0);
             inmap.getwdefault(idprefix+"_b",axes(1),1.0);
         }
@@ -771,10 +772,11 @@ class naca : public geometry<2> {
             for(int n=0;n<2;++n)
                 pt[n] = x[n] -pos(n);
             
-            FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
+            FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta); 
             pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
             pt[0] = temp;
             pt *= scale;
+			
             FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];            
             return(coeff[0]*pt[0] -poly*poly/coeff[0]);
         }
@@ -827,8 +829,8 @@ class naca : public geometry<2> {
             fout << idprefix << "_center: " << pos << std::endl;
         }
       
-         void input(input_map& inmap,std::string idprefix,std::ostream& log) {
-            geometry<2>::input(inmap,idprefix,log);
+         void init(input_map& inmap,std::string idprefix,std::ostream& log) {
+            geometry<2>::init(inmap,idprefix,log);
 
             FLT thickness;
             inmap.getwdefault(idprefix+"_sign",sign,1.0);
@@ -847,43 +849,47 @@ class naca : public geometry<2> {
             datastream.clear();
             coeff *= thickness;
             
-            inmap.getwdefault(idprefix+"_center",linebuf,std::string("0.0 0.0"));
+            inmap.getlinewdefault(idprefix+"_center",linebuf,std::string("0.0 0.0"));
             datastream.str(linebuf);
             for(int i=0;i<2;++i)
                 datastream >> pos(i);
-            datastream.clear();            
+            datastream.clear();        
         }
 };         
 
-#ifdef SPLINE
+#define FORTSPLINE
+#ifdef FORTSPLINE
 #include <cspline.h>
-class spline : public geometry<2> {
-    int curve_id;
-    
+class spline {
+    public:
+        int curve_id;
     public:        
-        spline() : geometry<2>() {}
-        spline(const spline &inbdry) : geometry<2>(inbdry) {}
+        spline() {}
+        spline(const spline &inbdry) : curve_id(inbdry.curve_id) {}
         spline* create() const {return(new spline(*this));}
 
         void output(std::ostream& fout,std::string idprefix) {}
       
-        void input(input_map& inmap,std::string idprefix,std::ostream& log) {
+        void init(input_map& inmap,std::string idprefix,std::ostream& log) {
             std::string filename;
             if (!inmap.get(idprefix+"_filename",filename)) {
                 std::cerr << "Couldn't find file\n";
                 exit(1);
             }
             inmap.getwdefault(idprefix+"_curve",curve_id,1);
-            char fname[100];
+            char fname[80];
             strcpy(fname,filename.c_str());
-            SPLINR(fname);
+            // SPLINR(fname);
+			unsigned int length = filename.length();
+			splinr_(fname,length);
+			float x,y,s = 0.0;
+			SPLINE(curve_id,s,x,y);
         }
         
-        void mvpttobdry(TinyVector<FLT,2> &pt) {
-            float s;
+        void mvpttobdry(float s, TinyVector<FLT,2> &pt) {
             float x = pt(0);
             float y = pt(1);
-            INVSPLINE(curve_id,s,x,y);
+            SPLINE(curve_id,s,x,y);
             pt(0) = x;
             pt(1) = y;
         }        

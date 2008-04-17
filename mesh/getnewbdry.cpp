@@ -72,7 +72,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
         }
     } 
     
-    temp->input(bdrydata);
+    temp->init(bdrydata);
     
     return(temp);
 }
@@ -155,7 +155,12 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
             break;
         }
         case etype::spline: {
-//            temp = new eboundary_with_geometry<edge_bdry,spline>(idnum,*this);
+#ifdef FORTSPLINE
+            temp = new edge_parametric<edge_bdry>(idnum,*this);
+#else
+            *gbl->log << "not compiled with splines" << std::endl;
+            exit(1);
+#endif
             break;
         }
 
@@ -180,7 +185,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
         }
     }
     
-    temp->input(bdrydata);
+    temp->init(bdrydata);
     
     return(temp);
 }

@@ -120,7 +120,7 @@ class tri_mesh : public multigrid_interface {
         /** Routine to initialize with using information in map and shared resource in gbl_in */
         void init(input_map& input, void *gbl_in);
         /** Routine to initialze from another mesh with option of increasing or decreasing storage (compatible with block.h) */
-        void init(const multigrid_interface& mgin, FLT sizereduce1d = 1.0);
+        void init(const multigrid_interface& mgin, init_purpose why=duplicate, FLT sizereduce1d=1.0);
         /** Routine to copy */
         void copy(const tri_mesh& tgt);
 
@@ -352,11 +352,20 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
         edge_bdry(const edge_bdry &inbdry, tri_mesh &xin) : boundary(inbdry.idnum), x(xin), maxseg(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
         
         /* BASIC B.C. STUFF */
-        void alloc(int n);
+        virtual void alloc(int size);
         virtual edge_bdry* create(tri_mesh &xin) const {
             return(new edge_bdry(*this,xin));
         }
         virtual void copy(const edge_bdry& bin);
+        virtual void input(istream &fin,tri_mesh::filetype type) {
+            if (type == tri_mesh::grid) {
+                for(int j=0;j<nseg;++j) {
+                    fin.ignore(80,':');
+                    fin >> seg(j);
+                    fin.ignore(80,'\n');
+                }
+            }
+        }
         
         /* ADDITIONAL STUFF FOR SIDES */
         virtual void swap(int s1, int s2);

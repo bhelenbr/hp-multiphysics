@@ -17,6 +17,7 @@ void tri_mesh::init(input_map &input, void *gin) {
     std::istringstream data;
     std::string filename;
     std::string bdryfile;
+
     
     if (gin != 0) {
         gbl = static_cast<global *>(gin);   
@@ -59,7 +60,7 @@ void tri_mesh::init(input_map &input, void *gin) {
     }
 }
 
-void tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
+void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
     int i;
    
      if (!initialized) {
@@ -80,7 +81,7 @@ void tri_mesh::init(const multigrid_interface& in, FLT sizereduce1d) {
             vbdry(i)->alloc(4);
         }
         qtree.allocate((FLT (*)[ND]) pnts(0).data(), maxpst);
-        coarse_level = inmesh.coarse_level+1;
+        if (why == multigrid) coarse_level = inmesh.coarse_level+1;
         initialized = 1;
     }
 }
@@ -115,7 +116,7 @@ void tri_mesh::allocate(int mxsize) {
         // gbl->intwk should always be kept initialized to -1
         gbl->intwk.resize(Range(-1,maxpst));
         gbl->intwk = -1;
-        gbl->maxsrch = 100;
+        gbl->maxsrch = 1000;
         
         gbl->fltwk.resize(maxpst);
         gbl->i2wk.resize(maxpst+1);
@@ -146,6 +147,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
     ifstream in;
     FLT fltskip;
     int intskip;
+	Array<Array<TinyVector<int,2>,1>,1> svrtxbtemp;  // TEMPORARY FOR LOADING GAMBIT
 
     if (filename.substr(0,7) == "${HOME}") {
         grd_nm = getenv("HOME") +filename.substr(7,filename.length());
@@ -356,7 +358,7 @@ next1a:      continue;
                 }
 
                 /* READ BOUNDARY DATA STORE TEMPORARILY */                
-                int (*svrtxbtemp[10])[2];
+				svrtxbtemp.resize(10);
      
                 for(i=0;i<nebd;++i) {
                     //fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); TEMPORARY
@@ -367,14 +369,14 @@ next1a:      continue;
                     
                     in.ignore(160,'\n');
                                         
-                    svrtxbtemp[i] = (int (*)[2]) xmalloc(ebdry(i)->nseg*2*sizeof(int));
+					svrtxbtemp(i).resize(ebdry(i)->nseg);
                           
                     for(j=0;j<ebdry(i)->nseg;++j) {
-                        in >> intskip >> svrtxbtemp[i][j][0] >> svrtxbtemp[i][j][1];
-                        --svrtxbtemp[i][j][0];
-                        --svrtxbtemp[i][j][1];
-                        pnt(svrtxbtemp[i][j][0]).info = ebdry(i)->idnum;
-                        pnt(svrtxbtemp[i][j][1]).info = ebdry(i)->idnum;
+                        in >> intskip >> svrtxbtemp(i)(j)(0) >> svrtxbtemp(i)(j)(1);
+                        --svrtxbtemp(i)(j)(0);
+                        --svrtxbtemp(i)(j)(1);
+                        pnt(svrtxbtemp(i)(j)(0)).info = ebdry(i)->idnum;
+                        pnt(svrtxbtemp(i)(j)(1)).info = ebdry(i)->idnum;
                     }
                 }
 
@@ -393,19 +395,19 @@ next1a:      continue;
                 /* MATCH BOUNDARY SIDES TO GROUPS */     
                 for(i=0;i<nebd;++i) {
                     for(j=0;j<ebdry(i)->nseg;++j) {
-                        sind = pnt(svrtxbtemp[i][j][0]).info;
+                        sind = pnt(svrtxbtemp(i)(j)(0)).info;
                         if (sind < 0) {
                             *gbl->log << "error in boundary information " << i << j << std::endl;
                             exit(1);
                         }
-                        if (seg(sind).pnt(1) == svrtxbtemp[i][j][1]) {
+                        if (seg(sind).pnt(1) == svrtxbtemp(i)(j)(1)) {
                             seg(sind).info = ebdry(i)->idnum;
                             ebdry(i)->seg(j) = sind;
                             pnt(seg(sind).pnt(0)).info = 0;
                         }
                         else {
                             *gbl->log << "Error: boundary sides are not counterclockwise " << 
-                            svrtxbtemp[i][j][0] << svrtxbtemp[i][j][1] << std::endl;
+                            svrtxbtemp(i)(j)(0) << svrtxbtemp(i)(j)(1) << std::endl;
                             exit(1);
                         }
                     }
@@ -415,6 +417,7 @@ next1a:      continue;
                     pnt(i).info = 0;
                     
                 in.close();
+				~svrtxbtemp;
 
                 break;
                 
@@ -488,11 +491,7 @@ next1a:      continue;
                     in >> ebdry(i)->nseg;
                     if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
                     else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
-                    for(int j=0;j<ebdry(i)->nseg;++j) {
-                        in.ignore(80,':');
-                        in >> ebdry(i)->seg(j);
-                        in.ignore(80,'\n');
-                    }
+                    ebdry(i)->input(in,grid);
                 }
                 
                 /* VERTEX BOUNDARY INFO HEADER */
@@ -842,6 +841,11 @@ next1c:      continue;
                 ntri = 0;
                 triangulate(nseg);
                 
+                /* SOME TESTING FOR SPLINES */
+//                for(i=0;i<nebd;++i) {
+//                    ebdry(i)->input(in,boundary);
+//                }
+                
                 in.close();
                 
                 break;
@@ -867,7 +871,7 @@ next1c:      continue;
      
     for(i=0;i<nebd;++i) {
         /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-        ebdry(i)->reorder();
+        ebdry(i)->reorder(); 
     }
     
     /* FIND ENDPOINT MATCHES */

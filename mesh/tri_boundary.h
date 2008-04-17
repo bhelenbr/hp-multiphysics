@@ -82,12 +82,12 @@ template<class BASE> class prdc_template : public BASE {
             BASE::output(fout);
             fout << BASE::idprefix << "_dir" << ": " << dir << std::endl;  
         }
-        void input(input_map& inmap) {
+        void init(input_map& inmap) {
             std::string keyword;
             std::map<std::string,std::string>::const_iterator mi;
             std::istringstream data;
             
-            BASE::input(inmap);
+            BASE::init(inmap);
 
             keyword = BASE::idprefix + "_dir";
             mi = inmap.find(keyword);
@@ -128,14 +128,12 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
             BASE::output(fout);
             geometry_object.output(fout,BASE::idprefix);
         }
-        void input(input_map& inmap) {
-            BASE::input(inmap);
-            geometry_object.input(inmap,BASE::idprefix,*BASE::x.gbl->log);
+        void init(input_map& inmap) {
+            BASE::init(inmap);
+            geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
         }
         
         void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-            /* GET LINEAR APPROXIMATION FIRST */
-            BASE::mvpttobdry(nseg,psi,pt);
             geometry_object.mvpttobdry(pt);
             return;
         }
@@ -165,4 +163,103 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_interface,
             return;
         }
 };
+
+#ifdef FORTSPLINE
+#include <blitz/tinyvec-et.h>
+
+template<class BASE> class edge_parametric : public BASE {
+    spline geometry_object;
+    Array<FLT,1> s;
+    FLT smin, smax;
+    
+    public: 
+        edge_parametric(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"parametric";}
+        edge_parametric(const edge_parametric<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object), smin(inbdry.smin), smax(inbdry.smax) {}
+        edge_parametric* create(tri_mesh& xin) const {return(new edge_parametric<BASE>(*this,xin));}
+        
+        /* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
+        void alloc(int n) {BASE::alloc(n); s.resize(n+1);}
+        void output(std::ostream& fout) {
+            BASE::output(fout);
+            fout << s(Range(0,BASE::nseg-1)) << std::endl;
+            geometry_object.output(fout,BASE::idprefix);
+        }
+        void init(input_map& inmap) {
+            BASE::init(inmap);
+            geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
+            std::string line;
+            inmap.getlinewdefault(BASE::idprefix+"_s_limits",line,"0 1");
+            std::istringstream data(line);
+            data >> smin >> smax;
+            data.clear();     
+        }
+        
+        void input(std::istream& fin, tri_mesh::filetype type) {
+            BASE::input(fin,type);
+            if (type == tri_mesh::boundary) {
+                for(int i=0;i<BASE::nseg+1;++i) {
+                    fin >> s(i);
+                }
+            }
+        }
+        
+        void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+            /* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
+            int sind = BASE::seg(nseg);
+            int p0 = BASE::x.seg(sind).pnt(0);
+            int p1 = BASE::x.seg(sind).pnt(1);
+            float sloc;
+			
+//			*BASE::x.gbl->log << "nseg " << nseg << ' ' << sind << ' ' <<  psi << ' ' << pt << std::endl;
+			
+            /* METHOD 1 */
+            TinyVector<float,tri_mesh::ND> fpt0,fpt1;
+            float sloc0,sloc1;
+            
+            fpt0 = BASE::x.pnts(p0);
+            INVSPLINE(geometry_object.curve_id,sloc0,fpt0(0),fpt0(1));
+            /* FOR LOOPS */
+            if (sloc0 > smax) sloc0 = smin;
+            
+            
+            fpt1 = BASE::x.pnts(p1);
+            INVSPLINE(geometry_object.curve_id,sloc1,fpt1(0),fpt1(1));
+            /* FOR LOOPS */
+            if (sloc1 < smin) sloc1 = smax;
+       
+            
+            sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
+            geometry_object.mvpttobdry(sloc,pt);
+			
+//			*BASE::x.gbl->log << sloc0 << ' ' << sloc1 << ' ' << sloc << ' ' << pt << std::endl;
+            
+            TinyVector<FLT,tri_mesh::ND> dx = BASE::x.pnts(p1) -BASE::x.pnts(p0);
+            FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
+            FLT ds,psinew;
+            int iter;
+            for (iter = 0; iter < 100; ++iter) {
+                psinew = 2*((pt(0)-BASE::x.pnts(p0)(0))*dx(0) +(pt(1)-BASE::x.pnts(p0)(1))*dx(1))/l2 -1.0;
+                ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
+                sloc += 0.5*ds;
+                geometry_object.mvpttobdry(sloc,pt);
+                if (fabs(psinew-psi) < 1.0e-4) break;
+            }
+            if (iter > 99) {
+                *BASE::x.gbl->log << "too many spline iterations " << fabs(psinew-psi) << pt << ' ' << fpt0 << ' ' << fpt1 << '\n' ;
+            }
+
+//			*BASE::x.gbl->log << sloc0 << ' ' << sloc1 << ' ' << sloc << ' ' << pt << std::endl;
+            /* METHOD 2 */
+//            TinyVector<float,tri_mesh::ND> fpt;
+//            fpt = 0.5*((1.-psi)*BASE::x.pnts(p0) +(1.+psi)*BASE::x.pnts(p1));
+//            INVSPLINE(geometry_object.curve_id,sloc,fpt(0),fpt(1));
+//            pt = fpt;
+            
+
+            return;
+        }
+};
+#endif
+
+
 

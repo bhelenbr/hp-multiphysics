@@ -47,7 +47,7 @@ refineby2.o swap.o yaber.o adapt.o blocks.o
 
 MAINOBJ = main.o 
 
-DEFINES = -DMETIS $(EXTRAFLAGS)
+DEFINES = -DMETIS -Df2cFortran $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lm -lmuparser -lmetis -lspline -lg2c -lpth 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
