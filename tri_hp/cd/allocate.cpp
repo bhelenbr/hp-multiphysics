@@ -9,45 +9,55 @@
 
 #include "tri_hp_cd.h"
 
-void tri_hp_cd::init(input_map& input, gbl *gin) {
-    bool coarse, adapt_storage;
+void tri_hp_cd::init(input_map& input, void *gin) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
     
-    keyword = idprefix + "_nvariable";
+    gbl = static_cast<global *>(gin);
+    keyword = gbl->idprefix + "_nvariable";
     input[keyword] = "1";
     
     tri_hp::init(input,gin);
     
-    /* Load pointer to block stuff */
-    gbl_ptr = gin;
-      
-    keyword = idprefix + "_adapt_storage";
-    input.getwdefault(keyword,adapt_storage,false);
-    if (adapt_storage) return;
-    
-    keyword = idprefix + "_coarse";
-    input.getwdefault(keyword,coarse,false);
-    
-    keyword = idprefix + "_dissipation";
+    keyword = gbl->idprefix + "_dissipation";
     input.getwdefault(keyword,adis,1.0);
     
-    if (coarse) return;
-  
-    keyword = idprefix + "_ax";
-    if (!input.get(keyword,gbl_ptr->ax)) input.getwdefault("ax",gbl_ptr->ax,1.0);
+    keyword = gbl->idprefix + "_ax";
+    if (!input.get(keyword,gbl->ax)) input.getwdefault("ax",gbl->ax,1.0);
 
-    keyword = idprefix + "_ay";
-    if (!input.get(keyword,gbl_ptr->ay)) input.getwdefault("ay",gbl_ptr->ay,0.0);
+    keyword = gbl->idprefix + "_ay";
+    if (!input.get(keyword,gbl->ay)) input.getwdefault("ay",gbl->ay,0.0);
 
-    keyword = idprefix + "_nu";
-    if (!input.get(keyword,gbl_ptr->nu)) input.getwdefault("nu",gbl_ptr->nu,0.0);
-
-    gbl_ptr->tau.resize(maxvst);
+    keyword = gbl->idprefix + "_nu";
+    if (!input.get(keyword,gbl->nu)) input.getwdefault("nu",gbl->nu,0.0);
     
-    gbl_ptr->src = getnewsrc(input);
-    gbl_ptr->src->input(input,idprefix);
+    keyword = gbl->idprefix + "_minlngth";
+    if (!input.get(keyword,gbl->minlngth)) input.getwdefault("minlngth",gbl->minlngth,-1.0);
+
+    keyword = gbl->idprefix + "_maxlngth";
+    if (!input.get(keyword,gbl->maxlngth)) input.getwdefault("maxlngth",gbl->maxlngth,1.0e99);    
+    
+    gbl->tau.resize(maxpst);
+    
+    gbl->src = getnewsrc(input);
+    gbl->src->input(input,gbl->idprefix);
     
     return;
 }
+
+void tri_hp_cd::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
+    std::string keyword;
+    std::istringstream data;
+    std::string filename;
+    
+    const tri_hp_cd& inmesh = dynamic_cast<const tri_hp_cd &>(in);
+    gbl = inmesh.gbl;
+
+    tri_hp::init(in,why,sizereduce1d);
+    
+    adis = inmesh.adis;
+        
+    return;
+}
+

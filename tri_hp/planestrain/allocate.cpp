@@ -10,42 +10,37 @@
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 
- void tri_hp_ps::init(input_map& input, gbl *gin) {
+ void tri_hp_ps::init(input_map& input, void *gin) {
     FLT nu, E;
-    bool coarse;
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
-    
-    keyword = idprefix + "_nvariable";
-    input[keyword] = "3";
-    
+
+    gbl = static_cast<global *>(gin);
+
+    input[gbl->idprefix + "_nvariable"] = "3";
     tri_hp::init(input,gin);
     
-    /* Load pointer to block stuff */
-    gbl_ptr = gin;
-    
-    keyword = idprefix + "_coarse";
-    input.getwdefault(keyword,coarse,false);
-    
-    keyword = idprefix + "_dissipation";
-    input.getwdefault(keyword,adis,1.0);
-    
-    if (coarse) return;
-    
-    gbl_ptr->tau.resize(maxvst);
 
-    keyword = idprefix + "_nu";
-    input.getwdefault(keyword,nu,0.0);
+    gbl->tau.resize(maxpst);
+    input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+    input.getwdefault(gbl->idprefix + "_nu",nu,0.0);
+    input.getwdefault(gbl->idprefix + "_E",E,0.0);
     
-    keyword = idprefix + "_E";
-    input.getwdefault(keyword,E,0.0);
-    
-    gbl_ptr->mu = E/(2.*(1.+nu));
-    gbl_ptr->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
+    gbl->mu = E/(2.*(1.+nu));
+    gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
   
     return;
 }
 
+void tri_hp_ps::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
+
+    const tri_hp_ps& inmesh = dynamic_cast<const tri_hp_ps &>(in);
+    gbl = inmesh.gbl;
+
+    tri_hp::init(in,why,sizereduce1d);
+    
+    adis = inmesh.adis;
+        
+    return;
+}
+
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW TO DO NOTHING */
-void tri_hp_ps::calculate_unsteady_sources(bool coarse) {}
+void tri_hp_ps::calculate_unsteady_sources() {}

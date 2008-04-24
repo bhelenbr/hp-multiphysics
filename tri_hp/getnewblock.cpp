@@ -9,8 +9,7 @@
  
 #include <blocks.h>
 #include <block.h>
-#include <mgblock.h>
-#include <r_mesh.h>
+#include <r_tri_mesh.h>
 
 #include "cd/tri_hp_cd.h"
 #include "ins/tri_hp_ins.h"
@@ -26,7 +25,7 @@
 class btype {
     public:
         const static int ntypes = 12;
-        enum ids {r_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset};
+        enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             int i;
@@ -35,95 +34,90 @@ class btype {
             return(-1);
         }
 };
-const char btype::names[ntypes][40] = {"r_mesh","cd","ins","ps","swirl","buoyancy",
+const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
     "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset"};
 
-
-block* blocks::getnewblock(int idnum, input_map& blockdata) {
+multigrid_interface* block::getnewlevel(input_map& input) {
     std::string keyword,val,ibcname,srcname;
     std::istringstream data;
-    char idntystring[10];
     int type;          
     
     /* FIND BLOCK TYPE */
-    sprintf(idntystring,"b%d",idnum);
-    keyword = std::string(idntystring) + "_type";
-
-    if (blockdata.get(keyword,val)) {
+    if (input.get(idprefix+"_type",val)) {
         type = btype::getid(val.c_str());
     }
     else {
-        if (!blockdata.get("blocktype",val)) {
-            *sim::log << "couldn't find block type" << std::endl;
+        if (!input.get("blocktype",val)) {
+            std::cerr << "couldn't find block type" << std::endl;
             exit(1);
         }
         type = btype::getid(val.c_str());
     }
             
     switch(type) {
-        case btype::r_mesh: {
-            mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
+        case btype::r_tri_mesh: {
+            r_tri_mesh *temp = new r_tri_mesh();
             return(temp);
         }
         
         case btype::cd: {
-            mgrid<tri_hp_cd> *temp = new mgrid<tri_hp_cd>(idnum);
+            tri_hp_cd *temp = new tri_hp_cd();
             return(temp);
         }
         
         case btype::ins: {
-            mgrid<tri_hp_ins> *temp = new mgrid<tri_hp_ins>(idnum);
+            tri_hp_ins *temp = new tri_hp_ins();
             return(temp);
         }
         
         case btype::ps: {
-            mgrid<tri_hp_ps> *temp = new mgrid<tri_hp_ps>(idnum);
+            tri_hp_ps *temp = new tri_hp_ps();
             return(temp);
         }
 		
 		case btype::swirl: {
-            mgrid<tri_hp_swirl> *temp = new mgrid<tri_hp_swirl>(idnum);
+            tri_hp_swirl *temp = new tri_hp_swirl();
             return(temp);
         }
         
         case btype::buoyancy: {
-            mgrid<tri_hp_buoyancy> *temp = new mgrid<tri_hp_buoyancy>(idnum);
+            tri_hp_buoyancy *temp = new tri_hp_buoyancy();
             return(temp);
         }
         
         case btype::pod_ins_gen: {
-            mgrid<pod_generate<tri_hp_ins> > *temp = new mgrid<pod_generate<tri_hp_ins> >(idnum);
+            pod_generate<tri_hp_ins> *temp = new pod_generate<tri_hp_ins>();
             return(temp);
         }
         
         case btype::pod_cd_gen: {
-            mgrid<pod_generate<tri_hp_cd> > *temp = new mgrid<pod_generate<tri_hp_cd> >(idnum);
+            pod_generate<tri_hp_cd> *temp = new pod_generate<tri_hp_cd>();
             return(temp);
         }
         
         case btype::pod_ins_sim: {
-            mgrid<pod_simulate<tri_hp_ins> > *temp = new mgrid<pod_simulate<tri_hp_ins> >(idnum);
+            pod_simulate<tri_hp_ins> *temp = new pod_simulate<tri_hp_ins>();
             return(temp);
         }
         
         case btype::pod_cd_sim: {
-            mgrid<pod_simulate<tri_hp_cd> > *temp = new mgrid<pod_simulate<tri_hp_cd> >(idnum);
+            pod_simulate<tri_hp_cd> *temp = new pod_simulate<tri_hp_cd>();
             return(temp);
         }
         
         case btype::swe: {
-            mgrid<tri_hp_swe> *temp = new mgrid<tri_hp_swe>(idnum);
+            tri_hp_swe *temp = new tri_hp_swe();
             return(temp);
         }
 
         case btype::lvlset: {
-            mgrid<tri_hp_lvlset> *temp = new mgrid<tri_hp_lvlset>(idnum);
+            tri_hp_lvlset *temp = new tri_hp_lvlset();
             return(temp);
         }
         
         default: {
-            std::cout << "unrecognizable block type: " <<  type << std::endl;
-            mgrid<r_mesh> *temp = new mgrid<r_mesh>(idnum);
+            std::cerr << "unrecognizable block type: " <<  type << std::endl;
+            r_tri_mesh *temp = new r_tri_mesh();
             return(temp);
         }
     } 

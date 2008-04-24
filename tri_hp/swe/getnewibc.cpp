@@ -15,7 +15,7 @@ namespace ibc_swe {
         private:
             FLT amplitude;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
                 FLT A = 0.771*amplitude*amplitude;
                 FLT phi = A*pow(cosh(amplitude*x(0)),-2);
                 FLT dphidx = -2*amplitude*tanh(amplitude*x(0))*phi;
@@ -55,7 +55,7 @@ namespace ibc_swe {
     class flat : public init_bdry_cndtn {
         private:
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
                 return(0.0);
             }
     };
@@ -84,10 +84,10 @@ init_bdry_cndtn *tri_hp_swe::getnewibc(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + "_ibc";
+	keyword = std::string(gbl->idprefix) + "_ibc";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("ibc",ibcname)) {
-			*sim::log << "couldn't find initial condition type" << std::endl;
+			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}	
 	type = ibc_swe::ibc_type::getid(ibcname.c_str());    
@@ -109,10 +109,10 @@ init_bdry_cndtn *tri_hp_swe::getnewbathy(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + "_bathy";
+	keyword = std::string(gbl->idprefix) + "_bathy";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("bathy",ibcname)) {
-			*sim::log << "couldn't find bathy  type" << std::endl;
+			*gbl->log << "couldn't find bathy  type" << std::endl;
 		}
 	}
 	

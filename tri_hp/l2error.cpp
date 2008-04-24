@@ -25,7 +25,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
     
 /* MATCH PRESSURE AT ONE POINT */
     ppipi = 0.0;
-    ppipi = -comparsion->f(2,vrtx(0)(0),vrtx(0)(1))+ug.v(0,2);
+    ppipi = -comparsion->f(2,pnts(0)(0),pnts(0)(1))+ug.v(0,2);
 #endif
     
 	for(n=0;n<NV;++n) {
@@ -35,20 +35,20 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	
 	for(tind=0;tind<ntri;++tind) {
         
-        if (td(tind).info > -1) {
+        if (tri(tind).info > -1) {
             crdtocht(tind);
             for(n=0;n<ND;++n)
                 basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
         }
         else {
             for(n=0;n<ND;++n)
-                basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+                basis::tri(log2p).proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                 for(j=0;j<basis::tri(log2p).gpn;++j) {
                     for(n=0;n<ND;++n) {
-                        dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(1))(n) -vrtx(td(tind).vrtx(0))(n));
-                        dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(0))(n));
+                        dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(1))(n) -pnts(tri(tind).pnt(0))(n));
+                        dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(0))(n));
                     }
                 }
             }
@@ -64,7 +64,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
                 pt(0) = crd(0)(i,j);
                 pt(1) = crd(1)(i,j);
                 for(n=0;n<NV;++n) {
-                    err =  fabs(u(n)(i,j)-comparison->f(n,pt));
+                    err =  fabs(u(n)(i,j)-comparison->f(n,pt,gbl->time));
                     if (err > mxr[n]) {
                         mxr[n] = err;
                         loc[n] = tind;
@@ -95,20 +95,20 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
     a = 0.0;
     
     for(tind=0;tind<ntri;++tind) {
-        if (td(tind).info > -1) {
+        if (tri(tind).info > -1) {
             crdtocht(tind);
-            for(n=0;n<mesh::ND;++n)
+            for(n=0;n<tri_mesh::ND;++n)
                 basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
         }
         else {
-            for(n=0;n<mesh::ND;++n)
-                basis::tri(log2p).proj(vrtx(td(tind).vrtx(0))(n),vrtx(td(tind).vrtx(1))(n),vrtx(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+            for(n=0;n<tri_mesh::ND;++n)
+                basis::tri(log2p).proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                 for(j=0;j<basis::tri(log2p).gpn;++j) {
-                    for(n=0;n<mesh::ND;++n) {
-                        dcrd(n,0)(i,j) = 0.5*(vrtx(td(tind).vrtx(2))(n) -vrtx(td(tind).vrtx(1))(n));
-                        dcrd(n,1)(i,j) = 0.5*(vrtx(td(tind).vrtx(0))(n) -vrtx(td(tind).vrtx(1))(n));
+                    for(n=0;n<tri_mesh::ND;++n) {
+                        dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(1))(n));
+                        dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(0))(n) -pnts(tri(tind).pnt(1))(n));
                     }
                 }
             }
@@ -134,41 +134,3 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
     return;
 }
 
-/* UTILITY ROUTINE TO OUTPUT TRUNCATION ERROR ASSUMING STORED IN FSCR1 */
-void tri_hp::output_error() {
-   int i,n,tind;
-   ostringstream fname;
-   ofstream out;
-    
-   fname << idprefix << +"_truncation" << sim::time << ".dat";
-   out.open(fname.str().c_str());
-   if (!out) {
-       *sim::log << "couldn't open tecplot output file " << fname.str();
-       exit(1);
-   }
-
-   out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << std::endl;
-   
-   /* VERTEX MODES */
-   for(i=0;i<nvrtx;++i) {
-      for(n=0;n<ND;++n)
-         out << vrtx(i)(n) << ' ';
-      out << fscr1(i) << '\n';                    
-   }
-   
-   
-
-//   /* TO RENORMALIZE */
-//   for(i=0;i<nvrtx;++i)
-//      fscr1(i) = log10(fscr1(i)/(vd(i).nnbor*trncerr));
-
-   /* OUTPUT CONNECTIVY INFO */
-   out << std::endl << "#CONNECTION DATA#" << std::endl;
-
-   for(tind=0;tind<ntri;++tind)
-      out << td(tind).vrtx(0)+1 << ' ' << td(tind).vrtx(1)+1 << ' ' << td(tind).vrtx(2)+1 << '\n';
- 
-   out.close();
-   
-   return;
-}

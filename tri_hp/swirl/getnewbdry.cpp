@@ -13,7 +13,7 @@
 
 using namespace bdry_swirl;
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
@@ -35,17 +35,17 @@ class tri_hp_swirl_stype {
 const char tri_hp_swirl_stype::names[ntypes][40] = {"symmetry"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
+hp_edge_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
-    keyword =  sbdry(bnum)->idprefix + "_swirl_type";    
+    keyword =  ebdry(bnum)->idprefix + "_swirl_type";    
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_swirl_stype::getid(val.c_str());
         if (type == tri_hp_swirl_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -55,7 +55,7 @@ hp_side_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
 
     switch(type) {
 		case tri_hp_swirl_stype::symmetry: {
-            temp = new symmetry(*this,*sbdry(bnum));
+            temp = new symmetry(*this,*ebdry(bnum));
             break;
         }	
         default: {

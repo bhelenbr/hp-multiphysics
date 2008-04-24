@@ -15,17 +15,14 @@
 
 class tri_hp_swirl : public tri_hp_ins {
     public:
-		hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(input_map& inmap);
-    
-    private:
-        int excpt;
-        
+       
     public:
-        void init(input_map& input, gbl *gin); 
+        void init(input_map& input, void *gin);  
         tri_hp_swirl* create() { return new tri_hp_swirl(); }
-        block::ctrl length(block::ctrl ctrl_message);
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
+        void length();
+        void setup_preconditioner();
+        void rsdl(int stage);
 };
 #endif

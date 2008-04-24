@@ -16,21 +16,21 @@
     TinyVector<FLT,2> pt;
         
     /* LOOP THROUGH VERTICES */
-    for(i=0;i<nvrtx;++i)
+    for(i=0;i<npnt;++i)
         for(n=0;n<NV;++n)
-            ugbd(tlvl).v(i,n) = ibc->f(n,vrtx(i));
+            ugbd(tlvl).v(i,n) = ibc->f(n,pnts(i),gbl->time);
             
     if (basis::tri(log2p).sm <= 0) return;
 
     /* LOOP THROUGH SIDES */    
-    for(sind=0;sind<nside;++sind) {
+    for(sind=0;sind<nseg;++sind) {
                 
-        v0 = sd(sind).vrtx(0);
-        v1 = sd(sind).vrtx(1);
+        v0 = seg(sind).pnt(0);
+        v1 = seg(sind).pnt(1);
         
-        if (sd(sind).info < 0) {
+        if (seg(sind).info < 0) {
             for(n=0;n<ND;++n)
-                basis::tri(log2p).proj1d(vrtx(v0)(n),vrtx(v1)(n),&crd(n)(0,0));
+                basis::tri(log2p).proj1d(pnts(v0)(n),pnts(v1)(n),&crd(n)(0,0));
         }
         else {
             crdtocht1d(sind,tlvl);
@@ -45,7 +45,7 @@
             pt(0) = crd(0)(0,i);
             pt(1) = crd(1)(0,i);
             for(n=0;n<NV;++n)
-                res(n)(0,i) -= ibc->f(n,pt);
+                res(n)(0,i) -= ibc->f(n,pt,gbl->time);
         }
                 
         for(n=0;n<NV;++n)
@@ -66,9 +66,9 @@
         for(n=0;n<NV;++n)
             basis::tri(log2p).proj_bdry(&uht(n)(0),&u(n)(0,0),MXGP);
             
-        if (td(tind).info < 0) {
+        if (tri(tind).info < 0) {
             for(n=0;n<ND;++n)
-                basis::tri(log2p).proj(vrtxbd(tlvl)(td(tind).vrtx(0))(n),vrtxbd(tlvl)(td(tind).vrtx(1))(n),vrtxbd(tlvl)(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+                basis::tri(log2p).proj(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
         }
         else {
             crdtocht(tind,tlvl);
@@ -81,7 +81,7 @@
                 pt(0) = crd(0)(i,j);
                 pt(1) = crd(1)(i,j);
                 for(n=0;n<NV;++n)
-                    u(n)(i,j) -= ibc->f(n,pt);
+                    u(n)(i,j) -= ibc->f(n,pt,gbl->time);
             }
         }
                             

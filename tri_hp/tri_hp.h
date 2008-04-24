@@ -10,9 +10,9 @@
 #ifndef _tri_hp_h_
 #define _tri_hp_h_
 
-#include <r_mesh.h>
+#include <r_tri_mesh.h>
 #include <float.h>
-#include <hpbasis.h>
+#include <tri_basis.h>
 #include <blocks.h>
 
 #ifdef AXISYMMETRIC
@@ -22,37 +22,35 @@
 #endif
 
 class hp_vrtx_bdry;
-class hp_side_bdry;
+class hp_edge_bdry;
 
 class init_bdry_cndtn {
     public:
-        virtual FLT f(int n, TinyVector<FLT,mesh::ND> x) = 0;
+        virtual FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) = 0;
         virtual void input(input_map &blkdata, std::string idnty) {};
 };
 
-class mesh_mover;
+class tri_hp_helper;
 
 /** This class is just the data storage and nothing for multigrid */
-class tri_hp : public r_mesh  {
+class tri_hp : public r_tri_mesh  {
     public:
         int NV;
         int p0, sm0, im0;  /**> Initialization values */
         int log2p; /**> index of basis to use in global basis::tri array */
         int log2pmax; /**> Initialization value of log2p */
-        bool coarse; /**> tells whether we are coarse level of multigrid or not */
         enum movementtype {fixed,uncoupled_rigid,coupled_rigid,uncoupled_deformable,coupled_deformable} mmovement;
-        bool adapt_flag;
         
-        /* STATIC WORK ARRAYS */
-        static Array<TinyMatrix<FLT,MXGP,MXGP>,1> u,res;
-        static Array<TinyMatrix<FLT,MXGP,MXGP>,2> du;
-        static TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> crd;
-        static TinyMatrix<FLT,MXGP,MXGP> cjcb;
-        static TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND> dcrd;
-        static Array<TinyVector<FLT,MXTM>,1> uht,lf;
-        static TinyMatrix<FLT,ND,MXTM> cht, cf;
-        static TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
-        static Array<TinyMatrix<FLT,MXGP,MXGP>,2> bdwk;
+        /* WORK ARRAYS */
+        Array<TinyMatrix<FLT,MXGP,MXGP>,1> u,res;
+        Array<TinyMatrix<FLT,MXGP,MXGP>,2> du;
+        TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> crd;
+        TinyMatrix<FLT,MXGP,MXGP> cjcb;
+        TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,ND,ND> dcrd;
+        Array<TinyVector<FLT,MXTM>,1> uht,lf;
+        TinyMatrix<FLT,ND,MXTM> cht, cf;
+        TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> mvel; // for local mesh velocity info
+        Array<TinyMatrix<FLT,MXGP,MXGP>,2> bdwk;
 
         /** Stores vertex, side and interior coefficients of solution */
         struct vsi {
@@ -64,11 +62,11 @@ class tri_hp : public r_mesh  {
         /** vertex boundary information */
         Array<hp_vrtx_bdry *,1> hp_vbdry;
         virtual hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-        /** side boundary information */
-        Array<hp_side_bdry *,1> hp_sbdry;
-        virtual hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata); 
+        /** edge boundary information */
+        Array<hp_edge_bdry *,1> hp_ebdry;
+        virtual hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata); 
         /** object to perform rigid mesh movement */
-        mesh_mover *mover;
+        tri_hp_helper *helper;
         
         /** Array for time history information */
         TinyVector<vsi,sim::nhist+1> ugbd;
@@ -78,21 +76,20 @@ class tri_hp : public r_mesh  {
         
         /* Multigrid stuff needed on each mesh */
         bool isfrst; // FLAG TO SET ON FIRST ENTRY TO COARSE MESH
+        bool coarse_flag;   // Flag to indicate coarse level
         Array<vsi,1> dres; //!< Driving term for multigrid
         Array<FLT,2> vug_frst; //!< Solution on first entry to coarse mesh
         FLT fadd; //!< Controls addition of residuals on coarse mesh
-        
-        /** Adaptation constants */
-        FLT trncerr, bdrysensitivity, vlngth_tol;  //!<    Adaptation constants  
-        
+                
         /* THESE THINGS ARE SHARED BY MESHES OF THE SAME BLOCK */
-        struct gbl : public r_mesh::gbl {
+        struct global : public r_tri_mesh::global {
             
             /**< Pointer to adaptation solution storage 
              * Also used for backwards difference storage in tadvance 
              * could be used for ug0 res and res_r as well? 
              */
             tri_hp *pstr;  
+            FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  
 
             /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
             vsi ug0;
@@ -114,18 +111,18 @@ class tri_hp : public r_mesh  {
             /* INITIALIZATION AND BOUNDARY CONDITION FUNCTION */
             init_bdry_cndtn *ibc;
                         
-            /* Pointers to block storage objects for side boundary conditions */
-            Array<void *,1> sbdry_gbls;
+            /* Pointers to block storage objects for edge boundary conditions */
+            Array<void *,1> ebdry_gbls;
             
-            /* Pointers to block storage objects for vrtx boundary conditions */
+            /* Pointers to block storage objects for pnts boundary conditions */
             Array<void *,1> vbdry_gbls;
             
             /* Time step factor for different polynomial degree */
             TinyVector<FLT,MXGP> cfl;
             
-        } *gbl_ptr;
+        } *gbl;
         virtual init_bdry_cndtn* getnewibc(input_map& inmap);
-        virtual mesh_mover* getnewmesh_mover(input_map& inmap);
+        virtual tri_hp_helper* getnewhelper(input_map& inmap);
 
         /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
         void ugtouht(int tind);
@@ -147,99 +144,101 @@ class tri_hp : public r_mesh  {
         void setinfo();
         
     public:
-        tri_hp() : r_mesh() {}
-        virtual ~tri_hp();
-        void init(input_map& input, gbl *gin);
-        void copy(const tri_hp &tgt);
-        virtual tri_hp* create() = 0;
-        
-        /* Initialization functions */
+        tri_hp() : r_tri_mesh() {}
+        virtual tri_hp* create() {return new tri_hp;}
+        void* create_global_structure() {return new global;}
+        void init(input_map& input, void *gin);
+        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
         void tobasis(init_bdry_cndtn *ibc, int tlvl = 0);
         void curvinit();
         
         /* Input / Output functions */
-        enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary};
+        enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary, trunc_error};
         TinyVector<filetype,3> output_type;
         void input(const std::string &name);
         void input(const std::string &name, filetype type, int tlvl = 0);
+        
+        /** Outputs solution in various filetypes */
         void output(const std::string &name, block::output_purpose why);
         void output(const std::string &name, filetype type = tecplot, int tlvl = 0);
+       
+        /** Shift to next implicit time step */
+        void tadvance();
+        virtual void calculate_unsteady_sources();
+        
+        /** Makes sure vertex positions on boundaries coinside */
+        void matchboundaries();
+                                 
+        /** Setup preconditioner */
+        void setup_preconditioner();
+                
+        /** Calculate residuals */
+        void rsdl() {rsdl(sim::NSTAGE);}
+        virtual void rsdl(int stage); 
+        
+        /** Relax solution */  
+        void update();
+        void minvrt();
+        void minvrt_test();
 
-        /* Some other handy utilities */
-        void l2error(init_bdry_cndtn *toCompare);
-        block::ctrl findmax(block::ctrl ctrl_message, int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
-        void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
-        void integrated_averages(Array<FLT,1> a);
-        void output_error();
-        
-        /* Routines for point probe */
-        void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
-        void ptprobe_bdry(int bnum, TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
-        
-        /* Adaptation Routines */
-        void findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
-        void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
+        /** Multigrid cycle */
+        void mg_restrict();
+        void mg_prolongate();
+                        
+        /** Print errors */
+        FLT maxres();
         
         /* FUNCTIONS FOR ADAPTION */ 
-        virtual block::ctrl length(block::ctrl ctrl_message) {*sim::log << "here\n"; return(block::stop);}
-        block::ctrl adapt(block::ctrl ctrl_message,FLT tol);
-        void movevdata(int frm, int to);
-        void movevdata_bdry(int bnum,int bel,int endpt);
-        void updatevdata(int v);
-        void updatevdata_bdry(int bnum,int bel,int endpt);
+        void length() {*gbl->log << "using generic length\n";}
+        void adapt();
+        void copy(const tri_hp &tgt);
+        void movepdata(int frm, int to);
+        void movepdata_bdry(int bnum,int bel,int endpt);
+        void updatepdata(int v);
+        void updatepdata_bdry(int bnum,int bel,int endpt);
         void movesdata(int frm, int to);
         void movesdata_bdry(int bnum,int bel);
         void updatesdata(int s);
         void updatesdata_bdry(int bnum,int bel);
         void movetdata(int frm, int to);
         void updatetdata(int t);
+        void findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
+        void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
+        void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
+        void ptprobe_bdry(int bnum, TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
 
-        /* Routines to do explicit update of solution */
-        virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage = sim::NSTAGE) {    
-            /* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES */
-            if (mmovement == coupled_deformable && stage == sim::NSTAGE && log2p == 0) {
-                return(r_mesh::rsdl(ctrl_message));                
-            }
-            return(block::stop);
-        }
-        FLT maxres();        
-        block::ctrl update(block::ctrl ctrl_message);
-        block::ctrl minvrt(block::ctrl ctrl_message);
-        block::ctrl minvrt_test(block::ctrl ctrl_message);
-        
-        /* MGRID TRANSFER */
-        inline void setlog2p(int value) { tri_hp::log2p = value; } /* To switch polynomial degree */
-        block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
-        block::ctrl mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh);
-
-        /* ADVANCE TIME SOLUTION */
-        block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
-        virtual void calculate_unsteady_sources(bool coarse);
-        
         /* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */
-        void vc0load(int phase, FLT *vdata, int vrtstride=1);
-        int vc0wait_rcv(int phase,FLT *vdata, int vrtsride=1);
-        int vc0rcv(int phase,FLT *vdata, int vrtstride=1);
+        void vc0load(int phase, FLT *pdata, int vrtstride=1);
+        int vc0wait_rcv(int phase,FLT *pdata, int vrtsride=1);
+        int vc0rcv(int phase,FLT *pdata, int vrtstride=1);
         void sc0load(FLT *sdata, int bgnmode, int endmode, int modestride);
         int sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
         int sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
-        block::ctrl matchboundaries(block::ctrl ctrl_message);
         
-    private:
-        int excpt,excpt1,stage,mp_phase,mode;
+        /* Some other utilities */
+        void l2error(init_bdry_cndtn *toCompare);
+        void findmax(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
+        void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
+        void integrated_averages(Array<FLT,1> a);
+        
+        virtual ~tri_hp();
 };
 
-class mesh_mover {
+/* THIS CLASS IS TO ALLOW SPECIAL THINGS LIKE RIGIDLY MOVING MESHES OR PARAMETER CHANGING ETC.. */
+class tri_hp_helper {
+    protected:
+        tri_hp &x;
     public:
-        mesh_mover(tri_hp& xin) {}
-        virtual void init(input_map& input, std::string idnty) {}
-        virtual mesh_mover* create(tri_hp& xin) { return new mesh_mover(xin); }
-        virtual block::ctrl tadvance(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE) {return(block::stop);}
-        virtual block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
-};
+        tri_hp_helper(tri_hp& xin) : x(xin) {}
+		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin) {}
+		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
 
+        virtual void init(input_map& input, std::string idnty) {}
+        virtual void tadvance() {}
+        virtual void setup_preconditioner() {}
+        virtual void rsdl(int stage) {}
+        virtual void update(int stage) {}
+		virtual void mg_restrict() {}
+};
 
 #endif

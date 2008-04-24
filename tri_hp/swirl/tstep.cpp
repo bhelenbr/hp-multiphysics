@@ -2,85 +2,77 @@
 #include "tri_hp_swirl.h"
 #include "../hp_boundary.h"
 
-block::ctrl tri_hp_swirl::setup_preconditioner(block::ctrl ctrl_message) {
+void tri_hp_swirl::setup_preconditioner() {
     int tind,i,j,side,v0;
     FLT jcb,h,hmax,q,qmax,lam1,gam;
     TinyVector<int,3> v;
 
-    if (ctrl_message == block::begin) excpt = 0;
-    if (ctrl_message == block::advance1) ++excpt;  
+    FLT nu = gbl->mu/gbl->rho;
+
+    /***************************************/
+    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
+    /***************************************/
+    gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+    if (basis::tri(log2p).sm > 0) {
+        gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+    }
+
+    for(tind = 0; tind < ntri; ++tind) {
+        jcb = 0.25*area(tind);  // area is 2 x triangle area
+        v = tri(tind).pnt;
+        hmax = 0.0;
+        for(j=0;j<3;++j) {
+            h = pow(pnts(v(j))(0) -pnts(v((j+1)%3))(0),2.0) + 
+            pow(pnts(v(j))(1) -pnts(v((j+1)%3))(1),2.0);
+            hmax = (h > hmax ? h : hmax);
+        }
+        hmax = sqrt(hmax);
+        
+        if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
+            *gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
+            *gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
+            tri_mesh::output("negative",grid);
+            exit(1);
+        }
+        h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
+        hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
     
-    if (excpt == 3) {
-        ++excpt;
-        
-        FLT nu = gbl_ptr->mu/gbl_ptr->rho;
-
-        /***************************************/
-        /** DETERMINE FLOW PSEUDO-TIME STEP ****/
-        /***************************************/
-        gbl_ptr->vprcn(Range(0,nvrtx-1),Range::all()) = 0.0;
-        if (basis::tri(log2p).sm > 0) {
-            gbl_ptr->sprcn(Range(0,nside-1),Range::all()) = 0.0;
+        qmax = 0.0;
+        for(j=0;j<3;++j) {
+            v0 = v(j);
+            q = pow(ug.v(v0,0)-0.5*(gbl->bd[0]*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+                +pow(ug.v(v0,1)-0.5*(gbl->bd[0]*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+            q += pow(ug.v(v0,2),2.0);
+            qmax = MAX(qmax,q);
         }
-
-        for(tind = 0; tind < ntri; ++tind) {
-            jcb = 0.25*area(tind);  // area is 2 x triangle area
-            v = td(tind).vrtx;
-            hmax = 0.0;
-            for(j=0;j<3;++j) {
-                h = pow(vrtx(v(j))(0) -vrtx(v((j+1)%3))(0),2.0) + 
-                pow(vrtx(v(j))(1) -vrtx(v((j+1)%3))(1),2.0);
-                hmax = (h > hmax ? h : hmax);
-            }
-            hmax = sqrt(hmax);
-            
-            if (!(jcb > 0.0)) {  // THIS CATCHES NAN'S TOO
-                *sim::log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
-                *sim::log << "approximate location: " << vrtx(v(0))(0) << ' ' << vrtx(v(0))(1) << std::endl;
-                mesh::output("negative",grid);
-                exit(1);
-            }
-            h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-            hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+        gam = 3.0*qmax +(0.5*hmax*gbl->bd[0] +2.*nu/hmax)*(0.5*hmax*gbl->bd[0] +2.*nu/hmax);
+        if (gbl->mu + gbl->bd[0] == 0.0) gam = MAX(gam,0.01);
+        q = sqrt(qmax);
+        lam1 = q + sqrt(qmax +gam);
         
-            qmax = 0.0;
-            for(j=0;j<3;++j) {
-                v0 = v(j);
-                q = pow(ug.v(v0,0)-0.5*(sim::bd[0]*(vrtx(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-                    +pow(ug.v(v0,1)-0.5*(sim::bd[0]*(vrtx(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
-				q += pow(ug.v(v0,2),2.0);
-                qmax = MAX(qmax,q);
-            }
-            gam = 3.0*qmax +(0.5*hmax*sim::bd[0] +2.*nu/hmax)*(0.5*hmax*sim::bd[0] +2.*nu/hmax);
-            if (gbl_ptr->mu + sim::bd[0] == 0.0) gam = MAX(gam,0.01);
-            q = sqrt(qmax);
-            lam1 = q + sqrt(qmax +gam);
-            
-            /* SET UP DISSIPATIVE COEFFICIENTS */
-            gbl_ptr->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-            gbl_ptr->tau(tind,NV-1) = qmax*gbl_ptr->tau(tind,0);
-            
-            /* SET UP DIAGONAL PRECONDITIONER */
-            // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +sim::bd[0];
-            jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-            jcb *= (vrtx(v(0))(0) +vrtx(v(1))(0) +vrtx(v(2))(0))/3.;
+        /* SET UP DISSIPATIVE COEFFICIENTS */
+        gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+        gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+        
+        /* SET UP DIAGONAL PRECONDITIONER */
+        // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd[0];
+        jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+        jcb *= (pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.;
 
-            gbl_ptr->tprcn(tind,0) = gbl_ptr->rho*jcb;    
-            gbl_ptr->tprcn(tind,1) = gbl_ptr->rho*jcb;  
-            gbl_ptr->tprcn(tind,2) = gbl_ptr->rho*jcb;      
-            gbl_ptr->tprcn(tind,3) =  jcb/gam;
-            for(i=0;i<3;++i) {
-                gbl_ptr->vprcn(v(i),Range::all())  += gbl_ptr->tprcn(tind,Range::all());
-                if (basis::tri(log2p).sm > 0) {
-                    side = td(tind).side(i);
-                    gbl_ptr->sprcn(side,Range::all()) += gbl_ptr->tprcn(tind,Range::all());
-                }
+        gbl->tprcn(tind,0) = gbl->rho*jcb;    
+        gbl->tprcn(tind,1) = gbl->rho*jcb;  
+        gbl->tprcn(tind,2) = gbl->rho*jcb;      
+        gbl->tprcn(tind,3) =  jcb/gam;
+        for(i=0;i<3;++i) {
+            gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+            if (basis::tri(log2p).sm > 0) {
+                side = tri(tind).seg(i);
+                gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
             }
         }
     }
-    else {
-        ctrl_message = tri_hp::setup_preconditioner(ctrl_message);  
-    }
+    tri_hp::setup_preconditioner();
 
-    return(ctrl_message);
+
+    return;
 }

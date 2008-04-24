@@ -16,7 +16,7 @@
 class tri_hp_cd : public tri_hp {
     public:
         /* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-        struct gbl : public tri_hp::gbl {
+        struct global : public tri_hp::global {
             /* STABILIZATION */
             Array<FLT,1> tau;
                 
@@ -25,23 +25,26 @@ class tri_hp_cd : public tri_hp {
             
             /* SOURCE FUNCTION */
             init_bdry_cndtn *src;
+            
+            /* ADAPTATION LIMITS */
+            FLT minlngth, maxlngth;
 
-        } *gbl_ptr;
+        } *gbl;
         
         FLT adis; // DISSIPATION CONSTANT
         
-        hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+        hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
         init_bdry_cndtn* getnewibc(input_map& inmap);
-        init_bdry_cndtn *getnewsrc(input_map &inmap);
-    
-    private:
-        int excpt;
+        init_bdry_cndtn *getnewsrc(input_map& inmap);
+        tri_hp_helper* getnewhelper(input_map& inmap);
         
     public:
-        void init(input_map& input, gbl *gin); 
+        void* create_global_structure() {return new global;}
         tri_hp_cd* create() { return new tri_hp_cd(); }
-        block::ctrl length(block::ctrl ctrl_message);
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
+        void init(input_map& input, void *gin); 
+        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+        void length();
+        void setup_preconditioner();
+        void rsdl(int stage);
 };
 #endif

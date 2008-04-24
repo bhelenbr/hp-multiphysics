@@ -4,7 +4,7 @@
 
 using namespace bdry_cd;
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
@@ -26,18 +26,18 @@ class tri_hp_cd_stype {
 const char tri_hp_cd_stype::names[ntypes][40] = {"plain","dirichlet","adiabatic","characteristic","mixed"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
 
-    keyword =  sbdry(bnum)->idprefix + "_cd_type";
+    keyword =  ebdry(bnum)->idprefix + "_cd_type";
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_cd_stype::getid(val.c_str());
         if (type == tri_hp_cd_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -48,23 +48,23 @@ hp_side_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 
     switch(type) {
         case tri_hp_cd_stype::plain: {
-            temp = new hp_side_bdry(*this,*sbdry(bnum));
+            temp = new hp_edge_bdry(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_cd_stype::dirichlet: {
-            temp = new dirichlet(*this,*sbdry(bnum));
+            temp = new dirichlet(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_cd_stype::adiabatic: {
-            temp = new neumann(*this,*sbdry(bnum));
+            temp = new neumann(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_cd_stype::characteristic: {
-            temp = new characteristic(*this,*sbdry(bnum));
+            temp = new characteristic(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_cd_stype::mixed_cd: {
-            temp = new mixed(*this,*sbdry(bnum));
+            temp = new mixed(*this,*ebdry(bnum));
             break;
         }
         default: {

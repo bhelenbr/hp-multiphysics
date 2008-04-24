@@ -14,8 +14,8 @@ class symbolic_ibc : public init_bdry_cndtn {
     private:
         Array<symbolic_function<2>,1> fcn;
     public:
-        FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-            return(fcn(n).Eval(x,sim::time));
+        FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
+            return(fcn(n).Eval(x,time));
         }
         void input(input_map &inmap,std::string idnty) {
             std::string keyword,val;
@@ -43,7 +43,7 @@ class symbolic_ibc : public init_bdry_cndtn {
                         fcn(n).init(inmap,nstr.str());
                     }
                     else {
-                        *sim::log << "couldn't find initial condition function\n";
+                        std:cerr << "couldn't find initial condition function\n";
                         exit(1);
                     }
                 }
@@ -72,10 +72,10 @@ init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
     int type;
 
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(idprefix) + "_ibc";
+    keyword = std::string(gbl->idprefix) + "_ibc";
     if (!inmap.get(keyword,ibcname)) {
         if (!inmap.get("ibc",ibcname)) {
-            *sim::log << "couldn't find initial condition type" << std::endl;
+            *gbl->log << "couldn't find initial condition type" << std::endl;
         }
     }
     
@@ -87,18 +87,18 @@ init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
             return(temp);
         }
         default: {
-            *sim::log << "couldn't find initial condition function " << ibcname << std::endl;
+            *gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
             exit(1);
         }
     }
 }
         
         
-class translating : public mesh_mover {
+class translating : public tri_hp_helper {
     public: 
         tri_hp &x;
         TinyVector<FLT,2> velocity;
-        translating(tri_hp &xin) :mesh_mover(xin), x(xin) {}
+        translating(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
 
         virtual void init(input_map& input, std::string idnty) {
             std::string keyword,val;
@@ -109,39 +109,37 @@ class translating : public mesh_mover {
             if (!input.get(idnty +"_velocity",velocity.data(),2)) input.getwdefault("velocity",velocity.data(),2,vdflt);
         }
         
-        block::ctrl tadvance(block::ctrl ctrl_message) {
+        void tadvance() {
             
-            if (x.coarse) return(block::stop);
+            if (x.coarse_level) return;
             
-            if (ctrl_message == block::begin) {
-                if (sim::substep == 0) x.l2error(x.gbl_ptr->ibc);
-                
-                TinyVector<FLT,2> dx;
-                for (int n=0;n<mesh::ND;++n)
-                    dx(n) = sim::cdirk[sim::substep]/sim::dti*velocity(n);
-                
-                for(int i=0;i<x.nvrtx;++i)
-                    x.vrtx(i) += dx;
-            }
+            if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
             
-            return(block::stop);
+            TinyVector<FLT,2> dx;
+            for (int n=0;n<tri_mesh::ND;++n)
+                dx(n) = x.gbl->cdirk[x.gbl->substep]/x.gbl->dti*velocity(n);
+            
+            for(int i=0;i<x.npnt;++i)
+                x.pnts(i) += dx;
+            
+            return;
         }
 };
 
-class gcl_test : public mesh_mover {
+class gcl_test : public tri_hp_helper {
     public: 
         tri_hp &x;
         Array<symbolic_function<2>,1> vel;
-        gcl_test(tri_hp &xin) :mesh_mover(xin), x(xin) {}
+        gcl_test(tri_hp &xin) : tri_hp_helper(xin), x(xin) {}
 
         virtual void init(input_map& input, std::string idnty) {
             std::string keyword,val;
             std::istringstream data;
             std::ostringstream nstr;
             
-            vel.resize(mesh::ND);
+            vel.resize(tri_mesh::ND);
             
-            for(int n=0;n<mesh::ND;++n) {
+            for(int n=0;n<tri_mesh::ND;++n) {
                 nstr.str("");
                 nstr << idnty << "_gcl_velocity" << n << std::flush;
                 if (input.find(nstr.str() +"_expression") != input.end()) {
@@ -154,70 +152,65 @@ class gcl_test : public mesh_mover {
                         vel(n).init(input,nstr.str());
                     }
                     else {
-                        *sim::log << "couldn't find mesh movement function\n";
+                        *x.gbl->log << "couldn't find mesh movement function\n";
                         exit(1);
                     }
                 }
             }
         }
         
-        block::ctrl tadvance(block::ctrl ctrl_message) {
+        void tadvance() {
+            if (x.coarse_level) return;
             
-            if (x.coarse) return(block::stop);
-            
-            if (ctrl_message == block::begin) {
-                if (sim::substep == 0) x.l2error(x.gbl_ptr->ibc);
+            if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
                 
-                TinyVector<FLT,2> dx;
-                
-                for(int i=0;i<x.nvrtx;++i) {
-                    for (int n=0;n<mesh::ND;++n)
-                        dx(n) = sim::cdirk[sim::substep]/sim::dti*vel(n).Eval(x.vrtx(i),sim::time);
-                    x.vrtx(i) += dx;
-                }
-            }
+            TinyVector<FLT,2> dx;
             
-            return(block::stop);
+            for(int i=0;i<x.npnt;++i) {
+                for (int n=0;n<tri_mesh::ND;++n)
+                    dx(n) = x.gbl->cdirk[x.gbl->substep]/x.gbl->dti*vel(n).Eval(x.pnts(i),x.gbl->time);
+                x.pnts(i) += dx;
+            }            
+            return;
         }
 };
 
-class l2_error : public mesh_mover {
+class l2_error : public tri_hp_helper {
     public: 
         tri_hp &x;
-        l2_error(tri_hp &xin) :mesh_mover(xin), x(xin) {}
-        block::ctrl tadvance(block::ctrl ctrl_message) {
+        l2_error(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
+        void tadvance() {
+            if (x.coarse_level) return;
             
-            if (x.coarse) return(block::stop);
-            
-            if (ctrl_message == block::begin && sim::substep == 0) {
-                x.l2error(x.gbl_ptr->ibc);
+            if (x.gbl->substep == 0) {
+                x.l2error(x.gbl->ibc);
             }
-            return(block::stop);
+            return;
         }
 };
 
-class print_averages : public mesh_mover {
+class print_averages : public tri_hp_helper {
     public: 
         tri_hp &x;
-        print_averages(tri_hp &xin) :mesh_mover(xin), x(xin) {}
-        block::ctrl tadvance(block::ctrl ctrl_message) {
+        print_averages(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
+        void tadvance() {
             
-            if (x.coarse) return(block::stop);
+            if (x.coarse_level) return;
             
-            if (ctrl_message == block::begin && sim::substep == 0) {
+            if (x.gbl->substep == 0) {
                 Array<FLT,1> av(x.NV+3);
                 x.integrated_averages(av);
-                *sim::log << "# area: " << av(0) << " xbar: " << av(1) << " ybar: " << av(2);
+                *x.gbl->log << "# area: " << av(0) << " xbar: " << av(1) << " ybar: " << av(2);
                 for(int n=0;n<x.NV;++n) 
-                    *sim::log << " V" << n << ": " << av(n+3);
-                *sim::log << std::endl;
+                    *x.gbl->log << " V" << n << ": " << av(n+3);
+                *x.gbl->log << std::endl;
             }
             
-            return(block::stop);
+            return;
         }
 };
 
-class mesh_mover_type {
+class helper_type {
     public:
         const static int ntypes = 4;
         enum ids {translating,print_averages,l2error,gcl_test};
@@ -229,42 +222,42 @@ class mesh_mover_type {
             return(-1);
         }
 };
-const char mesh_mover_type::names[ntypes][40] = {"translating","print_averages","l2error","gcl_test"};
+const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","gcl_test"};
 
 
-mesh_mover *tri_hp::getnewmesh_mover(input_map& inmap) {
+tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
     std::string keyword,movername;
     int type;
     
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(idprefix) + "_mesh_mover";
+    keyword = std::string(gbl->idprefix) + "_helper";
     if (!inmap.get(keyword,movername)) {
-        if (!inmap.get("mesh_mover",movername)) {
+        if (!inmap.get("tri_hp_helper",movername)) {
             type = -1;
         }
     }
     
-    type = mesh_mover_type::getid(movername.c_str());
+    type = helper_type::getid(movername.c_str());
         
     switch(type) {
-        case mesh_mover_type::translating: {
-            mesh_mover *temp = new translating(*this);
+        case helper_type::translating: {
+            tri_hp_helper *temp = new translating(*this);
             return(temp);
         }
-        case mesh_mover_type::print_averages: {
-            mesh_mover *temp = new print_averages(*this);
+        case helper_type::print_averages: {
+            tri_hp_helper *temp = new print_averages(*this);
             return(temp);
         }
-        case mesh_mover_type::l2error: {
-            mesh_mover *temp = new l2_error(*this);
+        case helper_type::l2error: {
+            tri_hp_helper *temp = new l2_error(*this);
             return(temp);
         }
-        case mesh_mover_type::gcl_test: {
-            mesh_mover *temp = new gcl_test(*this);
+        case helper_type::gcl_test: {
+            tri_hp_helper *temp = new gcl_test(*this);
             return(temp);
         }
         default: {
-            mesh_mover *temp = new mesh_mover(*this);
+            tri_hp_helper *temp = new tri_hp_helper(*this);
             return(temp);
         }
     }

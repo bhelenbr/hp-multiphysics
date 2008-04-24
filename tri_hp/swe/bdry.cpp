@@ -8,7 +8,7 @@
 
 using namespace bdry_swe;
 
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
     FLT ul,vl,hl,hr,hul,hur,hvl,hvr,hu,hv,h,w1,w2,w3;
     FLT um,vm,c,c2,lam0,lam1,lam2,mag,dxmax;
     FLT pre,qmax,fmax,alpha,alpha2,sigma;
@@ -27,7 +27,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
         
     /* FREESTREAM CONDITIONS */
     for(int n=0;n<x.NV;++n)
-        ub(n) = x.gbl_ptr->ibc->f(n,xpt);
+        ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
     
     hr = ub(x.NV-1);    
     hur =  ub(0)*norm(0) +ub(1)*norm(1);
@@ -38,14 +38,14 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
     ul = hul/hl -um;
     vl = hvl/hl -vm;
     qmax = ul*ul +vl*vl;
-    fmax = fabs(x.gbl_ptr->f0 +x.gbl_ptr->beta*xpt(1));
-    c2 = sim::g*hl;
+    fmax = fabs(x.gbl->f0 +x.gbl->beta*xpt(1));
+    c2 = x.gbl->g*hl;
     dxmax = 2.*mag/(0.25*(basis::tri(x.log2p).p +1)*(basis::tri(x.log2p).p+1));
-    alpha = x.gbl_ptr->cd*dxmax/(2*hl);
+    alpha = x.gbl->cd*dxmax/(2*hl);
     alpha2 = alpha*alpha;
     sigma = MAX((qmax -c2)/qmax,0);
-//    pre = x.gbl_ptr->ptest*(pow(dxmax*(sim::bd[0]+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(sim::bd[0]*sim::bd[0] +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
-    pre = x.gbl_ptr->ptest*(pow(dxmax*(sim::bd[0]*.5 +fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(sim::bd[0]*sim::bd[0]*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
+//    pre = x.gbl->ptest*(pow(dxmax*(gbl->bd[0]+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd[0]*gbl->bd[0] +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
+    pre = x.gbl->ptest*(pow(dxmax*(x.gbl->bd[0]*.5 +fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(x.gbl->bd[0]*x.gbl->bd[0]*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
 
     lam0 = ul;
     c = sqrt(ul*ul*(1-pre) +pre*c2);
@@ -71,7 +71,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
         }
     }
     else {
-        for(int n=mesh::ND;n<x.NV-1;++n)
+        for(int n=tri_mesh::ND;n<x.NV-1;++n)
             ub(n) = u(n);
             
         if (lam2 > 0.0) {
@@ -103,10 +103,10 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
     
     flx(x.NV-1) = ((ub(0) -ub(x.NV-1)*mv(0))*norm(0) +(ub(1) -ub(x.NV-1)*mv(1))*norm(1));
     
-    for(int n=0;n<mesh::ND;++n)
-        flx(n) = flx(x.NV-1)*ub(n)/ub(x.NV-1) +ub(x.NV-1)*ub(x.NV-1)*sim::g*norm(n)/2.;
+    for(int n=0;n<tri_mesh::ND;++n)
+        flx(n) = flx(x.NV-1)*ub(n)/ub(x.NV-1) +ub(x.NV-1)*ub(x.NV-1)*x.gbl->g*norm(n)/2.;
         
-    for(int n=mesh::ND;n<x.NV-1;++n)
+    for(int n=tri_mesh::ND;n<x.NV-1;++n)
         flx(n) = flx(x.NV-1)*ub(n);
         
     return;

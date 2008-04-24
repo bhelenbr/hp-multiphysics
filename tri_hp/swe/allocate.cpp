@@ -10,21 +10,25 @@
 #include "tri_hp_swe.h"
 #include "../hp_boundary.h"
 
- void tri_hp_swe::init(input_map& input, gbl *gin) {
-    std::string keyword;
+ void tri_hp_swe::init(input_map& input, void *gin) {
     
+    gbl = static_cast<global *>(gin);    
     tri_hp_ins::init(input,gin);
-    
-    /* Load pointer to block stuff */
-    gbl_ptr = gin;
 
-    if (!input.get(idprefix + "_f0",gbl_ptr->f0)) input.getwdefault("f0",gbl_ptr->f0,0.0);
-    if (!input.get(idprefix + "_beta",gbl_ptr->beta)) input.getwdefault("beta",gbl_ptr->beta,0.0);
-    if (!input.get(idprefix + "_cd",gbl_ptr->cd)) input.getwdefault("cd",gbl_ptr->cd,0.0);
-    if (!input.get(idprefix + "_ptest",gbl_ptr->ptest)) input.getwdefault("ptest",gbl_ptr->ptest,1.0);
+    if (!input.get(gbl->idprefix + "_f0",gbl->f0)) input.getwdefault("f0",gbl->f0,0.0);
+    if (!input.get(gbl->idprefix + "_beta",gbl->beta)) input.getwdefault("beta",gbl->beta,0.0);
+    if (!input.get(gbl->idprefix + "_cd",gbl->cd)) input.getwdefault("cd",gbl->cd,0.0);
+    if (!input.get(gbl->idprefix + "_ptest",gbl->ptest)) input.getwdefault("ptest",gbl->ptest,1.0);
 
-    gbl_ptr->bathy = getnewbathy(input);
-    gbl_ptr->bathy->input(input,idprefix);
+    gbl->bathy = getnewbathy(input);
+    gbl->bathy->input(input,gbl->idprefix);
     
+    return;
+}
+
+void tri_hp_swe::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
+    const tri_hp_swe& inmesh = dynamic_cast<const tri_hp_swe &>(in);
+    gbl = inmesh.gbl;
+    tri_hp_ins::init(in,why,sizereduce1d);
     return;
 }

@@ -32,23 +32,33 @@
 
 namespace bdry_ins {
 
-    class generic : public hp_side_bdry {
+    class generic : public hp_edge_bdry {
         protected:
             tri_hp_ins &x;
-            Array<FLT,1> fluxstorage;
             bool report_flag;
-        
         public:
-            generic(tri_hp_ins &xin, side_bdry &bin) : hp_side_bdry(xin,bin), x(xin) {mytype = "generic";}
-            generic(const generic& inbdry, tri_hp_ins &xin, side_bdry &bin) : hp_side_bdry(inbdry,xin,bin), x(xin) {}
-            generic* create(tri_hp& xin, side_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& input,void* &gbl_in) {
-                hp_side_bdry::init(input,gbl_in);
+            Array<FLT,1> total_flux,diff_flux,conv_flux;
+            FLT circumference,moment,convect,circulation;
+
+        public:
+            generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
+            generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
+                if (report_flag) {
+                    total_flux.resize(x.NV);
+                    diff_flux.resize(x.NV);
+                    conv_flux.resize(x.NV);  
+                }
+            }
+            generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& input,void* gbl_in) {
+                hp_edge_bdry::init(input,gbl_in);
                 std::string keyword = base.idprefix +"_report";
                 input.getwdefault(keyword,report_flag,false);
                 
                 if (report_flag) {
-                    fluxstorage.resize(x.NV);
+                    total_flux.resize(x.NV);
+                    diff_flux.resize(x.NV);
+                    conv_flux.resize(x.NV);            
                 }
             }
             void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
@@ -57,44 +67,44 @@ namespace bdry_ins {
 
     class neumann : public generic {
         protected:
-            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
                 
                 /* CONTINUITY */
-                flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
               
                 /* X&Y MOMENTUM */
 #ifdef INERTIALESS
-                for (int n=0;n<mesh::ND;++n)
-                    flx(n) = x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+                for (int n=0;n<tri_mesh::ND;++n)
+                    flx(n) = x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
-                for (int n=0;n<mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+                for (int n=0;n<tri_mesh::ND;++n)
+                    flx(n) = flx(x.NV-1)*u(n) +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
               
                 /* EVERYTHING ELSE */
-                 for (int n=mesh::ND;n<x.NV-1;++n)
+                 for (int n=tri_mesh::ND;n<x.NV-1;++n)
                     flx(n) = flx(x.NV-1)*u(n);
                     
                 return;
             }
         
         public:
-            neumann(tri_hp_ins &xin, side_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
-            neumann(const neumann& inbdry, tri_hp_ins &xin, side_bdry &bin) : generic(inbdry,xin,bin) {}
-            neumann* create(tri_hp& xin, side_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            block::ctrl rsdl(block::ctrl ctrl_message);
+            neumann(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
+            neumann(const neumann& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
+            neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void rsdl(int stage);
     };
 
 
 
     class inflow : public neumann {        
-        void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {
-            
-            /* CONTINUITY */
-            flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 
-            /* EVERYTHING ELSE */
+            /* CONTINUITY */
+            flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+
+            /* EVERYTHING ELSE DOESN'T MATTER */
              for (int n=0;n<x.NV-1;++n)
                 flx(n) = 0.0;
                 
@@ -102,76 +112,129 @@ namespace bdry_ins {
         }
         
         public:
-            inflow(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "inflow";}
-            inflow(const inflow& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-            inflow* create(tri_hp& xin, side_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            inflow(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "inflow";}
+            inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+            inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			
             void vdirichlet() {
                 int sind,v0;
                             
-                for(int j=0;j<base.nel;++j) {
-                    sind = base.el(j);
-                    v0 = x.sd(sind).vrtx(0);
-                    x.gbl_ptr->res.v(v0,Range(0,x.NV-2)) = 0.0;
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    v0 = x.seg(sind).pnt(0);
+                    x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
                 }
-                v0 = x.sd(sind).vrtx(1);
-                x.gbl_ptr->res.v(v0,Range(0,x.NV-2)) = 0.0;
+                v0 = x.seg(sind).pnt(1);
+                x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
             }
             
             void sdirichlet(int mode) {
                 int sind;
 
-                for(int j=0;j<base.nel;++j) {
-                    sind = base.el(j);
-                    x.gbl_ptr->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    x.gbl->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
                 }
             }
-                
-            block::ctrl tadvance(bool coarse, block::ctrl ctrl_message);
+			
+			void setvalues(init_bdry_cndtn *ibc);
+			void tadvance() {
+				hp_edge_bdry::tadvance();
+				setvalues(x.gbl->ibc);
+			};
     };
+	
+	
+	class rigid : public init_bdry_cndtn {
+		public:
+			FLT omega;
+			TinyVector<FLT,2> vel, ctr;
+			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
+				FLT r,cost,sint,v; 
+				TinyVector<FLT,2> dx;
+				
+				dx = x-ctr;
+				r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
+				cost = dx(0)/r;
+				sint = dx(1)/r;
+				if(n == 0)
+					v = -r*omega*sint +vel(0);
+				else
+					v = r*omega*cost +vel(1);
+					
+				return(v);
+			}
+			rigid() : omega(0.0), vel(0.0), ctr(0.0) {}
+	};		
     
+	class force_coupling : public inflow {
+		rigid my_ibc;
+		
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+             for (int n=0;n<x.NV;++n)
+                flx(n) = 0.0;
+            return;
+        }
+		
+		public:
+			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "force_coupling";}
+			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {}
+			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void tadvance() {hp_edge_bdry::tadvance();}
+			void update(int stage) {
+				if (!x.coarse_flag) setvalues(&my_ibc);
+			}
+			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
+			void set_ctr_rot(TinyVector<FLT,2> c) {my_ibc.ctr = c;}
+			void set_vel(TinyVector<FLT,2> v) {my_ibc.vel = v;}
+	};
+			
+	
+		
+		
     class euler : public neumann {
         protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm,  Array<FLT,1>& flx) {
+            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
                 Array<FLT,1> ub(x.NV);
                 
                 for(int n=0;n<x.NV;++n)
-                    ub(n) = x.gbl_ptr->ibc->f(n,xpt);
+                    ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
                 
-                flx(x.NV-1) = x.gbl_ptr->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+                flx(x.NV-1) = x.gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
                 
                 /* X&Y MOMENTUM */
-                for (int n=0;n<mesh::ND;++n)
+                for (int n=0;n<tri_mesh::ND;++n)
                     flx(n) = flx(x.NV-1)*ub(n) +u(x.NV-1)*norm(n);
               
                 /* EVERYTHING ELSE */
-                 for (int n=mesh::ND;n<x.NV-1;++n)
+                 for (int n=tri_mesh::ND;n<x.NV-1;++n)
                     flx(n) = flx(x.NV-1)*ub(n);
                 
                 return;
             }
         public:
-            euler(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "euler";}
-            euler(const euler& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-            euler* create(tri_hp& xin, side_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            euler(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "euler";}
+            euler(const euler& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+            euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
     };
     
     class characteristic : public neumann {
         protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx);
+            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
         public:
-            characteristic(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
-            characteristic(const characteristic& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-            characteristic* create(tri_hp& xin, side_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            characteristic(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
+            characteristic(const characteristic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+            characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
     };
     
     class symmetry : public generic {
         int dir;
         
         public:
-            symmetry(tri_hp_ins &xin, side_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
-            symmetry(const symmetry& inbdry, tri_hp_ins &xin, side_bdry &bin) : generic(inbdry,xin,bin) {}
-            symmetry* create(tri_hp& xin, side_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& input,void* &gbl_in) {
+            symmetry(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "symmetry";}
+            symmetry(const symmetry& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin), dir(inbdry.dir) {}
+            symmetry* create(tri_hp& xin, edge_bdry &bin) const {return new symmetry(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& input,void* gbl_in) {
                 generic::init(input,gbl_in);
                 std::string keyword = base.idprefix +"_dir";
                 input.getwdefault(keyword,dir,0);
@@ -180,75 +243,77 @@ namespace bdry_ins {
             void vdirichlet() {
                 int sind,v0;
                             
-                for(int j=0;j<base.nel;++j) {
-                    sind = base.el(j);
-                    v0 = x.sd(sind).vrtx(0);
-                    x.gbl_ptr->res.v(v0,dir) = 0.0;
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    v0 = x.seg(sind).pnt(0);
+                    x.gbl->res.v(v0,dir) = 0.0;
                 }
-                v0 = x.sd(sind).vrtx(1);
-                x.gbl_ptr->res.v(v0,dir) = 0.0;
+                v0 = x.seg(sind).pnt(1);
+                x.gbl->res.v(v0,dir) = 0.0;
             }
             
             void sdirichlet(int mode) {
                 int sind;
 
-                for(int j=0;j<base.nel;++j) {
-                    sind = base.el(j);
-                    x.gbl_ptr->res.s(sind,mode,dir) = 0.0;
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    x.gbl->res.s(sind,mode,dir) = 0.0;
                 }
             }
                 
-            block::ctrl tadvance(bool coarse, block::ctrl ctrl_message);
+            void tadvance();
     };
     
     class applied_stress : public neumann {
         Array<symbolic_function<2>,1> stress;
 
         protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
                 
                 /* CONTINUITY */
-                flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
               
                 FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
                 /* X&Y MOMENTUM */
 #ifdef INERTIALESS
-                for (int n=0;n<mesh::ND;++n)
-                    flx(n) = -stress(n).Eval(xpt,sim::time)*length +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+                for (int n=0;n<tri_mesh::ND;++n)
+                    flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
-                for (int n=0;n<mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,sim::time)*length +x.gbl_ptr->ibc->f(x.NV-1, xpt)*norm(n);
+                for (int n=0;n<tri_mesh::ND;++n)
+                    flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
               
                 /* EVERYTHING ELSE */
-                 for (int n=mesh::ND;n<x.NV-1;++n)
+                 for (int n=tri_mesh::ND;n<x.NV-1;++n)
                     flx(n) = flx(x.NV-1)*u(n);
                     
                 return;
             }
         public:
-            applied_stress(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
-            applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-            applied_stress* create(tri_hp& xin, side_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* &gbl_in);
+            applied_stress(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
+            applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {
+                stress.resize(tri_mesh::ND);
+                for(int n=0;n<tri_mesh::ND;++n) 
+                    stress(n).copy(inbdry.stress(n));
+            }
+            applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& inmap,void* gbl_in);
     };
     
     class surface_slave : public neumann {
-        private:
-            int excpt, excpt1, stage;
-            
         public:
-            surface_slave(tri_hp_ins &xin, side_bdry &bin) : neumann(xin,bin) {mytype = "surface_slave";}
-            surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, side_bdry &bin) : neumann(inbdry,xin,bin) {}
-            surface_slave* create(tri_hp& xin, side_bdry &bin) const {return new surface_slave(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* &gbl_in);
+            surface_slave(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "surface_slave";}
+            surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+            surface_slave* create(tri_hp& xin, edge_bdry &bin) const {return new surface_slave(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& inmap,void* gbl_in);
 
             /* FOR COUPLED DYNAMIC BOUNDARIES */
-            block::ctrl rsdl(block::ctrl ctrl_message);
-            block::ctrl update(block::ctrl ctrl_message);
+            void tadvance();
+            void rsdl(int stage);
+            void update(int stage);
                       
-            void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,vrtstride*x.NV);}
-            void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2, x.NV*vrtstride);}
+            void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
+            void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
             void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
             void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
     };
@@ -257,28 +322,26 @@ namespace bdry_ins {
     class surface : public surface_slave {
         protected:
             Array<FLT,1> ksprg;
-            Array<TinyVector<FLT,mesh::ND>,1> vug_frst;
-            Array<TinyVector<FLT,mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, vrtx)
-            Array<TinyVector<FLT,mesh::ND>,3> sdres; //!< Driving term for multigrid (log2p, side, order)
-        
-        private:
-            int mp_phase,excpt,excpt1,stage;
-                     
+            Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
+            Array<TinyVector<FLT,tri_mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
+            Array<TinyVector<FLT,tri_mesh::ND>,3> sdres; //!< Driving term for multigrid (log2p, side, order)
+            const surface *fine, *coarse;
+            
         public:
-            struct gbl {                
+            struct global {                
                 bool is_loop;
                 /* FLUID PROPERTIES */
                 FLT sigma,rho2,mu2;
 
                 /* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
-                Array<TinyVector<FLT,mesh::ND>,1> vug0;
-                Array<TinyVector<FLT,mesh::ND>,2> sug0;
+                Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;
+                Array<TinyVector<FLT,tri_mesh::ND>,2> sug0;
                 
                 /* RESIDUALS */
-                Array<TinyVector<FLT,mesh::ND>,1> vres;
-                Array<TinyVector<FLT,mesh::ND>,2> sres;
-                Array<TinyVector<FLT,mesh::ND>,1> vres0;
-                Array<TinyVector<FLT,mesh::ND>,2> sres0;
+                Array<TinyVector<FLT,tri_mesh::ND>,1> vres;
+                Array<TinyVector<FLT,tri_mesh::ND>,2> sres;
+                Array<TinyVector<FLT,tri_mesh::ND>,1> vres0;
+                Array<TinyVector<FLT,tri_mesh::ND>,2> sres0;
 #ifdef DROP
                 FLT penalty,vflux;
                 Array<FLT,1> vvolumeflux;
@@ -286,8 +349,8 @@ namespace bdry_ins {
 #endif
                 
                 /* PRECONDITIONER */
-                Array<TinyMatrix<FLT,mesh::ND,mesh::ND>,1> vdt;
-                Array<TinyMatrix<FLT,mesh::ND,mesh::ND>,1> sdt;
+                Array<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,1> vdt;
+                Array<TinyMatrix<FLT,tri_mesh::ND,tri_mesh::ND>,1> sdt;
                 Array<FLT,1> meshc;
 
 #ifdef DETAILED_MINV
@@ -295,34 +358,40 @@ namespace bdry_ins {
                 Array<FLT,5> vms;
                 Array<TinyVector<int,2*MAXP>,1> ipiv;
 #endif
-                TinyVector<FLT,mesh::ND> fadd;
-                TinyMatrix<FLT,mesh::ND,MAXP> cfl;
+                TinyVector<FLT,tri_mesh::ND> fadd;
+                TinyMatrix<FLT,tri_mesh::ND,MAXP> cfl;
                 FLT adis;
-            } *surf_gbl; 
+            } *gbl; 
 
         public:
-            surface(tri_hp_ins &xin, side_bdry &bin) : surface_slave(xin,bin) {mytype = "surface";}
-            surface(const surface& inbdry, tri_hp_ins &xin, side_bdry &bin) : surface_slave(inbdry,xin,bin) {}
-            surface* create(tri_hp& xin, side_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-
-            void init(input_map& input,void* &gbl_in); 
+            void* create_global_structure() {return new global;}
+            surface(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "surface";}
+            surface(const surface& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : surface_slave(inbdry,xin,bin) {
+                gbl = inbdry.gbl;
+                ksprg.resize(base.maxseg);
+                vug_frst.resize(base.maxseg+1);
+                vdres.resize(1,base.maxseg+1);
+                fine = &inbdry;
+            };
+            surface* create(tri_hp& xin, edge_bdry &bin) const {return new surface(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& input,void* gbl_in); 
 
             /* FOR COUPLED DYNAMIC BOUNDARIES */
-            block::ctrl tadvance(bool coarse,block::ctrl ctrl_message);
-            block::ctrl rsdl(block::ctrl ctrl_message);
+            void tadvance();
+            void rsdl(int stage);
             void maxres();
-            block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-            block::ctrl minvrt(block::ctrl ctrl_message);
-            block::ctrl update(block::ctrl ctrl_message);
-            block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum); 
+            void setup_preconditioner();
+            void minvrt();
+            void update(int stage);
+            void mg_restrict(); 
     };
     
     class hybrid_surface_levelset : public surface_slave { 
         protected:
-            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
                 
                 /* CONTINUITY */
-                flx(x.NV-1) = x.gbl_ptr->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
               
                 /* EVERYTHING ELSE */
                  for (int n=0;n<x.NV-1;++n)
@@ -330,14 +399,12 @@ namespace bdry_ins {
                     
                 return;
             }      
-        private:
-            int mp_phase,excpt,excpt1,stage;
-                     
+   
         public:
-            hybrid_surface_levelset(tri_hp_ins &xin, side_bdry &bin) : surface_slave(xin,bin) {mytype = "hybrid_surface_levelset";}
-            hybrid_surface_levelset(const hybrid_surface_levelset& inbdry, tri_hp_ins &xin, side_bdry &bin) : surface_slave(inbdry,xin,bin) {}
-            hybrid_surface_levelset* create(tri_hp& xin, side_bdry &bin) const {return new hybrid_surface_levelset(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* &gbl_in) {
+            hybrid_surface_levelset(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "hybrid_surface_levelset";}
+            hybrid_surface_levelset(const hybrid_surface_levelset& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
+            hybrid_surface_levelset* create(tri_hp& xin, edge_bdry &bin) const {return new hybrid_surface_levelset(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& inmap,void* gbl_in) {
                 std::string keyword;
                 
                 keyword = base.idprefix + "_curved";
@@ -348,8 +415,8 @@ namespace bdry_ins {
                 return;
             }
             
-            block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
-            block::ctrl rsdl(block::ctrl ctrl_message) {return(neumann::rsdl(ctrl_message));}
+            void update(int stage) {return;}
+            void rsdl(int stage) {neumann::rsdl(stage);}
 
     };
 
@@ -368,23 +435,29 @@ namespace bdry_ins {
          public:
             surface_fixed_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "surface_fixed_pt";}
             surface_fixed_pt(const surface_fixed_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), 
-                surfbdry(inbdry.surfbdry), dirstart(inbdry.dirstart), dirstop(inbdry.dirstop) {}
+                surfbdry(inbdry.surfbdry), dirstart(inbdry.dirstart), dirstop(inbdry.dirstop) {
+                if (!(surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
+                    *x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
+                    exit(1);
+                }
+            }
             surface_fixed_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_fixed_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* &gbl_in) {
+            
+            void init(input_map& inmap,void* gbl_in) {
                 std::string keyword,val;
                 std::istringstream data;
                 std::string filename;
 
                 hp_vrtx_bdry::init(inmap,gbl_in);
                 
-                if (surf = dynamic_cast<surface *>(x.hp_sbdry(base.sbdry(0)))) {
+                if (surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(0)))) {
                     surfbdry = 0;
                 }
-                else if (surf = dynamic_cast<surface *>(x.hp_sbdry(base.sbdry(1)))) {
+                else if (surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(1)))) {
                     surfbdry = 1;
                 }
                 else {
-                    *sim::log << "something's wrong neither side is a surface boundary" << std::endl;
+                    *x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
                     exit(1);
                 }
                 
@@ -395,49 +468,47 @@ namespace bdry_ins {
                 inmap.getwdefault(keyword,dirstop,1);
             }
             
-            block::ctrl rsdl(block::ctrl ctrl_message) {
-                if (ctrl_message == block::begin) {
-                    if (surfbdry == 0) {
-                        /* SET TANGENT RESIDUAL TO ZERO */
-                        surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(0) = 0.0;
-                        if (dirstop > 0) {
-                            /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
-                            x.gbl_ptr->res.v(base.v0,x.NV-1) += surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1)*x.gbl_ptr->rho;
-                            /* AND ZERO RESIDUAL */
-                            surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(1) = 0.0;
-                        }
-                    }
-                    else {
-                        /* SET TANGENT RESIDUAL TO ZERO */
-                        surf->surf_gbl->vres(0)(0) = 0.0;
-                        if (dirstop > 0) {
-                            /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
-                            x.gbl_ptr->res.v(base.v0,x.NV-1) += surf->surf_gbl->vres(0)(1)*x.gbl_ptr->rho;
-                            /* AND ZERO RESIDUAL */
-                            surf->surf_gbl->vres(0)(1) = 0.0;
-                        }
+            void rsdl(int stage) {
+                if (surfbdry == 0) {
+                    /* SET TANGENT RESIDUAL TO ZERO */
+                    surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(0) = 0.0;
+                    if (dirstop > 0) {
+                        /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
+                        x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(1)*x.gbl->rho;
+                        /* AND ZERO RESIDUAL */
+                        surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(1) = 0.0;
                     }
                 }
-                return(block::stop);
+                else {
+                    /* SET TANGENT RESIDUAL TO ZERO */
+                    surf->gbl->vres(0)(0) = 0.0;
+                    if (dirstop > 0) {
+                        /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
+                        x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(0)(1)*x.gbl->rho;
+                        /* AND ZERO RESIDUAL */
+                        surf->gbl->vres(0)(1) = 0.0;
+                    }
+                }
+                return;
             }
             
             void vdirichlet() {
                 if (surfbdry == 0) {
                     for(int n=dirstart;n<=dirstop;++n) 
-                        surf->surf_gbl->vres(x.sbdry(base.sbdry(0))->nel)(n) = 0.0;
+                        surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(n) = 0.0;
                 }
                 else {
                     for(int n=dirstart;n<=dirstop;++n) 
-                        surf->surf_gbl->vres(0)(n) = 0.0;
+                        surf->gbl->vres(0)(n) = 0.0;
                 }
             }
             
-            void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
                 if (surfbdry == 0) {
-                    x.sbdry(base.sbdry(1))->mvpttobdry(0,-1.0,pt);
+                    x.ebdry(base.ebdry(1))->mvpttobdry(0,-1.0,pt);
                 }
                 else {
-                    x.sbdry(base.sbdry(0))->mvpttobdry(x.sbdry(base.sbdry(0))->nel-1,1.0,pt);
+                    x.ebdry(base.ebdry(0))->mvpttobdry(x.ebdry(base.ebdry(0))->nseg-1,1.0,pt);
                 }
             }
     };
@@ -449,49 +520,18 @@ namespace bdry_ins {
             
         public:
             surface_periodic_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_periodic_pt";}
-            surface_periodic_pt(const surface_periodic_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin), position(inbdry.position), vertical(inbdry.vertical) {*sim::log << position << std::endl;}
+            surface_periodic_pt(const surface_periodic_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin), position(inbdry.position), vertical(inbdry.vertical) {}
             surface_periodic_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_periodic_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
             
-            void init(input_map& inmap,void* &gbl_in) {
-                bool coarse,first;
-                ostringstream nstr;
-                
+            void init(input_map& inmap,void* gbl_in) {                
                 surface_fixed_pt::init(inmap,gbl_in);
                 dirstart = 0;
                 dirstop = 0;
                 inmap.getwdefault(base.idprefix + "_vertical",vertical,true); 
-                inmap.getwdefault(x.idprefix + "_coarse",coarse,false);
-                if (!coarse) {
-                    position = x.vrtx(base.v0)(1-vertical);
-                    nstr.str("");
-                    nstr << position << std::flush;
-                    inmap.getwdefault(base.idprefix+"_first",first,true);
-                    if (first) {
-                        inmap[base.idprefix+"_first"] = "0";
-                        inmap[base.idprefix+"_prdc_pos_first"] = nstr.str();
-                    }
-                    else {
-                        inmap[base.idprefix+"_first"] = "1";
-                        inmap[base.idprefix+"_prdc_pos_second"] = nstr.str();
-                    }
-                }
-                else {
-                    if (!inmap.get(base.idprefix+"_first",first)) {
-                        *sim::log << "Something went wrong finding periodic point position" << std::endl;
-                        exit(1);
-                    }
-                    if (first) {
-                        inmap[base.idprefix+"_first"] = "0";
-                        inmap.get(base.idprefix+"_prdc_pos_first",position);
-                    }
-                    else {
-                        inmap[base.idprefix+"_first"] = "1";
-                        inmap.get(base.idprefix+"_prdc_pos_second",position);
-                    }
-                }
+                position = x.pnts(base.pnt)(1-vertical);
             }
             
-            void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
                 pt(1-vertical) = position;
             }
     };
@@ -500,16 +540,16 @@ namespace bdry_ins {
     class surface_outflow_endpt : public surface_fixed_pt {
          public:
             surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow_endpt";}
-            surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {}
+            surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin) {}
             surface_outflow_endpt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_endpt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& input,void* &gbl_in) {
+            void init(input_map& input,void* gbl_in) {
                 surface_fixed_pt::init(input,gbl_in);
                 dirstart = 0;
                 dirstop = 0;
             }
                 
             /* FOR COUPLED DYNAMIC BOUNDARIES */
-            block::ctrl rsdl(block::ctrl ctrl_message);
+            void rsdl(int stage);
     };
     
     class surface_outflow_planar : public surface_outflow_endpt {
@@ -519,9 +559,9 @@ namespace bdry_ins {
             
         public:
             surface_outflow_planar(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin) {mytype = "surface_outflow_planar";}
-            surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin), vertical(inbdry.vertical), position(inbdry.position) {}
+            surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(inbdry,xin,bin), vertical(inbdry.vertical), position(inbdry.position) {}
             surface_outflow_planar* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_planar(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* &gbl_in) {
+            void init(input_map& inmap,void* gbl_in) {
                 std::string keyword;
                 std::ostringstream nstr;
                 
@@ -532,14 +572,14 @@ namespace bdry_ins {
                      
                 keyword = base.idprefix +"_position";
                 if (!inmap.get(keyword,position)) {
-                    position = x.vrtx(base.v0)(1-vertical);
+                    position = x.pnts(base.pnt)(1-vertical);
                     nstr.str("");
                     nstr << position;
                     inmap[keyword] = nstr.str();
                 }
             }
                 
-            void mvpttobdry(TinyVector<FLT,mesh::ND> &pt) {
+            void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
                 pt(1-vertical) = position;
             }
     };
@@ -553,16 +593,14 @@ namespace bdry_ins {
             inflow_pt(const inflow_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
             inflow_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 
-            block::ctrl tadvance(block::ctrl ctrl_message) { 
-                if (ctrl_message == block::begin) {
-                    for(int n=0;n<x.NV-1;++n)
-                        x.ug.v(base.v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(base.v0));  
-                }
-                return(block::stop);
+            void tadvance() { 
+                for(int n=0;n<x.NV-1;++n)
+                    x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+                return;
             }
                                     
             void vdirichlet2d() {
-                x.gbl_ptr->res.v(base.v0,Range(0,x.NV-2)) = 0.0;
+                x.gbl->res.v(base.pnt,Range(0,x.NV-2)) = 0.0;
             }
     };
 
@@ -574,8 +612,8 @@ namespace bdry_ins {
                           /* THIS IS VERY COMPLICATED TO DO THIS WAY */
             /* FOR NOW USE PHASED SWEEPING OF BOUNDARY SIDES (NO COMMUNICATION THROUGH VERTICES) */
             /*
-            void vmatchsolution_snd(int phase, FLT *vdata) {base.vloadbuff(boundary::all,vdata,0,x.NV-2,x.NV);}
-            void vmatchsolution_rcv(int phase, FLT *vdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-2,x.NV);}
+            void pmatchsolution_snd(int phase, FLT *pdata) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,x.NV);}
+            void pmatchsolution_rcv(int phase, FLT *pdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2,x.NV);}
             */
 /*    };*/
 

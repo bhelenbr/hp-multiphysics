@@ -23,18 +23,16 @@ class tri_hp_lvlset_stype {
 const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","flow_inflow","outflow","characteristic","euler"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
-    
-    keyword =  sbdry(bnum)->idprefix + "_ins_type";
-    if (bdrydata.get(keyword,val)) {
+        if (bdrydata.get(ebdry(bnum)->idprefix + "_ins_type",val)) {
         type = tri_hp_lvlset_stype::getid(val.c_str());
         if (type == tri_hp_lvlset_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -44,23 +42,27 @@ hp_side_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 
     switch(type) {
         case tri_hp_lvlset_stype::inflow: {
-            temp = new inflow(*this,*sbdry(bnum));
+            temp = new inflow(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::flow_inflow: {
-            temp = new flow_inflow(*this,*sbdry(bnum));
+#ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
+            temp = new flow_inflow(*this,*ebdry(bnum));
+#else
+            *gbl->log << "can't use flow_inflow type with convective level-set\n";
+#endif
             break;
         }
         case tri_hp_lvlset_stype::outflow: {
-            temp = new neumann(*this,*sbdry(bnum));
+            temp = new neumann(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::characteristic: {
-            temp = new characteristic(*this,*sbdry(bnum));
+            temp = new characteristic(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::euler: {
-            temp = new euler(*this,*sbdry(bnum));
+            temp = new euler(*this,*ebdry(bnum));
             break;
         }
         default: {
@@ -71,20 +73,20 @@ hp_side_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
     return(temp);
 }
 
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVector<FLT,mesh::ND> mv, TinyVector<FLT,mesh::ND> norm, Array<FLT,1>& flx) {
+void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
     FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
     FLT s,um,v,c,den,lam0,lam1,lam2,mag,mu;
     FLT nu,gam,qmax;
     Array<FLT,1> ub(x.NV), uvp(x.NV);
     
     /* CHARACTERISTIC FAR-FIELD B.C. */  
-    rho = x.gbl_ptr->rho + (x.gbl_ptr->rho2-x.gbl_ptr->rho)*x.heavyside_if(u(2)/x.gbl_ptr->width);
-    mu = x.gbl_ptr->mu + (x.gbl_ptr->mu2-x.gbl_ptr->mu)*x.heavyside_if(u(2)/x.gbl_ptr->width);
+    rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
+    mu = x.gbl->mu + (x.gbl->mu2-x.gbl->mu)*x.heavyside_if(u(2)/x.gbl->width);
     nu = mu/rho;
     rhoi = 1./rho;
     mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
     qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
-    gam = 3.0*qmax +(0.5*mag*sim::bd[0] +2.*nu/mag)*(0.5*mag*sim::bd[0] +2.*nu/mag);
+    gam = 3.0*qmax +(0.5*mag*x.gbl->bd[0] +2.*nu/mag)*(0.5*mag*x.gbl->bd[0] +2.*nu/mag);
 
     norm(0) /= mag;
     norm(1) /= mag;
@@ -95,7 +97,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
     
     /* FREESTREAM CONDITIONS */
     for(int n=0;n<x.NV;++n)
-        ub(n) = x.gbl_ptr->ibc->f(n,xpt);
+        ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
 
     ur =  ub(0)*norm(0) +ub(1)*norm(1);
     vr = -ub(0)*norm(1) +ub(1)*norm(0);
@@ -119,12 +121,12 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
     uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
     if (lam0 > 0.0) {
         uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
-        for(int n=mesh::ND;n<x.NV-1;++n)
+        for(int n=tri_mesh::ND;n<x.NV-1;++n)
             uvp(n) = u(n);
     }
     else {
         uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-        for(int n=mesh::ND;n<x.NV-1;++n)
+        for(int n=tri_mesh::ND;n<x.NV-1;++n)
             uvp(n) = ub(n);
     }
     uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
@@ -133,91 +135,89 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,mesh::ND> xpt, TinyVec
     ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
     ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
     
-    for(int n=mesh::ND;n<x.NV-1;++n)
+    for(int n=tri_mesh::ND;n<x.NV;++n)
         ub(n) =uvp(n);
-    
-    ub(x.NV-1) =  uvp(x.NV-1);
-    
+            
     norm *= mag;
     
     flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-    
-    for(int n=0;n<mesh::ND;++n)
+    flx(x.NV-2) = flx(x.NV-1)*ub(x.NV-2);
+
+    for(int n=0;n<tri_mesh::ND;++n)
         flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
-    flx(2) = 0.0;
+        
+#ifndef CONSERVATIVE
+    flx(x.NV-2) = 0.0;
+#endif
         
     return;
 }
 
-block::ctrl flow_inflow::tadvance(bool coarse, block::ctrl ctrl_message) {
+#ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
+void flow_inflow::tadvance() {
     int j,k,m,n,v0,v1,sind,indx,info;
-    TinyVector<FLT,mesh::ND> pt;
+    TinyVector<FLT,tri_mesh::ND> pt;
     char uplo[] = "U";
-    block::ctrl state;
     
-    if (ctrl_message == block::begin) excpt1 = 0;
-    
-    if (excpt1 == 0) {
-        if ((state = hp_side_bdry::tadvance(coarse,ctrl_message)) != block::stop) return(state);
-        ++excpt1;
+    hp_edge_bdry::tadvance();
         
-        /* UPDATE BOUNDARY CONDITION VALUES */
-        for(j=0;j<base.nel;++j) {
-            sind = base.el(j);
-            v0 = x.sd(sind).vrtx(0);
-            for(n=0;n<x.NV-2;++n)
-                x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
-        }
-        v0 = x.sd(sind).vrtx(1);
+    /* UPDATE BOUNDARY CONDITION VALUES */
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
         for(n=0;n<x.NV-2;++n)
-            x.ug.v(v0,n) = x.gbl_ptr->ibc->f(n,x.vrtx(v0));
+            x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
+    }
+    v0 = x.seg(sind).pnt(1);
+    for(n=0;n<x.NV-2;++n)
+        x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
 
-        /*******************/    
-        /* SET SIDE VALUES */
-        /*******************/
-        for(j=0;j<base.nel;++j) {
-            sind = base.el(j);
-            v0 = x.sd(sind).vrtx(0);
-            v1 = x.sd(sind).vrtx(1);
-            
-            if (is_curved()) {
-                x.crdtocht1d(sind);
-                for(n=0;n<mesh::ND;++n)
-                    basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+    /*******************/    
+    /* SET SIDE VALUES */
+    /*******************/
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
+        v1 = x.seg(sind).pnt(1);
+        
+        if (is_curved()) {
+            x.crdtocht1d(sind);
+            for(n=0;n<tri_mesh::ND;++n)
+                basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+        }
+        else {
+            for(n=0;n<tri_mesh::ND;++n) {
+                basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+                
+                for(k=0;k<basis::tri(x.log2p).gpx;++k)
+                    x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
             }
-            else {
-                for(n=0;n<mesh::ND;++n) {
-                    basis::tri(x.log2p).proj1d(x.vrtx(v0)(n),x.vrtx(v1)(n),&x.crd(n)(0,0));
-                    
-                    for(k=0;k<basis::tri(x.log2p).gpx;++k)
-                        x.dcrd(n,0)(0,k) = 0.5*(x.vrtx(v1)(n)-x.vrtx(v0)(n));
-                }
+        }
+
+        if (basis::tri(x.log2p).sm) {
+            for(n=0;n<x.NV-2;++n)
+                basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
+
+            for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
+                pt(0) = x.crd(0)(0,k);
+                pt(1) = x.crd(1)(0,k);
+                for(n=0;n<x.NV-2;++n)
+                    x.res(n)(0,k) -= x.gbl->ibc->f(n,pt,x.gbl->time);
             }
+            for(n=0;n<x.NV-2;++n)
+                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
-            if (basis::tri(x.log2p).sm) {
-                for(n=0;n<x.NV-2;++n)
-                    basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
-
-                for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
-                    pt(0) = x.crd(0)(0,k);
-                    pt(1) = x.crd(1)(0,k);
-                    for(n=0;n<x.NV-2;++n)
-                        x.res(n)(0,k) -= x.gbl_ptr->ibc->f(n,pt);
-                }
-                for(n=0;n<x.NV-2;++n)
-                    basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
-                indx = sind*x.sm0;
-                for(n=0;n<x.NV-2;++n) {
-                    PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-                    for(m=0;m<basis::tri(x.log2p).sm;++m) 
-                        x.ug.s(sind,m,n) = -x.lf(n)(2+m);
-                }
+            indx = sind*x.sm0;
+            for(n=0;n<x.NV-2;++n) {
+                PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
+                for(m=0;m<basis::tri(x.log2p).sm;++m) 
+                    x.ug.s(sind,m,n) = -x.lf(n)(2+m);
             }
         }
     }
-    return(block::stop);
+    
+    return;
 }
-
+#endif
 
 

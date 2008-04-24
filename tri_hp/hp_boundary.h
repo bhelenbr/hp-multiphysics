@@ -9,26 +9,27 @@
 
 #ifndef _hp_boundary_h_
 #define _hp_boundary_h_
- 
+
+#include <blocks.h>
 #include <boundary.h>
-#include <hpbasis.h>
+#include <tri_basis.h>
 #include <myblas.h>
 
-class hp_side_bdry;
+class hp_edge_bdry;
 
-class hp_vrtx_bdry : public vgeometry_interface {
+class hp_vrtx_bdry : public vgeometry_interface<2> {
     protected:
         std::string mytype;
         tri_hp& x;
         vrtx_bdry& base;
-        static FLT dummy;
-        int excpt,excpt1;
+        FLT dummy;
         
     public:
         hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
         hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
+        virtual void* create_global_structure() {return 0;}
         virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
-        virtual void init(input_map& input,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
+        virtual void init(input_map& input,void* gbl_in) {} /**< This is to read definition data only (not solution data) */
         virtual void copy(const hp_vrtx_bdry& tgt) {}
         virtual ~hp_vrtx_bdry() {}
         
@@ -36,7 +37,7 @@ class hp_vrtx_bdry : public vgeometry_interface {
         virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
             switch(typ) {
                 case(tri_hp::text):
-                    fout << base.idprefix << " " << mytype << std::endl;
+                    fout << base.x.gbl->idprefix << " " << mytype << std::endl;
                     break;
                 default:
                     break;
@@ -61,39 +62,48 @@ class hp_vrtx_bdry : public vgeometry_interface {
         /* BOUNDARY CONDITION FUNCTIONS */
         virtual void vdirichlet() {}
         virtual void vdirichlet2d() {} //!< SPECIAL CASE OF POINT BOUNDARY CONDITION FOR 2D FIELD
-        virtual void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
-        virtual void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
+        virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
+        virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
                 
         /* FOR COUPLED DYNAMIC BOUNDARIES */
-        virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl tadvance(block::ctrl ctrl_message) {return(block::stop);}
-        virtual void calculate_unsteady_sources(bool coarse) {}
-        virtual block::ctrl rsdl(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum) {return(block::stop);} 
-        virtual block::ctrl mg_getcchng(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum) {return(block::stop);}    
+        virtual void setup_preconditioner() {}
+        virtual void tadvance() {}
+        virtual void calculate_unsteady_sources() {}
+        virtual void rsdl(int stage) {}
+        virtual void update(int stage) {}
+        virtual void mg_restrict() {} 
+        virtual void mg_prolongate() {}    
 };
 
 
-class hp_side_bdry : public sgeometry_interface {
+class hp_edge_bdry : public egeometry_interface<2> {
     public:
         std::string mytype;
         tri_hp& x;
-        side_bdry &base;
-        const hp_side_bdry *adapt_storage;
+        edge_bdry &base;
+        const hp_edge_bdry *adapt_storage;
         bool curved, coupled;
-        Array<TinyVector<FLT,mesh::ND>,2> crv;
-        TinyVector<Array<TinyVector<FLT,mesh::ND>,2>,sim::nhist+1> crvbd;
-        Array<TinyMatrix<FLT,mesh::ND,MXGP>,2> dxdt;
-        int excpt,excpt1;
+        Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
+        TinyVector<Array<TinyVector<FLT,tri_mesh::ND>,2>,sim::nhist+1> crvbd;
+        Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
 
     public:
-        hp_side_bdry(tri_hp& xin, side_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";}
-        hp_side_bdry(const hp_side_bdry &inbdry, tri_hp& xin, side_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {}
-        virtual hp_side_bdry* create(tri_hp& xin, side_bdry &bin) const {return(new hp_side_bdry(*this,xin,bin));}
-        virtual void init(input_map& input,void* &gbl_in); 
-        virtual void copy(const hp_side_bdry& tgt);
-        virtual ~hp_side_bdry() {}
+        hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";}
+        hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), curved(inbdry.curved), coupled(inbdry.coupled) {
+            if (curved && !x.coarse_level) {
+                crv.resize(base.maxseg,x.sm0);
+                for(int i=1;i<sim::nhist+1;++i)
+                    crvbd(i).resize(base.maxseg,x.sm0);
+                crvbd(0).reference(crv);
+            }
+            dxdt.resize(x.log2pmax+1,base.maxseg);
+            base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);    
+        }
+        virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
+        virtual void* create_global_structure() {return 0;}
+        virtual void init(input_map& input,void* gbl_in); 
+        virtual void copy(const hp_edge_bdry& tgt);
+        virtual ~hp_edge_bdry() {}
                 
         /* input output functions */
         virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
@@ -107,38 +117,37 @@ class hp_side_bdry : public sgeometry_interface {
         void curv_init(int tlvl = 0);
                         
         /* BOUNDARY CONDITION FUNCTIONS */
-        virtual block::ctrl rsdl(block::ctrl ctrl_message) {return(block::stop);}
         virtual void maxres() {}
         virtual void vdirichlet() {}
         virtual void sdirichlet(int mode) {}
-        virtual void vmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.vloadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
-        virtual void vmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
+        virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
+        virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
         virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
             base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
             return;
         }
         virtual void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
     
-                
         /* FOR COUPLED DYNAMIC BOUNDARIES */
-        virtual block::ctrl setup_preconditioner(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl tadvance(bool coarse, block::ctrl ctrl_message);
-        virtual void calculate_unsteady_sources(bool coarse);
-        virtual block::ctrl update(block::ctrl ctrl_message) {return(block::stop);}
-        virtual block::ctrl mg_getfres(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum) {return(block::stop);} 
-        virtual block::ctrl mg_getcchng(block::ctrl ctrl_message, Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh, int bnum) {return(block::stop);}    
-        
+        virtual void setup_preconditioner() {}
+        virtual void tadvance();
+        virtual void calculate_unsteady_sources();
+        virtual void rsdl(int stage) {}
+        virtual void update(int stage) {}
+        virtual void mg_restrict() {} 
+        virtual void mg_prolongate() {}    
+               
         /* ADAPTATION FUNCTIONS */
-        virtual void updatevdata_bdry(int bel,int endpt,hp_side_bdry *bin) {}
-        virtual void movevdata_bdry(int bel,int endpt,hp_side_bdry *bin) {}
-        virtual void updatesdata_bdry(int bel,hp_side_bdry *bin) {}
-        virtual void movesdata_bdry(int bel,hp_side_bdry *tgt) {
+        virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
+        virtual void movepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}
+        virtual void updatesdata_bdry(int bel,hp_edge_bdry *bin) {}
+        virtual void movesdata_bdry(int bel,hp_edge_bdry *tgt) {
             int sind,tgtel,step,m,n;
             
             if (!curved || !x.sm0) return;
     
-            sind = base.el(bel);
-            tgtel = tgt->x.getbdryel(tgt->x.sd(sind).tri(1));
+            sind = base.seg(bel);
+            tgtel = tgt->x.getbdryseg(tgt->x.seg(sind).tri(1));
                         
             for(step=0;step<sim::nadapt;++step) {
                 for(m=0;m<x.sm0;++m) {
@@ -152,10 +161,10 @@ class hp_side_bdry : public sgeometry_interface {
         
         /* SEARCH FUNCTIONS */
         virtual void findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const;
-        virtual void mvpttobdry(int nel, FLT psi, TinyVector<FLT,mesh::ND> &pt);
+        virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
         
         /* SOME UTILITIES */
-        block::ctrl findmax(block::ctrl ctrl_message, FLT (*fxy)(TinyVector<FLT,2> &x));
+        void findmax(FLT (*fxy)(TinyVector<FLT,2> &x));
         void findintercept(FLT (*fxy)(TinyVector<FLT,2> &x));
 };
 

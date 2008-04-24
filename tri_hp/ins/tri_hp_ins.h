@@ -16,7 +16,7 @@
 class tri_hp_ins : public tri_hp {
     public:
         /* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
-        struct gbl : public tri_hp::gbl {
+        struct global : public tri_hp::global {
             /* STABILIZATION */
             Array<FLT,2> tau;
                 
@@ -27,7 +27,7 @@ class tri_hp_ins : public tri_hp {
             /* STORAGE FOR CALCULATION OF ENERGY AND AREA */
             TinyVector<FLT,2> eanda, eanda_recv;
 
-        } *gbl_ptr;
+        } *gbl;
 
 #ifdef DROP
         /** Rigid Mesh Motion for Finding Steady Translating Solutions */
@@ -37,20 +37,21 @@ class tri_hp_ins : public tri_hp {
         FLT adis; // DISSIPATION CONSTANT
         
         hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-        hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+        hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
         init_bdry_cndtn* getnewibc(input_map& inmap);
-        mesh_mover* getnewmesh_mover(input_map& inmap);
+        tri_hp_helper* getnewhelper(input_map& inmap);
 
-    
-    private:
-        int excpt;
-        
     public:
-        void init(input_map& input, gbl *gin); 
+        void* create_global_structure() {return new global;}
         tri_hp_ins* create() { return new tri_hp_ins(); }
-        block::ctrl length(block::ctrl ctrl_message);
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-        void calculate_unsteady_sources(bool coarse);
+
+        void init(input_map& input, void *gin); 
+        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+
+        void length();
+        void setup_preconditioner();
+        void rsdl(int stage);
+        void calculate_unsteady_sources();
+                
 };
 #endif

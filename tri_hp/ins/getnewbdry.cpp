@@ -9,6 +9,7 @@
 #include "tri_hp_ins.h"
 #include "bdry_ins.h"
 #include <input_map.h>
+#include <tri_boundary.h>
 
 using namespace bdry_ins;
 
@@ -43,7 +44,7 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_ins_vtype::getid(val.c_str());
         if (type == tri_hp_ins_vtype::unknown)  {
-            *sim::log << "unknown vertex type:" << val << std::endl;
+            *gbl->log << "unknown vertex type:" << val << std::endl;
             exit(1);
         }
     }
@@ -78,11 +79,12 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
             break;
         }
     } 
+    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
     return(temp);
 }
 
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
@@ -91,9 +93,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
     public:
-        static const int ntypes = 10;
+        static const int ntypes = 11;
         enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset};
+            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset,force_coupling};
         static const char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i)
@@ -103,21 +105,21 @@ class tri_hp_ins_stype {
 };
 
 const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset"};
+    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
 
-    keyword =  sbdry(bnum)->idprefix + "_ins_type";
+    keyword =  ebdry(bnum)->idprefix + "_ins_type";
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_ins_stype::getid(val.c_str());
         if (type == tri_hp_ins_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -127,45 +129,55 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 
     switch(type) {
         case tri_hp_ins_stype::plain: {
-            temp = new generic(*this,*sbdry(bnum));
+            temp = new generic(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::inflow: {
-            temp = new inflow(*this,*sbdry(bnum));
+            temp = new inflow(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::outflow: {
-            temp = new neumann(*this,*sbdry(bnum));
+            temp = new neumann(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::characteristic: {
-            temp = new characteristic(*this,*sbdry(bnum));
+            temp = new characteristic(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::euler: {
-            temp = new euler(*this,*sbdry(bnum));
+            temp = new euler(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::symmetry: {
-            temp = new symmetry(*this,*sbdry(bnum));
+            temp = new symmetry(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::applied_stress: {
-            temp = new applied_stress(*this,*sbdry(bnum));
+            temp = new applied_stress(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::surface: {
-            temp = new surface(*this,*sbdry(bnum));
-            dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
+            if (dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))) {
+                temp = new surface(*this,*ebdry(bnum));
+                dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))->physics = temp;
+            }
+            else {
+                std::cerr << "use coupled physics for surface boundary\n";
+                exit(1);
+            }
             break;
         }
         case tri_hp_ins_stype::surface_slave: {
-            temp = new surface_slave(*this,*sbdry(bnum));
-            dynamic_cast<sgeometry_pointer *>(sbdry(bnum))->solution_data = temp;
+            temp = new surface_slave(*this,*ebdry(bnum));
+            dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))->physics = temp;
             break;
         }
         case tri_hp_ins_stype::hybrid_surface_levelset: {
-            temp = new hybrid_surface_levelset(*this,*sbdry(bnum));
+            temp = new hybrid_surface_levelset(*this,*ebdry(bnum));
+            break;
+        }
+		case tri_hp_ins_stype::force_coupling: {
+            temp = new force_coupling(*this,*ebdry(bnum));
             break;
         }
         default: {
@@ -173,6 +185,8 @@ hp_side_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
             break;
         }
     }    
+    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+
     return(temp);
 }
 

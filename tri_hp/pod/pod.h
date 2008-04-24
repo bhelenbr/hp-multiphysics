@@ -8,9 +8,6 @@
  */
 
 template<class BASE> class pod_generate : public BASE {
-    public:
-        typedef typename BASE::gbl gbl;
-
     protected:
         int nsnapshots;
         int nmodes;
@@ -19,20 +16,13 @@ template<class BASE> class pod_generate : public BASE {
         typedef typename BASE::vsi vsi;
         Array<vsi,1> modes;
         Array<FLT,1> psimatrix,psimatrix_recv;
-        
-    private:
-        int excpt;
-    
     public:
-        void init(input_map& input, gbl *gin); 
+        void init(input_map& input, void *gin); 
         pod_generate<BASE>* create() { return new pod_generate<BASE>();}
-        block::ctrl tadvance(bool coarse,block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct,Array<mesh::transfer,1> &cv_to_ft, tri_hp *fmesh);
+        void tadvance();
 };
 
 template<class BASE> class pod_simulate : public BASE {
-    public:
-        typedef typename BASE::gbl gbl;
-
     protected:
         int nmodes;
         Array<FLT,1> coeffs, rsdls, rsdls_recv;
@@ -41,17 +31,13 @@ template<class BASE> class pod_simulate : public BASE {
         Array<FLT,2> jacobian;
         Array<int,1> ipiv;
         
-    private:
-        int excpt,excpt1,modeloop;
-    
     public:
-        void init(input_map& input, gbl *gin); 
+        void init(input_map& input, void *gin); 
         pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl update(block::ctrl ctrl_message);
+        void rsdl(int stage);
+        void setup_preconditioner();
+        void update();
         FLT maxres();        
-
 };
 
 

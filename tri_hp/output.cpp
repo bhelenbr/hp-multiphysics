@@ -28,7 +28,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
     std::ostringstream nstr;
     ofstream out;
     out.setf(std::ios::scientific, std::ios::floatfield);
-    out.precision(10);
+    out.precision(4);
     
     switch(why) {
         case(block::display): {
@@ -43,17 +43,17 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                 fnmapp = namewdot +nstr.str();
                 output(fnmapp,output_type(1),i);
             }
-            if (mmovement != fixed || adapt_flag) {
+            if (mmovement != fixed || gbl->adapt_flag) {
                 namewdot = fname +".v";
-                mesh::output(fname,mesh::grid);
-                mesh::output(fname,mesh::vlength);
+                tri_mesh::output(fname,tri_mesh::grid);
+                tri_mesh::output(fname,tri_mesh::vlength);
                 for(i=1;i<sim::nadapt;++i) {
                     nstr.str("");
                     nstr << i << std::flush;
                     fnmapp = namewdot +nstr.str() +".txt";
                     out.open(fnmapp.c_str());
-                    out << nvrtx << std::endl;
-                    for (j=0;j<nvrtx;++j) 
+                    out << npnt << std::endl;
+                    for (j=0;j<npnt;++j) 
                         out << j << ':' << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
                     out.close();
                 }
@@ -74,29 +74,29 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
     int ijind[MXTM][MXTM];
     
     out.setf(std::ios::scientific, std::ios::floatfield);
-    out.precision(10);
+    out.precision(4);
                 
     switch (typ) {
         case (text):
             fnmapp = fname +".txt";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open text output file " << fnmapp;
+                *gbl->log << "couldn't open text output file " << fnmapp;
                 exit(1);
             }
             
             /* HEADER INFORMATION */
             out << "p0 = " << p0 << std::endl;
-            out << "nvrtx = " << nvrtx << ", nside = " << nside << ", ntri = " << ntri << std::endl;
+            out << "npnt = " << npnt << ", nseg = " << nseg << ", ntri = " << ntri << std::endl;
             out << "END OF HEADER" << std::endl;
 
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<NV;++n)
                     out << ugbd(tlvl).v(i,n) << '\t';
                 out << std::endl;
             }
             
-            for(i=0;i<nside;++i) {
+            for(i=0;i<nseg;++i) {
                 for(m=0;m<sm0;++m) {
                     for(n=0;n<NV;++n)
                         out << ugbd(tlvl).s(i,m,n) << '\t';
@@ -113,8 +113,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             }
 
             /* BOUNDARY INFO */
-            for(i=0;i<nsbd;++i) {
-                hp_sbdry(i)->output(out,typ,tlvl);
+            for(i=0;i<nebd;++i) {
+                hp_ebdry(i)->output(out,typ,tlvl);
             }
             
             for(i=0;i<nvbd;++i) {
@@ -128,14 +128,14 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             fnmapp = fname +".dat";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open tecplot output file " << fnmapp;
+                *gbl->log << "couldn't open tecplot output file " << fnmapp;
                 exit(1);
             }
         
-            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx+basis::tri(log2p).sm*nside+basis::tri(log2p).im*ntri << ", E = " << ntri*(basis::tri(log2p).sm+1)*(basis::tri(log2p).sm+1) << std::endl;
+            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt+basis::tri(log2p).sm*nseg+basis::tri(log2p).im*ntri << ", E = " << ntri*(basis::tri(log2p).sm+1)*(basis::tri(log2p).sm+1) << std::endl;
 
             /* VERTEX MODES */
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<ND;++n)
                     out << vrtxbd(tlvl)(i)(n) << ' ';
                 for(n=0;n<NV;++n)
@@ -145,10 +145,10 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             
             if (basis::tri(log2p).p > 1) {
                 /* SIDE MODES */
-                for(sind=0;sind<nside;++sind) {
-                    if (sd(sind).info < 0) {
-                        v0 = sd(sind).vrtx(0);
-                        v1 = sd(sind).vrtx(1);
+                for(sind=0;sind<nseg;++sind) {
+                    if (seg(sind).info < 0) {
+                        v0 = seg(sind).pnt(0);
+                        v1 = seg(sind).pnt(1);
                         for(n=0;n<ND;++n)
                             basis::tri(log2p).proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
                     }
@@ -178,9 +178,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
                         for(n=0;n<NV;++n)
                             basis::tri(log2p).proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
                             
-                        if (td(tind).info < 0) {
+                        if (tri(tind).info < 0) {
                             for(n=0;n<ND;++n)
-                                basis::tri(log2p).proj_leg(vrtxbd(tlvl)(td(tind).vrtx(0))(n),vrtxbd(tlvl)(td(tind).vrtx(1))(n),vrtxbd(tlvl)(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+                                basis::tri(log2p).proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
                         }
                         else {
                             crdtocht(tind,tlvl);
@@ -207,49 +207,49 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             for(tind=0;tind<ntri;++tind) {
 
                  /* VERTICES */
-                ijind[0][basis::tri(log2p).sm+1] = td(tind).vrtx(0);
-                ijind[0][0] = td(tind).vrtx(1);
-                ijind[basis::tri(log2p).sm+1][0] = td(tind).vrtx(2);
+                ijind[0][basis::tri(log2p).sm+1] = tri(tind).pnt(0);
+                ijind[0][0] = tri(tind).pnt(1);
+                ijind[basis::tri(log2p).sm+1][0] = tri(tind).pnt(2);
 
                 /* SIDES */
-                indx = td(tind).side(0);
-                sgn = td(tind).sign(0);
+                indx = tri(tind).seg(0);
+                sgn = tri(tind).sgn(0);
                 if (sgn < 0) {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[i+1][0] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
+                        ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p).sm -(i+1);
                 }
                 else {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[i+1][0] = nvrtx +indx*basis::tri(log2p).sm +i;
+                        ijind[i+1][0] = npnt +indx*basis::tri(log2p).sm +i;
                 }
                 
-                indx = td(tind).side(1);
-                sgn = td(tind).sign(1);
+                indx = tri(tind).seg(1);
+                sgn = tri(tind).sgn(1);
                 if (sgn > 0) {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
+                        ijind[basis::tri(log2p).sm-i][i+1] = npnt +indx*basis::tri(log2p).sm +i;
                 }
                 else {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[basis::tri(log2p).sm-i][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
+                        ijind[basis::tri(log2p).sm-i][i+1] = npnt +(indx+1)*basis::tri(log2p).sm -(i+1);
                 }
 
-                indx = td(tind).side(2);
-                sgn = td(tind).sign(2);
+                indx = tri(tind).seg(2);
+                sgn = tri(tind).sgn(2);
                 if (sgn > 0) {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[0][i+1] = nvrtx +(indx+1)*basis::tri(log2p).sm -(i+1);
+                        ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p).sm -(i+1);
                 }
                 else {
                     for(i=0;i<basis::tri(log2p).sm;++i)
-                        ijind[0][i+1] = nvrtx +indx*basis::tri(log2p).sm +i;
+                        ijind[0][i+1] = npnt +indx*basis::tri(log2p).sm +i;
                 }
     
                 /* INTERIOR VERTICES */
                 k = 0;
                 for(i=1;i<basis::tri(log2p).sm;++i) {
                     for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
-                        ijind[i][j] = nvrtx +nside*basis::tri(log2p).sm +tind*basis::tri(log2p).im +k;
+                        ijind[i][j] = npnt +nseg*basis::tri(log2p).sm +tind*basis::tri(log2p).im +k;
                         ++k;
                     }
                 }
@@ -265,27 +265,27 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             }
             out.close();
             
-            for(i=0;i<nsbd;++i)    // TEMPORARY NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
-                hp_sbdry(i)->output(*sim::log, typ);
+            for(i=0;i<nebd;++i)    // TEMPORARY NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
+                hp_ebdry(i)->output(*gbl->log, typ);
                 
             break; 
             
         case (datatank): {
 #ifdef DATATANK
             DTMutableIntArray dt_tvrtx(3,ntri);
-            DTMutableDoubleArray dt_vrtx(2,nvrtx);
+            DTMutableDoubleArray dt_vrtx(2,npnt);
 
             for (int tind=0;tind<ntri;++tind)
                 for (int j=0;j<3;++j)
-                    dt_tvrtx(j,tind) = td(tind).vrtx(j);
+                    dt_tvrtx(j,tind) = tri(tind).pnt(j);
 
-            for (int vind=0;vind<nvrtx;++vind)
+            for (int vind=0;vind<npnt;++vind)
                 for (int j=0;j<2;++j)
-                    dt_vrtx(j,vind) = vrtx(vind)(j);
+                    dt_vrtx(j,vind) = pnts(vind)(j);
                     
             dt_grid = DTTriangularGrid(dt_tvrtx,dt_vrtx);
-            DTMutableDoubleArray dt_values(nvrtx);
-            for (int vind=0;vind<nvrtx;++vind) {
+            DTMutableDoubleArray dt_values(npnt);
+            for (int vind=0;vind<npnt;++vind) {
                 dt_values1(vind) = 0.1;
                 dt_values2(vind) = 0.2;
             }
@@ -307,7 +307,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             Write(outputFile,"Var2",dt_mesh2,dt_grid_save);
             outputFile.Save("TriangularMesh2D","Seq_Var1");
 #else
-            *sim::log << "Not supported on this platform\n";
+            *gbl->log << "Not supported on this platform\n";
 #endif
             break;
         }
@@ -316,28 +316,63 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             fnmapp = fname +".dat";
             out.open(fnmapp.c_str());
             if (!out) {
-                *sim::log << "couldn't open tecplot output file " << fnmapp;
+                *gbl->log << "couldn't open tecplot output file " << fnmapp;
                 exit(1);
             }
         
-            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << nvrtx << ", E = " << ntri << std::endl;
-            for(i=0;i<nvrtx;++i) {
+            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << std::endl;
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<ND;++n)
-                    out << vrtx(i)(n) << ' ';
-                out << vlngth(i) << ' ' << log10(fscr1(i)) << std::endl;                    
+                    out << pnts(i)(n) << ' ';
+                out << lngth(i) << ' ' << log10(gbl->fltwk(i)) << std::endl;                    
             }
 
             /* OUTPUT CONNECTIVY INFO */
             out << std::endl << "#CONNECTION DATA#" << std::endl;
             
             for(tind=0;tind<ntri;++tind)
-                out << td(tind).vrtx(0)+1 << ' ' << td(tind).vrtx(1)+1 << ' ' << td(tind).vrtx(2)+1 << std::endl;
+                out << tri(tind).pnt(0)+1 << ' ' << tri(tind).pnt(1)+1 << ' ' << tri(tind).pnt(2)+1 << std::endl;
             
             break;
         }
         
+        case trunc_error: {
+            /* UTILITY ROUTINE TO OUTPUT TRUNCATION ERROR ASSUMING STORED IN FSCR1 */
+
+            fnmapp = fname +"_truncation.dat";
+            out.open(fnmapp.c_str());
+            if (!out) {
+               *gbl->log << "couldn't open tecplot output file " << fnmapp << '\n';
+               exit(1);
+            }
+
+            out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << std::endl;
+
+            /* VERTEX MODES */
+            for(i=0;i<npnt;++i) {
+              for(n=0;n<ND;++n)
+                 out << pnts(i)(n) << ' ';
+              out << gbl->fltwk(i) << '\n';                    
+            }
+
+            //   /* TO RENORMALIZE */
+            //   for(i=0;i<npnt;++i)
+            //      gbl->fltwk(i) = log10(gbl->fltwk(i)/(pnt(i).nnbor*error_target));
+
+            /* OUTPUT CONNECTIVY INFO */
+            out << std::endl << "#CONNECTION DATA#" << std::endl;
+
+            for(tind=0;tind<ntri;++tind)
+              out << tri(tind).pnt(0)+1 << ' ' << tri(tind).pnt(1)+1 << ' ' << tri(tind).pnt(2)+1 << '\n';
+
+            out.close();
+            break;
+           
+        }
+
+        
         default:
-            *sim::log << "can't output a tri_hp to that filetype" << std::endl;
+            *gbl->log << "can't output a tri_hp to that filetype" << std::endl;
             exit(1);
             break;
       }
@@ -360,24 +395,29 @@ void tri_hp::input(const std::string& fname) {
         fin.close();
         fnmapp = fname +".v";
         input_map blank;
-        mesh::input(fname,mesh::grid,1,blank);
+        tri_mesh::input(fname,tri_mesh::grid,1,blank);
         for(i=1;i<sim::nadapt;++i) {
             nstr.str("");
             nstr << i << std::flush;
             fnmapp = fname +".v" +nstr.str() +".txt";
             fin.open(fnmapp.c_str());
             if (!fin.is_open()) {
-                *sim::log << "couldn't open input file " << fnmapp << std::endl;
+                *gbl->log << "couldn't open input file " << fnmapp << std::endl;
                 exit(1);
             }
             fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
-            for (j=0;j<nvrtx;++j) {
+            for (j=0;j<npnt;++j) {
                 fin.ignore(80,':');
                 fin >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
             }
             fin.close();
         }
-    }            
+    }
+    else {
+        /* THIS IS TO MAKE SURE THAT FIXED GRID CALCULATIONS DON'T GET MESSED UP BY TIME STEP EXTRAPOLATION */
+        vrtxbd(1)(Range(0,npnt-1)) = vrtxbd(0)(Range(0,npnt-1));
+    }
+            
     
     for(i=0;i<sim::nadapt;++i) {
         nstr.str("");
@@ -406,7 +446,7 @@ void tri_hp::input(const std::string& fname) {
             fnapp = filename +".txt";
             in.open(fnapp.c_str());
             if (!in) {
-                *sim::log << "couldn't open text input file " << fnapp << std::endl;
+                *gbl->log << "couldn't open text input file " << fnapp << std::endl;
                 exit(1);
             }
             
@@ -422,12 +462,12 @@ void tri_hp::input(const std::string& fname) {
             } while (buffer[0] != 'E');  // END OF HEADER
             in.ignore(80,'\n');
 
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 for(n=0;n<NV;++n)
                     in >> ugbd(tlvl).v(i,n);
             }
             
-            for(i=0;i<nside;++i) {
+            for(i=0;i<nseg;++i) {
                 for(m=0;m<(pmin-1);++m) {
                     for(n=0;n<NV;++n)
                         in >> ugbd(tlvl).s(i,m,n);
@@ -467,8 +507,8 @@ void tri_hp::input(const std::string& fname) {
             
 
             /* BOUNDARY INFO */
-            for(i=0;i<nsbd;++i)
-                hp_sbdry(i)->input(in,typ,tlvl);
+            for(i=0;i<nebd;++i)
+                hp_ebdry(i)->input(in,typ,tlvl);
                 
             for(i=0;i<nvbd;++i)
                 hp_vbdry(i)->input(in,typ,tlvl);
@@ -481,12 +521,12 @@ void tri_hp::input(const std::string& fname) {
             fnapp = filename +".dat";
             in.open(fnapp.c_str());
             if (!in) {
-                *sim::log << "couldn't open tecplot input file " << fnapp << std::endl;
+                *gbl->log << "couldn't open tecplot input file " << fnapp << std::endl;
                 exit(1);
             }
             in.ignore(80,'\n');
 
-            for(i=0;i<nvrtx;++i) {
+            for(i=0;i<npnt;++i) {
                 in >> fltskip >> fltskip;
                 for(n=0;n<NV;++n)
                     in >> ugbd(tlvl).v(i,n);
@@ -508,8 +548,8 @@ void tri_hp::input(const std::string& fname) {
                 exit(1);
             }
                 
-            for(sind=0;sind<nside;++sind) {
-                if (sd(sind).info < 0) {
+            for(sind=0;sind<nseg;++sind) {
+                if (seg(sind).info < 0) {
                     ugtouht1d(sind,tlvl);
                     for(n=0;n<NV;++n)
                         basis::tri(log2p).proj1d_leg(&uht(n)(0),&u(n)(0,0));
@@ -553,12 +593,12 @@ void tri_hp::input(const std::string& fname) {
                             ugbd(tlvl).s(sind,m,n) = -u(n)(0,1+m);
                     }
                     
-                    bnum = getbdrynum(sd(sind).tri(1));
-                    indx = getbdryel(sd(sind).tri(1));
+                    bnum = getbdrynum(seg(sind).tri(1));
+                    indx = getbdryseg(seg(sind).tri(1));
                     for(n=0;n<ND;++n) {
                         GETRS(trans,basis::tri(log2p).sm,1,matrix[0],MXTM,ipiv,&crd(n)(0,1),MXTM,info);
                         for(m=0;m<basis::tri(log2p).sm;++m)
-                            hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n) = -crd(n)(0,1+m);
+                            hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n) = -crd(n)(0,1+m);
                     }
                 }
             }
@@ -613,7 +653,7 @@ void tri_hp::input(const std::string& fname) {
             break;
                     
         default:
-            *sim::log << "can't input a tri_hp from that filetype" << std::endl;
+            *gbl->log << "can't input a tri_hp from that filetype" << std::endl;
             exit(1);
             break;
     }

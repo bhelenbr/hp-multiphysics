@@ -12,7 +12,7 @@
 
 using namespace bdry_swe;
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
@@ -34,17 +34,17 @@ class tri_hp_swe_stype {
 const char tri_hp_swe_stype::names[ntypes][40] = {"wall","characteristic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
+hp_edge_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
-    keyword =  sbdry(bnum)->idprefix + "_swe_type";    
+    keyword =  ebdry(bnum)->idprefix + "_swe_type";    
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_swe_stype::getid(val.c_str());
         if (type == tri_hp_swe_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -54,11 +54,11 @@ hp_side_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
 
     switch(type) {
 		case tri_hp_swe_stype::wall: {
-            temp = new wall(*this,*sbdry(bnum));
+            temp = new wall(*this,*ebdry(bnum));
             break;
         }	
         case tri_hp_swe_stype::characteristic: {
-            temp = new characteristic(*this,*sbdry(bnum));
+            temp = new characteristic(*this,*ebdry(bnum));
             break;
         }	
         default: {

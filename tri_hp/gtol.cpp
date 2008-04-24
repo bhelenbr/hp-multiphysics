@@ -18,7 +18,7 @@
     /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
     /* VERTICES */    
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<NV; ++n)
             uht(n)(i) = ug.v(indx,n);
     }
@@ -27,8 +27,8 @@
     /* SIDES */
     cnt = 3;
     for(i=0;i<3;++i) {
-        sind = td(tind).side(i);
-        sign = td(tind).sign(i);
+        sind = tri(tind).seg(i);
+        sign = tri(tind).sgn(i);
         msgn = 1;
         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<NV; ++n)
@@ -62,7 +62,7 @@
     /* THIS IS FOR FLOW VARIABLES ON ANY MESH */
     /* VERTICES */    
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<NV; ++n)
             uht(n)(i) = ug.v(indx,n);
     }
@@ -70,8 +70,8 @@
     /* SIDES */
     cnt = 3;
     for(i=0;i<3;++i) {
-        sind = td(tind).side(i);
-        sign = td(tind).sign(i);
+        sind = tri(tind).seg(i);
+        sign = tri(tind).sgn(i);
         msgn = 1;
         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<NV; ++n)
@@ -102,7 +102,7 @@
      int sign, msgn;
     
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<NV; ++n)
             uht(n)(i) = ug.v(indx,n);
     }
@@ -110,8 +110,8 @@
     /* SIDES */
     cnt = 3;
     for(i=0;i<3;++i) {
-        sind = td(tind).side(i);
-        sign = td(tind).sign(i);
+        sind = tri(tind).seg(i);
+        sign = tri(tind).sgn(i);
         msgn = 1;
         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<NV; ++n)
@@ -130,7 +130,7 @@
      vsi &ug = ugbd(tlvl);
     
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<NV; ++n)
             uht(n)(i) = ug.v(indx,n);
     }
@@ -138,8 +138,8 @@
     /* SIDES */
     cnt = 3;
     for(i=0;i<3;++i) {
-        sind = td(tind).side(i);
-        sign = td(tind).sign(i);
+        sind = tri(tind).seg(i);
+        sign = tri(tind).sgn(i);
         msgn = 1;
         for (m = 0; m < basis::tri(log2p).sm; ++m) {
             for(n=0; n<NV; ++n)
@@ -156,8 +156,8 @@
  void tri_hp::ugtouht1d(int sind) {
     int m,n,v0,v1;
     
-    v0 = sd(sind).vrtx(0);
-    v1 = sd(sind).vrtx(1);
+    v0 = seg(sind).pnt(0);
+    v1 = seg(sind).pnt(1);
     for(n=0;n<NV;++n) {
         uht(n)(0) = ug.v(v0,n);
         uht(n)(1) = ug.v(v1,n);
@@ -174,8 +174,8 @@
     int m,n,v0,v1;
     vsi &ug = ugbd(tlvl);
     
-    v0 = sd(sind).vrtx(0);
-    v1 = sd(sind).vrtx(1);
+    v0 = seg(sind).pnt(0);
+    v1 = seg(sind).pnt(1);
     for(n=0;n<NV;++n) {
         uht(n)(0) = ug.v(v0,n);
         uht(n)(1) = ug.v(v1,n);
@@ -193,9 +193,9 @@
     
     /* VERTICES */    
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<ND; ++n)
-            cht(n,i) = vrtx(indx)(n);
+            cht(n,i) = pnts(indx)(n);
     }
 
     if (basis::tri(log2p).sm == 0) return;
@@ -203,8 +203,8 @@
     /* SIDES */
     cnt = 3;
     for (i=0; i<3;++i) {    
-        sind = td(tind).side(i);
-        if (sd(sind).tri(1) >= 0) {
+        sind = tri(tind).seg(i);
+        if (seg(sind).tri(1) >= 0) {
             for(m=0;m<basis::tri(log2p).sm;++m) {
                 for(n=0;n<ND;++n)
                     cht(n,cnt) = 0.0;
@@ -212,12 +212,12 @@
             }
         }
         else {
-            bnum = getbdrynum(sd(sind).tri(1));
-            indx = getbdryel(sd(sind).tri(1));
-            if (hp_sbdry(bnum)->is_curved()) {
+            bnum = getbdrynum(seg(sind).tri(1));
+            indx = getbdryseg(seg(sind).tri(1));
+            if (hp_ebdry(bnum)->is_curved()) {
                 for (m = 0; m < basis::tri(log2p).sm; ++m) {
                     for(n=0; n<ND; ++n)
-                        cht(n,cnt) = hp_sbdry(bnum)->crds(indx,m,n);
+                        cht(n,cnt) = hp_ebdry(bnum)->crds(indx,m,n);
                     ++cnt;
                 }
             }
@@ -239,7 +239,7 @@
         
     /* VERTICES */    
     for (i=0; i<3; ++i) {
-        indx = td(tind).vrtx(i);
+        indx = tri(tind).pnt(i);
         for(n=0; n<ND; ++n)
             cht(n,i) = vrtxbd(tlvl)(indx)(n);
     }
@@ -249,8 +249,8 @@
     /* SIDES */
     cnt = 3;
     for (i=0; i<3;++i) {    
-        sind = td(tind).side(i);
-        if (sd(sind).tri(1) >= 0) {
+        sind = tri(tind).seg(i);
+        if (seg(sind).tri(1) >= 0) {
             for(m=0;m<basis::tri(log2p).sm;++m) {
                 for(n=0;n<ND;++n)
                     cht(n,cnt) = 0.0;
@@ -258,12 +258,12 @@
             }
         }
         else {
-            bnum = getbdrynum(sd(sind).tri(1));
-            indx = getbdryel(sd(sind).tri(1));
-            if (hp_sbdry(bnum)->is_curved()) {
+            bnum = getbdrynum(seg(sind).tri(1));
+            indx = getbdryseg(seg(sind).tri(1));
+            if (hp_ebdry(bnum)->is_curved()) {
                 for (m = 0; m < basis::tri(log2p).sm; ++m) {
                     for(n=0; n<ND; ++n)
-                        cht(n,cnt) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);
+                        cht(n,cnt) = hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n);
                     ++cnt;
                 }
             }
@@ -283,25 +283,25 @@
  void tri_hp::crdtocht1d(int sind) {
     int m,n,bnum,indx,v0,v1;
     
-    v0 = sd(sind).vrtx(0);
-    v1 = sd(sind).vrtx(1);
+    v0 = seg(sind).pnt(0);
+    v1 = seg(sind).pnt(1);
     for(n=0;n<ND;++n) {
-        cht(n,0) = vrtx(v0)(n);
-        cht(n,1) = vrtx(v1)(n);
+        cht(n,0) = pnts(v0)(n);
+        cht(n,1) = pnts(v1)(n);
     }
     
-    if (sd(sind).tri(1) >= 0) {
+    if (seg(sind).tri(1) >= 0) {
         for(m=0;m<basis::tri(log2p).sm;++m)
             for(n=0;n<ND;++n) 
                 cht(n,m+2) = 0.0;
     }
     else {
-        bnum = getbdrynum(sd(sind).tri(1));
-        indx = getbdryel(sd(sind).tri(1));
-        if (hp_sbdry(bnum)->is_curved()) {
+        bnum = getbdrynum(seg(sind).tri(1));
+        indx = getbdryseg(seg(sind).tri(1));
+        if (hp_ebdry(bnum)->is_curved()) {
             for(m=0;m<basis::tri(log2p).sm;++m)
                 for(n=0;n<ND;++n) 
-                    cht(n,m+2) = hp_sbdry(bnum)->crds(indx,m,n);
+                    cht(n,m+2) = hp_ebdry(bnum)->crds(indx,m,n);
         }
         else {
             for(m=0;m<basis::tri(log2p).sm;++m)
@@ -316,25 +316,25 @@
  void tri_hp::crdtocht1d(int sind,int tlvl) {
     int m,n,bnum,indx,v0,v1;
     
-    v0 = sd(sind).vrtx(0);
-    v1 = sd(sind).vrtx(1);
+    v0 = seg(sind).pnt(0);
+    v1 = seg(sind).pnt(1);
     for(n=0;n<ND;++n) {
         cht(n,0) = vrtxbd(tlvl)(v0)(n);
         cht(n,1) = vrtxbd(tlvl)(v1)(n);
     }
     
-    if (sd(sind).tri(1) >= 0) {
+    if (seg(sind).tri(1) >= 0) {
         for(m=0;m<basis::tri(log2p).sm;++m)
             for(n=0;n<ND;++n) 
                 cht(n,m+2) = 0.0;
     }
     else {
-        bnum = getbdrynum(sd(sind).tri(1));
-        indx = getbdryel(sd(sind).tri(1));
-        if (hp_sbdry(bnum)->is_curved()) {
+        bnum = getbdrynum(seg(sind).tri(1));
+        indx = getbdryseg(seg(sind).tri(1));
+        if (hp_ebdry(bnum)->is_curved()) {
             for(m=0;m<basis::tri(log2p).sm;++m)
                 for(n=0;n<ND;++n) {
-                    cht(n,m+2) = hp_sbdry(bnum)->crdsbd(tlvl,indx,m,n);                    
+                    cht(n,m+2) = hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n);                    
                 }
         }
         else {
@@ -352,7 +352,7 @@
     
     /* VERTEX MODES */
     for (m=0; m<3; ++m) {
-        gindx = td(tind).vrtx(m);
+        gindx = tri(tind).pnt(m);
         for(n=0;n<NV;++n)
             g.v(gindx,n) += lf(n)(m);
     }
@@ -362,8 +362,8 @@
         /* SIDE MODES */
         indx = 3;
         for(i=0;i<3;++i) {
-            sind = td(tind).side(i);
-            sgn = td(tind).sign(i);
+            sind = tri(tind).seg(i);
+            sgn = tri(tind).sgn(i);
             msgn = 1;
             for (m = 0; m < basis::tri(log2p).sm; ++m) {
                 for(n=0;n<NV;++n)

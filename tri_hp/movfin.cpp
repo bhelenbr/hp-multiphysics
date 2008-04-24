@@ -1,103 +1,73 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-block::ctrl tri_hp::mg_getcchng(block::ctrl ctrl_message,Array<mesh::transfer,1> &fv_to_ct, Array<mesh::transfer,1> &cv_to_ft, tri_hp *cmesh) {
+
+//#define DEBUG
+
+void tri_hp::mg_prolongate() {
     int i,j,ind,tind;
-    block::ctrl state;
-    int stop = 1;
-            
-    if (ctrl_message == block::begin) {
-        excpt = 0;
-        if(cmesh == this) {
-            excpt = -1;
-            ++log2p;
-            if (log2p == log2pmax) coarse = false;
-            return(block::stop);
-        }
+    int last_phase, mp_phase;
+    
+    if(!coarse_level) {
+        ++log2p;
+        if (log2p == log2pmax) coarse_flag = false;
+        return;
     }
         
-    switch (excpt) {
-        case(0): {
-            if (ctrl_message != block::advance1) {
-                if (mmovement == coupled_deformable) {
-                    state = r_mesh::mg_getcchng(ctrl_message,fv_to_ct,cv_to_ft,cmesh);
-                    if (state != block::stop) return(state);
-                }
-                return(block::advance1);
-            }
-            ++excpt;
-            ctrl_message = block::begin;
-        }
+    if (mmovement == coupled_deformable) {
+        r_tri_mesh::mg_prolongate();
+    }
 
-        case(1): {
-            if (ctrl_message != block::advance1) {
-                /* TRANFER COUPLED BOUNDARY UPDATES */
-                state = block::stop;
-                for(i=0;i<nsbd;++i)
-                    state &= hp_sbdry(i)->mg_getcchng(ctrl_message, fv_to_ct, cv_to_ft, cmesh, i);
-                if (state != block::stop) return(state);
-                return(block::advance1);
-            }
-            ++excpt;
-        }
+    for(i=0;i<nebd;++i)
+        hp_ebdry(i)->mg_prolongate();
             
-        case(2): {
-            /* DETERMINE CORRECTIONS ON COARSE MESH    */    
-            cmesh->vug_frst(Range(0,cmesh->nvrtx-1),Range::all()) -= cmesh->ug.v(Range(0,cmesh->nvrtx-1),Range::all());
-    
-            /* LOOP THROUGH FINE VERTICES    */
-            /* TO DETERMINE CHANGE IN SOLUTION */    
-            for(i=0;i<nvrtx;++i) {
-                tind = fv_to_ct(i).tri;
+    /* CALCULATE CORRECTIONS */
+    vug_frst(Range(0,npnt-1),Range::all()) -= ug.v(Range(0,npnt-1),Range::all());
 
-                gbl_ptr->res.v(i,Range::all()) = 0.0;
-                
-                for(j=0;j<3;++j) {
-                    ind = cmesh->td(tind).vrtx(j);
-                    gbl_ptr->res.v(i,Range::all()) -= fv_to_ct(i).wt(j)*cmesh->vug_frst(ind,Range::all());
-                }
-            }
-            ++excpt;
-            mp_phase = -1;
-            ctrl_message = block::stay;
-        }
-            
-        case(3): {
-            /* SEND COMMUNICATION PACKETS  */ 
-            if (ctrl_message == block::stay) {
-                ++mp_phase;
+#ifdef DEBUG
+    *gbl->log << vug_frst(Range(0,npnt-1),Range::all());
+#endif
 
-                switch(mp_phase%3) {
-                    case(0):
-                        for(i=0;i<nsbd;++i)
-                            sbdry(i)->vloadbuff(boundary::partitions,(FLT *) gbl_ptr->res.v.data(),0,NV-1,NV);
-                            
-                        for(i=0;i<nsbd;++i) 
-                            sbdry(i)->comm_prepare(boundary::partitions,mp_phase/3,boundary::symmetric);
-                        
-                        return(block::stay);
-                    case(1):
-                        for(i=0;i<nsbd;++i) 
-                            sbdry(i)->comm_exchange(boundary::partitions,mp_phase/3,boundary::symmetric);
-                        return(block::stay);
-                    case(2):
-                        stop = 1;
-                        for(i=0;i<nsbd;++i) {
-                            stop &= sbdry(i)->comm_wait(boundary::partitions,mp_phase/3,boundary::symmetric);
-                            sbdry(i)->vfinalrcv(boundary::partitions,mp_phase/3,boundary::symmetric,boundary::average,(FLT *) gbl_ptr->res.v.data(),0,NV-1,NV);
-                        }
-                        return(static_cast<block::ctrl>(stop));
-                }
-            }
-            ++excpt;
-        }
-        case(4): {
-            /* ADD CORRECTION */
-            ug.v(Range(0,nvrtx-1),Range::all()) += gbl_ptr->res.v(Range(0,nvrtx-1),Range::all());      
-            ++excpt;             
+    /* LOOP THROUGH FINE VERTICES    */
+    /* TO DETERMINE CHANGE IN SOLUTION */   
+    tri_hp *fmesh = dynamic_cast<tri_hp *>(fine);
+    int fnvrtx = fmesh->npnt;
+    for(i=0;i<fnvrtx;++i) {
+        tind = fmesh->ccnnct(i).tri;
+
+        gbl->res.v(i,Range::all()) = 0.0;
+        
+        for(j=0;j<3;++j) {
+            ind = tri(tind).pnt(j);
+            gbl->res.v(i,Range::all()) -= fmesh->ccnnct(i).wt(j)*vug_frst(ind,Range::all());
         }
     }
-    return(block::stop);
+    
+#ifdef DEBUG
+    *gbl->log << gbl->res.v(Range(0,fnvrtx-1),Range::all());
+#endif
+    
+    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+        for(i=0;i<nebd;++i)
+            fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) gbl->res.v.data(),0,NV-1,NV);
+
+        for(i=0;i<nebd;++i) 
+            fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+            
+        for(i=0;i<nebd;++i) 
+            fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+            
+        last_phase = true;
+        for(i=0;i<nebd;++i) {
+            last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+            fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::average,(FLT *) gbl->res.v.data(),0,NV-1,NV);
+        }
+    }
+
+    /* ADD CORRECTION */
+    fmesh->ug.v(Range(0,fnvrtx-1),Range::all()) += gbl->res.v(Range(0,fnvrtx-1),Range::all());      
+
+    return;
 }
     
     

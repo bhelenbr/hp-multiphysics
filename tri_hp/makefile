@@ -92,7 +92,7 @@ OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm -lpth
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
@@ -130,10 +130,10 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 CPPFLAGS += $(DEFINES)
 
 hp: dirs $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
 
 hp_mpi: dirs $(OBJ)
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh_mpi $(LIB)
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins

@@ -10,39 +10,23 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
- void tri_hp_buoyancy::init(input_map& input, gbl *gin) {
-    std::string keyword;
-    bool adapt_storage;
-    bool coarse;
-    
-    keyword = idprefix + "_nvariable";
-    input[keyword] = "4";
-    
+ void tri_hp_buoyancy::init(input_map& input, void *gin) {
+    gbl = static_cast<global *>(gin);
+    input[gbl->idprefix + "_nvariable"] = "4";
     tri_hp_ins::init(input,gin);
     
-    /* Load pointer to block stuff */
-    gbl_ptr = gin;
+    if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
+    gbl->D(2) = gbl->kcond;
+    if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
     
-    keyword = idprefix + "_adapt_storage";
-    input.getwdefault(keyword,adapt_storage,false);
-    if (adapt_storage) return;
-    
-    keyword = idprefix + "_coarse";
-    input.getwdefault(keyword,coarse,false);
-    if (coarse) return;
-    
-    if (!input.get(idprefix + "_conductivity",gbl_ptr->kcond)) input.getwdefault("conductivity",gbl_ptr->kcond,0.7*gbl_ptr->mu);
-    gbl_ptr->D(2) = gbl_ptr->kcond;
-    if (!input.get(idprefix + "_cp",gbl_ptr->cp)) input.getwdefault("cp",gbl_ptr->cp,1.0);
-    
-    if (input.find(idprefix+"_rhovsT_expression") != input.end()) {
-        gbl_ptr->rhovsT.init(input,idprefix+"_rhovsT");
+    if (input.find(gbl->idprefix+"_rhovsT_expression") != input.end()) {
+        gbl->rhovsT.init(input,gbl->idprefix+"_rhovsT");
     } 
     else if (input.find("rhovsT_expression") != input.end()){
-        gbl_ptr->rhovsT.init(input,"rhovsT");
+        gbl->rhovsT.init(input,"rhovsT");
     }
     else {
-        *sim::log << "couldn't find rhovsT equation for density\n";
+        *gbl->log << "couldn't find rhovsT equation for density\n";
         exit(1);
     }
 
@@ -50,27 +34,36 @@
     return;
 }
 
+void tri_hp_buoyancy::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
+    const tri_hp_buoyancy& inmesh = dynamic_cast<const tri_hp_buoyancy &>(in);
+    gbl = inmesh.gbl;
+    tri_hp_ins::init(in,why,sizereduce1d);
+    return;
+}
+
+
+
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
-void tri_hp_buoyancy::calculate_unsteady_sources(bool coarse) {
+void tri_hp_buoyancy::calculate_unsteady_sources() {
     int i,j,n,tind;
     FLT lrho;
         
     for (log2p=0;log2p<=log2pmax;++log2p) {
         for(tind=0;tind<ntri;++tind) {
-            if (td(tind).info > -1) {
+            if (tri(tind).info > -1) {
                 crdtocht(tind,1);
                 for(n=0;n<ND;++n)
                     basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
             }
             else {
                 for(n=0;n<ND;++n)
-                    basis::tri(log2p).proj(vrtxbd(1)(td(tind).vrtx(0))(n),vrtxbd(1)(td(tind).vrtx(1))(n),vrtxbd(1)(td(tind).vrtx(2))(n),&crd(n)(0,0),MXGP);
+                    basis::tri(log2p).proj(vrtxbd(1)(tri(tind).pnt(0))(n),vrtxbd(1)(tri(tind).pnt(1))(n),vrtxbd(1)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
                 for(i=0;i<basis::tri(log2p).gpx;++i) {
                     for(j=0;j<basis::tri(log2p).gpn;++j) {
                         for(n=0;n<ND;++n) {
-                            dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(td(tind).vrtx(1))(n) -vrtxbd(1)(td(tind).vrtx(0))(n));
-                            dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(td(tind).vrtx(2))(n) -vrtxbd(1)(td(tind).vrtx(0))(n));
+                            dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(1))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
+                            dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(2))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
                         }
                     }
                 }
@@ -82,11 +75,11 @@ void tri_hp_buoyancy::calculate_unsteady_sources(bool coarse) {
 
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                 for(j=0;j<basis::tri(log2p).gpn;++j) {    
-                    cjcb(i,j) = -sim::bd[0]*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
-                    lrho = gbl_ptr->rhovsT.Eval(u(2)(i,j));                    
+                    cjcb(i,j) = -gbl->bd[0]*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+                    lrho = gbl->rhovsT.Eval(u(2)(i,j));                    
                     for(n=0;n<NV-2;++n)
                         dugdt(log2p,tind,n)(i,j) = lrho*u(n)(i,j)*cjcb(i,j);
-                    dugdt(log2p,tind,NV-2)(i,j) = lrho*gbl_ptr->cp*u(NV-2)(i,j)*cjcb(i,j);
+                    dugdt(log2p,tind,NV-2)(i,j) = lrho*gbl->cp*u(NV-2)(i,j)*cjcb(i,j);
                     dugdt(log2p,tind,NV-1)(i,j) = lrho*cjcb(i,j);
 
                     for(n=0;n<ND;++n)

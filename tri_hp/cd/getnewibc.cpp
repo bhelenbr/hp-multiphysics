@@ -82,7 +82,7 @@ FLT df1d(int n, FLT x, FLT y) {
     class zero_src : public init_bdry_cndtn {
         private:
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
                 return(0.0);
             }
             void input(input_map &inmap,std::string idnty) {}
@@ -95,8 +95,8 @@ FLT df1d(int n, FLT x, FLT y) {
             Array<FLT,2> a;
             Array<FLT,2> spd;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
-                return(c(n)*pow(x(0)-spd(n,0)*sim::time,a(n,0))*pow(x(1)-spd(n,1)*sim::time,a(n,1)));
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
+                return(c(n)*pow(x(0)-spd(n,0)*time,a(n,0))*pow(x(1)-spd(n,1)*time,a(n,1)));
             }
             void input(input_map &inmap,std::string idnty) {
                 std::string keyword,val;
@@ -146,12 +146,11 @@ FLT df1d(int n, FLT x, FLT y) {
     };
 
     class soi_src : public init_bdry_cndtn {
-
-         private:
-            double xl,xr,yt,yb,c;
-
+        tri_hp_cd &x;
+        
          public:
-             FLT f(int n, TinyVector<FLT,mesh::ND> x){
+            double xl,xr,yt,yb,c;
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time){
 
                 
                 if( x(0) >= xl && x(0) <= xr && x(1) <= yt && x(1) >= yb )		//xdl < xdr < xgl < xj < xgr < xsl < xsr
@@ -160,30 +159,84 @@ FLT df1d(int n, FLT x, FLT y) {
                     return 0;
 
              }
+             
+            soi_src(tri_hp_cd& xin) : x(xin) {}
 
-
-             void input(input_map &blockdata,std::string idnty) {
-                 std::string keyword,val;
-                 std::istringstream data;
-                
-                keyword = idnty+"_xl";
-                blockdata.getwdefault(keyword,xl,0.68);
-                
-                keyword = idnty+"_xr";
-                blockdata.getwdefault(keyword,xr,0.7);
-
-                keyword = idnty+"_yt";
-                blockdata.getwdefault(keyword,yt,0.0);
-
-                keyword = idnty+"_yb";
-                blockdata.getwdefault(keyword,yb,-0.07);
-                
-                keyword = idnty+"_constant";
-                blockdata.getwdefault(keyword,c,0.41);
-
-             }
+            void input(input_map &blockdata,std::string idnty); 
 
     };
+    
+    class source_changer : public tri_hp_helper {
+        protected:
+            tri_hp_cd &x;
+            FLT delta_c;
+            int interval;
+        public:
+            soi_src *src;
+
+        public:
+            source_changer(tri_hp_cd& xin) : tri_hp_helper(xin), x(xin) {}
+            
+            void init(input_map& input, std::string idnty) {
+                std::string keyword, val;
+                keyword = idnty + "_delta_c";
+                if (!input.get(keyword,delta_c)) {
+                    input.getwdefault("delta_c",delta_c,0.0);
+                }
+                input.getwdefault("parameter_interval",interval,1);
+            }
+            
+            tri_hp_helper* create(tri_hp& xin) { return new source_changer(dynamic_cast<tri_hp_cd&>(xin));}            
+
+            void tadvance() {
+                if (x.coarse_level) return;
+            
+                if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
+                    src->c += delta_c;
+                    *x.gbl->log << "new source strength is " << src->c << std::endl;
+                }            
+                return;
+            }
+    };
+    
+    void soi_src::input(input_map &blockdata,std::string idnty) {
+        std::string keyword,val;
+        std::istringstream data;
+        
+        keyword = idnty+"_xl";
+        blockdata.getwdefault(keyword,xl,0.68);
+        
+        keyword = idnty+"_xr";
+        blockdata.getwdefault(keyword,xr,0.7);
+
+        keyword = idnty+"_yt";
+        blockdata.getwdefault(keyword,yt,0.0);
+
+        keyword = idnty+"_yb";
+        blockdata.getwdefault(keyword,yb,-0.07);
+        
+        keyword = idnty+"_constant";
+        blockdata.getwdefault(keyword,c,0.41);
+        
+        if (source_changer *sptr = dynamic_cast<source_changer *>(x.helper)) {
+            sptr->src = this;
+        }
+     }
+    
+    class helper_type {
+        public:
+            const static int ntypes = 1;
+            enum ids {source_changer};
+            const static char names[ntypes][40];
+            static int getid(const char *nin) {
+                int i;
+                for(i=0;i<ntypes;++i) 
+                    if (!strcmp(nin,names[i])) return(i);
+                return(-1);
+            }
+    };
+    const char helper_type::names[ntypes][40] = {"source_changer"};
+
     
     class src_type {
         public:
@@ -207,10 +260,10 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(input_map& inmap) {
     int type;
 
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(idprefix) + "_ibc";
+    keyword = std::string(gbl->idprefix) + "_ibc";
     if (!inmap.get(keyword,ibcname)) {
         if (!inmap.get("ibc",ibcname)) {
-            *sim::log << "couldn't find initial condition type" << std::endl;
+            *gbl->log << "couldn't find initial condition type" << std::endl;
         }
     }
     type = ibc_cd::ibc_type::getid(ibcname.c_str());
@@ -228,10 +281,10 @@ init_bdry_cndtn *tri_hp_cd::getnewsrc(input_map& inmap) {
     int type;
 
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(idprefix) + "_src";
+    keyword = std::string(gbl->idprefix) + "_src";
     if (!inmap.get(keyword,ibcname)) {
         if (!inmap.get("src",ibcname)) {
-            *sim::log << "couldn't find source type" << std::endl;
+            *gbl->log << "couldn't find source type" << std::endl;
         }
     }
     type = ibc_cd::src_type::getid(ibcname.c_str());
@@ -245,9 +298,34 @@ init_bdry_cndtn *tri_hp_cd::getnewsrc(input_map& inmap) {
         case(ibc_cd::src_type::power):
             return(new ibc_cd::power_src);
         case(ibc_cd::src_type::soi):
-            return(new ibc_cd::soi_src);
+            return(new ibc_cd::soi_src(*this));
         default: {
             return(new ibc_cd::zero_src);
+        }
+    }
+}
+
+tri_hp_helper *tri_hp_cd::getnewhelper(input_map& inmap) {
+    std::string keyword,helpername;
+    int type;
+    
+    /* FIND INITIAL CONDITION TYPE */
+    keyword = std::string(gbl->idprefix) + "_helper";
+    if (!inmap.get(keyword,helpername)) {
+        if (!inmap.get("helper",helpername)) {
+            type = -1;
+        }
+    }
+    
+    type = ibc_cd::helper_type::getid(helpername.c_str());
+        
+    switch(type) {
+        case ibc_cd::helper_type::source_changer: {
+            tri_hp_helper *temp = new ibc_cd::source_changer(*this);
+            return(temp);
+        }
+        default: {
+            return(tri_hp::getnewhelper(inmap));
         }
     }
 }

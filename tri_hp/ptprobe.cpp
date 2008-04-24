@@ -16,8 +16,8 @@
     FLT psi;
     int sind;
     
-    hp_sbdry(bnum)->findandmovebdrypt(xp,sind,psi);
-    sind = sbdry(bnum)->el(sind);
+    hp_ebdry(bnum)->findandmovebdrypt(xp,sind,psi);
+    sind = ebdry(bnum)->seg(sind);
     ugtouht1d(sind,tlvl);  
     basis::tri(log2p).ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
 }
@@ -31,7 +31,7 @@
     getwgts(wgt);
     
     if (tind < 0) {
-        *sim::log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
+        *gbl->log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
         tind = abs(tind);
     }
 
@@ -39,7 +39,7 @@
     s = wgt(0)*2 -1.0;
     r = wgt(2)*2 -1.0;
     
-    if (td(tind).info < 0) {
+    if (tri(tind).info < 0) {
         basis::tri(log2p).ptvalues_rs(r,s);
         return;
     }
@@ -70,7 +70,7 @@
     s = wgt(0)*2 -1.0;
     r = wgt(2)*2 -1.0;
     
-    if (td(tind).info >= 0) {
+    if (tri(tind).info >= 0) {
         /* DEAL WITH CURVED SIDES */
         crdtocht(tind);
         
@@ -90,26 +90,28 @@
             r += dr;
             s += ds;
             if (iter++ > 100) {
-                *sim::log << "#Warning: max iterations for curved triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+                *gbl->log << "#Warning: max iterations for curved triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
                 std::ostringstream fname;
-                fname << idprefix << "_maxiter" << sim::time;
-                mesh::output(fname.str().c_str(),mesh::grid);
+                fname << gbl->idprefix << "_maxiter" << gbl->tstep;
+                tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
                 /* TRIANGLE COORDINATES */    
                 s = wgt(0)*2 -1.0;
                 r = wgt(2)*2 -1.0;
-                *sim::log  << "#Warning: this was the first guess " << r << ' ' << s << ' ' << '\n';
+                *gbl->log  << "#Warning: this was the first guess " << r << ' ' << s << ' ' << '\n';
                 break;
             }
         } while (fabs(dr) +fabs(ds) > roundoff);
         
         if (r < -1 || r > 1 || s < -1 || s > 1) {
-            *sim::log << "#Warning: point outside triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+            *gbl->log << "#Warning: point outside triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
         }
         /* need to do this because ptprobe_bdry only calculates boundary function */
+        basis::tri(log2p).ptvalues_rs(r,s);
+
         return;
     }
     else if (tind1 < 0) {
-        *sim::log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
+        *gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
     }
         
     /* need to do this because ptprobe_bdry only calculates boundary function */

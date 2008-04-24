@@ -12,7 +12,7 @@
 
 using namespace bdry_ps;
 
-/** \brief Helper object for side_bdry 
+/** \brief Helper object for edge_bdry 
  *
  * \ingroup boundary
  * Contains list of all side_bdys's by name 
@@ -34,17 +34,17 @@ class tri_hp_ps_stype {
 const char tri_hp_ps_stype::names[ntypes][40] = {"plain","dirichlet","neumann","friction_wall"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-hp_side_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
+hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
     std::istringstream data;
     int type;          
-    hp_side_bdry *temp;  
+    hp_edge_bdry *temp;  
     
-    keyword =  sbdry(bnum)->idprefix + "_ps_type";
+    keyword =  ebdry(bnum)->idprefix + "_ps_type";
     if (bdrydata.get(keyword,val)) {
         type = tri_hp_ps_stype::getid(val.c_str());
         if (type == tri_hp_ps_stype::unknown)  {
-            *sim::log << "unknown side type:" << val << std::endl;
+            *gbl->log << "unknown side type:" << val << std::endl;
             exit(1);
         }
     }
@@ -54,19 +54,19 @@ hp_side_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
     
     switch(type) {
         case tri_hp_ps_stype::plain: {
-            temp = new hp_side_bdry(*this,*sbdry(bnum));
+            temp = new hp_edge_bdry(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ps_stype::dirichlet: {
-            temp = new dirichlet(*this,*sbdry(bnum));
+            temp = new dirichlet(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ps_stype::neumann: {
-            temp = new neumann(*this,*sbdry(bnum));
+            temp = new neumann(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ps_stype::friction_wall: {
-            temp = new friction_wall(*this,*sbdry(bnum));  // TEMPORARY NOT WORKING YET
+            temp = new friction_wall(*this,*ebdry(bnum));  // TEMPORARY NOT WORKING YET
             break;
         }
         default: {

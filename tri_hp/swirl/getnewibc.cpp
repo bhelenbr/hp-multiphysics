@@ -15,7 +15,7 @@ namespace ibc_swirl {
         private:
             FLT omega;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
                 switch(n) {
                     case(0):
                         return(0.0);
@@ -43,7 +43,7 @@ namespace ibc_swirl {
         private:
             FLT omega,speed;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
                 switch(n) {
                     case(0):
                         return(x(0)*speed/2);
@@ -75,7 +75,7 @@ namespace ibc_swirl {
         private:
             FLT omega,epsilon;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				double R,H,A,B,C,D;
 				R=1.0;
 				H=1.75;
@@ -122,7 +122,7 @@ namespace ibc_swirl {
         private:
             FLT w,H;
         public:
-            FLT f(int n, TinyVector<FLT,mesh::ND> x) {
+            FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
                 switch(n) {
                     case(0):
                         return(0.0);
@@ -175,10 +175,10 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(idprefix) + "_ibc";
+	keyword = std::string(gbl->idprefix) + "_ibc";
 	if (!inmap.get(keyword,ibcname)) {
 		if (!inmap.get("ibc",ibcname)) {
-			*sim::log << "couldn't find initial condition type" << std::endl;
+			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}
 	

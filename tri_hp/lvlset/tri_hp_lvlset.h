@@ -13,26 +13,31 @@
 #include "../ins/tri_hp_ins.h"
 #include <blocks.h>
 
+/* DIFFERENT WAYS OF DOING LEVEL-SET */
+// #define CONSERVATIVE
+#define NONCONSERVATIVE
+// #define LOCALIZED_WITH_DISTANCE_FUNCTION
+
 class tri_hp_lvlset : public tri_hp_ins {
     public:
-        struct gbl : public tri_hp_ins::gbl {
+        struct global : public tri_hp_ins::global {
             /* PHYSICAL CONSTANTS */
             FLT sigma, width;
             FLT rho2, mu2;
 
-        } *gbl_ptr;
-        hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+        } *gbl;
+        hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
-    
-    private:
-        int excpt;
-        
     public:
-        void init(input_map& input, gbl *gin); 
+        void* create_global_structure() {return new global;}
         tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-        void calculate_unsteady_sources(bool coarse);
+        
+        void init(input_map& input, void *gin);  
+        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+
+       void setup_preconditioner();
+        void rsdl(int stage);
+        void calculate_unsteady_sources();
         
         FLT heavyside(FLT phidw) {
             FLT onemphi2 = (1-phidw*phidw);
@@ -49,8 +54,8 @@ class tri_hp_lvlset : public tri_hp_ins {
         }
         
         FLT delta(FLT phidw) {
-            return(693./512./gbl_ptr->width*pow(1.-phidw*phidw,5));
-            // return(0.5/gbl_ptr->width*(1.+cos(M_PI*phidw)));
+            return(693./512./gbl->width*pow(1.-phidw*phidw,5));
+            // return(0.5/gbl->width*(1.+cos(M_PI*phidw)));
         }
         
         FLT heavyside_if(FLT phidw) {

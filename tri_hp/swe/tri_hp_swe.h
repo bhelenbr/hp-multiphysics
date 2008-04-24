@@ -15,7 +15,7 @@
 
 class tri_hp_swe : public tri_hp_ins {
     public:
-        struct gbl : public tri_hp_ins::gbl {
+        struct global : public tri_hp_ins::global {
         
             /* PHYSICAL CONSTANTS */
             FLT f0, beta, cd, ptest;
@@ -23,20 +23,21 @@ class tri_hp_swe : public tri_hp_ins {
             /* BATHYMETRY DATA */
             init_bdry_cndtn *bathy;
             
-        } *gbl_ptr;
+        } *gbl;
 
         init_bdry_cndtn* getnewbathy(input_map& inmap);
-		hp_side_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(input_map& inmap);
-    
-    private:
-        int excpt;
-        
+
     public:
-        void init(input_map& input, gbl *gin); 
+        void* create_global_structure() {return new global;}
         tri_hp_swe* create() { return new tri_hp_swe(); }
-        block::ctrl setup_preconditioner(block::ctrl ctrl_message);
-        block::ctrl rsdl(block::ctrl ctrl_message, int stage=sim::NSTAGE);
-        void calculate_unsteady_sources(bool coarse) {tri_hp::calculate_unsteady_sources(coarse);}
+        
+        void init(input_map& input, void *gin);  
+        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+
+        void setup_preconditioner();
+        void rsdl(int stage);
+        void calculate_unsteady_sources() {tri_hp::calculate_unsteady_sources();}
 };
 #endif
