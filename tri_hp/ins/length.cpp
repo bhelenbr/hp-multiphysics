@@ -69,7 +69,7 @@ void tri_hp_ins::length() {
                 v -= mesh_ref_vel(1);
 #endif
                 ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1))/gbl->rho;// TEMPORARY
-                sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
+                sum = pow(distance2(v0,v1),-basis::tri(log2p).p/2)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
                 gbl->fltwk(v0) += sum;
                 gbl->fltwk(v1) += sum;
             }                            
@@ -88,7 +88,7 @@ void tri_hp_ins::length() {
                 v -= mesh_ref_vel(1);
 #endif
                 ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1))/gbl->rho;// TEMPORARY;
-                sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
+                sum = pow(distance2(v0,v1),-basis::tri(log2p).p/2)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
                 gbl->fltwk(v0) += sum;
                 gbl->fltwk(v1) += sum;
             }
@@ -145,8 +145,8 @@ void tri_hp_ins::length() {
     }
 
     for(i=0;i<npnt;++i) {
-        gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
-        lngth(i) /= gbl->fltwk(i);        
+        lngth(i) = gbl->error_target*pow(gbl->fltwk(i)/(norm*pnt(i).nnbor),-1./(basis::tri(log2p).p-1+ND/2.));
+//        lngth(i) = gbl->fltwk(i);        
 //                lngth(i) *= 2.0;  // For testing
 
 #ifdef THREELAYER

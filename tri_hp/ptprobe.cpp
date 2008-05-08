@@ -90,7 +90,7 @@
             r += dr;
             s += ds;
             if (iter++ > 100) {
-                *gbl->log << "#Warning: max iterations for curved triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+                *gbl->log << "#Warning: max iterations for curved triangle " << tind1 << "from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
                 std::ostringstream fname;
                 fname << gbl->idprefix << "_maxiter" << gbl->tstep;
                 tri_mesh::output(fname.str().c_str(),tri_mesh::grid);

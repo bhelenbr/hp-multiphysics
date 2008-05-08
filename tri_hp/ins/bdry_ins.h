@@ -187,6 +187,19 @@ namespace bdry_ins {
 			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
 			void set_ctr_rot(TinyVector<FLT,2> c) {my_ibc.ctr = c;}
 			void set_vel(TinyVector<FLT,2> v) {my_ibc.vel = v;}
+			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
+				inflow::input(fin,typ,tlvl);
+				if (typ == tri_hp::text) {
+					fin >> my_ibc.omega >> my_ibc.vel >> my_ibc.ctr;
+				}
+			}
+			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
+				inflow::output(fout,typ,tlvl);
+				if (typ == tri_hp::text) {
+					fout << my_ibc.omega << ' ' << my_ibc.vel << ' ' << my_ibc.ctr << '\n';
+				}
+			}
+
 	};
 			
 	

@@ -650,10 +650,10 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
                     input.getwdefault("dthetadt0",w_d,0.0);
 					
                 if (!input.get(x.gbl->idprefix +"_k_linear",k_linear)) 
-                    input.getwdefault("k_linear",k_linear,4.0);
+                    input.getwdefault("k_linear",k_linear,1.0);
 													
 				if (!input.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
-                    input.getwdefault("k_torsion",k_torsion,8.0);
+                    input.getwdefault("k_torsion",k_torsion,1.0);
 	
 				if (!input.get(x.gbl->idprefix +"_mass",mass)) 
                     input.getwdefault("mass",mass,1.0);

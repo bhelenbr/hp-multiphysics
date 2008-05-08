@@ -49,10 +49,13 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 template<class BASE> void pod_generate<BASE>::tadvance() {
     int i,j,k,l,n,tind,info;
     int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
+	Array<FLT,1> low_noise_dot;
     std::string filename,keyword,linebuff;
     std::ostringstream nstr;
     std::istringstream instr;
     FLT cjcb;
+	
+	if (BASE::gbl->substep != 0) return;
     
     BASE::tadvance(); 
 
@@ -64,6 +67,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     
     psimatrix.resize(nsnapshots*nsnapshots);
     psimatrix_recv.resize(nsnapshots*nsnapshots);
+	low_noise_dot.resize(ntri);
     
     /* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
     psimatrix = 0.0;
@@ -107,15 +111,26 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
                 for(n=0;n<BASE::NV;++n)
                     basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
                 
+				FLT tmp_store = 0.0;
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
                         cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
                         for(n=0;n<BASE::NV;++n) {
-                            psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
                         }
                     }
                 }
+				low_noise_dot(tind) = tmp_store;
             }
+			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+			int halfcount,remainder;
+			while (oldhalfcount > 1) {
+			for (remainder=ntri % 2, halfcount = ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+				for (tind=0;tind<halfcount;++tind) 
+					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+			}
+			psimatrix(psi1dcounter) = low_noise_dot(0);
             ++psi1dcounter;
         }	
         BASE::ugbd(0).v.reference(ugstore.v);
@@ -249,6 +264,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
     psimatrix = 0.0;
     psimatrix_recv = 0.0;
+	psi1dcounter=0.0;
     for (k=0;k<nsnapshots;++k) {
         /* LOAD SNAPSHOT */
         nstr.str("");
