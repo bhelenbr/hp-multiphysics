@@ -1,0 +1,40 @@
+OBJ = spline.o
+
+CPPFLAGS = -I${HOME}/Codes/include/ -I${HOME}/Packages/include/
+
+### Begin machine dependent
+
+## Darwin:
+## Machine specific for Darwin
+#AR = libtool
+#ARFLAGS = -o
+#CPPFLAGS += -O3
+
+## Linux:
+##  Machine specific for Linux
+#CXX=icpc #(cares)
+#CXX=g++3 #(shelob)
+CPPFLAGS += -O3
+
+## IRIX64:
+#CPPFLAGS += -Ofast=IP30  #(sauter)
+#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
+#CPPFLAGS += -Ofast=IPrk5 #(origin)
+
+## Aix:
+## Machine specific for Jupiter
+#CPPFLAGS += -O3
+
+### End machine dependent
+
+all: libspline.a splinetest
+
+libspline.a: $(OBJ)
+	$(AR) $(ARFLAGS) $@ $(OBJ)
+	mv -f libspline.a $(HOME)/Codes/lib/
+	cp -f spline.h $(HOME)/Codes/include/
+
+splinetest: $(OBJ) main.o
+	${CXX} -o $@ main.o -L$(HOME)/Codes/lib -lspline -lm
+
+$(OBJ): spline.h spline_impl.h
