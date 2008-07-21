@@ -1,0 +1,9 @@
+# THIS IS A COMMENT
+log2p: 2
+cfls: 1, 3, 5
+mesh: /Users/helenbrk/Codes/grids/KOVA/kova
+dx: 0.04 log2p 99.99
+# AND SO IS THIS
+itercrsn: 37
+prefix.matching_block: matchname.log2p
+matchname.log2p: 3
