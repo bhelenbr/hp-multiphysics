@@ -1,5 +1,5 @@
 OBJ = initialize.o intgrt.o intgrt1d.o proj.o \
-proj1d.o ptvalues.o hpprobe.o
+proj1d.o ptvalues.o probe.o
 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 DEFINES = -Df2cFortran
@@ -41,14 +41,14 @@ LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 
 CPPFLAGS += $(DEFINES)
 
-all: tri_basis libbasis.a 
+all: tri_basis libtri_basis.a 
 
 tri_basis: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIB)
 
-libbasis.a: $(OBJ)
+libtri_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libbasis.a $(HOME)/Codes/lib/
+	mv -f libtri_basis.a $(HOME)/Codes/lib/
 	cp -f tri_basis.h $(HOME)/Codes/include/
 
 $(OBJ): tri_basis.h
