@@ -121,7 +121,7 @@ class tri_hp : public r_tri_mesh  {
             TinyVector<FLT,MXGP> cfl;
             
         } *gbl;
-        virtual init_bdry_cndtn* getnewibc(input_map& inmap);
+        virtual init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
         virtual tri_hp_helper* getnewhelper(input_map& inmap);
 
         /* FUNCTIONS FOR MOVING GLOBAL TO LOCAL */
@@ -155,6 +155,7 @@ class tri_hp : public r_tri_mesh  {
         /* Input / Output functions */
         enum filetype {tecplot, text, binary, adapt_diagnostic, auxiliary, trunc_error};
         TinyVector<filetype,3> output_type;
+		filetype reload_type;
         void input(const std::string &name);
         void input(const std::string &name, filetype type, int tlvl = 0);
         
