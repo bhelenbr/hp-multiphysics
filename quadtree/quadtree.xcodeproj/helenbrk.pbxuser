@@ -1,6 +1,7 @@
 // !$*UTF8*$!
 {
 	08FB7793FE84155DC02AAC07 /* Project object */ = {
+		activeArchitecture = ppc;
 		activeBuildConfigurationName = Deployment;
 		activeExecutable = 6FFC0D4705AE0B7900A78095 /* quadtree */;
 		activeTarget = 6FD8B0140865BC3F005A8B60 /* quad */;
@@ -32,7 +33,7 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					595,
+					606,
 					20,
 					103,
 					43,
@@ -90,8 +91,8 @@
 				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
 				PBXFileTableDataSourceColumnWidthsKey = (
 					20,
-					290,
-					363,
+					604,
+					60,
 					20,
 					65,
 					43,
@@ -107,7 +108,7 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 204401786;
+			PBXPerProjectTemplateStateSaveDate = 240349585;
 			PBXPrepackagedSmartGroups_v2 = (
 				{
 					PBXTransientLocationAtTop = bottom;
@@ -545,54 +546,97 @@
 				PBXModuleWindowStatusBarHidden = YES;
 				RubberWindowFrame = "460 581 745 464 0 0 1600 1178 ";
 			};
-			PBXWorkspaceStateSaveDate = 204401786;
+			PBXWorkspaceStateSaveDate = 240349585;
 		};
 		perUserProjectItems = {
-			6F0A48A00B650D270014F7D2 = 6F0A48A00B650D270014F7D2 /* PBXTextBookmark */;
-			6F456DB508664AEE00E9E549 = 6F456DB508664AEE00E9E549 /* PBXTextBookmark */;
-			6F456DB708664AEE00E9E549 = 6F456DB708664AEE00E9E549 /* PBXTextBookmark */;
+			6F0C781E0E4CC5D800920C8A = 6F0C781E0E4CC5D800920C8A /* PBXTextBookmark */;
+			6F0C78770E4CCAC400920C8A = 6F0C78770E4CCAC400920C8A /* PBXTextBookmark */;
+			6F0C78C00E4CD2EB00920C8A = 6F0C78C00E4CD2EB00920C8A /* PBXTextBookmark */;
+			6F0C78C10E4CD2EB00920C8A = 6F0C78C10E4CD2EB00920C8A /* PBXTextBookmark */;
+			6F0C78C20E4CD2EB00920C8A = 6F0C78C20E4CD2EB00920C8A /* PBXTextBookmark */;
+			6F0C78C30E4CD2EB00920C8A = 6F0C78C30E4CD2EB00920C8A /* PBXTextBookmark */;
+			6F3920C80DC17CA300B5C521 = 6F3920C80DC17CA300B5C521 /* PBXTextBookmark */;
 			6F7AEB520838C96500BCEA95 = 6F7AEB520838C96500BCEA95 /* PBXTextBookmark */;
 			6F7AEB5E0838D26900BCEA95 = 6F7AEB5E0838D26900BCEA95 /* PBXTextBookmark */;
 			6F7AEB600838D26900BCEA95 = 6F7AEB600838D26900BCEA95 /* PBXTextBookmark */;
 			6FAA589D085E788E0081E42D = 6FAA589D085E788E0081E42D /* PBXTextBookmark */;
 			6FAA589E085E788E0081E42D = 6FAA589E085E788E0081E42D /* PBXTextBookmark */;
-			6FCF90DD0A954BA7005AE260 = 6FCF90DD0A954BA7005AE260 /* PBXTextBookmark */;
-			6FD9FC600B9692D70061DCB5 = 6FD9FC600B9692D70061DCB5 /* PBXTextBookmark */;
-			6FD9FC610B9692D70061DCB5 = 6FD9FC610B9692D70061DCB5 /* PBXTextBookmark */;
+			6FAEC7C30E5371AB00FA473E /* PBXTextBookmark */ = 6FAEC7C30E5371AB00FA473E /* PBXTextBookmark */;
+			6FAEC7C40E5371AB00FA473E /* PBXTextBookmark */ = 6FAEC7C40E5371AB00FA473E /* PBXTextBookmark */;
 		};
 		sourceControlManager = 6F9EDD9E056D74D5001A7791 /* Source Control */;
 		userBuildSettings = {
 		};
 	};
-	6F0A48A00B650D270014F7D2 /* PBXTextBookmark */ = {
+	6F0C781E0E4CC5D800920C8A /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = F51211000190489701990B20 /* quadtree.h */;
-		name = "quadtree.h: nearpt";
-		rLen = 0;
-		rLoc = 2144;
+		fRef = F51210FF0190489701990B20 /* quad.cpp */;
+		name = "quad.cpp: 21";
+		rLen = 153;
+		rLoc = 506;
 		rType = 0;
-		vrLen = 1076;
-		vrLoc = 891;
-	};
-	6F456DB508664AEE00E9E549 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = F512110701904AE101990B20 /* main.cpp */;
-		name = "main.cpp: 92";
-		rLen = 934;
-		rLoc = 2150;
-		rType = 0;
-		vrLen = 690;
+		vrLen = 660;
 		vrLoc = 0;
 	};
-	6F456DB708664AEE00E9E549 /* PBXTextBookmark */ = {
+	6F0C78770E4CCAC400920C8A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F51211000190489701990B20 /* quadtree.h */;
+		name = "quadtree.h: 55";
+		rLen = 7;
+		rLoc = 1212;
+		rType = 0;
+		vrLen = 1495;
+		vrLoc = 923;
+	};
+	6F0C78C00E4CD2EB00920C8A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F512110701904AE101990B20 /* main.cpp */;
+		name = "main.cpp: 105";
+		rLen = 0;
+		rLoc = 2551;
+		rType = 0;
+		vrLen = 1182;
+		vrLoc = 2317;
+	};
+	6F0C78C10E4CD2EB00920C8A /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
 		fRef = F5129161033258B801990B69 /* quad_impl.h */;
-		name = "quad_impl.h: 226";
+		name = "quad_impl.h: 35";
 		rLen = 0;
-		rLoc = 5475;
+		rLoc = 812;
 		rType = 0;
-		vrLen = 964;
-		vrLoc = 6589;
+		vrLen = 1143;
+		vrLoc = 217;
+	};
+	6F0C78C20E4CD2EB00920C8A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F512110701904AE101990B20 /* main.cpp */;
+		name = "main.cpp: 105";
+		rLen = 0;
+		rLoc = 2551;
+		rType = 0;
+		vrLen = 1182;
+		vrLoc = 2317;
+	};
+	6F0C78C30E4CD2EB00920C8A /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F5129161033258B801990B69 /* quad_impl.h */;
+		name = "quad_impl.h: 35";
+		rLen = 0;
+		rLoc = 812;
+		rType = 0;
+		vrLen = 1611;
+		vrLoc = 4612;
+	};
+	6F3920C80DC17CA300B5C521 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F5440D5202465FF801990B20 /* makefile */;
+		name = "makefile: 1";
+		rLen = 729;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 620;
+		vrLoc = 0;
 	};
 	6F7AEB520838C96500BCEA95 /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
@@ -629,8 +673,9 @@
 		fallbackIsa = XCSourceControlManager;
 		isSCMEnabled = 1;
 		scmConfiguration = {
+			repositoryName = "My Repository";
 		};
-		scmType = scm.cvs;
+		scmType = scm.subversion;
 	};
 	6F9EDD9F056D74D5001A7791 /* Code sense */ = {
 		isa = PBXCodeSenseManager;
@@ -651,43 +696,33 @@
 		fRef = F5129161033258B801990B69 /* quad_impl.h */;
 		name = reinit;
 		rLen = 6;
-		rLoc = 3629;
+		rLoc = 3619;
 		rType = 0;
 		vrLen = 853;
 		vrLoc = 3004;
 	};
-	6FCF90DD0A954BA7005AE260 /* PBXTextBookmark */ = {
+	6FAEC7C30E5371AB00FA473E /* PBXTextBookmark */ = {
 		isa = PBXTextBookmark;
-		fRef = F51210FF0190489701990B20 /* quad.cpp */;
-		name = "quad.cpp: 28";
+		fRef = F5129161033258B801990B69 /* quad_impl.h */;
+		name = "quad_impl.h: 35";
 		rLen = 0;
-		rLoc = 644;
+		rLoc = 812;
 		rType = 0;
-		vrLen = 644;
-		vrLoc = 0;
+		vrLen = 1611;
+		vrLoc = 4612;
+	};
+	6FAEC7C40E5371AB00FA473E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = F5129161033258B801990B69 /* quad_impl.h */;
+		name = "quad_impl.h: 35";
+		rLen = 0;
+		rLoc = 812;
+		rType = 0;
+		vrLen = 1611;
+		vrLoc = 4612;
 	};
 	6FD8B0140865BC3F005A8B60 /* quad */ = {
 		activeExec = 0;
-	};
-	6FD9FC600B9692D70061DCB5 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = F5440D5202465FF801990B20 /* makefile */;
-		name = "makefile: 3";
-		rLen = 0;
-		rLoc = 49;
-		rType = 0;
-		vrLen = 649;
-		vrLoc = 79;
-	};
-	6FD9FC610B9692D70061DCB5 /* PBXTextBookmark */ = {
-		isa = PBXTextBookmark;
-		fRef = F5440D5202465FF801990B20 /* makefile */;
-		name = "makefile: 3";
-		rLen = 0;
-		rLoc = 49;
-		rType = 0;
-		vrLen = 728;
-		vrLoc = 0;
 	};
 	6FFC0D3A05AE0B7900A78095 /* quadtree */ = {
 		activeExec = 0;
@@ -697,12 +732,12 @@
 	};
 	6FFC0D4705AE0B7900A78095 /* quadtree */ = {
 		isa = PBXExecutable;
-		activeArgIndex = 2147483647;
 		activeArgIndices = (
 		);
 		argumentStrings = (
 		);
 		autoAttachOnCrash = 1;
+		breakpointsEnabled = 0;
 		configStateDict = {
 		};
 		customDataFormattersEnabled = 1;
@@ -716,42 +751,49 @@
 		executableUserSymbolLevel = 0;
 		libgmallocEnabled = 0;
 		name = quadtree;
+		savedGlobals = {
+		};
 		sourceDirectories = (
 		);
 	};
 	F51210FF0190489701990B20 /* quad.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {690, 408}}";
-			sepNavSelRange = "{141, 22}";
+			sepNavIntBoundsRect = "{{0, 0}, {839, 480}}";
+			sepNavSelRange = "{506, 153}";
+			sepNavVisRange = "{0, 660}";
 			sepNavVisRect = "{{0, 0}, {690, 408}}";
 		};
 	};
 	F51211000190489701990B20 /* quadtree.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {848, 1274}}";
-			sepNavSelRange = "{2144, 0}";
-			sepNavVisRect = "{{0, 428}, {848, 699}}";
+			sepNavIntBoundsRect = "{{0, 0}, {839, 1274}}";
+			sepNavSelRange = "{1212, 7}";
+			sepNavVisRange = "{923, 1495}";
+			sepNavVisRect = "{{0, 561}, {848, 699}}";
 			sepNavWindowFrame = "{{77, 671}, {750, 502}}";
 		};
 	};
 	F512110701904AE101990B20 /* main.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {926, 2310}}";
-			sepNavSelRange = "{2042, 898}";
+			sepNavIntBoundsRect = "{{0, 0}, {920, 2618}}";
+			sepNavSelRange = "{2551, 0}";
+			sepNavVisRange = "{2317, 1182}";
 			sepNavVisRect = "{{0, 0}, {725, 543}}";
 		};
 	};
 	F5129161033258B801990B69 /* quad_impl.h */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {690, 8400}}";
-			sepNavSelRange = "{177, 22}";
+			sepNavIntBoundsRect = "{{0, 0}, {839, 8876}}";
+			sepNavSelRange = "{812, 0}";
+			sepNavVisRange = "{4612, 1611}";
 			sepNavVisRect = "{{0, 0}, {690, 408}}";
 		};
 	};
 	F5440D5202465FF801990B20 /* makefile */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {848, 699}}";
-			sepNavSelRange = "{172, 0}";
+			sepNavIntBoundsRect = "{{0, 0}, {828, 574}}";
+			sepNavSelRange = "{0, 729}";
+			sepNavVisRange = "{0, 620}";
 			sepNavVisRect = "{{0, 0}, {848, 699}}";
 		};
 	};

@@ -30,7 +30,7 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
     
 /*	TAKES APPROXIMATELY 1:1 boxS TO VERTICES WITH 4 NODES / box */
 /*	+10 IS FACTOR OF SAFETY FOR SMALL mxv */
-    size = (int) 1.1*mxv +10; 
+    size = mxv +10; 
     base = new class box<ND>[size];
     indx = new class box<ND>*[maxvrtx];
     for(i=0;i<maxvrtx;++i)
@@ -173,6 +173,19 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
         }
         qpt = qpt->dghtr[i];
     }
+	
+	/* DEBUGGING ONLY */
+//    while (qpt->num < 0) {
+//        i = 0;
+//        for(n=0;n<ND;++n) {
+//            xshift = vrtx[v0][n] -0.5*(qpt->xmax[n] +qpt->xmin[n]);
+//            if (xshift > 0.0)
+//				i = (i<<1) +1;
+//			else 
+//				i = (i<<1) +0;
+//        }
+//        qpt = qpt->dghtr[i];
+//    }
     
     if (qpt->num < (1<<ND)) {
 /*		box CAN ACCEPT NEW POINT */
@@ -184,7 +197,11 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 /*	box IS FULL SUBDIVIDE */
     if (current +(1<<ND) >= size) {
         printf("Need to allocate bigger quadtree %d\n",size);
+		printf("A possible cause is point ouside of domain:\n");
+		for (n=0;n<ND;++n)
+			printf("direction: %d, point %e, left %e, right %e\n",n,vrtx[v0][n],base->xmin[n],base->xmax[n]);
         output("quad_error",quadtree::text);
+		output("quad_error",quadtree::tecplot);
         exit(1);
     }
     for (i=0;i<(1<<ND);++i)
@@ -205,6 +222,26 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
         qpt->dghtr[i] = base +current;
         ++current;
     }
+	
+	/* DEBUG TEST */
+//	for(i=0;i<(1<<ND)+1;++i) {
+//		for (n=0;n<ND;++n) {
+//			if (vrtx[store[i]][n] < qpt->xmin[n]) {
+//				std::cout << "less than min problem in quadtree " << store[i] << ' ' << vrtx[store[i]][n] << std::endl;
+//				std::cout << qpt->xmin[n] << ' ' << base->xmin[n] << std::endl;
+//				output("quad_error");
+//				output("quad_error",text);
+//				exit(1);
+//			}
+//			if (vrtx[store[i]][n] > qpt->xmax[n]) {
+//				std::cout << "greater than max problem in quadtree " << store[i] << ' ' << vrtx[store[i]][n] << std::endl;
+//				std::cout << qpt->xmax[n] << ' ' << base->xmax[n] <<  std::endl;
+//				output("quad_error");
+//				output("quad_error",text);
+//				exit(1);
+//			}
+//		}
+//	}
     
     for(i=0;i<(1<<ND)+1;++i)
         addpt(store[i],qpt);

@@ -153,9 +153,11 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FD8AE7A08651561005A8B60 /* Build configuration list for PBXProject "quadtree" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* quadtree */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				6FD8B0140865BC3F005A8B60 /* quad */,
 				6FFC0D3A05AE0B7900A78095 /* quadtree */,
@@ -324,17 +326,17 @@
 		6FD8B0180865BC8A005A8B60 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = NO;
 				DSTROOT = "$(HOME)/Codes/";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G4;
 				HEADER_SEARCH_PATHS = ../include;
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = ../lib;
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
+				OPTIMIZATION_CFLAGS = "-O2";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
