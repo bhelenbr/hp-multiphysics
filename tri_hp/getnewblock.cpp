@@ -21,6 +21,7 @@
 #include "lvlset/tri_hp_lvlset.h"
 #include "hp_boundary.h"
 
+// #define JUST_INS
 
 class btype {
     public:
@@ -59,17 +60,19 @@ multigrid_interface* block::getnewlevel(input_map& input) {
             r_tri_mesh *temp = new r_tri_mesh();
             return(temp);
         }
-        
+#ifndef JUST_INS
         case btype::cd: {
             tri_hp_cd *temp = new tri_hp_cd();
             return(temp);
         }
+#endif
         
         case btype::ins: {
             tri_hp_ins *temp = new tri_hp_ins();
             return(temp);
         }
-        
+
+#ifndef JUST_INS
         case btype::ps: {
             tri_hp_ps *temp = new tri_hp_ps();
             return(temp);
@@ -114,6 +117,7 @@ multigrid_interface* block::getnewlevel(input_map& input) {
             tri_hp_lvlset *temp = new tri_hp_lvlset();
             return(temp);
         }
+#endif
         
         default: {
             std::cerr << "unrecognizable block type: " <<  type << std::endl;

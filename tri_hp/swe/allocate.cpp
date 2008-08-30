@@ -20,8 +20,7 @@
     if (!input.get(gbl->idprefix + "_cd",gbl->cd)) input.getwdefault("cd",gbl->cd,0.0);
     if (!input.get(gbl->idprefix + "_ptest",gbl->ptest)) input.getwdefault("ptest",gbl->ptest,1.0);
 
-    gbl->bathy = getnewbathy(input);
-    gbl->bathy->input(input,gbl->idprefix);
+    gbl->bathy = getnewbathy("bathy",input);
     
     return;
 }

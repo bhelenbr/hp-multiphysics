@@ -19,10 +19,10 @@
     gbl->D(2) = gbl->kcond;
     if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
     
-    if (input.find(gbl->idprefix+"_rhovsT_expression") != input.end()) {
+    if (input.find(gbl->idprefix+"_rhovsT") != input.end()) {
         gbl->rhovsT.init(input,gbl->idprefix+"_rhovsT");
     } 
-    else if (input.find("rhovsT_expression") != input.end()){
+    else if (input.find("rhovsT") != input.end()){
         gbl->rhovsT.init(input,"rhovsT");
     }
     else {

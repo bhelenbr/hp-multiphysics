@@ -41,7 +41,7 @@ namespace bdry_lvlset {
               
                 /* X&Y MOMENTUM */
                 for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+                    flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
               
                 /* LEVEL-SET */
                 flx(2) = 0.0;
@@ -119,7 +119,7 @@ namespace bdry_lvlset {
                 FLT rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
 
                 for(int n=0;n<x.NV;++n)
-                    ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
+                    ub(n) = ibc->f(n,xpt,x.gbl->time);
                 
                 flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
                 
@@ -154,21 +154,50 @@ namespace bdry_lvlset {
             characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
     };
     
-//    class surface_levelset_hybrid : public bdry_ins::surface_slave {        
-//        private:
-//            int mp_phase,excpt,excpt1,stage;
-//                     
-//        public:
-//            surface_levelset_hybrid(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "surface_levelset_hybrid";}
-//            surface_levelset_hybrid(const surface_levelset_hybrid& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
-//            surface_levelset_hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new surface_levelset_hybrid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-//
-//            void init(input_map& input,void* gbl_in); 
-//
-//            /* FOR COUPLED DYNAMIC BOUNDARIES */
-//            void rsdl(int stage);
-//            block::ctrl update(block::ctrl ctrl_message);
-//    };
+    class levelset_hybrid : public neumann {                             
+        public:
+            levelset_hybrid(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "levelset_hybrid";}
+            levelset_hybrid(const levelset_hybrid& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
+            levelset_hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new levelset_hybrid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+            void init(input_map& inmap,void* gbl_in);
+
+            void rsdl(int stage);
+			
+			void vdirichlet() {
+                int sind,v0;
+                            
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    v0 = x.seg(sind).pnt(0);
+                    x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
+                }
+                v0 = x.seg(sind).pnt(1);
+                x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
+            }
+            
+            void sdirichlet(int mode) {
+                int sind;
+
+                for(int j=0;j<base.nseg;++j) {
+                    sind = base.seg(j);
+                    x.gbl->res.s(sind,mode,Range(0,x.NV-3)) = 0.0;
+                }
+            }
+			
+			
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
+			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
+				base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
+				return;
+			}
+			void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
+
+
+
+
+    };
     
-}
+	
+	}
 #endif

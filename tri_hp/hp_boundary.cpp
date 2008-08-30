@@ -10,6 +10,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 #include <blitz/tinyvec-et.h>
+#include <libbinio/binwrap.h>
 
 #define NO_MPDEBUG
 
@@ -90,6 +91,10 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
     std::string keyword;
     std::istringstream data;
     std::string filename;
+	
+	if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
+		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
+	}
     
     keyword = base.idprefix + "_curved";
     inmap.getwdefault(keyword,curved,false);
@@ -113,7 +118,7 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 
 void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
     int j,m,n;
-    
+
     switch(typ) {
         case(tri_hp::text):
             fout << base.idprefix << " " << mytype << std::endl;
@@ -128,7 +133,24 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                     }
                 }
             }
-            
+			break;
+			
+		case(tri_hp::binary):
+			if (curved) {
+				binowstream bout(&fout);
+				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+				bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+				bout.writeInt(x.p0,sizeof(int));
+                
+                for(j=0;j<base.nseg;++j) {
+                    for(m=0;m<x.sm0;++m) {
+                        for(n=0;n<tri_mesh::ND;++n)
+                            bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
+                    }
+                }
+			}
+            break;
+			
         default:
             break;
     }
@@ -156,6 +178,27 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
                     }
                 }
             }
+            break;
+		case(tri_hp::binary):
+			if (curved) {
+				biniwstream bin(&fin);
+				
+				/* HEADER INFORMATION */
+				bin.setFlag(binio::BigEndian,bin.readInt(1));
+				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+                
+				pmin = bin.readInt(sizeof(int));
+                for(j=0;j<base.nseg;++j) {
+                    for(m=0;m<pmin-1;++m) {
+                        for(n=0;n<tri_mesh::ND;++n)
+                            crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+                    }
+	                for(m=pmin-1;m<x.sm0;++m) {
+                        for(n=0;n<tri_mesh::ND;++n)
+                            crvbd(tlvl)(j,m)(n) = 0.0;
+                    }				
+                }
+			}
             break;
             
         default:

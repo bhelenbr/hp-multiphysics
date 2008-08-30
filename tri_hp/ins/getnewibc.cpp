@@ -19,7 +19,7 @@ namespace ibc_ins {
             
         public:
             FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
-                FLT amp = (time < 0.0 ? perturb_amp : 0.0); 
+                FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
                 switch(n) {
                     case(0):
                         return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
@@ -477,13 +477,13 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
                 for(int n=0;n<2;++n) {
                     nstr.str("");
                     nstr << idnty << "_forcing" << n << std::flush;
-                    if (input.find(nstr.str() +"_expression") != input.end()) {
+                    if (input.find(nstr.str()) != input.end()) {
                         fcn(n).init(input,nstr.str());
                     }
                     else {
                         nstr.str("");
                         nstr << "forcing" << n << std::flush;
-                        if (input.find(nstr.str() +"_expression") != input.end()) {
+                        if (input.find(nstr.str()) != input.end()) {
                             fcn(n).init(input,nstr.str());
                         }
                         else {
@@ -887,49 +887,53 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
 }
 
  
-init_bdry_cndtn *tri_hp_ins::getnewibc(input_map& inmap) {
+init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
     std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
     int type;
 
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_ibc";
-    if (!inmap.get(keyword,ibcname)) {
-        if (!inmap.get("ibc",ibcname)) {
-            *gbl->log << "couldn't find initial condition type" << std::endl;
-        }
-    }
+	keyword = gbl->idprefix + "_" +suffix;
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find initial condition type" << std::endl;
+		}
+	}
     type = ibc_ins::ibc_type::getid(ibcname.c_str());
 
         
     switch(type) {
         case ibc_ins::ibc_type::freestream: {
-            init_bdry_cndtn *temp = new ibc_ins::freestream;
-            return(temp);
+            temp = new ibc_ins::freestream;
+            break;
         }
         case ibc_ins::ibc_type::sphere: {
-            init_bdry_cndtn *temp = new ibc_ins::sphere;
-            return(temp);
+            temp = new ibc_ins::sphere;
+            break;
         }
         case ibc_ins::ibc_type::accelerating: {
-            init_bdry_cndtn *temp = new ibc_ins::accelerating;
-            return(temp);
+            temp = new ibc_ins::accelerating;
+            break;
         }
         case ibc_ins::ibc_type::impinge: {
-            init_bdry_cndtn *temp = new ibc_ins::impinge;
-            return(temp);
+            temp = new ibc_ins::impinge;
+            break;
         }
         case ibc_ins::ibc_type::stokes_drop_gas: {
-            init_bdry_cndtn *temp = new ibc_ins::stokes_drop_gas;
-            return(temp);
+            temp = new ibc_ins::stokes_drop_gas;
+            break;
         }
         case ibc_ins::ibc_type::stokes_drop_liquid: {
-            init_bdry_cndtn *temp = new ibc_ins::stokes_drop_liquid;
-            return(temp);
+            temp = new ibc_ins::stokes_drop_liquid;
+            break;
         }
         default: {
-            return(tri_hp::getnewibc(inmap));
+            return(tri_hp::getnewibc(suffix,inmap));
         }
     }
+	temp->input(inmap,keyword);
+	return(temp);
 }
 
 tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {

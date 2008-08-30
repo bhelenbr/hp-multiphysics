@@ -8,7 +8,7 @@
  */
 
 #include "tri_hp.h"
-#include <mathclass.h>
+#include <symbolic_function.h>
 
 class symbolic_ibc : public init_bdry_cndtn {
     private:
@@ -32,21 +32,14 @@ class symbolic_ibc : public init_bdry_cndtn {
 
             for(int n=0;n<nvar;++n) {
                 nstr.str("");
-                nstr << idnty << "_ibc" << n << std::flush;
-                if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
+                nstr << idnty << n << std::flush;
+                if (inmap.find(nstr.str()) != inmap.end()) {
                     fcn(n).init(inmap,nstr.str());
                 }
                 else {
-                    nstr.str("");
-                    nstr << "ibc" << n << std::flush;
-                    if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
-                        fcn(n).init(inmap,nstr.str());
-                    }
-                    else {
-                        std:cerr << "couldn't find initial condition function\n";
-                        exit(1);
-                    }
-                }
+					std:cerr << "couldn't find initial condition function\n";
+					exit(1);
+				}
             }
         }
 };
@@ -67,30 +60,35 @@ const char ibc_type::names[ntypes][40] = {"symbolic"};
 
 
 
-init_bdry_cndtn *tri_hp::getnewibc(input_map& inmap) {
+init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
     std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
     int type;
 
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_ibc";
-    if (!inmap.get(keyword,ibcname)) {
-        if (!inmap.get("ibc",ibcname)) {
-            *gbl->log << "couldn't find initial condition type" << std::endl;
-        }
-    }
+	keyword = gbl->idprefix + "_" +suffix;
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find initial condition type" << std::endl;
+		}
+	}
     
     type = ibc_type::getid(ibcname.c_str());
         
     switch(type) {
         case ibc_type::symbolic: {
-            init_bdry_cndtn *temp = new symbolic_ibc;
-            return(temp);
+            temp = new symbolic_ibc;
+			break;
         }
         default: {
             *gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
             exit(1);
         }
     }
+	temp->input(inmap,keyword);
+	return(temp);
+
 }
         
         
@@ -142,13 +140,13 @@ class gcl_test : public tri_hp_helper {
             for(int n=0;n<tri_mesh::ND;++n) {
                 nstr.str("");
                 nstr << idnty << "_gcl_velocity" << n << std::flush;
-                if (input.find(nstr.str() +"_expression") != input.end()) {
+                if (input.find(nstr.str()) != input.end()) {
                     vel(n).init(input,nstr.str());
                 }
                 else {
                     nstr.str("");
                     nstr << "gcl_velocity" << n << std::flush;
-                    if (input.find(nstr.str() +"_expression") != input.end()) {
+                    if (input.find(nstr.str()) != input.end()) {
                         vel(n).init(input,nstr.str());
                     }
                     else {
@@ -226,18 +224,14 @@ const char helper_type::names[ntypes][40] = {"translating","print_averages","l2e
 
 
 tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
-    std::string keyword,movername;
+    std::string movername;
     int type;
     
     /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_helper";
-    if (!inmap.get(keyword,movername)) {
-        if (!inmap.get("tri_hp_helper",movername)) {
-            type = -1;
-        }
-    }
-    
-    type = helper_type::getid(movername.c_str());
+    if (!inmap.get(gbl->idprefix + "_helper",movername))
+		inmap.getwdefault("tri_hp_helper",movername,std::string("default"));
+
+	type = helper_type::getid(movername.c_str());
         
     switch(type) {
         case helper_type::translating: {

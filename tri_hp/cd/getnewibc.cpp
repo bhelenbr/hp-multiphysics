@@ -63,22 +63,6 @@ FLT df1d(int n, FLT x, FLT y) {
 
 #endif
 
-
-
-    class ibc_type {
-        public:
-            const static int ntypes = 0;
-            enum ids {};
-            const static char names[ntypes][40];
-            static int getid(const char *nin) {
-                int i;
-                for(i=0;i<ntypes;++i) 
-                    if (!strcmp(nin,names[i])) return(i);
-                return(-1);
-        }
-    };
-    const char ibc_type::names[ntypes][40] = {};
-
     class zero_src : public init_bdry_cndtn {
         private:
         public:
@@ -238,7 +222,7 @@ FLT df1d(int n, FLT x, FLT y) {
     const char helper_type::names[ntypes][40] = {"source_changer"};
 
     
-    class src_type {
+    class ibc_type {
         public:
             const static int ntypes = 3;
             enum ids {zero,power,soi};
@@ -250,59 +234,43 @@ FLT df1d(int n, FLT x, FLT y) {
                 return(-1);
         }
     };
-    const char src_type::names[ntypes][40] = {"zero","power","soi"};
+    const char ibc_type::names[ntypes][40] = {"zero","power","soi"};
 
     
 }
 
-init_bdry_cndtn *tri_hp_cd::getnewibc(input_map& inmap) {
+
+init_bdry_cndtn *tri_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
     std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
     int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_ibc";
-    if (!inmap.get(keyword,ibcname)) {
-        if (!inmap.get("ibc",ibcname)) {
-            *gbl->log << "couldn't find initial condition type" << std::endl;
-        }
-    }
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = gbl->idprefix + "_" +suffix;
+	if (!inmap.get(keyword,ibcname)) {
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find cd initial condition type" << std::endl;
+		}
+	}
     type = ibc_cd::ibc_type::getid(ibcname.c_str());
-
-        
+ 
     switch(type) {
+        case(ibc_cd::ibc_type::zero):
+            temp = new ibc_cd::zero_src;
+			break;
+        case(ibc_cd::ibc_type::power):
+            temp = new ibc_cd::power_src;
+			break;
+        case(ibc_cd::ibc_type::soi):
+            temp = new ibc_cd::soi_src(*this);
+			break;
         default: {
-            return(tri_hp::getnewibc(inmap));
+            return(tri_hp::getnewibc(suffix,inmap));
         }
     }
-}
-
-init_bdry_cndtn *tri_hp_cd::getnewsrc(input_map& inmap) {
-    std::string keyword,ibcname;
-    int type;
-
-    /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_src";
-    if (!inmap.get(keyword,ibcname)) {
-        if (!inmap.get("src",ibcname)) {
-            *gbl->log << "couldn't find source type" << std::endl;
-        }
-    }
-    type = ibc_cd::src_type::getid(ibcname.c_str());
-    
-    
-
-        
-    switch(type) {
-        case(ibc_cd::src_type::zero):
-            return(new ibc_cd::zero_src);
-        case(ibc_cd::src_type::power):
-            return(new ibc_cd::power_src);
-        case(ibc_cd::src_type::soi):
-            return(new ibc_cd::soi_src(*this));
-        default: {
-            return(new ibc_cd::zero_src);
-        }
-    }
+	temp->input(inmap,keyword);
+	return(temp);
 }
 
 tri_hp_helper *tri_hp_cd::getnewhelper(input_map& inmap) {

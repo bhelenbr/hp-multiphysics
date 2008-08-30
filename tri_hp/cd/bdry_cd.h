@@ -67,7 +67,7 @@ namespace bdry_cd {
                 if (vel > 0.0)
                     return(vel*u);
 
-                return(x.gbl->ibc->f(0, pt, x.gbl->time)*vel);
+                return(ibc->f(0, pt, x.gbl->time)*vel);
             }
             characteristic(tri_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
             characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}

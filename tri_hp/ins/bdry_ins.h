@@ -24,7 +24,7 @@
 #include "../hp_boundary.h"
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
-#include <mathclass.h>
+#include <symbolic_function.h>
 
 //#define DETAILED_DT
 //#define DETAILED_MINV
@@ -75,10 +75,10 @@ namespace bdry_ins {
                 /* X&Y MOMENTUM */
 #ifdef INERTIALESS
                 for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+                    flx(n) = ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
                 for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+                    flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
               
@@ -140,7 +140,7 @@ namespace bdry_ins {
 			void setvalues(init_bdry_cndtn *ibc);
 			void tadvance() {
 				hp_edge_bdry::tadvance();
-				setvalues(x.gbl->ibc);
+				setvalues(ibc);
 			};
     };
 	
@@ -211,7 +211,7 @@ namespace bdry_ins {
                 Array<FLT,1> ub(x.NV);
                 
                 for(int n=0;n<x.NV;++n)
-                    ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
+                    ub(n) = ibc->f(n,xpt,x.gbl->time);
                 
                 flx(x.NV-1) = x.gbl->rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
                 
@@ -290,10 +290,10 @@ namespace bdry_ins {
                 /* X&Y MOMENTUM */
 #ifdef INERTIALESS
                 for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+                    flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
                 for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +x.gbl->ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+                    flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
               
                 /* EVERYTHING ELSE */
@@ -304,11 +304,7 @@ namespace bdry_ins {
             }
         public:
             applied_stress(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
-            applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {
-                stress.resize(tri_mesh::ND);
-                for(int n=0;n<tri_mesh::ND;++n) 
-                    stress(n).copy(inbdry.stress(n));
-            }
+            applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
             applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
             void init(input_map& inmap,void* gbl_in);
     };

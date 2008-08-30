@@ -25,9 +25,9 @@ class tri_hp_swe : public tri_hp_ins {
             
         } *gbl;
 
-        init_bdry_cndtn* getnewbathy(input_map& inmap);
+        init_bdry_cndtn* getnewbathy(std::string suffix, input_map& inmap);
+		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-		init_bdry_cndtn* getnewibc(input_map& inmap);
 
     public:
         void* create_global_structure() {return new global;}

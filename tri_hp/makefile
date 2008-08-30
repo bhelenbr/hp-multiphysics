@@ -6,71 +6,71 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: planar axi
 
-planar: hp hp_mpi
-axi: hp_axi hp_axi_mpi
+planar: tri_hp tri_hp_mpi
+axi: tri_hp_axi tri_hp_axi_mpi
 
-hp:
+tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp
-	cp _$@/hp $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp
+	cp _$@/tri_hp $(HOME)/bin/$@
 
-.PHONY: hp
+.PHONY: tri_hp
 
-hp_axi:
+tri_hp_axi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS=-DAXISYMMETRIC
-	cp _$@/hp $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS=-DAXISYMMETRIC
+	cp _$@/tri_hp $(HOME)/bin/$@
 
-.PHONY: hp_axi
+.PHONY: tri_hp_axi
 
-hp_mpi:
+tri_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS=-DMPISRC
-	cp _$@/hp_mpi $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS=-DMPISRC
+	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
-.PHONY: hp_mpi
+.PHONY: tri_hp_mpi
 
-hp_axi_mpi:
+tri_hp_axi_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
-	cp _$@/hp_mpi $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
-.PHONY: hp_axi_mpi
+.PHONY: tri_hp_axi_mpi
 
-hp_drop:
+tri_hp_drop:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
-	cp _$@/hp $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
+	cp _$@/tri_hp $(HOME)/bin/$@
 
-.PHONY: hp_drop
+.PHONY: tri_hp_drop
 
-hp_drop_mpi:
+tri_hp_drop_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
-	cp _$@/hp_mpi $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
+	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
-.PHONY: hp_drop_mpi
+.PHONY: tri_hp_drop_mpi
 
-hp_drop_stokes:
+tri_hp_drop_stokes:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS'
-	cp _$@/hp $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS'
+	cp _$@/tri_hp $(HOME)/bin/$@
 
-.PHONY: hp_drop_stokes
+.PHONY: tri_hp_drop_stokes
 
-hp_drop_stokes_mpi:
+tri_hp_drop_stokes_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC'
-	cp _$@/hp_mpi $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC'
+	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
-.PHONY: hp_drop_stokes_mpi
+.PHONY: tri_hp_drop_stokes_mpi
 
 makefile : ;
 %.mk :: ;
 
 .PHONY: clean
 clean:
-	rm -rf _hp*
+	rm -rf _tri_hp*
 
 else
 
@@ -92,7 +92,7 @@ OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm -lpth
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
@@ -129,10 +129,10 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 ### End machine dependent
 CPPFLAGS += $(DEFINES)
 
-hp: dirs $(OBJ)
+tri_hp: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
 
-hp_mpi: dirs $(OBJ)
+tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 
 dirs:

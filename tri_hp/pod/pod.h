@@ -6,7 +6,21 @@
  *  Copyright 2006 __MyCompanyName__. All rights reserved.
  *
  */
+#define LOWNOISE
 
+#ifdef LOWNOISE
+template<class BASE> class pod_generate : public BASE {
+    protected:
+        int nsnapshots;
+        int nmodes;
+        Array<FLT,1> scaling;
+        Array<FLT,1> coeffs;
+    public:
+        void init(input_map& input, void *gin); 
+        pod_generate<BASE>* create() { return new pod_generate<BASE>();}
+        void tadvance();
+};
+#else
 template<class BASE> class pod_generate : public BASE {
     protected:
         int nsnapshots;
@@ -21,6 +35,7 @@ template<class BASE> class pod_generate : public BASE {
         pod_generate<BASE>* create() { return new pod_generate<BASE>();}
         void tadvance();
 };
+#endif
 
 template<class BASE> class pod_simulate : public BASE {
     protected:

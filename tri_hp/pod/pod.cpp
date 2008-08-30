@@ -8,7 +8,18 @@
  */
 
 #include <myblas.h>
+#include <libbinio/binfile.h>
 // #include <veclib/clapack.h>
+
+extern "C" {
+double dlamch_(char *cmach);
+/* Subroutine */ int dspevx_(char *jobz, char *range, char *uplo, int *n, 
+	double *ap, double *vl, double *vu, int *il, int *
+	iu, double *abstol, int *m, double *w, double *z__, 
+	int *ldz, double *work, int *iwork, int *ifail, 
+	int *info);
+}	
+	
 
 template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) {
     std::string filename,keyword,linebuff;
@@ -35,6 +46,8 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
     }
     
     nmodes = MAX(nmodes,2);
+
+#ifndef LOWNOISE
     modes.resize(nmodes);
     for(i=0;i<nmodes;++i) {
         modes(i).v.resize(BASE::maxpst,BASE::NV);
@@ -42,9 +55,12 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
         modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
     }
     coeffs.resize(nmodes);
-    
+#endif
+
     return;
 }
+
+#ifndef LOWNOISE
     
 template<class BASE> void pod_generate<BASE>::tadvance() {
     int i,j,k,l,n,tind,info;
@@ -67,7 +83,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     
     psimatrix.resize(nsnapshots*nsnapshots);
     psimatrix_recv.resize(nsnapshots*nsnapshots);
-	low_noise_dot.resize(ntri);
+	low_noise_dot.resize(BASE::ntri);
     
     /* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
     psimatrix = 0.0;
@@ -78,7 +94,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
         BASE::ugbd(0).v.reference(modes(0).v);
         BASE::ugbd(0).s.reference(modes(0).s);
         BASE::ugbd(0).i.reference(modes(0).i);
-        BASE::input(filename, BASE::text);
+        BASE::input(filename, BASE::binary);
         
         for(l=k;l<nsnapshots;++l) {
             nstr.str("");
@@ -87,7 +103,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
             BASE::ugbd(0).v.reference(modes(1).v);
             BASE::ugbd(0).s.reference(modes(1).s);
             BASE::ugbd(0).i.reference(modes(1).i);
-            BASE::input(filename, BASE::text);
+            BASE::input(filename, BASE::binary);
             
             for(tind=0;tind<BASE::ntri;++tind) {          
                 /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
@@ -124,8 +140,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
             }
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
-			while (oldhalfcount > 1) {
-			for (remainder=ntri % 2, halfcount = ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
 				for (tind=0;tind<halfcount;++tind) 
 					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
@@ -142,7 +157,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     Array<FLT,1> eigenvalues(nsnapshots);
     Array<FLT,2> eigenvectors(nsnapshots,nsnapshots);
     
-/*         
+	/* To compute needed sizes 
     char jobz[2] = "V", range[2] = "A", uplo[2] = "L";
     double vl, vu;
     int il, iu;
@@ -158,8 +173,22 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     info1 = dsyevr_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
     &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
     std::cout << "optimal sizes:" <<  work(0) << ' ' << iwork(0) << std::endl; 
-    exit(1);
-*/
+	*/
+
+	/* TO COMPUTE JUST 1 EIGENVECTOR
+	char jobz[2] = "V", range[2] = "I"; uplo[2] = "L";
+    double vl, vu;
+    int il=nsnapshots, iu=nsnapshots;
+    double abstol = 2.*dlamch_("Safe minimum");
+    int neig,info;
+    Array<int,1> iwork(5*nsnapshots);
+	Array<double,1> work(8*nsnapshots);
+	Array<int,1> ifail(nsnapshots);
+
+    info = dspevx_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
+    &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
+	*/
+	
     char jobz[2] = "V", uplo[2] = "L";
     Array<FLT,1> work(3*nsnapshots);
     DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
@@ -184,7 +213,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
             nstr.str("");
             nstr << l +1 << std::flush;
             filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-            BASE::input(filename, BASE::text);
+            BASE::input(filename, BASE::binary);
 
             modes(k).v += eigenvectors(l,nmodes -k -1)*BASE::ug.v;
             modes(k).s += eigenvectors(l,nmodes -k -1)*BASE::ug.s;
@@ -250,7 +279,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
         BASE::ugbd(0).v.reference(modes(k).v);
         BASE::ugbd(0).s.reference(modes(k).s);
         BASE::ugbd(0).i.reference(modes(k).i);
-        BASE::output(filename, BASE::text);
+        BASE::output(filename, BASE::binary);
         BASE::output(filename, BASE::tecplot);
     }
     BASE::ugbd(0).v.reference(ugstore.v);
@@ -264,13 +293,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
     psimatrix = 0.0;
     psimatrix_recv = 0.0;
-	psi1dcounter=0.0;
+	psi1dcounter=0;
     for (k=0;k<nsnapshots;++k) {
         /* LOAD SNAPSHOT */
         nstr.str("");
         nstr << k+1 << std::flush;
         filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-        BASE::input(filename, BASE::text);
+        BASE::input(filename, BASE::binary);
         
         for(l=0;l<nmodes;++l) {
             BASE::ugbd(1).v.reference(modes(l).v);
@@ -317,16 +346,18 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
         /* OUTPUT COEFFICIENT VECTOR */
         nstr.str("");
         nstr << k+1 << std::flush;
-        filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".txt";
-        std::ofstream out;
+        filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
+        binofstream out;
         out.open(filename.c_str());
-        if (!out) {
+        if (out.error()) {
             *BASE::gbl->log << "couldn't open coefficient output file " << filename;
             exit(1);
         }
+		out.writeInt(static_cast<unsigned char>(out.getFlag(binio::BigEndian)),1);
+		out.writeInt(static_cast<unsigned char>(out.getFlag(binio::FloatIEEE)),1);
         
         for (l=0;l<nmodes;++l) 
-            out << psimatrix_recv(k*nmodes +l) << '\n';
+            out.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
             
         out.close();
     }
@@ -334,7 +365,275 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     return;
 }
     
+#else	
+template<class BASE> void pod_generate<BASE>::tadvance() {
+ 	
+	if (BASE::gbl->substep != 0) return;
     
+    BASE::tadvance(); 
+
+    Array<FLT,1> psimatrix(nsnapshots*nsnapshots);
+    Array<FLT,1> psimatrix_recv(nsnapshots*nsnapshots);
+	Array<FLT,1> low_noise_dot(BASE::ntri);
+	Array<FLT,1> eigenvalues(nsnapshots);
+    Array<FLT,1> eigenvector(nsnapshots);
+	Array<FLT,2> coeff(nsnapshots,nsnapshots);
+	char jobz[2] = "V", range[2] = "I", uplo[2] = "L";
+	double vl, vu;
+	int il=nsnapshots, iu=nsnapshots;
+	double abstol = 2.*dlamch_("Safe minimum");
+	int neig,info;
+	Array<int,1> iwork(5*nsnapshots);
+	Array<double,1> work(8*nsnapshots);
+	Array<int,1> ifail(nsnapshots);
+	int i,j,k,l,n,tind;
+    int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
+    std::string filename,keyword,linebuff;
+    std::ostringstream nstr;
+    std::istringstream instr;
+    FLT cjcb;
+
+	/* MAKE TEMPORARY FILES FOR SNAPSHOT-PROJECTION */
+	for(k=0;k<nsnapshots;++k) {
+		nstr.str("");
+        nstr << k+1 << std::flush;
+        filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+        BASE::input(filename, BASE::binary);
+        nstr.str("");
+        nstr << k << std::flush;
+        filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+        BASE::output(filename, BASE::binary);
+	}
+	
+	
+	for (int eig_ct=0; eig_ct<nsnapshots;++eig_ct) {
+    
+		/* ******************************************/
+		/* GENERATE POD MODES SNAPSHOT MATRIX       */
+		/********************************************/
+		int psi1dcounter = 0;
+		psimatrix = 0.0;
+		for (k=0;k<nsnapshots;++k) {
+			nstr.str("");
+			nstr << k << std::flush;
+			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			BASE::input(filename, BASE::binary);
+			
+			for(l=k;l<nsnapshots;++l) {
+				nstr.str("");
+				nstr << l << std::flush;
+				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				BASE::input(filename, BASE::binary, 1);
+				
+				for(tind=0;tind<BASE::ntri;++tind) {          
+					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+					BASE::crdtocht(tind);
+
+					/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+					for(n=0;n<BASE::ND;++n)
+						basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+									 
+					BASE::ugtouht(tind,0);
+					for(n=0;n<BASE::NV;++n)
+						basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+						
+					BASE::ugtouht(tind,1);
+					for(n=0;n<BASE::NV;++n)
+						basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+					
+					FLT tmp_store = 0.0;
+					for(i=0;i<lgpx;++i) {
+						for(j=0;j<lgpn;++j) {
+							cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+							for(n=0;n<BASE::NV;++n) {
+								tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+							}
+						}
+					}
+					low_noise_dot(tind) = tmp_store;
+				}
+				
+				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+				int halfcount,remainder;
+				for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+					for (tind=0;tind<halfcount;++tind) 
+						low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+					if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+				}
+				psimatrix(psi1dcounter) = low_noise_dot(0);
+				
+				++psi1dcounter;
+			}	
+		}
+		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
+		 		
+		/*********************************/
+		/* TO COMPUTE JUST 1 EIGENVECTOR */
+		/*********************************/
+		dspevx_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &vl, &vu, &il, &iu, &abstol,
+		&neig, eigenvalues.data(),eigenvector.data(), &nsnapshots, work.data(), iwork.data(), ifail.data(), &info); 
+		if (info != 0) {
+			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+			exit(1);
+		}
+		
+		*BASE::gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
+		
+		
+		/*************************************/
+		/* LOAD SNAPSHOTS AND CALCULATE MODE */
+		/*************************************/
+		BASE::ug.v = 0.0;
+		BASE::ug.s = 0.0;
+		BASE::ug.i = 0.0;
+		for(l=0;l<nsnapshots;++l)	{
+			nstr.str("");
+			nstr << l << std::flush;
+			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			BASE::input(filename, BASE::binary, 1);
+
+			BASE::ug.v += eigenvector(l)*BASE::ugbd(1).v;
+			BASE::ug.s += eigenvector(l)*BASE::ugbd(1).s;
+			BASE::ug.i += eigenvector(l)*BASE::ugbd(1).i;
+		}
+
+
+		/********************/
+		/* RENORMALIZE MODE */
+		/********************/
+		for(tind=0;tind<BASE::ntri;++tind) {          
+			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+			BASE::crdtocht(tind);
+
+			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+			for(n=0;n<BASE::ND;++n)
+				basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+							 
+			/* PROJECT MODE TO GAUSS POINTS */
+			BASE::ugtouht(tind);
+			for(n=0;n<BASE::NV;++n)
+				basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+			
+			FLT tmp_store = 0.0;
+			for(i=0;i<lgpx;++i) {
+				for(j=0;j<lgpn;++j) {
+					cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+					for(n=0;n<BASE::NV;++n) {
+						 tmp_store += BASE::res(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+					}
+				}
+			}
+			low_noise_dot(tind) = tmp_store;
+		}
+		/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+		int halfcount,remainder;
+		for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+			for (tind=0;tind<halfcount;++tind) 
+				low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+			if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+		}
+		double norm = low_noise_dot(0);
+		double norm_recv;
+		
+		sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum);
+		
+		/* DIVIDE BY NORM */
+		norm = sqrt(norm_recv);
+		BASE::ug.v /= norm;
+		BASE::ug.s /= norm;
+		BASE::ug.i /= norm;
+			
+		/* OUTPUT RENORMALIZED MODE */
+		nstr.str("");
+		nstr << eig_ct << std::flush;
+		filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+		BASE::output(filename, BASE::binary);
+		BASE::output(filename, BASE::tecplot);
+
+		/***************************************/
+		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
+		/***************************************/
+		double dotp_recv, dotp;
+		for (k=0;k<nsnapshots;++k) {
+			/* LOAD SNAPSHOT */
+			nstr.str("");
+			nstr << k << std::flush;
+			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			BASE::input(filename, BASE::binary, 1);
+		
+			for(tind=0;tind<BASE::ntri;++tind) {          
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				BASE::crdtocht(tind);
+
+				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(n=0;n<BASE::ND;++n)
+					basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+								 
+				/* PROJECT SNAPSHOT TO GAUSS POINTS */
+				BASE::ugtouht(tind);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+					
+				/* PROJECT MODE TO GAUSS POINTS */
+				BASE::ugtouht(tind,1);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+				
+
+				FLT tmp_store = 0.0;
+				for(i=0;i<lgpx;++i) {
+					for(j=0;j<lgpn;++j) {
+						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+						for(n=0;n<BASE::NV;++n) {
+							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						}
+					}
+				}
+				low_noise_dot(tind) = tmp_store;
+			}
+			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+			int halfcount,remainder;
+			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+				for (tind=0;tind<halfcount;++tind) 
+					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+			}
+			dotp = low_noise_dot(0);
+
+			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum);
+					
+			BASE::ugbd(1).v -= dotp_recv*BASE::ug.v;
+			BASE::ugbd(1).s -= dotp_recv*BASE::ug.s;
+			BASE::ugbd(1).i -= dotp_recv*BASE::ug.i;
+			BASE::output(filename, BASE::binary, 1);
+			coeff(k,eig_ct) = dotp_recv;
+		}
+	}
+
+	/*****************************/
+	/* OUTPUT COEFFICIENT VECTOR */
+	/*****************************/
+	for (k=0;k<nsnapshots;++k) {
+		nstr.str("");
+		nstr << k+1 << std::flush;
+		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
+		binofstream out;
+		out.open(filename.c_str());
+		if (out.error()) {
+			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
+			exit(1);
+		}
+		
+		for (l=0;l<nmodes;++l) 
+			out.writeFloat(coeff(k,l),binio::Double);
+			
+		out.close();
+	}
+
+    return;
+}
+#endif
+
 template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
     std::string filename,keyword,linebuff;
     std::ostringstream nstr;
@@ -363,7 +662,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
         BASE::ugbd(0).v.reference(modes(i).v);
         BASE::ugbd(0).s.reference(modes(i).s);
         BASE::ugbd(0).i.reference(modes(i).i);
-        BASE::input(filename, BASE::text);
+        BASE::input(filename, BASE::binary);
     }
     BASE::ugbd(0).v.reference(ugstore.v);
     BASE::ugbd(0).s.reference(ugstore.s);
@@ -379,10 +678,10 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
     input.getwdefault("initfile",initfile,1);
     nstr.str("");
     nstr << initfile << std::flush;
-    filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".txt";
-    std::ifstream in;
+    filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
+    binifstream in;
     in.open(filename.c_str());
-    if (!in) {
+    if (in.error()) {
         *BASE::gbl->log << "couldn't open coefficient input file " << filename;
         exit(1);
     }
@@ -393,7 +692,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
     BASE::ug.i = 0;
                 
     for (int l=0;l<nmodes;++l) {
-        in >> coeffs(l);
+        coeffs(l) = in.readFloat(binio::Double); 
         BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
         BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
         BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));

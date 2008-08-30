@@ -27,7 +27,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
         
     /* FREESTREAM CONDITIONS */
     for(int n=0;n<x.NV;++n)
-        ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
+        ub(n) = ibc->f(n,xpt,x.gbl->time);
     
     hr = ub(x.NV-1);    
     hur =  ub(0)*norm(0) +ub(1)*norm(1);

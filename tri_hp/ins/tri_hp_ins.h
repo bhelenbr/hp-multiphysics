@@ -38,7 +38,7 @@ class tri_hp_ins : public tri_hp {
         
         hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
         hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-        init_bdry_cndtn* getnewibc(input_map& inmap);
+        init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
         tri_hp_helper* getnewhelper(input_map& inmap);
 
     public:

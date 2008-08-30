@@ -97,7 +97,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
     
     /* FREESTREAM CONDITIONS */
     for(int n=0;n<x.NV;++n)
-        ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
+        ub(n) = ibc->f(n,xpt,x.gbl->time);
 
     ur =  ub(0)*norm(0) +ub(1)*norm(1);
     vr = -ub(0)*norm(1) +ub(1)*norm(0);
@@ -158,6 +158,7 @@ void flow_inflow::tadvance() {
     int j,k,m,n,v0,v1,sind,indx,info;
     TinyVector<FLT,tri_mesh::ND> pt;
     char uplo[] = "U";
+	int one = 1;
     
     hp_edge_bdry::tadvance();
         
@@ -166,11 +167,11 @@ void flow_inflow::tadvance() {
         sind = base.seg(j);
         v0 = x.seg(sind).pnt(0);
         for(n=0;n<x.NV-2;++n)
-            x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
+            x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
     }
     v0 = x.seg(sind).pnt(1);
     for(n=0;n<x.NV-2;++n)
-        x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
+        x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
 
     /*******************/    
     /* SET SIDE VALUES */
@@ -202,7 +203,7 @@ void flow_inflow::tadvance() {
                 pt(0) = x.crd(0)(0,k);
                 pt(1) = x.crd(1)(0,k);
                 for(n=0;n<x.NV-2;++n)
-                    x.res(n)(0,k) -= x.gbl->ibc->f(n,pt,x.gbl->time);
+                    x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
             }
             for(n=0;n<x.NV-2;++n)
                 basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
@@ -210,6 +211,7 @@ void flow_inflow::tadvance() {
             indx = sind*x.sm0;
             for(n=0;n<x.NV-2;++n) {
                 PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
+                dpbtrs_(uplo,&basis::tri(x.log2p).sm,&basis::tri(x.log2p).sbwth,&one,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
                 for(m=0;m<basis::tri(x.log2p).sm;++m) 
                     x.ug.s(sind,m,n) = -x.lf(n)(2+m);
             }
@@ -219,5 +221,38 @@ void flow_inflow::tadvance() {
     return;
 }
 #endif
+
+void levelset_hybrid::rsdl(int stage) {
+    int i,m,msgn,count,sind,v0;
+    
+    base.comm_prepare(boundary::all,0,boundary::master_slave);
+    base.comm_exchange(boundary::all,0,boundary::master_slave);
+    base.comm_wait(boundary::all,0,boundary::master_slave);          
+    count = 0;
+    for(i=base.nseg-1;i>=0;--i) {
+        sind = base.seg(i);
+        v0 = x.seg(sind).pnt(1);
+#ifdef MPDEBUG
+        *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+#endif
+        x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+    }
+    v0 = x.seg(sind).pnt(0);
+#ifdef MPDEBUG
+    *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
+#endif     
+    x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+
+    for(i=base.nseg-1;i>=0;--i) {
+        sind = base.seg(i);
+        msgn = 1;
+        for(m=0;m<basis::tri(x.log2p).sm;++m) {
+            x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
+            msgn *= -1;
+        }
+    }
+
+    return;
+}
 
 

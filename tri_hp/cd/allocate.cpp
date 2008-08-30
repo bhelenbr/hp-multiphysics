@@ -40,8 +40,7 @@ void tri_hp_cd::init(input_map& input, void *gin) {
     
     gbl->tau.resize(maxpst);
     
-    gbl->src = getnewsrc(input);
-    gbl->src->input(input,gbl->idprefix);
+    gbl->src = getnewibc("src",input);
     
     return;
 }

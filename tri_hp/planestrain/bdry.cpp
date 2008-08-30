@@ -78,11 +78,11 @@ void dirichlet::tadvance() {
         sind = base.seg(j);
         v0 = x.seg(sind).pnt(0);
         for(n=0;n<x.ND;++n)
-            x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
+            x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
     }
     v0 = x.seg(sind).pnt(1);
     for(n=0;n<x.ND;++n)
-        x.ug.v(v0,n) = x.gbl->ibc->f(n,x.pnts(v0),x.gbl->time);
+        x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
     
     /*******************/    
     /* SET SIDE VALUES */
@@ -114,7 +114,7 @@ void dirichlet::tadvance() {
                 pt(0) = x.crd(0)(0,k);
                 pt(1) = x.crd(1)(0,k);
                 for(n=0;n<x.ND;++n)
-                    x.res(n)(0,k) -= x.gbl->ibc->f(n,pt,x.gbl->time);
+                    x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
             }
             for(n=0;n<x.ND;++n)
                 basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));

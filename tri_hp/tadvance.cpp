@@ -101,6 +101,9 @@ void tri_hp::tadvance() {
             }
         }
     }
+	
+	for(i=0;i<nvbd;++i) 
+        hp_vbdry(i)->tadvance();
 
     for(i=0;i<nebd;++i) 
         hp_ebdry(i)->tadvance();

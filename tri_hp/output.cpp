@@ -14,7 +14,8 @@
 #include <stdlib.h>
 #include <utilities.h>
 #include <myblas.h>
-
+#include <libbinio/binwrap.h>
+#include <libbinio/binfile.h>
 // #define DATATANK
 
 #ifdef DATATANK
@@ -45,18 +46,35 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             }
             if (mmovement != fixed || gbl->adapt_flag) {
                 namewdot = fname +".v";
-                tri_mesh::output(fname,tri_mesh::grid);
-                tri_mesh::output(fname,tri_mesh::vlength);
-                for(i=1;i<sim::nadapt;++i) {
-                    nstr.str("");
-                    nstr << i << std::flush;
-                    fnmapp = namewdot +nstr.str() +".txt";
-                    out.open(fnmapp.c_str());
-                    out << npnt << std::endl;
-                    for (j=0;j<npnt;++j) 
-                        out << j << ':' << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
-                    out.close();
-                }
+				if (output_type(1) == tri_hp::binary) {
+					tri_mesh::output(fname,tri_mesh::binary);
+					binofstream bout;
+					for(i=1;i<sim::nadapt;++i) {
+						nstr.str("");
+						nstr << i << std::flush;
+						fnmapp = namewdot +nstr.str() +".bin";
+						bout.open(fnmapp.c_str());
+						for (j=0;j<npnt;++j) { 
+							bout.writeFloat(vrtxbd(i)(j)(0),binio::Double);
+							bout.writeFloat(vrtxbd(i)(j)(1),binio::Double);
+						}
+						bout.close();
+					}
+				}
+				else {
+					tri_mesh::output(fname,tri_mesh::grid);
+					tri_mesh::output(fname,tri_mesh::vlength);
+					for(i=1;i<sim::nadapt;++i) {
+						nstr.str("");
+						nstr << i << std::flush;
+						fnmapp = namewdot +nstr.str() +".txt";
+						out.open(fnmapp.c_str());
+						out << npnt << std::endl;
+						for (j=0;j<npnt;++j) 
+							out << j << ':' << vrtxbd(i)(j)(0) << ' ' << vrtxbd(i)(j)(1) << std::endl;
+						out.close();
+					}
+				}
             }            
             return;
         }
@@ -124,6 +142,55 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             out.close();
             break;
         
+		case (binary): {
+            fnmapp = fname +".bin";
+            out.open(fnmapp.c_str(),std::ios::binary);
+            if (!out) {
+                *gbl->log << "couldn't open text output file " << fnmapp;
+                exit(1);
+            }
+			binowstream bout(&out);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+			
+            /* HEADER INFORMATION */
+			bout.writeInt(p0,sizeof(int));
+			bout.writeInt(npnt,sizeof(int));
+			bout.writeInt(nseg,sizeof(int));
+			bout.writeInt(ntri,sizeof(int));
+			
+            for(i=0;i<npnt;++i) {
+                for(n=0;n<NV;++n)
+                    bout.writeFloat(ugbd(tlvl).v(i,n),binio::Double);
+            }
+            
+            for(i=0;i<nseg;++i) {
+                for(m=0;m<sm0;++m) {
+                    for(n=0;n<NV;++n)
+                        bout.writeFloat(ugbd(tlvl).s(i,m,n),binio::Double);
+                }
+            }
+            
+            for(i=0;i<ntri;++i) {
+                for(m=0;m<im0;++m) {
+                    for(n=0;n<NV;++n)
+                        bout.writeFloat(ugbd(tlvl).i(i,m,n),binio::Double);
+                }
+            }
+			
+            /* BOUNDARY INFO */
+            for(i=0;i<nebd;++i) {
+                hp_ebdry(i)->output(out,typ,tlvl);
+            }
+            
+            for(i=0;i<nvbd;++i) {
+                hp_vbdry(i)->output(out,typ,tlvl);
+            }
+            
+            out.close();
+            break;
+		}
+
         case(tecplot):
             fnmapp = fname +".dat";
             out.open(fnmapp.c_str());
@@ -388,44 +455,75 @@ void tri_hp::input(const std::string& fname) {
     std::string fnmapp;
     std::ostringstream nstr;
     ifstream fin;
-    
-    fnmapp = fname +".grd";
-    fin.open(fnmapp.c_str(),ios::in);
-    if(fin.is_open()) {
-        fin.close();
-        fnmapp = fname +".v";
-        input_map blank;
-        tri_mesh::input(fname,tri_mesh::grid,1,blank);
-        for(i=1;i<sim::nadapt;++i) {
-            nstr.str("");
-            nstr << i << std::flush;
-            fnmapp = fname +".v" +nstr.str() +".txt";
-            fin.open(fnmapp.c_str());
-            if (!fin.is_open()) {
-                *gbl->log << "couldn't open input file " << fnmapp << std::endl;
-                exit(1);
-            }
-            fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
-            for (j=0;j<npnt;++j) {
-                fin.ignore(80,':');
-                fin >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
-            }
-            fin.close();
-        }
-    }
-    else {
-        /* THIS IS TO MAKE SURE THAT FIXED GRID CALCULATIONS DON'T GET MESSED UP BY TIME STEP EXTRAPOLATION */
-        vrtxbd(1)(Range(0,npnt-1)) = vrtxbd(0)(Range(0,npnt-1));
-    }
-            
-    
-    for(i=0;i<sim::nadapt;++i) {
-        nstr.str("");
-        nstr << i << std::flush;
-        fnmapp = fname +".d" +nstr.str();
-        // input(fnmapp,output_type(1),i);
-        input(fnmapp,text,i);
-    }
+	binifstream bin;
+	
+	if (reload_type == tri_hp::binary) {
+	    fnmapp = fname +".bin";
+		fin.open(fnmapp.c_str(),ios::in);
+		if(fin.is_open()) {
+			fin.close();
+			fnmapp = fname +".v";
+			input_map blank;
+			tri_mesh::input(fname,tri_mesh::binary,1,blank);
+			for(i=1;i<sim::nadapt;++i) {
+				nstr.str("");
+				nstr << i << std::flush;
+				fnmapp = fname +".v" +nstr.str() +".bin";
+				bin.open(fnmapp.c_str());
+				if (bin.error()) {
+					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
+					exit(1);
+				}
+				for (j=0;j<npnt;++j) {
+					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
+					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
+				}
+				bin.close();
+			}
+		}
+				
+		
+		for(i=0;i<sim::nadapt;++i) {
+			nstr.str("");
+			nstr << i << std::flush;
+			fnmapp = fname +".d" +nstr.str();
+			input(fnmapp,reload_type,i);
+		}
+	}
+	else {
+		fnmapp = fname +".grd";
+		fin.open(fnmapp.c_str(),ios::in);
+		if(fin.is_open()) {
+			fin.close();
+			fnmapp = fname +".v";
+			input_map blank;
+			tri_mesh::input(fname,tri_mesh::grid,1,blank);
+			for(i=1;i<sim::nadapt;++i) {
+				nstr.str("");
+				nstr << i << std::flush;
+				fnmapp = fname +".v" +nstr.str() +".txt";
+				fin.open(fnmapp.c_str());
+				if (!fin.is_open()) {
+					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
+					exit(1);
+				}
+				fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
+				for (j=0;j<npnt;++j) {
+					fin.ignore(80,':');
+					fin >> vrtxbd(i)(j)(0) >> vrtxbd(i)(j)(1);
+				}
+				fin.close();
+			}
+		}
+				
+		
+		for(i=0;i<sim::nadapt;++i) {
+			nstr.str("");
+			nstr << i << std::flush;
+			fnmapp = fname +".d" +nstr.str();
+			input(fnmapp,reload_type,i);
+		}
+	}
 
     return;
 
@@ -515,6 +613,89 @@ void tri_hp::input(const std::string& fname) {
 
             in.close();
             break;
+		
+		case (binary): {
+            fnapp = filename +".bin";
+            in.open(fnapp.c_str());
+            if (!in) {
+                *gbl->log << "couldn't open text input file " << fnapp << std::endl;
+                exit(1);
+            }
+			biniwstream bin(&in);
+			            
+			/* HEADER INFORMATION */
+			bin.setFlag(binio::BigEndian,bin.readInt(1));
+			bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+		
+            /* INPUT # OF SIDE MODES (ONLY THING THAT CAN BE DIFFERENT) THEN SKIP THE REST */
+            pin = bin.readInt(sizeof(int));
+            pmin = MIN(p0,pin);
+
+			if (bin.readInt(sizeof(int))  != npnt) {
+				*gbl->log << "mismatched pnt counts?\n";
+				exit(1);
+			}
+			if (bin.readInt(sizeof(int))  != nseg) {
+				*gbl->log << "mismatched seg counts?\n";
+				exit(1);
+			}
+			if (bin.readInt(sizeof(int))  != ntri) {
+				*gbl->log << "mismatched tri counts?\n";
+				exit(1);
+			}
+
+            for(i=0;i<npnt;++i) {
+                for(n=0;n<NV;++n)
+                    ugbd(tlvl).v(i,n) = bin.readFloat(binio::Double);
+            }
+            
+            for(i=0;i<nseg;++i) {
+                for(m=0;m<(pmin-1);++m) {
+                    for(n=0;n<NV;++n)
+                        ugbd(tlvl).s(i,m,n) = bin.readFloat(binio::Double);
+                }
+                indx += p0 -pmin;
+
+                for(m=0;m<(pin-p0);++m) {
+                    for(n=0;n<NV;++n)
+                        bin.readFloat(binio::Double);
+                }              
+            }
+            
+            for(i=0;i<ntri;++i) {
+                indx = 0;
+                for(m=1;m<pmin-1;++m) {
+                    for(k=0;k<pmin-1-m;++k) {
+                        for(n=0;n<NV;++n) 
+                            ugbd(tlvl).i(i,indx,n) = bin.readFloat(binio::Double);
+                        ++indx;
+                    }
+                    indx += p0 -pmin;
+                    
+                    for(k=0;k<pin-p0;++k) {
+                        for(n=0;n<NV;++n) 
+                            bin.readFloat(binio::Double);
+                    }
+                }
+                
+                for(m=pmin-1;m<pin-1;++m) {
+                    for(k=0;k<pin-1-m;++k) {
+                        for(n=0;n<NV;++n) 
+                            bin.readFloat(binio::Double); 
+                    }
+                }              
+            }
+						
+            /* BOUNDARY INFO */
+            for(i=0;i<nebd;++i)
+                hp_ebdry(i)->input(in,typ,tlvl);
+                
+            for(i=0;i<nvbd;++i)
+                hp_vbdry(i)->input(in,typ,tlvl);
+
+            in.close();
+            break;
+		}
 
         case(tecplot):
             /* CAN ONLY DO THIS IF HAVE MESH FILE */

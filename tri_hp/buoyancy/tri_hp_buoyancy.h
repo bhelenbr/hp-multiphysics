@@ -12,7 +12,7 @@
 
 #include "../ins/tri_hp_ins.h"
 #include <blocks.h>
-#include <mathclass.h>
+#include <symbolic_function.h>
 
 class tri_hp_buoyancy : public tri_hp_ins {
     public:

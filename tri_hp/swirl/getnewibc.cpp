@@ -170,14 +170,16 @@ namespace ibc_swirl {
 }
 
 
-init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
+init_bdry_cndtn *tri_hp_swirl::getnewibc(std::string suffix, input_map& inmap) {
 	std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_ibc";
+	keyword = gbl->idprefix + "_" +suffix;
 	if (!inmap.get(keyword,ibcname)) {
-		if (!inmap.get("ibc",ibcname)) {
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
 			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}
@@ -186,29 +188,31 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(input_map& inmap) {
 		
 	switch(type) {
 		case ibc_swirl::ibc_type::spinning: {
-			init_bdry_cndtn *temp = new ibc_swirl::spinning;
-			return(temp);
+			temp = new ibc_swirl::spinning;
+			break;
 			
 		}
 		case ibc_swirl::ibc_type::jet: {
-			init_bdry_cndtn *temp = new ibc_swirl::jet;
-			return(temp);
+			temp = new ibc_swirl::jet;
+			break;
 			
 		}
 		case ibc_swirl::ibc_type::spinninglid: {
-			init_bdry_cndtn *temp = new ibc_swirl::spinninglid;
-			return(temp);
+			temp = new ibc_swirl::spinninglid;
+			break;
 			
 		}
 		
 		case ibc_swirl::ibc_type::spinninglid2: {
-		init_bdry_cndtn *temp = new ibc_swirl::spinninglid2;
-		return(temp);
+		temp = new ibc_swirl::spinninglid2;
+		break;
 			
 		}
 		
 		default: {
-            return(tri_hp::getnewibc(inmap));
+            return(tri_hp::getnewibc(suffix,inmap));
         }
 	}
+	temp->input(inmap,keyword);
+	return(temp);
 }

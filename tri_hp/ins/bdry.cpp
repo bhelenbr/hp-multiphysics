@@ -15,7 +15,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
     FLT convect;
     
     switch(typ) {
-        case(tri_hp::text): {
+        case(tri_hp::text): case(tri_hp::binary): {
             hp_edge_bdry::output(fout,typ,tlvl);
             break;
         }
@@ -210,7 +210,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
     for(int n=0;n<tri_mesh::ND;++n) {
         nstr.str("");
         nstr << base.idprefix << "_stress" << n << std::flush;
-        if (inmap.find(nstr.str() +"_expression") != inmap.end()) {
+        if (inmap.find(nstr.str()) != inmap.end()) {
             stress(n).init(inmap,nstr.str());
         }
         else {
@@ -338,7 +338,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
     
     /* FREESTREAM CONDITIONS */
     for(int n=0;n<x.NV;++n)
-        ub(n) = x.gbl->ibc->f(n,xpt,x.gbl->time);
+        ub(n) = ibc->f(n,xpt,x.gbl->time);
         
     ur =  ub(0)*norm(0) +ub(1)*norm(1);
     vr = -ub(0)*norm(1) +ub(1)*norm(0);

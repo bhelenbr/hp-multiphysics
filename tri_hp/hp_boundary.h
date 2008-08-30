@@ -67,7 +67,10 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
                 
         /* FOR COUPLED DYNAMIC BOUNDARIES */
         virtual void setup_preconditioner() {}
-        virtual void tadvance() {}
+        virtual void tadvance() {
+			int pnt = base.pnt;
+			base.mvpttobdry(x.pnts(pnt));
+		}
         virtual void calculate_unsteady_sources() {}
         virtual void rsdl(int stage) {}
         virtual void update(int stage) {}
@@ -82,15 +85,16 @@ class hp_edge_bdry : public egeometry_interface<2> {
         tri_hp& x;
         edge_bdry &base;
         const hp_edge_bdry *adapt_storage;
+		init_bdry_cndtn *ibc;
         bool curved, coupled;
         Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
         TinyVector<Array<TinyVector<FLT,tri_mesh::ND>,2>,sim::nhist+1> crvbd;
         Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
 
     public:
-        hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";}
-        hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), curved(inbdry.curved), coupled(inbdry.coupled) {
-            if (curved && !x.coarse_level) {
+        hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain"; ibc=x.gbl->ibc;}
+        hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
+			if (curved && !x.coarse_level) {
                 crv.resize(base.maxseg,x.sm0);
                 for(int i=1;i<sim::nhist+1;++i)
                     crvbd(i).resize(base.maxseg,x.sm0);

@@ -80,14 +80,16 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     output_purposes(0) = "display_type";
     defaults(0) = tri_hp::tecplot;
     output_purposes(1) = "restart_type";
-    defaults(1) = tri_hp::text;
+    defaults(1) = tri_hp::binary;
     output_purposes(2) = "debug_type";
     defaults(2) = tri_hp::tecplot;
     for(int i=0;i<3;++i) {
         if (!inmap.get(gbl->idprefix + "_" + output_purposes(i),ival)) inmap.getwdefault(output_purposes(i),ival,defaults(i));
         output_type(i) = static_cast<filetype>(ival);
     }
-            
+	if (!inmap.get(gbl->idprefix + "_reload_type",ival)) inmap.getwdefault("reload_type",ival,static_cast<int>(tri_hp::binary));
+	reload_type = static_cast<filetype>(ival); 
+	          
     /* Check that static work arrays are big enough */
     if (u.extent(firstDim) < NV) {
         u.resize(NV);
@@ -114,7 +116,10 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
         ugbd(i).s.resize(maxpst,sm0,NV);
         ugbd(i).i.resize(maxpst,im0,NV);
         vrtxbd(i).resize(maxpst);
-    }    
+    }
+	
+	/* GET INITIAL CONDITION FUNCTION */
+    gbl->ibc = getnewibc("ibc",inmap);
         
     /* ALLOCATE BOUNDARY CONDITION STUFF */
     gbl->ebdry_gbls.resize(nebd);
@@ -138,9 +143,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     dxdt.resize(log2p+1,maxpst,ND);
     /// COARSE MESH STOPS HERE */
     
-    /* GET INITIAL CONDITION FUNCTION */
-    gbl->ibc = getnewibc(inmap);
-    gbl->ibc->input(inmap,gbl->idprefix);
+
 
     /* Multigrid Storage all except highest order (log2p+1)*/
     dres.resize(log2p);

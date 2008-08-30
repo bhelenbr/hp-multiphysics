@@ -79,14 +79,16 @@ namespace ibc_swe {
 };
 
 
-init_bdry_cndtn *tri_hp_swe::getnewibc(input_map& inmap) {
-	std::string keyword,ibcname;
+init_bdry_cndtn *tri_hp_swe::getnewibc(std::string suffix, input_map& inmap) {
+	std::string ibcname, keyword;
+	init_bdry_cndtn *temp;
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_ibc";
+	keyword = gbl->idprefix + "_" +suffix;
 	if (!inmap.get(keyword,ibcname)) {
-		if (!inmap.get("ibc",ibcname)) {
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
 			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}	
@@ -94,40 +96,47 @@ init_bdry_cndtn *tri_hp_swe::getnewibc(input_map& inmap) {
 		
 	switch(type) {
 		case ibc_swe::ibc_type::rossby: {
-			init_bdry_cndtn *temp = new ibc_swe::rossby;
-			return(temp);
+			temp = new ibc_swe::rossby;
+			break;
 		}
 		
 		default: {
-            return(tri_hp_ins::getnewibc(inmap));
+            return(tri_hp_ins::getnewibc(suffix,inmap));
         }
 	}
+	
+	temp->input(inmap,keyword);
+	return(temp);
 }
 
-init_bdry_cndtn *tri_hp_swe::getnewbathy(input_map& inmap) {
+init_bdry_cndtn *tri_hp_swe::getnewbathy(std::string suffix, input_map& inmap) {
 	std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
 	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
-	keyword = std::string(gbl->idprefix) + "_bathy";
+	keyword = gbl->idprefix + "_" +suffix;
 	if (!inmap.get(keyword,ibcname)) {
-		if (!inmap.get("bathy",ibcname)) {
-			*gbl->log << "couldn't find bathy  type" << std::endl;
+		keyword = suffix;
+		if (!inmap.get(keyword,ibcname)) {
+			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
-	}
-	
+	}		
 	type = ibc_swe::bathy_type::getid(ibcname.c_str());
 		
 	switch(type) {
 		case ibc_swe::bathy_type::flat: {
-			init_bdry_cndtn *temp = new ibc_swe::flat;
-			return(temp);
+			temp = new ibc_swe::flat;
+			break;
 		}
         default: {
-            return(tri_hp::getnewibc(inmap));
+            return(tri_hp::getnewibc(suffix,inmap));
         }
 	}
-    
+	
+	temp->input(inmap,keyword);
+	
+	return(temp);
 }
 
 
