@@ -106,7 +106,7 @@ void blocks::go(input_map& input) {
     }
     blk.resize(myblock);
     for(i=0;i<myblock;++i)
-        blk(i) = getnewblock(i,input);
+        blk(i) = getnewblock(i+bstart,input);
     
     /* RESIZE ALLREDUCE BUFFER POINTERS ARRAYS */
     sndbufs.resize(myblock);
@@ -643,15 +643,15 @@ void block::init(input_map &input) {
 #endif 
 
     /* SET TIME STEPPING INFO */
-    gbl->tstep = -1;
+    gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
     gbl->substep = -1;
-    gbl->time = -1.0;  // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
     input.getwdefault("dtinv",gbl->dti,0.0);
     input.getwdefault("dtinv_prev",gbl->dti_prev,gbl->dti); 
     input.getwdefault("ntstep",ntstep,1);
     input.getwdefault("restart",nstart,0);
     ntstep += nstart +1;
-    if (nstart > 0 && gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
+	gbl->time = 0.0;
+    if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
         
     /* OTHER UNIVERSAL CONSTANTS */
     input.getwdefault("gravity",gbl->g,0.0);
@@ -737,7 +737,7 @@ void block::init(input_map &input) {
 
 
 void block::cycle(int vw, int lvl) {
-    int vcount; 
+    int vcount,extra_count = 0; 
     int gridlevel,gridlevelp;
     FLT error,maxerror = 0.0;
     
@@ -761,6 +761,14 @@ void block::cycle(int vw, int lvl) {
             maxerror = MAX(error,maxerror);
             *gbl->log << ' ' << error/maxerror << std::endl;
             if (error/maxerror > error_control_tolerance) vcount = vw-2;
+			if (debug_output) {
+			    std::string outname;
+				std::ostringstream nstr("");
+				nstr.str("");
+				nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count++ << std::flush;
+				outname = "coarse_debug" +nstr.str();
+				output(outname,block::debug,gridlevel);
+			}
             if (lvl == mglvls-1) continue;
         }
         
@@ -935,7 +943,7 @@ void block::tadvance() {
         gbl->dti_prev = gbl->dti;
     }
     else {
-        gbl->time = 0.0;
+        gbl->time = gbl->tstep;
     }
 #endif
 #endif

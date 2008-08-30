@@ -12,8 +12,8 @@
 
 class r_stype {
     public:
-        static const int ntypes = 4;
-        enum ids {free=1, fixed, translating, oscillating};
+        static const int ntypes = 5;
+        enum ids {free=1, fixed, translating, oscillating, deforming};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i) 
@@ -22,23 +22,21 @@ class r_stype {
         }
 };
 
-const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating"};
+const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating", "deforming"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
-    std::istringstream data;
-    std::map<std::string,std::string>::const_iterator mi;
+    std::string typ_str;
+	int type;
     r_side_bdry *temp;  
-    int type = 2;
 
-    mi = in_map.find(ebdry(bnum)->idprefix + "_r_type");
-    if (mi != in_map.end()) {
-        type = r_stype::getid((*mi).second.c_str());
-        if (type < 0)  {
-            *gbl->log << "unknown type:" << (*mi).second << std::endl;
-            exit(1);
-        }
-    }
+    if (in_map.get(ebdry(bnum)->idprefix + "_r_type",typ_str)) {
+		type = r_stype::getid(typ_str.c_str());
+		if (type < 0)  {
+			*gbl->log << ebdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
+			exit(1);
+		}
+	}
     else {
         /* SOME DEFAULTS FOR VARIOUS BOUNDARY TYPES */
         if (ebdry(bnum)->mytype == "comm") {
@@ -57,7 +55,7 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
         else {
             type = r_stype::fixed;
         }
-        *gbl->log << "# using default r_type of " << r_stype::names[type-1] << " for " << ebdry(bnum)->idprefix << std::endl;
+        *gbl->log << '#' << ebdry(bnum)->idprefix << "_r_type: " <<  r_stype::names[type-1] << std::endl;
     }
 
     switch(type) {
@@ -76,11 +74,67 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
         case r_stype::oscillating: {
             temp = new r_oscillating(*this,*ebdry(bnum)); 
             break;
-        }        
+        } 
+		case r_stype::deforming: {
+            temp = new r_deforming(*this,*ebdry(bnum)); 
+            break;
+        } 
         default: {
             temp = new r_fixed(*this,*ebdry(bnum));
             std::cout << "Don't know this r_side_bdry type\n";
         }
+    }
+    
+    temp->input(in_map);
+    
+    return(temp);
+}
+
+class r_vtype {
+    public:
+        static const int ntypes = 3;
+        enum ids {free=1, fixed, moving};
+        const static char names[ntypes][40];
+        static int getid(const char *nin) {
+            for(int i=0;i<ntypes;++i) 
+                if (!strcmp(nin,names[i])) return(i+1);
+            return(-1);
+        }
+};
+
+const char r_vtype::names[ntypes][40] = {"free", "fixed", "moving"};
+
+/* FUNCTION TO CREATE BOUNDARY OBJECTS */
+r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& in_map) {
+	std::string typ_str;
+	int type;
+    r_vrtx_bdry *temp;  
+	
+    in_map.getwdefault(vbdry(bnum)->idprefix + "_r_type",typ_str,std::string("free"));
+	type = r_vtype::getid(typ_str.c_str());
+	if (type < 0)  {
+		*gbl->log << vbdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
+		exit(1);
+	}
+
+    switch(type) {
+        case r_vtype::free: {
+            temp = new r_vrtx_bdry(*this,*vbdry(bnum));
+            break;
+        }
+        case r_vtype::fixed: {
+            temp = new r_vfixed(*this,*vbdry(bnum)); 
+            break;
+        }
+        case r_vtype::moving: {
+            temp = new r_vmoving(*this,*vbdry(bnum)); 
+            break;
+        }
+		default: {
+			temp = new r_vrtx_bdry(*this,*vbdry(bnum));
+			std::cout << "Don't know this r_vrtx_bdry type\n";
+
+		}
     }
     
     temp->input(in_map);

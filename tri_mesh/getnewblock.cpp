@@ -7,7 +7,7 @@ multigrid_interface* block::getnewlevel(input_map& input) {
     int type;          
     multigrid_interface *temp;  
     
-    if (!input.get(idprefix+"_type",type)) input.getwdefault("blocktype",type,1);
+    if (!input.get(idprefix+"_type",type)) input.getwdefault("type",type,1);
     
     switch(type) {
         default: {

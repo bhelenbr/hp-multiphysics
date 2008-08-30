@@ -199,3 +199,88 @@ class r_oscillating : public r_fixed {
         }
 };
 
+
+class r_deforming : public r_fixed {
+    public:
+		r_deforming(r_tri_mesh &xin, edge_bdry &bin) : r_fixed(xin,bin) {mytype="deforming";}
+        r_deforming(const r_deforming &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin) {mytype="deforming";}
+        r_deforming* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_deforming(*this,xin,bin);}            
+	
+        void tadvance() {
+			int vrt;
+			for(int j=1;j<base.nseg;++j) {
+				vrt = x.seg(base.seg(j)).pnt(0);
+				base.mvpttobdry(j,-1.0,x.pnts(vrt));
+			}
+		}
+};
+
+class r_vrtx_bdry {
+    protected:
+        std::string mytype;
+        r_tri_mesh &x;
+        vrtx_bdry &base;
+
+    public:
+        r_vrtx_bdry(r_tri_mesh &xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        r_vrtx_bdry(const r_vrtx_bdry &inbdry, r_tri_mesh &xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype="plain";}
+        virtual r_vrtx_bdry* create(r_tri_mesh &xin, vrtx_bdry &bin) const {return new r_vrtx_bdry(*this,xin,bin);}
+        /* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
+        virtual void output(std::ostream& fout) {
+            fout << base.idprefix << "_r_vtype: " << mytype << std::endl;            
+        }
+        virtual void input(input_map& bdrydata) {}
+        virtual void tadvance() {}
+        virtual void dirichlet() {}
+        virtual void fixdx2() {}
+        virtual ~r_vrtx_bdry() {}
+};
+
+class r_vfixed : public r_vrtx_bdry {
+    public:
+        int dstart, dstop;
+        
+        r_vfixed(r_tri_mesh &xin, vrtx_bdry &bin) : r_vrtx_bdry(xin,bin), dstart(0), dstop(1) {mytype = "vfixed";} 
+        r_vfixed(const r_vfixed &inbdry, r_tri_mesh &xin, vrtx_bdry &bin) : r_vrtx_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "vfixed";}
+        r_vfixed* create(r_tri_mesh &xin, vrtx_bdry &bin) const {return new r_vfixed(*this,xin,bin);}
+                   
+        void input(input_map& inmap) {
+            r_vrtx_bdry::input(inmap);
+            
+            std::string line;
+            inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
+            std::istringstream data(line);
+            data >> dstart >> dstop;
+            data.clear();
+        }  
+        
+        void output(std::ostream& fout) {
+            r_vrtx_bdry::output(fout);
+            fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
+        }
+              
+        void dirichlet() {            
+			int pnt = base.pnt;
+			for(int n=dstart;n<=dstop;++n) {
+				x.gbl->res(pnt)(n) = 0.0;
+			}
+            return;
+        }
+
+};
+
+class r_vmoving : public r_vfixed {
+    public:
+		r_vmoving(r_tri_mesh &xin, vrtx_bdry &bin) : r_vfixed(xin,bin) {mytype="moving";}
+        r_vmoving(const r_vmoving &inbdry, r_tri_mesh &xin, vrtx_bdry &bin) : r_vfixed(inbdry,xin,bin) {mytype="moving";}
+        r_vmoving* create(r_tri_mesh &xin, vrtx_bdry &bin) const {return new r_vmoving(*this,xin,bin);}            
+	
+        void tadvance() {
+			int pnt = base.pnt;
+			base.mvpttobdry(x.pnts(pnt));
+		}
+};
+
+
+
+

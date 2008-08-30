@@ -21,9 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		6F1616030B974E67006CA043 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6F16C6DB0D81EDF500F03F54 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F3627460CD2336E00BF7568 /* libspline.a */; };
-		6F16C6DC0D81EDF600F03F54 /* libgfortran.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F36274E0CD233C100BF7568 /* libgfortran.a */; };
 		6F16C6E40D81F11000F03F54 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D80D81EDD900F03F54 /* libmpi_cxx.dylib */; };
 		6F16C6E80D81F12200F03F54 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D70D81EDD900F03F54 /* libmpi.dylib */; };
 		6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
@@ -56,8 +54,9 @@
 		6F2262E3086730AE001017D0 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F2262E4086730AF001017D0 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F749A0DD89553002615F9 /* libbinio.dylib */; };
+		6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F749A0DD89553002615F9 /* libbinio.dylib */; };
 		6F446DB708B291D1004FF284 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
-		6F4843C30D08AC6C005269B3 /* libgfortran.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F36274E0CD233C100BF7568 /* libgfortran.a */; };
 		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
 		6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
 		6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
@@ -163,7 +162,6 @@
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
-		6FDBE9090C6019AB00BFCA72 /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
 /* End PBXBuildFile section */
 
@@ -185,8 +183,8 @@
 		6F16C6D70D81EDD900F03F54 /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		6F16C6D80D81EDD900F03F54 /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
 		6F2262C008672FAE001017D0 /* libtri_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F2F749A0DD89553002615F9 /* libbinio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbinio.dylib; path = ../../Packages/lib/libbinio.dylib; sourceTree = SOURCE_ROOT; };
 		6F3627460CD2336E00BF7568 /* libspline.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspline.a; path = ../lib/libspline.a; sourceTree = SOURCE_ROOT; };
-		6F36274E0CD233C100BF7568 /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; wrapsLines = 1; };
 		6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34_1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_thread-mt-1_34_1.dylib"; path = "../../Packages/lib/libboost_thread-mt-1_34_1.dylib"; sourceTree = SOURCE_ROOT; };
 		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
@@ -246,12 +244,11 @@
 				6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */,
 				6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
-				6F1616030B974E67006CA043 /* libDT.a in Frameworks */,
 				6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */,
 				6F16C6DB0D81EDF500F03F54 /* libspline.a in Frameworks */,
-				6F16C6DC0D81EDF600F03F54 /* libgfortran.a in Frameworks */,
 				6F16C6E40D81F11000F03F54 /* libmpi_cxx.dylib in Frameworks */,
 				6F16C6E80D81F12200F03F54 /* libmpi.dylib in Frameworks */,
+				6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,10 +262,9 @@
 				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
 				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
 				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
-				6FDBE9090C6019AB00BFCA72 /* libDT.a in Frameworks */,
 				6FA4AF290D0758E000EDB036 /* libspline.a in Frameworks */,
-				6F4843C30D08AC6C005269B3 /* libgfortran.a in Frameworks */,
 				6FA883610D868DFB00C8435F /* libpth.a in Frameworks */,
+				6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -279,12 +275,12 @@
 			isa = PBXGroup;
 			children = (
 				6F1616010B974E67006CA043 /* libDT.a */,
+				6F2F749A0DD89553002615F9 /* libbinio.dylib */,
 				6F56D55C09EEE7F900C97501 /* libblitz.a */,
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
 				6F8509B607A5383700343685 /* libquad.a */,
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
 				6F3627460CD2336E00BF7568 /* libspline.a */,
-				6F36274E0CD233C100BF7568 /* libgfortran.a */,
 				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
 				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
 				6F50F44D0C4CE618001452F3 /* libboost_thread-mt-1_34_1.dylib */,
@@ -957,6 +953,7 @@
 				DEPLOYMENT_LOCATION = NO;
 				DSTROOT = /;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -964,6 +961,7 @@
 					METIS,
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
@@ -1098,6 +1096,10 @@
 		6FD540670863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Development;
 		};

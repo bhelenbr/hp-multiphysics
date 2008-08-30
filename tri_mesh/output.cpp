@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <fstream>
 #include <iomanip>
+#include <libbinio/binfile.h>
 #include "tri_mesh.h"
-#include <bstream.h>
 
 // #define DATATANK
 
@@ -17,7 +17,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
     std::string fnmapp;
     int i,j,n,tind,count;
     ofstream out;
-    bostream bout;
+    binofstream bout;
     
     out.setf(std::ios::scientific, std::ios::floatfield);
     out.precision(10);
@@ -265,46 +265,51 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
         case(binary):
             fnmapp = filename +".bin";
             bout.open(fnmapp.c_str());
-            if (!out) {
+            if (bout.error()) {
                 *gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
                 exit(1);
             }
             
             /* HEADER LINES */
-            bout << "npnt: " << npnt;
-            bout << " nseg: " << nseg;
-            bout << " ntri: " << ntri << endl;
-
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+            bout.writeInt(npnt,sizeof(int));
+			bout.writeInt(nseg,sizeof(int));
+			bout.writeInt(ntri,sizeof(int));
             /* POINT INFO */                                
             for(i=0;i<npnt;++i) {
-                bout << i << ": ";
                 for(n=0;n<ND;++n)
-                    bout << pnts(i)(n) << ' ';
-                bout << "\n";
+                    bout.writeFloat(pnts(i)(n),binio::Double);
+				bout.writeFloat(lngth(i),binio::Double);
             }
                           
             /* SIDE INFO */
-            for(i=0;i<nseg;++i)
-                bout << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << endl;
+            for(i=0;i<nseg;++i) {
+                bout.writeInt(seg(i).pnt(0),sizeof(int));
+				bout.writeInt(seg(i).pnt(1),sizeof(int));
+			}
 
             /* THEN TRI INFO */
-            for(i=0;i<ntri;++i)
-                bout << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << endl;
-
+            for(i=0;i<ntri;++i) {
+				bout.writeInt(tri(i).pnt(0),sizeof(int));
+				bout.writeInt(tri(i).pnt(1),sizeof(int));
+				bout.writeInt(tri(i).pnt(2),sizeof(int));
+			}
+			
             /* SIDE BOUNDARY INFO HEADER */
-            bout << "nebd: " << nebd << endl;
+			bout.writeInt(nebd,sizeof(int));
             for(i=0;i<nebd;++i) {
-                bout << "idnum: " << ebdry(i)->idnum << endl;
-            	bout << "number: " << ebdry(i)->nseg << endl;
+				bout.writeInt(ebdry(i)->idnum,sizeof(int));
+				bout.writeInt(ebdry(i)->nseg,sizeof(int));
                 for(int j=0;j<ebdry(i)->nseg;++j)
-                    bout << j << ": " << ebdry(i)->seg(j) << std::endl;
+					bout.writeInt(ebdry(i)->seg(j),sizeof(int));
             }
 
             /* VERTEX BOUNDARY INFO HEADER */
-            bout << "nvbd: " << nvbd << endl;
+			bout.writeInt(nvbd,sizeof(int));
             for(i=0;i<nvbd;++i) {
-                bout << "idnum: " << vbdry(i)->idnum << endl;
-                bout << "point: " << vbdry(i)->pnt << endl;
+				bout.writeInt(vbdry(i)->idnum,sizeof(int));
+				bout.writeInt(vbdry(i)->pnt,sizeof(int));
             }
             
             bout.close();
@@ -331,7 +336,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
             // Output from computation
             Write(outputFile,"grid",dt_grid);
             outputFile.Save("TriangularGrid2D","Seq_grid");
- #else
+#else
             *gbl->log << "Not supported on this platform\n";
 #endif
             break;

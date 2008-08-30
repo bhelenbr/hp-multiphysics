@@ -19,8 +19,8 @@
  */
 class vtype {
     public:
-        static const int ntypes = 3;
-        enum ids {plain=1,comm,prdc};
+        static const int ntypes = 4;
+        enum ids {plain=1,comm,prdc,symbolic};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i) 
@@ -29,11 +29,10 @@ class vtype {
         }
 };
 
-const char vtype::names[ntypes][40] = {"plain","comm","prdc"};
+const char vtype::names[ntypes][40] = {"plain","comm","prdc","symbolic"};
 
-vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
+vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
+    std::string keyword,typ_str;
     ostringstream nstr;
     int type;          
     vrtx_bdry *temp;  
@@ -41,16 +40,13 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
     nstr.str("");
     nstr << idnum << std::flush;        
     keyword = gbl->idprefix +"_v" +nstr.str() + "_type";
-    if (bdrydata.get(keyword,val)) {
-        type = vtype::getid(val.c_str());
-        if (type < 0)  {
-            *gbl->log << "unknown vertex type:" << val << std::endl;
-            exit(1);
-        }
-    }
-    else {
-        type = vtype::plain;
-    }
+	
+    in_map.getwdefault(keyword,typ_str,std::string("plain"));
+	type = vtype::getid(typ_str.c_str());
+	if (type < 0)  {
+		*gbl->log << "unknown vertex type:" << typ_str << std::endl;
+		exit(1);
+	}
         
     switch(type) {
         case vtype::plain: {
@@ -65,14 +61,18 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& bdrydata) {
             temp = new vprdc(idnum,*this);
             break;
         }
+		case vtype::symbolic: {
+            temp = new vboundary_with_geometry<vrtx_bdry,symbolic_point<2> >(idnum,*this);
+            break;
+        }
         default: {
-            std::cout << "unrecognizable pnt type: " <<  type << " idnum: " << idnum << std::endl;
+            std::cout << "unrecognizable vrtx type: " <<  type << " idnum: " << idnum << std::endl;
             temp = new vrtx_bdry(idnum,*this);
             break;
         }
     } 
     
-    temp->init(bdrydata);
+    temp->init(in_map);
     
     return(temp);
 }
@@ -102,9 +102,8 @@ const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "sy
     "circle", "naca","ellipse"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
-edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
+edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
+    std::string keyword,typ_str;
     ostringstream nstr;
     int type;          
     edge_bdry *temp;  
@@ -114,16 +113,14 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
     nstr.str("");
     nstr << idnum << std::flush;        
     keyword = gbl->idprefix +"_s" +nstr.str() + "_type";
-    if (bdrydata.get(keyword,val)) {
-        type = etype::getid(val.c_str());
-        if (type < 0)  {
-            *gbl->log << "unknown edge type:" << val << std::endl;
-            exit(1);
-        }
-    }
-    else {
-        type = etype::plain;
-    }
+	
+    in_map.getwdefault(keyword,typ_str,std::string("plain"));
+	type = etype::getid(typ_str.c_str());
+	if (type < 0)  {
+		*gbl->log << "unknown edge type:" << typ_str << std::endl;
+		exit(1);
+	}
+
 
     switch(type) {
         case etype::plain: {
@@ -155,12 +152,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
             break;
         }
         case etype::spline: {
-#ifdef FORTSPLINE
-            temp = new edge_parametric<edge_bdry>(idnum,*this);
-#else
-            *gbl->log << "not compiled with splines" << std::endl;
-            exit(1);
-#endif
+            temp = new spline_bdry(idnum,*this);
             break;
         }
 
@@ -185,7 +177,7 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& bdrydata) {
         }
     }
     
-    temp->init(bdrydata);
+    temp->init(in_map);
     
     return(temp);
 }

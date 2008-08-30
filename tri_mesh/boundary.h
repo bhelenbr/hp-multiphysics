@@ -12,9 +12,9 @@
 #include <utilities.h>
 #include <stdio.h>
 #include <input_map.h>
-#include <mathclass.h>
+#include <symbolic_function.h>
 #include <float.h>
-#include <blocks.h>
+#include "blocks.h"
 
 using namespace blitz;
 
@@ -601,31 +601,25 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 /* GENERIC TEMPLATE FOR SHAPES */
 template<int ND> class geometry {
     protected:
-        //TinyVector<FLT,2> pos;
-        //TinyVector<FLT,3> angle;
         virtual FLT hgt(TinyVector<FLT,ND> pt, FLT time = 0.0) {return(0.0);}
         virtual FLT dhgt(int dir, TinyVector<FLT,ND> pt, FLT time = 0.0) {return(1.0);}
 
     public:        
-//        geometry() {pos = 0.0; angle = 0.0;}
         geometry* create() const {return(new geometry);}
-        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {
             int iter,n;
             FLT mag, delt_dist;
-            
-            /* TEMPO NEED TO PUT RIGID BODY DYNAMICS STUFF HERE */
-            
                             
             /* FOR AN ANALYTIC SURFACE */
             iter = 0;
             do {
                 mag = 0.0;
                 for(n=0;n<ND;++n)
-                    mag += pow(dhgt(n,pt.data()),2);
+                    mag += pow(dhgt(n,pt.data(),time),2);
                 mag = sqrt(mag);
-                delt_dist = -hgt(pt.data())/mag;
+                delt_dist = -hgt(pt.data(),time)/mag;
                 for(n=0;n<ND;++n)
-                    pt(n) += delt_dist*dhgt(n,pt.data())/mag;
+                    pt(n) += delt_dist*dhgt(n,pt.data(),time)/mag;
                 if (++iter > 100) {
                     std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // TEMPORARY NEED TO FIX
                     exit(1);
@@ -636,29 +630,60 @@ template<int ND> class geometry {
         }
         virtual void init(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
-        //virtual void translate(TinyVector<FLT,ND> dx) {pos += dx;}
-        //virtual void rotate(TinyVector<FLT,ND> dphi) {angle += dphi;}
         virtual ~geometry() {}
 };
 
 template<int ND> class vgeometry_interface {
     public:
-        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {}
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
         virtual ~vgeometry_interface() {}
 };
 
 template<int ND> class egeometry_interface {
     public:
-        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
+        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
         virtual ~egeometry_interface() {}
 };
 
 template<int ND> class fgeometry_interface {
     public:
-        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
+        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
         virtual ~fgeometry_interface() {}
 };
 
+
+template<int ND> class symbolic_point : public geometry<ND> {
+    protected:
+        TinyVector<symbolic_function<0>,2> loc;
+    public:
+		symbolic_point() : geometry<ND>() {}
+		symbolic_point(const symbolic_point& tgt) : geometry<ND>(tgt), loc(tgt.loc) {}
+			
+        void init(input_map& inmap, std::string idprefix, std::ostream& log) {    
+            geometry<ND>::init(inmap,idprefix,log);
+
+            if (inmap.find(idprefix +"_locx0") != inmap.end()) {
+                loc(0).init(inmap,idprefix+"_locx0");
+            }
+            else {
+                log << "couldn't find shape function " << idprefix << "_locx0" << std::endl;
+                exit(1);
+            }
+			
+			if (inmap.find(idprefix +"_locx1") != inmap.end()) {
+                loc(1).init(inmap,idprefix+"_locx1");
+            }
+            else {
+                log << "couldn't find shape function " << idprefix << "_locx1" << std::endl;
+                exit(1);
+            }
+        }
+		
+		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {
+			pt(0) = loc(0).Eval(time);
+			pt(1) = loc(1).Eval(time);
+		}
+};
 
 template<int ND> class symbolic_shape : public geometry<ND> {
     protected:
@@ -671,35 +696,37 @@ template<int ND> class symbolic_shape : public geometry<ND> {
             return(dhdx0.Eval(pt,time));
         }
     public:
+		symbolic_shape() : geometry<ND>() {}
+		symbolic_shape(const symbolic_shape& tgt) : geometry<ND>(tgt), h(tgt.h), dhdx0(tgt.dhdx0), dhdx1(tgt.dhdx1) {}
         void init(input_map& inmap, std::string idprefix, std::ostream& log) {    
             geometry<ND>::init(inmap,idprefix,log);
-            if (inmap.find(idprefix +"_h_expression") != inmap.end()) {
+            if (inmap.find(idprefix +"_h") != inmap.end()) {
                 h.init(inmap,idprefix+"_h");
             }
             else {
-                log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function " << idprefix << "_h" << std::endl;
                 exit(1);
             }
             
-            if (inmap.find(idprefix +"_dhdx0_expression") != inmap.end()) {
-                dhdx0.copy_consts(h);
+            if (inmap.find(idprefix +"_dhdx0") != inmap.end()) {
                 dhdx0.init(inmap,idprefix+"_dhdx0");
             }
             else {
-                log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function for " << idprefix << "_dhdx0" << std::endl;
                 exit(1);
             }
             
-            if (inmap.find(idprefix +"_dhdx1_expression") != inmap.end()) {
-                dhdx1.copy_consts(h);
+            if (inmap.find(idprefix +"_dhdx1") != inmap.end()) {
                 dhdx1.init(inmap,idprefix+"_dhdx1");
             }
             else {
-                log << "couldn't find shape function for " << idprefix << std::endl;
+                log << "couldn't find shape function " << idprefix << "_dhdx1" << std::endl;
                 exit(1);
             }
         }
+
 };
+
 
 class circle : public geometry<2> {
     public:
@@ -742,7 +769,7 @@ class ellipse : public geometry<2> {
         }
         
             public:
-        ellipse() {}
+        ellipse() : geometry<2>() {}
         ellipse(const ellipse &inbdry) : geometry<2>(inbdry), axes(inbdry.axes) {}
         ellipse* create() const {return(new ellipse(*this));}
 
@@ -855,50 +882,8 @@ class naca : public geometry<2> {
                 datastream >> pos(i);
             datastream.clear();        
         }
-};         
-
-#define FORTSPLINE
-#ifdef FORTSPLINE
-#include <cspline.h>
-class spline {
-    public:
-        int curve_id;
-    public:        
-        spline() {}
-        spline(const spline &inbdry) : curve_id(inbdry.curve_id) {}
-        spline* create() const {return(new spline(*this));}
-
-        void output(std::ostream& fout,std::string idprefix) {}
-      
-        void init(input_map& inmap,std::string idprefix,std::ostream& log) {
-            std::string filename;
-            if (!inmap.get(idprefix+"_filename",filename)) {
-                std::cerr << "Couldn't find file\n";
-                exit(1);
-            }
-            inmap.getwdefault(idprefix+"_curve",curve_id,1);
-            char fname[80];
-            strcpy(fname,filename.c_str());
-            // SPLINR(fname);
-			unsigned int length = filename.length();
-			splinr_(fname,length);
-			float x,y,s = 0.0;
-			SPLINE(curve_id,s,x,y);
-        }
-        
-        void mvpttobdry(float s, TinyVector<FLT,2> &pt) {
-            float x = pt(0);
-            float y = pt(1);
-            SPLINE(curve_id,s,x,y);
-            pt(0) = x;
-            pt(1) = y;
-        }        
 };
 #endif
 
-
-
-
-#endif
 
 

@@ -17,6 +17,7 @@
 #define GEOMETRIC
 
 class r_side_bdry;
+class r_vrtx_bdry;
 
 class r_tri_mesh : public tri_mesh {
         protected:            
@@ -33,6 +34,10 @@ class r_tri_mesh : public tri_mesh {
             Array<r_side_bdry *,1> r_sbdry;
             r_side_bdry* getnewedgeobject(int bnum, input_map& bdrydata);
             
+			Array<r_vrtx_bdry *,1> r_vbdry;
+            r_vrtx_bdry* getnewvrtxobject(int bnum, input_map& bdrydata);
+			
+			
              /* SETUP SPRING CONSTANTS */
             /* LAPLACE CONSTANTS */
             void rklaplace();

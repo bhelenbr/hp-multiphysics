@@ -203,7 +203,10 @@ void tri_mesh::treeinit() {
             }
         }
     }
-    
+	
+//	std::cout << gbl->idprefix << " tree init bl: " << x1[0] << ' ' <<  x1[1] << std::endl;
+//	std::cout << gbl->idprefix << " tree init tr: " << x2[0] << ' ' <<  x2[1] << std::endl;
+
     for(n=0;n<ND;++n) {
         dx = MAX(x2[n]-x1[n],100.0*EPSILON);
         x1[n] -= 0.25*dx;
@@ -211,6 +214,9 @@ void tri_mesh::treeinit() {
     }
     
     treeinit(x1,x2);
+
+//	std::cout << gbl->idprefix << " tree init bl: " << x1[0] << ' ' <<  x1[1] << std::endl;
+//	std::cout << gbl->idprefix << " tree init tr: " << x2[0] << ' ' <<  x2[1] << std::endl;
 
     return;
 }

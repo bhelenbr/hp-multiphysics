@@ -54,6 +54,10 @@ void r_tri_mesh::init(input_map& input, void *gin) {
     r_sbdry.resize(nebd);
     for(int i=0;i<nebd;++i)
         r_sbdry(i) = getnewedgeobject(i,input);
+		
+	r_vbdry.resize(nvbd);
+    for(int i=0;i<nvbd;++i)
+        r_vbdry(i) = getnewvrtxobject(i,input);
     
     return;
 }
@@ -79,6 +83,10 @@ void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizer
     r_sbdry.resize(nebd);
     for(int i=0;i<nebd;++i)
         r_sbdry(i) = inmesh.r_sbdry(i)->create(*this,*ebdry(i));
+		
+	r_vbdry.resize(nebd);
+    for(int i=0;i<nvbd;++i)
+        r_vbdry(i) = inmesh.r_vbdry(i)->create(*this,*vbdry(i));
     
     return;
 }
@@ -87,9 +95,12 @@ void r_tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizer
 r_tri_mesh::~r_tri_mesh() {
     for(int i=0;i<nebd;++i)
         delete r_sbdry(i);
+	
+    for(int i=0;i<nvbd;++i)
+        delete r_vbdry(i);
 }
 
-
+ 
 void r_tri_mesh::rklaplace() {
     int sind,tind,p0,p1,k;
     FLT dx,dy,l;
@@ -437,6 +448,9 @@ void r_tri_mesh::moveboundaries() {
     /* MOVE BOUNDARY POSITIONS */
     for(int i=0;i<nebd;++i)
         r_sbdry(i)->tadvance();
+		
+	for(int i=0;i<nvbd;++i)
+		r_vbdry(i)->tadvance();
     
     return;
 }
@@ -476,6 +490,9 @@ void r_tri_mesh::rsdl() {
     /* APPLY DIRICHLET BOUNDARY CONDITIONS */
     for(i=0;i<nebd;++i)
         r_sbdry(i)->fixdx2();
+		
+	for(i=0;i<nvbd;++i)
+		r_vbdry(i)->fixdx2();
 
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
         pmsgload(boundary::all_phased, mp_phase, boundary::symmetric,(FLT *) gbl->res1.data(),0,1,2);
@@ -544,6 +561,10 @@ void r_tri_mesh::rsdl() {
     /* APPLY DIRICHLET BOUNDARY CONDITIONS */
     for(i=0;i<nebd;++i)
         r_sbdry(i)->dirichlet();
+		
+	/* APPLY DIRICHLET BOUNDARY CONDITIONS */
+    for(i=0;i<nvbd;++i)
+        r_vbdry(i)->dirichlet();
 
     for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
         pmsgload(boundary::all_phased,mp_phase, boundary::symmetric,(FLT *) gbl->res.data(),0,1,2);

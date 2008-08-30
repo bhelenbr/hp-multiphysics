@@ -134,10 +134,35 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
         }
         
         void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
-            geometry_object.mvpttobdry(pt);
+            geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
             return;
         }
 };
+
+template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {
+    public:
+        GEOM geometry_object;
+        
+    public: 
+        vboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
+        vboundary_with_geometry(const vboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+        vboundary_with_geometry* create(tri_mesh& xin) const {return(new vboundary_with_geometry<BASE,GEOM>(*this,xin));}
+
+        void output(std::ostream& fout) {
+            BASE::output(fout);
+            geometry_object.output(fout,BASE::idprefix);
+        }
+        void init(input_map& inmap) {
+            BASE::init(inmap);
+            geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
+        }
+        
+        void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
+            geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
+            return;
+        }
+};
+
 
 /** \brief Interface & template to make a boundary that can be coupled to some other geometry object after tstep = 0
  *
@@ -164,102 +189,86 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_interface,
         }
 };
 
-#ifdef FORTSPLINE
+#include <spline.h>
 #include <blitz/tinyvec-et.h>
 
-template<class BASE> class edge_parametric : public BASE {
-    spline geometry_object;
-    Array<FLT,1> s;
-    FLT smin, smax;
+class spline_bdry : public edge_bdry {
+    spline<2> my_spline;
+    Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
+    FLT smin, smax; // LIMITS FOR BOUNDARY
     
     public: 
-        edge_parametric(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"parametric";}
-        edge_parametric(const edge_parametric<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object), smin(inbdry.smin), smax(inbdry.smax) {}
-        edge_parametric* create(tri_mesh& xin) const {return(new edge_parametric<BASE>(*this,xin));}
+        spline_bdry(int inid, tri_mesh &xin) : edge_bdry(inid,xin) {mytype="spline";}
+        spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax) {}
+        spline_bdry* create(tri_mesh& xin) const {return(new spline_bdry(*this,xin));}
         
         /* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
-        void alloc(int n) {BASE::alloc(n); s.resize(n+1);}
+        void alloc(int n) {edge_bdry::alloc(n); s.resize(n+1);}
         void output(std::ostream& fout) {
-            BASE::output(fout);
-            fout << s(Range(0,BASE::nseg-1)) << std::endl;
-            geometry_object.output(fout,BASE::idprefix);
+            edge_bdry::output(fout);
+            fout << s(Range(0,edge_bdry::nseg-1)) << std::endl;
         }
         void init(input_map& inmap) {
-            BASE::init(inmap);
-            geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
-            std::string line;
-            inmap.getlinewdefault(BASE::idprefix+"_s_limits",line,"0 1");
+            edge_bdry::init(inmap);
+			
+			std::string line;
+			if (!inmap.get(edge_bdry::idprefix+"_filename",line)) {
+				*x.gbl->log << "Couldn't fine spline file name in input file\n";
+				exit(1);
+			}
+            my_spline.read(line);
+			
+            inmap.getlinewdefault(edge_bdry::idprefix+"_s_limits",line,"0 1");
             std::istringstream data(line);
             data >> smin >> smax;
             data.clear();     
         }
         
         void input(std::istream& fin, tri_mesh::filetype type) {
-            BASE::input(fin,type);
-            if (type == tri_mesh::boundary) {
-                for(int i=0;i<BASE::nseg+1;++i) {
-                    fin >> s(i);
-                }
-            }
+            edge_bdry::input(fin,type);
+			for(int i=0;i<nseg+1;++i) {
+				fin >> s(i);
+			}
         }
         
         void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
             /* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
-            int sind = BASE::seg(nseg);
-            int p0 = BASE::x.seg(sind).pnt(0);
-            int p1 = BASE::x.seg(sind).pnt(1);
+            int sind = seg(nseg);
+            int p0 = x.seg(sind).pnt(0);
+            int p1 = x.seg(sind).pnt(1);
             float sloc;
-			
-//			*BASE::x.gbl->log << "nseg " << nseg << ' ' << sind << ' ' <<  psi << ' ' << pt << std::endl;
-			
+						
             /* METHOD 1 */
-            TinyVector<float,tri_mesh::ND> fpt0,fpt1;
-            float sloc0,sloc1;
-            
-            fpt0 = BASE::x.pnts(p0);
-            INVSPLINE(geometry_object.curve_id,sloc0,fpt0(0),fpt0(1));
+            FLT sloc0,sloc1;
+            my_spline.find(sloc0,x.pnts(p0));
             /* FOR LOOPS */
             if (sloc0 > smax) sloc0 = smin;
             
-            
-            fpt1 = BASE::x.pnts(p1);
-            INVSPLINE(geometry_object.curve_id,sloc1,fpt1(0),fpt1(1));
+            my_spline.find(sloc1,x.pnts(p1));
             /* FOR LOOPS */
             if (sloc1 < smin) sloc1 = smax;
        
-            
             sloc = 0.5*((1-psi)*sloc0 +(1+psi)*sloc1);
-            geometry_object.mvpttobdry(sloc,pt);
-			
-//			*BASE::x.gbl->log << sloc0 << ' ' << sloc1 << ' ' << sloc << ' ' << pt << std::endl;
-            
-            TinyVector<FLT,tri_mesh::ND> dx = BASE::x.pnts(p1) -BASE::x.pnts(p0);
+            my_spline.interpolate(sloc,pt);
+			            
+            TinyVector<FLT,tri_mesh::ND> dx = x.pnts(p1) -x.pnts(p0);
             FLT l2 = dx(0)*dx(0) +dx(1)*dx(1);
             FLT ds,psinew;
             int iter;
             for (iter = 0; iter < 100; ++iter) {
-                psinew = 2*((pt(0)-BASE::x.pnts(p0)(0))*dx(0) +(pt(1)-BASE::x.pnts(p0)(1))*dx(1))/l2 -1.0;
+                psinew = 2*((pt(0)-x.pnts(p0)(0))*dx(0) +(pt(1)-x.pnts(p0)(1))*dx(1))/l2 -1.0;
                 ds = -(psinew-psi)*(sloc1-sloc0)/2.0;
                 sloc += 0.5*ds;
-                geometry_object.mvpttobdry(sloc,pt);
-                if (fabs(psinew-psi) < 1.0e-4) break;
+                my_spline.interpolate(sloc,pt);
+                if (fabs(psinew-psi) < 1.0e-8) break;
             }
             if (iter > 99) {
-                *BASE::x.gbl->log << "too many spline iterations " << fabs(psinew-psi) << pt << ' ' << fpt0 << ' ' << fpt1 << '\n' ;
+                *x.gbl->log << "too many spline iterations\n";
             }
-
-//			*BASE::x.gbl->log << sloc0 << ' ' << sloc1 << ' ' << sloc << ' ' << pt << std::endl;
-            /* METHOD 2 */
-//            TinyVector<float,tri_mesh::ND> fpt;
-//            fpt = 0.5*((1.-psi)*BASE::x.pnts(p0) +(1.+psi)*BASE::x.pnts(p1));
-//            INVSPLINE(geometry_object.curve_id,sloc,fpt(0),fpt(1));
-//            pt = fpt;
-            
 
             return;
         }
 };
-#endif
 
 
 

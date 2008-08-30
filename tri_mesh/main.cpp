@@ -88,11 +88,8 @@ int main(int argc, char *argv[]) {
         printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
         exit(1);
     }
-    
-    class tri_mesh zx, zy;
-    tri_mesh::filetype in = static_cast<tri_mesh::filetype>(informat);
+	tri_mesh::filetype in = static_cast<tri_mesh::filetype>(informat);
     tri_mesh::filetype out = static_cast<tri_mesh::filetype>(outformat);
-    
     std::string bdry_nm(std::string(argv[1]) +"_bdry.inpt");
     ifstream intest;
     input_map bdrymap;
@@ -102,7 +99,8 @@ int main(int argc, char *argv[]) {
         bdrymap.input(bdry_nm);
     }
  
-    if (Cut) {
+    if (Cut) {    
+		class tri_mesh zx;
         zx.input(argv[1],in,1.0,bdrymap);        
         for(int i=0;i<zx.npnt;++i)
             zx.gbl->fltwk(i) = zx.pnts(i)(0)*zx.pnts(i)(0) +zx.pnts(i)(1)*zx.pnts(i)(1) - 0.25;
@@ -115,12 +113,15 @@ int main(int argc, char *argv[]) {
 
     /* TO SYMMETRIZE A MESH */
     if (Symmetrize) {
+	    class tri_mesh zx;
         zx.input(argv[1],in,8.0,bdrymap);
         zx.symmetrize();
         return 0;
     }
     
     if (Vlngth) {
+	    class tri_mesh zx;
+
         zx.input(argv[1],in,8.0,bdrymap);
         std::string name;
         name = std::string(argv[1]) +".lngth";
@@ -131,6 +132,8 @@ int main(int argc, char *argv[]) {
     }
     
     if (Refineby2) {
+	    class tri_mesh zx,zy;
+
         zx.input(argv[1],in,8.0,bdrymap);
         zy.refineby2(zx);
         zy.checkintegrity();
@@ -139,6 +142,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (Coarsen_hp) {
+	    class tri_mesh zx,zy;
+
         int p;
         zx.input(argv[1],in,1.0,bdrymap);
         printf("input p\n");
@@ -149,6 +154,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (Scale) {     
+	    class tri_mesh zx;
         TinyVector<FLT,2> s;
         printf("Enter x and y scaling\n");
         scanf("%le%le",&s(0),&s(1));
@@ -159,6 +165,8 @@ int main(int argc, char *argv[]) {
     }
     
     if (Shift) {     
+		class tri_mesh zx;
+
         TinyVector<FLT,2> s;
         printf("Enter x and y shift\n");
         scanf("%le%le",&s(0),&s(1));
@@ -177,6 +185,7 @@ int main(int argc, char *argv[]) {
     
     if (Partition) {
 #ifdef METIS
+		class tri_mesh zx;
         int p;
         std::string fname;
         ostringstream nstr;
@@ -201,6 +210,8 @@ int main(int argc, char *argv[]) {
     }
     
     if (Coarsen_Marks) {
+		class tri_mesh zx;
+		
         zx.input(argv[1],in,1.0,bdrymap);
         FILE *fp = fopen(argv[3],"r");
 
