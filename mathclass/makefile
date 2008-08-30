@@ -8,10 +8,10 @@ CPPFLAGS += -I$(HOME)/Packages/include -I$(HOME)/Codes/include
 #CPPFLAGS += -cxxlib-icc
 
 header:
-	cp mathclass.h ../include
+	cp symbolic_function.h ../include
 	
-test: $(OBJ)
+main: $(OBJ)
 	$(CXX) $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
 	
-$(OBJ): mathclass.h
+$(OBJ): symbolic_function.h
 
