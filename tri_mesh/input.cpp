@@ -1,5 +1,4 @@
 #include "tri_mesh.h"
-#include "tri_boundary.h"
 #include <utilities.h>
 #include <cstdlib>
 #include <cstring>
@@ -1007,7 +1006,7 @@ next1c:      continue;
     else if (filetype != boundary) initlngth();
     
     
-    tri_mesh::setinfo();
+    tri_mesh::setinfo();  // Don't call virtual because other objects must be set-up first
     checkintegrity();
 
     initialized = 1;

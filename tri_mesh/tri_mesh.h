@@ -308,7 +308,7 @@ class tri_mesh : public multigrid_interface {
  * Specialization of communication routines and 
  * and storage for a vertex boundary 
  */
-class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
+class vrtx_bdry : public boundary {
     public:
         tri_mesh &x;
         TinyVector<int,2> ebdry;
@@ -339,7 +339,7 @@ class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
  * Specialization of communication routines and 
  * and storage for an edge boundary 
  */
-class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
+class edge_bdry : public boundary {
     public:
         tri_mesh &x;
         TinyVector<int,2> vbdry;

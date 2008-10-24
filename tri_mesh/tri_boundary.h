@@ -1,12 +1,12 @@
-#include "tri_mesh.h"
+#ifndef _tri_boundary_h_
+#define _tri_boundary_h_
 
+#include "tri_mesh.h"
 #include <iostream>
 #include <input_map.h>
 #include <string>
 #include <sstream>
 #include <fstream>
-
-//#define MPDEBUG
 
 /** \brief Specialization for a communiation vertex 
  *
@@ -171,12 +171,41 @@ template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {
  * Physics object must provide geometry
  * BASE is the boundary object 
  */
-class ecoupled_physics_interface : public geometry<tri_mesh::ND> {
+template<int ND> class vgeometry_interface {
+    public:
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {}
+        virtual ~vgeometry_interface() {}
+};
+
+class vcoupled_physics_ptr {
+    public:
+        vgeometry_interface<2> *physics;
+};
+
+template<int ND> class egeometry_interface {
+    public:
+        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
+        virtual ~egeometry_interface() {}
+};
+
+class ecoupled_physics_ptr {
     public:
         egeometry_interface<2> *physics;
 };
 
-template<class BASE> class ecoupled_physics : public ecoupled_physics_interface, public BASE {
+template<int ND> class fgeometry_interface {
+    public:
+        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
+        virtual ~fgeometry_interface() {}
+};
+
+class fcoupled_physics_ptr {
+    public:
+        fgeometry_interface<2> *physics;
+};
+
+
+template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, public BASE {
   public: 
         ecoupled_physics(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
         ecoupled_physics(const ecoupled_physics<BASE> &inbdry, tri_mesh &xin) : BASE(inbdry,xin) {}
@@ -270,5 +299,6 @@ class spline_bdry : public edge_bdry {
         }
 };
 
+#endif
 
 

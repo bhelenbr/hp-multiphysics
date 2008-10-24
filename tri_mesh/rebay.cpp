@@ -419,6 +419,7 @@ void tri_mesh::bdry_rebay1() {
             sind = ebdry(bnum)->seg(bseg);
             psifxpt = -ebdry(bnum)->ircvbuf(0,i+1);
             psi = psifxpt/256.0;
+            pnts(npnt) = 0.5*((1.-psi)*pnts(seg(sind).pnt(0)) +(1.+psi)*pnts(seg(sind).pnt(1)));
             ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
             lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));
 #ifdef DEBUG_ADAPT

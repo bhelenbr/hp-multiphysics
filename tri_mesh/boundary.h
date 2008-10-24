@@ -77,7 +77,6 @@ class boundary {
         virtual bool is_comm() {return(false);}
         virtual bool& is_frst() {return(dummy.bdum=true);}
         virtual int& group() {return(dummy.idum=1);}
-        virtual int matches() {return(0);}
         virtual int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {return 1;}
 #ifdef MPISRC
         virtual int mpi_cnnct(int proc_tgt, int snd_tag, int rcv_tag) {return 1;}
@@ -85,6 +84,8 @@ class boundary {
         virtual int& matchphase(boundary::groups group, int matchnum) {return(dummy.idum=0);}
         virtual void resize_buffers(int size) {}
         virtual void *psndbuf() {return(&dummy);}
+		virtual int& nmatches() {return(dummy.idum=0);}
+		virtual int& msg_phase(int grp, int match) {return(dummy.idum=0);}
         virtual int& isndbuf(int indx) {return(dummy.idum);}
         virtual FLT& fsndbuf(int indx) {return(dummy.fdum);}
         virtual int& ircvbuf(int m,int indx) {return(dummy.idum);}
@@ -112,7 +113,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         int groupmask;  //!< To make groups that only communicate in restricted situations group 0 all, group 1 all phased, group 2 partitions, group 3 manifolds 
         Array<int,1> maxphase; //!<  For phased symmetric message passing for each group
         Array<TinyVector<int,maxmatch>,1> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
-
+		int& msg_phase(int grp, int match) {return(phase(grp)(match));} //!< virtual accessor
         int buffsize; //!< Size in bytes of buffer
         void *sndbuf; //!< Raw memory for outgoing message buffer
         Array<FLT,1> fsndbufarray; //!< Access to outgoing message buffer for floats
@@ -131,6 +132,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         enum matchtype {local};
 #endif
         int nmatch; //!< Number of matching boundaries
+		int& nmatches() {return(nmatch);} //!< virtual accessor
         TinyVector<matchtype,maxmatch> mtype; //!< Local or mpi or ?
         TinyVector<boundary *,maxmatch> local_match; //!< Pointers to local matches
         TinyVector<int,maxmatch> snd_tags; //!< Identifies each connection uniquely
@@ -177,7 +179,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         int& group() {return(groupmask);}
         int& sndsize() {return(msgsize);}
         boundary::msg_type& sndtype() {return(msgtype);}
-        int matches() {return(nmatch);}
         int& matchphase(boundary::groups group, int matchnum) {return(phase(group)(matchnum));}  
         int& isndbuf(int indx) {return(isndbufarray(indx));}
         FLT& fsndbuf(int indx) {return(fsndbufarray(indx));}
@@ -606,7 +607,7 @@ template<int ND> class geometry {
 
     public:        
         geometry* create() const {return(new geometry);}
-        virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
             int iter,n;
             FLT mag, delt_dist;
                             
@@ -631,24 +632,6 @@ template<int ND> class geometry {
         virtual void init(input_map& inmap, std::string idprefix, std::ostream& log) {}
         virtual void output(std::ostream& fout, std::string idprefix) {}
         virtual ~geometry() {}
-};
-
-template<int ND> class vgeometry_interface {
-    public:
-        virtual void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
-        virtual ~vgeometry_interface() {}
-};
-
-template<int ND> class egeometry_interface {
-    public:
-        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
-        virtual ~egeometry_interface() {}
-};
-
-template<int ND> class fgeometry_interface {
-    public:
-        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt, FLT time = 0.0) {}
-        virtual ~fgeometry_interface() {}
 };
 
 
@@ -679,7 +662,7 @@ template<int ND> class symbolic_point : public geometry<ND> {
             }
         }
 		
-		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time = 0.0) {
+		void mvpttobdry(TinyVector<FLT,ND> &pt, FLT time) {
 			pt(0) = loc(0).Eval(time);
 			pt(1) = loc(1).Eval(time);
 		}

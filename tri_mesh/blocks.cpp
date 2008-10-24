@@ -149,6 +149,15 @@ void blocks::go(input_map& input) {
 
 }
 
+
+/* each block has a list of group #'s that it belongs to: integer array of size "n_comm_purposes" */
+/* typicaally there will be 2 comm_purposes: everyone to everyone, and only 1 with user defined groups in it */
+/* Each entry in array corresponds to different communication purpose entry 1 always has value 1 and that */
+/* corresponds to MPI_COMM_WORLD, -1 means block is not active for that communication purpose */
+/* blocks has to know how many different groups there are for each purpose: array<1, int> n_comm_entries_for_purpose(n_comm_purposes) */
+/* and must be able to associaciate those group numbers to a sequential integer count: array<1,map<int,int> > buffer_number(n_comm_purposes) */
+/* Then blocks has to have buffer pointer arrays for the total # of groups in each purpose: array<1, array<1, void *> > sndbuf(n_comm_purposes), rcvbuf(n_comm_purposes)  */
+
 void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op) {
     int i,j;
     int *ircvbuf;
