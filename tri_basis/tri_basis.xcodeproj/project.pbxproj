@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 44;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,6 +17,7 @@
 		6F4CCC4A0CDAC301009F79DE /* probe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F4CCC490CDAC301009F79DE /* probe.cpp */; };
 		6F4CCC4C0CDAC316009F79DE /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; };
 		6F7BCBCC0CA4AB2A000E4207 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
+		6FB7AA160EE3DED1000D6A89 /* CHUD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB7AA150EE3DED1000D6A89 /* CHUD.framework */; };
 		6FBD8A80084C13F20057FD8F /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
 		6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
 		6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
@@ -35,6 +36,7 @@
 		6F33E671086787710029F2D6 /* libtri_basis.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_basis.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F4CCC490CDAC301009F79DE /* probe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = probe.cpp; sourceTree = "<group>"; };
 		6F4CCC4B0CDAC316009F79DE /* tri_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tri_basis.h; sourceTree = "<group>"; };
+		6FB7AA150EE3DED1000D6A89 /* CHUD.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CHUD.framework; path = /System/Library/PrivateFrameworks/CHUD.framework; sourceTree = "<absolute>"; };
 		6FBD8A69084C13780057FD8F /* initialize.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initialize.cpp; sourceTree = "<group>"; };
 		6FBD8A6A084C13780057FD8F /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
 		6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt1d.cpp; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 				6FBD8A80084C13F20057FD8F /* libblitz.a in Frameworks */,
 				6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */,
 				6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */,
+				6FB7AA160EE3DED1000D6A89 /* CHUD.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -117,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				6FBD8A85084C14470057FD8F /* vecLib.framework */,
+				6FB7AA150EE3DED1000D6A89 /* CHUD.framework */,
 				6FBD8A81084C14040057FD8F /* libmyblas.a */,
 				6FBD8A7F084C13F20057FD8F /* libblitz.a */,
 			);
@@ -145,9 +149,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		6F33E670086787710029F2D6 /* basis */ = {
+		6F33E670086787710029F2D6 /* tri_basis */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "basis" */;
+			buildConfigurationList = 6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "tri_basis" */;
 			buildPhases = (
 				6F33E66D086787710029F2D6 /* Headers */,
 				6F33E66E086787710029F2D6 /* Sources */,
@@ -157,7 +161,7 @@
 			);
 			dependencies = (
 			);
-			name = basis;
+			name = tri_basis;
 			productName = tri_basis;
 			productReference = 6F33E671086787710029F2D6 /* libtri_basis.a */;
 			productType = "com.apple.product-type.library.static";
@@ -186,11 +190,13 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tri_basis" */;
+			compatibilityVersion = "Xcode 3.0";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* tri_basis */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
-				6F33E670086787710029F2D6 /* basis */,
+				6F33E670086787710029F2D6 /* tri_basis */,
 				8DD76F620486A84900D96B5E /* main */,
 			);
 		};
@@ -305,7 +311,7 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					f2cFortran,
 					NO_BZ_DEBUG,
@@ -314,7 +320,6 @@
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -333,6 +338,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
@@ -364,6 +373,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
@@ -394,6 +407,10 @@
 		6FD8AD430864E338005A8B60 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"",
+				);
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
@@ -437,7 +454,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "basis" */ = {
+		6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "tri_basis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6F33E673086787BF0029F2D6 /* Development */,
