@@ -7,3 +7,4 @@ dx: 0.04 log2p 99.99
 itercrsn: 37
 prefix.matching_block: matchname.log2p
 matchname.log2p: 3
+nu: 3*itercrsn+dx
