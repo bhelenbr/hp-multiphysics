@@ -38,6 +38,10 @@ void tri_mesh::init(input_map &input, void *gin) {
         if (!input.get(keyword,grwfac)) {
             input.getwdefault("growth factor",grwfac,2.0);
         }
+		if (grwfac < 1.0) {
+			*gbl->log << "growth factor must be greater than one\n";
+			std::abort();
+		}
         
         int filetype;
         keyword = gbl->idprefix + "_filetype";
@@ -620,7 +624,7 @@ next1a:      continue;
                 
                 break;
                                 
-            case(text):
+		 case(text): 
                 if (!initialized) {
                     *gbl->log << "to read in point positions only must first load mesh structure" << std::endl;
                     exit(1);

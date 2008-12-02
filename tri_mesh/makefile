@@ -49,8 +49,8 @@ MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lg2c -lpth 
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lg2c -lpth -lblitz
+CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
@@ -59,16 +59,14 @@ CXXMPI = ${CXX}
 ## Machine specific for Darwin
 #AR = libtool
 #ARFLAGS = -o
-CPPFLAGS += -O3
 
 ## Linux:
 ##  Machine specific for Linux
 #CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
-#CPPFLAGS += -O3
-#CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
+#CPPFLAGS += -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
 #LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-CPPFLAGS += -O3 -I/opt/mpich/myrinet/gnu/include #(cares)
+CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## IRIX64:
@@ -78,7 +76,6 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## Aix:
 ## Machine specific for Jupiter
-#CPPFLAGS += -O3
 
 ### End machine dependent
 

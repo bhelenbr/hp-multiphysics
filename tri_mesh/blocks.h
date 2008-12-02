@@ -16,6 +16,10 @@
 #include <pth.h>
 #endif
 
+#ifdef MPISRC
+#include <mpi.h>
+#endif
+
 #ifdef BOOST
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
@@ -51,14 +55,26 @@ class blocks {
          *  used in allreduce for block communication
          */
         //@{
-        blitz::Array<void *,1> sndbufs, rcvbufs;
+		class all_reduce_data {
+			public: 
+				int nentries, buf_cnt;
+				blitz::Array<void *,1> sndbufs, rcvbufs;
+#ifdef MPISRC
+				MPI_Comm comm;
+#endif
+				all_reduce_data() : nentries(1), buf_cnt(0)
+#ifdef MPISRC 
+			, comm(MPI_COMM_WORLD) 
+#endif
+			{}
+		};
+		std::map<int,all_reduce_data> group_data; /**< Associaciates group numbers to their data */ 
         //@}
         
          /** @name variables needed for thread message passing
          */
         //@{
-        std::map<int,bool> message_list;
-        int all_reduce_count;  
+        std::map<int,bool> message_list; /**< keeps track of whether communication messages have been received */
 #if defined(PTH)
         blitz::Array<pth_t,1> threads;
         pth_mutex_t list_mutex, allreduce_mutex;
@@ -74,7 +90,7 @@ class blocks {
 
     public:
         /** Initialize multiblock/mgrid mesh */
-        blocks() : nproc(1), myid(0), all_reduce_count(0) {}
+        blocks() : nproc(1), myid(0) {}
         
         /** Initializes blocks using data from map */
         void go(input_map& input);
@@ -85,7 +101,7 @@ class blocks {
         /** Function to allow blocks to perform global sums, averages, etc.. */
         enum operations {sum,max}; /** Only summing and max for now */
         enum msg_type {flt_msg, int_msg};
-        void allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op);
+        void allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op, int group = 0);
         
         /** Functions for thread communication */
 #if defined(PTH)

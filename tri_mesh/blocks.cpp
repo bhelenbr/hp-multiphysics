@@ -20,6 +20,7 @@
 #include <utilities.h>
 #ifdef MPISRC
 #include <mpi.h>
+#include <set>
 #endif
 #include <blitz/array.h>
 
@@ -45,6 +46,13 @@ void* thread_go(void* ptr) {
 }
 #endif
 
+void my_new_handler() 
+{ 
+	std::cerr << "Out of memory" << endl; 
+	std::cerr.flush(); 
+	std::abort(); 
+} 
+
 void blocks::go(const std::string &infile, const std::string &outfile) {
     input_map maptemp;
     std::string name;
@@ -62,55 +70,122 @@ void blocks::go(const std::string &infile, const std::string &outfile) {
 }
 
 void blocks::go(input_map& input) {
-    int i,nb;
-    std::string mystring;
+    int i,nb,groupid;
+    std::string blkstring,mystring;
     std::ostringstream nstr;
     std::istringstream data;
-
+	std::map<int,all_reduce_data>::iterator mi;
+    
 #ifdef MPISRC
     MPI_Comm_size(MPI_COMM_WORLD,&nproc);
     MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif   
+	
+	std::set_new_handler(my_new_handler); 
 
     /* EXTRACT NBLOCKS FOR MYID */
     /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
     int bstart = 0;
-    if (input.getline("nblock",mystring)) {
-        data.str(mystring);
-        for (i=0;i<myid;++i) {
-            if (!(data >> nb)) {
-                std::cerr << "error reading blocks\n"; 
-                exit(1);
-            }
-            bstart += nb;
-        }
-        if (!(data >> myblock)) {
-            std::cerr << "error reading blocks\n"; 
-            exit(1);
-        }
-        data.clear();
-        
-        nblock = bstart +myblock;
-        for (i=myid+1;i<nproc;++i) {
-            if (!(data >> nb)) {
-                std::cerr << "error reading blocks\n"; 
-                exit(1);
-            }
-            nblock += nb;
-        }
-    }
-    else {
-        bstart = 0;
-        myblock = 1;
-        nblock = 1;
-    }
+    input.getlinewdefault("nblock",blkstring,std::string("1"));
+	data.str(blkstring);
+	for (i=0;i<myid;++i) {
+		if (!(data >> nb)) {
+			std::cerr << "error reading blocks\n"; 
+			exit(1);
+		}
+		bstart += nb;
+	}
+	if (!(data >> myblock)) {
+		std::cerr << "error reading blocks\n"; 
+		exit(1);
+	}
+	data.clear();
+	
+	nblock = bstart +myblock;
+	for (i=myid+1;i<nproc;++i) {
+		if (!(data >> nb)) {
+			std::cerr << "error reading blocks\n"; 
+			exit(1);
+		}
+		nblock += nb;
+	}
     blk.resize(myblock);
-    for(i=0;i<myblock;++i)
+	
+	/* SET-UP MPI_COMM_WORLD STRUCTURE */
+	group_data[0] = all_reduce_data();
+	group_data[0].nentries = myblock;
+	
+    for(i=0;i<myblock;++i) {
         blk(i) = getnewblock(i+bstart,input);
+		input.getlinewdefault(blk(i)->idprefix +"_groups",mystring,std::string(""));
+		data.str(mystring);
+		while (data >> groupid) {
+			if (groupid == 0) {
+				std::cerr << "Can't use 0 as a group number\n";
+				exit(1);
+			}
+			if ((mi = group_data.find(groupid)) != group_data.end()) {
+				++mi->second.nentries;
+			}
+			else {
+				/* New entry */
+				group_data[groupid] = all_reduce_data();
+			}
+		}
+	}
     
     /* RESIZE ALLREDUCE BUFFER POINTERS ARRAYS */
-    sndbufs.resize(myblock);
-    rcvbufs.resize(myblock);
+	for (mi=group_data.begin();mi != group_data.end(); ++mi) {
+		mi->second.sndbufs.resize(mi->second.nentries);
+		mi->second.rcvbufs.resize(mi->second.nentries);
+	}
+	
+#ifdef MPISRC
+	/* SET-UP COMMUNICATORS FOR ALL_REDUCE COMMUNICATION */
+	/* NEED LIST OF PROCESSORS FOR EACH GROUP */
+	std::map<int,std::set<int> > grp_rnk;
+	
+	/* EXTRACT NBLOCKS FOR MYID */
+    /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
+    bstart = 0;
+    istringstream nblkstr;
+	nblkstr.str(blkstring);
+	for (i=0;i<nproc;++i) {
+		nblkstr >> nb;
+		for (int bn=bstart;bn<bstart+nb;++bn) {
+			nstr.str("");
+			nstr << "b" << bn << "_groups";
+			input.getlinewdefault(nstr.str(),mystring,std::string(""));
+			data.str(mystring);
+			while (data >> groupid) {
+				grp_rnk[groupid].insert(i);
+			}
+		}
+		bstart += nb;
+	}
+	
+	int ierr,n;
+	MPI_Group base_grp, temp_grp;
+	MPI_Comm comm_out;
+	blitz::Array<int,1> ranks(nproc);
+
+	ierr = MPI_Comm_group (MPI_COMM_WORLD,&base_grp);
+
+	for (std::map<int,std::set<int> >::iterator gri = grp_rnk.begin(); gri != grp_rnk.end(); ++gri) {
+		/* Create array of ranks */
+		n = gri->second.size();
+		for (std::set<int>::iterator si = gri->second.begin(); si != gri->second.end();++si) {
+			ranks(i) = *si;
+		}
+		
+		ierr += MPI_Group_incl(base_grp, n, ranks.data(), &temp_grp);
+		ierr += MPI_Comm_create (MPI_COMM_WORLD, temp_grp, &comm_out);
+		if ((mi = group_data.find(gri->first)) != group_data.end()) {
+			mi->second.comm = comm_out;
+		}
+	}
+#endif
+	
     
 #ifdef PTH
     threads.resize(myblock);
@@ -154,11 +229,11 @@ void blocks::go(input_map& input) {
 /* typicaally there will be 2 comm_purposes: everyone to everyone, and only 1 with user defined groups in it */
 /* Each entry in array corresponds to different communication purpose entry 1 always has value 1 and that */
 /* corresponds to MPI_COMM_WORLD, -1 means block is not active for that communication purpose */
-/* blocks has to know how many different groups there are for each purpose: array<1, int> n_comm_entries_for_purpose(n_comm_purposes) */
-/* and must be able to associaciate those group numbers to a sequential integer count: array<1,map<int,int> > buffer_number(n_comm_purposes) */
+/* blocks has to know how many different groups there are for each purpose: array<int, 1> n_comm_entries_for_purpose(n_comm_purposes) */
+/* and must be able to associaciate those group numbers to a sequential integer count: array<map<int,int>,1> buffer_number(n_comm_purposes) */
 /* Then blocks has to have buffer pointer arrays for the total # of groups in each purpose: array<1, array<1, void *> > sndbuf(n_comm_purposes), rcvbuf(n_comm_purposes)  */
 
-void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op) {
+void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op, int group) {
     int i,j;
     int *ircvbuf;
     FLT *frcvbuf;
@@ -167,12 +242,15 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
     pth_mutex_acquire(&allreduce_mutex,false,NULL);
 #elif defined(BOOST)
     boost::mutex::scoped_lock lock(allreduce_mutex);
-#endif    
-    sndbufs(all_reduce_count) = sendbuf;
-    rcvbufs(all_reduce_count) = recvbuf;
-    ++all_reduce_count;
+#endif
+
+	std::map<int,all_reduce_data>::iterator gi = group_data.find(group);
+	all_reduce_data& gd(gi->second);
+    gd.sndbufs(gd.buf_cnt) = sendbuf;
+	gd.rcvbufs(gd.buf_cnt) = recvbuf;
+	++gd.buf_cnt;
         
-    if (all_reduce_count == myblock) {
+    if (gd.buf_cnt == gd.nentries) {
        switch(datatype) {
             case(int_msg): {
             
@@ -181,22 +259,22 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                 switch(op) {
                     case(sum): {
                         isendbuf = 0;
-                        for(j=0;j<all_reduce_count;++j) {
+                        for(j=0;j<gd.buf_cnt;++j) {
                             for(i=0;i<count;++i) {
-                                isendbuf(i) += static_cast<int *>(sndbufs(j))[i];  /* NOT SURE ABOUT THIS TEMPORARY !!!! */
+                                isendbuf(i) += static_cast<int *>(gd.sndbufs(j))[i];  /* NOT SURE ABOUT THIS TEMPORARY !!!! */
                             }
                         }
 #ifdef MPISRC
-                        MPI_Allreduce(isendbuf.data(),rcvbufs(0),count,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+                        MPI_Allreduce(isendbuf.data(),gd.rcvbufs(0),count,MPI_INT,MPI_SUM,gd.comm);
                         
-                        for(i=1;i<all_reduce_count;++i) {
-                            ircvbuf = static_cast<int *>(rcvbufs(i));
+                        for(i=1;i<gd.buf_cnt;++i) {
+                            ircvbuf = static_cast<int *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
-                                ircvbuf[j] =  static_cast<int *>(rcvbufs(0))[j]; /* NOT SURE ABOUT THIS TEMPORARY !!!! */
+                                ircvbuf[j] =  static_cast<int *>(gd.rcvbufs(0))[j]; /* NOT SURE ABOUT THIS TEMPORARY !!!! */
                         }
 #else
-                        for(i=0;i<all_reduce_count;++i) {
-                            ircvbuf = static_cast<int *>(rcvbufs(i));
+                        for(i=0;i<gd.buf_cnt;++i) {
+                            ircvbuf = static_cast<int *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
                                 ircvbuf[j] = isendbuf(j);
                         }
@@ -206,25 +284,25 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                     
                     case(max): {
                         for(j=0;j<count;++j) {
-                            isendbuf(j) = static_cast<int *>(sndbufs(0))[j];
+                            isendbuf(j) = static_cast<int *>(gd.sndbufs(0))[j];
                         }
 
-                        for(i=1;i<all_reduce_count;++i) {
+                        for(i=1;i<gd.buf_cnt;++i) {
                             for(j=0;j<count;++j) {
-                                isendbuf(j) = MAX(static_cast<int *>(sndbufs(i))[j],isendbuf(j));
+                                isendbuf(j) = MAX(static_cast<int *>(gd.sndbufs(i))[j],isendbuf(j));
                             }
                         }
 #ifdef MPISRC
-                        MPI_Allreduce(isendbuf.data(),rcvbufs(0),count,MPI_INT,MPI_MAX,MPI_COMM_WORLD);
+                        MPI_Allreduce(isendbuf.data(),gd.rcvbufs(0),count,MPI_INT,MPI_MAX,gd.comm);
                         
-                        for(i=1;i<all_reduce_count;++i) {
-                            ircvbuf = static_cast<int *>(rcvbufs(i));
+                        for(i=1;i<gd.buf_cnt;++i) {
+                            ircvbuf = static_cast<int *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
-                                ircvbuf[j] =  static_cast<int *>(rcvbufs(0))[j];
+                                ircvbuf[j] =  static_cast<int *>(gd.rcvbufs(0))[j];
                         }
 #else
-                        for(i=0;i<all_reduce_count;++i) {
-                            ircvbuf = static_cast<int *>(rcvbufs(i));
+                        for(i=0;i<gd.buf_cnt;++i) {
+                            ircvbuf = static_cast<int *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
                                 ircvbuf[j] = isendbuf(j);
                         }
@@ -243,22 +321,22 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                 switch(op) {
                     case(sum): {
                         fsendbuf = 0;
-                        for(i=0;i<all_reduce_count;++i) {
+                        for(i=0;i<gd.buf_cnt;++i) {
                             for(j=0;j<count;++j) {
-                                fsendbuf(j) += static_cast<FLT *>(sndbufs(i))[j];
+                                fsendbuf(j) += static_cast<FLT *>(gd.sndbufs(i))[j];
                             }
                         }
 #ifdef MPISRC
-                        MPI_Allreduce(fsendbuf.data(),rcvbufs(0),count,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+                        MPI_Allreduce(fsendbuf.data(),gd.rcvbufs(0),count,MPI_DOUBLE,MPI_SUM,gd.comm);
                         
-                        for(i=1;i<all_reduce_count;++i) {
-                            frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                        for(i=1;i<gd.buf_cnt;++i) {
+                            frcvbuf = static_cast<FLT *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
-                                frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0))[j];
+                                frcvbuf[j] =  static_cast<FLT *>(gd.rcvbufs(0))[j];
                         }
 #else
-                        for(i=0;i<all_reduce_count;++i) {
-                            frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                        for(i=0;i<gd.buf_cnt;++i) {
+                            frcvbuf = static_cast<FLT *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
                                 frcvbuf[j] = fsendbuf(j);
                         }
@@ -268,25 +346,25 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                     
                     case(max): {
                         for(j=0;j<count;++j) {
-                            fsendbuf(j) = static_cast<FLT *>(sndbufs(0))[j];
+                            fsendbuf(j) = static_cast<FLT *>(gd.sndbufs(0))[j];
                         }
 
-                        for(i=1;i<all_reduce_count;++i) {
+                        for(i=1;i<gd.buf_cnt;++i) {
                             for(j=0;j<count;++j) {
-                                fsendbuf(j) = MAX(static_cast<FLT *>(sndbufs(i))[j],fsendbuf(j));
+                                fsendbuf(j) = MAX(static_cast<FLT *>(gd.sndbufs(i))[j],fsendbuf(j));
                             }
                         }
 #ifdef MPISRC
-                        MPI_Allreduce(fsendbuf.data(),rcvbufs(0),count,MPI_DOUBLE,MPI_MAX,MPI_COMM_WORLD);
+                        MPI_Allreduce(fsendbuf.data(),gd.rcvbufs(0),count,MPI_DOUBLE,MPI_MAX,gd.comm);
                         
-                        for(i=1;i<all_reduce_count;++i) {
-                            frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                        for(i=1;i<gd.buf_cnt;++i) {
+                            frcvbuf = static_cast<FLT *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
-                                frcvbuf[j] =  static_cast<FLT *>(rcvbufs(0))[j];
+                                frcvbuf[j] =  static_cast<FLT *>(gd.rcvbufs(0))[j];
                         }
 #else
-                        for(i=0;i<all_reduce_count;++i) {
-                            frcvbuf = static_cast<FLT *>(rcvbufs(i));
+                        for(i=0;i<gd.buf_cnt;++i) {
+                            frcvbuf = static_cast<FLT *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
                                 frcvbuf[j] = fsendbuf(j);
                         }
@@ -297,7 +375,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                 break;
             }
         }
-        all_reduce_count = 0;    
+        gd.buf_cnt = 0;    
     
 #if defined(PTH)
         pth_cond_notify(&allreduce_change, true);
