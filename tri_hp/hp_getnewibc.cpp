@@ -23,13 +23,11 @@ class symbolic_ibc : public init_bdry_cndtn {
             std::ostringstream nstr;
             int nvar;
             
-            keyword = idnty +"_nvariable";
-
-            if (!inmap.get(keyword,nvar))
-                inmap.getwdefault("nvariable",nvar,1);
-            
-            fcn.resize(nvar);
-
+			/* Figure out how many variables */
+			for(nvar=0, nstr.str(""), nstr << idnty << nvar << std::flush; inmap.find(nstr.str()) != inmap.end(); ++nvar, nstr.str(""), nstr << idnty << nvar << std::flush);
+		
+			fcn.resize(nvar);
+			
             for(int n=0;n<nvar;++n) {
                 nstr.str("");
                 nstr << idnty << n << std::flush;
@@ -177,13 +175,8 @@ class l2_error : public tri_hp_helper {
     public: 
         tri_hp &x;
         l2_error(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
-        void tadvance() {
-            if (x.coarse_level) return;
-            
-            if (x.gbl->substep == 0) {
-                x.l2error(x.gbl->ibc);
-            }
-            return;
+        void output() {
+            x.l2error(x.gbl->ibc);
         }
 };
 
@@ -191,27 +184,90 @@ class print_averages : public tri_hp_helper {
     public: 
         tri_hp &x;
         print_averages(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
-        void tadvance() {
-            
-            if (x.coarse_level) return;
-            
-            if (x.gbl->substep == 0) {
-                Array<FLT,1> av(x.NV+3);
-                x.integrated_averages(av);
-                *x.gbl->log << "# area: " << av(0) << " xbar: " << av(1) << " ybar: " << av(2);
-                for(int n=0;n<x.NV;++n) 
-                    *x.gbl->log << " V" << n << ": " << av(n+3);
-                *x.gbl->log << std::endl;
-            }
+        void output() {            
+			Array<FLT,1> av(x.NV+3);
+			x.integrated_averages(av);
+			*x.gbl->log << "# area: " << av(0) << " xbar: " << av(1) << " ybar: " << av(2);
+			for(int n=0;n<x.NV;++n) 
+				*x.gbl->log << " V" << n << ": " << av(n+3);
+			*x.gbl->log << std::endl;
             
             return;
         }
 };
 
+class output_contour : public tri_hp_helper {
+    protected:
+		int var;
+		FLT c;
+		symbolic_function<2> norm;
+		
+	
+	public: 
+        tri_hp &x;
+        output_contour(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
+		
+		virtual void init(input_map& input, std::string idnty) {
+			input.getwdefault(idnty+"_var",var,0);
+			input.getwdefault(idnty+"_level",c,0.0);
+			norm.init(input,idnty+"_norm");
+        }
+		
+        void output() {
+            
+
+			Array<FLT,1> u(x.NV), du(x.NV);
+			TinyVector<FLT,2> xpt;
+			FLT psi,dpsi;
+			int iter,sind,v0,v1;
+			int nintsct = 0;
+			FLT norm_sum = 0.0;
+
+			std::ofstream out;
+			std:ostringstream filename;
+			
+			filename << "contour" << x.gbl->tstep << ".dat";
+			out.open(filename.str().c_str());
+			
+			
+			/* FIND CONTOUR EDGE INTERSECTION POINTS */
+			for (sind=0;sind < x.nseg;++sind) {
+				v0 = x.seg(sind).pnt(0);
+				v1 = x.seg(sind).pnt(1);
+				if ( (x.ug.v(v0,var)-c)*(x.ug.v(v1,var)-c) < 0.0) {
+					/* Have intersection */
+					psi = -1. +2*(c -x.ug.v(v0,var))/(x.ug.v(v1,var)-x.ug.v(v0,var));
+					x.ugtouht1d(sind);
+					for (iter = 0, dpsi = 1.0; iter < 100 && fabs(dpsi) > 10*FLT_EPSILON; ++iter) {
+						basis::tri(x.log2p).ptprobe1d(x.NV,u.data(),du.data(),psi,&x.uht(0)(0),MXTM);
+						dpsi = -(u(var)-c)/du(var);
+						psi += dpsi;
+					}
+					if (fabs(psi) > 1.0 || iter > 99) continue;
+					
+					x.crdtocht1d(sind);
+					for(int n=0;n<x.ND;++n) {
+						basis::tri(x.log2p).ptprobe1d(x.ND,xpt.data(),&x.cht(0,0),MXTM);
+						out << xpt(n) << ' ';
+					}
+					out << '\n';
+					norm_sum += norm.Eval(xpt,x.gbl->time);
+					++nintsct;
+				}
+					
+			}
+			out.close();
+			*x.gbl->log << "Contour norm: " << sqrt(norm_sum)/nintsct << '\n';            
+            return;
+        }
+};
+
+
+
 class helper_type {
     public:
-        const static int ntypes = 4;
-        enum ids {translating,print_averages,l2error,gcl_test};
+        const static int ntypes = 5;
+        enum ids {translating,print_averages,l2error,output_contour,gcl_test};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             int i;
@@ -220,7 +276,7 @@ class helper_type {
             return(-1);
         }
 };
-const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","gcl_test"};
+const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test"};
 
 
 tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
@@ -244,6 +300,10 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
         }
         case helper_type::l2error: {
             tri_hp_helper *temp = new l2_error(*this);
+            return(temp);
+        }
+        case helper_type::output_contour: {
+            tri_hp_helper *temp = new output_contour(*this);
             return(temp);
         }
         case helper_type::gcl_test: {

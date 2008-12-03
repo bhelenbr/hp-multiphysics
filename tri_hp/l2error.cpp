@@ -77,9 +77,9 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
     
 	for(n=0;n<NV;++n) {
 		l2r[n] = sqrt(l2r[n]); 
-		printf("#L_2: %.3e L_inf %.3e %4d ",l2r[n],mxr[n],loc[n]);
+		*gbl->log << "#L_2: " << l2r[n] << " L_inf " << mxr[n] <<  ' ' << loc[n];
 	}
-	printf("\n");
+	*gbl->log << '\n';
 		
 	return;
 }

@@ -22,8 +22,9 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
     public:
-        static const int ntypes = 5;
-        enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,inflow};
+        static const int ntypes = 7;
+        enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
+		inflow,hybrid_slave_point,hybrid_point};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i) 
@@ -32,7 +33,8 @@ class tri_hp_ins_vtype {
         }
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar","inflow"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar",
+	"inflow","hybrid_slave_point","hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
     std::string keyword,val;
@@ -74,6 +76,14 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
             temp = new inflow_pt(*this,*vbdry(bnum));
             break;
         }
+        case tri_hp_ins_vtype::hybrid_slave_point: {
+            temp = new hybrid_slave_pt(*this,*vbdry(bnum));
+            break;
+        }
+		case tri_hp_ins_vtype::hybrid_point: {
+            temp = new hybrid_pt(*this,*vbdry(bnum));
+            break;
+        }
         default: {
             temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
             break;
@@ -93,9 +103,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
     public:
-        static const int ntypes = 11;
+        static const int ntypes = 10;
         enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset,force_coupling};
+            symmetry,applied_stress,surface,surface_slave,force_coupling};
         static const char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i)
@@ -105,7 +115,7 @@ class tri_hp_ins_stype {
 };
 
 const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
+    "symmetry","applied_stress","surface","surface_slave","force_coupling"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -157,9 +167,9 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
             break;
         }
         case tri_hp_ins_stype::surface: {
-            if (dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))) {
+            if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
                 temp = new surface(*this,*ebdry(bnum));
-                dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))->physics = temp;
+                dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
             }
             else {
                 std::cerr << "use coupled physics for surface boundary\n";
@@ -169,11 +179,7 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
         }
         case tri_hp_ins_stype::surface_slave: {
             temp = new surface_slave(*this,*ebdry(bnum));
-            dynamic_cast<ecoupled_physics_interface *>(ebdry(bnum))->physics = temp;
-            break;
-        }
-        case tri_hp_ins_stype::hybrid_surface_levelset: {
-            temp = new hybrid_surface_levelset(*this,*ebdry(bnum));
+            dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
             break;
         }
 		case tri_hp_ins_stype::force_coupling: {

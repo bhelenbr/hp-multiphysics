@@ -23,6 +23,9 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     std::string filename;
     
     gbl = static_cast<global *>(gin);
+	 
+	coarse_flag = false;
+	isfrst = true;
         
     keyword = gbl->idprefix + "_mesh_movement";
     if (!inmap.get(keyword,line)) {
@@ -131,6 +134,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     for(i=0;i<nvbd;++i) hp_vbdry(i) = getnewvrtxobject(i,inmap);
     for(i=0;i<nebd;++i) hp_ebdry(i)->init(inmap,gbl->ebdry_gbls(i));
     for(i=0;i<nvbd;++i) hp_vbdry(i)->init(inmap,gbl->vbdry_gbls(i));
+	setinfo();
 
     inmap.getwdefault("hp_fadd",fadd,1.0);
                          
@@ -197,7 +201,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     } 
     else {
         for(i=0;i<nebd;++i)
-            hp_ebdry(i)->curv_init();  /* TEMPO WILL NEED TO CHANGE THIS TO "tobasis" */
+            hp_ebdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
             
         /* USE TOBASIS TO INITALIZE SOLUTION */
         tobasis(gbl->ibc);
@@ -243,6 +247,8 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
         sm0 = 0;
         im0 = 0;
         log2pmax = 0;
+		coarse_flag = true;
+		isfrst = true;
     }
     else {
         log2p = inmesh.log2p;
@@ -250,8 +256,9 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
         sm0 = inmesh.sm0;
         im0 = inmesh.im0;
         log2pmax = inmesh.log2pmax;
+		coarse_flag = false;
+		isfrst = true;
     }
-        
     
     output_type = inmesh.output_type;
 

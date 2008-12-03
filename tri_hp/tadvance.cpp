@@ -15,8 +15,6 @@
 void tri_hp::tadvance() {
     int i,j,n,s,tind,stage;
         
-    tri_hp* fmesh = dynamic_cast<tri_hp *>(fine);
-
     /* DO STUFF FOR DEFORMABLE MESH FIRST */    
     if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
         r_tri_mesh::tadvance();
@@ -83,7 +81,8 @@ void tri_hp::tadvance() {
         }
     }
     else {
-        
+		tri_hp* fmesh = dynamic_cast<tri_hp *>(fine);
+
         /* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
         for(i=0;i<npnt;++i) {
             tind = fcnnct(i).tri;

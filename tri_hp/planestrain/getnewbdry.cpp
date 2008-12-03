@@ -66,7 +66,7 @@ hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
             break;
         }
         case tri_hp_ps_stype::friction_wall: {
-            temp = new friction_wall(*this,*ebdry(bnum));  // TEMPORARY NOT WORKING YET
+            temp = new friction_wall(*this,*ebdry(bnum));  // FIXME NOT WORKING YET
             break;
         }
         default: {

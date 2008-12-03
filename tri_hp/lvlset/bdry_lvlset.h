@@ -28,174 +28,127 @@
 
 namespace bdry_lvlset {
 
-    class neumann : public bdry_ins::neumann {
-        protected:
-            tri_hp_lvlset &x;
-
-            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-                
-                FLT rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
-
-                /* CONTINUITY */
-                flx(x.NV-1) = rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-              
-                /* X&Y MOMENTUM */
-                for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
-              
-                /* LEVEL-SET */
-                flx(2) = 0.0;
-        
-                return;
-            }
-        
-        public:
-            neumann(tri_hp_lvlset &xin, edge_bdry &bin) : bdry_ins::neumann(xin,bin), x(xin) {}
-            neumann(const neumann& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : bdry_ins::neumann(inbdry,xin,bin), x(xin) {}
-            neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
-    };
-
-    class inflow : public bdry_ins::inflow {  
-        protected:
-            tri_hp_lvlset &x;
-    
-        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-            
-            /* CONTINUITY */
-            FLT rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
-            flx(x.NV-1) = rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-
-            /* EVERYTHING ELSE DOESN'T MATTER */
-             for (int n=0;n<x.NV-1;++n)
-                flx(n) = 0.0;
-                
-            return;
-        }
-        
-        public:
-            inflow(tri_hp_lvlset &xin, edge_bdry &bin) : bdry_ins::inflow(xin,bin), x(xin) {}
-            inflow(const inflow& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : bdry_ins::inflow(inbdry,xin,bin), x(xin) {}
-            inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
-    };
-  
-     /* THIS IS FOR FUTURE IMPLEMENTATION OF LEVEL-SET AS DISTANCE FUNCTION */
-#ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
-    class flow_inflow : public inflow {                
-        public:
-            flow_inflow(tri_hp_lvlset &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "flow_inflow";}
-            flow_inflow(const flow_inflow& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {}
-            flow_inflow* create(tri_hp& xin, edge_bdry &bin) const {return new flow_inflow(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
-            void tadvance();
-
-            void vdirichlet() {
-                int sind,v0;
-                            
-                for(int j=0;j<base.nseg;++j) {
-                    sind = base.seg(j);
-                    v0 = x.seg(sind).pnt(0);
-                    x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
-                }
-                v0 = x.seg(sind).pnt(1);
-                x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
-            }
-            
-            void sdirichlet(int mode) {
-                int sind;
-
-                for(int j=0;j<base.nseg;++j) {
-                    sind = base.seg(j);
-                    x.gbl->res.s(sind,mode,Range(0,x.NV-3)) = 0.0;
-                }
-            }
-    };
-#endif
-
-    
-    class euler : public neumann {
-        protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-                Array<FLT,1> ub(x.NV);
-                
-                FLT rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
-
-                for(int n=0;n<x.NV;++n)
-                    ub(n) = ibc->f(n,xpt,x.gbl->time);
-                
-                flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-                
-                /* X&Y MOMENTUM */
-                for (int n=0;n<tri_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*ub(n) +u(x.NV-1)*norm(n);
-              
-                /* EVERYTHING ELSE */
-                for (int n=tri_mesh::ND;n<x.NV-1;++n)
-                    flx(n) = flx(x.NV-1)*ub(n);
-                    
-                /* LEVEL-SET */
-                flx(2) = 0.0;
-                
-                return;
-            }
-        public:
-            euler(tri_hp_lvlset &xin, edge_bdry &bin) : neumann(xin,bin) {mytype="euler";}
-            euler(const euler& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
-            euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
-    };
-    
-
-
-    
-    class characteristic : public neumann {
-        protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
-        public:
-            characteristic(tri_hp_lvlset &xin, edge_bdry &bin) : neumann(xin,bin) {mytype="characteristic";}
-            characteristic(const characteristic& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : neumann(inbdry,xin,bin)  {}
-            characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
-    };
-    
-    class levelset_hybrid : public neumann {                             
-        public:
-            levelset_hybrid(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "levelset_hybrid";}
-            levelset_hybrid(const levelset_hybrid& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
-            levelset_hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new levelset_hybrid(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* gbl_in);
-
-            void rsdl(int stage);
-			
+    template <class BASE> class characteristic : public BASE {
+		protected:
+			tri_hp_lvlset &x;
+		public:
+            characteristic(tri_hp_lvlset &xin, edge_bdry &bin) : BASE(xin,bin), x(xin) {BASE::mytype="characteristic";}
+            characteristic(const characteristic<BASE>& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : BASE(inbdry,xin,bin), x(xin) {}
+            characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic<BASE>(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
+ 
 			void vdirichlet() {
-                int sind,v0;
-                            
-                for(int j=0;j<base.nseg;++j) {
-                    sind = base.seg(j);
-                    v0 = x.seg(sind).pnt(0);
-                    x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
-                }
-                v0 = x.seg(sind).pnt(1);
-                x.gbl->res.v(v0,Range(0,x.NV-3)) = 0.0;
-            }
-            
-            void sdirichlet(int mode) {
-                int sind;
-
-                for(int j=0;j<base.nseg;++j) {
-                    sind = base.seg(j);
-                    x.gbl->res.s(sind,mode,Range(0,x.NV-3)) = 0.0;
-                }
-            }
-			
-			
-			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
-			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
-			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
-				base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
-				return;
+				int sind,v0,v1;
+				TinyVector<FLT,2> nrm, vel;
+				FLT normvel;
+				
+				BASE::vdirichlet();
+							
+				for(int j=0;j<BASE::base.nseg;++j) {
+					sind = BASE::base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+					nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+					
+					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+								  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+								  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+					normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
+							
+					/* normvel is defined positive outward */
+					if (normvel < 0.0) {
+						x.gbl->res.v(v0,2) = 0.0;
+						x.gbl->res.v(v1,2) = 0.0;
+					}
+				}
 			}
+
+			void sdirichlet(int mode) {
+				int sind,v0,v1;
+				TinyVector<FLT,2> nrm, vel;
+				FLT normvel;
+							
+				BASE::sdirichlet(mode);
+				
+				for(int j=0;j<BASE::base.nseg;++j) {
+					sind = BASE::base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+					nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+					
+					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+								  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+								  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+					normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
+					
+					if (normvel < 0.0) {
+						x.gbl->res.s(sind,mode,2) = 0.0;
+					}
+				}
+			}
+	};
+    
+    class hybrid : public characteristic<bdry_ins::neumann> {                             
+        public:
+            hybrid(tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(xin,bin) {mytype = "hybrid";}
+            hybrid(const hybrid& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(inbdry,xin,bin) {}
+            hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new hybrid(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
+			
+			void rsdl(int stage) {};
+			void update(int stage) {
+			    int sind;
+				
+				if (stage == -1 || x.coarse_flag) return;
+				
+				int v0 = x.seg(base.seg(0)).pnt(0);
+				int v1 = x.seg(base.seg(base.nseg-1)).pnt(1);
+				
+				if (v0 == 0) {
+					for(int j=0;j<base.nseg;++j) {
+						sind = base.seg(j);
+						v1 = x.seg(sind).pnt(1);
+						x.ug.v(v1,2) = -x.distance(v1,v0);
+					}
+				}
+				else if (v1 == 0) {
+					for(int j=0;j<base.nseg;++j) {
+						sind = base.seg(j);
+						v0 = x.seg(sind).pnt(0);
+						x.ug.v(v0,2) = x.distance(v1,v0);
+					}
+				}
+			}
+				
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride);			
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride); 
+			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
 			void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 
+    };
+	
+	class hybrid_pt : public hp_vrtx_bdry {
+        protected:
+            tri_hp_lvlset &x;
+            
+         public:
+            hybrid_pt(tri_hp_lvlset &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "hybrid_pt";}
+            hybrid_pt(const hybrid_pt& inbdry, tri_hp_lvlset &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+            hybrid_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_pt(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
+			
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride); 
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
 
-
-
+            void vdirichlet2d() {
+                x.gbl->res.v(base.pnt,Range(0,x.ND-1)) = 0.0;
+				x.gbl->res.v(base.pnt,x.NV-1) = 0.0;  // Needs to be fixed
+            }
+			
+			void update(int stage);
     };
     
 	

@@ -12,7 +12,7 @@
 #include <myblas.h>
 
 void tri_hp::adapt() {
-    treeinit();  // TEMPORARY??
+    treeinit();  // FIXME??
     gbl->pstr->copy(*this);
     tri_mesh::adapt();
     setinfo();
@@ -260,7 +260,7 @@ void tri_hp::updatetdata(int tind) {
     char uplo[] = "U";
     TinyVector<FLT,2> pt;
     
-    if (!im0) return;  /* TEMPORARY NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
+    if (!im0) return;  /* FIXME NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
         
     for(step=0;step<sim::nadapt;++step) {
         ugtouht_bdry(tind,step);
@@ -302,7 +302,7 @@ void tri_hp::updatetdata(int tind) {
 void tri_hp::movetdata(int from, int to) {
     int step;
     
-    if (!im0) return;  /* TEMPORARY NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
+    if (!im0) return;  /* FIXME NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
 
     for(step=0;step<sim::nadapt;++step) {
         ugbd(step).i(to,Range::all(),Range::all()) = ugbd(step).i(from,Range::all(),Range::all());

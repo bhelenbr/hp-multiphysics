@@ -240,6 +240,7 @@ class tri_hp_helper {
         virtual void rsdl(int stage) {}
         virtual void update(int stage) {}
 		virtual void mg_restrict() {}
+		virtual void output() {};
 };
 
 #endif

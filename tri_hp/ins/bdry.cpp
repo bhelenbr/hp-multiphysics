@@ -12,7 +12,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
     TinyVector<FLT,tri_mesh::ND> norm, mvel;
-    FLT convect;
+    FLT convect,jcb;
     
     switch(typ) {
         case(tri_hp::text): case(tri_hp::binary): {
@@ -27,6 +27,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
             moment = 0.0;
             circumference = 0.0;
             circulation = 0.0;
+#ifdef L2_ERROR
+			FLT l2error = 0.0;
+			TinyVector<FLT,2> xpt;
+#endif
                         
             for(ind=0; ind < base.nseg; ++ind) {
                 sind = base.seg(ind);
@@ -49,8 +53,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                     basis::tri(x.log2p).proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
                 for (i=0;i<basis::tri(x.log2p).gpx;++i) {
-                    circumference += basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
-                    x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
+                    jcb =  basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					circumference += jcb;
+                    
+					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
                     
                     /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                     /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -99,12 +105,18 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
                     }
                     
-                    circulation += -norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1));
+                    circulation += basis::tri(x.log2p).wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
                     
                     convect = basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
                     conv_flux(2) -= convect;
                     conv_flux(0) -= x.u(0)(0,i)*convect;
                     conv_flux(1) -= x.u(1)(0,i)*convect;
+					
+#ifdef L2_ERROR
+					xpt(0) = x.crd(0)(0,i);
+					xpt(1) = x.crd(1)(0,i);
+					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
+#endif
                 }				
             }
             fout << base.idprefix << " circumference: " << circumference << std::endl;
@@ -114,6 +126,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                 
             /* OUTPUT AUXILIARY FLUXES */
             fout << base.idprefix << "total fluxes: " << total_flux << std::endl;
+#ifdef L2_ERROR
+            fout << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+#endif
             break;
         }
                 
@@ -393,4 +408,104 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 
         
     return;
+}
+
+void hybrid_slave_pt::update(int stage) {
+
+	if (stage == -1) return;
+	
+	base.sndsize() = 4;
+	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(0) = 0.0;
+	base.fsndbuf(1) = 0.0;
+	base.fsndbuf(2) = 0.0;
+	base.fsndbuf(3) = 0.0;
+	
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	
+	for(int m=0;m<base.nmatches();++m) {
+		for(int i=0;i<4;++i) 
+			base.fsndbuf(i) += base.frcvbuf(m,i);
+	}
+	
+	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+	}
+	
+	if (base.fsndbuf(0) > 0.0) {
+		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+	}
+	else {
+		x.pnts(base.pnt)(1) = base.fsndbuf(1);
+	}
+}
+
+void hybrid_pt::rsdl(int stage) {
+	int sind,v0,v1;
+	TinyVector<FLT,2> tang,vel;
+	FLT tangvel;
+	
+	if (surfbdry == 0) {
+		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
+		v0 = x.seg(sind).pnt(1);
+		v1 = x.seg(sind).pnt(0);
+	}
+	else {
+		sind = x.ebdry(base.ebdry(1))->seg(0);
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+	}
+
+
+	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
+	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
+	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+	
+	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+				  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+				  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
+
+	if (tangvel > 0.0)
+		fix_norm = 1;
+	else
+		fix_norm = 0;
+
+	surface_outflow_planar::rsdl(stage);
+}
+
+
+
+void hybrid_pt::update(int stage) {
+
+	if (stage == -1) return;
+	
+	base.sndsize() = 4;
+	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(0) = 2*fix_norm-1.0;
+	base.fsndbuf(1) = x.pnts(base.pnt)(1);
+	base.fsndbuf(2) = 0.0;
+	base.fsndbuf(3) = 0.0;
+
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	
+	for(int m=0;m<base.nmatches();++m) {
+		for(int i=0;i<4;++i) 
+			base.fsndbuf(i) += base.frcvbuf(m,i);
+	}
+	
+	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+	}
+	
+	if (fix_norm) {
+		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+	}
 }

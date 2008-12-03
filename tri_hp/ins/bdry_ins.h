@@ -29,6 +29,7 @@
 //#define DETAILED_DT
 //#define DETAILED_MINV
 
+#define L2_ERROR
 
 namespace bdry_ins {
 
@@ -36,6 +37,9 @@ namespace bdry_ins {
         protected:
             tri_hp_ins &x;
             bool report_flag;
+#ifdef L2_ERROR
+			symbolic_function<2> l2norm;
+#endif
         public:
             Array<FLT,1> total_flux,diff_flux,conv_flux;
             FLT circumference,moment,convect,circulation;
@@ -44,6 +48,9 @@ namespace bdry_ins {
             generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
             generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
                 if (report_flag) {
+#ifdef L2_ERROR
+					l2norm = inbdry.l2norm;
+#endif
                     total_flux.resize(x.NV);
                     diff_flux.resize(x.NV);
                     conv_flux.resize(x.NV);  
@@ -56,6 +63,9 @@ namespace bdry_ins {
                 input.getwdefault(keyword,report_flag,false);
                 
                 if (report_flag) {
+#ifdef L2_ERROR
+					l2norm.init(input,base.idprefix+"_norm");
+#endif
                     total_flux.resize(x.NV);
                     diff_flux.resize(x.NV);
                     conv_flux.resize(x.NV);            
@@ -321,8 +331,8 @@ namespace bdry_ins {
             void rsdl(int stage);
             void update(int stage);
                       
-            void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride=1) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
-            void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride=1) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
+            void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
+            void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
             void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
             void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
     };
@@ -395,42 +405,6 @@ namespace bdry_ins {
             void mg_restrict(); 
     };
     
-    class hybrid_surface_levelset : public surface_slave { 
-        protected:
-            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-                
-                /* CONTINUITY */
-                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-              
-                /* EVERYTHING ELSE */
-                 for (int n=0;n<x.NV-1;++n)
-                    flx(n) = 0.0;
-                    
-                return;
-            }      
-   
-        public:
-            hybrid_surface_levelset(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "hybrid_surface_levelset";}
-            hybrid_surface_levelset(const hybrid_surface_levelset& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
-            hybrid_surface_levelset* create(tri_hp& xin, edge_bdry &bin) const {return new hybrid_surface_levelset(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* gbl_in) {
-                std::string keyword;
-                
-                keyword = base.idprefix + "_curved";
-                inmap[keyword] = "0";
-
-                neumann::init(inmap,gbl_in);
-                
-                return;
-            }
-            
-            void update(int stage) {return;}
-            void rsdl(int stage) {neumann::rsdl(stage);}
-
-    };
-
-
-
     /*******************************/
     /* VERTEX BOUNDARY CONDITIONS */
     /******************************/
@@ -439,12 +413,12 @@ namespace bdry_ins {
             tri_hp_ins &x;
             surface *surf;
             int surfbdry;
-            int dirstart,dirstop;
+            int fix_norm;
             
          public:
-            surface_fixed_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "surface_fixed_pt";}
+            surface_fixed_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin), fix_norm(1) {mytype = "surface_fixed_pt";}
             surface_fixed_pt(const surface_fixed_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), 
-                surfbdry(inbdry.surfbdry), dirstart(inbdry.dirstart), dirstop(inbdry.dirstop) {
+                surfbdry(inbdry.surfbdry),fix_norm(inbdry.fix_norm) {
                 if (!(surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
                     *x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
                     exit(1);
@@ -469,19 +443,16 @@ namespace bdry_ins {
                     *x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
                     exit(1);
                 }
-                
-                keyword = base.idprefix + "_dirstart";
-                inmap.getwdefault(keyword,dirstart,0);
-                
-                keyword = base.idprefix + "_dirstop";
-                inmap.getwdefault(keyword,dirstop,1);
+ 
+                keyword = base.idprefix + "_fix_normal";
+                inmap.getwdefault(keyword,fix_norm,1);
             }
             
             void rsdl(int stage) {
                 if (surfbdry == 0) {
                     /* SET TANGENT RESIDUAL TO ZERO */
                     surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(0) = 0.0;
-                    if (dirstop > 0) {
+                    if (fix_norm) {
                         /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
                         x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(1)*x.gbl->rho;
                         /* AND ZERO RESIDUAL */
@@ -491,7 +462,7 @@ namespace bdry_ins {
                 else {
                     /* SET TANGENT RESIDUAL TO ZERO */
                     surf->gbl->vres(0)(0) = 0.0;
-                    if (dirstop > 0) {
+                    if (fix_norm > 0) {
                         /* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
                         x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(0)(1)*x.gbl->rho;
                         /* AND ZERO RESIDUAL */
@@ -503,11 +474,11 @@ namespace bdry_ins {
             
             void vdirichlet() {
                 if (surfbdry == 0) {
-                    for(int n=dirstart;n<=dirstop;++n) 
+                    for(int n=0;n<=fix_norm;++n) 
                         surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(n) = 0.0;
                 }
                 else {
-                    for(int n=dirstart;n<=dirstop;++n) 
+                    for(int n=0;n<=fix_norm;++n) 
                         surf->gbl->vres(0)(n) = 0.0;
                 }
             }
@@ -534,8 +505,7 @@ namespace bdry_ins {
             
             void init(input_map& inmap,void* gbl_in) {                
                 surface_fixed_pt::init(inmap,gbl_in);
-                dirstart = 0;
-                dirstop = 0;
+                fix_norm = 0;
                 inmap.getwdefault(base.idprefix + "_vertical",vertical,true); 
                 position = x.pnts(base.pnt)(1-vertical);
             }
@@ -553,8 +523,7 @@ namespace bdry_ins {
             surface_outflow_endpt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_endpt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
             void init(input_map& input,void* gbl_in) {
                 surface_fixed_pt::init(input,gbl_in);
-                dirstart = 0;
-                dirstop = 0;
+                fix_norm = 0;
             }
                 
             /* FOR COUPLED DYNAMIC BOUNDARIES */
@@ -613,18 +582,35 @@ namespace bdry_ins {
             }
     };
 
-    
-    
-    
-    
-/*    clase surface_vertex_comm : public hp_vrtx_bdry { */
-                          /* THIS IS VERY COMPLICATED TO DO THIS WAY */
-            /* FOR NOW USE PHASED SWEEPING OF BOUNDARY SIDES (NO COMMUNICATION THROUGH VERTICES) */
-            /*
-            void pmatchsolution_snd(int phase, FLT *pdata) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,x.NV);}
-            void pmatchsolution_rcv(int phase, FLT *pdata) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2,x.NV);}
-            */
-/*    };*/
+     class hybrid_slave_pt : public hp_vrtx_bdry {
+        protected:
+            tri_hp_ins &x;
+            
+         public:
+            hybrid_slave_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "hybrid_slave_pt";}
+            hybrid_slave_pt(const hybrid_slave_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+            hybrid_slave_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_slave_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+                    
+            void vdirichlet2d() {
+                x.gbl->res.v(base.pnt,Range(0,x.NV-1)) = 0.0;
+            }
+			
+			void update(int stage);
+    };
+
+	class hybrid_pt : public surface_outflow_planar {
+		public:
+			hybrid_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_planar(xin,bin) {mytype = "hybrid_pt";}
+			hybrid_pt(const hybrid_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_planar(inbdry,xin,bin) {}
+			hybrid_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			
+			void vdirichlet2d() {
+				x.gbl->res.v(base.pnt,Range(0,x.NV-1)) = 0.0;
+			}
+			
+			void rsdl(int stage); 			
+			void update(int stage);
+	};
 
 }
 #endif

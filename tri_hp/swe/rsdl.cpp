@@ -126,7 +126,7 @@ void tri_hp_swe::rsdl(int stage) {
                         res(1)(i,j) = cjcb*(gbl->bd[0]*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->beta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
                         res(NV-1)(i,j) = cjcb*gbl->bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
                         
-                        /* TEMPORARY TO MAINTAIN FREE-STREAM SOLUTION */
+                        /* TO MAINTAIN FREE-STREAM SOLUTION */
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;
@@ -244,7 +244,7 @@ void tri_hp_swe::rsdl(int stage) {
                         res(NV-1)(i,j) = cjcb*gbl->bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
           
                         
-                        /* TEMPORARY TO MAINTAIN FREE-STREAM SOLUTION */
+                        /* TO MAINTAIN FREE-STREAM SOLUTION */
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;

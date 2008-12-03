@@ -204,9 +204,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
     //reconstruct POD MODES
     for(k=0;k<nmodes;++k)	{
-        modes(k).v = 0.0;
-        modes(k).s = 0.0;
-        modes(k).i = 0.0;
+        modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
+        modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
+        modes(k).i(Range(0,BASE::ntri-1)) = 0.0;
         
         /* LOAD SNAPSHOTS AND CALCULATE MODE */
         for(l=0;l<nsnapshots;++l)	{
@@ -215,9 +215,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
             filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
             BASE::input(filename, BASE::binary);
 
-            modes(k).v += eigenvectors(l,nmodes -k -1)*BASE::ug.v;
-            modes(k).s += eigenvectors(l,nmodes -k -1)*BASE::ug.s;
-            modes(k).i += eigenvectors(l,nmodes -k -1)*BASE::ug.i;
+            modes(k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.v(Range(0,BASE::npnt-1));
+            modes(k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.s(Range(0,BASE::nseg-1));
+            modes(k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.i(Range(0,BASE::ntri-1));
         }
     }
 
@@ -269,9 +269,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     /* RENORMALIZE MODES AND OUTPUT COEFFICIENTS */
     for (k=0;k<nmodes;++k) {
         norm = sqrt(psimatrix_recv(k));
-        modes(k).v /= norm;
-        modes(k).s /= norm;
-        modes(k).i /= norm;
+        modes(k).v(Range(0,BASE::npnt-1)) /= norm;
+        modes(k).s(Range(0,BASE::nseg-1)) /= norm;
+        modes(k).i(Range(0,BASE::ntri-1)) /= norm;
         
         nstr.str("");
         nstr << k << std::flush;
@@ -347,19 +347,19 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
         nstr.str("");
         nstr << k+1 << std::flush;
         filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-        binofstream out;
-        out.open(filename.c_str());
-        if (out.error()) {
+        binofstream bout;
+        bout.open(filename.c_str());
+        if (bout.error()) {
             *BASE::gbl->log << "couldn't open coefficient output file " << filename;
             exit(1);
         }
-		out.writeInt(static_cast<unsigned char>(out.getFlag(binio::BigEndian)),1);
-		out.writeInt(static_cast<unsigned char>(out.getFlag(binio::FloatIEEE)),1);
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
         
         for (l=0;l<nmodes;++l) 
-            out.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
+            bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
             
-        out.close();
+        bout.close();
     }
 
     return;
@@ -393,7 +393,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     std::istringstream instr;
     FLT cjcb;
 
-	/* MAKE TEMPORARY FILES FOR SNAPSHOT-PROJECTION */
+	/* MAKE FILES FOR SNAPSHOT-PROJECTION */
 	for(k=0;k<nsnapshots;++k) {
 		nstr.str("");
         nstr << k+1 << std::flush;
@@ -492,9 +492,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 			BASE::input(filename, BASE::binary, 1);
 
-			BASE::ug.v += eigenvector(l)*BASE::ugbd(1).v;
-			BASE::ug.s += eigenvector(l)*BASE::ugbd(1).s;
-			BASE::ug.i += eigenvector(l)*BASE::ugbd(1).i;
+			BASE::ug.v(Range(0,BASE::npnt-1)) += eigenvector(l)*BASE::ugbd(1).v(Range(0,BASE::npnt-1));
+			BASE::ug.s(Range(0,BASE::nseg-1)) += eigenvector(l)*BASE::ugbd(1).s(Range(0,BASE::nseg-1));
+			BASE::ug.i(Range(0,BASE::ntri-1)) += eigenvector(l)*BASE::ugbd(1).i(Range(0,BASE::ntri-1));
 		}
 
 
@@ -539,9 +539,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		
 		/* DIVIDE BY NORM */
 		norm = sqrt(norm_recv);
-		BASE::ug.v /= norm;
-		BASE::ug.s /= norm;
-		BASE::ug.i /= norm;
+		BASE::ug.v(Range(0,BASE::npnt-1)) /= norm;
+		BASE::ug.s(Range(0,BASE::nseg-1)) /= norm;
+		BASE::ug.i(Range(0,BASE::ntri-1)) /= norm;
 			
 		/* OUTPUT RENORMALIZED MODE */
 		nstr.str("");
@@ -602,9 +602,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum);
 					
-			BASE::ugbd(1).v -= dotp_recv*BASE::ug.v;
-			BASE::ugbd(1).s -= dotp_recv*BASE::ug.s;
-			BASE::ugbd(1).i -= dotp_recv*BASE::ug.i;
+			BASE::ugbd(1).v(Range(0,BASE::npnt-1)) -= dotp_recv*BASE::ug.v(Range(0,BASE::npnt-1));
+			BASE::ugbd(1).s(Range(0,BASE::nseg-1)) -= dotp_recv*BASE::ug.s(Range(0,BASE::nseg-1));
+			BASE::ugbd(1).i(Range(0,BASE::ntri-1)) -= dotp_recv*BASE::ug.i(Range(0,BASE::ntri-1));
 			BASE::output(filename, BASE::binary, 1);
 			coeff(k,eig_ct) = dotp_recv;
 		}
@@ -617,17 +617,19 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		nstr.str("");
 		nstr << k+1 << std::flush;
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-		binofstream out;
-		out.open(filename.c_str());
-		if (out.error()) {
+		binofstream bout;
+		bout.open(filename.c_str());
+		if (bout.error()) {
 			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
 			exit(1);
 		}
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 		
 		for (l=0;l<nmodes;++l) 
-			out.writeFloat(coeff(k,l),binio::Double);
+			bout.writeFloat(coeff(k,l),binio::Double);
 			
-		out.close();
+		bout.close();
 	}
 
     return;
@@ -649,7 +651,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
     ugstore.v.reference(BASE::ugbd(0).v);
     ugstore.s.reference(BASE::ugbd(0).s);
     ugstore.i.reference(BASE::ugbd(0).i);
-
+	
     modes.resize(nmodes);
     for(i=0;i<nmodes;++i) {
         nstr.str("");
@@ -667,7 +669,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
     BASE::ugbd(0).v.reference(ugstore.v);
     BASE::ugbd(0).s.reference(ugstore.s);
     BASE::ugbd(0).i.reference(ugstore.i);
-            
+	
     coeffs.resize(nmodes);
     rsdls.resize(nmodes);
     rsdls_recv.resize(nmodes);
@@ -679,20 +681,22 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
     nstr.str("");
     nstr << initfile << std::flush;
     filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
-    binifstream in;
-    in.open(filename.c_str());
-    if (in.error()) {
+    binifstream bin;
+    bin.open(filename.c_str());
+    if (bin.error()) {
         *BASE::gbl->log << "couldn't open coefficient input file " << filename;
         exit(1);
     }
+	bin.setFlag(binio::BigEndian,bin.readInt(1));
+	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
 
     /* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
-    BASE::ug.v = 0;
-    BASE::ug.s = 0;
-    BASE::ug.i = 0;
+    BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
+    BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
+    BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
                 
     for (int l=0;l<nmodes;++l) {
-        coeffs(l) = in.readFloat(binio::Double); 
+        coeffs(l) = bin.readFloat(binio::Double); 
         BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
         BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
         BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
@@ -702,9 +706,9 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 }
 
 template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
-
+	
     BASE::rsdl(stage);
-
+	
     rsdls = 0.0;
     
     /* APPLY VERTEX DIRICHLET B.C.'S */
@@ -736,7 +740,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
                     rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
                     
     }
-    
+	
     sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
 
     return;
@@ -744,20 +748,21 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
+	
     BASE::setup_preconditioner();
     rsdl(sim::NSTAGE);
-    
-    /* STORE BASELINE IN LAST COLUMN */
+	
+    /* STORE BASELINE bin LAST COLUMN */
     jacobian(Range(0,nmodes-1),nmodes-1) = rsdls_recv;
-    BASE::gbl->ug0.v = BASE::ug.v;
-    BASE::gbl->ug0.s = BASE::ug.s;
-    BASE::gbl->ug0.i = BASE::ug.i;
+    BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) = BASE::ug.v(Range(0,BASE::npnt-1));
+    BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) = BASE::ug.s(Range(0,BASE::nseg-1));
+    BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) = BASE::ug.i(Range(0,BASE::ntri-1));
 
     for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
         /* PERTURB EACH COEFFICIENT */
-        BASE::gbl->res.v(Range(0,BASE::npnt-1),Range::all()) = 1.0e-4*modes(modeloop).v(Range(0,BASE::npnt-1),Range::all());
-        BASE::gbl->res.s(Range(0,BASE::nseg-1),Range::all(),Range::all()) = 1.0e-4*modes(modeloop).s(Range(0,BASE::nseg-1),Range::all(),Range::all());
-        BASE::gbl->res.i(Range(0,BASE::ntri-1),Range::all(),Range::all()) = 1.0e-4*modes(modeloop).i(Range(0,BASE::ntri-1),Range::all(),Range::all());
+        BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 1.0e-4*modes(modeloop).v(Range(0,BASE::npnt-1));
+        BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 1.0e-4*modes(modeloop).s(Range(0,BASE::nseg-1));
+        BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 1.0e-4*modes(modeloop).i(Range(0,BASE::ntri-1));
         
         /* APPLY VERTEX DIRICHLET B.C.'S */
         for(int i=0;i<BASE::nebd;++i)
@@ -771,9 +776,9 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
             for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
                 BASE::hp_ebdry(i)->sdirichlet(sm);
 
-        BASE::ug.v(Range(0,BASE::npnt-1),Range::all()) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1),Range::all()) +BASE::gbl->res.v(Range(0,BASE::npnt-1),Range::all());
-        BASE::ug.s(Range(0,BASE::nseg-1),Range::all(),Range::all()) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1),Range::all()) +BASE::gbl->res.s(Range(0,BASE::nseg-1),Range::all(),Range::all());
-        BASE::ug.i(Range(0,BASE::ntri-1),Range::all(),Range::all()) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1),Range::all(),Range::all()) +BASE::gbl->res.i(Range(0,BASE::ntri-1),Range::all(),Range::all());
+        BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
+        BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
+        BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
         
         rsdl(sim::NSTAGE);
         
@@ -782,9 +787,9 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
     }
             
     /* RESTORE UG */
-    BASE::ug.v = BASE::gbl->ug0.v;
-    BASE::ug.s = BASE::gbl->ug0.s;
-    BASE::ug.i = BASE::gbl->ug0.i;
+    BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1));
+    BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
+    BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
                 
     /* FACTORIZE PRECONDITIONER */
     int info;
@@ -809,14 +814,14 @@ template<class BASE> void pod_simulate<BASE>::update() {
     }
     coeffs -= rsdls_recv;
     
-    BASE::gbl->res.v = 0.0;
-    BASE::gbl->res.s = 0.0;
-    BASE::gbl->res.i = 0.0;
+    BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+    BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+    BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
     
     for (int m=0;m<nmodes;++m) {
-        BASE::gbl->res.v(Range(0,BASE::npnt-1),Range::all()) += rsdls_recv(m)*modes(m).v(Range(0,BASE::npnt-1),Range::all());
-        BASE::gbl->res.s(Range(0,BASE::nseg-1),Range::all(),Range::all()) += rsdls_recv(m)*modes(m).s(Range(0,BASE::nseg-1),Range::all(),Range::all());
-        BASE::gbl->res.i(Range(0,BASE::ntri-1),Range::all(),Range::all()) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1),Range::all(),Range::all());
+        BASE::gbl->res.v(Range(0,BASE::npnt-1)) += rsdls_recv(m)*modes(m).v(Range(0,BASE::npnt-1));
+        BASE::gbl->res.s(Range(0,BASE::nseg-1)) += rsdls_recv(m)*modes(m).s(Range(0,BASE::nseg-1));
+        BASE::gbl->res.i(Range(0,BASE::ntri-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1));
     }
     
     /* APPLY VERTEX DIRICHLET B.C.'S */
@@ -832,9 +837,9 @@ template<class BASE> void pod_simulate<BASE>::update() {
             BASE::hp_ebdry(i)->sdirichlet(sm);
             
 
-    BASE::ug.v(Range(0,BASE::npnt-1),Range::all()) -= BASE::gbl->res.v(Range(0,BASE::npnt-1),Range::all());
-    BASE::ug.s(Range(0,BASE::nseg-1),Range::all(),Range::all()) -= BASE::gbl->res.s(Range(0,BASE::nseg-1),Range::all(),Range::all());
-    BASE::ug.i(Range(0,BASE::ntri-1),Range::all(),Range::all()) -= BASE::gbl->res.i(Range(0,BASE::ntri-1),Range::all(),Range::all());
+    BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
+    BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::gbl->res.s(Range(0,BASE::nseg-1));
+    BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::gbl->res.i(Range(0,BASE::ntri-1));
     
     return;
 }

@@ -51,6 +51,9 @@ void tri_hp::update() {
 
     for(i=0;i<nebd;++i)
         hp_ebdry(i)->update(-1);
+		
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->update(-1);
             
     helper->update(-1);
             
@@ -168,10 +171,21 @@ void tri_hp::update() {
         for(i=0;i<nebd;++i) {
             hp_ebdry(i)->update(stage);
         }
+		
+		for(i=0;i<nvbd;++i) {
+			hp_vbdry(i)->update(stage);
+		}
+		
+		
         
 #ifdef DEBUG
 //        if (coarse_level) {
-//            exit(1);
+#ifdef PTH
+		pth_exit(NULL);
+#endif
+#ifdef MPI
+//		MPI_Finalize();
+#endif
 //        }
 #endif
 

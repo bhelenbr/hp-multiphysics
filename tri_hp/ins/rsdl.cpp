@@ -464,7 +464,7 @@ void tri_hp_ins::rsdl(int stage) {
     }
     else {
         if (stage == sim::NSTAGE) {
-            /* TEMPORARY HACK FOR AUXILIARY FLUXES */
+            /* HACK FOR AUXILIARY FLUXES */
             for (i=0;i<nebd;++i)
                 hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
         }

@@ -1,6 +1,8 @@
 #include "bdry_lvlset.h"
 #include <myblas.h>
 
+//#define MPDEBUG
+
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
 /* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
@@ -8,10 +10,66 @@
 /*************************************************/
 using namespace bdry_lvlset;
 
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tri_hp_lvlset_vtype {
+    public:
+        static const int ntypes = 1;
+        enum ids {unknown=-1,hybrid_point};
+        const static char names[ntypes][40];
+        static int getid(const char *nin) {
+            for(int i=0;i<ntypes;++i) 
+                if (!strcmp(nin,names[i])) return(i);
+            return(unknown);
+        }
+};
+
+const char tri_hp_lvlset_vtype::names[ntypes][40] = {"hybrid_point"};
+
+hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
+    std::string keyword,val;
+    std::istringstream data;
+    int type;          
+    hp_vrtx_bdry *temp;  
+    
+    keyword = vbdry(bnum)->idprefix + "_lvlset_type";
+    if (bdrydata.get(keyword,val)) {
+        type = tri_hp_lvlset_vtype::getid(val.c_str());
+        if (type == tri_hp_lvlset_vtype::unknown)  {
+            *gbl->log << "unknown vertex type:" << val << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        type = tri_hp_lvlset_vtype::unknown;
+    }
+    
+    
+    switch(type) {
+        case tri_hp_lvlset_vtype::hybrid_point: {
+            temp = new hybrid_pt(*this,*vbdry(bnum));
+            break;
+        }
+        default: {
+            temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
+            break;
+        }
+    } 
+    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+    return(temp);
+}
+
+
+
 class tri_hp_lvlset_stype {
     public:
         static const int ntypes = 5;
-        enum ids {unknown=-1,inflow,flow_inflow,outflow,characteristic,euler};
+        enum ids {unknown=-1,inflow,outflow,characteristic,euler,hybrid};
         static const char names[ntypes][40];
         static int getid(const char *nin) {
             for(int i=0;i<ntypes;++i)
@@ -20,7 +78,7 @@ class tri_hp_lvlset_stype {
         }
 };
 
-const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","flow_inflow","outflow","characteristic","euler"};
+const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","outflow","characteristic","euler","hybrid"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -29,7 +87,7 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
     int type;          
     hp_edge_bdry *temp;  
     
-        if (bdrydata.get(ebdry(bnum)->idprefix + "_ins_type",val)) {
+	if (bdrydata.get(ebdry(bnum)->idprefix + "_lvlset_type",val)) {
         type = tri_hp_lvlset_stype::getid(val.c_str());
         if (type == tri_hp_lvlset_stype::unknown)  {
             *gbl->log << "unknown side type:" << val << std::endl;
@@ -42,27 +100,23 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 
     switch(type) {
         case tri_hp_lvlset_stype::inflow: {
-            temp = new inflow(*this,*ebdry(bnum));
-            break;
-        }
-        case tri_hp_lvlset_stype::flow_inflow: {
-#ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
-            temp = new flow_inflow(*this,*ebdry(bnum));
-#else
-            *gbl->log << "can't use flow_inflow type with convective level-set\n";
-#endif
+            temp = new characteristic<bdry_ins::inflow>(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::outflow: {
-            temp = new neumann(*this,*ebdry(bnum));
+            temp = new characteristic<bdry_ins::neumann>(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::characteristic: {
-            temp = new characteristic(*this,*ebdry(bnum));
+            temp = new characteristic<bdry_ins::characteristic>(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_lvlset_stype::euler: {
-            temp = new euler(*this,*ebdry(bnum));
+            temp = new characteristic<bdry_ins::euler>(*this,*ebdry(bnum));
+            break;
+        }
+		case tri_hp_lvlset_stype::hybrid: {
+            temp = new hybrid(*this,*ebdry(bnum));
             break;
         }
         default: {
@@ -72,187 +126,320 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
     }    
     return(temp);
 }
-
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-    FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
-    FLT s,um,v,c,den,lam0,lam1,lam2,mag,mu;
-    FLT nu,gam,qmax;
-    Array<FLT,1> ub(x.NV), uvp(x.NV);
+			
+void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
+    int j,k,count,sind,offset;
     
-    /* CHARACTERISTIC FAR-FIELD B.C. */  
-    rho = x.gbl->rho + (x.gbl->rho2-x.gbl->rho)*x.heavyside_if(u(2)/x.gbl->width);
-    mu = x.gbl->mu + (x.gbl->mu2-x.gbl->mu)*x.heavyside_if(u(2)/x.gbl->width);
-    nu = mu/rho;
-    rhoi = 1./rho;
-    mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-    qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
-    gam = 3.0*qmax +(0.5*mag*x.gbl->bd[0] +2.*nu/mag)*(0.5*mag*x.gbl->bd[0] +2.*nu/mag);
-
-    norm(0) /= mag;
-    norm(1) /= mag;
-    
-    ul =  u(0)*norm(0) +u(1)*norm(1);
-    vl = -u(0)*norm(1) +u(1)*norm(0);
-    pl =  u(x.NV-1);
-    
-    /* FREESTREAM CONDITIONS */
-    for(int n=0;n<x.NV;++n)
-        ub(n) = ibc->f(n,xpt,x.gbl->time);
-
-    ur =  ub(0)*norm(0) +ub(1)*norm(1);
-    vr = -ub(0)*norm(1) +ub(1)*norm(0);
-    pr =  ub(x.NV-1);
-        
-    um = mv(0)*norm(0) +mv(1)*norm(1);
-    
-    cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
-    cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
-    c = 0.5*(cl+cr);
-    s = 0.5*(ul+ur);
-    v = 0.5*(vl+vr);
-    
-    den = 1./(2*c);
-    lam0 = s -um;
-    lam1 = s-.5*um +c; /* always positive */
-    lam2 = s-.5*um -c; /* always negative */
-        
-    /* PERFORM CHARACTERISTIC SWAP */
-    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
-    uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-    if (lam0 > 0.0) {
-        uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
-        for(int n=tri_mesh::ND;n<x.NV-1;++n)
-            uvp(n) = u(n);
-    }
-    else {
-        uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-        for(int n=tri_mesh::ND;n<x.NV-1;++n)
-            uvp(n) = ub(n);
-    }
-    uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
-    
-    /* CHANGE BACK TO X,Y COORDINATES */
-    ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
-    ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
-    
-    for(int n=tri_mesh::ND;n<x.NV;++n)
-        ub(n) =uvp(n);
-            
-    norm *= mag;
-    
-    flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-    flx(x.NV-2) = flx(x.NV-1)*ub(x.NV-2);
-
-    for(int n=0;n<tri_mesh::ND;++n)
-        flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
-        
-#ifndef CONSERVATIVE
-    flx(x.NV-2) = 0.0;
-#endif
-        
-    return;
-}
-
-#ifdef LOCALIZED_WITH_DISTANCE_FUNCTION
-void flow_inflow::tadvance() {
-    int j,k,m,n,v0,v1,sind,indx,info;
-    TinyVector<FLT,tri_mesh::ND> pt;
-    char uplo[] = "U";
-	int one = 1;
-    
-    hp_edge_bdry::tadvance();
-        
-    /* UPDATE BOUNDARY CONDITION VALUES */
-    for(j=0;j<base.nseg;++j) {
-        sind = base.seg(j);
-        v0 = x.seg(sind).pnt(0);
-        for(n=0;n<x.NV-2;++n)
-            x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
-    }
-    v0 = x.seg(sind).pnt(1);
-    for(n=0;n<x.NV-2;++n)
-        x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
-
-    /*******************/    
-    /* SET SIDE VALUES */
-    /*******************/
-    for(j=0;j<base.nseg;++j) {
-        sind = base.seg(j);
-        v0 = x.seg(sind).pnt(0);
-        v1 = x.seg(sind).pnt(1);
-        
-        if (is_curved()) {
-            x.crdtocht1d(sind);
-            for(n=0;n<tri_mesh::ND;++n)
-                basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-        }
-        else {
-            for(n=0;n<tri_mesh::ND;++n) {
-                basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-                
-                for(k=0;k<basis::tri(x.log2p).gpx;++k)
-                    x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
-            }
-        }
-
-        if (basis::tri(x.log2p).sm) {
-            for(n=0;n<x.NV-2;++n)
-                basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
-
-            for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
-                pt(0) = x.crd(0)(0,k);
-                pt(1) = x.crd(1)(0,k);
-                for(n=0;n<x.NV-2;++n)
-                    x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
-            }
-            for(n=0;n<x.NV-2;++n)
-                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
-            indx = sind*x.sm0;
-            for(n=0;n<x.NV-2;++n) {
-                PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-                dpbtrs_(uplo,&basis::tri(x.log2p).sm,&basis::tri(x.log2p).sbwth,&one,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-                for(m=0;m<basis::tri(x.log2p).sm;++m) 
-                    x.ug.s(sind,m,n) = -x.lf(n)(2+m);
-            }
-        }
-    }
-    
-    return;
-}
-#endif
-
-void levelset_hybrid::rsdl(int stage) {
-    int i,m,msgn,count,sind,v0;
-    
-    base.comm_prepare(boundary::all,0,boundary::master_slave);
-    base.comm_exchange(boundary::all,0,boundary::master_slave);
-    base.comm_wait(boundary::all,0,boundary::master_slave);          
+	stride*=4;
+	
     count = 0;
-    for(i=base.nseg-1;i>=0;--i) {
-        sind = base.seg(i);
-        v0 = x.seg(sind).pnt(1);
-#ifdef MPDEBUG
-        *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
-#endif
-        x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        offset = x.seg(sind).pnt(0)*stride;
+        for (k=0;k<x.ND;++k) {
+            base.fsndbuf(count++) = pdata[offset+k];
+        }
+		base.fsndbuf(count++) = pdata[offset+x.NV-1];
     }
-    v0 = x.seg(sind).pnt(0);
-#ifdef MPDEBUG
-    *x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
-#endif     
-    x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
+    offset = x.seg(sind).pnt(1)*stride;
+    for (k=0;k<x.ND;++k) 
+        base.fsndbuf(count++) = pdata[offset+k];
+	base.fsndbuf(count++) = pdata[offset+x.NV-1];
 
-    for(i=base.nseg-1;i>=0;--i) {
-        sind = base.seg(i);
-        msgn = 1;
-        for(m=0;m<basis::tri(x.log2p).sm;++m) {
-            x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
-            msgn *= -1;
+    base.sndsize() = count;
+    base.sndtype() = boundary::flt_msg;
+}
+
+void hybrid::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
+    int j,k,m,count,countdn,countup,offset,sind;
+    int matches = 1;
+    FLT mtchinv;
+	
+	stride *= 4; // u,v,phi,p;
+	int grp = 1;  // ALL_PHASED GROUP
+	
+    /* ASSUMES REVERSE ORDERING OF SIDES */
+    /* WON'T WORK IN 3D */
+	/* RELOAD FROM BUFFER */
+	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
+	for(m=0;m<base.nmatches();++m) {    
+		if (base.msg_phase(grp,m) != phi) continue;
+		
+		++matches;
+		
+		int ebp1 = 3;  // u,v,p but not phi
+		countdn = base.nseg*ebp1;
+		countup = 0;
+		for(j=0;j<base.nseg+1;++j) {
+			for(k=0;k<ebp1;++k) {
+				base.fsndbuf(countup +k) += base.frcvbuf(m,countdn +k);
+			}
+			countup += ebp1;
+			countdn -= ebp1;
+		}
+	}
+
+	if (matches > 1) {
+		mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+		*x.gbl->log << "finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+		count = 0;
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			offset = x.seg(sind).pnt(0)*stride;
+			for (k=0;k<x.ND;++k) {
+				pdata[offset+k] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+				*x.gbl->log << "\t" << pdata[offset+k] << std::endl;
+#endif
+			}
+			pdata[offset+x.NV-1] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+			*x.gbl->log << "\t" << pdata[offset+x.NV-1] << std::endl;
+#endif
+		}
+		offset = x.seg(sind).pnt(1)*stride;
+		for (k=0;k<x.ND;++k) {
+			pdata[offset+k] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+			*x.gbl->log << "\t" << pdata[offset+k] << std::endl;
+#endif
+		}
+		pdata[offset+x.NV-1] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+		*x.gbl->log << "\t" << pdata[offset+x.NV-1] << std::endl;
+#endif
+	}
+	return;
+}
+
+void hybrid::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
+    int j,k,n,countup,offset;
+    
+    if (!base.is_comm()) return;
+    
+#ifdef MPDEBUG
+	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+    
+    countup = 0;
+    for(j=0;j<base.nseg;++j) {
+        offset = base.seg(j)*stride*x.NV;
+        for(k=bgn;k<=end;++k) {
+            for(n=0;n<x.ND;++n) {
+                base.fsndbuf(countup++) = sdata[offset +k*x.NV +n];
+#ifdef MPDEBUG
+				*x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+            }
+			base.fsndbuf(countup++) = sdata[offset +k*x.NV +x.NV-1];
+#ifdef MPDEBUG
+			*x.gbl->log << "\t" << sdata[offset +k*x.NV +x.NV-1] << std::endl;
+#endif
         }
     }
-
+    base.sndsize() = countup;
+    base.sndtype() = boundary::flt_msg;
     return;
 }
 
 
+void hybrid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+    
+    if (!base.is_comm()) return;
+        
+    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+    int j,k,m,n,count,countdn,countup,offset,sind,sign;
+    FLT mtchinv;
+    
+    /* ASSUMES REVERSE ORDERING OF SIDES */
+    /* WON'T WORK IN 3D */
+    
+    int matches = 1;
+    
+    int bgnsign = (bgn % 2 ? -1 : 1);
+    
+    /* RELOAD FROM BUFFER */
+    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
+    for(m=0;m<base.nmatches();++m) {            
+        ++matches;
+        
+        int ebp1 = end-bgn+1;
+
+        countdn = (base.nseg-1)*ebp1*(x.NV-1);
+        countup = 0;
+        for(j=0;j<base.nseg;++j) {
+            sign = bgnsign;
+            for(k=0;k<ebp1;++k) {
+                for(n=0;n<x.NV-1;++n) {
+                    base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+                }
+                sign *= -1;
+            }
+            countdn -= 2*ebp1*(x.NV-1);
+        }
+    }
+    
+    if (matches > 1) {
+        mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+        *x.gbl->log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+        count = 0;
+        for(j=0;j<base.nseg;++j) {
+            sind = base.seg(j);
+            offset = sind*stride*x.NV;
+            for (k=bgn;k<=end;++k) {
+                for(n=0;n<x.ND;++n) {
+                    sdata[offset +k*x.NV +n] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+                    *x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+                }
+				sdata[offset +k*x.NV +x.NV-1] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+				*x.gbl->log << "\t" << sdata[offset +k*x.NV +x.NV-1] << std::endl;
+#endif				
+            }
+
+        }
+    }
+    return;
+}
+
+void hybrid_pt::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
+    int count,offset;
+    
+	if (!base.is_comm()) return;
+
+	offset = base.pnt*4;
+	count = 0;
+    base.fsndbuf(count++) = pdata[offset];
+	base.fsndbuf(count++) = pdata[offset+1];
+	base.fsndbuf(count++) = pdata[offset+3];
+
+    base.sndsize() = count;
+    base.sndtype() = boundary::flt_msg;
+}
+
+void hybrid_pt::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
+	int m,matches,k,offset,count;
+	FLT mtchinv;
+	
+	if (!base.is_comm()) return;
+	
+	stride *= 4; // u,v,phi,p;
+	int grp = 1;  // ALL_PHASED GROUP
+	matches = 1;
+	
+	for(m=0;m<base.nmatches();++m) {    
+		if (base.msg_phase(grp,m) != phi) continue;
+		++matches;
+		for(k=0;k<3;++k) {
+			base.fsndbuf(k) += base.frcvbuf(m,k);
+		}
+	}
+
+	if (matches > 1) {
+		mtchinv = 1./matches;
+
+#ifdef MPDEBUG
+		*x.gbl->log << "finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+
+		offset = base.pnt*stride;
+		count = 0;
+		for (k=0;k<x.ND;++k) {
+			pdata[offset+k] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+			*x.gbl->log << "\t" << pdata[offset+k] << std::endl;
+#endif
+		}
+		pdata[offset+x.NV-1] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+		*x.gbl->log << "\t" << pdata[offset+x.NV-1] << std::endl;
+#endif
+	}
+}
+
+	
+void hybrid_pt::update(int stage) {
+
+	if (stage == -1) return;
+
+	base.sndsize() = 4;
+	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(0) = 0.0;
+	base.fsndbuf(1) = 0.0;
+	base.fsndbuf(2) = 1.0;
+	base.fsndbuf(3) = 0.0;
+	
+	int sind = x.ebdry(base.ebdry(1))->seg(0);
+	int v0 = x.seg(sind).pnt(0);
+	int v1 = x.seg(sind).pnt(1);
+	
+	TinyVector<FLT,2> nrm, vel;
+	FLT normvel;
+				
+	nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+	nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+	
+	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+				  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+				  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	
+	/* normvel is defined positive outward */
+	normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
+		
+	if (normvel > 0.0)  { 
+		/* flow going out level-set changed from zero */
+		int p0 = x.seg(x.ebdry(base.ebdry(1))->seg(0)).pnt(1);
+		int p1 = x.seg(x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1)).pnt(0);
+	
+		if (x.ug.v(base.pnt,2)*x.ug.v(p0,2) < 0.0) {
+			/* MOVE TO INTERSECTION POINT */
+			TinyVector<FLT,2> dx = x.pnts(p0)-x.pnts(base.pnt);
+			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p0,2)-x.ug.v(base.pnt,2));
+			x.pnts(base.pnt)(1) += dx(1);
+			x.ug.v(base.pnt,2) = 0.0;
+		}
+		else {
+			/* MOVE TO INTERSECTION POINT */
+			TinyVector<FLT,2> dx = x.pnts(p1)-x.pnts(base.pnt);
+			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p1,2)-x.ug.v(base.pnt,2));
+			x.pnts(base.pnt)(1) += dx(1);
+			x.ug.v(base.pnt,2) = 0.0;	
+		}
+		base.fsndbuf(2) = -1.0;
+	}
+	base.fsndbuf(3) = x.pnts(base.pnt)(1);
+	
+	if (!base.is_comm()) return;
+	
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	
+	for(int m=0;m<base.nmatches();++m) {
+		for(int i=0;i<4;++i) 
+			base.fsndbuf(i) += base.frcvbuf(m,i);
+	}
+	
+	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+	}
+	
+	if (base.fsndbuf(0) > 0.0) {
+		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+	}
+	else {
+		x.pnts(base.pnt)(1) = base.fsndbuf(1);
+	}
+}

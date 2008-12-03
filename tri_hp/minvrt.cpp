@@ -89,7 +89,7 @@ void tri_hp::minvrt() {
     /* PART 1 REMOVE VERTEX CONTRIBUTIONS */
     for(tind=0;tind<ntri;++tind) {
             
-        if (gbl->diagonal_preconditioner) {  // IF STATEMENT IN LOOP IS BAD TEMPO
+        if (gbl->diagonal_preconditioner) {  // IF STATEMENT IN LOOP IS BAD FIXME
             for(i=0;i<3;++i) {
                 v0 = tri(tind).pnt(i);
                 for(n=0;n<NV;++n)

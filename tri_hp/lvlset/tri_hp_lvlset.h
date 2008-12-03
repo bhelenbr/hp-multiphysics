@@ -26,6 +26,7 @@ class tri_hp_lvlset : public tri_hp_ins {
             FLT rho2, mu2;
 
         } *gbl;
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
         hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
     public:

@@ -29,6 +29,7 @@ void tri_hp_lvlset::rsdl(int stage) {
     TinyVector<TinyMatrix<FLT,MXGP,MXGP>,ND> phivel;
 
     tri_hp::rsdl(stage);
+	
     oneminusbeta = 1.0-sim::beta[stage];
      for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -331,10 +332,10 @@ void tri_hp_lvlset::rsdl(int stage) {
                         phivel(0)(i,j) = -norm(0)/length;
                         phivel(1)(i,j) = -norm(1)/length;
 #elif defined(NONCONSERVATIVE)
-                        res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd[0]*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
-                            +(u(0)(i,j)-mvel(0)(i,j))*norm(0) +(u(1)(i,j)-mvel(1)(i,j))*norm(1));
-                        phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
+						phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
                         phivel(1)(i,j) = u(1)(i,j) -mvel(1)(i,j);
+                        res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd[0]*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
+                            +phivel(0)(i,j)*norm(0) +phivel(1)(i,j)*norm(1));
 #else
                         cv(NV-2,0)(i,j) = u(NV-2)(i,j)*du(NV-1,0)(i,j);
                         cv(NV-2,1)(i,j) = u(NV-2)(i,j)*du(NV-1,1)(i,j);
@@ -366,6 +367,7 @@ void tri_hp_lvlset::rsdl(int stage) {
 #elif defined(NONCONSERVATIVE)
                         res(2)(i,j) = RAD(crd(0)(i,j))*cjcb*(gbl->bd[0]*u(NV-2)(i,j) +dugdt(log2p,tind,NV-2)(i,j)
                             +(u(0)(i,j)-mvel(0)(i,j))*norm(0) +(u(1)(i,j)-mvel(1)(i,j))*norm(1));
+
                         phivel(0)(i,j) = u(0)(i,j) -mvel(0)(i,j);
                         phivel(1)(i,j) = u(1)(i,j) -mvel(1)(i,j);
 #else
@@ -438,7 +440,7 @@ void tri_hp_lvlset::rsdl(int stage) {
 #ifdef CONSERVATIVE
             basis::tri(log2p).intgrtrs(&lf(NV-2)(0),&cv(NV-2,0)(0,0),&cv(NV-2,1)(0,0),MXGP);
 #else
-            basis::tri(log2p).intgrt(&lf(NV-2)(0),&res(NV-2,0)(0,0),MXGP);
+            basis::tri(log2p).intgrt(&lf(NV-2)(0),&res(NV-2)(0,0),MXGP);
 #endif
 
             /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
@@ -604,6 +606,7 @@ void tri_hp_lvlset::rsdl(int stage) {
     }
     
     
+	
 //            for(i=0;i<npnt;++i) {
 //                printf("rsdl v: %d ",i);
 //                for (n=0;n<NV;++n) 

@@ -39,7 +39,7 @@ const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buo
     "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
-    std::string keyword,val,ibcname,srcname;
+    std::string keyword,val,ibcname;
     std::istringstream data;
     int type;          
     

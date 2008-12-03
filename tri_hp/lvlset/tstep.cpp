@@ -75,22 +75,25 @@ void tri_hp_lvlset::setup_preconditioner() {
 #endif
 #ifdef CONSERVATIVE
             lam2 *= rhomax;
-#endif           
-
-            gbl->tau(tind,2) = 0.0;
-            
+#endif            
+			
             /* SET UP DIAGONAL PRECONDITIONER */
-            jcbphi = jcb*lam2;
+            jcbphi = 2.0*jcb*lam2;
             jcbphi *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
             // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd[0];
             jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
             jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
             
-            gbl->tprcn(tind,0) = rhomax*jcb;    
+			/* BRUTE FORCE WAY TO FREEZE FLOW 
+			gbl->tprcn(tind,0) = 1.0e99*gbl->rho*jcb;   
+			gbl->tprcn(tind,1) = 1.0e99*gbl->rho*jcb;   
+			gbl->tprcn(tind,3) =  1.0e99*jcb/gam; */
+			
+            gbl->tprcn(tind,0) = rhomax*jcb; 
             gbl->tprcn(tind,1) = rhomax*jcb;  
             gbl->tprcn(tind,2) = jcbphi;      
-            gbl->tprcn(tind,3) =  jcb/gam;
+            gbl->tprcn(tind,3) = jcb/gam;
             for(i=0;i<3;++i) {
                 gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
                 if (basis::tri(log2p).sm > 0) {

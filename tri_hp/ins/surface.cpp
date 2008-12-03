@@ -149,7 +149,7 @@ void surface::tadvance() {
 
             for(i=0;i<base.nseg;++i) 
                 for(m=0;m<basis::tri(x.log2p).sm;++m)
-                    sdres(x.log2p,i,m)(0) = -gbl->sres(i,m)(0)*0;  /* TEMPO TO KEEP SIDE MODES EQUALLY SPACED */
+                    sdres(x.log2p,i,m)(0) = -gbl->sres(i,m)(0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
         }
     }
     return;
@@ -799,6 +799,8 @@ void surface::setup_preconditioner() {
     return;
 }
 
+
+
 void surface::update(int stage) {
     int i,m,n,count,sind,indx,v0;
 
@@ -916,7 +918,7 @@ void surface::update(int stage) {
         base.comm_exchange(boundary::all,0,boundary::master_slave);
         base.comm_wait(boundary::all,0,boundary::master_slave);
     }
-    
+	
     return;
 }
 
@@ -1035,7 +1037,7 @@ void surface_slave::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride)
     /* RELOAD FROM BUFFER */
     /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
     /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
-    for(m=0;m<base.matches();++m) {            
+    for(m=0;m<base.nmatches();++m) {            
         ++matches;
         
         int ebp1 = end-bgn+1;

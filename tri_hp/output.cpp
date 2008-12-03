@@ -34,6 +34,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
     switch(why) {
         case(block::display): {
             output(fname,output_type(0));
+			helper->output();
             return;
         }
         case(block::restart): {
@@ -332,7 +333,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
             }
             out.close();
             
-            for(i=0;i<nebd;++i)    // TEMPORARY NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
+            for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
                 hp_ebdry(i)->output(*gbl->log, typ);
                 
             break; 

@@ -11,8 +11,9 @@
 #include "hp_boundary.h"
 #include <blitz/tinyvec-et.h>
 #include <libbinio/binwrap.h>
+#include <myblas.h>
 
-#define NO_MPDEBUG
+//#define MPDEBUG
 
 hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
     hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));  
@@ -37,7 +38,7 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
     int bgnsign = (bgn % 2 ? -1 : 1);
     
     /* ASSUMES REVERSE ORDERING OF SIDES */
-    for(m=0;m<base.matches();++m) {    
+    for(m=0;m<base.nmatches();++m) {    
             
         ++matches;
         
@@ -69,7 +70,7 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
                 for(n=0;n<x.NV;++n) {
                     sdata[offset++] = base.fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                    *gbl->log << "\t" << sdata[offset-1] << std::endl;
+                    *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
 #endif
                 }
             }
