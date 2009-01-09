@@ -34,7 +34,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
         input.getwdefault("snapshots",nsnapshots,10);
     }
     
-    if (!input.get(BASE::gbl->idprefix + "_podmodes",nsnapshots)) input.getwdefault("podmodes",nmodes,nsnapshots);    
+    if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
     
     /* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
     scaling.resize(BASE::NV);
@@ -393,7 +393,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     std::istringstream instr;
     FLT cjcb;
 
-	/* MAKE FILES FOR SNAPSHOT-PROJECTION */
+	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<nsnapshots;++k) {
 		nstr.str("");
         nstr << k+1 << std::flush;
@@ -402,6 +402,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
         nstr.str("");
         nstr << k << std::flush;
         filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+		
+		/* ZERO SNAPSHOTS ON POD BOUNDARY'S */
+		for (i=0;i<BASE::nebd;++i)
+			pod_ebdry(i)->zero_bdry();
+		
         BASE::output(filename, BASE::binary);
 	}
 	
@@ -635,6 +640,304 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     return;
 }
 #endif
+
+template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
+	std::string keyword;
+	
+	keyword = base.idprefix + "_pod";
+	input.getwdefault(keyword,active,false);
+	
+	keyword = base.idprefix + "_podmodes";
+	input.getwdefault(keyword,nmodes,0);
+}
+
+template<class BASE> void pod_gen_edge_bdry<BASE>::zero_bdry() {
+
+	if (!active) return;
+
+	int sind,v0;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		x.gbl->res.v(v0,Range(0,x.NV-1)) = 0.0;
+		x.gbl->res.s(sind,Range(0,x.sm0-1),Range(0,x.NV-1)) = 0.0;
+	}
+	v0 = x.seg(sind).pnt(1);
+	x.gbl->res.v(v0,Range(0,x.NV-1)) = 0.0;
+}
+
+/* 1D VERSION TO GENERATE MODES */
+template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
+	
+	if (!active) return;
+
+    Array<FLT,1> psimatrix(x.nsnapshots*x.nsnapshots);
+    Array<FLT,1> psimatrix_recv(x.nsnapshots*x.nsnapshots);
+	Array<FLT,1> low_noise_dot(x.BASE::ntri);
+	Array<FLT,1> eigenvalues(x.nsnapshots);
+    Array<FLT,1> eigenvector(x.nsnapshots);
+	Array<FLT,2> coeff(x.nsnapshots,x.nsnapshots);
+	char jobz[2] = "V", range[2] = "I", uplo[2] = "L";
+	double vl, vu;
+	int il=x.nsnapshots, iu=x.nsnapshots;
+	double abstol = 2.*dlamch_("Safe minimum");
+	int sind,v0,neig,info;
+	Array<int,1> iwork(5*x.nsnapshots);
+	Array<double,1> work(8*x.nsnapshots);
+	Array<int,1> ifail(x.nsnapshots);
+	int i,j,k,l,n,tind;
+    int lgpx = basis::tri(x.log2p).gpx, lgpn = basis::tri(x.log2p).gpn;
+    std::string filename,keyword,linebuff;
+    std::ostringstream nstr;
+    std::istringstream instr;
+    FLT cjcb;
+	
+	/* MAKE FILES FOR EDGE MODE SNAPSHOT-PROJECTION */
+	for(k=0;k<x.nsnapshots;++k) {
+		nstr.str("");
+        nstr << k+1 << std::flush;
+        filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+        x.input(filename, BASE::binary);
+        nstr.str("");
+        nstr << k << std::flush;
+        filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+        x.output(filename, BASE::binary);
+	}
+	
+	
+	for (int eig_ct=0; eig_ct<x.nsnapshots;++eig_ct) {
+		
+		/* ******************************************/
+		/* GENERATE POD MODES SNAPSHOT MATRIX       */
+		/********************************************/
+		int psi1dcounter = 0;
+		psimatrix = 0.0;
+		for (k=0;k<x.nsnapshots;++k) {
+			nstr.str("");
+			nstr << k << std::flush;
+			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+			x.input(filename, x.binary);
+			
+			for(l=k;l<x.nsnapshots;++l) {
+				nstr.str("");
+				nstr << l << std::flush;
+				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+				x.input(filename, x.binary, 1);
+				
+				/* PERFORM 1D INTEGRATION */
+				for(int bsind=0;bsind<base.nseg;++bsind) {
+					sind = base.seg(bsind);
+					
+					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+					x.crdtocht1d(sind);
+					
+					/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+					for(n=0;n<x.ND;++n)
+						basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+					
+					x.ugtouht1d(sind,0);
+					for(n=0;n<x.NV;++n)
+						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+					
+					x.ugtouht1d(sind,1);
+					for(n=0;n<x.NV;++n)
+						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+					
+					FLT tmp_store = 0.0;
+					for(i=0;i<lgpx;++i) {
+						cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+						for(n=0;n<x.NV;++n) {
+							tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
+						}
+					}
+					low_noise_dot(bsind) = tmp_store;
+				}
+				
+				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+				int halfcount,remainder;
+				for (remainder=base.nseg % 2, halfcount = base.nseg/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+					for (int bsind=0;bsind<halfcount;++bsind) 
+						low_noise_dot(bsind) += low_noise_dot(bsind+halfcount);
+					if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+				}
+				psimatrix(psi1dcounter) = low_noise_dot(0);
+				
+				++psi1dcounter;
+			}	
+		}
+		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),x.nsnapshots*(x.nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
+		
+		/*********************************/
+		/* TO COMPUTE JUST 1 EIGENVECTOR */
+		/*********************************/
+		dspevx_(jobz, range, uplo, &x.nsnapshots, psimatrix_recv.data(), &vl, &vu, &il, &iu, &abstol,
+				&neig, eigenvalues.data(),eigenvector.data(), &x.nsnapshots, work.data(), iwork.data(), ifail.data(), &info); 
+		if (info != 0) {
+			*x.gbl->log << "Failed to find eigenmodes " << info << std::endl;
+			exit(1);
+		}
+		
+		*x.gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
+		
+		
+		/*************************************/
+		/* LOAD SNAPSHOTS AND CALCULATE MODE */
+		/*************************************/
+		/* FOR NOW I AM GOING TO CALCULATE 2D MODE */
+		/* EVEN THOUGH THIS IS UNNECESSARY */
+		x.ug.v = 0.0;
+		x.ug.s = 0.0;
+		x.ug.i = 0.0;
+		for(l=0;l<x.nsnapshots;++l)	{
+			nstr.str("");
+			nstr << l << std::flush;
+			filename = "temp" +nstr.str() + "_" + x.gbl->idprefix;
+			x.input(filename, x.binary, 1);
+			
+			for (int bsind=0;bsind<base.nseg;++bsind) {
+				sind = base.seg(bsind);
+				v0 = x.sd(sind).pnt(0);
+				x.ug.v(v0) += eigenvector(l)*x.ugbd(1).v(v0);
+				x.ug.s(sind) += eigenvector(l)*x.ugbd(1).s(sind);
+			}
+			v0 = x.sd(sind).pnt(1);
+			x.ug.v(v0) += eigenvector(l)*x.ugbd(1).v(v0);
+		}
+		
+		
+		/********************/
+		/* RENORMALIZE MODE */
+		/********************/
+		for(int bsind=0;bsind<base.nseg;++bsind) {
+			sind = base.seg(bsind);
+			
+			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+			x.crdtocht1d(sind);
+			
+			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+			for(n=0;n<x.ND;++n)
+				basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+			
+			x.ugtouht1d(sind);
+			for(n=0;n<x.NV;++n)
+				basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+			
+			FLT tmp_store = 0.0;
+			for(i=0;i<lgpx;++i) {
+				cjcb =  basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+				for(n=0;n<x.NV;++n) {
+					tmp_store += x.res(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
+				}
+			}
+			low_noise_dot(bsind) = tmp_store;
+		}
+		/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+		int halfcount,remainder;
+		for (remainder=base.nseg % 2, halfcount = base.nseg/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+			for (int bsind=0;bsind<halfcount;++bsind) 
+				low_noise_dot(bsind) += low_noise_dot(bsind+halfcount);
+			if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+		}
+		double norm = low_noise_dot(0);
+		double norm_recv;
+		
+		sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum);
+		
+		/* DIVIDE BY NORM */
+		norm = sqrt(norm_recv);
+		x.ug.v(Range(0,x.npnt-1)) /= norm;
+		x.ug.s(Range(0,x.nseg-1)) /= norm;
+		
+		/* OUTPUT RENORMALIZED MODE */
+		nstr.str("");
+		nstr << eig_ct << std::flush;
+		filename = "mode" +nstr.str() + "_" + base.idprefix;
+		x.output(filename, x.binary);
+		x.output(filename, x.tecplot);
+		
+		/***************************************/
+		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
+		/***************************************/
+		double dotp_recv, dotp;
+		for (k=0;k<x.nsnapshots;++k) {
+			/* LOAD SNAPSHOT */
+			nstr.str("");
+			nstr << k << std::flush;
+			filename = "temp" +nstr.str() + "_" + x.gbl->idprefix;
+			x.input(filename, x.binary, 1);
+			
+			/* PERFORM 1D INTEGRATION */
+			for(int bsind=0;bsind<base.nseg;++bsind) {
+				sind = base.seg(bsind);
+				
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				x.crdtocht1d(sind);
+				
+				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(n=0;n<x.ND;++n)
+					basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+				
+				x.ugtouht1d(sind,0);
+				for(n=0;n<x.NV;++n)
+					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+				
+				x.ugtouht1d(sind,1);
+				for(n=0;n<x.NV;++n)
+					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+				
+				FLT tmp_store = 0.0;
+				for(i=0;i<lgpx;++i) {
+					cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					for(n=0;n<x.NV;++n) {
+						tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
+					}
+				}
+				low_noise_dot(bsind) = tmp_store;
+			}
+			
+			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+			int halfcount,remainder;
+			for (remainder=base.nseg % 2, halfcount = base.nseg/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+				for (int bsind=0;bsind<halfcount;++bsind) 
+					low_noise_dot(bsind) += low_noise_dot(bsind+halfcount);
+				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+			}
+			dotp = low_noise_dot(0);
+			
+			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum);
+			
+			x.ugbd(1).v(Range(0,x.npnt-1)) -= dotp_recv*x.ug.v(Range(0,x.npnt-1));
+			x.ugbd(1).s(Range(0,x.nseg-1)) -= dotp_recv*x.ug.s(Range(0,x.nseg-1));
+			x.output(filename, x.binary, 1);
+			coeff(k,eig_ct) = dotp_recv;
+		}
+	}
+	
+	/*****************************/
+	/* OUTPUT COEFFICIENT VECTOR */
+	/*****************************/
+	for (k=0;k<x.nsnapshots;++k) {
+		nstr.str("");
+		nstr << k+1 << std::flush;
+		filename = "coeff" +nstr.str() + "_" +base.idprefix +".bin";
+		binofstream bout;
+		bout.open(filename.c_str());
+		if (bout.error()) {
+			*x.gbl->log << "couldn't open coefficient output file " << filename;
+			exit(1);
+		}
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+		
+		for (l=0;l<nmodes;++l) 
+			bout.writeFloat(coeff(k,l),binio::Double);
+		
+		bout.close();
+	}
+}
+
+
 
 template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
     std::string filename,keyword,linebuff;

@@ -100,11 +100,14 @@ void tri_hp::movepdata_bdry(int bnum,int bel,int endpt) {
     hp_ebdry(bnum)->movepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
 }
 
+static int error_count = 0;
+
 void tri_hp::updatesdata(int sind) {
     int i,m,n,v0,v1,tind,step,info;
     FLT r,s,upt[NV];
     char uplo[] = "U";
     TinyVector<FLT,2> pt;
+	int ierr;
     
     if (!sm0) return;
     
@@ -121,7 +124,14 @@ void tri_hp::updatesdata(int sind) {
     for(i=0;i<basis::tri(log2p).gpx;++i) {
         pt(0) = crd(0)(0,i);
         pt(1) = crd(1)(0,i);
-        gbl->pstr->findinteriorpt(pt,tind,r,s);
+        ierr = gbl->pstr->findinteriorpt(pt,tind,r,s);
+		if (ierr) {
+			*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatesdata for " << sind << ' ' << pt << std::endl;
+			std::ostringstream fname;
+			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
+			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+		}
         
         for(step=0;step<sim::nadapt;++step) {
             gbl->pstr->ugtouht(tind,step);
@@ -259,6 +269,7 @@ void tri_hp::updatetdata(int tind) {
     FLT upt[NV];
     char uplo[] = "U";
     TinyVector<FLT,2> pt;
+	int ierr;
     
     if (!im0) return;  /* FIXME NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
         
@@ -276,8 +287,14 @@ void tri_hp::updatetdata(int tind) {
         for (j=0; j < basis::tri(log2p).gpn; ++j ) {
             pt(0) = crd(0)(i,j);
             pt(1) = crd(1)(i,j);
-            gbl->pstr->findinteriorpt(pt,ttgt,r,s);
-            
+            ierr = gbl->pstr->findinteriorpt(pt,ttgt,r,s);
+			if (ierr) {
+				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
+				std::ostringstream fname;
+				fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
+				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+			}            
             for(step=0;step<sim::nadapt;++step) {
                 gbl->pstr->ugtouht(ttgt,step);
                 basis::tri(log2p).ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);

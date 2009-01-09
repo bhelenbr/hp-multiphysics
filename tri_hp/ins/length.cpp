@@ -50,7 +50,7 @@ void tri_hp_ins::length() {
             um = u;
             vm = v;
         }
-        gbl->eanda(0) += 1./3.*( (0.5*gbl->rho*q +p)*area(tind) +duv*gbl->mu*sqrt(area(tind)) ) /gbl->rho;  //TEMPO
+        gbl->eanda(0) += 1./3.*( (0.5*gbl->rho*q +p)*area(tind) +duv*gbl->mu*sqrt(area(tind)));
         gbl->eanda(1) += area(tind);
     }
     sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
@@ -68,9 +68,9 @@ void tri_hp_ins::length() {
                 u -= mesh_ref_vel(0);
                 v -= mesh_ref_vel(1);
 #endif
-                ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1))/gbl->rho;// TEMPORARY
-//                sum = pow(distance2(v0,v1),-basis::tri(log2p).p/2)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
-				sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
+                ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1));
+                sum = pow(distance2(v0,v1),-0.5*basis::tri(log2p).p)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
+//				sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
 
 				gbl->fltwk(v0) += sum;
                 gbl->fltwk(v1) += sum;
@@ -89,10 +89,10 @@ void tri_hp_ins::length() {
                 u -= mesh_ref_vel(0);
                 v -= mesh_ref_vel(1);
 #endif
-                ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1))/gbl->rho;// TEMPORARY;
-//                sum = pow(distance2(v0,v1),-basis::tri(log2p).p/2)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
-                sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
-                gbl->fltwk(v0) += sum;
+                ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1));
+                sum = pow(distance2(v0,v1),-0.5*basis::tri(log2p).p)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
+//                sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
+				gbl->fltwk(v0) += sum;
                 gbl->fltwk(v1) += sum;
             }
             
@@ -139,18 +139,21 @@ void tri_hp_ins::length() {
                     curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
 
                     sum = gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
-                    gbl->fltwk(v1) += sum*gbl->error_target*norm*pnt(v1).nnbor;
-                    gbl->fltwk(v2) += sum*gbl->error_target*norm*pnt(v2).nnbor;
+                    gbl->fltwk(v1) += sum*norm*pnt(v1).nnbor/gbl->error_target;
+                    gbl->fltwk(v2) += sum*norm*pnt(v2).nnbor/gbl->error_target;
                 }
             }
             break;
         }
     }
 
+	norm = gbl->error_target*pow(norm,1./(basis::tri(log2p).p-1.0+ND/2.));
     for(i=0;i<npnt;++i) {
-//        lngth(i) = gbl->error_target*pow(gbl->fltwk(i)/(norm*pnt(i).nnbor),-1./(basis::tri(log2p).p-1+ND/2.));
-		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
-        lngth(i) = gbl->fltwk(i);        
+        lngth(i) = norm*pow(gbl->fltwk(i)/pnt(i).nnbor,-1./(basis::tri(log2p).p-1.0+ND/2.));
+
+//		lngth(i) = norm*pow(gbl->fltwk(i)/pnt(i).nnbor,1./(basis::tri(log2p).p+1+ND));
+//		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
+//      lngth(i) = gbl->fltwk(i);        
 //                lngth(i) *= 2.0;  // For testing
 
 #ifdef THREELAYER
@@ -191,6 +194,6 @@ void tri_hp_ins::length() {
         ++nsweep;
         *gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
     } while(count > 0 && nsweep < 5);
-        
-    return;
+	
+	return;
 }

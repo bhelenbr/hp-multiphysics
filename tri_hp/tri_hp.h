@@ -203,7 +203,7 @@ class tri_hp : public r_tri_mesh  {
         void updatesdata_bdry(int bnum,int bel);
         void movetdata(int frm, int to);
         void updatetdata(int t);
-        void findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
+        int findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
         void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
         void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
         void ptprobe_bdry(int bnum, TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);

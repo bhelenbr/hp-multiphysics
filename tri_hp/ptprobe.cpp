@@ -24,17 +24,15 @@
 
  void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
     TinyVector<FLT,3> wgt;
-    int v0;
+    int v0,ierr;
     
     qtree.nearpt(xp.data(),v0);
-    tind = findtri(xp,v0);
-    getwgts(wgt);
-    
-    if (tind < 0) {
+    ierr = findtri(xp,v0,tind);
+    if (ierr) {
         *gbl->log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
-        tind = abs(tind);
     }
-
+	
+	 getwgts(wgt);
     /* TRIANGLE COORDINATES */    
     s = wgt(0)*2 -1.0;
     r = wgt(2)*2 -1.0;
@@ -54,16 +52,17 @@
     return;
 }
 
+int mistake_counter = 0;
 
- void tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
+ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
     FLT dr,ds,dx,dy,det,roundoff;
     TinyVector<FLT,3> wgt;
     TinyVector<FLT,ND> x,dxmax,ddr,dds;
     int n,iter,v0,tind1;
+	int ierr = 0, find_tri_err;
 
     qtree.nearpt(xp.data(),v0);
-    tind1 = findtri(xp,v0);
-    tind = abs(tind1);
+    find_tri_err = findtri(xp,v0,tind);
     getwgts(wgt);
 
     /* TRIANGLE COORDINATES */    
@@ -90,31 +89,39 @@
             r += dr;
             s += ds;
             if (iter++ > 100) {
-                *gbl->log << "#Warning: max iterations for curved triangle " << tind1 << "from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
-                std::ostringstream fname;
-                fname << gbl->idprefix << "_maxiter" << gbl->tstep;
+                *gbl->log << "#Warning: max iterations for curved triangle " << tind << "find tri?" << find_tri_err << " from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+				std::ostringstream fname;
+                fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
                 tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
                 /* TRIANGLE COORDINATES */    
                 s = wgt(0)*2 -1.0;
                 r = wgt(2)*2 -1.0;
                 *gbl->log  << "#Warning: this was the first guess " << r << ' ' << s << ' ' << '\n';
+				ierr = 1;
                 break;
             }
         } while (fabs(dr) +fabs(ds) > roundoff);
         
-        if (r < -1 || r > 1 || s < -1 || s > 1) {
-            *gbl->log << "#Warning: point outside triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
-        }
+        if (r < -(1.0+10.0*FLT_EPSILON) || r > (1.0+10.0*FLT_EPSILON) || s < -(1.0+10.0*FLT_EPSILON) || s > (1.0+10.0*FLT_EPSILON)) {
+            *gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << find_tri_err << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+			std::ostringstream fname;
+			fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
+			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+			ierr = 1;
+		}
         /* need to do this because ptprobe_bdry only calculates boundary function */
         basis::tri(log2p).ptvalues_rs(r,s);
 
-        return;
+        return(ierr);
     }
     else if (tind1 < 0) {
         *gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
-    }
+		ierr = 1;
+	}
         
     /* need to do this because ptprobe_bdry only calculates boundary function */
     basis::tri(log2p).ptvalues_rs(r,s);
-    return;
+    return(ierr);
 }
