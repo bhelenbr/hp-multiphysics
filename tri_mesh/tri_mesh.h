@@ -225,6 +225,7 @@ class tri_mesh : public multigrid_interface {
         const static int PSPEC = 0x4, PDLTE = 0x2, PTOUC=0x1;
         const static int SDLTE = 0x10*0x2, STOUC=0x10*0x1;
         const static int TSRCH = 0x100*0x4, TDLTE = 0x100*0x2, TTOUC=0x100*0x1;
+
         void setup_for_adapt(); /**< Set all flags */
 
         void triangulate(int nseg); /**< Creates an initial triangulation */
@@ -245,7 +246,7 @@ class tri_mesh : public multigrid_interface {
         int insert(const TinyVector<FLT,ND> &x);  /**< Inserts a point */
         int insert(int pnum, int tnum);  /**< Inserts point at pnum into tnum */
         void bdry_insert(int pnum, int sind, int endpt = 0); /**< Inserts a boundary point in segment sind if endpt is 0 makes left old and right new seg */
-        int findtri(TinyVector<FLT,ND> x, int pnear); /**< Locate triangle containing point with initial seed of pnear */
+        int findtri(TinyVector<FLT,ND> x, int pnear, int &tind); /**< Locate triangle containing point with initial seed of pnear */
         
         void cleanup_after_adapt(); /**< Clean up and move data etc.. */
         void dltpnt(int pind); /**< Removes leftover point references */
@@ -296,7 +297,9 @@ class tri_mesh : public multigrid_interface {
         FLT aspect(int tind) const;  /**< Calculates aspect ratio basied on perimeter to area ratio normalized so 1 is equilateral */
         FLT intri(int tind, const TinyVector<FLT,2> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
         TinyVector<FLT,3> tri_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
+		int findtri(TinyVector<FLT,ND> x,int &tnear);  /**< For finding point with initial guess for triangle */
         void getwgts(TinyVector<FLT,3> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */
+	
         //@}
 
 };
@@ -345,7 +348,7 @@ class edge_bdry : public boundary {
         TinyVector<int,2> vbdry;
         int maxseg;
         int nseg;
-        Array<int,1> seg;
+		Array<int,1> seg, next, prev;
         
         /* CONSTRUCTOR */
         edge_bdry(int inid, tri_mesh &xin) : boundary(inid), x(xin), maxseg(0)  {idprefix = x.gbl->idprefix +"_s" +idprefix; mytype="plain"; vbdry = -1;}

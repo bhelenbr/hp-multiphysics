@@ -9,6 +9,37 @@
 
 #include "tri_mesh.h"
 
+
+/* Memory Usage */
+/* tri(i).info: (Should be able to merge this with intwk, except for reorder?) */
+/* For vertices 0 = untouched, 1 = touched, 2 = deleted, 3 = special */
+/* For sides 0 = untouced, 1 = touched, 2 = deleted */
+/* For triangles 0 = untouched, 1 = touched, 2 = deleted, 3 = searched */
+
+/* List of entities needing refinement */
+/* seg(i).info */
+
+/* Back reference into list of entities needing refinement */
+/* pnt(i).info */
+
+/* ratio of triangle size to target */
+/* fscr1(i) */
+
+/* in insert & bdry_insert */
+/* gbl->i2wk_lst1(ntdel++) = tnum; */
+/* gbl->i2wk_lst2(nskeep++) = sind; */
+/* gbl->i2wk_lst3(nsdel++) = sind; */
+		
+/* in findtri */
+/* intwk mark for searches */
+/* i2wk list of triangles needing search */
+
+/* in yaber & collapse */
+/* gbl->i2wk_lst1, gbl->i2wk_lst2, gbl->i2wk_lst3 */
+		
+/* in reorder */
+/* intwk + i2wk */
+
 void tri_mesh::adapt() {
     int i;
     
@@ -101,10 +132,15 @@ void tri_mesh::cleanup_after_adapt() {
     }
     
     /* DELETE SIDES FROM BOUNDARY CONDITIONS */
-    for(i=0;i<nebd;++i) {
+    for(i=0;i<nebd;++i) {		
         for(j=ebdry(i)->nseg-1;j>=0;--j) {
-            if (tri(ebdry(i)->seg(j)).info&SDLTE) 
+            if (tri(ebdry(i)->seg(j)).info&SDLTE) {
                 ebdry(i)->seg(j) = ebdry(i)->seg(--ebdry(i)->nseg);
+				ebdry(i)->prev(j) = ebdry(i)->prev(ebdry(i)->nseg);
+				ebdry(i)->next(j) = ebdry(i)->next(ebdry(i)->nseg);
+				ebdry(i)->prev(ebdry(i)->next(j)) = j;
+				ebdry(i)->next(ebdry(i)->prev(j)) = j;
+			}
         }
         ebdry(i)->reorder();
     }
@@ -112,6 +148,10 @@ void tri_mesh::cleanup_after_adapt() {
 
     
     /* UPDATE BOUNDARY DATA */
+	/* AT THIS POINT NO SIDE OR PNTS HAVE BEEN MOVED */
+	/* SO CAN USE SIND TO LOOK UP BOUNDARY ELEMENT NUMBER IN OLD MESH FOR UNTOUCHED SIDES */
+	/* THIS PROBABLY WON'T WORK FOR VERTICES.  WILL HAVE TO CHANGE A LITTLE */
+	/* DON'T HAVE ANY DIRECT WAY OF SAYING HOW BOUNDARY ENTITIES HAVE CHANGE POSITION */
     for (i=0;i<nebd;++i) {
         /* THIS IS PROBABLY UNNECESSARY SINCE FIRST */
         /* & LAST VERTEX SHOULD NEVER BE CHANGED */
@@ -156,7 +196,7 @@ void tri_mesh::cleanup_after_adapt() {
                                 
     /* CLEAN UP SIDES */
     /* SINFO WILL END UP STORING -1 UNTOUCHED, -2 TOUCHED, or INITIAL INDEX OF UNTOUCHED SIDE */
-    /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* TEMPORARY HAVEN"T TESTED THIS */
+    /* SINFO > NSIDE WILL STORE MOVEMENT LOCATION */  /* FIXME: HAVEN"T TESTED THIS */
     for(i=0;i<nseg;++i) {
         seg(i).info = -1;
         if (tri(i).info&SDLTE) dltseg(i);

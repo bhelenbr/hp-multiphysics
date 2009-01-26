@@ -123,7 +123,7 @@ void tri_mesh::yaber(FLT tolsize) {
             {
                 /* KEEP POINT WHICH IS CLOSEST TO CENTER OF AREA */
                 /* THIS WAY WORKS BEST BUT COSTS MORE */
-                /* TEMPORARY:: NEED TO ELIMINATE DUPLICATION OF WORK BETWEEN THIS & COLLAPSE */
+                /* FIXME :: NEED TO ELIMINATE DUPLICATION OF WORK BETWEEN THIS & COLLAPSE */
                 x = 0.0;
                 y = 0.0;
                 asum = 0.0;
@@ -223,13 +223,13 @@ void tri_mesh::yaber(FLT tolsize) {
             gbl->fltwk(tind) = minvl/inscribedradius(tind);
             if (gbl->fltwk(tind) > tolsize) putinlst(tind);
         }
-        
+
 #ifdef DEBUG_ADAPT
         std::ostringstream nstr;
         nstr << adapt_count++ << std::flush;
-        adapt_file = gbl->idprefix +"_adapt" +nstr.str();
+		adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
         nstr.str("");
-        output(adapt_file.c_str(),adapt_output);
+        output(adapt_file.c_str(),grid);
 #endif
     }
 
@@ -307,7 +307,7 @@ void tri_mesh::checkintegrity() {
 
 void tri_mesh::bdry_yaber(FLT tolsize) {
     int sind,endpt,p0,p1,count;
-    int bseg, nseg, pel, next, sindprev, sindnext, saffect;
+    int bseg, pel, nel, sindprev, sindnext, saffect;
 
     /* COARSEN FIRST BOUNDARIES */
     for(int bnum=0;bnum<nebd;++bnum) {
@@ -336,24 +336,12 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
             sind = seg(gbl->nlst-1).info;
             bseg = getbdryseg(seg(sind).tri(1));
             
-            /* FIND ADJACENT NON-DELETED SIDES */
-            nseg = -1;
-            for(next = bseg+1;next<ebdry(bnum)->nseg;++next) {
-                if(!(tri(ebdry(bnum)->seg(next)).info&SDLTE)) {
-                    nseg = next;
-                    sindnext = ebdry(bnum)->seg(nseg);
-                    break;
-                }
-            }
-            pel = -1;
-            for(next = bseg-1;next>=0;--next) {
-                if(!(tri(ebdry(bnum)->seg(next)).info&SDLTE)) {
-                    pel = next;
-                    sindprev = ebdry(bnum)->seg(pel);
-                    break;
-                }
-            }
-            
+            /* ADJACENT SIDES */
+			nel = ebdry(bnum)->next(bseg);
+			pel = ebdry(bnum)->prev(bseg);
+			sindnext = ebdry(bnum)->seg(nel);
+			sindprev = ebdry(bnum)->seg(pel);
+			            
             /* PICK ENDPT */
             p0 = seg(sind).pnt(0);
             p1 = seg(sind).pnt(1);
@@ -387,6 +375,10 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 #endif
             collapse(sind,endpt);
             tkoutlst(sind);
+			
+			/* UPDATE PREV/NEXT BOUNDARY POINTERS */
+			ebdry(bnum)->prev(nel) = pel;
+			ebdry(bnum)->next(pel) = nel;
             
             /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
             ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = bseg;
@@ -400,9 +392,9 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;
-            adapt_file = gbl->idprefix +"_adapt" +nstr.str();
+			adapt_file = "adapt" +nstr.str() + "_" +gbl->idprefix;
             nstr.str("");
-            output(adapt_file.c_str(),adapt_output);
+            output(adapt_file.c_str(),grid);
 #endif                
         }
         ebdry(bnum)->isndbuf(0) = ebdry(bnum)->sndsize();
@@ -433,6 +425,13 @@ void tri_mesh::bdry_yaber1() {
             std::cout << "collapsing boundary" << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
 #endif
             collapse(sind,endpt);
+			
+			/* UPDATE PREV/NEXT BOUNDARY POINTERS */
+			int nel = ebdry(bnum)->next(seg);
+			int pel = ebdry(bnum)->prev(seg);
+			ebdry(bnum)->prev(nel) = pel;
+			ebdry(bnum)->next(pel) = nel;
+						
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;
             nstr << adapt_count++ << std::flush;

@@ -622,7 +622,7 @@ template<int ND> class geometry {
                 for(n=0;n<ND;++n)
                     pt(n) += delt_dist*dhgt(n,pt.data(),time)/mag;
                 if (++iter > 100) {
-                    std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // TEMPORARY NEED TO FIX
+                    std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // FIXME:  NEED TO FIX
                     exit(1);
                 }
             } while (fabs(delt_dist) > 10.*EPSILON);

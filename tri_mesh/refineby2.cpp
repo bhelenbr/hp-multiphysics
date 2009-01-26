@@ -11,7 +11,7 @@
 #include <assert.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {
-    int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber;
+    int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber,ierr;
     TinyVector<FLT,ND> xpt;
     
     /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
@@ -47,8 +47,8 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     for(i=npnt;i<count;++i) { 
         qtree.addpt(npnt);
         qtree.nearpt(npnt,pnear);
-        tind = findtri(pnts(npnt),pnear);
-        assert(tind > -1);
+        ierr = findtri(pnts(npnt),pnear,tind);
+        assert(!ierr);
         err = insert(npnt,tind);
         ++npnt;
     }

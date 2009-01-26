@@ -74,12 +74,15 @@ void blocks::go(input_map& input) {
     std::string blkstring,mystring;
     std::ostringstream nstr;
     std::istringstream data;
-	std::map<int,all_reduce_data>::iterator mi;
+	std::map<int,all_reduce_data *>::iterator mi;
     
 #ifdef MPISRC
     MPI_Comm_size(MPI_COMM_WORLD,&nproc);
     MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif   
+	
+	input.echo = true;
+    input.echoprefix = "#";
 	
 	std::set_new_handler(my_new_handler); 
 
@@ -112,8 +115,8 @@ void blocks::go(input_map& input) {
     blk.resize(myblock);
 	
 	/* SET-UP MPI_COMM_WORLD STRUCTURE */
-	group_data[0] = all_reduce_data();
-	group_data[0].nentries = myblock;
+	group_data[0] = new all_reduce_data(); 
+	group_data[0]->myblock = myblock;
 	
     for(i=0;i<myblock;++i) {
         blk(i) = getnewblock(i+bstart,input);
@@ -125,28 +128,30 @@ void blocks::go(input_map& input) {
 				exit(1);
 			}
 			if ((mi = group_data.find(groupid)) != group_data.end()) {
-				++mi->second.nentries;
+				++mi->second->myblock;
+				mi->second->mylocalid[i+bstart] = 1;  // Temporarily use mylocalid's key values to mark blocks in group
 			}
 			else {
 				/* New entry */
-				group_data[groupid] = all_reduce_data();
+				group_data[groupid] = new all_reduce_data();
+				group_data[groupid]->mylocalid[i+bstart] = 1; // Temporarily use mylocalid's key values to mark blocks in group
 			}
 		}
+		data.clear();
 	}
     
     /* RESIZE ALLREDUCE BUFFER POINTERS ARRAYS */
 	for (mi=group_data.begin();mi != group_data.end(); ++mi) {
-		mi->second.sndbufs.resize(mi->second.nentries);
-		mi->second.rcvbufs.resize(mi->second.nentries);
+		mi->second->sndbufs.resize(mi->second->myblock);
+		mi->second->rcvbufs.resize(mi->second->myblock);
 	}
 	
 #ifdef MPISRC
 	/* SET-UP COMMUNICATORS FOR ALL_REDUCE COMMUNICATION */
-	/* NEED LIST OF PROCESSORS FOR EACH GROUP */
+	/* FOR EACH GROUP NEED LIST OF PROCESSORS */
 	std::map<int,std::set<int> > grp_rnk;
 	
-	/* EXTRACT NBLOCKS FOR MYID */
-    /* SPACE DELIMITED ARRAY OF NBLOCKS FOR EACH PROCESSOR */
+	/* Go through list of # of blocks per processor again */
     bstart = 0;
     istringstream nblkstr;
 	nblkstr.str(blkstring);
@@ -159,6 +164,9 @@ void blocks::go(input_map& input) {
 			data.str(mystring);
 			while (data >> groupid) {
 				grp_rnk[groupid].insert(i);
+				if ((mi = group_data.find(groupid)) != group_data.end()) {
+					/* This group is on this processor */
+					mi->second->mylocalid[bn] = 1;  // Temporarily use mylocalid's key values to mark blocks in group
 			}
 		}
 		bstart += nb;
@@ -181,10 +189,19 @@ void blocks::go(input_map& input) {
 		ierr += MPI_Group_incl(base_grp, n, ranks.data(), &temp_grp);
 		ierr += MPI_Comm_create (MPI_COMM_WORLD, temp_grp, &comm_out);
 		if ((mi = group_data.find(gri->first)) != group_data.end()) {
-			mi->second.comm = comm_out;
+			mi->second->comm = comm_out;
 		}
 	}
 #endif
+	
+	/* Give blocks in localid for each group sequential numbering */
+	for (mi=group_data.begin();mi != group_data.end(); ++mi) {
+		int count = 0;
+		for (std::map<int,int>::iterator lid = mi->second->mylocalid.begin(); lid != mi->second->mylocalid.end(); ++lid) {
+			lid->second = count++;
+		}
+		mi->second->nblock = count;
+	}
 	
     
 #ifdef PTH
@@ -192,7 +209,8 @@ void blocks::go(input_map& input) {
     pth_mutex_init(&list_mutex);
     pth_cond_init(&list_change);
     pth_mutex_init(&allreduce_mutex);
-    pth_cond_init(&allreduce_change);
+	for (mi=group_data.begin();mi != group_data.end(); ++mi)
+		pth_cond_init(&(mi->second->allreduce_change));
     pth_mutex_init(&data_mutex);
     attr = PTH_ATTR_DEFAULT;
     pth_attr_set(attr, PTH_ATTR_JOINABLE, true); 
@@ -244,13 +262,17 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
     boost::mutex::scoped_lock lock(allreduce_mutex);
 #endif
 
-	std::map<int,all_reduce_data>::iterator gi = group_data.find(group);
-	all_reduce_data& gd(gi->second);
+	std::map<int,all_reduce_data *>::iterator gi = group_data.find(group);
+	if (gi == group_data.end()) {
+		std::cerr << "couldn't find group in all_reduce\n";
+		exit(1);
+	}
+	all_reduce_data& gd(*gi->second);
     gd.sndbufs(gd.buf_cnt) = sendbuf;
 	gd.rcvbufs(gd.buf_cnt) = recvbuf;
 	++gd.buf_cnt;
-        
-    if (gd.buf_cnt == gd.nentries) {
+	        
+    if (gd.buf_cnt == gd.myblock) {
        switch(datatype) {
             case(int_msg): {
             
@@ -261,7 +283,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                         isendbuf = 0;
                         for(j=0;j<gd.buf_cnt;++j) {
                             for(i=0;i<count;++i) {
-                                isendbuf(i) += static_cast<int *>(gd.sndbufs(j))[i];  /* NOT SURE ABOUT THIS TEMPORARY !!!! */
+                                isendbuf(i) += static_cast<int *>(gd.sndbufs(j))[i]; 
                             }
                         }
 #ifdef MPISRC
@@ -270,7 +292,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
                         for(i=1;i<gd.buf_cnt;++i) {
                             ircvbuf = static_cast<int *>(gd.rcvbufs(i));
                             for(j=0;j<count;++j)
-                                ircvbuf[j] =  static_cast<int *>(gd.rcvbufs(0))[j]; /* NOT SURE ABOUT THIS TEMPORARY !!!! */
+                                ircvbuf[j] =  static_cast<int *>(gd.rcvbufs(0))[j]; 
                         }
 #else
                         for(i=0;i<gd.buf_cnt;++i) {
@@ -378,17 +400,16 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
         gd.buf_cnt = 0;    
     
 #if defined(PTH)
-        pth_cond_notify(&allreduce_change, true);
-        pth_mutex_release(&allreduce_mutex);
+        pth_cond_notify(&gd.allreduce_change, true);
 #elif defined(BOOST)
-        allreduce_change.notify_all();
+        gd.allreduce_change.notify_all();
 #endif
     }
     else {
 #if defined(PTH)
-        pth_cond_await(&allreduce_change, &allreduce_mutex, NULL);
+        pth_cond_await(&gd.allreduce_change, &allreduce_mutex, NULL);
 #elif defined(BOOST)
-        allreduce_change.wait(lock);
+        gd.allreduce_change.wait(lock); 
 #endif
     }
 #if defined(PTH)
@@ -697,6 +718,7 @@ void block::init(input_map &input) {
     for (int i=0;i<ngrid;++i) 
         grd(i) = getnewlevel(input);
     gbl = static_cast<block_global *>(grd(0)->create_global_structure());
+	gbl->idnum = idnum;
     gbl->idprefix = idprefix;
     
     /* OPEN LOGFILES FOR EACH BLOCK */

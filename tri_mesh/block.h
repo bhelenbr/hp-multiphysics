@@ -25,7 +25,8 @@ using namespace blitz;
 /* THIS STRUCTURE STORES ALL OF THE GLOBAL INFORMATION FOR A BLOCK */
 /* COMPONENTS OF BLOCK INHERIT THIS AND THEN ALLOCATE ONE BIG GLOBAL STRUCTURE */
 struct block_global {
-    std::string idprefix;
+	int idnum; /**< global block number */ 
+    std::string idprefix; /**< "b" + block # */
     FLT dti; /**< Inverse time step */
     FLT dti_prev; /**< Inverse time step for prior step (allows changes in time step) */
     FLT time; /**< Simulation time */

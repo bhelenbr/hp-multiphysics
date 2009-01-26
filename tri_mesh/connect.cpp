@@ -54,7 +54,7 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
     /* LOOP THROUGH POINTS AND FIND SURROUNDING TRIANGLE */
     for(i=0;i<npnt;++i) {
         tgt.qtree.nearpt(pnts(i).data(),p0);
-        cnnct(i).tri = abs(tgt.findtri(pnts(i),p0));
+		tgt.findtri(pnts(i),p0,cnnct(i).tri);
         tgt.getwgts(cnnct(i).wt);
     }
     

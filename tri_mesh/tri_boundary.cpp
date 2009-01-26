@@ -103,7 +103,11 @@ void vcomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 /**************************************/
 void edge_bdry::alloc(int n) {
     maxseg = n;
-    seg.resize(n);
+    seg.resize(Range(-1,n));
+	prev.resize(Range(-1,n));
+	next.resize(Range(-1,n));
+	prev = 0;
+	next = 0;
 }
       
 void edge_bdry::copy(const edge_bdry& bin) {
@@ -223,11 +227,36 @@ void edge_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int
 /* SWAP ELEMENTS IN LIST */
 void edge_bdry::swap(int s1, int s2) {
     int ind;
-    
-    /* TEMPORARY NOT SURE HOW TO SWAP S VALUES */    
+		
+    /* FIXME NOT SURE HOW TO SWAP S VALUES */    
     ind = seg(s1);
     seg(s1) = seg(s2);
     seg(s2) = ind;
+	
+	/* PREV/NEXT IMPLEMENTATION */
+	ind = prev(s1);
+    prev(s1) = prev(s2);
+    prev(s2) = ind;
+	
+	ind = next(s1);
+    next(s1) = next(s2);
+    next(s2) = ind;
+	
+	int prev1 = prev(s1);
+	int next1 = next(s1);
+	int prev2 = prev(s2);
+	int next2 = next(s2);
+	
+	if (prev1 == s1) prev1 = s2;
+	if (next1 == s1) next1 = s2;
+	if (prev2 == s2) prev2 = s1;
+	if (next2 == s2) next2 = s1;
+	
+	next(prev1) = s1;
+	prev(next1) = s1;
+	
+	next(prev2) = s2;
+	prev(next2) = s2;
 
     return;
 }
@@ -270,9 +299,9 @@ void edge_bdry::reorder() {
         minp = x.npnt;
         for(i=0;i<nseg;++i) {
             sind = seg(i);
-            if (x.seg(sind).pnt(1) < minp) {
+            if (x.seg(sind).pnt(0) < minp) {
                 first = i;
-                minp = x.seg(sind).pnt(1);
+                minp = x.seg(sind).pnt(0);
             }
         }
     }
@@ -311,8 +340,13 @@ void edge_bdry::reorder() {
             x.ebdry(x.nebd-1)->swap(i,i+nseg);
         x.ebdry(x.nebd-1)->nseg = total-nseg;
         *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
-        return;
     }
+	
+	for (i=0;i<nseg;++i) {
+		prev(i) = i-1;
+		next(i) = i+1;
+	}
+	next(nseg-1) = -1;
     
     return;
 }

@@ -27,7 +27,7 @@ static std::string adapt_file;
 */
     
 void tri_mesh::rebay(FLT tolsize) {
-    int i,j,n,tind,tfind,p0,p1,p2,pnear,nsnew,ntnew,snum,intrcnt,err;
+    int i,j,n,tind,tfind,p0,p1,p2,pnear,nsnew,ntnew,snum,intrcnt,err,ierr;
     TinyVector<FLT,ND> xpt,dx,xmid,xdif,rn;
     TinyVector<FLT,3> wt;
     FLT maxvl;
@@ -212,8 +212,8 @@ INSRT:
             continue;
         }
             
-        tfind = findtri(xpt,pnear);
-        if (tfind < 0) {
+        ierr = findtri(xpt,pnear,tfind);
+        if (ierr) {
 #ifdef VERBOSE
             *gbl->log << "#Warning: Trying to insert outside domain " << std::endl;
             *gbl->log << pnts(p0) << std::endl; 
@@ -294,7 +294,7 @@ INSRT:
 }
 
 void tri_mesh::bdry_rebay(FLT tolsize) {
-    int sind,p0,count,psifxpt,bseg;
+    int sind,p0,count,psifxpt,bseg,prev,sind_prev;
     FLT psi;
     TinyVector<FLT,tri_mesh::ND> endpt;
     
@@ -341,13 +341,27 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
         /* SKIP FIRST SPOT SO CAN SEND LENGTH FIRST */
         ebdry(bnum)->sndsize() = 1;
         while (gbl->nlst > 0) {
-            // START WITH LARGEST SIDE LENGTH RATIO
-            sind = seg(gbl->nlst-1).info;
-            bseg = getbdryseg(seg(sind).tri(1));
-            
-            /* FOR NOW INSERTION POINT IN MIDDLE */
-            /* FIXED POINT ARITHMETIC SO I CAN PASS AN INTEGER */
-            psi = 0.0;
+
+			for(int i=gbl->nlst-1;i>=0;--i) {
+				sind = seg(i).info;
+				bseg = getbdryseg(seg(sind).tri(1));
+				prev = ebdry(bnum)->prev(bseg);
+
+				/* Check if it is the first edge. Ok to start there */
+				if (prev < 0) break;
+			
+				/* Check that previous edge is not in list */
+				sind_prev = ebdry(bnum)->seg(prev);
+				if (pnt(sind_prev).info == -1)  break;
+			}
+			
+			/* INSERT POINT TO MATCH LENGTH FUNCTION L/2(1+psi) = lbar +psi dl/2 */
+			FLT L = distance(seg(sind).pnt(0),seg(sind).pnt(1));
+			FLT lbar = 0.5*(lngth(seg(sind).pnt(0)) +lngth(seg(sind).pnt(1)));
+			FLT dl = lngth(seg(sind).pnt(1)) -lngth(seg(sind).pnt(0));
+			psi = (lbar -L/2)/(L/2 +dl/2);
+			if (psi > 0.0) psi = 0.0;
+			
             psifxpt = static_cast<int>(256*psi);
             psi = psifxpt/256.0;
             pnts(npnt) = 0.5*((1.-psi)*pnts(seg(sind).pnt(0)) +(1.+psi)*pnts(seg(sind).pnt(1)));
@@ -364,7 +378,13 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
             bdry_insert(npnt,sind);
             ++npnt;
             ++count;
-            
+			
+			/* UPDATE NEXT & PREV POINTERS */
+			ebdry(bnum)->prev(ebdry(bnum)->next(bseg)) = ebdry(bnum)->nseg-1;
+			ebdry(bnum)->next(ebdry(bnum)->nseg-1) = ebdry(bnum)->next(bseg);
+			ebdry(bnum)->next(bseg) = ebdry(bnum)->nseg-1;
+			ebdry(bnum)->prev(ebdry(bnum)->nseg-1) = bseg;
+			
             /* STORE ADAPTATION INFO FOR COMMUNICATION BOUNDARIES */
             ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = bseg;
             ebdry(bnum)->isndbuf(ebdry(bnum)->sndsize()++) = psifxpt;
@@ -390,7 +410,6 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
         ebdry(bnum)->sndtype() = boundary::int_msg;
         ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
         *gbl->log << "#Boundary refinement finished, " << ebdry(bnum)->idnum << ' ' << count << " sides added" << std::endl;
-
     }
     
     return;
@@ -430,6 +449,12 @@ void tri_mesh::bdry_rebay1() {
 #endif
             bdry_insert(npnt,sind,1);
             ++npnt;
+			
+			/* UPDATE NEXT & PREV POINTERS */
+			ebdry(bnum)->next(ebdry(bnum)->prev(bseg)) = ebdry(bnum)->nseg-1;
+			ebdry(bnum)->prev(ebdry(bnum)->nseg-1) = ebdry(bnum)->prev(bseg);
+			ebdry(bnum)->prev(bseg) = ebdry(bnum)->nseg-1;
+			ebdry(bnum)->next(ebdry(bnum)->nseg-1) = bseg;
             
 #ifdef DEBUG_ADAPT
             std::ostringstream nstr;

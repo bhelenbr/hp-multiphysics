@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
-    int n,tind,pnear,err;
+    int n,tind,pnear,err,ierr;
     
     for(n=0;n<ND;++n)
         pnts(npnt)(n) = x(n);
@@ -23,8 +23,8 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
     qtree.nearpt(npnt,pnear);
 
     /* FIND TRIANGLE CONTAINING POINT */        
-    tind = findtri(x,pnear);
-    if (tind < 0) {
+    ierr = findtri(x,pnear,tind);
+    if (ierr < 0) {
         std::cerr << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
         std::cerr << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
         output("error");
@@ -454,16 +454,17 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
     return;
 }
 
-int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
-    int i,j,vn,dir,stoptri,tin,tind;
+int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
+    int i,j,vn,dir,stoptri,tin;
     int ntdel;
     int tclose,nsurround;
-    FLT minclosest,closest;
+    FLT minclosest;
     int p0,p1,p2;
+	int ierr = 0;
     FLT dx0,dy0,dx1,dy1,dx2,dy2;
     TinyVector<FLT,3> a;
     
-/* TSRCH = 0x100*0x4 */
+	/* TSRCH = 0x100*0x4 */
 #if ((-1)&(0x100*0x4))
 #define ISSRCH(A) (!((A)&TSRCH))
 #define SETSRCH(A) A&=(~TSRCH)
@@ -483,7 +484,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
         if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND;
         SETSRCH(gbl->intwk(tind));
         gbl->i2wk(ntdel++) = tind;
-    
+		
         for(vn=0;vn<3;++vn) 
             if (tri(tind).pnt(vn) == pnear) break;
         
@@ -495,7 +496,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
             tind = pnt(pnear).tri;
             for(vn=0;vn<3;++vn) 
                 if (tri(tind).pnt(vn) == pnear) break;
-
+			
             tind = tri(tind).tri((vn +dir)%3);
             if (tind < 0) break;
             stoptri = -1;
@@ -503,7 +504,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
     } while(tind != stoptri); 
     
     nsurround = ntdel;
-        
+	
     /* DIDN'T FIND TRIANGLE */
     /* NEED TO SEARCH SURROUNDING TRIANGLES */
     for(i=0;i<ntdel;++i) {
@@ -518,7 +519,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
         }
         if (ntdel >= gbl->maxsrch-4) break;
     }
-//    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
+	//    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
     minclosest = -1.0e16;
     tclose = -1;
     for (i=0;i<ntdel;++i) {
@@ -545,7 +546,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
             a(0) /= distance(p2,p1);
             a(1) /= distance(p0,p2);
             a(2) /= distance(p1,p0);
-        
+			
             for (int j=0;j<3;++j) {
                 if (a(j) < 0.0 && a(j) > minclosest) {
                     minclosest = a(j);
@@ -559,16 +560,101 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear) {
         *gbl->log << "Major Trouble in Findtri " << x << ' ' << pnear << '\n';
         exit(1);
     }
-
+	
     intri(tclose,x);
-    tind = -tclose;
-        
+    tind = tclose;
+	ierr = 1;
+	
 FOUND:
     /* RESET gbl->intwkW1 TO -1 */
     for(i=0;i<ntdel;++i) {
         CLRSRCH(gbl->intwk(gbl->i2wk(i)));
     }
- 
-    return(tind);
+	
+    return(ierr);
 }
+
+int tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
+    int i,j,tin;
+    int ntdel;
+    int tclose;
+    FLT minclosest;
+    int p0,p1,p2;
+    FLT dx0,dy0,dx1,dy1,dx2,dy2;
+    TinyVector<FLT,3> a;
+	int ierr = 0;
+	
+    ntdel = 0;
+	if (intri(tind,x) < area(tind)*10.*EPSILON) return(0);
+	SETSRCH(gbl->intwk(tind));
+	gbl->i2wk(ntdel++) = tind;
+	
+    /* SEARCH SURROUNDING TRIANGLES */
+    for(i=0;i<ntdel;++i) {
+        tin = gbl->i2wk(i);
+        for(j=0;j<3;++j) {
+            tind = tri(tin).tri(j);
+            if (tind < 0) continue;
+            if (ISSRCH(gbl->intwk(tind))) continue;
+            SETSRCH(gbl->intwk(tind));
+            gbl->i2wk(ntdel++) = tind;            
+            if (intri(tind,x) < area(tind)*10.*EPSILON) goto FOUND2;
+        }
+        if (ntdel >= gbl->maxsrch-4) break;
+    }
+	//    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
+    minclosest = -1.0e16;
+    tclose = -1;
+    for (i=0;i<ntdel;++i) {
+        tind = gbl->i2wk(i);
+        
+        p0 = tri(tind).pnt(0);
+        p1 = tri(tind).pnt(1);
+        p2 = tri(tind).pnt(2);
+        
+        dx0 =  (x(0) -pnts(p0)(0));
+        dy0 =  (x(1) -pnts(p0)(1)); 
+        dx1 =  (x(0) -pnts(p1)(0));
+        dy1 =  (x(1) -pnts(p1)(1));
+        dx2 =  (x(0) -pnts(p2)(0));
+        dy2 =  (x(1) -pnts(p2)(1));
+        
+        a(0) = (dy2*dx1 -dx2*dy1);
+        a(1) = (dy0*dx2 -dx0*dy2);
+        a(2) = (dy1*dx0 -dx1*dy0);
+        
+        /* FIND NEGATIVE SIDE */
+        /* CHECK IF 2 SIDES POSITIVE & 1 NEGATIVE */
+        if (a(0)*a(1)*a(2) < 0) {
+            a(0) /= distance(p2,p1);
+            a(1) /= distance(p0,p2);
+            a(2) /= distance(p1,p0);
+			
+            for (int j=0;j<3;++j) {
+                if (a(j) < 0.0 && a(j) > minclosest) {
+                    minclosest = a(j);
+                    tclose = tind;
+                    break;
+                }
+            }
+        }
+    }
+    if (tclose < 0) {
+        *gbl->log << "Major Trouble in Findtri " << x << ' ' << tind << '\n';
+        exit(1);
+    }
+	
+    intri(tclose,x);
+    tind = tclose;
+	ierr = 1;
+	
+FOUND2:
+    /* RESET gbl->intwkW1 TO -1 */
+    for(i=0;i<ntdel;++i) {
+        CLRSRCH(gbl->intwk(gbl->i2wk(i)));
+    }
+	
+    return(ierr);
+}
+
 

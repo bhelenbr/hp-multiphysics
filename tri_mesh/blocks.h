@@ -57,34 +57,48 @@ class blocks {
         //@{
 		class all_reduce_data {
 			public: 
-				int nentries, buf_cnt;
-				blitz::Array<void *,1> sndbufs, rcvbufs;
+				int myblock; /**< number of blocks on this processor that are in group */
+				int nblock; /**< total number of blocks that are in group */
+				int buf_cnt;  /**< counter for checking when everyone has called in */
+				std::map<int,int> mylocalid;  /**< Map from block number to global sequential list for group */
+				blitz::Array<void *,1> sndbufs, rcvbufs;  /**< arrays to keep track of location of send and receive buffers */
 #ifdef MPISRC
-				MPI_Comm comm;
+				MPI_Comm comm;	/**< MPI version of all_reduce_data */
 #endif
-				all_reduce_data() : nentries(1), buf_cnt(0)
+#if defined(PTH)
+				pth_cond_t allreduce_change; /**< conditional await for mpiallreduce */
+#elif defined(BOOST)
+				boost::condition allreduce_change; /**< conditional await for mpiallreduce */
+#endif
+				/** allreduce data constructor */
+				all_reduce_data() : myblock(1), buf_cnt(0)
 #ifdef MPISRC 
-			, comm(MPI_COMM_WORLD) 
+					, comm(MPI_COMM_WORLD) 
 #endif
-			{}
+					{}
 		};
-		std::map<int,all_reduce_data> group_data; /**< Associaciates group numbers to their data */ 
+		std::map<int,all_reduce_data *> group_data; /**< Associaiates group numbers to their data */
+#if defined(PTH)
+		pth_mutex_t allreduce_mutex;
+#elif defined(BOOST)
+		boost::mutex allreduce_mutex;
+#endif
         //@}
         
-         /** @name variables needed for thread message passing
+         /** @name variables needed for threads and thread message passing
          */
         //@{
         std::map<int,bool> message_list; /**< keeps track of whether communication messages have been received */
 #if defined(PTH)
         blitz::Array<pth_t,1> threads;
-        pth_mutex_t list_mutex, allreduce_mutex;
-        pth_cond_t list_change, allreduce_change;
+		pth_mutex_t list_mutex;
+		pth_cond_t list_change;
         pth_attr_t attr;
 #elif defined(BOOST)
         blitz::Array<boost::function0<void>,1> thread_func;
         boost::thread_group threads;
-        boost::mutex list_mutex, allreduce_mutex;
-        boost::condition list_change, allreduce_change;
+        boost::mutex list_mutex;
+        boost::condition list_change;
 #endif
         //@}
 
@@ -102,7 +116,33 @@ class blocks {
         enum operations {sum,max}; /** Only summing and max for now */
         enum msg_type {flt_msg, int_msg};
         void allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatype, operations op, int group = 0);
-        
+		int allreduce_local_id(int group, int bid) { 
+#if defined(PTH)
+			pth_mutex_acquire(&allreduce_mutex,false,NULL);
+#elif defined(BOOST)
+			boost::mutex::scoped_lock lock(allreduce_mutex);
+#endif
+			int localid = group_data[group]->mylocalid[bid];
+#if defined(PTH)
+			pth_mutex_release(&allreduce_mutex);
+#endif
+			return(localid);
+		}
+	
+		int allreduce_nmember(int group) { 
+#if defined(PTH)
+			pth_mutex_acquire(&allreduce_mutex,false,NULL);
+#elif defined(BOOST)
+			boost::mutex::scoped_lock lock(allreduce_mutex);
+#endif
+			int nmember = group_data[group]->nblock;
+#if defined(PTH)
+			pth_mutex_release(&allreduce_mutex);
+#endif
+			return(nmember);
+		}
+	
+			        
         /** Functions for thread communication */
 #if defined(PTH)
         pth_mutex_t data_mutex;
