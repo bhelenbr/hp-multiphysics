@@ -11,17 +11,52 @@
 #include <block.h>
 #include <r_tri_mesh.h>
 
-#include "cd/tri_hp_cd.h"
-#include "ins/tri_hp_ins.h"
-#include "planestrain/tri_hp_ps.h"
-#include "swirl/tri_hp_swirl.h"
-#include "buoyancy/tri_hp_buoyancy.h"
-#include "pod/pod.h"
-#include "swe/tri_hp_swe.h"
-#include "lvlset/tri_hp_lvlset.h"
-#include "hp_boundary.h"
+#define CD
+#define INS
+//#define PS
+//#define SWIRL
+//#define BUOYANCY
+//#define SWE
+//#define LVLSET
 
-// #define JUST_INS
+#define POD
+
+#ifdef CD
+#include "cd/tri_hp_cd.h"
+#endif
+
+#ifdef INS
+#include "ins/tri_hp_ins.h"
+#endif
+
+#ifdef PS
+#include "planestrain/tri_hp_ps.h"
+#endif
+
+#ifdef SWIRL
+#include "swirl/tri_hp_swirl.h"
+#endif
+
+#ifdef BUOYANCY
+#include "buoyancy/tri_hp_buoyancy.h"
+#endif
+
+#ifdef SWE
+#include "swe/tri_hp_swe.h"
+#endif
+
+#ifdef LVLSET
+#include "lvlset/tri_hp_lvlset.h"
+#endif
+
+#ifdef POD
+#include "pod/pod_simulate.h"
+#include "pod/pod_generate.h"
+#include "hp_boundary.h"
+#endif
+
+
+
 
 class btype {
     public:
@@ -60,65 +95,79 @@ multigrid_interface* block::getnewlevel(input_map& input) {
             r_tri_mesh *temp = new r_tri_mesh();
             return(temp);
         }
-#ifndef JUST_INS
+#ifdef CD
         case btype::cd: {
             tri_hp_cd *temp = new tri_hp_cd();
             return(temp);
         }
 #endif
-        
+
+#ifdef INS
         case btype::ins: {
             tri_hp_ins *temp = new tri_hp_ins();
             return(temp);
         }
+#endif
 
-#ifndef JUST_INS
+#ifdef PS
         case btype::ps: {
             tri_hp_ps *temp = new tri_hp_ps();
             return(temp);
         }
+#endif
 		
+#ifdef SWIRL
 		case btype::swirl: {
             tri_hp_swirl *temp = new tri_hp_swirl();
             return(temp);
         }
-        
+#endif
+			
+#ifdef BUOYANCY
         case btype::buoyancy: {
             tri_hp_buoyancy *temp = new tri_hp_buoyancy();
             return(temp);
         }
-        
-        case btype::pod_ins_gen: {
-            pod_generate<tri_hp_ins> *temp = new pod_generate<tri_hp_ins>();
-            return(temp);
-        }
-        
-        case btype::pod_cd_gen: {
-            pod_generate<tri_hp_cd> *temp = new pod_generate<tri_hp_cd>();
-            return(temp);
-        }
-        
-        case btype::pod_ins_sim: {
-            pod_simulate<tri_hp_ins> *temp = new pod_simulate<tri_hp_ins>();
-            return(temp);
-        }
-        
-        case btype::pod_cd_sim: {
-            pod_simulate<tri_hp_cd> *temp = new pod_simulate<tri_hp_cd>();
-            return(temp);
-        }
-        
-        case btype::swe: {
+#endif
+			
+#ifdef SWE
+		case btype::swe: {
             tri_hp_swe *temp = new tri_hp_swe();
             return(temp);
         }
+#endif
 
+#ifdef LVLSET
         case btype::lvlset: {
             tri_hp_lvlset *temp = new tri_hp_lvlset();
             return(temp);
         }
 #endif
+
+#if (defined(POD) && defined(CD))
+        case btype::pod_cd_gen: {
+            pod_generate<tri_hp_cd> *temp = new pod_generate<tri_hp_cd>();
+            return(temp);
+        }
+			
+        case btype::pod_cd_sim: {
+            pod_simulate<tri_hp_cd> *temp = new pod_simulate<tri_hp_cd>();
+            return(temp);
+        }
+#endif
         
+#if (defined(POD) && defined(INS))
+		case btype::pod_ins_gen: {
+            pod_generate<tri_hp_ins> *temp = new pod_generate<tri_hp_ins>();
+            return(temp);
+        }
+			
+        case btype::pod_ins_sim: {
+            pod_simulate<tri_hp_ins> *temp = new pod_simulate<tri_hp_ins>();
+            return(temp);
+        }
+#endif
+                
         default: {
             std::cerr << "unrecognizable block type: " <<  type << std::endl;
             r_tri_mesh *temp = new r_tri_mesh();
