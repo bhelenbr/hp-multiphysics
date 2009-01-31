@@ -42,7 +42,7 @@ void tri_hp_swirl::setup_preconditioner() {
             v0 = v(j);
             q = pow(ug.v(v0,0)-0.5*(gbl->bd[0]*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
                 +pow(ug.v(v0,1)-0.5*(gbl->bd[0]*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
-            q += pow(ug.v(v0,2),2.0);
+            // q += pow(ug.v(v0,2),2.0); // FIXME?
             qmax = MAX(qmax,q);
         }
         gam = 3.0*qmax +(0.5*hmax*gbl->bd[0] +2.*nu/hmax)*(0.5*hmax*gbl->bd[0] +2.*nu/hmax);
@@ -53,12 +53,12 @@ void tri_hp_swirl::setup_preconditioner() {
         /* SET UP DISSIPATIVE COEFFICIENTS */
         gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
         gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
-        
+		  
         /* SET UP DIAGONAL PRECONDITIONER */
         // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd[0];
         jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-        jcb *= (pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.;
-
+        jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+		
         gbl->tprcn(tind,0) = gbl->rho*jcb;    
         gbl->tprcn(tind,1) = gbl->rho*jcb;  
         gbl->tprcn(tind,2) = gbl->rho*jcb;      

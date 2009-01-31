@@ -87,19 +87,19 @@ void tri_hp_swirl::rsdl(int stage) {
             for(i=0;i<lgpx;++i) {
                 for(j=0;j<lgpn;++j) {
 
-                    fluxx = gbl->rho*crd(0)(i,j)*(u(0)(i,j) -mvel(0)(i,j));
-                    fluxy = gbl->rho*crd(0)(i,j)*(u(1)(i,j) -mvel(1)(i,j));
+                    fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+                    fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                     
                     /* CONTINUITY EQUATION FLUXES */
                     du(3,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
                     du(3,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
 
                     /* U-MOMENTUM */
-                    cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +dcrd(1,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                    cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -dcrd(1,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                    cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +dcrd(1,1)(i,j)*RAD(crd(0)(i,j))*u(3)(i,j);
+                    cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -dcrd(1,0)(i,j)*RAD(crd(0)(i,j))*u(3)(i,j);
                     /* V-MOMENTUM */
-                    cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -dcrd(0,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                    cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +dcrd(0,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                    cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -dcrd(0,1)(i,j)*RAD(crd(0)(i,j))*u(3)(i,j);
+                    cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +dcrd(0,0)(i,j)*RAD(crd(0)(i,j))*u(3)(i,j);
                     /* W-MOMENTUM */
                     cv20[i][j] =  u(2)(i,j)*du(3,0)(i,j);
                     cv21[i][j] =  u(2)(i,j)*du(3,1)(i,j);
@@ -119,8 +119,8 @@ void tri_hp_swirl::rsdl(int stage) {
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
                         cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                        rhorbd0 = rhobd0*crd(0)(i,j)*cjcb;
-                        cjcbi = lmu*crd(0)(i,j)/cjcb;
+                        rhorbd0 = rhobd0*RAD(crd(0)(i,j))*cjcb;
+                        cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
                         
                         /* UNSTEADY TERMS */
                         res(0)(i,j) = rhorbd0*u(0)(i,j) +dugdt(log2p,tind,0)(i,j);
@@ -128,13 +128,16 @@ void tri_hp_swirl::rsdl(int stage) {
                         res(2)(i,j) = rhorbd0*u(2)(i,j) +dugdt(log2p,tind,2)(i,j);
                         res(3)(i,j) = rhorbd0 +dugdt(log2p,tind,3)(i,j);
                         
-                        /* SOURCE TERMS */
+#ifdef AXISYMMETRIC
+						/* SOURCE TERMS */
                         res(0)(i,j) -= cjcb*(u(3)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +gbl->rho*u(2)(i,j)*u(2)(i,j));
                         //res(2)(i,j) -= cjcb*(lmu*((dcrd(1,1)(i,j)*du(2,1)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb -u(2)(i,j)/crd(0)(i,j)) -gbl->rho*u(0)(i,j)*u(2)(i,j));	
                         //res(2)(i,j) += lmu*(dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j))-lmu*cjcb*u(2)(i,j)/crd(0)(i,j) +cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j);
                         //res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
                         res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
-
+#else
+						res(2)(i,j) -= cjcb*RAD(crd(0)(i,j))*dpdz;
+#endif
                         
                         /* Source Terms for Test Function */
                         //res(0)(i,j) -= crd(0)(i,j)*cjcb*(gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
@@ -162,7 +165,7 @@ void tri_hp_swirl::rsdl(int stage) {
                         visc[0][1][1][0] = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
                   
                         visc[2][2][0][0] = -cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
-                        visc[2][2][0][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
+                        visc[2][2][0][1] =  cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
                         visc[2][2][1][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
 #define					viscI2II2II1II0I visc[2][2][0][1]
 
@@ -185,9 +188,14 @@ void tri_hp_swirl::rsdl(int stage) {
                         e11[i][j] = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
                                         +viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j);
                   
-                        e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) +lmu*dcrd(1,1)(i,j)*u(2)(i,j);
-                
-                        e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) -lmu*dcrd(1,0)(i,j)*u(2)(i,j);
+                        e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j);
+#ifdef AXISYMMETRIC
+						e20[i][j] += lmu*dcrd(1,1)(i,j)*u(2)(i,j);
+#endif
+                        e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j);
+#ifdef AXISYMMETRIC
+						e21[i][j] -= lmu*dcrd(1,0)(i,j)*u(2)(i,j);
+#endif
                 
                                         
                         cv00[i][j] += e00[i][j];
@@ -270,19 +278,19 @@ void tri_hp_swirl::rsdl(int stage) {
             for(i=0;i<lgpx;++i) {
                 for(j=0;j<lgpn;++j) {
 
-                    fluxx = gbl->rho*crd(0)(i,j)*(u(0)(i,j) -mvel(0)(i,j));
-                    fluxy = gbl->rho*crd(0)(i,j)*(u(1)(i,j) -mvel(1)(i,j));
+                    fluxx = gbl->rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
+                    fluxy = gbl->rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
                     
                     /* CONTINUITY EQUATION FLUXES */
-                    du(3,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
-                    du(3,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
+                    du(3,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
+                    du(3,1)(i,j) = -ldcrd(1,0)*fluxx +ldcrd(0,0)*fluxy;
 
                     /* U-MOMENTUM */
-                    cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +dcrd(1,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                    cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -dcrd(1,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                    cv00[i][j] =  u(0)(i,j)*du(3,0)(i,j) +ldcrd(1,1)*RAD(crd(0)(i,j))*u(3)(i,j);
+                    cv01[i][j] =  u(0)(i,j)*du(3,1)(i,j) -ldcrd(1,0)*RAD(crd(0)(i,j))*u(3)(i,j);
                     /* V-MOMENTUM */
-                    cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -dcrd(0,1)(i,j)*crd(0)(i,j)*u(3)(i,j);
-                    cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +dcrd(0,0)(i,j)*crd(0)(i,j)*u(3)(i,j);
+                    cv10[i][j] =  u(1)(i,j)*du(3,0)(i,j) -ldcrd(0,1)*RAD(crd(0)(i,j))*u(3)(i,j);
+                    cv11[i][j] =  u(1)(i,j)*du(3,1)(i,j) +ldcrd(0,0)*RAD(crd(0)(i,j))*u(3)(i,j);
                     /* W-MOMENTUM */
                     cv20[i][j] =  u(2)(i,j)*du(3,0)(i,j);
                     cv21[i][j] =  u(2)(i,j)*du(3,1)(i,j);
@@ -301,9 +309,9 @@ void tri_hp_swirl::rsdl(int stage) {
                 /* TIME DERIVATIVE TERMS */ 
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
-                        cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                        rhorbd0 = rhobd0*crd(0)(i,j)*cjcb;
-                        cjcbi = lmu*crd(0)(i,j)/cjcb;
+                        cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+                        rhorbd0 = rhobd0*RAD(crd(0)(i,j))*cjcb;
+                        cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
                         
                         /* UNSTEADY TERMS */
                         res(0)(i,j) = rhorbd0*u(0)(i,j) +dugdt(log2p,tind,0)(i,j);
@@ -311,14 +319,16 @@ void tri_hp_swirl::rsdl(int stage) {
                         res(2)(i,j) = rhorbd0*u(2)(i,j) +dugdt(log2p,tind,2)(i,j);
                         res(3)(i,j) = rhorbd0 +dugdt(log2p,tind,3)(i,j);
                         
+#ifdef AXISYMMETRIC
                         /* SOURCE TERMS */
                         res(0)(i,j) -= cjcb*(u(3)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j) +gbl->rho*u(2)(i,j)*u(2)(i,j));
-                        //res(2)(i,j) -= cjcb*(lmu*((dcrd(1,1)(i,j)*du(2,1)(i,j) -dcrd(1,0)(i,j)*du(2,1)(i,j))/cjcb -u(2)(i,j)/crd(0)(i,j)) -gbl->rho*u(0)(i,j)*u(2)(i,j));	
-                        //res(2)(i,j) += lmu*(dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j))-lmu*cjcb*u(2)(i,j)/crd(0)(i,j) +cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j);
-                        //res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((dcrd(1,1)(i,j)*du(2,0)(i,j)-dcrd(1,0)(i,j)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
-                        res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*dcrd(1,1)(i,j)*du(2,0)(i,j) +lmu*dcrd(1,0)(i,j)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
-
-                        
+                        //res(2)(i,j) -= cjcb*(lmu*((ldcrd(1,1)*du(2,1)(i,j) -ldcrd(1,0)*du(2,1)(i,j))/cjcb -u(2)(i,j)/crd(0)(i,j)) -gbl->rho*u(0)(i,j)*u(2)(i,j));	
+                        //res(2)(i,j) += lmu*(ldcrd(1,1)*du(2,0)(i,j)-ldcrd(1,0)*du(2,1)(i,j))-lmu*cjcb*u(2)(i,j)/crd(0)(i,j) +cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j);
+                        //res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -cjcb*lmu*((ldcrd(1,1)*du(2,0)(i,j)-ldcrd(1,0)*du(2,1)(i,j)/cjcb) -u(2)(i,j)/crd(0)(i,j));
+                        res(2)(i,j) += cjcb*gbl->rho*u(0)(i,j)*u(2)(i,j) -lmu*ldcrd(1,1)*du(2,0)(i,j) +lmu*ldcrd(1,0)*du(2,1)(i,j) +cjcb*lmu*u(2)(i,j)/crd(0)(i,j);
+#else
+						res(2)(i,j) -= cjcb*RAD(crd(0)(i,j))*dpdz;
+#endif                        
                         /* Source Terms for Test Function */
                         //res(0)(i,j) -= crd(0)(i,j)*cjcb*(gbl->rho*pow(crd(0)(i,j),3.0) +2*crd(0)(i,j) -3*lmu);
                         
@@ -329,26 +339,26 @@ void tri_hp_swirl::rsdl(int stage) {
 
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH) */
                         /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S) */
-                        visc[0][0][0][0] = -cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[0][0][1][1] = -cjcbi*(2.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[0][0][0][1] =  cjcbi*(2.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+                        visc[0][0][0][0] = -cjcbi*(2.*ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
+                        visc[0][0][1][1] = -cjcbi*(2.*ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
+                        visc[0][0][0][1] =  cjcbi*(2.*ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
 #define                 viscI0II0II1II0I visc[0][0][0][1]
 
-                        visc[1][1][0][0] = -cjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-                        visc[1][1][1][1] = -cjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-                        visc[1][1][0][1] =  cjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +2.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+                        visc[1][1][0][0] = -cjcbi*(ldcrd(1,1)*ldcrd(1,1) +2.*ldcrd(0,1)*ldcrd(0,1));
+                        visc[1][1][1][1] = -cjcbi*(ldcrd(1,0)*ldcrd(1,0) +2.*ldcrd(0,0)*ldcrd(0,0));
+                        visc[1][1][0][1] =  cjcbi*(ldcrd(1,1)*ldcrd(1,0) +2.*ldcrd(0,1)*ldcrd(0,0));
 #define                 viscI1II1II1II0I visc[1][1][0][1]
                         
-                        visc[0][1][0][0] =  cjcbi*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
-                        visc[0][1][1][1] =  cjcbi*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][0][1] = -cjcbi*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
-                        visc[0][1][1][0] = -cjcbi*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
+                        visc[0][1][0][0] =  cjcbi*ldcrd(0,1)*ldcrd(1,1);
+                        visc[0][1][1][1] =  cjcbi*ldcrd(0,0)*ldcrd(1,0);
+                        visc[0][1][0][1] = -cjcbi*ldcrd(0,1)*ldcrd(1,0);
+                        visc[0][1][1][0] = -cjcbi*ldcrd(0,0)*ldcrd(1,1);
                   
-                        visc[2][2][0][0] = -cjcbi*(dcrd(0,1)(i,j)*dcrd(0,1)(i,j) +dcrd(1,1)(i,j)*dcrd(1,1)(i,j));
-                        visc[2][2][0][1] = cjcbi*(dcrd(0,0)(i,j)*dcrd(0,1)(i,j) +dcrd(1,0)(i,j)*dcrd(1,1)(i,j));
-                        visc[2][2][1][1] = -cjcbi*(dcrd(0,0)(i,j)*dcrd(0,0)(i,j) +dcrd(1,0)(i,j)*dcrd(1,0)(i,j));
-#define						viscI2II2II1II0I visc[2][2][0][1]
-
+                        visc[2][2][0][0] = -cjcbi*(ldcrd(0,1)*ldcrd(0,1) +ldcrd(1,1)*ldcrd(1,1));
+                        visc[2][2][0][1] =  cjcbi*(ldcrd(0,0)*ldcrd(0,1) +ldcrd(1,0)*ldcrd(1,1));
+                        visc[2][2][1][1] = -cjcbi*(ldcrd(0,0)*ldcrd(0,0) +ldcrd(1,0)*ldcrd(1,0));
+#define					viscI2II2II1II0I visc[2][2][0][1]
+						
                         /* OTHER SYMMETRIES     */                
 #define                 viscI1II0II0II0I visc[0][1][0][0]
 #define                 viscI1II0II1II1I visc[0][1][1][1]
@@ -368,10 +378,14 @@ void tri_hp_swirl::rsdl(int stage) {
                         e11[i][j] = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
                                         +viscI1II0II1II1I*du(0,1)(i,j) +visc[1][1][1][1]*du(1,1)(i,j);
                   
-                        e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j) +lmu*dcrd(1,1)(i,j)*u(2)(i,j);
-                
-                        e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j) -lmu*dcrd(1,0)(i,j)*u(2)(i,j);
-                
+                        e20[i][j] = +visc[2][2][0][0]*du(2,0)(i,j) +visc[2][2][0][1]*du(2,1)(i,j);
+#ifdef AXISYMMETRIC
+						e20[i][j] += lmu*ldcrd(1,1)*u(2)(i,j);
+#endif
+                        e21[i][j] = +viscI2II2II1II0I*du(2,0)(i,j) +visc[2][2][1][1]*du(2,1)(i,j);
+#ifdef AXISYMMETRIC
+						e20[i][j] -= lmu*ldcrd(1,0)*u(2)(i,j);
+#endif                
                                         
                         cv00[i][j] += e00[i][j];
                         cv01[i][j] += e01[i][j];
@@ -406,34 +420,34 @@ void tri_hp_swirl::rsdl(int stage) {
                         tres[3] = gbl->tau(tind,NV-1)*res(3)(i,j);
 
 
-                        e00[i][j] -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                        -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                        -dcrd(0,1)(i,j)*u(0)(i,j)*tres[1]
-                                        +dcrd(1,1)(i,j)*tres[3];
-                        e01[i][j] -= (-dcrd(1,0)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))
-                                        +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
-                                        +dcrd(0,0)(i,j)*u(0)(i,j)*tres[1]
-                                        -dcrd(1,0)(i,j)*tres[3];
-                        e10[i][j] -= +dcrd(1,1)(i,j)*u(1)(i,j)*tres[0]
-                                        +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                        -dcrd(0,1)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                                        -dcrd(0,1)(i,j)*tres[3];
-                        e11[i][j] -= -dcrd(1,0)(i,j)*u(1)(i,j)*tres[0]
-                                +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                +dcrd(0,0)(i,j)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
-                                +dcrd(0,0)(i,j)*tres[3];
-                        e20[i][j] -= +dcrd(1,1)(i,j)*u(2)(i,j)*tres[0]
-                                    -dcrd(0,1)(i,j)*u(2)(i,j)*tres[1]
-                                    +(dcrd(1,1)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    -dcrd(0,1)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
-                        e21[i][j] -= -dcrd(1,0)(i,j)*u(2)(i,j)*tres[0]
-                                    +dcrd(0,0)(i,j)*u(2)(i,j)*tres[1]
-                                    +(-dcrd(1,0)(i,j)*(u(0)(i,j)-mvel(0)(i,j))
-                                    +dcrd(0,0)(i,j)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
+                        e00[i][j] -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                        -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
+                                        -ldcrd(0,1)*u(0)(i,j)*tres[1]
+                                        +ldcrd(1,1)*tres[3];
+                        e01[i][j] -= (-ldcrd(1,0)*(2*u(0)(i,j)-mvel(0)(i,j))
+                                        +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres[0]
+                                        +ldcrd(0,0)*u(0)(i,j)*tres[1]
+                                        -ldcrd(1,0)*tres[3];
+                        e10[i][j] -= +ldcrd(1,1)*u(1)(i,j)*tres[0]
+                                        +(ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
+                                        -ldcrd(0,1)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
+                                        -ldcrd(0,1)*tres[3];
+                        e11[i][j] -= -ldcrd(1,0)*u(1)(i,j)*tres[0]
+                                +(-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
+                                +ldcrd(0,0)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres[1]
+                                +ldcrd(0,0)*tres[3];
+                        e20[i][j] -= +ldcrd(1,1)*u(2)(i,j)*tres[0]
+                                    -ldcrd(0,1)*u(2)(i,j)*tres[1]
+                                    +(ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
+                                    -ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
+                        e21[i][j] -= -ldcrd(1,0)*u(2)(i,j)*tres[0]
+                                    +ldcrd(0,0)*u(2)(i,j)*tres[1]
+                                    +(-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
+                                    +ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres[2];
 
                                         
-                        du(3,0)(i,j) = -(dcrd(1,1)(i,j)*tres[0] -dcrd(0,1)(i,j)*tres[1]);
-                        du(3,1)(i,j) = -(-dcrd(1,0)(i,j)*tres[0] +dcrd(0,0)(i,j)*tres[1]);
+                        du(3,0)(i,j) = -(ldcrd(1,1)*tres[0] -ldcrd(0,1)*tres[1]);
+                        du(3,1)(i,j) = -(-ldcrd(1,0)*tres[0] +ldcrd(0,0)*tres[1]);
                     }
                 }
                 basis::tri(log2p).intgrtrs(&lf(0)(0),e00[0],e01[0],MXGP);
