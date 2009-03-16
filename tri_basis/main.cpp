@@ -5,19 +5,22 @@
 #include <time.h>
 
 #define P 4
-#define GP P+2
+#define GP P+1
 
-#define OP_COUNT
+// #define OP_COUNT
+
+#ifdef OP_COUNT
 #include <CHUD/CHUD.h>
+#endif
 
 int main (int argc, const char * argv[]) {
-    clock_t cpu_time;
+    clock_t bgn_time, end_time;
     
     /* CREATE 1 BASIS FOR GENERAL USE */
     basis::tri.resize(1);
     basis::tri(0).initialize(P,GP);
     
-    clock();
+    bgn_time = clock();
     double uht[MXTM];
     double u[GP][GP];
     double dx[GP][GP];
@@ -29,10 +32,10 @@ int main (int argc, const char * argv[]) {
 	chudStartRemotePerfMonitor("fpucount"); 
 #endif
 	
-    for (int i = 0; i < 10000; ++i) {
-        basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
-      	basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
-        basis::tri(0).intgrt(uht,dx[0],GP); 
+    for (int i = 0; i < 1000000; ++i) {
+        // basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
+      	// basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
+       basis::tri(0).intgrt(uht,dx[0],GP); 
     }
 	
 	
@@ -40,9 +43,8 @@ int main (int argc, const char * argv[]) {
 	chudStopRemotePerfMonitor(); 
 	chudReleaseRemoteAccess();
 #endif
-		
-    cpu_time = clock();
-    printf("#that took %ld cpu time\n",cpu_time);        
-
+    end_time = clock();
+    printf("#that took %lf seconds\n",static_cast<double>(end_time - bgn_time)/ CLOCKS_PER_SEC);
+	
     return 0;
 }
