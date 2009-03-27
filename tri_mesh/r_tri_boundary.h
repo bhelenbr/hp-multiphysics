@@ -106,16 +106,8 @@ class r_translating : public r_fixed {
         void input(input_map& inmap) {
             r_fixed::input(inmap);
             
-            std::string line;
-            if(inmap.getline(base.idprefix+"_r_translate",line)) {
-                std::istringstream data(line);
-                data >> dx[0] >> dx[1];
-                data.clear();
-            }
-            else {
-                dx[0] = 0;
-                dx[1] = 1;
-            }
+            FLT dx_dflt[2] = {0.0, 1.0};
+            inmap.getwdefault(base.idprefix+"_r_translate",dx,2,dx_dflt);
         }  
         
         void output(std::ostream& fout) {
@@ -156,16 +148,10 @@ class r_oscillating : public r_fixed {
             r_fixed::input(inmap);
             
             std::string line;
-            if(inmap.getline(base.idprefix+"_r_oscillate",line)) {
-                std::istringstream data(line);
-                data >> p0 >> amp >> omega;
-                data.clear();
-            }
-            else {
-                p0 = 0.0;
-                amp = 0.0;
-                omega = 0.0;
-            }
+            inmap.getlinewdefault(base.idprefix+"_r_oscillate",line,std::string("0.0 0.0 0.0"));
+            std::istringstream data(line);
+            data >> p0 >> amp >> omega;
+            data.clear();
         }  
         
         void output(std::ostream& fout) {

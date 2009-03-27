@@ -852,18 +852,12 @@ class naca : public geometry<2> {
             
             std::string linebuf;
             istringstream datastream;
-            inmap.getwdefault(idprefix+"_coeff",linebuf,std::string("1.4845 -0.63 -1.758 1.4215 -0.5180"));
-            datastream.str(linebuf);
-            for(int i=0;i<5;++i)
-                datastream >> coeff[i];
-            datastream.clear();
+            FLT naca_0012_dflt[5] = {1.4845, -0.63, -1.758, 1.4215, -0.5180};
+            inmap.getwdefault(idprefix+"_coeff",coeff.data(),5,naca_0012_dflt);
             coeff *= thickness;
             
-            inmap.getlinewdefault(idprefix+"_center",linebuf,std::string("0.0 0.0"));
-            datastream.str(linebuf);
-            for(int i=0;i<2;++i)
-                datastream >> pos(i);
-            datastream.clear();        
+            FLT ctr_dflt[2] = {0.0, 0.0};
+            inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
         }
 };
 #endif

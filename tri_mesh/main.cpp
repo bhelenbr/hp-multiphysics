@@ -16,6 +16,7 @@ static int outformat = 3;
 static GBool Generate = gFalse;
 static GBool Shift = gFalse;
 static GBool Scale = gFalse;
+static GBool Smooth = gFalse;
 static GBool Coarsen_hp = gFalse;
 static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
@@ -34,6 +35,8 @@ static ArgDesc argDesc[] = {
     "shift mesh position"},
   {"-s",        argFlag,      &Scale,        0,
     "scale mesh"},
+  {"-f",        argFlag,      &Smooth,        0,
+    "smooth mesh"},
   {"-h",        argFlag,      &printHelp,      0,
     "print usage information"},
   {"-help",    argFlag,      &printHelp,      0,
@@ -97,6 +100,8 @@ int main(int argc, char *argv[]) {
     if (intest.good()) {
         intest.close();
         bdrymap.input(bdry_nm);
+        bdrymap.echo = true;
+        std::cout << "Using " << bdry_nm << std::endl;
     }
  
     if (Cut) {    
@@ -130,10 +135,19 @@ int main(int argc, char *argv[]) {
         fclose(fp);
         return 0;
     }
+	
+	if (Smooth) {
+	    class tri_mesh zx;
+
+        zx.input(argv[1],in,8.0,bdrymap);
+        zx.smooth_cofa(2);
+		zx.output(argv[2],out);
+		
+        return 0;
+    }
     
     if (Refineby2) {
 	    class tri_mesh zx,zy;
-
         zx.input(argv[1],in,8.0,bdrymap);
         zy.refineby2(zx);
         zy.checkintegrity();

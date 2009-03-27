@@ -9,6 +9,7 @@
 #include "tri_mesh.h"
 #include <utilities.h>
 #include <assert.h>
+#include <blitz/tinyvec-et.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber,ierr;
@@ -61,6 +62,7 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
         initialsidenumber = ebdry(i)->nseg;
         for(j=0;j<initialsidenumber;++j) {
             sind = ebdry(i)->seg(j);
+            pnts(npnt) = 0.5*(pnts(seg(sind).pnt(0)) +pnts(seg(sind).pnt(1)));
             ebdry(i)->mvpttobdry(j,0.0,pnts(npnt));
             bdry_insert(npnt,sind);
             ++npnt;

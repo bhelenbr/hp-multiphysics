@@ -8,6 +8,7 @@
 #include <input_map.h>
 
 #define DIRK 4
+// #define BACKDIFF 2
 #ifdef SINGLE
 #define FLT float
 #define EPSILON FLT_EPSILON
@@ -22,6 +23,35 @@ class boundary;
 class multigrid_interface;
 using namespace blitz;
 
+
+/** \brief Global variables for simulation
+ *
+ * This namespace contains global varaibles and constants accessible to all
+ */
+namespace sim {
+    /** @name DIRK3 scheme constants
+     *  Constants used to define the DIRK3 scheme
+     */
+    //@{
+    const FLT GRK3 = 0.43586652150845899941601945;
+    const FLT C2RK3 = (2.-9*GRK3+6.*GRK3*GRK3)/(3*(1-4*GRK3+2*GRK3*GRK3));
+    const FLT B2RK3 = -3*(1-4*GRK3+2*GRK3*GRK3)*(1-4*GRK3+2*GRK3*GRK3)/(4*(-1+6*GRK3-9*GRK3*GRK3+3*GRK3*GRK3*GRK3));    
+    //@}
+    
+    /** @name DIRK4 scheme constants
+     *  Constants used to define the DIRK4 scheme
+     */
+    //@{
+    // const FLT GRK4 0.5  // FOR ERROR PREDICTION
+    const FLT GRK4 = 0.43586652150845899941601945; // FOR L-STABILITY
+    const FLT C3RK4 = 2*GRK4*(GRK4-1./4.)*(GRK4-1.)/((GRK4-0.5)*(GRK4-0.5)-1./12.);
+    const FLT A32RK4 = (C3RK4*C3RK4-2*C3RK4*GRK4)/(4.*GRK4);
+    const FLT B1RK4 = (1./6. +GRK4*GRK4-GRK4*GRK4*C3RK4+3./2.*GRK4*C3RK4-GRK4-1./4.*C3RK4)/(GRK4*C3RK4);
+    const FLT B2RK4 = (1./3.-GRK4-1./2.*C3RK4+GRK4*C3RK4)/(2.*GRK4*(2.*GRK4-C3RK4));
+    const FLT B3RK4 =( 1./3.-2*GRK4+2*GRK4*GRK4)/(C3RK4*(C3RK4-2*GRK4));
+    //@}
+}
+
 /* THIS STRUCTURE STORES ALL OF THE GLOBAL INFORMATION FOR A BLOCK */
 /* COMPONENTS OF BLOCK INHERIT THIS AND THEN ALLOCATE ONE BIG GLOBAL STRUCTURE */
 struct block_global {
@@ -35,27 +65,31 @@ struct block_global {
     FLT g;  /**< gravity */
     blitz::TinyVector<FLT,2> body; /**< General way for body forces */
     std::ostream *log; /**< log file stream */
+  
+    /** Time stepping data for simulation */
+    int nhist; /**< number of backwards difference steps */
+    int nadapt; /**< number of solutions that require adaptation */
+    int stepsolves; /**< Number of implicit solutions required per timestep */
+    Array<FLT,1> bd;  /**< backwards difference or diagonal DIRK constants */
     
-    /** Time stepping for simulation */
-#ifdef BACKDIFF
-    /** @name backdiff Backwards difference constants
-    *  These are constant for backwards difference timestepping
-    */
-    //@{
-    FLT bd[BACKDIFF+1];  /**< backwards difference constants */
-    //@}
-#endif
-#ifdef DIRK
     /** @name DIRK variables
      *  These are arrays for diagonally implicit RK Timestepping 
      */
     //@{
-    FLT bd[1]; /**< Diagonal coefficient */
-    FLT adirk[DIRK][DIRK]; /**< ``a'' coefficient matrix */
-    FLT cdirk[DIRK]; /**< ``c'' coefficient matrix */
+    Array<FLT,2> adirk; /**< ``a'' coefficient matrix */
+    Array<FLT,1> cdirk; /**< ``c'' coefficient matrix */
     bool esdirk; /**< Flag to be set when using an explicit 1'st stage */
     //@}
-#endif
+
+    /** @name Multistage Explicit Scheme
+     *  Constants for multistage iteration scheme 
+     */
+    //@{
+    int nstage; /**< Number of stages */
+    Array<FLT,1> alpha;  /**< Multistage time step constants (imaginary) */
+    Array<FLT,1> beta; /**< Multistage time step constants (real) */ 
+    //@}
+    
     /** @name Adaptation parameters 
      *  constants controlling adaptation 
      */

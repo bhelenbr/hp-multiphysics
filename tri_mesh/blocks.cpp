@@ -167,6 +167,7 @@ void blocks::go(input_map& input) {
 				if ((mi = group_data.find(groupid)) != group_data.end()) {
 					/* This group is on this processor */
 					mi->second->mylocalid[bn] = 1;  // Temporarily use mylocalid's key values to mark blocks in group
+				}
 			}
 		}
 		bstart += nb;
@@ -752,6 +753,22 @@ void block::init(input_map &input) {
 #endif 
 
     /* SET TIME STEPPING INFO */
+#ifdef BACKDIFF
+    gbl->nhist = BACKDIFF+1;
+    gbl->nadapt = BACKDIFF+1;
+    gbl->bd.resize(BACKDIFF+1);
+    gbl->stepsolves = 1;
+#endif
+    
+#ifdef DIRK
+    gbl->nadapt = 2; 
+    gbl->nhist = 4; 
+    gbl->stepsolves = 3;
+    gbl->bd.resize(1);
+    gbl->adirk.resize(DIRK,DIRK);
+    gbl->cdirk.resize(DIRK);
+#endif
+    
     gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
     gbl->substep = -1;
     input.getwdefault("dtinv",gbl->dti,0.0);
@@ -765,6 +782,21 @@ void block::init(input_map &input) {
     /* OTHER UNIVERSAL CONSTANTS */
     input.getwdefault("gravity",gbl->g,0.0);
     
+    /* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
+    input.getwdefault("nstage",gbl->nstage,5);
+    gbl->alpha.resize(gbl->nstage+1);
+    gbl->beta.resize(gbl->nstage+1);
+    istringstream datastream;
+
+    /* LOAD COEFFICIENTS FOR IMAGINARY TERMS */
+    const FLT alpha_dflt[5] = {0.25, 1./6., .375, .5, 1.0};
+    input.getwdefault("alpha",gbl->alpha.data(),gbl->nstage,alpha_dflt);
+    gbl->alpha(gbl->nstage) = 1.0;
+    
+    const FLT beta_dflt[5] = {1.0, 0.0, 5./9., 0.0, 4./9.};
+    input.getwdefault("beta",gbl->beta.data(),gbl->nstage,beta_dflt);
+    gbl->beta(gbl->nstage) = 1.0;
+    
     /* LOAD BASIC CONSTANTS FOR MULTIGRID */
     input.getwdefault("itercrsn",itercrsn,1);
     
@@ -774,7 +806,7 @@ void block::init(input_map &input) {
     
     input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
     
-    input.getwdefault("vwcycle",vw,2);
+    input.getwdefault("vwcycle",vw,2);    
     
     input.getwdefault("absolute_tolerance",absolute_tolerance,1.0e-12);
     
@@ -821,15 +853,12 @@ void block::init(input_map &input) {
     }
     
     ostringstream nstr;
-#define OLDRECONNECT
     for(int lvl=1;lvl<ngrid;++lvl) {
-#ifdef OLDRECONNECT
         grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,2.0);
-#else
-        FLT size_reduce = 1.0;
-        if (lvl > 1) size_reduce = 2.0;
-        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
-#endif
+//        FLT size_reduce = 1.0;
+//        if (lvl > 1) size_reduce = 2.0;
+//        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
+
         findmatch(lvl);             // Because this is done second
         grd(lvl)->connect(*grd(lvl-1));
         if (gbl->adapt_output) {
@@ -916,7 +945,7 @@ void block::go(input_map input) {
     if (nstart == 0) output("data0",block::display);
     
     for(gbl->tstep=nstart+1;gbl->tstep<ntstep;++gbl->tstep) {
-        for(gbl->substep=0;gbl->substep<sim::stepsolves;++gbl->substep) {
+        for(gbl->substep=0;gbl->substep<gbl->stepsolves;++gbl->substep) {
             *gbl->log << "#TIMESTEP: " << gbl->tstep << " SUBSTEP: " << gbl->substep << std::endl;
             tadvance();
 
@@ -976,27 +1005,27 @@ void block::tadvance() {
 #ifdef BACKDIFF
     if (gbl->dti > 0.0) gbl->time += 1./gbl->dti;
 
-    for(i=0;i<BACKDIFF+1;++i)
-        gbl->bd[i] = 0.0;
+    for(int i=0;i<BACKDIFF+1;++i)
+        gbl->bd(i) = 0.0;
     
     switch(gbl->tstep) {
         case(1):
-            gbl->bd[0] =  gbl->dti;
-            gbl->bd[1] = -gbl->dti;
+            gbl->bd(0) =  gbl->dti;
+            gbl->bd(1) = -gbl->dti;
             break;
 #if (BACKDIFF > 1)
         case(2):
-            gbl->bd[0] =  1.5*gbl->dti;
-            gbl->bd[1] = -2.0*gbl->dti;
-            gbl->bd[2] =  0.5*gbl->dti;
+            gbl->bd(0) =  1.5*gbl->dti;
+            gbl->bd(1) = -2.0*gbl->dti;
+            gbl->bd(2) =  0.5*gbl->dti;
             break;
 #endif
 #if (BACKDIFF > 2)
         case(3):
-            gbl->bd[0] = 11./6*gbl->dti;
-            gbl->bd[1] = -3.*gbl->dti;
-            gbl->bd[2] = 1.5*gbl->dti;
-            gbl->bd[3] = -1./3.*gbl->dti;
+            gbl->bd(0) = 11./6*gbl->dti;
+            gbl->bd(1) = -3.*gbl->dti;
+            gbl->bd(2) = 1.5*gbl->dti;
+            gbl->bd(3) = -1./3.*gbl->dti;
             break;
 #endif
     }
@@ -1008,46 +1037,46 @@ void block::tadvance() {
     switch(gbl->tstep) {
         case(1): {
             /* THIS IS THE STANDARD FORM */
-            // FLT gbl->adirk[DIRK][DIRK] = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
+            // FLT gbl->adirk(DIRK,DIRK) = {{GRK3,0.0,0.0},{C2RK3-GRK3,GRK3,0.0},{1-B2RK3-GRK3,B2RK3,GRK3}} 
             // FLT gbl->bdirk[DIRK] = {1-B2RK3-GRK3,B2RK3,GRK3};
-            // FLT gbl->cdirk[DIRK] = {GRK3,C2RK3,1.0};
+            // FLT gbl->cdirk(DIRK) = {GRK3,C2RK3,1.0};
             /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-            gbl->adirk[0][0] = 1./sim::GRK3;                 gbl->adirk[0][1] = 0.0;             gbl->adirk[0][2] = 0.0;
-            gbl->adirk[1][0] = sim::C2RK3-sim::GRK3;      gbl->adirk[1][1] = 1./sim::GRK3; gbl->adirk[1][2] = 0.0;
-            gbl->adirk[2][0] = 1.-sim::B2RK3-sim::C2RK3; gbl->adirk[2][1] = sim::B2RK3;    gbl->adirk[2][2] = 1./sim::GRK3;
-            gbl->cdirk[0] = sim::GRK3; gbl->cdirk[1] = sim::C2RK3-sim::GRK3; gbl->cdirk[2] = 1.0-sim::C2RK3;
+            gbl->adirk(0,0) = 1./sim::GRK3;                 gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;
+            gbl->adirk(1,0) = sim::C2RK3-sim::GRK3;      gbl->adirk(1,1) = 1./sim::GRK3; gbl->adirk(1,2) = 0.0;
+            gbl->adirk(2,0) = 1.-sim::B2RK3-sim::C2RK3; gbl->adirk(2,1) = sim::B2RK3;    gbl->adirk(2,2) = 1./sim::GRK3;
+            gbl->cdirk(0) = sim::GRK3; gbl->cdirk(1) = sim::C2RK3-sim::GRK3; gbl->cdirk(2) = 1.0-sim::C2RK3;
             gbl->esdirk = false;
             break;
         }
         case(2): {
-            gbl->adirk[0][0] = 1./sim::GRK3;                         gbl->adirk[0][1] = 0.0;             gbl->adirk[0][2] = 0.0;      gbl->adirk[0][3] = 0.0;
-            gbl->adirk[1][0] = sim::GRK4;                             gbl->adirk[1][1] = 1./sim::GRK4;        gbl->adirk[1][2] = 0.0;      gbl->adirk[1][3] = 0.0;
-            gbl->adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk[2][1] = sim::A32RK4;         gbl->adirk[2][2] = 1./sim::GRK4; gbl->adirk[2][3] = 0.0;
-            gbl->adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk[3][1] = sim::B2RK4-sim::A32RK4; gbl->adirk[3][2] = sim::B3RK4;    gbl->adirk[3][3] = 1./sim::GRK4; 
-            gbl->cdirk[0] = 2.*sim::GRK4; gbl->cdirk[1] = sim::C3RK4-2.*sim::GRK4; gbl->cdirk[2] = 1.0-sim::C3RK4;
+            gbl->adirk(0,0) = 1./sim::GRK3;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
+            gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
+            gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
+            gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4; 
+            gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
             gbl->esdirk = true;
             break;
         }
         default : {
             /* THIS IS THE STANDARD FORM */
-            // FLT gbl->adirk[DIRK][DIRK] = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}} 
+            // FLT gbl->adirk(DIRK,DIRK) = {{0.0,0.0,0.0,0.0},{GRK4,GRK4,0.0,0.0},{C3RK4-A32RK4-GRK4,A32RK4,GRK4,0.0},{B1RK4,B2RK4,B3RK4,GRK4}} 
             // FLT gbl->bdirk[DIRK] = {B1RK4,B2RK4,B3RK4,GRK4};
-            // FLT gbl->cdirk[DIRK] = {0.0,2.*GRK4,C3RK4,1.0};
+            // FLT gbl->cdirk(DIRK) = {0.0,2.*GRK4,C3RK4,1.0};
             /* THIS IS THE INCREMENTAL FORM WITH DIAGONAL TERM IS INVERTED */
-            gbl->adirk[0][0] = 1./sim::GRK4;                         gbl->adirk[0][1] = 0.0;             gbl->adirk[0][2] = 0.0;      gbl->adirk[0][3] = 0.0;
-            gbl->adirk[1][0] = sim::GRK4;                             gbl->adirk[1][1] = 1./sim::GRK4;        gbl->adirk[1][2] = 0.0;      gbl->adirk[1][3] = 0.0;
-            gbl->adirk[2][0] = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk[2][1] = sim::A32RK4;         gbl->adirk[2][2] = 1./sim::GRK4; gbl->adirk[2][3] = 0.0;
-            gbl->adirk[3][0] = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk[3][1] = sim::B2RK4-sim::A32RK4; gbl->adirk[3][2] = sim::B3RK4;    gbl->adirk[3][3] = 1./sim::GRK4; 
-            gbl->cdirk[0] = 2.*sim::GRK4; gbl->cdirk[1] = sim::C3RK4-2.*sim::GRK4; gbl->cdirk[2] = 1.0-sim::C3RK4;
+            gbl->adirk(0,0) = 1./sim::GRK4;                         gbl->adirk(0,1) = 0.0;             gbl->adirk(0,2) = 0.0;      gbl->adirk(0,3) = 0.0;
+            gbl->adirk(1,0) = sim::GRK4;                             gbl->adirk(1,1) = 1./sim::GRK4;        gbl->adirk(1,2) = 0.0;      gbl->adirk(1,3) = 0.0;
+            gbl->adirk(2,0) = sim::C3RK4-sim::A32RK4-2.*sim::GRK4;        gbl->adirk(2,1) = sim::A32RK4;         gbl->adirk(2,2) = 1./sim::GRK4; gbl->adirk(2,3) = 0.0;
+            gbl->adirk(3,0) = sim::B1RK4-(sim::C3RK4-sim::A32RK4-sim::GRK4); gbl->adirk(3,1) = sim::B2RK4-sim::A32RK4; gbl->adirk(3,2) = sim::B3RK4;    gbl->adirk(3,3) = 1./sim::GRK4; 
+            gbl->cdirk(0) = 2.*sim::GRK4; gbl->cdirk(1) = sim::C3RK4-2.*sim::GRK4; gbl->cdirk(2) = 1.0-sim::C3RK4;
             gbl->esdirk = true;
         }
     }
-    gbl->bd[0] = gbl->dti*gbl->adirk[gbl->substep +gbl->esdirk][gbl->substep +gbl->esdirk];
+    gbl->bd(0) = gbl->dti*gbl->adirk(gbl->substep +gbl->esdirk,gbl->substep +gbl->esdirk);
     if (gbl->dti > 0.0) {
-        gbl->time += gbl->cdirk[gbl->substep]/gbl->dti;
+        gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
         if (gbl->esdirk) {
             /* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
-            gbl->   adirk[0][0] *= gbl->dti_prev/gbl->dti;
+            gbl->   adirk(0,0) *= gbl->dti_prev/gbl->dti;
         }
         gbl->dti_prev = gbl->dti;
     }

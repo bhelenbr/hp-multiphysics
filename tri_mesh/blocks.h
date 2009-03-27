@@ -25,7 +25,6 @@
 #include <boost/bind.hpp>
 #endif
 
-#define DIRK 4
 #ifdef SINGLE
 #define FLT float
 #define EPSILON FLT_EPSILON
@@ -217,60 +216,10 @@ class blocks {
 
 /** \brief Global variables for simulation
  *
- * This namespace contains global variables needed by all blocks of the simulation 
+ * This namespace contains global variables and constants needed by all blocks of the simulation 
  */
 namespace sim {
     extern blocks blks; /**< Contains all blocks for this processor */
-    extern int nproc;
-    extern int myid;
-    
-    /** Time stepping for simulation */
-#ifdef BACKDIFF
-    /** @name backdiff Backwards difference constants
-    *  These are constant for backwards difference timestepping
-    */
-    //@{
-    const int nhist = BACKDIFF; /**< number of backwards difference steps */
-    const int nadapt = BACKDIFF; /**< number of backwards difference steps that require adaptation */
-    const int stepsolves = 1;
-    //@}
-#endif
-#ifdef DIRK
-    /** @name DIRK3 scheme constants
-     *  Constants used to define the DIRK3 scheme
-    */
-    //@{
-    const FLT GRK3 = 0.43586652150845899941601945;
-    const FLT C2RK3 = (2.-9*GRK3+6.*GRK3*GRK3)/(3*(1-4*GRK3+2*GRK3*GRK3));
-    const FLT B2RK3 = -3*(1-4*GRK3+2*GRK3*GRK3)*(1-4*GRK3+2*GRK3*GRK3)/(4*(-1+6*GRK3-9*GRK3*GRK3+3*GRK3*GRK3*GRK3));
-    //@}
-
-    /** @name DIRK4 scheme constants
-     *  Constants used to define the DIRK4 scheme
-    */
-    //@{
-    // const FLT GRK4 0.5  // FOR ERROR PREDICTION
-    const FLT GRK4 = 0.43586652150845899941601945; // FOR L-STABILITY
-    const FLT C3RK4 = 2*GRK4*(GRK4-1./4.)*(GRK4-1.)/((GRK4-0.5)*(GRK4-0.5)-1./12.);
-    const FLT A32RK4 = (C3RK4*C3RK4-2*C3RK4*GRK4)/(4.*GRK4);
-    const FLT B1RK4 = (1./6. +GRK4*GRK4-GRK4*GRK4*C3RK4+3./2.*GRK4*C3RK4-GRK4-1./4.*C3RK4)/(GRK4*C3RK4);
-    const FLT B2RK4 = (1./3.-GRK4-1./2.*C3RK4+GRK4*C3RK4)/(2.*GRK4*(2.*GRK4-C3RK4));
-    const FLT B3RK4 =( 1./3.-2*GRK4+2*GRK4*GRK4)/(C3RK4*(C3RK4-2*GRK4));
-    const int nadapt = 2; /**< number of time steps that require adaptation */
-    const int nhist = 4; /**< number of time steps to be stored during a time step */
-    const int stepsolves = 3; /**< Number of DIRK implicit solutions required */
-    //@}
-#endif
-
-    /** @name Multistage Explicit Scheme
-     *  Constants for multistage iteration scheme 
-     */
-    //@{
-    const int NSTAGE = 5; /**< Number of stages */
-    const FLT alpha[NSTAGE+1] = {0.25, 1./6., .375, .5, 1.0, 1.0}; /**< Multistage time step constants (imaginary) */
-    const FLT beta[NSTAGE+1] = {1.0, 0.0, 5./9., 0.0, 4./9., 1.0}; /**< Multistage time step constants (real) */
-    //@}
-    
 }
 
 #endif
