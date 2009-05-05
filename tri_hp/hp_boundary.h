@@ -85,7 +85,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		init_bdry_cndtn *ibc;
         bool curved, coupled;
         Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
-        TinyVector<Array<TinyVector<FLT,tri_mesh::ND>,2>,sim::nhist+1> crvbd;
+        Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
         Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
 
     public:
@@ -93,7 +93,8 @@ class hp_edge_bdry : public egeometry_interface<2> {
         hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
 			if (curved && !x.coarse_level) {
                 crv.resize(base.maxseg,x.sm0);
-                for(int i=1;i<sim::nhist+1;++i)
+                crvbd.resize(x.gbl->nhist+1);
+                for(int i=1;i<x.gbl->nhist+1;++i)
                     crvbd(i).resize(base.maxseg,x.sm0);
                 crvbd(0).reference(crv);
             }
@@ -150,7 +151,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
             sind = base.seg(bel);
             tgtel = tgt->x.getbdryseg(tgt->x.seg(sind).tri(1));
                         
-            for(step=0;step<sim::nadapt;++step) {
+            for(step=0;step<x.gbl->nadapt;++step) {
                 for(m=0;m<x.sm0;++m) {
                     for(n=0;n<x.ND;++n) {
                         crdsbd(step,bel,m,n) = tgt->crdsbd(step,tgtel,m,n);

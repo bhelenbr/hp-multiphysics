@@ -27,7 +27,7 @@ void tri_hp_buoyancy::rsdl(int stage) {
     
         
     tri_hp::rsdl(stage);
-    oneminusbeta = 1.0-sim::beta[stage];
+    oneminusbeta = 1.0-gbl->beta(stage);
 
      for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -57,8 +57,8 @@ void tri_hp_buoyancy::rsdl(int stage) {
         /* CALCULATE MESH VELOCITY */
         for(i=0;i<lgpx;++i) {
             for(j=0;j<lgpn;++j) {
-                mvel(0)(i,j) = gbl->bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-                mvel(1)(i,j) = gbl->bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+                mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
 #ifdef DROP
                 mvel(0)(i,j) += mesh_ref_vel(0);
                 mvel(1)(i,j) += mesh_ref_vel(1);
@@ -69,7 +69,7 @@ void tri_hp_buoyancy::rsdl(int stage) {
         /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
         /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
         ugtouht(tind);
-        if (sim::beta[stage] > 0.0) {
+        if (gbl->beta(stage) > 0.0) {
             for(n=0;n<NV-1;++n)
                 basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);  
             basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
@@ -123,12 +123,12 @@ void tri_hp_buoyancy::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 /* TIME DERIVATIVE TERMS */ 
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
                         cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                        rhorbd0 = rho(i,j)*gbl->bd[0]*RAD(crd(0)(i,j))*cjcb;
+                        rhorbd0 = rho(i,j)*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
                         cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
                         cjcbi2 = cjcbi*lkcond/lmu;
                         
@@ -246,7 +246,7 @@ void tri_hp_buoyancy::rsdl(int stage) {
               
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -290,11 +290,11 @@ void tri_hp_buoyancy::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
                 cjcbi = lmu/cjcb;
                 cjcbi2 = cjcbi/lmu*lkcond;
-                lbd0 = gbl->bd[0]*cjcb;
+                lbd0 = gbl->bd(0)*cjcb;
                 
                 /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
                 /* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -415,7 +415,7 @@ void tri_hp_buoyancy::rsdl(int stage) {
                 
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -447,7 +447,7 @@ void tri_hp_buoyancy::rsdl(int stage) {
         if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
     }
     else {
-        if (stage == sim::NSTAGE) {
+        if (stage == gbl->nstage) {
             /* HACK FOR AUXILIARY FLUXES */
             for (i=0;i<nebd;++i)
                 hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);

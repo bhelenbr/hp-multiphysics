@@ -25,7 +25,7 @@ void tri_hp_ps::rsdl(int stage) {
     FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
     tri_hp::rsdl(stage);    
-    oneminusbeta = 1.0-sim::beta[stage];
+    oneminusbeta = 1.0-gbl->beta(stage);
         
     for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -55,7 +55,7 @@ void tri_hp_ps::rsdl(int stage) {
         /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
         /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
         ugtouht(tind);
-        if (sim::beta[stage] > 0.0) {
+        if (gbl->beta(stage) > 0.0) {
             basis::tri(log2p).proj(&uht(0)(0),&u(0)(0,0),&du(0,0)(0,0),&du(0,1)(0,0),MXGP);
             basis::tri(log2p).proj(&uht(1)(0),&u(1)(0,0),&du(1,0)(0,0),&du(1,1)(0,0),MXGP);
             basis::tri(log2p).proj(&uht(2)(0),&u(2)(0,0),MXGP);
@@ -98,7 +98,7 @@ void tri_hp_ps::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 /* TIME DERIVATIVE TERMS */ 
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
@@ -183,7 +183,7 @@ void tri_hp_ps::rsdl(int stage) {
 
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -216,7 +216,7 @@ void tri_hp_ps::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
                 cjcbi = lmu/cjcb;
                 
@@ -300,7 +300,7 @@ void tri_hp_ps::rsdl(int stage) {
                 
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }

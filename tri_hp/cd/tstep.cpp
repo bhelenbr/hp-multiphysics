@@ -45,13 +45,13 @@ void tri_hp_cd::setup_preconditioner() {
         qmax = 0.0;
         for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(gbl->ax -(gbl->bd[0]*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-                +pow(gbl->ay -(gbl->bd[0]*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+            q = pow(gbl->ax -(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+                +pow(gbl->ay -(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
             qmax = MAX(qmax,q);
         }
         q = sqrt(qmax);
         
-        lam1  = (q +1.5*gbl->nu/h +h*gbl->bd[0]);
+        lam1  = (q +1.5*gbl->nu/h +h*gbl->bd(0));
                                     
         /* SET UP DISSIPATIVE COEFFICIENTS */
         gbl->tau(tind)  = adis*h/(jcb*lam1);
@@ -63,7 +63,7 @@ void tri_hp_cd::setup_preconditioner() {
 #ifdef TIMEACCURATE
         dtstari = MAX(lam1/h,dtstari);
     }
-    printf("#iterative to physical time step ratio: %f\n",gbl->bd[0]/dtstari);
+    printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
         
     for(tind=0;tind<ntri;++tind) {
         v = tri(tind).pnt;

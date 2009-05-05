@@ -39,7 +39,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
         }
         case(block::restart): {
             namewdot = fname +".d";
-            for(i=0;i<sim::nadapt;++i) {
+            for(i=0;i<gbl->nadapt;++i) {
                 nstr.str("");
                 nstr << i << std::flush;
                 fnmapp = namewdot +nstr.str();
@@ -50,7 +50,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				if (output_type(1) == tri_hp::binary) {
 					tri_mesh::output(fname,tri_mesh::binary);
 					binofstream bout;
-					for(i=1;i<sim::nadapt;++i) {
+					for(i=1;i<gbl->nadapt;++i) {
 						nstr.str("");
 						nstr << i << std::flush;
 						fnmapp = namewdot +nstr.str() +".bin";
@@ -65,7 +65,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				else {
 					tri_mesh::output(fname,tri_mesh::grid);
 					tri_mesh::output(fname,tri_mesh::vlength);
-					for(i=1;i<sim::nadapt;++i) {
+					for(i=1;i<gbl->nadapt;++i) {
 						nstr.str("");
 						nstr << i << std::flush;
 						fnmapp = namewdot +nstr.str() +".txt";
@@ -466,7 +466,7 @@ void tri_hp::input(const std::string& fname) {
 			fnmapp = fname +".v";
 			input_map blank;
 			tri_mesh::input(fname,tri_mesh::binary,1,blank);
-			for(i=1;i<sim::nadapt;++i) {
+			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
 				fnmapp = fname +".v" +nstr.str() +".bin";
@@ -484,7 +484,7 @@ void tri_hp::input(const std::string& fname) {
 		}
 				
 		
-		for(i=0;i<sim::nadapt;++i) {
+		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
 			fnmapp = fname +".d" +nstr.str();
@@ -499,7 +499,7 @@ void tri_hp::input(const std::string& fname) {
 			fnmapp = fname +".v";
 			input_map blank;
 			tri_mesh::input(fname,tri_mesh::grid,1,blank);
-			for(i=1;i<sim::nadapt;++i) {
+			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
 				fnmapp = fname +".v" +nstr.str() +".txt";
@@ -518,7 +518,7 @@ void tri_hp::input(const std::string& fname) {
 		}
 				
 		
-		for(i=0;i<sim::nadapt;++i) {
+		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");
 			nstr << i << std::flush;
 			fnmapp = fname +".d" +nstr.str();

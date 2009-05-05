@@ -18,6 +18,7 @@
 //#define BUOYANCY
 //#define SWE
 //#define LVLSET
+#define EXPLICIT
 
 #define POD
 
@@ -55,13 +56,15 @@
 #include "hp_boundary.h"
 #endif
 
-
+#ifdef EXPLICIT
+#include "explicit/tri_hp_explicit.h"
+#endif
 
 
 class btype {
     public:
-        const static int ntypes = 12;
-        enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset};
+        const static int ntypes = 13;
+        enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset,explct};
         const static char names[ntypes][40];
         static int getid(const char *nin) {
             int i;
@@ -71,7 +74,7 @@ class btype {
         }
 };
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
-    "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset"};
+    "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset","explicit"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
     std::string keyword,val,ibcname;
@@ -164,6 +167,13 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			
         case btype::pod_ins_sim: {
             pod_simulate<tri_hp_ins> *temp = new pod_simulate<tri_hp_ins>();
+            return(temp);
+        }
+#endif
+            
+#ifdef EXPLICIT
+        case btype::explct: {
+            tri_hp_explicit *temp = new tri_hp_explicit();
             return(temp);
         }
 #endif

@@ -39,13 +39,13 @@ void tri_hp_swe::setup_preconditioner() {
         fmax = 0.0;
         for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(ug.v(v0,0)/ug.v(v0,NV-1) -gbl->bd[0]*(pnts(v0)(0) -vrtxbd(1)(v0)(0)),2.0) 
-                +pow(ug.v(v0,1)/ug.v(v0,NV-1) -gbl->bd[0]*(pnts(v0)(1) -vrtxbd(1)(v0)(1)),2.0);  
+            q = pow(ug.v(v0,0)/ug.v(v0,NV-1) -gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0)),2.0) 
+                +pow(ug.v(v0,1)/ug.v(v0,NV-1) -gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1)),2.0);  
             qmax = MAX(qmax,q);
             hmax = MAX(hmax,ug.v(v0,NV-1));
             umax = MAX(umax,ug.v(v0,0)/ug.v(v0,NV-1));
             vmax = MAX(vmax,ug.v(v0,1)/ug.v(v0,NV-1));
-            fmax = MAX(fmax,fabs(gbl->f0 +gbl->beta*pnts(v0)(1)));
+            fmax = MAX(fmax,fabs(gbl->f0 +gbl->cbeta*pnts(v0)(1)));
         }
         if (!(jcb > 0.0) || !(hmax > 0.0)) {  // THIS CATCHES NAN'S TOO
             *gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
@@ -60,11 +60,11 @@ void tri_hp_swe::setup_preconditioner() {
         sigma = MAX((qmax -c2)/qmax,0);
         alpha = gbl->cd*dxmax/(2*hmax);
         alpha2 = alpha*alpha;
-//            pre = gbl->ptest*(pow(dxmax*(gbl->bd[0]+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd[0]*gbl->bd[0] +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
-        pre = gbl->ptest*(pow(dxmax*(gbl->bd[0]*.5+fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd[0]*gbl->bd[0]*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
+//            pre = gbl->ptest*(pow(dxmax*(gbl->bd(0)+fmax),2.0) +(3.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd(0)*gbl->bd(0) +sigma*fmax*fmax) +c2 +(3.+sigma*alpha2)*qmax);
+        pre = gbl->ptest*(pow(dxmax*(gbl->bd(0)*.5+fmax),2.0) +(1.+alpha2)*qmax)/(dxmax*dxmax*(gbl->bd(0)*gbl->bd(0)*.25 +sigma*fmax*fmax) +c2 +(1.+sigma*alpha2)*qmax);
 
         rtpre = sqrt(pre);
-        lambdamax = ((1. +(2.+sqrt(7)-sqrt(3))/2.*MAX(1 -rtpre,0))*q +rtpre*c +2*alpha*q)/dx +gbl->bd[0] +fmax;
+        lambdamax = ((1. +(2.+sqrt(7)-sqrt(3))/2.*MAX(1 -rtpre,0))*q +rtpre*c +2*alpha*q)/dx +gbl->bd(0) +fmax;
         
         /* SET UP DISSIPATIVE COEFFICIENTS */
         gbl->tau(tind,0) = adis/(lambdamax*jcb);
@@ -74,7 +74,7 @@ void tri_hp_swe::setup_preconditioner() {
         /* SET UP DIAGONAL PRECONDITIONER */
         jcb *=  lambdamax;
         
-        cflnow = MAX((q/dx +fmax +c/dx)/gbl->bd[0],cflnow);
+        cflnow = MAX((q/dx +fmax +c/dx)/gbl->bd(0),cflnow);
         
         gbl->tprcn(tind,0) = jcb;    
         gbl->tprcn(tind,1) = jcb;      

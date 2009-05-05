@@ -20,14 +20,14 @@ void tri_hp_ins::rsdl(int stage) {
     TinyMatrix<FLT,ND,ND> ldcrd;
     TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
     int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-    FLT rhobd0 = gbl->rho*gbl->bd[0], lmu = gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
+    FLT rhobd0 = gbl->rho*gbl->bd(0), lmu = gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
     TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
     TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
     TinyVector<FLT,NV> tres;
     
     tri_hp::rsdl(stage);
     
-    oneminusbeta = 1.0-sim::beta[stage];
+    oneminusbeta = 1.0-gbl->beta(stage);
     
     for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -57,8 +57,8 @@ void tri_hp_ins::rsdl(int stage) {
         /* CALCULATE MESH VELOCITY */
         for(i=0;i<lgpx;++i) {
             for(j=0;j<lgpn;++j) {
-                mvel(0)(i,j) = gbl->bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-                mvel(1)(i,j) = gbl->bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+                mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
 #ifdef DROP
                 mvel(0)(i,j) += mesh_ref_vel(0);
                 mvel(1)(i,j) += mesh_ref_vel(1);
@@ -69,7 +69,7 @@ void tri_hp_ins::rsdl(int stage) {
         /* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
         /* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
         ugtouht(tind);
-        if (sim::beta[stage] > 0.0) {
+        if (gbl->beta(stage) > 0.0) {
             for(n=0;n<NV-1;++n)
                 basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
             basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
@@ -126,7 +126,7 @@ void tri_hp_ins::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 /* TIME DERIVATIVE TERMS */ 
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
@@ -138,6 +138,7 @@ void tri_hp_ins::rsdl(int stage) {
                         for(n=0;n<NV-1;++n)
                             res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						
 #ifdef INERTIALESS
                         res(0)(i,j) = 0.0;
                         res(1)(i,j) = 0.0;
@@ -146,8 +147,8 @@ void tri_hp_ins::rsdl(int stage) {
                         res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 #ifdef BODYFORCE
-                        res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
-                        res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
+                        res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+                        res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif                  
                                                         
                         /* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -240,7 +241,7 @@ void tri_hp_ins::rsdl(int stage) {
               
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -288,7 +289,7 @@ void tri_hp_ins::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
                 cjcbi = lmu/cjcb;
                 lrhorbd0 = rhobd0*cjcb;
@@ -325,6 +326,7 @@ void tri_hp_ins::rsdl(int stage) {
                         for(n=0;n<NV-1;++n)
                             res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
                         res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
+						
 #ifdef INERTIALESS
                         res(0)(i,j) = 0.0;
                         res(1)(i,j) = 0.0;
@@ -333,8 +335,8 @@ void tri_hp_ins::rsdl(int stage) {
                         res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 #ifdef BODYFORCE
-                        res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*sim::body(0);
-                        res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*sim::body(1);
+                        res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
+                        res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
 #endif        
                         df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
                                                      +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
@@ -401,7 +403,7 @@ void tri_hp_ins::rsdl(int stage) {
                 
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -463,7 +465,7 @@ void tri_hp_ins::rsdl(int stage) {
         if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
     }
     else {
-        if (stage == sim::NSTAGE) {
+        if (stage == gbl->nstage) {
             /* HACK FOR AUXILIARY FLUXES */
             for (i=0;i<nebd;++i)
                 hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);

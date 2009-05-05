@@ -150,25 +150,6 @@ namespace ibc_ins {
                 return(0.0);
             }
     };
-    
-
-#ifdef TAYLOR
-FLT ppipi = -0.5;
-
-FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
-    
-    x *= 2.*M_PI;
-    y *= 2.*M_PI;
-    switch(n) {
-        case(0):
-            return(exp(-8.*M_PI*M_PI*time)*sin(y)*cos(x));
-        case(1):
-            return(-exp(-8.*M_PI*M_PI*time)*cos(y)*sin(x));
-        case(2):
-            return(0.5*exp(-16.*M_PI*M_PI*time)*(sin(x)*sin(x)+sin(y)*sin(y)) +ppipi);
-    }
-}
-#endif
 
     class stokes_drop_gas : public init_bdry_cndtn {
         private:
@@ -558,7 +539,7 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
             }
             
             void setup_preconditioner() {
-                /* if (sim::dti == 0.0) */ calculate_stuff();
+                /* if (gbl->dti == 0.0) */ calculate_stuff();
                 return;
             }
             
@@ -593,7 +574,7 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
             Array<eboundary_with_geometry<edge_bdry,naca> *,1> ebdry;
             FLT w_a, w_b, w_c, w_d;
             FLT w_a_tilda, w_b_tilda, w_c_tilda, w_d_tilda;
-            FLT k_a[sim::nhist], k_b[sim::nhist], k_c[sim::nhist], k_d[sim::nhist];
+            TinyVector<FLT,5> k_a, k_b, k_c, k_d;
             /* This is to dump output from the generic boundaries */
             struct nullstream : std::ostream {
                 nullstream(): std::ios(0), std::ostream(0) {}
@@ -705,10 +686,10 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
 
                 int stage = x.gbl->substep +x.gbl->esdirk;
                 if (stage > 0) {
-                    k_a[stage-1]=(w_a-w_a_tilda)/(1/x.gbl->adirk[stage-1][stage-1]);
-                    k_b[stage-1]=(w_b-w_b_tilda)/(1/x.gbl->adirk[stage-1][stage-1]); 
-                    k_c[stage-1]=(w_c-w_c_tilda)/(1/x.gbl->adirk[stage-1][stage-1]);
-                    k_d[stage-1]=(w_d-w_d_tilda)/(1/x.gbl->adirk[stage-1][stage-1]);
+                    k_a[stage-1]=(w_a-w_a_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
+                    k_b[stage-1]=(w_b-w_b_tilda)/(1/x.gbl->adirk(stage-1,stage-1)); 
+                    k_c[stage-1]=(w_c-w_c_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
+                    k_d[stage-1]=(w_d-w_d_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
                 }
                 
                 if (x.gbl->substep == 0) {
@@ -719,15 +700,15 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
                 }
                 
                 for (int s=0;s<stage;++s) {
-                    w_a_tilda=w_a_tilda+(x.gbl->adirk[stage][s])*k_a[s];
-                    w_b_tilda=w_b_tilda+(x.gbl->adirk[stage][s])*k_b[s];
-                    w_c_tilda=w_c_tilda+(x.gbl->adirk[stage][s])*k_c[s];
-                    w_d_tilda=w_d_tilda+(x.gbl->adirk[stage][s])*k_d[s];
+                    w_a_tilda=w_a_tilda+(x.gbl->adirk(stage,s))*k_a[s];
+                    w_b_tilda=w_b_tilda+(x.gbl->adirk(stage,s))*k_b[s];
+                    w_c_tilda=w_c_tilda+(x.gbl->adirk(stage,s))*k_c[s];
+                    w_d_tilda=w_d_tilda+(x.gbl->adirk(stage,s))*k_d[s];
                 }
 				
 				/* EXTRAPOLATE */
 				if (stage  && x.gbl->dti > 0.0) {
-					FLT constant =  x.gbl->cdirk[x.gbl->substep];
+					FLT constant =  x.gbl->cdirk(x.gbl->substep);
 					w_a += constant*k_a[stage-1]; 
 					w_b += constant*k_b[stage-1];
 					w_c += constant*k_c[stage-1];
@@ -838,10 +819,10 @@ FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, time) {
                     /* CALCULATE NEW POSITION */
                     double w_a_first = w_a;
                     double w_c_first = w_c;
-                    w_a=(w_a_tilda+((1/x.gbl->adirk[stage][stage]))*dt*(w_b_tilda+((1/x.gbl->adirk[stage][stage]))*dt*force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk[stage][stage])*(1/x.gbl->adirk[stage][stage])));         // translational displacement
-                    w_b=(w_b_tilda-((1/x.gbl->adirk[stage][stage]))*dt*(w_a_tilda*k_linear-force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk[stage][stage])*(1/x.gbl->adirk[stage][stage])));                                    // translational velocity
-                    w_c=(w_c_tilda+((1/x.gbl->adirk[stage][stage]))*dt*(w_d_tilda+((1/x.gbl->adirk[stage][stage]))*dt*moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk[stage][stage])*(1/x.gbl->adirk[stage][stage])));         // rotational displacement
-                    w_d=(w_d_tilda-((1/x.gbl->adirk[stage][stage]))*dt*(w_c_tilda*k_torsion-moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk[stage][stage])*(1/x.gbl->adirk[stage][stage])));                                   // rotational velocity
+                    w_a=(w_a_tilda+((1/x.gbl->adirk(stage,stage)))*dt*(w_b_tilda+((1/x.gbl->adirk(stage,stage)))*dt*force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // translational displacement
+                    w_b=(w_b_tilda-((1/x.gbl->adirk(stage,stage)))*dt*(w_a_tilda*k_linear-force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                    // translational velocity
+                    w_c=(w_c_tilda+((1/x.gbl->adirk(stage,stage)))*dt*(w_d_tilda+((1/x.gbl->adirk(stage,stage)))*dt*moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // rotational displacement
+                    w_d=(w_d_tilda-((1/x.gbl->adirk(stage,stage)))*dt*(w_c_tilda*k_torsion-moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                   // rotational velocity
 
 
 					/* FIX POSITIONS */

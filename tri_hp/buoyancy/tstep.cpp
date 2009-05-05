@@ -40,8 +40,8 @@ void tri_hp_buoyancy::setup_preconditioner() {
         rhoav = 0.0;
         for(j=0;j<3;++j) {
             v0 = v(j);
-            q = pow(ug.v(v0,0) -0.5*(gbl->bd[0]*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-                +pow(ug.v(v0,1) -0.5*(gbl->bd[0]*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
+            q = pow(ug.v(v0,0) -0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+                +pow(ug.v(v0,1) -0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);
             qmax = MAX(qmax,q);
             rhoav += gbl->rhovsT.Eval(ug.v(v0,2)); 
         }
@@ -49,11 +49,11 @@ void tri_hp_buoyancy::setup_preconditioner() {
         FLT nu = gbl->mu/rhoav;
         FLT alpha = gbl->kcond/(rhoav*gbl->cp);
     
-        gam = 3.0*qmax +(0.5*hmax*gbl->bd[0] +2.*nu/hmax)*(0.5*hmax*gbl->bd[0] +2.*nu/hmax);
-        if (gbl->mu + gbl->bd[0] == 0.0) gam = MAX(gam,0.01);
+        gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
+        if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.01);
         q = sqrt(qmax);
         lam1 = q + sqrt(qmax +gam);
-        lam2  = (q +1.5*alpha/h +hmax*gbl->bd[0]);
+        lam2  = (q +1.5*alpha/h +hmax*gbl->bd(0));
 
         /* SET UP DISSIPATIVE COEFFICIENTS */
         gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
@@ -64,7 +64,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
         jcb1 = 2.5*jcb*lam1/h;
         jcb1 *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-        // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd[0];
+        // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
         jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
         jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 

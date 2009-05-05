@@ -85,10 +85,11 @@ OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o sw
 OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o
+OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
 
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET)
+OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -g -O3 -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
@@ -143,5 +144,6 @@ dirs:
 	+@[ -d  buoyancy ] || mkdir -p buoyancy
 	+@[ -d  swe ] || mkdir -p swe
 	+@[ -d  lvlset ] || mkdir -p lvlset
+	+@[ -d  explicit ] || mkdir -p explicit
 
 endif

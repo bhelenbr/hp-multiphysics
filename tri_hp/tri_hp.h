@@ -69,8 +69,8 @@ class tri_hp : public r_tri_mesh  {
         tri_hp_helper *helper;
         
         /** Array for time history information */
-        TinyVector<vsi,sim::nhist+1> ugbd;
-        TinyVector<Array<TinyVector<FLT,ND>,1>,sim::nhist+1> vrtxbd; //!< Highest level contains pre-summed unsteady mesh velocity source
+        Array<vsi,1> ugbd;
+        Array<Array<TinyVector<FLT,ND>,1>,1> vrtxbd; //!< Highest level contains pre-summed unsteady mesh velocity source
         Array<TinyMatrix<FLT,MXGP,MXGP>,3> dugdt; //!< Precalculated unsteady sources at Gauss points
         Array<TinyMatrix<FLT,MXGP,MXGP>,3> dxdt; //!< Precalculated mesh velocity sources at Gauss points
         
@@ -174,12 +174,12 @@ class tri_hp : public r_tri_mesh  {
         void setup_preconditioner();
                 
         /** Calculate residuals */
-        void rsdl() {rsdl(sim::NSTAGE);}
+        void rsdl() {rsdl(gbl->nstage);}
         virtual void rsdl(int stage); 
         
         /** Relax solution */  
         void update();
-        void minvrt();
+        virtual void minvrt();
         void minvrt_test();
 
         /** Multigrid cycle */

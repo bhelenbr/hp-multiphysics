@@ -255,7 +255,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	
     BASE::setup_preconditioner();
-    rsdl(sim::NSTAGE);
+    rsdl(BASE::gbl->nstage);
 	
     /* STORE BASELINE IN LAST COLUMN */
     jacobian(Range(0,tmodes-1),tmodes-1) = rsdls_recv;
@@ -285,7 +285,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
         BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
         BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
         
-        rsdl(sim::NSTAGE);
+        rsdl(BASE::gbl->nstage);
         
          /* STORE IN ROW */
         jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
@@ -314,7 +314,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) +BASE::gbl->res.s(Range(0,BASE::nseg-1));
 		BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) +BASE::gbl->res.i(Range(0,BASE::ntri-1));
 		
-		rsdl(sim::NSTAGE);
+		rsdl(BASE::gbl->nstage);
 		
 		/* STORE IN ROW */
 		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
@@ -339,7 +339,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
     char trans[] = "T";
     int info;
     
-    rsdl(sim::NSTAGE);
+    rsdl(BASE::gbl->nstage);
 	  
     GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
     if (info != 0) {

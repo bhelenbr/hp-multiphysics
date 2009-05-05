@@ -25,19 +25,19 @@ void tri_hp::updatepdata(int v0) {
         
     gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);
         
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         gbl->pstr->ugtouht(tind,step);
         basis::tri(log2p).ptprobe(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
     }
     
     if (gbl->pstr->tri(tind).info > -1) {
-        for(step=1;step<sim::nadapt;++step) {
+        for(step=1;step<gbl->nadapt;++step) {
             gbl->pstr->crdtocht(tind,step);
             basis::tri(log2p).ptprobe_bdry(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
         }
     }
     else {
-        for(step=1;step<sim::nadapt;++step) {
+        for(step=1;step<gbl->nadapt;++step) {
             for(n=0;n<ND;++n) 
                 vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(0))(n)*(s +1.)/2.
                                             +gbl->pstr->vrtxbd(step)(gbl->pstr->tri(tind).pnt(1))(n)*(-r -s)/2.
@@ -56,19 +56,19 @@ void tri_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
     gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pnts(v0),sidloc,psi);
     sind = gbl->pstr->ebdry(bnum)->seg(sidloc);
     
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         gbl->pstr->ugtouht1d(sind,step);
         basis::tri(log2p).ptprobe1d(NV,&ugbd(step).v(v0,0),&gbl->pstr->uht(0)(0),MXTM);
     }
 
     if (hp_ebdry(bnum)->is_curved()) {
-        for(step=1;step<sim::nadapt;++step) {
+        for(step=1;step<gbl->nadapt;++step) {
             gbl->pstr->crdtocht1d(sind,step);
             basis::tri(log2p).ptprobe1d(ND,&vrtxbd(step)(v0)(0),&gbl->pstr->cht(0,0),MXTM);
         }
     }
     else {
-        for(step=1;step<sim::nadapt;++step) {
+        for(step=1;step<gbl->nadapt;++step) {
             for(n=0;n<ND;++n) 
                 vrtxbd(step)(v0)(n) = gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(0))(n)*(1. -psi)/2.
                                                  +gbl->pstr->vrtxbd(step)(gbl->pstr->seg(sind).pnt(1))(n)*(1. +psi)/2.;
@@ -84,7 +84,7 @@ void tri_hp::updatepdata_bdry(int bnum, int bel, int endpt) {
 void tri_hp::movepdata(int from, int to) {
     int n,step;
             
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         for(n=0;n<NV;++n)
             ugbd(step).v(to,n) = ugbd(step).v(from,n);
             
@@ -117,7 +117,7 @@ void tri_hp::updatesdata(int sind) {
     for(n=0;n<ND;++n)
         basis::tri(log2p).proj1d(pnts(v0)(n),pnts(v1)(n),&crd(n)(0,0));
 
-    for(step=0;step<sim::nadapt;++step)
+    for(step=0;step<gbl->nadapt;++step)
         for(n=0;n<NV;++n)
             basis::tri(log2p).proj1d(ugbd(step).v(v0,n),ugbd(step).v(v1,n),&bdwk(step,n)(0,0));
         
@@ -133,7 +133,7 @@ void tri_hp::updatesdata(int sind) {
 			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 		}
         
-        for(step=0;step<sim::nadapt;++step) {
+        for(step=0;step<gbl->nadapt;++step) {
             gbl->pstr->ugtouht(tind,step);
             basis::tri(log2p).ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
             for(n=0;n<NV;++n)    {
@@ -142,7 +142,7 @@ void tri_hp::updatesdata(int sind) {
         }
     }
 
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         for(n=0;n<NV;++n)
             basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(0,0));
 
@@ -168,11 +168,11 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
     v0 = seg(sind).pnt(0);
     v1 = seg(sind).pnt(1);
 
-    for(step=0;step<sim::nadapt;++step)
+    for(step=0;step<gbl->nadapt;++step)
         for(n=0;n<NV;++n)
             basis::tri(log2p).proj1d(ugbd(step).v(v0,n),ugbd(step).v(v1,n),&bdwk(step,n)(0,0));
             
-    for(step=0;step<sim::nadapt;++step)
+    for(step=0;step<gbl->nadapt;++step)
         for(n=0;n<ND;++n)
             basis::tri(log2p).proj1d(vrtxbd(step)(v0)(n),vrtxbd(step)(v1)(n),&bdwk(step,n)(1,0));
             
@@ -185,7 +185,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
             gbl->pstr->hp_ebdry(bnum)->findandmovebdrypt(pt,stgt,psi);
             stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
               
-            for(step=0;step<sim::nadapt;++step) {
+            for(step=0;step<gbl->nadapt;++step) {
                 gbl->pstr->ugtouht1d(stgt,step);
                 basis::tri(log2p).ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
                 for(n=0;n<NV;++n)    
@@ -198,7 +198,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
             }                          
         }      
 
-        for(step=0;step<sim::nadapt;++step) {
+        for(step=0;step<gbl->nadapt;++step) {
             for(n=0;n<ND;++n) {
                 basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(1,0));
                 PBTRS(uplo,basis::tri(log2p).sm,basis::tri(log2p).sbwth,1,&basis::tri(log2p).sdiag1d(0,0),basis::tri(log2p).sbwth+1,&lf(n)(2),basis::tri(log2p).sm,info);
@@ -218,7 +218,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
             stgt = gbl->pstr->ebdry(bnum)->seg(stgt);
             
             /* CALCULATE VALUE OF SOLUTION AT POINT */
-            for(step=0;step<sim::nadapt;++step) {
+            for(step=0;step<gbl->nadapt;++step) {
                 gbl->pstr->ugtouht1d(stgt,step);
                 basis::tri(log2p).ptprobe1d(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
                 for(n=0;n<NV;++n)    
@@ -227,7 +227,7 @@ void tri_hp::updatesdata_bdry(int bnum,int bel) {
         }
     }
 
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         for(n=0;n<NV;++n)
             basis::tri(log2p).intgrt1d(&lf(n)(0),&bdwk(step,n)(0,0));
 
@@ -250,7 +250,7 @@ void tri_hp::movesdata(int from, int to) {
     
     if (!sm0) return;
     
-    for(step=0;step<sim::nadapt;++step)
+    for(step=0;step<gbl->nadapt;++step)
         ugbd(step).s(to,Range::all(),Range::all()) = ugbd(step).s(from,Range::all(),Range::all());
 
     return;
@@ -273,7 +273,7 @@ void tri_hp::updatetdata(int tind) {
     
     if (!im0) return;  /* FIXME NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
         
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         ugtouht_bdry(tind,step);
         for(n=0;n<NV;++n)
             basis::tri(log2p).proj_bdry(&uht(n)(0),&bdwk(step,n)(0,0),MXGP);
@@ -295,7 +295,7 @@ void tri_hp::updatetdata(int tind) {
 				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
 				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 			}            
-            for(step=0;step<sim::nadapt;++step) {
+            for(step=0;step<gbl->nadapt;++step) {
                 gbl->pstr->ugtouht(ttgt,step);
                 basis::tri(log2p).ptprobe(NV,upt,&gbl->pstr->uht(0)(0),MXTM);
                 for(n=0;n<NV;++n)
@@ -304,7 +304,7 @@ void tri_hp::updatetdata(int tind) {
         }
     }
                         
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         for(n=0;n<NV;++n) {
             basis::tri(log2p).intgrt(lf(n).data(),&bdwk(step,n)(0,0),MXGP);
             PBTRS(uplo,basis::tri(log2p).im,basis::tri(log2p).ibwth,1,&basis::tri(log2p).idiag(0,0),basis::tri(log2p).ibwth+1,&lf(n)(basis::tri(log2p).bm),basis::tri(log2p).im,info);
@@ -321,7 +321,7 @@ void tri_hp::movetdata(int from, int to) {
     
     if (!im0) return;  /* FIXME NEED TO FIX THIS IN MESH SO CAN TURN OFF ENTIRE LOOP */
 
-    for(step=0;step<sim::nadapt;++step) {
+    for(step=0;step<gbl->nadapt;++step) {
         ugbd(step).i(to,Range::all(),Range::all()) = ugbd(step).i(from,Range::all(),Range::all());
     }
                 

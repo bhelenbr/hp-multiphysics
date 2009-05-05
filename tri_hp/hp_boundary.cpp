@@ -83,7 +83,7 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
     
     if (!curved || !x.sm0) return;
     
-    for(int i=0;i<sim::nadapt; ++i)
+    for(int i=0;i<x.gbl->nadapt; ++i)
         crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
 }
 
@@ -104,8 +104,9 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
     inmap.getwdefault(keyword,coupled,false);
     
     if (curved && !x.coarse_level) {
+        crvbd.resize(x.gbl->nhist+1);
         crv.resize(base.maxseg,x.sm0);
-        for(i=1;i<sim::nhist+1;++i)
+        for(i=1;i<x.gbl->nhist+1;++i)
             crvbd(i).resize(base.maxseg,x.sm0);
         crvbd(0).reference(crv);
     }
@@ -312,7 +313,7 @@ void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
     return;
 }
 
-
+#ifdef DIRK
 void hp_edge_bdry::tadvance() {
     int stage = x.gbl->substep +x.gbl->esdirk;  
         
@@ -322,7 +323,7 @@ void hp_edge_bdry::tadvance() {
             for(int j=0;j<base.nseg;++j) {
                 for(int m=0;m<basis::tri(x.log2p).sm;++m) {
                     for(int n=0;n<tri_mesh::ND;++n)
-                        crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*x.gbl->adirk[stage-1][stage-1];
+                        crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*x.gbl->adirk(stage-1,stage-1);
                 }
             }
         }
@@ -342,7 +343,7 @@ void hp_edge_bdry::tadvance() {
             for(int j=0;j<base.nseg;++j) {
                 for(int m=0;m<basis::tri(x.log2p).sm;++m) {
                     for(int n=0;n<tri_mesh::ND;++n) {
-                        crvbd(1)(j,m)(n) += x.gbl->adirk[stage][s]*crvbd(s+2)(j,m)(n);
+                        crvbd(1)(j,m)(n) += x.gbl->adirk(stage,s)*crvbd(s+2)(j,m)(n);
                     }
                 }
             }
@@ -350,7 +351,7 @@ void hp_edge_bdry::tadvance() {
 
         /* EXTRAPOLATE GUESS? */
         if (stage && x.gbl->dti > 0.0) {
-            FLT constant =  x.gbl->cdirk[x.gbl->substep];
+            FLT constant =  x.gbl->cdirk(x.gbl->substep);
             crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += constant*crvbd(stage+1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
         }
     }
@@ -377,6 +378,58 @@ void hp_edge_bdry::calculate_unsteady_sources() {
     
     return;
 }
+#else
+/* BACKWARDS DIFFERENCE STUFF */
+void hp_edge_bdry::tadvance() {    
+    if (x.p0 > 1 && curved) {
+        for (int i=x.gbl->nhist-2;i>=0; --i) {            
+
+            /* BACK CALCULATE K TERM */
+            for(int j=0;j<base.nseg;++j) {
+                for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+                    for(int n=0;n<tri_mesh::ND;++n)
+                        crvbd(i+1)(j,m)(n) = crvbd(i)(j,m)(n);
+                }
+            }
+        }
+        
+        /* EXTRAPOLATE GUESS? */
+        if (x.gbl->dti > 0.0 && x.gbl->tstep > 1) {
+            crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += crvbd(1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -crvbd(2)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+        }
+    }
+    
+    calculate_unsteady_sources();
+    
+    /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
+    if (!coupled && curved) curv_init();
+    
+    return;
+}
+
+void hp_edge_bdry::calculate_unsteady_sources() {
+    int j,n,sind;
+    TinyMatrix<FLT,tri_mesh::ND,MXGP> crd;
+    
+    for (int level=1;level<min(x.gbl->nhist,x.gbl->tstep+1);++level) {
+        for(int p=0;p<=x.log2pmax;++p) {
+            for(j=0;j<base.nseg;++j) {
+                dxdt(p,j) = 0.0;
+                sind = base.seg(j);
+                x.crdtocht1d(sind,level);
+                for(n=0;n<tri_mesh::ND;++n) {
+                    basis::tri(p).proj1d(&x.cht(n,0),&crd(n,0));
+                    for (int i=0;i<basis::tri(p).gpx;++i)
+                        dxdt(p,j)(n,i) += x.gbl->bd(level)/x.gbl->bd(0)*crd(n,i);
+                }
+            }
+        }
+    }
+    
+    return;
+}
+#endif
+
 
 void tri_hp::vc0load(int phase, FLT *pdata, int vrtstride) {
     int i;

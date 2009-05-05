@@ -13,8 +13,10 @@
 #include "hp_boundary.h"
 
 void tri_hp::l2error(init_bdry_cndtn *comparison) {
-	int i,j,n,tind,loc[NV];
-	FLT err,mxr[NV],l2r[NV];
+	int i,j,n,tind;
+	FLT err;
+	Array<int,1> loc(NV);
+	Array<FLT,1> mxr(NV),l2r(NV);
     TinyVector<FLT,2> pt;
     
 #ifdef TAYLOR
@@ -29,8 +31,8 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 #endif
     
 	for(n=0;n<NV;++n) {
-		mxr[n] = 0.0;
-		l2r[n] = 0.0;
+		mxr(n) = 0.0;
+		l2r(n) = 0.0;
 	}
 	
 	for(tind=0;tind<ntri;++tind) {
@@ -65,19 +67,19 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
                 pt(1) = crd(1)(i,j);
                 for(n=0;n<NV;++n) {
                     err =  fabs(u(n)(i,j)-comparison->f(n,pt,gbl->time));
-                    if (err > mxr[n]) {
-                        mxr[n] = err;
-                        loc[n] = tind;
+                    if (err >= mxr(n)) {
+                        mxr(n) = err;
+                        loc(n) = tind;
                     }
-                    l2r[n] += err*err*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+                    l2r(n) += err*err*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
                 }
             }
         }	
 	}
     
 	for(n=0;n<NV;++n) {
-		l2r[n] = sqrt(l2r[n]); 
-		*gbl->log << "#L_2: " << l2r[n] << " L_inf " << mxr[n] <<  ' ' << loc[n];
+		l2r(n) = sqrt(l2r(n)); 
+		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n);
 	}
 	*gbl->log << '\n';
 		

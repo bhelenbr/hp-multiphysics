@@ -99,7 +99,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
                     norm(0) = x.dcrd(1,0)(0,i);
                     norm(1) = -x.dcrd(0,0)(0,i);                
                     for(n=0;n<tri_mesh::ND;++n) {
-                        mvel(n) = x.gbl->bd[0]*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
+                        mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,i) -dxdt(x.log2p,ind)(n,i));
 #ifdef DROP
                         mvel(n) += tri_hp_ins::mesh_ref_vel(n);
 #endif
@@ -181,7 +181,7 @@ void neumann::rsdl(int stage) {
             nrm(1) = -x.dcrd(0,0)(0,k);                
             for(n=0;n<tri_mesh::ND;++n) {
                 pt(n) = x.crd(n)(0,k);
-                mvel(n) = x.gbl->bd[0]*(x.crd(n)(0,k) -dxdt(x.log2p,j)(n,k));
+                mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,j)(n,k));
 #ifdef DROP
                 mvel(n) += tri_hp_ins::mesh_ref_vel(n);
 #endif
@@ -342,7 +342,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
     mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
 	hmax = mag*2.0/(0.25*(basis::tri(x.log2p).p +1)*(basis::tri(x.log2p).p+1));
     qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
-	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd[0] +2.*nu/hmax)*(0.5*hmax*x.gbl->bd[0] +2.*nu/hmax);
+	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
 
     norm(0) /= mag;
     norm(1) /= mag;
@@ -464,10 +464,10 @@ void hybrid_pt::rsdl(int stage) {
 	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
 	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 	
-	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-				  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-				  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
 	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
 
 	if (tangvel > 0.0)

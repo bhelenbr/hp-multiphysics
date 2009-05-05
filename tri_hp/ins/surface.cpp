@@ -114,7 +114,7 @@ void surface_slave::tadvance() {
     /* THIS IS TO RECEIVE MESSAGES SENT FROM SURFACE DURING TADVANCE RSDL CALL */
     if (x.gbl->substep == 0) {
         if (!x.coarse_level) {
-            rsdl(sim::NSTAGE);
+            rsdl(x.gbl->nstage);
         }
     }
     return;
@@ -142,7 +142,7 @@ void surface::tadvance() {
                 for(m=0;m<basis::tri(x.log2p).sm;++m)
                     sdres(x.log2p,i,m)(0) = 0.0;
                     
-            rsdl(sim::NSTAGE);
+            rsdl(x.gbl->nstage);
 
             for(i=0;i<base.nseg+1;++i)
                 vdres(x.log2p,i)(0) = -gbl->vres(i)(0);
@@ -195,7 +195,7 @@ void surface::rsdl(int stage) {
             
             /* RELATIVE VELOCITY STORED IN MVEL(N)*/
             for(n=0;n<tri_mesh::ND;++n) {
-                mvel(n,i) = u(n)(i) -(x.gbl->bd[0]*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+                mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef DROP
                 mvel(n,i) -= tri_hp_ins::mesh_ref_vel(n);
 #endif    
@@ -571,7 +571,7 @@ void surface::setup_preconditioner() {
             
             /* RELATIVE VELOCITY STORED IN MVEL(N)*/
             for(n=0;n<tri_mesh::ND;++n) {
-                mvel(n) = u(n)(i) -(x.gbl->bd[0]*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+                mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
 #ifdef DROP
                 mvel(n) -= tri_hp_ins::mesh_ref_vel(n);
 #endif    
@@ -585,21 +585,21 @@ void surface::setup_preconditioner() {
             
             dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1))/hsm);
 #ifndef BODYFORCE
-            strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*sim::g*nrm(1)/h);
+            strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
 #else
-            strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-sim::body(0)*nrm(0) +(sim::g-sim::body(1))*nrm(1))/h);
+            strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
 #endif
 
-            gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd[0] + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd[0] + 2.*nu1/hsm);
-            gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd[0] + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd[0] + 2.*nu2/hsm);
+            gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
+            gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 
-            if (x.gbl->bd[0] + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+            if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 
 #ifdef INERTIALESS
             gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
             gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-            dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd[0] +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
+            dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
     
             /* SET UP DISSIPATIVE COEFFICIENT */
             /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -608,8 +608,8 @@ void surface::setup_preconditioner() {
             /* |a| dx/2 2/dx dv/dpsi  dpsi */
             /* |a| dv/dpsi  dpsi */
             // gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
-            // gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd[0]))); /* FAILED IN MOVING UP TESTS */
-            gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd[0]))); /* SEEMS THE BEST I'VE GOT */
+            // gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+            gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
         }
         nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
         nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
@@ -618,8 +618,8 @@ void surface::setup_preconditioner() {
         nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
         h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
         
-        mvel(0) = x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
-        mvel(1) = x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+        mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+        mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
 #ifdef DROP
         mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
         mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
@@ -628,8 +628,8 @@ void surface::setup_preconditioner() {
         qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
         vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
 
-        mvel(0) = x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
-        mvel(1) = x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+        mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+        mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
 #ifdef DROP
         mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
         mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
@@ -643,19 +643,19 @@ void surface::setup_preconditioner() {
 #ifndef BODYFORCE
         strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
 #else
-        strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-sim::body(0)*nrm(0) +(sim::g-sim::body(1))*nrm(1))/h);
+        strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
 #endif
 
-        gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd[0] + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd[0] + 2.*nu1/hsm);
-        gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd[0] + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd[0] + 2.*nu2/hsm);
+        gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
+        gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
 
-        if (x.gbl->bd[0] + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+        if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
 
 #ifdef INERTIALESS
         gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
         gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
 #endif
-        dtnorm = 2.*vslp/hsm +x.gbl->bd[0] +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
+        dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
         
         /* SET UP DISSIPATIVE COEFFICIENT */
         /* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
@@ -664,8 +664,8 @@ void surface::setup_preconditioner() {
         /* |a| dx/2 2/dx dv/dpsi  dpsi */
         /* |a| dv/dpsi  dpsi */
         // gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
-        // gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd[0])); /* FAILED IN MOVING UP TESTS */
-        gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd[0])); /* SEEMS THE BEST I'VE GOT */
+        // gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+        gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
 #endif
 
         dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
@@ -865,12 +865,12 @@ void surface::update(int stage) {
     for(i=0;i<base.nseg;++i) {
         sind = base.seg(i);
         v0 = x.seg(sind).pnt(0);
-        x.pnts(v0) = gbl->vug0(i) -sim::alpha[stage]*gbl->vres(i);
+        x.pnts(v0) = gbl->vug0(i) -x.gbl->alpha(stage)*gbl->vres(i);
     }
     v0 = x.seg(sind).pnt(1);
-    x.pnts(v0) = gbl->vug0(base.nseg) -sim::alpha[stage]*gbl->vres(base.nseg);
+    x.pnts(v0) = gbl->vug0(base.nseg) -x.gbl->alpha(stage)*gbl->vres(base.nseg);
     
-    if (basis::tri(x.log2p).sm > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -sim::alpha[stage]*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+    if (basis::tri(x.log2p).sm > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
 
     /* FIX POINTS THAT SLIDE ON CURVE */
     x.hp_vbdry(base.vbdry(1))->mvpttobdry(x.pnts(v0));

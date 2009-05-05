@@ -75,7 +75,7 @@ void tri_hp_buoyancy::calculate_unsteady_sources() {
 
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                 for(j=0;j<basis::tri(log2p).gpn;++j) {    
-                    cjcb(i,j) = -gbl->bd[0]*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+                    cjcb(i,j) = -gbl->bd(0)*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
                     lrho = gbl->rhovsT.Eval(u(2)(i,j));                    
                     for(n=0;n<NV-2;++n)
                         dugdt(log2p,tind,n)(i,j) = lrho*u(n)(i,j)*cjcb(i,j);

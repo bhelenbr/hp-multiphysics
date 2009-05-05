@@ -24,7 +24,7 @@ void tri_hp_cd::rsdl(int stage) {
 
     tri_hp::rsdl(stage);
     
-    oneminusbeta = 1.0-sim::beta[stage];
+    oneminusbeta = 1.0-gbl->beta(stage);
 
     for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -58,8 +58,8 @@ void tri_hp_cd::rsdl(int stage) {
         /* CALCULATE MESH VELOCITY */
         for(i=0;i<lgpx;++i) {
             for(j=0;j<lgpn;++j) {
-                mvel(0)(i,j) = gbl->bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-                mvel(1)(i,j) = gbl->bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+                mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
             }
         }
         
@@ -87,7 +87,7 @@ void tri_hp_cd::rsdl(int stage) {
         lftog(tind,gbl->res);
 
         /* NEGATIVE REAL TERMS */
-        if (sim::beta[stage] > 0.0) {
+        if (gbl->beta(stage) > 0.0) {
                 
             /* TIME DERIVATIVE TERMS */
             for(i=0;i<basis::tri(log2p).gpx;++i) {
@@ -95,7 +95,7 @@ void tri_hp_cd::rsdl(int stage) {
                     pt(0) = crd(0)(i,j);
                     pt(1) = crd(1)(i,j);
                     cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                    res(0)(i,j) = RAD(crd(0)(i,j))*gbl->bd[0]*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
+                    res(0)(i,j) = RAD(crd(0)(i,j))*gbl->bd(0)*u(0)(i,j)*cjcb(i,j) +dugdt(log2p,tind,0)(i,j);
                     res(0)(i,j) -= RAD(crd(0)(i,j))*cjcb(i,j)*gbl->src->f(0,pt,gbl->time);
                 }
             }            
@@ -140,7 +140,7 @@ void tri_hp_cd::rsdl(int stage) {
 
             for(n=0;n<NV;++n)
                 for(i=0;i<basis::tri(log2p).tm;++i)
-                    lf(n)(i) *= sim::beta[stage];
+                    lf(n)(i) *= gbl->beta(stage);
                     
             lftog(tind,gbl->res_r);
         }

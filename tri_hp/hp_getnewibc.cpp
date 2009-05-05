@@ -112,8 +112,13 @@ class translating : public tri_hp_helper {
             if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
             
             TinyVector<FLT,2> dx;
+#ifdef DIRK
             for (int n=0;n<tri_mesh::ND;++n)
-                dx(n) = x.gbl->cdirk[x.gbl->substep]/x.gbl->dti*velocity(n);
+                dx(n) = x.gbl->cdirk(x.gbl->substep)/x.gbl->dti*velocity(n);
+#else
+            for (int n=0;n<tri_mesh::ND;++n)
+                dx(n) = velocity(n)/x.gbl->dti;
+#endif
             
             for(int i=0;i<x.npnt;++i)
                 x.pnts(i) += dx;
@@ -160,11 +165,16 @@ class gcl_test : public tri_hp_helper {
             
             if (x.gbl->substep == 0) x.l2error(x.gbl->ibc);
                 
-            TinyVector<FLT,2> dx;
-            
+            FLT dt;
+#ifdef DIRK
+            dt = x.gbl->cdirk(x.gbl->substep)/x.gbl->dti;
+#else
+            dt = 1./x.gbl->dti;
+#endif                
+            TinyVector<FLT,tri_mesh::ND> dx;
             for(int i=0;i<x.npnt;++i) {
                 for (int n=0;n<tri_mesh::ND;++n)
-                    dx(n) = x.gbl->cdirk[x.gbl->substep]/x.gbl->dti*vel(n).Eval(x.pnts(i),x.gbl->time);
+                    dx(n) = dt*vel(n).Eval(x.pnts(i),x.gbl->time);
                 x.pnts(i) += dx;
             }            
             return;

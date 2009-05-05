@@ -100,7 +100,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
         du.resize(NV,ND);
         uht.resize(NV);
         lf.resize(MAX(NV,ND));
-        bdwk.resize(sim::nhist+1,MAX(NV,ND));
+        bdwk.resize(gbl->nhist+1,MAX(NV,ND));
     }
          
     /* Allocate solution vector storage */
@@ -109,12 +109,14 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     ug.i.resize(maxpst,im0,NV);
     
     /* For ease of access have level 0 in time history reference ug */
+    ugbd.resize(gbl->nhist+1);
+    vrtxbd.resize(gbl->nhist+1);
     ugbd(0).v.reference(ug.v);
     ugbd(0).s.reference(ug.s);
     ugbd(0).i.reference(ug.i);
     vrtxbd(0).reference(pnts); 
     
-    for(i=1;i<sim::nhist+1;++i) {
+    for(i=1;i<gbl->nhist+1;++i) {
         ugbd(i).v.resize(maxpst,NV);
         ugbd(i).s.resize(maxpst,sm0,NV);
         ugbd(i).i.resize(maxpst,im0,NV);
@@ -169,6 +171,9 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
     gbl->res_r.v.resize(maxpst,NV);
     gbl->res_r.s.resize(maxpst,sm0,NV);
     gbl->res_r.i.resize(maxpst,im0,NV);
+	gbl->res_r.v = 0.;
+	gbl->res_r.s = 0.;
+	gbl->res_r.i = 0.;
 
     gbl->res0.v.resize(maxpst,NV);
     gbl->res0.s.resize(maxpst,basis::tri(log2p).sm,NV);
@@ -185,8 +190,8 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
         gbl->tprcn_ut.resize(maxpst,NV,NV);
     }
 
-    double CFLdflt[3] = {2.5, 1.5, 1.0};
-    if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),3)) inmap.getwdefault("cfl",gbl->cfl.data(),3,CFLdflt); 
+    double CFLdflt[4] = {2.5, 1.5, 1.0, 0.5};
+    if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
 
     /***************************************************/
     /* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
@@ -268,7 +273,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
     du.resize(NV,ND);
     uht.resize(NV);
     lf.resize(MAX(NV,ND));
-    bdwk.resize(sim::nhist+1,MAX(NV,ND));
+    bdwk.resize(gbl->nhist+1,MAX(NV,ND));
          
     /* Allocate solution vector storage */
     ug.v.resize(maxpst,NV);
@@ -276,6 +281,8 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
     ug.i.resize(maxpst,im0,NV);
     
     /* For ease of access have level 0 in time history reference ug */
+    ugbd.resize(gbl->nhist+1);
+    vrtxbd.resize(gbl->nhist+1);
     ugbd(0).v.reference(ug.v);
     ugbd(0).s.reference(ug.s);
     ugbd(0).i.reference(ug.i);
@@ -294,8 +301,15 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
     switch (why) {
         case multigrid: {
             /* STUFF FOR MULTIGRID SOURCE TERMS */
+#ifdef DIRK
             ugbd(1).v.resize(maxpst,NV);
             vrtxbd(1).resize(maxpst); 
+#else
+            for (int i=1;i<gbl->nhist;++i) {
+                ugbd(i).v.resize(maxpst,NV);
+                vrtxbd(i).resize(maxpst);
+            }
+#endif
             vug_frst.resize(maxpst,NV);      
             dres.resize(1);
             dres(0).v.resize(maxpst,NV); 
@@ -310,7 +324,7 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
             break;
         }
         case adapt_storage: {
-            for(int i=1;i<sim::nadapt;++i) {
+            for(int i=1;i<gbl->nadapt;++i) {
                 ugbd(i).v.resize(maxpst,NV);
                 ugbd(i).s.resize(maxpst,sm0,NV);
                 ugbd(i).i.resize(maxpst,im0,NV);

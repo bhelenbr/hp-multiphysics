@@ -63,11 +63,11 @@ void tri_hp_lvlset::calculate_unsteady_sources() {
             for(i=0;i<basis::tri(log2p).gpx;++i) {
                 for(j=0;j<basis::tri(log2p).gpn;++j) {    
                     rho = gbl->rho +(gbl->rho2 -gbl->rho)*heavyside_if(u(2)(i,j)/gbl->width);
-                    cjcb(i,j) = -gbl->bd[0]*rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
+                    cjcb(i,j) = -gbl->bd(0)*rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 #ifndef CONSERVATIVE
                     for(n=0;n<NV-2;++n)
                         dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
-                    dugdt(log2p,tind,NV-2)(i,j) = -gbl->bd[0]*u(NV-2)(i,j);
+                    dugdt(log2p,tind,NV-2)(i,j) = -gbl->bd(0)*u(NV-2)(i,j);
 #else
                     for(n=0;n<NV-1;++n)
                         dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);

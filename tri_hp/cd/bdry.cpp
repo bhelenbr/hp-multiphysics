@@ -111,7 +111,7 @@ void neumann::rsdl(int stage) {
             nrm(1) = -x.dcrd(0,0)(0,k);                
             for(n=0;n<tri_mesh::ND;++n) {
                 pt(n) = x.crd(n)(0,k);
-                mvel(n) = x.gbl->bd[0]*(x.crd(n)(0,k) -x.crd(n)(1,k));
+                mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -x.crd(n)(1,k));
             }
 
             x.res(0)(0,k) = RAD(x.crd(0)(0,k))*flux(x.u(0)(0,k),pt,mvel,nrm);

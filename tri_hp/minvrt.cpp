@@ -87,9 +87,9 @@ void tri_hp::minvrt() {
     /* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
     /* SOLVE FOR SIDE MODES */
     /* PART 1 REMOVE VERTEX CONTRIBUTIONS */
-    for(tind=0;tind<ntri;++tind) {
             
-        if (gbl->diagonal_preconditioner) {  // IF STATEMENT IN LOOP IS BAD FIXME
+    if (gbl->diagonal_preconditioner) {  // IF STATEMENT IN LOOP IS BAD FIXME
+        for(tind=0;tind<ntri;++tind) {
             for(i=0;i<3;++i) {
                 v0 = tri(tind).pnt(i);
                 for(n=0;n<NV;++n)
@@ -110,8 +110,10 @@ void tri_hp::minvrt() {
                 }
             }
         }
-        else {
-            /* THIS IS TO USE A MATRIX PRECONDITIONER */
+    }
+    else {
+        /* THIS IS TO USE A MATRIX PRECONDITIONER */
+        for(tind=0;tind<ntri;++tind) {
             for(i=0;i<3;++i) {
                 v0 = tri(tind).pnt(i);
                 for(n=0;n<NV;++n)
@@ -359,109 +361,4 @@ void tri_hp::setup_preconditioner() {
     }
     return;
 }
-
-    
-
-void tri_hp::minvrt_test() {
-    int i,j,k,m,n,tind,side,indx,indx1;
-    TinyVector<int,3> v;
-    TinyVector<FLT,tri_mesh::ND> pt;
-    FLT jcb,dtstari;
-    
-
-    /*	SET TIME STEP TO BE 1 */
-    for(tind = 0; tind < ntri; ++tind) {
-        jcb = 0.25*area(tind);
-        v = tri(tind).pnt;
-
-        /* SET UP DIAGONAL PRECONDITIONER */
-        dtstari = jcb*RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
-        gbl->tprcn(tind,Range::all()) = dtstari;        
-        
-        for(i=0;i<3;++i) {
-            gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
-            if (basis::tri(log2p).sm > 0) {
-                side = tri(tind).seg(i);
-                gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
-            }
-        }
-    }
-    setup_preconditioner();
- 
-    gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-    gbl->res.s(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
-    gbl->res.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
-    
-    ug.v(Range(0,npnt-1),Range::all()) = 0.0;
-    ug.s(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
-    ug.i(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
-
-    for(tind = 0; tind<ntri;++tind) {
-    
-        if (tri(tind).info > -1) {
-            crdtocht(tind);
-            for(n=0;n<ND;++n)
-                basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-
-        }
-        else {
-            for(n=0;n<ND;++n)
-                basis::tri(log2p).proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
-
-            for(i=0;i<basis::tri(log2p).gpx;++i) {
-                for(j=0;j<basis::tri(log2p).gpn;++j) {
-                    for(n=0;n<ND;++n) {
-                        dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(1))(n) -pnts(tri(tind).pnt(0))(n));
-                        dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(0))(n));
-                    }
-                }
-            }
-        }
-         
-        for(n=0;n<NV;++n)
-            for(i=0;i<basis::tri(log2p).tm;++i)
-                lf(n)(i) = 0.0;
-
-        for(i=0;i<basis::tri(log2p).gpx;++i) {
-            for(j=0;j<basis::tri(log2p).gpn;++j) {
-                pt(0) = crd(0)(i,j);
-                pt(1) = crd(1)(i,j);
-                cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-                for(n=0;n<NV;++n)
-                    res(n)(i,j) = RAD(crd(0)(i,j))*gbl->ibc->f(n,pt,gbl->time)*cjcb(i,j);
-            }
-        }
-        for(n=0;n<NV;++n)
-            basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
-                          
-        lftog(tind,gbl->res);
-    }
- 
-    /* Inversion finished */
-    ug.v(Range(0,npnt-1),Range::all()) = gbl->res.v(Range(0,npnt-1),Range::all());
-
-    if (basis::tri(log2p).sm > 0) {
-        ug.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
- 
-        if (basis::tri(log2p).im > 0) {
-
-            for(i=0;i<ntri;++i) {
-                indx = 0;
-                indx1 = 0;
-                for(m=1;m<basis::tri(log2p).sm;++m) {
-                    for(k=0;k<basis::tri(log2p).sm-m;++k) {
-                        for(n=0;n<NV;++n) {
-                            ug.i(i,indx1,n) = gbl->res.i(i,indx,n);
-                        }
-                        ++indx; ++indx1;
-                    }
-                    indx1 += sm0 -basis::tri(log2p).sm;
-                }
-            }
-        }
-    }
- 
-    return;
-}
-
 

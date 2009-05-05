@@ -16,7 +16,7 @@
     tri_hp_ins::init(input,gin);
 
     if (!input.get(gbl->idprefix + "_f0",gbl->f0)) input.getwdefault("f0",gbl->f0,0.0);
-    if (!input.get(gbl->idprefix + "_beta",gbl->beta)) input.getwdefault("beta",gbl->beta,0.0);
+    if (!input.get(gbl->idprefix + "_beta",gbl->beta)) input.getwdefault("beta",gbl->cbeta,0.0);
     if (!input.get(gbl->idprefix + "_cd",gbl->cd)) input.getwdefault("cd",gbl->cd,0.0);
     if (!input.get(gbl->idprefix + "_ptest",gbl->ptest)) input.getwdefault("ptest",gbl->ptest,1.0);
 

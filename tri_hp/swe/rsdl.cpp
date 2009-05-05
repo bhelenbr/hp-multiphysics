@@ -26,7 +26,7 @@ void tri_hp_swe::rsdl(int stage) {
     FLT drag;
     
     tri_hp::rsdl(stage);
-    oneminusbeta = 1.0-sim::beta[stage];
+    oneminusbeta = 1.0-gbl->beta(stage);
 
     for(tind = 0; tind<ntri;++tind) {
         /* LOAD INDICES OF VERTEX POINTS */
@@ -56,8 +56,8 @@ void tri_hp_swe::rsdl(int stage) {
         /* CALCULATE MESH VELOCITY */
         for(i=0;i<lgpx;++i) {
             for(j=0;j<lgpn;++j) {
-                mvel(0)(i,j) = gbl->bd[0]*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
-                mvel(1)(i,j) = gbl->bd[0]*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+                mvel(0)(i,j) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+                mvel(1)(i,j) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
             }
         }
 
@@ -111,7 +111,7 @@ void tri_hp_swe::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 /* TIME DERIVATIVE TERMS */ 
                 for(i=0;i<lgpx;++i) {
                     for(j=0;j<lgpn;++j) {
@@ -122,16 +122,16 @@ void tri_hp_swe::rsdl(int stage) {
                         drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
                         
                         /* UNSTEADY TERMS */
-                        res(0)(i,j) = cjcb*(gbl->bd[0]*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->beta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
-                        res(1)(i,j) = cjcb*(gbl->bd[0]*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->beta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
-                        res(NV-1)(i,j) = cjcb*gbl->bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+                        res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
+                        res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
                         
                         /* TO MAINTAIN FREE-STREAM SOLUTION */
 //                                TinyVector<FLT,tri_mesh::ND> xtemp;
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;
 //                                res(0)(i,j) += cjcb*(-gbl->cd*pow(gbl->ibc->f(0,xtemp,gbl->time),2));
-//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->beta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);                                
+//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->cbeta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);                                
                     }
                 }
                 for(n=0;n<NV;++n)
@@ -183,7 +183,7 @@ void tri_hp_swe::rsdl(int stage) {
               
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }
@@ -228,7 +228,7 @@ void tri_hp_swe::rsdl(int stage) {
             lftog(tind,gbl->res);
 
             /* NEGATIVE REAL TERMS */
-            if (sim::beta[stage] > 0.0) {
+            if (gbl->beta(stage) > 0.0) {
                 cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
                 
                 /* TIME DERIVATIVE TERMS */ 
@@ -239,9 +239,9 @@ void tri_hp_swe::rsdl(int stage) {
 
                         drag = gbl->cd*sqrt(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))/(u(NV-1)(i,j)*u(NV-1)(i,j));
                         /* UNSTEADY TERMS */
-                        res(0)(i,j) = cjcb*(gbl->bd[0]*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->beta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
-                        res(1)(i,j) = cjcb*(gbl->bd[0]*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->beta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
-                        res(NV-1)(i,j) = cjcb*gbl->bd[0]*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
+                        res(0)(i,j) = cjcb*(gbl->bd(0)*u(0)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(0,pt,gbl->time) -(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(1)(i,j) +drag*u(0)(i,j)) +dugdt(log2p,tind,0)(i,j);
+                        res(1)(i,j) = cjcb*(gbl->bd(0)*u(1)(i,j) -u(NV-1)(i,j)*gbl->g*gbl->bathy->f(1,pt,gbl->time) +(gbl->f0 +gbl->cbeta*crd(1)(i,j))*u(0)(i,j) +drag*u(1)(i,j)) +dugdt(log2p,tind,1)(i,j);                                
+                        res(NV-1)(i,j) = cjcb*gbl->bd(0)*u(NV-1)(i,j) +dugdt(log2p,tind,NV-1)(i,j);
           
                         
                         /* TO MAINTAIN FREE-STREAM SOLUTION */
@@ -249,7 +249,7 @@ void tri_hp_swe::rsdl(int stage) {
 //                                xtemp(0) = 0.0;
 //                                xtemp(1) = 0.0;
 //                                res(0)(i,j) += cjcb*(-gbl->cd*pow(gbl->ibc->f(0,xtemp,gbl->time),2));
-//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->beta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);     
+//                                res(1)(i,j) += cjcb*(-(gbl->f0 +gbl->cbeta*crd(1)(i,j)))*gbl->ibc->f(0,xtemp,gbl->time);     
                         
                     }
                 }                        
@@ -303,7 +303,7 @@ void tri_hp_swe::rsdl(int stage) {
                 
                 for(n=0;n<NV;++n)
                     for(i=0;i<basis::tri(log2p).tm;++i)
-                        lf(n)(i) *= sim::beta[stage];
+                        lf(n)(i) *= gbl->beta(stage);
                         
                 lftog(tind,gbl->res_r);
             }

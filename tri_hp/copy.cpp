@@ -17,7 +17,7 @@
     /* COPY MESH INFORMATION */
     tri_mesh::copy(tgt);
 
-    for(t=0;t<sim::nadapt;++t) {
+    for(t=0;t<gbl->nadapt;++t) {
         ugbd(t).v(Range(0,npnt-1),Range::all()) = tgt.ugbd(t).v(Range(0,npnt-1),Range::all());
         if (sm0) ugbd(t).s(Range(0,nseg-1),Range::all(),Range::all()) = tgt.ugbd(t).s(Range(0,nseg-1),Range::all(),Range::all());
         if (im0) ugbd(t).i(Range(0,ntri-1),Range::all(),Range::all()) = tgt.ugbd(t).i(Range(0,ntri-1),Range::all(),Range::all());

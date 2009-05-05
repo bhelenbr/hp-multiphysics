@@ -51,10 +51,10 @@ namespace bdry_lvlset {
 					nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 					nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
 					
-					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-								  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-								  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+								  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+								  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
 					normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
 							
 					/* normvel is defined positive outward */
@@ -80,10 +80,10 @@ namespace bdry_lvlset {
 					nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
 					nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
 					
-					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd[0]*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-								  x.ug.v(v1,0)-(x.gbl->bd[0]*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd[0]*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-								  x.ug.v(v1,1)-(x.gbl->bd[0]*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+					vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+								  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+					vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+								  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
 					normvel = vel(0)*nrm(0)+vel(1)*nrm(1);
 					
 					if (normvel < 0.0) {
