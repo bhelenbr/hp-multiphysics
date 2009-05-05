@@ -375,7 +375,7 @@ class edge_bdry : public boundary {
         virtual void reorder();
         virtual void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
         virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
-        virtual void findbdrypt(const TinyVector<FLT,2> xpt, int &sidloc, FLT &psiloc) const;
+        virtual void findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, FLT &psiloc) const;
         
         /* DEFAULT SENDING FOR SIDE POINTS */
         virtual void vloadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride) {}

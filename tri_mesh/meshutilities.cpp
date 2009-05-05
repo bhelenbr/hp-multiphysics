@@ -286,7 +286,7 @@ void tri_mesh::shift(TinyVector<FLT,ND>& s) {
     
     for(int i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
-            pnts(i)(1) += s(n);
+            pnts(i)(n) += s(n);
 
     return;
 }
@@ -295,7 +295,7 @@ void tri_mesh::scale(TinyVector<FLT,ND>& s) {
     int n;
     for(int i=0;i<npnt;++i)
         for(n=0;n<ND;++n)
-            pnts(i)(1) *= s(n);
+            pnts(i)(n) *= s(n);
 
     return;
 }

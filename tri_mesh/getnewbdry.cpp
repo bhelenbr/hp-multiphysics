@@ -62,7 +62,7 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
             break;
         }
 		case vtype::symbolic: {
-            temp = new vboundary_with_geometry<vrtx_bdry,symbolic_point<2> >(idnum,*this);
+            temp = new vboundary_with_geometry<vrtx_bdry,symbolic_point<tri_mesh::ND> >(idnum,*this);
             break;
         }
         default: {
@@ -140,19 +140,19 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
             break;
         }
         case etype::symbolic: {
-            temp = new eboundary_with_geometry<edge_bdry,symbolic_shape<2> >(idnum,*this);
+            temp = new eboundary_with_geometry<edge_bdry,symbolic_shape<tri_mesh::ND> >(idnum,*this);
             break;
         }
 		case etype::symbolic_comm: {
-            temp = new eboundary_with_geometry<ecomm,symbolic_shape<2> >(idnum,*this);
+            temp = new eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> >(idnum,*this);
             break;
         }
         case etype::coupled_symbolic: {
-            temp = new ecoupled_physics<eboundary_with_geometry<edge_bdry,symbolic_shape<2> > >(idnum,*this);
+            temp = new ecoupled_physics<eboundary_with_geometry<edge_bdry,symbolic_shape<tri_mesh::ND> > >(idnum,*this);
             break;
         }
         case etype::coupled_symbolic_comm: {
-            temp = new ecoupled_physics<eboundary_with_geometry<ecomm,symbolic_shape<2> > >(idnum,*this);
+            temp = new ecoupled_physics<eboundary_with_geometry<ecomm,symbolic_shape<tri_mesh::ND> > >(idnum,*this);
             break;
         }
         case etype::spline: {

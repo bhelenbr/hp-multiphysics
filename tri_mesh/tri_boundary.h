@@ -179,7 +179,7 @@ template<int ND> class vgeometry_interface {
 
 class vcoupled_physics_ptr {
     public:
-        vgeometry_interface<2> *physics;
+        vgeometry_interface<tri_mesh::ND> *physics;
 };
 
 template<int ND> class egeometry_interface {
@@ -190,7 +190,7 @@ template<int ND> class egeometry_interface {
 
 class ecoupled_physics_ptr {
     public:
-        egeometry_interface<2> *physics;
+        egeometry_interface<tri_mesh::ND> *physics;
 };
 
 template<int ND> class fgeometry_interface {
@@ -201,7 +201,7 @@ template<int ND> class fgeometry_interface {
 
 class fcoupled_physics_ptr {
     public:
-        fgeometry_interface<2> *physics;
+        fgeometry_interface<tri_mesh::ND> *physics;
 };
 
 
@@ -222,7 +222,7 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 #include <blitz/tinyvec-et.h>
 
 class spline_bdry : public edge_bdry {
-    spline<2> my_spline;
+    spline<tri_mesh::ND> my_spline;
     Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
     FLT smin, smax; // LIMITS FOR BOUNDARY
     

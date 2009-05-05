@@ -362,7 +362,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #ifdef MPDEBUG
                         *(BASE::x.gbl->log) << "mpi to process " << mpi_match(m) << std::endl << std::flush;
 #endif
-                        switch(msgtype) {
+                        switch(sndtype()) {
                             case(boundary::flt_msg): {
 #ifdef SINGLE
                                 err = MPI_Irecv(&frcvbuf(m,0), buffsize/sizeof(FLT), MPI_FLOAT, 
@@ -459,7 +459,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 //                            *(BASE::x.gbl->log) << "\t" << local_match(m)->fsndbuf(i) << std::endl;
 #endif      
                 sim::blks.waitforslot(rcv_tags(m),true);
-                switch(msgtype) {
+                switch(sndtype()) {
                     case(boundary::flt_msg): {
                         for(i=0;i<local_match(m)->sndsize();++i) 
                             frcvbuf(m,i) = local_match(m)->fsndbuf(i);
@@ -482,7 +482,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #ifdef MPDEBUG
                 *(BASE::x.gbl->log) << "exchanging mpi float message with process: " << mpi_match(m) << ' ' << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << snd_tags(m) << " first:" <<  is_frst()  << " with type: " << mtype(m) << std::endl;
 #endif  
-                switch(msgtype) {
+                switch(sndtype()) {
                     case(boundary::flt_msg): {
 #ifdef SINGLE
                         err = MPI_Isend(&fsndbuf(0), msgsize, MPI_FLOAT, 
@@ -584,7 +584,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 }
                 
 #ifdef MPDEBUG
-                if (msgtype == boundary::flt_msg) {
+                if (sndtype() == boundary::flt_msg) {
                     *(BASE::x.gbl->log) << "received float message: " << BASE::idprefix << " with Group, Phase, Type " << grp << ',' << phi << ',' <<  type << " tag " << rcv_tags(m) << " with type: " << mtype(m) << std::endl;
                 }
                 else {
@@ -596,7 +596,192 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             /* ONE MEANS FINISHED 0 MEANS MORE TO DO */
             return((phi-maxphase(grp) >= 0 ? 1 : 0));
         }
+        
+        bool comm_finish(boundary::groups grp, int phi, boundary::comm_type type, boundary::operation op) {
+            int matches;
+            
+            if (!((1<<grp)&groupmask)) return(false);
+            
+            switch(type) {
+                case(boundary::slave_master): {
+                    if (!first) return(false);
+                }
+                
+                case(boundary::master_slave): {
+                    if (first || phase(grp)(0) != phi) return(false);
+                    
+#ifdef MPDEBUG
+                    *BASE::x.gbl->log << "finish"  << idnum << " " << is_frst() << std::endl;
+#endif
+                    switch(sndtype()) {
+                        case(boundary::int_msg):
+                            for(int j=0;j<sndsize();++j) {
+                                isndbuf(j) = ircvbuf(0,j);
+#ifdef MPDEBUG
+                                *BASE::x.gbl->log << "\t" << isndbuf(j) << std::endl;
+#endif
+                            }
+                            return(true);
+                        case(boundary::flt_msg):
+                             for(int j=0;j<sndsize();++j) {
+                                fsndbuf(j) = frcvbuf(0,j);
+#ifdef MPDEBUG
+                                *BASE::x.gbl->log << "\t" << fsndbuf(j) << std::endl;
+#endif
+                            }
+                            return(true);
+                    }
+                }
+                    
+                default: {
+                    switch(sndtype()) {
+                        case(boundary::flt_msg): {
+                            switch(op) {
+                                case(boundary::average): {                       
+                                    for(int m=0;m<nmatch;++m) {    
+                                        if (phase(grp)(m) != phi) continue;
+                                        
+                                        ++matches;
+                                        for(int j=0;j<sndsize();++j) {
+                                            fsndbuf(j) += frcvbuf(m,j);
+                                        }
+                                    }
+                                    if (matches > 1 ) {
+                                        FLT mtchinv = 1./matches;
+                                        for(int j=0;j<sndsize();++j)
+                                            fsndbuf(j) *= mtchinv;
+
+#ifdef MPDEBUG
+                                        *BASE::x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                                        for(j=0;j<sndsize();++j) {
+                                            *BASE::x.gbl->log << "\t" << fsndbuf(j) << std::endl;
+                                        }
+                                        *BASE::x.gbl->log << "\t" << fsndbuf(Range(0,sndsize()-1)) << std::endl;
+#endif
+                                    }
+                                    return(true);
+                                }
+                                    
+                                case(boundary::sum): {
+                                    for(int m=0;m<nmatch;++m) {    
+                                        if (phase(grp)(m) != phi) continue;
+                                        
+                                        ++matches;
+                                        for(int j=0;j<sndsize();++j) {
+                                            fsndbuf(j) += frcvbuf(m,j);
+                                        }
+                                    }
+#ifdef MPDEBUG
+
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                                        for(j=0;j<sndsize();++j) {
+                                            *BASE::x.gbl->log << "\t" << fsndbuf(j) << std::endl;
+                                        }
+                                        *BASE::x.gbl->log << "\t" << fsndbuf(Range(0,sndsize()-1)) << std::endl;
+                                    }
+#endif
+                                    return(true);
+                                }
+                                    
+                                case(boundary::maximum): {                
+                                    matches = 1;
+
+                                    for(int m=0;m<nmatch;++m) {    
+                                        if (phase(grp)(m) != phi) continue;
+                                        
+                                        ++matches;
+
+                                        for(int j=0;j<sndsize();++j) {
+                                            fsndbuf(j) = MAX(fsndbuf(j),frcvbuf(m,j));
+                                        }
+                                    }
+
+#ifdef MPDEBUG
+                                    if (matches > 1) {
+                                        *BASE::x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                                        for(j=0;j<sndsize();++j) {
+                                            *BASE::x.gbl->log << "\t" << fsndbuf(j) << std::endl;
+                                        }
+                                    }
+#endif
+                                    return(true);
+                                }
+                                
+                                default: {
+                                    *BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
+                                    exit(1);
+                                }
+                            }
+                        }
+                            
+                        case(boundary::int_msg): {
+                            switch(op) {
+                                case(boundary::average): {                        
+                                    *BASE::x.gbl->log << "averaging with integer messages?" << std::endl;
+                                    exit(1);
+                                }
+                                    
+                                case(boundary::sum): {
+                                    for(int m=0;m<nmatch;++m) {    
+                                        if (phase(grp)(m) != phi) continue;
+                                        
+                                        ++matches;
+                                        for(int j=0;j<sndsize();++j) {
+                                            isndbuf(j) += ircvbuf(m,j);
+                                        }
+                                    }
+#ifdef MPDEBUG
+
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                                        for(j=0;j<sndsize();++j) {
+                                            *BASE::x.gbl->log << "\t" << isndbuf(j) << std::endl;
+                                        }
+                                        *BASE::x.gbl->log << "\t" << isndbuf(Range(0,sndsize()-1)) << std::endl;
+                                    }
+#endif
+                                    return(true);
+                                }
+                                    
+                                case(boundary::maximum): {        
+                                    matches = 1;
+
+                                    for(int m=0;m<nmatch;++m) {    
+                                        if (phase(grp)(m) != phi) continue;
+                                        
+                                        ++matches;
+
+                                        for(int j=0;j<sndsize();++j) {
+                                            isndbuf(j) = MAX(isndbuf(j),ircvbuf(m,j));
+                                        }
+                                    }
+
+#ifdef MPDEBUG
+                                    if (matches > 1) {
+                                        *BASE::x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
+                                        for(j=0;j<sndsize();++j) {
+                                            *BASE::x.gbl->log << "\t" << isndbuf(j) << std::endl;
+                                        }
+                                    }
+#endif
+                                    return(true);
+                                }
+                                
+                                default: {
+                                    *BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
+                                    exit(1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return(false);
+        }
 };
+        
 
 
 /* GENERIC TEMPLATE FOR SHAPES */
