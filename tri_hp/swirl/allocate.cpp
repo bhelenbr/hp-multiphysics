@@ -13,7 +13,10 @@
  void tri_hp_swirl::init(input_map& input, void *gin) { 
 	
 	gbl = static_cast<global *>(gin);    
-    input[gbl->idprefix + "_nvariable"] = "4";
+    
+    if (input.find(gbl->idprefix + "_nvariable") == input.end())
+        input[gbl->idprefix + "_nvariable"] = "4";
+    
     tri_hp_ins::init(input,gin);
 	 
 #ifdef AXISYMMETRIC

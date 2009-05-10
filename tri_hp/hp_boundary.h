@@ -111,6 +111,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
         virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
         /** This is to read solution data **/
         virtual void input(ifstream& fin,tri_hp::filetype typ,int tlvl = 0); 
+        void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
         
         /* CURVATURE FUNCTIONS */
         bool is_curved() {return(curved);}

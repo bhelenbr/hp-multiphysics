@@ -103,8 +103,8 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
     public:
-        static const int ntypes = 10;
-        enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
+        static const int ntypes = 11;
+        enum ids {unknown=-1,plain,inflow,flexible,outflow,characteristic,euler,
             symmetry,applied_stress,surface,surface_slave,force_coupling};
         static const char names[ntypes][40];
         static int getid(const char *nin) {
@@ -114,7 +114,7 @@ class tri_hp_ins_stype {
         }
 };
 
-const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
+const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","flexible","outflow","characteristic","euler",
     "symmetry","applied_stress","surface","surface_slave","force_coupling"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
@@ -144,6 +144,10 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
         }
         case tri_hp_ins_stype::inflow: {
             temp = new inflow(*this,*ebdry(bnum));
+            break;
+        }
+        case tri_hp_ins_stype::flexible: {
+            temp = new flexible(*this,*ebdry(bnum));
             break;
         }
         case tri_hp_ins_stype::outflow: {

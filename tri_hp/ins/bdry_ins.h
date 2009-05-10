@@ -24,7 +24,11 @@
 #include "../hp_boundary.h"
 #include <myblas.h>
 #include <blitz/tinyvec-et.h>
+#include <blitz/array.h>
 #include <symbolic_function.h>
+
+
+using namespace blitz;
 
 //#define DETAILED_DT
 //#define DETAILED_MINV
@@ -40,6 +44,8 @@ namespace bdry_ins {
 #ifdef L2_ERROR
 			symbolic_function<2> l2norm;
 #endif
+            enum bctypes {ess, nat, mix};
+
         public:
             Array<FLT,1> total_flux,diff_flux,conv_flux;
             FLT circumference,moment,convect,circulation;
@@ -108,22 +114,32 @@ namespace bdry_ins {
 
 
 
-    class inflow : public neumann {        
-        void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+    class inflow : public neumann {  
+        protected:
+            Array<int,1> dirichlets;
+            int ndirichlets;
+            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 
-            /* CONTINUITY */
-            flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+                /* CONTINUITY */
+                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 
-            /* EVERYTHING ELSE DOESN'T MATTER */
-             for (int n=0;n<x.NV-1;++n)
-                flx(n) = 0.0;
-                
-            return;
-        }
+                /* EVERYTHING ELSE DOESN'T MATTER */
+                 for (int n=0;n<x.NV-1;++n)
+                    flx(n) = 0.0;
+                    
+                return;
+            }
         
         public:
-            inflow(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "inflow";}
-            inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+            inflow(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {
+                mytype = "inflow";
+                dirichlets.resize(x.NV);
+                ndirichlets = x.NV-1;
+                dirichlets.resize(x.NV-1);
+                for (int n=0;n<x.NV-1;++n)
+                    dirichlets(n) = n;
+            }
+            inflow(const inflow& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
             inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
             void vdirichlet() {
@@ -147,11 +163,47 @@ namespace bdry_ins {
                 }
             }
 			
-			void setvalues(init_bdry_cndtn *ibc);
 			void tadvance() {
 				hp_edge_bdry::tadvance();
-				setvalues(ibc);
+				setvalues(ibc,dirichlets,ndirichlets);
 			};
+    };
+    
+    class flexible : public inflow { 
+        protected:
+            Array<bctypes,1> type;
+            init_bdry_cndtn *ibc;
+            
+            void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+                double flux = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+                
+                for (int n=0;n<x.NV-1;++n) {
+                    switch(type(n)) {
+                        case(ess): {
+                            flx(n) = 0.0;
+                        }
+                        case (nat): {
+                            FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+                            flx(n) = ibc->f(n, xpt, x.gbl->time)*length;
+                        }
+                        case (mix): {
+                            FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+                            for (int n=0;n<tri_mesh::ND;++n)
+                                flx(n) = flux*u(n) +ibc->f(n, xpt, x.gbl->time)*length;     
+                        }
+                    }
+                }
+                
+                flx(x.NV-1) = flux;
+                    
+                return;
+            }
+        
+        public:
+            flexible(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "flexible"; type.resize(x.NV-1);}
+            flexible(const flexible& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {type.resize(x.NV-1); type = inbdry.type; ibc = inbdry.ibc;}
+            flexible* create(tri_hp& xin, edge_bdry &bin) const {return new flexible(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& input,void* gbl_in);
     };
 	
 	
@@ -192,7 +244,7 @@ namespace bdry_ins {
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void tadvance() {hp_edge_bdry::tadvance();}
 			void update(int stage) {
-				if (!x.coarse_flag) setvalues(&my_ibc);
+				if (!x.coarse_flag) setvalues(&my_ibc,dirichlets,ndirichlets);
 			}
 			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
 			void set_ctr_rot(TinyVector<FLT,2> c) {my_ibc.ctr = c;}

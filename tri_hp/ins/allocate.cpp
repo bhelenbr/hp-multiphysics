@@ -36,7 +36,15 @@ TinyVector<FLT,tri_mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
     
     /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
     gbl->D.resize(NV);
-    gbl->D = 0.0;
+    if (NV > 3) {
+        for (int n=2;n<NV-1;++n) {
+            stringstream nstr;
+            nstr << n-2;
+            if (!input.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n))) 
+                if (!input.get("D" +nstr.str(),gbl->D(n)))
+                    gbl->D(n) = 0.0;
+        }
+    }
     
 #ifdef DROP
     *gbl->log << "#DROP is defined" << std::endl;

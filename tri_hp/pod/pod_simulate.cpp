@@ -520,31 +520,16 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::loadbuff(Array<FLT,1>& sdata)
 }
 
 template<class BASE> void pod_sim_edge_bdry<BASE>::finalrcv(Array<FLT,1>& sdata) {
-	int j,m;
-	FLT mtchinv;
+	int j;
 	
-	if (!active || !base.is_comm()) return;
-	
-	int matches = 1;
-	/* ASSUMES REVERSE ORDERING OF SIDES */
-	for(m=0;m<base.nmatches();++m) {    
-		++matches;
-		for(j=0;j<nmodes;++j) 
-			base.fsndbuf(j) += base.frcvbuf(m,j);
-	}
-	
-	if (matches > 1) {
-		mtchinv = 1./matches;
-#ifdef MPDEBUG
-		*x.gbl->log << "pod finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
-#endif
-		for(j=0;j<nmodes;++j) {
-			sdata(bindex+j) = base.fsndbuf(j)*mtchinv;
-#ifdef MPDEBUG
-			*x.gbl->log << "\t" << sdata(bindex+j) << std::endl;
-#endif
-		}
-	}
+	if (!active) return;
+    
+    bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
+	if (!reload) return;
+    
+    for(j=0;j<nmodes;++j) {
+        sdata(bindex+j) = base.fsndbuf(j);
+    }
 	return;
 }
 

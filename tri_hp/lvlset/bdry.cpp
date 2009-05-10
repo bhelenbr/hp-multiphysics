@@ -132,6 +132,7 @@ void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
     
 	stride*=4;
 	
+    
     count = 0;
     for(j=0;j<base.nseg;++j) {
         sind = base.seg(j);

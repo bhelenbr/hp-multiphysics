@@ -237,67 +237,32 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
     return;
 }
 
-void inflow::setvalues(init_bdry_cndtn *ibc) {
-    int j,k,m,n,v0,v1,sind,indx,info;
-	TinyVector<FLT,tri_mesh::ND> pt;
-    char uplo[] = "U";
+void flexible::init(input_map& inmap,void* gbl_in) {
+    std::string keyword;
+    std::ostringstream nstr;
 
-    /* UPDATE BOUNDARY CONDITION VALUES */
-    for(j=0;j<base.nseg;++j) {
-        sind = base.seg(j);
-        v0 = x.seg(sind).pnt(0);
-        for(n=0;n<x.NV-1;++n)
-            x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
+    inflow::init(inmap,gbl_in);
+    
+    ibc = x.getnewibc(base.idprefix +"_fcn",inmap);
+    
+    Array<int,1> atemp(x.NV-1);
+    if (!inmap.get(base.idprefix+"_ins_bcs", atemp.data(), x.NV-1)) {
+        *x.gbl->log << "missing flexible specifier list (0 = essential, 1 = natural, 2 = mixed)\n";
+        exit(1);
     }
-    v0 = x.seg(sind).pnt(1);
-    for(n=0;n<x.NV-1;++n)
-        x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
-
-    /*******************/    
-    /* SET SIDE VALUES */
-    /*******************/
-    for(j=0;j<base.nseg;++j) {
-        sind = base.seg(j);
-        v0 = x.seg(sind).pnt(0);
-        v1 = x.seg(sind).pnt(1);
-        
-        if (is_curved()) {
-            x.crdtocht1d(sind);
-            for(n=0;n<tri_mesh::ND;++n)
-                basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-        }
-        else {
-            for(n=0;n<tri_mesh::ND;++n) {
-                basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-                
-                for(k=0;k<basis::tri(x.log2p).gpx;++k)
-                    x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
-            }
-        }
-
-        if (basis::tri(x.log2p).sm) {
-            for(n=0;n<x.NV-1;++n)
-                basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
-
-            for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
-                pt(0) = x.crd(0)(0,k);
-                pt(1) = x.crd(1)(0,k);
-                for(n=0;n<x.NV-1;++n)
-                    x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
-            }
-            for(n=0;n<x.NV-1;++n)
-                basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
-            indx = sind*x.sm0;
-            for(n=0;n<x.NV-1;++n) {
-                PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-                for(m=0;m<basis::tri(x.log2p).sm;++m) 
-                    x.ug.s(sind,m,n) = -x.lf(n)(2+m);
+    else {
+        ndirichlets = 0;
+        for (int n=0;n<x.NV-1;++n) {
+            type(n) = static_cast<bctypes>(atemp(n));
+            if (type(n) == ess) {
+                dirichlets(ndirichlets++) = n;
             }
         }
     }
+
     return;
 }
+
 
 void symmetry::tadvance() {
     int j,m,v0,sind;

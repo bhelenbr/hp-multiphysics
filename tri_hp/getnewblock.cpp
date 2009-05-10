@@ -14,11 +14,11 @@
 #define CD
 #define INS
 //#define PS
-//#define SWIRL
+#define SWIRL
 //#define BUOYANCY
 //#define SWE
 //#define LVLSET
-#define EXPLICIT
+//#define EXPLICIT
 
 #define POD
 

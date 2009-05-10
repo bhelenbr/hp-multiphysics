@@ -68,7 +68,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 	if (!inmap.get(keyword,ibcname)) {
 		keyword = suffix;
 		if (!inmap.get(keyword,ibcname)) {
-			*gbl->log << "couldn't find initial condition type" << std::endl;
+			*gbl->log << "couldn't find initial condition type " << keyword << std::endl;
 		}
 	}
     

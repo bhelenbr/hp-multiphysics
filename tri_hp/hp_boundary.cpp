@@ -29,7 +29,7 @@ hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
 
 void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
     /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-    int j,k,m,n,count,countdn,countup,offset,sind,sign;
+    int j,k,m,n,count,offset,sind,sign;
     FLT mtchinv;
     
     if (!base.is_comm()) return;
@@ -37,22 +37,20 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
     int matches = 1;
     int bgnsign = (bgn % 2 ? -1 : 1);
     
-    /* ASSUMES REVERSE ORDERING OF SIDES */
     for(m=0;m<base.nmatches();++m) {    
             
         ++matches;
-        
         int ebp1 = end-bgn+1;
-        countdn = (base.nseg-1)*ebp1*x.NV;
-        countup = 0;
+        count = 0;
         for(j=0;j<base.nseg;++j) {
             sign = bgnsign;
             for(k=0;k<ebp1;++k) {
-                for(n=0;n<x.NV;++n)
-                    base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+                for(n=0;n<x.NV;++n) {
+                    base.fsndbuf(count) += sign*base.frcvbuf(m,count);
+                    count++;
+                }
                 sign *= -1;
             }
-            countdn -= 2*ebp1*x.NV;
         }
     }
     
@@ -62,20 +60,38 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
 #ifdef MPDEBUG
         *x.gbl->log << "side finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
-        count = 0;
-        for(j=0;j<base.nseg;++j) {
-            sind = base.seg(j);
-            offset = (sind*stride +bgn)*x.NV;
-            for (k=bgn;k<=end;++k) {
-                for(n=0;n<x.NV;++n) {
-                    sdata[offset++] = base.fsndbuf(count++)*mtchinv;
+
+        if (base.is_frst()) {
+            count = 0;
+            for(j=0;j<base.nseg;++j) {
+                sind = base.seg(j);
+                offset = (sind*stride +bgn)*x.NV;
+                for (k=bgn;k<=end;++k) {
+                    for(n=0;n<x.NV;++n) {
+                        sdata[offset++] = base.fsndbuf(count++)*mtchinv;
 #ifdef MPDEBUG
-                    *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
+                        *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
 #endif
+                    }
                 }
             }
         }
+        else {
+            for(j=base.nseg-1;j>=0;--j) {
+                sind = base.seg(j);
+                offset = (sind*stride +bgn)*x.NV;
+                for (k=bgn;k<=end;++k) {
+                    for(n=0;n<x.NV;++n) {
+                        sdata[offset++] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+                        *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
+#endif
+                    }
+                }
+            }    
+        }
     }
+    
     return;
 }
 
@@ -207,6 +223,69 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
             break;
     }
 }
+
+void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets) {
+    int j,k,m,n,v0,v1,sind,indx,info;
+	TinyVector<FLT,tri_mesh::ND> pt;
+    char uplo[] = "U";
+        
+    /* UPDATE BOUNDARY CONDITION VALUES */
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
+        for(n=0;n<ndirichlets;++n)
+            x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
+    }
+    v0 = x.seg(sind).pnt(1);
+    for(n=0;n<ndirichlets;++n)
+        x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
+
+    /*******************/    
+    /* SET SIDE VALUES */
+    /*******************/
+    for(j=0;j<base.nseg;++j) {
+        sind = base.seg(j);
+        v0 = x.seg(sind).pnt(0);
+        v1 = x.seg(sind).pnt(1);
+        
+        if (is_curved()) {
+            x.crdtocht1d(sind);
+            for(n=0;n<tri_mesh::ND;++n)
+                basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+        }
+        else {
+            for(n=0;n<tri_mesh::ND;++n) {
+                basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+                
+                for(k=0;k<basis::tri(x.log2p).gpx;++k)
+                    x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+            }
+        }
+
+        if (basis::tri(x.log2p).sm) {
+            for(n=0;n<ndirichlets;++n)
+                basis::tri(x.log2p).proj1d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),&x.res(dirichlets(n))(0,0));
+
+            for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
+                pt(0) = x.crd(0)(0,k);
+                pt(1) = x.crd(1)(0,k);
+                for(n=0;n<ndirichlets;++n)
+                    x.res(dirichlets(n))(0,k) -= ibc->f(dirichlets(n),pt,x.gbl->time);
+            }
+            for(n=0;n<ndirichlets;++n)
+                basis::tri(x.log2p).intgrt1d(&x.lf(dirichlets(n))(0),&x.res(dirichlets(n))(0,0));
+
+            indx = sind*x.sm0;
+            for(n=0;n<ndirichlets;++n) {
+                PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(dirichlets(n))(2),basis::tri(x.log2p).sm,info);
+                for(m=0;m<basis::tri(x.log2p).sm;++m) 
+                    x.ug.s(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m);
+            }
+        }
+    }
+    return;
+}
+
 
 void hp_edge_bdry::curv_init(int tlvl) {
     int i,j,m,n,v0,v1,sind,info;

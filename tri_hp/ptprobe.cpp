@@ -24,11 +24,12 @@
 
  void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
     TinyVector<FLT,3> wgt;
-    int v0,ierr;
+    int v0;
+    bool found;
     
     qtree.nearpt(xp.data(),v0);
-    ierr = findtri(xp,v0,tind);
-    if (ierr) {
+    found = findtri(xp,v0,tind);
+    if (!found) {
         *gbl->log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
     }
 	
@@ -59,10 +60,11 @@ int mistake_counter = 0;
     TinyVector<FLT,3> wgt;
     TinyVector<FLT,ND> x,dxmax,ddr,dds;
     int n,iter,v0,tind1;
-	int ierr = 0, find_tri_err;
+	int ierr = 0;
+    bool found;
 
     qtree.nearpt(xp.data(),v0);
-    find_tri_err = findtri(xp,v0,tind);
+    found = findtri(xp,v0,tind);
     getwgts(wgt);
 
     /* TRIANGLE COORDINATES */    
@@ -89,7 +91,7 @@ int mistake_counter = 0;
             r += dr;
             s += ds;
             if (iter++ > 100) {
-                *gbl->log << "#Warning: max iterations for curved triangle " << tind << "find tri?" << find_tri_err << " from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+                *gbl->log << "#Warning: max iterations for curved triangle " << tind << "find tri?" << found << " from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
 				std::ostringstream fname;
                 fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
                 tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
@@ -104,7 +106,7 @@ int mistake_counter = 0;
         } while (fabs(dr) +fabs(ds) > roundoff);
         
         if (r < -(1.0+10.0*FLT_EPSILON) || r > (1.0+10.0*FLT_EPSILON) || s < -(1.0+10.0*FLT_EPSILON) || s > (1.0+10.0*FLT_EPSILON)) {
-            *gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << find_tri_err << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
+            *gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << found << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
 			std::ostringstream fname;
 			fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
 			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
