@@ -1,0 +1,53 @@
+dr^2:  +dr^2*xs^2*yt^2+dr^2*ys^2*xt^2-2*dr^2*ys*zt*zs*yt-2*dr^2*xs*zt*zs*xt+dr^2*zs^2*yt^2+dr^2*xs^2*zt^2+dr^2*zs^2*xt^2+dr^2*ys^2*zt^2-2*dr^2*xs*yt*ys*xt
+ds^2:  +ds^2*xr^2*yt^2+ds^2*yr^2*xt^2+ds^2*xr^2*zt^2+ds^2*zr^2*xt^2-2*ds^2*xr*zt*zr*xt-2*ds^2*yr*zt*zr*yt-2*ds^2*xr*yt*yr*xt+ds^2*yr^2*zt^2+ds^2*zr^2*yt^2
+dt^2:  +dt^2*xr^2*ys^2+dt^2*yr^2*xs^2-2*dt^2*xr*zs*zr*xs+dt^2*xr^2*zs^2+dt^2*zr^2*xs^2-2*dt^2*yr*zs*zr*ys-2*dt^2*xr*ys*yr*xs+dt^2*yr^2*zs^2+dt^2*zr^2*ys^2
+drds:  -2*dr*zs*xt^2*ds*zr+2*dr*zs*xt*ds*xr*zt-2*dr*ys*xt^2*ds*yr+2*dr*ys*xt*ds*xr*yt+2*dr*xs*zt*ds*zr*xt+2*dr*xs*yt*ds*yr*xt-2*dr*xs*yt^2*ds*xr-2*dr*zs*yt^2*ds*zr-2*dr*xs*zt^2*ds*xr-2*dr*ys*zt^2*ds*yr+2*dr*ys*zt*ds*zr*yt+2*dr*zs*yt*ds*yr*zt
+drdt:  -2*dr*zs^2*xt*dt*xr+2*dr*zs*xt*dt*zr*xs-2*dr*xs^2*zt*dt*zr+2*dr*ys*xt*dt*yr*xs-2*dr*ys^2*xt*dt*xr-2*dr*xs^2*yt*dt*yr+2*dr*xs*yt*dt*xr*ys+2*dr*xs*zt*dt*xr*zs+2*dr*zs*yt*dt*zr*ys+2*dr*ys*zt*dt*yr*zs-2*dr*ys^2*zt*dt*zr-2*dr*zs^2*yt*dt*yr
+dsdt:  -2*ds*xr^2*zt*dt*zs+2*ds*xr*zt*dt*zr*xs+2*ds*zr*xt*dt*xr*zs-2*ds*zr^2*xt*dt*xs+2*ds*yr*xt*dt*xr*ys-2*ds*yr^2*xt*dt*xs+2*ds*xr*yt*dt*yr*xs-2*ds*yr^2*zt*dt*zs+2*ds*yr*zt*dt*zr*ys+2*ds*zr*yt*dt*yr*zs-2*ds*zr^2*yt*dt*ys-2*ds*xr^2*yt*dt*ys
+
+
+
+
+
+
+
+
+dr2 =
+ 
+xs^2*yt^2+ys^2*xt^2-2*ys*zt*zs*yt-2*xs*zt*zs*xt+zs^2*yt^2+xs^2*zt^2+zs^2*xt^2+ys^2*zt^2-2*xs*yt*ys*xt
+ 
+ 
+ 
+ds2 =
+ 
+xr^2*yt^2+yr^2*xt^2+xr^2*zt^2+zr^2*xt^2-2*xr*zt*zr*xt-2*yr*zt*zr*yt-2*xr*yt*yr*xt+yr^2*zt^2+zr^2*yt^2
+ 
+ 
+ 
+dt2 =
+ 
+xr^2*ys^2+yr^2*xs^2-2*xr*zs*zr*xs+xr^2*zs^2+zr^2*xs^2-2*yr*zs*zr*ys-2*xr*ys*yr*xs+yr^2*zs^2+zr^2*ys^2
+ 
+ 
+ 
+drds =
+ 
+-zs*xt^2*zr+zs*xt*xr*zt-ys*xt^2*yr+ys*xt*xr*yt+xs*zt*zr*xt+xs*yt*yr*xt-xs*yt^2*xr-zs*yt^2*zr-xs*zt^2*xr-ys*zt^2*yr+ys*zt*zr*yt+zs*yt*yr*zt
+ 
+ 
+ 
+drdt =
+ 
+-zs^2*xt*xr+zs*xt*zr*xs-xs^2*zt*zr+ys*xt*yr*xs-ys^2*xt*xr-xs^2*yt*yr+xs*yt*xr*ys+xs*zt*xr*zs+zs*yt*zr*ys+ys*zt*yr*zs-ys^2*zt*zr-zs^2*yt*yr
+ 
+ 
+ 
+dsdt =
+ 
+-xr^2*zt*zs+xr*zt*zr*xs+zr*xt*xr*zs-zr^2*xt*xs+yr*xt*xr*ys-yr^2*xt*xs+xr*yt*yr*xs-yr^2*zt*zs+yr*zt*zr*ys+zr*yt*yr*zs-zr^2*yt*ys-xr^2*yt*ys
+ 
+
+
+ //  (ys*zt-zs*yt)*dr+(-yr*zt+zr*yt)*ds+(yr*zs-zr*ys)*dt
+// (-xs*zt+zs*xt)*dr+(xr*zt-zr*xt)*ds+(-xr*zs+zr*xs)*dt
+//  (xs*yt-ys*xt)*dr+(-xr*yt+yr*xt)*ds+(xr*ys-yr*xs)*dt
