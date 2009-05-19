@@ -1,0 +1,405 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
+		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
+		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
+		95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
+		95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */; };
+		B21BBC590CB2E45F0056D083 /* tet_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FC242850BE65C36003F9828 /* tet_basis.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B21BBC5A0CB2E4600056D083 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2063F0D0AE7D81F00D6577D /* intgrt.cpp */; };
+		B21BBC5B0CB2E4610056D083 /* intgrt2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1C57F0BF14B8D000E4F20 /* intgrt2d.cpp */; };
+		B21BBC5C0CB2E4610056D083 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */; };
+		B260A5080D3C1622001E15D6 /* proj2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1CA150BF8B213000E4F20 /* proj2d.cpp */; };
+		B260A5090D3C1623001E15D6 /* proj1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1CA190BF8B21D000E4F20 /* proj1d.cpp */; };
+		B260A50A0D3C1623001E15D6 /* ptvalues.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6E084C13780057FD8F /* ptvalues.cpp */; };
+		B260A50B0D3C162F001E15D6 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		B260A50C0D3C163A001E15D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
+		B260A5480D3D0D71001E15D6 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2063F0D0AE7D81F00D6577D /* intgrt.cpp */; };
+		B260A5490D3D0D72001E15D6 /* intgrt2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1C57F0BF14B8D000E4F20 /* intgrt2d.cpp */; };
+		B260A54A0D3D0D73001E15D6 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */; };
+		B260A54B0D3D0D73001E15D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
+		B260A54C0D3D0D74001E15D6 /* proj1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1CA190BF8B21D000E4F20 /* proj1d.cpp */; };
+		B260A54D0D3D0D75001E15D6 /* proj2d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2B1CA150BF8B213000E4F20 /* proj2d.cpp */; };
+		B260A54E0D3D0D76001E15D6 /* ptvalues.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6E084C13780057FD8F /* ptvalues.cpp */; };
+		B260A54F0D3D0D77001E15D6 /* outputstuff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */; };
+		B26FE2210B7D62E20070C569 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
+		B27150D20AF90B54002DC550 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
+		B27150D30AF90B54002DC550 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6F33E671086787710029F2D6 /* libtet_basis.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_basis.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FBD8A68084C13780057FD8F /* hpprobe.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = hpprobe.cpp; sourceTree = "<group>"; };
+		6FBD8A69084C13780057FD8F /* initialize.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = initialize.cpp; sourceTree = "<group>"; };
+		6FBD8A6C084C13780057FD8F /* proj.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = proj.cpp; sourceTree = "<group>"; };
+		6FBD8A6E084C13780057FD8F /* ptvalues.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptvalues.cpp; sourceTree = "<group>"; };
+		6FBD8A79084C13AF0057FD8F /* createlib */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.csh; path = createlib; sourceTree = "<group>"; };
+		6FBD8A7A084C13AF0057FD8F /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
+		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../../Codes/lib/libmyblas.a; sourceTree = "<group>"; };
+		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
+		6FC242850BE65C36003F9828 /* tet_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tet_basis.h; sourceTree = "<group>"; };
+		B2063F0D0AE7D81F00D6577D /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
+		B27150B90AF90B1E002DC550 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt1d.cpp; sourceTree = "<group>"; };
+		B2B1C57F0BF14B8D000E4F20 /* intgrt2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt2d.cpp; sourceTree = "<group>"; };
+		B2B1CA150BF8B213000E4F20 /* proj2d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proj2d.cpp; sourceTree = "<group>"; };
+		B2B1CA190BF8B21D000E4F20 /* proj1d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = proj1d.cpp; sourceTree = "<group>"; };
+		B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = outputstuff.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6F33E66F086787710029F2D6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B27150B70AF90B1E002DC550 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B27150D20AF90B54002DC550 /* libmyblas.a in Frameworks */,
+				B27150D30AF90B54002DC550 /* libblitz.a in Frameworks */,
+				95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* tri_basis */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				6FBD8A78084C139E0057FD8F /* Scripts */,
+				6FBD8A89084C14550057FD8F /* Libraries */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = tri_basis;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7796FE84155DC02AAC07 /* main.cpp */,
+				6FC242850BE65C36003F9828 /* tet_basis.h */,
+				6FBD8A68084C13780057FD8F /* hpprobe.cpp */,
+				6FBD8A69084C13780057FD8F /* initialize.cpp */,
+				B2063F0D0AE7D81F00D6577D /* intgrt.cpp */,
+				B2B1C57F0BF14B8D000E4F20 /* intgrt2d.cpp */,
+				B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */,
+				6FBD8A6C084C13780057FD8F /* proj.cpp */,
+				B2B1CA150BF8B213000E4F20 /* proj2d.cpp */,
+				B2B1CA190BF8B21D000E4F20 /* proj1d.cpp */,
+				6FBD8A6E084C13780057FD8F /* ptvalues.cpp */,
+				B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6F33E671086787710029F2D6 /* libtet_basis.a */,
+				B27150B90AF90B1E002DC550 /* main */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6FBD8A78084C139E0057FD8F /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				6FBD8A79084C13AF0057FD8F /* createlib */,
+				6FBD8A7A084C13AF0057FD8F /* makefile */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
+		6FBD8A89084C14550057FD8F /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				6FBD8A85084C14470057FD8F /* vecLib.framework */,
+				6FBD8A81084C14040057FD8F /* libmyblas.a */,
+				6FBD8A7F084C13F20057FD8F /* libblitz.a */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		6F33E66D086787710029F2D6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B21BBC590CB2E45F0056D083 /* tet_basis.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6F33E670086787710029F2D6 /* tet_basis */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "tet_basis" */;
+			buildPhases = (
+				6F33E66D086787710029F2D6 /* Headers */,
+				6F33E66E086787710029F2D6 /* Sources */,
+				6F33E66F086787710029F2D6 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tet_basis;
+			productName = tri_basis;
+			productReference = 6F33E671086787710029F2D6 /* libtet_basis.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		B27150B80AF90B1E002DC550 /* main */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B27150D90AF90B96002DC550 /* Build configuration list for PBXNativeTarget "main" */;
+			buildPhases = (
+				B27150B60AF90B1E002DC550 /* Sources */,
+				B27150B70AF90B1E002DC550 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = main;
+			productName = main;
+			productReference = B27150B90AF90B1E002DC550 /* main */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* tri_basis */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6F33E670086787710029F2D6 /* tet_basis */,
+				B27150B80AF90B1E002DC550 /* main */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6F33E66E086787710029F2D6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */,
+				6F33E678086787F40029F2D6 /* initialize.cpp in Sources */,
+				6F33E67B086787F40029F2D6 /* proj.cpp in Sources */,
+				B21BBC5A0CB2E4600056D083 /* intgrt.cpp in Sources */,
+				B21BBC5B0CB2E4610056D083 /* intgrt2d.cpp in Sources */,
+				B21BBC5C0CB2E4610056D083 /* intgrt1d.cpp in Sources */,
+				B260A5080D3C1622001E15D6 /* proj2d.cpp in Sources */,
+				B260A5090D3C1623001E15D6 /* proj1d.cpp in Sources */,
+				B260A50A0D3C1623001E15D6 /* ptvalues.cpp in Sources */,
+				95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B27150B60AF90B1E002DC550 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B26FE2210B7D62E20070C569 /* hpprobe.cpp in Sources */,
+				B260A50B0D3C162F001E15D6 /* main.cpp in Sources */,
+				B260A50C0D3C163A001E15D6 /* initialize.cpp in Sources */,
+				B260A5480D3D0D71001E15D6 /* intgrt.cpp in Sources */,
+				B260A5490D3D0D72001E15D6 /* intgrt2d.cpp in Sources */,
+				B260A54A0D3D0D73001E15D6 /* intgrt1d.cpp in Sources */,
+				B260A54B0D3D0D73001E15D6 /* proj.cpp in Sources */,
+				B260A54C0D3D0D74001E15D6 /* proj1d.cpp in Sources */,
+				B260A54D0D3D0D75001E15D6 /* proj2d.cpp in Sources */,
+				B260A54E0D3D0D76001E15D6 /* ptvalues.cpp in Sources */,
+				B260A54F0D3D0D77001E15D6 /* outputstuff.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6F33E673086787BF0029F2D6 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = NO;
+				DSTROOT = "/tmp/$(PROJECT_NAME).dst";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G4;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)/Codes/include",
+					"$(HOME)/Packages/include",
+				);
+				INSTALL_PATH = "$(HOME)/lib";
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = tet_basis;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		6F33E674086787BF0029F2D6 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G4;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = (
+					"$(HOME)/Codes/include",
+					"$(HOME)/Packages/include",
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-falign-loops=16",
+					"-funroll-loops",
+				);
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tet_basis;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		6FD8AD450864E338005A8B60 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		6FD8AD460864E338005A8B60 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+		B27150DA0AF90B96002DC550 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					BZ_DEBUG,
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(HOME)/Packages/lib",
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../include\" $(HOME)/Packages/include";
+				ZERO_LINK = YES;
+			};
+			name = Development;
+		};
+		B27150DB0AF90B96002DC550 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(HOME)/Packages/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../lib\"";
+				PREBINDING = NO;
+				PRODUCT_NAME = main;
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../include\" $(HOME)/Packages/include";
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6F33E672086787BF0029F2D6 /* Build configuration list for PBXNativeTarget "tet_basis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F33E673086787BF0029F2D6 /* Development */,
+				6F33E674086787BF0029F2D6 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FD8AD440864E338005A8B60 /* Build configuration list for PBXProject "tet_basis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD8AD450864E338005A8B60 /* Development */,
+				6FD8AD460864E338005A8B60 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		B27150D90AF90B96002DC550 /* Build configuration list for PBXNativeTarget "main" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B27150DA0AF90B96002DC550 /* Development */,
+				B27150DB0AF90B96002DC550 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
