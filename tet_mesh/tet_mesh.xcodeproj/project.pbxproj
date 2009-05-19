@@ -1,0 +1,1028 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		6F27980608B9FA49007BECA9 /* Documentation */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */;
+			buildPhases = (
+				6F27980508B9FA49007BECA9 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = Documentation;
+			productName = Documentation;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		6F14BE0C0FBA86FB006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0A0FBA86FB006DD167 /* copy.cpp */; };
+		6F14BE0E0FBA86FB006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0A0FBA86FB006DD167 /* copy.cpp */; };
+		6F14BE0F0FBA86FB006DD167 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */; };
+		6F14BE100FBA86FB006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0A0FBA86FB006DD167 /* copy.cpp */; };
+		6F14BE110FBA86FB006DD167 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */; };
+		6F14BE120FBA86FB006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0A0FBA86FB006DD167 /* copy.cpp */; };
+		6F14BE130FBA86FB006DD167 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */; };
+		6F14BE2C0FBAAA15006DD167 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */; };
+		6F2262C508673029001017D0 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6F2262C60867302A001017D0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
+		6F2262C908673035001017D0 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
+		6F2262E608673105001017D0 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
+		6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
+		6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC10B5E9BAF00FE5BCE /* libmetis.a */; };
+		6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC40B5E9BD300FE5BCE /* libmuparser.a */; };
+		6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F584BC40B5E9BD300FE5BCE /* libmuparser.a */; };
+		6F65646D0FAB452300428C3C /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646C0FAB452300428C3C /* libbinio.dylib */; };
+		6F65646E0FAB452400428C3C /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646C0FAB452300428C3C /* libbinio.dylib */; };
+		6F6564700FAB455200428C3C /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646F0FAB455200428C3C /* libspline.a */; };
+		6F6564710FAB455200428C3C /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F65646F0FAB455200428C3C /* libspline.a */; };
+		6F6564760FAB458A00428C3C /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564750FAB458A00428C3C /* libpth.a */; };
+		6F6564770FAB458A00428C3C /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564750FAB458A00428C3C /* libpth.a */; };
+		6F65647C0FAB459500428C3C /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564780FAB459500428C3C /* libmpi.dylib */; };
+		6F65647D0FAB459500428C3C /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6564790FAB459500428C3C /* libmpi_cxx.dylib */; };
+		6F6564C10FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
+		6F6564C20FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
+		6F6564C30FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
+		6F6564C40FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
+		6F6565540FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
+		6F6565550FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
+		6F6565560FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
+		6F6565570FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
+		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
+		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
+		6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; };
+		6FADD85F086EF36A00350FA2 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
+		6FADD862086EF36A00350FA2 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
+		6FB91AB70ACCB10300792B04 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB91AC00ACCB10300792B04 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
+		6FB91AC30ACCB10300792B04 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
+		6FB91AD60ACCB10300792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6FB91AE30ACCB1E100792B04 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; };
+		6FB91AEC0ACCB1E100792B04 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6FB91AED0ACCB1E100792B04 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
+		6FB91AF00ACCB1E100792B04 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
+		6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
+		6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
+		6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
+		6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F56D55C09EEE7F900C97501 /* libblitz.a */; };
+		6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
+		6FBD0E8D0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
+		6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
+		6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD0E8B0FB234BE00565502 /* connect.cpp */; };
+		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
+		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
+		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		B2152F680C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
+		B2152F690C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
+		B2152F6A0C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
+		B2152F6B0C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
+		B226FE2A0C6A63A300D6BB4A /* setupbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B226FE280C6A63A300D6BB4A /* setupbdry.cpp */; };
+		B226FE2C0C6A63A300D6BB4A /* setupbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B226FE280C6A63A300D6BB4A /* setupbdry.cpp */; };
+		B226FE2E0C6A63A300D6BB4A /* setupbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B226FE280C6A63A300D6BB4A /* setupbdry.cpp */; };
+		B226FE300C6A63A300D6BB4A /* setupbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B226FE280C6A63A300D6BB4A /* setupbdry.cpp */; };
+		B23E83F00CF231270027B187 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B23E83EF0CF231270027B187 /* findmatch.cpp */; };
+		B23E83F10CF231270027B187 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B23E83EF0CF231270027B187 /* findmatch.cpp */; };
+		B23E83F20CF231270027B187 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B23E83EF0CF231270027B187 /* findmatch.cpp */; };
+		B23E83F30CF231270027B187 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B23E83EF0CF231270027B187 /* findmatch.cpp */; };
+		B24116600C5E828000EA7B1A /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
+		B241177C0C5FBAF600EA7B1A /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
+		B24117800C5FBB0900EA7B1A /* tet_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = B241177F0C5FBB0900EA7B1A /* tet_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B24117810C5FBB0900EA7B1A /* tet_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = B241177F0C5FBB0900EA7B1A /* tet_boundary.h */; };
+		B24117820C5FBB0900EA7B1A /* tet_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = B241177F0C5FBB0900EA7B1A /* tet_boundary.h */; };
+		B24117830C5FBB0900EA7B1A /* tet_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = B241177F0C5FBB0900EA7B1A /* tet_boundary.h */; };
+		B24117DE0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */; };
+		B24117DF0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */; };
+		B24117E00C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */; };
+		B24117E10C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */; };
+		B24119860C623C2300EA7B1A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
+		B24119870C623C2300EA7B1A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
+		B24119880C623C2300EA7B1A /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
+		B2411AAA0C626D7600EA7B1A /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241165F0C5E828000EA7B1A /* setup.cpp */; };
+		B25713D20CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
+		B25713D40CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
+		B25713D50CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
+		B25C7C840C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
+		B25C7C860C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
+		B25C7C870C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
+		B25C7CA60C79E104005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
+		B2DF8B4F0CD0FA7B00E24F1E /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
+		B2DF8C380CD249B700E24F1E /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		07F2E94600974D3D80990B20 /* input.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = input.cpp; sourceTree = "<group>"; };
+		07F2E94800974D3D80990B20 /* output.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = output.cpp; sourceTree = "<group>"; };
+		07F2E95000974D3D80990B20 /* tet_mesh.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tet_mesh.h; sourceTree = "<group>"; };
+		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6F14BE0A0FBA86FB006DD167 /* copy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = copy.cpp; sourceTree = "<group>"; };
+		6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = refineby2.cpp; sourceTree = "<group>"; };
+		6F2262C008672FAE001017D0 /* libtet_mesh.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F56D55C09EEE7F900C97501 /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
+		6F584BC10B5E9BAF00FE5BCE /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
+		6F584BC40B5E9BD300FE5BCE /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
+		6F65646C0FAB452300428C3C /* libbinio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbinio.dylib; path = ../../Packages/lib/libbinio.dylib; sourceTree = SOURCE_ROOT; };
+		6F65646F0FAB455200428C3C /* libspline.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libspline.a; path = ../lib/libspline.a; sourceTree = SOURCE_ROOT; };
+		6F6564720FAB457C00428C3C /* libboost_thread-mt-1_34_1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libboost_thread-mt-1_34_1.dylib"; path = "../../Packages/lib/libboost_thread-mt-1_34_1.dylib"; sourceTree = SOURCE_ROOT; };
+		6F6564750FAB458A00428C3C /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
+		6F6564780FAB459500428C3C /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
+		6F6564790FAB459500428C3C /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
+		6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
+		6F6565530FACD24700428C3C /* tprims.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tprims.cpp; sourceTree = "<group>"; };
+		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
+		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../../../lib/libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FBD0E8B0FB234BE00565502 /* connect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = connect.cpp; sourceTree = "<group>"; };
+		6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparseargs.a; path = ../../Packages/lib/libparseargs.a; sourceTree = SOURCE_ROOT; };
+		6FC7DF0305B30C6E001FE736 /* tet_mesh */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2152F670C836C72001BE654 /* vertexcircle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexcircle.cpp; sourceTree = "<group>"; };
+		B21C0D9C0C20774400E7FBFC /* fangle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fangle.cpp; sourceTree = "<group>"; };
+		B21C0DE80C20865300E7FBFC /* facear.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = facear.cpp; sourceTree = "<group>"; };
+		B226FE280C6A63A300D6BB4A /* setupbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = setupbdry.cpp; sourceTree = "<group>"; };
+		B23E83EF0CF231270027B187 /* findmatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = findmatch.cpp; sourceTree = "<group>"; };
+		B241165F0C5E828000EA7B1A /* setup.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = setup.cpp; sourceTree = "<group>"; };
+		B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tet_boundary.cpp; sourceTree = "<group>"; };
+		B241177F0C5FBB0900EA7B1A /* tet_boundary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tet_boundary.h; sourceTree = "<group>"; };
+		B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewbdry.cpp; sourceTree = "<group>"; };
+		B24119840C623C2300EA7B1A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
+		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
+		B25C7C830C79CCB3005F82C5 /* vertexball.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexball.cpp; sourceTree = "<group>"; };
+		F556D7CC0226C8DC01990B20 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6F2262BE08672FAE001017D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AD70ACCB10300792B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B25713D50CEA55F200BAC009 /* libtri_mesh.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91B040ACCB1E100792B04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91B050ACCB1E100792B04 /* libinput_map.a in Frameworks */,
+				6FB91B070ACCB1E100792B04 /* libparseargs.a in Frameworks */,
+				6FB91B080ACCB1E100792B04 /* libquad.a in Frameworks */,
+				6FB91B090ACCB1E100792B04 /* libutil.a in Frameworks */,
+				6FB91B0A0ACCB1E100792B04 /* libblitz.a in Frameworks */,
+				6F584BC30B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
+				6F584BC60B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
+				B25713D40CEA55F200BAC009 /* libtri_mesh.a in Frameworks */,
+				6F65646E0FAB452400428C3C /* libbinio.dylib in Frameworks */,
+				6F6564710FAB455200428C3C /* libspline.a in Frameworks */,
+				6F6564770FAB458A00428C3C /* libpth.a in Frameworks */,
+				6F65647C0FAB459500428C3C /* libmpi.dylib in Frameworks */,
+				6F65647D0FAB459500428C3C /* libmpi_cxx.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FC7DEF705B30C6E001FE736 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */,
+				6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */,
+				6F8509B707A5383700343685 /* libquad.a in Frameworks */,
+				6F8509B307A5381400343685 /* libutil.a in Frameworks */,
+				6F56D55D09EEE7F900C97501 /* libblitz.a in Frameworks */,
+				6F584BC20B5E9BAF00FE5BCE /* libmetis.a in Frameworks */,
+				6F584BC50B5E9BD300FE5BCE /* libmuparser.a in Frameworks */,
+				B25713D20CEA55F200BAC009 /* libtri_mesh.a in Frameworks */,
+				6F65646D0FAB452300428C3C /* libbinio.dylib in Frameworks */,
+				6F6564700FAB455200428C3C /* libspline.a in Frameworks */,
+				6F6564760FAB458A00428C3C /* libpth.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				6F65646C0FAB452300428C3C /* libbinio.dylib */,
+				6F56D55C09EEE7F900C97501 /* libblitz.a */,
+				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
+				B25713D10CEA55F200BAC009 /* libtri_mesh.a */,
+				6F8509B607A5383700343685 /* libquad.a */,
+				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
+				6F65646F0FAB455200428C3C /* libspline.a */,
+				6F8509B207A5381400343685 /* libutil.a */,
+				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
+				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
+				6F6564720FAB457C00428C3C /* libboost_thread-mt-1_34_1.dylib */,
+				6F6564750FAB458A00428C3C /* libpth.a */,
+				6F6564780FAB459500428C3C /* libmpi.dylib */,
+				6F6564790FAB459500428C3C /* libmpi_cxx.dylib */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		08FB7794FE84155DC02AAC07 /* test2 */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* mesh */,
+				B24117780C5FBA6E00EA7B1A /* Boundaries */,
+				F556D7CB0226C8DC01990B20 /* Scripts */,
+				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = test2;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* mesh */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7796FE84155DC02AAC07 /* main.cpp */,
+				07F2E95000974D3D80990B20 /* tet_mesh.h */,
+				07F2E94600974D3D80990B20 /* input.cpp */,
+				07F2E94800974D3D80990B20 /* output.cpp */,
+				B23E83EF0CF231270027B187 /* findmatch.cpp */,
+				B241165F0C5E828000EA7B1A /* setup.cpp */,
+				6F14BE0A0FBA86FB006DD167 /* copy.cpp */,
+				6F14BE0B0FBA86FB006DD167 /* refineby2.cpp */,
+				6FBD0E8B0FB234BE00565502 /* connect.cpp */,
+				6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */,
+				B21C0D9C0C20774400E7FBFC /* fangle.cpp */,
+				B21C0DE80C20865300E7FBFC /* facear.cpp */,
+				6F6565530FACD24700428C3C /* tprims.cpp */,
+				B25C7C830C79CCB3005F82C5 /* vertexball.cpp */,
+				B24119840C623C2300EA7B1A /* test.cpp */,
+			);
+			name = mesh;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6F2262C008672FAE001017D0 /* libtet_mesh.a */,
+				6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */,
+				6FC7DF0305B30C6E001FE736 /* tet_mesh */,
+				6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B24117780C5FBA6E00EA7B1A /* Boundaries */ = {
+			isa = PBXGroup;
+			children = (
+				B241177F0C5FBB0900EA7B1A /* tet_boundary.h */,
+				B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */,
+				B226FE280C6A63A300D6BB4A /* setupbdry.cpp */,
+				B2152F670C836C72001BE654 /* vertexcircle.cpp */,
+				B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */,
+			);
+			name = Boundaries;
+			sourceTree = "<group>";
+		};
+		F556D7CB0226C8DC01990B20 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				F556D7CC0226C8DC01990B20 /* makefile */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		6F2262BC08672FAE001017D0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F2262C508673029001017D0 /* tet_mesh.h in Headers */,
+				B24117800C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AB60ACCB10300792B04 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AB70ACCB10300792B04 /* tet_mesh.h in Headers */,
+				B24117810C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AE20ACCB1E100792B04 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AE30ACCB1E100792B04 /* tet_mesh.h in Headers */,
+				B24117830C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FC7DED905B30C6E001FE736 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */,
+				B24117820C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6F2262BF08672FAE001017D0 /* libtet_mesh */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "libtet_mesh" */;
+			buildPhases = (
+				6F2262BC08672FAE001017D0 /* Headers */,
+				6F2262BD08672FAE001017D0 /* Sources */,
+				6F2262BE08672FAE001017D0 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libtet_mesh;
+			productName = lib;
+			productReference = 6F2262C008672FAE001017D0 /* libtet_mesh.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6FB91AB50ACCB10300792B04 /* libtet_mesh_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "libtet_mesh_mpi" */;
+			buildPhases = (
+				6FB91AB60ACCB10300792B04 /* Headers */,
+				6FB91ABF0ACCB10300792B04 /* Sources */,
+				6FB91AD70ACCB10300792B04 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libtet_mesh_mpi;
+			productName = lib;
+			productReference = 6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6FB91AE10ACCB1E100792B04 /* tet_mesh_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "tet_mesh_mpi" */;
+			buildPhases = (
+				6FB91AE20ACCB1E100792B04 /* Headers */,
+				6FB91AEB0ACCB1E100792B04 /* Sources */,
+				6FB91B040ACCB1E100792B04 /* Frameworks */,
+				6FB91B0E0ACCB1E100792B04 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tet_mesh_mpi;
+			productName = test2;
+			productReference = 6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */;
+			productType = "com.apple.product-type.tool";
+		};
+		6FC7DED805B30C6E001FE736 /* tet_mesh */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "tet_mesh" */;
+			buildPhases = (
+				6FC7DED905B30C6E001FE736 /* Headers */,
+				6FC7DEE205B30C6E001FE736 /* Sources */,
+				6FC7DEF705B30C6E001FE736 /* Frameworks */,
+				6FC7DF0005B30C6E001FE736 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tet_mesh;
+			productName = test2;
+			productReference = 6FC7DF0305B30C6E001FE736 /* tet_mesh */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* test2 */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6F2262BF08672FAE001017D0 /* libtet_mesh */,
+				6FB91AB50ACCB10300792B04 /* libtet_mesh_mpi */,
+				6FC7DED805B30C6E001FE736 /* tet_mesh */,
+				6FB91AE10ACCB1E100792B04 /* tet_mesh_mpi */,
+				6F27980608B9FA49007BECA9 /* Documentation */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXRezBuildPhase section */
+		6FB91B0E0ACCB1E100792B04 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FC7DF0005B30C6E001FE736 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		6F27980508B9FA49007BECA9 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# shell script goes here\n/Applications/Doxygen.app/Contents/Resources/doxygen Doxyfile\nexit 0";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6F2262BD08672FAE001017D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F2262C60867302A001017D0 /* input.cpp in Sources */,
+				6F2262C908673035001017D0 /* output.cpp in Sources */,
+				6FC0044C08CD33CF0030E073 /* main.cpp in Sources */,
+				B24116600C5E828000EA7B1A /* setup.cpp in Sources */,
+				B241177C0C5FBAF600EA7B1A /* tet_boundary.cpp in Sources */,
+				B24117DE0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
+				B24119870C623C2300EA7B1A /* test.cpp in Sources */,
+				B226FE2E0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
+				B25C7C840C79CCB3005F82C5 /* vertexball.cpp in Sources */,
+				B2152F690C836C72001BE654 /* vertexcircle.cpp in Sources */,
+				B23E83F10CF231270027B187 /* findmatch.cpp in Sources */,
+				6F6564C40FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
+				6F6565570FACD24700428C3C /* tprims.cpp in Sources */,
+				6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */,
+				6F14BE120FBA86FB006DD167 /* copy.cpp in Sources */,
+				6F14BE130FBA86FB006DD167 /* refineby2.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91ABF0ACCB10300792B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AC00ACCB10300792B04 /* input.cpp in Sources */,
+				6FB91AC30ACCB10300792B04 /* output.cpp in Sources */,
+				6FB91AD60ACCB10300792B04 /* main.cpp in Sources */,
+				B24117DF0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
+				B24119880C623C2300EA7B1A /* test.cpp in Sources */,
+				B226FE300C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
+				B25C7C870C79CCB3005F82C5 /* vertexball.cpp in Sources */,
+				B2152F6B0C836C72001BE654 /* vertexcircle.cpp in Sources */,
+				B23E83F20CF231270027B187 /* findmatch.cpp in Sources */,
+				6F6564C30FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
+				6F6565560FACD24700428C3C /* tprims.cpp in Sources */,
+				6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */,
+				6F14BE100FBA86FB006DD167 /* copy.cpp in Sources */,
+				6F14BE110FBA86FB006DD167 /* refineby2.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB91AEB0ACCB1E100792B04 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB91AEC0ACCB1E100792B04 /* main.cpp in Sources */,
+				6FB91AED0ACCB1E100792B04 /* input.cpp in Sources */,
+				6FB91AF00ACCB1E100792B04 /* output.cpp in Sources */,
+				B24117E10C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
+				B24119860C623C2300EA7B1A /* test.cpp in Sources */,
+				B226FE2C0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
+				B25C7C860C79CCB3005F82C5 /* vertexball.cpp in Sources */,
+				B2152F6A0C836C72001BE654 /* vertexcircle.cpp in Sources */,
+				B23E83F00CF231270027B187 /* findmatch.cpp in Sources */,
+				6F6564C20FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
+				6F6565550FACD24700428C3C /* tprims.cpp in Sources */,
+				6FBD0E8D0FB234BE00565502 /* connect.cpp in Sources */,
+				6F14BE0E0FBA86FB006DD167 /* copy.cpp in Sources */,
+				6F14BE0F0FBA86FB006DD167 /* refineby2.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FC7DEE205B30C6E001FE736 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F2262E608673105001017D0 /* main.cpp in Sources */,
+				6FADD85F086EF36A00350FA2 /* input.cpp in Sources */,
+				6FADD862086EF36A00350FA2 /* output.cpp in Sources */,
+				B24117E00C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
+				B2411AAA0C626D7600EA7B1A /* setup.cpp in Sources */,
+				B226FE2A0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
+				B25C7CA60C79E104005F82C5 /* vertexball.cpp in Sources */,
+				B2152F680C836C72001BE654 /* vertexcircle.cpp in Sources */,
+				B2DF8B4F0CD0FA7B00E24F1E /* tet_boundary.cpp in Sources */,
+				B2DF8C380CD249B700E24F1E /* test.cpp in Sources */,
+				B23E83F30CF231270027B187 /* findmatch.cpp in Sources */,
+				6F6564C10FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
+				6F6565540FACD24700428C3C /* tprims.cpp in Sources */,
+				6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */,
+				6F14BE0C0FBA86FB006DD167 /* copy.cpp in Sources */,
+				6F14BE2C0FBAAA15006DD167 /* refineby2.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		6F2262C208672FD1001017D0 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tet_mesh;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6F2262C308672FD1001017D0 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
+					METIS,
+					NO_MPISRC,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tet_mesh;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6F27981008B9FA5A007BECA9 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Documentation;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Development;
+		};
+		6F27981108B9FA5A007BECA9 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Documentation;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Deployment;
+		};
+		6FB91AD90ACCB10300792B04 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tet_mesh_mpi;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FB91ADA0ACCB10300792B04 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					MPISRC,
+					BZ_DEBUG,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tet_mesh_mpi;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6FB91B100ACCB1E100792B04 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = "$(HOME)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
+					METIS,
+					NO_MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/usr/share/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				PREBINDING = YES;
+				PRODUCT_NAME = tet_mesh_mpi;
+				SKIP_INSTALL = YES;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FB91B110ACCB1E100792B04 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = NO;
+				DSTROOT = /;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/usr/share/include,
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/usr/share/lib,
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				PREBINDING = YES;
+				PRODUCT_NAME = tet_mesh_mpi;
+				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6FD540630863870800D6A762 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DSTROOT = "$(HOME)";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
+					METIS,
+					NO_MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+				);
+				INSTALL_PATH = /bin;
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_3)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_4)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/muParser/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				PREBINDING = YES;
+				PRODUCT_NAME = tet_mesh;
+				SKIP_INSTALL = YES;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FD540640863870800D6A762 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = /;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+					/Library/DataTank/DTHeaders,
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					/Library/DataTank,
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				PREBINDING = YES;
+				PRODUCT_NAME = tet_mesh;
+				SKIP_INSTALL = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				ZERO_LINK = NO;
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Deployment;
+		};
+		6FD540670863870800D6A762 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Development;
+		};
+		6FD540680863870800D6A762 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Deployment;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6F2262C108672FD1001017D0 /* Build configuration list for PBXNativeTarget "libtet_mesh" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F2262C208672FD1001017D0 /* Development */,
+				6F2262C308672FD1001017D0 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6F27980F08B9FA5A007BECA9 /* Build configuration list for PBXAggregateTarget "Documentation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F27981008B9FA5A007BECA9 /* Development */,
+				6F27981108B9FA5A007BECA9 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FB91AD80ACCB10300792B04 /* Build configuration list for PBXNativeTarget "libtet_mesh_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB91AD90ACCB10300792B04 /* Development */,
+				6FB91ADA0ACCB10300792B04 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FB91B0F0ACCB1E100792B04 /* Build configuration list for PBXNativeTarget "tet_mesh_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB91B100ACCB1E100792B04 /* Development */,
+				6FB91B110ACCB1E100792B04 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FD540620863870800D6A762 /* Build configuration list for PBXNativeTarget "tet_mesh" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD540630863870800D6A762 /* Development */,
+				6FD540640863870800D6A762 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FD540660863870800D6A762 /* Build configuration list for PBXProject "tet_mesh" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FD540670863870800D6A762 /* Development */,
+				6FD540680863870800D6A762 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
