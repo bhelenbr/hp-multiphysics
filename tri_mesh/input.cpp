@@ -367,7 +367,8 @@ next1a:      continue;
 				svrtxbtemp.resize(10);
      
                 for(i=0;i<nebd;++i) {
-                    //fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); TEMPORARY
+                    // fscanf(grd,"%*[^0-9]%*d%*[^0-9]%d%*[^0-9]%*d%*[^0-9]%*d%*[^0-9]%d\n",&count,&temp); // FIXME
+                    count = 0;
                     
                     ebdry(i) = getnewedgeobject(temp,bdrymap);
                     ebdry(i)->alloc(static_cast<int>(count*grwfac));

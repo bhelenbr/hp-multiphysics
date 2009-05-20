@@ -225,7 +225,93 @@ class multigrid_interface {
         virtual boundary* getvbdry(int num) {return 0;}
         virtual boundary* getebdry(int num) {return 0;}
         virtual boundary* getfbdry(int num) {return 0;}
+        virtual void match_bdry_numbering() {}
         
         virtual ~multigrid_interface() {}
+};
+
+/** \brief Generic interface for a b.c. 
+ *
+ *  \ingroup boundary
+ *  Contains all the basic functions for parallel communications
+ */
+class boundary {
+    public:
+        int idnum;
+        std::string idprefix; 
+        std::string mytype;
+
+        boundary(int idin) : idnum(idin) {
+            char buffer[100];
+            std::string keyname;
+            sprintf(buffer,"%d",idnum);
+            idprefix = std::string(buffer);
+            mytype = "boundary";
+        }
+        virtual void init(input_map& bdrydata) {}
+        virtual void alloc(int n) {}
+        virtual void output(std::ostream& fout) {
+            fout << idprefix << "_type: " << mytype << std::endl;            
+        }
+        virtual void input(std::istream& fin) {}
+        
+        /* VIRTUAL FUNCTIONS FOR COMMUNICATION BOUNDARIES */
+        enum msg_type {flt_msg, int_msg};
+        enum groups {all,all_phased,partitions,manifolds};
+        enum comm_type {symmetric,master_slave,slave_master};
+        enum operation {average,sum,difference,maximum,minimum,replace};
+        union  {
+            bool bdum;
+            int idum;
+            FLT fdum;
+            msg_type mdum;
+        } dummy;
+        virtual bool is_comm() {return(false);}
+        virtual bool& is_frst() {return(dummy.bdum=true);}
+        virtual int& group() {return(dummy.idum=1);}
+        virtual bool in_group(int group) {return(false);}
+        virtual int local_cnnct(boundary *bin, int snd_tag, int rcv_tag) {return 1;}
+#ifdef MPISRC
+        virtual int mpi_cnnct(int proc_tgt, int snd_tag, int rcv_tag) {return 1;}
+#endif
+        virtual int& matchphase(boundary::groups group, int matchnum) {return(dummy.idum=0);}
+        virtual void resize_buffers(int size) {}
+        virtual void *psndbuf() {return(&dummy);}
+		virtual int& nmatches() {return(dummy.idum=0);}
+		virtual int& msg_phase(int grp, int match) {return(dummy.idum=0);}
+        virtual int& isndbuf(int indx) {return(dummy.idum);}
+        virtual FLT& fsndbuf(int indx) {return(dummy.fdum);}
+        virtual int& ircvbuf(int m,int indx) {return(dummy.idum);}
+        virtual FLT& frcvbuf(int m,int indx) {return(dummy.fdum);}
+        virtual int& sndsize() {return(dummy.idum=0);}
+        virtual boundary::msg_type& sndtype() {return(dummy.mdum);}
+        virtual void comm_prepare(boundary::groups group, int phase, comm_type type) {}
+        virtual void comm_exchange(boundary::groups group, int phase, comm_type type) {}
+        virtual int comm_wait(boundary::groups group, int phase, comm_type type) {return 1;}
+        virtual int comm_nowait(boundary::groups group, int phase, comm_type type) {return 1;}
+        virtual bool comm_finish(boundary::groups group, int phase, comm_type type, operation op) {return(false);}
+        virtual ~boundary() {}
+};
+
+
+/** \brief Interface & template to make a boundary type that can be used provide geometric information
+ *
+ */
+template<int ND> class vgeometry_interface {
+    public:
+        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {}
+        virtual ~vgeometry_interface() {}
+};
+
+template<int ND> class egeometry_interface {
+    public:
+        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
+        virtual ~egeometry_interface() {}
+};
+
+template<int ND> class fgeometry_interface {
+    public:
+        virtual void mvpttobdry(int elem, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
+        virtual ~fgeometry_interface() {}
 };
 #endif

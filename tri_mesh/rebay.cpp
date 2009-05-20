@@ -27,7 +27,7 @@ static std::string adapt_file;
 */
     
 void tri_mesh::rebay(FLT tolsize) {
-    int i,j,n,tind,tfind,p0,p1,p2,pnear,nsnew,ntnew,snum,intrcnt,err,ierr;
+    int i,j,n,tind,tfind,p0,p1,p2,pnear,nsnew,ntnew,snum,intrcnt,err;
     TinyVector<FLT,ND> xpt,dx,xmid,xdif,rn;
     TinyVector<FLT,3> wt;
     FLT maxvl;
@@ -74,6 +74,8 @@ void tri_mesh::rebay(FLT tolsize) {
             }
         }
         *gbl->log << "Didn't find triangle???" << std::endl;
+        tind = seg(gbl->nlst-1).info;
+        snum = 0;
                 
         TFOUND:
         
@@ -212,8 +214,8 @@ INSRT:
             continue;
         }
             
-        ierr = findtri(xpt,pnear,tfind);
-        if (ierr) {
+        bool found = findtri(xpt,pnear,tfind);
+        if (!found) {
 #ifdef VERBOSE
             *gbl->log << "#Warning: Trying to insert outside domain " << std::endl;
             *gbl->log << pnts(p0) << std::endl; 
@@ -294,7 +296,8 @@ INSRT:
 }
 
 void tri_mesh::bdry_rebay(FLT tolsize) {
-    int sind,p0,count,psifxpt,bseg,prev,sind_prev;
+    int sind,p0,count,psifxpt,prev,sind_prev;
+    int bseg = 0; // To avoid may be used uninitialized warning
     FLT psi;
     TinyVector<FLT,tri_mesh::ND> endpt;
     

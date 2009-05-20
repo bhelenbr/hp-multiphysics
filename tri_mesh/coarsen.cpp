@@ -301,7 +301,7 @@ void tri_mesh::coarsen3() {
             sind = tri(tind).seg(j);
             node = (1+tri(tind).sgn(j))/2;
             collapse(sind,node);
-            pnt(p0).info = -1;
+            pnt(i).info = -1;
             ++cnt;
         }
     }

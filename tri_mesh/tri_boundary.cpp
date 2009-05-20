@@ -10,7 +10,7 @@
 void vcomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int i,offset;
 
-    if (!((1<<grp)&groupmask)) return;
+    if (!in_group(grp)) return;
 
     sndsize()=end-bgn+1;
     sndtype()=flt_msg;
@@ -92,6 +92,8 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, 
     } 
     else {
         psiprev = -1.0;
+        sidlocprev = -1;  // FIXME: ENDPOINTS ARE NOT SEARCHED
+        normdistprev = 1.0e10; // This shouldn't be used
     }
     
     for(k=0;k<nseg;++k) {
@@ -285,9 +287,10 @@ void edge_bdry::reorder() {
 }
 
 void ecomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
-    int j,k,count,sind,offset;
+    int j,k,count,offset;
+    int sind = 0;  // To avoid may be used uninitialized warnings
     
-    if (!((1<<grp)&groupmask)) return;
+    if (!in_group(grp)) return;
 
     if (first) {
         count = 0;
@@ -321,7 +324,9 @@ void ecomm::vloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
 }
 
 void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
-    int j,k,count,offset,sind;
+    int j,k,count,offset;
+    int sind = 0;  // To avoid may be used uninitialized warnings
+
     
     bool reload = comm_finish(grp,phi,type,op);
     if (!reload) return;
@@ -361,7 +366,7 @@ void ecomm::vfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int j,k,count,sind,offset;
     
-    if (!((1<<grp)&groupmask)) return;
+    if (!in_group(grp)) return;
 
     if (first) {
         count = 0;

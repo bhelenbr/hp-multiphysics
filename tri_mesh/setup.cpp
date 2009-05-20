@@ -7,7 +7,8 @@
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TRI.PNT MUST BE COUNTERCLOCKWISE ORDERED */
 void tri_mesh::createseg(void) {
-    int i,j,tind,p1,p2,vout,temp,minp,maxp,order,sind,sindprev;
+    int i,j,tind,p1,p2,vout,temp,minp,maxp,order,sind;
+    int sindprev = 0; // To avoid may be used uninitialized warning
     
     for(i=0;i<npnt;++i)
         pnt(i).info = -1;

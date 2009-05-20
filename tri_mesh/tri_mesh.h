@@ -12,7 +12,6 @@
 #include <sstream>
 #include <blitz/array.h>
 #include "blocks.h"
-#include "boundary.h"
 
 #ifdef SINGLE
 #define FLT float
@@ -246,7 +245,7 @@ class tri_mesh : public multigrid_interface {
         int insert(const TinyVector<FLT,ND> &x);  /**< Inserts a point */
         int insert(int pnum, int tnum);  /**< Inserts point at pnum into tnum */
         void bdry_insert(int pnum, int sind, int endpt = 0); /**< Inserts a boundary point in segment sind if endpt is 0 makes left old and right new seg */
-        int findtri(TinyVector<FLT,ND> x, int pnear, int &tind); /**< Locate triangle containing point with initial seed of pnear */
+        bool findtri(TinyVector<FLT,ND> x, int pnear, int &tind); /**< Locate triangle containing point with initial seed of pnear */
         
         void cleanup_after_adapt(); /**< Clean up and move data etc.. */
         void dltpnt(int pind); /**< Removes leftover point references */
@@ -297,7 +296,7 @@ class tri_mesh : public multigrid_interface {
         FLT aspect(int tind) const;  /**< Calculates aspect ratio basied on perimeter to area ratio normalized so 1 is equilateral */
         FLT intri(int tind, const TinyVector<FLT,2> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
         TinyVector<FLT,3> tri_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
-		int findtri(TinyVector<FLT,ND> x,int &tnear);  /**< For finding point with initial guess for triangle */
+        bool findtri(TinyVector<FLT,ND> x,int &tnear);  /**< For finding point with initial guess for triangle */
         void getwgts(TinyVector<FLT,3> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */
 	
         //@}
@@ -327,6 +326,10 @@ class vrtx_bdry : public boundary {
             pnt = bin.pnt;
             ebdry = bin.ebdry;
         }
+        /* FIX ME: THESE AREN'T USED YET */
+        virtual void input(istream &fin,tri_mesh::filetype type = tri_mesh::grid) {}
+        virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {}
+                
         virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
         virtual void vfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
 
@@ -360,7 +363,9 @@ class edge_bdry : public boundary {
             return(new edge_bdry(*this,xin));
         }
         virtual void copy(const edge_bdry& bin);
-        virtual void input(istream &fin,tri_mesh::filetype type) {
+        
+        /* FIX ME: THESE AREN'T USED YET */
+        virtual void input(istream &fin,tri_mesh::filetype type = tri_mesh::grid) {
             if (type == tri_mesh::grid) {
                 for(int j=0;j<nseg;++j) {
                     fin.ignore(80,':');
@@ -369,6 +374,7 @@ class edge_bdry : public boundary {
                 }
             }
         }
+        virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {}
         
         /* ADDITIONAL STUFF FOR SIDES */
         virtual void swap(int s1, int s2);

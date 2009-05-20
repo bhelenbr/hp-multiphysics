@@ -68,7 +68,8 @@ void tri_mesh::copy(const tri_mesh& tgt) {
 void tri_mesh::append(const tri_mesh &z) {
 	int i,j,k,n,vrt,sind,flip;
     int nvrtxold, nsideold,ntriold;
-    int sind1,tind1,v1a,v1b;
+    int sind1,tind1,v1b;
+    int v1a = 0; // To avoid may be used uninitialized warning
     int sind2,tind2,v2a,v2b;
             
 	for(i=0;i<z.npnt;++i) {

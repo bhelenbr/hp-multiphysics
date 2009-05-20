@@ -10,7 +10,6 @@
 
 #include "blocks.h"
 #include "block.h"
-#include "boundary.h"
 #include <time.h>
 #include <input_map.h>
 #include <utilities.h>
@@ -582,7 +581,7 @@ void block::findmatch(int grdlvl) {
     /* LOOK FOR VERTEX MATCHES */
     for(int i=0;i<binfo[b1].nvcomm;++i) {
         bool first_found = false;
-        *gbl->log << "#\tvertex " << binfo[b1].vcomm[i].nvbd << " b1: " << binfo[b1].vcomm[i].idnum << std::endl;
+        *gbl->log << "#\tvertex " << binfo[b1].vcomm[i].nvbd << " idnum: " << binfo[b1].vcomm[i].idnum << std::endl;
         for(int b2=0;b2<nblock;++b2) {
             for(int j=0;j<binfo[b2].nvcomm;++j) {
                 if (binfo[b1].vcomm[i].idnum == binfo[b2].vcomm[j].idnum) {
@@ -621,7 +620,7 @@ void block::findmatch(int grdlvl) {
     /* LOOK FOR SIDE MATCHES */
     for(int i=0;i<binfo[b1].nscomm;++i) {
         bool first_found = false;
-        *gbl->log << "#\tside " << binfo[b1].ecomm[i].nebd << " b1: " << binfo[b1].ecomm[i].idnum << std::endl;
+        *gbl->log << "#\tside " << binfo[b1].ecomm[i].nebd << " idnum: " << binfo[b1].ecomm[i].idnum << std::endl;
         for(int b2=0;b2<nblock;++b2) {
             for(int j=0;j<binfo[b2].nscomm;++j) {
                 if (binfo[b1].ecomm[i].idnum == binfo[b2].ecomm[j].idnum) {
@@ -662,7 +661,7 @@ void block::findmatch(int grdlvl) {
     /* LOOK FOR FACE MATCHES */
     for(int i=0;i<binfo[b1].nfcomm;++i) {
         bool first_found = false;
-        *gbl->log << "#\tface " << binfo[b1].fcomm[i].nfbd << " b1: " << binfo[b1].fcomm[i].idnum << std::endl;
+        *gbl->log << "#\tface " << binfo[b1].fcomm[i].nfbd << " idnum: " << binfo[b1].fcomm[i].idnum << std::endl;
         for(int b2=0;b2<nblock;++b2) {
             for(int j=0;j<binfo[b2].nfcomm;++j) {
                 if (binfo[b1].fcomm[i].idnum == binfo[b2].fcomm[j].idnum) {
@@ -706,6 +705,10 @@ void block::findmatch(int grdlvl) {
                  
     /* DELETE DATA STRUCTURE */
     delete []binfo;
+    
+    
+    /* Now match internal numbering system of boundaries (if necessary) */
+    grd(grdlvl)->match_bdry_numbering();
 
     return;
 }

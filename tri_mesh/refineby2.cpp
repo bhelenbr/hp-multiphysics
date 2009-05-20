@@ -12,7 +12,8 @@
 #include <blitz/tinyvec-et.h>
 
 void tri_mesh::refineby2(const class tri_mesh& inmesh) {
-    int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber,ierr;
+    int i,j,n,sind,tind,p0,p1,count,pnear,err,initialsidenumber;
+    bool found;
     TinyVector<FLT,ND> xpt;
     
     /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
@@ -48,8 +49,8 @@ void tri_mesh::refineby2(const class tri_mesh& inmesh) {
     for(i=npnt;i<count;++i) { 
         qtree.addpt(npnt);
         qtree.nearpt(npnt,pnear);
-        ierr = findtri(pnts(npnt),pnear,tind);
-        assert(!ierr);
+        found = findtri(pnts(npnt),pnear,tind);
+        assert(found);
         err = insert(npnt,tind);
         ++npnt;
     }

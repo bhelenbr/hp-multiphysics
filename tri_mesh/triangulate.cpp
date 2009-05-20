@@ -61,16 +61,17 @@ void tri_mesh::triangulate(int nsd) {
             minp = v(1);
             maxp = v(0);
         }
-        sind1 = pnt(minp).info;
-        while (sind1 >= 0) {
-            sindprev = sind1;
-            sind1 = seg(sind1).info;
-        }
         seg(sind).info = -1;
-        if (pnt(minp).info < 0)
+        sind1 = pnt(minp).info;
+        if (sind1 < 0)
             pnt(minp).info = sind;
-        else 
+        else {
+            do {
+                sindprev = sind1;
+                sind1 = seg(sind1).info;
+            } while (sind1 >= 0);
             seg(sindprev).info = sind;
+         }
     }
     
     bgn = 0;
@@ -93,6 +94,7 @@ void tri_mesh::triangulate(int nsd) {
                 xmid(n) = 0.5*(pnts(v(1))(n) -pnts(v(0))(n));
             }
             hmin = 1.0e99;
+            ngood = 0;
             
             /* FIND NODES WHICH MAKE POSITIVE TRIANGLE WITH SIDE */
             for(i=0;i<nv;++i) {
@@ -257,7 +259,8 @@ vtry_failed:continue;
 
 void tri_mesh::addtri(int p0,int p1, int p2, int sind, int dir) {
     int i,j,k,end,sind1,tind;
-    int minp,maxp,order,sindprev,temp;
+    int minp,maxp,order,temp;
+    int sindprev = 0; // To avoid may be used uninitialized warning
         
     /* ADD NEW TRIANGLE */
     tri(ntri).pnt(0) = p0;

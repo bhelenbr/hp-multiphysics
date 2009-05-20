@@ -14,7 +14,7 @@
 #include <stdlib.h>
 
 int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
-    int n,tind,pnear,err,ierr;
+    int n,tind,pnear,err;
     
     for(n=0;n<ND;++n)
         pnts(npnt)(n) = x(n);
@@ -23,8 +23,8 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
     qtree.nearpt(npnt,pnear);
 
     /* FIND TRIANGLE CONTAINING POINT */        
-    ierr = findtri(x,pnear,tind);
-    if (ierr < 0) {
+    bool isfound = findtri(x,pnear,tind);
+    if (!isfound) {
         std::cerr << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
         std::cerr << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
         output("error");
@@ -454,13 +454,13 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
     return;
 }
 
-int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
+bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
     int i,j,vn,dir,stoptri,tin;
     int ntdel;
     int tclose,nsurround;
     FLT minclosest;
     int p0,p1,p2;
-	int ierr = 0;
+	bool found = true;
     FLT dx0,dy0,dx1,dy1,dx2,dy2;
     TinyVector<FLT,3> a;
     
@@ -563,7 +563,7 @@ int tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 	
     intri(tclose,x);
     tind = tclose;
-	ierr = 1;
+	found = false;
 	
 FOUND:
     /* RESET gbl->intwkW1 TO -1 */
@@ -571,10 +571,10 @@ FOUND:
         CLRSRCH(gbl->intwk(gbl->i2wk(i)));
     }
 	
-    return(ierr);
+    return(found);
 }
 
-int tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
+bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
     int i,j,tin;
     int ntdel;
     int tclose;
@@ -582,7 +582,7 @@ int tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
     int p0,p1,p2;
     FLT dx0,dy0,dx1,dy1,dx2,dy2;
     TinyVector<FLT,3> a;
-	int ierr = 0;
+	bool found = true;
 	
     ntdel = 0;
 	if (intri(tind,x) < area(tind)*10.*EPSILON) return(0);
@@ -646,7 +646,7 @@ int tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 	
     intri(tclose,x);
     tind = tclose;
-	ierr = 1;
+	found = false;
 	
 FOUND2:
     /* RESET gbl->intwkW1 TO -1 */
@@ -654,7 +654,7 @@ FOUND2:
         CLRSRCH(gbl->intwk(gbl->i2wk(i)));
     }
 	
-    return(ierr);
+    return(found);
 }
 
 

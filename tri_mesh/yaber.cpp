@@ -73,6 +73,7 @@ void tri_mesh::yaber(FLT tolsize) {
         
         /* FIND SIDE ON TRIANGLE WITH LARGEST TARGET TO LENGTH RATIO */
         minvl = 0.0;
+        sind1 = -1;
         for(j=0;j<3;++j) {
             sind = tri(tind).seg(j);
             if (seg(sind).tri(1) < 0) {
@@ -92,7 +93,10 @@ void tri_mesh::yaber(FLT tolsize) {
                 minvl =sratio;
             }
         }
-
+        if (sind1 < 0) {
+            *gbl->log << "Trying to coarsen triangle with all three sides on boundaries\n";
+            continue;
+        }
         sind = sind1;
 
         /* REMOVE TRIANGLES THAT WILL BE DELETED */

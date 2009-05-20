@@ -2,11 +2,13 @@
 #define _tri_boundary_h_
 
 #include "tri_mesh.h"
+#include "boundary.h"
 #include <iostream>
 #include <input_map.h>
 #include <string>
 #include <sstream>
 #include <fstream>
+
 
 /** \brief Specialization for a communiation vertex 
  *
@@ -163,29 +165,10 @@ template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {
         }
 };
 
-
-/** \brief Interface & template to make a boundary that can be coupled to some other geometry object after tstep = 0
- *
- * \ingroup boundary
- * geometry in class is for initial condition, then
- * Physics object must provide geometry
- * BASE is the boundary object 
- */
-template<int ND> class vgeometry_interface {
-    public:
-        virtual void mvpttobdry(TinyVector<FLT,ND> &pt) {}
-        virtual ~vgeometry_interface() {}
-};
-
+/* Boundary objects that redirect to a physics class for obtaining geoemtry information */
 class vcoupled_physics_ptr {
     public:
         vgeometry_interface<tri_mesh::ND> *physics;
-};
-
-template<int ND> class egeometry_interface {
-    public:
-        virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
-        virtual ~egeometry_interface() {}
 };
 
 class ecoupled_physics_ptr {
@@ -193,18 +176,12 @@ class ecoupled_physics_ptr {
         egeometry_interface<tri_mesh::ND> *physics;
 };
 
-template<int ND> class fgeometry_interface {
-    public:
-        virtual void mvpttobdry(int tri, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
-        virtual ~fgeometry_interface() {}
-};
-
 class fcoupled_physics_ptr {
     public:
         fgeometry_interface<tri_mesh::ND> *physics;
 };
 
-
+/* Class which uses geometry information for tstep < 0, then redirects to a physics class */
 template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, public BASE {
   public: 
         ecoupled_physics(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}

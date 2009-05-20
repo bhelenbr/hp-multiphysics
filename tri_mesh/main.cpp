@@ -25,8 +25,7 @@ static GBool Coarsen_Marks = gFalse;
 static GBool Symmetrize = gFalse;
 static GBool Cut = gFalse;
 static GBool Vlngth = gFalse;
-GBool printHelp = gFalse;
-
+GBool printHelp = gFalse;   
 
 static ArgDesc argDesc[] = {
   {"-g",        argFlag,        &Generate,      0,
