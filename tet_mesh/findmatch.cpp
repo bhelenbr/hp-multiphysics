@@ -345,7 +345,7 @@ void tet_mesh::create_unique_numbering() {
             if (!ebdry(i)->is_comm()) continue;
             
             for (int j=0;j<ebdry(i)->nseg;++j) {
-                sind = ebdry(i)->seg(j);
+                sind = ebdry(i)->seg(j).gindx;
                 pnt0 = seg(sind).pnt(0);
                 ebdry(i)->isndbuf(j) = pnt(pnt0).info;
             }
@@ -405,7 +405,7 @@ void tet_mesh::create_unique_numbering() {
             if (!ebdry(i)->is_comm()) continue;
             
             for (int j=0;j<ebdry(i)->nseg;++j) {
-                sind = ebdry(i)->seg(j);
+                sind = ebdry(i)->seg(j).gindx;
                 pnt0 = seg(sind).pnt(0);
                 pnt(pnt0).info = ebdry(i)->isndbuf(j);
             }
@@ -439,13 +439,42 @@ void tet_mesh::match_bdry_numbering() {
     /* FINAL PART OF SENDING */
     for(int i=0;i<nfbd;++i)
         fbdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
+    
+    /* FINAL PART OF SENDING */
+    for(int i=0;i<nfbd;++i)
+        fbdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
 
     /* Slave receives vertex positions & matches vertex numbering */
     for(int i=0;i<nfbd;++i)
         fbdry(i)->match_numbering(1);
-     
-    /* Reorient tets based on global numbering system */
+
+    /* Create global numbering system */
     create_unique_numbering();
+	 
+	 /* Reorder Side boundaries so direction is the same */
+	 for(int i=0;i<nebd;++i) 
+		ebdry(i)->match_numbering(1);
+
+    /* FIRST PART OF SENDING, POST ALL RECEIVES */
+    for(int i=0;i<nebd;++i)
+        ebdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
+                        
+    /* SECOND PART */
+	 for(int i=0;i<nebd;++i) 
+        ebdry(i)->comm_exchange(boundary::all,0,boundary::master_slave);
+  
+    /* FINAL PART OF SENDING */
+    for(int i=0;i<nebd;++i)
+        ebdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
+    
+    /* FINAL PART OF SENDING */
+    for(int i=0;i<nebd;++i)
+        ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
+
+	 for(int i=0;i<nebd;++i) 
+		ebdry(i)->match_numbering(2);		  
+ 
+	 /* Redefine tets based on global numbering system */
     feedinvertexinfo();
     createedgeinfo();
     createfaceinfo();
@@ -476,14 +505,64 @@ void tet_mesh::match_bdry_numbering() {
 
     for(int i = 0; i < nfbd; ++i){
         if (!fbdry(i)->is_frst() && fbdry(i)->is_comm()) {
-            fbdry(i)->createsideinfo(); 
+            fbdry(i)->createtdstri(); 
             fbdry(i)->createttri();
             fbdry(i)->cnt_nbor();
             fbdry(i)->createvtri();
         }
     }  
     
+#ifdef TEST_MATCH
+    for (int i=0;i<nfbd;++i) {
+        if (!fbdry(i)->is_comm()) continue;
+        
+        *gbl->log << "Reordered pnts\n";
+        for (int j=0;j<fbdry(i)->npnt;++j) {
+            *gbl->log << pnts(fbdry(i)->pnt(j).gindx) << std::endl;
+        }
+    
+        if (fbdry(i)->is_frst()) {
+            *gbl->log << "Reordered Side definitions\n";
+            for (int j=0;j<fbdry(i)->nseg;++j) {
+                *gbl->log << fbdry(i)->seg(j).pnt(0) << ' ' << fbdry(i)->seg(j).pnt(1) << std::endl;
+                *gbl->log << fbdry(i)->seg(j).tri(0) << ' ' << fbdry(i)->seg(j).tri(1) << std::endl;
+                *gbl->log << pnts(seg(fbdry(i)->seg(j).gindx).pnt(0)) << ' ' << pnts(seg(fbdry(i)->seg(j).gindx).pnt(0)) << std::endl;
+            }
+            
+            
+            *gbl->log << "Reordered Tri definitions\n";
+            for (int j=0;j<fbdry(i)->ntri;++j) {
+                *gbl->log << fbdry(i)->tri(j).pnt(0) << ' ' << fbdry(i)->tri(j).pnt(1) << ' ' << fbdry(i)->tri(j).pnt(2) << std::endl;
+                *gbl->log << fbdry(i)->tri(j).seg(0) << ' ' << fbdry(i)->tri(j).seg(1) << ' ' << fbdry(i)->tri(j).seg(2) << std::endl;
+                *gbl->log << fbdry(i)->tri(j).tri(0) << ' ' << fbdry(i)->tri(j).tri(1) << ' ' << fbdry(i)->tri(j).tri(2) << std::endl;
+                *gbl->log << fbdry(i)->tri(j).sgn(0) << ' ' << fbdry(i)->tri(j).sgn(1) << ' ' << fbdry(i)->tri(j).sgn(2) << std::endl;
+                
+                *gbl->log << pnts(tri(fbdry(i)->tri(j).gindx).pnt(0)) << ' ' << pnts(tri(fbdry(i)->tri(j).gindx).pnt(1)) << ' ' << pnts(tri(fbdry(i)->tri(j).gindx).pnt(2)) << std::endl;
+            }   
+        }
+        else {
+            *gbl->log << "Reordered Side definitions\n";
+            for (int j=0;j<fbdry(i)->nseg;++j) {
+                *gbl->log << fbdry(i)->seg(j).pnt(0) << ' ' << fbdry(i)->seg(j).pnt(1) << std::endl;
+                *gbl->log << fbdry(i)->seg(j).tri(1) << ' ' << fbdry(i)->seg(j).tri(0) << std::endl;
+                *gbl->log << pnts(seg(fbdry(i)->seg(j).gindx).pnt(0)) << ' ' << pnts(seg(fbdry(i)->seg(j).gindx).pnt(0)) << std::endl;
+            }
+            
+            *gbl->log << "Reordered Tri definitions\n";
+            for (int j=0;j<fbdry(i)->ntri;++j) {
+                *gbl->log << fbdry(i)->tri(j).pnt(0) << ' ' << fbdry(i)->tri(j).pnt(2) << ' ' << fbdry(i)->tri(j).pnt(1) << std::endl;
+                *gbl->log << fbdry(i)->tri(j).seg(0) << ' ' << fbdry(i)->tri(j).seg(2) << ' ' << fbdry(i)->tri(j).seg(1) << std::endl;
+                *gbl->log << fbdry(i)->tri(j).tri(0) << ' ' << fbdry(i)->tri(j).tri(2) << ' ' << fbdry(i)->tri(j).tri(1) << std::endl;
+                *gbl->log << -fbdry(i)->tri(j).sgn(0) << ' ' << -fbdry(i)->tri(j).sgn(2) << ' ' << -fbdry(i)->tri(j).sgn(1) << std::endl;
+                
+                *gbl->log << pnts(tri(fbdry(i)->tri(j).gindx).pnt(0)) << ' ' << pnts(tri(fbdry(i)->tri(j).gindx).pnt(2)) << ' ' << pnts(tri(fbdry(i)->tri(j).gindx).pnt(1)) << std::endl;
+            }   
+        }
+    }
+#endif
+
     setinfo();
+    
 }
 
 

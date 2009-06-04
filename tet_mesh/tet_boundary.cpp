@@ -50,10 +50,6 @@ void vcomm::pfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 void edge_bdry::alloc(int n) {
     maxseg = n;
     seg.resize(Range(-1,n));
-    prev.resize(Range(-1,n));
-    next.resize(Range(-1,n));
-    prev = 0;
-    next = 0;
 }
       
 void edge_bdry::copy(const edge_bdry& bin) {
@@ -76,7 +72,7 @@ void edge_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt) 
     int n;
     
     for (n=0;n<tet_mesh::ND;++n)
-        pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(seg(indx)).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(seg(indx)).pnt(1))(n));
+        pt(n) = 0.5*((1. -psi)*x.pnts(x.seg(seg(indx).gindx).pnt(0))(n) +(1.+psi)*x.pnts(x.seg(seg(indx).gindx).pnt(1))(n));
     
     return;
 }
@@ -87,9 +83,9 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, 
     FLT psiprev,normdistprev;
     FLT mindist = 1.0e32;
         
-    if (x.seg(seg(0)).pnt(0) == x.seg(seg(nseg-1)).pnt(1)) {
+    if (x.seg(seg(0).gindx).pnt(0) == x.seg(seg(nseg-1).gindx).pnt(1)) {
         /* BOUNDARY IS A LOOP */
-        sind = seg(nseg-1);
+        sind = seg(nseg-1).gindx;
         p0 = x.seg(sind).pnt(0);
         p1 = x.seg(sind).pnt(1);
         dx = x.pnts(p1)(0) - x.pnts(p0)(0);
@@ -107,7 +103,7 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, 
     }
     
     for(k=0;k<nseg;++k) {
-        sind = seg(k);
+        sind = seg(k).gindx;
         p0 = x.seg(sind).pnt(0);
         p1 = x.seg(sind).pnt(1);
         dx = x.pnts(p1)(0) - x.pnts(p0)(0);
@@ -153,9 +149,9 @@ void edge_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
     FLT psiloc;
         
     for(k=1;k<nseg;++k) {
-        p0 = x.seg(seg(k)).pnt(0);
+        p0 = x.seg(seg(k).gindx).pnt(0);
         tgt.ebdry(bnum)->findbdrypt(x.pnts(p0), sidloc, psiloc);
-        sind = tgt.ebdry(bnum)->seg(sidloc);
+        sind = tgt.ebdry(bnum)->seg(sidloc).gindx;
         tind = tgt.seg(sind).tet;                            
         cnnct(p0).tet = tind;
         for (j=0;j<3;++j) 
@@ -171,363 +167,283 @@ void edge_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 
 /* SWAP ELEMENTS IN LIST */
 void edge_bdry::swap(int s1, int s2) {
-    int ind;
+    segstruct ind;
         
+	 if (s1 == s2) return;
+	 
     /* FIXME NOT SURE HOW TO SWAP S VALUES */    
     ind = seg(s1);
     seg(s1) = seg(s2);
     seg(s2) = ind;
     
     /* PREV/NEXT IMPLEMENTATION */
-    ind = prev(s1);
-    prev(s1) = prev(s2);
-    prev(s2) = ind;
-    
-    ind = next(s1);
-    next(s1) = next(s2);
-    next(s2) = ind;
-    
-    int prev1 = prev(s1);
-    int next1 = next(s1);
-    int prev2 = prev(s2);
-    int next2 = next(s2);
+    int prev1 = seg(s1).prev;
+    int next1 = seg(s1).next;
+    int prev2 = seg(s2).prev;
+    int next2 = seg(s2).next;
     
     if (prev1 == s1) prev1 = s2;
     if (next1 == s1) next1 = s2;
     if (prev2 == s2) prev2 = s1;
     if (next2 == s2) next2 = s1;
     
-    next(prev1) = s1;
-    prev(next1) = s1;
-    
-    next(prev2) = s2;
-    prev(next2) = s2;
+    seg(prev1).next = s1;	 
+    seg(next1).prev = s1;    
+	 
+    seg(prev2).next = s2;
+    seg(next2).prev = s2;
 
     return;
 }
 
+void edge_bdry::setup_next_prev() {
+    int i,next,prev,sind,sind2;
 
-/* REORDERS BOUNDARIES TO BE SEQUENTIAL */
-/* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
-void edge_bdry::reorder() {
-    int i,count,total,sind,minp,first;
-
-    total = nseg;
-    
     /* DON'T ASSUME wk INITIALIZED TO -1 */
     for(i=0;i<nseg;++i) {
-        sind = seg(i);
+        sind = seg(i).gindx;
+		  seg(i).prev = -1;
+		  seg(i).next = -1;
         x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
-        x.gbl->i2wk(x.seg(sind).pnt(1)) = -1;
+		  x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
     }
     
-    /* STORE SIDE INDICES BY VERTEX NUMBER */
+    /* FILL IN NEXT/PREV DATA */
     for(i=0; i < nseg; ++i) {
-        sind = seg(i);
-        x.gbl->i1wk(x.seg(sind).pnt(1)) = i;
-        x.gbl->i2wk(x.seg(sind).pnt(0)) = i;
+        sind = seg(i).gindx;
+		  int v0 = x.seg(sind).pnt(0);
+		  if (x.gbl->i1wk(v0) == -1) {
+			   x.gbl->i1wk(v0) = i;
+		  }
+		  else {
+		     /* found match */
+			  prev = x.gbl->i1wk(v0);
+			  seg(i).prev = prev;
+			  sind2 = seg(prev).gindx;
+			  if (x.seg(sind2).pnt(0) == v0)
+			     seg(prev).prev = i;
+			  else
+			     seg(prev).next = i;
+		  }
+
+		  int v1 = x.seg(sind).pnt(1);
+		  if (x.gbl->i1wk(v1) == -1) {
+			   x.gbl->i1wk(v1) = i;
+		  }
+		  else {
+		     /* found match */
+			  next = x.gbl->i1wk(v1);
+			  seg(i).next = next;
+			  sind2 = seg(next).gindx;
+			  if (x.seg(sind2).pnt(1) == v1)
+			     seg(next).next = i;
+			  else
+			     seg(next).prev = i;
+		  }
+	 }
+	 
+	 /* RESET gbl->i1wk TO -1 */
+    for(i=0; i <nseg; ++i) {
+        sind = seg(i).gindx;
+        x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
+		  x.gbl->i1wk(x.seg(sind).pnt(0)) = -1;
     }
+	return;
+}
+
+
+/* REORDERS BOUNDARIES TO BE SEQUENTIAL & REORIENTS EDGES TO ALL BE ALIGNED IN THE SAME DIRECTION */
+/* USES gbl->i1wk & gbl->i2wk AS WORK ARRAYS */
+void edge_bdry::reorder() {
+    int i,count,next,sind,first;
 
     /* FIND FIRST SIDE */    
     first = -1;
     for(i=0;i<nseg;++i) {
-        sind = seg(i);
-        if (x.gbl->i1wk(x.seg(sind).pnt(0)) == -1) {
+        if (seg(i).prev < 0 || seg(i).next < 0) {
             first = i;
             break;
         }
     }
+	 
+	 if (first < 0) {
+		 /* EDGE LOOP */
+		 first = 0;
+	 }
+	 else {
+	    if (seg(first).prev != -1) {
+		    /* Reverse orientation of first side */
+			 seg(first).next = seg(first).prev;
+			 seg(first).prev = -1;
+			 sind = seg(first).gindx;
+			 int v0 = x.seg(sind).pnt(0);
+			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+			 x.seg(sind).pnt(1) = v0;
+		 }
+	 }
+	 
+	 /* First swap directions, then reorder */
+	 count = 0;
+	 int indx = first;
+	 while(count < nseg && (next = seg(indx).next) > -1) {
+		 if (seg(next).prev != indx) {
+		    /* Reverse orientation side */
+			 seg(next).next = seg(next).prev;
+			 seg(next).prev = indx;
+			 sind = seg(next).gindx;
+			 int v0 = x.seg(sind).pnt(0);
+			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+			 x.seg(sind).pnt(1) = v0;
+		 }
+		 ++count;
+		 indx = next;
+	}
+	 
+	/* Now reorder */
+	count = 0;
+	indx = first;
+	do {
+		swap(count++,indx);
+	} while (count < nseg && (indx = seg(count-1).next) > -1);    
     
-    /* SPECIAL CONSTRAINT IF LOOP */
-    /* THIS IS TO ELIMINATE ANY INDEFINITENESS ABOUT SIDE ORDERING FOR LOOP */
-    if (first < 0) {
-        minp = x.npnt;
-        for(i=0;i<nseg;++i) {
-            sind = seg(i);
-            if (x.seg(sind).pnt(0) < minp) {
-                first = i;
-                minp = x.seg(sind).pnt(0);
-            }
-        }
-    }
-    
-    /* SWAP FIRST SIDE */
-    count = 0;
-    swap(count,first);
-    x.gbl->i1wk(x.seg(seg(first)).pnt(1)) = first;
-    x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
-    x.gbl->i1wk(x.seg(seg(count)).pnt(1)) = count;
-    x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = -1;  // TO MAKE SURE LOOP STOPS
-
-    /* REORDER LIST */
-    while ((first = x.gbl->i2wk(x.seg(seg(count++)).pnt(1))) >= 0) {
-        swap(count,first);
-        x.gbl->i1wk(x.seg(seg(first)).pnt(1)) = first;
-        x.gbl->i2wk(x.seg(seg(first)).pnt(0)) = first;
-        x.gbl->i1wk(x.seg(seg(count)).pnt(1)) = count;
-        x.gbl->i2wk(x.seg(seg(count)).pnt(0)) = count;
-    }
-    
-    /* RESET gbl->i1wk TO -1 */
-    for(i=0; i <total; ++i) {
-        sind = seg(i);
-        x.gbl->i1wk(x.seg(sind).pnt(1)) = -1;
-    }
-    
-    if (count < total) {
+	 if (count < nseg) {
         ++x.nebd;
         x.ebdry.resizeAndPreserve(x.nebd);
         x.ebdry(x.nebd-1) = create(x);
         x.ebdry(x.nebd-1)->copy(*this);
-        nseg = count;
-
-        for(i=0;i<total-nseg;++i)
-            x.ebdry(x.nebd-1)->swap(i,i+nseg);
-        x.ebdry(x.nebd-1)->nseg = total-nseg;
+        for(i=0;i<nseg-count;++i)
+            x.ebdry(x.nebd-1)->swap(i,i+count);
+        x.ebdry(x.nebd-1)->nseg = nseg -count;
         *x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
-    }
-    
-    for (i=0;i<nseg;++i) {
-        prev(i) = i-1;
-        next(i) = i+1;
-    }
-    next(nseg-1) = -1;
+		  nseg = count;
+	 }
     
     return;
 }
 
+void ecomm::match_numbering(int step) {
+	int sind;
+	switch(step) {
+		case 1: {
+			if (is_frst()) {
+				sind = seg(0).gindx;
+				isndbuf(0) = x.pnt(x.seg(sind).pnt(0)).info;
+				isndbuf(1) = x.pnt(x.seg(sind).pnt(1)).info;
+			}
+			sndsize() = 2;
+			sndtype() = int_msg;
+			break;
+		}
+		case 2: {
+			if (is_frst()) return;
+			
+			sind = seg(0).gindx;
+			if (isndbuf(0) == x.pnt(x.seg(sind).pnt(0)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(1)).info) {
+				return;
+			}
+				
+			*x.gbl->log << "Reversing edge: " << idprefix << " This part of code not tested\n";
+			
+			/* EDGE IS ORIENTED BACKWARDS FROM MASTER OR IS MISALIGNED LOOP OR BOTH */
+			sind = seg(nseg-1).gindx;
+			if (isndbuf(0) == x.pnt(x.seg(sind).pnt(1)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(0)).info) {
+				/* just backwards, swap first & last, then reorder */
+				swap(0,nseg-1);
+				reorder();
+				return;
+			}
+			
+			/* Find Start of Loop */
+			for (int i=0;i<nseg;++i) {
+				sind = seg(i).gindx;
+				if (isndbuf(0) == x.pnt(x.seg(sind).pnt(0)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(1)).info) {
+					swap(0,i);
+					reorder();
+					return;
+				}
+				
+				if (isndbuf(0) == x.pnt(x.seg(sind).pnt(1)).info && isndbuf(1) == x.pnt(x.seg(sind).pnt(0)).info) {
+					swap(0,i);
+					/* invert side direction */
+					int temp = seg(0).next;
+					seg(0).next = seg(0).prev;
+					seg(0).prev = temp;
+					sind = seg(0).gindx;
+					int v0 = x.seg(sind).pnt(0);
+					x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
+					x.seg(sind).pnt(1) = v0;
+					
+					reorder();
+					return;
+				}
+			}
+		}
+	 }
+	return;
+}
+	
 void ecomm::ploadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
-    int j,k,count,sind,offset;
+    int j,k,count,offset;
+    int sind = 0;  // To avoid may be used uninitialized warnings
     
-    if (!((1<<grp)&groupmask)) return;
+    if (!in_group(grp)) return;
 
-    count = 0;
-    for(j=0;j<nseg;++j) {
-        sind = seg(j);
-        offset = x.seg(sind).pnt(0)*stride;
-        for (k=bgn;k<=end;++k) {
-            fsndbuf(count++) = base[offset+k];
-        }
-    }
-    offset = x.seg(sind).pnt(1)*stride;
-    for (k=bgn;k<=end;++k) 
-        fsndbuf(count++) = base[offset+k]; 
+	count = 0;
+	for(j=0;j<nseg;++j) {
+		sind = seg(j).gindx;
+		offset = x.seg(sind).pnt(0)*stride;
+		for (k=bgn;k<=end;++k) {
+			 fsndbuf(count++) = base[offset+k];
+		}
+	}
+	offset = x.seg(sind).pnt(1)*stride;
+	for (k=bgn;k<=end;++k) 
+		fsndbuf(count++) = base[offset+k]; 
+
         
     sndsize() = count;
     sndtype() = boundary::flt_msg;
 }
 
 void ecomm::pfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
-    int j,k,m,count,countdn,countup,offset,sind;
-    int matches = 1;
-    FLT mtchinv;
-    /* ASSUMES REVERSE ORDERING OF SIDES */
-    /* WON'T WORK IN 3D */
+    int j,k,count,offset;
+    int sind = 0;  // To avoid may be used uninitialized warnings
+
+    
+	bool reload = comm_finish(grp,phi,type,op);
+	if (!reload) return;
+
+	int ebp1 = end-bgn+1;
+	count = 0;
+	for(j=0;j<nseg;++j) {
+		sind = seg(j).gindx;
+		offset = x.seg(sind).pnt(0)*stride +bgn;
+		for(k=0;k<ebp1;++k) {
+			 base[offset+k] = fsndbuf(count++);
+		}
+	}
+	offset = x.seg(sind).pnt(1)*stride +bgn;
+	for(k=0;k<ebp1;++k) {
+		base[offset+k] = fsndbuf(count++);
+	}
         
-    if (!((1<<grp)&groupmask)) return;
-    
-    switch(type) {
-        case(slave_master): {
-            if (!first) return;
-        }
-        
-        case(master_slave): {
-            if (first || phase(grp)(0) != phi) return;
-            
-#ifdef MPDEBUG
-            *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
-#endif
-            int ebp1 = end-bgn+1;
-            countdn = nseg*ebp1;
-            for(j=0;j<nseg;++j) {
-                sind = seg(j);
-                offset = x.seg(sind).pnt(0)*stride +bgn;
-                for(k=0;k<ebp1;++k) {
-                    base[offset+k] = frcvbuf(0,countdn +k);
-#ifdef MPDEBUG
-                    *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                }
-                countdn -= ebp1;
-            }
-            offset = x.seg(sind).pnt(1)*stride +bgn;
-            for(k=0;k<ebp1;++k) {
-                base[offset+k] = frcvbuf(0,countdn+k);
-#ifdef MPDEBUG
-                *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-            }
-            return;
-        }
-            
-        default: {
-            switch(op) {
-                case(average):
-    
-                    /* RELOAD FROM BUFFER */
-                    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-                    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
-                    for(m=0;m<nmatch;++m) {    
-                        if (phase(grp)(m) != phi) continue;
-                        
-                        ++matches;
-                        
-                        int ebp1 = end-bgn+1;
-                        countdn = nseg*ebp1;
-                        countup = 0;
-                        for(j=0;j<nseg+1;++j) {
-                            for(k=0;k<ebp1;++k)
-                                fsndbuf(countup +k) += frcvbuf(m,countdn +k);
-                            countup += ebp1;
-                            countdn -= ebp1;
-                        }
-                    }
-
-                    if (matches > 1) {
-                        mtchinv = 1./matches;
-
-#ifdef MPDEBUG
-                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
-#endif
-                        count = 0;
-                        for(j=0;j<nseg;++j) {
-                            sind = seg(j);
-                            offset = x.seg(sind).pnt(0)*stride;
-                            for (k=bgn;k<=end;++k) {
-                                base[offset+k] = fsndbuf(count++)*mtchinv;
-#ifdef MPDEBUG
-                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                            }
-
-                        }
-                        offset = x.seg(sind).pnt(1)*stride;
-                        for (k=bgn;k<=end;++k) {
-                            base[offset+k] = fsndbuf(count++)*mtchinv;
-#ifdef MPDEBUG
-                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                        }
-                    }
-                    return;
-                case(sum): 
-                     matches = 1;
-    
-                    /* RELOAD FROM BUFFER */
-                    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-                    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
-                    for(m=0;m<nmatch;++m) {    
-                        if (phase(grp)(m) != phi) continue;
-                        
-                        ++matches;
-                        
-                        int ebp1 = end-bgn+1;
-                        countdn = nseg*ebp1;
-                        countup = 0;
-                        for(j=0;j<nseg+1;++j) {
-                            for(k=0;k<ebp1;++k)
-                                fsndbuf(countup +k) += frcvbuf(m,countdn +k);
-                            countup += ebp1;
-                            countdn -= ebp1;
-                        }
-                    }
-
-                    if (matches > 1) {
-#ifdef MPDEBUG
-                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
-#endif
-                        count = 0;
-                        for(j=0;j<nseg;++j) {
-                            sind = seg(j);
-                            offset = x.seg(sind).pnt(0)*stride;
-                            for (k=bgn;k<=end;++k) {
-                                base[offset+k] = fsndbuf(count++);
-#ifdef MPDEBUG
-                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                            }
-
-                        }
-                        offset = x.seg(sind).pnt(1)*stride;
-                        for (k=bgn;k<=end;++k) {
-                            base[offset+k] = fsndbuf(count++);
-#ifdef MPDEBUG
-                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                        }
-                    }
-                    return;
-                
-                case(maximum):                    
-                    matches = 1;
-    
-                    /* RELOAD FROM BUFFER */
-                    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-                    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
-                    for(m=0;m<nmatch;++m) {    
-                        if (phase(grp)(m) != phi) continue;
-                        
-                        ++matches;
-                        
-                        int ebp1 = end-bgn+1;
-                        countdn = nseg*ebp1;
-                        countup = 0;
-                        for(j=0;j<nseg+1;++j) {
-                            for(k=0;k<ebp1;++k)
-                                fsndbuf(countup +k) = MAX(fsndbuf(countup+k),frcvbuf(m,countdn +k));
-                            countup += ebp1;
-                            countdn -= ebp1;
-                        }
-                    }
-
-                    if (matches > 1) {
-#ifdef MPDEBUG
-                        *x.gbl->log << "finalrcv"  << idnum << " " << is_frst() << std::endl;
-#endif
-                        count = 0;
-                        for(j=0;j<nseg;++j) {
-                            sind = seg(j);
-                            offset = x.seg(sind).pnt(0)*stride;
-                            for (k=bgn;k<=end;++k) {
-                                base[offset+k] = fsndbuf(count++);
-#ifdef MPDEBUG
-                                *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                            }
-
-                        }
-                        offset = x.seg(sind).pnt(1)*stride;
-                        for (k=bgn;k<=end;++k) {
-                            base[offset+k] = fsndbuf(count++);
-#ifdef MPDEBUG
-                            *x.gbl->log << "\t" << base[offset+k] << std::endl;
-#endif
-                        }
-                    }
-                    return;
-                
-                default: 
-                    *x.gbl->log << "replacement with symmetric sending?" << std::endl;
-                    exit(1);
-            }
-            break;
-        }
-    }
+    return;
 }
     
 void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int j,k,count,sind,offset;
     
-    if (!((1<<grp)&groupmask)) return;
+    if (!in_group(grp)) return;
 
-    count = 0;
-    for(j=0;j<nseg;++j) {
-        sind = seg(j);
-        offset = sind*stride;
-        for (k=bgn;k<=end;++k) {
-            fsndbuf(count++) = base[offset+k];
-        }
-    }
+	  count = 0;
+	  for(j=0;j<nseg;++j) {
+			sind = seg(j).gindx;
+			offset = sind*stride;
+			for (k=bgn;k<=end;++k) {
+				 fsndbuf(count++) = base[offset+k];
+			}
+	  }
+  
         
     sndsize() = count;
     sndtype() = boundary::flt_msg;
@@ -535,22 +451,20 @@ void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
 
 void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {
     int j,k,count,offset,sind;
-    /* ASSUMES REVERSE ORDERING OF SIDES */
-    /* WON'T WORK IN 3D */
     
+    /* ASSUMES REVERSE ORDERING OF SIDES */
     bool reload = comm_finish(grp,phi,type,op);
     if (!reload) return;
-   
-     count = 0;
-    for(j=0;j<nseg;++j) {
-        sind = seg(j);
-        offset = sind*stride;
-        for (k=bgn;k<=end;++k) {
-            base[offset+k] = fsndbuf(count++);
-        }
-    }
-    return;
-}
+
+	  count = 0;
+	  for(j=0;j<nseg;++j) {
+			sind = seg(j).gindx;
+			offset = sind*stride;
+			for (k=bgn;k<=end;++k) {
+				 base[offset+k] = fsndbuf(count++);
+			}
+	  }
+ }
 
 void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
     int i,j,k,p0;
@@ -558,7 +472,7 @@ void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int
  
     /* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
     /* MAKE SURE ENDPOINTS ARE OK */
-    i = x.seg(seg(0)).pnt(0);
+    i = x.seg(seg(0).gindx).pnt(0);
     if (cnnct(i).tet < 0) {
         tgt.otree.nearpt(x.pnts(i).data(),p0);
         cnnct(i).tet=tgt.pnt(p0).tet;
@@ -567,7 +481,7 @@ void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int
             if (tgt.tet(cnnct(i).tet).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
         }
     }
-    i = x.seg(seg(nseg-1)).pnt(1);
+    i = x.seg(seg(nseg-1).gindx).pnt(1);
     if (cnnct(i).tet < 0) {
         tgt.otree.nearpt(x.pnts(i).data(),p0);
         cnnct(i).tet=tgt.pnt(p0).tet;
@@ -581,7 +495,7 @@ void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int
         sndsize() = 0;
         sndtype() = int_msg;
         for(k=1;k<nseg;++k) {
-            p0 = x.seg(seg(k)).pnt(0);
+            p0 = x.seg(seg(k).gindx).pnt(0);
             if (cnnct(p0).tet > 0) {
                 isndbuf(sndsize()++) = -1;
             }
@@ -601,7 +515,7 @@ void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int
     if (!first) {
         i = 0;
         for(k=nseg-1;k>0;--k) {
-            p0 = x.seg(seg(k)).pnt(1);
+            p0 = x.seg(seg(k).gindx).pnt(1);
             if (ircvbuf(0,i) < 0) {
                 cnnct(p0).tet = 0;
                 for(j=0;j<3;++j)
@@ -897,7 +811,6 @@ void fcomm::match_numbering(int step) {
             for (int i=0;i<nseg;++i) {
                 seg(i).pnt(0) = isndbuf(count++);
                 seg(i).pnt(1) = isndbuf(count++);
-                *x.gbl->log << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << std::endl;
             }
             gbltolclside();
             

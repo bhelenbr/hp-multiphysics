@@ -120,7 +120,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
                 out << "idnum: " << ebdry(i)->idnum << endl;
                 out << "number: " << ebdry(i)->nseg << endl;
                 for(int j=0;j<ebdry(i)->nseg;++j)
-                    out << j << ": " << ebdry(i)->seg(j) << std::endl;
+                    out << j << ": " << ebdry(i)->seg(j).gindx << std::endl;
             }    
             
             /* FACE BOUNDARY INFO HEADER */
@@ -208,7 +208,7 @@ void tet_mesh::setinfo() {
     
     for(int i=0;i<nebd;++i)
         for(int j=0;j<ebdry(i)->nseg;++j)
-            seg(ebdry(i)->seg(j)).info = ebdry(i)->idnum;
+            seg(ebdry(i)->seg(j).gindx).info = ebdry(i)->idnum;
 
     for(int i=0;i<ntri;++i)
         tri(i).info = -1;

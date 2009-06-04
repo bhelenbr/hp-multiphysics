@@ -95,9 +95,10 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	for(int i = 0; i < nebd; ++i){
 		ind=ebdry(i)->nseg;
 		for(int j = 0; j < ebdry(i)->nseg; ++j){
-			sind = ebdry(i)->seg(j);
+			sind = ebdry(i)->seg(j).gindx;
 
       }
+		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();
 	}
 	

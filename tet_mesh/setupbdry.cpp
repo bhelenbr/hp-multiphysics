@@ -248,20 +248,23 @@ void face_bdry::createtdstri(void) {
         v1 = seg(i).pnt(0);
         v2 = seg(i).pnt(1);
         minv = (v1 < v2 ? v1 : v2);
-        sind = pnt(minv).info;
-        while (sind >= 0) {
-            sindprev = sind;
-            sind = seg(sind).info;
-        }
-        if (pnt(minv).info < 0)
-            pnt(minv).info = i;
-        else 
-            seg(sindprev).info = i;
         seg(i).info = -1;
+        if ((sind = pnt(minv).info) < 0)
+            pnt(minv).info = i;
+        else {
+            while (sind >= 0) {
+                sindprev = sind;
+                sind = seg(sind).info;
+            }
+            seg(sindprev).info = i;
+        }
     }
 
-    for(i=0;i<nseg;++i)
+    for(i=0;i<nseg;++i) {
+        seg(i).tri(0) = -1;
         seg(i).tri(1) = -1;
+    }
+        
 
     for(tind=0;tind<ntri;++tind) {
         vout = tri(tind).pnt(0);

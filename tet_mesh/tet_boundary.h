@@ -37,7 +37,10 @@ class ecomm : public comm_bdry<edge_bdry,tet_mesh> {
         ecomm(const ecomm &inbdry, tet_mesh& xin) : comm_bdry<edge_bdry,tet_mesh>(inbdry,xin) {}
         
         ecomm* create(tet_mesh& xin) const {return new ecomm(*this,xin);}
-        
+
+        /* Match boundary numbering systems */
+        void match_numbering(int step);
+		          
         /* GENERIC COMMUNICATIONS */
         void ploadbuff(boundary::groups group,FLT *base,int bgn,int end, int stride);
         void pfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride);
@@ -264,7 +267,7 @@ class spline_bdry : public edge_bdry {
         
         void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tet_mesh::ND> &pt) {
             /* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
-            int sind = seg(nseg);
+            int sind = seg(nseg).gindx;
             int p0 = x.seg(sind).pnt(0);
             int p1 = x.seg(sind).pnt(1);
             float sloc;

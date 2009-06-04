@@ -397,11 +397,17 @@ class vrtx_bdry : public boundary {
 class edge_bdry : public boundary {
     public:
         tet_mesh &x;
-        TinyVector<int,2> vbdry;  // FIXME
+		  TinyVector<int,2> vbdry;  // FIXME
         int maxseg;
         int nseg;
-        Array<int,1> seg, next, prev;
-                
+		  struct segstruct {
+				int next; /**< Not used except in adaptation (kept ordered) */
+				int prev; /**< Not used except in adaptation (kept ordered) */
+            int gindx;  /**< global index of side */
+            int info; /**< General purpose (mostly for adaptation) */
+        };
+		  Array<segstruct,1> seg;
+
         /* CONSTRUCTOR */
         edge_bdry(int inid, tet_mesh &xin) : boundary(inid), x(xin), maxseg(0)  {idprefix = x.gbl->idprefix +"_e" +idprefix; mytype="plain"; vbdry = -1;}
         edge_bdry(const edge_bdry &inbdry, tet_mesh &xin) : boundary(inbdry.idnum), x(xin), maxseg(0)  {idprefix = inbdry.idprefix; mytype = inbdry.mytype; vbdry = inbdry.vbdry;}
@@ -418,7 +424,7 @@ class edge_bdry : public boundary {
             if (type == tet_mesh::grid) {
                 for(int j=0;j<nseg;++j) {
                     fin.ignore(80,':');
-                    fin >> seg(j);
+                    fin >> seg(j).gindx;
                     fin.ignore(80,'\n');
                 }
             }
@@ -427,7 +433,9 @@ class edge_bdry : public boundary {
 
         
         /* ADDITIONAL STUFF FOR EDGES */
+		  virtual void match_numbering(int step) {}
         virtual void swap(int s1, int s2);
+		  virtual void setup_next_prev();
         virtual void reorder();
         virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
         virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);

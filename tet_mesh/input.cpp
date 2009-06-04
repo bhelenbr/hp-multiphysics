@@ -47,6 +47,9 @@ void tet_mesh::init(input_map &input, void *gin) {
         coarse_level = 0;
         tet_mesh::input(filename.c_str(),static_cast<tet_mesh::filetype>(filetype),grwfac,input);
     }
+	 
+	 /* SET-UP BOUNDARY COMMUNICATIONS */
+	 findmatch(gbl,coarse_level);
 }
 
 void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizereduce1d) {
@@ -73,6 +76,9 @@ void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizer
         coarse_level = inmesh.coarse_level+1;
         initialized = 1;
     }
+	 
+	 /* SET-UP BOUNDARY COMMUNICATIONS */
+	 if (why == multigrid) findmatch(gbl,coarse_level);
 }
 
 void tet_mesh::allocate(int mxsize) {
@@ -297,10 +303,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
             for(int i = 0; i < nvbd; ++i){
                 in.ignore(80,':');
                 in >> temp;
-                if (!vbdry(i)) {
-                    vbdry(i) = getnewvrtxobject(temp,bdrymap);
-                    vbdry(i)->alloc(4);
-                }
+					 vbdry(i) = getnewvrtxobject(temp,bdrymap);
+					 vbdry(i)->alloc(4);
                 in.ignore(80,':');
                 in >> vbdry(i)->pnt;
 
@@ -312,17 +316,17 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
             for(int i = 0; i < nebd; ++i){
                 in.ignore(80,':');
                 in >> temp;
-                if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
+                ebdry(i) = getnewedgeobject(temp,bdrymap);
                 in.ignore(80,':');
                 in >> ebdry(i)->nseg;
-                if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
-                else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
+                ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
                 for(int j=0;j<ebdry(i)->nseg;++j) {
                     in.ignore(80,':');
-                    in >> ebdry(i)->seg(j);
+                    in >> ebdry(i)->seg(j).gindx;
                 }
-            }
-            
+					 ebdry(i)->setup_next_prev();
+					 ebdry(i)->reorder();
+				}
 
             in.ignore(80,':');
             in >> nfbd;
@@ -369,7 +373,6 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
                 fbdry(i)->cnt_nbor();
                 fbdry(i)->createvtri();    
             }
-
             
             break;
 
@@ -566,20 +569,15 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
                 *gbl->log << "That filetype is not supported" << std::endl;
                 exit(1);
     }
-     
-    for(int i=0;i<nebd;++i) {
-        /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-        ebdry(i)->reorder();
-    }
     
     /* FIND ENDPOINT MATCHES */
     for(int i=0;i<nvbd;++i) {
         /* Find two connecting boundary sides */
         for(int j=0;j<nebd;++j) {
-            if (seg(ebdry(j)->seg(0)).pnt(0) == vbdry(i)->pnt) {
+            if (seg(ebdry(j)->seg(0).gindx).pnt(0) == vbdry(i)->pnt) {
                 ebdry(j)->vbdry(0) = i;
             }
-            if (seg(ebdry(j)->seg(ebdry(j)->nseg-1)).pnt(1) == vbdry(i)->pnt) {
+            if (seg(ebdry(j)->seg(ebdry(j)->nseg-1).gindx).pnt(1) == vbdry(i)->pnt) {
                 ebdry(j)->vbdry(1) = i;
             }
         }
