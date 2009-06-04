@@ -32,7 +32,7 @@ using namespace blitz;
 #endif
 #endif
 
-// #define MPDEBUG
+#define MPDEBUG
 
 /** \brief Template class to make a communciation boundary 
  *
@@ -53,9 +53,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         void *sndbuf; //!< Raw memory for outgoing message buffer
         Array<FLT,1> fsndbufarray; //!< Access to outgoing message buffer for floats
         Array<int,1> isndbufarray; //!< Access to outgoing message buffer for ints
-#ifdef MPDEBUG
-        bool logswitch;  //!< to turn on/off logging of sndbuf access
-#endif
         int msgsize; //!< Outgoing size
         boundary::msg_type msgtype; //!< Outgoing type
         
@@ -90,9 +87,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             maxphase.resize(maxgroup+1);
             phase.resize(maxgroup+1);
             for(int m=0;m<maxmatch;++m) phase(0)(m) = 0;
-#ifdef MPDEBUG
-            logswitch = true;
-#endif
         }
         comm_bdry(const comm_bdry<BASE,MESH> &inbdry, MESH& xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {    
             maxphase.resize(maxgroup+1);
@@ -122,18 +116,8 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         int& sndsize() {return(msgsize);}
         boundary::msg_type& sndtype() {return(msgtype);}
         int& matchphase(boundary::groups group, int matchnum) {return(phase(group)(matchnum));} 
-        int& isndbuf(int indx) {
-#ifdef MPDEBUG
-            if (indx > 0 && logswitch) *BASE::x.gbl->log << "accessing send buf " << BASE::idprefix << ' ' <<  indx << ": " << isndbufarray(indx-1) << std::endl;
-#endif
-            return(isndbufarray(indx));
-        }
-        FLT& fsndbuf(int indx) {
-#ifdef MPDEBUG
-            if (indx > 0) *BASE::x.gbl->log << "accessing send buf " << BASE::idprefix << ' ' <<  indx << ": " << fsndbufarray(indx-1) << std::endl;
-#endif        
-            return(fsndbufarray(indx));
-        }
+        int& isndbuf(int indx) {return(isndbufarray(indx));}
+        FLT& fsndbuf(int indx) {return(fsndbufarray(indx));}
         int& ircvbuf(int m,int indx) {return(ircvbufarray(m)(indx));}
         FLT& frcvbuf(int m,int indx) {return(frcvbufarray(m)(indx));}
         
@@ -261,9 +245,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
             int err;
 #endif
 
-#ifdef MPDEBUG
-            logswitch = false;
-#endif
             if (!in_group(grp)) return;
             
             /* SWITCHES FOR MASTER_SLAVE */
@@ -296,6 +277,23 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                     break;
                 }
             }
+            
+#ifdef MPDEBUG
+            if (nsends_to_post) {
+                *BASE::x.gbl->log << "preparing to send these messages from "  << BASE::idprefix << "with type " << type << std::endl;
+                switch(sndtype()) {
+                    case(boundary::flt_msg): {
+                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+                        break;
+                    }
+                    case(boundary::int_msg): {
+                        *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+
+                        break;
+                    }
+                }
+            }
+#endif
             
             /* MPI POST RECEIVES FIRST */
             for(m=0;m<nrecvs_to_post;++m) {
@@ -390,10 +388,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 if (phi != phase(grp)(m) || mtype(m) != local) continue;
                
                 sim::blks.waitforslot(rcv_tags(m),true);
-
-#ifdef MPDEBUG
-                *BASE::x.gbl->log << "local exchanges start ignoring these messages"  << BASE::idprefix << std::endl;
-#endif               
+              
                 switch(sndtype()) {
                     case(boundary::flt_msg): {
                         for(i=0;i<local_match(m)->sndsize();++i) 
@@ -406,9 +401,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                         break;   
                     }
                 }
-#ifdef MPDEBUG
-                *BASE::x.gbl->log << "local exchanges stop ignoring messages"  << BASE::idprefix << std::endl;
-#endif   
                 sim::blks.notify_change(rcv_tags(m),false);
             }
   
@@ -518,10 +510,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
         }
         
         bool comm_finish(boundary::groups grp, int phi, boundary::comm_type type, boundary::operation op) {            
-#ifdef MPDEBUG
-            logswitch = true;
-#endif
-            
+        
             if (!in_group(grp)) return(false);
             
             switch(type) {
@@ -531,6 +520,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                 
                 case(boundary::master_slave): {
                     if (is_frst() || (phase(grp)(0) != phi)) return(false);                    
+
 #ifdef MPDEBUG
                     *BASE::x.gbl->log << "finish master_slave"  << BASE::idprefix << std::endl;
 #endif
@@ -539,13 +529,22 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                             for(int j=0;j<sndsize();++j) {
                                 isndbufarray(j) = ircvbuf(0,j);
                             }
-                            return(true);
+#ifdef MPDEBUG
+                            *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+#endif
+                            break;
+                            
                         case(boundary::flt_msg):
                              for(int j=0;j<sndsize();++j) {
                                 fsndbufarray(j) = frcvbuf(0,j);
                             }
-                            return(true);
+#ifdef MPDEBUG
+                            *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+#endif
+                            break;
                     }
+                    return(true);
+
                 }
                     
                 default: {
@@ -567,8 +566,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                         for(int j=0;j<sndsize();++j)
                                             fsndbufarray(j) *= mtchinv;
 #ifdef MPDEBUG
-                                        *BASE::x.gbl->log << "finish average"  << BASE::idprefix << " " << is_frst() << std::endl;
-#endif
+                                        *BASE::x.gbl->log << "finish average"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+#endif               
                                     }
                                     return(true);
                                 }
@@ -585,9 +585,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                         }
                                     }
 #ifdef MPDEBUG
-
                                     if (matches > 1 ) {
-                                        *BASE::x.gbl->log << "finish sum"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                        *BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
 #endif
                                     return(true);
@@ -607,8 +607,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                     }
 
 #ifdef MPDEBUG
-                                    if (matches > 1) {
-                                        *BASE::x.gbl->log << "finish max"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
 #endif
                                     return(true);
@@ -628,8 +629,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                     }
 
 #ifdef MPDEBUG
-                                    if (matches > 1) {
-                                        *BASE::x.gbl->log << "finish min"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
 #endif
                                     return(true);
@@ -661,9 +663,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                         }
                                     }
 #ifdef MPDEBUG
-
                                     if (matches > 1 ) {
-                                        *BASE::x.gbl->log << "finish sum"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                        *BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
 #endif
                                     return(true);
@@ -683,10 +685,11 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                     }
 
 #ifdef MPDEBUG
-                                    if (matches > 1) {
-                                        *BASE::x.gbl->log << "finish max"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
-#endif
+#endif                              
                                     return(true);
                                 }
                                 
@@ -704,10 +707,11 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
                                     }
 
 #ifdef MPDEBUG
-                                    if (matches > 1) {
-                                        *BASE::x.gbl->log << "finish min"  << BASE::idprefix << " " << is_frst() << std::endl;
+                                    if (matches > 1 ) {
+                                        *BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
+                                        *BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
                                     }
-#endif
+#endif       
                                     return(true);
                                 }
                                 

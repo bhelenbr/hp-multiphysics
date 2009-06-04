@@ -421,7 +421,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
 /** This is a data structure for storing communication info
  *  only used temporarily to sort things out in findmatch
  */
-class block::comm_info {
+class multigrid_interface::comm_info {
     public:
         int proc;
         int blk;
@@ -450,7 +450,7 @@ class block::comm_info {
         }
 };
 
-int block::comm_info::unpack(blitz::Array<int,1> entitylist) {
+int multigrid_interface::comm_info::unpack(blitz::Array<int,1> entitylist) {
     int count = 0;
     proc = entitylist(count++);
     blk = entitylist(count++);
@@ -477,9 +477,7 @@ int block::comm_info::unpack(blitz::Array<int,1> entitylist) {
     return(count);
 }
 
-void block::findmatch(int grdlvl) {
-
-    *gbl->log << "# finding matches at multigrid level " << grdlvl << " for block " << idnum << std::endl;
+void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
     
     /* GET DATA FROM BLOCKS IN A THREAD SAFE WAY */
 #if defined(PTH)
@@ -487,17 +485,23 @@ void block::findmatch(int grdlvl) {
 #elif defined(BOOST)
     boost::mutex::scoped_lock datalock(sim::blks.data_mutex);
 #endif       
-    int nblock = sim::blks.nblock;
-    int myid = sim::blks.myid;
-    int myblock = sim::blks.myblock;
-    /* FIGURE OUT MY LOCAL BLOCK NUMBER */
+    const int nblock = sim::blks.nblock;
+    const int myid = sim::blks.myid;
+    const int myblock = sim::blks.myblock;
+	 const int idnum = gbl->idnum;
+	 
+    /* FIGURE OUT MY LOCAL BLOCK NUMBER & GRID LEVEL? */
     int b1;
     for (b1=0;b1<myblock;++b1)
-        if (sim::blks.blk(b1) == this) break;
+        if (sim::blks.blk(b1)->grd(grdlvl) == this) break;
     if (b1 >= myblock) {
         *gbl->log << "Didn't find myself in block list?\n";
         exit(1);
     }
+	 
+	 
+	 
+	 
 #if defined(PTH)
     pth_mutex_release(&sim::blks.data_mutex);
 #elif defined(BOOST)
@@ -507,7 +511,7 @@ void block::findmatch(int grdlvl) {
     /* FIRST DETERMINE TOTAL SIZE OF LIST */
     Array<int,1> sndsize(nblock), size(nblock);
     sndsize = 0;  
-    sndsize(idnum) = 2 +grd(grdlvl)->comm_entity_size(); // 2 is for myid & local block number
+    sndsize(idnum) = 2 +comm_entity_size(); // 2 is for myid & local block number
     sim::blks.allreduce(sndsize.data(),size.data(),nblock,blocks::int_msg,blocks::sum);
     ~sndsize;
     
@@ -529,7 +533,7 @@ void block::findmatch(int grdlvl) {
     
     Array<int,1> sublist;
     sublist.reference(sndentitylist(Range(count,toEnd)));
-    grd(grdlvl)->comm_entity_list(sublist);
+    comm_entity_list(sublist);
     ~sublist;
         
     Array<int,1> entitylist(tsize);
@@ -540,7 +544,7 @@ void block::findmatch(int grdlvl) {
     /* UNPACK ENTITY LIST INTO MORE USABLE FORM */
     int max_comm_bdry_num = 0; // SO I CAN GENERATE UNIQUE TAGS
     count = 0;
-    block::comm_info *binfo = new block::comm_info[nblock];
+    multigrid_interface::comm_info *binfo = new multigrid_interface::comm_info[nblock];
     for(int i=0;i<nblock;++i) {
         count += binfo[i].unpack(entitylist(Range(count,toEnd)));
         max_comm_bdry_num = MAX(max_comm_bdry_num,binfo[i].nvcomm);
@@ -551,7 +555,7 @@ void block::findmatch(int grdlvl) {
     sim::blks.setdigits(max_comm_bdry_num);
     
     /* OUTPUT LIST FOR DEBUGGING */
-    *gbl->log << "# block " << idprefix << " block data" << std::endl;
+    *gbl->log << "# block " << gbl->idprefix << " block data" << std::endl;
     *gbl->log << "# myid: " << binfo[idnum].proc << "\t local block number: " << binfo[idnum].blk << std::endl;
     *gbl->log << "#\t\tnvcomm: " << binfo[idnum].nvcomm << std::endl;
     for (int i=0;i<binfo[idnum].nvcomm;++i)
@@ -590,7 +594,7 @@ void block::findmatch(int grdlvl) {
                         continue;  // CAN"T MATCH TO MYSELF
                     }
                     
-                    boundary *bp1 = grd(grdlvl)->getvbdry(binfo[b1].vcomm[i].nvbd);
+                    boundary *bp1 = getvbdry(binfo[b1].vcomm[i].nvbd);
                     if (binfo[b1].proc == binfo[b2].proc) {
                         /* local match */
                         boundary *bp2 = sim::blks.blk(binfo[b2].blk)->grd(grdlvl)->getvbdry(binfo[b2].vcomm[j].nvbd);
@@ -629,7 +633,7 @@ void block::findmatch(int grdlvl) {
                         continue;  // CAN"T MATCH TO MYSELF
                     }
                     
-                    boundary *bp1 = grd(grdlvl)->getebdry(binfo[b1].ecomm[i].nebd);
+                    boundary *bp1 = getebdry(binfo[b1].ecomm[i].nebd);
                     if (binfo[b1].proc == binfo[b2].proc) {
                         /* local match */
                         boundary *bp2 = sim::blks.blk(binfo[b2].blk)->grd(grdlvl)->getebdry(binfo[b2].ecomm[j].nebd);
@@ -670,7 +674,7 @@ void block::findmatch(int grdlvl) {
                         continue;  // CAN"T MATCH TO MYSELF
                     }
                     
-                    boundary *bp1 = grd(grdlvl)->getfbdry(binfo[b1].fcomm[i].nfbd);
+                    boundary *bp1 = getfbdry(binfo[b1].fcomm[i].nfbd);
                     if (binfo[b1].proc == binfo[b2].proc) {
                         /* local match */
                         boundary *bp2 = sim::blks.blk(binfo[b2].blk)->grd(grdlvl)->getfbdry(binfo[b2].fcomm[j].nfbd);
@@ -708,7 +712,7 @@ void block::findmatch(int grdlvl) {
     
     
     /* Now match internal numbering system of boundaries (if necessary) */
-    grd(grdlvl)->match_bdry_numbering();
+    match_bdry_numbering();
 
     return;
 }
@@ -849,7 +853,6 @@ void block::init(input_map &input) {
          
     /* LOAD FINE MESH INFORMATION */
     grd(0)->init(input,gbl);
-    findmatch(0);
     grd(0)->matchboundaries();
     if (gbl->adapt_output) {
         output("matched0",block::display,0);
@@ -862,7 +865,6 @@ void block::init(input_map &input) {
 //        if (lvl > 1) size_reduce = 2.0;
 //        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
 
-        findmatch(lvl);             // Because this is done second
         grd(lvl)->connect(*grd(lvl-1));
         if (gbl->adapt_output) {
             nstr.str("");

@@ -380,7 +380,7 @@ void ecomm::sloadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride
     }
     else {
         count = 0;
-        for(j=nseg-1;j>=0;++j) {
+        for(j=nseg-1;j>=0;--j) {
             sind = seg(j);
             offset = sind*stride;
             for (k=bgn;k<=end;++k) {

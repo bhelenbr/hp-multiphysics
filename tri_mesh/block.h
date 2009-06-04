@@ -123,6 +123,7 @@ class block {
         */
         //@{
         Array<multigrid_interface *,1> grd;
+		  friend class multigrid_interface;
         int mglvls; /**< Total number of levels of multigrid */
         int ngrid; /**< Number of grids (could be more or less than mglvls) */
         int extra_finest_levels; /**< Number of extra levels to included on finest grid */
@@ -157,10 +158,6 @@ class block {
         
         /** Initialization function */
         virtual void init(input_map& input);
-        
-        /** Sets-up parallel communications, called by init */
-        void findmatch(int level);
-        class comm_info;  /**< Utility class for figuring out communication */
 
         /** Outputs solution in various filetypes */
         enum output_purpose {display, restart, debug};
@@ -183,10 +180,10 @@ class block {
 };
 
 class multigrid_interface {
-    public:
+	public:
         /** Initialization functions */
         virtual void* create_global_structure() {return 0;}
-        virtual void init(input_map& input, void *gbl_in) {}
+		  virtual void init(input_map& input, void *gbl_in) {}
         enum init_purpose {duplicate, multigrid, adapt_storage, user_defined};
         virtual void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0) {}
         
@@ -195,9 +192,10 @@ class multigrid_interface {
 
         /** Shift to next implicit time step */
         virtual void tadvance() {}
-                
-        /** Makes sure vertex positions on boundaries coinside */
-        virtual void matchboundaries() {}
+		
+		  void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
+        class comm_info;  /**< Utility class for figuring out communication */
+        virtual void matchboundaries() {} /**< Makes sure data on boundaries coinside */
                                  
         /** Setup preconditioner */
         virtual void setup_preconditioner() {}

@@ -62,6 +62,8 @@ void tri_mesh::init(input_map &input, void *gin) {
         coarse_level = 0;
         tri_mesh::input(filename.c_str(),static_cast<tri_mesh::filetype>(filetype),grwfac,input);
     }
+	 
+	 findmatch(gbl,coarse_level);
 }
 
 void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
@@ -89,6 +91,8 @@ void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizered
 		else coarse_level = 0;
         initialized = 1;
     }
+	 
+	 if (why == multigrid) findmatch(gbl,coarse_level);
 }
 
 void tri_mesh::allocate(int mxsize) {

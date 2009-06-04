@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 
         TinyVector<FLT,2> s;
         printf("Enter x and y shift\n");
-        scanf("%le%le",&s(0),&s(1));
+        scanf("%le %le",&s(0),&s(1));
         zx.input(argv[1],in,1.0,bdrymap);
         zx.shift(s);
         zx.output(argv[2],out);
