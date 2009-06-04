@@ -1,7 +1,7 @@
 #ifndef _symbolic_function_h_
 #define _symbolic_function_h_
 
-#include <muParser.h>
+#include <muParser/muParser.h>
 #include <blitz/array.h>
 #include <input_map.h>
 #include <math.h>
@@ -103,6 +103,7 @@ template<int N> class symbolic_function {
 			std::cout << "Token:    " << e.GetToken() << std::endl;
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
 		}
 		return(rslt);
 	}
@@ -125,6 +126,7 @@ template<int N> class symbolic_function {
 			std::cout << "Token:    " << e.GetToken() << std::endl;
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
 		}
 		return(rslt);
 	}
@@ -146,6 +148,7 @@ template<int N> class symbolic_function {
 			std::cout << "Token:    " << e.GetToken() << std::endl;
 			std::cout << "Position: " << e.GetPos() << std::endl;
 			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
 		}
 		return(rslt);
 	}
