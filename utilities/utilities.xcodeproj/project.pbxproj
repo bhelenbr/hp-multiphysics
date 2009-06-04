@@ -23,10 +23,12 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		6F16C6F80D82062100F03F54 /* myblas.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C3084C097A00C7F857 /* myblas.c */; };
+		6F16C6F90D82062200F03F54 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; };
+		6F16C6FA0D82062200F03F54 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
+		6F16C6FB0D82062300F03F54 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; };
 		6FB150980867818C00EAF2E5 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150990867819100EAF2E5 /* myblas.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C3084C097A00C7F857 /* myblas.c */; };
-		6FB1509A086781A200EAF2E5 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB1507F0867810C00EAF2E5 /* libmyblas.a */; };
-		6FB1509C086781A200EAF2E5 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB150960867814600EAF2E5 /* libutil.a */; };
 		6FB150A0086781DE00EAF2E5 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150A1086781E400EAF2E5 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
 		8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
@@ -87,8 +89,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FB1509A086781A200EAF2E5 /* libmyblas.a in Frameworks */,
-				6FB1509C086781A200EAF2E5 /* libutil.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -142,6 +142,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6F16C6F90D82062200F03F54 /* myblas.h in Headers */,
+				6F16C6FB0D82062300F03F54 /* utilities.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,9 +224,11 @@
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 08FB7794FE84155DC02AAC07 /* utilities */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				6FB150A8086782CE00EAF2E5 /* All */,
 				6FB1507E0867810C00EAF2E5 /* myblas */,
@@ -256,6 +260,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD76FAC0486AB0100D96B5E /* main.cpp in Sources */,
+				6F16C6F80D82062100F03F54 /* myblas.c in Sources */,
+				6F16C6FA0D82062200F03F54 /* utilities.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
