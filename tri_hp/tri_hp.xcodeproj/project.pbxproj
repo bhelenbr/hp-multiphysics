@@ -615,8 +615,8 @@
 		6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tri_hp_buoyancy.h; path = buoyancy/tri_hp_buoyancy.h; sourceTree = "<group>"; };
 		6F77C4430B4D63ED006A4504 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = buoyancy/tstep.cpp; sourceTree = "<group>"; };
 		6F77C5100B4D8959006A4504 /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/muParser/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
-		6F9854120BDE612700D342F6 /* tri_hp_axi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi; sourceTree = BUILT_PRODUCTS_DIR; };
-		6F9854CB0BDE649A00D342F6 /* tri_hp_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F9854120BDE612700D342F6 /* tri_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F9854CB0BDE649A00D342F6 /* tri_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB40AC9091AF516002BAA09 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6FB40ACB091AF516002BAA09 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = ins/bdry.cpp; sourceTree = "<group>"; };
 		6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = cd/getnewbdry.cpp; sourceTree = "<group>"; };
@@ -823,8 +823,8 @@
 				8DD76F6C0486A84900D96B5E /* tri_hp */,
 				6FB91AA80ACCB04500792B04 /* tri_hp_mpi */,
 				6F12757B0BAA4D4100406504 /* tri_hp */,
-				6F9854120BDE612700D342F6 /* tri_hp_axi */,
-				6F9854CB0BDE649A00D342F6 /* tri_hp_mpi */,
+				6F9854120BDE612700D342F6 /* tri_hp */,
+				6F9854CB0BDE649A00D342F6 /* tri_hp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1037,7 +1037,7 @@
 			name = tri_hp_axi;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
-			productReference = 6F9854120BDE612700D342F6 /* tri_hp_axi */;
+			productReference = 6F9854120BDE612700D342F6 /* tri_hp */;
 			productType = "com.apple.product-type.tool";
 		};
 		6F98546F0BDE649A00D342F6 /* tri_hp_axi_mpi */ = {
@@ -1055,7 +1055,7 @@
 			name = tri_hp_axi_mpi;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
-			productReference = 6F9854CB0BDE649A00D342F6 /* tri_hp_mpi */;
+			productReference = 6F9854CB0BDE649A00D342F6 /* tri_hp */;
 			productType = "com.apple.product-type.tool";
 		};
 		6FB91A580ACCB04500792B04 /* tri_hp_mpi */ = {
