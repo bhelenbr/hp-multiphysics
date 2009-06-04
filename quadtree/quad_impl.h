@@ -200,6 +200,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 		printf("A possible cause is point ouside of domain:\n");
 		for (n=0;n<ND;++n)
 			printf("direction: %d, point %e, left %e, right %e\n",n,vrtx[v0][n],base->xmin[n],base->xmax[n]);
+		printf("Another possible cause is repeated insertion of the same point\n");
         output("quad_error",quadtree::text);
 		output("quad_error",quadtree::tecplot);
         exit(1);
