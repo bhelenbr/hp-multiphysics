@@ -178,6 +178,7 @@ class tet_hp : public tet_mesh  {
       virtual tet_hp* create() {return new tet_hp;}
       void* create_global_structure() {return new global;}
       void init(input_map& input, void *gin);
+		void init_post_findmatch();
       void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
       void copy(const tet_hp& tgt);
 

@@ -162,7 +162,7 @@ void hp_edge_bdry::curv_init(int tlvl) {
    
    /* SKIP END VERTICES */
    for(j=1;j<base.nseg;++j) {
-      sind = base.seg(j);
+      sind = base.seg(j).gindx;
       v0 = x.seg(sind).pnt(0);
       base.mvpttobdry(j,-1.0, x.pnts(v0));
    }
@@ -173,7 +173,7 @@ void hp_edge_bdry::curv_init(int tlvl) {
    /* SET UP HIGHER ORDER MODES */
    /*****************************/
    for(j=0;j<base.nseg;++j) {
-      sind = base.seg(j);
+      sind = base.seg(j).gindx;
 
       v0 = x.seg(sind).pnt(0);
       v1 = x.seg(sind).pnt(1);
@@ -214,7 +214,7 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,tet_mesh::ND>& xp,int &bel,F
       return;
    }
    
-   sind = base.seg(bel);
+   sind = base.seg(bel).gindx;
    v0 = x.seg(sind).pnt(0);
    v1 = x.seg(sind).pnt(1);
    dx = x.pnts(v1)(0) - x.pnts(v0)(0);
@@ -309,7 +309,7 @@ void hp_edge_bdry::calculate_unsteady_sources() {
    
    for(i=0;i<=x.log2pmax;++i) {
       for(j=0;j<base.nseg;++j) {
-         sind = base.seg(j);
+         sind = base.seg(j).gindx;
          x.crdtocht1d(sind,1);
          for(n=0;n<tet_mesh::ND;++n)
             basis::tet(i).proj1d(&x.cht(n)(0),&dxdt(i,j)(n,0));
@@ -846,7 +846,7 @@ int tet_hp::pc0rcv(int phase, FLT *pdata, int vrtstride) {
 
 void tet_hp::sc0load(int phase, FLT *sdata, int bgn, int end, int stride) {
    int i;
-         
+   
    /* SEND COMMUNICATIONS TO ADJACENT MESHES */
    for(i=0;i<nfbd;++i) 
       hp_fbdry(i)->smatchsolution_snd(phase,sdata,bgn,end,stride);
@@ -942,7 +942,7 @@ void tet_hp::matchboundaries() {
       
    /* Match boundary vertices */
    tet_mesh::matchboundaries();
-      
+         
    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
       pc0load(mp_phase,ug.v.data());
       pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
@@ -951,9 +951,10 @@ void tet_hp::matchboundaries() {
    }
    
    if (!em0) return;
+   
    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-      pc0load(mp_phase,ug.e.data());
-      pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+      sc0load(mp_phase,ug.e.data(),0,em0-1,ug.e.extent(secondDim));
+      smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
       last_phase = true;
       last_phase &= sc0wait_rcv(mp_phase,ug.e.data(),0,em0-1,ug.e.extent(secondDim));      
    }   

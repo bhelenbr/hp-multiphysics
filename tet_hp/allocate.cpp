@@ -241,7 +241,7 @@ const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid
 			spklink(i).resize(nspk);
 			spkpiv(i).resize(nspk*(basis::tet(log2p).em-1));
 		}
-		cout << "max number of spokes "<<  maxnspk << endl;
+		*gbl->log << "max number of spokes "<<  maxnspk << endl;
 		spkres.resize(maxnspk*(basis::tet(log2p).em-1));
 		wkseg.resize(nseg,basis::tet(log2p).em-1,NV);
 		//spoke();
