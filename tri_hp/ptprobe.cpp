@@ -1,5 +1,4 @@
 #include "tri_hp.h"
-#include "boundary.h"
 #include "hp_boundary.h"
 #include <assert.h>
 

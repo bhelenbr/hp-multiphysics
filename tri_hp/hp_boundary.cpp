@@ -27,73 +27,83 @@ hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
     return(temp);
 }
 
-void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
     /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-    int j,k,m,n,count,offset,sind,sign;
-    FLT mtchinv;
-    
+    int j,k,n,count,offset,sind,sign;
+        
     if (!base.is_comm()) return;
-
-    int matches = 1;
-    int bgnsign = (bgn % 2 ? -1 : 1);
     
-    for(m=0;m<base.nmatches();++m) {    
-            
-        ++matches;
-        int ebp1 = end-bgn+1;
+    int ebp1 = end-bgn+1;
+    if (base.is_frst()) {
         count = 0;
         for(j=0;j<base.nseg;++j) {
-            sign = bgnsign;
+            sind = base.seg(j);
+            offset = (sind*stride +bgn)*x.NV;
             for(k=0;k<ebp1;++k) {
                 for(n=0;n<x.NV;++n) {
-                    base.fsndbuf(count) += sign*base.frcvbuf(m,count);
-                    count++;
+                    base.fsndbuf(count++) = sdata[offset++];
+                }
+            }
+        }
+    }
+    else {
+        int bgnsign = (bgn % 2 ? -1 : 1);
+        count = 0;
+        
+        for(j=base.nseg-1;j>=0;--j) {
+            sind = base.seg(j);
+            offset = (sind*stride +bgn)*x.NV;
+            sign = bgnsign;
+            for (k=bgn;k<=end;++k) {
+                for(n=0;n<x.NV;++n) {
+                    base.fsndbuf(count++) = sign*sdata[offset++];
                 }
                 sign *= -1;
             }
-        }
+        }    
     }
+    base.sndsize() = count;
+    base.sndtype() = boundary::flt_msg;
+}
+
+void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+    int j,k,n,count,offset,sind,sign;
     
-    if (matches > 1) {
-        mtchinv = 1./matches;
-
-#ifdef MPDEBUG
-        *x.gbl->log << "side finalrcv"  << base.idnum << " " << base.is_frst() << std::endl;
-#endif
-
-        if (base.is_frst()) {
-            count = 0;
-            for(j=0;j<base.nseg;++j) {
-                sind = base.seg(j);
-                offset = (sind*stride +bgn)*x.NV;
-                for (k=bgn;k<=end;++k) {
-                    for(n=0;n<x.NV;++n) {
-                        sdata[offset++] = base.fsndbuf(count++)*mtchinv;
-#ifdef MPDEBUG
-                        *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
-#endif
-                    }
+    bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
+    if (!reload) return;
+    
+    int ebp1 = end -bgn +1;
+    if (base.is_frst()) {
+        count = 0;
+        for(j=0;j<base.nseg;++j) {
+            sind = base.seg(j);
+            offset = (sind*stride +bgn)*x.NV;
+            for(k=0;k<ebp1;++k) {
+                for(n=0;n<x.NV;++n) {
+                    sdata[offset++] = base.fsndbuf(count++);
                 }
             }
         }
-        else {
-            for(j=base.nseg-1;j>=0;--j) {
-                sind = base.seg(j);
-                offset = (sind*stride +bgn)*x.NV;
-                for (k=bgn;k<=end;++k) {
-                    for(n=0;n<x.NV;++n) {
-                        sdata[offset++] = base.fsndbuf(count++)*mtchinv;
-#ifdef MPDEBUG
-                        *x.gbl->log << "\t" << sdata[offset-1] << std::endl;
-#endif
-                    }
-                }
-            }    
-        }
     }
-    
-    return;
+    else {
+        int bgnsign = (bgn % 2 ? -1 : 1);
+        int count = 0;
+        
+        for(j=base.nseg-1;j>=0;--j) {
+            sind = base.seg(j);
+            offset = (sind*stride +bgn)*x.NV;
+            sign = bgnsign;
+            for (k=bgn;k<=end;++k) {
+                for(n=0;n<x.NV;++n) {
+                    sdata[offset++] = sign*base.fsndbuf(count++);
+                }
+                sign *= -1;
+            }
+        }    
+    }
 }
+
 
 void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
     

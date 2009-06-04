@@ -10,7 +10,7 @@
 #ifndef _hp_boundary_h_
 #define _hp_boundary_h_
 
-#include <tri_boundary.h>
+#include "tri_hp.h"
 
 class hp_edge_bdry;
 
@@ -19,7 +19,6 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
         std::string mytype;
         tri_hp& x;
         vrtx_bdry& base;
-        FLT dummy;
         
     public:
         hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
@@ -125,10 +124,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
         virtual void sdirichlet(int mode) {}
         virtual void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-1,x.NV*vrtstride);}
         virtual void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-1,x.NV*vrtstride);}
-        virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride) {
-            base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
-            return;
-        }
+        virtual void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
         virtual void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
     
         /* FOR COUPLED DYNAMIC BOUNDARIES */

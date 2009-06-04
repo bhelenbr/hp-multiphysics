@@ -168,10 +168,6 @@ void neumann::rsdl(int stage) {
         for(n=0;n<tri_mesh::ND;++n)
             basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
         
-        x.crdtocht1d(sind,1);
-        for(n=0;n<tri_mesh::ND;++n)
-            basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
-        
         x.ugtouht1d(sind);
         for(n=0;n<x.NV;++n)
             basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
