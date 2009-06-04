@@ -189,6 +189,13 @@ class tet_basis {
 			ptvalues(2.0*(1+r)/(-s-t+10.*EPSILON) -1.0, 2.0*(1+s)/(1-t+10.*EPSILON)-1.0, t);
 			ptprobe(nv, f, lin, stride);
 		}
+      
+      void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT *dz1, FLT r, FLT s, FLT t, FLT *lin1, int stride);
+      
+//        {
+//         ptvalues_deriv(2.0*(1+r)/(-s-t+10.*EPSILON) -1.0, 2.0*(1+s)/(1-t+10.*EPSILON)-1.0, t);
+//         ptprobe(nv, f1, dx1, dy1, dz1, lin1, stride);
+//      }
 		
 		/* 2D SIDE PROBE FUNCTIONS */
 		inline void ptprobe2d(int nv, FLT *f, FLT r, FLT s, FLT *sin, int stride) {    
@@ -202,7 +209,8 @@ class tet_basis {
 			ptprobe1d(nv,f,sin,stride);
 		}	 
 		 
-		void ptprobe(int nv, FLT *f, FLT *lin, int stride);  // REUSES OLD R,S,T    
+		void ptprobe(int nv, FLT *f, FLT *lin, int stride);  // REUSES OLD R,S,T
+//      void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT *dz1, FLT *lin, int stride); // REUSES OLD R,S,T
 		void ptprobe2d(int nv, FLT *f, FLT *lin, int stride); // REUSES OLD R,S  
 		void ptprobe1d(int nv, FLT *f, FLT *sin, int stride);  // REUSES OLD VALUES OF X
 
