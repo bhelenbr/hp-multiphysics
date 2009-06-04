@@ -65,9 +65,9 @@
 		6F4949C7084C097A00C7F857 /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		6F4949C8084C097A00C7F857 /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		6F4949D4084C09A500C7F857 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		6FB1507F0867810C00EAF2E5 /* libmyblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmyblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FB1507F0867810C00EAF2E5 /* libblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB150960867814600EAF2E5 /* libutil.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libutil.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		8DD76FB20486AB0100D96B5E /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76FB20486AB0100D96B5E /* utilities */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = utilities; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,8 +120,8 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76FB20486AB0100D96B5E /* main */,
-				6FB1507F0867810C00EAF2E5 /* libmyblas.a */,
+				8DD76FB20486AB0100D96B5E /* utilities */,
+				6FB1507F0867810C00EAF2E5 /* libblas.a */,
 				6FB150960867814600EAF2E5 /* libutil.a */,
 			);
 			name = Products;
@@ -180,7 +180,7 @@
 			);
 			name = myblas;
 			productName = blas;
-			productReference = 6FB1507F0867810C00EAF2E5 /* libmyblas.a */;
+			productReference = 6FB1507F0867810C00EAF2E5 /* libblas.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FB150950867814600EAF2E5 /* util */ = {
@@ -215,7 +215,7 @@
 			name = main;
 			productInstallPath = "$(HOME)/bin";
 			productName = utilities;
-			productReference = 8DD76FB20486AB0100D96B5E /* main */;
+			productReference = 8DD76FB20486AB0100D96B5E /* utilities */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -362,9 +362,9 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -387,10 +387,9 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /lib;
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -412,9 +411,9 @@
 			buildSettings = {
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -435,9 +434,9 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -460,10 +459,9 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /lib;
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -485,9 +483,9 @@
 			buildSettings = {
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
-				OPTIMIZATION_CFLAGS = "-O0";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -507,7 +505,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				OPTIMIZATION_CFLAGS = "-O0";
+				GCC_OPTIMIZATION_LEVEL = 0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -526,7 +524,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				OPTIMIZATION_CFLAGS = "-O0";
+				GCC_OPTIMIZATION_LEVEL = 0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -543,7 +541,7 @@
 		6FB150CB086782E900EAF2E5 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OPTIMIZATION_CFLAGS = "-O0";
+				GCC_OPTIMIZATION_LEVEL = 0;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
