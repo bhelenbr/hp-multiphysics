@@ -15,8 +15,6 @@
 #include "tet_hp.h"
 #include <myblas.h>
 
-class hp_face_bdry;
-
 class hp_vrtx_bdry : public vgeometry_interface<3> {
    protected:
      std::string mytype;
