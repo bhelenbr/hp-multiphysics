@@ -16,6 +16,10 @@
 /* VERTEX FUNCTIONS */
 /********************/
     
+
+
+/*  Hi Brian */
+
 /* GENERIC VERTEX COMMUNICATIONS */
 void vcomm::ploadbuff(boundary::groups grp,FLT *base,int bgn,int end, int stride) {
     int i,offset;
