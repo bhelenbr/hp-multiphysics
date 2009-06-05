@@ -57,6 +57,8 @@ void tet_hp_ins::setup_preconditioner() {
             qmax = 0.0;
             for(j=0;j<4;++j) {
                 v0 = v(j);
+				cout << "v0 = "<< v0 << " pnts = " << pnts(v0) << " vrtxbd = " << vrtxbd(1)(v0) << endl;
+				cout << "ug.v = " << ug.v(v0,0) << ' ' << ug.v(v0,1) << ' ' << ug.v(v0,2) << endl;
                 q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
                     +pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
 					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);

@@ -707,7 +707,7 @@ void hp_face_bdry::curv_init(int tlvl) {
    if (basis::tet(x.log2p).fm <= 0) return;  
    
    for(j=0;j<base.ntri;++j) {
-      int tind = base.seg(j).gindx;
+      int tind = base.tri(j).gindx;
       // x.crdtocht2d_bdry(tind,tlvl);  FIXME
       
       for(n=0;n<tet_mesh::ND;++n)

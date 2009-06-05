@@ -152,24 +152,40 @@ namespace bdry_ins {
 			}
 		}
 		
-		void edirichlet(int mode) {
+//		void edirichlet(int mode) {
+//			int sind;
+//			
+//			for(int j=0;j<base.nseg;++j) {
+//				sind = base.seg(j).gindx;
+//				x.gbl->res.e(sind,mode,Range(0,x.NV-2)) = 0.0;
+//			}
+//		}
+		void edirichlet() {
 			int sind;
-			
-			for(int j=0;j<base.nseg;++j) {
-				sind = base.seg(j).gindx;
-				x.gbl->res.e(sind,mode,Range(0,x.NV-2)) = 0.0;
+			if (basis::tet(x.log2p).em > 0) {
+				for(int j=0;j<base.nseg;++j) {
+					sind = base.seg(j).gindx;
+					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),Range(0,x.NV-2)) = 0.0;
+				}
 			}
-		}
-		
-		void fdirichlet(int mode) {
+		}		
+//		void fdirichlet(int mode) {
+//			int find;
+//			
+//			for(int j=0;j<base.ntri;++j) {
+//				find = base.tri(j).gindx;
+//				x.gbl->res.f(find,mode,Range(0,x.NV-2)) = 0.0;
+//			}
+//		}
+		void fdirichlet() {
 			int find;
-			
-			for(int j=0;j<base.ntri;++j) {
-				find = base.tri(j).gindx;
-				x.gbl->res.f(find,mode,Range(0,x.NV-2)) = 0.0;
+			if (basis::tet(x.log2p).fm > 0) {
+				for(int j=0;j<base.ntri;++j) {
+					find = base.tri(j).gindx;
+					x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),Range(0,x.NV-2)) = 0.0;
+				}
 			}
-		}
-		
+		}		
 		void tadvance() {
 			hp_face_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);

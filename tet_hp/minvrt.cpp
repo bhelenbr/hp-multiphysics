@@ -16,7 +16,7 @@ void tet_hp::minvrt() {
 	char trans[] = "T";
    int last_phase, mp_phase;
    
-	cout.precision(15);
+	//cout.precision(15);
 	//cout << "p = "<< basis::tet(log2p).p <<" vdiag " << basis::tet(log2p).vdiag << " ediag " << basis::tet(log2p).ediag << " fdiag "<< basis::tet(log2p).fdiag << endl;	
    /* LOOP THROUGH EDGES */
    if (basis::tet(log2p).em > 0) {
