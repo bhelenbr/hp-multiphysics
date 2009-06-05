@@ -55,9 +55,11 @@ class tet_hp : public tet_mesh  {
       TinyVector<TinyVector<FLT,MXTM>,ND> cht; // used in crd to cht routines
       Array<TinyVector<FLT,MXTM>,1> uht; // used in ug to uht routines
       Array<TinyVector<FLT,MXTM>,1> lf;  // used in intgrt routines
-      TinyVector<TinyVector<double,MXGP>,ND> crd1d;
+      TinyVector<TinyVector<double,MXGP>,ND> crd1d,dcrd1d;
       Array<TinyVector<double,MXGP>,1> u1d,res1d;   
       TinyVector<TinyVector<TinyVector<double,MXGP>,MXGP>,ND> crd2d;
+	  TinyVector<TinyVector<TinyVector<TinyVector<double,MXGP>,MXGP>,2>,ND> dcrd2d;
+
       Array<TinyVector<TinyVector<double,MXGP>,MXGP>,1> u2d,res2d;   
       TinyVector<TinyVector<TinyVector<TinyVector<double,MXGP>,MXGP>,MXGP>,ND> crd;
       Array<TinyVector<TinyVector<TinyVector<double,MXGP>,MXGP>,MXGP>,1> u,res;  

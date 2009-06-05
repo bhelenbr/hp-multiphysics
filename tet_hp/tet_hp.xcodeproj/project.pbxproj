@@ -35,6 +35,10 @@
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		959FD36C0E313856000EF952 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
+		95F027D60FD89C08000E9979 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
+		95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
+		95F027D80FD89C0B000E9979 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2C0F55C464008788DB /* getnewibc.cpp */; };
+		95F027D90FD89C0D000E9979 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE310F55C464008788DB /* tstep.cpp */; };
 		95F478A30DF5A9C500255952 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9533379C0DCA18D2007A1D26 /* rsdl.cpp */; };
 		95F478A40DF5A9C800255952 /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */; };
 		95F478A50DF5A9CA00255952 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B10DCA19B7007A1D26 /* getnewibc.cpp */; };
@@ -331,6 +335,10 @@
 				6F14BE040FBA8649006DD167 /* copy.cpp in Sources */,
 				6F4CAFBD0FC0A9AE006D50F8 /* allocate.cpp in Sources */,
 				6F4CB0A10FC15169006D50F8 /* rsdl.cpp in Sources */,
+				95F027D60FD89C08000E9979 /* bdry.cpp in Sources */,
+				95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */,
+				95F027D80FD89C0B000E9979 /* getnewibc.cpp in Sources */,
+				95F027D90FD89C0D000E9979 /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

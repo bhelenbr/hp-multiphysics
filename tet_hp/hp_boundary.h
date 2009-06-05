@@ -15,6 +15,7 @@
 #include "tet_hp.h"
 #include <myblas.h>
 
+class hp_face_bdry;
 
 class hp_vrtx_bdry : public vgeometry_interface<3> {
    protected:
@@ -83,6 +84,7 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		tet_hp& x;
 		edge_bdry &base;
 		const hp_edge_bdry *adapt_storage;
+		init_bdry_cndtn *ibc;
 		bool curved, coupled;
 		Array<TinyVector<FLT,tet_mesh::ND>,2> crv;
 		Array<Array<TinyVector<FLT,tet_mesh::ND>,2>,1> crvbd;
@@ -177,6 +179,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
      tet_hp& x;
      face_bdry &base;
      const hp_face_bdry *adapt_storage;
+	 init_bdry_cndtn *ibc;
      bool curved, coupled;
      Array<TinyVector<FLT,tet_mesh::ND>,2> ecrv;
      Array<Array<TinyVector<FLT,tet_mesh::ND>,2>,1> ecrvbd;
@@ -197,7 +200,8 @@ class hp_face_bdry : public fgeometry_interface<3> {
      virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
      /** This is to read solution data **/
      virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0); 
-     
+	 void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
+
      /* CURVATURE FUNCTIONS */
      bool is_curved() {return(curved);}
      FLT& crde(int ind, int mode, int dir) {return(ecrv(ind,mode)(dir));}
