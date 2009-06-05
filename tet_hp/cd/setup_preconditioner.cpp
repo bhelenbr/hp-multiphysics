@@ -125,8 +125,6 @@ void tet_hp_cd::setup_preconditioner() {
 //	cout << "hmax = " << hmax << endl;
 //	cout << "hmin = " << hmin << endl;
 
-	if(basis::tet(log2p).p > 2)
-		spoke();
 	
 	tet_hp::setup_preconditioner();
     

@@ -51,21 +51,18 @@ void tet_hp_ins::setup_preconditioner() {
 
 			}
 			
-			
 			h = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); // 3*8/6=4
-           // amax = sqrt(amax);
             hmax = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); // 3*8/6=4
-
         
             qmax = 0.0;
-            for(j=0;j<3;++j) {
+            for(j=0;j<4;++j) {
                 v0 = v(j);
                 q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
                     +pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
 					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
 				qmax = MAX(qmax,q);
             }
-            
+            cout << "qmax = " << qmax << endl;
             if (!(jcb > 0.0)) { 
                 *gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
                 *gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
@@ -223,6 +220,8 @@ void tet_hp_ins::setup_preconditioner() {
 //            }
 //        }
     }
-    
+
+
+	
     tet_hp::setup_preconditioner();
 }

@@ -398,6 +398,8 @@ void tet_hp::minvrt() {
 				hp_fbdry(i)->fdirichlet();
 
       }
+	
+
 					
    return;
 }
@@ -490,6 +492,10 @@ void tet_hp::setup_preconditioner() {
 //      }
 //   }
 
+	
+	if(basis::tet(log2p).p > 2)
+		spoke();
+	
    return;
 }
 
@@ -502,7 +508,7 @@ void tet_hp::spoke(){
 	TinyVector<int,2> v0;
 	TinyVector<int,3> e0;
 	TinyMatrix<int,6,2> vrtxseg;
-	
+
 	for(int vind = 0;vind < npnt; ++vind){
 		tet_mesh::vertexball(vind);
 		spkmass(vind) = 0.0;
