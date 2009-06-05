@@ -22,6 +22,7 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
      vrtx_bdry& base;
      
    public:
+     init_bdry_cndtn *ibc;
      hp_vrtx_bdry(tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";ibc=x.gbl->ibc;}
      hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tet_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
      virtual void* create_global_structure() {return 0;}
@@ -29,7 +30,7 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
      virtual void init(input_map& input,void* &gbl_in) {} /**< This is to read definition data only (not solution data) */
      virtual void copy(const hp_vrtx_bdry& tgt) {}
      virtual ~hp_vrtx_bdry() {}
-     
+
      /* input output functions */
      virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0) {
        switch(typ) {
