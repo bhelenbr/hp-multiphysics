@@ -12,37 +12,37 @@
 #include <blitz/tinyvec-et.h>
 
 void tet_mesh::refineby2(const class tet_mesh& inmesh) {
-    int i,j,n,sind,ind,find,tind,p0,p1,count,pnear,err,initialsidenumber;
-    bool found;
-    TinyVector<FLT,ND> xpt;
-    int ijind[3][3][3];
+	int i,j,n,sind,ind,find,tind,p0,p1,count,pnear,err,initialsidenumber;
+	bool found;
+	TinyVector<FLT,ND> xpt;
+	int ijind[3][3][3];
 	
-    /* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
-    /* BECAUSE OF gbl->intwk USAGE */
+	/* INPUT MESH MUST HAVE GROWTH FACTOR OF 4 */
+	/* BECAUSE OF gbl->intwk USAGE */
 	if (!initialized) {
-        /* VERTEX STORAGE ALLOCATION */
-        init(inmesh,duplicate,0.5);
-    }
-    
-    this->copy(inmesh);
-    				
-    /* CALCULATE LOCATION OF NEW INTERIOR POINTS */
-    for(sind=0;sind<nseg;++sind) {            
-        p0 = seg(sind).pnt(0);
-        p1 = seg(sind).pnt(1);
-        
-        /* MIDPOINT */
-        for(n=0;n<ND;++n)
-            xpt(n) = 0.5*(pnts(p0)(n) +pnts(p1)(n));
-                    
-        /* INSERT POINT */
-        for(n=0;n<ND;++n)
-            pnts(npnt)(n) = xpt(n);
-            
-        otree.addpt(npnt);
-        ++npnt;
-    }
-   
+		/* VERTEX STORAGE ALLOCATION */
+		init(inmesh,duplicate,0.5);
+	}
+	
+	this->copy(inmesh);
+					
+	/* CALCULATE LOCATION OF NEW INTERIOR POINTS */
+	for(sind=0;sind<nseg;++sind) {            
+		p0 = seg(sind).pnt(0);
+		p1 = seg(sind).pnt(1);
+		
+		/* MIDPOINT */
+		for(n=0;n<ND;++n)
+			xpt(n) = 0.5*(pnts(p0)(n) +pnts(p1)(n));
+					
+		/* INSERT POINT */
+		for(n=0;n<ND;++n)
+			pnts(npnt)(n) = xpt(n);
+			
+		otree.addpt(npnt);
+		++npnt;
+	}
+
 	/* ADD NEW TETS TO MESH */
 	ind=ntet;
 	for(int tind=0;tind<ntet;++tind){                
@@ -92,12 +92,11 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	}
 	
 					
-	for(int i = 0; i < nebd; ++i){
+	for(int i = 0; i < nebd; ++i) {
 		ind=ebdry(i)->nseg;
-		for(int j = 0; j < ebdry(i)->nseg; ++j){
+		for(int j = 0; j < ebdry(i)->nseg; ++j) {
 			sind = ebdry(i)->seg(j).gindx;
-
-      }
+		}
 		ebdry(i)->setup_next_prev();
 		ebdry(i)->reorder();
 	}
@@ -122,7 +121,7 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 		fbdry(i)->createvtri();    
 	}
 			
-    
-    return;
+	
+	return;
 }
 

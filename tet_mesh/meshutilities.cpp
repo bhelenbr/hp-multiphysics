@@ -278,60 +278,60 @@
 //}
 
 
-            
-    
+			
+	
 
 void tet_mesh::shift(TinyVector<FLT,ND>& s) {
-    int n;
-    
-    for(int i=0;i<npnt;++i)
-        for(n=0;n<ND;++n)
-            pnts(i)(n) += s(n);
+	int n;
+	
+	for(int i=0;i<npnt;++i)
+		for(n=0;n<ND;++n)
+			pnts(i)(n) += s(n);
 
-    return;
+	return;
 }
 
 void tet_mesh::scale(TinyVector<FLT,ND>& s) {
-    int n;
-    for(int i=0;i<npnt;++i)
-        for(n=0;n<ND;++n)
-            pnts(i)(n) *= s(n);
+	int n;
+	for(int i=0;i<npnt;++i)
+		for(n=0;n<ND;++n)
+			pnts(i)(n) *= s(n);
 
-    return;
+	return;
 }
 
 int tet_mesh::smooth_cofa(int niter) {
-    int iter,i,j,n,p0,p1;
-        
-    for(i=0;i<npnt;++i)
-        pnt(i).info = 0;
-        
-    for(i=0;i<nfbd;++i) {
-        for(j=0;j<fbdry(i)->npnt;++j) {
-            pnt(fbdry(i)->pnt(j).gindx).info = -1;
-        }
-    }
-    
-    for(iter=0; iter< niter; ++iter) {
-        /* SMOOTH POINT DISTRIBUTION X*/
-        for(n=0;n<ND;++n) {
-            for(i=0;i<npnt;++i)
-                gbl->fltwk(i) = 0.0;
-    
-            for(i=0;i<nseg;++i) {
-                p0 = seg(i).pnt(0);
-                p1 = seg(i).pnt(1);
-                gbl->fltwk(p0) += pnts(p1)(n);
-                gbl->fltwk(p1) += pnts(p0)(n);
-            }
-    
-            for(i=0;i<npnt;++i) {
-                if (pnt(i).info == 0) {
-                    pnts(i)(n) = gbl->fltwk(i)/pnt(i).nnbor;
-                }
-            }
-        }
-    }
-    
-    return(1);
+	int iter,i,j,n,p0,p1;
+		
+	for(i=0;i<npnt;++i)
+		pnt(i).info = 0;
+		
+	for(i=0;i<nfbd;++i) {
+		for(j=0;j<fbdry(i)->npnt;++j) {
+			pnt(fbdry(i)->pnt(j).gindx).info = -1;
+		}
+	}
+	
+	for(iter=0; iter< niter; ++iter) {
+		/* SMOOTH POINT DISTRIBUTION X*/
+		for(n=0;n<ND;++n) {
+			for(i=0;i<npnt;++i)
+				gbl->fltwk(i) = 0.0;
+	
+			for(i=0;i<nseg;++i) {
+				p0 = seg(i).pnt(0);
+				p1 = seg(i).pnt(1);
+				gbl->fltwk(p0) += pnts(p1)(n);
+				gbl->fltwk(p1) += pnts(p0)(n);
+			}
+	
+			for(i=0;i<npnt;++i) {
+				if (pnt(i).info == 0) {
+					pnts(i)(n) = gbl->fltwk(i)/pnt(i).nnbor;
+				}
+			}
+		}
+	}
+	
+	return(1);
 }

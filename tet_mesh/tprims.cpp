@@ -2,11 +2,11 @@
 #include<cmath>
 
 bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
-    tind = pnt(seedvrtx).tet;
+	tind = pnt(seedvrtx).tet;
 	int nbor = pnt(seedvrtx).nnbor;
 	int ind = 0;
 	int ind2 = nbor;
-   bool found = true;
+	bool found = true;
 
 	/* KNOWN TET CONNECTED TO VERTEX */
 	if(intet(tind, xp) < tet(tind).vol*10.*EPSILON)
@@ -134,21 +134,21 @@ FLT tet_mesh::intet(int tind, const TinyVector<FLT,3> &xp) {
 		/* CALCULATE VOLUME */
 		tet_wgt(i)=-rnx*(pnt(v(3),0)-pnt(v(0),0))-rny*(pnt(v(3),1)-pnt(v(0),1))-rnz*(pnt(v(3),2)-pnt(v(0),2)); 
 	}
-    
-    return(fabs(tet_wgt(0)) +fabs(tet_wgt(1)) +fabs(tet_wgt(2))+fabs(tet_wgt(3)) - (tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3)));
+	
+	return(fabs(tet_wgt(0)) +fabs(tet_wgt(1)) +fabs(tet_wgt(2))+fabs(tet_wgt(3)) - (tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3)));
 }
 
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
 void tet_mesh::getwgts(TinyVector<FLT,4> &wt) const {
-    int i;
-    FLT sum;
-    
-    sum = tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3);
-    for(i=0;i<4;++i) 
-        wt(i) = tet_wgt(i)/sum;
-    
-    return;
+	int i;
+	FLT sum;
+	
+	sum = tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3);
+	for(i=0;i<4;++i) 
+		wt(i) = tet_wgt(i)/sum;
+	
+	return;
 }
  //       
 //FLT tri_mesh::minangle(int p0, int p1, int p2) const {

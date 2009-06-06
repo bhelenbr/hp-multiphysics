@@ -14,37 +14,37 @@
 
 
 void tet_mesh::vertexball(int vind){
-    int i,j,k,ind,tind,tind2;
-    int nbor = pnt(vind).nnbor;        
+	int i,j,k,ind,tind,tind2;
+	int nbor = pnt(vind).nnbor;        
 
-    ind = 0;
-    // known tet connected to vertex
-    gbl->i2wk(ind) = pnt(vind).tet;
-    gbl->i1wk(gbl->i2wk(ind)) = 0;
-    
-    for(i = 0; i < nbor; ++i) {    
-        tind = gbl->i2wk(i);  
-        for(j = 0; j < 4; ++j) {            
-            tind2 = tet(tind).tet(j);
-            if (tind2 == -1)
-                goto NEXTFACE;
-            if (gbl->i1wk(tind2) < 0) {            
-                for(k = 0; k < 4; ++k) {
-                    if(tet(tind2).pnt(k) == vind) {
-                        gbl->i2wk(++ind) = tind2; // connected tet found
-                        gbl->i1wk(tind2) = 0;
-                        goto NEXTFACE;                            
-                    }
-                }
-            }
-            NEXTFACE:;        
-        }
-    }
-    
-    for(i = 0; i < nbor; ++i) {    
-        gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
-    }
-    return;
+	ind = 0;
+	// known tet connected to vertex
+	gbl->i2wk(ind) = pnt(vind).tet;
+	gbl->i1wk(gbl->i2wk(ind)) = 0;
+	
+	for(i = 0; i < nbor; ++i) {    
+		tind = gbl->i2wk(i);  
+		for(j = 0; j < 4; ++j) {            
+			tind2 = tet(tind).tet(j);
+			if (tind2 == -1)
+				goto NEXTFACE;
+			if (gbl->i1wk(tind2) < 0) {            
+				for(k = 0; k < 4; ++k) {
+					if(tet(tind2).pnt(k) == vind) {
+						gbl->i2wk(++ind) = tind2; // connected tet found
+						gbl->i1wk(tind2) = 0;
+						goto NEXTFACE;                            
+					}
+				}
+			}
+			NEXTFACE:;        
+		}
+	}
+	
+	for(i = 0; i < nbor; ++i) {    
+		gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
+	}
+	return;
 }
 
 //void tet_mesh::spokes(int vind){
@@ -79,37 +79,37 @@ void tet_mesh::vertexball(int vind){
 //}
 
 void tet_mesh::ring(int eind){
-    int i,j,k,ind,tind,tind2;
-    int nbor = seg(eind).nnbor;        
+	int i,j,k,ind,tind,tind2;
+	int nbor = seg(eind).nnbor;        
 
-    ind = 0;
-    // known tet connected to edge
-    gbl->i2wk(ind) = seg(eind).tet;
-    gbl->i1wk(gbl->i2wk(ind)) = 0;
-    
-    for(i = 0; i < nbor; ++i) {    
-        tind = gbl->i2wk(i);  
-        for(j = 0; j < 4; ++j) {            
-            tind2 = tet(tind).tet(j);
-            if (tind2 == -1)
-                goto NEXTFACE;
-            if (gbl->i1wk(tind2) < 0) {            
-                for(k = 0; k < 6; ++k) {
-                    if(tet(tind2).seg(k) == eind) {
-                        gbl->i2wk(++ind) = tind2; // connected tet found
-                        gbl->i1wk(tind2) = 0;
-                        goto NEXTFACE;                            
-                    }
-                }
-            }
-            NEXTFACE:;        
-        }
-    }
-    
-    for(i = 0; i < nbor; ++i) {    
-        gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
-    }
-    return;
+	ind = 0;
+	// known tet connected to edge
+	gbl->i2wk(ind) = seg(eind).tet;
+	gbl->i1wk(gbl->i2wk(ind)) = 0;
+	
+	for(i = 0; i < nbor; ++i) {    
+		tind = gbl->i2wk(i);  
+		for(j = 0; j < 4; ++j) {            
+			tind2 = tet(tind).tet(j);
+			if (tind2 == -1)
+				goto NEXTFACE;
+			if (gbl->i1wk(tind2) < 0) {            
+				for(k = 0; k < 6; ++k) {
+					if(tet(tind2).seg(k) == eind) {
+						gbl->i2wk(++ind) = tind2; // connected tet found
+						gbl->i1wk(tind2) = 0;
+						goto NEXTFACE;                            
+					}
+				}
+			}
+			NEXTFACE:;        
+		}
+	}
+	
+	for(i = 0; i < nbor; ++i) {    
+		gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
+	}
+	return;
 }
 
 

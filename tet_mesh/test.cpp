@@ -26,12 +26,12 @@ void tet_mesh::test() {
 //    input["mesh"] = "box2";
 //    
 //    tet_mesh::init(input,0);
-        
-    //in = static_cast<tet_mesh::filetype>(tecplot);
-    // output tecplot
-    //tet_mesh::output(filename, in);
-    
-    
+		
+	//in = static_cast<tet_mesh::filetype>(tecplot);
+	// output tecplot
+	//tet_mesh::output(filename, in);
+	
+	
 //    // output all fields to screen    
 //    n = 4;
 //    
@@ -183,8 +183,8 @@ void tet_mesh::test() {
 //    tet_mesh::ring(eind);
 //    for(int i = 0; i < seg(eind).nnbor; ++i)
 //        cout << gbl->i2wk(i) << endl;
-        
-    
+		
+	
 //    cout << endl << "tri global index data" << endl;
 //    for(int i = 0; i < n; ++i)        
 //        cout << fbdry(0)->tet(i).gindx << endl;
@@ -198,9 +198,9 @@ void tet_mesh::test() {
 //    fbdry(0)->vertexcircle(vind);
 //    for(int i = 0; i < fbdry(0)->pnt(vind).nnbor; ++i)
 //        cout << i2wk(i) << endl;
-        
-        
-    ////output mesh
+		
+		
+	////output mesh
 //    in = static_cast<tet_mesh::filetype>(tecplot);
 //    tet_mesh::output(filename, in);
 
@@ -265,147 +265,147 @@ void tet_mesh::test() {
 //        }
 //        
 //    }
-    checkintegrity();
+	checkintegrity();
 return;
 }
 
 void tet_mesh::checkintegrity() {
-    int tind,i,j,sind,find;
-    // vertices of each segment on tet
-    TinyMatrix<int,6,2> vs;    
-    vs(0,0)=2, vs(0,1)=3; 
-    vs(1,0)=3, vs(1,1)=1; 
-    vs(2,0)=2, vs(2,1)=1;
-    vs(3,0)=1, vs(3,1)=0;
-    vs(4,0)=2, vs(4,1)=0; 
-    vs(5,0)=3, vs(5,1)=0;
-    
-    // vertices of each face on a tet
-    TinyMatrix<int,4,3> vf1;
-    vf1(0,0)=1, vf1(0,1)=2, vf1(0,2)=3;
-    vf1(1,0)=0, vf1(1,1)=3, vf1(1,2)=2;
-    vf1(2,0)=0, vf1(2,1)=1, vf1(2,2)=3;
-    vf1(3,0)=0, vf1(3,1)=2, vf1(3,2)=1;
-    TinyMatrix<int,4,3> vf2;
-    vf2(0,0)=1, vf2(0,2)=2, vf2(0,1)=3;
-    vf2(1,0)=0, vf2(1,2)=3, vf2(1,1)=2;
-    vf2(2,0)=0, vf2(2,2)=1, vf2(2,1)=3;
-    vf2(3,0)=0, vf2(3,2)=2, vf2(3,1)=1; 
-    
-    // segments of each face on a tet
-    TinyMatrix<int,4,3> sf1;
-    sf1(0,0)=0, sf1(0,1)=1, sf1(0,2)=2;
-    sf1(1,0)=0, sf1(1,1)=4, sf1(1,2)=5;
-    sf1(2,0)=1, sf1(2,1)=5, sf1(2,2)=3;
-    sf1(3,0)=2, sf1(3,1)=3, sf1(3,2)=4;
-    TinyMatrix<int,4,3> sf2;
-    sf2(0,0)=0, sf2(0,2)=1, sf2(0,1)=2;
-    sf2(1,0)=0, sf2(1,2)=4, sf2(1,1)=5;
-    sf2(2,0)=1, sf2(2,2)=5, sf2(2,1)=3;
-    sf2(3,0)=2, sf2(3,2)=3, sf2(3,1)=4;
-    
-    // vertices of each segment on a tri
-    TinyMatrix<int,3,2> vst;
-    vst(0,0)=1, vst(0,1)=2;
-    vst(1,0)=2, vst(1,1)=0;
-    vst(2,0)=0, vst(2,1)=1;
-    
-    
-    for(i=0;i<maxvst;++i) {
-        if (gbl->i1wk(i) != -1) {
-            *gbl->log << "gbl->i1wk check failed" << std::endl;
-            exit(1);
-        }
-    }
+	int tind,i,j,sind,find;
+	// vertices of each segment on tet
+	TinyMatrix<int,6,2> vs;    
+	vs(0,0)=2, vs(0,1)=3; 
+	vs(1,0)=3, vs(1,1)=1; 
+	vs(2,0)=2, vs(2,1)=1;
+	vs(3,0)=1, vs(3,1)=0;
+	vs(4,0)=2, vs(4,1)=0; 
+	vs(5,0)=3, vs(5,1)=0;
+	
+	// vertices of each face on a tet
+	TinyMatrix<int,4,3> vf1;
+	vf1(0,0)=1, vf1(0,1)=2, vf1(0,2)=3;
+	vf1(1,0)=0, vf1(1,1)=3, vf1(1,2)=2;
+	vf1(2,0)=0, vf1(2,1)=1, vf1(2,2)=3;
+	vf1(3,0)=0, vf1(3,1)=2, vf1(3,2)=1;
+	TinyMatrix<int,4,3> vf2;
+	vf2(0,0)=1, vf2(0,2)=2, vf2(0,1)=3;
+	vf2(1,0)=0, vf2(1,2)=3, vf2(1,1)=2;
+	vf2(2,0)=0, vf2(2,2)=1, vf2(2,1)=3;
+	vf2(3,0)=0, vf2(3,2)=2, vf2(3,1)=1; 
+	
+	// segments of each face on a tet
+	TinyMatrix<int,4,3> sf1;
+	sf1(0,0)=0, sf1(0,1)=1, sf1(0,2)=2;
+	sf1(1,0)=0, sf1(1,1)=4, sf1(1,2)=5;
+	sf1(2,0)=1, sf1(2,1)=5, sf1(2,2)=3;
+	sf1(3,0)=2, sf1(3,1)=3, sf1(3,2)=4;
+	TinyMatrix<int,4,3> sf2;
+	sf2(0,0)=0, sf2(0,2)=1, sf2(0,1)=2;
+	sf2(1,0)=0, sf2(1,2)=4, sf2(1,1)=5;
+	sf2(2,0)=1, sf2(2,2)=5, sf2(2,1)=3;
+	sf2(3,0)=2, sf2(3,2)=3, sf2(3,1)=4;
+	
+	// vertices of each segment on a tri
+	TinyMatrix<int,3,2> vst;
+	vst(0,0)=1, vst(0,1)=2;
+	vst(1,0)=2, vst(1,1)=0;
+	vst(2,0)=0, vst(2,1)=1;
+	
+	
+	for(i=0;i<maxvst;++i) {
+		if (gbl->i1wk(i) != -1) {
+			*gbl->log << "gbl->i1wk check failed" << std::endl;
+			exit(1);
+		}
+	}
 
-    for(tind=0;tind<ntet;++tind){
-        if(tet(tind).vol < 0){
-            *gbl->log << "negative tet volume on tet: " << tind << endl;
-            exit(1);
-        }
-        for(i = 0; i < 4; ++i){
-            find = tet(tind).tri(i);
-            if(tri(find).tet(1) > -1){
-                if(tet(tind).tet(i) < 0){
-                    *gbl->log << "tet neighbor data error type 1"<< endl;
-                    exit(1);
-                }
-                if(tri(find).tet(1) != tet(tind).tet(i) && tri(find).tet(0) != tet(tind).tet(i)){
-                    *gbl->log << "tet neighbor data error type 2"<< endl;
-                    exit(1);
-                }
-            }
+	for(tind=0;tind<ntet;++tind){
+		if(tet(tind).vol < 0){
+			*gbl->log << "negative tet volume on tet: " << tind << endl;
+			exit(1);
+		}
+		for(i = 0; i < 4; ++i){
+			find = tet(tind).tri(i);
+			if(tri(find).tet(1) > -1){
+				if(tet(tind).tet(i) < 0){
+					*gbl->log << "tet neighbor data error type 1"<< endl;
+					exit(1);
+				}
+				if(tri(find).tet(1) != tet(tind).tet(i) && tri(find).tet(0) != tet(tind).tet(i)){
+					*gbl->log << "tet neighbor data error type 2"<< endl;
+					exit(1);
+				}
+			}
 
-            if(tet(tind).rot(i) == 1){
-                for(j = 0; j < 3; ++j){
-                    if(tet(tind).pnt(vf1(i,j)) != tri(find).pnt(j)){
-                        *gbl->log << "face vertex error type 1"<< endl;
-                        exit(1);
-                    }
-                    if(tet(tind).seg(sf1(i,j)) != tri(find).seg(j)){
-                        *gbl->log << "face seg error type 1"<< endl;
-                        exit(1);
-                    }
-                }
-                if(tind != tri(find).tet(0)){
-                    *gbl->log << "tet rot error type 1"<< endl;
-                    exit(1);
-                }
-            }
-            else{
-                for(j = 0; j < 3; ++j){
-                    if(tet(tind).pnt(vf2(i,j)) != tri(find).pnt(j)){
-                        *gbl->log << "face vertex error type 2"<< endl;
-                        exit(1);
-                    }
-                    if(tet(tind).seg(sf2(i,j)) != tri(find).seg(j)){
-                        *gbl->log << "face seg error type 2"<< endl;
-                        exit(1);
-                    }
-                }
+			if(tet(tind).rot(i) == 1){
+				for(j = 0; j < 3; ++j){
+					if(tet(tind).pnt(vf1(i,j)) != tri(find).pnt(j)){
+						*gbl->log << "face vertex error type 1"<< endl;
+						exit(1);
+					}
+					if(tet(tind).seg(sf1(i,j)) != tri(find).seg(j)){
+						*gbl->log << "face seg error type 1"<< endl;
+						exit(1);
+					}
+				}
+				if(tind != tri(find).tet(0)){
+					*gbl->log << "tet rot error type 1"<< endl;
+					exit(1);
+				}
+			}
+			else{
+				for(j = 0; j < 3; ++j){
+					if(tet(tind).pnt(vf2(i,j)) != tri(find).pnt(j)){
+						*gbl->log << "face vertex error type 2"<< endl;
+						exit(1);
+					}
+					if(tet(tind).seg(sf2(i,j)) != tri(find).seg(j)){
+						*gbl->log << "face seg error type 2"<< endl;
+						exit(1);
+					}
+				}
 //                if(tri(find).tet(1) != -1){
 //                    if(tet(tind).tet(i) != tri(find).tet(1)){
 //                        *gbl->log << "tet rot error type 2 "<< tri(find).tet(1)<<' '<<tet(tind).tet(i)<< ' '<< tri(find).tet(1)<< ' ' << tet(tind).rot(i) << endl;                        
 //                        exit(1);
 //                    }
 //                }
-            }
-                            
-            for(j = 0; j < 3; ++j){
-                sind = tri(find).seg(j);
-                if(tri(find).sgn(j) == 1){
-                    if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
-                        *gbl->log << "seg vertex error type 1"<< endl;
-                        exit(1);
-                    }
-                }
-                else{
-                    if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
-                        *gbl->log << "seg vertex error type 2"<< endl;
-                        exit(1);
-                    }
-                }
-            }
-        }    
-        for(i = 0; i < 6; ++i){
-            sind = tet(tind).seg(i);
-            if(tet(tind).sgn(i) == 1){
-                if(seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))){
-                    *gbl->log << "tet seg vertex error type 1"<< endl;
-                    exit(1);
-                }
-            }
-            else{
-                if(seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))){
-                    *gbl->log << "tet seg vertex error type 2"<< endl;
-                    exit(1);
-                }
-            }
-        }
-        
-    }
-        
-    
-    return;
+			}
+							
+			for(j = 0; j < 3; ++j){
+				sind = tri(find).seg(j);
+				if(tri(find).sgn(j) == 1){
+					if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
+						*gbl->log << "seg vertex error type 1"<< endl;
+						exit(1);
+					}
+				}
+				else{
+					if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
+						*gbl->log << "seg vertex error type 2"<< endl;
+						exit(1);
+					}
+				}
+			}
+		}    
+		for(i = 0; i < 6; ++i){
+			sind = tet(tind).seg(i);
+			if(tet(tind).sgn(i) == 1){
+				if(seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))){
+					*gbl->log << "tet seg vertex error type 1"<< endl;
+					exit(1);
+				}
+			}
+			else{
+				if(seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))){
+					*gbl->log << "tet seg vertex error type 2"<< endl;
+					exit(1);
+				}
+			}
+		}
+		
+	}
+		
+	
+	return;
 }
 
