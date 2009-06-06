@@ -15,7 +15,6 @@
 #include <math.h>
 
 void tet_hp::getu(const TinyVector<FLT,3> &xp, int &tind,TinyVector<FLT,4> &uout) {
-
 	int tetsearch,tlvl;
 	double rnx,rny,rnz,minvol,volinv,r,s,t;
 	TinyVector<int,4> v;	
@@ -26,52 +25,51 @@ void tet_hp::getu(const TinyVector<FLT,3> &xp, int &tind,TinyVector<FLT,4> &uout
 		pnt(4,i)=xp(i);
 	}
 
-		
-		tetsearch=1;
-		while(tetsearch > -1){
-			tetsearch=-1;		
-			v=tet(tind).pnt;// vertices
-			for(int i=0;i < 4; ++i){
-				for(int j=0;j < 3; ++j){
-					pnt(i,j)=pnts(v(i))(j); // load vertex locations
-				}
+	tetsearch=1;
+	while(tetsearch > -1){
+		tetsearch=-1;		
+		v=tet(tind).pnt;// vertices
+		for(int i=0;i < 4; ++i){
+			for(int j=0;j < 3; ++j){
+				pnt(i,j)=pnts(v(i))(j); // load vertex locations
 			}
-
-			minvol=0.0;
-			for(int i=0;i < 4; ++i){// find volume of tetrahedral created from a face of tetrahedral and point
-				v(0)=0;
-				v(1)=1;
-				v(2)=2;
-				v(3)=3;
-				v(i)=4;
-				rnx = (pnt(v(1),1)-pnt(v(0),1))*(pnt(v(2),2)-pnt(v(0),2))-(pnt(v(2),1)-pnt(v(0),1))*(pnt(v(1),2)-pnt(v(0),2));
-				rny = (pnt(v(1),2)-pnt(v(0),2))*(pnt(v(2),0)-pnt(v(0),0))-(pnt(v(2),2)-pnt(v(0),2))*(pnt(v(1),0)-pnt(v(0),0));
-				rnz = (pnt(v(1),0)-pnt(v(0),0))*(pnt(v(2),1)-pnt(v(0),1))-(pnt(v(2),0)-pnt(v(0),0))*(pnt(v(1),1)-pnt(v(0),1));
-				vol(i)=-rnx*(pnt(v(3),0)-pnt(v(0),0))-rny*(pnt(v(3),1)-pnt(v(0),1))-rnz*(pnt(v(3),2)-pnt(v(0),2)); // calculate volume
-				if(vol(i) < minvol){
-					minvol=vol(i); // keep track of smallest volume 
-					tetsearch=i;
-				}
-			}
-			if(tetsearch > -1){
-				tind=tet(tind).tet(tetsearch);// if tet is not found then search in direction of smallest volume
-			}
-			if(tind < 0) return;
-			//cout << tind+1 << ", " ;
 		}
 
-		volinv=1.0/tet(tind).vol; // volume of tetrahedral
+		minvol=0.0;
+		for(int i=0;i < 4; ++i){// find volume of tetrahedral created from a face of tetrahedral and point
+			v(0)=0;
+			v(1)=1;
+			v(2)=2;
+			v(3)=3;
+			v(i)=4;
+			rnx = (pnt(v(1),1)-pnt(v(0),1))*(pnt(v(2),2)-pnt(v(0),2))-(pnt(v(2),1)-pnt(v(0),1))*(pnt(v(1),2)-pnt(v(0),2));
+			rny = (pnt(v(1),2)-pnt(v(0),2))*(pnt(v(2),0)-pnt(v(0),0))-(pnt(v(2),2)-pnt(v(0),2))*(pnt(v(1),0)-pnt(v(0),0));
+			rnz = (pnt(v(1),0)-pnt(v(0),0))*(pnt(v(2),1)-pnt(v(0),1))-(pnt(v(2),0)-pnt(v(0),0))*(pnt(v(1),1)-pnt(v(0),1));
+			vol(i)=-rnx*(pnt(v(3),0)-pnt(v(0),0))-rny*(pnt(v(3),1)-pnt(v(0),1))-rnz*(pnt(v(3),2)-pnt(v(0),2)); // calculate volume
+			if(vol(i) < minvol){
+				minvol=vol(i); // keep track of smallest volume 
+				tetsearch=i;
+			}
+		}
+		if(tetsearch > -1){
+			tind=tet(tind).tet(tetsearch);// if tet is not found then search in direction of smallest volume
+		}
+		if(tind < 0) return;
+		//cout << tind+1 << ", " ;
+	}
 
-		/* TETRAHEDRAL COORDINATES */  
-		t = 2.0*vol(0)*volinv -1.0;
-		s = 2.0*vol(1)*volinv -1.0;
-		r = 2.0*vol(3)*volinv -1.0;
+	volinv=1.0/tet(tind).vol; // volume of tetrahedral
 
-		basis::tet(log2p).ptvalues_rst(r,s,t);// value of basis at r,s,t
-		tlvl = 0;
-		ugtouht(tind,tlvl); // take global coefficients and load them to local coefficients
+	/* TETRAHEDRAL COORDINATES */  
+	t = 2.0*vol(0)*volinv -1.0;
+	s = 2.0*vol(1)*volinv -1.0;
+	r = 2.0*vol(3)*volinv -1.0;
 
-		basis::tet(log2p).ptprobe(NV,uout.data(),&uht(0)(0),MXTM);	// use basis and local coefficients to interpolate value of function at point	
+	basis::tet(log2p).ptvalues_rst(r,s,t);// value of basis at r,s,t
+	tlvl = 0;
+	ugtouht(tind,tlvl); // take global coefficients and load them to local coefficients
+
+	basis::tet(log2p).ptprobe(NV,uout.data(),&uht(0)(0),MXTM);	// use basis and local coefficients to interpolate value of function at point	
 
 	return;
 }

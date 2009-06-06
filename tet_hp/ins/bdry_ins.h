@@ -15,7 +15,7 @@
  *  Copyright 2005 __MyCompanyName__. All rights reserved.
  *
  */
- 
+
 #ifndef _bdry_ins_h_
 #define _bdry_ins_h_
 
@@ -38,7 +38,7 @@ using namespace blitz;
 
 namespace bdry_ins {
 
-    class generic : public hp_face_bdry {
+	class generic : public hp_face_bdry {
 	protected:
 		tet_hp_ins &x;
 		bool report_flag;
@@ -80,38 +80,38 @@ namespace bdry_ins {
 		}
 		void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 	};
-        
+		
 
-    class neumann : public generic {
-        protected:
-            virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
-                
-                /* CONTINUITY */
-                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
-              
-                /* X&Y MOMENTUM */
+	class neumann : public generic {
+		protected:
+			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+
+				/* CONTINUITY */
+				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
+
+				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
-                for (int n=0;n<tet_mesh::ND;++n)
-                    flx(n) = ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+				for (int n=0;n<tet_mesh::ND;++n)
+						flx(n) = ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
-                for (int n=0;n<tet_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+				for (int n=0;n<tet_mesh::ND;++n)
+						flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
-              
-                /* EVERYTHING ELSE */
-                 for (int n=tet_mesh::ND;n<x.NV-1;++n)
-                    flx(n) = flx(x.NV-1)*u(n);
-                    
-                return;
-            }
-        
-        public:
-            neumann(tet_hp_ins &xin, face_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
-            neumann(const neumann& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin) {}
-            neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-            void rsdl(int stage);
-    };
+
+				/* EVERYTHING ELSE */
+					for (int n=tet_mesh::ND;n<x.NV-1;++n)
+						flx(n) = flx(x.NV-1)*u(n);
+
+				return;
+			}
+		
+		public:
+			neumann(tet_hp_ins &xin, face_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
+			neumann(const neumann& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin) {}
+			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
+			void rsdl(int stage);
+	};
 
 
 
@@ -130,7 +130,7 @@ namespace bdry_ins {
 			
 			return;
 		}
-        
+		
 	public:
 		inflow(tet_hp_ins &xin, face_bdry &bin) : neumann(xin,bin) {
 			mytype = "inflow";
@@ -190,41 +190,41 @@ namespace bdry_ins {
 			hp_face_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
-    };
+	};
 	
 	
-    
-    class applied_stress : public neumann {
-        Array<symbolic_function<3>,1> stress;
+	
+	class applied_stress : public neumann {
+		Array<symbolic_function<3>,1> stress;
 
-        protected:
-            void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
-                
-                /* CONTINUITY */
-                flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
-              
-                FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1)+norm(2)*norm(2));
-                /* X&Y MOMENTUM */
+		protected:
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+
+				/* CONTINUITY */
+				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
+
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1)+norm(2)*norm(2));
+				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
-                for (int n=0;n<tet_mesh::ND;++n)
-                    flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+				for (int n=0;n<tet_mesh::ND;++n)
+						flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
-                for (int n=0;n<tet_mesh::ND;++n)
-                    flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+				for (int n=0;n<tet_mesh::ND;++n)
+						flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
-              
-                /* EVERYTHING ELSE */
-                 for (int n=tet_mesh::ND;n<x.NV-1;++n)
-                    flx(n) = flx(x.NV-1)*u(n);
-                    
-                return;
-            }
-        public:
-            applied_stress(tet_hp_ins &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
-            applied_stress(const applied_stress& inbdry, tet_hp_ins &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
-            applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
-            void init(input_map& inmap,void* gbl_in);
-    };
-    
+
+				/* EVERYTHING ELSE */
+					for (int n=tet_mesh::ND;n<x.NV-1;++n)
+						flx(n) = flx(x.NV-1)*u(n);
+
+				return;
+			}
+		public:
+			applied_stress(tet_hp_ins &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
+			applied_stress(const applied_stress& inbdry, tet_hp_ins &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
+			applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in);
+	};
+	
 }
 #endif

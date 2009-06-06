@@ -12,59 +12,59 @@
 #include "myblas.h"
 
 namespace bdry_cd {
-    class dirichlet : public hp_face_bdry {
-        tet_hp_cd &x;
-        
-        public:
-            dirichlet(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "dirichlet";}
-            dirichlet(const dirichlet& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
-            dirichlet* create(tet_hp& xin, face_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-            void vdirichlet() { 
+	class dirichlet : public hp_face_bdry {
+		tet_hp_cd &x;
+		
+		public:
+			dirichlet(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "dirichlet";}
+			dirichlet(const dirichlet& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
+			dirichlet* create(tet_hp& xin, face_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+			void vdirichlet() { 
 				int v0; 											
-                for(int j=0;j<base.npnt;++j) {
+				for(int j=0;j<base.npnt;++j) {
 					v0 = base.pnt(j).gindx;
-                    x.gbl->res.v(v0,0) = 0.0;
+						x.gbl->res.v(v0,0) = 0.0;
 				}			
-            }
-            
-            void edirichlet() {
-                int sind;
-                if (basis::tet(x.log2p).em > 0) {
-                   for(int j=0;j<base.nseg;++j) {
-                       sind = base.seg(j).gindx;
-                       x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
-                   }
-                }
-            }
+			}
+
+			void edirichlet() {
+				int sind;
+				if (basis::tet(x.log2p).em > 0) {
+					for(int j=0;j<base.nseg;++j) {
+						sind = base.seg(j).gindx;
+						x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),0) = 0.0;
+					}
+				}
+			}
 			
 			void fdirichlet() {
-                int find;
+				int find;
 
-                if (basis::tet(x.log2p).fm > 0) {
-                   for(int j=0;j<base.ntri;++j) {
-                       find = base.tri(j).gindx;
-                       x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
-                   }
-                }
-            }
-                
-            void tadvance(); 
-    };
+				if (basis::tet(x.log2p).fm > 0) {
+					for(int j=0;j<base.ntri;++j) {
+						find = base.tri(j).gindx;
+						x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),0) = 0.0;
+					}
+				}
+			}
 
-    class neumann : public hp_face_bdry {
-        protected:
-            tet_hp_cd &x;
-            virtual FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> x, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {return(0.0);}
-        
-        public:
-            neumann(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "neumann";}
-            neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
-            neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
+			void tadvance(); 
+	};
+
+	class neumann : public hp_face_bdry {
+		protected:
+			tet_hp_cd &x;
+			virtual FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> x, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {return(0.0);}
+		
+		public:
+			neumann(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "neumann";}
+			neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
+			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
 //            void rsdl(int stage);
-    };
+	};
 
 
- //   class characteristic : public neumann {
+//   class characteristic : public neumann {
 //        public:
 //            FLT flux(FLT u, TinyVector<FLT,tet_mesh::ND> pt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm) {
 //                FLT vel;

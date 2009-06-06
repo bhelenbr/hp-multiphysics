@@ -9,32 +9,32 @@
 
 #include "tet_hp_cd.h"
 #include "../hp_boundary.h"
-    
+	
 void tet_hp_cd::rsdl(int stage) {
-    int i,j,k,n,tind;
-    FLT fluxx,fluxy,fluxz,jcb;
+	int i,j,k,n,tind;
+	FLT fluxx,fluxy,fluxz,jcb;
 	FLT tres[NV];
 	TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP> cv00,cv01,cv02,e00,e01,e02;
 	TinyVector<TinyVector<FLT,3>,3> visc, d;
 
-    TinyVector<FLT,ND> pt;
-    TinyVector<int,4> v;
-    int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
+	TinyVector<FLT,ND> pt;
+	TinyVector<int,4> v;
+	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
-    int stridex = MXGP*MXGP; 
-    
+	int stridex = MXGP*MXGP; 
+	
 	tet_hp::rsdl(stage);
 
-    for(tind = 0; tind<ntet;++tind) {
-        /* LOAD INDICES OF VERTEX POINTS */
-        v = tet(tind).pnt;
+	for(tind = 0; tind<ntet;++tind) {
+		/* LOAD INDICES OF VERTEX POINTS */
+		v = tet(tind).pnt;
 
 		if (tet(tind).info < 0) {
-            for(n=0;n<ND;++n)
-                basis::tet(log2p).proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),pnts(v(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
+			for(n=0;n<ND;++n)
+				basis::tet(log2p).proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),pnts(v(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
 
-            for(i=0;i<lgpx;++i) {
-                for(j=0;j<lgpy;++j) {
+			for(i=0;i<lgpx;++i) {
+				for(j=0;j<lgpy;++j) {
 	                for(k=0;k<lgpz;++k) {
 						for(n=0;n<ND;++n) {
 							dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
@@ -46,35 +46,35 @@ void tet_hp_cd::rsdl(int stage) {
 			}
 		}
 		else {
-            crdtocht(tind);
-            for(n=0;n<ND;++n)
-                basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
-        }
+			crdtocht(tind);
+			for(n=0;n<ND;++n)
+				basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
+		}
 		
 
 		
 		/* CALCULATE MESH VELOCITY */
-        for(i=0;i<lgpx;++i) {
-            for(j=0;j<lgpy;++j) {
+		for(i=0;i<lgpx;++i) {
+			for(j=0;j<lgpy;++j) {
 	            for(k=0;k<lgpz;++k) {
 					mvel(0)(i)(j)(k) = 0;//gbl->bd(0)*(crd(0)(i)(j)(k) -dxdt(log2p,tind,0)(i)(j)(k));
 					mvel(1)(i)(j)(k) = 0;//gbl->bd(0)*(crd(1)(i)(j)(k) -dxdt(log2p,tind,1)(i)(j)(k));
 					mvel(2)(i)(j)(k) = 0;//gbl->bd(0)*(crd(2)(i)(j)(k) -dxdt(log2p,tind,2)(i)(j)(k));
 
 				}
-            }
-        }
-        
-        ugtouht(tind);
-        basis::tet(log2p).proj(&uht(0)(0),&u(0)(0)(0)(0),&du(0,0)(0)(0)(0),&du(0,1)(0)(0)(0),&du(0,2)(0)(0)(0),stridex, stridey);
+			}
+		}
+		
+		ugtouht(tind);
+		basis::tet(log2p).proj(&uht(0)(0),&u(0)(0)(0)(0),&du(0,0)(0)(0)(0),&du(0,1)(0)(0)(0),&du(0,2)(0)(0)(0),stridex, stridey);
 
-        for(n=0;n<NV;++n)
-            for(i=0;i<basis::tet(log2p).tm;++i)
-                lf(n)(i) = 0.0;
+		for(n=0;n<NV;++n)
+			for(i=0;i<basis::tet(log2p).tm;++i)
+				lf(n)(i) = 0.0;
 
-        /* CONVECTION */
-        for(i=0;i<lgpx;++i) {
-            for(j=0;j<lgpy;++j) {
+		/* CONVECTION */
+		for(i=0;i<lgpx;++i) {
+			for(j=0;j<lgpy;++j) {
 	            for(k=0;k<lgpz;++k) {
 				
 					d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
@@ -94,22 +94,22 @@ void tet_hp_cd::rsdl(int stage) {
 					cv01(i)(j)(k) = d(0)(1)*fluxx+d(1)(1)*fluxy+d(2)(1)*fluxz;
 					cv02(i)(j)(k) = d(0)(2)*fluxx+d(1)(2)*fluxy+d(2)(2)*fluxz;
 				}
-            }
-        }
+			}
+		}
 		
-        basis::tet(log2p).intgrtrst(&lf(0)(0),&cv00(0)(0)(0),&cv01(0)(0)(0),&cv02(0)(0)(0),stridex,stridey);
+		basis::tet(log2p).intgrtrst(&lf(0)(0),&cv00(0)(0)(0),&cv01(0)(0)(0),&cv02(0)(0)(0),stridex,stridey);
 
-        /* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-        lftog(tind,gbl->res);
+		/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
+		lftog(tind,gbl->res);
 
-        /* NEGATIVE REAL TERMS */
-        if (gbl->beta(stage) > 0.0) {
+		/* NEGATIVE REAL TERMS */
+		if (gbl->beta(stage) > 0.0) {
 			
 			ugtouht(tind,1);
-            for(n=0;n<NV;++n)
-                basis::tet(log2p).proj(&uht(n)(0),&dugdt(n)(0)(0)(0),stridex,stridey);
-                
-            /* TIME DERIVATIVE TERMS */
+			for(n=0;n<NV;++n)
+				basis::tet(log2p).proj(&uht(n)(0),&dugdt(n)(0)(0)(0),stridex,stridey);
+
+			/* TIME DERIVATIVE TERMS */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
 					for(k=0;k<lgpz;++k) {
@@ -121,13 +121,13 @@ void tet_hp_cd::rsdl(int stage) {
 						res(0)(i)(j)(k) -= cjcb(i)(j)(k)*gbl->src->f(0,pt,gbl->time);
 //						cout << cjcb(i)(j)(k) << endl;
 					}
-                }
-            }   
+				}
+			}   
 //			cout << cjcb(0)(0)(0) << endl;   
 //			cout << "jcb-cjcb = " << tet(tind).vol/8 - cjcb(0)(0)(0) << endl;      
-            basis::tet(log2p).intgrt(&lf(0)(0),&res(0)(0)(0)(0),stridex,stridey);
+			basis::tet(log2p).intgrt(&lf(0)(0),&res(0)(0)(0)(0),stridex,stridey);
 
-            /* DIFFUSIVE TERMS  */
+			/* DIFFUSIVE TERMS  */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
 					for(k=0;k<lgpz;++k) {
@@ -171,13 +171,13 @@ void tet_hp_cd::rsdl(int stage) {
 						//*gbl->log << "vs " << visc(0)(0) << ' ' << visc(1)(1) << ' ' << visc(2)(2) << std::endl;
 					}
 				}
-            }
-            basis::tet(log2p).derivr(&cv00(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
-            basis::tet(log2p).derivs(&cv01(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
-            basis::tet(log2p).derivt(&cv02(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
+			}
+			basis::tet(log2p).derivr(&cv00(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
+			basis::tet(log2p).derivs(&cv01(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
+			basis::tet(log2p).derivt(&cv02(0)(0)(0),&res(0)(0)(0)(0),stridex,stridey);
 			//cout << res(0)(0)(0)(1)<< endl;
-            
-            /* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
+
+			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
 					for(k=0;k<lgpz;++k) {
@@ -198,47 +198,47 @@ void tet_hp_cd::rsdl(int stage) {
 
 					}
 				}
-            }
+			}
 
-            basis::tet(log2p).intgrtrst(&lf(0)(0),&e00(0)(0)(0),&e01(0)(0)(0),&e02(0)(0)(0),stridex,stridey); 
+			basis::tet(log2p).intgrtrst(&lf(0)(0),&e00(0)(0)(0),&e01(0)(0)(0),&e02(0)(0)(0),stridex,stridey); 
 
-            for(n=0;n<NV;++n)
-                for(i=0;i<basis::tet(log2p).tm;++i)
-                    lf(n)(i) *= gbl->beta(stage);
+			for(n=0;n<NV;++n)
+				for(i=0;i<basis::tet(log2p).tm;++i)
+						lf(n)(i) *= gbl->beta(stage);
 			
-            lftog(tind,gbl->res_r);
-        }
-    }
+			lftog(tind,gbl->res_r);
+		}
+	}
 
-    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-    gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-    if (basis::tet(log2p).em > 0) {
-        gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
-        if (basis::tet(log2p).fm > 0) {
-            gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tet(log2p).em > 0) {
+		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
+		if (basis::tet(log2p).fm > 0) {
+			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
 			if (basis::tet(log2p).im > 0) {
 				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
 			}
 		}
 	}
-    
-    /*********************************************/
-    /* MODIFY RESIDUALS ON COARSER MESHES            */
-    /*********************************************/    
-    if (coarse_flag) {
-    /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-        if(isfrst) {
-            dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-            if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
-            if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
-            if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
-			isfrst = false;
-        }
-        gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-        if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
-        if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
-        if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
-    }
 	
-    return;
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
+	/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+		if(isfrst) {
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
+			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
+			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
+			isfrst = false;
+		}
+		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+		if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
+		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
+	}
+	
+	return;
 }

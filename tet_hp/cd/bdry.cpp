@@ -22,12 +22,12 @@
 using namespace bdry_cd;
 
 void dirichlet::tadvance() {
-    int j,k,m,n,v0,v1,sind,indx,info;
-    TinyVector<FLT,tet_mesh::ND> pt;
-    char uplo[] = "U";
-        
-    hp_face_bdry::tadvance(); 
-    
+	int j,k,m,n,v0,v1,sind,indx,info;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	char uplo[] = "U";
+		
+	hp_face_bdry::tadvance(); 
+	
 //
 //    /* UPDATE BOUNDARY CONDITION VALUES */
 //    for(j=0;j<base.nseg;++j) {
@@ -81,8 +81,8 @@ void dirichlet::tadvance() {
 //            }
 //        }
 //    }
-    
-    return;
+	
+	return;
 }
 //
 //void neumann::rsdl(int stage) {

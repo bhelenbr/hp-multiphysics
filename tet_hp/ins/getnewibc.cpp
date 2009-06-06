@@ -13,71 +13,71 @@
 
 namespace ibc_ins {
 
-    class freestream : public init_bdry_cndtn {
-        private:
-            FLT alpha, speed,perturb_amp;
-            
-        public:
-            FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
-                FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
-                switch(n) {
-                    case(0):
-                        return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
-                    case(1):
-                        return(speed*sin(alpha));
+	class freestream : public init_bdry_cndtn {
+		private:
+			FLT alpha, speed,perturb_amp;
+
+		public:
+			FLT f(int n, TinyVector<FLT,tet_mesh::ND> x, FLT time) {
+				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
+				switch(n) {
+					case(0):
+						return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
+					case(1):
+						return(speed*sin(alpha));
 					case(2):
-                        return(speed*sin(alpha));
-                    case(3):
-                        return(0.0);
-                }
-                return(0.0);
-            }
-            
-            void input(input_map &blockdata,std::string idnty) {
-                std::string keyword,val;
-                std::istringstream data;
+						return(speed*sin(alpha));
+					case(3):
+						return(0.0);
+				}
+				return(0.0);
+			}
 
-                keyword = idnty +"_flowspeed";
-                if (!blockdata.get(keyword,speed)) 
-                    blockdata.getwdefault("flowspeed",speed,1.0);
-     
-                keyword = idnty +"_flowangle";
-                if (!blockdata.get(keyword,alpha)) 
-                    blockdata.getwdefault("flowangle",alpha,0.0);  
-                    
-                keyword = idnty +"_perturb_amplitude";
-                if (!blockdata.get(keyword,perturb_amp)) 
-                    blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
+			void input(input_map &blockdata,std::string idnty) {
+				std::string keyword,val;
+				std::istringstream data;
 
-                alpha *= M_PI/180.0;
-            }
-    };
-    
+				keyword = idnty +"_flowspeed";
+				if (!blockdata.get(keyword,speed)) 
+						blockdata.getwdefault("flowspeed",speed,1.0);
+
+				keyword = idnty +"_flowangle";
+				if (!blockdata.get(keyword,alpha)) 
+						blockdata.getwdefault("flowangle",alpha,0.0);  
+
+				keyword = idnty +"_perturb_amplitude";
+				if (!blockdata.get(keyword,perturb_amp)) 
+						blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
+
+				alpha *= M_PI/180.0;
+			}
+	};
+	
 
 
-    class ibc_type {
-        public:
-            const static int ntypes = 1;
-            enum ids {freestream};
-            const static char names[ntypes][40];
-            static int getid(const char *nin) {
-                int i;
-                for(i=0;i<ntypes;++i) 
-                    if (!strcmp(nin,names[i])) return(i);
-                return(-1);
-        }
-    };
-    const char ibc_type::names[ntypes][40] = {"freestream"};
+	class ibc_type {
+		public:
+			const static int ntypes = 1;
+			enum ids {freestream};
+			const static char names[ntypes][40];
+			static int getid(const char *nin) {
+				int i;
+				for(i=0;i<ntypes;++i) 
+						if (!strcmp(nin,names[i])) return(i);
+				return(-1);
+		}
+	};
+	const char ibc_type::names[ntypes][40] = {"freestream"};
 
 }
 
- 
-init_bdry_cndtn *tet_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
-    std::string keyword,ibcname;
-	init_bdry_cndtn *temp;
-    int type;
 
-    /* FIND INITIAL CONDITION TYPE */
+init_bdry_cndtn *tet_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
+	std::string keyword,ibcname;
+	init_bdry_cndtn *temp;
+	int type;
+
+	/* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_" +suffix;
 	if (!inmap.get(keyword,ibcname)) {
 		keyword = suffix;
@@ -85,18 +85,18 @@ init_bdry_cndtn *tet_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
 			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}
-    type = ibc_ins::ibc_type::getid(ibcname.c_str());
+	type = ibc_ins::ibc_type::getid(ibcname.c_str());
 
-        
-    switch(type) {
-        case ibc_ins::ibc_type::freestream: {
-            temp = new ibc_ins::freestream;
-            break;
-        }
+		
+	switch(type) {
+		case ibc_ins::ibc_type::freestream: {
+			temp = new ibc_ins::freestream;
+			break;
+		}
 		default: {
-            return(tet_hp::getnewibc(suffix,inmap));
-        }
-    }
+			return(tet_hp::getnewibc(suffix,inmap));
+		}
+	}
 	temp->input(inmap,keyword);
 	return(temp);
 }

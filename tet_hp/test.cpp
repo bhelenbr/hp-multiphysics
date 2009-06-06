@@ -33,7 +33,7 @@ void tet_hp::test() {
 			cout.precision(10);
 		//	cout << npnt << ' ' << nseg << ' ' << ntri << ' ' << ntet << endl;
 			/* pt probe test */
-   			Array<double,1> uout(1);
+				Array<double,1> uout(1);
 
 //			// edge 1
 //			pt(0,0) = -.345676;

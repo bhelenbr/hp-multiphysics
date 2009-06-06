@@ -11,47 +11,47 @@
 #include "../hp_boundary.h"
 
 
- void tet_hp_ins::init(input_map& input, void *gin) {
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
-    
-    gbl = static_cast<global *>(gin);
-    
-    if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
-        input[gbl->idprefix + "_nvariable"] = "4";
-    }
-    
-    tet_hp::init(input,gin);
-    
-    input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
-        
-    gbl->tau.resize(maxvst,NV);
-  
-    if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
-    if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
-    
-    /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-    gbl->D.resize(NV);
-    gbl->D = 0.0;
-    
-        
-    return;
+void tet_hp_ins::init(input_map& input, void *gin) {
+	std::string keyword;
+	std::istringstream data;
+	std::string filename;
+	
+	gbl = static_cast<global *>(gin);
+	
+	if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
+		input[gbl->idprefix + "_nvariable"] = "4";
+	}
+	
+	tet_hp::init(input,gin);
+	
+	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+		
+	gbl->tau.resize(maxvst,NV);
+
+	if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
+	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
+	
+	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
+	gbl->D.resize(NV);
+	gbl->D = 0.0;
+	
+		
+	return;
 }
 
 void tet_hp_ins::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
-    
-    const tet_hp_ins& inmesh = dynamic_cast<const tet_hp_ins &>(in);
-    gbl = inmesh.gbl;
+	std::string keyword;
+	std::istringstream data;
+	std::string filename;
+	
+	const tet_hp_ins& inmesh = dynamic_cast<const tet_hp_ins &>(in);
+	gbl = inmesh.gbl;
 
-    tet_hp::init(in,why,sizereduce1d);
-    
-    adis = inmesh.adis;
-        
-    return;
+	tet_hp::init(in,why,sizereduce1d);
+	
+	adis = inmesh.adis;
+		
+	return;
 }
 
 

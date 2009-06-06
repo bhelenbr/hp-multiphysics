@@ -4,30 +4,30 @@
 #include "../hp_boundary.h"
 
 void tet_hp_ins::setup_preconditioner() {
-    if (gbl->diagonal_preconditioner) {
-        /* SET-UP DIAGONAL PRECONDITIONER */
-        int tind,i,j,side,v0,v1,v2,find;
-        FLT jcb,h,hmax,q,qmax,lam1,gam,a,amax,amin,dx1,dx2,dy1,dy2,dz1,dz2,cpi,cpj,cpk;
-        TinyVector<int,4> v;
-        
-        FLT nu = gbl->mu/gbl->rho;
-              
-        /***************************************/
-        /** DETERMINE FLOW PSEUDO-TIME STEP ****/
-        /***************************************/
-        gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-        if (basis::tet(log2p).em > 0) {
-            gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;
-        }
-        
-    #ifdef TIMEACCURATE
-        gam = 10.0;
-        FLT dtstari = 0.0;
-    #endif
+	if (gbl->diagonal_preconditioner) {
+		/* SET-UP DIAGONAL PRECONDITIONER */
+		int tind,i,j,side,v0,v1,v2,find;
+		FLT jcb,h,hmax,q,qmax,lam1,gam,a,amax,amin,dx1,dx2,dy1,dy2,dz1,dz2,cpi,cpj,cpk;
+		TinyVector<int,4> v;
+		
+		FLT nu = gbl->mu/gbl->rho;
 
-        for(tind = 0; tind < ntet; ++tind) {
-            jcb = tet(tind).vol/8.0;   // area is 2 x triangle area
-            v = tet(tind).pnt;	
+		/***************************************/
+		/** DETERMINE FLOW PSEUDO-TIME STEP ****/
+		/***************************************/
+		gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+		if (basis::tet(log2p).em > 0) {
+			gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		}
+		
+	#ifdef TIMEACCURATE
+		gam = 10.0;
+		FLT dtstari = 0.0;
+	#endif
+
+		for(tind = 0; tind < ntet; ++tind) {
+			jcb = tet(tind).vol/8.0;   // area is 2 x triangle area
+			v = tet(tind).pnt;	
 			amin=1000000.0;
 			amax = 0.0;
 			for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
@@ -52,77 +52,77 @@ void tet_hp_ins::setup_preconditioner() {
 			}
 			
 			h = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); // 3*8/6=4
-            hmax = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); // 3*8/6=4
-        
-            qmax = 0.0;
-            for(j=0;j<4;++j) {
-                v0 = v(j);
+			hmax = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); // 3*8/6=4
+		
+			qmax = 0.0;
+			for(j=0;j<4;++j) {
+				v0 = v(j);
 				cout << "v0 = "<< v0 << " pnts = " << pnts(v0) << " vrtxbd = " << vrtxbd(1)(v0) << endl;
 				cout << "ug.v = " << ug.v(v0,0) << ' ' << ug.v(v0,1) << ' ' << ug.v(v0,2) << endl;
-                q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-                    +pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
+				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
+						+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
 					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
 				qmax = MAX(qmax,q);
-            }
-            cout << "qmax = " << qmax << endl;
-            if (!(jcb > 0.0)) { 
-                *gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
-                *gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
-                tet_mesh::output("negative",grid);
-                exit(1);
-            }
-            
-            if  (!(qmax >= 0.0)) {  // THIS CATCHES NAN'S TOO
-                *gbl->log << "flow solution has nan's" << std::endl;
-                output("nan",tecplot);
-                exit(1);
-            }
+			}
+			cout << "qmax = " << qmax << endl;
+			if (!(jcb > 0.0)) { 
+				*gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
+				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
+				tet_mesh::output("negative",grid);
+				exit(1);
+			}
 
-    #ifndef INERTIALESS
+			if  (!(qmax >= 0.0)) {  // THIS CATCHES NAN'S TOO
+				*gbl->log << "flow solution has nan's" << std::endl;
+				output("nan",tecplot);
+				exit(1);
+			}
 
-    #ifndef TIMEACCURATE
-            gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
-            if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
-    #endif
-            q = sqrt(qmax);
-            lam1 = q + sqrt(qmax +gam);
-            
-            /* SET UP DISSIPATIVE COEFFICIENTS */
-            gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-            gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
-            
-            /* SET UP DIAGONAL PRECONDITIONER */
-            // jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
-            jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-    #else
-            gam = pow(2.*nu/hmax,2); 
-            lam1 = sqrt(gam);
-            
-            /* SET UP DISSIPATIVE COEFFICIENTS */
-            gbl->tau(tind,1)  = adis*h/(jcb*sqrt(gam));
-            gbl->tau(tind,0) = 0.0;
+	#ifndef INERTIALESS
 
-            jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
-    #endif
-    #ifdef TIMEACCURATE
-            dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
+	#ifndef TIMEACCURATE
+			gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
+			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
+	#endif
+			q = sqrt(qmax);
+			lam1 = q + sqrt(qmax +gam);
 
-        }
-        printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
-            
-        for(tind=0;tind<ntet;++tind) {
-            v = tet(tind).pnt;
-            jcb = 0.125*tet(tind).vol*dtstari;
-    #endif
+			/* SET UP DISSIPATIVE COEFFICIENTS */
+			gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+			gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
 
-            jcb *= (pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0) +pnts(v(3))(0))/3.0;
+			/* SET UP DIAGONAL PRECONDITIONER */
+			// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
+			jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+	#else
+			gam = pow(2.*nu/hmax,2); 
+			lam1 = sqrt(gam);
 
-            gbl->iprcn(tind,0) = gbl->rho*jcb;    
-            gbl->iprcn(tind,1) = gbl->rho*jcb;
+			/* SET UP DISSIPATIVE COEFFICIENTS */
+			gbl->tau(tind,1)  = adis*h/(jcb*sqrt(gam));
+			gbl->tau(tind,0) = 0.0;
+
+			jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
+	#endif
+	#ifdef TIMEACCURATE
+			dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
+
+		}
+		printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+
+		for(tind=0;tind<ntet;++tind) {
+			v = tet(tind).pnt;
+			jcb = 0.125*tet(tind).vol*dtstari;
+	#endif
+
+			jcb *= (pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0) +pnts(v(3))(0))/3.0;
+
+			gbl->iprcn(tind,0) = gbl->rho*jcb;    
+			gbl->iprcn(tind,1) = gbl->rho*jcb;
 			gbl->iprcn(tind,2) = gbl->rho*jcb;      
-            gbl->iprcn(tind,3) =  jcb/gam;
-            for(i=0;i<4;++i) 
-                gbl->vprcn(v(i),Range::all())  += gbl->iprcn(tind,Range::all());            
+			gbl->iprcn(tind,3) =  jcb/gam;
+			for(i=0;i<4;++i) 
+				gbl->vprcn(v(i),Range::all())  += gbl->iprcn(tind,Range::all());            
 			if (basis::tet(log2p).em > 0) {
 				for(i=0;i<6;++i){
 					side = tet(tind).seg(i);
@@ -135,9 +135,9 @@ void tet_hp_ins::setup_preconditioner() {
 					gbl->fprcn(side,Range::all()) += gbl->iprcn(tind,Range::all());
 				}
 			}
-        }
-    }
-    else {
+		}
+	}
+	else {
 		cout << "matrix preconditioner on" << endl;
 //        /* SET-UP MATRIX PRECONDITIONER */
 //        int tind,i,j,side,v0;
@@ -221,9 +221,9 @@ void tet_hp_ins::setup_preconditioner() {
 //                }
 //            }
 //        }
-    }
+	}
 
 
 	
-    tet_hp::setup_preconditioner();
+	tet_hp::setup_preconditioner();
 }
