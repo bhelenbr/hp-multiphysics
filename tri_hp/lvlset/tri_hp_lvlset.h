@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __MyCompanyName__. All rights reserved.
  *
  */
- 
+
 #ifndef _tri_hp_lvlset_h_
 #define _tri_hp_lvlset_h_
 
@@ -20,66 +20,66 @@
 
 class tri_hp_lvlset : public tri_hp_ins {
     public:
-        struct global : public tri_hp_ins::global {
-            /* PHYSICAL CONSTANTS */
-            FLT sigma, width;
-            FLT rho2, mu2;
+		struct global : public tri_hp_ins::global {
+			/* PHYSICAL CONSTANTS */
+			FLT sigma, width;
+			FLT rho2, mu2;
 
-        } *gbl;
+		} *gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-        hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
+		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
     public:
-        void* create_global_structure() {return new global;}
-        tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
-        
-        void init(input_map& input, void *gin);  
-        void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+		void* create_global_structure() {return new global;}
+		tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
 
-       void setup_preconditioner();
-        void rsdl(int stage);
-        void calculate_unsteady_sources();
-        
-        FLT heavyside(FLT phidw) {
-            FLT onemphi2 = (1-phidw*phidw);
-            FLT term = 0.5;
-            FLT sum = term;
-            FLT r = 2.0;
-            for (int i=1;i<6;++i) {
-                term *= onemphi2*(r-1.)/r;
-                sum += term;
-                r += 2.0;
-            }
-            return(0.5 +phidw*sum);
-            // return(0.5*(phidw +sin(M_PI*phidw)/M_PI));
-        }
-        
-        FLT delta(FLT phidw) {
-            return(693./512./gbl->width*pow(1.-phidw*phidw,5));
-            // return(0.5/gbl->width*(1.+cos(M_PI*phidw)));
-        }
-        
-        FLT heavyside_if(FLT phidw) {
-            if (phidw < -1.0) return(0.0);
-            if (phidw >  1.0) return(1.0);
-            return(heavyside(phidw));
-        }
-        
-        void heavyside_and_delta_if(FLT phidw, FLT& h, FLT& d) {
-            if (phidw < -1.0) {
-                h = 0.0;
-                d = 0.0;
-            }
-            else if (phidw >  1.0) {
-                h = 1.0;
-                d = 0.0;
-            }
-            else {
-                h = heavyside(phidw);
-                d = delta(phidw);
-            }
-            return;
-        }            
+		void init(input_map& input, void *gin);  
+		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
+
+		void setup_preconditioner();
+		void rsdl(int stage);
+		void calculate_unsteady_sources();
+
+		FLT heavyside(FLT phidw) {
+			FLT onemphi2 = (1-phidw*phidw);
+			FLT term = 0.5;
+			FLT sum = term;
+			FLT r = 2.0;
+			for (int i=1;i<6;++i) {
+				term *= onemphi2*(r-1.)/r;
+				sum += term;
+				r += 2.0;
+			}
+			return(0.5 +phidw*sum);
+			// return(0.5*(phidw +sin(M_PI*phidw)/M_PI));
+		}
+
+		FLT delta(FLT phidw) {
+			return(693./512./gbl->width*pow(1.-phidw*phidw,5));
+			// return(0.5/gbl->width*(1.+cos(M_PI*phidw)));
+		}
+
+		FLT heavyside_if(FLT phidw) {
+			if (phidw < -1.0) return(0.0);
+			if (phidw >  1.0) return(1.0);
+			return(heavyside(phidw));
+		}
+
+		void heavyside_and_delta_if(FLT phidw, FLT& h, FLT& d) {
+			if (phidw < -1.0) {
+				h = 0.0;
+				d = 0.0;
+			}
+			else if (phidw >  1.0) {
+				h = 1.0;
+				d = 0.0;
+			}
+			else {
+				h = heavyside(phidw);
+				d = delta(phidw);
+			}
+			return;
+		}            
 
 };
 #endif

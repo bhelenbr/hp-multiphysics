@@ -22,14 +22,14 @@ using namespace bdry_swirl;
  */
 class tri_hp_swirl_stype {
     public:
-        static const int ntypes = 1;
-        enum ids {unknown=-1,symmetry};
-        static const char names[ntypes][40];
-        static int getid(const char *nin) {
-            for(int i=0;i<ntypes;++i)
-                if (!strcmp(nin,names[i])) return(i);
-            return(unknown);
-        }
+		static const int ntypes = 1;
+		enum ids {unknown=-1,symmetry};
+		static const char names[ntypes][40];
+		static int getid(const char *nin) {
+			for(int i=0;i<ntypes;++i)
+				if (!strcmp(nin,names[i])) return(i);
+			return(unknown);
+		}
 };
 
 const char tri_hp_swirl_stype::names[ntypes][40] = {"symmetry"};
@@ -40,30 +40,30 @@ hp_edge_bdry* tri_hp_swirl::getnewsideobject(int bnum, input_map& bdrydata) {
     std::istringstream data;
     int type;          
     hp_edge_bdry *temp;  
-    
+
     keyword =  ebdry(bnum)->idprefix + "_swirl_type";    
     if (bdrydata.get(keyword,val)) {
-        type = tri_hp_swirl_stype::getid(val.c_str());
-        if (type == tri_hp_swirl_stype::unknown)  {
-            *gbl->log << "unknown side type:" << val << std::endl;
-            exit(1);
-        }
+		type = tri_hp_swirl_stype::getid(val.c_str());
+		if (type == tri_hp_swirl_stype::unknown)  {
+			*gbl->log << "unknown side type:" << val << std::endl;
+			exit(1);
+		}
     }
     else {
-        type = tri_hp_swirl_stype::unknown;
+		type = tri_hp_swirl_stype::unknown;
     }
 
     switch(type) {
 		case tri_hp_swirl_stype::symmetry: {
-            temp = new symmetry(*this,*ebdry(bnum));
-            break;
-        }	
-        default: {
-            temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
-            break;
-        }
+			temp = new symmetry(*this,*ebdry(bnum));
+			break;
+		}	
+		default: {
+			temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
+			break;
+		}
     }
-    
+
     return(temp);
 }
 

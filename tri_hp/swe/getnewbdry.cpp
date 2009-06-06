@@ -21,14 +21,14 @@ using namespace bdry_swe;
  */
 class tri_hp_swe_stype {
     public:
-        static const int ntypes = 2;
-        enum ids {unknown=-1,wall,characteristic};
-        static const char names[ntypes][40];
-        static int getid(const char *nin) {
-            for(int i=0;i<ntypes;++i)
-                if (!strcmp(nin,names[i])) return(i);
-            return(unknown);
-        }
+		static const int ntypes = 2;
+		enum ids {unknown=-1,wall,characteristic};
+		static const char names[ntypes][40];
+		static int getid(const char *nin) {
+			for(int i=0;i<ntypes;++i)
+				if (!strcmp(nin,names[i])) return(i);
+			return(unknown);
+		}
 };
 
 const char tri_hp_swe_stype::names[ntypes][40] = {"wall","characteristic"};
@@ -39,34 +39,34 @@ hp_edge_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
     std::istringstream data;
     int type;          
     hp_edge_bdry *temp;  
-    
+
     keyword =  ebdry(bnum)->idprefix + "_swe_type";    
     if (bdrydata.get(keyword,val)) {
-        type = tri_hp_swe_stype::getid(val.c_str());
-        if (type == tri_hp_swe_stype::unknown)  {
-            *gbl->log << "unknown side type:" << val << std::endl;
-            exit(1);
-        }
+		type = tri_hp_swe_stype::getid(val.c_str());
+		if (type == tri_hp_swe_stype::unknown)  {
+			*gbl->log << "unknown side type:" << val << std::endl;
+			exit(1);
+		}
     }
     else {
-        type = tri_hp_swe_stype::unknown;
+		type = tri_hp_swe_stype::unknown;
     }
 
     switch(type) {
 		case tri_hp_swe_stype::wall: {
-            temp = new wall(*this,*ebdry(bnum));
-            break;
-        }	
-        case tri_hp_swe_stype::characteristic: {
-            temp = new characteristic(*this,*ebdry(bnum));
-            break;
-        }	
-        default: {
-            temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
-            break;
-        }
+			temp = new wall(*this,*ebdry(bnum));
+			break;
+		}	
+		case tri_hp_swe_stype::characteristic: {
+			temp = new characteristic(*this,*ebdry(bnum));
+			break;
+		}	
+		default: {
+			temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
+			break;
+		}
     }
-    
+
     return(temp);
 }
 

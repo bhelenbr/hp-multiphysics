@@ -16,10 +16,10 @@
 extern "C" {
 	double dlamch_(char *cmach);
 	/* Subroutine */ int dspevx_(char *jobz, char *range, char *uplo, int *n, 
-								 double *ap, double *vl, double *vu, int *il, int *
-								 iu, double *abstol, int *m, double *w, double *z__, 
-								 int *ldz, double *work, int *iwork, int *ifail, 
-								 int *info);
+							 double *ap, double *vl, double *vu, int *il, int *
+							 iu, double *abstol, int *m, double *w, double *z__, 
+							 int *ldz, double *work, int *iwork, int *ifail, 
+							 int *info);
 }	
 
 
@@ -28,35 +28,35 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
     std::ostringstream nstr;
     std::istringstream instr;
     int i;
-	
+
     /* Initialize base class */
     BASE::init(input,gin);
-    
+
     if (!input.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
-        input.getwdefault("snapshots",nsnapshots,10);
+		input.getwdefault("snapshots",nsnapshots,10);
     }
-    
+
     if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
-    
+
     /* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
     scaling.resize(BASE::NV);
     scaling = 1;
     if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
-        instr.str(linebuff);
-        for(i=0;i<BASE::NV;++i)
-            instr >> scaling(i);
+		instr.str(linebuff);
+		for(i=0;i<BASE::NV;++i)
+			instr >> scaling(i);
     }
-    
+
     nmodes = MAX(nmodes,2);
-	
+
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
-	
+
 #ifndef LOWNOISE
     modes.resize(nmodes);
     for(i=0;i<nmodes;++i) {
-        modes(i).v.resize(BASE::maxpst,BASE::NV);
-        modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
-        modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
+		modes(i).v.resize(BASE::maxpst,BASE::NV);
+		modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
+		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
     }
     coeffs.resize(nmodes);
 #else
@@ -66,7 +66,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i)->init(input);
 	}
 #endif
-	
+
     return;
 }
 
@@ -80,74 +80,74 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     std::ostringstream nstr;
     std::istringstream instr;
     FLT cjcb;
-	
+
 	if (BASE::gbl->substep != 0) return;
-    
+
     BASE::tadvance(); 
-	
+
     int psi1dcounter = 0;
     vsi ugstore;
     ugstore.v.reference(BASE::ugbd(0).v);
     ugstore.s.reference(BASE::ugbd(0).s);
     ugstore.i.reference(BASE::ugbd(0).i);
-    
+
     psimatrix.resize(nsnapshots*nsnapshots);
     psimatrix_recv.resize(nsnapshots*nsnapshots);
 	low_noise_dot.resize(BASE::ntri);
-    
+
     /* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
     psimatrix = 0.0;
     for (k=0;k<nsnapshots;++k) {
-        nstr.str("");
-        nstr << k+1 << std::flush;
-        filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-        BASE::ugbd(0).v.reference(modes(0).v);
-        BASE::ugbd(0).s.reference(modes(0).s);
-        BASE::ugbd(0).i.reference(modes(0).i);
-        BASE::input(filename, BASE::binary);
-        
-        for(l=k;l<nsnapshots;++l) {
-            nstr.str("");
-            nstr << l+1 << std::flush;
-            filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-            BASE::ugbd(0).v.reference(modes(1).v);
-            BASE::ugbd(0).s.reference(modes(1).s);
-            BASE::ugbd(0).i.reference(modes(1).i);
-            BASE::input(filename, BASE::binary);
-            
-            for(tind=0;tind<BASE::ntri;++tind) {          
-                /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-                BASE::crdtocht(tind);
-				
-                /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-                for(n=0;n<BASE::ND;++n)
-                    basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-				
-                BASE::ugbd(0).v.reference(modes(0).v);
-                BASE::ugbd(0).s.reference(modes(0).s);
-                BASE::ugbd(0).i.reference(modes(0).i);
-                BASE::ugtouht(tind,0);
-                for(n=0;n<BASE::NV;++n)
-                    basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-				
-                BASE::ugbd(0).v.reference(modes(1).v);
-                BASE::ugbd(0).s.reference(modes(1).s);
-                BASE::ugbd(0).i.reference(modes(1).i);
-                BASE::ugtouht(tind,0);
-                for(n=0;n<BASE::NV;++n)
-                    basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-                
+		nstr.str("");
+		nstr << k+1 << std::flush;
+		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+		BASE::ugbd(0).v.reference(modes(0).v);
+		BASE::ugbd(0).s.reference(modes(0).s);
+		BASE::ugbd(0).i.reference(modes(0).i);
+		BASE::input(filename, BASE::binary);
+
+		for(l=k;l<nsnapshots;++l) {
+			nstr.str("");
+			nstr << l+1 << std::flush;
+			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+			BASE::ugbd(0).v.reference(modes(1).v);
+			BASE::ugbd(0).s.reference(modes(1).s);
+			BASE::ugbd(0).i.reference(modes(1).i);
+			BASE::input(filename, BASE::binary);
+
+			for(tind=0;tind<BASE::ntri;++tind) {          
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				BASE::crdtocht(tind);
+
+				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(n=0;n<BASE::ND;++n)
+					basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+
+				BASE::ugbd(0).v.reference(modes(0).v);
+				BASE::ugbd(0).s.reference(modes(0).s);
+				BASE::ugbd(0).i.reference(modes(0).i);
+				BASE::ugtouht(tind,0);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+
+				BASE::ugbd(0).v.reference(modes(1).v);
+				BASE::ugbd(0).s.reference(modes(1).s);
+				BASE::ugbd(0).i.reference(modes(1).i);
+				BASE::ugtouht(tind,0);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+
 				FLT tmp_store = 0.0;
-                for(i=0;i<lgpx;++i) {
-                    for(j=0;j<lgpn;++j) {
-                        cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-                        for(n=0;n<BASE::NV;++n) {
-							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-                        }
-                    }
-                }
+				for(i=0;i<lgpx;++i) {
+					for(j=0;j<lgpn;++j) {
+						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+						for(n=0;n<BASE::NV;++n) {
+						tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						}
+					}
+				}
 				low_noise_dot(tind) = tmp_store;
-            }
+			}
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
 			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -156,17 +156,17 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
 			psimatrix(psi1dcounter) = low_noise_dot(0);
-            ++psi1dcounter;
-        }	
-        BASE::ugbd(0).v.reference(ugstore.v);
-        BASE::ugbd(0).s.reference(ugstore.s);
-        BASE::ugbd(0).i.reference(ugstore.i);
+			++psi1dcounter;
+		}	
+		BASE::ugbd(0).v.reference(ugstore.v);
+		BASE::ugbd(0).s.reference(ugstore.s);
+		BASE::ugbd(0).i.reference(ugstore.i);
     }
     sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
-	
+
     Array<FLT,1> eigenvalues(nsnapshots);
     Array<FLT,2> eigenvectors(nsnapshots,nsnapshots);
-    
+
 	/* To compute needed sizes 
 	 char jobz[2] = "V", range[2] = "A", uplo[2] = "L";
 	 double vl, vu;
@@ -179,12 +179,12 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	 Array<FLT,1> work(lwork);
 	 Array<int,1> iwork(lwork);
 	 int info1, info;
-	 
+
 	 info1 = dsyevr_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
 	 &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
 	 std::cout << "optimal sizes:" <<  work(0) << ' ' << iwork(0) << std::endl; 
 	 */
-	
+
 	/* TO COMPUTE JUST 1 EIGENVECTOR
 	 char jobz[2] = "V", range[2] = "I"; uplo[2] = "L";
 	 double vl, vu;
@@ -194,194 +194,194 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	 Array<int,1> iwork(5*nsnapshots);
 	 Array<double,1> work(8*nsnapshots);
 	 Array<int,1> ifail(nsnapshots);
-	 
+
 	 info = dspevx_(jobz, range, uplo, &nsnapshots, psimatrix_recv.data(), &nsnapshots, &vl, &vu, &il, &iu, &abstol,
 	 &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
 	 */
-	
+
     char jobz[2] = "V", uplo[2] = "L";
     Array<FLT,1> work(3*nsnapshots);
     DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
-    
+
     if (info != 0) {
-        *BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-        exit(1);
+		*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
+		exit(1);
     }
-    
+
     *BASE::gbl->log << "eigenvalues "<<  eigenvalues << std::endl;
-    
+
     eigenvectors.transposeSelf(secondDim,firstDim);  // FORTRAN ROUTINE RETURNS TRANSPOSE
-	
+
     //reconstruct POD MODES
     for(k=0;k<nmodes;++k)	{
-        modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
-        modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
-        modes(k).i(Range(0,BASE::ntri-1)) = 0.0;
-        
-        /* LOAD SNAPSHOTS AND CALCULATE MODE */
-        for(l=0;l<nsnapshots;++l)	{
-            nstr.str("");
-            nstr << l +1 << std::flush;
-            filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-            BASE::input(filename, BASE::binary);
-			
-            modes(k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.v(Range(0,BASE::npnt-1));
-            modes(k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.s(Range(0,BASE::nseg-1));
-            modes(k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.i(Range(0,BASE::ntri-1));
-        }
+		modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
+		modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
+		modes(k).i(Range(0,BASE::ntri-1)) = 0.0;
+
+		/* LOAD SNAPSHOTS AND CALCULATE MODE */
+		for(l=0;l<nsnapshots;++l)	{
+			nstr.str("");
+			nstr << l +1 << std::flush;
+			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+			BASE::input(filename, BASE::binary);
+
+			modes(k).v(Range(0,BASE::npnt-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.v(Range(0,BASE::npnt-1));
+			modes(k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.s(Range(0,BASE::nseg-1));
+			modes(k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.i(Range(0,BASE::ntri-1));
+		}
     }
-	
+
     ugstore.v.reference(BASE::ugbd(1).v);
     ugstore.s.reference(BASE::ugbd(1).s);
     ugstore.i.reference(BASE::ugbd(1).i);
-    
+
     psimatrix = 0.0;
     psimatrix_recv = 0.0;
-	
+
     for(l=0;l<nmodes;++l) {
-        BASE::ugbd(1).v.reference(modes(l).v);
-        BASE::ugbd(1).s.reference(modes(l).s);
-        BASE::ugbd(1).i.reference(modes(l).i);
-        
-        for(tind=0;tind<BASE::ntri;++tind) {          
-            /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-            BASE::crdtocht(tind);
-			
-            /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-            for(n=0;n<BASE::ND;++n)
-                basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-			
-            /* PROJECT MODE TO GAUSS POINTS */
-            BASE::ugtouht(tind,1);
-            for(n=0;n<BASE::NV;++n)
-                basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-            
-            for(i=0;i<lgpx;++i) {
-                for(j=0;j<lgpn;++j) {
-                    cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-                    for(n=0;n<BASE::NV;++n) {
-                        psimatrix(l) += BASE::res(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-                    }
-                }
-            }
-        }
+		BASE::ugbd(1).v.reference(modes(l).v);
+		BASE::ugbd(1).s.reference(modes(l).s);
+		BASE::ugbd(1).i.reference(modes(l).i);
+
+		for(tind=0;tind<BASE::ntri;++tind) {          
+			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+			BASE::crdtocht(tind);
+
+			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+			for(n=0;n<BASE::ND;++n)
+				basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+
+			/* PROJECT MODE TO GAUSS POINTS */
+			BASE::ugtouht(tind,1);
+			for(n=0;n<BASE::NV;++n)
+				basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+
+			for(i=0;i<lgpx;++i) {
+				for(j=0;j<lgpn;++j) {
+					cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+					for(n=0;n<BASE::NV;++n) {
+						psimatrix(l) += BASE::res(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+					}
+				}
+			}
+		}
     }	
     BASE::ugbd(1).v.reference(ugstore.v);
     BASE::ugbd(1).s.reference(ugstore.s);
     BASE::ugbd(1).i.reference(ugstore.i);
     sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
-	
+
     ugstore.v.reference(BASE::ugbd(0).v);
     ugstore.s.reference(BASE::ugbd(0).s);
     ugstore.i.reference(BASE::ugbd(0).i);
-    
+
     FLT norm;
     /* RENORMALIZE MODES AND OUTPUT COEFFICIENTS */
     for (k=0;k<nmodes;++k) {
-        norm = sqrt(psimatrix_recv(k));
-        modes(k).v(Range(0,BASE::npnt-1)) /= norm;
-        modes(k).s(Range(0,BASE::nseg-1)) /= norm;
-        modes(k).i(Range(0,BASE::ntri-1)) /= norm;
-        
-        nstr.str("");
-        nstr << k << std::flush;
-        filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
-        BASE::ugbd(0).v.reference(modes(k).v);
-        BASE::ugbd(0).s.reference(modes(k).s);
-        BASE::ugbd(0).i.reference(modes(k).i);
-        BASE::output(filename, BASE::binary);
-        BASE::output(filename, BASE::tecplot);
+		norm = sqrt(psimatrix_recv(k));
+		modes(k).v(Range(0,BASE::npnt-1)) /= norm;
+		modes(k).s(Range(0,BASE::nseg-1)) /= norm;
+		modes(k).i(Range(0,BASE::ntri-1)) /= norm;
+
+		nstr.str("");
+		nstr << k << std::flush;
+		filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
+		BASE::ugbd(0).v.reference(modes(k).v);
+		BASE::ugbd(0).s.reference(modes(k).s);
+		BASE::ugbd(0).i.reference(modes(k).i);
+		BASE::output(filename, BASE::binary);
+		BASE::output(filename, BASE::tecplot);
     }
     BASE::ugbd(0).v.reference(ugstore.v);
     BASE::ugbd(0).s.reference(ugstore.s);
     BASE::ugbd(0).i.reference(ugstore.i);
-    
-	
+
+
     ugstore.v.reference(BASE::ugbd(1).v);
     ugstore.s.reference(BASE::ugbd(1).s);
     ugstore.i.reference(BASE::ugbd(1).i);
-	
+
     psimatrix = 0.0;
     psimatrix_recv = 0.0;
 	psi1dcounter=0;
     for (k=0;k<nsnapshots;++k) {
-        /* LOAD SNAPSHOT */
-        nstr.str("");
-        nstr << k+1 << std::flush;
-        filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-        BASE::input(filename, BASE::binary);
-        
-        for(l=0;l<nmodes;++l) {
-            BASE::ugbd(1).v.reference(modes(l).v);
-            BASE::ugbd(1).s.reference(modes(l).s);
-            BASE::ugbd(1).i.reference(modes(l).i);
-            
-            for(tind=0;tind<BASE::ntri;++tind) {          
-                /* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-                BASE::crdtocht(tind);
-				
-                /* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-                for(n=0;n<BASE::ND;++n)
-                    basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-				
-                /* PROJECT SNAPSHOT TO GAUSS POINTS */
-                BASE::ugtouht(tind);
-                for(n=0;n<BASE::NV;++n)
-                    basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-				
-                /* PROJECT MODE TO GAUSS POINTS */
-                BASE::ugtouht(tind,1);
-                for(n=0;n<BASE::NV;++n)
-                    basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-                
-                for(i=0;i<lgpx;++i) {
-                    for(j=0;j<lgpn;++j) {
-                        cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-                        for(n=0;n<BASE::NV;++n) {
-                            psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-                        }
-                    }
-                }
-            }
-            ++psi1dcounter;
-        }
+		/* LOAD SNAPSHOT */
+		nstr.str("");
+		nstr << k+1 << std::flush;
+		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+		BASE::input(filename, BASE::binary);
+
+		for(l=0;l<nmodes;++l) {
+			BASE::ugbd(1).v.reference(modes(l).v);
+			BASE::ugbd(1).s.reference(modes(l).s);
+			BASE::ugbd(1).i.reference(modes(l).i);
+
+			for(tind=0;tind<BASE::ntri;++tind) {          
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				BASE::crdtocht(tind);
+
+				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(n=0;n<BASE::ND;++n)
+					basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+
+				/* PROJECT SNAPSHOT TO GAUSS POINTS */
+				BASE::ugtouht(tind);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+
+				/* PROJECT MODE TO GAUSS POINTS */
+				BASE::ugtouht(tind,1);
+				for(n=0;n<BASE::NV;++n)
+					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+
+				for(i=0;i<lgpx;++i) {
+					for(j=0;j<lgpn;++j) {
+						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+						for(n=0;n<BASE::NV;++n) {
+							psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						}
+					}
+				}
+			}
+			++psi1dcounter;
+		}
     }
     BASE::ugbd(1).v.reference(ugstore.v);
     BASE::ugbd(1).s.reference(ugstore.s);
     BASE::ugbd(1).i.reference(ugstore.i);
-	
+
     sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
-	
+
     for (k=0;k<nsnapshots;++k) {
-        /* OUTPUT COEFFICIENT VECTOR */
-        nstr.str("");
-        nstr << k+1 << std::flush;
-        filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-        binofstream bout;
-        bout.open(filename.c_str());
-        if (bout.error()) {
-            *BASE::gbl->log << "couldn't open coefficient output file " << filename;
-            exit(1);
-        }
+		/* OUTPUT COEFFICIENT VECTOR */
+		nstr.str("");
+		nstr << k+1 << std::flush;
+		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
+		binofstream bout;
+		bout.open(filename.c_str());
+		if (bout.error()) {
+			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
+			exit(1);
+		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-        
-        for (l=0;l<nmodes;++l) 
-            bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
-		
-        bout.close();
+
+		for (l=0;l<nmodes;++l) 
+			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
+
+		bout.close();
     }
-	
+
     return;
 }
 
 #else	
 template<class BASE> void pod_generate<BASE>::tadvance() {
- 	
+
 	if (BASE::gbl->substep != 0) return;
-    
+
     BASE::tadvance(); 
-	
+
     Array<FLT,1> psimatrix(nsnapshots*nsnapshots);
     Array<FLT,1> psimatrix_recv(nsnapshots*nsnapshots);
 	Array<FLT,1> low_noise_dot(BASE::ntri);
@@ -402,27 +402,27 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
     std::ostringstream nstr;
     std::istringstream instr;
     FLT cjcb;
-	
+
 	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<nsnapshots;++k) {
 		nstr.str("");
-        nstr << k+1 << std::flush;
-        filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-        BASE::input(filename, BASE::binary);
-        nstr.str("");
-        nstr << k << std::flush;
-        filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
-		
+		nstr << k+1 << std::flush;
+		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+		BASE::input(filename, BASE::binary);
+		nstr.str("");
+		nstr << k << std::flush;
+		filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
+
 		/* ZERO SNAPSHOTS ON POD BOUNDARY'S */
 		for (i=0;i<BASE::nebd;++i)
 			pod_ebdry(i)->zero_bdry(BASE::ug);
-		
-        BASE::output(filename, BASE::binary);
+
+		BASE::output(filename, BASE::binary);
 	}
-	
-	
+
+
 	for (int eig_ct=0; eig_ct<nsnapshots;++eig_ct) {
-		
+
 		/* ******************************************/
 		/* GENERATE POD MODES SNAPSHOT MATRIX       */
 		/********************************************/
@@ -433,41 +433,41 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 			BASE::input(filename, BASE::binary);
-			
+
 			for(l=k;l<nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 				BASE::input(filename, BASE::binary, 1);
-				
+
 				for(tind=0;tind<BASE::ntri;++tind) {          
 					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 					BASE::crdtocht(tind);
-					
+
 					/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 					for(n=0;n<BASE::ND;++n)
 						basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-					
+
 					BASE::ugtouht(tind,0);
 					for(n=0;n<BASE::NV;++n)
 						basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-					
+
 					BASE::ugtouht(tind,1);
 					for(n=0;n<BASE::NV;++n)
 						basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-					
+
 					FLT tmp_store = 0.0;
 					for(i=0;i<lgpx;++i) {
 						for(j=0;j<lgpn;++j) {
-							cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-							for(n=0;n<BASE::NV;++n) {
-								tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-							}
+						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+						for(n=0;n<BASE::NV;++n) {
+							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						}
 						}
 					}
 					low_noise_dot(tind) = tmp_store;
 				}
-				
+
 				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 				int halfcount,remainder;
 				for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -476,12 +476,12 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 				}
 				psimatrix(psi1dcounter) = low_noise_dot(0);
-				
+
 				++psi1dcounter;
 			}	
 		}
 		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
-		
+
 		/*********************************/
 		/* TO COMPUTE JUST 1 EIGENVECTOR */
 		/*********************************/
@@ -491,10 +491,10 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
 			exit(1);
 		}
-		
+
 		*BASE::gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
-		
-		
+
+
 		/*************************************/
 		/* LOAD SNAPSHOTS AND CALCULATE MODE */
 		/*************************************/
@@ -506,29 +506,29 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr << l << std::flush;
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 			BASE::input(filename, BASE::binary, 1);
-			
+
 			BASE::ug.v(Range(0,BASE::npnt-1)) += eigenvector(l)*BASE::ugbd(1).v(Range(0,BASE::npnt-1));
 			BASE::ug.s(Range(0,BASE::nseg-1)) += eigenvector(l)*BASE::ugbd(1).s(Range(0,BASE::nseg-1));
 			BASE::ug.i(Range(0,BASE::ntri-1)) += eigenvector(l)*BASE::ugbd(1).i(Range(0,BASE::ntri-1));
 		}
-		
-		
+
+
 		/********************/
 		/* RENORMALIZE MODE */
 		/********************/
 		for(tind=0;tind<BASE::ntri;++tind) {          
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 			BASE::crdtocht(tind);
-			
+
 			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 			for(n=0;n<BASE::ND;++n)
 				basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-			
+
 			/* PROJECT MODE TO GAUSS POINTS */
 			BASE::ugtouht(tind);
 			for(n=0;n<BASE::NV;++n)
 				basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-			
+
 			FLT tmp_store = 0.0;
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
@@ -549,22 +549,22 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 		double norm = low_noise_dot(0);
 		double norm_recv;
-		
+
 		sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum,pod_id);
-		
+
 		/* DIVIDE BY NORM */
 		norm = sqrt(norm_recv);
 		BASE::ug.v(Range(0,BASE::npnt-1)) /= norm;
 		BASE::ug.s(Range(0,BASE::nseg-1)) /= norm;
 		BASE::ug.i(Range(0,BASE::ntri-1)) /= norm;
-		
+
 		/* OUTPUT RENORMALIZED MODE */
 		nstr.str("");
 		nstr << eig_ct << std::flush;
 		filename = "mode" +nstr.str() + "_" + BASE::gbl->idprefix;
 		BASE::output(filename, BASE::binary);
 		BASE::output(filename, BASE::tecplot);
-		
+
 		/***************************************/
 		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
 		/***************************************/
@@ -575,32 +575,32 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 			BASE::input(filename, BASE::binary, 1);
-			
+
 			for(tind=0;tind<BASE::ntri;++tind) {          
 				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 				BASE::crdtocht(tind);
-				
+
 				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 				for(n=0;n<BASE::ND;++n)
 					basis::tri(BASE::log2p).proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-				
+
 				/* PROJECT SNAPSHOT TO GAUSS POINTS */
 				BASE::ugtouht(tind);
 				for(n=0;n<BASE::NV;++n)
 					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-				
+
 				/* PROJECT MODE TO GAUSS POINTS */
 				BASE::ugtouht(tind,1);
 				for(n=0;n<BASE::NV;++n)
 					basis::tri(BASE::log2p).proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-				
-				
+
+
 				FLT tmp_store = 0.0;
 				for(i=0;i<lgpx;++i) {
 					for(j=0;j<lgpn;++j) {
 						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p).wtx(i)*basis::tri(BASE::log2p).wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
 						for(n=0;n<BASE::NV;++n) {
-							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+						tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
 						}
 					}
 				}
@@ -614,9 +614,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
 			dotp = low_noise_dot(0);
-			
+
 			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
-			
+
 			BASE::ugbd(1).v(Range(0,BASE::npnt-1)) -= dotp_recv*BASE::ug.v(Range(0,BASE::npnt-1));
 			BASE::ugbd(1).s(Range(0,BASE::nseg-1)) -= dotp_recv*BASE::ug.s(Range(0,BASE::nseg-1));
 			BASE::ugbd(1).i(Range(0,BASE::ntri-1)) -= dotp_recv*BASE::ug.i(Range(0,BASE::ntri-1));
@@ -624,7 +624,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			coeff(k,eig_ct) = dotp_recv;
 		}
 	}
-	
+
 	/*****************************/
 	/* OUTPUT COEFFICIENT VECTOR */
 	/*****************************/
@@ -640,44 +640,44 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
+
 		for (l=0;l<nmodes;++l) 
 			bout.writeFloat(coeff(k,l),binio::Double);
-		
+
 		bout.close();
 	}
-	
+
 	/* NOW GENERATE BDRY POD MODES */
 	for (int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->calculate_modes();
-	
+
     return;
 }
 #endif
 
 template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 	std::string keyword;
-	
+
 	keyword = base.idprefix + "_pod";
 	input.getwdefault(keyword,active,false);
-	
+
 	if (!active) return;
-	
+
 	keyword = base.idprefix + "_podmodes";
 	input.getwdefault(keyword,nmodes,x.nsnapshots);
-	
+
 	keyword = base.idprefix + "_pod_id";
 	if (!input.get(keyword,pod_id)) {
 		*x.gbl->log << "Must provide a pod id for pod boundary\n";
 		exit(1);
 	}
-	
+
 	/* ERROR CHECK THAT NUMBER IS LISTED IN GROUP LIST */
 	if (!input.getline(x.gbl->idprefix +"_groups",keyword)) {
 		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "\n";
 		exit(1);
 	}
-	
+
 	istringstream mystr(keyword);
 	int bnum;
 	do {
@@ -689,11 +689,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 }
 
 template<class BASE> void pod_gen_edge_bdry<BASE>::zero_bdry(tri_hp::vsi ug) {
-	
+
 	if (!active) return;
-	
+
 	int sind,v0;
-	
+
 	for(int j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
@@ -706,9 +706,9 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::zero_bdry(tri_hp::vsi ug) {
 
 /* 1D VERSION TO GENERATE MODES */
 template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
-	
+
 	if (!active) return;
-	
+
     Array<FLT,1> psimatrix(x.nsnapshots*x.nsnapshots);
     Array<FLT,1> psimatrix_recv(x.nsnapshots*x.nsnapshots);
 	Array<FLT,1> low_noise_dot(x.BASE::ntri);
@@ -729,22 +729,22 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
     std::ostringstream nstr;
     std::istringstream instr;
     FLT cjcb;
-	
+
 	/* MAKE FILES FOR EDGE MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
-        nstr << k+1 << std::flush;
-        filename = "rstrt" +nstr.str() + "_" + x.gbl->idprefix +".d0";
-        x.input(filename, BASE::binary);
-        nstr.str("");
-        nstr << k << std::flush;
-        filename = "temp" +nstr.str() + "_" + base.idprefix;
-        x.output(filename, BASE::binary);
+		nstr << k+1 << std::flush;
+		filename = "rstrt" +nstr.str() + "_" + x.gbl->idprefix +".d0";
+		x.input(filename, BASE::binary);
+		nstr.str("");
+		nstr << k << std::flush;
+		filename = "temp" +nstr.str() + "_" + base.idprefix;
+		x.output(filename, BASE::binary);
 	}
-	
-	
+
+
 	for (int eig_ct=0; eig_ct<x.nsnapshots;++eig_ct) {
-		
+
 		/* ******************************************/
 		/* GENERATE POD MODES SNAPSHOT MATRIX       */
 		/********************************************/
@@ -755,42 +755,42 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + base.idprefix;
 			x.input(filename, x.binary);
-			
+
 			for(l=k;l<x.nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str() + "_" + base.idprefix;
 				x.input(filename, x.binary, 1);
-				
+
 				/* PERFORM 1D INTEGRATION */
 				for(int bsind=0;bsind<base.nseg;++bsind) {
 					sind = base.seg(bsind);
-					
+
 					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 					x.crdtocht1d(sind);
-					
+
 					/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 					for(n=0;n<x.ND;++n)
 						basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
-					
+
 					x.ugtouht1d(sind,0);
 					for(n=0;n<x.NV;++n)
 						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-					
+
 					x.ugtouht1d(sind,1);
 					for(n=0;n<x.NV;++n)
 						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
-					
+
 					FLT tmp_store = 0.0;
 					for(i=0;i<lgpx;++i) {
 						cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 						for(n=0;n<x.NV;++n) {
-							tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
+						tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
 						}
 					}
 					low_noise_dot(bsind) = tmp_store;
 				}
-				
+
 				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 				int halfcount,remainder;
 				for (remainder=base.nseg % 2, halfcount = base.nseg/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -799,12 +799,12 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 					if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 				}
 				psimatrix(psi1dcounter) = low_noise_dot(0);
-				
+
 				++psi1dcounter;
 			}	
 		}
 		sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),x.nsnapshots*(x.nsnapshots+1)/2,blocks::flt_msg,blocks::sum,pod_id);
-		
+
 		/*********************************/
 		/* TO COMPUTE JUST 1 EIGENVECTOR */
 		/*********************************/
@@ -814,10 +814,10 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			*x.gbl->log << "Failed to find eigenmodes " << info << std::endl;
 			exit(1);
 		}
-		
+
 		*x.gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
-		
-		
+
+
 		/*************************************/
 		/* LOAD SNAPSHOTS AND CALCULATE MODE */
 		/*************************************/
@@ -831,7 +831,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr << l << std::flush;
 			filename = "temp" +nstr.str() + "_" + base.idprefix;
 			x.input(filename, x.binary, 1);
-			
+
 			for (int bsind=0;bsind<base.nseg;++bsind) {
 				sind = base.seg(bsind);
 				v0 = x.seg(sind).pnt(0);
@@ -841,25 +841,25 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			v0 = x.seg(sind).pnt(1);
 			x.ug.v(v0) += eigenvector(l)*x.ugbd(1).v(v0);
 		}
-		
-		
+
+
 		/********************/
 		/* RENORMALIZE MODE */
 		/********************/
 		for(int bsind=0;bsind<base.nseg;++bsind) {
 			sind = base.seg(bsind);
-			
+
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 			x.crdtocht1d(sind);
-			
+
 			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 			for(n=0;n<x.ND;++n)
 				basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
-			
+
 			x.ugtouht1d(sind);
 			for(n=0;n<x.NV;++n)
 				basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
-			
+
 			FLT tmp_store = 0.0;
 			for(i=0;i<lgpx;++i) {
 				cjcb =  basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
@@ -878,31 +878,31 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		}
 		double norm = low_noise_dot(0);
 		double norm_recv;
-		
+
 		sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum,pod_id);
-		
+
 		/* DIVIDE BY NORM */
 		norm = sqrt(norm_recv);
 		x.ug.v(Range(0,x.npnt-1)) /= norm;
 		x.ug.s(Range(0,x.nseg-1)) /= norm;
-		
+
 		/* 2D OUTPUT RENORMALIZED MODE */
 		nstr.str("");
 		nstr << eig_ct << std::flush;
 		filename = "mode" +nstr.str() + "_" + base.idprefix;
 		x.output(filename, x.tecplot);
-		
+
 		/* 1D OUTPUT RENORMALIZED MODE */
 		filename = "mode" +nstr.str() + "_" + base.idprefix +".bin";
-        binofstream bout;
-        bout.open(filename.c_str());
-        if (bout.error()) {
-            *x.gbl->log << "couldn't open coefficient output file " << filename;
-            exit(1);
-        }
+		binofstream bout;
+		bout.open(filename.c_str());
+		if (bout.error()) {
+			*x.gbl->log << "couldn't open coefficient output file " << filename;
+			exit(1);
+		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
+
 		for (int bsind=0;bsind<base.nseg;++bsind) {
 			sind = base.seg(bsind);
 			v0 = x.seg(sind).pnt(0);
@@ -912,16 +912,16 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		v0 = x.seg(sind).pnt(1);
 		for (n=0;n<x.NV;++n)
 			bout.writeFloat(x.ug.v(v0,n),binio::Double);		
-		
+
 		for (int bsind=0;bsind<base.nseg;++bsind) {
 			sind = base.seg(bsind);
 			for (int m=0;m<x.sm0;++m)
 				for (n=0;n<x.NV;++n)
 					bout.writeFloat(x.ug.s(sind,m,n),binio::Double);
 		}
-        bout.close();
-		
-		
+		bout.close();
+
+
 		/***************************************/
 		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
 		/***************************************/
@@ -932,26 +932,26 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + base.idprefix;
 			x.input(filename, x.binary, 1);
-			
+
 			/* PERFORM 1D INTEGRATION */
 			for(int bsind=0;bsind<base.nseg;++bsind) {
 				sind = base.seg(bsind);
-				
+
 				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 				x.crdtocht1d(sind);
-				
+
 				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 				for(n=0;n<x.ND;++n)
 					basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
-				
+
 				x.ugtouht1d(sind,0);
 				for(n=0;n<x.NV;++n)
 					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-				
+
 				x.ugtouht1d(sind,1);
 				for(n=0;n<x.NV;++n)
 					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
-				
+
 				FLT tmp_store = 0.0;
 				for(i=0;i<lgpx;++i) {
 					cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
@@ -961,7 +961,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 				}
 				low_noise_dot(bsind) = tmp_store;
 			}
-			
+
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
 			for (remainder=base.nseg % 2, halfcount = base.nseg/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -970,7 +970,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
 			dotp = low_noise_dot(0);
-			
+
 			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 			x.ugbd(1).v(Range(0,x.npnt-1)) -= dotp_recv*x.ug.v(Range(0,x.npnt-1));
 			x.ugbd(1).s(Range(0,x.nseg-1)) -= dotp_recv*x.ug.s(Range(0,x.nseg-1));
@@ -978,7 +978,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			coeff(k,eig_ct) = dotp_recv;
 		}
 	}
-	
+
 	/*****************************/
 	/* OUTPUT COEFFICIENT VECTOR */
 	/*****************************/
@@ -994,10 +994,10 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-		
+
 		for (l=0;l<nmodes;++l) 
 			bout.writeFloat(coeff(k,l),binio::Double);
-		
+
 		bout.close();
 	}
 }

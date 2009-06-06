@@ -11,7 +11,7 @@
 #include "../hp_boundary.h"
 
  void tri_hp_swe::init(input_map& input, void *gin) {
-    
+
     gbl = static_cast<global *>(gin);    
     tri_hp_ins::init(input,gin);
 
@@ -21,7 +21,7 @@
     if (!input.get(gbl->idprefix + "_ptest",gbl->ptest)) input.getwdefault("ptest",gbl->ptest,1.0);
 
     gbl->bathy = getnewbathy("bathy",input);
-    
+
     return;
 }
 

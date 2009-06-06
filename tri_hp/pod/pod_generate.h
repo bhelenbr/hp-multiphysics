@@ -25,7 +25,7 @@ public:
 	Array<FLT,1> coeffs;
 	Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 	Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
-	
+
 public:
 	void init(input_map& input, void *gin); 
 	pod_generate<BASE>* create() { return new pod_generate<BASE>();}
@@ -41,7 +41,7 @@ protected:
 	typedef typename BASE::vsi vsi;
 	Array<vsi,1> modes;
 	Array<FLT,1> psimatrix,psimatrix_recv;
-	
+
 public:
 	void init(input_map& input, void *gin); 
 	pod_generate<BASE>* create() { return new pod_generate<BASE>();}
@@ -56,7 +56,7 @@ protected:
 	int nmodes;
 	int pod_id;
 	bool active;
-	
+
 public:
 	pod_gen_edge_bdry(pod_generate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
 	void init(input_map& input);

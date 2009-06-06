@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     // Then continue
 	int rc = pth_init();
     if (!rc) {
-        std::cerr << "couldn't start pth environment\n";
+		std::cerr << "couldn't start pth environment\n";
     }
 #endif
 
@@ -38,11 +38,11 @@ int main(int argc, char **argv) {
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
 	if (sigaction(SIGTERM,&action,&o_action)) printf("interrupt handler failed\n");
-    
+
     /* NORMAL SIMULATION */
     if (argc < 2) {
-        std::cerr << "# Need to specify input file" << std::endl;
-        exit(1);
+		std::cerr << "# Need to specify input file" << std::endl;
+		exit(1);
     }
     sim::blks.go(argv[1]);
 
