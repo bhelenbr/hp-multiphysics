@@ -211,7 +211,7 @@ class fcoupled_physics_ptr {
 
 
 template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, public BASE {
-  public: 
+	public: 
 		ecoupled_physics(int inid, tet_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"coupled";}
 		ecoupled_physics(const ecoupled_physics<BASE> &inbdry, tet_mesh &xin) : BASE(inbdry,xin) {}
 		ecoupled_physics* create(tet_mesh& xin) const {return(new ecoupled_physics<BASE>(*this,xin));}

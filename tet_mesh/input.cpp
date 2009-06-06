@@ -48,8 +48,8 @@ void tet_mesh::init(input_map &input, void *gin) {
 		tet_mesh::input(filename.c_str(),static_cast<tet_mesh::filetype>(filetype),grwfac,input);
 	}
 	 
-	 /* SET-UP BOUNDARY COMMUNICATIONS */
-	 findmatch(gbl,coarse_level);
+	/* SET-UP BOUNDARY COMMUNICATIONS */
+	findmatch(gbl,coarse_level);
 }
 
 void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizereduce1d) {
