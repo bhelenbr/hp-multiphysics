@@ -1,7 +1,7 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 
-//#define DEBUG
+#define DEBUG
 
 void tet_hp::rsdl(int stage) {    
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */

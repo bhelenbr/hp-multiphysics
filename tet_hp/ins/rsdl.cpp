@@ -405,10 +405,9 @@ void tet_hp_ins::rsdl(int stage) {
 
 #endif
 											
-							
-							du(2,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
-							du(2,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
-							du(2,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
+							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
+							du(NV-1,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
+							du(NV-1,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
 						}
 
 						}
@@ -426,6 +425,7 @@ void tet_hp_ins::rsdl(int stage) {
 		}
 		else {
 		
+			
 			d(0)(0) =  ldcrd(1,1)*ldcrd(2,2)-ldcrd(2,1)*ldcrd(1,2);
 			d(0)(1) = -ldcrd(1,0)*ldcrd(2,2)+ldcrd(2,0)*ldcrd(1,2);
 			d(0)(2) =  ldcrd(1,0)*ldcrd(2,1)-ldcrd(2,0)*ldcrd(1,1);
@@ -491,16 +491,110 @@ void tet_hp_ins::rsdl(int stage) {
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
 			lftog(tind,gbl->res);
+<<<<<<< .mine
+            /* NEGATIVE REAL TERMS */
+            if (gbl->beta(stage) > 0.0) {
+				cjcbi = lmu/cjcb;
+				rhorbd0 = rhobd0*cjcb;
+				
+				/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
+				/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
+				
+				visc(0,0)(0,0) = cjcbi*(2*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
+				visc(0,0)(0,1) = cjcbi*(2*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
+				visc(0,0)(0,2) = cjcbi*(2*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
+				visc(0,0)(1,0) = visc(0,0)(0,1);
+				visc(0,0)(1,1) = cjcbi*(2*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
+				visc(0,0)(1,2) = cjcbi*(2*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
+				visc(0,0)(2,0) = visc(0,0)(0,2);
+				visc(0,0)(2,1) = visc(0,0)(1,2);
+				visc(0,0)(2,2) = cjcbi*(2*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
+				
+				visc(0,1)(0,0) = cjcbi*d(0)(1)*d(0)(0);
+				visc(0,1)(0,1) = cjcbi*d(0)(1)*d(1)(0);
+				visc(0,1)(0,2) = cjcbi*d(0)(1)*d(2)(0);
+				visc(0,1)(1,0) = cjcbi*d(1)(1)*d(0)(0);
+				visc(0,1)(1,1) = cjcbi*d(1)(1)*d(1)(0);
+				visc(0,1)(1,2) = cjcbi*d(1)(1)*d(2)(0);
+				visc(0,1)(2,0) = cjcbi*d(2)(1)*d(0)(0);
+				visc(0,1)(2,1) = cjcbi*d(2)(1)*d(1)(0);
+				visc(0,1)(2,2) = cjcbi*d(2)(1)*d(2)(0);
+				
+				visc(0,2)(0,0) = cjcbi*d(0)(2)*d(0)(0);
+				visc(0,2)(0,1) = cjcbi*d(0)(2)*d(1)(0);
+				visc(0,2)(0,2) = cjcbi*d(0)(2)*d(2)(0);
+				visc(0,2)(1,0) = cjcbi*d(1)(2)*d(0)(0);
+				visc(0,2)(1,1) = cjcbi*d(1)(2)*d(1)(0);
+				visc(0,2)(1,2) = cjcbi*d(1)(2)*d(2)(0);
+				visc(0,2)(2,0) = cjcbi*d(2)(2)*d(0)(0);
+				visc(0,2)(2,1) = cjcbi*d(2)(2)*d(1)(0);
+				visc(0,2)(2,2) = cjcbi*d(2)(2)*d(2)(0);
+				
+				visc(1,0)(0,0) = cjcbi*d(0)(0)*d(0)(1);
+				visc(1,0)(0,1) = cjcbi*d(0)(0)*d(1)(1);
+				visc(1,0)(0,2) = cjcbi*d(0)(0)*d(2)(1);
+				visc(1,0)(1,0) = cjcbi*d(1)(0)*d(0)(1);
+				visc(1,0)(1,1) = cjcbi*d(1)(0)*d(1)(1);
+				visc(1,0)(1,2) = cjcbi*d(1)(0)*d(2)(1);
+				visc(1,0)(2,0) = cjcbi*d(2)(0)*d(0)(1);
+				visc(1,0)(2,1) = cjcbi*d(2)(0)*d(1)(1);
+				visc(1,0)(2,2) = cjcbi*d(2)(0)*d(2)(1);
+				
+				visc(1,1)(0,0) = cjcbi*(2*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
+				visc(1,1)(0,1) = cjcbi*(2*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
+				visc(1,1)(0,2) = cjcbi*(2*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
+				visc(1,1)(1,0) = visc(1,1)(0,1);
+				visc(1,1)(1,1) = cjcbi*(2*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
+				visc(1,1)(1,2) = cjcbi*(2*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
+				visc(1,1)(2,0) = visc(1,1)(0,2);
+				visc(1,1)(2,1) = visc(1,1)(1,2);
+				visc(1,1)(2,2) = cjcbi*(2*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
+				
+				visc(1,2)(0,0) = cjcbi*d(0)(2)*d(0)(1);
+				visc(1,2)(0,1) = cjcbi*d(0)(2)*d(1)(1);
+				visc(1,2)(0,2) = cjcbi*d(0)(2)*d(2)(1);
+				visc(1,2)(1,0) = cjcbi*d(1)(2)*d(0)(1);
+				visc(1,2)(1,1) = cjcbi*d(1)(2)*d(1)(1);
+				visc(1,2)(1,2) = cjcbi*d(1)(2)*d(2)(1);
+				visc(1,2)(2,0) = cjcbi*d(2)(2)*d(0)(1);
+				visc(1,2)(2,1) = cjcbi*d(2)(2)*d(1)(1);
+				visc(1,2)(2,2) = cjcbi*d(2)(2)*d(2)(1);
+				
+				visc(2,0)(0,0) = cjcbi*d(0)(0)*d(0)(2);
+				visc(2,0)(0,1) = cjcbi*d(0)(0)*d(1)(2);
+				visc(2,0)(0,2) = cjcbi*d(0)(0)*d(2)(2);
+				visc(2,0)(1,0) = cjcbi*d(1)(0)*d(0)(2);
+				visc(2,0)(1,1) = cjcbi*d(1)(0)*d(1)(2);
+				visc(2,0)(1,2) = cjcbi*d(1)(0)*d(2)(2);
+				visc(2,0)(2,0) = cjcbi*d(2)(0)*d(0)(2);
+				visc(2,0)(2,1) = cjcbi*d(2)(0)*d(1)(2);
+				visc(2,0)(2,2) = cjcbi*d(2)(0)*d(2)(2);
+				
+				visc(2,1)(0,0) = cjcbi*d(0)(1)*d(0)(2);
+				visc(2,1)(0,1) = cjcbi*d(0)(1)*d(0)(2);
+				visc(2,1)(0,2) = cjcbi*d(0)(1)*d(0)(2);
+				visc(2,1)(1,0) = cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(1,1) = cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(1,2) = cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(2,0) = cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(2,1) = cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(2,2) = cjcbi*d(1)(1)*d(0)(2);
+				
+				visc(2,2)(0,0) = cjcbi*(2*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
+				visc(2,2)(0,1) = cjcbi*(2*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
+				visc(2,2)(0,2) = cjcbi*(2*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
+				visc(2,2)(1,0) = visc(2,2)(0,1);
+				visc(2,2)(1,1) = cjcbi*(2*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
+				visc(2,2)(1,2) = visc(2,2)(2,1);
+				visc(2,2)(2,0) = visc(2,2)(0,2);
+				visc(2,2)(2,1) = cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
+				visc(2,2)(2,2) = cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
+        
 
-			/* NEGATIVE REAL TERMS */
-			if (gbl->beta(stage) > 0.0) {
 				/* TIME DERIVATIVE TERMS */ 
 				for(i=0;i<lgpx;++i) {
-						for(j=0;j<lgpy;++j) {
+					for(j=0;j<lgpy;++j) {
 						for(k=0;k<lgpz;++k) {
-						
-							rhorbd0 = rhobd0*cjcb;
-							cjcbi = lmu/cjcb;
 							
 							/* UNSTEADY TERMS */
 							for(n=0;n<NV-1;++n)
@@ -517,100 +611,6 @@ void tet_hp_ins::rsdl(int stage) {
 								res(n)(i)(j)(k) -= gbl->rho*cjcb*sim::body(n);			
 
 #endif                        
-							/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-							/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
-
-							visc(0,0)(0,0) = cjcbi*(2*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
-							visc(0,0)(0,1) = cjcbi*(2*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
-							visc(0,0)(0,2) = cjcbi*(2*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
-							visc(0,0)(1,0) = visc(0,0)(0,1);
-							visc(0,0)(1,1) = cjcbi*(2*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
-							visc(0,0)(1,2) = cjcbi*(2*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
-							visc(0,0)(2,0) = visc(0,0)(0,2);
-							visc(0,0)(2,1) = visc(0,0)(1,2);
-							visc(0,0)(2,2) = cjcbi*(2*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
-
-							visc(0,1)(0,0) = cjcbi*d(0)(1)*d(0)(0);
-							visc(0,1)(0,1) = cjcbi*d(0)(1)*d(1)(0);
-							visc(0,1)(0,2) = cjcbi*d(0)(1)*d(2)(0);
-							visc(0,1)(1,0) = cjcbi*d(1)(1)*d(0)(0);
-							visc(0,1)(1,1) = cjcbi*d(1)(1)*d(1)(0);
-							visc(0,1)(1,2) = cjcbi*d(1)(1)*d(2)(0);
-							visc(0,1)(2,0) = cjcbi*d(2)(1)*d(0)(0);
-							visc(0,1)(2,1) = cjcbi*d(2)(1)*d(1)(0);
-							visc(0,1)(2,2) = cjcbi*d(2)(1)*d(2)(0);
-							
-							visc(0,2)(0,0) = cjcbi*d(0)(2)*d(0)(0);
-							visc(0,2)(0,1) = cjcbi*d(0)(2)*d(1)(0);
-							visc(0,2)(0,2) = cjcbi*d(0)(2)*d(2)(0);
-							visc(0,2)(1,0) = cjcbi*d(1)(2)*d(0)(0);
-							visc(0,2)(1,1) = cjcbi*d(1)(2)*d(1)(0);
-							visc(0,2)(1,2) = cjcbi*d(1)(2)*d(2)(0);
-							visc(0,2)(2,0) = cjcbi*d(2)(2)*d(0)(0);
-							visc(0,2)(2,1) = cjcbi*d(2)(2)*d(1)(0);
-							visc(0,2)(2,2) = cjcbi*d(2)(2)*d(2)(0);
-							
-							visc(1,0)(0,0) = cjcbi*d(0)(0)*d(0)(1);
-							visc(1,0)(0,1) = cjcbi*d(0)(0)*d(1)(1);
-							visc(1,0)(0,2) = cjcbi*d(0)(0)*d(2)(1);
-							visc(1,0)(1,0) = cjcbi*d(1)(0)*d(0)(1);
-							visc(1,0)(1,1) = cjcbi*d(1)(0)*d(1)(1);
-							visc(1,0)(1,2) = cjcbi*d(1)(0)*d(2)(1);
-							visc(1,0)(2,0) = cjcbi*d(2)(0)*d(0)(1);
-							visc(1,0)(2,1) = cjcbi*d(2)(0)*d(1)(1);
-							visc(1,0)(2,2) = cjcbi*d(2)(0)*d(2)(1);
-							
-							visc(1,1)(0,0) = cjcbi*(2*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
-							visc(1,1)(0,1) = cjcbi*(2*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
-							visc(1,1)(0,2) = cjcbi*(2*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
-							visc(1,1)(1,0) = visc(1,1)(0,1);
-							visc(1,1)(1,1) = cjcbi*(2*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
-							visc(1,1)(1,2) = cjcbi*(2*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
-							visc(1,1)(2,0) = visc(1,1)(0,2);
-							visc(1,1)(2,1) = visc(1,1)(1,2);
-							visc(1,1)(2,2) = cjcbi*(2*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
-							
-							visc(1,2)(0,0) = cjcbi*d(0)(2)*d(0)(1);
-							visc(1,2)(0,1) = cjcbi*d(0)(2)*d(1)(1);
-							visc(1,2)(0,2) = cjcbi*d(0)(2)*d(2)(1);
-							visc(1,2)(1,0) = cjcbi*d(1)(2)*d(0)(1);
-							visc(1,2)(1,1) = cjcbi*d(1)(2)*d(1)(1);
-							visc(1,2)(1,2) = cjcbi*d(1)(2)*d(2)(1);
-							visc(1,2)(2,0) = cjcbi*d(2)(2)*d(0)(1);
-							visc(1,2)(2,1) = cjcbi*d(2)(2)*d(1)(1);
-							visc(1,2)(2,2) = cjcbi*d(2)(2)*d(2)(1);
-							
-							visc(2,0)(0,0) = cjcbi*d(0)(0)*d(0)(2);
-							visc(2,0)(0,1) = cjcbi*d(0)(0)*d(1)(2);
-							visc(2,0)(0,2) = cjcbi*d(0)(0)*d(2)(2);
-							visc(2,0)(1,0) = cjcbi*d(1)(0)*d(0)(2);
-							visc(2,0)(1,1) = cjcbi*d(1)(0)*d(1)(2);
-							visc(2,0)(1,2) = cjcbi*d(1)(0)*d(2)(2);
-							visc(2,0)(2,0) = cjcbi*d(2)(0)*d(0)(2);
-							visc(2,0)(2,1) = cjcbi*d(2)(0)*d(1)(2);
-							visc(2,0)(2,2) = cjcbi*d(2)(0)*d(2)(2);
-					
-							visc(2,1)(0,0) = cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(0,1) = cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(0,2) = cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(1,0) = cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(1,1) = cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(1,2) = cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,0) = cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,1) = cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,2) = cjcbi*d(1)(1)*d(0)(2);
-							
-							visc(2,2)(0,0) = cjcbi*(2*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
-							visc(2,2)(0,1) = cjcbi*(2*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
-							visc(2,2)(0,2) = cjcbi*(2*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
-							visc(2,2)(1,0) = visc(2,2)(0,1);
-							visc(2,2)(1,1) = cjcbi*(2*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
-							visc(2,2)(1,2) = visc(2,2)(2,1);
-							visc(2,2)(2,0) = visc(2,2)(0,2);
-							visc(2,2)(2,1) = cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
-							visc(2,2)(2,2) = cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
-
-
 
 							df(0,0)(i)(j)(k) = +visc(0,0)(0,0)*du(0,0)(i)(j)(k)+visc(0,1)(0,0)*du(1,0)(i)(j)(k)+visc(0,2)(0,0)*du(2,0)(i)(j)(k)
 											   +visc(0,0)(0,1)*du(0,1)(i)(j)(k)+visc(0,1)(0,1)*du(1,1)(i)(j)(k)+visc(0,2)(0,1)*du(2,1)(i)(j)(k)
@@ -673,14 +673,13 @@ void tet_hp_ins::rsdl(int stage) {
 				/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 				for(i=0;i<lgpx;++i) {
 						for(j=0;j<lgpy;++j) {
-						for(k=0;k<lgpz;++k) {
-
-							
+						for(k=0;k<lgpz;++k) {							
 							tres(0) = gbl->tau(tind,0)*res(0)(i)(j)(k);    
 							tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
 							tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
 							tres(3) = gbl->tau(tind,NV-1)*res(3)(i)(j)(k);
-							
+							cout << "tres = " << tres(0) << ' ' << tres(1) << ' ' <<tres(2) << ' ' << tres(3) << endl;
+
 							
 #ifndef INERTIALESS
 							df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
@@ -722,9 +721,9 @@ void tet_hp_ins::rsdl(int stage) {
 #endif
 											
 							
-							du(2,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
-							du(2,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
-							du(2,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
+							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
+							du(NV-1,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
+							du(NV-1,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
 					}
 
 						}
