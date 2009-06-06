@@ -45,7 +45,7 @@ tprims.o collapse.o findmatch.o getnewr_bdry.o rebay.o setup.o\
 triangulate.o tri_boundary.o connect.o getnewbdry.o input.o meshutilities.o \
 refineby2.o swap.o yaber.o adapt.o blocks.o
 
-MAINOBJ = main.o 
+MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran $(EXTRAFLAGS)
 
@@ -85,17 +85,17 @@ libtri_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libtri_mesh.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
-	
+
 tri_mesh: $(OBJ) $(MAINOBJ)
 	${CXX} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 	mv tri_mesh $(HOME)/bin
-	
-libtri_mesh_mpi.a: $(OBJ) 
+
+libtri_mesh_mpi.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libtri_mesh_mpi.a $(HOME)/Codes/lib/
 	cp -f ../*.h $(HOME)/Codes/include/
 
-tri_mesh_mpi: $(OBJ) $(MAINOBJ) 
+tri_mesh_mpi: $(OBJ) $(MAINOBJ)
 	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 	mv tri_mesh_mpi $(HOME)/bin
 
