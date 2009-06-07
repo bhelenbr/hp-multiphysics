@@ -11,6 +11,7 @@
 #include "tet_boundary.h"
 #include <assert.h>
 #include <float.h>
+#include <blitz/tinyvec-et.h>.
 
 /********************/
 /* VERTEX FUNCTIONS */
@@ -79,40 +80,43 @@ void edge_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt) 
 
 void edge_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, FLT &psiloc) const {
 	int k,sind,p0,p1,sidlocprev;
-	FLT dx,dy,ol,psi,normdist;
+	FLT ol,psi,normdist;
 	FLT psiprev,normdistprev;
 	FLT mindist = 1.0e32;
+	TinyVector<FLT,3> dx,normvect;
 		
 	if (x.seg(seg(0).gindx).pnt(0) == x.seg(seg(nseg-1).gindx).pnt(1)) {
 		/* BOUNDARY IS A LOOP */
 		sind = seg(nseg-1).gindx;
 		p0 = x.seg(sind).pnt(0);
 		p1 = x.seg(sind).pnt(1);
-		dx = x.pnts(p1)(0) - x.pnts(p0)(0);
-		dy = x.pnts(p1)(1) - x.pnts(p0)(1);
-		ol = 2./(dx*dx +dy*dy);
-		psi = ol*((xpt(0) -x.pnts(p0)(0))*dx +(xpt(1) -x.pnts(p0)(1))*dy) -1.;
-		normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p1)(0));
-		normdist *= sqrt(ol/2.);
+		dx = x.pnts(p1) -x.pnts(p0);
+		ol = 2./dot(dx,dx);
+		psi = ol*dot(xpt-x.pnts(p0),dx) -1.;
+		normvect = xpt -x.pnts(p0) -dx*(1.+psi)*0.5;
+		normdist = dot(normvect,normvect);
+		normdist *= sqrt(ol*0.5);
 		psiprev = psi;
 		normdistprev = normdist;
 		sidlocprev = nseg-1;
 	} 
 	else {
 		psiprev = -1.0;
+		sidlocprev = -1;  // FIXME: ENDPOINTS ARE NOT SEARCHED
+		normdistprev = 1.0e10; // This shouldn't be used
 	}
 	
 	for(k=0;k<nseg;++k) {
 		sind = seg(k).gindx;
 		p0 = x.seg(sind).pnt(0);
 		p1 = x.seg(sind).pnt(1);
-		dx = x.pnts(p1)(0) - x.pnts(p0)(0);
-		dy = x.pnts(p1)(1) - x.pnts(p0)(1);
-		ol = 2./(dx*dx +dy*dy);
-		psi = ol*((xpt(0) -x.pnts(p0)(0))*dx +(xpt(1) -x.pnts(p0)(1))*dy) -1.;
-		normdist = dx*(xpt(1)-x.pnts(p0)(1))-dy*(xpt(0)-x.pnts(p1)(0));
-		normdist *= sqrt(ol/2.);
-		
+		dx = x.pnts(p1) -x.pnts(p0);
+		ol = 2./dot(dx,dx);
+		psi = ol*dot(xpt-x.pnts(p0),dx) -1.;
+		normvect = xpt -x.pnts(p0) -dx*(1.+psi)*0.5;
+		normdist = dot(normvect,normvect);
+		normdist *= sqrt(ol*0.5);
+
 		if (psi <= -1.0 && psiprev >= 1.0) {
 			/* PREVIOUS & THIS SIDE ARE POTENTIAL MATCHES */
 			if (fabs(normdist) < mindist) {
@@ -141,8 +145,6 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, 
 	
 	return;
 }
-
-
 
 void edge_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
 	int j,k,sind,tind,p0,sidloc;
