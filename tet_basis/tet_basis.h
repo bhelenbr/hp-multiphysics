@@ -163,7 +163,6 @@ class tet_basis {
 		void proj2d(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride); 
 		void proj2d(FLT *lin1, FLT *f1, int stride); 
 		void proj2d_bdry(FLT *lin1, FLT *f1, int stride); 
-		void proj2d_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride);
 		void proj2d(FLT u1, FLT u2, FLT u3, FLT *f1, int stride);
 		void proj2d_leg(FLT *lin1, FLT *f1, int stride);
 		void proj2d_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride);
