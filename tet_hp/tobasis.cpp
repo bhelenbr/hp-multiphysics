@@ -30,7 +30,7 @@ void tet_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 		v0 = seg(eind).pnt(0);
 		v1 = seg(eind).pnt(1);
 		
-		if (seg(eind).info < 0) {
+		if (seg(eind).info < 0){
 			for(n=0;n<ND;++n)
 				basis::tet(log2p).proj1d(pnts(v0)(n),pnts(v1)(n),&crd1d(n)(0));
 		}
@@ -84,12 +84,12 @@ void tet_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 			
 		for (i=0; i < basis::tet(log2p).gpx; ++i ) {
 			for (j=0; j < basis::tet(log2p).gpy; ++j ) {
-			pt(0) = crd2d(0)(i)(j);
-			pt(1) = crd2d(1)(i)(j);
-			pt(2) = crd2d(2)(i)(j);
-			for(n=0;n<NV;++n) {
-				u2d(n)(i)(j) -= ibc->f(n,pt,gbl->time);
-			}
+				pt(0) = crd2d(0)(i)(j);
+				pt(1) = crd2d(1)(i)(j);
+				pt(2) = crd2d(2)(i)(j);
+				for(n=0;n<NV;++n) {
+					u2d(n)(i)(j) -= ibc->f(n,pt,gbl->time);
+				}
 			}
 		}
 	  
@@ -97,7 +97,7 @@ void tet_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 		for(n=0;n<NV;++n) {
 			basis::tet(log2p).intgrt2d(&lf(n)(0),&u2d(n)(0)(0),stridey);
 			for(i=0;i<basis::tet(log2p).fm;++i){
-			ugbd(tlvl).f(find,i,n) = -lf(n)(3+3*basis::tet(log2p).em+i)*basis::tet(log2p).diag2d(i);
+				ugbd(tlvl).f(find,i,n) = -lf(n)(3+3*basis::tet(log2p).em+i)*basis::tet(log2p).diag2d(i);
 			}
 		}
 	}
@@ -122,20 +122,20 @@ void tet_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 			
 		for (i=0; i < basis::tet(log2p).gpx; ++i ) {
 			for (j=0; j < basis::tet(log2p).gpy; ++j ) {
-			for (k=0; k < basis::tet(log2p).gpz; ++k ) {
-				pt(0) = crd(0)(i)(j)(k);
-				pt(1) = crd(1)(i)(j)(k);
-				pt(2) = crd(2)(i)(j)(k);
-				for(n=0;n<NV;++n)
-					u(n)(i)(j)(k) -= ibc->f(n,pt,gbl->time);
-			}
+				for (k=0; k < basis::tet(log2p).gpz; ++k ) {
+					pt(0) = crd(0)(i)(j)(k);
+					pt(1) = crd(1)(i)(j)(k);
+					pt(2) = crd(2)(i)(j)(k);
+					for(n=0;n<NV;++n)
+						u(n)(i)(j)(k) -= ibc->f(n,pt,gbl->time);
+				}
 			}
 		}
 
 		for(n=0;n<NV;++n) {
 			basis::tet(log2p).intgrt(&lf(n)(0),&u(n)(0)(0)(0),stridex,stridey);
 			for(i=0;i<basis::tet(log2p).im;++i) {
-			ugbd(tlvl).i(tind,i,n) = -lf(n)(basis::tet(log2p).bm+i)*basis::tet(log2p).diag3d(i);
+				ugbd(tlvl).i(tind,i,n) = -lf(n)(basis::tet(log2p).bm+i)*basis::tet(log2p).diag3d(i);
 			}
 		}
 	}
