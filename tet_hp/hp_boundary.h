@@ -33,27 +33,27 @@ class hp_vrtx_bdry : public vgeometry_interface<3> {
 
 		/* input output functions */
 		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0) {
-		switch(typ) {
-			case(tet_hp::text):
-			fout << base.x.gbl->idprefix << " " << mytype << std::endl;
-			break;
-			default:
-			break;
-		}
-		return;
+			switch(typ) {
+				case(tet_hp::text):
+				fout << base.x.gbl->idprefix << " " << mytype << std::endl;
+				break;
+				default:
+				break;
+			}
+			return;
 		}
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0) {
-		std::string idin,mytypein;
+			std::string idin,mytypein;
 
-		switch(typ) {
-			case(tet_hp::text):
-			fin >> idin >> mytypein;
-			break;
-			default:
-			break;
-		}
-		return;
+			switch(typ) {
+				case(tet_hp::text):
+				fin >> idin >> mytypein;
+				break;
+				default:
+				break;
+			}
+			return;
 		}
 
 		/* BOUNDARY CONDITION FUNCTIONS */
@@ -178,7 +178,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		tet_hp& x;
 		face_bdry &base;
 		const hp_face_bdry *adapt_storage;
-	 init_bdry_cndtn *ibc;
+		init_bdry_cndtn *ibc;
 		bool curved, coupled;
 		Array<TinyVector<FLT,tet_mesh::ND>,2> ecrv;
 		Array<Array<TinyVector<FLT,tet_mesh::ND>,2>,1> ecrvbd;
@@ -187,7 +187,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		Array<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,tet_mesh::ND>,2> dxdt;
 
 	public:
-	hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
+		hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
 		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_face_bdry* create(tet_hp& xin, face_bdry &bin) const {return(new hp_face_bdry(*this,xin,bin));}
@@ -199,7 +199,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void output(std::ostream& fout, tet_hp::filetype typ,int tlvl = 0);
 		/** This is to read solution data **/
 		virtual void input(ifstream& fin,tet_hp::filetype typ,int tlvl = 0); 
-	 void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
+		void setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets);
 
 		/* CURVATURE FUNCTIONS */
 		bool is_curved() {return(curved);}
@@ -218,12 +218,12 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void pmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.ploadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void pmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.pfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
-		base.sloadbuff(boundary::all_phased,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
-		return;
+			base.sloadbuff(boundary::all_phased,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
+			return;
 		}
 		virtual void smatchsolution_rcv(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
-		base.sfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
-		return;
+			base.sfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
+			return;
 		}       
 		virtual void tmatchsolution_snd(FLT *fdata, int bgnmode, int endmode, int modestride);
 		virtual void tmatchsolution_rcv(FLT *fdata, int bgnmode, int endmode, int modestride); 

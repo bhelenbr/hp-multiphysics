@@ -19,11 +19,14 @@ void tet_hp_ins::setup_preconditioner() {
 		if (basis::tet(log2p).em > 0) {
 			gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;
 		}
+		if (basis::tet(log2p).fm > 0) {
+			gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
+		}
 		
-	#ifdef TIMEACCURATE
+#ifdef TIMEACCURATE
 		gam = 10.0;
 		FLT dtstari = 0.0;
-	#endif
+#endif
 
 		for(tind = 0; tind < ntet; ++tind) {
 			jcb = tet(tind).vol/8.0;   // area is 2 x triangle area
@@ -57,10 +60,10 @@ void tet_hp_ins::setup_preconditioner() {
 			qmax = 0.0;
 			for(j=0;j<4;++j) {
 				v0 = v(j);
-				cout << "v0 = "<< v0 << " pnts = " << pnts(v0) << " vrtxbd = " << vrtxbd(1)(v0) << endl;
-				cout << "ug.v = " << ug.v(v0,0) << ' ' << ug.v(v0,1) << ' ' << ug.v(v0,2) << endl;
+//				cout << "v0 = "<< v0 << " pnts = " << pnts(v0) << " vrtxbd = " << vrtxbd(1)(v0) << endl;
+//				cout << "ug.v = " << ug.v(v0,0) << ' ' << ug.v(v0,1) << ' ' << ug.v(v0,2) << endl;
 				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-						+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
+					+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
 					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
 				qmax = MAX(qmax,q);
 			}
@@ -78,12 +81,12 @@ void tet_hp_ins::setup_preconditioner() {
 				exit(1);
 			}
 
-	#ifndef INERTIALESS
+#ifndef INERTIALESS
 
-	#ifndef TIMEACCURATE
+#ifndef TIMEACCURATE
 			gam = 3.0*qmax +(0.5*hmax*gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*gbl->bd(0) +2.*nu/hmax);
 			if (gbl->mu + gbl->bd(0) == 0.0) gam = MAX(gam,0.1);
-	#endif
+#endif
 			q = sqrt(qmax);
 			lam1 = q + sqrt(qmax +gam);
 
@@ -94,13 +97,13 @@ void tet_hp_ins::setup_preconditioner() {
 			/* SET UP DIAGONAL PRECONDITIONER */
 			// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
 			jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-	#else
+#else
 			gam = pow(2.*nu/hmax,2); 
 			lam1 = sqrt(gam);
 
 			/* SET UP DISSIPATIVE COEFFICIENTS */
-			gbl->tau(tind,1)  = adis*h/(jcb*sqrt(gam));
-			gbl->tau(tind,0) = 0.0;
+			gbl->tau(tind,0)  = adis*h/(jcb*sqrt(gam));
+			gbl->tau(tind,NV-1) = 0.0;
 
 			jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 	#endif
@@ -114,8 +117,6 @@ void tet_hp_ins::setup_preconditioner() {
 			v = tet(tind).pnt;
 			jcb = 0.125*tet(tind).vol*dtstari;
 	#endif
-
-			jcb *= (pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0) +pnts(v(3))(0))/3.0;
 
 			gbl->iprcn(tind,0) = gbl->rho*jcb;    
 			gbl->iprcn(tind,1) = gbl->rho*jcb;
@@ -138,7 +139,7 @@ void tet_hp_ins::setup_preconditioner() {
 		}
 	}
 	else {
-		cout << "matrix preconditioner on" << endl;
+		cout << "matrix preconditioner being called and doesn't work " << endl;
 //        /* SET-UP MATRIX PRECONDITIONER */
 //        int tind,i,j,side,v0;
 //        FLT jcb,h,hmax,q,qmax,lam1,gam,ubar,vbar;
