@@ -13,16 +13,16 @@ void tet_hp_cd::setup_preconditioner() {
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
-		gbl->vprcn(Range::all(),Range::all())=0.0;
-		if (basis::tet(log2p).em > 0) {
-			gbl->eprcn(Range::all(),Range::all())=0.0;
-			if (basis::tet(log2p).fm > 0) {
-				gbl->fprcn(Range::all(),Range::all())=0.0;
-				if (basis::tet(log2p).im > 0) {
-					gbl->iprcn(Range::all(),Range::all())=0.0;
-				}
+	gbl->vprcn(Range::all(),Range::all())=0.0;
+	if (basis::tet(log2p).em > 0) {
+		gbl->eprcn(Range::all(),Range::all())=0.0;
+		if (basis::tet(log2p).fm > 0) {
+			gbl->fprcn(Range::all(),Range::all())=0.0;
+			if (basis::tet(log2p).im > 0) {
+				gbl->iprcn(Range::all(),Range::all())=0.0;
 			}
 		}
+	}
 	
 #ifdef TIMEACCURATE
 	FLT dtstari = 0.0;
@@ -34,7 +34,6 @@ void tet_hp_cd::setup_preconditioner() {
 		jcb = tet(tind).vol/8; 
 		v = tet(tind).pnt;
 		amax = 0.0;
-//		amin = 1000000.0;
 		for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
 			find = tet(tind).tri(j);
 			p0 = tri(find).pnt(0);
@@ -52,19 +51,10 @@ void tet_hp_cd::setup_preconditioner() {
 			cpk = dx1*dy2-dy1*dx2;
 			a =	.5*sqrt(cpi*cpi+cpj*cpj+cpk*cpk);
 			amax = (a > amax ? a : amax);
-//			amin = (a < amin ? a : amin);
 		}
 
 		
 		h = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); // 3*8/6=4
-		
-//		if(4.0*jcb/amin > hmax)
-//			hmax = 4.0*jcb/amin;
-//			
-//		if(4.0*jcb/amax < hmin)
-//			hmin = 4.0*jcb/amax;
-			
-		//cout << "hmin = " << hmin << "  hmax = " << hmax << endl;
 			
 		qmax = 0.0;
 		for(j=0;j<4;++j) {
@@ -76,10 +66,9 @@ void tet_hp_cd::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		
 		lam1  = (q +1.5*gbl->nu/h +h*gbl->bd(0)); 
 
-//        /* SET UP DISSIPATIVE COEFFICIENTS */
+        /* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind)  = adis*h/(jcb*lam1);
 		
 		jcb *= lam1/h;		
@@ -98,10 +87,8 @@ void tet_hp_cd::setup_preconditioner() {
 #endif
 
 	
-		gbl->iprcn(tind,0) = jcb;    //temp
-		
-	//cout << gbl->iprcn(tind,0) << endl;
-	
+		gbl->iprcn(tind,0) = jcb; 
+			
 		for(i=0;i<4;++i) 
 			gbl->vprcn(v(i),0) += gbl->iprcn(tind,0);
 			
@@ -119,12 +106,6 @@ void tet_hp_cd::setup_preconditioner() {
 		}	
 
 	}
-	//dtcheck/=ntet;
-	//cout << "dtcheck " << dtcheck << endl;
-
-//	cout << "hmax = " << hmax << endl;
-//	cout << "hmin = " << hmin << endl;
-
 	
 	tet_hp::setup_preconditioner();
 	

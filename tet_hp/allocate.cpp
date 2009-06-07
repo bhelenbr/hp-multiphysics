@@ -203,7 +203,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 		gbl->iprcn_ut.resize(maxvst,NV,NV);
 	}
 
-	double CFLdflt[4] = {2.5, 1.5, 1.0, 0.5};
+	double CFLdflt[4] = {2.2, 1.5, 1.0, 0.5};
 	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
 
 	/***************************************************/
@@ -219,9 +219,9 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	} 
 	else {
 		for(i=0;i<nebd;++i)
-		hp_ebdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
+			hp_ebdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
 		for(i=0;i<nfbd;++i)
-		hp_fbdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
+			hp_fbdry(i)->curv_init();  /* FIXME WILL NEED TO CHANGE THIS TO "tobasis" */
 		
 		/* USE TOBASIS TO INITALIZE SOLUTION */
 		tobasis(gbl->ibc);
@@ -343,38 +343,38 @@ void tet_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 
 	switch (why) {
 		case multigrid: {
-		/* STUFF FOR MULTIGRID SOURCE TERMS */
+			/* STUFF FOR MULTIGRID SOURCE TERMS */
 #ifdef DIRK
-		ugbd(1).v.resize(maxvst,NV);
-		vrtxbd(1).resize(maxvst); 
+			ugbd(1).v.resize(maxvst,NV);
+			vrtxbd(1).resize(maxvst); 
 #else
-		for (int i=1;i<gbl->nhist;++i) {
-			ugbd(i).v.resize(maxvst,NV);
-			vrtxbd(i).resize(maxvst);
-		}
+			for (int i=1;i<gbl->nhist;++i) {
+				ugbd(i).v.resize(maxvst,NV);
+				vrtxbd(i).resize(maxvst);
+			}
 #endif
-		vug_frst.resize(maxvst,NV);    
-		dres.resize(1);
-		dres(0).v.resize(maxvst,NV); 
-		fadd = inmesh.fadd;
-		
-		/* GET MESH MOVEMENT FUNCTION */
-		helper = inmesh.helper->create(*this); 
-		
-		/* UNSTEADY SOURCE TERMS */
-		dugdt.resize(log2p+1,maxvst,NV);
-		dxdt.resize(log2p+1,maxvst,ND);
-		break;
+			vug_frst.resize(maxvst,NV);    
+			dres.resize(1);
+			dres(0).v.resize(maxvst,NV); 
+			fadd = inmesh.fadd;
+			
+			/* GET MESH MOVEMENT FUNCTION */
+			helper = inmesh.helper->create(*this); 
+			
+			/* UNSTEADY SOURCE TERMS */
+			dugdt.resize(log2p+1,maxvst,NV);
+			dxdt.resize(log2p+1,maxvst,ND);
+			break;
 		}
 		case adapt_storage: {
-		for(int i=1;i<gbl->nadapt;++i) {
-			ugbd(i).v.resize(maxvst,NV);
-			ugbd(i).e.resize(maxvst,em0,NV);
-			ugbd(i).f.resize(maxvst,fm0,NV);
-			ugbd(i).i.resize(maxvst,im0,NV);
-			vrtxbd(i).resize(maxvst);
-		}
-		break;
+			for(int i=1;i<gbl->nadapt;++i) {
+				ugbd(i).v.resize(maxvst,NV);
+				ugbd(i).e.resize(maxvst,em0,NV);
+				ugbd(i).f.resize(maxvst,fm0,NV);
+				ugbd(i).i.resize(maxvst,im0,NV);
+				vrtxbd(i).resize(maxvst);
+			}
+			break;
 		}
 	}
 	

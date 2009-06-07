@@ -16,8 +16,6 @@ void tet_hp::minvrt() {
 	char trans[] = "T";
 	int last_phase, mp_phase;
 	
-	//cout.precision(15);
-	//cout << "p = "<< basis::tet(log2p).p <<" vdiag " << basis::tet(log2p).vdiag << " ediag " << basis::tet(log2p).ediag << " fdiag "<< basis::tet(log2p).fdiag << endl;	
 	/* LOOP THROUGH EDGES */
 	if (basis::tet(log2p).em > 0) {
 		indx = 0;
@@ -28,7 +26,6 @@ void tet_hp::minvrt() {
 					v0 = seg(eind).pnt(i);
 					for(n=0;n<NV;++n)
 						gbl->res.v(v0,n) -= basis::tet(log2p).sfmv(i,k)*gbl->res.e(eind,k,n);
-						//cout << gbl->res.v(v0,0) << basis::tet(log2p).sfmv(i,k) << gbl->res.e(eind,k,0)<<endl;
 				}
 			}
 		}
@@ -97,16 +94,16 @@ void tet_hp::minvrt() {
 			}
 			// edges
 			for(i=0;i<6;++i) {
-			sind = tet(tind).seg(i);
-			sgn  = tet(tind).sgn(i);
-			for(j=0;j<4;++j) {
-				msgn = 1;
-				for(k=0;k<basis::tet(log2p).em;++k) {
-					for(n=0;n<NV;++n)
-						gbl->res.e(sind,k,n) -= msgn*basis::tet(log2p).vfms(j,4+k+i*basis::tet(log2p).em)*uht(n)(j);
-					msgn *= sgn;
+				sind = tet(tind).seg(i);
+				sgn  = tet(tind).sgn(i);
+				for(j=0;j<4;++j) {
+					msgn = 1;
+					for(k=0;k<basis::tet(log2p).em;++k) {
+						for(n=0;n<NV;++n)
+							gbl->res.e(sind,k,n) -= msgn*basis::tet(log2p).vfms(j,4+k+i*basis::tet(log2p).em)*uht(n)(j);
+						msgn *= sgn;
+					}
 				}
-			}
 			}
 			//faces
 			for(i=0;i<4;++i) {
@@ -198,12 +195,12 @@ void tet_hp::minvrt() {
 		}
 	}
 
-	//cout << basis::tet(log2p).vfms(4,Range::all()) << endl;
-	if(basis::tet(log2p).p == 2){
+	if(basis::tet(log2p).p == 2) {
 		basis::tet(log2p).ediag(0) = 80;//157
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 	}
-	if(basis::tet(log2p).p == 3){
+	
+	if(basis::tet(log2p).p == 3) {
 		basis::tet(log2p).ediag(1) = 1000;//1890 optimize later
 		basis::tet(log2p).fdiag(0) = 3000;//5670
 	}
@@ -216,14 +213,14 @@ void tet_hp::minvrt() {
 	}
 
 	
-	/* APPLY VERTEX DIRICHLET B.C.'S */
+	/* APPLY EDGE DIRICHLET B.C.'S */
 	for(i=0;i<nfbd;++i)
 		hp_fbdry(i)->edirichlet();
 		
 	for (i=0;i<nebd;++i) 
 		hp_ebdry(i)->edirichlet3d();
 		
-	if(basis::tet(log2p).em > 1){
+	if(basis::tet(log2p).em > 1) {
 		for(tind=0;tind<ntet;++tind) {         
 			if (gbl->diagonal_preconditioner) { 
 				for(i=0;i<6;++i) {
@@ -306,8 +303,6 @@ void tet_hp::minvrt() {
 		}
 	}
 	
-
-
 	/* ALL HIGH ORDER MODES */
 	/* LOOP THROUGH EDGES */	         
 	if (basis::tet(log2p).fm > 0){
@@ -336,10 +331,7 @@ void tet_hp::minvrt() {
 //         }
 //      }
 	}
-	
-	
-
-			
+		
 	return;
 }
 #endif
@@ -438,23 +430,22 @@ void tet_hp::setup_preconditioner() {
 			
 		if (basis::tet(log2p).em) {
 			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-			sc0load(mp_phase,gbl->eprcn.data(),0,0,1);
-			smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-			last_phase = true;
-			last_phase &= sc0wait_rcv(mp_phase,gbl->eprcn.data(),0,0,1);
+				sc0load(mp_phase,gbl->eprcn.data(),0,0,1);
+				smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+				last_phase = true;
+				last_phase &= sc0wait_rcv(mp_phase,gbl->eprcn.data(),0,0,1);
 			}
 		
 			/* INVERT DIAGANOL PRECONDITIONER FOR SIDES */            
 			gbl->eprcn(Range(0,nseg-1),Range::all()) = 1.0/gbl->eprcn(Range(0,nseg-1),Range::all());
 			
-			
 			if (basis::tet(log2p).fm) {
-			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-				tc0load(gbl->fprcn.data(),0,0,gbl->fprcn.extent(secondDim));
-				tmsgpass(boundary::all,mp_phase,boundary::symmetric);
-				last_phase = true;
-				last_phase &= tc0wait_rcv(gbl->fprcn.data(),0,0,gbl->fprcn.extent(secondDim));
-			}	
+				for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+					tc0load(gbl->fprcn.data(),0,0,gbl->fprcn.extent(secondDim));
+					tmsgpass(boundary::all,mp_phase,boundary::symmetric);
+					last_phase = true;
+					last_phase &= tc0wait_rcv(gbl->fprcn.data(),0,0,gbl->fprcn.extent(secondDim));
+				}	
 				gbl->fprcn(Range(0,ntri-1),Range::all()) = 1.0/gbl->fprcn(Range(0,ntri-1),Range::all());
 
 				if(basis::tet(log2p).im > 0) {

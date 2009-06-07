@@ -1,7 +1,7 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 
-#define DEBUG
+//#define DEBUG
 
 void tet_hp::rsdl(int stage) {    
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
@@ -80,7 +80,6 @@ void tet_hp::update() {
 			
 		for(i=0;i<nfbd;++i)
 			hp_fbdry(i)->vdirichlet();
-			
 		for(i=0;i<nfbd;++i)
 			hp_fbdry(i)->edirichlet();
 		for(i=0;i<nfbd;++i)

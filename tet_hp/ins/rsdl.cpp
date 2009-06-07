@@ -491,7 +491,7 @@ void tet_hp_ins::rsdl(int stage) {
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
 			lftog(tind,gbl->res);
-<<<<<<< .mine
+
             /* NEGATIVE REAL TERMS */
             if (gbl->beta(stage) > 0.0) {
 				cjcbi = lmu/cjcb;
