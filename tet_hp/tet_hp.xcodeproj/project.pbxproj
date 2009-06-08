@@ -246,16 +246,16 @@
 		9598AE270F55C3E0008788DB /* Incompressible */ = {
 			isa = PBXGroup;
 			children = (
+				9598AE300F55C464008788DB /* tet_hp_ins.h */,
 				9598AE280F55C464008788DB /* allocate.cpp */,
-				9598AE290F55C464008788DB /* bdry.cpp */,
+				9598AE310F55C464008788DB /* tstep.cpp */,
+				9598AE2E0F55C464008788DB /* rsdl.cpp */,
+				9598AE2D0F55C464008788DB /* length.cpp */,
 				9598AE2A0F55C464008788DB /* bdry_ins.h */,
+				9598AE290F55C464008788DB /* bdry.cpp */,
 				9598AE2B0F55C464008788DB /* getnewbdry.cpp */,
 				9598AE2C0F55C464008788DB /* getnewibc.cpp */,
-				9598AE2D0F55C464008788DB /* length.cpp */,
-				9598AE2E0F55C464008788DB /* rsdl.cpp */,
 				9598AE2F0F55C464008788DB /* surface.cpp */,
-				9598AE300F55C464008788DB /* tet_hp_ins.h */,
-				9598AE310F55C464008788DB /* tstep.cpp */,
 			);
 			name = Incompressible;
 			sourceTree = "<group>";

@@ -132,17 +132,17 @@ void tet_hp::tadvance() {
 /* WILL NEED TO BE OVERRIDDEN FOR SPECIAL CASES */
 void tet_hp::calculate_unsteady_sources() {
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
-	int i,j,k,n,ttind;
+	int i,j,k,n,tind;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP;
 	TinyVector<int,4> v;
 	
 	for (log2p=0;log2p<=log2pmax;++log2p) {
-		for(ttind=0;ttind<ntri;++ttind) {
-			v = tet(ttind).pnt;
+		for(tind=0;tind<ntet;++tind) {
+			v = tet(tind).pnt;
 
-			if (tet(ttind).info > -1) {
-			crdtocht(ttind,1);
+			if (tet(tind).info > -1) {
+			crdtocht(tind,1);
 			for(n=0;n<ND;++n)
 				basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
 			}
@@ -154,16 +154,16 @@ void tet_hp::calculate_unsteady_sources() {
 					for(j=0;j<lgpy;++j) {
 						for(k=0;k<lgpz;++k) {
 							for(n=0;n<ND;++n) {
-								dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(ttind).pnt(3))(n) -pnts(tet(ttind).pnt(2))(n));
-								dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(ttind).pnt(1))(n) -pnts(tet(ttind).pnt(2))(n));
-								dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(ttind).pnt(0))(n) -pnts(tet(ttind).pnt(2))(n));
+								dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
+								dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(1))(n) -pnts(tet(tind).pnt(2))(n));
+								dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(0))(n) -pnts(tet(tind).pnt(2))(n));
 							}
 						}
 					}
 				}
 			}
 		
-			ugtouht(ttind,1);
+			ugtouht(tind,1);
 			for(n=0;n<NV;++n)
 				basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex, stridey);
 
@@ -172,9 +172,9 @@ void tet_hp::calculate_unsteady_sources() {
 					for(k=0;k<lgpz;++k) {
 						cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 						for(n=0;n<NV;++n)
-							dugdt(log2p,ttind,n)(i)(j)(k) = u(n)(i)(j)(k)*cjcb(i)(j)(k);
+							dugdt(log2p,tind,n)(i)(j)(k) = u(n)(i)(j)(k)*cjcb(i)(j)(k);
 						for(n=0;n<ND;++n)
-							dxdt(log2p,ttind,n)(i)(j) = crd(n)(i)(j)(k);
+							dxdt(log2p,tind,n)(i)(j)(k) = crd(n)(i)(j)(k);
 					}
 				}	
 			}

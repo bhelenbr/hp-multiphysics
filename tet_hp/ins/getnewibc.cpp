@@ -29,6 +29,14 @@ namespace ibc_ins {
 						return(speed*sin(alpha));
 					case(3):
 						return(0.0);
+//					case(0):
+//						return(1.0);
+//					case(1):
+//						return(2.0);
+//					case(2):
+//						return(3.0);
+//					case(3):
+//						return(4.0);
 				}
 				return(0.0);
 			}

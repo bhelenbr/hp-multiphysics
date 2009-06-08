@@ -35,7 +35,7 @@ void tet_hp_ins::rsdl(int stage) {
 	for(tind = 0; tind<ntet;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
 		v = tet(tind).pnt;
-	
+
 		/* IF TINFO > -1 IT IS CURVED ELEMENT */
 		if (tet(tind).info > -1 ) {
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
@@ -82,7 +82,7 @@ void tet_hp_ins::rsdl(int stage) {
 			for(n=0;n<NV;++n)
 				basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex,stridey);
 		}
-		
+
 		/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 		for(n=0;n<NV;++n)
 			for(i=0;i<basis::tet(log2p).tm;++i)
@@ -90,6 +90,7 @@ void tet_hp_ins::rsdl(int stage) {
 
 		if (tet(tind).info > -1) {
 			/* CURVED ELEMENT */
+			cout << " curvy element being called in rsdl"<<endl;
 			/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
@@ -423,7 +424,6 @@ void tet_hp_ins::rsdl(int stage) {
 		}
 		else {
 			/* LINEAR ELEMENT */
-			
 			d(0)(0) =  ldcrd(1,1)*ldcrd(2,2)-ldcrd(2,1)*ldcrd(1,2);
 			d(0)(1) = -ldcrd(1,0)*ldcrd(2,2)+ldcrd(2,0)*ldcrd(1,2);
 			d(0)(2) =  ldcrd(1,0)*ldcrd(2,1)-ldcrd(2,0)*ldcrd(1,1);
@@ -587,96 +587,6 @@ void tet_hp_ins::rsdl(int stage) {
 				visc(2,2)(2,1) = -cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
 				visc(2,2)(2,2) = -cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
 				
-//				visc(0,0)(0,0) = cjcbi*(2*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
-//				visc(0,0)(0,1) = cjcbi*(2*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
-//				visc(0,0)(0,2) = cjcbi*(2*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
-//				visc(0,0)(1,0) = visc(0,0)(0,1);
-//				visc(0,0)(1,1) = cjcbi*(2*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
-//				visc(0,0)(1,2) = cjcbi*(2*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
-//				visc(0,0)(2,0) = visc(0,0)(0,2);
-//				visc(0,0)(2,1) = visc(0,0)(1,2);
-//				visc(0,0)(2,2) = cjcbi*(2*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
-//				
-//				visc(0,1)(0,0) = cjcbi*d(0)(1)*d(0)(0);
-//				visc(0,1)(0,1) = cjcbi*d(0)(1)*d(1)(0);
-//				visc(0,1)(0,2) = cjcbi*d(0)(1)*d(2)(0);
-//				visc(0,1)(1,0) = cjcbi*d(1)(1)*d(0)(0);
-//				visc(0,1)(1,1) = cjcbi*d(1)(1)*d(1)(0);
-//				visc(0,1)(1,2) = cjcbi*d(1)(1)*d(2)(0);
-//				visc(0,1)(2,0) = cjcbi*d(2)(1)*d(0)(0);
-//				visc(0,1)(2,1) = cjcbi*d(2)(1)*d(1)(0);
-//				visc(0,1)(2,2) = cjcbi*d(2)(1)*d(2)(0);
-//				
-//				visc(0,2)(0,0) = cjcbi*d(0)(2)*d(0)(0);
-//				visc(0,2)(0,1) = cjcbi*d(0)(2)*d(1)(0);
-//				visc(0,2)(0,2) = cjcbi*d(0)(2)*d(2)(0);
-//				visc(0,2)(1,0) = cjcbi*d(1)(2)*d(0)(0);
-//				visc(0,2)(1,1) = cjcbi*d(1)(2)*d(1)(0);
-//				visc(0,2)(1,2) = cjcbi*d(1)(2)*d(2)(0);
-//				visc(0,2)(2,0) = cjcbi*d(2)(2)*d(0)(0);
-//				visc(0,2)(2,1) = cjcbi*d(2)(2)*d(1)(0);
-//				visc(0,2)(2,2) = cjcbi*d(2)(2)*d(2)(0);
-//				
-//				visc(1,0)(0,0) = cjcbi*d(0)(0)*d(0)(1);
-//				visc(1,0)(0,1) = cjcbi*d(0)(0)*d(1)(1);
-//				visc(1,0)(0,2) = cjcbi*d(0)(0)*d(2)(1);
-//				visc(1,0)(1,0) = cjcbi*d(1)(0)*d(0)(1);
-//				visc(1,0)(1,1) = cjcbi*d(1)(0)*d(1)(1);
-//				visc(1,0)(1,2) = cjcbi*d(1)(0)*d(2)(1);
-//				visc(1,0)(2,0) = cjcbi*d(2)(0)*d(0)(1);
-//				visc(1,0)(2,1) = cjcbi*d(2)(0)*d(1)(1);
-//				visc(1,0)(2,2) = cjcbi*d(2)(0)*d(2)(1);
-//				
-//				visc(1,1)(0,0) = cjcbi*(2*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
-//				visc(1,1)(0,1) = cjcbi*(2*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
-//				visc(1,1)(0,2) = cjcbi*(2*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
-//				visc(1,1)(1,0) = visc(1,1)(0,1);
-//				visc(1,1)(1,1) = cjcbi*(2*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
-//				visc(1,1)(1,2) = cjcbi*(2*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
-//				visc(1,1)(2,0) = visc(1,1)(0,2);
-//				visc(1,1)(2,1) = visc(1,1)(1,2);
-//				visc(1,1)(2,2) = cjcbi*(2*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
-//				
-//				visc(1,2)(0,0) = cjcbi*d(0)(2)*d(0)(1);
-//				visc(1,2)(0,1) = cjcbi*d(0)(2)*d(1)(1);
-//				visc(1,2)(0,2) = cjcbi*d(0)(2)*d(2)(1);
-//				visc(1,2)(1,0) = cjcbi*d(1)(2)*d(0)(1);
-//				visc(1,2)(1,1) = cjcbi*d(1)(2)*d(1)(1);
-//				visc(1,2)(1,2) = cjcbi*d(1)(2)*d(2)(1);
-//				visc(1,2)(2,0) = cjcbi*d(2)(2)*d(0)(1);
-//				visc(1,2)(2,1) = cjcbi*d(2)(2)*d(1)(1);
-//				visc(1,2)(2,2) = cjcbi*d(2)(2)*d(2)(1);
-//				
-//				visc(2,0)(0,0) = cjcbi*d(0)(0)*d(0)(2);
-//				visc(2,0)(0,1) = cjcbi*d(0)(0)*d(1)(2);
-//				visc(2,0)(0,2) = cjcbi*d(0)(0)*d(2)(2);
-//				visc(2,0)(1,0) = cjcbi*d(1)(0)*d(0)(2);
-//				visc(2,0)(1,1) = cjcbi*d(1)(0)*d(1)(2);
-//				visc(2,0)(1,2) = cjcbi*d(1)(0)*d(2)(2);
-//				visc(2,0)(2,0) = cjcbi*d(2)(0)*d(0)(2);
-//				visc(2,0)(2,1) = cjcbi*d(2)(0)*d(1)(2);
-//				visc(2,0)(2,2) = cjcbi*d(2)(0)*d(2)(2);
-//				
-//				visc(2,1)(0,0) = cjcbi*d(0)(1)*d(0)(2);
-//				visc(2,1)(0,1) = cjcbi*d(0)(1)*d(0)(2);
-//				visc(2,1)(0,2) = cjcbi*d(0)(1)*d(0)(2);
-//				visc(2,1)(1,0) = cjcbi*d(1)(1)*d(0)(2);
-//				visc(2,1)(1,1) = cjcbi*d(1)(1)*d(0)(2);
-//				visc(2,1)(1,2) = cjcbi*d(1)(1)*d(0)(2);
-//				visc(2,1)(2,0) = cjcbi*d(1)(1)*d(0)(2);
-//				visc(2,1)(2,1) = cjcbi*d(1)(1)*d(0)(2);
-//				visc(2,1)(2,2) = cjcbi*d(1)(1)*d(0)(2);
-//				
-//				visc(2,2)(0,0) = cjcbi*(2*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
-//				visc(2,2)(0,1) = cjcbi*(2*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
-//				visc(2,2)(0,2) = cjcbi*(2*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
-//				visc(2,2)(1,0) = visc(2,2)(0,1);
-//				visc(2,2)(1,1) = cjcbi*(2*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
-//				visc(2,2)(1,2) = visc(2,2)(2,1);
-//				visc(2,2)(2,0) = visc(2,2)(0,2);
-//				visc(2,2)(2,1) = cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
-//				visc(2,2)(2,2) = cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
-        
 
 				/* TIME DERIVATIVE TERMS */ 
 				for(i=0;i<lgpx;++i) {
@@ -764,7 +674,7 @@ void tet_hp_ins::rsdl(int stage) {
 							tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
 							tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
 							tres(3) = gbl->tau(tind,NV-1)*res(3)(i)(j)(k);
-							cout << "tres = " << tres(0) << ' ' << tres(1) << ' ' <<tres(2) << ' ' << tres(3) << endl;
+//							cout << "tres = " << tres(0) << ' ' << tres(1) << ' ' <<tres(2) << ' ' << tres(3) << endl;
 
 							
 #ifndef INERTIALESS

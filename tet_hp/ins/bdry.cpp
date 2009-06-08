@@ -44,7 +44,8 @@ void neumann::rsdl(int stage) {
 				
 				for(n=0;n<tet_mesh::ND;++n) {
 					pt(n) = x.crd2d(n)(i)(k);
-					mvel(n) = x.gbl->bd(0)*(x.crd2d(n)(i)(k) -dxdt(x.log2p,j)(n)(i)(k));
+					mvel(n) = 0.0;//x.gbl->bd(0)*(x.crd2d(n)(i)(k) -dxdt(x.log2p,j)(n)(i)(k));//fix me need dxdt
+
 				}
 				
 				for(n=0;n<x.NV;++n)

@@ -67,7 +67,7 @@ void tet_hp_ins::setup_preconditioner() {
 					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
 				qmax = MAX(qmax,q);
 			}
-			cout << "qmax = " << qmax << endl;
+//			cout << "qmax = " << qmax << endl;
 			if (!(jcb > 0.0)) { 
 				*gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
@@ -100,14 +100,13 @@ void tet_hp_ins::setup_preconditioner() {
 #else
 			gam = pow(2.*nu/hmax,2); 
 			lam1 = sqrt(gam);
-
 			/* SET UP DISSIPATIVE COEFFICIENTS */
 			gbl->tau(tind,0)  = adis*h/(jcb*sqrt(gam));
 			gbl->tau(tind,NV-1) = 0.0;
 
 			jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
-	#endif
-	#ifdef TIMEACCURATE
+#endif
+#ifdef TIMEACCURATE
 			dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
 
 		}
@@ -116,7 +115,7 @@ void tet_hp_ins::setup_preconditioner() {
 		for(tind=0;tind<ntet;++tind) {
 			v = tet(tind).pnt;
 			jcb = 0.125*tet(tind).vol*dtstari;
-	#endif
+#endif
 
 			gbl->iprcn(tind,0) = gbl->rho*jcb;    
 			gbl->iprcn(tind,1) = gbl->rho*jcb;
