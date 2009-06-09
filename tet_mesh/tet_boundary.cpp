@@ -147,21 +147,31 @@ void edge_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &sidloc, 
 }
 
 void edge_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
-	int j,k,sind,tind,p0,sidloc;
+	int j,k,sind,ttind,p0,sidloc;
 	FLT psiloc;
+	
+	TinyMatrix<int,6,2> vs;    
+	vs(0,0)=2, vs(0,1)=3; 
+	vs(1,0)=3, vs(1,1)=1; 
+	vs(2,0)=2, vs(2,1)=1;
+	vs(3,0)=1, vs(3,1)=0;
+	vs(4,0)=2, vs(4,1)=0; 
+	vs(5,0)=3, vs(5,1)=0;
 		
 	for(k=1;k<nseg;++k) {
 		p0 = x.seg(seg(k).gindx).pnt(0);
 		tgt.ebdry(bnum)->findbdrypt(x.pnts(p0), sidloc, psiloc);
 		sind = tgt.ebdry(bnum)->seg(sidloc).gindx;
-		tind = tgt.seg(sind).tet;                            
-		cnnct(p0).tet = tind;
-		for (j=0;j<3;++j) 
-			if (tgt.tri(tind).seg(j) == sind) break;
-		assert(j < 3);
-		cnnct(p0).wt(j) = 0.0;
-		cnnct(p0).wt((j+1)%3) = 0.5*(1.-psiloc);
-		cnnct(p0).wt((j+2)%3) = 0.5*(1.+psiloc);
+		ttind = tgt.seg(sind).tet;                            
+		cnnct(p0).tet = ttind;
+		for (j=0;j<6;++j) 
+			if (tgt.tet(ttind).seg(j) == sind) break;
+		assert(j < 6);
+		
+		psiloc = psiloc*tgt.tet(ttind).sgn(j);
+		cnnct(p0).wt = 0.0;
+		cnnct(p0).wt(vs(j,0)) = 0.5*(1.-psiloc);
+		cnnct(p0).wt(vs(j,1)) = 0.5*(1.+psiloc);
 	} 
 	
 	return;
@@ -586,7 +596,7 @@ void face_bdry::copy(const face_bdry& tgt) {
 }
 
 void face_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
-	int j,k,tind,ttind,p0,p1,facloc;
+	int j,k,tind,ttind,p0,facloc;
 	FLT r, s;
 	
 	// vertices of each face on a tet
@@ -598,46 +608,23 @@ void face_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 		
 	for(j=0;j<npnt;++j) {
 		p0 = pnt(j).gindx;
-
-		FLT dist = tgt.otree.nearpt(x.pnts(p0).data(),p1);  //FIXME  
-		if (dist > EPSILON*10.) {
-			*x.gbl->log << "findbdrypt is not general enough for arbitrary points yet\n";
-			exit(1);  // FIXME
-		}
-		ttind = tgt.pnt(p0).tet;
-		cnnct(p0).tet = ttind;
-		for (k=0;k<4;++k) {
-			if (tgt.tet(ttind).pnt(k) == p1) 
-				cnnct(p0).wt(k) = 1.0;
-			else 
-				cnnct(p0).wt(k) = 0.0;
-		}
 		
 		/* THIS IS THE RIGHT WAY, BUT FINDBDRYPT ISN'T WORKING YET */
-//        tgt.fbdry(bnum)->findbdrypt(x.pnts(p0), facloc, r, s);
-//        tind = tgt.fbdry(bnum)->tri(facloc).gindx;
-//        ttind = tgt.tri(tind).tet(0);                             
-//        cnnct(p0).tet = ttind;
-//        for (k=0;k<4;++k) 
-//            if (tgt.tet(ttind).tri(k) == tind) break;
-//        assert(k < 3);
-//        cnnct(p0).wt(k) = 0.0;
-//        
-//        // Assumes Definition of face is compatible with definition on tet
-//        cnnct(p0).wt(vf1(k,0)) = 0.5*(1.+s);
-//        cnnct(p0).wt(vf1(k,1)) = 0.5*(-r -s);
-//        cnnct(p0).wt(vf1(k,2)) = 0.5*(1.+r);
-	} 
-	
-	return;
-}
+		tgt.fbdry(bnum)->findbdrypt(x.pnts(p0), facloc, r, s);
+		tind = tgt.fbdry(bnum)->tri(facloc).gindx;
+		ttind = tgt.tri(tind).tet(0);                             
+		cnnct(p0).tet = ttind;
+		for (k=0;k<4;++k) 
+			if (tgt.tet(ttind).tri(k) == tind) break;
+		assert(k < 4);
+		cnnct(p0).wt(k) = 0.0;
 
-void face_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s) const {
-	if (1) {
-		*x.gbl->log << "findbdrypt is not general enough for arbitrary points yet\n";
-		exit(1);  // FIXME
+		// Assumes Definition of face is compatible with definition on tet, which should always be true :-)
+		cnnct(p0).wt(vf1(k,0)) = 0.5*(1.+s);
+		cnnct(p0).wt(vf1(k,1)) = 0.5*(-r -s);
+		cnnct(p0).wt(vf1(k,2)) = 0.5*(1.+r);
 	}
-
+	
 	return;
 }
 

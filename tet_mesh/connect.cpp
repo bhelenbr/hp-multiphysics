@@ -17,8 +17,8 @@ void tet_mesh::connect(multigrid_interface& in) {
 	if (fcnnct.ubound(firstDim) < maxvst-1) fcnnct.resize(maxvst);
 	if (tgt.ccnnct.ubound(firstDim) < tgt.maxvst-1) tgt.ccnnct.resize(tgt.maxvst);
 	
-	// coarsen(1.6,tgt);
-
+	copy(tgt);  // Temporary
+		
 	mgconnect(tgt,fcnnct);
 	tgt.mgconnect(*this,tgt.ccnnct);
 	

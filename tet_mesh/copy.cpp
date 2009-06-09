@@ -11,39 +11,28 @@ void tet_mesh::copy(const tet_mesh& tgt) {
 	else {
 		/* CHECK IF BIG ENOUGH */
 		if (tgt.nseg > maxvst) {
-			*gbl->log << "mesh is too big to copy" << std::endl;
+			*gbl->log << "mesh is too big to copy: " << tgt.nseg << ' ' << maxvst << std::endl;
 			exit(1);
 		}
 	}
 	
 	/* COPY VERTEX INFO OVER */
 	npnt = tgt.npnt;
-	for(i=0;i<npnt;++i)
+	for(i=0;i<npnt;++i) {
 		for(n=0;n<ND;++n)
 			pnts(i)(n) = tgt.pnts(i)(n);
-
-	for(i=0;i<npnt;++i) {
 		lngth(i) = tgt.lngth(i);
-		pnt(i).info = tgt.pnt(i).info;
-		pnt(i).nnbor = tgt.pnt(i).nnbor;
-		pnt(i).tet = tgt.pnt(i).tet;
-		pnt(i).seg = tgt.pnt(i).seg;
-		pnt(i).nspk = tgt.pnt(i).nspk;
+		pnt(i) = tgt.pnt(i);
 	}
 		
 	/* COPY VERTEX BOUNDARY INFO */
 	for(i=0;i<nvbd;++i)
 		vbdry(i)->copy(*tgt.vbdry(i));
 			
-/* COPY SIDE INFORMATION */
+	/* COPY SIDE INFORMATION */
 	nseg = tgt.nseg;
-	for(i=0;i<nseg;++i) {
-		for(n=0;n<2;++n)
-			seg(i).pnt(n) = tgt.seg(i).pnt(n);
-		seg(i).info = tgt.seg(i).info;
-		seg(i).nnbor = tgt.seg(i).nnbor;
-
-	}
+	for(i=0;i<nseg;++i)
+		seg(i) = tgt.seg(i);
 		
 	/* COPY SIDE BOUNDARY INFO */
 	for(i=0;i<nebd;++i)
@@ -51,16 +40,8 @@ void tet_mesh::copy(const tet_mesh& tgt) {
 	
 	/* COPY TRI DATA */
 	ntri = tgt.ntri;
-	for(i=0;i<ntri;++i) {
-		for(n=0;n<3;++n) {
-			tri(i).pnt(n) = tgt.tri(i).pnt(n);
-			tri(i).seg(n) = tgt.tri(i).seg(n);
-			tri(i).sgn(n) = tgt.tri(i).sgn(n);
-		}
-		for(n=0;n<2;++n)
-			tri(i).tet(n) = tgt.tri(i).tet(n);
-		tri(i).info = tgt.tri(i).info;
-	}
+	for(i=0;i<ntri;++i)
+		tri(i) = tgt.tri(i);
 		
 	/* COPY FACE BOUNDARY INFO */
 	for(i=0;i<nfbd;++i)
@@ -68,20 +49,8 @@ void tet_mesh::copy(const tet_mesh& tgt) {
 		
 	/* COPY ELEMENT DATA */
 	ntet = tgt.ntet;
-	for(i=0;i<ntet;++i) {
-		for(n=0;n<4;++n) {
-			tet(i).pnt(n) = tgt.tet(i).pnt(n);
-			tet(i).tri(n) = tgt.tet(i).tri(n);
-			tet(i).rot(n) = tgt.tet(i).rot(n);
-			tet(i).tet(n) = tgt.tet(i).tet(n);
-		}
-		for(n=0;n<6;++n){
-			tet(i).seg(n) = tgt.tet(i).seg(n);
-			tet(i).sgn(n) = tgt.tet(i).sgn(n);
-		}
-		tet(i).info = tgt.tet(i).info;
-	}
-
+	for(i=0;i<ntet;++i)
+		tet(i) = tgt.tet(i);
 		
 	otree.copy(tgt.otree);
 	otree.change_vptr((FLT (*)[ND]) pnts(0).data() );

@@ -28,7 +28,7 @@ void tet_mesh::init(input_map &input, void *gin) {
 		FLT grwfac;
 		keyword = gbl->idprefix + "_growth factor";
 		if (!input.get(keyword,grwfac)) {
-			input.getwdefault("growth factor",grwfac,2.0);
+			input.getwdefault("growth factor",grwfac,1.0);
 		}
 		
 		int filetype;
@@ -58,8 +58,14 @@ void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizer
 	if (!initialized) {
 		const tet_mesh& inmesh = dynamic_cast<const tet_mesh &>(mgin);
 		gbl = inmesh.gbl;
-		maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d)),10);
+		maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d*sizereduce1d)),10);
 		allocate(maxvst);
+		nfbd = inmesh.nfbd;
+		fbdry.resize(nfbd);
+		for(i=0;i<nfbd;++i) {
+			fbdry(i) = inmesh.fbdry(i)->create(*this);
+			fbdry(i)->alloc(MAX(static_cast<int>(inmesh.fbdry(i)->maxpst/(sizereduce1d*sizereduce1d)),10));
+		}		
 		nebd = inmesh.nebd;
 		ebdry.resize(nebd);
 		for(i=0;i<nebd;++i) {
@@ -173,14 +179,14 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			fbdry.resize(1);
 					
 			maxvst = (4*ntet+nbfaces)/2;  // CHECK THIS TEMPORARY!!!!
-			allocate(maxvst);
+			allocate(grwfac*maxvst);
 			
 			/* LOAD PTS (npnt,3) */
 			in.ignore(160,'\n'); 
 			in.ignore(160,'\n');  
 			
 			fbdry(0) = getnewfaceobject(0,bdrymap);
-			fbdry(0)->alloc(3*nbfaces/2);
+			fbdry(0)->alloc(grwfac*3*nbfaces/2);
 			nvbd = 0;
 			nebd = 0;
 
@@ -272,7 +278,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in >> ntet;
 						
 			maxvst = ntri;  // CHECK THIS TEMPORARY!!!!
-			allocate(maxvst);
+			allocate(grwfac*maxvst);
 			
 			for(int i = 0; i < npnt; ++i) {
 				in.ignore(80,':');

@@ -323,6 +323,8 @@ void tet_mesh::checkintegrity() {
 			*gbl->log << "negative tet volume on tet: " << tind << endl;
 			exit(1);
 		}
+		
+		/* Test Tri Data */
 		for(i = 0; i < 4; ++i){
 			find = tet(tind).tri(i);
 			if(tri(find).tet(1) > -1){

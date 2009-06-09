@@ -346,7 +346,7 @@ class tet_mesh : public multigrid_interface {
 		bool findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind);
 		bool findtet(const TinyVector<FLT,3> xp, int &tind);
 		FLT intet(int tind, const TinyVector<FLT,ND> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
-		TinyVector<FLT,3> tet_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
+		TinyVector<FLT,4> tet_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
 		void getwgts(TinyVector<FLT,ND+1> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */
 		//@}
 };
@@ -475,7 +475,7 @@ class face_bdry : public boundary {
 			int info; /**< General purpose (mostly for adaptation) */
 		};
 		Array<pntstruct,1> pnt;  /**< Array of point integer data */
-		class quadtree<tet_mesh::ND> otree; /**< Octtree for finding points */  //FIXME
+		class quadtree<tet_mesh::ND> otree; /**< Octtree for finding points */
 		//@}
 
 		/** @name Variables describing mesh segments */
@@ -545,7 +545,7 @@ class face_bdry : public boundary {
 		void treeinit();
 		void treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]);
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
-		virtual void findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s) const;
+		virtual void findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s);
 		virtual void mvpttobdry(int ntri, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt);
 		
 //        /* MESH MODIFICATION FUNCTIONS */
@@ -623,8 +623,9 @@ class face_bdry : public boundary {
 //        void circumcenter(int tind, TinyVector<FLT,2> &x) const;
 //        FLT inscribedradius(int tind) const;
 //        FLT aspect(int tind) const;
-//        FLT inttri(int tind, const TinyVector<FLT,tet_mesh::ND> &x) const;
-//        void getwgts(TinyVector<FLT,tet_mesh::ND+1> &wgt) const;
+			FLT intri(int tind, const TinyVector<FLT,tet_mesh::ND> &x);
+			void getwgts(TinyVector<FLT,tet_mesh::ND> &wgt) const;
+			TinyVector<FLT,3> tri_wgt, norm; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
 //        /* tri numbers at boundary point to el and group */
 //        int getbdrynum(int trinum) const { return((-trinum>>16) -1);}
 //        int getbdryel(int trinum) const { return(-trinum&0xFFFF);}
