@@ -138,45 +138,47 @@ void tet_hp::calculate_unsteady_sources() {
 	TinyVector<int,4> v;
 	
 	for (log2p=0;log2p<=log2pmax;++log2p) {
-		for(tind=0;tind<ntet;++tind) {
-			v = tet(tind).pnt;
+		for (int level=1;level<min(gbl->nhist,gbl->tstep+1);++level) {
+			for(tind=0;tind<ntet;++tind) {
+				v = tet(tind).pnt;
 
-			if (tet(tind).info > -1) {
-			crdtocht(tind,1);
-			for(n=0;n<ND;++n)
-				basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
-			}
-			else {
+				if (tet(tind).info > -1) {
+				crdtocht(tind,level);
 				for(n=0;n<ND;++n)
-					basis::tet(log2p).proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),pnts(v(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
+					basis::tet(log2p).proj_bdry(&cht(n)(0), &crd(n)(0)(0)(0), &dcrd(n)(0)(0)(0)(0), &dcrd(n)(1)(0)(0)(0),&dcrd(n)(2)(0)(0)(0),stridex,stridey);
+				}
+				else {
+					for(n=0;n<ND;++n)
+						basis::tet(log2p).proj(vrtxbd(level)(v(0))(n),vrtxbd(level)(v(1))(n),vrtxbd(level)(v(2))(n),vrtxbd(level)(v(3))(n),&crd(n)(0)(0)(0),stridex,stridey);
 
-				for(i=0;i<lgpx;++i) {
-					for(j=0;j<lgpy;++j) {
-						for(k=0;k<lgpz;++k) {
-							for(n=0;n<ND;++n) {
-								dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
-								dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(1))(n) -pnts(tet(tind).pnt(2))(n));
-								dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(0))(n) -pnts(tet(tind).pnt(2))(n));
+					for(i=0;i<lgpx;++i) {
+						for(j=0;j<lgpy;++j) {
+							for(k=0;k<lgpz;++k) {
+								for(n=0;n<ND;++n) {
+									dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
+									dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(1))(n) -pnts(tet(tind).pnt(2))(n));
+									dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(0))(n) -pnts(tet(tind).pnt(2))(n));
+								}
 							}
 						}
 					}
 				}
-			}
-		
-			ugtouht(tind,1);
-			for(n=0;n<NV;++n)
-				basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex, stridey);
+			
+				ugtouht(tind,level);
+				for(n=0;n<NV;++n)
+					basis::tet(log2p).proj(&uht(n)(0),&u(n)(0)(0)(0),stridex, stridey);
 
-			for(i=0;i<lgpx;++i) {
-				for(j=0;j<lgpy;++j) {
-					for(k=0;k<lgpz;++k) {
-						cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
-						for(n=0;n<NV;++n)
-							dugdt(log2p,tind,n)(i)(j)(k) = u(n)(i)(j)(k)*cjcb(i)(j)(k);
-						for(n=0;n<ND;++n)
-							dxdt(log2p,tind,n)(i)(j)(k) = crd(n)(i)(j)(k);
-					}
-				}	
+				for(i=0;i<lgpx;++i) {
+					for(j=0;j<lgpy;++j) {
+						for(k=0;k<lgpz;++k) {
+							cjcb(i)(j)(k) = -gbl->bd(level)*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
+							for(n=0;n<NV;++n)
+								dugdt(log2p,tind,n)(i)(j)(k) += u(n)(i)(j)(k)*cjcb(i)(j)(k);
+							for(n=0;n<ND;++n)
+								dxdt(log2p,tind,n)(i)(j)(k) += gbl->bd(level)/gbl->bd(0)*crd(n)(i)(j)(k);
+						}
+					}	
+				}
 			}
 		}
 	}

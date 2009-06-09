@@ -596,15 +596,15 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 				pt(2) = x.crd1d(2)(k);
 				
 				for(n=0;n<ndirichlets;++n)
-						x.res1d(dirichlets(n))(k) -= ibc->f(dirichlets(n),pt,x.gbl->time);
+					x.res1d(dirichlets(n))(k) -= ibc->f(dirichlets(n),pt,x.gbl->time);
 			}
 			for(n=0;n<ndirichlets;++n)
 				basis::tet(x.log2p).intgrt1d(&x.lf(dirichlets(n))(0),&x.res1d(dirichlets(n))(0));
 			
-			for(n=0;n<ndirichlets;++n) {
+			for(n=0;n<ndirichlets;++n) 
 				for(m=0;m<basis::tet(x.log2p).em;++m) 
-						x.ug.e(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m)*basis::tet(x.log2p).diag1d(m);
-			}
+					x.ug.e(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m)*basis::tet(x.log2p).diag1d(m);
+			
 		}
 	}
 	
@@ -623,17 +623,19 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 				basis::tet(x.log2p).proj2d_bdry(&x.cht(n)(0),&x.crd2d(n)(0)(0),MXGP);
 		}
 		else {
-			for(n=0;n<tet_mesh::ND;++n) {
+			for(n=0;n<tet_mesh::ND;++n) 
 				basis::tet(x.log2p).proj2d(x.pnts(v0)(n),x.pnts(v1)(n),x.pnts(v2)(n),&x.crd2d(n)(0)(0),MXGP);                
-			}
+			
 		}
 		if (basis::tet(x.log2p).em) {
 			for(n=0;n<ndirichlets;++n)
 				basis::tet(x.log2p).proj2d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),x.ug.v(v2,dirichlets(n)),&x.res2d(dirichlets(n))(0)(0),MXGP);
+//			x.ugtouht2d_bdry(find);
+//			for(n=0;n<ndirichlets;++n)
+//				basis::tet(x.log2p).proj2d_bdry(&x.uht(dirichlets(n))(0),&x.res2d(dirichlets(n))(0)(0),MXGP);
 			
 			for(i=0;i<basis::tet(x.log2p).gpx; ++i) {
-				for(k=0;k<basis::tet(x.log2p).gpy; ++k) {
-					
+				for(k=0;k<basis::tet(x.log2p).gpy; ++k) {					
 					pt(0) = x.crd2d(0)(i)(k);
 					pt(1) = x.crd2d(1)(i)(k);
 					pt(2) = x.crd2d(2)(i)(k);

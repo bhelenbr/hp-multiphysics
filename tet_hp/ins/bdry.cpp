@@ -13,9 +13,6 @@ void generic::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
 	return;
 }
 
-
-
-
 void neumann::rsdl(int stage) {
 	int i,j,k,n,v0,v1,v2,sind,find;
 	TinyVector<FLT,3> pt,mvel,nrm;
@@ -40,11 +37,11 @@ void neumann::rsdl(int stage) {
 				/* co-variant vectors: d vec(x)/dxi crossed with d vec(x)/deta */
 				nrm(0) = x.dcrd2d(1)(0)(i)(k)*x.dcrd2d(2)(1)(i)(k)-x.dcrd2d(2)(0)(i)(k)*x.dcrd2d(1)(1)(i)(k);
 				nrm(1) = -x.dcrd2d(0)(0)(i)(k)*x.dcrd2d(2)(1)(i)(k)+x.dcrd2d(2)(0)(i)(k)*x.dcrd2d(0)(1)(i)(k);
-				nrm(2) = x.dcrd2d(0)(0)(i)(k)*x.dcrd2d(1)(1)(i)(k)-x.dcrd2d(1)(0)(i)(k)*x.dcrd2d(0)(1)(i)(k);  
+				nrm(2) = x.dcrd2d(0)(0)(i)(k)*x.dcrd2d(1)(1)(i)(k)-x.dcrd2d(1)(0)(i)(k)*x.dcrd2d(0)(1)(i)(k); 
 				
 				for(n=0;n<tet_mesh::ND;++n) {
 					pt(n) = x.crd2d(n)(i)(k);
-					mvel(n) = 0.0;//x.gbl->bd(0)*(x.crd2d(n)(i)(k) -dxdt(x.log2p,j)(n)(i)(k));//fix me need dxdt
+					mvel(n) = x.gbl->bd(0)*(x.crd2d(n)(i)(k) -dxdt(x.log2p,j)(n)(i)(k));
 
 				}
 				
@@ -52,7 +49,7 @@ void neumann::rsdl(int stage) {
 					u(n) = x.u2d(n)(i)(k);
 				
 				flux(u,pt,mvel,nrm,flx);
-							
+
 				for(n=0;n<x.NV;++n)
 					x.res2d(n)(i)(k) = flx(n);
 

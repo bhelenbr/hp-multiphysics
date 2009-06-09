@@ -32,8 +32,8 @@ void tet_hp::rsdl(int stage) {
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
 
-	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->rsdl(stage);
+//	for(int i=0;i<nvbd;++i)
+//		hp_vbdry(i)->rsdl(stage);
 		
 	helper->rsdl(stage);
 	
@@ -78,12 +78,12 @@ void tet_hp::update() {
 
 		rsdl(stage);	
 			
-		for(i=0;i<nfbd;++i)
-			hp_fbdry(i)->vdirichlet();
-		for(i=0;i<nfbd;++i)
-			hp_fbdry(i)->edirichlet();
-		for(i=0;i<nfbd;++i)
-			hp_fbdry(i)->fdirichlet();
+//		for(i=0;i<nfbd;++i)
+//			hp_fbdry(i)->vdirichlet();
+//		for(i=0;i<nfbd;++i)
+//			hp_fbdry(i)->edirichlet();
+//		for(i=0;i<nfbd;++i)
+//			hp_fbdry(i)->fdirichlet();
 
 		minvrt();
 
@@ -276,7 +276,7 @@ void tet_hp::update() {
 			pth_exit(NULL);
 #endif
 #ifdef MPI
-			MPI_Finalize();
+//			MPI_Finalize();
 #endif
 	//   }
 #endif
