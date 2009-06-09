@@ -51,17 +51,15 @@ void face_bdry::vertexcircle(int vind){
 
 void face_bdry::findbdrypt(const TinyVector<FLT,tet_mesh::ND> xpt, int &facloc, FLT &r, FLT &s) {
 	FLT normdist, minnormdist = 1.0e99;
-	
-	/* Need to fix this so it does less repetitive work FIXME */
+
+	/* For now I am going to search the whole boundary for the best possible answer */
 	for (int i=0;i<npnt;++i)
 		pnt(i).info = 0;
 		
 	for (int i=0;i<nseg;++i)
 		seg(i).info = 0;
-
-	/* For now going to search the whole boundary until I fix quadtree FIXME */
-	for (int tind=0;tind<ntri;++tind) {
-	
+		
+	for (int tind=0;tind<ntri;++tind) {	
 		TinyVector<int,3> v;
 		for (int i=0;i<3;++i)
 			v(i) = pnt(tri(tind).pnt(i)).gindx;
