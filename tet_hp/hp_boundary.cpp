@@ -630,7 +630,7 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 
 		}
 		if (basis::tet(x.log2p).fm) {
-			for(n=0;n<ndirichlets;++n)
+//			for(n=0;n<ndirichlets;++n)
 //				basis::tet(x.log2p).proj2d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),x.ug.v(v2,dirichlets(n)),&x.res2d(dirichlets(n))(0)(0),MXGP);
 //			cout << " there may be bug in face_bdry::setvalues for high order"<< endl;
 			x.ugtouht2d_bdry(find);//temp may need to fix this for high order

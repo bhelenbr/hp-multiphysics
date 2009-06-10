@@ -303,6 +303,13 @@ void tet_hp::minvrt() {
 		}
 	}
 	
+	/* APPLY EDGE DIRICHLET B.C.'S */
+    for(i=0;i<nfbd;++i)
+        hp_fbdry(i)->edirichlet();	
+	
+	for (i=0;i<nebd;++i) 
+		hp_ebdry(i)->edirichlet3d();
+	
 	/* ALL HIGH ORDER MODES */
 	/* LOOP THROUGH EDGES */	         
 	if (basis::tet(log2p).fm > 0){
