@@ -78,12 +78,12 @@ void tet_hp::update() {
 
 		rsdl(stage);	
 			
-//		for(i=0;i<nfbd;++i)
-//			hp_fbdry(i)->vdirichlet();
-//		for(i=0;i<nfbd;++i)
-//			hp_fbdry(i)->edirichlet();
-//		for(i=0;i<nfbd;++i)
-//			hp_fbdry(i)->fdirichlet();
+		for(i=0;i<nfbd;++i)
+			hp_fbdry(i)->vdirichlet();
+		for(i=0;i<nfbd;++i)
+			hp_fbdry(i)->edirichlet();
+		for(i=0;i<nfbd;++i)
+			hp_fbdry(i)->fdirichlet();
 
 		minvrt();
 

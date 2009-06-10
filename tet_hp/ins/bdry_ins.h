@@ -213,10 +213,9 @@ namespace bdry_ins {
 #endif
 
 				/* EVERYTHING ELSE */
-					for (int n=tet_mesh::ND;n<x.NV-1;++n)// temp is there a bug here?
+					for (int n=tet_mesh::ND;n<x.NV-1;++n)
 						flx(n) = flx(x.NV-1)*u(n);
 
-				cout << flx << endl;
 				return;
 			}
 		public:

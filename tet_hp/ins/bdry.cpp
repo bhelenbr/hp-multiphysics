@@ -1,6 +1,6 @@
 #include "bdry_ins.h"
 #include <myblas.h>
-
+#include<blitz/tinyvec-et.h>
 /*************************************************/
 /* SET DIRICHLET BOUNDARY VALUES & FLUXES ********/
 /* (THINGS THAT ARE INDEPENDENT OF THE SOLUTION) */
@@ -9,17 +9,18 @@
 using namespace bdry_ins;
 
 void generic::output(std::ostream& fout, tet_hp::filetype typ,int tlvl) {
-	cout << "warning generic::output in bdry.cpp is being called and is not functioning" << endl;
+//	cout << "warning generic::output in bdry.cpp is being called and is not functioning" << endl;
 	return;
 }
 
 void neumann::rsdl(int stage) {
-	int i,j,k,n,v0,v1,v2,sind,find;
-	TinyVector<FLT,3> pt,mvel,nrm;
+	int i,j,k,n,v0,v1,v2,sind,find,indx;
+	FLT sgn,msgn;
+	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 	
-	for(j=0;j<base.ntri;++j) {
-		find = base.tri(j).gindx;
+	for(i=0;i<base.ntri;++i) {
+		find = base.tri(i).gindx;
 		v0 = x.tri(find).pnt(0);
 		v1 = x.tri(find).pnt(1);
 		v2 = x.tri(find).pnt(2);
@@ -32,26 +33,33 @@ void neumann::rsdl(int stage) {
 		for(n=0;n<x.NV;++n)
 			basis::tet(x.log2p).proj2d(&x.uht(n)(0),&x.u2d(n)(0)(0),MXGP);
 
-		for(i=0;i<basis::tet(x.log2p).gpx;++i) {
+		for(j=0;j<basis::tet(x.log2p).gpx;++j) {
 			for(k=0;k<basis::tet(x.log2p).gpy;++k) {
 				/* co-variant vectors: d vec(x)/dxi crossed with d vec(x)/deta */
-				nrm(0) = x.dcrd2d(1)(0)(i)(k)*x.dcrd2d(2)(1)(i)(k)-x.dcrd2d(2)(0)(i)(k)*x.dcrd2d(1)(1)(i)(k);
-				nrm(1) = -x.dcrd2d(0)(0)(i)(k)*x.dcrd2d(2)(1)(i)(k)+x.dcrd2d(2)(0)(i)(k)*x.dcrd2d(0)(1)(i)(k);
-				nrm(2) = x.dcrd2d(0)(0)(i)(k)*x.dcrd2d(1)(1)(i)(k)-x.dcrd2d(1)(0)(i)(k)*x.dcrd2d(0)(1)(i)(k); 
+				for(n=0;n<3;++n){
+					vec1(n)=x.dcrd2d(n)(0)(j)(k);
+					vec2(n)=x.dcrd2d(n)(1)(j)(k);
+				}
+				nrm=-cross(vec1,vec2);
 				
-				for(n=0;n<tet_mesh::ND;++n) {
-					pt(n) = x.crd2d(n)(i)(k);
-					mvel(n) = x.gbl->bd(0)*(x.crd2d(n)(i)(k) -dxdt(x.log2p,j)(n)(i)(k));
+//				cout << "nrm1 = " << nrm << endl;
+//				nrm(0) = x.dcrd2d(1)(0)(j)(k)*x.dcrd2d(2)(1)(j)(k)-x.dcrd2d(2)(0)(j)(k)*x.dcrd2d(1)(1)(j)(k);
+//				nrm(1) = -x.dcrd2d(0)(0)(j)(k)*x.dcrd2d(2)(1)(j)(k)+x.dcrd2d(2)(0)(j)(k)*x.dcrd2d(0)(1)(j)(k);
+//				nrm(2) = x.dcrd2d(0)(0)(j)(k)*x.dcrd2d(1)(1)(j)(k)-x.dcrd2d(1)(0)(j)(k)*x.dcrd2d(0)(1)(j)(k); 
+//				cout << "nrm2 = " << nrm << endl;
 
+				for(n=0;n<tet_mesh::ND;++n) {
+					pt(n) = x.crd2d(n)(j)(k);
+					mvel(n) = x.gbl->bd(0)*(x.crd2d(n)(j)(k) -dxdt(x.log2p,j)(n)(j)(k));
 				}
 				
 				for(n=0;n<x.NV;++n)
-					u(n) = x.u2d(n)(i)(k);
+					u(n) = x.u2d(n)(j)(k);
 				
 				flux(u,pt,mvel,nrm,flx);
 
 				for(n=0;n<x.NV;++n)
-					x.res2d(n)(i)(k) = flx(n);
+					x.res2d(n)(j)(k) = flx(n);
 
 			}
 		}
@@ -68,18 +76,24 @@ void neumann::rsdl(int stage) {
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v2,n) += x.lf(n)(2);
 		
-		for(i=0;i<3;++i) {
-			sind=x.tri(find).seg(i);
+		indx = 3;
+		for(j=0;j<3;++j) {
+			sind=x.tri(find).seg(j);
+			sgn = x.tri(find).sgn(j);
+			msgn = 1.0;
 			for(k=0;k<basis::tet(x.log2p).em;++k) {
 				for(n=0;n<x.NV;++n)
-					x.gbl->res.e(sind,k,n) += x.lf(n)(i*basis::tet(x.log2p).em+k+3);
+					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+				msgn *= sgn;
+				++indx;
 			}
 		}
 													  
 	    for(k=0;k<basis::tet(x.log2p).fm;++k) {
 		    for(n=0;n<x.NV;++n)
-				x.gbl->res.f(find,k,n) += x.lf(n)(3*basis::tet(x.log2p).em+k+3);
-		}
+				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+			++indx;
+		}		
 	}
 	return;
 }

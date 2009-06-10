@@ -565,7 +565,7 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 	for(j=0;j<base.npnt;++j) {
 		v0 = base.pnt(j).gindx;
 		for(n=0;n<ndirichlets;++n)
-			x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
+			x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);		
 	}
 	
 	/*******************/    
@@ -625,14 +625,17 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 		else {
 			for(n=0;n<tet_mesh::ND;++n) 
 				basis::tet(x.log2p).proj2d(x.pnts(v0)(n),x.pnts(v1)(n),x.pnts(v2)(n),&x.crd2d(n)(0)(0),MXGP);                
-			
+
+				//basis::tet(x.log2p).proj2d(x.vrtxbd(0)(x.tri(find).pnt(0))(n),x.vrtxbd(0)(x.tri(find).pnt(1))(n),x.vrtxbd(0)(x.tri(find).pnt(2))(n),&x.crd2d(n)(0)(0),MXGP);
+
 		}
-		if (basis::tet(x.log2p).em) {
+		if (basis::tet(x.log2p).fm) {
 			for(n=0;n<ndirichlets;++n)
-				basis::tet(x.log2p).proj2d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),x.ug.v(v2,dirichlets(n)),&x.res2d(dirichlets(n))(0)(0),MXGP);
-//			x.ugtouht2d_bdry(find);
-//			for(n=0;n<ndirichlets;++n)
-//				basis::tet(x.log2p).proj2d_bdry(&x.uht(dirichlets(n))(0),&x.res2d(dirichlets(n))(0)(0),MXGP);
+//				basis::tet(x.log2p).proj2d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),x.ug.v(v2,dirichlets(n)),&x.res2d(dirichlets(n))(0)(0),MXGP);
+//			cout << " there may be bug in face_bdry::setvalues for high order"<< endl;
+			x.ugtouht2d_bdry(find);//temp may need to fix this for high order
+			for(n=0;n<ndirichlets;++n)
+				basis::tet(x.log2p).proj2d_bdry(&x.uht(dirichlets(n))(0),&x.res2d(dirichlets(n))(0)(0),MXGP);
 			
 			for(i=0;i<basis::tet(x.log2p).gpx; ++i) {
 				for(k=0;k<basis::tet(x.log2p).gpy; ++k) {					
@@ -649,7 +652,7 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 			
 			for(n=0;n<ndirichlets;++n) {
 				for(m=0;m<basis::tet(x.log2p).fm;++m) 
-						x.ug.f(find,m,dirichlets(n)) = -x.lf(dirichlets(n))(3+3*basis::tet(x.log2p).em+i)*basis::tet(x.log2p).diag2d(m);
+						x.ug.f(find,m,dirichlets(n)) = -x.lf(dirichlets(n))(3+3*basis::tet(x.log2p).em+m)*basis::tet(x.log2p).diag2d(m);
 			}
 		}
 	}
