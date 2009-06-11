@@ -175,13 +175,11 @@
 				6FB40AF0091AF516002BAA09 /* tet_hp.h */,
 				6FB901D80A6C782300A4729C /* allocate.cpp */,
 				6FB40AD8091AF516002BAA09 /* gtol.cpp */,
-				6FB40AD4091AF516002BAA09 /* copy.cpp */,
 				6FB40AE4091AF516002BAA09 /* output.cpp */,
-				95331FE40D6B602400961CD4 /* test.cpp */,
 				6FB40AEE091AF516002BAA09 /* tobasis.cpp */,
 				6FB40ADC091AF516002BAA09 /* l2error.cpp */,
 				6FB40AC9091AF516002BAA09 /* adapt.cpp */,
-				95671D860F57074800872173 /* particle.cpp */,
+				6FB40AD4091AF516002BAA09 /* copy.cpp */,
 				6FB40AE5091AF516002BAA09 /* ptprobe.cpp */,
 				6FB40AEC091AF516002BAA09 /* tadvance.cpp */,
 				6FB40AE3091AF516002BAA09 /* update.cpp */,
@@ -191,6 +189,8 @@
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
+				95671D860F57074800872173 /* particle.cpp */,
+				95331FE40D6B602400961CD4 /* test.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";

@@ -62,9 +62,9 @@ void tet_hp_ins::rsdl(int stage) {
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpy;++j) {
 	            for(k=0;k<lgpz;++k) {
-					mvel(0)(i)(j)(k) = gbl->bd(0)*(crd(0)(i)(j)(k) -dxdt(log2p,tind,0)(i)(j)(k));
-					mvel(1)(i)(j)(k) = gbl->bd(0)*(crd(1)(i)(j)(k) -dxdt(log2p,tind,1)(i)(j)(k));
-					mvel(2)(i)(j)(k) = gbl->bd(0)*(crd(2)(i)(j)(k) -dxdt(log2p,tind,2)(i)(j)(k));
+					mvel(0)(i)(j)(k) = 0.0;//gbl->bd(0)*(crd(0)(i)(j)(k) -dxdt(log2p,tind,0)(i)(j)(k));
+					mvel(1)(i)(j)(k) = 0.0;//gbl->bd(0)*(crd(1)(i)(j)(k) -dxdt(log2p,tind,1)(i)(j)(k));
+					mvel(2)(i)(j)(k) = 0.0;//gbl->bd(0)*(crd(2)(i)(j)(k) -dxdt(log2p,tind,2)(i)(j)(k));
 				}
 			}
 		}

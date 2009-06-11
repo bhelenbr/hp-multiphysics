@@ -33,7 +33,15 @@ void tet_hp_ins::init(input_map& input, void *gin) {
 	
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
 	gbl->D.resize(NV);
-	gbl->D = 0.0;
+	if (NV > 4) {
+		for (int n=2;n<NV-1;++n) {
+			stringstream nstr;
+			nstr << n-2;
+			if (!input.get(gbl->idprefix + "_D" +nstr.str(),gbl->D(n))) 
+				if (!input.get("D" +nstr.str(),gbl->D(n)))
+					gbl->D(n) = 0.0;
+		}
+    }
 	
 		
 	return;

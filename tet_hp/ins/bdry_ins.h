@@ -206,15 +206,15 @@ namespace bdry_ins {
 				/* XYZ MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tet_mesh::ND;++n)
-						flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+					flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #else
 				for (int n=0;n<tet_mesh::ND;++n)
-						flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
+					flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
 				/* EVERYTHING ELSE */
-					for (int n=tet_mesh::ND;n<x.NV-1;++n)
-						flx(n) = flx(x.NV-1)*u(n);
+				for (int n=tet_mesh::ND;n<x.NV-1;++n)
+					flx(n) = flx(x.NV-1)*u(n);
 
 				return;
 			}

@@ -92,7 +92,7 @@ void tet_hp::minvrt() {
 				for(n=0;n<NV;++n)
 					uht(n)(i) = gbl->res.v(v0,n)*gbl->iprcn(tind,n);
 			}
-			// edges
+			/* edges */
 			for(i=0;i<6;++i) {
 				sind = tet(tind).seg(i);
 				sgn  = tet(tind).sgn(i);
@@ -105,7 +105,7 @@ void tet_hp::minvrt() {
 					}
 				}
 			}
-			//faces
+			/* faces */
 			for(i=0;i<4;++i) {
 				find = tet(tind).tri(i);
 				sgn  = tet(tind).rot(i);
@@ -122,7 +122,7 @@ void tet_hp::minvrt() {
 					}
 				}
 			}
-			//interior
+			/* interior */
 			for(j=0;j<4;++j) {
 				for(k=0;k<basis::tet(log2p).im;++k) {
 					for(n=0;n<NV;++n)
@@ -188,8 +188,6 @@ void tet_hp::minvrt() {
 				}
 				for(int spk = 0; spk < pnt(vind).nspk; ++spk){
 					gbl->res.e(spklink(vind)(spk)(0),0,n)+=spkres(spk)/2;
-					//gbl->res.e(spklink(vind)(spk)(0),0,n)=spkres(spk);
-					//gbl->res.e(spklink(vind)(spk)(0),0,n)=0.0;
 				}
 			}
 		}
@@ -228,7 +226,7 @@ void tet_hp::minvrt() {
 					for(n=0;n<NV;++n)
 						uht(n)(i) = gbl->res.e(side,0,n)*gbl->iprcn(tind,n);
 				}
-				// edges
+				/* edges */
 				for(i=0;i<6;++i) {
 					sind = tet(tind).seg(i);
 					sgn  = tet(tind).sgn(i);
@@ -241,7 +239,7 @@ void tet_hp::minvrt() {
 						}
 					}
 				}
-				//faces
+				/* faces */
 				for(i=0;i<4;++i) {
 					find = tet(tind).tri(i);
 					sgn  = tet(tind).rot(i);
@@ -258,7 +256,7 @@ void tet_hp::minvrt() {
 						}
 					}
 				}
-	//			//interior
+//				/* interior */
 //				for(j=0;j<6;++j) {
 //					for(k=0;k<basis::tet(log2p).im;++k) {
 //						for(n=0;n<NV;++n)

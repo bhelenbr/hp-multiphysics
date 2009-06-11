@@ -938,11 +938,11 @@ void hp_face_bdry::calculate_unsteady_sources() {
 	
 	for(i=0;i<=x.log2pmax;++i) {
 		for(j=0;j<base.ntri;++j) {
-			int tind = base.seg(j).gindx;
+			int tind = base.tri(j).gindx;
 			x.crdtocht2d(tind,1);
 		
 			for(n=0;n<tet_mesh::ND;++n)
-			basis::tet(x.log2p).proj2d(&x.cht(n)(0),&dxdt(i,j)(n)(0)(0),MXGP);
+				basis::tet(x.log2p).proj2d(&x.cht(n)(0),&dxdt(i,j)(n)(0)(0),MXGP);
 		}
 	}
 	

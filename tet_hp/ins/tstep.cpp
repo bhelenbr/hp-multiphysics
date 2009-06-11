@@ -15,12 +15,15 @@ void tet_hp_ins::setup_preconditioner() {
 		/***************************************/
 		/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 		/***************************************/
-		gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+		gbl->vprcn(Range::all(),Range::all())=0.0;
 		if (basis::tet(log2p).em > 0) {
-			gbl->eprcn(Range(0,nseg-1),Range::all()) = 0.0;
-		}
-		if (basis::tet(log2p).fm > 0) {
-			gbl->fprcn(Range(0,ntri-1),Range::all()) = 0.0;
+			gbl->eprcn(Range::all(),Range::all())=0.0;
+			if (basis::tet(log2p).fm > 0) {
+				gbl->fprcn(Range::all(),Range::all())=0.0;
+				if (basis::tet(log2p).im > 0) {
+					gbl->iprcn(Range::all(),Range::all())=0.0;
+				}
+			}
 		}
 		
 #ifdef TIMEACCURATE
@@ -29,7 +32,7 @@ void tet_hp_ins::setup_preconditioner() {
 #endif
 
 		for(tind = 0; tind < ntet; ++tind) {
-			jcb = tet(tind).vol/8.0;   // area is 2 x triangle area
+			jcb = 0.125*tet(tind).vol;   // area is 2 x triangle area
 			v = tet(tind).pnt;	
 			amin=1000000.0;
 			amax = 0.0;
