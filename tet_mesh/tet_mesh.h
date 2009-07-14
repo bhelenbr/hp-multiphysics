@@ -156,10 +156,13 @@ class tet_mesh : public multigrid_interface {
 		void copy(const tet_mesh& tgt);
 		
 		/** Innput/Output file types */
-		enum filetype {easymesh, baker, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
+		enum filetype {easymesh, baker, gambit, tecplot, grid, text, binary, BRep, gmsh, boundary, vlength, debug_adapt, datatank};
 		
 		/** Input mesh */
 		void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
+#ifdef USING_MADLIB
+		void MAdLib_input(const std::string filename, FLT grwfac, input_map& input);
+#endif
 		/** Virtual routine so inheritors can set up info after input/adaptation */
 		virtual void setinfo();  
 
@@ -227,7 +230,7 @@ class tet_mesh : public multigrid_interface {
 		//@{ 
 		int coarse_level; /**< Integer telling which multigrid level I am */
 		multigrid_interface *fine, *coarse; /**< Pointers to fine and coarse objects */
-//        void coarsen(FLT factor, const class tet_mesh& xmesh); /**< Coarsens by triangulating then inserting */
+		void coarsen(FLT factor, const class tet_mesh& xmesh); /**< Coarsens by triangulating then inserting */
 //        void coarsen2(FLT factor, const class tet_mesh& inmesh, FLT size_reduce = 1.0);  /**< Coarsens by using yaber */
 //        void coarsen3(); /**< Coarsens based on marks stored in pnt().info */
 
@@ -246,37 +249,43 @@ class tet_mesh : public multigrid_interface {
 		void checkintegrity(); /**< Checks data arrays for compatibility */
 		void checki1wk() const; /**< Makes sure i1wk is all -1 */
 
-		
-	protected:
-		/** @name Setup routines */
-		//@{
-		void allocate(int mxsize);  /**< Allocates memory */
-		void cnt_nbor(void); /**< Fills in pnt().nnbor */
-		void bdrylabel(void); /**< Makes seg().tri and tri().tri on boundary have pointer to boundary group/element */
-		void createseg(void); /**< Creates all segment information from list of triangle points and also tri().seg/sgn (if necessary) */
-		void createsegtri(void); /**< Creates seg.tri() and tri().seg connections */
-		void createtritri(void); /**< Creates tri().tri data */
-		void treeinit(); /**< Initialize octtree data */
-		void treeinit(FLT x1[ND], FLT x2[ND]); /** Initialize octtree data with specified domain */
-		//@}
-			
 		/*******************/
 		/* INTERNAL FUNCTIONS */
 		/*******************/  
-		void fixvertexinfo(void);  /**< reorients vertex ordering, and calculates volume */
-		void feedinvertexinfo(void); /**< reorients vertex ordering based on pnt.info and calculates volume */
-		void vertexnnbor(void);  /**< counts number of neighboring tet's connected to a point pnt().nnbor*/
-		void createedgeinfo(void);  /**<  */
-		void edgeinfo(void);
-		void createfaceinfo(void);
-		void faceinfo(void);
-		void morefaceinfo(void);
-		void createtetinfo(void);
-		void createtdstri(void);
-		void createttet(void);
-		void createvtet(void);
+		/** @name Setup routines */
+		//@{
+		void allocate(int mxsize);  /**< Allocates memory */
+		void bdrylabel(void); /**< Makes seg().tri and tri().tri on boundary have pointer to boundary group/element */
+		void treeinit(); /**< Initialize octtree data */
+		void treeinit(FLT x1[ND], FLT x2[ND]); /** Initialize octtree data with specified domain */
+		void reorient_tets(bool use_pnt_info=false);  /**< reorients vertex ordering, and calculates volume */
+		void create_seg_from_tet(void);
+		void create_tri_from_tet(void);
+		void match_tet_and_seg(void);
+		void match_tet_and_tri(void);
+		void match_tri_and_seg(void);
+		void create_pnt_nnbor(void);  /**< counts number of neighboring tet's connected to a point pnt().nnbor*/
+		void create_tet_tet(void); /**< createst tet(ttind).tet(0-4) data */
+		
+		/* Standard usages to initialize data */
+		void create_from_tet() {
+			create_seg_from_tet();
+			create_tri_from_tet();
+			match_tri_and_seg();
+			create_pnt_nnbor();
+			create_tet_tet();
+		}
+		
+		void match_all() {
+			match_tet_and_seg();
+			match_tet_and_tri();
+			match_tri_and_seg();
+			create_pnt_nnbor();
+			create_tet_tet();
+		}
+		//@}
+
 		void ring(int eind);
-		void createfaceorientation(void);
 
 //        /** @name Mesh modification functions */
 //        //@{
@@ -330,6 +339,8 @@ class tet_mesh : public multigrid_interface {
 		/** @name Some primitive functions */
 		//@{
 		/** Calculate distance between two points */
+		FLT volume(int ttind);
+		FLT volume(TinyVector<FLT,ND> xp, int tind);
 		inline FLT distance(int p0, int p1) const {
 			FLT d = 0.0;
 			for(int n = 0; n<ND;++n)
@@ -397,12 +408,12 @@ class vrtx_bdry : public boundary {
 class edge_bdry : public boundary {
 	public:
 		tet_mesh &x;
-		  TinyVector<int,2> vbdry;  // FIXME
+		TinyVector<int,2> vbdry;  // FIXME
 		int maxseg;
 		int nseg;
-		  struct segstruct {
-				int next; /**< Not used except in adaptation (kept ordered) */
-				int prev; /**< Not used except in adaptation (kept ordered) */
+		struct segstruct {
+			int next; /**< Not used except in adaptation (kept ordered) */
+			int prev; /**< Not used except in adaptation (kept ordered) */
 			int gindx;  /**< global index of side */
 			int info; /**< General purpose (mostly for adaptation) */
 		};
@@ -433,9 +444,9 @@ class edge_bdry : public boundary {
 
 		
 		/* ADDITIONAL STUFF FOR EDGES */
-		  virtual void match_numbering(int step) {}
+		virtual void match_numbering(int step) {}
 		virtual void swap(int s1, int s2);
-		  virtual void setup_next_prev();
+		virtual void setup_next_prev();
 		virtual void reorder();
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
 		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tet_mesh::ND> &pt);
@@ -533,15 +544,32 @@ class face_bdry : public boundary {
 		/*******************/  
 		virtual void match_numbering(int step) {}
 		void vertexcircle(int vind);
-		void cnt_nbor(void);
-		void createsideinfo(void);
-		void createtdstri(void);
-		void createttri(void);
-		void createvtri(void);
-		void gbltolclvrtx(void);
-		void gbltolclside(void);
-		void gbltolcltri(void);
-		void allinfo(void);
+		void create_seg_from_tri(void);
+		void match_tri_and_seg(void);
+		void create_tri_pnt_and_pnt_gindx_from_gbltris(void);
+		void create_seg_gindx(void);
+		void create_tri_gindx(void);
+		void convert_gbl_to_lcl(void);
+		void create_pnt_nnbor(void);
+		void create_tri_tri(void);
+		void create_pnt_tri(void);
+		
+		void create_from_tri() {
+			create_tri_pnt_and_pnt_gindx_from_gbltris();
+			create_seg_from_tri(); 
+			create_tri_gindx();
+			create_seg_gindx();
+			create_tri_tri();
+			create_pnt_nnbor();
+			create_pnt_tri(); 
+		}
+				
+		void match_all() {
+			convert_gbl_to_lcl(); 
+			create_pnt_nnbor();
+			create_pnt_tri();
+			create_tri_tri();
+		}
 		void treeinit();
 		void treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]);
 		virtual void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);

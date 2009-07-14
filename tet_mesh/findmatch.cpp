@@ -451,8 +451,8 @@ void tet_mesh::match_bdry_numbering() {
 	/* Create global numbering system */
 	create_unique_numbering();
 	 
-	 /* Reorder Side boundaries so direction is the same */
-	 for(int i=0;i<nebd;++i) 
+	/* Reorder Side boundaries so direction is the same */
+	for(int i=0;i<nebd;++i) 
 		ebdry(i)->match_numbering(1);
 
 	/* FIRST PART OF SENDING, POST ALL RECEIVES */
@@ -471,16 +471,12 @@ void tet_mesh::match_bdry_numbering() {
 	for(int i=0;i<nebd;++i)
 		ebdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
 
-	 for(int i=0;i<nebd;++i) 
+	for(int i=0;i<nebd;++i) 
 		ebdry(i)->match_numbering(2);		  
 
-	 /* Redefine tets based on global numbering system */
-	feedinvertexinfo();
-	createedgeinfo();
-	createfaceinfo();
-	morefaceinfo();
-	createtetinfo();
-	vertexnnbor();
+	/* Redefine tets based on global numbering system */
+	reorient_tets(true);
+	match_all();
 		
 	/* Master loads integer data (seg, tri definitions) */
 	for(int i=0;i<nfbd;++i)
@@ -505,10 +501,10 @@ void tet_mesh::match_bdry_numbering() {
 
 	for(int i = 0; i < nfbd; ++i){
 		if (!fbdry(i)->is_frst() && fbdry(i)->is_comm()) {
-			fbdry(i)->createtdstri(); 
-			fbdry(i)->createttri();
-			fbdry(i)->cnt_nbor();
-			fbdry(i)->createvtri();
+			fbdry(i)->match_tri_and_seg(); 
+			fbdry(i)->create_tri_tri();
+			fbdry(i)->create_pnt_nnbor();
+			fbdry(i)->create_pnt_tri();
 		}
 	}  
 	
@@ -781,7 +777,7 @@ void tet_mesh::match_bdry_numbering() {
 //    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
 //
 //    createtritri();
-//    cnt_nbor();
+//    create_pnt_nnbor();
 //    FLT xmin[ND], xmax[ND];
 //    for(n=0;n<ND;++n) {
 //        xmin[n] = xin.otree.xmin(n);

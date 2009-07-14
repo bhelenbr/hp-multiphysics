@@ -317,11 +317,27 @@ void tet_mesh::checkintegrity() {
 			exit(1);
 		}
 	}
-
+		
 	for(tind=0;tind<ntet;++tind){
 		if(tet(tind).vol < 0){
 			*gbl->log << "negative tet volume on tet: " << tind << endl;
 			exit(1);
+		}
+		
+		for(i = 0; i < 6; ++i){
+			sind = tet(tind).seg(i);
+			if(tet(tind).sgn(i) == 1){
+				if(seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))){
+					*gbl->log << "tet seg vertex error type 1"<< endl;
+					exit(1);
+				}
+			}
+			else{
+				if(seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))){
+					*gbl->log << "tet seg vertex error type 2 " << sind << ' ' << tind << ' ' << i << endl;
+					exit(1);
+				}
+			}
 		}
 		
 		/* Test Tri Data */
@@ -377,34 +393,40 @@ void tet_mesh::checkintegrity() {
 				sind = tri(find).seg(j);
 				if(tri(find).sgn(j) == 1){
 					if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
-						*gbl->log << "seg vertex error type 1"<< endl;
+						*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
+						output("error",easymesh);
 						exit(1);
 					}
 				}
 				else{
 					if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
-						*gbl->log << "seg vertex error type 2"<< endl;
+						*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
+						output("error",easymesh);
 						exit(1);
 					}
 				}
 			}
-		}    
-		for(i = 0; i < 6; ++i){
-			sind = tet(tind).seg(i);
-			if(tet(tind).sgn(i) == 1){
-				if(seg(sind).pnt(0) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(1) != tet(tind).pnt(vs(i,1))){
-					*gbl->log << "tet seg vertex error type 1"<< endl;
+		}   
+	}
+	
+	for(find=0;find<ntri;++find) {
+		for(j = 0; j < 3; ++j){
+			sind = tri(find).seg(j);
+			if(tri(find).sgn(j) == 1){
+				if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
+					*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
+					output("error",easymesh);
 					exit(1);
 				}
 			}
 			else{
-				if(seg(sind).pnt(1) != tet(tind).pnt(vs(i,0)) && seg(sind).pnt(0) != tet(tind).pnt(vs(i,1))){
-					*gbl->log << "tet seg vertex error type 2"<< endl;
+				if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
+					*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
+					output("error",easymesh);
 					exit(1);
 				}
 			}
 		}
-		
 	}
 		
 	

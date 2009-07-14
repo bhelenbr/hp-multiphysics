@@ -22,6 +22,72 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 	out.precision(10);
 			
 	switch (filetype) {    
+		case (easymesh): 
+			fnmapp = filename +".p";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+				exit(1);
+			}
+			
+			out << npnt << endl;
+			for(int i=0;i<npnt;++i) {
+				out << i << ": ";
+				for(int n=0;n<ND;++n)
+					out << pnts(i)(n) << ' ';
+				out << pnt(i).info << endl;
+			}
+			out.close();
+
+			/* SIDE FILE */
+			fnmapp = filename +".s";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+				exit(1);
+			}
+			out << nseg << endl;
+			for(int i=0;i<nseg;++i) {
+				out << i << ": " << seg(i).pnt(0) << ' ' << seg(i).pnt(1) << ' ' << seg(i).info <<endl;
+			}
+			out.close();
+
+			fnmapp = filename +".f";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+				exit(1);
+			}
+			out << ntri << endl;
+			for(int i=0;i<ntri;++i) {
+				out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
+				out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
+				out << ' ' << tri(i).sgn(0) << ' ' << tri(i).sgn(1) << ' ' << tri(i).sgn(2);
+				out << ' ' << tri(i).tet(0) << ' ' << tri(i).tet(1) << tri(i).info << endl;
+			}
+			out.close();
+
+			fnmapp = filename +".t";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+				exit(1);
+			}
+			out << ntet << endl;
+			for(int i=0;i<ntet;++i) {
+				out << i << ": " << tet(i).pnt(0) << ' ' << tet(i).pnt(1) << ' ' << tet(i).pnt(2) << ' ' << tet(i).pnt(3);
+				out << ' ' << tet(i).seg(0) << ' ' << tet(i).seg(1) << ' ' << tet(i).seg(2) << ' ' << tet(i).seg(3) << ' ' << tet(i).seg(4) << ' ' << tet(i).seg(5);
+				out << ' ' << tet(i).sgn(0) << ' ' << tet(i).sgn(1) << ' ' << tet(i).sgn(2) << ' ' << tet(i).sgn(3) << ' ' << tet(i).sgn(4) << ' ' << tet(i).sgn(5);
+				out << ' ' << tet(i).tri(0) << ' ' << tet(i).tri(1) << ' ' << tet(i).tri(2) << ' ' << tet(i).tri(3);
+				out << ' ' << tet(i).rot(0) << ' ' << tet(i).rot(1) << ' ' << tet(i).rot(2) << ' ' << tet(i).rot(3);				
+				out << ' ' << tet(i).tet(0) << ' ' << tet(i).tet(1) << ' ' << tet(i).tet(2) << ' ' << tet(i).tet(3) << ' ' << tet(i).info << endl;
+			}
+			out.close();			
+			
+			
+			
+			break;
+
 
 		case (tecplot):
 			fnmapp = filename +".dat";

@@ -631,9 +631,12 @@ void face_bdry::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int 
 void face_bdry::mvpttobdry(int indx, FLT r, FLT s, TinyVector<FLT,tet_mesh::ND> &pt) {
 	/* FOR A LINEAR SIDE */
 	int n;
-	
+	TinyVector<int,3> v = tri(indx).pnt;
+	for (int i=0; i<3;++i) 
+		v(i) = pnt(v(i)).gindx;
+		
 	for (n=0;n<tet_mesh::ND;++n)
-		pt(n) = 0.5*((1.+s)*x.pnts(x.tri(tri(indx).gindx).pnt(0))(n) +(-r-s)*x.pnts(x.tri(tri(indx).gindx).pnt(1))(n) +(1.+r)*x.pnts(x.tri(tri(indx).gindx).pnt(2))(n));
+		pt(n) = 0.5*((1.+s)*x.pnts(v(0))(n) +(-r-s)*x.pnts(v(1))(n) +(1.+r)*x.pnts(v(2))(n));
 	
 	return;
 }
@@ -801,7 +804,7 @@ void fcomm::match_numbering(int step) {
 				seg(i).pnt(0) = isndbuf(count++);
 				seg(i).pnt(1) = isndbuf(count++);
 			}
-			gbltolclside();
+			create_seg_gindx();
 			
 			/* Triangles are reverse oriented */
 			for (int i=0;i<ntri;++i) {
@@ -809,7 +812,7 @@ void fcomm::match_numbering(int step) {
 				tri(i).pnt(2) = isndbuf(count++);
 				tri(i).pnt(1) = isndbuf(count++);
 			}
-			gbltolcltri();
+			create_tri_gindx();
 		}
 	}
 	

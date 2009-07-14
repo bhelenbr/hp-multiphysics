@@ -105,22 +105,12 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 	ntet=ind;
 	
 	/* UPDATE DATA STRUCTURES */
-	fixvertexinfo();
-	createedgeinfo();
-	createfaceinfo();
-	morefaceinfo();
-	createtetinfo();
-	vertexnnbor();	
+	reorient_tets();
+	create_from_tet();
+	
 	for(int i = 0; i < nfbd; ++i){
-		fbdry(i)->gbltolclvrtx();
-		fbdry(i)->createsideinfo(); 
-		fbdry(i)->createttri();
-		fbdry(i)->gbltolcltri();
-		fbdry(i)->gbltolclside();        
-		fbdry(i)->cnt_nbor();
-		fbdry(i)->createvtri();    
+		fbdry(i)->create_from_tri();
 	}
-			
 	
 	return;
 }

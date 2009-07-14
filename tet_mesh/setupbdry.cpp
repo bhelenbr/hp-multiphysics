@@ -11,7 +11,7 @@
 #include <float.h>
 
 /* only run once else it gets screwed up */
-void face_bdry::gbltolclvrtx(void){
+void face_bdry::create_tri_pnt_and_pnt_gindx_from_gbltris(void) {
 	int nvrt,vrt;    
 	Array<int,1> vinfo(x.npnt);
 	
@@ -41,7 +41,7 @@ void face_bdry::gbltolclvrtx(void){
 	return;
 }
 
-void face_bdry::gbltolclside(void){
+void face_bdry::create_seg_gindx(void){
 	int i,j,lcl2,eind,sind;    
 	long lcl0,lcl1;
 	TinyVector<int,2> v,a;
@@ -71,7 +71,7 @@ NEXTSIDE:;
 	return;
 }
 
-void face_bdry::gbltolcltri(void){
+void face_bdry::create_tri_gindx(void){
 	int i,j,tind,lcl2,find;    
 	long lcl0,lcl1;
 	TinyVector<int,3> v,a;
@@ -104,7 +104,7 @@ NEXTTRI:;
 }
 
 /* fills in all info after loading minimal mesh data (grid) */
-void face_bdry::allinfo(void){
+void face_bdry::convert_gbl_to_lcl(void){
 	int ind;
 		
 	for(int i = 0; i < npnt; ++i){
@@ -174,7 +174,7 @@ void face_bdry::allinfo(void){
 /* USES VINFO TO STORE FIRST SIND FROM VERTEX */
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
-void face_bdry::createsideinfo(void) {
+void face_bdry::create_seg_from_tri(void) {
 	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
 	
 	for(i=0;i<npnt;++i)
@@ -238,7 +238,7 @@ NEXTTRISIDE:
 	return;
 }
 
-void face_bdry::createtdstri(void) {
+void face_bdry::match_tri_and_seg(void) {
 	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
 	
 	for(i=0;i<npnt;++i)
@@ -313,7 +313,7 @@ NEXTTRISIDE:
 }
 
 
-void face_bdry::createvtri(void) {
+void face_bdry::create_pnt_tri(void) {
 	int i,tind;
 	
 	/* THIS ALLOWS US TO GET TO LOCAL HIGHER ENTITIES FROM VERTEX NUMBER */
@@ -325,7 +325,7 @@ void face_bdry::createvtri(void) {
 }
 
 /* CALCULATE NUMBER OF NEIGHBORS TO EACH CELL */
-void face_bdry::cnt_nbor(void) {
+void face_bdry::create_pnt_nnbor(void) {
 	int i;
 	
 	for (i=0;i<npnt;++i)
@@ -340,7 +340,7 @@ void face_bdry::cnt_nbor(void) {
 }
 
 /* CREATES TRIANGLE TO TRIANGLE POINTER */
-void face_bdry::createttri(void) {
+void face_bdry::create_tri_tri(void) {
 	int tind,sind,j,flip;
 	
 	for(tind=0;tind<ntri;++tind) {

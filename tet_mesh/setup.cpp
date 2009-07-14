@@ -12,70 +12,18 @@
 #include <float.h>
 #include <math.h>
 
-
-void tet_mesh::fixvertexinfo(void){
-	/* orient elements so that v0 has the lowest global index
-	and v1 has the second lowest global index.*/
-	int tind,j,ind,temp;
-	double rnx,rny,rnz,volume;
-	TinyVector<int,4> v;
-	
-	for(tind = 0; tind < ntet; ++tind){
-		
-		v=tet(tind).pnt;
-		// move v0 to first index
-		ind=0;
-		for(j = 1; j < 4; ++j){
-			if (v(j) < v(ind)){
-				ind = j;                
-			}
-		}
-		
-		temp = v(ind);
-		v(ind) = v(0);
-		v(0) = temp;
-		
-		// move v1 to second index
-		ind = 1;
-		for(j = 2; j < 4; ++j){
-			if (v(j) < v(ind)){
-				ind = j;                
-			}
-		}
-		temp = v(ind);
-		v(ind) = v(1);
-		v(1) = temp;
-
-		
-		/* check orientation of v2 & v3    by calculating volume and checking sign */
-		rnx = (pnts(v(1))(1)-pnts(v(0))(1))*(pnts(v(2))(2)-pnts(v(0))(2))-(pnts(v(2))(1)-pnts(v(0))(1))*(pnts(v(1))(2)-pnts(v(0))(2));
-		rny = (pnts(v(1))(2)-pnts(v(0))(2))*(pnts(v(2))(0)-pnts(v(0))(0))-(pnts(v(2))(2)-pnts(v(0))(2))*(pnts(v(1))(0)-pnts(v(0))(0));
-		rnz = (pnts(v(1))(0)-pnts(v(0))(0))*(pnts(v(2))(1)-pnts(v(0))(1))-(pnts(v(2))(0)-pnts(v(0))(0))*(pnts(v(1))(1)-pnts(v(0))(1));
-		volume=-rnx*(pnts(v(3))(0)-pnts(v(0))(0))-rny*(pnts(v(3))(1)-pnts(v(0))(1))-rnz*(pnts(v(3))(2)-pnts(v(0))(2));
-		
-		//cout << "volume = " << volume << endl;
-		// temporary may have to flip sign
-		if(volume < 0.0){
-			temp = v(2);
-			v(2) = v(3);
-			v(3) = temp;
-		}
-		tet(tind).pnt = v;
-		
-		/* calculates volume */
-		tet(tind).vol=fabs(volume);            
-			
-	}
-
-	return;
-}
-
-void tet_mesh::feedinvertexinfo(void){
+void tet_mesh::reorient_tets(bool usevinfo){
 	/* orient elements so that v0 has the lowest pnt.info index
 	and v1 has the second lowest pnt.info index */
 	int tind,j,ind,temp;
 	double rnx,rny,rnz,volume;
 	TinyVector<int,4> v,vinfo;
+	
+	if (!usevinfo) {
+		for (int pind=0;pind<npnt;++pind) {
+			pnt(pind).info = pind;
+		}
+	}
 	
 	for(tind = 0; tind < ntet; ++tind){
 		
@@ -136,9 +84,8 @@ void tet_mesh::feedinvertexinfo(void){
 
 
 
-void tet_mesh::vertexnnbor(void){
+void tet_mesh::create_pnt_nnbor(void){
 	/* counts the number of neigboring tet's connected to a pnt*/
-
 	TinyVector<int,4> v;
 	
 	for(int i=0;i<npnt;++i){
@@ -146,21 +93,19 @@ void tet_mesh::vertexnnbor(void){
 		pnt(i).nspk = 0;
 	}
 	
-	for(int tind = 0; tind < ntet; ++tind){    
-		for(int j = 0; j < 4; ++j)
-			v(j)=tet(tind).pnt(j);        
-		for(int j = 0; j < 4; ++j){        
-			++pnt(v(j)).nnbor;    
-			pnt(v(j)).tet=tind;
+	for(int tind = 0; tind < ntet; ++tind){         
+		for(int j = 0; j < 4; ++j) {
+			int p0 = tet(tind).pnt(j);
+			++pnt(p0).nnbor;    
+			pnt(p0).tet=tind;
 		}                
 	}
 	
-	for(int eind = 0; eind < nseg; ++eind){    
-		for(int j = 0; j < 2; ++j)
-			v(j)=seg(eind).pnt(j);        
-		for(int j = 0; j < 2; ++j){    
-			++pnt(v(j)).nspk;
-			pnt(v(j)).seg=eind;
+	for(int eind = 0; eind < nseg; ++eind){           
+		for(int j = 0; j < 2; ++j) { 
+			int p0 = seg(eind).pnt(j);
+			++pnt(p0).nspk;
+			pnt(p0).seg=eind;
 		}                    
 	}
 
@@ -168,7 +113,7 @@ void tet_mesh::vertexnnbor(void){
 }
 
 
-void tet_mesh::createedgeinfo(void) {
+void tet_mesh::create_seg_from_tet(void) {
 	int i,tind,minv,eind,eindprev,ne,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,6,2> vs;
@@ -242,7 +187,7 @@ NEXTEDGE:;
 }
 
 
-void tet_mesh::edgeinfo(void) {
+void tet_mesh::match_tet_and_seg(void) {
 	int i,tind,minv,eind,eindprev,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,6,2> vs;
@@ -302,11 +247,15 @@ void tet_mesh::edgeinfo(void) {
 					++seg(eind).nnbor;        // number of neighbors surrounding an seg
 					seg(eind).tet = tind;     // one tet connected to an seg
 					if(v(0) == a(1))
-						tet(tind).sgn(i) = -1;            
+						tet(tind).sgn(i) = -1;   
+					else
+						tet(tind).sgn(i) = 1;
 					goto NEXTEDGE; 
 				}            
 				eind=seg(eind).info;            
-			}        
+			}  
+			*gbl->log << "Error matching tet and seg\n";
+			exit(1);      
 
 NEXTEDGE:;
 
@@ -316,9 +265,7 @@ NEXTEDGE:;
 	return;
 }
 
-
-
-void tet_mesh::createfaceinfo(void) {
+void tet_mesh::create_tri_from_tet(void) {
 	int i,j,tind,minv,find,findprev,nf,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,4,3> vf;
@@ -393,7 +340,7 @@ NEXTFACE:;
 	return;
 }
 
-void tet_mesh::faceinfo(void) {
+void tet_mesh::match_tet_and_tri(void) {
 	int i,j,tind,minv,find,findprev,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,4,3> vf;
@@ -407,6 +354,7 @@ void tet_mesh::faceinfo(void) {
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
+		
 	for(i=0;i<ntri;++i){
 		tri(i).tet(0) = -1;
 		tri(i).tet(1) = -1;
@@ -454,22 +402,28 @@ void tet_mesh::faceinfo(void) {
 				a(2)=tri(find).pnt(2);
 				lcl2=fabs(lcl0-a(0)-a(1)-a(2));
 				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
-				if(lcl2 == 0 ){        
-					if(a(1) == v(2))
-						tet(tind).rot(i) = -1;        // cw orientation            
-					else 
-						tet(tind).rot(i) = 1;        // ccw orientation
-
-					if (tri(find).tet(0) >= 0)
-						tri(find).tet(1)=tind;    // 2nd tet connected to a face
-					else 
-						tri(find).tet(0)=tind;     // 1st tet connected to a face
-					
-					tet(tind).tri(i)=find;          // 4 face on to a tet
+				if(lcl2 == 0) {
+					if (tri(find).tet(0) < 0) {
+						tri(find).pnt(0) = v(0);
+						tri(find).pnt(1) = v(1);
+						tri(find).pnt(2) = v(2);
+						tri(find).tet(0) = tind;
+						tet(tind).rot(i) = 1;
+					}
+					else {
+						tri(find).pnt(0) = v(0);
+						tri(find).pnt(1) = v(2);
+						tri(find).pnt(2) = v(1);
+						tri(find).tet(1) = tind;
+						tet(tind).rot(i) = -1;
+					}
+					tet(tind).tri(i) = find;
 					goto NEXTFACE;
 				}            
 				find=tri(find).info;            
-			}			
+			}
+			*gbl->log << "Error matching tet and tri\n";
+			exit(1);	
 
 NEXTFACE:;
 	
@@ -479,7 +433,7 @@ NEXTFACE:;
 	return;
 }
 
-void tet_mesh::morefaceinfo(void){
+void tet_mesh::match_tri_and_seg(void){
 	int i,tind,find;
 	TinyMatrix<int,4,3> sf;
 	TinyMatrix<int,3,2> vs;
@@ -494,22 +448,20 @@ void tet_mesh::morefaceinfo(void){
 	vs(1,0)=2, vs(1,1)=0;
 	vs(2,0)=0, vs(2,1)=1;
 	
-	int findtri=-1;
-	int ind;
-	
 	for(find = 0; find < ntri; ++find){
 		tind = tri(find).tet(0);
-		ind = 0;
+		int findtri = -1;
 		for(i = 0; i < 4; ++i){
 			if(tet(tind).tri(i) == find){
-				findtri = ind;
-				//break;
+				findtri = i;
+				break;
 			}
-			++ind;
 		}
+		assert(findtri >= 0);
 		for(i = 0; i < 3; ++i){
 			tri(find).seg(i)=tet(tind).seg(sf(findtri,i));    // 3 edges on a face
 		}
+		
 		v=tri(find).pnt;
 		for(int i = 0; i < 3; ++i){
 			if(v(vs(i,0)) == seg(tri(find).seg(i)).pnt(0) && v(vs(i,1)) == seg(tri(find).seg(i)).pnt(1)){
@@ -519,7 +471,9 @@ void tet_mesh::morefaceinfo(void){
 				tri(find).sgn(i) = -1;
 			}
 			else{
-				cout << "bad sign on tri: " << find << endl;
+				output("error",easymesh);
+				cout << "Error matching seg and tri: " << i << ' ' << find << ' ' << ' ' << tind << ' ' << findtri << endl;
+				exit(1);
 			}
 		}
 	}
@@ -527,60 +481,62 @@ void tet_mesh::morefaceinfo(void){
 }
 
 
-void tet_mesh::createfaceorientation(void) {
-	int i,j,tind,find;
-	TinyMatrix<int,4,3> vf;
-	TinyVector<int,3> v,a;
 
-	// may need rearrangment to correspond to my standard element
-	vf(0,0)=1, vf(0,1)=2, vf(0,2)=3;
-	vf(1,0)=0, vf(1,1)=3, vf(1,2)=2;
-	vf(2,0)=0, vf(2,1)=1, vf(2,2)=3;
-	vf(3,0)=0, vf(3,1)=2, vf(3,2)=1;  
-	
-	for(tind = 0; tind < ntet; ++tind){
-		for(i = 0; i < 4; ++i){
-			tet(tind).rot(i) = 1;
-			find = tet(tind).tri(i);
-			for(j = 0; j < 3; ++j){
-				v(j)=tet(tind).pnt(vf(i,j));
-				a(j)=tri(find).pnt(j);
-			}
-			
-			if(a(0) == v(0)){
-				if(a(1) == v(2)){
-					tet(tind).rot(i) = -1;
-				}
-			}
-			
-			if(a(0) == v(1)){
-				if(a(1) == v(2)){
-					tet(tind).rot(i) = 2;
-				}
-				else {
-					tet(tind).rot(i) = -2;
-				}
-			}
-			
-			if(a(0) == v(2)){
-				if(a(1) == v(0)){
-					tet(tind).rot(i) = 3;
-				}
-				else {
-					tet(tind).rot(i) = -3;
-				}
-			}
+/* We don't allow randaom face orientations anymore */
+//void tet_mesh::createfaceorientation(void) {
+//	int i,j,tind,find;
+//	TinyMatrix<int,4,3> vf;
+//	TinyVector<int,3> v,a;
+//
+//	// may need rearrangment to correspond to my standard element
+//	vf(0,0)=1, vf(0,1)=2, vf(0,2)=3;
+//	vf(1,0)=0, vf(1,1)=3, vf(1,2)=2;
+//	vf(2,0)=0, vf(2,1)=1, vf(2,2)=3;
+//	vf(3,0)=0, vf(3,1)=2, vf(3,2)=1;  
+//	
+//	for(tind = 0; tind < ntet; ++tind){
+//		for(i = 0; i < 4; ++i){
+//			tet(tind).rot(i) = 1;
+//			find = tet(tind).tri(i);
+//			for(j = 0; j < 3; ++j){
+//				v(j)=tet(tind).pnt(vf(i,j));
+//				a(j)=tri(find).pnt(j);
+//			}
+//			
+//			if(a(0) == v(0)){
+//				if(a(1) == v(2)){
+//					tet(tind).rot(i) = -1;
+//				}
+//			}
+//			
+//			if(a(0) == v(1)){
+//				if(a(1) == v(2)){
+//					tet(tind).rot(i) = 2;
+//				}
+//				else {
+//					tet(tind).rot(i) = -2;
+//				}
+//			}
+//			
+//			if(a(0) == v(2)){
+//				if(a(1) == v(0)){
+//					tet(tind).rot(i) = 3;
+//				}
+//				else {
+//					tet(tind).rot(i) = -3;
+//				}
+//			}
+//
+//		}
+//		cout << tet(tind).rot << endl;
+//
+//	}
+//	
+//	return;
+//}
 
-		}
-		cout << tet(tind).rot << endl;
 
-	}
-	
-	return;
-}
-
-
-void tet_mesh::createtetinfo(void) {
+void tet_mesh::create_tet_tet(void) {
 	int tind,find,j;
 //    int nbf = 0;
 	for(tind = 0; tind < ntet; ++tind) {

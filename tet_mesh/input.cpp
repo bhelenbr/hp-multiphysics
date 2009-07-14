@@ -4,6 +4,9 @@
 #include <cstring>
 #include <input_map.h>
 #include <iostream>
+#ifdef USING_MADLIB
+#include <MAdLibInterface.h>
+#endif
 
 void tet_mesh::init(input_map &input, void *gin) {
 	std::string keyword;
@@ -55,8 +58,9 @@ void tet_mesh::init(input_map &input, void *gin) {
 void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizereduce1d) {
 	int i;
 
+	const tet_mesh& inmesh = dynamic_cast<const tet_mesh &>(mgin);
+
 	if (!initialized) {
-		const tet_mesh& inmesh = dynamic_cast<const tet_mesh &>(mgin);
 		gbl = inmesh.gbl;
 		maxvst =  MAX((int) (inmesh.maxvst/(sizereduce1d*sizereduce1d*sizereduce1d)),10);
 		allocate(maxvst);
@@ -83,8 +87,13 @@ void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizer
 		initialized = 1;
 	}
 	 
-	 /* SET-UP BOUNDARY COMMUNICATIONS */
-	 if (why == multigrid) findmatch(gbl,coarse_level);
+	/* SET-UP BOUNDARY COMMUNICATIONS */
+	if (why == multigrid) {
+		coarsen(2.0,inmesh);
+//		input_map empty;
+//		input("/Users/helenbrk/Codes/ucl/Meshes/Squares/tet8.msh",gmsh,1.0,empty);
+		findmatch(gbl,coarse_level);
+	}
 }
 
 void tet_mesh::allocate(int mxsize) {
@@ -242,20 +251,9 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 						
 			in.close(); 
 			
-			tet_mesh::fixvertexinfo();
-			tet_mesh::createedgeinfo();
-			tet_mesh::createfaceinfo();
-			tet_mesh::morefaceinfo();
-			tet_mesh::createtetinfo();
-			tet_mesh::vertexnnbor();
-			fbdry(0)->gbltolclvrtx();
-			fbdry(0)->createsideinfo(); 
-			fbdry(0)->createttri();
-			fbdry(0)->gbltolcltri();
-			fbdry(0)->gbltolclside();        
-			fbdry(0)->cnt_nbor();
-			fbdry(0)->createvtri();        
-		
+			reorient_tets();
+			create_from_tet();
+			fbdry(0)->create_from_tri();      
 					
 			break;
 			
@@ -306,20 +304,19 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in >> nvbd;
 			vbdry.resize(nvbd);
 			
-			for(int i = 0; i < nvbd; ++i){
+			for(int i = 0; i < nvbd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
-					 vbdry(i) = getnewvrtxobject(temp,bdrymap);
-					 vbdry(i)->alloc(4);
+				vbdry(i) = getnewvrtxobject(temp,bdrymap);
+				vbdry(i)->alloc(4);
 				in.ignore(80,':');
 				in >> vbdry(i)->pnt;
-
 			}
 			
 			in.ignore(80,':');
 			in >> nebd;
 			ebdry.resize(nebd);
-			for(int i = 0; i < nebd; ++i){
+			for(int i = 0; i < nebd; ++i) {
 				in.ignore(80,':');
 				in >> temp;
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
@@ -330,14 +327,14 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 					in.ignore(80,':');
 					in >> ebdry(i)->seg(j).gindx;
 				}
-					 ebdry(i)->setup_next_prev();
-					 ebdry(i)->reorder();
-				}
+				ebdry(i)->setup_next_prev();
+				ebdry(i)->reorder();
+			}
 
 			in.ignore(80,':');
 			in >> nfbd;
 			fbdry.resize(nfbd);
-			
+				
 			for(int i = 0; i < nfbd; ++i){
 				in.ignore(80,':');
 				in >> temp;
@@ -349,7 +346,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				in.ignore(80,':');
 				in >> fbdry(i)->ntri;                
 				fbdry(i)->alloc(grwfac*3*(fbdry(i)->ntri));        //temporary fix        
-				
+
 				for(int j = 0; j < fbdry(i)->npnt; ++j){
 					in.ignore(80,':');
 					in >> fbdry(i)->pnt(j).gindx;
@@ -362,22 +359,14 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 					in.ignore(80,':');
 					in >> fbdry(i)->tri(j).gindx;
 				}
-
 			}    
 			
 			in.close();
 			
-			tet_mesh::vertexnnbor();
-			tet_mesh::edgeinfo();
-			tet_mesh::faceinfo();
-			tet_mesh::morefaceinfo();
-			tet_mesh::createtetinfo();
-			
+			match_all();
 			
 			for(int i = 0; i < nfbd; ++i){
-				fbdry(i)->allinfo(); 
-				fbdry(i)->cnt_nbor();
-				fbdry(i)->createvtri();    
+				fbdry(i)->match_all(); 
 			}
 			
 			break;
@@ -456,24 +445,11 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 
 			in.close();
 
-			fixvertexinfo();
-			createedgeinfo();
-			createfaceinfo();
-			morefaceinfo();
-			createtetinfo();
-			vertexnnbor();
-			for(int i = 0; i < nfbd; ++i){
-				fbdry(i)->gbltolclvrtx();
-				fbdry(i)->createsideinfo(); 
-				fbdry(i)->createttri();
-				fbdry(i)->gbltolcltri();
-				fbdry(i)->gbltolclside();        
-				fbdry(i)->cnt_nbor();
-				fbdry(i)->createvtri();    
-			}
+			reorient_tets();
+			create_from_tet();
+			for(int i = 0; i < nfbd; ++i) 
+				fbdry(i)->create_from_tri(); 
 			
-			//tet_mesh::createfaceorientation();                  
-			//tet_mesh::test();
 			break;
 			
 
@@ -522,17 +498,12 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				--tet(i).pnt(1);
 				--tet(i).pnt(2);
 				--tet(i).pnt(3);
-				tet(i).info = -1;
-				std::cout << tet(i).pnt(0) << tet(i).pnt(1) << tet(i).pnt(2) << tet(i).pnt(3) << std::endl;
-				
+				tet(i).info = -1;				
 			}
 			
-			/*    CREATE ALL MESH INFO */
-			tet_mesh::fixvertexinfo();
-			tet_mesh::createedgeinfo();
-			tet_mesh::createfaceinfo();
-			tet_mesh::morefaceinfo();
-			tet_mesh::createtetinfo();
+			/* CREATE ALL MESH INFO */
+			reorient_tets();
+			create_from_tet();
 
 			/* FIND ALL BOUNDARY SIDES */
 			int count = 0;
@@ -552,15 +523,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				}
 			}
 			
-			for(int i = 0; i < nfbd; ++i){
-				fbdry(i)->gbltolclvrtx();
-				fbdry(i)->createsideinfo(); 
-				fbdry(i)->createttri();
-				fbdry(i)->gbltolcltri();
-				fbdry(i)->gbltolclside();        
-				fbdry(i)->cnt_nbor();
-				fbdry(i)->createvtri();    
-			}
+			for(int i = 0; i < nfbd; ++i)
+				fbdry(i)->create_from_tri();  
 			
 			nvbd = 0;
 			nebd = 0;
@@ -568,6 +532,13 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			
 			break;
 		}
+
+#ifdef USING_MADLIB
+		case(gmsh): {
+			MAdLib_input(filename, grwfac, bdrymap);
+			break;
+		}
+#endif
 			
 
 

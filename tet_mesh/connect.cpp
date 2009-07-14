@@ -5,8 +5,20 @@
 #include <utilities.h>
 #include <string.h>
 #include "block.h"
+#ifdef USING_MADLIB
+#include "MAdLibInterface.h"
+#endif
+
 // #include <boost/bind.hpp>
 // #include <boost/thread.hpp>
+
+void tet_mesh::coarsen(FLT factor, const tet_mesh& tgt) {
+	copy(tgt);
+#ifdef USING_MADLIB
+	MAdLibInterface::coarsenMesh(factor,this);
+#endif
+	return;
+}
 
 void tet_mesh::connect(multigrid_interface& in) {
 	tet_mesh &tgt = dynamic_cast<tet_mesh&>(in);
@@ -17,15 +29,15 @@ void tet_mesh::connect(multigrid_interface& in) {
 	if (fcnnct.ubound(firstDim) < maxvst-1) fcnnct.resize(maxvst);
 	if (tgt.ccnnct.ubound(firstDim) < tgt.maxvst-1) tgt.ccnnct.resize(tgt.maxvst);
 	
-	copy(tgt);  // Temporary
-		
+	// copy(tgt);
+	coarsen(2.0,tgt);
 	mgconnect(tgt,fcnnct);
 	tgt.mgconnect(*this,tgt.ccnnct);
-	
-	/* THIS IS FOR DIAGNOSIS OF MULTI-GRID FAILURES */
-	checkintegrity();
 
+	/* THIS IS FOR DIAGNOSIS OF MULTI-GRID FAILURES */
 	if (gbl->adapt_output) {
+		checkintegrity();
+		tgt.checkintegrity();
 		std::string name, fname;
 		std::string adapt_file;
 		std::ostringstream nstr;
