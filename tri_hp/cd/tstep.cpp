@@ -5,24 +5,24 @@
 
 
 void tri_hp_cd::setup_preconditioner() {
-    int tind,i,j,side,v0;
-    FLT jcb,h,hmax,q,qmax,lam1;
-    TinyVector<int,3> v;
+	int tind,i,j,side,v0;
+	FLT jcb,h,hmax,q,qmax,lam1;
+	TinyVector<int,3> v;
 
 
-    /***************************************/
-    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
-    /***************************************/
-    gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-    if (basis::tri(log2p).sm > 0) {
+	/***************************************/
+	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
+	/***************************************/
+	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	if (basis::tri(log2p).sm > 0) {
 		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
-    }
+	}
 
 #ifdef TIMEACCURATE
-    FLT dtstari = 0.0;
+	FLT dtstari = 0.0;
 #endif
 
-    for(tind = 0; tind < ntri; ++tind) {
+	for(tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);  // area is 2 x triangle area
 		v = tri(tind).pnt;
 		hmax = 0.0;
@@ -62,10 +62,10 @@ void tri_hp_cd::setup_preconditioner() {
 		/* SET UP DIAGONAL PRECONDITIONER */
 #ifdef TIMEACCURATE
 		dtstari = MAX(lam1/h,dtstari);
-    }
-    printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+	}
+	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
 
-    for(tind=0;tind<ntri;++tind) {
+	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;
 		jcb = 0.25*area(tind)*dtstari;
 #endif
@@ -78,9 +78,9 @@ void tri_hp_cd::setup_preconditioner() {
 				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
 			}
 		}
-    }
+	}
 
-    tri_hp::setup_preconditioner();
+	tri_hp::setup_preconditioner();
 
-    return; 
+	return; 
 }

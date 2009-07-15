@@ -11,7 +11,7 @@
 
 namespace ibc_swe {
 
-    class rossby : public init_bdry_cndtn {
+	class rossby : public init_bdry_cndtn {
 		private:
 			FLT amplitude;
 		public:
@@ -36,9 +36,9 @@ namespace ibc_swe {
 
 				if (!in_map.get(idnty + "_rossby_amp",amplitude)) in_map.getwdefault("rossby_amp",amplitude,0.395);
 			}
-    };
+	};
 
-    class ibc_type {
+	class ibc_type {
 		public:
 			const static int ntypes = 1;
 			enum ids {rossby};
@@ -58,11 +58,11 @@ namespace ibc_swe {
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				return(0.0);
 			}
-    };
+	};
 
 
 
-    class bathy_type {
+	class bathy_type {
 		public:
 			const static int ntypes = 1;
 			enum ids {flat};
@@ -73,8 +73,8 @@ namespace ibc_swe {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 		}
-    };
-    const char ibc_swe::bathy_type::names[ntypes][40] = {"flat"};
+	};
+	const char ibc_swe::bathy_type::names[ntypes][40] = {"flat"};
 
 };
 

@@ -12,21 +12,21 @@
 
 
 void tri_hp_cd::rsdl(int stage) {
-    int i,j,n,tind;
-    FLT fluxx,fluxy;
-    FLT visc[ND][ND][ND][ND], tres[NV];
-    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
-    FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
-    FLT oneminusbeta;
-    TinyVector<FLT,ND> pt;
-    TinyVector<int,3> v;
-    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+	int i,j,n,tind;
+	FLT fluxx,fluxy;
+	FLT visc[ND][ND][ND][ND], tres[NV];
+	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP];
+	FLT e00[MXGP][MXGP],e01[MXGP][MXGP];
+	FLT oneminusbeta;
+	TinyVector<FLT,ND> pt;
+	TinyVector<int,3> v;
+	int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
 
-    tri_hp::rsdl(stage);
+	tri_hp::rsdl(stage);
 
-    oneminusbeta = 1.0-gbl->beta(stage);
+	oneminusbeta = 1.0-gbl->beta(stage);
 
-    for(tind = 0; tind<ntri;++tind) {
+	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
 		v = tri(tind).pnt;
 
@@ -144,21 +144,21 @@ void tri_hp_cd::rsdl(int stage) {
 
 			lftog(tind,gbl->res_r);
 		}
-    }
+	}
 
-    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-    gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-    if (basis::tri(log2p).sm) {
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p).sm) {
 		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());          
 		if (basis::tri(log2p).im) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());      
 		}
-    }
+	}
 
-    /*********************************************/
-    /* MODIFY RESIDUALS ON COARSER MESHES            */
-    /*********************************************/    
-    if (coarse_flag) {
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
 			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
@@ -169,6 +169,6 @@ void tri_hp_cd::rsdl(int stage) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
 		if (basis::tri(log2p).sm) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 		if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
-    }
-    return;
+	}
+	return;
 }

@@ -12,7 +12,7 @@
 #include "myblas.h"
 
 namespace bdry_cd {
-    class dirichlet : public hp_edge_bdry {
+	class dirichlet : public hp_edge_bdry {
 		tri_hp_cd &x;
 
 		public:
@@ -41,9 +41,9 @@ namespace bdry_cd {
 			}
 
 			void tadvance(); 
-    };
+	};
 
-    class neumann : public hp_edge_bdry {
+	class neumann : public hp_edge_bdry {
 		protected:
 			tri_hp_cd &x;
 			virtual FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> x, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {return(0.0);}
@@ -53,10 +53,10 @@ namespace bdry_cd {
 			neumann(const neumann& inbdry, tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 			void rsdl(int stage);
-    };
+	};
 
 
-    class characteristic : public neumann {
+	class characteristic : public neumann {
 		public:
 			FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> pt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {
 				FLT vel;
@@ -72,9 +72,9 @@ namespace bdry_cd {
 			characteristic(tri_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
 			characteristic(const characteristic &inbdry, tri_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
 			characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-    };
+	};
 
-    class mixed : public neumann {
+	class mixed : public neumann {
 		public:
 			TinyVector<FLT,5> c;
 
@@ -109,6 +109,6 @@ namespace bdry_cd {
 				}
 				return;
 			}
-    };
+	};
 }
 

@@ -4,7 +4,7 @@
 
 void tri_hp_lvlset::setup_preconditioner() {
 
-    if (gbl->diagonal_preconditioner) {
+	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
 		int tind,i,j,side,v0;
 		FLT jcb,jcbphi,h,hmax,q,qmax,lam1,lam2,gam,rho,rhomax,mu,nu,heavy,delt,deltamax,strss;
@@ -102,7 +102,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 				}
 			}
 		}
-    }
+	}
 //    else {
 //        /* SET-UP MATRIX PRECONDITIONER */
 //        int tind,i,j,side,v0;
@@ -208,7 +208,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 //        }
 //    }
 
-    tri_hp::setup_preconditioner();
+	tri_hp::setup_preconditioner();
 
-    return;
+	return;
 }

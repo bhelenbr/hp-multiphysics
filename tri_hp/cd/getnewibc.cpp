@@ -24,13 +24,13 @@ FLT axext = AMP*cos(M_PI*LAM/180.0), ayext = AMP*sin(M_PI*LAM/180.0);
 FLT nuext = (1.0 - AMP);
 
 FLT f1(int n, FLT x, FLT y) {
-    FLT nux = nuext*4.*M_PI*M_PI;
-    FLT axx = axext*2.*M_PI;
-    FLT xx = x*2.*M_PI;
-    FLT yx = y*2.*M_PI;
-    double eps = 0.05;
+	FLT nux = nuext*4.*M_PI*M_PI;
+	FLT axx = axext*2.*M_PI;
+	FLT xx = x*2.*M_PI;
+	FLT yx = y*2.*M_PI;
+	double eps = 0.05;
 
-    switch(n) {
+	switch(n) {
 		case((0+CASE)%3):
 			return(axx*sin(xx)/(axx*axx +nux*nux)
 				+nux*cos(xx)/(axx*axx +nux*nux)
@@ -42,38 +42,37 @@ FLT f1(int n, FLT x, FLT y) {
 			if (x > 2.*eps)
 				return(0.0);
 			return(1+cos(M_PI*(x-eps)/eps));
-    }
-    return(0.0);
+	}
+	return(0.0);
 }
 
 FLT df1d(int n, FLT x, FLT y) {
-    FLT nux = nuext*4.*M_PI*M_PI;
-    FLT axx = axext*2.*M_PI;
-    FLT xx = x*2.*M_PI;
-    switch(n) {
+	FLT nux = nuext*4.*M_PI*M_PI;
+	FLT axx = axext*2.*M_PI;
+	FLT xx = x*2.*M_PI;
+	switch(n) {
 		case((0+CASE)%3):
 			return(axx*cos(xx)/(axx*axx +nux*nux) 
 				-nuext*sin(x)/(axx*axx +nux*nux)
 				+(nux > 0.0 ? blayer*axx/nux*exp(axx/nux*xx) : 0.0));
 		case(!CASE):
 			return(0.0);
-    }
-    return(0.0);
+	}
+	return(0.0);
 }
 
 #endif
 
-    class zero_src : public init_bdry_cndtn {
-		private:
+	class zero_src : public init_bdry_cndtn {
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
 				return(0.0);
 			}
 			void input(input_map &inmap,std::string idnty) {}
-    };
+	};
 
 
-    class power_src : public init_bdry_cndtn {
+	class power_src : public init_bdry_cndtn {
 		private:
 			Array<FLT,1> c;
 			Array<FLT,2> a;
@@ -127,9 +126,9 @@ FLT df1d(int n, FLT x, FLT y) {
 					data.clear(); 
 				}
 			}
-    };
+	};
 
-    class soi_src : public init_bdry_cndtn {
+	class soi_src : public init_bdry_cndtn {
 		tri_hp_cd &x;
 
 		public:
@@ -148,9 +147,9 @@ FLT df1d(int n, FLT x, FLT y) {
 
 			void input(input_map &blockdata,std::string idnty); 
 
-    };
+	};
 
-    class source_changer : public tri_hp_helper {
+	class source_changer : public tri_hp_helper {
 		protected:
 			tri_hp_cd &x;
 			FLT delta_c;
@@ -181,9 +180,9 @@ FLT df1d(int n, FLT x, FLT y) {
 				}            
 				return;
 			}
-    };
+	};
 
-    void soi_src::input(input_map &blockdata,std::string idnty) {
+	void soi_src::input(input_map &blockdata,std::string idnty) {
 		std::string keyword,val;
 		std::istringstream data;
 
@@ -207,7 +206,7 @@ FLT df1d(int n, FLT x, FLT y) {
 		}
 	}
 
-    class helper_type {
+	class helper_type {
 		public:
 			const static int ntypes = 1;
 			enum ids {source_changer};
@@ -218,11 +217,11 @@ FLT df1d(int n, FLT x, FLT y) {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 			}
-    };
-    const char helper_type::names[ntypes][40] = {"source_changer"};
+	};
+	const char helper_type::names[ntypes][40] = {"source_changer"};
 
 
-    class ibc_type {
+	class ibc_type {
 		public:
 			const static int ntypes = 3;
 			enum ids {zero,power,soi};
@@ -233,17 +232,16 @@ FLT df1d(int n, FLT x, FLT y) {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 		}
-    };
-    const char ibc_type::names[ntypes][40] = {"zero","power","soi"};
-
+	};
+	const char ibc_type::names[ntypes][40] = {"zero","power","soi"};
 
 }
 
 
 init_bdry_cndtn *tri_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
-    std::string keyword,ibcname;
+	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
-    int type;
+	int type;
 
 	/* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_" +suffix;
@@ -253,9 +251,9 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
 			*gbl->log << "couldn't find cd initial condition type " << keyword << std::endl;
 		}
 	}
-    type = ibc_cd::ibc_type::getid(ibcname.c_str());
+	type = ibc_cd::ibc_type::getid(ibcname.c_str());
 
-    switch(type) {
+	switch(type) {
 		case(ibc_cd::ibc_type::zero):
 			temp = new ibc_cd::zero_src;
 			break;
@@ -268,26 +266,26 @@ init_bdry_cndtn *tri_hp_cd::getnewibc(std::string suffix, input_map& inmap) {
 		default: {
 			return(tri_hp::getnewibc(suffix,inmap));
 		}
-    }
+	}
 	temp->input(inmap,keyword);
 	return(temp);
 }
 
 tri_hp_helper *tri_hp_cd::getnewhelper(input_map& inmap) {
-    std::string keyword,helpername;
-    int type;
+	std::string keyword,helpername;
+	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_helper";
-    if (!inmap.get(keyword,helpername)) {
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = std::string(gbl->idprefix) + "_helper";
+	if (!inmap.get(keyword,helpername)) {
 		if (!inmap.get("helper",helpername)) {
 			type = -1;
 		}
-    }
+	}
 
-    type = ibc_cd::helper_type::getid(helpername.c_str());
+	type = ibc_cd::helper_type::getid(helpername.c_str());
 
-    switch(type) {
+	switch(type) {
 		case ibc_cd::helper_type::source_changer: {
 			tri_hp_helper *temp = new ibc_cd::source_changer(*this);
 			return(temp);
@@ -295,6 +293,6 @@ tri_hp_helper *tri_hp_cd::getnewhelper(input_map& inmap) {
 		default: {
 			return(tri_hp::getnewhelper(inmap));
 		}
-    }
+	}
 }
 

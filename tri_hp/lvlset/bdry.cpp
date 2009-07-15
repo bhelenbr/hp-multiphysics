@@ -18,7 +18,7 @@ using namespace bdry_lvlset;
  * allocate by name rather than by number
  */
 class tri_hp_lvlset_vtype {
-    public:
+	public:
 		static const int ntypes = 1;
 		enum ids {unknown=-1,hybrid_point};
 		const static char names[ntypes][40];
@@ -32,25 +32,25 @@ class tri_hp_lvlset_vtype {
 const char tri_hp_lvlset_vtype::names[ntypes][40] = {"hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_vrtx_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_vrtx_bdry *temp;  
 
-    keyword = vbdry(bnum)->idprefix + "_lvlset_type";
-    if (bdrydata.get(keyword,val)) {
+	keyword = vbdry(bnum)->idprefix + "_lvlset_type";
+	if (bdrydata.get(keyword,val)) {
 		type = tri_hp_lvlset_vtype::getid(val.c_str());
 		if (type == tri_hp_lvlset_vtype::unknown)  {
 			*gbl->log << "unknown vertex type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_lvlset_vtype::unknown;
-    }
+	}
 
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_lvlset_vtype::hybrid_point: {
 			temp = new hybrid_pt(*this,*vbdry(bnum));
 			break;
@@ -59,15 +59,15 @@ hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
 			break;
 		}
-    } 
-    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-    return(temp);
+	} 
+	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+	return(temp);
 }
 
 
 
 class tri_hp_lvlset_stype {
-    public:
+	public:
 		static const int ntypes = 5;
 		enum ids {unknown=-1,inflow,outflow,characteristic,euler,hybrid};
 		static const char names[ntypes][40];
@@ -82,10 +82,10 @@ const char tri_hp_lvlset_stype::names[ntypes][40] = {"inflow","outflow","charact
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_edge_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_edge_bdry *temp;  
 
 	if (bdrydata.get(ebdry(bnum)->idprefix + "_lvlset_type",val)) {
 		type = tri_hp_lvlset_stype::getid(val.c_str());
@@ -93,12 +93,12 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 			*gbl->log << "unknown side type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_lvlset_stype::unknown;
-    }
+	}
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_lvlset_stype::inflow: {
 			temp = new characteristic<bdry_ins::inflow>(*this,*ebdry(bnum));
 			break;
@@ -123,44 +123,44 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
 			break;
 		}
-    }    
-    return(temp);
+	}    
+	return(temp);
 }
 
 void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
-    int j,k,count,sind,offset;
+	int j,k,count,sind,offset;
 
 	stride*=4;
 
 
-    count = 0;
-    for(j=0;j<base.nseg;++j) {
+	count = 0;
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		offset = x.seg(sind).pnt(0)*stride;
 		for (k=0;k<x.ND;++k) {
 			base.fsndbuf(count++) = pdata[offset+k];
 		}
 		base.fsndbuf(count++) = pdata[offset+x.NV-1];
-    }
-    offset = x.seg(sind).pnt(1)*stride;
-    for (k=0;k<x.ND;++k) 
+	}
+	offset = x.seg(sind).pnt(1)*stride;
+	for (k=0;k<x.ND;++k) 
 		base.fsndbuf(count++) = pdata[offset+k];
 	base.fsndbuf(count++) = pdata[offset+x.NV-1];
 
-    base.sndsize() = count;
-    base.sndtype() = boundary::flt_msg;
+	base.sndsize() = count;
+	base.sndtype() = boundary::flt_msg;
 }
 
 void hybrid::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
-    int j,k,m,count,countdn,countup,offset,sind;
-    int matches = 1;
-    FLT mtchinv;
+	int j,k,m,count,countdn,countup,offset,sind;
+	int matches = 1;
+	FLT mtchinv;
 
 	stride *= 4; // u,v,phi,p;
 	int grp = 1;  // ALL_PHASED GROUP
 
-    /* ASSUMES REVERSE ORDERING OF SIDES */
-    /* WON'T WORK IN 3D */
+	/* ASSUMES REVERSE ORDERING OF SIDES */
+	/* WON'T WORK IN 3D */
 	/* RELOAD FROM BUFFER */
 	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
 	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
@@ -218,16 +218,16 @@ void hybrid::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
 }
 
 void hybrid::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
-    int j,k,n,countup,offset;
+	int j,k,n,countup,offset;
 
-    if (!base.is_comm()) return;
+	if (!base.is_comm()) return;
 
 #ifdef MPDEBUG
 	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
 #endif
 
-    countup = 0;
-    for(j=0;j<base.nseg;++j) {
+	countup = 0;
+	for(j=0;j<base.nseg;++j) {
 		offset = base.seg(j)*stride*x.NV;
 		for(k=bgn;k<=end;++k) {
 			for(n=0;n<x.ND;++n) {
@@ -241,32 +241,32 @@ void hybrid::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 			*x.gbl->log << "\t" << sdata[offset +k*x.NV +x.NV-1] << std::endl;
 #endif
 		}
-    }
-    base.sndsize() = countup;
-    base.sndtype() = boundary::flt_msg;
-    return;
+	}
+	base.sndsize() = countup;
+	base.sndtype() = boundary::flt_msg;
+	return;
 }
 
 
 void hybrid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 
-    if (!base.is_comm()) return;
+	if (!base.is_comm()) return;
 
-    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-    int j,k,m,n,count,countdn,countup,offset,sind,sign;
-    FLT mtchinv;
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,m,n,count,countdn,countup,offset,sind,sign;
+	FLT mtchinv;
 
-    /* ASSUMES REVERSE ORDERING OF SIDES */
-    /* WON'T WORK IN 3D */
+	/* ASSUMES REVERSE ORDERING OF SIDES */
+	/* WON'T WORK IN 3D */
 
-    int matches = 1;
+	int matches = 1;
 
-    int bgnsign = (bgn % 2 ? -1 : 1);
+	int bgnsign = (bgn % 2 ? -1 : 1);
 
-    /* RELOAD FROM BUFFER */
-    /* ELIMINATES V/S/F COUPLING IN ONE PHASE */
-    /* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
-    for(m=0;m<base.nmatches();++m) {            
+	/* RELOAD FROM BUFFER */
+	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
+	for(m=0;m<base.nmatches();++m) {            
 		++matches;
 
 		int ebp1 = end-bgn+1;
@@ -283,9 +283,9 @@ void hybrid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 			}
 			countdn -= 2*ebp1*(x.NV-1);
 		}
-    }
+	}
 
-    if (matches > 1) {
+	if (matches > 1) {
 		mtchinv = 1./matches;
 
 #ifdef MPDEBUG
@@ -309,8 +309,8 @@ void hybrid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 			}
 
 		}
-    }
-    return;
+	}
+	return;
 }
 
 void hybrid_pt::pmatchsolution_snd(int phase, FLT *pdata, int stride) {

@@ -22,7 +22,7 @@
 
 namespace bdry_ps {
 
-    class neumann : public hp_edge_bdry {
+	class neumann : public hp_edge_bdry {
 		protected:
 			tri_hp_ps &x;
 			virtual void flux(TinyVector<FLT,3> u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
@@ -38,11 +38,11 @@ namespace bdry_ps {
 			neumann(const neumann& inbdry, tri_hp_ps &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ps&>(xin),bin);}
 			void rsdl(int stage);
-    };
+	};
 
 
 
-    class dirichlet : public neumann {        
+	class dirichlet : public neumann {        
 		void flux(TinyVector<FLT,3> u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> norm, TinyVector<FLT,3>& flx) {
 			/* THESE DON'T GET USED */
 			flx(0) = 0.0;
@@ -78,9 +78,9 @@ namespace bdry_ps {
 			}
 
 			void tadvance();
-    };
+	};
 
-    class friction_wall : public hp_edge_bdry {
+	class friction_wall : public hp_edge_bdry {
 		protected:
 			tri_hp_ps &x;
 			int dir;
@@ -142,5 +142,5 @@ namespace bdry_ps {
 				}
 			}
 
-    };
+	};
 }

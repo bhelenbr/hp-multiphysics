@@ -14,7 +14,7 @@
 #include <blocks.h>
 
 class tri_hp_ps : public tri_hp {
-    public:
+	public:
 		/* THINGS SHARED BY ALL tri_hp_ps in same multigrid block */
 		struct global : public tri_hp::global {
 			/* STABILIZATION */

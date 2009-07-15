@@ -13,15 +13,15 @@
 #include <utilities.h>
 
 void tri_hp_cd::length() {
-    int i,j,k,v0,v1,v2,sind,tind,count;
-    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
-    FLT sum,ratio;
-    FLT length0,length1,length2,lengthept;
-    FLT ang1,curved1,ang2,curved2;
+	int i,j,k,v0,v1,v2,sind,tind,count;
+	TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
+	FLT sum,ratio;
+	FLT length0,length1,length2,lengthept;
+	FLT ang1,curved1,ang2,curved2;
 
-    gbl->fltwk(Range(0,npnt-1)) = 0.0;
+	gbl->fltwk(Range(0,npnt-1)) = 0.0;
 
-    switch(basis::tri(log2p).p) {
+	switch(basis::tri(log2p).p) {
 		case(1): {
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
@@ -95,11 +95,11 @@ void tri_hp_cd::length() {
 			}
 			break;
 		}
-    }
+	}
 
-    // output_error(); FOR SHOCK DETECTION
+	// output_error(); FOR SHOCK DETECTION
 
-    for(i=0;i<npnt;++i) {
+	for(i=0;i<npnt;++i) {
 		gbl->fltwk(i) = pow(gbl->fltwk(i)/(pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
 		lngth(i) /= gbl->fltwk(i);  
 		lngth(i) = MAX(lngth(i),gbl->minlngth);
@@ -126,7 +126,7 @@ void tri_hp_cd::length() {
 		}
 		++nsweep;
 		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
-    } while(count > 0 && nsweep < 5);
+	} while(count > 0 && nsweep < 5);
 
-    return;
+	return;
 }

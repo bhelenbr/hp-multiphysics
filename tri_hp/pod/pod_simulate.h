@@ -15,7 +15,7 @@ template<class BASE> class pod_sim_edge_bdry;
 template<class BASE> class pod_sim_vrtx_bdry;
 
 template<class BASE> class pod_simulate : public BASE {
-    protected:
+	protected:
 		int nmodes;
 		int tmodes;
 		int pod_id;
@@ -28,7 +28,7 @@ template<class BASE> class pod_simulate : public BASE {
 		Array<int,1> ipiv;
 		friend class pod_sim_edge_bdry<BASE>;
 
-    public:
+	public:
 		void init(input_map& input, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
 		void rsdl(int stage);
@@ -42,30 +42,30 @@ template<class BASE> class pod_simulate : public BASE {
 };
 
 template<class BASE> class pod_sim_edge_bdry {
-protected:
-	pod_simulate<BASE> &x;
-	edge_bdry &base;
-	int nmodes;
-	int pod_id;
-	int bindex; 
-	bool active;
+	protected:
+		pod_simulate<BASE> &x;
+		edge_bdry &base;
+		int nmodes;
+		int pod_id;
+		int bindex; 
+		bool active;
 
-	struct vs {
-		Array<FLT,2> v;
-		Array<FLT,3> s;
-	} ug;
-	Array<vs,1> modes;
-	friend class pod_simulate<BASE>;
+		struct vs {
+			Array<FLT,2> v;
+			Array<FLT,3> s;
+		} ug;
+		Array<vs,1> modes;
+		friend class pod_simulate<BASE>;
 
-public:
-	pod_sim_edge_bdry(pod_simulate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
-	void init(input_map& input);
-	void rsdl();
-	void addto2Dsolution(struct tri_hp::vsi ug);
-	void addto2Dsolution(struct tri_hp::vsi ug, int mode, FLT coeff);
-	void update();
-	void loadbuff(Array<FLT,1>& sdata);
-	void finalrcv(Array<FLT,1>& sdata);
+	public:
+		pod_sim_edge_bdry(pod_simulate<BASE>& xin, edge_bdry &bin) : x(xin), base(bin) {}
+		void init(input_map& input);
+		void rsdl();
+		void addto2Dsolution(struct tri_hp::vsi ug);
+		void addto2Dsolution(struct tri_hp::vsi ug, int mode, FLT coeff);
+		void update();
+		void loadbuff(Array<FLT,1>& sdata);
+		void finalrcv(Array<FLT,1>& sdata);
 };
 
 #include "pod_simulate.cpp"

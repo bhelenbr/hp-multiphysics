@@ -16,18 +16,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 	FLT err;
 	Array<int,1> loc(NV);
 	Array<FLT,1> mxr(NV),l2r(NV);
-    TinyVector<FLT,2> pt;
-
-#ifdef TAYLOR
-    extern FLT ppipi;
-//    
-//    ptprobe(0.5,0.5,l2r);
-//    ppipi = l2r[2];
-
-/* MATCH PRESSURE AT ONE POINT */
-    ppipi = 0.0;
-    ppipi = -comparsion->f(2,pnts(0)(0),pnts(0)(1))+ug.v(0,2);
-#endif
+	TinyVector<FLT,2> pt;
 
 	for(n=0;n<NV;++n) {
 		mxr(n) = 0.0;
@@ -87,15 +76,15 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 
 /* CALCULATE AREA/CIRCUMFERENCE/YBAR */
 void tri_hp::integrated_averages(Array<FLT,1> a) {
-    int i,j,n,tind;
+	int i,j,n,tind;
 
-    /* a(0) = area */
-    /* a(1) = xbar */
-    /* a(2) = ybar */
-    /* a(3-...) variable averages */
-    a = 0.0;
+	/* a(0) = area */
+	/* a(1) = xbar */
+	/* a(2) = ybar */
+	/* a(3-...) variable averages */
+	a = 0.0;
 
-    for(tind=0;tind<ntri;++tind) {
+	for(tind=0;tind<ntri;++tind) {
 		if (tri(tind).info > -1) {
 			crdtocht(tind);
 			for(n=0;n<tri_mesh::ND;++n)
@@ -129,9 +118,9 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
 					a(3+n) += u(n)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
 			}
 		}
-    }
-    a(Range(1,2+NV)) /= a(0);
+	}
+	a(Range(1,2+NV)) /= a(0);
 
-    return;
+	return;
 }
 

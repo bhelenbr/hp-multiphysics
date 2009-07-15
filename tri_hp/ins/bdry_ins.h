@@ -37,7 +37,7 @@ using namespace blitz;
 
 namespace bdry_ins {
 
-    class generic : public hp_edge_bdry {
+	class generic : public hp_edge_bdry {
 		protected:
 			tri_hp_ins &x;
 			bool report_flag;
@@ -78,10 +78,10 @@ namespace bdry_ins {
 				}
 			}
 			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
-};
+	};
 
 
-    class neumann : public generic {
+	class neumann : public generic {
 		protected:
 			virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 
@@ -110,11 +110,11 @@ namespace bdry_ins {
 			neumann(const neumann& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void rsdl(int stage);
-    };
+	};
 
 
 
-    class inflow : public neumann {  
+	class inflow : public neumann {  
 		protected:
 			Array<int,1> dirichlets;
 			int ndirichlets;
@@ -165,10 +165,10 @@ namespace bdry_ins {
 			void tadvance() {
 				hp_edge_bdry::tadvance();
 				setvalues(ibc,dirichlets,ndirichlets);
-			};
-    };
+			}
+	};
 
-    class flexible : public inflow { 
+	class flexible : public inflow { 
 		protected:
 			Array<bctypes,1> type;
 			init_bdry_cndtn *ibc;
@@ -203,7 +203,7 @@ namespace bdry_ins {
 			flexible(const flexible& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {type.resize(x.NV-1); type = inbdry.type; ibc = inbdry.ibc;}
 			flexible* create(tri_hp& xin, edge_bdry &bin) const {return new flexible(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
-    };
+	};
 
 
 	class rigid : public init_bdry_cndtn {
@@ -266,7 +266,7 @@ namespace bdry_ins {
 
 
 
-    class euler : public neumann {
+	class euler : public neumann {
 		protected:
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 				Array<FLT,1> ub(x.NV);
@@ -290,9 +290,9 @@ namespace bdry_ins {
 			euler(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "euler";}
 			euler(const euler& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
 			euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-    };
+	};
 
-    class characteristic : public neumann {
+	class characteristic : public neumann {
 		protected:
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
 		public:
@@ -336,9 +336,9 @@ namespace bdry_ins {
 			}
 
 			void tadvance();
-    };
+	};
 
-    class applied_stress : public neumann {
+	class applied_stress : public neumann {
 		Array<symbolic_function<2>,1> stress;
 
 		protected:
@@ -368,9 +368,9 @@ namespace bdry_ins {
 			applied_stress(const applied_stress& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
-    };
+	};
 
-    class surface_slave : public neumann {
+	class surface_slave : public neumann {
 		public:
 			surface_slave(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "surface_slave";}
 			surface_slave(const surface_slave& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
@@ -386,10 +386,10 @@ namespace bdry_ins {
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
 			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
 			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
-    };
+	};
 
 
-    class surface : public surface_slave {
+	class surface : public surface_slave {
 		protected:
 			Array<FLT,1> ksprg;
 			Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
@@ -454,12 +454,12 @@ namespace bdry_ins {
 			void minvrt();
 			void update(int stage);
 			void mg_restrict(); 
-    };
+	};
 
-    /*******************************/
-    /* VERTEX BOUNDARY CONDITIONS */
-    /******************************/
-    class surface_fixed_pt : public hp_vrtx_bdry {
+	/*******************************/
+	/* VERTEX BOUNDARY CONDITIONS */
+	/******************************/
+	class surface_fixed_pt : public hp_vrtx_bdry {
 		protected:
 			tri_hp_ins &x;
 			surface *surf;
@@ -542,9 +542,9 @@ namespace bdry_ins {
 					x.ebdry(base.ebdry(0))->mvpttobdry(x.ebdry(base.ebdry(0))->nseg-1,1.0,pt);
 				}
 			}
-    };
+	};
 
-    class surface_periodic_pt : public surface_fixed_pt {
+	class surface_periodic_pt : public surface_fixed_pt {
 		protected:
 			FLT position;
 			bool vertical;
@@ -564,10 +564,10 @@ namespace bdry_ins {
 			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 				pt(1-vertical) = position;
 			}
-    };
+	};
 
 
-    class surface_outflow_endpt : public surface_fixed_pt {
+	class surface_outflow_endpt : public surface_fixed_pt {
 		public:
 			surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow_endpt";}
 			surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin) {}
@@ -579,9 +579,9 @@ namespace bdry_ins {
 
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void rsdl(int stage);
-    };
+	};
 
-    class surface_outflow_planar : public surface_outflow_endpt {
+	class surface_outflow_planar : public surface_outflow_endpt {
 		protected:
 			bool vertical;
 			FLT position;
@@ -611,9 +611,9 @@ namespace bdry_ins {
 			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
 				pt(1-vertical) = position;
 			}
-    };
+	};
 
-    class inflow_pt : public hp_vrtx_bdry {
+	class inflow_pt : public hp_vrtx_bdry {
 		protected:
 			tri_hp_ins &x;
 
@@ -631,7 +631,7 @@ namespace bdry_ins {
 			void vdirichlet2d() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-2)) = 0.0;
 			}
-    };
+	};
 
 	class hybrid_slave_pt : public hp_vrtx_bdry {
 		protected:
@@ -647,7 +647,7 @@ namespace bdry_ins {
 			}
 
 			void update(int stage);
-    };
+	};
 
 	class hybrid_pt : public surface_outflow_planar {
 		public:

@@ -11,7 +11,7 @@
 
 namespace ibc_swirl {
 
-    class spinning : public init_bdry_cndtn {
+	class spinning : public init_bdry_cndtn {
 		private:
 			FLT omega;
 		public:
@@ -37,7 +37,7 @@ namespace ibc_swirl {
 				if (!blockdata.get(keyword,omega)) 
 					blockdata.getwdefault("rotationalspeed",omega,1.0); 
 			}
-    };
+	};
 
 	class jet : public init_bdry_cndtn {
 		private:
@@ -69,7 +69,7 @@ namespace ibc_swirl {
 				if (!blockdata.get(keyword,omega)) 
 					blockdata.getwdefault("jetspeed",speed,1.0); 
 			}
-    };
+	};
 
 	class spinninglid : public init_bdry_cndtn {
 		private:
@@ -116,7 +116,7 @@ namespace ibc_swirl {
 				if (!blockdata.get(keyword,epsilon)) 
 					blockdata.getwdefault("offset",epsilon,0.01); 
 			}
-    };
+	};
 
 	class spinninglid2 : public init_bdry_cndtn {
 		private:
@@ -151,9 +151,9 @@ namespace ibc_swirl {
 				if (!blockdata.get(keyword,H)) 
 					blockdata.getwdefault("height",H,2.0); 
 			}
-    };
+	};
 
-    class ibc_type {
+	class ibc_type {
 		public:
 			const static int ntypes = 4;
 			enum ids {spinning,jet,spinninglid,spinninglid2};
@@ -164,8 +164,8 @@ namespace ibc_swirl {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 		}
-    };
-    const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2"};
+	};
+	const char ibc_swirl::ibc_type::names[ntypes][40] = {"spinning","jet","spinninglid","spinninglid2"};
 
 }
 
@@ -200,13 +200,11 @@ init_bdry_cndtn *tri_hp_swirl::getnewibc(std::string suffix, input_map& inmap) {
 		case ibc_swirl::ibc_type::spinninglid: {
 			temp = new ibc_swirl::spinninglid;
 			break;
-
 		}
 
 		case ibc_swirl::ibc_type::spinninglid2: {
-		temp = new ibc_swirl::spinninglid2;
-		break;
-
+			temp = new ibc_swirl::spinninglid2;
+			break;
 		}
 
 		default: {

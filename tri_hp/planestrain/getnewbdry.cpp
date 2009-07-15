@@ -20,7 +20,7 @@ using namespace bdry_ps;
  * allocate by name rather than by number
  */
 class tri_hp_ps_stype {
-    public:
+	public:
 		static const int ntypes = 4;
 		enum ids {unknown=-1,plain,dirichlet,neumann,friction_wall};
 		static const char names[ntypes][40];
@@ -35,24 +35,24 @@ const char tri_hp_ps_stype::names[ntypes][40] = {"plain","dirichlet","neumann","
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_edge_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_edge_bdry *temp;  
 
-    keyword =  ebdry(bnum)->idprefix + "_ps_type";
-    if (bdrydata.get(keyword,val)) {
+	keyword =  ebdry(bnum)->idprefix + "_ps_type";
+	if (bdrydata.get(keyword,val)) {
 		type = tri_hp_ps_stype::getid(val.c_str());
 		if (type == tri_hp_ps_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_ps_stype::unknown;
-    }
+	}
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_ps_stype::plain: {
 			temp = new hp_edge_bdry(*this,*ebdry(bnum));
 			break;
@@ -73,9 +73,9 @@ hp_edge_bdry* tri_hp_ps::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp::getnewsideobject(bnum,bdrydata);
 			break;
 		}
-    }
+	}
 
-    return(temp);
+	return(temp);
 }
 
 

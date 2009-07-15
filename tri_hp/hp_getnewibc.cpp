@@ -11,7 +11,7 @@
 #include <symbolic_function.h>
 
 class symbolic_ibc : public init_bdry_cndtn {
-    private:
+	private:
 		Array<symbolic_function<2>,1> fcn;
     public:
 		FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
@@ -43,7 +43,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 };
 
 class ibc_type {
-    public:
+	public:
 		const static int ntypes = 1;
 		enum ids {symbolic};
 		const static char names[ntypes][40];
@@ -59,9 +59,9 @@ const char ibc_type::names[ntypes][40] = {"symbolic"};
 
 
 init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
-    std::string keyword,ibcname;
+	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
-    int type;
+	int type;
 
     /* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_" +suffix;
@@ -72,9 +72,9 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 		}
 	}
 
-    type = ibc_type::getid(ibcname.c_str());
+	type = ibc_type::getid(ibcname.c_str());
 
-    switch(type) {
+	switch(type) {
 		case ibc_type::symbolic: {
 			temp = new symbolic_ibc;
 			break;
@@ -83,7 +83,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
 			exit(1);
 		}
-    }
+	}
 	temp->input(inmap,keyword);
 	return(temp);
 
@@ -91,7 +91,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 
 
 class translating : public tri_hp_helper {
-    public: 
+	public: 
 		tri_hp &x;
 		TinyVector<FLT,2> velocity;
 		translating(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
@@ -128,7 +128,7 @@ class translating : public tri_hp_helper {
 };
 
 class gcl_test : public tri_hp_helper {
-    public: 
+	public: 
 		tri_hp &x;
 		Array<symbolic_function<2>,1> vel;
 		gcl_test(tri_hp &xin) : tri_hp_helper(xin), x(xin) {}
@@ -182,7 +182,7 @@ class gcl_test : public tri_hp_helper {
 };
 
 class l2_error : public tri_hp_helper {
-    public: 
+	public: 
 		tri_hp &x;
 		l2_error(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
 		void output() {
@@ -191,7 +191,7 @@ class l2_error : public tri_hp_helper {
 };
 
 class print_averages : public tri_hp_helper {
-    public: 
+	public: 
 		tri_hp &x;
 		print_averages(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
 		void output() {            
@@ -207,7 +207,7 @@ class print_averages : public tri_hp_helper {
 };
 
 class output_contour : public tri_hp_helper {
-    protected:
+	protected:
 		int var;
 		FLT c;
 		symbolic_function<2> norm;
@@ -275,7 +275,7 @@ class output_contour : public tri_hp_helper {
 
 
 class helper_type {
-    public:
+	public:
 		const static int ntypes = 5;
 		enum ids {translating,print_averages,l2error,output_contour,gcl_test};
 		const static char names[ntypes][40];
@@ -290,16 +290,16 @@ const char helper_type::names[ntypes][40] = {"translating","print_averages","l2e
 
 
 tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
-    std::string movername;
-    int type;
+	std::string movername;
+	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-    if (!inmap.get(gbl->idprefix + "_helper",movername))
+	/* FIND INITIAL CONDITION TYPE */
+	if (!inmap.get(gbl->idprefix + "_helper",movername))
 		inmap.getwdefault("tri_hp_helper",movername,std::string("default"));
 
 	type = helper_type::getid(movername.c_str());
 
-    switch(type) {
+	switch(type) {
 		case helper_type::translating: {
 			tri_hp_helper *temp = new translating(*this);
 			return(temp);
@@ -324,6 +324,6 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
 			tri_hp_helper *temp = new tri_hp_helper(*this);
 			return(temp);
 		}
-    }
+	}
 }
 

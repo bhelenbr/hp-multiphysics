@@ -21,7 +21,7 @@ using namespace bdry_ins;
  * allocate by name rather than by number
  */
 class tri_hp_ins_vtype {
-    public:
+	public:
 		static const int ntypes = 7;
 		enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
 		inflow,hybrid_slave_point,hybrid_point};
@@ -37,25 +37,25 @@ const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_peri
 	"inflow","hybrid_slave_point","hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_vrtx_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_vrtx_bdry *temp;  
 
-    keyword = vbdry(bnum)->idprefix + "_ins_type";
-    if (bdrydata.get(keyword,val)) {
+	keyword = vbdry(bnum)->idprefix + "_ins_type";
+	if (bdrydata.get(keyword,val)) {
 		type = tri_hp_ins_vtype::getid(val.c_str());
 		if (type == tri_hp_ins_vtype::unknown)  {
 			*gbl->log << "unknown vertex type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_ins_vtype::unknown;
-    }
+	}
 
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_ins_vtype::surface_inflow: {
 			temp = new surface_fixed_pt(*this,*vbdry(bnum));
 			break;
@@ -88,9 +88,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
 			break;
 		}
-    } 
-    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-    return(temp);
+	} 
+	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+	return(temp);
 }
 
 
@@ -102,7 +102,7 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  * allocate by name rather than by number
  */
 class tri_hp_ins_stype {
-    public:
+	public:
 		static const int ntypes = 11;
 		enum ids {unknown=-1,plain,inflow,flexible,outflow,characteristic,euler,
 			symmetry,applied_stress,surface,surface_slave,force_coupling};
@@ -119,25 +119,25 @@ const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","flexible","o
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_edge_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_edge_bdry *temp;  
 
 
-    keyword =  ebdry(bnum)->idprefix + "_ins_type";
-    if (bdrydata.get(keyword,val)) {
+	keyword =  ebdry(bnum)->idprefix + "_ins_type";
+	if (bdrydata.get(keyword,val)) {
 		type = tri_hp_ins_stype::getid(val.c_str());
 		if (type == tri_hp_ins_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_ins_stype::unknown;
-    }
+	}
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_ins_stype::plain: {
 			temp = new generic(*this,*ebdry(bnum));
 			break;
@@ -194,10 +194,10 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp::getnewsideobject(bnum,bdrydata);
 			break;
 		}
-    }    
-    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+	}    
+	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 
-    return(temp);
+	return(temp);
 }
 
 

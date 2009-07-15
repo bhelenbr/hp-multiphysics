@@ -4,22 +4,22 @@
 #include "../hp_boundary.h"
 
 void tri_hp_swe::setup_preconditioner() {
-    int tind,i,j,side,v0;
-    FLT jcb,hmax,q,qmax,umax,vmax,c,c2,pre,rtpre,fmax,cflnow,alpha,alpha2,sigma;
-    FLT dx, dxmax, lambdamax;
-    TinyVector<int,3> v;
+	int tind,i,j,side,v0;
+	FLT jcb,hmax,q,qmax,umax,vmax,c,c2,pre,rtpre,fmax,cflnow,alpha,alpha2,sigma;
+	FLT dx, dxmax, lambdamax;
+	TinyVector<int,3> v;
 
-    cflnow = 0.0;
+	cflnow = 0.0;
 
-    /***************************************/
-    /** DETERMINE FLOW PSEUDO-TIME STEP ****/
-    /***************************************/
-    gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-    if (basis::tri(log2p).sm > 0) {
+	/***************************************/
+	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
+	/***************************************/
+	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+	if (basis::tri(log2p).sm > 0) {
 		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
-    }
+	}
 
-    for(tind = 0; tind < ntri; ++tind) {
+	for(tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);  // area is 2 x triangle area
 		v = tri(tind).pnt;
 		dxmax = 0.0;
@@ -86,10 +86,10 @@ void tri_hp_swe::setup_preconditioner() {
 				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
 			}
 		}
-    }
-    // if (!coarse && log2p == log2pmax) *gbl->log << "#cfl is " << cflnow << std::endl;
+	}
+	// if (!coarse && log2p == log2pmax) *gbl->log << "#cfl is " << cflnow << std::endl;
 
-    tri_hp::setup_preconditioner();  
+	tri_hp::setup_preconditioner();  
 
-    return;
+	return;
 }

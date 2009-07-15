@@ -2,17 +2,17 @@
 #include "hp_boundary.h"
 
 void tri_hp::mg_restrict() {
-    int i,j,k,m,n,tind,v0,indx,indx1;
+	int i,j,k,m,n,tind,v0,indx,indx1;
 
-    isfrst = true;
-    coarse_flag = true;
+	isfrst = true;
+	coarse_flag = true;
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		hp_ebdry(i)->mg_restrict();
 
 	helper->mg_restrict();
 
-    if(!coarse_level) {
+	if(!coarse_level) {
 		--log2p;
 
 		/* TRANSFER IS ON FINE MESH */
@@ -37,8 +37,8 @@ void tri_hp::mg_restrict() {
 				}
 			}
 		}
-    }
-    else {
+	}
+	else {
 		if (mmovement == coupled_deformable) { 
 			r_tri_mesh::mg_restrict();
 		}
@@ -70,9 +70,9 @@ void tri_hp::mg_restrict() {
 
 			vug_frst(i,Range::all()) = ug.v(i,Range::all());
 		}
-    }
+	}
 
 
-    return;
+	return;
 }
 

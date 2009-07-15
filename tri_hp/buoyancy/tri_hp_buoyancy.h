@@ -15,7 +15,7 @@
 #include <symbolic_function.h>
 
 class tri_hp_buoyancy : public tri_hp_ins {
-    public:
+	public:
 		struct global : public tri_hp_ins::global {
 
 			/* PHYSICAL CONSTANTS */
@@ -24,7 +24,7 @@ class tri_hp_buoyancy : public tri_hp_ins {
 
 		} *gbl;
 
-    public:
+	public:
 		void* create_global_structure() {return new global;}
 		tri_hp_buoyancy* create() { return new tri_hp_buoyancy(); }
 

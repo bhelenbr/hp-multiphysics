@@ -3,17 +3,22 @@
 
 // #define DEBUG
 
+// #define OP_COUNT
+
+#ifdef OP_COUNT
+#include <CHUD/CHUD.h>
+#endif
+
 void tri_hp::rsdl(int stage) {    
-    /* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
-    if (mmovement == coupled_deformable && stage == gbl->nstage && log2p == 0) r_tri_mesh::rsdl(); 
+	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
+	if (mmovement == coupled_deformable && stage == gbl->nstage && log2p == 0) r_tri_mesh::rsdl(); 
 
 
+	FLT oneminusbeta = 1.0-gbl->beta(stage);
+	gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
+	gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
 
-    FLT oneminusbeta = 1.0-gbl->beta(stage);
-    gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
-    gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
-
-    if (basis::tri(log2p).sm) {
+	if (basis::tri(log2p).sm) {
 		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
 		gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
 
@@ -21,51 +26,64 @@ void tri_hp::rsdl(int stage) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
 			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
 		}
-    }
+	}
 
 
-    for(int i=0;i<nebd;++i)
+	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
 
-    helper->rsdl(stage);
+	helper->rsdl(stage);
 
-    return;
+	return;
 }
 
 
 void tri_hp::update() {
-    int i,m,k,n,indx,indx1;
-    FLT cflalpha;
+	int i,m,k,n,indx,indx1;
+	FLT cflalpha;
 
-    /* COUPLED MESH MOVMEMENT */
+	/* COUPLED MESH MOVMEMENT */
 	if (mmovement == coupled_deformable  && log2p == 0) {
 		r_tri_mesh::update();
-    }
+	}
 
-    /* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
-    gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
-    if (basis::tri(log2p).sm) {
+	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
+	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p).sm) {
 		gbl->ug0.s(Range(0,nseg-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nseg-1),Range::all(),Range::all());
 		if (basis::tri(log2p).im) {
 			gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
 		}
-    }
+	}
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		hp_ebdry(i)->update(-1);
 
 	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->update(-1);
 
-    helper->update(-1);
+	helper->update(-1);
 
 
-    for (int stage = 0; stage < gbl->nstage; ++stage) {
+	for (int stage = 0; stage < gbl->nstage; ++stage) {
 
+#ifdef OP_COUNT
+		chudInitialize(); 
+		chudAcquireRemoteAccess(); 
+		chudStartRemotePerfMonitor("fpucount"); 
+		for (int i=0;i<100;++i)
+#endif
 		rsdl(stage);
+		
+#ifdef OP_COUNT
+		chudStopRemotePerfMonitor(); 
+		chudReleaseRemoteAccess();
+		exit(1);
+#endif
+
 		minvrt();
 
- #ifdef DEBUG   
+#ifdef DEBUG   
 		// if (coarse_level) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
 
@@ -190,5 +208,5 @@ void tri_hp::update() {
 //        }
 #endif
 
-    }
+	}
 }

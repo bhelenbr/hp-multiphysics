@@ -10,35 +10,35 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
- void tri_hp_buoyancy::init(input_map& input, void *gin) {
-    gbl = static_cast<global *>(gin);
-    input[gbl->idprefix + "_nvariable"] = "4";
-    tri_hp_ins::init(input,gin);
+void tri_hp_buoyancy::init(input_map& input, void *gin) {
+	gbl = static_cast<global *>(gin);
+	input[gbl->idprefix + "_nvariable"] = "4";
+	tri_hp_ins::init(input,gin);
 
-    if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
-    gbl->D(2) = gbl->kcond;
-    if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
+	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.7*gbl->mu);
+	gbl->D(2) = gbl->kcond;
+	if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
 
-    if (input.find(gbl->idprefix+"_rhovsT") != input.end()) {
+	if (input.find(gbl->idprefix+"_rhovsT") != input.end()) {
 		gbl->rhovsT.init(input,gbl->idprefix+"_rhovsT");
-    } 
-    else if (input.find("rhovsT") != input.end()){
+	} 
+	else if (input.find("rhovsT") != input.end()){
 		gbl->rhovsT.init(input,"rhovsT");
-    }
-    else {
+	}
+	else {
 		*gbl->log << "couldn't find rhovsT equation for density\n";
 		exit(1);
-    }
+	}
 
 
-    return;
+	return;
 }
 
 void tri_hp_buoyancy::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-    const tri_hp_buoyancy& inmesh = dynamic_cast<const tri_hp_buoyancy &>(in);
-    gbl = inmesh.gbl;
-    tri_hp_ins::init(in,why,sizereduce1d);
-    return;
+	const tri_hp_buoyancy& inmesh = dynamic_cast<const tri_hp_buoyancy &>(in);
+	gbl = inmesh.gbl;
+	tri_hp_ins::init(in,why,sizereduce1d);
+	return;
 }
 
 

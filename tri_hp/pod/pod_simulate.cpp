@@ -16,13 +16,13 @@ struct bd_str {
 };
 
 template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
-    std::string filename,keyword,linebuff;
-    std::ostringstream nstr;
-    std::istringstream instr;
-    int i;
+	std::string filename,keyword,linebuff;
+	std::ostringstream nstr;
+	std::istringstream instr;
+	int i;
 
-    /* Initialize base class */
-    BASE::init(input,gin);
+	/* Initialize base class */
+	BASE::init(input,gin);
 
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
@@ -31,13 +31,13 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	if (!input.get(nstr.str(),nmodes)) input.getwdefault("nmodes",nmodes,5); 
 	nstr.clear();
 
-    vsi ugstore;
-    ugstore.v.reference(BASE::ugbd(0).v);
-    ugstore.s.reference(BASE::ugbd(0).s);
-    ugstore.i.reference(BASE::ugbd(0).i);
+	vsi ugstore;
+	ugstore.v.reference(BASE::ugbd(0).v);
+	ugstore.s.reference(BASE::ugbd(0).s);
+	ugstore.i.reference(BASE::ugbd(0).i);
 
-    modes.resize(nmodes);
-    for(i=0;i<nmodes;++i) {
+	modes.resize(nmodes);
+	for(i=0;i<nmodes;++i) {
 		nstr.str("");
 		nstr << i << std::flush;
 		filename = "mode" +nstr.str() +"_" +BASE::gbl->idprefix;
@@ -49,10 +49,10 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		BASE::ugbd(0).s.reference(modes(i).s);
 		BASE::ugbd(0).i.reference(modes(i).i);
 		BASE::input(filename, BASE::binary);
-    }
-    BASE::ugbd(0).v.reference(ugstore.v);
-    BASE::ugbd(0).s.reference(ugstore.s);
-    BASE::ugbd(0).i.reference(ugstore.i);
+	}
+	BASE::ugbd(0).v.reference(ugstore.v);
+	BASE::ugbd(0).s.reference(ugstore.s);
+	BASE::ugbd(0).i.reference(ugstore.i);
 
 	pod_ebdry.resize(BASE::nebd);
 	/* Count how many boundary modes there are so we can size arrays before initializing boundaries */
@@ -150,31 +150,31 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 
 
-    int initfile;
-    input.getwdefault("initfile",initfile,1);
-    nstr.str("");
-    nstr << initfile << std::flush;
-    filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
-    binifstream bin;
-    bin.open(filename.c_str());
-    if (bin.error()) {
+	int initfile;
+	input.getwdefault("initfile",initfile,1);
+	nstr.str("");
+	nstr << initfile << std::flush;
+	filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
+	binifstream bin;
+	bin.open(filename.c_str());
+	if (bin.error()) {
 		*BASE::gbl->log << "couldn't open coefficient input file " << filename;
 		exit(1);
-    }
+	}
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
 	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
 
-    /* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
-    BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
-    BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
-    BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
+	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
+	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
+	BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
+	BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
 
-    for (int l=0;l<nmodes;++l) {
+	for (int l=0;l<nmodes;++l) {
 		coeffs(l) = bin.readFloat(binio::Double); 
 		BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
 		BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
 		BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
-    }
+	}
 	bin.close();
 
 	/* Let boundary conditions load to and from coeff/rsdls vectors */
@@ -188,28 +188,28 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	*BASE::gbl->log << multiplicity << std::endl;
 
 
-    return;
+	return;
 }
 
 template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
-    BASE::rsdl(stage);
+	BASE::rsdl(stage);
 
 	rsdls = 0.0;  // Need to do this, because not every block will touch every rsdl
 
-    /* APPLY VERTEX DIRICHLET B.C.'S */
-    for(int i=0;i<BASE::nebd;++i)
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<BASE::nebd;++i)
 		BASE::hp_ebdry(i)->vdirichlet();
 
-    for(int i=0;i<BASE::nvbd;++i)
+	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
 
-    /* APPLY DIRCHLET B.C.S TO MODE */
-    for(int i=0;i<BASE::nebd;++i)
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int i=0;i<BASE::nebd;++i)
 		for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
-    for (int k = 0; k < nmodes; ++k) {
+	for (int k = 0; k < nmodes; ++k) {
 		for(int i=0; i<BASE::npnt;++i)
 			for(int n=0;n<BASE::NV;++n)
 				rsdls(k) += modes(k).v(i,n)*BASE::gbl->res.v(i,n);
@@ -224,7 +224,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
 
-    }
+	}
 
 	/* FORM RESIDUALS FOR SIDE MODES */
 	for (int i=0;i<BASE::nebd;++i)
@@ -246,24 +246,24 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 	for(int i=0;i<BASE::nebd;++i) 
 		pod_ebdry(i)->finalrcv(rsdls_recv);
 
-    sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),tmodes,blocks::flt_msg,blocks::sum,pod_id);	
+	sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),tmodes,blocks::flt_msg,blocks::sum,pod_id);	
 
-    return;
+	return;
 }
 
 
 template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
-    BASE::setup_preconditioner();
-    rsdl(BASE::gbl->nstage);
+	BASE::setup_preconditioner();
+	rsdl(BASE::gbl->nstage);
 
-    /* STORE BASELINE IN LAST COLUMN */
-    jacobian(Range(0,tmodes-1),tmodes-1) = rsdls_recv;
-    BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) = BASE::ug.v(Range(0,BASE::npnt-1));
-    BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) = BASE::ug.s(Range(0,BASE::nseg-1));
-    BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) = BASE::ug.i(Range(0,BASE::ntri-1));
+	/* STORE BASELINE IN LAST COLUMN */
+	jacobian(Range(0,tmodes-1),tmodes-1) = rsdls_recv;
+	BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) = BASE::ug.v(Range(0,BASE::npnt-1));
+	BASE::gbl->ug0.s(Range(0,BASE::nseg-1)) = BASE::ug.s(Range(0,BASE::nseg-1));
+	BASE::gbl->ug0.i(Range(0,BASE::ntri-1)) = BASE::ug.i(Range(0,BASE::ntri-1));
 
-    for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
+	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
 		/* PERTURB EACH COEFFICIENT */
 		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 1.0e-4*modes(modeloop).v(Range(0,BASE::npnt-1));
 		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 1.0e-4*modes(modeloop).s(Range(0,BASE::nseg-1));
@@ -289,7 +289,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 		/* STORE IN ROW */
 		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
-    }
+	}
 
 	/* CREATE JACOBIAN FOR BOUNDARY MODES */
 	for (int modeloop = nmodes; modeloop < tmodes; ++modeloop) {
@@ -320,32 +320,32 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
 	}
 
-    /* RESTORE UG & COEFF VECTOR */
-    BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1));
-    BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
-    BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
+	/* RESTORE UG & COEFF VECTOR */
+	BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) = BASE::gbl->ug0.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) = BASE::gbl->ug0.i(Range(0,BASE::ntri-1));
 
-    /* FACTORIZE PRECONDITIONER */
-    int info;
-    GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
-    if (info != 0) {
+	/* FACTORIZE PRECONDITIONER */
+	int info;
+	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
+	if (info != 0) {
 		printf("DGETRF FAILED FOR POD JACOBIAN %d\n",info);
 		exit(1);
-    }
-    return;
+	}
+	return;
 }
 
 template<class BASE> void pod_simulate<BASE>::update() {
-    char trans[] = "T";
-    int info;
+	char trans[] = "T";
+	int info;
 
-    rsdl(BASE::gbl->nstage);
+	rsdl(BASE::gbl->nstage);
 
-    GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
-    if (info != 0) {
+	GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
+	if (info != 0) {
 		printf("DGETRS FAILED FOR POD UPDATE\n");
 		exit(1);
-    }
+	}
 	/* Need to fix pod boundaries so coefficients are equal */
 	/* store rsdls_recv to compare to after boundary comm */
 	rsdls0 = rsdls_recv;	
@@ -378,15 +378,15 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	coeffs -= rsdls_recv;
 
-    BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
-    BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
-    BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+	BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
 
-    for (int m=0;m<nmodes;++m) {
+	for (int m=0;m<nmodes;++m) {
 		BASE::gbl->res.v(Range(0,BASE::npnt-1)) += rsdls_recv(m)*modes(m).v(Range(0,BASE::npnt-1));
 		BASE::gbl->res.s(Range(0,BASE::nseg-1)) += rsdls_recv(m)*modes(m).s(Range(0,BASE::nseg-1));
 		BASE::gbl->res.i(Range(0,BASE::ntri-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1));
-    }
+	}
 
 	for (int m=nmodes;m<tmodes;++m) {
 		for (int bind=0;bind<BASE::nebd;++bind) {		
@@ -394,24 +394,24 @@ template<class BASE> void pod_simulate<BASE>::update() {
 		}
 	}
 
-    /* APPLY VERTEX DIRICHLET B.C.'S */
-    for(int i=0;i<BASE::nebd;++i)
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<BASE::nebd;++i)
 		BASE::hp_ebdry(i)->vdirichlet();
 
-    for(int i=0;i<BASE::nvbd;++i)
+	for(int i=0;i<BASE::nvbd;++i)
 		BASE::hp_vbdry(i)->vdirichlet2d();
 
-    /* APPLY DIRCHLET B.C.S TO MODE */
-    for(int i=0;i<BASE::nebd;++i)
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int i=0;i<BASE::nebd;++i)
 		for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
 
-    BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
-    BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::gbl->res.s(Range(0,BASE::nseg-1));
-    BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::gbl->res.i(Range(0,BASE::ntri-1));
+	BASE::ug.v(Range(0,BASE::npnt-1)) -= BASE::gbl->res.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) -= BASE::gbl->res.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) -= BASE::gbl->res.i(Range(0,BASE::ntri-1));
 
-    return;
+	return;
 }
 
 template<class BASE>void pod_simulate<BASE>::sc0load() {

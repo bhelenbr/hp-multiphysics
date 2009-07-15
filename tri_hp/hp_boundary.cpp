@@ -16,25 +16,25 @@
 //#define MPDEBUG
 
 hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
-    hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));  
-    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-    return(temp);
+	hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));  
+	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+	return(temp);
 }
 
 hp_edge_bdry* tri_hp::getnewsideobject(int bnum, input_map &bdrydata) {
-    hp_edge_bdry *temp = new hp_edge_bdry(*this,*ebdry(bnum));
-    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
-    return(temp);
+	hp_edge_bdry *temp = new hp_edge_bdry(*this,*ebdry(bnum));
+	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+	return(temp);
 }
 
 void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
-    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-    int j,k,n,count,offset,sind,sign;
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,n,count,offset,sind,sign;
 
-    if (!base.is_comm()) return;
+	if (!base.is_comm()) return;
 
-    int ebp1 = end-bgn+1;
-    if (base.is_frst()) {
+	int ebp1 = end-bgn+1;
+	if (base.is_frst()) {
 		count = 0;
 		for(j=0;j<base.nseg;++j) {
 			sind = base.seg(j);
@@ -45,8 +45,8 @@ void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) 
 				}
 			}
 		}
-    }
-    else {
+	}
+	else {
 		int bgnsign = (bgn % 2 ? -1 : 1);
 		count = 0;
 
@@ -61,20 +61,20 @@ void hp_edge_bdry::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) 
 				sign *= -1;
 			}
 		}    
-    }
-    base.sndsize() = count;
-    base.sndtype() = boundary::flt_msg;
+	}
+	base.sndsize() = count;
+	base.sndtype() = boundary::flt_msg;
 }
 
 void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
-    /* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
-    int j,k,n,count,offset,sind,sign;
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,n,count,offset,sind,sign;
 
-    bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
-    if (!reload) return;
+	bool reload = base.comm_finish(boundary::all,0,boundary::symmetric,boundary::average);
+	if (!reload) return;
 
-    int ebp1 = end -bgn +1;
-    if (base.is_frst()) {
+	int ebp1 = end -bgn +1;
+	if (base.is_frst()) {
 		count = 0;
 		for(j=0;j<base.nseg;++j) {
 			sind = base.seg(j);
@@ -85,8 +85,8 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
 				}
 			}
 		}
-    }
-    else {
+	}
+	else {
 		int bgnsign = (bgn % 2 ? -1 : 1);
 		int count = 0;
 
@@ -101,53 +101,53 @@ void hp_edge_bdry::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) 
 				sign *= -1;
 			}
 		}    
-    }
+	}
 }
 
 
 void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 
-    if (!curved || !x.sm0) return;
+	if (!curved || !x.sm0) return;
 
-    for(int i=0;i<x.gbl->nadapt; ++i)
+	for(int i=0;i<x.gbl->nadapt; ++i)
 		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
 }
 
 void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
-    int i;
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
+	int i;
+	std::string keyword;
+	std::istringstream data;
+	std::string filename;
 
 	if (inmap.find(base.idprefix +"_ibc") != inmap.end()) {
 		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
 	}
 
-    keyword = base.idprefix + "_curved";
-    inmap.getwdefault(keyword,curved,false);
+	keyword = base.idprefix + "_curved";
+	inmap.getwdefault(keyword,curved,false);
 
-    keyword = base.idprefix + "_coupled";
-    inmap.getwdefault(keyword,coupled,false);
+	keyword = base.idprefix + "_coupled";
+	inmap.getwdefault(keyword,coupled,false);
 
-    if (curved && !x.coarse_level) {
+	if (curved && !x.coarse_level) {
 		crvbd.resize(x.gbl->nhist+1);
 		crv.resize(base.maxseg,x.sm0);
 		for(i=1;i<x.gbl->nhist+1;++i)
 			crvbd(i).resize(base.maxseg,x.sm0);
 		crvbd(0).reference(crv);
-    }
+	}
 
-    dxdt.resize(x.log2pmax+1,base.maxseg);
+	dxdt.resize(x.log2pmax+1,base.maxseg);
 
-    base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
+	base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
 
-    return;
+	return;
 }
 
 void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
-    int j,m,n;
+	int j,m,n;
 
-    switch(typ) {
+	switch(typ) {
 		case(tri_hp::text):
 			fout << base.idprefix << " " << mytype << std::endl;
 			if (curved) {
@@ -181,14 +181,14 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 		default:
 			break;
-    }
-    return;
+	}
+	return;
 }
 
 void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-    int j,m,n,pmin;
-    std::string idin, mytypein;    
-    switch(typ) {
+	int j,m,n,pmin;
+	std::string idin, mytypein;    
+	switch(typ) {
 		case(tri_hp::text):
 			fin >> idin >> mytypein;
 			if (curved) { 
@@ -231,29 +231,29 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 
 		default:
 			break;
-    }
+	}
 }
 
 void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int ndirichlets) {
-    int j,k,m,n,v0,v1,sind,indx,info;
+	int j,k,m,n,v0,v1,sind,indx,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
-    char uplo[] = "U";
+	char uplo[] = "U";
 
-    /* UPDATE BOUNDARY CONDITION VALUES */
-    for(j=0;j<base.nseg;++j) {
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		for(n=0;n<ndirichlets;++n)
 			x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
-    }
-    v0 = x.seg(sind).pnt(1);
-    for(n=0;n<ndirichlets;++n)
+	}
+	v0 = x.seg(sind).pnt(1);
+	for(n=0;n<ndirichlets;++n)
 		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
 
-    /*******************/    
-    /* SET SIDE VALUES */
-    /*******************/
-    for(j=0;j<base.nseg;++j) {
+	/*******************/    
+	/* SET SIDE VALUES */
+	/*******************/
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
@@ -292,33 +292,33 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int
 					x.ug.s(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m);
 			}
 		}
-    }
-    return;
+	}
+	return;
 }
 
 
 void hp_edge_bdry::curv_init(int tlvl) {
-    int i,j,m,n,v0,v1,sind,info;
-    TinyVector<FLT,2> pt;
-    char uplo[] = "U";
+	int i,j,m,n,v0,v1,sind,info;
+	TinyVector<FLT,2> pt;
+	char uplo[] = "U";
 
-    if (!curved) return;
+	if (!curved) return;
 
-    /* SKIP END VERTICES */
-    for(j=1;j<base.nseg;++j) {
+	/* SKIP END VERTICES */
+	for(j=1;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		base.mvpttobdry(j,-1.0, x.pnts(v0));
-    }
+	}
 //    v0 = x.seg(sind).pnt(1);
 //    base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 
-    if (basis::tri(x.log2p).p == 1) return;
+	if (basis::tri(x.log2p).p == 1) return;
 
-    /*****************************/
-    /* SET UP HIGHER ORDER MODES */
-    /*****************************/
-    for(j=0;j<base.nseg;++j) {
+	/*****************************/
+	/* SET UP HIGHER ORDER MODES */
+	/*****************************/
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 
 		v0 = x.seg(sind).pnt(0);
@@ -349,38 +349,38 @@ void hp_edge_bdry::curv_init(int tlvl) {
 		*gbl->log << pt << ' ' << pt(0)*pt(0) +pt(1)*pt(1) << std::endl;
 		*/
 
-    }
-    return;
+	}
+	return;
 }
 
 void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) const {
-    int sind,v0,v1,iter;
-    FLT dx,dy,ol,roundoff,dpsi;
-    TinyVector<FLT,2> pt;
+	int sind,v0,v1,iter;
+	FLT dx,dy,ol,roundoff,dpsi;
+	TinyVector<FLT,2> pt;
 
-    base.findbdrypt(xp,bel,psi);
-    if (!curved) {
+	base.findbdrypt(xp,bel,psi);
+	if (!curved) {
 		base.edge_bdry::mvpttobdry(bel,psi,xp);
 		basis::tri(x.log2p).ptvalues1d(psi);
 		return;
-    }
+	}
 
-    sind = base.seg(bel);
-    v0 = x.seg(sind).pnt(0);
-    v1 = x.seg(sind).pnt(1);
-    dx = x.pnts(v1)(0) - x.pnts(v0)(0);
-    dy = x.pnts(v1)(1) - x.pnts(v0)(1);
-    ol = 2./(dx*dx +dy*dy);
-    dx *= ol;
-    dy *= ol;
+	sind = base.seg(bel);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	dx = x.pnts(v1)(0) - x.pnts(v0)(0);
+	dy = x.pnts(v1)(1) - x.pnts(v0)(1);
+	ol = 2./(dx*dx +dy*dy);
+	dx *= ol;
+	dy *= ol;
 
-    /* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
-    /* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */ 
-    x.crdtocht1d(sind);
+	/* FIND PSI SUCH THAT TANGENTIAL POSITION ALONG LINEAR SIDE STAYS THE SAME */
+	/* THIS WAY, MULTIPLE CALLS WILL NOT GIVE DIFFERENT RESULTS */ 
+	x.crdtocht1d(sind);
 
-    iter = 0;
-    roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
-    do {
+	iter = 0;
+	roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
+	do {
 		basis::tri(x.log2p).ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
 		dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
 		psi -= dpsi;
@@ -388,25 +388,25 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
 			*x.gbl->log << "#Warning: max iterations for curved side in bdry_locate type: " << base.idnum << " seg: " << bel << " sind: " << sind << " loc: " << xp << " dpsi: " << dpsi << std::endl;
 			break;
 		}  
-    } while (fabs(dpsi) > roundoff);
-    xp = pt;
+	} while (fabs(dpsi) > roundoff);
+	xp = pt;
 }
 
 void hp_edge_bdry::mvpttobdry(int bel,FLT psi,TinyVector<FLT,2> &xp) {
 
-    /* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
-    /* FIRST GET LINEAR APPROXIMATION TO LOCATION */
-    base.edge_bdry::mvpttobdry(bel, psi, xp);
-    adapt_storage->findandmovebdrypt(xp,bel,psi);
+	/* SOLUTION IS BEING ADAPTED MUST GET INFO FROM ADAPT STORAGE */
+	/* FIRST GET LINEAR APPROXIMATION TO LOCATION */
+	base.edge_bdry::mvpttobdry(bel, psi, xp);
+	adapt_storage->findandmovebdrypt(xp,bel,psi);
 
-    return;
+	return;
 }
 
 #ifdef DIRK
 void hp_edge_bdry::tadvance() {
-    int stage = x.gbl->substep +x.gbl->esdirk;  
+	int stage = x.gbl->substep +x.gbl->esdirk;  
 
-    if (x.p0 > 1 && curved) {
+	if (x.p0 > 1 && curved) {
 		if (stage) {
 			/* BACK CALCULATE K TERM */
 			for(int j=0;j<base.nseg;++j) {
@@ -443,34 +443,34 @@ void hp_edge_bdry::tadvance() {
 			FLT constant =  x.gbl->cdirk(x.gbl->substep);
 			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += constant*crvbd(stage+1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
 		}
-    }
+	}
 
-    calculate_unsteady_sources();
+	calculate_unsteady_sources();
 
-    /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
-    if (!coupled && curved) curv_init();
+	/* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
+	if (!coupled && curved) curv_init();
 
-    return;
+	return;
 }
 
 void hp_edge_bdry::calculate_unsteady_sources() {
-    int i,j,n,sind;
+	int i,j,n,sind;
 
-    for(i=0;i<=x.log2pmax;++i) {
+	for(i=0;i<=x.log2pmax;++i) {
 		for(j=0;j<base.nseg;++j) {
 			sind = base.seg(j);
 			x.crdtocht1d(sind,1);
 			for(n=0;n<tri_mesh::ND;++n)
 				basis::tri(i).proj1d(&x.cht(n,0),&dxdt(i,j)(n,0));
 		}
-    }
+	}
 
-    return;
+	return;
 }
 #else
 /* BACKWARDS DIFFERENCE STUFF */
 void hp_edge_bdry::tadvance() {    
-    if (x.p0 > 1 && curved) {
+	if (x.p0 > 1 && curved) {
 		for (int i=x.gbl->nhist-2;i>=0; --i) {            
 
 			/* BACK CALCULATE K TERM */
@@ -486,21 +486,21 @@ void hp_edge_bdry::tadvance() {
 		if (x.gbl->dti > 0.0 && x.gbl->tstep > 1) {
 			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += crvbd(1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -crvbd(2)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
 		}
-    }
+	}
 
-    calculate_unsteady_sources();
+	calculate_unsteady_sources();
 
-    /* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
-    if (!coupled && curved) curv_init();
+	/* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
+	if (!coupled && curved) curv_init();
 
-    return;
+	return;
 }
 
 void hp_edge_bdry::calculate_unsteady_sources() {
-    int j,n,sind;
-    TinyMatrix<FLT,tri_mesh::ND,MXGP> crd;
+	int j,n,sind;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd;
 
-    for (int level=1;level<min(x.gbl->nhist,x.gbl->tstep+1);++level) {
+	for (int level=1;level<min(x.gbl->nhist,x.gbl->tstep+1);++level) {
 		for(int p=0;p<=x.log2pmax;++p) {
 			for(j=0;j<base.nseg;++j) {
 				dxdt(p,j) = 0.0;
@@ -513,128 +513,128 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 				}
 			}
 		}
-    }
+	}
 
-    return;
+	return;
 }
 #endif
 
 
 void tri_hp::vc0load(int phase, FLT *pdata, int vrtstride) {
-    int i;
+	int i;
 
-    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
-    for(i=0;i<nebd;++i) 
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
-    for(i=0;i<nvbd;++i)
+	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->pmatchsolution_snd(phase,pdata,vrtstride);
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
-    for(i=0;i<nvbd;++i)
+	for(i=0;i<nvbd;++i)
 		vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
 
-    return;
+	return;
 }
 int tri_hp::vc0wait_rcv(int phase, FLT *pdata, int vrtstride) {
-    int stop = 1;
-    int i;
+	int stop = 1;
+	int i;
 
-    for(i=0;i<nebd;++i) {
+	for(i=0;i<nebd;++i) {
 		stop &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
-    }
+	}
 
-    for(i=0;i<nvbd;++i) {
+	for(i=0;i<nvbd;++i) {
 		stop &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
-    }
+	}
 
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-    for(i=0;i<nvbd;++i)
+	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
 
-    return(stop);
+	return(stop);
 }
 
 int tri_hp::vc0rcv(int phase, FLT *pdata, int vrtstride) {
-    int stop = 1,i;
+	int stop = 1,i;
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		stop &= ebdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
-    for(i=0;i<nvbd;++i)
+	for(i=0;i<nvbd;++i)
 		stop &= vbdry(i)->comm_nowait(boundary::all_phased,phase,boundary::symmetric);
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
-    for(i=0;i<nvbd;++i)
+	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->pmatchsolution_rcv(phase,pdata,vrtstride);
 
-    return(stop);
+	return(stop);
 }
 
 void tri_hp::sc0load(FLT *sdata, int bgnmode, int endmode, int modestride) {
-    int i;
+	int i;
 
-    /* SEND COMMUNICATIONS TO ADJACENT MESHES */\
-    for(i=0;i<nebd;++i) 
+	/* SEND COMMUNICATIONS TO ADJACENT MESHES */\
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->smatchsolution_snd(sdata,bgnmode,endmode,modestride);
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
 
-    return;
+	return;
 }
 
 int tri_hp::sc0wait_rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
-    int stop = 1;
-    int i;
+	int stop = 1;
+	int i;
 
-    for(i=0;i<nebd;++i) {
+	for(i=0;i<nebd;++i) {
 		stop &= ebdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-    }
+	}
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
 
-    return(stop);
+	return(stop);
 }
 
 int tri_hp::sc0rcv(FLT *sdata, int bgnmode, int endmode, int modestride) {
-    int stop = 1,i;
+	int stop = 1,i;
 
-    for(i=0;i<nebd;++i)
+	for(i=0;i<nebd;++i)
 		stop &= ebdry(i)->comm_nowait(boundary::all,0,boundary::symmetric);
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->smatchsolution_rcv(sdata,bgnmode,endmode,modestride);
 
-    return(stop);
+	return(stop);
 }
 
 
 void tri_hp::matchboundaries() {
-    int i, m, n, msgn, bnum, count;
-    int last_phase, mp_phase;
+	int i, m, n, msgn, bnum, count;
+	int last_phase, mp_phase;
 
-    /* Match boundary vertices */
-    tri_mesh::matchboundaries();
+	/* Match boundary vertices */
+	tri_mesh::matchboundaries();
 
-    for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		vc0load(mp_phase,ug.v.data());
 		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
 		last_phase = true;
 		last_phase &= vc0wait_rcv(mp_phase,ug.v.data());
-    }
+	}
 
-    if (!sm0) return;
+	if (!sm0) return;
 
-    sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
-    smsgpass(boundary::all,0,boundary::symmetric);
-    sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));    
+	sc0load(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(ug.s.data(),0,sm0-1,ug.s.extent(secondDim));    
 
-    /* Match curved sides */
-    for(bnum=0;bnum<nebd;++bnum) {
+	/* Match curved sides */
+	for(bnum=0;bnum<nebd;++bnum) {
 		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {                
 			count = 0;
 			for(i=0;i<ebdry(bnum)->nseg;++i) {
@@ -647,16 +647,16 @@ void tri_hp::matchboundaries() {
 			ebdry(bnum)->sndtype() = boundary::flt_msg;
 			ebdry(bnum)->comm_prepare(boundary::all,0,boundary::master_slave);
 		}
-    }
+	}
 
-    for(bnum=0;bnum<nebd;++bnum) {
+	for(bnum=0;bnum<nebd;++bnum) {
 		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {                
 			ebdry(bnum)->comm_exchange(boundary::all,0,boundary::master_slave);
 		}
-    }
+	}
 
 
-    for(bnum=0;bnum<nebd;++bnum) {
+	for(bnum=0;bnum<nebd;++bnum) {
 		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {                
 			ebdry(bnum)->comm_wait(boundary::all,0,boundary::master_slave);
 
@@ -672,50 +672,50 @@ void tri_hp::matchboundaries() {
 				}
 			}
 		}
-    }
+	}
 
-    return;
+	return;
 }
 
 void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
-    FLT ddpsi1, ddpsi2, psil, psir;
-    TinyVector<FLT,2> xp, dx, maxloc, minloc;
-    FLT max,min;
-    int v0, sind;
+	FLT ddpsi1, ddpsi2, psil, psir;
+	TinyVector<FLT,2> xp, dx, maxloc, minloc;
+	FLT max,min;
+	int v0, sind;
 
 
-    /* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
-    sind = base.seg(base.nseg-1);
-    x.crdtocht1d(sind);
-    basis::tri(x.log2p).ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
-    ddpsi2 = (*fxy)(dx);
-    if (base.vbdry(1) >= 0) {
+	/* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
+	sind = base.seg(base.nseg-1);
+	x.crdtocht1d(sind);
+	basis::tri(x.log2p).ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
+	ddpsi2 = (*fxy)(dx);
+	if (base.vbdry(1) >= 0) {
 		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
 		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
-    }
-    if (base.vbdry(0) >= 0) {
+	}
+	if (base.vbdry(0) >= 0) {
 		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,0,boundary::master_slave);
-    }
+	}
 
 
-    if (base.vbdry(1) >= 0) 
+	if (base.vbdry(1) >= 0) 
 		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
-    if (base.vbdry(0) >= 0)
+	if (base.vbdry(0) >= 0)
 		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,0,boundary::master_slave);
 
-    if (base.vbdry(1) >= 0) 
+	if (base.vbdry(1) >= 0) 
 		x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,0,boundary::master_slave);
-    if (base.vbdry(0) >= 0) {
+	if (base.vbdry(0) >= 0) {
 		x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,0,boundary::master_slave);
 		if (x.vbdry(base.vbdry(0))->is_comm()) 
 			ddpsi2 = x.vbdry(base.vbdry(0))->frcvbuf(0,0);
 		else
 			ddpsi2 = 0.0;
-    }
+	}
 
-    max = -1.0e99;
-    min = 1.0e99;
-    for(int indx=0;indx<base.nseg;++indx) {
+	max = -1.0e99;
+	min = 1.0e99;
+	for(int indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
 		x.crdtocht1d(sind);
 		basis::tri(x.log2p).ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
@@ -759,25 +759,25 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 			}
 			*x.gbl->log << "#LOCAL EXTREMA: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
 		}  
-    }
-    *x.gbl->log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
-    *x.gbl->log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
+	}
+	*x.gbl->log << "#MAX EXTREMA: " << maxloc[0] << ' ' << maxloc[1] << ' ' << max << std::endl;
+	*x.gbl->log << "#MIN EXTREMA: " << minloc[0] << ' ' << minloc[1] << ' ' << min << std::endl;
 
-    return;
+	return;
 }
 
  void hp_edge_bdry::findintercept(FLT (*fxy)(TinyVector<FLT,2> &x)) {
-    FLT psil, psir;
-    TinyVector<FLT,2> xp, dx;
-    int v0, sind;
-    FLT vl, vr;
+	FLT psil, psir;
+	TinyVector<FLT,2> xp, dx;
+	int v0, sind;
+	FLT vl, vr;
 
-    sind = base.seg(0);
-    x.crdtocht1d(sind);
-    v0 = x.seg(sind).pnt(0);
-    vl = (*fxy)(x.pnts(v0));
+	sind = base.seg(0);
+	x.crdtocht1d(sind);
+	v0 = x.seg(sind).pnt(0);
+	vl = (*fxy)(x.pnts(v0));
 
-    for(int indx=0;indx<base.nseg;++indx) {
+	for(int indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
 		x.crdtocht1d(sind);
 		v0 = x.seg(sind).pnt(1);
@@ -797,7 +797,7 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 			*x.gbl->log << "#INTERSECTION: " << xp[0] << ' ' << xp[1] << ' ' << (*fxy)(xp) << std::endl;
 		}
 		vl = vr; 
-    }
+	}
 
-    return;
+	return;
 }

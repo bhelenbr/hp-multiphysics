@@ -11,23 +11,23 @@
 #include "../hp_boundary.h"
 
 void tri_hp_buoyancy::rsdl(int stage) {
-    int i,j,n,tind;
-    FLT fluxx,fluxy;
-    const int NV = 4;
-    TinyVector<int,3> v;
-    TinyMatrix<FLT,ND,ND> ldcrd;
-    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-    FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi, oneminusbeta;
-    FLT lkcond = gbl->kcond, cjcbi2;
-    TinyMatrix<FLT,MXGP,MXGP> rho;
-    TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
-    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
-    TinyVector<FLT,NV> tres;
+	int i,j,n,tind;
+	FLT fluxx,fluxy;
+	const int NV = 4;
+	TinyVector<int,3> v;
+	TinyMatrix<FLT,ND,ND> ldcrd;
+	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
+	int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+	FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi, oneminusbeta;
+	FLT lkcond = gbl->kcond, cjcbi2;
+	TinyMatrix<FLT,MXGP,MXGP> rho;
+	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
+	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
+	TinyVector<FLT,NV> tres;
 
 
-    tri_hp::rsdl(stage);
-    oneminusbeta = 1.0-gbl->beta(stage);
+	tri_hp::rsdl(stage);
+	oneminusbeta = 1.0-gbl->beta(stage);
 
 	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
@@ -420,21 +420,21 @@ void tri_hp_buoyancy::rsdl(int stage) {
 				lftog(tind,gbl->res_r);
 			}
 		}
-    }
+	}
 
-    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-    gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-    if (basis::tri(log2p).sm) {
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p).sm) {
 		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());          
 		if (basis::tri(log2p).im) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());      
 		}
-    }
+	}
 
-    /*********************************************/
-    /* MODIFY RESIDUALS ON COARSER MESHES            */
-    /*********************************************/    
-    if (coarse_flag) {
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
 			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
@@ -445,14 +445,14 @@ void tri_hp_buoyancy::rsdl(int stage) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
 		if (basis::tri(log2p).sm) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 		if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
-    }
-    else {
+	}
+	else {
 		if (stage == gbl->nstage) {
 			/* HACK FOR AUXILIARY FLUXES */
 			for (i=0;i<nebd;++i)
 				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
 		}
-    }
+	}
 
 //    for(i=0;i<npnt;++i) {
 //        printf("rsdl v: %d ",i);

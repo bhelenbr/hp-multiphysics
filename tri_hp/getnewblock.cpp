@@ -11,16 +11,16 @@
 #include <block.h>
 #include <r_tri_mesh.h>
 
-#define CD
+//#define CD
 #define INS
 //#define PS
-#define SWIRL
+//#define SWIRL
 //#define BUOYANCY
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT
 
-#define POD
+//#define POD
 
 #ifdef CD
 #include "cd/tri_hp_cd.h"
@@ -62,7 +62,7 @@
 
 
 class btype {
-    public:
+	public:
 		const static int ntypes = 13;
 		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim,swe,lvlset,explct};
 		const static char names[ntypes][40];
@@ -77,23 +77,23 @@ const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buo
     "pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim","swe","lvlset","explicit"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
-    std::string keyword,val,ibcname;
-    std::istringstream data;
-    int type;          
+	std::string keyword,val,ibcname;
+	std::istringstream data;
+	int type;          
 
-    /* FIND BLOCK TYPE */
-    if (input.get(idprefix+"_type",val)) {
+	/* FIND BLOCK TYPE */
+	if (input.get(idprefix+"_type",val)) {
 		type = btype::getid(val.c_str());
-    }
-    else {
+	}
+	else {
 		if (!input.get("blocktype",val)) {
 			std::cerr << "couldn't find block type" << std::endl;
 			exit(1);
 		}
 		type = btype::getid(val.c_str());
-    }
+	}
 
-    switch(type) {
+	switch(type) {
 		case btype::r_tri_mesh: {
 			r_tri_mesh *temp = new r_tri_mesh();
 			return(temp);
@@ -183,8 +183,8 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			r_tri_mesh *temp = new r_tri_mesh();
 			return(temp);
 		}
-    } 
+	} 
 
-    return(0);
+	return(0);
 }
 

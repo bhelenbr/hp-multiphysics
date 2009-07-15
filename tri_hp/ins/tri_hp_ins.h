@@ -14,7 +14,7 @@
 #include <blocks.h>
 
 class tri_hp_ins : public tri_hp {
-    public:
+	public:
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
 		struct global : public tri_hp::global {
 			/* STABILIZATION */
@@ -25,7 +25,7 @@ class tri_hp_ins : public tri_hp {
 			Array<FLT,1> D;
 
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
-			TinyVector<FLT,2> eanda, eanda_recv;
+			TinyVector<FLT,3> eanda, eanda_recv;
 
 		} *gbl;
 
@@ -41,7 +41,7 @@ class tri_hp_ins : public tri_hp {
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 		tri_hp_helper* getnewhelper(input_map& inmap);
 
-    public:
+	public:
 		void* create_global_structure() {return new global;}
 		tri_hp_ins* create() { return new tri_hp_ins(); }
 

@@ -34,7 +34,7 @@ class tri_hp_helper;
 
 /** This class is just the data storage and nothing for multigrid */
 class tri_hp : public r_tri_mesh  {
-    public:
+	public:
 		int NV;
 		int p0, sm0, im0;  /**> Initialization values */
 		int log2p; /**> index of basis to use in global basis::tri array */
@@ -143,7 +143,7 @@ class tri_hp : public r_tri_mesh  {
 		/* SETUP V/S/T INFO */
 		void setinfo();
 
-    public:
+	public:
 		tri_hp() : r_tri_mesh() {}
 		virtual tri_hp* create() {return new tri_hp;}
 		void* create_global_structure() {return new global;}
@@ -227,9 +227,9 @@ class tri_hp : public r_tri_mesh  {
 
 /* THIS CLASS IS TO ALLOW SPECIAL THINGS LIKE RIGIDLY MOVING MESHES OR PARAMETER CHANGING ETC.. */
 class tri_hp_helper {
-    protected:
+	protected:
 		tri_hp &x;
-    public:
+	public:
 		tri_hp_helper(tri_hp& xin) : x(xin) {}
 		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin) {}
 		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }

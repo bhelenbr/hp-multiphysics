@@ -28,7 +28,7 @@
 
 namespace bdry_lvlset {
 
-    template <class BASE> class characteristic : public BASE {
+	template <class BASE> class characteristic : public BASE {
 		protected:
 			tri_hp_lvlset &x;
 		public:
@@ -93,7 +93,7 @@ namespace bdry_lvlset {
 			}
 	};
 
-    class hybrid : public characteristic<bdry_ins::neumann> {                             
+	class hybrid : public characteristic<bdry_ins::neumann> {                             
 		public:
 			hybrid(tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(xin,bin) {mytype = "hybrid";}
 			hybrid(const hybrid& inbdry, tri_hp_lvlset &xin, edge_bdry &bin) : characteristic<bdry_ins::neumann>(inbdry,xin,bin) {}
@@ -129,7 +129,7 @@ namespace bdry_lvlset {
 			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
 			void smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride);
 
-    };
+	};
 
 	class hybrid_pt : public hp_vrtx_bdry {
 		protected:
@@ -149,7 +149,7 @@ namespace bdry_lvlset {
 			}
 
 			void update(int stage);
-    };
+	};
 
 
 	}

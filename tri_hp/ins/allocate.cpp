@@ -14,29 +14,29 @@
 TinyVector<FLT,tri_mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
 #endif
 
- void tri_hp_ins::init(input_map& input, void *gin) {
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
+void tri_hp_ins::init(input_map& input, void *gin) {
+	std::string keyword;
+	std::istringstream data;
+	std::string filename;
 
-    gbl = static_cast<global *>(gin);
+	gbl = static_cast<global *>(gin);
 
-    if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
+	if (input.find(gbl->idprefix + "_nvariable") == input.end()) {
 		input[gbl->idprefix + "_nvariable"] = "3";
-    }
+	}
 
-    tri_hp::init(input,gin);
+	tri_hp::init(input,gin);
 
-    input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 
-    gbl->tau.resize(maxpst,NV);
+	gbl->tau.resize(maxpst,NV);
 
-    if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
-    if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
+	if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
+	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
 
-    /* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-    gbl->D.resize(NV);
-    if (NV > 3) {
+	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
+	gbl->D.resize(NV);
+	if (NV > 3) {
 		for (int n=2;n<NV-1;++n) {
 			stringstream nstr;
 			nstr << n-2;
@@ -44,37 +44,37 @@ TinyVector<FLT,tri_mesh::ND> tri_hp_ins::mesh_ref_vel = 0.0;
 				if (!input.get("D" +nstr.str(),gbl->D(n)))
 					gbl->D(n) = 0.0;
 		}
-    }
+	}
 
 #ifdef DROP
-    *gbl->log << "#DROP is defined" << std::endl;
+	*gbl->log << "#DROP is defined" << std::endl;
 #endif
 
-    return;
+	return;
 }
 
 void tri_hp_ins::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-    std::string keyword;
-    std::istringstream data;
-    std::string filename;
+	std::string keyword;
+	std::istringstream data;
+	std::string filename;
 
-    const tri_hp_ins& inmesh = dynamic_cast<const tri_hp_ins &>(in);
-    gbl = inmesh.gbl;
+	const tri_hp_ins& inmesh = dynamic_cast<const tri_hp_ins &>(in);
+	gbl = inmesh.gbl;
 
-    tri_hp::init(in,why,sizereduce1d);
+	tri_hp::init(in,why,sizereduce1d);
 
-    adis = inmesh.adis;
+	adis = inmesh.adis;
 
-    return;
+	return;
 }
 
 
 
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_ins::calculate_unsteady_sources() {
-    int i,j,n,tind;
+	int i,j,n,tind;
 
-    for (log2p=0;log2p<=log2pmax;++log2p) {
+	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
 			if (tri(tind).info > -1) {
 				crdtocht(tind,1);
@@ -111,8 +111,8 @@ void tri_hp_ins::calculate_unsteady_sources() {
 				}				
 			}
 		}
-    }
-    log2p=log2pmax;
+	}
+	log2p=log2pmax;
 
-    return;
+	return;
 }

@@ -11,24 +11,24 @@
 #include "../hp_boundary.h"
 
 void tri_hp_swe::rsdl(int stage) {
-    int i,j,n,tind;
-    FLT fluxx,fluxy,pres;
-    const int NV = 3;
-    TinyVector<int,3> v;
-    TinyMatrix<FLT,ND,ND> ldcrd;
-    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-    FLT cjcb, oneminusbeta;
-    TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
-    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
-    TinyVector<FLT,ND> vel,pt;
-    TinyVector<FLT,NV> tres;
-    FLT drag;
+	int i,j,n,tind;
+	FLT fluxx,fluxy,pres;
+	const int NV = 3;
+	TinyVector<int,3> v;
+	TinyMatrix<FLT,ND,ND> ldcrd;
+	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
+	int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+	FLT cjcb, oneminusbeta;
+	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
+	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
+	TinyVector<FLT,ND> vel,pt;
+	TinyVector<FLT,NV> tres;
+	FLT drag;
 
-    tri_hp::rsdl(stage);
-    oneminusbeta = 1.0-gbl->beta(stage);
+	tri_hp::rsdl(stage);
+	oneminusbeta = 1.0-gbl->beta(stage);
 
-    for(tind = 0; tind<ntri;++tind) {
+	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
 		v = tri(tind).pnt;
 
@@ -308,21 +308,21 @@ void tri_hp_swe::rsdl(int stage) {
 				lftog(tind,gbl->res_r);
 			}
 		}
-    }
+	}
 
-    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-    gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-    if (basis::tri(log2p).sm) {
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p).sm) {
 		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());          
 		if (basis::tri(log2p).im) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());      
 		}
-    }
+	}
 
-    /*********************************************/
-    /* MODIFY RESIDUALS ON COARSER MESHES            */
-    /*********************************************/    
-    if (coarse_flag) {
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
 		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
 			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
@@ -333,7 +333,7 @@ void tri_hp_swe::rsdl(int stage) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
 		if (basis::tri(log2p).sm) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 		if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
-    }
+	}
 
 
 //            for(i=0;i<npnt;++i)
@@ -347,5 +347,5 @@ void tri_hp_swe::rsdl(int stage) {
 //                for(int m=0;m<basis::tri(log2p).im;++m)
 //                    printf("rsdl i: %d %d %e %e %e\n",i,m,gbl->res.i(i,m,0),gbl->res.i(i,m,1),gbl->res.i(i,m,2));
 
-    return;
+	return;
 }

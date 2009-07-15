@@ -15,12 +15,12 @@
 class hp_edge_bdry;
 
 class hp_vrtx_bdry : public vgeometry_interface<2> {
-    protected:
+	protected:
 		std::string mytype;
 		tri_hp& x;
 		vrtx_bdry& base;
 
-    public:
+	public:
 		hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
 		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
 		virtual void* create_global_structure() {return 0;}
@@ -76,7 +76,7 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
 
 
 class hp_edge_bdry : public egeometry_interface<2> {
-    public:
+	public:
 		std::string mytype;
 		tri_hp& x;
 		edge_bdry &base;
@@ -87,7 +87,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 		Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
 
-    public:
+	public:
 		hp_edge_bdry(tri_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain"; ibc=x.gbl->ibc;}
 		hp_edge_bdry(const hp_edge_bdry &inbdry, tri_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), adapt_storage(inbdry.adapt_storage), ibc(inbdry.ibc), curved(inbdry.curved), coupled(inbdry.coupled) {
 			if (curved && !x.coarse_level) {

@@ -24,41 +24,41 @@ extern "C" {
 
 
 template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) {
-    std::string filename,keyword,linebuff;
-    std::ostringstream nstr;
-    std::istringstream instr;
-    int i;
+	std::string filename,keyword,linebuff;
+	std::ostringstream nstr;
+	std::istringstream instr;
+	int i;
 
-    /* Initialize base class */
-    BASE::init(input,gin);
+	/* Initialize base class */
+	BASE::init(input,gin);
 
-    if (!input.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
+	if (!input.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
 		input.getwdefault("snapshots",nsnapshots,10);
-    }
+	}
 
-    if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
+	if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
 
-    /* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
-    scaling.resize(BASE::NV);
-    scaling = 1;
-    if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
+	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
+	scaling.resize(BASE::NV);
+	scaling = 1;
+	if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
 		instr.str(linebuff);
 		for(i=0;i<BASE::NV;++i)
 			instr >> scaling(i);
-    }
+	}
 
-    nmodes = MAX(nmodes,2);
+	nmodes = MAX(nmodes,2);
 
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 #ifndef LOWNOISE
-    modes.resize(nmodes);
-    for(i=0;i<nmodes;++i) {
+	modes.resize(nmodes);
+	for(i=0;i<nmodes;++i) {
 		modes(i).v.resize(BASE::maxpst,BASE::NV);
 		modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
 		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
-    }
-    coeffs.resize(nmodes);
+	}
+	coeffs.resize(nmodes);
 #else
 	pod_ebdry.resize(BASE::nebd);
 	for (int i=0;i<BASE::nebd;++i) {
@@ -67,37 +67,37 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	}
 #endif
 
-    return;
+	return;
 }
 
 #ifndef LOWNOISE
 
 template<class BASE> void pod_generate<BASE>::tadvance() {
-    int i,j,k,l,n,tind,info;
-    int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
+	int i,j,k,l,n,tind,info;
+	int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
 	Array<FLT,1> low_noise_dot;
-    std::string filename,keyword,linebuff;
-    std::ostringstream nstr;
-    std::istringstream instr;
-    FLT cjcb;
+	std::string filename,keyword,linebuff;
+	std::ostringstream nstr;
+	std::istringstream instr;
+	FLT cjcb;
 
 	if (BASE::gbl->substep != 0) return;
 
-    BASE::tadvance(); 
+	BASE::tadvance(); 
 
-    int psi1dcounter = 0;
-    vsi ugstore;
-    ugstore.v.reference(BASE::ugbd(0).v);
-    ugstore.s.reference(BASE::ugbd(0).s);
-    ugstore.i.reference(BASE::ugbd(0).i);
+	int psi1dcounter = 0;
+	vsi ugstore;
+	ugstore.v.reference(BASE::ugbd(0).v);
+	ugstore.s.reference(BASE::ugbd(0).s);
+	ugstore.i.reference(BASE::ugbd(0).i);
 
-    psimatrix.resize(nsnapshots*nsnapshots);
-    psimatrix_recv.resize(nsnapshots*nsnapshots);
+	psimatrix.resize(nsnapshots*nsnapshots);
+	psimatrix_recv.resize(nsnapshots*nsnapshots);
 	low_noise_dot.resize(BASE::ntri);
 
-    /* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
-    psimatrix = 0.0;
-    for (k=0;k<nsnapshots;++k) {
+	/* GENERATE POD MODES SNAPSHOT COEFFICIENTS */
+	psimatrix = 0.0;
+	for (k=0;k<nsnapshots;++k) {
 		nstr.str("");
 		nstr << k+1 << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
@@ -161,11 +161,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		BASE::ugbd(0).v.reference(ugstore.v);
 		BASE::ugbd(0).s.reference(ugstore.s);
 		BASE::ugbd(0).i.reference(ugstore.i);
-    }
-    sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
+	}
+	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*(nsnapshots+1)/2,blocks::flt_msg,blocks::sum);
 
-    Array<FLT,1> eigenvalues(nsnapshots);
-    Array<FLT,2> eigenvectors(nsnapshots,nsnapshots);
+	Array<FLT,1> eigenvalues(nsnapshots);
+	Array<FLT,2> eigenvectors(nsnapshots,nsnapshots);
 
 	/* To compute needed sizes 
 	 char jobz[2] = "V", range[2] = "A", uplo[2] = "L";
@@ -199,21 +199,21 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	 &neig, eigenvalues.data(),eigenvectors.data(), &nsnapshots, isuppz.data(), work.data(), &lwork,&iwork, iwork.data(), &info); 
 	 */
 
-    char jobz[2] = "V", uplo[2] = "L";
-    Array<FLT,1> work(3*nsnapshots);
-    DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
+	char jobz[2] = "V", uplo[2] = "L";
+	Array<FLT,1> work(3*nsnapshots);
+	DSPEV(jobz,uplo,nsnapshots,psimatrix_recv.data(),eigenvalues.data(),eigenvectors.data(),nsnapshots,work.data(),info);
 
-    if (info != 0) {
+	if (info != 0) {
 		*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
 		exit(1);
-    }
+	}
 
-    *BASE::gbl->log << "eigenvalues "<<  eigenvalues << std::endl;
+	*BASE::gbl->log << "eigenvalues "<<  eigenvalues << std::endl;
 
-    eigenvectors.transposeSelf(secondDim,firstDim);  // FORTRAN ROUTINE RETURNS TRANSPOSE
+	eigenvectors.transposeSelf(secondDim,firstDim);  // FORTRAN ROUTINE RETURNS TRANSPOSE
 
-    //reconstruct POD MODES
-    for(k=0;k<nmodes;++k)	{
+	//reconstruct POD MODES
+	for(k=0;k<nmodes;++k)	{
 		modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
 		modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
 		modes(k).i(Range(0,BASE::ntri-1)) = 0.0;
@@ -229,16 +229,16 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			modes(k).s(Range(0,BASE::nseg-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.s(Range(0,BASE::nseg-1));
 			modes(k).i(Range(0,BASE::ntri-1)) += eigenvectors(l,nmodes -k -1)*BASE::ug.i(Range(0,BASE::ntri-1));
 		}
-    }
+	}
 
-    ugstore.v.reference(BASE::ugbd(1).v);
-    ugstore.s.reference(BASE::ugbd(1).s);
-    ugstore.i.reference(BASE::ugbd(1).i);
+	ugstore.v.reference(BASE::ugbd(1).v);
+	ugstore.s.reference(BASE::ugbd(1).s);
+	ugstore.i.reference(BASE::ugbd(1).i);
 
-    psimatrix = 0.0;
-    psimatrix_recv = 0.0;
+	psimatrix = 0.0;
+	psimatrix_recv = 0.0;
 
-    for(l=0;l<nmodes;++l) {
+	for(l=0;l<nmodes;++l) {
 		BASE::ugbd(1).v.reference(modes(l).v);
 		BASE::ugbd(1).s.reference(modes(l).s);
 		BASE::ugbd(1).i.reference(modes(l).i);
@@ -265,19 +265,19 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				}
 			}
 		}
-    }	
-    BASE::ugbd(1).v.reference(ugstore.v);
-    BASE::ugbd(1).s.reference(ugstore.s);
-    BASE::ugbd(1).i.reference(ugstore.i);
-    sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
+	}	
+	BASE::ugbd(1).v.reference(ugstore.v);
+	BASE::ugbd(1).s.reference(ugstore.s);
+	BASE::ugbd(1).i.reference(ugstore.i);
+	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
 
-    ugstore.v.reference(BASE::ugbd(0).v);
-    ugstore.s.reference(BASE::ugbd(0).s);
-    ugstore.i.reference(BASE::ugbd(0).i);
+	ugstore.v.reference(BASE::ugbd(0).v);
+	ugstore.s.reference(BASE::ugbd(0).s);
+	ugstore.i.reference(BASE::ugbd(0).i);
 
-    FLT norm;
-    /* RENORMALIZE MODES AND OUTPUT COEFFICIENTS */
-    for (k=0;k<nmodes;++k) {
+	FLT norm;
+	/* RENORMALIZE MODES AND OUTPUT COEFFICIENTS */
+	for (k=0;k<nmodes;++k) {
 		norm = sqrt(psimatrix_recv(k));
 		modes(k).v(Range(0,BASE::npnt-1)) /= norm;
 		modes(k).s(Range(0,BASE::nseg-1)) /= norm;
@@ -291,20 +291,20 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		BASE::ugbd(0).i.reference(modes(k).i);
 		BASE::output(filename, BASE::binary);
 		BASE::output(filename, BASE::tecplot);
-    }
-    BASE::ugbd(0).v.reference(ugstore.v);
-    BASE::ugbd(0).s.reference(ugstore.s);
-    BASE::ugbd(0).i.reference(ugstore.i);
+	}
+	BASE::ugbd(0).v.reference(ugstore.v);
+	BASE::ugbd(0).s.reference(ugstore.s);
+	BASE::ugbd(0).i.reference(ugstore.i);
 
 
-    ugstore.v.reference(BASE::ugbd(1).v);
-    ugstore.s.reference(BASE::ugbd(1).s);
-    ugstore.i.reference(BASE::ugbd(1).i);
+	ugstore.v.reference(BASE::ugbd(1).v);
+	ugstore.s.reference(BASE::ugbd(1).s);
+	ugstore.i.reference(BASE::ugbd(1).i);
 
-    psimatrix = 0.0;
-    psimatrix_recv = 0.0;
+	psimatrix = 0.0;
+	psimatrix_recv = 0.0;
 	psi1dcounter=0;
-    for (k=0;k<nsnapshots;++k) {
+	for (k=0;k<nsnapshots;++k) {
 		/* LOAD SNAPSHOT */
 		nstr.str("");
 		nstr << k+1 << std::flush;
@@ -345,14 +345,14 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			}
 			++psi1dcounter;
 		}
-    }
-    BASE::ugbd(1).v.reference(ugstore.v);
-    BASE::ugbd(1).s.reference(ugstore.s);
-    BASE::ugbd(1).i.reference(ugstore.i);
+	}
+	BASE::ugbd(1).v.reference(ugstore.v);
+	BASE::ugbd(1).s.reference(ugstore.s);
+	BASE::ugbd(1).i.reference(ugstore.i);
 
-    sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
+	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
 
-    for (k=0;k<nsnapshots;++k) {
+	for (k=0;k<nsnapshots;++k) {
 		/* OUTPUT COEFFICIENT VECTOR */
 		nstr.str("");
 		nstr << k+1 << std::flush;
@@ -370,9 +370,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
 
 		bout.close();
-    }
+	}
 
-    return;
+	return;
 }
 
 #else	
@@ -380,13 +380,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	if (BASE::gbl->substep != 0) return;
 
-    BASE::tadvance(); 
+	BASE::tadvance(); 
 
-    Array<FLT,1> psimatrix(nsnapshots*nsnapshots);
-    Array<FLT,1> psimatrix_recv(nsnapshots*nsnapshots);
+	Array<FLT,1> psimatrix(nsnapshots*nsnapshots);
+	Array<FLT,1> psimatrix_recv(nsnapshots*nsnapshots);
 	Array<FLT,1> low_noise_dot(BASE::ntri);
 	Array<FLT,1> eigenvalues(nsnapshots);
-    Array<FLT,1> eigenvector(nsnapshots);
+	Array<FLT,1> eigenvector(nsnapshots);
 	Array<FLT,2> coeff(nsnapshots,nsnapshots);
 	char jobz[2] = "V", range[2] = "I", uplo[2] = "L";
 	double vl, vu;
@@ -397,11 +397,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	Array<double,1> work(8*nsnapshots);
 	Array<int,1> ifail(nsnapshots);
 	int i,j,k,l,n,tind;
-    int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
-    std::string filename,keyword,linebuff;
-    std::ostringstream nstr;
-    std::istringstream instr;
-    FLT cjcb;
+	int lgpx = basis::tri(BASE::log2p).gpx, lgpn = basis::tri(BASE::log2p).gpn;
+	std::string filename,keyword,linebuff;
+	std::ostringstream nstr;
+	std::istringstream instr;
+	FLT cjcb;
 
 	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<nsnapshots;++k) {
@@ -651,7 +651,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->calculate_modes();
 
-    return;
+	return;
 }
 #endif
 
@@ -709,11 +709,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 
 	if (!active) return;
 
-    Array<FLT,1> psimatrix(x.nsnapshots*x.nsnapshots);
-    Array<FLT,1> psimatrix_recv(x.nsnapshots*x.nsnapshots);
+	Array<FLT,1> psimatrix(x.nsnapshots*x.nsnapshots);
+	Array<FLT,1> psimatrix_recv(x.nsnapshots*x.nsnapshots);
 	Array<FLT,1> low_noise_dot(x.BASE::ntri);
 	Array<FLT,1> eigenvalues(x.nsnapshots);
-    Array<FLT,1> eigenvector(x.nsnapshots);
+	Array<FLT,1> eigenvector(x.nsnapshots);
 	Array<FLT,2> coeff(x.nsnapshots,x.nsnapshots);
 	char jobz[2] = "V", range[2] = "I", uplo[2] = "L";
 	double vl, vu;
@@ -724,11 +724,11 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	Array<double,1> work(8*x.nsnapshots);
 	Array<int,1> ifail(x.nsnapshots);
 	int i,k,l,n;
-    int lgpx = basis::tri(x.log2p).gpx;
-    std::string filename,keyword,linebuff;
-    std::ostringstream nstr;
-    std::istringstream instr;
-    FLT cjcb;
+	int lgpx = basis::tri(x.log2p).gpx;
+	std::string filename,keyword,linebuff;
+	std::ostringstream nstr;
+	std::istringstream instr;
+	FLT cjcb;
 
 	/* MAKE FILES FOR EDGE MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<x.nsnapshots;++k) {

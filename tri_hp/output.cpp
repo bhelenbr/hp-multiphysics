@@ -24,14 +24,14 @@
 
 
 void tri_hp::output(const std::string& fname, block::output_purpose why) {
-    int i,j;
-    std::string fnmapp, namewdot;
-    std::ostringstream nstr;
-    ofstream out;
-    out.setf(std::ios::scientific, std::ios::floatfield);
-    out.precision(4);
+	int i,j;
+	std::string fnmapp, namewdot;
+	std::ostringstream nstr;
+	ofstream out;
+	out.setf(std::ios::scientific, std::ios::floatfield);
+	out.precision(4);
 
-    switch(why) {
+	switch(why) {
 		case(block::display): {
 			output(fname,output_type(0));
 			helper->output();
@@ -55,6 +55,8 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 						nstr << i << std::flush;
 						fnmapp = namewdot +nstr.str() +".bin";
 						bout.open(fnmapp.c_str());
+						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+						bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 						for (j=0;j<npnt;++j) { 
 							bout.writeFloat(vrtxbd(i)(j)(0),binio::Double);
 							bout.writeFloat(vrtxbd(i)(j)(1),binio::Double);
@@ -82,20 +84,20 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 		case(block::debug): {
 			output(fname,output_type(2));
 		}
-    }
-    return;
+	}
+	return;
 }
 
  void tri_hp::output(const std::string& fname, filetype typ, int tlvl) {
-    ofstream out;
-    std::string fnmapp;
-    int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
-    int ijind[MXTM][MXTM];
+	ofstream out;
+	std::string fnmapp;
+	int i,j,k,m,n,v0,v1,sind,tind,indx,sgn;
+	int ijind[MXTM][MXTM];
 
-    out.setf(std::ios::scientific, std::ios::floatfield);
-    out.precision(4);
+	out.setf(std::ios::scientific, std::ios::floatfield);
+	out.precision(4);
 
-    switch (typ) {
+	switch (typ) {
 		case (text):
 			fnmapp = fname +".txt";
 			out.open(fnmapp.c_str());
@@ -445,21 +447,18 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 	}
 
-
-
-
 	return;
 }
 
 void tri_hp::input(const std::string& fname) {
-    int i,j;
-    std::string fnmapp;
-    std::ostringstream nstr;
-    ifstream fin;
+	int i,j;
+	std::string fnmapp;
+	std::ostringstream nstr;
+	ifstream fin;
 	binifstream bin;
 
 	if (reload_type == tri_hp::binary) {
-	    fnmapp = fname +".bin";
+		fnmapp = fname +".bin";
 		fin.open(fnmapp.c_str(),ios::in);
 		if(fin.is_open()) {
 			fin.close();
@@ -475,6 +474,8 @@ void tri_hp::input(const std::string& fname) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
 					exit(1);
 				}
+				bin.setFlag(binio::BigEndian,bin.readInt(1));
+				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
 				for (j=0;j<npnt;++j) {
 					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
 					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
@@ -526,20 +527,20 @@ void tri_hp::input(const std::string& fname) {
 		}
 	}
 
-    return;
+	return;
 
 }
 
- void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
-    int i,j,k,m,n,pin,pmin,indx;
-    int bnum;
-    std::string fnapp;
-    char buffer[80];
-    char trans[] = "T";
-    ifstream in;
-    FLT fltskip;
+void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
+	int i,j,k,m,n,pin,pmin,indx;
+	int bnum;
+	std::string fnapp;
+	char buffer[80];
+	char trans[] = "T";
+	ifstream in;
+	FLT fltskip;
 
-    switch(typ) {
+	switch(typ) {
 
 		case (text):
 			fnapp = filename +".txt";
@@ -815,7 +816,7 @@ void tri_hp::input(const std::string& fname) {
 				m = 0;
 				for(i=1;i<basis::tri(log2p).sm;++i) {
 					for(j=1;j<basis::tri(log2p).sm-(i-1);++j) {
-						for(n=0;n<ND;++n)
+						for(n=0;n<NV;++n)
 							uht(n)(m) = u(n)(i,j);
 						in >> fltskip >> fltskip;
 						for(n=0;n<NV;++n) {
@@ -838,7 +839,7 @@ void tri_hp::input(const std::string& fname) {
 			*gbl->log << "can't input a tri_hp from that filetype" << std::endl;
 			exit(1);
 			break;
-    }
+	}
 
-    return;
+	return;
 }

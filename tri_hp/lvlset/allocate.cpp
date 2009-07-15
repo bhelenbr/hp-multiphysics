@@ -11,31 +11,31 @@
 #include "../hp_boundary.h"
 
 void tri_hp_lvlset::init(input_map& input, void *gin) {
-    gbl = static_cast<global *>(gin);    
-    input[gbl->idprefix + "_nvariable"] = "4";
-    tri_hp_ins::init(input,gin);
+	gbl = static_cast<global *>(gin);    
+	input[gbl->idprefix + "_nvariable"] = "4";
+	tri_hp_ins::init(input,gin);
 
-    input.getwdefault(gbl->idprefix + "_rho2",gbl->rho2,1.0);
-    input.getwdefault(gbl->idprefix + "_mu2",gbl->mu2,0.0);
-    input.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
-    input.getwdefault(gbl->idprefix + "_width",gbl->width,0.02);
+	input.getwdefault(gbl->idprefix + "_rho2",gbl->rho2,1.0);
+	input.getwdefault(gbl->idprefix + "_mu2",gbl->mu2,0.0);
+	input.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
+	input.getwdefault(gbl->idprefix + "_width",gbl->width,0.02);
 
-    return;
+	return;
 }
 
 void tri_hp_lvlset::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
-    const tri_hp_lvlset& inmesh = dynamic_cast<const tri_hp_lvlset &>(in);
-    gbl = inmesh.gbl;
-    tri_hp_ins::init(in,why,sizereduce1d);
-    return;
+	const tri_hp_lvlset& inmesh = dynamic_cast<const tri_hp_lvlset &>(in);
+	gbl = inmesh.gbl;
+	tri_hp_ins::init(in,why,sizereduce1d);
+	return;
 }
 
 
 void tri_hp_lvlset::calculate_unsteady_sources() {
-    int i,j,n,tind;
-    FLT rho;
+	int i,j,n,tind;
+	FLT rho;
 
-    for (log2p=0;log2p<=log2pmax;++log2p) {
+	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
 			if (tri(tind).info > -1) {
 				crdtocht(tind,1);
@@ -79,8 +79,8 @@ void tri_hp_lvlset::calculate_unsteady_sources() {
 				}
 			}
 		}
-    }
-    log2p=log2pmax;
+	}
+	log2p=log2pmax;
 
-    return;
+	return;
 }

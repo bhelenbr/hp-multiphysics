@@ -11,10 +11,10 @@ using namespace bdry_ins;
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
-    TinyVector<FLT,tri_mesh::ND> norm, mvel;
-    FLT convect,jcb;
+	TinyVector<FLT,tri_mesh::ND> norm, mvel;
+	FLT convect,jcb;
 
-    switch(typ) {
+	switch(typ) {
 		case(tri_hp::text): case(tri_hp::binary): {
 			hp_edge_bdry::output(fout,typ,tlvl);
 			break;
@@ -146,7 +146,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			v0 = x.seg(sind).pnt(1);
 			total_flux += x.gbl->res.v(v0,Range::all());
 		}
-    }
+	}
 
 	return;
 }
@@ -155,11 +155,11 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 
 void neumann::rsdl(int stage) {
-    int j,k,n,v0,v1,sind;
-    TinyVector<FLT,2> pt,mvel,nrm;
-    Array<FLT,1> u(x.NV),flx(x.NV);
+	int j,k,n,v0,v1,sind;
+	TinyVector<FLT,2> pt,mvel,nrm;
+	Array<FLT,1> u(x.NV),flx(x.NV);
 
-    for(j=0;j<base.nseg;++j) {
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
@@ -206,19 +206,19 @@ void neumann::rsdl(int stage) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
-    }
-    return;
+	}
+	return;
 }
 
 void applied_stress::init(input_map& inmap,void* gbl_in) {
-    std::string keyword;
-    std::ostringstream nstr;
+	std::string keyword;
+	std::ostringstream nstr;
 
-    neumann::init(inmap,gbl_in);
+	neumann::init(inmap,gbl_in);
 
-    stress.resize(tri_mesh::ND);
+	stress.resize(tri_mesh::ND);
 
-    for(int n=0;n<tri_mesh::ND;++n) {
+	for(int n=0;n<tri_mesh::ND;++n) {
 		nstr.str("");
 		nstr << base.idprefix << "_stress" << n << std::flush;
 		if (inmap.find(nstr.str()) != inmap.end()) {
@@ -228,25 +228,25 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 			*x.gbl->log << "couldn't find stress function " << nstr.str() << '\n';
 			exit(1);
 		}
-    }
+	}
 
-    return;
+	return;
 }
 
 void flexible::init(input_map& inmap,void* gbl_in) {
-    std::string keyword;
-    std::ostringstream nstr;
+	std::string keyword;
+	std::ostringstream nstr;
 
-    inflow::init(inmap,gbl_in);
+	inflow::init(inmap,gbl_in);
 
-    ibc = x.getnewibc(base.idprefix +"_fcn",inmap);
+	ibc = x.getnewibc(base.idprefix +"_fcn",inmap);
 
-    Array<int,1> atemp(x.NV-1);
-    if (!inmap.get(base.idprefix+"_ins_bcs", atemp.data(), x.NV-1)) {
+	Array<int,1> atemp(x.NV-1);
+	if (!inmap.get(base.idprefix+"_ins_bcs", atemp.data(), x.NV-1)) {
 		*x.gbl->log << "missing flexible specifier list (0 = essential, 1 = natural, 2 = mixed)\n";
 		exit(1);
-    }
-    else {
+	}
+	else {
 		ndirichlets = 0;
 		for (int n=0;n<x.NV-1;++n) {
 			type(n) = static_cast<bctypes>(atemp(n));
@@ -254,121 +254,121 @@ void flexible::init(input_map& inmap,void* gbl_in) {
 				dirichlets(ndirichlets++) = n;
 			}
 		}
-    }
+	}
 
-    return;
+	return;
 }
 
 
 void symmetry::tadvance() {
-    int j,m,v0,sind;
-    TinyVector<FLT,tri_mesh::ND> pt;
+	int j,m,v0,sind;
+	TinyVector<FLT,tri_mesh::ND> pt;
 
-    hp_edge_bdry::tadvance();
+	hp_edge_bdry::tadvance();
 
-    /* UPDATE BOUNDARY CONDITION VALUES */
-    for(j=0;j<base.nseg;++j) {
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		x.ug.v(v0,dir) = 0.0;
-    }
-    v0 = x.seg(sind).pnt(1);
-    x.ug.v(v0,dir) = 0.0;
+	}
+	v0 = x.seg(sind).pnt(1);
+	x.ug.v(v0,dir) = 0.0;
 
-    /*******************/    
-    /* SET SIDE VALUES */
-    /*******************/
-    for(j=0;j<base.nseg;++j) {
+	/*******************/    
+	/* SET SIDE VALUES */
+	/*******************/
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		for(m=0;m<basis::tri(x.log2p).sm;++m) {
 			x.ug.s(sind,m,dir) = 0.0;
 		}
-    }
+	}
 
-    return;
+	return;
 }
 
 
 void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-    FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
-    FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
-    FLT nu,gam,qmax;
-    Array<FLT,1> ub(x.NV), uvp(x.NV);
+	FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
+	FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
+	FLT nu,gam,qmax;
+	Array<FLT,1> ub(x.NV), uvp(x.NV);
 
-    /* CHARACTERISTIC FAR-FIELD B.C. */   
+	/* CHARACTERISTIC FAR-FIELD B.C. */   
 
-    rho = x.gbl->rho;
-    nu = x.gbl->mu/x.gbl->rho;
-    rhoi = 1./rho;
-    mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+	rho = x.gbl->rho;
+	nu = x.gbl->mu/x.gbl->rho;
+	rhoi = 1./rho;
+	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
 	hmax = mag*2.0/(0.25*(basis::tri(x.log2p).p +1)*(basis::tri(x.log2p).p+1));
-    qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
+	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
 	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
 
-    norm(0) /= mag;
-    norm(1) /= mag;
+	norm(0) /= mag;
+	norm(1) /= mag;
 
-    ul =  u(0)*norm(0) +u(1)*norm(1);
-    vl = -u(0)*norm(1) +u(1)*norm(0);
-    pl =  u(x.NV-1);
+	ul =  u(0)*norm(0) +u(1)*norm(1);
+	vl = -u(0)*norm(1) +u(1)*norm(0);
+	pl =  u(x.NV-1);
 
-    /* FREESTREAM CONDITIONS */
-    for(int n=0;n<x.NV;++n)
+	/* FREESTREAM CONDITIONS */
+	for(int n=0;n<x.NV;++n)
 		ub(n) = ibc->f(n,xpt,x.gbl->time);
 
-    ur =  ub(0)*norm(0) +ub(1)*norm(1);
-    vr = -ub(0)*norm(1) +ub(1)*norm(0);
-    pr =  ub(x.NV-1);
+	ur =  ub(0)*norm(0) +ub(1)*norm(1);
+	vr = -ub(0)*norm(1) +ub(1)*norm(0);
+	pr =  ub(x.NV-1);
 
-    um = mv(0)*norm(0) +mv(1)*norm(1);
+	um = mv(0)*norm(0) +mv(1)*norm(1);
 
-    cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
-    cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
-    c = 0.5*(cl+cr);
-    s = 0.5*(ul+ur);
-    v = 0.5*(vl+vr);
+	cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
+	cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
+	c = 0.5*(cl+cr);
+	s = 0.5*(ul+ur);
+	v = 0.5*(vl+vr);
 
-    den = 1./(2*c);
-    lam0 = s -um;
-    lam1 = s-.5*um +c; /* always positive */
-    lam2 = s-.5*um -c; /* always negative */
+	den = 1./(2*c);
+	lam0 = s -um;
+	lam1 = s-.5*um +c; /* always positive */
+	lam2 = s-.5*um -c; /* always negative */
 
-    /* PERFORM CHARACTERISTIC SWAP */
-    /* BASED ON LINEARIZATION AROUND UL,VL,PL */
-    uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-    if (lam0 > 0.0) {
+	/* PERFORM CHARACTERISTIC SWAP */
+	/* BASED ON LINEARIZATION AROUND UL,VL,PL */
+	uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
+	if (lam0 > 0.0) {
 		uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
 		for(int n=tri_mesh::ND;n<x.NV-1;++n)
 			uvp(n) = u(n);
-    }
-    else {
+	}
+	else {
 		uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
 		for(int n=tri_mesh::ND;n<x.NV-1;++n)
 			uvp(n) = ub(n);
-    }
-    uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+	}
+	uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
 
-    /* CHANGE BACK TO X,Y COORDINATES */
-    ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
-    ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
+	/* CHANGE BACK TO X,Y COORDINATES */
+	ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
+	ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
 
-    for(int n=tri_mesh::ND;n<x.NV;++n)
+	for(int n=tri_mesh::ND;n<x.NV;++n)
 		ub(n) =uvp(n);
 
-    norm *= mag;
+	norm *= mag;
 
-    flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
 
-    for(int n=0;n<tri_mesh::ND;++n)
+	for(int n=0;n<tri_mesh::ND;++n)
 		flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
 
-    for(int n=tri_mesh::ND;n<x.NV-1;++n)
+	for(int n=tri_mesh::ND;n<x.NV-1;++n)
 		flx(n) = flx(x.NV-1)*ub(n);
 
 	// *x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
 
 
-    return;
+	return;
 }
 
 void hybrid_slave_pt::update(int stage) {

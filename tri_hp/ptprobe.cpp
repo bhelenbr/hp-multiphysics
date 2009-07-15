@@ -2,75 +2,75 @@
 #include "hp_boundary.h"
 #include <assert.h>
 
- void tri_hp::ptprobe(TinyVector<FLT,2> xp, Array<FLT,1> uout, int tlvl) {
-    FLT r,s;
-    int tind;
+void tri_hp::ptprobe(TinyVector<FLT,2> xp, Array<FLT,1> uout, int tlvl) {
+	FLT r,s;
+	int tind;
 
-    findinteriorpt(xp,tind,r,s);
-    ugtouht(tind,tlvl);  
-    basis::tri(log2p).ptprobe(NV,uout.data(),&uht(0)(0),MXTM);
+	findinteriorpt(xp,tind,r,s);
+	ugtouht(tind,tlvl);  
+	basis::tri(log2p).ptprobe(NV,uout.data(),&uht(0)(0),MXTM);
 }
 
- void tri_hp::ptprobe_bdry(int bnum, TinyVector<FLT,2> xp, Array<FLT,1> uout,int tlvl) {
-    FLT psi;
-    int sind;
+void tri_hp::ptprobe_bdry(int bnum, TinyVector<FLT,2> xp, Array<FLT,1> uout,int tlvl) {
+	FLT psi;
+	int sind;
 
-    hp_ebdry(bnum)->findandmovebdrypt(xp,sind,psi);
-    sind = ebdry(bnum)->seg(sind);
-    ugtouht1d(sind,tlvl);  
-    basis::tri(log2p).ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
+	hp_ebdry(bnum)->findandmovebdrypt(xp,sind,psi);
+	sind = ebdry(bnum)->seg(sind);
+	ugtouht1d(sind,tlvl);  
+	basis::tri(log2p).ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
 }
 
- void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
-    TinyVector<FLT,3> wgt;
-    int v0;
-    bool found;
+void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
+	TinyVector<FLT,3> wgt;
+	int v0;
+	bool found;
 
-    qtree.nearpt(xp.data(),v0);
-    found = findtri(xp,v0,tind);
-    if (!found) {
+	qtree.nearpt(xp.data(),v0);
+	found = findtri(xp,v0,tind);
+	if (!found) {
 		*gbl->log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
-    }
+	}
 
-	 getwgts(wgt);
-    /* TRIANGLE COORDINATES */    
-    s = wgt(0)*2 -1.0;
-    r = wgt(2)*2 -1.0;
+	getwgts(wgt);
+	/* TRIANGLE COORDINATES */    
+	s = wgt(0)*2 -1.0;
+	r = wgt(2)*2 -1.0;
 
-    if (tri(tind).info < 0) {
+	if (tri(tind).info < 0) {
 		basis::tri(log2p).ptvalues_rs(r,s);
 		return;
-    }
+	}
 
-    /* MOVE POINT WITH SIDE CURVATURE */
-    crdtocht(tind);
-    basis::tri(log2p).ptprobe_bdry(ND,xp.data(),r,s,&cht(0,0),MXTM);
+	/* MOVE POINT WITH SIDE CURVATURE */
+	crdtocht(tind);
+	basis::tri(log2p).ptprobe_bdry(ND,xp.data(),r,s,&cht(0,0),MXTM);
 
-    /* need to do this because ptprobe_bdry only calculates boundary function */
-    basis::tri(log2p).ptvalues_rs(r,s);
+	/* need to do this because ptprobe_bdry only calculates boundary function */
+	basis::tri(log2p).ptvalues_rs(r,s);
 
-    return;
+	return;
 }
 
 int mistake_counter = 0;
 
- int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
-    FLT dr,ds,dx,dy,det,roundoff;
-    TinyVector<FLT,3> wgt;
-    TinyVector<FLT,ND> x,dxmax,ddr,dds;
-    int n,iter,v0,tind1;
+int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
+	FLT dr,ds,dx,dy,det,roundoff;
+	TinyVector<FLT,3> wgt;
+	TinyVector<FLT,ND> x,dxmax,ddr,dds;
+	int n,iter,v0,tind1;
 	int ierr = 0;
-    bool found;
+	bool found;
 
-    qtree.nearpt(xp.data(),v0);
-    found = findtri(xp,v0,tind);
-    getwgts(wgt);
+	qtree.nearpt(xp.data(),v0);
+	found = findtri(xp,v0,tind);
+	getwgts(wgt);
 
-    /* TRIANGLE COORDINATES */    
-    s = wgt(0)*2 -1.0;
-    r = wgt(2)*2 -1.0;
+	/* TRIANGLE COORDINATES */    
+	s = wgt(0)*2 -1.0;
+	r = wgt(2)*2 -1.0;
 
-    if (tri(tind).info >= 0) {
+	if (tri(tind).info >= 0) {
 		/* DEAL WITH CURVED SIDES */
 		crdtocht(tind);
 
@@ -116,13 +116,13 @@ int mistake_counter = 0;
 		basis::tri(log2p).ptvalues_rs(r,s);
 
 		return(ierr);
-    }
-    else if (tind1 < 0) {
+	}
+	else if (tind1 < 0) {
 		*gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
 		ierr = 1;
 	}
 
-    /* need to do this because ptprobe_bdry only calculates boundary function */
-    basis::tri(log2p).ptvalues_rs(r,s);
-    return(ierr);
+	/* need to do this because ptprobe_bdry only calculates boundary function */
+	basis::tri(log2p).ptvalues_rs(r,s);
+	return(ierr);
 }

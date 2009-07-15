@@ -14,7 +14,7 @@
 #include <blocks.h>
 
 class tri_hp_swe : public tri_hp_ins {
-    public:
+	public:
 		struct global : public tri_hp_ins::global {
 
 			/* PHYSICAL CONSTANTS */
@@ -29,7 +29,7 @@ class tri_hp_swe : public tri_hp_ins {
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
-    public:
+	public:
 		void* create_global_structure() {return new global;}
 		tri_hp_swe* create() { return new tri_hp_swe(); }
 

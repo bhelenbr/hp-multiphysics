@@ -14,12 +14,12 @@
 /* DIRK SCHEMES */
 #ifdef DIRK
 void tri_hp::tadvance() {
-    int i,j,n,s,tind,stage;
+	int i,j,n,s,tind,stage;
 
-    /* DO STUFF FOR DEFORMABLE MESH FIRST */    
-    if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
+	/* DO STUFF FOR DEFORMABLE MESH FIRST */    
+	if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
 		r_tri_mesh::tadvance();
-    }
+	}
 
 	/* To see what length target will look like */
 //	length();
@@ -29,8 +29,8 @@ void tri_hp::tadvance() {
 //	output(fname.c_str(),trunc_error);
 //	exit(1);
 
-    stage = gbl->substep +gbl->esdirk;
-    if (!coarse_level) {
+	stage = gbl->substep +gbl->esdirk;
+	if (!coarse_level) {
 		if (stage > 0) {
 			/* BACK CALCULATE K TERM */
 			ugbd(stage+1).v(Range(0,npnt-1),Range::all()) = (ug.v(Range(0,npnt-1),Range::all()) -ugbd(1).v(Range(0,npnt-1),Range::all()))*gbl->adirk(stage-1,stage-1);
@@ -88,8 +88,8 @@ void tri_hp::tadvance() {
 			if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
 				vrtxbd(0)(Range(0,npnt-1)) += constant*vrtxbd(stage+1)(Range(0,npnt-1));               
 		}
-    }
-    else {
+	}
+	else {
 		tri_hp* fmesh = dynamic_cast<tri_hp *>(fine);
 
 		/* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
@@ -108,28 +108,28 @@ void tri_hp::tadvance() {
 					vrtxbd(1)(i)(n) += fcnnct(i).wt(j)*fmesh->vrtxbd(1)(fmesh->tri(tind).pnt(j))(n);
 			}
 		}
-    }
+	}
 
 	for(i=0;i<nvbd;++i) 
 		hp_vbdry(i)->tadvance();
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->tadvance();
 
-    helper->tadvance();
+	helper->tadvance();
 
-    calculate_unsteady_sources();
+	calculate_unsteady_sources();
 
-    return;
+	return;
 
 }
 
 /* A GENERIC CALCULATION OF SOURCES FOR AN AUTONOMOUS SYSTEM IN STANDARD FORM */
 /* WILL NEED TO BE OVERRIDDEN FOR SPECIAL CASES */
 void tri_hp::calculate_unsteady_sources() {
-    int i,j,n,tind;
+	int i,j,n,tind;
 
-    for (log2p=0;log2p<=log2pmax;++log2p) {
+	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
 			if (tri(tind).info > -1) {
 				crdtocht(tind,1);
@@ -166,23 +166,23 @@ void tri_hp::calculate_unsteady_sources() {
 				}				
 			}
 		}
-    }
-    log2p = log2pmax;
+	}
+	log2p = log2pmax;
 
-    return;
+	return;
 }
 
 #else
 
 void tri_hp::tadvance() {
-    int i,j,n,tind;
+	int i,j,n,tind;
 
-    /* DO STUFF FOR DEFORMABLE MESH FIRST */    
-    if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
+	/* DO STUFF FOR DEFORMABLE MESH FIRST */    
+	if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
 		r_tri_mesh::tadvance();
-    }
+	}
 
-    if (!coarse_level) {
+	if (!coarse_level) {
 		/* SHIFT DATA */
 		for (int lvl=gbl->nhist-2;lvl>=0; --lvl) {            
 			ugbd(lvl+1).v(Range(0,npnt-1),Range::all()) = ugbd(lvl).v(Range(0,npnt-1),Range::all());
@@ -211,8 +211,8 @@ void tri_hp::tadvance() {
 			if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
 				vrtxbd(0)(Range(0,npnt-1)) += vrtxbd(1)(Range(0,npnt-1)) -vrtxbd(2)(Range(0,npnt-1));               
 		}
-    }
-    else {
+	}
+	else {
 		tri_hp* fmesh = dynamic_cast<tri_hp *>(fine);
 
 		/* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
@@ -233,28 +233,28 @@ void tri_hp::tadvance() {
 				}
 			}
 		}
-    }
+	}
 
 	for(i=0;i<nvbd;++i) 
 		hp_vbdry(i)->tadvance();
 
-    for(i=0;i<nebd;++i) 
+	for(i=0;i<nebd;++i) 
 		hp_ebdry(i)->tadvance();
 
-    helper->tadvance();
+	helper->tadvance();
 
-    calculate_unsteady_sources();
+	calculate_unsteady_sources();
 
-    return;
+	return;
 
 }
 
 /* A GENERIC CALCULATION OF SOURCES FOR AN AUTONOMOUS SYSTEM IN STANDARD FORM */
 /* WILL NEED TO BE OVERRIDDEN FOR SPECIAL CASES */
 void tri_hp::calculate_unsteady_sources() {
-    int i,j,n,tind;
+	int i,j,n,tind;
 
-    for (log2p=0;log2p<=log2pmax;++log2p) {
+	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for (int level=1;level<min(gbl->nhist,gbl->tstep+1);++level) {
 			for(tind=0;tind<ntri;++tind) {
 				if (tri(tind).info > -1) {
@@ -293,11 +293,11 @@ void tri_hp::calculate_unsteady_sources() {
 				}
 			}
 		}
-    }
+	}
 
-    log2p = log2pmax;
+	log2p = log2pmax;
 
-    return;
+	return;
 }
 #endif
 

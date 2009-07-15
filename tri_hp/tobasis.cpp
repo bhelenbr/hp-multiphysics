@@ -11,12 +11,12 @@
 #include<myblas.h>
 
  void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
-    int tind,i,j,m,n,indx,v0,v1,sind,info;
-    char uplo[] = "U";
-    TinyVector<FLT,2> pt;
+	int tind,i,j,m,n,indx,v0,v1,sind,info;
+	char uplo[] = "U";
+	TinyVector<FLT,2> pt;
 
-    /* LOOP THROUGH VERTICES */
-    for(i=0;i<npnt;++i)
+	/* LOOP THROUGH VERTICES */
+	for(i=0;i<npnt;++i)
 		for(n=0;n<NV;++n)
 			ugbd(tlvl).v(i,n) = ibc->f(n,pnts(i),gbl->time);
 
@@ -57,11 +57,11 @@
 			for(m=0;m<basis::tri(log2p).sm;++m) 
 				ugbd(tlvl).s(sind,m,n) = -lf(n)(2+m);
 		}
-    }
+	}
 
-    if (basis::tri(log2p).im <= 0) return;
+	if (basis::tri(log2p).im <= 0) return;
 
-    for(tind = 0; tind < ntri; ++tind) {
+	for(tind = 0; tind < ntri; ++tind) {
 		ugtouht_bdry(tind,tlvl);
 		for(n=0;n<NV;++n)
 			basis::tri(log2p).proj_bdry(&uht(n)(0),&u(n)(0,0),MXGP);
@@ -91,8 +91,8 @@
 			for(i=0;i<basis::tri(log2p).im;++i)
 				ugbd(tlvl).i(tind,i,n) = -lf(n)(basis::tri(log2p).bm+i);
 		}
-    }
+	}
 
-    return;
+	return;
 }    
 

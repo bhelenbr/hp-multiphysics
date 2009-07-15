@@ -14,12 +14,12 @@
 #include <blocks.h>
 
 class tri_hp_swirl : public tri_hp_ins {
-    public:
+	public:
 		FLT dpdz; //< 3D driving pressure gradient
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
 
-    public:
+	public:
 		void init(input_map& input, void *gin);  
 		tri_hp_swirl* create() { return new tri_hp_swirl(); }
 		void length();

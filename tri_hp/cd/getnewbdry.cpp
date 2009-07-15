@@ -27,26 +27,26 @@ const char tri_hp_cd_stype::names[ntypes][40] = {"plain","dirichlet","adiabatic"
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
-    std::string keyword,val;
-    std::istringstream data;
-    int type;          
-    hp_edge_bdry *temp;  
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_edge_bdry *temp;  
 
 
-    keyword =  ebdry(bnum)->idprefix + "_cd_type";
-    if (bdrydata.get(keyword,val)) {
+	keyword =  ebdry(bnum)->idprefix + "_cd_type";
+	if (bdrydata.get(keyword,val)) {
 		type = tri_hp_cd_stype::getid(val.c_str());
 		if (type == tri_hp_cd_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
 			exit(1);
 		}
-    }
-    else {
+	}
+	else {
 		type = tri_hp_cd_stype::unknown;
-    }
+	}
 
 
-    switch(type) {
+	switch(type) {
 		case tri_hp_cd_stype::plain: {
 			temp = new hp_edge_bdry(*this,*ebdry(bnum));
 			break;
@@ -71,7 +71,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = tri_hp::getnewsideobject(bnum,bdrydata);
 			break;
 		}
-    }
+	}
 
-    return(temp);
+	return(temp);
 }

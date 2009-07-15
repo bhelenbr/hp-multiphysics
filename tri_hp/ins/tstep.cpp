@@ -3,8 +3,10 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
+#define TIMEACCURATE
+
 void tri_hp_ins::setup_preconditioner() {
-    if (gbl->diagonal_preconditioner) {
+	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
 		int tind,i,j,side,v0;
 		FLT jcb,h,hmax,q,qmax,lam1,gam;
@@ -58,7 +60,7 @@ void tri_hp_ins::setup_preconditioner() {
 				exit(1);
 			}
 
-			if  (!(qmax >= 0.0)) {  // THIS CATCHES NAN'S TOO
+			if  (std::isnan(qmax)) { 
 				*gbl->log << "flow solution has nan's" << std::endl;
 				output("nan",tecplot);
 				exit(1);
@@ -120,8 +122,8 @@ void tri_hp_ins::setup_preconditioner() {
 				}
 			}
 		}
-    }
-    else {
+	}
+	else {
 		/* SET-UP MATRIX PRECONDITIONER */
 		int tind,i,j,side,v0;
 		FLT jcb,h,hmax,q,qmax,lam1,gam,ubar,vbar;
@@ -207,7 +209,7 @@ void tri_hp_ins::setup_preconditioner() {
 				}
 			}
 		}
-    }
+	}
 
-    tri_hp::setup_preconditioner();
+	tri_hp::setup_preconditioner();
 }

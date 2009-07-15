@@ -13,7 +13,7 @@
 
 namespace ibc_ins {
 
-    class freestream : public init_bdry_cndtn {
+	class freestream : public init_bdry_cndtn {
 		private:
 			FLT alpha, speed,perturb_amp;
 
@@ -49,9 +49,9 @@ namespace ibc_ins {
 
 				alpha *= M_PI/180.0;
 			}
-    };
+	};
 
-    class sphere : public init_bdry_cndtn {
+	class sphere : public init_bdry_cndtn {
 		private:
 			FLT speed,angle,inner,outer;
 			TinyVector<FLT,tri_mesh::ND> vel;
@@ -97,10 +97,10 @@ namespace ibc_ins {
 				vel(0) = speed*cos(angle);
 				vel(1) = speed*sin(angle);
 			}
-    };
+	};
 
 
-    class accelerating : public init_bdry_cndtn {
+	class accelerating : public init_bdry_cndtn {
 		private:
 			FLT speed,c,alpha;
 
@@ -133,9 +133,9 @@ namespace ibc_ins {
 				if (!blockdata.get(keyword,alpha)) 
 					blockdata.getwdefault("power",alpha,0.0); 
 			}
-    };    
+	};    
 
-    class impinge : public init_bdry_cndtn {
+	class impinge : public init_bdry_cndtn {
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x,FLT time) {
 				switch(n) {
@@ -149,9 +149,9 @@ namespace ibc_ins {
 				}
 				return(0.0);
 			}
-    };
+	};
 
-    class stokes_drop_gas : public init_bdry_cndtn {
+	class stokes_drop_gas : public init_bdry_cndtn {
 		private:
 			FLT outer_limit;
 			FLT mu_g, kappa;
@@ -207,13 +207,14 @@ namespace ibc_ins {
 				if (!blockdata.get(keyword,center.data(),2))
 					blockdata.getwdefault("center",center.data(),2,center.data());
 
-				keyword = idnty +"_mu";
+				string blkname = idnty.substr(0,idnty.find('_'));
+				keyword = blkname +"_mu";
 				if (!blockdata.get(keyword,mu_g)) {
-					std::cerr << "couldn't find mu of gas" << std::endl;
+					std::cerr << "couldn't find mu of gas " << keyword << std::endl;
 					exit(1);
 				}
 
-				keyword = idnty +"_liquid";
+				keyword = blkname +"_liquid";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of liquid block" << std::endl;
 					exit(1);
@@ -227,9 +228,9 @@ namespace ibc_ins {
 				}
 				kappa = mu_l/mu_g;
 			}
-    };
+	};
 
-    class stokes_drop_liquid : public init_bdry_cndtn {
+	class stokes_drop_liquid : public init_bdry_cndtn {
 		private:
 			FLT outer_limit;
 			FLT rho_l, mu_l, kappa, sigma;
@@ -273,18 +274,19 @@ namespace ibc_ins {
 				if (!blockdata.get(keyword,center.data(),2))
 					blockdata.getwdefault("center",center.data(),2,center.data());
 
-				keyword = idnty +"_rho";
+				string blkname = idnty.substr(0,idnty.find('_'));
+				keyword = blkname +"_rho";
 				if (!blockdata.get(keyword,rho_l)) {
 					std::cerr << "couldn't find rho of liquid" << std::endl;
 					exit(1);
 				}
 
-				keyword = idnty +"_mu";
+				keyword = blkname +"_mu";
 				if (!blockdata.get(keyword,mu_l)) {
 					std::cerr << "couldn't find mu of liquid" << std::endl;
 					exit(1);
 				}
-				keyword = idnty +"_liquid_bdry";
+				keyword = blkname +"_liquid_bdry";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of liquid boundary" << std::endl;
 					exit(1);
@@ -296,7 +298,7 @@ namespace ibc_ins {
 					exit(1);
 				}				
 
-				keyword = idnty +"_gas";
+				keyword = blkname +"_gas";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of gas block" << std::endl;
 					exit(1);
@@ -305,14 +307,14 @@ namespace ibc_ins {
 				FLT mu_g;
 				keyword = val +"_mu";
 				if (!blockdata.get(keyword,mu_g)) {
-					std::cerr << "couldn't find mu of gas" << std::endl;
+					std::cerr << "couldn't find mu of gas " << keyword << std::endl;
 					exit(1);
 				}
 				kappa = mu_l/mu_g;
 			}
-    };
+	};
 
-    class parameter_changer : public tri_hp_helper {
+	class parameter_changer : public tri_hp_helper {
 		protected:
 			tri_hp_ins &x;
 			bdry_ins::surface *surf;
@@ -441,10 +443,10 @@ namespace ibc_ins {
 				}
 				return;
 			}
-    };
+	};
 
 
-    class unsteady_body_force : public tri_hp_helper {
+	class unsteady_body_force : public tri_hp_helper {
 		protected:
 			TinyVector<symbolic_function<1>,2> fcn;
 
@@ -519,8 +521,8 @@ namespace ibc_ins {
 				x.integrated_averages(avg);
 				rbar  = pow(3.*0.5*avg(0),1.0/3.0);
 #ifdef DROP
-				gbl->vflux =  penalty1*kc*(rbar -0.5);
-				tri_hp_ins::mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);    
+				if (!x.coarse_flag) gbl->vflux =  penalty1*kc*(rbar -0.5);
+				if (!x.coarse_flag) tri_hp_ins::mesh_ref_vel(1) = penalty2*kc*avg(2) +avg(4);    
 #endif
 
 				/* C_D TO G CONVERSION REMINDER 
@@ -562,10 +564,10 @@ namespace ibc_ins {
 				surf->findmax(xmax);
 				return;
 			}
-    };
+	};
 
 
-    class force_coupling : public tri_hp_helper {
+	class force_coupling : public tri_hp_helper {
 		protected:
 			FLT k_linear, k_torsion;
 			FLT mass, I;
@@ -759,28 +761,28 @@ namespace ibc_ins {
 
 
 			void rigid_body(FLT dtheta, FLT omega, TinyVector<FLT,2> ctr, TinyVector<FLT,2> disp, TinyVector<FLT,2> vel) {
-					TinyVector<FLT,2> dx;
+				TinyVector<FLT,2> dx;
 
-					/* UPDATE MESH POSITION */
-				    FLT r,cost,sint; 
-					FLT cosdt = cos(dtheta);    
-					FLT sindt = sin(dtheta);    
-					for (int i=0;i<x.npnt;++i) {
-						dx = x.pnts(i) -ctr;
-					   	r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
-						cost = dx(0)/r;
-						sint = dx(1)/r;
-						x.pnts(i)(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
-						x.pnts(i)(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);						
-					}
+				/* UPDATE MESH POSITION */
+				FLT r,cost,sint; 
+				FLT cosdt = cos(dtheta);    
+				FLT sindt = sin(dtheta);    
+				for (int i=0;i<x.npnt;++i) {
+					dx = x.pnts(i) -ctr;
+						r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
+					cost = dx(0)/r;
+					sint = dx(1)/r;
+					x.pnts(i)(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
+					x.pnts(i)(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);						
+				}
 
-					for (int i=0; i<nboundary; ++i) {
-						hp_ebdry(i)->set_ctr_rot(ctr);
-						hp_ebdry(i)->set_vel(vel);
-						hp_ebdry(i)->set_omega(w_d);
-						ebdry(i)->geometry_object.theta += -dtheta; 
-						ebdry(i)->geometry_object.pos(0) += disp(0) -0.25*(cos(w_c) -cos(w_c -dtheta)); 
-						ebdry(i)->geometry_object.pos(1) += disp(1) -0.25*(sin(w_c) -sin(w_c -dtheta)); 
+				for (int i=0; i<nboundary; ++i) {
+					hp_ebdry(i)->set_ctr_rot(ctr);
+					hp_ebdry(i)->set_vel(vel);
+					hp_ebdry(i)->set_omega(w_d);
+					ebdry(i)->geometry_object.theta += -dtheta; 
+					ebdry(i)->geometry_object.pos(0) += disp(0) -0.25*(cos(w_c) -cos(w_c -dtheta)); 
+					ebdry(i)->geometry_object.pos(1) += disp(1) -0.25*(sin(w_c) -sin(w_c -dtheta)); 
 
 						/* CAN FIX ENDPOINTS TOO (NOT NECESSARY) */
 //						v0 = x.seg(ebdry(i)->seg(0)).pnt(0);
@@ -792,10 +794,10 @@ namespace ibc_ins {
 //						x.pnts(v0)(0) = distance2*cos(w_c);
 //						x.pnts(v0)(1) = w_a +distance2*sin(w_c);
 
-						hp_ebdry(i)->curv_init();
+					hp_ebdry(i)->curv_init();
 
-					}
 				}
+			}
 
 
 
@@ -835,9 +837,9 @@ namespace ibc_ins {
 				}
 				return;
 			}
-    };
+	};
 
-    class helper_type {
+	class helper_type {
 		public:
 			const static int ntypes = 4;
 			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling};
@@ -848,10 +850,10 @@ namespace ibc_ins {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 			}
-    };
-    const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
+	};
+	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
 
-    class ibc_type {
+	class ibc_type {
 		public:
 			const static int ntypes = 6;
 			enum ids {freestream,sphere,accelerating,impinge,stokes_drop_gas,stokes_drop_liquid};
@@ -862,16 +864,16 @@ namespace ibc_ins {
 					if (!strcmp(nin,names[i])) return(i);
 				return(-1);
 		}
-    };
-    const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","impinge","stokes_drop_gas","stokes_drop_liquid"};
+	};
+	const char ibc_type::names[ntypes][40] = {"freestream","sphere","accelerating","impinge","stokes_drop_gas","stokes_drop_liquid"};
 
 }
 
 
 init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
-    std::string keyword,ibcname;
+	std::string keyword,ibcname;
 	init_bdry_cndtn *temp;
-    int type;
+	int type;
 
     /* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_" +suffix;
@@ -881,10 +883,10 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
 			*gbl->log << "couldn't find initial condition type" << std::endl;
 		}
 	}
-    type = ibc_ins::ibc_type::getid(ibcname.c_str());
+	type = ibc_ins::ibc_type::getid(ibcname.c_str());
 
 
-    switch(type) {
+	switch(type) {
 		case ibc_ins::ibc_type::freestream: {
 			temp = new ibc_ins::freestream;
 			break;
@@ -912,26 +914,26 @@ init_bdry_cndtn *tri_hp_ins::getnewibc(std::string suffix, input_map& inmap) {
 		default: {
 			return(tri_hp::getnewibc(suffix,inmap));
 		}
-    }
+	}
 	temp->input(inmap,keyword);
 	return(temp);
 }
 
 tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
-    std::string keyword,movername;
-    int type;
+	std::string keyword,movername;
+	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
-    keyword = std::string(gbl->idprefix) + "_helper";
-    if (!inmap.get(keyword,movername)) {
+	/* FIND INITIAL CONDITION TYPE */
+	keyword = std::string(gbl->idprefix) + "_helper";
+	if (!inmap.get(keyword,movername)) {
 		if (!inmap.get("helper",movername)) {
 			type = -1;
 		}
-    }
+	}
 
-    type = ibc_ins::helper_type::getid(movername.c_str());
+	type = ibc_ins::helper_type::getid(movername.c_str());
 
-    switch(type) {
+	switch(type) {
 		case ibc_ins::helper_type::translating_drop: {
 			tri_hp_helper *temp = new ibc_ins::translating_drop(*this);
 			return(temp);
@@ -951,7 +953,7 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 		default: {
 			return(tri_hp::getnewhelper(inmap));
 		}
-    }
+	}
 }
 
 
@@ -960,23 +962,23 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 static FLT h = 2.0;
 
 double f1(int n, double x, double y) { 
-    FLT bf,re,g1,g2,n1,n2,q1,q2;
+	FLT bf,re,g1,g2,n1,n2,q1,q2;
 
-    /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
-    /* THETA DEFINED + CLOCKWISE */
-    bf = mux[0]/(rhox[0]*(0.5 +(h-1)*rhox[1]/rhox[0])*sin(theta));
-    body[0] = bf*sin(theta);
-    body[1] = -bf*cos(theta);
+	/* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+	/* THETA DEFINED + CLOCKWISE */
+	bf = mux[0]/(rhox[0]*(0.5 +(h-1)*rhox[1]/rhox[0])*sin(theta));
+	body[0] = bf*sin(theta);
+	body[1] = -bf*cos(theta);
 
-    re = rhox[0]/mux[0];
-    g1 = -bf*sin(theta);
-    g2 = -bf*rhox[1]/rhox[0]*sin(theta);
-    n1 = 1;
-    q1 = 1;
-    n2 = mux[1]/mux[0];
-    q2 = rhox[1]/rhox[0];
+	re = rhox[0]/mux[0];
+	g1 = -bf*sin(theta);
+	g2 = -bf*rhox[1]/rhox[0]*sin(theta);
+	n1 = 1;
+	q1 = 1;
+	n2 = mux[1]/mux[0];
+	q2 = rhox[1]/rhox[0];
 
-    if (y < 1) {
+	if (y < 1) {
 		switch (n) {
 			case(0):
 				return(0.5*re*g1/n1*y*y +(re*g2*(1-h)-re*g1)*y);
@@ -985,8 +987,8 @@ double f1(int n, double x, double y) {
 			case(2):
 				return(-bf*q1*cos(theta)*(y-h));
 		}
-    }
-    else {
+	}
+	else {
 		switch (n) {
 			case(0):
 				return(0.5*re*g1/n2*y*y -re*g2*h/n2*y -0.5*g2*re/n2 +re*g2*h/n2 +re*g2*(1-h)-re*g1/2);
@@ -995,34 +997,34 @@ double f1(int n, double x, double y) {
 			case(2):
 				return(-bf*q2*cos(theta)*(y-h));
 		}
-    }    
+	}    
 
-    return(0.0);
+	return(0.0);
 }
 #endif
 
 #ifdef ONELAYER
 double f1(int n, double x, double y) { 
-    FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
-    int mid,nonmid;
+	FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
+	int mid,nonmid;
 
-    /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
-    /* THETA DEFINED + CLOCKWISE */
-    bf = 2.*mux[0]/(rhox[0]*sin(theta));
-    body[0] = bf*sin(theta);
-    body[1] = -bf*cos(theta);
+	/* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+	/* THETA DEFINED + CLOCKWISE */
+	bf = 2.*mux[0]/(rhox[0]*sin(theta));
+	body[0] = bf*sin(theta);
+	body[1] = -bf*cos(theta);
 
-    re = rhox[0]/mux[0];
-    switch (n) {
+	re = rhox[0]/mux[0];
+	switch (n) {
 		case(0):
 			return(-(y+1.0)*(y-1.0) -1.0);
 		case(1):
 			return(0.0);
 		case(2):
 			return(-2.*cos(theta)/(sin(theta)*re)*y);
-    }
+	}
 
-    return(0.0);
+	return(0.0);
 }
 #endif
 
@@ -1031,36 +1033,36 @@ double f1(int n, double x, double y) {
 #ifdef THREELAYER
 
 double f1(int n, double x, double y) { 
-    FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
-    int mid,nonmid;
+	FLT bf,re,n1,n2,n3,q1,q2,q3,h1,h2,h3;
+	int mid,nonmid;
 
-    /* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
-    /* THETA DEFINED + CLOCKWISE */
-    /* FAIL PROOF TEST */
-    if (fabs(mux[2] -mux[1]) < 1.0e-6) mid = 0;
-    else if (fabs(mux[2] -mux[0]) < 1.0e-6) mid = 1;
-    else mid = 2;
-    nonmid = (mid+1)%3;
+	/* FOR UIFACE TO BE 1 WITH D = 1, h = h/d */
+	/* THETA DEFINED + CLOCKWISE */
+	/* FAIL PROOF TEST */
+	if (fabs(mux[2] -mux[1]) < 1.0e-6) mid = 0;
+	else if (fabs(mux[2] -mux[0]) < 1.0e-6) mid = 1;
+	else mid = 2;
+	nonmid = (mid+1)%3;
 
-    bf = 2.*mux[nonmid]/(rhox[nonmid]*sin(theta));
-    body[0] = bf*sin(theta);
-    body[1] = -bf*cos(theta);
+	bf = 2.*mux[nonmid]/(rhox[nonmid]*sin(theta));
+	body[0] = bf*sin(theta);
+	body[1] = -bf*cos(theta);
 
-    re = rhox[nonmid]/mux[nonmid];
+	re = rhox[nonmid]/mux[nonmid];
 
-    h1 = 0.475;
-    n1 = 1;
-    q1 = 1;
+	h1 = 0.475;
+	n1 = 1;
+	q1 = 1;
 
-    h2 = 0.525;
-    n2 = mux[mid]/mux[nonmid];
-    q2 = rhox[mid]/rhox[nonmid];
+	h2 = 0.525;
+	n2 = mux[mid]/mux[nonmid];
+	q2 = rhox[mid]/rhox[nonmid];
 
-    h3 = 1.0;
-    n3 = mux[nonmid]/mux[nonmid];
-    q3 = rhox[nonmid]/rhox[nonmid];
+	h3 = 1.0;
+	n3 = mux[nonmid]/mux[nonmid];
+	q3 = rhox[nonmid]/rhox[nonmid];
 
-    switch (n) {
+	switch (n) {
 		case(0):
 			if (y <= 0.475) {
 				double c1 = 2.0*h3/n1;
@@ -1082,9 +1084,9 @@ double f1(int n, double x, double y) {
 			return(0.0);
 		case(2):
 			return(-2.*cos(theta)/(sin(theta)*re)*y);
-    }
+	}
 
-    return(0.0);
+	return(0.0);
 }
 #endif
 

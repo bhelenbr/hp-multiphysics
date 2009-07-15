@@ -14,16 +14,16 @@
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
 void tri_hp_swirl::length() {
-    int i,j,k,v0,v1,v2,indx,sind,tind,count;
-    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
-    FLT q,p,duv,um,vm,wm,u,v,w;
-    FLT sum,ruv,ratio;
-    FLT length0,length1,length2,lengthept;
-    FLT ang1,curved1,ang2,curved2;
-    FLT norm;
+	int i,j,k,v0,v1,v2,indx,sind,tind,count;
+	TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
+	FLT q,p,duv,um,vm,wm,u,v,w;
+	FLT sum,ruv,ratio;
+	FLT length0,length1,length2,lengthept;
+	FLT ang1,curved1,ang2,curved2;
+	FLT norm;
 
-    gbl->eanda = 0.0;
-    for(tind=0;tind<ntri;++tind) {
+	gbl->eanda = 0.0;
+	for(tind=0;tind<ntri;++tind) {
 		q = 0.0;
 		p = 0.0;
 		duv = 0.0;
@@ -44,13 +44,13 @@ void tri_hp_swirl::length() {
 		}
 		gbl->eanda(0) += 1./3.*( (0.5*gbl->rho*q +p)*area(tind) +duv*gbl->mu*sqrt(area(tind)) );
 		gbl->eanda(1) += area(tind);
-    }
-    sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
+	}
+	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
 
-    norm = gbl->eanda_recv(0)/gbl->eanda_recv(1);
-    gbl->fltwk(Range(0,npnt-1)) = 0.0;
+	norm = gbl->eanda_recv(0)/gbl->eanda_recv(1);
+	gbl->fltwk(Range(0,npnt-1)) = 0.0;
 
-    switch(basis::tri(log2p).p) {
+	switch(basis::tri(log2p).p) {
 		case(1): {
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
@@ -129,16 +129,16 @@ void tri_hp_swirl::length() {
 			}
 			break;
 		}
-    }
+	}
 
-    for(i=0;i<npnt;++i) {
+	for(i=0;i<npnt;++i) {
 		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
 		lngth(i) /= gbl->fltwk(i);        
-    }
+	}
 
-    /* AVOID HIGH ASPECT RATIOS */
-    int nsweep = 0;
-    do {
+	/* AVOID HIGH ASPECT RATIOS */
+	int nsweep = 0;
+	do {
 		count = 0;
 		for(i=0;i<nseg;++i) {
 			v0 = seg(i).pnt(0);
@@ -156,7 +156,7 @@ void tri_hp_swirl::length() {
 		}
 		++nsweep;
 		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
-    } while(count > 0 && nsweep < 5);
+	} while(count > 0 && nsweep < 5);
 
-    return;
+	return;
 }

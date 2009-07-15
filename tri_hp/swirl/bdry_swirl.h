@@ -22,7 +22,7 @@
 
 namespace bdry_swirl {
 
-	 class symmetry : public bdry_ins::neumann {        
+ class symmetry : public bdry_ins::neumann {        
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 			/* THESE DON'T GET USED */
 			flx(Range(0,x.NV-1)) = 0.0;
@@ -57,5 +57,5 @@ namespace bdry_swirl {
 			}
 
 			void tadvance();
-    };        
+	};        
 }

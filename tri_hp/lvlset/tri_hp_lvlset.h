@@ -19,7 +19,7 @@
 // #define LOCALIZED_WITH_DISTANCE_FUNCTION
 
 class tri_hp_lvlset : public tri_hp_ins {
-    public:
+	public:
 		struct global : public tri_hp_ins::global {
 			/* PHYSICAL CONSTANTS */
 			FLT sigma, width;
@@ -29,7 +29,7 @@ class tri_hp_lvlset : public tri_hp_ins {
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
-    public:
+	public:
 		void* create_global_structure() {return new global;}
 		tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
 

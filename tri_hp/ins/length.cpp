@@ -12,175 +12,186 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 #include <blitz/tinyvec-et.h>
+#include <vector>
 
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
 void tri_hp_ins::length() {
-    int i,j,k,v0,v1,v2,indx,sind,tind,count;
-    TinyVector<FLT,2> dx0,dx1,dx2,ep,dedpsi;
-    FLT q,p,duv,um,vm,u,v;
-    FLT sum,ruv,ratio;
-    FLT length0,length1,length2,lengthept;
-    FLT ang1,curved1,ang2,curved2;
-    FLT norm;
-
-    gbl->eanda = 0.0;
-    for(tind=0;tind<ntri;++tind) {
-		q = 0.0;
-		p = 0.0;
-		duv = 0.0;
-		um = ug.v(tri(tind).pnt(2),0);
-		vm = ug.v(tri(tind).pnt(2),1);
-#ifdef DROP
-		um -= mesh_ref_vel(0);
-		vm -= mesh_ref_vel(1);
-#endif
-
-		for(j=0;j<3;++j) {
-			v0 = tri(tind).pnt(j);
-			u = ug.v(v0,0);
-			v = ug.v(v0,1);
-#ifdef DROP
-			u -= mesh_ref_vel(0);
-			v -= mesh_ref_vel(1);
-#endif
-			q += pow(u,2) +pow(v,2);
-			p += fabs(ug.v(v0,NV-1));
-			duv += fabs(u-um)+fabs(v-vm);
-			um = u;
-			vm = v;
+	TinyMatrix<FLT,ND,ND> ldcrd;
+	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
+	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
+		
+	int sm = basis::tri(log2p).sm;
+	int lgpx = basis::tri(log2p).gpx;
+	int lgpn = basis::tri(log2p).gpn;
+	std::vector<int> highs;
+	highs.push_back(2+sm);
+	highs.push_back(2+2*sm);
+	highs.push_back(2+3*sm);
+	int indx = 3+3*sm;
+	for(int m = 1; m < sm; ++m) {
+		for(int k = 0; k < sm-m-1; ++k) {
+			++indx;
 		}
-		gbl->eanda(0) += 1./3.*( (0.5*gbl->rho*q +p)*area(tind) +duv*gbl->mu*sqrt(area(tind)));
-		gbl->eanda(1) += area(tind);
-    }
-    sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),2,blocks::flt_msg,blocks::sum);
-    norm = gbl->eanda_recv(0)/gbl->eanda_recv(1);
-    gbl->fltwk(Range(0,npnt-1)) = 0.0;
+		highs.push_back(indx++);
+	}
 
-    switch(basis::tri(log2p).p) {
-		case(1): {
-			for(i=0;i<nseg;++i) {
-				v0 = seg(i).pnt(0);
-				v1 = seg(i).pnt(1);
-				u = fabs(ug.v(v0,0) +ug.v(v1,0));
-				v = fabs(ug.v(v0,1) +ug.v(v1,1));
-#ifdef DROP
-				u -= mesh_ref_vel(0);
-				v -= mesh_ref_vel(1);
-#endif
-				ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1));
-				sum = pow(distance2(v0,v1),-0.5*basis::tri(log2p).p)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
-//				sum = distance2(v0,v1)*(ruv*(fabs(ug.v(v0,0) -ug.v(v1,0)) +fabs(ug.v(v0,1) -ug.v(v1,1))) +fabs(ug.v(v0,NV-1) -ug.v(v1,NV-1)));
-
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
-			}                            
-			break;
+	/* USING BERNOULLI CONSTANT AS ERROR INDICATOR */
+	const FLT alpha = 2.0*(basis::tri(log2p).p-0.5)/static_cast<FLT>(ND);
+	FLT denom = 0.0, totalbernoulli = 0.0, totalerror = 0.0;
+	for (int tind=0;tind<ntri;++tind) {
+			
+		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+		TinyVector<int,3> v = tri(tind).pnt;
+		/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
+		for(int n=0;n<ND;++n) {
+			ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
+			ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
 		}
+			
+		ugtouht(tind);
+		
+		for(int n=0;n<ND;++n)
+			basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
+		basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
+		
+		for(int n=0;n<NV;++n) 
+			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
+				uht(n)(*it) = 0.0;
+			
+		for(int n=0;n<ND;++n)
+			basis::tri(log2p).proj(&uht(n)(0),&ul(n)(0,0),&dul(n,0)(0,0),&dul(n,1)(0,0),MXGP);
+		basis::tri(log2p).proj(&uht(NV-1)(0),&ul(NV-1)(0,0),MXGP);
 
-		default: {
-			indx = basis::tri(log2p).sm-1;
-			for(i=0;i<nseg;++i) {
-				v0 = seg(i).pnt(0);
-				v1 = seg(i).pnt(1);
-				u = fabs(ug.v(v0,0) +ug.v(v1,0));
-				v = fabs(ug.v(v0,1) +ug.v(v1,1));
-#ifdef DROP
-				u -= mesh_ref_vel(0);
-				v -= mesh_ref_vel(1);
-#endif
-				ruv = (gbl->rho*0.5*(u + v) +gbl->mu/distance(v0,v1));
-				sum = pow(distance2(v0,v1),-0.5*basis::tri(log2p).p)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
-//                sum = distance2(v0,v1)*(ruv*(fabs(ug.s(i,indx,0)) +fabs(ug.s(i,indx,1))) +fabs(ug.s(i,indx,NV-1)));
-				gbl->fltwk(v0) += sum;
-				gbl->fltwk(v1) += sum;
+		FLT jcb = 0.25*area(tind); 
+		FLT error2 = 0.0; 
+		FLT bernoulli, dbernoulli;
+		for(int i=0;i<lgpx;++i) {
+			for(int j=0;j<lgpn;++j) {
+				FLT dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
+				FLT dudy = -ldcrd(0,1)*du(0,0)(i,j) +ldcrd(0,0)*du(0,1)(i,j);
+				FLT dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
+				FLT dvdy = -ldcrd(0,1)*du(1,0)(i,j) +ldcrd(0,0)*du(1,1)(i,j);	
+				
+				FLT dudxl = ldcrd(1,1)*dul(0,0)(i,j) -ldcrd(1,0)*dul(0,1)(i,j);
+				FLT dudyl = -ldcrd(0,1)*dul(0,0)(i,j) +ldcrd(0,0)*dul(0,1)(i,j);
+				FLT dvdxl = ldcrd(1,1)*dul(1,0)(i,j) -ldcrd(1,0)*dul(1,1)(i,j);
+				FLT dvdyl = -ldcrd(0,1)*dul(1,0)(i,j) +ldcrd(0,0)*dul(1,1)(i,j);		
+				
+				/* INVISCID PARTS TO ERROR MEASURE */
+				bernoulli = gbl->rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
+				/* VISCOUS PART TO ERROR MEASURE */
+				bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
+				
+				dbernoulli = gbl->rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
+				dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				
+				dbernoulli -= bernoulli;
+				
+				error2 += dbernoulli*dbernoulli*jcb*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j);
+				totalbernoulli += bernoulli*bernoulli*jcb*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j);
 			}
-
-			/* BOUNDARY CURVATURE */
-			for(i=0;i<nebd;++i) {
-				if (!(hp_ebdry(i)->is_curved())) continue;
-
-				for(j=0;j<ebdry(i)->nseg;++j) {
-					sind = ebdry(i)->seg(j);
-					v1 = seg(sind).pnt(0);
-					v2 = seg(sind).pnt(1);
-
-					crdtocht1d(sind);
-
-					/* FIND ANGLE BETWEEN LINEAR SIDES */
-					tind = seg(sind).tri(0);
-					for(k=0;k<3;++k)
-						if (tri(tind).seg(k) == sind) break;
-
-					v0 = tri(tind).pnt(k);
-
-					dx0(0) = pnts(v2)(0)-pnts(v1)(0);
-					dx0(1) = pnts(v2)(1)-pnts(v1)(1);
-					length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
-
-					dx1(0) = pnts(v0)(0)-pnts(v2)(0);
-					dx1(1) = pnts(v0)(1)-pnts(v2)(1);
-					length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
-
-					dx2(0) = pnts(v1)(0)-pnts(v0)(0);
-					dx2(1) = pnts(v1)(1)-pnts(v0)(1);
-					length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
-
-					basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
-					lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-
-					ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
-					curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
-
-					basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
-					lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-
-					ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
-					curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
-
-					sum = gbl->curvature_sensitivity*(curved1/ang1 +curved2/ang2);
-					gbl->fltwk(v1) += sum*norm*pnt(v1).nnbor/gbl->error_target;
-					gbl->fltwk(v2) += sum*norm*pnt(v2).nnbor/gbl->error_target;
-				}
-			}
-			break;
 		}
-    }
+		totalerror += error2;
+		denom += pow(error2,1./(1.+alpha));
+		gbl->fltwk(tind) = error2;
+	}
 
-	norm = gbl->error_target*pow(norm,1./(basis::tri(log2p).p-1.0+ND/2.));
-    for(i=0;i<npnt;++i) {
-		lngth(i) = norm*pow(gbl->fltwk(i)/pnt(i).nnbor,-1./(basis::tri(log2p).p-1.0+ND/2.));
-
-//		lngth(i) = norm*pow(gbl->fltwk(i)/pnt(i).nnbor,1./(basis::tri(log2p).p+1+ND));
-//		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
-//      lngth(i) = gbl->fltwk(i);        
-//                lngth(i) *= 2.0;  // For testing
-
-#ifdef THREELAYER
-#define TRES 0.025/THREELAYER
-		if (pnts(i)(1) > 0.525) {
-			lngth(i) = MIN(lngth(i),TRES +(pnts(i)(1)-0.525)*(9*TRES)/0.475);
+	/* Need to all-reduce norm,totalerror,and totalbernoulli */
+	gbl->eanda(0) = totalbernoulli;
+	gbl->eanda(1) = denom;
+	gbl->eanda(2) = totalerror;
+	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
+	
+	/* Determine error target (SEE AEA Paper) */
+	FLT etarget2 = gbl->error_target*gbl->error_target*gbl->eanda_recv(0);
+	*gbl->log << "# Normalized Error " << sqrt(gbl->eanda_recv(2)/gbl->eanda_recv(0)) << " Target " << gbl->error_target << '\n';
+	FLT K = pow(etarget2/denom,1./(ND*alpha));
+	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
+	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	for(int tind=0;tind<ntri;++tind) {
+		FLT error2 = gbl->fltwk(tind)+FLT_EPSILON;
+		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+		for (int j=0;j<3;++j) {
+			int p0 = tri(tind).pnt(j);
+			/* Calculate average at vertices */
+			gbl->res.v(0,p0) *= ri;
+			gbl->res_r.v(0,p0) += 1.0;
 		}
-		else if (pnts(i)(1) < 0.475) {
-			lngth(i) = MIN(lngth(i),TRES +(0.475 -pnts(i)(1))*(9*TRES)/0.475);
-		}
-		else {
-			lngth(i) = MIN(lngth(i),TRES);
-		}
-#endif
-#ifdef TWOLAYER
-		lngth(i) = MIN(lngth(i),0.3333); 
-#endif
-    }
+	}
+	
+	/* NOW RESCALE AT VERTICES */
+	FLT maxlngth = 50.0;
+	FLT minlngth = 0.0;
+	for (int pind=0;pind<npnt;++pind) {
+		lngth(pind) *= pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
+		lngth(pind) = MIN(lngth(pind),maxlngth);
+		lngth(pind) = MAX(lngth(pind),minlngth);
+	}
+	
+	/* LIMIT BOUNDARY CURVATURE */
+	for(int i=0;i<nebd;++i) {
+		if (!(hp_ebdry(i)->is_curved())) continue;
 
-    /* AVOID HIGH ASPECT RATIOS */
-    int nsweep = 0;
-    do {
+		for(int j=0;j<ebdry(i)->nseg;++j) {
+			int sind = ebdry(i)->seg(j);
+			int v1 = seg(sind).pnt(0);
+			int v2 = seg(sind).pnt(1);
+
+			crdtocht1d(sind);
+
+			/* FIND ANGLE BETWEEN LINEAR SIDES */
+			int tind = seg(sind).tri(0);
+			int k;
+			for(k=0;k<3;++k)
+				if (tri(tind).seg(k) == sind) break;
+
+			int v0 = tri(tind).pnt(k);
+
+			TinyVector<FLT,ND> dx0;
+			dx0(0) = pnts(v2)(0)-pnts(v1)(0);
+			dx0(1) = pnts(v2)(1)-pnts(v1)(1);
+			FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
+
+			TinyVector<FLT,ND> dx1;
+			dx1(0) = pnts(v0)(0)-pnts(v2)(0);
+			dx1(1) = pnts(v0)(1)-pnts(v2)(1);
+			FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
+
+			TinyVector<FLT,ND> dx2;
+			dx2(0) = pnts(v1)(0)-pnts(v0)(0);
+			dx2(1) = pnts(v1)(1)-pnts(v0)(1);
+			FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
+			
+			TinyVector<FLT,2> ep, dedpsi;
+			basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
+			FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+
+			FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
+			FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
+
+			basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
+			lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
+
+			FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
+			FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
+
+			// FIXME: end points are wrong for periodic boundary or communication boundary
+			FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
+			lngth(v1) /= 1. +sum;
+			lngth(v2) /= 1. +sum;
+		}
+	}
+
+	/* AVOID HIGH ASPECT RATIOS */
+	int nsweep = 0;
+	int count;
+	do {
 		count = 0;
-		for(i=0;i<nseg;++i) {
-			v0 = seg(i).pnt(0);
-			v1 = seg(i).pnt(1);
-			ratio = lngth(v1)/lngth(v0);
+		for(int i=0;i<nseg;++i) {
+			int v0 = seg(i).pnt(0);
+			int v1 = seg(i).pnt(1);
+			FLT ratio = lngth(v1)/lngth(v0);
 
 			if (ratio > 3.0) {
 				lngth(v1) = 2.5*lngth(v0);
@@ -193,7 +204,7 @@ void tri_hp_ins::length() {
 		}
 		++nsweep;
 		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
-    } while(count > 0 && nsweep < 5);
+	} while(count > 0 && nsweep < 5);
 
 	return;
 }

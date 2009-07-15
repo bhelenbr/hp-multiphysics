@@ -12,11 +12,11 @@
 using namespace bdry_ps;
 
 void neumann::rsdl(int stage) {
-    int j,k,n,v0,v1,sind;
-    TinyVector<FLT,2> pt,mvel,nrm;
-    TinyVector<FLT,3> u,flx;
+	int j,k,n,v0,v1,sind;
+	TinyVector<FLT,2> pt,mvel,nrm;
+	TinyVector<FLT,3> u,flx;
 
-    for(j=0;j<base.nseg;++j) {
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
@@ -58,36 +58,36 @@ void neumann::rsdl(int stage) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
-    }
+	}
 
-    return;
+	return;
 }
 
 
 
 
 void dirichlet::tadvance() {
-    int j,k,m,n,v0,v1,sind,indx,info;
-    TinyVector<FLT,tri_mesh::ND> pt;
-    char uplo[] = "U";
+	int j,k,m,n,v0,v1,sind,indx,info;
+	TinyVector<FLT,tri_mesh::ND> pt;
+	char uplo[] = "U";
 
-    hp_edge_bdry::tadvance();
+	hp_edge_bdry::tadvance();
 
-    /* UPDATE BOUNDARY CONDITION VALUES */
-    for(j=0;j<base.nseg;++j) {
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		for(n=0;n<x.ND;++n)
 			x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
-    }
-    v0 = x.seg(sind).pnt(1);
-    for(n=0;n<x.ND;++n)
+	}
+	v0 = x.seg(sind).pnt(1);
+	for(n=0;n<x.ND;++n)
 		x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
 
-    /*******************/    
-    /* SET SIDE VALUES */
-    /*******************/
-    for(j=0;j<base.nseg;++j) {
+	/*******************/    
+	/* SET SIDE VALUES */
+	/*******************/
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
@@ -126,18 +126,18 @@ void dirichlet::tadvance() {
 					x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 			}
 		}
-    }
-    return;
+	}
+	return;
 }
 
 void friction_wall::rsdl(int stage) {
-    int j,k,m,n,seg,v0,v1,sind,tind;
-    TinyVector<FLT,2> pt,mvel,nrm;
-    TinyVector<FLT,3> u,flx;
-    TinyVector<FLT,tri_mesh::ND> stress;
-    FLT visc[x.ND][x.ND][x.ND][x.ND];
+	int j,k,m,n,seg,v0,v1,sind,tind;
+	TinyVector<FLT,2> pt,mvel,nrm;
+	TinyVector<FLT,3> u,flx;
+	TinyVector<FLT,tri_mesh::ND> stress;
+	FLT visc[x.ND][x.ND][x.ND][x.ND];
 
-    for(j=0;j<base.nseg;++j) {
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
@@ -221,7 +221,7 @@ void friction_wall::rsdl(int stage) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
-    }
+	}
 
-    return;
+	return;
 }

@@ -10,36 +10,36 @@
 #include "tri_hp_ps.h"
 #include "../hp_boundary.h"
 
- void tri_hp_ps::init(input_map& input, void *gin) {
-    FLT nu, E;
+void tri_hp_ps::init(input_map& input, void *gin) {
+	FLT nu, E;
 
-    gbl = static_cast<global *>(gin);
+	gbl = static_cast<global *>(gin);
 
-    input[gbl->idprefix + "_nvariable"] = "3";
-    tri_hp::init(input,gin);
+	input[gbl->idprefix + "_nvariable"] = "3";
+	tri_hp::init(input,gin);
 
 
-    gbl->tau.resize(maxpst);
-    input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
-    input.getwdefault(gbl->idprefix + "_nu",nu,0.0);
-    input.getwdefault(gbl->idprefix + "_E",E,0.0);
+	gbl->tau.resize(maxpst);
+	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
+	input.getwdefault(gbl->idprefix + "_nu",nu,0.0);
+	input.getwdefault(gbl->idprefix + "_E",E,0.0);
 
-    gbl->mu = E/(2.*(1.+nu));
-    gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
+	gbl->mu = E/(2.*(1.+nu));
+	gbl->lami = (1.+nu)*(1.-2.*nu)/(E*nu);
 
-    return;
+	return;
 }
 
 void tri_hp_ps::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 
-    const tri_hp_ps& inmesh = dynamic_cast<const tri_hp_ps &>(in);
-    gbl = inmesh.gbl;
+	const tri_hp_ps& inmesh = dynamic_cast<const tri_hp_ps &>(in);
+	gbl = inmesh.gbl;
 
-    tri_hp::init(in,why,sizereduce1d);
+	tri_hp::init(in,why,sizereduce1d);
 
-    adis = inmesh.adis;
+	adis = inmesh.adis;
 
-    return;
+	return;
 }
 
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW TO DO NOTHING */

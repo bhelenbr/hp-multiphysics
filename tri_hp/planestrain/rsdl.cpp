@@ -12,22 +12,22 @@
 
 
 void tri_hp_ps::rsdl(int stage) {
-    int i,j,n,tind;
-    FLT fluxx,fluxy;
-    const int NV = 3;
-    TinyVector<int,3> v;
-    TinyMatrix<FLT,ND,ND> ldcrd;
-    TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-    int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
-    FLT lmu = gbl->mu, cjcb, cjcbi, oneminusbeta;
-    FLT visc[ND][ND][ND][ND], tres[NV];
-    FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
-    FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
+	int i,j,n,tind;
+	FLT fluxx,fluxy;
+	const int NV = 3;
+	TinyVector<int,3> v;
+	TinyMatrix<FLT,ND,ND> ldcrd;
+	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
+	int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+	FLT lmu = gbl->mu, cjcb, cjcbi, oneminusbeta;
+	FLT visc[ND][ND][ND][ND], tres[NV];
+	FLT cv00[MXGP][MXGP],cv01[MXGP][MXGP],cv10[MXGP][MXGP],cv11[MXGP][MXGP]; // LOCAL WORK ARRAYS
+	FLT e00[MXGP][MXGP],e01[MXGP][MXGP],e10[MXGP][MXGP],e11[MXGP][MXGP]; // LOCAL WORK ARRAYS
 
-    tri_hp::rsdl(stage);    
-    oneminusbeta = 1.0-gbl->beta(stage);
+	tri_hp::rsdl(stage);    
+	oneminusbeta = 1.0-gbl->beta(stage);
 
-    for(tind = 0; tind<ntri;++tind) {
+	for(tind = 0; tind<ntri;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
 		v = tri(tind).pnt;
 
@@ -305,21 +305,21 @@ void tri_hp_ps::rsdl(int stage) {
 				lftog(tind,gbl->res_r);
 			}
 		}
-    }
+	}
 
-    /* ADD IN VISCOUS/DISSIPATIVE FLUX */
-    gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-    if (basis::tri(log2p).sm) {
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p).sm) {
 		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());          
 		if (basis::tri(log2p).im) {
 			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());      
 		}
-    }
+	}
 
-    /*********************************************/
-    /* MODIFY RESIDUALS ON COARSER MESHES            */
-    /*********************************************/    
-    if (coarse_flag) {
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
 			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
@@ -330,7 +330,7 @@ void tri_hp_ps::rsdl(int stage) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
 		if (basis::tri(log2p).sm) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
 		if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
-    }
+	}
 
-    return;
+	return;
 }
