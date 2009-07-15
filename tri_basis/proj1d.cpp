@@ -16,11 +16,11 @@
 #define lin(i) lin1[(i)]
 #endif
 
-void tri_basis::proj1d(FLT *lin1, FLT *f1, FLT *dx1) {
+void tri_basis::proj1d(const FLT *lin1, FLT *f1, FLT *dx1) const {
     const int lgpx = gpx, lsm2 = sm+2;
     FLT lcl0, lcl1;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(lsm2), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(lsm2), neverDeleteData);
     Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
     Array<FLT,1> dx(dx1, shape(gpx), neverDeleteData);
 #endif
@@ -39,11 +39,11 @@ void tri_basis::proj1d(FLT *lin1, FLT *f1, FLT *dx1) {
     return;
 }
 
-void tri_basis::proj1d(FLT *lin1, FLT *f1) {
+void tri_basis::proj1d(const FLT *lin1, FLT *f1) const {
     const int lgpx = gpx, lsm2 = sm+2;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(lsm2), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(lsm2), neverDeleteData);
     Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
 #endif
     
@@ -58,7 +58,7 @@ void tri_basis::proj1d(FLT *lin1, FLT *f1) {
     return;
 }
 
-void tri_basis::proj1d(FLT u1, FLT u2, FLT *f1) {
+void tri_basis::proj1d(FLT u1, FLT u2, FLT *f1) const {
     const int lgpx = gpx;
 #ifdef BZ_DEBUG
     Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
@@ -70,12 +70,12 @@ void tri_basis::proj1d(FLT u1, FLT u2, FLT *f1) {
     return;
 }
 
-void tri_basis::derivx1d(FLT *f1, FLT *dx1) {
+void tri_basis::derivx1d(const FLT *f1, FLT *dx1) const {
     TinyVector<FLT,MXGP> wk0;
     const int lgpx = gpx;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
+    const Array<FLT,1> f((FLT *) f1, shape(gpx), neverDeleteData);
     Array<FLT,1> dx(dx1, shape(gpx), neverDeleteData);
 #endif
     
@@ -94,10 +94,10 @@ void tri_basis::derivx1d(FLT *f1, FLT *dx1) {
     return;
 }
 
-void tri_basis::proj1d_leg(FLT *lin1, FLT *f1) {
+void tri_basis::proj1d_leg(const FLT *lin1, FLT *f1) const {
     int i,m;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(sm+2), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(sm+2), neverDeleteData);
     Array<FLT,1> f(f1, shape(sm+1), neverDeleteData);
 #endif
 
@@ -111,7 +111,7 @@ void tri_basis::proj1d_leg(FLT *lin1, FLT *f1) {
     return;
 }
 
-void tri_basis::proj1d_leg(FLT u1, FLT u2, FLT *f1) {
+void tri_basis::proj1d_leg(FLT u1, FLT u2, FLT *f1) const {
     int i;
 #ifdef BZ_DEBUG
     Array<FLT,1> f(f1, shape(sm+1), neverDeleteData);

@@ -19,13 +19,13 @@
 #define rslt(i) rslt1[i]
 #endif
 
-void tri_basis::intgrt(FLT *rslt1, FLT *f1, int stride) {
+void tri_basis::intgrt(FLT *rslt1,const FLT *f1, int stride)  const {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
     const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
+    const Array<FLT,2> f((FLT *) f1, shape(gpx,stride), neverDeleteData);
     Array<FLT,1> rslt(rslt1, shape(tm), neverDeleteData);
 #endif
         
@@ -78,14 +78,14 @@ void tri_basis::intgrt(FLT *rslt1, FLT *f1, int stride) {
 }
 
 /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-void tri_basis::intgrtrs(FLT *rslt1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::intgrtrs(FLT *rslt1,const FLT *dx1,const FLT *dy1, int stride) const {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm, lsm2 = sm+2;
     const int lgpn=gpn,lgpx=gpx,lnmodx=nmodx;
     FLT lcl0, lcl1;
 #ifdef BZ_DEBUG
-    Array<FLT,2> dx(dx1, shape(gpx,stride), neverDeleteData);
-    Array<FLT,2> dy(dy1, shape(gpx,stride), neverDeleteData);
+    const Array<FLT,2> dx((FLT *) dx1, shape(gpx,stride), neverDeleteData);
+    const Array<FLT,2> dy((FLT *) dy1, shape(gpx,stride), neverDeleteData);
     Array<FLT,1> rslt(rslt1, shape(tm), neverDeleteData);
 #endif
         

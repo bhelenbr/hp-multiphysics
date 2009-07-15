@@ -14,11 +14,11 @@
 #define rslt(i) rslt1[i]
 #endif
 
-void tri_basis::intgrt1d(FLT *rslt1, FLT *f1) {
+void tri_basis::intgrt1d(FLT *rslt1,const FLT *f1) const {
     const int lgpx = gpx, lnmodx = nmodx;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
+    const Array<FLT,1> f((FLT *) f1, shape(gpx), neverDeleteData);
     Array<FLT,1> rslt(rslt1, shape(nmodx), neverDeleteData);
 #endif
     
@@ -42,11 +42,11 @@ void tri_basis::intgrt1d(FLT *rslt1, FLT *f1) {
     return;
 }
     
-void tri_basis::intgrtx1d(FLT *rslt1, FLT *f1) {
+void tri_basis::intgrtx1d(FLT *rslt1,const FLT *f1) const {
     const int lgpx = gpx, lnmodx = nmodx;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> f(f1, shape(gpx), neverDeleteData);
+    const Array<FLT,1> f((FLT *) f1, shape(gpx), neverDeleteData);
     Array<FLT,1> rslt(rslt1, shape(nmodx), neverDeleteData);
 #endif
     

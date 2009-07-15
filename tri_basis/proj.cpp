@@ -19,14 +19,14 @@
 #define dtan(i) dtan1[i]
 #endif
 
-void tri_basis::proj(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::proj(const FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) const {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
     FLT lcl0, lcl1, lcl2;
     FLT xp1,oeta; 
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dx(dx1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dy(dy1, shape(gpx,stride), neverDeleteData);
@@ -118,13 +118,13 @@ void tri_basis::proj(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     return;
 }
 
-void tri_basis::proj(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj(const FLT *lin1, FLT *f1, int stride) const {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
 #endif
 
@@ -185,7 +185,7 @@ void tri_basis::proj(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
+void tri_basis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) const {
     const int lgpx = gpx, lgpn = gpn;
 #ifdef BZ_DEBUG
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
@@ -198,14 +198,14 @@ void tri_basis::proj(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::proj_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
+void tri_basis::proj_bdry(const FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) const {
     TinyMatrix<FLT,MXTM,MXGP> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;
     FLT lcl0, lcl1, lcl2;
     FLT xp1,oeta;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dx(dx1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dy(dy1, shape(gpx,stride), neverDeleteData);
@@ -280,13 +280,13 @@ void tri_basis::proj_bdry(FLT *lin1, FLT *f1, FLT *dx1, FLT *dy1, int stride) {
     return;
 }
 
-void tri_basis::proj_bdry(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_bdry(const FLT *lin1, FLT *f1, int stride) const {
     TinyMatrix<FLT,MXTM,MXGP> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lgpx = gpx, lgpn = gpn, lnmodx = nmodx;  
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
 #endif
 
@@ -336,12 +336,12 @@ void tri_basis::proj_bdry(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::derivr(FLT *f1, FLT *dx1, int stride) {
+void tri_basis::derivr(const FLT *f1, FLT *dx1, int stride) const {
     TinyVector<FLT,MXGP> wk0;
     const int lgpn = gpn, lgpx = gpx;
     FLT ln0, lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
+    const Array<FLT,2> f((FLT *) f1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dx(dx1, shape(gpx,stride), neverDeleteData);
 #endif
 
@@ -362,12 +362,12 @@ void tri_basis::derivr(FLT *f1, FLT *dx1, int stride) {
     return;
 }
 
-void tri_basis::derivs(FLT *f1, FLT *dy1, int stride) {
+void tri_basis::derivs(const FLT *f1, FLT *dy1, int stride) const {
     TinyVector<FLT,MXGP> wk0;
     const int lgpn = gpn, lgpx = gpx;
     FLT ln0, lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
+    const Array<FLT,2> f((FLT *) f1, shape(gpx,stride), neverDeleteData);
     Array<FLT,2> dy(dy1, shape(gpx,stride), neverDeleteData);
 #endif
     
@@ -401,11 +401,11 @@ void tri_basis::derivs(FLT *f1, FLT *dy1, int stride) {
     return;
 }
     
-void tri_basis::proj_leg(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_leg(const FLT *lin1, FLT *f1, int stride) const {
     const int lsm = sm, ltm = tm;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
 #endif
     
@@ -422,7 +422,7 @@ void tri_basis::proj_leg(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
+void tri_basis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) const {
     int lsm = sm;
 #ifdef BZ_DEBUG
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
@@ -436,11 +436,11 @@ void tri_basis::proj_leg(FLT u1, FLT u2, FLT u3, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::proj_bdry_leg(FLT *lin1, FLT *f1, int stride) {
+void tri_basis::proj_bdry_leg(const FLT *lin1, FLT *f1, int stride) const {
     int lsm = sm, lbm = bm;
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,2> f(f1, shape(gpx,stride), neverDeleteData);
 #endif
     
@@ -457,11 +457,11 @@ void tri_basis::proj_bdry_leg(FLT *lin1, FLT *f1, int stride) {
     return;
 }
 
-void tri_basis::proj_side(int side, FLT *lin1, FLT *f1, FLT *dtan1, FLT *dnrm1) {
+void tri_basis::proj_side(int side, const FLT *lin1, FLT *f1, FLT *dtan1, FLT *dnrm1) const {
     TinyVector<FLT,MXGP> wk0;
     const int lgpx = gpx, lsm = sm, ltm = tm;
 #ifdef BZ_DEBUG
-    Array<FLT,1> lin(lin1, shape(tm), neverDeleteData);
+    const Array<FLT,1> lin((FLT *) lin1, shape(tm), neverDeleteData);
     Array<FLT,1> dtan(dtan1, shape(gpx), neverDeleteData);
     Array<FLT,1> dnrm(dnrm1, shape(gpx), neverDeleteData);
 #endif

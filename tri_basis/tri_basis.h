@@ -23,8 +23,8 @@
 #endif
 #endif
 
-#define MAXP 4
-#define MXTM (MAXP+2)*(MAXP+1)/2
+#define MAXP 8
+#define MXTM ((MAXP+2)*(MAXP+1))/2
 #define MXGP (MAXP+2)
 #define MORTHOGONAL
 
@@ -112,103 +112,107 @@ class tri_basis {
         static inline int imode(int p1) {return((p1-2)*(p1-1)/2);}
         static inline int tmode(int p1) {return((p1+2)*(p1+1)/2);}
         /* PROJECT WITH R & S DERIVATIVES */
-        void proj(FLT *lin, FLT *f, FLT *dx, FLT *dy, int stride);
+        void proj(const FLT *lin, FLT *f, FLT *dx, FLT *dy, int stride) const;
         /* PROJECT ONLY VALUE */
-        void proj(FLT *lin, FLT *f, int stride);
+        void proj(const FLT *lin, FLT *f, int stride) const;
         /* PROJECT A LINEAR FUNCTION */
-        void proj(FLT u1, FLT u2, FLT u3, FLT *f, int stride);
+        void proj(FLT u1, FLT u2, FLT u3, FLT *f, int stride) const;
         /* PROJECT USING SIDE/VERTEX MODES WITH R & S DERIVATIVES */
-        void proj_bdry(FLT *lin, FLT *f, FLT *dr, FLT *ds, int stride);
+        void proj_bdry(const FLT *lin, FLT *f, FLT *dr, FLT *ds, int stride) const;
         /* PROJECT USING SIDE/VERTEX MODES ONLY */
-        void proj_bdry(FLT *lin, FLT *f, int stride);
+        void proj_bdry(const FLT *lin, FLT *f, int stride) const;
         /* PROJECT TO LEGENDRE POINTS (FOR OUTPUTING) */
-        void proj_leg(FLT *lin, FLT *f, int stride);
+        void proj_leg(const FLT *lin, FLT *f, int stride) const;
         /* PROJECT LINEAR FUNCTION TO LEGENDRE POINTS (FOR OUTPUTING) */
-        void proj_leg(FLT u1, FLT u2, FLT u3, FLT *f, int stride);
+        void proj_leg(FLT u1, FLT u2, FLT u3, FLT *f, int stride) const;
         /* PROJECT TO LEGENDRE POINTS USING SIDE/VERTEX MODES ONLY (FOR OUTPUTING) */
-        void proj_bdry_leg(FLT *lin, FLT *f, int stride);
+        void proj_bdry_leg(const FLT *lin, FLT *f, int stride) const;
         /* PROJECT VALUES & TANGENT & NORMAL DERIVATIVES TO 1D SIDE GAUSS POINTS */
         /* dx is tangential derivative, dn is normal derivative to side */
-        void proj_side(int side, FLT *lin, FLT *f, FLT *dx, FLT *dn);
+        void proj_side(int side,const FLT *lin, FLT *f, FLT *dx, FLT *dn) const;
 
         /* DERIVATIVE IN R */
-        void derivr(FLT *f, FLT *dr, int stride);
+        void derivr(const FLT *f, FLT *dr, int stride) const;
         /* DERIVATIVE IN S */
-        void derivs(FLT *f, FLT *ds, int stride);
+        void derivs(const FLT *f, FLT *ds, int stride) const;
         /* INTEGRATE WITH RESPECT TO BASIS */
-        void intgrt(FLT *rslt, FLT *f, int stride);
+        void intgrt(FLT *rslt,const FLT *f, int stride) const;
         /* INTEGRATE FX W/RSPCT TO DG/DR & FY W/RSPCT TO DG/DS */
         /* WARNING THIS ADDS INTEGRATION TO RESULT: RESULT IS NOT CLEARED FIRST */
-        void intgrtrs(FLT *rslt, FLT *dx, FLT *dy, int stride);
+        void intgrtrs(FLT *rslt,const FLT *dx,const FLT *dy, int stride) const;
 
         /* SAME STUFF EXCEPT 1D    */    
         /* PROJECT WITH X DERIVATIVES */
-        void proj1d(FLT *lin, FLT *f, FLT *dx);
+        void proj1d(const FLT *lin, FLT *f, FLT *dx) const;
         /* PROJECT ONLY VALUE */
-        void proj1d(FLT *lin, FLT *f);
+        void proj1d(const FLT *lin, FLT *f) const;
         /* PROJECT A LINEAR FUNCTION */
-        void proj1d(FLT u1, FLT u2, FLT *f);
+        void proj1d(FLT u1, FLT u2, FLT *f) const;
         /* PROJECT TO LEGENDRE POINTS (FOR OUTPUTING) */
-        void proj1d_leg(FLT *lin, FLT *f);
+        void proj1d_leg(const FLT *lin, FLT *f) const;
         /* PROJECT TO LEGENDRE POINTS USING SIDE/VERTEX MODES ONLY (FOR OUTPUTING) */
-        void proj1d_leg(FLT u1, FLT u2, FLT *f);
+        void proj1d_leg(FLT u1, FLT u2, FLT *f) const;
         /* DERIVATIVE IN X */
-        void derivx1d(FLT *f, FLT *dx);
+        void derivx1d(const FLT *f, FLT *dx) const;
         /* INTEGRATE WITH RESPECT TO BASIS */
-        void intgrt1d(FLT *rslt, FLT *f);
+        void intgrt1d(FLT *rslt,const FLT *f) const;
         /* INTEGRATE W/RSPCT TO DG/DX */
-        void intgrtx1d(FLT *rslt, FLT *f);
+        void intgrtx1d(FLT *rslt,const FLT *f) const;
               
         /* POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
-        inline void ptprobe(int nv, FLT *f, FLT r, FLT s, FLT *lin, int stride) {
+        inline void ptprobe(int nv, FLT *f, FLT r, FLT s,const FLT *lin, int stride) const {
             ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
             ptprobe(nv, f, lin, stride);
         }
-        void ptprobe(int nv, FLT *f, FLT *lin, int stride);  // REUSES OLD R,S
+        void ptprobe(int nv, FLT *f,const FLT *lin, int stride) const;  // REUSES OLD R,S
         
         /* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
-        inline void ptprobe_bdry(int nv, FLT *f, FLT r, FLT s, FLT *lin, int stride) {
+        inline void ptprobe_bdry(int nv, FLT *f, FLT r, FLT s, const FLT *lin, int stride) const {
             ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
             ptprobe_bdry(nv, f, lin, stride);
         }
-        void ptprobe_bdry(int nv, FLT *f, FLT *lin, int stride); // REUSES OLD R,S ONLY BDRY MODES 
-        void ptprobe_bdry(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, FLT *lin, int stride); // BOUNDARY MODES ONLY CALC'S DERIVATIVES
+        void ptprobe_bdry(int nv, FLT *f, const FLT *lin, int stride) const; // REUSES OLD R,S ONLY BDRY MODES 
+        void ptprobe_bdry(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, const FLT *lin, int stride) const; // BOUNDARY MODES ONLY CALC'S DERIVATIVES
         
         /* 1D SIDE PROBE FUNCTIONS */
-        inline void ptprobe1d(int nv, FLT *f, FLT x, FLT *sin, int stride) {     
+        inline void ptprobe1d(int nv, FLT *f, FLT x, FLT *sin, int stride) const {     
             ptvalues1d(x);
             ptprobe1d(nv,f,sin,stride);
         }
-        void ptprobe1d(int nv, FLT *f, FLT *sin, int stride);  // REUSES OLD VALUES OF X
-        inline void ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, FLT *sin, int stride) {     
+        void ptprobe1d(int nv, FLT *f, FLT *sin, int stride) const;  // REUSES OLD VALUES OF X
+        inline void ptprobe1d(int nv, FLT *f, FLT *dx, FLT x, FLT *sin, int stride) const {     
             ptvalues1d_deriv(x);
             ptprobe1d(nv,f,dx,sin,stride);
         }
-        void ptprobe1d(int nv, FLT *f, FLT *dx, FLT *sin, int stride);
+        void ptprobe1d(int nv, FLT *f, FLT *dx, FLT *sin, int stride) const;
         
         /* TO CALCULATE BASIS FUNCTIONS & DERIVATIVES */
-        void ptvalues(FLT xi, FLT s); // CALCULATES GX, gn VALUES AT A POINT
-        void ptvalues_deriv(FLT xi, FLT s); // CALCULATES GX, DGX, GN, DGN AT A POINT
-        void ptvalues_bdry(FLT xi, FLT s); // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
-        void ptvalues_deriv_bdry(FLT xi, FLT s); // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+        void ptvalues(FLT xi, FLT s) const; // CALCULATES GX, gn VALUES AT A POINT
+        void ptvalues_deriv(FLT xi, FLT s) const; // CALCULATES GX, DGX, GN, DGN AT A POINT
+        void ptvalues_bdry(FLT xi, FLT s) const; // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
+        void ptvalues_deriv_bdry(FLT xi, FLT s) const; // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
         
-        void ptvalues_rs(FLT r, FLT s) {ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT
-        void ptvalues_deriv_rs(FLT r, FLT s) {ptvalues_deriv(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, DGX, GN, DGN AT A POINT
-        void ptvalues_bdry_rs(FLT r, FLT s) {ptvalues_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
-        void ptvalues_deriv_bdry_rs(FLT r, FLT s) {ptvalues_deriv_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
+        void ptvalues_rs(FLT r, FLT s)  const {ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT
+        void ptvalues_deriv_rs(FLT r, FLT s) const {ptvalues_deriv(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, DGX, GN, DGN AT A POINT
+        void ptvalues_bdry_rs(FLT r, FLT s) const {ptvalues_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn VALUES AT A POINT (BDRY MODES ONLY)
+        void ptvalues_deriv_bdry_rs(FLT r, FLT s) const {ptvalues_deriv_bdry(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);} // CALCULATES GX, gn & DERIV VALUES AT A POINT (BDRY MODES ONLY)
         
         /* 1D SIDE BASIS FUNCTIONS & DERIVATIVES */
-        void ptvalues1d(FLT x);
-        void ptvalues1d_deriv(FLT x);
+        void ptvalues1d(FLT x) const;
+        void ptvalues1d_deriv(FLT x) const;
+				
+				/* Utility for switching between uniform legendre representation & this basis */
+				void legtobasis(const FLT *data, FLT *coeff) const;
         
     /* LOCAL STORAGE/WORK */
     private:
-        Array<FLT,1> pgx, dpgx, pgn, dpgn; // FOR POINT PROBE
+        mutable Array<FLT,1> pgx, dpgx, pgn, dpgn; // FOR POINT PROBE
         
         /* SETUP FUNCTIONS */
         void initialize_values(); // SET UP THINGS FOR PROJECT/INTEGRATE/DERIV
         void sideinfoinit(); // SET UP THINGS TO EVALUATE NORMAL DERIVATIVES ALONG SIDE
         void lumpinv(); // SET UP THINGS FOR INVERSE OF LUMPED MASS MATRIX
+				void lumpinv1d();
         void legpt(); // SET UP PROJECTION TO LEGENDRE POINTS (FOR OUTPUTING)
 };
 

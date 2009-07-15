@@ -19,13 +19,13 @@
 #define dy(i) dy1[(i)]
 #endif
 
-void tri_basis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
+void tri_basis::ptprobe(int nv, FLT *f1, const FLT *lin1, int stride) const {
     TinyVector<FLT,MXTM> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lnmodx = nmodx;  
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+    const Array<FLT,2> lin((FLT *) lin1, shape(nv,stride), neverDeleteData);
     Array<FLT,1> f(f1, shape(nv), neverDeleteData);
 #endif
     
@@ -74,13 +74,13 @@ void tri_basis::ptprobe(int nv, FLT *f1, FLT *lin1, int stride) {
     return;
 }
 
-void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
+void tri_basis::ptprobe_bdry(int nv, FLT *f1, const FLT *lin1, int stride) const {
     TinyVector<FLT,MXTM> wk0;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     const int lnmodx = nmodx;  
     FLT lcl0;
 #ifdef BZ_DEBUG
-    Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+    const Array<FLT,2> lin((FLT *) lin1, shape(nv,stride), neverDeleteData);
     Array<FLT,1> f(f1, shape(nv), neverDeleteData);
 #endif
     
@@ -119,14 +119,14 @@ void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *lin1, int stride) {
     return;
 }
 
-void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, FLT *lin1, int stride) {
+void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, const FLT *lin1, int stride) const {
     TinyVector<FLT,MXTM> wk0,wk1,wk2;
     const int bs1 = sm+3, bs2 = 2*sm+3, bint = bm;
     FLT lcl0, lcl1, lcl2;
     FLT xp1,oeta; 
     FLT x,eta;
 #ifdef BZ_DEBUG
-    Array<FLT,2> lin(lin1, shape(nv,stride), neverDeleteData);
+    const Array<FLT,2> lin((FLT *) lin1, shape(nv,stride), neverDeleteData);
     Array<FLT,1> f(f1, shape(nv), neverDeleteData);
     Array<FLT,1> dx(dx1, shape(nv), neverDeleteData);
     Array<FLT,1> dy(dy1, shape(nv), neverDeleteData);
@@ -197,7 +197,7 @@ void tri_basis::ptprobe_bdry(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, 
     return;
 }
 
-void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
+void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) const {
     const int pp=p+1;
     FLT lcl0;
 #ifdef BZ_DEBUG
@@ -216,7 +216,7 @@ void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *sin1, int stride) {
     return;
 }
 
-void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *dx1, FLT *sin1, int stride) {
+void tri_basis::ptprobe1d(int nv, FLT *f1, FLT *dx1, FLT *sin1, int stride) const {
     const int pp = p+1;
     FLT lcl0,lcl1;
 #ifdef BZ_DEBUG

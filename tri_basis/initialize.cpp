@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#define NO_DEBUG
+// #define DEBUG
 
 #include <math.h>
 #include <utilities.h>
@@ -16,6 +16,12 @@
 const int tri_basis::sbwth;
 
 Array<tri_basis,1> basis::tri;
+
+#ifdef DEBUG
+#include <blitz/tinyvec-et.h>
+FLT func(FLT r,FLT s) {return(s*s*s*s);}
+#endif
+
 
 void tri_basis::initialize(int pdegree, int gpoints) {    
     if (pdegree < 1) {
@@ -631,6 +637,429 @@ void tri_basis::sideinfoinit() {
     return;
 }
 
+// #define NEWWAY
+#ifdef NEWWAY
+/************************************************/
+/** CALCULATE THINGS FOR LUMPED MASS INVERSION  */
+/************************************************/
+void tri_basis::lumpinv(void) {
+    int i,j,k,m,info;
+    Array<int,1> ipiv(2*tm);
+    Array<FLT,2> mm(tm,tm);
+	Array<FLT,2> mmpsi(bm,tm);
+	Array<FLT,3> psi(bm,gpx,gpn);
+    Array<FLT,1> uht(tm),l(tm);
+	FLT psinorm;
+	Array<FLT,1> apsi(p), bpsi(p);
+    char trans[] = "T", uplo[] = "U";
+	int ipoly,ierr;
+	FLT al,be;
+	FLT pkp,pk,pkm,pks;
+	FLT r,s,u,v,x,n;
+    
+    /* ALLOCATE MASS MATRIX INVERSION VARIABLES */
+    if (sm > 0) {
+        vfms.resize(3,sm);
+        sfmv.resize(2,sm);
+        sdiag.resize(sm);
+    }
+    if (sm > 1) sfms.resize(sm-1,sm,3);
+    if (im > 0) {
+        ifmb.resize(bm,im);
+        bfmi.resize(bm,im);
+        idiag.resize(im,ibwth+1);
+    }
+    msi.resize(bm,bm);
+	
+    /********************************************/    
+    /* GENERATE MASS MATRIX                        */
+    /********************************************/
+    for(m=0;m<tm;++m) {
+        for(i=0;i<tm;++i)
+            uht(i) = 0.0;
+        uht(m) = 1.0;
+
+        proj(&uht(0),&psi(0,0,0),gpn);  // PROJECT USES WK0
+        intgrt(&l(0),&psi(0,0,0),gpn); // INTGRT USES WK0
+
+#ifdef DEBUG
+        for(i=0;i<gpx;++i)
+            for(j=0;j<gpn;++j)
+                printf("MIMM: %d %d %e\n",i,j,psi(0,i,j));
+        for(i=0;i<tm;++i)
+            printf("MIMM2: %d %e\n",i,l(i));
+#endif
+                
+        for(i=0;i<tm;++i) 
+            mm(m,i) = l(i);        
+    }
+	
+	
+	/*******************************************/
+	/* GENERATE PSI BASIS VERTEX & SIDE MODES  */
+	/*******************************************/
+	/* VERTEX */
+    ipoly = 6;
+    al = 2.0;
+    be = 1.0;
+    ierr = recur(sm+1,ipoly,al,be,&apsi(0),&bpsi(0));
+    if (ierr != 0) {
+        printf("recur #3 error %d\n",ierr);
+        exit(1);
+    }
+	
+	Array<FLT,2> m1d(sm,sm);
+	Array<FLT,2> psin(sm,sm);
+	psin = 0.0;
+	
+	for (m=0;m<sm;++m) {
+		m1d = 0.0;
+		/* FIND FUNCTION ORTHOGONAL TO OPPOSING SIDE MODES */
+		for(i=0;i<sm-1-m;++i) {
+			for(j=0;j<sm-m;++j) {
+				for(k=0;k<gpn;++k) {
+					m1d(i+1,j) += gnwtn(3+sm+i+m,k)*pow(0.5*(1.-np(k)),2.+m)*pow(0.5*(1.+np(k)),j);
+				}
+			}
+		}
+		m1d(0,0) = 1.0;  // NORMALIZATION FOR FIRST COEFFICIENT 
+		psin(m,0) = 1.0;  // NORMALIZATION CONSTRAINT 
+
+		/* COEFFICIENTS TO FORM PSI BASIS FROM PHI BASIS */
+		GETRF(sm-m,sm-m,m1d.data(),sm,&ipiv(0),info);
+		if (info != 0) {
+			printf("DGETRF FAILED info:%d sm:%d i:%d\n",info,(sm+2),i);
+			exit(1);
+		}
+		GETRS(trans,sm-m,1,m1d.data(),sm,&ipiv(0),&psin(m,0),sm,info);
+	}
+
+	/* CALCULATE NORMALIZATION CONSTANT FOR VERTEX FUNCTION */
+	pk = 1.0;
+	pkm = 0.0;
+	for(m=0;m<p-1;++m) {
+		pkp = (1.0-apsi(m))*pk - bpsi(m)*pkm;
+		pkm = pk;
+		pk = pkp;
+	}
+	psinorm = pk;
+	
+	/* NOW CALCULATE PSI BASIS FUNCTIONS */
+	for (i=0;i<gpx;++i) {
+		for(j=0;j<gpn;++j) {
+		
+			x = xp(i);
+			n = np(j);
+		
+			/* VERTEX 0 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<p-1;++m) {
+				pkp = (n-apsi(m))*pk - bpsi(m)*pkm;
+				pkm = pk;
+				pk = pkp;
+			}
+			psi(0,i,j) = pk/psinorm*(1.+n)*.5;
+			
+			/* SIDE 0 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<sm;++m) {
+				/* CALCULATE ETA FUNCTION */
+				pks = 0.0;
+				for(k=0;k<sm-m;++k) 
+					pks += psin(m,k)*pow(0.5*(1.-n),2.+m)*pow(0.5*(1.+n),k);
+
+				/* CALCULATE PSI FUNCTION */
+				psi(m+3,i,j) = pks*(1.-x)*(1.+x)*0.25*pk*norm(m+3);
+				pkp = (x-a0(0,m))*pk - b0(0,m)*pkm;
+				pkm = pk;
+				pk = pkp;  
+			}
+			
+			/* NOW ROTATED FUNCTIONS */
+			r = (x+1.)*(1.-n)*0.5 -1.0;
+			s = n;
+
+			u = s;
+			v = -1.-r-s;
+			
+			x = 2.0*(1.+u)/(1.-v) -1.0;
+			n = v;
+			
+			/* VERTEX 1 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<p-1;++m) {
+				pkp = (n-apsi(m))*pk - bpsi(m)*pkm;
+				pkm = pk;
+				pk = pkp;
+			}
+			psi(1,i,j) = pk/psinorm*(1.+n)*.5;
+			
+			/* SIDE 1 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<sm;++m) {
+				/* CALCULATE ETA FUNCTION */
+				pks = 0.0;
+				for(k=0;k<sm-m;++k) 
+					pks += psin(m,k)*pow(0.5*(1.-n),2.+m)*pow(0.5*(1.+n),k);
+
+				/* CALCULATE PSI FUNCTION */
+				psi(m+3+sm,i,j) = pks*(1.-x)*(1.+x)*0.25*pk*norm(m+3);
+				pkp = (x-a0(0,m))*pk - b0(0,m)*pkm;
+				pkm = pk;
+				pk = pkp;  
+			}
+			
+			/* NOW ROTATED FUNCTIONS AGAIN */
+			r = (x+1.)*(1.-n)*0.5 -1.0;
+			s = n;
+
+			u = s;
+			v = -1.-r-s;
+			
+			x = 2.0*(1+u)/(1-v) -1.0;
+			n = v;
+			
+			/* VERTEX 2 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<p-1;++m) {
+				pkp = (n-apsi(m))*pk - bpsi(m)*pkm;
+				pkm = pk;
+				pk = pkp;
+			}
+			psi(2,i,j) = pk/psinorm*(1.+n)*.5;
+			
+			/* SIDE 2 */
+			pk = 1.0;
+			pkm = 0.0;
+			for(m=0;m<sm;++m) {
+				/* CALCULATE ETA FUNCTION */
+				pks = 0.0;
+				for(k=0;k<sm-m;++k) 
+					pks += psin(m,k)*pow(0.5*(1.-n),2.+m)*pow(0.5*(1.+n),k);
+
+				/* CALCULATE PSI FUNCTION */
+				psi(m+3+2*sm,i,j) = pks*(1.-x)*(1.+x)*0.25*pk*norm(m+3);
+				pkp = (x-a0(0,m))*pk - b0(0,m)*pkm;
+				pkm = pk;
+				pk = pkp;  
+			}
+		}
+	}
+	
+	for (m=0;m<bm;++m) {
+        intgrt(&l(0),&psi(m,0,0),gpn);
+		mmpsi(m,Range::all()) = l;
+	}
+			
+	if (p > 1)
+		vdiag = mmpsi(0,0);
+	else 
+		vdiag = mm(0,0) + mm(0,1) + mm(0,2);
+		
+	/* SIDES LOWER TRIANGLE*/
+	for(k=0;k<sm;++k) {
+        for(j=0;j<3;++j)
+            vfms(j,k) = mmpsi(3+k,j);
+            
+        sdiag(k) = 1./mmpsi(3+k,3+k);
+        
+        for(j=0;j<k;++j) {
+            sfms(j,k,0) = mmpsi(3+k,3+j);
+            sfms(j,k,1) = mmpsi(3+k,3+j+sm);
+            sfms(j,k,2) = mmpsi(3+k,3+j+2*sm);
+        }
+    }
+	
+	/* REMOVAL FROM INTERIORS */
+	for(i=0; i<bm; ++i ) {
+		for(j=0; j<im; ++j ) {
+			bfmi(i,j) = mm(j+bm,i);
+		}
+	}
+	
+	/* INTERIOR - INTERIOR MATRIX (THIS IS STUPID: Identity) */
+	int i1;
+	if (im > 0) {
+		/* SETUP DIAGANOL FORM OF MATRIX */
+		/* ONLY NECESSARY WHEN USING DPBTRF */    
+		for(j=0;j<im;++j) {
+			i1 = (0 > j-ibwth ? 0 : j-ibwth);
+			for(i=i1;i<=j;++i) {
+				k = i - (j-ibwth);
+				idiag(j,k) = mm(i+bm,j+bm);
+			}
+		}
+		
+		PBTRF(uplo,im,ibwth,&idiag(0,0),ibwth+1,info);
+		if (info != 0) {
+			printf("1:PBTRF FAILED info: %d\n", info);
+			exit(1);
+		}
+	}
+	
+	/* COEFFICIENTS TO FORM PSI BASIS FROM PHI BASIS */
+	GETRF(tm,tm,&mm(0,0),tm,&ipiv(0),info);
+	if (info != 0) {
+		printf("DGETRF FAILED info:%d sm:%d i:%d\n",info,(sm+2),i);
+		exit(1);
+	}
+	GETRS(trans,tm,bm,mm.data(),tm,&ipiv(0),mmpsi.data(),tm,info);
+	
+	/* STORE SIDE VALUES */
+	for(k=0;k<sm;++k) {
+		sfmv(0,k) = -mmpsi(1,k+3);
+		sfmv(1,k) = -mmpsi(2,k+3);
+	}
+	
+	for(k=0;k<bm;++k)
+		for(j=0;j<im;++j)
+			ifmb(k,j) = -mmpsi(k,j+bm);
+			
+			
+	/************************************************/
+	/* FIND MATRICES TO DETERMINE INTERIOR MODES */
+	/************************************************/
+	if (im > 0) {
+		/* PREMULTIPLY MATRIX TO REMOVE BOUNDARY MODES FROM INTERIOR */
+		for(i=0; i<bm; ++i ) {
+			PBTRS(uplo,im,ibwth,1,&idiag(0,0),ibwth+1,&bfmi(i,0),im,info);
+		}
+	}
+        
+
+	
+#ifdef DEBUG
+	std::cout << "sfmv" << std::endl;
+	std::cout << sfmv << std::endl;
+	std::cout << "ifmb" << std::endl;
+	std::cout << ifmb << std::endl;
+	std::cout << "vdiag" << std::endl;
+	std::cout << vdiag << std::endl;
+	std::cout << "sdiag" << std::endl;
+	std::cout << sdiag << std::endl;
+	std::cout << "vfms" << std::endl;
+	std::cout << vfms << std::endl;
+	std::cout << "sfms" << std::endl;
+	std::cout << sfms << std::endl;
+	std::cout << "bfmi" << std::endl;
+	std::cout << bfmi << std::endl;
+	std::cout << "idiag" << std::endl;
+	std::cout << idiag << std::endl;
+
+	int i2;
+	Array<FLT,2> mwk(MXTM,MXTM);
+    Array<FLT,1> vwk(MXTM),wk1(MXTM*MXGP);
+
+    /* CHECK TO MAKE SURE PREVIOUS RESULTS ARE RIGHT */
+    for(i=0;i<3;++i) {
+        i1 = (i+1)%3;
+        i2 = (i+2)%3;
+
+        uht(i) = 1.0;
+        uht(i1) = 0.0;
+        uht(i2) = 0.0;
+        
+        for(j=0;j<sm;++j) {
+            uht(3+j+i*sm) = 0.0;
+            uht(3+j+i1*sm) = -sfmv(1,j);
+            uht(3+j+i2*sm) = -sfmv(0,j);
+        }
+        
+        for(j=0;j<im;++j)
+            uht(bm+j) = -ifmb(i,j);
+            
+        proj(&uht(0),&wk1(0),gpn);
+        intgrt(&mwk(i,0),&wk1(0),gpn);
+        printf("%2d:",i);
+        for(j=0;j<tm;++j)
+            printf("%+.4le  ",mwk(i,j));
+        printf("\n");
+    }
+    
+    for(i=0;i<3;++i) {
+        for(k=0;k<sm;++k) {
+            for(j=0;j<tm;++j)
+                uht(j) = 0.0;
+            uht(i*sm+k+3) = 1.0;
+            for(j=0;j<im;++j) {
+                uht(j+bm) = -ifmb(i*sm+k+3,j);
+            }
+
+            proj(&uht(0),&wk1(0),gpn);
+            intgrt(&mwk(i*sm+k+3,0),&wk1(0),gpn);
+            
+            printf("%2d:",3+i*sm+k);
+            for(j=0;j<tm;++j)
+                printf("%+.4le  ",mwk(i*sm+k+3,j));
+            printf("\n");
+        }            
+    }
+    
+    for(i=0;i<im;++i) {
+        for(j=0;j<tm;++j)
+            uht(j) = 0.0;
+        uht(i +bm) = 1.0;  
+        proj(&uht(0),&wk1(0),gpn);
+        intgrt(&mwk(i+bm,0),&wk1(0),gpn);
+    }
+    
+    for(i=0;i<3;++i)
+        for(m=0;m<tm;++m)
+            mwk(i,m) /= vdiag;
+            
+    for(i=0;i<3;++i) {
+        for(j=0;j<3;++j) {
+            i1 = (i+j)%3;
+            for(k=0;k<sm;++k) {
+                for(m=0;m<tm;++m)
+                    mwk(i*sm+k+3,m) -= vfms(j,k)*mwk(i1,m);
+            }
+        }
+    }
+    
+    /* REMOVE MODES J,K FROM MODE I,M */
+    int mode;
+    for(mode = 0; mode <sm;++mode) {
+        for(i=0;i<3;++i)
+            for(k=0;k<tm;++k)
+                mwk(3+i*sm+mode,k) *= sdiag(mode);
+        for(i=0;i<3;++i) {
+            for(m=mode+1;m<sm;++m) {
+                for(j=0;j<3;++j) {
+                    i1 = (i+j)%3;
+                    for(k=0;k<tm;++k)
+                        mwk(3+i*sm+m,k) -= sfms(mode,m,j)*mwk(3+i1*sm+mode,k);
+                }
+            }
+        }
+    }
+    DPBTRSNU1(&idiag(0,0),im,ibwth,&mwk(bm,0),MXTM);
+    for(k=0;k<im;++k)
+        for(i=0;i<bm;++i)
+            for(j=0;j<tm;++j)
+                mwk(bm+k,j) -= bfmi(i,k)*mwk(i,j);
+                            
+    for(m=0;m<tm;++m) {
+        printf("LI1: %2d:",m);
+        for(j=0;j<tm;++j) {
+            if (fabs(mwk(m,j)) > 1.0e-12)
+                printf("%+.2e  ",mwk(m,j));
+            else
+                printf("%+.2e  ",0.0);
+        }
+        printf("\n");
+    }
+#endif    
+
+			
+	lumpinv1d();
+}
+#else
 /************************************************/
 /** CALCULATE THINGS FOR LUMPED MASS INVERSION  */
 /************************************************/
@@ -655,13 +1084,6 @@ void tri_basis::lumpinv(void) {
         idiag.resize(im,ibwth+1);
     }
     msi.resize(bm,bm);
-    
-    /* ALLOCATE 1D MASS MATRIX INVERSION VARIABLES */
-    if (sm > 0) {
-        vfms1d.resize(2,sm);
-        sfmv1d.resize(2,sm);
-        sdiag1d.resize(sm,sbwth+1);
-    }
 
     /********************************************/    
     /* GENERATE MASS MATRIX                        */
@@ -685,7 +1107,7 @@ void tri_basis::lumpinv(void) {
         for(i=0;i<tm;++i) 
             mm(m,i) = l(i);        
     }
-
+	
     /*******************************************************/        
     /*  EQUATIONS TO FIND VERTEX VALUES TO SM-1 ACCURACY */
     /*******************************************************/        
@@ -956,6 +1378,22 @@ void tri_basis::lumpinv(void) {
 
 
 #ifdef DEBUG
+	std::cout << "sfmv" << std::endl;
+	std::cout << sfmv << std::endl;
+	std::cout << "ifmb" << std::endl;
+	std::cout << ifmb << std::endl;
+	std::cout << "vdiag" << std::endl;
+	std::cout << vdiag << std::endl;
+	std::cout << "sdiag" << std::endl;
+	std::cout << sdiag << std::endl;
+	std::cout << "vfms" << std::endl;
+	std::cout << vfms << std::endl;
+	std::cout << "sfms" << std::endl;
+	std::cout << sfms << std::endl;
+	std::cout << "bfmi" << std::endl;
+	std::cout << bfmi << std::endl;
+	std::cout << "idiag" << std::endl;
+	std::cout << idiag << std::endl;
 
     /* CHECK TO MAKE SURE PREVIOUS RESULTS ARE RIGHT */
     for(i=0;i<3;++i) {
@@ -1058,9 +1496,31 @@ void tri_basis::lumpinv(void) {
     }
 #endif    
 
+	lumpinv1d();
+
+}
+#endif
+
+
+void tri_basis::lumpinv1d() {
+	int i,i1,j,k,m,info;
+    Array<int,1> ipiv(2*MXTM);
+    Array<FLT,2> mwk(MXTM,MXTM),mm(MXTM,MXTM);
+    Array<FLT,1> u(MXTM),l(MXTM),vwk(MXTM),wk1(MXTM*MXGP);
+    FLT rcond=1;
+    char trans[] = "T", uplo[] = "U";
+
     /********************************************************************/    
     /* NOW SETUP SIMILAR THING FOR 1-D MATRICES                                     */
     /********************************************************************/    
+	/* ALLOCATE 1D MASS MATRIX INVERSION VARIABLES */
+    if (sm > 0) {
+        vfms1d.resize(2,sm);
+        sfmv1d.resize(2,sm);
+        sdiag1d.resize(sm,sbwth+1);
+    }
+	
+	
     /* CALCULATE 1-D MASS MATRIX */    
     for(m=1;m<p+2;++m) {
         for(k=1;k<p+2;++k) {
@@ -1172,8 +1632,6 @@ void tri_basis::lumpinv(void) {
     }
 #endif
 
-
-
     return;
 }            
 
@@ -1249,8 +1707,137 @@ void tri_basis::legpt()
         for(m=0;m<p+1;++m)
             lgrnge1d(m,i) = pgx(m);
     }
+		
+#ifdef DEBUG	
+	Array<FLT,1> test(tm), rslt(tm), test1(tm), uht(tm); 
+	
+	test(0) = func(-1.0,1.0);
+	test(1) = func(-1.0,-1.0);
+	test(2) = func(1.0,-1.0);
+	
+	for (i=1;i<sm+1;++i) {
+		x = 2.0*(FLT) i/(FLT)(sm+1) -1.0;
+		test(i+2) = func(x,-1.0);
+		test(i+2+sm) = func(-x,x);
+		test(i+2+2*sm) = func(-1.,-x);
+	}
+	
+	int count = bm;
+	for(i=1;i<sm;++i) {
+			for(j=1;j<sm-(i-1);++j) {
+					s = -1 +2.0*((FLT) j)/(FLT)(sm+1);
+					r = -1 +2.0*((FLT) i)/(FLT)(sm+1);	
+					test(count++) = func(r,s);
+			}
+	}
+	std::cout << test << std::endl;
+
+	legtobasis(test.data(),rslt.data());
+	
+	std::cout << rslt << std::endl;
+	
+	test1(Range(0,2)) = rslt(Range(0,2));
+	
+	for(i=0;i<3;++i) {
+		uht(0) = rslt((i+1)%3);
+		uht(1) = rslt((i+2)%3);
+		uht(Range(2,sm+1)) = rslt(Range(3+i*sm,3+(i+1)*sm-1));
+		proj1d_leg(uht.data(),&test1(2+i*sm));
+	}
+	
+	Array<FLT,2> d1_leg(MXGP,MXGP);
+	proj_leg(rslt.data(),d1_leg.data(), MXGP);
+	count = bm;
+	for(i=1;i<sm;++i) {
+			for(j=1;j<sm-(i-1);++j) {	
+					test1(count++) = d1_leg(i,j);
+			}
+	}
+	test -= test1;
+	std::cout << test << std::endl;
+#endif
+	
     
     return;
 }
 
+void tri_basis::legtobasis(const FLT *data, FLT *coeff) const {
+	int i,j,m,n;
+	char trans[] = "T";
+
+	
+	/* Vertex coefficients are the same */
+	for(int i=0;i<3;++i)
+		coeff[i] = data[i];
+		
+	/* Side coefficients */
+	TinyMatrix<FLT,MXTM,MXTM> matrix;
+	TinyVector<int,2*MXTM> ipiv;
+	int info;
+
+	/* REVERSE OUTPUTING PROCESS */
+	for(m=0;m<sm;++m)
+		for(n=0;n<sm;++n)
+			matrix(n,m) = lgrnge1d(m+2,n+1);
+
+	GETRF(sm,sm,matrix.data(),MXTM,ipiv.data(),info);
+	if (info != 0) {
+		printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+		exit(1);
+	}
+	
+	TinyVector<FLT,MXTM> uht;
+	TinyVector<FLT,MXTM> u1d;
+	
+	int count1 = 3;
+	int count2 = 3;
+	for (int i=0;i<3;++i) {
+		uht = 0.0;
+		uht(0) = data[(i+1)%3];
+		uht(1) = data[(i+2)%3];
+		proj1d_leg(uht.data(),u1d.data());
+		for(m=0;m<sm;++m) {
+			u1d(m+1) -= data[count1++];
+		}
+		GETRS(trans,sm,1,matrix.data(),MXTM,ipiv.data(),u1d.data()+1,MXTM,info);
+		for(m=0;m<sm;++m)
+			coeff[count2++] = -u1d(1+m);
+	}
+		
+	/* Interior modes */
+	for(int m=0;m<im;++m) {
+		n = 0;
+		for(int i=1;i<sm;++i) {
+			for(int j=1;j<sm-(i-1);++j) {
+				matrix(n++,m) = lgrnge(m+bm,i,j);
+			}
+		}
+	}
+
+	GETRF(im,im,matrix.data(),MXTM,ipiv.data(),info);
+	if (info != 0) {
+		printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+		exit(1);
+	}
+
+	for (int i=bm;i<tm;++i)
+		coeff[i] = 0.0;
+		
+	TinyMatrix<FLT,MXGP+2,MXGP+2> u2d;
+
+	proj_leg(coeff,u2d.data(),MXGP+2);
+
+	m = 0;
+	for(i=1;i<sm;++i) {
+		for(j=1;j<sm-(i-1);++j) {
+			uht(m) = u2d(i,j) -data[m+bm];   
+			++m;
+		}
+	}
+	GETRS(trans,im,1,matrix.data(),MXTM,ipiv.data(),uht.data(),MXTM,info);
+	for(m=0;m<im;++m)
+		coeff[m+bm] = -uht(m);
+		
+	return;
+}
 

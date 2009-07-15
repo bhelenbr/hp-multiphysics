@@ -21,7 +21,7 @@ int main (int argc, const char * argv[]) {
     basis::tri(0).initialize(P,GP);
     
     bgn_time = clock();
-    double uht[MXTM];
+    double uht[MXTM],vht[MXTM];
     double u[GP][GP];
     double dx[GP][GP];
     double dy[GP][GP];
@@ -32,12 +32,13 @@ int main (int argc, const char * argv[]) {
 	chudStartRemotePerfMonitor("fpucount"); 
 #endif
 	
-    for (int i = 0; i < 1000000; ++i) {
+    for (int i = 0; i < 100; ++i) {
         // basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
       	// basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
        basis::tri(0).intgrt(uht,dx[0],GP); 
+			 basis::tri(0).legtobasis(uht,vht);
     }
-	
+
 	
 #ifdef OP_COUNT
 	chudStopRemotePerfMonitor(); 
