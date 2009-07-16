@@ -3,7 +3,7 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-#define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tri_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
