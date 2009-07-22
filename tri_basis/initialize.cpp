@@ -6,7 +6,7 @@
  *  Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-// #define DEBUG
+#define DEBUG
 
 #include <math.h>
 #include <utilities.h>
@@ -1478,7 +1478,7 @@ void tri_basis::lumpinv(void) {
             }
         }
     }
-    DPBTRSNU1(&idiag(0,0),im,ibwth,&mwk(bm,0),MXTM);
+    if (im) DPBTRSNU1(&idiag(0,0),im,ibwth,&mwk(bm,0),MXTM);
     for(k=0;k<im;++k)
         for(i=0;i<bm;++i)
             for(j=0;j<tm;++j)
@@ -1738,20 +1738,22 @@ void tri_basis::legpt()
 	
 	test1(Range(0,2)) = rslt(Range(0,2));
 	
-	for(i=0;i<3;++i) {
-		uht(0) = rslt((i+1)%3);
-		uht(1) = rslt((i+2)%3);
-		uht(Range(2,sm+1)) = rslt(Range(3+i*sm,3+(i+1)*sm-1));
-		proj1d_leg(uht.data(),&test1(2+i*sm));
-	}
-	
-	Array<FLT,2> d1_leg(MXGP,MXGP);
-	proj_leg(rslt.data(),d1_leg.data(), MXGP);
-	count = bm;
-	for(i=1;i<sm;++i) {
-			for(j=1;j<sm-(i-1);++j) {	
-					test1(count++) = d1_leg(i,j);
-			}
+	if (sm) {
+		for(i=0;i<3;++i) {
+			uht(0) = rslt((i+1)%3);
+			uht(1) = rslt((i+2)%3);
+			uht(Range(2,sm+1)) = rslt(Range(3+i*sm,3+(i+1)*sm-1));
+			proj1d_leg(uht.data(),&test1(2+i*sm));
+		}
+		
+		Array<FLT,2> d1_leg(MXGP,MXGP);
+		proj_leg(rslt.data(),d1_leg.data(), MXGP);
+		count = bm;
+		for(i=1;i<sm;++i) {
+				for(j=1;j<sm-(i-1);++j) {	
+						test1(count++) = d1_leg(i,j);
+				}
+		}
 	}
 	test -= test1;
 	std::cout << test << std::endl;

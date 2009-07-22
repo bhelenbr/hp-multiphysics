@@ -4,7 +4,7 @@
 #include <utilities.h>
 #include <time.h>
 
-#define P 4
+#define P 1
 #define GP P+1
 
 // #define OP_COUNT
@@ -32,11 +32,11 @@ int main (int argc, const char * argv[]) {
 	chudStartRemotePerfMonitor("fpucount"); 
 #endif
 	
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         // basis::tri(0).proj(uht,u[0],dx[0],dy[0],GP);
       	// basis::tri(0).intgrtrs(uht,dx[0],dy[0],GP); 
        basis::tri(0).intgrt(uht,dx[0],GP); 
-			 basis::tri(0).legtobasis(uht,vht);
+//			 basis::tri(0).legtobasis(uht,vht);
     }
 
 	
