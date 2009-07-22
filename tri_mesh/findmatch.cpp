@@ -274,10 +274,33 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	int i,j,n,tind,sind,p0,indx;
 	Array<int,2> bcntr(xin.nebd +5,3);
 	int bnum,bel,match;
+	
+	/* TO CREATE UNIQUE EDGE NUMBERS */
+	int maxenum = 0;
+	for(i=0;i<xin.nebd;++i) {
+		maxenum = MAX(maxenum,xin.ebdry(i)->idnum);
+	}
+	int epad = 0;
+	while (maxenum > 0) {
+		maxenum /= 2;
+		++epad;
+	}
+	
+	/* TO CREATE UNIQUE VERTEX NUMBERS */
+	int maxvnum = 0;
+	for(i=0;i<xin.nvbd;++i) {
+		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
+	}
+	int vpad = 0;
+	while (maxvnum > 0) {
+		maxvnum /= 2;
+		++vpad;
+	}
 
 	for(i=0;i<xin.npnt;++i)
 		xin.pnt(i).info = -1;
 
+	int maxpnum = 0;
 	ntri = 0;
 	for(i=0;i<xin.ntri;++i) {
 		if (xin.tri(i).info == npart) {
@@ -285,10 +308,14 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			for(n=0;n<3;++n)
 				xin.pnt(xin.tri(i).pnt(n)).info = npart;
 		}
+		maxpnum = MAX(xin.tri(i).info,maxpnum);
 	}
-
-	*gbl->log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
-
+	int ppad = 0;
+	while (maxpnum > 0) {
+		maxpnum /= 2;
+		++ppad;
+	}	
+	
 	if (!initialized) {
 		maxpst = static_cast<int>(static_cast<FLT>(ntri*xin.maxpst)/xin.ntri);
 		allocate(maxpst);
@@ -297,6 +324,11 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 		*gbl->log << "mesh is too small" << std::endl;
 		exit(1);
 	}
+	
+	ostringstream nstr;
+	nstr << "b" << npart << std::flush;
+	gbl->idprefix = nstr.str();
+	gbl->idnum = npart;
 
 	npnt = 0;
 	for(i=0;i<xin.npnt;++i) {
@@ -355,8 +387,9 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			else {
 				/* PARTITION SIDE */
 				match = xin.tri(indx).info;
-				if (match < npart) bnum = (match<<16) + (npart << 24);
-				else bnum = (npart<<16) + (match << 24);
+				if (match < npart) bnum = (match<<ppad) + (npart << ppad);
+				else bnum = (npart<<ppad) + (match << ppad);
+				bnum = bnum << epad;
 				for (j = 0; j <nebd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
@@ -373,12 +406,16 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 		next1: continue;
 	}
 
+	/* Make new boundaries and print boundary information */
 	ebdry.resize(nebd);
 	for(i=0;i<nebd;++i) {
-		if (bcntr(i,0) < 0)
+		if (bcntr(i,0) < 0) {
 			ebdry(i) = new epartition(abs(bcntr(i,0)),*this);
-		else
+			std::cout << ebdry(i)->idprefix << "_type: partition\n";
+		}
+		else {
 			ebdry(i) = xin.ebdry(bcntr(i,0))->create(*this);
+		}
 		ebdry(i)->alloc(static_cast<int>(bcntr(i,1)*2));
 		ebdry(i)->nseg = 0;
 	}
@@ -411,7 +448,6 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 		}
 	}
 
-
 	/* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
 	for(i=0;i<nebd;++i) {
 		if (ebdry(i)->mytype == "partition") {
@@ -424,9 +460,10 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			tind = tri(seg(sind).tri(0)).info;
 			for(n=0;n<3;++n)
 				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
+			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n) << vpad,*this);
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
+			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 			++nvbd;
 
 			nextv0:
@@ -439,9 +476,10 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			tind = tri(seg(sind).tri(0)).info;
 			for(n=0;n<3;++n)
 				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
+			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n)<<vpad,*this);
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
+			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
 			++nvbd;
 
 			nextv1:

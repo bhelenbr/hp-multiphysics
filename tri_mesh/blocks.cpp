@@ -864,7 +864,6 @@ void block::init(input_map &input) {
 //        FLT size_reduce = 1.0;
 //        if (lvl > 1) size_reduce = 2.0;
 //        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
-
 		grd(lvl)->connect(*grd(lvl-1));
 		if (gbl->adapt_output) {
 			nstr.str("");
@@ -1008,7 +1007,10 @@ void block::tadvance() {
 	int lvl;
 
 #ifdef BACKDIFF
-	if (gbl->dti > 0.0) gbl->time += 1./gbl->dti;
+	if (gbl->dti > 0.0) 
+		gbl->time += 1./gbl->dti;
+	else 
+		gbl->time = gbl->tstep;
 
 	for(int i=0;i<BACKDIFF+1;++i)
 		gbl->bd(i) = 0.0;

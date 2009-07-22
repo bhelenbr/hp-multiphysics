@@ -183,7 +183,7 @@ class multigrid_interface {
 	public:
 		/** Initialization functions */
 		virtual void* create_global_structure() {return 0;}
-		  virtual void init(input_map& input, void *gbl_in) {}
+		virtual void init(input_map& input, void *gbl_in) {}
 		enum init_purpose {duplicate, multigrid, adapt_storage, user_defined};
 		virtual void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0) {}
 
@@ -193,7 +193,7 @@ class multigrid_interface {
 		/** Shift to next implicit time step */
 		virtual void tadvance() {}
 
-		  void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
+		void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
 		class comm_info;  /**< Utility class for figuring out communication */
 		virtual void matchboundaries() {} /**< Makes sure data on boundaries coinside */
 
@@ -248,7 +248,7 @@ class boundary {
 		}
 		virtual void init(input_map& bdrydata) {}
 		virtual void alloc(int n) {}
-		virtual void output(std::ostream& fout) {
+		virtual void output(std::ostream& fout) const {
 			fout << idprefix << "_type: " << mytype << std::endl;
 		}
 		virtual void input(std::istream& fin) {}

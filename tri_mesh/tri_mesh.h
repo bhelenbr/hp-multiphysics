@@ -328,7 +328,7 @@ class vrtx_bdry : public boundary {
 		}
 		/* FIX ME: THESE AREN'T USED YET */
 		virtual void input(istream &fin,tri_mesh::filetype type = tri_mesh::grid) {}
-		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {}
+		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {boundary::output(fout);}
 
 		virtual void vloadbuff(boundary::groups group, FLT *base, int bgn, int end, int stride) {}
 		virtual void vfinalrcv(boundary::groups group, int phase, comm_type type, operation op, FLT *base, int bgn, int end, int stride) {}
@@ -374,7 +374,7 @@ class edge_bdry : public boundary {
 				}
 			}
 		}
-		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {}
+		virtual void output(ostream &fout,tri_mesh::filetype type = tri_mesh::grid) const {boundary::output(fout);}
 
 		/* ADDITIONAL STUFF FOR SIDES */
 		virtual void swap(int s1, int s2);
