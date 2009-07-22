@@ -139,7 +139,7 @@ void surface::tadvance() {
 				vdres(x.log2p,i)(0) = 0.0;
 
 			for(i=0;i<base.nseg;++i) 
-				for(m=0;m<basis::tri(x.log2p).sm;++m)
+				for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					sdres(x.log2p,i,m)(0) = 0.0;
 
 			rsdl(x.gbl->nstage);
@@ -148,7 +148,7 @@ void surface::tadvance() {
 				vdres(x.log2p,i)(0) = -gbl->vres(i)(0);
 
 			for(i=0;i<base.nseg;++i) 
-				for(m=0;m<basis::tri(x.log2p).sm;++m)
+				for(m=0;m<basis::tri(x.log2p)->sm();++m)
 					sdres(x.log2p,i,m)(0) = -gbl->sres(i,m)(0)*0;  /* TO KEEP SIDE MODES EQUALLY SPACED */
 		}
 	}
@@ -182,13 +182,13 @@ void surface::rsdl(int stage) {
 
 		x.crdtocht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
 
 		x.ugtouht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.uht(n)(0),&u(n)(0));    
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
 
-		for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			norm(0) =  dcrd(1,i);
 			norm(1) = -dcrd(0,i);
 			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
@@ -225,49 +225,49 @@ void surface::rsdl(int stage) {
 			res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
 		}
 
-		for(m=0;m<basis::tri(x.log2p).sm+2;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
 			lf(0,m) = 0.0;
 
 		/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-		basis::tri(x.log2p).intgrtx1d(&lf(0,0),&res(0,0));
-		basis::tri(x.log2p).intgrt1d(&lf(1,0),&res(1,0));
-		basis::tri(x.log2p).intgrtx1d(&lf(1,0),&res(2,0));
+		basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(0,0));
+		basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
+		basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(2,0));
 #ifdef DROP
-		basis::tri(x.log2p).intgrt1d(&lf(2,0),&res(3,0));
+		basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(3,0));
 #endif
 
 		/* STORE IN RES */
 		for(n=0;n<tri_mesh::ND;++n) {
 			gbl->vres(indx)(n) += lf(n,0);
 			gbl->vres(indx+1)(n) = lf(n,1);
-			for(m=0;m<basis::tri(x.log2p).sm;++m)
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
 				gbl->sres(indx,m)(n) = lf(n,m+2);
 		}
 
 #ifdef DROP
 		gbl->vres(indx)(1) += lf(2,0);
 		gbl->vres(indx+1)(1) += lf(2,1);
-		for(m=0;m<basis::tri(x.log2p).sm;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
 			gbl->sres(indx,m)(1) += lf(2,m+2);        
 
 		gbl->vvolumeflux(indx) += lf(2,0);
 		gbl->vvolumeflux(indx+1) = lf(2,1);
-		for(m=0;m<basis::tri(x.log2p).sm;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
 			gbl->svolumeflux(indx,m) = lf(2,m+2);                    
 #endif
 
 		/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-		basis::tri(x.log2p).intgrt1d(&lf1(0,0),&res(4,0));
-		basis::tri(x.log2p).intgrtx1d(&lf1(0,0),&res(5,0));
-		basis::tri(x.log2p).intgrt1d(&lf1(1,0),&res(6,0));
-		basis::tri(x.log2p).intgrtx1d(&lf1(1,0),&res(7,0));
+		basis::tri(x.log2p)->intgrt1d(&lf1(0,0),&res(4,0));
+		basis::tri(x.log2p)->intgrtx1d(&lf1(0,0),&res(5,0));
+		basis::tri(x.log2p)->intgrt1d(&lf1(1,0),&res(6,0));
+		basis::tri(x.log2p)->intgrtx1d(&lf1(1,0),&res(7,0));
 
 		/* MASS FLUX PRECONDITIONER */				
 		for(n=2;n<x.NV-1;++n) /* For swirling case */
-			for(m=0;m<basis::tri(x.log2p).sm+2;++m)
+			for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
 				lf1(n,m) = 0.0;
 
-		for(m=0;m<basis::tri(x.log2p).sm+2;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
 			lf1(x.NV-1,m) = -x.gbl->rho*lf(1,m); 
 
 #ifndef INERTIALESS
@@ -277,7 +277,7 @@ void surface::rsdl(int stage) {
 		for (n=0;n<x.NV-1;++n) {
 			lf1(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(1,0);
 			lf1(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(1,1);
-			for(m=0;m<basis::tri(x.log2p).sm;++m)
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
 				lf1(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(1,m+2);
 		}
 #endif
@@ -288,7 +288,7 @@ void surface::rsdl(int stage) {
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v1,n) += lf1(n,1);
 
-		for(m=0;m<basis::tri(x.log2p).sm;++m) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,m,n) += lf1(n,m+2);
 		}  
@@ -308,7 +308,7 @@ void surface::rsdl(int stage) {
 					vdres(x.log2p,i)(n) = gbl->fadd(n)*gbl->vres0(i)(n) -gbl->vres(i)(n);
 
 			for(i=0;i<base.nseg;++i) 
-				for(m=0;m<basis::tri(x.log2p).sm;++m) 
+				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 					for(n=0;n<tri_mesh::ND;++n)
 						sdres(x.log2p,i,m)(n) = gbl->fadd(n)*gbl->sres0(i,m)(n) -gbl->sres(i,m)(n);
 
@@ -318,7 +318,7 @@ void surface::rsdl(int stage) {
 				gbl->vres(i)(n) += vdres(x.log2p,i)(n);
 
 		for(i=0;i<base.nseg;++i) 
-			for(m=0;m<basis::tri(x.log2p).sm;++m) 
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 				for(n=0;n<tri_mesh::ND;++n)
 					gbl->sres(i,m)(n) += sdres(x.log2p,i,m)(n);
 	}
@@ -328,7 +328,7 @@ void surface::rsdl(int stage) {
 			gbl->vres(i)(0) += vdres(x.log2p,i)(0);
 
 		for(i=0;i<base.nseg;++i)
-			for(m=0;m<basis::tri(x.log2p).sm;++m) 
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 				gbl->sres(i,m)(0) += sdres(x.log2p,i,m)(0);
 	}
 
@@ -344,7 +344,7 @@ void surface::rsdl(int stage) {
 #endif
 		}
 		for(j=0;j<base.nseg;++j) {
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				base.fsndbuf(count++) = gbl->sres(j,m)(1)*gbl->rho2;
 #ifdef DROP
 				base.fsndbuf(count-1) -= gbl->svolumeflux(j,m)*gbl->rho2;
@@ -384,7 +384,7 @@ void surface_slave::rsdl(int stage) {
 	for(i=base.nseg-1;i>=0;--i) {
 		sind = base.seg(i);
 		msgn = 1;
-		for(m=0;m<basis::tri(x.log2p).sm;++m) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			x.gbl->res.s(sind,m,x.NV-1) += msgn*base.frcvbuf(0,count++);
 			msgn *= -1;
 		}
@@ -404,7 +404,7 @@ void surface_outflow_endpt::rsdl(int stage) {
 	if (surfbdry == 0) {
 		sind = x.ebdry(bnum)->seg(x.ebdry(bnum)->nseg-1);
 		x.crdtocht1d(sind);
-		basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
+		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
 		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
 		x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
 		x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
@@ -412,7 +412,7 @@ void surface_outflow_endpt::rsdl(int stage) {
 	else {
 		sind = x.ebdry(bnum)->seg(0);
 		x.crdtocht1d(sind);
-		basis::tri(x.log2p).ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
+		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
 		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
 		x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
 		x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
@@ -427,14 +427,14 @@ void surface::minvrt() {
 
 	/* INVERT MASS MATRIX */
 	/* LOOP THROUGH SIDES */
-	if (basis::tri(x.log2p).sm > 0) {
+	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx = 0; indx<base.nseg; ++indx) {
 			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */            
-			for (m=0; m <basis::tri(x.log2p).sm; ++m) {
+			for (m=0; m <basis::tri(x.log2p)->sm(); ++m) {
 				for(n=0;n<tri_mesh::ND;++n)
-					gbl->vres(indx)(n) -= basis::tri(x.log2p).sfmv1d(0,m)*gbl->sres(indx,m)(n);
+					gbl->vres(indx)(n) -= basis::tri(x.log2p)->sfmv1d(0,m)*gbl->sres(indx,m)(n);
 				for(n=0;n<tri_mesh::ND;++n)
-					gbl->vres(indx+1)(n) -= basis::tri(x.log2p).sfmv1d(1,m)*gbl->sres(indx,m)(n);
+					gbl->vres(indx+1)(n) -= basis::tri(x.log2p)->sfmv1d(1,m)*gbl->sres(indx,m)(n);
 			}
 		}
 	}
@@ -474,11 +474,11 @@ void surface::minvrt() {
 	}
 
 	/* SOLVE FOR SIDE MODES */
-	if (basis::tri(x.log2p).sm > 0) {
+	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx = 0; indx<base.nseg; ++indx) {                   
 
 #ifdef DETAILED_MINV
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<tri_mesh::ND;++n) {
 					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,0)*gbl->vres(indx)(0);
 					gbl->sres(indx,m)(n) -= gbl->vms(indx,n,0,m,1)*gbl->vres(indx+1)(0);
@@ -488,7 +488,7 @@ void surface::minvrt() {
 			}
 			int info;
 			char trans[] = "T";
-			GETRS(trans,2*basis::tri(x.log2p).sm,1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
+			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
 			if (info != 0) {
 				printf("DGETRS FAILED FOR SIDE MODE UPDATE\n");
 				exit(1);
@@ -496,17 +496,17 @@ void surface::minvrt() {
 #else
 
 			/* INVERT SIDE MODES */
-			DPBTRSNU2(&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,&(gbl->sres(indx,0)(0)),tri_mesh::ND);
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			DPBTRSNU2((double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),&(gbl->sres(indx,0)(0)),tri_mesh::ND);
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				temp                             = gbl->sres(indx,m)(0)*gbl->sdt(indx)(0,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(0,1);
 				gbl->sres(indx,m)(1) = gbl->sres(indx,m)(0)*gbl->sdt(indx)(1,0) +gbl->sres(indx,m)(1)*gbl->sdt(indx)(1,1);         
 				gbl->sres(indx,m)(0) = temp;
 			}
 
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<tri_mesh::ND;++n) {
-					gbl->sres(indx,m)(n) -= basis::tri(x.log2p).vfms1d(0,m)*gbl->vres(indx)(n);
-					gbl->sres(indx,m)(n) -= basis::tri(x.log2p).vfms1d(1,m)*gbl->vres(indx+1)(n);
+					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(0,m)*gbl->vres(indx)(n);
+					gbl->sres(indx,m)(n) -= basis::tri(x.log2p)->vfms1d(1,m)*gbl->vres(indx+1)(n);
 				}
 			}
 #endif
@@ -555,16 +555,16 @@ void surface::setup_preconditioner() {
 #ifdef DETAILED_DT
 		x.crdtocht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
 
 		x.ugtouht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.uht(n)(0),&u(n)(0));    
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
 
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
 		gbl->meshc(indx) = 1.0e99;
-		for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
 			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
@@ -581,9 +581,9 @@ void surface::setup_preconditioner() {
 
 			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
 			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
-			hsm = h/(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1));
+			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
 
-			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1))/hsm);
+			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
 #ifndef BODYFORCE
 			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
 #else
@@ -637,9 +637,9 @@ void surface::setup_preconditioner() {
 		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
 		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
 
-		hsm = h/(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1));
+		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
 
-		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p).p+1)*(basis::tri(x.log2p).p+1))/hsm;
+		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
 #ifndef BODYFORCE
 		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
 #else
@@ -672,41 +672,41 @@ void surface::setup_preconditioner() {
 
 		nrm *= 0.5;
 
-		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx)(1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx+1)(0,0) = -dttang*nrm(1)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx+1)(0,1) =  dttang*nrm(0)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx+1)(1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p).vdiag1d;
-		gbl->vdt(indx+1)(1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p).vdiag1d;
+		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
 
-		if (basis::tri(x.log2p).sm) {
+		if (basis::tri(x.log2p)->sm()) {
 			gbl->sdt(indx)(0,0) = -dttang*nrm(1);
 			gbl->sdt(indx)(0,1) =  dttang*nrm(0);
 			gbl->sdt(indx)(1,0) =  dtnorm*nrm(0);
 			gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);  
 
 #ifdef DETAILED_MINV
-			int lsm = basis::tri(x.log2p).sm;
+			int lsm = basis::tri(x.log2p)->sm();
 			x.crdtocht1d(sind);
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p).proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
 
 			for(int m = 0; m<lsm; ++m) {
-				for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+				for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 					nrm(0) =  dcrd(1,i);
 					nrm(1) = -dcrd(0,i);
-					res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p).gx(i,m+3);
-					res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p).gx(i,m+3);
-					res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p).gx(i,m+3);
-					res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p).gx(i,m+3); 
+					res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p)->gx(i,m+3);
+					res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p)->gx(i,m+3); 
 				}
 				lf = 0;
-				basis::tri(x.log2p).intgrt1d(&lf(0,0),&res(0,0));
-				basis::tri(x.log2p).intgrt1d(&lf(1,0),&res(1,0));
-				basis::tri(x.log2p).intgrt1d(&lf(2,0),&res(2,0));
-				basis::tri(x.log2p).intgrt1d(&lf(3,0),&res(3,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(0,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(2,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
 
 				/* CFL = 0 WON'T WORK THIS WAY */
 				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
@@ -782,7 +782,7 @@ void surface::setup_preconditioner() {
 	}
 
 	/* INVERT SIDE MATRIX */    
-	if (basis::tri(x.log2p).sm > 0) {
+	if (basis::tri(x.log2p)->sm() > 0) {
 		for(indx=0;indx<base.nseg;++indx) {
 			/* INVERT SIDE MVDT MATRIX */
 			jcbi = 1.0/(gbl->sdt(indx)(0,0)*gbl->sdt(indx)(1,1) -gbl->sdt(indx)(0,1)*gbl->sdt(indx)(1,0));
@@ -812,7 +812,7 @@ void surface::update(int stage) {
 		v0 = x.seg(sind).pnt(1);
 		gbl->vug0(base.nseg) = x.pnts(v0);
 
-		if (basis::tri(x.log2p).sm > 0) gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) = crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+		if (basis::tri(x.log2p)->sm() > 0) gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 		return;
 	}
 
@@ -836,7 +836,7 @@ void surface::update(int stage) {
 	}
 
 	for(i=0;i<base.nseg;++i) {
-		for(m=0;m<basis::tri(x.log2p).sm;++m) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			printf("sres: %d ",i);
 			for(n=0;n<tri_mesh::ND;++n) {
 				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) printf("%8.4e ",gbl->sres(i,m)(n));
@@ -855,7 +855,7 @@ void surface::update(int stage) {
 	printf("vertex positions %d %8.4e %8.4e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
 
 	for(i=0;i<base.nseg;++i)
-		for(m=0;m<basis::tri(x.log2p).sm;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
 			printf("spos: %d %d %8.4e %8.4e\n",i,m,crv(i,m)(0),crv(i,m)(1));
    // }
 #endif
@@ -868,7 +868,7 @@ void surface::update(int stage) {
 	v0 = x.seg(sind).pnt(1);
 	x.pnts(v0) = gbl->vug0(base.nseg) -x.gbl->alpha(stage)*gbl->vres(base.nseg);
 
-	if (basis::tri(x.log2p).sm > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+	if (basis::tri(x.log2p)->sm() > 0) crv(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sug0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) -x.gbl->alpha(stage)*gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 
 	/* FIX POINTS THAT SLIDE ON CURVE */
 	x.hp_vbdry(base.vbdry(1))->mvpttobdry(x.pnts(v0));
@@ -887,7 +887,7 @@ void surface::update(int stage) {
 	printf("vertex positions %d %e %e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
 
 	for(i=0;i<base.nseg;++i)
-		for(m=0;m<basis::tri(x.log2p).sm;++m)
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
 			printf("spos: %d %d %e %e\n",i,m,crv(i,m)(0),crv(i,m)(1));
  //   }
 #endif
@@ -905,7 +905,7 @@ void surface::update(int stage) {
 			base.fsndbuf(count++) = x.pnts(v0)(n);                
 
 		for(i=0;i<base.nseg;++i) {
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<tri_mesh::ND;++n)
 					base.fsndbuf(count++) = crv(i,m)(n);
 			}
@@ -940,11 +940,11 @@ void surface_slave::update(int stage) {
 	for(n=0;n<tri_mesh::ND;++n)
 	x.pnts(v0)(n) = base.frcvbuf(0,count++);
 
-	if (basis::tri(x.log2p).sm > 0) {
+	if (basis::tri(x.log2p)->sm() > 0) {
 		for(i=base.nseg-1;i>=0;--i) {
 			sind = base.seg(i);
 			msgn = 1;
-			for(m=0;m<basis::tri(x.log2p).sm;++m) {
+			for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 				for(n=0;n<tri_mesh::ND;++n)
 					crds(i,m,n) = msgn*base.frcvbuf(0,count++);
 				msgn *= -1;
@@ -960,7 +960,7 @@ void surface::mg_restrict() {
 	if(x.p0 > 1) {
 		/* TRANSFER IS ON FINEST MESH */
 		gbl->vres0(Range(0,base.nseg)) = gbl->vres(Range(0,base.nseg));
-		if (basis::tri(x.log2p).sm > 0) gbl->sres0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) = gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+		if (basis::tri(x.log2p)->sm() > 0) gbl->sres0(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) = gbl->sres(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 		return;
 	}
 	else {

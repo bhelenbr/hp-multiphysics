@@ -31,7 +31,7 @@ void symmetry::tadvance() {
 	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		indx = sind*x.sm0;
-		for(m=0;m<basis::tri(x.log2p).sm;++m) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			x.ug.s(sind,m,0) = 0.0;
 			x.ug.s(sind,m,2) = 0.0;
 		}

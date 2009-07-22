@@ -15,7 +15,7 @@ void tri_hp_swe::setup_preconditioner() {
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-	if (basis::tri(log2p).sm > 0) {
+	if (basis::tri(log2p)->sm() > 0) {
 		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 
@@ -29,8 +29,8 @@ void tri_hp_swe::setup_preconditioner() {
 			dxmax = (dx > dxmax ? dx : dxmax);
 		}
 		dxmax = sqrt(dxmax);
-		dx = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*dxmax);
-		dxmax /= 0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1);
+		dx = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*dxmax);
+		dxmax /= 0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1);
 
 		qmax = 0.0;
 		hmax = 0.0;
@@ -81,7 +81,7 @@ void tri_hp_swe::setup_preconditioner() {
 		gbl->tprcn(tind,2) =  jcb/pre;
 		for(i=0;i<3;++i) {
 			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
-			if (basis::tri(log2p).sm > 0) {
+			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
 				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
 			}

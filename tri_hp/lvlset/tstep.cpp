@@ -14,7 +14,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 		/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 		/***************************************/
 		gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-		if (basis::tri(log2p).sm > 0) {
+		if (basis::tri(log2p)->sm() > 0) {
 			gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 		}
 
@@ -35,8 +35,8 @@ void tri_hp_lvlset::setup_preconditioner() {
 				tri_mesh::output("negative",grid);
 				exit(1);
 			}
-			h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-			hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 
 			qmax = 0.0;
 			nu = 0.0;
@@ -96,7 +96,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 			gbl->tprcn(tind,3) = jcb/gam;
 			for(i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
-				if (basis::tri(log2p).sm > 0) {
+				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
 					gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
 				}
@@ -114,7 +114,7 @@ void tri_hp_lvlset::setup_preconditioner() {
 //        /** DETERMINE FLOW PSEUDO-TIME STEP ****/
 //        /***************************************/
 //        gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
-//        if (basis::tri(log2p).sm > 0) {
+//        if (basis::tri(log2p)->sm() > 0) {
 //            gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 //        }
 //        gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
@@ -137,8 +137,8 @@ void tri_hp_lvlset::setup_preconditioner() {
 //                tri_mesh::output("negative",grid);
 //                exit(1);
 //            }
-//            h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-//            hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+//            h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+//            hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 //        
 //            qmax = 0.0;
 //            ubar = 0.0;
@@ -199,8 +199,8 @@ void tri_hp_lvlset::setup_preconditioner() {
 //            gbl->tprcn_ut(tind,1,3) = jcb*vbar/gam;
 //            gbl->tprcn_ut(tind,2,3) = jcb*phibar/gam;
 //            for(i=0;i<3;++i) {
-//                gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p).vdiag*gbl->tprcn_ut(tind,Range::all(),Range::all());
-//                if (basis::tri(log2p).sm > 0) {
+//                gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
+//                if (basis::tri(log2p)->sm() > 0) {
 //                    side = tri(tind).seg(i);
 //                    gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
 //                }

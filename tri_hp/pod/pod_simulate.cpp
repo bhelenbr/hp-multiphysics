@@ -603,7 +603,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 
 		for (int bsind=0;bsind<base.nseg;++bsind) {
 			sind = base.seg(bsind);
-			for(int sm=0;sm<basis::tri(x.log2p).sm;++sm)
+			for(int sm=0;sm<basis::tri(x.log2p)->sm();++sm)
 				for(int n=0;n<x.NV;++n)
 					x.rsdls(bindex+k) += modes(k).s(bsind,sm,n)*x.gbl->res.s(sind,sm,n);
 		}		

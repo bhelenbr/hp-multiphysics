@@ -40,7 +40,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	qmax = ul*ul +vl*vl;
 	fmax = fabs(x.gbl->f0 +x.gbl->cbeta*xpt(1));
 	c2 = x.gbl->g*hl;
-	dxmax = 2.*mag/(0.25*(basis::tri(x.log2p).p +1)*(basis::tri(x.log2p).p+1));
+	dxmax = 2.*mag/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
 	alpha = x.gbl->cd*dxmax/(2*hl);
 	alpha2 = alpha*alpha;
 	sigma = MAX((qmax -c2)/qmax,0);

@@ -49,34 +49,34 @@ void dirichlet::tadvance() {
 		if (is_curved()) {
 			x.crdtocht1d(sind);
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 		}
 		else {
 			for(n=0;n<tri_mesh::ND;++n) {
-				basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+				basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
 
-				for(k=0;k<basis::tri(x.log2p).gpx;++k)
+				for(k=0;k<basis::tri(x.log2p)->gpx();++k)
 					x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
 			}
 		}
 
-		if (basis::tri(x.log2p).sm) {
+		if (basis::tri(x.log2p)->sm()) {
 			for(n=0;n<x.NV;++n)
-				basis::tri(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
+				basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 
-			for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
+			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 				pt(0) = x.crd(0)(0,k);
 				pt(1) = x.crd(1)(0,k);
 				for(n=0;n<x.NV;++n)
 					x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
 			}
 			for(n=0;n<x.NV;++n)
-				basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
+				basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
 			indx = sind*x.sm0;
 			for(n=0;n<x.NV;++n) {
-				PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(n)(2),basis::tri(x.log2p).sm,info);
-				for(m=0;m<basis::tri(x.log2p).sm;++m) 
+				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
+				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 					x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 			}
 		}
@@ -96,17 +96,17 @@ void neumann::rsdl(int stage) {
 
 		x.crdtocht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 
 		x.crdtocht1d(sind,1);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(1,0));
 
 		x.ugtouht1d(sind);
 		for(n=0;n<x.NV;++n)
-			basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 
-		for(k=0;k<basis::tri(x.log2p).gpx;++k) {
+		for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
 			nrm(0) = x.dcrd(1,0)(0,k);
 			nrm(1) = -x.dcrd(0,0)(0,k);                
 			for(n=0;n<tri_mesh::ND;++n) {
@@ -118,7 +118,7 @@ void neumann::rsdl(int stage) {
 		}
 
 		for(n=0;n<x.NV;++n)
-			basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
+			basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v0,n) += x.lf(n)(0);
@@ -126,7 +126,7 @@ void neumann::rsdl(int stage) {
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v1,n) += x.lf(n)(1);
 
-		for(k=0;k<basis::tri(x.log2p).sm;++k) {
+		for(k=0;k<basis::tri(x.log2p)->sm();++k) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}

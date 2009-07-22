@@ -18,21 +18,21 @@ void tri_hp::mg_restrict() {
 		/* TRANSFER IS ON FINE MESH */
 		gbl->res0.v(Range(0,npnt-1),Range::all()) = gbl->res.v(Range(0,npnt-1),Range::all());
 
-		if (basis::tri(log2p).p > 1) {
-			gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+		if (basis::tri(log2p)->p() > 1) {
+			gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
 
-			if (basis::tri(log2p).p > 2) {
+			if (basis::tri(log2p)->p() > 2) {
 
 				for(tind=0;tind<ntri;++tind) {
 					indx = 0;
 					indx1 = 0;
-					for(m=1;m<basis::tri(log2p).sm;++m) {
-						for(k=0;k<basis::tri(log2p).sm-m;++k) {
+					for(m=1;m<basis::tri(log2p)->sm();++m) {
+						for(k=0;k<basis::tri(log2p)->sm()-m;++k) {
 							gbl->res0.i(tind,indx,Range::all()) = gbl->res.i(tind,indx1,Range::all());
 							++indx;
 							++indx1;
 						}
-						indx1 += basis::tri(log2p).p;
+						indx1 += basis::tri(log2p)->p();
 					}
 				}
 			}

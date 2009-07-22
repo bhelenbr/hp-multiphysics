@@ -261,34 +261,34 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int
 		if (is_curved()) {
 			x.crdtocht1d(sind);
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 		}
 		else {
 			for(n=0;n<tri_mesh::ND;++n) {
-				basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+				basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
 
-				for(k=0;k<basis::tri(x.log2p).gpx;++k)
+				for(k=0;k<basis::tri(x.log2p)->gpx();++k)
 					x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
 			}
 		}
 
-		if (basis::tri(x.log2p).sm) {
+		if (basis::tri(x.log2p)->sm()) {
 			for(n=0;n<ndirichlets;++n)
-				basis::tri(x.log2p).proj1d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),&x.res(dirichlets(n))(0,0));
+				basis::tri(x.log2p)->proj1d(x.ug.v(v0,dirichlets(n)),x.ug.v(v1,dirichlets(n)),&x.res(dirichlets(n))(0,0));
 
-			for(k=0;k<basis::tri(x.log2p).gpx; ++k) {
+			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 				pt(0) = x.crd(0)(0,k);
 				pt(1) = x.crd(1)(0,k);
 				for(n=0;n<ndirichlets;++n)
 					x.res(dirichlets(n))(0,k) -= ibc->f(dirichlets(n),pt,x.gbl->time);
 			}
 			for(n=0;n<ndirichlets;++n)
-				basis::tri(x.log2p).intgrt1d(&x.lf(dirichlets(n))(0),&x.res(dirichlets(n))(0,0));
+				basis::tri(x.log2p)->intgrt1d(&x.lf(dirichlets(n))(0),&x.res(dirichlets(n))(0,0));
 
 			indx = sind*x.sm0;
 			for(n=0;n<ndirichlets;++n) {
-				PBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.lf(dirichlets(n))(2),basis::tri(x.log2p).sm,info);
-				for(m=0;m<basis::tri(x.log2p).sm;++m) 
+				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(dirichlets(n))(2),basis::tri(x.log2p)->sm(),info);
+				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 					x.ug.s(sind,m,dirichlets(n)) = -x.lf(dirichlets(n))(2+m);
 			}
 		}
@@ -313,7 +313,7 @@ void hp_edge_bdry::curv_init(int tlvl) {
 //    v0 = x.seg(sind).pnt(1);
 //    base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 
-	if (basis::tri(x.log2p).p == 1) return;
+	if (basis::tri(x.log2p)->p() == 1) return;
 
 	/*****************************/
 	/* SET UP HIGHER ORDER MODES */
@@ -325,27 +325,27 @@ void hp_edge_bdry::curv_init(int tlvl) {
 		v1 = x.seg(sind).pnt(1);
 
 		for(n=0;n<tri_mesh::ND;++n) 
-			basis::tri(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+			basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
 
-		for(i=0;i<basis::tri(x.log2p).gpx;++i) {
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			pt(0) = x.crd(0)(0,i);
 			pt(1) = x.crd(1)(0,i);
-			base.mvpttobdry(j,basis::tri(x.log2p).xp(i),pt);
+			base.mvpttobdry(j,basis::tri(x.log2p)->xp(i),pt);
 			x.crd(0)(0,i) -= pt(0);
 			x.crd(1)(0,i) -= pt(1);
 		}
 
 		for(n=0;n<tri_mesh::ND;++n) {
-			basis::tri(x.log2p).intgrt1d(&x.cf(n,0),&x.crd(n)(0,0));
-			DPBTRS(uplo,basis::tri(x.log2p).sm,basis::tri(x.log2p).sbwth,1,&basis::tri(x.log2p).sdiag1d(0,0),basis::tri(x.log2p).sbwth+1,&x.cf(n,2),basis::tri(x.log2p).sm,info);
+			basis::tri(x.log2p)->intgrt1d(&x.cf(n,0),&x.crd(n)(0,0));
+			DPBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.cf(n,2),basis::tri(x.log2p)->sm(),info);
 
-			for(m=0;m<basis::tri(x.log2p).sm;++m)
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
 				crvbd(tlvl)(j,m)(n) = -x.cf(n,m+2);
 		}
 
 		/* TEST FOR A CIRCLE 
-		basis::tri(x.log2p).ptvalues1d(0.0);
-		basis::tri(x.log2p).ptprobe1d(tri_mesh::ND,&pt(0),&x.cht(0,0),MXTM);
+		basis::tri(x.log2p)->ptvalues1d(0.0);
+		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&pt(0),&x.cht(0,0),MXTM);
 		*gbl->log << pt << ' ' << pt(0)*pt(0) +pt(1)*pt(1) << std::endl;
 		*/
 
@@ -361,7 +361,7 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
 	base.findbdrypt(xp,bel,psi);
 	if (!curved) {
 		base.edge_bdry::mvpttobdry(bel,psi,xp);
-		basis::tri(x.log2p).ptvalues1d(psi);
+		basis::tri(x.log2p)->ptvalues1d(psi);
 		return;
 	}
 
@@ -381,7 +381,7 @@ void hp_edge_bdry::findandmovebdrypt(TinyVector<FLT,2>& xp,int &bel,FLT &psi) co
 	iter = 0;
 	roundoff = 10.0*EPSILON*(1.0 +(fabs(xp(0)*dx) +fabs(xp(1)*dy)));
 	do {
-		basis::tri(x.log2p).ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
+		basis::tri(x.log2p)->ptprobe1d(x.ND,pt.data(),psi,&x.cht(0,0),MXTM);
 		dpsi = (pt(0) -xp(0))*dx +(pt(1) -xp(1))*dy;
 		psi -= dpsi;
 		if (iter++ > 100) {
@@ -410,7 +410,7 @@ void hp_edge_bdry::tadvance() {
 		if (stage) {
 			/* BACK CALCULATE K TERM */
 			for(int j=0;j<base.nseg;++j) {
-				for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 					for(int n=0;n<tri_mesh::ND;++n)
 						crvbd(stage+1)(j,m)(n) = (crvbd(0)(j,m)(n)-crvbd(1)(j,m)(n))*x.gbl->adirk(stage-1,stage-1);
 				}
@@ -420,7 +420,7 @@ void hp_edge_bdry::tadvance() {
 		if (x.gbl->substep == 0) {
 			/* STORE TILDE W */
 			for(int j=0;j<base.nseg;++j) {
-				for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 					for(int n=0;n<tri_mesh::ND;++n)
 						crvbd(1)(j,m)(n) = crv(j,m)(n);
 				}
@@ -430,7 +430,7 @@ void hp_edge_bdry::tadvance() {
 		/* UPDATE TILDE W */
 		for (int s=0;s<stage;++s) {            
 			for(int j=0;j<base.nseg;++j) {
-				for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 					for(int n=0;n<tri_mesh::ND;++n) {
 						crvbd(1)(j,m)(n) += x.gbl->adirk(stage,s)*crvbd(s+2)(j,m)(n);
 					}
@@ -441,7 +441,7 @@ void hp_edge_bdry::tadvance() {
 		/* EXTRAPOLATE GUESS? */
 		if (stage && x.gbl->dti > 0.0) {
 			FLT constant =  x.gbl->cdirk(x.gbl->substep);
-			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += constant*crvbd(stage+1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) += constant*crvbd(stage+1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 		}
 	}
 
@@ -461,7 +461,7 @@ void hp_edge_bdry::calculate_unsteady_sources() {
 			sind = base.seg(j);
 			x.crdtocht1d(sind,1);
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(i).proj1d(&x.cht(n,0),&dxdt(i,j)(n,0));
+				basis::tri(i)->proj1d(&x.cht(n,0),&dxdt(i,j)(n,0));
 		}
 	}
 
@@ -475,7 +475,7 @@ void hp_edge_bdry::tadvance() {
 
 			/* BACK CALCULATE K TERM */
 			for(int j=0;j<base.nseg;++j) {
-				for(int m=0;m<basis::tri(x.log2p).sm;++m) {
+				for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
 					for(int n=0;n<tri_mesh::ND;++n)
 						crvbd(i+1)(j,m)(n) = crvbd(i)(j,m)(n);
 				}
@@ -484,7 +484,7 @@ void hp_edge_bdry::tadvance() {
 
 		/* EXTRAPOLATE GUESS? */
 		if (x.gbl->dti > 0.0 && x.gbl->tstep > 1) {
-			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) += crvbd(1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1)) -crvbd(2)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p).sm-1));
+			crvbd(0)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) += crvbd(1)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1)) -crvbd(2)(Range(0,base.nseg-1),Range(0,basis::tri(x.log2p)->sm()-1));
 		}
 	}
 
@@ -638,7 +638,7 @@ void tri_hp::matchboundaries() {
 		if (ebdry(bnum)->is_comm() && hp_ebdry(bnum)->is_curved()) {                
 			count = 0;
 			for(i=0;i<ebdry(bnum)->nseg;++i) {
-				for(m=0;m<basis::tri(log2p).sm;++m) {
+				for(m=0;m<basis::tri(log2p)->sm();++m) {
 					for(n=0;n<ND;++n)
 						ebdry(bnum)->fsndbuf(count++) = hp_ebdry(bnum)->crds(i,m,n);
 				}
@@ -664,7 +664,7 @@ void tri_hp::matchboundaries() {
 				count = 0;
 				for(i=ebdry(bnum)->nseg-1;i>=0;--i) {
 					msgn = 1;
-					for(m=0;m<basis::tri(log2p).sm;++m) {
+					for(m=0;m<basis::tri(log2p)->sm();++m) {
 						for(n=0;n<ND;++n)
 							hp_ebdry(bnum)->crds(i,m,n) = msgn*ebdry(bnum)->frcvbuf(0,count++);
 						msgn *= -1;
@@ -687,7 +687,7 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 	/* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
 	sind = base.seg(base.nseg-1);
 	x.crdtocht1d(sind);
-	basis::tri(x.log2p).ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
+	basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),1.0,&x.cht(0,0),MXTM);
 	ddpsi2 = (*fxy)(dx);
 	if (base.vbdry(1) >= 0) {
 		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&ddpsi2,0,1,1);
@@ -718,7 +718,7 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 	for(int indx=0;indx<base.nseg;++indx) {
 		sind = base.seg(indx);
 		x.crdtocht1d(sind);
-		basis::tri(x.log2p).ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
+		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), -1.0, &x.cht(0,0), MXTM);
 		ddpsi1 = (*fxy)(dx);
 		if (ddpsi1 * ddpsi2 <= 0.0) {
 			v0 = x.seg(base.seg(indx)).pnt(0);
@@ -734,14 +734,14 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 			}
 			*x.gbl->log << "#LOCAL EXTREMA: " << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << ' ' <<(*fxy)(x.pnts(v0)) << std::endl;
 		}
-		basis::tri(x.log2p).ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 1.0, &x.cht(0,0), MXTM);
+		basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 1.0, &x.cht(0,0), MXTM);
 		ddpsi2 = (*fxy)(dx);
 		if (ddpsi1 *ddpsi2 <= 0.0) {
 			/* INTERIOR MAXIMUM */
 			psil = -1.0;
 			psir = 1.0;
 			while (psir-psil > 1.0e-10) {
-				basis::tri(x.log2p).ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 0.5*(psil +psir), &x.cht(0,0), MXTM);
+				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND, &xp(0), &dx(0), 0.5*(psil +psir), &x.cht(0,0), MXTM);
 				if ((*fxy)(dx)*ddpsi1 < 0.0) 
 					psir = 0.5*(psil+psir);
 				else
@@ -788,7 +788,7 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 			psil = -1.0;
 			psir = 1.0;
 			while (psir-psil > 1.0e-10) {
-				basis::tri(x.log2p).ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),0.5*(psil+psir),&x.cht(0,0),MXTM);
+				basis::tri(x.log2p)->ptprobe1d(tri_mesh::ND,&xp(0),&dx(0),0.5*(psil+psir),&x.cht(0,0),MXTM);
 				if ((*fxy)(xp)*vl < 0.0) 
 					psir = 0.5*(psil+psir);
 				else

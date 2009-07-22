@@ -28,14 +28,14 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 		if (tri(tind).info > -1) {
 			crdtocht(tind);
 			for(n=0;n<ND;++n)
-				basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 		}
 		else {
 			for(n=0;n<ND;++n)
-				basis::tri(log2p).proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+				basis::tri(log2p)->proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
-			for(i=0;i<basis::tri(log2p).gpx;++i) {
-				for(j=0;j<basis::tri(log2p).gpn;++j) {
+			for(i=0;i<basis::tri(log2p)->gpx();++i) {
+				for(j=0;j<basis::tri(log2p)->gpn();++j) {
 					for(n=0;n<ND;++n) {
 						dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(1))(n) -pnts(tri(tind).pnt(0))(n));
 						dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(0))(n));
@@ -46,10 +46,10 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 
 		ugtouht(tind);
 		for(n=0;n<NV;++n)
-			basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
+			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 
- 		for (i=0;i<basis::tri(log2p).gpx;++i) {	
-			for (j=0;j<basis::tri(log2p).gpn;++j) {
+ 		for (i=0;i<basis::tri(log2p)->gpx();++i) {	
+			for (j=0;j<basis::tri(log2p)->gpn();++j) {
 				cjcb(i,j) = (dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 				pt(0) = crd(0)(i,j);
 				pt(1) = crd(1)(i,j);
@@ -59,7 +59,7 @@ void tri_hp::l2error(init_bdry_cndtn *comparison) {
 						mxr(n) = err;
 						loc(n) = tind;
 					}
-					l2r(n) += err*err*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+					l2r(n) += err*err*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
 				}
 			}
 		}	
@@ -88,14 +88,14 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
 		if (tri(tind).info > -1) {
 			crdtocht(tind);
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 		}
 		else {
 			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(log2p).proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+				basis::tri(log2p)->proj(pnts(tri(tind).pnt(0))(n),pnts(tri(tind).pnt(1))(n),pnts(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
-			for(i=0;i<basis::tri(log2p).gpx;++i) {
-				for(j=0;j<basis::tri(log2p).gpn;++j) {
+			for(i=0;i<basis::tri(log2p)->gpx();++i) {
+				for(j=0;j<basis::tri(log2p)->gpn();++j) {
 					for(n=0;n<tri_mesh::ND;++n) {
 						dcrd(n,0)(i,j) = 0.5*(pnts(tri(tind).pnt(2))(n) -pnts(tri(tind).pnt(1))(n));
 						dcrd(n,1)(i,j) = 0.5*(pnts(tri(tind).pnt(0))(n) -pnts(tri(tind).pnt(1))(n));
@@ -106,16 +106,16 @@ void tri_hp::integrated_averages(Array<FLT,1> a) {
 
 		ugtouht(tind);
 		for(n=0;n<NV;++n)
-			basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
+			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 
-		for(i=0;i<basis::tri(log2p).gpx;++i) {
-			for(j=0;j<basis::tri(log2p).gpn;++j) {
+		for(i=0;i<basis::tri(log2p)->gpx();++i) {
+			for(j=0;j<basis::tri(log2p)->gpn();++j) {
 				cjcb(i,j) = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
-				a(0) += RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
-				a(1) += crd(0)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
-				a(2) += crd(1)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+				a(0) += RAD(crd(0)(i,j))*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
+				a(1) += crd(0)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
+				a(2) += crd(1)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
 				for(n=0;n<NV;++n) 
-					a(3+n) += u(n)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j)*cjcb(i,j);
+					a(3+n) += u(n)(i,j)*RAD(crd(0)(i,j))*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j)*cjcb(i,j);
 			}
 		}
 	}

@@ -79,14 +79,14 @@ void tri_hp_ins::calculate_unsteady_sources() {
 			if (tri(tind).info > -1) {
 				crdtocht(tind,1);
 				for(n=0;n<ND;++n)
-					basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+					basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 			}
 			else {
 				for(n=0;n<ND;++n)
-					basis::tri(log2p).proj(vrtxbd(1)(tri(tind).pnt(0))(n),vrtxbd(1)(tri(tind).pnt(1))(n),vrtxbd(1)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+					basis::tri(log2p)->proj(vrtxbd(1)(tri(tind).pnt(0))(n),vrtxbd(1)(tri(tind).pnt(1))(n),vrtxbd(1)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
 
-				for(i=0;i<basis::tri(log2p).gpx;++i) {
-					for(j=0;j<basis::tri(log2p).gpn;++j) {
+				for(i=0;i<basis::tri(log2p)->gpx();++i) {
+					for(j=0;j<basis::tri(log2p)->gpn();++j) {
 						for(n=0;n<ND;++n) {
 							dcrd(n,0)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(1))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
 							dcrd(n,1)(i,j) = 0.5*(vrtxbd(1)(tri(tind).pnt(2))(n) -vrtxbd(1)(tri(tind).pnt(0))(n));
@@ -97,10 +97,10 @@ void tri_hp_ins::calculate_unsteady_sources() {
 
 			ugtouht(tind,1);
 			for(n=0;n<NV;++n)
-				basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
+				basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 
-			for(i=0;i<basis::tri(log2p).gpx;++i) {
-				for(j=0;j<basis::tri(log2p).gpn;++j) {    
+			for(i=0;i<basis::tri(log2p)->gpx();++i) {
+				for(j=0;j<basis::tri(log2p)->gpn();++j) {    
 					cjcb(i,j) = -gbl->bd(0)*gbl->rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					for(n=0;n<NV-1;++n)
 						dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);

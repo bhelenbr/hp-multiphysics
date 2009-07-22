@@ -724,7 +724,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	Array<double,1> work(8*x.nsnapshots);
 	Array<int,1> ifail(x.nsnapshots);
 	int i,k,l,n;
-	int lgpx = basis::tri(x.log2p).gpx;
+	int lgpx = basis::tri(x.log2p)->gpx();
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
 	std::istringstream instr;
@@ -771,19 +771,19 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 
 					/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 					for(n=0;n<x.ND;++n)
-						basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+						basis::tri(x.log2p)->proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
 
 					x.ugtouht1d(sind,0);
 					for(n=0;n<x.NV;++n)
-						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+						basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 
 					x.ugtouht1d(sind,1);
 					for(n=0;n<x.NV;++n)
-						basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+						basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.res(n)(0,0));
 
 					FLT tmp_store = 0.0;
 					for(i=0;i<lgpx;++i) {
-						cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+						cjcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 						for(n=0;n<x.NV;++n) {
 						tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
 						}
@@ -854,15 +854,15 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 
 			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 			for(n=0;n<x.ND;++n)
-				basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
 
 			x.ugtouht1d(sind);
 			for(n=0;n<x.NV;++n)
-				basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+				basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.res(n)(0,0));
 
 			FLT tmp_store = 0.0;
 			for(i=0;i<lgpx;++i) {
-				cjcb =  basis::tri(x.log2p).wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+				cjcb =  basis::tri(x.log2p)->wtx(i)*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 				for(n=0;n<x.NV;++n) {
 					tmp_store += x.res(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
 				}
@@ -942,19 +942,19 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 
 				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 				for(n=0;n<x.ND;++n)
-					basis::tri(x.log2p).proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
+					basis::tri(x.log2p)->proj1d(&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0));
 
 				x.ugtouht1d(sind,0);
 				for(n=0;n<x.NV;++n)
-					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+					basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 
 				x.ugtouht1d(sind,1);
 				for(n=0;n<x.NV;++n)
-					basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.res(n)(0,0));
+					basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.res(n)(0,0));
 
 				FLT tmp_store = 0.0;
 				for(i=0;i<lgpx;++i) {
-					cjcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+					cjcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					for(n=0;n<x.NV;++n) {
 						tmp_store += x.u(n)(0,i)*x.res(n)(0,i)*x.scaling(n)*cjcb;
 					}

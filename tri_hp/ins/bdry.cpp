@@ -41,19 +41,19 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 				assert(seg != 3);
 
 				x.crdtocht(tind);
-				for(m=basis::tri(x.log2p).bm;m<basis::tri(x.log2p).tm;++m)
+				for(m=basis::tri(x.log2p)->bm();m<basis::tri(x.log2p)->tm();++m)
 					for(n=0;n<tri_mesh::ND;++n)
 						x.cht(n,m) = 0.0;
 
 				for(n=0;n<tri_mesh::ND;++n)
-					basis::tri(x.log2p).proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
+					basis::tri(x.log2p)->proj_side(seg,&x.cht(n,0), &x.crd(n)(0,0), &x.dcrd(n,0)(0,0), &x.dcrd(n,1)(0,0));
 
 				x.ugtouht(tind);
 				for(n=0;n<x.NV;++n)
-					basis::tri(x.log2p).proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
+					basis::tri(x.log2p)->proj_side(seg,&x.uht(n)(0),&x.u(n)(0,0),&x.du(n,0)(0,0),&x.du(n,1)(0,0));
 
-				for (i=0;i<basis::tri(x.log2p).gpx;++i) {
-					jcb =  basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
+				for (i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					jcb =  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*sqrt(x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i) +x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i));
 					circumference += jcb;
 
 					x.cjcb(0,i) = x.gbl->mu*RAD(x.crd(0)(0,i))/(x.dcrd(0,0)(0,i)*x.dcrd(1,1)(0,i) -x.dcrd(1,0)(0,i)*x.dcrd(0,1)(0,i));
@@ -86,12 +86,12 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						diff_flux(n) -= x.gbl->D(n)/x.gbl->mu*basis::tri(x.log2p).wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
+						diff_flux(n) -= x.gbl->D(n)/x.gbl->mu*basis::tri(x.log2p)->wtx(i)*(-visc[2][2][1][0]*x.du(2,0)(0,i) -visc[2][2][1][1]*x.du(2,1)(0,i));
 
-					diff_flux(0) -=    basis::tri(x.log2p).wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
+					diff_flux(0) -=    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
 									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-					diff_flux(1) -=    basis::tri(x.log2p).wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+					diff_flux(1) -=    basis::tri(x.log2p)->wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
 									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
 									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
 
@@ -105,9 +105,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 					}
 
-					circulation += basis::tri(x.log2p).wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
+					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
 
-					convect = basis::tri(x.log2p).wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
+					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
 					conv_flux(2) -= convect;
 					conv_flux(0) -= x.u(0)(0,i)*convect;
 					conv_flux(1) -= x.u(1)(0,i)*convect;
@@ -166,13 +166,13 @@ void neumann::rsdl(int stage) {
 
 		x.crdtocht1d(sind);
 		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 
 		x.ugtouht1d(sind);
 		for(n=0;n<x.NV;++n)
-			basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 
-		for(k=0;k<basis::tri(x.log2p).gpx;++k) {
+		for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
 			nrm(0) = x.dcrd(1,0)(0,k);
 			nrm(1) = -x.dcrd(0,0)(0,k);                
 			for(n=0;n<tri_mesh::ND;++n) {
@@ -194,7 +194,7 @@ void neumann::rsdl(int stage) {
 		}
 
 		for(n=0;n<x.NV;++n)
-			basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
+			basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v0,n) += x.lf(n)(0);
@@ -202,7 +202,7 @@ void neumann::rsdl(int stage) {
 		for(n=0;n<x.NV;++n)
 			x.gbl->res.v(v1,n) += x.lf(n)(1);
 
-		for(k=0;k<basis::tri(x.log2p).sm;++k) {
+		for(k=0;k<basis::tri(x.log2p)->sm();++k) {
 			for(n=0;n<x.NV;++n)
 				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
 		}
@@ -280,7 +280,7 @@ void symmetry::tadvance() {
 	/*******************/
 	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
-		for(m=0;m<basis::tri(x.log2p).sm;++m) {
+		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			x.ug.s(sind,m,dir) = 0.0;
 		}
 	}
@@ -301,7 +301,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	nu = x.gbl->mu/x.gbl->rho;
 	rhoi = 1./rho;
 	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	hmax = mag*2.0/(0.25*(basis::tri(x.log2p).p +1)*(basis::tri(x.log2p).p+1));
+	hmax = mag*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
 	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
 	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
 

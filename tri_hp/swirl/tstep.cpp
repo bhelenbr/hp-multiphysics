@@ -13,7 +13,7 @@ void tri_hp_swirl::setup_preconditioner() {
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
-	if (basis::tri(log2p).sm > 0) {
+	if (basis::tri(log2p)->sm() > 0) {
 		gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
 	}
 
@@ -34,8 +34,8 @@ void tri_hp_swirl::setup_preconditioner() {
 			tri_mesh::output("negative",grid);
 			exit(1);
 		}
-		h = 4.*jcb/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1)*hmax);
-		hmax = hmax/(0.25*(basis::tri(log2p).p +1)*(basis::tri(log2p).p+1));
+		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
+		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 
 		qmax = 0.0;
 		qsmax = 0.0;
@@ -76,7 +76,7 @@ void tri_hp_swirl::setup_preconditioner() {
 		gbl->tprcn(tind,NV-1) =  jcb/gam;
 		for(i=0;i<3;++i) {
 			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
-			if (basis::tri(log2p).sm > 0) {
+			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
 				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
 			}

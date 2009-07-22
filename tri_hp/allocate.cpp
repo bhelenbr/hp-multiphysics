@@ -15,6 +15,12 @@
 const int nmovetypes = 5;
 const char movetypes[nmovetypes][80] = {"fixed","uncoupled_rigid","coupled_rigid","uncoupled_deformable","coupled_deformable"};
 
+#ifdef AXISYMMETRIC
+tri_basis_array<1> basis::tri;
+#else
+tri_basis_array<0> basis::tri;
+#endif
+
 void tri_hp::init(input_map& inmap, void *gin) {
 	int i,ival,p;
 	std::string keyword, line;
@@ -61,20 +67,9 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	int npts = 0;
 #endif
 
-	/* Check that global basis has been allocated & allocate if necessary */
-	if (basis::tri.extent(firstDim) < log2p +1) {
-		basis::tri.resize(log2p+1);
-
-		p = 1;
-		for(i=0;i<log2p+1;++i) {
-			basis::tri(i).initialize(p,p+1+npts);
-			p = p<<1;
-		}
-	}
-
-	p0 = basis::tri(log2p).p;
-	sm0 = basis::tri(log2p).sm;
-	im0 = basis::tri(log2p).im;
+	p0 = basis::tri(log2p)->p();
+	sm0 = basis::tri(log2p)->sm();
+	im0 = basis::tri(log2p)->im();
 	log2pmax = log2p;
 
 	TinyVector<std::string,3> output_purposes;
@@ -154,8 +149,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	dres.resize(log2p);
 	for(i=0;i<log2p;++i) {
 		dres(i).v.resize(maxpst,NV);
-		dres(i).s.resize(maxpst,basis::tri(i).sm,NV);
-		dres(i).i.resize(maxpst,basis::tri(i).im,NV);
+		dres(i).s.resize(maxpst,basis::tri(i)->sm(),NV);
+		dres(i).i.resize(maxpst,basis::tri(i)->im(),NV);
 	}
 
 	/* Allocate block stuff */
@@ -175,8 +170,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	gbl->res_r.i = 0.;
 
 	gbl->res0.v.resize(maxpst,NV);
-	gbl->res0.s.resize(maxpst,basis::tri(log2p).sm,NV);
-	gbl->res0.i.resize(maxpst,basis::tri(log2p).im,NV); 
+	gbl->res0.s.resize(maxpst,basis::tri(log2p)->sm(),NV);
+	gbl->res0.i.resize(maxpst,basis::tri(log2p)->im(),NV); 
 
 	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
 	if (gbl->diagonal_preconditioner) {

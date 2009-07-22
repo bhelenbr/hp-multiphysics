@@ -21,9 +21,9 @@ void tri_hp_ins::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 		
-	int sm = basis::tri(log2p).sm;
-	int lgpx = basis::tri(log2p).gpx;
-	int lgpn = basis::tri(log2p).gpn;
+	int sm = basis::tri(log2p)->sm();
+	int lgpx = basis::tri(log2p)->gpx();
+	int lgpn = basis::tri(log2p)->gpn();
 	std::vector<int> highs;
 	highs.push_back(2+sm);
 	highs.push_back(2+2*sm);
@@ -37,7 +37,7 @@ void tri_hp_ins::length() {
 	}
 
 	/* USING BERNOULLI CONSTANT AS ERROR INDICATOR */
-	const FLT alpha = 2.0*(basis::tri(log2p).p-0.5)/static_cast<FLT>(ND);
+	const FLT alpha = 2.0*(basis::tri(log2p)->p()-0.5)/static_cast<FLT>(ND);
 	FLT denom = 0.0, totalbernoulli = 0.0, totalerror = 0.0;
 	for (int tind=0;tind<ntri;++tind) {
 			
@@ -52,16 +52,16 @@ void tri_hp_ins::length() {
 		ugtouht(tind);
 		
 		for(int n=0;n<ND;++n)
-			basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
-		basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
+			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
+		basis::tri(log2p)->proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
 		
 		for(int n=0;n<NV;++n) 
 			for(std::vector<int>::iterator it=highs.begin();it!=highs.end();++it)
 				uht(n)(*it) = 0.0;
 			
 		for(int n=0;n<ND;++n)
-			basis::tri(log2p).proj(&uht(n)(0),&ul(n)(0,0),&dul(n,0)(0,0),&dul(n,1)(0,0),MXGP);
-		basis::tri(log2p).proj(&uht(NV-1)(0),&ul(NV-1)(0,0),MXGP);
+			basis::tri(log2p)->proj(&uht(n)(0),&ul(n)(0,0),&dul(n,0)(0,0),&dul(n,1)(0,0),MXGP);
+		basis::tri(log2p)->proj(&uht(NV-1)(0),&ul(NV-1)(0,0),MXGP);
 
 		FLT jcb = 0.25*area(tind); 
 		FLT error2 = 0.0; 
@@ -88,8 +88,8 @@ void tri_hp_ins::length() {
 				
 				dbernoulli -= bernoulli;
 				
-				error2 += dbernoulli*dbernoulli*jcb*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j);
-				totalbernoulli += bernoulli*bernoulli*jcb*basis::tri(log2p).wtx(i)*basis::tri(log2p).wtn(j);
+				error2 += dbernoulli*dbernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);
+				totalbernoulli += bernoulli*bernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);
 			}
 		}
 		totalerror += error2;
@@ -164,13 +164,13 @@ void tri_hp_ins::length() {
 			FLT length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
 			
 			TinyVector<FLT,2> ep, dedpsi;
-			basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
+			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
 			FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 
 			FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
 			FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
 
-			basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
+			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
 			lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 
 			FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));

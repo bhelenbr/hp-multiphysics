@@ -12,7 +12,7 @@
 
 #include <r_tri_mesh.h>
 #include <float.h>
-#include <tri_basis.h>
+#include <tri_basis_b.h>
 #include <blocks.h>
 
 #ifdef AXISYMMETRIC
@@ -20,6 +20,10 @@
 #else
 #define RAD(r) 1
 #endif
+
+#define MAXP 4
+#define MXGP MAXP+2
+#define MXTM (MAXP+1)*(MAXP+2)/2 
 
 class hp_vrtx_bdry;
 class hp_edge_bdry;
@@ -242,5 +246,13 @@ class tri_hp_helper {
 		virtual void mg_restrict() {}
 		virtual void output() {};
 };
+
+namespace basis {
+#ifdef AXISYMMETRIC
+	extern tri_basis_array<1> tri;
+#else
+	extern tri_basis_array<0> tri;
+#endif
+}
 
 #endif

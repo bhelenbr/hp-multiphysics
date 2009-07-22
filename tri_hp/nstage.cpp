@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-// #define DEBUG
+//#define DEBUG
 
 // #define OP_COUNT
 
@@ -18,13 +18,13 @@ void tri_hp::rsdl(int stage) {
 	gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
 	gbl->res_r.v(Range(0,npnt-1),Range::all()) *= oneminusbeta;
 
-	if (basis::tri(log2p).sm) {
-		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = 0.0;
-		gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) *= oneminusbeta;
+	if (basis::tri(log2p)->sm()) {
+		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = 0.0;
+		gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) *= oneminusbeta;
 
-		if (basis::tri(log2p).im) {
-			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = 0.0;
-			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) *= oneminusbeta;
+		if (basis::tri(log2p)->im()) {
+			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = 0.0;
+			gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) *= oneminusbeta;
 		}
 	}
 
@@ -49,9 +49,9 @@ void tri_hp::update() {
 
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
 	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
-	if (basis::tri(log2p).sm) {
+	if (basis::tri(log2p)->sm()) {
 		gbl->ug0.s(Range(0,nseg-1),Range(0,sm0-1),Range::all()) = ug.s(Range(0,nseg-1),Range::all(),Range::all());
-		if (basis::tri(log2p).im) {
+		if (basis::tri(log2p)->im()) {
 			gbl->ug0.i(Range(0,ntri-1),Range(0,im0-1),Range::all()) = ug.i(Range(0,ntri-1),Range::all(),Range::all());
 		}
 	}
@@ -107,7 +107,7 @@ void tri_hp::update() {
 		}
 
 		for(i=0;i<nseg;++i) {
-			for(m=0;m<basis::tri(log2p).sm;++m) {
+			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				printf("%s s: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
 					if (fabs(gbl->res.s(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl->res.s(i,m,n));
@@ -119,7 +119,7 @@ void tri_hp::update() {
 
 
 		for(i=0;i<ntri;++i) {
-			for(m=0;m<basis::tri(log2p).im;++m) {
+			for(m=0;m<basis::tri(log2p)->im();++m) {
 				printf("%s i: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
 					if (fabs(gbl->res.i(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl->res.i(i,m,n));
@@ -139,7 +139,7 @@ void tri_hp::update() {
 		}
 
 		for(i=0;i<nseg;++i) {
-			for(m=0;m<basis::tri(log2p).sm;++m) {
+			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				printf("%s ug.s: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
 					if (fabs(ug.s(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.s(i,m,n));
@@ -151,7 +151,7 @@ void tri_hp::update() {
 
 
 		for(i=0;i<ntri;++i) {
-			for(m=0;m<basis::tri(log2p).im;++m) {
+			for(m=0;m<basis::tri(log2p)->im();++m) {
 				printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
 					if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
@@ -166,22 +166,22 @@ void tri_hp::update() {
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 
-		if (basis::tri(log2p).sm > 0) {
-			ug.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = gbl->ug0.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -cflalpha*gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
+		if (basis::tri(log2p)->sm() > 0) {
+			ug.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = gbl->ug0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -cflalpha*gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
 
-			if (basis::tri(log2p).im > 0) {
+			if (basis::tri(log2p)->im() > 0) {
 
 				for(i=0;i<ntri;++i) {
 					indx = 0;
 					indx1 = 0;
-					for(m=1;m<basis::tri(log2p).sm;++m) {
-						for(k=0;k<basis::tri(log2p).sm-m;++k) {
+					for(m=1;m<basis::tri(log2p)->sm();++m) {
+						for(k=0;k<basis::tri(log2p)->sm()-m;++k) {
 							for(n=0;n<NV;++n) {
 								ug.i(i,indx1,n) =  gbl->ug0.i(i,indx1,n) -cflalpha*gbl->res.i(i,indx,n);
 							}
 							++indx; ++indx1;
 						}
-						indx1 += sm0 -basis::tri(log2p).sm;
+						indx1 += sm0 -basis::tri(log2p)->sm();
 					}
 				}
 			}
@@ -200,7 +200,7 @@ void tri_hp::update() {
 #ifdef DEBUG
 //        if (coarse_level) {
 #ifdef PTH
-		pth_exit(NULL);
+//		pth_exit(NULL);
 #endif
 #ifdef MPI
 //		MPI_Finalize();

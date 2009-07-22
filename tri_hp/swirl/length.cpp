@@ -50,7 +50,7 @@ void tri_hp_swirl::length() {
 	norm = gbl->eanda_recv(0)/gbl->eanda_recv(1);
 	gbl->fltwk(Range(0,npnt-1)) = 0.0;
 
-	switch(basis::tri(log2p).p) {
+	switch(basis::tri(log2p)->p()) {
 		case(1): {
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
@@ -67,7 +67,7 @@ void tri_hp_swirl::length() {
 		}
 
 		default: {
-			indx = basis::tri(log2p).sm-1;
+			indx = basis::tri(log2p)->sm()-1;
 			for(i=0;i<nseg;++i) {
 				v0 = seg(i).pnt(0);
 				v1 = seg(i).pnt(1);
@@ -110,13 +110,13 @@ void tri_hp_swirl::length() {
 					dx2(1) = pnts(v1)(1)-pnts(v0)(1);
 					length2 = dx2(0)*dx2(0) +dx2(1)*dx2(1);
 
-					basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
+					basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
 					lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 
 					ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
 					curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
 
-					basis::tri(log2p).ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
+					basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
 					lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
 
 					ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
@@ -132,7 +132,7 @@ void tri_hp_swirl::length() {
 	}
 
 	for(i=0;i<npnt;++i) {
-		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p).p+1+ND));
+		gbl->fltwk(i) = pow(gbl->fltwk(i)/(norm*pnt(i).nnbor*gbl->error_target),1./(basis::tri(log2p)->p()+1+ND));
 		lngth(i) /= gbl->fltwk(i);        
 	}
 

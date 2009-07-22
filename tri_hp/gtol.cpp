@@ -30,7 +30,7 @@ void tri_hp::ugtouht(int tind) {
 		sind = tri(tind).seg(i);
 		sign = tri(tind).sgn(i);
 		msgn = 1;
-		for (m = 0; m < basis::tri(log2p).sm; ++m) {
+		for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 			for(n=0; n<NV; ++n)
 				uht(n)(cnt) = msgn*ug.s(sind,m,n);
 			msgn *= sign;
@@ -39,15 +39,15 @@ void tri_hp::ugtouht(int tind) {
 	}
 
 	/* INTERIORS */    
-	if (basis::tri(log2p).im > 0) {
+	if (basis::tri(log2p)->im() > 0) {
 		indx = 0;
-		for(m = 1; m < basis::tri(log2p).sm; ++m) {
-			for(k = 0; k < basis::tri(log2p).sm-m; ++k) {
+		for(m = 1; m < basis::tri(log2p)->sm(); ++m) {
+			for(k = 0; k < basis::tri(log2p)->sm()-m; ++k) {
 				for(n=0; n<NV; ++n)
 					uht(n)(cnt) = ug.i(tind,indx,n);
 				++cnt; ++indx;
 			}
-			indx += sm0 -basis::tri(log2p).sm;
+			indx += sm0 -basis::tri(log2p)->sm();
 		}
 	}
 
@@ -73,7 +73,7 @@ void tri_hp::ugtouht(int tind, int tlvl) {
 		sind = tri(tind).seg(i);
 		sign = tri(tind).sgn(i);
 		msgn = 1;
-		for (m = 0; m < basis::tri(log2p).sm; ++m) {
+		for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 			for(n=0; n<NV; ++n)
 				uht(n)(cnt) = msgn*ug.s(sind,m,n);
 			msgn *= sign;
@@ -82,15 +82,15 @@ void tri_hp::ugtouht(int tind, int tlvl) {
 	}
 
 	/* INTERIORS */    
-	if (basis::tri(log2p).im > 0) {    
+	if (basis::tri(log2p)->im() > 0) {    
 		indx = 0;
-		for(m = 1; m < basis::tri(log2p).sm; ++m) {
-			for(k = 0; k < basis::tri(log2p).sm-m; ++k) {
+		for(m = 1; m < basis::tri(log2p)->sm(); ++m) {
+			for(k = 0; k < basis::tri(log2p)->sm()-m; ++k) {
 				for(n=0; n<NV; ++n)
 					uht(n)(cnt) = ug.i(tind,indx,n);
 				++cnt; ++indx;
 			}
-			indx += sm0 -basis::tri(log2p).sm;
+			indx += sm0 -basis::tri(log2p)->sm();
 		}
 	}
 
@@ -113,7 +113,7 @@ void tri_hp::ugtouht(int tind, int tlvl) {
 		sind = tri(tind).seg(i);
 		sign = tri(tind).sgn(i);
 		msgn = 1;
-		for (m = 0; m < basis::tri(log2p).sm; ++m) {
+		for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 			for(n=0; n<NV; ++n)
 				uht(n)(cnt) = msgn*ug.s(sind,m,n);
 			msgn *= sign;
@@ -141,7 +141,7 @@ void tri_hp::ugtouht(int tind, int tlvl) {
 		sind = tri(tind).seg(i);
 		sign = tri(tind).sgn(i);
 		msgn = 1;
-		for (m = 0; m < basis::tri(log2p).sm; ++m) {
+		for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 			for(n=0; n<NV; ++n)
 				uht(n)(cnt) = msgn*ug.s(sind,m,n);
 			msgn *= sign;
@@ -163,7 +163,7 @@ void tri_hp::ugtouht1d(int sind) {
 		uht(n)(1) = ug.v(v1,n);
 	}
 
-	for(m=0;m<basis::tri(log2p).sm;++m)
+	for(m=0;m<basis::tri(log2p)->sm();++m)
 		for(n=0;n<NV;++n) 
 			uht(n)(m+2) = ug.s(sind,m,n);
 
@@ -181,7 +181,7 @@ void tri_hp::ugtouht1d(int sind, int tlvl) {
 		uht(n)(1) = ug.v(v1,n);
 	}
 
-	for(m=0;m<basis::tri(log2p).sm;++m)
+	for(m=0;m<basis::tri(log2p)->sm();++m)
 		for(n=0;n<NV;++n) 
 			uht(n)(m+2) = ug.s(sind,m,n);
 
@@ -198,14 +198,14 @@ void tri_hp::crdtocht(int tind) {
 			cht(n,i) = pnts(indx)(n);
 	}
 
-	if (basis::tri(log2p).sm == 0) return;
+	if (basis::tri(log2p)->sm() == 0) return;
 
 	/* SIDES */
 	cnt = 3;
 	for (i=0; i<3;++i) {    
 		sind = tri(tind).seg(i);
 		if (seg(sind).tri(1) >= 0) {
-			for(m=0;m<basis::tri(log2p).sm;++m) {
+			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				for(n=0;n<ND;++n)
 					cht(n,cnt) = 0.0;
 				++cnt;
@@ -215,14 +215,14 @@ void tri_hp::crdtocht(int tind) {
 			bnum = getbdrynum(seg(sind).tri(1));
 			indx = getbdryseg(seg(sind).tri(1));
 			if (hp_ebdry(bnum)->is_curved()) {
-				for (m = 0; m < basis::tri(log2p).sm; ++m) {
+				for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(n=0; n<ND; ++n)
 						cht(n,cnt) = hp_ebdry(bnum)->crds(indx,m,n);
 					++cnt;
 				}
 			}
 			else {
-				for(m=0;m<basis::tri(log2p).sm;++m) {
+				for(m=0;m<basis::tri(log2p)->sm();++m) {
 					for(n=0;n<ND;++n)
 						cht(n,cnt) = 0.0;
 					++cnt;
@@ -244,14 +244,14 @@ void tri_hp::crdtocht(int tind, int tlvl) {
 			cht(n,i) = vrtxbd(tlvl)(indx)(n);
 	}
 
-	if (basis::tri(log2p).sm == 0) return;
+	if (basis::tri(log2p)->sm() == 0) return;
 
 	/* SIDES */
 	cnt = 3;
 	for (i=0; i<3;++i) {    
 		sind = tri(tind).seg(i);
 		if (seg(sind).tri(1) >= 0) {
-			for(m=0;m<basis::tri(log2p).sm;++m) {
+			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				for(n=0;n<ND;++n)
 					cht(n,cnt) = 0.0;
 				++cnt;
@@ -261,14 +261,14 @@ void tri_hp::crdtocht(int tind, int tlvl) {
 			bnum = getbdrynum(seg(sind).tri(1));
 			indx = getbdryseg(seg(sind).tri(1));
 			if (hp_ebdry(bnum)->is_curved()) {
-				for (m = 0; m < basis::tri(log2p).sm; ++m) {
+				for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(n=0; n<ND; ++n)
 						cht(n,cnt) = hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n);
 					++cnt;
 				}
 			}
 			else {
-				for(m=0;m<basis::tri(log2p).sm;++m) {
+				for(m=0;m<basis::tri(log2p)->sm();++m) {
 					for(n=0;n<ND;++n)
 						cht(n,cnt) = 0.0;
 					++cnt;
@@ -291,7 +291,7 @@ void tri_hp::crdtocht1d(int sind) {
 	}
 
 	if (seg(sind).tri(1) >= 0) {
-		for(m=0;m<basis::tri(log2p).sm;++m)
+		for(m=0;m<basis::tri(log2p)->sm();++m)
 			for(n=0;n<ND;++n) 
 				cht(n,m+2) = 0.0;
 	}
@@ -299,12 +299,12 @@ void tri_hp::crdtocht1d(int sind) {
 		bnum = getbdrynum(seg(sind).tri(1));
 		indx = getbdryseg(seg(sind).tri(1));
 		if (hp_ebdry(bnum)->is_curved()) {
-			for(m=0;m<basis::tri(log2p).sm;++m)
+			for(m=0;m<basis::tri(log2p)->sm();++m)
 				for(n=0;n<ND;++n) 
 					cht(n,m+2) = hp_ebdry(bnum)->crds(indx,m,n);
 		}
 		else {
-			for(m=0;m<basis::tri(log2p).sm;++m)
+			for(m=0;m<basis::tri(log2p)->sm();++m)
 				for(n=0;n<ND;++n) 
 					cht(n,m+2) = 0.0;
 		}  
@@ -324,7 +324,7 @@ void tri_hp::crdtocht1d(int sind,int tlvl) {
 	}
 
 	if (seg(sind).tri(1) >= 0) {
-		for(m=0;m<basis::tri(log2p).sm;++m)
+		for(m=0;m<basis::tri(log2p)->sm();++m)
 			for(n=0;n<ND;++n) 
 				cht(n,m+2) = 0.0;
 	}
@@ -332,13 +332,13 @@ void tri_hp::crdtocht1d(int sind,int tlvl) {
 		bnum = getbdrynum(seg(sind).tri(1));
 		indx = getbdryseg(seg(sind).tri(1));
 		if (hp_ebdry(bnum)->is_curved()) {
-			for(m=0;m<basis::tri(log2p).sm;++m)
+			for(m=0;m<basis::tri(log2p)->sm();++m)
 				for(n=0;n<ND;++n) {
 					cht(n,m+2) = hp_ebdry(bnum)->crdsbd(tlvl,indx,m,n);                    
 				}
 		}
 		else {
-			for(m=0;m<basis::tri(log2p).sm;++m)
+			for(m=0;m<basis::tri(log2p)->sm();++m)
 				for(n=0;n<ND;++n) 
 					cht(n,m+2) = 0.0;
 		}  
@@ -358,14 +358,14 @@ void tri_hp::lftog(int tind, struct vsi g) {
 	}
 
 
-	if (basis::tri(log2p).p > 1) {
+	if (basis::tri(log2p)->p() > 1) {
 		/* SIDE MODES */
 		indx = 3;
 		for(i=0;i<3;++i) {
 			sind = tri(tind).seg(i);
 			sgn = tri(tind).sgn(i);
 			msgn = 1;
-			for (m = 0; m < basis::tri(log2p).sm; ++m) {
+			for (m = 0; m < basis::tri(log2p)->sm(); ++m) {
 				for(n=0;n<NV;++n)
 					g.s(sind,m,n) += msgn*lf(n)(indx);
 				msgn *= sgn;
@@ -375,8 +375,8 @@ void tri_hp::lftog(int tind, struct vsi g) {
 		}
 
 		gindx = 0;
-		indx = basis::tri(log2p).bm;
-		for(m=0;m<basis::tri(log2p).im;++m) {
+		indx = basis::tri(log2p)->bm();
+		for(m=0;m<basis::tri(log2p)->im();++m) {
 			for(n=0;n<NV;++n)
 				g.i(tind,gindx,n) += lf(n)(indx);
 			++gindx;

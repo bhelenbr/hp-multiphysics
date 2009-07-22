@@ -19,7 +19,7 @@ void tri_hp_ins::rsdl(int stage) {
 	TinyVector<int,3> v;
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-	int lgpx = basis::tri(log2p).gpx, lgpn = basis::tri(log2p).gpn;
+	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	FLT rhobd0 = gbl->rho*gbl->bd(0), lmu = gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
@@ -40,12 +40,12 @@ void tri_hp_ins::rsdl(int stage) {
 
 			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 			for(n=0;n<ND;++n)
-				basis::tri(log2p).proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 		}
 		else {
 			/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
 			for(n=0;n<ND;++n)
-				basis::tri(log2p).proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
+				basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 
 			/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
 			for(n=0;n<ND;++n) {
@@ -71,17 +71,17 @@ void tri_hp_ins::rsdl(int stage) {
 		ugtouht(tind);
 		if (gbl->beta(stage) > 0.0) {
 			for(n=0;n<NV-1;++n)
-				basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
-			basis::tri(log2p).proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
+				basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
+			basis::tri(log2p)->proj(&uht(NV-1)(0),&u(NV-1)(0,0),MXGP);
 		}
 		else {
 			for(n=0;n<NV;++n)
-				basis::tri(log2p).proj(&uht(n)(0),&u(n)(0,0),MXGP);
+				basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 		}
 
 		/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 		for(n=0;n<NV;++n)
-			for(i=0;i<basis::tri(log2p).tm;++i)
+			for(i=0;i<basis::tri(log2p)->tm();++i)
 				lf(n)(i) = 0.0;
 
 		if (tri(tind).info > -1) {
@@ -119,8 +119,8 @@ void tri_hp_ins::rsdl(int stage) {
 				}
 			}
 			for(n=0;n<NV-1;++n)
-				basis::tri(log2p).intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
-			basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+				basis::tri(log2p)->intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
+			basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
 			lftog(tind,gbl->res);
@@ -194,15 +194,15 @@ void tri_hp_ins::rsdl(int stage) {
 					}
 				}
 				for(n=0;n<NV;++n)
-					basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
 
 				/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
 				for(n=0;n<NV-1;++n) {
-					basis::tri(log2p).derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
-					basis::tri(log2p).derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 				}
-				basis::tri(log2p).derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
-				basis::tri(log2p).derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
+				basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
+				basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
 				/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 				for(i=0;i<lgpx;++i) {
@@ -236,11 +236,11 @@ void tri_hp_ins::rsdl(int stage) {
 					}
 				}
 				for(n=0;n<NV-1;++n)
-					basis::tri(log2p).intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
-				basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+					basis::tri(log2p)->intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
+				basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
 				for(n=0;n<NV;++n)
-					for(i=0;i<basis::tri(log2p).tm;++i)
+					for(i=0;i<basis::tri(log2p)->tm();++i)
 						lf(n)(i) *= gbl->beta(stage);
 
 				lftog(tind,gbl->res_r);
@@ -281,8 +281,8 @@ void tri_hp_ins::rsdl(int stage) {
 				}
 			}
 			for(n=0;n<NV-1;++n)
-				basis::tri(log2p).intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
-			basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+				basis::tri(log2p)->intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
+			basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
 
 			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
@@ -357,15 +357,15 @@ void tri_hp_ins::rsdl(int stage) {
 					}
 				}
 				for(n=0;n<NV;++n)
-					basis::tri(log2p).intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
 
 				/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
 				for(n=0;n<NV-1;++n) {
-					basis::tri(log2p).derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
-					basis::tri(log2p).derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
+					basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 				}
-				basis::tri(log2p).derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
-				basis::tri(log2p).derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
+				basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
+				basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
 
 				/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 				for(i=0;i<lgpx;++i) {
@@ -398,11 +398,11 @@ void tri_hp_ins::rsdl(int stage) {
 					}
 				}
 				for(n=0;n<NV-1;++n)
-					basis::tri(log2p).intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
-				basis::tri(log2p).intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
+					basis::tri(log2p)->intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
+				basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
 
 				for(n=0;n<NV;++n)
-					for(i=0;i<basis::tri(log2p).tm;++i)
+					for(i=0;i<basis::tri(log2p)->tm();++i)
 						lf(n)(i) *= gbl->beta(stage);
 
 				lftog(tind,gbl->res_r);
@@ -412,10 +412,10 @@ void tri_hp_ins::rsdl(int stage) {
 
 	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
 	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-	if (basis::tri(log2p).sm) {
-		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());          
-		if (basis::tri(log2p).im) {
-			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());      
+	if (basis::tri(log2p)->sm()) {
+		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
+		if (basis::tri(log2p)->im()) {
+			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
 		}
 	}
 
@@ -430,7 +430,7 @@ void tri_hp_ins::rsdl(int stage) {
     }
 
 		for(i=0;i<nseg;++i) {
-			for(int m=0;m<basis::tri(log2p).sm;++m) {
+			for(int m=0;m<basis::tri(log2p)->sm();++m) {
 				printf("rsdl s: %d %d ",i,m); 
 				for(n=0;n<NV;++n)
 					printf("%e ",gbl->res.s(i,m,n));
@@ -439,7 +439,7 @@ void tri_hp_ins::rsdl(int stage) {
     }
 
     for(i=0;i<ntri;++i) {
-			for(int m=0;m<basis::tri(log2p).im;++m) {
+			for(int m=0;m<basis::tri(log2p)->im();++m) {
 				printf("rsdl i: %d %d ",i,m);
 				for(n=0;n<NV;++n) 
 					printf("%e %e %e\n",gbl->res.i(i,m,n));
@@ -456,13 +456,13 @@ void tri_hp_ins::rsdl(int stage) {
     /* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
 		if(isfrst) {
 			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p).sm) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());      
-			if (basis::tri(log2p).im) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());
+			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
+			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
 			isfrst = false;
 		}
 		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tri(log2p).sm) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p).sm-1),Range::all());
-		if (basis::tri(log2p).im) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p).im-1),Range::all());  
+		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
 	}
 	else {
 		if (stage == gbl->nstage) {

@@ -8,7 +8,7 @@ void tri_hp::ptprobe(TinyVector<FLT,2> xp, Array<FLT,1> uout, int tlvl) {
 
 	findinteriorpt(xp,tind,r,s);
 	ugtouht(tind,tlvl);  
-	basis::tri(log2p).ptprobe(NV,uout.data(),&uht(0)(0),MXTM);
+	basis::tri(log2p)->ptprobe(NV,uout.data(),&uht(0)(0),MXTM);
 }
 
 void tri_hp::ptprobe_bdry(int bnum, TinyVector<FLT,2> xp, Array<FLT,1> uout,int tlvl) {
@@ -18,7 +18,7 @@ void tri_hp::ptprobe_bdry(int bnum, TinyVector<FLT,2> xp, Array<FLT,1> uout,int 
 	hp_ebdry(bnum)->findandmovebdrypt(xp,sind,psi);
 	sind = ebdry(bnum)->seg(sind);
 	ugtouht1d(sind,tlvl);  
-	basis::tri(log2p).ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
+	basis::tri(log2p)->ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
 }
 
 void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
@@ -38,16 +38,16 @@ void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &
 	r = wgt(2)*2 -1.0;
 
 	if (tri(tind).info < 0) {
-		basis::tri(log2p).ptvalues_rs(r,s);
+		basis::tri(log2p)->ptvalues_rs(r,s);
 		return;
 	}
 
 	/* MOVE POINT WITH SIDE CURVATURE */
 	crdtocht(tind);
-	basis::tri(log2p).ptprobe_bdry(ND,xp.data(),r,s,&cht(0,0),MXTM);
+	basis::tri(log2p)->ptprobe_bdry(ND,xp.data(),r,s,&cht(0,0),MXTM);
 
 	/* need to do this because ptprobe_bdry only calculates boundary function */
-	basis::tri(log2p).ptvalues_rs(r,s);
+	basis::tri(log2p)->ptvalues_rs(r,s);
 
 	return;
 }
@@ -80,7 +80,7 @@ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 
 		iter = 0;
 		do {
-			basis::tri(log2p).ptprobe_bdry(ND,x.data(),ddr.data(),dds.data(),r,s,&cht(0,0),MXTM);
+			basis::tri(log2p)->ptprobe_bdry(ND,x.data(),ddr.data(),dds.data(),r,s,&cht(0,0),MXTM);
 			det = 1.0/(fabs(ddr(0)*dds(1) - ddr(1)*dds(0)) +10.0*EPSILON);
 			dx = xp(0)-x(0);
 			dy = xp(1)-x(1);
@@ -113,7 +113,7 @@ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 			ierr = 1;
 		}
 		/* need to do this because ptprobe_bdry only calculates boundary function */
-		basis::tri(log2p).ptvalues_rs(r,s);
+		basis::tri(log2p)->ptvalues_rs(r,s);
 
 		return(ierr);
 	}
@@ -123,6 +123,6 @@ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	}
 
 	/* need to do this because ptprobe_bdry only calculates boundary function */
-	basis::tri(log2p).ptvalues_rs(r,s);
+	basis::tri(log2p)->ptvalues_rs(r,s);
 	return(ierr);
 }
