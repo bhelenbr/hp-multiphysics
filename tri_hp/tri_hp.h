@@ -12,7 +12,7 @@
 
 #include <r_tri_mesh.h>
 #include <float.h>
-#include <tri_basis_b.h>
+#include <tri_basis.h>
 #include <blocks.h>
 
 #ifdef AXISYMMETRIC
