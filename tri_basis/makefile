@@ -1,5 +1,4 @@
-OBJ = initialize.o intgrt.o intgrt1d.o proj.o \
-proj1d.o ptvalues.o probe.o
+OBJ = instances.o
 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 DEFINES = -Df2cFortran

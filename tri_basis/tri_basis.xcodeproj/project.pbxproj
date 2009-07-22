@@ -8,26 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		6F09762C0F20A70800E94A8E /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A7F084C13F20057FD8F /* libblitz.a */; };
-		6F16F58708BABCBA00DE5BAA /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
-		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
-		6F33E679086787F40029F2D6 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6A084C13780057FD8F /* intgrt.cpp */; };
-		6F33E67A086787F40029F2D6 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */; };
-		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
-		6F33E67C086787F40029F2D6 /* proj1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6D084C13780057FD8F /* proj1d.cpp */; };
-		6F33E67D086787F40029F2D6 /* ptvalues.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6E084C13780057FD8F /* ptvalues.cpp */; };
-		6F4CCC4A0CDAC301009F79DE /* probe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F4CCC490CDAC301009F79DE /* probe.cpp */; };
 		6F4CCC4C0CDAC316009F79DE /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; };
-		6F89795A0F6DA5C500B38702 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6FB7AA160EE3DED1000D6A89 /* CHUD.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB7AA150EE3DED1000D6A89 /* CHUD.framework */; };
 		6FBD8A82084C14040057FD8F /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A81084C14040057FD8F /* libmyblas.a */; };
 		6FBD8A86084C14470057FD8F /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
-		6FD9FC6E0B9693AC0061DCB5 /* intgrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6A084C13780057FD8F /* intgrt.cpp */; };
-		6FD9FC6F0B9693AD0061DCB5 /* intgrt1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6B084C13780057FD8F /* intgrt1d.cpp */; };
-		6FD9FC700B9693AD0061DCB5 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
-		6FD9FC710B9693AE0061DCB5 /* proj1d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6D084C13780057FD8F /* proj1d.cpp */; };
-		6FD9FC720B9693AF0061DCB5 /* ptvalues.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6E084C13780057FD8F /* ptvalues.cpp */; };
+		6FEB5D4710172444000E6287 /* instances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEB5D4610172444000E6287 /* instances.cpp */; };
+		6FEB5D4810172444000E6287 /* instances.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEB5D4610172444000E6287 /* instances.cpp */; };
 		6FF1B1D60CDBCC9E00A4F68E /* tri_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4CCC4B0CDAC316009F79DE /* tri_basis.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6FF1B1FA0CDBD33B00A4F68E /* probe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F4CCC490CDAC301009F79DE /* probe.cpp */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 /* End PBXBuildFile section */
 
@@ -47,6 +34,7 @@
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
+		6FEB5D4610172444000E6287 /* instances.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = instances.cpp; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* tri_basis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_basis; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -87,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
+				6FEB5D4610172444000E6287 /* instances.cpp */,
 				6F4CCC4B0CDAC316009F79DE /* tri_basis.h */,
 				6FBD8A69084C13780057FD8F /* initialize.cpp */,
 				6FBD8A6A084C13780057FD8F /* intgrt.cpp */,
@@ -207,14 +196,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6F33E678086787F40029F2D6 /* initialize.cpp in Sources */,
-				6F33E679086787F40029F2D6 /* intgrt.cpp in Sources */,
-				6F33E67A086787F40029F2D6 /* intgrt1d.cpp in Sources */,
-				6F33E67B086787F40029F2D6 /* proj.cpp in Sources */,
-				6F33E67C086787F40029F2D6 /* proj1d.cpp in Sources */,
-				6F33E67D086787F40029F2D6 /* ptvalues.cpp in Sources */,
-				6F16F58708BABCBA00DE5BAA /* main.cpp in Sources */,
-				6FF1B1FA0CDBD33B00A4F68E /* probe.cpp in Sources */,
+				6FEB5D4710172444000E6287 /* instances.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,13 +205,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
-				6FD9FC6E0B9693AC0061DCB5 /* intgrt.cpp in Sources */,
-				6FD9FC6F0B9693AD0061DCB5 /* intgrt1d.cpp in Sources */,
-				6FD9FC700B9693AD0061DCB5 /* proj.cpp in Sources */,
-				6FD9FC710B9693AE0061DCB5 /* proj1d.cpp in Sources */,
-				6FD9FC720B9693AF0061DCB5 /* ptvalues.cpp in Sources */,
-				6F4CCC4A0CDAC301009F79DE /* probe.cpp in Sources */,
-				6F89795A0F6DA5C500B38702 /* initialize.cpp in Sources */,
+				6FEB5D4810172444000E6287 /* instances.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,10 +251,12 @@
 				COPY_PHASE_STRIP = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
+				GCC_AUTO_VECTORIZATION = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_UNROLL_LOOPS = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(HOME)/Codes/include",
 					"$(HOME)/Packages/include",
