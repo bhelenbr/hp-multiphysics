@@ -6,7 +6,7 @@
  *	Copyright (c) 2001 __CompanyName__. All rights reserved.
  *
  */
-#define DEBUG
+// #define DEBUG
 
 #include <math.h>
 #include <utilities.h>
