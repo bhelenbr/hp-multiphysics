@@ -209,9 +209,10 @@ int main(int argc, char *argv[]) {
 		for(int i=0;i<p;++i) {
 			nstr << "b" << i << std::flush;
 			fname = "partition_" +nstr.str();
-			std::cout << nstr.str() << "_grid: " << fname << std::endl;
+			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
 			nstr.str("");
 			zpart(i).partition(zx,i);
+			zpart(i).checkintegrity();
 			zpart(i).output(fname,out);
 			//zpart(i).output(fname,tri_mesh::boundary);
 		}

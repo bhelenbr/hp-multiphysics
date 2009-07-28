@@ -269,10 +269,12 @@ void tri_mesh::setpartition(int nparts) {
 /* THE OLD MESH STORES  */
 /* pnt(pind).info = new pnt index or -1 */
 /* THE NEW MESH STORES */
+/* pnt(sind).info = old pnt index */
+/* seg(sind).info = old side index */
 /* tri(tind).info = old tri index */
 void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	int i,j,n,tind,sind,p0,indx;
-	Array<int,2> bcntr(xin.nebd +5,3);
+	Array<int,2> bcntr(xin.nebd +10,2);
 	int bnum,bel,match;
 	
 	/* TO CREATE UNIQUE EDGE NUMBERS */
@@ -280,41 +282,27 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	for(i=0;i<xin.nebd;++i) {
 		maxenum = MAX(maxenum,xin.ebdry(i)->idnum);
 	}
-	int epad = 0;
-	while (maxenum > 0) {
-		maxenum /= 2;
-		++epad;
-	}
+	++maxenum;
 	
 	/* TO CREATE UNIQUE VERTEX NUMBERS */
 	int maxvnum = 0;
 	for(i=0;i<xin.nvbd;++i) {
 		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
 	}
-	int vpad = 0;
-	while (maxvnum > 0) {
-		maxvnum /= 2;
-		++vpad;
-	}
+	++maxvnum;
 
 	for(i=0;i<xin.npnt;++i)
 		xin.pnt(i).info = -1;
-
-	int maxpnum = 0;
+		
 	ntri = 0;
 	for(i=0;i<xin.ntri;++i) {
 		if (xin.tri(i).info == npart) {
 			++ntri;
-			for(n=0;n<3;++n)
+			for(n=0;n<3;++n) {
 				xin.pnt(xin.tri(i).pnt(n)).info = npart;
+			}
 		}
-		maxpnum = MAX(xin.tri(i).info,maxpnum);
 	}
-	int ppad = 0;
-	while (maxpnum > 0) {
-		maxpnum /= 2;
-		++ppad;
-	}	
 	
 	if (!initialized) {
 		maxpst = static_cast<int>(static_cast<FLT>(ntri*xin.maxpst)/xin.ntri);
@@ -329,7 +317,9 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	nstr << "b" << npart << std::flush;
 	gbl->idprefix = nstr.str();
 	gbl->idnum = npart;
+	nstr.clear();
 
+	/* FILL IN PNT ARRAY */
 	npnt = 0;
 	for(i=0;i<xin.npnt;++i) {
 		if (xin.pnt(i).info == npart) {
@@ -342,6 +332,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			xin.pnt(i).info = -1;
 	}
 
+	/* FILL IN TRI ARRAY */
 	ntri = 0;
 	for(i=0;i<xin.ntri;++i) {
 		if (xin.tri(i).info == npart) {
@@ -351,21 +342,24 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			++ntri;
 		}
 	}
-
+	
 	createseg();
-
+		
 	nebd = 0;
 	for(i=0;i<nseg;++i) {
-		seg(i).info = -1;
+		/* tri number in old mesh */
+		tind = tri(seg(i).tri(0)).info;
+		
+		p0 = seg(i).pnt(0);
+		for(n=0;n<3;++n)
+			if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
+		if (n==3) *gbl->log << "error in partitioning\n";
+		n = (n+2)%3;
+		
+		/* store seg number in old mesh */
+		seg(i).info = xin.tri(tind).seg(n);
+			
 		if (seg(i).tri(1) < 0) {
-			tind = tri(seg(i).tri(0)).info;
-
-			p0 = seg(i).pnt(0);
-			for(n=0;n<3;++n)
-				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-			if (n==3) *gbl->log << "error in partitioning\n";
-			n = (n+2)%3;
-
 			indx = xin.tri(tind).tri(n);
 			if (indx < 0) {
 				/* BOUNDARY SIDE */
@@ -375,30 +369,29 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 				for (j = 0; j <nebd;++j) {
 					if (bnum == bcntr(j,0)) {
 						++bcntr(j,1);
-						seg(i).info = j;
+						seg(i).tri(1) = trinumatbdry(j,0);
 						goto next1;
 					}
 				}
 				/* NEW SIDE */
-				seg(i).info = nebd;
+				seg(i).tri(1) = trinumatbdry(nebd, 0);
 				bcntr(nebd,0) = bnum;
 				bcntr(nebd++,1) = 1;
 			}
 			else {
 				/* PARTITION SIDE */
 				match = xin.tri(indx).info;
-				if (match < npart) bnum = (match<<ppad) + (npart << ppad);
-				else bnum = (npart<<ppad) + (match << ppad);
-				bnum = bnum << epad;
+				if (match < npart) bnum = (match<<16) + (npart<<24);
+				else bnum = (match<<24) + (npart<<16);
 				for (j = 0; j <nebd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
-						seg(i).info = j;
+						seg(i).tri(1) = trinumatbdry(j,match);
 						goto next1;
 					}
 				}
 				/* NEW SIDE */
-				seg(i).info = nebd;
+				seg(i).tri(1) = trinumatbdry(nebd,match);
 				bcntr(nebd,0) = -bnum;
 				bcntr(nebd++,1) = 1;
 			}
@@ -411,7 +404,6 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	for(i=0;i<nebd;++i) {
 		if (bcntr(i,0) < 0) {
 			ebdry(i) = new epartition(abs(bcntr(i,0)),*this);
-			std::cout << ebdry(i)->idprefix << "_type: partition\n";
 		}
 		else {
 			ebdry(i) = xin.ebdry(bcntr(i,0))->create(*this);
@@ -422,15 +414,17 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 
 
 	for(i=0;i<nseg;++i) {
-		if (seg(i).info > -1)
-			ebdry(seg(i).info)->seg(ebdry(seg(i).info)->nseg++) = i;
+		if (seg(i).tri(1) < 0) {
+			bnum = getbdrynum(seg(i).tri(1));
+			ebdry(bnum)->seg(ebdry(bnum)->nseg++) = i;
+		}
 	}
 
 	for(i=0;i<nebd;++i) {
 		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
 		ebdry(i)->reorder();
 	}
-
+	
 	/* MOVE VERTEX BOUNDARY INFO */
 	nvbd = 0;
 	for(i=0;i<xin.nvbd;++i)
@@ -451,7 +445,28 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	/* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
 	for(i=0;i<nebd;++i) {
 		if (ebdry(i)->mytype == "partition") {
+			/* Now that all independent ebdry sides are determined give new numbers to partitions */
 			sind = ebdry(i)->seg(0);
+			match = getbdryseg(seg(sind).tri(1));
+			if (npart < match) {
+				int newid = seg(ebdry(i)->seg(0)).info +maxenum;
+				ostringstream nstr;
+				nstr << "b" << npart << "_s" << newid << std::flush;
+				ebdry(i)->idprefix = nstr.str();
+				ebdry(i)->idnum = newid;
+				nstr.clear();
+				std::cout << ebdry(i)->idprefix << "_type: partition\n";
+			}
+			else {
+				int newid = seg(ebdry(i)->seg(ebdry(i)->nseg-1)).info +maxenum;
+				ostringstream nstr;
+				nstr << "b" << npart << "_s" << newid << std::flush;
+				ebdry(i)->idprefix = nstr.str();
+				ebdry(i)->idnum = newid;
+				nstr.clear();	
+				std::cout << ebdry(i)->idprefix << "_type: partition\n";
+			}
+			
 			p0 = seg(sind).pnt(0);
 			for(j=0;j<nvbd;++j)
 				if (vbdry(j)->pnt == p0) goto nextv0;
@@ -460,7 +475,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			tind = tri(seg(sind).tri(0)).info;
 			for(n=0;n<3;++n)
 				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n) << vpad,*this);
+			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n) +maxvnum,*this);
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
 			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
@@ -476,7 +491,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			tind = tri(seg(sind).tri(0)).info;
 			for(n=0;n<3;++n)
 				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n)<<vpad,*this);
+			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n)+maxvnum,*this);
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
 			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";

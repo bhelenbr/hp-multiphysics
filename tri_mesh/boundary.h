@@ -129,6 +129,15 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			fsndbufarray.reference(temp);
 			Array<int,1> temp1(static_cast<int *>(sndbuf), buffsize/sizeof(int), neverDeleteData);
 			isndbufarray.reference(temp1);
+			
+			for (int m=0;m<nmatch;++m) {
+				if (rcvbuf(m)) free(rcvbuf(m));
+				rcvbuf(m) = new FLT[buffsize/sizeof(FLT)]; // xmalloc(buffsize);
+				Array<FLT,1> temp(static_cast<FLT *>(rcvbuf(m)), buffsize/sizeof(FLT), neverDeleteData);
+				frcvbufarray(m).reference(temp);
+				Array<int,1> temp1(static_cast<int *>(rcvbuf(m)), buffsize/sizeof(int), neverDeleteData);
+				ircvbufarray(m).reference(temp1);
+			}
 		}
 
 		void alloc(int nels) {
@@ -584,13 +593,15 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 											fsndbufarray(j) += frcvbuf(m,j);
 										}
 									}
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+
+									}
+									return(false);
 								}
 
 								case(boundary::maximum): {
@@ -606,13 +617,14 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										}
 									}
 
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
 										*BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+									}
+									return(false);
 								}
 
 								case(boundary::minimum): {
@@ -628,13 +640,16 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										}
 									}
 
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
+
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+
+									}
+									return(false);
 								}
 
 								default: {
@@ -662,13 +677,15 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 											isndbufarray(j) += ircvbuf(m,j);
 										}
 									}
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
+
 										*BASE::x.gbl->log << "finish sum"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+									}
+									return(false);
 								}
 
 								case(boundary::maximum): {
@@ -684,13 +701,15 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										}
 									}
 
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
+
 										*BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+									}
+									return(false);
 								}
 
 								case(boundary::minimum): {
@@ -706,13 +725,15 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										}
 									}
 
-#ifdef MPDEBUG
 									if (matches > 1 ) {
+#ifdef MPDEBUG
+
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
-									}
 #endif
-									return(true);
+										return(true);
+									}
+									return(false);
 								}
 
 								default: {
