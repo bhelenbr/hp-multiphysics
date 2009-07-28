@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6F14BE040FBA8649006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
+		6F25FE810FED8DEE00B2A5D7 /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */; };
 		6F2C827B0CE6506C000267B3 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C827A0CE6506C000267B3 /* libtri_mesh.a */; };
 		6F2C828A0CE6510B000267B3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C82890CE6510B000267B3 /* libpth.a */; };
 		6F2C82BC0CE6598C000267B3 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
@@ -70,6 +71,7 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMAdLib.a; path = ../../Packages/lib/libMAdLib.a; sourceTree = SOURCE_ROOT; };
 		6F2C827A0CE6506C000267B3 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
 		6F2C82890CE6510B000267B3 /* libpth.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpth.a; path = ../../Packages/lib/libpth.a; sourceTree = SOURCE_ROOT; };
 		6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbinio.dylib; path = ../../Packages/lib/libbinio.dylib; sourceTree = SOURCE_ROOT; };
@@ -148,6 +150,7 @@
 				6F2C828A0CE6510B000267B3 /* libpth.a in Frameworks */,
 				6F4CAF8C0FBF0B5E006D50F8 /* libbinio.dylib in Frameworks */,
 				6F4CAF930FBF0BAD006D50F8 /* libspline.a in Frameworks */,
+				6F25FE810FED8DEE00B2A5D7 /* libMAdLib.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +224,7 @@
 				6F77C5100B4D8959006A4504 /* libmuparser.a */,
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
+				6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */,
 				6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */,
 				6F662044091AFCEF00FB5D82 /* vecLib.framework */,
 			);
@@ -373,6 +377,7 @@
 					"$(packages)/lib",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
@@ -406,6 +411,7 @@
 					"$(packages)/lib",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
@@ -414,33 +420,6 @@
 				ZERO_LINK = NO;
 			};
 			name = Release;
-		};
-		6FB40AC4091AF4FA002BAA09 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
-					"${prefix}/include",
-					"${packages}/include",
-				);
-				INSTALL_PATH = "$(HOME)/bin";
-				LIBRARY_SEARCH_PATHS = (
-					"$(prefix)/lib",
-					"$(packages)/lib",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
-				PREBINDING = NO;
-				PRODUCT_NAME = tri_hp;
-			};
-			name = Default;
 		};
 		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -458,14 +437,6 @@
 			};
 			name = Release;
 		};
-		6FB40AC8091AF4FA002BAA09 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				packages = "$(HOME)/packages";
-				prefix = "$(HOME)/Codes";
-			};
-			name = Default;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -474,20 +445,18 @@
 			buildConfigurations = (
 				6FB40AC2091AF4FA002BAA09 /* Debug */,
 				6FB40AC3091AF4FA002BAA09 /* Release */,
-				6FB40AC4091AF4FA002BAA09 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 		6FB40AC5091AF4FA002BAA09 /* Build configuration list for PBXProject "tet_hp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB40AC6091AF4FA002BAA09 /* Debug */,
 				6FB40AC7091AF4FA002BAA09 /* Release */,
-				6FB40AC8091AF4FA002BAA09 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};

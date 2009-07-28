@@ -246,9 +246,9 @@ class tet_hp : public tet_mesh  {
 //      void updatesdata_bdry(int bnum,int bel);
 //      void movetdata(int frm, int to);
 //      void updatetdata(int t);
-//      void findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
+		int findinteriorpt(TinyVector<FLT,3> pt, int &tind, FLT &r, FLT &s, FLT &t);
 //      void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
-//      void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
+		void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
 //      void ptprobe_bdry(int bnum, TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
 
 		/* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */

@@ -93,15 +93,15 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		hp_edge_bdry(tet_hp& xin, edge_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
 		hp_edge_bdry(const hp_edge_bdry &inbdry, tet_hp& xin, edge_bdry &bin) : mytype(inbdry.mytype), 
 		x(xin), base(bin), adapt_storage(inbdry.adapt_storage), curved(inbdry.curved), coupled(inbdry.coupled) {
-		if (curved && !x.coarse_level) {
-			crv.resize(base.maxseg,x.em0);
-			crvbd.resize(x.gbl->nhist+1);
-			for(int i=1;i<x.gbl->nhist+1;++i)
-			crvbd(i).resize(base.maxseg,x.em0);
-			crvbd(0).reference(crv);
-		}
-		dxdt.resize(x.log2pmax+1,base.maxseg);
-		base.resize_buffers(base.maxseg*(x.em0+2)*x.NV);   
+			if (curved && !x.coarse_level) {
+				crv.resize(base.maxseg,x.em0);
+				crvbd.resize(x.gbl->nhist+1);
+				for(int i=1;i<x.gbl->nhist+1;++i)
+					crvbd(i).resize(base.maxseg,x.em0);
+				crvbd(0).reference(crv);
+			}
+			dxdt.resize(x.log2pmax+1,base.maxseg);
+			base.resize_buffers(base.maxseg*(x.em0+2)*x.NV);   
 		}
 		virtual hp_edge_bdry* create(tet_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 		virtual void* create_global_structure() {return 0;}
@@ -129,8 +129,8 @@ class hp_edge_bdry : public egeometry_interface<3> {
 		virtual void pmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.ploadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void pmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.pfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void smatchsolution_snd(int phase, FLT *sdata, int bgnmode, int endmode, int modestride) {
-		base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
-		return;
+			base.sloadbuff(boundary::all,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
+			return;
 		}
 		virtual void smatchsolution_rcv(int phase,FLT *sdata, int bgnmode, int endmode, int modestride) {
 		base.sfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,sdata,bgnmode*x.NV,(endmode+1)*x.NV-1,x.NV*modestride);
@@ -188,7 +188,24 @@ class hp_face_bdry : public fgeometry_interface<3> {
 
 	public:
 		hp_face_bdry(tet_hp& xin, face_bdry &bin) : x(xin), base(bin), curved(false), coupled(false) {mytype = "plain";ibc=x.gbl->ibc;}
-		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {}
+		hp_face_bdry(const hp_face_bdry &inbdry, tet_hp& xin, face_bdry &bin) : mytype(inbdry.mytype), x(xin), base(bin), curved(inbdry.curved), coupled(inbdry.coupled) {			
+			if (curved && !x.coarse_level) {
+				ecrvbd.resize(x.gbl->nhist+1);
+				ecrv.resize(base.maxpst,x.em0);
+				for(int i=1;i<x.gbl->nhist+1;++i)
+					ecrvbd(i).resize(base.maxpst,x.em0);
+				ecrvbd(0).reference(ecrv);
+				
+				fcrvbd.resize(x.gbl->nhist+1);
+				fcrv.resize(base.maxpst,x.fm0);
+				for(int i=1;i<x.gbl->nhist+1;++i)
+					fcrvbd(i).resize(base.maxpst,x.fm0);
+				fcrvbd(0).reference(fcrv);
+			}
+			
+			dxdt.resize(x.log2pmax+1,base.maxpst);
+			base.resize_buffers(base.maxpst*(x.fm0+2)*x.NV);	
+		}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_face_bdry* create(tet_hp& xin, face_bdry &bin) const {return(new hp_face_bdry(*this,xin,bin));}
 		virtual void init(input_map& input,void *gbl_in); 

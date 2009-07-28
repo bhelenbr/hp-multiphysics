@@ -652,7 +652,7 @@ void hp_face_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1> & dirichlets, in
 			
 			for(n=0;n<ndirichlets;++n) {
 				for(m=0;m<basis::tet(x.log2p).fm;++m) 
-						x.ug.f(find,m,dirichlets(n)) = -x.lf(dirichlets(n))(3+3*basis::tet(x.log2p).em+m)*basis::tet(x.log2p).diag2d(m);
+					x.ug.f(find,m,dirichlets(n)) = -x.lf(dirichlets(n))(3+3*basis::tet(x.log2p).em+m)*basis::tet(x.log2p).diag2d(m);
 			}
 		}
 	}

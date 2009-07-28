@@ -117,7 +117,7 @@ void tet_hp_cd::rsdl(int stage) {
 						pt(1) = crd(1)(i)(j)(k);
 						pt(2) = crd(2)(i)(j)(k);
 						cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
-						res(0)(i)(j)(k) = gbl->bd(0)*cjcb(i)(j)(k)*(u(0)(i)(j)(k)-dugdt(0)(i)(j)(k));
+						res(0)(i)(j)(k) = gbl->bd(0)*cjcb(i)(j)(k)*(u(0)(i)(j)(k)-dugdt(log2p,tind,0)(i)(j)(k));
 						res(0)(i)(j)(k) -= cjcb(i)(j)(k)*gbl->src->f(0,pt,gbl->time);
 //						cout << cjcb(i)(j)(k) << endl;
 					}

@@ -237,7 +237,12 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 				}
 				for(n=0;n<NV;++n) {
 					out << ugbd(tlvl).v(i,n)<< ' ';
-				}               
+				}            
+//				out << ugbd(tlvl).v(i,0)-1.0<< ' ';
+//				out << ugbd(tlvl).v(i,1)<< ' ';
+//				out << ugbd(tlvl).v(i,2)<< ' ';
+//				out << ugbd(tlvl).v(i,3)<< ' ';
+
 				out << std::endl;
 			}
 			
@@ -264,6 +269,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 						for(n=0;n<ND;++n) {
 							out << crd1d(n)(i) << ' ';
 						}
+//						u1d(0)(i)-=1.0;
 						for(n=0;n<NV;++n){
 							out << u1d(n)(i)<< ' ';               
 						}            
@@ -294,6 +300,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 							for(n=0;n<ND;++n) {
 								out << crd2d(n)(i)(j) << ' ';
 							}
+//							u2d(0)(i)(j)-=1.0;
 							for(n=0;n<NV;++n) {
 								out << u2d(n)(i)(j) << ' ';               
 							}              

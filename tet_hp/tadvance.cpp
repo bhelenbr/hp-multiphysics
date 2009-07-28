@@ -13,9 +13,8 @@
 
 /* DIRK SCHEMES */
 #ifdef DIRK
-
 void tet_hp::tadvance() {
-	int i,j,n,s,ttind,stage;
+	int i,j,n,s,tind,stage;
 	
 	/* DO STUFF FOR DEFORMABLE MESH FIRST */    
 //    if (log2p == log2pmax && gbl->substep == 0 && (mmovement == coupled_deformable || mmovement == uncoupled_deformable)) {
@@ -99,7 +98,7 @@ void tet_hp::tadvance() {
 
 		/* CALCULATE UNSTEADY SOURCE TERMS ON COARSE MESHES */
 		for(i=0;i<npnt;++i) {
-			ttind = fcnnct(i).tet;
+			tind = fcnnct(i).tet;
 
 			ugbd(1).v(i,Range::all()) = 0.0;
 
@@ -107,9 +106,9 @@ void tet_hp::tadvance() {
 				vrtxbd(1)(i)(n) = 0.0;
 
 			for(j=0;j<4;++j) {
-				ugbd(1).v(i,Range::all()) += fcnnct(i).wt(j)*fmesh->ugbd(1).v(fmesh->tet(ttind).pnt(j),Range::all());
+				ugbd(1).v(i,Range::all()) += fcnnct(i).wt(j)*fmesh->ugbd(1).v(fmesh->tet(tind).pnt(j),Range::all());
 				for(n=0;n<ND;++n)
-					vrtxbd(1)(i)(n) += fcnnct(i).wt(j)*fmesh->vrtxbd(1)(fmesh->tet(ttind).pnt(j))(n);
+					vrtxbd(1)(i)(n) += fcnnct(i).wt(j)*fmesh->vrtxbd(1)(fmesh->tet(tind).pnt(j))(n);
 			}
 		}
 	}
@@ -138,7 +137,7 @@ void tet_hp::calculate_unsteady_sources() {
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP;
 	TinyVector<int,4> v;
-	
+
 	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntet;++tind) {
 			v = tet(tind).pnt;
@@ -156,9 +155,9 @@ void tet_hp::calculate_unsteady_sources() {
 					for(j=0;j<lgpy;++j) {
 						for(k=0;k<lgpz;++k) {
 							for(n=0;n<ND;++n) {
-								dcrd(n)(0)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(3))(n) -pnts(tet(tind).pnt(2))(n));
-								dcrd(n)(1)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(1))(n) -pnts(tet(tind).pnt(2))(n));
-								dcrd(n)(2)(i)(j)(k) = 0.5*(pnts(tet(tind).pnt(0))(n) -pnts(tet(tind).pnt(2))(n));
+								dcrd(n)(0)(i)(j)(k) = 0.5*(vrtxbd(1)(v(3))(n) -vrtxbd(1)(v(2))(n));
+								dcrd(n)(1)(i)(j)(k) = 0.5*(vrtxbd(1)(v(1))(n) -vrtxbd(1)(v(2))(n));
+								dcrd(n)(2)(i)(j)(k) = 0.5*(vrtxbd(1)(v(0))(n) -vrtxbd(1)(v(2))(n));
 							}
 						}
 					}

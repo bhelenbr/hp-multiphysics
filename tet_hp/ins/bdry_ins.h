@@ -98,7 +98,6 @@ namespace bdry_ins {
 						flx(n) = flx(x.NV-1)*u(n) +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
 #endif
 
-
 				/* EVERYTHING ELSE */
 					for (int n=tet_mesh::ND;n<x.NV-1;++n)
 						flx(n) = flx(x.NV-1)*u(n);
@@ -202,8 +201,9 @@ namespace bdry_ins {
 				/* CONTINUITY */
 				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1)+(u(2) -mv(2))*norm(2));
 
-				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1)+norm(2)*norm(2));
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1) +norm(2)*norm(2));
 				/* XYZ MOMENTUM */
+
 #ifdef INERTIALESS
 				for (int n=0;n<tet_mesh::ND;++n)
 					flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);

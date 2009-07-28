@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
 #endif
 #ifdef PTH
 	// For debugging put interrupt here
-	// On interrupt type this into gdb console: handle SIGUSR1 nostop print pass
+	// On interrupt type this into gdb console:  handle SIGUSR1 nostop print pass
 	// Then continue
 	int rc = pth_init();
 	if (!rc) {
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-/*	INTERRUPT HANDLER FOR GRACEFUL EXIT ON CTRL-C    	*/	
+	/* INTERRUPT HANDLER FOR GRACEFUL EXIT ON CTRL-C */	
 	action.sa_handler = ctrlc;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 	}
 	sim::blks.go(argv[1]);
 	
-	#ifdef PTH
+#ifdef PTH
 	pth_exit(NULL);
 #endif    
 #ifdef MPISRC

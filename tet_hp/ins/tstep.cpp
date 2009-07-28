@@ -2,14 +2,18 @@
 
 #include "tet_hp_ins.h"
 #include "../hp_boundary.h"
+#include<blitz/tinyvec-et.h>
 
 void tet_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
-		int tind,i,j,side,v0,v1,v2,find;
-		FLT jcb,h,hmax,q,qmax,lam1,gam,a,amax,amin,dx1,dx2,dy1,dy2,dz1,dz2,cpi,cpj,cpk;
+		int tind,i,j,side,find;
+		FLT jcb,h,hmax,q,qmax,lam1,gam,a,amax,amin;
 		TinyVector<int,4> v;
-		
+		TinyVector<int,3> vtri;
+
+		TinyVector<double,3>vec1,vec2,vec3;
+		FLT havg = 0.0;
 		FLT nu = gbl->mu/gbl->rho;
 
 		/***************************************/
@@ -20,9 +24,6 @@ void tet_hp_ins::setup_preconditioner() {
 			gbl->eprcn(Range::all(),Range::all())=0.0;
 			if (basis::tet(log2p).fm > 0) {
 				gbl->fprcn(Range::all(),Range::all())=0.0;
-				if (basis::tet(log2p).im > 0) {
-					gbl->iprcn(Range::all(),Range::all())=0.0;
-				}
 			}
 		}
 		
@@ -32,34 +33,27 @@ void tet_hp_ins::setup_preconditioner() {
 #endif
 
 		for(tind = 0; tind < ntet; ++tind) {
-			jcb = 0.125*tet(tind).vol;   // area is 2 x triangle area
+			jcb = 0.125*tet(tind).vol;   /* volume is 8 x tet volume */
 			v = tet(tind).pnt;	
-			amin=1000000.0;
+			amin=1.0e99;
 			amax = 0.0;
-			for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 
-				find = tet(tind).tri(j);
-				v0 = tri(find).pnt(0);
-				v1 = tri(find).pnt(1);
-				v2 = tri(find).pnt(2);
-				
-				dx1 = pnts(v0)(0)-pnts(v1)(0);
-				dy1 = pnts(v0)(1)-pnts(v1)(1);
-				dz1 = pnts(v0)(2)-pnts(v1)(2);
-				dx2 = pnts(v0)(0)-pnts(v2)(0);
-				dy2 = pnts(v0)(1)-pnts(v2)(1);
-				dz2 = pnts(v0)(2)-pnts(v2)(2);
-				cpi = dy1*dz2-dz1*dy2;
-				cpj = -dx1*dz2+dz1*dx2;
-				cpk = dx1*dy2-dy1*dx2;
-				a =	.5*sqrt(cpi*cpi+cpj*cpj+cpk*cpk);
+			for(j=0;j<4;++j) { /* FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT */
+				vtri = tri(tet(tind).tri(j)).pnt;
+				vec1=pnts(vtri(0))-pnts(vtri(1));
+				vec2=pnts(vtri(0))-pnts(vtri(2));
+				vec3=cross(vec1,vec2);
+				a=.5*sqrt(vec3(0)*vec3(0)+vec3(1)*vec3(1)+vec3(2)*vec3(2));
 				amax = (a > amax ? a : amax);
 				amin = (a < amin ? a : amin);
-
 			}
+
+			float c = 1.0;
+			h = c*4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); /* 3*8/6=4 */
+			hmax = c*4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); /* 3*8/6=4 */
+//			h = 4.0*jcb/(0.25*(p0+1)*(p0+1)*amax); /* 3*8/6=4 temp FIXME */
+//			hmax = 4.0*jcb/(0.25*(p0+1)*(p0+1)*amin); /* 3*8/6=4 temp FIXME */
 			
-			h = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); // 3*8/6=4
-			hmax = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); // 3*8/6=4
-		
+			havg+=hmax;
 			qmax = 0.0;
 			for(j=0;j<4;++j) {
 				v0 = v(j);
@@ -99,15 +93,15 @@ void tet_hp_ins::setup_preconditioner() {
 
 			/* SET UP DIAGONAL PRECONDITIONER */
 			// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
-			jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-#else
+			jcb *= 2.*nu*(1./(h*h) +1./(h*h)+1./(h*h)) +3*lam1/h;  // heuristically tuned
+
 			gam = pow(2.*nu/hmax,2); 
 			lam1 = sqrt(gam);
 			/* SET UP DISSIPATIVE COEFFICIENTS */
 			gbl->tau(tind,0)  = adis*h/(jcb*sqrt(gam));
 			gbl->tau(tind,NV-1) = 0.0;
 
-			jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
+			jcb *= 8.*nu*(1./(h*h) +1./(h*h)+1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax;
 #endif
 #ifdef TIMEACCURATE
 			dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
@@ -139,6 +133,7 @@ void tet_hp_ins::setup_preconditioner() {
 				}
 			}
 		}
+		//cout <<"havg = " <<  havg/ntet << endl;
 	}
 	else {
 		cout << "matrix preconditioner being called and doesn't work " << endl;

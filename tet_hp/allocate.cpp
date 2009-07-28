@@ -61,8 +61,8 @@ void tet_hp::init(input_map& inmap, void *gin) {
 
 		p = 1;
 		for(i=0;i<log2p+1;++i) {
-		basis::tet(i).initialize(p,p+1);
-		p = p+1;
+			basis::tet(i).initialize(p,p+1);
+			p = p+1;
 		}
 	}
 	
@@ -227,7 +227,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 		tobasis(gbl->ibc);
 	}
 	
-	if(basis::tet(log2p).p > 2){
+	if(basis::tet(log2p).p == 3){
 		spkmass.resize(npnt);
 		spklink.resize(npnt);
 		spkpiv.resize(npnt);
@@ -314,7 +314,7 @@ void tet_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 	du.resize(NV,ND);
 	uht.resize(NV);
 	lf.resize(MAX(NV,ND));
-	bdwk.resize(gbl->nhist+1,MAX(NV,ND));
+	// bdwk.resize(gbl->nhist+1,MAX(NV,ND)); TEMPORARY
 		
 	/* Allocate solution vector storage */
 	ug.v.resize(maxvst,NV);

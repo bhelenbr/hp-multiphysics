@@ -1,7 +1,8 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 
-//#define DEBUG
+// #define DEBUG
+// #define MGRID_TEST
 
 void tet_hp::rsdl(int stage) {    
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
@@ -32,8 +33,8 @@ void tet_hp::rsdl(int stage) {
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
 
-//	for(int i=0;i<nvbd;++i)
-//		hp_vbdry(i)->rsdl(stage);
+	for(int i=0;i<nvbd;++i)
+		hp_vbdry(i)->rsdl(stage);
 		
 	helper->rsdl(stage);
 	
@@ -88,14 +89,14 @@ void tet_hp::update() {
 		minvrt();
 
 #ifdef DEBUG   
-		// if (coarse_level) {
+//		if (coarse_level) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
 
 		for(i=0;i<npnt;++i) {
 			printf("%s vprcn nstage: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(gbl->vprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->vprcn(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(gbl->vprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->vprcn(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
@@ -103,24 +104,24 @@ void tet_hp::update() {
 		for(i=0;i<nseg;++i) {
 			printf("%s eprcn nstage: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(gbl->eprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->eprcn(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(gbl->eprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->eprcn(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
 		for(i=0;i<ntri;++i) {
 			printf("%s fprcn nstage: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(gbl->fprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->fprcn(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(gbl->fprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->fprcn(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}		
 		for(i=0;i<ntet;++i) {
 			printf("%s iprcn nstage: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(gbl->iprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->iprcn(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(gbl->iprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->iprcn(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
@@ -128,8 +129,8 @@ void tet_hp::update() {
 		for(i=0;i<npnt;++i) {
 			printf("%s res v: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(gbl->res.v(i,n)) > 1.0e-14) printf("%8.5e ",gbl->res.v(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(gbl->res.v(i,n)) > 1.0e-14) printf("%8.5e ",gbl->res.v(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
@@ -171,8 +172,8 @@ void tet_hp::update() {
 		for(i=0;i<npnt;++i) {
 			printf("%s ug.v: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-			if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
-			else printf("%8.5e ",0.0);
+				if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
@@ -210,7 +211,10 @@ void tet_hp::update() {
 			printf("\n");
 			}
 		}
-// }
+//	}
+#endif
+#ifdef MGRID_TEST
+		if (!coarse_flag) continue; // TO TEST COARSE GRID CORRECTION ONLY
 #endif
 
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
@@ -271,14 +275,14 @@ void tet_hp::update() {
 		}
 
 #ifdef DEBUG
-	//   if (coarse_level) {
+//   if (coarse_level) {
 #ifdef PTH
 			pth_exit(NULL);
 #endif
 #ifdef MPI
-//			MPI_Finalize();
+			MPI_Finalize();
 #endif
-	//   }
+//	   }
 #endif
 	}
 }

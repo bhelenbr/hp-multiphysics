@@ -61,12 +61,12 @@ void tet_hp::l2error(init_bdry_cndtn *comparison) {
 					pt(2) = crd(2)(i)(j)(k);
 					cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 					for(n=0;n<NV;++n) {
-					err =  fabs(u(n)(i)(j)(k)-comparison->f(n,pt,gbl->time));
-					   if (err > mxr(n)) {
-						mxr(n) = err;
-						loc(n) = tind;
-					}
-					   l2r(n) += err*err*basis::tet(log2p).wtx(i)*basis::tet(log2p).wty(j)*basis::tet(log2p).wtz(k)*cjcb(i)(j)(k);
+						err =  fabs(u(n)(i)(j)(k)-comparison->f(n,pt,gbl->time));
+						if (err > mxr(n)) {
+							mxr(n) = err;
+							loc(n) = tind;
+						}
+						l2r(n) += err*err*basis::tet(log2p).wtx(i)*basis::tet(log2p).wty(j)*basis::tet(log2p).wtz(k)*cjcb(i)(j)(k);
 					}
 				}
 			}
@@ -75,7 +75,8 @@ void tet_hp::l2error(init_bdry_cndtn *comparison) {
 	
 	for(n=0;n<NV;++n) {
 		l2r(n) = sqrt(l2r(n)); 
-		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n);
+		*gbl->log << "#L_2: " << l2r(n) << " L_inf " << mxr(n) <<  ' ' << loc(n) << ' ';
+		//*gbl->log  << l2r(n) << ' ' << mxr(n) <<  ' ' ;
 	}
 	*gbl->log << '\n';
 

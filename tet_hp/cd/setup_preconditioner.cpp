@@ -31,7 +31,7 @@ void tet_hp_cd::setup_preconditioner() {
 //	hmin = 1000000;
 	dtcheck = 0.0;
 	for(tind = 0; tind < ntet; ++tind) {
-		jcb = tet(tind).vol/8; 
+		jcb = 0.125*tet(tind).vol; 
 		v = tet(tind).pnt;
 		amax = 0.0;
 		for(j=0;j<4;++j) { // FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT 

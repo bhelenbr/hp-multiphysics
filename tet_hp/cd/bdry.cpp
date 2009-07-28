@@ -28,15 +28,11 @@ void dirichlet::tadvance() {
 		
 	hp_face_bdry::tadvance(); 
 	
-//
-//    /* UPDATE BOUNDARY CONDITION VALUES */
-//    for(j=0;j<base.nseg;++j) {
-//        sind = base.seg(j);
-//        v0 = x.seg(sind).pnt(0);
-//        x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
-//    }
-//    v0 = x.seg(sind).pnt(1);
-//    x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
+	/* UPDATE BOUNDARY CONDITION VALUES */
+	for(j=0;j<base.npnt;++j) {
+			v0 = base.pnt(j).gindx;
+			x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
+	}
 //
 //    /*******************/    
 //    /* SET SIDE VALUES */

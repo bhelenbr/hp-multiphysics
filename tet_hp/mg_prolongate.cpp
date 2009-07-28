@@ -21,6 +21,7 @@ void tet_hp::mg_prolongate() {
 	for(i=0;i<nfbd;++i)
 		hp_fbdry(i)->mg_prolongate();
 
+
 	/* CALCULATE CORRECTIONS */
 	vug_frst(Range(0,npnt-1),Range::all()) -= ug.v(Range(0,npnt-1),Range::all());
 

@@ -2,8 +2,6 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
-#define NO_CTRL_DEBUG
-
 //#define NODAL
 
 /************************************************/
@@ -111,13 +109,13 @@ void tet_hp::minvrt() {
 				sgn  = tet(tind).rot(i);
 				for(j=0;j<4;++j) {
 					msgn = 1;
-						ind = 0;
-						for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
-							for(k = 1; k <= basis::tet(log2p).em-m; ++k) {
-								for(n=0;n<NV;++n)
-									gbl->res.f(find,ind,n) -= msgn*basis::tet(log2p).vfms(j,4+6*basis::tet(log2p).em+i*basis::tet(log2p).fm+ind)*uht(n)(j);
-								++ind;
-							}
+					ind = 0;
+					for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
+						for(k = 1; k <= basis::tet(log2p).em-m; ++k) {
+							for(n=0;n<NV;++n)
+								gbl->res.f(find,ind,n) -= msgn*basis::tet(log2p).vfms(j,4+6*basis::tet(log2p).em+i*basis::tet(log2p).fm+ind)*uht(n)(j);
+							++ind;
+						}
 						msgn *= sgn;
 					}
 				}
@@ -166,7 +164,7 @@ void tet_hp::minvrt() {
 							wkseg(sind,0,n)(0) += basis::tet(log2p).ffms(i,k,1)*gbl->res.f(find,k,n);
 							wkseg(sind,0,n)(1) += basis::tet(log2p).ffms(i,k,0)*gbl->res.f(find,k,n);
 						}
-						else{
+						else {
 							wkseg(sind,0,n)(0) += basis::tet(log2p).ffms(i,k,0)*gbl->res.f(find,k,n);
 							wkseg(sind,0,n)(1) += basis::tet(log2p).ffms(i,k,1)*gbl->res.f(find,k,n);
 						}						
@@ -187,20 +185,21 @@ void tet_hp::minvrt() {
 					exit(1);
 				}
 				for(int spk = 0; spk < pnt(vind).nspk; ++spk){
-					gbl->res.e(spklink(vind)(spk)(0),0,n)+=spkres(spk)/2;
+					gbl->res.e(spklink(vind)(spk)(0),0,n)+=spkres(spk)/2.0;
 				}
 			}
 		}
 	}
-
+	
+	FLT	diagcoef = 1.0;
 	if(basis::tet(log2p).p == 2) {
-		basis::tet(log2p).ediag(0) = 80;//157
+		basis::tet(log2p).ediag(0) = diagcoef*80.0;//157
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 	}
 	
 	if(basis::tet(log2p).p == 3) {
-		basis::tet(log2p).ediag(1) = 1000;//1890 optimize later
-		basis::tet(log2p).fdiag(0) = 3000;//5670
+		basis::tet(log2p).ediag(1) = diagcoef*1000.0;//1890 optimize later
+		basis::tet(log2p).fdiag(0) = diagcoef*3000.0;//5670
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
@@ -489,7 +488,7 @@ void tet_hp::setup_preconditioner() {
 //   }
 
 	
-	if(basis::tet(log2p).p > 2)
+	if(basis::tet(log2p).p == 3)
 		spoke();
 	
 	return;
@@ -620,10 +619,10 @@ void tet_hp::minvrt_test() {
 		cout << hmin << ' ' << hmax << ' ' << havg/ntet << endl;
 		
 		
-	#ifndef NODAL	
+#ifndef NODAL	
 	if(basis::tet(log2p).p > 2)
 		spoke();
-	#endif
+#endif
 		
 	setup_preconditioner();
 

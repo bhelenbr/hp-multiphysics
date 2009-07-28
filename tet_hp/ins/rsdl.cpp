@@ -96,26 +96,26 @@ void tet_hp_ins::rsdl(int stage) {
 				for(j=0;j<lgpy;++j) {
 					for(k=0;k<lgpz;++k) {
 
-						d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-						d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-						d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-						d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-						d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-						d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-						d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-						d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-						d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
+						d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+						d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+						d(0)(2) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
+						d(1)(0) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+						d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+						d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
+						d(2)(0) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+						d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+						d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 						
 						fluxx = gbl->rho*(u(0)(i)(j)(k) -mvel(0)(i)(j)(k));
 						fluxy = gbl->rho*(u(1)(i)(j)(k) -mvel(1)(i)(j)(k));
 						fluxz = gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
-
+						
 						/* CONTINUITY EQUATION FLUXES */
-						du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(1)(0)*fluxy+d(2)(0)*fluxz;
-						du(NV-1,1)(i)(j)(k) = d(0)(1)*fluxx+d(1)(1)*fluxy+d(2)(1)*fluxz;					
-						du(NV-1,2)(i)(j)(k) = d(0)(2)*fluxx+d(1)(2)*fluxy+d(2)(2)*fluxz;
-
-
+						du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
+						du(NV-1,1)(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;					
+						du(NV-1,2)(i)(j)(k) = d(2)(0)*fluxx+d(2)(1)*fluxy+d(2)(2)*fluxz;
+						
+						
 #ifndef INERTIALESS
 						/* CONVECTIVE FLUXES */
 						for(n=0;n<NV-1;++n) {
@@ -130,20 +130,21 @@ void tet_hp_ins::rsdl(int stage) {
 							cv(n,2)(i)(j)(k) = 0.0;
 						}
 #endif
+						
 						/* PRESSURE TERMS */
 						/* U-MOMENTUM */
 						cv(0,0)(i)(j)(k) += d(0)(0)*u(NV-1)(i)(j)(k);
-						cv(0,1)(i)(j)(k) += d(0)(1)*u(NV-1)(i)(j)(k);
-						cv(0,2)(i)(j)(k) += d(0)(2)*u(NV-1)(i)(j)(k);
-
+						cv(0,1)(i)(j)(k) += d(1)(0)*u(NV-1)(i)(j)(k);
+						cv(0,2)(i)(j)(k) += d(2)(0)*u(NV-1)(i)(j)(k);
+						
 						/* V-MOMENTUM */
-						cv(1,0)(i)(j)(k) += d(1)(0)*u(NV-1)(i)(j)(k);
+						cv(1,0)(i)(j)(k) += d(0)(1)*u(NV-1)(i)(j)(k);
 						cv(1,1)(i)(j)(k) += d(1)(1)*u(NV-1)(i)(j)(k);
-						cv(1,2)(i)(j)(k) += d(1)(2)*u(NV-1)(i)(j)(k);
+						cv(1,2)(i)(j)(k) += d(2)(1)*u(NV-1)(i)(j)(k);
 						
 						/* W-MOMENTUM */
-						cv(2,0)(i)(j)(k) += d(2)(0)*u(NV-1)(i)(j)(k);
-						cv(2,1)(i)(j)(k) += d(2)(1)*u(NV-1)(i)(j)(k);
+						cv(2,0)(i)(j)(k) += d(0)(2)*u(NV-1)(i)(j)(k);
+						cv(2,1)(i)(j)(k) += d(1)(2)*u(NV-1)(i)(j)(k);
 						cv(2,2)(i)(j)(k) += d(2)(2)*u(NV-1)(i)(j)(k);
 					}
 				}
@@ -162,17 +163,18 @@ void tet_hp_ins::rsdl(int stage) {
 					for(j=0;j<lgpy;++j) {
 						for(k=0;k<lgpz;++k) {
 						
-							d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-							d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-							d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-							d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-							d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
+							d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+							d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+							d(0)(2) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
+							d(1)(0) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
+							d(2)(0) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 
 							cjcb = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
+														
 							rhorbd0 = rhobd0*cjcb;
 							cjcbi = lmu/cjcb;
 							
@@ -193,16 +195,16 @@ void tet_hp_ins::rsdl(int stage) {
 #endif                        
 							/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 							/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
-							visc(0,0)(0,0) = -cjcbi*(2*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
-							visc(0,0)(0,1) = -cjcbi*(2*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
-							visc(0,0)(0,2) = -cjcbi*(2*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
+							visc(0,0)(0,0) = -cjcbi*(2.*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
+							visc(0,0)(0,1) = -cjcbi*(2.*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
+							visc(0,0)(0,2) = -cjcbi*(2.*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
 							visc(0,0)(1,0) = visc(0,0)(0,1);
-							visc(0,0)(1,1) = -cjcbi*(2*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
-							visc(0,0)(1,2) = -cjcbi*(2*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
+							visc(0,0)(1,1) = -cjcbi*(2.*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
+							visc(0,0)(1,2) = -cjcbi*(2.*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
 							visc(0,0)(2,0) = visc(0,0)(0,2);
 							visc(0,0)(2,1) = visc(0,0)(1,2);
-							visc(0,0)(2,2) = -cjcbi*(2*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
-
+							visc(0,0)(2,2) = -cjcbi*(2.*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
+							
 							visc(0,1)(0,0) = -cjcbi*d(0)(1)*d(0)(0);
 							visc(0,1)(0,1) = -cjcbi*d(0)(1)*d(1)(0);
 							visc(0,1)(0,2) = -cjcbi*d(0)(1)*d(2)(0);
@@ -223,25 +225,25 @@ void tet_hp_ins::rsdl(int stage) {
 							visc(0,2)(2,1) = -cjcbi*d(2)(2)*d(1)(0);
 							visc(0,2)(2,2) = -cjcbi*d(2)(2)*d(2)(0);
 							
-							visc(1,0)(0,0) = -cjcbi*d(0)(0)*d(0)(1);
-							visc(1,0)(0,1) = -cjcbi*d(0)(0)*d(1)(1);
-							visc(1,0)(0,2) = -cjcbi*d(0)(0)*d(2)(1);
-							visc(1,0)(1,0) = -cjcbi*d(1)(0)*d(0)(1);
-							visc(1,0)(1,1) = -cjcbi*d(1)(0)*d(1)(1);
-							visc(1,0)(1,2) = -cjcbi*d(1)(0)*d(2)(1);
-							visc(1,0)(2,0) = -cjcbi*d(2)(0)*d(0)(1);
-							visc(1,0)(2,1) = -cjcbi*d(2)(0)*d(1)(1);
-							visc(1,0)(2,2) = -cjcbi*d(2)(0)*d(2)(1);
+							visc(1,0)(0,0) = visc(0,1)(0,0);
+							visc(1,0)(0,1) = visc(0,1)(1,0);
+							visc(1,0)(0,2) = visc(0,1)(2,0);
+							visc(1,0)(1,0) = visc(0,1)(0,1);
+							visc(1,0)(1,1) = visc(0,1)(1,1);
+							visc(1,0)(1,2) = visc(0,1)(2,1);
+							visc(1,0)(2,0) = visc(0,1)(0,2);
+							visc(1,0)(2,1) = visc(0,1)(1,2);
+							visc(1,0)(2,2) = visc(0,1)(2,2);
 							
-							visc(1,1)(0,0) = -cjcbi*(2*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
-							visc(1,1)(0,1) = -cjcbi*(2*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
-							visc(1,1)(0,2) = -cjcbi*(2*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
+							visc(1,1)(0,0) = -cjcbi*(2.*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
+							visc(1,1)(0,1) = -cjcbi*(2.*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
+							visc(1,1)(0,2) = -cjcbi*(2.*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
 							visc(1,1)(1,0) = visc(1,1)(0,1);
-							visc(1,1)(1,1) = -cjcbi*(2*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
-							visc(1,1)(1,2) = -cjcbi*(2*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
+							visc(1,1)(1,1) = -cjcbi*(2.*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
+							visc(1,1)(1,2) = -cjcbi*(2.*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
 							visc(1,1)(2,0) = visc(1,1)(0,2);
 							visc(1,1)(2,1) = visc(1,1)(1,2);
-							visc(1,1)(2,2) = -cjcbi*(2*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
+							visc(1,1)(2,2) = -cjcbi*(2.*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
 							
 							visc(1,2)(0,0) = -cjcbi*d(0)(2)*d(0)(1);
 							visc(1,2)(0,1) = -cjcbi*d(0)(2)*d(1)(1);
@@ -253,58 +255,57 @@ void tet_hp_ins::rsdl(int stage) {
 							visc(1,2)(2,1) = -cjcbi*d(2)(2)*d(1)(1);
 							visc(1,2)(2,2) = -cjcbi*d(2)(2)*d(2)(1);
 							
-							visc(2,0)(0,0) = -cjcbi*d(0)(0)*d(0)(2);
-							visc(2,0)(0,1) = -cjcbi*d(0)(0)*d(1)(2);
-							visc(2,0)(0,2) = -cjcbi*d(0)(0)*d(2)(2);
-							visc(2,0)(1,0) = -cjcbi*d(1)(0)*d(0)(2);
-							visc(2,0)(1,1) = -cjcbi*d(1)(0)*d(1)(2);
-							visc(2,0)(1,2) = -cjcbi*d(1)(0)*d(2)(2);
-							visc(2,0)(2,0) = -cjcbi*d(2)(0)*d(0)(2);
-							visc(2,0)(2,1) = -cjcbi*d(2)(0)*d(1)(2);
-							visc(2,0)(2,2) = -cjcbi*d(2)(0)*d(2)(2);
-					
-							visc(2,1)(0,0) = -cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(0,1) = -cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(0,2) = -cjcbi*d(0)(1)*d(0)(2);
-							visc(2,1)(1,0) = -cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(1,1) = -cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(1,2) = -cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,0) = -cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,1) = -cjcbi*d(1)(1)*d(0)(2);
-							visc(2,1)(2,2) = -cjcbi*d(1)(1)*d(0)(2);
+							visc(2,0)(0,0) = visc(0,2)(0,0);
+							visc(2,0)(0,1) = visc(0,2)(1,0);
+							visc(2,0)(0,2) = visc(0,2)(2,0);
+							visc(2,0)(1,0) = visc(0,2)(0,1);
+							visc(2,0)(1,1) = visc(0,2)(1,1);
+							visc(2,0)(1,2) = visc(0,2)(2,1);
+							visc(2,0)(2,0) = visc(0,2)(0,2);
+							visc(2,0)(2,1) = visc(0,2)(1,2);
+							visc(2,0)(2,2) = visc(0,2)(2,2);
 							
-							visc(2,2)(0,0) = -cjcbi*(2*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
-							visc(2,2)(0,1) = -cjcbi*(2*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
-							visc(2,2)(0,2) = -cjcbi*(2*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
+							visc(2,1)(0,0) = visc(1,2)(0,0);
+							visc(2,1)(0,1) = visc(1,2)(1,0);
+							visc(2,1)(0,2) = visc(1,2)(2,0);
+							visc(2,1)(1,0) = visc(1,2)(0,1);
+							visc(2,1)(1,1) = visc(1,2)(1,1);
+							visc(2,1)(1,2) = visc(1,2)(2,1);
+							visc(2,1)(2,0) = visc(1,2)(0,2);
+							visc(2,1)(2,1) = visc(1,2)(1,2);
+							visc(2,1)(2,2) = visc(1,2)(2,2);
+							
+							visc(2,2)(0,0) = -cjcbi*(2.*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
+							visc(2,2)(0,1) = -cjcbi*(2.*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
+							visc(2,2)(0,2) = -cjcbi*(2.*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
 							visc(2,2)(1,0) = visc(2,2)(0,1);
-							visc(2,2)(1,1) = -cjcbi*(2*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
-							visc(2,2)(1,2) = visc(2,2)(2,1);
+							visc(2,2)(1,1) = -cjcbi*(2.*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
+							visc(2,2)(1,2) = -cjcbi*(2.*d(1)(2)*d(2)(2)+d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1));
 							visc(2,2)(2,0) = visc(2,2)(0,2);
-							visc(2,2)(2,1) = -cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
-							visc(2,2)(2,2) = -cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
-
+							visc(2,2)(2,1) = visc(2,2)(1,2);
+							visc(2,2)(2,2) = -cjcbi*(2.*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
 
 
 							df(0,0)(i)(j)(k) = +visc(0,0)(0,0)*du(0,0)(i)(j)(k)+visc(0,1)(0,0)*du(1,0)(i)(j)(k)+visc(0,2)(0,0)*du(2,0)(i)(j)(k)
 											   +visc(0,0)(0,1)*du(0,1)(i)(j)(k)+visc(0,1)(0,1)*du(1,1)(i)(j)(k)+visc(0,2)(0,1)*du(2,1)(i)(j)(k)
 											   +visc(0,0)(0,2)*du(0,2)(i)(j)(k)+visc(0,1)(0,2)*du(1,2)(i)(j)(k)+visc(0,2)(0,2)*du(2,2)(i)(j)(k);
-											   
+							
 							df(0,1)(i)(j)(k) = +visc(0,0)(1,0)*du(0,0)(i)(j)(k)+visc(0,1)(1,0)*du(1,0)(i)(j)(k)+visc(0,2)(1,0)*du(2,0)(i)(j)(k)
 											   +visc(0,0)(1,1)*du(0,1)(i)(j)(k)+visc(0,1)(1,1)*du(1,1)(i)(j)(k)+visc(0,2)(1,1)*du(2,1)(i)(j)(k)
 											   +visc(0,0)(1,2)*du(0,2)(i)(j)(k)+visc(0,1)(1,2)*du(1,2)(i)(j)(k)+visc(0,2)(1,2)*du(2,2)(i)(j)(k);
-												
+							
 							df(0,2)(i)(j)(k) = +visc(0,0)(2,0)*du(0,0)(i)(j)(k)+visc(0,1)(2,0)*du(1,0)(i)(j)(k)+visc(0,2)(2,0)*du(2,0)(i)(j)(k)
 											   +visc(0,0)(2,1)*du(0,1)(i)(j)(k)+visc(0,1)(2,1)*du(1,1)(i)(j)(k)+visc(0,2)(2,1)*du(2,1)(i)(j)(k)
-											   +visc(0,0)(2,2)*du(0,2)(i)(j)(k)+visc(0,1)(2,2)*du(1,2)(i)(j)(k)+visc(0,2)(2,2)*du(2,2)(i)(j)(k);
-											   
+											    +visc(0,0)(2,2)*du(0,2)(i)(j)(k)+visc(0,1)(2,2)*du(1,2)(i)(j)(k)+visc(0,2)(2,2)*du(2,2)(i)(j)(k);
+							
 							df(1,0)(i)(j)(k) = +visc(1,0)(0,0)*du(0,0)(i)(j)(k)+visc(1,1)(0,0)*du(1,0)(i)(j)(k)+visc(1,2)(0,0)*du(2,0)(i)(j)(k)
 											   +visc(1,0)(0,1)*du(0,1)(i)(j)(k)+visc(1,1)(0,1)*du(1,1)(i)(j)(k)+visc(1,2)(0,1)*du(2,1)(i)(j)(k)
 											   +visc(1,0)(0,2)*du(0,2)(i)(j)(k)+visc(1,1)(0,2)*du(1,2)(i)(j)(k)+visc(1,2)(0,2)*du(2,2)(i)(j)(k);
-
+							
 							df(1,1)(i)(j)(k) = +visc(1,0)(1,0)*du(0,0)(i)(j)(k)+visc(1,1)(1,0)*du(1,0)(i)(j)(k)+visc(1,2)(1,0)*du(2,0)(i)(j)(k)
 											   +visc(1,0)(1,1)*du(0,1)(i)(j)(k)+visc(1,1)(1,1)*du(1,1)(i)(j)(k)+visc(1,2)(1,1)*du(2,1)(i)(j)(k)
 											   +visc(1,0)(1,2)*du(0,2)(i)(j)(k)+visc(1,1)(1,2)*du(1,2)(i)(j)(k)+visc(1,2)(1,2)*du(2,2)(i)(j)(k);
-											
+							
 							df(1,2)(i)(j)(k) = +visc(1,0)(2,0)*du(0,0)(i)(j)(k)+visc(1,1)(2,0)*du(1,0)(i)(j)(k)+visc(1,2)(2,0)*du(2,0)(i)(j)(k)
 											   +visc(1,0)(2,1)*du(0,1)(i)(j)(k)+visc(1,1)(2,1)*du(1,1)(i)(j)(k)+visc(1,2)(2,1)*du(2,1)(i)(j)(k)
 											   +visc(1,0)(2,2)*du(0,2)(i)(j)(k)+visc(1,1)(2,2)*du(1,2)(i)(j)(k)+visc(1,2)(2,2)*du(2,2)(i)(j)(k);
@@ -312,14 +313,14 @@ void tet_hp_ins::rsdl(int stage) {
 							df(2,0)(i)(j)(k) = +visc(2,0)(0,0)*du(0,0)(i)(j)(k)+visc(2,1)(0,0)*du(1,0)(i)(j)(k)+visc(2,2)(0,0)*du(2,0)(i)(j)(k)
 											   +visc(2,0)(0,1)*du(0,1)(i)(j)(k)+visc(2,1)(0,1)*du(1,1)(i)(j)(k)+visc(2,2)(0,1)*du(2,1)(i)(j)(k)
 											   +visc(2,0)(0,2)*du(0,2)(i)(j)(k)+visc(2,1)(0,2)*du(1,2)(i)(j)(k)+visc(2,2)(0,2)*du(2,2)(i)(j)(k);
-
+							
 							df(2,1)(i)(j)(k) = +visc(2,0)(1,0)*du(0,0)(i)(j)(k)+visc(2,1)(1,0)*du(1,0)(i)(j)(k)+visc(2,2)(1,0)*du(2,0)(i)(j)(k)
 											   +visc(2,0)(1,1)*du(0,1)(i)(j)(k)+visc(2,1)(1,1)*du(1,1)(i)(j)(k)+visc(2,2)(1,1)*du(2,1)(i)(j)(k)
 											   +visc(2,0)(1,2)*du(0,2)(i)(j)(k)+visc(2,1)(1,2)*du(1,2)(i)(j)(k)+visc(2,2)(1,2)*du(2,2)(i)(j)(k);
-											
-							df(2,2)(i)(j)(k) = +visc(2,0)(2,0)*du(2,0)(i)(j)(k)+visc(2,1)(2,0)*du(1,0)(i)(j)(k)+visc(2,2)(2,0)*du(2,0)(i)(j)(k)
-											   +visc(2,0)(2,1)*du(2,1)(i)(j)(k)+visc(2,1)(2,1)*du(1,1)(i)(j)(k)+visc(2,2)(2,1)*du(2,1)(i)(j)(k)
-											   +visc(2,0)(2,2)*du(2,2)(i)(j)(k)+visc(2,1)(2,2)*du(1,2)(i)(j)(k)+visc(2,2)(2,2)*du(2,2)(i)(j)(k);
+							
+							df(2,2)(i)(j)(k) = +visc(2,0)(2,0)*du(0,0)(i)(j)(k)+visc(2,1)(2,0)*du(1,0)(i)(j)(k)+visc(2,2)(2,0)*du(2,0)(i)(j)(k)
+											   +visc(2,0)(2,1)*du(0,1)(i)(j)(k)+visc(2,1)(2,1)*du(1,1)(i)(j)(k)+visc(2,2)(2,1)*du(2,1)(i)(j)(k)
+											   +visc(2,0)(2,2)*du(0,2)(i)(j)(k)+visc(2,1)(2,2)*du(1,2)(i)(j)(k)+visc(2,2)(2,2)*du(2,2)(i)(j)(k);
 							
 							for(n=0;n<NV-1;++n) {
 								cv(n,0)(i)(j)(k) += df(n,0)(i)(j)(k);
@@ -330,7 +331,7 @@ void tet_hp_ins::rsdl(int stage) {
 					}
 				}
 				for(n=0;n<NV;++n)
-						basis::tet(log2p).intgrt(&lf(n)(0),&res(n)(0)(0)(0),stridex,stridey);
+					basis::tet(log2p).intgrt(&lf(n)(0),&res(n)(0)(0)(0),stridex,stridey);
 
 				/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
 				for(n=0;n<NV-1;++n) {
@@ -347,69 +348,83 @@ void tet_hp_ins::rsdl(int stage) {
 					for(j=0;j<lgpy;++j) {
 						for(k=0;k<lgpz;++k) {
 							
-							d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-							d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-							d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-							d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-							d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-							d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
+							d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+							d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
+							d(0)(2) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
+							d(1)(0) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
+							d(2)(0) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
+							d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 							
 							tres(0) = gbl->tau(tind,0)*res(0)(i)(j)(k);    
 							tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
 							tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
-							tres(3) = gbl->tau(tind,NV-1)*res(3)(i)(j)(k);
-
-
-#ifndef INERTIALESS
-							df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(0)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(0)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(0)*tres(NV-1);
-							df(0,1)(i)(j)(k) -= (d(0)(1)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(1)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(1)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(1)*tres(NV-1);
-							df(0,2)(i)(j)(k) -= (d(0)(2)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(2)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(2)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(2)*tres(NV-1);
-							df(1,0)(i)(j)(k) -= +d(0)(0)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(0)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(0)*tres(NV-1);		
-							df(1,1)(i)(j)(k) -= +d(0)(1)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(1)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(1)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(1)*tres(NV-1);		
-							df(1,2)(i)(j)(k) -= +d(0)(2)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(2)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(2)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(2)*tres(NV-1);
-							df(2,0)(i)(j)(k) -= +d(0)(0)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(0)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(0)*tres(NV-1);	
-							df(2,1)(i)(j)(k) -= +d(0)(1)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(1)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(1)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(1)*tres(NV-1);	
-							df(2,2)(i)(j)(k) -= +d(0)(2)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(2)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(2)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(2)*tres(NV-1);	
+							tres(3) = gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
 							
-
+#ifndef INERTIALESS
+							df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(0)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(0)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(0)(0)*tres(NV-1);
+							df(0,1)(i)(j)(k) -= (d(1)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												 +d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												 +d(1)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(1)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(1)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(1)(0)*tres(NV-1);
+							df(0,2)(i)(j)(k) -= (d(2)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(2)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(2)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(2)(0)*tres(NV-1);
+							df(1,0)(i)(j)(k) -= d(0)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(0)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(0)(1)*tres(NV-1);		
+							df(1,1)(i)(j)(k) -= d(1)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(1)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(1)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(1)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(1)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(1)(1)*tres(NV-1);		
+							df(1,2)(i)(j)(k) -= d(2)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(2)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(2)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(2)(1)*tres(NV-1);
+							df(2,0)(i)(j)(k) -= d(0)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(0)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(0)(2)*tres(NV-1);	
+							df(2,1)(i)(j)(k) -= d(1)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(1)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(1)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(1)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(1)(2)*tres(NV-1);	
+							df(2,2)(i)(j)(k) -= d(2)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(2)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(2)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(2)(2)*tres(NV-1);
 #endif
-											
-							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
-							du(NV-1,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
-							du(NV-1,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
+										
+							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(0)(1)*tres(1)-d(0)(2)*tres(2);
+							du(NV-1,1)(i)(j)(k) = -d(1)(0)*tres(0)-d(1)(1)*tres(1)-d(1)(2)*tres(2);					
+							du(NV-1,2)(i)(j)(k) = -d(2)(0)*tres(0)-d(2)(1)*tres(1)-d(2)(2)*tres(2);
 						}
-
-						}
+					}
 				}
 				for(n=0;n<NV-1;++n)
 					basis::tet(log2p).intgrtrst(&lf(n)(0),&df(n,0)(0)(0)(0),&df(n,1)(0)(0)(0),&df(n,2)(0)(0)(0),stridex,stridey);
@@ -423,18 +438,24 @@ void tet_hp_ins::rsdl(int stage) {
 			}
 		}
 		else {
-			/* LINEAR ELEMENT */
-			d(0)(0) =  ldcrd(1,1)*ldcrd(2,2)-ldcrd(2,1)*ldcrd(1,2);
-			d(0)(1) = -ldcrd(1,0)*ldcrd(2,2)+ldcrd(2,0)*ldcrd(1,2);
-			d(0)(2) =  ldcrd(1,0)*ldcrd(2,1)-ldcrd(2,0)*ldcrd(1,1);
-			d(1)(0) = -ldcrd(0,1)*ldcrd(2,2)+ldcrd(2,1)*ldcrd(0,2);
-			d(1)(1) =  ldcrd(0,0)*ldcrd(2,2)-ldcrd(2,0)*ldcrd(0,2);
-			d(1)(2) = -ldcrd(0,0)*ldcrd(2,1)+ldcrd(2,0)*ldcrd(0,1);
-			d(2)(0) =  ldcrd(0,1)*ldcrd(1,2)-ldcrd(1,1)*ldcrd(0,2);
-			d(2)(1) = -ldcrd(0,0)*ldcrd(1,2)+ldcrd(1,0)*ldcrd(0,2);
-			d(2)(2) =  ldcrd(0,0)*ldcrd(1,1)-ldcrd(1,0)*ldcrd(0,1);
-			cjcb = ldcrd(0,0)*(ldcrd(1,1)*ldcrd(2,2)-ldcrd(1,2)*ldcrd(2,1))-ldcrd(0,1)*(ldcrd(1,0)*ldcrd(2,2)-ldcrd(1,2)*ldcrd(2,0))+ldcrd(0,2)*(ldcrd(1,0)*ldcrd(2,1)-ldcrd(1,1)*ldcrd(2,0));
+			// drdx dsdx dtdx [  ys*zt-zs*yt, -yr*zt+zr*yt,  yr*zs-zr*ys]
+			// drdy dsdy dtdy [ -xs*zt+zs*xt,  xr*zt-zr*xt, -xr*zs+zr*xs]
+			// drdz dsdz dtdz [  xs*yt-ys*xt, -xr*yt+yr*xt,  xr*ys-yr*xs]
+			
+			// cjcb = xr*(ys*zt-zs*yt)-xs*(yr*zt-zr*yt)+xt*(yr*zs-zr*ys)
 
+			/* LINEAR ELEMENT */
+			d(0)(0) =  ldcrd(1,1)*ldcrd(2,2)-ldcrd(1,2)*ldcrd(2,1);//dr/dx
+			d(0)(1) = -ldcrd(0,1)*ldcrd(2,2)+ldcrd(0,2)*ldcrd(2,1);//dr/dy
+			d(0)(2) =  ldcrd(0,1)*ldcrd(1,2)-ldcrd(0,2)*ldcrd(1,1);//dr/dz
+			d(1)(0) = -ldcrd(1,0)*ldcrd(2,2)+ldcrd(1,2)*ldcrd(2,0);//ds/dx
+			d(1)(1) =  ldcrd(0,0)*ldcrd(2,2)-ldcrd(0,2)*ldcrd(2,0);//ds/dy
+			d(1)(2) = -ldcrd(0,0)*ldcrd(1,2)+ldcrd(0,2)*ldcrd(1,0);//ds/dz
+			d(2)(0) =  ldcrd(1,0)*ldcrd(2,1)-ldcrd(1,1)*ldcrd(2,0);//dt/dx
+			d(2)(1) = -ldcrd(0,0)*ldcrd(2,1)+ldcrd(0,1)*ldcrd(2,0);//dt/dy
+			d(2)(2) =  ldcrd(0,0)*ldcrd(1,1)-ldcrd(0,1)*ldcrd(1,0);//dt/dz
+			cjcb = ldcrd(0,0)*(ldcrd(1,1)*ldcrd(2,2)-ldcrd(1,2)*ldcrd(2,1))-ldcrd(0,1)*(ldcrd(1,0)*ldcrd(2,2)-ldcrd(2,0)*ldcrd(1,2))+ldcrd(0,2)*(ldcrd(1,0)*ldcrd(2,1)-ldcrd(2,0)*ldcrd(1,1));
+		
 			/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpy;++j) {
@@ -445,9 +466,9 @@ void tet_hp_ins::rsdl(int stage) {
 						fluxz = gbl->rho*(u(2)(i)(j)(k) -mvel(2)(i)(j)(k));
 
 						/* CONTINUITY EQUATION FLUXES */
-						du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(1)(0)*fluxy+d(2)(0)*fluxz;
-						du(NV-1,1)(i)(j)(k) = d(0)(1)*fluxx+d(1)(1)*fluxy+d(2)(1)*fluxz;					
-						du(NV-1,2)(i)(j)(k) = d(0)(2)*fluxx+d(1)(2)*fluxy+d(2)(2)*fluxz;
+						du(NV-1,0)(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
+						du(NV-1,1)(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;					
+						du(NV-1,2)(i)(j)(k) = d(2)(0)*fluxx+d(2)(1)*fluxy+d(2)(2)*fluxz;
 
 
 #ifndef INERTIALESS
@@ -468,17 +489,17 @@ void tet_hp_ins::rsdl(int stage) {
 						/* PRESSURE TERMS */
 						/* U-MOMENTUM */
 						cv(0,0)(i)(j)(k) += d(0)(0)*u(NV-1)(i)(j)(k);
-						cv(0,1)(i)(j)(k) += d(0)(1)*u(NV-1)(i)(j)(k);
-						cv(0,2)(i)(j)(k) += d(0)(2)*u(NV-1)(i)(j)(k);
+						cv(0,1)(i)(j)(k) += d(1)(0)*u(NV-1)(i)(j)(k);
+						cv(0,2)(i)(j)(k) += d(2)(0)*u(NV-1)(i)(j)(k);
 
 						/* V-MOMENTUM */
-						cv(1,0)(i)(j)(k) += d(1)(0)*u(NV-1)(i)(j)(k);
+						cv(1,0)(i)(j)(k) += d(0)(1)*u(NV-1)(i)(j)(k);
 						cv(1,1)(i)(j)(k) += d(1)(1)*u(NV-1)(i)(j)(k);
-						cv(1,2)(i)(j)(k) += d(1)(2)*u(NV-1)(i)(j)(k);
+						cv(1,2)(i)(j)(k) += d(2)(1)*u(NV-1)(i)(j)(k);
 						
 						/* W-MOMENTUM */
-						cv(2,0)(i)(j)(k) += d(2)(0)*u(NV-1)(i)(j)(k);
-						cv(2,1)(i)(j)(k) += d(2)(1)*u(NV-1)(i)(j)(k);
+						cv(2,0)(i)(j)(k) += d(0)(2)*u(NV-1)(i)(j)(k);
+						cv(2,1)(i)(j)(k) += d(1)(2)*u(NV-1)(i)(j)(k);
 						cv(2,2)(i)(j)(k) += d(2)(2)*u(NV-1)(i)(j)(k);		
 					}
 				}
@@ -497,15 +518,15 @@ void tet_hp_ins::rsdl(int stage) {
 				
 				/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 				/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
-				visc(0,0)(0,0) = -cjcbi*(2*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
-				visc(0,0)(0,1) = -cjcbi*(2*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
-				visc(0,0)(0,2) = -cjcbi*(2*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
+				visc(0,0)(0,0) = -cjcbi*(2.*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
+				visc(0,0)(0,1) = -cjcbi*(2.*d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1)+d(0)(2)*d(1)(2));
+				visc(0,0)(0,2) = -cjcbi*(2.*d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1)+d(0)(2)*d(2)(2));
 				visc(0,0)(1,0) = visc(0,0)(0,1);
-				visc(0,0)(1,1) = -cjcbi*(2*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
-				visc(0,0)(1,2) = -cjcbi*(2*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
+				visc(0,0)(1,1) = -cjcbi*(2.*d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
+				visc(0,0)(1,2) = -cjcbi*(2.*d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1)+d(1)(2)*d(2)(2));
 				visc(0,0)(2,0) = visc(0,0)(0,2);
 				visc(0,0)(2,1) = visc(0,0)(1,2);
-				visc(0,0)(2,2) = -cjcbi*(2*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
+				visc(0,0)(2,2) = -cjcbi*(2.*d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1)+d(2)(2)*d(2)(2));
 				
 				visc(0,1)(0,0) = -cjcbi*d(0)(1)*d(0)(0);
 				visc(0,1)(0,1) = -cjcbi*d(0)(1)*d(1)(0);
@@ -527,25 +548,25 @@ void tet_hp_ins::rsdl(int stage) {
 				visc(0,2)(2,1) = -cjcbi*d(2)(2)*d(1)(0);
 				visc(0,2)(2,2) = -cjcbi*d(2)(2)*d(2)(0);
 				
-				visc(1,0)(0,0) = -cjcbi*d(0)(0)*d(0)(1);
-				visc(1,0)(0,1) = -cjcbi*d(0)(0)*d(1)(1);
-				visc(1,0)(0,2) = -cjcbi*d(0)(0)*d(2)(1);
-				visc(1,0)(1,0) = -cjcbi*d(1)(0)*d(0)(1);
-				visc(1,0)(1,1) = -cjcbi*d(1)(0)*d(1)(1);
-				visc(1,0)(1,2) = -cjcbi*d(1)(0)*d(2)(1);
-				visc(1,0)(2,0) = -cjcbi*d(2)(0)*d(0)(1);
-				visc(1,0)(2,1) = -cjcbi*d(2)(0)*d(1)(1);
-				visc(1,0)(2,2) = -cjcbi*d(2)(0)*d(2)(1);
+				visc(1,0)(0,0) = visc(0,1)(0,0);
+				visc(1,0)(0,1) = visc(0,1)(1,0);
+				visc(1,0)(0,2) = visc(0,1)(2,0);
+				visc(1,0)(1,0) = visc(0,1)(0,1);
+				visc(1,0)(1,1) = visc(0,1)(1,1);
+				visc(1,0)(1,2) = visc(0,1)(2,1);
+				visc(1,0)(2,0) = visc(0,1)(0,2);
+				visc(1,0)(2,1) = visc(0,1)(1,2);
+				visc(1,0)(2,2) = visc(0,1)(2,2);
 				
-				visc(1,1)(0,0) = -cjcbi*(2*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
-				visc(1,1)(0,1) = -cjcbi*(2*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
-				visc(1,1)(0,2) = -cjcbi*(2*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
+				visc(1,1)(0,0) = -cjcbi*(2.*d(0)(1)*d(0)(1)+d(0)(0)*d(0)(0)+d(0)(2)*d(0)(2));
+				visc(1,1)(0,1) = -cjcbi*(2.*d(0)(1)*d(1)(1)+d(0)(0)*d(1)(0)+d(0)(2)*d(1)(2));
+				visc(1,1)(0,2) = -cjcbi*(2.*d(0)(1)*d(2)(1)+d(0)(0)*d(2)(0)+d(0)(2)*d(2)(2));
 				visc(1,1)(1,0) = visc(1,1)(0,1);
-				visc(1,1)(1,1) = -cjcbi*(2*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
-				visc(1,1)(1,2) = -cjcbi*(2*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
+				visc(1,1)(1,1) = -cjcbi*(2.*d(1)(1)*d(1)(1)+d(1)(0)*d(1)(0)+d(1)(2)*d(1)(2));
+				visc(1,1)(1,2) = -cjcbi*(2.*d(1)(1)*d(2)(1)+d(1)(0)*d(2)(0)+d(1)(2)*d(2)(2));
 				visc(1,1)(2,0) = visc(1,1)(0,2);
 				visc(1,1)(2,1) = visc(1,1)(1,2);
-				visc(1,1)(2,2) = -cjcbi*(2*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
+				visc(1,1)(2,2) = -cjcbi*(2.*d(2)(1)*d(2)(1)+d(2)(0)*d(2)(0)+d(2)(2)*d(2)(2));
 				
 				visc(1,2)(0,0) = -cjcbi*d(0)(2)*d(0)(1);
 				visc(1,2)(0,1) = -cjcbi*d(0)(2)*d(1)(1);
@@ -557,35 +578,35 @@ void tet_hp_ins::rsdl(int stage) {
 				visc(1,2)(2,1) = -cjcbi*d(2)(2)*d(1)(1);
 				visc(1,2)(2,2) = -cjcbi*d(2)(2)*d(2)(1);
 				
-				visc(2,0)(0,0) = -cjcbi*d(0)(0)*d(0)(2);
-				visc(2,0)(0,1) = -cjcbi*d(0)(0)*d(1)(2);
-				visc(2,0)(0,2) = -cjcbi*d(0)(0)*d(2)(2);
-				visc(2,0)(1,0) = -cjcbi*d(1)(0)*d(0)(2);
-				visc(2,0)(1,1) = -cjcbi*d(1)(0)*d(1)(2);
-				visc(2,0)(1,2) = -cjcbi*d(1)(0)*d(2)(2);
-				visc(2,0)(2,0) = -cjcbi*d(2)(0)*d(0)(2);
-				visc(2,0)(2,1) = -cjcbi*d(2)(0)*d(1)(2);
-				visc(2,0)(2,2) = -cjcbi*d(2)(0)*d(2)(2);
+				visc(2,0)(0,0) = visc(0,2)(0,0);
+				visc(2,0)(0,1) = visc(0,2)(1,0);
+				visc(2,0)(0,2) = visc(0,2)(2,0);
+				visc(2,0)(1,0) = visc(0,2)(0,1);
+				visc(2,0)(1,1) = visc(0,2)(1,1);
+				visc(2,0)(1,2) = visc(0,2)(2,1);
+				visc(2,0)(2,0) = visc(0,2)(0,2);
+				visc(2,0)(2,1) = visc(0,2)(1,2);
+				visc(2,0)(2,2) = visc(0,2)(2,2);
 				
-				visc(2,1)(0,0) = -cjcbi*d(0)(1)*d(0)(2);
-				visc(2,1)(0,1) = -cjcbi*d(0)(1)*d(0)(2);
-				visc(2,1)(0,2) = -cjcbi*d(0)(1)*d(0)(2);
-				visc(2,1)(1,0) = -cjcbi*d(1)(1)*d(0)(2);
-				visc(2,1)(1,1) = -cjcbi*d(1)(1)*d(0)(2);
-				visc(2,1)(1,2) = -cjcbi*d(1)(1)*d(0)(2);
-				visc(2,1)(2,0) = -cjcbi*d(1)(1)*d(0)(2);
-				visc(2,1)(2,1) = -cjcbi*d(1)(1)*d(0)(2);
-				visc(2,1)(2,2) = -cjcbi*d(1)(1)*d(0)(2);
+				visc(2,1)(0,0) = visc(1,2)(0,0);
+				visc(2,1)(0,1) = visc(1,2)(1,0);
+				visc(2,1)(0,2) = visc(1,2)(2,0);
+				visc(2,1)(1,0) = visc(1,2)(0,1);
+				visc(2,1)(1,1) = visc(1,2)(1,1);
+				visc(2,1)(1,2) = visc(1,2)(2,1);
+				visc(2,1)(2,0) = visc(1,2)(0,2);
+				visc(2,1)(2,1) = visc(1,2)(1,2);
+				visc(2,1)(2,2) = visc(1,2)(2,2);
 				
-				visc(2,2)(0,0) = -cjcbi*(2*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
-				visc(2,2)(0,1) = -cjcbi*(2*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
-				visc(2,2)(0,2) = -cjcbi*(2*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
+				visc(2,2)(0,0) = -cjcbi*(2.*d(0)(2)*d(0)(2)+d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1));
+				visc(2,2)(0,1) = -cjcbi*(2.*d(0)(2)*d(1)(2)+d(0)(0)*d(1)(0)+d(0)(1)*d(1)(1));
+				visc(2,2)(0,2) = -cjcbi*(2.*d(0)(2)*d(2)(2)+d(0)(0)*d(2)(0)+d(0)(1)*d(2)(1));
 				visc(2,2)(1,0) = visc(2,2)(0,1);
-				visc(2,2)(1,1) = -cjcbi*(2*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
-				visc(2,2)(1,2) = visc(2,2)(2,1);
+				visc(2,2)(1,1) = -cjcbi*(2.*d(1)(2)*d(1)(2)+d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1));
+				visc(2,2)(1,2) = -cjcbi*(2.*d(1)(2)*d(2)(2)+d(1)(0)*d(2)(0)+d(1)(1)*d(2)(1));
 				visc(2,2)(2,0) = visc(2,2)(0,2);
-				visc(2,2)(2,1) = -cjcbi*(2*d(2)(2)*d(1)(2)+d(2)(0)*d(1)(0)+d(2)(1)*d(1)(1));
-				visc(2,2)(2,2) = -cjcbi*(2*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
+				visc(2,2)(2,1) = visc(2,2)(1,2);
+				visc(2,2)(2,2) = -cjcbi*(2.*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
 				
 
 				/* TIME DERIVATIVE TERMS */ 
@@ -609,6 +630,7 @@ void tet_hp_ins::rsdl(int stage) {
 
 #endif                        
 
+							
 							df(0,0)(i)(j)(k) = +visc(0,0)(0,0)*du(0,0)(i)(j)(k)+visc(0,1)(0,0)*du(1,0)(i)(j)(k)+visc(0,2)(0,0)*du(2,0)(i)(j)(k)
 											   +visc(0,0)(0,1)*du(0,1)(i)(j)(k)+visc(0,1)(0,1)*du(1,1)(i)(j)(k)+visc(0,2)(0,1)*du(2,1)(i)(j)(k)
 											   +visc(0,0)(0,2)*du(0,2)(i)(j)(k)+visc(0,1)(0,2)*du(1,2)(i)(j)(k)+visc(0,2)(0,2)*du(2,2)(i)(j)(k);
@@ -641,9 +663,9 @@ void tet_hp_ins::rsdl(int stage) {
 											   +visc(2,0)(1,1)*du(0,1)(i)(j)(k)+visc(2,1)(1,1)*du(1,1)(i)(j)(k)+visc(2,2)(1,1)*du(2,1)(i)(j)(k)
 											   +visc(2,0)(1,2)*du(0,2)(i)(j)(k)+visc(2,1)(1,2)*du(1,2)(i)(j)(k)+visc(2,2)(1,2)*du(2,2)(i)(j)(k);
 											
-							df(2,2)(i)(j)(k) = +visc(2,0)(2,0)*du(2,0)(i)(j)(k)+visc(2,1)(2,0)*du(1,0)(i)(j)(k)+visc(2,2)(2,0)*du(2,0)(i)(j)(k)
-											   +visc(2,0)(2,1)*du(2,1)(i)(j)(k)+visc(2,1)(2,1)*du(1,1)(i)(j)(k)+visc(2,2)(2,1)*du(2,1)(i)(j)(k)
-											   +visc(2,0)(2,2)*du(2,2)(i)(j)(k)+visc(2,1)(2,2)*du(1,2)(i)(j)(k)+visc(2,2)(2,2)*du(2,2)(i)(j)(k);
+							df(2,2)(i)(j)(k) = +visc(2,0)(2,0)*du(0,0)(i)(j)(k)+visc(2,1)(2,0)*du(1,0)(i)(j)(k)+visc(2,2)(2,0)*du(2,0)(i)(j)(k)
+											   +visc(2,0)(2,1)*du(0,1)(i)(j)(k)+visc(2,1)(2,1)*du(1,1)(i)(j)(k)+visc(2,2)(2,1)*du(2,1)(i)(j)(k)
+											   +visc(2,0)(2,2)*du(0,2)(i)(j)(k)+visc(2,1)(2,2)*du(1,2)(i)(j)(k)+visc(2,2)(2,2)*du(2,2)(i)(j)(k);
 							
 							for(n=0;n<NV-1;++n) {
 								cv(n,0)(i)(j)(k) += df(n,0)(i)(j)(k);
@@ -673,53 +695,72 @@ void tet_hp_ins::rsdl(int stage) {
 							tres(0) = gbl->tau(tind,0)*res(0)(i)(j)(k);    
 							tres(1) = gbl->tau(tind,0)*res(1)(i)(j)(k);
 							tres(2) = gbl->tau(tind,0)*res(2)(i)(j)(k);
-							tres(3) = gbl->tau(tind,NV-1)*res(3)(i)(j)(k);
-//							cout << "tres = " << tres(0) << ' ' << tres(1) << ' ' <<tres(2) << ' ' << tres(3) << endl;
-
+							tres(3) = gbl->tau(tind,NV-1)*res(NV-1)(i)(j)(k);
 							
 #ifndef INERTIALESS
-							df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(0)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(0)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(0)*tres(NV-1);
-							df(0,1)(i)(j)(k) -= (d(0)(1)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(1)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(1)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(1)*tres(NV-1);
-							df(0,2)(i)(j)(k) -= (d(0)(2)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
-											+d(1)(2)*u(0)(i)(j)(k)*tres(1)
-											+d(2)(2)*u(0)(i)(j)(k)*tres(2)
-											+d(0)(2)*tres(NV-1);
-							df(1,0)(i)(j)(k) -= +d(0)(0)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(0)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(0)*tres(NV-1);		
-							df(1,1)(i)(j)(k) -= +d(0)(1)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(1)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(1)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(1)*tres(NV-1);		
-							df(1,2)(i)(j)(k) -= +d(0)(2)*u(1)(i)(j)(k)*tres(0)
-											+(d(0)(2)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
-											+d(2)(2)*u(1)(i)(j)(k)*tres(2)				
-											+d(1)(2)*tres(NV-1);
-							df(2,0)(i)(j)(k) -= +d(0)(0)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(0)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(0)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(0)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(0)*tres(NV-1);	
-							df(2,1)(i)(j)(k) -= +d(0)(1)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(1)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(1)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(1)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(1)*tres(NV-1);	
-							df(2,2)(i)(j)(k) -= +d(0)(2)*u(2)(i)(j)(k)*tres(0)
-											+d(1)(2)*u(2)(i)(j)(k)*tres(1)
-											+(d(0)(2)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))+d(1)(2)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))+d(2)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
-											+d(2)(2)*tres(NV-1);
+							
+							/* 1st index is equation, 2nd equation is curvilinear coordinate derivative of test function */
+						
+							df(0,0)(i)(j)(k) -= (d(0)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(0)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(0)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(0)(0)*tres(NV-1);
+							df(0,1)(i)(j)(k) -= (d(1)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(1)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(1)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(1)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(1)(0)*tres(NV-1);
+							df(0,2)(i)(j)(k) -= (d(2)(0)*(2.*u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(0)
+												+d(2)(1)*u(0)(i)(j)(k)*tres(1)
+												+d(2)(2)*u(0)(i)(j)(k)*tres(2)
+												+d(2)(0)*tres(NV-1);
+							df(1,0)(i)(j)(k) -= d(0)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(0)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(0)(1)*tres(NV-1);		
+							df(1,1)(i)(j)(k) -= d(1)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(1)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(1)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(1)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(1)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(1)(1)*tres(NV-1);		
+							df(1,2)(i)(j)(k) -= d(2)(0)*u(1)(i)(j)(k)*tres(0)
+												+(d(2)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(2.*u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(1)
+												+d(2)(2)*u(1)(i)(j)(k)*tres(2)				
+												+d(2)(1)*tres(NV-1);
+							df(2,0)(i)(j)(k) -= d(0)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(0)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(0)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(0)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(0)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(0)(2)*tres(NV-1);	
+							df(2,1)(i)(j)(k) -= d(1)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(1)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(1)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(1)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(1)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(1)(2)*tres(NV-1);	
+							df(2,2)(i)(j)(k) -= d(2)(0)*u(2)(i)(j)(k)*tres(0)
+												+d(2)(1)*u(2)(i)(j)(k)*tres(1)
+												+(d(2)(0)*(u(0)(i)(j)(k)-mvel(0)(i)(j)(k))
+												+d(2)(1)*(u(1)(i)(j)(k)-mvel(1)(i)(j)(k))
+												+d(2)(2)*(2.*u(2)(i)(j)(k)-mvel(2)(i)(j)(k)))*tres(2)
+												+d(2)(2)*tres(NV-1);
 #endif
 											
 							
-							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(1)(0)*tres(1)-d(2)(0)*tres(2);
-							du(NV-1,1)(i)(j)(k) = -d(0)(1)*tres(0)-d(1)(1)*tres(1)-d(2)(1)*tres(2);					
-							du(NV-1,2)(i)(j)(k) = -d(0)(2)*tres(0)-d(1)(2)*tres(1)-d(2)(2)*tres(2);
+							du(NV-1,0)(i)(j)(k) = -d(0)(0)*tres(0)-d(0)(1)*tres(1)-d(0)(2)*tres(2);
+							du(NV-1,1)(i)(j)(k) = -d(1)(0)*tres(0)-d(1)(1)*tres(1)-d(1)(2)*tres(2);					
+							du(NV-1,2)(i)(j)(k) = -d(2)(0)*tres(0)-d(2)(1)*tres(1)-d(2)(2)*tres(2);
 						}
 					}
 				}
