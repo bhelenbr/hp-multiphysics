@@ -22,7 +22,7 @@ tri_basis_array<0> basis::tri;
 #endif
 
 void tri_hp::init(input_map& inmap, void *gin) {
-	int i,ival,p;
+	int i,ival;
 	std::string keyword, line;
 	std::istringstream data;
 	std::string filename;
@@ -61,10 +61,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 
 #ifdef AXISYMMETRIC
 	*gbl->log << "#AXISYMMETRIC is defined" << std::endl;
-	int npts = 1;
 #else
 	*gbl->log << "#AXISYMMETRIC is NOT defined" << std::endl;
-	int npts = 0;
 #endif
 
 	p0 = basis::tri(log2p)->p();
