@@ -50,12 +50,24 @@
 		6F6564C20FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
 		6F6564C30FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
 		6F6564C40FAB4C2B00428C3C /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */; };
-		6F6565540FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
-		6F6565550FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
-		6F6565560FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
-		6F6565570FACD24700428C3C /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tprims.cpp */; };
+		6F6565540FACD24700428C3C /* tet_prims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tet_prims.cpp */; };
+		6F6565550FACD24700428C3C /* tet_prims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tet_prims.cpp */; };
+		6F6565560FACD24700428C3C /* tet_prims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tet_prims.cpp */; };
+		6F6565570FACD24700428C3C /* tet_prims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6565530FACD24700428C3C /* tet_prims.cpp */; };
 		6F8509B307A5381400343685 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B207A5381400343685 /* libutil.a */; };
 		6F8509B707A5383700343685 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8509B607A5383700343685 /* libquad.a */; };
+		6F90CCE60FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		6F90CCE70FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		6F90CCE90FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		6F90CCEA0FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		6F90CCEB0FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		6F90CCEC0FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		6F90CCED0FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
+		6F90D4720FE255C6003B959F /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F90D4710FE255C6003B959F /* libMAdLib.a */; };
+		6F90D4730FE255C6003B959F /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F90D4710FE255C6003B959F /* libMAdLib.a */; };
+		6F956D730FE65610009B5B29 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F956D720FE65610009B5B29 /* Accelerate.framework */; };
+		6F956D740FE65610009B5B29 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F956D720FE65610009B5B29 /* Accelerate.framework */; };
 		6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tet_mesh.h */; };
 		6FADD85F086EF36A00350FA2 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
 		6FADD862086EF36A00350FA2 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
@@ -108,10 +120,6 @@
 		B25713D20CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
 		B25713D40CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
 		B25713D50CEA55F200BAC009 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B25713D10CEA55F200BAC009 /* libtri_mesh.a */; };
-		B25C7C840C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
-		B25C7C860C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
-		B25C7C870C79CCB3005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
-		B25C7CA60C79E104005F82C5 /* vertexball.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B25C7C830C79CCB3005F82C5 /* vertexball.cpp */; };
 		B2DF8B4F0CD0FA7B00E24F1E /* tet_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B241177B0C5FBAF600EA7B1A /* tet_boundary.cpp */; };
 		B2DF8C380CD249B700E24F1E /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B24119840C623C2300EA7B1A /* test.cpp */; };
 /* End PBXBuildFile section */
@@ -134,9 +142,13 @@
 		6F6564780FAB459500428C3C /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		6F6564790FAB459500428C3C /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
 		6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
-		6F6565530FACD24700428C3C /* tprims.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tprims.cpp; sourceTree = "<group>"; };
+		6F6565530FACD24700428C3C /* tet_prims.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tet_prims.cpp; sourceTree = "<group>"; };
 		6F8509B207A5381400343685 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../../../lib/libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F90CCE40FE1A135003B959F /* MAdLibInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAdLibInterface.h; sourceTree = "<group>"; };
+		6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MAdLibInterface.cpp; sourceTree = "<group>"; };
+		6F90D4710FE255C6003B959F /* libMAdLib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMAdLib.a; path = ../../Packages/lib/libMAdLib.a; sourceTree = SOURCE_ROOT; };
+		6F956D720FE65610009B5B29 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FBD0E8B0FB234BE00565502 /* connect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = connect.cpp; sourceTree = "<group>"; };
@@ -153,7 +165,6 @@
 		B24117DD0C5FC40E00EA7B1A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = getnewbdry.cpp; sourceTree = "<group>"; };
 		B24119840C623C2300EA7B1A /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		B25713D10CEA55F200BAC009 /* libtri_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh.a; path = ../lib/libtri_mesh.a; sourceTree = SOURCE_ROOT; };
-		B25C7C830C79CCB3005F82C5 /* vertexball.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexball.cpp; sourceTree = "<group>"; };
 		F5DD976F03A7AAC701990B69 /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -190,6 +201,8 @@
 				6F6564770FAB458A00428C3C /* libpth.a in Frameworks */,
 				6F65647C0FAB459500428C3C /* libmpi.dylib in Frameworks */,
 				6F65647D0FAB459500428C3C /* libmpi_cxx.dylib in Frameworks */,
+				6F90D4730FE255C6003B959F /* libMAdLib.a in Frameworks */,
+				6F956D740FE65610009B5B29 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,6 +221,8 @@
 				6F65646D0FAB452300428C3C /* libbinio.dylib in Frameworks */,
 				6F6564700FAB455200428C3C /* libspline.a in Frameworks */,
 				6F6564760FAB458A00428C3C /* libpth.a in Frameworks */,
+				6F90D4720FE255C6003B959F /* libMAdLib.a in Frameworks */,
+				6F956D730FE65610009B5B29 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,6 +232,7 @@
 		0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				6F956D720FE65610009B5B29 /* Accelerate.framework */,
 				6F65646C0FAB452300428C3C /* libbinio.dylib */,
 				6F56D55C09EEE7F900C97501 /* libblitz.a */,
 				F5DD976F03A7AAC701990B69 /* libinput_map.a */,
@@ -225,6 +241,7 @@
 				6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */,
 				6F65646F0FAB455200428C3C /* libspline.a */,
 				6F8509B207A5381400343685 /* libutil.a */,
+				6F90D4710FE255C6003B959F /* libMAdLib.a */,
 				6F584BC10B5E9BAF00FE5BCE /* libmetis.a */,
 				6F584BC40B5E9BD300FE5BCE /* libmuparser.a */,
 				6F6564720FAB457C00428C3C /* libboost_thread-mt-1_34_1.dylib */,
@@ -240,6 +257,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* mesh */,
 				B24117780C5FBA6E00EA7B1A /* Boundaries */,
+				6F90CCD60FE1A10C003B959F /* MadLib */,
 				F556D7CB0226C8DC01990B20 /* Scripts */,
 				0249A662FF388D9811CA2CEA /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -262,8 +280,7 @@
 				6F6564C00FAB4C2B00428C3C /* meshutilities.cpp */,
 				B21C0D9C0C20774400E7FBFC /* fangle.cpp */,
 				B21C0DE80C20865300E7FBFC /* facear.cpp */,
-				6F6565530FACD24700428C3C /* tprims.cpp */,
-				B25C7C830C79CCB3005F82C5 /* vertexball.cpp */,
+				6F6565530FACD24700428C3C /* tet_prims.cpp */,
 				B24119840C623C2300EA7B1A /* test.cpp */,
 			);
 			name = mesh;
@@ -278,6 +295,15 @@
 				6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6F90CCD60FE1A10C003B959F /* MadLib */ = {
+			isa = PBXGroup;
+			children = (
+				6F90CCE40FE1A135003B959F /* MAdLibInterface.h */,
+				6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */,
+			);
+			name = MadLib;
 			sourceTree = "<group>";
 		};
 		B24117780C5FBA6E00EA7B1A /* Boundaries */ = {
@@ -308,6 +334,7 @@
 			files = (
 				6F2262C508673029001017D0 /* tet_mesh.h in Headers */,
 				B24117800C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+				6F90CCEA0FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +344,7 @@
 			files = (
 				6FB91AB70ACCB10300792B04 /* tet_mesh.h in Headers */,
 				B24117810C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+				6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,6 +354,7 @@
 			files = (
 				6FB91AE30ACCB1E100792B04 /* tet_mesh.h in Headers */,
 				B24117830C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+				6F90CCEC0FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -335,6 +364,7 @@
 			files = (
 				6FADD857086EF32D00350FA2 /* tet_mesh.h in Headers */,
 				B24117820C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
+				6F90CCE60FE1A135003B959F /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -478,14 +508,14 @@
 				B24117DE0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
 				B24119870C623C2300EA7B1A /* test.cpp in Sources */,
 				B226FE2E0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
-				B25C7C840C79CCB3005F82C5 /* vertexball.cpp in Sources */,
 				B2152F690C836C72001BE654 /* vertexcircle.cpp in Sources */,
 				B23E83F10CF231270027B187 /* findmatch.cpp in Sources */,
 				6F6564C40FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
-				6F6565570FACD24700428C3C /* tprims.cpp in Sources */,
+				6F6565570FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE120FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE130FBA86FB006DD167 /* refineby2.cpp in Sources */,
+				6F90CCEB0FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,14 +529,14 @@
 				B24117DF0C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
 				B24119880C623C2300EA7B1A /* test.cpp in Sources */,
 				B226FE300C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
-				B25C7C870C79CCB3005F82C5 /* vertexball.cpp in Sources */,
 				B2152F6B0C836C72001BE654 /* vertexcircle.cpp in Sources */,
 				B23E83F20CF231270027B187 /* findmatch.cpp in Sources */,
 				6F6564C30FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
-				6F6565560FACD24700428C3C /* tprims.cpp in Sources */,
+				6F6565560FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8E0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE100FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE110FBA86FB006DD167 /* refineby2.cpp in Sources */,
+				6F90CCE90FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,14 +550,14 @@
 				B24117E10C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
 				B24119860C623C2300EA7B1A /* test.cpp in Sources */,
 				B226FE2C0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
-				B25C7C860C79CCB3005F82C5 /* vertexball.cpp in Sources */,
 				B2152F6A0C836C72001BE654 /* vertexcircle.cpp in Sources */,
 				B23E83F00CF231270027B187 /* findmatch.cpp in Sources */,
 				6F6564C20FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
-				6F6565550FACD24700428C3C /* tprims.cpp in Sources */,
+				6F6565550FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8D0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE0E0FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE0F0FBA86FB006DD167 /* refineby2.cpp in Sources */,
+				6F90CCED0FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -541,16 +571,16 @@
 				B24117E00C5FC40E00EA7B1A /* getnewbdry.cpp in Sources */,
 				B2411AAA0C626D7600EA7B1A /* setup.cpp in Sources */,
 				B226FE2A0C6A63A300D6BB4A /* setupbdry.cpp in Sources */,
-				B25C7CA60C79E104005F82C5 /* vertexball.cpp in Sources */,
 				B2152F680C836C72001BE654 /* vertexcircle.cpp in Sources */,
 				B2DF8B4F0CD0FA7B00E24F1E /* tet_boundary.cpp in Sources */,
 				B2DF8C380CD249B700E24F1E /* test.cpp in Sources */,
 				B23E83F30CF231270027B187 /* findmatch.cpp in Sources */,
 				6F6564C10FAB4C2B00428C3C /* meshutilities.cpp in Sources */,
-				6F6565540FACD24700428C3C /* tprims.cpp in Sources */,
+				6F6565540FACD24700428C3C /* tet_prims.cpp in Sources */,
 				6FBD0E8C0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE0C0FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE2C0FBAAA15006DD167 /* refineby2.cpp in Sources */,
+				6F90CCE70FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -571,6 +601,7 @@
 					METIS,
 					NO_MPISRC,
 					BZ_DEBUG,
+					USING_MADLIB,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(prefix)/include",
@@ -612,9 +643,9 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					BZ_DEBUG,
 					METIS,
 					NO_MPISRC,
+					USING_MADLIB,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(prefix)/include",
@@ -875,9 +906,10 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					BZ_DEBUG,
-					METIS,
 					NO_MPISRC,
+					BZ_DEBUG,
+					USING_MADLIB,
+					METIS,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -919,8 +951,10 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					METIS,
 					NO_MPISRC,
+					NO_BZ_DEBUG,
+					USING_MADLIB,
+					METIS,
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -954,12 +988,14 @@
 		6FD540670863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = MADLIB;
 			};
 			name = Development;
 		};
 		6FD540680863870800D6A762 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = MADLIB;
 			};
 			name = Deployment;
 		};
