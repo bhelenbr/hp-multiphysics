@@ -578,8 +578,9 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 										*BASE::x.gbl->log << "finish average"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
 #endif
+										return(true);
 									}
-									return(true);
+									return(false);
 								}
 
 								case(boundary::sum): {
@@ -642,7 +643,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
-
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
 #endif
@@ -703,7 +703,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
-
 										*BASE::x.gbl->log << "finish max"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
 #endif
@@ -727,7 +726,6 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 									if (matches > 1 ) {
 #ifdef MPDEBUG
-
 										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
 										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
 #endif
