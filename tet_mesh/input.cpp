@@ -563,6 +563,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 	
 	bdrylabel();  // MAKES BOUNDARY ELEMENTS POINT TO BOUNDARY GROUP/ELEMENT
 	treeinit(); 
+	for (int i=0;i<nfbd;++i)
+		fbdry(i)->treeinit();
 	
 	grd_app = grd_nm + ".lngth";
 	in.open(grd_app.c_str());

@@ -551,6 +551,8 @@ void face_bdry::alloc(int mxsize) {
 
 	/* TRI INFO */ 
 	tri.resize(Range(-1,maxpst));
+	
+	otree.allocate((FLT (*)[tet_mesh::ND]) x.pnts(0).data(), mxsize);
 
 	return;
 }
@@ -665,6 +667,8 @@ void fcomm::pfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 		
 	bool reload = comm_finish(grp,phi,type,op);
 	if (!reload) return;
+	
+	*x.gbl->log << "I am here " << idprefix << ' ' << grp << ' ' << phi << ' ' << bgn << ' ' << end << ' ' << stride << std::endl;
 
 	count = 0;
 	for(j=0;j<npnt;++j) {
@@ -763,7 +767,7 @@ void fcomm::match_numbering(int step) {
 					for (int n=0;n<tet_mesh::ND;++n)
 						mpnt(n) = fsndbuf(count++);
 						
-					FLT dist = x.otree.nearpt(mpnt.data(),pnt(i).gindx);
+					FLT dist = otree.nearpt(mpnt.data(),pnt(i).gindx);
 					if (dist > 10.*EPSILON) {
 						*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << '\n';
 					}

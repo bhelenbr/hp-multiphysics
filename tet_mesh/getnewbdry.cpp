@@ -112,7 +112,7 @@ edge_bdry* tet_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 
 	nstr.str("");
 	nstr << idnum << std::flush;        
-	keyword = gbl->idprefix +"_s" +nstr.str() + "_type";
+	keyword = gbl->idprefix +"_e" +nstr.str() + "_type";
 	
 	in_map.getwdefault(keyword,typ_str,std::string("plain"));
 	type = etype::getid(typ_str.c_str());
@@ -196,7 +196,7 @@ edge_bdry* tet_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 class ftype {
 	public:
 		static const int ntypes = 3;
-		enum ids {plain=1};
+	enum ids {plain=1, comm, prdc};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -232,21 +232,21 @@ face_bdry* tet_mesh::getnewfaceobject(int idnum, input_map& bdrydata) {
 	}
 
 	switch(type) {
-		case etype::plain: {
+		case ftype::plain: {
 			temp = new face_bdry(idnum,*this);
 			break;
 		}
-		case etype::comm: {
+		case ftype::comm: {
 			temp = new fcomm(idnum,*this);
 			break;
 		}
-		case etype::prdc: {
+		case ftype::prdc: {
 			temp = new fprdc(idnum,*this);
 			break;
 		}
 		default: {
 			temp = new face_bdry(idnum,*this);
-			std::cout << "unrecognizable side type: " << idnum << "type " << type << std::endl;
+			std::cout << "unrecognizable face type: " << idnum << "type " << type << std::endl;
 			break;
 		}
 	}

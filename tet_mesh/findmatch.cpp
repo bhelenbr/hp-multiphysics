@@ -427,7 +427,7 @@ void tet_mesh::match_bdry_numbering() {
 
 	/* LOAD POSITIONS INTO BUFFERS */
 	for(int i=0;i<nfbd;++i) 
-		fbdry(i)->loadpositions();
+		fbdry(i)->ploadbuff(boundary::all,&(pnts(0)(0)),0,ND-1,ND);
 		
 	/* FIRST PART OF SENDING, POST ALL RECEIVES */
 	for(int i=0;i<nfbd;++i)
@@ -512,6 +512,7 @@ void tet_mesh::match_bdry_numbering() {
 	for (int i=0;i<nfbd;++i) {
 		if (!fbdry(i)->is_comm()) continue;
 		
+		*gbl->log << fbdry(i)->idprefix << "\n";
 		*gbl->log << "Reordered pnts\n";
 		for (int j=0;j<fbdry(i)->npnt;++j) {
 			*gbl->log << pnts(fbdry(i)->pnt(j).gindx) << std::endl;

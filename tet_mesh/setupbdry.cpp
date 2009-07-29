@@ -386,7 +386,7 @@ void face_bdry::treeinit() {
 void face_bdry::treeinit(FLT x1[tet_mesh::ND], FLT x2[tet_mesh::ND]) {
 	
 	otree.init(x1,x2);
-		
+	
 	for(int i=0;i<npnt;++i) 
 		otree.addpt(pnt(i).gindx);
 	
