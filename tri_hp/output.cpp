@@ -479,7 +479,6 @@ void tri_hp::input(const std::string& fname) {
 				for (j=0;j<npnt;++j) {
 					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
 					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
-					std::cout << vrtxbd(i)(j)(0) << ' ' << pnts(j)(0) << std::endl;
 				}
 				bin.close();
 			}

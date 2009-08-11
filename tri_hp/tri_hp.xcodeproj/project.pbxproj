@@ -15,7 +15,6 @@
 		6F0077860CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077800CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib */; };
 		6F0077870CCB7027008D3233 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
 		6F07D6640F23BE6B0041BAA6 /* pod_generate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F07D6600F23BE6B0041BAA6 /* pod_generate.cpp */; };
-		6F07D6650F23BE6B0041BAA6 /* pod_generate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F07D6600F23BE6B0041BAA6 /* pod_generate.cpp */; };
 		6F0BB7290D0E412500530241 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
 		6F1275230BAA4D4000406504 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		6F1275240BAA4D4000406504 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
@@ -49,7 +48,6 @@
 		6F1275620BAA4D4000406504 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6F1275630BAA4D4000406504 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6F1275640BAA4D4000406504 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
-		6F1275650BAA4D4000406504 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F1275660BAA4D4000406504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6F1275680BAA4D4000406504 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6F1275690BAA4D4000406504 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
@@ -98,23 +96,24 @@
 		6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
 		6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
-		6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
 		6F681E5A0F5330AD005F5783 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E3C0F5330AD005F5783 /* allocate.cpp */; };
-		6F681E610F5330AD005F5783 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E3C0F5330AD005F5783 /* allocate.cpp */; };
 		6F681E9D0F533522005F5783 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E830F533522005F5783 /* bdry.cpp */; };
 		6F681E9E0F533522005F5783 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E850F533522005F5783 /* getnewbdry.cpp */; };
 		6F681E9F0F533522005F5783 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E860F533522005F5783 /* getnewibc.cpp */; };
 		6F681EA00F533522005F5783 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E870F533522005F5783 /* length.cpp */; };
 		6F681EA10F533522005F5783 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E880F533522005F5783 /* rsdl.cpp */; };
 		6F681EA20F533522005F5783 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E8A0F533522005F5783 /* tstep.cpp */; };
-		6F681EA30F533522005F5783 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E830F533522005F5783 /* bdry.cpp */; };
-		6F681EA40F533522005F5783 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E850F533522005F5783 /* getnewbdry.cpp */; };
-		6F681EA50F533522005F5783 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E860F533522005F5783 /* getnewibc.cpp */; };
-		6F681EA60F533522005F5783 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E870F533522005F5783 /* length.cpp */; };
-		6F681EA70F533522005F5783 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E880F533522005F5783 /* rsdl.cpp */; };
-		6F681EA80F533522005F5783 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E8A0F533522005F5783 /* tstep.cpp */; };
 		6F68254F099850E600F57688 /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
+		6F6DDBB71021DD630018DCC2 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
+		6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
+		6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
+		6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		6F6DDBF71021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		6F6DDC231021E6200018DCC2 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
 		6F77C4440B4D63ED006A4504 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
 		6F77C4450B4D63ED006A4504 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		6F77C4460B4D63ED006A4504 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
@@ -173,7 +172,6 @@
 		6F9853F90BDE612700D342F6 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6F9853FA0BDE612700D342F6 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6F9853FB0BDE612700D342F6 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
-		6F9853FC0BDE612700D342F6 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F9853FD0BDE612700D342F6 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6F9853FF0BDE612700D342F6 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6F9854000BDE612700D342F6 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
@@ -254,7 +252,6 @@
 		6F9854B00BDE649A00D342F6 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6F9854B10BDE649A00D342F6 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6F9854B20BDE649A00D342F6 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
-		6F9854B30BDE649A00D342F6 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F9854B70BDE649A00D342F6 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6F9854B90BDE649A00D342F6 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6F9854BA0BDE649A00D342F6 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
@@ -340,7 +337,6 @@
 		6FB91A910ACCB04500792B04 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
 		6FB91A920ACCB04500792B04 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6FB91A930ACCB04500792B04 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
-		6FB91A940ACCB04500792B04 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6FB91A990ACCB04500792B04 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		6FB91A9A0ACCB04500792B04 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
 		6FB91A9B0ACCB04500792B04 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
@@ -540,7 +536,6 @@
 		6F661FF8091AFB3500FB5D82 /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
 		6F661FF9091AFB3500FB5D82 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
 		6F662036091AFC8D00FB5D82 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
-		6F662044091AFCEF00FB5D82 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6F66205C091AFFC500FB5D82 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
 		6F681E3C0F5330AD005F5783 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns/allocate.cpp; sourceTree = "<group>"; };
 		6F681E830F533522005F5783 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = cns/bdry.cpp; sourceTree = "<group>"; };
@@ -554,6 +549,8 @@
 		6F68254D099850E600F57688 /* hp_getnewibc.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = hp_getnewibc.cpp; sourceTree = "<group>"; };
 		6F68255A0998541300F57688 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = ins/getnewibc.cpp; sourceTree = "<group>"; };
 		6F6825750998586200F57688 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = cd/getnewibc.cpp; sourceTree = "<group>"; };
+		6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libtri_mesh_mpi.a; sourceTree = SOURCE_ROOT; };
+		6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
 		6F77C4400B4D63ED006A4504 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = buoyancy/allocate.cpp; sourceTree = "<group>"; };
 		6F77C4410B4D63ED006A4504 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = buoyancy/rsdl.cpp; sourceTree = "<group>"; };
 		6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tri_hp_buoyancy.h; path = buoyancy/tri_hp_buoyancy.h; sourceTree = "<group>"; };
@@ -623,12 +620,12 @@
 				6F1275620BAA4D4000406504 /* libutil.a in Frameworks */,
 				6F1275630BAA4D4000406504 /* libblitz.a in Frameworks */,
 				6F1275640BAA4D4000406504 /* libmetis.a in Frameworks */,
-				6F1275650BAA4D4000406504 /* vecLib.framework in Frameworks */,
 				6F1275660BAA4D4000406504 /* libmuparser.a in Frameworks */,
 				6F0077860CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */,
 				6F0077870CCB7027008D3233 /* libpth.a in Frameworks */,
 				6F2F75050DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6FAD1C9B100525F500A0E28B /* libspline.a in Frameworks */,
+				6F6DDBF71021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -644,12 +641,12 @@
 				6F9853F90BDE612700D342F6 /* libutil.a in Frameworks */,
 				6F9853FA0BDE612700D342F6 /* libblitz.a in Frameworks */,
 				6F9853FB0BDE612700D342F6 /* libmetis.a in Frameworks */,
-				6F9853FC0BDE612700D342F6 /* vecLib.framework in Frameworks */,
 				6F9853FD0BDE612700D342F6 /* libmuparser.a in Frameworks */,
 				6F0077840CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */,
 				6F0077850CCB7027008D3233 /* libpth.a in Frameworks */,
 				6FFEF5DF0DCEA2E60079FF6D /* libspline.a in Frameworks */,
 				6F2F75040DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
+				6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -664,11 +661,12 @@
 				6F9854B00BDE649A00D342F6 /* libutil.a in Frameworks */,
 				6F9854B10BDE649A00D342F6 /* libblitz.a in Frameworks */,
 				6F9854B20BDE649A00D342F6 /* libmetis.a in Frameworks */,
-				6F9854B30BDE649A00D342F6 /* vecLib.framework in Frameworks */,
 				6F9854B70BDE649A00D342F6 /* libmuparser.a in Frameworks */,
 				6F48D8690D848AED00514E23 /* libmpi.dylib in Frameworks */,
 				6F48D86A0D848AED00514E23 /* libmpi_cxx.dylib in Frameworks */,
 				6F2F75020DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
+				6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
+				6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -683,11 +681,14 @@
 				6FB91A910ACCB04500792B04 /* libutil.a in Frameworks */,
 				6FB91A920ACCB04500792B04 /* libblitz.a in Frameworks */,
 				6FB91A930ACCB04500792B04 /* libmetis.a in Frameworks */,
-				6FB91A940ACCB04500792B04 /* vecLib.framework in Frameworks */,
 				6F77C5110B4D8959006A4504 /* libmuparser.a in Frameworks */,
 				6F48D8670D848AED00514E23 /* libmpi.dylib in Frameworks */,
 				6F48D8680D848AED00514E23 /* libmpi_cxx.dylib in Frameworks */,
 				6F2F75010DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
+				6F6DDBB71021DD630018DCC2 /* libspline.a in Frameworks */,
+				6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
+				6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
+				6F6DDC231021E6200018DCC2 /* libpth.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -703,12 +704,12 @@
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
 				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
 				6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */,
-				6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */,
 				6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */,
 				6F0077830CCB7027008D3233 /* libpth.a in Frameworks */,
 				6F0BB7290D0E412500530241 /* libspline.a in Frameworks */,
 				6F2F75030DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F17DA5D0FF10AD10047FEDF /* CHUD.framework in Frameworks */,
+				6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -810,6 +811,7 @@
 			isa = PBXGroup;
 			children = (
 				6F217C5D0CDD88200061AA2E /* libtri_mesh.a */,
+				6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */,
 				6F661FF4091AFB3500FB5D82 /* libtri_basis.a */,
 				6F661FF6091AFB3500FB5D82 /* libinput_map.a */,
 				6F661FF8091AFB3500FB5D82 /* libmyblas.a */,
@@ -820,7 +822,7 @@
 				6F2F75000DD8A7EA002615F9 /* libbinio.dylib */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
 				6F64234B0CE20E9C00434697 /* libspline.a */,
-				6F662044091AFCEF00FB5D82 /* vecLib.framework */,
+				6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */,
 				6F17DA5C0FF10AD10047FEDF /* CHUD.framework */,
 				6F0077800CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib */,
 				6F0077810CCB7027008D3233 /* libpth.a */,
@@ -1275,14 +1277,6 @@
 				6FE412F20B7A77D500FFA5CC /* bdry.cpp in Sources */,
 				6FB913720C0FC45F00F689BF /* bdry.cpp in Sources */,
 				6F8A178A0C67C4D20093A5BC /* bdry.cpp in Sources */,
-				6F07D6650F23BE6B0041BAA6 /* pod_generate.cpp in Sources */,
-				6F681E610F5330AD005F5783 /* allocate.cpp in Sources */,
-				6F681EA30F533522005F5783 /* bdry.cpp in Sources */,
-				6F681EA40F533522005F5783 /* getnewbdry.cpp in Sources */,
-				6F681EA50F533522005F5783 /* getnewibc.cpp in Sources */,
-				6F681EA60F533522005F5783 /* length.cpp in Sources */,
-				6F681EA70F533522005F5783 /* rsdl.cpp in Sources */,
-				6F681EA80F533522005F5783 /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1660,6 +1654,7 @@
 					"$(packages)/lib",
 					/usr/share/lib,
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				PREBINDING = NO;
@@ -1694,6 +1689,7 @@
 					"$(packages)/lib",
 					/usr/share/lib,
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				PREBINDING = NO;
