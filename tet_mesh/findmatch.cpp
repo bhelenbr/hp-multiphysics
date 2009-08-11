@@ -1,4 +1,5 @@
 #include "tet_mesh.h"
+#include <tet_boundary.h>
 #include <stdlib.h>
 #include <new>
 
@@ -563,236 +564,310 @@ void tet_mesh::match_bdry_numbering() {
 }
 
 
-//#ifdef METIS
-//
-//extern "C" void METIS_PartMeshNodal(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
-//int *epart, int *npart);
-//
-//void tet_mesh::setpartition(int nparts) {
-//    int i,n;
-//    int etype = 1;
-//    int numflag = 0;
-//    int edgecut;
-//    
-//    /* CREATE ISOLATED TVRTX ARRAY */
-//    Array<TinyVector<int,3>,1> tvrtx(maxpst);    
-//    for(i=0;i<ntri;++i)
-//        for(n=0;n<3;++n)
-//            tvrtx(i)(n) = tri(i).pnt(n);
-//            
-//    METIS_PartMeshNodal(&ntri, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->i1wk(0)),&(gbl->i2wk(0)));
-//    
-//    for(i=0;i<ntri;++i)
-//        tri(i).info = gbl->i1wk(i);
-//        
-//    gbl->i1wk = -1;
-//
-//    return;
-//}
-//#endif
-//
-///* WHEN THIS ROUTINE EXITS */
-///* THE OLD MESH STORES  */
-///* pnt(pind).info = new pnt index or -1 */
-///* THE NEW MESH STORES */
-///* tri(tind).info = old tri index */ 
-//void tet_mesh::partition(class tet_mesh& xin, int npart) {
-//    int i,j,n,tind,sind,p0,indx;
-//    Array<int,2> bcntr(xin.nebd +5,3); 
-//    int bnum,bel,match;
-//    
-//    for(i=0;i<xin.npnt;++i)
-//        xin.pnt(i).info = -1;
-//
-//    ntri = 0;
-//    for(i=0;i<xin.ntri;++i) {
-//        if (xin.tri(i).info == npart) {
-//            ++ntri;
-//            for(n=0;n<3;++n)
-//                xin.pnt(xin.tri(i).pnt(n)).info = npart;
-//        }
-//    }
-//    
-//    *gbl->log << "New mesh with " << ntri << " of " << xin.ntri << " tris\n";
-//    
-//    if (!initialized) {
-//        maxpst = static_cast<int>(static_cast<FLT>(ntri*xin.maxpst)/xin.ntri);
-//        allocate(maxpst);
-//    }
-//    else if (3*ntri > maxpst) {
-//        *gbl->log << "mesh is too small" << std::endl;
-//        exit(1);
-//    }
-//
-//    npnt = 0;
-//    for(i=0;i<xin.npnt;++i) {
-//        if (xin.pnt(i).info == npart) {
-//            for(n=0;n<ND;++n)
-//                pnts(npnt)(n) = xin.pnts(i)(n);
-//            xin.pnt(i).info = npnt;
-//            ++npnt;
-//        }
-//        else
-//            xin.pnt(i).info = -1;
-//    }
-//
-//    ntri = 0;
-//    for(i=0;i<xin.ntri;++i) {
-//        if (xin.tri(i).info == npart) {
-//            for(n=0;n<3;++n)
-//                tri(ntri).pnt(n) = xin.pnt(xin.tri(i).pnt(n)).info;
-//            tri(ntri).info = i;
-//            ++ntri;
-//        }
-//    }
-//
-//    createseg();
-//    
-//    nebd = 0;
-//    for(i=0;i<nseg;++i) {
-//        seg(i).info = -1;
-//        if (seg(i).tri(1) < 0) {
-//            tind = tri(seg(i).tri(0)).info;
-//
-//            p0 = seg(i).pnt(0);
-//            for(n=0;n<3;++n)
-//                if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-//            if (n==3) *gbl->log << "error in partitioning\n";
-//            n = (n+2)%3;
-//
-//            indx = xin.tri(tind).tri(n);
-//            if (indx < 0) {
-//                /* BOUNDARY SIDE */
-//                bnum = getbdrynum(indx);
-//                bel = getbdryseg(indx);
-//
-//                for (j = 0; j <nebd;++j) {
-//                    if (bnum == bcntr(j,phase)) {
-//                        ++bcntr(j,1);
-//                        seg(i).info = j;
-//                        goto next1;
-//                    }
-//                }
-//                /* NEW SIDE */
-//                seg(i).info = nebd;
-//                bcntr(nebd,phase) = bnum;
-//                bcntr(nebd++,1) = 1;
-//            }
-//            else {
-//                /* PARTITION SIDE */
-//                match = xin.tri(indx).info;
-//                if (match < npart) bnum = (match<<16) + (npart << 24);
-//                else bnum = (npart<<16) + (match << 24);
-//                for (j = 0; j <nebd;++j) {
-//                    if (bcntr(j,phase) == -bnum) {
-//                        ++bcntr(j,1);
-//                        seg(i).info = j;
-//                        goto next1;
-//                    }
-//                }
-//                /* NEW SIDE */
-//                seg(i).info = nebd;
-//                bcntr(nebd,phase) = -bnum;
-//                bcntr(nebd++,1) = 1;
-//            }
-//        }
-//        next1: continue;
-//    }
-//
-//    ebdry.resize(nebd);
-//    for(i=0;i<nebd;++i) {
-//        if (bcntr(i,phase) < 0) 
-//            ebdry(i) = new epartition(abs(bcntr(i,phase)),*this);
-//        else
-//            ebdry(i) = xin.ebdry(bcntr(i,phase))->create(*this);
-//        ebdry(i)->alloc(static_cast<int>(bcntr(i,1)*2));
-//        ebdry(i)->nseg = 0;
-//    }         
-//    
-//    
-//    for(i=0;i<nseg;++i) {
-//        if (seg(i).info > -1) 
-//            ebdry(seg(i).info)->seg(ebdry(seg(i).info)->nseg++) = i;
-//    }
-//
-//    for(i=0;i<nebd;++i) {
-//        /* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
-//        ebdry(i)->reorder();
-//    }
-//    
-//    /* MOVE VERTEX BOUNDARY INFO */
-//    nvbd = 0;
-//    for(i=0;i<xin.nvbd;++i) 
-//        if (xin.pnt(xin.vbdry(i)->pnt).info > -1)
-//            ++nvbd;
-//    vbdry.resize(nvbd+2*nebd);
-//    
-//    nvbd = 0;
-//    for(i=0;i<xin.nvbd;++i) {
-//        if (xin.pnt(xin.vbdry(i)->pnt).info > -1) {
-//            vbdry(nvbd) = xin.vbdry(i)->create(*this);
-//            vbdry(nvbd)->alloc(4);
-//            vbdry(nvbd)->pnt = xin.pnt(xin.vbdry(i)->pnt).info;
-//            ++nvbd;
-//        }
-//    }
-//    
-//    
-//    /* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
-//    for(i=0;i<nebd;++i) {
-//        if (ebdry(i)->mytype == "partition") {
-//            sind = ebdry(i)->seg(0);
-//            p0 = seg(sind).pnt(0);
-//            for(j=0;j<nvbd;++j)
-//                if (vbdry(j)->pnt == p0) goto nextv0;
-//         
-//            /* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
-//            tind = tri(seg(sind).tri(0)).info;
-//            for(n=0;n<3;++n)
-//                if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-//            vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
-//            vbdry(nvbd)->alloc(4);
-//            vbdry(nvbd)->pnt = p0;
-//            ++nvbd;
-//        
-//            nextv0:
-//            sind = ebdry(i)->seg(ebdry(i)->nseg-1);
-//            p0 = seg(sind).pnt(1);
-//            for(j=0;j<nvbd;++j)
-//                if (vbdry(j)->pnt == p0) goto nextv1;
-//         
-//            /* NEW ENDPOINT */
-//            tind = tri(seg(sind).tri(0)).info;
-//            for(n=0;n<3;++n)
-//                if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
-//            vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n),*this);
-//            vbdry(nvbd)->alloc(4);
-//            vbdry(nvbd)->pnt = p0;
-//            ++nvbd;
-//
-//            nextv1:
-//            continue;
-//        }
-//    }
-//    
-//    bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
-//
-//    createtritri();
-//    create_pnt_nnbor();
-//    FLT xmin[ND], xmax[ND];
-//    for(n=0;n<ND;++n) {
-//        xmin[n] = xin.otree.xmin(n);
-//        xmax[n] = xin.otree.xmax(n);
-//    }
-//    treeinit(xmin,xmax);
-//
-//    initialized = 1;
-//
-//    return;
-//}
-//                
-//    
-//    
-//    
-//            
-//
+#ifdef METIS
+
+extern "C" void METIS_PartMeshNodal(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
+									int *epart, int *npart);
+
+void tet_mesh::setpartition(int nparts) {
+	int i,n;
+	int etype = 2; /* 1 = triangle, 2 = tetrahedral*/
+	int numflag = 0; /* C-style numbering */
+	int edgecut;
+	
+	/* CREATE ISOLATED TVRTX ARRAY */
+	Array<TinyVector<int,4>,1> tvrtx(maxvst);
+	for(i=0;i<ntet;++i)
+		for(n=0;n<4;++n)
+			tvrtx(i)(n) = tet(i).pnt(n);
+	
+	METIS_PartMeshNodal(&ntet, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->i1wk(0)),&(gbl->i2wk(0)));
+	
+	for(i=0;i<ntet;++i)
+		tet(i).info = gbl->i1wk(i);
+	
+	gbl->i1wk = -1;
+	
+	return;
+}
+#endif
+
+/* WHEN THIS ROUTINE EXITS */
+/* THE OLD MESH STORES  */
+/* pnt(pind).info = new pnt index or -1 */
+/* THE NEW MESH STORES */
+/* pnt(sind).info = old pnt index */
+/* seg(sind).info = old side index */
+/* tri(tind).info = old tri index */
+void tet_mesh::partition(class tet_mesh& xin, int npart) {
+	int i,j,n,tind,indx,lcl;
+	Array<int,2> bcntr(xin.nfbd +10,2);
+	int bnum,bel,match;
+	
+	/* TO CREATE UNIQUE FACE NUMBERS */
+	int maxfnum = 0;
+	for(i=0;i<xin.nfbd;++i) {
+		maxfnum = MAX(maxfnum,xin.fbdry(i)->idnum);
+	}
+	++maxfnum;
+	
+	/* TO CREATE UNIQUE EDGE NUMBERS */
+	int maxenum = 0;
+	for(i=0;i<xin.nebd;++i) {
+		maxenum = MAX(maxenum,xin.ebdry(i)->idnum);
+	}
+	++maxenum;
+	
+	/* TO CREATE UNIQUE VERTEX NUMBERS */
+	int maxvnum = 0;
+	for(i=0;i<xin.nvbd;++i) {
+		maxvnum = MAX(maxvnum,xin.vbdry(i)->idnum);
+	}
+	++maxvnum;
+	
+	for(i=0;i<xin.npnt;++i)
+		xin.pnt(i).info = -1;
+	
+	ntet = 0;
+	for(i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			++ntet;
+			for(n=0;n<4;++n) {
+				xin.pnt(xin.tet(i).pnt(n)).info = npart;
+			}
+		}
+	}
+	if (!initialized) {
+		maxvst = static_cast<int>(static_cast<FLT>(ntet*xin.maxvst)/xin.ntet);
+		allocate(maxvst);
+	}
+	else if (4*ntet > maxvst) {//FIX ME 3->4??
+		*gbl->log << "mesh is too small" << std::endl;
+		exit(1);
+	}
+	
+	ostringstream nstr;
+	nstr << "b" << npart << std::flush;
+	gbl->idprefix = nstr.str();
+	gbl->idnum = npart;
+	nstr.clear();
+	
+	/* FILL IN PNT ARRAY */
+	npnt = 0;
+	for(i=0;i<xin.npnt;++i) {
+		if (xin.pnt(i).info == npart) {
+			for(n=0;n<ND;++n)
+				pnts(npnt)(n) = xin.pnts(i)(n);
+			xin.pnt(i).info = npnt;
+			++npnt;
+		}
+	}
+	
+	/* FILL IN TET ARRAY */
+	ntet = 0;
+	for(i=0;i<xin.ntet;++i) {
+		if (xin.tet(i).info == npart) {
+			for(n=0;n<4;++n)
+				tet(ntet).pnt(n) = xin.pnt(xin.tet(i).pnt(n)).info;
+			tet(ntet).info = i;
+			++ntet;
+		}
+	}
+	
+	create_from_tet();
+	
+	nfbd = 0;
+	for(i=0;i<ntri;++i) {
+		
+		/* tet number in old mesh */
+		tind = tet(tri(i).tet(0)).info;
+		
+		lcl=0;
+		for(n=0;n<4;++n)  // CHECK JUST USING LOCAL TIND & LOCAL PNT??? 
+			lcl += xin.pnt(xin.tet(tind).pnt(n)).info;
+
+		for(n=0;n<3;++n)
+			lcl -= tri(i).pnt(n);
+		
+		for(n=0;n<4;++n)
+			if(xin.pnt(xin.tet(tind).pnt(n)).info == lcl) break;
+		
+		assert(n < 4);
+			
+		tri(i).info = xin.tet(tind).tri(n);
+				
+		
+		if (tri(i).tet(1) < 0) {		
+			indx = xin.tet(tind).tet(n);
+
+			if (indx < 0) {
+				/* BOUNDARY TRI */
+				bnum = getbdrynum(indx);
+				
+				for (j = 0; j <nfbd;++j) {
+					if (bnum == bcntr(j,0)) {
+						++bcntr(j,1);
+						tri(i).tet(1) = tetnumatbdry(j,0);
+						goto next1;
+					}
+				}
+				/* NEW TRI */
+				tri(i).tet(1) = tetnumatbdry(nfbd, 0);
+				bcntr(nfbd,0) = bnum;
+				bcntr(nfbd++,1) = 1;
+			}
+			else {
+				/* PARTITION FACE */
+				match = xin.tet(indx).info;
+				if (match < npart) bnum = (match<<16) + (npart<<24);
+				else bnum = (match<<24) + (npart<<16);
+				for (j = 0; j <nfbd;++j) {
+					if (bcntr(j,0) == -bnum) {
+						++bcntr(j,1);
+						tri(i).tet(1) = tetnumatbdry(j,match);
+						goto next1;
+					}
+				}
+				/* NEW FACE */
+				tri(i).tet(1) = tetnumatbdry(nfbd,match);
+				bcntr(nfbd,0) = -bnum;
+				bcntr(nfbd++,1) = 1;
+			}
+		}
+		next1: continue;
+	}
+	
+	/* Make new boundaries and print boundary information */
+	fbdry.resize(nfbd);
+	for(i=0;i<nfbd;++i) {		
+		if (bcntr(i,0) < 0) {
+			fbdry(i) = new fpartition(abs(bcntr(i,0)),*this);
+		}
+		else {
+			fbdry(i) = xin.fbdry(bcntr(i,0))->create(*this);
+		}
+		fbdry(i)->alloc(static_cast<int>(bcntr(i,1)*3));
+		fbdry(i)->ntri = 0;
+	}
+		
+	for(i=0;i<ntri;++i) {
+		if (tri(i).tet(1) < 0) {
+			bnum = getbdrynum(tri(i).tet(1));
+			fbdry(bnum)->tri(fbdry(bnum)->ntri++).gindx = i;
+		}
+	}
+
+	for(i = 0; i < nfbd; ++i) {
+		for(tind = 0; tind < fbdry(i)->ntri;++tind) {
+			int tri_gindx = fbdry(i)->tri(tind).gindx;
+			for(j=0;j<3;++j)
+				fbdry(i)->tri(tind).pnt(j) = tri(tri_gindx).pnt(j);		
+		}
+	}
+
+	for(int i = 0; i < nfbd; ++i) 
+		fbdry(i)->create_from_tri(); 
+	
+	/* stopped here */
+//	for(i=0;i<nebd;++i) {
+//		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
+//		ebdry(i)->reorder();
+//	}
+//	
+//	/* MOVE VERTEX BOUNDARY INFO */
+//	nvbd = 0;
+//	for(i=0;i<xin.nvbd;++i)
+//		if (xin.pnt(xin.vbdry(i)->pnt).info > -1)
+//			++nvbd;
+//	vbdry.resize(nvbd+2*nebd);
+//	
+//	nvbd = 0;
+//	for(i=0;i<xin.nvbd;++i) {
+//		if (xin.pnt(xin.vbdry(i)->pnt).info > -1) {
+//			vbdry(nvbd) = xin.vbdry(i)->create(*this);
+//			vbdry(nvbd)->alloc(4);
+//			vbdry(nvbd)->pnt = xin.pnt(xin.vbdry(i)->pnt).info;
+//			++nvbd;
+//		}
+//	}
+//	
+	/* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
+	for(i=0;i<nfbd;++i) {
+		if (fbdry(i)->mytype == "partition") {
+			/* Now that all independent fbdry sides are determined give new numbers to partitions */
+			tind = fbdry(i)->tri(0).gindx;
+			match = getbdrytri(tri(tind).tet(1));
+			if (npart < match) {
+				int newid = tri(fbdry(i)->tri(0).gindx).info +maxfnum;
+				ostringstream nstr;
+				nstr << "b" << npart << "_f" << newid << std::flush;
+				fbdry(i)->idprefix = nstr.str();
+				fbdry(i)->idnum = newid;
+				nstr.clear();
+				std::cout << fbdry(i)->idprefix << "_type: partition\n";
+			}
+			else {
+				int newid = tri(fbdry(i)->tri(fbdry(i)->ntri-1).gindx).info +maxfnum;
+				ostringstream nstr;
+				nstr << "b" << npart << "_f" << newid << std::flush;
+				fbdry(i)->idprefix = nstr.str();
+				fbdry(i)->idnum = newid;
+				nstr.clear();	
+				std::cout << fbdry(i)->idprefix << "_type: partition\n";
+			}
+//			
+//			p0 = seg(sind).pnt(0);
+//			for(j=0;j<nvbd;++j)
+//				if (vbdry(j)->pnt == p0) goto nextv0;
+//			
+//			/* ENDPOINT IS NEW NEED TO DEFINE BOUNDARY */
+//			tind = tri(seg(sind).tri(0)).info;
+//			for(n=0;n<3;++n)
+//				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
+//			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n) +maxvnum,*this);
+//			vbdry(nvbd)->alloc(4);
+//			vbdry(nvbd)->pnt = p0;
+//			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+//			++nvbd;
+//			
+//		nextv0:
+//			sind = ebdry(i)->seg(ebdry(i)->nseg-1);
+//			p0 = seg(sind).pnt(1);
+//			for(j=0;j<nvbd;++j)
+//				if (vbdry(j)->pnt == p0) goto nextv1;
+//			
+//			/* NEW ENDPOINT */
+//			tind = tri(seg(sind).tri(0)).info;
+//			for(n=0;n<3;++n)
+//				if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
+//			vbdry(nvbd) = new vcomm(xin.tri(tind).pnt(n)+maxvnum,*this);
+//			vbdry(nvbd)->alloc(4);
+//			vbdry(nvbd)->pnt = p0;
+//			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+//			++nvbd;
+//			
+//		nextv1:
+//			continue;
+		}
+	}
+	
+	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+	
+//	createtritri();
+//	createpnttri();
+//	cnt_nbor();
+	FLT xmin[ND], xmax[ND];
+	for(n=0;n<ND;++n) {
+		xmin[n] = xin.otree.xmin(n);
+		xmax[n] = xin.otree.xmax(n);
+	}
+	treeinit(xmin,xmax);
+	
+	initialized = 1;
+	
+	return;
+}
+
+
+
+

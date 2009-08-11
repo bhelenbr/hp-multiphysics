@@ -618,17 +618,17 @@ void tet_mesh::initlngth() {
 
 /* FIX tri.tet and tet.tet TO POINT TO GROUP/SIDE ON BOUNDARY */
 void tet_mesh::bdrylabel() {
-	int i,j,k,tind,ttind;
+	int i,j,k,find,tind;
 	
 	for(i=0;i<nfbd;++i) {
 		for(j=0;j<fbdry(i)->ntri;++j) {
-			tind = fbdry(i)->tri(j).gindx;
-			tri(tind).tet(1) = tetnumatbdry(i,j);
-			ttind = tri(tind).tet(0);
+			find = fbdry(i)->tri(j).gindx;
+			tri(find).tet(1) = tetnumatbdry(i,j);
+			tind = tri(find).tet(0);
 			for(k=0;k<4;++k)
-				if (tet(ttind).tri(k) == tind) break;
+				if (tet(tind).tri(k) == find) break;
 				
-			tet(ttind).tet(k) = tri(tind).tet(1);
+			tet(tind).tet(k) = tri(find).tet(1);
 		}
 	}
 	

@@ -109,7 +109,7 @@ class tet_mesh : public multigrid_interface {
 		Array<face_bdry *,1> fbdry;  /**< array of face boundary objects */
 		face_bdry* getnewfaceobject(int idnum, input_map& bdrydata); /**< function for obtaining different face boundary objects */
 		int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
-		int getbdryseg(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
+		int getbdrytri(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
 		int tetnumatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
 		//@}
 		
@@ -145,7 +145,7 @@ class tet_mesh : public multigrid_interface {
 		/*  INTERFACE */
 		/**************/
 		/* INITIALIZATION & ALLOCATION */
-		tet_mesh() : nvbd(0), nebd(0), nfbd(0), initialized(0)  {}
+		tet_mesh() : nvbd(0), nebd(0), nfbd(0), gbl(0), initialized(0)  {}
 		/** Routine to allocate shared variables */
 		void* create_global_structure() {return new global;}
 		/** Routine to initialize with using information in map and shared resource in gbl_in */
@@ -198,12 +198,12 @@ class tet_mesh : public multigrid_interface {
 //        void coarsen_substructured(const class tet_mesh &tgt,int p); /**< Coarsens mesh that was output by hp FEM method */ 
 		//@}
 
-//         /** @name Routines for parallel computations */
-//        //@{ 
-//#ifdef METIS
-//        void setpartition(int nparts);  /**< Set partition of mesh (in tri(i).info) */
-//#endif 
-//        void partition(class tet_mesh& xmesh, int npart); /**< Creates a partition from xmesh */
+         /** @name Routines for parallel computations */
+        //@{ 
+#ifdef METIS
+        void setpartition(int nparts);  /**< Set partition of mesh (in tri(i).info) */
+#endif 
+        void partition(class tet_mesh& xmesh, int npart); /**< Creates a partition from xmesh */
 		int comm_entity_size(); /**< Returns size of list of communication entities (for blocks.h) */
 		int comm_entity_list(Array<int,1>& list);  /**< Returns list of communication entities */
 		class boundary* getvbdry(int num); /**< Returns pointer to vertex boundary (for blocks.h) */
@@ -356,6 +356,7 @@ class tet_mesh : public multigrid_interface {
 		} 
 		bool findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind);
 		bool findtet(const TinyVector<FLT,3> xp, int &tind);
+		int facematch(TinyVector<int,3> v1, TinyVector<int,3> v2); /**< Determine if two faces match by checking if vertices are the same  */
 		FLT intet(int tind, const TinyVector<FLT,ND> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
 		TinyVector<FLT,4> tet_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
 		void getwgts(TinyVector<FLT,ND+1> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */

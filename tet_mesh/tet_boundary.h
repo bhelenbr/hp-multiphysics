@@ -91,6 +91,15 @@ class epartition : public ecomm {
 		void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
 };
 
+class fpartition : public fcomm {
+	public:
+		/* CONSTRUCTOR */
+		fpartition(int inid, tet_mesh& xin) : fcomm(inid,xin) {groupmask = 1;mytype="partition";}
+		fpartition(const fpartition &inbdry, tet_mesh& xin) : fcomm(inbdry,xin) {}
+		
+		fpartition* create(tet_mesh& xin) const {return new fpartition(*this,xin);}
+		void mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum);
+};
 
 /** \brief Template to make a periodic vertex or edge 
  *
@@ -137,7 +146,7 @@ template<class BASE> class prdc_template : public BASE {
 //@{
 typedef prdc_template<vcomm> vprdc;  /**< Periodic vertex point */
 typedef prdc_template<ecomm> eprdc;  /**< Periodic edge boundary */
-typedef prdc_template<fcomm> fprdc;  /**< Periodic edge boundary */
+typedef prdc_template<fcomm> fprdc;  /**< Periodic face boundary */
 //@}
 
 /** \brief Template to make a boundary and give it geometry

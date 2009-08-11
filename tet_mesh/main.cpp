@@ -199,33 +199,36 @@ int main(int argc, char *argv[]) {
 		zx.output(argv[2],out);
 		return(0);
 	}
-//    
-//    if (Partition) {
-//#ifdef METIS
-//        class tet_mesh zx;
-//        int p;
-//        std::string fname;
-//        ostringstream nstr;
-//        std::cout << "input # of partitions" << std::endl;
-//        std::cin >> p;
-//        zx.input(argv[1],in,1.0,bdrymap);
-//        zx.setpartition(p);
-//        Array<tet_mesh,1> zpart(p);
-//        
-//        for(int i=0;i<p;++i) {
-//            nstr << i << std::flush;
-//            fname = argv[1] +nstr.str();
-//            nstr.str("");
-//            zpart(i).partition(zx,i);
-//            zpart(i).output(fname,out);
-//            zpart(i).output(fname,tet_mesh::boundary);
-//        }
-//#else
-//        printf("Need metis package to partition\n");
-//#endif
-//        return(0);
-//    }
-//    
+    
+    if (Partition) {
+#ifdef METIS
+        class tet_mesh zx;
+        int p;
+        std::string fname;
+        ostringstream nstr;
+        std::cout << "input # of partitions" << std::endl;
+        std::cin >> p;
+		tet_mesh::filetype in = static_cast<tet_mesh::filetype>(4);//temp fixme
+		tet_mesh::filetype out = static_cast<tet_mesh::filetype>(4);//temp fixme
+
+        zx.input(argv[1],in,1.0,bdrymap);
+        zx.setpartition(p);
+        Array<tet_mesh,1> zpart(p);
+        
+        for(int i=0;i<p;++i) {
+            nstr << i << std::flush;
+            fname = argv[1] +nstr.str();
+            nstr.str("");
+            zpart(i).partition(zx,i);
+            zpart(i).output(fname,out);
+            //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
+        }
+#else
+        printf("Need metis package to partition\n");
+#endif
+        return(0);
+    }
+    
 //    if (Coarsen_Marks) {
 //        class tet_mesh zx;
 //        

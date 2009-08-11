@@ -537,6 +537,9 @@ void epartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int
 	}                    
 }
 
+
+
+
 /********************/
 /* FACE FUNCTIONS */
 /********************/
@@ -668,7 +671,7 @@ void fcomm::pfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 	bool reload = comm_finish(grp,phi,type,op);
 	if (!reload) return;
 	
-	*x.gbl->log << "I am here " << idprefix << ' ' << grp << ' ' << phi << ' ' << bgn << ' ' << end << ' ' << stride << std::endl;
+//	*x.gbl->log << "I am here " << idprefix << ' ' << grp << ' ' << phi << ' ' << bgn << ' ' << end << ' ' << stride << std::endl;
 
 	count = 0;
 	for(j=0;j<npnt;++j) {
@@ -823,7 +826,65 @@ void fcomm::match_numbering(int step) {
 	return;
 }
 		
-			
+void fpartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
+	int i,j,k,p0;
+	cout << "fpartition::mgconnect being called and doesnt work" << endl;
+	
+	//	/* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
+	//	/* MAKE SURE ENDPOINTS ARE OK */
+	//	i = x.seg(seg(0).gindx).pnt(0);
+	//	if (cnnct(i).tet < 0) {
+	//		tgt.otree.nearpt(x.pnts(i).data(),p0);
+	//		cnnct(i).tet=tgt.pnt(p0).tet;
+	//		for(j=0;j<4;++j) {
+	//			cnnct(i).wt(j) = 0.0;
+	//			if (tgt.tet(cnnct(i).tet).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
+	//		}
+	//	}
+	//	i = x.seg(seg(nseg-1).gindx).pnt(1);
+	//	if (cnnct(i).tet < 0) {
+	//		tgt.otree.nearpt(x.pnts(i).data(),p0);
+	//		cnnct(i).tet=tgt.pnt(p0).tet;
+	//		for(j=0;j<3;++j) {
+	//			cnnct(i).wt(j) = 0.0;
+	//			if (tgt.tet(cnnct(i).tet).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
+	//		}
+	//	}
+	//	
+	//	if (first) {
+	//		sndsize() = 0;
+	//		sndtype() = int_msg;
+	//		for(k=1;k<nseg;++k) {
+	//			p0 = x.seg(seg(k).gindx).pnt(0);
+	//			if (cnnct(p0).tet > 0) {
+	//				isndbuf(sndsize()++) = -1;
+	//			}
+	//			else {
+	//				isndbuf(sndsize()++) = +1;
+	//				cnnct(p0).tet = 0;
+	//				for(j=0;j<3;++j)
+	//					cnnct(p0).wt(j) = 0.0;
+	//			}
+	//		}
+	//	}
+	//	
+	//	comm_prepare(boundary::all,0,slave_master); 
+	//	comm_exchange(boundary::all,0,slave_master);
+	//	comm_wait(boundary::all,0,slave_master);
+	//	
+	//	if (!first) {
+	//		i = 0;
+	//		for(k=nseg-1;k>0;--k) {
+	//			p0 = x.seg(seg(k).gindx).pnt(1);
+	//			if (ircvbuf(0,i) < 0) {
+	//				cnnct(p0).tet = 0;
+	//				for(j=0;j<3;++j)
+	//					cnnct(p0).wt(j) = 0.0;
+	//			}
+	//		}
+	//	}                    
+}
+
 			
 
 

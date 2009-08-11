@@ -140,6 +140,26 @@ FLT tet_mesh::intet(int tind, const TinyVector<FLT,3> &xp) {
 	return(fabs(tet_wgt(0)) +fabs(tet_wgt(1)) +fabs(tet_wgt(2))+fabs(tet_wgt(3)) - (tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3)));
 }
 
+int tet_mesh::facematch(TinyVector<int,3> v1, TinyVector<int,3> v2) {
+	/* Proof by Michael Felland Clarkson University 8/1/07
+	 Face matching algorithm: The only way to match is if both sets are identical. 
+	 Let a be the common value--call the sets {a,b,c} and {a,d,e}.  You want a*b*c=a*d*e 
+	 and a+b+c=a+d+e; a is not 0.  This means b*c=d*e and b+c=d+e.  Since the sums are the 
+	 same, one of the two pairs of values must lie between the other--say b<d<e<c. If m
+	 is the common mean value, m=(b+c)/2=(d+e)/2, then there are x and y so that
+	 d=m-x,e=m+x,b=m-y,c=m+y with x<y.  d*e = m^2-x^2 > m^2-y^2 = b*c (this is if
+	 all are positive or all negative--cases where some are negative can be also handled). */
+	
+	int lcl0;
+	long lcl1,lcl2;
+	
+	lcl0=v1(0)+v1(1)+v1(2);
+	lcl1=(v1(0)+1)*(v1(1)+1)*(v1(2)+1);
+	lcl2=fabs(lcl0-v2(0)-v2(1)-v2(2));
+	lcl2+=fabs(lcl1-(v2(0)+1)*(v2(1)+1)*(v2(2)+1));	
+	
+	return(lcl2);
+}
 
 /* RETURNS WEIGHTS FROM INTRI FUNCTION */
 void tet_mesh::getwgts(TinyVector<FLT,4> &wt) const {
