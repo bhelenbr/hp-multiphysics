@@ -20,7 +20,7 @@
 //#define LVLSET
 //#define EXPLICIT
 
-//#define POD
+#define POD
 
 #ifdef CD
 #include "cd/tri_hp_cd.h"

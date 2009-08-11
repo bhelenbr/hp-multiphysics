@@ -206,7 +206,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
-		for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
+		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
 	for (int k = 0; k < nmodes; ++k) {
@@ -215,12 +215,12 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 				rsdls(k) += modes(k).v(i,n)*BASE::gbl->res.v(i,n);
 
 		for(int i=0; i<BASE::nseg;++i)
-			for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
+			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).s(i,sm,n)*BASE::gbl->res.s(i,sm,n);
 
 		for(int i=0; i<BASE::ntri;++i)
-			for(int im=0;im<basis::tri(BASE::log2p).im;++im)
+			for(int im=0;im<basis::tri(BASE::log2p)->im();++im)
 				for(int n=0;n<BASE::NV;++n)
 					rsdls(k) += modes(k).i(i,im,n)*BASE::gbl->res.i(i,im,n);
 
@@ -278,7 +278,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 		/* APPLY DIRCHLET B.C.S TO MODE */
 		for(int i=0;i<BASE::nebd;++i)
-			for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
+			for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 				BASE::hp_ebdry(i)->sdirichlet(sm);
 
 		BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1)) +BASE::gbl->res.v(Range(0,BASE::npnt-1));
@@ -403,7 +403,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int i=0;i<BASE::nebd;++i)
-		for(int sm=0;sm<basis::tri(BASE::log2p).sm;++sm)
+		for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
 			BASE::hp_ebdry(i)->sdirichlet(sm);
 
 

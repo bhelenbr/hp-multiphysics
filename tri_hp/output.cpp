@@ -479,9 +479,14 @@ void tri_hp::input(const std::string& fname) {
 				for (j=0;j<npnt;++j) {
 					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
 					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
+					std::cout << vrtxbd(i)(j)(0) << ' ' << pnts(j)(0) << std::endl;
 				}
 				bin.close();
 			}
+		}
+		else {
+			for(i=1;i<gbl->nadapt;++i)
+				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 		}
 
 
@@ -516,6 +521,10 @@ void tri_hp::input(const std::string& fname) {
 				}
 				fin.close();
 			}
+		}
+		else {
+			for(i=1;i<gbl->nadapt;++i)
+				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 		}
 
 
