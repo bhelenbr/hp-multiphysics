@@ -21,7 +21,7 @@ static GBool Coarsen_hp = gFalse;
 static GBool Refineby2 = gFalse;
 static GBool Partition = gFalse;
 static GBool Format = gFalse;
-static GBool Coarsen_Marks = gFalse;
+static GBool Coarsenby2 = gFalse;
 static GBool Symmetrize = gFalse;
 static GBool Cut = gFalse;
 static GBool Vlngth = gFalse;
@@ -40,8 +40,8 @@ static ArgDesc argDesc[] = {
 	"print usage information"},
   {"-help",    argFlag,      &printHelp,      0,
 	"print usage information"},
-  {"-c",        argFlag,      &Coarsen_hp,      0,
-	"coarsen substructured mesh"},
+	{"-c"  ,argFlag,     &Coarsenby2,            0,
+	"Coarsen mesh by factor of 2"},
   {"-r",        argFlag,      &Refineby2,             0,
 	"refine mesh by 2"},
   {"-i",        argInt,      &informat,          0,
@@ -52,8 +52,8 @@ static ArgDesc argDesc[] = {
 	"partition mesh"},
   {"-x"  ,argFlag,     &Format,            0,
 	"change format"},
-  {"-l"  ,argFlag,     &Coarsen_Marks,            0,
-	"Coarsen vertices based on list of marks"},
+  {"-l",        argFlag,      &Coarsen_hp,      0,
+	"coarsen substructured mesh"},
   {"-y"  ,argFlag,     &Symmetrize,            0,
 	"Make mesh symmetric about y = 0"},
   {"-z"  ,argFlag,     &Cut,            0,
@@ -221,25 +221,42 @@ int main(int argc, char *argv[]) {
 #endif
 		return(0);
 	}
-
-	if (Coarsen_Marks) {
-		class tri_mesh zx;
+	
+	if (Coarsenby2) {
+		class tri_mesh zx,zy;
 
 		zx.input(argv[1],in,1.0,bdrymap);
-		FILE *fp = fopen(argv[3],"r");
-
+		
 		for(int i=0;i<zx.npnt;++i) {
-			fscanf(fp,"%d\n",&zx.pnt(i).info);
-			zx.pnt(i).info = 1-zx.pnt(i).info;
+			zx.lngth(i) *= 2.0;
 		}
 		clock();
-		zx.coarsen3();
+		zy.coarsen(1.6,zx);
 		cpu_time = clock();
 		std::cout << "that took " << cpu_time << " cpu time" << std::endl;
 
-		zx.output(argv[2],out);
+		zy.output(argv[2],out);
 		return(0);
 	}
+	
+//	if (Coarsen_Marks) {
+//		class tri_mesh zx;
+//
+//		zx.input(argv[1],in,1.0,bdrymap);
+//		FILE *fp = fopen(argv[3],"r");
+//
+//		for(int i=0;i<zx.npnt;++i) {
+//			fscanf(fp,"%d\n",&zx.pnt(i).info);
+//			zx.pnt(i).info = 1-zx.pnt(i).info;
+//		}
+//		clock();
+//		zx.coarsen3();
+//		cpu_time = clock();
+//		std::cout << "that took " << cpu_time << " cpu time" << std::endl;
+//
+//		zx.output(argv[2],out);
+//		return(0);
+//	}
 
 
 	if (argc == 2) {

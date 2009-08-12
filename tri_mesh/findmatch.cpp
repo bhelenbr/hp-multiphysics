@@ -260,6 +260,27 @@ void tri_mesh::setpartition(int nparts) {
 		tri(i).info = gbl->intwk(i);
 
 	gbl->intwk = -1;
+	
+	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
+	for(int i=0;i<ntri;++i) {
+		for(int j=0;j<3;++j) {
+			int tind = tri(i).tri(j);
+			if (tind > -1) 
+				if (tri(i).info == tri(tind).info) goto next;
+		}
+		
+		std::cout << "#reassigning problem triangle " << i << '\n';
+		for(int j=0;j<3;++j) {
+			int tind = tri(i).tri(j);
+			if (tind > -1) {
+				tri(i).info = tri(tind).info;
+				break;
+			}
+		}	
+		
+		next:;
+	}
+		
 
 	return;
 }
@@ -270,12 +291,10 @@ void tri_mesh::setpartition(int nparts) {
 /* pnt(pind).info = new pnt index or -1 */
 /* THE NEW MESH STORES */
 /* pnt(sind).info = old pnt index */
-/* seg(sind).info = old side index */
-/* tri(tind).info = old tri index */
 void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	int i,j,n,tind,sind,p0,indx;
 	Array<int,2> bcntr(xin.nebd +10,2);
-	int bnum,bel,match;
+	int bnum,match;
 	
 	/* TO CREATE UNIQUE EDGE NUMBERS */
 	int maxenum = 0;
@@ -328,8 +347,6 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			xin.pnt(i).info = npnt;
 			++npnt;
 		}
-		else
-			xin.pnt(i).info = -1;
 	}
 
 	/* FILL IN TRI ARRAY */
@@ -350,10 +367,13 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 		/* tri number in old mesh */
 		tind = tri(seg(i).tri(0)).info;
 		
+		/* find first point of side */
 		p0 = seg(i).pnt(0);
 		for(n=0;n<3;++n)
 			if (xin.pnt(xin.tri(tind).pnt(n)).info == p0) break;
 		if (n==3) *gbl->log << "error in partitioning\n";
+		
+		// Rotate 2 to get side number
 		n = (n+2)%3;
 		
 		/* store seg number in old mesh */
@@ -364,7 +384,6 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			if (indx < 0) {
 				/* BOUNDARY SIDE */
 				bnum = getbdrynum(indx);
-				bel = getbdryseg(indx);
 
 				for (j = 0; j <nebd;++j) {
 					if (bnum == bcntr(j,0)) {
