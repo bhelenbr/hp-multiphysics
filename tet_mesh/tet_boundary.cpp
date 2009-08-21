@@ -291,6 +291,7 @@ void edge_bdry::reorder() {
 			 int v0 = x.seg(sind).pnt(0);
 			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
 			 x.seg(sind).pnt(1) = v0;
+			 //x.switch_edge_sign(sind);
 		 }
 	 }
 	 
@@ -306,6 +307,7 @@ void edge_bdry::reorder() {
 			 int v0 = x.seg(sind).pnt(0);
 			 x.seg(sind).pnt(0) = x.seg(sind).pnt(1);
 			 x.seg(sind).pnt(1) = v0;
+			 //x.switch_edge_sign(sind);
 		 }
 		 ++count;
 		 indx = next;

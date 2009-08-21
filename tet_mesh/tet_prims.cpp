@@ -134,7 +134,7 @@ FLT tet_mesh::intet(int tind, const TinyVector<FLT,3> &xp) {
 	/* FIND VOLUME OF TET CREATED FROM A FACE OF ORIGINAL TET AND A POINT */
 	for(int i = 0; i < 4; ++i){
 		/* CALCULATE VOLUME */
-		tet_wgt(i) = tet(tind).rot(i)*volume(xp,tet(tind).tri(i)); 
+		tet_wgt(i) = -tet(tind).rot(i)*volume(xp,tet(tind).tri(i)); 
 	}
 	
 	return(fabs(tet_wgt(0)) +fabs(tet_wgt(1)) +fabs(tet_wgt(2))+fabs(tet_wgt(3)) - (tet_wgt(0) +tet_wgt(1) +tet_wgt(2)+tet_wgt(3)));
@@ -295,6 +295,36 @@ void tet_mesh::ring(int eind){
 	
 	for(i = 0; i < nbor; ++i) {    
 		gbl->i1wk(gbl->i2wk(i))=-1; // reset i1wk to -1
+	}
+	return;
+}
+
+
+void tet_mesh::switch_edge_sign(int eind){
+	int i,j,k,tind,find,sind;
+	int nbor = seg(eind).nnbor; 
+	
+	ring(eind);
+	
+	for(i = 0; i < nbor; ++i){
+		tind = gbl->i2wk(i);
+		for(j=0;j<6;++j){
+			sind=tet(tind).seg(j);
+			if(eind == sind){
+				tet(tind).sgn(j) *= -1;
+				//break;
+			}
+		}
+		for(j=0;j<4;++j){
+			find = tet(tind).tri(j);
+			for(k=0;k<3;++k){
+				sind = tri(find).seg(k);
+				if(eind == sind){
+					tri(find).sgn(k) *= -1;
+					//break;
+				}	
+			}
+		}
 	}
 	return;
 }

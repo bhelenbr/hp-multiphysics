@@ -10,8 +10,8 @@
 
 using namespace std;
 
-static int informat = 3;
-static int outformat = 3;
+static int informat = 4;
+static int outformat = 4;
 static GBool Generate = gFalse;
 static GBool Shift = gFalse;
 static GBool Scale = gFalse;
@@ -208,8 +208,6 @@ int main(int argc, char *argv[]) {
         ostringstream nstr;
         std::cout << "input # of partitions" << std::endl;
         std::cin >> p;
-		tet_mesh::filetype in = static_cast<tet_mesh::filetype>(4);//temp fixme
-		tet_mesh::filetype out = static_cast<tet_mesh::filetype>(4);//temp fixme
 
         zx.input(argv[1],in,1.0,bdrymap);
         zx.setpartition(p);
@@ -220,6 +218,7 @@ int main(int argc, char *argv[]) {
             fname = argv[1] +nstr.str();
             nstr.str("");
             zpart(i).partition(zx,i);
+			zpart(i).checkintegrity();
             zpart(i).output(fname,out);
             //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
         }

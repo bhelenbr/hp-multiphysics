@@ -202,7 +202,11 @@ void face_bdry::create_seg_from_tri(void) {
 			while (sind >= 0) {
 				if (maxv == seg(sind).pnt(order)) {
 					if (seg(sind).tri(1) >= 0) {
-						*x.gbl->log << "Error: side " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
+						*x.gbl->log << "Error: side " << sind << " has been matched with Triangle " << tind << " 3 times" << std::endl;  
+						*x.gbl->log << "tets "<< x.tri(tri(tind).gindx).tet(0) << ' ' << x.tri(tri(tind).gindx).tet(1)<< " pnts "<< x.pnts(x.tri(tri(tind).gindx).pnt(0)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(1)) << ' ' << x.pnts(x.tri(tri(tind).gindx).pnt(2))<<std::endl;  
+
+						x.output("error");
+						exit(1);
 					}
 					else {
 						seg(sind).tri(1) = tind;
@@ -245,7 +249,7 @@ void face_bdry::match_tri_and_seg(void) {
 		pnt(i).info = -1;
 		
 	for(i=0;i<nseg;++i) {
-		v1 = seg(i).pnt(0);
+		v1 = seg(i).pnt(0);//fix me temp switch these to be consistent?
 		v2 = seg(i).pnt(1);
 		minv = (v1 < v2 ? v1 : v2);
 		seg(i).info = -1;
