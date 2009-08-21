@@ -422,7 +422,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 				/* FACES */
 				k = 0;
 				indx = tet(tind).tri(0);
-				rot = tet(tind).rot(0);
+				rot = -tet(tind).rot(0);
 				if (rot == -1){
 					for(i=1;i<basis::tet(log2p).em;++i) { 
 						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
@@ -442,7 +442,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 				
 				k = 0;
 				indx = tet(tind).tri(1);
-				rot = tet(tind).rot(1);
+				rot = -tet(tind).rot(1);
 				if(rot == 1){
 					for(i=1;i<basis::tet(log2p).em;++i) {
 						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
@@ -462,7 +462,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 
 				k = 0;
 				indx = tet(tind).tri(2);
-				rot = tet(tind).rot(2);
+				rot = -tet(tind).rot(2);
 				if (rot == 1){
 					for(i=1;i<basis::tet(log2p).em;++i) {
 						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {
@@ -482,7 +482,7 @@ void tet_hp::output(const std::string& fname, filetype typ, int tlvl) {
 
 				k = 0;
 				indx = tet(tind).tri(3);
-				rot = tet(tind).rot(3);
+				rot = -tet(tind).rot(3);
 				if (rot == -1){
 					for(i=1;i<basis::tet(log2p).em;++i) {
 						for(j=1;j<basis::tet(log2p).em-(i-1);++j) {

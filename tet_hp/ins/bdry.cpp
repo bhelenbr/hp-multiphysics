@@ -40,7 +40,7 @@ void neumann::rsdl(int stage) {
 					vec1(n)=x.dcrd2d(n)(0)(j)(k);
 					vec2(n)=x.dcrd2d(n)(1)(j)(k);
 				}
-				nrm=-cross(vec1,vec2);
+				nrm=cross(vec1,vec2);
 				
 //				cout << "nrm1 = " << nrm << endl;
 //				nrm(0) = x.dcrd2d(1)(0)(j)(k)*x.dcrd2d(2)(1)(j)(k)-x.dcrd2d(2)(0)(j)(k)*x.dcrd2d(1)(1)(j)(k);

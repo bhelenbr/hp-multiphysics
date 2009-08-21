@@ -106,7 +106,7 @@ void tet_hp::minvrt() {
 			/* faces */
 			for(i=0;i<4;++i) {
 				find = tet(tind).tri(i);
-				sgn  = tet(tind).rot(i);
+				sgn  = -tet(tind).rot(i);
 				for(j=0;j<4;++j) {
 					msgn = 1;
 					ind = 0;
@@ -195,20 +195,19 @@ void tet_hp::minvrt() {
 	if(basis::tet(log2p).p == 2) {
 		basis::tet(log2p).ediag(0) = diagcoef*80.0;//157
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
+		
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			sc0load(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+			smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+			last_phase = true;
+			last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+		}
 	}
 	
 	if(basis::tet(log2p).p == 3) {
 		basis::tet(log2p).ediag(1) = diagcoef*1000.0;//1890 optimize later
 		basis::tet(log2p).fdiag(0) = diagcoef*3000.0;//5670
 	}
-	
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		sc0load(mp_phase,gbl->res.e.data(),0,basis::tet(log2p).em-1,gbl->res.e.extent(secondDim));
-		smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
-		last_phase = true;
-		last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,basis::tet(log2p).em-1,gbl->res.e.extent(secondDim));
-	}
-
 	
 	/* APPLY EDGE DIRICHLET B.C.'S */
     for(i=0;i<nfbd;++i)
@@ -241,7 +240,7 @@ void tet_hp::minvrt() {
 				/* faces */
 				for(i=0;i<4;++i) {
 					find = tet(tind).tri(i);
-					sgn  = tet(tind).rot(i);
+					sgn  = -tet(tind).rot(i);
 					for(j=0;j<6;++j) {
 						msgn = 1;
 						ind = 0;
@@ -270,7 +269,21 @@ void tet_hp::minvrt() {
 		if (gbl->diagonal_preconditioner) {
 			gbl->res.e(Range(0,nseg-1),1,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(1);
 		}
-			
+		
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			sc0load(mp_phase,gbl->res.e.data(),0,basis::tet(log2p).em-1,gbl->res.e.extent(secondDim));
+			smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+			last_phase = true;
+			last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,basis::tet(log2p).em-1,gbl->res.e.extent(secondDim));
+		}
+		
+		/* APPLY EDGE DIRICHLET B.C.'S */
+		for(i=0;i<nfbd;++i)
+			hp_fbdry(i)->edirichlet();	
+		
+		for (i=0;i<nebd;++i) 
+			hp_ebdry(i)->edirichlet3d();
+		
 		for(tind=0;tind<ntet;++tind) {         
 			if (gbl->diagonal_preconditioner) { 
 				for(i=0;i<6;++i) {
@@ -282,7 +295,7 @@ void tet_hp::minvrt() {
 				//faces
 				for(i=0;i<4;++i) {
 					find = tet(tind).tri(i);
-					sgn  = tet(tind).rot(i);
+					sgn  = -tet(tind).rot(i);
 					for(j=0;j<6;++j) {
 						msgn = 1;
 						ind = 0;
@@ -300,13 +313,6 @@ void tet_hp::minvrt() {
 		}
 	}
 	
-	/* APPLY EDGE DIRICHLET B.C.'S */
-    for(i=0;i<nfbd;++i)
-        hp_fbdry(i)->edirichlet();	
-	
-	for (i=0;i<nebd;++i) 
-		hp_ebdry(i)->edirichlet3d();
-	
 	/* ALL HIGH ORDER MODES */
 	/* LOOP THROUGH EDGES */	         
 	if (basis::tet(log2p).fm > 0){
@@ -319,7 +325,7 @@ void tet_hp::minvrt() {
 		}
 		
 		tc0load(gbl->res.f.data(),0,basis::tet(log2p).fm-1,gbl->res.f.extent(secondDim));
-		tmsgpass(boundary::all,mp_phase,boundary::symmetric);
+		tmsgpass(boundary::all,0,boundary::symmetric);
 		tc0wait_rcv(gbl->res.f.data(),0,basis::tet(log2p).fm-1,gbl->res.f.extent(secondDim));
 		
 		for(i=0;i<nfbd;++i)
@@ -619,10 +625,10 @@ void tet_hp::minvrt_test() {
 		cout << hmin << ' ' << hmax << ' ' << havg/ntet << endl;
 		
 		
-#ifndef NODAL	
+	#ifndef NODAL	
 	if(basis::tet(log2p).p > 2)
 		spoke();
-#endif
+	#endif
 		
 	setup_preconditioner();
 

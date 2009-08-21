@@ -56,15 +56,11 @@ void tet_hp_ins::setup_preconditioner() {
 			havg+=hmax;
 			qmax = 0.0;
 			for(j=0;j<4;++j) {
-				v0 = v(j);
-//				cout << "v0 = "<< v0 << " pnts = " << pnts(v0) << " vrtxbd = " << vrtxbd(1)(v0) << endl;
-//				cout << "ug.v = " << ug.v(v0,0) << ' ' << ug.v(v0,1) << ' ' << ug.v(v0,2) << endl;
-				q = pow(ug.v(v0,0)-0.5*(gbl->bd(0)*(pnts(v0)(0) -vrtxbd(1)(v0)(0))),2.0) 
-					+pow(ug.v(v0,1)-0.5*(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0)  
-					+pow(ug.v(v0,2)-0.5*(gbl->bd(0)*(pnts(v0)(2) -vrtxbd(1)(v0)(2))),2.0);
+				q = pow(ug.v(v(j),0)-0.5*(gbl->bd(0)*(pnts(v(j))(0) -vrtxbd(1)(v(j))(0))),2.0) 
+					+pow(ug.v(v(j),1)-0.5*(gbl->bd(0)*(pnts(v(j))(1) -vrtxbd(1)(v(j))(1))),2.0)  
+					+pow(ug.v(v(j),2)-0.5*(gbl->bd(0)*(pnts(v(j))(2) -vrtxbd(1)(v(j))(2))),2.0);
 				qmax = MAX(qmax,q);
 			}
-//			cout << "qmax = " << qmax << endl;
 			if (!(jcb > 0.0)) { 
 				*gbl->log << "negative tetrahedral volume caught in tstep. Problem tet is : " << tind << std::endl;
 				*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1)<< ' ' << pnts(v(0))(2) << std::endl;
@@ -94,7 +90,7 @@ void tet_hp_ins::setup_preconditioner() {
 			/* SET UP DIAGONAL PRECONDITIONER */
 			// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
 			jcb *= 2.*nu*(1./(h*h) +1./(h*h)+1./(h*h)) +3*lam1/h;  // heuristically tuned
-
+#else
 			gam = pow(2.*nu/hmax,2); 
 			lam1 = sqrt(gam);
 			/* SET UP DISSIPATIVE COEFFICIENTS */

@@ -399,7 +399,7 @@ tet_hp::~tet_hp() {
 /* tet.info marked with 0/-1 */
 
 void tet_hp::setinfo() {
-	int i,sind;
+	int i,j,sind;
 	
 	/* SET UP VRTX BC INFORMATION FOR OUTPUT */
 	for(i=0;i<npnt;++i)
@@ -417,6 +417,12 @@ void tet_hp::setinfo() {
 
 	for(i=0;i<nvbd;++i)
 		pnt(vbdry(i)->pnt).info = i;
+//	for(i=0;i<nebd;++i)
+//		for(j=0;j<ebdry(i)->nseg;++j)
+//			seg(ebdry(i)->seg(j).gindx).info = i;
+//	for(i=0;i<nfbd;++i)
+//		for(j=0;j<fbdry(i)->ntri;++j)
+//			tri(fbdry(i)->tri(j).gindx).info = i;
 	
 //   if (log2p > 0) {  // FIXME
 //      for(i=0;i<nfbd;++i) {

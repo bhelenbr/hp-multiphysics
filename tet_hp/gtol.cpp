@@ -47,7 +47,7 @@ void tet_hp::ugtouht(int tind) {
 	if (basis::tet(log2p).fm > 0) {
 		for(int i = 0; i < 4; ++i) { 
 			find = tet(tind).tri(i);
-			sign = tet(tind).rot(i);
+			sign = -tet(tind).rot(i);
 			msgn = 1;
 			indx = 0;
 			for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
@@ -118,7 +118,7 @@ void tet_hp::ugtouht(int tind, int tlvl) {
 	if (basis::tet(log2p).fm > 0) {
 		for(int i = 0; i < 4; ++i) { 
 			find = tet(tind).tri(i);
-			sign = tet(tind).rot(i);
+			sign = -tet(tind).rot(i);
 			msgn = 1;
 			indx = 0;
 			for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
@@ -184,7 +184,7 @@ void tet_hp::ugtouht_bdry(int tind) {
 	if (basis::tet(log2p).fm > 0) {
 		for(int i = 0; i < 4; ++i) { 
 			find = tet(tind).tri(i);
-			sign = tet(tind).rot(i);
+			sign = -tet(tind).rot(i);
 			msgn = 1;
 			indx = 0;
 			for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
@@ -235,7 +235,7 @@ void tet_hp::ugtouht_bdry(int tind, int tlvl) {
 	if (basis::tet(log2p).fm > 0) {
 		for(int i = 0; i < 4; ++i) { 
 			find = tet(tind).tri(i);
-			sign = tet(tind).rot(i);		
+			sign = -tet(tind).rot(i);		
 			msgn = 1;
 			indx = 0;
 			for(m = 1; m <= basis::tet(log2p).em-1; ++m) {
@@ -466,7 +466,7 @@ void tet_hp::crdtocht(int tind) {
 		}
 		else {
 			bnum = getbdrynum(seg(eind).info);
-			indx = getbdryseg(seg(eind).info);
+			indx = getbdryel(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);/// temporary fix crde(indx,m,n)
@@ -489,7 +489,7 @@ void tet_hp::crdtocht(int tind) {
 		}
 		else {
 			bnum = getbdrynum(tri(find).tet(1));
-			indx = getbdryseg(tri(find).tet(1));
+			indx = getbdryel(tri(find).tet(1));
 			for(m = 0; m < basis::tet(log2p).fm; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_fbdry(bnum)->crdf(indx,m,n);/// temporary fix crdf(indx,m,n)
@@ -527,7 +527,7 @@ void tet_hp::crdtocht(int tind, int tlvl) {
 		}
 		else {
 			bnum = getbdrynum(seg(eind).info);
-			indx = getbdryseg(seg(eind).info);
+			indx = getbdryel(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);/// fix crdebd(tlvl,indx,m,n)
@@ -551,7 +551,7 @@ void tet_hp::crdtocht(int tind, int tlvl) {
 		}
 		else {
 			bnum = getbdrynum(tri(find).tet(1));
-			indx = getbdryseg(tri(find).tet(1));
+			indx = getbdryel(tri(find).tet(1));
 			for(m = 0; m < basis::tet(log2p).fm; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_fbdry(bnum)->crdfbd(tlvl,indx,m,n);/// fix crdf(indx,m,n)
@@ -589,7 +589,7 @@ void tet_hp::crdtocht2d(int find){
 		}
 		else {
 			bnum = getbdrynum(seg(eind).info);
-			indx = getbdryseg(seg(eind).info);
+			indx = getbdryel(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_ebdry(bnum)->crde(indx,m,n);/// fix crde(indx,m,n)
@@ -630,7 +630,7 @@ void tet_hp::crdtocht2d(int find, int tlvl) {
 		}
 		else {
 			bnum = getbdrynum(seg(eind).info);
-			indx = getbdryseg(seg(eind).info);
+			indx = getbdryel(seg(eind).info);
 			for(m = 0; m < basis::tet(log2p).em; ++m) {
 				for(n = 0; n < ND; ++n)
 					cht(n)(cnt) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);/// fix crde(indx,m,n)
@@ -660,7 +660,7 @@ void tet_hp::crdtocht1d(int eind) {
 	}
 	else {
 		bnum = getbdrynum(seg(eind).info);
-		indx = getbdryseg(seg(eind).info);      
+		indx = getbdryel(seg(eind).info);      
 		for(m=0;m<basis::tet(log2p).em;++m)
 			for(n=0;n<ND;++n) 
 				cht(n)(m+2) = hp_ebdry(bnum)->crde(indx,m,n);     
@@ -688,7 +688,7 @@ void tet_hp::crdtocht1d(int eind,int tlvl) {
 	}
 	else {
 		bnum = getbdrynum(seg(eind).info);
-		indx = getbdryseg(seg(eind).info);      
+		indx = getbdryel(seg(eind).info);      
 		for(m=0;m<basis::tet(log2p).em;++m)
 			for(n=0;n<ND;++n) 
 				cht(n)(m+2) = hp_ebdry(bnum)->crdebd(tlvl,indx,m,n);     
@@ -728,7 +728,7 @@ void tet_hp::lftog(int tind, struct vefi g) {
 	/* FACE MODES */
 	if (basis::tet(log2p).p > 2) {
 		for(i = 0; i < 4; ++i){
-			sgn = tet(tind).rot(i);
+			sgn = -tet(tind).rot(i);
 			find = tet(tind).tri(i);
 			gindx = 0;
 			msgn = 1;		
@@ -798,7 +798,7 @@ void tet_hp::lftog(int tind, struct vefi g) {
 	/* FACE MODES */
 	if (basis::tet(log2p).p > 2) {
 		for(i = 0; i < 4; ++i){
-			sgn = tet(tind).rot(i);
+			sgn = -tet(tind).rot(i);
 			find = tet(tind).tri(i);
 			gindx = 0;
 			msgn = 1;		
