@@ -707,12 +707,12 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				for (j = 0; j <nfbd;++j) {
 					if (bnum == bcntr(j,0)) {
 						++bcntr(j,1);
-						tri(i).tet(1) = tetnumatbdry(j,0);
+						tri(i).tet(1) = numatbdry(j,0);
 						goto next1;
 					}
 				}
 				/* NEW TRI */
-				tri(i).tet(1) = tetnumatbdry(nfbd, 0);
+				tri(i).tet(1) = numatbdry(nfbd, 0);
 				bcntr(nfbd,0) = bnum;
 				bcntr(nfbd++,1) = 1;
 			}
@@ -724,12 +724,12 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				for (j = 0; j <nfbd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
-						tri(i).tet(1) = tetnumatbdry(j,match);
+						tri(i).tet(1) = numatbdry(j,match);
 						goto next1;
 					}
 				}
 				/* NEW FACE */
-				tri(i).tet(1) = tetnumatbdry(nfbd,match);
+				tri(i).tet(1) = numatbdry(nfbd,match);
 				bcntr(nfbd,0) = -bnum;
 				bcntr(nfbd++,1) = 1;
 			}
@@ -796,7 +796,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		if (fbdry(i)->mytype == "partition") {
 			/* Now that all independent fbdry sides are determined give new numbers to partitions */
 			tind = fbdry(i)->tri(0).gindx;
-			match = getbdrytri(tri(tind).tet(1));
+			match = getbdryel(tri(tind).tet(1));
 			if (npart < match) {
 				int newid = tri(fbdry(i)->tri(0).gindx).info +maxfnum;
 				ostringstream nstr;
