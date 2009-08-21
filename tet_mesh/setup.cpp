@@ -122,10 +122,7 @@ void tet_mesh::create_seg_from_tet(void) {
 	for(i=0;i<npnt;++i){
 		pnt(i).info = -1;
 	}
-	for(i=0;i<nseg;++i){
-		seg(i).nnbor = 0;
-	}
-
+ 
 	vs(0,0)=2, vs(0,1)=3; 
 	vs(1,0)=3, vs(1,1)=1; 
 	vs(2,0)=2, vs(2,1)=1;
@@ -166,7 +163,7 @@ void tet_mesh::create_seg_from_tet(void) {
 			/* create new seg    */        
 			seg(ne).tet = tind;       // one tet connected to an seg
 			tet(tind).seg(i)=ne;     // 6 edges connected to a tet
-			++seg(ne).nnbor;          // number of neighbors surrounding an seg
+			seg(ne).nnbor=1;          // number of neighbors surrounding an seg
 			seg(ne).pnt=v;           // two vertex attached to seg
 			seg(ne).info=-1;
 			tet(tind).sgn(i) = 1;
@@ -271,10 +268,10 @@ void tet_mesh::create_tri_from_tet(void) {
 	TinyMatrix<int,4,3> vf;
 	TinyVector<int,3> v,a;
 
-	vf(0,0)=1, vf(0,1)=2, vf(0,2)=3;
-	vf(1,0)=0, vf(1,1)=3, vf(1,2)=2;
-	vf(2,0)=0, vf(2,1)=1, vf(2,2)=3;
-	vf(3,0)=0, vf(3,1)=2, vf(3,2)=1; 
+	vf(0,0)=1, vf(0,2)=2, vf(0,1)=3;
+	vf(1,0)=0, vf(1,2)=3, vf(1,1)=2;
+	vf(2,0)=0, vf(2,2)=1, vf(2,1)=3;
+	vf(3,0)=0, vf(3,2)=2, vf(3,1)=1; 
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
@@ -346,11 +343,10 @@ void tet_mesh::match_tet_and_tri(void) {
 	TinyMatrix<int,4,3> vf;
 	TinyVector<int,3> v,a;
 
-	// may need rearrangment to correspond to my standard element
-	vf(0,0)=1, vf(0,1)=2, vf(0,2)=3;
-	vf(1,0)=0, vf(1,1)=3, vf(1,2)=2;
-	vf(2,0)=0, vf(2,1)=1, vf(2,2)=3;
-	vf(3,0)=0, vf(3,1)=2, vf(3,2)=1;  
+	vf(0,0)=1, vf(0,2)=2, vf(0,1)=3;
+	vf(1,0)=0, vf(1,2)=3, vf(1,1)=2;
+	vf(2,0)=0, vf(2,2)=1, vf(2,1)=3;
+	vf(3,0)=0, vf(3,2)=2, vf(3,1)=1;  
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
@@ -439,10 +435,10 @@ void tet_mesh::match_tri_and_seg(void){
 	TinyMatrix<int,3,2> vs;
 	TinyVector<int,3> v;
 
-	sf(0,0)=0, sf(0,1)=1, sf(0,2)=2;
-	sf(1,0)=0, sf(1,1)=4, sf(1,2)=5;
-	sf(2,0)=1, sf(2,1)=5, sf(2,2)=3;
-	sf(3,0)=2, sf(3,1)=3, sf(3,2)=4;
+	sf(0,0)=0, sf(0,2)=1, sf(0,1)=2;
+	sf(1,0)=0, sf(1,2)=4, sf(1,1)=5;
+	sf(2,0)=1, sf(2,2)=5, sf(2,1)=3;
+	sf(3,0)=2, sf(3,2)=3, sf(3,1)=4;
 
 	vs(0,0)=1, vs(0,1)=2;
 	vs(1,0)=2, vs(1,1)=0;

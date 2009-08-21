@@ -282,27 +282,27 @@ void tet_mesh::checkintegrity() {
 	
 	// vertices of each face on a tet
 	TinyMatrix<int,4,3> vf1;
-	vf1(0,0)=1, vf1(0,1)=2, vf1(0,2)=3;
-	vf1(1,0)=0, vf1(1,1)=3, vf1(1,2)=2;
-	vf1(2,0)=0, vf1(2,1)=1, vf1(2,2)=3;
-	vf1(3,0)=0, vf1(3,1)=2, vf1(3,2)=1;
+	vf1(0,0)=1, vf1(0,2)=2, vf1(0,1)=3;
+	vf1(1,0)=0, vf1(1,2)=3, vf1(1,1)=2;
+	vf1(2,0)=0, vf1(2,2)=1, vf1(2,1)=3;
+	vf1(3,0)=0, vf1(3,2)=2, vf1(3,1)=1;
 	TinyMatrix<int,4,3> vf2;
-	vf2(0,0)=1, vf2(0,2)=2, vf2(0,1)=3;
-	vf2(1,0)=0, vf2(1,2)=3, vf2(1,1)=2;
-	vf2(2,0)=0, vf2(2,2)=1, vf2(2,1)=3;
-	vf2(3,0)=0, vf2(3,2)=2, vf2(3,1)=1; 
+	vf2(0,0)=1, vf2(0,1)=2, vf2(0,2)=3;
+	vf2(1,0)=0, vf2(1,1)=3, vf2(1,2)=2;
+	vf2(2,0)=0, vf2(2,1)=1, vf2(2,2)=3;
+	vf2(3,0)=0, vf2(3,1)=2, vf2(3,2)=1; 
 	
 	// segments of each face on a tet
 	TinyMatrix<int,4,3> sf1;
-	sf1(0,0)=0, sf1(0,1)=1, sf1(0,2)=2;
-	sf1(1,0)=0, sf1(1,1)=4, sf1(1,2)=5;
-	sf1(2,0)=1, sf1(2,1)=5, sf1(2,2)=3;
-	sf1(3,0)=2, sf1(3,1)=3, sf1(3,2)=4;
+	sf1(0,0)=0, sf1(0,2)=1, sf1(0,1)=2;
+	sf1(1,0)=0, sf1(1,2)=4, sf1(1,1)=5;
+	sf1(2,0)=1, sf1(2,2)=5, sf1(2,1)=3;
+	sf1(3,0)=2, sf1(3,2)=3, sf1(3,1)=4;
 	TinyMatrix<int,4,3> sf2;
-	sf2(0,0)=0, sf2(0,2)=1, sf2(0,1)=2;
-	sf2(1,0)=0, sf2(1,2)=4, sf2(1,1)=5;
-	sf2(2,0)=1, sf2(2,2)=5, sf2(2,1)=3;
-	sf2(3,0)=2, sf2(3,2)=3, sf2(3,1)=4;
+	sf2(0,0)=0, sf2(0,1)=1, sf2(0,2)=2;
+	sf2(1,0)=0, sf2(1,1)=4, sf2(1,2)=5;
+	sf2(2,0)=1, sf2(2,1)=5, sf2(2,2)=3;
+	sf2(3,0)=2, sf2(3,1)=3, sf2(3,2)=4;
 	
 	// vertices of each segment on a tri
 	TinyMatrix<int,3,2> vst;
@@ -414,14 +414,14 @@ void tet_mesh::checkintegrity() {
 			sind = tri(find).seg(j);
 			if(tri(find).sgn(j) == 1){
 				if(tri(find).pnt(vst(j,0)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,1)) != seg(sind).pnt(1)){
-					*gbl->log << "seg vertex error type 1 "<< find << ' ' << j << ' ' << sind << endl;
+					*gbl->log << "seg vertex error type 3 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",easymesh);
 					exit(1);
 				}
 			}
 			else{
 				if(tri(find).pnt(vst(j,1)) != seg(sind).pnt(0) && tri(find).pnt(vst(j,0)) != seg(sind).pnt(1)){
-					*gbl->log << "seg vertex error type 2 "<< find << ' ' << j << ' ' << sind << endl;
+					*gbl->log << "seg vertex error type 4 "<< find << ' ' << j << ' ' << sind << endl;
 					output("error",easymesh);
 					exit(1);
 				}
