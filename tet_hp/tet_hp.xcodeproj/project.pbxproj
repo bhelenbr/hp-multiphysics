@@ -33,8 +33,10 @@
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		959FD36C0E313856000EF952 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
+		95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2D0F55C464008788DB /* length.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
 		95F027D60FD89C08000E9979 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
 		95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
@@ -343,6 +345,8 @@
 				95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */,
 				95F027D80FD89C0B000E9979 /* getnewibc.cpp in Sources */,
 				95F027D90FD89C0D000E9979 /* tstep.cpp in Sources */,
+				95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */,
+				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

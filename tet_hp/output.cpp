@@ -40,10 +40,10 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 		case(block::restart): {
 			namewdot = fname +".d";
 			for(i=0;i<gbl->nadapt;++i) {
-			nstr.str("");
-			nstr << i << std::flush;
-			fnmapp = namewdot +nstr.str();
-			output(fnmapp,output_type(1),i);
+				nstr.str("");
+				nstr << i << std::flush;
+				fnmapp = namewdot +nstr.str();
+				output(fnmapp,output_type(1),i);
 			}
 			if (mmovement != fixed || gbl->adapt_flag) {
 			namewdot = fname +".v";
@@ -55,6 +55,8 @@ void tet_hp::output(const std::string& fname, block::output_purpose why) {
 					nstr << i << std::flush;
 					fnmapp = namewdot +nstr.str() +".bin";
 					bout.open(fnmapp.c_str());
+					bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+					bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 					for (j=0;j<npnt;++j) { 
 						bout.writeFloat(vrtxbd(i)(j)(0),binio::Double);
 						bout.writeFloat(vrtxbd(i)(j)(1),binio::Double);
@@ -571,21 +573,27 @@ void tet_hp::input(const std::string& fname) {
 			input_map blank;
 			tet_mesh::input(fname,tet_mesh::binary,1,blank);
 			for(i=1;i<gbl->nadapt;++i) {
-			nstr.str("");
-			nstr << i << std::flush;
-			fnmapp = fname +".v" +nstr.str() +".bin";
-			bin.open(fnmapp.c_str());
-			if (bin.error()) {
-				*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-				exit(1);
+				nstr.str("");
+				nstr << i << std::flush;
+				fnmapp = fname +".v" +nstr.str() +".bin";
+				bin.open(fnmapp.c_str());
+				if (bin.error()) {
+					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
+					exit(1);
+				}
+				bin.setFlag(binio::BigEndian,bin.readInt(1));
+				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+				for (j=0;j<npnt;++j) {
+					vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
+					vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
+					vrtxbd(i)(j)(2) = bin.readFloat(binio::Double);
+				}
+				bin.close();
 			}
-			for (j=0;j<npnt;++j) {
-				vrtxbd(i)(j)(0) = bin.readFloat(binio::Double);
-				vrtxbd(i)(j)(1) = bin.readFloat(binio::Double);
-				vrtxbd(i)(j)(2) = bin.readFloat(binio::Double);
-			}
-			bin.close();
-			}
+		}
+		else {
+			for(i=1;i<gbl->nadapt;++i)
+				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
 		}
 		
 		for(i=0;i<gbl->nadapt;++i) {
@@ -620,7 +628,10 @@ void tet_hp::input(const std::string& fname) {
 				fin.close();
 			}
 		}
-
+		else {
+			for(i=1;i<gbl->nadapt;++i)
+				vrtxbd(i)(Range(0,npnt-1)) = pnts(Range(0,npnt-1));
+		}
 		
 		for(i=0;i<gbl->nadapt;++i) {
 			nstr.str("");

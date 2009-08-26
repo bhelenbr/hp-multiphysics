@@ -13,47 +13,47 @@
 
 using namespace bdry_ins;
 
-///** \brief Helper object for vrtx_bdry 
-// *
-// * \ingroup boundary
-// * Contains list of all vrtx_bdys's by name 
-// * and has routine to return integer so can
-// * allocate by name rather than by number
-// */
-//class tet_hp_ins_vtype {
-//    public:
-//        static const int ntypes = 5;
-//        enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,inflow};
-//        const static char names[ntypes][40];
-//        static int getid(const char *nin) {
-//            for(int i=0;i<ntypes;++i) 
-//                if (!strcmp(nin,names[i])) return(i);
-//            return(unknown);
-//        }
-//};
-//
-//const char tet_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar","inflow"};
-//
-//hp_vrtx_bdry* tet_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
-//    std::string keyword,val;
-//    std::istringstream data;
-//    int type;          
-//    hp_vrtx_bdry *temp;  
-//    
-//    keyword = vbdry(bnum)->idprefix + "_ins_type";
-//    if (bdrydata.get(keyword,val)) {
-//        type = tet_hp_ins_vtype::getid(val.c_str());
-//        if (type == tet_hp_ins_vtype::unknown)  {
-//            *gbl->log << "unknown vertex type:" << val << std::endl;
-//            exit(1);
-//        }
-//    }
-//    else {
-//        type = tet_hp_ins_vtype::unknown;
-//    }
-//    
-//    
-//    switch(type) {
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tet_hp_ins_vtype {
+    public:
+        static const int ntypes = 5;
+        enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,inflow};
+        const static char names[ntypes][40];
+        static int getid(const char *nin) {
+            for(int i=0;i<ntypes;++i) 
+                if (!strcmp(nin,names[i])) return(i);
+            return(unknown);
+        }
+};
+
+const char tet_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar","inflow"};
+
+hp_vrtx_bdry* tet_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
+    std::string keyword,val;
+    std::istringstream data;
+    int type;          
+    hp_vrtx_bdry *temp;  
+    
+    keyword = vbdry(bnum)->idprefix + "_ins_type";
+    if (bdrydata.get(keyword,val)) {
+        type = tet_hp_ins_vtype::getid(val.c_str());
+        if (type == tet_hp_ins_vtype::unknown)  {
+            *gbl->log << "unknown vertex type:" << val << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        type = tet_hp_ins_vtype::unknown;
+    }
+    
+    
+    switch(type) {
 //        case tet_hp_ins_vtype::surface_inflow: {
 //            temp = new surface_fixed_pt(*this,*vbdry(bnum));
 //            break;
@@ -74,60 +74,60 @@ using namespace bdry_ins;
 //            temp = new inflow_pt(*this,*vbdry(bnum));
 //            break;
 //        }
-//        default: {
-//            temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
-//            break;
-//        }
-//    } 
-//    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
-//    return(temp);
-//}
-//
-//
-///** \brief Helper object for edge_bdry 
-// *
-// * \ingroup boundary
-// * Contains list of all side_bdys's by name 
-// * and has routine to return integer so can
-// * allocate by name rather than by number
-// */
-//class tet_hp_ins_etype {
-//    public:
-//        static const int ntypes = 11;
-//        enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-//            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset,force_coupling};
-//        static const char names[ntypes][40];
-//        static int getid(const char *nin) {
-//            for(int i=0;i<ntypes;++i)
-//                if (!strcmp(nin,names[i])) return(i);
-//            return(-1);
-//        }
-//};
-//
-//const char tet_hp_ins_etype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-//    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
-//
-///* FUNCTION TO CREATE BOUNDARY OBJECTS */
-//hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, input_map &bdrydata) {
-//    std::string keyword,val;
-//    std::istringstream data;
-//    int type;          
-//    hp_edge_bdry *temp;  
-//    
-//
-//    keyword =  ebdry(bnum)->idprefix + "_ins_type";
-//    if (bdrydata.get(keyword,val)) {
-//        type = tet_hp_ins_etype::getid(val.c_str());
-//        if (type == tet_hp_ins_stype::unknown)  {
-//            *gbl->log << "unknown side type:" << val << std::endl;
-//            exit(1);
-//        }
-//    }
-//    else {
-//        type = tet_hp_ins_etype::unknown;
-//    }
-//
-//    switch(type) {
+        default: {
+            temp = tet_hp::getnewvrtxobject(bnum,bdrydata);
+            break;
+        }
+    } 
+    gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+    return(temp);
+}
+
+
+/** \brief Helper object for edge_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all side_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tet_hp_ins_etype {
+    public:
+        static const int ntypes = 11;
+        enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
+            symmetry,applied_stress,surface,surface_slave,hybrid_surface_levelset,force_coupling};
+        static const char names[ntypes][40];
+        static int getid(const char *nin) {
+            for(int i=0;i<ntypes;++i)
+                if (!strcmp(nin,names[i])) return(i);
+            return(-1);
+        }
+};
+
+const char tet_hp_ins_etype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
+    "symmetry","applied_stress","surface","surface_slave","hybrid_surface_levelset","force_coupling"};
+
+/* FUNCTION TO CREATE BOUNDARY OBJECTS */
+hp_edge_bdry* tet_hp_ins::getnewedgeobject(int bnum, input_map &bdrydata) {
+    std::string keyword,val;
+    std::istringstream data;
+    int type;          
+    hp_edge_bdry *temp;  
+    
+
+    keyword =  ebdry(bnum)->idprefix + "_ins_type";
+    if (bdrydata.get(keyword,val)) {
+        type = tet_hp_ins_etype::getid(val.c_str());
+        if (type == tet_hp_ins_etype::unknown)  {
+            *gbl->log << "unknown edge type:" << val << std::endl;
+            exit(1);
+        }
+    }
+    else {
+        type = tet_hp_ins_etype::unknown;
+    }
+
+    switch(type) {
 //        case tet_hp_ins_etype::plain: {
 //            temp = new generic(*this,*ebdry(bnum));
 //            break;
@@ -180,15 +180,15 @@ using namespace bdry_ins;
 //            temp = new force_coupling(*this,*ebdry(bnum));
 //            break;
 //        }
-//        default: {
-//            temp = tet_hp::getnewedgeobject(bnum,bdrydata);
-//            break;
-//        }
-//    }    
-//    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
-//
-//    return(temp);
-//}
+        default: {
+            temp = tet_hp::getnewedgeobject(bnum,bdrydata);
+            break;
+        }
+    }    
+    gbl->ebdry_gbls(bnum) = temp->create_global_structure();
+
+    return(temp);
+}
 
 
 /** \brief Helper object for face_bdry 

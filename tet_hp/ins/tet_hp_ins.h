@@ -32,8 +32,8 @@ class tet_hp_ins : public tet_hp {
 
 		FLT adis; // DISSIPATION CONSTANT
 		
-		// hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
-		// hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata);
+		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
+		hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata);
 		hp_face_bdry* getnewfaceobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
         //tet_hp_helper* getnewhelper(input_map& inmap);
@@ -45,7 +45,7 @@ class tet_hp_ins : public tet_hp {
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
-		// void length(); dont need yet for adaption
+		void length(); 
 		void setup_preconditioner();
 		void rsdl(int stage);
 		void calculate_unsteady_sources();

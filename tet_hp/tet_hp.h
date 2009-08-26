@@ -233,7 +233,7 @@ class tet_hp : public tet_mesh  {
 		FLT maxres();
 		
 		/* FUNCTIONS FOR ADAPTION */ 
-//      void length() {*gbl->log << "using generic length\n";}
+        void length() {*gbl->log << "using generic length\n";}
 //      void adapt();
 //      void copy(const tri_hp &tgt);
 //      void movevdata(int frm, int to);
