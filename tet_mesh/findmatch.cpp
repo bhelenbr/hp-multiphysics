@@ -604,15 +604,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	Array<int,2> bcntr(xin.nfbd +20,2);
 	Array<int,2> ecntr(xin.nfbd+xin.nebd +20,4);
 	TinyVector<int,2> a,b;
-	TinyMatrix<int,6,2> vs;
-	
-	vs(0,0)=2, vs(0,1)=3; 
-	vs(1,0)=3, vs(1,1)=1; 
-	vs(2,0)=2, vs(2,1)=1;
-	vs(3,0)=1, vs(3,1)=0;
-	vs(4,0)=2, vs(4,1)=0; 
-	vs(5,0)=3, vs(5,1)=0;
-
 	int bnum,match;
 	
 	/* TO CREATE UNIQUE FACE NUMBERS */
@@ -932,23 +923,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			std::cout << ebdry(i)->idprefix << "_type: partition\n";
 
 			sind = ebdry(i)->seg(0).gindx;			
-			
-//			for(j=0;j<ebdry(i)->nseg;++j){
-//				if(ebdry(i)->seg(j).prev == -1){
-//					sind = ebdry(i)->seg(j).gindx;
-//					next = ebdry(i)->seg(ebdry(i)->seg(j).next).gindx;
-//					break;
-//				}
-//			}
-//			
-//			a(0) = seg(sind).pnt(0);
-//			a(1) = seg(sind).pnt(1);
-//			b(0) = seg(next).pnt(0);
-//			b(1) = seg(next).pnt(1);
-//			if(a(0) == b(0) || a(0) == b(1))
-//				p0 = a(1);
-//			else
-//				p0 = a(0);
 			p0 = seg(sind).pnt(0);
 
 			for(j=0;j<nvbd;++j)
@@ -967,23 +941,6 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		nextv0:
 
 			sind = ebdry(i)->seg(ebdry(i)->nseg-1).gindx;
-//			for(j=0;j<ebdry(i)->nseg;++j){
-//				if(ebdry(i)->seg(j).next == -1){
-//					sind = ebdry(i)->seg(j).gindx;
-//					prev = ebdry(i)->seg(ebdry(i)->seg(j).prev).gindx;
-//
-//					break;
-//				}
-//			}	
-//			a(0) = seg(sind).pnt(0);
-//			a(1) = seg(sind).pnt(1);
-//			b(0) = seg(prev).pnt(0);
-//			b(1) = seg(prev).pnt(1);
-//			if(a(0) == b(0) || a(0) == b(1))
-//				p0 = a(1);
-//			else
-//				p0 = a(0);
-			
 			p0 = seg(sind).pnt(1);
 
 			for(j=0;j<nvbd;++j)
