@@ -3,7 +3,8 @@
 #include "tri_hp_ins.h"
 #include "../hp_boundary.h"
 
-//#define TIMEACCURATE
+// #define TIMEACCURATE
+#define REFINED_WAY
 
 void tri_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
@@ -23,13 +24,14 @@ void tri_hp_ins::setup_preconditioner() {
 		}
 
 #ifdef TIMEACCURATE
-		gam = 10.0;
+		gam = 100.0;
 		FLT dtstari = 0.0;
 #endif
 
 		for(tind = 0; tind < ntri; ++tind) {
 			jcb = 0.25*area(tind);  // area is 2 x triangle area
 			v = tri(tind).pnt;
+			
 			hmax = 0.0;
 			for(j=0;j<3;++j) {
 				h = pow(pnts(v(j))(0) -pnts(v((j+1)%3))(0),2.0) + 
@@ -39,7 +41,55 @@ void tri_hp_ins::setup_preconditioner() {
 			hmax = sqrt(hmax);
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			
+#ifdef REFINED_WAY
+			/* IF TINFO > -1 IT IS CURVED ELEMENT */
+			if (tri(tind).info > -1) {
+				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+				crdtocht(tind);
 
+				/* Not sure how to use this to determine curved mesh length.
+//				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+//				for(n=0;n<ND;++n)
+//					basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
+			}
+			else {
+				/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+				for(int n=0;n<ND;++n)
+					basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
+
+//				/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
+//				for(n=0;n<ND;++n) {
+//					dcrd(n,0)(Range(0,lgpx-1),Range(0,lgpn-1)) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
+//					dcrd(n,1)(Range(0,lgpx-1),Range(0,lgpn-1)) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
+//				}
+			}
+
+			/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
+			/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
+			ugtouht(tind);
+			for(int n=0;n<ND;++n)
+				basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
+				
+				
+			/* CALCULATE MESH VELOCITY */
+			TinyVector<FLT,ND> mvel;
+			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+			for(i=0;i<lgpx;++i) {
+				for(j=0;j<lgpn;++j) {
+					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
+					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
+#ifdef DROP
+					mvel(0) += mesh_ref_vel(0);
+					mvel(1) += mesh_ref_vel(1);
+#endif                        
+
+					q = pow(u(0)(i,j)-0.5*mvel(0),2.0)  +pow(u(1)(i,j)-0.5*mvel(1),2.0);
+					qmax = MAX(qmax,q);
+				
+				}
+			}
+#else
 			qmax = 0.0;
 			for(j=0;j<3;++j) {
 				v0 = v(j);
@@ -52,6 +102,7 @@ void tri_hp_ins::setup_preconditioner() {
 #endif
 				qmax = MAX(qmax,q);
 			}
+#endif
 
 			if (!(jcb > 0.0)) { 
 				*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
