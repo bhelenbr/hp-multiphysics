@@ -10,6 +10,8 @@
 		6F33E677086787F40029F2D6 /* hpprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A68084C13780057FD8F /* hpprobe.cpp */; };
 		6F33E678086787F40029F2D6 /* initialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A69084C13780057FD8F /* initialize.cpp */; };
 		6F33E67B086787F40029F2D6 /* proj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FBD8A6C084C13780057FD8F /* proj.cpp */; };
+		9572078610473AD20044E240 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 9572078510473AD20044E240 /* makefile */; };
+		9572078710473AD20044E240 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 9572078510473AD20044E240 /* makefile */; };
 		95BBD2560D623EF60066A8AC /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FBD8A85084C14470057FD8F /* vecLib.framework */; };
 		95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2F858B60BA1DB5A002BC30A /* outputstuff.cpp */; };
 		B21BBC590CB2E45F0056D083 /* tet_basis.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FC242850BE65C36003F9828 /* tet_basis.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -42,11 +44,11 @@
 		6FBD8A6C084C13780057FD8F /* proj.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = proj.cpp; sourceTree = "<group>"; };
 		6FBD8A6E084C13780057FD8F /* ptvalues.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ptvalues.cpp; sourceTree = "<group>"; };
 		6FBD8A79084C13AF0057FD8F /* createlib */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.csh; path = createlib; sourceTree = "<group>"; };
-		6FBD8A7A084C13AF0057FD8F /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FBD8A7F084C13F20057FD8F /* libblitz.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libblitz.a; path = ../../Packages/lib/libblitz.a; sourceTree = SOURCE_ROOT; };
 		6FBD8A81084C14040057FD8F /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../../Codes/lib/libmyblas.a; sourceTree = "<group>"; };
 		6FBD8A85084C14470057FD8F /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6FC242850BE65C36003F9828 /* tet_basis.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = tet_basis.h; sourceTree = "<group>"; };
+		9572078510473AD20044E240 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = makefile; path = ../../Desktop/makefiles/tet_basis/makefile; sourceTree = SOURCE_ROOT; };
 		B2063F0D0AE7D81F00D6577D /* intgrt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt.cpp; sourceTree = "<group>"; };
 		B27150B90AF90B1E002DC550 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2B1C57B0BF14B7E000E4F20 /* intgrt1d.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = intgrt1d.cpp; sourceTree = "<group>"; };
@@ -119,8 +121,8 @@
 		6FBD8A78084C139E0057FD8F /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				9572078510473AD20044E240 /* makefile */,
 				6FBD8A79084C13AF0057FD8F /* createlib */,
-				6FBD8A7A084C13AF0057FD8F /* makefile */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
@@ -215,6 +217,7 @@
 				B260A5090D3C1623001E15D6 /* proj1d.cpp in Sources */,
 				B260A50A0D3C1623001E15D6 /* ptvalues.cpp in Sources */,
 				95CE9C590EB9A9A800D14C51 /* outputstuff.cpp in Sources */,
+				9572078610473AD20044E240 /* makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +236,7 @@
 				B260A54D0D3D0D75001E15D6 /* proj2d.cpp in Sources */,
 				B260A54E0D3D0D76001E15D6 /* ptvalues.cpp in Sources */,
 				B260A54F0D3D0D77001E15D6 /* outputstuff.cpp in Sources */,
+				9572078710473AD20044E240 /* makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
