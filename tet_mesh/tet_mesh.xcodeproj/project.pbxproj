@@ -149,6 +149,7 @@
 		6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MAdLibInterface.cpp; sourceTree = "<group>"; };
 		6F90D4710FE255C6003B959F /* libMAdLib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMAdLib.a; path = ../../Packages/lib/libMAdLib.a; sourceTree = SOURCE_ROOT; };
 		6F956D720FE65610009B5B29 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		6F9D57311047327300216CB3 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		6FB91ADC0ACCB10300792B04 /* libtet_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtet_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* tet_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FBD0E8B0FB234BE00565502 /* connect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = connect.cpp; sourceTree = "<group>"; };
@@ -321,6 +322,7 @@
 		F556D7CB0226C8DC01990B20 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				6F9D57311047327300216CB3 /* makefile */,
 			);
 			name = Scripts;
 			sourceTree = "<group>";
