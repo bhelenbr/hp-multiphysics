@@ -5,7 +5,7 @@
 #include <input_map.h>
 #include <iostream>
 #ifdef USING_MADLIB
-#include <MAdLibInterface.h>
+#include "MAdLibInterface.h"
 #endif
 
 void tet_mesh::init(input_map &input, void *gin) {
