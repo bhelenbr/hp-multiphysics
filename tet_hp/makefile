@@ -36,8 +36,7 @@ OBJ += $(OBJCD) $(OBJINS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -ltri_mesh -lquad -ltet_basis -lmyblas -lutil 
--linput_map -lmuparser -lmetis -lm
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -ltri_mesh -ltet_mesh -lquad -ltet_basis -lmyblas -lspline -lutil -linput_map -lmuparser -lmetis -lm -lbinio -lpth -lblitz 
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
