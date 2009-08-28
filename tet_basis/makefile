@@ -1,9 +1,9 @@
-OBJ = initialize.o intgrt.o intgrt1d.o proj.o \
-proj1d.o ptvalues.o hpprobe.o
+OBJ = initialize.o intgrt.o intgrt2d.o intgrt1d.o proj.o \
+proj1d.o proj2d.o ptvalues.o hpprobe.o outputstuff.o 
 
-CPPFLAGS = -I$(HOME)/Codes/include/ 
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 DEFINES = -Df2cFortran
-LIB = -L$(HOME)/Codes/lib -lmyblas -lm
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
 
 ### Begin machine dependent
 
@@ -16,10 +16,10 @@ LIB = -L$(HOME)/Codes/lib -lmyblas -lm
  
 ## Linux:
 ##  Machine specific for Linux
-CXX=icpc #(cares)
+#CXX=icpc #(cares)
 #CXX=g++3 #(shelob)
-#CPPFLAGS += -O3
-CPPFLAGS += -O3 -cxxlib-icc
+CPPFLAGS += -O3
+#CPPFLAGS += -O3 -cxxlib-icc
 #LIB += -llapack -lblas -lg2c #(shelob)
 LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 #DEFINES = -DpgiFortran
@@ -41,15 +41,14 @@ LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 
 CPPFLAGS += $(DEFINES)
 
-all: tri_basis libbasis.a 
+all: tet_basis libtet_basis.a 
 
-tri_basis: $(OBJ) main.o
+tet_basis: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIB)
 
-libbasis.a: $(OBJ)
+libtet_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libbasis.a $(HOME)/Codes/lib/
+	mv -f libtet_basis.a $(HOME)/Codes/lib/
 	cp -f tet_basis.h $(HOME)/Codes/include/
-	rm *.o
 
 $(OBJ): tet_basis.h
