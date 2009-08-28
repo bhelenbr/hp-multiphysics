@@ -10,7 +10,6 @@
 		6F004387091F9BDA00A6F21E /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		6F00469F092047C500A6F21E /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
 		6F0077830CCB7027008D3233 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
-		6F0077840CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077800CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib */; };
 		6F0077850CCB7027008D3233 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
 		6F0077860CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077800CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib */; };
 		6F0077870CCB7027008D3233 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
@@ -642,7 +641,6 @@
 				6F9853FA0BDE612700D342F6 /* libblitz.a in Frameworks */,
 				6F9853FB0BDE612700D342F6 /* libmetis.a in Frameworks */,
 				6F9853FD0BDE612700D342F6 /* libmuparser.a in Frameworks */,
-				6F0077840CCB7027008D3233 /* libboost_thread-mt-1_34_1.dylib in Frameworks */,
 				6F0077850CCB7027008D3233 /* libpth.a in Frameworks */,
 				6FFEF5DF0DCEA2E60079FF6D /* libspline.a in Frameworks */,
 				6F2F75040DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,

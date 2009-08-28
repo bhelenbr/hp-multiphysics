@@ -49,7 +49,6 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 
 	nmodes = MAX(nmodes,2);
 
-	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 #ifndef LOWNOISE
 	modes.resize(nmodes);
@@ -60,6 +59,8 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	}
 	coeffs.resize(nmodes);
 #else
+	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
+
 	pod_ebdry.resize(BASE::nebd);
 	for (int i=0;i<BASE::nebd;++i) {
 		pod_ebdry(i) = new pod_gen_edge_bdry<BASE>(*this,*BASE::ebdry(i));
@@ -74,7 +75,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 
 template<class BASE> void pod_generate<BASE>::tadvance() {
 	int i,j,k,l,n,tind,info;
-	int lgpx = basis::tri(BASE::log2p)->gpx, lgpn = basis::tri(BASE::log2p)->gpn;
+	int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
 	Array<FLT,1> low_noise_dot;
 	std::string filename,keyword,linebuff;
 	std::ostringstream nstr;
@@ -147,6 +148,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					}
 				}
 				low_noise_dot(tind) = tmp_store;
+				
+				psimatrix(psi1dcounter) += tmp_store; // TO NOT USE LOW NOISE DOT
 			}
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
@@ -155,7 +158,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
-			psimatrix(psi1dcounter) = low_noise_dot(0);
+			// psimatrix(psi1dcounter) = low_noise_dot(0);  // TO USE LOW NOISE DOT!! TEMPO!!
+			
 			++psi1dcounter;
 		}	
 		BASE::ugbd(0).v.reference(ugstore.v);
