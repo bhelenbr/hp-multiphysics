@@ -20,7 +20,7 @@ makefile : ;
 
 .PHONY: clean
 clean:
-	rm -rf _serial _tet_hp*
+	rm -rf _tet_hp*
 
 else
 
