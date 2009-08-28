@@ -10,7 +10,7 @@ planar: tet_hp
 
 tet_hp:
 	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile hp
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile tet_hp
 	cp _serial/tet_hp $(HOME)/bin/$@
 
 .PHONY: tet_hp
@@ -20,7 +20,7 @@ makefile : ;
 
 .PHONY: clean
 clean:
-	rm -rf _serial _mpi _axi_serial _axi_mpi
+	rm -rf _serial _tet_hp*
 
 else
 
@@ -36,7 +36,7 @@ OBJ += $(OBJCD) $(OBJINS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lbasis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -ltet_basis -lmyblas -lutil -linput_map -lmuparser -lmetis -lm
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
@@ -74,7 +74,7 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 CPPFLAGS += $(DEFINES)
 
 tet_hp: dirs $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -lmesh $(LIB)
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltet_mesh $(LIB)
 
 
 dirs:
