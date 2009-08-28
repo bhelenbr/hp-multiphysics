@@ -4,7 +4,7 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
-all: libtet_mesh.a  tri_mesh 
+all: libtet_mesh.a  tet_mesh 
 
 libtet_mesh.a:
 	+@[ -d  _serial ] || mkdir -p _serial
@@ -28,13 +28,13 @@ else
 
 VPATH = ../
 
-OBJ = connect.o copy.o findmatch.o getnewbdry.o input.o MAdLibInterface.o\
+OBJ = connect.o copy.o findmatch.o getnewbdry.o input.o \
 meshutilities.o output.o refineby2.o setup.o setupbdry.o tet_boundary.o\
 tet_prims.o vertexcircle.o test.o
 
 MAINOBJ = main.o
-
-DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
+DEFINES = -DMETIS -Df2cFortran  $(EXTRAFLAGS)
+#DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lg2c -lpth -lblitz
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
