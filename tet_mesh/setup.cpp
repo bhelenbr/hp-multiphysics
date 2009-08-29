@@ -144,8 +144,8 @@ void tet_mesh::create_seg_from_tet(void) {
 			while(eind >= 0){                
 				a(0)=seg(eind).pnt(0);    
 				a(1)=seg(eind).pnt(1);            
-				lcl2=fabs(lcl0-a(0)-a(1));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1));
+				lcl2=abs(lcl0-a(0)-a(1));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1));
 				if(lcl2 == 0) {
 					tet(tind).seg(i)=eind;   // 6 edges attached to tet
 					++seg(eind).nnbor;        // number of neighbors surrounding an seg
@@ -237,8 +237,8 @@ void tet_mesh::match_tet_and_seg(void) {
 			while(eind >= 0){                
 				a(0)=seg(eind).pnt(0);    
 				a(1)=seg(eind).pnt(1);            
-				lcl2=fabs(lcl0-a(0)-a(1));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1));
+				lcl2=abs(lcl0-a(0)-a(1));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1));
 				if(lcl2 == 0) {
 					tet(tind).seg(i)=eind;   // 6 edges attached to tet
 					++seg(eind).nnbor;        // number of neighbors surrounding an seg
@@ -300,8 +300,8 @@ void tet_mesh::create_tri_from_tet(void) {
 				a(0)=tri(find).pnt(0);    
 				a(1)=tri(find).pnt(1);
 				a(2)=tri(find).pnt(2);
-				lcl2=fabs(lcl0-a(0)-a(1)-a(2));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
+				lcl2=abs(lcl0-a(0)-a(1)-a(2));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
 				if(lcl2 == 0 ){        
 					tri(find).tet(1)=tind;    // 2nd tet connected to a face
 					tet(tind).tri(i)=find;      // ith face on to a tet
@@ -396,8 +396,8 @@ void tet_mesh::match_tet_and_tri(void) {
 				a(0)=tri(find).pnt(0);    
 				a(1)=tri(find).pnt(1);
 				a(2)=tri(find).pnt(2);
-				lcl2=fabs(lcl0-a(0)-a(1)-a(2));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
+				lcl2=abs(lcl0-a(0)-a(1)-a(2));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
 				if(lcl2 == 0) {
 					if (tri(find).tet(0) < 0) {
 						tri(find).pnt(0) = v(0);

@@ -155,8 +155,8 @@ int tet_mesh::facematch(TinyVector<int,3> v1, TinyVector<int,3> v2) {
 	
 	lcl0=v1(0)+v1(1)+v1(2);
 	lcl1=(v1(0)+1)*(v1(1)+1)*(v1(2)+1);
-	lcl2=fabs(lcl0-v2(0)-v2(1)-v2(2));
-	lcl2+=fabs(lcl1-(v2(0)+1)*(v2(1)+1)*(v2(2)+1));	
+	lcl2=abs(lcl0-v2(0)-v2(1)-v2(2));
+	lcl2+=abs(lcl1-(v2(0)+1)*(v2(1)+1)*(v2(2)+1));	
 	
 	return(lcl2);
 }

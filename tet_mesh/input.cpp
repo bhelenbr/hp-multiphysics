@@ -188,14 +188,14 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			fbdry.resize(1);
 					
 			maxvst = (4*ntet+nbfaces)/2;  // CHECK THIS TEMPORARY!!!!
-			allocate(grwfac*maxvst);
+			allocate(static_cast<int>(grwfac*maxvst));
 			
 			/* LOAD PTS (npnt,3) */
 			in.ignore(160,'\n'); 
 			in.ignore(160,'\n');  
 			
 			fbdry(0) = getnewfaceobject(0,bdrymap);
-			fbdry(0)->alloc(grwfac*3*nbfaces/2);
+			fbdry(0)->alloc(static_cast<int>(grwfac*3*nbfaces/2));
 			nvbd = 0;
 			nebd = 0;
 
@@ -276,7 +276,7 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 			in >> ntet;
 						
 			maxvst = ntri;  // CHECK THIS TEMPORARY!!!!
-			allocate(grwfac*maxvst);
+			allocate(static_cast<int>(grwfac*maxvst));
 			
 			for(int i = 0; i < npnt; ++i) {
 				in.ignore(80,':');
@@ -345,7 +345,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				in >> fbdry(i)->nseg;
 				in.ignore(80,':');
 				in >> fbdry(i)->ntri;                
-				fbdry(i)->alloc(grwfac*3*(fbdry(i)->ntri));        //temporary fix        
+				
+				fbdry(i)->alloc(static_cast<int>(grwfac*3*(fbdry(i)->ntri)));//temporary fix        
 
 				for(int j = 0; j < fbdry(i)->npnt; ++j){
 					in.ignore(80,':');
@@ -432,7 +433,8 @@ void tet_mesh::input(const std::string &filename, tet_mesh::filetype filetype, F
 				in >> intskip;
 				in.ignore(20,':');
 				in >> fbdry(i)->ntri;
-				fbdry(i)->alloc(grwfac*3*(fbdry(i)->ntri));    //temporary fix
+				
+				fbdry(i)->alloc(static_cast<int>(grwfac*3*(fbdry(i)->ntri)));    //temporary fix
 				in.ignore(160,'\n');
 				in.ignore(160,'\n');
 				for(int j = 0; j < fbdry(i)->ntri; ++j){

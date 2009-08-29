@@ -11,7 +11,7 @@
 #include "tet_boundary.h"
 #include <assert.h>
 #include <float.h>
-#include <blitz/tinyvec-et.h>.
+#include <blitz/tinyvec-et.h>
 
 /********************/
 /* VERTEX FUNCTIONS */

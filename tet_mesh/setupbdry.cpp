@@ -57,8 +57,8 @@ void face_bdry::create_seg_gindx(void){
 				eind=x.tet(x.gbl->i2wk(i)).seg(j);        
 				a(0)=x.seg(eind).pnt(0);    
 				a(1)=x.seg(eind).pnt(1);
-				lcl2=fabs(lcl0-a(0)-a(1));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1));
+				lcl2=abs(lcl0-a(0)-a(1));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1));
 				if(lcl2 == 0){
 					seg(sind).gindx=eind;
 					goto NEXTSIDE;
@@ -89,8 +89,8 @@ void face_bdry::create_tri_gindx(void){
 				a(0)=x.tri(find).pnt(0);    
 				a(1)=x.tri(find).pnt(1);
 				a(2)=x.tri(find).pnt(2);
-				lcl2=fabs(lcl0-a(0)-a(1)-a(2));
-				lcl2+=fabs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
+				lcl2=abs(lcl0-a(0)-a(1)-a(2));
+				lcl2+=abs(lcl1-(a(0)+1)*(a(1)+1)*(a(2)+1));
 				if(lcl2 == 0){
 					tri(tind).gindx=find;
 					goto NEXTTRI;
