@@ -860,10 +860,10 @@ void block::init(input_map &input) {
 
 	ostringstream nstr;
 	for(int lvl=1;lvl<ngrid;++lvl) {
-		grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,2.0);
-//        FLT size_reduce = 1.0;
-//        if (lvl > 1) size_reduce = 2.0;
-//        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
+//		grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,2.0);
+        FLT size_reduce = 1.0;
+        if (lvl > 1) size_reduce = 2.0;
+        grd(lvl)->init(*grd(lvl-1),multigrid_interface::multigrid,size_reduce);
 		grd(lvl)->connect(*grd(lvl-1));
 		if (gbl->adapt_output) {
 			nstr.str("");
