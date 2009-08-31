@@ -245,7 +245,6 @@ class tri_mesh : public multigrid_interface {
 		int insert(const TinyVector<FLT,ND> &x);  /**< Inserts a point */
 		int insert(int pnum, int tnum);  /**< Inserts point at pnum into tnum */
 		void bdry_insert(int pnum, int sind, int endpt = 0); /**< Inserts a boundary point in segment sind if endpt is 0 makes left old and right new seg */
-		bool findtri(TinyVector<FLT,ND> x, int pnear, int &tind); /**< Locate triangle containing point with initial seed of pnear */
 
 		void cleanup_after_adapt(); /**< Clean up and move data etc.. */
 		void dltpnt(int pind); /**< Removes leftover point references */
@@ -297,6 +296,7 @@ class tri_mesh : public multigrid_interface {
 		FLT intri(int tind, const TinyVector<FLT,2> &x);  /**< Determine whether a triangle contains a point (0.0 or negative) */
 		TinyVector<FLT,3> tri_wgt; /**< Used in intri for searching (normalized value returned by getwgts after successful search) */
 		bool findtri(TinyVector<FLT,ND> x,int &tnear);  /**< For finding point with initial guess for triangle */
+		bool findtri(TinyVector<FLT,ND> x, int pnear, int &tind); /**< Locate triangle containing point with initial seed of pnear */
 		void getwgts(TinyVector<FLT,3> &wgt) const; /**< Returns weighting for point interpolation within last triangle find by intri */
 
 		//@}

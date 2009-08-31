@@ -239,7 +239,7 @@ void tri_mesh::matchboundaries() {
 
 #ifdef METIS
 
-extern "C" void METIS_PartMeshNodal(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
+extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
 int *epart, int *npart);
 
 void tri_mesh::setpartition(int nparts) {
@@ -254,7 +254,7 @@ void tri_mesh::setpartition(int nparts) {
 		for(n=0;n<3;++n)
 			tvrtx(i)(n) = tri(i).pnt(n);
 
-	METIS_PartMeshNodal(&ntri, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->intwk(0)),&(gbl->i2wk(0)));
+	METIS_PartMeshDual(&ntri, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->intwk(0)),&(gbl->i2wk(0)));
 
 	for(i=0;i<ntri;++i)
 		tri(i).info = gbl->intwk(i);

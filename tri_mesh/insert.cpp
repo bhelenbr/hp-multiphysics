@@ -585,7 +585,7 @@ bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 	bool found = true;
 
 	ntdel = 0;
-	if (intri(tind,x) < area(tind)*10.*EPSILON) return(0);
+	if (intri(tind,x) < area(tind)*10.*EPSILON) return(true);
 	SETSRCH(gbl->intwk(tind));
 	gbl->i2wk(ntdel++) = tind;
 
