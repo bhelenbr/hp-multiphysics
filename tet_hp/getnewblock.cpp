@@ -11,6 +11,7 @@
 
 #define CD
 #define INS
+//#define POD
 
 #ifdef CD
 #include "cd/tet_hp_cd.h"
@@ -20,10 +21,16 @@
 #include "ins/tet_hp_ins.h"
 #endif
 
+#ifdef POD
+#include "pod/pod_simulate.h"
+#include "pod/pod_generate.h"
+#include "hp_boundary.h"
+#endif
+
 class btype {
 	public:
-		const static int ntypes = 3;
-		enum ids {plain,cd,ins};
+		const static int ntypes = 7;
+		enum ids {plain,cd,ins,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -32,7 +39,7 @@ class btype {
 			return(-1);
 		}
 };
-const char btype::names[ntypes][40] = {"plain","cd","ins"};
+const char btype::names[ntypes][40] = {"plain","cd","ins","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname,srcname;
@@ -68,7 +75,31 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			tet_hp_ins *temp = new tet_hp_ins();
 			return(temp);
 		}
-#endif        
+#endif   
+			
+#if (defined(POD) && defined(CD))
+		case btype::pod_cd_gen: {
+			pod_generate<tet_hp_cd> *temp = new pod_generate<tet_hp_cd>();
+			return(temp);
+		}
+			
+		case btype::pod_cd_sim: {
+			pod_simulate<tet_hp_cd> *temp = new pod_simulate<tet_hp_cd>();
+			return(temp);
+		}
+#endif
+			
+#if (defined(POD) && defined(INS))
+		case btype::pod_ins_gen: {
+			pod_generate<tet_hp_ins> *temp = new pod_generate<tet_hp_ins>();
+			return(temp);
+		}
+			
+		case btype::pod_ins_sim: {
+			pod_simulate<tet_hp_ins> *temp = new pod_simulate<tet_hp_ins>();
+			return(temp);
+		}
+#endif
 		default: {
 			std::cerr << "unrecognizable block type: " <<  type << std::endl;
 			tet_hp *temp = new tet_hp();
