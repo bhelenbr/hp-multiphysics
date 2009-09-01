@@ -19,6 +19,8 @@
 
 #include <MAdLib/ModelInterface.h>
 #include <MAdLib/MeshDataBaseInterface.h>
+#include <MAdLib/MeshDataBase.h>
+#include <MAdLib/MAdModel.h>
 #include <MAdLib/ModelInterface.h>
 #include <MAdLib/AdaptInterface.h>
 #include <MAdLib/PWLinearSField.h>

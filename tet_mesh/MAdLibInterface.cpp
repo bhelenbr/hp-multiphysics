@@ -23,7 +23,7 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 	GM_create(&MAdModel,"theModel");
 	GM_readFromMSH(MAdModel, filename.c_str());
 	pMesh MAdMesh = M_new(MAdModel);
-  M_load(MAdMesh,filename.c_str());
+	M_load(MAdMesh,filename.c_str());
 	
 	if (!initialized) {
 		maxvst = M_numTets(MAdMesh);
@@ -40,9 +40,13 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 		for (int i=0;i<Ntotal;) {
 			int thisID = M_geomFeatureId(MAdMesh,i);
 			pPGList list = M_geomFeature(MAdMesh, thisID);
-			std::vector<pGEntity>::iterator it = list->entities.begin();
-			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-				int gDim = GEN_type(*it);						
+			void * tmp = NULL;
+			pGEntity pge;
+			while ( ( pge = PGList_next(list,&tmp) ) ) {
+// 			std::vector<pGEntity>::iterator it = list->entities.begin();
+// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
+				int gDim = GEN_type(pge);
+// 				int gDim = GEN_type(*it);						
 				switch (gDim) {
 					case(0):
 						++nvbd;
@@ -56,6 +60,7 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 				}
 				++i;
 			}
+			PGList_delete(list);
 		} 
 		
 		vbdry.resize(nvbd);
@@ -68,10 +73,13 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 		for (int i=0;i<Ntotal;) {
 			int thisID = M_geomFeatureId(MAdMesh,i);
 			pPGList list = M_geomFeature(MAdMesh, thisID);
-			std::vector<pGEntity>::iterator it = list->entities.begin();
-			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
-				int gDim = GEN_type(*it);
-				int gId = GEN_tag(*it);			
+			void * tmp = NULL;
+			pGEntity pge;
+			while ( ( pge = PGList_next(list,&tmp) ) ) {
+// 			std::vector<pGEntity>::iterator it = list->entities.begin();
+// 			for(std::vector<pGEntity>::iterator it = list->entities.begin(); it != list->entities.end(); ++it) {
+				int gDim = GEN_type(pge);
+				int gId = GEN_tag(pge);			
 				switch (gDim) {
 					case(0):
 						vbdry(nvbd) = getnewvrtxobject(gId,input);
@@ -80,17 +88,18 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 						break;
 					case(1):
 						ebdry(nebd) = getnewedgeobject(gId,input);
-						ebdry(nebd)->alloc(grwfac*M_numClassifiedEdges(MAdMesh,*it));
+						ebdry(nebd)->alloc(grwfac*M_numClassifiedEdges(MAdMesh,pge));
 						++nebd;
 						break;
 					case(2):
 						fbdry(nfbd) = getnewfaceobject(gId,input);
-						fbdry(nfbd)->alloc(grwfac*2*M_numClassifiedEdges(MAdMesh,*it));   
+						fbdry(nfbd)->alloc(grwfac*2*M_numClassifiedEdges(MAdMesh,pge));
 						++nfbd;
 						break;
 				}
 				++i;
 			}
+			PGList_delete(list);
 		}
 	}
 	
@@ -170,7 +179,7 @@ void MAdLibInterface::coarsenMesh(FLT factor, tet_mesh* mesh)
 	delete MAdModel;
 
 	// 3.D. (optional with 1.A.) build mesh/solution 
-	//													 dependent data in the solver
+	//													dependent data in the solver
 //	solver->allocateAndComputeData();
 }
 
@@ -391,8 +400,8 @@ void MAdLibInterface::exportToMAdMesh(const tet_mesh* mesh, MAd::pMesh MAdMesh) 
 	pGRegion geom = GM_regionByTag(MAdMesh->model,mesh->gbl->idnum);
 	for (int i=0; i < mesh->ntet; ++i) {
 		MAdMesh->add_tet(mesh->tet(i).pnt(0), mesh->tet(i).pnt(1),
-										 mesh->tet(i).pnt(2), mesh->tet(i).pnt(3),
-										 (pGEntity)geom); 
+										mesh->tet(i).pnt(2), mesh->tet(i).pnt(3),
+										(pGEntity)geom); 
 	}
 
 	MAdMesh->classify_unclassified_entities();
