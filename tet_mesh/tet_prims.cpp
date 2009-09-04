@@ -36,6 +36,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 	}
 	if (ind != nbor) {
 		*gbl->log << "problem in findtet " << seedvrtx << ' ' << nbor << '\n';
+		*gbl->log << "tets with common vertex" << std::endl;
 		for (int i=0;i<ind;++i) {
 			*gbl->log << gbl->i2wk(i);
 			tind = gbl->i2wk(i);
@@ -43,7 +44,9 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 				*gbl->log << '\t' << tet(tind).tet(j) << ',' << gbl->i1wk(tet(tind).tet(j));
 			*gbl->log << std::endl;
 		}
-		
+		*gbl->log << std::endl;
+		*gbl->log << "other tets" << std::endl;
+
 		for (int i=nbor;i<ind2;++i) {
 			*gbl->log << gbl->i2wk(i);
 			tind = gbl->i2wk(i);
@@ -54,6 +57,7 @@ bool tet_mesh::findtet(const TinyVector<FLT,3> xp, int seedvrtx, int &tind) {
 			
 		output("error"+gbl->idprefix,easymesh);
 		output("error"+gbl->idprefix);
+		
 		exit(1);
 	}
 			

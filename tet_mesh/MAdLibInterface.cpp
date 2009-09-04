@@ -30,7 +30,7 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 		maxvst = (maxvst > M_numEdges(MAdMesh) ? maxvst : M_numEdges(MAdMesh));
 		maxvst = (maxvst > M_numFaces(MAdMesh) ? maxvst : M_numFaces(MAdMesh));
 		maxvst = (maxvst > M_numVertices(MAdMesh) ? maxvst : M_numVertices(MAdMesh));
-		allocate(grwfac*maxvst);	
+		allocate(static_cast<int>(grwfac*maxvst));	
 
 		/* Now Generate Boundary Structures */
 		int Ntotal = M_numGeomFeatures(MAdMesh);
@@ -349,8 +349,32 @@ void MAdLibInterface::importFromMAdMesh(const MAd::pMesh MAdMesh, tet_mesh* mesh
 		}
 		mesh->fbdry(i)->create_from_tri();
 	}
+	/* FIND ENDPOINT MATCHES */
+	for(int i=0;i<mesh->nvbd;++i) {
+		/* Find two connecting boundary sides */
+		for(int j=0;j<mesh->nebd;++j) {
+			if (mesh->seg(mesh->ebdry(j)->seg(0).gindx).pnt(0) == mesh->vbdry(i)->pnt) {
+				mesh->ebdry(j)->vbdry(0) = i;
+			}
+			if (mesh->seg(mesh->ebdry(j)->seg(mesh->ebdry(j)->nseg-1).gindx).pnt(1) == mesh->vbdry(i)->pnt) {
+				mesh->ebdry(j)->vbdry(1) = i;
+			}
+		}
+	}
 	
+	mesh->bdrylabel();  // MAKES BOUNDARY ELEMENTS POINT TO BOUNDARY GROUP/ELEMENT
+	mesh->treeinit(); 
+	for (int i=0;i<mesh->nfbd;++i)
+		mesh->fbdry(i)->treeinit();	
+	
+	mesh->tet_mesh::setinfo();
 	mesh->checkintegrity();
+	
+	
+	
+
+	
+	
 }
 
 //-----------------------------------------------------------------------------

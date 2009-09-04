@@ -370,6 +370,7 @@ void face_bdry::treeinit() {
 
 	for (i=0;i<npnt;++i) {
 		v0 = pnt(i).gindx;
+		//cout << "idnum" << idnum <<" v0 in treeinit "<<v0 << ' '<< i<< '/'<< npnt<<  endl;
 		for(n=0;n<tet_mesh::ND;++n) {
 			x1[n] = MIN(x1[n],x.pnts(v0)(n));
 			x2[n] = MAX(x2[n],x.pnts(v0)(n));
@@ -382,7 +383,7 @@ void face_bdry::treeinit() {
 		x2[n] += 0.25*dx;
 	}
 	
-	treeinit(x1,x2);
+	// treeinit(x1,x2);
 
 	return;
 }
