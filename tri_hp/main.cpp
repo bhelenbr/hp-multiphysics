@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
 	// Then continue
 	int rc = pth_init();
 	if (!rc) {
-		std::cerr << "couldn't start pth environment\n";
+		std::cerr << "couldn't start pth environment" << std::endl;
 	}
 #endif
 

@@ -2,23 +2,15 @@
 #include "hp_boundary.h"
 #include <assert.h>
 
-void tri_hp::ptprobe(TinyVector<FLT,2> xp, Array<FLT,1> uout, int tlvl) {
+bool tri_hp::ptprobe(TinyVector<FLT,2> xp, Array<FLT,1> uout, int& tind, int tlvl) {
 	FLT r,s;
-	int tind;
+	bool found;
 
-	findinteriorpt(xp,tind,r,s);
+	found = findinteriorpt(xp,tind,r,s);
 	ugtouht(tind,tlvl);  
 	basis::tri(log2p)->ptprobe(NV,uout.data(),&uht(0)(0),MXTM);
-}
-
-void tri_hp::ptprobe_bdry(int bnum, TinyVector<FLT,2> xp, Array<FLT,1> uout,int tlvl) {
-	FLT psi;
-	int sind;
-
-	hp_ebdry(bnum)->findandmovebdrypt(xp,sind,psi);
-	sind = ebdry(bnum)->seg(sind);
-	ugtouht1d(sind,tlvl);  
-	basis::tri(log2p)->ptprobe1d(NV,uout.data(),&uht(0)(0),MXTM);
+	return(found);
+	
 }
 
 void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &s) {
@@ -54,16 +46,20 @@ void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &
 
 int mistake_counter = 0;
 
-int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
+bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	FLT dr,ds,dx,dy,det,roundoff;
 	TinyVector<FLT,3> wgt;
 	TinyVector<FLT,ND> x,dxmax,ddr,dds;
 	int n,iter,v0,tind1;
-	int ierr = 0;
-	bool found;
+	bool found = true;
 
-	qtree.nearpt(xp.data(),v0);
-	found = findtri(xp,v0,tind);
+	if (tind < 0) {
+		qtree.nearpt(xp.data(),v0);
+		found = findtri(xp,v0,tind);
+	}
+	else {
+		found = findtri(xp,tind);
+	}
 	getwgts(wgt);
 
 	/* TRIANGLE COORDINATES */    
@@ -99,7 +95,7 @@ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 				s = wgt(0)*2 -1.0;
 				r = wgt(2)*2 -1.0;
 				*gbl->log  << "#Warning: this was the first guess " << r << ' ' << s << ' ' << '\n';
-				ierr = 1;
+				found = false;
 				break;
 			}
 		} while (fabs(dr) +fabs(ds) > roundoff);
@@ -110,19 +106,19 @@ int tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 			fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
 			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
 			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
-			ierr = 1;
+			found = false;
 		}
 		/* need to do this because ptprobe_bdry only calculates boundary function */
 		basis::tri(log2p)->ptvalues_rs(r,s);
 
-		return(ierr);
+		return(found);
 	}
 	else if (tind1 < 0) {
 		*gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
-		ierr = 1;
+		found = false;
 	}
 
 	/* need to do this because ptprobe_bdry only calculates boundary function */
 	basis::tri(log2p)->ptvalues_rs(r,s);
-	return(ierr);
+	return(found);
 }

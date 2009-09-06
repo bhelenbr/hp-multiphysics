@@ -470,7 +470,7 @@ namespace ibc_ins {
 							fcn(n).init(input,nstr.str());
 						}
 						else {
-							std::cerr << "couldn't find forcing function\n";
+							std::cerr << "couldn't find forcing function" << std::endl;
 							exit(1);
 						}
 					}
@@ -488,14 +488,14 @@ namespace ibc_ins {
     FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
 
     class translating_drop : public parameter_changer {
-		private:
-			Array<FLT,1> avg;
-			FLT penalty1,penalty2;
+			private:
+				Array<FLT,1> avg;
+				FLT penalty1,penalty2;
 
-		public:
-			translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {
-				avg.resize(1+x.ND+x.NV);
-			}
+			public:
+				translating_drop(tri_hp_ins& xin) : parameter_changer(xin) {
+					avg.resize(1+x.ND+x.NV);
+				}
 
 			void init(input_map& input, std::string idnty) {
 				parameter_changer::init(input,idnty);
@@ -565,6 +565,9 @@ namespace ibc_ins {
 				return;
 			}
 	};
+	
+	
+
 
 
 	class force_coupling : public tri_hp_helper {
@@ -597,16 +600,16 @@ namespace ibc_ins {
 						goto found;
 						}
 					}
-					std::cerr << "List of force boundaries is wrong\n";
+					std::cerr << "List of force boundaries is wrong" << std::endl;
 					exit(1);
 
 					found:
 					if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
-						std:cerr << "Boundary in list of force boundaries is of wrong type\n";
+						std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
 					if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
-						std::cerr << "Boundary in list of force boundaries is of wrong type\n";
+						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
 
@@ -649,7 +652,7 @@ namespace ibc_ins {
 
 				if (!input.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
 					if (!input.getline("force_boundaries",bdrys)) {
-						std::cerr << "No boundary number list\n";
+						std::cerr << "No boundary number list" << std::endl;
 						exit(1);
 					}
 				}
@@ -666,16 +669,16 @@ namespace ibc_ins {
 							goto found;
 						}
 					}
-					std::cerr << "List of force boundaries is wrong\n";
+					std::cerr << "List of force boundaries is wrong" << std::endl;
 					exit(1);
 
 					found:
 						if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
-							std:cerr << "Boundary in list of force boundaries is of wrong type\n";
+							std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
 						if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
-							std::cerr << "Boundary in list of force boundaries is of wrong type\n";
+							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
 
@@ -838,11 +841,239 @@ namespace ibc_ins {
 				return;
 			}
 	};
+	
+	
+	
+	class streamlines : public tri_hp_helper {
+		protected:
+			tri_hp_ins &x;
+			int ndiv;
+			TinyMatrix<FLT,2,tri_mesh::ND> rake_pts;
+			int nterm_lines;
+			Array<TinyMatrix<FLT,2,tri_mesh::ND>,1> term_lines;
+			int maxtsteps;
+			bool forward, backward;
+
+
+		public:
+			streamlines(tri_hp_ins& xin) : tri_hp_helper(xin), x(xin) {};
+			streamlines(streamlines& tgt, tri_hp_ins& xin) : tri_hp_helper(xin), x(xin), ndiv(tgt.ndiv), nterm_lines(tgt.nterm_lines), maxtsteps(tgt.maxtsteps), forward(tgt.forward), backward(tgt.backward) {
+				term_lines.resize(nterm_lines);
+				term_lines = tgt.term_lines;
+			}
+			tri_hp_helper* create(tri_hp& xin) { return new streamlines(*this,dynamic_cast<tri_hp_ins&>(xin)); }
+			void init(input_map& input, std::string idnty) {
+			
+				if (!input.get(x.gbl->idprefix +"_divisions",ndiv)) 
+					input.getwdefault("divisions",ndiv,0);
+					
+				if (!input.get(x.gbl->idprefix +"_maxtsteps",maxtsteps)) 
+					input.getwdefault("maxtsteps",maxtsteps,100000);
+
+				if (!input.get(x.gbl->idprefix +"_pt0",&rake_pts(0,0),tri_mesh::ND)) {
+					if (!input.get("pt0",&rake_pts(0,0),tri_mesh::ND)) {
+						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
+						exit(1);
+					}
+				}
+				
+				if (!input.get(x.gbl->idprefix +"_pt1",&rake_pts(1,0),tri_mesh::ND)) {
+					if (!input.get("pt1",&rake_pts(1,0),tri_mesh::ND)) {
+						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
+						exit(1);
+					}
+				}
+				
+				/* Termination lines */
+				if (!input.get(x.gbl->idprefix +"_nterm_line",nterm_lines)) 
+					input.getwdefault("nterm_line",nterm_lines,0);
+
+				term_lines.resize(nterm_lines);
+
+				for (int n=0;n<nterm_lines;++n) {
+					ostringstream nstr;
+					nstr << "term_line" << n << std::endl;
+					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt0",&term_lines(n)(0,0),tri_mesh::ND)) {
+						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
+						exit(1);
+					}
+					
+					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt1",&term_lines(n)(1,0),tri_mesh::ND)) {
+						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
+						exit(1);
+					}
+				}
+				
+				if (!input.get(x.gbl->idprefix +"_forward",forward)) 
+					input.getwdefault("forward",forward,true);
+					
+				if (!input.get(x.gbl->idprefix +"_backward",backward)) 
+					input.getwdefault("backward",backward,false);
+			}
+			
+			void output() {
+				std::ofstream out;
+				std:ostringstream filename;
+				filename << "streamlines" << x.gbl->tstep << ".dat";
+				out.open(filename.str().c_str());
+			
+				TinyVector<FLT,tri_mesh::ND> dx;
+				dx(0) = (rake_pts(1,0)-rake_pts(0,0))/ndiv;
+				dx(1) = (rake_pts(1,1)-rake_pts(0,1))/ndiv;
+				
+				TinyVector<FLT,tri_mesh::ND> ppt0, ppt1;
+				for (int i=0;i<ndiv+1;++i) {
+					ppt0(0) = rake_pts(0,0) +dx(0)*i;
+					ppt0(1) = rake_pts(0,1) +dx(1)*i;
+					
+					int tind = -1;
+					int counter;
+					timeloop: for (counter = 0; counter < maxtsteps; ++counter) {
+						
+						const int nstage = 4;			
+						Array<FLT,2> vels(nstage,x.NV);
+						
+						Array<FLT,1> vel = vels(0,Range::all());
+						if (!x.ptprobe(ppt0,vel,tind)) break;
+						out << ppt0(0) << ' ' << ppt0(1) << '\n';
+						FLT dt = x.inscribedradius(tind)/(fabs(vel(0))+fabs(vel(1)));
+						
+						double a[nstage] = {0.0, 0.5, 0.5, 1.0};
+						for (int s = 1; s < nstage;++s) {
+							ppt1(0) = ppt0(0) +dt*a[s]*vels(s-1,0);
+							ppt1(1) = ppt0(1) +dt*a[s]*vels(s-1,1);
+							
+							Array<FLT,1> vel = vels(s,Range::all());
+							if (!x.ptprobe(ppt0,vel,tind)) goto exit;
+						}
+						ppt0(0) += dt/6.*(vels(0,0) +2.*vels(1,0) +2.*vels(2,0) +vels(3,0));
+						ppt0(1) += dt/6.*(vels(0,1) +2.*vels(1,1) +2.*vels(2,1) +vels(3,1));
+					}
+					exit: out << counter << '\n';
+					continue;
+				}
+			}
+
+	};
+	
+	static bool tempflip = true;
+	class static_particles : public streamlines {
+		FLT rho, d;
+
+		public:
+			static_particles(tri_hp_ins& xin) : streamlines(xin) {};
+			static_particles(static_particles& tgt, tri_hp_ins& xin) : streamlines(tgt), rho(tgt.rho), d(tgt.d) {}
+			tri_hp_helper* create(tri_hp& xin) { return new static_particles(*this,dynamic_cast<tri_hp_ins&>(xin)); }
+			
+			void init(input_map& input, std::string idnty) {
+				
+				streamlines::init(input,idnty);
+				
+				if (!input.get(x.gbl->idprefix +"_particle_density",rho)) 
+					input.getwdefault("particle_density",rho,1.0);
+				
+				if (!input.get(x.gbl->idprefix +"_particle_diameter",d)) 
+					input.getwdefault("particle_diameter",d,1.0);
+			}
+			
+			void tadvance() {
+				d *= 2.0;
+			}
+				
+			void output() {
+				std::ofstream out;
+				std:ostringstream filename;
+				filename << "static_particles" << x.gbl->tstep << ".dat";
+				out.precision(10);
+				out.open(filename.str().c_str());
+				
+				TinyVector<FLT,tri_mesh::ND> dx;
+				dx(0) = (rake_pts(1,0)-rake_pts(0,0))/ndiv;
+				dx(1) = (rake_pts(1,1)-rake_pts(0,1))/ndiv;
+				FLT re_over_v = x.gbl->rho*d/x.gbl->mu;
+				FLT vol = M_PI*d*d*d/6.;
+				FLT m = rho*vol;
+				FLT buoy = (rho-x.gbl->rho)*vol*x.gbl->g/m;
+				FLT rhoAo2m = 0.5*M_PI*d*d/4.*x.gbl->rho/m;
+
+									
+				TinyVector<FLT,tri_mesh::ND> ppt0, ppt1, vel0, vel1;
+				for (int i=0;i<ndiv+1;++i) {
+					ppt0(0) = rake_pts(0,0) +dx(0)*i;
+					ppt0(1) = rake_pts(0,1) +dx(1)*i;
+					vel0 = 0.0;
+
+					int tind = -1;
+					out << "Curve Begin\n";
+					for (int counter = 0; counter < maxtsteps; ++counter) {
+						const int nstage = 4;			
+						Array<FLT,2> vels(nstage,x.NV);
+						Array<FLT,2> fs(nstage,x.NV);
+						Array<FLT,1> vel(x.NV);
+						
+						if (!x.ptprobe(ppt0,vel,tind)) break;
+						out << ppt0(0) << ", " << ppt0(1) << '\n';
+						
+						TinyVector<FLT,2> vslip;
+						vslip(0) = vel0(0) -vel(0);
+						vslip(1) = vel0(1) -vel(1);
+						
+						FLT vmag = sqrt(vslip(0)*vslip(0) + vslip(1)*vslip(1));
+						FLT re =vmag*re_over_v;
+						FLT nonlinear = 0.125*pow(re,0.72);
+						FLT cd = 24./re_over_v*(1.+nonlinear);  // Avoid dividing by v
+						FLT dcdre = 24./re_over_v*nonlinear*.72/re;
+
+
+						FLT dt = 1./((fabs(vel0(0))+fabs(vel0(1)))/x.inscribedradius(tind) +rhoAo2m*(cd +dcdre*re));
+							
+						vels(0,0) = vel0(0);
+						vels(0,1) = vel0(1);
+						fs(0,0) = -rhoAo2m*cd*vslip(0);
+						fs(0,1) = -rhoAo2m*cd*vslip(1) -buoy;
+												
+						double a[nstage] = {0.0, 0.5, 0.5, 1.0};
+						for (int s = 1; s < nstage;++s) {
+							ppt1(0) = ppt0(0) +dt*a[s]*vels(s-1,0);
+							ppt1(1) = ppt0(1) +dt*a[s]*vels(s-1,1);
+							vel1(0) = vel0(0) +dt*a[s]*fs(s-1,0);
+							vel1(1) = vel0(1) +dt*a[s]*fs(s-1,1);
+							
+							if (!x.ptprobe(ppt1,vel,tind)) goto nextpt;
+							
+							vslip(0) = vel1(0) -vel(0);
+							vslip(1) = vel1(1) -vel(1);
+							
+							vmag = sqrt(vslip(0)*vslip(0) + vslip(1)*vslip(1));
+							re =vmag*re_over_v;
+							nonlinear = 0.125*pow(re,0.72);
+							cd = 24./re_over_v*(1.+nonlinear);  // Avoid dividing by v		
+							
+							vels(s,0) = vel1(0);
+							vels(s,1) = vel1(1);					
+							fs(s,0) = -rhoAo2m*cd*vslip(0);
+							fs(s,1) = -rhoAo2m*cd*vslip(1) -buoy;
+							
+						}
+						ppt0(0) += dt/6.*(vels(0,0) +2.*vels(1,0) +2.*vels(2,0) +vels(3,0));
+						ppt0(1) += dt/6.*(vels(0,1) +2.*vels(1,1) +2.*vels(2,1) +vels(3,1));
+						vel0(0) += dt/6.*(fs(0,0) +2.*fs(1,0) +2.*fs(2,0) +fs(3,0));
+						vel0(1) += dt/6.*(fs(0,1) +2.*fs(1,1) +2.*fs(2,1) +fs(3,1));
+					}
+					nextpt: continue;
+				}
+				
+				out.close();
+			}
+		
+	};	
+	
+
 
 	class helper_type {
 		public:
-			const static int ntypes = 4;
-			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling};
+			const static int ntypes = 6;
+			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling,streamlines,static_particles};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -851,7 +1082,7 @@ namespace ibc_ins {
 				return(-1);
 			}
 	};
-	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
+	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling","streamlines","static_particles"};
 
 	class ibc_type {
 		public:
@@ -948,6 +1179,14 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 		}
 		case ibc_ins::helper_type::force_coupling: {
 			tri_hp_helper *temp = new ibc_ins::force_coupling(*this);
+			return(temp);
+		}
+		case ibc_ins::helper_type::streamlines: {
+			tri_hp_helper *temp = new ibc_ins::streamlines(*this);
+			return(temp);
+		}
+		case ibc_ins::helper_type::static_particles: {
+			tri_hp_helper *temp = new ibc_ins::static_particles(*this);
 			return(temp);
 		}
 		default: {

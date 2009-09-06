@@ -306,7 +306,7 @@ namespace ibc_cns {
 							fcn(n).init(input,nstr.str());
 						}
 						else {
-							std::cerr << "couldn't find forcing function\n";
+							std::cerr << "couldn't find forcing function" << std::endl;
 							exit(1);
 						}
 					}
@@ -353,16 +353,16 @@ namespace ibc_cns {
 						goto found;
 						}
 					}
-					std::cerr << "List of force boundaries is wrong\n";
+					std::cerr << "List of force boundaries is wrong" << std::endl;
 					exit(1);
 
 					found:
 					if (!(hp_ebdry(i) = dynamic_cast<bdry_cns::force_coupling *>(x.hp_ebdry(j)))) {
-						std:cerr << "Boundary in list of force boundaries is of wrong type\n";
+						std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
 					if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
-						std::cerr << "Boundary in list of force boundaries is of wrong type\n";
+						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
 
@@ -405,7 +405,7 @@ namespace ibc_cns {
 
 				if (!input.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
 					if (!input.getline("force_boundaries",bdrys)) {
-						std::cerr << "No boundary number list\n";
+						std::cerr << "No boundary number list" << std::endl;
 						exit(1);
 					}
 				}
@@ -422,16 +422,16 @@ namespace ibc_cns {
 							goto found;
 						}
 					}
-					std::cerr << "List of force boundaries is wrong\n";
+					std::cerr << "List of force boundaries is wrong" << std::endl;
 					exit(1);
 
 					found:
 						if (!(hp_ebdry(i) = dynamic_cast<bdry_cns::force_coupling *>(x.hp_ebdry(j)))) {
-							std:cerr << "Boundary in list of force boundaries is of wrong type\n";
+							std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
 						if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
-							std::cerr << "Boundary in list of force boundaries is of wrong type\n";
+							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
 

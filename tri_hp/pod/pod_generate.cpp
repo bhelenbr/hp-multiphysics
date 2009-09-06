@@ -672,13 +672,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 
 	keyword = base.idprefix + "_pod_id";
 	if (!input.get(keyword,pod_id)) {
-		*x.gbl->log << "Must provide a pod id for pod boundary\n";
+		*x.gbl->log << "Must provide a pod id for pod boundary" << std::endl;
 		exit(1);
 	}
 
 	/* ERROR CHECK THAT NUMBER IS LISTED IN GROUP LIST */
 	if (!input.getline(x.gbl->idprefix +"_groups",keyword)) {
-		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "\n";
+		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "" << std::endl;
 		exit(1);
 	}
 
@@ -686,7 +686,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 	int bnum;
 	do {
 		if (!(mystr >> bnum)) {
-			*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "\n";
+			*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "" << std::endl;
 			exit(1);
 		}
 	} while (bnum != pod_id);

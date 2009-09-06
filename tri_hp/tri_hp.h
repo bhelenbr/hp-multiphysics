@@ -207,9 +207,9 @@ class tri_hp : public r_tri_mesh  {
 		void updatesdata_bdry(int bnum,int bel);
 		void movetdata(int frm, int to);
 		void updatetdata(int t);
-		int findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
+		bool findinteriorpt(TinyVector<FLT,2> pt, int &tind, FLT &r, FLT &s);
 		void findandmvptincurved(TinyVector<FLT,2>& pt,int &tind, FLT &r, FLT &s);
-		void ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
+		bool ptprobe(TinyVector<FLT,ND> xp, Array<FLT,1> uout, int& tind, int tlvl = 0);
 		void ptprobe_bdry(int bnum, TinyVector<FLT,ND> xp, Array<FLT,1> uout, int tlvl);
 
 		/* MESSAGE PASSING ROUTINES SPECIALIZED FOR SOLUTION CONTINUITY */

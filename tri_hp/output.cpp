@@ -377,7 +377,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			Write(outputFile,"Var2",dt_mesh2,dt_grid_save);
 			outputFile.Save("TriangularMesh2D","Seq_Var1");
 #else
-			*gbl->log << "Not supported on this platform\n";
+			*gbl->log << "Not supported on this platform" << std::endl;
 #endif
 			break;
 		}
@@ -642,15 +642,15 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			pmin = MIN(p0,pin);
 
 			if (bin.readInt(sizeof(int))  != npnt) {
-				*gbl->log << "mismatched pnt counts?\n";
+				*gbl->log << "mismatched pnt counts?" << std::endl;
 				exit(1);
 			}
 			if (bin.readInt(sizeof(int))  != nseg) {
-				*gbl->log << "mismatched seg counts?\n";
+				*gbl->log << "mismatched seg counts" << std::endl;;
 				exit(1);
 			}
 			if (bin.readInt(sizeof(int))  != ntri) {
-				*gbl->log << "mismatched tri counts?\n";
+				*gbl->log << "mismatched tri counts?" << std::endl;
 				exit(1);
 			}
 

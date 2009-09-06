@@ -171,7 +171,7 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, input_map &bdrydata) {
 				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
 			}
 			else {
-				std::cerr << "use coupled physics for surface boundary\n";
+				std::cerr << "use coupled physics for surface boundary" << std::endl;
 				exit(1);
 			}
 			break;

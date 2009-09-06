@@ -35,7 +35,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 					fcn(n).init(inmap,nstr.str());
 				}
 				else {
-					std:cerr << "couldn't find initial condition function\n";
+					std:cerr << "couldn't find initial condition function" << std::endl;
 					exit(1);
 				}
 			}
@@ -153,7 +153,7 @@ class gcl_test : public tri_hp_helper {
 						vel(n).init(input,nstr.str());
 					}
 					else {
-						*x.gbl->log << "couldn't find mesh movement function\n";
+						*x.gbl->log << "couldn't find mesh movement function" << std::endl;
 						exit(1);
 					}
 				}

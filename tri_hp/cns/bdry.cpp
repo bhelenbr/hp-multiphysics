@@ -229,7 +229,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 			stress(n).init(inmap,nstr.str());
 		}
 		else {
-			*x.gbl->log << "couldn't find stress function " << nstr.str() << '\n';
+			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
 			exit(1);
 		}
 	}
@@ -431,7 +431,7 @@ void hybrid_slave_pt::update(int stage) {
 	}
 
 	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
 	}
 
@@ -501,7 +501,7 @@ void hybrid_pt::update(int stage) {
 	}
 
 	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
 	}
 

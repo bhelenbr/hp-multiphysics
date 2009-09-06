@@ -433,7 +433,7 @@ void hybrid_pt::update(int stage) {
 	}
 
 	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point\n";
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
 		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
 	}
 
