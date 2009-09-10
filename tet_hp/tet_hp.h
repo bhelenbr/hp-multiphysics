@@ -69,7 +69,10 @@ class tet_hp : public tet_mesh  {
 		Array<Array<int,1>,1> spkpiv;
 		Array<Array<TinyVector<int,2>,1>,1> spklink; // spoke list for each vertex
 		Array<TinyVector<FLT,2>,3> wkseg;
-
+		Array<int,1> ija; //sparse matrix integer storage
+		Array<FLT,1> sa; //sparse matrix element storage
+		int number_sparse_elements; 
+		int size_sparse_matrix;
 
 		/** Stores vertex, edge, face, and interior coefficients of solution */
 		struct vefi {
