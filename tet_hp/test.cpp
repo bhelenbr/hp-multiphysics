@@ -17,20 +17,51 @@
 
 
 void tet_hp::test() {
-			tet_mesh::checkintegrity();
-			output("b0",tecplot);
-			particle();
-			exit(5);
 
-			TinyMatrix<FLT,3,11> pt;
-			TinyVector<TinyMatrix<FLT,MXGP,MXGP>,4> f,g;
-			TinyVector<FLT,3> pnt;
-			float r,s,t;
-			int ind=0;
-			int find;
+//	TinyVector<FLT,5> b,x;
+//	x(0)=1,x(1)=4,x(2)=9,x(3)=2,x(4)=67;
+	
+	insert_sparse(0,0,.1);
+	insert_sparse(1,1,.2);
+	insert_sparse(2,2,.3);
+	insert_sparse(3,3,.4);
+	insert_sparse(4,4,.5);
+
+	insert_sparse(0,2,200);
+	insert_sparse(0,4,400);
+	insert_sparse(0,3,300);
+	insert_sparse(0,1,100);
+
+
+	cout << ija << sa << endl;
+	
+	//test matrix multiply
+//	for(int i = 0; i < size_sparse_matrix; ++i){
+//		b(i) = sa(i)*x(i);
+//		for(int j = ija(i); j < ija(i+1); ++j)
+//			b(i)+=sa(j)*x(ija(j));
+//	}
+//		
+//	cout << b << endl;
+	
+	exit(4);
+			
+	
+	
+	tet_mesh::checkintegrity();
+	output("b0",tecplot);
+	particle();
+	exit(5);
+
+	TinyMatrix<FLT,3,11> pt;
+	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,4> f,g;
+	TinyVector<FLT,3> pnt;
+	float r,s,t;
+	int ind=0;
+	int find;
 
 	
-			cout.precision(10);
+	cout.precision(10);
 		//	cout << npnt << ' ' << nseg << ' ' << ntri << ' ' << ntet << endl;
 			/* pt probe test */
 				Array<double,1> uout(1);

@@ -250,14 +250,24 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	/* sparse matrix allocation */
 	ija.resize(MXTM*NV*ntet);//too much storage resize later
 	sa.resize(MXTM*NV*ntet);
-	number_sparse_elements = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
-	size_sparse_matrix = number_sparse_elements;
+	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+	number_sparse_elements = size_sparse_matrix;
 	sa = 0.0;
+	/* creates sparse matrix with zeros on diagonal */
 	for(int i = 0; i < number_sparse_elements+1; ++i)
-		ija(i) = size_sparse_matrix+2;
+		ija(i) = size_sparse_matrix+1;
 	
 	
-	//test();
+//	ija.resize(10);//too much storage resize later
+//	sa.resize(10);
+//	size_sparse_matrix = 5;
+//	number_sparse_elements = size_sparse_matrix;
+//	ija = -1;
+//	sa = 0.0;
+//	for(int i = 0; i < size_sparse_matrix+1; ++i)
+//		ija(i) = size_sparse_matrix+1;
+//	
+//	test();
 	
 	
 	/*********************************/

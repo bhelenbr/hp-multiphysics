@@ -234,6 +234,9 @@ class tet_hp : public tet_mesh  {
 
 		/** Print errors */
 		FLT maxres();
+	
+		/** Sparse stuff */
+		void insert_sparse(int row, int col, FLT value);
 		
 		/* FUNCTIONS FOR ADAPTION */ 
         void length() {*gbl->log << "using generic length\n";}

@@ -38,6 +38,7 @@
 		959FD36C0E313856000EF952 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
 		95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2D0F55C464008788DB /* length.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
+		95C73E20105EA89D00637BEE /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C73E1F105EA89D00637BEE /* sparse.cpp */; };
 		95F027D60FD89C08000E9979 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
 		95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
 		95F027D80FD89C0B000E9979 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2C0F55C464008788DB /* getnewibc.cpp */; };
@@ -130,6 +131,7 @@
 		9598AE300F55C464008788DB /* tet_hp_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tet_hp_ins.h; path = ins/tet_hp_ins.h; sourceTree = "<group>"; };
 		9598AE310F55C464008788DB /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = ins/tstep.cpp; sourceTree = "<group>"; };
 		95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblibtet_nodal_basis.a; path = ../lib/liblibtet_nodal_basis.a; sourceTree = SOURCE_ROOT; };
+		95C73E1F105EA89D00637BEE /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
 		95DE303F104864E800F7FA10 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		95DE30A7104C294F00F7FA10 /* pod_generate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_generate.cpp; path = pod/pod_generate.cpp; sourceTree = "<group>"; };
 		95DE30A8104C294F00F7FA10 /* pod_generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pod_generate.h; path = pod/pod_generate.h; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				6FB40AE0091AF516002BAA09 /* minvrt.cpp */,
 				6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */,
 				6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */,
+				95C73E1F105EA89D00637BEE /* sparse.cpp */,
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
@@ -375,6 +378,7 @@
 				95F027D90FD89C0D000E9979 /* tstep.cpp in Sources */,
 				95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */,
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
+				95C73E20105EA89D00637BEE /* sparse.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
