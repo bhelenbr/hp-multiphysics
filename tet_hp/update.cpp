@@ -4,7 +4,7 @@
 // #define DEBUG
 // #define MGRID_TEST
 
-void tet_hp::rsdl(int stage) {    
+void tet_hp::rsdl(int stage) {  
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
 //    if (mmovement == coupled_deformable && stage == gbl->nstage && log2p == 0) r_tet_mesh::rsdl(); 
 	
@@ -37,10 +37,96 @@ void tet_hp::rsdl(int stage) {
 		hp_vbdry(i)->rsdl(stage);
 		
 	helper->rsdl(stage);
+			
+	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
+	
+	for(int tind = 0; tind<ntet;++tind) {
+		
+		/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
+		ugtouht(tind);
+		
+		/* call rsdl for element */
+		element_rsdl(tind,stage,uht,lf_re,lf_im);
+		
+		/* load imaginary local residual into global residual */
+		lf = lf_im;
+		lftog(tind,gbl->res);
+		
+		/* load real local residual into global residual */
+		lf = lf_re;
+		lftog(tind,gbl->res_r);
+	}
+	
+	
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tet(log2p).em > 0) {
+		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
+		if (basis::tet(log2p).fm > 0) {
+			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
+			if (basis::tet(log2p).im > 0) {
+				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
+			}
+		}
+	}
+	
+
+#ifdef DEBUG
+	if (coarse_flag) {
+		for(i=0;i<npnt;++i) {
+			printf("rsdl v: %d ",i);
+			for (n=0;n<NV;++n) 
+				printf("%e ",gbl->res.v(i,n));
+			printf("\n");
+		}
+		
+		for(i=0;i<nseg;++i) {
+			for(int m=0;m<basis::tet(log2p).em;++m) {
+				printf("rsdl s: %d %d ",i,m); 
+				for(n=0;n<NV;++n)
+					printf("%e ",gbl->res.e(i,m,n));
+				printf("\n");
+			}
+		}
+		
+		for(i=0;i<ntri;++i) {
+			for(int m=0;m<basis::tet(log2p).fm;++m) {
+				printf("rsdl i: %d %d ",i,m);
+				for(n=0;n<NV;++n) 
+					printf("%e %e %e\n",gbl->res.f(i,m,n));
+				printf("\n");
+			}
+		}
+	}
+#endif
+	
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if (coarse_flag) {
+		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+		if(isfrst) {
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
+			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
+			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
+			isfrst = false;
+		}
+		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+		if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
+		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
+	}
+	else {
+		if (stage == gbl->nstage) {
+			/* TEMPORARY HACK FOR AUXILIARY FLUXES */
+			for (int i=0;i<nfbd;++i)
+				hp_fbdry(i)->output(*gbl->log, tet_hp::auxiliary);
+		}
+	}
 	
 	return;
 }
-		
 
 void tet_hp::update() {
 	int i,j,m,k,n,indx,indx1;

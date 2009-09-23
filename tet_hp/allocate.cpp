@@ -267,7 +267,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 //	for(int i = 0; i < size_sparse_matrix+1; ++i)
 //		ija(i) = size_sparse_matrix+1;
 //	
-//	test();
+	//test();
 	
 	
 	/*********************************/

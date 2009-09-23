@@ -213,7 +213,11 @@ class tet_hp : public tet_mesh  {
 
 		/** Calculate residuals */
 		void rsdl() {rsdl(gbl->nstage);}
-		virtual void rsdl(int stage); 
+		virtual void rsdl(int stage); 		
+		virtual void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
+			*gbl->log << "I shouldn't be in generic element_rsdl" << std::endl;
+		}
+		
 
 		/** Relax solution */  
 		void update();
@@ -237,6 +241,10 @@ class tet_hp : public tet_mesh  {
 	
 		/** Sparse stuff */
 		void insert_sparse(int row, int col, FLT value);
+		void create_jacobian();
+		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
+
+
 		
 		/* FUNCTIONS FOR ADAPTION */ 
         void length() {*gbl->log << "using generic length\n";}

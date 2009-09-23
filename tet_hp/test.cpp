@@ -18,21 +18,26 @@
 
 void tet_hp::test() {
 
+	
+	
+	create_jacobian();
+	
+/* insert sparse matrix test */
 //	TinyVector<FLT,5> b,x;
 //	x(0)=1,x(1)=4,x(2)=9,x(3)=2,x(4)=67;
 	
-	insert_sparse(0,0,.1);
-	insert_sparse(1,1,.2);
-	insert_sparse(2,2,.3);
-	insert_sparse(3,3,.4);
-	insert_sparse(4,4,.5);
-
-	insert_sparse(0,2,200);
-	insert_sparse(0,4,400);
-	insert_sparse(0,3,300);
-	insert_sparse(0,1,100);
-
-
+//	insert_sparse(0,0,.1);
+//	insert_sparse(1,1,.2);
+//	insert_sparse(2,2,.3);
+//	insert_sparse(3,3,.4);
+//	insert_sparse(4,4,.5);
+//
+//	insert_sparse(0,2,200);
+//	insert_sparse(0,4,400);
+//	insert_sparse(0,3,300);
+//	insert_sparse(0,1,100);
+//
+//
 	cout << ija << sa << endl;
 	
 	//test matrix multiply

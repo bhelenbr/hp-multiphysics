@@ -9,9 +9,10 @@
 
 #include "tet_hp_cd.h"
 #include "../hp_boundary.h"
+void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	
-void tet_hp_cd::rsdl(int stage) {
-	int i,j,k,n,tind;
+//void tet_hp_cd::rsdl(int stage) {
+	int i,j,k,n;
 	FLT fluxx,fluxy,fluxz,jcb;
 	FLT tres[NV];
 	TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP> cv00,cv01,cv02,e00,e01,e02;
@@ -23,9 +24,9 @@ void tet_hp_cd::rsdl(int stage) {
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP; 
 	
-	tet_hp::rsdl(stage);
+//	tet_hp::rsdl(stage);
 
-	for(tind = 0; tind<ntet;++tind) {
+//	for(tind = 0; tind<ntet;++tind) {
 		/* LOAD INDICES OF VERTEX POINTS */
 		v = tet(tind).pnt;
 
@@ -65,12 +66,12 @@ void tet_hp_cd::rsdl(int stage) {
 			}
 		}
 		
-		ugtouht(tind);
+		//ugtouht(tind);
 		basis::tet(log2p).proj(&uht(0)(0),&u(0)(0)(0)(0),&du(0,0)(0)(0)(0),&du(0,1)(0)(0)(0),&du(0,2)(0)(0)(0),stridex, stridey);
 
 		for(n=0;n<NV;++n)
 			for(i=0;i<basis::tet(log2p).tm;++i)
-				lf(n)(i) = 0.0;
+				lf_im(n)(i) = 0.0;
 
 		/* CONVECTION */
 		for(i=0;i<lgpx;++i) {
@@ -97,10 +98,10 @@ void tet_hp_cd::rsdl(int stage) {
 			}
 		}
 		
-		basis::tet(log2p).intgrtrst(&lf(0)(0),&cv00(0)(0)(0),&cv01(0)(0)(0),&cv02(0)(0)(0),stridex,stridey);
+		basis::tet(log2p).intgrtrst(&lf_im(0)(0),&cv00(0)(0)(0),&cv01(0)(0)(0),&cv02(0)(0)(0),stridex,stridey);
 
 		/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-		lftog(tind,gbl->res);
+		//lftog(tind,gbl->res);
 
 		/* NEGATIVE REAL TERMS */
 		if (gbl->beta(stage) > 0.0) {
@@ -125,7 +126,7 @@ void tet_hp_cd::rsdl(int stage) {
 			}   
 //			cout << cjcb(0)(0)(0) << endl;   
 //			cout << "jcb-cjcb = " << tet(tind).vol/8 - cjcb(0)(0)(0) << endl;      
-			basis::tet(log2p).intgrt(&lf(0)(0),&res(0)(0)(0)(0),stridex,stridey);
+			basis::tet(log2p).intgrt(&lf_re(0)(0),&res(0)(0)(0)(0),stridex,stridey);
 
 			/* DIFFUSIVE TERMS  */
 			for(i=0;i<lgpx;++i) {
@@ -204,41 +205,41 @@ void tet_hp_cd::rsdl(int stage) {
 
 			for(n=0;n<NV;++n)
 				for(i=0;i<basis::tet(log2p).tm;++i)
-						lf(n)(i) *= gbl->beta(stage);
+						lf_re(n)(i) *= gbl->beta(stage);
 			
-			lftog(tind,gbl->res_r);
+			//lftog(tind,gbl->res_r);
 		}
-	}
+//	}
 
-	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
-	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
-	if (basis::tet(log2p).em > 0) {
-		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
-		if (basis::tet(log2p).fm > 0) {
-			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
-			if (basis::tet(log2p).im > 0) {
-				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
-			}
-		}
-	}
-	
-	/*********************************************/
-	/* MODIFY RESIDUALS ON COARSER MESHES            */
-	/*********************************************/    
-	if (coarse_flag) {
-	/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
-			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
-			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
-			isfrst = false;
-		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
-		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
-		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
-	}
+//	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+//	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+//	if (basis::tet(log2p).em > 0) {
+//		gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += gbl->res_r.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());          
+//		if (basis::tet(log2p).fm > 0) {
+//			gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += gbl->res_r.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());      
+//			if (basis::tet(log2p).im > 0) {
+//				gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += gbl->res_r.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());      
+//			}
+//		}
+//	}
+//	
+//	/*********************************************/
+//	/* MODIFY RESIDUALS ON COARSER MESHES            */
+//	/*********************************************/    
+//	if (coarse_flag) {
+//	/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+//		if(isfrst) {
+//			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
+//			if (basis::tet(log2p).em) dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) = fadd*gbl->res0.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) -gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());      
+//			if (basis::tet(log2p).fm) dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) = fadd*gbl->res0.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) -gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());
+//			if (basis::tet(log2p).im) dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
+//			isfrst = false;
+//		}
+//		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+//		if (basis::tet(log2p).em) gbl->res.e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all()) += dres(log2p).e(Range(0,nseg-1),Range(0,basis::tet(log2p).em-1),Range::all());
+//		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
+//		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
+//	}
 	
 	return;
 }
