@@ -6,6 +6,7 @@
  *  Copyright 2009 Clarkson University. All rights reserved.
  *
  */
+#define petsc
 
 #include "tet_hp.h"
 #include "ins/tet_hp_ins.h"
@@ -19,6 +20,7 @@ void tet_hp::insert_sparse(int row, int col, FLT value){
 		sa(row) += value;
 		return;
 	}
+	
 	/* add value to already existing element in sparse */
 	for(int i = ija(row); i < ija(row+1); ++i){
 		if(ija(i) == col){
@@ -129,17 +131,29 @@ void tet_hp::create_jacobian() {
 				loc_to_glo(ind++) = iind+m*NV+n;
 			}
 		}
-		
+
+#ifdef petsc
+		PetscErrorCode ierr;
 		for(int i = 0; i < kn; ++i)
 			for(int j = 0; j < kn; ++j)
-				insert_sparse(loc_to_glo(i), loc_to_glo(j), K(i,j));				
+				ierr = MatSetValues(petsc_J,1,&loc_to_glo(i),1,&loc_to_glo(j),&K(i,j),ADD_VALUES);CHKERRQ(ierr);
+#endif
+
+#ifndef petsc
+		for(int i = 0; i < kn; ++i)
+			for(int j = 0; j < kn; ++j)
+				insert_sparse(loc_to_glo(i), loc_to_glo(j), K(i,j));	
+#endif
+
 				
 				
 	}
 	
+#ifndef petsc
 	ija.resizeAndPreserve(number_sparse_elements+1);
 	sa.resizeAndPreserve(number_sparse_elements+1);
-
+#endif	
+	
 	return;
 }
 
@@ -176,6 +190,102 @@ void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	
 	return;
 }
+
+void tet_hp::create_rsdl() {
+	int indx,gindx,eind,find,iind,sgn,msgn,mode;
+	
+	int kn = NV*basis::tet(log2p).tm;
+	Array<FLT,1> lclres(kn);
+	Array<int,1> loc_to_glo(kn);
+	
+	for(int tind = 0; tind < ntet; ++tind){	
+		
+		int ind = 0;
+		
+		create_local_rsdl(tind, lclres);
+		
+		for (int m = 0; m < 4; ++m) {
+			gindx = NV*tet(tind).pnt(m);
+			for (int n = 0; n < NV; ++n)
+				loc_to_glo(ind++) = gindx+n;
+		}		
+		
+		/* EDGE MODES */
+		if (basis::tet(log2p).p > 1) {
+			for(int i = 0; i < 6; ++i) {
+				eind = npnt*NV + tet(tind).seg(i)*basis::tet(log2p).em*NV;
+				sgn = tet(tind).sgn(i);
+				msgn = 1;
+				for (int m = 0; m < basis::tet(log2p).em; ++m) {
+					for(int n = 0; n < NV; ++n) {
+						lclres(ind) *= msgn;
+						loc_to_glo(ind++) = eind + m*NV + n;
+					}
+					msgn *= sgn;
+				}
+			}
+		}
+		
+		/* FACE MODES */
+		if (basis::tet(log2p).p > 2) {
+			for(int i = 0; i < 4; ++i){
+				sgn = -tet(tind).rot(i);
+				find = npnt*NV+nseg*basis::tet(log2p).em*NV+tet(tind).tri(i)*basis::tet(log2p).em*NV;
+				mode = 0;
+				msgn = 1;		
+				for(int m = 1; m <= basis::tet(log2p).em-1; ++m) {
+					for(int j = 1; j <= basis::tet(log2p).em-m; ++j){
+						for(int n = 0; n < NV; ++n){
+							lclres(ind) *= msgn;							
+							loc_to_glo(ind++) = find+mode*NV+n;
+						}
+						++mode;
+					}
+					msgn *= sgn;
+				}
+			}		
+		}		
+		
+		/* INTERIOR MODES */
+		iind = npnt*NV+nseg*basis::tet(log2p).em*NV+ntri*basis::tet(log2p).fm*NV+tind*basis::tet(log2p).im*NV;
+		for(int m = 0; m < basis::tet(log2p).im; ++m) 
+			for(int n = 0; n < NV; ++n)
+				loc_to_glo(ind++) = iind+m*NV+n;
+			
+		
+#ifdef petsc
+		PetscErrorCode ierr;
+		for(int i = 0; i < kn; ++i)
+			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),INSERT_VALUES);CHKERRQ(ierr);
+
+#endif
+		
+#ifndef petsc
+		for(int i = 0; i < kn; ++i)
+			gblres(loc_to_glo(i))=lclres(i);	
+#endif
+		
+		
+		
+	}
+	
+	return;
+}
+
+void tet_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
+	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV);
+
+	int ind = 0;
+
+	ugtouht(tind);
+	element_rsdl(tind,0,uht,lf_re,lf_im);
+	for(int i=0;i<basis::tet(log2p).tm;++i)
+		for(int n=0;n<NV;++n)
+			lclres(ind++)=lf_re(n)(i)+lf_im(n)(i);	
+	
+	return;
+}
+
 
 
 //void tet_hp::sparse_matrix_multiply(FLT *x, FLT *b){

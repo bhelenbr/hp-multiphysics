@@ -11,6 +11,7 @@
 #define _tet_hp_h_
 
 //#define NODAL
+#define petsc
 
 #ifdef NODAL
 #include <tet_nodal_basis.h>
@@ -21,6 +22,10 @@
 #include <tet_mesh.h>
 #include <float.h>
 #include <blocks.h>
+
+#ifdef petsc
+#include <petscksp.h>
+#endif
 
 
 class hp_vrtx_bdry;
@@ -243,6 +248,20 @@ class tet_hp : public tet_mesh  {
 		void insert_sparse(int row, int col, FLT value);
 		void create_jacobian();
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
+		void create_rsdl();
+		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
+
+#ifdef petsc
+		void petsc_initialize();
+		void petsc_solve();
+		void petsc_finalize();
+		void petsc_to_ug();
+		void ug_to_petsc();
+		Mat  petsc_J;                /* Jacobian matrix */
+		Vec  petsc_u,petsc_f;          /* solution,residual */
+		KSP  ksp;             /* linear solver context */
+
+#endif		
 
 
 		
