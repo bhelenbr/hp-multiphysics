@@ -11,7 +11,6 @@
 #define _tet_hp_h_
 
 //#define NODAL
-#define petsc
 
 #ifdef NODAL
 #include <tet_nodal_basis.h>
@@ -74,10 +73,7 @@ class tet_hp : public tet_mesh  {
 		Array<Array<int,1>,1> spkpiv;
 		Array<Array<TinyVector<int,2>,1>,1> spklink; // spoke list for each vertex
 		Array<TinyVector<FLT,2>,3> wkseg;
-		Array<int,1> ija; //sparse matrix integer storage
-		Array<FLT,1> sa; //sparse matrix element storage
-		int number_sparse_elements; 
-		int size_sparse_matrix;
+
 
 		/** Stores vertex, edge, face, and interior coefficients of solution */
 		struct vefi {
@@ -245,7 +241,6 @@ class tet_hp : public tet_mesh  {
 		FLT maxres();
 	
 		/** Sparse stuff */
-		void insert_sparse(int row, int col, FLT value);
 		void create_jacobian();
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
 		void create_rsdl();
@@ -257,11 +252,34 @@ class tet_hp : public tet_mesh  {
 		void petsc_finalize();
 		void petsc_to_ug();
 		void ug_to_petsc();
-		Mat  petsc_J;                /* Jacobian matrix */
-		Vec  petsc_u,petsc_f;          /* solution,residual */
-		KSP  ksp;             /* linear solver context */
+		Mat  petsc_J;           /* Jacobian matrix */
+		Vec  petsc_u,petsc_f;   /* solution,residual */
+		KSP  ksp;               /* linear solver context */
+		PC   pc;                 /* preconditioner */
 
-#endif		
+#endif	
+
+#ifndef petsc
+	
+		bool sparse_resized;	
+		Array<FLT,1> res_vec,ug_vec;// solution and residual vector
+		Array<int,1> ija; //sparse matrix integer storage
+		Array<FLT,1> sa; //sparse matrix element storage
+		int number_sparse_elements; 
+		int size_sparse_matrix;
+	
+		void insert_sparse(int row, int col, FLT value);
+		void zero_sparse();
+		void initialize_sparse();
+		void vec_to_ug();
+		void ug_to_vec();
+		void lsolve();
+		struct jacobian_matrix{
+			jacobian_matrix() {}
+		};	
+		void mult(const jacobian_matrix &J, const double *vec_in, double *vec_out);
+
+#endif
 
 
 		

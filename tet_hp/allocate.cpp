@@ -7,6 +7,7 @@
  *
  */
 
+
 #include "tet_hp.h"
 #include <utilities.h>
 #include <input_map.h>
@@ -247,20 +248,25 @@ void tet_hp::init(input_map& inmap, void *gin) {
 		//spoke();
 	}
 	
-	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
 
-#ifndef petsc
-	/* sparse matrix allocation */
-	ija.resize(MXTM*NV*ntet);//too much storage resize later
-	sa.resize(MXTM*NV*ntet);
-	number_sparse_elements = size_sparse_matrix;
-	sa = 0.0;
-	/* creates sparse matrix with zeros on diagonal */
-	for(int i = 0; i < number_sparse_elements+1; ++i)
-		ija(i) = size_sparse_matrix+1;
-#endif	
+//#ifndef petsc
+//	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+//
+//	/* sparse matrix allocation */
+//	ija.resize(MXTM*NV*ntet);//too much storage resize later
+//	sa.resize(MXTM*NV*ntet);
+//	number_sparse_elements = size_sparse_matrix;
+//	sa = 0.0;
+//	/* creates sparse matrix with zeros on diagonal */
+//	for(int i = 0; i < number_sparse_elements+1; ++i)
+//		ija(i) = size_sparse_matrix+1;
+//#endif	
 	
-
+#ifndef petsc
+	initialize_sparse();
+	sparse_resized = false;
+#endif
+	
 	//test();
 	
 	

@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
 	MPI_Init(&argc,&argv);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
+	
 #ifdef PTH
 	// For debugging put interrupt here
 	// On interrupt type this into gdb console:  handle SIGUSR1 nostop print pass

@@ -6,11 +6,11 @@
  *  Copyright 2009 Clarkson University. All rights reserved.
  *
  */
-#define petsc
 
 #include "tet_hp.h"
 #include "ins/tet_hp_ins.h"
 
+#ifndef petsc
 void tet_hp::insert_sparse(int row, int col, FLT value){
 	
 	int find_col = -1;
@@ -60,6 +60,32 @@ void tet_hp::insert_sparse(int row, int col, FLT value){
 	return;	
 }
 
+/* zero out sparse matrix but keep same structure */
+void tet_hp::zero_sparse(){
+	
+	for (int i = 0; i < number_sparse_elements+1; ++i){
+		res_vec(i) = 0.0;
+		sa(i) = 0.0;
+	}
+	
+	return;
+}
+
+void tet_hp::initialize_sparse(){
+
+	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+	
+	/* sparse matrix allocation */
+	ija.resize(MXTM*NV*ntet);//too much storage resize later
+	sa.resize(MXTM*NV*ntet);
+	number_sparse_elements = size_sparse_matrix;
+	sa = 0.0;
+	/* creates sparse matrix with zeros on diagonal */
+	for(int i = 0; i < number_sparse_elements+1; ++i)
+		ija(i) = size_sparse_matrix+1;
+	return;
+}
+#endif
 
 void tet_hp::create_jacobian() {
 	int indx,gindx,eind,find,iind,sgn,msgn,mode;
@@ -132,11 +158,14 @@ void tet_hp::create_jacobian() {
 			}
 		}
 
+		
 #ifdef petsc
+
 		PetscErrorCode ierr;
 		for(int i = 0; i < kn; ++i)
 			for(int j = 0; j < kn; ++j)
-				ierr = MatSetValues(petsc_J,1,&loc_to_glo(i),1,&loc_to_glo(j),&K(i,j),ADD_VALUES);CHKERRQ(ierr);
+				ierr = MatSetValues(petsc_J,1,&loc_to_glo(i),1,&loc_to_glo(j),&K(i,j),ADD_VALUES);
+		// CHKERRQ(ierr);
 #endif
 
 #ifndef petsc
@@ -150,10 +179,13 @@ void tet_hp::create_jacobian() {
 	}
 	
 #ifndef petsc
-	ija.resizeAndPreserve(number_sparse_elements+1);
-	sa.resizeAndPreserve(number_sparse_elements+1);
-#endif	
-	
+	if (!sparse_resized) {
+		ija.resizeAndPreserve(number_sparse_elements+1);
+		sa.resizeAndPreserve(number_sparse_elements+1);
+		sparse_resized = true;
+	}
+
+#endif
 	return;
 }
 
@@ -253,16 +285,19 @@ void tet_hp::create_rsdl() {
 				loc_to_glo(ind++) = iind+m*NV+n;
 			
 		
+	
 #ifdef petsc
+		
 		PetscErrorCode ierr;
 		for(int i = 0; i < kn; ++i)
-			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),INSERT_VALUES);CHKERRQ(ierr);
+			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),INSERT_VALUES);
+		// CHKERRQ(ierr);
 
 #endif
 		
 #ifndef petsc
 		for(int i = 0; i < kn; ++i)
-			gblres(loc_to_glo(i))=lclres(i);	
+			res_vec(loc_to_glo(i))+=lclres(i);	
 #endif
 		
 		
@@ -286,7 +321,59 @@ void tet_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 	return;
 }
 
+#ifndef petsc
+void tet_hp::vec_to_ug(){
+	
+	int ind = 0;
+	
+	for(int i = 0; i < npnt; ++i)
+		for(int n = 0; n < NV; ++n)
+			ug.v(i,n) = ug_vec(ind++);
+	
+	for(int i = 0; i < nseg; ++i)
+		for(int m = 0; m < basis::tet(log2p).em; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug.e(i,m,n) = ug_vec(ind++);
+	
+	for(int i = 0; i < ntri; ++i)
+		for(int m = 0; m < basis::tet(log2p).fm; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug.f(i,m,n) = ug_vec(ind++);		
+	
+	for(int i = 0; i < ntet; ++i)
+		for(int m = 0; m < basis::tet(log2p).im; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug.i(i,m,n) = ug_vec(ind++);	
+	
+	return;	
+}
 
+void tet_hp::ug_to_vec(){
+	
+	int ind = 0;
+	
+	for(int i = 0; i < npnt; ++i)
+		for(int n = 0; n < NV; ++n)
+			ug_vec(ind++) = ug.v(i,n);
+	
+	for(int i = 0; i < nseg; ++i)
+		for(int m = 0; m < basis::tet(log2p).em; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug_vec(ind++) = ug.e(i,m,n);
+	
+	for(int i = 0; i < ntri; ++i)
+		for(int m = 0; m < basis::tet(log2p).fm; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug_vec(ind++) = ug.f(i,m,n);;		
+	
+	for(int i = 0; i < ntet; ++i)
+		for(int m = 0; m < basis::tet(log2p).im; ++m)
+			for(int n = 0; n < NV; ++n)
+				ug_vec(ind++) = ug.i(i,m,n);	
+	
+	return;	
+}
+#endif
 
 //void tet_hp::sparse_matrix_multiply(FLT *x, FLT *b){
 //

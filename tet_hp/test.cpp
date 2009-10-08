@@ -37,9 +37,7 @@ void tet_hp::test() {
 //	insert_sparse(0,3,300);
 //	insert_sparse(0,1,100);
 //
-//
-	cout << ija << sa << endl;
-	
+//	
 	//test matrix multiply
 //	for(int i = 0; i < size_sparse_matrix; ++i){
 //		b(i) = sa(i)*x(i);
