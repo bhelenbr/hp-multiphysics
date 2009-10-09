@@ -9,6 +9,7 @@
 
 #include "tet_hp.h"
 #include "ins/tet_hp_ins.h"
+#include "gmres.h"
 
 #ifndef petsc
 void tet_hp::insert_sparse(int row, int col, FLT value){

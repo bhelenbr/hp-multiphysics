@@ -21,7 +21,6 @@
 		6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
 		6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
 		6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
-		6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662044091AFCEF00FB5D82 /* vecLib.framework */; };
 		6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
 		6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
@@ -29,17 +28,20 @@
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181B107A9FDA005403AA /* libmpi.dylib */; };
 		951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181C107A9FDA005403AA /* libmpi_cxx.dylib */; };
-		951C1843107AA166005403AA /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C1841107AA166005403AA /* libpetscmat.a */; };
-		951C1844107AA166005403AA /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C1842107AA166005403AA /* libpetscvec.a */; };
-		951C1852107AA1A9005403AA /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C184C107AA1A9005403AA /* libpetsccontrib.a */; };
-		951C1853107AA1A9005403AA /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C184D107AA1A9005403AA /* libpetscdm.a */; };
-		951C1854107AA1A9005403AA /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C184E107AA1A9005403AA /* libpetscksp.a */; };
-		951C1855107AA1A9005403AA /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C184F107AA1A9005403AA /* libpetscsnes.a */; };
 		951C185C107AA9EF005403AA /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953FD0AB106AB696002145CC /* petsc.cpp */; };
-		9521259F107E94A100404D67 /* lsolver.c in Sources */ = {isa = PBXBuildFile; fileRef = 95167870107E741E00E48F75 /* lsolver.c */; };
 		9527AE660E3513F000360E38 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
 		9527AE680E3513FA00360E38 /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
 		9527AE690E3513FB00360E38 /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
+		9529B9C6107F8DAA0002670A /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529B9C5107F8DAA0002670A /* Accelerate.framework */; };
+		9529BA1C107F99130002670A /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA14107F99130002670A /* libpetsc.a */; };
+		9529BA1D107F99130002670A /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA15107F99130002670A /* libpetsccontrib.a */; };
+		9529BA1E107F99130002670A /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA16107F99130002670A /* libpetscdm.a */; };
+		9529BA1F107F99130002670A /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA17107F99130002670A /* libpetscksp.a */; };
+		9529BA20107F99130002670A /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA18107F99130002670A /* libpetscmat.a */; };
+		9529BA21107F99130002670A /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA19107F99130002670A /* libpetscsnes.a */; };
+		9529BA22107F99130002670A /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA1A107F99130002670A /* libpetscts.a */; };
+		9529BA23107F99130002670A /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA1B107F99130002670A /* libpetscvec.a */; };
+		9529BA4C107FB0990002670A /* lsolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9529BA4B107FB0990002670A /* lsolver.cpp */; };
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
@@ -94,7 +96,6 @@
 		6F661FF8091AFB3500FB5D82 /* libmyblas.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmyblas.a; path = ../lib/libmyblas.a; sourceTree = SOURCE_ROOT; };
 		6F661FF9091AFB3500FB5D82 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
 		6F662036091AFC8D00FB5D82 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
-		6F662044091AFCEF00FB5D82 /* vecLib.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = vecLib.framework; path = /System/Library/Frameworks/vecLib.framework; sourceTree = "<absolute>"; };
 		6F66205C091AFFC500FB5D82 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
 		6F68254D099850E600F57688 /* hp_getnewibc.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = hp_getnewibc.cpp; sourceTree = "<group>"; };
 		6F77C5100B4D8959006A4504 /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/muParser/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
@@ -118,16 +119,20 @@
 		6FB901D80A6C782300A4729C /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
 		6FB91B1C0ACCB45300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libmesh_mpi.a; sourceTree = SOURCE_ROOT; };
 		8DD76F6C0486A84900D96B5E /* tet_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp; sourceTree = BUILT_PRODUCTS_DIR; };
-		95167870107E741E00E48F75 /* lsolver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lsolver.c; sourceTree = "<group>"; };
 		9516787F107E7F9700E48F75 /* gmres.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gmres.h; sourceTree = "<group>"; };
 		951C181B107A9FDA005403AA /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		951C181C107A9FDA005403AA /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
-		951C1841107AA166005403AA /* libpetscmat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscmat.a; path = ../../Packages/lib/libpetscmat.a; sourceTree = SOURCE_ROOT; };
-		951C1842107AA166005403AA /* libpetscvec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscvec.a; path = ../../Packages/lib/libpetscvec.a; sourceTree = SOURCE_ROOT; };
-		951C184C107AA1A9005403AA /* libpetsccontrib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetsccontrib.a; path = ../../Packages/lib/libpetsccontrib.a; sourceTree = SOURCE_ROOT; };
-		951C184D107AA1A9005403AA /* libpetscdm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscdm.a; path = ../../Packages/lib/libpetscdm.a; sourceTree = SOURCE_ROOT; };
-		951C184E107AA1A9005403AA /* libpetscksp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscksp.a; path = ../../Packages/lib/libpetscksp.a; sourceTree = SOURCE_ROOT; };
-		951C184F107AA1A9005403AA /* libpetscsnes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscsnes.a; path = ../../Packages/lib/libpetscsnes.a; sourceTree = SOURCE_ROOT; };
+		9529B9C5107F8DAA0002670A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
+		9529BA14107F99130002670A /* libpetsc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetsc.a; path = ../../Packages/lib/libpetsc.a; sourceTree = SOURCE_ROOT; };
+		9529BA15107F99130002670A /* libpetsccontrib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetsccontrib.a; path = ../../Packages/lib/libpetsccontrib.a; sourceTree = SOURCE_ROOT; };
+		9529BA16107F99130002670A /* libpetscdm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscdm.a; path = ../../Packages/lib/libpetscdm.a; sourceTree = SOURCE_ROOT; };
+		9529BA17107F99130002670A /* libpetscksp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscksp.a; path = ../../Packages/lib/libpetscksp.a; sourceTree = SOURCE_ROOT; };
+		9529BA18107F99130002670A /* libpetscmat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscmat.a; path = ../../Packages/lib/libpetscmat.a; sourceTree = SOURCE_ROOT; };
+		9529BA19107F99130002670A /* libpetscsnes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscsnes.a; path = ../../Packages/lib/libpetscsnes.a; sourceTree = SOURCE_ROOT; };
+		9529BA1A107F99130002670A /* libpetscts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscts.a; path = ../../Packages/lib/libpetscts.a; sourceTree = SOURCE_ROOT; };
+		9529BA1B107F99130002670A /* libpetscvec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscvec.a; path = ../../Packages/lib/libpetscvec.a; sourceTree = SOURCE_ROOT; };
+		9529BA47107FB0840002670A /* superlu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = superlu.cpp; sourceTree = "<group>"; };
+		9529BA4B107FB0990002670A /* lsolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lsolver.cpp; sourceTree = "<group>"; };
 		95331FE40D6B602400961CD4 /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		9533379C0DCA18D2007A1D26 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rsdl.cpp; sourceTree = "<group>"; };
 		9533379D0DCA18D2007A1D26 /* tet_hp_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tet_hp_cd.h; sourceTree = "<group>"; };
@@ -174,7 +179,6 @@
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
 				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
 				6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */,
-				6F662045091AFCEF00FB5D82 /* vecLib.framework in Frameworks */,
 				6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */,
 				6F2C827B0CE6506C000267B3 /* libtri_mesh.a in Frameworks */,
 				6F2C828A0CE6510B000267B3 /* libpth.a in Frameworks */,
@@ -183,12 +187,15 @@
 				6F25FE810FED8DEE00B2A5D7 /* libMAdLib.a in Frameworks */,
 				951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */,
 				951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */,
-				951C1843107AA166005403AA /* libpetscmat.a in Frameworks */,
-				951C1844107AA166005403AA /* libpetscvec.a in Frameworks */,
-				951C1852107AA1A9005403AA /* libpetsccontrib.a in Frameworks */,
-				951C1853107AA1A9005403AA /* libpetscdm.a in Frameworks */,
-				951C1854107AA1A9005403AA /* libpetscksp.a in Frameworks */,
-				951C1855107AA1A9005403AA /* libpetscsnes.a in Frameworks */,
+				9529B9C6107F8DAA0002670A /* Accelerate.framework in Frameworks */,
+				9529BA1C107F99130002670A /* libpetsc.a in Frameworks */,
+				9529BA1D107F99130002670A /* libpetsccontrib.a in Frameworks */,
+				9529BA1E107F99130002670A /* libpetscdm.a in Frameworks */,
+				9529BA1F107F99130002670A /* libpetscksp.a in Frameworks */,
+				9529BA20107F99130002670A /* libpetscmat.a in Frameworks */,
+				9529BA21107F99130002670A /* libpetscsnes.a in Frameworks */,
+				9529BA22107F99130002670A /* libpetscts.a in Frameworks */,
+				9529BA23107F99130002670A /* libpetscvec.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -234,10 +241,11 @@
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
 				95671D860F57074800872173 /* particle.cpp */,
 				95331FE40D6B602400961CD4 /* test.cpp */,
-				9516787F107E7F9700E48F75 /* gmres.h */,
 				95C73E1F105EA89D00637BEE /* sparse.cpp */,
 				953FD0AB106AB696002145CC /* petsc.cpp */,
-				95167870107E741E00E48F75 /* lsolver.c */,
+				9516787F107E7F9700E48F75 /* gmres.h */,
+				9529BA4B107FB0990002670A /* lsolver.cpp */,
+				9529BA47107FB0840002670A /* superlu.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -260,25 +268,27 @@
 				B21BBEF30CBAC96D0056D083 /* libtet_basis.a */,
 				95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */,
 				6F4CAF920FBF0BAD006D50F8 /* libspline.a */,
-				6F2C82890CE6510B000267B3 /* libpth.a */,
 				6F661FF6091AFB3500FB5D82 /* libinput_map.a */,
 				6F661FF8091AFB3500FB5D82 /* libmyblas.a */,
 				6F661FF9091AFB3500FB5D82 /* libquad.a */,
 				6F662036091AFC8D00FB5D82 /* libutil.a */,
 				6F77C5100B4D8959006A4504 /* libmuparser.a */,
+				6F2C82890CE6510B000267B3 /* libpth.a */,
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
 				6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */,
 				6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */,
-				6F662044091AFCEF00FB5D82 /* vecLib.framework */,
+				9529BA14107F99130002670A /* libpetsc.a */,
+				9529BA15107F99130002670A /* libpetsccontrib.a */,
+				9529BA16107F99130002670A /* libpetscdm.a */,
+				9529BA17107F99130002670A /* libpetscksp.a */,
+				9529BA18107F99130002670A /* libpetscmat.a */,
+				9529BA19107F99130002670A /* libpetscsnes.a */,
+				9529BA1A107F99130002670A /* libpetscts.a */,
+				9529BA1B107F99130002670A /* libpetscvec.a */,
 				951C181B107A9FDA005403AA /* libmpi.dylib */,
 				951C181C107A9FDA005403AA /* libmpi_cxx.dylib */,
-				951C1841107AA166005403AA /* libpetscmat.a */,
-				951C1842107AA166005403AA /* libpetscvec.a */,
-				951C184C107AA1A9005403AA /* libpetsccontrib.a */,
-				951C184D107AA1A9005403AA /* libpetscdm.a */,
-				951C184E107AA1A9005403AA /* libpetscksp.a */,
-				951C184F107AA1A9005403AA /* libpetscsnes.a */,
+				9529B9C5107F8DAA0002670A /* Accelerate.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -418,7 +428,7 @@
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
-				9521259F107E94A100404D67 /* lsolver.c in Sources */,
+				9529BA4C107FB0990002670A /* lsolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,7 +447,6 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					petsc,
 					f2cFortran,
 					BZ_DEBUG,
 				);
@@ -455,6 +464,7 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 					"\"$(SRCROOT)/../../Packages/lib\"",
+					"\"$(SRCROOT)/../../Packages/petsc-3.0.0-p8/darwin9.8.0-c-debug/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
@@ -474,10 +484,7 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G4;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					petsc,
-					f2cFortran,
-				);
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -493,6 +500,7 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
 					"\"$(SRCROOT)/../../Packages/lib\"",
+					"\"$(SRCROOT)/../../Packages/petsc-3.0.0-p8/darwin9.8.0-c-debug/lib\"",
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";

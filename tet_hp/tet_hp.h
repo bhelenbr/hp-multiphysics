@@ -273,7 +273,7 @@ class tet_hp : public tet_mesh  {
 		void initialize_sparse();
 		void vec_to_ug();
 		void ug_to_vec();
-		void lsolve();
+		void lsolver();
 		struct jacobian_matrix{
 			jacobian_matrix() {}
 		};	
