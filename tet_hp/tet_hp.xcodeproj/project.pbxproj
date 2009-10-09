@@ -41,7 +41,6 @@
 		9529BA21107F99130002670A /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA19107F99130002670A /* libpetscsnes.a */; };
 		9529BA22107F99130002670A /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA1A107F99130002670A /* libpetscts.a */; };
 		9529BA23107F99130002670A /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529BA1B107F99130002670A /* libpetscvec.a */; };
-		9529BA4C107FB0990002670A /* lsolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9529BA4B107FB0990002670A /* lsolver.cpp */; };
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
@@ -240,12 +239,12 @@
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
 				95671D860F57074800872173 /* particle.cpp */,
-				95331FE40D6B602400961CD4 /* test.cpp */,
 				95C73E1F105EA89D00637BEE /* sparse.cpp */,
 				953FD0AB106AB696002145CC /* petsc.cpp */,
 				9516787F107E7F9700E48F75 /* gmres.h */,
 				9529BA4B107FB0990002670A /* lsolver.cpp */,
 				9529BA47107FB0840002670A /* superlu.cpp */,
+				95331FE40D6B602400961CD4 /* test.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -428,7 +427,6 @@
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
-				9529BA4C107FB0990002670A /* lsolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

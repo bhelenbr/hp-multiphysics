@@ -77,12 +77,23 @@ void tet_hp::lsolver(){
 //	jacobian_matrix();
 //};
 
+///* row-indexed matrix multiplication*/
+//void tet_hp::mult(const jacobian_matrix &J, const double *vec_in, double *vec_out){
+//	for(int i = 0; i < size_sparse_matrix; ++i){
+//		vec_out[i] = sa(i)*vec_in[i];
+//		for(int j = ija(i); j < ija(i+1); ++j)
+//			vec_out[i] += sa(j)*vec_in[ija(j)];
+//	}
+//}
+
+/* compressed row matrix multiplication*/
 void tet_hp::mult(const jacobian_matrix &J, const double *vec_in, double *vec_out){
 	for(int i = 0; i < size_sparse_matrix; ++i){
-		vec_out[i] = sa(i)*vec_in[i];
-		for(int j = ija(i); j < ija(i+1); ++j)
-			vec_out[i] += sa(j)*vec_in[ija(j)];
+		vec_out[i] = 0.0;
+		for(int j = row_ptr(i); j < row_ptr(i+1); ++j)
+			vec_out[i] += sval(j)*vec_in[col_ind(j)];
 	}
 }
+
 
 #endif

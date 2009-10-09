@@ -263,8 +263,13 @@ class tet_hp : public tet_mesh  {
 	
 		bool sparse_resized;	
 		Array<FLT,1> res_vec,ug_vec;// solution and residual vector
-		Array<int,1> ija; //sparse matrix integer storage
-		Array<FLT,1> sa; //sparse matrix element storage
+		//Array<int,1> ija; //sparse matrix integer storage
+		//Array<FLT,1> sa; //sparse matrix element storage
+	
+		Array<int,1> col_ind; //sparse matrix column index
+		Array<FLT,1> row_ptr; //sparse matrix row pointer		
+		Array<FLT,1> sval; //sparse matrix element storage
+	
 		int number_sparse_elements; 
 		int size_sparse_matrix;
 	
@@ -280,6 +285,8 @@ class tet_hp : public tet_mesh  {
 		void mult(const jacobian_matrix &J, const double *vec_in, double *vec_out);
 
 #endif
+	
+
 
 
 		
