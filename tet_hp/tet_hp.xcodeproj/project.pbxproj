@@ -50,6 +50,7 @@
 		95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2D0F55C464008788DB /* length.cpp */; };
 		95AA515D10600DE500E0151D /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C73E1F105EA89D00637BEE /* sparse.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
+		95C730821083B05A007E4076 /* lsolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9529BA4B107FB0990002670A /* lsolver.cpp */; };
 		95F027D60FD89C08000E9979 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
 		95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
 		95F027D80FD89C0B000E9979 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2C0F55C464008788DB /* getnewibc.cpp */; };
@@ -427,6 +428,7 @@
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
+				95C730821083B05A007E4076 /* lsolver.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

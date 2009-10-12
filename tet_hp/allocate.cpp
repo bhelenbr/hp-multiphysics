@@ -270,7 +270,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 #endif
 	
 
-	//test();
+	test();
 	
 	
 	/*********************************/

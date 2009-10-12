@@ -19,13 +19,9 @@ void tet_hp::lsolver(){
 	int max_newton_its = 100;
 	int inner_its = 5;
 	FLT newton_norm,tol=1.0e-12;
-//	Array<double,1> du(size_sparse_matrix);
-	double *du = new double[size_sparse_matrix];
-	double *b = new double[size_sparse_matrix];
+	Array<double,1> du(size_sparse_matrix);
 
-	/* create jacobian struct */
-	jacobian_matrix J();
-	
+	jacobian_matrix J;
 	/* send global solution to ug_vec */
 	ug_to_vec();
 	
@@ -34,41 +30,32 @@ void tet_hp::lsolver(){
 		/* zero out sparse matrix ija and residual res_vec */
 		zero_sparse();
 		
-		/* insert values into jacobian J (ija) */
-		create_jacobian();
+		/* insert values into jacobian J: 0 is compressed row */
+		create_jacobian(0);
 		
 		/* insert values into residual res_vec */ 
 		create_rsdl();
 		
-		for(int i = 0; i < size_sparse_matrix; ++i)
-			b[i]=res_vec(i);
-		
+
 		/* solve system with gmres J*du=res_vec */
-//		its = gmres(inner_its,size_sparse_matrix,J,res_vec,du,tol);
-		//its = gmres(inner_its,size_sparse_matrix,J,b,du,tol);// wont work just compiling
-		mult(J,b,du);//testing delete later
+		its = gmres(inner_its,size_sparse_matrix,J,res_vec.data(),du.data(),tol);
 		
 		/* update solution */
-		for(int i = 0; i < size_sparse_matrix; ++i)
-			ug_vec(i)-=du[i];
-
-//		ug_vec-=du;
+//		for(int i = 0; i < size_sparse_matrix; ++i)
+//			ug_vec(i)-=du[i];
+		ug_vec-=du;
 		
 		/* send ug_vec to global solution */
 		vec_to_ug();
 		
 		newton_norm = 0.0;			
 		for (int j = 0; j < size_sparse_matrix; ++j)
-			newton_norm += du[j]*du[j];
-
-//			newton_norm += du(j)*du(j);
+			newton_norm += du(j)*du(j);
 		
 		if (newton_norm < tol*tol) break;
 		
 	}
 
-	delete[] du;
-	delete[] b;
 	
 	return;
 }
@@ -90,8 +77,8 @@ void tet_hp::lsolver(){
 void tet_hp::mult(const jacobian_matrix &J, const double *vec_in, double *vec_out){
 	for(int i = 0; i < size_sparse_matrix; ++i){
 		vec_out[i] = 0.0;
-		for(int j = row_ptr(i); j < row_ptr(i+1); ++j)
-			vec_out[i] += sval(j)*vec_in[col_ind(j)];
+		for(int j = sparse_ptr(i); j < sparse_ptr(i+1); ++j)
+			vec_out[i] += sparse_val(j)*vec_in[sparse_ind(j)];
 	}
 }
 

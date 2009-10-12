@@ -26,7 +26,6 @@
 #include <petscksp.h>
 #endif
 
-
 class hp_vrtx_bdry;
 class hp_edge_bdry;
 class hp_face_bdry;
@@ -241,7 +240,7 @@ class tet_hp : public tet_mesh  {
 		FLT maxres();
 	
 		/** Sparse stuff */
-		void create_jacobian();
+		void create_jacobian(bool jac_tran = false);
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
 		void create_rsdl();
 		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
@@ -266,18 +265,19 @@ class tet_hp : public tet_mesh  {
 		//Array<int,1> ija; //sparse matrix integer storage
 		//Array<FLT,1> sa; //sparse matrix element storage
 	
-		Array<int,1> col_ind; //sparse matrix column index
-		Array<FLT,1> row_ptr; //sparse matrix row pointer		
-		Array<FLT,1> sval; //sparse matrix element storage
+		Array<int,1> sparse_ind; //sparse matrix index
+		Array<FLT,1> sparse_ptr; //sparse matrix pointer
+		Array<FLT,1> sparse_val; //sparse matrix element storage
 	
 		int number_sparse_elements; 
 		int size_sparse_matrix;
 	
-		void insert_sparse(int row, int col, FLT value);
+		void insert_sparse(int row, int col, FLT value, bool compressed_column=false);//default to compressed row storage
 		void zero_sparse();
 		void initialize_sparse();
 		void vec_to_ug();
 		void ug_to_vec();
+	
 		void lsolver();
 		struct jacobian_matrix{
 			jacobian_matrix() {}

@@ -11,163 +11,95 @@
 #include "ins/tet_hp_ins.h"
 #include "gmres.h"
 
-#ifndef petsc
-/* row-indexed sparse storage */
-//void tet_hp::insert_sparse(int row, int col, FLT value){
-//	
-//	int find_col = -1;
-//	
-//	/* insert diagonal element */
-//	if(row == col){
-//		sa(row) += value;
-//		return;
-//	}
-//	
-//	/* add value to already existing element in sparse */
-//	for(int i = ija(row); i < ija(row+1); ++i){
-//		if(ija(i) == col){
-//			sa(i) += value;
-//			return;
-//		}
-//	}
-//	
-//	/* if not diagonal entry or pre-exisiting element then add to list in correct location */
-//	for(int i = ija(row); i < ija(row+1); ++i){
-//		if(ija(i) > col){
-//			find_col = i;
-//			break;
-//		}
-//	}
-//	/* no column bigger so insert at end */
-//	if(find_col == -1)
-//		find_col = ija(row+1);
-//		
-//	++number_sparse_elements;
-//	
-//	/* shift start of column index by one */
-//	for(int i = row+1; i < size_sparse_matrix+1; ++i)
-//		++ija(i);
-//		
-//	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
-//		for(int i = number_sparse_elements; i > find_col; --i){
-//			sa(i)=sa(i-1);
-//			ija(i)=ija(i-1);
-//		}
-//	
-//	/* insert new element into sparse matrix */
-//	sa(find_col) = value;
-//	ija(find_col) = col;
-//	
-//	
-//	return;	
-//}
 
+#ifndef petsc
 /* compressed row storage */
-void tet_hp::insert_sparse(int row, int col, FLT value){
+void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
+
+	/* to make compressed column switch row and column */
+	if (compressed_col) {
+		int temp = row;
+		row = col;
+		col = temp;
+	}
+
 	
-	int find_col = -1;
+	int find_ind = -1;
 	
 	/* add value to already existing element in sparse */
-	for(int i = row_ptr(row); i < row_ptr(row+1); ++i){
-		if(col_ind(i) == col){
-			sval(i) += value;
+	for(int i = sparse_ptr(row); i < sparse_ptr(row+1); ++i){
+		if(sparse_ind(i) == col){
+			sparse_val(i) += value;
 			return;
 		}
 	}
 	
 	/* if not pre-exisiting element then add to list in correct location */
-	for(int i = row_ptr(row); i < row_ptr(row+1); ++i){
-		if(col_ind(i) > col){
-			find_col = i;
+	for(int i = sparse_ptr(row); i < sparse_ptr(row+1); ++i){
+		if(sparse_ind(i) > col){
+			find_ind = i;
 			break;
 		}
 	}
 	/* no column bigger so insert at end */
-	if(find_col == -1)
-		find_col = col_ind(row+1);
+	if(find_ind == -1)
+		find_ind = sparse_ptr(row+1);
 	
 	++number_sparse_elements;
 	
 	/* shift start of column index by one */
-	for(int i = row+1; i < size_sparse_matrix+1; ++i)
-		++row_ptr(i);
+	for(int i = row+1; i <= size_sparse_matrix+1; ++i)
+		++sparse_ptr(i);
 	
 	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
-	for(int i = number_sparse_elements; i > find_col; --i){
-		sval(i)=sval(i-1);
-		col_ind(i)=col_ind(i-1);
+	for(int i = number_sparse_elements; i > find_ind; --i){
+		sparse_val(i)=sparse_val(i-1);
+		sparse_ind(i)=sparse_ind(i-1);
 	}
 	
 	/* insert new element into sparse matrix */
-	sval(find_col) = value;
-	col_ind(find_col) = col;
-	
+	sparse_val(find_ind) = value;
+	sparse_ind(find_ind) = col;	
 	
 	return;	
 }
-
-
-///* zero out sparse matrix but keep same structure */
-//void tet_hp::zero_sparse(){
-//	
-//	for (int i = 0; i < number_sparse_elements; ++i){
-//		res_vec(i) = 0.0;
-//		sa(i) = 0.0;
-//	}
-//	sa(number_sparse_elements) = 0.0;
-//	
-//	return;
-//}
 
 /* zero out sparse matrix but keep same structure */
 void tet_hp::zero_sparse(){
 	
 	for (int i = 0; i < number_sparse_elements; ++i){
 		res_vec(i) = 0.0;
-		sval(i) = 0.0;
+		sparse_val(i) = 0.0;
 	}
 	
 	return;
 }
-
-
-//void tet_hp::initialize_sparse(){
-//
-//	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
-//	
-//	/* sparse matrix allocation */
-//	ija.resize(MXTM*NV*ntet);//too much storage resize later
-//	sa.resize(MXTM*NV*ntet);
-//	number_sparse_elements = size_sparse_matrix;
-//	sa = 0.0;
-//	/* creates sparse matrix with zeros on diagonal */
-//	for(int i = 0; i < number_sparse_elements+1; ++i)
-//		ija(i) = size_sparse_matrix+1;
-//	return;
-//}
 
 void tet_hp::initialize_sparse(){
 	
 	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
 
 	/* sparse matrix allocation */
-	col_ind.resize(MXTM*NV*ntet);//too much storage resize later
-	sval.resize(MXTM*NV*ntet);
-	row_ptr.resize(size_sparse_matrix+1);
+	sparse_ind.resize(MXTM*NV*ntet);//too much storage resize later
+	sparse_val.resize(MXTM*NV*ntet);
+	sparse_ptr.resize(size_sparse_matrix+1);
 	number_sparse_elements = size_sparse_matrix;
 	
 	/* creates sparse matrix with zeros on diagonal */
 	for (int i = 0; i < size_sparse_matrix+1; ++i) {
-		row_ptr(i) = i;
-		col_ind(i) = i;
+		sparse_ptr(i) = i;
+		sparse_ind(i) = i;
 	}
 	
 	return;
 }
 
+
+
 #endif
 
-void tet_hp::create_jacobian() {
+
+void tet_hp::create_jacobian(bool jac_tran) {
 	int indx,gindx,eind,find,iind,sgn,msgn,mode;
 	
 	int kn = basis::tet(log2p).tm*NV;
@@ -251,7 +183,7 @@ void tet_hp::create_jacobian() {
 #ifndef petsc
 		for(int i = 0; i < kn; ++i)
 			for(int j = 0; j < kn; ++j)
-				insert_sparse(loc_to_glo(i), loc_to_glo(j), K(i,j));
+				insert_sparse(loc_to_glo(j), loc_to_glo(i), K(i,j),jac_tran);
 
 #endif
 
@@ -260,14 +192,16 @@ void tet_hp::create_jacobian() {
 	}
 	
 #ifndef petsc
+	/* resize and preserve sparse matrix on first call only */
 	if (!sparse_resized) {
+		
 		//ija.resizeAndPreserve(number_sparse_elements+1);
 		//sa.resizeAndPreserve(number_sparse_elements+1);
-		col_ind.resizeAndPreserve(number_sparse_elements);
-		sval.resizeAndPreserve(number_sparse_elements);
+
+		sparse_ind.resizeAndPreserve(number_sparse_elements);
+		sparse_val.resizeAndPreserve(number_sparse_elements);
 		sparse_resized = true;
 	}
-
 #endif
 	return;
 }
@@ -460,13 +394,86 @@ void tet_hp::ug_to_vec(){
 
 
 
-// compressed row matrix multiply
-//for i = 1, n 
-//y(i)  = 0 
-//for j = row_ptr(i), row_ptr(i+1) - 1
-//y(i) = y(i) + val(j) * x(col_ind(j))
-//end;
-//end;
+
+
+//#ifdef row_index
+///* row-indexed sparse storage */
+//void tet_hp::insert_sparse(int row, int col, FLT value){
+//	
+//	int find_col = -1;
+//	
+//	/* insert diagonal element */
+//	if(row == col){
+//		sa(row) += value;
+//		return;
+//	}
+//	
+//	/* add value to already existing element in sparse */
+//	for(int i = ija(row); i < ija(row+1); ++i){
+//		if(ija(i) == col){
+//			sa(i) += value;
+//			return;
+//		}
+//	}
+//	
+//	/* if not diagonal entry or pre-exisiting element then add to list in correct location */
+//	for(int i = ija(row); i < ija(row+1); ++i){
+//		if(ija(i) > col){
+//			find_col = i;
+//			break;
+//		}
+//	}
+//	/* no column bigger so insert at end */
+//	if(find_col == -1)
+//		find_col = ija(row+1);
+//		
+//	++number_sparse_elements;
+//	
+//	/* shift start of column index by one */
+//	for(int i = row+1; i < size_sparse_matrix+1; ++i)
+//		++ija(i);
+//		
+//	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
+//		for(int i = number_sparse_elements; i > find_col; --i){
+//			sa(i)=sa(i-1);
+//			ija(i)=ija(i-1);
+//		}
+//	
+//	/* insert new element into sparse matrix */
+//	sa(find_col) = value;
+//	ija(find_col) = col;
+//	
+//	
+//	return;	
+//}
+//
+///* zero out sparse matrix but keep same structure */
+//void tet_hp::zero_sparse(){
+//	
+//	for (int i = 0; i < number_sparse_elements; ++i){
+//		res_vec(i) = 0.0;
+//		sa(i) = 0.0;
+//	}
+//	sa(number_sparse_elements) = 0.0;
+//	
+//	return;
+//}
+//
+//void tet_hp::initialize_sparse(){
+//	
+//	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+//	
+//	/* sparse matrix allocation */
+//	ija.resize(MXTM*NV*ntet);//too much storage resize later
+//	sa.resize(MXTM*NV*ntet);
+//	number_sparse_elements = size_sparse_matrix;
+//	sa = 0.0;
+//	/* creates sparse matrix with zeros on diagonal */
+//	for(int i = 0; i < number_sparse_elements+1; ++i)
+//		ija(i) = size_sparse_matrix+1;
+//	return;
+//}
+//#endif
 
 
 //void tet_hp::sparse_matrix_multiply(FLT *x, FLT *b){

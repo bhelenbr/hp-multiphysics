@@ -22,19 +22,19 @@ void tet_hp::test() {
 	
 	//create_jacobian();
 	
-	//zero_sparse();
+	zero_sparse();
 
 /* insert sparse matrix test */
 	TinyVector<FLT,5> b,x;
 	x(0)=1,x(1)=4,x(2)=9,x(3)=2,x(4)=67;
 	
-	insert_sparse(0,0,.1);
-	insert_sparse(1,1,.2);
+//	insert_sparse(0,0,.1);
+//	insert_sparse(1,1,.2);
 //	insert_sparse(2,2,.3);
 //	insert_sparse(3,3,.4);
 //	insert_sparse(4,4,.5);
 //
-	insert_sparse(1,4,-200);
+//	insert_sparse(1,4,-200);
 //	insert_sparse(0,4,400);
 //	insert_sparse(0,3,300);
 //	insert_sparse(0,1,100);
@@ -49,32 +49,45 @@ void tet_hp::test() {
 //		
 //	cout << b << endl;
 	
-	sval.resizeAndPreserve(number_sparse_elements);
-	col_ind.resizeAndPreserve(number_sparse_elements);
+	int ind = 1;
+	for(int i=0; i < size_sparse_matrix; ++i)
+		for(int j=0; j < size_sparse_matrix; ++j)
+			insert_sparse(i, j, ind++);
+//	insert_sparse(0, 0, 1.0);
+//	insert_sparse(0, 1, 2.0);
+//	insert_sparse(0, 2, 3.0);
+//	insert_sparse(0, 3, 4.0);
+//	insert_sparse(1, 0, 5.0);
 	
-	cout <<  sval << col_ind << row_ptr << endl;
-	
+
+
+	sparse_val.resizeAndPreserve(number_sparse_elements);
+	sparse_ind.resizeAndPreserve(number_sparse_elements);
+	//cout << sval << col_ind << row_ptr << endl;
+	cout << "value " << sparse_val << "\n column index" << sparse_ind  << "\n row pointer " << sparse_ptr << endl;
+
+	//cout << "value " << sval << "\n row index" << row_ind  << "\n column pointer " << col_ptr << endl;
 	exit(4);
 			
 	
 	
-	tet_mesh::checkintegrity();
-	output("b0",tecplot);
-	particle();
-	exit(5);
-
-	TinyMatrix<FLT,3,11> pt;
-	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,4> f,g;
-	TinyVector<FLT,3> pnt;
-	float r,s,t;
-	int ind=0;
-	int find;
-
-	
-	cout.precision(10);
+//	tet_mesh::checkintegrity();
+//	output("b0",tecplot);
+//	particle();
+//	exit(5);
+//
+//	TinyMatrix<FLT,3,11> pt;
+//	TinyVector<TinyMatrix<FLT,MXGP,MXGP>,4> f,g;
+//	TinyVector<FLT,3> pnt;
+//	float r,s,t;
+//	int ind=0;
+//	int find;
+//
+//	
+//	cout.precision(10);
 		//	cout << npnt << ' ' << nseg << ' ' << ntri << ' ' << ntet << endl;
 			/* pt probe test */
-				Array<double,1> uout(1);
+//				Array<double,1> uout(1);
 
 //			// edge 1
 //			pt(0,0) = -.345676;
@@ -201,14 +214,14 @@ void tet_hp::test() {
 		
 		
 		
-			cout << "running minvrt_test" << endl;
-
-			tet_hp::minvrt_test();
-			std::ostringstream filename;
-			filename.str("");
-			filename << "minvrt_test"  << std::flush;
-			output(filename.str(),block::display);
-			exit(5);
+//			cout << "running minvrt_test" << endl;
+//
+//			tet_hp::minvrt_test();
+//			std::ostringstream filename;
+//			filename.str("");
+//			filename << "minvrt_test"  << std::flush;
+//			output(filename.str(),block::display);
+//			exit(5);
 		
 			
 
