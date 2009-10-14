@@ -24,6 +24,8 @@ void tri_hp_cns::rsdl(int stage) {
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
+	FLT lmu = gbl->mu;
+	FLT lkcond = gbl->kcond;
 
 	tri_hp::rsdl(stage);
 
@@ -90,14 +92,14 @@ void tri_hp_cns::rsdl(int stage) {
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					double rho = u(0)(i,j)/u(NV-1,i,j);
-					fluxx = rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-					fluxy = rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
+					fluxx = rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(0)(i,j));
+					fluxy = rho*RAD(crd(0)(i,j))*(u(2)(i,j) -mvel(1)(i,j));
 
 					/* CONTINUITY EQUATION FLUXES */
 					cv(0,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
 					cv(0,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
 
-					/* MOMENTUM FLUXES */
+					/* MOMENTUM & ENERGY FLUXES */
 					for(n=1;n<NV;++n) {
 						cv(n,0)(i,j) = u(n)(i,j)*cv(0,0)(i,j);
 						cv(n,1)(i,j) = u(n)(i,j)*cv(0,1)(i,j);
@@ -132,15 +134,16 @@ void tri_hp_cns::rsdl(int stage) {
 						cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 						rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 						mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-						kcjcbi = mujcbi*gbl->pr;
+						kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb;
 
 						/* UNSTEADY TERMS */
 						res(0)(i,j) = rhorbd0 +dugdt(log2p,tind,n)(i,j);
 						for(n=1;n<NV-1;++n)
 							res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-						res(NV-1)(i,j) = rhorbd0*gbl->ogm1 +dugdt(log2p,tind,NV-1)(i,j);
+						double e = gbl->ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
+						res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
 #ifdef AXISYMMETRIC
-						res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  // FixMe
+						res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  FixMe
 #endif
 #ifdef BODYFORCE
 						res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
@@ -152,12 +155,12 @@ void tri_hp_cns::rsdl(int stage) {
 						visc(0,0)(0,0) = -mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 						visc(0,0)(1,1) = -mujcbi*(4./3.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 						visc(0,0)(0,1) =  mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI0II0II1II0I visc(0,0)(0,1)
+#define     viscI0II0II1II0I visc(0,0)(0,1)
 
 						visc(1,1)(0,0) = -mujcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 						visc(1,1)(1,1) = -mujcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 						visc(1,1)(0,1) =  mujcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI1II1II1II0I visc(1,1)(0,1)
+#define     viscI1II1II1II0I visc(1,1)(0,1)
 
 						visc(0,1)(0,0) =  mujcbi*1./3.*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
 						visc(0,1)(1,1) =  mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
@@ -165,35 +168,35 @@ void tri_hp_cns::rsdl(int stage) {
 						visc(0,1)(1,0) = -mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
 
 						/* OTHER SYMMETRIES     */                
-#define                 viscI1II0II0II0I visc(0,1)(0,0)
-#define                 viscI1II0II1II1I visc(0,1)(1,1)
-#define                 viscI1II0II0II1I visc(0,1)(1,0)
-#define                 viscI1II0II1II0I visc(0,1)(0,1)                      
+#define     viscI1II0II0II0I visc(0,1)(0,0)
+#define     viscI1II0II1II1I visc(0,1)(1,1)
+#define     viscI1II0II0II1I visc(0,1)(1,0)
+#define     viscI1II0II1II0I visc(0,1)(0,1)                      
 
 						/* HEAT DIFFUSION TENSOR */
 						kcond(0,0) = -cjcb(i,j)*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 						kcond(1,1) = -cjcb(i,j)*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 						kcond(0,1) =  cjcb(i,j)*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 kcondI1II0I kcond(0,1)
+#define     kcondI1II0I kcond(0,1)
 
 
 						/* Momentum equations */
-						df(1,0)(i,j) = +visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-										+visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j);
+						df(1,0)(i,j) = +visc(0,0)(0,0)*du(1,0)(i,j) +visc(0,1)(0,0)*du(2,0)(i,j)
+										+visc(0,0)(0,1)*du(1,1)(i,j) +visc(0,1)(0,1)*du(2,1)(i,j);
 
-						df(1,1)(i,j) = +viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-										+visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j);
+						df(1,1)(i,j) = +viscI0II0II1II0I*du(1,0)(i,j) +visc(0,1)(1,0)*du(2,0)(i,j)
+										+visc(0,0)(1,1)*du(1,1)(i,j) +visc(0,1)(1,1)*du(2,1)(i,j);
 
-						df(2,0)(i,j) = +viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-										+viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j);
+						df(2,0)(i,j) = +viscI1II0II0II0I*du(1,0)(i,j) +visc(1,1)(0,0)*du(2,0)(i,j)
+										+viscI1II0II0II1I*du(1,1)(i,j) +visc(1,1)(0,1)*du(2,1)(i,j);
 
-						df(2,1)(i,j) = +viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-										+viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j);
+						df(2,1)(i,j) = +viscI1II0II1II0I*du(1,0)(i,j) +viscI1II1II1II0I*du(2,0)(i,j)
+										+viscI1II0II1II1I*du(1,1)(i,j) +visc(1,1)(1,1)*du(2,1)(i,j);
 
 
 						/* Energy equation */
-						df(3,0)(i,j) = +kcond(0,0)*du(2,0)(i,j) +kcond(0,1)*du(2,1)(i,j);
-						df(3,1)(i,j) = +kcondI1II0I*du(2,0)(i,j) +kcond(1,1)*du(2,1)(i,j);
+						df(3,0)(i,j) = +kcond(0,0)*du(NV-1,0)(i,j) +kcond(0,1)*du(NV-1,1)(i,j);
+						df(3,1)(i,j) = +kcondI1II0I*du(NV-1,0)(i,j) +kcond(1,1)*du(NV-1,1)(i,j);
 
 						/* VISCOUS DISSIPATION */
 						df(3,0)(i,j) -= df(1,0)(i,j)*u(1)(i,j) +df(2,0)(i,j)*u(2)(i,j);

@@ -29,7 +29,8 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.0);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
-	if (!input.get(gbl->idprefix + "_conductivity",gbl->kcond)) input.getwdefault("conductivity",gbl->kcond,0.0);
+	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.0);
+	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
 
 
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */

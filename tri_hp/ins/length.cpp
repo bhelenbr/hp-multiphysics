@@ -183,28 +183,34 @@ void tri_hp_ins::length() {
 		}
 	}
 
-	/* AVOID HIGH ASPECT RATIOS */
-	int nsweep = 0;
-	int count;
-	do {
-		count = 0;
-		for(int i=0;i<nseg;++i) {
-			int v0 = seg(i).pnt(0);
-			int v1 = seg(i).pnt(1);
-			FLT ratio = lngth(v1)/lngth(v0);
+//	/* AVOID HIGH ASPECT RATIOS */
+//	int nsweep = 0;
+//	int count;
+//	do {
+//		count = 0;
+//		for(int i=0;i<nseg;++i) {
+//			int v0 = seg(i).pnt(0);
+//			int v1 = seg(i).pnt(1);
+//			FLT ratio = lngth(v1)/lngth(v0);
+//
+//			if (ratio > 3.0) {
+//				lngth(v1) = 2.5*lngth(v0);
+//				++count;
+//			}
+//			else if (ratio < 0.333) {
+//				lngth(v0) = 2.5*lngth(v1);
+//				++count;
+//			}
+//		}
+//		++nsweep;
+//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
+//	} while(count > 0 && nsweep < 5);
 
-			if (ratio > 3.0) {
-				lngth(v1) = 2.5*lngth(v0);
-				++count;
-			}
-			else if (ratio < 0.333) {
-				lngth(v0) = 2.5*lngth(v1);
-				++count;
-			}
-		}
-		++nsweep;
-		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
-	} while(count > 0 && nsweep < 5);
-
+	if (gbl->adapt_output) {
+		ostringstream fname;
+		fname << "adapt_diagnostic" << gbl->tstep << '_' << gbl->idprefix;
+		output(fname.str(),tri_hp::adapt_diagnostic);
+	}
+	
 	return;
 }

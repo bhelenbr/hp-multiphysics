@@ -383,7 +383,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 		}
 
 		case(adapt_diagnostic): {            
-			fnmapp = fname +".dat";
+			fnmapp = fname+ "_length.dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open tecplot output file " << fnmapp;
@@ -403,12 +403,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			for(tind=0;tind<ntri;++tind)
 				out << tri(tind).pnt(0)+1 << ' ' << tri(tind).pnt(1)+1 << ' ' << tri(tind).pnt(2)+1 << std::endl;
 
-			break;
-		}
-
-		case trunc_error: {
-			/* UTILITY ROUTINE TO OUTPUT TRUNCATION ERROR ASSUMING STORED IN FSCR1 */
-
+			out.close();
+			
+			/* OUTPUTS POINT AT CENTER OF TRI & ERROR FOR TRI */
 			fnmapp = fname +"_truncation.dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
@@ -416,25 +413,15 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 				exit(1);
 			}
 
-			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << std::endl;
-
-			/* VERTEX MODES */
-			for(i=0;i<npnt;++i) {
+			for(tind=0;tind<ntri;++tind) {
+				TinyVector<FLT,ND> pnt = 0.0;
+				for (int j=0;j<3;++j)
+					pnt += pnts(tri(tind).pnt(j));
+				pnt *= 1./3.;
 				for(n=0;n<ND;++n)
-				out << pnts(i)(n) << ' ';
-				out << gbl->fltwk(i) << '\n';                    
+					out << pnt(n) << ' ';
+				out << gbl->fltwk(tind) << '\n';
 			}
-
-			//   /* TO RENORMALIZE */
-			//   for(i=0;i<npnt;++i)
-			//      gbl->fltwk(i) = log10(gbl->fltwk(i)/(pnt(i).nnbor*error_target));
-
-			/* OUTPUT CONNECTIVY INFO */
-			out << std::endl << "#CONNECTION DATA#" << std::endl;
-
-			for(tind=0;tind<ntri;++tind)
-				out << tri(tind).pnt(0)+1 << ' ' << tri(tind).pnt(1)+1 << ' ' << tri(tind).pnt(2)+1 << '\n';
-
 			out.close();
 			break;
 
