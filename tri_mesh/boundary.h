@@ -968,6 +968,7 @@ class naca : public geometry<2> {
 			sign = 1;
 			coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
 			coeff *= 0.12;
+			// at peak y =0.4950625*0.12
 			pos = 0.0;
 		}
 		naca(const naca &inbdry) : geometry<2>(inbdry), sign(inbdry.sign), scale(inbdry.scale), theta(inbdry.theta) {
