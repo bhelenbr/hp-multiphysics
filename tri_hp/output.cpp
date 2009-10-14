@@ -405,23 +405,29 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			out.close();
 			
-			/* OUTPUTS POINT AT CENTER OF TRI & ERROR FOR TRI */
 			fnmapp = fname +"_truncation.dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open tecplot output file " << fnmapp << '\n';
 				exit(1);
 			}
-
-			for(tind=0;tind<ntri;++tind) {
-				TinyVector<FLT,ND> pnt = 0.0;
-				for (int j=0;j<3;++j)
-					pnt += pnts(tri(tind).pnt(j));
-				pnt *= 1./3.;
-				for(n=0;n<ND;++n)
-					out << pnt(n) << ' ';
-				out << gbl->fltwk(tind) << '\n';
+			
+			/* OUTPUTS DISCONNECTED TRIS & ERROR FOR TRI */
+			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << 3*ntri << ", E = " << ntri << std::endl;
+			for(i=0;i<ntri;++i) {
+				for(j=0;j<3;++j) {
+					for(n=0;n<ND;++n)
+						out << pnts(tri(tind).pnt(j))(n) << ' ';
+					out << gbl->fltwk(tind) << '\n';
+				}
 			}
+
+			/* OUTPUT CONNECTIVY INFO */
+			out << std::endl << "#CONNECTION DATA#" << std::endl;
+
+			for(tind=0;tind<ntri;++tind)
+				out << 3*tind+1 << ' ' << 3*tind+2 << ' ' << 3*tind+3 << std::endl;
+
 			out.close();
 			break;
 
