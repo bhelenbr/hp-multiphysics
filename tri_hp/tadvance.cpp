@@ -21,14 +21,6 @@ void tri_hp::tadvance() {
 		r_tri_mesh::tadvance();
 	}
 
-	/* To see what length target will look like */
-//	length();
-//	gbl->fltwk(Range(0,npnt)) = lngth(Range(0,npnt));
-//	std::string fname;
-//	fname = "lngth_" +gbl->idprefix;
-//	output(fname.c_str(),trunc_error);
-//	exit(1);
-
 	stage = gbl->substep +gbl->esdirk;
 	if (!coarse_level) {
 		if (stage > 0) {
