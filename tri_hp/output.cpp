@@ -394,7 +394,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<ND;++n)
 					out << pnts(i)(n) << ' ';
-				out << lngth(i) << ' ' << log10(gbl->fltwk(i)) << std::endl;                    
+				out << lngth(i) << '\n';                    
 			}
 
 			/* OUTPUT CONNECTIVY INFO */
@@ -414,7 +414,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			
 			/* OUTPUTS DISCONNECTED TRIS & ERROR FOR TRI */
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << 3*ntri << ", E = " << ntri << std::endl;
-			for(i=0;i<ntri;++i) {
+			for(tind=0;tind<ntri;++tind) {
 				for(j=0;j<3;++j) {
 					for(n=0;n<ND;++n)
 						out << pnts(tri(tind).pnt(j))(n) << ' ';
