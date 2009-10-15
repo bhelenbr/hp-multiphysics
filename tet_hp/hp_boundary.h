@@ -231,6 +231,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void vdirichlet() {}
 		virtual void edirichlet() {}
 		virtual void fdirichlet() {}
+		virtual void apply_sparse_dirichlet(bool compressed_column) {}
 
 		virtual void pmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.ploadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void pmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.pfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}

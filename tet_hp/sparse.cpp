@@ -94,10 +94,48 @@ void tet_hp::initialize_sparse(){
 	return;
 }
 
+/* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
+void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
+	
+	res_vec(ind) = 0.0;
+
+	if(compressed_col){
+		/* compressed column: only works for symmetric sparsity pattern */
+		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
+			for(int j = sparse_ptr(sparse_ind(i)); j < sparse_ptr(sparse_ind(i)+1); ++j){
+				if(ind == sparse_ind(j)){
+					sparse_val(j) = 0.0;
+					break;
+				}
+			}	
+			if(ind == sparse_ind(i))
+				sparse_val(i) = 1.0;
+		}
+	}
+	else {
+		/* compressed row */
+		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
+			sparse_val(i) = 0.0;
+			if(ind == sparse_ind(i))
+				sparse_val(i) = 1.0;
+		}
+	}
+	return;
+}
 
 
 #endif
 
+#ifdef petsc
+
+//void tet_hp::petsc_dirichlet(int ind){
+//	FLT zero = 0.0;
+//	FLT one = 1.0;
+//	
+//	ierr = MatSetValues(petsc_J,1,&ind,1,&loc_to_glo(j),&zero,INSERT_VALUES);
+//	return;
+//}
+#endif
 
 void tet_hp::create_jacobian(bool jac_tran) {
 	int indx,gindx,eind,find,iind,sgn,msgn,mode;

@@ -31,12 +31,15 @@ void tet_hp::lsolver(){
 		zero_sparse();
 		
 		/* insert values into jacobian J: 0 is compressed row */
-		create_jacobian(0);
+		create_jacobian(false);
 		
 		/* insert values into residual res_vec */ 
 		create_rsdl();
 		
-
+		/* apply dirichlet boundary conditions to sparse matrix and vector */
+		for(int j = 0; j < nfbd; ++j)
+			fbdry(j)->apply_sparse_dirichlet(false);
+		
 		/* solve system with gmres J*du=res_vec */
 		its = gmres(inner_its,size_sparse_matrix,J,res_vec.data(),du.data(),tol);
 		

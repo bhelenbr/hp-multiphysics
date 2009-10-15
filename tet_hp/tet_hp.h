@@ -272,7 +272,8 @@ class tet_hp : public tet_mesh  {
 		int number_sparse_elements; 
 		int size_sparse_matrix;
 	
-		void insert_sparse(int row, int col, FLT value, bool compressed_column=false);//default to compressed row storage
+		void insert_sparse(int row, int col, FLT value, bool compressed_column=true);//default to compressed column storage
+		void sparse_dirichlet(int ind, bool compressed_col=true);//default to compressed column storage
 		void zero_sparse();
 		void initialize_sparse();
 		void vec_to_ug();

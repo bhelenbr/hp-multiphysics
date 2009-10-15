@@ -22,11 +22,11 @@ void tet_hp::test() {
 	
 	//create_jacobian();
 	
-	zero_sparse();
+//	zero_sparse();
 
 /* insert sparse matrix test */
-	TinyVector<FLT,5> b,x;
-	x(0)=1,x(1)=4,x(2)=9,x(3)=2,x(4)=67;
+//	TinyVector<FLT,5> b,x;
+//	x(0)=1,x(1)=4,x(2)=9,x(3)=2,x(4)=67;
 	
 //	insert_sparse(0,0,.1);
 //	insert_sparse(1,1,.2);
@@ -49,25 +49,25 @@ void tet_hp::test() {
 //		
 //	cout << b << endl;
 	
-	int ind = 1;
-	for(int i=0; i < size_sparse_matrix; ++i)
-		for(int j=0; j < size_sparse_matrix; ++j)
-			insert_sparse(i, j, ind++);
+//	int ind = 1;
+//	for(int i=0; i < size_sparse_matrix; ++i)
+//		for(int j=0; j < size_sparse_matrix; ++j)
+//			insert_sparse(j, i, ind++,true);
 //	insert_sparse(0, 0, 1.0);
 //	insert_sparse(0, 1, 2.0);
 //	insert_sparse(0, 2, 3.0);
 //	insert_sparse(0, 3, 4.0);
 //	insert_sparse(1, 0, 5.0);
 	
-
-
-	sparse_val.resizeAndPreserve(number_sparse_elements);
-	sparse_ind.resizeAndPreserve(number_sparse_elements);
-	//cout << sval << col_ind << row_ptr << endl;
-	cout << "value " << sparse_val << "\n column index" << sparse_ind  << "\n row pointer " << sparse_ptr << endl;
-
-	//cout << "value " << sval << "\n row index" << row_ind  << "\n column pointer " << col_ptr << endl;
-	exit(4);
+//	sparse_dirichlet(0,true);
+//
+//	sparse_val.resizeAndPreserve(number_sparse_elements);
+//	sparse_ind.resizeAndPreserve(number_sparse_elements);
+//	//cout << sval << col_ind << row_ptr << endl;
+//	cout << "value " << sparse_val << "\n column index" << sparse_ind  << "\n row pointer " << sparse_ptr << endl;
+//
+//	//cout << "value " << sval << "\n row index" << row_ind  << "\n column pointer " << col_ptr << endl;
+//	exit(4);
 			
 	
 	
