@@ -91,7 +91,12 @@ void tet_mesh::create_pnt_nnbor(void){
 	for(int i=0;i<npnt;++i){
 		pnt(i).nnbor = 0;
 		pnt(i).nspk = 0;
+		pnt(i).ntri = 0;
 	}
+	
+	for (int i=0; i<nseg; ++i) 
+		seg(i).nspk = 0;
+	
 	
 	for(int tind = 0; tind < ntet; ++tind){         
 		for(int j = 0; j < 4; ++j) {
@@ -106,6 +111,16 @@ void tet_mesh::create_pnt_nnbor(void){
 			int p0 = seg(eind).pnt(j);
 			++pnt(p0).nspk;
 			pnt(p0).seg=eind;
+		}                    
+	}
+	
+	for(int tind = 0; tind < ntri; ++tind){           
+		for(int j = 0; j < 3; ++j) { 
+			int e0 = tri(tind).seg(j);
+			int p0 = tri(tind).pnt(j);
+			++seg(e0).nspk;
+			++pnt(p0).ntri;
+
 		}                    
 	}
 

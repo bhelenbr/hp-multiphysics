@@ -75,15 +75,15 @@ int main(int argc, char *argv[]) {
 	MPI_Init(&argc,&argv);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
-#ifdef PTH
-	// For debugging put interrupt here
-	// On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
-	// Then continue
-	int rc = pth_init();
-	if (!rc) {
-		std::cerr << "couldn't start pth environment\n";
-	}
-#endif
+//#ifdef PTH
+//	// For debugging put interrupt here
+//	// On interrupt type this into gdb console: "handle SIGUSR1 nostop print pass"
+//	// Then continue
+//	int rc = pth_init();
+//	if (!rc) {
+//		std::cerr << "couldn't start pth environment\n";
+//	}
+//#endif
 
   // parse args
 	ok = parseArgs(argDesc, &argc, argv);

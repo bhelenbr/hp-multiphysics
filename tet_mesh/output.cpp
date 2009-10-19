@@ -63,7 +63,7 @@ void tet_mesh::output(const std::string &filename, tet_mesh::filetype filetype) 
 				out << i << ": " << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2);
 				out << ' ' << tri(i).seg(0) << ' ' << tri(i).seg(1) << ' ' << tri(i).seg(2);
 				out << ' ' << tri(i).sgn(0) << ' ' << tri(i).sgn(1) << ' ' << tri(i).sgn(2);
-				out << ' ' << tri(i).tet(0) << ' ' << tri(i).tet(1) << tri(i).info << endl;
+				out << ' ' << tri(i).tet(0) << ' ' << tri(i).tet(1) << ' ' << tri(i).info << endl;
 			}
 			out.close();
 

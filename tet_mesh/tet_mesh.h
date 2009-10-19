@@ -52,6 +52,7 @@ class tet_mesh : public multigrid_interface {
 			int seg;  /**< Pointer to a seg connected to this point */
 			int nnbor; /**< Number of tets connected to this point */
 			int nspk; /**< Number of segs connected to this point */
+			int ntri; /**< Number of tris connected to this point */ 
 			int info; /**< General purpose (mostly for adaptation) */
 		};
 		Array<pntstruct,1> pnt; /**< Array of point integer data */
@@ -77,6 +78,7 @@ class tet_mesh : public multigrid_interface {
 			int tet;   /**< one tet connected to a segment */
 			int nnbor;    /**< number of neighboring tets */
 			int info;   /**< General purpose (mostly for adaptation) */
+			int nspk;  /**< Number of tris connected to this point */
 		};
 		Array<segstruct,1> seg; /**< Array of segment data */
 		//@}

@@ -60,8 +60,6 @@
 		6F90CCE70FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		6F90CCE80FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
 		6F90CCE90FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
-		6F90CCEA0FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
-		6F90CCEB0FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		6F90CCEC0FE1A135003B959F /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
 		6F90CCED0FE1A135003B959F /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		6F90D4720FE255C6003B959F /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F90D4710FE255C6003B959F /* libMAdLib.a */; };
@@ -91,6 +89,8 @@
 		6FC0044C08CD33CF0030E073 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
+		959CF3A010890B7E002293FD /* MAdLibInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F90CCE40FE1A135003B959F /* MAdLibInterface.h */; };
+		959CF3A110890B7F002293FD /* MAdLibInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F90CCE50FE1A135003B959F /* MAdLibInterface.cpp */; };
 		B2152F680C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
 		B2152F690C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
 		B2152F6A0C836C72001BE654 /* vertexcircle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B2152F670C836C72001BE654 /* vertexcircle.cpp */; };
@@ -336,7 +336,7 @@
 			files = (
 				6F2262C508673029001017D0 /* tet_mesh.h in Headers */,
 				B24117800C5FBB0900EA7B1A /* tet_boundary.h in Headers */,
-				6F90CCEA0FE1A135003B959F /* MAdLibInterface.h in Headers */,
+				959CF3A010890B7E002293FD /* MAdLibInterface.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,7 +517,7 @@
 				6FBD0E8F0FB234BE00565502 /* connect.cpp in Sources */,
 				6F14BE120FBA86FB006DD167 /* copy.cpp in Sources */,
 				6F14BE130FBA86FB006DD167 /* refineby2.cpp in Sources */,
-				6F90CCEB0FE1A135003B959F /* MAdLibInterface.cpp in Sources */,
+				959CF3A110890B7F002293FD /* MAdLibInterface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -592,6 +592,7 @@
 		6F2262C208672FD1001017D0 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = NO;
@@ -616,6 +617,7 @@
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
 				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -637,6 +639,7 @@
 		6F2262C308672FD1001017D0 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
@@ -645,9 +648,9 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					USING_MADLIB,
 					METIS,
 					NO_MPISRC,
-					USING_MADLIB,
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(prefix)/include",
@@ -660,6 +663,7 @@
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../lib\"";
 				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
@@ -900,6 +904,7 @@
 		6FD540630863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = NO;
 				DSTROOT = "$(HOME)";
 				GCC_DYNAMIC_NO_PIC = NO;
@@ -930,6 +935,7 @@
 				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_3 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
 				LIBRARY_SEARCH_PATHS_QUOTED_4 = "\"$(LOCAL_LIBRARY_DIR)/DataTank\"";
+				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = tet_mesh;
 				SKIP_INSTALL = YES;
@@ -946,6 +952,7 @@
 		6FD540640863870800D6A762 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = /;
@@ -973,6 +980,7 @@
 				);
 				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
 				LINK_WITH_STANDARD_LIBRARIES = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = YES;
 				PRODUCT_NAME = tet_mesh;
 				SKIP_INSTALL = NO;
