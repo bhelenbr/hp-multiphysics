@@ -240,7 +240,7 @@ class tet_hp : public tet_mesh  {
 		FLT maxres();
 	
 		/** Sparse stuff */
-		void create_jacobian(bool jac_tran = false);
+		void create_jacobian(bool jac_tran = true);
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
 		void create_rsdl();
 		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
@@ -261,12 +261,13 @@ class tet_hp : public tet_mesh  {
 #ifndef petsc
 	
 		bool sparse_resized;	
-		Array<FLT,1> res_vec,ug_vec;// solution and residual vector
+		Array<FLT,1> res_vec;//residual vector
+		Array<FLT,1> ug_vec;// solution vector
 		//Array<int,1> ija; //sparse matrix integer storage
 		//Array<FLT,1> sa; //sparse matrix element storage
 	
 		Array<int,1> sparse_ind; //sparse matrix index
-		Array<FLT,1> sparse_ptr; //sparse matrix pointer
+		Array<int,1> sparse_ptr; //sparse matrix pointer
 		Array<FLT,1> sparse_val; //sparse matrix element storage
 	
 		int number_sparse_elements; 
@@ -278,6 +279,8 @@ class tet_hp : public tet_mesh  {
 		void initialize_sparse();
 		void vec_to_ug();
 		void ug_to_vec();
+		
+		void superlu();
 	
 		void lsolver();
 		struct jacobian_matrix{

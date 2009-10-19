@@ -15,6 +15,10 @@
 #ifndef petsc
 /* compressed row storage */
 void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
+	
+//	if (fabs(value)<10e-15) {
+//		return;
+//	}
 
 	/* to make compressed column switch row and column */
 	if (compressed_col) {
@@ -22,7 +26,6 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 		row = col;
 		col = temp;
 	}
-
 	
 	int find_ind = -1;
 	
@@ -48,7 +51,7 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 	++number_sparse_elements;
 	
 	/* shift start of column index by one */
-	for(int i = row+1; i <= size_sparse_matrix+1; ++i)
+	for(int i = row+1; i < size_sparse_matrix+1; ++i)
 		++sparse_ptr(i);
 	
 	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
@@ -67,21 +70,25 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 /* zero out sparse matrix but keep same structure */
 void tet_hp::zero_sparse(){
 	
-	for (int i = 0; i < number_sparse_elements; ++i){
-		res_vec(i) = 0.0;
+	for (int i = 0; i < number_sparse_elements; ++i)
 		sparse_val(i) = 0.0;
-	}
+	
+	for (int i = 0; i < size_sparse_matrix; ++i)
+		res_vec(i) = 0.0;
+
 	
 	return;
 }
 
 void tet_hp::initialize_sparse(){
 	
-	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
-
+	size_sparse_matrix = (npnt+nseg*basis::tet(log2p).em+ntri*basis::tet(log2p).fm+ntet*basis::tet(log2p).im)*NV;
+	//size_sparse_matrix = 4;//temp 
 	/* sparse matrix allocation */
-	sparse_ind.resize(MXTM*NV*ntet);//too much storage resize later
-	sparse_val.resize(MXTM*NV*ntet);
+	int nse = static_cast<int>(size_sparse_matrix*size_sparse_matrix/10);//number of sparse elements
+	cout << "number of sparse elements allocated " << nse << endl;
+	sparse_ind.resize(nse);//too much storage resize later
+	sparse_val.resize(nse);
 	sparse_ptr.resize(size_sparse_matrix+1);
 	number_sparse_elements = size_sparse_matrix;
 	
@@ -123,6 +130,65 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 	return;
 }
 
+//void tet_hp::find_sparse_bandwidth(){
+//	Array<int,1> bw(size_sparse_matrix);
+//	int em=basis::tet(log2p).em;
+//	int fm=basis::tet(log2p).fm;
+//	int im=basis::tet(log2p).im;
+//	int begin_seg = npnt*NV;
+//	int begin_tri = begin_seg+nseg*em*NV;
+//	int begin_tet = begin_tri+ntri*fm*NV;
+//
+//	bw = 0;
+//	
+//	for(int i=0; i<ntri; ++i){
+//		
+//		for(int j=0;j<3;++j)
+//			for(int n=0;n<NV;++n)
+//				bw(tri(i).pnt(j)*NV+n) += fm*NV;
+//		
+//		for(int j=0;j<3;++j)
+//			for(int m=0;m<em;++m)
+//				for(int n=0;n<NV;++n)
+//					bw(begin_seg+tri(i).seg(j)*em*NV+m*NV+n) += fm*NV;
+//		
+//		for(int m=0;m<fm;++m)
+//			for(int n=0;n<NV;++n)
+//				bw(begin_tri+i*fm*NV+m*NV+n) += fm*NV;
+//		
+//		//stopped here
+//		for(int m=0;m<im;++m)
+//			for(int n=0;n<NV;++n)
+//				bw(begin_tet+i*im*NV+m*NV+n)+= im*NV;
+//	}
+//	
+//	for(int i=0; i<ntet; ++i){
+//		
+//		for(int j=0;j<4;++j)
+//			for(int n=0;n<NV;++n)
+//				bw(tet(i).pnt(j)*NV+n) += im*NV;
+//		
+//		for(int j=0;j<6;++j)
+//			for(int m=0;m<em;++m)
+//				for(int n=0;n<NV;++n)
+//					bw(begin_seg+tet(i).seg(j)*em*NV+m*NV+n) += im*NV;
+//		
+//		for(int j=0;j<4;++j)
+//			for(int m=0;m<fm;++m)
+//				for(int n=0;n<NV;++n)
+//					bw(begin_tri+tet(i).tri(j)*fm*NV+m*NV+n) += im*NV;
+//
+//		for(int m=0;m<im;++m)
+//			for(int n=0;n<NV;++n)
+//				bw(begin_tet+i*im*NV+m*NV+n)+= im*NV;
+//	}
+//	
+//	
+//	
+//	
+//	return;
+//}
+
 
 #endif
 
@@ -138,8 +204,7 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 #endif
 
 void tet_hp::create_jacobian(bool jac_tran) {
-	int indx,gindx,eind,find,iind,sgn,msgn,mode;
-	
+	int gindx,eind,find,iind,sgn,msgn,mode;
 	int kn = basis::tet(log2p).tm*NV;
 	Array<FLT,2> K(kn,kn);
 	Array<int,1> loc_to_glo(kn);
@@ -207,7 +272,6 @@ void tet_hp::create_jacobian(bool jac_tran) {
 				loc_to_glo(ind++) = iind+m*NV+n;
 			}
 		}
-
 		
 #ifdef petsc
 
@@ -221,7 +285,7 @@ void tet_hp::create_jacobian(bool jac_tran) {
 #ifndef petsc
 		for(int i = 0; i < kn; ++i)
 			for(int j = 0; j < kn; ++j)
-				insert_sparse(loc_to_glo(j), loc_to_glo(i), K(i,j),jac_tran);
+				insert_sparse(loc_to_glo(i), loc_to_glo(j), K(i,j),jac_tran);
 
 #endif
 
@@ -247,19 +311,34 @@ void tet_hp::create_jacobian(bool jac_tran) {
 void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
 	int kcol = 0;
-	FLT dw = 0.001;  //dw=sqrt(eps/l2_norm(q))
+	FLT dw = 0.01;  //dw=sqrt(eps/l2_norm(q))
 	
 	
 	ugtouht(tind);
+	
+	for (int m = 0; m < basis::tet(log2p).tm; ++m) {
+		for (int n = 0; n < NV; ++n) {
+			lf_im(n)(m)=0.0;
+			lf_re(n)(m)=0.0;
+		}
+	}
+	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
 	for(int i=0;i<basis::tet(log2p).tm;++i)
 		for(int n=0;n<NV;++n)
 			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
 
-	
 	for(int mode = 0; mode < basis::tet(log2p).tm; ++mode){
 		for(int var = 0; var < NV; ++var){
 			uht(var)(mode) += dw;
+			
+			for (int m = 0; m < basis::tet(log2p).tm; ++m) {
+				for (int n = 0; n < NV; ++n) {
+					lf_im(n)(m)=0.0;
+					lf_re(n)(m)=0.0;
+				}
+			}
+			
 			element_rsdl(tind,0,uht,lf_re,lf_im);
 			for(int i=0;i<basis::tet(log2p).tm;++i)
 				for(int n=0;n<NV;++n)
@@ -274,12 +353,12 @@ void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 			uht(var)(mode) -= dw;
 		}
 	}	
-	
+
 	return;
 }
 
 void tet_hp::create_rsdl() {
-	int indx,gindx,eind,find,iind,sgn,msgn,mode;
+	int gindx,eind,find,iind,sgn,msgn,mode;
 	
 	int kn = NV*basis::tet(log2p).tm;
 	Array<FLT,1> lclres(kn);
@@ -368,6 +447,14 @@ void tet_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 	int ind = 0;
 
 	ugtouht(tind);
+	
+	for (int m = 0; m < basis::tet(log2p).tm; ++m) {
+		for (int n = 0; n < NV; ++n) {
+			lf_im(n)(m)=0.0;
+			lf_re(n)(m)=0.0;
+		}
+	}
+	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
 	for(int i=0;i<basis::tet(log2p).tm;++i)
 		for(int n=0;n<NV;++n)
@@ -378,22 +465,27 @@ void tet_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 
 #ifndef petsc
 void tet_hp::vec_to_ug(){
-	
 	int ind = 0;
 	
 	for(int i = 0; i < npnt; ++i)
 		for(int n = 0; n < NV; ++n)
 			ug.v(i,n) = ug_vec(ind++);
 	
+	if(!basis::tet(log2p).em) return;
+	
 	for(int i = 0; i < nseg; ++i)
 		for(int m = 0; m < basis::tet(log2p).em; ++m)
 			for(int n = 0; n < NV; ++n)
 				ug.e(i,m,n) = ug_vec(ind++);
 	
+	if(!basis::tet(log2p).fm) return;
+
 	for(int i = 0; i < ntri; ++i)
 		for(int m = 0; m < basis::tet(log2p).fm; ++m)
 			for(int n = 0; n < NV; ++n)
 				ug.f(i,m,n) = ug_vec(ind++);		
+
+	if(!basis::tet(log2p).im) return;
 	
 	for(int i = 0; i < ntet; ++i)
 		for(int m = 0; m < basis::tet(log2p).im; ++m)
@@ -411,16 +503,22 @@ void tet_hp::ug_to_vec(){
 		for(int n = 0; n < NV; ++n)
 			ug_vec(ind++) = ug.v(i,n);
 	
+	if(!basis::tet(log2p).em) return;
+
 	for(int i = 0; i < nseg; ++i)
 		for(int m = 0; m < basis::tet(log2p).em; ++m)
 			for(int n = 0; n < NV; ++n)
 				ug_vec(ind++) = ug.e(i,m,n);
 	
+	if(!basis::tet(log2p).fm) return;
+
 	for(int i = 0; i < ntri; ++i)
 		for(int m = 0; m < basis::tet(log2p).fm; ++m)
 			for(int n = 0; n < NV; ++n)
 				ug_vec(ind++) = ug.f(i,m,n);;		
 	
+	if(!basis::tet(log2p).im) return;
+
 	for(int i = 0; i < ntet; ++i)
 		for(int m = 0; m < basis::tet(log2p).im; ++m)
 			for(int n = 0; n < NV; ++n)

@@ -38,7 +38,7 @@ void tet_hp::lsolver(){
 		
 		/* apply dirichlet boundary conditions to sparse matrix and vector */
 		for(int j = 0; j < nfbd; ++j)
-			fbdry(j)->apply_sparse_dirichlet(false);
+			hp_fbdry(j)->apply_sparse_dirichlet(false);
 		
 		/* solve system with gmres J*du=res_vec */
 		its = gmres(inner_its,size_sparse_matrix,J,res_vec.data(),du.data(),tol);

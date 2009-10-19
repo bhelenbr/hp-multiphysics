@@ -1,7 +1,7 @@
 #include "tet_hp.h"
 #include "hp_boundary.h"
 
-// #define DEBUG
+//#define DEBUG
 // #define MGRID_TEST
 
 void tet_hp::rsdl(int stage) {  
@@ -45,15 +45,28 @@ void tet_hp::rsdl(int stage) {
 		/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 		ugtouht(tind);
 		
+		for (int m = 0; m < basis::tet(log2p).tm; ++m) {
+			for (int n = 0; n < NV; ++n) {
+				lf_im(n)(m)=0.0;
+				lf_re(n)(m)=0.0;
+			}
+		}
+		
 		/* call rsdl for element */
 		element_rsdl(tind,stage,uht,lf_re,lf_im);
 		
 		/* load imaginary local residual into global residual */
-		lf = lf_im;
+		for (int m = 0; m < basis::tet(log2p).tm; ++m) 
+			for (int n = 0; n < NV; ++n)
+				lf(n)(m) = lf_im(n)(m);
+		
 		lftog(tind,gbl->res);
 		
 		/* load real local residual into global residual */
-		lf = lf_re;
+		for (int m = 0; m < basis::tet(log2p).tm; ++m) 
+			for (int n = 0; n < NV; ++n)
+				lf(n)(m) = lf_re(n)(m);
+		
 		lftog(tind,gbl->res_r);
 	}
 	
@@ -73,27 +86,27 @@ void tet_hp::rsdl(int stage) {
 
 #ifdef DEBUG
 	if (coarse_flag) {
-		for(i=0;i<npnt;++i) {
+		for(int i=0;i<npnt;++i) {
 			printf("rsdl v: %d ",i);
-			for (n=0;n<NV;++n) 
+			for (int n=0;n<NV;++n) 
 				printf("%e ",gbl->res.v(i,n));
 			printf("\n");
 		}
 		
-		for(i=0;i<nseg;++i) {
+		for(int i=0;i<nseg;++i) {
 			for(int m=0;m<basis::tet(log2p).em;++m) {
 				printf("rsdl s: %d %d ",i,m); 
-				for(n=0;n<NV;++n)
+				for(int n=0;n<NV;++n)
 					printf("%e ",gbl->res.e(i,m,n));
 				printf("\n");
 			}
 		}
 		
-		for(i=0;i<ntri;++i) {
+		for(int i=0;i<ntri;++i) {
 			for(int m=0;m<basis::tet(log2p).fm;++m) {
 				printf("rsdl i: %d %d ",i,m);
-				for(n=0;n<NV;++n) 
-					printf("%e %e %e\n",gbl->res.f(i,m,n));
+				for(int n=0;n<NV;++n) 
+					printf("%e \n",gbl->res.f(i,m,n));
 				printf("\n");
 			}
 		}
@@ -117,13 +130,7 @@ void tet_hp::rsdl(int stage) {
 		if (basis::tet(log2p).fm) gbl->res.f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all()) += dres(log2p).f(Range(0,ntri-1),Range(0,basis::tet(log2p).fm-1),Range::all());  
 		if (basis::tet(log2p).im) gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) += dres(log2p).i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());  
 	}
-	else {
-		if (stage == gbl->nstage) {
-			/* TEMPORARY HACK FOR AUXILIARY FLUXES */
-			for (int i=0;i<nfbd;++i)
-				hp_fbdry(i)->output(*gbl->log, tet_hp::auxiliary);
-		}
-	}
+
 	
 	return;
 }
@@ -131,7 +138,25 @@ void tet_hp::rsdl(int stage) {
 void tet_hp::update() {
 	int i,j,m,k,n,indx,indx1;
 	FLT cflalpha;
+	
+//	if(!sparse_resized){
+//		l2error(gbl->ibc);
+//
+//		superlu();
+//		output("superlu", tecplot);
+//		l2error(gbl->ibc);
+//
+//		//exit(1);
+//		return;
+//	}
+//
+//	l2error(gbl->ibc);
 
+	
+	superlu();
+	output("superlu", tecplot);
+
+	
 	/* COUPLED MESH MOVMEMENT */
 //    if (mmovement == coupled_deformable  && log2p == 0) {
 //        r_tet_mesh::update();
@@ -178,39 +203,39 @@ void tet_hp::update() {
 //		if (coarse_level) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
 
-		for(i=0;i<npnt;++i) {
-			printf("%s vprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->vprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->vprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
-		
-		for(i=0;i<nseg;++i) {
-			printf("%s eprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->eprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->eprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
-		for(i=0;i<ntri;++i) {
-			printf("%s fprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->fprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->fprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}		
-		for(i=0;i<ntet;++i) {
-			printf("%s iprcn nstage: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->iprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->iprcn(i,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-		}
+//		for(i=0;i<npnt;++i) {
+//			printf("%s vprcn nstage: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->vprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->vprcn(i,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//		}
+//		
+//		for(i=0;i<nseg;++i) {
+//			printf("%s eprcn nstage: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->eprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->eprcn(i,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//		}
+//		for(i=0;i<ntri;++i) {
+//			printf("%s fprcn nstage: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->fprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->fprcn(i,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//		}		
+//		for(i=0;i<ntet;++i) {
+//			printf("%s iprcn nstage: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->iprcn(i,n)) > 1.0e-14) printf("%8.5e ",gbl->iprcn(i,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//		}
 
 		for(i=0;i<npnt;++i) {
 			printf("%s res v: %d ",gbl->idprefix.c_str(),i);
@@ -232,28 +257,28 @@ void tet_hp::update() {
 			}
 		}
 		
-		
-		for(i=0;i<ntri;++i) {
-			for(m=0;m<basis::tet(log2p).fm;++m) {
-			printf("%s res f: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.f(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.f(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-			}
-		}
-		
-		for(i=0;i<ntet;++i) {
-			for(m=0;m<basis::tet(log2p).im;++m) {
-			printf("%s res i: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.i(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.i(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-			}
-		}
+//		
+//		for(i=0;i<ntri;++i) {
+//			for(m=0;m<basis::tet(log2p).fm;++m) {
+//			printf("%s res f: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->res.f(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.f(i,m,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//			}
+//		}
+//		
+//		for(i=0;i<ntet;++i) {
+//			for(m=0;m<basis::tet(log2p).im;++m) {
+//			printf("%s res i: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->res.i(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.i(i,m,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//			}
+//		}
 		
 		for(i=0;i<npnt;++i) {
 			printf("%s ug.v: %d ",gbl->idprefix.c_str(),i);
@@ -275,30 +300,53 @@ void tet_hp::update() {
 			}
 		}
 		
+//		
+//		for(i=0;i<ntri;++i) {
+//			for(m=0;m<basis::tet(log2p).fm;++m) {
+//			printf("%s ug.f: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(ug.f(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.f(i,m,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//			}
+//		}
+//		
+//		for(i=0;i<ntet;++i) {
+//			for(m=0;m<basis::tet(log2p).im;++m) {
+//			printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//			}
+//		}
 		
-		for(i=0;i<ntri;++i) {
-			for(m=0;m<basis::tet(log2p).fm;++m) {
-			printf("%s ug.f: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(ug.f(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.f(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-			}
-		}
 		
-		for(i=0;i<ntet;++i) {
-			for(m=0;m<basis::tet(log2p).im;++m) {
-			printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
-			for(n=0;n<NV;++n) {
-				if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
-				else printf("%8.5e ",0.0);
-			}
-			printf("\n");
-			}
-		}
 //	}
 #endif
+		
+//		for(i=0;i<npnt;++i) {
+//			printf("%s res v: %d ",gbl->idprefix.c_str(),i);
+//			for(n=0;n<NV;++n) {
+//				if (fabs(gbl->res.v(i,n)) > 1.0e-14) printf("%8.5e ",gbl->res.v(i,n));
+//				else printf("%8.5e ",0.0);
+//			}
+//			printf("\n");
+//		}
+//		
+//		for(i=0;i<nseg;++i) {
+//			for(m=0;m<basis::tet(log2p).em;++m) {
+//				printf("%s res e: %d ",gbl->idprefix.c_str(),i);
+//				for(n=0;n<NV;++n) {
+//					if (fabs(gbl->res.e(i,m,n)) > 1.0e-14) printf("%8.5e ",gbl->res.e(i,m,n));
+//					else printf("%8.5e ",0.0);
+//				}
+//				printf("\n");
+//			}
+//		}
+		
 #ifdef MGRID_TEST
 		if (!coarse_flag) continue; // TO TEST COARSE GRID CORRECTION ONLY
 #endif
@@ -363,10 +411,10 @@ void tet_hp::update() {
 #ifdef DEBUG
 //   if (coarse_level) {
 #ifdef PTH
-			pth_exit(NULL);
+//			pth_exit(NULL);
 #endif
 #ifdef MPI
-			MPI_Finalize();
+//			MPI_Finalize();
 #endif
 //	   }
 #endif

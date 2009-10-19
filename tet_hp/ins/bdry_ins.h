@@ -186,30 +186,29 @@ namespace bdry_ins {
 		}	
 		
 		void apply_sparse_dirichlet(bool compressed_column) {
+			/* only works if pressure if 4th variable */
 			int gind;
 			int em=basis::tet(x.log2p).em;
 			int fm=basis::tet(x.log2p).fm;
-			int NV = x.NV;
-
 			
 			for(int i=0;i<base.npnt;++i){
-				gind = base.pnt(i).gindx*NV;
-				for(int n=0;n<NV;++n)
+				gind = base.pnt(i).gindx*x.NV;
+				for(int n=0;n<x.NV-1;++n)
 					x.sparse_dirichlet(gind+n,compressed_column);
 			}
 			
 			for(int i=0;i<base.nseg;++i){
-				gind = base.npnt*NV+base.seg(i).gindx*em*NV;
+				gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
 				for(int m=0; m<em; ++m)
-					for(int n=0;n<NV;++n)
-						x.sparse_dirichlet(gind+m*NV+n,compressed_column);
+					for(int n=0;n<x.NV-1;++n)
+						x.sparse_dirichlet(gind+m*x.NV+n,compressed_column);
 			}
 			
 			for(int i=0;i<base.ntri;++i){
-				gind = base.npnt*NV+base.nseg*em*NV+base.tri(i).gindx*fm*NV;
+				gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
 				for(int m=0; m<fm; ++m)
-					for(int n=0;n<NV;++n)
-						x.sparse_dirichlet(gind+m*NV+n,compressed_column);
+					for(int n=0;n<x.NV-1;++n)
+						x.sparse_dirichlet(gind+m*x.NV+n,compressed_column);
 			}			
 		}
 		

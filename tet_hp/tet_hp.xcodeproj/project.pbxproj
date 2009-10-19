@@ -45,10 +45,12 @@
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
 		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		959CF6F7108BF54A002293FD /* superlu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9529BA47107FB0840002670A /* superlu.cpp */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		959FD36C0E313856000EF952 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
 		95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2D0F55C464008788DB /* length.cpp */; };
 		95AA515D10600DE500E0151D /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C73E1F105EA89D00637BEE /* sparse.cpp */; };
+		95BE98481086B60E0026238C /* libsuperlu_4.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95BE98471086B60E0026238C /* libsuperlu_4.0.a */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
 		95F027D60FD89C08000E9979 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
 		95F027D70FD89C0A000E9979 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
@@ -155,6 +157,7 @@
 		9598AE300F55C464008788DB /* tet_hp_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tet_hp_ins.h; path = ins/tet_hp_ins.h; sourceTree = "<group>"; };
 		9598AE310F55C464008788DB /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = ins/tstep.cpp; sourceTree = "<group>"; };
 		95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblibtet_nodal_basis.a; path = ../lib/liblibtet_nodal_basis.a; sourceTree = SOURCE_ROOT; };
+		95BE98471086B60E0026238C /* libsuperlu_4.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuperlu_4.0.a; path = ../../Packages/lib/libsuperlu_4.0.a; sourceTree = SOURCE_ROOT; };
 		95C73E1F105EA89D00637BEE /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
 		95DE303F104864E800F7FA10 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
 		95DE30A7104C294F00F7FA10 /* pod_generate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_generate.cpp; path = pod/pod_generate.cpp; sourceTree = "<group>"; };
@@ -195,6 +198,7 @@
 				9529BA21107F99130002670A /* libpetscsnes.a in Frameworks */,
 				9529BA22107F99130002670A /* libpetscts.a in Frameworks */,
 				9529BA23107F99130002670A /* libpetscvec.a in Frameworks */,
+				95BE98481086B60E0026238C /* libsuperlu_4.0.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +279,7 @@
 				6F2C82890CE6510B000267B3 /* libpth.a */,
 				6F661FF5091AFB3500FB5D82 /* libblitz.a */,
 				6F66205C091AFFC500FB5D82 /* libmetis.a */,
+				95BE98471086B60E0026238C /* libsuperlu_4.0.a */,
 				6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */,
 				6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */,
 				9529BA14107F99130002670A /* libpetsc.a */,
@@ -427,6 +432,7 @@
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
+				959CF6F7108BF54A002293FD /* superlu.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -446,7 +452,6 @@
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					petsc,
 					f2cFortran,
 					BZ_DEBUG,
 				);
