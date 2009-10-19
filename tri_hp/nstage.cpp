@@ -1,8 +1,8 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-//#define DEBUG
-
+#define DEBUG
+#define DEBUG_TOL 1.0e-9
 // #define OP_COUNT
 
 #ifdef OP_COUNT
@@ -83,6 +83,7 @@ void tri_hp::update() {
 
 		minvrt();
 
+
 #ifdef DEBUG   
 		// if (coarse_level) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
@@ -90,7 +91,7 @@ void tri_hp::update() {
 		for(i=0;i<npnt;++i) {
 			printf("%s nstage: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->vprcn(i,n)) > 1.0e-9) printf("%8.5e ",gbl->vprcn(i,n));
+				if (fabs(gbl->vprcn(i,n)) > DEBUG_TOL) printf("%8.5e ",gbl->vprcn(i,n));
 				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
@@ -99,9 +100,8 @@ void tri_hp::update() {
 		for(i=0;i<npnt;++i) {
 			printf("%s v: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-				// if (fabs(gbl->res.v(i,n)) > 1.0e-9) 
-				printf("%8.5e ",gbl->res.v(i,n));
-				//else printf("%8.5e ",0.0);
+				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.v(i,n));
+				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
 		}
@@ -110,7 +110,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				printf("%s s: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.s(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl->res.s(i,m,n));
+					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.s(i,m,n));
 					else printf("%8.5e ",0.0);
 				}
 				printf("\n");
@@ -122,7 +122,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->im();++m) {
 				printf("%s i: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) > 1.0e-9) printf("%8.5e ",gbl->res.i(i,m,n));
+					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.i(i,m,n));
 					else printf("%8.5e ",0.0);
 				}
 				printf("\n");
@@ -132,7 +132,7 @@ void tri_hp::update() {
 		for(i=0;i<npnt;++i) {
 			printf("%s ug.v: %d ",gbl->idprefix.c_str(),i);
 			for(n=0;n<NV;++n) {
-				if (fabs(ug.v(i,n)) > 1.0e-9) printf("%8.5e ",ug.v(i,n));
+				if (fabs(ug.v(i,n)) > DEBUG_TOL) printf("%8.5e ",ug.v(i,n));
 				else printf("%8.5e ",0.0);
 			}
 			printf("\n");
@@ -142,7 +142,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
 				printf("%s ug.s: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
-					if (fabs(ug.s(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.s(i,m,n));
+					if (fabs(ug.s(i,m,n)) > DEBUG_TOL) printf("%8.5e ",ug.s(i,m,n));
 					else printf("%8.5e ",0.0);
 				}
 				printf("\n");
@@ -154,7 +154,7 @@ void tri_hp::update() {
 			for(m=0;m<basis::tri(log2p)->im();++m) {
 				printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
 				for(n=0;n<NV;++n) {
-					if (fabs(ug.i(i,m,n)) > 1.0e-9) printf("%8.5e ",ug.i(i,m,n));
+					if (fabs(ug.i(i,m,n)) > DEBUG_TOL) printf("%8.5e ",ug.i(i,m,n));
 					else printf("%8.5e ",0.0);
 				}
 				printf("\n");
@@ -198,14 +198,14 @@ void tri_hp::update() {
 		}
 
 #ifdef DEBUG
-//        if (coarse_level) {
+        if (coarse_level) {
 #ifdef PTH
-//		pth_exit(NULL);
+		pth_exit(NULL);
 #endif
 #ifdef MPI
 //		MPI_Finalize();
 #endif
-//        }
+        }
 #endif
 
 	}
