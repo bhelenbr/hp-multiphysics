@@ -65,7 +65,7 @@ void tet_hp::superlu(){
     superlu_options_t options;
     SuperLUStat_t stat;	
 	
-	FLT newton_norm,tol=1.0e-12;
+	FLT newton_norm,tol=1.0e-14;
 	int max_newton_its = 50;
 		
     /* Set the default input options:
@@ -102,7 +102,6 @@ void tet_hp::superlu(){
 		/* create jacobian */
 		create_jacobian(compressed_column);
 
-		cout << "number of sparse elements "<< number_sparse_elements << endl;
 		/* create residual */
 		create_rsdl();	
 		
@@ -117,9 +116,7 @@ void tet_hp::superlu(){
 		}
 		cout << "L infinity norm of residual " << max_resid << endl;
 		
-		if (max_resid < tol) {
-			break;
-		}
+		if (max_resid < tol) break;		
 
 		/* create super matrix A using compressed column storage */
 		dCreate_CompCol_Matrix(&A, size_sparse_matrix, size_sparse_matrix, number_sparse_elements, sparse_val.data(), sparse_ind.data(), sparse_ptr.data(), SLU_NC, SLU_D, SLU_GE);
@@ -156,7 +153,6 @@ void tet_hp::superlu(){
 
 		for(int j = 0; j < size_sparse_matrix; ++j)
 			ug_vec(j)-=du[j];
-		
 		
 		/* send ug_vec to global solution */
 		vec_to_ug();

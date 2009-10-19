@@ -26,9 +26,7 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 		row = col;
 		col = temp;
 	}
-	
-	int find_ind = -1;
-	
+		
 	/* add value to already existing element in sparse */
 	for(int i = sparse_ptr(row); i < sparse_ptr(row+1); ++i){
 		if(sparse_ind(i) == col){
@@ -37,6 +35,8 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 		}
 	}
 	
+	int find_ind = -1;
+
 	/* if not pre-exisiting element then add to list in correct location */
 	for(int i = sparse_ptr(row); i < sparse_ptr(row+1); ++i){
 		if(sparse_ind(i) > col){
@@ -44,18 +44,26 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 			break;
 		}
 	}
-	/* no column bigger so insert at end */
-	if(find_ind == -1)
-		find_ind = sparse_ptr(row+1);
 	
-	++number_sparse_elements;
+//	/* bandwidth known so dont do this stuff*/
+//	/* no column bigger so insert at end */
+//	if(find_ind == -1)
+//		find_ind = sparse_ptr(row+1);
+//	
+//	++number_sparse_elements;
+//	
+//	/* shift start of column index by one */
+//	for(int i = row+1; i < size_sparse_matrix+1; ++i)
+//		++sparse_ptr(i);
+//	
+//	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
+//	for(int i = number_sparse_elements; i > find_ind; --i){
+//		sparse_val(i)=sparse_val(i-1);
+//		sparse_ind(i)=sparse_ind(i-1);
+//	}
 	
-	/* shift start of column index by one */
-	for(int i = row+1; i < size_sparse_matrix+1; ++i)
-		++sparse_ptr(i);
-	
-	/* slide all non-diagonal entries after insertion column to the right (slow but only done once) */
-	for(int i = number_sparse_elements; i > find_ind; --i){
+	/* slide all entries after insertion column to the right*/
+	for(int i = sparse_ptr(row+1)-1; i > find_ind; --i){
 		sparse_val(i)=sparse_val(i-1);
 		sparse_ind(i)=sparse_ind(i-1);
 	}
@@ -66,6 +74,9 @@ void tet_hp::insert_sparse(int row, int col, FLT value, bool compressed_col ){
 	
 	return;	
 }
+
+
+
 
 /* zero out sparse matrix but keep same structure */
 void tet_hp::zero_sparse(){
@@ -83,20 +94,30 @@ void tet_hp::zero_sparse(){
 void tet_hp::initialize_sparse(){
 	
 	size_sparse_matrix = (npnt+nseg*basis::tet(log2p).em+ntri*basis::tet(log2p).fm+ntet*basis::tet(log2p).im)*NV;
-	//size_sparse_matrix = 4;//temp 
-	/* sparse matrix allocation */
-	int nse = static_cast<int>(size_sparse_matrix*size_sparse_matrix/10);//number of sparse elements
-	cout << "number of sparse elements allocated " << nse << endl;
-	sparse_ind.resize(nse);//too much storage resize later
-	sparse_val.resize(nse);
+
+//	/* sparse matrix allocation */
+//	int nse = static_cast<int>(size_sparse_matrix*size_sparse_matrix);//number of sparse elements
+//	cout << "number of sparse elements allocated " << nse << endl;
+//	sparse_ind.resize(nse);//too much storage resize later
+//	sparse_val.resize(nse);
+//	number_sparse_elements = size_sparse_matrix;
+
 	sparse_ptr.resize(size_sparse_matrix+1);
-	number_sparse_elements = size_sparse_matrix;
+	find_sparse_bandwidth();
+	number_sparse_elements = sparse_ptr(size_sparse_matrix);
 	
-	/* creates sparse matrix with zeros on diagonal */
-	for (int i = 0; i < size_sparse_matrix+1; ++i) {
-		sparse_ptr(i) = i;
-		sparse_ind(i) = i;
-	}
+	cout << "number of sparse elements "<< number_sparse_elements << endl;
+
+	sparse_val.resize(number_sparse_elements);
+	sparse_ind.resize(number_sparse_elements);
+	
+	sparse_ind = 100*size_sparse_matrix; // some number bigger than size of matrix
+
+//	/* creates sparse matrix with zeros on diagonal */
+//	for (int i = 0; i < size_sparse_matrix+1; ++i) {
+//		sparse_ptr(i) = i;
+//		sparse_ind(i) = i;
+//	}
 	
 	return;
 }
@@ -130,64 +151,97 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 	return;
 }
 
-//void tet_hp::find_sparse_bandwidth(){
-//	Array<int,1> bw(size_sparse_matrix);
-//	int em=basis::tet(log2p).em;
-//	int fm=basis::tet(log2p).fm;
-//	int im=basis::tet(log2p).im;
-//	int begin_seg = npnt*NV;
-//	int begin_tri = begin_seg+nseg*em*NV;
-//	int begin_tet = begin_tri+ntri*fm*NV;
+void tet_hp::find_sparse_bandwidth(){
+	
+	Array<int,1> bw(size_sparse_matrix);
+	
+	int em=basis::tet(log2p).em;
+	int fm=basis::tet(log2p).fm;
+	int im=basis::tet(log2p).im;
+	int tm=basis::tet(log2p).tm;
+
+	int begin_seg = npnt*NV;
+	int begin_tri = begin_seg+nseg*em*NV;
+	int begin_tet = begin_tri+ntri*fm*NV;
+
+	bw = 0;
+	
+	for(int i=0; i<npnt; ++i){
+		
+		for(int n=0;n<NV;++n)
+			bw(i*NV+n) += NV*(pnt(i).nnbor*fm+pnt(i).nspk+pnt(i).ntri*em+1);		
+		
+	}
+	
+
+	for(int i=0; i<nseg; ++i){
+		
+		for(int j=0;j<2;++j)
+			for(int n=0;n<NV;++n)
+				bw(seg(i).pnt(j)*NV+n) += em*NV;
+		
+		for(int m=0;m<em;++m)
+			for(int n=0;n<NV;++n)
+				bw(begin_seg+i*em*NV+m*NV+n) += NV*((2*fm+em)*seg(i).nnbor+em+(2*em+1)*seg(i).nspk+2);		
+	}
+	
+	
+	for(int i=0; i<ntri; ++i){
+		
+		for(int j=0;j<3;++j)
+			for(int n=0;n<NV;++n)
+				bw(tri(i).pnt(j)*NV+n) += fm*NV;
+		
+		for(int j=0;j<3;++j)
+			for(int m=0;m<em;++m)
+				for(int n=0;n<NV;++n)
+					bw(begin_seg+tri(i).seg(j)*em*NV+m*NV+n) += fm*NV;
+		
+		if(tri(i).tet(1) > 0){
+			for(int m=0;m<fm;++m)
+				for(int n=0;n<NV;++n)
+					bw(begin_tri+i*fm*NV+m*NV+n) += NV*(7*fm+9*em+5);
+		}
+		else{
+			for(int m=0;m<fm;++m)
+				for(int n=0;n<NV;++n)
+					bw(begin_tri+i*fm*NV+m*NV+n) += NV*(4*fm+6*em+4);
+		}
+	}
+	
+	for(int i=0; i<ntet; ++i){
+		
+		for(int j=0;j<4;++j)
+			for(int n=0;n<NV;++n)
+				bw(tet(i).pnt(j)*NV+n) += im*NV;
+		
+		for(int j=0;j<6;++j)
+			for(int m=0;m<em;++m)
+				for(int n=0;n<NV;++n)
+					bw(begin_seg+tet(i).seg(j)*em*NV+m*NV+n) += im*NV;
+		
+		for(int j=0;j<4;++j)
+			for(int m=0;m<fm;++m)
+				for(int n=0;n<NV;++n)
+					bw(begin_tri+tet(i).tri(j)*fm*NV+m*NV+n) += im*NV;
+
+		for(int m=0;m<im;++m)
+			for(int n=0;n<NV;++n)
+				bw(begin_tet+i*im*NV+m*NV+n)+= tm*NV;
+	}
+	
+//	for (int i = 0; i < size_sparse_matrix; ++i) {
+//		cout << "bandwidth "<< bw(i)- sparse_ptr(i+1)+sparse_ptr(i) << endl;
 //
-//	bw = 0;
-//	
-//	for(int i=0; i<ntri; ++i){
-//		
-//		for(int j=0;j<3;++j)
-//			for(int n=0;n<NV;++n)
-//				bw(tri(i).pnt(j)*NV+n) += fm*NV;
-//		
-//		for(int j=0;j<3;++j)
-//			for(int m=0;m<em;++m)
-//				for(int n=0;n<NV;++n)
-//					bw(begin_seg+tri(i).seg(j)*em*NV+m*NV+n) += fm*NV;
-//		
-//		for(int m=0;m<fm;++m)
-//			for(int n=0;n<NV;++n)
-//				bw(begin_tri+i*fm*NV+m*NV+n) += fm*NV;
-//		
-//		//stopped here
-//		for(int m=0;m<im;++m)
-//			for(int n=0;n<NV;++n)
-//				bw(begin_tet+i*im*NV+m*NV+n)+= im*NV;
 //	}
-//	
-//	for(int i=0; i<ntet; ++i){
-//		
-//		for(int j=0;j<4;++j)
-//			for(int n=0;n<NV;++n)
-//				bw(tet(i).pnt(j)*NV+n) += im*NV;
-//		
-//		for(int j=0;j<6;++j)
-//			for(int m=0;m<em;++m)
-//				for(int n=0;n<NV;++n)
-//					bw(begin_seg+tet(i).seg(j)*em*NV+m*NV+n) += im*NV;
-//		
-//		for(int j=0;j<4;++j)
-//			for(int m=0;m<fm;++m)
-//				for(int n=0;n<NV;++n)
-//					bw(begin_tri+tet(i).tri(j)*fm*NV+m*NV+n) += im*NV;
-//
-//		for(int m=0;m<im;++m)
-//			for(int n=0;n<NV;++n)
-//				bw(begin_tet+i*im*NV+m*NV+n)+= im*NV;
-//	}
-//	
-//	
-//	
-//	
-//	return;
-//}
+	
+	sparse_ptr(0)=0;
+	for (int i=1; i<size_sparse_matrix+1; ++i) {
+		sparse_ptr(i) = bw(i-1)+sparse_ptr(i-1);
+	}
+	
+	return;
+}
 
 
 #endif
@@ -244,7 +298,7 @@ void tet_hp::create_jacobian(bool jac_tran) {
 		if (basis::tet(log2p).p > 2) {
 			for(int i = 0; i < 4; ++i){
 				sgn = -tet(tind).rot(i);
-				find = npnt*NV+nseg*basis::tet(log2p).em*NV+tet(tind).tri(i)*basis::tet(log2p).em*NV;
+				find = npnt*NV+nseg*basis::tet(log2p).em*NV+tet(tind).tri(i)*basis::tet(log2p).fm*NV;
 				mode = 0;
 				msgn = 1;		
 				for(int m = 1; m <= basis::tet(log2p).em-1; ++m) {
@@ -293,18 +347,18 @@ void tet_hp::create_jacobian(bool jac_tran) {
 				
 	}
 	
-#ifndef petsc
-	/* resize and preserve sparse matrix on first call only */
-	if (!sparse_resized) {
-		
-		//ija.resizeAndPreserve(number_sparse_elements+1);
-		//sa.resizeAndPreserve(number_sparse_elements+1);
-
-		sparse_ind.resizeAndPreserve(number_sparse_elements);
-		sparse_val.resizeAndPreserve(number_sparse_elements);
-		sparse_resized = true;
-	}
-#endif
+//#ifndef petsc
+//	/* resize and preserve sparse matrix on first call only */
+//	if (!sparse_resized) {
+//		
+//		//ija.resizeAndPreserve(number_sparse_elements+1);
+//		//sa.resizeAndPreserve(number_sparse_elements+1);
+//
+//		sparse_ind.resizeAndPreserve(number_sparse_elements);
+//		sparse_val.resizeAndPreserve(number_sparse_elements);
+//		sparse_resized = true;
+//	}
+//#endif
 	return;
 }
 
@@ -396,7 +450,7 @@ void tet_hp::create_rsdl() {
 		if (basis::tet(log2p).p > 2) {
 			for(int i = 0; i < 4; ++i){
 				sgn = -tet(tind).rot(i);
-				find = npnt*NV+nseg*basis::tet(log2p).em*NV+tet(tind).tri(i)*basis::tet(log2p).em*NV;
+				find = npnt*NV+nseg*basis::tet(log2p).em*NV+tet(tind).tri(i)*basis::tet(log2p).fm*NV;
 				mode = 0;
 				msgn = 1;		
 				for(int m = 1; m <= basis::tet(log2p).em-1; ++m) {

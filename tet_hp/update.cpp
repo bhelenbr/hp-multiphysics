@@ -139,22 +139,14 @@ void tet_hp::update() {
 	int i,j,m,k,n,indx,indx1;
 	FLT cflalpha;
 	
-//	if(!sparse_resized){
-//		l2error(gbl->ibc);
-//
-//		superlu();
-//		output("superlu", tecplot);
-//		l2error(gbl->ibc);
-//
-//		//exit(1);
-//		return;
-//	}
-//
-//	l2error(gbl->ibc);
-
 	
+	
+	l2error(gbl->ibc);
 	superlu();
 	output("superlu", tecplot);
+	l2error(gbl->ibc);
+	return;
+	
 
 	
 	/* COUPLED MESH MOVMEMENT */
