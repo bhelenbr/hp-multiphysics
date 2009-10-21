@@ -956,7 +956,6 @@ namespace ibc_ins {
 
 	};
 	
-	static bool tempflip = true;
 	class static_particles : public streamlines {
 		FLT rho, d;
 
