@@ -74,6 +74,7 @@ void tri_hp_ins::setup_preconditioner() {
 				
 			/* CALCULATE MESH VELOCITY */
 			TinyVector<FLT,ND> mvel;
+			qmax = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
