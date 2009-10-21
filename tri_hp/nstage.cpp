@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define DEBUG
+// #define DEBUG
 #define DEBUG_TOL 1.0e-9
 // #define OP_COUNT
 
@@ -198,14 +198,14 @@ void tri_hp::update() {
 		}
 
 #ifdef DEBUG
-        if (coarse_level) {
+//        if (coarse_level) {
 #ifdef PTH
 		pth_exit(NULL);
 #endif
 #ifdef MPI
 //		MPI_Finalize();
 #endif
-        }
+//        }
 #endif
 
 	}
