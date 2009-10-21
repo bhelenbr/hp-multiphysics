@@ -14,6 +14,7 @@
 
 #include "tet_hp.h"
 #include <myblas.h>
+#include "hp_boundary.h"
 
 class hp_vrtx_bdry : public vgeometry_interface<3> {
 	protected:
@@ -232,6 +233,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void edirichlet() {}
 		virtual void fdirichlet() {}
 		virtual void apply_sparse_dirichlet(bool compressed_column) {}
+		virtual void el_rsdl(int find,int stage) {}
 
 		virtual void pmatchsolution_snd(int phase, FLT *vdata, int vrtstride=1) {base.ploadbuff(boundary::all,vdata,0,x.NV-1,x.NV*vrtstride);}
 		virtual void pmatchsolution_rcv(int phase, FLT *vdata, int vrtstride=1) {base.pfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,vdata,0,x.NV-1,x.NV*vrtstride);}

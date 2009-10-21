@@ -275,6 +275,7 @@ class tet_hp : public tet_mesh  {
 	
 		void insert_sparse(int row, int col, FLT value, bool compressed_column=true);//default to compressed column storage
 		void sparse_dirichlet(int ind, bool compressed_col=true);//default to compressed column storage
+		void apply_neumman(bool jac_tran=true);
 		void find_sparse_bandwidth();
 		void zero_sparse();
 		void initialize_sparse();
@@ -283,11 +284,22 @@ class tet_hp : public tet_mesh  {
 		
 		void superlu();
 	
-		void lsolver();
-		struct jacobian_matrix{
-			jacobian_matrix() {}
-		};	
-		void mult(const jacobian_matrix &J, const double *vec_in, double *vec_out);
+//		void lsolver();
+//		struct jacobian_matrix{
+//			jacobian_matrix() {}
+//		};	
+//		void mult(const jacobian_matrix &J, const double *vec_in, double *vec_out);
+
+//		int dfgmr(int n, void (*dmatvec) (double, double[], double, double[]), void (*dpsolve) (int, double[], double[]),double *rhs, double *sol, double tol, int im, int *itmax, FILE * fits)
+//		void ilu_gmres();/* incomplete lu with gmres solve */
+//		int GLOBAL_PERM_C;
+//		int GLOBAL_PERM_R;
+//		SuperMatrix GLOBAL_A;
+//		SuperMatrix GLOBAL_L;
+//		SuperMatrix GLOBAL_U;
+//		SuperLUStat_t GLOBAL_STAT;
+//		void dmatvec_mult(double alpha, double x[], double beta, double y[]);/* matrix vector multiplication */
+//		void dpsolve(int n, double x[], double y[]);
 
 #endif
 	

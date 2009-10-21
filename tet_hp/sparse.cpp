@@ -9,8 +9,8 @@
 
 #include "tet_hp.h"
 #include "ins/tet_hp_ins.h"
-#include "gmres.h"
-
+//#include "gmres.h"
+#include "hp_boundary.h"
 
 #ifndef petsc
 /* compressed row storage */
@@ -107,11 +107,12 @@ void tet_hp::initialize_sparse(){
 	number_sparse_elements = sparse_ptr(size_sparse_matrix);
 	
 	cout << "number of sparse elements "<< number_sparse_elements << endl;
+	cout << "number of unknowns "<< size_sparse_matrix << endl;
 
 	sparse_val.resize(number_sparse_elements);
 	sparse_ind.resize(number_sparse_elements);
 	
-	sparse_ind = 100*size_sparse_matrix; // some number bigger than size of matrix
+	sparse_ind = 10*size_sparse_matrix; // some number bigger than size of matrix
 
 //	/* creates sparse matrix with zeros on diagonal */
 //	for (int i = 0; i < size_sparse_matrix+1; ++i) {
@@ -151,6 +152,7 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 	return;
 }
 
+/* finds number of nonzeros per row tested up to p=4 */ 
 void tet_hp::find_sparse_bandwidth(){
 	
 	Array<int,1> bw(size_sparse_matrix);
@@ -166,16 +168,13 @@ void tet_hp::find_sparse_bandwidth(){
 
 	bw = 0;
 	
-	for(int i=0; i<npnt; ++i){
-		
+	for(int i=0; i<npnt; ++i){		
 		for(int n=0;n<NV;++n)
 			bw(i*NV+n) += NV*(pnt(i).nnbor*fm+pnt(i).nspk+pnt(i).ntri*em+1);		
-		
 	}
 	
 
-	for(int i=0; i<nseg; ++i){
-		
+	for(int i=0; i<nseg; ++i){		
 		for(int j=0;j<2;++j)
 			for(int n=0;n<NV;++n)
 				bw(seg(i).pnt(j)*NV+n) += em*NV;
@@ -186,8 +185,7 @@ void tet_hp::find_sparse_bandwidth(){
 	}
 	
 	
-	for(int i=0; i<ntri; ++i){
-		
+	for(int i=0; i<ntri; ++i){		
 		for(int j=0;j<3;++j)
 			for(int n=0;n<NV;++n)
 				bw(tri(i).pnt(j)*NV+n) += fm*NV;
@@ -202,15 +200,14 @@ void tet_hp::find_sparse_bandwidth(){
 				for(int n=0;n<NV;++n)
 					bw(begin_tri+i*fm*NV+m*NV+n) += NV*(7*fm+9*em+5);
 		}
-		else{
+		else {
 			for(int m=0;m<fm;++m)
 				for(int n=0;n<NV;++n)
 					bw(begin_tri+i*fm*NV+m*NV+n) += NV*(4*fm+6*em+4);
 		}
 	}
 	
-	for(int i=0; i<ntet; ++i){
-		
+	for(int i=0; i<ntet; ++i){		
 		for(int j=0;j<4;++j)
 			for(int n=0;n<NV;++n)
 				bw(tet(i).pnt(j)*NV+n) += im*NV;
@@ -236,9 +233,9 @@ void tet_hp::find_sparse_bandwidth(){
 //	}
 	
 	sparse_ptr(0)=0;
-	for (int i=1; i<size_sparse_matrix+1; ++i) {
+	for (int i=1; i<size_sparse_matrix+1; ++i) 
 		sparse_ptr(i) = bw(i-1)+sparse_ptr(i-1);
-	}
+	
 	
 	return;
 }
@@ -370,13 +367,6 @@ void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	
 	ugtouht(tind);
 	
-	for (int m = 0; m < basis::tet(log2p).tm; ++m) {
-		for (int n = 0; n < NV; ++n) {
-			lf_im(n)(m)=0.0;
-			lf_re(n)(m)=0.0;
-		}
-	}
-	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
 	for(int i=0;i<basis::tet(log2p).tm;++i)
 		for(int n=0;n<NV;++n)
@@ -385,13 +375,6 @@ void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	for(int mode = 0; mode < basis::tet(log2p).tm; ++mode){
 		for(int var = 0; var < NV; ++var){
 			uht(var)(mode) += dw;
-			
-			for (int m = 0; m < basis::tet(log2p).tm; ++m) {
-				for (int n = 0; n < NV; ++n) {
-					lf_im(n)(m)=0.0;
-					lf_re(n)(m)=0.0;
-				}
-			}
 			
 			element_rsdl(tind,0,uht,lf_re,lf_im);
 			for(int i=0;i<basis::tet(log2p).tm;++i)
@@ -517,6 +500,94 @@ void tet_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 	return;
 }
 
+void tet_hp::apply_neumman(bool jac_tran) {
+	int fm = 3+3*basis::tet(log2p).em+basis::tet(log2p).fm;
+	int kn = fm*NV;
+	int kcol,krow,find,ind;
+	FLT dw = 0.01;
+	FLT sgn,msgn;
+	Array<FLT,2> R(NV,fm),Rbar(NV,fm);
+	Array<FLT,2> K(kn,kn);
+	Array<FLT,1> lclres(kn);
+	Array<int,1> loc_to_glo(kn);
+	
+	for(int i=0;i<nfbd;++i){
+		for(int j=0;j<fbdry(i)->ntri;++j){
+			find = fbdry(i)->tri(j).gindx;
+			ugtouht2d(find);
+			hp_fbdry(i)->el_rsdl(find,0);
+			kcol = 0;
+			ind = 0;
+			for(int k=0;k<fm;++k){
+				for(int n=0;n<NV;++n){
+					Rbar(n,k) = lf(n)(k);
+					lclres(ind++) = lf(n)(k);
+				}
+			}
+			for(int mode = 0; mode < fm; ++mode){
+				for(int var = 0; var < NV; ++var){
+					uht(var)(mode) += dw;
+					
+					hp_fbdry(i)->el_rsdl(find,0);
+					for(int k=0;k<fm;++k)
+						for(int n=0;n<NV;++n)
+							R(n,k)=lf(n)(k);
+					
+					krow = 0;
+					for(int k=0;k<fm;++k)
+						for(int n=0;n<NV;++n)
+							K(krow++,kcol) = (R(n,k)-Rbar(n,k))/dw;
+					++kcol;
+					
+					uht(var)(mode) -= dw;
+				}
+			}
+			ind = 0;
+			for (int m = 0; m < 3; ++m) {
+				int gindx = NV*tri(find).pnt(m);
+				for (int n = 0; n < NV; ++n)
+					loc_to_glo(ind++) = gindx+n;
+			}		
+			
+			/* EDGE MODES */
+			if (basis::tet(log2p).p > 1) {
+				for(int k = 0; k < 3; ++k) {
+					int eind = npnt*NV + tri(find).seg(k)*basis::tet(log2p).em*NV;
+					sgn = tri(find).sgn(k);
+					msgn = 1;
+					for (int m = 0; m < basis::tet(log2p).em; ++m) {
+						for(int n = 0; n < NV; ++n) {
+							for(int j = 0; j < kn; ++j) {
+								K(ind,j) *= msgn;
+								K(j,ind) *= msgn;
+								lclres(j) *= msgn;
+							}
+							loc_to_glo(ind++) = eind + m*NV + n;
+						}
+						msgn *= sgn;
+					}
+				}
+			}
+			
+			/* FACE MODE */
+			int gbl_find = npnt*NV+nseg*basis::tet(log2p).em*NV+find*basis::tet(log2p).fm*NV;
+			for(int m = 0; m < basis::tet(log2p).fm; ++m) 
+				for(int n = 0; n < NV; ++n)
+					loc_to_glo(ind++) = gbl_find+m*NV+n;				
+				
+			for(int k = 0; k < kn; ++k){
+				for(int m = 0; m < kn; ++m)
+					insert_sparse(loc_to_glo(k), loc_to_glo(m), K(k,m),jac_tran);
+				
+				res_vec(loc_to_glo(k)) += lclres(k);
+			}
+			
+		}
+		
+	}
+	
+	return;
+}
 #ifndef petsc
 void tet_hp::vec_to_ug(){
 	int ind = 0;

@@ -110,6 +110,7 @@ namespace bdry_ins {
 			neumann(const neumann& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin) {}
 			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
 			void rsdl(int stage);
+			void el_rsdl(int find,int stage);
 	};
 
 
@@ -186,7 +187,7 @@ namespace bdry_ins {
 		}	
 		
 		void apply_sparse_dirichlet(bool compressed_column) {
-			/* only works if pressure if 4th variable */
+			/* only works if pressure is 4th variable */
 			int gind;
 			int em=basis::tet(x.log2p).em;
 			int fm=basis::tet(x.log2p).fm;

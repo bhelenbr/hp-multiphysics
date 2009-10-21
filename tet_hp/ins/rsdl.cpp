@@ -81,9 +81,12 @@ void tet_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	}
 	
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
-	for(n=0;n<NV;++n)
-		for(i=0;i<basis::tet(log2p).tm;++i)
+	for(n=0;n<NV;++n){
+		for(i=0;i<basis::tet(log2p).tm;++i){
+			lf_re(n)(i) = 0.0;
 			lf_im(n)(i) = 0.0;	
+		}
+	}
 	
 	if (tet(tind).info > -1) {
 		/* CURVED ELEMENT */

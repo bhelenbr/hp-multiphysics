@@ -65,9 +65,12 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 
 	basis::tet(log2p).proj(&uht(0)(0),&u(0)(0)(0)(0),&du(0,0)(0)(0)(0),&du(0,1)(0)(0)(0),&du(0,2)(0)(0)(0),stridex, stridey);
 
-	for(n=0;n<NV;++n)
-		for(i=0;i<basis::tet(log2p).tm;++i)
-			lf_im(n)(i) = 0.0;
+	for(n=0;n<NV;++n){
+		for(i=0;i<basis::tet(log2p).tm;++i){
+			lf_re(n)(i) = 0.0;
+			lf_im(n)(i) = 0.0;	
+		}
+	}
 
 	/* CONVECTION */
 	for(i=0;i<lgpx;++i) {

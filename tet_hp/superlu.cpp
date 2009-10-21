@@ -51,15 +51,13 @@ void tet_hp::superlu(){
 //    mem_usage_t    mem_usage;
 //    superlu_options_t options;
 //    SuperLUStat_t  stat;
-//	NCformat	*Astore;	
-//	double *xact;
-//	lwork = 0;// superlu determines memory allocation
+//	lwork = 0; // superlu determines memory allocation
 	
 	
 	/* simple driver dgssv allocation */
     SuperMatrix    A, L, U;
     SuperMatrix    B;
-	int            *perm_r; /* row permutations from partial pivoting */
+	  int            *perm_r; /* row permutations from partial pivoting */
     int            *perm_c; /* column permutation vector */
     int            info;
     superlu_options_t options;
@@ -89,19 +87,25 @@ void tet_hp::superlu(){
 	ug_to_vec();
 	
 	bool compressed_column = true;
+	if ( !(perm_c = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_c[].");
 
+	
 	for(int i = 0; i < max_newton_its; ++i) {
 
-		if ( !(perm_c = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_c[].");
 		if ( !(perm_r = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_r[].");
-		
+
 
 		/* zero out sparse and residual but keep sparsity pattern */
 		zero_sparse();
 		
+//		dCreate_Dense_Matrix(&X, size_sparse_matrix, 1, res_vec.data(), size_sparse_matrix, SLU_DN, SLU_D, SLU_GE);
+
 		/* create jacobian */
 		create_jacobian(compressed_column);
 
+		/* apply neumman bc's */
+		apply_neumman(compressed_column);
+		
 		/* create residual */
 		create_rsdl();	
 		
@@ -122,24 +126,30 @@ void tet_hp::superlu(){
 		dCreate_CompCol_Matrix(&A, size_sparse_matrix, size_sparse_matrix, number_sparse_elements, sparse_val.data(), sparse_ind.data(), sparse_ptr.data(), SLU_NC, SLU_D, SLU_GE);
 		//dPrint_CompCol_Matrix("A", &A);
 
-		//cout << "residual "<<res_vec << endl;
+//		if ( !(etree = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for etree[].");
+//		if ( !(R = (double *) SUPERLU_MALLOC(A.nrow * sizeof(double))) ) 
+//			ABORT("SUPERLU_MALLOC fails for R[].");
+//		if ( !(C = (double *) SUPERLU_MALLOC(A.ncol * sizeof(double))) )
+//			ABORT("SUPERLU_MALLOC fails for C[].");
+//		if ( !(ferr = (double *) SUPERLU_MALLOC(1 * sizeof(double))) )
+//			ABORT("SUPERLU_MALLOC fails for ferr[].");
+//		if ( !(berr = (double *) SUPERLU_MALLOC(1 * sizeof(double))) ) 
+//			ABORT("SUPERLU_MALLOC fails for berr[].");
+		
 		
 		dCreate_Dense_Matrix(&B, size_sparse_matrix, 1, res_vec.data(), size_sparse_matrix, SLU_DN, SLU_D, SLU_GE);
 		//dPrint_Dense_Matrix("B", &B);
+		
 
 		/* Initialize the statistics variables. */
 		StatInit(&stat);
 
 //		/* advanced superlu driver */
 //		dgssvx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work, lwork, &B, &X, &rpg, &rcond, ferr, berr,&mem_usage, &stat, &info);		
+//		
 //		/* get access to solution and store in du */
 //		double *du = (double*) ((DNformat*) X.Store)->nzval;
-
 			
-//		/* not sure what this crap does */
-//		xact = doubleMalloc(size_sparse_matrix);
-//		dGenXtrue(size_sparse_matrix, 1, xact, size_sparse_matrix);
-//		dFillRHS(options.Trans, 1, xact, size_sparse_matrix, &A, &B);
 
 		/* solve system Ax=b and stores solution x in b */
 		dgssv(&options, &A, perm_c, perm_r, &L, &U, &B, &stat, &info);
@@ -173,55 +183,38 @@ void tet_hp::superlu(){
 //		}
 
 		/* once factorized can keep same pattern for next iteration */
-		//options.Fact = SamePattern;
+//		options.Fact = SamePattern;
 		SUPERLU_FREE (perm_r);
-		SUPERLU_FREE (perm_c);
-//		SUPERLU_FREE (xact);
+		//SUPERLU_FREE (xact);
 //		SUPERLU_FREE (etree);
 //		SUPERLU_FREE (R);
 //		SUPERLU_FREE (C);
 //		SUPERLU_FREE (ferr);
 //		SUPERLU_FREE (berr);
 
+
 	}
 
-	//cout << "solution "<<ug_vec << endl;
-	
-//	ofstream out;
-//	out.open("superlu.dat");
-//
-//	out <<"ZONE F=FEPOINT, ET=TETRAHEDRON, N = "<<npnt <<", E = " << ntet << endl;
-//	for(int i = 0; i < npnt; ++i)
-//		out << pnts(i)(0) << ' ' << pnts(i)(1) << ' ' << pnts(i)(2) <<' ' << ug_vec(i) << endl;
-//	for(int i = 0; i < ntet; ++i)
-//		out << tet(i).pnt(0)+1 << ' ' << tet(i).pnt(1)+1 << ' ' <<tet(i).pnt(2)+1 << ' '<<tet(i).pnt(3)+1 << endl;
-//	out.close();
-	
-
-//	
-//	SUPERLU_FREE (xact);
-//	SUPERLU_FREE (etree);
-//	SUPERLU_FREE (R);
-//	SUPERLU_FREE (C);
-//	SUPERLU_FREE (ferr);
-//	SUPERLU_FREE (berr);
+	SUPERLU_FREE (perm_c);
 
 	return;
 }
 
-
-
-//void superilu_gmres(){
-//	
-//	
-////	/* make all these global */
-////	GLOBAL_A = &A;
-////    GLOBAL_L = &L;
-////    GLOBAL_U = &U;
-////    GLOBAL_STAT = &stat;
-////    GLOBAL_PERM_C = perm_c;
-////    GLOBAL_PERM_R = perm_r;
-////	
+//void tet_hp::ilu_gmres(){
+//	cout << "ilu_gmres called" <<endl;
+//	/*
+//	 * Purpose
+//	 * =======
+//	 *
+//	 * The driver program DLINSOLX2.
+//	 * 
+//	 * This example illustrates how to use DGSSVX to solve systems repeatedly
+//	 * with the same sparsity pattern of matrix A.
+//	 * In this case, the column permutation vector perm_c is computed once.
+//	 * The following data structures will be reused in the subsequent call to
+//	 * DGSSVX: perm_c, etree
+//	 * 
+//	 */
 //	
 //    /* advanced driver dgssvx allocation */ 
 //    char           equed[1];
@@ -238,106 +231,194 @@ void tet_hp::superlu(){
 //    mem_usage_t    mem_usage;
 //    superlu_options_t options;
 //    SuperLUStat_t  stat;
+//	lwork = 0; // superlu determines memory allocation
+//	int restrt, iter, maxit;
+//    double resid;
+//    double *x, *b;
 //	
-//	lwork = 0;// superlu determines memory allocation
-//	
-//	
-//	/* simple driver dgssv allocation */
+//	//	/* simple driver dgssv allocation */
 //	//    SuperMatrix    A, L, U;
 //	//    SuperMatrix    B;
-//	//	int            *perm_r; /* row permutations from partial pivoting */
+//	//	  int            *perm_r; /* row permutations from partial pivoting */
 //	//    int            *perm_c; /* column permutation vector */
 //	//    int            info;
 //	//    superlu_options_t options;
 //	//    SuperLUStat_t stat;	
 //	
-//	FLT newton_norm,tol=1.0e-12;
-//	int max_newton_its = 100;
+//	FLT newton_norm,tol=1.0e-14;
+//	int max_newton_its = 50;
 //	
-//    ilu_set_default_options(&options);
-//	
-//    /* Modify the defaults. */
-//    options.PivotGrowth = YES;	  /* Compute reciprocal pivot growth */
-//    options.ConditionNumber = YES;/* Compute reciprocal condition number */
-//	
+//    /* Set the default input options:
+//	 options.Fact = DOFACT;
+//	 options.Equil = YES;
+//	 options.ColPerm = COLAMD;
+//	 options.DiagPivotThresh = 0.1; //different from complete LU
+//	 options.Trans = NOTRANS;
+//	 options.IterRefine = NOREFINE;
+//	 options.SymmetricMode = NO;
+//	 options.PivotGrowth = NO;
+//	 options.ConditionNumber = NO;
+//	 options.PrintStat = YES;
+//	 options.RowPerm = LargeDiag;
+//	 options.ILU_DropTol = 1e-4;
+//	 options.ILU_FillTol = 1e-2;
+//	 options.ILU_FillFactor = 10.0;
+//	 options.ILU_DropRule = DROP_BASIC | DROP_AREA;
+//	 options.ILU_Norm = INF_NORM;
+//	 options.ILU_MILU = SMILU_2;
+//     */
+//    
+//	ilu_set_default_options(&options);	
 //	//options.PrintStat = NO;
-//	
+////    options.PivotGrowth = YES;	  /* Compute reciprocal pivot growth */
+////    options.ConditionNumber = YES;/* Compute reciprocal condition number */
+//
 //	/* send global solution to ug_vec */
 //	ug_to_vec();
 //	
+//	bool compressed_column = true;
+//	if ( !(perm_c = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_c[].");
+//	
+//	
 //	for(int i = 0; i < max_newton_its; ++i) {
 //		
+//		if ( !(perm_r = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_r[].");
+//		
+//		
+//		/* zero out sparse and residual but keep sparsity pattern */
 //		zero_sparse();
-//		create_jacobian(1);
+//		
+//		dCreate_Dense_Matrix(&X, size_sparse_matrix, 1, res_vec.data(), size_sparse_matrix, SLU_DN, SLU_D, SLU_GE);
+//		
+//		/* create jacobian */
+//		create_jacobian(compressed_column);
+//		
+//		/* create residual */
+//		create_rsdl();	
+//		
+//		/* apply dirichlet boundary conditions to sparse matrix and vector */
+//		for(int j = 0; j < nfbd; ++j)
+//			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);
+//		
+//		FLT max_resid = 0.0;
+//		for (int j = 0; j < size_sparse_matrix; ++j){
+//			if(fabs(res_vec(j)) > max_resid)
+//				max_resid = fabs(res_vec(j));
+//		}
+//		cout << "L infinity norm of residual " << max_resid << endl;
+//		
+//		if (max_resid < tol) break;		
 //		
 //		/* create super matrix A using compressed column storage */
 //		dCreate_CompCol_Matrix(&A, size_sparse_matrix, size_sparse_matrix, number_sparse_elements, sparse_val.data(), sparse_ind.data(), sparse_ptr.data(), SLU_NC, SLU_D, SLU_GE);
 //		
-//		/* create residual and store in B */
-//		create_rsdl();	
+//		if ( !(etree = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for etree[].");
+//		if ( !(R = (double *) SUPERLU_MALLOC(A.nrow * sizeof(double))) ) 
+//			ABORT("SUPERLU_MALLOC fails for R[].");
+//		if ( !(C = (double *) SUPERLU_MALLOC(A.ncol * sizeof(double))) )
+//			ABORT("SUPERLU_MALLOC fails for C[].");
+//		if ( !(ferr = (double *) SUPERLU_MALLOC(1 * sizeof(double))) )
+//			ABORT("SUPERLU_MALLOC fails for ferr[].");
+//		if ( !(berr = (double *) SUPERLU_MALLOC(1 * sizeof(double))) ) 
+//			ABORT("SUPERLU_MALLOC fails for berr[].");
+//		
+//		
 //		dCreate_Dense_Matrix(&B, size_sparse_matrix, 1, res_vec.data(), size_sparse_matrix, SLU_DN, SLU_D, SLU_GE);
 //		
 //		/* Initialize the statistics variables. */
 //		StatInit(&stat);
 //		
-//		/* incomplete lu factorization advanced superlu driver */
-//		dgsisx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work, lwork, &B, &X, &rpg, &rcond, &mem_usage, &stat, &info);
+//		/* Compute the incomplete factorization and compute the condition number and pivot growth using dgsisx. */
+//		dgsisx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work,lwork, &B, &X, &rpg, &rcond, &mem_usage, &stat, &info);
+//		
+//		/* get access to solution and store in du */
+//		//double *du = (double*) ((DNformat*) X.Store)->nzval;
+//			
+//		if (info > 0) {
+//			cout << "something went wrong with superlu \n";
+//			exit(1);
+//		}
 //		
 //		if (info > 0 || rcond < 1e-8 || rpg > 1e8)
 //			printf("WARNING: This preconditioner might be unstable.\n");
-//
+//		
 //		restrt = SUPERLU_MIN(n / 3 + 1, 50);
 //		maxit = 1000;
 //		iter = maxit;
 //		resid = 1e-8;
+//		if (!(b = doubleMalloc(m))) ABORT("Malloc fails for b[].");
+//		if (!(x = doubleMalloc(n))) ABORT("Malloc fails for x[].");
+//		
+//		for (int i = 0; i < size_sparse_matrix; i++)
+//			x[i] = 0.0;
+//		
+//		/* call GMRES */
+//		dfgmr(size_sparse_matrix, dmatvec_mult, dpsolve, b, x, resid, restrt, &iter, stdout);
 //
-//		sp_dgemv("N", 1.0, &A, xact, 1, 0.0, b, 1);
-//		
-//		/* call gmres */
-//		
-//		
-//		/* get access to solution and store in du */
-//		double *du = (double*) ((DNformat*) X.Store)->nzval;
-//		
-//		for(int i = 0; i < size_sparse_matrix; ++i)
-//			ug_vec(i)-=du[i];
+//			
+//		for(int j = 0; j < size_sparse_matrix; ++j)
+//			ug_vec(j)-=x[j];
 //		
 //		/* send ug_vec to global solution */
 //		vec_to_ug();
 //		
 //		if ( options.PrintStat ) StatPrint(&stat);
 //		StatFree(&stat);
-//		Destroy_CompCol_Matrix(&A);
-//		Destroy_Dense_Matrix(&B);
-//		Destroy_SuperNode_Matrix(&L);
-//		Destroy_CompCol_Matrix(&U);
-//		
-//		newton_norm = 0.0;			
-//		for (int j = 0; j < size_sparse_matrix; ++j)
-//			newton_norm += du[j]*du[j];
-//		
-//		if (newton_norm < tol*tol) break;
 //		
 //		/* once factorized can keep same pattern for next iteration */
 //		options.Fact = SamePattern;
+//		SUPERLU_FREE (perm_r);
+//		SUPERLU_FREE (etree);
+//		SUPERLU_FREE (R);
+//		SUPERLU_FREE (C);
+//		SUPERLU_FREE (ferr);
+//		SUPERLU_FREE (berr);
+//		
+//		
 //	}
 //	
-//    SUPERLU_FREE (xact);
-//    SUPERLU_FREE (etree);
-//    SUPERLU_FREE (perm_r);
-//    SUPERLU_FREE (perm_c);
-//    SUPERLU_FREE (R);
-//    SUPERLU_FREE (C);
-//    SUPERLU_FREE (ferr);
-//    SUPERLU_FREE (berr);
+//	SUPERLU_FREE (perm_c);
 //	
 //	return;
 //}
 //
+//
+//int *GLOBAL_PERM_C, *GLOBAL_PERM_R;
+//SuperMatrix *GLOBAL_A, *GLOBAL_L, *GLOBAL_U;
+//SuperLUStat_t *GLOBAL_STAT;
+//
+//void dmatvec_mult(double alpha, double x[], double beta, double y[])
+//{
+//    SuperMatrix *A = GLOBAL_A;
+//	
+//    sp_dgemv("N", alpha, A, x, 1, beta, y, 1);
+//}
+//
+//void dpsolve(int n, double x[], double y[])
+//{
+//    extern void dcopy_(int *, double [], int *, double [], int *);
+//	
+//    int i_1 = 1;
+//    SuperMatrix *L = GLOBAL_L, *U = GLOBAL_U;
+//    SuperLUStat_t *stat = GLOBAL_STAT;
+//    int *perm_c = GLOBAL_PERM_C, *perm_r = GLOBAL_PERM_R;
+//    int info;
+//    static DNformat X;
+//    static SuperMatrix XX = {SLU_DN, SLU_D, SLU_GE, 1, 1, &X};
+//	
+//    dcopy_(&n, y, &i_1, x, &i_1);
+//    XX.nrow = n;
+//    X.lda = n;
+//    X.nzval = x;
+//    dgstrs(NOTRANS, L, U, perm_c, perm_r, &XX, stat, &info);
+//}
+//
+//
+//
+//
 ///*! @file dfgmr.c
 // * \brief flexible GMRES written by Yousef Saad.
 // */
-//
 //
 //#define  epsmac  1.0e-16
 //
@@ -604,322 +685,3 @@ void tet_hp::superlu(){
 //	
 //    return retval;
 //} /*----end of fgmr ----*/
-//
-//
-//
-///*
-// * -- SuperLU routine (version 4.0) --
-// * Lawrence Berkeley National Laboratory
-// * June 30, 2009
-// */
-//
-//int *GLOBAL_PERM_C, *GLOBAL_PERM_R;
-//SuperMatrix *GLOBAL_A, *GLOBAL_L, *GLOBAL_U;
-//SuperLUStat_t *GLOBAL_STAT;
-//
-//void dmatvec_mult(double alpha, double x[], double beta, double y[])
-//{
-//    SuperMatrix *A = GLOBAL_A;
-////	y := alpha*A*x + beta*y
-//    sp_dgemv("N", alpha, A, x, 1, beta, y, 1);
-//}
-//
-//void dpsolve(int n, double x[], double y[])
-//{
-//    extern void dcopy_(int *, double [], int *, double [], int *);
-//	
-//    int i_1 = 1;
-//    SuperMatrix *L = GLOBAL_L, *U = GLOBAL_U;
-//    SuperLUStat_t *stat = GLOBAL_STAT;
-//    int *perm_c = GLOBAL_PERM_C, *perm_r = GLOBAL_PERM_R;
-//    int info;
-//    static DNformat X;
-//    static SuperMatrix XX = {SLU_DN, SLU_D, SLU_GE, 1, 1, &X};
-//	
-//    dcopy_(&n, y, &i_1, x, &i_1);
-//    XX.nrow = n;
-//    X.lda = n;
-//    X.nzval = x;
-//    dgstrs(NOTRANS, L, U, perm_c, perm_r, &XX, stat, &info);
-//}
-//
-//int main(int argc, char *argv[])
-//{
-//    void dmatvec_mult(double alpha, double x[], double beta, double y[]);
-//    void dpsolve(int n, double x[], double y[]);
-//    extern int dfgmr( int n,
-//					 void (*matvec_mult)(double, double [], double, double []),
-//					 void (*psolve)(int n, double [], double[]),
-//					 double *rhs, double *sol, double tol, int restrt, int *itmax,
-//					 FILE *fits);
-//    extern int dfill_diag(int n, NCformat *Astore);
-//	
-//    char     equed[1] = {'B'};
-//    yes_no_t equil;
-//    trans_t  trans;
-//    SuperMatrix A, L, U;
-//    SuperMatrix B, X;
-//    NCformat *Astore;
-//    NCformat *Ustore;
-//    SCformat *Lstore;
-//    double   *a;
-//    int      *asub, *xa;
-//    int      *etree;
-//    int      *perm_c; /* column permutation vector */
-//    int      *perm_r; /* row permutations from partial pivoting */
-//    int      nrhs, ldx, lwork, info, m, n, nnz;
-//    double   *rhsb, *rhsx, *xact;
-//    double   *work = NULL;
-//    double   *R, *C;
-//    double   u, rpg, rcond;
-//    double zero = 0.0;
-//    double one = 1.0;
-//    mem_usage_t   mem_usage;
-//    superlu_options_t options;
-//    SuperLUStat_t stat;
-//	
-//    int restrt, iter, maxit, i;
-//    double resid;
-//    double *x, *b;
-//	
-//#ifdef DEBUG
-//    extern int num_drop_L, num_drop_U;
-//#endif
-//	
-//#if ( DEBUGlevel>=1 )
-//    CHECK_MALLOC("Enter main()");
-//#endif
-//	
-//    /* Defaults */
-//    lwork = 0;
-//    nrhs  = 1;
-//    equil = YES;
-//    u	  = 0.1; /* u=1.0 for complete factorization */
-//    trans = NOTRANS;
-//	
-//    /* Set the default input options:
-//	 options.Fact = DOFACT;
-//	 options.Equil = YES;
-//	 options.ColPerm = COLAMD;
-//	 options.DiagPivotThresh = 0.1; //different from complete LU
-//	 options.Trans = NOTRANS;
-//	 options.IterRefine = NOREFINE;
-//	 options.SymmetricMode = NO;
-//	 options.PivotGrowth = NO;
-//	 options.ConditionNumber = NO;
-//	 options.PrintStat = YES;
-//	 options.RowPerm = LargeDiag;
-//	 options.ILU_DropTol = 1e-4;
-//	 options.ILU_FillTol = 1e-2;
-//	 options.ILU_FillFactor = 10.0;
-//	 options.ILU_DropRule = DROP_BASIC | DROP_AREA;
-//	 options.ILU_Norm = INF_NORM;
-//	 options.ILU_MILU = SMILU_2;
-//     */
-//    ilu_set_default_options(&options);
-//	
-//    /* Modify the defaults. */
-//    options.PivotGrowth = YES;	  /* Compute reciprocal pivot growth */
-//    options.ConditionNumber = YES;/* Compute reciprocal condition number */
-//	
-//    if ( lwork > 0 ) {
-//		work = SUPERLU_MALLOC(lwork);
-//		if ( !work ) ABORT("Malloc fails for work[].");
-//    }
-//	
-//    /* Read matrix A from a file in Harwell-Boeing format.*/
-//    if (argc < 2)
-//    {
-//		printf("Usage:\n%s [OPTION] < [INPUT] > [OUTPUT]\nOPTION:\n"
-//			   "-h -hb:\n\t[INPUT] is a Harwell-Boeing format matrix.\n"
-//			   "-r -rb:\n\t[INPUT] is a Rutherford-Boeing format matrix.\n"
-//			   "-t -triplet:\n\t[INPUT] is a triplet format matrix.\n",
-//			   argv[0]);
-//		return 0;
-//    }
-//    else
-//    {
-//		switch (argv[1][1])
-//		{
-//			case 'H':
-//			case 'h':
-//				printf("Input a Harwell-Boeing format matrix:\n");
-//				dreadhb(&m, &n, &nnz, &a, &asub, &xa);
-//				break;
-//			case 'R':
-//			case 'r':
-//				printf("Input a Rutherford-Boeing format matrix:\n");
-//				dreadrb(&m, &n, &nnz, &a, &asub, &xa);
-//				break;
-//			case 'T':
-//			case 't':
-//				printf("Input a triplet format matrix:\n");
-//				dreadtriple(&m, &n, &nnz, &a, &asub, &xa);
-//				break;
-//			default:
-//				printf("Unrecognized format.\n");
-//				return 0;
-//		}
-//    }
-//	
-//    dCreate_CompCol_Matrix(&A, m, n, nnz, a, asub, xa, SLU_NC, SLU_D, SLU_GE);
-//    Astore = A.Store;
-//    dfill_diag(n, Astore);
-//    printf("Dimension %dx%d; # nonzeros %d\n", A.nrow, A.ncol, Astore->nnz);
-//    fflush(stdout);
-//	
-//    if ( !(rhsb = doubleMalloc(m * nrhs)) ) ABORT("Malloc fails for rhsb[].");
-//    if ( !(rhsx = doubleMalloc(m * nrhs)) ) ABORT("Malloc fails for rhsx[].");
-//    dCreate_Dense_Matrix(&B, m, nrhs, rhsb, m, SLU_DN, SLU_D, SLU_GE);
-//    dCreate_Dense_Matrix(&X, m, nrhs, rhsx, m, SLU_DN, SLU_D, SLU_GE);
-//    xact = doubleMalloc(n * nrhs);
-//    ldx = n;
-//    dGenXtrue(n, nrhs, xact, ldx);
-//    dFillRHS(trans, nrhs, xact, ldx, &A, &B);
-//	
-//    if ( !(etree = intMalloc(n)) ) ABORT("Malloc fails for etree[].");
-//    if ( !(perm_r = intMalloc(m)) ) ABORT("Malloc fails for perm_r[].");
-//    if ( !(perm_c = intMalloc(n)) ) ABORT("Malloc fails for perm_c[].");
-//    if ( !(R = (double *) SUPERLU_MALLOC(A.nrow * sizeof(double))) )
-//		ABORT("SUPERLU_MALLOC fails for R[].");
-//    if ( !(C = (double *) SUPERLU_MALLOC(A.ncol * sizeof(double))) )
-//		ABORT("SUPERLU_MALLOC fails for C[].");
-//	
-//    info = 0;
-//#ifdef DEBUG
-//    num_drop_L = 0;
-//    num_drop_U = 0;
-//#endif
-//	
-//    /* Initialize the statistics variables. */
-//    StatInit(&stat);
-//	
-//    /* Compute the incomplete factorization and compute the condition number
-//	 and pivot growth using dgsisx. */
-//    dgsisx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work,
-//		   lwork, &B, &X, &rpg, &rcond, &mem_usage, &stat, &info);
-//	
-//    Lstore = (SCformat *) L.Store;
-//    Ustore = (NCformat *) U.Store;
-//    printf("dgsisx(): info %d\n", info);
-//    if (info > 0 || rcond < 1e-8 || rpg > 1e8)
-//		printf("WARNING: This preconditioner might be unstable.\n");
-//	
-//    if ( info == 0 || info == n+1 ) {
-//		
-//		if ( options.PivotGrowth == YES )
-//			printf("Recip. pivot growth = %e\n", rpg);
-//		if ( options.ConditionNumber == YES )
-//			printf("Recip. condition number = %e\n", rcond);
-//		
-//    } else if ( info > 0 && lwork == -1 ) {
-//		printf("** Estimated memory: %d bytes\n", info - n);
-//    }
-//    printf("n(A) = %d, nnz(A) = %d\n", n, Astore->nnz);
-//    printf("No of nonzeros in factor L = %d\n", Lstore->nnz);
-//    printf("No of nonzeros in factor U = %d\n", Ustore->nnz);
-//    printf("No of nonzeros in L+U = %d\n", Lstore->nnz + Ustore->nnz - n);
-//    printf("Fill ratio: nnz(F)/nnz(A) = %.3f\n",
-//		   ((double)(Lstore->nnz) + (double)(Ustore->nnz) - (double)n)
-//		   / (double)Astore->nnz);
-//    printf("L\\U MB %.3f\ttotal MB needed %.3f\n",
-//		   mem_usage.for_lu/1e6, mem_usage.total_needed/1e6);
-//    fflush(stdout);
-//	
-//    /* Set the global variables. */
-//    GLOBAL_A = &A;
-//    GLOBAL_L = &L;
-//    GLOBAL_U = &U;
-//    GLOBAL_STAT = &stat;
-//    GLOBAL_PERM_C = perm_c;
-//    GLOBAL_PERM_R = perm_r;
-//	
-//    /* Set the variables used by GMRES. */
-//    restrt = SUPERLU_MIN(n / 3 + 1, 50);
-//    maxit = 1000;
-//    iter = maxit;
-//    resid = 1e-8;
-//    if (!(b = doubleMalloc(m))) ABORT("Malloc fails for b[].");
-//    if (!(x = doubleMalloc(n))) ABORT("Malloc fails for x[].");
-//    sp_dgemv("N", one, &A, xact, 1, zero, b, 1);
-//	// b=A*xact
-//	
-//    if (info <= n + 1)
-//    {
-//		int i_1 = 1;
-//		double maxferr = 0.0, nrmA, nrmB, res, t;
-//        double temp;
-//		extern double dnrm2_(int *, double [], int *);
-//		extern void daxpy_(int *, double *, double [], int *, double [], int *);
-//		
-//		/* Call GMRES. */
-//		/*double *sol = (double*) ((DNformat*) X.Store)->nzval;
-//		 for (i = 0; i < n; i++) x[i] = sol[i];*/
-//		for (i = 0; i < n; i++) x[i] = zero;
-//		
-//		t = SuperLU_timer_();
-//		
-//		dfgmr(n, dmatvec_mult, dpsolve, b, x, resid, restrt, &iter, stdout);
-//		
-//		t = SuperLU_timer_() - t;
-//		
-//		/* Output the result. */
-//		nrmA = dnrm2_(&(Astore->nnz), (double *)((DNformat *)A.Store)->nzval,
-//					  &i_1);
-//		nrmB = dnrm2_(&m, b, &i_1);
-////		y := alpha*A*x + beta*y
-//		sp_dgemv("N", -1.0, &A, x, 1, 1.0, b, 1);
-//		//b=-Ax+b;residual
-//		res = dnrm2_(&m, b, &i_1);
-//		resid = res / nrmB;
-//		printf("||A||_F = %.1e, ||B||_2 = %.1e, ||B-A*X||_2 = %.1e, "
-//			   "relres = %.1e\n", nrmA, nrmB, res, resid);
-//		
-//		if (iter >= maxit)
-//		{
-//			if (resid >= 1.0) iter = -180;
-//			else if (resid > 1e-8) iter = -111;
-//		}
-//		printf("iteration: %d\nresidual: %.1e\nGMRES time: %.2f seconds.\n",
-//			   iter, resid, t);
-//		
-//		for (i = 0; i < m; i++)
-//			maxferr = SUPERLU_MAX(maxferr, fabs(x[i] - xact[i]));
-//		printf("||X-X_true||_oo = %.1e\n", maxferr);
-//    }
-//#ifdef DEBUG
-//    printf("%d entries in L and %d entries in U dropped.\n",
-//		   num_drop_L, num_drop_U);
-//#endif
-//    fflush(stdout);
-//	
-//    if ( options.PrintStat ) StatPrint(&stat);
-//    StatFree(&stat);
-//	
-//    SUPERLU_FREE (rhsb);
-//    SUPERLU_FREE (rhsx);
-//    SUPERLU_FREE (xact);
-//    SUPERLU_FREE (etree);
-//    SUPERLU_FREE (perm_r);
-//    SUPERLU_FREE (perm_c);
-//    SUPERLU_FREE (R);
-//    SUPERLU_FREE (C);
-//    Destroy_CompCol_Matrix(&A);
-//    Destroy_SuperMatrix_Store(&B);
-//    Destroy_SuperMatrix_Store(&X);
-//    if ( lwork >= 0 ) {
-//		Destroy_SuperNode_Matrix(&L);
-//		Destroy_CompCol_Matrix(&U);
-//    }
-//    SUPERLU_FREE(b);
-//    SUPERLU_FREE(x);
-//	
-//#if ( DEBUGlevel>=1 )
-//    CHECK_MALLOC("Exit main()");
-//#endif
-//	
-//    return 0;
-//}
-//
-//
-//
