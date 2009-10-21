@@ -64,7 +64,7 @@ void tet_hp::superlu(){
     SuperLUStat_t stat;	
 	
 	FLT newton_norm,tol=1.0e-14;
-	int max_newton_its = 50;
+	int max_newton_its = 1;
 		
     /* Set the default input options:
 	 options.Fact = DOFACT;
@@ -93,7 +93,6 @@ void tet_hp::superlu(){
 	for(int i = 0; i < max_newton_its; ++i) {
 
 		if ( !(perm_r = intMalloc(size_sparse_matrix)) ) ABORT("Malloc fails for perm_r[].");
-
 
 		/* zero out sparse and residual but keep sparsity pattern */
 		zero_sparse();
@@ -145,8 +144,7 @@ void tet_hp::superlu(){
 		StatInit(&stat);
 
 //		/* advanced superlu driver */
-//		dgssvx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work, lwork, &B, &X, &rpg, &rcond, ferr, berr,&mem_usage, &stat, &info);		
-//		
+//		dgssvx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work, lwork, &B, &X, &rpg, &rcond, ferr, berr,&mem_usage, &stat, &info);				
 //		/* get access to solution and store in du */
 //		double *du = (double*) ((DNformat*) X.Store)->nzval;
 			

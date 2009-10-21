@@ -22,7 +22,7 @@ void neumann::rsdl(int stage){
 		int find = base.tri(i).gindx;
 		x.ugtouht2d(find);
 		
-		el_rsdl(find,stage);
+		element_rsdl(find,stage);
 		
 		for(int n=0;n<x.NV;++n)
 			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
@@ -56,7 +56,7 @@ void neumann::rsdl(int stage){
 	return;
 }
 
-void neumann::el_rsdl(int find,int stage) {
+void neumann::element_rsdl(int find,int stage) {
 	int j,k,n;
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);

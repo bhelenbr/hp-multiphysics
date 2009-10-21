@@ -110,7 +110,7 @@ namespace bdry_ins {
 			neumann(const neumann& inbdry, tet_hp_ins &xin, face_bdry &bin) : generic(inbdry,xin,bin) {}
 			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_ins&>(xin),bin);}
 			void rsdl(int stage);
-			void el_rsdl(int find,int stage);
+			void element_rsdl(int find,int stage);
 	};
 
 

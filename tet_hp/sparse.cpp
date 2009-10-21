@@ -515,7 +515,7 @@ void tet_hp::apply_neumman(bool jac_tran) {
 		for(int j=0;j<fbdry(i)->ntri;++j){
 			find = fbdry(i)->tri(j).gindx;
 			ugtouht2d(find);
-			hp_fbdry(i)->el_rsdl(find,0);
+			hp_fbdry(i)->element_rsdl(find,0);
 			kcol = 0;
 			ind = 0;
 			for(int k=0;k<fm;++k){
@@ -528,7 +528,7 @@ void tet_hp::apply_neumman(bool jac_tran) {
 				for(int var = 0; var < NV; ++var){
 					uht(var)(mode) += dw;
 					
-					hp_fbdry(i)->el_rsdl(find,0);
+					hp_fbdry(i)->element_rsdl(find,0);
 					for(int k=0;k<fm;++k)
 						for(int n=0;n<NV;++n)
 							R(n,k)=lf(n)(k);
@@ -554,14 +554,15 @@ void tet_hp::apply_neumman(bool jac_tran) {
 				for(int k = 0; k < 3; ++k) {
 					int eind = npnt*NV + tri(find).seg(k)*basis::tet(log2p).em*NV;
 					sgn = tri(find).sgn(k);
-					msgn = 1;
+					msgn = 1.0;
 					for (int m = 0; m < basis::tet(log2p).em; ++m) {
 						for(int n = 0; n < NV; ++n) {
 							for(int j = 0; j < kn; ++j) {
 								K(ind,j) *= msgn;
 								K(j,ind) *= msgn;
-								lclres(j) *= msgn;
 							}
+							lclres(ind) *= msgn;
+
 							loc_to_glo(ind++) = eind + m*NV + n;
 						}
 						msgn *= sgn;
@@ -580,10 +581,8 @@ void tet_hp::apply_neumman(bool jac_tran) {
 					insert_sparse(loc_to_glo(k), loc_to_glo(m), K(k,m),jac_tran);
 				
 				res_vec(loc_to_glo(k)) += lclres(k);
-			}
-			
+			}				
 		}
-		
 	}
 	
 	return;
