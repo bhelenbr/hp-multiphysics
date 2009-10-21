@@ -50,7 +50,7 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	FLT dr,ds,dx,dy,det,roundoff;
 	TinyVector<FLT,3> wgt;
 	TinyVector<FLT,ND> x,dxmax,ddr,dds;
-	int n,iter,v0,tind1;
+	int n,iter,v0;
 	bool found = true;
 
 	if (tind < 0) {
@@ -99,7 +99,7 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 				break;
 			}
 		} while (fabs(dr) +fabs(ds) > roundoff);
-
+	
 		if (r < -(1.0+10.0*FLT_EPSILON) || r > (1.0+10.0*FLT_EPSILON) || s < -(1.0+10.0*FLT_EPSILON) || s > (1.0+10.0*FLT_EPSILON)) {
 			*gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << found << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
 			std::ostringstream fname;
@@ -113,11 +113,11 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 
 		return(found);
 	}
-	else if (tind1 < 0) {
+	
+	/* CHECK FOR STRAIGHT EDGED TRIANGLES */
+	if (!found) {
 		*gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
-		found = false;
 	}
-
 	/* need to do this because ptprobe_bdry only calculates boundary function */
 	basis::tri(log2p)->ptvalues_rs(r,s);
 	return(found);
