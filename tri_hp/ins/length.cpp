@@ -37,8 +37,13 @@ void tri_hp_ins::length() {
 	}
 
 	/* USING BERNOULLI CONSTANT AS ERROR INDICATOR */
-	const FLT alpha = 2.0*(basis::tri(log2p)->p()-0.5)/static_cast<FLT>(ND);
-	FLT denom = 0.0, totalbernoulli = 0.0, totalerror = 0.0;
+	/* Real convergence rate is p+1/2 (for pressure in L_2) */
+	/* Real convergence rate of the error for this norm will be probably p-1/2 because it has derivatives */
+	/* This norm is measuring error in p-1 solution not pth order solution */
+	/* If solution was optimal converence of derivative in this norm would be p-1 (so this the lower bound) */
+	/* alpha includes weighting due to area of element +2 */
+	const FLT alpha = 2.0*(basis::tri(log2p)->p()-1.0+ND)/static_cast<FLT>(ND);
+	FLT e2to_pow = 0.0, totalbernoulli2 = 0.0, totalerror2 = 0.0;
 	for (int tind=0;tind<ntri;++tind) {
 			
 		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -89,28 +94,33 @@ void tri_hp_ins::length() {
 				dbernoulli -= bernoulli;
 				
 				error2 += dbernoulli*dbernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);
-				totalbernoulli += bernoulli*bernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);
+				totalbernoulli2 += bernoulli*bernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);
 			}
 		}
-		totalerror += error2;
-		denom += pow(error2,1./(1.+alpha));
+		totalerror2 += error2;
+		e2to_pow += pow(error2,1./(1.+alpha));
 		gbl->fltwk(tind) = error2;
 	}
 
-	/* Need to all-reduce norm,totalerror,and totalbernoulli */
-	gbl->eanda(0) = totalbernoulli;
-	gbl->eanda(1) = denom;
-	gbl->eanda(2) = totalerror;
+	/* Need to all-reduce norm,totalerror2,and totalbernoulli2 */
+	gbl->eanda(0) = totalbernoulli2;
+	gbl->eanda(1) = e2to_pow;
+	gbl->eanda(2) = totalerror2;
 	sim::blks.allreduce(gbl->eanda.data(),gbl->eanda_recv.data(),3,blocks::flt_msg,blocks::sum);
+	totalbernoulli2 = gbl->eanda_recv(0);
+	e2to_pow = gbl->eanda_recv(1);
+	totalerror2 = gbl->eanda_recv(2);
+	
+			
+	*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
 	
 	/* Determine error target (SEE AEA Paper) */
-	FLT etarget2 = gbl->error_target*gbl->error_target*gbl->eanda_recv(0);
-	*gbl->log << "# Normalized Error " << sqrt(gbl->eanda_recv(2)/gbl->eanda_recv(0)) << " Target " << gbl->error_target << '\n';
-	FLT K = pow(etarget2/denom,1./(ND*alpha));
+	FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
+	FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
 	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
 	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
-		FLT error2 = gbl->fltwk(tind)+FLT_EPSILON;
+		FLT error2 = gbl->fltwk(tind);
 		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);

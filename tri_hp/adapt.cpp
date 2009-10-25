@@ -17,6 +17,8 @@ void tri_hp::adapt() {
 	tri_mesh::adapt();
 	setinfo();
 	
+	*gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
+	
 	// FOR TESTING ADAPTATION TO A SPECIFIED FUNCTION
 	// tobasis(gbl->ibc);
 	
