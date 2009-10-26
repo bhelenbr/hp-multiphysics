@@ -72,7 +72,7 @@ void tri_hp_ins::setup_preconditioner() {
 							
 						h = 0.0;
 						for (int n=0;n<ND;++n)
-							h += dcrd(n,0)(i,j)*dcrd(n,0)(i,j);
+							h += dcrd(n,1)(i,j)*dcrd(n,1)(i,j);
 						hmax = MAX(h,hmax);
 
 						h = 0.0;
