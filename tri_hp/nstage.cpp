@@ -85,7 +85,7 @@ void tri_hp::update() {
 
 
 #ifdef DEBUG   
-		// if (coarse_level) {
+		// if (coarse_level || log2p != log2pmax) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
 
 		for(i=0;i<npnt;++i) {
@@ -198,14 +198,14 @@ void tri_hp::update() {
 		}
 
 #ifdef DEBUG
-//        if (coarse_level) {
+        if (coarse_level || log2p != log2pmax) {
 #ifdef PTH
 		pth_exit(NULL);
 #endif
 #ifdef MPI
 //		MPI_Finalize();
 #endif
-//        }
+        }
 #endif
 
 	}
