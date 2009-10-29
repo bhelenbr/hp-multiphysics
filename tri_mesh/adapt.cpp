@@ -126,7 +126,7 @@ void tri_mesh::cleanup_after_adapt() {
 		std::string adapt_file;
 		std::ostringstream nstr;
 		nstr << gbl->tstep << std::flush;
-		adapt_file = gbl->idprefix +"_adapt" +nstr.str();
+		adapt_file = "adapt" +nstr.str() +"_" +gbl->idprefix;
 		nstr.str("");
 		output(adapt_file.c_str(),debug_adapt);
 	}
