@@ -136,9 +136,9 @@ void tet_hp::update() {
 	
 	l2error(gbl->ibc);
 	superlu();
-	output("superlu", tecplot);
-	l2error(gbl->ibc);
-	return;
+	//output("superlu", tecplot);
+	//l2error(gbl->ibc);
+	//return;
 	
 
 	
@@ -182,7 +182,7 @@ void tet_hp::update() {
 		for(i=0;i<nfbd;++i)
 			hp_fbdry(i)->fdirichlet();
 
-		minvrt();
+		//minvrt();
 
 #ifdef DEBUG   
 //		if (coarse_level) {

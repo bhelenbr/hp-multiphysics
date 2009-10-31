@@ -125,7 +125,11 @@ void tet_hp::initialize_sparse(){
 
 /* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
 void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
-	
+
+#ifdef petsc
+	VecSetValues(petsc_f,1,ind,0.0,INSERT_VALUES);
+	MatZeroRowsIS(petsc_J,1,ind,1.0);
+#else
 	res_vec(ind) = 0.0;
 
 	if(compressed_col){
@@ -149,6 +153,8 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 				sparse_val(i) = 1.0;
 		}
 	}
+#endif
+
 	return;
 }
 
@@ -461,7 +467,7 @@ void tet_hp::create_rsdl() {
 		
 		PetscErrorCode ierr;
 		for(int i = 0; i < kn; ++i)
-			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),INSERT_VALUES);
+			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),ADD_VALUES);
 		// CHKERRQ(ierr);
 
 #endif
@@ -575,13 +581,21 @@ void tet_hp::apply_neumman(bool jac_tran) {
 			for(int m = 0; m < basis::tet(log2p).fm; ++m) 
 				for(int n = 0; n < NV; ++n)
 					loc_to_glo(ind++) = gbl_find+m*NV+n;				
+#ifdef petsc				
+			for(int k = 0; k < kn; ++k){
+				for(int m = 0; m < kn; ++m)
+					MatSetValues(petsc_J,1,&loc_to_glo(k),1,&loc_to_glo(m),&K(k,m),ADD_VALUES);
 				
+				VecSetValues(petsc_f,1,&loc_to_glo(k),&lclres(k),ADD_VALUES);
+			}	
+#else
 			for(int k = 0; k < kn; ++k){
 				for(int m = 0; m < kn; ++m)
 					insert_sparse(loc_to_glo(k), loc_to_glo(m), K(k,m),jac_tran);
 				
 				res_vec(loc_to_glo(k)) += lclres(k);
-			}				
+			}
+#endif
 		}
 	}
 	

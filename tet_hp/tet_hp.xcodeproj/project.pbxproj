@@ -44,6 +44,8 @@
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		957F5E64109B7AC1006756DD /* blas_mac_x.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E63109B7AC1006756DD /* blas_mac_x.a */; };
+		957F5E95109B7FA9006756DD /* libgfortran.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E94109B7FA9006756DD /* libgfortran.a */; };
 		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
 		959CF6F7108BF54A002293FD /* superlu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9529BA47107FB0840002670A /* superlu.cpp */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
@@ -146,6 +148,8 @@
 		953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = setup_preconditioner.cpp; sourceTree = "<group>"; };
 		953FD0AB106AB696002145CC /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
 		95671D860F57074800872173 /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
+		957F5E63109B7AC1006756DD /* blas_mac_x.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = blas_mac_x.a; path = ../../Packages/lib/blas_mac_x.a; sourceTree = SOURCE_ROOT; };
+		957F5E94109B7FA9006756DD /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; };
 		9598AE280F55C464008788DB /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
 		9598AE290F55C464008788DB /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = ins/bdry.cpp; sourceTree = "<group>"; };
 		9598AE2A0F55C464008788DB /* bdry_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_ins.h; path = ins/bdry_ins.h; sourceTree = "<group>"; };
@@ -199,6 +203,8 @@
 				9529BA22107F99130002670A /* libpetscts.a in Frameworks */,
 				9529BA23107F99130002670A /* libpetscvec.a in Frameworks */,
 				95BE98481086B60E0026238C /* libsuperlu_4.0.a in Frameworks */,
+				957F5E64109B7AC1006756DD /* blas_mac_x.a in Frameworks */,
+				957F5E95109B7FA9006756DD /* libgfortran.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -293,6 +299,8 @@
 				951C181B107A9FDA005403AA /* libmpi.dylib */,
 				951C181C107A9FDA005403AA /* libmpi_cxx.dylib */,
 				9529B9C5107F8DAA0002670A /* Accelerate.framework */,
+				957F5E94109B7FA9006756DD /* libgfortran.a */,
+				957F5E63109B7AC1006756DD /* blas_mac_x.a */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";

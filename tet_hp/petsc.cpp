@@ -118,8 +118,12 @@ void tet_hp::petsc_solve(){
 	newton_its = 0;
 	while(norm > 1e-12){
 		
+		VecSet(petsc_f,0.0);
+		MatZeroEntries(petsc_J);
+		
 		/* insert values into jacobian matrix J (every processor will do this need to do it a different way) */
 		create_jacobian();
+		
 		
 		/* 
 		 Assemble matrix, using the 2-step process:
@@ -143,7 +147,8 @@ void tet_hp::petsc_solve(){
 		ierr = VecAssemblyBegin(petsc_f);//CHKERRQ(ierr);
 		ierr = VecAssemblyEnd(petsc_f);//CHKERRQ(ierr);
 		
-	
+		//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,TRUE);
+
 		/* 
 		 Solve linear system.  Here we explicitly call KSPSetUp() for more
 		 detailed performance monitoring of certain preconditioners, such
@@ -173,7 +178,10 @@ void tet_hp::petsc_solve(){
 			ierr = PetscPrintf(PETSC_COMM_WORLD,"Max Newton iterations exceeded: break \n");//CHKERRQ(ierr);
 			break;
 		}
+		
+		MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,TRUE);
 	}
+	
 	
 	ierr = VecDestroy(du);//CHKERRQ(ierr);
 

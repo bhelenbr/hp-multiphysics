@@ -21,6 +21,7 @@
 #include <tet_mesh.h>
 #include <float.h>
 #include <blocks.h>
+#include "slu_ddefs.h"
 
 #ifdef petsc
 #include <petscksp.h>
@@ -283,6 +284,13 @@ class tet_hp : public tet_mesh  {
 		void ug_to_vec();
 		
 		void superlu();
+		void fgmres(int n, SuperMatrix *A, SuperMatrix *L, SuperMatrix *U, 
+					double *sol, double *rhs,int *perm_c, int *perm_r,
+					FLT tol, int im, int *itmax);
+//		SuperMatrix A;
+//		SuperMatrix L;
+//		SuperMatrix U;
+//		SuperMatrix B;
 	
 //		void lsolver();
 //		struct jacobian_matrix{

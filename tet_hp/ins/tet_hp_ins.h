@@ -36,7 +36,7 @@ class tet_hp_ins : public tet_hp {
 		hp_edge_bdry* getnewedgeobject(int bnum, input_map &bdrydata);
 		hp_face_bdry* getnewfaceobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-        //tet_hp_helper* getnewhelper(input_map& inmap);
+        tet_hp_helper* getnewhelper(input_map& inmap);
 
 	public:
 		void* create_global_structure() {return new global;}
