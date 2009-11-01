@@ -63,6 +63,7 @@
 		95F478A50DF5A9CA00255952 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B10DCA19B7007A1D26 /* getnewibc.cpp */; };
 		95F478A60DF5A9CB00255952 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B00DCA19B7007A1D26 /* getnewbdry.cpp */; };
 		95F478A70DF5A9CC00255952 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AD0DCA19B7007A1D26 /* allocate.cpp */; };
+		95F59CF6109DEA2A0094ABBE /* gmres.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95F59C1E109C9C390094ABBE /* gmres.cpp */; };
 		B21BBEF40CBAC96D0056D083 /* libtet_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B21BBEF30CBAC96D0056D083 /* libtet_basis.a */; };
 		B21BBF3D0CBBE2620056D083 /* hp_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */; };
 		B21BBFD40CBEE3C50056D083 /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
@@ -168,6 +169,7 @@
 		95DE30A8104C294F00F7FA10 /* pod_generate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pod_generate.h; path = pod/pod_generate.h; sourceTree = "<group>"; };
 		95DE30A9104C294F00F7FA10 /* pod_simulate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pod_simulate.cpp; path = pod/pod_simulate.cpp; sourceTree = "<group>"; };
 		95DE30AA104C294F00F7FA10 /* pod_simulate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pod_simulate.h; path = pod/pod_simulate.h; sourceTree = "<group>"; };
+		95F59C1E109C9C390094ABBE /* gmres.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gmres.cpp; sourceTree = "<group>"; };
 		B21BBEF30CBAC96D0056D083 /* libtet_basis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtet_basis.a; path = ../lib/libtet_basis.a; sourceTree = SOURCE_ROOT; };
 		B23E83230CF223480027B187 /* libtet_mesh.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtet_mesh.a; path = ../lib/libtet_mesh.a; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -254,6 +256,7 @@
 				9516787F107E7F9700E48F75 /* gmres.h */,
 				9529BA4B107FB0990002670A /* lsolver.cpp */,
 				9529BA47107FB0840002670A /* superlu.cpp */,
+				95F59C1E109C9C390094ABBE /* gmres.cpp */,
 				95331FE40D6B602400961CD4 /* test.cpp */,
 			);
 			name = Source;
@@ -441,6 +444,7 @@
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
 				959CF6F7108BF54A002293FD /* superlu.cpp in Sources */,
+				95F59CF6109DEA2A0094ABBE /* gmres.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -284,9 +284,14 @@ class tet_hp : public tet_mesh  {
 		void ug_to_vec();
 		
 		void superlu();
-		void fgmres(int n, SuperMatrix *A, SuperMatrix *L, SuperMatrix *U, 
-					double *sol, double *rhs,int *perm_c, int *perm_r,
-					FLT tol, int im, int *itmax);
+//		void fgmres(int n, SuperMatrix *A, SuperMatrix *L, SuperMatrix *U, 
+//					double *sol, double *rhs,int *perm_c, int *perm_r,
+//					FLT tol, int im, int *itmax);
+		//void fgmres(int n,SuperMatrix &A,SuperMatrix &L,SuperMatrix &U,int &perm_c, int &perm_r, Array<double,1> &rhs,double &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
+
+		void fgmres(int n,SuperMatrix &A,SuperMatrix &L,SuperMatrix &U, int &perm_c, int &perm_r, Array<double,1> &rhs,Array<double,1> &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
+		void dpsolve(int n, SuperMatrix &L, SuperMatrix &U, int &perm_c, int &perm_r,Array<double,1> &x, Array<double,1> &y, SuperLUStat_t &stat);
+
 //		SuperMatrix A;
 //		SuperMatrix L;
 //		SuperMatrix U;
