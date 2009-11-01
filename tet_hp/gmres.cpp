@@ -10,9 +10,11 @@
 #include "tet_hp.h"
 #include "slu_ddefs.h"
 
+/* brief flexible GMRES written by Yousef Saad */
+
 void tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &perm_c, int &perm_r, Array<double,1> &rhs,Array<double,1> &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat){
 	int i,i1,k1,its;
-	FLT t,t0,tt,beta,gam,fltwork,negt;
+	FLT t,t0,tt,beta,gam,negt;
 	FLT eps1 = 0.0;
 	int maxits = itmax;
 	Array<Array<double,1>,1> vv(im+1);
@@ -29,21 +31,16 @@ void tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 
 	its = 0;
 	
+	/* outer loop starts here */
 	do{
-//		sp_dgemv (char *, double, SuperMatrix *, double *,
-//				  int, double, double *, int);
+
 		/* compute initial residual */
 		sp_dgemv("N",1.0, &A, sol.data(),1,0.0,vv(0).data(),1);
 		vv(0)=rhs-vv(0);
-		beta=0.0;
-		for(int ind=0;ind<n;++ind) beta+=vv(0)(ind)*vv(0)(ind);
-		beta=sqrt(beta);
 		
-		fltwork=0.0;
-		for(int ind=0;ind<n;++ind) fltwork+=rhs(ind)*rhs(ind);
-		fltwork=sqrt(fltwork);
+		beta = nrm2(n,vv(0));		
 		
-		if ( !(beta > tol * fltwork) )
+		if ( !(beta > tol * nrm2(n,rhs)) )
 			break;
 		
 		t = 1.0/beta;
@@ -72,33 +69,25 @@ void tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 			 |     w  = w - h_{i,j} v_{i}
 			 +------------------------------------------------------------*/
 			
-			t0 = 0.0;
-			for(int ind=0;ind<n;++ind) t0+=vv(i1)(ind)*vv(i1)(ind);
-			t0=sqrt(t0);
+			t0=nrm2(n,vv(i1));
 			
 			for(int j = 0; j <= i; j++){
-				tt = 0.0;
-				for(int ind=0;ind<n;++ind) tt+=vv(j)(ind)*vv(i1)(ind);
+				tt=dotprod(n,vv(j),vv(i1));
 				hh(i)(j) = tt;
 				negt = -tt;
 				vv(i1)+=negt*vv(j); //daxpy				
 			}
 			/* h_{j+1,j} = ||w||_{2} */
-			t = 0.0;
-			for(int ind=0;ind<n;++ind) t+=vv(i1)(ind)*vv(i1)(ind);
-			t = sqrt(t);
+			t=nrm2(n,vv(i1));
 			while ( t < 0.5*t0){
 				t0 = t;
 				for(int j = 0; j <=i; j++){
-					tt = 0.0;
-					for(int ind=0;ind<n;++ind) t+=vv(j)(ind)*vv(i1)(ind);
+					tt=dotprod(n,vv(j),vv(i1));
 					hh(i)(j) += tt;
 					negt = -tt;
-					vv(i1)+=negt*vv(j);
-				}
-				t = 0.0;
-				for(int ind=0;ind<n;++ind) t+=vv(i1)(ind)*vv(i1)(ind);
-				t = sqrt(t);				
+					vv(i1)+=negt*vv(j); //daxpy
+				}	
+				t=nrm2(n,vv(i1));
 			}
 			
 			hh(i)(i1) = t;
@@ -177,9 +166,7 @@ void tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 		for(int j = 0; j < n; j++)
 			vv(0)(j)=rhs(j)-vv(0)(j);
 		
-		beta = 0.0;
-		for(int ind=0;ind<n;++ind) beta+=vv(0)(ind)*vv(0)(ind);
-		beta = sqrt(beta);
+		beta=nrm2(n,vv(0));
 		
 		/*---- restart outer loop if needed ----*/
 
@@ -209,5 +196,21 @@ void tet_hp::dpsolve(int n, SuperMatrix &L, SuperMatrix &U, int &perm_c, int &pe
     X.lda = n;
     X.nzval = x.data();
     dgstrs(NOTRANS, &L, &U, &perm_c, &perm_r, &XX, &stat, &info);
+}
+
+double tet_hp::nrm2(int n,Array<double,1> x){
+	FLT fltwk=0.0;
+	for(int i = 0; i < n; ++i)
+		fltwk += x(i)*x(i);
+	
+	return sqrt(fltwk);
+}
+
+double tet_hp::dotprod(int n,Array<double,1> x, Array<double,1> y){
+	FLT fltwk = 0.0;
+	for(int i = 0; i < n; ++i)
+		fltwk += x(i)*y(i);
+	
+	return fltwk;
 }
 

@@ -291,6 +291,9 @@ class tet_hp : public tet_mesh  {
 
 		void fgmres(int n,SuperMatrix &A,SuperMatrix &L,SuperMatrix &U, int &perm_c, int &perm_r, Array<double,1> &rhs,Array<double,1> &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
 		void dpsolve(int n, SuperMatrix &L, SuperMatrix &U, int &perm_c, int &perm_r,Array<double,1> &x, Array<double,1> &y, SuperLUStat_t &stat);
+	
+		double nrm2(int n,Array<double,1> x);
+		double dotprod(int n,Array<double,1> x, Array<double,1> y);
 
 //		SuperMatrix A;
 //		SuperMatrix L;
