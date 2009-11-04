@@ -28,7 +28,6 @@
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181B107A9FDA005403AA /* libmpi.dylib */; };
 		951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181C107A9FDA005403AA /* libmpi_cxx.dylib */; };
-		951C185C107AA9EF005403AA /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953FD0AB106AB696002145CC /* petsc.cpp */; };
 		9527AE660E3513F000360E38 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
 		9527AE680E3513FA00360E38 /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
 		9527AE690E3513FB00360E38 /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
@@ -442,7 +441,6 @@
 				95A9DAAF10431ED30015C0F6 /* length.cpp in Sources */,
 				957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */,
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
-				951C185C107AA9EF005403AA /* petsc.cpp in Sources */,
 				959CF6F7108BF54A002293FD /* superlu.cpp in Sources */,
 				95F59CF6109DEA2A0094ABBE /* gmres.cpp in Sources */,
 			);
@@ -506,7 +504,7 @@
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_VERSION = 4.2;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (

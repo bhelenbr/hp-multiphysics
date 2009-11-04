@@ -95,13 +95,6 @@ void tet_hp::initialize_sparse(){
 	
 	size_sparse_matrix = (npnt+nseg*basis::tet(log2p).em+ntri*basis::tet(log2p).fm+ntet*basis::tet(log2p).im)*NV;
 
-//	/* sparse matrix allocation */
-//	int nse = static_cast<int>(size_sparse_matrix*size_sparse_matrix);//number of sparse elements
-//	cout << "number of sparse elements allocated " << nse << endl;
-//	sparse_ind.resize(nse);//too much storage resize later
-//	sparse_val.resize(nse);
-//	number_sparse_elements = size_sparse_matrix;
-
 	sparse_ptr.resize(size_sparse_matrix+1);
 	find_sparse_bandwidth();
 	number_sparse_elements = sparse_ptr(size_sparse_matrix);
@@ -114,11 +107,8 @@ void tet_hp::initialize_sparse(){
 	
 	sparse_ind = 10*size_sparse_matrix; // some number bigger than size of matrix
 
-//	/* creates sparse matrix with zeros on diagonal */
-//	for (int i = 0; i < size_sparse_matrix+1; ++i) {
-//		sparse_ptr(i) = i;
-//		sparse_ind(i) = i;
-//	}
+	res_vec.resize(size_sparse_matrix);
+	ug_vec.resize(size_sparse_matrix);
 	
 	return;
 }

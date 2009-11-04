@@ -135,7 +135,8 @@ void tet_hp::update() {
 	
 	
 	l2error(gbl->ibc);
-	superlu();
+	//superlu();
+	superilu();
 	//output("superlu", tecplot);
 	//l2error(gbl->ibc);
 	//return;

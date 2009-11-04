@@ -265,8 +265,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 #ifndef petsc
 	initialize_sparse();
 	//sparse_resized = false;
-	res_vec.resize(size_sparse_matrix);
-	ug_vec.resize(size_sparse_matrix);
+
 #endif
 	
 
