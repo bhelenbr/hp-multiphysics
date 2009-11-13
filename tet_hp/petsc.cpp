@@ -7,13 +7,15 @@
  petscis.h     - index sets            petscksp.h - Krylov subspace methods
  petscviewer.h - viewers               petscpc.h  - preconditioners
  */
+#ifdef petsc
 
 #include "tet_hp.h"
+#include "hp_boundary.h"
 
-#ifdef petsc
 void tet_hp::petsc_initialize(){
 	
-	PetscInt m = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
+	
 	PetscErrorCode ierr;
 	PetscTruth mat_nonsymmetric;
 
@@ -22,17 +24,19 @@ void tet_hp::petsc_initialize(){
 //	PetscInitialize();
 	PetscInitializeNoArguments();
 
-
 	/* 
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
      runtime. Also, the parallel partitioning of the matrix is
      determined by PETSc at runtime.
 	 */
-	ierr = MatCreate(PETSC_COMM_WORLD,&petsc_J);//CHKERRQ(ierr);
-	ierr = MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,m,m);//CHKERRQ(ierr);
-	ierr = MatSetFromOptions(petsc_J);//CHKERRQ(ierr);
+	//ierr = MatCreate(PETSC_COMM_WORLD,&petsc_J);//CHKERRQ(ierr);
+	//ierr = MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);//CHKERRQ(ierr);
 	
+	/* or do this */
+	find_sparse_bandwidth();
+//	ierr = MatSetFromOptions(petsc_J);//CHKERRQ(ierr);
+
 	/* 
 	 Create parallel vectors.
 	 - When using VecSetSizes(), we specify only the vector's global
@@ -40,33 +44,29 @@ void tet_hp::petsc_initialize(){
 	 - Note: We form 1 vector from scratch and then duplicate as needed.
 	 */
 	ierr = VecCreate(PETSC_COMM_WORLD,&petsc_u);//CHKERRQ(ierr);
-	ierr = VecSetSizes(petsc_u,PETSC_DECIDE,m);//CHKERRQ(ierr);
+	ierr = VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);//CHKERRQ(ierr);
 	ierr = VecSetFromOptions(petsc_u);//CHKERRQ(ierr);
 	ierr = VecDuplicate(petsc_u,&petsc_f);//CHKERRQ(ierr);
-	
+
 	/*
      Set flag if we are doing a nonsymmetric problem; the default is symmetric.
 	 */
 	
 	ierr = PetscOptionsHasName(PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);//CHKERRQ(ierr);
 
-	
-	/* choose KSP type */
-	KSPSetType(ksp,KSPGMRES); // GMRES
-//	KSPSetType(KSP ksp,KSPType KSPBICG);  // BiConjugate Gradient
-	
 	/* 
 	 Create linear solver context
 	 */
 	ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);//CHKERRQ(ierr);
 	
-	/* 
-	 Set operators. Here the matrix that defines the linear system
-	 also serves as the preconditioning matrix.
-	 */
 	
-	ierr = KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);//CHKERRQ(ierr);
-	
+	/* choose KSP type */
+//	KSPSetType(ksp, KSPGMRES); // GMRES
+//	KSPSetType(ksp, KSPCHEBYCHEV); // Chebychev
+//	KSPSetType(ksp, KSPRICHARDSON);  // Richardson
+//	KSPSetType(ksp, KSPLSQR);  // Least Squares
+//	KSPSetType(ksp, KSPBICG);  // BiConjugate Gradient
+
 	
 	/*
 	Set linear solver defaults for this problem (optional). - By extracting the KSP and PC contexts from the KSP context,
@@ -78,11 +78,16 @@ void tet_hp::petsc_initialize(){
 	
 	/* choose preconditioner type */
 
-//	PCSetType(PC pc,PCType PCLU);     // LU
-//	PCSetType(PC pc,PCType PCILU);    // incomplete LU
-//	PCSetType(PC pc,PCType PCSOR);    // SOR
-	PCSetType(pc,PCJACOBI); // Jacobi
+//	PCSetType(pc, PCLU);     // LU
+//	PCSetType(pc, PCILU);    // incomplete LU
+//	PCSetType(pc, PCSOR);    // SOR
+//	PCSORSetOmega(pc,1.3); // Set Omega in SOR
+//	PCSetType(pc, PCJACOBI); // Jacobi
+//	PCSetType(pc, PCASM); // Additive Schwarz method
 	
+	
+//	KSPSetTolerances(ksp,1.e-7,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+
 	/*
 	Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
 	These options will override those specified above as long as KSPSetFromOptions() is called _after_ any other customization routines.
@@ -93,62 +98,46 @@ void tet_hp::petsc_initialize(){
 	return;
 }
 
-void tet_hp::petsc_solve(){
-	
-	Vec            du;          /* solution, update, function */
-	PetscReal      norm=1.0;    /* norm of solution error */
-	PetscErrorCode ierr;
-	PetscInt       its,newton_its,m=(npnt+nseg*em0+ntri*fm0+ntet*im0)*NV,max_newton_its;
-	//PetscMPIInt    size,rank;
 
-	max_newton_its = 1000;
+void tet_hp::petsc_solve(){
+	cout << "petsc called "<< endl;
+	Vec            resid,du;          /* solution, update, function */
+	PetscErrorCode ierr;
+	PetscInt       newton_its,its,max_newton_its;
+	PetscScalar    petsc_norm;
+	//PetscMPIInt    size,rank;
+	max_newton_its = 10;
+	FLT tol = 1.0e-12;
 	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
 	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
 	
 	
-	ierr = VecDuplicate(petsc_f,&du);//CHKERRQ(ierr);
-	
+	VecDuplicate(petsc_f,&du);
+	VecDuplicate(petsc_f,&resid);
+
 	/* initialize u with ug */
 	ug_to_petsc();
 	
-	
 	// -ksp_max_it <its>
 	//ierr = KSPSetTolerances(KSP ksp,double rtol,double atol,double dtol,int maxits);//CHKERRQ(ierr);
-	
-	newton_its = 0;
-	while(norm > 1e-12){
+
+	for(int iter = 0; iter < max_newton_its; ++iter) {
 		
-		VecSet(petsc_f,0.0);
-		MatZeroEntries(petsc_J);
+		/* creates jacobian and residual with BC's applied */
+		create_jacobian_residual();
 		
-		/* insert values into jacobian matrix J (every processor will do this need to do it a different way) */
-		create_jacobian();
+		VecNorm(petsc_f,NORM_2,&petsc_norm);		
+		cout << "norm of residual: " << petsc_norm << endl;
 		
+		if(petsc_norm < tol) break;
 		
 		/* 
-		 Assemble matrix, using the 2-step process:
-		 MatAssemblyBegin(), MatAssemblyEnd()
-		 Computations can be done while messages are in transition
-		 by placing code between these two statements.
+		 Set operators. Here the matrix that defines the linear system
+		 also serves as the preconditioning matrix.
 		 */
-		ierr = MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);//CHKERRQ(ierr);
-		ierr = MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);//CHKERRQ(ierr);
 		
-
-		/* insert values into residual f (every processor will do this need to do it a different way) */
-		create_rsdl();		
+		KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
 		
-		/* 
-		 Assemble vector, using the 2-step process:
-		 VecAssemblyBegin(), VecAssemblyEnd()
-		 Computations can be done while messages are in transition,
-		 by placing code between these two statements.
-		 */
-		ierr = VecAssemblyBegin(petsc_f);//CHKERRQ(ierr);
-		ierr = VecAssemblyEnd(petsc_f);//CHKERRQ(ierr);
-		
-		//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,TRUE);
-
 		/* 
 		 Solve linear system.  Here we explicitly call KSPSetUp() for more
 		 detailed performance monitoring of certain preconditioners, such
@@ -157,29 +146,29 @@ void tet_hp::petsc_solve(){
 		 called already.
 		 */
 		
-		ierr = KSPSetUp(ksp);//CHKERRQ(ierr);
-		ierr = KSPSolve(ksp,petsc_f,du);//CHKERRQ(ierr);
+		KSPSetUp(ksp);
+		KSPSolve(ksp,petsc_f,du);
+	
+		MatMult(petsc_J,du,resid);		
+		VecAXPY(resid,-1.0,petsc_f);
+
+		VecNorm(resid,NORM_2,&petsc_norm);
+		KSPGetIterationNumber(ksp,&its);
+
+		cout << "linear system residual: " << petsc_norm << endl;
+		cout << "iterations: " << its << endl;
 		
-		/* u=u-J^-1*f=u-du */
-		ierr = VecAXPY(petsc_u,-1.0,du);//CHKERRQ(ierr);
+		KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+		
+		/* update: u=u-J^-1*f=u-du */
+		VecAXPY(petsc_u,-1.0,du);
 
 		/* send petsc vector u back to ug */
 		petsc_to_ug();
 
-		++newton_its;
+		output("petsc", tecplot);
 		
-		/* check the error */
-
-		ierr = VecNorm(du,NORM_2,&norm);//CHKERRQ(ierr);
-		ierr = KSPGetIterationNumber(ksp,&its);//CHKERRQ(ierr);
-		ierr = PetscPrintf(PETSC_COMM_WORLD,"Newton iteration %D, Norm of error %A, ksp Iterations %D\n",newton_its,norm,its);//CHKERRQ(ierr);
-		
-		if (newton_its > max_newton_its ) {
-			ierr = PetscPrintf(PETSC_COMM_WORLD,"Max Newton iterations exceeded: break \n");//CHKERRQ(ierr);
-			break;
-		}
-		
-		MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,TRUE);
+		//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,PETSC_TRUE);
 	}
 	
 	
@@ -282,4 +271,5 @@ void tet_hp::petsc_finalize(){
 	
 	return;
 }
+
 #endif

@@ -245,6 +245,11 @@ class tet_hp : public tet_mesh  {
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
 		void create_rsdl();
 		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
+		void sparse_dirichlet(int ind, bool compressed_col=true);//default to compressed column storage
+		void apply_neumman(bool jac_tran=true);
+		void find_sparse_bandwidth();
+		void create_jacobian_residual();		
+		int size_sparse_matrix;
 
 #ifdef petsc
 		void petsc_initialize();
@@ -270,14 +275,11 @@ class tet_hp : public tet_mesh  {
 		Array<int,1> sparse_ind; //sparse matrix index
 		Array<int,1> sparse_ptr; //sparse matrix pointer
 		Array<FLT,1> sparse_val; //sparse matrix element storage
-	
 		int number_sparse_elements; 
-		int size_sparse_matrix;
+
 	
 		void insert_sparse(int row, int col, FLT value, bool compressed_column=true);//default to compressed column storage
-		void sparse_dirichlet(int ind, bool compressed_col=true);//default to compressed column storage
-		void apply_neumman(bool jac_tran=true);
-		void find_sparse_bandwidth();
+
 		void zero_sparse();
 		void initialize_sparse();
 		void vec_to_ug();
@@ -285,39 +287,13 @@ class tet_hp : public tet_mesh  {
 		
 		void superlu();
 		void superilu();
-//		void fgmres(int n, SuperMatrix *A, SuperMatrix *L, SuperMatrix *U, 
-//					double *sol, double *rhs,int *perm_c, int *perm_r,
-//					FLT tol, int im, int *itmax);
-		//void fgmres(int n,SuperMatrix &A,SuperMatrix &L,SuperMatrix &U,int &perm_c, int &perm_r, Array<double,1> &rhs,double &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
-		//void fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int *perm_c, int *perm_r, Array<double,1> &rhs,Array<double,1> &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
 
 		bool fgmres(int n,SuperMatrix &A,SuperMatrix &L,SuperMatrix &U, int &perm_c, int &perm_r, Array<double,1> &rhs,Array<double,1> &sol,FLT tol,int im,int &itmax,SuperLUStat_t  &stat);
 		void dpsolve(int n, SuperMatrix &L, SuperMatrix &U, int &perm_c, int &perm_r,Array<double,1> &x, Array<double,1> &y, SuperLUStat_t &stat);
 	
-		double nrm2(int n,Array<double,1> x);
-		double dotprod(int n,Array<double,1> x, Array<double,1> y);
+		double nrm2(int n,Array<double,1> x); // performs l2 norm of blitz array
+		double dotprod(int n,Array<double,1> x, Array<double,1> y); // dot product of two blitz arrays
 
-//		SuperMatrix A;
-//		SuperMatrix L;
-//		SuperMatrix U;
-//		SuperMatrix B;
-	
-//		void lsolver();
-//		struct jacobian_matrix{
-//			jacobian_matrix() {}
-//		};	
-//		void mult(const jacobian_matrix &J, const double *vec_in, double *vec_out);
-
-//		int dfgmr(int n, void (*dmatvec) (double, double[], double, double[]), void (*dpsolve) (int, double[], double[]),double *rhs, double *sol, double tol, int im, int *itmax, FILE * fits)
-//		void ilu_gmres();/* incomplete lu with gmres solve */
-//		int GLOBAL_PERM_C;
-//		int GLOBAL_PERM_R;
-//		SuperMatrix GLOBAL_A;
-//		SuperMatrix GLOBAL_L;
-//		SuperMatrix GLOBAL_U;
-//		SuperLUStat_t GLOBAL_STAT;
-//		void dmatvec_mult(double alpha, double x[], double beta, double y[]);/* matrix vector multiplication */
-//		void dpsolve(int n, double x[], double y[]);
 
 #endif
 	

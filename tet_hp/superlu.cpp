@@ -16,6 +16,8 @@
  *
  */
 
+#ifndef petsc
+
 #include "tet_hp.h"
 #include "slu_ddefs.h"
 #include "hp_boundary.h"
@@ -27,12 +29,13 @@ void tet_hp::superilu(){
     /* advanced driver dgssvx allocation */ 
     char           equed[1];
     SuperMatrix    A, L, U;
+	//NCformat       *Astore;
     SuperMatrix    B, X;
 	trans_t  trans;
 	int            *perm_r; /* row permutations from partial pivoting */
     int            *perm_c; /* column permutation vector */
     int            *etree;
-    void           *work;
+    void           *work = NULL;
     int            info, lwork;
 	int			   n=size_sparse_matrix;
     double         *R, *C;
@@ -40,6 +43,11 @@ void tet_hp::superilu(){
 	//double		   *xact;
 	//double *x, *b;
 
+	/* GMRES inputs */
+	int im = 50; // krlov subspace
+	int itmax = 5000; // total iterations
+	FLT gtol = 1.0e-13; // tolerance
+	
     mem_usage_t    mem_usage;
     superlu_options_t options;
     SuperLUStat_t  stat;
@@ -49,7 +57,7 @@ void tet_hp::superilu(){
 	Array<double,1> x(n),b(n);
 	du = 0.0;
 	trans = NOTRANS;
-	FLT tol=1.0e-14;
+	FLT tol=1.0e-12;
 	int max_newton_its = 50;
 	bool compressed_column = true;
 	
@@ -69,6 +77,7 @@ void tet_hp::superilu(){
 	
 	/* create super matrix A using compressed column storage */
 	dCreate_CompCol_Matrix(&A, n, n, number_sparse_elements, sparse_val.data(), sparse_ind.data(), sparse_ptr.data(), SLU_NC, SLU_D, SLU_GE);
+	//Astore = (NCformat *) A.Store;
 	
 	dCreate_Dense_Matrix(&X, n, 1, du.data(), n, SLU_DN, SLU_D, SLU_GE);
 
@@ -113,22 +122,19 @@ void tet_hp::superilu(){
 	options.RowPerm = NOROWPERM;
 	options.ColPerm = NATURAL;
 	options.ColPerm = COLAMD;
-
 	options.Equil = NO;
 	
-	//options.Equil = NO;
-//	options.PivotGrowth = YES;	  /* Compute reciprocal pivot growth */
-//	options.ConditionNumber = YES;/* Compute reciprocal condition number */
-	
-	//options.Equil = NO;
-	//options.ColPerm = NATURAL;
-	//options.Fact = SamePattern_SameRowPerm;
+	options.PivotGrowth = YES;	  /* Compute reciprocal pivot growth */
+	options.ConditionNumber = YES;/* Compute reciprocal condition number */
 
-//	options.DiagPivotThresh = .2;
-//	options.ILU_DropRule = DROP_AREA;
-//	options.ILU_DropTol = 1.0e-4;
-//	options.ILU_FillTol = 1.0e-2;
-//	options.ILU_FillFactor = 12.0;
+
+	options.DiagPivotThresh = 0.001;
+	//options.ILU_DropRule = DROP_AREA;
+	//options.ILU_DropTol = 1.0e-4;
+	//options.ILU_FillTol = 1.0e-2;
+	options.ILU_FillFactor = 3.0;
+	options.ILU_MILU = SMILU_3;
+
 	
 	/* send global solution to ug_vec */
 	ug_to_vec();
@@ -154,6 +160,7 @@ void tet_hp::superilu(){
 		for(int j = 0; j < nfbd; ++j)
 			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
 
+		
 		FLT max_resid = 0.0;
 		for (int j = 0; j < n; ++j){
 			if(fabs(res_vec(j)) > max_resid)
@@ -170,8 +177,6 @@ void tet_hp::superilu(){
 		dgsisx(&options, &A, perm_c, perm_r, etree, equed, R, C, &L, &U, work, lwork, &B, &X, &rpg, &rcond, &mem_usage, &stat, &info);
 		cout << " equed     "<<equed << endl;
 
-
-		
 //		int panel_size = sp_ienv(1);
 //		int relax      = sp_ienv(2);		
 //		dgsitrf(&options, &A, relax, panel_size,etree, work, lwork, perm_c, perm_r,	&L, &U, &stat, &info);
@@ -192,16 +197,11 @@ void tet_hp::superilu(){
 		if ( options.PrintStat ) StatPrint(&stat);
 		
 		b=res_vec;
-		sp_dgemv("N", -1.0, &A, du.data(), 1, 1.0, b.data(), 1);
+		sp_dgemv("N", -1.0, &A, du.data(), 1, 1.0, b.data(), 1);//b=-Ax+b
 		
-		cout << endl << endl << "ILU residual "<< nrm2(n, b) << endl << endl;
-		
-		
-		/* GMRES inputs */
-		int im = 50; // krlov subspace
-		int itmax = 200; // total iterations
-		FLT gtol = 1.0e-13; // tolerance
-		du = 0;
+		FLT ilu_res=nrm2(n, b);
+		cout << endl << endl << "ILU residual "<< ilu_res << endl << endl;
+		if (ilu_res > 1.0e-2) du = 0.0;// sometimes ILU answer is too crappy to feed into gmres
 		
 		/* Flexible GMRES */ 
 		t = SuperLU_timer_();
@@ -215,7 +215,7 @@ void tet_hp::superilu(){
 		}
 		
 		b=res_vec;
-		sp_dgemv("N", -1.0, &A, du.data(), 1, 1.0, b.data(), 1);
+		sp_dgemv("N", -1.0, &A, du.data(), 1, 1.0, b.data(), 1);//b=-Ax+b
 		
 		cout << endl << endl << "gmres residual "<< nrm2(n, b) << endl << endl;
 
@@ -229,12 +229,10 @@ void tet_hp::superilu(){
 
 
 		cout << endl;
-		
 		Destroy_SuperNode_Matrix(&L);
 		Destroy_CompCol_Matrix(&U);
+		
 		StatFree(&stat);
-
-
 
 	}
 	
@@ -252,7 +250,7 @@ void tet_hp::superilu(){
 void tet_hp::superlu(){
 	cout << "superlu called" <<endl;
 
-    char           equed[1]={'R'};
+    char           equed[1];
     SuperMatrix    A, L, U;
     SuperMatrix    B, X;
 	trans_t  trans;
@@ -382,3 +380,5 @@ void tet_hp::superlu(){
 	
 	return;
 }
+
+#endif

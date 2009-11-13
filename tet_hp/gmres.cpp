@@ -6,6 +6,7 @@
  *  Copyright 2009 Clarkson University. All rights reserved.
  *
  */
+#ifndef petsc
 
 #include "tet_hp.h"
 #include "slu_ddefs.h"
@@ -33,7 +34,8 @@ bool tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 	Array<double,1> c(im);
 	Array<double,1> s(im);
 	Array<double,1> rs(im+1);
-		
+	
+	
 	its = 0;
 	
 	/* outer loop starts here */
@@ -67,6 +69,43 @@ bool tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 			dpsolve(n, L, U, perm_c, perm_r, z(i), vv(i), stat);
 			/* instead of preconditioning copy z=v */
 //			z(i) = vv(i);
+			
+			/* use diagonal preconditioner */
+//			for(int j=0;j<n;++j)
+//				for(int k=sparse_ptr(j);k<sparse_ptr(j+1);++k)
+//					if(sparse_ind(k) == j)
+//						z(i)(j)=vv(i)(j)/sparse_val(k);
+			
+			/* use lumped diagonal preconditioner */
+//			for(int j=0;j<n;++j){
+//				FLT rowsum = 0.0;
+//				for(int k=sparse_ptr(j);k<sparse_ptr(j+1);++k)
+//					rowsum+=fabs(sparse_val(k));
+//				z(i)(j)=vv(i)(j)/rowsum;
+//			}
+			
+			/* Jacobi preconditioner */
+//			Array<double,1> wk(n);
+//			FLT diag;
+//			FLT rowsum;
+//			z(i)=0.0;
+//			for(int it=0;it<5;++it){
+//				for(int j=0;j<n;++j){
+//					rowsum = 0.0;
+//					for(int k=sparse_ptr(j);k<sparse_ptr(j+1);++k){
+//						if(sparse_ind(k) == j)
+//							diag = sparse_val(k);
+//						else
+//							rowsum += sparse_val(k)*z(i)(sparse_ind(k));
+//					}
+//					wk(j)=(vv(i)(j)-rowsum)/diag;
+//					//z(i)(j)=(vv(i)(j)-rowsum)/diag;
+//
+//				}
+//				z(i)=wk;
+//			}
+			
+			
 			
 			/* matvec operation w = A z_{j} = A M^{-1} v_{j} */
 			sp_dgemv("N",1.0,&A,z(i).data(),1,0.0,vv(i1).data(),1);
@@ -178,6 +217,10 @@ bool tet_hp::fgmres(int n,SuperMatrix &A, SuperMatrix &L,SuperMatrix &U, int &pe
 		
 		beta=nrm2(n,vv(0));
 		cout << "gmres beta " << beta << endl;
+		
+		/* not sure if I should do this or not */
+		if(beta < tol)
+			break;
 		/*---- restart outer loop if needed ----*/
 
 		if ( !(beta < eps1 / tol) )	{
@@ -231,3 +274,5 @@ double tet_hp::dotprod(int n,Array<double,1> x, Array<double,1> y){
 	return fltwk;
 }
 
+
+#endif

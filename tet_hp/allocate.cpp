@@ -262,12 +262,11 @@ void tet_hp::init(input_map& inmap, void *gin) {
 //		ija(i) = size_sparse_matrix+1;
 //#endif	
 	
-#ifndef petsc
+#ifdef petsc
+	petsc_initialize();
+#else
 	initialize_sparse();
-	//sparse_resized = false;
-
 #endif
-	
 
 	//test();
 	

@@ -113,40 +113,7 @@ void tet_hp::initialize_sparse(){
 	return;
 }
 
-/* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
-void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
-
-#ifdef petsc
-	VecSetValues(petsc_f,1,ind,0.0,INSERT_VALUES);
-	MatZeroRowsIS(petsc_J,1,ind,1.0);
-#else
-	res_vec(ind) = 0.0;
-
-	if(compressed_col){
-		/* compressed column: only works for symmetric sparsity pattern */
-		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
-			for(int j = sparse_ptr(sparse_ind(i)); j < sparse_ptr(sparse_ind(i)+1); ++j){
-				if(ind == sparse_ind(j)){
-					sparse_val(j) = 0.0;
-					break;
-				}
-			}	
-			if(ind == sparse_ind(i))
-				sparse_val(i) = 1.0;
-		}
-	}
-	else {
-		/* compressed row */
-		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
-			sparse_val(i) = 0.0;
-			if(ind == sparse_ind(i))
-				sparse_val(i) = 1.0;
-		}
-	}
 #endif
-
-	return;
-}
 
 /* finds number of nonzeros per row tested up to p=4 */ 
 void tet_hp::find_sparse_bandwidth(){
@@ -157,11 +124,11 @@ void tet_hp::find_sparse_bandwidth(){
 	int fm=basis::tet(log2p).fm;
 	int im=basis::tet(log2p).im;
 	int tm=basis::tet(log2p).tm;
-
+	
 	int begin_seg = npnt*NV;
 	int begin_tri = begin_seg+nseg*em*NV;
 	int begin_tet = begin_tri+ntri*fm*NV;
-
+	
 	bw = 0;
 	
 	for(int i=0; i<npnt; ++i){		
@@ -169,7 +136,7 @@ void tet_hp::find_sparse_bandwidth(){
 			bw(i*NV+n) += NV*(pnt(i).nnbor*fm+pnt(i).nspk+pnt(i).ntri*em+1);		
 	}
 	
-
+	
 	for(int i=0; i<nseg; ++i){		
 		for(int j=0;j<2;++j)
 			for(int n=0;n<NV;++n)
@@ -217,38 +184,135 @@ void tet_hp::find_sparse_bandwidth(){
 			for(int m=0;m<fm;++m)
 				for(int n=0;n<NV;++n)
 					bw(begin_tri+tet(i).tri(j)*fm*NV+m*NV+n) += im*NV;
-
+		
 		for(int m=0;m<im;++m)
 			for(int n=0;n<NV;++n)
 				bw(begin_tet+i*im*NV+m*NV+n)+= tm*NV;
 	}
 	
-//	for (int i = 0; i < size_sparse_matrix; ++i) {
-//		cout << "bandwidth "<< bw(i)- sparse_ptr(i+1)+sparse_ptr(i) << endl;
-//
-//	}
-	
+
+#ifdef petsc
+	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
+	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
+#else
 	sparse_ptr(0)=0;
 	for (int i=1; i<size_sparse_matrix+1; ++i) 
 		sparse_ptr(i) = bw(i-1)+sparse_ptr(i-1);
+#endif
+
 	
 	
 	return;
 }
 
 
-#endif
-
+/* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
+void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
+	
 #ifdef petsc
+	const PetscInt row = ind;
+	PetscScalar zero = 0.0;
+	PetscScalar one = 1.0;
 
-//void tet_hp::petsc_dirichlet(int ind){
-//	FLT zero = 0.0;
-//	FLT one = 1.0;
+	/* apply dirichlet by inserting zero in f */
+	VecSetValues(petsc_f,1,&row,&zero,INSERT_VALUES);
+	
+	MatZeroRows(petsc_J,1,&row,1.0);
+	
+//	PetscInt ncols;
+//	const PetscInt *cols;
+//	const PetscScalar *vals;
+//   
+//	MatGetRow(petsc_J,row,&ncols,&cols,&vals);
 //	
-//	ierr = MatSetValues(petsc_J,1,&ind,1,&loc_to_glo(j),&zero,INSERT_VALUES);
-//	return;
-//}
+//	Array<double,1> values(ncols);
+//
+//	for(int i=0; i<ncols; ++i) {
+//		if (row == cols[i]) 
+//			values(i)=1.0;
+//		else
+//			values(i)=0.0;			
+//	}
+//	
+//	MatSetValues(petsc_J,1,&row,ncols,cols,values.data(),INSERT_VALUES);
+//	
+//	MatRestoreRow(petsc_J,row,&ncols,&cols,&vals);
+	
+	
+	/* zero out row in Jacobian and insert 1.0 on diagonal */
+	//MatZeroRowsLocal(petsc_J,1,&pind,one);
+	//MatZeroRowsIS(petsc_J,IS rows,one);
+	
+//	/* hacked */
+//	PetscInt *columns;
+//	PetscScalar *values;
+//
+//	for(int i = 0; i < size_sparse_matrix; ++i){
+//		columns[i]=i;
+//		values[i]=0.0;
+//	}
+//	
+//	//MatSetValues(petsc_J,1,&row,size_sparse_matrix,columns,values,INSERT_VALUES);
+//	MatSetValues(petsc_J,1,&row,1,&row,&one,INSERT_VALUES);
+
+#else
+	res_vec(ind) = 0.0;
+	
+	if(compressed_col){
+		/* compressed column: only works for symmetric sparsity pattern */
+		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
+			for(int j = sparse_ptr(sparse_ind(i)); j < sparse_ptr(sparse_ind(i)+1); ++j){
+				if(ind == sparse_ind(j)){
+					sparse_val(j) = 0.0;
+					break;
+				}
+			}	
+			if(ind == sparse_ind(i))
+				sparse_val(i) = 1.0;
+		}
+	}
+	else {
+		/* compressed row */
+		for(int i = sparse_ptr(ind); i < sparse_ptr(ind+1); ++i){
+			sparse_val(i) = 0.0;
+			if(ind == sparse_ind(i))
+				sparse_val(i) = 1.0;
+		}
+	}
 #endif
+	
+	return;
+}
+
+void tet_hp::create_jacobian_residual(){
+	
+	bool compressed_column = false;
+	
+	VecSet(petsc_f,0.0);
+	MatZeroEntries(petsc_J);
+
+	/* insert values into jacobian matrix J (every processor will do this need to do it a different way) */
+	create_jacobian(compressed_column);
+
+	/* insert values into residual f (every processor will do this need to do it a different way) */
+	create_rsdl();		
+
+	/* apply neumman bc's */
+	apply_neumman(compressed_column);
+	
+	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+
+	/* apply dirichlet boundary conditions to sparse matrix and vector */
+	for(int j = 0; j < nfbd; ++j)
+		hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
+	
+	VecAssemblyBegin(petsc_f);
+	VecAssemblyEnd(petsc_f);
+	
+	return;
+	
+}
 
 void tet_hp::create_jacobian(bool jac_tran) {
 	int gindx,eind,find,iind,sgn,msgn,mode;
@@ -323,13 +387,8 @@ void tet_hp::create_jacobian(bool jac_tran) {
 #ifdef petsc
 
 		PetscErrorCode ierr;
-		for(int i = 0; i < kn; ++i)
-			for(int j = 0; j < kn; ++j)
-				ierr = MatSetValues(petsc_J,1,&loc_to_glo(i),1,&loc_to_glo(j),&K(i,j),ADD_VALUES);
-		// CHKERRQ(ierr);
-#endif
-
-#ifndef petsc
+		ierr = MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
+#else
 		for(int i = 0; i < kn; ++i)
 			for(int j = 0; j < kn; ++j)
 				insert_sparse(loc_to_glo(i), loc_to_glo(j), K(i,j),jac_tran);
@@ -338,27 +397,15 @@ void tet_hp::create_jacobian(bool jac_tran) {
 
 				
 				
-	}
-	
-//#ifndef petsc
-//	/* resize and preserve sparse matrix on first call only */
-//	if (!sparse_resized) {
-//		
-//		//ija.resizeAndPreserve(number_sparse_elements+1);
-//		//sa.resizeAndPreserve(number_sparse_elements+1);
-//
-//		sparse_ind.resizeAndPreserve(number_sparse_elements);
-//		sparse_val.resizeAndPreserve(number_sparse_elements);
-//		sparse_resized = true;
-//	}
-//#endif
+	}	
+
 	return;
 }
 
 void tet_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
 	int kcol = 0;
-	FLT dw = 0.01;  //dw=sqrt(eps/l2_norm(q))
+	FLT dw = 1.0e-6;  //dw=sqrt(eps/l2_norm(q))
 	
 	
 	ugtouht(tind);
@@ -453,16 +500,11 @@ void tet_hp::create_rsdl() {
 			
 		
 	
-#ifdef petsc
-		
+#ifdef petsc		
 		PetscErrorCode ierr;
-		for(int i = 0; i < kn; ++i)
-			ierr = VecSetValues(petsc_f,1,&loc_to_glo(i),&lclres(i),ADD_VALUES);
-		// CHKERRQ(ierr);
+		ierr = VecSetValues(petsc_f,kn,loc_to_glo.data(),lclres.data(),ADD_VALUES);
 
-#endif
-		
-#ifndef petsc
+#else
 		for(int i = 0; i < kn; ++i)
 			res_vec(loc_to_glo(i))+=lclres(i);	
 #endif
@@ -500,7 +542,7 @@ void tet_hp::apply_neumman(bool jac_tran) {
 	int fm = 3+3*basis::tet(log2p).em+basis::tet(log2p).fm;
 	int kn = fm*NV;
 	int kcol,krow,find,ind;
-	FLT dw = 0.01;
+	FLT dw = 1.0e-6;
 	FLT sgn,msgn;
 	Array<FLT,2> R(NV,fm),Rbar(NV,fm);
 	Array<FLT,2> K(kn,kn);
@@ -572,12 +614,10 @@ void tet_hp::apply_neumman(bool jac_tran) {
 				for(int n = 0; n < NV; ++n)
 					loc_to_glo(ind++) = gbl_find+m*NV+n;				
 #ifdef petsc				
-			for(int k = 0; k < kn; ++k){
-				for(int m = 0; m < kn; ++m)
-					MatSetValues(petsc_J,1,&loc_to_glo(k),1,&loc_to_glo(m),&K(k,m),ADD_VALUES);
+
+			MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
+			VecSetValues(petsc_f,kn,loc_to_glo.data(),lclres.data(),ADD_VALUES);
 				
-				VecSetValues(petsc_f,1,&loc_to_glo(k),&lclres(k),ADD_VALUES);
-			}	
 #else
 			for(int k = 0; k < kn; ++k){
 				for(int m = 0; m < kn; ++m)
@@ -591,6 +631,7 @@ void tet_hp::apply_neumman(bool jac_tran) {
 	
 	return;
 }
+
 #ifndef petsc
 void tet_hp::vec_to_ug(){
 	int ind = 0;

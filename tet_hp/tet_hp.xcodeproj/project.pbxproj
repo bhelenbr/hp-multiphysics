@@ -28,6 +28,7 @@
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181B107A9FDA005403AA /* libmpi.dylib */; };
 		951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181C107A9FDA005403AA /* libmpi_cxx.dylib */; };
+		951E6B8310AC626D0089C06E /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953FD0AB106AB696002145CC /* petsc.cpp */; };
 		9527AE660E3513F000360E38 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
 		9527AE680E3513FA00360E38 /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
 		9527AE690E3513FB00360E38 /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
@@ -122,7 +123,6 @@
 		6FB901D80A6C782300A4729C /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
 		6FB91B1C0ACCB45300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libmesh_mpi.a; sourceTree = SOURCE_ROOT; };
 		8DD76F6C0486A84900D96B5E /* tet_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp; sourceTree = BUILT_PRODUCTS_DIR; };
-		9516787F107E7F9700E48F75 /* gmres.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gmres.h; sourceTree = "<group>"; };
 		951C181B107A9FDA005403AA /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		951C181C107A9FDA005403AA /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
 		9529B9C5107F8DAA0002670A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
@@ -135,7 +135,6 @@
 		9529BA1A107F99130002670A /* libpetscts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscts.a; path = ../../Packages/lib/libpetscts.a; sourceTree = SOURCE_ROOT; };
 		9529BA1B107F99130002670A /* libpetscvec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscvec.a; path = ../../Packages/lib/libpetscvec.a; sourceTree = SOURCE_ROOT; };
 		9529BA47107FB0840002670A /* superlu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = superlu.cpp; sourceTree = "<group>"; };
-		9529BA4B107FB0990002670A /* lsolver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lsolver.cpp; sourceTree = "<group>"; };
 		95331FE40D6B602400961CD4 /* test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		9533379C0DCA18D2007A1D26 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rsdl.cpp; sourceTree = "<group>"; };
 		9533379D0DCA18D2007A1D26 /* tet_hp_cd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tet_hp_cd.h; sourceTree = "<group>"; };
@@ -252,8 +251,6 @@
 				95671D860F57074800872173 /* particle.cpp */,
 				95C73E1F105EA89D00637BEE /* sparse.cpp */,
 				953FD0AB106AB696002145CC /* petsc.cpp */,
-				9516787F107E7F9700E48F75 /* gmres.h */,
-				9529BA4B107FB0990002670A /* lsolver.cpp */,
 				9529BA47107FB0840002670A /* superlu.cpp */,
 				95F59C1E109C9C390094ABBE /* gmres.cpp */,
 				95331FE40D6B602400961CD4 /* test.cpp */,
@@ -443,6 +440,7 @@
 				95AA515D10600DE500E0151D /* sparse.cpp in Sources */,
 				959CF6F7108BF54A002293FD /* superlu.cpp in Sources */,
 				95F59CF6109DEA2A0094ABBE /* gmres.cpp in Sources */,
+				951E6B8310AC626D0089C06E /* petsc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -462,6 +460,7 @@
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					petsc,
 					f2cFortran,
 					BZ_DEBUG,
 				);
@@ -502,7 +501,10 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					petsc,
+					f2cFortran,
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
