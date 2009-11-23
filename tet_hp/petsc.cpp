@@ -14,9 +14,9 @@
 
 void tet_hp::petsc_initialize(){
 	
-	size_sparse_matrix = (npnt+nseg*em0+ntri*fm0+ntet*im0)*NV;
-	
-	PetscErrorCode ierr;
+	size_sparse_matrix = (npnt+nseg*basis::tet(log2p).em+ntri*basis::tet(log2p).fm+ntet*basis::tet(log2p).im)*NV;
+	cout << "number of unknowns "<< size_sparse_matrix << endl;
+
 	PetscTruth mat_nonsymmetric;
 
 //	PetscInitialize(&argc,&args,(char *)0,help);
@@ -24,18 +24,24 @@ void tet_hp::petsc_initialize(){
 //	PetscInitialize();
 	PetscInitializeNoArguments();
 
+	/*
+     Set flag if we are doing a nonsymmetric problem; the default is symmetric.
+	 */
+	
+	PetscOptionsHasName(PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);
+
 	/* 
      Create parallel matrix, specifying only its global dimensions.
      When using MatCreate(), the matrix format can be specified at
      runtime. Also, the parallel partitioning of the matrix is
      determined by PETSc at runtime.
 	 */
-	//ierr = MatCreate(PETSC_COMM_WORLD,&petsc_J);//CHKERRQ(ierr);
-	//ierr = MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);//CHKERRQ(ierr);
-	
-	/* or do this */
+	MatCreate(PETSC_COMM_WORLD,&petsc_J);
+	//MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);
+	//MatSetFromOptions(petsc_J);
+
+	/* finds number of columns for each row */
 	find_sparse_bandwidth();
-//	ierr = MatSetFromOptions(petsc_J);//CHKERRQ(ierr);
 
 	/* 
 	 Create parallel vectors.
@@ -43,21 +49,15 @@ void tet_hp::petsc_initialize(){
 	 dimension; the parallel partitioning is determined at runtime. 
 	 - Note: We form 1 vector from scratch and then duplicate as needed.
 	 */
-	ierr = VecCreate(PETSC_COMM_WORLD,&petsc_u);//CHKERRQ(ierr);
-	ierr = VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);//CHKERRQ(ierr);
-	ierr = VecSetFromOptions(petsc_u);//CHKERRQ(ierr);
-	ierr = VecDuplicate(petsc_u,&petsc_f);//CHKERRQ(ierr);
-
-	/*
-     Set flag if we are doing a nonsymmetric problem; the default is symmetric.
-	 */
-	
-	ierr = PetscOptionsHasName(PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);//CHKERRQ(ierr);
+	VecCreate(PETSC_COMM_WORLD,&petsc_u);
+	VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);
+	VecSetFromOptions(petsc_u);
+	VecDuplicate(petsc_u,&petsc_f);
 
 	/* 
 	 Create linear solver context
 	 */
-	ierr = KSPCreate(PETSC_COMM_WORLD,&ksp);//CHKERRQ(ierr);
+	KSPCreate(PETSC_COMM_WORLD,&ksp);
 	
 	
 	/* choose KSP type */
@@ -81,6 +81,7 @@ void tet_hp::petsc_initialize(){
 //	PCSetType(pc, PCLU);     // LU
 //	PCSetType(pc, PCILU);    // incomplete LU
 //	PCSetType(pc, PCSOR);    // SOR
+//	PCSetType(pc,PCSPAI);
 //	PCSORSetOmega(pc,1.3); // Set Omega in SOR
 //	PCSetType(pc, PCJACOBI); // Jacobi
 //	PCSetType(pc, PCASM); // Additive Schwarz method
@@ -93,8 +94,16 @@ void tet_hp::petsc_initialize(){
 	These options will override those specified above as long as KSPSetFromOptions() is called _after_ any other customization routines.
 	*/
 
-	ierr = KSPSetFromOptions(ksp);//CHKERRQ(ierr);
+	KSPSetFromOptions(ksp);
 	
+	/* set preconditioner side */
+	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
+	int ndofs = 0;
+	for(int i=0;i < nfbd; ++i)
+		ndofs+=(fbdry(i)->ntri*basis::tet(log2p).fm+fbdry(i)->nseg*basis::tet(log2p).em+fbdry(i)->npnt)*NV;
+	
+	dirichlet_rows.resize(ndofs);
+
 	return;
 }
 
@@ -103,7 +112,7 @@ void tet_hp::petsc_solve(){
 	cout << "petsc called "<< endl;
 	Vec            resid,du;          /* solution, update, function */
 	PetscErrorCode ierr;
-	PetscInt       newton_its,its,max_newton_its;
+	PetscInt       its,max_newton_its;
 	PetscScalar    petsc_norm;
 	//PetscMPIInt    size,rank;
 	max_newton_its = 10;
@@ -111,6 +120,8 @@ void tet_hp::petsc_solve(){
 	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
 	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
 	
+	bool compressed_column = false;
+	PetscLogDouble time1,time2;
 	
 	VecDuplicate(petsc_f,&du);
 	VecDuplicate(petsc_f,&resid);
@@ -118,25 +129,64 @@ void tet_hp::petsc_solve(){
 	/* initialize u with ug */
 	ug_to_petsc();
 	
-	// -ksp_max_it <its>
-	//ierr = KSPSetTolerances(KSP ksp,double rtol,double atol,double dtol,int maxits);//CHKERRQ(ierr);
-
 	for(int iter = 0; iter < max_newton_its; ++iter) {
 		
 		/* creates jacobian and residual with BC's applied */
-		create_jacobian_residual();
+		//create_jacobian_residual();
+
+
+		VecSet(petsc_f,0.0);
+		if(iter > 0) MatZeroEntries(petsc_J);
+		
+		/* insert values into jacobian matrix J */		
+		PetscGetTime(&time1);
+		create_jacobian(compressed_column);
+		PetscGetTime(&time2);
+		
+		cout << "jacobian made " << time2-time1 << " seconds" << endl;
+		
+		/* insert values into residual f (every processor will do this need to do it a different way) */
+		create_rsdl();		
+		
+		/* apply neumman bc's */
+		apply_neumman(compressed_column);
+				
+		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+				
+		row_counter = 0;
+
+		/* apply dirichlet boundary conditions to sparse matrix and vector */
+		for(int j = 0; j < nfbd; ++j)
+			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
+		
+		//--row_counter;
+		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
+
+		
+		VecAssemblyBegin(petsc_f);
+		VecAssemblyEnd(petsc_f);
 		
 		VecNorm(petsc_f,NORM_2,&petsc_norm);		
 		cout << "norm of residual: " << petsc_norm << endl;
 		
 		if(petsc_norm < tol) break;
 		
+		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
+		MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+		
+		double rtol=1.0e-12; // relative tolerance
+		double atol=max(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
+		double dtol = 10000; // divergence tolerance
+		int maxits = 10000; // maximum iterations
+		
+		KSPSetTolerances(ksp,rtol,atol,dtol,maxits);
 		/* 
 		 Set operators. Here the matrix that defines the linear system
 		 also serves as the preconditioning matrix.
 		 */
 		
-		KSPSetOperators(ksp,petsc_J,petsc_J,DIFFERENT_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+		KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
 		
 		/* 
 		 Solve linear system.  Here we explicitly call KSPSetUp() for more
@@ -147,7 +197,10 @@ void tet_hp::petsc_solve(){
 		 */
 		
 		KSPSetUp(ksp);
+
+		PetscGetTime(&time1);
 		KSPSolve(ksp,petsc_f,du);
+		PetscGetTime(&time2);
 	
 		MatMult(petsc_J,du,resid);		
 		VecAXPY(resid,-1.0,petsc_f);
@@ -157,8 +210,9 @@ void tet_hp::petsc_solve(){
 
 		cout << "linear system residual: " << petsc_norm << endl;
 		cout << "iterations: " << its << endl;
+		cout << "solve time: " << time2-time1 << " seconds" << endl;
 		
-		KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+		//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 		
 		/* update: u=u-J^-1*f=u-du */
 		VecAXPY(petsc_u,-1.0,du);
@@ -168,7 +222,10 @@ void tet_hp::petsc_solve(){
 
 		output("petsc", tecplot);
 		
+		//MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
 		//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,PETSC_TRUE);
+		
+//		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);
 	}
 	
 	
@@ -251,23 +308,17 @@ void tet_hp::ug_to_petsc(){
 
 void tet_hp::petsc_finalize(){
 
-	PetscErrorCode ierr;
 
 	/* 
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
 	 */
-	ierr = KSPDestroy(ksp);//CHKERRQ(ierr);
-	ierr = VecDestroy(petsc_f);//CHKERRQ(ierr);
-	ierr = VecDestroy(petsc_u);//CHKERRQ(ierr);
-	ierr = MatDestroy(petsc_J);//CHKERRQ(ierr);
+	KSPDestroy(ksp);
+	VecDestroy(petsc_f);
+	VecDestroy(petsc_u);
+	MatDestroy(petsc_J);
 	
-	/*
-     Indicate to PETSc profiling that we're concluding the second stage 
-	 */
-	//ierr = PetscLogStagePop();//CHKERRQ(ierr);
-	
-	ierr = PetscFinalize();//CHKERRQ(ierr);
+	PetscFinalize();
 	
 	return;
 }

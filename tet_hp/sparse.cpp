@@ -216,43 +216,69 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 
 	/* apply dirichlet by inserting zero in f */
 	VecSetValues(petsc_f,1,&row,&zero,INSERT_VALUES);
+	dirichlet_rows(row_counter++)=ind;
+	
+	return;
+	
+//	PetscInt          ncols;
+//	const PetscInt    *cols;
+//	const PetscScalar *vals;
+//	PetscTruth        flg1=PETSC_FALSE;
+//	PetscScalar       *zeros;
+//	
+//	MatGetRow(petsc_J,row,&ncols,&cols,&vals); 
+//	
+//	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+//	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+//	
+//	PetscMalloc(sizeof(PetscScalar)*(ncols+1),&zeros);
+//	PetscMemzero(zeros,(ncols+1)*sizeof(PetscScalar));
+//	PetscOptionsHasName(PETSC_NULL, "-set_row_zero", &flg1);
+//
+//	MatSetValues(petsc_J,1,&row,ncols,cols,zeros,INSERT_VALUES);
+//
+//	
+//	
+//	return;
+	
 	
 	MatZeroRows(petsc_J,1,&row,1.0);
+
+	
+	return;
 	
 //	PetscInt ncols;
 //	const PetscInt *cols;
 //	const PetscScalar *vals;
 //   
 //	MatGetRow(petsc_J,row,&ncols,&cols,&vals);
-//	
-//	Array<double,1> values(ncols);
 //
-//	for(int i=0; i<ncols; ++i) {
-//		if (row == cols[i]) 
-//			values(i)=1.0;
-//		else
-//			values(i)=0.0;			
-//	}
+//	Array<double,1> values(ncols);
+//	values = 0.0;
 //	
 //	MatSetValues(petsc_J,1,&row,ncols,cols,values.data(),INSERT_VALUES);
-//	
-//	MatRestoreRow(petsc_J,row,&ncols,&cols,&vals);
+//	MatSetValues(petsc_J,1,&row,1,&row,&one,INSERT_VALUES);
 	
+//	MatRestoreRow(petsc_J,row,&ncols,&cols,&vals);
+
+//	return;
+//	MatRestoreRow(petsc_J,row,&ncols,&cols,&values.data());
 	
 	/* zero out row in Jacobian and insert 1.0 on diagonal */
 	//MatZeroRowsLocal(petsc_J,1,&pind,one);
 	//MatZeroRowsIS(petsc_J,IS rows,one);
 	
 //	/* hacked */
-//	PetscInt *columns;
-//	PetscScalar *values;
+//	PetscInt *cols;
+//	PetscScalar *vals;
+//	PetscInt ncol = size_sparse_matrix;
 //
 //	for(int i = 0; i < size_sparse_matrix; ++i){
-//		columns[i]=i;
-//		values[i]=0.0;
+//		cols[i]=i;
+//		vals[i]=0.0;
 //	}
 //	
-//	//MatSetValues(petsc_J,1,&row,size_sparse_matrix,columns,values,INSERT_VALUES);
+//	MatSetValues(petsc_J,1,&row,ncol,cols,vals,INSERT_VALUES);
 //	MatSetValues(petsc_J,1,&row,1,&row,&one,INSERT_VALUES);
 
 #else
@@ -284,35 +310,85 @@ void tet_hp::sparse_dirichlet(int ind, bool compressed_col){
 	return;
 }
 
+#ifdef petsc
 void tet_hp::create_jacobian_residual(){
 	
 	bool compressed_column = false;
+	PetscLogDouble time1,time2;
+	
+	//find_sparse_bandwidth();//shouldn't have to do this everytime
 	
 	VecSet(petsc_f,0.0);
-	MatZeroEntries(petsc_J);
-
-	/* insert values into jacobian matrix J (every processor will do this need to do it a different way) */
+//	MatZeroEntries(petsc_J);
+	cout << "zeroed enries"<< endl;
+	/* insert values into jacobian matrix J */
+	
+	PetscGetTime(&time1);
 	create_jacobian(compressed_column);
+	PetscGetTime(&time2);
+
+	cout << "jacobian made " << time2-time1 << " seconds" << endl;
 
 	/* insert values into residual f (every processor will do this need to do it a different way) */
 	create_rsdl();		
+	cout << "residual made"<< endl;
 
 	/* apply neumman bc's */
 	apply_neumman(compressed_column);
 	
+	cout << "neumman BC's applied"<< endl;
+
 	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
 
+	cout << "jacobian assembled"<< endl;
+
+	
+	PetscGetTime(&time1);
 	/* apply dirichlet boundary conditions to sparse matrix and vector */
 	for(int j = 0; j < nfbd; ++j)
 		hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
-	
+	PetscGetTime(&time2);
+
+	cout << "dirichlet BC's applied "<< time2-time1 <<" seconds"<< endl;
+
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
+	cout << "petsc_f assembled "<< endl;
+
+	return;
+	
+}
+
+#else
+
+void tet_hp::create_jacobian_residual(){
+	
+	bool compressed_column = true;
+	
+	zero_sparse();
+
+	/* insert values into jacobian matrix J (every processor will do this need to do it a different way) */
+	create_jacobian(compressed_column);
+	
+	/* insert values into residual f (every processor will do this need to do it a different way) */
+	create_rsdl();		
+	
+	/* apply neumman bc's */
+	apply_neumman(compressed_column);
+
+	
+	/* apply dirichlet boundary conditions to sparse matrix and vector */
+	for(int j = 0; j < nfbd; ++j)
+		hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
+
 	
 	return;
 	
 }
+
+#endif
+
 
 void tet_hp::create_jacobian(bool jac_tran) {
 	int gindx,eind,find,iind,sgn,msgn,mode;

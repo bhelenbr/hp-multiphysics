@@ -261,6 +261,8 @@ class tet_hp : public tet_mesh  {
 		Vec  petsc_u,petsc_f;   /* solution,residual */
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
+		Array<int,1> dirichlet_rows;
+		int row_counter;
 
 #endif	
 

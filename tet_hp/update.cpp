@@ -135,15 +135,14 @@ void tet_hp::update() {
 	
 	
 	//l2error(gbl->ibc);
-	//superlu();
-	//superilu();
-	//output("superlu", tecplot);
-	//l2error(gbl->ibc);
-	//return;
 	
+#ifdef petsc
 	petsc_solve();
-	//petsc_finalize();
-	//exit(4);
+#else
+	//superlu();
+	superilu();
+#endif
+
 	
 	/* COUPLED MESH MOVMEMENT */
 //    if (mmovement == coupled_deformable  && log2p == 0) {
