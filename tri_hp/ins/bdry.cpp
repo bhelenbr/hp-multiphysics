@@ -365,7 +365,8 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	for(int n=tri_mesh::ND;n<x.NV-1;++n)
 		flx(n) = flx(x.NV-1)*ub(n);
 
-	// *x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
+//	*x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
+//	*x.gbl->log << ul << ' ' << vl << ' ' << pl << ' ' << ur << ' ' << vr << ' ' << pr << ' '<< uvp << '\n';
 
 
 	return;

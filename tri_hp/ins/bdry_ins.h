@@ -291,6 +291,47 @@ namespace bdry_ins {
 			euler(const euler& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
 			euler* create(tri_hp& xin, edge_bdry &bin) const {return new euler(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 	};
+	
+	class friction_slip : public neumann {
+		protected:
+			FLT slip_length;
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+				Array<FLT,1> ub(x.NV);
+
+				for(int n=0;n<x.NV;++n)
+					ub(n) = ibc->f(n,xpt,x.gbl->time);
+					
+				FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);
+				TinyVector<FLT,tri_mesh::ND> tang(-norm(1),norm(0));
+				FLT slip_stress = ((ub(0) -u(0))*tang(1) +(ub(1) -u(1))*tang(0))*x.gbl->mu/(slip_length*sqrt(tang(0)*tang(0)+tang(1)*tang(1)));
+
+				flx(x.NV-1) = x.gbl->rho*un;
+
+				/* X&Y MOMENTUM */
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n) = flx(x.NV-1)*ub(n) +u(x.NV-1)*norm(n) -slip_stress*tang(n);
+
+				/* EVERYTHING ELSE */
+				for (int n=tri_mesh::ND;n<x.NV-1;++n)
+					flx(n) = flx(x.NV-1)*ub(n);
+
+				return;
+			}
+		public:
+			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "friction_slip";}
+			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& input,void* gbl_in) {
+				neumann::init(input,gbl_in);
+				std::string keyword = base.idprefix +"_sliplength";
+				if (!input.get(keyword,slip_length)) {
+					*x.gbl->log << "Couldn't find slip length for " << keyword << std::endl;
+					exit(1);
+				}
+			}
+	
+	};
+
 
 	class characteristic : public neumann {
 		protected:
@@ -460,6 +501,7 @@ namespace bdry_ins {
 	/* VERTEX BOUNDARY CONDITIONS */
 	/******************************/
 	class surface_fixed_pt : public hp_vrtx_bdry {
+		/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 		protected:
 			tri_hp_ins &x;
 			surface *surf;
@@ -580,7 +622,7 @@ namespace bdry_ins {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void rsdl(int stage);
 	};
-
+	
 	class surface_outflow_planar : public surface_outflow_endpt {
 		protected:
 			bool vertical;
@@ -613,6 +655,25 @@ namespace bdry_ins {
 			}
 	};
 
+	
+	class surface_contact_pt : public surface_fixed_pt {
+		protected:
+			FLT contact_angle;  // radians;
+		public:
+			surface_contact_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_contact_pt";}
+			surface_contact_pt(const surface_contact_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin) {}
+			surface_contact_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_contact_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& input,void* gbl_in) {
+				surface_fixed_pt::init(input,gbl_in);
+				fix_norm = 0;
+				input.getwdefault(base.idprefix+"_contact_angle",contact_angle,90.0);
+				contact_angle *= M_PI/180.0;
+			}
+
+			/* TO SET CONTACT ANGLE STRESS */
+			void rsdl(int stage);
+	};
+	
 	class inflow_pt : public hp_vrtx_bdry {
 		protected:
 			tri_hp_ins &x;

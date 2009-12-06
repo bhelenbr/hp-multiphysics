@@ -536,6 +536,8 @@
 		6F661FF9091AFB3500FB5D82 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = ../lib/libquad.a; sourceTree = SOURCE_ROOT; };
 		6F662036091AFC8D00FB5D82 /* libutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libutil.a; path = ../lib/libutil.a; sourceTree = SOURCE_ROOT; };
 		6F66205C091AFFC500FB5D82 /* libmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmetis.a; path = ../../Packages/lib/libmetis.a; sourceTree = SOURCE_ROOT; };
+		6F676E2E10CBC8C100533A9B /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
+		6F676E2F10CBC8C100533A9B /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
 		6F681E3C0F5330AD005F5783 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns/allocate.cpp; sourceTree = "<group>"; };
 		6F681E830F533522005F5783 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = cns/bdry.cpp; sourceTree = "<group>"; };
 		6F681E840F533522005F5783 /* bdry_cns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_cns.h; path = cns/bdry_cns.h; sourceTree = "<group>"; };
@@ -757,6 +759,8 @@
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
 				6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */,
 				6F68254D099850E600F57688 /* hp_getnewibc.cpp */,
+				6F676E2E10CBC8C100533A9B /* petsc.cpp */,
+				6F676E2F10CBC8C100533A9B /* sparse.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";

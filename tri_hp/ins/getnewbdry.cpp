@@ -22,9 +22,9 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
 	public:
-		static const int ntypes = 7;
+		static const int ntypes = 8;
 		enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
-		inflow,hybrid_slave_point,hybrid_point};
+		inflow,hybrid_slave_point,hybrid_point,surface_contact_pt};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -34,7 +34,7 @@ class tri_hp_ins_vtype {
 };
 
 const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar",
-	"inflow","hybrid_slave_point","hybrid_point"};
+	"inflow","hybrid_slave_point","hybrid_point","surface_contact_pt"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -84,6 +84,10 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			temp = new hybrid_pt(*this,*vbdry(bnum));
 			break;
 		}
+		case tri_hp_ins_vtype::surface_contact_pt: {
+			temp = new surface_contact_pt(*this,*vbdry(bnum));
+			break;
+		}
 		default: {
 			temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
 			break;
@@ -103,9 +107,9 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
  */
 class tri_hp_ins_stype {
 	public:
-		static const int ntypes = 11;
+		static const int ntypes = 12;
 		enum ids {unknown=-1,plain,inflow,flexible,outflow,characteristic,euler,
-			symmetry,applied_stress,surface,surface_slave,force_coupling};
+			symmetry,applied_stress,surface,surface_slave,force_coupling,friction_slip};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -115,7 +119,7 @@ class tri_hp_ins_stype {
 };
 
 const char tri_hp_ins_stype::names[ntypes][40] = {"plain","inflow","flexible","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","force_coupling"};
+    "symmetry","applied_stress","surface","surface_slave","force_coupling","friction_slip"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -188,6 +192,10 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_ins_stype::force_coupling: {
 			temp = new force_coupling(*this,*ebdry(bnum));
+			break;
+		}
+		case tri_hp_ins_stype::friction_slip: {
+			temp = new friction_slip(*this,*ebdry(bnum));
 			break;
 		}
 		default: {
