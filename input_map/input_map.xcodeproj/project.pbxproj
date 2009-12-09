@@ -23,7 +23,7 @@
 		6FD651CD0922EC6800D18689 /* input_map.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = input_map.h; sourceTree = "<group>"; };
 		6FD651CE0922EC6800D18689 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6FD651CF0922EC6800D18689 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		6FD651F10922EF8E00D18689 /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FD651F10922EF8E00D18689 /* mod_map */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mod_map; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2AAC046055464E500DB518D /* libinput_map.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinput_map.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -73,7 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				D2AAC046055464E500DB518D /* libinput_map.a */,
-				6FD651F10922EF8E00D18689 /* main */,
+				6FD651F10922EF8E00D18689 /* mod_map */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -130,7 +130,7 @@
 			);
 			name = main;
 			productName = main;
-			productReference = 6FD651F10922EF8E00D18689 /* main */;
+			productReference = 6FD651F10922EF8E00D18689 /* mod_map */;
 			productType = "com.apple.product-type.tool";
 		};
 		D2AAC045055464E500DB518D /* input_map */ = {
