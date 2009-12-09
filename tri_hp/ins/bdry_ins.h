@@ -142,13 +142,14 @@ namespace bdry_ins {
 			inflow* create(tri_hp& xin, edge_bdry &bin) const {return new inflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 
 			void vdirichlet() {
-				int sind,v0;
+				int sind,j,v0;
 
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
+				j = 0;
+				do {
+					sind = base.seg(j++);
 					v0 = x.seg(sind).pnt(0);
 					x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
-				}
+				} while (j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
 				x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
 			}
@@ -318,8 +319,8 @@ namespace bdry_ins {
 				return;
 			}
 		public:
-			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "friction_slip";}
-			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin), slip_length(0.0) {mytype = "friction_slip";}
+			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), slip_length(inbdry.slip_length) {}
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				neumann::init(input,gbl_in);
@@ -356,13 +357,13 @@ namespace bdry_ins {
 			}
 
 			void vdirichlet() {
-				int sind,v0;
-
-				for(int j=0;j<base.nseg;++j) {
-					sind = base.seg(j);
+				int sind,j,v0;
+				j = 0;
+				do {
+					sind = base.seg(j++);
 					v0 = x.seg(sind).pnt(0);
 					x.gbl->res.v(v0,dir) = 0.0;
-				}
+				} while (j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
 				x.gbl->res.v(v0,dir) = 0.0;
 			}
@@ -660,8 +661,8 @@ namespace bdry_ins {
 		protected:
 			FLT contact_angle;  // radians;
 		public:
-			surface_contact_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_contact_pt";}
-			surface_contact_pt(const surface_contact_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin) {}
+			surface_contact_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin), contact_angle(M_PI) {mytype = "surface_contact_pt";}
+			surface_contact_pt(const surface_contact_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin), contact_angle(inbdry.contact_angle) {}
 			surface_contact_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_contact_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				surface_fixed_pt::init(input,gbl_in);
