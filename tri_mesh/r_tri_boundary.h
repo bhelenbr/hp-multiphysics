@@ -65,6 +65,45 @@ class r_fixed : public r_side_bdry {
 		}
 };
 
+class r_fixed_angled : public r_side_bdry {
+	public:
+		FLT theta;
+
+		r_fixed_angled(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin), theta(0.0) {mytype = "fixed_angled";}
+		r_fixed_angled(const r_fixed_angled &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), theta(inbdry.theta) {mytype = "fixed_angled";}
+		r_fixed_angled* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed_angled(*this,xin,bin);}
+
+		void input(input_map& inmap) {
+			r_side_bdry::input(inmap);
+
+			inmap.get(base.idprefix+"_r_theta",theta);
+			theta *= M_PI/180.0;
+		}
+
+		void output(std::ostream& fout) {
+			r_side_bdry::output(fout);
+			fout << base.idprefix << "_r_theta: " << theta*180.0/M_PI << std::endl;
+		}
+
+		void dirichlet() {
+			int sind;
+			int j = 0;
+			do {
+				sind = base.seg(j++);
+				/* Tangent Residual Only */
+				FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
+				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
+				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
+			} while (j < base.nseg);
+			FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
+			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
+			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
+			
+			return;
+		}
+};
+
+
 class r_fixed4 : public r_fixed {
 	public:
 		int d2start, d2stop;

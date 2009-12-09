@@ -12,8 +12,8 @@
 
 class r_stype {
 	public:
-		static const int ntypes = 5;
-		enum ids {free=1, fixed, translating, oscillating, deforming};
+		static const int ntypes = 6;
+		enum ids {free=1, fixed, fixed_angled, translating, oscillating, deforming};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -22,7 +22,7 @@ class r_stype {
 		}
 };
 
-const char r_stype::names[ntypes][40] = {"free", "fixed", "translating", "oscillating", "deforming"};
+const char r_stype::names[ntypes][40] = {"free", "fixed", "fixed_angled", "translating", "oscillating", "deforming"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
@@ -65,6 +65,10 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
 		}
 		case r_stype::fixed: {
 			temp = new r_fixed(*this,*ebdry(bnum));
+			break;
+		}
+		case r_stype::fixed_angled: {
+			temp = new r_fixed_angled(*this,*ebdry(bnum));
 			break;
 		}
 		case r_stype::translating: {
