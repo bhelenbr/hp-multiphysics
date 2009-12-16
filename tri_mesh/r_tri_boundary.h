@@ -95,7 +95,7 @@ class r_fixed_angled : public r_side_bdry {
 				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
 			} while (j < base.nseg);
-			FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
+			FLT res = -x.gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
 			
