@@ -4,7 +4,7 @@
 
 //#define MPDEBUG
 
-// #define DEBUG
+//#define DEBUG
 
 //#define BODYFORCE
 
@@ -398,6 +398,9 @@ void surface_outflow_endpt::rsdl(int stage) {
 	TinyVector<FLT,tri_mesh::ND> ubar, tangent, rp;
 	FLT jcb;
 
+	/* SET TANGENT RESDIUAL TO 0 */
+	surface_fixed_pt::rsdl(stage);
+	
 	/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 	/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
 	bnum = base.ebdry(surfbdry);
@@ -424,6 +427,9 @@ void surface_contact_pt::rsdl(int stage) {
 	int bnumwall,sindwall;
 	TinyVector<FLT,tri_mesh::ND> ubar, tangent, tangentwall, rp;
 	FLT jcb;
+	
+	/* SET TANGENT RESDIUAL TO 0 */
+	surface_fixed_pt::rsdl(stage);
 
 	/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 	/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
