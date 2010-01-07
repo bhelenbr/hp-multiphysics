@@ -184,7 +184,7 @@ void tet_hp::update() {
 		for(i=0;i<nfbd;++i)
 			hp_fbdry(i)->fdirichlet();
 
-		//minvrt();
+		minvrt();
 
 #ifdef DEBUG   
 //		if (coarse_level) {

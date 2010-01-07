@@ -44,6 +44,13 @@
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		9577D2B510F63D77003EAC0A /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2AB10F63D77003EAC0A /* allocate.cpp */; };
+		9577D2B610F63D77003EAC0A /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2AD10F63D77003EAC0A /* bdry.cpp */; };
+		9577D2B710F63D77003EAC0A /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2AE10F63D77003EAC0A /* getnewbdry.cpp */; };
+		9577D2B810F63D77003EAC0A /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2AF10F63D77003EAC0A /* getnewibc.cpp */; };
+		9577D2B910F63D77003EAC0A /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2B010F63D77003EAC0A /* length.cpp */; };
+		9577D2BA10F63D77003EAC0A /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2B110F63D77003EAC0A /* rsdl.cpp */; };
+		9577D2BC10F63D77003EAC0A /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9577D2B410F63D77003EAC0A /* tstep.cpp */; };
 		957F5E64109B7AC1006756DD /* blas_mac_x.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E63109B7AC1006756DD /* blas_mac_x.a */; };
 		957F5E95109B7FA9006756DD /* libgfortran.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E94109B7FA9006756DD /* libgfortran.a */; };
 		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
@@ -147,6 +154,15 @@
 		953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = setup_preconditioner.cpp; sourceTree = "<group>"; };
 		953FD0AB106AB696002145CC /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
 		95671D860F57074800872173 /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
+		9577D2AB10F63D77003EAC0A /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns/allocate.cpp; sourceTree = "<group>"; };
+		9577D2AC10F63D77003EAC0A /* bdry_cns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_cns.h; path = cns/bdry_cns.h; sourceTree = "<group>"; };
+		9577D2AD10F63D77003EAC0A /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = cns/bdry.cpp; sourceTree = "<group>"; };
+		9577D2AE10F63D77003EAC0A /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = cns/getnewbdry.cpp; sourceTree = "<group>"; };
+		9577D2AF10F63D77003EAC0A /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = cns/getnewibc.cpp; sourceTree = "<group>"; };
+		9577D2B010F63D77003EAC0A /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = cns/length.cpp; sourceTree = "<group>"; };
+		9577D2B110F63D77003EAC0A /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = cns/rsdl.cpp; sourceTree = "<group>"; };
+		9577D2B310F63D77003EAC0A /* tet_hp_cns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tet_hp_cns.h; path = cns/tet_hp_cns.h; sourceTree = "<group>"; };
+		9577D2B410F63D77003EAC0A /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = cns/tstep.cpp; sourceTree = "<group>"; };
 		957F5E63109B7AC1006756DD /* blas_mac_x.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = blas_mac_x.a; path = ../../Packages/lib/blas_mac_x.a; sourceTree = SOURCE_ROOT; };
 		957F5E94109B7FA9006756DD /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; };
 		9598AE280F55C464008788DB /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
@@ -216,6 +232,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				9533379B0DCA18D2007A1D26 /* cd */,
+				9577D2AA10F63D3E003EAC0A /* Compressible */,
 				9598AE270F55C3E0008788DB /* Incompressible */,
 				95DE30A2104C28E500F7FA10 /* POD */,
 				9572077510473A580044E240 /* scripts */,
@@ -326,6 +343,22 @@
 				95DE303F104864E800F7FA10 /* makefile */,
 			);
 			name = scripts;
+			sourceTree = "<group>";
+		};
+		9577D2AA10F63D3E003EAC0A /* Compressible */ = {
+			isa = PBXGroup;
+			children = (
+				9577D2B310F63D77003EAC0A /* tet_hp_cns.h */,
+				9577D2AB10F63D77003EAC0A /* allocate.cpp */,
+				9577D2B410F63D77003EAC0A /* tstep.cpp */,
+				9577D2B110F63D77003EAC0A /* rsdl.cpp */,
+				9577D2B010F63D77003EAC0A /* length.cpp */,
+				9577D2AD10F63D77003EAC0A /* bdry.cpp */,
+				9577D2AC10F63D77003EAC0A /* bdry_cns.h */,
+				9577D2AE10F63D77003EAC0A /* getnewbdry.cpp */,
+				9577D2AF10F63D77003EAC0A /* getnewibc.cpp */,
+			);
+			name = Compressible;
 			sourceTree = "<group>";
 		};
 		9598AE270F55C3E0008788DB /* Incompressible */ = {
@@ -441,6 +474,13 @@
 				959CF6F7108BF54A002293FD /* superlu.cpp in Sources */,
 				95F59CF6109DEA2A0094ABBE /* gmres.cpp in Sources */,
 				951E6B8310AC626D0089C06E /* petsc.cpp in Sources */,
+				9577D2B510F63D77003EAC0A /* allocate.cpp in Sources */,
+				9577D2B610F63D77003EAC0A /* bdry.cpp in Sources */,
+				9577D2B710F63D77003EAC0A /* getnewbdry.cpp in Sources */,
+				9577D2B810F63D77003EAC0A /* getnewibc.cpp in Sources */,
+				9577D2B910F63D77003EAC0A /* length.cpp in Sources */,
+				9577D2BA10F63D77003EAC0A /* rsdl.cpp in Sources */,
+				9577D2BC10F63D77003EAC0A /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
