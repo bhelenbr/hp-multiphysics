@@ -18,7 +18,7 @@ class tri_hp_cns : public tri_hp {
 		/* THINGS SHARED BY ALL tri_hp_cns in same multigrid block */
 		struct global : public tri_hp::global {
 			/* STABILIZATION */
-			Array<FLT,2> tau;
+			Array<FLT,3> tau;
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond, mu, gamma;
@@ -28,11 +28,6 @@ class tri_hp_cns : public tri_hp {
 			TinyVector<FLT,2> eanda, eanda_recv;
 
 		} *gbl;
-
-#ifdef DROP
-		/** Rigid Mesh Motion for Finding Steady Translating Solutions */
-		static TinyVector<FLT,ND> mesh_ref_vel;
-#endif
 
 		FLT adis; // DISSIPATION CONSTANT
 
