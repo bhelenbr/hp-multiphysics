@@ -14,7 +14,7 @@
 
 void tri_hp::petsc_initialize(){
 	
-	size_sparse_matrix = (npnt+nseg*basis::tri(log2p).sm+ntri*basis::tri(log2p).im)*NV;
+	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
 
 	PetscTruth mat_nonsymmetric;
 
@@ -94,9 +94,11 @@ void tri_hp::petsc_initialize(){
 	
 	/* set preconditioner side */
 	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
+	
+	/* count total degrees of freedom on boundaries */
 	int ndofs = 0;
 	for(int i=0;i < nebd; ++i)
-		ndofs+=(ebdry(i)->nseg*basis::tet(log2p).sm+ebdry(i)->npnt)*NV;
+		ndofs+=(ebdry(i)->nseg*basis::tet(log2p)->sm+ebdry(i)->npnt)*NV;
 	
 	dirichlet_rows.resize(ndofs);
 
@@ -116,7 +118,6 @@ void tri_hp::petsc_solve(){
 	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
 	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
 	
-	bool compressed_column = false;
 	PetscLogDouble time1,time2;
 	
 	VecDuplicate(petsc_f,&du);
@@ -133,7 +134,7 @@ void tri_hp::petsc_solve(){
 		
 		/* insert values into jacobian matrix J */		
 		PetscGetTime(&time1);
-		create_jacobian(compressed_column);
+		create_jacobian();
 		PetscGetTime(&time2);
 		
 		cout << "jacobian made " << time2-time1 << " seconds" << endl;
@@ -142,7 +143,7 @@ void tri_hp::petsc_solve(){
 		create_rsdl();		
 		
 		/* apply neumman bc's */
-		apply_neumman(compressed_column);
+		apply_neumman();
 				
 		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
@@ -151,7 +152,7 @@ void tri_hp::petsc_solve(){
 
 		/* apply dirichlet boundary conditions to sparse matrix and vector */
 		for(int j = 0; j < nfbd; ++j)
-			hp_fbdry(j)->apply_sparse_dirichlet(compressed_column);		
+			hp_fbdry(j)->apply_sparse_dirichlet();		
 		
 		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
 
@@ -168,7 +169,7 @@ void tri_hp::petsc_solve(){
 		MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
 		
 		double rtol=1.0e-12; // relative tolerance
-		double atol=max(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
+		double atol=MAX(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
 		double dtol = 10000; // divergence tolerance
 		int maxits = 10000; // maximum iterations
 		
@@ -228,7 +229,6 @@ void tri_hp::petsc_solve(){
 
 /* temp fix can I input petsc vectors ? */
 void tri_hp::petsc_to_ug(){
-	PetscErrorCode ierr;
 	PetscScalar *array;
 	int ind = 0;
 	ierr = VecGetArray(petsc_u,&array);
@@ -238,45 +238,44 @@ void tri_hp::petsc_to_ug(){
 			ug.v(i,n) = array[ind++];
 	
 	for(int i = 0; i < nseg; ++i)
-		for(int m = 0; m < basis::tri(log2p).sm; ++m)
+		for(int m = 0; m < basis::tri(log2p)->sm(); ++m)
 			for(int n = 0; n < NV; ++n)
 				ug.s(i,m,n) = array[ind++];
 	
 	for(int i = 0; i < ntri; ++i)
-		for(int m = 0; m < basis::tri(log2p).im; ++m)
+		for(int m = 0; m < basis::tri(log2p)->im(); ++m)
 			for(int n = 0; n < NV; ++n)
 				ug.i(i,m,n) = array[ind++];		
 	
 	
-	ierr = VecRestoreArray(petsc_u,&array);
+	VecRestoreArray(petsc_u,&array);
 	return;	
 }
 
 /* temp fix can I input petsc vectors ? */
 void tet_hp::ug_to_petsc(){
-	PetscErrorCode ierr;
 	int ind = 0;
 	
 	for(int i = 0; i < npnt; ++i){
 		for(int n = 0; n < NV; ++n){
-			ierr = VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
+			VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
 			++ind;
 		}
 	}
 	
 	for(int i = 0; i < nseg; ++i){
-		for(int m = 0; m < basis::tri(log2p).sm; ++m){
+		for(int m = 0; m < basis::tri(log2p)->sm(); ++m){
 			for(int n = 0; n < NV; ++n){
-				ierr = VecSetValues(petsc_u,1,&ind,&ug.s(i,m,n),INSERT_VALUES);
+				VecSetValues(petsc_u,1,&ind,&ug.s(i,m,n),INSERT_VALUES);
 				++ind;
 			}
 		}
 	}
 	
 	for(int i = 0; i < ntri; ++i){
-		for(int m = 0; m < basis::tri(log2p).im; ++m){
+		for(int m = 0; m < basis::tri(log2p)->im(); ++m){
 			for(int n = 0; n < NV; ++n){
-				ierr = VecSetValues(petsc_u,1,&ind,&ug.i(i,m,n),INSERT_VALUES);
+				VecSetValues(petsc_u,1,&ind,&ug.i(i,m,n),INSERT_VALUES);
 				++ind;
 			}
 		}

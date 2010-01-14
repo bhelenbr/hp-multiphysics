@@ -1,6 +1,6 @@
 /*
  *  sparse.cpp
- *  tet_hp
+ *  tri_hp
  *
  *  Created by michael brazell on 9/14/09.
  *  Copyright 2009 Clarkson University. All rights reserved.
@@ -12,69 +12,70 @@
 #include "hp_boundary.h"
 
 
+#ifdef petsc
 
-/* finds number of nonzeros per row tested up to p=4 */ 
-void tet_hp::find_sparse_bandwidth(){
+/* finds number of nonzeros per row */ 
+void tri_hp::find_sparse_bandwidth(){
 	
 	Array<int,1> bw(size_sparse_matrix);
 	
-	int sm=basis::tri(log2p).sm;
-	int im=basis::tri(log2p).im;
-	int tm=basis::tri(log2p).tm;
+	int sm=basis::tri(log2p)->sm();
+	int im=basis::tri(log2p)->im();
+	int tm=basis::tri(log2p)->tm();
 	
 	int begin_seg = npnt*NV;
 	int begin_tri = begin_seg+nseg*sm*NV;
 	
 	bw = 0;
 	
-	for(int i=0; i<npnt; ++i){		
+	/* opposite edge and vertices from vertex */
+	for(int i=0; i<npnt; ++i)	
 		for(int n=0;n<NV;++n)
 			bw(i*NV+n) += NV*(pnt(i).nnbor*(sm+2));		
-	}
 	
 	
+	// temp fix me will this work for parallel BC's
+	// may not matter because matrix storage can correct size of bandwidth
 	for(int i=0; i<nseg; ++i){		
+		/* add side modes to each vertex */
 		for(int j=0;j<2;++j)
 			for(int n=0;n<NV;++n)
 				bw(seg(i).pnt(j)*NV+n) += sm*NV;
 		
+		/* add side and vertex modes to edges */
 		if(seg(i).tri(1) > 0){
-			for(int m=0;m<em;++m)
+			for(int m=0;m<sm;++m)
 				for(int n=0;n<NV;++n)
 					bw(begin_seg+i*sm*NV+m*NV+n) += NV*(5*sm+4);	
 		}
 		else{
-			for(int m=0;m<em;++m)
+			for(int m=0;m<sm;++m)
 				for(int n=0;n<NV;++n)
 					bw(begin_seg+i*sm*NV+m*NV+n) += NV*(3*sm+3);
 		}
 	}
 	
 	
-	for(int i=0; i<ntri; ++i){		
+	for(int i=0; i<ntri; ++i){	
+		/* add interior modes to each vertex */
 		for(int j=0;j<3;++j)
 			for(int n=0;n<NV;++n)
 				bw(tri(i).pnt(j)*NV+n) += im*NV;
-		
+		/* add interior modes to each edge */
 		for(int j=0;j<3;++j)
 			for(int m=0;m<sm;++m)
 				for(int n=0;n<NV;++n)
 					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += im*NV;
-		
+		/* add total modes to each interior mode */
 		for(int m=0;m<im;++m)
 			for(int n=0;n<NV;++n)
 				bw(begin_tri+i*im*NV+m*NV+n)+= tm*NV;
 	}
 	
 
-#ifdef petsc
 	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
 	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
-#else
-	sparse_ptr(0)=0;
-	for (int i=1; i<size_sparse_matrix+1; ++i) 
-		sparse_ptr(i) = bw(i-1)+sparse_ptr(i-1);
-#endif
+
 
 	
 	
@@ -83,7 +84,7 @@ void tet_hp::find_sparse_bandwidth(){
 
 
 /* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
-void tri_hp::sparse_dirichlet(int ind, bool compressed_col){
+void tri_hp::sparse_dirichlet(int ind){
 	
 	const PetscInt row = ind;
 	PetscScalar zero = 0.0;
@@ -95,12 +96,18 @@ void tri_hp::sparse_dirichlet(int ind, bool compressed_col){
 
 	
 	return;
+
+// too slow, but easy to implement
+//	MatZeroRows(petsc_J,1,&row,1.0);
+//
+//	return;
+
 }
 
 
 void tri_hp::create_jacobian() {
 	int gindx,eind,find,iind,sgn,msgn,mode;
-	int kn = basis::tri(log2p).tm*NV;
+	int kn = basis::tri(log2p)->tm()*NV;
 	Array<FLT,2> K(kn,kn);
 	Array<int,1> loc_to_glo(kn);
 	
@@ -117,12 +124,12 @@ void tri_hp::create_jacobian() {
 		}		
 		
 		/* EDGE MODES */
-		if (basis::tri(log2p).p > 1) {
+		if (basis::tri(log2p)->p() > 1) {
 			for(int i = 0; i < 3; ++i) {
-				eind = npnt*NV + tri(tind).seg(i)*basis::tri(log2p).sm*NV;
+				eind = npnt*NV + tri(tind).seg(i)*basis::tri(log2p)->sm()*NV;
 				sgn = tri(tind).sgn(i);
 				msgn = 1;
-				for (int m = 0; m < basis::tri(log2p).sm; ++m) {
+				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(int n = 0; n < NV; ++n) {
 						for(int j = 0; j < kn; ++j) {
 							K(ind,j) *= msgn;
@@ -135,10 +142,10 @@ void tri_hp::create_jacobian() {
 			}
 		}
 		
-		/* FACE MODES */
-		if (basis::tri(log2p).p > 2) {
-			find = npnt*NV+nseg*basis::tri(log2p).sm*NV+tind*basis::tri(log2p).im*NV;
-			for(int m = ; m < basis::tri(log2p).im; ++m) {
+		/* INTERIOR	MODES */
+		if (basis::tri(log2p)->p() > 2) {
+			find = npnt*NV+nseg*basis::tri(log2p)->sm()*NV+tind*basis::tri(log2p)->im()*NV;
+			for(int m = ; m < basis::tri(log2p)->im(); ++m) {
 				for(int n = 0; n < NV; ++n){
 					loc_to_glo(ind++) = find+m*NV+n;
 				}
@@ -164,21 +171,21 @@ void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	ugtouht(tind);
 	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
-	for(int i=0;i<basis::tri(log2p).tm;++i)
+	for(int i=0;i<basis::tri(log2p)->tm();++i)
 		for(int n=0;n<NV;++n)
 			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
 
-	for(int mode = 0; mode < basis::tri(log2p).tm; ++mode){
+	for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
 		for(int var = 0; var < NV; ++var){
 			uht(var)(mode) += dw;
 			
 			element_rsdl(tind,0,uht,lf_re,lf_im);
-			for(int i=0;i<basis::tri(log2p).tm;++i)
+			for(int i=0;i<basis::tri(log2p)->tm();++i)
 				for(int n=0;n<NV;++n)
 					R(n)(i)=lf_re(n)(i)+lf_im(n)(i);
 
 			int krow = 0;
-			for(int i=0;i<basis::tri(log2p).tm;++i)
+			for(int i=0;i<basis::tri(log2p)->tm();++i)
 				for(int n=0;n<NV;++n)
 					K(krow++,kcol) = (R(n)(i)-Rbar(n)(i))/dw;
 			++kcol;
@@ -193,7 +200,7 @@ void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 void tri_hp::create_rsdl() {
 	int gindx,eind,find,iind,sgn,msgn,mode;
 	
-	int kn = NV*basis::tri(log2p).tm;
+	int kn = NV*basis::tri(log2p)->tm();
 	Array<FLT,1> lclres(kn);
 	Array<int,1> loc_to_glo(kn);
 	
@@ -210,12 +217,12 @@ void tri_hp::create_rsdl() {
 		}		
 		
 		/* EDGE MODES */
-		if (basis::tri(log2p).p > 1) {
+		if (basis::tri(log2p)->p() > 1) {
 			for(int i = 0; i < 3; ++i) {
-				eind = npnt*NV + tri(tind).seg(i)*basis::tet(log2p).sm*NV;
+				eind = npnt*NV + tri(tind).seg(i)*basis::tri(log2p)->sm()*NV;
 				sgn = tri(tind).sgn(i);
 				msgn = 1;
-				for (int m = 0; m < basis::tri(log2p).sm; ++m) {
+				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(int n = 0; n < NV; ++n) {
 						lclres(ind) *= msgn;
 						loc_to_glo(ind++) = eind + m*NV + n;
@@ -226,9 +233,9 @@ void tri_hp::create_rsdl() {
 		}
 		
 		/* FACE MODES */
-		if (basis::tet(log2p).p > 2) {
-			find = npnt*NV+nseg*basis::tri(log2p).sm*NV+tind*basis::tri(log2p).im*NV;
-			for(int m = 0; m < basis::tri(log2p).im; ++m) {
+		if (basis::tri(log2p)->p() > 2) {
+			find = npnt*NV+nseg*basis::tri(log2p)->sm()*NV+tind*basis::tri(log2p)->im()*NV;
+			for(int m = 0; m < basis::tri(log2p)->im(); ++m) {
 				for(int n = 0; n < NV; ++n){
 					loc_to_glo(ind++) = find+m*NV+n;
 				}					
@@ -251,7 +258,7 @@ void tri_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 
 	ugtouht(tind);
 	
-	for (int m = 0; m < basis::tri(log2p).tm; ++m) {
+	for (int m = 0; m < basis::tri(log2p)->tm(); ++m) {
 		for (int n = 0; n < NV; ++n) {
 			lf_im(n)(m)=0.0;
 			lf_re(n)(m)=0.0;
@@ -259,7 +266,7 @@ void tri_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 	}
 	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
-	for(int i=0;i<basis::tri(log2p).tm;++i)
+	for(int i=0;i<basis::tri(log2p)->tm();++i)
 		for(int n=0;n<NV;++n)
 			lclres(ind++)=lf_re(n)(i)+lf_im(n)(i);	
 	
@@ -267,10 +274,10 @@ void tri_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 }
 
 void tri_hp::apply_neumman() {
-	int tm = 2+basis::tri(log2p).sm;
+	int tm = 2+basis::tri(log2p)->sm();
 	int kn = tm*NV;
 	int kcol,krow,eind,ind;
-	FLT dw = 1.0e-6;
+	FLT dw = 1.0e-6;// fix me temp make a global value?
 	FLT sgn,msgn;
 	Array<FLT,2> R(NV,tm),Rbar(NV,tm);
 	Array<FLT,2> K(kn,kn);
@@ -316,11 +323,11 @@ void tri_hp::apply_neumman() {
 			}		
 			
 			/* EDGE MODES */
-			if (basis::tet(log2p).p > 1) {
-				int gbl_eind = npnt*NV + eind*basis::tet(log2p).sm*NV;
+			if (basis::tri(log2p)->p() > 1) {
+				int gbl_eind = npnt*NV + eind*basis::tri(log2p)->sm()*NV;
 				sgn = seg(eind).sgn(k);
 				msgn = 1.0;
-				for (int m = 0; m < basis::tet(log2p).sm; ++m) {
+				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(int n = 0; n < NV; ++n) {
 						for(int j = 0; j < kn; ++j) {
 							K(ind,j) *= msgn;
@@ -343,3 +350,4 @@ void tri_hp::apply_neumman() {
 	
 	return;
 }
+#endif

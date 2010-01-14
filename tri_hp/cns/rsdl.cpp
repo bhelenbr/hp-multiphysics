@@ -143,7 +143,7 @@ void tri_hp_cns::rsdl(int stage) {
 						double e = gbl->ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 						res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
 #ifdef AXISYMMETRIC
-						res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  FixMe
+						res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  //FixMe
 #endif
 #ifdef BODYFORCE
 						res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);

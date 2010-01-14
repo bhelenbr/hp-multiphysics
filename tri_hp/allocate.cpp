@@ -217,7 +217,10 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		for(i=0;i<nebd;++i)
 			hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
 	}
-
+#ifdef petsc
+	petsc_initialize();
+#endif
+	
 	return;
 }
 
@@ -280,6 +283,22 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 	ugbd(0).i.reference(ug.i);
 	vrtxbd(0).reference(pnts); 
 
+// //test matrix absolute value	
+//	Array<FLT,2> A(4,4);
+//	A=2., 1., 4., 1.,
+//	1., 3., 1., 1.,
+//	1., 1., 4., 1.,
+//	1., 1., 1., 5.;
+//	
+//	A =	1,   3,   5,   6,
+//	1,   8,   4,   2,
+//	5,   2,   6,   7,
+//	7,   8,   9,   4;
+//	
+//	matrix_absolute_value(A, 4);
+//	
+//	exit(3);
+	
 	nebd = inmesh.nebd;
 	nvbd = inmesh.nvbd;
 	hp_ebdry.resize(nebd);

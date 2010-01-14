@@ -15,6 +15,10 @@
 #include <tri_basis.h>
 #include <blocks.h>
 
+#ifdef petsc
+#include <petscksp.h>
+#endif
+
 #ifdef AXISYMMETRIC
 #define RAD(r) (r)
 #else
@@ -180,6 +184,9 @@ class tri_hp : public r_tri_mesh  {
 		/** Calculate residuals */
 		void rsdl() {rsdl(gbl->nstage);}
 		virtual void rsdl(int stage); 
+		virtual void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
+			*gbl->log << "I shouldn't be in generic element_rsdl" << std::endl;
+		}
 
 		/** Relax solution */  
 		void update();
@@ -225,6 +232,38 @@ class tri_hp : public r_tri_mesh  {
 		void findmax(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
 		void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
 		void integrated_averages(Array<FLT,1> a);
+		
+	
+#ifdef petsc
+
+		/* Sparse stuff */
+		void create_jacobian();
+		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
+		void create_rsdl();
+		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
+		void sparse_dirichlet(int ind);
+		void apply_neumman();
+		void find_sparse_bandwidth();
+		int size_sparse_matrix;
+		void petsc_initialize();
+		void petsc_solve();
+		void petsc_finalize();
+		void petsc_to_ug();
+		void ug_to_petsc();
+		Mat  petsc_J;           /* Jacobian matrix */
+		Vec  petsc_u,petsc_f;   /* solution,residual */
+		KSP  ksp;               /* linear solver context */
+		PC   pc;                 /* preconditioner */
+		Array<int,1> dirichlet_rows;
+		int row_counter;
+	
+#endif	
+	
+		/* some new utilities */
+		FLT spectral_radius(Array<FLT,2> A, int n);	// find max eigenvalue
+		FLT l2norm(Array<FLT,1> x, int n);	
+		FLT inner_product(Array<FLT,1> x, Array<FLT,1> y, int n);
+		void matrix_absolute_value(Array<FLT,2> &A, int n);
 
 		virtual ~tri_hp();
 };

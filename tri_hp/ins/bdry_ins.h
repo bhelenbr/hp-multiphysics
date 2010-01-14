@@ -109,7 +109,8 @@ namespace bdry_ins {
 			neumann(tri_hp_ins &xin, edge_bdry &bin) : generic(xin,bin) {mytype = "neumann";}
 			neumann(const neumann& inbdry, tri_hp_ins &xin, edge_bdry &bin) : generic(inbdry,xin,bin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void rsdl(int stage);
+			void element_rsdl(int eind,int stage);
+
 	};
 
 
@@ -162,7 +163,29 @@ namespace bdry_ins {
 					x.gbl->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
 				}
 			}
-
+		// temp fix me not sure how to make compatible
+#ifdef petsc
+			void apply_sparse_dirichlet() {
+				/* only works if pressure is 4th variable */
+				int gind;
+				int sm=basis::tri(x.log2p)->sm;
+				
+				for(int i=0;i<base.nseg+1;++i){
+					gind = base.pnt(i).gindx*x.NV;
+					for(int n=0;n<x.NV-1;++n)
+						x.sparse_dirichlet(gind+n);
+				}
+				
+				for(int i=0;i<base.nseg;++i){
+					gind = x.npnt*x.NV+base.seg(i).gindx*sm*x.NV;
+					for(int m=0; m<sm; ++m)
+						for(int n=0;n<x.NV-1;++n)
+							x.sparse_dirichlet(gind+m*x.NV+n);
+				}
+				
+			
+			}
+#endif
 			void tadvance() {
 				hp_edge_bdry::tadvance();
 				setvalues(ibc,dirichlets,ndirichlets);

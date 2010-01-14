@@ -131,10 +131,31 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void setup_preconditioner() {}
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
-		virtual void rsdl(int stage) {}
+		virtual void rsdl(int stage) {
+			for(int j=0;j<base.nseg;++j) {
+				int sind = base.seg(j);
+				int v0 = x.seg(sind).pnt(0);
+				int v1 = x.seg(sind).pnt(1);
+				
+				element_rsdl(j,stage);
+		
+				for(int n=0;n<x.NV;++n)
+					x.gbl->res.v(v0,n) += x.lf(n)(0);
+				
+				for(int n=0;n<x.NV;++n)
+					x.gbl->res.v(v1,n) += x.lf(n)(1);
+				
+				for(int k=0;k<basis::tri(x.log2p)->sm();++k) {
+					for(int n=0;n<x.NV;++n)
+						x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+				}
+			}
+		}
 		virtual void update(int stage) {}
 		virtual void mg_restrict() {} 
-		virtual void mg_prolongate() {}    
+		virtual void mg_prolongate() {} 
+		virtual void apply_sparse_dirichlet() {}
+		virtual void element_rsdl(int sind,int stage) {}
 
 		/* ADAPTATION FUNCTIONS */
 		virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}

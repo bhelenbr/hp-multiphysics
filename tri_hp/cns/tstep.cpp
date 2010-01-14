@@ -13,7 +13,6 @@ void tri_hp_cns::setup_preconditioner() {
 	TinyVector<int,3> v;
 	TinyMatrix<FLT,2> P(4,4),Pinv(4,4),A(4,4),B(4,4),S(4,4),Tinv(4,4),temp(4,4);
 	int info,ipiv[NV];
-
 	char trans[] = "T";
 	
 	FLT nu = gbl->mu/gbl->rho;
@@ -192,10 +191,12 @@ void tri_hp_cns::setup_preconditioner() {
 		  0,0, nu,0,
 		  0,0, 0, nu;
 			
-		Tinv=2.0/hmax*(A+B+hmax*S);
+		S=pmax/hmax*S;//temp fix me
+		
+		Tinv=2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
 		
 		/* Write a routine given tprcn, a, b, s, returns dt & tau */
-		sr=spectral_radius(Tinv,NV);
+		dt=spectral_radius(Tinv,NV);
 		
 		/*  LU factorization  */
 		GETRF(NV, NV, Tinv.data(), NV, ipiv, info);

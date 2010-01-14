@@ -31,7 +31,7 @@ FLT tri_hp::spectral_radius(Array<FLT,2> A, int n){
 	/* Spectral radius using the Rayleigh quotient */
 	lambda = inner_product(x, temp, n)/inner_product(x, x, n);
 	
-	return(lambda);
+	return(fabs(lambda));
 }
 
 FLT tri_hp::l2norm(Array<FLT,1> x, int n){

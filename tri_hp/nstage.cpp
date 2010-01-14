@@ -34,6 +34,92 @@ void tri_hp::rsdl(int stage) {
 
 	helper->rsdl(stage);
 
+	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
+	
+	for(int tind = 0; tind<ntri;++tind) {
+		
+		/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
+		ugtouht(tind);
+		
+		/* call rsdl for element */
+		element_rsdl(tind,stage,uht,lf_re,lf_im);
+		
+		/* load imaginary local residual into global residual */
+		for (int m = 0; m < basis::tri(log2p)->tm(); ++m) 
+			for (int n = 0; n < NV; ++n)
+				lf(n)(m) = lf_im(n)(m);
+		
+		lftog(tind,gbl->res);
+		
+		/* load real local residual into global residual */
+		for (int m = 0; m < basis::tri(log2p)->tm(); ++m) 
+			for (int n = 0; n < NV; ++n)
+				lf(n)(m) = lf_re(n)(m);
+		
+		lftog(tind,gbl->res_r);
+	}
+	
+	/* ADD IN VISCOUS/DISSIPATIVE FLUX */
+	gbl->res.v(Range(0,npnt-1),Range::all()) += gbl->res_r.v(Range(0,npnt-1),Range::all());
+	if (basis::tri(log2p)->sm() > 0) {
+		gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += gbl->res_r.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());          
+		if (basis::tri(log2p)->im() > 0) {
+			gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += gbl->res_r.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());      
+		}
+	}
+	
+#ifdef DEBUG
+	if (coarse_flag) {
+		for(i=0;i<npnt;++i) {
+			printf("rsdl v: %d ",i);
+			for (n=0;n<NV;++n) 
+				printf("%e ",gbl->res.v(i,n));
+			printf("\n");
+		}
+		
+		for(i=0;i<nseg;++i) {
+			for(int m=0;m<basis::tri(log2p)->sm();++m) {
+				printf("rsdl s: %d %d ",i,m); 
+				for(n=0;n<NV;++n)
+					printf("%e ",gbl->res.s(i,m,n));
+				printf("\n");
+			}
+		}
+		
+		for(i=0;i<ntri;++i) {
+			for(int m=0;m<basis::tri(log2p)->im();++m) {
+				printf("rsdl i: %d %d ",i,m);
+				for(n=0;n<NV;++n) 
+					printf("%e %e %e\n",gbl->res.i(i,m,n));
+				printf("\n");
+			}
+		}
+	}
+#endif
+	
+	/*********************************************/
+	/* MODIFY RESIDUALS ON COARSER MESHES            */
+	/*********************************************/    
+	if(coarse_flag) {
+		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+		if(isfrst) {
+			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
+			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
+			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
+			isfrst = false;
+		}
+		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
+		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
+		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
+	}
+	else {
+		if (stage == gbl->nstage) {
+			/* HACK FOR AUXILIARY FLUXES */
+			for (int i=0;i<nebd;++i)
+				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
+		}
+	}
+	
 	return;
 }
 
@@ -42,6 +128,11 @@ void tri_hp::update() {
 	int i,m,k,n,indx,indx1;
 	FLT cflalpha;
 
+	// temp fix need to better incorporate more solvers
+#ifdef petsc
+	petsc_solve();
+#endif
+	
 	/* COUPLED MESH MOVMEMENT */
 	if (mmovement == coupled_deformable  && log2p == 0) {
 		r_tri_mesh::update();
