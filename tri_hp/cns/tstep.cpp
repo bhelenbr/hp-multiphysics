@@ -9,9 +9,13 @@
 void tri_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side,v0;
-	FLT jcb,h,hmax,q,qmax,lam1,gam;
+	FLT jcb,h,hmax,q,qmax,lam1,gam,pmax,rtmax;
 	TinyVector<int,3> v;
+	TinyMatrix<FLT,2> P(4,4),Pinv(4,4),A(4,4),B(4,4),S(4,4),Tinv(4,4),temp(4,4);
+	int info,ipiv[NV];
 
+	char trans[] = "T";
+	
 	FLT nu = gbl->mu/gbl->rho;
 
 	/***************************************/
@@ -49,6 +53,8 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			qmax = 0.0;
 			hmax = 0.0;
+			pmax = 0.0;
+			rtmax = 0.0;
 			FLT jcbmin = jcb;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
@@ -74,8 +80,13 @@ void tri_hp_cns::setup_preconditioner() {
 						h += (dcrd(n,1)(i,j) -dcrd(n,0)(i,j))*(dcrd(n,1)(i,j) -dcrd(n,0)(i,j));
 					hmax = MAX(h,hmax);
 				
-					q = pow(u(0)(i,j)-0.5*mvel(0),2.0)  +pow(u(1)(i,j)-0.5*mvel(1),2.0);
+					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
 					qmax = MAX(qmax,q);
+					
+					pmax = MAX(pmax,fabs(u(0)(i,j)));
+					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
+						
+					
 				}
 			}	
 			hmax = 2.*sqrt(hmax);
@@ -90,14 +101,18 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			qmax = 0.0;
 			hmax = 0.0;
+			pmax = 0.0;
+			rtmax = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));                       
-					q = pow(u(0)(i,j)-0.5*mvel(0),2.0)  +pow(u(1)(i,j)-0.5*mvel(1),2.0);
+					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
 					qmax = MAX(qmax,q);
+					pmax = MAX(pmax,fabs(u(0)(i,j)));
+					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
 				
 				}
 			}
@@ -123,29 +138,79 @@ void tri_hp_cns::setup_preconditioner() {
 			exit(1);
 		}
 		q = sqrt(qmax);
+		FLT op = 1.0/pmax;
+		FLT rt = rtmax;
+		FLT gm1 = gam-1;
 		
+		P =       qmax*gm1,        -q*gm1,       -q*gm1,     gm1,
+			      -q*op*rt,         op*rt,        0.0,       0.0,
+			      -q*op*rt           0.0,        op*rt,      0.0,
+			op*rt*(gm1*qmax-rt),-op*rt*q*gm1,-op*rt*q*gm1,op*rt*gm1;
+
 		
-		/* Calculate and store tprcn (4x4) matrix */
-		pinv =
- 
-[                       1/rt,                          0,                          0,                    -p/rt^2]
-[                     1/rt*u,                       p/rt,                          0,                  -p/rt^2*u]
-[                     1/rt*v,                          0,                       p/rt,                  -p/rt^2*v]
-[ 1/(gam-1)+1/2/rt*(u^2+v^2),                     p/rt*u,                     p/rt*v,      -1/2*p/rt^2*(u^2+v^2)]
-
-p = 
-[                   1/2*(u^2+v^2)*(gam-1),                              -u*(gam-1),                              -v*(gam-1),                                   gam-1]
-[                                 -u/p*rt,                                  1/p*rt,                                       0,                                       0]
-[                               -1/p*v*rt,                                       0,                                  1/p*rt,                                       0]
-[ 1/2/p*(u^2*gam-u^2+v^2*gam-v^2-2*rt)*rt,                       -1/p*rt*u*(gam-1),                       -1/p*rt*v*(gam-1),                          1/p*rt*(gam-1)]
+		/* Calculate and store tprcn (4x4) matrix */	
+		
+		FLT ort = 1.0/rtmax;
+		
+		Pinv =         ort,        0.0,          0.0       -pmax*ort*ort,
+				      ort*q,     pmax*ort,       0.0,     -pmax*ort*ort*q,
+				      ort*q,       0.0,       pmax*ort,   -pmax*ort*ort*q,
+				1.0/gm1+rt*qmax, pmax*ort*q, pmax*ort*q,-pmax*ort*ort*qmax;
 
 
+		gbl->tprcn_ut(tind,Range::all(),Range::all())=Pinv;//temp replace Pinv with this
 
+		A =         ort*q,                 pmax*ort,                    0.0,                        -pmax*ort*ort*q,
+				ort*qmax+1.0,          2.0*pmax*ort*q,                  0.0,                     -pmax*ort*ort*qmax,
+			     ort*qmax,               pmax*ort*q,                pmax*ort*q,                    -pmax*ort*ort*qmax,
+		   q*(gam/gm1+qmax*ort),pmax*((gam/gm1+qmax*ort)+ort*qmax),pmax*ort*qmax,-pmax*ort*ort*q*(gam/gm1*rtmax+qmax)+pmax*ort*q*gam/gm1;
+		
+		temp = 0.0;
+		for (int i = 0; i < n; ++i)
+			for (int j = 0; j < n; ++j)
+				for (int k = 0; k < n; ++k)
+					temp(i,j)+=P(i,k)*A(k,j);	
+		A=temp;
+		matrix_absolute_value(A, NV);
+	
+
+		B =         ort*q,            0.0,						pmax*ort,                -pmax*ort*ort*q,
+				  ort*qmax,         pmax*ort*q,                pmax*ort*q,                 -pmax*ort*ort*qmax,
+				ort*qmax+1.0,         0.0,                     2.0*pmax*ort*q,               -pmax*ort*ort*qmax,
+			q*(gam/gm1+qmax*ort),pmax*ort*qmax,pmax*((gam/gm1+qmax*ort)+ort*qmax),-pmax*ort*ort*q*(gam/gm1*rtmax+qmax)+pmax*ort*q*gam/gm1;
+		
+		temp = 0.0;
+		for (int i = 0; i < NV; ++i)
+			for (int j = 0; j < NV; ++j)
+				for (int k = 0; k < NV; ++k)
+					temp(i,j)+=P(i,k)*B(k,j);	
+		B=temp;
+		matrix_absolute_value(B, NV);
+		
+		S=0,0, 0, 0,
+		  0,nu,0, 0,
+		  0,0, nu,0,
+		  0,0, 0, nu;
+			
+		Tinv=2.0/hmax*(A+B+hmax*S);
+		
 		/* Write a routine given tprcn, a, b, s, returns dt & tau */
+		sr=spectral_radius(Tinv,NV);
 		
+		/*  LU factorization  */
+		GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
 		
+		for (int i = 0; i < NV; ++i)
+			for (int j = 0; j < NV; ++j)
+				temp(i,j)=P(j,i);
 		
+		/* Solve transposed system temp = inv(Tinv)*temp */
+		GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),n,info);
 		
+		for (int i = 0; i < NV; ++i)
+			for (int j = 0; j < NV; ++j)
+				gbl->tau(tind,i,j)=temp(j,i);
+					  
 		/* FROM HERE BELOW WILL CHANGE */
 		lam1 = q + sqrt(qmax +gam);
 
@@ -186,3 +251,5 @@ p =
 
 	tri_hp::setup_preconditioner();
 }
+
+
