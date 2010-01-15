@@ -27,6 +27,7 @@
 		6F16C6F90D82062200F03F54 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; };
 		6F16C6FA0D82062200F03F54 /* utilities.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C7084C097A00C7F857 /* utilities.c */; };
 		6F16C6FB0D82062300F03F54 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; };
+		6F53EDE610FFA5160076AAFB /* matrix.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F53EDE410FFA5160076AAFB /* matrix.cpp */; };
 		6FB150980867818C00EAF2E5 /* myblas.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C4084C097A00C7F857 /* myblas.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB150990867819100EAF2E5 /* myblas.c in Sources */ = {isa = PBXBuildFile; fileRef = 6F4949C3084C097A00C7F857 /* myblas.c */; };
 		6FB150A0086781DE00EAF2E5 /* utilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F4949C8084C097A00C7F857 /* utilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -65,9 +66,10 @@
 		6F4949C7084C097A00C7F857 /* utilities.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = utilities.c; sourceTree = "<group>"; };
 		6F4949C8084C097A00C7F857 /* utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = utilities.h; sourceTree = "<group>"; };
 		6F4949D4084C09A500C7F857 /* makefile */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		6FB1507F0867810C00EAF2E5 /* libblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F53EDE410FFA5160076AAFB /* matrix.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = matrix.cpp; sourceTree = "<group>"; };
+		6FB1507F0867810C00EAF2E5 /* libmyblas.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libmyblas.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB150960867814600EAF2E5 /* libutil.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libutil.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		8DD76FB20486AB0100D96B5E /* utilities */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = utilities; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76FB20486AB0100D96B5E /* main */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = main; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -108,6 +110,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				6F53EDE410FFA5160076AAFB /* matrix.cpp */,
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				6F4949C3084C097A00C7F857 /* myblas.c */,
 				6F4949C4084C097A00C7F857 /* myblas.h */,
@@ -120,8 +123,8 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76FB20486AB0100D96B5E /* utilities */,
-				6FB1507F0867810C00EAF2E5 /* libblas.a */,
+				8DD76FB20486AB0100D96B5E /* main */,
+				6FB1507F0867810C00EAF2E5 /* libmyblas.a */,
 				6FB150960867814600EAF2E5 /* libutil.a */,
 			);
 			name = Products;
@@ -180,7 +183,7 @@
 			);
 			name = myblas;
 			productName = blas;
-			productReference = 6FB1507F0867810C00EAF2E5 /* libblas.a */;
+			productReference = 6FB1507F0867810C00EAF2E5 /* libmyblas.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FB150950867814600EAF2E5 /* util */ = {
@@ -215,7 +218,7 @@
 			name = main;
 			productInstallPath = "$(HOME)/bin";
 			productName = utilities;
-			productReference = 8DD76FB20486AB0100D96B5E /* utilities */;
+			productReference = 8DD76FB20486AB0100D96B5E /* main */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -244,6 +247,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6FB150990867819100EAF2E5 /* myblas.c in Sources */,
+				6F53EDE610FFA5160076AAFB /* matrix.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +367,8 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";
@@ -387,7 +393,9 @@
 				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				INSTALL_PATH = /lib;
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";
@@ -412,6 +420,8 @@
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";

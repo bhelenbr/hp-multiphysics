@@ -11,6 +11,7 @@
 #define _myblas_h_
 
 #include<cfortran.h>
+
 extern "C" void DPBTRSNU2(double *abd, int stride, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU1(double *abd, int ordr, int ofdg, double *b, int rhs);
 extern "C" void DPBTRSNU(double **abd, int ordr, int ofdg, double *b, int rhs);
@@ -77,14 +78,21 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define GETRS SGETRS
 #define PBTRF SPBTRF
 #define PBTRS SPBTRS
+#define GEEV SGEEV
 #define EPSILON FLT_EPSILON
 #else
 #define GETRF DGETRF
 #define GETRS DGETRS
 #define PBTRF DPBTRF
 #define PBTRS DPBTRS
+#define GEEV DGEEV
 #define EPSILON DBL_EPSILON
 #endif
 
+#include<blitz/array.h>
+double spectral_radius(blitz::Array<double,2> A);
+double l2norm(blitz::Array<double,1> x);
+double inner_product(blitz::Array<double,1> x, blitz::Array<double,1> y);
+void matrix_absolute_value(blitz::Array<double,2> &A);
 #endif
 
