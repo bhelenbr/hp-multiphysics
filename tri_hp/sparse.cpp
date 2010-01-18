@@ -26,50 +26,28 @@ void tri_hp::find_sparse_bandwidth(){
 	int begin_seg = npnt*NV;
 	int begin_tri = begin_seg+nseg*sm*NV;
 	
-	bw = 0;
+	/* SELF CONNECTIONS */
+	bw(Range(0,begin_seg-1)) = NV;  
+	if (sm) bw(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
+	if (im) bw(Range(begin_tri,size_sparse_matrix-1)) = tm*NV;
 	
-	/* opposite edge and vertices from vertex */
+	/* connected edges and vertices to vertex */
 	for(int i=0; i<npnt; ++i)	
 		for(int n=0;n<NV;++n)
-			bw(i*NV+n) += NV*(pnt(i).nnbor*(sm+2));		
+			bw(i*NV+n) += NV*(pnt(i).nnbor*(sm+1));		
 	
-	
-	// temp fix me will this work for parallel BC's
-	// may not matter because matrix storage can correct size of bandwidth
-	for(int i=0; i<nseg; ++i){		
-		/* add side modes to each vertex */
-		for(int j=0;j<2;++j)
-			for(int n=0;n<NV;++n)
-				bw(seg(i).pnt(j)*NV+n) += sm*NV;
-		
-		/* add side and vertex modes to edges */
-		if(seg(i).tri(1) > 0){
-			for(int m=0;m<sm;++m)
-				for(int n=0;n<NV;++n)
-					bw(begin_seg+i*sm*NV+m*NV+n) += NV*(5*sm+4);	
-		}
-		else{
-			for(int m=0;m<sm;++m)
-				for(int n=0;n<NV;++n)
-					bw(begin_seg+i*sm*NV+m*NV+n) += NV*(3*sm+3);
-		}
-	}
-	
-	
-	for(int i=0; i<ntri; ++i){	
+	for(int i=0; i<ntri; ++i) {	
 		/* add interior modes to each vertex */
 		for(int j=0;j<3;++j)
 			for(int n=0;n<NV;++n)
-				bw(tri(i).pnt(j)*NV+n) += im*NV;
+				bw(tri(i).pnt(j)*NV+n) += (im+sm)*NV;
+				
+		
 		/* add interior modes to each edge */
 		for(int j=0;j<3;++j)
 			for(int m=0;m<sm;++m)
 				for(int n=0;n<NV;++n)
-					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += im*NV;
-		/* add total modes to each interior mode */
-		for(int m=0;m<im;++m)
-			for(int n=0;n<NV;++n)
-				bw(begin_tri+i*im*NV+m*NV+n)+= tm*NV;
+					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm+1)*NV;
 	}
 	
 
@@ -106,11 +84,82 @@ void tri_hp::sparse_dirichlet(int ind){
 
 
 void tri_hp::create_jacobian() {
-	int gindx,eind,find,iind,sgn,msgn,mode;
-	int kn = basis::tri(log2p)->tm()*NV;
-	Array<FLT,2> K(kn,kn);
-	Array<int,1> loc_to_glo(kn);
+	int gindx,eind,find;
+	int sm = basis::tri(log2p)->sm();
+	int tm = basis::tri(log2p)->tm();
+
+	Array<FLT,2> K(NV*(sm+2),NV*(sm+2));
+	Array<int,1> loc_to_glo(NV*(sm+2));
+
+	int kcol,krow;
+	FLT dw = 1.0e-4;// fix me temp make a global value?
+	FLT sgn,msgn;
+	Array<FLT,2> Rbar(NV,tm);
 	
+	/* DO NEUMANN BOUNDARY CONDITIONS */
+	for(int i=0;i<nebd;++i){
+		for(int j=0;j<ebdry(i)->nseg;++j){
+			
+			/* Calculate and store initial residual */
+			eind = ebdry(i)->seg(j);
+			ugtouht1d(eind);
+			lf = 0.0;
+			hp_ebdry(i)->element_rsdl(j,0);
+
+			int ind = 0;
+			for(int k=0;k<2;++k) {
+				int gindx = NV*seg(eind).pnt(k);
+				for(int n=0;n<NV;++n) {
+					Rbar(n,k) = lf(n)(k);
+					loc_to_glo(ind++) = gindx+n;
+				}
+			}
+			
+			/* EDGE MODES */
+			if (sm > 0) {
+				int gbl_eind = npnt*NV + eind*sm*NV;
+				for (int m = 0; m < sm; ++m) {
+					for(int n = 0; n < NV; ++n) {
+						Rbar(n,m+2) = lf(n)(m+2);
+						loc_to_glo(ind++) = gbl_eind + m*NV + n;
+					}
+				}
+			}
+			
+			/* Numerically create Jacobian */
+			kcol = 0;
+			for(int mode = 0; mode < sm+2; ++mode){
+				for(int var = 0; var < NV; ++var){
+					uht(var)(mode) += dw;
+					
+					lf = 0.0;
+					hp_ebdry(i)->element_rsdl(j,0);
+
+					krow = 0;
+					for(int k=0;k<sm+2;++k)
+						for(int n=0;n<NV;++n)
+							K(krow++,kcol) = (lf(n)(k)-Rbar(n,k))/dw;
+					
+					++kcol;
+					
+					uht(var)(mode) -= dw;
+				}
+			}
+			
+			*gbl->log << i << ' ' << j << ' ' << eind << ' ' << K << std::endl;
+			*gbl->log << loc_to_glo << std::endl;
+			
+			MatSetValues(petsc_J,sm+2,loc_to_glo.data(),sm+2,loc_to_glo.data(),K.data(),ADD_VALUES);
+		}
+	}
+	
+	return;  // TEMPORARY TO CHECK BOUNDARY JACOBIANS //
+	
+	int kn = tm*NV;
+	K.resize(kn,kn);
+	loc_to_glo.resize(kn);
+		
+	/* NOW DO ELEMENTS */
 	for(int tind = 0; tind < ntri; ++tind){	
 		
 		int ind = 0;
@@ -145,7 +194,7 @@ void tri_hp::create_jacobian() {
 		/* INTERIOR	MODES */
 		if (basis::tri(log2p)->p() > 2) {
 			find = npnt*NV+nseg*basis::tri(log2p)->sm()*NV+tind*basis::tri(log2p)->im()*NV;
-			for(int m = ; m < basis::tri(log2p)->im(); ++m) {
+			for(int m = 0; m < basis::tri(log2p)->im(); ++m) {
 				for(int n = 0; n < NV; ++n){
 					loc_to_glo(ind++) = find+m*NV+n;
 				}
@@ -164,8 +213,7 @@ void tri_hp::create_jacobian() {
 
 void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
-	int kcol = 0;
-	FLT dw = 1.0e-6;  //dw=sqrt(eps/l2_norm(q))
+	FLT dw = 1.0e-4;  //dw=sqrt(eps/l2_norm(q))
 	
 	
 	ugtouht(tind);
@@ -174,22 +222,20 @@ void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 	for(int i=0;i<basis::tri(log2p)->tm();++i)
 		for(int n=0;n<NV;++n)
 			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
-
+	
+	int kcol = 0;
 	for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
 		for(int var = 0; var < NV; ++var){
 			uht(var)(mode) += dw;
 			
 			element_rsdl(tind,0,uht,lf_re,lf_im);
-			for(int i=0;i<basis::tri(log2p)->tm();++i)
-				for(int n=0;n<NV;++n)
-					R(n)(i)=lf_re(n)(i)+lf_im(n)(i);
 
 			int krow = 0;
 			for(int i=0;i<basis::tri(log2p)->tm();++i)
 				for(int n=0;n<NV;++n)
-					K(krow++,kcol) = (R(n)(i)-Rbar(n)(i))/dw;
-			++kcol;
+					K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
 			
+			++kcol;
 			uht(var)(mode) -= dw;
 		}
 	}	
@@ -204,6 +250,43 @@ void tri_hp::create_rsdl() {
 	Array<FLT,1> lclres(kn);
 	Array<int,1> loc_to_glo(kn);
 	
+	
+	/* DO BOUNDARY CONDITION RESIDUALS */
+	int sm = basis::tri(log2p)->sm();
+	for(int i=0;i<nebd;++i) {
+		for(int j=0;j<ebdry(i)->nseg;++j) {
+			
+			eind = ebdry(i)->seg(j);
+			ugtouht1d(eind);
+			lf = 0.0;
+			hp_ebdry(i)->element_rsdl(j,0);
+
+			/* Vertex Modes */
+			int ind = 0;
+			for (int m = 0; m < 2; ++m) {
+				int gindx = NV*seg(eind).pnt(m);
+				for (int n = 0; n < NV; ++n) {
+					lclres(ind) = lf(n)(m);
+					loc_to_glo(ind++) = gindx+n;
+				}
+			}		
+			
+			/* Edge Modes */
+			if (sm > 0) {
+				int gbl_eind = npnt*NV + eind*sm*NV;
+				for (int m = 0; m < sm; ++m) {
+					for(int n = 0; n < NV; ++n) {
+						lclres(ind) = lf(n)(m+2);
+						loc_to_glo(ind++) = gbl_eind + m*NV + n;
+					}
+				}
+			}
+			VecSetValues(petsc_f,(sm+2)*NV,loc_to_glo.data(),lclres.data(),ADD_VALUES);
+		}
+	}
+	
+	
+	/* NOW DO ELEMENT RESIDUAL */
 	for(int tind = 0; tind < ntri; ++tind){	
 		
 		int ind = 0;
@@ -241,11 +324,7 @@ void tri_hp::create_rsdl() {
 				}					
 			}					
 		}		
-			
-		
 		VecSetValues(petsc_f,kn,loc_to_glo.data(),lclres.data(),ADD_VALUES);	
-		
-		
 	}
 	
 	return;
@@ -258,95 +337,10 @@ void tri_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
 
 	ugtouht(tind);
 	
-	for (int m = 0; m < basis::tri(log2p)->tm(); ++m) {
-		for (int n = 0; n < NV; ++n) {
-			lf_im(n)(m)=0.0;
-			lf_re(n)(m)=0.0;
-		}
-	}
-	
 	element_rsdl(tind,0,uht,lf_re,lf_im);
 	for(int i=0;i<basis::tri(log2p)->tm();++i)
 		for(int n=0;n<NV;++n)
 			lclres(ind++)=lf_re(n)(i)+lf_im(n)(i);	
-	
-	return;
-}
-
-void tri_hp::apply_neumman() {
-	int tm = 2+basis::tri(log2p)->sm();
-	int kn = tm*NV;
-	int kcol,krow,eind,ind;
-	FLT dw = 1.0e-6;// fix me temp make a global value?
-	FLT sgn,msgn;
-	Array<FLT,2> R(NV,tm),Rbar(NV,tm);
-	Array<FLT,2> K(kn,kn);
-	Array<FLT,1> lclres(kn);
-	Array<int,1> loc_to_glo(kn);
-	
-	for(int i=0;i<nebd;++i){
-		for(int j=0;j<ebdry(i)->nseg;++j){
-			eind = ebdry(i)->seg(j).gindx;
-			ugtouht1d(eind);
-			hp_ebdry(i)->element_rsdl(eind,0);
-			kcol = 0;
-			ind = 0;
-			for(int k=0;k<tm;++k){
-				for(int n=0;n<NV;++n){
-					Rbar(n,k) = lf(n)(k);
-					lclres(ind++) = lf(n)(k);
-				}
-			}
-			for(int mode = 0; mode < tm; ++mode){
-				for(int var = 0; var < NV; ++var){
-					uht(var)(mode) += dw;
-					
-					hp_ebdry(i)->element_rsdl(eind,0);
-					for(int k=0;k<tm;++k)
-						for(int n=0;n<NV;++n)
-							R(n,k)=lf(n)(k);
-					
-					krow = 0;
-					for(int k=0;k<tm;++k)
-						for(int n=0;n<NV;++n)
-							K(krow++,kcol) = (R(n,k)-Rbar(n,k))/dw;
-					++kcol;
-					
-					uht(var)(mode) -= dw;
-				}
-			}
-			ind = 0;
-			for (int m = 0; m < 2; ++m) {
-				int gindx = NV*seg(eind).pnt(m);
-				for (int n = 0; n < NV; ++n)
-					loc_to_glo(ind++) = gindx+n;
-			}		
-			
-			/* EDGE MODES */
-			if (basis::tri(log2p)->p() > 1) {
-				int gbl_eind = npnt*NV + eind*basis::tri(log2p)->sm()*NV;
-				sgn = seg(eind).sgn(k);
-				msgn = 1.0;
-				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
-					for(int n = 0; n < NV; ++n) {
-						for(int j = 0; j < kn; ++j) {
-							K(ind,j) *= msgn;
-							K(j,ind) *= msgn;
-						}
-						lclres(ind) *= msgn;
-
-						loc_to_glo(ind++) = eind + m*NV + n;
-					}
-					msgn *= sgn;
-				}
-			}
-			
-
-			MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
-			VecSetValues(petsc_f,kn,loc_to_glo.data(),lclres.data(),ADD_VALUES);
-
-		}
-	}
 	
 	return;
 }

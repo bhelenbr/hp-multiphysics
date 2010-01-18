@@ -389,6 +389,7 @@ void tri_hp::setinfo() {
 	return;
 }
 
+#ifndef petsc
 FLT tri_hp::maxres() {
 	int i,n;
 	Array<FLT,1> mxr(NV);
@@ -419,5 +420,12 @@ FLT tri_hp::maxres() {
 	return(flowerror);
 
 }
-
+#else
+FLT tri_hp::maxres() {
+	FLT petsc_norm;
+	VecNorm(petsc_f,NORM_2,&petsc_norm);
+	*gbl->log << ' ' << petsc_norm << ' ';
+	return(petsc_norm);
+}
+#endif
 

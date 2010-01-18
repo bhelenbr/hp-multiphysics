@@ -161,13 +161,16 @@ void neumann::element_rsdl(int eind, int stage) {
 	TinyVector<FLT,2> pt,mvel,nrm;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 
+	x.lf = 0.0;
+	
 	sind = base.seg(eind);
 	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 
-	x.ugtouht1d(sind);
+	// x.ugtouht1d(sind);
+	
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
 

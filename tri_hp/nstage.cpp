@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-// #define DEBUG
+//#define DEBUG
 #define DEBUG_TOL 1.0e-9
 // #define OP_COUNT
 
@@ -32,6 +32,8 @@ void tri_hp::rsdl(int stage) {
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
 
+	return; // TEMPORARY TO CHECK BOUNDARY JACOBIANS 
+	
 	helper->rsdl(stage);
 
 	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV); 
@@ -68,7 +70,8 @@ void tri_hp::rsdl(int stage) {
 		}
 	}
 	
-#ifdef DEBUG
+#ifdef RSDL_DEBUG
+	int i, n;
 	if (coarse_flag) {
 		for(i=0;i<npnt;++i) {
 			printf("rsdl v: %d ",i);
@@ -131,6 +134,7 @@ void tri_hp::update() {
 	// temp fix need to better incorporate more solvers
 #ifdef petsc
 	petsc_solve();
+	return;
 #endif
 	
 	/* COUPLED MESH MOVMEMENT */
@@ -289,14 +293,17 @@ void tri_hp::update() {
 		}
 
 #ifdef DEBUG
-        if (coarse_level || log2p != log2pmax) {
+//        if (coarse_level || log2p != log2pmax) {
 #ifdef PTH
 		pth_exit(NULL);
 #endif
 #ifdef MPI
-//		MPI_Finalize();
+		MPI_Finalize();
 #endif
-        }
+
+		exit(1);
+		
+ //       }
 #endif
 
 	}

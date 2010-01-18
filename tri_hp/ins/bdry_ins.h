@@ -167,23 +167,28 @@ namespace bdry_ins {
 #ifdef petsc
 			void apply_sparse_dirichlet() {
 				/* only works if pressure is 4th variable */
-				int gind;
-				int sm=basis::tri(x.log2p)->sm;
+				int gind,v0,sind;
+				int sm=basis::tri(x.log2p)->sm();
 				
-				for(int i=0;i<base.nseg+1;++i){
-					gind = base.pnt(i).gindx*x.NV;
+				int j = 0;
+				do {
+					sind = base.seg(j++);
+					v0 = x.seg(sind).pnt(0);
+					gind = v0*x.NV;
 					for(int n=0;n<x.NV-1;++n)
 						x.sparse_dirichlet(gind+n);
-				}
-				
+				} while (j < base.nseg);
+				v0 = x.seg(sind).pnt(1);
+				gind = v0*x.NV;
+				for(int n=0;n<x.NV-1;++n)
+					x.sparse_dirichlet(gind+n);			
+
 				for(int i=0;i<base.nseg;++i){
-					gind = x.npnt*x.NV+base.seg(i).gindx*sm*x.NV;
+					gind = x.npnt*x.NV+base.seg(i)*sm*x.NV;
 					for(int m=0; m<sm; ++m)
 						for(int n=0;n<x.NV-1;++n)
 							x.sparse_dirichlet(gind+m*x.NV+n);
-				}
-				
-			
+				}	
 			}
 #endif
 			void tadvance() {

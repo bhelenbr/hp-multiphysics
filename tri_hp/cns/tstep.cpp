@@ -170,7 +170,7 @@ void tri_hp_cns::setup_preconditioner() {
 				for (int k = 0; k < n; ++k)
 					temp(i,j)+=P(i,k)*A(k,j);	
 		A=temp;
-		matrix_absolute_value(A, NV);
+		matrix_absolute_value(A);
 	
 
 		B =         ort*q,            0.0,						pmax*ort,                -pmax*ort*ort*q,
@@ -184,7 +184,7 @@ void tri_hp_cns::setup_preconditioner() {
 				for (int k = 0; k < NV; ++k)
 					temp(i,j)+=P(i,k)*B(k,j);	
 		B=temp;
-		matrix_absolute_value(B, NV);
+		matrix_absolute_value(B);
 		
 		S=0,0, 0, 0,
 		  0,nu,0, 0,

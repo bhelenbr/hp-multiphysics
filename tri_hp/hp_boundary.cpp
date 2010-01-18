@@ -302,7 +302,6 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	TinyVector<FLT,2> pt;
 	char uplo[] = "U";
 
-	if (!curved) return;
 
 	/* SKIP END VERTICES */
 	for(j=1;j<base.nseg;++j) {
@@ -313,7 +312,7 @@ void hp_edge_bdry::curv_init(int tlvl) {
 //    v0 = x.seg(sind).pnt(1);
 //    base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 
-	if (basis::tri(x.log2p)->p() == 1) return;
+	if (!curved || basis::tri(x.log2p)->p() == 1) return;
 
 	/*****************************/
 	/* SET UP HIGHER ORDER MODES */
@@ -448,7 +447,7 @@ void hp_edge_bdry::tadvance() {
 	calculate_unsteady_sources();
 
 	/* EXTRAPOLATE SOLUTION OR MOVE TO NEXT TIME POSITION */
-	if (!coupled && curved) curv_init();
+	if (!coupled) curv_init();
 
 	return;
 }

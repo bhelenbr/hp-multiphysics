@@ -25,7 +25,6 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
 
-
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
 
@@ -64,7 +63,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 	/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
-	ugtouht(tind);
+	//ugtouht(tind);
 	if (gbl->beta(stage) > 0.0) {
 		for(n=0;n<NV-1;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
@@ -75,7 +74,6 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 	}
 
-	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 	for(n=0;n<NV;++n){
 		for(i=0;i<basis::tri(log2p)->tm();++i){

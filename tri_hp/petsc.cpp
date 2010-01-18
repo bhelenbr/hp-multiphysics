@@ -12,6 +12,9 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
+#define DEBUG
+#define DEBUG_TOL 1.0e-9
+
 void tri_hp::petsc_initialize(){
 	
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
@@ -74,7 +77,7 @@ void tri_hp::petsc_initialize(){
 	
 	/* choose preconditioner type */
 
-//	PCSetType(pc, PCLU);     // LU
+	//PCSetType(pc, PCLU);     // LU
 //	PCSetType(pc, PCILU);    // incomplete LU
 //	PCSetType(pc, PCSOR);    // SOR
 //	PCSetType(pc,PCSPAI);
@@ -98,7 +101,7 @@ void tri_hp::petsc_initialize(){
 	/* count total degrees of freedom on boundaries */
 	int ndofs = 0;
 	for(int i=0;i < nebd; ++i)
-		ndofs+=(ebdry(i)->nseg*basis::tet(log2p)->sm+ebdry(i)->npnt)*NV;
+		ndofs+=(ebdry(i)->nseg*(basis::tri(log2p)->sm()+1))*NV;
 	
 	dirichlet_rows.resize(ndofs);
 
@@ -113,8 +116,7 @@ void tri_hp::petsc_solve(){
 	PetscInt       its,max_newton_its;
 	PetscScalar    petsc_norm;
 	//PetscMPIInt    size,rank;
-	max_newton_its = 10;
-	FLT tol = 1.0e-12;
+	max_newton_its = 20;
 	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
 	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
 	
@@ -126,101 +128,241 @@ void tri_hp::petsc_solve(){
 	/* initialize u with ug */
 	ug_to_petsc();
 	
-	for(int iter = 0; iter < max_newton_its; ++iter) {
 		
-
-		VecSet(petsc_f,0.0);
-		if(iter > 0) MatZeroEntries(petsc_J);
-		
-		/* insert values into jacobian matrix J */		
-		PetscGetTime(&time1);
-		create_jacobian();
-		PetscGetTime(&time2);
-		
-		cout << "jacobian made " << time2-time1 << " seconds" << endl;
-		
-		/* insert values into residual f (every processor will do this need to do it a different way) */
-		create_rsdl();		
-		
-		/* apply neumman bc's */
-		apply_neumman();
-				
-		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
-				
-		row_counter = 0;
-
-		/* apply dirichlet boundary conditions to sparse matrix and vector */
-		for(int j = 0; j < nfbd; ++j)
-			hp_fbdry(j)->apply_sparse_dirichlet();		
-		
-		MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
-
-		
-		VecAssemblyBegin(petsc_f);
-		VecAssemblyEnd(petsc_f);
-		
-		VecNorm(petsc_f,NORM_2,&petsc_norm);		
-		cout << "norm of residual: " << petsc_norm << endl;
-		
-		if(petsc_norm < tol) break;
-		
-		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
-		MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
-		
-		double rtol=1.0e-12; // relative tolerance
-		double atol=MAX(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
-		double dtol = 10000; // divergence tolerance
-		int maxits = 10000; // maximum iterations
-		
-		KSPSetTolerances(ksp,rtol,atol,dtol,maxits);
-		/* 
-		 Set operators. Here the matrix that defines the linear system
-		 also serves as the preconditioning matrix.
-		 */
-		
-		KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
-		
-		/* 
-		 Solve linear system.  Here we explicitly call KSPSetUp() for more
-		 detailed performance monitoring of certain preconditioners, such
-		 as ICC and ILU.  This call is optional, as KSPSetUp() will
-		 automatically be called within KSPSolve() if it hasn't been
-		 called already.
-		 */
-		
-		KSPSetUp(ksp);
-
-		PetscGetTime(&time1);
-		KSPSolve(ksp,petsc_f,du);
-		PetscGetTime(&time2);
+	/* insert values into residual f (every processor will do this need to do it a different way) */
+	VecSet(petsc_f,0.0);
+	create_rsdl();	
 	
-		MatMult(petsc_J,du,resid);		
-		VecAXPY(resid,-1.0,petsc_f);
+	/* insert values into jacobian matrix J */		
+	PetscGetTime(&time1);
+	MatZeroEntries(petsc_J);
+	create_jacobian();
+	PetscGetTime(&time2);
+	
+	cout << "jacobian made " << time2-time1 << " seconds" << endl;
 
-		VecNorm(resid,NORM_2,&petsc_norm);
-		KSPGetIterationNumber(ksp,&its);
+	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+	
 
-		cout << "linear system residual: " << petsc_norm << endl;
-		cout << "iterations: " << its << endl;
-		cout << "solve time: " << time2-time1 << " seconds" << endl;
-		
-		//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
-		
-		/* update: u=u-J^-1*f=u-du */
-		VecAXPY(petsc_u,-1.0,du);
-
-		/* send petsc vector u back to ug */
-		petsc_to_ug();
-
-		output("petsc", tecplot);
-		
-		//MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
-		//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,PETSC_TRUE);
-		
-//		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);
+#ifdef DEBUG
+	/* HARD TEST OF JACOBIAN ROUTINE */
+	FLT dw = 1.0e-4;
+	int dof = NV*(npnt +sm0*nseg +im0*ntri);
+	Array<FLT,2> testJ(dof,dof);
+	testJ = 0.0;
+	
+	rsdl();
+	
+	--dof;
+	for (int i=0;i<npnt;++i)
+		for(int n=0;n<NV;++n)
+			testJ(i*NV+n,dof) = gbl->res.v(i,n);
+	
+	int sbgn = npnt*NV;
+	for (int i=0;i<nseg;++i) 
+		for(int m=0;m<sm0;++m)
+			for(int n=0;n<NV;++n)
+				testJ(sbgn+i*sm0*NV+m*NV+n,dof) = gbl->res.s(i,m,n);
+				
+	int tbgn = sbgn +nseg*sm0*NV;
+	for (int i=0;i<ntri;++i) 
+		for(int m=0;m<im0;++m)
+			for(int n=0;n<NV;++n)
+				testJ(tbgn+i*im0*NV+m*NV+n,dof) = gbl->res.i(i,m,n);
+	
+	int ind = 0;
+	for (int pind=0;pind<npnt;++pind) {
+		for(int n1=0;n1<NV;++n1) {
+			FLT stored_value = ug.v(pind,n1);
+			ug.v(pind,n1) += dw;
+			rsdl();
+			
+			for (int i=0;i<npnt;++i)
+				for(int n=0;n<NV;++n)
+					testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+					
+			int sbgn = npnt*NV;
+			for (int i=0;i<nseg;++i) 
+				for(int m=0;m<sm0;++m)
+					for(int n=0;n<NV;++n)
+						testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+						
+			int tbgn = sbgn +nseg*sm0*NV;
+			for (int i=0;i<ntri;++i) 
+				for(int m=0;m<im0;++m)
+					for(int n=0;n<NV;++n)
+						testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+						
+			++ind;
+			ug.v(pind,n1) = stored_value;
+		}
 	}
 	
+	
+			
+	for (int sind=0;sind<nseg;++sind) {
+		for (int m1=0;m1<sm0;++m1) {
+			for(int n1=0;n1<NV;++n1) {
+				ug.s(sind,m1,n1) += dw;
+				rsdl();
+				
+				for (int i=0;i<npnt;++i)
+					for(int n=0;n<NV;++n)
+						testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+						
+				int sbgn = npnt*NV;
+				for (int i=0;i<nseg;++i) 
+					for(int m=0;m<sm0;++m)
+						for(int n=0;n<NV;++n)
+							testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+							
+				int tbgn = sbgn +nseg*sm0*NV;
+				for (int i=0;i<ntri;++i) 
+					for(int m=0;m<im0;++m)
+						for(int n=0;n<NV;++n)
+							testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+							
+				++ind;
+				ug.s(sind,m1,n1) -= dw;
+			}
+		}			
+	}
+	
+	for (int tind=0;tind<ntri;++tind) {
+		for (int m1=0;m1<im0;++m1) {
+			for(int n1=0;n1<NV;++n1) {
+				ug.i(tind,m1,n1) += dw;
+				rsdl();
+				
+				for (int i=0;i<npnt;++i)
+					for(int n=0;n<NV;++n)
+						testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+						
+				int sbgn = npnt*NV;
+				for (int i=0;i<nseg;++i) 
+					for(int m=0;m<sm0;++m)
+						for(int n=0;n<NV;++n)
+							testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+							
+				int tbgn = sbgn +nseg*sm0*NV;
+				for (int i=0;i<ntri;++i) 
+					for(int m=0;m<im0;++m)
+						for(int n=0;n<NV;++n)
+							testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+							
+				++ind;
+				ug.i(tind,m1,n1) -= dw;
+			}
+		}			
+	}
+		
+	const PetscScalar *vals;
+	const PetscInt *cols;
+	int nnz;
+	
+	for(int i=0;i<ind;++i) {
+		MatGetRow(petsc_J,i,&nnz,&cols,&vals);
+		*gbl->log << "row " << i/NV << ' ' << i%NV << ": ";
+		int cnt = 0;
+		for(int j=0;j<ind;++j) {
+			if (fabs(testJ(i,j)) > DEBUG_TOL) {
+				if (cnt >= nnz) {
+					*gbl->log << " (Extra entry in full matrix " <<  j/NV << ' ' << j%NV << ' ' << testJ(i,j) << ") ";
+					continue;
+				}
+				if (cols[cnt] == j) {
+					if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
+						*gbl->log << " (Mismatched Jacobian " << j/NV << ' ' << j%NV << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+					++cnt;
+				}
+				else if (cols[cnt] < j) {
+					do {
+						if (fabs(vals[cnt]) > DEBUG_TOL)
+							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt]/3 << ' ' << cols[cnt]%3 << ' ' << vals[cnt] << ") ";
+						++cnt;
+					} while (cols[cnt] < j);
+					--j;
+				}
+				else {
+					*gbl->log << " (Extra entry in full matrix " <<  j/NV << ' ' << j%NV << ' ' << testJ(i,j) << ") ";
+				}
+			}
+		}
+		*gbl->log << std::endl;
+		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
+	}
+	
+	exit(1);
+#endif
+			
+	row_counter = 0;
+
+	/* apply dirichlet boundary conditions to sparse matrix and vector */
+	for(int j = 0; j < nebd; ++j)
+		hp_ebdry(j)->apply_sparse_dirichlet();		
+	
+	MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
+
+	
+	VecAssemblyBegin(petsc_f);
+	VecAssemblyEnd(petsc_f);
+			
+	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
+	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+	
+//		double rtol=1.0e-12; // relative tolerance
+//		double atol=MAX(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
+//		double dtol = 10000; // divergence tolerance
+//		int maxits = 10000; // maximum iterations
+//		
+//		KSPSetTolerances(ksp,rtol,atol,dtol,maxits);
+	/* 
+	 Set operators. Here the matrix that defines the linear system
+	 also serves as the preconditioning matrix.
+	 */
+	
+	KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+	
+	/* 
+	 Solve linear system.  Here we explicitly call KSPSetUp() for more
+	 detailed performance monitoring of certain preconditioners, such
+	 as ICC and ILU.  This call is optional, as KSPSetUp() will
+	 automatically be called within KSPSolve() if it hasn't been
+	 called already.
+	 */
+	
+	KSPSetUp(ksp);
+	
+	//MatView(petsc_J,0);
+	//VecView(petsc_f,0);
+
+	PetscGetTime(&time1);
+	KSPSolve(ksp,petsc_f,du);
+	PetscGetTime(&time2);
+
+	MatMult(petsc_J,du,resid);		
+	VecAXPY(resid,-1.0,petsc_f);
+
+	VecNorm(resid,NORM_2,&petsc_norm);
+	KSPGetIterationNumber(ksp,&its);
+
+	cout << "linear system residual: " << petsc_norm << endl;
+	cout << "iterations: " << its << endl;
+	cout << "solve time: " << time2-time1 << " seconds" << endl;
+	
+	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
+	
+	/* update: u=u-J^-1*f=u-du */
+	VecAXPY(petsc_u,-1.0,du);
+
+	/* send petsc vector u back to ug */
+	petsc_to_ug();
+	
+	//MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+	//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,PETSC_TRUE);
+	
+//		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);	
 	
 	ierr = VecDestroy(du);//CHKERRQ(ierr);
 
@@ -231,7 +373,7 @@ void tri_hp::petsc_solve(){
 void tri_hp::petsc_to_ug(){
 	PetscScalar *array;
 	int ind = 0;
-	ierr = VecGetArray(petsc_u,&array);
+	VecGetArray(petsc_u,&array);
 
 	for(int i = 0; i < npnt; ++i)
 		for(int n = 0; n < NV; ++n)
@@ -253,7 +395,7 @@ void tri_hp::petsc_to_ug(){
 }
 
 /* temp fix can I input petsc vectors ? */
-void tet_hp::ug_to_petsc(){
+void tri_hp::ug_to_petsc(){
 	int ind = 0;
 	
 	for(int i = 0; i < npnt; ++i){
