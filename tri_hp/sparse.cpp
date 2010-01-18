@@ -146,15 +146,11 @@ void tri_hp::create_jacobian() {
 				}
 			}
 			
-			*gbl->log << i << ' ' << j << ' ' << eind << ' ' << K << std::endl;
-			*gbl->log << loc_to_glo << std::endl;
-			
-			MatSetValues(petsc_J,sm+2,loc_to_glo.data(),sm+2,loc_to_glo.data(),K.data(),ADD_VALUES);
+
+			MatSetValues(petsc_J,NV*(sm+2),loc_to_glo.data(),NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 		}
 	}
-	
-	return;  // TEMPORARY TO CHECK BOUNDARY JACOBIANS //
-	
+		
 	int kn = tm*NV;
 	K.resize(kn,kn);
 	loc_to_glo.resize(kn);

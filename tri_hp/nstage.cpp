@@ -31,8 +31,6 @@ void tri_hp::rsdl(int stage) {
 
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->rsdl(stage);
-
-	return; // TEMPORARY TO CHECK BOUNDARY JACOBIANS 
 	
 	helper->rsdl(stage);
 

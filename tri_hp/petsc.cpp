@@ -12,7 +12,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define DEBUG
+// #define DEBUG
 #define DEBUG_TOL 1.0e-9
 
 void tri_hp::petsc_initialize(){
@@ -292,6 +292,8 @@ void tri_hp::petsc_solve(){
 		*gbl->log << std::endl;
 		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
 	}
+	
+	// MatView(petsc_J,0);
 	
 	exit(1);
 #endif
