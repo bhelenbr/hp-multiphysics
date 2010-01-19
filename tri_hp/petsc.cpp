@@ -22,16 +22,16 @@ void tri_hp::petsc_initialize(){
 
 	int bdofs = 0;
 	for(int i=0;i < nebd; ++i) {
-		bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*NV
+		bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*NV;
 	}
 
 	/* count total degrees of freedom on boundaries */
 	int isodofs = 0;
 	if (mmovement == coupled_deformable) {
 		for(int i=0;i < nebd; ++i) {
-			if (ebdry(i)->curved && ebdry(i)->coupled) {
+			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled) {
 				isodofs += ebdry(i)->nseg*basis::tri(log2p)->sm()*ND;
-				bdofs += (ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*ND;
+				bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*ND;
 			}
 		}
 		size_sparse_matrix += npnt*ND +isodofs;
@@ -141,11 +141,10 @@ void tri_hp::petsc_solve(){
 
 	/* initialize u with ug */
 	ug_to_petsc();
-	
 		
 	/* insert values into residual f (every processor will do this need to do it a different way) */
 	VecSet(petsc_f,0.0);
-	create_rsdl();	
+	create_rsdl();
 	
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
@@ -162,28 +161,40 @@ void tri_hp::petsc_solve(){
 #ifdef DEBUG
 	/* HARD TEST OF JACOBIAN ROUTINE */
 	FLT dw = 1.0e-4;
-	int dof = NV*(npnt +sm0*nseg +im0*ntri);
+	int dof = size_sparse_matrix;
 	Array<FLT,2> testJ(dof,dof);
 	testJ = 0.0;
 	
 	rsdl();
 	
 	--dof;
-	for (int i=0;i<npnt;++i)
-		for(int n=0;n<NV;++n)
-			testJ(i*NV+n,dof) = gbl->res.v(i,n);
+	
+	int ind = 0;
+	if (mmovement != coupled_deformable) {
+		for (int i=0;i<npnt;++i)
+			for(int n=0;n<NV;++n)
+				testJ(ind++,dof) = gbl->res.v(i,n);
+	}
+	else {
+		for (int i=0;i<npnt;++i) {
+			for(int n=0;n<NV;++n)
+				testJ(ind++,dof) = gbl->res.v(i,n);
+			for(int n=0;n<ND;++n)
+				testJ(ind++,dof) = gbl->res.v(i,n);
+		}
+	}
 	
 	int sbgn = npnt*NV;
 	for (int i=0;i<nseg;++i) 
 		for(int m=0;m<sm0;++m)
 			for(int n=0;n<NV;++n)
-				testJ(sbgn+i*sm0*NV+m*NV+n,dof) = gbl->res.s(i,m,n);
+				testJ(ind++,dof) = gbl->res.s(i,m,n);
 				
 	int tbgn = sbgn +nseg*sm0*NV;
 	for (int i=0;i<ntri;++i) 
 		for(int m=0;m<im0;++m)
 			for(int n=0;n<NV;++n)
-				testJ(tbgn+i*im0*NV+m*NV+n,dof) = gbl->res.i(i,m,n);
+				testJ(ind++,dof) = gbl->res.i(i,m,n);
 	
 	int ind = 0;
 	for (int pind=0;pind<npnt;++pind) {
@@ -192,50 +203,68 @@ void tri_hp::petsc_solve(){
 			ug.v(pind,n1) += dw;
 			rsdl();
 			
+			int ind1 = 0;
 			for (int i=0;i<npnt;++i)
-				for(int n=0;n<NV;++n)
-					testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+				for(int n=0;n<NV;++n) {
+					testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
+					++ind1;
+				}
+			}
 					
-			int sbgn = npnt*NV;
-			for (int i=0;i<nseg;++i) 
-				for(int m=0;m<sm0;++m)
-					for(int n=0;n<NV;++n)
-						testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+			for (int i=0;i<nseg;++i) {
+				for(int m=0;m<sm0;++m) {
+					for(int n=0;n<NV;++n)  {
+						testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
+						++ind1;
+					}
+				}
+			}
 						
-			int tbgn = sbgn +nseg*sm0*NV;
-			for (int i=0;i<ntri;++i) 
-				for(int m=0;m<im0;++m)
-					for(int n=0;n<NV;++n)
-						testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+			for (int i=0;i<ntri;++i) { 
+				for(int m=0;m<im0;++m) {
+					for(int n=0;n<NV;++n) {
+						testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
+						++ind1;
+					}
+				}
+			}
 						
 			++ind;
 			ug.v(pind,n1) = stored_value;
 		}
 	}
-	
-	
-			
+				
 	for (int sind=0;sind<nseg;++sind) {
 		for (int m1=0;m1<sm0;++m1) {
 			for(int n1=0;n1<NV;++n1) {
 				ug.s(sind,m1,n1) += dw;
 				rsdl();
 				
-				for (int i=0;i<npnt;++i)
-					for(int n=0;n<NV;++n)
-						testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+				int ind1 = 0;
+				for (int i=0;i<npnt;++i) {
+					for(int n=0;n<NV;++n) {
+						testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
+						++ind;
+					}
+				}
 						
-				int sbgn = npnt*NV;
-				for (int i=0;i<nseg;++i) 
-					for(int m=0;m<sm0;++m)
-						for(int n=0;n<NV;++n)
-							testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+				for (int i=0;i<nseg;++i) { 
+					for(int m=0;m<sm0;++m) {
+						for(int n=0;n<NV;++n) {
+							testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
+							++ind1;
+						}
+					}
+				}
 							
-				int tbgn = sbgn +nseg*sm0*NV;
-				for (int i=0;i<ntri;++i) 
-					for(int m=0;m<im0;++m)
-						for(int n=0;n<NV;++n)
-							testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+				for (int i=0;i<ntri;++i)  {
+					for(int m=0;m<im0;++m) {
+						for(int n=0;n<NV;++n) {
+							testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
+							++ind1;
+						}
+					}
+				}
 							
 				++ind;
 				ug.s(sind,m1,n1) -= dw;
@@ -249,21 +278,30 @@ void tri_hp::petsc_solve(){
 				ug.i(tind,m1,n1) += dw;
 				rsdl();
 				
-				for (int i=0;i<npnt;++i)
-					for(int n=0;n<NV;++n)
-						testJ(i*NV+n,ind) = (gbl->res.v(i,n) -testJ(i*NV+n,dof))/dw;
+				int ind1 = 0;
+				for (int i=0;i<npnt;++i) {
+					for(int n=0;n<NV;++n) {
+						testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
+						++ind1;
+					}
+				}
 						
-				int sbgn = npnt*NV;
-				for (int i=0;i<nseg;++i) 
-					for(int m=0;m<sm0;++m)
-						for(int n=0;n<NV;++n)
-							testJ(sbgn+i*sm0*NV+m*NV+n,ind) = (gbl->res.s(i,m,n) -testJ(sbgn+i*sm0*NV+m*NV+n,dof))/dw;
+				for (int i=0;i<nseg;++i) {
+					for(int m=0;m<sm0;++m) {
+						for(int n=0;n<NV;++n) {
+							testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
+							++ind1;
+						}
+					}
+				}
 							
-				int tbgn = sbgn +nseg*sm0*NV;
-				for (int i=0;i<ntri;++i) 
-					for(int m=0;m<im0;++m)
-						for(int n=0;n<NV;++n)
-							testJ(tbgn+i*im0*NV+m*NV+n,ind) = (gbl->res.i(i,m,n) -testJ(tbgn+i*im0*NV+m*NV+n,dof))/dw;			
+				for (int i=0;i<ntri;++i) {
+					for(int m=0;m<im0;++m) {
+						for(int n=0;n<NV;++n) {
+							testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
+						}
+					}
+				}
 							
 				++ind;
 				ug.i(tind,m1,n1) -= dw;
@@ -282,24 +320,24 @@ void tri_hp::petsc_solve(){
 		for(int j=0;j<ind;++j) {
 			if (fabs(testJ(i,j)) > DEBUG_TOL) {
 				if (cnt >= nnz) {
-					*gbl->log << " (Extra entry in full matrix " <<  j/NV << ' ' << j%NV << ' ' << testJ(i,j) << ") ";
+					*gbl->log << " (Extra entry in full matrix " <<  j << ' ' << testJ(i,j) << ") ";
 					continue;
 				}
 				if (cols[cnt] == j) {
 					if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
-						*gbl->log << " (Mismatched Jacobian " << j/NV << ' ' << j%NV << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+						*gbl->log << " (Mismatched Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 					++cnt;
 				}
 				else if (cols[cnt] < j) {
 					do {
 						if (fabs(vals[cnt]) > DEBUG_TOL)
-							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt]/3 << ' ' << cols[cnt]%3 << ' ' << vals[cnt] << ") ";
+							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
 						++cnt;
 					} while (cols[cnt] < j);
 					--j;
 				}
 				else {
-					*gbl->log << " (Extra entry in full matrix " <<  j/NV << ' ' << j%NV << ' ' << testJ(i,j) << ") ";
+					*gbl->log << " (Extra entry in full matrix " <<  j  << ' ' << testJ(i,j) << ") ";
 				}
 			}
 		}
@@ -390,11 +428,21 @@ void tri_hp::petsc_to_ug(){
 	PetscScalar *array;
 	int ind = 0;
 	VecGetArray(petsc_u,&array);
-
-	for(int i = 0; i < npnt; ++i)
-		for(int n = 0; n < NV; ++n)
-			ug.v(i,n) = array[ind++];
 	
+	if (mmovement != coupled_deformable) {
+		for(int i = 0; i < npnt; ++i)
+			for(int n = 0; n < NV; ++n)
+				ug.v(i,n) = array[ind++];
+	}
+	else {
+		for(int i = 0; i < npnt; ++i) {
+			for(int n = 0; n < NV; ++n)
+				ug.v(i,n) = array[ind++];
+			for(int n = 0; n < ND; ++n)
+				pnts(i)(n) = array[ind++];
+		}
+	}
+
 	for(int i = 0; i < nseg; ++i)
 		for(int m = 0; m < basis::tri(log2p)->sm(); ++m)
 			for(int n = 0; n < NV; ++n)
@@ -404,7 +452,17 @@ void tri_hp::petsc_to_ug(){
 		for(int m = 0; m < basis::tri(log2p)->im(); ++m)
 			for(int n = 0; n < NV; ++n)
 				ug.i(i,m,n) = array[ind++];		
-	
+				
+	if (mmovement == coupled_deformable) {
+		for(int i = 0; i < nebd; ++i) {
+			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
+			
+			for(int j = 0; j < ebdry(i)->nseg;++j) 
+				for(int m = 0; m < basis::tri(log2p)->sm(); ++m) 
+					for(int n = 0; n < ND; ++n) 
+						hp_ebdry(i)->crds(j,m,n) = array[ind++];
+		}
+	}
 	
 	VecRestoreArray(petsc_u,&array);
 	return;	
@@ -414,7 +472,7 @@ void tri_hp::petsc_to_ug(){
 void tri_hp::ug_to_petsc(){
 	int ind = 0;
 	
-	if (mmovment != coupled_deformable) {
+	if (mmovement != coupled_deformable) {
 		for(int i = 0; i < npnt; ++i){
 			for(int n = 0; n < NV; ++n){
 				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
@@ -429,7 +487,7 @@ void tri_hp::ug_to_petsc(){
 				++ind;
 			}
 			for(int n = 0; n < ND; ++n){
-				VecSetValues(petsc_u,1,&ind,&pnt(i)(n),INSERT_VALUES);
+				VecSetValues(petsc_u,1,&ind,&pnts(i)(n),INSERT_VALUES);
 				++ind;
 			}			
 		}
@@ -456,12 +514,12 @@ void tri_hp::ug_to_petsc(){
 	
 	if (mmovement == coupled_deformable) {
 		for(int i = 0; i < nebd; ++i) {
-			if (!ebdry(i)->curved || !ebdry(i)->coupled) continue;
+			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
 			
 			for(int j = 0; j < ebdry(i)->nseg;++j) {
 				for(int m = 0; m < basis::tri(log2p)->sm(); ++m) {
 					for(int n = 0; n < ND; ++n) {
-						VecSetValues(petsc_u,1,&ind,&ebdry(i)->crds(j,m,n),INSERT_VALUES);
+						VecSetValues(petsc_u,1,&ind,&hp_ebdry(i)->crds(j,m,n),INSERT_VALUES);
 						++ind;					
 					}
 				}

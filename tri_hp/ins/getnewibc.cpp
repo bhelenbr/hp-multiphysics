@@ -605,7 +605,7 @@ namespace ibc_ins {
 
 					found:
 					if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
-						std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
+						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
 					if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
@@ -674,7 +674,7 @@ namespace ibc_ins {
 
 					found:
 						if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
-							std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
+							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
 						if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
@@ -913,7 +913,7 @@ namespace ibc_ins {
 			
 			void output() {
 				std::ofstream out;
-				std:ostringstream filename;
+				std::ostringstream filename;
 				filename << "streamlines" << x.gbl->tstep << ".dat";
 				out.open(filename.str().c_str());
 			
@@ -928,7 +928,7 @@ namespace ibc_ins {
 					
 					int tind = -1;
 					int counter;
-					timeloop: for (counter = 0; counter < maxtsteps; ++counter) {
+					for (counter = 0; counter < maxtsteps; ++counter) {
 						
 						const int nstage = 4;			
 						Array<FLT,2> vels(nstage,x.NV);
@@ -981,7 +981,7 @@ namespace ibc_ins {
 				
 			void output() {
 				std::ofstream out;
-				std:ostringstream filename;
+				std::ostringstream filename;
 				filename << "static_particles" << x.gbl->tstep << ".dat";
 				out.precision(10);
 				out.open(filename.str().c_str());

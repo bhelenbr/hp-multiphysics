@@ -66,7 +66,7 @@ void tri_hp::sparse_dirichlet(int ind){
 	
 	const PetscInt row = ind;
 	PetscScalar zero = 0.0;
-	PetscScalar one = 1.0;
+	// PetscScalar one = 1.0;
 
 	/* apply dirichlet by inserting zero in f */
 	VecSetValues(petsc_f,1,&row,&zero,INSERT_VALUES);
@@ -240,7 +240,7 @@ void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
 }
 
 void tri_hp::create_rsdl() {
-	int gindx,eind,find,iind,sgn,msgn,mode;
+	int gindx,eind,find,sgn,msgn;
 	
 	int kn = NV*basis::tri(log2p)->tm();
 	Array<FLT,1> lclres(kn);

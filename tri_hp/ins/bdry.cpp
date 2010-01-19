@@ -157,7 +157,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 
 void neumann::element_rsdl(int eind, int stage) {
-	int k,n,v0,v1,sind;
+	int k,n,sind;
 	TinyVector<FLT,2> pt,mvel,nrm;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 

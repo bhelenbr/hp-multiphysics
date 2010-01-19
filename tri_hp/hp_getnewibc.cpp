@@ -35,7 +35,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 					fcn(n).init(inmap,nstr.str());
 				}
 				else {
-					std:cerr << "couldn't find initial condition function" << std::endl;
+					std::cerr << "couldn't find initial condition function" << std::endl;
 					exit(1);
 				}
 			}
@@ -234,7 +234,7 @@ class output_contour : public tri_hp_helper {
 			FLT norm_sum = 0.0;
 
 			std::ofstream out;
-			std:ostringstream filename;
+			std::ostringstream filename;
 
 			filename << "contour" << x.gbl->tstep << ".dat";
 			out.open(filename.str().c_str());

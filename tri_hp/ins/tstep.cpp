@@ -9,7 +9,7 @@
 void tri_hp_ins::setup_preconditioner() {
 	if (gbl->diagonal_preconditioner) {
 		/* SET-UP DIAGONAL PRECONDITIONER */
-		int tind,i,j,side,v0;
+		int tind,i,j,side;
 		FLT jcb,h,hmax,q,qmax,lam1,gam;
 		TinyVector<int,3> v;
 
