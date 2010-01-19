@@ -36,6 +36,7 @@ class init_bdry_cndtn {
     public:
 		virtual FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) = 0;
 		virtual void input(input_map &blkdata, std::string idnty) {};
+		virtual ~init_bdry_cndtn() {};
 };
 
 class tri_hp_helper;
@@ -276,7 +277,7 @@ class tri_hp_helper {
 		tri_hp_helper(tri_hp& xin) : x(xin) {}
 		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin) {}
 		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
-
+		virtual ~tri_hp_helper() {};
 		virtual void init(input_map& input, std::string idnty) {}
 		virtual void tadvance() {}
 		virtual void setup_preconditioner() {}

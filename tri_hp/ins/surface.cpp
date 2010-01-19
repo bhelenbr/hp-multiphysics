@@ -367,14 +367,15 @@ void surface_slave::rsdl(int stage) {
 	base.comm_exchange(boundary::all,0,boundary::master_slave);
 	base.comm_wait(boundary::all,0,boundary::master_slave);          
 	count = 0;
-	for(i=base.nseg-1;i>=0;--i) {
+	i = base.nseg-1;
+	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(1);
 #ifdef MPDEBUG
 		*x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
 #endif
 		x.gbl->res.v(v0,x.NV-1) += base.frcvbuf(0,count++);
-	}
+	} while(--i >= 0);
 	v0 = x.seg(sind).pnt(0);
 #ifdef MPDEBUG
 	*x.gbl->log << x.gbl->res.v(v0,x.NV-1) << ' ' << base.frcvbuf(0,count) << '\n';
@@ -846,11 +847,12 @@ void surface::update(int stage) {
 
 	if (stage < 0) {
 		indx = 0;
-		for(i=0;i<base.nseg;++i) {
+		int i = 0;
+		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
 			gbl->vug0(i) = x.pnts(v0);
-		}
+		} while (++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		gbl->vug0(base.nseg) = x.pnts(v0);
 
@@ -888,11 +890,12 @@ void surface::update(int stage) {
 		}
 	}
 
-	for(i=0;i<base.nseg;++i) {
+	i = 0;
+	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
 		printf("vertex positions %d %8.4e %8.4e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
-	}
+	} while(++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	printf("vertex positions %d %8.4e %8.4e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
 
@@ -902,11 +905,12 @@ void surface::update(int stage) {
    // }
 #endif
 
-	for(i=0;i<base.nseg;++i) {
+	i = 0;
+	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
 		x.pnts(v0) = gbl->vug0(i) -x.gbl->alpha(stage)*gbl->vres(i);
-	}
+	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	x.pnts(v0) = gbl->vug0(base.nseg) -x.gbl->alpha(stage)*gbl->vres(base.nseg);
 
@@ -920,11 +924,12 @@ void surface::update(int stage) {
 
 #ifdef DEBUG
 //   if (x.coarse_flag) {
-	for(i=0;i<base.nseg;++i) {
+	i = 0;
+	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
 		printf("vertex positions %d %e %e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
-	}
+	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	printf("vertex positions %d %e %e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
 
@@ -936,12 +941,13 @@ void surface::update(int stage) {
 
 	if (base.is_comm()) {                
 		count = 0;
-		for(i=0;i<base.nseg;++i) {
+		i = 0;
+		do {
 			sind = base.seg(i);
 			v0 = x.seg(sind).pnt(0);
 			for(n=0;n<tri_mesh::ND;++n)
 				base.fsndbuf(count++) = x.pnts(v0)(n);
-		}
+		} while(++i < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for(n=0;n<tri_mesh::ND;++n)
 			base.fsndbuf(count++) = x.pnts(v0)(n);                
@@ -972,12 +978,13 @@ void surface_slave::update(int stage) {
 	base.comm_wait(boundary::all,0,boundary::master_slave);
 
 	count = 0;
-	for(i=base.nseg-1;i>=0;--i) {
+	i = base.nseg-1;
+	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(1);
 		for(n=0;n<tri_mesh::ND;++n) 
 			x.pnts(v0)(n) = base.frcvbuf(0,count++);
-	}
+	} while (--i >= 0);
 	v0 = x.seg(sind).pnt(0);
 	for(n=0;n<tri_mesh::ND;++n)
 	x.pnts(v0)(n) = base.frcvbuf(0,count++);

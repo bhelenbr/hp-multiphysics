@@ -240,12 +240,13 @@ void hp_edge_bdry::setvalues(init_bdry_cndtn *ibc, Array<int,1>& dirichlets, int
 	char uplo[] = "U";
 
 	/* UPDATE BOUNDARY CONDITION VALUES */
-	for(j=0;j<base.nseg;++j) {
+	j = 0;
+	do {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		for(n=0;n<ndirichlets;++n)
 			x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);
-	}
+	} while(++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	for(n=0;n<ndirichlets;++n)
 		x.ug.v(v0,dirichlets(n)) = ibc->f(dirichlets(n),x.pnts(v0),x.gbl->time);

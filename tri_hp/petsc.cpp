@@ -16,8 +16,26 @@
 #define DEBUG_TOL 1.0e-9
 
 void tri_hp::petsc_initialize(){
-	
+
+
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
+
+	int bdofs = 0;
+	for(int i=0;i < nebd; ++i) {
+		bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*NV
+	}
+
+	/* count total degrees of freedom on boundaries */
+	int isodofs = 0;
+	if (mmovement == coupled_deformable) {
+		for(int i=0;i < nebd; ++i) {
+			if (ebdry(i)->curved && ebdry(i)->coupled) {
+				isodofs += ebdry(i)->nseg*basis::tri(log2p)->sm()*ND;
+				bdofs += (ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*ND;
+			}
+		}
+		size_sparse_matrix += npnt*ND +isodofs;
+	}
 
 	PetscTruth mat_nonsymmetric;
 
@@ -98,12 +116,8 @@ void tri_hp::petsc_initialize(){
 	/* set preconditioner side */
 	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
 	
-	/* count total degrees of freedom on boundaries */
-	int ndofs = 0;
-	for(int i=0;i < nebd; ++i)
-		ndofs+=(ebdry(i)->nseg*(basis::tri(log2p)->sm()+1))*NV;
 	
-	dirichlet_rows.resize(ndofs);
+	dirichlet_rows.resize(bdofs);
 
 	return;
 }
@@ -400,12 +414,27 @@ void tri_hp::petsc_to_ug(){
 void tri_hp::ug_to_petsc(){
 	int ind = 0;
 	
-	for(int i = 0; i < npnt; ++i){
-		for(int n = 0; n < NV; ++n){
-			VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
-			++ind;
+	if (mmovment != coupled_deformable) {
+		for(int i = 0; i < npnt; ++i){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
+				++ind;
+			}
+		}	
+	}
+	else {
+		for(int i = 0; i < npnt; ++i){
+			for(int n = 0; n < NV; ++n){
+				VecSetValues(petsc_u,1,&ind,&ug.v(i,n),INSERT_VALUES);
+				++ind;
+			}
+			for(int n = 0; n < ND; ++n){
+				VecSetValues(petsc_u,1,&ind,&pnt(i)(n),INSERT_VALUES);
+				++ind;
+			}			
 		}
 	}
+		
 	
 	for(int i = 0; i < nseg; ++i){
 		for(int m = 0; m < basis::tri(log2p)->sm(); ++m){
@@ -425,7 +454,20 @@ void tri_hp::ug_to_petsc(){
 		}
 	}
 	
-
+	if (mmovement == coupled_deformable) {
+		for(int i = 0; i < nebd; ++i) {
+			if (!ebdry(i)->curved || !ebdry(i)->coupled) continue;
+			
+			for(int j = 0; j < ebdry(i)->nseg;++j) {
+				for(int m = 0; m < basis::tri(log2p)->sm(); ++m) {
+					for(int n = 0; n < ND; ++n) {
+						VecSetValues(petsc_u,1,&ind,&ebdry(i)->crds(j,m,n),INSERT_VALUES);
+						++ind;					
+					}
+				}
+			}
+		}
+	}
 	
 	return;	
 }

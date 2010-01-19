@@ -698,12 +698,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::zero_bdry(tri_hp::vsi ug) {
 
 	int sind,v0;
 
-	for(int j=0;j<base.nseg;++j) {
+	int j = 0;
+	do {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		ug.v(v0,Range(0,x.NV-1)) = 0.0;
 		ug.s(sind,Range(0,x.sm0-1),Range(0,x.NV-1)) = 0.0;
-	}
+	} while(++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	ug.v(v0,Range(0,x.NV-1)) = 0.0;
 }
@@ -767,7 +768,8 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 				x.input(filename, x.binary, 1);
 
 				/* PERFORM 1D INTEGRATION */
-				for(int bsind=0;bsind<base.nseg;++bsind) {
+				int bsind = 0;
+				do {
 					sind = base.seg(bsind);
 
 					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
@@ -793,7 +795,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 						}
 					}
 					low_noise_dot(bsind) = tmp_store;
-				}
+				} while(++bsind < base.nseg);
 
 				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 				int halfcount,remainder;
@@ -836,12 +838,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 			filename = "temp" +nstr.str() + "_" + base.idprefix;
 			x.input(filename, x.binary, 1);
 
-			for (int bsind=0;bsind<base.nseg;++bsind) {
+			int bsind = 0;
+			do {
 				sind = base.seg(bsind);
 				v0 = x.seg(sind).pnt(0);
 				x.ug.v(v0) += eigenvector(l)*x.ugbd(1).v(v0);
 				x.ug.s(sind) += eigenvector(l)*x.ugbd(1).s(sind);
-			}
+			} while(++bsind < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			x.ug.v(v0) += eigenvector(l)*x.ugbd(1).v(v0);
 		}
@@ -907,12 +910,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 
-		for (int bsind=0;bsind<base.nseg;++bsind) {
+		int bsind = 0;
+		do {
 			sind = base.seg(bsind);
 			v0 = x.seg(sind).pnt(0);
 			for (n=0;n<x.NV;++n)
 				bout.writeFloat(x.ug.v(v0,n),binio::Double);
-		}
+		} while(++bsind < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (n=0;n<x.NV;++n)
 			bout.writeFloat(x.ug.v(v0,n),binio::Double);		

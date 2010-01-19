@@ -540,11 +540,12 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tri_hp
 	int sind, v0;
 
 	for (int l=0;l<nmodes;++l) {
-		for (int bsind=0;bsind<base.nseg;++bsind) {
+		int bsind = 0;
+		do {
 			sind = base.seg(bsind);
 			v0 = x.seg(sind).pnt(0);
 			ug.v(v0) += x.coeffs(bindex+l)*modes(l).v(bsind);
-		}
+		} while (++bsind < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		ug.v(v0) += x.coeffs(bindex+l)*modes(l).v(base.nseg);
 
@@ -565,11 +566,12 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::addto2Dsolution(struct tri_hp
 
 	int sind, v0;
 
-	for (int bsind=0;bsind<base.nseg;++bsind) {
+	int bsind = 0;
+	do {
 		sind = base.seg(bsind);
 		v0 = x.seg(sind).pnt(0);
 		ug.v(v0) += coeff*modes(lmode).v(bsind);
-	}
+	} while(++bsind < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	ug.v(v0) += coeff*modes(lmode).v(base.nseg);
 
@@ -590,13 +592,14 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 
 	int sind,v0;
 
-    for (int k = 0; k < nmodes; ++k) {		
-		for (int bsind=0;bsind<base.nseg;++bsind) {
+	for (int k = 0; k < nmodes; ++k) {		
+		int bsind = 0;
+		do {
 			sind = base.seg(bsind);
 			v0 = x.seg(sind).pnt(0);
 			for (int n=0;n<x.NV;++n)
 				x.rsdls(bindex+k) += modes(k).v(bsind,n)*x.gbl->res.v(v0,n);
-		}
+		} while (++bsind < base.nseg);
 		v0 = x.seg(sind).pnt(1);
 		for (int n=0;n<x.NV;++n)
 			x.rsdls(bindex+k) += modes(k).v(base.nseg,n)*x.gbl->res.v(v0,n);
