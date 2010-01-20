@@ -243,7 +243,6 @@ class tri_hp : public r_tri_mesh  {
 		void petsc_update();
 		void petsc_setup_preconditioner();
 		
-		void sparse_dirichlet(int ind);
 		void find_sparse_bandwidth();
 		int size_sparse_matrix;
 		void petsc_initialize();
