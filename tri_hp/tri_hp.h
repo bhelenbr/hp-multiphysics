@@ -257,15 +257,7 @@ class tri_hp : public r_tri_mesh  {
 		PC   pc;                 /* preconditioner */
 		Array<int,1> dirichlet_rows;
 		int row_counter;
-	
 #endif	
-	
-		/* some new utilities */
-		FLT spectral_radius(Array<FLT,2> A, int n);	// find max eigenvalue
-		FLT l2norm(Array<FLT,1> x, int n);	
-		FLT inner_product(Array<FLT,1> x, Array<FLT,1> y, int n);
-		void matrix_absolute_value(Array<FLT,2> &A, int n);
-
 		virtual ~tri_hp();
 };
 
