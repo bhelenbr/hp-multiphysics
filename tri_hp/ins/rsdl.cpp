@@ -34,6 +34,8 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		crdtocht(tind);
 
 		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+		/* dcrd(i,j) is derivative of physical coordinate i with respect to curvilinear coordinate j */
+		/* dxi/dx = dy/deta, dxi/dy = -dx/deta, deta/dx = -dy/dxi, deta/dy = dx/dxi (divided by jacobian) */
 		for(n=0;n<ND;++n)
 			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 	}
