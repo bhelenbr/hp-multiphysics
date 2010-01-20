@@ -16,8 +16,6 @@
 #define DEBUG_TOL 1.0e-9
 
 void tri_hp::petsc_initialize(){
-
-
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
 
 	int bdofs = 0;
@@ -122,34 +120,13 @@ void tri_hp::petsc_initialize(){
 	return;
 }
 
-
-void tri_hp::petsc_solve(){
-	cout << "petsc called "<< endl;
-	Vec            resid,du;          /* solution, update, function */
-	PetscErrorCode ierr;
-	PetscInt       its,max_newton_its;
-	PetscScalar    petsc_norm;
-	//PetscMPIInt    size,rank;
-	max_newton_its = 20;
-	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
-	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
-	
+void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
-	
-	VecDuplicate(petsc_f,&du);
-	VecDuplicate(petsc_f,&resid);
 
-	/* initialize u with ug */
-	ug_to_petsc();
-		
-	/* insert values into residual f (every processor will do this need to do it a different way) */
-	VecSet(petsc_f,0.0);
-	create_rsdl();
-	
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
 	MatZeroEntries(petsc_J);
-	create_jacobian();
+	petsc_jacobian();
 	PetscGetTime(&time2);
 	
 	cout << "jacobian made " << time2-time1 << " seconds" << endl;
@@ -166,147 +143,87 @@ void tri_hp::petsc_solve(){
 	testJ = 0.0;
 	
 	rsdl();
-	
-	--dof;
-	
+	petsc_make_1D_rsdl_vector(testJ(Range::all(),dof-1));
+		
 	int ind = 0;
 	if (mmovement != coupled_deformable) {
-		for (int i=0;i<npnt;++i)
-			for(int n=0;n<NV;++n)
-				testJ(ind++,dof) = gbl->res.v(i,n);
+		for (int pind=0;pind<npnt;++pind) {
+			for(int n=0;n<NV;++n) {
+				FLT stored_value = ug.v(pind,n);
+				ug.v(pind,n) += dw;
+				rsdl();
+				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				++ind;
+				ug.v(pind,n) = stored_value;
+			}
+		}
 	}
 	else {
-		for (int i=0;i<npnt;++i) {
-			for(int n=0;n<NV;++n)
-				testJ(ind++,dof) = gbl->res.v(i,n);
-			for(int n=0;n<ND;++n)
-				testJ(ind++,dof) = gbl->res.v(i,n);
-		}
-	}
-	
-	int sbgn = npnt*NV;
-	for (int i=0;i<nseg;++i) 
-		for(int m=0;m<sm0;++m)
-			for(int n=0;n<NV;++n)
-				testJ(ind++,dof) = gbl->res.s(i,m,n);
-				
-	int tbgn = sbgn +nseg*sm0*NV;
-	for (int i=0;i<ntri;++i) 
-		for(int m=0;m<im0;++m)
-			for(int n=0;n<NV;++n)
-				testJ(ind++,dof) = gbl->res.i(i,m,n);
-	
-	int ind = 0;
-	for (int pind=0;pind<npnt;++pind) {
-		for(int n1=0;n1<NV;++n1) {
-			FLT stored_value = ug.v(pind,n1);
-			ug.v(pind,n1) += dw;
-			rsdl();
+		for (int pind=0;pind<npnt;++pind) {
+			for(int n=0;n<NV;++n) {
+				FLT stored_value = ug.v(pind,n);
+				ug.v(pind,n) += dw;
+				rsdl();
+				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				++ind;
+				ug.v(pind,n) = stored_value;
+			}
 			
-			int ind1 = 0;
-			for (int i=0;i<npnt;++i)
-				for(int n=0;n<NV;++n) {
-					testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
-					++ind1;
-				}
+			for(int n=0;n<ND;++n) {
+				FLT stored_value = pnts(pind)(n);
+				pnts(pind)(n) += dw;
+				rsdl();
+				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				++ind;
+				pnts(pind)(n) = stored_value;
 			}
-					
-			for (int i=0;i<nseg;++i) {
-				for(int m=0;m<sm0;++m) {
-					for(int n=0;n<NV;++n)  {
-						testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
-						++ind1;
-					}
-				}
-			}
-						
-			for (int i=0;i<ntri;++i) { 
-				for(int m=0;m<im0;++m) {
-					for(int n=0;n<NV;++n) {
-						testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
-						++ind1;
-					}
-				}
-			}
-						
-			++ind;
-			ug.v(pind,n1) = stored_value;
 		}
 	}
-				
+			
 	for (int sind=0;sind<nseg;++sind) {
-		for (int m1=0;m1<sm0;++m1) {
-			for(int n1=0;n1<NV;++n1) {
-				ug.s(sind,m1,n1) += dw;
+		for (int m=0;m<sm0;++m) {
+			for(int n=0;n<NV;++n) {
+				ug.s(sind,m,n) += dw;
 				rsdl();
-				
-				int ind1 = 0;
-				for (int i=0;i<npnt;++i) {
-					for(int n=0;n<NV;++n) {
-						testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
-						++ind;
-					}
-				}
-						
-				for (int i=0;i<nseg;++i) { 
-					for(int m=0;m<sm0;++m) {
-						for(int n=0;n<NV;++n) {
-							testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
-							++ind1;
-						}
-					}
-				}
-							
-				for (int i=0;i<ntri;++i)  {
-					for(int m=0;m<im0;++m) {
-						for(int n=0;n<NV;++n) {
-							testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
-							++ind1;
-						}
-					}
-				}
-							
+				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
 				++ind;
-				ug.s(sind,m1,n1) -= dw;
+				ug.s(sind,m,n) -= dw;
 			}
 		}			
 	}
-	
+
 	for (int tind=0;tind<ntri;++tind) {
-		for (int m1=0;m1<im0;++m1) {
-			for(int n1=0;n1<NV;++n1) {
-				ug.i(tind,m1,n1) += dw;
+		for (int m=0;m<im0;++m) {
+			for(int n=0;n<NV;++n) {
+				ug.i(tind,m,n) += dw;
 				rsdl();
-				
-				int ind1 = 0;
-				for (int i=0;i<npnt;++i) {
-					for(int n=0;n<NV;++n) {
-						testJ(ind1,ind) = (gbl->res.v(i,n) -testJ(ind1,dof))/dw;
-						++ind1;
-					}
-				}
-						
-				for (int i=0;i<nseg;++i) {
-					for(int m=0;m<sm0;++m) {
-						for(int n=0;n<NV;++n) {
-							testJ(ind1,ind) = (gbl->res.s(i,m,n) -testJ(ind1,dof))/dw;
-							++ind1;
-						}
-					}
-				}
-							
-				for (int i=0;i<ntri;++i) {
-					for(int m=0;m<im0;++m) {
-						for(int n=0;n<NV;++n) {
-							testJ(ind1,ind) = (gbl->res.i(i,m,n) -testJ(ind1,dof))/dw;
-						}
-					}
-				}
-							
+				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
 				++ind;
-				ug.i(tind,m1,n1) -= dw;
+				ug.i(tind,m,n) -= dw;
 			}
-		}			
+		}
+	}
+	
+	/* How to perturb extra unknowns? */
+	for(int i=0;i<nebd;++i) {
+		if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
+		for(int j=0;j<ebdry(i)->nseg;++j) {
+			for(int m=0;m<sm0;++m) {
+				for(int n=0;n<ND;++n) {
+					hp_ebdry(i)->crds(j,m,n) += dw;
+					rsdl();
+					petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
+					testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+					++ind;
+					hp_ebdry(i)->crds(j,m,n) -= dw;
+				}
+			}
+		}
 	}
 		
 	const PetscScalar *vals;
@@ -324,8 +241,8 @@ void tri_hp::petsc_solve(){
 					continue;
 				}
 				if (cols[cnt] == j) {
-					if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
-						*gbl->log << " (Mismatched Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+					//if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
+						*gbl->log << " (Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 					++cnt;
 				}
 				else if (cols[cnt] < j) {
@@ -350,19 +267,15 @@ void tri_hp::petsc_solve(){
 	exit(1);
 #endif
 			
+	
+	/* apply dirichlet boundary conditions to vector & create list of locations for zeroing jacobian */
 	row_counter = 0;
-
-	/* apply dirichlet boundary conditions to sparse matrix and vector */
 	for(int j = 0; j < nebd; ++j)
-		hp_ebdry(j)->apply_sparse_dirichlet();		
+		hp_ebdry(j)->petsc_dirichlet();		
 	
 	MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
-
 	
-	VecAssemblyBegin(petsc_f);
-	VecAssemblyEnd(petsc_f);
-			
-	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
+		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
 	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
 	
 //		double rtol=1.0e-12; // relative tolerance
@@ -389,21 +302,48 @@ void tri_hp::petsc_solve(){
 	KSPSetUp(ksp);
 	
 	//MatView(petsc_J,0);
-	//VecView(petsc_f,0);
 
+	return;
+	
+}
+
+void tri_hp::petsc_update() {
+	Vec            resid,du;          /* solution, update, function */
+	PetscErrorCode ierr;
+	PetscInt       its,max_newton_its;
+	PetscScalar    petsc_norm;
+	//PetscMPIInt    size,rank;
+	max_newton_its = 20;
+	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
+	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
+	
+	PetscLogDouble time1,time2;
+	VecDuplicate(petsc_f,&du);
+	VecDuplicate(petsc_f,&resid);
+
+	/* initialize u with ug */
+	ug_to_petsc();
+		
+	/* insert values into residual f (every processor will do this need to do it a different way) */
+	petsc_rsdl();
+	/* apply dirichlet boundary conditions to vector & create list of locations for zeroing jacobian */
+	row_counter = 0;
+	for(int j = 0; j < nebd; ++j)
+		hp_ebdry(j)->petsc_dirichlet();		
+			
+	VecAssemblyBegin(petsc_f);
+	VecAssemblyEnd(petsc_f);
+	
 	PetscGetTime(&time1);
 	KSPSolve(ksp,petsc_f,du);
 	PetscGetTime(&time2);
 
-	MatMult(petsc_J,du,resid);		
-	VecAXPY(resid,-1.0,petsc_f);
-
+	MatMult(petsc_J,du,resid);
+	VecAXPY(resid,-1.0,petsc_f);		
 	VecNorm(resid,NORM_2,&petsc_norm);
 	KSPGetIterationNumber(ksp,&its);
 
-	cout << "linear system residual: " << petsc_norm << endl;
-	cout << "iterations: " << its << endl;
-	cout << "solve time: " << time2-time1 << " seconds" << endl;
+	cout << "linear system residual: " << petsc_norm << "  solve time: " << time2-time1 << " seconds" << endl;
 	
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
@@ -530,8 +470,40 @@ void tri_hp::ug_to_petsc(){
 	return;	
 }
 
-void tri_hp::petsc_finalize(){
 
+void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
+	int ind = 0;	
+	if (mmovement != coupled_deformable) {
+		for (int i=0;i<npnt;++i)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.v(i,n);
+	}
+	else {
+		for (int i=0;i<npnt;++i) {
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.v(i,n);
+			for(int n=0;n<ND;++n)
+				rv(ind++) = dynamic_cast<r_tri_mesh::global *>(gbl)->res(i)(n);
+		}
+	}
+	
+	for (int i=0;i<nseg;++i) 
+		for(int m=0;m<sm0;++m)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.s(i,m,n);
+	
+	for (int i=0;i<ntri;++i) 
+		for(int m=0;m<im0;++m)
+			for(int n=0;n<NV;++n)
+				rv(ind++) = gbl->res.i(i,m,n);
+	
+	for (int i=0;i<nebd;++i) {
+		if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
+			ind += hp_ebdry(i)->petsc_append_extra_rsdls(rv(Range(ind,size_sparse_matrix-1)));
+	}
+}
+
+void tri_hp::petsc_finalize(){
 
 	/* 
      Free work space.  All PETSc objects should be destroyed when they

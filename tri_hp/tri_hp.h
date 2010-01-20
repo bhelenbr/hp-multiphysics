@@ -188,6 +188,8 @@ class tri_hp : public r_tri_mesh  {
 		virtual void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
 			*gbl->log << "I shouldn't be in generic element_rsdl" << std::endl;
 		}
+		void jacobian() {} // Not filled this in yet
+		virtual void element_jacobian(int tind, Array<FLT,2>&);
 
 		/** Relax solution */  
 		void update();
@@ -234,23 +236,22 @@ class tri_hp : public r_tri_mesh  {
 		void findintercept(int bnum, FLT (*fxy)(TinyVector<FLT,ND> &x));
 		void integrated_averages(Array<FLT,1> a);
 		
-	
 #ifdef petsc
-
 		/* Sparse stuff */
-		void create_jacobian();
-		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
-		void create_rsdl();
-		void create_local_rsdl(int tind, Array<FLT,1> &lclres);
+		void petsc_jacobian();
+		void petsc_rsdl();
+		void petsc_update();
+		void petsc_setup_preconditioner();
+		
 		void sparse_dirichlet(int ind);
-		void apply_neumman();
 		void find_sparse_bandwidth();
 		int size_sparse_matrix;
 		void petsc_initialize();
-		void petsc_solve();
 		void petsc_finalize();
+		
 		void petsc_to_ug();
 		void ug_to_petsc();
+		void petsc_make_1D_rsdl_vector(Array<FLT,1>);
 		Mat  petsc_J;           /* Jacobian matrix */
 		Vec  petsc_u,petsc_f;   /* solution,residual */
 		KSP  ksp;               /* linear solver context */

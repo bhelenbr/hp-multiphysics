@@ -154,10 +154,13 @@ class hp_edge_bdry : public egeometry_interface<2> {
 				}
 			}
 		}
+#ifdef petsc
+		virtual int petsc_append_extra_rsdls(Array<FLT,1> rsdl) {return(0);}
+		virtual void petsc_dirichlet() {}
+#endif
 		virtual void update(int stage) {}
 		virtual void mg_restrict() {} 
 		virtual void mg_prolongate() {} 
-		virtual void apply_sparse_dirichlet() {}
 
 		/* ADAPTATION FUNCTIONS */
 		virtual void updatepdata_bdry(int bel,int endpt,hp_edge_bdry *bin) {}

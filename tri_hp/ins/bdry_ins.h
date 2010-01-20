@@ -165,29 +165,37 @@ namespace bdry_ins {
 			}
 		// temp fix me not sure how to make compatible
 #ifdef petsc
-			void apply_sparse_dirichlet() {
+			void petsc_dirichlet() {
 				/* only works if pressure is 4th variable */
 				int gind,v0,sind;
 				int sm=basis::tri(x.log2p)->sm();
+				PetscScalar zero = 0.0;
 				
 				int j = 0;
 				do {
 					sind = base.seg(j++);
 					v0 = x.seg(sind).pnt(0);
 					gind = v0*x.NV;
-					for(int n=0;n<x.NV-1;++n)
-						x.sparse_dirichlet(gind+n);
+					for(int n=0;n<x.NV-1;++n) {						
+						x.dirichlet_rows(x.row_counter)=gind+n;
+						VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+					}
 				} while (j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
 				gind = v0*x.NV;
-				for(int n=0;n<x.NV-1;++n)
-					x.sparse_dirichlet(gind+n);			
+				for(int n=0;n<x.NV-1;++n) {
+					x.dirichlet_rows(x.row_counter)=gind+n;
+					VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+				}
 
 				for(int i=0;i<base.nseg;++i){
 					gind = x.npnt*x.NV+base.seg(i)*sm*x.NV;
-					for(int m=0; m<sm; ++m)
-						for(int n=0;n<x.NV-1;++n)
-							x.sparse_dirichlet(gind+m*x.NV+n);
+					for(int m=0; m<sm; ++m) {
+						for(int n=0;n<x.NV-1;++n) {
+							x.dirichlet_rows(x.row_counter)=gind+m*x.NV+n;
+							VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+						}
+					}
 				}	
 			}
 #endif

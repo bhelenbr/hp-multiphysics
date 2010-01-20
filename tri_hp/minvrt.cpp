@@ -359,6 +359,11 @@ void tri_hp::setup_preconditioner() {
 //                    gbl->sprcn_ut(i,n,n)= 1.0/gbl->sprcn_ut(i,n,n);
 //        }
 	}
+	
+#ifdef petsc
+	petsc_setup_preconditioner();
+#endif
+
 	return;
 }
 

@@ -22,81 +22,89 @@ void tri_hp::find_sparse_bandwidth(){
 	int sm=basis::tri(log2p)->sm();
 	int im=basis::tri(log2p)->im();
 	int tm=basis::tri(log2p)->tm();
-	
-	int begin_seg = npnt*NV;
+
+	int vdofs;
+	if (mmovement != coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+		
+
+	int begin_seg = npnt*vdofs;
 	int begin_tri = begin_seg+nseg*sm*NV;
+	int begin_iso = begin_tri +ntri*im*NV;
 	
 	/* SELF CONNECTIONS */
-	bw(Range(0,begin_seg-1)) = NV;  
-	if (sm) bw(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
+	bw(Range(0,begin_seg-1)) = vdofs; 
+	if (sm) {
+		bw(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
+		/* connections of high order isoparametric mappings */
+		if (mmovement == coupled_deformable) bw(Range(begin_iso,size_sparse_matrix-1)) = vdofs*(sm+3) +NV*(im+2*sm);
+	}
 	if (im) bw(Range(begin_tri,size_sparse_matrix-1)) = tm*NV;
 	
-	/* connected edges and vertices to vertex */
+	/* edges and vertices connected to avertex */
 	for(int i=0; i<npnt; ++i)	
-		for(int n=0;n<NV;++n)
-			bw(i*NV+n) += NV*(pnt(i).nnbor*(sm+1));		
+		for(int n=0;n<vdofs;++n)
+			bw(i*vdofs+n) += pnt(i).nnbor*(vdofs +sm*NV);
 	
 	for(int i=0; i<ntri; ++i) {	
-		/* add interior modes to each vertex */
+		/* interior and opposing side mode for each vertex */
 		for(int j=0;j<3;++j)
-			for(int n=0;n<NV;++n)
-				bw(tri(i).pnt(j)*NV+n) += (im+sm)*NV;
+			for(int n=0;n<vdofs;++n)
+				bw(tri(i).pnt(j)*vdofs+n) += (im+sm)*NV;
 				
 		
-		/* add interior modes to each edge */
+		/* interior modes,opposing side modes, and opposing vertex to each side */
 		for(int j=0;j<3;++j)
 			for(int m=0;m<sm;++m)
 				for(int n=0;n<NV;++n)
-					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm+1)*NV;
+					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
 	}
 	
+	/* Connections to isoparametric coordinates */
+	for(int i=0;i<nebd;++i) {
+		if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
+		
+		for(int j=0;j<ebdry(i)->nseg;++j) {
 
+			int tind = seg(ebdry(i)->seg(j)).tri(0);
+			bw(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+			
+			for(int j=0;j<3;++j) {
+				int sind = tri(tind).seg(j);
+				bw(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
+				int pind = tri(tind).pnt(j);
+				bw(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
+			}
+		}
+	}
+	
 	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
 	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
 
-
-	
-	
 	return;
 }
 
 
-/* clears row in sparse matrix, inserts 1.0 on diagonal, and inserts 0.0 in the residual */
-void tri_hp::sparse_dirichlet(int ind){
-	
-	const PetscInt row = ind;
-	PetscScalar zero = 0.0;
-	// PetscScalar one = 1.0;
-
-	/* apply dirichlet by inserting zero in f */
-	VecSetValues(petsc_f,1,&row,&zero,INSERT_VALUES);
-	dirichlet_rows(row_counter++)=ind;
-
-	
-	return;
-
-// too slow, but easy to implement
-//	MatZeroRows(petsc_J,1,&row,1.0);
-//
-//	return;
-
-}
-
-
-void tri_hp::create_jacobian() {
+void tri_hp::petsc_jacobian() {
 	int gindx,eind,find;
 	int sm = basis::tri(log2p)->sm();
 	int tm = basis::tri(log2p)->tm();
 
+	int vdofs = NV;
+	if (mmovement == coupled_deformable) vdofs += ND;
 	Array<FLT,2> K(NV*(sm+2),NV*(sm+2));
+	Array<FLT,2> Kiso(vdofs*(sm+2),vdofs*(sm+2));
 	Array<int,1> loc_to_glo(NV*(sm+2));
+	Array<int,1> loc_to_glo_iso(vdofs*(sm+2));
 
 	int kcol,krow;
 	FLT dw = 1.0e-4;// fix me temp make a global value?
 	FLT sgn,msgn;
 	Array<FLT,2> Rbar(NV,tm);
 	
-	/* DO NEUMANN BOUNDARY CONDITIONS */
+	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
 	for(int i=0;i<nebd;++i){
 		for(int j=0;j<ebdry(i)->nseg;++j){
 			
@@ -160,7 +168,7 @@ void tri_hp::create_jacobian() {
 		
 		int ind = 0;
 
-		create_local_jacobian_matrix(tind, K);
+		element_jacobian(tind, K);
 		
 		for (int m = 0; m < 3; ++m) {
 			gindx = NV*tri(tind).pnt(m);
@@ -207,136 +215,14 @@ void tri_hp::create_jacobian() {
 	return;
 }
 
-void tri_hp::create_local_jacobian_matrix(int tind, Array<FLT,2> &K) {
-	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
-	FLT dw = 1.0e-4;  //dw=sqrt(eps/l2_norm(q))
-	
-	
-	ugtouht(tind);
-	
-	element_rsdl(tind,0,uht,lf_re,lf_im);
-	for(int i=0;i<basis::tri(log2p)->tm();++i)
-		for(int n=0;n<NV;++n)
-			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
-	
-	int kcol = 0;
-	for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
-		for(int var = 0; var < NV; ++var){
-			uht(var)(mode) += dw;
-			
-			element_rsdl(tind,0,uht,lf_re,lf_im);
+void tri_hp::petsc_rsdl() {
+	rsdl();
 
-			int krow = 0;
-			for(int i=0;i<basis::tri(log2p)->tm();++i)
-				for(int n=0;n<NV;++n)
-					K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
-			
-			++kcol;
-			uht(var)(mode) -= dw;
-		}
-	}	
-
-	return;
-}
-
-void tri_hp::create_rsdl() {
-	int gindx,eind,find,sgn,msgn;
-	
-	int kn = NV*basis::tri(log2p)->tm();
-	Array<FLT,1> lclres(kn);
-	Array<int,1> loc_to_glo(kn);
-	
-	
-	/* DO BOUNDARY CONDITION RESIDUALS */
-	int sm = basis::tri(log2p)->sm();
-	for(int i=0;i<nebd;++i) {
-		for(int j=0;j<ebdry(i)->nseg;++j) {
-			
-			eind = ebdry(i)->seg(j);
-			ugtouht1d(eind);
-			lf = 0.0;
-			hp_ebdry(i)->element_rsdl(j,0);
-
-			/* Vertex Modes */
-			int ind = 0;
-			for (int m = 0; m < 2; ++m) {
-				int gindx = NV*seg(eind).pnt(m);
-				for (int n = 0; n < NV; ++n) {
-					lclres(ind) = lf(n)(m);
-					loc_to_glo(ind++) = gindx+n;
-				}
-			}		
-			
-			/* Edge Modes */
-			if (sm > 0) {
-				int gbl_eind = npnt*NV + eind*sm*NV;
-				for (int m = 0; m < sm; ++m) {
-					for(int n = 0; n < NV; ++n) {
-						lclres(ind) = lf(n)(m+2);
-						loc_to_glo(ind++) = gbl_eind + m*NV + n;
-					}
-				}
-			}
-			VecSetValues(petsc_f,(sm+2)*NV,loc_to_glo.data(),lclres.data(),ADD_VALUES);
-		}
-	}
-	
-	
-	/* NOW DO ELEMENT RESIDUAL */
-	for(int tind = 0; tind < ntri; ++tind){	
-		
-		int ind = 0;
-		
-		create_local_rsdl(tind, lclres);
-		
-		for (int m = 0; m < 3; ++m) {
-			gindx = NV*tri(tind).pnt(m);
-			for (int n = 0; n < NV; ++n)
-				loc_to_glo(ind++) = gindx+n;
-		}		
-		
-		/* EDGE MODES */
-		if (basis::tri(log2p)->p() > 1) {
-			for(int i = 0; i < 3; ++i) {
-				eind = npnt*NV + tri(tind).seg(i)*basis::tri(log2p)->sm()*NV;
-				sgn = tri(tind).sgn(i);
-				msgn = 1;
-				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
-					for(int n = 0; n < NV; ++n) {
-						lclres(ind) *= msgn;
-						loc_to_glo(ind++) = eind + m*NV + n;
-					}
-					msgn *= sgn;
-				}
-			}
-		}
-		
-		/* FACE MODES */
-		if (basis::tri(log2p)->p() > 2) {
-			find = npnt*NV+nseg*basis::tri(log2p)->sm()*NV+tind*basis::tri(log2p)->im()*NV;
-			for(int m = 0; m < basis::tri(log2p)->im(); ++m) {
-				for(int n = 0; n < NV; ++n){
-					loc_to_glo(ind++) = find+m*NV+n;
-				}					
-			}					
-		}		
-		VecSetValues(petsc_f,kn,loc_to_glo.data(),lclres.data(),ADD_VALUES);	
-	}
-	
-	return;
-}
-
-void tri_hp::create_local_rsdl(int tind, Array<FLT,1> &lclres) {
-	Array<TinyVector<FLT,MXTM>,1> lf_re(NV),lf_im(NV);
-
-	int ind = 0;
-
-	ugtouht(tind);
-	
-	element_rsdl(tind,0,uht,lf_re,lf_im);
-	for(int i=0;i<basis::tri(log2p)->tm();++i)
-		for(int n=0;n<NV;++n)
-			lclres(ind++)=lf_re(n)(i)+lf_im(n)(i);	
+	PetscScalar *array;
+	VecGetArray(petsc_f,&array);
+	Array<FLT,1> res(array, shape(size_sparse_matrix), neverDeleteData);
+	petsc_make_1D_rsdl_vector(res);
+	VecRestoreArray(petsc_f, &array);
 	
 	return;
 }

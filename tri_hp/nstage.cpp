@@ -124,6 +124,60 @@ void tri_hp::rsdl(int stage) {
 	return;
 }
 
+void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
+	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
+	FLT dw = 1.0e-4;  //dw=sqrt(eps/l2_norm(q))
+	
+	ugtouht(tind);
+	
+	element_rsdl(tind,0,uht,lf_re,lf_im);
+	for(int i=0;i<basis::tri(log2p)->tm();++i)
+		for(int n=0;n<NV;++n)
+			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
+	
+	
+	if (mmovement != coupled_deformable) {
+		int kcol = 0;
+		for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
+			for(int var = 0; var < NV; ++var){
+				uht(var)(mode) += dw;
+				
+				element_rsdl(tind,0,uht,lf_re,lf_im);
+
+				int krow = 0;
+				for(int i=0;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n)
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+				
+				++kcol;
+				uht(var)(mode) -= dw;
+			}
+		}
+	} else {
+		int kcol = 0;
+		for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
+			for(int var = 0; var < NV; ++var){
+				uht(var)(mode) += dw;
+				
+				element_rsdl(tind,0,uht,lf_re,lf_im);
+
+				int krow = 0;
+				for(int i=0;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n)
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+				
+				++kcol;
+				uht(var)(mode) -= dw;
+			}
+		}
+	}
+	
+	
+
+	return;
+}
+
+
 
 void tri_hp::update() {
 	int i,m,k,n,indx,indx1;
@@ -131,7 +185,7 @@ void tri_hp::update() {
 
 	// temp fix need to better incorporate more solvers
 #ifdef petsc
-	petsc_solve();
+	petsc_update();
 	return;
 #endif
 	
