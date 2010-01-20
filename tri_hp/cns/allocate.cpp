@@ -27,7 +27,7 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 
 	gbl->tau.resize(maxpst,NV);
 
-	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.0);
+	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.3);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
 	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.0);
 	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
@@ -60,7 +60,8 @@ void tri_hp_cns::init(const multigrid_interface& in, init_purpose why, FLT sizer
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_cns::calculate_unsteady_sources() {
 	int i,j,n,tind;
-
+	FLT	ogm1 = 1.0/(gbl->gamma-1.0);
+	
 	for (log2p=0;log2p<=log2pmax;++log2p) {
 		for(tind=0;tind<ntri;++tind) {
 			if (tri(tind).info > -1) {
@@ -94,7 +95,7 @@ void tri_hp_cns::calculate_unsteady_sources() {
 					for(n=0;n<NV-1;++n)
 						dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
 
-					double e = gbl-ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
+					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					dugdt(log2p,tind,NV-1)(i,j) = e*cjcb(i,j);
 					for(n=0;n<ND;++n)
 						dxdt(log2p,tind,n)(i,j) = crd(n)(i,j);

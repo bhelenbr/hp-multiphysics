@@ -47,6 +47,8 @@ class tri_hp_cns : public tri_hp {
 		void setup_preconditioner();
 		void rsdl(int stage);
 		void calculate_unsteady_sources();
+		void pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT gam, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
+
 
 };
 #endif

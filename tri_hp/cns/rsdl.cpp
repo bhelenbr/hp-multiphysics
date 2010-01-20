@@ -220,10 +220,12 @@ void tri_hp_cns::rsdl(int stage) {
 				/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 				for(i=0;i<lgpx;++i) {
 					for(j=0;j<lgpn;++j) {
+						
+						tres = 0.0;
+						for(int m=0; m < NV; ++m)
+							for(int n=0; n < NV; ++n)							
+								tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
 
-						tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-						tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-						tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
 
 #ifndef INERTIALESS
 						df(0,0)(i,j) -= (dcrd(1,1)(i,j)*(2*u(0)(i,j)-mvel(0)(i,j))

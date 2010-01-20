@@ -1,4 +1,6 @@
 #include <math.h>
+#include <utilities.h>
+#include <myblas.h>
 
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
@@ -11,11 +13,9 @@ void tri_hp_cns::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1,gam,pmax,rtmax;
 	TinyVector<int,3> v;
-	TinyMatrix<FLT,2> P(4,4),Pinv(4,4),A(4,4),B(4,4),S(4,4),Tinv(4,4),temp(4,4);
-	int info,ipiv[NV];
-	char trans[] = "T";
+
 	
-	FLT nu = gbl->mu/gbl->rho;
+	//FLT nu = gbl->mu/gbl->rho;
 
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
@@ -137,81 +137,10 @@ void tri_hp_cns::setup_preconditioner() {
 			exit(1);
 		}
 		q = sqrt(qmax);
-		FLT op = 1.0/pmax;
-		FLT rt = rtmax;
-		FLT gm1 = gam-1;
-		
-		P =       qmax*gm1,        -q*gm1,       -q*gm1,     gm1,
-			      -q*op*rt,         op*rt,        0.0,       0.0,
-			      -q*op*rt           0.0,        op*rt,      0.0,
-			op*rt*(gm1*qmax-rt),-op*rt*q*gm1,-op*rt*q*gm1,op*rt*gm1;
 
-		
-		/* Calculate and store tprcn (4x4) matrix */	
-		
-		FLT ort = 1.0/rtmax;
-		
-		Pinv =         ort,        0.0,          0.0       -pmax*ort*ort,
-				      ort*q,     pmax*ort,       0.0,     -pmax*ort*ort*q,
-				      ort*q,       0.0,       pmax*ort,   -pmax*ort*ort*q,
-				1.0/gm1+rt*qmax, pmax*ort*q, pmax*ort*q,-pmax*ort*ort*qmax;
+		//pennsylvania_peanut_butter(q, pmax, rtmax, gbl->gam, hmax, nu gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);{
 
-
-		gbl->tprcn_ut(tind,Range::all(),Range::all())=Pinv;//temp replace Pinv with this
-
-		A =         ort*q,                 pmax*ort,                    0.0,                        -pmax*ort*ort*q,
-				ort*qmax+1.0,          2.0*pmax*ort*q,                  0.0,                     -pmax*ort*ort*qmax,
-			     ort*qmax,               pmax*ort*q,                pmax*ort*q,                    -pmax*ort*ort*qmax,
-		   q*(gam/gm1+qmax*ort),pmax*((gam/gm1+qmax*ort)+ort*qmax),pmax*ort*qmax,-pmax*ort*ort*q*(gam/gm1*rtmax+qmax)+pmax*ort*q*gam/gm1;
-		
-		temp = 0.0;
-		for (int i = 0; i < n; ++i)
-			for (int j = 0; j < n; ++j)
-				for (int k = 0; k < n; ++k)
-					temp(i,j)+=P(i,k)*A(k,j);	
-		A=temp;
-		matrix_absolute_value(A);
-	
-
-		B =         ort*q,            0.0,						pmax*ort,                -pmax*ort*ort*q,
-				  ort*qmax,         pmax*ort*q,                pmax*ort*q,                 -pmax*ort*ort*qmax,
-				ort*qmax+1.0,         0.0,                     2.0*pmax*ort*q,               -pmax*ort*ort*qmax,
-			q*(gam/gm1+qmax*ort),pmax*ort*qmax,pmax*((gam/gm1+qmax*ort)+ort*qmax),-pmax*ort*ort*q*(gam/gm1*rtmax+qmax)+pmax*ort*q*gam/gm1;
-		
-		temp = 0.0;
-		for (int i = 0; i < NV; ++i)
-			for (int j = 0; j < NV; ++j)
-				for (int k = 0; k < NV; ++k)
-					temp(i,j)+=P(i,k)*B(k,j);	
-		B=temp;
-		matrix_absolute_value(B);
-		
-		S=0,0, 0, 0,
-		  0,nu,0, 0,
-		  0,0, nu,0,
-		  0,0, 0, nu;
 			
-		S=pmax/hmax*S;//temp fix me
-		
-		Tinv=2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
-		
-		/* Write a routine given tprcn, a, b, s, returns dt & tau */
-		dt=spectral_radius(Tinv,NV);
-		
-		/*  LU factorization  */
-		GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
-		
-		for (int i = 0; i < NV; ++i)
-			for (int j = 0; j < NV; ++j)
-				temp(i,j)=P(j,i);
-		
-		/* Solve transposed system temp = inv(Tinv)*temp */
-		GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),n,info);
-		
-		for (int i = 0; i < NV; ++i)
-			for (int j = 0; j < NV; ++j)
-				gbl->tau(tind,i,j)=temp(j,i);
-					  
 		/* FROM HERE BELOW WILL CHANGE */
 		lam1 = q + sqrt(qmax +gam);
 
@@ -221,7 +150,7 @@ void tri_hp_cns::setup_preconditioner() {
 
 		/* SET UP DIAGONAL PRECONDITIONER */
 		// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
-		jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
+		//jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 
 #ifdef TIMEACCURATE
 		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
@@ -236,11 +165,11 @@ void tri_hp_cns::setup_preconditioner() {
 
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-		gbl->tprcn_ut(tind,0,0) = gbl->rho*jcb;    
-		gbl->tprcn_ut(tind,1,1) = gbl->rho*jcb;      
-		gbl->tprcn_ut(tind,2,2) = jcb/gam;
-		gbl->tprcn_ut(tind,0,2) = jcb*ubar/gam;
-		gbl->tprcn_ut(tind,1,2) = jcb*vbar/gam;
+//		gbl->tprcn_ut(tind,0,0) = gbl->rho*jcb;    
+//		gbl->tprcn_ut(tind,1,1) = gbl->rho*jcb;      
+//		gbl->tprcn_ut(tind,2,2) = jcb/gam;
+//		gbl->tprcn_ut(tind,0,2) = jcb*ubar/gam;
+//		gbl->tprcn_ut(tind,1,2) = jcb*vbar/gam;
 		for(i=0;i<3;++i) {
 			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
@@ -253,4 +182,94 @@ void tri_hp_cns::setup_preconditioner() {
 	tri_hp::setup_preconditioner();
 }
 
+
+void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT gam, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+	
+	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
+
+	FLT q2=qmax*qmax;
+	FLT op = 1.0/pmax;
+	FLT gm1 = gam-1;
+	
+	/* Preconditioner */
+	P =  q2*gm1,              -qmax*gm1,       -qmax*gm1,          gm1,
+	    -qmax*op*rtmax,       op*rtmax,        0.0,                0.0,
+	    -qmax*op*rtmax,        0.0,             op*rtmax,           0.0,
+	    op*rtmax*(gm1*q2-rtmax), -op*rtmax*qmax*gm1, -op*rtmax*qmax*gm1, op*rtmax*gm1;
+	
+	FLT ort = 1.0/rtmax;
+	
+	/* Inverse of Preconditioner */
+	Pinv = ort,              0.0,           0.0            -pmax*ort*ort,
+	       ort*qmax,         pmax*ort,      0.0,           -pmax*ort*ort*qmax,
+	       ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
+	       1.0/gm1+rtmax*q2, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
+	
+ 	FLT ort2=ort*ort;
+	FLT gogm1=gam/gm1;
+	
+	/* df/dw */
+	A = ort*qmax,              pmax*ort,                         0.0,           -pmax*ort2*qmax,
+	    ort*q2+1.0,            2.0*pmax*ort*qmax,                0.0,           -pmax*ort2*q2,
+	    ort*q2,                pmax*ort*qmax,                    pmax*ort*qmax, -pmax*ort2*q2,
+	    qmax*(gogm1+q2*ort), pmax*((gogm1+q2*ort)+ort*qmax), pmax*ort*q2,   -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
+	
+	
+	//A=product(P,A);
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*A(k,j);
+	A=temp;
+	
+	//matrix_absolute_value(A);
+	
+	/* dg/dw */
+	B = ort*qmax,              0.0,			  pmax*ort,                       -pmax*ort2*qmax,
+	    ort*q2,                pmax*ort*qmax, pmax*ort*qmax,                  -pmax*ort2*q2,
+	    ort*q2+1.0,            0.0,           2.0*pmax*ort*qmax,              -pmax*ort2*q2,
+	    qmax*(gogm1+q2*ort), pmax*ort*q2,   pmax*((gogm1+q2*ort)+ort*q2), -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
+	
+	
+	//B=product(P,B);
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*B(k,j);
+	
+	B=temp;
+	
+	//matrix_absolute_value(B);
+	
+	S= 0.0, 0.0, 0.0, 0.0,
+	   0.0, nu,  0.0, 0.0,
+	   0.0, 0.0, nu,  0.0,
+	   0.0, 0.0, 0.0, nu;
+	
+	S=pmax/hmax*S;//temp fix me
+	
+	Tinv=2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
+	
+	//timestep=1.0/spectral_radius(Tinv);
+	
+	/*  LU factorization  */
+	int info,ipiv[NV];
+	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
+	
+	for (int i = 0; i < NV; ++i)
+		for (int j = 0; j < NV; ++j)
+			temp(i,j)=P(j,i);
+	
+	/* Solve transposed system temp' = inv(Tinv')*temp' */
+	char trans[] = "T";
+	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+	
+	for (int i = 0; i < NV; ++i)
+		for (int j = 0; j < NV; ++j)
+			Tau(i,j)=temp(j,i);
+	
+	return;
+}
 
