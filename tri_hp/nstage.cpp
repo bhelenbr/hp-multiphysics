@@ -154,26 +154,86 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 			}
 		}
 	} else {
+		Array<FLT,2> r_K(3*ND,3*ND);
+		/* Get deformable mesh Jacobian */
+		r_tri_mesh::element_jacobian(tind,r_K);
+		const TinyVector<int,ND*3> rows(NV,NV+1,2*NV+ND,2*NV+ND+1,3*NV+2*ND,3*NV+2*ND+1);
+		for (int i=0;i<3*ND;++i)
+			for (int j=0;j<3*ND;++j)
+				K(rows(i),rows(j)) = r_K(i,j);
+		
 		int kcol = 0;
-		for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
+		for(int mode = 0; mode < 3; ++mode){
 			for(int var = 0; var < NV; ++var){
 				uht(var)(mode) += dw;
 				
 				element_rsdl(tind,0,uht,lf_re,lf_im);
 
 				int krow = 0;
-				for(int i=0;i<basis::tri(log2p)->tm();++i)
-					for(int n=0;n<NV;++n)
+				for(int i=0;i<3;++i) {
+					for(int n=0;n<NV;++n) {
 						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+					}
+					krow += ND;
+				}
+						
+				for(int i=3;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n) 
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+				
+				++kcol;
+				uht(var)(mode) -= dw;
+			}
+			kcol += ND;
+		}
+		
+		for(int mode = 3; mode <  basis::tri(log2p)->tm(); ++mode){
+			for(int var = 0; var < NV; ++var){
+				uht(var)(mode) += dw;
+				
+				element_rsdl(tind,0,uht,lf_re,lf_im);
+				
+				int krow = 0;
+				for(int i=0;i<3;++i) {
+					for(int n=0;n<NV;++n) {
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+					}
+					krow += ND;
+				}
+				
+				for(int i=3;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n) 
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
 				
 				++kcol;
 				uht(var)(mode) -= dw;
 			}
 		}
+		
+		for(int p=0;p<3;++p) {
+			for(int n=0;n<ND;++n) {
+				pnts(tri(tind).pnt(p))(n) += dw;
+				
+				element_rsdl(tind,0,uht,lf_re,lf_im);
+				
+				int krow = 0;
+				for(int i=0;i<3;++i) {
+					for(int n=0;n<NV;++n) {
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+					}
+					krow += ND;
+				}
+				
+				for(int i=3;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n) 
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+				
+				++kcol;
+				pnts(tri(tind).pnt(p))(n) -= dw;
+			}
+		}
 	}
 	
-	
-
 	return;
 }
 

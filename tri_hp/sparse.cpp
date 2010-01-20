@@ -89,106 +89,44 @@ void tri_hp::find_sparse_bandwidth(){
 
 void tri_hp::petsc_jacobian() {
 	int gindx,eind,find;
-	int sm = basis::tri(log2p)->sm();
-	int tm = basis::tri(log2p)->tm();
+
+	const int sm = basis::tri(log2p)->sm();
+	const int im = basis::tri(log2p)->im();
+	const int tm = basis::tri(log2p)->tm();
 
 	int vdofs = NV;
 	if (mmovement == coupled_deformable) vdofs += ND;
-	Array<FLT,2> K(NV*(sm+2),NV*(sm+2));
-	Array<FLT,2> Kiso(vdofs*(sm+2),vdofs*(sm+2));
-	Array<int,1> loc_to_glo(NV*(sm+2));
-	Array<int,1> loc_to_glo_iso(vdofs*(sm+2));
-
-	int kcol,krow;
-	FLT dw = 1.0e-4;// fix me temp make a global value?
+	int kn = 3*vdofs +(tm-3)*NV;
+	Array<int,1> loc_to_glo(kn);
+	Array<FLT,2> K(kn,kn);
 	FLT sgn,msgn;
 	Array<FLT,2> Rbar(NV,tm);
-	
-	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
-	for(int i=0;i<nebd;++i){
-		for(int j=0;j<ebdry(i)->nseg;++j){
-			
-			/* Calculate and store initial residual */
-			eind = ebdry(i)->seg(j);
-			ugtouht1d(eind);
-			lf = 0.0;
-			hp_ebdry(i)->element_rsdl(j,0);
 
-			int ind = 0;
-			for(int k=0;k<2;++k) {
-				int gindx = NV*seg(eind).pnt(k);
-				for(int n=0;n<NV;++n) {
-					Rbar(n,k) = lf(n)(k);
-					loc_to_glo(ind++) = gindx+n;
-				}
-			}
-			
-			/* EDGE MODES */
-			if (sm > 0) {
-				int gbl_eind = npnt*NV + eind*sm*NV;
-				for (int m = 0; m < sm; ++m) {
-					for(int n = 0; n < NV; ++n) {
-						Rbar(n,m+2) = lf(n)(m+2);
-						loc_to_glo(ind++) = gbl_eind + m*NV + n;
-					}
-				}
-			}
-			
-			/* Numerically create Jacobian */
-			kcol = 0;
-			for(int mode = 0; mode < sm+2; ++mode){
-				for(int var = 0; var < NV; ++var){
-					uht(var)(mode) += dw;
-					
-					lf = 0.0;
-					hp_ebdry(i)->element_rsdl(j,0);
-
-					krow = 0;
-					for(int k=0;k<sm+2;++k)
-						for(int n=0;n<NV;++n)
-							K(krow++,kcol) = (lf(n)(k)-Rbar(n,k))/dw;
-					
-					++kcol;
-					
-					uht(var)(mode) -= dw;
-				}
-			}
-			
-
-			MatSetValues(petsc_J,NV*(sm+2),loc_to_glo.data(),NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
-		}
-	}
-		
-	int kn = tm*NV;
-	K.resize(kn,kn);
-	loc_to_glo.resize(kn);
-		
-	/* NOW DO ELEMENTS */
+	/* DO ELEMENTS */
 	for(int tind = 0; tind < ntri; ++tind){	
 		
 		int ind = 0;
-
 		element_jacobian(tind, K);
 		
 		for (int m = 0; m < 3; ++m) {
-			gindx = NV*tri(tind).pnt(m);
-			for (int n = 0; n < NV; ++n)
-				loc_to_glo(ind++) = gindx+n;
+			gindx = vdofs*tri(tind).pnt(m);
+			for (int n = 0; n < vdofs; ++n)
+				loc_to_glo(ind++) = gindx++;
 		}		
 		
 		/* EDGE MODES */
-		if (basis::tri(log2p)->p() > 1) {
+		if (sm) {
 			for(int i = 0; i < 3; ++i) {
-				eind = npnt*NV + tri(tind).seg(i)*basis::tri(log2p)->sm()*NV;
+				gindx = npnt*vdofs +tri(tind).seg(i)*sm*NV;
 				sgn = tri(tind).sgn(i);
 				msgn = 1;
-				for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
+				for (int m = 0; m < sm; ++m) {
 					for(int n = 0; n < NV; ++n) {
 						for(int j = 0; j < kn; ++j) {
 							K(ind,j) *= msgn;
 							K(j,ind) *= msgn;
 						}
-						loc_to_glo(ind++) = eind + m*NV + n;
+						loc_to_glo(ind++) = gindx++;
 					}
 					msgn *= sgn;
 				}
@@ -196,21 +134,21 @@ void tri_hp::petsc_jacobian() {
 		}
 		
 		/* INTERIOR	MODES */
-		if (basis::tri(log2p)->p() > 2) {
-			find = npnt*NV+nseg*basis::tri(log2p)->sm()*NV+tind*basis::tri(log2p)->im()*NV;
-			for(int m = 0; m < basis::tri(log2p)->im(); ++m) {
+		if (tm) {
+			gindx = npnt*vdofs +nseg*sm*NV +tind*im*NV;
+			for(int m = 0; m < im; ++m) {
 				for(int n = 0; n < NV; ++n){
-					loc_to_glo(ind++) = find+m*NV+n;
+					loc_to_glo(ind++) = gindx++;
 				}
 			}
-					
 		}		
-		
-		
 		MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
-			
-				
-	}	
+	}
+	
+	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
+	for(int i=0;i<nebd;++i) {
+		hp_ebdry(i)->petsc_jacobian();
+	}
 
 	return;
 }

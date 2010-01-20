@@ -499,7 +499,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 	
 	for (int i=0;i<nebd;++i) {
 		if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
-			ind += hp_ebdry(i)->petsc_append_extra_rsdls(rv(Range(ind,size_sparse_matrix-1)));
+			ind += hp_ebdry(i)->petsc_rsdl(rv(Range(ind,size_sparse_matrix-1)));
 	}
 }
 

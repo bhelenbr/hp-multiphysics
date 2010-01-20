@@ -132,30 +132,12 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
 		virtual void element_rsdl(int sind,int stage) {}
-		virtual void rsdl(int stage) {
-			x.lf = 0.0;
-			for(int j=0;j<base.nseg;++j) {
-				int sind = base.seg(j);
-				int v0 = x.seg(sind).pnt(0);
-				int v1 = x.seg(sind).pnt(1);
-				
-				x.ugtouht1d(sind);
-				element_rsdl(j,stage);
-		
-				for(int n=0;n<x.NV;++n)
-					x.gbl->res.v(v0,n) += x.lf(n)(0);
-				
-				for(int n=0;n<x.NV;++n)
-					x.gbl->res.v(v1,n) += x.lf(n)(1);
-				
-				for(int k=0;k<basis::tri(x.log2p)->sm();++k) {
-					for(int n=0;n<x.NV;++n)
-						x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
-				}
-			}
-		}
+		virtual void rsdl(int stage);
+		virtual void element_jacobian(int sind, Array<FLT,2>& K);
+		virtual void jacobian() {}
 #ifdef petsc
-		virtual int petsc_append_extra_rsdls(Array<FLT,1> rsdl) {return(0);}
+		virtual void petsc_jacobian();
+		virtual int petsc_rsdl(Array<FLT,1> res) {}
 		virtual void petsc_dirichlet() {}
 #endif
 		virtual void update(int stage) {}

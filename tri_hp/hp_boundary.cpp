@@ -801,3 +801,119 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 
 	return;
 }
+
+void hp_edge_bdry::rsdl(int stage) {
+	x.lf = 0.0;
+	for(int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
+		int v0 = x.seg(sind).pnt(0);
+		int v1 = x.seg(sind).pnt(1);
+		
+		x.ugtouht1d(sind);
+		element_rsdl(j,stage);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(v0,n) += x.lf(n)(0);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(v1,n) += x.lf(n)(1);
+		
+		for(int k=0;k<basis::tri(x.log2p)->sm();++k) {
+			for(int n=0;n<x.NV;++n)
+				x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
+		}
+	}
+}
+
+
+void hp_edge_bdry::element_jacobian(int sind, Array<FLT,2>& K) {
+	int sm = basis::tri(x.log2p)->sm();	
+	FLT dw = 1.0e-4;// fix me temp make a global value?
+	Array<FLT,2> Rbar(x.NV,sm+2);
+	Array<int,1> loc_to_glo(x.NV*(sm+2));
+
+	/* Calculate and store initial residual */
+	int eind = base.seg(sind);
+	x.ugtouht1d(eind);
+	
+	x.lf = 0.0;
+	element_rsdl(sind,0);
+
+	int ind = 0;
+	for(int k=0;k<2;++k) {
+		int gindx = x.NV*x.seg(eind).pnt(k);
+		for(int n=0;n<x.NV;++n) {
+			Rbar(n,k) = x.lf(n)(k);
+			loc_to_glo(ind++) = gindx+n;
+		}
+	}
+
+	/* EDGE MODES */
+	if (sm > 0) {
+		int gbl_eind = x.npnt*x.NV + eind*sm*x.NV;
+		for (int m = 0; m < sm; ++m) {
+			for(int n = 0; n < x.NV; ++n) {
+				Rbar(n,m+2) = x.lf(n)(m+2);
+				loc_to_glo(ind++) = gbl_eind + m*x.NV + n;
+			}
+		}
+	}
+
+	/* Numerically create Jacobian */
+	int kcol = 0;
+	for(int mode = 0; mode < sm+2; ++mode){
+		for(int var = 0; var < x.NV; ++var){
+			x.uht(var)(mode) += dw;
+			
+			x.lf = 0.0;
+			element_rsdl(sind,0);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<x.NV;++n)
+					K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+					
+					++kcol;
+			
+			x.uht(var)(mode) -= dw;
+		}
+	}
+}
+
+void hp_edge_bdry::petsc_jacobian() {
+	int sm = basis::tri(x.log2p)->sm();	
+	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
+	Array<int,1> loc_to_glo(x.NV*(sm+2));
+	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+		
+	for(int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
+			
+		int ind = 0;
+		for(int k=0;k<2;++k) {
+			int gindx = vdofs*x.seg(sind).pnt(k);
+			for(int n=0;n<x.NV;++n) {
+				loc_to_glo(ind++) = gindx++;
+			}
+		}
+		
+		/* EDGE MODES */
+		if (sm > 0) {
+			int gbl_eind = x.npnt*vdofs + sind*sm*x.NV;
+			for (int m = 0; m < sm; ++m) {
+				for(int n = 0; n < x.NV; ++n) {
+					loc_to_glo(ind++) = gbl_eind++;
+				}
+			}
+		}
+		
+		element_jacobian(j,K);
+		
+		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+	}
+}
