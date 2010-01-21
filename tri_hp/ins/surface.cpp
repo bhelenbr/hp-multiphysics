@@ -1176,7 +1176,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 
 	/* Numerically create Jacobian */
 	int kcol = 0;
-	for(int mode = 0; mode < sm+2; ++mode) {
+	for(int mode = 0; mode < 2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
 			x.uht(var)(mode) += dw;
 			
@@ -1190,27 +1190,40 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 			++kcol;
 			x.uht(var)(mode) -= dw;
 		}
-	}
-	
-	for(int pnt = 0; pnt < 2; ++pnt) {
+		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
-			x.pnts(x.seg(sind).pnt(pnt))(var) += dw;
-			
+			x.pnts(x.seg(sind).pnt(var))(var) += dw;
+
 			element_rsdl(indx,lf);
-			
+
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
 					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
-					
+
 			++kcol;
-			x.pnts(x.seg(sind).pnt(pnt))(var) -= dw;
+			x.pnts(x.seg(sind).pnt(var))(var) -= dw;
 		}
 	}
+
 	
-	for(int mode = 0; mode < sm; ++mode) {
+	for(int mode = 2; mode < sm+2; ++mode) {
+		for(int var = 0; var < x.NV; ++var) {
+			x.uht(var)(mode) += dw;
+
+			element_rsdl(indx,lf);
+
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+
+			++kcol;
+			x.uht(var)(mode) -= dw;
+		}
+					 
 		for(int var = 0; var < tri_mesh::ND; ++var) {
-			crds(indx,mode,var) += dw;
+			crds(indx,mode-2,var) += dw;
 			
 			element_rsdl(indx,lf);
 			
@@ -1221,7 +1234,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 					
 					++kcol;
 			
-			crds(indx,mode,var) -= dw;
+			crds(indx,mode-2,var) -= dw;
 		}
 	}
 	
@@ -1233,28 +1246,43 @@ void surface::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
 	Array<int,1> loc_to_glo(x.NV*(sm+2));
-	
+	PetscScalar zero = 0.0;
 	int vdofs = x.NV +tri_mesh::ND;
+
+	/* Clear vertex rows assigned as dirichlet by r_mesh */
+	int j = 0;
+	int sind;
+	do {
+		sind = base.seg(j);
+		int gindx = vdofs*x.seg(sind).pnt(0) +x.NV;
+		MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
+		++gindx;
+		MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
+	} while (j++ < base.nseg);
+	int gindx = vdofs*x.seg(sind).pnt(1) +x.NV;
+	MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
+	++gindx;
+	MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);	
+	
+	for (j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
 		
-	for(int j=0;j<base.nseg;++j) {
-		int sind = base.seg(j);
-			
+		/* CREATE GLOBAL NUMBERING LIST */
 		int ind = 0;
-		for(int k=0;k<2;++k) {
-			int gindx = vdofs*x.seg(sind).pnt(k);
-			for(int n=0;n<x.NV;++n) {
+		for(int mode = 0; mode < 2; ++mode) {
+			int gindx = vdofs*x.seg(sind).pnt(mode);
+			for(int var = 0; var < vdofs; ++var)
 				loc_to_glo(ind++) = gindx++;
-			}
 		}
 		
-		/* EDGE MODES */
-		if (sm > 0) {
-			int gbl_eind = x.npnt*vdofs + sind*sm*x.NV;
-			for (int m = 0; m < sm; ++m) {
-				for(int n = 0; n < x.NV; ++n) {
-					loc_to_glo(ind++) = gbl_eind++;
-				}
-			}
+		int gindxNV = x.npnt*vdofs +x.NV*sind;
+		int gindxND = x.npnt*vdofs +x.NV*x.nseg +x.NV*x.ntri;
+		for(int mode = 0; mode < sm; ++mode) {
+			for(int var = 0; var < x.NV; ++var)
+				loc_to_glo(ind++) = gindxNV++;
+				
+			for(int var = 0; var < tri_mesh::ND; ++var)
+				loc_to_glo(ind++) = gindxND++;
 		}
 		
 		element_jacobian(j,K);
@@ -1262,4 +1290,21 @@ void surface::petsc_jacobian() {
 		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 }
+
+int surface::petsc_rsdl(Array<double,1> res) {
+	int sm = basis::tri(x.log2p)->sm();
+	int ind = 0;
+	for(int j=0;j<base.nseg;++j) {
+		for(int m=0;m<sm;++m) {
+			for(int n=0;n<tri_mesh::ND;++n) {
+				res(ind++) = gbl->sres(m)(n);
+			}
+		}
+	}
+	return(ind);
+}
+
+
 #endif
+
+/* Remember that vertex jacobians need to be written */
