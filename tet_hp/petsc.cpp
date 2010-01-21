@@ -229,17 +229,16 @@ void tet_hp::petsc_solve(){
 	}
 	
 	
-	ierr = VecDestroy(du);//CHKERRQ(ierr);
+	VecDestroy(du);
 
 	return;
 }
 
 /* temp fix can I input petsc vectors ? */
 void tet_hp::petsc_to_ug(){
-	PetscErrorCode ierr;
 	PetscScalar *array;
 	int ind = 0;
-	ierr = VecGetArray(petsc_u,&array);
+	VecGetArray(petsc_u,&array);
 
 	for(int i = 0; i < npnt; ++i)
 		for(int n = 0; n < NV; ++n)
@@ -260,7 +259,7 @@ void tet_hp::petsc_to_ug(){
 			for(int n = 0; n < NV; ++n)
 				ug.i(i,m,n) = array[ind++];	
 	
-	ierr = VecRestoreArray(petsc_u,&array);
+	VecRestoreArray(petsc_u,&array);
 	return;	
 }
 
