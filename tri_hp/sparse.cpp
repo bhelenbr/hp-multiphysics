@@ -88,7 +88,7 @@ void tri_hp::find_sparse_bandwidth(){
 
 
 void tri_hp::petsc_jacobian() {
-	int gindx,eind,find;
+	int gindx;
 
 	const int sm = basis::tri(log2p)->sm();
 	const int im = basis::tri(log2p)->im();
@@ -103,7 +103,7 @@ void tri_hp::petsc_jacobian() {
 	Array<FLT,2> Rbar(NV,tm);
 
 	/* DO ELEMENTS */
-	for(int tind = 0; tind < ntri; ++tind){	
+	for(int tind = 0; tind < ntri; ++tind) {	
 		
 		int ind = 0;
 		element_jacobian(tind, K);
@@ -146,9 +146,18 @@ void tri_hp::petsc_jacobian() {
 	}
 	
 	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
-	for(int i=0;i<nebd;++i) {
+	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian();
-	}
+	
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->petsc_jacobian();
+		
+	for(int i=0;i<nebd;++i) 
+		hp_ebdry(i)->petsc_jacobian_dirichlet();
+		
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->petsc_jacobian_dirichlet();	
+	
 
 	return;
 }

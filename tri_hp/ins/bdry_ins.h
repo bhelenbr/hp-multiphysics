@@ -627,6 +627,15 @@ namespace bdry_ins {
 					x.ebdry(base.ebdry(0))->mvpttobdry(x.ebdry(base.ebdry(0))->nseg-1,1.0,pt);
 				}
 			}
+			
+#ifdef petsc
+			void petsc_jacobian_dirichlet() {
+				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+				for(int n=0;n<=fix_norm;++n) {
+					MatZeroRows(petsc_J,1,&row,1.0);
+					++row;
+				}
+			}
 	};
 
 	class surface_periodic_pt : public surface_fixed_pt {
