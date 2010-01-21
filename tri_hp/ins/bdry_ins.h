@@ -527,11 +527,17 @@ namespace bdry_ins {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
+			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
 			void maxres();
 			void setup_preconditioner();
 			void minvrt();
 			void update(int stage);
 			void mg_restrict(); 
+			void element_jacobian(int indx, Array<FLT,2>& K);
+#ifdef petsc
+			void petsc_jacobian();
+			int petsc_rsdl(Array<FLT,1> res);
+#endif
 	};
 
 	/*******************************/

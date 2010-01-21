@@ -839,22 +839,17 @@ void hp_edge_bdry::element_jacobian(int sind, Array<FLT,2>& K) {
 	x.lf = 0.0;
 	element_rsdl(sind,0);
 
-	int ind = 0;
 	for(int k=0;k<2;++k) {
-		int gindx = x.NV*x.seg(eind).pnt(k);
 		for(int n=0;n<x.NV;++n) {
 			Rbar(n,k) = x.lf(n)(k);
-			loc_to_glo(ind++) = gindx+n;
 		}
 	}
 
 	/* EDGE MODES */
 	if (sm > 0) {
-		int gbl_eind = x.npnt*x.NV + eind*sm*x.NV;
 		for (int m = 0; m < sm; ++m) {
 			for(int n = 0; n < x.NV; ++n) {
 				Rbar(n,m+2) = x.lf(n)(m+2);
-				loc_to_glo(ind++) = gbl_eind + m*x.NV + n;
 			}
 		}
 	}
@@ -880,6 +875,7 @@ void hp_edge_bdry::element_jacobian(int sind, Array<FLT,2>& K) {
 	}
 }
 
+#ifdef petsc
 void hp_edge_bdry::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
@@ -917,3 +913,4 @@ void hp_edge_bdry::petsc_jacobian() {
 		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 }
+#endif

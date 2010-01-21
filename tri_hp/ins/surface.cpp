@@ -159,12 +159,18 @@ void surface::rsdl(int stage) {
 	int i,j,m,n,sind,indx,count,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
-	FLT jcb;
 	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
 	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
 	TinyMatrix<FLT,8,MXGP> res;
-	TinyMatrix<FLT,4,MXGP> lf,lf1;  
 
+	const int sm = basis::tri(x.log2p)->sm();
+#ifndef DROP
+	Array<FLT,2> lf(x.NV+tri_mesh::ND,sm+2);
+#else
+	Array<FLT,2> lf(x.NV+tri_mesh::ND+1,sm+2);
+#endif
+
+	
 	/**************************************************/
 	/* DETERMINE MESH RESIDUALS & SURFACE TENSION      */
 	/**************************************************/
@@ -179,63 +185,10 @@ void surface::rsdl(int stage) {
 		sind = base.seg(indx);
 		v0 = x.seg(sind).pnt(0);
 		v1 = x.seg(sind).pnt(1);
-
-		x.crdtocht1d(sind);
-		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
+	
 		x.ugtouht1d(sind);
-		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
-
-		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
-			norm(0) =  dcrd(1,i);
-			norm(1) = -dcrd(0,i);
-			jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-
-			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
-			for(n=0;n<tri_mesh::ND;++n) {
-				mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
-#ifdef DROP
-				mvel(n,i) -= tri_hp_ins::mesh_ref_vel(n);
-#endif    
-			}
-			/* TANGENTIAL SPACING */                
-			res(0,i) = -ksprg(indx)*jcb;
-			/* NORMAL FLUX */
-			res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
-			/* UPWINDING BASED ON TANGENTIAL VELOCITY */
-			res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
-#ifdef DROP
-			res(3,i) = +RAD(crd(0,i))*gbl->vflux*jcb;
-#endif 
-
-			/* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
-			res(4,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(0);
-#ifdef AXISYMMETRIC
-			res(4,i) += gbl->sigma*jcb;
-#endif
-			/* AND INTEGRATION BY PARTS TERM */
-			res(5,i) = +RAD(crd(0,i))*gbl->sigma*norm(1)/jcb;
-
-
-			/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
-			res(6,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(1);                
-			/* AND INTEGRATION BY PARTS TERM */
-			res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
-		}
-
-		for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-			lf(0,m) = 0.0;
-
-		/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-		basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(0,0));
-		basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
-		basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(2,0));
-#ifdef DROP
-		basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(3,0));
-#endif
-
+		element_rsdl(indx,lf);
+		
 		/* STORE IN RES */
 		for(n=0;n<tri_mesh::ND;++n) {
 			gbl->vres(indx)(n) += lf(n,0);
@@ -244,54 +197,29 @@ void surface::rsdl(int stage) {
 				gbl->sres(indx,m)(n) = lf(n,m+2);
 		}
 
-#ifdef DROP
-		gbl->vres(indx)(1) += lf(2,0);
-		gbl->vres(indx+1)(1) += lf(2,1);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->sres(indx,m)(1) += lf(2,m+2);        
-
-		gbl->vvolumeflux(indx) += lf(2,0);
-		gbl->vvolumeflux(indx+1) = lf(2,1);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			gbl->svolumeflux(indx,m) = lf(2,m+2);                    
-#endif
-
-		/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-		basis::tri(x.log2p)->intgrt1d(&lf1(0,0),&res(4,0));
-		basis::tri(x.log2p)->intgrtx1d(&lf1(0,0),&res(5,0));
-		basis::tri(x.log2p)->intgrt1d(&lf1(1,0),&res(6,0));
-		basis::tri(x.log2p)->intgrtx1d(&lf1(1,0),&res(7,0));
-
-		/* MASS FLUX PRECONDITIONER */				
-		for(n=2;n<x.NV-1;++n) /* For swirling case */
-			for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-				lf1(n,m) = 0.0;
-
-		for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-			lf1(x.NV-1,m) = -x.gbl->rho*lf(1,m); 
-
-#ifndef INERTIALESS
-		for (n=0;n<x.NV-1;++n) 
-			ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
-
-		for (n=0;n<x.NV-1;++n) {
-			lf1(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(1,0);
-			lf1(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(1,1);
-			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				lf1(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(1,m+2);
-		}
-#endif
 		/* ADD TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf1(n,0);
+			x.gbl->res.v(v0,n) += lf(n+2,0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf1(n,1);
+			x.gbl->res.v(v1,n) += lf(n+2,1);
 
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf1(n,m+2);
+				x.gbl->res.s(sind,m,n) += lf(n+2,m+2);
 		}  
+		
+#ifdef DROP
+		gbl->vres(indx)(1) += lf(x.NV+2,0);
+		gbl->vres(indx+1)(1) += lf(x.NV+2,1);
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
+			gbl->sres(indx,m)(1) += lf(x.NV+2,m+2);        
+
+		gbl->vvolumeflux(indx) += lf(x.NV+2,0);
+		gbl->vvolumeflux(indx+1) = lf(x.NV+2,1);
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
+			gbl->svolumeflux(indx,m) = lf(x.NV+2,m+2);                    
+#endif
 	}
 
 	/* CALL VERTEX RESIDUAL HERE */
@@ -357,6 +285,97 @@ void surface::rsdl(int stage) {
 		base.comm_exchange(boundary::all,0,boundary::master_slave);
 		base.comm_wait(boundary::all,0,boundary::master_slave);
 	}
+}
+
+void surface::element_rsdl(int indx, Array<FLT,2> lf) {
+	int i,m,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV);
+	FLT jcb;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	TinyMatrix<FLT,8,MXGP> res;
+		
+	sind = base.seg(indx);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+
+	x.crdtocht1d(sind);
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
+
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+		norm(0) =  dcrd(1,i);
+		norm(1) = -dcrd(0,i);
+		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+
+		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+		for(n=0;n<tri_mesh::ND;++n) {
+			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef DROP
+			mvel(n,i) -= tri_hp_ins::mesh_ref_vel(n);
+#endif    
+		}
+		/* TANGENTIAL SPACING */                
+		res(0,i) = -ksprg(indx)*jcb;
+		/* NORMAL FLUX */
+		res(1,i) = -RAD(crd(0,i))*(mvel(0,i)*norm(0) +mvel(1,i)*norm(1));     
+		/* UPWINDING BASED ON TANGENTIAL VELOCITY */
+		res(2,i) = -res(1,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
+#ifdef DROP
+		res(3,i) = +RAD(crd(0,i))*gbl->vflux*jcb;
+#endif 
+
+		/* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
+		res(4,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(0);
+#ifdef AXISYMMETRIC
+		res(4,i) += gbl->sigma*jcb;
+#endif
+		/* AND INTEGRATION BY PARTS TERM */
+		res(5,i) = +RAD(crd(0,i))*gbl->sigma*norm(1)/jcb;
+
+
+		/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
+		res(6,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(1);                
+		/* AND INTEGRATION BY PARTS TERM */
+		res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
+	}
+
+	lf = 0.0;
+
+	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
+	basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(0,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(2,0));
+
+	/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
+	basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(4,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(2,0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(6,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(3,0),&res(7,0));
+
+	/* mass flux preconditioning */
+	for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
+		lf(x.NV-1+2,m) = -x.gbl->rho*lf(1,m); 
+#ifndef INERTIALESS
+	for (n=0;n<x.NV-1;++n) 
+		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
+
+	for (n=0;n<x.NV-1;++n) {
+		lf(n+2,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(1,0);
+		lf(n+2,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(1,1);
+		for(m=0;m<basis::tri(x.log2p)->sm();++m)
+			lf(n+2,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(1,m+2);
+	}
+#endif
+		
+#ifdef DROP
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2,0),&res(3,0));
+#endif
+
 	return;
 }
 
@@ -1143,3 +1162,104 @@ void surface::maxres() {
 
 	return;
 }
+
+
+void surface::element_jacobian(int indx, Array<FLT,2>& K) {
+	int sm = basis::tri(x.log2p)->sm();	
+	FLT dw = 1.0e-4;// fix me temp make a global value?
+	Array<FLT,2> Rbar(x.NV+tri_mesh::ND,sm+2),lf(x.NV+tri_mesh::ND,sm+2);
+	
+	/* Calculate and store initial residual */
+	int sind = base.seg(indx);
+	x.ugtouht1d(sind);
+	element_rsdl(indx,Rbar);
+
+	/* Numerically create Jacobian */
+	int kcol = 0;
+	for(int mode = 0; mode < sm+2; ++mode) {
+		for(int var = 0; var < x.NV; ++var) {
+			x.uht(var)(mode) += dw;
+			
+			element_rsdl(indx,lf);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					
+			++kcol;
+			x.uht(var)(mode) -= dw;
+		}
+	}
+	
+	for(int pnt = 0; pnt < 2; ++pnt) {
+		for(int var = 0; var < tri_mesh::ND; ++var) {
+			x.pnts(x.seg(sind).pnt(pnt))(var) += dw;
+			
+			element_rsdl(indx,lf);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					
+			++kcol;
+			x.pnts(x.seg(sind).pnt(pnt))(var) -= dw;
+		}
+	}
+	
+	for(int mode = 0; mode < sm; ++mode) {
+		for(int var = 0; var < tri_mesh::ND; ++var) {
+			crds(indx,mode,var) += dw;
+			
+			element_rsdl(indx,lf);
+			
+			int krow = 0;
+			for(int k=0;k<sm+2;++k)
+				for(int n=0;n<x.NV+tri_mesh::ND;++n)
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					
+					++kcol;
+			
+			crds(indx,mode,var) -= dw;
+		}
+	}
+	
+	return;
+}
+
+#ifdef petsc
+void surface::petsc_jacobian() {
+	int sm = basis::tri(x.log2p)->sm();	
+	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
+	Array<int,1> loc_to_glo(x.NV*(sm+2));
+	
+	int vdofs = x.NV +tri_mesh::ND;
+		
+	for(int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
+			
+		int ind = 0;
+		for(int k=0;k<2;++k) {
+			int gindx = vdofs*x.seg(sind).pnt(k);
+			for(int n=0;n<x.NV;++n) {
+				loc_to_glo(ind++) = gindx++;
+			}
+		}
+		
+		/* EDGE MODES */
+		if (sm > 0) {
+			int gbl_eind = x.npnt*vdofs + sind*sm*x.NV;
+			for (int m = 0; m < sm; ++m) {
+				for(int n = 0; n < x.NV; ++n) {
+					loc_to_glo(ind++) = gbl_eind++;
+				}
+			}
+		}
+		
+		element_jacobian(j,K);
+		
+		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+	}
+}
+#endif

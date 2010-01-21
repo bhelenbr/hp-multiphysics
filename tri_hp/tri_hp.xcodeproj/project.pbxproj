@@ -369,9 +369,6 @@
 		6FFA305109769DD7008E427F /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
 		6FFEF5DF0DCEA2E60079FF6D /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
-		953FE570110785F3003EF155 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E8A0F533522005F5783 /* tstep.cpp */; };
-		953FE5F51107A223003EF155 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E3C0F5330AD005F5783 /* allocate.cpp */; };
-		953FE5F81107A241003EF155 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E880F533522005F5783 /* rsdl.cpp */; };
 		958B3B1010FF9AD8005313C1 /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203410B863F40006A896 /* petsc.cpp */; };
 		958B3B1110FF9ADE005313C1 /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203510B863F40006A896 /* sparse.cpp */; };
 /* End PBXBuildFile section */
@@ -1350,9 +1347,6 @@
 				6F1DBF27101C645200406AF3 /* nstage.cpp in Sources */,
 				958B3B1010FF9AD8005313C1 /* petsc.cpp in Sources */,
 				958B3B1110FF9ADE005313C1 /* sparse.cpp in Sources */,
-				953FE570110785F3003EF155 /* tstep.cpp in Sources */,
-				953FE5F51107A223003EF155 /* allocate.cpp in Sources */,
-				953FE5F81107A241003EF155 /* rsdl.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

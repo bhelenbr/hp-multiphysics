@@ -275,7 +275,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	
 	MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
 	
-		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
+	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
 	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
 	
 //		double rtol=1.0e-12; // relative tolerance
