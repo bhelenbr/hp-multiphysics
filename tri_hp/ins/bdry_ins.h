@@ -632,10 +632,11 @@ namespace bdry_ins {
 			void petsc_jacobian_dirichlet() {
 				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
 				for(int n=0;n<=fix_norm;++n) {
-					MatZeroRows(petsc_J,1,&row,1.0);
+					MatZeroRows(x.petsc_J,1,&row,1.0);
 					++row;
 				}
 			}
+#endif
 	};
 
 	class surface_periodic_pt : public surface_fixed_pt {

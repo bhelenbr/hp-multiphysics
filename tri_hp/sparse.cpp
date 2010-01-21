@@ -86,6 +86,7 @@ void tri_hp::find_sparse_bandwidth(){
 	return;
 }
 
+#include <r_tri_boundary.h>
 
 void tri_hp::petsc_jacobian() {
 	int gindx;
@@ -145,6 +146,10 @@ void tri_hp::petsc_jacobian() {
 		MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 	
+	/* DO R_MESH B.C.'s */
+	for(int i=0;i<nebd;++i) 
+		r_sbdry(i)->jacobian_dirichlet();
+				
 	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian();
