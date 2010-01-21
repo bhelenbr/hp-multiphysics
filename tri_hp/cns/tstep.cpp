@@ -138,7 +138,7 @@ void tri_hp_cns::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		//pennsylvania_peanut_butter(q, pmax, rtmax, gbl->gam, hmax, nu gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);{
+		//pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);
 
 			
 		/* FROM HERE BELOW WILL CHANGE */
@@ -183,13 +183,13 @@ void tri_hp_cns::setup_preconditioner() {
 }
 
 
-void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT gam, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
 
 	FLT q2 = qmax*qmax;
 	FLT op = 1.0/pmax;
-	FLT gm1 = gam-1;
+	FLT gm1 = gbl->gamma-1;
 	
 	/* Preconditioner */
 	P =  q2*gm1,                 -qmax*gm1,          -qmax*gm1,          gm1,
@@ -206,7 +206,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT g
 	       1.0/gm1+rtmax*q2, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
 	
  	FLT ort2 = ort*ort;
-	FLT gogm1 = gam/gm1;
+	FLT gogm1 = gbl->gamma/gm1;
 	
 	/* df/dw */
 	A = ort*qmax,            pmax*ort,                       0.0,           -pmax*ort2*qmax,

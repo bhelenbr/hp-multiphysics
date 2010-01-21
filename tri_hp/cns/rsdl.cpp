@@ -17,9 +17,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	FLT fluxx,fluxy;
 	const int NV = 4;
 	TinyVector<int,3> v;
-	TinyMatrix<FLT,ND,ND> ldcrd,d;
+	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
-	TinyVector<TinyMatrix<FLT,NV,NV>,ND> A;
+	TinyMatrix<FLT,NV,NV> A,B;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 	FLT lmu = gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
@@ -39,6 +39,8 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		crdtocht(tind);
 
 		/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+		/* dcrd(i,j) is derivative of physical coordinate i with respect to curvilinear coordinate j */
+		/* dxi/dx = dy/deta, dxi/dy = -dx/deta, deta/dx = -dy/dxi, deta/dy = dx/dxi (divided by jacobian) */
 		for(int n = 0; n < ND; ++n)
 			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 	}
@@ -214,6 +216,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
 
+			df(0,0) = 0.0;
+			df(0,1) = 0.0;
+			
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(int i=0;i<lgpx;++i) {
 				for(int j=0;j<lgpn;++j) {
@@ -223,31 +228,32 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						for(int n = 0; n < NV; ++n)							
 							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
 
-					d(0,0) = dcrd(1,1)(i,j);
-					d(0,1) = -dcrd(0,1)(i,j);
-					d(1,0) = -dcrd(1,0)(i,j);
-					d(1,1) = dcrd(0,0)(i,j);
+			
+					FLT pr = u(0)(i,j);
+					FLT uv = u(1)(i,j);
+					FLT vv = u(2)(i,j);
+					FLT rt = u(3)(i,j);	
+					FLT ke = 0.5*(uv*uv+vv*vv);
 					
-					/* df/dw */
-					A(0) = 2.0*u(0)(i,j), 0.0,       1.0,
-						   u(1)(i,j),     u(0)(i,j), 0.0,
-						   1.0,           0.0,       0.0;
+					/* df/dw */	
+					A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+					    1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+					    1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+						1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 					
-					/* dg/dw */
-					A(1) = u(1)(i,j), u(0)(i,j),     0.0,
-						   0.0,       2.0*u(1)(i,j), 1.0,
-						   0.0,       1.0,           0.0;
+					/* dg/dw */	
+					B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+					    1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+					    1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+					    1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+			
+					for(int m = 0; m < NV; ++m) {
+						for(int n = 0; n < NV; ++n) {
+							df(m,0)(i,j) -= (dcrd(1,1)(i,j)*A(m,n)-dcrd(0,1)(i,j)*B(m,n))*tres(n);
+							df(m,1)(i,j) -= (-dcrd(1,0)(i,j)*A(m,n)+dcrd(0,0)(i,j)*B(m,n))*tres(n);
+						}
+					}
 					
-					df(0,0) = 0.0;
-					df(0,1) = 0.0;
-					df(3,0) = 0.0;
-					df(3,1) = 0.0;
-					
-					for(int m1 = 0; m1 < NV; ++m1)
-						for(int n1 = 0; n1 < ND; ++n1)
-							for(int m2 = 0; m2 < NV; ++m2)
-								for(int n2 = 0; n2 < ND; ++n2)
-									df(m1,n1)(i,j) -= d(n1,n2)*A(n2)(m1,m2)*tres(m2);					
 				}
 			}
 			for(int n = 0; n < NV; ++n)

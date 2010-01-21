@@ -214,28 +214,28 @@ void neumann::rsdl(int stage) {
 	return;
 }
 
-void applied_stress::init(input_map& inmap,void* gbl_in) {
-	std::string keyword;
-	std::ostringstream nstr;
-
-	neumann::init(inmap,gbl_in);
-
-	stress.resize(tri_mesh::ND);
-
-	for(int n=0;n<tri_mesh::ND;++n) {
-		nstr.str("");
-		nstr << base.idprefix << "_stress" << n << std::flush;
-		if (inmap.find(nstr.str()) != inmap.end()) {
-			stress(n).init(inmap,nstr.str());
-		}
-		else {
-			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
-			exit(1);
-		}
-	}
-
-	return;
-}
+//void applied_stress::init(input_map& inmap,void* gbl_in) {
+//	std::string keyword;
+//	std::ostringstream nstr;
+//
+//	neumann::init(inmap,gbl_in);
+//
+//	stress.resize(tri_mesh::ND);
+//
+//	for(int n=0;n<tri_mesh::ND;++n) {
+//		nstr.str("");
+//		nstr << base.idprefix << "_stress" << n << std::flush;
+//		if (inmap.find(nstr.str()) != inmap.end()) {
+//			stress(n).init(inmap,nstr.str());
+//		}
+//		else {
+//			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
+//			exit(1);
+//		}
+//	}
+//
+//	return;
+//}
 
 void inflow::setvalues(init_bdry_cndtn *ibc) {
 	int j,k,m,n,v0,v1,sind,indx,info;
@@ -299,213 +299,213 @@ void inflow::setvalues(init_bdry_cndtn *ibc) {
 	return;
 }
 
-void symmetry::tadvance() {
-	int j,m,v0,sind;
-	TinyVector<FLT,tri_mesh::ND> pt;
-
-	hp_edge_bdry::tadvance();
-
-	/* UPDATE BOUNDARY CONDITION VALUES */
-	for(j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		v0 = x.seg(sind).pnt(0);
-		x.ug.v(v0,dir) = 0.0;
-	}
-	v0 = x.seg(sind).pnt(1);
-	x.ug.v(v0,dir) = 0.0;
-
-	/*******************/    
-	/* SET SIDE VALUES */
-	/*******************/
-	for(j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-			x.ug.s(sind,m,dir) = 0.0;
-		}
-	}
-
-	return;
-}
-
-
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-	FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
-	FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
-	FLT nu,gam,qmax;
-	Array<FLT,1> ub(x.NV), uvp(x.NV);
-
-	/* CHARACTERISTIC FAR-FIELD B.C. */   
-
-	rho = x.gbl->rho;
-	nu = x.gbl->mu/x.gbl->rho;
-	rhoi = 1./rho;
-	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-	hmax = mag*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
-	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
-	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
-
-	norm(0) /= mag;
-	norm(1) /= mag;
-
-	ul =  u(0)*norm(0) +u(1)*norm(1);
-	vl = -u(0)*norm(1) +u(1)*norm(0);
-	pl =  u(x.NV-1);
-
-	/* FREESTREAM CONDITIONS */
-	for(int n=0;n<x.NV;++n)
-		ub(n) = ibc->f(n,xpt,x.gbl->time);
-
-	ur =  ub(0)*norm(0) +ub(1)*norm(1);
-	vr = -ub(0)*norm(1) +ub(1)*norm(0);
-	pr =  ub(x.NV-1);
-
-	um = mv(0)*norm(0) +mv(1)*norm(1);
-
-	cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
-	cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
-	c = 0.5*(cl+cr);
-	s = 0.5*(ul+ur);
-	v = 0.5*(vl+vr);
-
-	den = 1./(2*c);
-	lam0 = s -um;
-	lam1 = s-.5*um +c; /* always positive */
-	lam2 = s-.5*um -c; /* always negative */
-
-	/* PERFORM CHARACTERISTIC SWAP */
-	/* BASED ON LINEARIZATION AROUND UL,VL,PL */
-	uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-	if (lam0 > 0.0) {
-		uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
-		for(int n=tri_mesh::ND;n<x.NV-1;++n)
-			uvp(n) = u(n);
-	}
-	else {
-		uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-		for(int n=tri_mesh::ND;n<x.NV-1;++n)
-			uvp(n) = ub(n);
-	}
-	uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
-
-	/* CHANGE BACK TO X,Y COORDINATES */
-	ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
-	ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
-
-	for(int n=tri_mesh::ND;n<x.NV;++n)
-	ub(n) =uvp(n);
-
-	norm *= mag;
-
-	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-
-	for(int n=0;n<tri_mesh::ND;++n)
-	flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
-
-	for(int n=tri_mesh::ND;n<x.NV-1;++n)
-	flx(n) = flx(x.NV-1)*ub(n);
-
-// *x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
+//void symmetry::tadvance() {
+//	int j,m,v0,sind;
+//	TinyVector<FLT,tri_mesh::ND> pt;
+//
+//	hp_edge_bdry::tadvance();
+//
+//	/* UPDATE BOUNDARY CONDITION VALUES */
+//	for(j=0;j<base.nseg;++j) {
+//		sind = base.seg(j);
+//		v0 = x.seg(sind).pnt(0);
+//		x.ug.v(v0,dir) = 0.0;
+//	}
+//	v0 = x.seg(sind).pnt(1);
+//	x.ug.v(v0,dir) = 0.0;
+//
+//	/*******************/    
+//	/* SET SIDE VALUES */
+//	/*******************/
+//	for(j=0;j<base.nseg;++j) {
+//		sind = base.seg(j);
+//		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
+//			x.ug.s(sind,m,dir) = 0.0;
+//		}
+//	}
+//
+//	return;
+//}
 
 
-	return;
-}
+//void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+//	FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
+//	FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
+//	FLT nu,gam,qmax;
+//	Array<FLT,1> ub(x.NV), uvp(x.NV);
+//
+//	/* CHARACTERISTIC FAR-FIELD B.C. */   
+//
+//	rho = x.gbl->rho;
+//	nu = x.gbl->mu/x.gbl->rho;
+//	rhoi = 1./rho;
+//	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+//	hmax = mag*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
+//	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
+//	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
+//
+//	norm(0) /= mag;
+//	norm(1) /= mag;
+//
+//	ul =  u(0)*norm(0) +u(1)*norm(1);
+//	vl = -u(0)*norm(1) +u(1)*norm(0);
+//	pl =  u(x.NV-1);
+//
+//	/* FREESTREAM CONDITIONS */
+//	for(int n=0;n<x.NV;++n)
+//		ub(n) = ibc->f(n,xpt,x.gbl->time);
+//
+//	ur =  ub(0)*norm(0) +ub(1)*norm(1);
+//	vr = -ub(0)*norm(1) +ub(1)*norm(0);
+//	pr =  ub(x.NV-1);
+//
+//	um = mv(0)*norm(0) +mv(1)*norm(1);
+//
+//	cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
+//	cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
+//	c = 0.5*(cl+cr);
+//	s = 0.5*(ul+ur);
+//	v = 0.5*(vl+vr);
+//
+//	den = 1./(2*c);
+//	lam0 = s -um;
+//	lam1 = s-.5*um +c; /* always positive */
+//	lam2 = s-.5*um -c; /* always negative */
+//
+//	/* PERFORM CHARACTERISTIC SWAP */
+//	/* BASED ON LINEARIZATION AROUND UL,VL,PL */
+//	uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
+//	if (lam0 > 0.0) {
+//		uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
+//		for(int n=tri_mesh::ND;n<x.NV-1;++n)
+//			uvp(n) = u(n);
+//	}
+//	else {
+//		uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
+//		for(int n=tri_mesh::ND;n<x.NV-1;++n)
+//			uvp(n) = ub(n);
+//	}
+//	uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
+//
+//	/* CHANGE BACK TO X,Y COORDINATES */
+//	ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
+//	ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
+//
+//	for(int n=tri_mesh::ND;n<x.NV;++n)
+//	ub(n) =uvp(n);
+//
+//	norm *= mag;
+//
+//	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
+//
+//	for(int n=0;n<tri_mesh::ND;++n)
+//	flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
+//
+//	for(int n=tri_mesh::ND;n<x.NV-1;++n)
+//	flx(n) = flx(x.NV-1)*ub(n);
+//
+//// *x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
+//
+//
+//	return;
+//}
 
-void hybrid_slave_pt::update(int stage) {
+//void hybrid_slave_pt::update(int stage) {
+//
+//	if (stage == -1) return;
+//
+//	base.sndsize() = 4;
+//	base.sndtype() = boundary::flt_msg;
+//	base.fsndbuf(0) = 0.0;
+//	base.fsndbuf(1) = 0.0;
+//	base.fsndbuf(2) = 0.0;
+//	base.fsndbuf(3) = 0.0;
+//
+//	base.comm_prepare(boundary::all,0,boundary::symmetric);
+//	base.comm_exchange(boundary::all,0,boundary::symmetric);
+//	base.comm_wait(boundary::all,0,boundary::symmetric);
+//
+//	for(int m=0;m<base.nmatches();++m) {
+//		for(int i=0;i<4;++i) 
+//			base.fsndbuf(i) += base.frcvbuf(m,i);
+//	}
+//
+//	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+//		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
+//		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+//	}
+//
+//	if (base.fsndbuf(0) > 0.0) {
+//		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+//	}
+//	else {
+//		x.pnts(base.pnt)(1) = base.fsndbuf(1);
+//	}
+//}
 
-	if (stage == -1) return;
-
-	base.sndsize() = 4;
-	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(0) = 0.0;
-	base.fsndbuf(1) = 0.0;
-	base.fsndbuf(2) = 0.0;
-	base.fsndbuf(3) = 0.0;
-
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<4;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-
-	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
-	}
-
-	if (base.fsndbuf(0) > 0.0) {
-		x.pnts(base.pnt)(1) = base.fsndbuf(3);
-	}
-	else {
-		x.pnts(base.pnt)(1) = base.fsndbuf(1);
-	}
-}
-
-void hybrid_pt::rsdl(int stage) {
-	int sind,v0,v1;
-	TinyVector<FLT,2> tang,vel;
-	FLT tangvel;
-
-	if (surfbdry == 0) {
-		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
-		v0 = x.seg(sind).pnt(1);
-		v1 = x.seg(sind).pnt(0);
-	}
-	else {
-		sind = x.ebdry(base.ebdry(1))->seg(0);
-		v0 = x.seg(sind).pnt(0);
-		v1 = x.seg(sind).pnt(1);
-	}
-
-
-	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
-	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
-	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-
-	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
-	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
-
-	if (tangvel > 0.0)
-		fix_norm = 1;
-	else
-		fix_norm = 0;
-
-	surface_outflow_planar::rsdl(stage);
-}
+//void hybrid_pt::rsdl(int stage) {
+//	int sind,v0,v1;
+//	TinyVector<FLT,2> tang,vel;
+//	FLT tangvel;
+//
+//	if (surfbdry == 0) {
+//		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
+//		v0 = x.seg(sind).pnt(1);
+//		v1 = x.seg(sind).pnt(0);
+//	}
+//	else {
+//		sind = x.ebdry(base.ebdry(1))->seg(0);
+//		v0 = x.seg(sind).pnt(0);
+//		v1 = x.seg(sind).pnt(1);
+//	}
+//
+//
+//	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
+//	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
+//	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+//
+//	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+//				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+//	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+//				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+//	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
+//
+//	if (tangvel > 0.0)
+//		fix_norm = 1;
+//	else
+//		fix_norm = 0;
+//
+//	surface_outflow_planar::rsdl(stage);
+//}
 
 
 
-void hybrid_pt::update(int stage) {
-
-	if (stage == -1) return;
-
-	base.sndsize() = 4;
-	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(0) = 2*fix_norm-1.0;
-	base.fsndbuf(1) = x.pnts(base.pnt)(1);
-	base.fsndbuf(2) = 0.0;
-	base.fsndbuf(3) = 0.0;
-
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<4;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-
-	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
-	}
-
-	if (fix_norm) {
-		x.pnts(base.pnt)(1) = base.fsndbuf(3);
-	}
-}
+//void hybrid_pt::update(int stage) {
+//
+//	if (stage == -1) return;
+//
+//	base.sndsize() = 4;
+//	base.sndtype() = boundary::flt_msg;
+//	base.fsndbuf(0) = 2*fix_norm-1.0;
+//	base.fsndbuf(1) = x.pnts(base.pnt)(1);
+//	base.fsndbuf(2) = 0.0;
+//	base.fsndbuf(3) = 0.0;
+//
+//	base.comm_prepare(boundary::all,0,boundary::symmetric);
+//	base.comm_exchange(boundary::all,0,boundary::symmetric);
+//	base.comm_wait(boundary::all,0,boundary::symmetric);
+//
+//	for(int m=0;m<base.nmatches();++m) {
+//		for(int i=0;i<4;++i) 
+//			base.fsndbuf(i) += base.frcvbuf(m,i);
+//	}
+//
+//	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+//		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
+//		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+//	}
+//
+//	if (fix_norm) {
+//		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+//	}
+//}
