@@ -576,6 +576,33 @@ void r_tri_mesh::rsdl() {
 	return;
 }
 
+void r_tri_mesh::element_jacobian(int tind, Array<FLT,2> K) {
+
+#ifdef FOURTH
+	*x.gbl->log << "DIDN'T DO THIS FOR ELEMENT JACOBIAN\n";
+	exit(1);
+#else
+	TinyMatrix<int,3,2> seg_pnts;
+	seg_pnts = 1,2,2,0,0,1;
+	
+	K = 0;
+	for(int s=0;s<3;++s) {
+		int sind = tri(tind).seg(s);
+		FLT lksprg = ksprg(sind);
+		int tadj = seg(tind).tri(1);
+		if (tadj >= 0) 
+			lksprg *= 0.5;  // Hack for the fact that element jacobian hits each side twice
+		K(seg_pnts(sind,0)*ND,seg_pnts(sind,0)*ND) += lksprg;
+		K(seg_pnts(sind,1)*ND,seg_pnts(sind,1)*ND) += lksprg;
+		K(seg_pnts(sind,0)*ND,seg_pnts(sind,1)*ND) -= lksprg;
+		K(seg_pnts(sind,1)*ND,seg_pnts(sind,0)*ND) -= lksprg;	
+	}
+#endif
+	
+	return;
+}
+
+
 
 void r_tri_mesh::setup_preconditioner() {
 	int last_phase, mp_phase;

@@ -28,6 +28,7 @@ class r_side_bdry {
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
 		virtual ~r_side_bdry() {}
+		virtual void jacobian_dirichlet() {}
 };
 
 class r_fixed : public r_side_bdry {
@@ -56,13 +57,24 @@ class r_fixed : public r_side_bdry {
 		void dirichlet() {
 			for(int j=0;j<base.nseg;++j) {
 				int sind = base.seg(j);
-					for(int n=dstart;n<=dstop;++n) {
-						x.gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
-						x.gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
-					}
+				for(int n=dstart;n<=dstop;++n) {
+					x.gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
+					x.gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
+				}
 			}
 			return;
 		}
+		
+		void jacobian_dirichlet() {
+			for(int j=0;j<base.nseg;++j) {
+				int sind = base.seg(j);
+				for(int n=dstart;n<=dstop;++n) {
+					x.jacobian_dirichlet(x.seg(sind).pnt(0),n);
+					x.jacobian_dirichlet(x.seg(sind).pnt(1),n);
+				}
+			}
+		}
+		
 };
 
 class r_fixed_angled : public r_side_bdry {
@@ -89,18 +101,19 @@ class r_fixed_angled : public r_side_bdry {
 			int sind;
 			int j = 0;
 			do {
-				sind = base.seg(j++);
-				/* Tangent Residual Only */
+				sind = base.seg(j);
+				/* Tangent Residual */
 				FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
-			} while (j < base.nseg);
+			} while (j++ < base.nseg);
 			FLT res = -x.gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
 			
 			return;
 		}
+
 };
 
 

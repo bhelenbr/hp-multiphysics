@@ -79,6 +79,8 @@ class r_tri_mesh : public tri_mesh {
 			void mg_prolongate();
 			void tadvance();
 			void rsdl();
+			void element_jacobian(int tind,Array<FLT,2> K); 
+			virtual void jacobian_dirichlet(int vertex, int dir) {}
 			void update();
 			void setup_preconditioner();
 			FLT maxres();
