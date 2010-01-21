@@ -187,14 +187,14 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT g
 	
 	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
 
-	FLT q2=qmax*qmax;
+	FLT q2 = qmax*qmax;
 	FLT op = 1.0/pmax;
 	FLT gm1 = gam-1;
 	
 	/* Preconditioner */
-	P =  q2*gm1,              -qmax*gm1,       -qmax*gm1,          gm1,
-	    -qmax*op*rtmax,       op*rtmax,        0.0,                0.0,
-	    -qmax*op*rtmax,        0.0,             op*rtmax,           0.0,
+	P =  q2*gm1,                 -qmax*gm1,          -qmax*gm1,          gm1,
+	    -qmax*op*rtmax,          op*rtmax,           0.0,                0.0,
+	    -qmax*op*rtmax,          0.0,                op*rtmax,           0.0,
 	    op*rtmax*(gm1*q2-rtmax), -op*rtmax*qmax*gm1, -op*rtmax*qmax*gm1, op*rtmax*gm1;
 	
 	FLT ort = 1.0/rtmax;
@@ -205,13 +205,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT g
 	       ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
 	       1.0/gm1+rtmax*q2, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
 	
- 	FLT ort2=ort*ort;
-	FLT gogm1=gam/gm1;
+ 	FLT ort2 = ort*ort;
+	FLT gogm1 = gam/gm1;
 	
 	/* df/dw */
-	A = ort*qmax,              pmax*ort,                         0.0,           -pmax*ort2*qmax,
-	    ort*q2+1.0,            2.0*pmax*ort*qmax,                0.0,           -pmax*ort2*q2,
-	    ort*q2,                pmax*ort*qmax,                    pmax*ort*qmax, -pmax*ort2*q2,
+	A = ort*qmax,            pmax*ort,                       0.0,           -pmax*ort2*qmax,
+	    ort*q2+1.0,          2.0*pmax*ort*qmax,              0.0,           -pmax*ort2*q2,
+	    ort*q2,              pmax*ort*qmax,                  pmax*ort*qmax, -pmax*ort2*q2,
 	    qmax*(gogm1+q2*ort), pmax*((gogm1+q2*ort)+ort*qmax), pmax*ort*q2,   -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
 	
 	
@@ -221,14 +221,14 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT g
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*A(k,j);
-	A=temp;
+	A = temp;
 	
-	//matrix_absolute_value(A);
+	matrix_absolute_value(A);
 	
 	/* dg/dw */
-	B = ort*qmax,              0.0,			  pmax*ort,                       -pmax*ort2*qmax,
-	    ort*q2,                pmax*ort*qmax, pmax*ort*qmax,                  -pmax*ort2*q2,
-	    ort*q2+1.0,            0.0,           2.0*pmax*ort*qmax,              -pmax*ort2*q2,
+	B = ort*qmax,            0.0,			pmax*ort,                     -pmax*ort2*qmax,
+	    ort*q2,              pmax*ort*qmax, pmax*ort*qmax,                -pmax*ort2*q2,
+	    ort*q2+1.0,          0.0,           2.0*pmax*ort*qmax,            -pmax*ort2*q2,
 	    qmax*(gogm1+q2*ort), pmax*ort*q2,   pmax*((gogm1+q2*ort)+ort*q2), -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
 	
 	
@@ -239,20 +239,20 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT g
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*B(k,j);
 	
-	B=temp;
+	B = temp;
 	
-	//matrix_absolute_value(B);
+	matrix_absolute_value(B);
 	
-	S= 0.0, 0.0, 0.0, 0.0,
-	   0.0, nu,  0.0, 0.0,
-	   0.0, 0.0, nu,  0.0,
-	   0.0, 0.0, 0.0, nu;
+	S = 0.0, 0.0, 0.0, 0.0,
+	    0.0, nu,  0.0, 0.0,
+	    0.0, 0.0, nu,  0.0,
+	    0.0, 0.0, 0.0, nu;
 	
-	S=pmax/hmax*S;//temp fix me
+	S = pmax/hmax*S;//temp fix me
 	
-	Tinv=2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
+	Tinv = 2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
 	
-	//timestep=1.0/spectral_radius(Tinv);
+	timestep = 1.0/spectral_radius(Tinv);
 	
 	/*  LU factorization  */
 	int info,ipiv[NV];

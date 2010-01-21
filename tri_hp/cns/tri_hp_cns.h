@@ -43,10 +43,11 @@ class tri_hp_cns : public tri_hp {
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
-		void length();
+		//void length();
 		void setup_preconditioner();
-		void rsdl(int stage);
+		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
+	
 		void pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT gam, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
 
 
