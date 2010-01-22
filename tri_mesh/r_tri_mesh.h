@@ -31,13 +31,14 @@ class r_tri_mesh : public tri_mesh {
 			Array<TinyVector<FLT,ND>,1> src;
 			Array<TinyVector<FLT,ND>,1> pnts_frst;
 
+	public:
 			Array<r_side_bdry *,1> r_sbdry;
 			r_side_bdry* getnewedgeobject(int bnum, input_map& bdrydata);
 
 			Array<r_vrtx_bdry *,1> r_vbdry;
 			r_vrtx_bdry* getnewvrtxobject(int bnum, input_map& bdrydata);
 
-
+	protected:
 			/* SETUP SPRING CONSTANTS */
 			/* LAPLACE CONSTANTS */
 			void rklaplace();
@@ -80,7 +81,7 @@ class r_tri_mesh : public tri_mesh {
 			void tadvance();
 			void rsdl();
 			void element_jacobian(int tind,Array<FLT,2> K); 
-			virtual void jacobian_dirichlet(int vertex, int dir) {}
+			virtual void r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop) {}
 			void update();
 			void setup_preconditioner();
 			FLT maxres();

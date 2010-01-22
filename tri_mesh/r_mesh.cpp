@@ -583,19 +583,29 @@ void r_tri_mesh::element_jacobian(int tind, Array<FLT,2> K) {
 	exit(1);
 #else
 	TinyMatrix<int,3,2> seg_pnts;
-	seg_pnts = 1,2,2,0,0,1;
+	seg_pnts =	1,2,
+							2,0,
+							0,1;
 	
 	K = 0;
 	for(int s=0;s<3;++s) {
 		int sind = tri(tind).seg(s);
 		FLT lksprg = ksprg(sind);
-		int tadj = seg(tind).tri(1);
+		int tadj = seg(sind).tri(1);
 		if (tadj >= 0) 
 			lksprg *= 0.5;  // Hack for the fact that element jacobian hits each side twice
-		K(seg_pnts(sind,0)*ND,seg_pnts(sind,0)*ND) += lksprg;
-		K(seg_pnts(sind,1)*ND,seg_pnts(sind,1)*ND) += lksprg;
-		K(seg_pnts(sind,0)*ND,seg_pnts(sind,1)*ND) -= lksprg;
-		K(seg_pnts(sind,1)*ND,seg_pnts(sind,0)*ND) -= lksprg;	
+		
+		K(seg_pnts(s,0)*ND,seg_pnts(s,0)*ND) += lksprg;
+		K(seg_pnts(s,1)*ND,seg_pnts(s,1)*ND) += lksprg;
+		K(seg_pnts(s,0)*ND,seg_pnts(s,1)*ND) -= lksprg;
+		K(seg_pnts(s,1)*ND,seg_pnts(s,0)*ND) -= lksprg;	
+		
+		K(seg_pnts(s,0)*ND+1,seg_pnts(s,0)*ND+1) += lksprg;
+		K(seg_pnts(s,1)*ND+1,seg_pnts(s,1)*ND+1) += lksprg;
+		K(seg_pnts(s,0)*ND+1,seg_pnts(s,1)*ND+1) -= lksprg;
+		K(seg_pnts(s,1)*ND+1,seg_pnts(s,0)*ND+1) -= lksprg;	
+		
+		
 	}
 #endif
 	

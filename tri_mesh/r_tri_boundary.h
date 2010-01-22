@@ -66,13 +66,16 @@ class r_fixed : public r_side_bdry {
 		}
 		
 		void jacobian_dirichlet() {
-			for(int j=0;j<base.nseg;++j) {
-				int sind = base.seg(j);
-				for(int n=dstart;n<=dstop;++n) {
-					x.jacobian_dirichlet(x.seg(sind).pnt(0),n);
-					x.jacobian_dirichlet(x.seg(sind).pnt(1),n);
-				}
-			}
+			Array<int,1> points((base.nseg+1));
+			
+			int j = 0;
+			int sind;
+			do {
+				sind = base.seg(j);
+				points(j) = x.seg(sind).pnt(0);
+			} while(++j < base.nseg);
+			points(j) = x.seg(sind).pnt(1);
+			x.r_jacobian_dirichlet(points,dstart,dstop);
 		}
 		
 };
