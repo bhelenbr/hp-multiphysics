@@ -300,7 +300,7 @@ void tri_hp::petsc_jacobian() {
 		
 	for(int i=0;i<nvbd;++i) 
 		hp_vbdry(i)->petsc_jacobian_dirichlet();	
-	
+
 	return;
 }
 
@@ -310,9 +310,14 @@ void tri_hp::petsc_rsdl() {
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->vdirichlet();
+		
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->vdirichlet();
 
-	for(int i=0;i<nvbd;++i) {
+	for(int i=0;i<nvbd;++i) 
 		hp_vbdry(i)->vdirichlet2d();
+
+	
 		
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int m=0;m<basis::tri(log2p)->sm();++m)
@@ -324,8 +329,7 @@ void tri_hp::petsc_rsdl() {
 	Array<FLT,1> res(array, shape(size_sparse_matrix), neverDeleteData);
 	petsc_make_1D_rsdl_vector(res);
 	VecRestoreArray(petsc_f, &array);
-	
-	
+		
 	return;
 }
 #endif
