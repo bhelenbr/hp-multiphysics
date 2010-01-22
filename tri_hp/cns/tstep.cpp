@@ -1,19 +1,17 @@
 #include <math.h>
-#include <utilities.h>
 #include <myblas.h>
 
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
 
 // #define TIMEACCURATE
-#define REFINED_WAY
+//#define REFINED_WAY
 
 void tri_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1,gam,pmax,rtmax;
 	TinyVector<int,3> v;
-
 	
 	//FLT nu = gbl->mu/gbl->rho;
 
@@ -26,9 +24,9 @@ void tri_hp_cns::setup_preconditioner() {
 	}
 	gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
-#ifdef TIMEACCURATE
-	FLT dtstari = 0.0;
-#endif
+//#ifdef TIMEACCURATE
+//	FLT dtstari = 0.0;
+//#endif
 
 	for(tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);  // area is 2 x triangle area
@@ -152,16 +150,16 @@ void tri_hp_cns::setup_preconditioner() {
 		// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
 		//jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 
-#ifdef TIMEACCURATE
-		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
-
-	}
-	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
-
-	for(tind=0;tind<ntri;++tind) {
-		v = tri(tind).pnt;
-		jcb = 0.25*area(tind)*dtstari;
-#endif
+//#ifdef TIMEACCURATE
+//		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
+//
+//	}
+//	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+//
+//	for(tind=0;tind<ntri;++tind) {
+//		v = tri(tind).pnt;
+//		jcb = 0.25*area(tind)*dtstari;
+//#endif
 
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
@@ -232,7 +230,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	    qmax*(gogm1+q2*ort), pmax*ort*q2,   pmax*((gogm1+q2*ort)+ort*q2), -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
 	
 	
-	//B=product(P,B);
+	//B=prod(P,B);
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
