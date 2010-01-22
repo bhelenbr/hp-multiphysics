@@ -247,10 +247,8 @@ class tri_hp : public r_tri_mesh  {
 		int size_sparse_matrix;
 		void petsc_initialize();
 		void petsc_finalize();
-		void jacobian_dirichlet(int vertex, int dir) {  // Interface to Jacobian for r_tri_mesh (for now)
-			int row = (NV+ND)*vertex+dir;
-			MatZeroRows(petsc_J,1,&row,1.0);
-		}
+		void r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop);  // Interface to Jacobian for r_tri_mesh (for now)
+
 		void petsc_to_ug();
 		void ug_to_petsc();
 		void petsc_make_1D_rsdl_vector(Array<FLT,1>);
@@ -258,8 +256,6 @@ class tri_hp : public r_tri_mesh  {
 		Vec  petsc_u,petsc_f;   /* solution,residual */
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
-		Array<int,1> dirichlet_rows;
-		int row_counter;
 #endif	
 		virtual ~tri_hp();
 };

@@ -826,51 +826,99 @@ void hp_edge_bdry::rsdl(int stage) {
 }
 
 
-void hp_edge_bdry::element_jacobian(int sind, Array<FLT,2>& K) {
+void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
 	FLT dw = 1.0e-4;// fix me temp make a global value?
 	Array<FLT,2> Rbar(x.NV,sm+2);
 	Array<int,1> loc_to_glo(x.NV*(sm+2));
 
 	/* Calculate and store initial residual */
-	int eind = base.seg(sind);
-	x.ugtouht1d(eind);
+	int sind = base.seg(indx);
+	x.ugtouht1d(sind);
 	
 	x.lf = 0.0;
-	element_rsdl(sind,0);
+	element_rsdl(indx,0);
 
-	for(int k=0;k<2;++k) {
+	for(int k=0;k<sm+2;++k) {
 		for(int n=0;n<x.NV;++n) {
 			Rbar(n,k) = x.lf(n)(k);
 		}
 	}
-
-	/* EDGE MODES */
-	if (sm > 0) {
-		for (int m = 0; m < sm; ++m) {
-			for(int n = 0; n < x.NV; ++n) {
-				Rbar(n,m+2) = x.lf(n)(m+2);
+	
+	if (x.mmovement != x.coupled_deformable) {
+		/* Numerically create Jacobian */
+		int kcol = 0;
+		for(int mode = 0; mode < sm+2; ++mode){
+			for(int var = 0; var < x.NV; ++var){
+				x.uht(var)(mode) += dw;
+				
+				x.lf = 0.0;
+				element_rsdl(indx,0);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<x.NV;++n)
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						
+						++kcol;
+				
+				x.uht(var)(mode) -= dw;
 			}
 		}
 	}
-
-	/* Numerically create Jacobian */
-	int kcol = 0;
-	for(int mode = 0; mode < sm+2; ++mode){
-		for(int var = 0; var < x.NV; ++var){
-			x.uht(var)(mode) += dw;
+	else {
+		/* Numerically create Jacobian */
+		int kcol = 0;
+		for(int mode = 0; mode < 2; ++mode) {
+			for(int var = 0; var < x.NV; ++var){
+				x.uht(var)(mode) += dw;
+				
+				x.lf = 0.0;
+				element_rsdl(indx,0);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<x.NV;++n)
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						
+						++kcol;
+				
+				x.uht(var)(mode) -= dw;
+			}
 			
-			x.lf = 0.0;
-			element_rsdl(sind,0);
+			for(int var = 0; var < tri_mesh::ND; ++var){
+				x.pnts(x.seg(sind).pnt(mode))(var) += dw;
+				
+				x.lf = 0.0;
+				element_rsdl(indx,0);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<x.NV;++n)
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						
+						++kcol;
+				
+				x.pnts(x.seg(sind).pnt(mode))(var) -= dw;
+			}
+		}
 			
-			int krow = 0;
-			for(int k=0;k<sm+2;++k)
-				for(int n=0;n<x.NV;++n)
-					K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
-					
-					++kcol;
-			
-			x.uht(var)(mode) -= dw;
+		for(int mode = 2; mode < sm+2; ++mode){
+			for(int var = 0; var < x.NV; ++var){
+				x.uht(var)(mode) += dw;
+				
+				x.lf = 0.0;
+				element_rsdl(indx,0);
+				
+				int krow = 0;
+				for(int k=0;k<sm+2;++k)
+					for(int n=0;n<x.NV;++n)
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						
+						++kcol;
+				
+				x.uht(var)(mode) -= dw;
+			}
 		}
 	}
 }
@@ -878,8 +926,7 @@ void hp_edge_bdry::element_jacobian(int sind, Array<FLT,2>& K) {
 #ifdef petsc
 void hp_edge_bdry::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
-	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
-	Array<int,1> loc_to_glo(x.NV*(sm+2));
+
 	
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
@@ -887,14 +934,24 @@ void hp_edge_bdry::petsc_jacobian() {
 	else
 		vdofs = x.NV+x.ND;
 		
+	/* If moving mesh, but not coupled, then vertices could slide along side */
+	Array<FLT,2> K(x.NV*(sm+2),vdofs*2 +x.NV*sm);
+	Array<int,1> rows(x.NV*(sm+2));
+	Array<int,1> cols(vdofs*2 +x.NV*sm);
+		
 	for(int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
 			
-		int ind = 0;
+		int rind = 0;
+		int cind = 0;
 		for(int k=0;k<2;++k) {
 			int gindx = vdofs*x.seg(sind).pnt(k);
 			for(int n=0;n<x.NV;++n) {
-				loc_to_glo(ind++) = gindx++;
+				rows(rind++) = gindx;
+				cols(cind++) = gindx++;
+			}
+			for(int n=x.NV;n<vdofs;++n) {
+				cols(cind++) = gindx++;
 			}
 		}
 		
@@ -903,14 +960,30 @@ void hp_edge_bdry::petsc_jacobian() {
 			int gbl_eind = x.npnt*vdofs + sind*sm*x.NV;
 			for (int m = 0; m < sm; ++m) {
 				for(int n = 0; n < x.NV; ++n) {
-					loc_to_glo(ind++) = gbl_eind++;
+					rows(rind++) = gbl_eind;
+					cols(cind++) = gbl_eind++;
 				}
 			}
 		}
 		
 		element_jacobian(j,K);
 		
-		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+		MatSetValues(x.petsc_J,x.NV*(sm+2),rows.data(),vdofs*2 +x.NV*sm,cols.data(),K.data(),ADD_VALUES);
 	}
 }
+
+#include <r_tri_boundary.h>
+void hp_edge_bdry::petsc_jacobian_dirichlet() {
+	/* DO R_MESH B.C.'s */
+	if (x.mmovement == x.coupled_deformable) {
+		/* This is ugly, but I need to be able to control this for different boundary types */
+		for(int i=0;i<x.nebd;++i) {
+			if (x.hp_ebdry(i) == this) {
+				x.r_sbdry(i)->jacobian_dirichlet();
+				break;
+			}
+		}
+	}
+}
+		
 #endif

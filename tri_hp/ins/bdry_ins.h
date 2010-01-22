@@ -147,10 +147,10 @@ namespace bdry_ins {
 
 				j = 0;
 				do {
-					sind = base.seg(j++);
+					sind = base.seg(j);
 					v0 = x.seg(sind).pnt(0);
 					x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
-				} while (j < base.nseg);
+				} while (++j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
 				x.gbl->res.v(v0,Range(0,x.NV-2)) = 0.0;
 			}
@@ -164,41 +164,51 @@ namespace bdry_ins {
 				}
 			}
 		// temp fix me not sure how to make compatible
-#ifdef petsc
-			void petsc_dirichlet() {
+#ifdef petsc			
+			void petsc_jacobian_dirichlet() {
+				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+				
+				int sm=basis::tri(x.log2p)->sm();
+				Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
+				
+				int vdofs;
+				if (x.mmovement == x.coupled_deformable)
+					vdofs = x.NV +tri_mesh::ND;
+				else
+					vdofs = x.NV;
+					
 				/* only works if pressure is 4th variable */
 				int gind,v0,sind;
-				int sm=basis::tri(x.log2p)->sm();
-				PetscScalar zero = 0.0;
+				int counter = 0;
 				
 				int j = 0;
 				do {
-					sind = base.seg(j++);
+					sind = base.seg(j);
 					v0 = x.seg(sind).pnt(0);
-					gind = v0*x.NV;
+					gind = v0*vdofs;
 					for(int n=0;n<x.NV-1;++n) {						
-						x.dirichlet_rows(x.row_counter)=gind+n;
-						VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+						indices(counter++)=gind+n;
 					}
-				} while (j < base.nseg);
+				} while (++j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
-				gind = v0*x.NV;
+				gind = v0*vdofs;
 				for(int n=0;n<x.NV-1;++n) {
-					x.dirichlet_rows(x.row_counter)=gind+n;
-					VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+					indices(counter++)=gind+n;
 				}
 
-				for(int i=0;i<base.nseg;++i){
-					gind = x.npnt*x.NV+base.seg(i)*sm*x.NV;
+				for(int i=0;i<base.nseg;++i) {
+					gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
 					for(int m=0; m<sm; ++m) {
 						for(int n=0;n<x.NV-1;++n) {
-							x.dirichlet_rows(x.row_counter)=gind+m*x.NV+n;
-							VecSetValues(x.petsc_f,1,&x.dirichlet_rows(x.row_counter++),&zero,INSERT_VALUES);
+							indices(counter++)=gind+m*x.NV+n;
 						}
 					}
 				}	
+				
+				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
 			}
 #endif
+
 			void tadvance() {
 				hp_edge_bdry::tadvance();
 				setvalues(ibc,dirichlets,ndirichlets);
@@ -396,10 +406,10 @@ namespace bdry_ins {
 				int sind,j,v0;
 				j = 0;
 				do {
-					sind = base.seg(j++);
+					sind = base.seg(j);
 					v0 = x.seg(sind).pnt(0);
 					x.gbl->res.v(v0,dir) = 0.0;
-				} while (j < base.nseg);
+				} while (++j < base.nseg);
 				v0 = x.seg(sind).pnt(1);
 				x.gbl->res.v(v0,dir) = 0.0;
 			}
@@ -536,6 +546,7 @@ namespace bdry_ins {
 			void element_jacobian(int indx, Array<FLT,2>& K);
 #ifdef petsc
 			void petsc_jacobian();
+			void petsc_jacobian_dirichlet() {} // Override r_mesh constraint on mesh positions
 			int petsc_rsdl(Array<FLT,1> res);
 #endif
 	};

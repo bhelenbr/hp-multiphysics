@@ -12,8 +12,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-// #define DEBUG
-#define DEBUG_TOL 1.0e-9
+
 
 void tri_hp::petsc_initialize(){
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
@@ -113,9 +112,6 @@ void tri_hp::petsc_initialize(){
 	
 	/* set preconditioner side */
 	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
-	
-	
-	dirichlet_rows.resize(bdofs);
 
 	return;
 }
@@ -130,151 +126,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscGetTime(&time2);
 	
 	cout << "jacobian made " << time2-time1 << " seconds" << endl;
-
-	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
-	
-
-#ifdef DEBUG
-	/* HARD TEST OF JACOBIAN ROUTINE */
-	FLT dw = 1.0e-4;
-	int dof = size_sparse_matrix;
-	Array<FLT,2> testJ(dof,dof);
-	testJ = 0.0;
-	
-	rsdl();
-	petsc_make_1D_rsdl_vector(testJ(Range::all(),dof-1));
 		
-	int ind = 0;
-	if (mmovement != coupled_deformable) {
-		for (int pind=0;pind<npnt;++pind) {
-			for(int n=0;n<NV;++n) {
-				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
-				rsdl();
-				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-				++ind;
-				ug.v(pind,n) = stored_value;
-			}
-		}
-	}
-	else {
-		for (int pind=0;pind<npnt;++pind) {
-			for(int n=0;n<NV;++n) {
-				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
-				rsdl();
-				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-				++ind;
-				ug.v(pind,n) = stored_value;
-			}
-			
-			for(int n=0;n<ND;++n) {
-				FLT stored_value = pnts(pind)(n);
-				pnts(pind)(n) += dw;
-				rsdl();
-				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-				++ind;
-				pnts(pind)(n) = stored_value;
-			}
-		}
-	}
-			
-	for (int sind=0;sind<nseg;++sind) {
-		for (int m=0;m<sm0;++m) {
-			for(int n=0;n<NV;++n) {
-				ug.s(sind,m,n) += dw;
-				rsdl();
-				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-				++ind;
-				ug.s(sind,m,n) -= dw;
-			}
-		}			
-	}
-
-	for (int tind=0;tind<ntri;++tind) {
-		for (int m=0;m<im0;++m) {
-			for(int n=0;n<NV;++n) {
-				ug.i(tind,m,n) += dw;
-				rsdl();
-				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-				++ind;
-				ug.i(tind,m,n) -= dw;
-			}
-		}
-	}
-	
-	/* How to perturb extra unknowns? */
-	for(int i=0;i<nebd;++i) {
-		if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
-		for(int j=0;j<ebdry(i)->nseg;++j) {
-			for(int m=0;m<sm0;++m) {
-				for(int n=0;n<ND;++n) {
-					hp_ebdry(i)->crds(j,m,n) += dw;
-					rsdl();
-					petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-					testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
-					++ind;
-					hp_ebdry(i)->crds(j,m,n) -= dw;
-				}
-			}
-		}
-	}
-		
-	const PetscScalar *vals;
-	const PetscInt *cols;
-	int nnz;
-	
-	for(int i=0;i<ind;++i) {
-		MatGetRow(petsc_J,i,&nnz,&cols,&vals);
-		*gbl->log << "row " << i/NV << ' ' << i%NV << ": ";
-		int cnt = 0;
-		for(int j=0;j<ind;++j) {
-			if (fabs(testJ(i,j)) > DEBUG_TOL) {
-				if (cnt >= nnz) {
-					*gbl->log << " (Extra entry in full matrix " <<  j << ' ' << testJ(i,j) << ") ";
-					continue;
-				}
-				if (cols[cnt] == j) {
-					//if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
-						*gbl->log << " (Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
-					++cnt;
-				}
-				else if (cols[cnt] < j) {
-					do {
-						if (fabs(vals[cnt]) > DEBUG_TOL)
-							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
-						++cnt;
-					} while (cols[cnt] < j);
-					--j;
-				}
-				else {
-					*gbl->log << " (Extra entry in full matrix " <<  j  << ' ' << testJ(i,j) << ") ";
-				}
-			}
-		}
-		*gbl->log << std::endl;
-		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
-	}
-	
-	// MatView(petsc_J,0);
-	
-	exit(1);
-#endif
-			
-	
-	/* apply dirichlet boundary conditions to vector & create list of locations for zeroing jacobian */
-	row_counter = 0;
-	for(int j = 0; j < nebd; ++j)
-		hp_ebdry(j)->petsc_dirichlet();		
-	
-	MatZeroRows(petsc_J,row_counter,dirichlet_rows.data(),1.0);
-	
 	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
 	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
 	
@@ -326,10 +178,6 @@ void tri_hp::petsc_update() {
 		
 	/* insert values into residual f (every processor will do this need to do it a different way) */
 	petsc_rsdl();
-	/* apply dirichlet boundary conditions to vector & create list of locations for zeroing jacobian */
-	row_counter = 0;
-	for(int j = 0; j < nebd; ++j)
-		hp_ebdry(j)->petsc_dirichlet();		
 			
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
@@ -517,6 +365,17 @@ void tri_hp::petsc_finalize(){
 	PetscFinalize();
 	
 	return;
+}
+
+void tri_hp::r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop) {  // Interface to Jacobian for r_tri_mesh (for now)
+	points = points*(NV +ND);
+	points = points +NV+dstart;
+	int np = points.extent(firstDim);
+	MatZeroRows(petsc_J,np,points.data(),1.0);
+	if (dstop > dstart) {
+		points = points+1;
+		MatZeroRows(petsc_J,np,points.data(),1.0);
+	}
 }
 
 #endif

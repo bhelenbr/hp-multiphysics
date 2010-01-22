@@ -184,7 +184,27 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 				++kcol;
 				uht(var)(mode) -= dw;
 			}
-			kcol += ND;
+			
+			for(int n=0;n<ND;++n) {
+				pnts(tri(tind).pnt(mode))(n) += dw;
+				
+				element_rsdl(tind,0,uht,lf_re,lf_im);
+				
+				int krow = 0;
+				for(int i=0;i<3;++i) {
+					for(int n=0;n<NV;++n) {
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+					}
+					krow += ND;
+				}
+				
+				for(int i=3;i<basis::tri(log2p)->tm();++i)
+					for(int n=0;n<NV;++n) 
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+				
+				++kcol;
+				pnts(tri(tind).pnt(mode))(n) -= dw;
+			}
 		}
 		
 		for(int mode = 3; mode <  basis::tri(log2p)->tm(); ++mode){
@@ -207,29 +227,6 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 				
 				++kcol;
 				uht(var)(mode) -= dw;
-			}
-		}
-		
-		for(int p=0;p<3;++p) {
-			for(int n=0;n<ND;++n) {
-				pnts(tri(tind).pnt(p))(n) += dw;
-				
-				element_rsdl(tind,0,uht,lf_re,lf_im);
-				
-				int krow = 0;
-				for(int i=0;i<3;++i) {
-					for(int n=0;n<NV;++n) {
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
-					}
-					krow += ND;
-				}
-				
-				for(int i=3;i<basis::tri(log2p)->tm();++i)
-					for(int n=0;n<NV;++n) 
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
-				
-				++kcol;
-				pnts(tri(tind).pnt(p))(n) -= dw;
 			}
 		}
 	}
