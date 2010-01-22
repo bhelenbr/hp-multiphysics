@@ -42,7 +42,7 @@ void tri_hp::find_sparse_bandwidth(){
 	if (sm) {
 		bw(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
 		/* connections of high order isoparametric mappings */
-		if (mmovement == coupled_deformable) bw(Range(begin_iso,size_sparse_matrix-1)) = vdofs*(sm+3) +NV*(im+2*sm);
+		if (mmovement == coupled_deformable && size_sparse_matrix > begin_iso) bw(Range(begin_iso,size_sparse_matrix-1)) = vdofs*(sm+3) +NV*(im+2*sm);
 	}
 	if (im) bw(Range(begin_tri,size_sparse_matrix-1)) = tm*NV;
 	
@@ -66,19 +66,21 @@ void tri_hp::find_sparse_bandwidth(){
 	}
 	
 	/* Connections to isoparametric coordinates */
-	for(int i=0;i<nebd;++i) {
-		if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
-		
-		for(int j=0;j<ebdry(i)->nseg;++j) {
-
-			int tind = seg(ebdry(i)->seg(j)).tri(0);
-			bw(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+	if (sm) {
+		for(int i=0;i<nebd;++i) {
+			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
 			
-			for(int j=0;j<3;++j) {
-				int sind = tri(tind).seg(j);
-				bw(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
-				int pind = tri(tind).pnt(j);
-				bw(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
+			for(int j=0;j<ebdry(i)->nseg;++j) {
+
+				int tind = seg(ebdry(i)->seg(j)).tri(0);
+				if (im) bw(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+				
+				for(int j=0;j<3;++j) {
+					int sind = tri(tind).seg(j);
+					bw(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
+					int pind = tri(tind).pnt(j);
+					bw(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
+				}
 			}
 		}
 	}
@@ -309,7 +311,7 @@ void tri_hp::petsc_rsdl() {
 	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->vdirichlet();
 
-	for(int i=0;i<nvbd;++i)
+	for(int i=0;i<nvbd;++i) {
 		hp_vbdry(i)->vdirichlet2d();
 		
 	/* APPLY DIRCHLET B.C.S TO MODE */

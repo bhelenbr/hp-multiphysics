@@ -118,8 +118,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
 #endif
 				}	
-				++ind;			
-			} while (ind < base.nseg);
+			} while (++ind < base.nseg);
 			fout << base.idprefix << " circumference: " << circumference << std::endl;
 			fout << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
 			fout << base.idprefix << " convective flux: " << conv_flux << std::endl;
@@ -141,10 +140,10 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			total_flux = 0.0;
 			ind = 0;
 			do {
-				sind = base.seg(ind++);
+				sind = base.seg(ind);
 				v0 = x.seg(sind).pnt(0);
 				total_flux += x.gbl->res.v(v0,Range::all());
-			} while (ind < base.nseg);
+			} while (++ind < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			total_flux += x.gbl->res.v(v0,Range::all());
 		}
@@ -271,10 +270,10 @@ void symmetry::tadvance() {
 	/* UPDATE BOUNDARY CONDITION VALUES */
 	j = 0;
 	do {
-		sind = base.seg(j++);
+		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		x.ug.v(v0,dir) = 0.0;
-	}	while (j < base.nseg);
+	}	while (++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	x.ug.v(v0,dir) = 0.0;
 

@@ -17,18 +17,12 @@
 void tri_hp::petsc_initialize(){
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
 
-	int bdofs = 0;
-	for(int i=0;i < nebd; ++i) {
-		bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*NV;
-	}
-
 	/* count total degrees of freedom on boundaries */
 	int isodofs = 0;
 	if (mmovement == coupled_deformable) {
 		for(int i=0;i < nebd; ++i) {
 			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled) {
 				isodofs += ebdry(i)->nseg*basis::tri(log2p)->sm()*ND;
-				bdofs += ebdry(i)->nseg*(basis::tri(log2p)->sm()+1)*ND;
 			}
 		}
 		size_sparse_matrix += npnt*ND +isodofs;
@@ -125,7 +119,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	petsc_jacobian();
 	PetscGetTime(&time2);
 	
-	cout << "jacobian made " << time2-time1 << " seconds" << endl;
+	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 		
 	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
 	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
@@ -191,7 +185,7 @@ void tri_hp::petsc_update() {
 	VecNorm(resid,NORM_2,&petsc_norm);
 	KSPGetIterationNumber(ksp,&its);
 
-	cout << "linear system residual: " << petsc_norm << "  solve time: " << time2-time1 << " seconds" << endl;
+	*gbl->log << "linear system residual: " << petsc_norm << "  solve time: " << time2-time1 << " seconds" << endl;
 	
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
@@ -345,9 +339,11 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 			for(int n=0;n<NV;++n)
 				rv(ind++) = gbl->res.i(i,m,n);
 	
-	for (int i=0;i<nebd;++i) {
-		if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
-			ind += hp_ebdry(i)->petsc_rsdl(rv(Range(ind,size_sparse_matrix-1)));
+	if (sm0) {
+		for (int i=0;i<nebd;++i) {
+			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
+				ind += hp_ebdry(i)->petsc_rsdl(rv(Range(ind,size_sparse_matrix-1)));
+		}
 	}
 }
 

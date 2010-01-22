@@ -188,26 +188,26 @@ void surface::rsdl(int stage) {
 	
 		x.ugtouht1d(sind);
 		element_rsdl(indx,lf);
-		
-		/* STORE IN RES */
-		for(n=0;n<tri_mesh::ND;++n) {
-			gbl->vres(indx)(n) += lf(n,0);
-			gbl->vres(indx+1)(n) = lf(n,1);
-			for(m=0;m<basis::tri(x.log2p)->sm();++m)
-				gbl->sres(indx,m)(n) = lf(n,m+2);
-		}
 
-		/* ADD TO RESIDUAL */
+		/* ADD FLUXES TO RESIDUAL */
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v0,n) += lf(n+2,0);
+			x.gbl->res.v(v0,n) += lf(n,0);
 
 		for(n=0;n<x.NV;++n)
-			x.gbl->res.v(v1,n) += lf(n+2,1);
+			x.gbl->res.v(v1,n) += lf(n,1);
 
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
 			for(n=0;n<x.NV;++n)
-				x.gbl->res.s(sind,m,n) += lf(n+2,m+2);
-		}  
+				x.gbl->res.s(sind,m,n) += lf(n,m+2);
+		} 
+		
+		/* STORE MESH-MOVEMENT RESIDUAL IN VRES/SRES */
+		for(n=0;n<tri_mesh::ND;++n) {
+			gbl->vres(indx)(n) += lf(x.NV+n,0);
+			gbl->vres(indx+1)(n) = lf(x.NV+n,1);
+			for(m=0;m<basis::tri(x.log2p)->sm();++m)
+				gbl->sres(indx,m)(n) = lf(x.NV+n,m+2);
+		}
 		
 #ifdef DROP
 		gbl->vres(indx)(1) += lf(x.NV+2,0);
@@ -285,10 +285,24 @@ void surface::rsdl(int stage) {
 		base.comm_exchange(boundary::all,0,boundary::master_slave);
 		base.comm_wait(boundary::all,0,boundary::master_slave);
 	}
+	
+#ifdef petsc
+	/* Store vertex residual in r_mesh residual vector */
+	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
+	
+	i = 0;
+	do {
+		sind = base.seg(i);
+		v0 = x.seg(sind).pnt(0);
+		r_gbl->res(v0) = gbl->vres(i);
+	} while (++i < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	r_gbl->res(v0) = gbl->vres(i);
+#endif	
 }
 
 void surface::element_rsdl(int indx, Array<FLT,2> lf) {
-	int i,m,n,sind,v0,v1;
+	int i,n,sind,v0,v1;
 	TinyVector<FLT,tri_mesh::ND> norm, rp;
 	Array<FLT,1> ubar(x.NV);
 	FLT jcb;
@@ -345,31 +359,32 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 	}
 
 	lf = 0.0;
-
-	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
-	basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(0,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(2,0));
-
 	/* INTEGRATE & STORE SURFACE TENSION SOURCE TERM */
-	basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(4,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(2,0),&res(5,0));
-	basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(6,0));
-	basis::tri(x.log2p)->intgrtx1d(&lf(3,0),&res(7,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(4,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(0,0),&res(5,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(6,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(1,0),&res(7,0));
+	
+	/* INTEGRATE & STORE MESH MOVEMENT RESIDUALS */                    
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV,0),&res(0,0));
+	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+1,0),&res(1,0));
+	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV+1,0),&res(2,0));
 
+#ifndef petsc
 	/* mass flux preconditioning */
-	for(m=0;m<basis::tri(x.log2p)->sm()+2;++m)
-		lf(x.NV-1+2,m) = -x.gbl->rho*lf(1,m); 
+	for(int m=0;m<basis::tri(x.log2p)->sm()+2;++m)
+		lf(x.NV-1,m) = -x.gbl->rho*lf(x.NV+1,m); 
 #ifndef INERTIALESS
 	for (n=0;n<x.NV-1;++n) 
 		ubar(n) = 0.5*(x.uht(n)(0) +x.uht(n)(1));
 
 	for (n=0;n<x.NV-1;++n) {
-		lf(n+2,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(1,0);
-		lf(n+2,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(1,1);
-		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			lf(n+2,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(1,m+2);
+		lf(n,0) -= x.uht(n)(0)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,0);
+		lf(n,1) -= x.uht(n)(1)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,1);
+		for(int m=0;m<basis::tri(x.log2p)->sm();++m)
+			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,m+2);
 	}
+#endif
 #endif
 		
 #ifdef DROP
@@ -1192,7 +1207,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 		}
 		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
-			x.pnts(x.seg(sind).pnt(var))(var) += dw;
+			x.pnts(x.seg(sind).pnt(mode))(var) += dw;
 
 			element_rsdl(indx,lf);
 
@@ -1202,7 +1217,7 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
 
 			++kcol;
-			x.pnts(x.seg(sind).pnt(var))(var) -= dw;
+			x.pnts(x.seg(sind).pnt(mode))(var) -= dw;
 		}
 	}
 
@@ -1244,28 +1259,30 @@ void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 #ifdef petsc
 void surface::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
-	Array<FLT,2> K(x.NV*(sm+2),x.NV*(sm+2));
-	Array<int,1> loc_to_glo(x.NV*(sm+2));
-	PetscScalar zero = 0.0;
 	int vdofs = x.NV +tri_mesh::ND;
-
-	/* Clear vertex rows assigned as dirichlet by r_mesh */
+	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
+	Array<int,1> loc_to_glo(vdofs*(sm+2));
+	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
+	
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	
 	int j = 0;
+	int cnt = 0;
 	int sind;
 	do {
 		sind = base.seg(j);
-		int gindx = vdofs*x.seg(sind).pnt(0) +x.NV;
-		MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
-		++gindx;
-		MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
-	} while (j++ < base.nseg);
-	int gindx = vdofs*x.seg(sind).pnt(1) +x.NV;
-	MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);
-	++gindx;
-	MatSetValues(x.petsc_J,1,&gindx,1,&gindx,&zero,INSERT_VALUES);	
+		indices(cnt++) = x.seg(sind).pnt(0)*vdofs+x.NV;
+		indices(cnt++) = x.seg(sind).pnt(0)*vdofs+x.NV+1;
+	} while (++j < base.nseg);
+	indices(cnt++) = x.seg(sind).pnt(1)*vdofs+x.NV;
+	indices(cnt++) = x.seg(sind).pnt(1)*vdofs+x.NV+1;
 	
-	for (j=0;j<base.nseg;++j) {
-		sind = base.seg(j);
+	/* Must zero rows of jacobian created by r_mesh */
+	MatZeroRows(x.petsc_J,cnt,indices.data(),PETSC_NULL);
+
+	for (int j=0;j<base.nseg;++j) {
+		int sind = base.seg(j);
 		
 		/* CREATE GLOBAL NUMBERING LIST */
 		int ind = 0;
@@ -1287,13 +1304,14 @@ void surface::petsc_jacobian() {
 		
 		element_jacobian(j,K);
 		
-		MatSetValues(x.petsc_J,x.NV*(sm+2),loc_to_glo.data(),x.NV*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+		MatSetValues(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 }
 
 int surface::petsc_rsdl(Array<double,1> res) {
 	int sm = basis::tri(x.log2p)->sm();
 	int ind = 0;
+
 	for(int j=0;j<base.nseg;++j) {
 		for(int m=0;m<sm;++m) {
 			for(int n=0;n<tri_mesh::ND;++n) {
