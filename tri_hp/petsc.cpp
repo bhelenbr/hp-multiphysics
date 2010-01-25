@@ -86,7 +86,7 @@ void tri_hp::petsc_initialize(){
 	
 	/* choose preconditioner type */
 
-	//PCSetType(pc, PCLU);     // LU
+		PCSetType(pc, PCLU);     // LU
 //	PCSetType(pc, PCILU);    // incomplete LU
 //	PCSetType(pc, PCSOR);    // SOR
 //	PCSetType(pc,PCSPAI);
@@ -185,7 +185,7 @@ void tri_hp::petsc_update() {
 	VecNorm(resid,NORM_2,&petsc_norm);
 	KSPGetIterationNumber(ksp,&its);
 
-	*gbl->log << "linear system residual: " << petsc_norm << "  solve time: " << time2-time1 << " seconds" << endl;
+	*gbl->log << "#linear system residual: " << petsc_norm << " iterations " << its << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
@@ -358,7 +358,7 @@ void tri_hp::petsc_finalize(){
 	VecDestroy(petsc_u);
 	MatDestroy(petsc_J);
 	
-	PetscFinalize();
+//	PetscFinalize();
 	
 	return;
 }

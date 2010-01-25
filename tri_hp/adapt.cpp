@@ -17,6 +17,11 @@ void tri_hp::adapt() {
 	tri_mesh::adapt();
 	setinfo();
 	
+#ifdef petsc
+	petsc_finalize();
+	petsc_initialize();
+#endif
+	
 	*gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
 	
 	// FOR TESTING ADAPTATION TO A SPECIFIED FUNCTION
