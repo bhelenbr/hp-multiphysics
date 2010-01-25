@@ -9,7 +9,7 @@
 
 #include "tri_mesh.h"
 
-#define petsc
+// #define petsc
 
 class r_side_bdry {
 	protected:
