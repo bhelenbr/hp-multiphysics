@@ -9,6 +9,8 @@
 
 #include "tri_mesh.h"
 
+#define petsc
+
 class r_side_bdry {
 	protected:
 		std::string mytype;
@@ -28,9 +30,12 @@ class r_side_bdry {
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
 		virtual ~r_side_bdry() {}
+		virtual void jacobian() {}
 		virtual void jacobian_dirichlet() {}
 };
 
+
+#ifndef petsc
 class r_fixed : public r_side_bdry {
 	public:
 		int dstart, dstop;
@@ -64,20 +69,6 @@ class r_fixed : public r_side_bdry {
 			}
 			return;
 		}
-		
-		void jacobian_dirichlet() {
-			Array<int,1> points((base.nseg+1));
-			
-			int j = 0;
-			int sind;
-			do {
-				sind = base.seg(j);
-				points(j) = x.seg(sind).pnt(0);
-			} while(++j < base.nseg);
-			points(j) = x.seg(sind).pnt(1);
-			x.r_jacobian_dirichlet(points,dstart,dstop);
-		}
-		
 };
 
 class r_fixed_angled : public r_side_bdry {
@@ -113,11 +104,152 @@ class r_fixed_angled : public r_side_bdry {
 			FLT res = -x.gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
-			
 			return;
 		}
-
 };
+#else
+
+#include <../tri_hp/tri_hp.h>
+
+class r_fixed : public r_side_bdry {
+	protected:
+		int dstart, dstop;
+		tri_hp& x;
+	
+	public:
+		r_fixed(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1), x(dynamic_cast<tri_hp &>(xin)) {mytype = "fixed";}
+		r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop), x(dynamic_cast<tri_hp &>(xin)) {mytype = "fixed";}
+		r_fixed* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed(*this,xin,bin);}
+
+		void input(input_map& inmap) {
+			r_side_bdry::input(inmap);
+
+			std::string line;
+			inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
+			std::istringstream data(line);
+			data >> dstart >> dstop;
+			data.clear();
+		}
+
+		void output(std::ostream& fout) {
+			r_side_bdry::output(fout);
+			fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
+		}
+		
+		void dirichlet() {
+			for(int j=0;j<base.nseg;++j) {
+				int sind = base.seg(j);
+				for(int n=dstart;n<=dstop;++n) {
+					x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
+					x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
+				}
+			}
+			return;
+		}
+		
+		
+		void jacobian_dirichlet() {
+			int stride = x.NV +tri_mesh::ND;
+			int np = (base.nseg+1)*(dstop -dstart +1);
+			Array<int,1> points(np);
+			
+			int j = 0;
+			int cnt = 0;
+			int sind;
+			do {
+				sind = base.seg(j);
+				int gindx = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +dstart;
+				for (int n=dstart;n<=dstop;++n)
+					points(cnt++) = gindx++;
+			} while(++j < base.nseg);
+			int gindx = x.seg(sind).pnt(1)*stride +stride -tri_mesh::ND +dstart;
+			for (int n=dstart;n<=dstop;++n)
+				points(cnt++) = gindx++;			
+			
+			MatZeroRows(x.petsc_J,cnt,points.data(),1.0);
+		}
+};
+
+class r_fixed_angled : public r_fixed {
+	public:
+		FLT theta;
+
+		r_fixed_angled(r_tri_mesh &xin, edge_bdry &bin) : r_fixed(xin,bin), theta(0.0) {mytype = "fixed_angled";}
+		r_fixed_angled(const r_fixed_angled &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin), theta(inbdry.theta) {mytype = "fixed_angled";}
+		r_fixed_angled* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed_angled(*this,xin,bin);}
+
+		void input(input_map& inmap) {
+			r_fixed::input(inmap);
+
+			inmap.get(base.idprefix+"_r_theta",theta);
+			theta *= M_PI/180.0;
+		}
+
+		void output(std::ostream& fout) {
+			r_fixed::output(fout);
+			fout << base.idprefix << "_r_theta: " << theta*180.0/M_PI << std::endl;
+		}
+
+		void dirichlet() {
+			int sind;
+			int j = 0;
+			do {
+				sind = base.seg(j);
+				/* Tangent Residual */
+				FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
+				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0) = res;
+				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1) = 0.0;
+			} while (j++ < base.nseg);
+			FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
+			x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0) = res;
+			x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1) = 0.0;
+			return;
+		}
+		
+		void jacobian() {
+			int stride = x.NV +tri_mesh::ND;
+			int nnz1, nnz2;
+			const PetscInt *cols1, *cols2;
+			const PetscScalar *vals1, *vals2;
+			
+			/* SKIP ENDPOINTS? */
+			int j = 1;
+			int sind;
+			do {
+				sind = base.seg(j);
+				int row = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +1;
+				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
+				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+				
+				Array<int,1> cols(nnz1+nnz2);
+				Array<FLT,1> vals(nnz1+nnz2);
+				for (int col=0;col<nnz1;++col) {
+					cols(col) = cols1[col];
+					vals(col) = -vals1[col]*sin(theta);
+				}
+				for (int col=0;col<nnz2;++col) {
+					cols(col+nnz1) = cols2[col];
+					vals(col+nnz1) = vals2[col]*cos(theta);
+				}
+				MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
+				MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+
+				/* Replace x equation with tangential position equation */
+				/* Replacy y equation with normal displacement equation */
+				TinyVector<int,2> rows(row,row+1);
+				MatZeroRows(x.petsc_J,2,rows.data(),PETSC_NULL);
+				MatSetValues(x.petsc_J,1,&row,nnz1+nnz2,cols.data(),vals.data(),INSERT_VALUES);
+				
+				cols(0) = row;
+				cols(1) = row +1;
+				vals(0) = cos(theta);
+				vals(1) = sin(theta);
+				++row;
+				MatSetValues(x.petsc_J,1,&row,2,cols.data(),vals.data(),INSERT_VALUES);
+			} while(++j < base.nseg);
+		}
+};
+#endif
 
 
 class r_fixed4 : public r_fixed {
@@ -321,7 +453,6 @@ class r_vmoving : public r_vfixed {
 			base.mvpttobdry(x.pnts(pnt));
 		}
 };
-
 
 
 

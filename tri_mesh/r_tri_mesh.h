@@ -81,7 +81,6 @@ class r_tri_mesh : public tri_mesh {
 			void tadvance();
 			void rsdl();
 			void element_jacobian(int tind,Array<FLT,2> K); 
-			virtual void r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop) {}
 			void update();
 			void setup_preconditioner();
 			FLT maxres();
