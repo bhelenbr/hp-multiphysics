@@ -206,6 +206,8 @@ class r_fixed_angled : public r_fixed {
 			return;
 		}
 		
+		void jacobian_dirichlet() {}
+		
 		void jacobian() {
 			int stride = x.NV +tri_mesh::ND;
 			int nnz1, nnz2;
