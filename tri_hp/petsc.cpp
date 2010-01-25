@@ -363,15 +363,4 @@ void tri_hp::petsc_finalize(){
 	return;
 }
 
-void tri_hp::r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop) {  // Interface to Jacobian for r_tri_mesh (for now)
-	points = points*(NV +ND);
-	points = points +NV+dstart;
-	int np = points.extent(firstDim);
-	MatZeroRows(petsc_J,np,points.data(),1.0);
-	if (dstop > dstart) {
-		points = points+1;
-		MatZeroRows(petsc_J,np,points.data(),1.0);
-	}
-}
-
 #endif

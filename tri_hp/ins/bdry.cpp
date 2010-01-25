@@ -439,7 +439,7 @@ void hybrid_pt::rsdl(int stage) {
 	else
 		fix_norm = 0;
 
-	surface_outflow_planar::rsdl(stage);
+	surface_outflow::rsdl(stage);
 }
 
 

@@ -98,7 +98,7 @@ class tri_hp : public r_tri_mesh  {
 			* could be used for ug0 res and res_r as well? 
 			*/
 			tri_hp *pstr;  
-			FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  
+			FLT curvature_sensitivity;  /**< sensitivity to boundary curvature  */
 
 			/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 			vsi ug0;

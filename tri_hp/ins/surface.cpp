@@ -428,7 +428,7 @@ void surface_slave::rsdl(int stage) {
 	return;
 }
 
-void surface_outflow_endpt::rsdl(int stage) {
+void surface_outflow::rsdl(int stage) {
 	int bnum,sind;
 	TinyVector<FLT,tri_mesh::ND> ubar, tangent, rp;
 	FLT jcb;
@@ -436,66 +436,61 @@ void surface_outflow_endpt::rsdl(int stage) {
 	/* SET TANGENT RESDIUAL TO 0 */
 	surface_fixed_pt::rsdl(stage);
 	
-	/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-	/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-	bnum = base.ebdry(surfbdry);
-	if (surfbdry == 0) {
-		sind = x.ebdry(bnum)->seg(x.ebdry(bnum)->nseg-1);
-		x.crdtocht1d(sind);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
-		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+	switch(contact_type) {
+		case(free_angle): {
+			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+			bnum = base.ebdry(surfbdry);
+			if (surfbdry == 0) {
+				sind = x.ebdry(bnum)->seg(x.ebdry(bnum)->nseg-1);
+				x.crdtocht1d(sind);
+				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),1.0,&x.cht(0,0),MXTM);
+				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
+				x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+				x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+			}
+			else {
+				sind = x.ebdry(bnum)->seg(0);
+				x.crdtocht1d(sind);
+				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
+				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
+				x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+				x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
+			}
+			break;
+		}
+		case(fixed_angle): {
+			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
+			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+			int bnumwall = base.ebdry(1-surfbdry);
+			TinyVector<FLT,tri_mesh::ND> tangentwall;
+			if (surfbdry == 0) {
+				int sindwall = x.ebdry(bnumwall)->seg(0);
+				x.crdtocht1d(sindwall);
+				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),-1.0,&x.cht(0,0),MXTM);
+				/* ROTATE TANGENT BY CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
+				tangent(0) = -tangentwall(0)*cos(-contact_angle) -tangentwall(1)*sin(-contact_angle);
+				tangent(1) = +tangentwall(0)*sin(-contact_angle) -tangentwall(1)*cos(-contact_angle);
+				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
+				x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+				x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
+			}
+			else {
+				int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
+				x.crdtocht1d(sindwall);
+				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),1.0,&x.cht(0,0),MXTM);
+				/* ROTATE TANGENT BY -CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
+				tangent(0) = -tangentwall(0)*cos(contact_angle) -tangentwall(1)*sin(contact_angle);
+				tangent(1) = +tangentwall(0)*sin(contact_angle) -tangentwall(1)*cos(contact_angle);
+				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
+				x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
+				x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
+			}
+		}
 	}
-	else {
-		sind = x.ebdry(bnum)->seg(0);
-		x.crdtocht1d(sind);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangent(0),-1.0,&x.cht(0,0),MXTM);
-		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;
-	}
-	return;
-}
-
-void surface_contact_pt::rsdl(int stage) {
-	int bnumwall,sindwall;
-	TinyVector<FLT,tri_mesh::ND> ubar, tangent, tangentwall, rp;
-	FLT jcb;
 	
-	/* SET TANGENT RESDIUAL TO 0 */
-	surface_fixed_pt::rsdl(stage);
-
-	/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
-	/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-	bnumwall = base.ebdry(1-surfbdry);
-	if (surfbdry == 0) {
-		sindwall = x.ebdry(bnumwall)->seg(0);
-		x.crdtocht1d(sindwall);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),-1.0,&x.cht(0,0),MXTM);
-		/* ROTATE TANGENT BY CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
-		tangent(0) = -tangentwall(0)*cos(-contact_angle) -tangentwall(1)*sin(-contact_angle);
-		tangent(1) = +tangentwall(0)*sin(-contact_angle) -tangentwall(1)*cos(-contact_angle);
-		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
-	}
-	else {
-		sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
-		x.crdtocht1d(sindwall);
-		basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),1.0,&x.cht(0,0),MXTM);
-		/* ROTATE TANGENT BY -CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
-		tangent(0) = -tangentwall(0)*cos(contact_angle) -tangentwall(1)*sin(contact_angle);
-		tangent(1) = +tangentwall(0)*sin(contact_angle) -tangentwall(1)*cos(contact_angle);
-		jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-		x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-		x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
-	}
 	return;
 }
-
-
-
 
 void surface::minvrt() {
 	int i,m,n,indx;

@@ -290,7 +290,6 @@ void tri_hp::petsc_jacobian() {
 		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
 	}
 	
-	// MatView(petsc_J,0);
 	
 	exit(1);
 #endif
@@ -300,6 +299,12 @@ void tri_hp::petsc_jacobian() {
 		
 	for(int i=0;i<nvbd;++i) 
 		hp_vbdry(i)->petsc_jacobian_dirichlet();	
+		
+	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+	
+//	MatView(petsc_J,0);
+//	exit(1);
 
 	return;
 }

@@ -22,9 +22,8 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
 	public:
-		static const int ntypes = 8;
-		enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
-		inflow,hybrid_slave_point,hybrid_point,surface_contact_pt};
+		static const int ntypes = 5;
+		enum ids {unknown=-1,surface_inflow,surface_outflow,inflow,hybrid_slave_point,hybrid_point};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -33,8 +32,7 @@ class tri_hp_ins_vtype {
 		}
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar",
-	"inflow","hybrid_slave_point","hybrid_point","surface_contact_pt"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","inflow","hybrid_slave_point","hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -60,16 +58,8 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			temp = new surface_fixed_pt(*this,*vbdry(bnum));
 			break;
 		}
-		case tri_hp_ins_vtype::surface_periodic: {
-			temp = new surface_periodic_pt(*this,*vbdry(bnum));
-			break;
-		}
 		case tri_hp_ins_vtype::surface_outflow: {
-			temp = new surface_outflow_endpt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_ins_vtype::surface_outflow_planar: {
-			temp = new surface_outflow_planar(*this,*vbdry(bnum));
+			temp = new surface_outflow(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_ins_vtype::inflow: {
@@ -82,10 +72,6 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_ins_vtype::hybrid_point: {
 			temp = new hybrid_pt(*this,*vbdry(bnum));
-			break;
-		}
-		case tri_hp_ins_vtype::surface_contact_pt: {
-			temp = new surface_contact_pt(*this,*vbdry(bnum));
 			break;
 		}
 		default: {

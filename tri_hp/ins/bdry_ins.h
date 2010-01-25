@@ -560,7 +560,7 @@ namespace bdry_ins {
 			tri_hp_ins &x;
 			surface *surf;
 			int surfbdry;
-			int fix_norm;
+			bool fix_norm;
 
 		public:
 			surface_fixed_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin), fix_norm(1) {mytype = "surface_fixed_pt";}
@@ -590,9 +590,7 @@ namespace bdry_ins {
 					*x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
 					exit(1);
 				}
-
-				keyword = base.idprefix + "_fix_normal";
-				inmap.getwdefault(keyword,fix_norm,1);
+				fix_norm = 1;  // THIS IS ONLY TO BE CHANGE BY INHERITED CLASSES
 			}
 
 			void rsdl(int stage) {
@@ -620,7 +618,7 @@ namespace bdry_ins {
 #endif
 				return;
 			}
-
+			
 			void vdirichlet() {
 				if (surfbdry == 0) {
 					for(int n=0;n<=fix_norm;++n) 
@@ -650,103 +648,118 @@ namespace bdry_ins {
 			
 #ifdef petsc
 			void petsc_jacobian_dirichlet() {
-				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-				for(int n=0;n<=fix_norm;++n) {
-					MatZeroRows(x.petsc_J,1,&row,1.0);
-					++row;
+				/* BOTH X & Y ARE FIXED */
+				if (fix_norm) {
+					int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+					for(int n=0;n<tri_mesh::ND;++n) {
+						MatZeroRows(x.petsc_J,1,&row,1.0);
+						++row;
+					}
 				}
 			}
 #endif
 	};
-
-	class surface_periodic_pt : public surface_fixed_pt {
+	
+	class surface_outflow : public surface_fixed_pt {
+		/* For a surface point sliding on a vertical or horizontal surface */
+		/* For periodic wall have tri_mesh vertex type be comm */
 		protected:
 			FLT position;
-			bool vertical;
+			enum {vertical, horizontal, angled} wall_type;
+			enum {prdc, free_angle, fixed_angle} contact_type;
+			FLT contact_angle;  // ONLY USED FOR FIXED_ANGLE CONTACT TYPE
+			TinyVector<FLT,tri_mesh::ND> wall_normal; 
 
 		public:
-			surface_periodic_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_periodic_pt";}
-			surface_periodic_pt(const surface_periodic_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin), position(inbdry.position), vertical(inbdry.vertical) {}
-			surface_periodic_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_periodic_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			surface_outflow(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow";}
+			surface_outflow(const surface_outflow& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin), position(inbdry.position), 
+				wall_type(inbdry.wall_type), contact_type(inbdry.contact_type), contact_angle(inbdry.contact_angle), wall_normal(inbdry.wall_normal) {}
+			surface_outflow* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 
 			void init(input_map& inmap,void* gbl_in) {                
 				surface_fixed_pt::init(inmap,gbl_in);
 				fix_norm = 0;
-				inmap.getwdefault(base.idprefix + "_vertical",vertical,true); 
-				position = x.pnts(base.pnt)(1-vertical);
+
+				std::string input;
+				if (!inmap.get(base.idprefix + "_contact_type",input))
+					contact_type = prdc;
+				else if (input == "free_angle")
+					contact_type = free_angle;
+				else if (input == "fixed_angle") {
+					contact_type = fixed_angle;
+					inmap.getwdefault(base.idprefix +"_contact_angle",contact_angle,90.0);
+					contact_angle *= M_PI/180.0;
+				}
+				else {
+					*x.gbl->log << "Unrecognized contact type" << std::endl;
+				}
+				
+				if (!inmap.get(base.idprefix + "_wall_type",input)) {
+					wall_type = vertical;
+					position = x.pnts(base.pnt)(0);
+				}
+				else if (input == "horizontal") {
+					wall_type = horizontal;
+					position = x.pnts(base.pnt)(1);
+				}
+				else if (input == "angled")
+					wall_type = angled;
+				else {
+					*x.gbl->log << "Unrecognized wall type" << std::endl;
+				}
+				
+				/* Find tangent to wall and use to constrain motion */
+				int bnumwall = base.ebdry(1-surfbdry);
+				TinyVector<FLT,tri_mesh::ND> rp;
+				if (surfbdry == 0) {
+					int sindwall = x.ebdry(bnumwall)->seg(0);
+					x.crdtocht1d(sindwall);
+					basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
+				}
+				else {
+					int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
+					x.crdtocht1d(sindwall);
+					basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
+				}
+				FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
+				wall_normal /= length;
+				FLT temp = wall_normal(0);
+				wall_normal(0) = wall_normal(1);
+				wall_normal(1) = -temp;
 			}
 
 			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-				pt(1-vertical) = position;
-			}
-	};
-
-
-	class surface_outflow_endpt : public surface_fixed_pt {
-		public:
-			surface_outflow_endpt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin) {mytype = "surface_outflow_endpt";}
-			surface_outflow_endpt(const surface_outflow_endpt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin) {}
-			surface_outflow_endpt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_endpt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				surface_fixed_pt::init(input,gbl_in);
-				fix_norm = 0;
-			}
-
-			/* FOR COUPLED DYNAMIC BOUNDARIES */
-			void rsdl(int stage);
-	};
-	
-	class surface_outflow_planar : public surface_outflow_endpt {
-		protected:
-			bool vertical;
-			FLT position;
-
-		public:
-			surface_outflow_planar(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(xin,bin) {mytype = "surface_outflow_planar";}
-			surface_outflow_planar(const surface_outflow_planar& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_endpt(inbdry,xin,bin), vertical(inbdry.vertical), position(inbdry.position) {}
-			surface_outflow_planar* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_outflow_planar(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& inmap,void* gbl_in) {
-				std::string keyword;
-				std::ostringstream nstr;
-
-				surface_outflow_endpt::init(inmap,gbl_in);
-
-				keyword = base.idprefix + "_vertical";
-				inmap.getwdefault(keyword,vertical,true);
-
-				keyword = base.idprefix +"_position";
-				if (!inmap.get(keyword,position)) {
-					position = x.pnts(base.pnt)(1-vertical);
-					nstr.str("");
-					nstr << position;
-					inmap[keyword] = nstr.str();
+				switch(wall_type) {
+					case(vertical):
+						pt(0) = position;
+						break;
+					case(horizontal):
+						pt(1) = position;
+						break;
+					case(angled):
+						surface_fixed_pt::mvpttobdry(pt);
+						break;
 				}
 			}
-
-			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
-				pt(1-vertical) = position;
-			}
-	};
-
-	
-	class surface_contact_pt : public surface_fixed_pt {
-		protected:
-			FLT contact_angle;  // radians;
-		public:
-			surface_contact_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(xin,bin), contact_angle(M_PI) {mytype = "surface_contact_pt";}
-			surface_contact_pt(const surface_contact_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_fixed_pt(inbdry,xin,bin), contact_angle(inbdry.contact_angle) {}
-			surface_contact_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_contact_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
-			void init(input_map& input,void* gbl_in) {
-				surface_fixed_pt::init(input,gbl_in);
-				fix_norm = 0;
-				input.getwdefault(base.idprefix+"_contact_angle",contact_angle,90.0);
-				contact_angle *= M_PI/180.0;
-			}
-
-			/* TO SET CONTACT ANGLE STRESS */
+			
 			void rsdl(int stage);
+						
+#ifdef petsc
+			void petsc_jacobian() {
+				if (contact_type != free_angle) return;
+					*x.gbl->log << "Just have to add this\n";
+			}
+
+			void petsc_jacobian_dirichlet() {
+				/* Replace tangential residual equation with equation that fixes wall position */
+				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+				MatZeroRows(x.petsc_J,1,&row,PETSC_NULL);
+				TinyVector<int,2> col(row,row+1);
+				MatSetValues(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
+			}
+#endif
 	};
-	
+		
 	class inflow_pt : public hp_vrtx_bdry {
 		protected:
 			tri_hp_ins &x;
@@ -783,11 +796,16 @@ namespace bdry_ins {
 			void update(int stage);
 	};
 
-	class hybrid_pt : public surface_outflow_planar {
+	class hybrid_pt : public surface_outflow {
 		public:
-			hybrid_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_planar(xin,bin) {mytype = "hybrid_pt";}
-			hybrid_pt(const hybrid_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow_planar(inbdry,xin,bin) {}
+			hybrid_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow(xin,bin) {mytype = "hybrid_pt"; contact_type = prdc;}
+			hybrid_pt(const hybrid_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow(inbdry,xin,bin) {}
 			hybrid_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			
+			void init(input_map& inmap,void* gbl_in) {                
+				surface_outflow::init(inmap,gbl_in);
+				contact_type = prdc;
+			}
 
 			void vdirichlet2d() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-1)) = 0.0;
