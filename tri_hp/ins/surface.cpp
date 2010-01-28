@@ -385,8 +385,26 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,m+2);
 	}
 #endif
-#endif
+#else
+	/* Rotate residual for better diagonal dominance */
+	/* Rotate vertices */
+	FLT temp;
+	temp         = lf(x.NV,0)*gbl->vdt(indx)(0,0) +lf(x.NV+1,0)*gbl->vdt(indx)(0,1);
+	lf(x.NV+1,0) = lf(x.NV,0)*gbl->vdt(indx)(1,0) +lf(x.NV+1,0)*gbl->vdt(indx)(1,1);
+	lf(x.NV,0) = temp;
+	
+	temp         = lf(x.NV,1)*gbl->vdt(indx+1)(0,0) +lf(x.NV+1,1)*gbl->vdt(indx+1)(0,1);
+	lf(x.NV+1,1) = lf(x.NV,1)*gbl->vdt(indx+1)(1,0) +lf(x.NV+1,1)*gbl->vdt(indx+1)(1,1);
+	lf(x.NV,1) = temp;
 		
+	/* SAME FOR SIDE MODES */
+	for(int m=2;m<basis::tri(x.log2p)->sm()+2;++m) {
+		temp         = lf(x.NV,m)*gbl->sdt(indx)(0,0) +lf(x.NV+1,m)*gbl->sdt(indx)(0,1);
+		lf(x.NV+1,m) = lf(x.NV,m)*gbl->sdt(indx)(1,0) +lf(x.NV+1,m)*gbl->sdt(indx)(1,1);         
+		lf(x.NV,m) = temp;
+	}
+#endif
+
 #ifdef DROP
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV+2,0),&res(3,0));
 #endif
@@ -462,35 +480,107 @@ void surface_outflow::rsdl(int stage) {
 		case(fixed_angle): {
 			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
-			int bnumwall = base.ebdry(1-surfbdry);
-			TinyVector<FLT,tri_mesh::ND> tangentwall;
+			TinyVector<FLT,tri_mesh::ND> tangent;
 			if (surfbdry == 0) {
-				int sindwall = x.ebdry(bnumwall)->seg(0);
-				x.crdtocht1d(sindwall);
-				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),-1.0,&x.cht(0,0),MXTM);
-				/* ROTATE TANGENT BY CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
-				tangent(0) = -tangentwall(0)*cos(-contact_angle) -tangentwall(1)*sin(-contact_angle);
-				tangent(1) = +tangentwall(0)*sin(-contact_angle) -tangentwall(1)*cos(-contact_angle);
-				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-				x.gbl->res.v(base.pnt,0) += -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-				x.gbl->res.v(base.pnt,1) += -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
+				/* Surf-boundary then point then wall (in ccw sense) */
+				tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
+				tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
+				x.gbl->res.v(base.pnt,0) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
+				x.gbl->res.v(base.pnt,1) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 			else {
-				int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
-				x.crdtocht1d(sindwall);
-				basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&tangentwall(0),1.0,&x.cht(0,0),MXTM);
-				/* ROTATE TANGENT BY -CONTACT ANGLE THEN NEGATE (POINTS IN SAME DIRECTION AS TANGENT TO SURFACE) */
-				tangent(0) = -tangentwall(0)*cos(contact_angle) -tangentwall(1)*sin(contact_angle);
-				tangent(1) = +tangentwall(0)*sin(contact_angle) -tangentwall(1)*cos(contact_angle);
-				jcb = sqrt(tangent(0)*tangent(0) +tangent(1)*tangent(1));
-				x.gbl->res.v(base.pnt,0) -= -RAD(rp(0))*surf->gbl->sigma*tangent(0)/jcb;
-				x.gbl->res.v(base.pnt,1) -= -RAD(rp(0))*surf->gbl->sigma*tangent(1)/jcb;	
+				/* Wall then poin then Surf-boundary (in ccw sense) */
+				tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
+				tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
+				x.gbl->res.v(base.pnt,0) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
+				x.gbl->res.v(base.pnt,1) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 		}
 	}
 	
 	return;
 }
+
+#ifdef petsc
+//void surface_outflow::petsc_jacobian_dirichlet() {
+//				/* Replace tangential residual equation with equation that fixes wall position */
+//				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+//				MatZeroRows(x.petsc_J,1,&row,PETSC_NULL);
+//				TinyVector<int,2> col(row,row+1);
+//				MatSetValues(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
+//				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+//				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
+//			}
+
+
+void surface_outflow::petsc_jacobian() {
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
+	
+	if (contact_type == free_angle) 
+			*x.gbl->log << "Haven't added jacobian of surfacetension free contact add\n";
+			
+	int indx;
+	if (surfbdry == 0) {
+		indx = x.ebdry(base.ebdry(0))->nseg+1;
+	}
+	else {
+		indx = 0;
+	}
+	
+	int nnz1, nnz2;
+	const PetscInt *cols1, *cols2;
+	const PetscScalar *vals1, *vals2;
+	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
+
+	MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
+	MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+
+	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
+	Array<int,1> cols(nnz1+nnz2);
+	Array<FLT,2> vals(2,nnz1+nnz2);
+	for (int col=0;col<nnz1;++col) {
+		cols(col) = cols1[col];
+		vals(0,col) = -vals1[col]*surf->gbl->vdt(indx)(1,0)/J;
+	}
+	for (int col=0;col<nnz2;++col) {
+		cols(col+nnz1) = cols2[col];
+		vals(0,col+nnz1) = vals2[col]*surf->gbl->vdt(indx)(0,0)/J;
+	}
+	MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
+	MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);					
+					
+	/* Replace x equation with tangential position equation */
+	/* Replacy y equation with normal displacement equation */
+	TinyVector<int,2> rows(row,row+1);
+	MatZeroRows(x.petsc_J,2,rows.data(),PETSC_NULL);
+	
+	/* Normal Equation */
+	vals(1,Range::all()) = 0.0;
+	for(int col=0;col<nnz1;++col) {
+		if (cols(col) == row) {
+			vals(1,col) = wall_normal(0);
+			break;
+		}
+	}
+	for(int col=nnz1;col<nnz1+nnz2;++col) {
+		if (cols(col) == row+1) {
+			vals(1,col) = wall_normal(1);
+			break;
+		}
+	}
+
+	/* tangent = -sin(theta) i +cos(theta) j */
+	/* normal = cos(theta) i + sin(theta) j */
+	/* Rotate equations for diagonal dominance to match what is done to residual */
+	Array<FLT,2> temp(2,nnz1+nnz2);
+	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(0,1) +vals(1,Range::all())*wall_normal(0);
+	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
+
+	MatSetValues(x.petsc_J,2,rows.data(),nnz1+nnz2,cols.data(),temp.data(),ADD_VALUES);
+
+}
+#endif
 
 void surface::minvrt() {
 	int i,m,n,indx;
@@ -851,6 +941,13 @@ void surface::setup_preconditioner() {
 		gbl->vdt(indx)(1,1) = temp;
 		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
 		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+		
+		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
+//		FLT theta =  100.0*M_PI/180.0;
+//		gbl->vdt(indx)(0,0) = -sin(theta);
+//		gbl->vdt(indx)(1,1) =  sin(theta);
+//		gbl->vdt(indx)(0,1) = cos(theta);
+//		gbl->vdt(indx)(1,0) = cos(theta);		
 	}
 
 	/* INVERT SIDE MATRIX */    
@@ -868,6 +965,7 @@ void surface::setup_preconditioner() {
 	}
 	return;
 }
+
 
 
 

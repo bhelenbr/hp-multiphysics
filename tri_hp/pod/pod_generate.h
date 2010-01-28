@@ -21,6 +21,7 @@ template<class BASE> class pod_generate : public BASE {
 		int nsnapshots;
 		int nmodes;
 		int pod_id;
+		int restartfile;
 		Array<FLT,1> scaling;
 		Array<FLT,1> coeffs;
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;

@@ -93,7 +93,14 @@ void tri_hp::petsc_initialize(){
 //	PCSORSetOmega(pc,1.3); // Set Omega in SOR
 //	PCSetType(pc, PCJACOBI); // Jacobi
 //	PCSetType(pc, PCASM); // Additive Schwarz method
-	
+
+//	const MatOrderingType rtype =	MATORDERING_NATURAL; /*  Natural */
+//	const MatOrderingType rtype =	MATORDERING_ND; /* Nested Dissection */
+//	const MatOrderingType rtype =	MATORDERING_1WD; /* One-way Dissection */
+//	const MatOrderingType rtype =	MATORDERING_RCM; /* Reverse Cuthill-McKee */
+//	const MatOrderingType rtype =	MATORDERING_QMD; /* Quotient Minimum Degree */
+// 	PCFactorSetMatOrderingType(pc, rtype);
+//	PCFactorReorderForNonzeroDiagonal(pc,1e-2); 
 	
 //	KSPSetTolerances(ksp,1.e-7,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
 

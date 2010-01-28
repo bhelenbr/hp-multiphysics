@@ -924,10 +924,10 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 }
 
 #ifdef petsc
+
 void hp_edge_bdry::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 
-	
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
 		vdofs = x.NV;
@@ -969,20 +969,6 @@ void hp_edge_bdry::petsc_jacobian() {
 		element_jacobian(j,K);
 		
 		MatSetValues(x.petsc_J,x.NV*(sm+2),rows.data(),vdofs*2 +x.NV*sm,cols.data(),K.data(),ADD_VALUES);
-	}
-}
-
-#include <r_tri_boundary.h>
-void hp_edge_bdry::petsc_jacobian_dirichlet() {
-	/* DO R_MESH B.C.'s */
-	if (x.mmovement == x.coupled_deformable) {
-		/* This is ugly, but I need to be able to control this for different boundary types */
-		for(int i=0;i<x.nebd;++i) {
-			if (x.hp_ebdry(i) == this) {
-				x.r_sbdry(i)->jacobian_dirichlet();
-				break;
-			}
-		}
 	}
 }
 		

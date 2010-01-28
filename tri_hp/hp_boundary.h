@@ -141,7 +141,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void jacobian() {}
 #ifdef petsc
 		virtual void petsc_jacobian();
-		virtual void petsc_jacobian_dirichlet(); 
+		virtual void petsc_jacobian_dirichlet() {} 
 		virtual int petsc_rsdl(Array<FLT,1> res) {}
 #endif
 		virtual void update(int stage) {}

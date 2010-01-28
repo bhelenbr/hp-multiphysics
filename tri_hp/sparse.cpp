@@ -10,11 +10,11 @@
 #include "tri_hp.h"
 #include "ins/tri_hp_ins.h"
 #include "hp_boundary.h"
-
+#include <r_tri_boundary.h>
 
 #ifdef petsc
 
-// #define DEBUG
+// #define DEBUG2
 #define DEBUG_TOL 1.0e-9
 
 /* finds number of nonzeros per row */ 
@@ -148,6 +148,19 @@ void tri_hp::petsc_jacobian() {
 		}		
 		MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
+	
+	/* APPLY ALL MOVING MESH B.C.'s FIRST */
+	if (mmovement == coupled_deformable) {
+		/* This mostly does nothing, except for angled boundarys */
+		for(int i=0;i<nebd;++i) 
+			r_sbdry(i)->jacobian();
+	
+		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+	
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian_dirichlet();
+	}
 				
 	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
 	for(int i=0;i<nebd;++i) 
@@ -160,19 +173,18 @@ void tri_hp::petsc_jacobian() {
 	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
 	
-	
-	
-#ifdef DEBUG
+#ifdef DEBUG1
 	/*************** TESTING ROUTINE ***********/
 	/* HARD TEST OF JACOBIAN ROUTINE */
 	FLT dw = 1.0e-4;
 	int dof = size_sparse_matrix;
 	Array<FLT,2> testJ(dof,dof);
+	Array<FLT,1> rbar(dof);
 	testJ = 0.0;
 	
 	rsdl();
-	petsc_make_1D_rsdl_vector(testJ(Range::all(),dof-1));
-		
+	petsc_make_1D_rsdl_vector(rbar);
+
 	int ind = 0;
 	if (mmovement != coupled_deformable) {
 		for (int pind=0;pind<npnt;++pind) {
@@ -181,7 +193,7 @@ void tri_hp::petsc_jacobian() {
 				ug.v(pind,n) += dw;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
 				++ind;
 				ug.v(pind,n) = stored_value;
 			}
@@ -194,7 +206,7 @@ void tri_hp::petsc_jacobian() {
 				ug.v(pind,n) += dw;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
 				++ind;
 				ug.v(pind,n) = stored_value;
 			}
@@ -204,7 +216,7 @@ void tri_hp::petsc_jacobian() {
 				pnts(pind)(n) += dw;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
 				++ind;
 				pnts(pind)(n) = stored_value;
 			}
@@ -217,7 +229,7 @@ void tri_hp::petsc_jacobian() {
 				ug.s(sind,m,n) += dw;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
 				++ind;
 				ug.s(sind,m,n) -= dw;
 			}
@@ -230,7 +242,7 @@ void tri_hp::petsc_jacobian() {
 				ug.i(tind,m,n) += dw;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
 				++ind;
 				ug.i(tind,m,n) -= dw;
 			}
@@ -246,7 +258,7 @@ void tri_hp::petsc_jacobian() {
 					hp_ebdry(i)->crds(j,m,n) += dw;
 					rsdl();
 					petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-					testJ(Range::all(),ind) = (testJ(Range::all(),ind)-testJ(Range::all(),dof-1))/dw;
+					testJ(Range::all(),ind) = (testJ(Range::all(),ind) -rbar)/dw;
 					++ind;
 					hp_ebdry(i)->crds(j,m,n) -= dw;
 				}
@@ -296,15 +308,170 @@ void tri_hp::petsc_jacobian() {
 		
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
-		
+
 	for(int i=0;i<nvbd;++i) 
-		hp_vbdry(i)->petsc_jacobian_dirichlet();	
+		hp_vbdry(i)->petsc_jacobian_dirichlet();
 		
-	MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-	MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+#ifdef DEBUG2
+	/*************** TESTING ROUTINE ***********************/
+	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
+	/*******************************************************/
+	FLT dw = 1.0e-4;
+	int dof = size_sparse_matrix;
+	Array<FLT,2> testJ(dof,dof);
+	testJ = 0.0;
+	PetscScalar *array;
+
+	petsc_rsdl();
+	VecGetArray(petsc_f,&array);
+	Array<FLT,1> rbar(array, shape(size_sparse_matrix), duplicateData);
+	VecRestoreArray(petsc_f, &array);
+
+
+	int ind = 0;
+	if (mmovement != coupled_deformable) {
+		for (int pind=0;pind<npnt;++pind) {
+			for(int n=0;n<NV;++n) {
+				FLT stored_value = ug.v(pind,n);
+				ug.v(pind,n) += dw;
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				VecRestoreArray(petsc_f, &array);
+				++ind;
+				ug.v(pind,n) = stored_value;
+			}
+		}
+	}
+	else {
+		for (int pind=0;pind<npnt;++pind) {
+			for(int n=0;n<NV;++n) {
+				FLT stored_value = ug.v(pind,n);
+				ug.v(pind,n) += dw;
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				VecRestoreArray(petsc_f, &array);
+				++ind;
+				ug.v(pind,n) = stored_value;
+			}
+			
+			for(int n=0;n<ND;++n) {
+				FLT stored_value = pnts(pind)(n);
+				pnts(pind)(n) += dw;
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				VecRestoreArray(petsc_f, &array);
+				++ind;
+				pnts(pind)(n) = stored_value;
+			}
+		}
+	}
+			
+	for (int sind=0;sind<nseg;++sind) {
+		for (int m=0;m<sm0;++m) {
+			for(int n=0;n<NV;++n) {
+				ug.s(sind,m,n) += dw;
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				VecRestoreArray(petsc_f, &array);
+				++ind;
+				ug.s(sind,m,n) -= dw;
+			}
+		}			
+	}
+
+	for (int tind=0;tind<ntri;++tind) {
+		for (int m=0;m<im0;++m) {
+			for(int n=0;n<NV;++n) {
+				ug.i(tind,m,n) += dw;
+				petsc_rsdl();
+				VecGetArray(petsc_f,&array);
+				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				VecRestoreArray(petsc_f, &array);
+				++ind;
+				ug.i(tind,m,n) -= dw;
+			}
+		}
+	}
+	
+	/* How to perturb extra unknowns? */
+	for(int i=0;i<nebd;++i) {
+		if (!(hp_ebdry(i)->curved) || !(hp_ebdry(i)->coupled)) continue;
+		for(int j=0;j<ebdry(i)->nseg;++j) {
+			for(int m=0;m<sm0;++m) {
+				for(int n=0;n<ND;++n) {
+					hp_ebdry(i)->crds(j,m,n) += dw;
+					petsc_rsdl();
+					VecGetArray(petsc_f,&array);
+					Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+					testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+					VecRestoreArray(petsc_f, &array);
+					++ind;
+					hp_ebdry(i)->crds(j,m,n) -= dw;
+				}
+			}
+		}
+	}
+		
+	const PetscScalar *vals;
+	const PetscInt *cols;
+	int nnz;
+	
+	for(int i=0;i<ind;++i) {
+		MatGetRow(petsc_J,i,&nnz,&cols,&vals);
+		*gbl->log << "row " << i << ": ";
+		int cnt = 0;
+		for(int j=0;j<ind;++j) {
+			if (fabs(testJ(i,j)) > DEBUG_TOL) {
+				if (cnt >= nnz) {
+					*gbl->log << " (Extra entry in full matrix " <<  j << ' ' << testJ(i,j) << ") ";
+					continue;
+				}
+				if (cols[cnt] == j) {
+					if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
+						*gbl->log << " (Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+					++cnt;
+				}
+				else if (cols[cnt] < j) {
+					do {
+						if (fabs(vals[cnt]) > DEBUG_TOL)
+							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+						++cnt;
+					} while (cols[cnt] < j);
+					--j;
+				}
+				else {
+					*gbl->log << " (Extra entry in full matrix " <<  j  << ' ' << testJ(i,j) << ") ";
+				}
+			}
+		}
+		if (cnt < nnz) {
+			do {
+				if (fabs(vals[cnt]) > DEBUG_TOL)
+					*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+			} while (++cnt < nnz);
+		}
+			
+		*gbl->log << std::endl;
+		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
+	}
 	
 //	MatView(petsc_J,0);
-//	exit(1);
+//	std::cout << testJ << std::endl;
+	
+	exit(1);	
+#endif
+
+
+
 
 	return;
 }

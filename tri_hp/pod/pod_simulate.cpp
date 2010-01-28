@@ -150,10 +150,10 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 
 
-	int initfile;
-	input.getwdefault("initfile",initfile,1);
+	int restartfile;
+	input.getwdefault("restart",restartfile,1);
 	nstr.str("");
-	nstr << initfile << std::flush;
+	nstr << restartfile << std::flush;
 	filename = "coeff" +nstr.str() +"_" +BASE::gbl->idprefix +".bin";
 	binifstream bin;
 	bin.open(filename.c_str());

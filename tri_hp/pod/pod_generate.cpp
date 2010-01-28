@@ -68,6 +68,8 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	}
 #endif
 
+	input.getwdefault("restart",restartfile,1);
+
 	return;
 }
 
@@ -149,7 +151,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				}
 				low_noise_dot(tind) = tmp_store;
 				
-				psimatrix(psi1dcounter) += tmp_store; // TO NOT USE LOW NOISE DOT
+				// psimatrix(psi1dcounter) += tmp_store; // TO NOT USE LOW NOISE DOT
 			}
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
@@ -158,7 +160,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
-			// psimatrix(psi1dcounter) = low_noise_dot(0);  // TO USE LOW NOISE DOT!! TEMPO!!
+			psimatrix(psi1dcounter) = low_noise_dot(0);  // TO USE LOW NOISE DOT!!
 			
 			++psi1dcounter;
 		}	
@@ -408,13 +410,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	FLT cjcb;
 
 	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
-	for(k=0;k<nsnapshots;++k) {
+	for(k=restartfile;k<nsnapshots+restartfile;++k) {
 		nstr.str("");
 		nstr << k+1 << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::input(filename, BASE::binary);
 		nstr.str("");
-		nstr << k << std::flush;
+		nstr << k-restartfile << std::flush;
 		filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 
 		/* ZERO SNAPSHOTS ON POD BOUNDARY'S */
@@ -632,9 +634,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	/*****************************/
 	/* OUTPUT COEFFICIENT VECTOR */
 	/*****************************/
-	for (k=0;k<nsnapshots;++k) {
+	for (k=restartfile;k<restartfile+nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k << std::flush;
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());

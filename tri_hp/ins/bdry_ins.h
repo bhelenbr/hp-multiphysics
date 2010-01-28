@@ -608,7 +608,7 @@ namespace bdry_ins {
 				else {
 					/* SET TANGENT RESIDUAL TO ZERO */
 					surf->gbl->vres(0)(0) = 0.0;
-					if (fix_norm > 0) {
+					if (fix_norm) {
 						/* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
 						x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(0)(1)*x.gbl->rho;
 						/* AND ZERO RESIDUAL */
@@ -620,6 +620,7 @@ namespace bdry_ins {
 			}
 			
 			void vdirichlet() {
+#ifndef petsc
 				if (surfbdry == 0) {
 					for(int n=0;n<=fix_norm;++n) 
 						surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(n) = 0.0;
@@ -628,12 +629,32 @@ namespace bdry_ins {
 					for(int n=0;n<=fix_norm;++n) 
 						surf->gbl->vres(0)(n) = 0.0;
 				}
+#else
+
 				
-#ifdef petsc
 				/* zero vertex residual in r_mesh residual vector */
 				r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-				for(int n=0;n<=fix_norm;++n) 
-					r_gbl->res(base.pnt)(n) = 0.0;
+
+				if (fix_norm) {
+					for(int n=0;n<tri_mesh::ND;++n) 
+						r_gbl->res(base.pnt)(n) = 0.0;
+				}
+				else {
+					int indx;
+					if (surfbdry == 0) {
+						indx = x.ebdry(base.ebdry(0))->nseg+1;
+					}
+					else {
+						indx = 0;
+					}
+
+					/* Need to unrotate, apply dirichlet to tangential residual, then re-rotate (doh!) */
+					FLT norm_res = -r_gbl->res(base.pnt)(0)*surf->gbl->vdt(indx)(1,0) +r_gbl->res(base.pnt)(1)*surf->gbl->vdt(indx)(0,0);
+					norm_res /= surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
+					
+					r_gbl->res(base.pnt)(0) = norm_res*surf->gbl->vdt(indx)(0,1);
+					r_gbl->res(base.pnt)(1) = norm_res*surf->gbl->vdt(indx)(1,1);
+				}
 #endif	
 			}
 
@@ -745,18 +766,8 @@ namespace bdry_ins {
 			void rsdl(int stage);
 						
 #ifdef petsc
-			void petsc_jacobian() {
-				if (contact_type != free_angle) return;
-					*x.gbl->log << "Just have to add this\n";
-			}
-
-			void petsc_jacobian_dirichlet() {
-				/* Replace tangential residual equation with equation that fixes wall position */
-				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-				MatZeroRows(x.petsc_J,1,&row,PETSC_NULL);
-				TinyVector<int,2> col(row,row+1);
-				MatSetValues(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
-			}
+			void petsc_jacobian(); 
+			void petsc_jacobian_dirichlet() {}
 #endif
 	};
 		
