@@ -12,6 +12,7 @@
 
 #include "../tri_hp.h"
 #include <blocks.h>
+#include <myblas.h>
 
 class tri_hp_cns : public tri_hp {
 	public:
@@ -21,7 +22,7 @@ class tri_hp_cns : public tri_hp {
 			Array<FLT,3> tau;
 
 			/* PHYSICAL CONSTANTS */
-			FLT kcond, mu, gamma;
+			FLT kcond, mu, gamma,R;
 			Array<FLT,1> D;
 
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */

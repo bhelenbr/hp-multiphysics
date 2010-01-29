@@ -17,17 +17,20 @@ namespace ibc_cns {
 			FLT alpha, speed,perturb_amp;
 
 		public:
+
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
+				FLT speed_sound = 340.29;
+				FLT gamma = 1.403;
 				switch(n) {
 					case(0):
-						return(0.0);
+						return(1.0/gamma);
 					case(1):
-						return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
+						return(speed/speed_sound*cos(alpha) +amp*x(0)*(1.0-x(0)));
 					case(2):
-						return(speed*sin(alpha));
+						return(speed/speed_sound*sin(alpha));
 					case(3):
-						return(273.);
+						return(1.0/gamma);
 				}
 				return(0.0);
 			}

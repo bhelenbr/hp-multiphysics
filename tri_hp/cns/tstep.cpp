@@ -1,5 +1,5 @@
-#include <math.h>
-#include <myblas.h>
+//#include <utilities.h>
+//#include <myblas.h>
 
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
@@ -136,15 +136,25 @@ void tri_hp_cns::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		//pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);
+		FLT nu=rtmax*gbl->mu/pmax;
+		FLT tstep;
+		Array<double,2> tprcn(NV,NV),tau(NV,NV);
+		//pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu, gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);
+		
+		pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu, tprcn,tau, tstep);
 
-			
+		gbl->tprcn_ut(tind,Range::all(),Range::all())=tprcn;
+		gbl->tau(tind,Range::all(),Range::all())=adis*tau;
+		
+//		cout << tau << endl;
+//		cout << "timestep: " << tstep << endl;
+		
 		/* FROM HERE BELOW WILL CHANGE */
-		lam1 = q + sqrt(qmax +gam);
+//		lam1 = q + sqrt(qmax +gam);
 
 		/* SET UP DISSIPATIVE COEFFICIENTS */
-		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-		gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
+//		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
+//		gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
 
 		/* SET UP DIAGONAL PRECONDITIONER */
 		// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
@@ -161,13 +171,14 @@ void tri_hp_cns::setup_preconditioner() {
 //		jcb = 0.25*area(tind)*dtstari;
 //#endif
 
-		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+//		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
 //		gbl->tprcn_ut(tind,0,0) = gbl->rho*jcb;    
 //		gbl->tprcn_ut(tind,1,1) = gbl->rho*jcb;      
 //		gbl->tprcn_ut(tind,2,2) = jcb/gam;
 //		gbl->tprcn_ut(tind,0,2) = jcb*ubar/gam;
 //		gbl->tprcn_ut(tind,1,2) = jcb*vbar/gam;
+		
 		for(i=0;i<3;++i) {
 			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
@@ -176,7 +187,7 @@ void tri_hp_cns::setup_preconditioner() {
 			}
 		}
 	}
-
+	
 	tri_hp::setup_preconditioner();
 }
 
@@ -197,12 +208,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	
 	FLT ort = 1.0/rtmax;
 	
+	Pinv = 0.0;
 	/* Inverse of Preconditioner */
-	Pinv = ort,              0.0,           0.0            -pmax*ort*ort,
+	Pinv = ort,              0.0,           0.0,            -pmax*ort*ort,
 	       ort*qmax,         pmax*ort,      0.0,           -pmax*ort*ort*qmax,
 	       ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
-	       1.0/gm1+rtmax*q2, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
-	
+	       1.0/gm1+q2/rtmax, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
+
  	FLT ort2 = ort*ort;
 	FLT gogm1 = gbl->gamma/gm1;
 	
@@ -212,8 +224,6 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	    ort*q2,              pmax*ort*qmax,                  pmax*ort*qmax, -pmax*ort2*q2,
 	    qmax*(gogm1+q2*ort), pmax*((gogm1+q2*ort)+ort*qmax), pmax*ort*q2,   -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
 	
-	
-	//A=product(P,A);
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -229,8 +239,6 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	    ort*q2+1.0,          0.0,           2.0*pmax*ort*qmax,            -pmax*ort2*q2,
 	    qmax*(gogm1+q2*ort), pmax*ort*q2,   pmax*((gogm1+q2*ort)+ort*q2), -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
 	
-	
-	//B=prod(P,B);
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -250,6 +258,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	
 	Tinv = 2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
 	
+	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
 	
 	/*  LU factorization  */
@@ -267,6 +276,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	for (int i = 0; i < NV; ++i)
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
+	
 	
 	return;
 }

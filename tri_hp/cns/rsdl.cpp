@@ -34,7 +34,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	v = tri(tind).pnt;
 
 	/* IF TINFO > -1 IT IS CURVED ELEMENT */
-	if (tri(tind).info > -1) {
+//	if (tri(tind).info > -1) {
 		/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 		crdtocht(tind);
 
@@ -43,18 +43,18 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		/* dxi/dx = dy/deta, dxi/dy = -dx/deta, deta/dx = -dy/dxi, deta/dy = dx/dxi (divided by jacobian) */
 		for(int n = 0; n < ND; ++n)
 			basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
-	}
-	else {
-		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-		for(int n = 0; n < ND; ++n)
-			basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
-
-		/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
-		for(int n = 0; n < ND; ++n) {
-			ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
-			ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
-		}
-	}
+//	}
+//	else {
+//		/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+//		for(int n = 0; n < ND; ++n)
+//			basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
+//
+//		/* CALCULATE COORDINATE DERIVATIVES A SIMPLE WAY */
+//		for(int n = 0; n < ND; ++n) {
+//			ldcrd(n,0) = 0.5*(pnts(v(2))(n) -pnts(v(1))(n));
+//			ldcrd(n,1) = 0.5*(pnts(v(0))(n) -pnts(v(1))(n));
+//		}
+//	}
 
 	/* CALCULATE MESH VELOCITY */
 	for(int i = 0; i < lgpx; ++i) {
@@ -79,7 +79,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		for(int n = 0; n < NV; ++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 	}
-
+	
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 	for(int n = 0; n < NV; ++n) {
 		for(int m = 0; m < basis::tri(log2p)->tm(); ++m) {
@@ -101,11 +101,18 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				cv(0,0)(i,j) = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
 				cv(0,1)(i,j) = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
 
+#ifndef INERTIALESS
 				/* MOMENTUM & ENERGY FLUXES */
-				for(int n = 1; n < NV; ++n) {
+				for(int n = 1; n < NV-1; ++n) {
 					cv(n,0)(i,j) = u(n)(i,j)*cv(0,0)(i,j);
 					cv(n,1)(i,j) = u(n)(i,j)*cv(0,1)(i,j);
 				}
+#else
+				for(n=1;n<NV-1;++n) {
+					cv(n,0)(i,j) = 0.0;
+					cv(n,1)(i,j) = 0.0;
+				}
+#endif
 
 				/* PRESSURE TERMS */
 				/* U-MOMENTUM */
@@ -141,6 +148,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
+					
 #ifdef AXISYMMETRIC
 					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  //FixMe
 #endif
@@ -154,12 +162,12 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					visc(0,0)(0,0) = -mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(0,0)(1,1) = -mujcbi*(4./3.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(0,0)(0,1) =  mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define     viscI0II0II1II0I visc(0,0)(0,1)
+#define				viscI0II0II1II0I visc(0,0)(0,1)
 
 					visc(1,1)(0,0) = -mujcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(1,1)(1,1) = -mujcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(1,1)(0,1) =  mujcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define     viscI1II1II1II0I visc(1,1)(0,1)
+#define				viscI1II1II1II0I visc(1,1)(0,1)
 
 					visc(0,1)(0,0) =  mujcbi*1./3.*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
 					visc(0,1)(1,1) =  mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
@@ -167,16 +175,17 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					visc(0,1)(1,0) = -mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
 
 					/* OTHER SYMMETRIES     */                
-#define     viscI1II0II0II0I visc(0,1)(0,0)
-#define     viscI1II0II1II1I visc(0,1)(1,1)
-#define     viscI1II0II0II1I visc(0,1)(1,0)
-#define     viscI1II0II1II0I visc(0,1)(0,1)                      
+#define				viscI1II0II0II0I visc(0,1)(0,0)
+#define				viscI1II0II1II1I visc(0,1)(1,1)
+#define				viscI1II0II0II1I visc(0,1)(1,0)
+#define				viscI1II0II1II0I visc(0,1)(0,1)                      
 
-					/* HEAT DIFFUSION TENSOR */
-					kcond(0,0) = -cjcb*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-					kcond(1,1) = -cjcb*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-					kcond(0,1) =  cjcb*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define     kcondI1II0I kcond(0,1)
+					/* HEAT DIFFUSION TENSOR */ 
+					// cjcb should be kcjcbi?
+					kcond(0,0) = -kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
+					kcond(1,1) = -kcjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
+					kcond(0,1) =  kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+#define				kcondI1II0I kcond(0,1)
 
 
 					/* Momentum equations */
@@ -228,7 +237,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						for(int n = 0; n < NV; ++n)							
 							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
 
-			
 					FLT pr = u(0)(i,j);
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
@@ -256,9 +264,11 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					
 				}
 			}
+			
+			
 			for(int n = 0; n < NV; ++n)
 				basis::tri(log2p)->intgrtrs(&lf_re(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
-
+			
 			for(int n = 0; n < NV; ++n)
 				for(int m = 0; m < basis::tri(log2p)->tm(); ++m)
 					lf_re(n)(m) *= gbl->beta(stage);

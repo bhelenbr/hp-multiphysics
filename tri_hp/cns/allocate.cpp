@@ -27,11 +27,13 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 
 	gbl->tau.resize(maxpst,NV,NV);
 
-	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.3);
-	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
-	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.0);
+	gbl->R = 8.314472;// Gas constant
+	
+	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.403);
+	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
+	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,1.0);
 	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
-
+	
 
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
 	gbl->D.resize(NV);
@@ -92,7 +94,7 @@ void tri_hp_cns::calculate_unsteady_sources() {
 					double rho = u(0)(i,j)/u(NV-1)(i,j);
 					cjcb(i,j) = -gbl->bd(0)*rho*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
 					dugdt(log2p,tind,0)(i,j) = cjcb(i,j);
-					for(n=0;n<NV-1;++n)
+					for(n=1;n<NV-1;++n)
 						dugdt(log2p,tind,n)(i,j) = u(n)(i,j)*cjcb(i,j);
 
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
