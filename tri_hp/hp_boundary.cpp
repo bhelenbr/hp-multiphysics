@@ -828,10 +828,12 @@ void hp_edge_bdry::rsdl(int stage) {
 
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
-	FLT dw = 1.0e-4;// fix me temp make a global value?
 	Array<FLT,2> Rbar(x.NV,sm+2);
 	Array<int,1> loc_to_glo(x.NV*(sm+2));
+	//const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 
+	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
 	x.ugtouht1d(sind);
@@ -845,12 +847,22 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 		}
 	}
 	
+	Array<FLT,1> dw(x.NV);
+	dw = 0.0;
+	for(int i=0;i<2;++i)
+		for(int n=0;n<x.NV;++n)
+			dw = dw + fabs(x.uht(n)(i));
+	
+	dw = dw*eps_r;
+	dw += eps_a;
+	
+	
 	if (x.mmovement != x.coupled_deformable) {
 		/* Numerically create Jacobian */
 		int kcol = 0;
 		for(int mode = 0; mode < sm+2; ++mode){
 			for(int var = 0; var < x.NV; ++var){
-				x.uht(var)(mode) += dw;
+				x.uht(var)(mode) += dw(var);
 				
 				x.lf = 0.0;
 				element_rsdl(indx,0);
@@ -858,20 +870,22 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 				int krow = 0;
 				for(int k=0;k<sm+2;++k)
 					for(int n=0;n<x.NV;++n)
-						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw(var);
 						
 						++kcol;
 				
-				x.uht(var)(mode) -= dw;
+				x.uht(var)(mode) -= dw(var);
 			}
 		}
 	}
 	else {
+		FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+
 		/* Numerically create Jacobian */
 		int kcol = 0;
 		for(int mode = 0; mode < 2; ++mode) {
 			for(int var = 0; var < x.NV; ++var){
-				x.uht(var)(mode) += dw;
+				x.uht(var)(mode) += dw(var);
 				
 				x.lf = 0.0;
 				element_rsdl(indx,0);
@@ -879,15 +893,14 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 				int krow = 0;
 				for(int k=0;k<sm+2;++k)
 					for(int n=0;n<x.NV;++n)
-						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw(var);
 						
-						++kcol;
-				
-				x.uht(var)(mode) -= dw;
+				++kcol;
+				x.uht(var)(mode) -= dw(var);
 			}
 			
 			for(int var = 0; var < tri_mesh::ND; ++var){
-				x.pnts(x.seg(sind).pnt(mode))(var) += dw;
+				x.pnts(x.seg(sind).pnt(mode))(var) += dx;
 				
 				x.lf = 0.0;
 				element_rsdl(indx,0);
@@ -895,17 +908,16 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 				int krow = 0;
 				for(int k=0;k<sm+2;++k)
 					for(int n=0;n<x.NV;++n)
-						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dx;
 						
-						++kcol;
-				
-				x.pnts(x.seg(sind).pnt(mode))(var) -= dw;
+				++kcol;
+				x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
 			}
 		}
 			
 		for(int mode = 2; mode < sm+2; ++mode){
 			for(int var = 0; var < x.NV; ++var){
-				x.uht(var)(mode) += dw;
+				x.uht(var)(mode) += dw(var);
 				
 				x.lf = 0.0;
 				element_rsdl(indx,0);
@@ -913,11 +925,10 @@ void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 				int krow = 0;
 				for(int k=0;k<sm+2;++k)
 					for(int n=0;n<x.NV;++n)
-						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw;
+						K(krow++,kcol) = (x.lf(n)(k)-Rbar(n,k))/dw(var);
 						
-						++kcol;
-				
-				x.uht(var)(mode) -= dw;
+				++kcol;
+				x.uht(var)(mode) -= dw(var);
 			}
 		}
 	}

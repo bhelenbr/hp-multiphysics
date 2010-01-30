@@ -176,7 +176,9 @@ void tri_hp::petsc_jacobian() {
 #ifdef DEBUG1
 	/*************** TESTING ROUTINE ***********/
 	/* HARD TEST OF JACOBIAN ROUTINE */
-	FLT dw = 1.0e-4;
+	const FLT eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+	Array<FLT,1> dw(NV) = eps_a;
+	FLT dx = eps_a;
 	int dof = size_sparse_matrix;
 	Array<FLT,2> testJ(dof,dof);
 	Array<FLT,1> rbar(dof);
@@ -190,10 +192,10 @@ void tri_hp::petsc_jacobian() {
 		for (int pind=0;pind<npnt;++pind) {
 			for(int n=0;n<NV;++n) {
 				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
+				ug.v(pind,n) += dw(n);
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw(n);
 				++ind;
 				ug.v(pind,n) = stored_value;
 			}
@@ -203,20 +205,20 @@ void tri_hp::petsc_jacobian() {
 		for (int pind=0;pind<npnt;++pind) {
 			for(int n=0;n<NV;++n) {
 				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
+				ug.v(pind,n) += dw(n);
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw(n);
 				++ind;
 				ug.v(pind,n) = stored_value;
 			}
 			
 			for(int n=0;n<ND;++n) {
 				FLT stored_value = pnts(pind)(n);
-				pnts(pind)(n) += dw;
+				pnts(pind)(n) += dx;
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dx;
 				++ind;
 				pnts(pind)(n) = stored_value;
 			}
@@ -226,12 +228,12 @@ void tri_hp::petsc_jacobian() {
 	for (int sind=0;sind<nseg;++sind) {
 		for (int m=0;m<sm0;++m) {
 			for(int n=0;n<NV;++n) {
-				ug.s(sind,m,n) += dw;
+				ug.s(sind,m,n) += dw(n);
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw(n);
 				++ind;
-				ug.s(sind,m,n) -= dw;
+				ug.s(sind,m,n) -= dw(n);
 			}
 		}			
 	}
@@ -239,12 +241,12 @@ void tri_hp::petsc_jacobian() {
 	for (int tind=0;tind<ntri;++tind) {
 		for (int m=0;m<im0;++m) {
 			for(int n=0;n<NV;++n) {
-				ug.i(tind,m,n) += dw;
+				ug.i(tind,m,n) += dw(n);
 				rsdl();
 				petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw;
+				testJ(Range::all(),ind) = (testJ(Range::all(),ind)-rbar)/dw(n);
 				++ind;
-				ug.i(tind,m,n) -= dw;
+				ug.i(tind,m,n) -= dw(n);
 			}
 		}
 	}
@@ -255,12 +257,12 @@ void tri_hp::petsc_jacobian() {
 		for(int j=0;j<ebdry(i)->nseg;++j) {
 			for(int m=0;m<sm0;++m) {
 				for(int n=0;n<ND;++n) {
-					hp_ebdry(i)->crds(j,m,n) += dw;
+					hp_ebdry(i)->crds(j,m,n) += dx;
 					rsdl();
 					petsc_make_1D_rsdl_vector(testJ(Range::all(),ind));
-					testJ(Range::all(),ind) = (testJ(Range::all(),ind) -rbar)/dw;
+					testJ(Range::all(),ind) = (testJ(Range::all(),ind) -rbar)/dx;
 					++ind;
-					hp_ebdry(i)->crds(j,m,n) -= dw;
+					hp_ebdry(i)->crds(j,m,n) -= dx;
 				}
 			}
 		}
@@ -316,7 +318,10 @@ void tri_hp::petsc_jacobian() {
 	/*************** TESTING ROUTINE ***********************/
 	/* HARD TEST OF JACOBIAN WITH DIRICHLET B.C.'s APPLIED */
 	/*******************************************************/
-	FLT dw = 1.0e-4;
+	const FLT eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+	Array<FLT,1> dw(NV);
+	dw = eps_a;
+	FLT dx = eps_a;
 	int dof = size_sparse_matrix;
 	Array<FLT,2> testJ(dof,dof);
 	testJ = 0.0;
@@ -333,11 +338,11 @@ void tri_hp::petsc_jacobian() {
 		for (int pind=0;pind<npnt;++pind) {
 			for(int n=0;n<NV;++n) {
 				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
+				ug.v(pind,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
 				ug.v(pind,n) = stored_value;
@@ -348,11 +353,11 @@ void tri_hp::petsc_jacobian() {
 		for (int pind=0;pind<npnt;++pind) {
 			for(int n=0;n<NV;++n) {
 				FLT stored_value = ug.v(pind,n);
-				ug.v(pind,n) += dw;
+				ug.v(pind,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
 				ug.v(pind,n) = stored_value;
@@ -360,11 +365,11 @@ void tri_hp::petsc_jacobian() {
 			
 			for(int n=0;n<ND;++n) {
 				FLT stored_value = pnts(pind)(n);
-				pnts(pind)(n) += dw;
+				pnts(pind)(n) += dx;
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				testJ(Range::all(),ind) = (rtemp-rbar)/dx;
 				VecRestoreArray(petsc_f, &array);
 				++ind;
 				pnts(pind)(n) = stored_value;
@@ -375,14 +380,14 @@ void tri_hp::petsc_jacobian() {
 	for (int sind=0;sind<nseg;++sind) {
 		for (int m=0;m<sm0;++m) {
 			for(int n=0;n<NV;++n) {
-				ug.s(sind,m,n) += dw;
+				ug.s(sind,m,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
-				ug.s(sind,m,n) -= dw;
+				ug.s(sind,m,n) -= dw(n);
 			}
 		}			
 	}
@@ -390,14 +395,14 @@ void tri_hp::petsc_jacobian() {
 	for (int tind=0;tind<ntri;++tind) {
 		for (int m=0;m<im0;++m) {
 			for(int n=0;n<NV;++n) {
-				ug.i(tind,m,n) += dw;
+				ug.i(tind,m,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
 				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-				testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
-				ug.i(tind,m,n) -= dw;
+				ug.i(tind,m,n) -= dw(n);
 			}
 		}
 	}
@@ -408,14 +413,14 @@ void tri_hp::petsc_jacobian() {
 		for(int j=0;j<ebdry(i)->nseg;++j) {
 			for(int m=0;m<sm0;++m) {
 				for(int n=0;n<ND;++n) {
-					hp_ebdry(i)->crds(j,m,n) += dw;
+					hp_ebdry(i)->crds(j,m,n) += dx;
 					petsc_rsdl();
 					VecGetArray(petsc_f,&array);
 					Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
-					testJ(Range::all(),ind) = (rtemp-rbar)/dw;
+					testJ(Range::all(),ind) = (rtemp-rbar)/dx;
 					VecRestoreArray(petsc_f, &array);
 					++ind;
-					hp_ebdry(i)->crds(j,m,n) -= dw;
+					hp_ebdry(i)->crds(j,m,n) -= dx;
 				}
 			}
 		}
@@ -464,15 +469,15 @@ void tri_hp::petsc_jacobian() {
 		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
 	}
 	
-//	MatView(petsc_J,0);
+	MatView(petsc_J,0);
 //	std::cout << testJ << std::endl;
 	
 	exit(1);	
 #endif
 
+	// MatView(petsc_J,0);
 
-
-
+	
 	return;
 }
 

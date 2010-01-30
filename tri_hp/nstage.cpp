@@ -126,13 +126,23 @@ void tri_hp::rsdl(int stage) {
 
 void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
-	FLT dw = 1.0e-4;  //dw=sqrt(eps/l2_norm(q))
+	Array<FLT,1> dw(NV);
+	// const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 	
 	ugtouht(tind);
 	
-	element_rsdl(tind,0,uht,lf_re,lf_im);
-	for(int i=0;i<basis::tri(log2p)->tm();++i)
+	dw = 0.0;
+	for(int i=0;i<3;++i)
 		for(int n=0;n<NV;++n)
+			dw = dw + fabs(uht(n)(i));
+	
+	dw = dw*eps_r;
+	dw = dw +eps_a;
+	
+	element_rsdl(tind,0,uht,lf_re,lf_im);
+	for(int i=0;i<basis::tri(log2p)->tm();++i) 
+		for(int n=0;n<NV;++n) 
 			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
 	
 	
@@ -140,17 +150,17 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 		int kcol = 0;
 		for(int mode = 0; mode < basis::tri(log2p)->tm(); ++mode){
 			for(int var = 0; var < NV; ++var){
-				uht(var)(mode) += dw;
+				uht(var)(mode) += dw(var);
 				
 				element_rsdl(tind,0,uht,lf_re,lf_im);
 
 				int krow = 0;
 				for(int i=0;i<basis::tri(log2p)->tm();++i)
 					for(int n=0;n<NV;++n)
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);
 				
 				++kcol;
-				uht(var)(mode) -= dw;
+				uht(var)(mode) -= dw(var);
 			}
 		}
 	} else {
@@ -158,75 +168,80 @@ void tri_hp::element_jacobian(int tind, Array<FLT,2> &K) {
 		/* Get deformable mesh Jacobian */
 		r_tri_mesh::element_jacobian(tind,r_K);
 		const TinyVector<int,ND*3> rows(NV,NV+1,2*NV+ND,2*NV+ND+1,3*NV+2*ND,3*NV+2*ND+1);
-		for (int i=0;i<3*ND;++i)
+		for (int i=0;i<3*ND;++i) {
+			K(rows(i),Range::all()) = 0.0;
 			for (int j=0;j<3*ND;++j)
 				K(rows(i),rows(j)) = r_K(i,j);
+		}
+				
+				
+		FLT dx = eps_r*sqrt(area(tind)) +eps_a;
 		
 		int kcol = 0;
 		for(int mode = 0; mode < 3; ++mode){
 			for(int var = 0; var < NV; ++var){
-				uht(var)(mode) += dw;
+				uht(var)(mode) += dw(var);
 				
 				element_rsdl(tind,0,uht,lf_re,lf_im);
 
 				int krow = 0;
 				for(int i=0;i<3;++i) {
 					for(int n=0;n<NV;++n) {
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);
 					}
 					krow += ND;
 				}
 						
 				for(int i=3;i<basis::tri(log2p)->tm();++i)
 					for(int n=0;n<NV;++n) 
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);	
 				
 				++kcol;
-				uht(var)(mode) -= dw;
+				uht(var)(mode) -= dw(var);
 			}
 			
 			for(int n=0;n<ND;++n) {
-				pnts(tri(tind).pnt(mode))(n) += dw;
+				pnts(tri(tind).pnt(mode))(n) += dx;
 				
 				element_rsdl(tind,0,uht,lf_re,lf_im);
 				
 				int krow = 0;
 				for(int i=0;i<3;++i) {
 					for(int n=0;n<NV;++n) {
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dx;
 					}
 					krow += ND;
 				}
 				
 				for(int i=3;i<basis::tri(log2p)->tm();++i)
 					for(int n=0;n<NV;++n) 
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dx;	
 				
 				++kcol;
-				pnts(tri(tind).pnt(mode))(n) -= dw;
+				pnts(tri(tind).pnt(mode))(n) -= dx;
 			}
 		}
 		
 		for(int mode = 3; mode <  basis::tri(log2p)->tm(); ++mode){
 			for(int var = 0; var < NV; ++var){
-				uht(var)(mode) += dw;
+				uht(var)(mode) += dw(var);
 				
 				element_rsdl(tind,0,uht,lf_re,lf_im);
 				
 				int krow = 0;
 				for(int i=0;i<3;++i) {
 					for(int n=0;n<NV;++n) {
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);
 					}
 					krow += ND;
 				}
 				
 				for(int i=3;i<basis::tri(log2p)->tm();++i)
 					for(int n=0;n<NV;++n) 
-						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw;	
+						K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);	
 				
 				++kcol;
-				uht(var)(mode) -= dw;
+				uht(var)(mode) -= dw(var);
 			}
 		}
 	}

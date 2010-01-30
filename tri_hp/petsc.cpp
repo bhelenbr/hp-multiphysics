@@ -119,6 +119,9 @@ void tri_hp::petsc_initialize(){
 
 void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
+	
+//	petsc_finalize();
+//	petsc_initialize();
 
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
@@ -182,6 +185,11 @@ void tri_hp::petsc_update() {
 			
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
+	
+	VecNorm(petsc_f,NORM_2,&petsc_norm);
+	// VecView(petsc_f,0);
+	
+	*gbl->log << "residual before " << petsc_norm << std::endl;
 	
 	PetscGetTime(&time1);
 	KSPSolve(ksp,petsc_f,du);

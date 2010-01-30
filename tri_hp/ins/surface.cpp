@@ -221,7 +221,7 @@ void surface::rsdl(int stage) {
 			gbl->svolumeflux(indx,m) = lf(x.NV+2,m+2);                    
 #endif
 	}
-
+	
 	/* CALL VERTEX RESIDUAL HERE */
 	for(i=0;i<2;++i)
 		x.hp_vbdry(base.vbdry(i))->rsdl(stage);
@@ -287,19 +287,38 @@ void surface::rsdl(int stage) {
 	}
 	
 #ifdef petsc
-	/* Store vertex residual in r_mesh residual vector */
+	/* Store rotated vertex residual in r_mesh residual vector */
 	r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-	
 	i = 0;
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
-		r_gbl->res(v0) = gbl->vres(i);
+		/* Rotate residual for better diagonal dominance */
+		r_gbl->res(v0)(0) = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
+		r_gbl->res(v0)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
 	} while (++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
-	r_gbl->res(v0) = gbl->vres(i);
+	r_gbl->res(v0)(0) = gbl->vres(i)(0)*gbl->vdt(i)(0,0) +gbl->vres(i)(1)*gbl->vdt(i)(0,1);
+	r_gbl->res(v0)(1) = gbl->vres(i)(0)*gbl->vdt(i)(1,0) +gbl->vres(i)(1)*gbl->vdt(i)(1,1);
 #endif	
 }
+
+#ifdef petsc
+int surface::petsc_rsdl(Array<double,1> res) {
+	int sm = basis::tri(x.log2p)->sm();
+	int ind = 0;
+	
+	/* Rotated for better diagonal dominance */
+	for(int j=0;j<base.nseg;++j) {
+		for(int m=0;m<sm;++m) {
+				res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(0,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(0,1);
+				res(ind++) = gbl->sres(j,m)(0)*gbl->sdt(j)(1,0) +gbl->sres(j,m)(1)*gbl->sdt(j)(1,1);
+		}
+	}
+	return(ind);
+}
+#endif
+
 
 void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 	int i,n,sind,v0,v1;
@@ -385,24 +404,6 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 			lf(n,m+2) -= ubar(n)*(x.gbl->rho -gbl->rho2)*lf(x.NV+1,m+2);
 	}
 #endif
-#else
-	/* Rotate residual for better diagonal dominance */
-	/* Rotate vertices */
-	FLT temp;
-	temp         = lf(x.NV,0)*gbl->vdt(indx)(0,0) +lf(x.NV+1,0)*gbl->vdt(indx)(0,1);
-	lf(x.NV+1,0) = lf(x.NV,0)*gbl->vdt(indx)(1,0) +lf(x.NV+1,0)*gbl->vdt(indx)(1,1);
-	lf(x.NV,0) = temp;
-	
-	temp         = lf(x.NV,1)*gbl->vdt(indx+1)(0,0) +lf(x.NV+1,1)*gbl->vdt(indx+1)(0,1);
-	lf(x.NV+1,1) = lf(x.NV,1)*gbl->vdt(indx+1)(1,0) +lf(x.NV+1,1)*gbl->vdt(indx+1)(1,1);
-	lf(x.NV,1) = temp;
-		
-	/* SAME FOR SIDE MODES */
-	for(int m=2;m<basis::tri(x.log2p)->sm()+2;++m) {
-		temp         = lf(x.NV,m)*gbl->sdt(indx)(0,0) +lf(x.NV+1,m)*gbl->sdt(indx)(0,1);
-		lf(x.NV+1,m) = lf(x.NV,m)*gbl->sdt(indx)(1,0) +lf(x.NV+1,m)*gbl->sdt(indx)(1,1);         
-		lf(x.NV,m) = temp;
-	}
 #endif
 
 #ifdef DROP
@@ -677,297 +678,6 @@ void surface::minvrt() {
 
 	return;
 }
-
-void surface::setup_preconditioner() {
-	int indx,m,n,sind,v0,v1;
-	TinyVector<FLT,tri_mesh::ND> nrm;
-	FLT h, hsm;
-	FLT dttang, dtnorm;
-	FLT vslp, strss;
-	FLT drho, srho, smu;
-	FLT nu1, nu2;
-	FLT qmax, gam1, gam2;
-	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
-	TinyMatrix<FLT,4,MXGP> res;
-	TinyMatrix<FLT,4,MXGP> lf;
-	TinyVector<FLT,2> mvel;
-	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
-	int last_phase, mp_phase;
-
-	drho = x.gbl->rho -gbl->rho2;
-	srho = x.gbl->rho +gbl->rho2;
-	smu = x.gbl->mu +gbl->mu2;
-	nu1 = x.gbl->mu/x.gbl->rho;
-	if (gbl->rho2 > 0.0) 
-		nu2 = gbl->mu2/gbl->rho2;
-	else
-		nu2 = 0.0;
-
-	/**************************************************/
-	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
-	/**************************************************/
-	gbl->vdt(0) = 0.0;
-
-	for(indx=0; indx < base.nseg; ++indx) {
-		sind = base.seg(indx);
-		v0 = x.seg(sind).pnt(0);
-		v1 = x.seg(sind).pnt(1);
-
-
-#ifdef DETAILED_DT
-		x.crdtocht1d(sind);
-		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
-		x.ugtouht1d(sind);
-		for(n=0;n<tri_mesh::ND;++n)
-			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
-
-		dtnorm = 1.0e99;
-		dttang = 1.0e99;
-		gbl->meshc(indx) = 1.0e99;
-		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
-			nrm(0) =  dcrd(1,i)*2;
-			nrm(1) = -dcrd(0,i)*2;
-			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
-
-			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
-			for(n=0;n<tri_mesh::ND;++n) {
-				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
-#ifdef DROP
-				mvel(n) -= tri_hp_ins::mesh_ref_vel(n);
-#endif    
-			}
-
-
-
-			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
-			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
-			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
-
-			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
-#ifndef BODYFORCE
-			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
-#else
-			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
-#endif
-
-			gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
-			gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
-
-			if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
-
-#ifdef INERTIALESS
-			gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
-			gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
-#endif
-			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
-
-			/* SET UP DISSIPATIVE COEFFICIENT */
-			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
-			/* RESIDUAL HAS DX/2 WEIGHTING */
-			/* |a| dx/2 dv/dx  dx/2 dpsi */
-			/* |a| dx/2 2/dx dv/dpsi  dpsi */
-			/* |a| dv/dpsi  dpsi */
-			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
-			// gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
-			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
-		}
-		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
-#else
-		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
-		h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
-
-		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
-		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
-#ifdef DROP
-		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
-		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
-#endif
-
-		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
-		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
-
-		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
-		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
-#ifdef DROP
-		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
-		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
-#endif
-		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
-		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
-
-		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
-
-		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
-#ifndef BODYFORCE
-		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
-#else
-		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
-#endif
-
-		gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
-		gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
-
-		if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
-
-#ifdef INERTIALESS
-		gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
-		gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
-#endif
-		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
-
-		/* SET UP DISSIPATIVE COEFFICIENT */
-		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
-		/* RESIDUAL HAS DX/2 WEIGHTING */
-		/* |a| dx/2 dv/dx  dx/2 dpsi */
-		/* |a| dx/2 2/dx dv/dpsi  dpsi */
-		/* |a| dv/dpsi  dpsi */
-		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
-		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
-		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
-#endif
-
-		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
-
-		nrm *= 0.5;
-
-		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx)(1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1)(0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1)(0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1)(1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
-		gbl->vdt(indx+1)(1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
-
-		if (basis::tri(x.log2p)->sm()) {
-			gbl->sdt(indx)(0,0) = -dttang*nrm(1);
-			gbl->sdt(indx)(0,1) =  dttang*nrm(0);
-			gbl->sdt(indx)(1,0) =  dtnorm*nrm(0);
-			gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);  
-
-#ifdef DETAILED_MINV
-			int lsm = basis::tri(x.log2p)->sm();
-			x.crdtocht1d(sind);
-			for(n=0;n<tri_mesh::ND;++n)
-				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
-
-			for(int m = 0; m<lsm; ++m) {
-				for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
-					nrm(0) =  dcrd(1,i);
-					nrm(1) = -dcrd(0,i);
-					res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p)->gx(i,m+3);
-					res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
-					res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
-					res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p)->gx(i,m+3); 
-				}
-				lf = 0;
-				basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(0,0));
-				basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
-				basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(2,0));
-				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
-
-				/* CFL = 0 WON'T WORK THIS WAY */
-				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(1,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
-				lf(2,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);
-				lf(3,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);                        
-
-				for (n=0;n<lsm;++n) {
-					gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
-					gbl->ms(indx)(2*m,2*n+1) = lf(1,n+2);
-					gbl->ms(indx)(2*m+1,2*n) = lf(2,n+2);
-					gbl->ms(indx)(2*m+1,2*n+1) = lf(3,n+2);
-				}
-
-				/* tang/norm, x/y,  mode,  vert */
-				gbl->vms(indx,0,0,m,0) = lf(0,0);
-				gbl->vms(indx,0,1,m,0) = lf(1,0);
-				gbl->vms(indx,0,0,m,1) = lf(0,1);
-				gbl->vms(indx,0,1,m,1) = lf(1,1);
-				gbl->vms(indx,1,0,m,0) = lf(2,0);
-				gbl->vms(indx,1,1,m,0) = lf(3,0);
-				gbl->vms(indx,1,0,m,1) = lf(2,1);
-				gbl->vms(indx,1,1,m,1) = lf(3,1);    
-			}
-
-			int info;
-			GETRF(2*lsm,2*lsm,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),info);
-			if (info != 0) {
-				printf("DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
-				exit(1);
-			}
-			/*
-			\phi_n dx,dy*t = \phi_n Vt
-			\phi_t dx,dy*n = \phi_t Vn
-			*/
-#endif
-		}
-	}
-
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
-		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
-
-		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
-
-		last_phase = true;
-		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
-		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
-		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
-	}
-
-	if (gbl->is_loop) {
-		for(m=0;m<tri_mesh::ND;++m)
-			for(n=0;n<tri_mesh::ND;++n)
-				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
-		gbl->vdt(base.nseg+1) = gbl->vdt(0);
-	}
-
-	FLT jcbi,temp;
-	for(indx=0;indx<base.nseg+1;++indx) {    
-		/* INVERT VERTEX MATRIX */
-		jcbi = 1.0/(gbl->vdt(indx)(0,0)*gbl->vdt(indx)(1,1) -gbl->vdt(indx)(0,1)*gbl->vdt(indx)(1,0));
-
-		temp = gbl->vdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
-		gbl->vdt(indx)(0,0) = gbl->vdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
-		gbl->vdt(indx)(1,1) = temp;
-		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
-		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
-		
-		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
-//		FLT theta =  100.0*M_PI/180.0;
-//		gbl->vdt(indx)(0,0) = -sin(theta);
-//		gbl->vdt(indx)(1,1) =  sin(theta);
-//		gbl->vdt(indx)(0,1) = cos(theta);
-//		gbl->vdt(indx)(1,0) = cos(theta);		
-	}
-
-	/* INVERT SIDE MATRIX */    
-	if (basis::tri(x.log2p)->sm() > 0) {
-		for(indx=0;indx<base.nseg;++indx) {
-			/* INVERT SIDE MVDT MATRIX */
-			jcbi = 1.0/(gbl->sdt(indx)(0,0)*gbl->sdt(indx)(1,1) -gbl->sdt(indx)(0,1)*gbl->sdt(indx)(1,0));
-
-			temp = gbl->sdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
-			gbl->sdt(indx)(0,0) = gbl->sdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
-			gbl->sdt(indx)(1,1) = temp;
-			gbl->sdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
-			gbl->sdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
-		}
-	}
-	return;
-}
-
-
-
 
 void surface::update(int stage) {
 	int i,m,n,count,sind,indx,v0;
@@ -1274,75 +984,86 @@ void surface::maxres() {
 
 void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
-	FLT dw = 1.0e-4;// fix me temp make a global value?
 	Array<FLT,2> Rbar(x.NV+tri_mesh::ND,sm+2),lf(x.NV+tri_mesh::ND,sm+2);
+	// const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
 	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
 	x.ugtouht1d(sind);
 	element_rsdl(indx,Rbar);
 
+	Array<FLT,1> dw(x.NV);
+	dw = 0.0;
+	for(int i=0;i<2;++i)
+		for(int n=0;n<x.NV;++n)
+			dw = dw + fabs(x.uht(n)(i));
+	
+	dw = dw*eps_r;
+	dw += eps_a;
+	FLT dx = eps_r*x.distance(x.seg(sind).pnt(0),x.seg(sind).pnt(1)) +eps_a;
+	
 	/* Numerically create Jacobian */
 	int kcol = 0;
 	for(int mode = 0; mode < 2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
-			x.uht(var)(mode) += dw;
+			x.uht(var)(mode) += dw(var);
 			
 			element_rsdl(indx,lf);
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
 					
 			++kcol;
-			x.uht(var)(mode) -= dw;
+			x.uht(var)(mode) -= dw(var);
 		}
 		
 		for(int var = 0; var < tri_mesh::ND; ++var) {
-			x.pnts(x.seg(sind).pnt(mode))(var) += dw;
+			x.pnts(x.seg(sind).pnt(mode))(var) += dx;
 
 			element_rsdl(indx,lf);
 
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
 
 			++kcol;
-			x.pnts(x.seg(sind).pnt(mode))(var) -= dw;
+			x.pnts(x.seg(sind).pnt(mode))(var) -= dx;
 		}
 	}
 
 	
 	for(int mode = 2; mode < sm+2; ++mode) {
 		for(int var = 0; var < x.NV; ++var) {
-			x.uht(var)(mode) += dw;
+			x.uht(var)(mode) += dw(var);
 
 			element_rsdl(indx,lf);
 
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw(var);
 
 			++kcol;
-			x.uht(var)(mode) -= dw;
+			x.uht(var)(mode) -= dw(var);
 		}
 					 
 		for(int var = 0; var < tri_mesh::ND; ++var) {
-			crds(indx,mode-2,var) += dw;
+			crds(indx,mode-2,var) += dx;
 			
 			element_rsdl(indx,lf);
 			
 			int krow = 0;
 			for(int k=0;k<sm+2;++k)
 				for(int n=0;n<x.NV+tri_mesh::ND;++n)
-					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dw;
+					K(krow++,kcol) = (lf(n,k)-Rbar(n,k))/dx;
 					
 					++kcol;
 			
-			crds(indx,mode-2,var) -= dw;
+			crds(indx,mode-2,var) -= dx;
 		}
 	}
 	
@@ -1354,6 +1075,7 @@ void surface::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
 	int vdofs = x.NV +tri_mesh::ND;
 	Array<FLT,2> K(vdofs*(sm+2),vdofs*(sm+2));
+	Array<FLT,1> row_store(vdofs*(sm+2));
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
 	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
 	
@@ -1397,25 +1119,320 @@ void surface::petsc_jacobian() {
 		
 		element_jacobian(j,K);
 		
+		/* Rotate for diagonal dominance */
+		/* Rotate vertices */
+		ind = x.NV;
+		row_store             = K(ind,Range::all())*gbl->vdt(j)(0,0) +K(ind+1,Range::all())*gbl->vdt(j)(0,1);
+		K(ind+1,Range::all()) = K(ind,Range::all())*gbl->vdt(j)(1,0) +K(ind+1,Range::all())*gbl->vdt(j)(1,1);
+		K(ind,Range::all()) = row_store;
+		ind += vdofs;
+		
+		row_store             = K(ind,Range::all())*gbl->vdt(j+1)(0,0) +K(ind+1,Range::all())*gbl->vdt(j+1)(0,1);
+		K(ind+1,Range::all()) = K(ind,Range::all())*gbl->vdt(j+1)(1,0) +K(ind+1,Range::all())*gbl->vdt(j+1)(1,1);
+		K(ind,Range::all()) = row_store;
+		ind += vdofs;
+
+		/* SAME FOR SIDE MODES */
+		for(int m=0;m<basis::tri(x.log2p)->sm();++m) {
+			row_store             = K(ind,Range::all())*gbl->sdt(j)(0,0) +K(ind+1,Range::all())*gbl->sdt(j)(0,1);
+			K(ind+1,Range::all()) = K(ind,Range::all())*gbl->sdt(j)(1,0) +K(ind+1,Range::all())*gbl->sdt(j)(1,1);
+			K(ind,Range::all()) = row_store;
+			ind += vdofs;
+		}
+
 		MatSetValues(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 }
 
-int surface::petsc_rsdl(Array<double,1> res) {
-	int sm = basis::tri(x.log2p)->sm();
-	int ind = 0;
-
-	for(int j=0;j<base.nseg;++j) {
-		for(int m=0;m<sm;++m) {
-			for(int n=0;n<tri_mesh::ND;++n) {
-				res(ind++) = gbl->sres(m)(n);
-			}
-		}
-	}
-	return(ind);
-}
-
-
 #endif
 
 /* Remember that vertex jacobians need to be written */
+
+void surface::setup_preconditioner() {
+	int indx,m,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> nrm;
+	FLT h, hsm;
+	FLT dttang, dtnorm;
+	FLT vslp, strss;
+	FLT drho, srho, smu;
+	FLT nu1, nu2;
+	FLT qmax, gam1, gam2;
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd;
+	TinyMatrix<FLT,4,MXGP> res;
+	TinyMatrix<FLT,4,MXGP> lf;
+	TinyVector<FLT,2> mvel;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	int last_phase, mp_phase;
+
+	drho = x.gbl->rho -gbl->rho2;
+	srho = x.gbl->rho +gbl->rho2;
+	smu = x.gbl->mu +gbl->mu2;
+	nu1 = x.gbl->mu/x.gbl->rho;
+	if (gbl->rho2 > 0.0) 
+		nu2 = gbl->mu2/gbl->rho2;
+	else
+		nu2 = 0.0;
+
+	/**************************************************/
+	/* DETERMINE SURFACE MOVEMENT TIME STEP              */
+	/**************************************************/
+	gbl->vdt(0) = 0.0;
+
+	for(indx=0; indx < base.nseg; ++indx) {
+		sind = base.seg(indx);
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+
+
+#ifdef DETAILED_DT
+		x.crdtocht1d(sind);
+		for(n=0;n<tri_mesh::ND;++n)
+			basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+
+		x.ugtouht1d(sind);
+		for(n=0;n<tri_mesh::ND;++n)
+			basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
+
+		dtnorm = 1.0e99;
+		dttang = 1.0e99;
+		gbl->meshc(indx) = 1.0e99;
+		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+			nrm(0) =  dcrd(1,i)*2;
+			nrm(1) = -dcrd(0,i)*2;
+			h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+
+			/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+			for(n=0;n<tri_mesh::ND;++n) {
+				mvel(n) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+#ifdef DROP
+				mvel(n) -= tri_hp_ins::mesh_ref_vel(n);
+#endif    
+			}
+
+
+
+			qmax = u(0)(i)*u(0)(i) +u(1)(i)*u(1)(i);
+			vslp = fabs(-u(0)(i)*nrm(1)/h +u(1)(i)*nrm(0)/h);
+			hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+
+			dttang = MIN(dttang,2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm);
+#ifndef BODYFORCE
+			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*gbl->g*nrm(1)/h);
+#else
+			strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
+#endif
+
+			gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
+			gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
+
+			if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+
+#ifdef INERTIALESS
+			gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
+			gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
+#endif
+			dtnorm = MIN(dtnorm,2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2)));                
+
+			/* SET UP DISSIPATIVE COEFFICIENT */
+			/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+			/* RESIDUAL HAS DX/2 WEIGHTING */
+			/* |a| dx/2 dv/dx  dx/2 dpsi */
+			/* |a| dx/2 2/dx dv/dpsi  dpsi */
+			/* |a| dv/dpsi  dpsi */
+			// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5);/* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+			// gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(vslp/hsm +x.gbl->bd(0)))); /* FAILED IN MOVING UP TESTS */
+			gbl->meshc(indx) = MIN(gbl->meshc(indx),gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0)))); /* SEEMS THE BEST I'VE GOT */
+		}
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+#else
+		nrm(0) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+		nrm(1) = -(x.pnts(v1)(0) -x.pnts(v0)(0));
+		h = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+
+		mvel(0) = x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0)));
+		mvel(1) = x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1)));
+#ifdef DROP
+		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
+		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
+#endif
+
+		qmax = mvel(0)*mvel(0)+mvel(1)*mvel(1);
+		vslp = fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h);
+
+		mvel(0) = x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0)));
+		mvel(1) = x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1)));
+#ifdef DROP
+		mvel(0) -= tri_hp_ins::mesh_ref_vel(0);
+		mvel(1) -= tri_hp_ins::mesh_ref_vel(1);
+#endif
+		qmax = MAX(qmax,mvel(0)*mvel(0)+mvel(1)*mvel(1));
+		vslp = MAX(vslp,fabs(-mvel(0)*nrm(1)/h +mvel(1)*nrm(0)/h));
+
+		hsm = h/(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1));
+
+		dttang = 2.*ksprg(indx)*(.25*(basis::tri(x.log2p)->p()+1)*(basis::tri(x.log2p)->p()+1))/hsm;
+#ifndef BODYFORCE
+		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*x.gbl->g*nrm(1)/h);
+#else
+		strss =  4.*gbl->sigma/(hsm*hsm) +fabs(drho*(-gbl->body(0)*nrm(0) +(gbl->g-gbl->body(1))*nrm(1))/h);
+#endif
+
+		gam1 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu1/hsm);
+		gam2 = 3.0*qmax +(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm)*(0.5*hsm*x.gbl->bd(0) + 2.*nu2/hsm);
+
+		if (x.gbl->bd(0) + x.gbl->mu == 0.0) gam1 = MAX(gam1,0.1);
+
+#ifdef INERTIALESS
+		gam1 = (2.*nu1/hsm)*(2.*nu1/hsm);
+		gam2 = (2.*nu2/hsm)*(2.*nu2/hsm);
+#endif
+		dtnorm = 2.*vslp/hsm +x.gbl->bd(0) +1.*strss/(x.gbl->rho*sqrt(qmax +gam1) +gbl->rho2*sqrt(qmax +gam2));                
+
+		/* SET UP DISSIPATIVE COEFFICIENT */
+		/* FOR UPWINDING LINEAR CONVECTIVE CASE SHOULD BE 1/|a| */
+		/* RESIDUAL HAS DX/2 WEIGHTING */
+		/* |a| dx/2 dv/dx  dx/2 dpsi */
+		/* |a| dx/2 2/dx dv/dpsi  dpsi */
+		/* |a| dv/dpsi  dpsi */
+		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
+		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
+		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+#endif
+
+		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
+
+		nrm *= 0.5;
+
+		gbl->vdt(indx)(0,0) += -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(0,1) +=  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(1,0) +=  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx)(1,1) +=  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(0,0) = -dttang*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(0,1) =  dttang*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(1,0) =  dtnorm*nrm(0)*basis::tri(x.log2p)->vdiag1d();
+		gbl->vdt(indx+1)(1,1) =  dtnorm*nrm(1)*basis::tri(x.log2p)->vdiag1d();
+
+		if (basis::tri(x.log2p)->sm()) {
+			gbl->sdt(indx)(0,0) = -dttang*nrm(1);
+			gbl->sdt(indx)(0,1) =  dttang*nrm(0);
+			gbl->sdt(indx)(1,0) =  dtnorm*nrm(0);
+			gbl->sdt(indx)(1,1) =  dtnorm*nrm(1);  
+
+#ifdef DETAILED_MINV
+			int lsm = basis::tri(x.log2p)->sm();
+			x.crdtocht1d(sind);
+			for(n=0;n<tri_mesh::ND;++n)
+				basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+
+			for(int m = 0; m<lsm; ++m) {
+				for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+					nrm(0) =  dcrd(1,i);
+					nrm(1) = -dcrd(0,i);
+					res(0,i) = -dttang*nrm(1)*basis::tri(x.log2p)->gx(i,m+3);
+					res(1,i) =  dttang*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(2,i) =  dtnorm*nrm(0)*basis::tri(x.log2p)->gx(i,m+3);
+					res(3,i) =  dtnorm*nrm(1)*basis::tri(x.log2p)->gx(i,m+3); 
+				}
+				lf = 0;
+				basis::tri(x.log2p)->intgrt1d(&lf(0,0),&res(0,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(1,0),&res(1,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(2,0),&res(2,0));
+				basis::tri(x.log2p)->intgrt1d(&lf(3,0),&res(3,0));
+
+				/* CFL = 0 WON'T WORK THIS WAY */
+				lf(0,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
+				lf(1,Range(0,lsm+1) /= gbl->cfl(0,x.log2p);
+				lf(2,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);
+				lf(3,Range(0,lsm+1) /= gbl->cfl(1,x.log2p);                        
+
+				for (n=0;n<lsm;++n) {
+					gbl->ms(indx)(2*m,2*n) = lf(0,n+2);
+					gbl->ms(indx)(2*m,2*n+1) = lf(1,n+2);
+					gbl->ms(indx)(2*m+1,2*n) = lf(2,n+2);
+					gbl->ms(indx)(2*m+1,2*n+1) = lf(3,n+2);
+				}
+
+				/* tang/norm, x/y,  mode,  vert */
+				gbl->vms(indx,0,0,m,0) = lf(0,0);
+				gbl->vms(indx,0,1,m,0) = lf(1,0);
+				gbl->vms(indx,0,0,m,1) = lf(0,1);
+				gbl->vms(indx,0,1,m,1) = lf(1,1);
+				gbl->vms(indx,1,0,m,0) = lf(2,0);
+				gbl->vms(indx,1,1,m,0) = lf(3,0);
+				gbl->vms(indx,1,0,m,1) = lf(2,1);
+				gbl->vms(indx,1,1,m,1) = lf(3,1);    
+			}
+
+			int info;
+			GETRF(2*lsm,2*lsm,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),info);
+			if (info != 0) {
+				printf("DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
+				exit(1);
+			}
+			/*
+			\phi_n dx,dy*t = \phi_n Vt
+			\phi_t dx,dy*n = \phi_t Vn
+			*/
+#endif
+		}
+	}
+
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		x.vbdry(base.vbdry(0))->vloadbuff(boundary::manifolds,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vloadbuff(boundary::manifolds,&gbl->vdt(base.nseg)(0,0),0,3,0);
+		x.vbdry(base.vbdry(0))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_prepare(boundary::manifolds,mp_phase,boundary::symmetric);
+
+		x.vbdry(base.vbdry(0))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(1))->comm_exchange(boundary::manifolds,mp_phase,boundary::symmetric);        
+
+		last_phase = true;
+		last_phase &= x.vbdry(base.vbdry(0))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		last_phase &= x.vbdry(base.vbdry(1))->comm_wait(boundary::manifolds,mp_phase,boundary::symmetric);
+		x.vbdry(base.vbdry(0))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(0)(0,0),0,3,0);
+		x.vbdry(base.vbdry(1))->vfinalrcv(boundary::manifolds,mp_phase,boundary::symmetric,boundary::average,&gbl->vdt(base.nseg)(0,0),0,3,0);
+	}
+
+	if (gbl->is_loop) {
+		for(m=0;m<tri_mesh::ND;++m)
+			for(n=0;n<tri_mesh::ND;++n)
+				gbl->vdt(0)(m,n) = 0.5*(gbl->vdt(0)(m,n) +gbl->vdt(base.nseg+1)(m,n));
+		gbl->vdt(base.nseg+1) = gbl->vdt(0);
+	}
+
+	FLT jcbi,temp;
+	for(indx=0;indx<base.nseg+1;++indx) {    
+		/* INVERT VERTEX MATRIX */
+		jcbi = 1.0/(gbl->vdt(indx)(0,0)*gbl->vdt(indx)(1,1) -gbl->vdt(indx)(0,1)*gbl->vdt(indx)(1,0));
+
+		temp = gbl->vdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
+		gbl->vdt(indx)(0,0) = gbl->vdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
+		gbl->vdt(indx)(1,1) = temp;
+		gbl->vdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
+		gbl->vdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+		
+		/* TEMPORARY DIRECT FORMATION OF vdt^{-1} theta is angle of normal from horizontal */
+//		FLT theta =  100.0*M_PI/180.0;
+//		gbl->vdt(indx)(0,0) = -sin(theta);
+//		gbl->vdt(indx)(1,1) =  sin(theta);
+//		gbl->vdt(indx)(0,1) = cos(theta);
+//		gbl->vdt(indx)(1,0) = cos(theta);		
+	}
+
+	/* INVERT SIDE MATRIX */    
+	if (basis::tri(x.log2p)->sm() > 0) {
+		for(indx=0;indx<base.nseg;++indx) {
+			/* INVERT SIDE MVDT MATRIX */
+			jcbi = 1.0/(gbl->sdt(indx)(0,0)*gbl->sdt(indx)(1,1) -gbl->sdt(indx)(0,1)*gbl->sdt(indx)(1,0));
+
+			temp = gbl->sdt(indx)(0,0)*jcbi*gbl->cfl(1,x.log2p);
+			gbl->sdt(indx)(0,0) = gbl->sdt(indx)(1,1)*jcbi*gbl->cfl(0,x.log2p);
+			gbl->sdt(indx)(1,1) = temp;
+			gbl->sdt(indx)(0,1) *= -jcbi*gbl->cfl(1,x.log2p);
+			gbl->sdt(indx)(1,0) *= -jcbi*gbl->cfl(0,x.log2p);
+		}
+	}
+	return;
+}
+

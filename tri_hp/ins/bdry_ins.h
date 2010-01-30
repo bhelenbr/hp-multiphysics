@@ -594,13 +594,14 @@ namespace bdry_ins {
 			}
 
 			void rsdl(int stage) {
-#ifndef petsc
 				if (surfbdry == 0) {
 					/* SET TANGENT RESIDUAL TO ZERO */
 					surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(0) = 0.0;
 					if (fix_norm) {
+#ifndef petsc
 						/* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
 						x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(1)*x.gbl->rho;
+#endif
 						/* AND ZERO RESIDUAL */
 						surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(1) = 0.0;
 					}
@@ -609,18 +610,18 @@ namespace bdry_ins {
 					/* SET TANGENT RESIDUAL TO ZERO */
 					surf->gbl->vres(0)(0) = 0.0;
 					if (fix_norm) {
+#ifndef petsc
 						/* POST-REMOVE ADDED MASS FLUX TERM FOR FIXED POINT */
 						x.gbl->res.v(base.pnt,x.NV-1) += surf->gbl->vres(0)(1)*x.gbl->rho;
+#endif
 						/* AND ZERO RESIDUAL */
 						surf->gbl->vres(0)(1) = 0.0;
 					}
 				}
-#endif
 				return;
 			}
 			
 			void vdirichlet() {
-#ifndef petsc
 				if (surfbdry == 0) {
 					for(int n=0;n<=fix_norm;++n) 
 						surf->gbl->vres(x.ebdry(base.ebdry(0))->nseg)(n) = 0.0;
@@ -629,33 +630,6 @@ namespace bdry_ins {
 					for(int n=0;n<=fix_norm;++n) 
 						surf->gbl->vres(0)(n) = 0.0;
 				}
-#else
-
-				
-				/* zero vertex residual in r_mesh residual vector */
-				r_tri_mesh::global *r_gbl = dynamic_cast<r_tri_mesh::global *>(x.gbl);
-
-				if (fix_norm) {
-					for(int n=0;n<tri_mesh::ND;++n) 
-						r_gbl->res(base.pnt)(n) = 0.0;
-				}
-				else {
-					int indx;
-					if (surfbdry == 0) {
-						indx = x.ebdry(base.ebdry(0))->nseg+1;
-					}
-					else {
-						indx = 0;
-					}
-
-					/* Need to unrotate, apply dirichlet to tangential residual, then re-rotate (doh!) */
-					FLT norm_res = -r_gbl->res(base.pnt)(0)*surf->gbl->vdt(indx)(1,0) +r_gbl->res(base.pnt)(1)*surf->gbl->vdt(indx)(0,0);
-					norm_res /= surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
-					
-					r_gbl->res(base.pnt)(0) = norm_res*surf->gbl->vdt(indx)(0,1);
-					r_gbl->res(base.pnt)(1) = norm_res*surf->gbl->vdt(indx)(1,1);
-				}
-#endif	
 			}
 
 			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
@@ -763,6 +737,8 @@ namespace bdry_ins {
 				}
 			}
 			
+			/* Routine to add surface tension stress */
+			/* also zero's tangent residual in no petsc */
 			void rsdl(int stage);
 						
 #ifdef petsc

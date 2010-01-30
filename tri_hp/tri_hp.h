@@ -257,6 +257,7 @@ class tri_hp : public r_tri_mesh  {
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
 #endif	
+
 		virtual ~tri_hp();
 };
 
