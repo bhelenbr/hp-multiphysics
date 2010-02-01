@@ -94,10 +94,15 @@ namespace bdry_cns {
 			
 			/* ENERGY EQUATION */
 			double gogm1 = x.gbl->gamma/(x.gbl->gamma-1.0);
-			double h = gogm1*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
-			flx(x.NV-1) = h*flx(0);
-
 			
+			//double h = gogm1*u(x.NV-1) +0.5*(u(1)*u(1)*norm(0)*norm(0)+u(2)*u(2)*norm(1)*norm(1));
+			double h = gogm1*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+			flx(x.NV-1) = h*flx(0);//+ibc->f(0, xpt, x.gbl->time)*norm(0);
+			//cout << flx(3) << endl;
+			//double temp = gogm1 +0.5*(u(1)*u(1)+u(2)*u(2))/u(x.NV-1);
+			//flx(x.NV-1) = ibc->f(0, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1))*temp;
+			//cout << flx(3) << endl;
+
 			return;
 		}
 		
@@ -122,7 +127,7 @@ namespace bdry_cns {
 			/* EVERYTHING ELSE DOESN'T MATTER */
 			for (int n=1;n<x.NV;++n)
 				flx(n) = 0.0;
-			
+
 			return;
 		}
 		
@@ -139,7 +144,6 @@ namespace bdry_cns {
 		
 		void vdirichlet() {
 			int sind,j,v0;
-			
 			j = 0;
 			do {
 				sind = base.seg(j);
@@ -162,10 +166,10 @@ namespace bdry_cns {
 #ifdef petsc			
 		void petsc_jacobian_dirichlet() {
 			hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
-			
+
 			int sm=basis::tri(x.log2p)->sm();
 			Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
-			
+
 			int vdofs;
 			if (x.mmovement == x.coupled_deformable)
 				vdofs = x.NV +tri_mesh::ND;

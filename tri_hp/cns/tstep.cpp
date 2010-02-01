@@ -136,16 +136,16 @@ void tri_hp_cns::setup_preconditioner() {
 		}
 		q = sqrt(qmax);
 
-		FLT nu=rtmax*gbl->mu/pmax;
 		FLT tstep;
 		Array<double,2> tprcn(NV,NV),tau(NV,NV);
 		//pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu, gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);
 		
-		pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu, tprcn,tau, tstep);
+		pennsylvania_peanut_butter(q, pmax, rtmax, hmax, tprcn,tau, tstep);
 
 		gbl->tprcn_ut(tind,Range::all(),Range::all())=tprcn;
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau;
 		
+		//cout << tau << gbl->tau(tind,Range::all(),Range::all()) << endl;
 //		cout << tau << endl;
 //		cout << "timestep: " << tstep << endl;
 		
@@ -192,7 +192,7 @@ void tri_hp_cns::setup_preconditioner() {
 }
 
 
-void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT hmax, FLT nu, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
 
@@ -249,14 +249,22 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	
 	matrix_absolute_value(B);
 	
-	S = 0.0, 0.0, 0.0, 0.0,
-	    0.0, nu,  0.0, 0.0,
-	    0.0, 0.0, nu,  0.0,
-	    0.0, 0.0, 0.0, nu;
+	S = 0.0, 0.0,     0.0,     0.0,
+	    0.0, gbl->mu, 0.0,     0.0,
+	    0.0, 0.0,     gbl->mu, 0.0,
+	    0.0, 0.0,     0.0,     gbl->kcond;
 	
-	S = pmax/hmax*S;//temp fix me
+	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
 	
-	Tinv = 2.0/hmax*(A+B+hmax*S);// temp fix me, cancel out hmax?
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*S(k,j);
+	
+	S = temp;
+	
+	Tinv = 2.0/hmax*(A+B+hmax*S);
 	
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);

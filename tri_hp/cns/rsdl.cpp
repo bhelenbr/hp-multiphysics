@@ -185,6 +185,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					kcond(0,0) = -kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					kcond(1,1) = -kcjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					kcond(0,1) =  kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+//					kcond(0,0) = -cjcb*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
+//					kcond(1,1) = -cjcb*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
+//					kcond(0,1) =  cjcb*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
 #define				kcondI1II0I kcond(0,1)
 
 
@@ -225,12 +228,16 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
 
-			df(0,0) = 0.0;
-			df(0,1) = 0.0;
+//			df(0,0) = 0.0;
+//			df(0,1) = 0.0;
 			
+			//cout << gbl->tau(tind,Range(0,3),Range(0,3)) << endl;
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(int i=0;i<lgpx;++i) {
 				for(int j=0;j<lgpn;++j) {
+					
+					df(0,0)(i,j) = 0.0;
+					df(0,1)(i,j) = 0.0;
 					
 					tres = 0.0;
 					for(int m = 0; m < NV; ++m)
