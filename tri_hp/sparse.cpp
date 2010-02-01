@@ -14,7 +14,7 @@
 
 #ifdef petsc
 
-// #define DEBUG2
+// #define DEBUG1
 #define DEBUG_TOL 1.0e-9
 
 /* finds number of nonzeros per row */ 
@@ -177,7 +177,8 @@ void tri_hp::petsc_jacobian() {
 	/*************** TESTING ROUTINE ***********/
 	/* HARD TEST OF JACOBIAN ROUTINE */
 	const FLT eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
-	Array<FLT,1> dw(NV) = eps_a;
+	Array<FLT,1> dw(NV);
+	dw = eps_a;
 	FLT dx = eps_a;
 	int dof = size_sparse_matrix;
 	Array<FLT,2> testJ(dof,dof);
@@ -299,6 +300,12 @@ void tri_hp::petsc_jacobian() {
 					*gbl->log << " (Extra entry in full matrix " <<  j  << ' ' << testJ(i,j) << ") ";
 				}
 			}
+		}
+		if (cnt < nnz) {
+			do {
+				if (fabs(vals[cnt]) > DEBUG_TOL)
+					*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
+			} while (++cnt < nnz);
 		}
 		*gbl->log << std::endl;
 		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
