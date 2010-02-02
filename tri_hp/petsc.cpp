@@ -154,8 +154,12 @@ void tri_hp::petsc_setup_preconditioner() {
 	 automatically be called within KSPSolve() if it hasn't been
 	 called already.
 	 */
-	
+	PetscGetTime(&time1);
 	KSPSetUp(ksp);
+	PetscGetTime(&time2);
+	
+	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
+
 	
 	//MatView(petsc_J,0);
 

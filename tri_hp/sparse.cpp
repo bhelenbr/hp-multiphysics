@@ -14,8 +14,10 @@
 
 #ifdef petsc
 
-// #define DEBUG1
+#ifdef BZ_DEBUG
+#define DEBUG1
 #define DEBUG_TOL 1.0e-9
+#endif
 
 /* finds number of nonzeros per row */ 
 void tri_hp::find_sparse_bandwidth(){

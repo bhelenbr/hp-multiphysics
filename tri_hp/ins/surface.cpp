@@ -985,8 +985,11 @@ void surface::maxres() {
 void surface::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
 	Array<FLT,2> Rbar(x.NV+tri_mesh::ND,sm+2),lf(x.NV+tri_mesh::ND,sm+2);
-	// const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#ifdef BZ_DEBUG
+	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
 	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
 	
 	/* Calculate and store initial residual */
 	int sind = base.seg(indx);
