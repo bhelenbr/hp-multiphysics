@@ -9,6 +9,7 @@
 #include "tri_hp_cns.h"
 #include "bdry_cns.h"
 #include <input_map.h>
+#include <tri_boundary.h>
 
 using namespace bdry_cns;
 
@@ -71,10 +72,10 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
 //			temp = new surface_outflow_planar(*this,*vbdry(bnum));
 //			break;
 //		}
-//		case tri_hp_cns_vtype::inflow: {
-//			temp = new inflow_pt(*this,*vbdry(bnum));
-//			break;
-//		}
+		case tri_hp_cns_vtype::inflow: {
+			temp = new inflow_pt(*this,*vbdry(bnum));
+			break;
+		}
 //		case tri_hp_cns_vtype::hybrid_slave_point: {
 //			temp = new hybrid_slave_pt(*this,*vbdry(bnum));
 //			break;

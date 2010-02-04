@@ -70,15 +70,15 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 	/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
-	if (gbl->beta(stage) > 0.0) {
-		basis::tri(log2p)->proj(&uht(0)(0),&u(NV-1)(0,0),MXGP);
+//	if (gbl->beta(stage) > 0.0) {
+		basis::tri(log2p)->proj(&uht(0)(0),&u(0)(0,0),MXGP);
 		for(int n = 1; n < NV; ++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
-	}
-	else {
-		for(int n = 0; n < NV; ++n)
-			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
-	}
+//	}
+//	else {
+//		for(int n = 0; n < NV; ++n)
+//			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
+//	}
 	
 	/* lf IS WHERE I WILL STORE THE ELEMENT RESIDUAL */
 	for(int n = 0; n < NV; ++n) {

@@ -153,21 +153,21 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 
 void neumann::element_rsdl(int eind, int stage) {
-	int k,n,v0,v1,sind;
+	int k,n,sind;
 	TinyVector<FLT,2> pt,mvel,nrm;
 	Array<FLT,1> u(x.NV),flx(x.NV);
-
-	x.lf = 0.0;
 	
-	sind = base.seg(eind);
+	x.lf = 0.0;
 
+	sind = base.seg(eind);
+	
 	x.crdtocht1d(sind);
 	for(n=0;n<tri_mesh::ND;++n)
 		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-
+	
 	for(k=0;k<basis::tri(x.log2p)->gpx();++k) {
 		nrm(0) = x.dcrd(1,0)(0,k);
 		nrm(1) = -x.dcrd(0,0)(0,k);                
@@ -178,21 +178,21 @@ void neumann::element_rsdl(int eind, int stage) {
 			mvel(n) += tri_hp_cns::mesh_ref_vel(n);
 #endif
 		}
-
+		
+	
 		for(n=0;n<x.NV;++n)
 			u(n) = x.u(n)(0,k);
-
+		
 		flux(u,pt,mvel,nrm,flx);
-
+		
 		for(n=0;n<x.NV;++n)
 			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n);
-
+		
 	}
-
+	
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 
-	
 	return;
 }
 

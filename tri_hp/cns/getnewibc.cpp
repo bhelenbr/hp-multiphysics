@@ -9,6 +9,7 @@
 
 #include "tri_hp_cns.h"
 #include "bdry_cns.h"
+#include <tri_boundary.h>
 
 namespace ibc_cns {
 

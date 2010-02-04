@@ -99,6 +99,7 @@ namespace bdry_cns {
 			double h = gogm1*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
 			flx(x.NV-1) = h*flx(0);//+ibc->f(0, xpt, x.gbl->time)*norm(0);
 			//cout << flx(3) << endl;
+			
 			//double temp = gogm1 +0.5*(u(1)*u(1)+u(2)*u(2))/u(x.NV-1);
 			//flx(x.NV-1) = ibc->f(0, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1))*temp;
 			//cout << flx(3) << endl;
@@ -622,25 +623,25 @@ namespace bdry_cns {
 //			}
 //	};
 
-//	class inflow_pt : public hp_vrtx_bdry {
-//		protected:
-//			tri_hp_cns &x;
-//
-//		public:
-//			inflow_pt(tri_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "inflow_pt";}
-//			inflow_pt(const inflow_pt& inbdry, tri_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
-//			inflow_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
-//
-//			void tadvance() { 
-//				for(int n=0;n<x.NV-1;++n)
-//					x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
-//				return;
-//			}
-//
-//			void vdirichlet2d() {
-//				x.gbl->res.v(base.pnt,Range(0,x.NV-2)) = 0.0;
-//			}
-//	};
+	class inflow_pt : public hp_vrtx_bdry {
+	protected:
+		tri_hp_cns &x;
+		
+	public:
+		inflow_pt(tri_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "inflow_pt";}
+		inflow_pt(const inflow_pt& inbdry, tri_hp_cns &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+		inflow_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new inflow_pt(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+		
+		void tadvance() { 
+			for(int n=1;n<x.NV;++n)
+				x.ug.v(base.pnt,n) = x.gbl->ibc->f(n,x.pnts(base.pnt),x.gbl->time);  
+			return;
+		}
+		
+		void vdirichlet2d() {
+			x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
+		}
+	};
 
 //	class hybrid_slave_pt : public hp_vrtx_bdry {
 //		protected:
