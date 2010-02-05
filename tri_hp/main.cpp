@@ -11,6 +11,10 @@
 #ifdef MPISRC
 #include <mpi.h>
 #endif
+#ifdef petsc
+#include <petscksp.h>
+static char help[] = "How am I supposed to know???\n\n";
+#endif
 
 void ctrlc(int signal);
 
@@ -33,7 +37,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef petsc
-	int err = PetscInitialize(argc,argv);
+    int err = PetscInitialize(&argc,&argv,(char *)0,help);
 	if (err) {
 		std::cerr << "couldn't start petsc environment" << std::endl;
 	}
