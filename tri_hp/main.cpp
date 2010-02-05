@@ -32,6 +32,12 @@ int main(int argc, char **argv) {
 		std::cerr << "couldn't start pth environment" << std::endl;
 	}
 #endif
+#ifdef petsc
+	int err = PetscInitialize(argc,argv);
+	if (err) {
+		std::cerr << "couldn't start petsc environment" << std::endl;
+	}
+#endif
 
 /*	INTERRUPT HANDLER FOR GRACEFUL EXIT ON CTRL-C    	*/	
 	action.sa_handler = ctrlc;
@@ -46,6 +52,9 @@ int main(int argc, char **argv) {
 	}
 	sim::blks.go(argv[1]);
 
+#ifdef petsc
+	PetscFinalize();
+#endif
 #ifdef PTH
 	pth_exit(NULL);
 #endif    

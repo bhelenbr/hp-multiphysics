@@ -30,8 +30,6 @@ void tri_hp::petsc_initialize(){
 
 	PetscTruth mat_nonsymmetric;
 
-	PetscInitializeNoArguments();
-
 	/*
      Set flag if we are doing a nonsymmetric problem; the default is symmetric.
 	 */
