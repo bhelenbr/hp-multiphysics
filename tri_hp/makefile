@@ -16,6 +16,13 @@ tri_hp:
 
 .PHONY: tri_hp
 
+tri_hp_petsc:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS=-Dpetsc
+	cp _$@/tri_hp_petsc $(HOME)/bin/$@
+
+.PHONY: tri_hp_petsc
+
 tri_hp_axi:
 	+@[ -d  _$@ ] || mkdir -p _$@
 	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS=-DAXISYMMETRIC
@@ -86,6 +93,7 @@ OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
+OBJPETSC = petsc.o sparse.o
 
 
 OBJ = $(BASE)
@@ -135,6 +143,9 @@ tri_hp: dirs $(OBJ)
 
 tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
+
+tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetscksp -lpetscmat -lpetsccontrib -lpetscdm -lpetscsnes -lpetscts -lpetscvec -lpetsc -lparmetis -lmetis -ldl
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
