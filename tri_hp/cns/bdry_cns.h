@@ -100,8 +100,8 @@ namespace bdry_cns {
 			flx(x.NV-1) = h*flx(0);//+ibc->f(0, xpt, x.gbl->time)*norm(0);
 			//cout << flx(3) << endl;
 			
-			//double temp = gogm1 +0.5*(u(1)*u(1)+u(2)*u(2))/u(x.NV-1);
-			//flx(x.NV-1) = ibc->f(0, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1))*temp;
+//			double temp = gogm1 +0.5*(u(1)*u(1)+u(2)*u(2))/u(x.NV-1);
+//			flx(x.NV-1) = ibc->f(0, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1))*temp;
 			//cout << flx(3) << endl;
 
 			return;
