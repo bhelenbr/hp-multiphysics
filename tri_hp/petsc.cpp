@@ -15,6 +15,7 @@
 
 
 void tri_hp::petsc_initialize(){
+	int err;
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
 
 	/* count total degrees of freedom on boundaries */
@@ -42,7 +43,11 @@ void tri_hp::petsc_initialize(){
      runtime. Also, the parallel partitioning of the matrix is
      determined by PETSc at runtime.
 	 */
-	MatCreate(PETSC_COMM_WORLD,&petsc_J);
+	err = MatCreate(PETSC_COMM_WORLD,&petsc_J);
+	if (err) {
+		*gbl->log << "Couldn't create matrix" << std::endl;
+		exit(1);
+	}
 	//MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);
 	//MatSetFromOptions(petsc_J);
 
@@ -55,7 +60,11 @@ void tri_hp::petsc_initialize(){
 	 dimension; the parallel partitioning is determined at runtime. 
 	 - Note: We form 1 vector from scratch and then duplicate as needed.
 	 */
-	VecCreate(PETSC_COMM_WORLD,&petsc_u);
+	err = VecCreate(PETSC_COMM_WORLD,&petsc_u);
+	if (err) {
+		*gbl->log << "Couldn't create vector" << std::endl;
+		exit(1);
+	}
 	VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);
 	VecSetFromOptions(petsc_u);
 	VecDuplicate(petsc_u,&petsc_f);
@@ -63,7 +72,11 @@ void tri_hp::petsc_initialize(){
 	/* 
 	 Create linear solver context
 	 */
-	KSPCreate(PETSC_COMM_WORLD,&ksp);
+	err = KSPCreate(PETSC_COMM_WORLD,&ksp);
+	if (err) {
+		*gbl->log << "Couldn't create KSP" << std::endl;
+		exit(1);
+	}
 	
 	
 	/* choose KSP type */
@@ -118,9 +131,6 @@ void tri_hp::petsc_initialize(){
 void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
 	
-//	petsc_finalize();
-//	petsc_initialize();
-
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
 	MatZeroEntries(petsc_J);
