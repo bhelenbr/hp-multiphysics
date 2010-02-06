@@ -100,7 +100,7 @@ class r_fixed_angled : public r_side_bdry {
 				FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
-			} while (j++ < base.nseg);
+			} while (++j < base.nseg);
 			FLT res = -x.gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
 			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
@@ -192,17 +192,18 @@ class r_fixed_angled : public r_fixed {
 
 		void dirichlet() {
 			int sind;
-			int j = 0;
-			do {
+			
+			/* SKIP ENDPOINTS */
+			for(int j=0;j<base.nseg-1;++j) {
 				sind = base.seg(j);
 				/* Tangent Residual */
-				FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
-				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0) = res;
-				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1) = 0.0;
-			} while (j++ < base.nseg);
-			FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
-			x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(0) = res;
-			x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(1) = 0.0;
+				/* tangent = -sin(theta) i +cos(theta) j */
+				/* normal = cos(theta) i + sin(theta) j */
+				FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
+				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
+				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
+			} 
+			
 			return;
 		}
 		
@@ -214,42 +215,63 @@ class r_fixed_angled : public r_fixed {
 			const PetscInt *cols1, *cols2;
 			const PetscScalar *vals1, *vals2;
 			
+			MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+			MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);	
+
 			/* SKIP ENDPOINTS? */
-			int j = 1;
-			int sind;
-			do {
-				sind = base.seg(j);
-				int row = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +1;
+			for(int j=0;j<base.nseg-1;++j) {
+				int sind = base.seg(j);
+				int row = x.seg(sind).pnt(1)*stride +x.NV;
 				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
-				
+
 				Array<int,1> cols(nnz1+nnz2);
-				Array<FLT,1> vals(nnz1+nnz2);
+				Array<FLT,2> vals(2,nnz1+nnz2);
 				for (int col=0;col<nnz1;++col) {
 					cols(col) = cols1[col];
-					vals(col) = -vals1[col]*sin(theta);
+					vals(0,col) = -vals1[col]*sin(theta);
 				}
 				for (int col=0;col<nnz2;++col) {
 					cols(col+nnz1) = cols2[col];
-					vals(col+nnz1) = vals2[col]*cos(theta);
+					vals(0,col+nnz1) = vals2[col]*cos(theta);
 				}
 				MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
-
+				
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
 				TinyVector<int,2> rows(row,row+1);
 				MatZeroRows(x.petsc_J,2,rows.data(),PETSC_NULL);
-				MatSetValues(x.petsc_J,1,&row,nnz1+nnz2,cols.data(),vals.data(),INSERT_VALUES);
 				
-				cols(0) = row;
-				cols(1) = row +1;
-				vals(0) = cos(theta);
-				vals(1) = sin(theta);
-				++row;
-				MatSetValues(x.petsc_J,1,&row,2,cols.data(),vals.data(),INSERT_VALUES);
-			} while(++j < base.nseg);
+				/* Normal Equation */
+				vals(1,Range::all()) = 0.0;
+				for(int col=0;col<nnz1;++col) {
+					if (cols(col) == row) {
+						vals(1,col) = cos(theta);
+						break;
+					}
+				}
+				for(int col=nnz1;col<nnz1+nnz2;++col) {
+					if (cols(col) == row+1) {
+						vals(1,col) = sin(theta);
+						break;
+					}
+				}
+				
+				/* tangent = -sin(theta) i +cos(theta) j */
+				/* normal = cos(theta) i + sin(theta) j */
+				/* Rotate equations for diagonal dominance to match what is done to residual */
+				Array<FLT,2> temp(2,nnz1+nnz2);
+				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
+				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
+
+				MatSetValues(x.petsc_J,2,rows.data(),nnz1+nnz2,cols.data(),temp.data(),ADD_VALUES);
+				
+				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
+			}
 		}
+		
 };
 #endif
 
