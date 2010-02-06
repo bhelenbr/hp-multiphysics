@@ -37,10 +37,9 @@ int main(int argc, char **argv) {
 	}
 #endif
 #ifdef petsc
-    int err = PetscInitialize(&argc,&argv,(char *)0,help);
-	if (err) {
-		std::cerr << "couldn't start petsc environment" << std::endl;
-	}
+	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+
 #endif
 
 /*	INTERRUPT HANDLER FOR GRACEFUL EXIT ON CTRL-C    	*/	

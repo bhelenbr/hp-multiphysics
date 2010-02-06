@@ -15,7 +15,7 @@
 #ifdef petsc
 
 #ifdef BZ_DEBUG
-#define DEBUG1
+#define DEBUG2
 #define DEBUG_TOL 1.0e-9
 #endif
 
@@ -87,9 +87,9 @@ void tri_hp::find_sparse_bandwidth(){
 		}
 	}
 	
-	MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
+	PetscErrorCode err = MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
 	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
-
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	return;
 }
 

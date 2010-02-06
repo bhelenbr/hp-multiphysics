@@ -15,7 +15,7 @@
 
 
 void tri_hp::petsc_initialize(){
-	int err;
+	PetscErrorCode err;
 	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
 
 	/* count total degrees of freedom on boundaries */
@@ -44,10 +44,7 @@ void tri_hp::petsc_initialize(){
      determined by PETSc at runtime.
 	 */
 	err = MatCreate(PETSC_COMM_WORLD,&petsc_J);
-	if (err) {
-		*gbl->log << "Couldn't create matrix" << std::endl;
-		exit(1);
-	}
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	//MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);
 	//MatSetFromOptions(petsc_J);
 
@@ -61,22 +58,20 @@ void tri_hp::petsc_initialize(){
 	 - Note: We form 1 vector from scratch and then duplicate as needed.
 	 */
 	err = VecCreate(PETSC_COMM_WORLD,&petsc_u);
-	if (err) {
-		*gbl->log << "Couldn't create vector" << std::endl;
-		exit(1);
-	}
-	VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);
-	VecSetFromOptions(petsc_u);
-	VecDuplicate(petsc_u,&petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+
+	err = VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	err = VecSetFromOptions(petsc_u);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	err = VecDuplicate(petsc_u,&petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 
 	/* 
 	 Create linear solver context
 	 */
 	err = KSPCreate(PETSC_COMM_WORLD,&ksp);
-	if (err) {
-		*gbl->log << "Couldn't create KSP" << std::endl;
-		exit(1);
-	}
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	
 	/* choose KSP type */
@@ -93,18 +88,20 @@ void tri_hp::petsc_initialize(){
 	various options. - The following four statements are optional; all of these
 	parameters could alternatively be specified at runtime via KSPSetFromOptions();
 	*/
-	KSPGetPC(ksp,&pc);
+	err = KSPGetPC(ksp,&pc);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	/* choose preconditioner type */
 
-		PCSetType(pc, PCLU);     // LU
+	err = PCSetType(pc, PCLU);     // LU
 //	PCSetType(pc, PCILU);    // incomplete LU
 //	PCSetType(pc, PCSOR);    // SOR
 //	PCSetType(pc,PCSPAI);
 //	PCSORSetOmega(pc,1.3); // Set Omega in SOR
 //	PCSetType(pc, PCJACOBI); // Jacobi
 //	PCSetType(pc, PCASM); // Additive Schwarz method
-
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	
 //	const MatOrderingType rtype =	MATORDERING_NATURAL; /*  Natural */
 //	const MatOrderingType rtype =	MATORDERING_ND; /* Nested Dissection */
 //	const MatOrderingType rtype =	MATORDERING_1WD; /* One-way Dissection */
@@ -120,7 +117,8 @@ void tri_hp::petsc_initialize(){
 	These options will override those specified above as long as KSPSetFromOptions() is called _after_ any other customization routines.
 	*/
 
-	KSPSetFromOptions(ksp);
+	err = KSPSetFromOptions(ksp);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	/* set preconditioner side */
 	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
@@ -130,6 +128,7 @@ void tri_hp::petsc_initialize(){
 
 void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
+	PetscErrorCode err;
 	
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
@@ -139,8 +138,10 @@ void tri_hp::petsc_setup_preconditioner() {
 	
 	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 		
-	MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
-	MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 //		double rtol=1.0e-12; // relative tolerance
 //		double atol=MAX(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
@@ -153,7 +154,8 @@ void tri_hp::petsc_setup_preconditioner() {
 	 also serves as the preconditioning matrix.
 	 */
 	
-	KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	/* 
 	 Solve linear system.  Here we explicitly call KSPSetUp() for more
@@ -163,7 +165,8 @@ void tri_hp::petsc_setup_preconditioner() {
 	 called already.
 	 */
 	PetscGetTime(&time1);
-	KSPSetUp(ksp);
+	err = KSPSetUp(ksp);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	PetscGetTime(&time2);
 	
 	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
@@ -177,17 +180,19 @@ void tri_hp::petsc_setup_preconditioner() {
 
 void tri_hp::petsc_update() {
 	Vec            resid,du;          /* solution, update, function */
-	PetscErrorCode ierr;
+	PetscErrorCode err;
 	PetscInt       its,max_newton_its;
 	PetscScalar    petsc_norm;
 	//PetscMPIInt    size,rank;
 	max_newton_its = 20;
-	//ierr = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRQ(ierr);
-	//ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRQ(ierr);
+	//err = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRABORT(MPI_COMM_WORLD,err)
+	//err = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	PetscLogDouble time1,time2;
-	VecDuplicate(petsc_f,&du);
-	VecDuplicate(petsc_f,&resid);
+	err = VecDuplicate(petsc_f,&du);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	err = VecDuplicate(petsc_f,&resid);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 
 	/* initialize u with ug */
 	ug_to_petsc();
@@ -204,7 +209,8 @@ void tri_hp::petsc_update() {
 	*gbl->log << "residual before " << petsc_norm << std::endl;
 	
 	PetscGetTime(&time1);
-	KSPSolve(ksp,petsc_f,du);
+	err = KSPSolve(ksp,petsc_f,du);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	PetscGetTime(&time2);
 
 	MatMult(petsc_J,du,resid);
@@ -227,7 +233,7 @@ void tri_hp::petsc_update() {
 	
 //		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);	
 	
-	ierr = VecDestroy(du);//CHKERRQ(ierr);
+	err = VecDestroy(du); CHKERRABORT(MPI_COMM_WORLD,err)
 
 	return;
 }
@@ -235,8 +241,11 @@ void tri_hp::petsc_update() {
 /* temp fix can I input petsc vectors ? */
 void tri_hp::petsc_to_ug(){
 	PetscScalar *array;
+	PetscErrorCode err;
 	int ind = 0;
-	VecGetArray(petsc_u,&array);
+	
+	err = VecGetArray(petsc_u,&array);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
 	if (mmovement != coupled_deformable) {
 		for(int i = 0; i < npnt; ++i)
@@ -273,7 +282,9 @@ void tri_hp::petsc_to_ug(){
 		}
 	}
 	
-	VecRestoreArray(petsc_u,&array);
+	err = VecRestoreArray(petsc_u,&array);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	
 	return;	
 }
 
@@ -380,13 +391,19 @@ void tri_hp::petsc_finalize(){
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
 	 */
-	KSPDestroy(ksp);
-	VecDestroy(petsc_f);
-	VecDestroy(petsc_u);
-	MatDestroy(petsc_J);
+	PetscErrorCode err;
+	err = KSPDestroy(ksp);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
-//	PetscFinalize();
+	err = VecDestroy(petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err)
 	
+	err = VecDestroy(petsc_u);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+	
+	err = MatDestroy(petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err)
+		
 	return;
 }
 

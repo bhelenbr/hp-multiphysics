@@ -147,6 +147,9 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			v0 = x.seg(sind).pnt(1);
 			total_flux += x.gbl->res.v(v0,Range::all());
 		}
+		default: {
+			break;
+		}
 	}
 
 	return;

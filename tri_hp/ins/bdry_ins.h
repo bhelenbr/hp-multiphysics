@@ -580,10 +580,10 @@ namespace bdry_ins {
 
 				hp_vrtx_bdry::init(inmap,gbl_in);
 
-				if (surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(0)))) {
+				if ((surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(0))))) {
 					surfbdry = 0;
 				}
-				else if (surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(1)))) {
+				else if ((surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(1))))) {
 					surfbdry = 1;
 				}
 				else {

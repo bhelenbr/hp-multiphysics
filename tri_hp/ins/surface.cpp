@@ -497,6 +497,9 @@ void surface_outflow::rsdl(int stage) {
 				x.gbl->res.v(base.pnt,1) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 		}
+		case(prdc): {
+			break;
+		}
 	}
 	
 	return;

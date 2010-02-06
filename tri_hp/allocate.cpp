@@ -343,6 +343,9 @@ void tri_hp::init(const multigrid_interface& in, init_purpose why, FLT sizereduc
 			}
 			break;
 		}
+		default: {
+			break;
+		}
 	}
 
 	return;
