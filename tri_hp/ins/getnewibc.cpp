@@ -331,7 +331,7 @@ namespace ibc_ins {
 				int bnum;
 
 				for(bnum=0;bnum<x.nebd;++bnum) 
-					if (surf = dynamic_cast<bdry_ins::surface *>(x.hp_ebdry(bnum))) break;
+					if ((surf = dynamic_cast<bdry_ins::surface *>(x.hp_ebdry(bnum)))) break;
 
 				if (bnum > x.nebd -1) surf = 0;
 			}
