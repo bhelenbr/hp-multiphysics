@@ -144,11 +144,11 @@ namespace ibc_cns {
 				
 				keyword = idnty +"_scale";
 				if (!blockdata.get(keyword,scale)) 
-					blockdata.getwdefault("scale",scale,200.0);
+					blockdata.getwdefault("scale",scale,20.0);
 				
 				keyword = idnty +"_xshift";
 				if (!blockdata.get(keyword,xshift)) 
-					blockdata.getwdefault("xshift",xshift,-400.0);
+					blockdata.getwdefault("xshift",xshift,-40.0);
 				
 				keyword = idnty +"_yshift";
 				if (!blockdata.get(keyword,yshift)) 
@@ -168,7 +168,7 @@ namespace ibc_cns {
 				double dtheta = -1.0e-4;
 				double dq = 1.0e-4;
 				double jac[2][2], deti, delta[2]; 
-				bool conservative = true;
+				bool conservative = false;
 				
 				double xyz[3];
 				xyz[0] = scale*x(0) +shift[0];

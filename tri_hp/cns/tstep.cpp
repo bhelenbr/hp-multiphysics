@@ -12,6 +12,7 @@ void tri_hp_cns::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1,gam,pmax,rtmax;
 	TinyVector<int,3> v;
+	Array<double,1> umax(NV);
 	
 	//FLT nu = gbl->mu/gbl->rho;
 
@@ -52,6 +53,7 @@ void tri_hp_cns::setup_preconditioner() {
 			hmax = 0.0;
 			pmax = 0.0;
 			rtmax = 0.0;
+			umax = 0.0;
 			FLT jcbmin = jcb;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
@@ -82,6 +84,11 @@ void tri_hp_cns::setup_preconditioner() {
 					
 					pmax = MAX(pmax,fabs(u(0)(i,j)));
 					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
+					
+					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
+					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
+					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
+					umax(3) = MAX(umax(3),fabs(u(3)(i,j)));
 						
 					
 				}
@@ -100,6 +107,7 @@ void tri_hp_cns::setup_preconditioner() {
 			hmax = 0.0;
 			pmax = 0.0;
 			rtmax = 0.0;
+			umax = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
@@ -110,6 +118,11 @@ void tri_hp_cns::setup_preconditioner() {
 					qmax = MAX(qmax,q);
 					pmax = MAX(pmax,fabs(u(0)(i,j)));
 					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
+					
+					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
+					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
+					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
+					umax(3) = MAX(umax(3),fabs(u(3)(i,j)));
 				
 				}
 			}
@@ -137,48 +150,14 @@ void tri_hp_cns::setup_preconditioner() {
 		q = sqrt(qmax);
 
 		FLT tstep;
-		Array<double,2> tprcn(NV,NV),tau(NV,NV);
-		//pennsylvania_peanut_butter(q, pmax, rtmax, hmax, nu, gbl->tprcn_ut(tind,Range::all(),Range::all()),gbl->tau(tind,Range::all(),Range::all()), tstep);
+		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
-		pennsylvania_peanut_butter(q, pmax, rtmax, hmax, tprcn,tau, tstep);
-
+		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
+		
 		gbl->tprcn_ut(tind,Range::all(),Range::all())=tprcn;
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau;
 		
-		//cout << tau << gbl->tau(tind,Range::all(),Range::all()) << endl;
-//		cout << tau << endl;
-//		cout << "timestep: " << tstep << endl;
-		
-		/* FROM HERE BELOW WILL CHANGE */
-//		lam1 = q + sqrt(qmax +gam);
-
-		/* SET UP DISSIPATIVE COEFFICIENTS */
-//		gbl->tau(tind,0) = adis*h/(jcb*sqrt(gam));
-//		gbl->tau(tind,NV-1) = qmax*gbl->tau(tind,0);
-
-		/* SET UP DIAGONAL PRECONDITIONER */
-		// jcb *= 8.*nu*(1./(hmax*hmax) +1./(h*h)) +2*lam1/h +2*sqrt(gam)/hmax +gbl->bd(0);
-		//jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
-
-//#ifdef TIMEACCURATE
-//		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
-//
-//	}
-//	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
-//
-//	for(tind=0;tind<ntri;++tind) {
-//		v = tri(tind).pnt;
-//		jcb = 0.25*area(tind)*dtstari;
-//#endif
-
-//		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
-
-//		gbl->tprcn_ut(tind,0,0) = gbl->rho*jcb;    
-//		gbl->tprcn_ut(tind,1,1) = gbl->rho*jcb;      
-//		gbl->tprcn_ut(tind,2,2) = jcb/gam;
-//		gbl->tprcn_ut(tind,0,2) = jcb*ubar/gam;
-//		gbl->tprcn_ut(tind,1,2) = jcb*vbar/gam;
-		
+	
 		for(i=0;i<3;++i) {
 			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
@@ -192,37 +171,37 @@ void tri_hp_cns::setup_preconditioner() {
 }
 
 
-void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
-
-	FLT q2 = qmax*qmax;
-	FLT op = 1.0/pmax;
+	
 	FLT gm1 = gbl->gamma-1;
+	FLT gogm1 = gbl->gamma/gm1;
+	FLT pr = u(0);
+	FLT uv = u(1);
+	FLT vv = u(2);
+	FLT rt = u(3);	
+	FLT ke = 0.5*(uv*uv+vv*vv);
 	
 	/* Preconditioner */
-	P =  q2*gm1,                 -qmax*gm1,          -qmax*gm1,          gm1,
-	    -qmax*op*rtmax,          op*rtmax,           0.0,                0.0,
-	    -qmax*op*rtmax,          0.0,                op*rtmax,           0.0,
-	    op*rtmax*(gm1*q2-rtmax), -op*rtmax*qmax*gm1, -op*rtmax*qmax*gm1, op*rtmax*gm1;
+	P = ke*gm1,            -uv*gm1,           -vv*gm1,           gm1,
+	    -uv/pr*rt,         1.0/pr*rt,         0.0,               0.0,
+        -1.0/pr*vv*rt,     0.0,               1.0/pr*rt,         0.0,
+		pr*(gm1*ke-rt)*rt, -1.0/pr*rt*uv*gm1, -1.0/pr*rt*vv*gm1, 1.0/pr*rt*gm1;
 	
-	FLT ort = 1.0/rtmax;
 	
-	Pinv = 0.0;
-	/* Inverse of Preconditioner */
-	Pinv = ort,              0.0,           0.0,            -pmax*ort*ort,
-	       ort*qmax,         pmax*ort,      0.0,           -pmax*ort*ort*qmax,
-	       ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
-	       1.0/gm1+q2/rtmax, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
-
- 	FLT ort2 = ort*ort;
-	FLT gogm1 = gbl->gamma/gm1;
+//	/* Inverse of Preconditioner */
+//	Pinv = ort,              0.0,           0.0,            -pmax*ort*ort,
+//	ort*qmax,         pmax*ort,      0.0,           -pmax*ort*ort*qmax,
+//	ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
+//	1.0/gm1+q2/rtmax, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
+	
 	
 	/* df/dw */
-	A = ort*qmax,            pmax*ort,                       0.0,           -pmax*ort2*qmax,
-	    ort*q2+1.0,          2.0*pmax*ort*qmax,              0.0,           -pmax*ort2*q2,
-	    ort*q2,              pmax*ort*qmax,                  pmax*ort*qmax, -pmax*ort2*q2,
-	    qmax*(gogm1+q2*ort), pmax*((gogm1+q2*ort)+ort*qmax), pmax*ort*q2,   -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
+	A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+		1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+		1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+		1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
@@ -234,10 +213,10 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	matrix_absolute_value(A);
 	
 	/* dg/dw */
-	B = ort*qmax,            0.0,			pmax*ort,                     -pmax*ort2*qmax,
-	    ort*q2,              pmax*ort*qmax, pmax*ort*qmax,                -pmax*ort2*q2,
-	    ort*q2+1.0,          0.0,           2.0*pmax*ort*qmax,            -pmax*ort2*q2,
-	    qmax*(gogm1+q2*ort), pmax*ort*q2,   pmax*((gogm1+q2*ort)+ort*q2), -pmax*ort2*qmax*(gogm1*rtmax+q2)+pmax*ort*qmax*gogm1;
+	B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+		1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+		1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+		1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
 	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
@@ -250,9 +229,9 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	matrix_absolute_value(B);
 	
 	S = 0.0, 0.0,     0.0,     0.0,
-	    0.0, gbl->mu, 0.0,     0.0,
-	    0.0, 0.0,     gbl->mu, 0.0,
-	    0.0, 0.0,     0.0,     gbl->kcond;
+	0.0, gbl->mu, 0.0,     0.0,
+	0.0, 0.0,     gbl->mu, 0.0,
+	0.0, 0.0,     0.0,     gbl->kcond;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
 	
@@ -288,4 +267,3 @@ void tri_hp_cns::pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT h
 	
 	return;
 }
-

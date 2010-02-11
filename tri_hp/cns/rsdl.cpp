@@ -10,13 +10,15 @@
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
 
-// #define BODYFORCE
+//#define BODYFORCE
+#define MMS
 
 void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 
 	FLT fluxx,fluxy;
 	const int NV = 4;
 	TinyVector<int,3> v;
+	TinyVector<FLT,ND> pt;
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	TinyMatrix<FLT,NV,NV> A,B;
@@ -140,7 +142,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					cjcb = dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j);
 					rhorbd0 = rho*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					double mujcbi = lmu*RAD(crd(0)(i,j))/cjcb;
-					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb;
+					double kcjcbi = lkcond*RAD(crd(0)(i,j))/cjcb/gbl->R;
 
 					/* UNSTEADY TERMS */
 					res(0)(i,j) = rhorbd0 +dugdt(log2p,tind,0)(i,j);
@@ -155,7 +157,16 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(2)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
-#endif                 
+#endif     
+					
+#ifdef MMS
+					/* source terms for MMS */
+					pt(0) = crd(0)(i,j);
+					pt(1) = crd(1)(i,j);
+
+					for(int n = 0; n < NV; ++n)
+						res(n)(i,j) -= RAD(crd(0)(i,j))*cjcb*gbl->src->f(n,pt,gbl->time);
+#endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
@@ -181,13 +192,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 #define				viscI1II0II1II0I visc(0,1)(0,1)                      
 
 					/* HEAT DIFFUSION TENSOR */ 
-					// cjcb should be kcjcbi?
-					kcond(0,0) = -kcjcbi/gbl->R*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-					kcond(1,1) = -kcjcbi/gbl->R*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-					kcond(0,1) =  kcjcbi/gbl->R*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-//					kcond(0,0) = -cjcb*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
-//					kcond(1,1) = -cjcb*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
-//					kcond(0,1) =  cjcb*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
+					kcond(0,0) = -kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
+					kcond(1,1) = -kcjcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
+					kcond(0,1) =  kcjcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
 #define				kcondI1II0I kcond(0,1)
 
 
