@@ -83,8 +83,8 @@ void tri_hp::petsc_jacobian() {
 		for(int i=0;i<nebd;++i) 
 			r_sbdry(i)->jacobian();
 	
-		MatAssemblyBegin(petsc_J,MAT_FLUSH_ASSEMBLY);
-		MatAssemblyEnd(petsc_J,MAT_FLUSH_ASSEMBLY);	
+		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
 	
 		for(int i=0;i<nebd;++i)
 			r_sbdry(i)->jacobian_dirichlet();
@@ -409,6 +409,9 @@ void tri_hp::petsc_jacobian() {
 	
 	exit(1);	
 #endif
+
+		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
 
 	// MatView(petsc_J,0);
 

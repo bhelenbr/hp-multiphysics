@@ -518,8 +518,8 @@ void surface_outflow::rsdl(int stage) {
 
 
 void surface_outflow::petsc_jacobian() {
-	MatAssemblyBegin(x.petsc_J,MAT_FLUSH_ASSEMBLY);
-	MatAssemblyEnd(x.petsc_J,MAT_FLUSH_ASSEMBLY);
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
 	
 	if (contact_type == free_angle) 
 			*x.gbl->log << "Haven't added jacobian of surfacetension free contact add\n";
@@ -1085,8 +1085,8 @@ void surface::petsc_jacobian() {
 	Array<int,1> loc_to_glo(vdofs*(sm+2));
 	Array<int,1> indices((base.nseg+1)*tri_mesh::ND);
 	
-	MatAssemblyBegin(x.petsc_J,MAT_FLUSH_ASSEMBLY); 
-	MatAssemblyEnd(x.petsc_J,MAT_FLUSH_ASSEMBLY); 
+	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY); 
+	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY); 
 	
 	int j = 0;
 	int cnt = 0;

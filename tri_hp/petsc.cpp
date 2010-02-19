@@ -134,6 +134,9 @@ void tri_hp::petsc_initialize(){
 	err = PCSetType(pc, PCLU);     // LU
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
+	err = PCFactorSetUseInPlace(pc);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
 	err = KSPSetFromOptions(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
