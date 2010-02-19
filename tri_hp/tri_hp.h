@@ -243,15 +243,14 @@ class tri_hp : public r_tri_mesh  {
 		void petsc_update();
 		void petsc_setup_preconditioner();
 		
-		void find_sparse_bandwidth();
-		int size_sparse_matrix;
 		void petsc_initialize();
 		void petsc_finalize();
 		void r_jacobian_dirichlet(Array<int,1> points, int dstart, int dstop);  // Interface to Jacobian for r_tri_mesh (for now)
-
 		void petsc_to_ug();
 		void ug_to_petsc();
 		void petsc_make_1D_rsdl_vector(Array<FLT,1>);
+		
+		int jacobian_size;
 		Mat  petsc_J;           /* Jacobian matrix */
 		Vec  petsc_u,petsc_f;   /* solution,residual */
 		KSP  ksp;               /* linear solver context */

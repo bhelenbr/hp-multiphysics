@@ -15,41 +15,94 @@
 
 
 void tri_hp::petsc_initialize(){
-	PetscErrorCode err;
-	size_sparse_matrix = (npnt+nseg*basis::tri(log2p)->sm()+ntri*basis::tri(log2p)->im())*NV;
+	int sm=basis::tri(log2p)->sm();
+	int im=basis::tri(log2p)->im();
+	int tm=basis::tri(log2p)->tm();
+	int vdofs;
+	
+	if (mmovement != coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+
+	jacobian_size = npnt*vdofs +(nseg*sm +ntri*im)*NV;
 
 	/* count total degrees of freedom on boundaries */
 	int isodofs = 0;
 	if (mmovement == coupled_deformable) {
 		for(int i=0;i < nebd; ++i) {
 			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled) {
-				isodofs += ebdry(i)->nseg*basis::tri(log2p)->sm()*ND;
+				isodofs += ebdry(i)->nseg*sm*ND;
 			}
 		}
-		size_sparse_matrix += npnt*ND +isodofs;
+		jacobian_size += isodofs;
 	}
-
-	PetscTruth mat_nonsymmetric;
-
-	/*
-     Set flag if we are doing a nonsymmetric problem; the default is symmetric.
-	 */
 	
-	PetscOptionsHasName(PETSC_NULL,"-mat_nonsym",&mat_nonsymmetric);
+	/* find number of non-zeros for each row */
+	Array<int,1> nnzero(jacobian_size);
+	int begin_seg = npnt*vdofs;
+	int begin_tri = begin_seg+nseg*sm*NV;
+	int begin_iso = begin_tri +ntri*im*NV;
+	
+	/* SELF CONNECTIONS */
+	nnzero(Range(0,begin_seg-1)) = vdofs; 
+	if (sm) {
+		nnzero(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
+		/* connections of high order isoparametric mappings */
+		if (mmovement == coupled_deformable && jacobian_size > begin_iso) nnzero(Range(begin_iso,jacobian_size-1)) = vdofs*(sm+3) +NV*(im+2*sm);
+	}
+	if (im) nnzero(Range(begin_tri,jacobian_size-1)) = tm*NV;
+	
+	/* edges and vertices connected to avertex */
+	for(int i=0; i<npnt; ++i)	
+		for(int n=0;n<vdofs;++n)
+			nnzero(i*vdofs+n) += pnt(i).nnbor*(vdofs +sm*NV);
+	
+	for(int i=0; i<ntri; ++i) {	
+		/* interior and opposing side mode for each vertex */
+		for(int j=0;j<3;++j)
+			for(int n=0;n<vdofs;++n)
+				nnzero(tri(i).pnt(j)*vdofs+n) += (im+sm)*NV;
+				
+		
+		/* interior modes,opposing side modes, and opposing vertex to each side */
+		for(int j=0;j<3;++j)
+			for(int m=0;m<sm;++m)
+				for(int n=0;n<NV;++n)
+					nnzero(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
+	}
+	
+	/* Connections to isoparametric coordinates */
+	if (sm) {
+		for(int i=0;i<nebd;++i) {
+			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
+			
+			for(int j=0;j<ebdry(i)->nseg;++j) {
 
-	/* 
-     Create parallel matrix, specifying only its global dimensions.
-     When using MatCreate(), the matrix format can be specified at
-     runtime. Also, the parallel partitioning of the matrix is
-     determined by PETSc at runtime.
-	 */
-	err = MatCreate(PETSC_COMM_WORLD,&petsc_J);
+				int tind = seg(ebdry(i)->seg(j)).tri(0);
+				if (im) nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+				
+				for(int j=0;j<3;++j) {
+					int sind = tri(tind).seg(j);
+					nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
+					int pind = tri(tind).pnt(j);
+					nnzero(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
+				}
+			}
+		}
+	}
+	
+	/* FIXME: NEED TO DO PARALLEL COMMUNICATION HERE TO PASS DATA ABOUT NNZ'S ON PARALLEL BOUNDARIES (create nmpizero.data())*/
+	
+	PetscErrorCode err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
+	//MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,PETSC_DECIDE,PETSC_DECIDE,PETSC_NULL,nnzero.data(),PETSC_NULL,nmpizero.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	//MatSetSizes(petsc_J,PETSC_DECIDE,PETSC_DECIDE,size_sparse_matrix,size_sparse_matrix);
-	//MatSetFromOptions(petsc_J);
-
-	/* finds number of columns for each row */
-	find_sparse_bandwidth(); 
+	
+	err = MatSetOption(petsc_J,MAT_SYMMETRIC,PETSC_FALSE); 
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = MatSetFromOptions(petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	/* 
 	 Create parallel vectors.
@@ -58,71 +111,32 @@ void tri_hp::petsc_initialize(){
 	 - Note: We form 1 vector from scratch and then duplicate as needed.
 	 */
 	err = VecCreate(PETSC_COMM_WORLD,&petsc_u);
-	CHKERRABORT(MPI_COMM_WORLD,err)
-
-	err = VecSetSizes(petsc_u,PETSC_DECIDE,size_sparse_matrix);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = VecSetSizes(petsc_u,jacobian_size,PETSC_DECIDE);
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = VecSetFromOptions(petsc_u);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = VecDuplicate(petsc_u,&petsc_f);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 
-	/* 
-	 Create linear solver context
-	 */
+	/* Create linear solver context */
 	err = KSPCreate(PETSC_COMM_WORLD,&ksp);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	
-	/* choose KSP type */
-//	KSPSetType(ksp, KSPGMRES); // GMRES
-//	KSPSetType(ksp, KSPCHEBYCHEV); // Chebychev
-//	KSPSetType(ksp, KSPRICHARDSON);  // Richardson
-//	KSPSetType(ksp, KSPLSQR);  // Least Squares
-//	KSPSetType(ksp, KSPBICG);  // BiConjugate Gradient
-
-	
-	/*
-	Set linear solver defaults for this problem (optional). - By extracting the KSP and PC contexts from the KSP context,
-	we can then directly call any KSP and PC routines to set
-	various options. - The following four statements are optional; all of these
-	parameters could alternatively be specified at runtime via KSPSetFromOptions();
-	*/
-	err = KSPGetPC(ksp,&pc);
-	CHKERRABORT(MPI_COMM_WORLD,err)
-	
-	/* choose preconditioner type */
-
-	err = PCSetType(pc, PCLU);     // LU
-//	PCSetType(pc, PCILU);    // incomplete LU
-//	PCSetType(pc, PCSOR);    // SOR
-//	PCSetType(pc,PCSPAI);
-//	PCSORSetOmega(pc,1.3); // Set Omega in SOR
-//	PCSetType(pc, PCJACOBI); // Jacobi
-//	PCSetType(pc, PCASM); // Additive Schwarz method
-	CHKERRABORT(MPI_COMM_WORLD,err)
-	
-//	const MatOrderingType rtype =	MATORDERING_NATURAL; /*  Natural */
-//	const MatOrderingType rtype =	MATORDERING_ND; /* Nested Dissection */
-//	const MatOrderingType rtype =	MATORDERING_1WD; /* One-way Dissection */
-//	const MatOrderingType rtype =	MATORDERING_RCM; /* Reverse Cuthill-McKee */
-//	const MatOrderingType rtype =	MATORDERING_QMD; /* Quotient Minimum Degree */
-// 	PCFactorSetMatOrderingType(pc, rtype);
-//	PCFactorReorderForNonzeroDiagonal(pc,1e-2); 
-	
-//	KSPSetTolerances(ksp,1.e-7,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
-
-	/*
-	Set runtime options, e.g., -ksp_type <type> -pc_type <type> -ksp_monitor -ksp_rtol <rtol>
-	These options will override those specified above as long as KSPSetFromOptions() is called _after_ any other customization routines.
-	*/
-
 	err = KSPSetFromOptions(ksp);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	/* set preconditioner side */
-	//KSPSetPreconditionerSide(ksp,PC_RIGHT);
-
+	err = KSPGetPC(ksp,&pc);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	/* Want default to be LU */
+	err = PCSetType(pc, PCLU);     // LU
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = KSPSetFromOptions(ksp);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
 	return;
 }
 
@@ -139,9 +153,9 @@ void tri_hp::petsc_setup_preconditioner() {
 	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 		
 	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 //		double rtol=1.0e-12; // relative tolerance
 //		double atol=MAX(petsc_norm*1.0e-3,1.0e-15);// absolute tolerance
@@ -155,7 +169,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	 */
 	
 	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	/* 
 	 Solve linear system.  Here we explicitly call KSPSetUp() for more
@@ -166,7 +180,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	 */
 	PetscGetTime(&time1);
 	err = KSPSetUp(ksp);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	PetscGetTime(&time2);
 	
 	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
@@ -185,14 +199,14 @@ void tri_hp::petsc_update() {
 	PetscScalar    petsc_norm;
 	//PetscMPIInt    size,rank;
 	max_newton_its = 20;
-	//err = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRABORT(MPI_COMM_WORLD,err)
-	//err = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRABORT(MPI_COMM_WORLD,err)
+	//err = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRABORT(MPI_COMM_WORLD,err);
+	//err = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	PetscLogDouble time1,time2;
 	err = VecDuplicate(petsc_f,&du);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = VecDuplicate(petsc_f,&resid);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	/* initialize u with ug */
 	ug_to_petsc();
@@ -203,14 +217,9 @@ void tri_hp::petsc_update() {
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
 	
-	VecNorm(petsc_f,NORM_2,&petsc_norm);
-	// VecView(petsc_f,0);
-	
-	*gbl->log << "residual before " << petsc_norm << std::endl;
-	
 	PetscGetTime(&time1);
 	err = KSPSolve(ksp,petsc_f,du);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	PetscGetTime(&time2);
 
 	MatMult(petsc_J,du,resid);
@@ -233,7 +242,7 @@ void tri_hp::petsc_update() {
 	
 //		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);	
 	
-	err = VecDestroy(du); CHKERRABORT(MPI_COMM_WORLD,err)
+	err = VecDestroy(du); CHKERRABORT(MPI_COMM_WORLD,err);
 
 	return;
 }
@@ -245,7 +254,7 @@ void tri_hp::petsc_to_ug(){
 	int ind = 0;
 	
 	err = VecGetArray(petsc_u,&array);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	if (mmovement != coupled_deformable) {
 		for(int i = 0; i < npnt; ++i)
@@ -283,7 +292,7 @@ void tri_hp::petsc_to_ug(){
 	}
 	
 	err = VecRestoreArray(petsc_u,&array);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	return;	
 }
@@ -380,7 +389,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 	if (sm0) {
 		for (int i=0;i<nebd;++i) {
 			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled)
-				ind += hp_ebdry(i)->petsc_rsdl(rv(Range(ind,size_sparse_matrix-1)));
+				ind += hp_ebdry(i)->petsc_rsdl(rv(Range(ind,jacobian_size-1)));
 		}
 	}
 }
@@ -393,16 +402,16 @@ void tri_hp::petsc_finalize(){
 	 */
 	PetscErrorCode err;
 	err = KSPDestroy(ksp);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = VecDestroy(petsc_f);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = VecDestroy(petsc_u);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatDestroy(petsc_J);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 		
 	return;
 }

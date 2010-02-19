@@ -19,80 +19,6 @@
 #define DEBUG_TOL 1.0e-9
 #endif
 
-/* finds number of nonzeros per row */ 
-void tri_hp::find_sparse_bandwidth(){
-	
-	Array<int,1> bw(size_sparse_matrix);
-	
-	int sm=basis::tri(log2p)->sm();
-	int im=basis::tri(log2p)->im();
-	int tm=basis::tri(log2p)->tm();
-
-	int vdofs;
-	if (mmovement != coupled_deformable) 
-		vdofs = NV;
-	else
-		vdofs = ND+NV;
-		
-
-	int begin_seg = npnt*vdofs;
-	int begin_tri = begin_seg+nseg*sm*NV;
-	int begin_iso = begin_tri +ntri*im*NV;
-	
-	/* SELF CONNECTIONS */
-	bw(Range(0,begin_seg-1)) = vdofs; 
-	if (sm) {
-		bw(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
-		/* connections of high order isoparametric mappings */
-		if (mmovement == coupled_deformable && size_sparse_matrix > begin_iso) bw(Range(begin_iso,size_sparse_matrix-1)) = vdofs*(sm+3) +NV*(im+2*sm);
-	}
-	if (im) bw(Range(begin_tri,size_sparse_matrix-1)) = tm*NV;
-	
-	/* edges and vertices connected to avertex */
-	for(int i=0; i<npnt; ++i)	
-		for(int n=0;n<vdofs;++n)
-			bw(i*vdofs+n) += pnt(i).nnbor*(vdofs +sm*NV);
-	
-	for(int i=0; i<ntri; ++i) {	
-		/* interior and opposing side mode for each vertex */
-		for(int j=0;j<3;++j)
-			for(int n=0;n<vdofs;++n)
-				bw(tri(i).pnt(j)*vdofs+n) += (im+sm)*NV;
-				
-		
-		/* interior modes,opposing side modes, and opposing vertex to each side */
-		for(int j=0;j<3;++j)
-			for(int m=0;m<sm;++m)
-				for(int n=0;n<NV;++n)
-					bw(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
-	}
-	
-	/* Connections to isoparametric coordinates */
-	if (sm) {
-		for(int i=0;i<nebd;++i) {
-			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
-			
-			for(int j=0;j<ebdry(i)->nseg;++j) {
-
-				int tind = seg(ebdry(i)->seg(j)).tri(0);
-				if (im) bw(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
-				
-				for(int j=0;j<3;++j) {
-					int sind = tri(tind).seg(j);
-					bw(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
-					int pind = tri(tind).pnt(j);
-					bw(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
-				}
-			}
-		}
-	}
-	
-	PetscErrorCode err = MatCreateSeqAIJ(PETSC_COMM_SELF,size_sparse_matrix,size_sparse_matrix,PETSC_NULL,bw.data(),&petsc_J);
-	//MatCreateMPIAIJ(comm,size_sparse_matrix,size_sparse_matrix,global_size,global_size,int d nz,int *d nnz, int o nz,int *o nnz,Mat *A);
-	CHKERRABORT(MPI_COMM_WORLD,err)
-	return;
-}
-
 void tri_hp::petsc_jacobian() {
 	int gindx;
 
@@ -157,8 +83,8 @@ void tri_hp::petsc_jacobian() {
 		for(int i=0;i<nebd;++i) 
 			r_sbdry(i)->jacobian();
 	
-		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+		MatAssemblyBegin(petsc_J,MAT_FLUSH_ASSEMBLY);
+		MatAssemblyEnd(petsc_J,MAT_FLUSH_ASSEMBLY);	
 	
 		for(int i=0;i<nebd;++i)
 			r_sbdry(i)->jacobian_dirichlet();
@@ -182,7 +108,7 @@ void tri_hp::petsc_jacobian() {
 	Array<FLT,1> dw(NV);
 	dw = eps_a;
 	FLT dx = eps_a;
-	int dof = size_sparse_matrix;
+	int dof = jacobian_size;
 	Array<FLT,2> testJ(dof,dof);
 	Array<FLT,1> rbar(dof);
 	testJ = 0.0;
@@ -331,14 +257,14 @@ void tri_hp::petsc_jacobian() {
 	Array<FLT,1> dw(NV);
 	dw = eps_a;
 	FLT dx = eps_a;
-	int dof = size_sparse_matrix;
+	int dof = jacobian_size;
 	Array<FLT,2> testJ(dof,dof);
 	testJ = 0.0;
 	PetscScalar *array;
 
 	petsc_rsdl();
 	VecGetArray(petsc_f,&array);
-	Array<FLT,1> rbar(array, shape(size_sparse_matrix), duplicateData);
+	Array<FLT,1> rbar(array, shape(jacobian_size), duplicateData);
 	VecRestoreArray(petsc_f, &array);
 
 
@@ -350,7 +276,7 @@ void tri_hp::petsc_jacobian() {
 				ug.v(pind,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
-				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
@@ -365,7 +291,7 @@ void tri_hp::petsc_jacobian() {
 				ug.v(pind,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
-				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
@@ -377,7 +303,7 @@ void tri_hp::petsc_jacobian() {
 				pnts(pind)(n) += dx;
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
-				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 				testJ(Range::all(),ind) = (rtemp-rbar)/dx;
 				VecRestoreArray(petsc_f, &array);
 				++ind;
@@ -392,7 +318,7 @@ void tri_hp::petsc_jacobian() {
 				ug.s(sind,m,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
-				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
@@ -407,7 +333,7 @@ void tri_hp::petsc_jacobian() {
 				ug.i(tind,m,n) += dw(n);
 				petsc_rsdl();
 				VecGetArray(petsc_f,&array);
-				Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+				Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 				testJ(Range::all(),ind) = (rtemp-rbar)/dw(n);
 				VecRestoreArray(petsc_f, &array);
 				++ind;
@@ -425,7 +351,7 @@ void tri_hp::petsc_jacobian() {
 					hp_ebdry(i)->crds(j,m,n) += dx;
 					petsc_rsdl();
 					VecGetArray(petsc_f,&array);
-					Array<FLT,1> rtemp(array, shape(size_sparse_matrix), neverDeleteData);
+					Array<FLT,1> rtemp(array, shape(jacobian_size), neverDeleteData);
 					testJ(Range::all(),ind) = (rtemp-rbar)/dx;
 					VecRestoreArray(petsc_f, &array);
 					++ind;
@@ -512,7 +438,7 @@ void tri_hp::petsc_rsdl() {
 				
 	PetscScalar *array;
 	VecGetArray(petsc_f,&array);
-	Array<FLT,1> res(array, shape(size_sparse_matrix), neverDeleteData);
+	Array<FLT,1> res(array, shape(jacobian_size), neverDeleteData);
 	petsc_make_1D_rsdl_vector(res);
 	VecRestoreArray(petsc_f, &array);
 		

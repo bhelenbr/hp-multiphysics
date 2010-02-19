@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
 #endif
 #ifdef petsc
 	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
-	CHKERRABORT(MPI_COMM_WORLD,err)
+	CHKERRABORT(MPI_COMM_WORLD,err);
 
 #endif
 

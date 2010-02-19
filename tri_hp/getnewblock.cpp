@@ -19,7 +19,7 @@
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT
-#define CNS
+//#define CNS
 
 #define POD
 

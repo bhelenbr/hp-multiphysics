@@ -218,6 +218,11 @@ void tri_hp::init(input_map& inmap, void *gin) {
 			hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
 	}
 #ifdef petsc
+	string petsc_options;
+	if (inmap.getline("petsc",petsc_options)) {
+		PetscErrorCode err = PetscOptionsInsertString(petsc_options.c_str());
+		CHKERRABORT(MPI_COMM_WORLD,err);
+	}
 	petsc_initialize();
 #endif
 	
