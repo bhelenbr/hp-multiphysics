@@ -11,7 +11,7 @@
 #include "../hp_boundary.h"
 
 //#define BODYFORCE
-#define MMS
+//#define MMS
 
 void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 
@@ -23,7 +23,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	TinyMatrix<FLT,NV,NV> A,B;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lmu = gbl->mu, rhorbd0, lrhorbd0, cjcb, cjcbi, oneminusbeta;
+	FLT lmu = gbl->mu, rhorbd0, cjcb;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,NV> cv, df;
 	TinyMatrix<FLT,ND,ND> kcond;
@@ -134,7 +134,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 			basis::tri(log2p)->intgrtrs(&lf_im(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
 
 		/* NEGATIVE REAL TERMS */
-		if (gbl->beta(stage) > 0.0) {
+//		if (gbl->beta(stage) > 0.0) {
 			/* TIME DERIVATIVE TERMS */ 
 			for(int i = 0; i < lgpx; ++i) {
 				for(int j = 0; j < lgpn; ++j) {
@@ -151,9 +151,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
 					
-#ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));  //FixMe
-#endif
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
 					res(2)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
@@ -163,9 +160,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					/* source terms for MMS */
 					pt(0) = crd(0)(i,j);
 					pt(1) = crd(1)(i,j);
-
 					for(int n = 0; n < NV; ++n)
-						res(n)(i,j) -= RAD(crd(0)(i,j))*cjcb*gbl->src->f(n,pt,gbl->time);
+						res(n)(i,j) -= cjcb*gbl->src->f(n,pt,gbl->time);
+
 #endif
 
 					/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -217,8 +214,8 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					df(3,1)(i,j) = +kcondI1II0I*du(NV-1,0)(i,j) +kcond(1,1)*du(NV-1,1)(i,j);
 
 					/* VISCOUS DISSIPATION */
-					df(3,0)(i,j) -= df(1,0)(i,j)*u(1)(i,j) +df(2,0)(i,j)*u(2)(i,j);
-					df(3,1)(i,j) -= df(1,1)(i,j)*u(1)(i,j) +df(2,1)(i,j)*u(2)(i,j);
+					df(3,0)(i,j) += df(1,0)(i,j)*u(1)(i,j) +df(2,0)(i,j)*u(2)(i,j);
+					df(3,1)(i,j) += df(1,1)(i,j)*u(1)(i,j) +df(2,1)(i,j)*u(2)(i,j);
 
 					for(int n = 1; n < NV; ++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
@@ -235,10 +232,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
 			}
 
-//			df(0,0) = 0.0;
-//			df(0,1) = 0.0;
-			
-			//cout << gbl->tau(tind,Range(0,3),Range(0,3)) << endl;
 			/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 			for(int i=0;i<lgpx;++i) {
 				for(int j=0;j<lgpn;++j) {
@@ -287,170 +280,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 				for(int m = 0; m < basis::tri(log2p)->tm(); ++m)
 					lf_re(n)(m) *= gbl->beta(stage);
 
-		}
-//	}
-//	else {
-//			/* LINEAR ELEMENT */
-//			/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
-//			for(i=0;i<lgpx;++i) {
-//				for(j=0;j<lgpn;++j) {
-//					double rho = u(0)(i,j)/u(NV-1)(i,j);
-//
-//					fluxx = rho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
-//					fluxy = rho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
-//
-//					/* CONTINUITY EQUATION FLUXES */
-//					du(NV-1,0)(i,j) = +ldcrd(1,1)*fluxx -ldcrd(0,1)*fluxy;
-//					du(NV-1,1)(i,j) = -ldcrd(1,0)*fluxx +ldcrd(0,0)*fluxy;
-//
-//#ifndef INERTIALESS
-//					/* CONVECTIVE FLUXES */
-//					for(n=0;n<NV-1;++n) {
-//						cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
-//						cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
-//					}
-//#else
-//					for(n=0;n<NV-1;++n) {
-//						cv(n,0)(i,j) = 0.0;
-//						cv(n,1)(i,j) = 0.0;
-//					}
-//#endif
-//					/* PRESSURE TERMS */
-//					/* U-MOMENTUM */
-//					cv(0,0)(i,j) += ldcrd(1,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-//					cv(0,1)(i,j) -= ldcrd(1,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-//					/* V-MOMENTUM */
-//					cv(1,0)(i,j) -=  ldcrd(0,1)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-//					cv(1,1)(i,j) +=  ldcrd(0,0)*RAD(crd(0)(i,j))*u(NV-1)(i,j);
-//				}
-//			}
-//			for(n=0;n<NV-1;++n)
-//				basis::tri(log2p)->intgrtrs(&lf(n)(0),&cv(n,0)(0,0),&cv(n,1)(0,0),MXGP);
-//			basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
-//
-//
-//			/* ASSEMBLE GLOBAL FORCING (IMAGINARY TERMS) */
-//			lftog(tind,gbl->res);
-//
-//			/* NEGATIVE REAL TERMS */
-//			if (gbl->beta(stage) > 0.0) {
-//				cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-//				cjcbi = lmu/cjcb;
-//				lrhorbd0 = rhobd0*cjcb;
-//
-//				/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
-//				/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-//				visc(0,0)(0,0) = -cjcbi*(2.*ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
-//				visc(0,0)(1,1) = -cjcbi*(2.*ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
-//				visc(0,0)(0,1) =  cjcbi*(2.*ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
-//#define         viscI0II0II1II0I visc(0,0)(0,1)
-//
-//				visc(1,1)(0,0) = -cjcbi*(ldcrd(1,1)*ldcrd(1,1) +2.*ldcrd(0,1)*ldcrd(0,1));
-//				visc(1,1)(1,1) = -cjcbi*(ldcrd(1,0)*ldcrd(1,0) +2.*ldcrd(0,0)*ldcrd(0,0));
-//				visc(1,1)(0,1) =  cjcbi*(ldcrd(1,1)*ldcrd(1,0) +2.*ldcrd(0,1)*ldcrd(0,0));
-//#define         viscI1II1II1II0I visc(1,1)(0,1)
-//
-//				visc(0,1)(0,0) =  cjcbi*ldcrd(0,1)*ldcrd(1,1);
-//				visc(0,1)(1,1) =  cjcbi*ldcrd(0,0)*ldcrd(1,0);
-//				visc(0,1)(0,1) = -cjcbi*ldcrd(0,1)*ldcrd(1,0);
-//				visc(0,1)(1,0) = -cjcbi*ldcrd(0,0)*ldcrd(1,1);
-//
-//				/* OTHER SYMMETRIES     */                
-//#define         viscI1II0II0II0I visc(0,1)(0,0)
-//#define         viscI1II0II1II1I visc(0,1)(1,1)
-//#define         viscI1II0II0II1I visc(0,1)(1,0)
-//#define         viscI1II0II1II0I visc(0,1)(0,1)
-//
-//				/* TIME DERIVATIVE TERMS */ 
-//				for(i=0;i<lgpx;++i) {
-//					for(j=0;j<lgpn;++j) {
-//						rhorbd0 = RAD(crd(0)(i,j))*lrhorbd0;
-//
-//						/* UNSTEADY TERMS */
-//						for(n=0;n<NV-1;++n)
-//							res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
-//						res(NV-1)(i,j) = rhorbd0 +dugdt(log2p,tind,NV-1)(i,j);
-//#ifdef INERTIALESS
-//						res(0)(i,j) = 0.0;
-//						res(1)(i,j) = 0.0;
-//#endif
-//#ifdef AXISYMMETRIC
-//						res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
-//#endif
-//#ifdef BODYFORCE
-//						res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);
-//						res(1)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(1);
-//#endif        
-//						df(0,0)(i,j) = RAD(crd(0)(i,j))*(+visc(0,0)(0,0)*du(0,0)(i,j) +visc(0,1)(0,0)*du(1,0)(i,j)
-//                                                     +visc(0,0)(0,1)*du(0,1)(i,j) +visc(0,1)(0,1)*du(1,1)(i,j));
-//
-//						df(0,1)(i,j) = RAD(crd(0)(i,j))*(+viscI0II0II1II0I*du(0,0)(i,j) +visc(0,1)(1,0)*du(1,0)(i,j)
-//                                                     +visc(0,0)(1,1)*du(0,1)(i,j) +visc(0,1)(1,1)*du(1,1)(i,j));
-//
-//						df(1,0)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II0II0I*du(0,0)(i,j) +visc(1,1)(0,0)*du(1,0)(i,j)
-//                                                     +viscI1II0II0II1I*du(0,1)(i,j) +visc(1,1)(0,1)*du(1,1)(i,j));
-//
-//						df(1,1)(i,j) = RAD(crd(0)(i,j))*(+viscI1II0II1II0I*du(0,0)(i,j) +viscI1II1II1II0I*du(1,0)(i,j)
-//                                                     +viscI1II0II1II1I*du(0,1)(i,j) +visc(1,1)(1,1)*du(1,1)(i,j));
-//
-//						for(n=0;n<NV-1;++n) {
-//							cv(n,0)(i,j) += df(n,0)(i,j);
-//							cv(n,1)(i,j) += df(n,1)(i,j);
-//						} 
-//					}
-//				}
-//				for(n=0;n<NV;++n)
-//					basis::tri(log2p)->intgrt(&lf(n)(0),&res(n)(0,0),MXGP);
-//
-//				/* CALCULATE RESIDUAL TO GOVERNING EQUATION & STORE IN RES */
-//				for(n=0;n<NV-1;++n) {
-//					basis::tri(log2p)->derivr(&cv(n,0)(0,0),&res(n)(0,0),MXGP);
-//					basis::tri(log2p)->derivs(&cv(n,1)(0,0),&res(n)(0,0),MXGP);
-//				}
-//				basis::tri(log2p)->derivr(&du(NV-1,0)(0,0),&res(NV-1)(0,0),MXGP);
-//				basis::tri(log2p)->derivs(&du(NV-1,1)(0,0),&res(NV-1)(0,0),MXGP);
-//
-//				/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
-//				for(i=0;i<lgpx;++i) {
-//					for(j=0;j<lgpn;++j) {
-//						tres(0) = gbl->tau(tind,0)*res(0)(i,j);
-//						tres(1) = gbl->tau(tind,0)*res(1)(i,j);
-//						tres(NV-1) = gbl->tau(tind,NV-1)*res(NV-1)(i,j);
-//
-//#ifndef INERTIALESS
-//						df(0,0)(i,j) -= (ldcrd(1,1)*(2*u(0)(i,j)-mvel(0)(i,j))
-//										-ldcrd(0,1)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-//										-ldcrd(0,1)*u(0)(i,j)*tres(1)
-//										+ldcrd(1,1)*tres(NV-1);
-//						df(0,1)(i,j) -= (-ldcrd(1,0)*(2*u(0)(i,j)-mvel(0)(i,j))
-//										+ldcrd(0,0)*(u(1)(i,j)-mvel(1)(i,j)))*tres(0)
-//										+ldcrd(0,0)*u(0)(i,j)*tres(1)
-//										-ldcrd(1,0)*tres(NV-1);
-//						df(1,0)(i,j) -= +ldcrd(1,1)*u(1)(i,j)*tres(0)
-//										+(ldcrd(1,1)*(u(0)(i,j)-mvel(0)(i,j))
-//										-ldcrd(0,1)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-//										-ldcrd(0,1)*tres(NV-1);
-//						df(1,1)(i,j) -= -ldcrd(1,0)*u(1)(i,j)*tres(0)
-//										+(-ldcrd(1,0)*(u(0)(i,j)-mvel(0)(i,j))
-//										+ldcrd(0,0)*(2.*u(1)(i,j)-mvel(1)(i,j)))*tres(1)
-//										+ldcrd(0,0)*tres(NV-1);
-//#endif
-//
-//						du(NV-1,0)(i,j) = -(ldcrd(1,1)*tres(0) -ldcrd(0,1)*tres(1));
-//						du(NV-1,1)(i,j) = -(-ldcrd(1,0)*tres(0) +ldcrd(0,0)*tres(1));
-//					}
-//				}
-//				for(n=0;n<NV-1;++n)
-//					basis::tri(log2p)->intgrtrs(&lf(n)(0),&df(n,0)(0,0),&df(n,1)(0,0),MXGP);
-//				basis::tri(log2p)->intgrtrs(&lf(NV-1)(0),&du(NV-1,0)(0,0),&du(NV-1,1)(0,0),MXGP);
-//
-//				for(n=0;n<NV;++n)
-//					for(i=0;i<basis::tri(log2p)->tm();++i)
-//						lf(n)(i) *= gbl->beta(stage);
-//
-//				lftog(tind,gbl->res_r);
-//			}
 //		}
+//	}
+
 
 
 	return;
