@@ -9,6 +9,8 @@
 
 #include "pod_generate.h"
 
+#define LOW_NOISE_DOT
+
 #include <myblas.h>
 #include <libbinio/binfile.h>
 // #include <veclib/clapack.h>
@@ -150,9 +152,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					}
 				}
 				low_noise_dot(tind) = tmp_store;
-				
-				// psimatrix(psi1dcounter) += tmp_store; // TO NOT USE LOW NOISE DOT
+#ifndef LOW_NOISE_DOT
+				psimatrix(psi1dcounter) += tmp_store;
+#endif
 			}
+#ifdef LOW_NOISE_DOT
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
 			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -161,7 +165,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
 			psimatrix(psi1dcounter) = low_noise_dot(0);  // TO USE LOW NOISE DOT!!
-			
+#endif
 			++psi1dcounter;
 		}	
 		BASE::ugbd(0).v.reference(ugstore.v);
@@ -472,8 +476,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 						}
 					}
 					low_noise_dot(tind) = tmp_store;
+#ifndef LOW_NOISE_DOT
+					psimatrix(psi1dcounter) += tmp_store;
+#endif
 				}
-
+#ifdef LOW_NOISE_DOT
 				/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 				int halfcount,remainder;
 				for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -482,7 +489,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 				}
 				psimatrix(psi1dcounter) = low_noise_dot(0);
-
+#endif
 				++psi1dcounter;
 			}	
 		}
@@ -522,6 +529,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/********************/
 		/* RENORMALIZE MODE */
 		/********************/
+		double norm = 0.0;
 		for(tind=0;tind<BASE::ntri;++tind) {          
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
 			BASE::crdtocht(tind);
@@ -545,7 +553,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				}
 			}
 			low_noise_dot(tind) = tmp_store;
+#ifndef LOW_NOISE_DOT
+			norm += tmp_store;
+#endif
 		}
+#ifdef LOW_NOISE_DOT
 		/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 		int halfcount,remainder;
 		for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -553,7 +565,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				low_noise_dot(tind) += low_noise_dot(tind+halfcount);
 			if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 		}
-		double norm = low_noise_dot(0);
+		norm = low_noise_dot(0);
+#endif
 		double norm_recv;
 
 		sim::blks.allreduce(&norm,&norm_recv,1,blocks::flt_msg,blocks::sum,pod_id);
@@ -575,6 +588,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
 		/***************************************/
 		double dotp_recv, dotp;
+		dotp = 0.0;
 		for (k=0;k<nsnapshots;++k) {
 			/* LOAD SNAPSHOT */
 			nstr.str("");
@@ -611,7 +625,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					}
 				}
 				low_noise_dot(tind) = tmp_store;
+#ifndef LOW_NOISE_DOT
+				dotp += tmp_store;
+#endif
 			}
+#ifdef LOW_NOISE_DOT
 			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
 			int halfcount,remainder;
 			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
@@ -620,7 +638,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
 			}
 			dotp = low_noise_dot(0);
-
+#endif
 			sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
 
 			BASE::ugbd(1).v(Range(0,BASE::npnt-1)) -= dotp_recv*BASE::ug.v(Range(0,BASE::npnt-1));
