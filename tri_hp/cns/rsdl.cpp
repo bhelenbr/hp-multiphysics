@@ -173,18 +173,18 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					visc(0,0)(0,0) = -mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(0,0)(1,1) = -mujcbi*(4./3.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(0,0)(0,1) =  mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define				viscI0II0II1II0I visc(0,0)(0,1)
-
+#define                 viscI0II0II1II0I visc(0,0)(0,1)
+					
 					visc(1,1)(0,0) = -mujcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(1,1)(1,1) = -mujcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(1,1)(0,1) =  mujcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define				viscI1II1II1II0I visc(1,1)(0,1)
-
+#define                 viscI1II1II1II0I visc(1,1)(0,1)
+					
 					visc(0,1)(0,0) =  mujcbi*1./3.*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
 					visc(0,1)(1,1) =  mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
-					visc(0,1)(0,1) = -mujcbi*1./3.*dcrd(0,1)(i,j)*dcrd(1,0)(i,j);
-					visc(0,1)(1,0) = -mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,1)(i,j);
-
+					visc(0,1)(0,1) = -mujcbi*(dcrd(0,1)(i,j)*dcrd(1,0)(i,j)-2./3.*dcrd(0,0)(i,j)*dcrd(1,1)(i,j));
+					visc(0,1)(1,0) = -mujcbi*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j)-2./3.*dcrd(0,1)(i,j)*dcrd(1,0)(i,j));
+					
 					/* OTHER SYMMETRIES     */                
 #define				viscI1II0II0II0I visc(0,1)(0,0)
 #define				viscI1II0II1II1I visc(0,1)(1,1)
@@ -210,8 +210,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 
 					df(2,1)(i,j) = +viscI1II0II1II0I*du(1,0)(i,j) +viscI1II1II1II0I*du(2,0)(i,j)
 									+viscI1II0II1II1I*du(1,1)(i,j) +visc(1,1)(1,1)*du(2,1)(i,j);
-
-
+				
 					/* Energy equation */
 					df(3,0)(i,j) = +kcond(0,0)*du(NV-1,0)(i,j) +kcond(0,1)*du(NV-1,1)(i,j);
 					df(3,1)(i,j) = +kcondI1II0I*du(NV-1,0)(i,j) +kcond(1,1)*du(NV-1,1)(i,j);
