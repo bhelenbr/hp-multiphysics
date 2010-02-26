@@ -196,28 +196,28 @@ void neumann::element_rsdl(int eind, int stage) {
 	return;
 }
 
-//void applied_stress::init(input_map& inmap,void* gbl_in) {
-//	std::string keyword;
-//	std::ostringstream nstr;
-//
-//	neumann::init(inmap,gbl_in);
-//
-//	stress.resize(tri_mesh::ND);
-//
-//	for(int n=0;n<tri_mesh::ND;++n) {
-//		nstr.str("");
-//		nstr << base.idprefix << "_stress" << n << std::flush;
-//		if (inmap.find(nstr.str()) != inmap.end()) {
-//			stress(n).init(inmap,nstr.str());
-//		}
-//		else {
-//			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
-//			exit(1);
-//		}
-//	}
-//
-//	return;
-//}
+void applied_stress::init(input_map& inmap,void* gbl_in) {
+	std::string keyword;
+	std::ostringstream nstr;
+
+	neumann::init(inmap,gbl_in);
+
+	stress.resize(x.NV-1);
+
+	for(int n=0;n<x.NV-1;++n) {
+		nstr.str("");
+		nstr << base.idprefix << "_stress" << n << std::flush;
+		if (inmap.find(nstr.str()) != inmap.end()) {
+			stress(n).init(inmap,nstr.str());
+		}
+		else {
+			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
+			exit(1);
+		}
+	}
+
+	return;
+}
 
 //void inflow::setvalues(init_bdry_cndtn *ibc) {
 //	int j,k,m,n,v0,v1,sind,indx,info;

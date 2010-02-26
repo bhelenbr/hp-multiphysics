@@ -162,10 +162,10 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, input_map &bdrydata) {
 //			temp = new symmetry(*this,*ebdry(bnum));
 //			break;
 //		}
-//		case tri_hp_cns_stype::applied_stress: {
-//			temp = new applied_stress(*this,*ebdry(bnum));
-//			break;
-//		}
+		case tri_hp_cns_stype::applied_stress: {
+			temp = new applied_stress(*this,*ebdry(bnum));
+			break;
+		}
 //		case tri_hp_cns_stype::surface: {
 //			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
 //				temp = new surface(*this,*ebdry(bnum));

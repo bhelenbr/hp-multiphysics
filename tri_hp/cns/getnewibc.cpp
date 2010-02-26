@@ -179,7 +179,7 @@ namespace ibc_cns {
 				
 				double error[2] = {1.0, 1.0};
 				int niter = 0;
-				while (fabs(error[0])+fabs(error[1]) > 1.0e-12 && niter++ < 20) {
+				while (fabs(error[0])+fabs(error[1]) > 1.0e-15 && niter++ < 30) {
 					calculateError(xyz, error, q, theta);
 					calculateError(xyz, delta, q+dq, theta);
 					jac[0][0] = (delta[0]-error[0])/dq;

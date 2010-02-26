@@ -155,7 +155,7 @@ void tri_hp_cns::setup_preconditioner() {
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 		
 		gbl->tprcn_ut(tind,Range::all(),Range::all())=tprcn;
-		gbl->tau(tind,Range::all(),Range::all())=adis*tau;
+		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
 	
 		for(i=0;i<3;++i) {
@@ -190,12 +190,11 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<F
 		pr*(gm1*ke-rt)*rt, -1.0/pr*rt*uv*gm1, -1.0/pr*rt*vv*gm1, 1.0/pr*rt*gm1;
 	
 	
-//	/* Inverse of Preconditioner */
-//	Pinv = ort,              0.0,           0.0,            -pmax*ort*ort,
-//	ort*qmax,         pmax*ort,      0.0,           -pmax*ort*ort*qmax,
-//	ort*qmax,         0.0,           pmax*ort,      -pmax*ort*ort*qmax,
-//	1.0/gm1+q2/rtmax, pmax*ort*qmax, pmax*ort*qmax, -pmax*ort*ort*q2;
-	
+	/* Inverse of Preconditioner */
+	Pinv = 1.0/rt,        0.0,      0.0,      -pr/rt/rt,
+           uv/rt,         pr/rt,    0.0,      -uv*pr/rt/rt,
+           vv/rt,         0.0,      pr/rt,    -vv*pr/rt/rt,
+		   1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
 	
 	/* df/dw */
 	A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
@@ -229,9 +228,9 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<F
 	matrix_absolute_value(B);
 	
 	S = 0.0, 0.0,     0.0,     0.0,
-	0.0, gbl->mu, 0.0,     0.0,
-	0.0, 0.0,     gbl->mu, 0.0,
-	0.0, 0.0,     0.0,     gbl->kcond;
+		0.0, gbl->mu, 0.0,     0.0,
+		0.0, 0.0,     gbl->mu, 0.0,
+		0.0, 0.0,     0.0,     gbl->kcond;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
 	

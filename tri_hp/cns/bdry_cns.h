@@ -341,37 +341,37 @@ namespace bdry_cns {
 //			void tadvance();
 //	};
 
-//	class applied_stress : public neumann {
-//		Array<symbolic_function<2>,1> stress;
-//
-//		protected:
-//			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-//
-//				/* CONTINUITY */
-//				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-//
-//				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-//				/* X&Y MOMENTUM */
-//#ifdef INERTIALESS
-//				for (int n=0;n<tri_mesh::ND;++n)
-//					flx(n) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
-//#else
-//				for (int n=0;n<tri_mesh::ND;++n)
-//					flx(n) = flx(x.NV-1)*u(n) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(x.NV-1, xpt, x.gbl->time)*norm(n);
-//#endif
-//
-//				/* EVERYTHING ELSE */
-//				for (int n=tri_mesh::ND;n<x.NV-1;++n)
-//					flx(n) = flx(x.NV-1)*u(n);
-//
-//				return;
-//			}
-//		public:
-//			applied_stress(tri_hp_cns &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
-//			applied_stress(const applied_stress& inbdry, tri_hp_cns &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
-//			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
-//			void init(input_map& inmap,void* gbl_in);
-//	};
+	class applied_stress : public neumann {
+		Array<symbolic_function<2>,1> stress;
+
+		protected:
+			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+
+				/* CONTINUITY */
+				flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+				/* X&Y MOMENTUM */
+#ifdef INERTIALESS
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+#else
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+#endif
+
+				/* ENERGY EQUATION */
+				double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+				flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time)*length;				
+				
+				return;
+			}
+		public:
+			applied_stress(tri_hp_cns &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "applied_stress";}
+			applied_stress(const applied_stress& inbdry, tri_hp_cns &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
+			applied_stress* create(tri_hp& xin, edge_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+			void init(input_map& inmap,void* gbl_in);
+	};
 
 //	class surface_slave : public neumann {
 //		public:

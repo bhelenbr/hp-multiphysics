@@ -11,7 +11,7 @@
 #include "../hp_boundary.h"
 
 //#define BODYFORCE
-//#define MMS
+#define MMS
 
 void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 
@@ -150,6 +150,9 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
 					double e = ogm1*u(NV-1)(i,j) +0.5*(u(1)(i,j)*u(1)(i,j) +u(2)(i,j)*u(2)(i,j));
 					res(NV-1)(i,j) = rhorbd0*e +dugdt(log2p,tind,NV-1)(i,j);
+					
+					for(int n = 0; n < NV; ++n)
+						res(n)(i,j) = 0.0;
 					
 #ifdef BODYFORCE
 					res(1)(i,j) -= rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);

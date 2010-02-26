@@ -30,13 +30,14 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.403);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
-	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.75);
+	//if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.75);
+	if (!input.get(gbl->idprefix + "_k",gbl->kcond)) input.getwdefault("k",gbl->kcond,1.0);
 	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,8.314472);
-	//if (!input.get(gbl->idprefix + "_kcond",gbl->kcond)) input.getwdefault("kcond",gbl->kcond,1.0);
-	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
+
+	//gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
 	
 	gbl->body(0) = 0.0;
-	gbl->body(1) = .00000001;
+	gbl->body(1) = 0.0;
 
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
 	gbl->D.resize(NV);
