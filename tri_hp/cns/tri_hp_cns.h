@@ -30,7 +30,7 @@ class tri_hp_cns : public tri_hp {
 			TinyVector<FLT,2> eanda, eanda_recv;
 			
 			/* SOURCE FUNCTION FOR MMS */
-			init_bdry_cndtn *src;
+			//init_bdry_cndtn *src;
 
 		} *gbl;
 
@@ -52,7 +52,6 @@ class tri_hp_cns : public tri_hp {
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
-		//void pennsylvania_peanut_butter(FLT qmax, FLT pmax, FLT rtmax, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
 		void pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
 
 

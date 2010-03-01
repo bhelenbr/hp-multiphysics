@@ -70,6 +70,19 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 		}
 	}
 
+	// switch u from conservative to primitive 
+	Array<FLT,1> cv(x.NV);
+	
+	for(int m = 0; m < basis::tri(log2p)->tm(); ++m){
+		for(int n = 0; n < NV; ++n)
+			cv(n)=uht(n)(m);
+		
+		uht(0)(m) = (x.gbl->gamma-1.0)*(cv(3)-0.5/cv(0)*(cv(1)*cv(1)+cv(2)*cv(2)));
+		uht(1)(m) = cv(1)/cv(0);
+		uht(2)(m) = cv(2)/cv(0);
+		uht(3)(m) = u(0)(m)/cv(0);
+	}
+	
 	/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
 	if (gbl->beta(stage) > 0.0) {

@@ -168,7 +168,7 @@ namespace ibc_cns {
 				double dtheta = -1.0e-4;
 				double dq = 1.0e-4;
 				double jac[2][2], deti, delta[2]; 
-				bool conservative = false;
+				bool conservative = true;
 				
 				double xyz[3];
 				xyz[0] = scale*x(0) +shift[0];
