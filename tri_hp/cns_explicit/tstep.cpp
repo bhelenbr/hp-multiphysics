@@ -5,12 +5,11 @@
 #include "../hp_boundary.h"
 
 // #define TIMEACCURATE
-//#define REFINED_WAY
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side;
-	FLT jcb,h,hmax,q,qmax,pmax,rtmax,dtmin;
+	FLT jcb,h,hmax;
 	TinyVector<int,3> v;
 	Array<double,1> umax(NV),cvu(NV);
 	
@@ -23,17 +22,36 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	}
 	gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
 
+#ifdef TIMEACCURATE
+	FLT dtstari = 0.0;
+#endif
 
 	for(tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);  // area is 2 x triangle area
 		v = tri(tind).pnt;
-		
+	
 		/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 		/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
 		ugtouht(tind);
 		for(int n=0;n<ND;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 	
+		int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
+
+		// switch uht from conservative to primitive variables
+		for(i = 0; i < lgpx; ++i) {
+			for(j = 0; j < lgpn; ++j) {
+				
+				for(int n = 0; n < NV; ++n)
+					cvu(n) = u(n)(i,j);
+				
+				u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
+				u(1)(i,j) = cvu(1)/cvu(0);
+				u(2)(i,j) = cvu(2)/cvu(0);
+				u(3)(i,j) = u(0)(i,j)/cvu(0);
+			}
+		}
+		
 		/* IF TINFO > -1 IT IS CURVED ELEMENT */
 		if (tri(tind).info > -1) {
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
@@ -44,13 +62,9 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 				basis::tri(log2p)->proj_bdry(&cht(n,0), &crd(n)(0,0), &dcrd(n,0)(0,0), &dcrd(n,1)(0,0),MXGP);
 		
 			TinyVector<FLT,ND> mvel;
-			qmax = 0.0;
 			hmax = 0.0;
-			pmax = 0.0;
-			rtmax = 0.0;
 			umax = 0.0;
 			FLT jcbmin = jcb;
-			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
 					
@@ -72,14 +86,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 					h = 0.0;
 					for (int n=0;n<ND;++n)
 						h += (dcrd(n,1)(i,j) -dcrd(n,0)(i,j))*(dcrd(n,1)(i,j) -dcrd(n,0)(i,j));
-					hmax = MAX(h,hmax);
+					hmax = MAX(h,hmax);						
 				
-					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
-					qmax = MAX(qmax,q);
-					
-					pmax = MAX(pmax,fabs(u(0)(i,j)));
-					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
-					
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
@@ -98,10 +106,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 				basis::tri(log2p)->proj(pnts(v(0))(n),pnts(v(1))(n),pnts(v(2))(n),&crd(n)(0,0),MXGP);
 		
 			TinyVector<FLT,ND> mvel;
-			qmax = 0.0;
 			hmax = 0.0;
-			pmax = 0.0;
-			rtmax = 0.0;
 			umax = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
@@ -109,11 +114,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 					
 					mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));                       
-					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
-					qmax = MAX(qmax,q);
-					pmax = MAX(pmax,fabs(u(0)(i,j)));
-					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
-					
+				
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
@@ -128,7 +129,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 			hmax = sqrt(hmax);
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
-		}			
+		}	
+
 
 		if (!(h > 0.0)) { 
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
@@ -137,24 +139,40 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 			exit(1);
 		}
 
-		if  (std::isnan(qmax)) { 
+		if  (std::isnan(umax(0)) && std::isnan(umax(1)) && std::isnan(umax(2)) && std::isnan(umax(3))) { 
 			*gbl->log << "flow solution has nan's" << std::endl;
 			output("nan",tecplot);
 			exit(1);
 		}
-		q = sqrt(qmax);
-
+		
 		FLT tstep;
 		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 		
-		gbl->tprcn(tind,Range::all())=tstep;
+		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
+		/* SET UP DIAGONAL PRECONDITIONER */
+		jcb /= tstep;  // temp fix me
+
+#ifdef TIMEACCURATE
+		dtstari = MAX(1./tstep,dtstari);
+		
+	}
+	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+	
+	for(tind=0;tind<ntri;++tind) {
+		v = tri(tind).pnt;
+		jcb = 0.25*area(tind)*dtstari; 
+#endif
+		
+		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
+
+		gbl->tprcn(tind,Range::all())=jcb;		
 	
 		for(i=0;i<3;++i) {
-			gbl->vprcn(v(i),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn(tind,Range::all());
+			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
 				gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
@@ -164,8 +182,6 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	
 	tri_hp::setup_preconditioner();
 }
-
-
 
 
 void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
