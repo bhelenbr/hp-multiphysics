@@ -119,6 +119,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 				}	
 			} while (++ind < base.nseg);
+			fout << precision(10);
 			fout << base.idprefix << " circumference: " << circumference << std::endl;
 			fout << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
 			fout << base.idprefix << " convective flux: " << conv_flux << std::endl;
