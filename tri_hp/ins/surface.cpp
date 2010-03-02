@@ -486,15 +486,15 @@ void surface_outflow::rsdl(int stage) {
 				/* Surf-boundary then point then wall (in ccw sense) */
 				tangent(0) = wall_normal(0)*sin(contact_angle) +wall_normal(1)*cos(contact_angle);
 				tangent(1) = -wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-				x.gbl->res.v(base.pnt,0) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
-				x.gbl->res.v(base.pnt,1) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
+				x.gbl->res.v(base.pnt,0) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
+				x.gbl->res.v(base.pnt,1) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 			else {
 				/* Wall then poin then Surf-boundary (in ccw sense) */
 				tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
 				tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
-				x.gbl->res.v(base.pnt,0) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
-				x.gbl->res.v(base.pnt,1) -= RAD(pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
+				x.gbl->res.v(base.pnt,0) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
+				x.gbl->res.v(base.pnt,1) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 		}
 		case(prdc): {
