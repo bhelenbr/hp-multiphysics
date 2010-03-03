@@ -33,7 +33,7 @@ class hp_vrtx_bdry;
 class hp_edge_bdry;
 
 class init_bdry_cndtn {
-    public:
+	public:
 		virtual FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) = 0;
 		virtual void input(input_map &blkdata, std::string idnty) {};
 		virtual ~init_bdry_cndtn() {};

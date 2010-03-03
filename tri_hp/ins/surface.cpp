@@ -518,6 +518,7 @@ void surface_outflow::rsdl(int stage) {
 
 
 void surface_outflow::petsc_jacobian() {
+
 	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
 	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
 	
@@ -539,26 +540,30 @@ void surface_outflow::petsc_jacobian() {
 
 	MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 	MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+	if (nnz1 != nnz2) {
+		*x.gbl->log << "zeros problem in surface_outflow\n";
+	}
+	
 
 	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
-	Array<int,1> cols(nnz1+nnz2);
-	Array<FLT,2> vals(2,nnz1+nnz2);
+	Array<int,1> cols(nnz1);
+	Array<FLT,2> vals(2,nnz1);
 	for (int col=0;col<nnz1;++col) {
 		cols(col) = cols1[col];
 		vals(0,col) = -vals1[col]*surf->gbl->vdt(indx)(1,0)/J;
 	}
-	for (int col=0;col<nnz2;++col) {
-		cols(col+nnz1) = cols2[col];
-		vals(0,col+nnz1) = vals2[col]*surf->gbl->vdt(indx)(0,0)/J;
+	for (int col=0;col<nnz1;++col) {
+		if (cols(col) != cols2[col]) {
+			*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+			*x.gbl->log << cols << ' ' << col << ' ' << cols2[col] << std::endl;
+		}
+		vals(0,col) += vals2[col]*surf->gbl->vdt(indx)(0,0)/J;
 	}
 	MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 	MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);					
 					
 	/* Replace x equation with tangential position equation */
 	/* Replacy y equation with normal displacement equation */
-	TinyVector<int,2> rows(row,row+1);
-	MatZeroRows(x.petsc_J,2,rows.data(),PETSC_NULL);
-	
 	/* Normal Equation */
 	vals(1,Range::all()) = 0.0;
 	for(int col=0;col<nnz1;++col) {
@@ -567,7 +572,7 @@ void surface_outflow::petsc_jacobian() {
 			break;
 		}
 	}
-	for(int col=nnz1;col<nnz1+nnz2;++col) {
+	for(int col=0;col<nnz1;++col) {
 		if (cols(col) == row+1) {
 			vals(1,col) = wall_normal(1);
 			break;
@@ -577,12 +582,12 @@ void surface_outflow::petsc_jacobian() {
 	/* tangent = -sin(theta) i +cos(theta) j */
 	/* normal = cos(theta) i + sin(theta) j */
 	/* Rotate equations for diagonal dominance to match what is done to residual */
-	Array<FLT,2> temp(2,nnz1+nnz2);
+	Array<FLT,2> temp(2,nnz1);
 	temp(0,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(0,1) +vals(1,Range::all())*wall_normal(0);
 	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
 
-	MatSetValues(x.petsc_J,2,rows.data(),nnz1+nnz2,cols.data(),temp.data(),ADD_VALUES);
-
+	TinyVector<int,2> rows(row,row+1);
+	MatSetValues(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
 }
 #endif
 
@@ -1145,7 +1150,6 @@ void surface::petsc_jacobian() {
 			K(ind,Range::all()) = row_store;
 			ind += vdofs;
 		}
-
 		MatSetValues(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
 }
