@@ -410,9 +410,6 @@ void tri_hp::petsc_jacobian() {
 	exit(1);	
 #endif
 
-		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
-
 	// MatView(petsc_J,0);
 
 	
