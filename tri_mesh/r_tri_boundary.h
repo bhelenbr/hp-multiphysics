@@ -207,42 +207,44 @@ class r_fixed_angled : public r_fixed {
 			return;
 		}
 		
-		void jacobian_dirichlet() {}
+		void jacobian() {}
 		
-		void jacobian() {
+		void jacobian_dirichlet() {
 			int stride = x.NV +tri_mesh::ND;
 			int nnz1, nnz2;
 			const PetscInt *cols1, *cols2;
 			const PetscScalar *vals1, *vals2;
 			
-			MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
-			MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);	
-
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
 				int row = x.seg(sind).pnt(1)*stride +x.NV;
 				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
-
-				Array<int,1> cols(nnz1+nnz2);
-				Array<FLT,2> vals(2,nnz1+nnz2);
+				if (nnz1 != nnz2) {
+					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+				}
+				
+				Array<int,1> cols(nnz1);
+				Array<FLT,2> vals(2,nnz1);
 				for (int col=0;col<nnz1;++col) {
 					cols(col) = cols1[col];
 					vals(0,col) = -vals1[col]*sin(theta);
 				}
+	
 				for (int col=0;col<nnz2;++col) {
-					cols(col+nnz1) = cols2[col];
-					vals(0,col+nnz1) = vals2[col]*cos(theta);
+					if (cols(col) != cols2[col]) {
+						*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+						*x.gbl->log << cols << ' ' << col << ' ' << cols2[col] << std::endl;
+					}
+					// cols(col+nnz1) = cols2[col];
+					vals(0,col) += vals2[col]*cos(theta);
 				}
 				MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
 				
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
-				TinyVector<int,2> rows(row,row+1);
-				MatZeroRows(x.petsc_J,2,rows.data(),PETSC_NULL);
-				
 				/* Normal Equation */
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
@@ -251,7 +253,7 @@ class r_fixed_angled : public r_fixed {
 						break;
 					}
 				}
-				for(int col=nnz1;col<nnz1+nnz2;++col) {
+				for(int col=0;col<nnz1;++col) {
 					if (cols(col) == row+1) {
 						vals(1,col) = sin(theta);
 						break;
@@ -261,14 +263,14 @@ class r_fixed_angled : public r_fixed {
 				/* tangent = -sin(theta) i +cos(theta) j */
 				/* normal = cos(theta) i + sin(theta) j */
 				/* Rotate equations for diagonal dominance to match what is done to residual */
-				Array<FLT,2> temp(2,nnz1+nnz2);
+				Array<FLT,2> temp(2,nnz1);
 				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
 				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
-
-				MatSetValues(x.petsc_J,2,rows.data(),nnz1+nnz2,cols.data(),temp.data(),ADD_VALUES);
 				
+				TinyVector<int,2> rows(row,row+1);
+				MatSetValues(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
 				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
-				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
+				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);	
 			}
 		}
 		
