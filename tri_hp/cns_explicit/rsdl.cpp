@@ -276,18 +276,20 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					FLT rt = u(3)(i,j);	
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
-					/* df/dw */	
-					A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-					    1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-					    1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-						1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 					
-					/* dg/dw */	
-					B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-					    1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-					    1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-					    1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
-			
+					/* df/dw */
+					A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+						uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+						uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+						uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+					
+					
+					/* dg/dw */
+					B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+						uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+						vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+						vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {
 							df(m,0)(i,j) -= (dcrd(1,1)(i,j)*A(m,n)-dcrd(0,1)(i,j)*B(m,n))*tres(n);
@@ -465,17 +467,18 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					FLT rt = u(3)(i,j);	
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
-					/* df/dw */	
-					A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-					1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-					1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-					1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+					/* df/dw */
+					A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+					    uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+					    uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+					    uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 					
-					/* dg/dw */	
-					B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-					1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-					1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-					1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+							
+					/* dg/dw */
+					B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+						uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+						vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+						vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
 					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {

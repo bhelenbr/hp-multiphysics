@@ -149,10 +149,16 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
+
+//		cout << "tprcn: "<< tprcn << endl;
+//		cout << "tau: "<< tau << endl;
+		//cout << "tstep: "<< tstep << " tstep estimate: " << hmax/2./(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+1.0) << endl;
+		tstep = hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+340);
+
+		//cout << tstep << endl;
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
-		
 		/* SET UP DIAGONAL PRECONDITIONER */
 		jcb /= tstep;  // temp fix me
 
@@ -169,8 +175,13 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-		gbl->tprcn(tind,Range::all())=jcb;		
-	
+		//gbl->tprcn(tind,Range::all())=jcb;		
+		gbl->tprcn(tind,0) = jcb;
+		gbl->tprcn(tind,1) = jcb;
+		gbl->tprcn(tind,2) = jcb;
+		gbl->tprcn(tind,3) = jcb;
+
+		//		cout << "tprcn: "<< jcb << endl;
 		for(i=0;i<3;++i) {
 			gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
@@ -197,11 +208,10 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 	FLT ke = 0.5*(uv*uv+vv*vv);
 	
 	/* Preconditioner */
-	P = ke*gm1,            -uv*gm1,           -vv*gm1,           gm1,
-	    -uv/pr*rt,         1.0/pr*rt,         0.0,               0.0,
-        -1.0/pr*vv*rt,     0.0,               1.0/pr*rt,         0.0,
-		pr*(gm1*ke-rt)*rt, -1.0/pr*rt*uv*gm1, -1.0/pr*rt*vv*gm1, 1.0/pr*rt*gm1;
-	
+	P = ke*gm1,            -uv*gm1,       -vv*gm1,       gm1,
+	    -uv/pr*rt,         rt/pr,         0.0,           0.0,
+        -vv*rt/pr,         0.0,           1.0/pr*rt,     0.0,
+		rt*(gm1*ke-rt)/pr, -rt*uv*gm1/pr, -rt*vv*gm1/pr, rt*gm1/pr;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/rt,        0.0,      0.0,      -pr/rt/rt,
@@ -210,10 +220,10 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 		   1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
 	
 	/* df/dw */
-	A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-		1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-		1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-		1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+	A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+		uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+		uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+		uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
@@ -225,11 +235,11 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 	matrix_absolute_value(A);
 	
 	/* dg/dw */
-	B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-		1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-		1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-		1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
-	
+	B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+		uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+		vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+		vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -246,7 +256,6 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 		0.0, 0.0,     0.0,     gbl->kcond;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -254,12 +263,17 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 				temp(i,j)+=P(i,k)*S(k,j);
 	
 	S = temp;
-	
+	//cout <<"S " << S << endl;
+
+	//cout << "A,B "<< A << B << endl;
 	Tinv = 2.0/hmax*(A+B+hmax*S);
-	
+
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
-	
+	//cout << "hmax: "<< hmax << endl;
+
+	//cout << "tauinv: "<< Tinv << endl;
+
 	/*  LU factorization  */
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);

@@ -89,16 +89,21 @@ namespace bdry_cns_explicit {
 			u(2) = cvu(2)/cvu(0);
 			u(3) = u(0)/cvu(0);
 			
+			double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
+
+			
 			/* CONTINUITY */
-			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 			
 			/* X&Y MOMENTUM */
 #ifdef INERTIALESS
+
 			for (int n=1;n<tri_mesh::ND+1;++n)
-				flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+					flx(n) = pr*norm(n-1);
 #else
+
 			for (int n=1;n<tri_mesh::ND+1;++n)
-				flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+				flx(n) = flx(0)*u(n) +pr*norm(n-1);
 #endif
 			
 			/* ENERGY EQUATION */
@@ -128,13 +133,15 @@ namespace bdry_cns_explicit {
 			Array<FLT,1> cvu(x.NV);
 			cvu=u;
 			
+			double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
+
 			u(0) = (x.gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
 			u(1) = cvu(1)/cvu(0);
 			u(2) = cvu(2)/cvu(0);
 			u(3) = u(0)/cvu(0);
 			
 			/* CONTINUITY */
-			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 			
 			/* EVERYTHING ELSE DOESN'T MATTER */
 			for (int n=1;n<x.NV;++n)
@@ -374,17 +381,20 @@ namespace bdry_cns_explicit {
 				u(2) = cvu(2)/cvu(0);
 				u(3) = u(0)/cvu(0);
 				
+				double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
+
+				
 				/* CONTINUITY */
-				flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+				flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 
 				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
 				/* X&Y MOMENTUM */
 #ifdef INERTIALESS
 				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+					flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +pr*norm(n);
 #else
 				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+					flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +pr*norm(n);
 #endif
 
 				/* ENERGY EQUATION */

@@ -26,7 +26,7 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 	input.getwdefault(gbl->idprefix + "_dissipation",adis,1.0);
 
 
-	gbl->tau.resize(maxpst,NV);
+	gbl->tau.resize(maxpst,NV,NV);
 
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.403);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);

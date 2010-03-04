@@ -16,22 +16,28 @@ namespace ibc_cns_explicit {
 	class freestream : public init_bdry_cndtn {
 		private:
 			FLT alpha, speed,perturb_amp;
+			TinyVector<FLT,tri_mesh::ND> vel;
 
 		public:
 
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
-				FLT speed_sound = 340.29;
+				FLT c = 340.29;
 				FLT gamma = 1.403;
+				FLT Mu = vel(0)/c;
+				FLT Mv = vel(1)/c;
+				
 				switch(n) {
 					case(0):
-						return(1.0/gamma);
+						return(1.0);
 					case(1):
-						return(speed/speed_sound*cos(alpha) +amp*x(0)*(1.0-x(0)));
+						return(Mu +amp*x(0)*(1.0-x(0)));
 					case(2):
-						return(speed/speed_sound*sin(alpha));
+						return(Mv);
 					case(3):
-						return(1.0/gamma);
+						return(1.0/(gamma-1.0)/gamma+0.5*(Mu*Mu+Mv*Mv));
+
+//						return(c*c/(gamma-1.0)/gamma+0.5*(Mu*Mu+Mv*Mv));
 				}
 				return(0.0);
 			}
@@ -53,29 +59,37 @@ namespace ibc_cns_explicit {
 					blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
 				alpha *= M_PI/180.0;
+				vel(0) = speed*cos(alpha);
+				vel(1) = speed*sin(alpha);
 			}
     };
 
 	class sphere : public init_bdry_cndtn {
 		private:
 			FLT speed,angle,inner,outer;
-			TinyVector<FLT,tri_mesh::ND> vel;
+			TinyVector<FLT,tri_mesh::ND> vel,M;
 
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
-				FLT r;
-
-				r = sqrt(x(0)*x(0) +x(1)*x(1));
+				FLT r = sqrt(x(0)*x(0) +x(1)*x(1));
+				FLT c = 340.29;
+				FLT gamma = 1.403;
+				M(0) = vel(0)/c;
+				M(1) = vel(1)/c;
+				
 				switch(n) {
 					case(1):case(2): 
 						if (r < inner) 
 							return(0.0);
 						else if (r < outer)
-							return(vel(n-1)/340.29*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
+							return(M(n-1)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
 						else
-							return(vel(n-1)/340.29);
-					case(0):case(3):
-						return(1./1.403);
+							return(M(n-1));
+					case(0):
+						return(1.0);
+					case(3):
+						return(1.0/(gamma-1.0)/gamma+0.5*(M(0)*M(0)+M(1)*M(1)));
+						//return(c*c/(gamma-1.0)/gamma+0.5*(M(0)*M(0)+M(1)*M(1)));
 				}
 				return(0.0);
 			}
@@ -156,7 +170,7 @@ namespace ibc_cns_explicit {
 				
 				shift[0] = xshift;
 				shift[1] = yshift;
-				gam = 1.403; // temp call gbl->gamma
+				gam = 1.403;
 
 				
 			}
