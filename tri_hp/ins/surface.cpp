@@ -490,7 +490,7 @@ void surface_outflow::rsdl(int stage) {
 				x.gbl->res.v(base.pnt,1) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(1);	
 			}
 			else {
-				/* Wall then poin then Surf-boundary (in ccw sense) */
+				/* Wall then point then Surf-boundary (in ccw sense) */
 				tangent(0) = wall_normal(0)*sin(contact_angle) -wall_normal(1)*cos(contact_angle);
 				tangent(1) = wall_normal(0)*cos(contact_angle) +wall_normal(1)*sin(contact_angle);
 				x.gbl->res.v(base.pnt,0) -= RAD(x.pnts(base.pnt)(0))*surf->gbl->sigma*tangent(0);
@@ -527,7 +527,7 @@ void surface_outflow::petsc_jacobian() {
 			
 	int indx;
 	if (surfbdry == 0) {
-		indx = x.ebdry(base.ebdry(0))->nseg+1;
+		indx = x.ebdry(base.ebdry(0))->nseg;
 	}
 	else {
 		indx = 0;
@@ -578,7 +578,7 @@ void surface_outflow::petsc_jacobian() {
 			break;
 		}
 	}
-
+	
 	/* tangent = -sin(theta) i +cos(theta) j */
 	/* normal = cos(theta) i + sin(theta) j */
 	/* Rotate equations for diagonal dominance to match what is done to residual */
