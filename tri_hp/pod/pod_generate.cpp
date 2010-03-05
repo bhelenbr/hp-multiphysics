@@ -104,7 +104,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	psimatrix = 0.0;
 	for (k=0;k<nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k+restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::ugbd(0).v.reference(modes(0).v);
 		BASE::ugbd(0).s.reference(modes(0).s);
@@ -113,7 +113,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 		for(l=k;l<nsnapshots;++l) {
 			nstr.str("");
-			nstr << l+1 << std::flush;
+			nstr << l+restartfile << std::flush;
 			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 			BASE::ugbd(0).v.reference(modes(1).v);
 			BASE::ugbd(0).s.reference(modes(1).s);
@@ -416,7 +416,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
 	for(k=restartfile;k<nsnapshots+restartfile;++k) {
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::input(filename, BASE::binary);
 		nstr.str("");
