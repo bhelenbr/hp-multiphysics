@@ -233,7 +233,7 @@ void blocks::go(input_map& input) {
 	}
 	threads.join_all();
 #else
-	if (nblock != 1) {
+	if (myblock != 1) {
 		std::cerr << "Need pth or boost::threads to run mulitple blocks on single processor\n";
 		exit(1);
 	}
