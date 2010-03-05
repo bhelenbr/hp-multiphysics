@@ -79,18 +79,18 @@ namespace ibc_cns_explicit {
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT r = sqrt(x(0)*x(0) +x(1)*x(1));
 								
+				TinyVector<FLT,2> v;
+				if (r < inner) v = 0.0;
+				else if (r < outer) v = vel*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner)));
+				else v = vel;
+				
 				switch(n) {
-					case(1):case(2): 
-						if (r < inner) 
-							return(0.0);
-						else if (r < outer)
-							return(pr/RT*vel(n-1)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
-						else
-							return(pr/RT*vel(n-1));
 					case(0):
 						return(pr/RT);
+					case(1):case(2): 
+						return(pr/RT*v(n-1));
 					case(3):
-						return(pr/(gamma-1.0)+0.5*pr/RT*(vel(0)*vel(0)+vel(1)*vel(1)));
+						return(pr/(gamma-1.0)+0.5*pr/RT*(v(0)*v(0)+v(1)*v(1)));
 				}
 				return(0.0);
 			}
@@ -115,18 +115,20 @@ namespace ibc_cns_explicit {
 				keyword = idnty +"_outer_radius";
 				if (!blockdata.get(keyword,outer)) 
 					blockdata.getwdefault("outer_radius",outer,2.1);
-
-				keyword = idnty +"_RT";
-				if (!blockdata.get(keyword,RT)) 
-					blockdata.getwdefault("RT",RT,1.0);
-				
-				keyword = idnty +"_pressure";
-				if (!blockdata.get(keyword,pr)) 
-					blockdata.getwdefault("pressure",pr,1.0);
-				
+					
 				keyword = idnty +"_gamma";
 				if (!blockdata.get(keyword,gamma))
 					blockdata.getwdefault("gamma",gamma,1.403);
+
+				keyword = idnty +"_RT";
+				if (!blockdata.get(keyword,RT)) 
+					blockdata.getwdefault("RT",RT,1.0/gamma);
+				
+				keyword = idnty +"_pressure";
+				if (!blockdata.get(keyword,pr)) 
+					blockdata.getwdefault("pressure",pr,1.0/gamma);
+				
+
 				
 				vel(0) = speed*cos(angle);
 				vel(1) = speed*sin(angle);
