@@ -15,29 +15,23 @@ namespace ibc_cns_explicit {
 
 	class freestream : public init_bdry_cndtn {
 		private:
-			FLT alpha, speed,perturb_amp;
+			FLT alpha, speed,perturb_amp,gamma,pr,RT;
 			TinyVector<FLT,tri_mesh::ND> vel;
 
 		public:
 
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
-				FLT c = 340.29;
-				FLT gamma = 1.403;
-				FLT Mu = vel(0)/c;
-				FLT Mv = vel(1)/c;
-				
+			
 				switch(n) {
 					case(0):
-						return(1.0);
+						return(pr/RT);
 					case(1):
-						return(Mu +amp*x(0)*(1.0-x(0)));
+						return(pr/RT*vel(0) +amp*x(0)*(1.0-x(0)));
 					case(2):
-						return(Mv);
+						return(pr/RT*vel(1));
 					case(3):
-						return(1.0/(gamma-1.0)/gamma+0.5*(Mu*Mu+Mv*Mv));
-
-//						return(c*c/(gamma-1.0)/gamma+0.5*(Mu*Mu+Mv*Mv));
+						return(pr/(gamma-1.0)+0.5*pr/RT*(vel(0)*vel(0)+vel(1)*vel(1)));
 				}
 				return(0.0);
 			}
@@ -58,6 +52,18 @@ namespace ibc_cns_explicit {
 				if (!blockdata.get(keyword,perturb_amp)) 
 					blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
+				keyword = idnty +"_RT";
+				if (!blockdata.get(keyword,RT)) 
+					blockdata.getwdefault("RT",RT,1.0);
+				
+				keyword = idnty +"_pressure";
+				if (!blockdata.get(keyword,pr)) 
+					blockdata.getwdefault("pressure",pr,1.0);
+				
+				keyword = idnty +"_gamma";
+				if (!blockdata.get(keyword,gamma))
+					blockdata.getwdefault("gamma",gamma,1.403);
+					
 				alpha *= M_PI/180.0;
 				vel(0) = speed*cos(alpha);
 				vel(1) = speed*sin(alpha);
@@ -66,30 +72,25 @@ namespace ibc_cns_explicit {
 
 	class sphere : public init_bdry_cndtn {
 		private:
-			FLT speed,angle,inner,outer;
-			TinyVector<FLT,tri_mesh::ND> vel,M;
+			FLT speed,angle,inner,outer,RT,pr,gamma;
+			TinyVector<FLT,tri_mesh::ND> vel;
 
 		public:
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT r = sqrt(x(0)*x(0) +x(1)*x(1));
-				FLT c = 340.29;
-				FLT gamma = 1.403;
-				M(0) = vel(0)/c;
-				M(1) = vel(1)/c;
-				
+								
 				switch(n) {
 					case(1):case(2): 
 						if (r < inner) 
 							return(0.0);
 						else if (r < outer)
-							return(M(n-1)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
+							return(pr/RT*vel(n-1)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
 						else
-							return(M(n-1));
+							return(pr/RT*vel(n-1));
 					case(0):
-						return(1.0);
+						return(pr/RT);
 					case(3):
-						return(1.0/(gamma-1.0)/gamma+0.5*(M(0)*M(0)+M(1)*M(1)));
-						//return(c*c/(gamma-1.0)/gamma+0.5*(M(0)*M(0)+M(1)*M(1)));
+						return(pr/(gamma-1.0)+0.5*pr/RT*(vel(0)*vel(0)+vel(1)*vel(1)));
 				}
 				return(0.0);
 			}
@@ -115,6 +116,18 @@ namespace ibc_cns_explicit {
 				if (!blockdata.get(keyword,outer)) 
 					blockdata.getwdefault("outer_radius",outer,2.1);
 
+				keyword = idnty +"_RT";
+				if (!blockdata.get(keyword,RT)) 
+					blockdata.getwdefault("RT",RT,1.0);
+				
+				keyword = idnty +"_pressure";
+				if (!blockdata.get(keyword,pr)) 
+					blockdata.getwdefault("pressure",pr,1.0);
+				
+				keyword = idnty +"_gamma";
+				if (!blockdata.get(keyword,gamma))
+					blockdata.getwdefault("gamma",gamma,1.403);
+				
 				vel(0) = speed*cos(angle);
 				vel(1) = speed*sin(angle);
 			}
@@ -122,9 +135,7 @@ namespace ibc_cns_explicit {
 
 	
 	class ringleb : public init_bdry_cndtn {
-//		protected:
-//			tri_hp_cns_explicit &x;
-		
+	
 		private:
 			FLT angle,xshift,yshift;
 			FLT gam; // temp figure out how to load gbl->gamma
@@ -168,9 +179,12 @@ namespace ibc_cns_explicit {
 				if (!blockdata.get(keyword,yshift)) 
 					blockdata.getwdefault("yshift",yshift,0.0);
 				
+				keyword = idnty +"_gamma";
+				if (!blockdata.get(keyword,gam)) 
+					blockdata.getwdefault("gamma",gam,1.403);
+				
 				shift[0] = xshift;
 				shift[1] = yshift;
-				gam = 1.403;
 
 				
 			}

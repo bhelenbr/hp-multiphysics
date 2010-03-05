@@ -152,11 +152,11 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 
 //		cout << "tprcn: "<< tprcn << endl;
 //		cout << "tau: "<< tau << endl;
-		//cout << "tstep: "<< tstep << " tstep estimate: " << hmax/2./(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+1.0) << endl;
-		tstep = hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+340);
-
-		//cout << tstep << endl;
+//		cout << "tstep: "<< tstep << " tstep estimate: " << hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+sqrt(gbl->gamma*umax(3))) << endl;
 		
+		//tstep = hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+sqrt(gbl->gamma*umax(3)));
+		//cout << tstep << endl;
+
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		/* SET UP DIAGONAL PRECONDITIONER */

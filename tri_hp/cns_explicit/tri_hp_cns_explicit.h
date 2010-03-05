@@ -23,7 +23,7 @@ class tri_hp_cns_explicit : public tri_hp {
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond, mu, gamma,R;
-			Array<FLT,1> D;
+
 			TinyVector<double,tri_mesh::ND> body;
 
 			/* STORAGE FOR CALCULATION OF ENERGY AND AREA */

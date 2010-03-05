@@ -39,10 +39,6 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 	gbl->body(0) = 0.0;
 	gbl->body(1) = 0.001;
 
-	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-	gbl->D.resize(NV);
-	gbl->D = 0.0;
-	
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);
 
@@ -69,7 +65,6 @@ void tri_hp_cns_explicit::init(const multigrid_interface& in, init_purpose why, 
 /* OVERRIDE VIRTUAL FUNCTION FOR INCOMPRESSIBLE FLOW */
 void tri_hp_cns_explicit::calculate_unsteady_sources() {
 	int i,j,n,tind;
-	FLT	ogm1 = 1.0/(gbl->gamma-1.0);
 	Array<FLT,1> cvu(NV);
 	
 	for (log2p=0;log2p<=log2pmax;++log2p) {

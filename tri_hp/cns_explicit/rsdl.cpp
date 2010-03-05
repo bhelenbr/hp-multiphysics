@@ -70,20 +70,6 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 		}
 	}
 
-
-	/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
-	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
-//	if (gbl->beta(stage) > 0.0) {
-//		basis::tri(log2p)->proj(&uht(0)(0),&u(0)(0,0),MXGP);
-//		for(int n = 1; n < NV; ++n)
-//			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);
-//	}
-//	else {
-//		for(int n = 0; n < NV; ++n)
-//			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
-//	}
-	
-	
 	for(int n = 0; n < NV; ++n)
 		basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 
