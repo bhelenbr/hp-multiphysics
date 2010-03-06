@@ -55,7 +55,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 				filename = filename +"_" +gbl->idprefix;
 			}
 			else {
-				*gbl->log << "no mesh name\n";
+				*gbl->log << "no mesh name" << std::endl;
 				exit(1);
 			}
 		}
