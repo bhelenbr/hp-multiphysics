@@ -1119,7 +1119,7 @@ void surface::petsc_jacobian() {
 		}
 		
 		int gindxNV = x.npnt*vdofs +x.NV*sind;
-		int gindxND = x.npnt*vdofs +x.NV*x.nseg +x.NV*x.ntri;
+		int gindxND = jacobian_start +j*tri_mesh::ND;
 		for(int mode = 0; mode < sm; ++mode) {
 			for(int var = 0; var < x.NV; ++var)
 				loc_to_glo(ind++) = gindxNV++;
@@ -1127,9 +1127,9 @@ void surface::petsc_jacobian() {
 			for(int var = 0; var < tri_mesh::ND; ++var)
 				loc_to_glo(ind++) = gindxND++;
 		}
-		
+						
 		element_jacobian(j,K);
-		
+				
 		/* Rotate for diagonal dominance */
 		/* Rotate vertices */
 		ind = x.NV;

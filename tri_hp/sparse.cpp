@@ -76,20 +76,24 @@ void tri_hp::petsc_jacobian() {
 		}		
 		MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
 	}
-	
 	/* APPLY ALL MOVING MESH B.C.'s FIRST */
 	if (mmovement == coupled_deformable) {
 		/* This mostly does nothing, except for angled boundarys */
 		for(int i=0;i<nebd;++i) 
 			r_sbdry(i)->jacobian();
 	
+		/* PETSC IS RETARDED */
+		FLT zero = 0.0;
+		for (int i=npnt*(NV+ND)+sm*NV*nseg+ntri*im*NV;i<jacobian_size;++i) 
+			MatSetValues(petsc_J,1,&i,1,&i,&zero,ADD_VALUES);
+			
 		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
-	
+
 		for(int i=0;i<nebd;++i)
 			r_sbdry(i)->jacobian_dirichlet();
 	}
-				
+					
 	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian();

@@ -276,6 +276,12 @@ class tri_hp_helper {
 		virtual void update(int stage) {}
 		virtual void mg_restrict() {}
 		virtual void output() {};
+		
+		/* Stuff to make jacobians for coupled problems */
+		virtual int dofs(int dofs) { return 0;}
+		virtual void non_sparse(Array<int,1> &nnzero) {}
+		virtual void jacobian() {};
+		virtual void jacobian_dirichlet() {};
 };
 
 namespace basis {

@@ -28,28 +28,23 @@ void tri_hp::petsc_initialize(){
 	jacobian_size = npnt*vdofs +(nseg*sm +ntri*im)*NV;
 
 	/* count total degrees of freedom on boundaries */
-	int isodofs = 0;
 	if (mmovement == coupled_deformable) {
 		for(int i=0;i < nebd; ++i) {
-			if (hp_ebdry(i)->curved && hp_ebdry(i)->coupled) {
-				isodofs += ebdry(i)->nseg*sm*ND;
-			}
+			jacobian_size += hp_ebdry(i)->dofs(jacobian_size);
 		}
-		jacobian_size += isodofs;
+		jacobian_size += helper->dofs(jacobian_size);
 	}
 	
 	/* find number of non-zeros for each row */
 	Array<int,1> nnzero(jacobian_size);
 	int begin_seg = npnt*vdofs;
 	int begin_tri = begin_seg+nseg*sm*NV;
-	int begin_iso = begin_tri +ntri*im*NV;
-	
+		
 	/* SELF CONNECTIONS */
 	nnzero(Range(0,begin_seg-1)) = vdofs; 
 	if (sm) {
-		nnzero(Range(begin_seg,begin_tri-1)) = (2 +sm)*NV;
+		nnzero(Range(begin_seg,begin_tri-1)) = (2*vdofs +sm*NV);
 		/* connections of high order isoparametric mappings */
-		if (mmovement == coupled_deformable && jacobian_size > begin_iso) nnzero(Range(begin_iso,jacobian_size-1)) = vdofs*(sm+3) +NV*(im+2*sm);
 	}
 	if (im) nnzero(Range(begin_tri,jacobian_size-1)) = tm*NV;
 	
@@ -71,29 +66,13 @@ void tri_hp::petsc_initialize(){
 				for(int n=0;n<NV;++n)
 					nnzero(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
 	}
-	
-	/* Connections to isoparametric coordinates */
-	if (sm) {
-		for(int i=0;i<nebd;++i) {
-			if (!hp_ebdry(i)->curved || !hp_ebdry(i)->coupled) continue;
 			
-			for(int j=0;j<ebdry(i)->nseg;++j) {
+	/* Connections to isoparametric coordinates */
+	for(int i=0;i<nebd;++i) 
+		hp_ebdry(i)->non_sparse(nnzero); 	/* FIXME: NEED TO DO PARALLEL COMMUNICATION HERE TO PASS DATA ABOUT NNZ'S ON PARALLEL BOUNDARIES (create nmpizero.data())*/
 
-				int tind = seg(ebdry(i)->seg(j)).tri(0);
-				if (im) nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
-				
-				for(int j=0;j<3;++j) {
-					int sind = tri(tind).seg(j);
-					nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
-					int pind = tri(tind).pnt(j);
-					nnzero(Range(pind*vdofs,(pind+1)*vdofs-1))+= ND*sm;
-				}
-			}
-		}
-	}
-	
-	/* FIXME: NEED TO DO PARALLEL COMMUNICATION HERE TO PASS DATA ABOUT NNZ'S ON PARALLEL BOUNDARIES (create nmpizero.data())*/
-	
+	helper->non_sparse(nnzero);
+		
 	PetscErrorCode err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
 	//MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,PETSC_DECIDE,PETSC_DECIDE,PETSC_NULL,nnzero.data(),PETSC_NULL,nmpizero.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
@@ -102,6 +81,9 @@ void tri_hp::petsc_initialize(){
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE); 
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE); 
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatSetFromOptions(petsc_J);

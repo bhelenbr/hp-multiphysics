@@ -87,6 +87,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		const hp_edge_bdry *adapt_storage;
 		init_bdry_cndtn *ibc;
 		bool curved, coupled;
+		int jacobian_start;
 		Array<TinyVector<FLT,tri_mesh::ND>,2> crv;
 		Array<Array<TinyVector<FLT,tri_mesh::ND>,2>,1> crvbd;
 		Array<TinyMatrix<FLT,tri_mesh::ND,MXGP>,2> dxdt;
@@ -138,6 +139,37 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void element_rsdl(int sind,int stage) {}
 		virtual void rsdl(int stage);
 		virtual void element_jacobian(int sind, Array<FLT,2>& K);
+		virtual int dofs(int start) {
+			jacobian_start = start;
+			if (curved && coupled) 
+				return(tri_mesh::ND*x.sm0*base.nseg);
+			return 0;
+		}
+		virtual void non_sparse(Array<int,1> &nnzero) {
+			if(coupled && curved && x.sm0 > 0) {
+				const int sm=basis::tri(x.log2p)->sm();
+				const int im=basis::tri(x.log2p)->im();
+				const int NV = x.NV;
+				const int ND = tri_mesh::ND;
+				const int vdofs = NV+ND;
+				
+				nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = vdofs*(sm+3) +NV*(im+2*sm);
+			
+				int begin_seg = x.npnt*vdofs;
+				int begin_tri = begin_seg+x.nseg*sm*NV;
+				for (int i=0;i<base.nseg;++i) {
+					int tind = x.seg(base.seg(i)).tri(0);
+					if (im) nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+					
+					for(int j=0;j<3;++j) {
+						int sind = x.tri(tind).seg(j);
+						nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += ND*sm;
+						int pind = x.tri(tind).pnt(j);
+						nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;
+					}
+				}
+			}
+		}
 		virtual void jacobian() {}
 #ifdef petsc
 		virtual void petsc_jacobian();

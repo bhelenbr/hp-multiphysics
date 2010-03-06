@@ -26,6 +26,9 @@ int main(int argc, char **argv) {
 	int myid;
 	MPI_Init(&argc,&argv);
 	MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+	
+	std::cout << "Running processes " << getpid() << std::endl;
+	// system("sleep 20");
 #endif
 #ifdef PTH
 	// For debugging put interrupt here
@@ -39,8 +42,8 @@ int main(int argc, char **argv) {
 #ifdef petsc
 	PetscErrorCode err = PetscInitialize(&argc,&argv,(char *)0,help);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-
 #endif
+
 
 /*	INTERRUPT HANDLER FOR GRACEFUL EXIT ON CTRL-C    	*/	
 	action.sa_handler = ctrlc;
