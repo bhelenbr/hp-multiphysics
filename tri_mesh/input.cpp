@@ -504,7 +504,7 @@ next1a:      continue;
 				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
 				in.ignore(80,':');
 				in >> ebdry(i)->nseg;
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
 				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
 				ebdry(i)->input(in,grid);
 			}
