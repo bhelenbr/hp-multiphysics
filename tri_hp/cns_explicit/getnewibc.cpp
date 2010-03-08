@@ -52,18 +52,18 @@ namespace ibc_cns_explicit {
 				if (!blockdata.get(keyword,perturb_amp)) 
 					blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
 
-				keyword = idnty +"_RT";
-				if (!blockdata.get(keyword,RT)) 
-					blockdata.getwdefault("RT",RT,1.0);
-				
-				keyword = idnty +"_pressure";
-				if (!blockdata.get(keyword,pr)) 
-					blockdata.getwdefault("pressure",pr,1.0);
-				
 				keyword = idnty +"_gamma";
 				if (!blockdata.get(keyword,gamma))
 					blockdata.getwdefault("gamma",gamma,1.403);
-					
+				
+				keyword = idnty +"_RT";
+				if (!blockdata.get(keyword,RT)) 
+					blockdata.getwdefault("RT",RT,1.0/gamma);
+				
+				keyword = idnty +"_pressure";
+				if (!blockdata.get(keyword,pr)) 
+					blockdata.getwdefault("pressure",pr,1.0/gamma);
+				
 				alpha *= M_PI/180.0;
 				vel(0) = speed*cos(alpha);
 				vel(1) = speed*sin(alpha);
@@ -127,8 +127,6 @@ namespace ibc_cns_explicit {
 				keyword = idnty +"_pressure";
 				if (!blockdata.get(keyword,pr)) 
 					blockdata.getwdefault("pressure",pr,1.0/gamma);
-				
-
 				
 				vel(0) = speed*cos(angle);
 				vel(1) = speed*sin(angle);
