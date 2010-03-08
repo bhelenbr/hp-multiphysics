@@ -226,7 +226,7 @@ next1:        continue;
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
@@ -379,7 +379,7 @@ next1a:      continue;
 				count = 0;
 
 				ebdry(i) = getnewedgeobject(temp,bdrymap);
-				ebdry(i)->alloc(static_cast<int>(count*grwfac));
+				ebdry(i)->alloc(static_cast<int>(count*4*grwfac));
 				ebdry(i)->nseg = count;
 
 				in.ignore(160,'\n');
@@ -603,7 +603,7 @@ next1a:      continue;
 				temp = bin.readInt(sizeof(int));
 				if (!ebdry(i)) ebdry(i) = getnewedgeobject(temp,bdrymap);
 				ebdry(i)->nseg = bin.readInt(sizeof(int));
-				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(grwfac*ebdry(i)->nseg));
+				if (!ebdry(i)->maxseg) ebdry(i)->alloc(static_cast<int>(4*grwfac*ebdry(i)->nseg));
 				else assert(ebdry(i)->nseg < ebdry(i)->maxseg);
 				for(int j=0;j<ebdry(i)->nseg;++j)
 					ebdry(i)->seg(j) = bin.readInt(sizeof(int));
@@ -765,7 +765,7 @@ next1b:        continue;
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
@@ -847,7 +847,7 @@ next1c:      continue;
 			nebd = 1;
 			ebdry.resize(1);
 			ebdry(0) = getnewedgeobject(1,bdrymap);
-			ebdry(0)->alloc(static_cast<int>(grwfac*count));
+			ebdry(0)->alloc(static_cast<int>(4*grwfac*count));
 			ebdry(0)->nseg = count;
 			count = 0;
 			for(i=0;i<nseg;++i)
@@ -926,7 +926,7 @@ next1c:      continue;
 			ebdry.resize(nebd);
 			for(i=0;i<nebd;++i) {
 				ebdry(i) = getnewedgeobject(gbl->intwk(i),bdrymap);
-				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*grwfac));
+				ebdry(i)->alloc(static_cast<int>(gbl->i2wk(i)*4*grwfac));
 				ebdry(i)->nseg = 0;
 				gbl->intwk(i) = -1;
 				gbl->i2wk(i) = -1;
