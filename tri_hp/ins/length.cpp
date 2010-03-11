@@ -21,7 +21,7 @@ void tri_hp_ins::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	// return;  // TEMPORARY To simply maintain mesh quality
+//	return;  // TEMPORARY To simply maintain mesh quality
 		
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
@@ -139,7 +139,8 @@ void tri_hp_ins::length() {
 	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT jcb = 0.25*area(tind);
-		FLT error2 = gbl->fltwk(tind)/(jcb*gbl->error_target);  // Magnitude of local truncation error
+		gbl->fltwk(tind) /= (jcb*gbl->error_target);
+		FLT error2 = gbl->fltwk(tind);  // Magnitude of local truncation error
 		FLT ri = pow(error2, -1./(basis::tri(log2p)->p()));
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
