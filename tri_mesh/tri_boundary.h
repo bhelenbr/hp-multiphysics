@@ -61,6 +61,7 @@ class epartition : public ecomm {
 
 		epartition* create(tri_mesh& xin) const {return new epartition(*this,xin);}
 		void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
+		void mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 };
 
 

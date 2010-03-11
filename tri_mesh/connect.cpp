@@ -67,11 +67,20 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 		if(ebdry(bnum)->idnum != tgt.ebdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
 			exit(1);
-		}
+		}		
 		ebdry(bnum)->mgconnect(cnnct,tgt,bnum);
+
 		//thread_func(bnum) = boost::bind(&edge_bdry::mgconnect,ebdry(bnum),boost::ref(cnnct),boost::ref(tgt),bnum);
 		//threads.create_thread(thread_func(bnum));
 	}
+	
+	for(bnum=0;bnum<nebd;++bnum) 
+		ebdry(bnum)->comm_exchange(boundary::partitions,0,boundary::slave_master);
+	
+	for(bnum=0;bnum<nebd;++bnum)
+		ebdry(bnum)->mgconnect1(cnnct,tgt,bnum);
+		
+		
 	//threads.join_all();
 
 }
@@ -100,6 +109,24 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 					work(i)(n) += cnnct(i).wt(j)*cmesh->pnts(cmesh->tri(tind).pnt(j))(n);
 			}
 		}
+		/* FIXME: THIS DOESN'T WORK:  PARTITIONS DON'T WORK IN MULTIGRID !!! */
+//		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+//			for(i=0;i<nebd;++i)
+//				fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) work.data(),0,ND-1,ND);
+//
+//			for(i=0;i<nebd;++i) 
+//				fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+//
+//			for(i=0;i<nebd;++i) 
+//				fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+//
+//			last_phase = true;
+//			for(i=0;i<nebd;++i) {
+//				last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+//				fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum, work.data(),0,ND-1,ND);
+//			}
+//		}
+		
 		Array<TinyVector<FLT,2>,1> storevrtx(pnts);
 		pnts.reference(work);
 		output(fname, grid);

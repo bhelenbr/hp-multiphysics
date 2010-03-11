@@ -464,18 +464,20 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
 			}
 		}
 	}
+	comm_prepare(boundary::partitions,0,slave_master);
+}
 
-	comm_prepare(boundary::all,0,slave_master);
-	comm_exchange(boundary::all,0,slave_master);
-	comm_wait(boundary::all,0,slave_master);
 
+void epartition::mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
+	comm_wait(boundary::partitions,0,slave_master);
+	
 	if (!first) {
-		i = 0;
-		for(k=nseg-1;k>0;--k) {
-			p0 = x.seg(seg(k)).pnt(1);
+		int i = 0;
+		for(int k=nseg-1;k>0;--k) {
+			int p0 = x.seg(seg(k)).pnt(0);
 			if (ircvbuf(0,i) < 0) {
 				cnnct(p0).tri = 0;
-				for(j=0;j<3;++j)
+				for(int j=0;j<3;++j)
 					cnnct(p0).wt(j) = 0.0;
 			}
 		}

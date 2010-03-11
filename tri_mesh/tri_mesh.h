@@ -380,6 +380,7 @@ class edge_bdry : public boundary {
 		virtual void swap(int s1, int s2);
 		virtual void reorder();
 		virtual void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
+		virtual void mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {}
 		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
 		virtual void findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, FLT &psiloc) const;
 
