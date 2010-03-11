@@ -94,6 +94,36 @@
 		6FADD872086EF36A00350FA2 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
 		6FADD873086EF36A00350FA2 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
 		6FADD874086EF36A00350FA2 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC8C070B25A40099AAD7 /* getnewblock.cpp */; };
+		6FB38FFE11472D7C009EF199 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB38FFF11472D7C009EF199 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900011472D7C009EF199 /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900111472D7C009EF199 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900211472D7C009EF199 /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900311472D7C009EF199 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900411472D7C009EF199 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6FB3900611472D7C009EF199 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
+		6FB3900711472D7C009EF199 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BE6B500162B73801000001 /* copy.cpp */; };
+		6FB3900811472D7C009EF199 /* setup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94700974D3D80990B20 /* setup.cpp */; };
+		6FB3900911472D7C009EF199 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94800974D3D80990B20 /* output.cpp */; };
+		6FB3900A11472D7C009EF199 /* findmatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94500974D3D80990B20 /* findmatch.cpp */; };
+		6FB3900B11472D7C009EF199 /* refineby2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F515EA5602B7E15B012A8EDA /* refineby2.cpp */; };
+		6FB3900C11472D7C009EF199 /* tprims.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94B00974D3D80990B20 /* tprims.cpp */; };
+		6FB3900D11472D7C009EF199 /* coarsen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94200974D3D80990B20 /* coarsen.cpp */; };
+		6FB3900E11472D7C009EF199 /* triangulate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F50FCD7F0128AA9801000001 /* triangulate.cpp */; };
+		6FB3900F11472D7C009EF199 /* insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5BDAB54014068AC01000001 /* insert.cpp */; };
+		6FB3901011472D7C009EF199 /* rebay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F543FC18014FCBC901000001 /* rebay.cpp */; };
+		6FB3901111472D7C009EF199 /* collapse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00E0854300CAD1857F000001 /* collapse.cpp */; };
+		6FB3901211472D7C009EF199 /* swap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5CED4AF015630AA01000001 /* swap.cpp */; };
+		6FB3901311472D7C009EF199 /* yaber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5F975AB0152459801000001 /* yaber.cpp */; };
+		6FB3901411472D7C009EF199 /* meshutilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */; };
+		6FB3901511472D7C009EF199 /* connect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94300974D3D80990B20 /* connect.cpp */; };
+		6FB3901611472D7C009EF199 /* tri_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F528820502B1545D012A8EDA /* tri_boundary.cpp */; };
+		6FB3901711472D7C009EF199 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5AF3BF901879D4B0131A0B3 /* getnewbdry.cpp */; };
+		6FB3901811472D7C009EF199 /* r_mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94A00974D3D80990B20 /* r_mesh.cpp */; };
+		6FB3901911472D7C009EF199 /* getnewr_bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FF8CC88070B25260099AAD7 /* getnewr_bdry.cpp */; };
+		6FB3901A11472D7C009EF199 /* blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F53FC7D10343C82E01E186A8 /* blocks.cpp */; };
+		6FB3901B11472D7C009EF199 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F5F76680760062A0026BE93 /* adapt.cpp */; };
+		6FB3901C11472D7C009EF199 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; };
 		6FB91AB70ACCB10300792B04 /* tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E95000974D3D80990B20 /* tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91AB80ACCB10300792B04 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB91AB90ACCB10300792B04 /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -192,6 +222,7 @@
 		6F5F76680760062A0026BE93 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6F8509B607A5383700343685 /* libquad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libquad.a; path = /Users/helenbrk/Codes/lib/libquad.a; sourceTree = "<absolute>"; };
 		6F92F9F108B94B60006F9C2C /* index.html */ = {isa = PBXFileReference; explicitFileType = text.html.documentation; fileEncoding = 30; name = index.html; path = html/index.html; sourceTree = "<group>"; };
+		6FB3902111472D7C009EF199 /* libtri_mesh_petsc.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh_petsc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libtri_mesh_mpi.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_mesh_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FC45D1207A0B35E00ADC8D3 /* meshutilities.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = meshutilities.cpp; sourceTree = "<group>"; };
@@ -221,6 +252,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		6F2262BE08672FAE001017D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB3901D11472D7C009EF199 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -339,6 +377,7 @@
 			children = (
 				6F2262C008672FAE001017D0 /* libtri_mesh.a */,
 				6FB91ADC0ACCB10300792B04 /* libtri_mesh_mpi.a */,
+				6FB3902111472D7C009EF199 /* libtri_mesh_petsc.a */,
 				6FC7DF0305B30C6E001FE736 /* tri_mesh */,
 				6FB91B130ACCB1E100792B04 /* tri_mesh_mpi */,
 			);
@@ -402,6 +441,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6FB38FFD11472D7C009EF199 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB38FFE11472D7C009EF199 /* tri_mesh.h in Headers */,
+				6FB38FFF11472D7C009EF199 /* boundary.h in Headers */,
+				6FB3900011472D7C009EF199 /* tri_boundary.h in Headers */,
+				6FB3900111472D7C009EF199 /* r_tri_mesh.h in Headers */,
+				6FB3900211472D7C009EF199 /* r_tri_boundary.h in Headers */,
+				6FB3900311472D7C009EF199 /* block.h in Headers */,
+				6FB3900411472D7C009EF199 /* blocks.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6FB91AB60ACCB10300792B04 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -462,6 +515,23 @@
 			name = libtri_mesh;
 			productName = lib;
 			productReference = 6F2262C008672FAE001017D0 /* libtri_mesh.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6FB38FFC11472D7C009EF199 /* libtri_mesh_petsc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6FB3901E11472D7C009EF199 /* Build configuration list for PBXNativeTarget "libtri_mesh_petsc" */;
+			buildPhases = (
+				6FB38FFD11472D7C009EF199 /* Headers */,
+				6FB3900511472D7C009EF199 /* Sources */,
+				6FB3901D11472D7C009EF199 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libtri_mesh_petsc;
+			productName = lib;
+			productReference = 6FB3902111472D7C009EF199 /* libtri_mesh_petsc.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FB91AB50ACCB10300792B04 /* libtri_mesh_mpi */ = {
@@ -531,6 +601,7 @@
 			targets = (
 				6F2262BF08672FAE001017D0 /* libtri_mesh */,
 				6FB91AB50ACCB10300792B04 /* libtri_mesh_mpi */,
+				6FB38FFC11472D7C009EF199 /* libtri_mesh_petsc */,
 				6FC7DED805B30C6E001FE736 /* tri_mesh */,
 				6FB91AE10ACCB1E100792B04 /* tri_mesh_mpi */,
 				6F27980608B9FA49007BECA9 /* Documentation */,
@@ -599,6 +670,36 @@
 				6F2262E4086730AF001017D0 /* blocks.cpp in Sources */,
 				6F1A386008C63AC500A4A615 /* adapt.cpp in Sources */,
 				6FC0044C08CD33CF0030E073 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6FB3900511472D7C009EF199 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6FB3900611472D7C009EF199 /* input.cpp in Sources */,
+				6FB3900711472D7C009EF199 /* copy.cpp in Sources */,
+				6FB3900811472D7C009EF199 /* setup.cpp in Sources */,
+				6FB3900911472D7C009EF199 /* output.cpp in Sources */,
+				6FB3900A11472D7C009EF199 /* findmatch.cpp in Sources */,
+				6FB3900B11472D7C009EF199 /* refineby2.cpp in Sources */,
+				6FB3900C11472D7C009EF199 /* tprims.cpp in Sources */,
+				6FB3900D11472D7C009EF199 /* coarsen.cpp in Sources */,
+				6FB3900E11472D7C009EF199 /* triangulate.cpp in Sources */,
+				6FB3900F11472D7C009EF199 /* insert.cpp in Sources */,
+				6FB3901011472D7C009EF199 /* rebay.cpp in Sources */,
+				6FB3901111472D7C009EF199 /* collapse.cpp in Sources */,
+				6FB3901211472D7C009EF199 /* swap.cpp in Sources */,
+				6FB3901311472D7C009EF199 /* yaber.cpp in Sources */,
+				6FB3901411472D7C009EF199 /* meshutilities.cpp in Sources */,
+				6FB3901511472D7C009EF199 /* connect.cpp in Sources */,
+				6FB3901611472D7C009EF199 /* tri_boundary.cpp in Sources */,
+				6FB3901711472D7C009EF199 /* getnewbdry.cpp in Sources */,
+				6FB3901811472D7C009EF199 /* r_mesh.cpp in Sources */,
+				6FB3901911472D7C009EF199 /* getnewr_bdry.cpp in Sources */,
+				6FB3901A11472D7C009EF199 /* blocks.cpp in Sources */,
+				6FB3901B11472D7C009EF199 /* adapt.cpp in Sources */,
+				6FB3901C11472D7C009EF199 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -813,6 +914,88 @@
 					"-Wno-four-char-constants",
 					"-Wno-unknown-pragmas",
 				);
+			};
+			name = Deployment;
+		};
+		6FB3901F11472D7C009EF199 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					METIS,
+					NO_MPISRC,
+					BZ_DEBUG,
+				);
+				GCC_VERSION = 4.0;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tri_mesh;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
+			};
+			name = Development;
+		};
+		6FB3902011472D7C009EF199 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
+				GCC_DEBUGGING_SYMBOLS = default;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					petsc,
+					METIS,
+					NO_MPISRC,
+					f2cFortran,
+				);
+				GCC_VERSION = 4.0;
+				HEADER_SEARCH_PATHS = (
+					"$(prefix)/include",
+					"$(packages)/include",
+				);
+				INSTALL_PATH = /lib;
+				LIBRARY_SEARCH_PATHS = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = /tmp;
+				PRODUCT_NAME = tri_mesh_petsc;
+				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+				packages = "$(HOME)/Packages";
+				prefix = "$(HOME)/Codes";
 			};
 			name = Deployment;
 		};
@@ -1128,6 +1311,15 @@
 			buildConfigurations = (
 				6F27981008B9FA5A007BECA9 /* Development */,
 				6F27981108B9FA5A007BECA9 /* Deployment */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Development;
+		};
+		6FB3901E11472D7C009EF199 /* Build configuration list for PBXNativeTarget "libtri_mesh_petsc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB3901F11472D7C009EF199 /* Development */,
+				6FB3902011472D7C009EF199 /* Deployment */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Development;
