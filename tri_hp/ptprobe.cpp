@@ -87,10 +87,6 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 			s += ds;
 			if (iter++ > 100) {
 				*gbl->log << "#Warning: max iterations for curved triangle " << tind << "find tri?" << found << " from near pt " << v0 << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
-				std::ostringstream fname;
-				fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
-				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 				/* TRIANGLE COORDINATES */    
 				s = wgt(0)*2 -1.0;
 				r = wgt(2)*2 -1.0;
@@ -102,10 +98,6 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	
 		if (r < -(1.0+10.0*FLT_EPSILON) || r > (1.0+10.0*FLT_EPSILON) || s < -(1.0+10.0*FLT_EPSILON) || s > (1.0+10.0*FLT_EPSILON)) {
 			*gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << found << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
-			std::ostringstream fname;
-			fname << "target_solution" << gbl->tstep << '_' << gbl->idprefix;
-			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 			found = false;
 		}
 		/* need to do this because ptprobe_bdry only calculates boundary function */
@@ -116,7 +108,7 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	
 	/* CHECK FOR STRAIGHT EDGED TRIANGLES */
 	if (!found) {
-		*gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << std::endl;
+		*gbl->log << "#Warning point outside of straight edged triangle " << tind << " loc: " << xp << " r: " << r << " s: " << s << std::endl;
 	}
 	/* need to do this because ptprobe_bdry only calculates boundary function */
 	basis::tri(log2p)->ptvalues_rs(r,s);
