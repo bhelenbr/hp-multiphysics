@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-// #define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -152,15 +152,15 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 
 //		cout << "tprcn: "<< tprcn << endl;
 //		cout << "tau: "<< tau << endl;
-//		cout << "tstep: "<< tstep << " tstep estimate: " << hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+sqrt(gbl->gamma*umax(3))) << endl;
-		
+//		cout << "tstep: "<< tstep << " tstep estimate: " << hmax/2.0/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+sqrt(gbl->gamma*umax(3))) << endl;
+//		tstep = .001;
 		//tstep = hmax/(sqrt(umax(1)*umax(1)+umax(2)*umax(2))+sqrt(gbl->gamma*umax(3)));
 		//cout << tstep << endl;
-
+		//tstep = 1.0e-5;
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		/* SET UP DIAGONAL PRECONDITIONER */
-		jcb /= tstep;  // temp fix me
+		jcb /= tstep/10.;  // temp fix me
 
 #ifdef TIMEACCURATE
 		dtstari = MAX(1./tstep,dtstari);

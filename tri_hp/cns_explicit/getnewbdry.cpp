@@ -56,34 +56,11 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
 
 
 	switch(type) {
-//		case tri_hp_cns_explicit_vtype::surface_inflow: {
-//			temp = new surface_fixed_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_vtype::surface_periodic: {
-//			temp = new surface_periodic_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_vtype::surface_outflow: {
-//			temp = new surface_outflow_endpt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_vtype::surface_outflow_planar: {
-//			temp = new surface_outflow_planar(*this,*vbdry(bnum));
-//			break;
-//		}
+
 		case tri_hp_cns_explicit_vtype::inflow: {
 			temp = new inflow_pt(*this,*vbdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_explicit_vtype::hybrid_slave_point: {
-//			temp = new hybrid_slave_pt(*this,*vbdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_vtype::hybrid_point: {
-//			temp = new hybrid_pt(*this,*vbdry(bnum));
-//			break;
-//		}
 		default: {
 			temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
 			break;
@@ -150,42 +127,15 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 			temp = new neumann(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_explicit_stype::characteristic: {
-//			temp = new characteristic(*this,*ebdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_stype::euler: {
-//			temp = new euler(*this,*ebdry(bnum));
-//			break;
-//		}
-//		case tri_hp_cns_explicit_stype::symmetry: {
-//			temp = new symmetry(*this,*ebdry(bnum));
-//			break;
-//		}
+		case tri_hp_cns_explicit_stype::characteristic: {
+			temp = new characteristic(*this,*ebdry(bnum));
+			break;
+		}
+
 		case tri_hp_cns_explicit_stype::applied_stress: {
 			temp = new applied_stress(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_explicit_stype::surface: {
-//			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
-//				temp = new surface(*this,*ebdry(bnum));
-//				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-//			}
-//			else {
-//				std::cerr << "use coupled physics for surface boundary" << std::endl;
-//				exit(1);
-//			}
-//			break;
-//		}
-//		case tri_hp_cns_explicit_stype::surface_slave: {
-//			temp = new surface_slave(*this,*ebdry(bnum));
-//			dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
-//			break;
-//		}
-//		case tri_hp_cns_explicit_stype::force_coupling: {
-//			temp = new force_coupling(*this,*ebdry(bnum));
-//			break;
-//		}
 		default: {
 			temp = tri_hp::getnewsideobject(bnum,bdrydata);
 			break;

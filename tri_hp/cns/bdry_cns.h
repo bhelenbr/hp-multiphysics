@@ -80,15 +80,6 @@ namespace bdry_cns {
 	protected:
 		virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 			
-			// switch u from conservative to primitive 
-			Array<FLT,1> cv(x.NV);
-			cv=u;
-			
-			u(0) = (x.gbl->gamma-1.0)*(cv(3)-0.5/cv(0)*(cv(1)*cv(1)+cv(2)*cv(2)));
-			u(1) = cv(1)/cv(0);
-			u(2) = cv(2)/cv(0);
-			u(3) = u(0)/cv(0);
-			
 			/* CONTINUITY */
 			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 			
@@ -123,15 +114,6 @@ namespace bdry_cns {
 		Array<int,1> dirichlets;
 		int ndirichlets;
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-			
-			// switch u from conservative to primitive 
-			Array<FLT,1> cv(x.NV);
-			cv=u;
-			
-			u(0) = (x.gbl->gamma-1.0)*(cv(3)-0.5/cv(0)*(cv(1)*cv(1)+cv(2)*cv(2)));
-			u(1) = cv(1)/cv(0);
-			u(2) = cv(2)/cv(0);
-			u(3) = u(0)/cv(0);
 			
 			/* CONTINUITY */
 			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
@@ -364,15 +346,6 @@ namespace bdry_cns {
 
 		protected:
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-
-				// switch u from conservative to primitive 
-				Array<FLT,1> cv(x.NV);
-				cv=u;
-				
-				u(0) = (x.gbl->gamma-1.0)*(cv(3)-0.5/cv(0)*(cv(1)*cv(1)+cv(2)*cv(2)));
-				u(1) = cv(1)/cv(0);
-				u(2) = cv(2)/cv(0);
-				u(3) = u(0)/cv(0);
 				
 				/* CONTINUITY */
 				flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));

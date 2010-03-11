@@ -184,23 +184,22 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<F
 	FLT ke = 0.5*(uv*uv+vv*vv);
 	
 	/* Preconditioner */
-	P = ke*gm1,            -uv*gm1,           -vv*gm1,           gm1,
-	    -uv/pr*rt,         1.0/pr*rt,         0.0,               0.0,
-        -1.0/pr*vv*rt,     0.0,               1.0/pr*rt,         0.0,
-		pr*(gm1*ke-rt)*rt, -1.0/pr*rt*uv*gm1, -1.0/pr*rt*vv*gm1, 1.0/pr*rt*gm1;
-	
+	P = ke*gm1,            -uv*gm1,       -vv*gm1,       gm1,
+		-uv/pr*rt,         rt/pr,         0.0,           0.0,
+		-vv*rt/pr,         0.0,           1.0/pr*rt,     0.0,
+		rt*(gm1*ke-rt)/pr, -rt*uv*gm1/pr, -rt*vv*gm1/pr, rt*gm1/pr;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/rt,        0.0,      0.0,      -pr/rt/rt,
-           uv/rt,         pr/rt,    0.0,      -uv*pr/rt/rt,
-           vv/rt,         0.0,      pr/rt,    -vv*pr/rt/rt,
-		   1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
+		uv/rt,         pr/rt,    0.0,      -uv*pr/rt/rt,
+		vv/rt,         0.0,      pr/rt,    -vv*pr/rt/rt,
+		1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
 	
 	/* df/dw */
-	A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-		1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-		1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-		1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+	A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+		uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+		uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+		uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
 	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
@@ -212,10 +211,10 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<F
 	matrix_absolute_value(A);
 	
 	/* dg/dw */
-	B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-		1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-		1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-		1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+	B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+		uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+		vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+		vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
 	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
