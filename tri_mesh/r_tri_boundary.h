@@ -9,8 +9,6 @@
 
 #include "tri_mesh.h"
 
-// #define petsc
-
 class r_side_bdry {
 	protected:
 		std::string mytype;
