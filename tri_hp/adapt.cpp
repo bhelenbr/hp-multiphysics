@@ -12,6 +12,8 @@
 #include <myblas.h>
 
 void tri_hp::adapt() {
+
+		
 	treeinit();  // FIXME??
 	gbl->pstr->copy(*this);
 	tri_mesh::adapt();
@@ -21,6 +23,13 @@ void tri_hp::adapt() {
 	petsc_finalize();
 	petsc_initialize();
 #endif
+
+	if (gbl->adapt_output) {
+		std::ostringstream fname;
+		fname << "adapted_solution" << gbl->tstep << '_' << gbl->idprefix;
+		tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+		tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+	}
 	
 	*gbl->log << "# Adaptation Complete with DOF: " << npnt +nseg*sm0 +ntri*im0 << std::endl;
 	
@@ -139,10 +148,10 @@ void tri_hp::updatesdata(int sind) {
 		found = gbl->pstr->findinteriorpt(pt,tind,r,s);
 		if (!found) {
 			*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatesdata for " << sind << ' ' << pt << std::endl;
-			std::ostringstream fname;
-			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
-			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+//			std::ostringstream fname;
+//			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
+//			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+//			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 		}
 
 		for(step=0;step<gbl->nadapt;++step) {
@@ -303,10 +312,10 @@ void tri_hp::updatetdata(int tind) {
 			found = gbl->pstr->findinteriorpt(pt,ttgt,r,s);
 			if (!found) {
 				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
-				std::ostringstream fname;
-				fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
-				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
-				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+//				std::ostringstream fname;
+//				fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
+//				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+//				tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
 			}            
 			for(step=0;step<gbl->nadapt;++step) {
 				gbl->pstr->ugtouht(ttgt,step);
