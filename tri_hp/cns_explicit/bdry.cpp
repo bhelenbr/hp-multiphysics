@@ -226,42 +226,51 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	
 	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
 	norm /= mag;
-	
+
+	/* Left */
+	/* Rotate Coordinate System */
 	FLT ul =  u(1)*norm(0) +u(2)*norm(1);
 	FLT vl = -u(1)*norm(1) +u(2)*norm(0);
 	u(1) = ul, u(2) = vl;
 
+	/* Roe Variables */
 	Rl(0) = sqrt(u(0));
 	Rl(1) = ul/Rl(0);
 	Rl(2) = vl/Rl(0);
 	Rl(3) = u(3)/Rl(0);	
 	
+	/* Right */
 	for(int n=0;n<x.NV;++n)
 		ub(n) = ibc->f(n,xpt,x.gbl->time);
-	
+
+	/* Rotate Coordinate System */
 	FLT ur =  ub(1)*norm(0) +ub(2)*norm(1);
 	FLT vr = -ub(1)*norm(1) +ub(2)*norm(0);
 	ub(1) = ur, ub(2) = vr;
 
+	/* Roe Variables */
 	Rr(0) = sqrt(ub(0));
 	Rr(1) = ur/Rr(0);
 	Rr(2) = vr/Rr(0);
 	Rr(3) = ub(3)/Rr(0);	
 	
+	/* Average Roe Variables */
 	Roe = 0.5*(Rl+Rr);
-	
+
+	/* Calculate u,v,c Variables */
 	FLT uv = Roe(1)/Roe(0);
 	FLT vv = Roe(2)/Roe(0);
 	FLT KE = 0.5*(uv*uv+vv*vv);
 	FLT H = Roe(3)/Roe(0);
 	FLT gam = x.gbl->gamma;
 	FLT RT = (gam-1.0)*(H-KE);
-	FLT c = sqrt(gam*RT);
-	
-	A = 0.0,                                        1.0,                                                                          0.0,            0.0,
-	    gam*KE-1.5*uv*uv-0.5*vv*vv,                 3.0*uv-uv*gam,                                                                -vv*(gam-1.0),  gam-1,
-	    -uv*vv,                                     vv,                                                                           uv,             0.0,
-	    uv*(-3*gam*KE+2*KE-c*c+gam*gam*KE)/(gam-1), -(1.5*uv*uv-2.5*uv*uv*gam-0.5*vv*vv*gam+0.5*vv*vv-c*c+uv*uv*gam*gam)/(gam-1), -uv*(gam-1)*vv, uv*gam;
+	FLT c2 = gam*RT;
+
+	/* df/dw in u,v,c Variables */
+	A = 0.0,                                       1.0,                                                                         0.0,            0.0,
+	    gam*KE-1.5*uv*uv-0.5*vv*vv,                3.0*uv-uv*gam,                                                               -vv*(gam-1.0),  gam-1,
+	    -uv*vv,                                    vv,                                                                          uv,             0.0,
+	    uv*(-3*gam*KE+2*KE-c2+gam*gam*KE)/(gam-1), -(1.5*uv*uv-2.5*uv*uv*gam-0.5*vv*vv*gam+0.5*vv*vv-c2+uv*uv*gam*gam)/(gam-1), -uv*(gam-1)*vv, uv*gam;
 	
 	temp = 0.0;
 	
@@ -270,18 +279,18 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 			temp(i) += 0.5*A(i,j)*(ub(j)+u(j));
 	
 	matrix_absolute_value(A);
-	
+
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
 			temp(i) -= 0.5*A(i,j)*(ub(j)-u(j));
-	
-	norm *= mag;
 
 	/* CHANGE BACK TO X,Y COORDINATES */
 	flx(0) = temp(0);
-	flx(1) =  temp(1)*norm(0) -temp(2)*norm(1);
-	flx(2) =  temp(1)*norm(1) +temp(2)*norm(0);
+	flx(1) = temp(1)*norm(0) -temp(2)*norm(1);
+	flx(2) = temp(1)*norm(1) +temp(2)*norm(0);
 	flx(3) = temp(3);
+	
+	flx *= mag;
 	
 	return;
 }

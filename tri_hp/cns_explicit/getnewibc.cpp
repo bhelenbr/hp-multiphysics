@@ -42,7 +42,7 @@ namespace ibc_cns_explicit {
 
 				keyword = idnty +"_flowspeed";
 				if (!blockdata.get(keyword,speed)) 
-					blockdata.getwdefault("flowspeed",speed,1.0);
+					blockdata.getwdefault("flowspeed",speed,0.1);
 
 				keyword = idnty +"_flowangle";
 				if (!blockdata.get(keyword,alpha)) 
@@ -101,7 +101,7 @@ namespace ibc_cns_explicit {
 
 				keyword = idnty +"_flowspeed";
 				if (!blockdata.get(keyword,speed)) 
-					blockdata.getwdefault("flowspeed",speed,1.0);
+					blockdata.getwdefault("flowspeed",speed,0.1);
 
 				keyword = idnty +"_angle";
 				if (!blockdata.get(keyword,angle)) 
