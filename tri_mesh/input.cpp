@@ -952,9 +952,6 @@ next1c:      continue;
 			ntri = 0;
 			triangulate(nseg);
 			
-			/* INSERT ADDITIONAL POINTS HERE */
-			
-			
 			/* SOME TESTING FOR SPLINES */
 //                for(i=0;i<nebd;++i) {
 //                    ebdry(i)->input(in,boundary);
@@ -1012,6 +1009,30 @@ next1c:      continue;
 	createpnttri();
 	cnt_nbor();
 	treeinit();
+	
+	if (filetype == boundary) {
+		/* Check if there are additional points to insert */
+		/* This only happens for .d files */
+		int bpnts = 0;
+		for (i=0;i<nebd;++i)
+			bpnts += ebdry(i)->nseg;
+			
+		std::cout << bpnts << std::endl;
+			
+		if (bpnts < npnt) {
+			int pnear,tind,err;
+			bool found;
+			for(int i=bpnts;i<npnt;++i) {
+				qtree.addpt(i);
+				qtree.nearpt(i,pnear);
+				found = findtri(pnts(i),pnear,tind);
+				assert(found);
+				err = insert(i,tind);
+			}
+		}
+		cnt_nbor();
+	}
+
 
 	grd_app = grd_nm + ".lngth";
 	in.open(grd_app.c_str());
