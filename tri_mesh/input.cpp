@@ -951,7 +951,10 @@ next1c:      continue;
 
 			ntri = 0;
 			triangulate(nseg);
-
+			
+			/* INSERT ADDITIONAL POINTS HERE */
+			
+			
 			/* SOME TESTING FOR SPLINES */
 //                for(i=0;i<nebd;++i) {
 //                    ebdry(i)->input(in,boundary);
