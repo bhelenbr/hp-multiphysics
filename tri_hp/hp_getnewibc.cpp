@@ -92,9 +92,8 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 
 class translating : public tri_hp_helper {
 	public: 
-		tri_hp &x;
 		TinyVector<FLT,2> velocity;
-		translating(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
+		translating(tri_hp &xin) :tri_hp_helper(xin) {}
 
 		virtual void init(input_map& input, std::string idnty) {
 			std::string keyword,val;
@@ -129,9 +128,8 @@ class translating : public tri_hp_helper {
 
 class gcl_test : public tri_hp_helper {
 	public: 
-		tri_hp &x;
 		Array<symbolic_function<2>,1> vel;
-		gcl_test(tri_hp &xin) : tri_hp_helper(xin), x(xin) {}
+		gcl_test(tri_hp &xin) : tri_hp_helper(xin) {}
 
 		virtual void init(input_map& input, std::string idnty) {
 			std::string keyword,val;
@@ -192,8 +190,7 @@ class l2_error : public tri_hp_helper {
 
 class print_averages : public tri_hp_helper {
 	public: 
-		tri_hp &x;
-		print_averages(tri_hp &xin) :tri_hp_helper(xin), x(xin) {}
+		print_averages(tri_hp &xin) :tri_hp_helper(xin) {}
 		void output() {            
 			Array<FLT,1> av(x.NV+3);
 			x.integrated_averages(av);
@@ -202,6 +199,65 @@ class print_averages : public tri_hp_helper {
 				*x.gbl->log << " V" << n << ": " << av(n+3);
 			*x.gbl->log << std::endl;
 
+			return;
+		}
+};
+
+class cartesian_interpolation : public tri_hp_helper {
+	TinyMatrix<FLT,2,tri_mesh::ND> bbox;
+	TinyVector<int,tri_mesh::ND> ndiv;
+	
+	public: 
+		cartesian_interpolation(tri_hp &xin) : tri_hp_helper(xin) {}
+		void init(input_map& input, std::string idnty) {
+			tri_hp_helper::init(input,idnty);
+			
+			if (!input.get(idnty+"_bbox0",&bbox(0,0),tri_mesh::ND)) {
+				if (!input.get("bbox0",&bbox(0,0),tri_mesh::ND)) {
+					*x.gbl->log << "couldn't find bbox0" << std::endl;
+				}
+			}
+			if (!input.get(idnty+"_bbox1",&bbox(1,0),tri_mesh::ND)) {
+				if (!input.get("bbox1",&bbox(1,0),tri_mesh::ND)) {
+					*x.gbl->log << "couldn't find bbox0" << std::endl;
+				}
+			}
+			if (!input.get(idnty+"_divisions",ndiv.data(),tri_mesh::ND)) {
+				if (!input.get("divisions",ndiv.data(),tri_mesh::ND)) {
+					*x.gbl->log << "couldn't find bbox0" << std::endl;
+				}
+			}		
+			
+			
+		}
+		void output() {
+			Array<FLT,1> u(x.NV);
+			TinyVector<FLT,tri_mesh::ND> xpt;
+			post_process = true;
+			std::ofstream out;
+			std::ostringstream filename;
+			filename << "cartesian_pts" << x.gbl->tstep << ".dat";
+			out.open(filename.str().c_str());
+			out << "ZONE I=" << ndiv(0)+1 << ", J=" << ndiv(1)+1 << ", F=POINT\n"; 
+
+			int tind = -1;
+			for (int jx=0;jx<ndiv(1)+1;++jx) {
+				xpt(1) = bbox(0,1) +jx*(bbox(1,1)-bbox(0,1))/ndiv(1);
+				for (int ix=0;ix<ndiv(0)+1;++ix) {
+					xpt(0) = bbox(0,0) +ix*(bbox(1,0)-bbox(0,0))/ndiv(0);
+					bool found = x.ptprobe(xpt,u,tind);
+					if (!found) u = 0.0;
+					for(int n=0;n<x.ND;++n) {
+						out << xpt(n) << ' ';
+					}
+					for(int n=0;n<x.NV;++n) {
+						out << u(n) << ' ';
+					}
+					out << '\n';
+				}
+				tind = -1;
+			}
+			out.close();
 			return;
 		}
 };
@@ -276,8 +332,8 @@ class output_contour : public tri_hp_helper {
 
 class helper_type {
 	public:
-		const static int ntypes = 5;
-		enum ids {translating,print_averages,l2error,output_contour,gcl_test};
+		const static int ntypes = 6;
+		enum ids {translating,print_averages,l2error,output_contour,gcl_test,cartesian_interpolation};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -286,7 +342,7 @@ class helper_type {
 			return(-1);
 		}
 };
-const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test"};
+const char helper_type::names[ntypes][40] = {"translating","print_averages","l2error","output_contour","gcl_test","cartesian_interpolation"};
 
 
 tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
@@ -318,6 +374,10 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
 		}
 		case helper_type::gcl_test: {
 			tri_hp_helper *temp = new gcl_test(*this);
+			return(temp);
+		}
+		case helper_type::cartesian_interpolation: {
+			tri_hp_helper *temp = new cartesian_interpolation(*this);
 			return(temp);
 		}
 		default: {
