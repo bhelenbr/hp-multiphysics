@@ -264,13 +264,27 @@ class tri_hp : public r_tri_mesh  {
 class tri_hp_helper {
 	protected:
 		tri_hp &x;
+		bool post_process;
+
 	public:
-		tri_hp_helper(tri_hp& xin) : x(xin) {}
+		tri_hp_helper(tri_hp& xin) : x(xin), post_process(false) {}
 		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin) {}
 		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
 		virtual ~tri_hp_helper() {};
-		virtual void init(input_map& input, std::string idnty) {}
-		virtual void tadvance() {}
+		virtual void init(input_map& input, std::string idnty) {
+			if (!input.get(idnty+"_post_process",post_process)) {
+				input.getwdefault("post_process",post_process,false);
+			}
+		}
+		virtual void tadvance() {
+			if (post_process) {
+				std::ostringstream nstr;
+				std::string fname;
+				nstr << x.gbl->tstep << std::flush;
+				fname = "rstrt" +nstr.str() +"_" +x.gbl->idprefix;
+				x.input(fname);
+			} 
+		}
 		virtual void setup_preconditioner() {}
 		virtual void rsdl(int stage) {}
 		virtual void update(int stage) {}
