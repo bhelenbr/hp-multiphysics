@@ -136,7 +136,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	rsdls_recv.resize(tmodes);
 	multiplicity.resize(tmodes);
 	jacobian.resize(tmodes,tmodes);
-    ipiv.resize(tmodes);
+	ipiv.resize(tmodes);
 
 	/* Count total number of boundary modes */
 	/* and make map be an accrual of previous modes */
@@ -158,7 +158,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	binifstream bin;
 	bin.open(filename.c_str());
 	if (bin.error()) {
-		*BASE::gbl->log << "couldn't open coefficient input file " << filename;
+		*BASE::gbl->log << "couldn't open coefficient input file " << filename << std::endl;
 		exit(1);
 	}
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
@@ -185,7 +185,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i)->init(input);
 	}	
 
-	*BASE::gbl->log << multiplicity << std::endl;
+	// *BASE::gbl->log << multiplicity << std::endl;
 
 
 	return;

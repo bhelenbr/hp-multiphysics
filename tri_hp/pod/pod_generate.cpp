@@ -59,7 +59,6 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		modes(i).s.resize(BASE::maxpst,BASE::sm0,BASE::NV);
 		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
 	}
-	coeffs.resize(nmodes);
 #else
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
@@ -365,7 +364,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (k=0;k<nsnapshots;++k) {
 		/* OUTPUT COEFFICIENT VECTOR */
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k+restartfile << std::flush;
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());
@@ -666,7 +665,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
 
 		for (l=0;l<nmodes;++l) 
-			bout.writeFloat(coeff(k,l),binio::Double);
+			bout.writeFloat(coeff(k-restartfile,l),binio::Double);
 
 		bout.close();
 	}
@@ -758,7 +757,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	/* MAKE FILES FOR EDGE MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k+x.restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + x.gbl->idprefix +".d0";
 		x.input(filename, BASE::binary);
 		nstr.str("");
@@ -1012,12 +1011,12 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	/*****************************/
 	for (k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k+x.restartfile << std::flush;
 		filename = "coeff" +nstr.str() + "_" +base.idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());
 		if (bout.error()) {
-			*x.gbl->log << "couldn't open coefficient output file " << filename;
+			*x.gbl->log << "couldn't open coefficient output file " << filename << std::endl;
 			exit(1);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);

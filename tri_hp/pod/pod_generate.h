@@ -23,7 +23,6 @@ template<class BASE> class pod_generate : public BASE {
 		int pod_id;
 		int restartfile;
 		Array<FLT,1> scaling;
-		Array<FLT,1> coeffs;
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
 
@@ -37,8 +36,8 @@ template<class BASE> class pod_generate : public BASE {
 	protected:
 		int nsnapshots;
 		int nmodes;
+		int restartfile;
 		Array<FLT,1> scaling;
-		Array<FLT,1> coeffs;
 		typedef typename BASE::vsi vsi;
 		Array<vsi,1> modes;
 		Array<FLT,1> psimatrix,psimatrix_recv;
