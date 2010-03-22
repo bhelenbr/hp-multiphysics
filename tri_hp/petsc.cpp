@@ -83,8 +83,9 @@ void tri_hp::petsc_initialize(){
 	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE); 
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE); 
-	CHKERRABORT(MPI_COMM_WORLD,err);
+	/* Uncomment for debugging */
+//	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE); 
+//	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatSetFromOptions(petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
