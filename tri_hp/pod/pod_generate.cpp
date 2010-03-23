@@ -316,7 +316,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (k=0;k<nsnapshots;++k) {
 		/* LOAD SNAPSHOT */
 		nstr.str("");
-		nstr << k+1 << std::flush;
+		nstr << k+restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::input(filename, BASE::binary);
 
