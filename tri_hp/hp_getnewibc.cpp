@@ -386,4 +386,3 @@ tri_hp_helper *tri_hp::getnewhelper(input_map& inmap) {
 		}
 	}
 }
-
