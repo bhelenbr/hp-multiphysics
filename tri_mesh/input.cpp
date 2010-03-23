@@ -154,7 +154,7 @@ void tri_mesh::allocate(int mxsize) {
 
 
 void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, FLT grwfac,input_map& bdrymap) {
-	int i,j,n,sind,count,temp;
+	int i,j,n,sind,count,temp,interior_pts=0;
 	std::string grd_nm, bdry_nm, grd_app;
 	TinyVector<int,3> v,s,e;
 	ifstream in;
@@ -858,7 +858,7 @@ next1c:      continue;
 
 			break;
 
-		case(boundary):
+		case(boundary): {
 			/* LOAD BOUNDARY INFORMATION */
 			grd_app = grd_nm +".d";
 			in.open(grd_app.c_str());
@@ -952,6 +952,15 @@ next1c:      continue;
 			ntri = 0;
 			triangulate(nseg);
 			
+			int bpnt = 0;
+			for (i=0;i<nebd;++i)
+				bpnt += ebdry(i)->nseg;
+				
+			interior_pts = npnt - bpnt;
+			npnt = bpnt;
+			
+			
+			
 			/* SOME TESTING FOR SPLINES */
 //                for(i=0;i<nebd;++i) {
 //                    ebdry(i)->input(in,boundary);
@@ -960,7 +969,8 @@ next1c:      continue;
 			in.close();
 
 			break;
-
+		}
+		
 		case(vlength): {
 			grd_app = grd_nm +".lngth";
 			in.open(grd_app.c_str());
@@ -1013,22 +1023,15 @@ next1c:      continue;
 	if (filetype == boundary) {
 		/* Check if there are additional points to insert */
 		/* This only happens for .d files */
-		int bpnts = 0;
-		for (i=0;i<nebd;++i)
-			bpnts += ebdry(i)->nseg;
-			
-		std::cout << bpnts << std::endl;
-			
-		if (bpnts < npnt) {
-			int pnear,tind,err;
-			bool found;
-			for(int i=bpnts;i<npnt;++i) {
-				qtree.addpt(i);
-				qtree.nearpt(i,pnear);
-				found = findtri(pnts(i),pnear,tind);
-				assert(found);
-				err = insert(i,tind);
-			}
+		int pnear,tind,err;
+		bool found;
+		for(int i=0;i<interior_pts;++i) {
+			qtree.addpt(npnt);
+			qtree.nearpt(npnt,pnear);
+			found = findtri(pnts(npnt),pnear,tind);
+			assert(found);
+			err = insert(npnt,tind);
+			++npnt;
 		}
 		cnt_nbor();
 	}
