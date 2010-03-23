@@ -565,30 +565,29 @@ namespace ibc_ins {
 				return;
 			}
 	};
-	
-	
 
-
-
-	class force_coupling : public tri_hp_helper {
+template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helper {
 		protected:
-			FLT k_linear, k_torsion;
+			bool horizontal, vertical, rotational;
+			int jacobian_start;
+			TinyVector<FLT,tri_mesh::ND> k_linear;
+			FLT k_torsion;
 			FLT mass, I;
 			int nboundary;
-			Array<bdry_ins::force_coupling *,1> hp_ebdry;
-			Array<eboundary_with_geometry<edge_bdry,naca> *,1> ebdry;
-			FLT w_a, w_b, w_c, w_d;
-			FLT w_a_tilda, w_b_tilda, w_c_tilda, w_d_tilda;
-			TinyVector<FLT,5> k_a, k_b, k_c, k_d;
+			Array<HPBDRY *,1> hp_ebdry;
+			Array<MSHBDRY *,1> ebdry;
+			TinyVector<FLT,6> w;  // x,xdot,y,ydot,theta,thetadot 
+			TinyVector<FLT,6> w_tilda;  //  x,xdot,y,ydot,theta,thetadot 
+			TinyVector<TinyVector<FLT,6>,5> ki;
 			/* This is to dump output from the generic boundaries */
 			struct nullstream : std::ostream {
 				nullstream(): std::ios(0), std::ostream(0) {}
 			} ns;
 
-
 		public:
-			force_coupling(tri_hp_ins& xin) : tri_hp_helper(xin), w_a(0.0), w_b(0.0), w_c(0.0), w_d(0.0) {}
-			force_coupling(const force_coupling &in_fc, tri_hp_ins& xin) : k_linear(in_fc.k_linear), k_torsion(in_fc.k_torsion),
+			force_coupling(tri_hp_ins& xin) : tri_hp_helper(xin), horizontal(false), vertical(false), rotational(false), w(0.0) {}
+			force_coupling(const force_coupling &in_fc, tri_hp_ins& xin) : horizontal(in_fc.horizontal), vertical(in_fc.vertical),  
+				rotational(in_fc.rotational), k_linear(in_fc.k_linear), k_torsion(in_fc.k_torsion),
 				mass(in_fc.mass), I(in_fc.I), nboundary(in_fc.nboundary), tri_hp_helper(xin) {
 				int i,j;
 
@@ -604,11 +603,11 @@ namespace ibc_ins {
 					exit(1);
 
 					found:
-					if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
+					if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
-					if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
+					if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						exit(1);
 					}
@@ -618,34 +617,68 @@ namespace ibc_ins {
 
 
 			tri_hp_helper* create(tri_hp& xin) {return new force_coupling(*this, dynamic_cast<tri_hp_ins&>(xin));}
+			int dofs(int dofs) {
+				jacobian_start = dofs;
+				return(2*(vertical+horizontal+rotational));
+			}
+			void non_sparse(Array<int,1> &nnzero) {
+				}
+		virtual void jacobian() {};
+		virtual void jacobian_dirichlet() {};
 
 			void init(input_map& input, std::string idnty) {     
 				std::string bdrys;
 				std::istringstream bdryin;
 
-				if (!input.get(x.gbl->idprefix +"_y0",w_a)) 
-					input.getwdefault("y0",w_a,0.0);
+				if (!input.get(x.gbl->idprefix +"_horizontal",horizontal)) 
+					input.getwdefault("horizontal",horizontal,false);
+					
+				if (!input.get(x.gbl->idprefix +"_vertical",vertical)) 
+					input.getwdefault("vertical",vertical,false);
 
-				if (!input.get(x.gbl->idprefix +"_dydt0",w_b)) 
-					input.getwdefault("dydt0",w_b,0.0);
+				if (!input.get(x.gbl->idprefix +"_rotational",rotational)) 
+					input.getwdefault("rotational",rotational,false);
+								
+				if (horizontal) {
+					if (!input.get(x.gbl->idprefix +"_x0",w(0))) 
+					input.getwdefault("x0",w(0),0.0);
 
-				if (!input.get(x.gbl->idprefix +"_theta0",w_c)) 
-					input.getwdefault("theta0",w_c,0.0);
+					if (!input.get(x.gbl->idprefix +"_dx0dt",w(1)))
+						input.getwdefault("dx0dt",w(1),0.0);
+						
+					if (!input.get(x.gbl->idprefix +"_k_linear0",k_linear(0))) 
+						input.getwdefault("k_linear0",k_linear(0),1.0);
+				}
+				
+				if (vertical) {
+					if (!input.get(x.gbl->idprefix +"_x1",w(2))) 
+					input.getwdefault("x1",w(2),0.0);
 
-				if (!input.get(x.gbl->idprefix +"_dthetadt0",w_d)) 
-					input.getwdefault("dthetadt0",w_d,0.0);
+					if (!input.get(x.gbl->idprefix +"_dx1dt",w(3)))
+						input.getwdefault("dx1dt",w(3),0.0);
+						
+					if (!input.get(x.gbl->idprefix +"_k_linear1",k_linear(0))) 
+						input.getwdefault("k_linear1",k_linear(1),1.0);
+				}
+				
+				if (horizontal || vertical) {
+					if (!input.get(x.gbl->idprefix +"_mass",mass)) 
+						input.getwdefault("mass",mass,1.0);
+				}
+				
+				if (rotational) {
+					if (!input.get(x.gbl->idprefix +"_theta",w(4))) 
+					input.getwdefault("theta",w(4),0.0);
 
-				if (!input.get(x.gbl->idprefix +"_k_linear",k_linear)) 
-					input.getwdefault("k_linear",k_linear,1.0);
-
-				if (!input.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
-					input.getwdefault("k_torsion",k_torsion,1.0);
-
-				if (!input.get(x.gbl->idprefix +"_mass",mass)) 
-					input.getwdefault("mass",mass,1.0);
-
-				if (!input.get(x.gbl->idprefix +"_I",I)) 
-					input.getwdefault("I",I,1.0);
+					if (!input.get(x.gbl->idprefix +"_dthetadt",w(5)))
+						input.getwdefault("dthetadt",w(5),0.0);
+						
+					if (!input.get(x.gbl->idprefix +"_I",I)) 
+						input.getwdefault("I",I,1.0);
+					
+					if (!input.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
+						input.getwdefault("k_torsion",k_torsion,1.0);
+				}				
 
 				if (!input.get(x.gbl->idprefix +"_nboundary",nboundary))
 					input.getwdefault("nboundary",nboundary,1);
@@ -673,11 +706,11 @@ namespace ibc_ins {
 					exit(1);
 
 					found:
-						if (!(hp_ebdry(i) = dynamic_cast<bdry_ins::force_coupling *>(x.hp_ebdry(j)))) {
+						if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
-						if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
+						if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							exit(1);
 						}
@@ -690,43 +723,31 @@ namespace ibc_ins {
 				if (x.coarse_flag) return;
 
 				int stage = x.gbl->substep +x.gbl->esdirk;
-				if (stage > 0) {
-					k_a[stage-1]=(w_a-w_a_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
-					k_b[stage-1]=(w_b-w_b_tilda)/(1/x.gbl->adirk(stage-1,stage-1)); 
-					k_c[stage-1]=(w_c-w_c_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
-					k_d[stage-1]=(w_d-w_d_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
-				}
+				if (stage > 0)
+					ki(stage-1) = (w-w_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
 
-				if (x.gbl->substep == 0) {
-					w_a_tilda=w_a;
-					w_b_tilda=w_b;   
-					w_c_tilda=w_c;
-					w_d_tilda=w_d;  
-				}
+				if (x.gbl->substep == 0)
+					w_tilda=w;
 
 				for (int s=0;s<stage;++s) {
-					w_a_tilda=w_a_tilda+(x.gbl->adirk(stage,s))*k_a[s];
-					w_b_tilda=w_b_tilda+(x.gbl->adirk(stage,s))*k_b[s];
-					w_c_tilda=w_c_tilda+(x.gbl->adirk(stage,s))*k_c[s];
-					w_d_tilda=w_d_tilda+(x.gbl->adirk(stage,s))*k_d[s];
+					w_tilda=w_tilda +x.gbl->adirk(stage,s)*ki(s);
 				}
 
 				/* EXTRAPOLATE */
 				if (stage  && x.gbl->dti > 0.0) {
 					FLT constant =  x.gbl->cdirk(x.gbl->substep);
-					w_a += constant*k_a[stage-1]; 
-					w_b += constant*k_b[stage-1];
-					w_c += constant*k_c[stage-1];
-					w_d += constant*k_d[stage-1];
-
+					w += constant*ki(stage-1); 
+					
 					/* FIX POSITIONS */
-					FLT dy = constant*k_a[stage-1];
-					FLT dtheta = constant*k_c[stage-1];
-					FLT w_a_first = w_a -dy;
-					TinyVector<FLT,2> ctr(0.0,w_a_first);
-					TinyVector<FLT,2> vel(0.0,w_b);
-					TinyVector<FLT,2> disp(0.0,dy);
-					rigid_body(dtheta,w_d,ctr,disp,vel);	
+					FLT dx = constant*ki(stage-1)(0);
+					FLT dy = constant*ki(stage-1)(2);
+					FLT dtheta = constant*ki(stage-1)(4);
+					FLT x_first = w(0) -dx;
+					FLT y_first = w(2) -dy;
+					TinyVector<FLT,2> ctr(x_first,y_first);
+					TinyVector<FLT,2> vel(w(1),w(3));
+					TinyVector<FLT,2> disp(dx,dy);
+					rigid_body(dtheta,w(5),ctr,disp,vel);	
 				}
 
 
@@ -738,17 +759,19 @@ namespace ibc_ins {
 					tri_hp *fmesh = dynamic_cast<tri_hp *>(x.fine);
 					force_coupling *fine_helper = dynamic_cast<force_coupling *>(fmesh->helper);
 
-					/* LOOP THROUGH POINTS TO TO CALCULATE POSITION OF COARSE POINTS  */
-					int i,j,n,tind;
-					for(i=0;i<x.npnt;++i) {
-						tind = x.fcnnct(i).tri;
+					if (x.mmovement != tri_hp::coupled_deformable) {
+						/* LOOP THROUGH POINTS TO TO CALCULATE POSITION OF COARSE POINTS  */
+						int i,j,n,tind;
+						for(i=0;i<x.npnt;++i) {
+							tind = x.fcnnct(i).tri;
 
-						for(n=0;n<x.ND;++n)
-						x.pnts(i)(n) = 0.0;
+							for(n=0;n<x.ND;++n)
+							x.pnts(i)(n) = 0.0;
 
-						for(j=0;j<3;++j) {
-						for(n=0;n<x.ND;++n)
-							x.pnts(i)(n) += x.fcnnct(i).wt(j)*fmesh->pnts(fmesh->tri(tind).pnt(j))(n);
+							for(j=0;j<3;++j) {
+							for(n=0;n<x.ND;++n)
+								x.pnts(i)(n) += x.fcnnct(i).wt(j)*fmesh->pnts(fmesh->tri(tind).pnt(j))(n);
+							}
 						}
 					}
 
@@ -767,54 +790,53 @@ namespace ibc_ins {
 				TinyVector<FLT,2> dx;
 
 				/* UPDATE MESH POSITION */
-				FLT r,cost,sint; 
-				FLT cosdt = cos(dtheta);    
-				FLT sindt = sin(dtheta);    
-				for (int i=0;i<x.npnt;++i) {
-					dx = x.pnts(i) -ctr;
-						r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
-					cost = dx(0)/r;
-					sint = dx(1)/r;
-					x.pnts(i)(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
-					x.pnts(i)(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);						
+				if (x.mmovement != tri_hp::coupled_deformable) {
+					FLT r,cost,sint; 
+					FLT cosdt = cos(dtheta);    
+					FLT sindt = sin(dtheta);    
+					for (int i=0;i<x.npnt;++i) {
+						dx = x.pnts(i) -ctr;
+							r = sqrt(dx(0)*dx(0) +dx(1)*dx(1));
+						cost = dx(0)/r;
+						sint = dx(1)/r;
+						x.pnts(i)(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
+						x.pnts(i)(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);						
+					}
 				}
 
 				for (int i=0; i<nboundary; ++i) {
 					hp_ebdry(i)->set_ctr_rot(ctr);
 					hp_ebdry(i)->set_vel(vel);
-					hp_ebdry(i)->set_omega(w_d);
+					hp_ebdry(i)->set_omega(w(5));
 					ebdry(i)->geometry_object.theta += -dtheta; 
-					ebdry(i)->geometry_object.pos(0) += disp(0) -0.25*(cos(w_c) -cos(w_c -dtheta)); 
-					ebdry(i)->geometry_object.pos(1) += disp(1) -0.25*(sin(w_c) -sin(w_c -dtheta)); 
+					ebdry(i)->geometry_object.pos(0) += disp(0) -0.25*(cos(w(4)) -cos(w(4) -dtheta)); 
+					ebdry(i)->geometry_object.pos(1) += disp(1) -0.25*(sin(w(4)) -sin(w(4) -dtheta)); 
 
 						/* CAN FIX ENDPOINTS TOO (NOT NECESSARY) */
 //						v0 = x.seg(ebdry(i)->seg(0)).pnt(0);
 //						FLT distance2 = (1-i)*0.75 -i*0.25;
 //						FLT distance1 = (1-i)*(-0.25) +i*0.75;
-//						x.pnts(v0)(0) = distance1*cos(w_c);
-//						x.pnts(v0)(1) = w_a +distance1*sin(w_c);
+//						x.pnts(v0)(0) = distance1*cos(w(4));
+//						x.pnts(v0)(1) = w_a +distance1*sin(w(4));
 //						v0 = x.seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1);
-//						x.pnts(v0)(0) = distance2*cos(w_c);
-//						x.pnts(v0)(1) = w_a +distance2*sin(w_c);
+//						x.pnts(v0)(0) = distance2*cos(w(4));
+//						x.pnts(v0)(1) = w_a +distance2*sin(w(4));
 
 					hp_ebdry(i)->curv_init();
 
 				}
 			}
 
-
-
 			void update(int stage) {
 				if (!x.coarse_flag) {
-
 					/* GET FORCE & TORQUE */
-					FLT force_y = 0.0;
-					// FLT force_x = 0.0;
+					TinyVector<FLT,tri_mesh::ND> force = 0.0;
 					FLT moment = 0.0;
 					for (int i=0; i<nboundary; ++i) {                                  
-					     /* FORCE BOUNDARY TO CALCULATE ALL FLUXES */
+						/* FORCE BOUNDARY TO CALCULATE ALL FLUXES */
 						hp_ebdry(i)->output(ns,tri_hp::tecplot);
-						force_y += hp_ebdry(i)->diff_flux(1);
+						force(0) += hp_ebdry(i)->diff_flux(0);
+						force(1) += hp_ebdry(i)->diff_flux(1);
 						moment += hp_ebdry(i)->moment;
 					}   
 
@@ -822,25 +844,47 @@ namespace ibc_ins {
 					int stage = x.gbl->substep +x.gbl->esdirk;
 
 					/* CALCULATE NEW POSITION */
-					double w_a_first = w_a;
-					double w_c_first = w_c;
-					w_a=(w_a_tilda+((1/x.gbl->adirk(stage,stage)))*dt*(w_b_tilda+((1/x.gbl->adirk(stage,stage)))*dt*force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // translational displacement
-					w_b=(w_b_tilda-((1/x.gbl->adirk(stage,stage)))*dt*(w_a_tilda*k_linear-force_y))/(1+k_linear*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                    // translational velocity
-					w_c=(w_c_tilda+((1/x.gbl->adirk(stage,stage)))*dt*(w_d_tilda+((1/x.gbl->adirk(stage,stage)))*dt*moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // rotational displacement
-					w_d=(w_d_tilda-((1/x.gbl->adirk(stage,stage)))*dt*(w_c_tilda*k_torsion-moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                   // rotational velocity
-
+					TinyVector<FLT,6> w_first(w);
+					if (horizontal) {
+						w(0) = (w_tilda(0) +((1/x.gbl->adirk(stage,stage)))*dt*
+						(w_tilda(1)+((1/x.gbl->adirk(stage,stage)))*dt*force(0)))/(1+k_linear(0)*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // translational displacement
+						w(1)=(w_tilda(1)-((1/x.gbl->adirk(stage,stage)))*dt*(w_tilda(0)*k_linear(0)-force(0)))/(1+k_linear(0)*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                    // translational velocity
+					}
+					else {
+						w(0) = 0.0;
+						w(1) = 0.0;
+					}
+					if (vertical) {
+						w(2) = (w_tilda(2) +((1/x.gbl->adirk(stage,stage)))*dt*
+						(w_tilda(3)+((1/x.gbl->adirk(stage,stage)))*dt*force(1)))/(1+k_linear(1)*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // translational displacement
+						w(3)=(w_tilda(3)-((1/x.gbl->adirk(stage,stage)))*dt*(w_tilda(2)*k_linear(1)-force(1)))/(1+k_linear(1)*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                    // translational velocity
+					}
+					else {
+						w(2) = 0.0;
+						w(3) = 0.0;
+					}
+					
+					if (rotational) {
+						w(4)=(w_tilda(4)+((1/x.gbl->adirk(stage,stage)))*dt*(w_tilda(5)+((1/x.gbl->adirk(stage,stage)))*dt*moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));         // rotational displacement
+						w(5)=(w_tilda(5)-((1/x.gbl->adirk(stage,stage)))*dt*(w_tilda(4)*k_torsion-moment))/(1+k_torsion*(dt*dt*(1/x.gbl->adirk(stage,stage))*(1/x.gbl->adirk(stage,stage))));                                   // rotational velocity
+					}
+					else {
+						w(4) = 0.0;
+						w(5) = 0.0;
+					}
 
 					/* FIX POSITIONS */
-					FLT dy = w_a -w_a_first;
-					FLT dtheta = w_c-w_c_first;
-					TinyVector<FLT,2> ctr(0.0,w_a_first);
-					TinyVector<FLT,2> vel(0.0,w_b);
-					TinyVector<FLT,2> disp(0.0,dy);
-					rigid_body(dtheta,w_d,ctr,disp,vel);	
+					TinyVector<FLT,6> delta;
+					TinyVector<FLT,2> ctr(w_first(0),w_first(2));
+					TinyVector<FLT,2> vel(w_first(1),w_first(3));
+					TinyVector<FLT,2> disp(delta(0),delta(2));
+					rigid_body(delta(4),w(5),ctr,disp,vel);	
 				}
 				return;
 			}
 	};
+	
+	
 	
 	
 	
@@ -1177,7 +1221,7 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 			return(temp);
 		}
 		case ibc_ins::helper_type::force_coupling: {
-			tri_hp_helper *temp = new ibc_ins::force_coupling(*this);
+			tri_hp_helper *temp = new ibc_ins::force_coupling<bdry_ins::force_coupling,eboundary_with_geometry<edge_bdry,naca> >(*this);
 			return(temp);
 		}
 		case ibc_ins::helper_type::streamlines: {
