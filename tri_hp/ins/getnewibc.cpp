@@ -621,10 +621,9 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				jacobian_start = dofs;
 				return(2*(vertical+horizontal+rotational));
 			}
-			void non_sparse(Array<int,1> &nnzero) {
-				}
-		virtual void jacobian() {};
-		virtual void jacobian_dirichlet() {};
+			void non_sparse(Array<int,1> &nnzero) {}
+			void jacobian() {}
+			void jacobian_dirichlet() {}
 
 			void init(input_map& input, std::string idnty) {     
 				std::string bdrys;
@@ -727,28 +726,28 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					ki(stage-1) = (w-w_tilda)/(1/x.gbl->adirk(stage-1,stage-1));
 
 				if (x.gbl->substep == 0)
-					w_tilda=w;
+					w_tilda = w;
 
 				for (int s=0;s<stage;++s) {
-					w_tilda=w_tilda +x.gbl->adirk(stage,s)*ki(s);
+					w_tilda = w_tilda +x.gbl->adirk(stage,s)*ki(s);
 				}
 
-				/* EXTRAPOLATE */
-				if (stage  && x.gbl->dti > 0.0) {
-					FLT constant =  x.gbl->cdirk(x.gbl->substep);
-					w += constant*ki(stage-1); 
-					
-					/* FIX POSITIONS */
-					FLT dx = constant*ki(stage-1)(0);
-					FLT dy = constant*ki(stage-1)(2);
-					FLT dtheta = constant*ki(stage-1)(4);
-					FLT x_first = w(0) -dx;
-					FLT y_first = w(2) -dy;
-					TinyVector<FLT,2> ctr(x_first,y_first);
-					TinyVector<FLT,2> vel(w(1),w(3));
-					TinyVector<FLT,2> disp(dx,dy);
-					rigid_body(dtheta,w(5),ctr,disp,vel);	
-				}
+//				/* EXTRAPOLATE */
+//				if (stage  && x.gbl->dti > 0.0) {
+//					FLT constant =  x.gbl->cdirk(x.gbl->substep);
+//					w += constant*ki(stage-1); 
+//					
+//					/* FIX POSITIONS */
+//					FLT dx = constant*ki(stage-1)(0);
+//					FLT dy = constant*ki(stage-1)(2);
+//					FLT dtheta = constant*ki(stage-1)(4);
+//					FLT x_first = w(0) -dx;
+//					FLT y_first = w(2) -dy;
+//					TinyVector<FLT,2> ctr(x_first,y_first);
+//					TinyVector<FLT,2> vel(w(1),w(3));
+//					TinyVector<FLT,2> disp(dx,dy);
+//					rigid_body(dtheta,w(5),ctr,disp,vel);	
+//				}
 
 
 				return;
@@ -874,7 +873,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					}
 
 					/* FIX POSITIONS */
-					TinyVector<FLT,6> delta;
+					TinyVector<FLT,6> delta = w -w_first;
 					TinyVector<FLT,2> ctr(w_first(0),w_first(2));
 					TinyVector<FLT,2> vel(w_first(1),w_first(3));
 					TinyVector<FLT,2> disp(delta(0),delta(2));
