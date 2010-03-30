@@ -339,7 +339,7 @@ int tri_mesh::smooth_cofa(int niter) {
 }
 
 int tri_mesh::smooth_lngth(int niter) {
-	int iter,sind,i,j,n,p0,p1;
+	int iter,sind,i,j,p0,p1;
 
 	for(i=0;i<npnt;++i)
 		pnt(i).info = 0;
