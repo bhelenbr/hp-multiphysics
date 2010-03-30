@@ -13,7 +13,7 @@
 #include <blitz/tinyvec-et.h>
 
 #define REBAY
-//#define DEBUG_ADAPT
+// #define DEBUG_ADAPT
 #define VERBOSE
 
 #ifdef DEBUG_ADAPT
@@ -54,6 +54,7 @@ void tri_mesh::rebay(FLT tolsize) {
 	/* BEGIN REFINEMENT ALGORITHM */
 	while (gbl->nlst > 0) {
 		for(i=gbl->nlst-1;i>=0;--i) {
+			
 			/* FIND TRIANGLE FACES ON BOUNDARY FIRST */
 			for(j=0;j<3;++j) {
 				tind = tri(seg(i).info).tri(j);
@@ -63,7 +64,22 @@ void tri_mesh::rebay(FLT tolsize) {
 					goto TFOUND;
 				}
 			}
-			/* FIND TRIANGLE FACES ON BOUNDARY OF ACCEPTED REGIONS */
+			
+			/* OR FIND TRIANGLES WITH 2 FACES ON BOUNDARY OF ACCEPTED REGIONS */
+			int naccept = 0;
+			for(j=0;j<3;++j) {
+				tind = tri(seg(i).info).tri(j);
+				if (pnt(tind).info == -1)  {
+					++naccept;
+					snum = j;
+					tind = seg(i).info;
+				}
+			}
+			if (naccept > 1) goto TFOUND;
+		}
+					
+		for(i=gbl->nlst-1;i>=0;--i) {	
+			/* FIND TRIANGLES WITH 1 FACE ON BOUNDARY OF ACCEPTED REGIONS */
 			for(j=0;j<3;++j) {
 				tind = tri(seg(i).info).tri(j);
 				if (pnt(tind).info == -1)  {

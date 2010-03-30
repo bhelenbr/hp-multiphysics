@@ -153,6 +153,7 @@ class tri_mesh : public multigrid_interface {
 		void shift(TinyVector<FLT,ND>& s); /**< Tranlates mesh */
 		void scale(TinyVector<FLT,ND>& s); /**< Scales mesh */
 		int smooth_cofa(int niter); /**< Does a center of area smoothing */
+		int smooth_lngth(int niter); /** diffuses vlength to smooth mesh */
 		void refineby2(const class tri_mesh& xmesh); /**< Refines by 2 */
 		void coarsen_substructured(const class tri_mesh &tgt,int p); /**< Coarsens mesh that was output by hp FEM method */
 		//@}

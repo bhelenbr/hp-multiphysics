@@ -87,9 +87,9 @@ vrtx_bdry* tri_mesh::getnewvrtxobject(int idnum, input_map& in_map) {
  */
 class etype {
 	public:
-		static const int ntypes = 12;
+		static const int ntypes = 13;
 		enum ids {plain=1, comm, partition, prdc, symbolic, symbolic_comm, coupled_symbolic,
-			coupled_symbolic_comm, spline,circle, naca, ellipse};
+			coupled_symbolic_comm, spline,circle, naca, ellipse,planar};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -99,7 +99,7 @@ class etype {
 };
 
 const char etype::names[ntypes][40] = {"plain", "comm", "partition", "prdc", "symbolic","symbolic_comm",
-	"coupled_symbolic","coupled_symbolic_comm", "spline","circle", "naca","ellipse"};
+	"coupled_symbolic","coupled_symbolic_comm", "spline","circle", "naca","ellipse","planar"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
@@ -167,6 +167,10 @@ edge_bdry* tri_mesh::getnewedgeobject(int idnum, input_map& in_map) {
 		}
 		case etype::naca: {
 			temp = new eboundary_with_geometry<edge_bdry,naca>(idnum,*this);
+			break;
+		}
+		case etype::planar: {
+			temp = new eboundary_with_geometry<edge_bdry,plane>(idnum,*this);
 			break;
 		}
 		case etype::ellipse: {

@@ -15,6 +15,7 @@
 #include <symbolic_function.h>
 #include <float.h>
 #include "blocks.h"
+#include <blitz/tinyvec-et.h>
 
 using namespace blitz;
 
@@ -1008,6 +1009,43 @@ class naca : public geometry<2> {
 			inmap.getwdefault(idprefix+"_coeff",coeff.data(),5,naca_0012_dflt);
 			coeff *= thickness;
 
+			FLT ctr_dflt[2] = {0.0, 0.0};
+			inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
+		}
+};
+
+class plane : public geometry<2> {
+	public:
+		FLT theta;
+		TinyVector<FLT,2> pos;
+
+		FLT hgt(TinyVector<FLT,2> xin, FLT time = 0.0) {
+			TinyVector<FLT,2> pt(xin-pos);
+			return(pt[0]*cos(theta) +pt[1]*sin(theta));
+		}
+		FLT dhgt(int dir, TinyVector<FLT,2> x, FLT time = 0.0) {
+			if (dir == 0) return(cos(theta));
+			return(sin(theta));
+		}
+
+		plane() : geometry<2>(), theta(0.0) {
+			pos = 0.0;
+		}
+		plane(const plane &inbdry) : geometry<2>(inbdry), theta(inbdry.theta) {
+			pos = inbdry.pos;
+		}
+		plane* create() const {return(new plane(*this));}
+
+		void output(std::ostream& fout,std::string idprefix) {
+			geometry<2>::output(fout,idprefix);
+			fout << idprefix << "_theta: " << theta << std::endl;
+			fout << idprefix << "_center: " << pos << std::endl;
+		}
+
+		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
+			geometry<2>::init(inmap,idprefix,log);
+			inmap.getwdefault(idprefix+"_theta",theta,0.0);
+			theta = theta*M_PI/180.0;
 			FLT ctr_dflt[2] = {0.0, 0.0};
 			inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
 		}

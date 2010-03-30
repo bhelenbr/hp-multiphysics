@@ -136,8 +136,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (Smooth) {
-	    class tri_mesh zx;
-
+		class tri_mesh zx;
 		zx.input(argv[1],in,8.0,bdrymap);
 		zx.smooth_cofa(2);
 		zx.output(argv[2],out);
