@@ -73,9 +73,9 @@ void tri_mesh::rebay(FLT tolsize) {
 					++naccept;
 					snum = j;
 					tind = seg(i).info;
+					if (naccept > 1) goto TFOUND;
 				}
 			}
-			if (naccept > 1) goto TFOUND;
 		}
 					
 		for(i=gbl->nlst-1;i>=0;--i) {	
