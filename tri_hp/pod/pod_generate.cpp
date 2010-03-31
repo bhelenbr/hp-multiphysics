@@ -150,21 +150,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 						}
 					}
 				}
-				low_noise_dot(tind) = tmp_store;
-#ifndef LOW_NOISE_DOT
 				psimatrix(psi1dcounter) += tmp_store;
-#endif
 			}
-#ifdef LOW_NOISE_DOT
-			/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
-			int halfcount,remainder;
-			for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
-				for (tind=0;tind<halfcount;++tind) 
-					low_noise_dot(tind) += low_noise_dot(tind+halfcount);
-				if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
-			}
-			psimatrix(psi1dcounter) = low_noise_dot(0);  // TO USE LOW NOISE DOT!!
-#endif
 			++psi1dcounter;
 		}	
 		BASE::ugbd(0).v.reference(ugstore.v);
@@ -587,13 +574,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/* SUBSTRACT PROJECTION FROM SNAPSHOTS */
 		/***************************************/
 		double dotp_recv, dotp;
-		dotp = 0.0;
 		for (k=0;k<nsnapshots;++k) {
 			/* LOAD SNAPSHOT */
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 			BASE::input(filename, BASE::binary, 1);
+			dotp = 0.0;
 
 			for(tind=0;tind<BASE::ntri;++tind) {          
 				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
