@@ -14,6 +14,8 @@
 #include <blitz/tinyvec-et.h>
 #include <vector>
 
+#define OPTIMAL_ENERGY_NORM
+
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
 void tri_hp_ins::length() {
@@ -21,7 +23,7 @@ void tri_hp_ins::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-//	return;  // TEMPORARY To simply maintain mesh quality
+	// return;  // TEMPORARY To simply maintain mesh quality
 		
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
