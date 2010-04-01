@@ -228,11 +228,11 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 //	for(j=0;j<base.nseg;++j) {
 //		sind = base.seg(j);
 //		v0 = x.seg(sind).pnt(0);
-//		for(n=0;n<x.NV-1;++n)
+//		for(n=1;n<x.NV;++n)
 //			x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
 //    }
 //	v0 = x.seg(sind).pnt(1);
-//	for(n=0;n<x.NV-1;++n)
+//	for(n=1;n<x.NV;++n)
 //		x.ug.v(v0,n) = ibc->f(n,x.pnts(v0),x.gbl->time);
 //
 //	/*******************/    
@@ -258,20 +258,20 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 //		}
 //
 //		if (basis::tri(x.log2p)->sm()) {
-//			for(n=0;n<x.NV-1;++n)
+//			for(n=1;n<x.NV;++n)
 //				basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 //
 //			for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 //				pt(0) = x.crd(0)(0,k);
 //				pt(1) = x.crd(1)(0,k);
-//				for(n=0;n<x.NV-1;++n)
+//				for(n=1;n<x.NV;++n)
 //					x.res(n)(0,k) -= ibc->f(n,pt,x.gbl->time);
 //			}
-//			for(n=0;n<x.NV-1;++n)
+//			for(n=1;n<x.NV;++n)
 //				basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 //
 //			indx = sind*x.sm0;
-//			for(n=0;n<x.NV-1;++n) {
+//			for(n=1;n<x.NV;++n) {
 //				PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
 //				for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 //					x.ug.s(sind,m,n) = -x.lf(n)(2+m);

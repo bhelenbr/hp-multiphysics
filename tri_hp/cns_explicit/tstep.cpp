@@ -150,6 +150,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 
+		//cout << "timestep " << tstep << endl;
+		tstep = 1.0e-5;
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
