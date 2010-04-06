@@ -367,7 +367,18 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 		bout.close();
 	}
-
+	
+#ifdef petsc
+	PetscFinalize();
+#endif
+#ifdef PTH
+	pth_exit(NULL);
+#endif    
+#ifdef MPISRC
+	MPI_Finalize();
+#endif
+	exit(1);
+	
 	return;
 }
 
@@ -455,10 +466,10 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 					FLT tmp_store = 0.0;
 					for(i=0;i<lgpx;++i) {
 						for(j=0;j<lgpn;++j) {
-						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-						for(n=0;n<BASE::NV;++n) {
-							tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-						}
+							cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+							for(n=0;n<BASE::NV;++n) {
+								tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+							}
 						}
 					}
 					low_noise_dot(tind) = tmp_store;
@@ -661,7 +672,16 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->calculate_modes();
 
-	return;
+#ifdef petsc
+	PetscFinalize();
+#endif
+#ifdef PTH
+	pth_exit(NULL);
+#endif    
+#ifdef MPISRC
+	MPI_Finalize();
+#endif
+	exit(1);
 }
 #endif
 
