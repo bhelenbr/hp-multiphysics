@@ -175,6 +175,18 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 		}
 #endif
 
+#if (defined(POD) && defined(CNS))
+		case btype::pod_cns_gen: {
+			pod_generate<tri_hp_cns> *temp = new pod_generate<tri_hp_cns>();
+			return(temp);
+		}
+			
+		case btype::pod_cns_sim: {
+			pod_simulate<tri_hp_cns> *temp = new pod_simulate<tri_hp_cns>();
+			return(temp);
+		}
+#endif
+			
 #ifdef EXPLICIT
 		case btype::explct: {
 			tri_hp_explicit *temp = new tri_hp_explicit();
