@@ -265,9 +265,10 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 
 	for (int modeloop = 0; modeloop < nmodes; ++modeloop) {
 		/* PERTURB EACH COEFFICIENT */
-		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 1.0e-4*modes(modeloop).v(Range(0,BASE::npnt-1));
-		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 1.0e-4*modes(modeloop).s(Range(0,BASE::nseg-1));
-		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 1.0e-4*modes(modeloop).i(Range(0,BASE::ntri-1));
+		FLT delta = 1.0e-2*coeffs(modeloop) +1.0e-12;
+		BASE::gbl->res.v(Range(0,BASE::npnt-1)) = delta*modes(modeloop).v(Range(0,BASE::npnt-1));
+		BASE::gbl->res.s(Range(0,BASE::nseg-1)) = delta*modes(modeloop).s(Range(0,BASE::nseg-1));
+		BASE::gbl->res.i(Range(0,BASE::ntri-1)) = delta*modes(modeloop).i(Range(0,BASE::ntri-1));
 
 		/* APPLY VERTEX DIRICHLET B.C.'S */
 		for(int i=0;i<BASE::nebd;++i)
@@ -288,7 +289,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		rsdl(BASE::gbl->nstage);
 
 		/* STORE IN ROW */
-		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
+		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/delta;
 	}
 
 	/* CREATE JACOBIAN FOR BOUNDARY MODES */
