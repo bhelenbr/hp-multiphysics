@@ -15,7 +15,7 @@
 #define INS
 //#define PS
 //#define SWIRL
-//#define BUOYANCY
+#define BUOYANCY
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT
@@ -78,7 +78,7 @@ class btype {
 		}
 };
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
-    "pod_ins_gen", "pod_cns_gen","pod_cd_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns"};
+    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname;
