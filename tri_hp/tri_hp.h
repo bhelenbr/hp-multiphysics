@@ -268,7 +268,7 @@ class tri_hp_helper {
 
 	public:
 		tri_hp_helper(tri_hp& xin) : x(xin), post_process(false) {}
-		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin) {}
+		tri_hp_helper(const tri_hp_helper &in_help, tri_hp& xin) : x(xin), post_process(in_help.post_process) {}
 		virtual tri_hp_helper* create(tri_hp& xin) { return new tri_hp_helper(*this,xin); }
 		virtual ~tri_hp_helper() {};
 		virtual void init(input_map& input, std::string idnty) {
