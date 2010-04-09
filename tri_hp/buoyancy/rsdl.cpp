@@ -10,7 +10,6 @@
 #include "tri_hp_buoyancy.h"
 #include "../hp_boundary.h"
 
-//void tri_hp_buoyancy::rsdl(int stage) {
 void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	int i,j,n;
 	FLT fluxx,fluxy;
@@ -26,8 +25,6 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
 
-
-	tri_hp::rsdl(stage);
 	oneminusbeta = 1.0-gbl->beta(stage);
 
 	/* LOAD INDICES OF VERTEX POINTS */
@@ -96,7 +93,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 				rho(i,j) = lrho;
 				u(2)(i,j) *= gbl->cp;
 
-				fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));// rho*u
+				fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));
 				fluxy = lrho*RAD(crd(0)(i,j))*(u(1)(i,j) -mvel(1)(i,j));
 
 				/* CONTINUITY EQUATION FLUXES */
@@ -105,7 +102,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 				/* CONVECTIVE FLUXES */
 				for(n=0;n<NV-1;++n) {
-					cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);//rho*u^2, rho*u*v
+					cv(n,0)(i,j) = u(n)(i,j)*du(NV-1,0)(i,j);
 					cv(n,1)(i,j) = u(n)(i,j)*du(NV-1,1)(i,j);
 				}
 
