@@ -82,12 +82,11 @@ void tri_mesh::append(const tri_mesh &z) {
 		lngth(i+npnt) = z.lngth(i);
 
 	for(i=0;i<z.npnt;++i) {
-		pnt(i+npnt).nnbor = z.pnt(i).nnbor;
 		pnt(i+npnt).tri = z.pnt(i).tri +ntri;
 	}
 
 	/* MOVE BOUNDARY INFO */
-	vbdry.resizeAndPreserve(nvbd+z.nvbd);
+	if (nvbd+z.nvbd > 0) vbdry.resizeAndPreserve(nvbd+z.nvbd);
 	for(i=0;i<z.nvbd;++i) {
 		vbdry(nvbd) = z.vbdry(i)->create(*this);
 		vbdry(nvbd)->alloc(4);
@@ -142,79 +141,92 @@ void tri_mesh::append(const tri_mesh &z) {
 
 	/* FIND MATCHING COMMUNICATION BOUNDARIES */
 	for(i=0;i<nebd -z.nebd;++i) {
-		if (!ebdry(i)->is_comm()) continue;
+		// if (!ebdry(i)->is_comm()) continue;
 
 		for(j=0;j<z.nebd;++j) {
 			if (ebdry(i)->idnum == z.ebdry(j)->idnum) {
-				nseg = ebdry(i)->nseg;
+				int bseg = ebdry(i)->nseg;
+				
+				assert(bseg == z.ebdry(j)->nseg);
 
-				/* FIRST POINT DONE REVERSE */
-				sind1 = ebdry(i)->seg(nseg-1);
+				/* DO FIRST POINT OF EDGE (IF NOT ALREADY DONE) */
+				sind1 = ebdry(i)->seg(bseg-1);
 				tind1 = seg(sind1).tri(0);
 				v1b = seg(sind1).pnt(1);
 				sind2 = z.ebdry(j)->seg(0);
 				tind2 = z.seg(sind2).tri(0) +ntriold;
 				v2a = z.seg(sind2).pnt(0) +nvrtxold;
-				pnt(v1b).nnbor += z.pnt(v2a-nvrtxold).nnbor-1;
-				qtree.dltpt(v2a);
-				pnt(v2a).info = -3;
-				do {
-					for(vrt=0;vrt<3;++vrt)
-						if (tri(tind2).pnt(vrt) == v2a) break;
-					assert(vrt != 3);
+				if (pnt(v2a).info != -3) {
+					qtree.dltpt(v2a);
+					pnt(v2a).info = -3;
+					do {
+						for(vrt=0;vrt<3;++vrt)
+							if (tri(tind2).pnt(vrt) == v2a) break;
+						assert(vrt != 3);
 
-					tri(tind2).pnt(vrt) = v1b;
-					sind = tri(tind2).seg((vrt +1)%3);
-					flip = (1 +tri(tind2).sgn((vrt +1)%3))/2;
-					assert(seg(sind).pnt(flip) == v2a);
-					seg(sind).pnt(flip) = v1b;
-					tind2 = tri(tind2).tri((vrt +1)%3);
+						tri(tind2).pnt(vrt) = v1b;
+						sind = tri(tind2).seg((vrt +1)%3);
+						flip = (1 +tri(tind2).sgn((vrt +1)%3))/2;
+						assert(seg(sind).pnt(flip) == v2a);
+						seg(sind).pnt(flip) = v1b;
+						tind2 = tri(tind2).tri((vrt +1)%3);
+					} while(tind2 > 0);
+				}
 
-				} while(tind2 > 0);
 
-				for(k=0;k<nseg;++k) {
-					sind1 = ebdry(i)->seg(nseg-k-1);
+				/* MERGE SIDES AND VERTICES ALONG MATCHING BOUNDARIES */
+				for(k=0;k<bseg-1;++k) {
+					/* Go backwards on this boundary */
+					sind1 = ebdry(i)->seg(bseg-k-1);
 					tind1 = seg(sind1).tri(0);
 					v1a = seg(sind1).pnt(0);
+					/* and forwards on this one */
 					sind2 = z.ebdry(j)->seg(k);
 					tind2 = z.seg(sind2).tri(0) +ntriold;
 					v2b = z.seg(sind2).pnt(1) +nvrtxold;
-					sind2 += nsideold;
-					pnt(v1a).nnbor += z.pnt(v2b-nvrtxold).nnbor-2;
 
+					/* Get neighboring side and tri information filled in for first mesh */
 					for(vrt=0;vrt<3;++vrt)
 						if (tri(tind1).seg(vrt) == sind1) break;
 					assert(vrt < 3);
 					tri(tind1).tri(vrt) = tind2;
 					seg(sind1).tri(1) = tind2;
+					sind2 += nsideold;
 
+					/* Get neighboring side and tri information filled in for second mesh */
 					for(vrt=0;vrt<3;++vrt)
-						if (tri(tind2).pnt(vrt) == v2b) break;
+						if (tri(tind2).seg(vrt) == sind2) break;
 					assert(vrt < 3);
-					tri(tind2).seg((vrt+1)%3) = sind1;
-					tri(tind2).sgn((vrt+1)%3) = -1;
-					tri(tind2).tri((vrt+1)%3) = tind1;
+					tri(tind2).seg(vrt) = sind1;
+					tri(tind2).sgn(vrt) = -1;
+					tri(tind2).tri(vrt) = tind1;
 					seg(sind2).info = -3;
-					pnt(v2b).info = -3;
-					qtree.dltpt(v2b);
+					
+					/* Change all references to v2b to v1a */
+					if (pnt(v2b).info != -3) {
+						vrt = (vrt+2)%3;
+						pnt(v2b).info = -3;
+						qtree.dltpt(v2b);
 
-					for(;;) {
-						tri(tind2).pnt(vrt) = v1a;
-						sind = tri(tind2).seg((vrt +2)%3);
-						flip = (1 -tri(tind2).sgn((vrt +2)%3))/2;
-						assert(seg(sind).pnt(flip) == v2b);
-						seg(sind).pnt(flip) = v1a;
-						tind2 = tri(tind2).tri((vrt +2)%3);
+						/* Find all segs/tri's referring to v2b and change to v1a */
+						for(;;) {
+							/* First one */
+							tri(tind2).pnt(vrt) = v1a;
+							sind = tri(tind2).seg((vrt +2)%3);
+							flip = (1 -tri(tind2).sgn((vrt +2)%3))/2;
+							assert(seg(sind).pnt(flip) == v2b);
+							seg(sind).pnt(flip) = v1a;
+							
+							/* find next possibility */
+							tind2 = tri(tind2).tri((vrt +2)%3);
+							if (tind2 < 0) break;
 
-						if (tind2 < 0) break;
-
-						for(vrt=0;vrt<3;++vrt)
-							if (tri(tind2).pnt(vrt) == v2b) break;
-						assert(vrt != 3);
+							for(vrt=0;vrt<3;++vrt)
+								if (tri(tind2).pnt(vrt) == v2b) break;
+							assert(vrt != 3);
+						}
 					}
 				}
-				/* LAST POINT ONLY SHARES ONE EDGE */
-				pnt(v1a).nnbor += 1;
 
 				delete ebdry(i);
 				for(k=i;k<nebd-1;++k)
@@ -255,7 +267,8 @@ void tri_mesh::append(const tri_mesh &z) {
 		ebdry(i)->reorder();
 	}
 
-  	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+	bdrylabel();  // CHANGES STRI / TTRI ON BOUNDARIES TO POINT TO GROUP/ELEMENT
+	cnt_nbor();
 
 	return;
 }

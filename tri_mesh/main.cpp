@@ -25,9 +25,12 @@ static GBool Coarsenby2 = gFalse;
 static GBool Symmetrize = gFalse;
 static GBool Cut = gFalse;
 static GBool Vlngth = gFalse;
+static GBool Append = gFalse;
 GBool printHelp = gFalse;
 
 static ArgDesc argDesc[] = {
+  {"-A",        argFlag,        &Append,      0,
+	"append two meshes"},
   {"-g",        argFlag,        &Generate,      0,
 	"generate mesh from .d file"},
   {"-m",        argFlag,        &Shift,        0,
@@ -113,7 +116,15 @@ int main(int argc, char *argv[]) {
 
 		return(0);
 	}
-
+	
+	if (Append) {
+		class tri_mesh zx,zy;
+		zx.input(argv[1],in,1.0,bdrymap);
+		zy.input(argv[2],in,100.0,bdrymap);
+		zy.append(zx);
+		zy.output(argv[3],out);
+		return(0);
+	}
 
 	/* TO SYMMETRIZE A MESH */
 	if (Symmetrize) {
