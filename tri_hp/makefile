@@ -86,10 +86,11 @@ VPATH = ../
 BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2error.o main.o minvrt.o movco.o movfin.o \
 nstage.o output.o ptprobe.o tadvance.o tobasis.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o
+OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/tstep.o
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/tstep.o
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/tstep.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
-OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o
+OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o buoyancy/length.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
 OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
@@ -97,7 +98,7 @@ OBJPETSC = petsc.o sparse.o
 
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
+OBJ += $(OBJCD) $(OBJINS) $(OBJCNS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -g -O3 -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
@@ -149,6 +150,7 @@ tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
+	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cd ] || mkdir -p cd
 	+@[ -d  planestrain ] || mkdir -p planestrain
 	+@[ -d  swirl ] || mkdir -p swirl
