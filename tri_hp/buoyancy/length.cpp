@@ -14,7 +14,7 @@
 #include <blitz/tinyvec-et.h>
 #include <vector>
 
-#define OPTIMAL_ENERGY_NORM
+//#define OPTIMAL_ENERGY_NORM
 
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
@@ -151,9 +151,9 @@ void tri_hp_buoyancy::length() {
 	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT jcb = 0.25*area(tind);
-		gbl->fltwk(tind) /= (jcb*gbl->error_target);
-		FLT error2 = gbl->fltwk(tind);  // Magnitude of local truncation error
-		FLT ri = pow(error2, -1./(basis::tri(log2p)->p()));
+		gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
+		FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+		FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
 			/* Calculate average at vertices */
