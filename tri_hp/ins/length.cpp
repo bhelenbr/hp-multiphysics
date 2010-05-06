@@ -23,7 +23,7 @@ void tri_hp_ins::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	// return;  // TEMPORARY To simply maintain mesh quality
+	return;  // TEMPORARY To simply maintain mesh quality
 		
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
@@ -157,7 +157,10 @@ void tri_hp_ins::length() {
 	FLT maxlngth = 50.0;
 	FLT minlngth = 0.0;
 	for (int pind=0;pind<npnt;++pind) {
-		lngth(pind) *= pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
+		FLT ri = pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
+		if (ri < 2.0 && ri > 0.5)
+			ri = 1.0;
+		lngth(pind) *= ri;
 		lngth(pind) = MIN(lngth(pind),maxlngth);
 		lngth(pind) = MAX(lngth(pind),minlngth);
 	}
