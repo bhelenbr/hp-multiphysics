@@ -123,16 +123,16 @@ void tri_hp_ins::length() {
 	/* Determine error target (SEE AEA Paper) */
 	FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
 	FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
-	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	gbl->res.v(Range(0,npnt-1),0) = 1.0;
+	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT error2 = gbl->fltwk(tind);
 		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
 			/* Calculate average at vertices */
-			gbl->res.v(0,p0) *= ri;
-			gbl->res_r.v(0,p0) += 1.0;
+			gbl->res.v(p0,0) *= ri;
+			gbl->res_r.v(p0,0) += 1.0;
 		}
 	}
 #else
@@ -152,15 +152,53 @@ void tri_hp_ins::length() {
 		}
 	}	
 #endif
+
+	for (int pind=0;pind<npnt;++pind) {
+		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
+		if (ri < 2.0 && ri > 0.5)
+			ri = 1.0;
+		gbl->res.v(pind,0) = ri;
+	}
+	
+	/* This is to smooth the change to the length function */
+	int iter,sind,i,j,p0,p1;
+	int niter = 1;
+
+	for(i=0;i<npnt;++i)
+		pnt(i).info = 0;
+
+	for(i=0;i<nebd;++i) {
+		for(j=0;j<ebdry(i)->nseg;++j) {
+			sind = ebdry(i)->seg(j);
+			pnt(seg(sind).pnt(0)).info = -1;
+			pnt(seg(sind).pnt(1)).info = -1;
+		}
+	}
+
+	for(iter=0; iter< niter; ++iter) {
+		/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
+			for(i=0;i<npnt;++i)
+				gbl->res_r.v(i,0) = 0.0;
+
+			for(i=0;i<nseg;++i) {
+				p0 = seg(i).pnt(0);
+				p1 = seg(i).pnt(1);
+				gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
+				gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
+			}
+
+			for(i=0;i<npnt;++i) {
+				if (pnt(i).info == 0) {
+					gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+				}
+			}
+	}
 	
 	/* NOW RESCALE AT VERTICES */
 	FLT maxlngth = 50.0;
 	FLT minlngth = 0.0;
 	for (int pind=0;pind<npnt;++pind) {
-		FLT ri = pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
-		if (ri < 2.0 && ri > 0.5)
-			ri = 1.0;
-		lngth(pind) *= ri;
+		lngth(pind) *= gbl->res.v(pind,0);
 		lngth(pind) = MIN(lngth(pind),maxlngth);
 		lngth(pind) = MAX(lngth(pind),minlngth);
 	}
@@ -241,6 +279,7 @@ void tri_hp_ins::length() {
 //		++nsweep;
 //		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
 //	} while(count > 0 && nsweep < 5);
+
 
 	if (gbl->adapt_output) {
 		ostringstream fname;
