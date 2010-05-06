@@ -286,6 +286,8 @@ void tri_mesh::initlngth() {
 			lngth(p1) = MIN(l,lngth(p1));
 		}
 	}
+	
+	smooth_lngth(2);
 
 	return;
 }
