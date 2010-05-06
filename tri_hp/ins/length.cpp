@@ -137,8 +137,8 @@ void tri_hp_ins::length() {
 	}
 #else
 	/* This is to maintain a constant local truncation error (independent of scale) */
-	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
-	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	gbl->res.v(Range(0,npnt-1),0) = 1.0;
+	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT jcb = 0.25*area(tind);
 		gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
@@ -147,8 +147,8 @@ void tri_hp_ins::length() {
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
 			/* Calculate average at vertices */
-			gbl->res.v(0,p0) *= ri;
-			gbl->res_r.v(0,p0) += 1.0;
+			gbl->res.v(p0,0) *= ri;
+			gbl->res_r.v(p0,0) += 1.0;
 		}
 	}	
 #endif
