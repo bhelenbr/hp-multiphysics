@@ -95,15 +95,17 @@ void tri_hp_buoyancy::length() {
 				/* INVISCID PARTS TO ERROR MEASURE */
 				bernoulli = rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
 				bernoulli += rho*(sqrt(u(0)(i,j)*u(0)(i,j)+u(1)(i,j)*u(1)(i,j))*u(2)(i,j));	
-
+				
+				FLT c = 1.0;
+				
 				/* VISCOUS PART TO ERROR MEASURE */
 				bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
-				bernoulli += gbl->kcond*(fabs(dtdx)+fabs(dtdy))/jcb;
+				bernoulli += c*gbl->kcond*(fabs(dtdx)+fabs(dtdy))/jcb;
 
 				dbernoulli = rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
 				dbernoulli += rho*(sqrt(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))*ul(2)(i,j));	
 				dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
-				dbernoulli += gbl->kcond*(fabs(dtdxl)+fabs(dtdyl))/jcb;
+				dbernoulli += c*gbl->kcond*(fabs(dtdxl)+fabs(dtdyl))/jcb;
 
 				dbernoulli -= bernoulli;
 				
@@ -129,26 +131,26 @@ void tri_hp_buoyancy::length() {
 
 #ifdef OPTIMAL_ENERGY_NORM
 	*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
-
+	
 	/* Determine error target (SEE AEA Paper) */
 	FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
 	FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
-	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	gbl->res.v(Range(0,npnt-1),0) = 1.0;
+	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT error2 = gbl->fltwk(tind);
 		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
 			/* Calculate average at vertices */
-			gbl->res.v(0,p0) *= ri;
-			gbl->res_r.v(0,p0) += 1.0;
+			gbl->res.v(p0,0) *= ri;
+			gbl->res_r.v(p0,0) += 1.0;
 		}
 	}
 #else
 	/* This is to maintain a constant local truncation error (independent of scale) */
-	gbl->res.v(0,Range(0,npnt-1)) = 1.0;
-	gbl->res_r.v(0,Range(0,npnt-1)) = 0.0;
+	gbl->res.v(Range(0,npnt-1),0) = 1.0;
+	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 	for(int tind=0;tind<ntri;++tind) {
 		FLT jcb = 0.25*area(tind);
 		gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
@@ -157,17 +159,58 @@ void tri_hp_buoyancy::length() {
 		for (int j=0;j<3;++j) {
 			int p0 = tri(tind).pnt(j);
 			/* Calculate average at vertices */
-			gbl->res.v(0,p0) *= ri;
-			gbl->res_r.v(0,p0) += 1.0;
+			gbl->res.v(p0,0) *= ri;
+			gbl->res_r.v(p0,0) += 1.0;
 		}
 	}	
 #endif
+	
+	for (int pind=0;pind<npnt;++pind) {
+		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
+		if (ri < 2.0 && ri > 0.5)
+			ri = 1.0;
+		gbl->res.v(pind,0) = ri;
+	}
+	
+	/* This is to smooth the change to the length function */
+	int iter,sind,i,j,p0,p1;
+	int niter = 1;
+	
+	for(i=0;i<npnt;++i)
+		pnt(i).info = 0;
+	
+	for(i=0;i<nebd;++i) {
+		for(j=0;j<ebdry(i)->nseg;++j) {
+			sind = ebdry(i)->seg(j);
+			pnt(seg(sind).pnt(0)).info = -1;
+			pnt(seg(sind).pnt(1)).info = -1;
+		}
+	}
+	
+	for(iter=0; iter< niter; ++iter) {
+		/* SMOOTH POINT DISTRIBUTION IN INTERIOR*/
+		for(i=0;i<npnt;++i)
+			gbl->res_r.v(i,0) = 0.0;
+		
+		for(i=0;i<nseg;++i) {
+			p0 = seg(i).pnt(0);
+			p1 = seg(i).pnt(1);
+			gbl->res_r.v(p0,0) += 1./gbl->res.v(p1,0);
+			gbl->res_r.v(p1,0) += 1./gbl->res.v(p0,0);
+		}
+		
+		for(i=0;i<npnt;++i) {
+			if (pnt(i).info == 0) {
+				gbl->res.v(i,0) = 1./(gbl->res_r.v(i,0)/pnt(i).nnbor);
+			}
+		}
+	}
 	
 	/* NOW RESCALE AT VERTICES */
 	FLT maxlngth = 50.0;
 	FLT minlngth = 0.0;
 	for (int pind=0;pind<npnt;++pind) {
-		lngth(pind) *= pow(gbl->res.v(0,pind),1.0/gbl->res_r.v(0,pind));
+		lngth(pind) *= gbl->res.v(pind,0);
 		lngth(pind) = MIN(lngth(pind),maxlngth);
 		lngth(pind) = MAX(lngth(pind),minlngth);
 	}
@@ -175,32 +218,32 @@ void tri_hp_buoyancy::length() {
 	/* LIMIT BOUNDARY CURVATURE */
 	for(int i=0;i<nebd;++i) {
 		if (!(hp_ebdry(i)->is_curved())) continue;
-
+		
 		for(int j=0;j<ebdry(i)->nseg;++j) {
 			int sind = ebdry(i)->seg(j);
 			int v1 = seg(sind).pnt(0);
 			int v2 = seg(sind).pnt(1);
-
+			
 			crdtocht1d(sind);
-
+			
 			/* FIND ANGLE BETWEEN LINEAR SIDES */
 			int tind = seg(sind).tri(0);
 			int k;
 			for(k=0;k<3;++k)
 				if (tri(tind).seg(k) == sind) break;
-
+			
 			int v0 = tri(tind).pnt(k);
-
+			
 			TinyVector<FLT,ND> dx0;
 			dx0(0) = pnts(v2)(0)-pnts(v1)(0);
 			dx0(1) = pnts(v2)(1)-pnts(v1)(1);
 			FLT length0 = dx0(0)*dx0(0) +dx0(1)*dx0(1);
-
+			
 			TinyVector<FLT,ND> dx1;
 			dx1(0) = pnts(v0)(0)-pnts(v2)(0);
 			dx1(1) = pnts(v0)(1)-pnts(v2)(1);
 			FLT length1 = dx1(0)*dx1(0) +dx1(1)*dx1(1);
-
+			
 			TinyVector<FLT,ND> dx2;
 			dx2(0) = pnts(v1)(0)-pnts(v0)(0);
 			dx2(1) = pnts(v1)(1)-pnts(v0)(1);
@@ -209,46 +252,47 @@ void tri_hp_buoyancy::length() {
 			TinyVector<FLT,2> ep, dedpsi;
 			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),-1.0,&cht(0,0),MXTM);
 			FLT lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-
+			
 			FLT ang1 = acos(-(dx0(0)*dx2(0) +dx0(1)*dx2(1))/sqrt(length0*length2));
 			FLT curved1 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));
-
+			
 			basis::tri(log2p)->ptprobe1d(2,&ep(0),&dedpsi(0),1.0,&cht(0,0),MXTM);
 			lengthept = dedpsi(0)*dedpsi(0) +dedpsi(1)*dedpsi(1);
-
+			
 			FLT ang2 = acos(-(dx0(0)*dx1(0) +dx0(1)*dx1(1))/sqrt(length0*length1));
 			FLT curved2 = acos((dx0(0)*dedpsi(0) +dx0(1)*dedpsi(1))/sqrt(length0*lengthept));                            
-
+			
 			// FIXME: end points are wrong for periodic boundary or communication boundary
 			FLT sum = gbl->curvature_sensitivity*(fabs(curved1/ang1) +fabs(curved2/ang2));
 			lngth(v1) /= 1. +sum;
 			lngth(v2) /= 1. +sum;
 		}
 	}
-
-//	/* AVOID HIGH ASPECT RATIOS */
-//	int nsweep = 0;
-//	int count;
-//	do {
-//		count = 0;
-//		for(int i=0;i<nseg;++i) {
-//			int v0 = seg(i).pnt(0);
-//			int v1 = seg(i).pnt(1);
-//			FLT ratio = lngth(v1)/lngth(v0);
-//
-//			if (ratio > 3.0) {
-//				lngth(v1) = 2.5*lngth(v0);
-//				++count;
-//			}
-//			else if (ratio < 0.333) {
-//				lngth(v0) = 2.5*lngth(v1);
-//				++count;
-//			}
-//		}
-//		++nsweep;
-//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
-//	} while(count > 0 && nsweep < 5);
-
+	
+	//	/* AVOID HIGH ASPECT RATIOS */
+	//	int nsweep = 0;
+	//	int count;
+	//	do {
+	//		count = 0;
+	//		for(int i=0;i<nseg;++i) {
+	//			int v0 = seg(i).pnt(0);
+	//			int v1 = seg(i).pnt(1);
+	//			FLT ratio = lngth(v1)/lngth(v0);
+	//
+	//			if (ratio > 3.0) {
+	//				lngth(v1) = 2.5*lngth(v0);
+	//				++count;
+	//			}
+	//			else if (ratio < 0.333) {
+	//				lngth(v0) = 2.5*lngth(v1);
+	//				++count;
+	//			}
+	//		}
+	//		++nsweep;
+	//		*gbl->log << "#aspect ratio fixes " << nsweep << ' ' << count << std::endl;
+	//	} while(count > 0 && nsweep < 5);
+	
+	
 	if (gbl->adapt_output) {
 		ostringstream fname;
 		fname << "adapt_diagnostic" << gbl->tstep << '_' << gbl->idprefix;
