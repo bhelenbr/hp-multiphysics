@@ -98,7 +98,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
 void tri_hp_buoyancy::setup_preconditioner() {
 	/* SET-UP DIAGONAL PRECONDITIONER */
 	int tind,i,j,side;
-	FLT jcb,jcb1,h,hmax,q,qmax,lam1,lam2,gam,rho,rhoav;
+	FLT jcb,jcb1,h,hmax,q,qmax,lam1,lam2,gam,rho,rhoav,nu,alpha;
 	TinyVector<int,3> v;
 	
 	/***************************************/
@@ -178,8 +178,8 @@ void tri_hp_buoyancy::setup_preconditioner() {
 			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			FLT nu = gbl->mu/rhoav;
-			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			nu = gbl->mu/rhoav;
+			alpha = gbl->kcond/(rhoav*gbl->cp);
 		}
 		else {
 			/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -216,8 +216,8 @@ void tri_hp_buoyancy::setup_preconditioner() {
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 			
-			FLT nu = gbl->mu/rhoav;
-			FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+			nu = gbl->mu/rhoav;
+			alpha = gbl->kcond/(rhoav*gbl->cp);
 		}
 		
 #else
@@ -245,8 +245,8 @@ void tri_hp_buoyancy::setup_preconditioner() {
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
 		
-		FLT nu = gbl->mu/rhoav;
-		FLT alpha = gbl->kcond/(rhoav*gbl->cp);
+		nu = gbl->mu/rhoav;
+		alpha = gbl->kcond/(rhoav*gbl->cp);
 		
 #endif
 		
