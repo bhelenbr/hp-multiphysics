@@ -217,6 +217,11 @@ void edge_bdry::reorder() {
 		x.gbl->intwk(x.seg(sind).pnt(1)) = i;
 		x.gbl->i2wk(x.seg(sind).pnt(0)) = i;
 	}
+	
+	/* Implement a break at vertex boundaries */
+	/* For weird case of two boundaries with same number that must be split */
+	for(i=0;i<x.nvbd;++i)
+		x.gbl->i2wk(x.vbdry(i)->pnt) = -1;
 
 	/* FIND FIRST SIDE */
 	first = -1;

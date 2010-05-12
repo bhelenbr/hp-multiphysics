@@ -374,15 +374,15 @@ void tri_mesh::bdry_rebay(FLT tolsize) {
 				if (pnt(sind_prev).info == -1)  break;
 			}
 
-			/* INSERT POINT TO MATCH LENGTH FUNCTION L/2(1+psi) = lbar +psi dl/2 */
+			/* INSERT POINT TO MATCH LENGTH FUNCTION L(1+psi)/2 = lbar +psi dl/2 */
 			FLT L = distance(seg(sind).pnt(0),seg(sind).pnt(1));
 			FLT lbar = 0.5*(lngth(seg(sind).pnt(0)) +lngth(seg(sind).pnt(1)));
 			FLT dl = lngth(seg(sind).pnt(1)) -lngth(seg(sind).pnt(0));
-			psi = (lbar -L/2)/(L/2 +dl/2);
+			psi = (lbar -L/2)/(L/2 -dl/2);
 			if (psi > 0.0) psi = 0.0;
-
-			psifxpt = static_cast<int>(256*psi);
-			psi = psifxpt/256.0;
+			
+			psifxpt = static_cast<int>((1<<16)*psi);
+			psi = psifxpt/static_cast<FLT>(1<<16);
 			pnts(npnt) = 0.5*((1.-psi)*pnts(seg(sind).pnt(0)) +(1.+psi)*pnts(seg(sind).pnt(1)));
 			ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
 			lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));
@@ -456,7 +456,7 @@ void tri_mesh::bdry_rebay1() {
 
 			sind = ebdry(bnum)->seg(bseg);
 			psifxpt = -ebdry(bnum)->ircvbuf(0,i+1);
-			psi = psifxpt/256.0;
+			psi = psifxpt/static_cast<FLT>(1<<16);
 			pnts(npnt) = 0.5*((1.-psi)*pnts(seg(sind).pnt(0)) +(1.+psi)*pnts(seg(sind).pnt(1)));
 			ebdry(bnum)->mvpttobdry(bseg,psi,pnts(npnt));
 			lngth(npnt) = 0.5*((1.-psi)*lngth(seg(sind).pnt(0)) +(1.+psi)*lngth(seg(sind).pnt(1)));

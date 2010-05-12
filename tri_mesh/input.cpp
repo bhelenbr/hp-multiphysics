@@ -919,7 +919,11 @@ next1c:      continue;
 					gbl->intwk(nebd) = seg(i).info;
 					gbl->i2wk(nebd++) = 1;
 				}
-			bdnext1:        continue;
+				else {
+					*gbl->log << "All sides should be boundary sides in a .d file" << std::endl;
+					exit(1);
+				}
+				bdnext1:        continue;
 			}
 
 
@@ -943,7 +947,7 @@ next1c:      continue;
 					*gbl->log << "Big error\n";
 					exit(1);
 				}
-			bdnext1a:      continue;
+				bdnext1a:      continue;
 			}
 
 			for(i=0;i<nseg;++i)
@@ -958,13 +962,6 @@ next1c:      continue;
 				
 			interior_pts = npnt - bpnt;
 			npnt = bpnt;
-			
-			
-			
-			/* SOME TESTING FOR SPLINES */
-//                for(i=0;i<nebd;++i) {
-//                    ebdry(i)->input(in,boundary);
-//                }
 
 			in.close();
 
