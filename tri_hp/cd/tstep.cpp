@@ -63,7 +63,7 @@ void tri_hp_cd::setup_preconditioner() {
 #ifdef TIMEACCURATE
 		dtstari = MAX(lam1/h,dtstari);
 	}
-	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << '\n';
 
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;

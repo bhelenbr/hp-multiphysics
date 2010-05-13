@@ -604,33 +604,6 @@ void tri_hp_lvlset::rsdl(int stage) {
 		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
 		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
 	}
-
-
-
-//            for(i=0;i<npnt;++i) {
-//                printf("rsdl v: %d ",i);
-//                for (n=0;n<NV;++n) 
-//                    printf("%e ",gbl->res.v(i,n));
-//                printf("\n");
-//            }
-//                
-//            for(i=0;i<nseg;++i) {
-//                for(int m=0;m<basis::tri(log2p)->sm();++m) {
-//                    printf("rsdl s: %d %d ",i,m); 
-//                    for(n=0;n<NV;++n)
-//                        printf("%e ",gbl->res.s(i,m,n));
-//                    printf("\n");
-//                }
-//            }
-//
-//            for(i=0;i<ntri;++i) {
-//                for(int m=0;m<basis::tri(log2p)->im();++m) {
-//                    printf("rsdl i: %d %d ",i,m);
-//                    for(n=0;n<NV;++n) 
-//                        printf("%e %e %e\n",gbl->res.i(i,m,n));
-//                    printf("\n");
-//                }
-//            }
-
+	
 	return;
 }

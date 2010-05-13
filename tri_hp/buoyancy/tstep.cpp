@@ -301,7 +301,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
 		dtstari = MAX((nu/(h*h) +lam1/h +gbl->bd(0)),dtstari);
 		
 	}
-	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << '\n';
 	
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;

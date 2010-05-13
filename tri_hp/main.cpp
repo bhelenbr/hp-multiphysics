@@ -49,7 +49,8 @@ int main(int argc, char **argv) {
 	action.sa_handler = ctrlc;
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
-	if (sigaction(SIGTERM,&action,&o_action)) printf("interrupt handler failed\n");
+	if (sigaction(SIGTERM,&action,&o_action))
+		std::cerr << "interrupt handler failed" << std::endl;
 
 	/* NORMAL SIMULATION */
 	if (argc < 2) {
@@ -91,7 +92,6 @@ int main(int argc, char **argv) {
 //    // hp.findmaxx(CURV_MASK);
 //    //FLT avg[5];
 //    //hp.integrated_averages(avg);
-//    //printf("%e %e %e %e %e\n",avg[0],avg[1],avg[2],avg[3],avg[4]);
 //#endif
 
 }

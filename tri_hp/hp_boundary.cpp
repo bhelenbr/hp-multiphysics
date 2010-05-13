@@ -221,7 +221,7 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 						for(n=0;n<tri_mesh::ND;++n)
 							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
 					}
-	                for(m=pmin-1;m<x.sm0;++m) {
+					for(m=pmin-1;m<x.sm0;++m) {
 						for(n=0;n<tri_mesh::ND;++n)
 							crvbd(tlvl)(j,m)(n) = 0.0;
 					}				
@@ -304,14 +304,14 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	char uplo[] = "U";
 
 
-	/* SKIP END VERTICES */
-	for(j=1;j<base.nseg;++j) {
+	/* SKIP END VERTICES TEMPORARY */
+	for(j=0;j<base.nseg;++j) {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		base.mvpttobdry(j,-1.0, x.pnts(v0));
 	}
-//    v0 = x.seg(sind).pnt(1);
-//    base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
+	v0 = x.seg(sind).pnt(1);
+	base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 
 	if (!curved || basis::tri(x.log2p)->p() == 1) return;
 
@@ -803,7 +803,6 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 }
 
 void hp_edge_bdry::rsdl(int stage) {
-	x.lf = 0.0;
 	for(int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
 		int v0 = x.seg(sind).pnt(0);

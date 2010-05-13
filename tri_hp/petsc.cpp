@@ -218,6 +218,7 @@ void tri_hp::petsc_update() {
 
 	*gbl->log << "#linear system residual: " << petsc_norm << " iterations " << its << " solve time: " << time2-time1 << " seconds" << endl;
 	
+	helper->update(-1);
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
 	/* update: u=u-J^-1*f=u-du */

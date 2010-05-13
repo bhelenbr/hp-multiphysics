@@ -728,7 +728,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			GETRF(basis::tri(log2p)->sm(),basis::tri(log2p)->sm(),matrix[0],MXTM,ipiv,info);
 			if (info != 0) {
-				printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
 				exit(1);
 			}
 
@@ -805,7 +805,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			GETRF(basis::tri(log2p)->im(),basis::tri(log2p)->im(),matrix[0],MXTM,ipiv,info);
 			if (info != 0) {
-				printf("DGETRF FAILED FOR INPUTING TECPLOT SIDES\n");
+				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
 				exit(1);
 			}
 

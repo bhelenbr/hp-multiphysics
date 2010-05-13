@@ -4,7 +4,7 @@
 
 //#define MPDEBUG
 
-//#define DEBUG
+#define DEBUG
 
 //#define BODYFORCE
 
@@ -661,7 +661,7 @@ void surface::minvrt() {
 			char trans[] = "T";
 			GETRS(trans,2*basis::tri(x.log2p)->sm(),1,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),&gbl->sres(indx,0)(0),2*MAXP,info);
 			if (info != 0) {
-				printf("DGETRS FAILED FOR SIDE MODE UPDATE\n");
+				*x.gbl->log << "DGETRS FAILED FOR SIDE MODE UPDATE" << std::endl;
 				exit(1);
 			}
 #else
@@ -710,28 +710,28 @@ void surface::update(int stage) {
 #ifdef DEBUG
 //   if (x.coarse_flag) {
 	for(i=0;i<base.nseg+1;++i)
-		printf("vdt: %d %8.4e %8.4e %8.4e %8.4e\n",i,gbl->vdt(i)(0,0),gbl->vdt(i)(0,1),gbl->vdt(i)(1,0),gbl->vdt(i)(1,1));
+		*x.gbl->log << "vdt: " << i << ' ' << gbl->vdt(i)(0,0) << ' ' << gbl->vdt(i)(0,1) << ' ' << gbl->vdt(i)(1,0) << ' ' << gbl->vdt(i)(1,1) << '\n';
 
     for(i=0;i<base.nseg;++i)
-		printf("sdt: %d %8.4e %8.4e %8.4e %8.4e\n",i,gbl->sdt(i)(0,0),gbl->sdt(i)(0,1),gbl->sdt(i)(1,0),gbl->sdt(i)(1,1));
+		*x.gbl->log << "sdt: " << i << ' ' << gbl->sdt(i)(0,0) << ' ' << gbl->sdt(i)(0,1) << ' ' << gbl->sdt(i)(1,0) << ' ' << gbl->sdt(i)(1,1) << '\n';
 
     for(i=0;i<base.nseg+1;++i) {
-		printf("vres: %d ",i);
+		*x.gbl->log << "vres: " << i << ' ';
 		for(n=0;n<tri_mesh::ND;++n) {
-			if (fabs(gbl->vres(i)(n)) > 1.0e-9) printf("%8.4e ",gbl->vres(i)(n));
-			else printf("%8.4e ",0.0);
+			if (fabs(gbl->vres(i)(n)) > 1.0e-9) *x.gbl->log << gbl->vres(i)(n) << ' ';
+			else *x.gbl->log << "0.0 ";
 		}
-		printf("\n");
+		*x.gbl->log << '\n';
 	}
 
 	for(i=0;i<base.nseg;++i) {
 		for(m=0;m<basis::tri(x.log2p)->sm();++m) {
-			printf("sres: %d ",i);
+			*x.gbl->log << "sres: " << i << ' ';
 			for(n=0;n<tri_mesh::ND;++n) {
-				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) printf("%8.4e ",gbl->sres(i,m)(n));
-				else printf("%8.4e ",0.0);
+				if (fabs(gbl->sres(i,m)(n)) > 1.0e-9) *x.gbl->log << gbl->sres(i,m)(n) << ' ';
+				else *x.gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*x.gbl->log << '\n';
 		}
 	}
 
@@ -739,14 +739,14 @@ void surface::update(int stage) {
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
-		printf("vertex positions %d %8.4e %8.4e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
+		*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
 	} while(++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
-	printf("vertex positions %d %8.4e %8.4e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
+	*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
 
 	for(i=0;i<base.nseg;++i)
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			printf("spos: %d %d %8.4e %8.4e\n",i,m,crv(i,m)(0),crv(i,m)(1));
+			*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
    // }
 #endif
 
@@ -773,15 +773,15 @@ void surface::update(int stage) {
 	do {
 		sind = base.seg(i);
 		v0 = x.seg(sind).pnt(0);
-		printf("vertex positions %d %e %e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
-	} while (++i < base.nseg);
+		*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
+	} while(++i < base.nseg);
 	v0 = x.seg(sind).pnt(1);
-	printf("vertex positions %d %e %e\n",v0,x.pnts(v0)(0),x.pnts(v0)(1));
+	*x.gbl->log << "vertex positions " << v0 << ' ' << x.pnts(v0)(0) << ' ' << x.pnts(v0)(1) << '\n';
 
 	for(i=0;i<base.nseg;++i)
 		for(m=0;m<basis::tri(x.log2p)->sm();++m)
-			printf("spos: %d %d %e %e\n",i,m,crv(i,m)(0),crv(i,m)(1));
- //   }
+			*x.gbl->log << "spos: " << i << ' ' << m << ' ' << crv(i,m)(0) << ' ' << crv(i,m)(1) << '\n';
+   // }
 #endif
 
 	if (base.is_comm()) {                
@@ -1377,7 +1377,7 @@ void surface::setup_preconditioner() {
 			int info;
 			GETRF(2*lsm,2*lsm,&gbl->ms(indx)(0,0),2*MAXP,&gbl->ipiv(indx)(0),info);
 			if (info != 0) {
-				printf("DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
+				*x.gbl->log << "DGETRF FAILED IN SIDE MODE PRECONDITIONER\n");
 				exit(1);
 			}
 			/*

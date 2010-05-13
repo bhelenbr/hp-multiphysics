@@ -335,17 +335,5 @@ void tri_hp_swe::rsdl(int stage) {
 		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
 	}
 
-
-//            for(i=0;i<npnt;++i)
-//                printf("rsdl v: %d %e %e %e\n",i,gbl->res.v(i,0),gbl->res.v(i,1),gbl->res.v(i,2));
-//                
-//            for(i=0;i<nseg;++i)
-//                for(int m=0;m<basis::tri(log2p)->sm();++m)
-//                    printf("rsdl s: %d %d %e %e %e\n",i,m,gbl->res.s(i,m,0),gbl->res.s(i,m,1),gbl->res.s(i,m,2));
-//
-//            for(i=0;i<ntri;++i)
-//                for(int m=0;m<basis::tri(log2p)->im();++m)
-//                    printf("rsdl i: %d %d %e %e %e\n",i,m,gbl->res.i(i,m,0),gbl->res.i(i,m,1),gbl->res.i(i,m,2));
-
 	return;
 }

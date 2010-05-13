@@ -330,7 +330,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	int info;
 	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
 	if (info != 0) {
-		printf("DGETRF FAILED FOR POD JACOBIAN %d\n",info);
+		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
 		exit(1);
 	}
 	return;
@@ -344,7 +344,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 
 	GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
 	if (info != 0) {
-		printf("DGETRS FAILED FOR POD UPDATE\n");
+		*BASE::gbl->log << "DGETRS FAILED FOR POD UPDATE " << info << std::endl;
 		exit(1);
 	}
 	/* Need to fix pod boundaries so coefficients are equal */

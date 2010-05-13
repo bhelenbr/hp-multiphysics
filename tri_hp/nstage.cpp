@@ -1,7 +1,7 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-//#define DEBUG
+#define DEBUG
 #define DEBUG_TOL 1.0e-9
 // #define OP_COUNT
 
@@ -72,27 +72,27 @@ void tri_hp::rsdl(int stage) {
 	int i, n;
 	if (coarse_flag) {
 		for(i=0;i<npnt;++i) {
-			printf("rsdl v: %d ",i);
+			*gbl->log << "rsdl v: " << i << ' ';
 			for (n=0;n<NV;++n) 
-				printf("%e ",gbl->res.v(i,n));
-			printf("\n");
+				*gbl->log << gbl->res.v(i,n) << ' ';
+			*gbl->log << '\n';
 		}
 		
 		for(i=0;i<nseg;++i) {
 			for(int m=0;m<basis::tri(log2p)->sm();++m) {
-				printf("rsdl s: %d %d ",i,m); 
+				*gbl->log << "rsdl s: " << i << ' ' << m << ' '; 
 				for(n=0;n<NV;++n)
-					printf("%e ",gbl->res.s(i,m,n));
-				printf("\n");
+					*gbl->log << gbl->res.s(i,m,n) << ' ';
+				*gbl->log << '\n';
 			}
 		}
 		
 		for(i=0;i<ntri;++i) {
 			for(int m=0;m<basis::tri(log2p)->im();++m) {
-				printf("rsdl i: %d %d ",i,m);
+				*gbl->log << "rsdl i: " << i << ' ' << m << ' ';
 				for(n=0;n<NV;++n) 
-					printf("%e %e %e\n",gbl->res.i(i,m,n));
-				printf("\n");
+					*gbl->log << gbl->res.i(i,m,n) << ' ';
+				*gbl->log << '\n';
 			}
 		}
 	}
@@ -308,78 +308,78 @@ void tri_hp::update() {
 
 #ifdef DEBUG   
 		// if (coarse_level || log2p != log2pmax) {
-		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);
+		*gbl->log << gbl->idprefix << " nstage: " << stage << " npnt: " << npnt << " log2p: " << log2p << '\n';
 
 		for(i=0;i<npnt;++i) {
-			printf("%s nstage: %d ",gbl->idprefix.c_str(),i);
+			*gbl->log << gbl->idprefix << " nstage: " << i;
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->vprcn(i,n)) > DEBUG_TOL) printf("%8.5e ",gbl->vprcn(i,n));
-				else printf("%8.5e ",0.0);
+				if (fabs(gbl->vprcn(i,n)) > DEBUG_TOL) *gbl->log << gbl->vprcn(i,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*gbl->log << '\n';
 		}
 
 		for(i=0;i<npnt;++i) {
-			printf("%s v: %d ",gbl->idprefix.c_str(),i);
+			*gbl->log << gbl->idprefix << " v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.v(i,n));
-				else printf("%8.5e ",0.0);
+				if (fabs(gbl->res.v(i,n)) > DEBUG_TOL) *gbl->log << gbl->res.v(i,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*gbl->log << '\n';
 		}
 
 		for(i=0;i<nseg;++i) {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
-				printf("%s s: %d ",gbl->idprefix.c_str(),i);
+				*gbl->log << gbl->idprefix << " s: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.s(i,m,n));
-					else printf("%8.5e ",0.0);
+					if (fabs(gbl->res.s(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.s(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
 				}
-				printf("\n");
+				*gbl->log << '\n';
 			}
 		}
 
 
 		for(i=0;i<ntri;++i) {
 			for(m=0;m<basis::tri(log2p)->im();++m) {
-				printf("%s i: %d ",gbl->idprefix.c_str(),i);
+				*gbl->log << gbl->idprefix << " i: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) printf("%8.5e ",gbl->res.i(i,m,n));
-					else printf("%8.5e ",0.0);
+					if (fabs(gbl->res.i(i,m,n)) > DEBUG_TOL) *gbl->log << gbl->res.i(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
 				}
-				printf("\n");
+				*gbl->log << '\n';
 			}
 		}
 
 		for(i=0;i<npnt;++i) {
-			printf("%s ug.v: %d ",gbl->idprefix.c_str(),i);
+			*gbl->log << gbl->idprefix << " ug.v: " << i << ' ';
 			for(n=0;n<NV;++n) {
-				if (fabs(ug.v(i,n)) > DEBUG_TOL) printf("%8.5e ",ug.v(i,n));
-				else printf("%8.5e ",0.0);
+				if (fabs(ug.v(i,n)) > DEBUG_TOL) *gbl->log << ug.v(i,n) << ' ';
+				else *gbl->log << "0.0 ";
 			}
-			printf("\n");
+			*gbl->log << '\n';
 		}
 
 		for(i=0;i<nseg;++i) {
 			for(m=0;m<basis::tri(log2p)->sm();++m) {
-				printf("%s ug.s: %d ",gbl->idprefix.c_str(),i);
+				*gbl->log << gbl->idprefix << " ug.s: " << i << '\n';
 				for(n=0;n<NV;++n) {
-					if (fabs(ug.s(i,m,n)) > DEBUG_TOL) printf("%8.5e ",ug.s(i,m,n));
-					else printf("%8.5e ",0.0);
+					if (fabs(ug.s(i,m,n)) > DEBUG_TOL) *gbl->log << ug.s(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
 				}
-				printf("\n");
+				*gbl->log << '\n';
 			}
 		}
 
 
 		for(i=0;i<ntri;++i) {
 			for(m=0;m<basis::tri(log2p)->im();++m) {
-				printf("%s ug.i: %d ",gbl->idprefix.c_str(),i);
+				*gbl->log << gbl->idprefix << " ug.i: " << i << ' ';
 				for(n=0;n<NV;++n) {
-					if (fabs(ug.i(i,m,n)) > DEBUG_TOL) printf("%8.5e ",ug.i(i,m,n));
-					else printf("%8.5e ",0.0);
+					if (fabs(ug.i(i,m,n)) > DEBUG_TOL) *gbl->log << ug.i(i,m,n) << ' ';
+					else *gbl->log << "0.0 ";
 				}
-				printf("\n");
+				*gbl->log << '\n';
 			}
 		}
 	//  }

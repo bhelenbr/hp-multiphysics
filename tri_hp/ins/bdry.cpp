@@ -197,7 +197,6 @@ void neumann::element_rsdl(int eind, int stage) {
 			x.res(n)(0,k) = RAD(x.crd(0)(0,k))*flx(n);
 
 	}
-
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 

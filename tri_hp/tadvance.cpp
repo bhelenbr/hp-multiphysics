@@ -67,19 +67,19 @@ void tri_hp::tadvance() {
 					vrtxbd(1)(i)(n) += gbl->adirk(stage,s)*vrtxbd(s+2)(i)(n);
 		}
 
-		/* EXTRAPOLATE */
-		if (stage  && gbl->dti > 0.0) {
-			FLT constant =  gbl->cdirk(gbl->substep);
-			ugbd(0).v(Range(0,npnt-1),Range::all()) += constant*ugbd(stage+1).v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p)->sm()) {
-				ugbd(0).s(Range(0,nseg-1),Range::all(),Range::all()) += constant*ugbd(stage+1).s(Range(0,nseg-1),Range::all(),Range::all());
-				if (basis::tri(log2p)->im()) {
-					ugbd(0).i(Range(0,ntri-1),Range::all(),Range::all()) += constant*ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all());
-				}
-			}
-			if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
-				vrtxbd(0)(Range(0,npnt-1)) += constant*vrtxbd(stage+1)(Range(0,npnt-1));               
-		}
+//		/* EXTRAPOLATE */
+//		if (stage  && gbl->dti > 0.0) {
+//			FLT constant =  gbl->cdirk(gbl->substep);
+//			ugbd(0).v(Range(0,npnt-1),Range::all()) += constant*ugbd(stage+1).v(Range(0,npnt-1),Range::all());
+//			if (basis::tri(log2p)->sm()) {
+//				ugbd(0).s(Range(0,nseg-1),Range::all(),Range::all()) += constant*ugbd(stage+1).s(Range(0,nseg-1),Range::all(),Range::all());
+//				if (basis::tri(log2p)->im()) {
+//					ugbd(0).i(Range(0,ntri-1),Range::all(),Range::all()) += constant*ugbd(stage+1).i(Range(0,ntri-1),Range::all(),Range::all());
+//				}
+//			}
+//			if (((mmovement == coupled_deformable) || (mmovement == uncoupled_deformable))) 
+//				vrtxbd(0)(Range(0,npnt-1)) += constant*vrtxbd(stage+1)(Range(0,npnt-1));               
+//		}
 	}
 	else {
 		tri_hp* fmesh = dynamic_cast<tri_hp *>(fine);
@@ -111,7 +111,7 @@ void tri_hp::tadvance() {
 	helper->tadvance();
 
 	calculate_unsteady_sources();
-
+	
 	return;
 
 }
