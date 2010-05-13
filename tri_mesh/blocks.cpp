@@ -904,7 +904,7 @@ void block::cycle(int vw, int lvl) {
 			*gbl->log << ' ' << error/maxerror << std::endl;
 			if (error/maxerror > error_control_tolerance) vcount = vw-2;
 			if (debug_output) {
-			    std::string outname;
+				std::string outname;
 				std::ostringstream nstr("");
 				nstr.str("");
 				nstr << gbl->tstep << '_' << gbl->substep << '_' << extra_count++ << std::flush;
