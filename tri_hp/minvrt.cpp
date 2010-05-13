@@ -2,8 +2,6 @@
 #include "hp_boundary.h"
 #include <myblas.h>
 
-#define NO_CTRL_DEBUG
-
 /************************************************/
 /**********        INVERT MASS MATRIX     **********/
 /************************************************/

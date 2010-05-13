@@ -803,6 +803,7 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 }
 
 void hp_edge_bdry::rsdl(int stage) {
+
 	for(int j=0;j<base.nseg;++j) {
 		int sind = base.seg(j);
 		int v0 = x.seg(sind).pnt(0);

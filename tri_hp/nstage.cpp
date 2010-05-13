@@ -1,7 +1,8 @@
 #include "tri_hp.h"
 #include "hp_boundary.h"
 
-#define DEBUG
+//#define RSDL_DEBUG
+//#define DEBUG
 #define DEBUG_TOL 1.0e-9
 // #define OP_COUNT
 
@@ -70,7 +71,7 @@ void tri_hp::rsdl(int stage) {
 	
 #ifdef RSDL_DEBUG
 	int i, n;
-	if (coarse_flag) {
+//	if (coarse_flag) {
 		for(i=0;i<npnt;++i) {
 			*gbl->log << "rsdl v: " << i << ' ';
 			for (n=0;n<NV;++n) 
@@ -95,7 +96,7 @@ void tri_hp::rsdl(int stage) {
 				*gbl->log << '\n';
 			}
 		}
-	}
+//	}
 #endif
 	
 	/*********************************************/
@@ -311,7 +312,7 @@ void tri_hp::update() {
 		*gbl->log << gbl->idprefix << " nstage: " << stage << " npnt: " << npnt << " log2p: " << log2p << '\n';
 
 		for(i=0;i<npnt;++i) {
-			*gbl->log << gbl->idprefix << " nstage: " << i;
+			*gbl->log << gbl->idprefix << " nstage: " << i << ' ';
 			for(n=0;n<NV;++n) {
 				if (fabs(gbl->vprcn(i,n)) > DEBUG_TOL) *gbl->log << gbl->vprcn(i,n) << ' ';
 				else *gbl->log << "0.0 ";

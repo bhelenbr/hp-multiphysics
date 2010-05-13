@@ -312,6 +312,7 @@ void tri_hp::updatetdata(int tind) {
 			found = gbl->pstr->findinteriorpt(pt,ttgt,r,s);
 			if (!found) {
 				*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatetdata for " << tind << ' ' << pt << std::endl;
+				*gbl->log << "Using triangle " << ttgt << " with (r,s) = (" << r << ',' << s << ')' << std::endl;
 //				std::ostringstream fname;
 //				fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
 //				tri_mesh::output(fname.str().c_str(),tri_mesh::grid);

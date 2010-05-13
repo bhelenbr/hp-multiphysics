@@ -136,7 +136,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void setup_preconditioner() {}
 		virtual void tadvance();
 		virtual void calculate_unsteady_sources();
-		virtual void element_rsdl(int sind,int stage) {}
+		virtual void element_rsdl(int sind,int stage) {x.lf = 0.0;}
 		virtual void rsdl(int stage);
 		virtual void element_jacobian(int sind, Array<FLT,2>& K);
 		virtual int dofs(int start) {

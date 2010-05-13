@@ -100,6 +100,9 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 			*gbl->log << "#Warning: point outside triangle " << tind << "find tri?" << found << " loc: " << xp << " x: " << x << " r: " << r << " s: " << s << " dr: " << dr << " ds: " << ds <<std::endl;
 			found = false;
 		}
+		else {
+			found = true;
+		}
 		/* need to do this because ptprobe_bdry only calculates boundary function */
 		basis::tri(log2p)->ptvalues_rs(r,s);
 
