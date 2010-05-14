@@ -68,14 +68,12 @@ namespace bdry_ins {
 				std::string keyword = base.idprefix +"_report";
 				input.getwdefault(keyword,report_flag,false);
 
-				if (report_flag) {
 #ifdef L2_ERROR
-					l2norm.init(input,base.idprefix+"_norm");
+				l2norm.init(input,base.idprefix+"_norm");
 #endif
-					total_flux.resize(x.NV);
-					diff_flux.resize(x.NV);
-					conv_flux.resize(x.NV);            
-				}
+				total_flux.resize(x.NV);
+				diff_flux.resize(x.NV);
+				conv_flux.resize(x.NV);            
 			}
 			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 	};
