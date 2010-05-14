@@ -163,8 +163,13 @@ class r_fixed : public r_side_bdry {
 			int gindx = x.seg(sind).pnt(1)*stride +stride -tri_mesh::ND +dstart;
 			for (int n=dstart;n<=dstop;++n)
 				points(cnt++) = gindx++;			
-			
+
+#ifdef MY_SPARSE
+			x.my_zero_rows(cnt,points);
+			x.my_set_diag(cnt,points,1.0);
+#else
 			MatZeroRows(x.petsc_J,cnt,points.data(),1.0);
+#endif
 		}
 };
 
@@ -209,7 +214,63 @@ class r_fixed_angled : public r_fixed {
 		
 		void jacobian_dirichlet() {
 			int stride = x.NV +tri_mesh::ND;
-			int nnz1, nnz2;
+			
+#ifdef MY_SPARSE
+			/* SKIP ENDPOINTS? */
+			for(int j=0;j<base.nseg-1;++j) {
+				int sind = base.seg(j);
+				int row = x.seg(sind).pnt(1)*stride +x.NV;
+
+				int nnz1 = x.sparse_cpt(row+1) -x.sparse_cpt(row);
+				int nnz2 = x.sparse_cpt(row+2) -x.sparse_cpt(row+1);
+				Array<int,1> cols(nnz1);
+				Array<FLT,2> vals(2,nnz1);
+				
+				/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+				if (nnz1 != nnz2) {
+					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+					exit(1);
+				}
+				int row1 = x.sparse_cpt(row);
+				int row2 = x.sparse_cpt(row+1);
+				for(int col=0;col<nnz1;++col) {
+					if (x.sparse_col(row1++) != x.sparse_col(row2++)) {
+						*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+						exit(1);
+					}	
+				}
+
+				vals(0,Range(0,nnz1-1)) = -x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1))*sin(theta);
+				vals(0,Range(0,nnz1-1)) += x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1))*cos(theta);
+								
+				/* Replace x equation with tangential position equation */
+				/* Replacy y equation with normal displacement equation */
+				/* Normal Equation */
+				vals(1,Range::all()) = 0.0;
+				for(int col=0;col<nnz1;++col) {
+					if (x.sparse_col(row1+col) == row) {
+						vals(1,col) = cos(theta);
+						break;
+					}
+				}
+				for(int col=0;col<nnz1;++col) {
+					if (x.sparse_col(row1+col) == row+1) {
+						vals(1,col) = sin(theta);
+						break;
+					}
+				}
+			
+				/* tangent = -sin(theta) i +cos(theta) j */
+				/* normal = cos(theta) i + sin(theta) j */
+				/* Rotate equations for diagonal dominance to match what is done to residual */
+				Array<FLT,2> temp(2,nnz1);
+				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
+				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
+			
+				x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1)) = temp(0,Range::all());
+				x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1)) = temp(1,Range::all());
+			}
+	#else
 			const PetscInt *cols1, *cols2;
 			const PetscScalar *vals1, *vals2;
 			
@@ -217,6 +278,7 @@ class r_fixed_angled : public r_fixed {
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
 				int row = x.seg(sind).pnt(1)*stride +x.NV;
+				int nnz1, nnz2;
 				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
 				if (nnz1 != nnz2) {
@@ -270,8 +332,9 @@ class r_fixed_angled : public r_fixed {
 				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
 				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);	
 			}
+	#endif
 		}
-		
+	
 };
 #endif
 
