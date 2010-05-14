@@ -156,6 +156,15 @@ void tri_hp::init(input_map& inmap, void *gin) {
 	gbl->ug0.s.resize(maxpst,sm0,NV);
 	gbl->ug0.i.resize(maxpst,im0,NV);
 
+		/* To make a vector of residuals that is contiguous in memory */
+//	gbl->res1d.resize(maxpst*(1 +sm0 +im0)*NV);
+//	Array<FLT,2> vtoreference(gbl->res1d.data(),shape(npnt,NV),neverDeleteData);
+//	gbl->res.v.reference(vtoreference);
+//	Array<FLT,3> storeference(gbl->res1d.data() +npnt*NV,shape(nseg,sm0,NV),neverDeleteData);
+//	gbl->res.s.reference(storeference);
+//	Array<FLT,3> itoreference(gbl->res1d.data() +npnt*NV +nseg*sm0*NV,shape(ntri,im0,NV),neverDeleteData);
+//	gbl->res.i.reference(itoreference);
+	
 	gbl->res.v.resize(maxpst,NV);
 	gbl->res.s.resize(maxpst,sm0,NV);
 	gbl->res.i.resize(maxpst,im0,NV);

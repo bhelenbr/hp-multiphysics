@@ -11,8 +11,9 @@
 
 #include "tri_hp.h"
 #include "hp_boundary.h"
+#include <limits.h>
 
-
+//#define DEBUG_JAC
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
@@ -39,6 +40,7 @@ void tri_hp::petsc_initialize(){
 	Array<int,1> nnzero(jacobian_size);
 	int begin_seg = npnt*vdofs;
 	int begin_tri = begin_seg+nseg*sm*NV;
+	int begin_aux = begin_tri+ntri*im*NV;
 		
 	/* SELF CONNECTIONS */
 	nnzero(Range(0,begin_seg-1)) = vdofs; 
@@ -46,7 +48,7 @@ void tri_hp::petsc_initialize(){
 		nnzero(Range(begin_seg,begin_tri-1)) = (2*vdofs +sm*NV);
 		/* connections of high order isoparametric mappings */
 	}
-	if (im) nnzero(Range(begin_tri,jacobian_size-1)) = tm*NV;
+	if (im) nnzero(Range(begin_tri,begin_aux-1)) = 3*vdofs +(tm-3)*NV;
 	
 	/* edges and vertices connected to avertex */
 	for(int i=0; i<npnt; ++i)	
@@ -73,7 +75,23 @@ void tri_hp::petsc_initialize(){
 
 	helper->non_sparse(nnzero);
 		
-	PetscErrorCode err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
+	/* CREATE MATRIX */
+	PetscErrorCode err;
+	
+#ifdef MY_SPARSE
+	sparse_cpt.resize(jacobian_size+1);
+	sparse_cpt(0)=0;
+	for (int i=1; i<jacobian_size+1; ++i) 
+		sparse_cpt(i) = sparse_cpt(i-1) +nnzero(i-1);
+	int number_sparse_elements = sparse_cpt(jacobian_size);
+	sparse_val.resize(number_sparse_elements);
+	sparse_col.resize(number_sparse_elements);
+	sparse_col = INT_MAX;
+	
+	err = MatCreate(PETSC_COMM_SELF,&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+#else
+	err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
 	//MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,PETSC_DECIDE,PETSC_DECIDE,PETSC_NULL,nnzero.data(),PETSC_NULL,nmpizero.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
@@ -89,6 +107,7 @@ void tri_hp::petsc_initialize(){
 	
 	err = MatSetFromOptions(petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
+#endif
 
 	/* 
 	 Create parallel vectors.
@@ -133,6 +152,28 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
 	PetscErrorCode err;
 	
+#ifdef MY_SPARSE
+	/* Not sure if I have to delete it each time or not */
+	err = MatDestroy(petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	sparse_val = 0.0;
+	petsc_jacobian();
+	check_for_unused_entries();
+	
+	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,sparse_cpt.data(),sparse_col.data(),sparse_val.data(),&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+//	err = MatSetOption(petsc_J,MAT_SYMMETRIC,PETSC_FALSE); 
+//	CHKERRABORT(MPI_COMM_WORLD,err);
+//	
+//	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE); 
+//	CHKERRABORT(MPI_COMM_WORLD,err);
+
+//	err = MatSetFromOptions(petsc_J);
+//	CHKERRABORT(MPI_COMM_WORLD,err);
+
+#else
 	/* insert values into jacobian matrix J */		
 	PetscGetTime(&time1);
 	MatZeroEntries(petsc_J);
@@ -156,7 +197,12 @@ void tri_hp::petsc_setup_preconditioner() {
 	 Set operators. Here the matrix that defines the linear system
 	 also serves as the preconditioning matrix.
 	 */
-	
+#endif
+
+#ifdef DEBUG_JAC
+	test_jacobian();
+#endif
+
 	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
@@ -390,6 +436,7 @@ void tri_hp::petsc_finalize(){
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
 	 */
+
 	PetscErrorCode err;
 	err = KSPDestroy(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);

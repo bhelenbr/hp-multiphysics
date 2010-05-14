@@ -204,8 +204,12 @@ namespace bdry_ins {
 						}
 					}
 				}	
-				
+#ifdef MY_SPARSE
+				x.my_zero_rows(counter,indices);
+				x.my_set_diag(counter,indices,1.0);
+#else
 				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
 			}
 #endif
 
@@ -737,11 +741,15 @@ namespace bdry_ins {
 			void petsc_jacobian_dirichlet() {
 				/* BOTH X & Y ARE FIXED */
 				if (fix_norm) {
-					int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-					for(int n=0;n<tri_mesh::ND;++n) {
-						MatZeroRows(x.petsc_J,1,&row,1.0);
-						++row;
-					}
+					Array<int,1> rows(tri_mesh::ND);
+					for(int n=0;n<tri_mesh::ND;++n) 
+						rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n;
+#ifdef MY_SPARSE
+					x.my_zero_rows(tri_mesh::ND,rows);
+					x.my_set_diag(tri_mesh::ND,rows,1.0);
+#else				
+					MatZeroRows(x.petsc_J,tri_mesh::ND,rows.data(),1.0);
+#endif
 				}
 			}
 #endif

@@ -104,12 +104,15 @@ class tri_hp : public r_tri_mesh  {
 			vsi ug0;
 
 			/** Residual storage for equations */
+			Array<FLT,1> res1d;
 			vsi res; 
 
 			/* REAL PART FOR RESIDUAL STORAGE */
+			Array<FLT,1> res_r1d;
 			vsi res_r;  
 
 			/* RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
+			Array<FLT,1> res0_1d;
 			vsi res0;
 
 			/* PRECONDITIONER  */
@@ -239,6 +242,7 @@ class tri_hp : public r_tri_mesh  {
 #ifdef petsc
 		/* Sparse stuff */
 		void petsc_jacobian();
+		void test_jacobian();
 		void petsc_rsdl();
 		void petsc_update();
 		void petsc_setup_preconditioner();
@@ -255,6 +259,18 @@ class tri_hp : public r_tri_mesh  {
 		Vec  petsc_u,petsc_f;   /* solution,residual */
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
+		
+#ifdef MY_SPARSE
+		Array<int,1> sparse_cpt; //pointer to column indices for each row
+		Array<int,1> sparse_col; //sparse list of columns
+		Array<FLT,1> sparse_val; //sparse matrix element storage
+		void my_add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+		void my_set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+		void my_set_values(int nels,const Array<int,1>& rows, const Array<int,1>& cols,const Array<FLT,1>& D);
+		void my_set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
+		void my_zero_rows(int nrows,const Array<int,1>& rows);
+		void check_for_unused_entries();
+#endif
 #endif	
 
 		virtual ~tri_hp();

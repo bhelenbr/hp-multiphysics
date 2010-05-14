@@ -825,6 +825,45 @@ void hp_edge_bdry::rsdl(int stage) {
 	}
 }
 
+void hp_edge_bdry::non_sparse(Array<int,1> &nnzero) {
+	if(coupled && curved && x.sm0 > 0) {
+		const int sm=basis::tri(x.log2p)->sm();
+		const int im=basis::tri(x.log2p)->im();
+		const int NV = x.NV;
+		const int ND = tri_mesh::ND;
+		const int vdofs = NV+ND;
+		
+		nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = vdofs*(sm+2);
+	
+		int begin_seg = x.npnt*vdofs;
+		int begin_tri = begin_seg+x.nseg*sm*NV;
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			int tind = x.seg(sind).tri(0);
+			if (im) nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
+			
+
+			for(int j=0;j<3;++j) {
+				int sind1 = x.tri(tind).seg(j);
+				nnzero(Range(begin_seg+sind1*NV*sm,begin_seg+(sind1+1)*NV*sm-1)) += ND*sm;
+				if (sind1 == sind) {
+					/* Opposing vertex mesh deformation equation doesn't depend on curvatures */
+					int pind = x.tri(tind).pnt(j);
+					nnzero(Range(pind*vdofs,pind*vdofs +x.NV -1)) += ND*sm;
+				}
+			}
+			
+			int pind = x.seg(sind).pnt(0);
+			nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;
+			
+			pind = x.seg(sind).pnt(1);
+			nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;		
+
+		}
+	}
+}
+
+
 
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {
 	int sm = basis::tri(x.log2p)->sm();	
@@ -980,8 +1019,12 @@ void hp_edge_bdry::petsc_jacobian() {
 		}
 		
 		element_jacobian(j,K);
-		
+
+#ifdef MY_SPARSE
+		x.my_add_values(x.NV*(sm+2),rows,vdofs*2 +x.NV*sm,cols,K);
+#else
 		MatSetValues(x.petsc_J,x.NV*(sm+2),rows.data(),vdofs*2 +x.NV*sm,cols.data(),K.data(),ADD_VALUES);
+#endif
 	}
 }
 		

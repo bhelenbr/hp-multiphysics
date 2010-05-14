@@ -229,8 +229,12 @@ namespace bdry_cns_explicit {
 					}
 				}
 			}	
-			
+#ifdef MY_SPARSE
+			x.my_zero_rows(counter,indices);
+			x.my_set_diag(counter,indices,1.0);
+#else
 			MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
 		}
 #endif
 		
