@@ -399,6 +399,8 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 			int nbadpnt = 0;
 			for(int i=0;i<ntsrnd;++i) {
 				int tind = gbl->i2wk_lst1(i);
+				if (area(tind) > 0.0) continue;
+				
 				for(int vn=0;vn<3;++vn) {
 					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
 					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
@@ -474,6 +476,7 @@ void tri_mesh::bdry_yaber1() {
 			int nbadpnt = 0;
 			for(int i=0;i<ntsrnd;++i) {
 				int tind = gbl->i2wk_lst1(i);
+				if (area(tind) > 0.0) continue;
 				for(int vn=0;vn<3;++vn) {
 					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
 					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
