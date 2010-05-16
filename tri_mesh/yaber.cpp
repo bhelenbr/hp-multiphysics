@@ -11,6 +11,7 @@
 #include <utilities.h>
 #include <assert.h>
 #include <blitz/tinyvec-et.h>
+#include <vector>
 
 /* THIS IS SUPPOSED TO DO THE REVERSE OF THE REBAY ROUTINE I HOPE */
 /* THUS THE NAME YABER -> REBAY */
@@ -373,7 +374,6 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 					saffect = sindnext;
 				}
 			}
-
 #ifdef DEBUG_ADAPT
 			std::cout << "collapsing boundary"  << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
 #endif
@@ -392,6 +392,32 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 			if (pnt(saffect).info > -1) tkoutlst(saffect);
 			gbl->fltwk(saffect) = MIN(lngth(seg(saffect).pnt(0)),lngth(seg(saffect).pnt(1)))/distance(seg(saffect).pnt(0),seg(saffect).pnt(1));
 			if (gbl->fltwk(saffect) > tolsize) putinlst(saffect);
+			
+			/* Check for inverted interior triangles because of changing boundary geometry */
+			int ntsrnd = gbl->i2wk_lst1(-1);
+			std::vector<int> badpnt;
+			int nbadpnt = 0;
+			for(int i=0;i<ntsrnd;++i) {
+				int tind = gbl->i2wk_lst1(i);
+				for(int vn=0;vn<3;++vn) {
+					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
+					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
+						badpnt[nbadpnt++] = tri(tind).pnt(vn);
+					}
+				}
+			}
+			
+			for(int i=0;i<nbadpnt;++i) {
+				*gbl->log << "Warning deleting " << badpnt[i] << " because of boundary change to " << saffect << '\n';
+				int tind = pnt(badpnt[i]).tri;
+				int vn;
+				for(vn=0;vn<3;++vn)  {
+					if (tri(tind).pnt(vn) == badpnt[i])
+						break;
+				}
+				collapse(tri(tind).seg((vn+1)%3),1);
+			}
+			
 			++count;
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
@@ -411,7 +437,7 @@ void tri_mesh::bdry_yaber(FLT tolsize) {
 }
 
 void tri_mesh::bdry_yaber1() {
-	int i,seg,endpt,sind,sndsize;
+	int i,lseg,endpt,sind,sndsize;
 
 	for(int bnum=0;bnum<nebd;++bnum) {
 
@@ -422,19 +448,50 @@ void tri_mesh::bdry_yaber1() {
 		sndsize = ebdry(bnum)->ircvbuf(0,0);
 
 		for(i=1;i<sndsize;i+=2) {
-			seg = ebdry(bnum)->nseg -1 -ebdry(bnum)->ircvbuf(0,i);
+			lseg = ebdry(bnum)->nseg -1 -ebdry(bnum)->ircvbuf(0,i);
 			endpt = 1 -ebdry(bnum)->ircvbuf(0,i+1);
-			sind = ebdry(bnum)->seg(seg);
+			sind = ebdry(bnum)->seg(lseg);
 #ifdef DEBUG_ADAPT
 			std::cout << "collapsing boundary" << adapt_count << ' ' << sind << " endpt " << endpt << std::endl;
 #endif
 			collapse(sind,endpt);
 
 			/* UPDATE PREV/NEXT BOUNDARY POINTERS */
-			int nel = ebdry(bnum)->next(seg);
-			int pel = ebdry(bnum)->prev(seg);
+			int nel = ebdry(bnum)->next(lseg);
+			int pel = ebdry(bnum)->prev(lseg);
 			ebdry(bnum)->prev(nel) = pel;
 			ebdry(bnum)->next(pel) = nel;
+			
+			int saffect;
+			if (endpt == 0) 
+				saffect = ebdry(bnum)->seg(pel);
+			else
+				saffect = ebdry(bnum)->seg(nel);
+				
+			/* Check for inverted interior triangles because of changing boundary geometry */
+			int ntsrnd = gbl->i2wk_lst1(-1);
+			std::vector<int> badpnt;
+			int nbadpnt = 0;
+			for(int i=0;i<ntsrnd;++i) {
+				int tind = gbl->i2wk_lst1(i);
+				for(int vn=0;vn<3;++vn) {
+					if (tri(tind).pnt(vn) == seg(saffect).pnt(0) || tri(tind).pnt(vn) == seg(saffect).pnt(1)) continue;
+					if (area(saffect,tri(tind).pnt(vn)) < FLT_EPSILON) {
+						badpnt[nbadpnt++] = tri(tind).pnt(vn);
+					}
+				}
+			}
+			
+			for(int i=0;i<nbadpnt;++i) {
+				*gbl->log << "Warning deleting " << badpnt[i] << " because of boundary change to " << saffect << '\n';
+				int tind = pnt(badpnt[i]).tri;
+				int vn;
+				for(vn=0;vn<3;++vn)  {
+					if (tri(tind).pnt(vn) == badpnt[i])
+						break;
+				}
+				collapse(tri(tind).seg((vn+1)%3),1);
+			}
 
 #ifdef DEBUG_ADAPT
 			std::ostringstream nstr;
