@@ -1220,6 +1220,8 @@ void surface::petsc_jacobian() {
 		MatSetValues(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 #endif
 	
+		if (!sm) continue;
+		
 		/* Now fill in effect of curvature on element resdiuals */
 		Array<TinyVector<FLT,MXTM>,1> R(x.NV),Rbar(x.NV),lf_re(x.NV),lf_im(x.NV);
 #ifdef BZ_DEBUG
@@ -1302,7 +1304,7 @@ void surface::petsc_jacobian() {
 #ifdef MY_SPARSE
 		x.my_add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
 #else
-		MatSetValues(petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
+		MatSetValues(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
 #endif		
 	}
 }

@@ -479,6 +479,49 @@ namespace bdry_ins {
 					x.gbl->res.s(sind,mode,dir) = 0.0;
 				}
 			}
+			
+#ifdef petsc			
+			void petsc_jacobian_dirichlet() {
+				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+				
+				int sm=basis::tri(x.log2p)->sm();
+				Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
+				
+				int vdofs;
+				if (x.mmovement == x.coupled_deformable)
+					vdofs = x.NV +tri_mesh::ND;
+				else
+					vdofs = x.NV;
+					
+				/* only works if pressure is 4th variable */
+				int gind,v0,sind;
+				int counter = 0;
+				
+				int j = 0;
+				do {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					gind = v0*vdofs;
+					indices(counter++)=gind+dir;
+				} while (++j < base.nseg);
+				v0 = x.seg(sind).pnt(1);
+				gind = v0*vdofs;
+				indices(counter++)=gind+dir;
+
+				for(int i=0;i<base.nseg;++i) {
+					gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
+					for(int m=0; m<sm; ++m) {
+							indices(counter++)=gind+m*x.NV+dir;
+					}
+				}	
+#ifdef MY_SPARSE
+				x.my_zero_rows(counter,indices);
+				x.my_set_diag(counter,indices,1.0);
+#else
+				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+			}
+#endif
 
 			void tadvance();
 	};
