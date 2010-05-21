@@ -587,7 +587,8 @@ next1a:      continue;
 
 			/* SIDE BOUNDARY INFO HEADER */
 			in.ignore(80,':');
-			int newnsbd1 = bin.readInt(sizeof(int));
+			int newnsbd1;
+			newnsbd1 = bin.readInt(sizeof(int));
 			if (nebd == 0) {
 				nebd = newnsbd1;
 				ebdry.resize(nebd);
@@ -610,7 +611,8 @@ next1a:      continue;
 			}
 
 			/* VERTEX BOUNDARY INFO HEADER */
-			int newnvbd1 = bin.readInt(sizeof(int));
+			int newnvbd1;
+			newnvbd1 = bin.readInt(sizeof(int));
 			if (nvbd == 0) {
 				nvbd = newnvbd1;
 				vbdry.resize(nvbd);
