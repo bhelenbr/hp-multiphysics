@@ -8,6 +8,7 @@
  */
 
 #include "tri_hp_swe.h"
+#include <cstring>
 
 namespace ibc_swe {
 

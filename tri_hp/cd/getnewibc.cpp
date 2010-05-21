@@ -9,6 +9,7 @@
  */
 
 #include "tri_hp_cd.h"
+#include <cstring>
 
 namespace ibc_cd {
 

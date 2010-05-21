@@ -8,6 +8,7 @@
  */
 
 #include "tri_hp_swirl.h"
+#include <cstring>
 
 namespace ibc_swirl {
 
