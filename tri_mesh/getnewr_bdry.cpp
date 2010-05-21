@@ -9,6 +9,7 @@
 
 #include "r_tri_mesh.h"
 #include "r_tri_boundary.h"
+#include <cstring>
 
 class r_stype {
 	public:
