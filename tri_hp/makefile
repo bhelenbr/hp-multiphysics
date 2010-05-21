@@ -119,8 +119,9 @@ CXXMPI = ${CXX}
 #LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 #LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 #LDFLAGS += -static-libcxa #(cares)
+LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
 CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-LIB += -L$(HOME) -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+#LIB += -L$(HOME) -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 ## IRIX64:
