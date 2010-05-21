@@ -55,7 +55,7 @@ MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lg2c -lpth -lblitz
+LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 CXXMPI = ${CXX}
 
