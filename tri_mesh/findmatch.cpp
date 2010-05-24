@@ -329,7 +329,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	}
 	else if (3*ntri > maxpst) {
 		*gbl->log << "mesh is too small" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
 	ostringstream nstr;

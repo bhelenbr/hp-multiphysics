@@ -229,14 +229,14 @@ class r_fixed_angled : public r_fixed {
 				/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 				if (nnz1 != nnz2) {
 					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-					exit(1);
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 				int row1 = x.sparse_cpt(row);
 				int row2 = x.sparse_cpt(row+1);
 				for(int col=0;col<nnz1;++col) {
 					if (x.sparse_col(row1++) != x.sparse_col(row2++)) {
 						*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}	
 				}
 

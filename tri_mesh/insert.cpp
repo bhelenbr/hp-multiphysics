@@ -28,12 +28,12 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 		std::cerr << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
 		std::cerr << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
 		output("error");
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	if (npnt >= maxpst) {
 		*gbl->log << "need to use larger growth factor: too many vertices" << std::endl;
 		output("error");
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	err = insert(npnt,tind);
 	npnt += 1 -err;
@@ -163,7 +163,7 @@ int tri_mesh::insert(int pnum, int tnum) {
 	if (ntri > maxpst || nseg > maxpst) {
 		*gbl->log << "need to use bigger growth factor: too many sides/tris" << nseg << ntri << std::endl;
 		output("error");
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	for(i=0;i<nskeep;++i) {
@@ -311,7 +311,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 	if (ebdry(i)->nseg >= ebdry(i)->maxseg) {
 		output("error");
 		*gbl->log << "need to use bigger growth factor (too many boundary sides)" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	ebdry(i)->seg(ebdry(i)->nseg++) = nseg;
 	++nseg;
@@ -331,7 +331,7 @@ void tri_mesh::bdry_insert(int pnum, int sind, int endpt) {
 	if (ntri > maxpst || nseg > maxpst) {
 		*gbl->log << "need to use bigger growth factor: too many sides/tris:" << nseg << ntri << std::endl;
 		output("error");
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	/* FIX FIRST AND LAST TRIANGLE BOUNDARY SIDE */
@@ -558,7 +558,7 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 	}
 	if (tclose < 0) {
 		*gbl->log << "Major Trouble in Findtri " << x << ' ' << pnear << '\n';
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	intri(tclose,x);
@@ -641,7 +641,7 @@ bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 	}
 	if (tclose < 0) {
 		*gbl->log << "Major Trouble in Findtri " << x << ' ' << tind << '\n';
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	intri(tclose,x);

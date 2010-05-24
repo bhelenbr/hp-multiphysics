@@ -7,32 +7,32 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 all: libtri_mesh.a libtri_mesh_mpi.a tri_mesh tri_mesh_mpi
 
 libtri_mesh.a:
-	+@[ -d  _serial ] || mkdir -p _serial
+	+@[ -d  _serial ] || mkdir -p _serial EXTRAFLAGS='-DPTH'
 	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
 
 .PHONY: libtri_mesh.a
 
 tri_mesh:
 	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DPTH'
 
 .PHONY: tri_mesh
 
 libtri_mesh_mpi.a:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DPTH'
 
 .PHONY: libtri_mesh_mpi.a
 
 tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS=-DMPISRC
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DPTH'
 
 .PHONY: tri_mesh_mpi
 
 libtri_mesh_petsc.a:
 	+@[ -d  _petsc ] || mkdir -p _petsc
-	+@$(MAKE) -C _petsc -f $(CURDIR)/makefile $@ EXTRAFLAGS=-Dpetsc
+	+@$(MAKE) -C _petsc -f $(CURDIR)/makefile $@ EXTRAFLAGS='-Dpetsc -DMY_SPARSE'
 
 .PHONY: libtri_mesh_petsc.a
 

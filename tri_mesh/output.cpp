@@ -30,7 +30,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << npnt << endl;
@@ -47,7 +47,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << nseg << endl;
 			for(i=0;i<nseg;++i) {
@@ -60,7 +60,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << ntri << endl;
 			for(i=0;i<ntri;++i) {
@@ -77,7 +77,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << endl;
@@ -101,7 +101,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << "YIN " << npnt << endl;
@@ -128,7 +128,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			count = ntri;
@@ -200,7 +200,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << npnt << endl;
 			for(i=0;i<npnt;++i) {
@@ -218,7 +218,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* HEADER LINES */
@@ -267,7 +267,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			bout.open(fnmapp.c_str());
 			if (bout.error()) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* HEADER LINES */
@@ -347,7 +347,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<npnt;++i)
@@ -362,7 +362,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << npnt << endl;
@@ -379,7 +379,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << nseg << endl;
 			for(i=0;i<nseg;++i) {
@@ -392,7 +392,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			out << ntri << endl;
 			for(i=0;i<ntri;++i) {

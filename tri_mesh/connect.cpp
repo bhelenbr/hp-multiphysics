@@ -66,7 +66,7 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 		/* CHECK TO MAKE SURE THESE ARE THE SAME SIDES */
 		if(ebdry(bnum)->idnum != tgt.ebdry(bnum)->idnum) {
 			*gbl->log << "error: sides are not numbered the same" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}		
 		ebdry(bnum)->mgconnect(cnnct,tgt,bnum);
 

@@ -221,7 +221,7 @@ class spline_bdry : public edge_bdry {
 			std::string line;
 			if (!inmap.get(edge_bdry::idprefix+"_filename",line)) {
 				*x.gbl->log << "Couldn't fine spline file name in input file\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			my_spline.read(line);
 

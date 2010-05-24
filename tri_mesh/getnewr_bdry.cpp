@@ -35,7 +35,7 @@ r_side_bdry* r_tri_mesh::getnewedgeobject(int bnum, input_map& in_map) {
 		type = r_stype::getid(typ_str.c_str());
 		if (type < 0)  {
 			*gbl->log << ebdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
@@ -119,7 +119,7 @@ r_vrtx_bdry* r_tri_mesh::getnewvrtxobject(int bnum, input_map& in_map) {
 	type = r_vtype::getid(typ_str.c_str());
 	if (type < 0)  {
 		*gbl->log << vbdry(bnum)->idprefix << "_r_type: unknown type " << typ_str << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	switch(type) {

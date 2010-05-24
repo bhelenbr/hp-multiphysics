@@ -51,7 +51,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 		ebdry(i)->nseg = 0;
 		if (typeid(ebdry(i)) != typeid(inmesh.ebdry(i))) {
 			*gbl->log << "can't coarsen into object with different boundaries" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		/* CHECK IF FIRST POINT INSERTED*/

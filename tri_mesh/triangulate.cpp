@@ -42,7 +42,7 @@ void tri_mesh::triangulate(int nsd) {
 	}
 	if (nv > maxpst -2) {
 			*gbl->log << gbl->idprefix << " coarse mesh is not big enough " << nv << ' ' << maxpst << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	/* SETUP SIDE POINTER INFO */
@@ -311,7 +311,7 @@ void tri_mesh::addtri(int p0,int p1, int p2, int sind, int dir) {
 					*gbl->log << "1:segment already matched?" << sind1 << ' ' << p1 << ' ' << p2 << std::endl;
 					output("error",tecplot);
 					output("error",grid);
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				seg(sind1).tri(0) = ntri;
 				tri(ntri).seg(k) = sind1;
@@ -334,7 +334,7 @@ void tri_mesh::addtri(int p0,int p1, int p2, int sind, int dir) {
 					*gbl->log << "2:segment already matched?" << sind1 << ' ' << p1 << ' ' << p2 << std::endl;
 					output("error",tecplot);
 					output("error",grid);
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				seg(sind1).tri(1) = ntri;
 				tri(ntri).seg(k) = sind1;

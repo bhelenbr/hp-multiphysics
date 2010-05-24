@@ -69,7 +69,7 @@ void tri_mesh::adapt() {
 	bdry_yaber1();
 
 	/* COARSEN INTERIOR */
-	yaber(gbl->tolerance);
+//	yaber(gbl->tolerance);
 
 	/* REFINE FIRST EDGES */
 	bdry_rebay(gbl->tolerance);

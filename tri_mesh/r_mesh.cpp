@@ -579,8 +579,8 @@ void r_tri_mesh::rsdl() {
 void r_tri_mesh::element_jacobian(int tind, Array<FLT,2> K) {
 
 #ifdef FOURTH
-	*x.gbl->log << "DIDN'T DO THIS FOR ELEMENT JACOBIAN\n";
-	exit(1);
+	*gbl->log << "DIDN'T DO THIS FOR ELEMENT JACOBIAN\n";
+	sim::abort(__LINE__,__FILE__,gbl->log);
 #else
 	TinyMatrix<int,3,2> seg_pnts;
 	seg_pnts =	1,2,

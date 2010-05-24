@@ -10,8 +10,6 @@
 #include <input_map.h>
 #include <utilities.h>
 
-#define PTH
-// #define BOOST
 #ifdef PTH
 #include <pth.h>
 #endif
@@ -67,7 +65,7 @@ class blocks {
 #if defined(PTH)
 				pth_cond_t allreduce_change; /**< conditional await for mpiallreduce */
 #elif defined(BOOST)
-				boost::condition allreduce_change; /**< conditional await for mpiallreduce */
+				boost::condition_variable allreduce_change; /**< conditional await for mpiallreduce */
 #endif
 				/** allreduce data constructor */
 				all_reduce_data() : myblock(1), buf_cnt(0)
@@ -97,7 +95,7 @@ class blocks {
 		blitz::Array<boost::function0<void>,1> thread_func;
 		boost::thread_group threads;
 		boost::mutex list_mutex;
-		boost::condition list_change;
+		boost::condition_variable list_change;
 #endif
 		//@}
 
@@ -211,7 +209,7 @@ class blocks {
 			list_change.notify_all();
 #endif
 		}
-};
+	};
 
 
 /** \brief Global variables for simulation
@@ -220,6 +218,13 @@ class blocks {
  */
 namespace sim {
 	extern blocks blks; /**< Contains all blocks for this processor */
+	
+	/* Routines for shutting down cleanly */
+	/* finalize waits for everyone to exit together */
+	void finalize(int line, char *file, std::ostream *log);
+	/* abort kills everyone else then exits */ 
+	void abort(int line, char *file, std::ostream *log); 
+
 }
 
 #endif

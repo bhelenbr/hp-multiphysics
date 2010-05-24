@@ -49,7 +49,7 @@ void my_new_handler()
 {
 	std::cerr << "Out of memory" << endl;
 	std::cerr.flush();
-	std::abort();
+	sim::abort(__LINE__,__FILE__,&std::cerr);
 }
 
 void blocks::go(const std::string &infile, const std::string &outfile) {
@@ -93,13 +93,13 @@ void blocks::go(input_map& input) {
 	for (i=0;i<myid;++i) {
 		if (!(data >> nb)) {
 			std::cerr << "error reading blocks\n";
-			exit(1);
+			sim::abort(__LINE__,__FILE__,&std::cerr);
 		}
 		bstart += nb;
 	}
 	if (!(data >> myblock)) {
 		std::cerr << "error reading blocks\n";
-		exit(1);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	data.clear();
 
@@ -107,7 +107,7 @@ void blocks::go(input_map& input) {
 	for (i=myid+1;i<nproc;++i) {
 		if (!(data >> nb)) {
 			std::cerr << "error reading blocks\n";
-			exit(1);
+			sim::abort(__LINE__,__FILE__,&std::cerr);
 		}
 		nblock += nb;
 	}
@@ -124,7 +124,7 @@ void blocks::go(input_map& input) {
 		while (data >> groupid) {
 			if (groupid == 0) {
 				std::cerr << "Can't use 0 as a group number\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&std::cerr);
 			}
 			if ((mi = group_data.find(groupid)) != group_data.end()) {
 				++mi->second->myblock;
@@ -235,13 +235,35 @@ void blocks::go(input_map& input) {
 #else
 	if (myblock != 1) {
 		std::cerr << "Need pth or boost::threads to run mulitple blocks on single processor\n";
-		exit(1);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	blk(0)->go(input);
 #endif
 
 }
 
+
+/* This routine waits for everyone to exit nicely */
+void sim::finalize(int line, char *file, std::ostream *log) {
+	*log << "Exiting at line " << line << " of file " << file << std::endl;
+#ifdef PTH
+	pth_exit(NULL);
+#endif
+#ifdef BOOST
+	throw boost::thread_interrupted();
+#endif
+	/* main will call MPI_Finalize */
+}
+
+/* This routine forces everyone to die */
+void sim::abort(int line, char *file, std::ostream *log) {
+	*log << "Exiting at line " << line << " of file " << file << std::endl;
+#ifdef MPI
+	MPI_Abort(MPI_COMM_WORLD,1);
+#endif
+	/* Terminates all threads */
+	std::abort();
+}
 
 /* each block has a list of group #'s that it belongs to: integer array of size "n_comm_purposes" */
 /* typicaally there will be 2 comm_purposes: everyone to everyone, and only 1 with user defined groups in it */
@@ -265,7 +287,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
 	std::map<int,all_reduce_data *>::iterator gi = group_data.find(group);
 	if (gi == group_data.end()) {
 		std::cerr << "couldn't find group in all_reduce\n";
-		exit(1);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	all_reduce_data& gd(*gi->second);
 	gd.sndbufs(gd.buf_cnt) = sendbuf;
@@ -496,7 +518,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 		if (sim::blks.blk(b1)->grd(grdlvl) == this) break;
 	if (b1 >= myblock) {
 		*gbl->log << "Didn't find myself in block list?\n";
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 
@@ -722,6 +744,8 @@ void block::init(input_map &input) {
 
 	/* NEED TO BOOTSTRAP UNTIL I CAN GET LOGFILE OPENED */
 	input.getwdefault("ngrid",ngrid,1);
+	ngrid = MAX(ngrid,1);
+	
 	grd.resize(ngrid);
 	for (int i=0;i<ngrid;++i)
 		grd(i) = getnewlevel(input);
@@ -750,12 +774,12 @@ void block::init(input_map &input) {
 #ifdef CAPRI
 	int status = gi_uStart();
 	*gbl->log << "gi_uStart status = ", status, "\n";
-	if (status != CAPRI_SUCCESS) exit(1);
+	if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
 
 	if (input.get("BRep",mystring)) {
 		status = gi_uLoadPart(mystring.c_str());
 		*gbl->log << mystring << ": gi_uLoadPart status = " << status << std::endl;
-		if (status != CAPRI_SUCCESS) exit(1);
+		if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 #endif
 
@@ -779,9 +803,30 @@ void block::init(input_map &input) {
 	gbl->tstep = -1; // Simulation starts at t = 0, This is set negative until first tadvance to alllow change between initialization & B.C.'s
 	gbl->substep = -1;
 	input.getwdefault("dtinv",gbl->dti,0.0);
+	if (gbl->dti < 0.0) {
+		*gbl->log << "Inverse time step must be positive number" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	input.getwdefault("dtinv_prev",gbl->dti_prev,gbl->dti);
+	if (gbl->dti_prev < 0.0) {
+		*gbl->log << "Inverse time step must be positive number" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}	
+	
 	input.getwdefault("ntstep",ntstep,1);
+	if (ntstep < 0) {
+		*gbl->log << "Number of time steps must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	input.getwdefault("restart",nstart,0);
+	if (restart < 0) {
+		*gbl->log << "Restart must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
+	
 	ntstep += nstart +1;
 	gbl->time = 0.0;
 	if (gbl->dti > 0.0) gbl->time = nstart/gbl->dti;
@@ -791,6 +836,9 @@ void block::init(input_map &input) {
 
 	/* LOAD CONSTANTS FOR MULTISTAGE ITERATIVE SCHEME */
 	input.getwdefault("nstage",gbl->nstage,5);
+	if (gbl->nstage < 0) {
+		*gbl->log << "Number of stages must be positive" << std::endl;
+	}
 	gbl->alpha.resize(gbl->nstage+1);
 	gbl->beta.resize(gbl->nstage+1);
 	istringstream datastream;
@@ -806,34 +854,61 @@ void block::init(input_map &input) {
 
 	/* LOAD BASIC CONSTANTS FOR MULTIGRID */
 	input.getwdefault("itercrsn",itercrsn,1);
+	if (itercrsn < 0) {
+		*gbl->log << "Number of iterations must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("iterrfne",iterrfne,0);
+	if (iterrfne < 0) {
+		*gbl->log << "Number of iterations must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("ncycle",ncycle,0);
+	if (ncycle < 0) {
+		*gbl->log << "Number of iterations must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("preconditioner_interval",prcndtn_intrvl,-1);
 
-	input.getwdefault("vwcycle",vw,2);
+	input.getwdefault("vwcycle",vw,1);
+	if (vw < 1) {
+		*gbl->log << "vwcycle must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("absolute_tolerance",absolute_tolerance,1.0e-12);
 
 	input.getwdefault("relative_tolerance",relative_tolerance,-1.0);
 
-	input.getwdefault("error_control_level",error_control_level,-1);
-
-	input.getwdefault("error_control_tolerance",error_control_tolerance,0.33);
-
 	input.getwdefault("ngrid",ngrid,1);  // JUST TO HAVE IN LOG FILE
-
+	ngrid = MAX(ngrid,1);
+	
 	input.getwdefault("extra_coarsest_levels",extra_coarsest_levels,0);
 
 	input.getwdefault("extra_finest_levels",extra_finest_levels,0);
 	mglvls = ngrid+extra_coarsest_levels+extra_finest_levels;
-
+	
+	input.getwdefault("error_control_level",error_control_level,-1);
+	if (error_control_level > -1 && error_control_level != mglvls-1) {
+		*gbl->log << "Error being controlled on other than coarsest mesh" << std::endl;
+	}
+	
+	input.getwdefault("error_control_tolerance",error_control_tolerance,0.33);
+	
 	input.getwdefault("output_interval", out_intrvl,1);
+	if (out_intrvl < 1) {
+		*gbl->log << "Output interval must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("restart_interval",rstrt_intrvl,1);
-	rstrt_intrvl = MAX(1,rstrt_intrvl);
+	if (rstrt_intrvl < 1) {
+		*gbl->log << "Restart interval must be positive" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	input.getwdefault("debug_output",debug_output,false);
 

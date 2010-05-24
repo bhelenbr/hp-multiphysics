@@ -12,7 +12,7 @@ void tri_mesh::copy(const tri_mesh& tgt) {
 		/* CHECK IF BIG ENOUGH */
 		if (tgt.nseg > maxpst) {
 			*gbl->log << "mesh is too big to copy" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 

@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 	if (!ok || printHelp) {
 		fprintf(stderr, "mesh utility ");
 		printUsage("mesh", "<inputfile> <outputfile>]", argDesc);
-		exit(1);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	tri_mesh::filetype in = static_cast<tri_mesh::filetype>(informat);
 	tri_mesh::filetype out = static_cast<tri_mesh::filetype>(outformat);
@@ -279,7 +279,7 @@ int main(int argc, char *argv[]) {
 	}
 
 #ifdef PTH
-	pth_exit(NULL);
+	pth_kill();
 #endif
 #ifdef MPISRC
 	MPI_Finalize();

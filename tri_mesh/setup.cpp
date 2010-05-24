@@ -35,7 +35,7 @@ void tri_mesh::createseg(void) {
 			while (sind >= 0) {
 				if (maxp == seg(sind).pnt(order)) {
 					if (seg(sind).tri(1) >= 0) {
-						*gbl->log << "Error: seg " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        exit(1);
+						*gbl->log << "Error: seg " << sind << "has been matched with Triangle" << tind << "3 times" << std::endl;                        sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 					else {
 						seg(sind).tri(1) = tind;
@@ -129,7 +129,7 @@ void tri_mesh::createsegtri(void) {
 				sind = seg(sind).info;
 			}
 			*gbl->log << "didn't match seg: " << p1 << p2 << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 
 NEXTTRISIDE:
 			temp = vout;

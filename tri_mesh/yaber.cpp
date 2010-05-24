@@ -249,7 +249,7 @@ void tri_mesh::checkintegrity() {
 	for(i=0;i<maxpst;++i) {
 		if (gbl->intwk(i) > -1) {
 			*gbl->log << "gbl->intwk check failed" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 
@@ -268,7 +268,7 @@ void tri_mesh::checkintegrity() {
 				for(i=0;i<nseg;++i)
 					seg(i).info += 2;
 				output("error");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
@@ -276,7 +276,7 @@ void tri_mesh::checkintegrity() {
 				for(i=0;i<nseg;++i)
 					seg(i).info += 2;
 				output("error");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if (seg(sind).tri(dir) != i) {
@@ -284,7 +284,7 @@ void tri_mesh::checkintegrity() {
 				for(i=0;i<nseg;++i)
 					seg(i).info += 2;
 				output("error");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if (tri(i).tri(j) != seg(sind).tri(1-dir)) {
@@ -292,7 +292,7 @@ void tri_mesh::checkintegrity() {
 				for(i=0;i<nseg;++i)
 					seg(i).info += 2;
 				output("error");
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if (tri(i).tri(j) > 0) {
@@ -301,7 +301,7 @@ void tri_mesh::checkintegrity() {
 					for(i=0;i<nseg;++i)
 						seg(i).info += 2;
 					output("error");
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 		}

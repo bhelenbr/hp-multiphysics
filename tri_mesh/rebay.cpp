@@ -107,7 +107,7 @@ void tri_mesh::rebay(FLT tolsize) {
 
 		if (npnt > maxpst -2) {
 			*gbl->log << "too many vertices" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		/* THIS IS TRIANGLE BASED REFINEMENT */

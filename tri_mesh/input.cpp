@@ -40,7 +40,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 		}
 		if (grwfac < 1.0) {
 			*gbl->log << "growth factor must be greater than one\n";
-			std::abort();
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		int filetype;
@@ -56,7 +56,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 			}
 			else {
 				*gbl->log << "no mesh name" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 		}
 		coarse_level = 0;
@@ -176,11 +176,11 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 					  *gbl->log << "error: couldn't open file: " << grd_app << std::endl;
-					  exit(1);
+					  sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (!(in >> nseg)) {
 				*gbl->log << "error: in segment file: " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			if (!initialized) {
@@ -188,7 +188,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 			}
 			else if (nseg > maxpst) {
 				*gbl->log << "error: mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<nseg;++i) {
@@ -196,7 +196,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 				in >> seg(i).pnt(0) >> seg(i).pnt(1) >> seg(i).tri(0) >> seg(i).tri(1) >> seg(i).info;
 				if(in.fail()) {
 					*gbl->log << "error: in segment file " << grd_app << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 			}
 
@@ -242,7 +242,7 @@ next1:        continue;
 						}
 					}
 					*gbl->log << "Big error\n";
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 next1a:      continue;
 			}
@@ -251,11 +251,11 @@ next1a:      continue;
 			/* LOAD VERTEX INFORMATION                    */
 			grd_app = grd_nm + ".n";
 			in.open(grd_app.c_str());
-			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
 
 			if(!(in >> npnt)) {
 				*gbl->log << "1: error in grid: " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<npnt;++i) {
@@ -264,7 +264,7 @@ next1a:      continue;
 					in >> pnts(i)(n);
 				}
 				in >> pnt(i).info;
-				if (in.fail())  { *gbl->log << "2b: error in grid" << std::endl; exit(1); }
+				if (in.fail())  { *gbl->log << "2b: error in grid" << std::endl; sim::abort(__LINE__,__FILE__,gbl->log); }
 			}
 			in.close();
 
@@ -290,11 +290,11 @@ next1a:      continue;
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 				*gbl->log << "trouble opening " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if(!(in >> ntri)) {
 				*gbl->log << "error in file " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<ntri;++i) {
@@ -325,7 +325,7 @@ next1a:      continue;
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 					  *gbl->log << "trouble opening " << grd_nm << std::endl;
-					  exit(1);
+					  sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<5;++i)
@@ -342,7 +342,7 @@ next1a:      continue;
 			}
 			else if ((3*i)/2 > maxpst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<8;++i)
@@ -413,7 +413,7 @@ next1a:      continue;
 					sind = pnt(svrtxbtemp(i)(j)(0)).info;
 					if (sind < 0) {
 						*gbl->log << "error in boundary information " << i << j << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 					if (seg(sind).pnt(1) == svrtxbtemp(i)(j)(1)) {
 						seg(sind).info = ebdry(i)->idnum;
@@ -423,7 +423,7 @@ next1a:      continue;
 					else {
 						*gbl->log << "Error: boundary sides are not counterclockwise " <<
 						svrtxbtemp(i)(j)(0) << svrtxbtemp(i)(j)(1) << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 			}
@@ -441,7 +441,7 @@ next1a:      continue;
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 				*gbl->log << "couldn't open grid file: " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			/* HEADER LINES */
 			in.ignore(10,':');
@@ -458,7 +458,7 @@ next1a:      continue;
 			}
 			else if (nseg > maxpst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* VRTX INFO */
@@ -494,7 +494,7 @@ next1a:      continue;
 			}
 			else if (nebd != newnsbd) {
 				*gbl->log << "reloading incompatible meshes" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			count = 0;
@@ -520,7 +520,7 @@ next1a:      continue;
 			}
 			else if (nvbd != newnvbd) {
 				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<nvbd;++i) {
@@ -543,7 +543,7 @@ next1a:      continue;
 			bin.open(grd_app.c_str());
 			if (bin.error()) {
 				*gbl->log << "couldn't open grid file: " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			bin.setFlag(binio::BigEndian,bin.readInt(1));
@@ -559,7 +559,7 @@ next1a:      continue;
 			}
 			else if (nseg > maxpst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* VRTX INFO */
@@ -596,7 +596,7 @@ next1a:      continue;
 			}
 			else if (nebd != newnsbd1) {
 				*gbl->log << "reloading incompatible meshes" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			count = 0;
@@ -620,7 +620,7 @@ next1a:      continue;
 			}
 			else if (nvbd != newnvbd1) {
 				*gbl->log << "re-inputting into incompatible mesh object" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<nvbd;++i) {
@@ -638,21 +638,21 @@ next1a:      continue;
 		case(text):
 			if (!initialized) {
 				*gbl->log << "to read in point positions only must first load mesh structure" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* LOAD VERTEX POSITIONS                    */
 			grd_app = grd_nm + ".txt";
 			in.open(grd_app.c_str());
-			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; exit(1);}
+			if (!in.good()) { *gbl->log << "trouble opening grid" << grd_app << std::endl; sim::abort(__LINE__,__FILE__,gbl->log);}
 
 			if(!(in >> temp)) {
 				*gbl->log << "1: error in grid " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (temp != npnt) {
 				*gbl->log << "grid doesn't match point list" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* ERROR %lf SHOULD BE FLT */
@@ -660,7 +660,7 @@ next1a:      continue;
 				in.ignore(80,':');
 				for(n=0;n<ND;++n)
 					in >> pnts(i)(n);
-				if (in.fail()) { *gbl->log << "2c: error in grid" << std::endl; exit(1); }
+				if (in.fail()) { *gbl->log << "2c: error in grid" << std::endl; sim::abort(__LINE__,__FILE__,gbl->log); }
 			}
 			in.close();
 
@@ -675,14 +675,14 @@ next1a:      continue;
 			sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
 			status = gi_dGetVolume(cpri_vol,&cpri_nnode,&cpri_nedge,&cpri_nface,&cpri_nbound, &cpri_name);
 			*gbl->log << " gi_uGetVolume status =" << status << std::endl;
-			if (status != CAPRI_SUCCESS) exit(1);
+			if (status != CAPRI_SUCCESS) sim::abort(__LINE__,__FILE__,gbl->log);
 			*gbl->log << "  # Edges = " << cpri_nedge << " # Faces = " << cpri_nface << std::endl;
 
 			status = gi_dTesselFace(cpri_vol, cpri_face, &ntri, &cpri_tris, &cpri_tric, &npnt, &cpri_points,
 				&cpri_ptype, &cpri_pindex, &cpri_uv);
 			if (status != CAPRI_SUCCESS) {
 				*gbl->log << "gi_dTesselFace status = " << status << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* ALLOCATE BASIC STORAGE */
@@ -692,7 +692,7 @@ next1a:      continue;
 			}
 			else if ((3*ntri)/2 > maxpst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* LOAD VERTEX INFO */
@@ -724,7 +724,7 @@ next1a:      continue;
 					++nvbd;
 					if (nvbd >= MAXVB) {
 						*gbl->log << "Too many vertex boundary conditions: increase MAXSB: " << nvbd << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,gbl->log);
 					}
 				}
 			}
@@ -748,7 +748,7 @@ next1a:      continue;
 						}
 						else {
 							*gbl->log << "Error in BRep Boundary Groups\n";
-							exit(1);
+							sim::abort(__LINE__,__FILE__,gbl->log);
 						}
 					}
 					for (j = 0; j <nebd;++j) {
@@ -782,7 +782,7 @@ next1b:        continue;
 						}
 					}
 					*gbl->log << "Big error\n";
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 next1c:      continue;
 			}
@@ -795,7 +795,7 @@ next1c:      continue;
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 				*gbl->log << "couldn't open tecplot file: " << grd_app << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* HEADER LINES */
@@ -814,7 +814,7 @@ next1c:      continue;
 			}
 			else if ((3*ntri) > maxpst) {
 				*gbl->log << "mesh is too large" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* READ VERTEX DATA */
@@ -866,7 +866,7 @@ next1c:      continue;
 			in.open(grd_app.c_str());
 			if (!in.good()) {
 				*gbl->log << "couldn't open " << grd_app << "for reading\n";
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			in >> npnt;
@@ -923,7 +923,7 @@ next1c:      continue;
 				}
 				else {
 					*gbl->log << "All sides should be boundary sides in a .d file" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				bdnext1:        continue;
 			}
@@ -947,7 +947,7 @@ next1c:      continue;
 						}
 					}
 					*gbl->log << "Big error\n";
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				bdnext1a:      continue;
 			}
@@ -975,7 +975,7 @@ next1c:      continue;
 			in.open(grd_app.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open vlength input file" << grd_app  << endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<npnt;++i)
@@ -986,7 +986,7 @@ next1c:      continue;
 
 		default:
 			*gbl->log << "That filetype is not supported" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	for(i=0;i<nebd;++i) {

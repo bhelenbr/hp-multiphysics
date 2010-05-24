@@ -655,7 +655,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 								default: {
 									*BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
-									exit(1);
+									sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 								}
 							}
 						}
@@ -664,7 +664,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 							switch(op) {
 								case(boundary::average): {
 									*BASE::x.gbl->log << "averaging with integer messages?" << std::endl;
-									exit(1);
+									sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 								}
 
 								case(boundary::sum): {
@@ -737,7 +737,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 								default: {
 									*BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
-									exit(1);
+									sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 								}
 							}
 						}
@@ -775,7 +775,7 @@ template<int ND> class geometry {
 					pt(n) += delt_dist*dhgt(n,pt.data(),time)/mag;
 				if (++iter > 100) {
 					std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // FIXME:  NEED TO FIX
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 			} while (fabs(delt_dist) > 10.*EPSILON);
 
@@ -802,7 +802,7 @@ template<int ND> class symbolic_point : public geometry<ND> {
 			}
 			else {
 				log << "couldn't find shape function " << idprefix << "_locx0" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&log);
 			}
 
 			if (inmap.find(idprefix +"_locx1") != inmap.end()) {
@@ -810,7 +810,7 @@ template<int ND> class symbolic_point : public geometry<ND> {
 			}
 			else {
 				log << "couldn't find shape function " << idprefix << "_locx1" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&log);
 			}
 		}
 
@@ -840,7 +840,7 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 			}
 			else {
 				log << "couldn't find shape function " << idprefix << "_h" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&log);
 			}
 
 			if (inmap.find(idprefix +"_dhdx0") != inmap.end()) {
@@ -848,7 +848,7 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 			}
 			else {
 				log << "couldn't find shape function for " << idprefix << "_dhdx0" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&log);
 			}
 
 			if (inmap.find(idprefix +"_dhdx1") != inmap.end()) {
@@ -856,7 +856,7 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 			}
 			else {
 				log << "couldn't find shape function " << idprefix << "_dhdx1" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,&log);
 			}
 		}
 
