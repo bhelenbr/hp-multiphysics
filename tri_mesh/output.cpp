@@ -14,19 +14,34 @@
 using namespace std;
 
 void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) const {
-	std::string fnmapp;
+	std::string fnmapp, grd_nm;
 	int i,j,n,tind,count;
 	ofstream out;
 	binofstream bout;
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
 	out.precision(10);
+	
+	/* Override filetype based on ending? */
+	size_t dotloc;
+	dotloc = filename.find_last_of('.');
+	string ending;
+	ending = filename.substr(dotloc+1);
+	if (ending == "grd") 
+		filetype = grid;
+	else if (ending == "d")
+		filetype = boundary;
+	else if (ending == "bin")
+		filetype = binary;
+	else if (ending == "dat")
+		filetype = tecplot;								
+	grd_nm = filename.substr(0,dotloc);	
 
 	switch (filetype) {
 
 		case (easymesh):
 			/* CREATE EASYMESH OUTPUT FILES */
-			fnmapp = filename +".n";
+			fnmapp = grd_nm +".n";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -43,7 +58,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.close();
 
 			/* SIDE FILE */
-			fnmapp = filename +".s";
+			fnmapp = grd_nm +".s";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -56,7 +71,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			}
 			out.close();
 
-			fnmapp = filename +".e";
+			fnmapp = grd_nm +".e";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -73,7 +88,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 
 		case (tecplot):
-			fnmapp = filename +".dat";
+			fnmapp = grd_nm +".dat";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -97,7 +112,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 
 		case (mavriplis):
-			fnmapp = filename +".GDS";
+			fnmapp = grd_nm +".GDS";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -124,7 +139,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 
 		case (gambit):
-			fnmapp = filename +".FDNEUT";
+			fnmapp = grd_nm +".FDNEUT";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -136,7 +151,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 				count += ebdry(i)->nseg;
 
 			out << "** FIDAP NEUTRAL FILE\n";
-			out << filename << "\n";
+			out << grd_nm << "\n";
 			out << "VERSION     8.01\n";
 			out << "29 Nov 1999     13:23:58\n";
 			out << "    NO. OF NODES    NO. ELEMENTS NO. ELT GROUPS             NDFCD             NDFVL\n";
@@ -196,7 +211,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 		case(text):
 			/* JUST OUTPUT VERTEX POSITIONS FOR DEFORMING MESH */
-			fnmapp = filename +".txt";
+			fnmapp = grd_nm +".txt";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -214,7 +229,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 
 		case(grid):
-			fnmapp = filename +".grd";
+			fnmapp = grd_nm +".grd";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -263,7 +278,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			break;
 
 		case(binary):
-			fnmapp = filename +".bin";
+			fnmapp = grd_nm +".bin";
 			bout.open(fnmapp.c_str());
 			if (bout.error()) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -331,7 +346,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 			DTTriangularGrid2D dt_grid(dt_tvrtx,dt_vrtx);
 
-			std::string outputFilename(filename +".dt");
+			std::string outputFilename(grd_nm +".dt");
 			DTDataFile outputFile(outputFilename.c_str(),DTFile::NewReadWrite);
 			// Output from computation
 			Write(outputFile,"grid",dt_grid);
@@ -343,7 +358,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 		}
 
 		case(vlength): {
-			fnmapp = filename +".lngth";
+			fnmapp = grd_nm +".lngth";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file" << fnmapp << "for output" << endl;
@@ -358,7 +373,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 		case(debug_adapt):
 			/* CREATE EASYMESH OUTPUT FILES */
-			fnmapp = filename +".n";
+			fnmapp = grd_nm +".n";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -375,7 +390,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.close();
 
 			/* SIDE FILE */
-			fnmapp = filename +".s";
+			fnmapp = grd_nm +".s";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -388,7 +403,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			}
 			out.close();
 
-			fnmapp = filename +".e";
+			fnmapp = grd_nm +".e";
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
@@ -405,7 +420,7 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 
 			break;
 		case boundary: {
-			fnmapp = filename +"_bdry.inpt";
+			fnmapp = grd_nm +"_bdry.inpt";
 			out.open(fnmapp.c_str());
 			for(i=0;i<nvbd;++i) vbdry(i)->output(out);
 			for(i=0;i<nebd;++i) ebdry(i)->output(out);

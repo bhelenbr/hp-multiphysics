@@ -42,13 +42,7 @@ void tri_mesh::init(input_map &input, void *gin) {
 			*gbl->log << "growth factor must be greater than one\n";
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
-
-		int filetype;
-		keyword = gbl->idprefix + "_filetype";
-		if (!input.get(keyword,filetype)) {
-			input.getwdefault("filetype",filetype,static_cast<int>(tri_mesh::grid));
-		}
-
+		
 		keyword = gbl->idprefix + "_mesh";
 		if (!input.get(keyword,filename)) {
 			if (input.get("mesh",filename)) {
@@ -59,6 +53,13 @@ void tri_mesh::init(input_map &input, void *gin) {
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 		}
+		
+		int filetype;
+		keyword = gbl->idprefix + "_filetype";
+		if (!input.get(keyword,filetype)) {
+			input.getwdefault("filetype",filetype,static_cast<int>(tri_mesh::grid));
+		}
+		
 		coarse_level = 0;
 		tri_mesh::input(filename.c_str(),static_cast<tri_mesh::filetype>(filetype),grwfac,input);
 	}
@@ -168,6 +169,21 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	}
 	else
 		grd_nm = filename;
+		
+	/* Override filetype based on ending? */
+	size_t dotloc;
+	dotloc = grd_nm.find_last_of('.');
+	string ending;
+	ending = grd_nm.substr(dotloc+1);
+	if (ending == "grd") 
+		filetype = grid;
+	else if (ending == "d")
+		filetype = boundary;
+	else if (ending == "bin")
+		filetype = binary;
+	else if (ending == "dat")
+		filetype = tecplot;								
+	grd_nm = grd_nm.substr(0,dotloc);
 
 	switch (filetype) {
 		case(easymesh):
