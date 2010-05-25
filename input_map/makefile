@@ -31,6 +31,7 @@ all: mod_map libinput_map.a
 
 mod_map: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIBS)
+	cp mod_map ~/bin/
 
 libinput_map.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
