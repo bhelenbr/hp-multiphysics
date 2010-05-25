@@ -175,15 +175,23 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	dotloc = grd_nm.find_last_of('.');
 	string ending;
 	ending = grd_nm.substr(dotloc+1);
-	if (ending == "grd") 
+	if (ending == "grd") {
 		filetype = grid;
-	else if (ending == "d")
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "d") {
 		filetype = boundary;
-	else if (ending == "bin")
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "bin") {
 		filetype = binary;
-	else if (ending == "dat")
-		filetype = tecplot;								
-	grd_nm = grd_nm.substr(0,dotloc);
+		grd_nm = grd_nm.substr(0,dotloc);
+	}
+	else if (ending == "dat") {
+		filetype = tecplot;
+		grd_nm = grd_nm.substr(0,dotloc);
+	}		
+	
 
 	switch (filetype) {
 		case(easymesh):
