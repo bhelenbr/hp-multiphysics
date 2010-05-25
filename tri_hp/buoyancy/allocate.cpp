@@ -27,7 +27,7 @@ void tri_hp_buoyancy::init(input_map& input, void *gin) {
 	}
 	else {
 		*gbl->log << "couldn't find rhovsT equation for density" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 

@@ -106,7 +106,7 @@ void tri_hp_explicit::setup_preconditioner() {
 //			
 //			std::cout << basis::tri(log2p)->idiag << std::endl;
 //			
-//			exit(1);
+//			sim::abort(_);
 
 			indx = 3;
 			for(int i=0;i<3;++i) {

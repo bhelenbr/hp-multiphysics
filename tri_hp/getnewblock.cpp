@@ -15,7 +15,7 @@
 #define INS
 //#define PS
 //#define SWIRL
-#define BUOYANCY
+//#define BUOYANCY
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT
@@ -92,7 +92,7 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 	else {
 		if (!input.get("blocktype",val)) {
 			std::cerr << "couldn't find block type" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,&std::cerr);
 		}
 		type = btype::getid(val.c_str());
 	}

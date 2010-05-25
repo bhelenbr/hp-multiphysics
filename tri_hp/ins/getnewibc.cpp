@@ -211,20 +211,20 @@ namespace ibc_ins {
 				keyword = blkname +"_mu";
 				if (!blockdata.get(keyword,mu_g)) {
 					std::cerr << "couldn't find mu of gas " << keyword << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
 				keyword = blkname +"_liquid";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of liquid block" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
 				FLT mu_l;
 				keyword = val +"_mu";
 				if (!blockdata.get(keyword,mu_l)) {
 					std::cerr << "couldn't find mu of liquid" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 				kappa = mu_l/mu_g;
 			}
@@ -278,37 +278,37 @@ namespace ibc_ins {
 				keyword = blkname +"_rho";
 				if (!blockdata.get(keyword,rho_l)) {
 					std::cerr << "couldn't find rho of liquid" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
 				keyword = blkname +"_mu";
 				if (!blockdata.get(keyword,mu_l)) {
 					std::cerr << "couldn't find mu of liquid" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 				keyword = blkname +"_liquid_bdry";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of liquid boundary" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
 				keyword = val +"_sigma";
 				if (!blockdata.get(keyword,sigma)) {
 					std::cerr << "couldn't find sigma" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}				
 
 				keyword = blkname +"_gas";
 				if (!blockdata.get(keyword,val)) { 
 					std::cerr << "couldn't find identity of gas block" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 
 				FLT mu_g;
 				keyword = val +"_mu";
 				if (!blockdata.get(keyword,mu_g)) {
 					std::cerr << "couldn't find mu of gas " << keyword << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 				kappa = mu_l/mu_g;
 			}
@@ -471,7 +471,7 @@ namespace ibc_ins {
 						}
 						else {
 							std::cerr << "couldn't find forcing function" << std::endl;
-							exit(1);
+							sim::abort(__LINE__,__FILE__,&std::cerr);
 						}
 					}
 				}
@@ -605,16 +605,16 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 						}
 					}
 					std::cerr << "List of force boundaries is wrong" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 
 					found:
 					if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
 					if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
 
 				}
@@ -721,7 +721,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				if (!input.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
 					if (!input.getline("force_boundaries",bdrys)) {
 						std::cerr << "No boundary number list" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
 				}
 
@@ -738,16 +738,16 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 						}
 					}
 					std::cerr << "List of force boundaries is wrong" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 
 					found:
 						if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-							exit(1);
+							sim::abort(__LINE__,__FILE__,&std::cerr);
 						}
 						if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-							exit(1);
+							sim::abort(__LINE__,__FILE__,&std::cerr);
 						}
 
 				}
@@ -1049,7 +1049,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				GETRF(size,size,J.data(),size,ipiv.data(),info);
 				if (info) {
 					*x.gbl->log << "Error inverting Jacobian for solid body coupling " << info << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 				
 			}
@@ -1066,7 +1066,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					GETRS(trans,size,1,J.data(),size,ipiv.data(),res.data(),size,info);
 					if (info) {
 						*x.gbl->log << "Error with Jacobian product for solid body coupling" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 					
 					res *= -1.0;
@@ -1113,14 +1113,14 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				if (!input.get(x.gbl->idprefix +"_pt0",&rake_pts(0,0),tri_mesh::ND)) {
 					if (!input.get("pt0",&rake_pts(0,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				
 				if (!input.get(x.gbl->idprefix +"_pt1",&rake_pts(1,0),tri_mesh::ND)) {
 					if (!input.get("pt1",&rake_pts(1,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				
@@ -1135,12 +1135,12 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					nstr << "term_line" << n << std::endl;
 					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt0",&term_lines(n)(0,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 0 of streamline rake" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 					
 					if (!input.get(x.gbl->idprefix +nstr.str() +"_pt1",&term_lines(n)(1,0),tri_mesh::ND)) {
 						*x.gbl->log << "Couldn't find endpoint 1 of streamline rake" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 				

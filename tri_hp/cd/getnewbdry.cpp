@@ -38,7 +38,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 		type = tri_hp_cd_stype::getid(val.c_str());
 		if (type == tri_hp_cd_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {

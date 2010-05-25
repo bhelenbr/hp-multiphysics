@@ -32,7 +32,7 @@ void tri_hp_swirl::setup_preconditioner() {
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
 			tri_mesh::output("negative",grid);
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 		hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));

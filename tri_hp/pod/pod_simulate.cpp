@@ -159,7 +159,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	bin.open(filename.c_str());
 	if (bin.error()) {
 		*BASE::gbl->log << "couldn't open coefficient input file " << filename << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
 	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
@@ -331,7 +331,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 	GETRF(tmodes,tmodes,jacobian.data(),tmodes,ipiv.data(),info);
 	if (info != 0) {
 		*BASE::gbl->log << "DGETRF FAILED FOR POD JACOBIAN " << info << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 	return;
 }
@@ -345,7 +345,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	GETRS(trans,tmodes,1,jacobian.data(),tmodes,ipiv.data(),rsdls_recv.data(),tmodes,info);
 	if (info != 0) {
 		*BASE::gbl->log << "DGETRS FAILED FOR POD UPDATE " << info << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 	/* Need to fix pod boundaries so coefficients are equal */
 	/* store rsdls_recv to compare to after boundary comm */
@@ -465,7 +465,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
 		bin.open(filename.c_str());
 		if (bin.error()) {
 			*x.gbl->log << "couldn't open input file " << filename << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		bin.setFlag(binio::BigEndian,bin.readInt(1));
 		bin.setFlag(binio::FloatIEEE,bin.readInt(1));
@@ -493,7 +493,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
     bin.open(filename.c_str());
     if (bin.error()) {
 		*x.gbl->log << "couldn't open coefficient input file " << filename << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
     }
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
 	bin.setFlag(binio::FloatIEEE,bin.readInt(1));

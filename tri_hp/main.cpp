@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 	/* NORMAL SIMULATION */
 	if (argc < 2) {
 		std::cerr << "# Need to specify input file" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	sim::blks.go(argv[1]);
 
@@ -102,12 +102,7 @@ void ctrlc(int signal)
     /* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
 //    sim::blks.output("interrupt",block::restart);
 //    sim::blks.output("interrupt",block::display);
-#ifdef PTH
-	pth_exit(NULL);
-#endif    
-#ifdef MPISRC
-	MPI_Finalize();
-#endif
-	exit(1);
+	sim::finalize(__LINE__,__FILE__,&std::cerr);
+
 }
 

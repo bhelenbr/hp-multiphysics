@@ -42,7 +42,7 @@ hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		type = tri_hp_lvlset_vtype::getid(val.c_str());
 		if (type == tri_hp_lvlset_vtype::unknown)  {
 			*gbl->log << "unknown vertex type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
@@ -91,7 +91,7 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 		type = tri_hp_lvlset_stype::getid(val.c_str());
 		if (type == tri_hp_lvlset_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {

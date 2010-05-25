@@ -47,7 +47,7 @@ hp_vrtx_bdry* tri_hp_cns::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		type = tri_hp_cns_vtype::getid(val.c_str());
 		if (type == tri_hp_cns_vtype::unknown)  {
 			*gbl->log << "unknown vertex type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
@@ -130,7 +130,7 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, input_map &bdrydata) {
 		type = tri_hp_cns_stype::getid(val.c_str());
 		if (type == tri_hp_cns_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
@@ -173,7 +173,7 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, input_map &bdrydata) {
 //			}
 //			else {
 //				std::cerr << "use coupled physics for surface boundary" << std::endl;
-//				exit(1);
+//				sim::abort(__LINE__,__FILE__,&std::cerr);
 //			}
 //			break;
 //		}

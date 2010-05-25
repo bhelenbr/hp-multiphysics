@@ -33,7 +33,21 @@ void tri_hp_ins::init(input_map& input, void *gin) {
 
 	if (!input.get(gbl->idprefix + "_rho",gbl->rho)) input.getwdefault("rho",gbl->rho,1.0);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,0.0);
-
+	
+	std::string estring;
+	if (!input.get(gbl->idprefix + "_error_estimator",estring)) input.getwdefault("error_estimator",estring,std::string("none"));
+	if (estring == "none") 
+			gbl->error_estimator = tri_hp_ins::none;
+	else if (estring == "energy_norm")
+			gbl->error_estimator = tri_hp_ins::energy_norm;
+	else if (estring == "scale_independent")
+			gbl->error_estimator = tri_hp_ins::scale_independent;
+	else {
+			*gbl->log << "Error estimator not recognized" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
+	
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
 	gbl->D.resize(NV);
 	if (NV > 3) {

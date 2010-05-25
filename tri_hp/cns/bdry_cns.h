@@ -479,7 +479,7 @@ namespace bdry_cns {
 //				surfbdry(inbdry.surfbdry),fix_norm(inbdry.fix_norm) {
 //				if (!(surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
 //					*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
-//					exit(1);
+//					sim::abort(__LINE__,__FILE__,x.gbl->log);
 //				}
 //			}
 //			surface_fixed_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_fixed_pt(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
@@ -499,7 +499,7 @@ namespace bdry_cns {
 //				}
 //				else {
 //					*x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
-//					exit(1);
+//					sim::abort(__LINE__,__FILE__,x.gbl->log);
 //				}
 //
 //				keyword = base.idprefix + "_fix_normal";

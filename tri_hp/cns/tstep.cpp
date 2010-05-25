@@ -139,13 +139,13 @@ void tri_hp_cns::setup_preconditioner() {
 			*gbl->log << "negative triangle area caught in tstep. Problem triangle is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << std::endl;
 			tri_mesh::output("negative",grid);
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
 		if  (std::isnan(qmax)) { 
 			*gbl->log << "flow solution has nan's" << std::endl;
 			output("nan",tecplot);
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		q = sqrt(qmax);
 

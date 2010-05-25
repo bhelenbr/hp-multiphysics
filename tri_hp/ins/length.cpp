@@ -23,8 +23,9 @@ void tri_hp_ins::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	// return; // TEMPORARY To simply maintain mesh quality
-		
+	if (gbl->error_estimator == tri_hp_ins::none) 
+		return;
+	
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
 	int lgpn = basis::tri(log2p)->gpn();
@@ -117,41 +118,46 @@ void tri_hp_ins::length() {
 	
 			
 
-#ifdef OPTIMAL_ENERGY_NORM
-	*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
+	if (gbl->error_estimator == tri_hp_ins::energy_norm) {
+		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
 
-	/* Determine error target (SEE AEA Paper) */
-	FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
-	FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-	gbl->res.v(Range(0,npnt-1),0) = 1.0;
-	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-	for(int tind=0;tind<ntri;++tind) {
-		FLT error2 = gbl->fltwk(tind);
-		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
-		for (int j=0;j<3;++j) {
-			int p0 = tri(tind).pnt(j);
-			/* Calculate average at vertices */
-			gbl->res.v(p0,0) *= ri;
-			gbl->res_r.v(p0,0) += 1.0;
+		/* Determine error target (SEE AEA Paper) */
+		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
+		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
+		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+		for(int tind=0;tind<ntri;++tind) {
+			FLT error2 = gbl->fltwk(tind);
+			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+			for (int j=0;j<3;++j) {
+				int p0 = tri(tind).pnt(j);
+				/* Calculate average at vertices */
+				gbl->res.v(p0,0) *= ri;
+				gbl->res_r.v(p0,0) += 1.0;
+			}
 		}
 	}
-#else
-	/* This is to maintain a constant local truncation error (independent of scale) */
-	gbl->res.v(Range(0,npnt-1),0) = 1.0;
-	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-	for(int tind=0;tind<ntri;++tind) {
-		FLT jcb = 0.25*area(tind);
-		gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
-		FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
-		FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
-		for (int j=0;j<3;++j) {
-			int p0 = tri(tind).pnt(j);
-			/* Calculate average at vertices */
-			gbl->res.v(p0,0) *= ri;
-			gbl->res_r.v(p0,0) += 1.0;
-		}
-	}	
-#endif
+	else if (gbl->error_estimator == tri_hp_ins::scale_independent) {
+		/* This is to maintain a constant local truncation error (independent of scale) */
+		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+		for(int tind=0;tind<ntri;++tind) {
+			FLT jcb = 0.25*area(tind);
+			gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
+			FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+			FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
+			for (int j=0;j<3;++j) {
+				int p0 = tri(tind).pnt(j);
+				/* Calculate average at vertices */
+				gbl->res.v(p0,0) *= ri;
+				gbl->res_r.v(p0,0) += 1.0;
+			}
+		}	
+	}
+	else {
+		*gbl->log << "Unknown error estimator??" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	for (int pind=0;pind<npnt;++pind) {
 		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));

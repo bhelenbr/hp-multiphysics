@@ -400,7 +400,7 @@ namespace bdry_ins {
 				std::string keyword = base.idprefix +"_sliplength";
 				if (!input.get(keyword,slip_length)) {
 					*x.gbl->log << "Couldn't find slip length for " << keyword << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 			}
 			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
@@ -705,7 +705,7 @@ namespace bdry_ins {
 				surfbdry(inbdry.surfbdry),fix_norm(inbdry.fix_norm) {
 				if (!(surf = dynamic_cast<surface *>(x.hp_ebdry(base.ebdry(surfbdry))))) {
 					*x.gbl->log << "something's wrong can't find surface boundary" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 			}
 			surface_fixed_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new surface_fixed_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
@@ -725,7 +725,7 @@ namespace bdry_ins {
 				}
 				else {
 					*x.gbl->log << "something's wrong neither side is a surface boundary" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 				fix_norm = 1;  // THIS IS ONLY TO BE CHANGE BY INHERITED CLASSES
 			}

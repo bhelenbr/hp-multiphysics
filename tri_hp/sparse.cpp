@@ -34,7 +34,7 @@ void tri_hp::my_add_values(int nrows,const Array<int,1>& rows, int ncols, const 
 #ifdef BZ_DEBUG
 			if (sindx == sparse_cpt(row+1)) {
 				*gbl->log << "Too many entries for row " << row << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 #endif
 			
@@ -72,7 +72,7 @@ void tri_hp::my_set_values(int nrows,const Array<int,1>& rows, int ncols, const 
 #ifdef BZ_DEBUG
 			if (sindx == sparse_cpt(row+1)) {
 				*gbl->log << "Too many entries for row " << row << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 #endif
 			
@@ -109,7 +109,7 @@ void tri_hp::my_set_values(int nels,const Array<int,1>& rows, const Array<int,1>
 #ifdef BZ_DEBUG
 			if (sindx == sparse_cpt(row+1)) {
 				*gbl->log << "Too many entries for row " << row << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 #endif
 		
@@ -144,7 +144,7 @@ void tri_hp::my_set_diag(int nels,const Array<int,1>& rows, FLT val, int offset)
 #ifdef BZ_DEBUG
 			if (sindx == sparse_cpt(row+1)) {
 				*gbl->log << "Too many entries for row " << row << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 #endif
 		

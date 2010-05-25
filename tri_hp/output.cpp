@@ -103,7 +103,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open text output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* HEADER INFORMATION */
@@ -150,7 +150,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.open(fnmapp.c_str(),std::ios::binary);
 			if (!out) {
 				*gbl->log << "couldn't open text output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			binowstream bout(&out);
 			bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
@@ -199,7 +199,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open tecplot output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << ", E = " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << std::endl;
@@ -387,7 +387,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open tecplot output file " << fnmapp;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			out << "ZONE F=FEPOINT, ET=TRIANGLE, N = " << npnt << ", E = " << ntri << std::endl;
@@ -409,7 +409,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			out.open(fnmapp.c_str());
 			if (!out) {
 				*gbl->log << "couldn't open tecplot output file " << fnmapp << '\n';
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			
 			/* OUTPUTS DISCONNECTED TRIS & ERROR FOR TRI */
@@ -436,7 +436,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 		default:
 			*gbl->log << "can't output a tri_hp to that filetype" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 			break;
 	}
 
@@ -465,7 +465,7 @@ void tri_hp::input(const std::string& fname) {
 				bin.open(fnmapp.c_str());
 				if (bin.error()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				bin.setFlag(binio::BigEndian,bin.readInt(1));
 				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
@@ -504,7 +504,7 @@ void tri_hp::input(const std::string& fname) {
 				fin.open(fnmapp.c_str());
 				if (!fin.is_open()) {
 					*gbl->log << "couldn't open input file " << fnmapp << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,gbl->log);
 				}
 				fin.ignore(80,'\n');  // SKIP NUMBER OF VERTICES
 				for (j=0;j<npnt;++j) {
@@ -548,7 +548,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			/* HEADER INFORMATION */
@@ -622,7 +622,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open text input file " << fnapp << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			biniwstream bin(&in);
 
@@ -636,15 +636,15 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 			if (bin.readInt(sizeof(int))  != npnt) {
 				*gbl->log << "mismatched pnt counts?" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (bin.readInt(sizeof(int))  != nseg) {
 				*gbl->log << "mismatched seg counts" << std::endl;;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			if (bin.readInt(sizeof(int))  != ntri) {
 				*gbl->log << "mismatched tri counts?" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(i=0;i<npnt;++i) {
@@ -706,7 +706,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			in.open(fnapp.c_str());
 			if (!in) {
 				*gbl->log << "couldn't open tecplot input file " << fnapp << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 			in.ignore(80,'\n');
 
@@ -729,7 +729,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			GETRF(basis::tri(log2p)->sm(),basis::tri(log2p)->sm(),matrix[0],MXTM,ipiv,info);
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(sind=0;sind<nseg;++sind) {
@@ -806,7 +806,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 			GETRF(basis::tri(log2p)->im(),basis::tri(log2p)->im(),matrix[0],MXTM,ipiv,info);
 			if (info != 0) {
 				*gbl->log << "DGETRF FAILED FOR INPUTING TECPLOT SIDES" << std::endl;
-				exit(1);
+				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
 			for(tind=0;tind<ntri;++tind) {
@@ -838,7 +838,7 @@ void tri_hp::input(const std::string& filename, filetype typ, int tlvl) {
 
 		default:
 			*gbl->log << "can't input a tri_hp from that filetype" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 			break;
 	}
 

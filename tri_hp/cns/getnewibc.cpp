@@ -467,7 +467,7 @@ namespace ibc_cns {
 //						}
 //						else {
 //							std::cerr << "couldn't find forcing function" << std::endl;
-//							exit(1);
+//							sim::abort(__LINE__,__FILE__,&std::cerr);
 //						}
 //					}
 //				}
@@ -514,16 +514,16 @@ namespace ibc_cns {
 //						}
 //					}
 //					std::cerr << "List of force boundaries is wrong" << std::endl;
-//					exit(1);
+//					sim::abort(__LINE__,__FILE__,&std::cerr);
 //
 //					found:
 //					if (!(hp_ebdry(i) = dynamic_cast<bdry_cns::force_coupling *>(x.hp_ebdry(j)))) {
 //						std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-//						exit(1);
+//						sim::abort(__LINE__,__FILE__,&std::cerr);
 //					}
 //					if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
 //						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-//						exit(1);
+//						sim::abort(__LINE__,__FILE__,&std::cerr);
 //					}
 //
 //				}
@@ -566,7 +566,7 @@ namespace ibc_cns {
 //				if (!input.getline(x.gbl->idprefix +"_force_boundaries",bdrys)) {
 //					if (!input.getline("force_boundaries",bdrys)) {
 //						std::cerr << "No boundary number list" << std::endl;
-//						exit(1);
+//						sim::abort(__LINE__,__FILE__,&std::cerr);
 //					}
 //				}
 //
@@ -583,16 +583,16 @@ namespace ibc_cns {
 //						}
 //					}
 //					std::cerr << "List of force boundaries is wrong" << std::endl;
-//					exit(1);
+//					sim::abort(__LINE__,__FILE__,&std::cerr);
 //
 //					found:
 //						if (!(hp_ebdry(i) = dynamic_cast<bdry_cns::force_coupling *>(x.hp_ebdry(j)))) {
 //							std:cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-//							exit(1);
+//							sim::abort(__LINE__,__FILE__,&std::cerr);
 //						}
 //						if (!(ebdry(i) = dynamic_cast<eboundary_with_geometry<edge_bdry,naca> *>(x.ebdry(j)))) {
 //							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
-//							exit(1);
+//							sim::abort(__LINE__,__FILE__,&std::cerr);
 //						}
 //
 //				}

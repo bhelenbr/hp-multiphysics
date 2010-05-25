@@ -201,7 +201,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	if (info != 0) {
 		*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 	}
 
 	*BASE::gbl->log << "eigenvalues "<<  eigenvalues << std::endl;
@@ -357,7 +357,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -368,17 +368,8 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.close();
 	}
 	
-#ifdef petsc
-	PetscFinalize();
-#endif
-#ifdef PTH
-	pth_exit(NULL);
-#endif    
-#ifdef MPISRC
-	MPI_Finalize();
-#endif
-	exit(1);
-	
+	sim::finalize(__LINE__,__FILE__,BASE::x.gbl->log);
+		
 	return;
 }
 
@@ -499,7 +490,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 				&neig, eigenvalues.data(),eigenvector.data(), &nsnapshots, work.data(), iwork.data(), ifail.data(), &info); 
 		if (info != 0) {
 			*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 		}
 
 		*BASE::gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
@@ -657,7 +648,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -681,7 +672,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 #ifdef MPISRC
 	MPI_Finalize();
 #endif
-	exit(1);
+	sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 }
 #endif
 
@@ -699,13 +690,13 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 	keyword = base.idprefix + "_pod_id";
 	if (!input.get(keyword,pod_id)) {
 		*x.gbl->log << "Must provide a pod id for pod boundary" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 
 	/* ERROR CHECK THAT NUMBER IS LISTED IN GROUP LIST */
 	if (!input.getline(x.gbl->idprefix +"_groups",keyword)) {
 		*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 
 	istringstream mystr(keyword);
@@ -713,7 +704,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 	do {
 		if (!(mystr >> bnum)) {
 			*x.gbl->log << "group list must contain pod_id for " << base.idprefix << "" << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 	} while (bnum != pod_id);
 }
@@ -844,7 +835,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 				&neig, eigenvalues.data(),eigenvector.data(), &x.nsnapshots, work.data(), iwork.data(), ifail.data(), &info); 
 		if (info != 0) {
 			*x.gbl->log << "Failed to find eigenmodes " << info << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 
 		*x.gbl->log << "eigenvalue "<<  eig_ct << ' ' << eigenvalues(0) << std::endl;
@@ -931,7 +922,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*x.gbl->log << "couldn't open coefficient output file " << filename;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -1024,7 +1015,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*x.gbl->log << "couldn't open coefficient output file " << filename << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);

@@ -36,7 +36,7 @@ class symbolic_ibc : public init_bdry_cndtn {
 				}
 				else {
 					std::cerr << "couldn't find initial condition function" << std::endl;
-					exit(1);
+					sim::abort(__LINE__,__FILE__,&std::cerr);
 				}
 			}
 		}
@@ -81,7 +81,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 		}
 		default: {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	temp->input(inmap,keyword);
@@ -152,7 +152,7 @@ class gcl_test : public tri_hp_helper {
 					}
 					else {
 						*x.gbl->log << "couldn't find mesh movement function" << std::endl;
-						exit(1);
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}
 				}
 			}

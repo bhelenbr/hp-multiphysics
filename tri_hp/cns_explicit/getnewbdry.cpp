@@ -47,7 +47,7 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
 		type = tri_hp_cns_explicit_vtype::getid(val.c_str());
 		if (type == tri_hp_cns_explicit_vtype::unknown)  {
 			*gbl->log << "unknown vertex type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {
@@ -107,7 +107,7 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 		type = tri_hp_cns_explicit_stype::getid(val.c_str());
 		if (type == tri_hp_cns_explicit_stype::unknown)  {
 			*gbl->log << "unknown side type:" << val << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
 	else {

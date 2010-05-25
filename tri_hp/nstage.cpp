@@ -301,7 +301,7 @@ void tri_hp::update() {
 #ifdef OP_COUNT
 		chudStopRemotePerfMonitor(); 
 		chudReleaseRemoteAccess();
-		exit(1);
+		sim::finalize(__LINE__,__FILE__,gbl->log);
 #endif
 
 		minvrt();
@@ -422,17 +422,8 @@ void tri_hp::update() {
 
 #ifdef DEBUG
 //        if (coarse_level || log2p != log2pmax) {
-#ifdef PTH
-		pth_exit(NULL);
-#endif
-#ifdef MPI
-		MPI_Finalize();
-#endif
-
-		exit(1);
-		
+						sim::finalize(__LINE__,__FILE__,gbl->log);		
  //       }
 #endif
-
 	}
 }

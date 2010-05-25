@@ -230,7 +230,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 		}
 		else {
 			*x.gbl->log << "couldn't find stress function " << nstr.str() << std::endl;
-			exit(1);
+			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}
 	}
 
@@ -248,7 +248,7 @@ void flexible::init(input_map& inmap,void* gbl_in) {
 	Array<int,1> atemp(x.NV-1);
 	if (!inmap.get(base.idprefix+"_ins_bcs", atemp.data(), x.NV-1)) {
 		*x.gbl->log << "missing flexible specifier list (0 = essential, 1 = natural, 2 = mixed)" << std::endl;
-		exit(1);
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	else {
 		ndirichlets = 0;
