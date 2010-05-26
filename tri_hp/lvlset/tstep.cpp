@@ -85,10 +85,10 @@ void tri_hp_lvlset::setup_preconditioner() {
 			jcb *= 2.*nu*(1./(hmax*hmax) +1./(h*h)) +3*lam1/h;  // heuristically tuned
 			jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-			/* BRUTE FORCE WAY TO FREEZE FLOW 
-			gbl->tprcn(tind,0) = 1.0e99*gbl->rho*jcb;   
-			gbl->tprcn(tind,1) = 1.0e99*gbl->rho*jcb;   
-			gbl->tprcn(tind,3) =  1.0e99*jcb/gam; */
+			/* BRUTE FORCE WAY TO FREEZE FLOW */
+//			gbl->tprcn(tind,0) = 1.0e99*gbl->rho*jcb;   
+//			gbl->tprcn(tind,1) = 1.0e99*gbl->rho*jcb;   
+//			gbl->tprcn(tind,3) =  1.0e99*jcb/gam; 
 
 			gbl->tprcn(tind,0) = rhomax*jcb; 
 			gbl->tprcn(tind,1) = rhomax*jcb;  

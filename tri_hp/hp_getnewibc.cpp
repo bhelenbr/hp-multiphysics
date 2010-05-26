@@ -63,7 +63,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 	init_bdry_cndtn *temp;
 	int type;
 
-    /* FIND INITIAL CONDITION TYPE */
+	/* FIND INITIAL CONDITION TYPE */
 	keyword = gbl->idprefix + "_" +suffix;
 	if (!inmap.get(keyword,ibcname)) {
 		keyword = suffix;

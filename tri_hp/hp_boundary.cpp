@@ -303,13 +303,13 @@ void hp_edge_bdry::curv_init(int tlvl) {
 	TinyVector<FLT,2> pt;
 	char uplo[] = "U";
 
-
 	/* SKIP END VERTICES TEMPORARY */
-	for(j=0;j<base.nseg;++j) {
+	j = 0;
+	do {
 		sind = base.seg(j);
 		v0 = x.seg(sind).pnt(0);
 		base.mvpttobdry(j,-1.0, x.pnts(v0));
-	}
+	} while (++j < base.nseg);
 	v0 = x.seg(sind).pnt(1);
 	base.mvpttobdry(base.nseg-1,1.0, x.pnts(v0));
 

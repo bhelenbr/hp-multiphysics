@@ -4,7 +4,7 @@
 
 //#define MPDEBUG
 
-#define DEBUG
+//#define DEBUG
 
 //#define BODYFORCE
 

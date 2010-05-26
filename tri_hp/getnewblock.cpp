@@ -17,7 +17,7 @@
 //#define SWIRL
 //#define BUOYANCY
 //#define SWE
-//#define LVLSET
+#define LVLSET
 //#define EXPLICIT
 //#define CNS
 

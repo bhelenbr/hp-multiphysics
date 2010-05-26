@@ -377,8 +377,8 @@ namespace bdry_ins {
 
 				FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);				
 				TinyVector<FLT,tri_mesh::ND> tang(-norm(1),norm(0));
-				FLT slip_stress = ((ub(0) -u(0))*tang(1) +(ub(1) -u(1))*tang(0))*x.gbl->mu/(slip_length*sqrt(tang(0)*tang(0)+tang(1)*tang(1)));
-
+				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.gbl->mu/(slip_length*sqrt(tang(0)*tang(0)+tang(1)*tang(1)));
+				
 				flx(x.NV-1) = x.gbl->rho*un;
 
 				/* X&Y MOMENTUM */

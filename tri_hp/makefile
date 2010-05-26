@@ -25,49 +25,49 @@ tri_hp_petsc:
 
 tri_hp_axi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS=-DAXISYMMETRIC
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DAXISYMMETRIC -DPTH'
 	cp _$@/tri_hp $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi
 
 tri_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS=-DMPISRC
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DPTH'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_mpi
 
 tri_hp_axi_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC -DPTH'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_mpi
 
 tri_hp_drop:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DPTH'
 	cp _$@/tri_hp $(HOME)/bin/$@
 
 .PHONY: tri_hp_drop
 
 tri_hp_drop_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC -DPTH'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_drop_mpi
 
 tri_hp_drop_stokes:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DPTH'
 	cp _$@/tri_hp $(HOME)/bin/$@
 
 .PHONY: tri_hp_drop_stokes
 
 tri_hp_drop_stokes_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC -DPTH'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_drop_stokes_mpi
