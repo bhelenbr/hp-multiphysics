@@ -805,14 +805,19 @@
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = "${inherited}";
 				PRODUCT_NAME = tri_mesh;
+				SKIP_INSTALL = NO;
 			};
 			name = Development;
 		};
 		6F2262C308672FD1001017D0 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = "${inherited}";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
+					"${inherited}",
+				);
 				PRODUCT_NAME = tri_mesh;
+				SKIP_INSTALL = NO;
 			};
 			name = Deployment;
 		};
@@ -858,10 +863,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					PETSC,
+					MY_SPARSE,
+					petsc,
 					"${inherited}",
 				);
 				PRODUCT_NAME = tri_mesh_petsc;
+				SKIP_INSTALL = NO;
 			};
 			name = Development;
 		};
@@ -869,10 +876,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					PETSC,
+					MY_SPARSE,
+					petsc,
 					"${inherited}",
 				);
 				PRODUCT_NAME = tri_mesh_petsc;
+				SKIP_INSTALL = NO;
 			};
 			name = Deployment;
 		};
@@ -884,6 +893,7 @@
 					MPISRC,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
+				SKIP_INSTALL = NO;
 			};
 			name = Development;
 		};
@@ -891,10 +901,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					"${inherited}",
 					MPISRC,
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
+				SKIP_INSTALL = NO;
 			};
 			name = Deployment;
 		};
@@ -903,6 +915,7 @@
 			buildSettings = {
 				DSTROOT = "${HOME}";
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					MPISRC,
 					"${inherited}",
 				);
@@ -916,6 +929,7 @@
 			buildSettings = {
 				DSTROOT = "${HOME}";
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					MPISRC,
 					"${inherited}",
 				);
@@ -928,6 +942,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"${inherited}",
+					PTH,
+				);
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tri_mesh;
 			};
@@ -937,6 +955,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"${inherited}",
+					PTH,
+				);
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tri_mesh;
 			};
@@ -947,11 +969,10 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					NO_BOOST,
-					PTH,
 					BZ_DEBUG,
 					METIS,
 					f2cFortran,
@@ -976,6 +997,7 @@
 					"${prefix}/lib",
 				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SKIP_INSTALL = NO;
 				STRIP_INSTALLED_PRODUCT = NO;
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";
@@ -987,13 +1009,12 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					METIS,
 					f2cFortran,
-					NO_BOOST,
-					PTH,
 				);
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -1016,6 +1037,7 @@
 					"${prefix}/lib",
 				);
 				PUBLIC_HEADERS_FOLDER_PATH = /include;
+				SKIP_INSTALL = NO;
 				STRIP_INSTALLED_PRODUCT = NO;
 				packages = "${HOME}/Packages";
 				prefix = "${HOME}/Codes";

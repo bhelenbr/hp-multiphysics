@@ -397,7 +397,7 @@ class r_translating : public r_fixed {
 			}
 
 
-			/* TEMPORARY */
+			/* TEMPORARY I think this was to get my mpi test right */
 				p0 = x.seg(base.seg(0)).pnt(0);
 				for(n=0;n<2;++n)
 					x.pnts(p0)(n) += dx[n]/2;
