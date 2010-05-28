@@ -102,7 +102,7 @@ void ctrlc(int signal)
     /* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
 //    sim::blks.output("interrupt",block::restart);
 //    sim::blks.output("interrupt",block::display);
-	sim::finalize(__LINE__,__FILE__,&std::cerr);
+	sim::abort(__LINE__,__FILE__,&std::cerr);
 
 }
 

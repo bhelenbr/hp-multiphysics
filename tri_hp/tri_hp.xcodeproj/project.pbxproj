@@ -26,12 +26,6 @@
 		6F1F0B28113E051900F200CC /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1B113E051900F200CC /* getnewibc.cpp */; };
 		6F1F0B29113E051900F200CC /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1C113E051900F200CC /* rsdl.cpp */; };
 		6F1F0B2A113E051900F200CC /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1E113E051900F200CC /* tstep.cpp */; };
-		6F1F0B2B113E051900F200CC /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B17113E051900F200CC /* allocate.cpp */; };
-		6F1F0B2C113E051900F200CC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B18113E051900F200CC /* bdry.cpp */; };
-		6F1F0B2D113E051900F200CC /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1A113E051900F200CC /* getnewbdry.cpp */; };
-		6F1F0B2E113E051900F200CC /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1B113E051900F200CC /* getnewibc.cpp */; };
-		6F1F0B2F113E051900F200CC /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1C113E051900F200CC /* rsdl.cpp */; };
-		6F1F0B30113E051900F200CC /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1E113E051900F200CC /* tstep.cpp */; };
 		6F1F0B31113E051900F200CC /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B17113E051900F200CC /* allocate.cpp */; };
 		6F1F0B32113E051900F200CC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B18113E051900F200CC /* bdry.cpp */; };
 		6F1F0B33113E051900F200CC /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1A113E051900F200CC /* getnewbdry.cpp */; };
@@ -106,10 +100,6 @@
 		6F61BF1E116E802A000E97C0 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
 		6F61BF1F116E802B000E97C0 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		6F61BF20116E802C000E97C0 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
-		6F61BF35116E818A000E97C0 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E870F533522005F5783 /* length.cpp */; };
-		6F61BF37116E81A2000E97C0 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
-		6F61BF38116E81A2000E97C0 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
-		6F61BF39116E81A3000E97C0 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
 		6F661FFA091AFB3500FB5D82 /* libtri_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF4091AFB3500FB5D82 /* libtri_basis.a */; };
 		6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6F661FFC091AFB3500FB5D82 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
@@ -132,12 +122,6 @@
 		6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
 		6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
 		6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
-		6F6FAED21118BBE000AB695D /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E3C0F5330AD005F5783 /* allocate.cpp */; };
-		6F6FAED31118BBE100AB695D /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E8A0F533522005F5783 /* tstep.cpp */; };
-		6F6FAED41118BBE200AB695D /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E880F533522005F5783 /* rsdl.cpp */; };
-		6F6FAED61118BBE400AB695D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E830F533522005F5783 /* bdry.cpp */; };
-		6F6FAED71118BBE500AB695D /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E850F533522005F5783 /* getnewbdry.cpp */; };
-		6F6FAED81118BBE700AB695D /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F681E860F533522005F5783 /* getnewibc.cpp */; };
 		6F77C4460B4D63ED006A4504 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
 		6F77C5110B4D8959006A4504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
 		6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
@@ -355,6 +339,10 @@
 		6FBF3D3C119B50F800A5019A /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
 		6FBF3D3D119B50F800A5019A /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
 		6FBF3D3E119B50F900A5019A /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
+		6FCBCB8411ACBD3300117AF1 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD509840A8AC9D100BD5ADB /* allocate.cpp */; };
+		6FCBCB8511ACBD3400117AF1 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098C0A8AC9D100BD5ADB /* tstep.cpp */; };
+		6FCBCB8611ACBD3500117AF1 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098A0A8AC9D100BD5ADB /* rsdl.cpp */; };
+		6FCBCB8711ACBD3600117AF1 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FE412F00B7A77D500FFA5CC /* bdry.cpp */; };
 		6FD0E23F100D226F00EC2128 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
 		6FE37DE70CD966CF00BC4074 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
 		6FE37E060CD96B0000BC4074 /* bdry_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00450F091FE27600A6F21E /* bdry_cd.h */; };
@@ -427,7 +415,6 @@
 		6FF5F808110CFDA100B16014 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
 		6FFA305109769DD7008E427F /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
 		6FFEF5DF0DCEA2E60079FF6D /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
-		6FFFB67511777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		6FFFB67611777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		6FFFB67711777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		6FFFB67811777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
@@ -644,7 +631,7 @@
 		6F77C4430B4D63ED006A4504 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = buoyancy/tstep.cpp; sourceTree = "<group>"; };
 		6F77C5100B4D8959006A4504 /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/muParser/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
 		6F9854120BDE612700D342F6 /* tri_hp_axi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi; sourceTree = BUILT_PRODUCTS_DIR; };
-		6F9854CB0BDE649A00D342F6 /* tri_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_mpi; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FB40AC9091AF516002BAA09 /* adapt.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = adapt.cpp; sourceTree = "<group>"; };
 		6FB40ACB091AF516002BAA09 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = ins/bdry.cpp; sourceTree = "<group>"; };
 		6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = cd/getnewbdry.cpp; sourceTree = "<group>"; };
@@ -913,7 +900,7 @@
 				8DD76F6C0486A84900D96B5E /* tri_hp */,
 				6FB91AA80ACCB04500792B04 /* tri_hp_mpi */,
 				6F9854120BDE612700D342F6 /* tri_hp_axi */,
-				6F9854CB0BDE649A00D342F6 /* tri_hp */,
+				6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */,
 				6FF5F80C110CFDA100B16014 /* tri_hp_petsc */,
 			);
 			name = Products;
@@ -1157,7 +1144,7 @@
 			name = tri_hp_axi_mpi;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
-			productReference = 6F9854CB0BDE649A00D342F6 /* tri_hp */;
+			productReference = 6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */;
 			productType = "com.apple.product-type.tool";
 		};
 		6FB91A580ACCB04500792B04 /* tri_hp_mpi */ = {
@@ -1440,24 +1427,7 @@
 				6FF5F7DC110CFDA100B16014 /* nstage.cpp in Sources */,
 				6FF5F7DD110CFDA100B16014 /* petsc.cpp in Sources */,
 				6FF5F7DE110CFDA100B16014 /* sparse.cpp in Sources */,
-				6F6FAED21118BBE000AB695D /* allocate.cpp in Sources */,
-				6F6FAED31118BBE100AB695D /* tstep.cpp in Sources */,
-				6F6FAED41118BBE200AB695D /* rsdl.cpp in Sources */,
-				6F6FAED61118BBE400AB695D /* bdry.cpp in Sources */,
-				6F6FAED71118BBE500AB695D /* getnewbdry.cpp in Sources */,
-				6F6FAED81118BBE700AB695D /* getnewibc.cpp in Sources */,
 				6FEC0A77111FA8E8007F039D /* tadvance.cpp in Sources */,
-				6F1F0B2B113E051900F200CC /* allocate.cpp in Sources */,
-				6F1F0B2C113E051900F200CC /* bdry.cpp in Sources */,
-				6F1F0B2D113E051900F200CC /* getnewbdry.cpp in Sources */,
-				6F1F0B2E113E051900F200CC /* getnewibc.cpp in Sources */,
-				6F1F0B2F113E051900F200CC /* rsdl.cpp in Sources */,
-				6F1F0B30113E051900F200CC /* tstep.cpp in Sources */,
-				6F61BF35116E818A000E97C0 /* length.cpp in Sources */,
-				6F61BF37116E81A2000E97C0 /* allocate.cpp in Sources */,
-				6F61BF38116E81A2000E97C0 /* tstep.cpp in Sources */,
-				6F61BF39116E81A3000E97C0 /* rsdl.cpp in Sources */,
-				6FFFB67511777A9300EFEB3C /* length.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1500,6 +1470,10 @@
 				6F61BF1F116E802B000E97C0 /* tstep.cpp in Sources */,
 				6F61BF20116E802C000E97C0 /* rsdl.cpp in Sources */,
 				6FFFB67711777A9300EFEB3C /* length.cpp in Sources */,
+				6FCBCB8411ACBD3300117AF1 /* allocate.cpp in Sources */,
+				6FCBCB8511ACBD3400117AF1 /* tstep.cpp in Sources */,
+				6FCBCB8611ACBD3500117AF1 /* rsdl.cpp in Sources */,
+				6FCBCB8711ACBD3600117AF1 /* bdry.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1511,6 +1485,7 @@
 			buildSettings = {
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					"$(inherited)",
 					AXISYMMETRIC,
 				);
@@ -1525,6 +1500,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					"$(inherited)",
 					AXISYMMETRIC,
 				);
@@ -1537,73 +1513,44 @@
 		6F9854C90BDE649A00D342F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
+				CC = "/usr/bin/mpic++";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
-					BZ_DEBUG,
+					PTH,
+					MPISRC,
+					"${inherited}",
 					AXISYMMETRIC,
 				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${prefix}/include",
-					"${packages}/include",
+					"${inherited}",
 					/usr/share/include,
 				);
-				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
-					"$(prefix)/lib",
-					"$(packages)/lib",
+					"${inherited}",
 					/usr/share/lib,
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
-				PREBINDING = NO;
-				PRODUCT_NAME = tri_hp;
-				ZERO_LINK = NO;
+				PRODUCT_NAME = tri_hp_axi_mpi;
 			};
 			name = Debug;
 		};
 		6F9854CA0BDE649A00D342F6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
+				CC = "/usr/bin/mpic++";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					f2cFortran,
+					PTH,
+					"${inherited}",
 					AXISYMMETRIC,
 					MPISRC,
 				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = (
-					"${prefix}/include",
-					"${packages}/include",
+					"${inherited}",
 					/usr/share/include,
 				);
-				INSTALL_PATH = "$(HOME)/bin";
 				LIBRARY_SEARCH_PATHS = (
-					"$(prefix)/lib",
-					"$(packages)/lib",
+					"${inherited}",
 					/usr/share/lib,
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
-				PREBINDING = NO;
-				PRODUCT_NAME = tri_hp_mpi;
-				ZERO_LINK = NO;
+				PRODUCT_NAME = tri_hp_axi_mpi;
 			};
 			name = Release;
 		};
@@ -1611,7 +1558,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
+					"$(inherited)",
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
@@ -1622,7 +1572,10 @@
 		6FB40AC3091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
+					"$(inherited)",
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
@@ -1699,6 +1652,7 @@
 				CC = "/usr/bin/mpic++";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					"$(inherited)",
 					MPISRC,
 				);
@@ -1709,7 +1663,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/share/lib,
-					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				PRODUCT_NAME = tri_hp_mpi;
 			};
@@ -1720,6 +1673,7 @@
 			buildSettings = {
 				CC = "/usr/bin/mpic++";
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					"$(inherited)",
 					MPISRC,
 				);
@@ -1730,7 +1684,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/share/lib,
-					"\"$(SRCROOT)/../../Packages/lib\"",
 				);
 				PRODUCT_NAME = tri_hp_mpi;
 			};
