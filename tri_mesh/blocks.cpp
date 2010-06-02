@@ -57,7 +57,12 @@ void blocks::go(const std::string &infile, const std::string &outfile) {
 	std::string name;
 
 	name = infile + ".inpt";
-	maptemp.input(name);
+	if (!maptemp.input(name)) {
+		if (!maptemp.input(infile)) {
+			std::cerr << "Couldn't open input file " << infile << std::endl;
+			sim::abort(__LINE__,__FILE__,&std::cerr);
+		}
+	}
 
 	if (!outfile.empty()) {
 		maptemp["logfile"] = outfile;
