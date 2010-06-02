@@ -36,14 +36,14 @@ string trim(string str) {
 	return(str);
 }
 
-void input_map::input(const std::string &filename) {
+bool input_map::input(const std::string &filename) {
     ifstream infile(filename.c_str());
     if (!infile) {
-        cout << "Couldn't read file: " << filename << endl;
-        exit(1);
+        return(false);
     }
     infile >> *this;
     infile.close();
+		return(true);
 }
 
 istream& operator >>(istream &infile,input_map &obj) {

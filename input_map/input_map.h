@@ -20,7 +20,7 @@ class input_map : public std::map<std::string,std::string> {
         std::string echoprefix;
         std::ostream *log;
         input_map() : echo(false), echoprefix(""), log(&std::cout) {}
-        void input(const std::string &filename);
+        bool input(const std::string &filename);
         friend std::istream& operator >>(std::istream &is,input_map &obj);
         friend std::ostream& operator <<(std::ostream &os,const input_map &obj);
         template<class T> bool get(const std::string &keyword, T &vout) {
