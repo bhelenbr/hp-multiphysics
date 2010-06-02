@@ -194,7 +194,7 @@ void tri_mesh::input(const std::string &filename, tri_mesh::filetype filetype, F
 	
 
 	switch (filetype) {
-		case(easymesh):
+		case(easymesh): {
 			/* LOAD SIDE INFORMATION */
 			grd_app = grd_nm + ".s";
 			in.open(grd_app.c_str());
@@ -343,8 +343,8 @@ next1a:      continue;
 			}
 			in.close();
 			break;
-
-		case(gambit):
+		}
+		case(gambit): {
 			grd_app = grd_nm +".FDNEUT";
 			in.open(grd_app.c_str());
 			if (!in.good()) {
@@ -459,8 +459,8 @@ next1a:      continue;
 			~svrtxbtemp;
 
 			break;
-
-		case(grid):
+		}
+		case(grid): {
 			grd_app = grd_nm + ".grd";
 			in.open(grd_app.c_str());
 			if (!in.good()) {
@@ -560,9 +560,9 @@ next1a:      continue;
 			in.close();
 
 			break;
+		}
 
-
-		case(binary):
+		case(binary): {
 			grd_app = grd_nm + ".bin";
 			bin.open(grd_app.c_str());
 			if (bin.error()) {
@@ -658,8 +658,8 @@ next1a:      continue;
 			bin.close();
 
 			break;
-
-		case(text):
+		}
+		case(text): {
 			if (!initialized) {
 				*gbl->log << "to read in point positions only must first load mesh structure" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
@@ -691,9 +691,10 @@ next1a:      continue;
 			treeinit();
 
 			return;
+		}
 
 #ifdef CAPRI
-		case(BRep):
+		case(BRep): {
 
 			/* READ VOLUME & FACE NUMBER FROM FILENAME STRING */
 			sscanf(filename,"%d%d",&cpri_vol,&cpri_face);
@@ -812,9 +813,10 @@ next1c:      continue;
 			}
 
 			break;
+		}
 #endif
 
-		case(tecplot):
+		case(tecplot): {
 			grd_app = grd_nm +".dat";
 			in.open(grd_app.c_str());
 			if (!in.good()) {
@@ -883,7 +885,7 @@ next1c:      continue;
 			in.close();
 
 			break;
-
+		}
 		case(boundary): {
 			/* LOAD BOUNDARY INFORMATION */
 			grd_app = grd_nm +".d";
@@ -1008,9 +1010,10 @@ next1c:      continue;
 			return;
 		}
 
-		default:
+		default: {
 			*gbl->log << "That filetype is not supported" << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
 	}
 
 	for(i=0;i<nebd;++i) {
