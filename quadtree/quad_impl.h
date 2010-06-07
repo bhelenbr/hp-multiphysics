@@ -7,11 +7,11 @@
  *
  */
 #include"quadtree.h"
-#include<utilities.h>
 #include<float.h>
 #include<cstdio>
 #include<assert.h>
 #include<string.h>
+#include<utilities.h>
 #include<math.h>
 
 /* STATIC VARIABLES FOR SEARCHING */ 

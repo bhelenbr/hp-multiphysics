@@ -59,7 +59,7 @@ template<int ND> class quadtree {
         int maxsrch;
 
     public:
-        quadtree() : size(0) {};
+        quadtree() : maxvrtx(0), vrtx(0), size(0), current(0) {};
         void copy(const class quadtree& tgt);
         void allocate(FLT (*v)[ND],int mxv);
         inline void init(FLT (*v)[ND], int mxv, FLT x1[ND], FLT x2[ND]) { allocate(v,mxv); init(x1,x2);}
