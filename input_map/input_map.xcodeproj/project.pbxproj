@@ -232,12 +232,14 @@
 		6FD651C60922EC5F00D18689 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
 			name = Debug;
 		};
 		6FD651C70922EC5F00D18689 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
 				GCC_OPTIMIZATION_LEVEL = 3;

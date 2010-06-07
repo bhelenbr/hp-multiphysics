@@ -97,7 +97,7 @@ bool input_map::get(const std::string &keyword, double &vout) {
                 mu::varmap_type::const_iterator item = variables.begin();
                 for (; item!=variables.end(); ++item) {
                     if (!get(item->first,value)) {
-												*log << echoprefix << "Trouble reading " << item->first << std::endl;
+												// *log << echoprefix << "Trouble reading " << item->first << std::endl;
 												return(false);
                     }
                     P1.DefineConst(item->first,value);
