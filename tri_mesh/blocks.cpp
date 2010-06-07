@@ -249,7 +249,7 @@ void blocks::go(input_map& input) {
 
 
 /* This routine waits for everyone to exit nicely */
-void sim::finalize(int line, char *file, std::ostream *log) {
+void sim::finalize(int line,const char *file, std::ostream *log) {
 	*log << "Exiting at line " << line << " of file " << file << std::endl;
 #ifdef PTH
 	pth_exit(NULL);
@@ -261,7 +261,7 @@ void sim::finalize(int line, char *file, std::ostream *log) {
 }
 
 /* This routine forces everyone to die */
-void sim::abort(int line, char *file, std::ostream *log) {
+void sim::abort(int line,const char *file, std::ostream *log) {
 	*log << "Exiting at line " << line << " of file " << file << std::endl;
 #ifdef MPI
 	MPI_Abort(MPI_COMM_WORLD,1);

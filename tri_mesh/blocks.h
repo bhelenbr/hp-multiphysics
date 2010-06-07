@@ -221,9 +221,9 @@ namespace sim {
 	
 	/* Routines for shutting down cleanly */
 	/* finalize waits for everyone to exit together */
-	void finalize(int line, char *file, std::ostream *log);
+	void finalize(int line, const char *file, std::ostream *log);
 	/* abort kills everyone else then exits */ 
-	void abort(int line, char *file, std::ostream *log); 
+	void abort(int line, const char *file, std::ostream *log); 
 
 }
 
