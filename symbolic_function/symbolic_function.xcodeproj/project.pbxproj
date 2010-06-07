@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6F14B7030E3E992A00716710 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 6F14B7010E3E992A00716710 /* makefile */; };
 		6F8B22250E352FBF005923AA /* symbolic_function.h in Headers */ = {isa = PBXBuildFile; fileRef = 6F8B220A0E352D4C005923AA /* symbolic_function.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6F8B22320E35307B005923AA /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8B22310E35307B005923AA /* libinput_map.a */; };
 		6F8B22370E3530AE005923AA /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F8B22360E3530AE005923AA /* libmuparser.a */; };
@@ -33,8 +32,8 @@
 		6F8B220A0E352D4C005923AA /* symbolic_function.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = symbolic_function.h; sourceTree = "<group>"; };
 		6F8B22310E35307B005923AA /* libinput_map.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libinput_map.a; path = ../lib/libinput_map.a; sourceTree = SOURCE_ROOT; };
 		6F8B22360E3530AE005923AA /* libmuparser.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmuparser.a; path = ../../Packages/lib/libmuparser.a; sourceTree = SOURCE_ROOT; };
-		6F8B22570E353230005923AA /* libinstall.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinstall.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DD76F6C0486A84900D96B5E /* symbolic_function */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = symbolic_function; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6FB90D811BD97CB00D9EB38 /* libinstall.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libinstall.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,7 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				8DD76F6C0486A84900D96B5E /* symbolic_function */,
-				6F8B22570E353230005923AA /* libinstall.a */,
+				E6FB90D811BD97CB00D9EB38 /* libinstall.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -123,7 +122,7 @@
 			);
 			name = install;
 			productName = install;
-			productReference = 6F8B22570E353230005923AA /* libinstall.a */;
+			productReference = E6FB90D811BD97CB00D9EB38 /* libinstall.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		8DD76F620486A84900D96B5E /* symbolic_function */ = {
@@ -168,7 +167,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
-				6F14B7030E3E992A00716710 /* makefile in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -178,6 +176,7 @@
 		1DEB923208733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -202,7 +201,7 @@
 		1DEB923308733DC60010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
@@ -221,10 +220,11 @@
 		1DEB923608733DC60010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
+				SDKROOT = "";
 			};
 			name = Debug;
 		};
