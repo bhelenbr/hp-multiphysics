@@ -110,10 +110,10 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				6F53EDE410FFA5160076AAFB /* matrix.cpp */,
 				08FB7796FE84155DC02AAC07 /* main.cpp */,
 				6F4949C3084C097A00C7F857 /* myblas.c */,
 				6F4949C4084C097A00C7F857 /* myblas.h */,
+				6F53EDE410FFA5160076AAFB /* matrix.cpp */,
 				6F4949C7084C097A00C7F857 /* utilities.c */,
 				6F4949C8084C097A00C7F857 /* utilities.h */,
 			);
@@ -345,18 +345,21 @@
 		6FB150780867810100EAF2E5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
 			name = Development;
 		};
 		6FB150790867810100EAF2E5 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
 			name = Deployment;
 		};
 		6FB1507A0867810100EAF2E5 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
 			name = Default;
 		};
