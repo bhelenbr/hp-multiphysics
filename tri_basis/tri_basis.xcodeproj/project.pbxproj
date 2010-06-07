@@ -358,6 +358,7 @@
 		6FD8AD450864E338005A8B60 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				LIBRARY_SEARCH_PATHS = "$(HOME)/Packages/lib/";
 			};
 			name = Development;
@@ -365,6 +366,7 @@
 		6FD8AD460864E338005A8B60 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 			};
 			name = Deployment;
 		};

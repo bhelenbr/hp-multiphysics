@@ -19,9 +19,12 @@ LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
 #CXX=g++3 #(shelob)
 CPPFLAGS += -O3
 #CPPFLAGS += -O3 -cxxlib-icc
-LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
+#LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
 #LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 #DEFINES = -DpgiFortran
+#LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+LIB += -llapack -lblas
+
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
