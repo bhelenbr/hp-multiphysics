@@ -51,39 +51,11 @@
 		6F48D86A0D848AED00514E23 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */; };
 		6F4B921B114872BA00E676AC /* libtri_mesh_petsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4B921A114872BA00E676AC /* libtri_mesh_petsc.a */; };
 		6F53EE8910FFB7550076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE8A10FFB7550076AAFB /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8810FFB7550076AAFB /* libpetscksp.a */; };
 		6F53EE8B10FFB7550076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE8C10FFB7550076AAFB /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8810FFB7550076AAFB /* libpetscksp.a */; };
 		6F53EE8D10FFB7560076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE8E10FFB7560076AAFB /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8810FFB7550076AAFB /* libpetscksp.a */; };
 		6F53EE8F10FFB7560076AAFB /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6F53EE9010FFB7560076AAFB /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8810FFB7550076AAFB /* libpetscksp.a */; };
 		6F53EECF10FFB9AA0076AAFB /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.dylib */; };
 		6F53EED010FFB9AC0076AAFB /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */; };
-		6F53EEE910FFBA420076AAFB /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */; };
-		6F53EEEA10FFBA420076AAFB /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE410FFBA420076AAFB /* libpetscdm.a */; };
-		6F53EEEB10FFBA420076AAFB /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE510FFBA420076AAFB /* libpetscmat.a */; };
-		6F53EEEC10FFBA420076AAFB /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE610FFBA420076AAFB /* libpetscsnes.a */; };
-		6F53EEED10FFBA420076AAFB /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE710FFBA420076AAFB /* libpetscts.a */; };
-		6F53EEEE10FFBA420076AAFB /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE810FFBA420076AAFB /* libpetscvec.a */; };
-		6F53EEEF10FFBA420076AAFB /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */; };
-		6F53EEF010FFBA420076AAFB /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE410FFBA420076AAFB /* libpetscdm.a */; };
-		6F53EEF110FFBA420076AAFB /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE510FFBA420076AAFB /* libpetscmat.a */; };
-		6F53EEF210FFBA420076AAFB /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE610FFBA420076AAFB /* libpetscsnes.a */; };
-		6F53EEF310FFBA420076AAFB /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE710FFBA420076AAFB /* libpetscts.a */; };
-		6F53EEF410FFBA420076AAFB /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE810FFBA420076AAFB /* libpetscvec.a */; };
-		6F53EEF510FFBA420076AAFB /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */; };
-		6F53EEF610FFBA420076AAFB /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE410FFBA420076AAFB /* libpetscdm.a */; };
-		6F53EEF710FFBA420076AAFB /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE510FFBA420076AAFB /* libpetscmat.a */; };
-		6F53EEF810FFBA420076AAFB /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE610FFBA420076AAFB /* libpetscsnes.a */; };
-		6F53EEF910FFBA420076AAFB /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE710FFBA420076AAFB /* libpetscts.a */; };
-		6F53EEFA10FFBA420076AAFB /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE810FFBA420076AAFB /* libpetscvec.a */; };
-		6F53EEFB10FFBA420076AAFB /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */; };
-		6F53EEFC10FFBA420076AAFB /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE410FFBA420076AAFB /* libpetscdm.a */; };
-		6F53EEFD10FFBA420076AAFB /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE510FFBA420076AAFB /* libpetscmat.a */; };
-		6F53EEFE10FFBA420076AAFB /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE610FFBA420076AAFB /* libpetscsnes.a */; };
-		6F53EEFF10FFBA420076AAFB /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE710FFBA420076AAFB /* libpetscts.a */; };
-		6F53EF0010FFBA420076AAFB /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE810FFBA420076AAFB /* libpetscvec.a */; };
 		6F53EF0510FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */; };
 		6F53EF0610FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */; };
 		6F53EF0710FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */; };
@@ -387,15 +359,8 @@
 		6FF5F7EB110CFDA100B16014 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F75000DD8A7EA002615F9 /* libbinio.dylib */; };
 		6FF5F7EC110CFDA100B16014 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
 		6FF5F7ED110CFDA100B16014 /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
-		6FF5F7EE110CFDA100B16014 /* libpetscksp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8810FFB7550076AAFB /* libpetscksp.a */; };
 		6FF5F7EF110CFDA100B16014 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.dylib */; };
 		6FF5F7F0110CFDA100B16014 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */; };
-		6FF5F7F1110CFDA100B16014 /* libpetsccontrib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */; };
-		6FF5F7F2110CFDA100B16014 /* libpetscdm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE410FFBA420076AAFB /* libpetscdm.a */; };
-		6FF5F7F3110CFDA100B16014 /* libpetscmat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE510FFBA420076AAFB /* libpetscmat.a */; };
-		6FF5F7F4110CFDA100B16014 /* libpetscsnes.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE610FFBA420076AAFB /* libpetscsnes.a */; };
-		6FF5F7F5110CFDA100B16014 /* libpetscts.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE710FFBA420076AAFB /* libpetscts.a */; };
-		6FF5F7F6110CFDA100B16014 /* libpetscvec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EEE810FFBA420076AAFB /* libpetscvec.a */; };
 		6FF5F7F7110CFDA100B16014 /* libsuperlu_dist_2.3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */; };
 		6FF5F7F8110CFDA100B16014 /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0E10FFBA730076AAFB /* libparmetis.a */; };
 		6FF5F7FA110CFDA100B16014 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
@@ -586,13 +551,6 @@
 		6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
 		6F4B921A114872BA00E676AC /* libtri_mesh_petsc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_petsc.a; path = ../lib/libtri_mesh_petsc.a; sourceTree = SOURCE_ROOT; };
 		6F53EE8710FFB7550076AAFB /* libpetsc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetsc.a; path = ../../Packages/lib/libpetsc.a; sourceTree = SOURCE_ROOT; };
-		6F53EE8810FFB7550076AAFB /* libpetscksp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscksp.a; path = ../../Packages/lib/libpetscksp.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetsccontrib.a; path = ../../Packages/lib/libpetsccontrib.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE410FFBA420076AAFB /* libpetscdm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscdm.a; path = ../../Packages/lib/libpetscdm.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE510FFBA420076AAFB /* libpetscmat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscmat.a; path = ../../Packages/lib/libpetscmat.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE610FFBA420076AAFB /* libpetscsnes.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscsnes.a; path = ../../Packages/lib/libpetscsnes.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE710FFBA420076AAFB /* libpetscts.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscts.a; path = ../../Packages/lib/libpetscts.a; sourceTree = SOURCE_ROOT; };
-		6F53EEE810FFBA420076AAFB /* libpetscvec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpetscvec.a; path = ../../Packages/lib/libpetscvec.a; sourceTree = SOURCE_ROOT; };
 		6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuperlu_dist_2.3.a; path = ../../Packages/lib/libsuperlu_dist_2.3.a; sourceTree = SOURCE_ROOT; };
 		6F53EF0E10FFBA730076AAFB /* libparmetis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libparmetis.a; path = ../../Packages/lib/libparmetis.a; sourceTree = SOURCE_ROOT; };
 		6F5964E6097F43D6009F4225 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = planestrain/allocate.cpp; sourceTree = "<group>"; };
@@ -704,13 +662,6 @@
 				6F2F75040DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBF61021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F53EE8D10FFB7560076AAFB /* libpetsc.a in Frameworks */,
-				6F53EE8E10FFB7560076AAFB /* libpetscksp.a in Frameworks */,
-				6F53EEF510FFBA420076AAFB /* libpetsccontrib.a in Frameworks */,
-				6F53EEF610FFBA420076AAFB /* libpetscdm.a in Frameworks */,
-				6F53EEF710FFBA420076AAFB /* libpetscmat.a in Frameworks */,
-				6F53EEF810FFBA420076AAFB /* libpetscsnes.a in Frameworks */,
-				6F53EEF910FFBA420076AAFB /* libpetscts.a in Frameworks */,
-				6F53EEFA10FFBA420076AAFB /* libpetscvec.a in Frameworks */,
 				6F53EF0710FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */,
 				6F53EF1110FFBA730076AAFB /* libparmetis.a in Frameworks */,
 			);
@@ -734,13 +685,6 @@
 				6F6DDBD11021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF41021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F53EE8F10FFB7560076AAFB /* libpetsc.a in Frameworks */,
-				6F53EE9010FFB7560076AAFB /* libpetscksp.a in Frameworks */,
-				6F53EEFB10FFBA420076AAFB /* libpetsccontrib.a in Frameworks */,
-				6F53EEFC10FFBA420076AAFB /* libpetscdm.a in Frameworks */,
-				6F53EEFD10FFBA420076AAFB /* libpetscmat.a in Frameworks */,
-				6F53EEFE10FFBA420076AAFB /* libpetscsnes.a in Frameworks */,
-				6F53EEFF10FFBA420076AAFB /* libpetscts.a in Frameworks */,
-				6F53EF0010FFBA420076AAFB /* libpetscvec.a in Frameworks */,
 				6F53EF0810FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */,
 				6F53EF1210FFBA730076AAFB /* libparmetis.a in Frameworks */,
 			);
@@ -763,13 +707,6 @@
 				6F6DDBD01021E52B0018DCC2 /* libtri_mesh_mpi.a in Frameworks */,
 				6F6DDBF31021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F53EE8B10FFB7550076AAFB /* libpetsc.a in Frameworks */,
-				6F53EE8C10FFB7550076AAFB /* libpetscksp.a in Frameworks */,
-				6F53EEEF10FFBA420076AAFB /* libpetsccontrib.a in Frameworks */,
-				6F53EEF010FFBA420076AAFB /* libpetscdm.a in Frameworks */,
-				6F53EEF110FFBA420076AAFB /* libpetscmat.a in Frameworks */,
-				6F53EEF210FFBA420076AAFB /* libpetscsnes.a in Frameworks */,
-				6F53EEF310FFBA420076AAFB /* libpetscts.a in Frameworks */,
-				6F53EEF410FFBA420076AAFB /* libpetscvec.a in Frameworks */,
 				6F53EF0610FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */,
 				6F53EF1010FFBA730076AAFB /* libparmetis.a in Frameworks */,
 				6F5ABB541141CE7D00CA83FE /* libpth.a in Frameworks */,
@@ -793,15 +730,8 @@
 				6FF5F7EB110CFDA100B16014 /* libbinio.dylib in Frameworks */,
 				6FF5F7EC110CFDA100B16014 /* Accelerate.framework in Frameworks */,
 				6FF5F7ED110CFDA100B16014 /* libpetsc.a in Frameworks */,
-				6FF5F7EE110CFDA100B16014 /* libpetscksp.a in Frameworks */,
 				6FF5F7EF110CFDA100B16014 /* libmpi.dylib in Frameworks */,
 				6FF5F7F0110CFDA100B16014 /* libmpi_cxx.dylib in Frameworks */,
-				6FF5F7F1110CFDA100B16014 /* libpetsccontrib.a in Frameworks */,
-				6FF5F7F2110CFDA100B16014 /* libpetscdm.a in Frameworks */,
-				6FF5F7F3110CFDA100B16014 /* libpetscmat.a in Frameworks */,
-				6FF5F7F4110CFDA100B16014 /* libpetscsnes.a in Frameworks */,
-				6FF5F7F5110CFDA100B16014 /* libpetscts.a in Frameworks */,
-				6FF5F7F6110CFDA100B16014 /* libpetscvec.a in Frameworks */,
 				6FF5F7F7110CFDA100B16014 /* libsuperlu_dist_2.3.a in Frameworks */,
 				6FF5F7F8110CFDA100B16014 /* libparmetis.a in Frameworks */,
 				6F4B921B114872BA00E676AC /* libtri_mesh_petsc.a in Frameworks */,
@@ -826,15 +756,8 @@
 				6F2F75030DD8A7EA002615F9 /* libbinio.dylib in Frameworks */,
 				6F6DDBF51021E5F60018DCC2 /* Accelerate.framework in Frameworks */,
 				6F53EE8910FFB7550076AAFB /* libpetsc.a in Frameworks */,
-				6F53EE8A10FFB7550076AAFB /* libpetscksp.a in Frameworks */,
 				6F53EECF10FFB9AA0076AAFB /* libmpi.dylib in Frameworks */,
 				6F53EED010FFB9AC0076AAFB /* libmpi_cxx.dylib in Frameworks */,
-				6F53EEE910FFBA420076AAFB /* libpetsccontrib.a in Frameworks */,
-				6F53EEEA10FFBA420076AAFB /* libpetscdm.a in Frameworks */,
-				6F53EEEB10FFBA420076AAFB /* libpetscmat.a in Frameworks */,
-				6F53EEEC10FFBA420076AAFB /* libpetscsnes.a in Frameworks */,
-				6F53EEED10FFBA420076AAFB /* libpetscts.a in Frameworks */,
-				6F53EEEE10FFBA420076AAFB /* libpetscvec.a in Frameworks */,
 				6F53EF0510FFBA5C0076AAFB /* libsuperlu_dist_2.3.a in Frameworks */,
 				6F53EF0F10FFBA730076AAFB /* libparmetis.a in Frameworks */,
 			);
@@ -959,13 +882,6 @@
 				6F53EE8710FFB7550076AAFB /* libpetsc.a */,
 				6F53EF0E10FFBA730076AAFB /* libparmetis.a */,
 				6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */,
-				6F53EEE310FFBA420076AAFB /* libpetsccontrib.a */,
-				6F53EEE410FFBA420076AAFB /* libpetscdm.a */,
-				6F53EEE510FFBA420076AAFB /* libpetscmat.a */,
-				6F53EEE610FFBA420076AAFB /* libpetscsnes.a */,
-				6F53EEE710FFBA420076AAFB /* libpetscts.a */,
-				6F53EEE810FFBA420076AAFB /* libpetscvec.a */,
-				6F53EE8810FFB7550076AAFB /* libpetscksp.a */,
 				6F217C5D0CDD88200061AA2E /* libtri_mesh.a */,
 				6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */,
 				6F4B921A114872BA00E676AC /* libtri_mesh_petsc.a */,
@@ -1586,6 +1502,7 @@
 		6FB40AC6091AF4FA002BAA09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					BZ_DEBUG,
@@ -1619,6 +1536,7 @@
 		6FB40AC7091AF4FA002BAA09 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
@@ -1694,6 +1612,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					AXISYMMETRIC,
 					MY_SPARSE,
 					petsc,
 					"$(inherited)",

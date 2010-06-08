@@ -830,18 +830,24 @@ namespace bdry_ins {
 					*x.gbl->log << "Unrecognized contact type" << std::endl;
 				}
 				
-				if (!inmap.get(base.idprefix + "_wall_type",input)) {
+				if (inmap.get(base.idprefix + "_wall_type",input)) {
+					if (input == "vertical") {
+						wall_type = vertical;
+						position = x.pnts(base.pnt)(0);
+					}
+					else if (input == "horizontal") {
+						wall_type = horizontal;
+						position = x.pnts(base.pnt)(1);
+					}
+					else if (input == "angled")
+						wall_type = angled;
+					else {
+						*x.gbl->log << "Unrecognized wall type" << std::endl;
+					}
+				}
+				else {
 					wall_type = vertical;
 					position = x.pnts(base.pnt)(0);
-				}
-				else if (input == "horizontal") {
-					wall_type = horizontal;
-					position = x.pnts(base.pnt)(1);
-				}
-				else if (input == "angled")
-					wall_type = angled;
-				else {
-					*x.gbl->log << "Unrecognized wall type" << std::endl;
 				}
 				
 				/* Find tangent to wall and use to constrain motion */
