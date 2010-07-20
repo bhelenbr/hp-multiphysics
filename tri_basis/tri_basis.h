@@ -436,7 +436,8 @@ template<int _p,int ep> class tri_basis : public tri_basis_interface {
 			ptprobe(nv, f, lin, stride);
 		}
 		void ptprobe(int nv, FLT *f,const FLT *lin, int stride) const;	// REUSES OLD R,S
-		
+	  void ptprobe(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, const FLT *lin, int stride) const; // CALC'S DERIVATIVES
+
 		/* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
 		void ptprobe_bdry(int nv, FLT *f, FLT r, FLT s, const FLT *lin, int stride) const {
 			ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
