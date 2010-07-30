@@ -53,14 +53,12 @@ namespace bdry_ins {
 		public:
 			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
 			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
-				if (report_flag) {
 #ifdef L2_ERROR
-					l2norm = inbdry.l2norm;
+				l2norm = inbdry.l2norm;
 #endif
-					total_flux.resize(x.NV);
-					diff_flux.resize(x.NV);
-					conv_flux.resize(x.NV);  
-				}
+				total_flux.resize(x.NV);
+				diff_flux.resize(x.NV);
+				conv_flux.resize(x.NV);  
 			}
 			generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
@@ -302,11 +300,17 @@ namespace bdry_ins {
 				return(v);
 			}
 			rigid() : omega(0.0), vel(0.0), ctr(0.0) {}
+			void input(input_map &inmap,std::string idnty) {
+				inmap.getwdefault(idnty+"_omega",omega,0.0);
+				FLT dflt[2] = {0.0, 0.0};
+				inmap.getwdefault(idnty+"_center",ctr.data(),2,dflt);
+				inmap.getwdefault(idnty+"_velocity",vel.data(),2,dflt);
+			}
+			
+			
 	};		
 
-	class force_coupling : public inflow {
-		rigid my_ibc;
-
+	class force_coupling : public inflow, public rigid {
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 			for (int n=0;n<x.NV;++n)
 				flx(n) = 0.0;
@@ -314,34 +318,36 @@ namespace bdry_ins {
 		}
 
 		public:
-			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "force_coupling";}
-			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {}
+			force_coupling(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin), rigid() {mytype = "force_coupling";}
+			force_coupling(const force_coupling& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), rigid(inbdry) {}
 			force_coupling* create(tri_hp& xin, edge_bdry &bin) const {return new force_coupling(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			void init(input_map& input,void* gbl_in) {
+				inflow::init(input,gbl_in);
+				rigid::input(input,base.idprefix);
+				report_flag = true;
+			}
 			void tadvance() {hp_edge_bdry::tadvance();}
 			void update(int stage) {
-				if (!x.coarse_flag) setvalues(&my_ibc,dirichlets,ndirichlets);
+				if (!x.coarse_flag) setvalues(this,dirichlets,ndirichlets);
 			}
-			void set_theta(FLT thetain) {};
-			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
-			void set_ctr_rot(TinyVector<FLT,2> c) {my_ibc.ctr = c;}
-			void set_vel(TinyVector<FLT,2> v) {my_ibc.vel = v;}
 			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-				inflow::input(fin,typ,tlvl);
+				// FIXME:  THIS DOESN'T WORK
+				inflow::input(fin,typ,tlvl);  
 				if (typ == tri_hp::text) {
-					fin >> my_ibc.omega >> my_ibc.vel >> my_ibc.ctr;
+					fin >> omega >> vel >> ctr;
 				}
 			}
 			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-				inflow::output(fout,typ,tlvl);
+				// FIXME:  THIS DOESN'T WORK
+				inflow::output(fout,typ,tlvl); 
 				if (typ == tri_hp::text) {
-					fout << my_ibc.omega << ' ' << my_ibc.vel << ' ' << my_ibc.ctr << '\n';
+					fout << omega << ' ' << vel << ' ' << ctr << '\n';
 				}
 			}
 
 	};
 	
-	class friction_slip : public neumann {
-		rigid my_ibc;
+	class friction_slip : public neumann, public rigid {
 
 		protected:
 			FLT slip_length;
@@ -350,7 +356,7 @@ namespace bdry_ins {
 
 				/* RIGID COMPONENT */
 				for(int n=0;n<x.NV;++n)
-					urb(n) = my_ibc.f(n,xpt,x.gbl->time);
+					urb(n) = f(n,xpt,x.gbl->time);
 	
 				/* Additional Components (for belts, sliding objects etc..) */
 			  /* Calculate position in object's frame */
@@ -392,34 +398,32 @@ namespace bdry_ins {
 				return;
 			}
 		public:
-			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin), slip_length(0.0) {mytype = "friction_slip";}
-			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), slip_length(inbdry.slip_length) {}
+			friction_slip(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin), rigid(), slip_length(0.0) {mytype = "friction_slip";}
+			friction_slip(const friction_slip& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), rigid(inbdry), slip_length(inbdry.slip_length) {}
 			friction_slip* create(tri_hp& xin, edge_bdry &bin) const {return new friction_slip(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in) {
 				neumann::init(input,gbl_in);
+				rigid::input(input,base.idprefix);
 				std::string keyword = base.idprefix +"_sliplength";
 				if (!input.get(keyword,slip_length)) {
 					*x.gbl->log << "Couldn't find slip length for " << keyword << std::endl;
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 			}
-			void set_omega(FLT dwdt) {my_ibc.omega = dwdt;}
-			void set_ctr_rot(TinyVector<FLT,2> c) {my_ibc.ctr = c;}
-			void set_vel(TinyVector<FLT,2> v) {my_ibc.vel = v;}
 			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				neumann::input(fin,typ,tlvl);
 				if (typ == tri_hp::text) {
-					fin >> my_ibc.omega >> my_ibc.vel >> my_ibc.ctr;
+					fin >> omega >> vel >> ctr;
 				}
 			}
 			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
 				// neumann::output(fout,typ,tlvl);
 				if (typ == tri_hp::text) {
-					fout << my_ibc.omega << ' ' << my_ibc.vel << ' ' << my_ibc.ctr << '\n';
+					fout << omega << ' ' << vel << ' ' << ctr << '\n';
 				}
 				if (typ == tri_hp::tecplot) {
 					/* Calculate total flux, (this is getting weird) */
-					total_flux = 0.0;
+					diff_flux = 0.0;
 					for(int j=0;j<base.nseg;++j) {
 						int sind = base.seg(j);
 						
@@ -427,10 +431,10 @@ namespace bdry_ins {
 						element_rsdl(j,0);
 						
 						for(int n=0;n<x.NV;++n)
-							total_flux(n) += x.lf(n)(0);
+							diff_flux(n) += x.lf(n)(0);
 						
 						for(int n=0;n<x.NV;++n)
-							total_flux(n) += x.lf(n)(1);
+							diff_flux(n) += x.lf(n)(1);
 					}
 				}
 			}

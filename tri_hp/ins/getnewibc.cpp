@@ -566,23 +566,42 @@ namespace ibc_ins {
 			}
 	};
 
-template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helper {
+class force_coupling : public tri_hp_helper {
 		protected:
 			tri_hp_ins& x;
+			
+			/* Physical data for solid body */
 			bool horizontal, vertical, rotational;
-			int jacobian_start;
 			TinyVector<FLT,tri_mesh::ND> k_linear;
 			FLT k_torsion;
 			FLT mass, I;
+			
+			/* Pointers to boundary information */
 			int nboundary;
-			Array<HPBDRY *,1> hp_ebdry;
-			Array<MSHBDRY *,1> ebdry;
+			Array<bdry_ins::generic *,1> hp_ebdry;
+			Array<bdry_ins::rigid *, 1> hp_ebdry_rigid;
+			Array<rigid_movement_interface2D *,1> ebdry_rigid;
+			Array<edge_bdry *,1> ebdry;
+			
+			/* Data for DIRK scheme */
 			TinyVector<FLT,6> w;  // x,xdot,y,ydot,theta,thetadot 
 			TinyVector<FLT,6> w_tilda;  //  x,xdot,y,ydot,theta,thetadot 
 			TinyVector<TinyVector<FLT,6>,5> ki;
+			
+			/* Residual */
 			TinyVector<FLT,6> res;
+			
+			/* For multigrid way */
+			bool isfrst;
 			TinyMatrix<FLT,6,6> J;
 			TinyVector<int,12> ipiv;
+			TinyVector<FLT,6> mg_res0;
+			TinyVector<FLT,6> mg_w0;
+			TinyVector<TinyVector<FLT,6>,3> dres;
+			
+			/* For full jacobian way (not working) */
+			int jacobian_start;
+
 			
 			/* This is to dump output from the generic boundaries */
 			struct nullstream : std::ostream {
@@ -597,7 +616,9 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				int i,j;
 
 				hp_ebdry.resize(nboundary);
+				hp_ebdry_rigid.resize(nboundary);
 				ebdry.resize(nboundary);
+				ebdry_rigid.resize(nboundary);
 				for (i = 0; i < nboundary; ++i) {
 					for (j=0;j<x.nebd;++j) {
 						if (x.ebdry(j)->idnum == in_fc.ebdry(i)->idnum) {
@@ -608,15 +629,16 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					sim::abort(__LINE__,__FILE__,&std::cerr);
 
 					found:
-					if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
+					hp_ebdry(i) = dynamic_cast<bdry_ins::generic *>(x.hp_ebdry(j));
+					ebdry(i) = x.ebdry(j);
+					if (!(hp_ebdry_rigid(i) = dynamic_cast<bdry_ins::rigid *>(x.hp_ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
-					if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
+					if (!(ebdry_rigid(i) = dynamic_cast<rigid_movement_interface2D *>(x.ebdry(j)))) {
 						std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 						sim::abort(__LINE__,__FILE__,&std::cerr);
 					}
-
 				}
 			}
 
@@ -625,34 +647,39 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 			
 			/* DECOUPLING THE FLOW & BOUNDARY MOVEMENT EQUATIONS */
 			int dofs(int dofs) {
-					return(0);  // Nothing in Jacobian
-					/* For full jacobian (not working yet) */
-//				jacobian_start = dofs;
-//				return(2*(vertical+horizontal+rotational));
+				return(0);  // Nothing in Jacobian
+				/* For full jacobian (not working yet) */
+				jacobian_start = dofs;
+				return(2*(vertical+horizontal+rotational));
 			}
-			void non_sparse(Array<int,1> &nnzero) {
-				return; // de-coupled approach
-				
+			void non_sparse(Array<int,1> &nnzero) {		
+				return;
 				/* For full jacobian (not working yet) */
 				if (x.mmovement == tri_hp::coupled_deformable) {
-					int vdofs = x.NV +x.ND;
+					const int vdofs = x.NV +x.ND;
+					const int sm=basis::tri(x.log2p)->sm();
+					const int begin_seg = x.npnt*vdofs;
+					
 					for (int i=0; i<nboundary; ++i) {
+						if (hp_ebdry(i)->is_curved())
+							nnzero(Range(hp_ebdry(i)->jacobian_start,hp_ebdry(i)->jacobian_start+hp_ebdry(i)->base.nseg*sm*tri_mesh::ND-1)) = 2*(vertical+horizontal+rotational);
+
 						for(int j=0;j<ebdry(i)->nseg;++j) {
-							int v0 = x.seg(ebdry(i)->seg(j)).pnt(0);
-							for(int n=0;n<x.ND;++n) {
-								nnzero(v0*vdofs+x.NV+n) += vertical+horizontal+rotational;
-							}
+							int sind = ebdry(i)->seg(j);
+							int v0 = x.seg(sind).pnt(0);
+
+							nnzero(Range(v0*vdofs,(v0+1)*vdofs-1)) += 2*(vertical+horizontal+rotational);
+							nnzero(Range(begin_seg+sind*x.NV*sm,begin_seg+(sind+1)*x.NV*sm-1)) += 2*(vertical+horizontal+rotational);
 						}
 						int v0 = x.seg(ebdry(i)->seg(ebdry(i)->nseg-1)).pnt(1);
-						for(int n=0;n<x.ND;++n) {
-							nnzero(v0*vdofs+x.NV+n) += vertical+horizontal+rotational;
+						for(int n=0;n<vdofs;++n) {
+							nnzero(v0*vdofs+n) += 2*(vertical+horizontal+rotational);
 						}
 					}
-					/* FIXME: NOT SURE WHAT TO DO WITH HIGH-ORDER MODES FOR CURVED BOUNDARY YET */
 				}
 				
 				if (x.mmovement == tri_hp::coupled_rigid) {
-					nnzero(Range(0,x.npnt*x.NV-1)) += vertical+horizontal+rotational;
+					nnzero(Range(0,x.npnt*x.NV-1)) += 2*(vertical+horizontal+rotational);
 					/* FIXME: NOT SURE WHAT TO DO WITH HIGH-ORDER MODES ON CURVED BOUNDARY YET */
 				}
 			}
@@ -713,7 +740,8 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					
 					if (!input.get(x.gbl->idprefix +"_k_torsion",k_torsion)) 
 						input.getwdefault("k_torsion",k_torsion,1.0);
-				}				
+				}
+				w_tilda = w;		
 
 				if (!input.get(x.gbl->idprefix +"_nboundary",nboundary))
 					input.getwdefault("nboundary",nboundary,1);
@@ -727,6 +755,8 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 
 				hp_ebdry.resize(nboundary);
 				ebdry.resize(nboundary);
+				hp_ebdry_rigid.resize(nboundary);
+				ebdry_rigid.resize(nboundary);
 				bdryin.str(bdrys);
 				int bnum;
 				int j;
@@ -741,11 +771,13 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					sim::abort(__LINE__,__FILE__,&std::cerr);
 
 					found:
-						if (!(hp_ebdry(i) = dynamic_cast<HPBDRY *>(x.hp_ebdry(j)))) {
+					hp_ebdry(i) = dynamic_cast<bdry_ins::generic *>(x.hp_ebdry(j));
+						ebdry(i) = x.ebdry(j);
+						if (!(hp_ebdry_rigid(i) = dynamic_cast<bdry_ins::rigid *>(x.hp_ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							sim::abort(__LINE__,__FILE__,&std::cerr);
 						}
-						if (!(ebdry(i) = dynamic_cast<MSHBDRY *>(x.ebdry(j)))) {
+						if (!(ebdry_rigid(i) = dynamic_cast<rigid_movement_interface2D *>(x.ebdry(j)))) {
 							std::cerr << "Boundary in list of force boundaries is of wrong type" << std::endl;
 							sim::abort(__LINE__,__FILE__,&std::cerr);
 						}
@@ -790,7 +822,10 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 			}
 
 			void mg_restrict() {
+				isfrst = true;
+				
 				if(x.coarse_level) {
+					isfrst = true;
 					tri_hp *fmesh = dynamic_cast<tri_hp *>(x.fine);
 					force_coupling *fine_helper = dynamic_cast<force_coupling *>(fmesh->helper);
 
@@ -809,14 +844,39 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 							}
 						}
 					}
-
+				
+					w = fine_helper->w;
+					w_tilda = fine_helper->w_tilda;  //  x,xdot,y,ydot,theta,thetadot 
+					ki = fine_helper->ki;
+					mg_w0 = w;
+					mg_res0 = fine_helper->res;
 					for (int i=0; i<nboundary; ++i) {
-						ebdry(i)->geometry_object.theta = fine_helper->ebdry(i)->geometry_object.theta; 
-						ebdry(i)->geometry_object.pos = fine_helper->ebdry(i)->geometry_object.pos; 
-					}
+						ebdry_rigid(i)->theta = fine_helper->ebdry_rigid(i)->theta; 
+						ebdry_rigid(i)->pos = fine_helper->ebdry_rigid(i)->pos; 
+						hp_ebdry_rigid(i)->ctr = 	fine_helper->hp_ebdry_rigid(i)->ctr;
+						hp_ebdry_rigid(i)->vel = 	fine_helper->hp_ebdry_rigid(i)->vel;
+						hp_ebdry_rigid(i)->omega = fine_helper->hp_ebdry_rigid(i)->omega;
+					}					
+				}
+				else {
+					mg_res0 = res;
 				}
 
 				return;
+			}
+			
+			void mg_prolongate() {
+				if(!x.coarse_level) {
+					return;
+				}
+				/* CALCULATE CORRECTIONS */
+				mg_w0 -= w;
+				
+				/* LOOP THROUGH FINE VERTICES    */
+				/* TO DETERMINE CHANGE IN SOLUTION */
+				tri_hp *fmesh = dynamic_cast<tri_hp *>(x.fine);
+				force_coupling *fine_helper = dynamic_cast<force_coupling *>(fmesh->helper);
+				fine_helper->w -= mg_w0;
 			}
 
 			void rigid_body(TinyVector<FLT,6> w0, TinyVector<FLT,6> dw) {
@@ -844,17 +904,17 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				}
 
 				for (int i=0; i<nboundary; ++i) {
-					hp_ebdry(i)->set_ctr_rot(ctr+disp);
-					hp_ebdry(i)->set_vel(vel);
-					hp_ebdry(i)->set_omega(omega);
+					hp_ebdry_rigid(i)->ctr = ctr+disp;
+					hp_ebdry_rigid(i)->vel = vel;
+					hp_ebdry_rigid(i)->omega = omega;
 					
 					FLT r = 0.25;
-					FLT cost = -cos(-ebdry(i)->geometry_object.theta);
-					FLT sint = -sin(-ebdry(i)->geometry_object.theta);
-					ebdry(i)->geometry_object.theta -= dtheta; 
+					FLT cost = -cos(-ebdry_rigid(i)->theta);
+					FLT sint = -sin(-ebdry_rigid(i)->theta);
+					ebdry_rigid(i)->theta -= dtheta; 
 					/* FIX ME HACK FOR 1/4 CHORD */
-					ebdry(i)->geometry_object.pos(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
-					ebdry(i)->geometry_object.pos(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);	
+					ebdry_rigid(i)->pos(0) += -(r-r*cosdt)*cost -r*sindt*sint +disp(0);
+					ebdry_rigid(i)->pos(1) += -(r-r*cosdt)*sint +r*sindt*cost +disp(1);	
 
 						/* CAN FIX ENDPOINTS TOO (NOT NECESSARY) */
 //						v0 = x.seg(ebdry(i)->seg(0)).pnt(0);
@@ -878,13 +938,15 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				/* GET FORCE & TORQUE */
 				TinyVector<FLT,tri_mesh::ND> force = 0.0;
 				FLT moment = 0.0;
-				for (int i=0; i<nboundary; ++i) {                                  
+				for (int i=0; i<nboundary; ++i) { 
 					/* FORCE BOUNDARY TO CALCULATE ALL FLUXES */
-					hp_ebdry(i)->output(ns,tri_hp::tecplot);
-					force(0) += hp_ebdry(i)->total_flux(0);
-					force(1) += hp_ebdry(i)->total_flux(1);
+					hp_ebdry(i)->output(*x.gbl->log,tri_hp::tecplot);
+					force(0) -= hp_ebdry(i)->diff_flux(0);
+					force(1) -= hp_ebdry(i)->diff_flux(1);					
 					moment += hp_ebdry(i)->moment;
 				}
+//				std::cout << w << ' ' << w_tilda << std::endl;
+//				std::cout << force << std::endl;
 
 				double L = 0.05;  // HACK HACK HACK FIX ME FOR GETTING HYDROSTATIC PRESSURE CORRECT
 				force(1) += -x.gbl->rho*x.gbl->g*w(2)*L; // -mass*x.gbl->g;				
@@ -920,7 +982,16 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				else {
 					res(4) = 0.0;
 					res(5) = 0.0;
-				}				
+				}
+				if(x.coarse_flag) {
+					/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
+					if(isfrst) {
+						isfrst = false;
+						dres(x.log2p) = x.fadd*mg_res0 -res;
+					}
+					res += dres(x.log2p); 
+				}
+					
 			}
 			
 			void setup_preconditioner() {
@@ -931,6 +1002,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				TinyVector<FLT,6> res0, dw;
 				res0 = res;
 				dw = 0.0;
+				J = 0.0;
 				 				
 				/* PERTURB VARIABLES AND SEE HOW FORCES & MOMENT CHANGES */
 				if (horizontal) {
@@ -1045,7 +1117,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				
 				/* Invert J */
 				int info;
-				int size = 6;
+				int size = 6;				
 				GETRF(size,size,J.data(),size,ipiv.data(),info);
 				if (info) {
 					*x.gbl->log << "Error inverting Jacobian for solid body coupling " << info << std::endl;
@@ -1070,7 +1142,6 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 					}
 					
 					res *= -1.0;
-					*x.gbl->log << "dw " << res << "w " << w << std::endl;
 					
 					/* Add correction */
 					rigid_body(w, res);
@@ -1311,8 +1382,8 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 
 	class helper_type {
 		public:
-			const static int ntypes = 7;
-			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling,streamlines,static_particles,moving_slip_wall};
+			const static int ntypes = 6;
+			enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling,streamlines,static_particles};
 			const static char names[ntypes][40];
 			static int getid(const char *nin) {
 				int i;
@@ -1321,7 +1392,7 @@ template<class HPBDRY, class MSHBDRY>	class force_coupling : public tri_hp_helpe
 				return(-1);
 			}
 	};
-	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling","streamlines","static_particles","moving_slip_wall"};
+	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling","streamlines","static_particles"};
 
 	class ibc_type {
 		public:
@@ -1417,11 +1488,7 @@ tri_hp_helper *tri_hp_ins::getnewhelper(input_map& inmap) {
 			return(temp);
 		}
 		case ibc_ins::helper_type::force_coupling: {
-			tri_hp_helper *temp = new ibc_ins::force_coupling<bdry_ins::force_coupling,eboundary_with_geometry<edge_bdry,naca> >(*this);
-			return(temp);
-		}
-		case ibc_ins::helper_type::moving_slip_wall: {
-			tri_hp_helper *temp = new ibc_ins::force_coupling<bdry_ins::friction_slip,eboundary_with_geometry<edge_bdry,plane> >(*this);
+			tri_hp_helper *temp = new ibc_ins::force_coupling(*this);
 			return(temp);
 		}
 		case ibc_ins::helper_type::streamlines: {
