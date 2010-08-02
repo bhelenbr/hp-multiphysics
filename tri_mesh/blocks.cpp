@@ -745,7 +745,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 }
 
 void block::init(input_map &input) {
-	std::string mystring;
+	std::string mystring,stem;
 
 	/* NEED TO BOOTSTRAP UNTIL I CAN GET LOGFILE OPENED */
 	input.getwdefault("ngrid",ngrid,1);
@@ -759,11 +759,29 @@ void block::init(input_map &input) {
 	gbl->idprefix = idprefix;
 
 	/* OPEN LOGFILES FOR EACH BLOCK */
-	if (input.get("logfile",mystring)) {
-		mystring += "." +idprefix +".log";
+	if (input.get("logfile",stem)) {
+		mystring = stem +"_" +idprefix +".log";
 		std::ofstream *filelog = new std::ofstream;
 		filelog->setf(std::ios::scientific, std::ios::floatfield);
 		filelog->precision(3);
+		
+		/* Check for pre-existing log file and rotate old log out of the way */
+		
+		FILE *f = fopen(mystring.c_str(),"r");
+		if (f) {
+			/* File exists, lets move it to mystring_idprefix.#.log */
+			ostringstream nstr;
+			int num = 0;
+			do {
+				++num;
+				fclose(f);
+				nstr.str("");
+				nstr << stem  << "_"  << idprefix << "." << num << ".log";
+				f = fopen(nstr.str().c_str(),"r");
+			} while (f);
+			rename(mystring.c_str(),nstr.str().c_str());
+		}
+		
 		filelog->open(mystring.c_str());
 		gbl->log = filelog;
 	}
