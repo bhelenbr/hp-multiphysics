@@ -100,29 +100,7 @@ namespace bdry_lvlset {
 			hybrid* create(tri_hp& xin, edge_bdry &bin) const {return new hybrid(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
 
 			void rsdl(int stage) {};
-			void update(int stage) {
-			    int sind;
-
-				if (stage == -1 || x.coarse_flag) return;
-
-				int v0 = x.seg(base.seg(0)).pnt(0);
-				int v1 = x.seg(base.seg(base.nseg-1)).pnt(1);
-
-				if (v0 == 0) {
-					for(int j=0;j<base.nseg;++j) {
-						sind = base.seg(j);
-						v1 = x.seg(sind).pnt(1);
-						x.ug.v(v1,2) = -x.distance(v1,v0);
-					}
-				}
-				else if (v1 == 0) {
-					for(int j=0;j<base.nseg;++j) {
-						sind = base.seg(j);
-						v0 = x.seg(sind).pnt(0);
-						x.ug.v(v0,2) = x.distance(v1,v0);
-					}
-				}
-			}
+			void update(int stage);
 
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride);			
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride); 

@@ -381,33 +381,70 @@ void hybrid_slave_pt::update(int stage) {
 
 	if (stage == -1) return;
 
-	base.sndsize() = 4;
+	int sendsize(6);
+	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
 	base.fsndbuf(0) = 0.0;
 	base.fsndbuf(1) = 0.0;
 	base.fsndbuf(2) = 0.0;
 	base.fsndbuf(3) = 0.0;
+	base.fsndbuf(4) = 0.0;
+	base.fsndbuf(5) = 0.0;
 
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
 	base.comm_wait(boundary::all,0,boundary::symmetric);
 
 	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<4;++i) 
+		for(int i=0;i<sendsize;++i) 
 			base.fsndbuf(i) += base.frcvbuf(m,i);
 	}
 
-	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
 
 	if (base.fsndbuf(0) > 0.0) {
-		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+		if (base.fsndbuf(4) == 2.0)
+			x.pnts(base.pnt)(0) = base.fsndbuf(4) - 2.0;
+		else 
+			x.pnts(base.pnt)(0) = base.fsndbuf(4);
+		x.pnts(base.pnt)(1) = base.fsndbuf(5);
 	}
 	else {
-		x.pnts(base.pnt)(1) = base.fsndbuf(1);
+		x.pnts(base.pnt)(0) = base.fsndbuf(1);
+		x.pnts(base.pnt)(1) = base.fsndbuf(2);
 	}
+	/* to move the other point along the edge back to the boundary */
+	/*
+	//std::cout<<"start moving points: SLAVE"<<endl;
+	int nsides(4);
+	for(int q=0;q<nsides;q++)
+	{
+		if(base.ebdry(q) != 0)
+		{
+			//std::cout<<"QQQQ: "<<q<<endl;
+			//std::cout<<base.ebdry(0)<<endl;
+			cout<<"NUMBER "<<q<<endl;
+			for(int r=0;r<x.ebdry(q)->nseg;r++)
+			{
+				//std::cout<<"r: "<<r<<endl;
+				x.ebdry(base.ebdry(q))->mvpttobdry(x.ebdry(base.ebdry(q))->seg(q),0.0,x.pnts(x.seg(x.ebdry(base.ebdry(q))->seg(r)).pnt(0)));
+			}
+		}
+	}
+	*/
+	/*
+	//std::cout<<"start moving points: SLAVE"<<endl;
+	int nsides(4);
+	for(int q=0;q<nsides;q++)
+	{
+		for(int r=0;r<x.ebdry(q)->nseg;r++)
+			x.ebdry(q)->mvpttobdry(x.ebdry(q)->seg(r),0.0,x.pnts(x.seg(x.ebdry(q)->seg(r)).pnt(0)));
+	}
+	*/
+	//std::cout<<"slave error: "<<x.pnts(base.pnt)(0)<<' '<<x.pnts(base.pnt)(1)<<' '<<x.pnts(base.pnt)(0)-0.1*sin(3.1415926*x.pnts(base.pnt)(1))-1<<std::endl;
 }
 
 void hybrid_pt::rsdl(int stage) {
@@ -445,34 +482,44 @@ void hybrid_pt::rsdl(int stage) {
 	surface_outflow::rsdl(stage);
 }
 
-
-
 void hybrid_pt::update(int stage) {
 
 	if (stage == -1) return;
 
-	base.sndsize() = 4;
+	int sendsize(6);
+	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
+	// (0) = flow direction
+	// (1) = x location
+	// (2) = y location
+	// see /lvlset/bdry.cpp hybrid_pt::update
 	base.fsndbuf(0) = 2*fix_norm-1.0;
-	base.fsndbuf(1) = x.pnts(base.pnt)(1);
-	base.fsndbuf(2) = 0.0;
+	base.fsndbuf(1) = x.pnts(base.pnt)(0);
+	base.fsndbuf(2) = x.pnts(base.pnt)(1);
 	base.fsndbuf(3) = 0.0;
+	base.fsndbuf(4) = 0.0;
+	base.fsndbuf(5) = 0.0;
 
 	base.comm_prepare(boundary::all,0,boundary::symmetric);
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
 	base.comm_wait(boundary::all,0,boundary::symmetric);
 
+	// add information from other points
 	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<4;++i) 
+		for(int i=0;i<sendsize;++i) 
 			base.fsndbuf(i) += base.frcvbuf(m,i);
 	}
 
-	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
-
 	if (fix_norm) {
-		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+		// '-2.0' required specifically for the hybrid example */
+		if (base.fsndbuf(4) == 2.0)
+			x.pnts(base.pnt)(0) = base.fsndbuf(4) - 2.0;
+		else 
+			x.pnts(base.pnt)(0) = base.fsndbuf(4);
+		x.pnts(base.pnt)(1) = base.fsndbuf(5);
 	}
 }

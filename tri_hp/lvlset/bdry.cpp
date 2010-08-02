@@ -64,8 +64,6 @@ hp_vrtx_bdry* tri_hp_lvlset::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	return(temp);
 }
 
-
-
 class tri_hp_lvlset_stype {
 	public:
 		static const int ntypes = 5;
@@ -128,7 +126,7 @@ hp_edge_bdry* tri_hp_lvlset::getnewsideobject(int bnum, input_map &bdrydata) {
 }
 
 void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
-	int j,k,count,sind,offset;
+	int j,k,count,sind(0),offset;
 
 	stride*=4;
 
@@ -152,7 +150,7 @@ void hybrid::pmatchsolution_snd(int phase, FLT *pdata, int stride) {
 }
 
 void hybrid::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
-	int j,k,m,count,countdn,countup,offset,sind;
+	int j,k,m,count,countdn,countup,offset,sind(0);
 	int matches = 1;
 	FLT mtchinv;
 
@@ -246,7 +244,6 @@ void hybrid::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
 	base.sndtype() = boundary::flt_msg;
 	return;
 }
-
 
 void hybrid::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
 
@@ -368,18 +365,25 @@ void hybrid_pt::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
 	}
 }
 
-
 void hybrid_pt::update(int stage) {
 
 	if (stage == -1) return;
 
-	base.sndsize() = 4;
+	int sendsize(6);
+	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
+	// see /ins/bdry.cpp hybrid_pt::update
+	// (3) = flow direction
+	// (4) = x location
+	// (5) = y location
 	base.fsndbuf(0) = 0.0;
 	base.fsndbuf(1) = 0.0;
-	base.fsndbuf(2) = 1.0;
-	base.fsndbuf(3) = 0.0;
+	base.fsndbuf(2) = 0.0;
+	base.fsndbuf(3) = 1.0;
+	base.fsndbuf(4) = 0.0;
+	base.fsndbuf(5) = 0.0;
 
+	/* this is a linear approximation of where the point will move */
 	int sind = x.ebdry(base.ebdry(1))->seg(0);
 	int v0 = x.seg(sind).pnt(0);
 	int v1 = x.seg(sind).pnt(1);
@@ -400,26 +404,32 @@ void hybrid_pt::update(int stage) {
 
 	if (normvel > 0.0)  { 
 		/* flow going out level-set changed from zero */
+		/* p0 is the previous ccw point on the boundary */
 		int p0 = x.seg(x.ebdry(base.ebdry(1))->seg(0)).pnt(1);
+		/* p1 is the next ccw point on the boundary */
 		int p1 = x.seg(x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1)).pnt(0);
 
 		if (x.ug.v(base.pnt,2)*x.ug.v(p0,2) < 0.0) {
 			/* MOVE TO INTERSECTION POINT */
 			TinyVector<FLT,2> dx = x.pnts(p0)-x.pnts(base.pnt);
 			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p0,2)-x.ug.v(base.pnt,2));
-			x.pnts(base.pnt)(1) += dx(1);
+			x.pnts(base.pnt) += dx;
 			x.ug.v(base.pnt,2) = 0.0;
 		}
 		else {
 			/* MOVE TO INTERSECTION POINT */
 			TinyVector<FLT,2> dx = x.pnts(p1)-x.pnts(base.pnt);
 			dx *= (0.0-x.ug.v(base.pnt,2))/(x.ug.v(p1,2)-x.ug.v(base.pnt,2));
-			x.pnts(base.pnt)(1) += dx(1);
+			x.pnts(base.pnt) += dx;
 			x.ug.v(base.pnt,2) = 0.0;	
 		}
-		base.fsndbuf(2) = -1.0;
+		base.fsndbuf(3) = -1.0;
+
 	}
-	base.fsndbuf(3) = x.pnts(base.pnt)(1);
+	// move the approximation to the boundary
+//	base.mvpttobdry(x.pnts(base.pnt));
+	base.fsndbuf(4) = x.pnts(base.pnt)(0);
+	base.fsndbuf(5) = x.pnts(base.pnt)(1);
 
 	if (!base.is_comm()) return;
 
@@ -427,20 +437,126 @@ void hybrid_pt::update(int stage) {
 	base.comm_exchange(boundary::all,0,boundary::symmetric);
 	base.comm_wait(boundary::all,0,boundary::symmetric);
 
+	// add information from other points
 	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<4;++i) 
+		for(int i=0;i<sendsize;++i) 
 			base.fsndbuf(i) += base.frcvbuf(m,i);
 	}
 
-	if (base.fsndbuf(0)*base.fsndbuf(2) > 0.0) {
+	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
 		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(2) << std::endl;
+		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
 
 	if (base.fsndbuf(0) > 0.0) {
-		x.pnts(base.pnt)(1) = base.fsndbuf(3);
+		x.pnts(base.pnt)(1) = base.fsndbuf(5);
+	}
+	// flow is into the level set
+	else {
+		// specific for the hybrid example. required since one of hybrid points has different x coordinate in lvlset, mesh grid */
+		if (base.fsndbuf(1) == 0.0)
+			x.pnts(base.pnt)(0) = base.fsndbuf(1) + 2.0;
+		else 
+			x.pnts(base.pnt)(0) = base.fsndbuf(1);
+		x.pnts(base.pnt)(1) = base.fsndbuf(2);
+	}
+}
+
+void hybrid::update(int stage) {
+	int sind(0),tind(0),v0(0);
+	bool flag(false);
+	
+	if (stage == -1 || x.coarse_flag) return;
+	if (base.vbdry(0) > -0.5 && base.vbdry(1) > -0.5)
+		std::cout<<"There is a problem.  lvlset/bdry.cpp"<<std::endl;
+	else if (base.vbdry(0) > -0.5){
+		sind = base.seg(0);
+		tind = x.seg(sind).tri(0);
+		v0 = x.seg(sind).pnt(0);
+		flag = true;
+	}
+	else if (base.vbdry(1) > -0.5){
+		sind = base.seg(base.nseg-1);
+		tind = x.seg(sind).tri(0);
+		v0 = x.seg(sind).pnt(1);
+		flag = false;
 	}
 	else {
-		x.pnts(base.pnt)(1) = base.fsndbuf(1);
+		*x.gbl->log << "Neither was a hybrid_pt?  What gives?" << std::endl;
 	}
+	
+	/* AT WHAT POINT OF TRIANGLE DO WE NEED TO KNOW DERIVATIVE? */
+	int j;
+	for (j=0;j<3;++j)
+		if (x.tri(tind).pnt(j) == v0) break;
+	assert(j < 3);
+	FLT r,s;
+	// from point number to r,s
+	r=-1.0;
+	s=-1.0;
+	if (j==0) s=1.0;
+	if (j==2) r=1.0;	
+	/* Figure out what r & s should be based on vertex # */
+	x.ugtouht(tind);
+	x.crdtocht(tind);
+	// 2 -> ND, 4 -> NV
+	TinyVector<FLT,2> xy,dxydr,dxyds,dxmax; 
+	//TinyVector<FLT,4> xx,ddr,dds;
+	FLT axx[4],addr[4],adds[4];
+	FLT *xx=axx, *dudr=addr, *duds=adds;
+	FLT xloc, yloc;
+	xloc = x.pnts(v0)(0);
+	yloc = x.pnts(v0)(1);
+
+	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xy.data(),dxydr.data(),dxyds.data(),r,s,&x.cht(0,0),MXTM); 
+	basis::tri(x.log2p)->ptprobe(x.NV,xx,dudr,duds,r,s,&x.uht(0)(0),MXTM); 
+	TinyMatrix<FLT,2,2> ldcrd;
+	ldcrd(0,0) = dxydr(0);
+	ldcrd(0,1) = dxyds(0);
+	ldcrd(1,0) = dxydr(1);
+	ldcrd(1,1) = dxyds(1);
+	FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
+	FLT normux, normuy, lengthu;
+	normux = (+ldcrd(1,1)*dudr[2] -ldcrd(1,0)*duds[2])/cjcb;
+	normuy = (-ldcrd(0,1)*dudr[2] +ldcrd(0,0)*duds[2])/cjcb;
+	lengthu = pow( normux*normux + normuy*normuy, 0.5 ); //for projection in this direction
+	normux /= lengthu; // unit u vector x direction
+	normuy /= lengthu; // y direction
+
+	int v1,v2;
+	FLT x2,y2,velx,vely,nrmx,nrmy;
+	if (flag) 
+		v2 = x.seg(sind).pnt(1);
+	else 
+		v2 = x.seg(sind).pnt(0);
+	x2 = x.pnts(v2)(0);
+	y2 = x.pnts(v2)(1);
+	FLT normcx, normcy; // points from hybrid_pt to to pt on other end of seg
+	normcx = x2 - xloc; 
+	normcy = y2 - yloc;
+
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		v1 = x.seg(sind).pnt(0);
+		v2 = x.seg(sind).pnt(1);
+		nrmx =  (x.pnts(v2)(1) -x.pnts(v1)(1));
+		nrmy = -(x.pnts(v2)(0) -x.pnts(v1)(0));
+		velx = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+		vely = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+		FLT normvel = velx*nrmx+vely*nrmy; // check if fluid is flowing in
+		/* normvel is defined positive outward */
+		if (normvel < 0.0 ) {
+			if (flag) v2 = x.seg(sind).pnt(1);
+			else v2 = x.seg(sind).pnt(0);
+			x2 = x.pnts(v2)(0);
+			y2 = x.pnts(v2)(1);
+			FLT temp = (x2-xloc)*normux + (y2-yloc)*normuy;
+			x.ug.v(v2,2) = (x2-xloc)*normux + (y2-yloc)*normuy;
+			// THIS IS CHEATING!!!!!!!!!!!!!!!!!
+//			x.ug.v(v2,2) = y2 - yloc;
+		}
+	}
+
 }

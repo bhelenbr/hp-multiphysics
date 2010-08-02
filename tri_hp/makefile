@@ -11,7 +11,7 @@ axi: tri_hp_axi tri_hp_axi_mpi
 
 tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS=-DPTH
 	cp _$@/tri_hp $(HOME)/bin/$@
 
 .PHONY: tri_hp
@@ -92,7 +92,7 @@ OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o plane
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
 OBJBUOY = buoyancy/allocate.o buoyancy/tstep.o buoyancy/rsdl.o buoyancy/length.o
 OBJSW = swe/allocate.o swe/getnewbdry.o swe/bdry.o swe/getnewibc.o swe/rsdl.o swe/tstep.o
-OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o
+OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlset/reinit.o
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
 OBJPETSC = petsc.o sparse.o
 

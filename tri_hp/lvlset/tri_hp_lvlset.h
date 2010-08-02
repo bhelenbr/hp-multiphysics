@@ -18,6 +18,9 @@
 #define NONCONSERVATIVE
 // #define LOCALIZED_WITH_DISTANCE_FUNCTION
 
+// to reinitialize phi or not
+//#define REINIT
+
 class tri_hp_lvlset : public tri_hp_ins {
 	public:
 		struct global : public tri_hp_ins::global {
@@ -28,16 +31,31 @@ class tri_hp_lvlset : public tri_hp_ins {
 		} *gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-
+#ifdef REINIT
 	public:
+		// functions to reinitialize phi
+		void tadvance() { 
+	                if (!coarse_level && gbl->substep == 0)
+				reinitialize();
+			tri_hp_ins::tadvance();
+		}
+	private:
+		void reinitialize();
+		void reinit();
+		void rsdl_reinit(int stage);
+		void setup_preconditioner_reinit();
+		void element_rsdl_reinit(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
+#endif
+	public:
+		void setup_preconditioner();
+		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
+
 		void* create_global_structure() {return new global;}
 		tri_hp_lvlset* create() { return new tri_hp_lvlset(); }
 
 		void init(input_map& input, void *gin);  
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 
-		void setup_preconditioner();
-		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
 
 		FLT heavyside(FLT phidw) {
