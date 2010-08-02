@@ -25,8 +25,8 @@ int tri_mesh::insert(const TinyVector<FLT,ND> &x) {
 	/* FIND TRIANGLE CONTAINING POINT */
 	bool isfound = findtri(x,pnear,tind);
 	if (!isfound) {
-		std::cerr << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
-		std::cerr << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
+		*gbl->log << "couldn't find triangle for point: " << x(0) << ' ' << x(1) << " pnear: " << pnear << std::endl;
+		*gbl->log << "maxsrch: " << gbl->maxsrch << "vtri: " << pnt(pnear).tri << std::endl;
 		output("error");
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
@@ -519,7 +519,7 @@ bool tri_mesh::findtri(const TinyVector<FLT,ND> x, int pnear, int& tind) {
 		}
 		if (ntdel >= gbl->maxsrch-4) break;
 	}
-	//    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
+	//    *gbl->log << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
 	minclosest = -1.0e16;
 	tclose = -1;
 	for (i=0;i<ntdel;++i) {
@@ -602,7 +602,7 @@ bool tri_mesh::findtri(TinyVector<FLT,ND> x, int& tind) {
 		}
 		if (ntdel >= gbl->maxsrch-4) break;
 	}
-	//    std::cerr << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
+	//    *gbl->log << "couldn't find tri for point " << x[0] << ' ' << x[1] << ' ' << pnear << std::endl;
 	minclosest = -1.0e16;
 	tclose = -1;
 	for (i=0;i<ntdel;++i) {

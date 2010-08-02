@@ -749,6 +749,49 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		}
 };
 
+/* Generic interface to allow rigid body rotation and translation of boundaries */
+class rigid_movement_interface2D {
+	public:
+		FLT theta;
+		TinyVector<FLT,2> pos;
+
+
+		rigid_movement_interface2D() : theta(0.0) {
+			pos = 0.0;
+		}
+		rigid_movement_interface2D(const rigid_movement_interface2D &to_copy) : theta(to_copy.theta) {
+			pos = to_copy.pos;
+		}
+		rigid_movement_interface2D* create() const {return(new rigid_movement_interface2D(*this));}
+		void init(input_map& inmap,std::string idprefix) {
+			inmap.getwdefault(idprefix+"_theta",theta,0.0);
+			theta = theta*M_PI/180.0;
+			FLT ctr_dflt[2] = {0.0, 0.0};
+			inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
+		}
+		void to_geometry_frame(TinyVector<FLT,2>& pt) {
+			pt -= pos;
+			FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
+			pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
+			pt[0] = temp;		
+		}
+		void to_physical_frame(TinyVector<FLT,2>& pt) {
+			FLT temp = pt[0]*cos(-theta) -pt[1]*sin(-theta);
+			pt[1] = pt[0]*sin(-theta) +pt[1]*cos(-theta);
+			pt[0] = temp;		
+			pt += pos;
+		}
+		void rotate_to_geometry_frame(TinyVector<FLT,2>& dir) {
+			FLT temp = dir(0)*cos(theta) +dir(1)*sin(theta);
+			dir(1) = dir(0)*(-sin(theta)) +dir(1)*cos(theta);
+			dir(0) = temp;
+		}
+		void rotate_to_physical_frame(TinyVector<FLT,2>& dir) {
+			FLT temp = dir(0)*cos(-theta) +dir(1)*sin(-theta);
+			dir(1) = dir(0)*(-sin(-theta)) +dir(1)*cos(-theta);
+			dir(0) = temp;
+		}
+};
 
 
 /* GENERIC TEMPLATE FOR SHAPES */
@@ -774,10 +817,9 @@ template<int ND> class geometry {
 				for(n=0;n<ND;++n)
 					pt(n) += delt_dist*dhgt(n,pt.data(),time)/mag;
 				if (++iter > 100) {
-					std::cout << "curved iterations exceeded curved boundary " << pt(0) << ' ' << pt(1) << '\n';  // FIXME:  NEED TO FIX
-					sim::abort(__LINE__,__FILE__,&std::cerr);
+					std::cout << "Warning: curved iterations exceeded for symbolic curved boundary " << pt(0) << ' ' << pt(1) << "Ratio to target error level " << fabs(delt_dist)/(10.*EPSILON) << '\n';  // FIXME:  NEED TO FIX
 				}
-			} while (fabs(delt_dist) > 10.*EPSILON);
+			} while (fabs(delt_dist) > 20.*EPSILON);
 
 			return;
 		}
@@ -865,30 +907,26 @@ template<int ND> class symbolic_shape : public geometry<ND> {
 
 class circle : public geometry<2> {
 	public:
-		FLT center[2];
+		// Position is kept in rigid class
 		FLT radius;
 		FLT hgt(TinyVector<FLT,2> pt,FLT time = 0.0) {
-			return(radius*radius -pow(pt[0]-center[0],2) -pow(pt[1]-center[1],2));
+			return(radius*radius -pt[0]*pt[0] -pt[1]*pt[1]);
 		}
 		FLT dhgt(int dir, TinyVector<FLT,2> pt,FLT time = 0.0) {
-			return(-2.*(pt[dir]-center[dir]));
+			return(-2.*(pt[dir]));
 		}
 
-		circle() : geometry<2>(), radius(0.5) {center[0] = 0.0; center[1] = 0.0;}
-		circle(const circle &inbdry) : geometry<2>(inbdry), radius(inbdry.radius) {center[0] = inbdry.center[0]; center[1] = inbdry.center[1];}
+		circle() : geometry<2>(), radius(0.5) {}
+		circle(const circle &inbdry) : geometry<2>(inbdry), radius(inbdry.radius) {}
 		circle* create() const {return(new circle(*this));}
 
 		void output(std::ostream& fout,std::string idprefix) {
 			geometry<2>::output(fout,idprefix);
-			fout << idprefix << "_center: " << center[0] << '\t' << center[1] << std::endl;
 			fout << idprefix << "_radius: " << radius << std::endl;
 		}
 
 		void init(input_map& inmap,std::string idprefix, std::ostream& log) {
 			geometry<2>::init(inmap,idprefix,log);
-
-			FLT dflt[2] = {0.0, 0.0};
-			inmap.getwdefault(idprefix+"_center",center,2,dflt);
 			inmap.getwdefault(idprefix+"_radius",radius,0.5);
 		}
 };
@@ -903,7 +941,7 @@ class ellipse : public geometry<2> {
 			return(-2.*pt[dir]/pow(axes(dir),2));
 		}
 
-			public:
+	public:
 		ellipse() : geometry<2>() {}
 		ellipse(const ellipse &inbdry) : geometry<2>(inbdry), axes(inbdry.axes) {}
 		ellipse* create() const {return(new ellipse(*this));}
@@ -926,30 +964,13 @@ class naca : public geometry<2> {
 		FLT sign;
 		TinyVector<FLT,5> coeff;
 		FLT scale;
-		FLT theta;
-		TinyVector<FLT,2> pos;
 
-		FLT hgt(TinyVector<FLT,2> x, FLT time = 0.0) {
-			TinyVector<FLT,2> pt;
-			for(int n=0;n<2;++n)
-				pt[n] = x[n] -pos(n);
-
-			FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
-			pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
-			pt[0] = temp;
+		FLT hgt(TinyVector<FLT,2> pt, FLT time = 0.0) {
 			pt *= scale;
-
 			FLT poly = coeff[1]*pt[0] +coeff[2]*pow(pt[0],2) +coeff[3]*pow(pt[0],3) +coeff[4]*pow(pt[0],4) - sign*pt[1];
 			return(coeff[0]*pt[0] -poly*poly/coeff[0]);
 		}
-		FLT dhgt(int dir, TinyVector<FLT,2> x, FLT time = 0.0) {
-			TinyVector<FLT,2> pt;
-			for(int n=0;n<2;++n)
-				pt[n] = x[n] -pos(n);
-
-			FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
-			pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
-			pt[0] = temp;
+		FLT dhgt(int dir, TinyVector<FLT,2> pt, FLT time = 0.0) {
 			pt *= scale;
 
 			TinyVector<FLT,2> ddx;
@@ -960,23 +981,20 @@ class naca : public geometry<2> {
 			ddx(1) = -2*poly*dpolydy/coeff[0];
 			ddx *= scale;
 
-			if (dir == 0) return(ddx(0)*cos(theta) +ddx(1)*sin(theta));
-			return(ddx(0)*(-sin(theta)) +ddx(1)*cos(theta));
+			if (dir == 0) return(ddx(0));
+			return(ddx(1));
 		}
 
-		naca() : geometry<2>(), sign(1.0), scale(1.0), theta(0.0) {
+		naca() : geometry<2>(), sign(1.0), scale(1.0) {
 			/* NACA 0012 is the default */
 			sign = 1;
 			coeff[0] = 1.4845; coeff[1] = -0.63; coeff[2] = -1.758; coeff[3] = 1.4215; coeff[4] = -0.5180;
 			coeff *= 0.12;
 			// at peak y =0.4950625*0.12
-			pos = 0.0;
 		}
-		naca(const naca &inbdry) : geometry<2>(inbdry), sign(inbdry.sign), scale(inbdry.scale), theta(inbdry.theta) {
+		naca(const naca &inbdry) : geometry<2>(inbdry), sign(inbdry.sign), scale(inbdry.scale) {
 			for(int i=0;i<5;++i)
 				coeff[i] = inbdry.coeff[i];
-
-			pos = inbdry.pos;
 		}
 		naca* create() const {return(new naca(*this));}
 
@@ -988,8 +1006,6 @@ class naca : public geometry<2> {
 				fout << coeff[i] << " ";
 			fout << std::endl;
 			fout << idprefix << "_scale: " << scale << std::endl;
-			fout << idprefix << "_theta: " << theta << std::endl;
-			fout << idprefix << "_center: " << pos << std::endl;
 		}
 
 		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
@@ -999,9 +1015,7 @@ class naca : public geometry<2> {
 			inmap.getwdefault(idprefix+"_sign",sign,1.0);
 			inmap.getwdefault(idprefix+"_thickness",thickness,0.12);
 			inmap.getwdefault(idprefix+"_scale",scale,1.0);
-			inmap.getwdefault(idprefix+"_theta",theta,0.0);
 			scale = 1./scale;
-			theta = theta*M_PI/180.0;
 
 			std::string linebuf;
 			istringstream datastream;
@@ -1009,46 +1023,23 @@ class naca : public geometry<2> {
 			inmap.getwdefault(idprefix+"_coeff",coeff.data(),5,naca_0012_dflt);
 			coeff *= thickness;
 
-			FLT ctr_dflt[2] = {0.0, 0.0};
-			inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
 		}
 };
 
 class plane : public geometry<2> {
 	public:
-		FLT theta;
-		TinyVector<FLT,2> pos;
-
+		// Rotation and position information is kept in rigid class
 		FLT hgt(TinyVector<FLT,2> xin, FLT time = 0.0) {
-			TinyVector<FLT,2> pt(xin-pos);
-			return(pt[0]*cos(theta) +pt[1]*sin(theta));
+			return(xin[0]);
 		}
 		FLT dhgt(int dir, TinyVector<FLT,2> x, FLT time = 0.0) {
-			if (dir == 0) return(cos(theta));
-			return(sin(theta));
+			if (dir == 0) return(1.0);
+			return(0.0);
 		}
 
-		plane() : geometry<2>(), theta(0.0) {
-			pos = 0.0;
-		}
-		plane(const plane &inbdry) : geometry<2>(inbdry), theta(inbdry.theta) {
-			pos = inbdry.pos;
-		}
+		plane() :geometry<2>() {}
+		plane(const plane &inbdry) : geometry<2>(inbdry) {}
 		plane* create() const {return(new plane(*this));}
-
-		void output(std::ostream& fout,std::string idprefix) {
-			geometry<2>::output(fout,idprefix);
-			fout << idprefix << "_theta: " << theta << std::endl;
-			fout << idprefix << "_center: " << pos << std::endl;
-		}
-
-		void init(input_map& inmap,std::string idprefix,std::ostream& log) {
-			geometry<2>::init(inmap,idprefix,log);
-			inmap.getwdefault(idprefix+"_theta",theta,0.0);
-			theta = theta*M_PI/180.0;
-			FLT ctr_dflt[2] = {0.0, 0.0};
-			inmap.getwdefault(idprefix+"_center",pos.data(),2,ctr_dflt);
-		}
 };
 #endif
 

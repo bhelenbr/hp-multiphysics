@@ -118,13 +118,13 @@ typedef prdc_template<ecomm> eprdc;  /**< Periodic edge boundary */
  * BASE is the boundary object
  * GEOM object should be of type "geometry"
  */
-template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
+template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, public rigid_movement_interface2D {
 	public:
 		GEOM geometry_object;
 
 	public:
 		eboundary_with_geometry(int inid, tri_mesh &xin) : BASE(inid,xin) {BASE::mytype=BASE::mytype+"analytic";}
-		eboundary_with_geometry(const eboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), geometry_object(inbdry.geometry_object) {}
+		eboundary_with_geometry(const eboundary_with_geometry<BASE,GEOM> &inbdry, tri_mesh &xin) : BASE(inbdry,xin), rigid_movement_interface2D(inbdry), geometry_object(inbdry.geometry_object) {}
 		eboundary_with_geometry* create(tri_mesh& xin) const {return(new eboundary_with_geometry<BASE,GEOM>(*this,xin));}
 
 		void output(std::ostream& fout) {
@@ -133,11 +133,14 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE {
 		}
 		void init(input_map& inmap) {
 			BASE::init(inmap);
+			rigid_movement_interface2D::init(inmap,BASE::idprefix);
 			geometry_object.init(inmap,BASE::idprefix,*BASE::x.gbl->log);
 		}
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+			to_geometry_frame(pt);
 			geometry_object.mvpttobdry(pt,BASE::x.gbl->time);
+			to_physical_frame(pt);
 			return;
 		}
 };
@@ -199,14 +202,14 @@ template<class BASE> class ecoupled_physics : public ecoupled_physics_ptr, publi
 #include <spline.h>
 #include <blitz/tinyvec-et.h>
 
-class spline_bdry : public edge_bdry {
+class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 	spline<tri_mesh::ND> my_spline;
 	Array<FLT,1> s;  // STORE S COORDINATE OF BOUNDARY POINTS (NOT WORKING)?
 	FLT smin, smax; // LIMITS FOR BOUNDARY
 
 	public:
 		spline_bdry(int inid, tri_mesh &xin) : edge_bdry(inid,xin) {mytype="spline";}
-		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax) {}
+		spline_bdry(const spline_bdry &inbdry, tri_mesh &xin) : edge_bdry(inbdry,xin), rigid_movement_interface2D(inbdry), my_spline(inbdry.my_spline), smin(inbdry.smin), smax(inbdry.smax) {}
 		spline_bdry* create(tri_mesh& xin) const {return(new spline_bdry(*this,xin));}
 
 		/* TEMPORARY INPUT/OUTPUTING/INIT NEEDS TO BE STRAIGHTENED OUT */
@@ -217,7 +220,7 @@ class spline_bdry : public edge_bdry {
 		}
 		void init(input_map& inmap) {
 			edge_bdry::init(inmap);
-
+			rigid_movement_interface2D::init(inmap,idprefix);
 			std::string line;
 			if (!inmap.get(edge_bdry::idprefix+"_filename",line)) {
 				*x.gbl->log << "Couldn't fine spline file name in input file\n";
@@ -239,6 +242,7 @@ class spline_bdry : public edge_bdry {
 		}
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
+			to_geometry_frame(pt);
 			/* TEMPORARY THIS IS A HACK UNTIL I GET PARAMETRIC BOUNDARIES WORKING BETTER */
 			int sind = seg(nseg);
 			int p0 = x.seg(sind).pnt(0);
@@ -272,7 +276,7 @@ class spline_bdry : public edge_bdry {
 			if (iter > 99) {
 				*x.gbl->log << "too many spline iterations\n";
 			}
-
+			to_physical_frame(pt);
 			return;
 		}
 };
