@@ -200,9 +200,11 @@ namespace bdry_ins {
 						}
 					}
 				}	
+
 #ifdef MY_SPARSE
-				x.my_zero_rows(counter,indices);
-				x.my_set_diag(counter,indices,1.0);
+				x.J.zero_rows(counter,indices);
+				x.J_mpi.zero_rows(counter,indices);
+				x.J.set_diag(counter,indices,1.0);
 #else
 				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
 #endif
@@ -518,9 +520,11 @@ namespace bdry_ins {
 							indices(counter++)=gind+m*x.NV+dir;
 					}
 				}	
+
 #ifdef MY_SPARSE
-				x.my_zero_rows(counter,indices);
-				x.my_set_diag(counter,indices,1.0);
+				x.J.zero_rows(counter,indices);
+				x.J_mpi.zero_rows(counter,indices);
+				x.J.set_diag(counter,indices,1.0);
 #else
 				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
 #endif
@@ -788,10 +792,10 @@ namespace bdry_ins {
 				if (fix_norm) {
 					Array<int,1> rows(tri_mesh::ND);
 					for(int n=0;n<tri_mesh::ND;++n) 
-						rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n;
+						rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n; 
 #ifdef MY_SPARSE
-					x.my_zero_rows(tri_mesh::ND,rows);
-					x.my_set_diag(tri_mesh::ND,rows,1.0);
+					x.J.zero_rows(tri_mesh::ND,rows);
+					x.J.set_diag(tri_mesh::ND,rows,1.0);
 #else				
 					MatZeroRows(x.petsc_J,tri_mesh::ND,rows.data(),1.0);
 #endif

@@ -14,6 +14,7 @@
 #include <float.h>
 #include <tri_basis.h>
 #include <blocks.h>
+#include <myblas.h>
 
 #ifdef petsc
 #include <petscksp.h>
@@ -254,6 +255,7 @@ class tri_hp : public r_tri_mesh  {
 		void ug_to_petsc();
 		void petsc_make_1D_rsdl_vector(Array<FLT,1>);
 		
+		int jacobian_start;
 		int jacobian_size;
 		Mat  petsc_J;           /* Jacobian matrix */
 		Vec  petsc_u,petsc_f;   /* solution,residual */
@@ -261,15 +263,8 @@ class tri_hp : public r_tri_mesh  {
 		PC   pc;                 /* preconditioner */
 		
 #ifdef MY_SPARSE
-		Array<int,1> sparse_cpt; //pointer to column indices for each row
-		Array<int,1> sparse_col; //sparse list of columns
-		Array<FLT,1> sparse_val; //sparse matrix element storage
-		void my_add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
-		void my_set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
-		void my_set_values(int nels,const Array<int,1>& rows, const Array<int,1>& cols,const Array<FLT,1>& D);
-		void my_set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
-		void my_zero_rows(int nrows,const Array<int,1>& rows);
-		void check_for_unused_entries();
+		sparse_row_major J; // This block's Jacobian
+		sparse_row_major J_mpi; // Coupling to other blocks
 #endif
 #endif	
 
@@ -309,7 +304,7 @@ class tri_hp_helper {
 		
 		/* Stuff to make jacobians for coupled problems */
 		virtual int dofs(int dofs) { return 0;}
-		virtual void non_sparse(Array<int,1> &nnzero) {}
+		virtual void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi) {}
 		virtual void jacobian() {};
 		virtual void jacobian_dirichlet() {};
 };

@@ -511,7 +511,7 @@ void surface_outflow::rsdl(int stage) {
 //				int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
 //				MatZeroRows(x.petsc_J,1,&row,PETSC_NULL);
 //				TinyVector<int,2> col(row,row+1);
-//				MatSetValues(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
+//				MatSetValuesLocal(x.petsc_J,1,&row,2,col.data(),wall_normal.data(),INSERT_VALUES);
 //				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
 //				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
 //			}
@@ -534,9 +534,9 @@ void surface_outflow::petsc_jacobian() {
 
 	/* GET X & Y MESH MOVEMENT ROW */
 	/* CONSTRAIN MOTION NORMAL TO BOUNDARY */
-	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV;
-	int nnz1 = x.sparse_cpt(row+1) -x.sparse_cpt(row);
-	int nnz2 = x.sparse_cpt(row+2) -x.sparse_cpt(row+1);
+	int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV; 
+	int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
+	int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
 	Array<int,1> cols(nnz1);
 	Array<FLT,2> vals(2,nnz1);
 	
@@ -545,10 +545,10 @@ void surface_outflow::petsc_jacobian() {
 		*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
-	int row1 = x.sparse_cpt(row);
-	int row2 = x.sparse_cpt(row+1);
+	int row1 = x.J._cpt(row);
+	int row2 = x.J._cpt(row+1);
 	for(int col=0;col<nnz1;++col) {
-		if (x.sparse_col(row1++) != x.sparse_col(row2++)) {
+		if (x.J._col(row1++) != x.J._col(row2++)) {
 			*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
 			sim::abort(__LINE__,__FILE__,x.gbl->log);
 		}	
@@ -557,21 +557,21 @@ void surface_outflow::petsc_jacobian() {
 		
 	FLT J = surf->gbl->vdt(indx)(0,0)*surf->gbl->vdt(indx)(1,1) -surf->gbl->vdt(indx)(1,0)*surf->gbl->vdt(indx)(0,1);
 
-	vals(0,Range(0,nnz1-1)) = -x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1))*surf->gbl->vdt(indx)(1,0)/J;
-	vals(0,Range(0,nnz1-1)) += x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1))*surf->gbl->vdt(indx)(0,0)/J;
+	vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*surf->gbl->vdt(indx)(1,0)/J;
+	vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*surf->gbl->vdt(indx)(0,0)/J;
 					
 	/* Replace x equation with tangential position equation */
 	/* Replacy y equation with normal displacement equation */
 	/* Normal Equation */
 	vals(1,Range::all()) = 0.0;
 	for(int col=0;col<nnz1;++col) {
-		if (x.sparse_col(row1+col) == row) {
+		if (x.J._col(row1+col) == row) {
 			vals(1,col) = wall_normal(0);
 			break;
 		}
 	}
 	for(int col=0;col<nnz1;++col) {
-		if (x.sparse_col(row1+col) == row+1) {
+		if (x.J._col(row1+col) == row+1) {
 			vals(1,col) = wall_normal(1);
 			break;
 		}
@@ -585,8 +585,8 @@ void surface_outflow::petsc_jacobian() {
 	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
 
 	TinyVector<int,2> rows(row,row+1);
-	x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1)) = temp(0,Range::all());
-	x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1)) = temp(1,Range::all());
+	x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
+	x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());
 #else
 	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
 	MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);
@@ -645,7 +645,7 @@ void surface_outflow::petsc_jacobian() {
 	temp(1,Range::all()) =  vals(0,Range::all())*surf->gbl->vdt(indx)(1,1) +vals(1,Range::all())*wall_normal(1);
 
 	TinyVector<int,2> rows(row,row+1);
-	MatSetValues(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
+	MatSetValuesLocal(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
 #endif
 
 }
@@ -1163,7 +1163,7 @@ void surface::petsc_jacobian() {
 	indices(cnt++) = x.seg(sind).pnt(1)*vdofs+x.NV+1;
 	
 #ifdef MY_SPARSE
-	x.my_zero_rows(cnt,indices);
+	x.J.zero_rows(cnt,indices);
 #else
 	/* Must zero rows of jacobian created by r_mesh */
 	MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY); 
@@ -1191,7 +1191,7 @@ void surface::petsc_jacobian() {
 			for(int var = 0; var < tri_mesh::ND; ++var)
 				loc_to_glo(ind++) = gindxND++;
 		}
-						
+		
 		element_jacobian(j,K);
 				
 		/* Rotate for diagonal dominance */
@@ -1215,9 +1215,9 @@ void surface::petsc_jacobian() {
 			ind += vdofs;
 		}
 #ifdef MY_SPARSE
-		x.my_add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
+		x.J.add_values(vdofs*(sm+2),loc_to_glo,vdofs*(sm+2),loc_to_glo,K);
 #else
-		MatSetValues(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
+		MatSetValuesLocal(x.petsc_J,vdofs*(sm+2),loc_to_glo.data(),vdofs*(sm+2),loc_to_glo.data(),K.data(),ADD_VALUES);
 #endif
 	
 		if (!sm) continue;
@@ -1302,9 +1302,9 @@ void surface::petsc_jacobian() {
 			loc_to_glo_crv(m) = gindxND++;
 			
 #ifdef MY_SPARSE
-		x.my_add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
+		x.J.add_values(tm*x.NV,loc_to_glo_e,sm*tri_mesh::ND,loc_to_glo_crv,Ke);
 #else
-		MatSetValues(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
+		MatSetValuesLocal(x.petsc_J,tm*x.NV,loc_to_glo_e.data(),sm*tri_mesh::ND,loc_to_glo_crv.data(),Ke.data(),ADD_VALUES);
 #endif		
 	}
 }

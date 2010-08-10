@@ -13,7 +13,8 @@
 #include "hp_boundary.h"
 #include <limits.h>
 
-//#define DEBUG_JAC
+
+// #define DEBUG_JAC
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
@@ -36,6 +37,21 @@ void tri_hp::petsc_initialize(){
 		jacobian_size += helper->dofs(jacobian_size);
 	}
 	
+	
+	const int nblock = sim::blks.nblock;
+	const int idnum = gbl->idnum;
+
+	Array<int,1> sndsize(nblock), size(nblock);
+	sndsize = 0;
+	sndsize(idnum) = jacobian_size; 
+	sim::blks.allreduce(sndsize.data(),size.data(),nblock,blocks::int_msg,blocks::sum);
+	~sndsize;
+	
+	int total_size = 0;
+	for(int i=0;i<nblock;++i) {
+		total_size += size(i);
+	}
+
 	/* find number of non-zeros for each row */
 	Array<int,1> nnzero(jacobian_size);
 	int begin_seg = npnt*vdofs;
@@ -69,30 +85,45 @@ void tri_hp::petsc_initialize(){
 					nnzero(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
 	}
 			
-	/* Connections to isoparametric coordinates */
+	/* Connections to extra boundary unknowns & to other blocks */
+	Array<int,1> nnzero_mpi(jacobian_size);
+	nnzero_mpi = 0;
 	for(int i=0;i<nebd;++i) 
-		hp_ebdry(i)->non_sparse(nnzero); 	/* FIXME: NEED TO DO PARALLEL COMMUNICATION HERE TO PASS DATA ABOUT NNZ'S ON PARALLEL BOUNDARIES (create nmpizero.data())*/
+		hp_ebdry(i)->non_sparse(nnzero,nnzero_mpi);
 
-	helper->non_sparse(nnzero);
+	helper->non_sparse(nnzero,nnzero_mpi);
 		
-	/* CREATE MATRIX */
+	/* CREATE VECTORS & MATRICES */
 	PetscErrorCode err;
 	
-#ifdef MY_SPARSE
-	sparse_cpt.resize(jacobian_size+1);
-	sparse_cpt(0)=0;
-	for (int i=1; i<jacobian_size+1; ++i) 
-		sparse_cpt(i) = sparse_cpt(i-1) +nnzero(i-1);
-	int number_sparse_elements = sparse_cpt(jacobian_size);
-	sparse_val.resize(number_sparse_elements);
-	sparse_col.resize(number_sparse_elements);
-	sparse_col = INT_MAX;
+	err = VecCreate(PETSC_COMM_WORLD,&petsc_u);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = VecSetSizes(petsc_u,jacobian_size,total_size);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = VecSetFromOptions(petsc_u);
 	
+	int high;
+	VecGetOwnershipRange(petsc_u,&jacobian_start,&high);
+	if (high-jacobian_start != jacobian_size) {
+		*gbl->log << "weird size allocation for petsc vector" << std::endl;
+		exit(1);
+	}
+
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = VecDuplicate(petsc_u,&petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+#ifdef MY_SPARSE
+	J.resize(jacobian_size,nnzero); //,jacobian_start);
+	J_mpi.resize(jacobian_size,nnzero_mpi); //,jacobian_start);
 	err = MatCreate(PETSC_COMM_SELF,&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #else
+#ifndef MPISRC
 	err = MatCreateSeqAIJ(PETSC_COMM_SELF,jacobian_size,jacobian_size,PETSC_NULL,nnzero.data(),&petsc_J);
-	//MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,PETSC_DECIDE,PETSC_DECIDE,PETSC_NULL,nnzero.data(),PETSC_NULL,nmpizero.data(),&petsc_J);
+#else
+	err = MatCreateMPIAIJ(PETSC_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,PETSC_NULL,nnzero.data(),PETSC_NULL,nnzero_mpi.data(),&petsc_J);
+#endif
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatSetOption(petsc_J,MAT_SYMMETRIC,PETSC_FALSE); 
@@ -102,28 +133,12 @@ void tri_hp::petsc_initialize(){
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	/* Uncomment for debugging */
-//	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE); 
-//	CHKERRABORT(MPI_COMM_WORLD,err);
+	//	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_ALLOCATION_ERR,PETSC_TRUE); 
+	//	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatSetFromOptions(petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
-
-	/* 
-	 Create parallel vectors.
-	 - When using VecSetSizes(), we specify only the vector's global
-	 dimension; the parallel partitioning is determined at runtime. 
-	 - Note: We form 1 vector from scratch and then duplicate as needed.
-	 */
-	err = VecCreate(PETSC_COMM_WORLD,&petsc_u);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	err = VecSetSizes(petsc_u,jacobian_size,PETSC_DECIDE);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	err = VecSetFromOptions(petsc_u);
-	
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	err = VecDuplicate(petsc_u,&petsc_f);
-	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	/* Create linear solver context */
 	err = KSPCreate(PETSC_COMM_WORLD,&ksp);
@@ -136,13 +151,13 @@ void tri_hp::petsc_initialize(){
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	/* Want default to be LU */
-	err = PCSetType(pc, PCLU);     // LU
-	CHKERRABORT(MPI_COMM_WORLD,err);
+//	err = PCSetType(pc, PCILU);     // LU
+//	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 //	err = PCFactorSetUseInPlace(pc);
 //	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	err = KSPSetFromOptions(ksp);
+	err = PCSetFromOptions(pc);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	return;
@@ -152,18 +167,34 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscLogDouble time1,time2;
 	PetscErrorCode err;
 	
+	PetscGetTime(&time1);
+	
 #ifdef MY_SPARSE
 	/* Not sure if I have to delete it each time or not */
 	err = MatDestroy(petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
-	sparse_val = 0.0;
+	J._val = 0.0;
+	J_mpi._val = 0.0;
+	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
 	petsc_jacobian();
-	check_for_unused_entries();
-	
-	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,sparse_cpt.data(),sparse_col.data(),sparse_val.data(),&petsc_J);
+	J.check_for_unused_entries();
+	J_mpi.check_for_unused_entries();
+
+#ifndef MPISRC
+	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	
+#else
+	int total_size;
+	sim::blks.allreduce(&jacobian_size, &total_size, 1, blocks::int_msg, blocks::sum);
+	err =  MatCreateMPIAIJWithSplitArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
+		J._cpt.data(),J._col.data(),J._val.data(),J_mpi._cpt.data(),J_mpi._col.data(),J_mpi._val.data(),&petsc_J);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+
+//	err =  MatCreateMPIAIJWithArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
+//	CHKERRABORT(MPI_COMM_WORLD,err);
+#endif
+
 //	err = MatSetOption(petsc_J,MAT_SYMMETRIC,PETSC_FALSE); 
 //	CHKERRABORT(MPI_COMM_WORLD,err);
 //	
@@ -175,13 +206,8 @@ void tri_hp::petsc_setup_preconditioner() {
 
 #else
 	/* insert values into jacobian matrix J */		
-	PetscGetTime(&time1);
 	MatZeroEntries(petsc_J);
-	petsc_jacobian();
-	PetscGetTime(&time2);
-	
-	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
-		
+	petsc_jacobian();		
 	err = MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	err = MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
@@ -198,44 +224,29 @@ void tri_hp::petsc_setup_preconditioner() {
 	 also serves as the preconditioning matrix.
 	 */
 #endif
+	PetscGetTime(&time2);
+	*gbl->log << "jacobian made " << time2-time1 << " seconds" << endl;
 
 #ifdef DEBUG_JAC
 	test_jacobian();
 #endif
 
-	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);// SAME_NONZERO_PATTERN
+	PetscGetTime(&time1);	 
+	err = KSPSetOperators(ksp,petsc_J,petsc_J,SAME_NONZERO_PATTERN);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	
-	/* 
-	 Solve linear system.  Here we explicitly call KSPSetUp() for more
-	 detailed performance monitoring of certain preconditioners, such
-	 as ICC and ILU.  This call is optional, as KSPSetUp() will
-	 automatically be called within KSPSolve() if it hasn't been
-	 called already.
-	 */
-	PetscGetTime(&time1);
 	err = KSPSetUp(ksp);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	PetscGetTime(&time2);
-	
 	*gbl->log << "matrix inverted " << time2-time1 << " seconds" << endl;
-
-	
-	//MatView(petsc_J,0);
 
 	return;
 	
 }
 
 void tri_hp::petsc_update() {
-	Vec            resid,du;          /* solution, update, function */
+	Vec	resid,du;
+	PetscInt its;
 	PetscErrorCode err;
-	PetscInt       its,max_newton_its;
-	PetscScalar    petsc_norm;
-	//PetscMPIInt    size,rank;
-	max_newton_its = 20;
-	//err = MPI_Comm_rank(PETSC_COMM_WORLD,&rank);//CHKERRABORT(MPI_COMM_WORLD,err);
-	//err = MPI_Comm_size(PETSC_COMM_WORLD,&size);//CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	PetscLogDouble time1,time2;
 	err = VecDuplicate(petsc_f,&du);
@@ -243,10 +254,8 @@ void tri_hp::petsc_update() {
 	err = VecDuplicate(petsc_f,&resid);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 
-	/* initialize u with ug */
 	ug_to_petsc();
 		
-	/* insert values into residual f (every processor will do this need to do it a different way) */
 	petsc_rsdl();
 			
 	VecAssemblyBegin(petsc_f);
@@ -255,14 +264,10 @@ void tri_hp::petsc_update() {
 	PetscGetTime(&time1);
 	err = KSPSolve(ksp,petsc_f,du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-	PetscGetTime(&time2);
 
-	MatMult(petsc_J,du,resid);
-	VecAXPY(resid,-1.0,petsc_f);		
-	VecNorm(resid,NORM_2,&petsc_norm);
 	KSPGetIterationNumber(ksp,&its);
-
-	*gbl->log << "#linear system residual: " << petsc_norm << " iterations " << its << " solve time: " << time2-time1 << " seconds" << endl;
+	PetscGetTime(&time2);
+	*gbl->log << "# iterations " << its << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	helper->update(-1);
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -272,13 +277,9 @@ void tri_hp::petsc_update() {
 
 	/* send petsc vector u back to ug */
 	petsc_to_ug();
-	
-	//MatSetOption(petsc_J,MAT_KEEP_ZEROED_ROWS,PETSC_TRUE);
-	//MatSetOption(petsc_J,MAT_NO_NEW_NONZERO_LOCATIONS,PETSC_TRUE);
-	
-//		MatSetOption(petsc_J,MAT_NEW_NONZERO_LOCATION_ERR,PETSC_TRUE);	
-	
-	err = VecDestroy(du); CHKERRABORT(MPI_COMM_WORLD,err);
+
+	err = VecDestroy(du);
+	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	return;
 }
@@ -335,7 +336,7 @@ void tri_hp::petsc_to_ug(){
 
 /* temp fix can I input petsc vectors ? */
 void tri_hp::ug_to_petsc(){
-	int ind = 0;
+	int ind = jacobian_start;
 	
 	if (mmovement != coupled_deformable) {
 		for(int i = 0; i < npnt; ++i){

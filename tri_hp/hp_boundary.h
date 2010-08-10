@@ -103,7 +103,11 @@ class hp_edge_bdry : public egeometry_interface<2> {
 				crvbd(0).reference(crv);
 			}
 			dxdt.resize(x.log2pmax+1,base.maxseg);
-			base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);    
+#ifndef petsc
+			base.resize_buffers(base.maxseg*(x.sm0+2)*x.NV);
+#else
+			base.resize_buffers(base.maxseg*(x.sm0+2)*(x.NV+x.ND)*8*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+#endif
 		}
 		virtual hp_edge_bdry* create(tri_hp& xin, edge_bdry &bin) const {return(new hp_edge_bdry(*this,xin,bin));}
 		virtual void* create_global_structure() {return 0;}
@@ -145,7 +149,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 				return(tri_mesh::ND*x.sm0*base.nseg);
 			return 0;
 		}
-		virtual void non_sparse(Array<int,1> &nnzero);
+		virtual void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void jacobian() {}
 #ifdef petsc
 		virtual void petsc_jacobian();

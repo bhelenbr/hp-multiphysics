@@ -652,7 +652,7 @@ class force_coupling : public tri_hp_helper {
 				jacobian_start = dofs;
 				return(2*(vertical+horizontal+rotational));
 			}
-			void non_sparse(Array<int,1> &nnzero) {		
+			void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi) {		
 				return;
 				/* For full jacobian (not working yet) */
 				if (x.mmovement == tri_hp::coupled_deformable) {

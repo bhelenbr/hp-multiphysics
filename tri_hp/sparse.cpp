@@ -14,175 +14,6 @@
 
 #ifdef petsc
 
-#ifdef MY_SPARSE
-void tri_hp::my_add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M) {
-	
-	for (int lrow = 0; lrow < nrows; ++lrow) {
-		int row = rows(lrow);
-		for (int lcol = 0; lcol < ncols; ++lcol) {
-			int col = cols(lcol);
-		
-			/* add value to already existing element in sparse */
-			int sindx;
-			for (sindx = sparse_cpt(row); col > sparse_col(sindx); ++sindx);
-			
-			if (sparse_col(sindx) == col) {
-				sparse_val(sindx) += M(lrow,lcol);
-				continue;
-			}
-			
-#ifdef BZ_DEBUG
-			if (sindx == sparse_cpt(row+1)) {
-				*gbl->log << "Too many entries for row " << row << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-#endif
-			
-			/* slide all entries after insertion column to the right*/
-			for(int i = sparse_cpt(row+1)-1; i > sindx; --i){
-				sparse_val(i)=sparse_val(i-1);
-				sparse_col(i)=sparse_col(i-1);
-			}
-			
-			/* insert new element into sparse matrix */
-			sparse_val(sindx) = M(lrow,lcol);
-			sparse_col(sindx) = col;	
-		}
-	}
-	
-	return;	
-}
-
-void tri_hp::my_set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M) {
-	
-	for (int lrow = 0; lrow < nrows; ++lrow) {
-		int row = rows(lrow);
-		for (int lcol = 0; lcol < ncols; ++lcol) {
-			int col = cols(lcol);
-		
-			/* add value to already existing element in sparse */
-			int sindx;
-			for (sindx = sparse_cpt(row); col > sparse_col(sindx); ++sindx);
-			
-			if (sparse_col(sindx) == col) {
-				sparse_val(sindx) = M(lrow,lcol);
-				continue;
-			}
-
-#ifdef BZ_DEBUG
-			if (sindx == sparse_cpt(row+1)) {
-				*gbl->log << "Too many entries for row " << row << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-#endif
-			
-			/* slide all entries after insertion column to the right*/
-			for(int i = sparse_cpt(row+1)-1; i > sindx; --i){
-				sparse_val(i)=sparse_val(i-1);
-				sparse_col(i)=sparse_col(i-1);
-			}
-			
-			/* insert new element into sparse matrix */
-			sparse_val(sindx) = M(lrow,lcol);
-			sparse_col(sindx) = col;	
-		}
-	}
-	
-	return;	
-}
-
-void tri_hp::my_set_values(int nels,const Array<int,1>& rows, const Array<int,1>& cols,const Array<FLT,1>& D) {
-	
-	for (int indx = 0; indx < nels; ++indx) {
-		int row = rows(indx);
-		int col = cols(indx);
-	
-		/* add value to already existing element in sparse */
-		int sindx;
-		for (sindx = sparse_cpt(row); col > sparse_col(sindx); ++sindx);
-		
-		if (sparse_col(sindx) == col) {
-			sparse_val(sindx) = D(indx);
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-			if (sindx == sparse_cpt(row+1)) {
-				*gbl->log << "Too many entries for row " << row << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = sparse_cpt(row+1)-1; i > sindx; --i){
-			sparse_val(i)=sparse_val(i-1);
-			sparse_col(i)=sparse_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		sparse_val(sindx) = D(indx);
-		sparse_col(sindx) = col;	
-	}
-	
-	return;	
-}
-
-void tri_hp::my_set_diag(int nels,const Array<int,1>& rows, FLT val, int offset) {	
-	for (int indx = 0; indx < nels; ++indx) {
-		int row = rows(indx);
-		int col = row+offset;
-	
-		/* add value to already existing element in sparse */
-		int sindx;
-		for (sindx = sparse_cpt(row); col > sparse_col(sindx); ++sindx);
-		
-		if (sparse_col(sindx) == col) {
-			sparse_val(sindx) = val;
-			continue;
-		}
-		
-#ifdef BZ_DEBUG
-			if (sindx == sparse_cpt(row+1)) {
-				*gbl->log << "Too many entries for row " << row << std::endl;
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
-#endif
-		
-		/* slide all entries after insertion column to the right*/
-		for(int i = sparse_cpt(row+1)-1; i > sindx; --i){
-			sparse_val(i)=sparse_val(i-1);
-			sparse_col(i)=sparse_col(i-1);
-		}
-		
-		/* insert new element into sparse matrix */
-		sparse_val(sindx) = val;
-		sparse_col(sindx) = col;	
-	}
-	
-	return;	
-}
-
-
-void tri_hp::my_zero_rows(int nrows,const Array<int,1>& rows) {
-	for(int i=0;i<nrows;++i)
-		sparse_val(Range(sparse_cpt(rows(i)),sparse_cpt(rows(i)+1)-1)) = 0.0;
-}
-
-void tri_hp::check_for_unused_entries() {
-	for(int i=0;i<jacobian_size;++i) {
-		for (int j=sparse_cpt(i);j<sparse_cpt(i+1);++j) {
-			if (sparse_col(j) > jacobian_size-1) {
-				*gbl->log << "unused entry for row " << i << " pnt " << i/NV << " allocated " << sparse_cpt(i+1) -sparse_cpt(i) << std::endl;
-				Array<int,1> used(sparse_col(Range(sparse_cpt(i),j-1)));
-				*gbl->log << "used " << used << " unused " << sparse_col(j) << std::endl;
-				break;
-			}
-		}
-	}
-	return;
-}
-#endif
-
 void tri_hp::petsc_jacobian() {
 	int gindx;
 
@@ -238,23 +69,25 @@ void tri_hp::petsc_jacobian() {
 				}
 			}
 		}
+		//loc_to_glo += jacobian_start;  /* shift indices for this block */
+		
 #ifdef MY_SPARSE
-		my_add_values(kn,loc_to_glo,kn,loc_to_glo,K);
+		J.add_values(kn,loc_to_glo,kn,loc_to_glo,K);
 #else
-		MatSetValues(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
+		MatSetValuesLocal(petsc_J,kn,loc_to_glo.data(),kn,loc_to_glo.data(),K.data(),ADD_VALUES);
 #endif
 	}
 	/* APPLY ALL MOVING MESH B.C.'s FIRST */
 	if (mmovement == coupled_deformable) {
 		/* This mostly does nothing, except for angled boundarys */
 		for(int i=0;i<nebd;++i) 
-			r_sbdry(i)->jacobian();
+			r_sbdry(i)->jacobian();  // Fixme: parallel jacobian stuff be done here
 
 #ifndef MY_SPARSE	
 		/* PETSC IS RETARDED */
 		FLT zero = 0.0;
-		for (int i=npnt*(NV+ND)+sm*NV*nseg+ntri*im*NV;i<jacobian_size;++i) 
-			MatSetValues(petsc_J,1,&i,1,&i,&zero,ADD_VALUES);
+		for (int i=jacobian_start +npnt*(NV+ND)+sm*NV*nseg+ntri*im*NV;i<jacobian_start +jacobian_size;++i) 
+			MatSetValuesLocal(petsc_J,1,&i,1,&i,&zero,ADD_VALUES);
 			
 		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
@@ -287,7 +120,24 @@ void tri_hp::petsc_jacobian() {
 }
 
 void tri_hp::petsc_rsdl() {
+
+
 	rsdl();
+	
+	/* Do communication */
+	/* Vertices */
+	int last_phase, mp_phase;
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,gbl->res.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
+	}
+	
+	/* Sides */
+	sc0load(gbl->res.s.data(),0,sm0-1,gbl->res.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(gbl->res.s.data(),0,sm0-1,gbl->res.s.extent(secondDim));  
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<nebd;++i)
@@ -299,7 +149,6 @@ void tri_hp::petsc_rsdl() {
 	for(int i=0;i<nvbd;++i) 
 		hp_vbdry(i)->vdirichlet2d();
 
-	
 		
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(int m=0;m<basis::tri(log2p)->sm();++m)
@@ -477,30 +326,30 @@ void tri_hp::test_jacobian() {
 	int nnz;
 	
 	for(int i=0;i<ind;++i) {
-		MatGetRow(petsc_J,i,&nnz,&cols,&vals);
-		*gbl->log << "row " << i << ": ";
+		MatGetRow(petsc_J,i+jacobian_start,&nnz,&cols,&vals);
+		*gbl->log << "row " << i+jacobian_start << ": ";
 		int cnt = 0;
 		for(int j=0;j<ind;++j) {
 			if (fabs(testJ(i,j)) > DEBUG_TOL) {
 				if (cnt >= nnz) {
-					*gbl->log << " (Extra entry in full matrix " <<  j << ' ' << testJ(i,j) << ") ";
+					*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start << ' ' << testJ(i,j) << ") ";
 					continue;
 				}
-				if (cols[cnt] == j) {
+				if (cols[cnt] == j+jacobian_start) {
 					if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
-						*gbl->log << " (Jacobian " << j << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
+						*gbl->log << " (Jacobian " << j+jacobian_start << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 					++cnt;
 				}
-				else if (cols[cnt] < j) {
+				else if (cols[cnt] < j+jacobian_start) {
 					do {
 						if (fabs(vals[cnt]) > DEBUG_TOL)
 							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
 						++cnt;
-					} while (cols[cnt] < j);
+					} while (cols[cnt] < j+jacobian_start);
 					--j;
 				}
 				else {
-					*gbl->log << " (Extra entry in full matrix " <<  j  << ' ' << testJ(i,j) << ") ";
+					*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start  << ' ' << testJ(i,j) << ") ";
 				}
 			}
 		}
@@ -515,7 +364,7 @@ void tri_hp::test_jacobian() {
 		MatRestoreRow(petsc_J,i,&nnz,&cols,&vals);
 	}
 	
-	//MatView(petsc_J,0);
+	// MatView(petsc_J,0);
 }
 
 #endif
