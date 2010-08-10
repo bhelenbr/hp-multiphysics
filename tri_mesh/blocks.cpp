@@ -515,7 +515,7 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 	const int nblock = sim::blks.nblock;
 	const int myid = sim::blks.myid;
 	const int myblock = sim::blks.myblock;
-	 const int idnum = gbl->idnum;
+	const int idnum = gbl->idnum;
 
 	/* FIGURE OUT MY LOCAL BLOCK NUMBER & GRID LEVEL? */
 	int b1;
