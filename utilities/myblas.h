@@ -80,6 +80,7 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define PBTRS SPBTRS
 #define GEEV SGEEV
 #define EPSILON FLT_EPSILON
+#define FLT float
 #else
 #define GETRF DGETRF
 #define GETRS DGETRS
@@ -87,6 +88,7 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define PBTRS DPBTRS
 #define GEEV DGEEV
 #define EPSILON DBL_EPSILON
+#define FLT double
 #endif
 
 #include<blitz/array.h>
@@ -94,5 +96,40 @@ double spectral_radius(blitz::Array<double,2> A);
 double l2norm(blitz::Array<double,1> x);
 double inner_product(blitz::Array<double,1> x, blitz::Array<double,1> y);
 void matrix_absolute_value(blitz::Array<double,2> &A);
+
+using namespace blitz;
+
+class sparse_row_major {
+	public:
+		int _nrow, _offset;
+		Array<int,1> _cpt; //pointer to column indices for each row
+		Array<int,1> _col; //sparse list of column indices
+		Array<FLT,1> _val; //sparse list of matrix values
+	
+		sparse_row_major() {}
+		sparse_row_major(int nrow, Array<int,1>& nnzero, int offset = 0);
+		void resize(int nrow, Array<int,1>& nnzero, int offset=0);
+		void reset_columns();
+		
+		void add_values(int row, int col, FLT value);
+		void add_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
+		void add_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
+		void add_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
+		void add_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+		
+		void set_values(int row, int col, FLT value);
+		void set_values(int nrows, const Array<int,1>& rows, int col, const Array<FLT,1>& D);
+		void set_values(int row, int ncols, const Array<int,1>& cols, const Array<FLT,1>& D);
+		void set_values(int nels, const Array<int,1>& rows, const Array<int,1>& cols, const Array<FLT,1>& D);
+		void set_values(int nrows,const Array<int,1>& rows, int ncols, const Array<int,1>& cols,const Array<FLT,2>& M);
+	
+		void set_diag(int nels,const Array<int,1>& rows, FLT val, int offset=0);
+		void zero_rows(int nrows,const Array<int,1>& rows);
+		void multiply_row(int row, FLT val);
+		
+		FLT& operator()(int row, int col);
+		void check_for_unused_entries();
+		friend ostream &operator<<(ostream &stream, sparse_row_major mat);
+};
 #endif
 
