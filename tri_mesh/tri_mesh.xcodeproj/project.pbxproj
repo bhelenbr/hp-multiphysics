@@ -99,7 +99,6 @@
 		6FB38FFF11472D7C009EF199 /* boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F528820602B1545D012A8EDA /* boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB3900011472D7C009EF199 /* tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = 6FCD4658071240D80003FAD1 /* tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB3900111472D7C009EF199 /* r_tri_mesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94D00974D3D80990B20 /* r_tri_mesh.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		6FB3900211472D7C009EF199 /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB3900311472D7C009EF199 /* block.h in Headers */ = {isa = PBXBuildFile; fileRef = F5C9C262032CCEAF01990B69 /* block.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB3900411472D7C009EF199 /* blocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 07F2E94E00974D3D80990B20 /* blocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FB3900611472D7C009EF199 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 07F2E94600974D3D80990B20 /* input.cpp */; };
@@ -194,6 +193,7 @@
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
+		E614A64812088C0F009DFFD0 /* r_tri_boundary.h in Headers */ = {isa = PBXBuildFile; fileRef = F51A5D6802B541FB012A8EDA /* r_tri_boundary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -453,9 +453,9 @@
 				6FB38FFF11472D7C009EF199 /* boundary.h in Headers */,
 				6FB3900011472D7C009EF199 /* tri_boundary.h in Headers */,
 				6FB3900111472D7C009EF199 /* r_tri_mesh.h in Headers */,
-				6FB3900211472D7C009EF199 /* r_tri_boundary.h in Headers */,
 				6FB3900311472D7C009EF199 /* block.h in Headers */,
 				6FB3900411472D7C009EF199 /* blocks.h in Headers */,
+				E614A64812088C0F009DFFD0 /* r_tri_boundary.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -865,6 +865,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
 					MY_SPARSE,
 					petsc,
 					"${inherited}",
@@ -878,6 +879,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
 					MY_SPARSE,
 					petsc,
 					"${inherited}",
@@ -969,6 +971,7 @@
 		6FD540670863870800D6A762 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;

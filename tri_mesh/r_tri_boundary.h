@@ -9,6 +9,7 @@
 
 #include "tri_mesh.h"
 
+#ifndef petsc
 class r_side_bdry {
 	protected:
 		std::string mytype;
@@ -32,8 +33,6 @@ class r_side_bdry {
 		virtual void jacobian_dirichlet() {}
 };
 
-
-#ifndef petsc
 class r_fixed : public r_side_bdry {
 	public:
 		int dstart, dstop;
@@ -109,14 +108,36 @@ class r_fixed_angled : public r_side_bdry {
 
 #include <../tri_hp/tri_hp.h>
 
+class r_side_bdry {
+protected:
+	std::string mytype;
+	tri_hp& x;
+	edge_bdry &base;
+	
+public:
+	r_side_bdry(r_tri_mesh &xin, edge_bdry &bin) : x(dynamic_cast<tri_hp &>(xin)), base(bin) {mytype="plain";}
+	r_side_bdry(const r_side_bdry &inbdry, r_tri_mesh &xin, edge_bdry &bin) : x(dynamic_cast<tri_hp &>(xin)), base(bin) {mytype="plain";}
+	virtual r_side_bdry* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
+	/* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
+	virtual void output(std::ostream& fout) {
+		fout << base.idprefix << "_r_type: " << mytype << std::endl;
+	}
+	virtual void input(input_map& bdrydata) {}
+	virtual void tadvance() {}
+	virtual void dirichlet() {}
+	virtual void fixdx2() {}
+	virtual ~r_side_bdry() {}
+	virtual void jacobian() {}
+	virtual void jacobian_dirichlet() {}
+};
+
 class r_fixed : public r_side_bdry {
 	protected:
 		int dstart, dstop;
-		tri_hp& x;
 	
 	public:
-		r_fixed(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1), x(dynamic_cast<tri_hp &>(xin)) {mytype = "fixed";}
-		r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop), x(dynamic_cast<tri_hp &>(xin)) {mytype = "fixed";}
+		r_fixed(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";}
+		r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
 		r_fixed* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed(*this,xin,bin);}
 
 		void input(input_map& inmap) {
@@ -164,9 +185,11 @@ class r_fixed : public r_side_bdry {
 			for (int n=dstart;n<=dstop;++n)
 				points(cnt++) = gindx++;			
 
+			points += x.jacobian_start;
 #ifdef MY_SPARSE
-			x.my_zero_rows(cnt,points);
-			x.my_set_diag(cnt,points,1.0);
+			x.J.zero_rows(cnt,points);
+			x.J_mpi.zero_rows(cnt,points);
+			x.J.set_diag(cnt,points,1.0);
 #else
 			MatZeroRows(x.petsc_J,cnt,points.data(),1.0);
 #endif
@@ -219,10 +242,10 @@ class r_fixed_angled : public r_fixed {
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV;
+				int row = x.seg(sind).pnt(1)*stride +x.NV+x.jacobian_start;
 
-				int nnz1 = x.sparse_cpt(row+1) -x.sparse_cpt(row);
-				int nnz2 = x.sparse_cpt(row+2) -x.sparse_cpt(row+1);
+				int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
+				int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
 				Array<int,1> cols(nnz1);
 				Array<FLT,2> vals(2,nnz1);
 				
@@ -231,30 +254,30 @@ class r_fixed_angled : public r_fixed {
 					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
-				int row1 = x.sparse_cpt(row);
-				int row2 = x.sparse_cpt(row+1);
+				int row1 = x.J._cpt(row);
+				int row2 = x.J._cpt(row+1);
 				for(int col=0;col<nnz1;++col) {
-					if (x.sparse_col(row1++) != x.sparse_col(row2++)) {
+					if (x.J._col(row1++) != x.J._col(row2++)) {
 						*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}	
 				}
 
-				vals(0,Range(0,nnz1-1)) = -x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1))*sin(theta);
-				vals(0,Range(0,nnz1-1)) += x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1))*cos(theta);
+				vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*sin(theta);
+				vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*cos(theta);
 								
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
 				/* Normal Equation */
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
-					if (x.sparse_col(row1+col) == row) {
+					if (x.J._col(row1+col) == row) {
 						vals(1,col) = cos(theta);
 						break;
 					}
 				}
 				for(int col=0;col<nnz1;++col) {
-					if (x.sparse_col(row1+col) == row+1) {
+					if (x.J._col(row1+col) == row+1) {
 						vals(1,col) = sin(theta);
 						break;
 					}
@@ -267,8 +290,8 @@ class r_fixed_angled : public r_fixed {
 				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
 				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
 			
-				x.sparse_val(Range(x.sparse_cpt(row),x.sparse_cpt(row+1)-1)) = temp(0,Range::all());
-				x.sparse_val(Range(x.sparse_cpt(row+1),x.sparse_cpt(row+2)-1)) = temp(1,Range::all());
+				x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
+				x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());
 			}
 	#else
 			const PetscInt *cols1, *cols2;
@@ -277,7 +300,7 @@ class r_fixed_angled : public r_fixed {
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV;
+				int row = x.seg(sind).pnt(1)*stride +x.NV +x.jacobian_start;
 				int nnz1, nnz2;
 				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
