@@ -185,7 +185,6 @@ class r_fixed : public r_side_bdry {
 			for (int n=dstart;n<=dstop;++n)
 				points(cnt++) = gindx++;			
 
-			points += x.jacobian_start;
 #ifdef MY_SPARSE
 			x.J.zero_rows(cnt,points);
 			x.J_mpi.zero_rows(cnt,points);
@@ -242,7 +241,7 @@ class r_fixed_angled : public r_fixed {
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV+x.jacobian_start;
+				int row = x.seg(sind).pnt(1)*stride +x.NV;
 
 				int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
 				int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
@@ -300,7 +299,7 @@ class r_fixed_angled : public r_fixed {
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV +x.jacobian_start;
+				int row = x.seg(sind).pnt(1)*stride +x.NV;
 				int nnz1, nnz2;
 				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
 				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
