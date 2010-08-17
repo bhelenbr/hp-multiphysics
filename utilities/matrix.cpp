@@ -550,7 +550,7 @@ void sparse_row_major::check_for_unused_entries() {
 				std::cerr << "unused entry for row " << i << " allocated " << _cpt(i+1) -_cpt(i) << std::endl;
 				Array<int,1> used(_col(Range(_cpt(i),j-1)));
 				std::cerr << "used " << used << " unused " << _col(j) << std::endl;
-				break;
+				assert(0);
 			}
 		}
 	}
@@ -571,6 +571,13 @@ ostream &operator<<(ostream &stream, sparse_row_major ob) {
 void sparse_row_major::multiply_row(int row, FLT val) {
 	for (int j=_cpt(row);j<_cpt(row+1);++j)
 		_val(j) *= val;
+	return;
+}
+
+void sparse_row_major::output_row(ostream &stream,int row) {
+	for (int j=_cpt(row);j<_cpt(row+1);++j)
+		stream << '(' << _col(j) << ',' << _val(j) << ") ";
+	stream << std::endl;
 	return;
 }
 

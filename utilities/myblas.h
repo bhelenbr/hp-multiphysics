@@ -130,6 +130,8 @@ class sparse_row_major {
 		FLT& operator()(int row, int col);
 		void check_for_unused_entries();
 		friend ostream &operator<<(ostream &stream, sparse_row_major mat);
+		void output_row(ostream &stream,int row);
+
 };
 #endif
 
