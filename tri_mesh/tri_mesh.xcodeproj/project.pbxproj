@@ -805,7 +805,10 @@
 		6F2262C208672FD1001017D0 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PREPROCESSOR_DEFINITIONS = "${inherited}";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
+					"${inherited}",
+				);
 				PRODUCT_NAME = tri_mesh;
 				SKIP_INSTALL = NO;
 			};

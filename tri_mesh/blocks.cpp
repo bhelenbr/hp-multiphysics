@@ -30,6 +30,10 @@ using namespace blitz;
 #include <capri.h>
 #endif
 
+#ifdef petsc
+#include <petsc.h>
+#endif
+
 blocks sim::blks;
 
 #ifdef PTH
@@ -38,14 +42,14 @@ struct gostruct {
 	input_map input;
 };
 
-void* thread_go(void* ptr) {
+static void* thread_go(void* ptr) {
 	gostruct *p = static_cast<gostruct *>(ptr);
 	p->blk->go(p->input);
 	return 0;
 }
 #endif
 
-void my_new_handler()
+static void my_new_handler()
 {
 	std::cerr << "Out of memory" << endl;
 	std::cerr.flush();
@@ -257,7 +261,15 @@ void sim::finalize(int line,const char *file, std::ostream *log) {
 #ifdef BOOST
 	throw boost::thread_interrupted();
 #endif
-	/* main will call MPI_Finalize */
+#ifdef PTH
+	pth_kill();
+#endif
+#ifdef petsc
+	PetscFinalize();
+#endif
+#ifdef MPISRC
+	MPI_Finalize();
+#endif
 }
 
 /* This routine forces everyone to die */
