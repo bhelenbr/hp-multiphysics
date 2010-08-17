@@ -244,6 +244,7 @@ class tri_hp : public r_tri_mesh  {
 		/* Sparse stuff */
 		void petsc_jacobian();
 		void test_jacobian();
+		void enforce_continuity(vsi& ug, Array<TinyVector<FLT,ND>,1>& pnts);
 		void petsc_rsdl();
 		void petsc_update();
 		void petsc_setup_preconditioner();

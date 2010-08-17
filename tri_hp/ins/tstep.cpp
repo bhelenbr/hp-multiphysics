@@ -14,7 +14,7 @@ void tri_hp_ins::setup_preconditioner() {
 		TinyVector<int,3> v;
 
 		FLT nu = gbl->mu/gbl->rho;
-
+		
 		/***************************************/
 		/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 		/***************************************/
@@ -55,7 +55,7 @@ void tri_hp_ins::setup_preconditioner() {
 				int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 				for(i=0;i<lgpx;++i) {
 					for(j=0;j<lgpn;++j) {
-						
+					
 						mvel(0) = gbl->bd(0)*(crd(0)(i,j) -dxdt(log2p,tind,0)(i,j));
 						mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));
 #ifdef DROP
@@ -151,7 +151,8 @@ void tri_hp_ins::setup_preconditioner() {
 			}
 
 			if  (std::isnan(qmax)) { 
-				*gbl->log << "flow solution has nan's" << std::endl;
+				*gbl->log << gbl->idprefix << ' ' << tind << std::endl;
+				*gbl->log << "flow solution has nan's " << qmax << std::endl;
 				output("nan",tecplot);
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}

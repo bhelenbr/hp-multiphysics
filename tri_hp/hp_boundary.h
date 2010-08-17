@@ -152,6 +152,8 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void jacobian() {}
 #ifdef petsc
+		virtual void petsc_matchjacobian_snd();
+		virtual void petsc_matchjacobian_rcv(int phase);
 		virtual void petsc_jacobian();
 		virtual void petsc_jacobian_dirichlet() {} 
 		virtual int petsc_rsdl(Array<FLT,1> res) {return(0);}

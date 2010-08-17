@@ -11,8 +11,13 @@
 #endif
 
 void tri_hp::rsdl(int stage) {    
+
 	/* ONLY NEED TO CALL FOR MOVEMENT BETWEEN MESHES INHERIT FROM THIS FOR SPECIFIC PHYSICS */
+#ifndef petsc
 	if (mmovement == coupled_deformable && stage == gbl->nstage && log2p == 0) r_tri_mesh::rsdl(); 
+#else
+	if (mmovement == coupled_deformable) r_tri_mesh::rsdl(); 
+#endif
 
 
 	FLT oneminusbeta = 1.0-gbl->beta(stage);

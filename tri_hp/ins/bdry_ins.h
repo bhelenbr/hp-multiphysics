@@ -577,6 +577,13 @@ namespace bdry_ins {
 			void tadvance();
 			void rsdl(int stage);
 			void update(int stage);
+#ifdef petsc
+			void petsc_matchjacobian_snd();
+			void petsc_matchjacobian_rcv(int phase);
+			int petsc_rsdl(Array<FLT,1> res);
+			void petsc_jacobian();
+			void non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+#endif
 
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
@@ -795,6 +802,7 @@ namespace bdry_ins {
 						rows(n) = (x.NV+tri_mesh::ND)*base.pnt +x.NV +n; 
 #ifdef MY_SPARSE
 					x.J.zero_rows(tri_mesh::ND,rows);
+					x.J_mpi.zero_rows(tri_mesh::ND,rows);
 					x.J.set_diag(tri_mesh::ND,rows,1.0);
 #else				
 					MatZeroRows(x.petsc_J,tri_mesh::ND,rows.data(),1.0);

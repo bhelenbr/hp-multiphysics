@@ -485,7 +485,7 @@ namespace ibc_ins {
 			}
     };
 
-    FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
+    static FLT xmax(TinyVector<FLT,2> &pt) {return(pt(0));}
 
     class translating_drop : public parameter_changer {
 			private:

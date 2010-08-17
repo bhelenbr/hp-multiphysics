@@ -179,7 +179,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	J_mpi.reset_columns();  // Fix me: stupid petsc!!!
 	petsc_jacobian();
 	J.check_for_unused_entries();
-	J_mpi.check_for_unused_entries();
+	J_mpi.check_for_unused_entries();	
 
 #ifndef MPISRC
 	err = MatCreateSeqAIJWithArrays(PETSC_COMM_SELF,jacobian_size,jacobian_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
@@ -229,6 +229,7 @@ void tri_hp::petsc_setup_preconditioner() {
 
 #ifdef DEBUG_JAC
 	test_jacobian();
+	sim::finalize(__LINE__,__FILE__,gbl->log);
 #endif
 
 	PetscGetTime(&time1);	 
@@ -261,13 +262,16 @@ void tri_hp::petsc_update() {
 	VecAssemblyBegin(petsc_f);
 	VecAssemblyEnd(petsc_f);
 	
+	double resmax;
+	VecNorm(petsc_f, NORM_INFINITY, &resmax );
+	
 	PetscGetTime(&time1);
 	err = KSPSolve(ksp,petsc_f,du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	KSPGetIterationNumber(ksp,&its);
 	PetscGetTime(&time2);
-	*gbl->log << "# iterations " << its << " solve time: " << time2-time1 << " seconds" << endl;
+	*gbl->log << "# iterations " << its << " residual0 " << resmax << " solve time: " << time2-time1 << " seconds" << endl;
 	
 	helper->update(-1);
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
@@ -409,7 +413,7 @@ void tri_hp::petsc_make_1D_rsdl_vector(Array<FLT,1> rv) {
 			for(int n=0;n<NV;++n)
 				rv(ind++) = gbl->res.v(i,n);
 			for(int n=0;n<ND;++n)
-				rv(ind++) = dynamic_cast<r_tri_mesh::global *>(gbl)->res(i)(n);
+				rv(ind++) = r_tri_mesh::gbl->res(i)(n);
 		}
 	}
 	

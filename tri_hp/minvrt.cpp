@@ -298,10 +298,16 @@ void tri_hp::restouht_bdry(int tind) {
 void tri_hp::setup_preconditioner() {
 	int i,last_phase,mp_phase;
 
+#ifndef petsc
 	/* SET UP TSTEP FOR MESH MOVEMENT */
 	if (mmovement == coupled_deformable && log2p == 0) {
 		r_tri_mesh::setup_preconditioner();    
 	}
+#else
+	if (mmovement == coupled_deformable) {
+		r_tri_mesh::setup_preconditioner();    
+	}
+#endif
 
 	/* SET UP TSTEP FOR ACTIVE BOUNDARIES */
 	for(i=0;i<nebd;++i)
