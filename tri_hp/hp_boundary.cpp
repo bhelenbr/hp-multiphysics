@@ -829,6 +829,7 @@ void hp_edge_bdry::rsdl(int stage) {
 	}
 }
 
+#ifdef petsc
 void hp_edge_bdry::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
@@ -894,7 +895,7 @@ void hp_edge_bdry::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 		}
 	}
 }
-
+#endif
 
 
 void hp_edge_bdry::element_jacobian(int indx, Array<FLT,2>& K) {

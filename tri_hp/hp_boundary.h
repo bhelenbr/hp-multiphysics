@@ -149,9 +149,9 @@ class hp_edge_bdry : public egeometry_interface<2> {
 				return(tri_mesh::ND*x.sm0*base.nseg);
 			return 0;
 		}
-		virtual void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void jacobian() {}
 #ifdef petsc
+		virtual void non_sparse(Array<int,1> &nnzero,Array<int,1> &nnzero_mpi);
 		virtual void petsc_matchjacobian_snd();
 		virtual void petsc_matchjacobian_rcv(int phase);
 		virtual void petsc_jacobian();
