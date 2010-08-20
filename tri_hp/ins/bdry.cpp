@@ -515,11 +515,8 @@ void hybrid_pt::update(int stage) {
 		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
 	}
 	if (fix_norm) {
-		// '-2.0' required specifically for the hybrid example */
-		if (base.fsndbuf(4) == 2.0)
-			x.pnts(base.pnt)(0) = base.fsndbuf(4) - 2.0;
-		else 
-			x.pnts(base.pnt)(0) = base.fsndbuf(4);
+		x.pnts(base.pnt)(0) = base.fsndbuf(4);
 		x.pnts(base.pnt)(1) = base.fsndbuf(5);
+		mvpttobdry(x.pnts(base.pnt));
 	}
 }

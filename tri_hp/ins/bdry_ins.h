@@ -947,6 +947,7 @@ namespace bdry_ins {
 	};
 
 	class hybrid_pt : public surface_outflow {
+		
 		public:
 			hybrid_pt(tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow(xin,bin) {mytype = "hybrid_pt"; contact_type = prdc;}
 			hybrid_pt(const hybrid_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : surface_outflow(inbdry,xin,bin) {}
@@ -963,6 +964,18 @@ namespace bdry_ins {
 
 			void rsdl(int stage); 			
 			void update(int stage);
+			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
+				switch(wall_type) {
+					case(vertical):
+						pt(0) = position;
+						break;
+					case(horizontal):
+						pt(1) = position;
+						break;
+					case(angled):
+						break;
+				}
+			}
 	};
 
 }

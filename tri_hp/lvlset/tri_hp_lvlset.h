@@ -18,11 +18,9 @@
 #define NONCONSERVATIVE
 // #define LOCALIZED_WITH_DISTANCE_FUNCTION
 
-// to reinitialize phi or not
-//#define REINIT
-
 class tri_hp_lvlset : public tri_hp_ins {
 	public:
+		bool reinit_flag;
 		struct global : public tri_hp_ins::global {
 			/* PHYSICAL CONSTANTS */
 			FLT sigma, width;
@@ -31,21 +29,20 @@ class tri_hp_lvlset : public tri_hp_ins {
 		} *gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
-#ifdef REINIT
 	public:
 		// functions to reinitialize phi
 		void tadvance() { 
-	                if (!coarse_level && gbl->substep == 0)
+			if (!coarse_level && gbl->substep == 0 && reinit_flag)
 				reinitialize();
 			tri_hp_ins::tadvance();
 		}
 	private:
 		void reinitialize();
 		void reinit();
+		void reinit_minvrt();
 		void rsdl_reinit(int stage);
 		void setup_preconditioner_reinit();
 		void element_rsdl_reinit(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
-#endif
 	public:
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);

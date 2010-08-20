@@ -112,21 +112,55 @@ namespace bdry_lvlset {
 	class hybrid_pt : public hp_vrtx_bdry {
 		protected:
 			tri_hp_lvlset &x;
+			FLT position;
+			enum {vertical, horizontal, angled} wall_type;
 
 		public:
 			hybrid_pt(tri_hp_lvlset &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "hybrid_pt";}
-			hybrid_pt(const hybrid_pt& inbdry, tri_hp_lvlset &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+			hybrid_pt(const hybrid_pt& inbdry, tri_hp_lvlset &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin), position(inbdry.position), wall_type(inbdry.wall_type) {}			
 			hybrid_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new hybrid_pt(*this,dynamic_cast<tri_hp_lvlset&>(xin),bin);}
 
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride); 
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride);
-
+			
+			void init(input_map& inmap,void* gbl_in) {                
+				hp_vrtx_bdry::init(inmap,gbl_in);
+				std::string input;
+				if (inmap.get(base.idprefix + "_wall_type",input)) {
+					if (input == "vertical") {
+						wall_type = vertical;
+						position = x.pnts(base.pnt)(0);
+					}
+					else if (input == "horizontal") {
+						wall_type = horizontal;
+						position = x.pnts(base.pnt)(1);
+					}
+					else if (input == "angled")
+						wall_type = angled;
+					else {
+						*x.gbl->log << "Unrecognized wall type" << std::endl;
+					}
+				}
+			}
+			
 			void vdirichlet2d() {
 				x.gbl->res.v(base.pnt,Range(0,x.ND-1)) = 0.0;
 				x.gbl->res.v(base.pnt,x.NV-1) = 0.0;  // Needs to be fixed
 			}
 
 			void update(int stage);
+			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {
+				switch(wall_type) {
+					case(vertical):
+						pt(0) = position;
+						break;
+					case(horizontal):
+						pt(1) = position;
+						break;
+					case(angled):
+						break;
+				}
+			}
 	};
 
 

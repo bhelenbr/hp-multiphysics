@@ -4,8 +4,6 @@
 #include <math.h>
 #include <blitz/tinyvec-et.h>
 
-#ifdef REINIT
-
 #define DEBUG_TOL 1.0e-9
 //#define RSDL_DEBUG
 void tri_hp_lvlset::reinitialize() {
@@ -74,7 +72,12 @@ void tri_hp_lvlset::reinit() {
 			}
 		}
 		*/
-		minvrt();
+		
+		/* SET RESDIUALS TO ZERO ON INCOMING CHARACTERISTIC BOUNDARIES */
+		reinit_minvrt();
+		
+		
+		
 //		std::cout<<"::reinit () did minvrt()"<<std::endl;
 // TO DEBUG: copy and paste from /tri_hp/nstage/ void tri_hp::update  #ifdef DEBUG
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
@@ -100,6 +103,13 @@ void tri_hp_lvlset::reinit() {
 				}
 			}
 		}
+		
+		
+		/* Update incoming phi values here */
+		/* Hybrid update b.c. with phi normal */
+		
+		
+		
 	}
 	/*
 	static int display = 0;
@@ -403,4 +413,193 @@ void tri_hp_lvlset::setup_preconditioner_reinit() {
 
 	return;
 }
-#endif
+
+void tri_hp_lvlset::reinit_minvrt() {
+	int i,j,k,m,tind,sind,v0,indx,indx1,indx2,sgn,msgn;
+	TinyVector<int,3> sign,side;
+	Array<FLT,2> tinv(NV,NV);
+	Array<FLT,1> temp(NV);
+	int last_phase, mp_phase;
+	
+	/* LOOP THROUGH SIDES */
+	if (basis::tri(log2p)->sm() > 0) {
+		indx = 0;
+		for(sind = 0; sind<nseg;++sind) {
+			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */            
+			for (k=0; k <basis::tri(log2p)->sm(); ++k) {
+				for (i=0; i<2; ++i) {
+					v0 = seg(sind).pnt(i);
+					
+						gbl->res.v(v0,2) -= basis::tri(log2p)->sfmv(i,k)*gbl->res.s(sind,k,2);
+				}
+				++indx;
+			}
+		}
+		
+		if (basis::tri(log2p)->im() > 0) {
+			/* SUBTRACT INTERIORS */
+			indx = 0;
+			for(tind = 0; tind<ntri;++tind) {
+				indx2 = 3;
+				for (i=0; i<3; ++i) {
+					v0 = tri(tind).pnt(i);
+					for (k=0;k<basis::tri(log2p)->im();++k)
+						
+							gbl->res.v(v0,2) -= basis::tri(log2p)->ifmb(i,k)*gbl->res.i(tind,k,2);
+					
+					sind = tri(tind).seg(i);
+					sgn = tri(tind).sgn(i);
+					msgn = 1;
+					for (j=0;j<basis::tri(log2p)->sm();++j) {
+						for (k=0;k<basis::tri(log2p)->im();++k)
+							
+								gbl->res.s(sind,j,2) -= msgn*basis::tri(log2p)->ifmb(indx2,k)*gbl->res.i(tind,k,2);
+						msgn *= sgn;
+						++indx2;
+					}
+				}
+				indx += basis::tri(log2p)->im();
+			}
+		}
+	}
+	
+	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+	
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		vc0load(mp_phase,gbl->res.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
+	}
+	
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(i=0;i<nebd;++i) {
+	 for (int j=0;j<ebdry(i)->nseg;++j) {
+		 /* SET VERTEX RESIDUALS TO ZERO IF INCOMING */
+		 if (1)
+			 gbl->res.v(seg(ebdry(i)->seg(j)).pnt(0),2) = 0.0;
+		 
+		}
+	}
+		
+	
+	if(basis::tri(log2p)->sm() == 0) return;
+	
+	
+	/* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
+	/* SOLVE FOR SIDE MODES */
+	/* PART 1 REMOVE VERTEX CONTRIBUTIONS */
+	for(tind=0;tind<ntri;++tind) {
+		for(i=0;i<3;++i) {
+			v0 = tri(tind).pnt(i);
+			
+				uht(2)(i) = gbl->res.v(v0,2)*gbl->tprcn(tind,2);
+		}
+		
+		for(i=0;i<3;++i) {
+			sind = tri(tind).seg(i);
+			sgn  = tri(tind).sgn(i);
+			for(j=0;j<3;++j) {
+				indx1 = (i+j)%3;
+				msgn = 1;
+				for(k=0;k<basis::tri(log2p)->sm();++k) {
+					
+						gbl->res.s(sind,k,2) -= msgn*basis::tri(log2p)->vfms(j,k)*uht(2)(indx1);
+					msgn *= sgn;
+				}
+			}
+		}
+	}
+	
+	
+	for (int mode = 0; mode < basis::tri(log2p)->sm()-1; ++ mode) {
+		/* SOLVE FOR SIDE MODE */
+		gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all())*basis::tri(log2p)->sdiag(mode);
+		
+		sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+		smsgpass(boundary::all,0,boundary::symmetric);
+		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+		
+		
+		/* APPLY DIRCHLET B.C.S TO MODE */
+		for(i=0;i<nebd;++i) {
+			for (int j=0;j<ebdry(i)->nseg;++j) {
+				/* SET SIDE RESIDUALS TO ZERO IF INCOMING */
+				if (1)
+					gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
+				
+			}
+		}
+		
+		
+		for(i=0;i<nebd;++i) {
+			for (int j=0;j<ebdry(i)->nseg;++j) {
+				/* DO STUFF */
+			}
+		}
+		
+		
+		/* REMOVE MODE FROM HIGHER MODES */
+		for(tind=0;tind<ntri;++tind) {
+			for(i=0;i<3;++i) {
+				side(i) = tri(tind).seg(i);
+				sign(i) = tri(tind).sgn(i);
+				sgn      = (mode % 2 ? sign(i) : 1);
+				
+					uht(2)(i) = sgn*gbl->res.s(side(i),mode,2)*gbl->tprcn(tind,2);
+			}
+			
+			/* REMOVE MODES J,K FROM MODE I,M */
+			for(i=0;i<3;++i) {
+				msgn = ( (mode +1) % 2 ? sign(i) : 1);
+				for(m=mode+1;m<basis::tri(log2p)->sm();++m) {
+					for(j=0;j<3;++j) {
+						indx = (i+j)%3;
+						 {
+							gbl->res.s(side(i),m,2) -= msgn*basis::tri(log2p)->sfms(mode,m,j)*uht(2)(indx);
+						}
+					}
+					msgn *= sign(i);
+				}
+			}
+		}
+	}
+	/* SOLVE FOR HIGHEST MODE */
+	int mode = basis::tri(log2p)->sm()-1;
+	gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all())*basis::tri(log2p)->sdiag(mode);
+
+	
+	sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+	smsgpass(boundary::all,0,boundary::symmetric);
+	sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
+	
+	/* APPLY DIRCHLET B.C.S TO MODE IDENTICAL TO ABOVE */
+	for(i=0;i<nebd;++i) {
+		for (int j=0;j<ebdry(i)->nseg;++j) {
+			/* SET SIDE RESIDUALS TO ZERO IF INCOMING */
+			if (1)
+				gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
+			
+		}
+	}
+	
+	
+	if (basis::tri(log2p)->im() == 0) return;
+	
+	/* SOLVE FOR INTERIOR MODES */
+	for(tind = 0; tind < ntri; ++tind) {
+		DPBTRSNU2((double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),&(gbl->res.i(tind,0,0)),NV);
+		restouht_bdry(tind);
+		for(k=0;k<basis::tri(log2p)->im();++k) {
+			gbl->res.i(tind,k,Range::all()) /= gbl->tprcn(tind,Range::all());
+			
+			for (i=0;i<basis::tri(log2p)->bm();++i)
+				 
+					gbl->res.i(tind,k,2) -= basis::tri(log2p)->bfmi(i,k)*uht(2)(i);
+		}
+	}
+	
+	return;
+}
+

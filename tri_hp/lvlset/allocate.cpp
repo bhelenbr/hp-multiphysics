@@ -15,6 +15,7 @@ void tri_hp_lvlset::init(input_map& input, void *gin) {
 	input[gbl->idprefix + "_nvariable"] = "4";
 	tri_hp_ins::init(input,gin);
 
+	input.getwdefault(gbl->idprefix + "_reinit",reinit_flag,false);
 	input.getwdefault(gbl->idprefix + "_rho2",gbl->rho2,1.0);
 	input.getwdefault(gbl->idprefix + "_mu2",gbl->mu2,0.0);
 	input.getwdefault(gbl->idprefix + "_sigma",gbl->sigma,0.0);
@@ -26,6 +27,7 @@ void tri_hp_lvlset::init(input_map& input, void *gin) {
 void tri_hp_lvlset::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {
 	const tri_hp_lvlset& inmesh = dynamic_cast<const tri_hp_lvlset &>(in);
 	gbl = inmesh.gbl;
+	reinit_flag = inmesh.reinit_flag;
 	tri_hp_ins::init(in,why,sizereduce1d);
 	return;
 }

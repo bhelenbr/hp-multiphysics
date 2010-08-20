@@ -467,15 +467,15 @@ void hybrid::update(int stage) {
 	bool flag(false);
 	
 	if (stage == -1 || x.coarse_flag) return;
-	if (base.vbdry(0) > -0.5 && base.vbdry(1) > -0.5)
-		std::cout<<"There is a problem.  lvlset/bdry.cpp"<<std::endl;
-	else if (base.vbdry(0) > -0.5){
+
+	/* COMPARE MAGNITUDE OF PHI AT ENDPOINTS */
+	if (base.vbdry(0) > -1){
 		sind = base.seg(0);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(0);
 		flag = true;
 	}
-	else if (base.vbdry(1) > -0.5){
+	else if (base.vbdry(1) > -1){
 		sind = base.seg(base.nseg-1);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(1);
