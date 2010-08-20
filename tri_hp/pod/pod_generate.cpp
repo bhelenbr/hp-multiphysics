@@ -16,7 +16,7 @@
 // #include <veclib/clapack.h>
 
 extern "C" {
-	double dlamch_(char *cmach);
+	double dlamch_(const char *cmach);
 	/* Subroutine */ int dspevx_(char *jobz, char *range, char *uplo, int *n, 
 							 double *ap, double *vl, double *vu, int *il, int *
 							 iu, double *abstol, int *m, double *w, double *z__, 
