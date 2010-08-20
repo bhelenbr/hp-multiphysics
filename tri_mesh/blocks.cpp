@@ -1193,7 +1193,7 @@ void block::tadvance() {
 		gbl->time += gbl->cdirk(gbl->substep)/gbl->dti;
 		if (gbl->esdirk) {
 			/* ALLOWS CHANGES OF TIME STEP BETWEEN RESTARTS */
-			gbl->   adirk(0,0) *= gbl->dti_prev/gbl->dti;
+			gbl->adirk(0,0) *= gbl->dti_prev/gbl->dti;
 		}
 		gbl->dti_prev = gbl->dti;
 	}
