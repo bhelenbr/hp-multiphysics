@@ -54,3 +54,6 @@ libtri_basis.a: $(OBJ)
 	cp -f tri_basis.h $(HOME)/Codes/include/
 
 $(OBJ): tri_basis.h
+
+clean:
+	rm -f *.o *~

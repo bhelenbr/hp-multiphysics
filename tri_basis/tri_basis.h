@@ -33,7 +33,7 @@ class tri_basis_interface {
 		tri_basis_interface() {}
 		virtual ~tri_basis_interface() {}
 		
-		/* NUMBER OF MODES : VERTEX,SIDE/INTERIOR/TOTAL/BOUNDARY */
+		/* NUMBER OF MODES : VERTEX/SIDE/INTERIOR/TOTAL/BOUNDARY */
 		virtual int p() = 0;
 		virtual int sm() = 0;
 		virtual int im() = 0;
@@ -70,7 +70,7 @@ class tri_basis_interface {
 		/* ETA FUNCTIONS & DERIVATIVES */
 		virtual FLT gn(int,int) = 0;
 		virtual FLT dgn(int,int) = 0;
-		/* GAUSS WEIGTS & LOCATIONS */
+		/* GAUSS WEIGHTS & LOCATIONS */
 		virtual FLT wtn(int) = 0; 
 		virtual FLT np(int) = 0;
 		virtual FLT n0(int) = 0;
@@ -192,6 +192,7 @@ class tri_basis_interface {
 		/* POINT PROBE IN STANDARD ELEMENT FOR VECTOR */
 		virtual void ptprobe(int nv, FLT *f,const FLT *lin, int stride) const = 0;	// REUSES OLD R,S
 		virtual void ptprobe(int nv, FLT *f, FLT r, FLT s,const FLT *lin, int stride) const  = 0;
+		virtual void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, const FLT *lin1, int stride) const = 0;
 
 		/* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
 		virtual void ptprobe_bdry(int nv, FLT *f, const FLT *lin, int stride) const = 0; // REUSES OLD R,S ONLY BDRY MODES 
@@ -436,8 +437,8 @@ template<int _p,int ep> class tri_basis : public tri_basis_interface {
 			ptprobe(nv, f, lin, stride);
 		}
 		void ptprobe(int nv, FLT *f,const FLT *lin, int stride) const;	// REUSES OLD R,S
-	  void ptprobe(int nv, FLT *f, FLT *dx, FLT *dy, FLT r, FLT s, const FLT *lin, int stride) const; // CALC'S DERIVATIVES
-
+		void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT r, FLT s, const FLT *lin1, int stride) const;
+		
 		/* POINT PROBE FUNCTIONS USING BOUNDARY MODES ONLY */
 		void ptprobe_bdry(int nv, FLT *f, FLT r, FLT s, const FLT *lin, int stride) const {
 			ptvalues(2.0*(1+r)/(1-s+10.*EPSILON) -1.0,s);
