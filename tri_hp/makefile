@@ -18,7 +18,7 @@ tri_hp:
 
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS=-Dpetsc
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS="-Dpetsc -DMY_SPARSE"
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_petsc
@@ -98,7 +98,8 @@ OBJPETSC = petsc.o sparse.o
 
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) $(OBJCNS) $(OBJPS) $(OBJSWIRL) $(OBJBUOY) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
+OBJ +=  $(OBJINS) 
+#$(OBJCD) $(OBJCNS) $(OBJBUOY) $(OBJPS) $(OBJSWIRL) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -g -O3 -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
@@ -113,29 +114,16 @@ CXXMPI = ${CXX}
 #LIB += -framework veclib
 
 ## Linux:
-##  Machine specific for Linux
-#CXX=icpc #(cares)
-#CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-#LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
-#LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-#LDFLAGS += -static-libcxa #(cares)
-#LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
+LIB += -L$(HOME)  -llapack -lblas #(cares)
 CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
-#LIB += -L$(HOME) -llapack -lblas #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
-## IRIX64:
-#CPPFLAGS += -Ofast=IP30  #(sauter)
-#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS += -Ofast=IPrk5 #(origin)
-#LIB += -lcomplib.sgimath
+## To use openmpi
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
 
-## Aix:
-## Machine specific for Jupiter
-#CPPFLAGS += -O3
-#LIB += -lessl \
-/afs/cu/software/Development/lapack-3.0/rs_aix52/LAPACK/lapack_RS6K.a -lxlf -lxlf90
-#DEFINES = -DIBMR2Fortran
+# (ubuntu) should really make symbolic links to liblapack and libatlas
+#LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
 
 ### End machine dependent
 CPPFLAGS += $(DEFINES)
@@ -147,7 +135,7 @@ tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 
 tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_petsc  $(LIB) -lpetscksp -lpetscmat -lpetsccontrib -lpetscdm -lpetscsnes -lpetscts -lpetscvec -lpetsc -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_petsc  $(LIB) -lpetsc -lparmetis -lmetis -ldl
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
