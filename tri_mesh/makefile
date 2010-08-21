@@ -32,7 +32,7 @@ tri_mesh_mpi:
 
 libtri_mesh_petsc.a:
 	+@[ -d  _petsc ] || mkdir -p _petsc
-	+@$(MAKE) -C _petsc -f $(CURDIR)/makefile $@ EXTRAFLAGS='-Dpetsc -DMY_SPARSE'
+	+@$(MAKE) -C _petsc -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -Dpetsc -DMY_SPARSE'
 
 .PHONY: libtri_mesh_petsc.a
 
