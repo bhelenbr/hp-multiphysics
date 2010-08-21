@@ -830,7 +830,58 @@ void hp_edge_bdry::rsdl(int stage) {
 }
 
 #ifdef petsc
-void hp_edge_bdry::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+void hp_vrtx_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+		
+	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	
+	int pind = base.pnt*vdofs;
+	for(int n=0;n<vdofs;++n) {
+		base.isndbuf(base.sndsize()++) = nnzero(pind++);
+	}
+}
+
+
+void hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	for(int m=0;m<base.nmatches();++m) {    								
+		int count = 0;
+		int pind = base.pnt*vdofs;
+		for(int n=0;n<vdofs;++n) {
+			nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+		}
+	}
+}
+
+
+void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
@@ -844,53 +895,63 @@ void hp_edge_bdry::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	int begin_seg = x.npnt*vdofs;
 			
 	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
-	if (base.is_comm()) {
-		/* Send number of non-zeros to matches */
-		base.sndsize() = 0;
-		base.sndtype() = boundary::int_msg;
-		for (int i=0;i<base.nseg;++i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(0)*vdofs;
-			for(int n=0;n<vdofs;++n)
-				base.isndbuf(base.sndsize()++) = nnzero(pind++);
-		}
-		int sind = base.seg(base.nseg-1);
-		int pind = x.seg(sind).pnt(1)*vdofs;
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	for (int i=0;i<base.nseg;++i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<vdofs;++n)
 			base.isndbuf(base.sndsize()++) = nnzero(pind++);
-		
-		/* Last thing to send is nnzero for edges (all the same) */
-		if (sm)
-			base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+	}
+	int sind = base.seg(base.nseg-1);
+	int pind = x.seg(sind).pnt(1)*vdofs;
+	for(int n=0;n<vdofs;++n)
+		base.isndbuf(base.sndsize()++) = nnzero(pind++);
 	
-		/* Fixme: This will block */
-		base.comm_prepare(boundary::all,0,boundary::symmetric);
-		base.comm_exchange(boundary::all,0,boundary::symmetric);
-		base.comm_wait(boundary::all,0,boundary::symmetric);
+	/* Last thing to send is nnzero for edges (all the same) */
+	if (sm)
+		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+}
+
+void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
 		
-		for(int m=0;m<base.nmatches();++m) {    								
-			int count = 0;
-			for (int i=base.nseg-1;i>=0;--i) {
-				int sind = base.seg(i);
-				int pind = x.seg(sind).pnt(1)*vdofs;
-				for(int n=0;n<vdofs;++n) {
-					nnzero_mpi(pind++) += base.ircvbuf(m,count++);
-				}
-			}
-			int sind = base.seg(0);
-			int pind = x.seg(sind).pnt(0)*vdofs;
+	for(int m=0;m<base.nmatches();++m) {    								
+		int count = 0;
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
 			for(int n=0;n<vdofs;++n) {
 				nnzero_mpi(pind++) += base.ircvbuf(m,count++);
 			}
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(int n=0;n<vdofs;++n) {
+			nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+		}
 
-			
-			/* Now add to side degrees of freedom */
-			if (x.sm0) {
-				int toadd = base.ircvbuf(m,count++); 
-				for (int i=0;i<base.nseg;++i) {
-					int sind = base.seg(i);
-					nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
-				}
+		
+		/* Now add to side degrees of freedom */
+		if (x.sm0) {
+			int toadd = base.ircvbuf(m,count++); 
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
 			}
 		}
 	}
@@ -1061,6 +1122,96 @@ void hp_edge_bdry::petsc_jacobian() {
 #endif
 	}
 }
+
+void hp_vrtx_bdry::petsc_matchjacobian_snd() {
+	
+	if (!base.is_comm())
+		return;
+	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+	
+	int row;
+	
+#ifdef MY_SPARSE
+	/* I am cheating here and sending floats and int's together */
+	/* Send Jacobian entries */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::flt_msg;
+	/* First send number of entries for each vertex row */
+	/* then append column numbers & values */
+	row = base.pnt*vdofs; 
+	/* attach diagonal column # to allow continuity enforcement */
+	base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+	for (int n=0;n<vdofs;++n) {
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
+#endif
+		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+			*x.gbl->log << x.J._col(col) << ' ';
+#endif
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+			base.fsndbuf(base.sndsize()++) = x.J._val(col);
+		}
+#ifdef MPDEBUG
+		*x.gbl->log << std::endl;
+#endif
+		++row;
+	}
+}
+
+void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
+	
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+	
+	int row = base.pnt*vdofs;	
+	int count = 0;
+	for (int m=0;m<base.nmatches();++m) {
+		int row_mpi = base.frcvbuf(m,count++);
+		for(int n=0;n<vdofs;++n) {
+			int ncol = base.frcvbuf(m,count++);
+#ifdef MPDEBUG
+			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
+#endif
+			for (int k = 0;k<ncol;++k) {
+				int col = base.frcvbuf(m,count++);
+#ifdef MPDEBUG
+				*x.gbl->log  << col << ' ';
+#endif
+				FLT val = base.frcvbuf(m,count++);
+				x.J_mpi.add_values(row+n,col,val);
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+			/* Shift all entries for this vertex */
+			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
+				FLT dval = x.J_mpi(row+n,row_mpi+n_mpi);
+				x.J_mpi(row+n,row_mpi+n_mpi) = 0.0;				
+				x.J(row+n,row+n_mpi) += dval;
+			}
+		}  
+	}
+	for(int n=0;n<vdofs;++n) {
+		x.J.multiply_row(row+n,0.5);
+		x.J_mpi.multiply_row(row+n,0.5);
+	}
+#else
+	This Part not working
+#endif
+}
+
 
 void hp_edge_bdry::petsc_matchjacobian_snd() {
 

@@ -1751,7 +1751,7 @@ void surface::petsc_jacobian() {
 	x.hp_vbdry(base.vbdry(1))->petsc_jacobian_dirichlet();
 }
 
-void surface_slave::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int im=basis::tri(x.log2p)->im();
 	const int NV = x.NV;
@@ -1768,12 +1768,10 @@ void surface_slave::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
 	if(x.sm0 > 0) {
 		if (base.is_frst()) {
- 			*x.gbl->log << "b0 " << x.gbl->idprefix << ' ' << jacobian_start << std::endl;
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = vdofs*(sm+2);
 		}
 		else {
 			/* Just an equality constraint */
-			*x.gbl->log << "b1 " << x.gbl->idprefix << ' ' << jacobian_start << std::endl;
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 		}
@@ -1815,6 +1813,8 @@ void surface_slave::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 		}
 	}
 	
+	if (!base.is_comm()) return;
+	
 	Array<int,1> c0vars(x.NV+x.ND-1);
 	for(int n=0;n<x.NV-1;++n) {
 		c0vars(n) = n;
@@ -1824,54 +1824,74 @@ void surface_slave::non_sparse(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	}		
 	
 	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
-	if (base.is_comm()) {
-		/* Send number of non-zeros to matches */
-		base.sndsize() = 0;
-		base.sndtype() = boundary::int_msg;
-		for (int i=0;i<base.nseg;++i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(0)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n)
-				base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
-		}
-		int sind = base.seg(base.nseg-1);
-		int pind = x.seg(sind).pnt(1)*vdofs;
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	for (int i=0;i<base.nseg;++i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n)
 			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
+	}
+	int sind = base.seg(base.nseg-1);
+	int pind = x.seg(sind).pnt(1)*vdofs;
+	for(int n=0;n<c0vars.extent(firstDim);++n)
+		base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
+	
+	/* Last thing to send is nnzero for edges (all the same) */
+	if (sm)
+		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
 		
-		/* Last thing to send is nnzero for edges (all the same) */
-		if (sm)
-			base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
-		
-		/* Fixme: This will block */
-		base.comm_prepare(boundary::all,0,boundary::symmetric);
-		base.comm_exchange(boundary::all,0,boundary::symmetric);
-		base.comm_wait(boundary::all,0,boundary::symmetric);
-		
-		int count = 0;
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(1)*vdofs;
-			for(int n=0;n<c0vars.extent(firstDim);++n) {
-				nnzero_mpi(pind+c0vars(n)) += base.ircvbuf(0,count++);
-			}
-		}
-		sind = base.seg(0);
-		pind = x.seg(sind).pnt(0)*vdofs;
+	return;
+}
+
+void surface_slave::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
+	
+	Array<int,1> c0vars(x.NV+x.ND-1);
+	for(int n=0;n<x.NV-1;++n) {
+		c0vars(n) = n;
+	}
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars(n-1) = n;
+	}	
+	
+	int count = 0;
+	for (int i=base.nseg-1;i>=0;--i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(1)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n) {
-			nnzero_mpi(pind +c0vars(n)) += base.ircvbuf(0,count++);
+			nnzero_mpi(pind+c0vars(n)) += base.ircvbuf(0,count++);
 		}
-		
-		
-		/* Now add to side degrees of freedom */
-		if (sm) {
-			int toadd = base.ircvbuf(0,count++); 
-			for (int i=0;i<base.nseg;++i) {
-				int sind = base.seg(i);
-				for (int mode=0;mode<sm;++mode) {
-					for(int n=0;n<x.NV-1;++n) {
-						nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
-					}
+	}
+	int sind = base.seg(0);
+	int pind = x.seg(sind).pnt(0)*vdofs;
+	for(int n=0;n<c0vars.extent(firstDim);++n) {
+		nnzero_mpi(pind +c0vars(n)) += base.ircvbuf(0,count++);
+	}
+	
+	
+	/* Now add to side degrees of freedom */
+	if (sm) {
+		int toadd = base.ircvbuf(0,count++); 
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			for (int mode=0;mode<sm;++mode) {
+				for(int n=0;n<x.NV-1;++n) {
+					nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
 				}
 			}
 		}

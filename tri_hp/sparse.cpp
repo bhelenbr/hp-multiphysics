@@ -115,9 +115,15 @@ void tri_hp::petsc_jacobian() {
 	for(int last_phase = false, phase = 0; !last_phase; ++phase) {
 		for(int i=0;i<nebd;++i) 
 			hp_ebdry(i)->petsc_matchjacobian_snd();
+			
+		for(int i=0;i<nvbd;++i)
+			hp_vbdry(i)->petsc_matchjacobian_snd();
 		
 		for(int i=0;i<nebd;++i)
 			ebdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
+			
+		for(int i=0;i<nvbd;++i)
+			vbdry(i)->comm_prepare(boundary::all_phased,phase,boundary::symmetric);
 			
 		pmsgpass(boundary::all_phased,phase,boundary::symmetric);
 		
@@ -125,9 +131,16 @@ void tri_hp::petsc_jacobian() {
 		for(int i=0;i<nebd;++i) {
 			last_phase &= ebdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
 		}
+		for(int i=0;i<nvbd;++i) {
+			last_phase &= vbdry(i)->comm_wait(boundary::all_phased,phase,boundary::symmetric);
+		}
 
 		for(int i=0;i<nebd;++i) 
 			hp_ebdry(i)->petsc_matchjacobian_rcv(phase);
+
+		for(int i=0;i<nvbd;++i) 
+			hp_vbdry(i)->petsc_matchjacobian_rcv(phase);			
+		
 	}
 		
 	for(int i=0;i<nebd;++i) 

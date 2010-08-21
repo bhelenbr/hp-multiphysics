@@ -445,6 +445,13 @@
 		E6CF700D11D23655001E5DF7 /* bdry_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C3C09818C7100AD7FA3 /* bdry_swirl.h */; };
 		E6CF700E11D23655001E5DF7 /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
 		E6CF700F11D23655001E5DF7 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
+		E6E29F8A121E1BDD0024282B /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F004489091FD33A00A6F21E /* allocate.cpp */; };
+		E6E29F8B121E1BDD0024282B /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF2091AF516002BAA09 /* tstep.cpp */; };
+		E6E29F8C121E1BDE0024282B /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE9091AF516002BAA09 /* rsdl.cpp */; };
+		E6E29F8D121E1BDF0024282B /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADE091AF516002BAA09 /* length.cpp */; };
+		E6E29F8E121E1BE00024282B /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
+		E6E29F8F121E1BE10024282B /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
+		E6E29F90121E1BE20024282B /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1521,6 +1528,13 @@
 				6F61BF1F116E802B000E97C0 /* tstep.cpp in Sources */,
 				6F61BF20116E802C000E97C0 /* rsdl.cpp in Sources */,
 				6FFFB67711777A9300EFEB3C /* length.cpp in Sources */,
+				E6E29F8A121E1BDD0024282B /* allocate.cpp in Sources */,
+				E6E29F8B121E1BDD0024282B /* tstep.cpp in Sources */,
+				E6E29F8C121E1BDE0024282B /* rsdl.cpp in Sources */,
+				E6E29F8D121E1BDF0024282B /* length.cpp in Sources */,
+				E6E29F8E121E1BE00024282B /* bdry.cpp in Sources */,
+				E6E29F8F121E1BE10024282B /* getnewbdry.cpp in Sources */,
+				E6E29F90121E1BE20024282B /* getnewibc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

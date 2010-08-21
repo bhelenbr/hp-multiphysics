@@ -89,7 +89,31 @@ void tri_hp::petsc_initialize(){
 	Array<int,1> nnzero_mpi(jacobian_size);
 	nnzero_mpi = 0;
 	for(int i=0;i<nebd;++i) 
-		hp_ebdry(i)->non_sparse(nnzero,nnzero_mpi);
+		hp_ebdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
+		
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->non_sparse_snd(nnzero,nnzero_mpi);
+		
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+	for(int i=0;i<nvbd;++i)
+		vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+	
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+	for(int i=0;i<nvbd;++i)
+		vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+
+	for(int i=0;i<nebd;++i)
+		ebdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+	for(int i=0;i<nvbd;++i)
+		vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+		
+	for(int i=0;i<nebd;++i) 
+		hp_ebdry(i)->non_sparse_rcv(nnzero,nnzero_mpi);
+	
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->non_sparse_rcv(nnzero,nnzero_mpi);		
 
 	helper->non_sparse(nnzero,nnzero_mpi);
 		
