@@ -34,7 +34,7 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 	//if (!input.get(gbl->idprefix + "_k",gbl->kcond)) input.getwdefault("k",gbl->kcond,1.0);
 	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,8.314472);
 
-	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
+	gbl->kcond = gbl->R*gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
 	
 	gbl->body(0) = 0.0;
 	gbl->body(1) = 0.001;

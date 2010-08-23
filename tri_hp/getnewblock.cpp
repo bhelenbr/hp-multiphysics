@@ -20,6 +20,7 @@
 //#define LVLSET
 //#define EXPLICIT
 //#define CNS
+//define CNS_EXPLICIT
 
 #define POD
 
@@ -65,10 +66,14 @@
 #include "cns/tri_hp_cns.h"
 #endif
 
+#ifdef CNS_EXPLICIT
+#include "cns_explicit/tri_hp_cns_explicit.h"
+#endif
+
 class btype {
 	public:
-		const static int ntypes = 16;
-		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,lvlset,explct,cns};
+		const static int ntypes = 17;
+		enum ids {r_tri_mesh,cd,ins,ps,swirl,buoyancy,pod_ins_gen,pod_cd_gen,pod_cns_gen,pod_ins_sim,pod_cns_sim,pod_cd_sim,swe,lvlset,explct,cns,cns_explicit};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -78,7 +83,7 @@ class btype {
 		}
 };
 const char btype::names[ntypes][40] = {"r_tri_mesh","cd","ins","ps","swirl","buoyancy",
-    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns"};
+    "pod_ins_gen","pod_cd_gen","pod_cns_gen","pod_ins_sim","pod_cns_sim","pod_cd_sim","swe","lvlset","explicit","cns","cns_explicit"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname;
@@ -197,6 +202,13 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 #ifdef CNS
 		case btype::cns: {
 			tri_hp_cns *temp = new tri_hp_cns();
+			return(temp);
+		}
+#endif
+			
+#ifdef CNS_EXPLICIT
+		case btype::cns_explicit: {
+			tri_hp_cns_explicit *temp = new tri_hp_cns_explicit();
 			return(temp);
 		}
 #endif

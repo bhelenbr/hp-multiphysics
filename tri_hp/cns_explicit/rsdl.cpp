@@ -262,19 +262,22 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					FLT rt = u(3)(i,j);	
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
+					FLT gam = gbl->gamma;
+					FLT gm1 = gam-1.0;
+					FLT rho = pr/rt;
+					FLT E = rt/gm1+ke;
 					
-					/* df/dw */
-					A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-						uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-						uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-						uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
-					
+					/* df/dw derivative of fluxes wrt conservative variables */
+					A = 0.0, 1.0, 0.0, 0.0,
+					    -uv*uv+gm1*ke, (2.0-gm1)*uv, -vv*gm1, gm1,
+					    -uv*vv, vv, uv, 0.0,
+					     uv*(-gam*E+gm1*ke), (gam*E-gm1*uv*uv-gm1*ke), -uv*vv*gm1, uv*gam;
 					
 					/* dg/dw */
-					B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-						uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-						vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-						vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+					B = 0.0, 0.0, 1.0, 0.0,
+						-uv*vv, vv, uv, 0.0,
+					    -vv*vv+gm1*ke, -uv*gm1, (2.0-gm1)*uv, gm1,
+					    vv*(-gam*E+gm1*ke),  -uv*vv*gm1, (gam*E-gm1*vv*vv-gm1*ke), vv*gam;
 					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {
@@ -453,18 +456,22 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					FLT rt = u(3)(i,j);	
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
-					/* df/dw */
-					A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-					    uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-					    uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-					    uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+					FLT gam = gbl->gamma;
+					FLT gm1 = gam-1.0;
+					FLT rho = pr/rt;
+					FLT E = rt/gm1+ke;
+									
+					/* df/dw derivative of fluxes wrt conservative variables */
+					A = 0.0, 1.0, 0.0, 0.0,
+						-uv*uv+gm1*ke, (2.0-gm1)*uv, -vv*gm1, gm1,
+						-uv*vv, vv, uv, 0.0,
+						uv*(-gam*E+gm1*ke), (gam*E-gm1*uv*uv-gm1*ke), -uv*vv*gm1, uv*gam;
 					
-							
 					/* dg/dw */
-					B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-						uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-						vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-						vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+					B = 0.0, 0.0, 1.0, 0.0,
+						-uv*vv, vv, uv, 0.0,
+						-vv*vv+gm1*ke, -uv*gm1, (2.0-gm1)*uv, gm1,
+						vv*(-gam*E+gm1*ke),  -uv*vv*gm1, (gam*E-gm1*vv*vv-gm1*ke), vv*gam;
 					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {

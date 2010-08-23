@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-//#define TIMEACCURATE
+#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -38,19 +38,19 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	
 		int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 
-		// switch uht from conservative to primitive variables
-		for(i = 0; i < lgpx; ++i) {
-			for(j = 0; j < lgpn; ++j) {
-				
-				for(int n = 0; n < NV; ++n)
-					cvu(n) = u(n)(i,j);
-				
-				u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
-				u(1)(i,j) = cvu(1)/cvu(0);
-				u(2)(i,j) = cvu(2)/cvu(0);
-				u(3)(i,j) = u(0)(i,j)/cvu(0);
-			}
-		}
+//		// switch uht from conservative to primitive variables
+//		for(i = 0; i < lgpx; ++i) {
+//			for(j = 0; j < lgpn; ++j) {
+//				
+//				for(int n = 0; n < NV; ++n)
+//					cvu(n) = u(n)(i,j);
+//				
+//				u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
+//				u(1)(i,j) = cvu(1)/cvu(0);
+//				u(2)(i,j) = cvu(2)/cvu(0);
+//				u(3)(i,j) = u(0)(i,j)/cvu(0);
+//			}
+//		}
 		
 		/* IF TINFO > -1 IT IS CURVED ELEMENT */
 		if (tri(tind).info > -1) {
@@ -89,7 +89,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 					hmax = MAX(h,hmax);						
 				
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
-					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
+					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));// temp fix because u(1) is rhou not u
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
 					umax(3) = MAX(umax(3),fabs(u(3)(i,j)));
 						
@@ -150,19 +150,20 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 
-		//cout << "timestep " << tstep << endl;
-		tstep = 1.0e-5;
+		
+		//cout << "timestep " << tstep << " hmax "<< hmax << endl;
+		//tstep = 1.e-3;
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
 		/* SET UP DIAGONAL PRECONDITIONER */
-		jcb /= tstep/10.;  // temp fix me
+		jcb /= tstep;  // temp fix me
 
 #ifdef TIMEACCURATE
 		dtstari = MAX(1./tstep,dtstari);
 		
 	}
-	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << '\n';
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
 	
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;
@@ -171,7 +172,6 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
-		//gbl->tprcn(tind,Range::all())=jcb;		
 		gbl->tprcn(tind,0) = jcb;
 		gbl->tprcn(tind,1) = jcb;
 		gbl->tprcn(tind,2) = jcb;
@@ -189,78 +189,159 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	tri_hp::setup_preconditioner();
 }
 
+void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+	
+	Array<FLT,2> P(NV,NV), A(NV,NV), V(NV,NV), VINV(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
+	Array<FLT,1> Aeigs(NV),Beigs(NV);
+	
+	FLT gam = gbl->gamma;
+	FLT gm1 = gam-1.0;
+	FLT gogm1 = gam/gm1;
+	FLT rho = cvu(0);
+	FLT rhou = cvu(1);
+	FLT u = rhou/rho;
+	FLT rhov = cvu(2);
+	FLT v = rhov/rho;
+	FLT rhoE = cvu(3);
+	FLT E = rhoE/rho;
+	FLT ke = 0.5*(u*u+v*v);
+	FLT c2 = gam*gm1*(E-ke);
+	FLT c = sqrt(c2); 
+	
+	cout.precision(15);
 
-void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
-	
-	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
-	
-	FLT gm1 = gbl->gamma-1;
-	FLT gogm1 = gbl->gamma/gm1;
-	FLT pr = u(0);
-	FLT uv = u(1);
-	FLT vv = u(2);
-	FLT rt = u(3);	
-	FLT ke = 0.5*(uv*uv+vv*vv);
-	
+	//cout << "u,v,c "  << u << ' ' << v << ' ' << c << endl;
+
 	/* Preconditioner */
-	P = ke*gm1,            -uv*gm1,       -vv*gm1,       gm1,
-	    -uv/pr*rt,         rt/pr,         0.0,           0.0,
-        -vv*rt/pr,         0.0,           1.0/pr*rt,     0.0,
-		rt*(gm1*ke-rt)/pr, -rt*uv*gm1/pr, -rt*vv*gm1/pr, rt*gm1/pr;
+	P = 1,0,0,0,
+	    0,1,0,0,
+	    0,0,1,0,
+	    0,0,0,1;
 	
 	/* Inverse of Preconditioner */
-	Pinv = 1.0/rt,        0.0,      0.0,      -pr/rt/rt,
-           uv/rt,         pr/rt,    0.0,      -uv*pr/rt/rt,
-           vv/rt,         0.0,      pr/rt,    -vv*pr/rt/rt,
-		   1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
+	Pinv = 1,0,0,0,
+		   0,1,0,0,
+		   0,0,1,0,
+		   0,0,0,1;
 	
 	/* df/dw */
-	A = uv/rt,               pr/rt,                           0.0,         -pr/rt/rt*uv,
-		uv*uv/rt+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
-		uv*vv/rt,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
-		uv*(gogm1*rt+ke)/rt, pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+	A =  0.0, 1.0, 0.0, 0.0,
+		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,
+	     -u*v, v, u, 0.0,
+	     u*(-gam*E+gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
+
+//	V = 1.0, 0.0, 1.0, 1.0,
+//		u, 0.0, u+c, u-c,
+//		0.0, 1.0, v, v,
+//		-0.5*(v*v-u*u), v, gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
 	
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*A(k,j);
-	A = temp;
+//	cout << "V " << V << endl;
+
+//	if (u > c) {
+//		Aeigs = u,u,u+c,u-c;
+//	}
+//	else {
+//		Aeigs = u,u,u+c,c-u;	
+//	}
+//	
+//	VINV = (-2.0+ke+ke/gam)/(-2.0+ke),  -u/(-2.0*gam+gm1*ke+ke), -v/(-2.0*gam+gm1*ke+ke),  1.0/(-2.0*gam+gm1*ke+ke),
+//	       v*ke/(-2.0*gam+gm1*ke+ke), -v*u/(-2.0*gam+gm1*ke+ke),  -(2.0*gam-gm1*ke+0.5*(v*v-u*u))/(-2.0*gam+gm1*ke+ke), v/(-2.0*gam+gm1*ke+ke),
+//	       -0.5*(-2.0*u*gam+u*gm1*ke+ke*c+u*ke)/(c*(-2.0*gam+gm1*ke+ke)),  0.5*(-2.0*gam+gm1*ke+u*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*v/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke),
+//		   -0.5*(2.0*u*gam-u*gm1*ke+ke*c-u*ke)/(c*(-2.0*gam+gm1*ke+ke)),  -0.5*(-2.0*gam+gm1*ke-u*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*v/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke);
+//
+////	cout << "inv(V) " << VINV << endl;
+//
+//	for(int i=0; i < NV; ++i)
+//		for(int j=0; j < NV; ++j)
+//			V(i,j) = Aeigs(j)*V(i,j);
+//
+//	A = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				A(i,j)+=V(i,k)*VINV(k,j);
+	//A = temp;
+//	cout << A << temp << endl;
+	
+//	cout << V << eigs << VINV << endl;
+	
+	//cout << " |A| " << A << endl;
+
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*A(k,j);
+//	A = temp;
 	
 	matrix_absolute_value(A);
-	
-	/* dg/dw */
-	B = vv/rt,               0.0,         pr/rt,                           -pr/rt/rt*vv,
-		uv*vv/rt,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
-		vv*vv/rt+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
-		vv*(gogm1*rt+ke)/rt, pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+	//cout << "u,u+c,u-c "  << u << ' ' << u+c << ' ' << u-c << endl;
 
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*B(k,j);
+
+	/* dg/dw */
+	B =   0.0, 0.0, 1.0, 0.0,
+	      -u*v, v, u, 0.0,
+		  -v*v+gm1*ke, -u*gm1, (2.0-gm1)*v, gm1,
+		  v*(-gam*E+gm1*ke),  -u*v*gm1, (gam*E-gm1*v*v-gm1*ke), v*gam;
+
+//	V = 1.0, 0.0, 1.0, 1.0,
+//		v, 0.0, v+c, v-c,
+//		0.0, 1.0, u, u,
+//		-0.5*(u*u-v*v), u, gam*E-gm1*ke+v*c, gam*E-gm1*ke-v*c;
+//	
+//	//	cout.precision(15);
+//	//	cout << "V " << V << endl;
+//	
+//	if (v > c) {
+//		Beigs = v,v,v+c,v-c;
+//	}
+//	else {
+//		Beigs = v,v,v+c,v-u;	
+//	}
+//	
+//	VINV = (-2.0+ke+ke/gam)/(-2.0+ke),  -v/(-2.0*gam+gm1*ke+ke), -u/(-2.0*gam+gm1*ke+ke),  1.0/(-2.0*gam+gm1*ke+ke),
+//			u*ke/(-2.0*gam+gm1*ke+ke), -v*u/(-2.0*gam+gm1*ke+ke),  -(2.0*gam-gm1*ke+0.5*(u*u-v*v))/(-2.0*gam+gm1*ke+ke), u/(-2.0*gam+gm1*ke+ke),
+//			-0.5*(-2.0*v*gam+v*gm1*ke+ke*c+v*ke)/(c*(-2.0*gam+gm1*ke+ke)),  0.5*(-2.0*gam+gm1*ke+v*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*u/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke),
+//			-0.5*(2.0*v*gam-v*gm1*ke+ke*c-v*ke)/(c*(-2.0*gam+gm1*ke+ke)),  -0.5*(-2.0*gam+gm1*ke-v*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*u/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke);
+//	
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*B(k,j);
+//	
+//	B = temp;
 	
-	B = temp;
-	
+	//cout << " B " << B << endl;
+
 	matrix_absolute_value(B);
+	//cout << "v,v+c,v-c "  << v << ' ' << v+c << ' ' << v-c << endl;
+
+	//cout << " |B| " << B << endl;
 	
-	S = 0.0, 0.0,     0.0,     0.0,
-		0.0, gbl->mu, 0.0,     0.0,
-		0.0, 0.0,     gbl->mu, 0.0,
-		0.0, 0.0,     0.0,     gbl->kcond;
+	FLT nu = gbl->mu/rho;
+	
+	FLT cp = gogm1*gbl->R;
+	FLT alpha = gbl->kcond/(rho*cp);
+	
+	S = 0.0, 0.0, 0.0, 0.0,
+		0.0, nu,  0.0, 0.0,
+		0.0, 0.0, nu,  0.0,
+		0.0, 0.0, 0.0, alpha;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*S(k,j);
 	
-	S = temp;
-	//cout <<"S " << S << endl;
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*S(k,j);
+//	
+//	S = temp;
+	
+	//cout << " S " << S << endl;
 
-	//cout << "A,B "<< A << B << endl;
+//	cout << "A,B "<< A << B << endl;
 	Tinv = 2.0/hmax*(A+B+hmax*S);
 
 	/* smallest eigenvalue of Tau tilde */
@@ -273,6 +354,11 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
 	
+	if (info != 0) {
+		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	for (int i = 0; i < NV; ++i)
 		for (int j = 0; j < NV; ++j)
 			temp(i,j)=P(j,i);
@@ -281,10 +367,17 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax
 	char trans[] = "T";
 	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
 	
+	if (info != 0) {
+		*gbl->log << "DGETRS FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	for (int i = 0; i < NV; ++i)
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
 	
+	//cout << "tau: "<< Tau << endl;
+
 	
 	return;
 }
