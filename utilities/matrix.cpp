@@ -20,7 +20,7 @@ double spectral_radius(Array<double,2> A) {
 	x=1;
 	
 	/* Power Iteration to find eigenvector for dominate eigenvalue */
-	for(int m=0;m<10;++m){
+	for(int m=0;m<20;++m){
 		temp=0;
 		for(int i=0; i<n; ++i){
 			for(int j=0; j<n; ++j){
@@ -69,6 +69,11 @@ void matrix_absolute_value(Array<double,2> &A) {
 	/* find eigenvalues and eigenvectors */
 	GEEV(nchar,vchar, n, A.data(), n, lambda_real.data(), lambda_imag.data(), temp.data(), n, VR.data(), n, work, lwork, info);
 	
+	if (info != 0) {
+		std::cerr << "DGEEV FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
+		assert(0);
+	}
+	
 	/* absolute value of eigenvalues */
 	for (int i=0; i < n; ++i) 
 		lambda_real(i) = sqrt(pow(lambda_real(i),2.0)+pow(lambda_imag(i),2.0));
@@ -81,8 +86,18 @@ void matrix_absolute_value(Array<double,2> &A) {
 	/*  LU factorization  */
 	GETRF(n, n, VR.data(), n, ipiv, info);
 	
+	if (info != 0) {
+		std::cerr << "DGETRF FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
+		assert(0);
+	}
+	
 	/* Solve transposed system temp = inv(VR)*temp */
 	GETRS(trans,n,n,VR.data(),n,ipiv,temp.data(),n,info);
+	
+	if (info != 0) {
+		std::cerr << "DGETRS FAILED FOR MATRIX ABSOLUTE VALUE IN UTILITIES" << std::endl;
+		assert(0);
+	}
 	
 	/* store transpose of temp in A */
 	for (int i = 0; i < n; ++i) 
