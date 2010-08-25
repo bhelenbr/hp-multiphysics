@@ -219,7 +219,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 	return;
 }
 
-void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
+void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
 
 	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
@@ -230,15 +230,15 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 
 	/* Left */
 	/* Rotate Coordinate System */
-	FLT ul =  u(1)*norm(0) +u(2)*norm(1);
-	FLT vl = -u(1)*norm(1) +u(2)*norm(0);
-	u(1) = ul, u(2) = vl;
+	FLT ul =  cvu(1)*norm(0) +cvu(2)*norm(1);
+	FLT vl = -cvu(1)*norm(1) +cvu(2)*norm(0);
+	cvu(1) = ul, cvu(2) = vl;
 
 	/* Roe Variables */
-	Rl(0) = sqrt(u(0));
+	Rl(0) = sqrt(cvu(0));
 	Rl(1) = ul/Rl(0);
 	Rl(2) = vl/Rl(0);
-	Rl(3) = u(3)/Rl(0);	
+	Rl(3) = cvu(3)/Rl(0);	
 	
 	/* Right */
 	for(int n=0;n<x.NV;++n)
@@ -259,67 +259,73 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	Roe = 0.5*(Rl+Rr);
 
 	/* Calculate u,v,c Variables */
-	FLT uv = Roe(1)/Roe(0);
-	FLT vv = Roe(2)/Roe(0);
-	FLT KE = 0.5*(uv*uv+vv*vv);
+	FLT u = Roe(1)/Roe(0);
+	FLT v = Roe(2)/Roe(0);
+	FLT ke = 0.5*(u*u+v*v);
 	FLT E = Roe(3)/Roe(0);
 	FLT gam = x.gbl->gamma;
 	FLT gm1 = gam-1.0;
-	FLT RT = gm1*(E-KE);
+	FLT RT = gm1*(E-ke);
 	FLT c2 = gam*RT;
 	FLT c = sqrt(c2);
 
-	/* df/dw in u,v,c Variables */
-	A = 0.0,                                       1.0,                                                                         0.0,            0.0,
-	    gam*KE-1.5*uv*uv-0.5*vv*vv,                3.0*uv-uv*gam,                                                               -vv*(gam-1.0),  gam-1,
-	    -uv*vv,                                    vv,                                                                          uv,             0.0,
-	    uv*(-3*gam*KE+2*KE-c2+gam*gam*KE)/(gam-1), -(1.5*uv*uv-2.5*uv*uv*gam-0.5*vv*vv*gam+0.5*vv*vv-c2+uv*uv*gam*gam)/(gam-1), -uv*(gam-1)*vv, uv*gam;
+//	/* df/dw in u,v,c Variables */
+//	A = 0.0,                                       1.0,                                                                         0.0,            0.0,
+//	    gam*ke-1.5*u*u-0.5*v*v,                3.0*u-u*gam,                                                               -v*(gam-1.0),  gam-1,
+//	    -u*v,                                    v,                                                                          u,             0.0,
+//	    u*(-3*gam*ke+2*ke-c2+gam*gam*ke)/(gam-1), -(1.5*u*u-2.5*u*u*gam-0.5*vv*vv*gam+0.5*vv*vv-c2+uv*uv*gam*gam)/(gam-1), -u*(gam-1)*v, u*gam;
+//	
 	
-//	V = 0.0, 1.0, 1.0, 1.0,
-//		0.0, uv, uv+c, uv-c,
-//		1.0, 0.0, vv, vv,
-//		vv, 0.5*(uv*uv-vv*vv), gam*E-gm1*KE+uv*c, gam*E-gm1*KE-uv*c;
-//
-//	Aeigs = uv,uv,uv+c,uv-c;
-//	
-//	VINV = 0.5*(gm1*KE-uv*c), -0.5*(uv*gm1-c), -0.5*vv*gm1, 0.5*gm1,
-//		   -KE*vv*gm1, vv*uv*gm1, gm1*vv*vv+c2, -vv*gm1,
-//		   (c2-gm1*KE)*uv, uv*uv*gm1, vv*uv*gm1, -uv*gm1,
-//		   0.5*(gm1*KE+uv*c), -0.5*(uv*gm1+c), -0.5*vv*gm1, 0.5*gm1;
-//	
-//	for(int i=0; i < x.NV; ++i)
-//		for(int j=0; j < x.NV; ++j)
-//			temp(i,j) = Aeigs(i)*VINV(i,j)/c2;
-//	
-//	A = 0.0;
-//	for(int i=0; i<x.NV; ++i)
-//		for(int j=0; j<x.NV; ++j)
-//			for(int k=0; k<x.NV; ++k)
-//				A(i,j)+=V(i,k)*temp(k,j);
+	/* eigenvectors of df/dw */
+	V = 0.0, 1.0,           1.0,              1.0,
+	    0.0, u,             u+c,              u-c,
+	    1.0, 0.0,           v,                v,
+	    v,   0.5*(u*u-v*v), gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
+	
+	/* eigenvalues of df/dw */
+	Aeigs = u,u,u+c,u-c;
+
+		/* inverse of eigenvectors of df/dw */
+	VINV = -v*ke*gm1,         v*u*gm1,         c2+gm1*v*v, -v*gm1,
+		   -gm1*ke+c2,        u*gm1,           v*gm1,      -gm1,
+		   0.5*(-u*c+gm1*ke), -0.5*(-c+u*gm1), -0.5*v*gm1, 0.5*gm1,
+		   0.5*(u*c+gm1*ke),  -0.5*(c+u*gm1),  -0.5*v*gm1, 0.5*gm1;
+	
+	VINV /= c2;
+	
+	for(int i=0; i < x.NV; ++i)
+		for(int j=0; j < x.NV; ++j)
+			temp(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				A(i,j)+=V(i,k)*temp(k,j);
 	
 	fluxtemp = 0.0;
 	
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
-			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+u(j));
+			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+cvu(j));
 
-	//Aeigs = fabs(uv),fabs(uv),fabs(uv+c),fabs(uv-c);
+	Aeigs = fabs(u),fabs(u),fabs(u+c),fabs(u-c);
 
-	matrix_absolute_value(A);
+	//matrix_absolute_value(A);
 
-//	for(int i=0; i < x.NV; ++i)
-//		for(int j=0; j < x.NV; ++j)
-//			temp(i,j) = Aeigs(i)*VINV(i,j)/c2;
-//	
-//	A = 0.0;
-//	for(int i=0; i<x.NV; ++i)
-//		for(int j=0; j<x.NV; ++j)
-//			for(int k=0; k<x.NV; ++k)
-//				A(i,j)+=V(i,k)*temp(k,j);
+	for(int i=0; i < x.NV; ++i)
+		for(int j=0; j < x.NV; ++j)
+			temp(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				A(i,j)+=V(i,k)*temp(k,j);
 	
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
-			fluxtemp(i) -= 0.5*A(i,j)*(ub(j)-u(j));
+			fluxtemp(i) -= 0.5*A(i,j)*(ub(j)-cvu(j));
 
 	/* CHANGE BACK TO X,Y COORDINATES */
 	flx(0) = fluxtemp(0);

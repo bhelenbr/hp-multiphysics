@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-#define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -227,75 +227,82 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		   0,0,0,1;
 	
 	/* df/dw */
-	A =  0.0, 1.0, 0.0, 0.0,
-		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,
-	     -u*v, v, u, 0.0,
-	     u*(-gam*E+2.0*gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
+//	A =  0.0, 1.0, 0.0, 0.0,
+//		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,
+//	     -u*v, v, u, 0.0,
+//	     u*(-gam*E+2.0*gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
+//	matrix_absolute_value(A);
 
-	matrix_absolute_value(A);
+	/* eigenvectors of df/dw */
+	V = 0.0, 1.0,           1.0,              1.0,
+		0.0, u,             u+c,              u-c,
+		1.0, 0.0,           v,                v,
+		v,   0.5*(u*u-v*v), gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
+	
+	/* take absolute value, u and c are already positive */
+	if (u > c) {
+		Aeigs = u,u,u+c,u-c;
+	}
+	else {
+		Aeigs = u,u,u+c,c-u;	
+	}
+		
+	/* inverse of eigenvectors of df/dw */
+	VINV= -v*ke*gm1,         v*u*gm1,         c2+gm1*v*v, -v*gm1,
+	      -gm1*ke+c2,        u*gm1,           v*gm1,      -gm1,
+	      0.5*(-u*c+gm1*ke), -0.5*(-c+u*gm1), -0.5*v*gm1, 0.5*gm1,
+	      0.5*(u*c+gm1*ke),  -0.5*(c+u*gm1),  -0.5*v*gm1, 0.5*gm1;
+			
+	VINV /= c2;
+	
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Aeigs(i)*VINV(i,j);
 
-//	V = 0.0, 1.0, 1.0, 1.0,
-//		0.0, u, u+c, u-c,
-//		1.0, 0.0, v, v,
-//		v, 0.5*(u*u-v*v), gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
-//	
-//	if (u > c) {
-//		Aeigs = u,u,u+c,u-c;
-//	}
-//	else {
-//		Aeigs = u,u,u+c,c-u;	
-//	}
-//	
-//	VINV = 0.5*(gm1*ke-u*c), -0.5*(u*gm1-c), -0.5*v*gm1, 0.5*gm1,
-//		   -ke*v*gm1, v*u*gm1, gm1*v*v+c2, -v*gm1,
-//		   (c2-gm1*ke)*u, u*u*gm1, v*u*gm1, -u*gm1,
-//		   0.5*(gm1*ke+u*c), -0.5*(u*gm1+c), -0.5*v*gm1, 0.5*gm1;
-//			
-//	for(int i=0; i < NV; ++i)
-//		for(int j=0; j < NV; ++j)
-//			VINV(i,j) = Aeigs(i)*VINV(i,j)/c2;
-//
-//	A = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				A(i,j)+=V(i,k)*VINV(k,j);
+	A = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				A(i,j)+=V(i,k)*VINV(k,j);
 
-	/* dg/dw */
-	B =   0.0, 0.0, 1.0, 0.0,
-	      -u*v, v, u, 0.0,
-		  -v*v+gm1*ke, -u*gm1, (2.0-gm1)*v, gm1,
-		  v*(-gam*E+2.0*gm1*ke),  -u*v*gm1, gam*E-gm1*v*v-gm1*ke, v*gam;
+//	/* dg/dw */
+//	B =   0.0, 0.0, 1.0, 0.0,
+//	      -u*v, v, u, 0.0,
+//		  -v*v+gm1*ke, -u*gm1, (2.0-gm1)*v, gm1,
+//		  v*(-gam*E+2.0*gm1*ke),  -u*v*gm1, gam*E-gm1*v*v-gm1*ke, v*gam;
+//	matrix_absolute_value(B);
+
+	V = 0.0, 1.0, 1.0, 1.0,
+		1.0, 0.0, u, u,
+		0.0, v, v+c, v-c,
+		u,-0.5*(u*u-v*v), gam*E-gm1*ke+v*c, gam*E-gm1*ke-v*c;
 	
-	matrix_absolute_value(B);
+	if (v > c) {
+		Beigs = v,v,v+c,v-c;
+	}
+	else {
+		Beigs = v,v,v+c,c-v;	
+	}
 	
-//	V = 0.0, 1.0, 1.0, 1.0,
-//		1.0, 0.0, u, u,
-//		0.0, v, v+c, v-c,
-//		u,-0.5*(u*u-v*v), gam*E-gm1*ke+v*c, gam*E-gm1*ke-v*c;
-//	
-//	if (v > c) {
-//		Beigs = v,v,v+c,v-c;
-//	}
-//	else {
-//		Beigs = v,v,v+c,v-u;	
-//	}
-//	
-//	VINV = -ke*u*gm1, gm1*u*u+c2, v*u*gm1, -u*gm1,
-//		   (c2-gm1*ke)*v, v*u*gm1, v*v*gm1, -v*gm1,
-//		   0.5*(gm1*ke-v*c), -0.5*u*gm1, -0.5*(v*gm1-c), 0.5*gm1,
-//		   0.5*(gm1*ke+v*c), -0.5*u*gm1, -0.5*(c+gm1*v), 0.5*gm1;
-//	
-//	for(int i=0; i < NV; ++i)
-//		for(int j=0; j < NV; ++j)
-//			VINV(i,j) = Beigs(i)*VINV(i,j)/c2;
-//	
-//	B = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				B(i,j)+=V(i,k)*VINV(k,j);	
+
+	VINV = -u*ke*gm1,c2+gm1*u*u, v*u*gm1, -u*gm1,
+	       -gm1*ke+c2, u*gm1, v*gm1, -gm1,
+		   0.5*(-v*c+gm1*ke),-0.5*u*gm1, -0.5*(-c+v*gm1), 0.5*gm1,
+	       0.5*(v*c+gm1*ke), -0.5*u*gm1, -0.5*(c+v*gm1), 0.5*gm1;
 	
+	
+	VINV /= c2;
+
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Beigs(i)*VINV(i,j);
+	
+	B = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				B(i,j)+=V(i,k)*VINV(k,j);	
+
 	FLT nu = gbl->mu/rho;
 	
 	FLT cp = gogm1*gbl->R;
