@@ -87,6 +87,7 @@ BASE = adapt.o allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc
 nstage.o output.o ptprobe.o tadvance.o tobasis.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o ins/surface.o
 OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/length.o cns/rsdl.o cns/tstep.o
+OBJCNSEXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/length.o cns/rsdl.o cns/tstep.o
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/length.o cd/rsdl.o cd/tstep.o
 OBJPS = planestrain/allocate.o planestrain/bdry.o planestrain/getnewbdry.o planestrain/length.o planestrain/rsdl.o planestrain/tstep.o
 OBJSWIRL = swirl/allocate.o swirl/bdry.o swirl/getnewbdry.o swirl/getnewibc.o swirl/length.o swirl/rsdl.o swirl/tstep.o
@@ -99,7 +100,7 @@ OBJPETSC = petsc.o sparse.o
 
 OBJ = $(BASE)
 OBJ +=  $(OBJINS) 
-#$(OBJCD) $(OBJCNS) $(OBJBUOY) $(OBJPS) $(OBJSWIRL) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT)
+#$(OBJCD) $(OBJCNS) $(OBJBUOY) $(OBJPS) $(OBJSWIRL) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT) $(OBJCNSEXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -g -O3 -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
@@ -140,6 +141,7 @@ tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
 	+@[ -d  cns ] || mkdir -p cns
+	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
 	+@[ -d  planestrain ] || mkdir -p planestrain
 	+@[ -d  swirl ] || mkdir -p swirl
