@@ -153,6 +153,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		//cout << "timestep " << tstep << " hmax "<< hmax << endl;
 		//tstep = 1.e-3;
+		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
@@ -164,6 +165,11 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 	}
 	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
+	
+	/* find max dtstari for all blocks and use on every block  */
+	FLT dtstari_recv;
+	sim::blks.allreduce(&dtstari,&dtstari_recv,1,blocks::flt_msg,blocks::max);
+	dtstari = dtstari_recv;
 	
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;
