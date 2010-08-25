@@ -29,8 +29,10 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 	TinyMatrix<FLT,ND,ND> kcond;
 	TinyVector<FLT,NV> tres,cvu;
 	FLT lkcond = gbl->kcond;
-	FLT ogm1 = 1.0/(gbl->gamma-1.0);
-	FLT gogm1 = gbl->gamma*ogm1;
+	FLT gam = gbl->gamma;
+	FLT gm1 = gam-1.0;
+	FLT ogm1 = 1.0/(gam-1.0);
+	FLT gogm1 = gam*ogm1;
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -183,12 +185,12 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					visc(0,0)(0,0) = -mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(0,0)(1,1) = -mujcbi*(4./3.*dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(0,0)(0,1) =  mujcbi*(4./3.*dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI0II0II1II0I visc(0,0)(0,1)
+#define             viscI0II0II1II0I visc(0,0)(0,1)
 					
 					visc(1,1)(0,0) = -mujcbi*(dcrd(1,1)(i,j)*dcrd(1,1)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,1)(i,j));
 					visc(1,1)(1,1) = -mujcbi*(dcrd(1,0)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,0)(i,j)*dcrd(0,0)(i,j));
 					visc(1,1)(0,1) =  mujcbi*(dcrd(1,1)(i,j)*dcrd(1,0)(i,j) +4./3.*dcrd(0,1)(i,j)*dcrd(0,0)(i,j));
-#define                 viscI1II1II1II0I visc(1,1)(0,1)
+#define             viscI1II1II1II0I visc(1,1)(0,1)
 					
 					visc(0,1)(0,0) =  mujcbi*1./3.*dcrd(0,1)(i,j)*dcrd(1,1)(i,j);
 					visc(0,1)(1,1) =  mujcbi*1./3.*dcrd(0,0)(i,j)*dcrd(1,0)(i,j);
@@ -256,15 +258,10 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						for(int n = 0; n < NV; ++n)							
 							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
 
-					FLT pr = u(0)(i,j);
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
 					FLT rt = u(3)(i,j);	
 					FLT ke = 0.5*(uv*uv+vv*vv);
-					
-					FLT gam = gbl->gamma;
-					FLT gm1 = gam-1.0;
-					FLT rho = pr/rt;
 					FLT E = rt/gm1+ke;
 					
 					/* df/dw derivative of fluxes wrt conservative variables */
@@ -299,7 +296,7 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 		}
 	}
 	else {
-		/* CURVED ELEMENT */
+		/* STRAIGHT EDGED ELEMENT */
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(int i = 0; i < lgpx; ++i) {
 			for(int j = 0; j < lgpn; ++j) {
@@ -377,12 +374,12 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					visc(0,0)(0,0) = -mujcbi*(4./3.*ldcrd(1,1)*ldcrd(1,1) +ldcrd(0,1)*ldcrd(0,1));
 					visc(0,0)(1,1) = -mujcbi*(4./3.*ldcrd(1,0)*ldcrd(1,0) +ldcrd(0,0)*ldcrd(0,0));
 					visc(0,0)(0,1) =  mujcbi*(4./3.*ldcrd(1,1)*ldcrd(1,0) +ldcrd(0,1)*ldcrd(0,0));
-#define                 viscI0II0II1II0I visc(0,0)(0,1)
+#define             viscI0II0II1II0I visc(0,0)(0,1)
 					
 					visc(1,1)(0,0) = -mujcbi*(ldcrd(1,1)*ldcrd(1,1) +4./3.*ldcrd(0,1)*ldcrd(0,1));
 					visc(1,1)(1,1) = -mujcbi*(ldcrd(1,0)*ldcrd(1,0) +4./3.*ldcrd(0,0)*ldcrd(0,0));
 					visc(1,1)(0,1) =  mujcbi*(ldcrd(1,1)*ldcrd(1,0) +4./3.*ldcrd(0,1)*ldcrd(0,0));
-#define                 viscI1II1II1II0I visc(1,1)(0,1)
+#define             viscI1II1II1II0I visc(1,1)(0,1)
 					
 					visc(0,1)(0,0) =  mujcbi*1./3.*ldcrd(0,1)*ldcrd(1,1);
 					visc(0,1)(1,1) =  mujcbi*1./3.*ldcrd(0,0)*ldcrd(1,0);
@@ -403,16 +400,16 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 					
 					/* Momentum equations */
 					df(1,0)(i,j) = +visc(0,0)(0,0)*du(1,0)(i,j) +visc(0,1)(0,0)*du(2,0)(i,j)
-					+visc(0,0)(0,1)*du(1,1)(i,j) +visc(0,1)(0,1)*du(2,1)(i,j);
+								   +visc(0,0)(0,1)*du(1,1)(i,j) +visc(0,1)(0,1)*du(2,1)(i,j);
 					
 					df(1,1)(i,j) = +viscI0II0II1II0I*du(1,0)(i,j) +visc(0,1)(1,0)*du(2,0)(i,j)
-					+visc(0,0)(1,1)*du(1,1)(i,j) +visc(0,1)(1,1)*du(2,1)(i,j);
+								   +visc(0,0)(1,1)*du(1,1)(i,j) +visc(0,1)(1,1)*du(2,1)(i,j);
 					
 					df(2,0)(i,j) = +viscI1II0II0II0I*du(1,0)(i,j) +visc(1,1)(0,0)*du(2,0)(i,j)
-					+viscI1II0II0II1I*du(1,1)(i,j) +visc(1,1)(0,1)*du(2,1)(i,j);
+								   +viscI1II0II0II1I*du(1,1)(i,j) +visc(1,1)(0,1)*du(2,1)(i,j);
 					
 					df(2,1)(i,j) = +viscI1II0II1II0I*du(1,0)(i,j) +viscI1II1II1II0I*du(2,0)(i,j)
-					+viscI1II0II1II1I*du(1,1)(i,j) +visc(1,1)(1,1)*du(2,1)(i,j);
+								   +viscI1II0II1II1I*du(1,1)(i,j) +visc(1,1)(1,1)*du(2,1)(i,j);
 					
 					/* Energy equation */
 					df(3,0)(i,j) = +kcond(0,0)*du(NV-1,0)(i,j) +kcond(0,1)*du(NV-1,1)(i,j);
@@ -450,15 +447,10 @@ void tri_hp_cns_explicit::element_rsdl(int tind, int stage, Array<TinyVector<FLT
 						for(int n = 0; n < NV; ++n)							
 							tres(m) += gbl->tau(tind,m,n)*res(n)(i,j);
 					
-					FLT pr = u(0)(i,j);
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
 					FLT rt = u(3)(i,j);	
-					FLT ke = 0.5*(uv*uv+vv*vv);
-					
-					FLT gam = gbl->gamma;
-					FLT gm1 = gam-1.0;
-					FLT rho = pr/rt;
+					FLT ke = 0.5*(uv*uv+vv*vv);					
 					FLT E = rt/gm1+ke;
 									
 					/* df/dw derivative of fluxes wrt conservative variables */

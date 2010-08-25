@@ -92,7 +92,6 @@ namespace bdry_cns_explicit {
 			u(3) = u(0)/cvu(0);
 			//u(3) = pr/cvu(0);
 
-			
 			/* CONTINUITY */
 			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 			
@@ -149,7 +148,16 @@ namespace bdry_cns_explicit {
 			//flx(0) = ibc->f(0, xpt, x.gbl->time)*(u(1)*norm(0)+u(2)*norm(1));
 			//flx(0) = pr/u(3)*(u(1)*norm(0) +u(2)*norm(1));
 
-			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+			flx(0) = cvu(1)*norm(0)+cvu(2)*norm(1);//doesnt work
+			flx(0) = ibc->f(1, xpt, x.gbl->time)*norm(0)+ibc->f(2, xpt, x.gbl->time)*norm(1);//doesnt work
+			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));//doesnt work
+			
+			//FLT KE = .5*(cvu(1)*cvu(1) + cvu(2)*cvu(2))/(cvu(0)*cvu(0));
+			
+			flx(0) = cvu(1)*norm(0)+cvu(2)*norm(1);//doesnt work
+//			flx(1) = 0.0;
+//			flx(2) = 0.0; 
+//			flx(3) = cvu(1)/cvu(0)*(cvu(3)+(x.gbl->gamma-1.0)*(cvu(3)-KE))*norm(0)+cvu(2)/cvu(0)*(cvu(3)+(x.gbl->gamma-1.0)*(cvu(3)-KE))*norm(1);
 
 			/* EVERYTHING ELSE DOESN'T MATTER */
 			for (int n=1;n<x.NV;++n)
@@ -161,9 +169,9 @@ namespace bdry_cns_explicit {
 	public:
 		inflow(tri_hp_cns_explicit &xin, edge_bdry &bin) : neumann(xin,bin) {
 			mytype = "inflow";
-			ndirichlets = x.NV-1;
-			dirichlets.resize(x.NV-1);
-			for (int n=1;n<x.NV;++n)
+			ndirichlets = x.NV-2;
+			dirichlets.resize(x.NV-2);
+			for (int n=1;n<x.NV-1;++n)
 				dirichlets(n-1) = n;
 		}
 		inflow(const inflow& inbdry, tri_hp_cns_explicit &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
@@ -175,10 +183,10 @@ namespace bdry_cns_explicit {
 			do {
 				sind = base.seg(j);
 				v0 = x.seg(sind).pnt(0);
-				x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
+				x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
-			x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
+			x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
 		}
 		
 		void sdirichlet(int mode) {
@@ -186,7 +194,7 @@ namespace bdry_cns_explicit {
 			
 			for(int j=0;j<base.nseg;++j) {
 				sind = base.seg(j);
-				x.gbl->res.s(sind,mode,Range(1,x.NV-1)) = 0.0;
+				x.gbl->res.s(sind,mode,Range(1,x.NV-2)) = 0.0;
 			}
 		}
 
@@ -319,7 +327,7 @@ namespace bdry_cns_explicit {
 		}
 		
 		void vdirichlet2d() {
-			x.gbl->res.v(base.pnt,Range(1,x.NV-1)) = 0.0;
+			x.gbl->res.v(base.pnt,Range(1,x.NV-2)) = 0.0;
 		}
 	};
 

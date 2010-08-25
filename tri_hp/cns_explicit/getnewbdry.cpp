@@ -22,9 +22,8 @@ using namespace bdry_cns_explicit;
  */
 class tri_hp_cns_explicit_vtype {
 	public:
-		static const int ntypes = 7;
-		enum ids {unknown=-1,surface_inflow,surface_periodic,surface_outflow,surface_outflow_planar,
-		inflow,hybrid_slave_point,hybrid_point};
+		static const int ntypes = 1;
+		enum ids {unknown=-1,inflow};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -33,8 +32,7 @@ class tri_hp_cns_explicit_vtype {
 		}
 };
 
-const char tri_hp_cns_explicit_vtype::names[ntypes][40] = {"surface_inflow","surface_periodic","surface_outflow","surface_outflow_planar",
-	"inflow","hybrid_slave_point","hybrid_point"};
+const char tri_hp_cns_explicit_vtype::names[ntypes][40] = {"inflow"};
 
 hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -80,9 +78,8 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
  */
 class tri_hp_cns_explicit_stype {
 	public:
-		static const int ntypes = 10;
-		enum ids {unknown=-1,plain,inflow,outflow,characteristic,euler,
-			symmetry,applied_stress,surface,surface_slave,force_coupling};
+		static const int ntypes = 5;
+		enum ids {unknown=-1,plain,inflow,outflow,characteristic,applied_stress};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -91,8 +88,7 @@ class tri_hp_cns_explicit_stype {
 		}
 };
 
-const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","euler",
-    "symmetry","applied_stress","surface","surface_slave","force_coupling"};
+const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","applied_stress"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydata) {

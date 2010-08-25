@@ -206,12 +206,8 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 	FLT E = rhoE/rho;
 	FLT ke = 0.5*(u*u+v*v);
 	FLT c2 = gam*gm1*(E-ke);
-	FLT c = sqrt(c2); 
+	FLT c = sqrt(c2);
 	
-	cout.precision(15);
-
-	//cout << "u,v,c "  << u << ' ' << v << ' ' << c << endl;
-
 	/* Preconditioner */
 	P = 1,0,0,0,
 	    0,1,0,0,
@@ -228,15 +224,15 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 	A =  0.0, 1.0, 0.0, 0.0,
 		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,
 	     -u*v, v, u, 0.0,
-	     u*(-gam*E+gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
+	     u*(-gam*E+2.0*gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
 
-//	V = 1.0, 0.0, 1.0, 1.0,
-//		u, 0.0, u+c, u-c,
-//		0.0, 1.0, v, v,
-//		-0.5*(v*v-u*u), v, gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
-	
-//	cout << "V " << V << endl;
+	matrix_absolute_value(A);
 
+//	V = 0.0, 1.0, 1.0, 1.0,
+//		0.0, u, u+c, u-c,
+//		1.0, 0.0, v, v,
+//		v, 0.5*(u*u-v*v), gam*E-gm1*ke+u*c, gam*E-gm1*ke-u*c;
+//	
 //	if (u > c) {
 //		Aeigs = u,u,u+c,u-c;
 //	}
@@ -244,53 +240,33 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 //		Aeigs = u,u,u+c,c-u;	
 //	}
 //	
-//	VINV = (-2.0+ke+ke/gam)/(-2.0+ke),  -u/(-2.0*gam+gm1*ke+ke), -v/(-2.0*gam+gm1*ke+ke),  1.0/(-2.0*gam+gm1*ke+ke),
-//	       v*ke/(-2.0*gam+gm1*ke+ke), -v*u/(-2.0*gam+gm1*ke+ke),  -(2.0*gam-gm1*ke+0.5*(v*v-u*u))/(-2.0*gam+gm1*ke+ke), v/(-2.0*gam+gm1*ke+ke),
-//	       -0.5*(-2.0*u*gam+u*gm1*ke+ke*c+u*ke)/(c*(-2.0*gam+gm1*ke+ke)),  0.5*(-2.0*gam+gm1*ke+u*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*v/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke),
-//		   -0.5*(2.0*u*gam-u*gm1*ke+ke*c-u*ke)/(c*(-2.0*gam+gm1*ke+ke)),  -0.5*(-2.0*gam+gm1*ke-u*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*v/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke);
-//
-////	cout << "inv(V) " << VINV << endl;
-//
+//	VINV = 0.5*(gm1*ke-u*c), -0.5*(u*gm1-c), -0.5*v*gm1, 0.5*gm1,
+//		   -ke*v*gm1, v*u*gm1, gm1*v*v+c2, -v*gm1,
+//		   (c2-gm1*ke)*u, u*u*gm1, v*u*gm1, -u*gm1,
+//		   0.5*(gm1*ke+u*c), -0.5*(u*gm1+c), -0.5*v*gm1, 0.5*gm1;
+//			
 //	for(int i=0; i < NV; ++i)
 //		for(int j=0; j < NV; ++j)
-//			V(i,j) = Aeigs(j)*V(i,j);
+//			VINV(i,j) = Aeigs(i)*VINV(i,j)/c2;
 //
 //	A = 0.0;
 //	for(int i=0; i<NV; ++i)
 //		for(int j=0; j<NV; ++j)
 //			for(int k=0; k<NV; ++k)
 //				A(i,j)+=V(i,k)*VINV(k,j);
-	//A = temp;
-//	cout << A << temp << endl;
-	
-//	cout << V << eigs << VINV << endl;
-	
-	//cout << " |A| " << A << endl;
-
-//	temp = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*A(k,j);
-//	A = temp;
-	
-	matrix_absolute_value(A);
-	//cout << "u,u+c,u-c "  << u << ' ' << u+c << ' ' << u-c << endl;
-
 
 	/* dg/dw */
 	B =   0.0, 0.0, 1.0, 0.0,
 	      -u*v, v, u, 0.0,
 		  -v*v+gm1*ke, -u*gm1, (2.0-gm1)*v, gm1,
-		  v*(-gam*E+gm1*ke),  -u*v*gm1, (gam*E-gm1*v*v-gm1*ke), v*gam;
-
-//	V = 1.0, 0.0, 1.0, 1.0,
-//		v, 0.0, v+c, v-c,
-//		0.0, 1.0, u, u,
-//		-0.5*(u*u-v*v), u, gam*E-gm1*ke+v*c, gam*E-gm1*ke-v*c;
-//	
-//	//	cout.precision(15);
-//	//	cout << "V " << V << endl;
+		  v*(-gam*E+2.0*gm1*ke),  -u*v*gm1, gam*E-gm1*v*v-gm1*ke, v*gam;
+	
+	matrix_absolute_value(B);
+	
+//	V = 0.0, 1.0, 1.0, 1.0,
+//		1.0, 0.0, u, u,
+//		0.0, v, v+c, v-c,
+//		u,-0.5*(u*u-v*v), gam*E-gm1*ke+v*c, gam*E-gm1*ke-v*c;
 //	
 //	if (v > c) {
 //		Beigs = v,v,v+c,v-c;
@@ -299,25 +275,20 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 //		Beigs = v,v,v+c,v-u;	
 //	}
 //	
-//	VINV = (-2.0+ke+ke/gam)/(-2.0+ke),  -v/(-2.0*gam+gm1*ke+ke), -u/(-2.0*gam+gm1*ke+ke),  1.0/(-2.0*gam+gm1*ke+ke),
-//			u*ke/(-2.0*gam+gm1*ke+ke), -v*u/(-2.0*gam+gm1*ke+ke),  -(2.0*gam-gm1*ke+0.5*(u*u-v*v))/(-2.0*gam+gm1*ke+ke), u/(-2.0*gam+gm1*ke+ke),
-//			-0.5*(-2.0*v*gam+v*gm1*ke+ke*c+v*ke)/(c*(-2.0*gam+gm1*ke+ke)),  0.5*(-2.0*gam+gm1*ke+v*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*u/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke),
-//			-0.5*(2.0*v*gam-v*gm1*ke+ke*c-v*ke)/(c*(-2.0*gam+gm1*ke+ke)),  -0.5*(-2.0*gam+gm1*ke-v*c+ke)/(c*(-2.0*gam+gm1*ke+ke)), 0.5*u/(-2.0*gam+gm1*ke+ke),  -0.5/(-2.0*gam+gm1*ke+ke);
+//	VINV = -ke*u*gm1, gm1*u*u+c2, v*u*gm1, -u*gm1,
+//		   (c2-gm1*ke)*v, v*u*gm1, v*v*gm1, -v*gm1,
+//		   0.5*(gm1*ke-v*c), -0.5*u*gm1, -0.5*(v*gm1-c), 0.5*gm1,
+//		   0.5*(gm1*ke+v*c), -0.5*u*gm1, -0.5*(c+gm1*v), 0.5*gm1;
 //	
-//	temp = 0.0;
+//	for(int i=0; i < NV; ++i)
+//		for(int j=0; j < NV; ++j)
+//			VINV(i,j) = Beigs(i)*VINV(i,j)/c2;
+//	
+//	B = 0.0;
 //	for(int i=0; i<NV; ++i)
 //		for(int j=0; j<NV; ++j)
 //			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*B(k,j);
-//	
-//	B = temp;
-	
-	//cout << " B " << B << endl;
-
-	matrix_absolute_value(B);
-	//cout << "v,v+c,v-c "  << v << ' ' << v+c << ' ' << v-c << endl;
-
-	//cout << " |B| " << B << endl;
+//				B(i,j)+=V(i,k)*VINV(k,j);	
 	
 	FLT nu = gbl->mu/rho;
 	
@@ -330,25 +301,11 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		0.0, 0.0, 0.0, alpha;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-	
-//	temp = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*S(k,j);
-//	
-//	S = temp;
-	
-	//cout << " S " << S << endl;
 
-//	cout << "A,B "<< A << B << endl;
 	Tinv = 2.0/hmax*(A+B+hmax*S);
 
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
-	//cout << "hmax: "<< hmax << endl;
-
-	//cout << "tauinv: "<< Tinv << endl;
 
 	/*  LU factorization  */
 	int info,ipiv[NV];
@@ -376,8 +333,6 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
 	
-	//cout << "tau: "<< Tau << endl;
-
 	
 	return;
 }

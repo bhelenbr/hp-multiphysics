@@ -155,7 +155,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 void neumann::element_rsdl(int eind, int stage) {
 	int k,n,sind;
 	TinyVector<FLT,2> pt,mvel,nrm;
-	Array<FLT,1> u(x.NV),flx(x.NV),cvu(x.NV);
+	Array<FLT,1> u(x.NV),flx(x.NV);
 	
 	x.lf = 0.0;
 
@@ -192,7 +192,7 @@ void neumann::element_rsdl(int eind, int stage) {
 	
 	for(n=0;n<x.NV;++n)
 		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-
+	
 	return;
 }
 
@@ -221,8 +221,9 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 
 void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
 
-	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,temp;
-	Array<FLT,2> A(x.NV,x.NV);
+	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp;
+	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
+	Array<FLT,1> Aeigs(x.NV);
 	
 	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
 	norm /= mag;
@@ -261,10 +262,12 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	FLT uv = Roe(1)/Roe(0);
 	FLT vv = Roe(2)/Roe(0);
 	FLT KE = 0.5*(uv*uv+vv*vv);
-	FLT H = Roe(3)/Roe(0);
+	FLT E = Roe(3)/Roe(0);
 	FLT gam = x.gbl->gamma;
-	FLT RT = (gam-1.0)*(H-KE);
+	FLT gm1 = gam-1.0;
+	FLT RT = gm1*(E-KE);
 	FLT c2 = gam*RT;
+	FLT c = sqrt(c2);
 
 	/* df/dw in u,v,c Variables */
 	A = 0.0,                                       1.0,                                                                         0.0,            0.0,
@@ -272,23 +275,57 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	    -uv*vv,                                    vv,                                                                          uv,             0.0,
 	    uv*(-3*gam*KE+2*KE-c2+gam*gam*KE)/(gam-1), -(1.5*uv*uv-2.5*uv*uv*gam-0.5*vv*vv*gam+0.5*vv*vv-c2+uv*uv*gam*gam)/(gam-1), -uv*(gam-1)*vv, uv*gam;
 	
-	temp = 0.0;
+//	V = 0.0, 1.0, 1.0, 1.0,
+//		0.0, uv, uv+c, uv-c,
+//		1.0, 0.0, vv, vv,
+//		vv, 0.5*(uv*uv-vv*vv), gam*E-gm1*KE+uv*c, gam*E-gm1*KE-uv*c;
+//
+//	Aeigs = uv,uv,uv+c,uv-c;
+//	
+//	VINV = 0.5*(gm1*KE-uv*c), -0.5*(uv*gm1-c), -0.5*vv*gm1, 0.5*gm1,
+//		   -KE*vv*gm1, vv*uv*gm1, gm1*vv*vv+c2, -vv*gm1,
+//		   (c2-gm1*KE)*uv, uv*uv*gm1, vv*uv*gm1, -uv*gm1,
+//		   0.5*(gm1*KE+uv*c), -0.5*(uv*gm1+c), -0.5*vv*gm1, 0.5*gm1;
+//	
+//	for(int i=0; i < x.NV; ++i)
+//		for(int j=0; j < x.NV; ++j)
+//			temp(i,j) = Aeigs(i)*VINV(i,j)/c2;
+//	
+//	A = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				A(i,j)+=V(i,k)*temp(k,j);
+	
+	fluxtemp = 0.0;
 	
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
-			temp(i) += 0.5*A(i,j)*(ub(j)+u(j));
-	
+			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+u(j));
+
+	//Aeigs = fabs(uv),fabs(uv),fabs(uv+c),fabs(uv-c);
+
 	matrix_absolute_value(A);
 
+//	for(int i=0; i < x.NV; ++i)
+//		for(int j=0; j < x.NV; ++j)
+//			temp(i,j) = Aeigs(i)*VINV(i,j)/c2;
+//	
+//	A = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				A(i,j)+=V(i,k)*temp(k,j);
+	
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
-			temp(i) -= 0.5*A(i,j)*(ub(j)-u(j));
+			fluxtemp(i) -= 0.5*A(i,j)*(ub(j)-u(j));
 
 	/* CHANGE BACK TO X,Y COORDINATES */
-	flx(0) = temp(0);
-	flx(1) = temp(1)*norm(0) -temp(2)*norm(1);
-	flx(2) = temp(1)*norm(1) +temp(2)*norm(0);
-	flx(3) = temp(3);
+	flx(0) = fluxtemp(0);
+	flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
+	flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
+	flx(3) = fluxtemp(3);
 	
 	flx *= mag;
 	

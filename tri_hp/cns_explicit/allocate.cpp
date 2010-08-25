@@ -41,6 +41,19 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);
+	
+	std::string estring;
+	if (!input.get(gbl->idprefix + "_error_estimator",estring)) input.getwdefault("error_estimator",estring,std::string("none"));
+	if (estring == "none") 
+		gbl->error_estimator = tri_hp_cns_explicit::none;
+	else if (estring == "energy_norm")
+		gbl->error_estimator = tri_hp_cns_explicit::energy_norm;
+	else if (estring == "scale_independent")
+		gbl->error_estimator = tri_hp_cns_explicit::scale_independent;
+	else {
+		*gbl->log << "Error estimator not recognized" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 
 	return;
 }
