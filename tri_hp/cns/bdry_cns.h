@@ -117,7 +117,7 @@ namespace bdry_cns {
 			
 			/* CONTINUITY */
 			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
-			
+
 			/* EVERYTHING ELSE DOESN'T MATTER */
 			for (int n=1;n<x.NV;++n)
 				flx(n) = 0.0;
@@ -347,6 +347,15 @@ namespace bdry_cns {
 //			void tadvance();
 //	};
 
+	class characteristic : public neumann {
+	protected:
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx);
+	public:
+		characteristic(tri_hp_cns &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "characteristic";}
+		characteristic(const characteristic& inbdry, tri_hp_cns &xin, edge_bdry &bin) : neumann(inbdry,xin,bin) {}
+		characteristic* create(tri_hp& xin, edge_bdry &bin) const {return new characteristic(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+	};
+	
 	class applied_stress : public neumann {
 		Array<symbolic_function<2>,1> stress;
 

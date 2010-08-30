@@ -34,18 +34,26 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 	//if (!input.get(gbl->idprefix + "_k",gbl->kcond)) input.getwdefault("k",gbl->kcond,1.0);
 	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,8.314472);
 
-	gbl->kcond = gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
+	gbl->kcond = gbl->R*gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
 	
 	gbl->body(0) = 0.0;
 	gbl->body(1) = -9.81;
 
-	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-	gbl->D.resize(NV);
-	gbl->D = 0.0;
-	
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);
-
+	
+	std::string estring;
+	if (!input.get(gbl->idprefix + "_error_estimator",estring)) input.getwdefault("error_estimator",estring,std::string("none"));
+	if (estring == "none") 
+		gbl->error_estimator = tri_hp_cns::none;
+	else if (estring == "energy_norm")
+		gbl->error_estimator = tri_hp_cns::energy_norm;
+	else if (estring == "scale_independent")
+		gbl->error_estimator = tri_hp_cns::scale_independent;
+	else {
+		*gbl->log << "Error estimator not recognized" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 	return;
 }
 

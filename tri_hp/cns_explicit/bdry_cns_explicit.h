@@ -129,39 +129,12 @@ namespace bdry_cns_explicit {
 		int ndirichlets;
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 			
-			// switch u from conservative to primitive 
-			Array<FLT,1> cvu(x.NV);
-			cvu=u;
+			FLT KE = .5*(u(1)*u(1)+u(2)*u(2))/(u(0)*u(0));
 			
-			double pr = (x.gbl->gamma-1.0)*(ibc->f(3, xpt, x.gbl->time)-0.5/ibc->f(0, xpt, x.gbl->time)*(ibc->f(1, xpt, x.gbl->time)*ibc->f(1, xpt, x.gbl->time)+ibc->f(2, xpt, x.gbl->time)*ibc->f(2, xpt, x.gbl->time)));
-
-			u(0) = (x.gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
-			u(1) = cvu(1)/cvu(0);
-			u(2) = cvu(2)/cvu(0);
-			u(3) = u(0)/cvu(0);
-			//u(3) = pr/cvu(0);
-
-			/* CONTINUITY */
-			//flx(0) = pr/u(3)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
-			//flx(0) = cvu(0)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
-			//flx(0) = ibc->f(1, xpt, x.gbl->time)*norm(0)+ibc->f(2, xpt, x.gbl->time)*norm(1);
-			//flx(0) = ibc->f(0, xpt, x.gbl->time)*(u(1)*norm(0)+u(2)*norm(1));
-			//flx(0) = pr/u(3)*(u(1)*norm(0) +u(2)*norm(1));
-
-			flx(0) = cvu(1)*norm(0)+cvu(2)*norm(1);//doesnt work
-			flx(0) = ibc->f(1, xpt, x.gbl->time)*norm(0)+ibc->f(2, xpt, x.gbl->time)*norm(1);//doesnt work
-			flx(0) = pr/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));//doesnt work
-			
-			//FLT KE = .5*(cvu(1)*cvu(1) + cvu(2)*cvu(2))/(cvu(0)*cvu(0));
-			
-			flx(0) = cvu(1)*norm(0)+cvu(2)*norm(1);//doesnt work
-//			flx(1) = 0.0;
-//			flx(2) = 0.0; 
-//			flx(3) = cvu(1)/cvu(0)*(cvu(3)+(x.gbl->gamma-1.0)*(cvu(3)-KE))*norm(0)+cvu(2)/cvu(0)*(cvu(3)+(x.gbl->gamma-1.0)*(cvu(3)-KE))*norm(1);
-
-			/* EVERYTHING ELSE DOESN'T MATTER */
-			for (int n=1;n<x.NV;++n)
-				flx(n) = 0.0;
+			flx(0) = u(1)*norm(0)+u(2)*norm(1);//doesnt work
+			flx(1) = 0.0;
+			flx(2) = 0.0; 
+			flx(3) = u(1)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(0)+u(2)/u(0)*(u(3)+(x.gbl->gamma-1.0)*(u(3)-KE))*norm(1);
 
 			return;
 		}
@@ -219,20 +192,20 @@ namespace bdry_cns_explicit {
 				sind = base.seg(j);
 				v0 = x.seg(sind).pnt(0);
 				gind = v0*vdofs;
-				for(int n=1;n<x.NV;++n) {						
+				for(int n=1;n<x.NV-1;++n) {						
 					indices(counter++)=gind+n;
 				}
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			gind = v0*vdofs;
-			for(int n=1;n<x.NV;++n) {
+			for(int n=1;n<x.NV-1;++n) {
 				indices(counter++)=gind+n;
 			}
 			
 			for(int i=0;i<base.nseg;++i) {
 				gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
 				for(int m=0; m<sm; ++m) {
-					for(int n=1;n<x.NV;++n) {
+					for(int n=1;n<x.NV-1;++n) {
 						indices(counter++)=gind+m*x.NV+n;
 					}
 				}

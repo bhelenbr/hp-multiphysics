@@ -273,8 +273,8 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 //	A = 0.0,                                       1.0,                                                                         0.0,            0.0,
 //	    gam*ke-1.5*u*u-0.5*v*v,                3.0*u-u*gam,                                                               -v*(gam-1.0),  gam-1,
 //	    -u*v,                                    v,                                                                          u,             0.0,
-//	    u*(-3*gam*ke+2*ke-c2+gam*gam*ke)/(gam-1), -(1.5*u*u-2.5*u*u*gam-0.5*vv*vv*gam+0.5*vv*vv-c2+uv*uv*gam*gam)/(gam-1), -u*(gam-1)*v, u*gam;
-//	
+//	    u*(-3*gam*ke+2*ke-c2+gam*gam*ke)/(gam-1), -(1.5*u*u-2.5*u*u*gam-0.5*v*v*gam+0.5*v*v-c2+u*u*gam*gam)/(gam-1), -u*(gam-1)*v, u*gam;
+
 	
 	/* eigenvectors of df/dw */
 	V = 0.0, 1.0,           1.0,              1.0,

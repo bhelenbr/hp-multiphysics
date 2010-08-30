@@ -310,87 +310,125 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 //}
 
 
-//void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-//	FLT ul,vl,ur,vr,pl,pr,cl,cr,rho,rhoi;
-//	FLT s,um,v,c,den,lam0,lam1,lam2,mag,hmax;
-//	FLT nu,gam,qmax;
-//	Array<FLT,1> ub(x.NV), uvp(x.NV);
-//
-//	/* CHARACTERISTIC FAR-FIELD B.C. */   
-//
-//	rho = x.gbl->rho;
-//	nu = x.gbl->mu/x.gbl->rho;
-//	rhoi = 1./rho;
-//	mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
-//	hmax = mag*2.0/(0.25*(basis::tri(x.log2p)->p() +1)*(basis::tri(x.log2p)->p()+1));
-//	qmax = pow(u(0)-0.5*mv(0),2.0) +pow(u(1)-0.5*mv(1),2.0);
-//	gam = 3.0*qmax +(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax)*(0.5*hmax*x.gbl->bd(0) +2.*nu/hmax);
-//
-//	norm(0) /= mag;
-//	norm(1) /= mag;
-//
-//	ul =  u(0)*norm(0) +u(1)*norm(1);
-//	vl = -u(0)*norm(1) +u(1)*norm(0);
-//	pl =  u(x.NV-1);
-//
-//	/* FREESTREAM CONDITIONS */
-//	for(int n=0;n<x.NV;++n)
-//		ub(n) = ibc->f(n,xpt,x.gbl->time);
-//
-//	ur =  ub(0)*norm(0) +ub(1)*norm(1);
-//	vr = -ub(0)*norm(1) +ub(1)*norm(0);
-//	pr =  ub(x.NV-1);
-//
-//	um = mv(0)*norm(0) +mv(1)*norm(1);
-//
-//	cl = sqrt((ul-.5*um)*(ul-.5*um) +gam);
-//	cr = sqrt((ur-.5*um)*(ur-.5*um) +gam);
-//	c = 0.5*(cl+cr);
-//	s = 0.5*(ul+ur);
-//	v = 0.5*(vl+vr);
-//
-//	den = 1./(2*c);
-//	lam0 = s -um;
-//	lam1 = s-.5*um +c; /* always positive */
-//	lam2 = s-.5*um -c; /* always negative */
-//
-//	/* PERFORM CHARACTERISTIC SWAP */
-//	/* BASED ON LINEARIZATION AROUND UL,VL,PL */
-//	uvp(0) = ((pl-pr)*rhoi +(ul*lam1 -ur*lam2))*den;
-//	if (lam0 > 0.0) {
-//		uvp(1) = v*((pr-pl)*rhoi +lam2*(ur-ul))*den/(lam0-lam2) +vl;
-//		for(int n=tri_mesh::ND;n<x.NV-1;++n)
-//			uvp(n) = u(n);
-//	}
-//	else {
-//		uvp(1) = v*((pr-pl)*rhoi +lam1*(ur-ul))*den/(lam0-lam1) +vr;
-//		for(int n=tri_mesh::ND;n<x.NV-1;++n)
-//			uvp(n) = ub(n);
-//	}
-//	uvp(x.NV-1) = (rho*(ul -ur)*gam - lam2*pl +lam1*pr)*den;
-//
-//	/* CHANGE BACK TO X,Y COORDINATES */
-//	ub(0) =  uvp(0)*norm(0) -uvp(1)*norm(1);
-//	ub(1) =  uvp(0)*norm(1) +uvp(1)*norm(0);
-//
-//	for(int n=tri_mesh::ND;n<x.NV;++n)
-//	ub(n) =uvp(n);
-//
-//	norm *= mag;
-//
-//	flx(x.NV-1) = rho*((ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1));
-//
-//	for(int n=0;n<tri_mesh::ND;++n)
-//	flx(n) = flx(x.NV-1)*ub(n) +ub(x.NV-1)*norm(n);
-//
-//	for(int n=tri_mesh::ND;n<x.NV-1;++n)
-//	flx(n) = flx(x.NV-1)*ub(n);
-//
-//// *x.gbl->log << x.npnt << '\t' << u << '\t' << xpt << '\t' << mv << '\t' << norm << '\t' << flx << '\n';
-//
-//
-//	return;
-//}
+void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
+	
+	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp;
+	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
+	Array<FLT,1> Aeigs(x.NV);
+	FLT gam = x.gbl->gamma;
+	FLT gm1 = gam-1.0;
+	FLT gogm1 = gam/gm1;
+	
+	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+	norm /= mag;
+	
+	/* Left */
+	/* Rotate Coordinate System */
+	FLT ul =  pvu(1)*norm(0) +pvu(2)*norm(1);
+	FLT vl = -pvu(1)*norm(1) +pvu(2)*norm(0);
+	pvu(1) = ul, pvu(2) = vl;
+	
+	/* Roe Variables */
+	Rl(0) = sqrt(pvu(0)/pvu(x.NV-1));
+	Rl(1) = ul/Rl(0);
+	Rl(2) = vl/Rl(0);
+	Rl(3) = Rl(0)*(pvu(x.NV-1)/gm1+0.5*(ul*ul+vl*vl));	
+	
+	/* Right */
+	for(int n=0;n<x.NV;++n)
+		ub(n) = ibc->f(n,xpt,x.gbl->time);
+	
+	/* Rotate Coordinate System */
+	FLT ur =  ub(1)*norm(0) +ub(2)*norm(1);
+	FLT vr = -ub(1)*norm(1) +ub(2)*norm(0);
+	ub(1) = ur, ub(2) = vr;
+	
+	/* Roe Variables */
+	Rr(0) = sqrt(ub(0)/ub(x.NV-1));
+	Rr(1) = ur/Rr(0);
+	Rr(2) = vr/Rr(0);
+	Rr(3) = Rr(0)*(ub(x.NV-1)/gm1+0.5*(ur*ur+vr*vr));	
+	
+	/* Average Roe Variables */
+	Roe = 0.5*(Rl+Rr);
+	
+	/* Calculate u,v,c Variables */
+	FLT rho = Roe(0)*Roe(0);
+	FLT u = Roe(1)/Roe(0);
+	FLT v = Roe(2)/Roe(0);
+	FLT ke = 0.5*(u*u+v*v);
+	FLT E = Roe(3)/Roe(0);
+	FLT rt = gm1*(E-ke);
+	FLT pr = rho*rt;
+	FLT c2 = gam*rt;
+	FLT c = sqrt(c2);
+	
+//	/* eigenvectors of P*df/dw */
+//	V = 0.0, 0.0, 1.0, 1.0,
+//		0.0, 0.0, c/(gam*pr), -c/(gam*pr),
+//		1.0, 0.0, 0.0, 0.0,
+//		0.0, 1.0, gm1/(gam*rho), gm1/(gam*rho);
+//	
+//	/* eigenvalues of P*df/dw  */
+//	Aeigs = u,u,u+c,u-c;
+//	
+//	/* inverse of eigenvectors (P*df/dw)^-1 */		
+//	VINV = 0.0,            0.0,           1.0, 0.0,
+//		   -gm1/(gam*rho), 0.0,           0.0, 1.0,
+//		   0.5,            0.5*gam*pr/c,  0.0, 0.0,
+//		   0.5,            -0.5*gam*pr/c, 0.0, 0.0;
+//	
+//	for(int i=0; i < x.NV; ++i)
+//		for(int j=0; j < x.NV; ++j)
+//			temp(i,j) = Aeigs(i)*VINV(i,j);
+//	
+//	A = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				A(i,j)+=V(i,k)*temp(k,j);
+	
+	/* df/dw */
+	A = u/rt,               rho,                       0.0,     -rho*u/rt,
+		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
+		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
+		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+	
+	fluxtemp = 0.0;
+	
+	for(int i = 0; i < x.NV; ++i)
+		for(int j = 0; j < x.NV; ++j)
+			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+pvu(j));
+	
+//	Aeigs = fabs(u),fabs(u),fabs(u+c),fabs(u-c);
+//	
+//	
+//	for(int i=0; i < x.NV; ++i)
+//		for(int j=0; j < x.NV; ++j)
+//			temp(i,j) = Aeigs(i)*VINV(i,j);
+//	
+//	A = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				A(i,j)+=V(i,k)*temp(k,j);
+	
+	matrix_absolute_value(A);
+	
+	for(int i = 0; i < x.NV; ++i)
+		for(int j = 0; j < x.NV; ++j)
+			fluxtemp(i) -= 0.5*A(i,j)*(ub(j)-pvu(j));
+	
+	/* CHANGE BACK TO X,Y COORDINATES */
+	flx(0) = fluxtemp(0);
+	flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
+	flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
+	flx(3) = fluxtemp(3);
+	
+	flx *= mag;
+	
+	return;
+}
 
 //void hybrid_slave_pt::update(int stage) {
 //

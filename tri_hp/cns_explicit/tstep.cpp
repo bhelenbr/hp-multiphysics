@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-//#define TIMEACCURATE
+#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -38,20 +38,6 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	
 		int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 
-//		// switch uht from conservative to primitive variables
-//		for(i = 0; i < lgpx; ++i) {
-//			for(j = 0; j < lgpn; ++j) {
-//				
-//				for(int n = 0; n < NV; ++n)
-//					cvu(n) = u(n)(i,j);
-//				
-//				u(0)(i,j) = (gbl->gamma-1.0)*(cvu(3)-0.5/cvu(0)*(cvu(1)*cvu(1)+cvu(2)*cvu(2)));
-//				u(1)(i,j) = cvu(1)/cvu(0);
-//				u(2)(i,j) = cvu(2)/cvu(0);
-//				u(3)(i,j) = u(0)(i,j)/cvu(0);
-//			}
-//		}
-		
 		/* IF TINFO > -1 IT IS CURVED ELEMENT */
 		if (tri(tind).info > -1) {
 			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
@@ -164,12 +150,14 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		dtstari = MAX(1./tstep,dtstari);
 		
 	}
-	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
 	
 	/* find max dtstari for all blocks and use on every block  */
 	FLT dtstari_recv;
 	sim::blks.allreduce(&dtstari,&dtstari_recv,1,blocks::flt_msg,blocks::max);
 	dtstari = dtstari_recv;
+	
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
+
 	
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;
@@ -265,6 +253,12 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 			for(int k=0; k<NV; ++k)
 				A(i,j)+=V(i,k)*VINV(k,j);
 
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*A(k,j);
+	A = temp;
 //	/* dg/dw */
 //	B =   0.0, 0.0, 1.0, 0.0,
 //	      -u*v, v, u, 0.0,
@@ -284,13 +278,11 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		Beigs = v,v,v+c,c-v;	
 	}
 	
-
 	VINV = -u*ke*gm1,c2+gm1*u*u, v*u*gm1, -u*gm1,
 	       -gm1*ke+c2, u*gm1, v*gm1, -gm1,
 		   0.5*(-v*c+gm1*ke),-0.5*u*gm1, -0.5*(-c+v*gm1), 0.5*gm1,
 	       0.5*(v*c+gm1*ke), -0.5*u*gm1, -0.5*(c+v*gm1), 0.5*gm1;
-	
-	
+		
 	VINV /= c2;
 
 	for(int i=0; i < NV; ++i)
@@ -303,6 +295,13 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 			for(int k=0; k<NV; ++k)
 				B(i,j)+=V(i,k)*VINV(k,j);	
 
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*B(k,j);
+	B = temp;
+	
 	FLT nu = gbl->mu/rho;
 	
 	FLT cp = gogm1*gbl->R;
@@ -314,6 +313,13 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		0.0, 0.0, 0.0, alpha;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*S(k,j);
+	S = temp;
 
 	Tinv = 2.0/hmax*(A+B+hmax*S);
 

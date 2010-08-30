@@ -150,10 +150,10 @@ hp_edge_bdry* tri_hp_cns::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = new neumann(*this,*ebdry(bnum));
 			break;
 		}
-//		case tri_hp_cns_stype::characteristic: {
-//			temp = new characteristic(*this,*ebdry(bnum));
-//			break;
-//		}
+		case tri_hp_cns_stype::characteristic: {
+			temp = new characteristic(*this,*ebdry(bnum));
+			break;
+		}
 //		case tri_hp_cns_stype::euler: {
 //			temp = new euler(*this,*ebdry(bnum));
 //			break;
