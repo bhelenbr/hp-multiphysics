@@ -15,18 +15,10 @@ void tri_hp_cns::minvrt() {
 	/* only p = 1 for now */
 	if (gbl->diagonal_preconditioner) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
-    } else {
+    } 
+	else {
 		/* uses Pinv */
 		for(i=0;i<npnt;++i) {
-//			DGETUS(&gbl->vprcn_ut(i,0,0), NV, NV, &gbl->res.v(i,0));
-//			
-//			for(j = 0; j < NV; ++j){
-//				temp(j) = 0.0;
-//				for(k = 0; k < NV; ++k){
-//					temp(j) += gbl->vprcn_ut(i,j,k)*gbl->res.v(i,k);
-//				}
-//			}
-			
 			
 			/*  LU factorization  */
 			int info,ipiv[NV];
@@ -45,9 +37,6 @@ void tri_hp_cns::minvrt() {
 				*gbl->log << "DGETRS FAILED IN CNS MINVRT" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-			for(j = 0; j < NV; ++j) 
-				gbl->res.v(i,j) /= basis::tri(log2p)->vdiag();
-
 		}
 	}
 

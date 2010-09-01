@@ -127,24 +127,23 @@ void tri_hp_cns::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
-//		if  (std::isnan(qmax)) { 
-//			*gbl->log << "flow solution has nan's" << std::endl;
-//			output("nan",tecplot);
-//			sim::abort(__LINE__,__FILE__,gbl->log);
-//		}
+		if  (std::isnan(qmax)) { 
+			*gbl->log << "flow solution has nan's" << std::endl;
+			output("nan",tecplot);
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
 
 		FLT tstep;
 		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 		
-		gbl->tprcn_ut(tind,Range::all(),Range::all()) = tprcn;
-		
+		gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn/tstep;
+
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 		
-	
 		for(i=0;i<3;++i) {
-			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += gbl->tprcn_ut(tind,Range::all(),Range::all());
+			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
 				side = tri(tind).seg(i);
 				gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
@@ -174,77 +173,77 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 	FLT c2 = gam*rt;
 	FLT c = sqrt(c2);
 	
-	/* Preconditioner */
-	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
-	    -u/rho,          1.0/rho,    0.0,         0.0,
-	    -v/rho,          0.0,        1.0/rho,     0.0,
-		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
-
-	/* Inverse of Preconditioner */
-	Pinv = 1.0/rt,               0.0,   0.0,   -rho/rt,
-		   u/rt,                 rho,   0.0,   -rho*u/rt,
-		   v/rt,                 0.0,   rho,   -rho*v/rt,
-		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
-	
-	
 //	/* Preconditioner */
-//	P = 1,0,0,0,
-//		0,1,0,0,
-//		0,0,1,0,
-//		0,0,0,1;
-//	
+//	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
+//	    -u/rho,          1.0/rho,    0.0,         0.0,
+//	    -v/rho,          0.0,        1.0/rho,     0.0,
+//		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
+//
 //	/* Inverse of Preconditioner */
-//	Pinv = 1,0,0,0,
-//		   0,1,0,0,
-//		   0,0,1,0,
-//		   0,0,0,1;
-	
-	/* eigenvectors of P*df/dw */
-	V = 0.0, 0.0, 1.0, 1.0,
-	    0.0, 0.0, c/(gam*pr), -c/(gam*pr),
-	    1.0, 0.0, 0.0, 0.0,
-	    0.0, 1.0, gm1/(gam*rho), gm1/(gam*rho);
-	
-	/* take absolute value, u and c are already positive */
-	if (u > c) {
-		Aeigs = u,u,u+c,u-c;
-	}
-	else {
-		Aeigs = u,u,u+c,c-u;	
-	}
-
-	/* inverse of eigenvectors (P*df/dw)^-1 */		
-	VINV = 0.0,            0.0,           1.0, 0.0,
-		   -gm1/(gam*rho), 0.0,           0.0, 1.0,
-	       0.5,            0.5*gam*pr/c,  0.0, 0.0,
-		   0.5,            -0.5*gam*pr/c, 0.0, 0.0;
-	
-	for(int i=0; i < NV; ++i)
-		for(int j=0; j < NV; ++j)
-			VINV(i,j) = Aeigs(i)*VINV(i,j);
-	
-	A = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				A(i,j)+=V(i,k)*VINV(k,j);
+//	Pinv = 1.0/rt,               0.0,   0.0,   -rho/rt,
+//		   u/rt,                 rho,   0.0,   -rho*u/rt,
+//		   v/rt,                 0.0,   rho,   -rho*v/rt,
+//		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
 	
 	
+	/* Preconditioner */
+	P = 1,0,0,0,
+		0,1,0,0,
+		0,0,1,0,
+		0,0,0,1;
 	
+	/* Inverse of Preconditioner */
+	Pinv = 1,0,0,0,
+		   0,1,0,0,
+		   0,0,1,0,
+		   0,0,0,1;
 	
-//	/* df/dw derivative of fluxes wrt primitive variables */
-//	A = u/rt,               rho,                       0.0,     -rho*u/rt,
-//		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
-//		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
-//		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+//	/* eigenvectors of P*df/dw */
+//	V = 0.0, 0.0, 1.0, 1.0,
+//	    0.0, 0.0, c/(gam*pr), -c/(gam*pr),
+//	    1.0, 0.0, 0.0, 0.0,
+//	    0.0, 1.0, gm1/(gam*rho), gm1/(gam*rho);
 //	
-//	temp = 0.0;
+//	/* take absolute value, u and c are already positive */
+//	if (u > c) {
+//		Aeigs = u,u,u+c,u-c;
+//	}
+//	else {
+//		Aeigs = u,u,u+c,c-u;	
+//	}
+//
+//	/* inverse of eigenvectors (P*df/dw)^-1 */		
+//	VINV = 0.0,            0.0,           1.0, 0.0,
+//		   -gm1/(gam*rho), 0.0,           0.0, 1.0,
+//	       0.5,            0.5*gam*pr/c,  0.0, 0.0,
+//		   0.5,            -0.5*gam*pr/c, 0.0, 0.0;
+//	
+//	for(int i=0; i < NV; ++i)
+//		for(int j=0; j < NV; ++j)
+//			VINV(i,j) = Aeigs(i)*VINV(i,j);
+//	
+//	A = 0.0;
 //	for(int i=0; i<NV; ++i)
 //		for(int j=0; j<NV; ++j)
 //			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*A(k,j);
-//	A = temp;
-//	matrix_absolute_value(A);
+//				A(i,j)+=V(i,k)*VINV(k,j);
+	
+	
+	
+	
+	/* df/dw derivative of fluxes wrt primitive variables */
+	A = u/rt,               rho,                       0.0,     -rho*u/rt,
+		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
+		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
+		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*A(k,j);
+	A = temp;
+	matrix_absolute_value(A);
 	
 	
 	
@@ -267,50 +266,49 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 	
 	
 	
-	/* eigenvectors of P*dg/dw */
-	
-	V = 0.0, 0.0, 1.0,           1.0,
-		1.0, 0.0, 0.0,           0.0,
-		0.0, 0.0, c/(gam*pr),    -c/(gam*pr),
-		0.0, 1.0, gm1/(gam*rho), gm1/(gam*rho);
-	
-	if (v > c) {
-		Beigs = v,v,v+c,v-c;
-	}
-	else {
-		Beigs = v,v,v+c,c-v;	
-	}
-	
-	VINV = 0.0,            1.0, 0.0,           0.0,
-	       -gm1/(gam*rho), 0.0, 0.0,           1.0,
-		   0.5,            0.0, 0.5*gam*pr/c,  0.0,
-		   0.5,            0.0, -0.5*gam*pr/c, 0.0;	
-	
-	for(int i=0; i < NV; ++i)
-		for(int j=0; j < NV; ++j)
-			VINV(i,j) = Beigs(i)*VINV(i,j);
-	
-	B = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				B(i,j)+=V(i,k)*VINV(k,j);	
-	
-	
-	
-//	/* dg/dw derivative of fluxes wrt primitive variables*/
-//	B = v/rt,               0.0,       rho,                         -rho*v/rt,
-//		u*v/rt,            rho*v,    rho*u,                      -rho*u*v/rt,
-//		v*v/rt+1.0,        0.0,       2.0*rho*v,                  -rho*v*v/rt,
-//		v*(gogm1*rt+ke)/rt, rho*u*v, rho*(gogm1*rt+ke)+rho*v*v, -rho*v*(gogm1*rt+ke)/rt+rho*v*gogm1;
+//	/* eigenvectors of P*dg/dw */
+//	V = 0.0, 0.0, 1.0,           1.0,
+//		1.0, 0.0, 0.0,           0.0,
+//		0.0, 0.0, c/(gam*pr),    -c/(gam*pr),
+//		0.0, 1.0, gm1/(gam*rho), gm1/(gam*rho);
 //	
-//	temp = 0.0;
+//	if (v > c) {
+//		Beigs = v,v,v+c,v-c;
+//	}
+//	else {
+//		Beigs = v,v,v+c,c-v;	
+//	}
+//	
+//	VINV = 0.0,            1.0, 0.0,           0.0,
+//	       -gm1/(gam*rho), 0.0, 0.0,           1.0,
+//		   0.5,            0.0, 0.5*gam*pr/c,  0.0,
+//		   0.5,            0.0, -0.5*gam*pr/c, 0.0;	
+//	
+//	for(int i=0; i < NV; ++i)
+//		for(int j=0; j < NV; ++j)
+//			VINV(i,j) = Beigs(i)*VINV(i,j);
+//	
+//	B = 0.0;
 //	for(int i=0; i<NV; ++i)
 //		for(int j=0; j<NV; ++j)
 //			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*B(k,j);
-//	B = temp;
-//	matrix_absolute_value(B);
+//				B(i,j)+=V(i,k)*VINV(k,j);	
+	
+	
+	
+	/* dg/dw derivative of fluxes wrt primitive variables*/
+	B = v/rt,               0.0,       rho,                         -rho*v/rt,
+		u*v/rt,            rho*v,    rho*u,                      -rho*u*v/rt,
+		v*v/rt+1.0,        0.0,       2.0*rho*v,                  -rho*v*v/rt,
+		v*(gogm1*rt+ke)/rt, rho*u*v, rho*(gogm1*rt+ke)+rho*v*v, -rho*v*(gogm1*rt+ke)/rt+rho*v*gogm1;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*B(k,j);
+	B = temp;
+	matrix_absolute_value(B);
 	
 	
 	
@@ -340,7 +338,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 		0.0, 0.0, 0.0, alpha;
 	
 	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-	
+
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)

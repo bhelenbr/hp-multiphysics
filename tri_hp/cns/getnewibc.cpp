@@ -58,7 +58,7 @@ namespace ibc_cns {
 
 	class sphere : public init_bdry_cndtn {
 		private:
-			FLT speed,angle,inner,outer;
+			FLT speed,angle,inner,outer,RT,pr,gamma;
 			TinyVector<FLT,tri_mesh::ND> vel;
 
 		public:
@@ -67,15 +67,17 @@ namespace ibc_cns {
 
 				r = sqrt(x(0)*x(0) +x(1)*x(1));
 				switch(n) {
+					case(0):
+						return(pr);
 					case(1):case(2): 
 						if (r < inner) 
 							return(0.0);
 						else if (r < outer)
-							return(vel(n-1)/340.29*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
+							return(vel(n-1)*0.5*(1.-cos(M_PI*(r-inner)/(outer-inner))));
 						else
-							return(vel(n-1)/340.29);
-					case(0):case(3):
-						return(1./1.403);
+							return(vel(n-1));
+					case(3):
+						return(RT);
 				}
 				return(0.0);
 			}
@@ -86,7 +88,7 @@ namespace ibc_cns {
 
 				keyword = idnty +"_flowspeed";
 				if (!blockdata.get(keyword,speed)) 
-					blockdata.getwdefault("flowspeed",speed,1.0);
+					blockdata.getwdefault("flowspeed",speed,0.1);
 
 				keyword = idnty +"_angle";
 				if (!blockdata.get(keyword,angle)) 
@@ -100,6 +102,18 @@ namespace ibc_cns {
 				keyword = idnty +"_outer_radius";
 				if (!blockdata.get(keyword,outer)) 
 					blockdata.getwdefault("outer_radius",outer,2.1);
+				
+				keyword = idnty +"_gamma";
+				if (!blockdata.get(keyword,gamma))
+					blockdata.getwdefault("gamma",gamma,1.403);
+				
+				keyword = idnty +"_RT";
+				if (!blockdata.get(keyword,RT)) 
+					blockdata.getwdefault("RT",RT,1.0/gamma);
+				
+				keyword = idnty +"_pressure";
+				if (!blockdata.get(keyword,pr)) 
+					blockdata.getwdefault("pressure",pr,1.0/gamma);
 
 				vel(0) = speed*cos(angle);
 				vel(1) = speed*sin(angle);
