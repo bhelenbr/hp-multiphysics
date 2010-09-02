@@ -329,10 +329,10 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	pvu(1) = ul, pvu(2) = vl;
 	
 	/* Roe Variables */
-	Rl(0) = sqrt(pvu(0)/pvu(x.NV-1));
-	Rl(1) = ul/Rl(0);
-	Rl(2) = vl/Rl(0);
-	Rl(3) = Rl(0)*(pvu(x.NV-1)/gm1+0.5*(ul*ul+vl*vl));	
+	Rl(0) = sqrt(pvu(0)/pvu(x.NV-1)); // sqrt(rho)
+	Rl(1) = Rl(0)*ul; // sqrt(rho)*u
+	Rl(2) = Rl(0)*vl; // sqrt(rho)*v
+	Rl(3) = Rl(0)*(pvu(x.NV-1)/gm1+0.5*(ul*ul+vl*vl)); // sqrt(rho)*E
 	
 	/* Right */
 	for(int n=0;n<x.NV;++n)
@@ -345,8 +345,8 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	/* Roe Variables */
 	Rr(0) = sqrt(ub(0)/ub(x.NV-1));
-	Rr(1) = ur/Rr(0);
-	Rr(2) = vr/Rr(0);
+	Rr(1) = Rr(0)*ur;
+	Rr(2) = Rr(0)*vr;
 	Rr(3) = Rr(0)*(ub(x.NV-1)/gm1+0.5*(ur*ur+vr*vr));	
 	
 	/* Average Roe Variables */

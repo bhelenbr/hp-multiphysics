@@ -4,22 +4,34 @@
 #include "tri_hp_cns.h"
 #include "../hp_boundary.h"
 
+//#define TIMEACCURATE
+
 void tri_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side,v0;
-	FLT jcb,h,hmax,q,qmax,lam1,gam,pmax,rtmax;
+	FLT jcb,h,hmax,q,qmax,lam1,gam,tstep;
 	TinyVector<int,3> v;
 	Array<double,1> umax(NV);
-	
+	Array<double,2> tprcn(NV,NV),tau(NV,NV);
+
 	/***************************************/
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
+	if(gbl->diagonal_preconditioner){
+		*gbl->log << "oops diagonal preconditioner not done yet" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+		
 	gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
 	if (basis::tri(log2p)->sm() > 0) {
 		gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 	}
 	gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
+#ifdef TIMEACCURATE
+	FLT dtstari = 0.0;
+#endif
+	
 	for(tind = 0; tind < ntri; ++tind) {
 		jcb = 0.25*area(tind);  // area is 2 x triangle area
 		v = tri(tind).pnt;
@@ -70,9 +82,6 @@ void tri_hp_cns::setup_preconditioner() {
 					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
 					qmax = MAX(qmax,q);
 					
-					pmax = MAX(pmax,fabs(u(0)(i,j)));
-					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
-					
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
@@ -101,8 +110,6 @@ void tri_hp_cns::setup_preconditioner() {
 					mvel(1) = gbl->bd(0)*(crd(1)(i,j) -dxdt(log2p,tind,1)(i,j));                       
 					q = pow(u(1)(i,j)-0.5*mvel(0),2.0)  +pow(u(2)(i,j)-0.5*mvel(1),2.0);
 					qmax = MAX(qmax,q);
-					pmax = MAX(pmax,fabs(u(0)(i,j)));
-					rtmax = MAX(rtmax,fabs(u(3)(i,j)));
 					
 					umax(0) = MAX(umax(0),fabs(u(0)(i,j)));
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
@@ -133,15 +140,35 @@ void tri_hp_cns::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 
-		FLT tstep;
-		Array<double,2> tprcn(NV,NV),tau(NV,NV);		
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
-		
-		gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn/tstep;
 
+		//tstep = 1.0e-3;//manually set time step
+		
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 		
+		jcb /= tstep;
+
+#ifdef TIMEACCURATE
+		dtstari = MAX(1./tstep,dtstari);
+		
+	}
+	
+	/* find max dtstari for all blocks and use on every block  */
+	FLT dtstari_recv;
+	sim::blks.allreduce(&dtstari,&dtstari_recv,1,blocks::flt_msg,blocks::max);
+	dtstari = dtstari_recv;
+	
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
+	
+	
+	for(tind=0;tind<ntri;++tind) {
+		v = tri(tind).pnt;
+		jcb = 0.25*area(tind)*dtstari; 
+#endif
+		
+		gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn;
+
 		for(i=0;i<3;++i) {
 			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
 			if (basis::tri(log2p)->sm() > 0) {
