@@ -7,8 +7,8 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 all: libtri_mesh.a libtri_mesh_mpi.a tri_mesh tri_mesh_mpi
 
 libtri_mesh.a:
-	+@[ -d  _serial ] || mkdir -p _serial EXTRAFLAGS='-DPTH'
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@
+	+@[ -d  _serial ] || mkdir -p _serial 
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DPTH'
 
 .PHONY: libtri_mesh.a
 
