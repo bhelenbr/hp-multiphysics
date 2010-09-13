@@ -606,7 +606,7 @@ namespace bdry_ins {
 			struct global {                
 				bool is_loop;
 				/* FLUID PROPERTIES */
-				FLT sigma,rho2,mu2;
+				FLT sigma,rho2,mu2,p_ext;
 
 				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;

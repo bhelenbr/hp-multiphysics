@@ -41,6 +41,8 @@ void surface::init(input_map& inmap,void* gin) {
 
 	keyword = base.idprefix + "_sigma";
 	inmap.getwdefault(keyword,gbl->sigma,0.0);
+	
+	inmap.getwdefault(base.idprefix +"_p_ext",gbl->p_ext,0.0);
 
 	keyword = base.idprefix + "_matching_block";
 	if (!inmap.get(keyword,val)) {
@@ -379,7 +381,7 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 #endif 
 
 		/* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
-		res(4,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(0);
+		res(4,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(0);
 #ifdef AXISYMMETRIC
 		res(4,i) += gbl->sigma*jcb;
 #endif
@@ -388,7 +390,7 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 
 
 		/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
-		res(6,i) = +RAD(crd(0,i))*(x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i)*norm(1);                
+		res(6,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(1);                
 		/* AND INTEGRATION BY PARTS TERM */
 		res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
 	}
