@@ -13,6 +13,8 @@
 #include "../tri_hp.h"
 #include <blocks.h>
 
+#define CONST_A
+
 class tri_hp_cd : public tri_hp {
 	public:
 		/* THINGS SHARED BY ALL tri_hp_ins in same multigrid block */
@@ -21,10 +23,10 @@ class tri_hp_cd : public tri_hp {
 			Array<FLT,1> tau;
 
 			/* PHYSICAL CONSTANTS */
-			FLT ax, ay, nu;
+			FLT nu,ax,ay;
 
-			/* SOURCE FUNCTION */
-			init_bdry_cndtn *src;
+			/* SOURCE FUNCTION & FLOW FIELDS */
+			init_bdry_cndtn *src, *a;
 
 			/* ADAPTATION LIMITS */
 			FLT minlngth, maxlngth;

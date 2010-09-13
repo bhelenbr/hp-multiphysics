@@ -75,9 +75,15 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	for(i=0;i<basis::tri(log2p)->gpx();++i) {
 		for(j=0;j<basis::tri(log2p)->gpn();++j) {
 
+#ifdef CONST_A
 			fluxx = RAD(crd(0)(i,j))*(gbl->ax -mvel(0)(i,j))*u(0)(i,j);
 			fluxy = RAD(crd(0)(i,j))*(gbl->ay -mvel(1)(i,j))*u(0)(i,j);
-
+#else
+			pt(0) = crd(0)(i,j);
+			pt(1) = crd(1)(i,j);
+			fluxx = RAD(crd(0)(i,j))*(gbl->a->f(0,pt,gbl->time) -mvel(0)(i,j))*u(0)(i,j);
+			fluxy = RAD(crd(0)(i,j))*(gbl->a->f(1,pt,gbl->time) -mvel(1)(i,j))*u(0)(i,j);
+#endif
 			cv00[i][j] = +dcrd(1,1)(i,j)*fluxx -dcrd(0,1)(i,j)*fluxy;
 			cv01[i][j] = -dcrd(1,0)(i,j)*fluxx +dcrd(0,0)(i,j)*fluxy;
 		}
@@ -127,13 +133,21 @@ void tri_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		/* THIS IS BASED ON CONSERVATIVE LINEARIZED MATRICES */
 		for(i=0;i<basis::tri(log2p)->gpx();++i) {
 			for(j=0;j<basis::tri(log2p)->gpn();++j) {
-
+				pt(0) = crd(0)(i,j);
+				pt(1) = crd(1)(i,j);
 				tres[0] = gbl->tau(tind)*res(0)(i,j);
 
+#ifdef CONST_A
 				e00[i][j] -= (dcrd(1,1)(i,j)*(gbl->ax-mvel(0)(i,j))
 					-dcrd(0,1)(i,j)*(gbl->ay-mvel(1)(i,j)))*tres[0];
 				e01[i][j] -= (-dcrd(1,0)(i,j)*(gbl->ax-mvel(0)(i,j))
 					+dcrd(0,0)(i,j)*(gbl->ay-mvel(1)(i,j)))*tres[0];
+#else
+				e00[i][j] -= (dcrd(1,1)(i,j)*(gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
+											-dcrd(0,1)(i,j)*(gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
+				e01[i][j] -= (-dcrd(1,0)(i,j)*(gbl->a->f(0,pt,gbl->time)-mvel(0)(i,j))
+											+dcrd(0,0)(i,j)*(gbl->a->f(1,pt,gbl->time)-mvel(1)(i,j)))*tres[0];
+#endif
 			}
 		}
 		basis::tri(log2p)->intgrtrs(&lf_re(0)(0),e00[0],e01[0],MXGP); 

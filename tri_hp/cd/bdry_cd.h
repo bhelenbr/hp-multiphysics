@@ -39,6 +39,57 @@ namespace bdry_cd {
 					x.gbl->res.s(sind,mode,0) = 0.0;
 				}
 			}
+			
+#ifdef petsc
+			void petsc_jacobian_dirichlet() {
+				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+				
+				int sm=basis::tri(x.log2p)->sm();
+				Array<int,1> indices((base.nseg+1)*(x.NV) +base.nseg*sm*(x.NV));
+				
+				int vdofs;
+				if (x.mmovement == x.coupled_deformable)
+					vdofs = x.NV +tri_mesh::ND;
+				else
+					vdofs = x.NV;
+				
+				/* only works if pressure is 4th variable */
+				int gind,v0,sind;
+				int counter = 0;
+				
+				int j = 0;
+				do {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					gind = v0*vdofs;
+					for(int n=0;n<x.NV;++n) {						
+						indices(counter++)=gind+n;
+					}
+				} while (++j < base.nseg);
+				v0 = x.seg(sind).pnt(1);
+				gind = v0*vdofs;
+				for(int n=0;n<x.NV;++n) {
+					indices(counter++)=gind+n;
+				}
+				
+				for(int i=0;i<base.nseg;++i) {
+					gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
+					for(int m=0; m<sm; ++m) {
+						for(int n=0;n<x.NV;++n) {
+							indices(counter++)=gind+m*x.NV+n;
+						}
+					}
+				}	
+			
+#ifdef MY_SPARSE
+				x.J.zero_rows(counter,indices);
+				x.J_mpi.zero_rows(counter,indices);
+				x.J.set_diag(counter,indices,1.0);
+#else
+				MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+			}
+#endif
 
 			void tadvance(); 
 	};
@@ -61,8 +112,11 @@ namespace bdry_cd {
 			FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> pt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {
 				FLT vel;
 
+#ifdef CONST_A
 				vel =  (x.gbl->ax-mv(0))*norm(0) +(x.gbl->ay -mv(1))*norm(1);        
-
+#else
+				vel =  (x.gbl->a->f(0,pt,x.gbl->time)-mv(0))*norm(0) +(x.gbl->a->f(1,pt,x.gbl->time) -mv(1))*norm(1);
+#endif
 
 				if (vel > 0.0)
 					return(vel*u);
