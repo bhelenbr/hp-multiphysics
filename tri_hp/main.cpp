@@ -19,7 +19,7 @@ static char help[] = "How am I supposed to know???\n\n";
 void ctrlc(int signal);
 
 int main(int argc, char **argv) {
-    struct sigaction action;
+	struct sigaction action;
 	struct sigaction o_action;
 
 #ifdef MPISRC
