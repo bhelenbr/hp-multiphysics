@@ -168,6 +168,7 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 			else {
 				std::cerr << "use coupled physics for surface boundary" << std::endl;
 				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
 			}
 			break;
 		}
