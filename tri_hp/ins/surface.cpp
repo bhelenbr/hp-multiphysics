@@ -1620,7 +1620,7 @@ void surface::petsc_jacobian() {
 				loc_to_glo(ind++) = gindx++;
 		}
 		
-		int gindxNV = x.npnt*vdofs +x.NV*sind;
+		int gindxNV = x.npnt*vdofs +x.NV*sind*sm;
 		int gindxND = jacobian_start +j*tri_mesh::ND*sm;
 		for(int mode = 0; mode < sm; ++mode) {
 			for(int var = 0; var < x.NV; ++var)
