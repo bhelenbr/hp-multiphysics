@@ -82,6 +82,7 @@ init_bdry_cndtn *tri_hp::getnewibc(std::string suffix, input_map& inmap) {
 		default: {
 			*gbl->log << "couldn't find initial condition function " << ibcname << std::endl;
 			sim::abort(__LINE__,__FILE__,gbl->log);
+			assert(0);
 		}
 	}
 	temp->input(inmap,keyword);
