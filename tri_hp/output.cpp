@@ -333,10 +333,11 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 					out << ijind[i][basis::tri(log2p)->sm()-i]+1 << ' ' << ijind[i+1][basis::tri(log2p)->sm()-i]+1 << ' ' << ijind[i][basis::tri(log2p)->sm()+1-i]+1 << std::endl;
 				}
 			}
-			out.close();
 
 			for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
-				hp_ebdry(i)->output(*gbl->log, typ);
+				hp_ebdry(i)->output(out, typ);
+
+			out.close();
 
 			break; 
 
