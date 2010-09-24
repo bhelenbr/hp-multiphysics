@@ -19,9 +19,9 @@ template<int _p, int ep> void tri_basis<_p,ep>::intgrt1d(FLT *rslt1, const FLT *
 	FLT lcl0;
 #ifdef BZ_DEBUG
 	const Array<FLT,1> f((FLT *) f1, shape(_gpx), neverDeleteData);
-	Array<FLT,1> rslt(rslt1, shape(_nmodx), neverDeleteData);
+	Array<FLT,1> rslt(rslt1, shape(_nmodx-1), neverDeleteData);
 #endif
-	
+
 	lcl0 = 0.0;
 	for(int i=0;i<lgpx;++i)
 		lcl0 += _gxwtx(1,i)*f(i);
@@ -47,7 +47,7 @@ template<int _p, int ep> void tri_basis<_p,ep>::intgrtx1d(FLT *rslt1, const FLT 
 	FLT lcl0;
 #ifdef BZ_DEBUG
 	const Array<FLT,1> f((FLT *) f1, shape(_gpx), neverDeleteData);
-	Array<FLT,1> rslt(rslt1, shape(_nmodx), neverDeleteData);
+	Array<FLT,1> rslt(rslt1, shape(_nmodx-1), neverDeleteData);
 #endif
 	
 	lcl0 = rslt(0);
