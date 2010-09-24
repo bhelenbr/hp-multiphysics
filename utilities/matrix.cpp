@@ -142,7 +142,9 @@ FLT& sparse_row_major::operator()(int row, int col) {
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 	}
 #endif
@@ -175,7 +177,9 @@ void sparse_row_major::add_values(int row, int col, double val) {
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 	}
 #endif
@@ -209,7 +213,9 @@ void sparse_row_major::add_values(int nrows, const Array<int,1>& rows, int col, 
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
@@ -244,7 +250,9 @@ void sparse_row_major::add_values(int row,int ncols, const Array<int,1>& cols,co
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
@@ -281,7 +289,9 @@ void sparse_row_major::add_values(int nels,const Array<int,1>& rows, const Array
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
@@ -315,10 +325,14 @@ void sparse_row_major::add_values(int nrows,const Array<int,1>& rows, int ncols,
 				continue;
 			}
 			
+			
+			
 #ifdef BZ_DEBUG
 			if (cindx >= _cpt(row+1)) {
 				std::cerr << "Too many entries for row " << row << " and col " << col ;
-				std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+				std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+				Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+				std::cerr << "Current usage " << colinds << std::endl;
 				assert(0);
 			}
 #endif
@@ -352,7 +366,9 @@ void sparse_row_major::set_values(int row, int col, double val) {
 #ifdef BZ_DEBUG
 	if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 	}
 #endif
@@ -386,8 +402,9 @@ void sparse_row_major::set_values(int nrows, const Array<int,1>& rows, int col, 
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
-			assert(0);
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;			assert(0);
 		}
 #endif
 		
@@ -421,7 +438,9 @@ void sparse_row_major::set_values(int row,int ncols, const Array<int,1>& cols,co
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
@@ -458,7 +477,9 @@ void sparse_row_major::set_values(int nels,const Array<int,1>& rows, const Array
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
@@ -495,7 +516,9 @@ void sparse_row_major::set_values(int nrows,const Array<int,1>& rows, int ncols,
 #ifdef BZ_DEBUG
 			if (cindx >= _cpt(row+1)) {
 				std::cerr << "Too many entries for row " << row << " and col " << col ;
-				std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+				std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+				Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+				std::cerr << "Current usage " << colinds << std::endl;
 				assert(0);
 			}
 #endif
@@ -532,7 +555,9 @@ void sparse_row_major::set_diag(int nels,const Array<int,1>& rows, FLT val, int 
 #ifdef BZ_DEBUG
 		if (cindx >= _cpt(row+1)) {
 			std::cerr << "Too many entries for row " << row << " and col " << col ;
-			std::cerr << " pointer " << cindx << " next row pointer " << _cpt(row+1) << std::endl;
+			std::cerr << " allocated entries " << _cpt(row+1) - _cpt(row) << std::endl;
+			Array<int,1> colinds(_col(Range(_cpt(row),_cpt(row+1)-1)));
+			std::cerr << "Current usage " << colinds << std::endl;
 			assert(0);
 		}
 #endif
