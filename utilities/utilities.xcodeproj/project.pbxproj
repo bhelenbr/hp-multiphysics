@@ -327,21 +327,6 @@
 			};
 			name = Deployment;
 		};
-		6FB150760867810100EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G4;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				INSTALL_PATH = "$(HOME)/bin";
-				PREBINDING = YES;
-				PRODUCT_NAME = utilities;
-			};
-			name = Default;
-		};
 		6FB150780867810100EAF2E5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -356,46 +341,33 @@
 			};
 			name = Deployment;
 		};
-		6FB1507A0867810100EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
-			};
-			name = Default;
-		};
 		6FB1508B0867812C00EAF2E5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = blas;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes/";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					BZ_DEBUG,
+					f2cFortran,
 				);
+				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
+				INSTALL_PATH = /lib;
+				OTHER_LDFLAGS = "";
+				PREBINDING = NO;
+				PRODUCT_NAME = myblas;
+				SECTORDER_FLAGS = "";
 			};
 			name = Development;
 		};
 		6FB1508C0867812C00EAF2E5 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G4;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
 				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
@@ -417,38 +389,16 @@
 			};
 			name = Deployment;
 		};
-		6FB1508D0867812C00EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
-				HEADER_SEARCH_PATHS = "$(HOME)/Packages/include";
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = blas;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
-		};
 		6FB150A30867821E00EAF2E5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "$(HOME)/Codes";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "$(HOME)/lib";
+				INSTALL_PATH = /lib;
 				LIBRARY_STYLE = STATIC;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
@@ -491,82 +441,19 @@
 			};
 			name = Deployment;
 		};
-		6FB150A50867821E00EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				INSTALL_PATH = "$(HOME)/lib";
-				LIBRARY_STYLE = STATIC;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PREBINDING = NO;
-				PRODUCT_NAME = util;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
-		};
 		6FB150C9086782E900EAF2E5 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = All;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Development;
 		};
 		6FB150CA086782E900EAF2E5 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = All;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
 			};
 			name = Deployment;
-		};
-		6FB150CB086782E900EAF2E5 /* Default */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GCC_OPTIMIZATION_LEVEL = 0;
-				OTHER_CFLAGS = "";
-				OTHER_LDFLAGS = "";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = All;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Default;
 		};
 /* End XCBuildConfiguration section */
 
@@ -576,50 +463,45 @@
 			buildConfigurations = (
 				6FB150740867810100EAF2E5 /* Development */,
 				6FB150750867810100EAF2E5 /* Deployment */,
-				6FB150760867810100EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB150770867810100EAF2E5 /* Build configuration list for PBXProject "utilities" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB150780867810100EAF2E5 /* Development */,
 				6FB150790867810100EAF2E5 /* Deployment */,
-				6FB1507A0867810100EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB1508A0867812C00EAF2E5 /* Build configuration list for PBXNativeTarget "myblas" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB1508B0867812C00EAF2E5 /* Development */,
 				6FB1508C0867812C00EAF2E5 /* Deployment */,
-				6FB1508D0867812C00EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB150A20867821E00EAF2E5 /* Build configuration list for PBXNativeTarget "util" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB150A30867821E00EAF2E5 /* Development */,
 				6FB150A40867821E00EAF2E5 /* Deployment */,
-				6FB150A50867821E00EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 		6FB150C8086782E900EAF2E5 /* Build configuration list for PBXAggregateTarget "All" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6FB150C9086782E900EAF2E5 /* Development */,
 				6FB150CA086782E900EAF2E5 /* Deployment */,
-				6FB150CB086782E900EAF2E5 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Default;
+			defaultConfigurationName = Development;
 		};
 /* End XCConfigurationList section */
 	};
