@@ -119,15 +119,15 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 //#endif
 //				}				
 //			}
-//			fout << base.idprefix << " circumference: " << circumference << std::endl;
-//			fout << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
-//			fout << base.idprefix << " convective flux: " << conv_flux << std::endl;
-//			fout << base.idprefix << " circulation: " << circulation << std::endl;
+//			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
+//			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
+//			*x.gbl->log << base.idprefix << " convective flux: " << conv_flux << std::endl;
+//			*x.gbl->log << base.idprefix << " circulation: " << circulation << std::endl;
 //
 //			/* OUTPUT AUXILIARY FLUXES */
-//			fout << base.idprefix << "total fluxes: " << total_flux << std::endl;
+//			*x.gbl->log << base.idprefix << "total fluxes: " << total_flux << std::endl;
 //#ifdef L2_ERROR
-//			fout << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
+//			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
 //#endif
 //			break;
 //		}
