@@ -23,11 +23,13 @@ void tri_hp_cd::init(input_map& input, void *gin) {
 	keyword = gbl->idprefix + "_dissipation";
 	input.getwdefault(keyword,adis,1.0);
 
-//	keyword = gbl->idprefix + "_ax";
-//	if (!input.get(keyword,gbl->ax)) input.getwdefault("ax",gbl->ax,1.0);
-//
-//	keyword = gbl->idprefix + "_ay";
-//	if (!input.get(keyword,gbl->ay)) input.getwdefault("ay",gbl->ay,0.0);
+#ifndef CONST_A
+	keyword = gbl->idprefix + "_ax";
+	if (!input.get(keyword,gbl->ax)) input.getwdefault("ax",gbl->ax,1.0);
+
+	keyword = gbl->idprefix + "_ay";
+	if (!input.get(keyword,gbl->ay)) input.getwdefault("ay",gbl->ay,0.0);
+#endif
 
 	keyword = gbl->idprefix + "_nu";
 	if (!input.get(keyword,gbl->nu)) input.getwdefault("nu",gbl->nu,0.0);

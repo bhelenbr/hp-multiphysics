@@ -12,12 +12,29 @@
 #include "myblas.h"
 
 namespace bdry_cd {
-	class dirichlet : public hp_edge_bdry {
+	class generic : public hp_edge_bdry {
+		tri_hp_cd &x;
+		bool report_flag;
+		FLT diff_total,conv_total,circumference;
+		
+	public:
+		generic(tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
+		generic(const generic& inbdry, tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {}
+		generic* create(tri_hp& xin, edge_bdry &bin) const {return new generic(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+		void init(input_map& input,void* gbl_in) {
+			hp_edge_bdry::init(input,gbl_in);
+			std::string keyword = base.idprefix +"_report";
+			input.getwdefault(keyword,report_flag,false);       
+		}
+		void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
+	};
+
+	class dirichlet : public generic {
 		tri_hp_cd &x;
 
 		public:
-			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "dirichlet";}
-			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
+			dirichlet(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "dirichlet";}
+			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 			void vdirichlet() {
 				int sind,v0;
@@ -94,14 +111,14 @@ namespace bdry_cd {
 			void tadvance(); 
 	};
 
-	class neumann : public hp_edge_bdry {
+	class neumann : public generic {
 		protected:
 			tri_hp_cd &x;
 			virtual FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> x, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {return(0.0);}
 
 		public:
-			neumann(tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "neumann";}
-			neumann(const neumann& inbdry, tri_hp_cd &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin) {}
+			neumann(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "neumann";}
+			neumann(const neumann& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 			void rsdl(int stage);
 	};
