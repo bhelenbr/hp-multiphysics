@@ -10,7 +10,7 @@
 #include"tri_hp.h"
 #include<myblas.h>
 
- void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
+void tri_hp::tobasis(init_bdry_cndtn *ibc, int tlvl) {
 	int tind,i,j,m,n,indx,v0,v1,sind,info;
 	char uplo[] = "U";
 	TinyVector<FLT,2> pt;
