@@ -119,7 +119,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #endif
 				}	
 			} while (++ind < base.nseg);
-			*x.gbl->log << base.idprefix << " circumference: " << precision(10) << circumference << std::endl;
+			streamsize oldprecision = (*x.gbl->log).precision(10);
+			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
 			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
 			*x.gbl->log << base.idprefix << " convective flux: " << conv_flux << std::endl;
 			*x.gbl->log << base.idprefix << " circulation: " << circulation << std::endl;
@@ -129,6 +130,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 #ifdef L2_ERROR
 			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
 #endif
+			(*x.gbl->log).precision(oldprecision);
 			break;
 		}
 
