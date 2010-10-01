@@ -14,8 +14,6 @@
 #include <blitz/tinyvec-et.h>
 #include <vector>
 
-//#define OPTIMAL_ENERGY_NORM
-
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
 void tri_hp_ins::length() {
@@ -93,8 +91,12 @@ void tri_hp_ins::length() {
 				/* VISCOUS PART TO ERROR MEASURE */
 				bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
 				
+				// bernoulli /= gbl->rho;  
+				
 				dbernoulli = gbl->rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
 				dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				
+				// dbernoulli /= gbl->rho; 
 				
 				dbernoulli -= bernoulli;
 				
