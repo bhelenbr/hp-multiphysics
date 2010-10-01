@@ -51,7 +51,7 @@ namespace bdry_ins {
 			FLT circumference,moment,convect,circulation;
 
 		public:
-			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin) {mytype = "generic";}
+			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
 			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
 #ifdef L2_ERROR
 				l2norm = inbdry.l2norm;
