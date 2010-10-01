@@ -48,7 +48,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 
 	switch(type) {
 		case tri_hp_cd_stype::plain: {
-			temp = new hp_edge_bdry(*this,*ebdry(bnum));
+			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
 		case tri_hp_cd_stype::dirichlet: {
