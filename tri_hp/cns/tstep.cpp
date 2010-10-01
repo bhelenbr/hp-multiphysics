@@ -18,15 +18,19 @@ void tri_hp_cns::setup_preconditioner() {
 	/** DETERMINE FLOW PSEUDO-TIME STEP ****/
 	/***************************************/
 	if(gbl->diagonal_preconditioner){
-		*gbl->log << "oops diagonal preconditioner not done yet" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
+		gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
+		if (basis::tri(log2p)->sm() > 0) {
+			gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+		}
+		gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
 	}
-		
-	gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
-	if (basis::tri(log2p)->sm() > 0) {
-		gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+	else {
+		gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
+		if (basis::tri(log2p)->sm() > 0) {
+			gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
+		}
+		gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 	}
-	gbl->tprcn_ut(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
 #ifdef TIMEACCURATE
 	FLT dtstari = 0.0;
@@ -167,13 +171,27 @@ void tri_hp_cns::setup_preconditioner() {
 		jcb = 0.25*area(tind)*dtstari; 
 #endif
 		
-		gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn;
+		if(gbl->diagonal_preconditioner){
+			for(i=0;i<NV;++i)
+				gbl->tprcn(tind,i) = jcb*tprcn(i,i);
+			
+			for(i=0;i<3;++i) {
+				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
+				if (basis::tri(log2p)->sm() > 0) {
+					side = tri(tind).seg(i);
+					gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+				}
+			}
+		}
+		else {
+			gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn;
 
-		for(i=0;i<3;++i) {
-			gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
-			if (basis::tri(log2p)->sm() > 0) {
-				side = tri(tind).seg(i);
-				gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
+			for(i=0;i<3;++i) {
+				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
+				if (basis::tri(log2p)->sm() > 0) {
+					side = tri(tind).seg(i);
+					gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
+				}
 			}
 		}
 	}

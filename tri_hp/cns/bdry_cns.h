@@ -96,7 +96,6 @@ namespace bdry_cns {
 			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
 			flx(x.NV-1) = h*flx(0);
 
-
 			return;
 		}
 		

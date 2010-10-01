@@ -12,11 +12,12 @@ void tri_hp_cns::minvrt() {
 	Array<FLT,1> temp(NV);
 	int last_phase, mp_phase;
 
-	/* only p = 1 for now */
 	if (gbl->diagonal_preconditioner) {
-		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+		tri_hp::minvrt();
+		//gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
     } 
 	else {
+		/* only p = 1 for now */
 		/* uses Pinv */
 		for(i=0;i<npnt;++i) {
 			

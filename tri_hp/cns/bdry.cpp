@@ -312,7 +312,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 
 void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
 	
-	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp;
+	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp,fluxleft, fluxright;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV);
 	Array<FLT,1> Aeigs(x.NV);
 	FLT gam = x.gbl->gamma;
@@ -388,6 +388,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 //			for(int k=0; k<x.NV; ++k)
 //				A(i,j)+=V(i,k)*temp(k,j);
 	
+	
 	/* df/dw */
 	A = u/rt,               rho,                       0.0,     -rho*u/rt,
 		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
@@ -399,6 +400,24 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
 			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+pvu(j));
+	
+//	/* or this way */
+//	fluxtemp(0) = rho*u;
+//	fluxtemp(1) = rho*u*u+pr;
+//	fluxtemp(2) = rho*u*v;
+//	fluxtemp(3) = rho*u*(gogm1*rt+ke);
+
+	fluxleft(0) = pvu(0)*pvu(1)/pvu(x.NV-1);
+	fluxleft(1) = fluxleft(0)*pvu(1)+pvu(0);
+	fluxleft(2) = fluxleft(0)*pvu(2);
+	fluxleft(3) = fluxleft(0)*(gogm1*pvu(x.NV-1)+0.5*(pvu(1)*pvu(1)+pvu(2)*pvu(2)));
+
+	fluxright(0) = ub(0)*ub(1)/ub(x.NV-1);
+	fluxright(1) = fluxright(0)*ub(1)+ub(0);
+	fluxright(2) = fluxright(0)*ub(2);
+	fluxright(3) = fluxright(0)*(gogm1*ub(x.NV-1)+0.5*(ub(1)*ub(1)+ub(2)*ub(2)));
+	
+	fluxtemp = 0.5*(fluxleft+fluxright);
 	
 //	Aeigs = fabs(u),fabs(u),fabs(u+c),fabs(u-c);
 //	
@@ -412,7 +431,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 //		for(int j=0; j<x.NV; ++j)
 //			for(int k=0; k<x.NV; ++k)
 //				A(i,j)+=V(i,k)*temp(k,j);
-	
+
 	matrix_absolute_value(A);
 	
 	for(int i = 0; i < x.NV; ++i)
@@ -424,9 +443,9 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
 	flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
 	flx(3) = fluxtemp(3);
-	
+
 	flx *= mag;
-	
+		
 	return;
 }
 

@@ -15,21 +15,21 @@ namespace ibc_cns {
 
 	class freestream : public init_bdry_cndtn {
 		private:
-			FLT alpha, speed,perturb_amp;
+		FLT alpha, speed,perturb_amp, gamma;
 
 		public:
 
 			FLT f(int n, TinyVector<FLT,tri_mesh::ND> x, FLT time) {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
-				FLT speed_sound = 340.29;
-				FLT gamma = 1.403;
+
 				switch(n) {
 					case(0):
 						return(1.0/gamma);
 					case(1):
-						return(speed/speed_sound*cos(alpha) +amp*x(0)*(1.0-x(0)));
+						//return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
+						return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
 					case(2):
-						return(speed/speed_sound*sin(alpha));
+						return(speed*sin(alpha));
 					case(3):
 						return(1.0/gamma);
 				}
@@ -42,7 +42,7 @@ namespace ibc_cns {
 
 				keyword = idnty +"_flowspeed";
 				if (!blockdata.get(keyword,speed)) 
-					blockdata.getwdefault("flowspeed",speed,1.0);
+					blockdata.getwdefault("flowspeed",speed,0.1);
 
 				keyword = idnty +"_flowangle";
 				if (!blockdata.get(keyword,alpha)) 
@@ -51,6 +51,10 @@ namespace ibc_cns {
 				keyword = idnty +"_perturb_amplitude";
 				if (!blockdata.get(keyword,perturb_amp)) 
 					blockdata.getwdefault("perturb_amplitude",perturb_amp,0.0); 
+				
+				keyword = idnty +"_gamma";
+				if (!blockdata.get(keyword,gamma))
+					blockdata.getwdefault("gamma",gamma,1.403);
 
 				alpha *= M_PI/180.0;
 			}
