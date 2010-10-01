@@ -39,11 +39,23 @@ void tri_hp::adapt() {
 	return;
 }
 
+static int error_count = 0;
+
 void tri_hp::updatepdata(int v0) {
-	int n,tind,step; 
+	int n,tind=-1,step; 
 	FLT r,s;      
 
-	gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);
+	bool found = gbl->pstr->findinteriorpt(pnts(v0),tind,r,s);
+	if (!found) {
+		*gbl->log << "Warning #" << error_count << ": didn't find interior point in updatepdata for " << v0 << ' ' << pnts(v0) << std::endl;
+		//			std::ostringstream fname;
+		//			fname << "current_solution" << error_count++ << '_' << gbl->idprefix;
+		//			tri_mesh::output(fname.str().c_str(),tri_mesh::grid);
+		//			tri_hp::output(fname.str().c_str(),tri_hp::tecplot);
+	}
+	
+	
+	// gbl->pstr->findandmvptincurved(pnts(v0),tind,r,s);  // old bad way
 
 	for(step=0;step<gbl->nadapt;++step) {
 		gbl->pstr->ugtouht(tind,step);
@@ -120,7 +132,6 @@ void tri_hp::movepdata_bdry(int bnum,int bel,int endpt) {
 	hp_ebdry(bnum)->movepdata_bdry(bel,endpt,gbl->pstr->hp_ebdry(bnum));
 }
 
-static int error_count = 0;
 
 void tri_hp::updatesdata(int sind) {
 	int i,m,n,v0,v1,step,info;
