@@ -169,7 +169,18 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	if (!input.getline(idprefix,buffer)) {
 	   std::cout << "couldn't find expression" << idprefix << '\n';
 	}
-	ptemp.SetExpr(buffer);
+	
+	try {
+		ptemp.SetExpr(buffer);
+	}
+	catch (mu::Parser::exception_type &e) {
+		std::cout << "Message:  " << e.GetMsg() << std::endl;
+		std::cout << "Formula:  " << e.GetExpr() << std::endl;
+		std::cout << "Token:     " << e.GetToken() << std::endl;
+		std::cout << "Position: " << e.GetPos() << std::endl;
+		std::cout << "Errc:      " << e.GetCode() << std::endl;
+		return(false);
+	}
 	mu::varmap_type variables = ptemp.GetUsedVar();
 
 
