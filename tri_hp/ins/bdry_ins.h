@@ -706,9 +706,7 @@ namespace bdry_ins {
 				surface_slave::init(inmap,gbl_in);
 				
 				/* LOAD PRESSURE JUMP FUNCTION */
-				if (base.is_frst()) {
-					dp.init(inmap,base.idprefix+"_jump");
-				}
+				dp.init(inmap,base.idprefix+"_jump");
 			}
 
 			/* Reset to normal stuff */
