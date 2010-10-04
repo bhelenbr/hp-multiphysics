@@ -669,15 +669,26 @@ namespace bdry_ins {
 	};
 	
 	class actuator_disc : public surface_slave {
+			symbolic_function<3> dp;
+					
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-
 				/* CONTINUITY */
 				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
-
-				// FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-				/* X&Y MOMENTUM */
-				for (int n=0;n<tri_mesh::ND;++n)
-					flx(n) = norm(n);  //FIXME
+				
+				if (base.is_frst()) {
+					FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+					FLT norm_vel = flx(x.NV-1)/(length*x.gbl->rho);
+					TinyVector<FLT,3> inpt(xpt(0),xpt(1),norm_vel);
+					FLT delta_p = dp.Eval(inpt,x.gbl->time);			
+					
+					/* X&Y MOMENTUM */
+					for (int n=0;n<tri_mesh::ND;++n)
+						flx(n) = norm(n)*delta_p; 
+				}
+				else {
+					for (int n=0;n<tri_mesh::ND;++n)
+						flx(n) = 0.0; 
+				}
 					
 				/* EVERYTHING ELSE */
 				for (int n=tri_mesh::ND;n<x.NV-1;++n)
@@ -687,15 +698,16 @@ namespace bdry_ins {
 			}
 		public:
 			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "actuator_disc";}
-			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin) {}
+			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin), dp(inbdry.dp) {}
 			actuator_disc* create(tri_hp& xin, edge_bdry &bin) const {return new actuator_disc(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			/* To read in data */
 			void init(input_map& inmap,void* gbl_in) {
-				/* LOAD K */
+				surface_slave::init(inmap,gbl_in);
 				
-				if (!base.is_frst()) {
-					// SET K TO 0.0
+				/* LOAD PRESSURE JUMP FUNCTION */
+				if (base.is_frst()) {
+					dp.init(inmap,base.idprefix+"_jump");
 				}
 			}
 
