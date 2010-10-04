@@ -15,7 +15,7 @@ template<int N> class symbolic_function {
 		blitz::Array<double,1> child_values;
       
 	public:		
-	symbolic_function() {
+	symbolic_function() : nchildren(0) {
 		std::ostringstream varname;
 		
 		p.DefineFun("erf", erf, false);
