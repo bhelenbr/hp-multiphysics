@@ -179,7 +179,6 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 		std::cout << "Token:     " << e.GetToken() << std::endl;
 		std::cout << "Position: " << e.GetPos() << std::endl;
 		std::cout << "Errc:      " << e.GetCode() << std::endl;
-		return(false);
 	}
 	mu::varmap_type variables = ptemp.GetUsedVar();
 
