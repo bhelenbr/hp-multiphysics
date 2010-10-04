@@ -172,6 +172,81 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	
 	try {
 		ptemp.SetExpr(buffer);
+		mu::varmap_type variables = ptemp.GetUsedVar();
+
+		/* Find out how many children are needed */
+		nchildren = 0;
+		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+			if (N > 1) {
+				for (int n=0;n<N;++n) {
+					varname.str("");
+					varname << "x" << n << std::flush;
+					if (item->first == varname.str()) goto NEXT;
+					varname.clear();
+				}
+			}
+			else {
+				if (item->first == "x") goto NEXT;
+			}
+			if (item->first == "t") goto NEXT;
+			
+			if (!input.get(item->first,value)) {
+				/* Check if it is not there or if it is also defined as a formula */
+				std::map<std::string,std::string>::const_iterator mi;
+					mi = input.find(item->first);
+				if (mi != input.end()) {
+					++nchildren;
+					goto NEXT;
+				}
+				else {
+					std::cout << "couldn't find expression " << item->first << '\n';
+					exit(1);
+				}
+			}
+			
+			NEXT: continue;
+		}
+
+		children.resize(nchildren);
+		child_values.resize(nchildren);
+		/* REPEAT EXCEPT THIS TIME ALLOCATE CHILDREN */
+		nchildren = 0;
+		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+			if (N > 1) {
+				for (int n=0;n<N;++n) {
+					varname.str("");
+					varname << "x" << n << std::flush;
+					if (item->first == varname.str()) goto NEXT1;
+					varname.clear();
+				}
+			}
+			else {
+				if (item->first == "x") goto NEXT1;
+			}
+			if (item->first == "t") goto NEXT1;
+			
+			if (!input.get(item->first,value)) {
+				/* Check if it is not there or if it is also defined as a formula */
+				std::map<std::string,std::string>::const_iterator mi;
+					mi = input.find(item->first);
+				if (mi != input.end()) {
+					/* It is there */
+					children(nchildren) = new symbolic_function<N>;
+					children(nchildren)->init(input,item->first);
+					p.DefineVar(item->first, &child_values(nchildren));
+					++nchildren;
+					goto NEXT1;
+				}
+				else {
+					std::cout << "couldn't find expression " << item->first << '\n';
+					exit(1);
+				}
+			}
+			p.DefineConst(item->first,value);
+			
+			NEXT1: continue;
+		}
+		p.SetExpr(buffer);
 	}
 	catch (mu::Parser::exception_type &e) {
 		std::cout << "Message:  " << e.GetMsg() << std::endl;
@@ -180,86 +255,9 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 		std::cout << "Position: " << e.GetPos() << std::endl;
 		std::cout << "Errc:      " << e.GetCode() << std::endl;
 	}
-	mu::varmap_type variables = ptemp.GetUsedVar();
-
-
-
-	/* Find out how many children are needed */
-	nchildren = 0;
-	for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
-		if (N > 1) {
-			for (int n=0;n<N;++n) {
-				varname.str("");
-				varname << "x" << n << std::flush;
-				if (item->first == varname.str()) goto NEXT;
-				varname.clear();
-			}
-		}
-		else {
-			if (item->first == "x") goto NEXT;
-		}
-		if (item->first == "t") goto NEXT;
-		
-		if (!input.get(item->first,value)) {
-			/* Check if it is not there or if it is also defined as a formula */
-			std::map<std::string,std::string>::const_iterator mi;
-    		mi = input.find(item->first);
-			if (mi != input.end()) {
-				++nchildren;
-				goto NEXT;
-			}
-			else {
-				std::cout << "couldn't find expression " << item->first << '\n';
-				exit(1);
-			}
-		}
-		
-		NEXT: continue;
-	 }
-
-	children.resize(nchildren);
-	child_values.resize(nchildren);
-	/* REPEAT EXCEPT THIS TIME ALLOCATE CHILDREN */
-	nchildren = 0;
-	for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
-		if (N > 1) {
-			for (int n=0;n<N;++n) {
-				varname.str("");
-				varname << "x" << n << std::flush;
-				if (item->first == varname.str()) goto NEXT1;
-				varname.clear();
-			}
-		}
-		else {
-			if (item->first == "x") goto NEXT1;
-		}
-		if (item->first == "t") goto NEXT1;
-		
-		if (!input.get(item->first,value)) {
-			/* Check if it is not there or if it is also defined as a formula */
-			std::map<std::string,std::string>::const_iterator mi;
-    		mi = input.find(item->first);
-			if (mi != input.end()) {
-				/* It is there */
-				children(nchildren) = new symbolic_function<N>;
-				children(nchildren)->init(input,item->first);
-				p.DefineVar(item->first, &child_values(nchildren));
-				++nchildren;
-				goto NEXT1;
-			}
-			else {
-				std::cout << "couldn't find expression " << item->first << '\n';
-				exit(1);
-			}
-		}
-		p.DefineConst(item->first,value);
-		
-		NEXT1: continue;
-	 }
-	 p.SetExpr(buffer);
 	
-	 return;
- }
+	return;
+}
 	 
 	 
 
