@@ -104,6 +104,7 @@ OBJ +=  $(OBJINS)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
 CPPFLAGS = -g -O3 -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+#CPPFLAGS += -DBZ_DEBUG
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
 CXXMPI = ${CXX}
 
@@ -136,7 +137,7 @@ tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 
 tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_petsc  $(LIB) -lpetsc -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_petsc  $(LIB) -lpetsc -lsuperlu_dist_2.3 -lparmetis -lmetis -ldl
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
