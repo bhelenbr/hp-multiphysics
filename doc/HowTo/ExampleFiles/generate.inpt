@@ -1,0 +1,39 @@
+logfile: generate
+nblock: 1
+ntstep: 2
+adapt: 1
+b0_filetype: 8
+b0_growth factor: 5000.0
+b0_mesh: ./testcase
+b0_adapt: 1
+#Physics type (1 is no physics): 
+b0_type: 1
+b0_s1_type: plain
+b0_s2_type: plain
+b0_s3_type: plain
+b0_s4_type: plain
+#for splines, include the following for each (X = boundary number): 
+#b0_sX_filename - File containing spline information: 
+#b0_sX_curve_id - Spline curve in file: 
+#b0_sX_s_limits - Beginning and ending limits of spline curve for this boundary: 
+#b0_sX_type - spline: 
+#Boundary 5: 
+b0_s5_filename: clark.spl
+b0_s5_type: spline
+b0_s5_curve_id: 1
+b0_s5_s_limits: 0 1
+####Boundary 6: 
+b0_s6_filename: clark.spl
+b0_s6_type: spline
+b0_s6_curve_id: 1
+b0_s6_s_limits: 1 2
+####Boundary 7: 
+b0_s7_filename: auxiliary.spl
+b0_s7_type: spline
+b0_s7_curve_id: 1
+b0_s7_s_limits: 0 1
+####Boundary 8: 
+b0_s8_filename: auxiliary.spl
+b0_s8_type: spline
+b0_s8_curve_id: 1
+b0_s8_s_limits: 1 2

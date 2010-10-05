@@ -1,0 +1,365 @@
+some basic commands to use (don't include the square brackets)
+	[cd foldername] change the directory you're in to foldername
+	[cd ..] go up one level in the directory
+	[ls] lists all the files in the current directory
+	[mkdir name] make a new folder called 'name'
+	[mv] moves a file/folder
+	[cp] copies
+	['tab'] tab completion - fills in folder names for you
+	[nano filename] open the file filename
+		[ctl+o, enter] save
+		[ctl+x] exit
+
+%To make mesh
+%tri_mesh <filename>  
+%where filename is typically "generate.inpt" 
+
+%To convert to a tecplot file format:
+%tri_mesh -x rstrt002_b0.grd rstrt002_b0.dat
+
+###################################################################
+###################################################################
+
+In Home directory make folders: Packages, Codes, bin
+	[mkdir Packages, etc]
+in Codes, make folder lib
+	[cd Codes]
+	[mkdir lib]
+
+
+###################################################################
+
+#### GET BLITZ ####
+METHOD 1 - using CVS to download
+	[mkdir Packages]
+	[cd Packages]
+	[export CVSROOT=:pserver:anonymous@blitz.cvs.sourceforge.net:/cvsroot/blitz]
+	[cvs login]
+	[cvs -z3 checkout blitz]
+	[cd blitz]
+	[autoreconf -vif]
+	[./configure -disable-fortran --prefix=$HOME/Packages CXX=c++]
+	[make]
+	[make install]
+(
+if you get an error after 'make lib' saying " 'labs' is not included in 'std'", do the following:
+
+	[nano blitz/func.h]
+at the top of the file that has the error
+	[#include <cstdlib>]
+at the line where the error occured in this same file, change
+	"{ return BZ_MATHFN_SCOPE(labs)(a); }"
+to
+	"{ return (labs)(a); }"
+(NOTE: 'labs' may be written as 'abs' or 'fabs'; keep it as whichever version it was originally in, just delete 'BZ_MATHFN_SCOPE')
+)
+
+###################################################################
+
+######### MATH PARSING LIBRARY ##################
+
+Download muParser v1.4 (most recent) at 
+	http://muparser.sourceforge.net/
+
+move it to the Packages folder
+while in the Downloads folder,
+	[mv muparser_v127.tar ../Packages]
+go to the Packages folder
+	[cd ../Packages]
+extract, configure 
+	[tar zxvf muparser_v127.tar]
+	[cd muparser]
+	[./configure --enable-shared=no --prefix=${HOME}/Packages --enable-samples=no --includedir=${HOME}/Packages/include/muParser]
+	[make]
+	[make install]
+	[cd ../include]
+	[mkdir muParser]
+	[mv mu* ./muParser]
+
+
+###################################################################
+
+######### PLATFORM INDEPENDENT BINARY I/O LIBRARY ##################
+
+Download libbinio v1.27 (most recent) at
+	http://sourceforge.net/projects/libbinio
+move libbinio-1.4.tar.bz2 to Packages
+unzip, configure
+	[tar --use-compress-program bzip2 -xvf libbinio-1.4.tar.bz2]
+	[cd libbinio-1.4]
+	[./configure --prefix=${HOME}/Packages]
+	[make]
+	[make install]
+	[cd ..]
+
+
+###################################################################
+
+######### MESH PARTITIONING LIBRARY #############
+
+Download METIS (4.01 most recent) at
+	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
+move metis-4.0.tar to Packages
+	[tar xvf metis-4.0.tar]
+	[cd metis-4.0]
+
+### Not necessary: (For intel compilers: Modify "Makefile.in" change "CC=cc" to "CC=icc"
+###	[nano Makefile.in])
+
+	[make]
+	[mv libmetis.a ../lib]
+	[cd ..]
+
+
+###################################################################
+
+######## USER SPACE THREADS LIBRARY #############
+
+Download Pth (2.0.7 is most recent) at
+	http://www.gnu.org/software/pth/
+move pth-2.0.7.tar.gz to Packages
+	[tar zxvf pth-2.0.7.tar.gz]
+	[cd pth-2.0.7]
+DONT USE THIS ONE
+	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize]
+USE THIS ONE
+	[./configure --prefix=${HOME}/Packages --with-mctx-mth=sjlj --with-mctx-dsp=ssjlj --with-mctx-stk=sas]
+	[make]
+	[make install]
+	[cd ..]
+
+
+###################################################################
+####### SYSTEM SPACE THREADS LIBRARY #############
+# SKIP THIS
+Download Boost at
+	http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041
+unpack in packages folder
+	[tar zxvf boost_1_43_0.tar.gz]
+	[cd boost_1_34_1]
+	[./bootstrap.sh --with-libraries=thread --prefix=${HOME}/Packages]
+	[./bjam install]
+	[cd ..]
+
+###################################################################
+
+
+### COMMAND LINE ARGUMENT PARSING UTILITY ##########
+# get parseargs from Brian
+	[cd parseargs]
+	[make]
+	[cd ..]
+
+### HEADER FOR C to CALL FORTRAN ROUTINES ###########
+http://www-zeus.desy.de/~burow/cfortran/
+save cfortran.h to ${HOME}/Packages/include/
+
+###################################################################
+#################################################
+# IF DESIRED, NOT NECESSARY                     #
+# TO MAKE MESH & INPUT FILE GRAPHICAL UTILITIES #
+#################################################
+
+cd 
+
+tar zxvf util.tgz
+
+# For showmesh,showgrid X11 application
+
+cd ${HOME}/Codes/Cocoa/easymesh
+
+./compile.command
+
+# For input.app application (OS X only) 
+
+cd ../inputwfind
+
+xcodebuild -configuration Deployment
+
+
+###################################################################
+
+######## FOR PETSC ############
+
+download current version at
+	http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
+move to Packages, extract
+	[mv petsc-3.0.0-p10 ../Packages]
+	[cd petsc-3.0.0-p10]
+	[tar zxvf petsc-3.0.0-p10]
+
+# To know what packages are available: ./config/configure.py --help
+# with superlu
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --download-parmetis=1
+# with out downloading parmetis
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
+# on cluster
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-dir=/opt/mpich/myrinet/gnu/  --with-x=0 --download-parmetis=1 --download-superlu_dist=1
+
+# READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
+make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug al
+make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;
+make PETSC_DIR=/Users/bhelenbr/Packages test
+
+
+
+###################################################################
+###################################################################
+#### FOR TETRAHEDRAL CODE, DO THIS HERE ####
+#### NOT NECESSARY FOR 2D CODE ###
+#### (FOR TETS ONLY) FOR MADLIB ####
+
+	[svn checkout https://braque.mema.ucl.ac.be/svn/MeshAdapt]
+	[cd MeshAdapt]
+	[make -f Makefile.svn]
+	[./configure --prefix=${HOME}/Packages --includedir=${HOME}/Packages/include/MAdLib]
+	[make]
+	[make install]
+
+
+#### (FOR TETS ONLY) FOR GMSH ####
+Download at http://www.fltk.org/software.php
+move to Packages
+	[tar zxvf fltk-1.1.9-source.tgz]
+	[rm fltk-1.1.9-source.tgz]
+	[cd fltk-1.1.9]
+	[./configure --prefix=${HOME}/Packages]
+	[make]
+	[make install]
+	[cd zlib]
+	[make]
+	[make install]
+	[cd ../..]
+FOR GMSH
+	[svn checkout https://geuz.org/svn/gmsh/trunk gmsh]
+For read-only access, simply use login=gmsh, password=gmsh.
+	[cd gmsh]
+	[svn update]
+
+For commits (me only, login=brianh password=hb4519)
+In CMAKE:
+	[CMAKE_INSTALL_PREFIX ${HOME}/Packages]
+	[CMAKE_PREFIX_PATH ${HOME}/Packages]
+	[FLTK_DIR ${HOME}/Packages/fltk-1.3x...]
+	[ENABLE_GRAPHICS]
+
+
+###################################################################
+
+ALL PACKAGES HAVE BEEN MADE
+NOW DOWNLOAD MY CODE
+
+[cd]
+[mkdir bin] # (if not already there)
+[mkdir Codes]
+[cd Codes]
+[mkdir include lib] # (if not already there)
+[svn co https://balrog.camp.clarkson.edu/Repository/trunk .]
+
+# hit return when it asks for password then
+# use "guest" as username
+# and hp-cfd as password
+
+now make all of my stuff:	
+#### UNIX ####
+
+cd utilities
+make
+cd ../spline++
+make
+cd ../quadtree
+make
+cd ../input_map
+make
+cd ../symbolic_function
+make
+cd ../tri_mesh
+make
+cd ../tri_basis
+make
+cd ../tri_hp
+make
+
+#### OS X ####
+
+	[cd ${HOME}/Codes]
+	[cd utilities]
+	[xcodebuild -target myblas -configuration Deployment]
+	[xcodebuild -target util -configuration Deployment]
+	[cd ../quadtree]
+	[xcodebuild -target quad -configuration Deployment]
+	[cd ../spline++]
+	[xcodebuild -target spline++ -configuration Release]
+	[cd ../input_map]
+	[xcodebuild -target input_map -configuration Release]
+	[cd ../symbolic_function]
+	[xcodebuild -target install -configuration Release]
+	[cd ../tri_mesh]
+	[xcodebuild -target tri_mesh -configuration Deployment]
+	[xcodebuild -target libtri_mesh -configuration Deployment]
+	[xcodebuild -target tri_mesh_mpi -configuration Deployment]
+	[xcodebuild -target libtri_mesh_mpi -configuration Deployment]
+	[cd ../tri_basis]
+	[xcodebuild -target tri_basis -configuration Deployment]
+	[cd ../tri_hp]
+	[xcodebuild -target tri_hp -configuration Release]
+	[xcodebuild -target tri_hp_mpi -configuration Release]
+
+
+###################################################################
+
+END
+
+
+
+#################################
+
+# INSTRUCTIONS FOR UNIX MACHINES
+
+#################################
+
+#move to home directory
+
+cd
+
+mkdir bin # (if not already there)
+
+cd ${HOME}/Codes
+
+mkdir include lib # (if not already there)
+
+
+
+cd utilities
+
+make
+
+cd ../spline++
+
+make
+
+cd ../quadtree
+
+make
+
+cd ../input_map
+
+make
+
+cd ../symbolic_function
+
+make
+
+cd ../tri_mesh
+
+make
+
+# INSTRUCTIONS FOR HP STUFF
+
+cd ../tri_basis
+
+make
+
+cd ../tri_hp
+
+make

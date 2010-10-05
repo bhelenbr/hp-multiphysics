@@ -1,0 +1,68 @@
+# Sets order of polynomial 0,1,2 gives 1,2,4 order: 
+log2p: 0
+# p-multigrid levels in iteration (should usually be same as log2p): 
+extra_finest_levels: 0
+# Number of geometric multigrid levels: 
+# Each level has a factor of 2 mesh resolution reduction: 
+# Turn on adapt_output flag to see if coarse levels are ok: 
+ngrid: 3
+# multigrid iterative parameters (leave alone): 
+itercrsn: 3
+iterrfne: 3
+vwcycle: 2
+# Number of multigrid cycles (enough to reduce error): 
+ncycle: 10
+# automatic cut-off for multigrid cycles: 
+absolute_tolerance: 1.0e-9
+relative_tolerance: 5.0e-4
+# number of steps (must be greater than 1 for adaptation to work): 
+ntstep: 10
+# inverse of timestep 0=steady state: 
+dtinv: 0.0
+#dtinv_prev: 50.0
+# adapatation flag: 
+adapt: 1
+# target error for mesh adaptation (smaller = finer mesh): 
+error_target: 5e-5
+curvature_sensitivity: 3
+# Uncomment if you want to restart from a previous time step: 
+restart: 2
+# Flag to see what is happening during iterations (for debugging convergence): 
+debug_output: 1
+# Flag to see adaptation processes: 
+#adapt_output: 1
+# Log file name: 
+logfile: clark
+# Number of blocks: 
+nblock: 1
+# Initial and boundary condition function: 
+ibc: sphere
+# Sphere initial/boundary condition gives velocity = 1 outside of outer_radius: 
+# and 0 inside inner radius with smooth transition in between: 
+# Angle controls angle of free-stream: 
+angle: 0
+inner_radius: 1.2
+outer_radius: 10.0
+# Viscosity (1/Reynolds Number): 
+mu: 1.0e-2
+# Physics type (incompressible Navier-Stokes): 
+b0_type: ins
+# Grid type 3 = .grd: 
+b0_filetype: 3
+#Memory allocation factor to allow mesh to get refine (times initial number of vertices): 
+b0_growth factor: 15
+# Mesh name: 
+b0_mesh: ../Meshgen4/MainMesh/data2_b0
+# Helper function for special tasks: 
+# Comment out helper for solution without airfoil motion: 
+#helper: force_coupling
+#nboundary: 2
+#force_boundaries: 5 6
+#dydt0: 0.1
+# Boundary geometry types: 
+b0_s1_ins_type: inflow
+b0_s2_ins_type: inflow
+b0_s3_ins_type: outflow
+b0_s4_ins_type: outflow
+b0_s5_ins_type: inflow
+b0_s6_ins_type: inflow

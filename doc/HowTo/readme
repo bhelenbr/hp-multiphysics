@@ -1,0 +1,193 @@
+File types you should be familiar with:
+
+.d
+-This is a file that contains information about the boundaries of your analysis.
+-It is organized into two sections
+	1) the top section, contianing the following information
+		-XY coordinates of points that lie on all boundaries
+		-mesh spacing between points along the boundaries
+		-a physical property modifier (should be 0 unless the boundaries are moving)
+		-the entry format is as follows
+[(index number): (X coord) (Y coord) (mesh spacing) (physical parameter)]
+	2) the bottom section
+		-this part of the file assigns boundary numbers
+		-it links two points specified in the top part of the file and tells which boundary they lie on
+		-the entry format is as follows
+[(index number): (point one) (point two) (boundary number that line lies on)]
+		
+.inpt
+-This is a file that the software uses to look up variables that it will use during analysis
+-Basically, it is where you list all of the control variables
+-You will use two .inpt files
+	1) One will be used for generating a mesh
+	2) The other will be used for running the analysis
+
+.spl
+-This is a file that allows the grid generation to utilize a spline
+-By using a spline during grid generation, you will end up with much smoother boundaries
+-This file contains three pieces of information
+	1) An x coordinate of a point lying on the boundary
+	2) A y coordinate of a point lying on the boundary
+	3) a s coordinate that is used to call specific points within the .spl file
+
+.grd
+-This is a file that is created in order to run the analysis
+-In order to create it, you will need:
+	1) a generate.inpt file
+	2) a .d file
+	3) optional: a .spl file if splines will be used
+
+
+###########
+You can find the following sample files in the HowTo/ExampleFiles folder for your reference:
+
+grid.d - this is a .d file for a NACA 0012 airfoil that does not use splines
+	-this is a good reference for proper format of a .d file
+	
+testcase.d - this is a .d file that you will look very similar to what you will be using
+	-it uses splines, so only has 4 points along each boundary
+	-The MATLAB code I wrote will spit out one of these for every geometry case you specify
+
+clark.spl - this is a .spl file that will also be similar to what you will use
+	-also a good reference for proper format
+	-MATLAB code will give you one of these as well as one for the auxiliary airfoil
+	
+generate.inpt - this is what the mesh generation code will call on for all it's inputs
+	-this file is a great starting point for doing the clark analysis
+	-contains information for using splines when building the mesh
+	
+run.inpt - this is what the analysis code will call on for all it's inputs
+	-this will also be a good starting point for doing the clark analysis
+
+
+##########
+Now for a discussion on organization.
+
+The way I organized my work was by having two separate folders, one for mesh generation and one
+for doing the analysis. (An example of this organization can be found in HowTo/
+	1) the Meshgen1 folder contains an appropriate .d file, a .spl file for both airfoils, and a 
+	   generate.inpt file
+		-this is where you will create and keep the .grd file
+	2) the Results1 folder contains only a run.inpt file
+		-this is where your log files and data files will be put when running the analysis
+
+
+##########
+Using terminal:
+	In order to use this software, you will be working in terminal. If you haven't used it before,
+here are a couple tips.
+
+commands to know
+
+cd - change directory - this is how you navigate between folders
+	example: 'cd /users/joe/codes'
+		-this will take you to the codes folder located in the user profile 'joe'
+		
+ls - list information about files - this will list out all the folders in your current directory
+	this is useful if you don't remember what all is located in the folder you are currently in
+	
+cd .. - typing this will take you back one folder
+
+~ - this is a shortcut for your home folder
+	-typing 'cd ~' and hitting enter will take you all the way back to your home folder
+	
+These are just a few commands, but its a good idea to become comfortable getting around in terminal
+as you will be spending quite a lot of time using it. Running this code is very text and typing 
+intesive, unlike other programs you may have used (FLUENT, for example).
+
+###########
+In order to run a case:
+(note: this will use the supplied sample files described above)
+
+Step 1 - Generate a mesh
+
+Files needed:
+A generate.inpt file
+	-the one supplied will use splines to generate a mesh that will be used in analysis later
+Two .spl files
+	-there is a separate spline file for each airfoil
+A .d file
+	-the file provided is testcase.d and only has four points on each boundary
+
+First, make sure the .inpt file will be calling up all the apporopriate files
+	-the value for b0_mesh should read ./testcase
+		-this is saying the .d file the code should look for is located in the same folder as this
+		 .inpt file and it is called testcase (the file extension is assumed)
+	-make sure the boundaries 5, 6, 7, and 8 are calling the appropriate spline files
+	-also make sure the boundary s-coordinates reference the correct points in the .spl file
+		-you will not have to change anything, but it's good to understand these connections
+	
+Now, in terminal, go to this folder
+	-once you are in the correct folder, type ~/bin/tri_mesh generate
+		-this is saying it wants the code tri_mesh to run using the input file generate.inpt
+		
+This will create 5 new files in this folder
+	data0_b0.grd
+	data1_b0.grd
+	data2_b0.grd
+	rstrt1_b0.grd
+	rstrt2_b0.grd
+	-the file data2_b0.grd is the final grid you will use in analysis
+	-the other files are created because first, the code creates a simple boundary space, then divides
+	 that space into a mesh in two subsequent iterations
+	 
+You can look at the grid that is created and the two previous iterations using ShowMesh
+
+If the grid looks satisfactory, you can now run the analysis.
+
+In the Results1 folder, check that the .inpt file contains the appropriate information
+	-when starting a new case make sure the following have a value of 0
+		-log2p
+		-dtinv
+		-adapt
+	-b0_mesh is the .grd file the analysis will use.
+		-make sure this is calling the data2_b0.grd we constructed above
+		-the filepath should read ../Meshgen1/data2_b0
+			-this means go back one folder, then into Meshgen1 and use the file data2_b0.grd
+
+
+In terminal, go to the Results1 folder
+	-once you are in the correct folder, type ~/bin/tri_hp run
+		-this is saying it wants the code tri_hp to run using the input file run.inpt
+		
+If there were no errors, the code should be running continuously
+	-to watch the progress of the analysis, go the the results1 folders and open the log file
+	 (this should be called clark.b0.log unless you changed its name in run.inpt) and open it
+	 with console.
+
+To stop analysis, go to terminal and hit ctrl+c
+
+	If you want to change some parameters in run.inpt and start again where you left off, look in the
+Results1 folder for the last rstrtX_b0.d1.bin
+	-in run.inpt, uncomment the restart parameter and give it a value of the last .bin
+		
+
+
+
+How to run in parallel:
+
+How to partition a mesh:
+
+1. modify your inpt file that you use to run simulation in serial ie run.inpt
+	---> nblock: 4
+	nblock is the number of blocks you want to partition your domain into
+	
+2. put the partition.bash script into ~/bin/ directory
+
+3. type in folder containing inpt and grid
+	---> ~/bin/partition.bash run.inpt
+	this makes 4 grids partition_b0,partition_b1 etc
+	and two input files: comm.inpt, partition.inpt
+	use comm.inpt when using multigrid
+	
+4. modify mpich.bash:
+
+	---> #$ -pe mpich 4
+	specifies number of processors to run 
+	---> ~/bin/tri_hp_mpi comm
+	
+5. modify comm.inpt as needed
+
+6. run code:
+
+	---> qsub mpich.bash
