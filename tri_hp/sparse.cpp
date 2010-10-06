@@ -146,6 +146,7 @@ void tri_hp::petsc_jacobian() {
 	for(int i=0;i<nebd;++i) 
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
 
+	/* FIX ME!! NOT SURE WHERE TO CALL THIS TEMPORARY */
 //	for(int i=0;i<nvbd;++i) 
 //		hp_vbdry(i)->petsc_jacobian_dirichlet();
 			

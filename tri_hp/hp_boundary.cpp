@@ -13,7 +13,7 @@
 #include <libbinio/binwrap.h>
 #include <myblas.h>
 
-//#define MPDEBUG
+// #define MPDEBUG
 
 hp_vrtx_bdry* tri_hp::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	hp_vrtx_bdry *temp = new hp_vrtx_bdry(*this,*vbdry(bnum));  
@@ -868,11 +868,20 @@ void hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 	else
 		vdofs = ND+NV;
 	
-	for(int m=0;m<base.nmatches();++m) {    								
-		int count = 0;
-		int pind = base.pnt*vdofs;
-		for(int n=0;n<vdofs;++n) {
-			nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+	for(int m=0;m<base.nmatches();++m) { 
+		if (base.is_local(m)) {
+			int count = 0;
+			int pind = base.pnt*vdofs;
+			for(int n=0;n<vdofs;++n) {
+				nnzero(pind++) += base.ircvbuf(m,count++);
+			}
+		}
+		else {
+			int count = 0;
+			int pind = base.pnt*vdofs;
+			for(int n=0;n<vdofs;++n) {
+				nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+			}
 		}
 	}
 }
@@ -930,28 +939,54 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 	
 	int begin_seg = x.npnt*vdofs;
 		
-	for(int m=0;m<base.nmatches();++m) {    								
-		int count = 0;
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(1)*vdofs;
+	for(int m=0;m<base.nmatches();++m) {  
+		if (base.is_local(m)) {
+			int count = 0;
+			for (int i=base.nseg-1;i>=0;--i) {
+				int sind = base.seg(i);
+				int pind = x.seg(sind).pnt(1)*vdofs;
+				for(int n=0;n<vdofs;++n) {
+					nnzero(pind++) += base.ircvbuf(m,count++);
+				}
+			}
+			int sind = base.seg(0);
+			int pind = x.seg(sind).pnt(0)*vdofs;
+			for(int n=0;n<vdofs;++n) {
+				nnzero(pind++) += base.ircvbuf(m,count++);
+			}
+			
+			/* Now add to side degrees of freedom */
+			if (x.sm0) {
+				int toadd = base.ircvbuf(m,count++); 
+				for (int i=0;i<base.nseg;++i) {
+					int sind = base.seg(i);
+					nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
+				}
+			}
+		}
+		else {
+			int count = 0;
+			for (int i=base.nseg-1;i>=0;--i) {
+				int sind = base.seg(i);
+				int pind = x.seg(sind).pnt(1)*vdofs;
+				for(int n=0;n<vdofs;++n) {
+					nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+				}
+			}
+			int sind = base.seg(0);
+			int pind = x.seg(sind).pnt(0)*vdofs;
 			for(int n=0;n<vdofs;++n) {
 				nnzero_mpi(pind++) += base.ircvbuf(m,count++);
 			}
-		}
-		int sind = base.seg(0);
-		int pind = x.seg(sind).pnt(0)*vdofs;
-		for(int n=0;n<vdofs;++n) {
-			nnzero_mpi(pind++) += base.ircvbuf(m,count++);
-		}
 
-		
-		/* Now add to side degrees of freedom */
-		if (x.sm0) {
-			int toadd = base.ircvbuf(m,count++); 
-			for (int i=0;i<base.nseg;++i) {
-				int sind = base.seg(i);
-				nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
+			
+			/* Now add to side degrees of freedom */
+			if (x.sm0) {
+				int toadd = base.ircvbuf(m,count++); 
+				for (int i=0;i<base.nseg;++i) {
+					int sind = base.seg(i);
+					nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
+				}
 			}
 		}
 	}
@@ -1169,6 +1204,8 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
 	
+	sparse_row_major *pJ_mpi;
+
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
 		vdofs = x.NV;
@@ -1178,6 +1215,13 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	int row = base.pnt*vdofs;	
 	int count = 0;
 	for (int m=0;m<base.nmatches();++m) {
+		if (base.is_local(m)) {
+			pJ_mpi = &x.J;
+		}
+		else {
+			pJ_mpi = &x.J_mpi;
+		}
+		
 		int row_mpi = base.frcvbuf(m,count++);
 		for(int n=0;n<vdofs;++n) {
 			int ncol = base.frcvbuf(m,count++);
@@ -1190,23 +1234,24 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 				*x.gbl->log  << col << ' ';
 #endif
 				FLT val = base.frcvbuf(m,count++);
-				x.J_mpi.add_values(row+n,col,val);
+				(*pJ_mpi).add_values(row+n,col,val);
 			}
 #ifdef MPDEBUG
 			*x.gbl->log << std::endl;
 #endif
 			/* Shift all entries for this vertex */
 			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
-				FLT dval = x.J_mpi(row+n,row_mpi+n_mpi);
-				x.J_mpi(row+n,row_mpi+n_mpi) = 0.0;				
+				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
 			}
 		}  
 	}
 	for(int n=0;n<vdofs;++n) {
-		x.J.multiply_row(row+n,0.5);
-		x.J_mpi.multiply_row(row+n,0.5);
+		x.J.multiply_row(row+n,1.0/base.nmatches());
+		x.J_mpi.multiply_row(row+n,1.0/base.nmatches());
 	}
+	
 #else
 	This Part not working
 #endif
@@ -1308,6 +1353,14 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	sparse_row_major *pJ_mpi;
+	if (base.is_local(0)) {
+		pJ_mpi = &x.J;
+	}
+	else {
+		pJ_mpi = &x.J_mpi;
+	}
 		
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
@@ -1329,19 +1382,22 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #endif
 			for (int k = 0;k<ncol;++k) {
 				int col = base.frcvbuf(0,count++);
-#ifdef MPDEBUG
-				*x.gbl->log  << col << ' ';
-#endif
+
 				FLT val = base.frcvbuf(0,count++);
-				x.J_mpi.add_values(row+n,col,val);
+				if (abs(col) < INT_MAX-10) {
+#ifdef MPDEBUG
+					*x.gbl->log  << col << ' ';
+#endif
+					(*pJ_mpi).add_values(row+n,col,val);
+				}
 			}
 #ifdef MPDEBUG
 			*x.gbl->log << std::endl;
 #endif
 			/* Shift all entries for this vertex */
 			for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
-				FLT dval = x.J_mpi(row+n,row_mpi+n_mpi);
-				x.J_mpi(row+n,row_mpi+n_mpi) = 0.0;				
+				FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+				(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;				
 				x.J(row+n,row+n_mpi) += dval;
 			}
 			x.J.multiply_row(row+n,0.5);
@@ -1361,11 +1417,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 #endif
 				for (int k = 0;k<ncol;++k) {
 					int col = base.frcvbuf(0,count++);
-#ifdef MPDEBUG
-					*x.gbl->log  << col << ' ';
-#endif
+
 					FLT val = sgn*base.frcvbuf(0,count++);
-					x.J_mpi.add_values(row+mcnt,col,val);
+					if (abs(col) < INT_MAX-10) {
+#ifdef MPDEBUG
+							*x.gbl->log  << col << ' ';
+#endif				
+							(*pJ_mpi).add_values(row+mcnt,col,val);
+					}
 				}
 #ifdef MPDEBUG
 				*x.gbl->log << std::endl;
@@ -1375,8 +1434,8 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 				int sgn_mpi = 1;
 				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
 					for(int n_mpi = 0;n_mpi<x.NV;++n_mpi) {
-						FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
-						x.J_mpi(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
+						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
 						++mcnt_mpi;
 					}
@@ -1403,15 +1462,20 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 			*x.gbl->log << col << ' ';
 #endif
 			FLT val = base.frcvbuf(0,count++);
-			x.J_mpi.add_values(row+n,col,val);
+			if (abs(col) < INT_MAX-100) {
+#ifdef MPDEBUG
+				*x.gbl->log  << col << ' ';
+#endif							
+				(*pJ_mpi).add_values(row+n,col,val);
+			}
 		}
 #ifdef MPDEBUG
 		*x.gbl->log << std::endl;
 #endif
 		/* Shift all entries for this vertex */
 		for(int n_mpi=0;n_mpi<vdofs;++n_mpi) {
-			FLT dval = x.J_mpi(row+n,row_mpi+n_mpi);
-			x.J_mpi(row+n,row_mpi+n_mpi) = 0.0;				
+			FLT dval = (*pJ_mpi)(row+n,row_mpi+n_mpi);
+			(*pJ_mpi)(row+n,row_mpi+n_mpi) = 0.0;
 			x.J(row+n,row+n_mpi) += dval;
 		}
 		x.J.multiply_row(row+n,0.5);

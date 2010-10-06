@@ -159,7 +159,6 @@ namespace bdry_ins {
 					x.gbl->res.s(sind,mode,Range(0,x.NV-2)) = 0.0;
 				}
 			}
-		// temp fix me not sure how to make compatible
 #ifdef petsc			
 			void petsc_jacobian_dirichlet() {
 				hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
@@ -308,8 +307,6 @@ namespace bdry_ins {
 				inmap.getwdefault(idnty+"_center",ctr.data(),2,dflt);
 				inmap.getwdefault(idnty+"_velocity",vel.data(),2,dflt);
 			}
-			
-			
 	};		
 
 	class force_coupling : public inflow, public rigid {
@@ -350,7 +347,6 @@ namespace bdry_ins {
 	};
 	
 	class friction_slip : public neumann, public rigid {
-
 		protected:
 			FLT slip_length;
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
@@ -668,51 +664,58 @@ namespace bdry_ins {
 #endif
 	};
 	
-	class actuator_disc : public surface_slave {
-			symbolic_function<3> dp;
+	class actuator_disc : public neumann {
+		symbolic_function<3> dp;
 					
-			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
-				/* CONTINUITY */
-				flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
+			/* CONTINUITY */
+			flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
+			
+			if (base.is_frst()) {
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+				FLT norm_vel = flx(x.NV-1)/(length*x.gbl->rho);
+				TinyVector<FLT,3> inpt(xpt(0),xpt(1),norm_vel);
+				FLT delta_p = dp.Eval(inpt,x.gbl->time);			
 				
-				if (base.is_frst()) {
-					FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-					FLT norm_vel = flx(x.NV-1)/(length*x.gbl->rho);
-					TinyVector<FLT,3> inpt(xpt(0),xpt(1),norm_vel);
-					FLT delta_p = dp.Eval(inpt,x.gbl->time);			
-					
-					/* X&Y MOMENTUM */
-					for (int n=0;n<tri_mesh::ND;++n)
-						flx(n) = norm(n)*delta_p; 
-				}
-				else {
-					for (int n=0;n<tri_mesh::ND;++n)
-						flx(n) = 0.0; 
-				}
-					
-				/* EVERYTHING ELSE */
-				for (int n=tri_mesh::ND;n<x.NV-1;++n)
-					flx(n) = flx(x.NV-1)*u(n);
-
-				return;
+				/* X&Y MOMENTUM */
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n) = norm(n)*delta_p; 
 			}
+			else {
+				for (int n=0;n<tri_mesh::ND;++n)
+					flx(n) = 0.0; 
+			}
+				
+			/* EVERYTHING ELSE */
+			for (int n=tri_mesh::ND;n<x.NV-1;++n)
+				flx(n) = flx(x.NV-1)*u(n);
+
+			return;
+		}
 		public:
-			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : surface_slave(xin,bin) {mytype = "actuator_disc";}
-			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : surface_slave(inbdry,xin,bin), dp(inbdry.dp) {}
+			actuator_disc(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "actuator_disc";}
+			actuator_disc(const actuator_disc& inbdry, tri_hp_ins &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), dp(inbdry.dp) {}
 			actuator_disc* create(tri_hp& xin, edge_bdry &bin) const {return new actuator_disc(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			
 			/* To read in data */
 			void init(input_map& inmap,void* gbl_in) {
-				surface_slave::init(inmap,gbl_in);
+				neumann::init(inmap,gbl_in);
 				
 				/* LOAD PRESSURE JUMP FUNCTION */
 				dp.init(inmap,base.idprefix+"_jump");
 			}
 
-			/* Reset to normal stuff */
-			void tadvance() {neumann::tadvance();}
-			void rsdl(int stage) {neumann::rsdl(stage);}
-			void update(int stage) {neumann::update(stage);}
+#ifdef petsc
+			void petsc_matchjacobian_snd();
+			void petsc_matchjacobian_rcv(int phase);
+			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
+			
+#endif
+			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
+			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}
+			void smatchsolution_snd(FLT *sdata, int bgnmode, int endmode, int modestride); 
+			void smatchsolution_rcv(FLT *sdata, int bgnmode, int endmode, int modestride);
 	};
 
 	/*******************************/
@@ -940,6 +943,83 @@ namespace bdry_ins {
 			void vdirichlet2d() {
 				x.gbl->res.v(base.pnt,Range(0,x.NV-2)) = 0.0;
 			}
+			
+#ifdef petsc			
+		void petsc_jacobian_dirichlet() {
+			hp_vrtx_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+			
+			Array<int,1> indices(x.NV-1);
+			
+			int vdofs;
+			if (x.mmovement == x.coupled_deformable)
+				vdofs = x.NV +tri_mesh::ND;
+			else
+				vdofs = x.NV;
+			
+			int gind,v0;
+			int counter = 0;
+			
+			v0 = base.pnt;
+			gind = v0*vdofs;
+			for(int n=0;n<x.NV-1;++n) {						
+				indices(counter++)=gind+n;
+			}
+#ifdef MY_SPARSE
+			x.J.zero_rows(counter,indices);
+			x.J_mpi.zero_rows(counter,indices);
+			x.J.set_diag(counter,indices,1.0);
+#else
+			MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+		}
+#endif
+		
+	};
+	
+	class pressure_pt : public hp_vrtx_bdry {
+		protected:
+			tri_hp_ins &x;
+			
+		public:
+			pressure_pt(tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "pressure_pt";}
+			pressure_pt(const pressure_pt& inbdry, tri_hp_ins &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+			pressure_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new pressure_pt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			
+			void tadvance() { 
+					x.ug.v(base.pnt,x.NV-1) = x.gbl->ibc->f(x.NV-1,x.pnts(base.pnt),x.gbl->time);  
+				return;
+			}
+			
+			void vdirichlet2d() {
+				x.gbl->res.v(base.pnt,x.NV-1) = 0.0;
+			}
+			
+#ifdef petsc			
+		void petsc_jacobian_dirichlet() {
+			hp_vrtx_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+			
+			Array<int,1> indices(1);
+			
+			int vdofs;
+			if (x.mmovement == x.coupled_deformable)
+				vdofs = x.NV +tri_mesh::ND;
+			else
+				vdofs = x.NV;
+			
+			int v0,counter=0;
+			
+			v0 = base.pnt;
+			indices(counter++) = v0*vdofs +x.NV-1;
+#ifdef MY_SPARSE
+			x.J.zero_rows(counter,indices);
+			x.J_mpi.zero_rows(counter,indices);
+			x.J.set_diag(counter,indices,1.0);
+#else
+			MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+		}
+#endif
+
 	};
 
 	class hybrid_slave_pt : public hp_vrtx_bdry {

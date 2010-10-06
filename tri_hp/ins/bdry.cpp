@@ -8,6 +8,8 @@
 /*************************************************/
 using namespace bdry_ins;
 
+// #define MPDEBUG
+
 void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int i,m,n,ind,sind,tind,seg;
 	FLT visc[tri_mesh::ND+1][tri_mesh::ND+1][tri_mesh::ND][tri_mesh::ND];
@@ -521,3 +523,478 @@ void hybrid_pt::update(int stage) {
 		mvpttobdry(x.pnts(base.pnt));
 	}
 }
+
+void actuator_disc::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
+	int j,k,n,countup,offset;
+	
+	if (!base.is_comm()) return;
+	
+#ifdef MPDEBUG
+	*x.gbl->log << base.idprefix << " In surface_snd"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+	
+	countup = 0;
+	for(j=0;j<base.nseg;++j) {
+		offset = base.seg(j)*stride*x.NV;
+		for(k=bgn;k<=end;++k) {
+			for(n=0;n<x.NV-1;++n) {
+				base.fsndbuf(countup++) = sdata[offset +k*x.NV +n];
+#ifdef MPDEBUG
+				*x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+			}
+		}
+	}
+	base.sndsize() = countup;
+	base.sndtype() = boundary::flt_msg;
+	return;
+}
+
+
+void actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride) {
+	
+	if (!base.is_comm()) return;
+	
+	/* CAN'T USE sfinalrcv BECAUSE OF CHANGING SIGNS */
+	int j,k,m,n,count,countdn,countup,offset,sind,sign;
+	FLT mtchinv;
+	
+	/* ASSUMES REVERSE ORDERING OF SIDES */
+	/* WON'T WORK IN 3D */
+	
+	int matches = 1;
+	
+	int bgnsign = (bgn % 2 ? -1 : 1);
+	
+	/* RELOAD FROM BUFFER */
+	/* ELIMINATES V/S/F COUPLING IN ONE PHASE */
+	/* FINALRCV SHOULD BE CALLED F,S,V ORDER (V HAS FINAL AUTHORITY) */    
+	for(m=0;m<base.nmatches();++m) {            
+		++matches;
+		
+		int ebp1 = end-bgn+1;
+		
+		countdn = (base.nseg-1)*ebp1*(x.NV-1);
+		countup = 0;
+		for(j=0;j<base.nseg;++j) {
+			sign = bgnsign;
+			for(k=0;k<ebp1;++k) {
+				for(n=0;n<x.NV-1;++n) {
+					base.fsndbuf(countup++) += sign*base.frcvbuf(m,countdn++);
+				}
+				sign *= -1;
+			}
+			countdn -= 2*ebp1*(x.NV-1);
+		}
+	}
+	
+	if (matches > 1) {
+		mtchinv = 1./matches;
+		
+#ifdef MPDEBUG
+		*x.gbl->log << base.idprefix << " In surface_rcv"  << base.idnum << " " << base.is_frst() << std::endl;
+#endif
+		count = 0;
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j);
+			offset = sind*stride*x.NV;
+			for (k=bgn;k<=end;++k) {
+				for(n=0;n<x.NV-1;++n) {
+					sdata[offset +k*x.NV +n] = base.fsndbuf(count++)*mtchinv;
+#ifdef MPDEBUG
+					*x.gbl->log << "\t" << sdata[offset +k*x.NV +n] << std::endl;
+#endif
+				}
+			}
+			
+		}
+	}
+	return;
+}
+
+#ifdef petsc
+void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
+		
+	if (!base.is_comm()) return;
+	
+	Array<int,1> c0vars(vdofs-1);
+	for(int n=0;n<x.NV-1;++n) {
+		c0vars(n) = n;
+	}
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars(n-1) = n;
+	}		
+	
+	/* Going to send all jacobian entries,  Diagonal entries for matching DOF's will be merged together not individual */
+	/* Send number of non-zeros to matches */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::int_msg;
+	for (int i=0;i<base.nseg;++i) {
+		int sind = base.seg(i);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(int n=0;n<c0vars.extent(firstDim);++n)
+			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
+	}
+	int sind = base.seg(base.nseg-1);
+	int pind = x.seg(sind).pnt(1)*vdofs;
+	for(int n=0;n<c0vars.extent(firstDim);++n)
+		base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
+	
+	/* Last thing to send is nnzero for edges (all the same) */
+	if (sm)
+		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+	
+	return;
+}
+
+void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;
+	
+	Array<int,1> c0vars(vdofs-1);
+	for(int n=0;n<x.NV-1;++n) {
+		c0vars(n) = n;
+	}
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars(n-1) = n;
+	}	
+	
+	if (base.is_local(0)) {
+		int count = 0;
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
+			for(int n=0;n<c0vars.extent(firstDim);++n) {
+				nnzero(pind+c0vars(n)) += base.ircvbuf(0,count++);
+			}
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(int n=0;n<c0vars.extent(firstDim);++n) {
+			nnzero(pind +c0vars(n)) += base.ircvbuf(0,count++);
+		}
+		
+		
+		/* Now add to side degrees of freedom */
+		if (sm) {
+			int toadd = base.ircvbuf(0,count++); 
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				for (int mode=0;mode<sm;++mode) {
+					for(int n=0;n<x.NV-1;++n) {
+						nnzero(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+					}
+				}
+			}
+		}
+	}
+	else {
+		int count = 0;
+		for (int i=base.nseg-1;i>=0;--i) {
+			int sind = base.seg(i);
+			int pind = x.seg(sind).pnt(1)*vdofs;
+			for(int n=0;n<c0vars.extent(firstDim);++n) {
+				nnzero_mpi(pind+c0vars(n)) += base.ircvbuf(0,count++);
+			}
+		}
+		int sind = base.seg(0);
+		int pind = x.seg(sind).pnt(0)*vdofs;
+		for(int n=0;n<c0vars.extent(firstDim);++n) {
+			nnzero_mpi(pind +c0vars(n)) += base.ircvbuf(0,count++);
+		}
+		
+		
+		/* Now add to side degrees of freedom */
+		if (sm) {
+			int toadd = base.ircvbuf(0,count++); 
+			for (int i=0;i<base.nseg;++i) {
+				int sind = base.seg(i);
+				for (int mode=0;mode<sm;++mode) {
+					for(int n=0;n<x.NV-1;++n) {
+						nnzero_mpi(begin_seg+sind*NV*sm +mode*NV +n) += toadd;
+					}
+				}
+			}
+		}
+	}
+}
+
+void actuator_disc::petsc_matchjacobian_snd() {	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+	
+	if (!base.is_comm()) return;
+	
+	/* Now do stuff for communication boundaries */
+	int row,sind;
+	
+	Array<int,1> c0vars(vdofs-1);
+	for(int n=0;n<x.NV-1;++n) {
+		c0vars(n) = n;
+	}
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars(n-1) = n;
+	}		
+	
+	/* I am cheating here and sending floats and int's together */
+#ifdef MY_SPARSE
+	/* Send Jacobian entries for u,v but not p */
+	base.sndsize() = 0;
+	base.sndtype() = boundary::flt_msg;
+	
+	for(int i=0;i<base.nseg;++i) {
+		sind = base.seg(i);
+		int rowbase = x.seg(sind).pnt(0)*vdofs; 
+		
+		/* attach diagonal column # to allow continuity enforcement */
+		base.fsndbuf(base.sndsize()++) = rowbase +x.jacobian_start;
+		
+		for (int n = 0; n <c0vars.extent(firstDim);++n) {
+			row = rowbase + c0vars(n);
+			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+			*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
+#endif
+			for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+				*x.gbl->log << x.J._col(col) << ' ';
+#endif
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+				base.fsndbuf(base.sndsize()++) = x.J._val(col);
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+		}
+		
+		/* Send Side Information */
+		row = x.npnt*vdofs +sind*x.NV*x.sm0;
+		
+		/* attach diagonal column # to allow continuity enforcement */
+		base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+		
+		for(int mode=0;mode<x.sm0;++mode) {
+			for (int n=0;n<x.NV-1;++n) {
+				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+				*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for side " << sind << " and variable " << n << std::endl;
+#endif
+				for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+					*x.gbl->log << x.J._col(col) << ' ';
+#endif
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+					base.fsndbuf(base.sndsize()++) = x.J._val(col);
+				}
+				
+#ifdef MPDEBUG
+				*x.gbl->log << std::endl;
+#endif
+				++row;
+			}
+			++row; // Skip pressure
+		}
+	}
+	
+	/* LAST POINT */
+	int rowbase = x.seg(sind).pnt(1)*vdofs; 
+	
+	/* attach diagonal # to allow continuity enforcement */
+	base.fsndbuf(base.sndsize()++) = rowbase +x.jacobian_start;
+	
+	for (int n = 0; n <c0vars.extent(firstDim);++n) {
+		row = rowbase + c0vars(n);
+		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
+#ifdef MPDEBUG
+		*x.gbl->log << "sending " << x.J._cpt(row+1) -x.J._cpt(row) << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
+#endif
+		for (int col=x.J._cpt(row);col<x.J._cpt(row+1);++col) {
+#ifdef MPDEBUG
+			*x.gbl->log << x.J._col(col) << ' ';
+#endif
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+			base.fsndbuf(base.sndsize()++) = x.J._val(col);
+		}
+		
+#ifdef MPDEBUG
+		*x.gbl->log << std::endl;
+#endif
+	}
+}
+
+void actuator_disc::petsc_matchjacobian_rcv(int phase) {
+	
+	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	sparse_row_major *pJ_mpi;
+	if (base.is_local(0)) {
+		pJ_mpi = &x.J;
+	}
+	else {
+		pJ_mpi = &x.J_mpi;
+	}
+	
+	int vdofs;
+	if (x.mmovement != x.coupled_deformable)
+		vdofs = x.NV;
+	else
+		vdofs = x.NV+x.ND;
+	
+	/* Now do stuff for communication boundaries */
+	int row;
+	
+	Array<int,1> c0vars(vdofs-1);
+	for(int n=0;n<x.NV-1;++n) {
+		c0vars(n) = n;
+	}
+	for(int n=x.NV;n<vdofs;++n) {
+		c0vars(n-1) = n;
+	}		
+	
+	/* Now Receive Information */		
+	int count = 0;
+	for (int i=base.nseg-1;i>=0;--i) {
+		int sind = base.seg(i);
+		int rowbase = x.seg(sind).pnt(1)*vdofs; 
+		int row_mpi = base.frcvbuf(0,count++);
+		
+		for (int n = 0; n <c0vars.extent(firstDim);++n) {
+			row = rowbase + c0vars(n);
+			int ncol = base.frcvbuf(0,count++);
+#ifdef MPDEBUG
+			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
+#endif
+			for (int k = 0;k<ncol;++k) {
+				int col = base.frcvbuf(0,count++);
+				FLT val = base.frcvbuf(0,count++);
+				if (abs(col) < INT_MAX-10) {
+#ifdef MPDEBUG
+					*x.gbl->log  << col << ' ';
+#endif
+					(*pJ_mpi).add_values(row,col,val);
+				}
+			}
+#ifdef MPDEBUG
+			*x.gbl->log << std::endl;
+#endif
+			/* Shift all entries for this vertex */
+			for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+				FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
+				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+				x.J(row,rowbase+c0vars(n_mpi)) += dval;
+			}
+			x.J.multiply_row(row,0.5);
+			x.J_mpi.multiply_row(row,0.5);
+		}  
+		
+		/* Now receive side Jacobian information */
+		row = x.npnt*vdofs +sind*x.NV*x.sm0;
+		row_mpi = base.frcvbuf(0,count++);
+		
+		int mcnt = 0;
+		int sgn = 1;
+		for(int mode=0;mode<x.sm0;++mode) {
+			for(int n=0;n<x.NV-1;++n) {
+				int ncol = base.frcvbuf(0,count++);
+#ifdef MPDEBUG
+				*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << n << std::endl;
+#endif
+				for (int k = 0;k<ncol;++k) {
+					int col = base.frcvbuf(0,count++);
+					FLT val = sgn*base.frcvbuf(0,count++);
+					if (abs(col) < INT_MAX-10) {
+#ifdef MPDEBUG
+						*x.gbl->log  << col << ' ';
+#endif
+						(*pJ_mpi).add_values(row+mcnt,col,val);
+					}
+				}
+#ifdef MPDEBUG
+				*x.gbl->log << std::endl;
+#endif
+				
+				/* Shift all modes in equation */
+				int mcnt_mpi = 0;
+				int sgn_mpi = 1;
+				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
+					for(int n_mpi = 0;n_mpi<x.NV-1;++n_mpi) {
+						FLT dval = (*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi);
+						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
+						++mcnt_mpi;
+					}
+					sgn_mpi *= -1;
+					++mcnt_mpi; // Skip pressure
+				}
+				x.J.multiply_row(row+mcnt,0.5);
+				x.J_mpi.multiply_row(row+mcnt,0.5);
+				++mcnt;
+			}
+			++mcnt; // Skip pressure
+			sgn *= -1;
+		}
+	}
+	int sind = base.seg(0);
+	int rowbase = x.seg(sind).pnt(0)*vdofs; 
+	int row_mpi = base.frcvbuf(0,count++);
+	
+	for (int n = 0; n <c0vars.extent(firstDim);++n) {
+		row = rowbase + c0vars(n);
+		int ncol = base.frcvbuf(0,count++);
+#ifdef MPDEBUG
+		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
+#endif
+		for (int k = 0;k<ncol;++k) {
+			int col = base.frcvbuf(0,count++);
+			FLT val = base.frcvbuf(0,count++);
+			if (abs(col) < INT_MAX-10) {
+#ifdef MPDEBUG
+				*x.gbl->log  << col << ' ';
+#endif
+				(*pJ_mpi).add_values(row,col,val);
+			}
+		}
+#ifdef MPDEBUG
+		*x.gbl->log << std::endl;
+#endif
+		/* Shift all entries for this vertex */
+		for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
+			FLT dval = (*pJ_mpi)(row,row_mpi+c0vars(n_mpi));
+			(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+			x.J(row,rowbase+c0vars(n_mpi)) += dval;
+		}
+		x.J.multiply_row(row,0.5);
+		x.J_mpi.multiply_row(row,0.5);
+	} 
+#endif
+}	
+
+#endif
+
+

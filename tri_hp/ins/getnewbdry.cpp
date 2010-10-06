@@ -22,8 +22,8 @@ using namespace bdry_ins;
  */
 class tri_hp_ins_vtype {
 	public:
-		static const int ntypes = 5;
-		enum ids {unknown=-1,surface_inflow,surface_outflow,inflow,hybrid_slave_point,hybrid_point};
+		static const int ntypes = 6;
+		enum ids {unknown=-1,surface_inflow,surface_outflow,inflow,pressure,hybrid_slave_point,hybrid_point};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i) 
@@ -32,7 +32,7 @@ class tri_hp_ins_vtype {
 		}
 };
 
-const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","inflow","hybrid_slave_point","hybrid_point"};
+const char tri_hp_ins_vtype::names[ntypes][40] = {"surface_inflow","surface_outflow","inflow","pressure","hybrid_slave_point","hybrid_point"};
 
 hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -64,6 +64,10 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 		}
 		case tri_hp_ins_vtype::inflow: {
 			temp = new inflow_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_ins_vtype::pressure: {
+			temp = new pressure_pt(*this,*vbdry(bnum));
 			break;
 		}
 		case tri_hp_ins_vtype::hybrid_slave_point: {
