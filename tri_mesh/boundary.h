@@ -112,6 +112,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		comm_bdry<BASE,MESH>* create(MESH &xin) const {return(new comm_bdry<BASE,MESH>(*this,xin));}
 		bool is_comm() {return(true);}
 		bool& is_frst() {return(first);}
+		bool is_local(int matchnum) {return(mtype(matchnum) == local);}
 		int& group() {return(groupmask);}
 		bool in_group(int grp) {return(((1<<grp)&groupmask));}
 		int& sndsize() {return(msgsize);}

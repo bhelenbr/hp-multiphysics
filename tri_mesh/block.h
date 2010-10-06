@@ -265,6 +265,7 @@ class boundary {
 			msg_type mdum;
 		} dummy;
 		virtual bool is_comm() {return(false);}
+		virtual bool is_local(int matchnum) {return(true);}
 		virtual bool& is_frst() {return(dummy.bdum=true);}
 		virtual int& group() {return(dummy.idum=1);}
 		virtual bool in_group(int group) {return(false);}
