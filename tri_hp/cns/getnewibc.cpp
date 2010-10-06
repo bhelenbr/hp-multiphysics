@@ -26,7 +26,6 @@ namespace ibc_cns {
 					case(0):
 						return(1.0/gamma);
 					case(1):
-						//return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
 						return(speed*cos(alpha) +amp*x(0)*(1.0-x(0)));
 					case(2):
 						return(speed*sin(alpha));
