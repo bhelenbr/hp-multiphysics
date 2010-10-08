@@ -80,21 +80,49 @@ namespace bdry_cns {
 	protected:
 		virtual void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 			
+			TinyVector<FLT,4> ub,fluxtemp;
+			FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+			norm /= mag;
+			
+			/* rotate coordinate system */
+			FLT ul =  (u(1)-mv(0))*norm(0) +(u(2)-mv(1))*norm(1);
+			FLT vl = -(u(1)-mv(0))*norm(1) +(u(2)-mv(1))*norm(0);
+						
+			/* far field */
+			FLT pr = ibc->f(0,xpt,x.gbl->time);
+			FLT RT = ibc->f(x.NV-1,xpt,x.gbl->time);
+			//RT = u(x.NV-1);
+
+			FLT rho = pr*RT;
+			
 			/* CONTINUITY */
-			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+			fluxtemp(0) = rho*ul;
+			fluxtemp(1) = fluxtemp(0)*ul+pr;
+			fluxtemp(2) = fluxtemp(0)*vl;
 			
-			/* X&Y MOMENTUM */
-#ifdef INERTIALESS
-			for (int n=1;n<tri_mesh::ND+1;++n)
-				flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
-#else
-			for (int n=1;n<tri_mesh::ND+1;++n)
-				flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
-#endif
+			FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(ul*ul+vl*vl);
+			fluxtemp(3) = fluxtemp(0)*h;
 			
-			/* ENERGY EQUATION */
-			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
-			flx(x.NV-1) = h*flx(0);
+			/* CHANGE BACK TO X,Y COORDINATES */
+			flx(0) = fluxtemp(0);
+			flx(1) = fluxtemp(1)*norm(0) - fluxtemp(2)*norm(1);
+			flx(2) = fluxtemp(1)*norm(1) + fluxtemp(2)*norm(0);
+			flx(3) = fluxtemp(3);
+			
+			flx *= mag;
+			
+//			/* X&Y MOMENTUM */
+//#ifdef INERTIALESS
+//			for (int n=1;n<tri_mesh::ND+1;++n)
+//				flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+//#else
+//			for (int n=1;n<tri_mesh::ND+1;++n)
+//				flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+//#endif
+//			
+//			/* ENERGY EQUATION */
+//			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+//			flx(x.NV-1) = h*flx(0);
 
 			return;
 		}

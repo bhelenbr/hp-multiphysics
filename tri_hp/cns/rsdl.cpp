@@ -248,20 +248,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
 					FLT rt = u(3)(i,j);	
-
-					
-//					/* P*df/dw */
-//					A = uv,    pr*gam, 0.0, 0.0,
-//					    rt/pr, uv,     0.0, 0.0,
-//					    0.0,   0.0,    uv,  0.0,
-//					    0.0,   gm1*rt, 0.0, uv;
-//					
-//					/* P*dg/dw */
-//					B = vv,    0.0, pr*gam, 0.0,
-//						0.0,   vv,  0.0,    0.0,
-//						rt/pr, 0.0, vv,     0.0,
-//						0.0,   0.0, gm1*rt, vv;
-					
+		
 					FLT rho = pr/rt;
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
@@ -276,20 +263,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					    uv*vv/rt,            rho*vv,    rho*uv,                      -rho*uv*vv/rt,
 						vv*vv/rt+1.0,        0.0,       2.0*rho*vv,                  -rho*vv*vv/rt,
 						vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, -rho*vv*(gogm1*rt+ke)/rt+rho*vv*gogm1;
-					
-//					FLT E = rt/gm1+ke;
-//					
-//					/* df/dw derivative of fluxes wrt conservative variables */
-//					A = 0.0,                1.0,                    0.0,        0.0,
-//						-uv*uv+gm1*ke,      (2.0-gm1)*uv,           -vv*gm1,    gm1,
-//						-uv*vv,			    vv,                     uv,         0.0,
-//						uv*(-gam*E+gm1*ke), gam*E-gm1*uv*uv-gm1*ke, -uv*vv*gm1, uv*gam;
-//					
-//					/* dg/dw */
-//					B = 0.0,                0.0,        1.0,                    0.0,
-//						-uv*vv,             vv,         uv,                     0.0,
-//						-vv*vv+gm1*ke,      -uv*gm1,    (2.0-gm1)*uv,           gm1,
-//						vv*(-gam*E+gm1*ke), -uv*vv*gm1, gam*E-gm1*vv*vv-gm1*ke, vv*gam;
 					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {
@@ -465,19 +438,7 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					FLT uv = u(1)(i,j);
 					FLT vv = u(2)(i,j);
 					FLT rt = u(3)(i,j);	
-					
-//					/* P*df/dw */
-//					A = uv,    pr*gam, 0.0, 0.0,
-//					    rt/pr, uv,     0.0, 0.0,
-//					    0.0,   0.0,    uv,  0.0,
-//					    0.0,   gm1*rt, 0.0, uv;
-//					
-//					/* P*dg/dw */
-//					B = vv,    0.0, pr*gam, 0.0,
-//						0.0,   vv,  0.0,    0.0,
-//						rt/pr, 0.0, vv,     0.0,
-//						0.0,   0.0, gm1*rt, vv;
-					
+
 					FLT rho = pr/rt;
 					FLT ke = 0.5*(uv*uv+vv*vv);
 					
@@ -493,20 +454,6 @@ void tri_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						vv*vv/rt+1.0,        0.0,       2.0*rho*vv,                  -rho*vv*vv/rt,
 						vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, -rho*vv*(gogm1*rt+ke)/rt+rho*vv*gogm1;
 						
-//					FLT E = rt/gm1+ke;
-//					
-//					/* df/dw derivative of fluxes wrt conservative variables */
-//					A = 0.0,                1.0,                    0.0,        0.0,
-//						-uv*uv+gm1*ke,      (2.0-gm1)*uv,           -vv*gm1,    gm1,
-//						-uv*vv,			    vv,                     uv,         0.0,
-//						uv*(-gam*E+gm1*ke), gam*E-gm1*uv*uv-gm1*ke, -uv*vv*gm1, uv*gam;
-//					
-//					/* dg/dw */
-//					B = 0.0,                0.0,        1.0,                    0.0,
-//						-uv*vv,             vv,         uv,                     0.0,
-//						-vv*vv+gm1*ke,      -uv*gm1,    (2.0-gm1)*uv,           gm1,
-//						vv*(-gam*E+gm1*ke), -uv*vv*gm1, gam*E-gm1*vv*vv-gm1*ke, vv*gam;
-					
 					for(int m = 0; m < NV; ++m) {
 						for(int n = 0; n < NV; ++n) {
 							df(m,0)(i,j) -= (+ldcrd(1,1)*A(m,n)-ldcrd(0,1)*B(m,n))*tres(n);

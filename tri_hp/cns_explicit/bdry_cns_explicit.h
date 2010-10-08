@@ -176,7 +176,7 @@ namespace bdry_cns_explicit {
 			hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
 
 			int sm=basis::tri(x.log2p)->sm();
-			Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
+			Array<int,1> indices((base.nseg+1)*(x.NV-2) +base.nseg*sm*(x.NV-2));
 
 			int vdofs;
 			if (x.mmovement == x.coupled_deformable)

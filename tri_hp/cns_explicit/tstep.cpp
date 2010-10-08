@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-#define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */

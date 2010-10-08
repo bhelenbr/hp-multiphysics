@@ -173,7 +173,7 @@ void tri_hp_cns::setup_preconditioner() {
 		
 		if(gbl->diagonal_preconditioner){
 			for(i=0;i<NV;++i)
-				gbl->tprcn(tind,i) = jcb*tprcn(i,i);
+				gbl->tprcn(tind,i) = jcb;
 			
 			for(i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());
@@ -183,17 +183,19 @@ void tri_hp_cns::setup_preconditioner() {
 				}
 			}
 		}
-		else {
-			gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn;
-
-			for(i=0;i<3;++i) {
-				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
-				if (basis::tri(log2p)->sm() > 0) {
-					side = tri(tind).seg(i);
-					gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
-				}
-			}
-		}
+//		else {
+////			gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb*tprcn; // hack bug temp fix later
+//			gbl->tprcn_ut(tind,Range::all(),Range::all()) = jcb;
+//
+//			for(i=0;i<3;++i) {
+////				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += basis::tri(log2p)->vdiag()*gbl->tprcn_ut(tind,Range::all(),Range::all());
+//				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += gbl->tprcn_ut(tind,Range::all(),Range::all());
+//				if (basis::tri(log2p)->sm() > 0) {
+//					side = tri(tind).seg(i);
+//					gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
+//				}
+//			}
+//		}
 	}
 	
 	tri_hp::setup_preconditioner();
@@ -218,30 +220,29 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 	FLT c2 = gam*rt;
 	FLT c = sqrt(c2);
 	
-//	/* Preconditioner */
-//	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
-//	    -u/rho,          1.0/rho,    0.0,         0.0,
-//	    -v/rho,          0.0,        1.0/rho,     0.0,
-//		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
-//
-//	/* Inverse of Preconditioner */
-//	Pinv = 1.0/rt,               0.0,   0.0,   -rho/rt,
-//		   u/rt,                 rho,   0.0,   -rho*u/rt,
-//		   v/rt,                 0.0,   rho,   -rho*v/rt,
-//		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
-	
-	
 	/* Preconditioner */
-	P = 1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0,0,0,1;
-	
+	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
+	    -u/rho,          1.0/rho,    0.0,         0.0,
+	    -v/rho,          0.0,        1.0/rho,     0.0,
+		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
+
 	/* Inverse of Preconditioner */
-	Pinv = 1,0,0,0,
-		   0,1,0,0,
-		   0,0,1,0,
-		   0,0,0,1;
+	Pinv = 1.0/rt,               0.0,   0.0,   -rho/rt,
+		   u/rt,                 rho,   0.0,   -rho*u/rt,
+		   v/rt,                 0.0,   rho,   -rho*v/rt,
+		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
+	
+//	/* Preconditioner */
+//	P = 1,0,0,0,
+//		0,1,0,0,
+//		0,0,1,0,
+//		0,0,0,1;
+//	
+//	/* Inverse of Preconditioner */
+//	Pinv = 1,0,0,0,
+//		   0,1,0,0,
+//		   0,0,1,0,
+//		   0,0,0,1;
 	
 //	/* eigenvectors of P*df/dw */
 //	V = 0.0, 0.0, 1.0, 1.0,
@@ -273,9 +274,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 //			for(int k=0; k<NV; ++k)
 //				A(i,j)+=V(i,k)*VINV(k,j);
 	
-	
-	
-	
+		
 	/* df/dw derivative of fluxes wrt primitive variables */
 	A = u/rt,               rho,                       0.0,     -rho*u/rt,
 		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
@@ -287,12 +286,12 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*A(k,j);
-	A = temp;
+	
+	A = temp;	
+	
 	matrix_absolute_value(A);
 	
 	
-	
-
 //	/* df/dw derivative of fluxes wrt conservative variables*/
 //	A =  0.0, 1.0, 0.0, 0.0,
 //		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,

@@ -308,7 +308,7 @@ void characteristic::flux(Array<FLT,1>& cvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	for(int i = 0; i < x.NV; ++i)
 		for(int j = 0; j < x.NV; ++j)
 			fluxtemp(i) += 0.5*A(i,j)*(ub(j)+cvu(j));
-
+	
 	Aeigs = fabs(u),fabs(u),fabs(u+c),fabs(u-c);
 
 	//matrix_absolute_value(A);
