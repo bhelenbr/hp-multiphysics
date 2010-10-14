@@ -427,6 +427,26 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 	}
 }
 
+void epartition::alloc(int size) {
+	ecomm::alloc(size);
+	seg_comm.resize(size);
+	tri_h.resize(2*size); 
+	seg_h.resize(2*size); 
+	seg_bdry_h.resize(size);
+}
+
+void epartition::copy(const edge_bdry& bin) {
+	ecomm::copy(bin);
+	const epartition& tgt(dynamic_cast<const epartition&>(bin));
+	seg_comm(Range(0,nseg-1)) = tgt.seg_comm(Range(0,nseg-1));
+	ntri_h = tgt.ntri_h;
+	tri_h(Range(0,ntri_h-1)) = tgt.tri_h(Range(0,ntri_h-1)); 
+	nseg_h = tgt.nseg_h;
+	seg_h(Range(0,nseg_h-1)) = tgt.seg_h(Range(0,nseg_h-1)); 
+	nseg_bdry_h = tgt.nseg_bdry_h;
+	seg_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.seg_bdry_h(Range(0,nseg_bdry_h-1));
+	return;
+}
 
 void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
 	int i,j,k,p0;
@@ -487,4 +507,66 @@ void epartition::mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, i
 			}
 		}
 	}
+}
+
+const int TSRCH = 0x100*0x4;
+#if ((-1)&(0x100*0x4))
+#define ISSRCH(A) (!((A)&TSRCH))
+#define SETSRCH(A) A&=(~TSRCH)
+#define CLRSRCH(A) A|=(TSRCH)
+#else
+#define ISSRCH(A) (((A)&TSRCH))
+#define SETSRCH(A) A|=(TSRCH)
+#define CLRSRCH(A) A&=(~TSRCH)
+#endif
+
+void epartition::calculate_halo() {
+	int tind,vn;
+	
+	nseg_h = 0;
+	nseg_bdry_h = 0;
+	ntri_h = 0;
+	
+	/* Find first side by going counter-clockwise */
+	int sind = seg(0);
+	int ppivot = x.seg(sind).pnt(0);
+	int tindnext = x.seg(sind).tri(0);
+	
+	do {
+		tind = tindnext;
+		if (!ISSRCH(x.gbl->intwk(tind))) {
+			tri_h(ntri_h++) = tind;
+			SETSRCH(x.gbl->intwk(tind));
+		}
+		for(vn=0;vn<3;++vn)
+			if (x.tri(tind).pnt(vn) == ppivot) break;
+		
+		tindnext = x.tri(tind).tri((vn +1)%3);
+	} while(tindnext > 0);
+				
+	/* Found first side */
+	seg_h(nseg_h++) = x.tri(tind).seg((vn +1)%3);
+	
+	
+	
+	for(int scnt=0;scnt<nseg;++scnt) {
+		/* Find first side by going counter-clockwise */
+		sind = seg(scnt);
+		ppivot = x.seg(sind).pnt(1);
+		tindnext = tind;
+
+		/* Now go clockwise for the rest */
+		do {
+			tind = tindnext;
+			if (!ISSRCH(x.gbl->intwk(tind))) {
+				tri_h(ntri_h++) = tind;
+				SETSRCH(x.gbl->intwk(tind));
+			}
+			
+			for(vn=0;vn<3;++vn)
+				if (x.tri(tind).pnt(vn) == ppivot) break;
+			tindnext = x.tri(tind).tri((vn+2)%3);
+		} while (tindnext > 0);
+	}
+	
 }

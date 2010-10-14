@@ -51,17 +51,29 @@ class ecomm : public comm_bdry<edge_bdry,tri_mesh> {
  * \ingroup boundary
  * This is specifically for partitions that are not smooth boundaries
  * as typically created by metis.  Because they are not smooth it
- * changes what happens between different levels of multigrid.
+ * changes what happens between different levels of multigrid. 
+ * It also changes what happens during mesh adaptation 
  */
 class epartition : public ecomm {
+		int ntri_h; /**< number of triangles in halo */
+		int nseg_h; /**< number of interior segments in halo */
+		int nseg_bdry_h; /**< number of segments on interior surface of halo */
+		Array<int,1> seg_comm; /**< seg numbers of sides in remote mesh */
+		Array<int,1> tri_h; /**< triangles in halo */
+		Array<int,1> seg_h; /**< interior segments in halo */
+		Array<int,1> seg_bdry_h; /**< segments on interior surface of halo */
+
 	public:
 		/* CONSTRUCTOR */
 		epartition(int inid, tri_mesh& xin) : ecomm(inid,xin) {groupmask = 1;mytype="partition";}
 		epartition(const epartition &inbdry, tri_mesh& xin) : ecomm(inbdry,xin) {}
 
 		epartition* create(tri_mesh& xin) const {return new epartition(*this,xin);}
+		void alloc(int size);
+		void copy(const edge_bdry& bin);
 		void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 		void mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
+		void calculate_halo();
 };
 
 
