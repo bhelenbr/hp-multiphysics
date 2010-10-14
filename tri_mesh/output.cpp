@@ -121,6 +121,38 @@ void tri_mesh::output(const std::string &filename, tri_mesh::filetype filetype) 
 			out.close();
 			break;
 
+		case (vtk):
+			fnmapp = grd_nm +".vtk";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open output file " << fnmapp << "for output" << endl;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			out << "# vtk DataFile Version 1.0" << endl;
+			out << "add title here" << endl;
+			out << "ASCII" << endl << endl;
+			
+			out << "DATASET UNSTRUCTURED_GRID" << endl;
+			out << "POINTS " << npnt << " float" << endl;
+
+			for(i=0;i<npnt;++i) {
+				for(n=0;n<ND;++n)
+					out << pnts(i)(n) << ' ';
+				out << 0.0 << endl;
+			}
+			
+			out << "CELLS " << ntri << ' ' << 4*ntri << endl;
+			
+			for(i=0;i<ntri;++i)
+				out << 3 << ' '  << tri(i).pnt(0) << ' ' << tri(i).pnt(1) << ' ' << tri(i).pnt(2) << endl;
+			out << "CELL_TYPES " << ntri << endl;
+
+			for(i=0;i<ntri;++i)
+				out << 5 << endl;
+			
+			out.close();
+			break;
+			
 		case (mavriplis):
 			fnmapp = grd_nm +".GDS";
 			out.open(fnmapp.c_str());

@@ -124,7 +124,7 @@ class tri_mesh : public multigrid_interface {
 		void copy(const tri_mesh& tgt);
 
 		/** Innput/Output file types */
-		enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank};
+		enum filetype {easymesh, gambit, tecplot, grid, text, binary, BRep, mavriplis, boundary, vlength, debug_adapt, datatank, vtk};
 
 		/** Input mesh */
 		void input(const std::string &filename, filetype ftype,  FLT grwfac, input_map &input);
