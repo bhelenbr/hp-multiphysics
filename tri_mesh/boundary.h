@@ -772,25 +772,15 @@ class rigid_movement_interface2D {
 		}
 		void to_geometry_frame(TinyVector<FLT,2>& pt) {
 			pt -= pos;
-			FLT temp = pt[0]*cos(theta) -pt[1]*sin(theta);
-			pt[1] = pt[0]*sin(theta) +pt[1]*cos(theta);
+			FLT temp = pt[0]*cos(theta) +pt[1]*sin(theta);
+			pt[1] = -pt[0]*sin(theta) +pt[1]*cos(theta);
 			pt[0] = temp;		
 		}
 		void to_physical_frame(TinyVector<FLT,2>& pt) {
-			FLT temp = pt[0]*cos(-theta) -pt[1]*sin(-theta);
-			pt[1] = pt[0]*sin(-theta) +pt[1]*cos(-theta);
+			FLT temp = pt[0]*cos(-theta) +pt[1]*sin(-theta);
+			pt[1] = -pt[0]*sin(-theta) +pt[1]*cos(-theta);
 			pt[0] = temp;		
 			pt += pos;
-		}
-		void rotate_to_geometry_frame(TinyVector<FLT,2>& dir) {
-			FLT temp = dir(0)*cos(theta) +dir(1)*sin(theta);
-			dir(1) = dir(0)*(-sin(theta)) +dir(1)*cos(theta);
-			dir(0) = temp;
-		}
-		void rotate_to_physical_frame(TinyVector<FLT,2>& dir) {
-			FLT temp = dir(0)*cos(-theta) +dir(1)*sin(-theta);
-			dir(1) = dir(0)*(-sin(-theta)) +dir(1)*cos(-theta);
-			dir(0) = temp;
 		}
 };
 
