@@ -35,7 +35,13 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
 			
-			fout << "ZONE\nVARIABLES=S,X,Y,CFLUX,DFLUX\nTITLE = " << base.idprefix << '\n';
+			std::ostringstream fname;
+			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
+			
+			std::ofstream fout;
+			fout.open(fname.str().c_str());
+			
+			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX\",\"DFLUX\"\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 			
 			conv_total = 0.0;
 			diff_total = 0.0;
@@ -97,6 +103,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			*x.gbl->log << base.idprefix << " total diffusive flux: " << precision(10) << diff_total << std::endl;
 			*x.gbl->log << base.idprefix << " total convective flux: " << conv_total << std::endl;
 			
+			fout.close();
 			break;
 		}
 		default: 
