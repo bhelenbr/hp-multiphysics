@@ -99,9 +99,8 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			
 			break;
 		}
-		default: {
-			*x.gbl->log << "That output type not supported for boundary reporting\n";
-		}
+		default: 
+			break;
 	}
 	
 	return;
