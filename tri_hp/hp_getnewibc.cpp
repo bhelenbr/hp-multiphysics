@@ -25,7 +25,11 @@ class symbolic_ibc : public init_bdry_cndtn {
 
 			/* Figure out how many variables */
 			for(nvar=0, nstr.str(""), nstr << idnty << nvar << std::flush; inmap.find(nstr.str()) != inmap.end(); ++nvar, nstr.str(""), nstr << idnty << nvar << std::flush);
-
+			
+			if (nvar == 0) {
+				std::cerr << "couldn't find initial condition function " << idnty << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+			}
 			fcn.resize(nvar);
 
 			for(int n=0;n<nvar;++n) {

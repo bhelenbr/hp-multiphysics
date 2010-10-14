@@ -123,11 +123,18 @@ void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 		ibc = x.getnewibc(base.idprefix+"_ibc",inmap);
 	}
 
+	if (base.is_comm() || inmap.find(base.idprefix+"_type") == inmap.end()) {
+		curved = false;
+	}
+	else {
+		curved = true;
+	}
 	keyword = base.idprefix + "_curved";
-	inmap.getwdefault(keyword,curved,false);
-
+	inmap.get(keyword,curved);
+	
 	keyword = base.idprefix + "_coupled";
-	inmap.getwdefault(keyword,coupled,false);
+	coupled = false;
+	inmap.get(keyword,coupled);
 
 	if (curved && !x.coarse_level) {
 		crvbd.resize(x.gbl->nhist+1);
@@ -176,8 +183,9 @@ void hp_edge_bdry::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 				for(j=0;j<base.nseg;++j) {
 					for(m=0;m<x.sm0;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
+						for(n=0;n<tri_mesh::ND;++n) {
 							bout.writeFloat(crvbd(tlvl)(j,m)(n),binio::Double);
+						}
 					}
 				}
 			}
@@ -198,7 +206,6 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 			if (curved) { 
 				fin.ignore(80,':');
 				fin >>  pmin;
-				pmin = x.p0;
 				for(j=0;j<base.nseg;++j) {
 					for(m=0;m<pmin -1;++m) {
 						for(n=0;n<tri_mesh::ND;++n)
@@ -218,12 +225,13 @@ void hp_edge_bdry::input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
 				/* HEADER INFORMATION */
 				bin.setFlag(binio::BigEndian,bin.readInt(1));
 				bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-
 				pmin = bin.readInt(sizeof(int));
+				
 				for(j=0;j<base.nseg;++j) {
 					for(m=0;m<pmin-1;++m) {
-						for(n=0;n<tri_mesh::ND;++n)
+						for(n=0;n<tri_mesh::ND;++n) {
 							crvbd(tlvl)(j,m)(n) = bin.readFloat(binio::Double);
+						}
 					}
 					for(m=pmin-1;m<x.sm0;++m) {
 						for(n=0;n<tri_mesh::ND;++n)
