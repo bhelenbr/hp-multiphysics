@@ -194,6 +194,190 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 			break;
 		}
 
+		case (vtk):
+			fnmapp = fname +".vtk";
+			out.open(fnmapp.c_str());
+			if (!out) {
+				*gbl->log << "couldn't open vtk output file " << fnmapp;
+				sim::abort(__LINE__,__FILE__,gbl->log);
+			}
+			
+			out << "# vtk DataFile Version 1.0" << endl;
+			out << "add title here" << endl;
+			out << "ASCII" << endl << endl;
+			
+			out << "DATASET UNSTRUCTURED_GRID" << endl;
+			out << "POINTS " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << " float" << endl;
+			
+			for(i=0;i<npnt;++i) {
+				for(n=0;n<ND;++n)
+					out << vrtxbd(tlvl)(i)(n) << ' ';
+				out << 0.0 << endl;
+			}
+			
+			if (basis::tri(log2p)->p() > 1) {
+				/* SIDE MODES */
+				for(sind=0;sind<nseg;++sind) {
+					if (seg(sind).info < 0) {
+						v0 = seg(sind).pnt(0);
+						v1 = seg(sind).pnt(1);
+						for(n=0;n<ND;++n)
+							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
+					}
+					else {
+						crdtocht1d(sind,tlvl);
+						
+						for(n=0;n<ND;++n)
+							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
+					}
+					
+					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(n=0;n<ND;++n)
+							out << crd(n)(0,i) << ' ';                    
+						out << 0.0 << endl;
+					}
+				}
+				
+				/* INTERIOR MODES */
+				if (basis::tri(log2p)->p() > 2) {
+					for(tind = 0; tind < ntri; ++tind) {
+						if (tri(tind).info < 0) {
+							for(n=0;n<ND;++n)
+								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+						}
+						else {
+							crdtocht(tind,tlvl);
+							for(n=0;n<ND;++n)
+								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
+						}
+						
+						for(i=1;i<basis::tri(log2p)->sm();++i) {
+							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(n=0;n<ND;++n)
+									out << crd(n)(i,j) << ' ';
+								out << 0.0 << endl;
+
+							}
+						}
+					}
+				}
+			}
+			
+			out << "CELLS " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << ' ' << 4*ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << endl;
+			
+			for(tind=0;tind<ntri;++tind) {
+				
+				/* VERTICES */
+				ijind[0][basis::tri(log2p)->sm()+1] = tri(tind).pnt(0);
+				ijind[0][0] = tri(tind).pnt(1);
+				ijind[basis::tri(log2p)->sm()+1][0] = tri(tind).pnt(2);
+				
+				/* SIDES */
+				indx = tri(tind).seg(0);
+				sgn = tri(tind).sgn(0);
+				if (sgn < 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				
+				indx = tri(tind).seg(1);
+				sgn = tri(tind).sgn(1);
+				if (sgn > 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				
+				indx = tri(tind).seg(2);
+				sgn = tri(tind).sgn(2);
+				if (sgn > 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				
+				/* INTERIOR VERTICES */
+				k = 0;
+				for(i=1;i<basis::tri(log2p)->sm();++i) {
+					for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+						ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
+						++k;
+					}
+				}
+				
+				/* OUTPUT CONNECTION LIST */        
+				for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
+					for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+						out << 3 << ' ' << ijind[i][j] << ' ' << ijind[i+1][j] << ' ' << ijind[i][j+1] << std::endl;
+						out << 3 << ' ' << ijind[i+1][j] << ' ' << ijind[i+1][j+1] << ' ' << ijind[i][j+1] << std::endl;
+					}
+					out << 3 << ' ' << ijind[i][basis::tri(log2p)->sm()-i] << ' ' << ijind[i+1][basis::tri(log2p)->sm()-i] << ' ' << ijind[i][basis::tri(log2p)->sm()+1-i] << std::endl;
+				}
+			}
+			
+			
+			out << "CELL_TYPES " << ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1) << endl;
+			
+			for(i=0;i<ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);++i)
+				out << 5 << endl;
+			
+			out << "POINT_DATA " << npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri << endl;
+			out << "SCALARS u,v,p float " << NV << endl;
+			out << "LOOKUP_TABLE default" << endl;
+			
+			/* VERTEX MODES */
+			for(i=0;i<npnt;++i) {
+				for(n=0;n<NV;++n)
+					out << ugbd(tlvl).v(i,n) << ' ';                    
+				out << std::endl;
+			}
+			
+			if (basis::tri(log2p)->p() > 1) {
+				/* SIDE MODES */
+				for(sind=0;sind<nseg;++sind) {
+					ugtouht1d(sind,tlvl);
+					for(n=0;n<NV;++n)
+						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
+					
+					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(n=0;n<NV;++n)
+							out << u(n)(0,i) << ' ';                    
+						out << std::endl;
+					}
+				}
+				
+				/* INTERIOR MODES */
+				if (basis::tri(log2p)->p() > 2) {
+					for(tind = 0; tind < ntri; ++tind) {
+						ugtouht(tind,tlvl);
+						for(n=0;n<NV;++n)
+							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
+							
+						for(i=1;i<basis::tri(log2p)->sm();++i) {
+							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(n=0;n<NV;++n)
+									out << u(n)(i,j) << ' ';                    
+								out << std::endl;
+							}
+						}
+					}
+				}
+			}
+			
+			
+			out.close();
+			break;
+			
 		case(tecplot):
 			fnmapp = fname +".dat";
 			out.open(fnmapp.c_str());
