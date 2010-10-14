@@ -408,34 +408,34 @@ namespace bdry_ins {
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 			}
-			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
-				neumann::input(fin,typ,tlvl);
-				if (typ == tri_hp::text) {
-					fin >> omega >> vel >> ctr;
-				}
-			}
-			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
-				// neumann::output(fout,typ,tlvl);
-				if (typ == tri_hp::text) {
-					fout << omega << ' ' << vel << ' ' << ctr << '\n';
-				}
-				if (typ == tri_hp::tecplot) {
-					/* Calculate total flux, (this is getting weird) */
-					diff_flux = 0.0;
-					for(int j=0;j<base.nseg;++j) {
-						int sind = base.seg(j);
-						
-						x.ugtouht1d(sind);
-						element_rsdl(j,0);
-						
-						for(int n=0;n<x.NV;++n)
-							diff_flux(n) += x.lf(n)(0);
-						
-						for(int n=0;n<x.NV;++n)
-							diff_flux(n) += x.lf(n)(1);
-					}
-				}
-			}
+//			void input(ifstream& fin,tri_hp::filetype typ,int tlvl) {
+//				neumann::input(fin,typ,tlvl);
+//				if (typ == tri_hp::text) {
+//					fin >> omega >> vel >> ctr;
+//				}
+//			}
+//			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
+//				neumann::output(fout,typ,tlvl);
+//				if (typ == tri_hp::text) {
+//					fout << omega << ' ' << vel << ' ' << ctr << '\n';
+//				}
+//				if (typ == tri_hp::tecplot) {
+//					/* Calculate total flux, (this is getting weird) */
+//					diff_flux = 0.0;
+//					for(int j=0;j<base.nseg;++j) {
+//						int sind = base.seg(j);
+//						
+//						x.ugtouht1d(sind);
+//						element_rsdl(j,0);
+//						
+//						for(int n=0;n<x.NV;++n)
+//							diff_flux(n) += x.lf(n)(0);
+//						
+//						for(int n=0;n<x.NV;++n)
+//							diff_flux(n) += x.lf(n)(1);
+//					}
+//				}
+//			}
 	};
 
 
