@@ -68,7 +68,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			temp = tri_hp::getnewsideobject(bnum,bdrydata);
+			temp = new generic(*this,*ebdry(bnum));
 			break;
 		}
 	}
