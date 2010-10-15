@@ -113,6 +113,12 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 		crvbd(i)(Range(0,base.nseg-1),Range::all()) = bin.crvbd(i)(Range(0,base.nseg-1),Range::all());
 }
 
+void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
+#ifdef petsc
+	base.resize_buffers((x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
+#endif	
+}
+
 void hp_edge_bdry::init(input_map& inmap,void* gbl_in) {
 	int i;
 	std::string keyword;
