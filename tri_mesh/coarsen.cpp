@@ -166,6 +166,11 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 
 	treeinit();
 
+	if (nseg > maxpst/3) {
+		*gbl->log << gbl->idprefix << " use bigger growth factor, lists aren't long enough" << nseg << ' ' << maxpst/3 << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	for(i=0;i<nseg;++i)
 		gbl->i2wk_lst1(i) = i+1;
 

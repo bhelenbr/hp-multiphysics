@@ -31,7 +31,12 @@ void tri_mesh::triangulate(int nsd) {
 	TinyVector<FLT,ND> xmax,xmin,xmax1,xmin1;
 	TinyVector<FLT,ND> dx1,dx2,dx3,dx4;
 	FLT det,det13,det14,det34,h1,h3;
-
+	
+	if (nsd > maxpst/3) {
+		*gbl->log << gbl->idprefix << " use bigger growth factor, lists aren't long enough" << nsd << ' ' << maxpst/3 << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	
 	/* CREATE VERTEX LIST */
 	nv = 0;
 	for(i=0;i<nsd;++i) {
@@ -39,10 +44,6 @@ void tri_mesh::triangulate(int nsd) {
 		dir = (1 -SIGN(gbl->i2wk_lst1(i)))/2;
 		seg(sind).tri(dir) = -1;
 		gbl->i2wk_lst2(nv++) = seg(sind).pnt(dir);
-	}
-	if (nv > maxpst -2) {
-			*gbl->log << gbl->idprefix << " coarse mesh is not big enough " << nv << ' ' << maxpst << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
 	/* SETUP SIDE POINTER INFO */
