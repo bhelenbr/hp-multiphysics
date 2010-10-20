@@ -8,6 +8,8 @@ clear
 
 whattodo = 1
 
+fname = input('filename');
+
 
 if (whattodo == 1)
     p = 0;
@@ -25,7 +27,7 @@ if (whattodo == 1)
     % ADL (rlx = 5) GS swp = 1
     % ILU (rlx = 7)        
     rlxscheme = 5;
-    swp = 1; 
+    swp = 0; 
     implct = 0; 
     dts = 10.0;
     mu = 1.0;
@@ -34,12 +36,12 @@ if (whattodo == 1)
     rk = 0;
     grd = 8;
     aratio = 1;
-    mglvl = 1;
+    mglvl = 2;
     rstrct = 1;
     vw = 1;
     cgswitch = 0;
     
-%     thetas = [0:15:180];
+     thetas = [0:15:360];
 %     thetas = [0,36,135];
      nstudy = length(thetas);
 %    mach = [0.01,0.05, 0.1, 0.5];
@@ -75,7 +77,7 @@ if (whattodo == 1)
     plot(thetas,rlx, 'k--')
     xlabel('Flow Angle/Degrees');
     ylabel('Damping Factor');
-    axis([0 180, 0.25 1.05])
+    axis([0 360, 0.25 1.05])
     
 %    semilogx(mach,mg,'k-')
 %    xlabel('Mach Number');
@@ -97,6 +99,11 @@ if (whattodo == 1)
     % save ILU_dt_study
     % save line_implicit_theta36
     % save line_w23_theta36
+    
+    fhandle = gcf;
+    saveas(fhandle,['../Figures/' fname '.fig']);
+    system(['cp looper.m ../Figures/' fname '.m']);
+    
     
     return
 end
