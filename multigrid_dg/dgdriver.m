@@ -1,4 +1,4 @@
-%function [mgdamping, rlxdamping] = dgdriver(input_vector)
+function [mgdamping, rlxdamping] = dgdriver(input_vector)
 clear global
 % To run type: [rlx,mg] = dgdriver([])
 % See kdxyloop for changing output options
