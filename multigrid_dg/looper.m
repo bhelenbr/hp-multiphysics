@@ -8,7 +8,7 @@ clear
 
 whattodo = 1
 
-fname = input('filename');
+fname = input('filename: (put in single quotes) ');
 
 
 if (whattodo == 1)
@@ -27,7 +27,7 @@ if (whattodo == 1)
     % ADL (rlx = 5) GS swp = 1
     % ILU (rlx = 7)        
     rlxscheme = 5;
-    swp = 0; 
+    swp = 1; 
     implct = 0; 
     dts = 10.0;
     mu = 1.0;
