@@ -6,8 +6,8 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: planar axi
 
-planar: tri_hp tri_hp_mpi
-axi: tri_hp_axi tri_hp_axi_mpi
+planar: tri_hp tri_hp_mpi tri_hp_petsc
+axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc
 
 tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -16,9 +16,16 @@ tri_hp:
 
 .PHONY: tri_hp
 
+tri_hp_mpi:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DPTH'
+	cp _$@/tri_hp_mpi $(HOME)/bin/$@
+
+.PHONY: tri_hp_mpi
+
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS="-Dpetsc -DMY_SPARSE"
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-Dpetsc -DMY_SPARSE'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_petsc
@@ -30,19 +37,19 @@ tri_hp_axi:
 
 .PHONY: tri_hp_axi
 
-tri_hp_mpi:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DPTH'
-	cp _$@/tri_hp_mpi $(HOME)/bin/$@
-
-.PHONY: tri_hp_mpi
-
 tri_hp_axi_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
 	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC -DPTH'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_mpi
+
+tri_hp_axi_petsc:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE'
+	cp _$@/tri_hp $(HOME)/bin/$@
+
+.PHONY: tri_hp_axi_petsc
 
 tri_hp_drop:
 	+@[ -d  _$@ ] || mkdir -p _$@
