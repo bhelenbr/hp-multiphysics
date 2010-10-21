@@ -46,8 +46,8 @@ tri_hp_axi_mpi:
 
 tri_hp_axi_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE'
-	cp _$@/tri_hp $(HOME)/bin/$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE'
+	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_petsc
 
@@ -110,7 +110,7 @@ OBJ +=  $(OBJINS)
 #$(OBJCD) $(OBJCNS) $(OBJBUOY) $(OBJPS) $(OBJSWIRL) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT) $(OBJCNSEXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -g -O3 -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+CPPFLAGS = -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 #CPPFLAGS += -DBZ_DEBUG
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
 CXXMPI = ${CXX}
