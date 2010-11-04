@@ -704,13 +704,13 @@ namespace bdry_ins {
 				/* LOAD PRESSURE JUMP FUNCTION */
 				dp.init(inmap,base.idprefix+"_jump");
 			}
+			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 
 #ifdef petsc
 			void petsc_matchjacobian_snd();
 			void petsc_matchjacobian_rcv(int phase);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
-			
 #endif
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
 			void pmatchsolution_rcv(int phase, FLT *pdata, int vrtstride) {base.vfinalrcv(boundary::all_phased,phase,boundary::symmetric,boundary::average,pdata,0,x.NV-2, x.NV*vrtstride);}

@@ -380,6 +380,59 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	return;
 }
 
+void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
+	int i,n,ind,sind;
+	TinyVector<FLT,tri_mesh::ND> nrm, mvel, pt;
+	FLT power;
+	
+	switch(typ) {
+		case(tri_hp::tecplot): {
+			if (!report_flag) return;
+			
+			power = 0.0;
+
+			ind = 0;
+			for (ind=0;ind<base.nseg;++ind) {
+				sind = base.seg(ind);
+			
+				x.crdtocht1d(sind);
+				for(n=0;n<tri_mesh::ND;++n)
+					basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+				
+				x.ugtouht1d(sind);
+				for(n=0;n<x.NV;++n)
+					basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&x.u(n)(0,0));
+				
+				for(int k=0;k<basis::tri(x.log2p)->gpx();++k) {
+					nrm(0) = x.dcrd(1,0)(0,k);
+					nrm(1) = -x.dcrd(0,0)(0,k);                
+					for(n=0;n<tri_mesh::ND;++n) {
+						pt(n) = x.crd(n)(0,k);
+						mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -dxdt(x.log2p,ind)(n,k));
+					}
+					FLT length = sqrt(nrm(0)*nrm(0) +nrm(1)*nrm(1));
+					FLT norm_vel = ((x.u(0)(0,k) -mvel(0))*nrm(0) +(x.u(1)(0,k) -mvel(1))*nrm(1))/length;
+					TinyVector<FLT,3> inpt(pt(0),pt(1),norm_vel);
+					FLT delta_p = dp.Eval(inpt,x.gbl->time);			
+					power +=  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*length*delta_p*norm_vel;
+				}
+			}
+			streamsize oldprecision = (*x.gbl->log).precision(10);
+			*x.gbl->log << base.idprefix << " power: " << power << std::endl;
+			(*x.gbl->log).precision(oldprecision);
+			break;
+		}
+		default: {
+			break;
+		}
+	}
+	
+	neumann::output(fout,typ,tlvl);
+	
+	return;
+}
+
+
 void hybrid_slave_pt::update(int stage) {
 
 	if (stage == -1) return;
