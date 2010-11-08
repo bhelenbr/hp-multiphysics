@@ -4,7 +4,7 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
-all: libtri_mesh.a libtri_mesh_mpi.a tri_mesh tri_mesh_mpi
+all: libtri_mesh.a tri_mesh libtri_mesh_mpi.a tri_mesh_mpi libtri_mesh_petsc.a
 
 libtri_mesh.a:
 	+@[ -d  _serial ] || mkdir -p _serial 
