@@ -25,7 +25,7 @@ tri_hp_mpi:
 
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-Dpetsc -DMY_SPARSE'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc -DMY_SPARSE'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_petsc
@@ -46,7 +46,7 @@ tri_hp_axi_mpi:
 
 tri_hp_axi_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE -DMPISRC'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_petsc
