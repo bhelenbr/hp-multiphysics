@@ -138,7 +138,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 
 		
 		//cout << "timestep " << tstep << " hmax "<< hmax << endl;
-		//tstep = 1.e-3;
+		//tstep = 1.0/5000.0;
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
@@ -253,12 +253,12 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 			for(int k=0; k<NV; ++k)
 				A(i,j)+=V(i,k)*VINV(k,j);
 
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*A(k,j);
-	A = temp;
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*A(k,j);
+//	A = temp;
 //	/* dg/dw */
 //	B =   0.0, 0.0, 1.0, 0.0,
 //	      -u*v, v, u, 0.0,
@@ -295,12 +295,12 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 			for(int k=0; k<NV; ++k)
 				B(i,j)+=V(i,k)*VINV(k,j);	
 
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*B(k,j);
-	B = temp;
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*B(k,j);
+//	B = temp;
 	
 	FLT nu = gbl->mu/rho;
 	
@@ -311,26 +311,34 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		0.0, nu,  0.0, 0.0,
 		0.0, 0.0, nu,  0.0,
 		0.0, 0.0, 0.0, alpha;
-	
-	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-	
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*S(k,j);
-	S = temp;
+
+//	if (gbl->bd(0) != 0.0)
+		S = Pinv*gbl->bd(0)+S/hmax/hmax;
+//	else
+//		S = Pinv+S/hmax/hmax;
+
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*S(k,j);
+//	S = temp;
 
 	Tinv = 2.0/hmax*(A+B+hmax*S);
 
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
+	
+	S = Tinv;// store for error checking later
+	
+	//if(Tinv(0,0) == 0.0) Tinv(0,0) = 1.0;
 
 	/*  LU factorization  */
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
 	
 	if (info != 0) {
+		cout << "Tinv before and after GETRF" << S << Tinv << endl;
 		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}

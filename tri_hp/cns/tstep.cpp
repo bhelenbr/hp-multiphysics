@@ -288,9 +288,8 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 				temp(i,j)+=P(i,k)*A(k,j);
 	
 	A = temp;	
-	
 	matrix_absolute_value(A);
-	
+
 	
 //	/* df/dw derivative of fluxes wrt conservative variables*/
 //	A =  0.0, 1.0, 0.0, 0.0,
@@ -353,7 +352,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 				temp(i,j)+=P(i,k)*B(k,j);
 	B = temp;
 	matrix_absolute_value(B);
-	
+
 	
 	
 //	/* dg/dw derivative of fluxes wrt conservative variables*/
@@ -381,17 +380,22 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 		0.0, 0.0, nu,  0.0,
 		0.0, 0.0, 0.0, alpha;
 	
-	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
-
+//	if (gbl->bd(0) != 0.0)
+		S = Pinv*gbl->bd(0)+S/hmax/hmax;
+//	else
+//		S = Pinv+S/hmax/hmax;
+	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*S(k,j);
 	S = temp;
-	
+		
 	Tinv = 2.0/hmax*(A+B+hmax*S);
 
+	S = Tinv; // for error checking later
+	
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
 	
@@ -400,7 +404,8 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
 	
 	if (info != 0) {
-		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
+		cout << "Tinv before and after GETRF" << S << Tinv << endl;
+		*gbl->log << "DGETRF FAILED FOR CNS TSTEP" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	
@@ -413,7 +418,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT hmax, Array
 	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
 	
 	if (info != 0) {
-		*gbl->log << "DGETRS FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
+		*gbl->log << "DGETRS FAILED FOR CNS TSTEP" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 	

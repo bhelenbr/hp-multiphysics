@@ -28,16 +28,18 @@ void tri_hp_cns_explicit::init(input_map& input, void *gin) {
 
 	gbl->tau.resize(maxpst,NV,NV);
 
+	double prandtl;
+	
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.403);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
-	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.75);
+	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.75);
 	//if (!input.get(gbl->idprefix + "_k",gbl->kcond)) input.getwdefault("k",gbl->kcond,1.0);
-	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,8.314472);
-
-	gbl->kcond = gbl->R*gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
+	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,287.058);
+	
+	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
 	
 	gbl->body(0) = 0.0;
-	gbl->body(1) = 0.001;
+	gbl->body(1) = -0.01;
 
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);

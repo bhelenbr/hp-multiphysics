@@ -120,26 +120,26 @@ void tri_hp_cns::length() {
 	
 	
 	
-	if (gbl->error_estimator == tri_hp_cns::energy_norm) {
-		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
-		
-		/* Determine error target (SEE AEA Paper) */
-		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
-		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-		gbl->res.v(Range(0,npnt-1),0) = 1.0;
-		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-		for(int tind=0;tind<ntri;++tind) {
-			FLT error2 = gbl->fltwk(tind);
-			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
-			for (int j=0;j<3;++j) {
-				int p0 = tri(tind).pnt(j);
-				/* Calculate average at vertices */
-				gbl->res.v(p0,0) *= ri;
-				gbl->res_r.v(p0,0) += 1.0;
-			}
-		}
-	}
-	else if (gbl->error_estimator == tri_hp_cns::scale_independent) {
+//	if (gbl->error_estimator == tri_hp_cns::energy_norm) {
+//		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
+//		
+//		/* Determine error target (SEE AEA Paper) */
+//		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
+//		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
+//		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+//		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+//		for(int tind=0;tind<ntri;++tind) {
+//			FLT error2 = gbl->fltwk(tind);
+//			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+//			for (int j=0;j<3;++j) {
+//				int p0 = tri(tind).pnt(j);
+//				/* Calculate average at vertices */
+//				gbl->res.v(p0,0) *= ri;
+//				gbl->res_r.v(p0,0) += 1.0;
+//			}
+//		}
+//	}
+//	else if (gbl->error_estimator == tri_hp_cns::scale_independent) {
 		
 		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
 		
@@ -158,11 +158,11 @@ void tri_hp_cns::length() {
 				gbl->res_r.v(p0,0) += 1.0;
 			}
 		}	
-	}
-	else {
-		*gbl->log << "Unknown error estimator??" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
+//	}
+//	else {
+//		*gbl->log << "Unknown error estimator??" << std::endl;
+//		sim::abort(__LINE__,__FILE__,gbl->log);
+//	}
 	
 	for (int pind=0;pind<npnt;++pind) {
 		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
@@ -173,7 +173,7 @@ void tri_hp_cns::length() {
 	
 	/* This is to smooth the change to the length function */
 	int iter,sind,i,j,p0,p1;
-	int niter = 1;
+	int niter = 2;
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = 0;

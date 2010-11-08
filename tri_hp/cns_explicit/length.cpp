@@ -164,44 +164,44 @@ void tri_hp_cns_explicit::length() {
 			
 
 //	if (gbl->error_estimator == tri_hp_cns_explicit::energy_norm) {
-//		
+		
 //		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
 //
-		/* Determine error target (SEE AEA Paper) */
-		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
-		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-		gbl->res.v(Range(0,npnt-1),0) = 1.0;
-		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-		for(int tind=0;tind<ntri;++tind) {
-			FLT error2 = gbl->fltwk(tind);
-			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
-			for (int j=0;j<3;++j) {
-				int p0 = tri(tind).pnt(j);
-				/* Calculate average at vertices */
-				gbl->res.v(p0,0) *= ri;
-				gbl->res_r.v(p0,0) += 1.0;
-			}
-		}
-//	}
-//	else if (gbl->error_estimator == tri_hp_cns_explicit::scale_independent) {
-//		
-//		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
-//
-//		/* This is to maintain a constant local truncation error (independent of scale) */
+//		/* Determine error target (SEE AEA Paper) */
+//		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
+//		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
 //		gbl->res.v(Range(0,npnt-1),0) = 1.0;
 //		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
 //		for(int tind=0;tind<ntri;++tind) {
-//			FLT jcb = 0.25*area(tind);
-//			gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
-//			FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
-//			FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
+//			FLT error2 = gbl->fltwk(tind);
+//			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
 //			for (int j=0;j<3;++j) {
 //				int p0 = tri(tind).pnt(j);
 //				/* Calculate average at vertices */
 //				gbl->res.v(p0,0) *= ri;
 //				gbl->res_r.v(p0,0) += 1.0;
 //			}
-//		}	
+//		}
+//	}
+//	else if (gbl->error_estimator == tri_hp_cns_explicit::scale_independent) {
+		
+		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
+
+		/* This is to maintain a constant local truncation error (independent of scale) */
+		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+		for(int tind=0;tind<ntri;++tind) {
+			FLT jcb = 0.25*area(tind);
+			gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
+			FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+			FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
+			for (int j=0;j<3;++j) {
+				int p0 = tri(tind).pnt(j);
+				/* Calculate average at vertices */
+				gbl->res.v(p0,0) *= ri;
+				gbl->res_r.v(p0,0) += 1.0;
+			}
+		}	
 	//}
 //	else {
 //		*gbl->log << "Unknown error estimator??" << std::endl;

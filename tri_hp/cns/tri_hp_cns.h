@@ -35,7 +35,8 @@ class tri_hp_cns : public tri_hp {
 			//init_bdry_cndtn *src;
 			
 			error_estimator_type error_estimator;
-
+			
+			vsi	res_temp;
 
 		} *gbl;
 
