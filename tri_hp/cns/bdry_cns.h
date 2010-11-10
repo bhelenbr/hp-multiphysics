@@ -247,6 +247,114 @@ namespace bdry_cns {
 	};
 	
 	
+	
+	class adiabatic : public neumann {  
+	protected:
+		Array<int,1> dirichlets;
+		int ndirichlets;
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			
+			/* CONTINUITY */
+			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+			
+			/* MOMENTUM */
+			for (int n=1;n<x.NV-1;++n)
+				flx(n) = 0.0;
+			
+			/* ENERGY EQUATION */
+			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+			flx(x.NV-1) = h*flx(0);
+			
+			return;
+		}
+		
+	public:
+		adiabatic(tri_hp_cns &xin, edge_bdry &bin) : neumann(xin,bin) {
+			mytype = "adiabatic";
+			ndirichlets = x.NV-2;
+			dirichlets.resize(ndirichlets);
+			for (int n=1;n<x.NV-1;++n)
+				dirichlets(n-1) = n;
+		}
+		adiabatic(const adiabatic& inbdry, tri_hp_cns &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
+		adiabatic* create(tri_hp& xin, edge_bdry &bin) const {return new adiabatic(*this,dynamic_cast<tri_hp_cns&>(xin),bin);}
+		
+		void vdirichlet() {
+			int sind,j,v0;
+			j = 0;
+			do {
+				sind = base.seg(j);
+				v0 = x.seg(sind).pnt(0);
+				x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
+			} while (++j < base.nseg);
+			v0 = x.seg(sind).pnt(1);
+			x.gbl->res.v(v0,Range(1,x.NV-2)) = 0.0;
+		}
+		
+		void sdirichlet(int mode) {
+			int sind;
+			
+			for(int j=0;j<base.nseg;++j) {
+				sind = base.seg(j);
+				x.gbl->res.s(sind,mode,Range(1,x.NV-2)) = 0.0;
+			}
+		}
+		
+#ifdef petsc			
+		void petsc_jacobian_dirichlet() {
+			hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+			
+			int sm=basis::tri(x.log2p)->sm();
+			Array<int,1> indices((base.nseg+1)*(x.NV-2) +base.nseg*sm*(x.NV-2));
+			
+			int vdofs;
+			if (x.mmovement == x.coupled_deformable)
+				vdofs = x.NV +tri_mesh::ND;
+			else
+				vdofs = x.NV;
+			
+			int gind,v0,sind;
+			int counter = 0;
+			
+			int j = 0;
+			do {
+				sind = base.seg(j);
+				v0 = x.seg(sind).pnt(0);
+				gind = v0*vdofs;
+				for(int n=1;n<x.NV-1;++n) {						
+					indices(counter++)=gind+n;
+				}
+			} while (++j < base.nseg);
+			v0 = x.seg(sind).pnt(1);
+			gind = v0*vdofs;
+			for(int n=1;n<x.NV-1;++n) {
+				indices(counter++)=gind+n;
+			}
+			
+			for(int i=0;i<base.nseg;++i) {
+				gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
+				for(int m=0; m<sm; ++m) {
+					for(int n=1;n<x.NV-1;++n) {
+						indices(counter++)=gind+m*x.NV+n;
+					}
+				}
+			}	
+			
+#ifdef MY_SPARSE
+			x.J.zero_rows(counter,indices);
+			x.J_mpi.zero_rows(counter,indices);
+			x.J.set_diag(counter,indices,1.0);
+#else			
+			MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+		}
+#endif
+		
+		void tadvance() {
+			hp_edge_bdry::tadvance();
+			setvalues(ibc,dirichlets,ndirichlets);
+		}
+	};
 
 //	class rigid : public init_bdry_cndtn {
 //		public:

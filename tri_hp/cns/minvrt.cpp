@@ -202,9 +202,13 @@ void tri_hp_cns::calculate_preconditioner(Array<double,1> pvu, Array<double,2> &
 
 void tri_hp_cns::minvrt() {
 	
-	tri_hp::minvrt();
+	if (basis::tri(log2p)->im()) {
+		*gbl->log << "MINVRT CNS only works for p=1" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 	
-	//return;
+	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+
 	gbl->res_temp.v = gbl->res.v;
 	gbl->res_temp.s = gbl->res.s;
 	gbl->res_temp.i = gbl->res.i;

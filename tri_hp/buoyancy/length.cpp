@@ -78,13 +78,15 @@ void tri_hp_buoyancy::length() {
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
 				FLT rho = gbl->rhovsT.Eval(u(2)(i,j));
+				FLT rhol = gbl->rhovsT.Eval(ul(2)(i,j));
+				
 				FLT dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
 				FLT dudy = -ldcrd(0,1)*du(0,0)(i,j) +ldcrd(0,0)*du(0,1)(i,j);
 				FLT dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
 				FLT dvdy = -ldcrd(0,1)*du(1,0)(i,j) +ldcrd(0,0)*du(1,1)(i,j);	
 				FLT dtdx = ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j);
 				FLT dtdy = -ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j);
-
+				
 				FLT dudxl = ldcrd(1,1)*dul(0,0)(i,j) -ldcrd(1,0)*dul(0,1)(i,j);
 				FLT dudyl = -ldcrd(0,1)*dul(0,0)(i,j) +ldcrd(0,0)*dul(0,1)(i,j);
 				FLT dvdxl = ldcrd(1,1)*dul(1,0)(i,j) -ldcrd(1,0)*dul(1,1)(i,j);
@@ -94,19 +96,14 @@ void tri_hp_buoyancy::length() {
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
 				bernoulli = rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
-				bernoulli += rho*(sqrt(u(0)(i,j)*u(0)(i,j)+u(1)(i,j)*u(1)(i,j))*u(2)(i,j));	
-				
-				FLT c = 1.0;
-				
+				bernoulli += (rho-gbl->rho)*gbl->g;
 				/* VISCOUS PART TO ERROR MEASURE */
 				bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
-				bernoulli += c*gbl->kcond*(fabs(dtdx)+fabs(dtdy))/jcb;
-
+				
 				dbernoulli = rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
-				dbernoulli += rho*(sqrt(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))*ul(2)(i,j));	
+				dbernoulli += (rhol-gbl->rho)*gbl->g;
 				dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
-				dbernoulli += c*gbl->kcond*(fabs(dtdxl)+fabs(dtdyl))/jcb;
-
+				
 				dbernoulli -= bernoulli;
 				
 				error2 += dbernoulli*dbernoulli*jcb*basis::tri(log2p)->wtx(i)*basis::tri(log2p)->wtn(j);

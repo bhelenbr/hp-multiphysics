@@ -306,6 +306,14 @@ void tri_hp::petsc_update() {
 	/* send petsc vector u back to ug */
 	petsc_to_ug();
 
+	for(int i=0;i<nebd;++i) {
+		hp_ebdry(i)->update(-1);
+	}
+	
+	for(int i=0;i<nvbd;++i) {
+		hp_vbdry(i)->update(-1);
+	}
+	
 	err = VecDestroy(du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 

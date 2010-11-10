@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-//#define TIMEACCURATE
+#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -138,7 +138,8 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 
 		
 		//cout << "timestep " << tstep << " hmax "<< hmax << endl;
-		//tstep = 1.0/5000.0;
+		
+		//tstep = MIN(1.0/450.0,tstep)
 		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;

@@ -78,8 +78,8 @@ hp_vrtx_bdry* tri_hp_cns_explicit::getnewvrtxobject(int bnum, input_map &bdrydat
  */
 class tri_hp_cns_explicit_stype {
 	public:
-		static const int ntypes = 5;
-		enum ids {unknown=-1,plain,inflow,outflow,characteristic,applied_stress};
+		static const int ntypes = 6;
+		enum ids {unknown=-1,plain,inflow,outflow,characteristic,applied_stress,adiabatic};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -88,7 +88,7 @@ class tri_hp_cns_explicit_stype {
 		}
 };
 
-const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","applied_stress"};
+const char tri_hp_cns_explicit_stype::names[ntypes][40] = {"plain","inflow","outflow","characteristic","applied_stress","adiabatic"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -130,6 +130,10 @@ hp_edge_bdry* tri_hp_cns_explicit::getnewsideobject(int bnum, input_map &bdrydat
 
 		case tri_hp_cns_explicit_stype::applied_stress: {
 			temp = new applied_stress(*this,*ebdry(bnum));
+			break;
+		}
+		case tri_hp_cns_explicit_stype::adiabatic: {
+			temp = new adiabatic(*this,*ebdry(bnum));
 			break;
 		}
 		default: {
