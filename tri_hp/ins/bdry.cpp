@@ -381,7 +381,7 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 }
 
 void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
-	int i,n,ind,sind;
+	int n,ind,sind;
 	TinyVector<FLT,tri_mesh::ND> nrm, mvel, pt;
 	FLT power;
 	
