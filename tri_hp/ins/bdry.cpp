@@ -414,7 +414,7 @@ void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					FLT norm_vel = ((x.u(0)(0,k) -mvel(0))*nrm(0) +(x.u(1)(0,k) -mvel(1))*nrm(1))/length;
 					TinyVector<FLT,3> inpt(pt(0),pt(1),norm_vel);
 					FLT delta_p = dp.Eval(inpt,x.gbl->time);			
-					power +=  basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*length*delta_p*norm_vel;
+					power +=  basis::tri(x.log2p)->wtx(k)*RAD(x.crd(0)(0,k))*length*delta_p*norm_vel;
 				}
 			}
 			streamsize oldprecision = (*x.gbl->log).precision(10);
