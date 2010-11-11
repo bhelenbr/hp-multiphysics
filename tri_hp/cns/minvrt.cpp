@@ -28,6 +28,16 @@ void tri_hp_cns::project_new_variables(){
 		for(int m = 0; m < NV; ++m)
 			gbl->res.v(i,m) = lcl(m);
 		
+// /* maybe forward substitution with Pinv??? */		
+//		for(int j=0;j<NV;++j){
+//			FLT lcl2 = gbl->res.v(i,j);
+//			for(int k=0;k<j;++k){
+//				lcl2 -= Pinv(j,k)*gbl->res.v(i,k);
+//			}
+//			gbl->res.v(i,j) = lcl2/Pinv(j,j);
+//		}
+		
+		
 	}
 	
 	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
@@ -189,31 +199,54 @@ void tri_hp_cns::calculate_preconditioner(Array<double,1> pvu, Array<double,2> &
 	double pr = pvu(0),u = pvu(1),v = pvu(2),rt = pvu(3);
 	double rho = pr/rt;
 	double ke = 0.5*(u*u+v*v);
-	double gm1 = gbl->gamma-1.0;
+	double gam = gbl->gamma;
+	double gm1 = gam-1.0;
+	
+//	/* Preconditioner */
+//	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
+//		-u/rho,          1.0/rho,    0.0,         0.0,
+//		-v/rho,          0.0,        1.0/rho,     0.0,
+//		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;
+	
+	FLT umag = sqrt(u*u+v*v);	
+	FLT c = sqrt(gam*rt);
+	FLT M = MIN(MAX(1.0e-5,umag/c),1.0);
+	FLT delta = 1.0;
+	FLT omega = gam-gm1*delta;
+	FLT k = 1.0; // can use more complicated formula for k see choi and merkle
+	FLT beta = k*gam*rt;
+	FLT bM2 = beta*M*M;
+	FLT E = rt/gm1+ke;
 	
 	/* Preconditioner */
-	P = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
-		-u/rho,          1.0/rho,    0.0,         0.0,
-		-v/rho,          0.0,        1.0/rho,     0.0,
-		(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;
+	P = bM2,                                    0.0,              0.0,              0.0,
+		-u/rho,                                 1.0/rho,          0.0,              0.0,
+		-v/rho,                                 0.0,              1.0/rho,          0.0,
+		gm1*(u*u+v*v-E-rt+delta*bM2)/(rho*gam), -u*gm1/(rho*gam), -v*gm1/(rho*gam), gm1/(rho*gam);	
 	
 	return;
 }
 
 void tri_hp_cns::minvrt() {
 	
-	if (basis::tri(log2p)->im()) {
-		*gbl->log << "MINVRT CNS only works for p=1" << std::endl;
-		sim::abort(__LINE__,__FILE__,gbl->log);
-	}
-	
-	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+	if (gbl->diagonal_preconditioner) {
 
-	gbl->res_temp.v = gbl->res.v;
-	gbl->res_temp.s = gbl->res.s;
-	gbl->res_temp.i = gbl->res.i;
-	
-	project_new_variables();
+		if (basis::tri(log2p)->sm()) {
+			*gbl->log << "MINVRT CNS only works for p=1" << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+		
+		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
+
+		gbl->res_temp.v = gbl->res.v;
+		gbl->res_temp.s = gbl->res.s;
+		gbl->res_temp.i = gbl->res.i;
+		
+		project_new_variables();
+	}
+	else {
+		tri_hp::minvrt();
+	}
 	
 	return;
 }

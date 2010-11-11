@@ -59,7 +59,18 @@ void tri_hp::minvrt() {
     } else {
 		/* ASSUMES LOWER TRIANGULAR FOR NOW */
 		for(i=0;i<npnt;++i) {
-			DGETUS(&gbl->vprcn_ut(i,0,0), NV, NV, &gbl->res.v(i,0));
+			/* forward substitution */
+			for(j=0;j<NV;++j){
+				FLT lcl = gbl->res.v(i,j);
+				for(k=0;k<j;++k){
+					lcl -= gbl->vprcn_ut(i,j,k)*gbl->res.v(i,k);
+				}
+				gbl->res.v(i,j) = lcl/gbl->vprcn_ut(i,j,j);
+			}
+//			DGETLS(&gbl->vprcn_ut(i,0,0), NV, NV, &gbl->res.v(i,0));
+			
+			gbl->res.v(i,Range::all()) /= basis::tri(log2p)->vdiag();
+
 		}
 	}
 
@@ -145,7 +156,7 @@ void tri_hp::minvrt() {
 		}
 		else {
 			for(sind = 0; sind < nseg; ++sind) {
-				DGETUS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
+				DGETLS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
 				gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
 			}
 		}
@@ -221,7 +232,7 @@ void tri_hp::minvrt() {
 	}
 	else {
 		for(sind = 0; sind < nseg; ++sind) {
-			DGETUS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
+			DGETLS(&gbl->sprcn_ut(sind,0,0), NV, NV, &gbl->res.s(sind,mode,0));
 			gbl->res.s(sind,mode,Range::all()) /= basis::tri(log2p)->sdiag(mode);
 		}
 	}
@@ -261,7 +272,7 @@ void tri_hp::minvrt() {
 					}
 				}
 				/* INVERT PRECONDITIONER (ASSUMES LOWER TRIANGULAR) */
-				DGETUS(&gbl->tprcn_ut(tind,0,0), NV, NV, &gbl->res.i(tind,k,0));
+				DGETLS(&gbl->tprcn_ut(tind,0,0), NV, NV, &gbl->res.i(tind,k,0));
 			}
 		}
 	}
