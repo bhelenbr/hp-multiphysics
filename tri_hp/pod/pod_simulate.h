@@ -11,22 +11,29 @@
 #define _POD_SIMULATE_H_
 
 
+#ifdef POD_BDRY
 template<class BASE> class pod_sim_edge_bdry;
 template<class BASE> class pod_sim_vrtx_bdry;
+#endif
 
 template<class BASE> class pod_simulate : public BASE {
 	protected:
+		int pod_id;
 		int nmodes;
 		int tmodes;
-		int pod_id;
-		Array<FLT,1> coeffs, rsdls, rsdls_recv, rsdls0, multiplicity;
+		Array<FLT,1> coeffs, rsdls, rsdls_recv, rsdls0;
 		typedef typename BASE::vsi vsi;
 		Array<vsi,1> modes;
+#ifdef POD_BDRY
+		Array<FLT,1> multiplicity;
 		Array<pod_sim_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_sim_vrtx_bdry<BASE> *, 1> pod_vbdry;
+#endif
 		Array<FLT,2> jacobian;
 		Array<int,1> ipiv;
+#ifdef POD_BDRY
 		friend class pod_sim_edge_bdry<BASE>;
+#endif
 
 	public:
 		void init(input_map& input, void *gin); 
@@ -36,11 +43,14 @@ template<class BASE> class pod_simulate : public BASE {
 		void update();
 		FLT maxres();
 
+#ifdef POD_BDRY
 		/* communication for boundary modes */
 		void sc0load();
 		int sc0wait_rcv();
+#endif
 };
 
+#ifdef POD_BRY
 template<class BASE> class pod_sim_edge_bdry {
 	protected:
 		pod_simulate<BASE> &x;
@@ -67,6 +77,7 @@ template<class BASE> class pod_sim_edge_bdry {
 		void loadbuff(Array<FLT,1>& sdata);
 		void finalrcv(Array<FLT,1>& sdata);
 };
+#endif
 
 #include "pod_simulate.cpp"
 

@@ -12,8 +12,10 @@
 
 #define LOWNOISE
 
+#ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry;
 template<class BASE> class pod_gen_vrtx_bdry;
+#endif
 
 #ifdef LOWNOISE
 template<class BASE> class pod_generate : public BASE {
@@ -23,8 +25,10 @@ template<class BASE> class pod_generate : public BASE {
 		int pod_id;
 		int restartfile;
 		Array<FLT,1> scaling;
+#ifdef POD_BDRY
 		Array<pod_gen_edge_bdry<BASE> *, 1> pod_ebdry;
 		Array<pod_gen_vrtx_bdry<BASE> *, 1> pod_vbdry;
+#endif
 
 	public:
 		void init(input_map& input, void *gin); 
@@ -49,6 +53,7 @@ template<class BASE> class pod_generate : public BASE {
 };
 #endif
 
+#ifdef POD_BDRY
 template<class BASE> class pod_gen_edge_bdry {
 	protected:
 		pod_generate<BASE> &x;
@@ -64,6 +69,7 @@ template<class BASE> class pod_gen_edge_bdry {
 		void calculate_modes();
 		void output();
 };
+#endif
 
 #include "pod_generate.cpp"
 

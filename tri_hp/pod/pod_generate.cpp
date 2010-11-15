@@ -60,6 +60,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
 	}
 #else
+#ifdef POD_BDRY
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
 	pod_ebdry.resize(BASE::nebd);
@@ -67,6 +68,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		pod_ebdry(i) = new pod_gen_edge_bdry<BASE>(*this,*BASE::ebdry(i));
 		pod_ebdry(i)->init(input);
 	}
+#endif
 #endif
 
 	input.getwdefault("restart",restartfile,1);
@@ -411,9 +413,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		nstr << k-restartfile << std::flush;
 		filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 
+#ifdef POD_BDRY
 		/* ZERO SNAPSHOTS ON POD BOUNDARY'S */
 		for (i=0;i<BASE::nebd;++i)
 			pod_ebdry(i)->zero_bdry(BASE::ug);
+#endif
 
 		BASE::output(filename, BASE::binary);
 	}
@@ -659,9 +663,11 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.close();
 	}
 
+#ifdef POD_BDRY
 	/* NOW GENERATE BDRY POD MODES */
 	for (int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->calculate_modes();
+#endif
 
 #ifdef petsc
 	PetscFinalize();
@@ -676,6 +682,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 }
 #endif
 
+#ifdef POD_BDRY
 template<class BASE> void pod_gen_edge_bdry<BASE>::init(input_map& input) {
 	std::string keyword;
 
@@ -1026,3 +1033,4 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 		bout.close();
 	}
 }
+#endif

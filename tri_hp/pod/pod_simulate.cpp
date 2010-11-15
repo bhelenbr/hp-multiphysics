@@ -10,10 +10,12 @@
 #include <myblas.h>
 #include <libbinio/binfile.h>
 
+#ifdef POD_BDRY
 struct bd_str {
 	int nmodes;
 	int multiplicity;
 };
+#endif
 
 template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) {
 	std::string filename,keyword,linebuff;
@@ -54,6 +56,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	BASE::ugbd(0).s.reference(ugstore.s);
 	BASE::ugbd(0).i.reference(ugstore.i);
 
+#ifdef POD_BDRY
 	pod_ebdry.resize(BASE::nebd);
 	/* Count how many boundary modes there are so we can size arrays before initializing boundaries */
 	/* For each mesh block that is part of this pod block need to know
@@ -129,15 +132,19 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		}
 	}
 	*BASE::gbl->log << "#There are " << tmodes << " total modes on pod block " << pod_id << std::endl;
+	multiplicity.resize(tmodes);
+#else
+	tmodes = nmodes;
+#endif
 
 	coeffs.resize(tmodes);
 	rsdls.resize(tmodes);
 	rsdls0.resize(tmodes);
 	rsdls_recv.resize(tmodes);
-	multiplicity.resize(tmodes);
 	jacobian.resize(tmodes,tmodes);
 	ipiv.resize(tmodes);
 
+#ifdef POD_BDRY
 	/* Count total number of boundary modes */
 	/* and make map be an accrual of previous modes */
 	multiplicity = 1.0;
@@ -148,6 +155,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		multiplicity(Range(bindex,bindex+n-1)) = mi->second.multiplicity;
 		bindex += n;
 	}
+#endif
 
 
 	int restartfile;
@@ -177,6 +185,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 	bin.close();
 
+#ifdef POD_BDRY
 	/* Let boundary conditions load to and from coeff/rsdls vectors */
 	/* Then initialize them */
 	for (int i=0;i<BASE::nebd;++i) {
@@ -186,6 +195,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}	
 
 	// *BASE::gbl->log << multiplicity << std::endl;
+#endif
 
 
 	return;
@@ -226,6 +236,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	}
 
+#ifdef POD_BDRY
 	/* FORM RESIDUALS FOR SIDE MODES */
 	for (int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->rsdl();
@@ -245,6 +256,7 @@ template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	for(int i=0;i<BASE::nebd;++i) 
 		pod_ebdry(i)->finalrcv(rsdls_recv);
+#endif
 
 	sim::blks.allreduce(rsdls.data(),rsdls_recv.data(),tmodes,blocks::flt_msg,blocks::sum,pod_id);	
 
@@ -292,6 +304,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/delta;
 	}
 
+#ifdef POD_BDRY
 	/* CREATE JACOBIAN FOR BOUNDARY MODES */
 	for (int modeloop = nmodes; modeloop < tmodes; ++modeloop) {
 
@@ -320,6 +333,7 @@ template<class BASE> void pod_simulate<BASE>::setup_preconditioner() {
 		/* STORE IN ROW */
 		jacobian(Range(0,tmodes-1),modeloop) = (rsdls_recv -jacobian(Range(0,tmodes-1),tmodes-1))/1.0e-4;
 	}
+#endif
 
 	/* RESTORE UG & COEFF VECTOR */
 	BASE::ug.v(Range(0,BASE::npnt-1)) = BASE::gbl->ug0.v(Range(0,BASE::npnt-1));
@@ -352,6 +366,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	rsdls0 = rsdls_recv;	
 	rsdls = rsdls_recv;
 
+#ifdef POD_BDRY
 	/* COMMUNICATE POD BDRY CORRECTIONS */
 	for(int i=0;i<BASE::nebd;++i)
 		pod_ebdry(i)->loadbuff(rsdls);
@@ -376,6 +391,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	/* Problem is that for pod boundaries spanning more than 1 blocks, the correction gets added mulitple times */
 	rsdls_recv /= multiplicity;
 	rsdls_recv += rsdls0;
+#endif
 
 	coeffs -= rsdls_recv;
 
@@ -389,11 +405,13 @@ template<class BASE> void pod_simulate<BASE>::update() {
 		BASE::gbl->res.i(Range(0,BASE::ntri-1)) += rsdls_recv(m)*modes(m).i(Range(0,BASE::ntri-1));
 	}
 
+#ifdef POD_BDRY
 	for (int m=nmodes;m<tmodes;++m) {
 		for (int bind=0;bind<BASE::nebd;++bind) {		
 			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,m,rsdls_recv(m));
 		}
 	}
+#endif
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(int i=0;i<BASE::nebd;++i)
@@ -415,6 +433,7 @@ template<class BASE> void pod_simulate<BASE>::update() {
 	return;
 }
 
+#ifdef POD_BDRY
 template<class BASE>void pod_simulate<BASE>::sc0load() {
 	for(int i=0;i<BASE::nebd;++i)
 		BASE::ebdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
@@ -428,6 +447,7 @@ template<class BASE> int pod_simulate<BASE>::sc0wait_rcv() {
 	}
 	return(stop);
 }
+#endif
 
 
 template<class BASE> FLT pod_simulate<BASE>::maxres() {
@@ -444,6 +464,7 @@ template<class BASE> FLT pod_simulate<BASE>::maxres() {
     return(mxr);
 }
 
+#ifdef POD_BDRY
 template<class BASE> void pod_sim_edge_bdry<BASE>::init(input_map& input) {
     std::string filename,keyword,linebuff;
     std::ostringstream nstr;
@@ -615,8 +636,5 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 
     return;
 }
-
-
-
-
+#endif
 
