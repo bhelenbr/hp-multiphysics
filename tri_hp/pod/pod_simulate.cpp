@@ -201,6 +201,58 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	return;
 }
 
+/* This  makes sure that the solution doesn't drift out of the POD space */
+template<class BASE> void pod_simulate<BASE>::tadvance() {
+
+	BASE::tadvance();
+
+	/* EXTRAPOLATE GUESS FOR COEFF'S HERE FOR NEXT TIME STEP??*/
+	
+	
+	/* CALCULATE SOLUTION BASED ON COEFFS */
+	BASE::gbl->res.v(Range(0,BASE::npnt-1)) = 0.0;
+	BASE::gbl->res.s(Range(0,BASE::nseg-1)) = 0.0;
+	BASE::gbl->res.i(Range(0,BASE::ntri-1)) = 0.0;
+
+	for (int m=0;m<nmodes;++m) {
+		BASE::gbl->res.v(Range(0,BASE::npnt-1)) += coeffs(m)*modes(m).v(Range(0,BASE::npnt-1));
+		BASE::gbl->res.s(Range(0,BASE::nseg-1)) += coeffs(m)*modes(m).s(Range(0,BASE::nseg-1));
+		BASE::gbl->res.i(Range(0,BASE::ntri-1)) += coeffs(m)*modes(m).i(Range(0,BASE::ntri-1));
+	}
+
+#ifdef POD_BDRY
+	for (int m=nmodes;m<tmodes;++m) {
+		for (int bind=0;bind<BASE::nebd;++bind) {		
+			pod_ebdry(bind)->addto2Dsolution(BASE::gbl->res,m,coeffs(m));
+		}
+	}
+#endif
+
+  /* NOW SUBTRACT CURRENT SOLUTION TO CALCULATE DEVIATION */
+	BASE::gbl->res.v(Range(0,BASE::npnt-1)) -= BASE::ug.v(Range(0,BASE::npnt-1));
+	BASE::gbl->res.s(Range(0,BASE::nseg-1)) -= BASE::ug.s(Range(0,BASE::nseg-1));
+	BASE::gbl->res.i(Range(0,BASE::ntri-1)) -= BASE::ug.i(Range(0,BASE::ntri-1));
+
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(int i=0;i<BASE::nebd;++i)
+	BASE::hp_ebdry(i)->vdirichlet();
+
+	for(int i=0;i<BASE::nvbd;++i)
+	BASE::hp_vbdry(i)->vdirichlet2d();
+
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int i=0;i<BASE::nebd;++i)
+	for(int sm=0;sm<basis::tri(BASE::log2p)->sm();++sm)
+	BASE::hp_ebdry(i)->sdirichlet(sm);
+
+
+	BASE::ug.v(Range(0,BASE::npnt-1)) += BASE::gbl->res.v(Range(0,BASE::npnt-1));
+	BASE::ug.s(Range(0,BASE::nseg-1)) += BASE::gbl->res.s(Range(0,BASE::nseg-1));
+	BASE::ug.i(Range(0,BASE::ntri-1)) += BASE::gbl->res.i(Range(0,BASE::ntri-1));
+}
+
+
+
 template<class BASE> void pod_simulate<BASE>::rsdl(int stage) {
 
 	BASE::rsdl(stage);
