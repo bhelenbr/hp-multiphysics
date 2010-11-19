@@ -37,6 +37,10 @@ class tri_hp_cns : public tri_hp {
 			error_estimator_type error_estimator;
 			
 			vsi	res_temp;
+			
+			/* preconditioner could make 2d but keep general for now */
+			Array<FLT,3> vpreconditioner,tpreconditioner; 
+
 
 		} *gbl;
 
@@ -53,15 +57,16 @@ class tri_hp_cns : public tri_hp {
 
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
-
-		void minvrt();
+	
+		//void minvrt();
+		void update();
 		void length();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 		void calculate_unsteady_sources();
-		void pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
+		void pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
 		void project_new_variables();
-		void calculate_preconditioner(Array<double,1> u, Array<double,2> &P);
+		void switch_variables(Array<double,1> pvu, Array<double,1> &a);
 
 };
 #endif

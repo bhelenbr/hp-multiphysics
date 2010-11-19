@@ -435,7 +435,7 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {	
 	
 	TinyVector<FLT,4> lambda,Rl,Rr,ub,Roe,fluxtemp,fluxleft, fluxright;
-	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV);
+	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
 	Array<FLT,1> Aeigs(x.NV);
 	FLT gam = x.gbl->gamma;
 	FLT gm1 = gam-1.0;
@@ -515,26 +515,64 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	
 	fluxtemp = 0.5*(fluxleft+fluxright);
 	
-	FLT umag = sqrt(u*u+v*v);	
-	FLT M = MIN(MAX(1.0e-5,umag/c),1.0);
-	FLT delta = 1.0;
-	FLT omega = gam-gm1*delta;
-	FLT k = 1.0; // can use more complicated formula for k see choi and merkle
-	FLT beta = k*gam*rt;
-	FLT bM2 = beta*M*M;
+	FLT nu = x.gbl->mu/rho;
+	FLT cp = gogm1*x.gbl->R;
+	FLT alpha = x.gbl->kcond/(rho*cp);
+	FLT h = mag; // or norm??? temp fix 
+	
+	/* need to tune better */
+	FLT hdt = 1.5*pow(h*x.gbl->bd(0),2.0);
+	FLT vel = 3.0*(u*u+v*v);
+	FLT nuh = 2.0*pow((nu+alpha)/h,2.0);
+	
+	FLT umag = sqrt(hdt+vel);	
+	umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
+	
+	FLT M = MAX(1.0e-5,umag/c);
+	FLT re = MAX(rho*sqrt(u*u+v*v)*mag/x.gbl->mu,1.0);
+	FLT b2,alph;
+	
+	if(M > 0.9) { // turn off preconditioner
+		b2 = 1.0;
+		alph = 0.0;
+	} else {
+		b2 = M*M/(1.0-M*M);
+		//b2 *= (1.0+2.0*pow(re,-.333));
+		alph = 1.0+b2;
+	}
 	
 	/* Preconditioner */
-	P = bM2,                                    0.0,              0.0,              0.0,
-		-u/rho,                                 1.0/rho,          0.0,              0.0,
-		-v/rho,                                 0.0,              1.0/rho,          0.0,
-		gm1*(u*u+v*v-E-rt+delta*bM2)/(rho*gam), -u*gm1/(rho*gam), -v*gm1/(rho*gam), gm1/(rho*gam);	
+	P = b2,                   0.0, 0.0, 0.0,
+	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
+	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
+	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;	
 	
 	/* Inverse of Preconditioner */
-	Pinv = 1.0/bM2,    0.0,   0.0,   0.0,
-		   u/bM2,      rho,   0.0,   0.0,
-		   v/bM2,      0.0,   rho,   0.0,
-		   (E+rt)/bM2, rho*u, rho*v, gogm1*rho;
+	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
+		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0,
+		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
+	       -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
+	
+	/* jacobian of primitive wrt conservative */
+	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
+	       -u/rho,          1.0/rho,    0.0,         0.0,
+		   -v/rho,          0.0,        1.0/rho,     0.0,
+	       (gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
+	
+	/* jacobian of conservative wrt primitive */
+	dcdp = 1.0/rt,               0.0,   0.0,   -rho/rt,
+		   u/rt,                 rho,   0.0,   -rho*u/rt,
+		   v/rt,                 0.0,   rho,   -rho*v/rt,
+		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
 
+	
+	temp = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				temp(i,j)+=dpdc(i,k)*A(k,j);
+	A = temp;
+	
 	temp = 0.0;
 	for(int i=0; i<x.NV; ++i)
 		for(int j=0; j<x.NV; ++j)
@@ -550,6 +588,14 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 			for(int k=0; k<x.NV; ++k)
 				temp(i,j)+=Pinv(i,k)*A(k,j);
 	
+	A = temp;
+	temp = 0.0;
+	
+	temp = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				temp(i,j)+=dcdp(i,k)*A(k,j);
 	A = temp;
 	
 	for(int i = 0; i < x.NV; ++i)

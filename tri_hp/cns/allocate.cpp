@@ -31,6 +31,9 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 	gbl->res_temp.s.resize(maxpst,sm0,NV);
 	gbl->res_temp.i.resize(maxpst,im0,NV);
 	
+	gbl->vpreconditioner.resize(maxpst,NV,NV);
+	gbl->tpreconditioner.resize(maxpst,NV,NV);
+
 	double prandtl;
 	
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
