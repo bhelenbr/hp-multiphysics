@@ -16,7 +16,7 @@
 #include <myblas.h>
 #include <libbinio/binwrap.h>
 #include <libbinio/binfile.h>
-// #define DATATANK
+//#define DATATANK
 
 #ifdef DATATANK
 #include <DTSource.h>
@@ -527,40 +527,178 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 		case (datatank): {
 #ifdef DATATANK
-			DTMutableIntArray dt_tvrtx(3,ntri);
-			DTMutableDoubleArray dt_vrtx(2,npnt);
+			fnmapp = fname +".dt";
+			int dt_pnts = npnt+basis::tri(log2p)->sm()*nseg+basis::tri(log2p)->im()*ntri;
+			int dt_tris = ntri*(basis::tri(log2p)->sm()+1)*(basis::tri(log2p)->sm()+1);
 
-			for (int tind=0;tind<ntri;++tind)
-				for (int j=0;j<3;++j)
-					dt_tvrtx(j,tind) = tri(tind).pnt(j);
+			DTMutableIntArray dt_tvrtx(3,dt_tris);
+			DTMutableDoubleArray dt_vrtx(2,dt_pnts);
+			DTMutableDoubleArray dt_vals(dt_pnts);
 
-			for (int vind=0;vind<npnt;++vind)
-				for (int j=0;j<2;++j)
-					dt_vrtx(j,vind) = pnts(vind)(j);
 
-			dt_grid = DTTriangularGrid(dt_tvrtx,dt_vrtx);
-			DTMutableDoubleArray dt_values(npnt);
-			for (int vind=0;vind<npnt;++vind) {
-				dt_values1(vind) = 0.1;
-				dt_values2(vind) = 0.2;
+			/* VERTEX MODES */
+			for(i=0;i<npnt;++i) {
+				for(n=0;n<ND;++n)
+					dt_vrtx(n,i) =  vrtxbd(tlvl)(i)(n);
+				for(n=0;n<NV;++n)
+					dt_vals(i) = ugbd(tlvl).v(i,n);                    
+			}
+			
+			dt_pnts = npnt;
+			if (basis::tri(log2p)->p() > 1) {
+				/* SIDE MODES */
+				for(sind=0;sind<nseg;++sind) {
+					if (seg(sind).info < 0) {
+						v0 = seg(sind).pnt(0);
+						v1 = seg(sind).pnt(1);
+						for(n=0;n<ND;++n)
+							basis::tri(log2p)->proj1d_leg(vrtxbd(tlvl)(v0)(n),vrtxbd(tlvl)(v1)(n),&crd(n)(0,0));
+					}
+					else {
+						crdtocht1d(sind,tlvl);
+						
+						for(n=0;n<ND;++n)
+							basis::tri(log2p)->proj1d_leg(&cht(n,0),&crd(n)(0,0));
+					}
+					ugtouht1d(sind,tlvl);
+					for(n=0;n<NV;++n)
+						basis::tri(log2p)->proj1d_leg(&uht(n)(0),&u(n)(0,0));
+					
+					for(i=1;i<basis::tri(log2p)->sm()+1;++i) {
+						for(n=0;n<ND;++n)
+							dt_vrtx(n,dt_pnts) = crd(n)(0,i);
+						for(n=0;n<NV;++n)
+							dt_vals(dt_pnts) = u(n)(0,i);                    
+						++dt_pnts;
+					}
+				}
+				
+				/* INTERIOR MODES */
+				if (basis::tri(log2p)->p() > 2) {
+					for(tind = 0; tind < ntri; ++tind) {
+						ugtouht(tind,tlvl);
+						for(n=0;n<NV;++n)
+							basis::tri(log2p)->proj_leg(&uht(n)(0),&u(n)(0,0),MXGP);
+						
+						if (tri(tind).info < 0) {
+							for(n=0;n<ND;++n)
+								basis::tri(log2p)->proj_leg(vrtxbd(tlvl)(tri(tind).pnt(0))(n),vrtxbd(tlvl)(tri(tind).pnt(1))(n),vrtxbd(tlvl)(tri(tind).pnt(2))(n),&crd(n)(0,0),MXGP);
+						}
+						else {
+							crdtocht(tind,tlvl);
+							for(n=0;n<ND;++n)
+								basis::tri(log2p)->proj_bdry_leg(&cht(n,0),&crd(n)(0,0),MXGP);
+						}
+						
+						for(i=1;i<basis::tri(log2p)->sm();++i) {
+							for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+								for(n=0;n<ND;++n)
+									dt_vrtx(n,dt_pnts) = crd(n)(i,j);
+								for(n=0;n<NV;++n)
+									dt_vals(dt_pnts) = u(n)(i,j);                    
+								++dt_pnts;
+							}
+						}
+					}
+				}
 			}
 
-			dt_mesh1 = DTTriangularMesh(dt_grid,dt_values1);
-			dt_mesh2 = DTTriangularMesh(dt_grid,dt_values2);
+			dt_tris = 0;
+			for(tind=0;tind<ntri;++tind) {
+				
+				/* VERTICES */
+				ijind[0][basis::tri(log2p)->sm()+1] = tri(tind).pnt(0);
+				ijind[0][0] = tri(tind).pnt(1);
+				ijind[basis::tri(log2p)->sm()+1][0] = tri(tind).pnt(2);
+				
+				/* SIDES */
+				indx = tri(tind).seg(0);
+				sgn = tri(tind).sgn(0);
+				if (sgn < 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[i+1][0] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[i+1][0] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				
+				indx = tri(tind).seg(1);
+				sgn = tri(tind).sgn(1);
+				if (sgn > 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[basis::tri(log2p)->sm()-i][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				
+				indx = tri(tind).seg(2);
+				sgn = tri(tind).sgn(2);
+				if (sgn > 0) {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[0][i+1] = npnt +(indx+1)*basis::tri(log2p)->sm() -(i+1);
+				}
+				else {
+					for(i=0;i<basis::tri(log2p)->sm();++i)
+						ijind[0][i+1] = npnt +indx*basis::tri(log2p)->sm() +i;
+				}
+				
+				/* INTERIOR VERTICES */
+				k = 0;
+				for(i=1;i<basis::tri(log2p)->sm();++i) {
+					for(j=1;j<basis::tri(log2p)->sm()-(i-1);++j) {
+						ijind[i][j] = npnt +nseg*basis::tri(log2p)->sm() +tind*basis::tri(log2p)->im() +k;
+						++k;
+					}
+				}
+				
+				/* OUTPUT CONNECTION LIST */        
+				for(i=0;i<basis::tri(log2p)->sm()+1;++i) {
+					for(j=0;j<basis::tri(log2p)->sm()-i;++j) {
+						dt_tvrtx(0,dt_tris) = ijind[i][j];
+						dt_tvrtx(1,dt_tris) = ijind[i+1][j];
+						dt_tvrtx(2,dt_tris) = ijind[i][j+1];
+						++dt_tris;
+						
+						dt_tvrtx(0,dt_tris) = ijind[i+1][j];
+						dt_tvrtx(1,dt_tris) = ijind[i+1][j+1];
+						dt_tvrtx(2,dt_tris) = ijind[i][j+1];
+						++dt_tris;
+					}
+					dt_tvrtx(0,dt_tris) = ijind[i][basis::tri(log2p)->sm()-i];
+					dt_tvrtx(1,dt_tris) = ijind[i+1][basis::tri(log2p)->sm()-i];
+					dt_tvrtx(2,dt_tris) = ijind[i][basis::tri(log2p)->sm()+1-i];
+					++dt_tris;
+				}
+			}
+			
+			DTDataFile outputFile(fnmapp.c_str(),DTFile::NewReadWrite);
+			outputFile.Save("Group","Seq_Var");
+			outputFile.Save("mesh","SeqInfo_Var_1N");
+			outputFile.Save("TriangularGrid2D","SeqInfo_Var_1T");
+			
+			outputFile.Save("var1","SeqInfo_Var_2N");
+			outputFile.Save("TriangularMesh2D","SeqInfo_Var_2T");
+			
+			outputFile.Save("var2","SeqInfo_Var_3N");
+			outputFile.Save("TriangularMesh2D","SeqInfo_Var_3T");
+			
+			outputFile.Save(3,"SeqInfo_Var_N");
+			outputFile.Save("Group","SeqInfo_Var");
 
-			std::string outputFilename("Output.dtbin");
-			DTDataFile outputFile(outputFilename.c_str(),DTFile::NewReadWrite);
-			// Output from computation
-			Write(outputFile,"V1",dt_mesh1,DTTriangularGrid2D_SaveInfo &shared)
-
-			DTTriangularGrid2D_SaveInfo dt_grid_save;
-
-			Write(outputFile,"grid",dt_grid,dt_grid_save);
-			outputFile.Save("TriangularGrid2D","Seq_grid");
-			Write(outputFile,"Var1",dt_mesh1,dt_grid_save);
-			outputFile.Save("TriangularMesh2D","Seq_Var1");
-			Write(outputFile,"Var2",dt_mesh2,dt_grid_save);
-			outputFile.Save("TriangularMesh2D","Seq_Var1");
+			// Structures for shared grids.
+			DTTriangularGrid2D_SaveInfo Info_DTTriangularGrid2D;
+			
+			DTTriangularGrid2D dt_grid(dt_tvrtx,dt_vrtx);
+			Write(outputFile,"Var_mesh",dt_grid,Info_DTTriangularGrid2D);
+			DTTriangularMesh2D dt_mesh(dt_grid,dt_vals);
+			Write(outputFile,"Var_var1",dt_mesh,Info_DTTriangularGrid2D);
+			Write(outputFile,"Var_var2",dt_mesh,Info_DTTriangularGrid2D);
+			Write(outputFile,"Var",DTDoubleArray()); // So that DataTank can see the variable.			
+		//	for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
+//				hp_ebdry(i)->output(out, typ);
 #else
 			*gbl->log << "Not supported on this platform" << std::endl;
 #endif
