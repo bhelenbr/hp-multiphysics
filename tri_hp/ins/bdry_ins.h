@@ -54,7 +54,8 @@ namespace bdry_ins {
 			generic(tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(xin,bin), x(xin), report_flag(false) {mytype = "generic";}
 			generic(const generic& inbdry, tri_hp_ins &xin, edge_bdry &bin) : hp_edge_bdry(inbdry,xin,bin), x(xin), report_flag(inbdry.report_flag) {
 #ifdef L2_ERROR
-				l2norm = inbdry.l2norm;
+				if (report_flag)
+					l2norm = inbdry.l2norm;
 #endif
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
@@ -67,7 +68,8 @@ namespace bdry_ins {
 				input.getwdefault(keyword,report_flag,false);
 
 #ifdef L2_ERROR
-				l2norm.init(input,base.idprefix+"_norm");
+				if (report_flag)
+					l2norm.init(input,base.idprefix+"_norm");
 #endif
 				total_flux.resize(x.NV);
 				diff_flux.resize(x.NV);
