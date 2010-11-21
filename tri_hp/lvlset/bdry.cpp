@@ -462,6 +462,8 @@ void hybrid_pt::update(int stage) {
 	}
 }
 
+#ifdef SKIP
+
 void hybrid::update(int stage) {
 	int sind(0),tind(0),v0(0);
 	bool flag(false);
@@ -560,3 +562,4 @@ void hybrid::update(int stage) {
 	}
 
 }
+#endif

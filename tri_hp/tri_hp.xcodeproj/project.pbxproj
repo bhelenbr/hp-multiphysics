@@ -1855,6 +1855,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
 					AXISYMMETRIC,
 					MY_SPARSE,
 					petsc,
@@ -1874,6 +1875,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
 					AXISYMMETRIC,
 					MY_SPARSE,
 					petsc,
