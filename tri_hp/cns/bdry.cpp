@@ -541,6 +541,9 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 		alph = 1.0+b2;
 	}
 	
+	b2 = 1.0;
+	alph = 0.0;
+	
 	/* Preconditioner */
 	P = b2,                   0.0, 0.0, 0.0,
 	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
@@ -589,7 +592,6 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 				temp(i,j)+=Pinv(i,k)*A(k,j);
 	
 	A = temp;
-	temp = 0.0;
 	
 	temp = 0.0;
 	for(int i=0; i<x.NV; ++i)

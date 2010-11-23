@@ -32,19 +32,20 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 	gbl->res_temp.i.resize(maxpst,im0,NV);
 	
 	gbl->vpreconditioner.resize(maxpst,NV,NV);
+	gbl->spreconditioner.resize(maxpst,NV,NV);
 	gbl->tpreconditioner.resize(maxpst,NV,NV);
 
 	double prandtl;
 	
+	double bodydflt[2] = {0.0,0.0};
+	if (!input.get(gbl->idprefix +"_body_force",gbl->body.data(),2)) input.getwdefault("body_force",gbl->body.data(),2,bodydflt); 
+
 	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
 	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.713);
 	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,287.058);
 
 	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
-	
-	gbl->body(0) = 0.0;
-	gbl->body(1) = -0.01;
 
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);

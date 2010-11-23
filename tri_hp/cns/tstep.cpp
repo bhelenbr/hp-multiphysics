@@ -11,7 +11,7 @@ void tri_hp_cns::setup_preconditioner() {
 	int tind,i,j,side,v0;
 	FLT jcb,h,hmax,q,qmax,lam1,gam,tstep,dti;
 	TinyVector<int,3> v;
-	Array<double,1> umax(NV);
+	Array<double,1> umax(NV),ubar(NV);
 	Array<double,2> tprcn(NV,NV),tau(NV,NV),dpdc(NV,NV);
 
 	/***************************************/
@@ -22,6 +22,7 @@ void tri_hp_cns::setup_preconditioner() {
 		gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
 		if (basis::tri(log2p)->sm() > 0) {
 			gbl->sprcn(Range(0,nseg-1),Range::all()) = 0.0;
+			gbl->spreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 		}
 		gbl->tprcn(Range(0,ntri-1),Range::all()) = 0.0;
 		gbl->tpreconditioner(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
@@ -62,6 +63,7 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			hmax = 0.0;
 			umax = 0.0;
+			ubar = 0.0;
 			FLT jcbmin = jcb;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
@@ -94,6 +96,9 @@ void tri_hp_cns::setup_preconditioner() {
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
 					umax(3) = MAX(umax(3),fabs(u(3)(i,j)));
+					
+					for(int n=0;n<NV;++n)
+						ubar(n) += u(n)(i,j);
 						
 					
 				}
@@ -101,6 +106,7 @@ void tri_hp_cns::setup_preconditioner() {
 			hmax = 2.*sqrt(hmax);
 			h = 4.*jcbmin/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			ubar /= lgpx*lgpn;
 		}
 		else {
 			/* PROJECT VERTEX COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
@@ -110,6 +116,7 @@ void tri_hp_cns::setup_preconditioner() {
 			TinyVector<FLT,ND> mvel;
 			hmax = 0.0;
 			umax = 0.0;
+			ubar = 0.0;
 			int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
 			for(i=0;i<lgpx;++i) {
 				for(j=0;j<lgpn;++j) {
@@ -123,6 +130,9 @@ void tri_hp_cns::setup_preconditioner() {
 					umax(1) = MAX(umax(1),fabs(u(1)(i,j)-0.5*mvel(0)));
 					umax(2) = MAX(umax(2),fabs(u(2)(i,j)-0.5*mvel(1)));
 					umax(3) = MAX(umax(3),fabs(u(3)(i,j)));
+					
+					for(int n=0;n<NV;++n)
+						ubar(n) += u(n)(i,j);
 				
 				}
 			}
@@ -133,6 +143,8 @@ void tri_hp_cns::setup_preconditioner() {
 			hmax = sqrt(hmax);
 			h = 4.*jcb/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1)*hmax);
 			hmax = hmax/(0.25*(basis::tri(log2p)->p() +1)*(basis::tri(log2p)->p()+1));
+			ubar /= lgpx*lgpn;
+
 		}			
 
 		if (!(h > 0.0)) { 
@@ -152,7 +164,14 @@ void tri_hp_cns::setup_preconditioner() {
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 
 		dti = 1.0/tstep;
-		gbl->tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
+		
+		if(gbl->diagonal_preconditioner) {
+			gbl->tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
+		}
+		else {
+			gbl->tprcn_ut(tind,Range::all(),Range::all()) = tprcn;
+		}
+		
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 
 #ifdef TIMEACCURATE
@@ -185,26 +204,40 @@ void tri_hp_cns::setup_preconditioner() {
 
 				if (basis::tri(log2p)->sm() > 0) {
 					side = tri(tind).seg(i);
+					
 					gbl->sprcn(side,Range::all()) += gbl->tprcn(tind,Range::all());
+					gbl->spreconditioner(side,Range::all(),Range::all()) += gbl->tpreconditioner(tind,Range::all(),Range::all());
 				}
 			}
 		}
 		else {
-			*gbl->log << "using a matrix preconditioner but must specify diagonal_preconditioner = true" << std::endl;
-			sim::abort(__LINE__,__FILE__,gbl->log);
+			gbl->tprcn_ut(tind,Range::all(),Range::all()) *= jcb*dti;
+			
+			for(i=0;i<3;++i) {
+				
+				gbl->vprcn_ut(v(i),Range::all(),Range::all())  += gbl->tprcn_ut(tind,Range::all(),Range::all());
+				
+				if (basis::tri(log2p)->sm() > 0) {
+					side = tri(tind).seg(i);
+					gbl->sprcn_ut(side,Range::all(),Range::all()) += gbl->tprcn_ut(tind,Range::all(),Range::all());
+				}
+			}
+
 		}
 	}
 	
-	for(i=0;i<npnt;++i) {
-		gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);	
+	if(gbl->diagonal_preconditioner){
+		for(i=0;i<npnt;++i) {
+			gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
+		}
 	}
-
+	
 	tri_hp::setup_preconditioner();
 }
 
 void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
-	Array<double,2> P(NV,NV),dpdc(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
+	Array<double,2> P(NV,NV),dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
 	
 	FLT gam = gbl->gamma;
@@ -213,7 +246,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT pr = pvu(0);
 	FLT u = pvu(1);
 	FLT v = pvu(2);
-	FLT rt = pvu(NV-1);
+	FLT rt = pvu(3);
 	FLT rho = pr/rt;
 	FLT ke = 0.5*(u*u+v*v);
 	FLT c2 = gam*rt;
@@ -224,15 +257,17 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
-	FLT hdt = 1.5*pow(h*gbl->bd(0),2.0);
+	FLT hdt = 5.0*pow(h*gbl->bd(0),2.0);
 	FLT vel = 3.0*(u*u+v*v);
 	FLT nuh = 2.0*pow((nu+alpha)/h,2.0);
 	
 	FLT umag = sqrt(hdt+vel);	
 	umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
-
+	//umag = sqrt(vel+nuh);
+	
 	FLT M = MAX(1.0e-5,umag/c);
 	FLT re = MAX(rho*sqrt(u*u+v*v)*h/gbl->mu,1.0);
+	
 	FLT b2,alph;
 	//cout << hdt << ' ' << vel << ' '  << nuh << ' ' << M << endl;
 	if(M > .9) { // turn off preconditioner
@@ -243,6 +278,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		//b2 *= (1.0+2.0*pow(re,-.333));
 		alph = 1.0+b2;
 	}
+	
+#ifdef petsc
+	b2 = 1.0;
+	alph = 0.0;
+#endif
+	
+	alph = 0.0; // prevents wiggles when residual gets small, not sure why
 	
 	/* Preconditioner */
 	P = b2,                   0.0, 0.0, 0.0,
@@ -261,7 +303,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		    -u/rho,          1.0/rho,    0.0,        0.0,
 		    -v/rho,          0.0,        1.0/rho,    0.0,
 			(gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
-		
+
+	/* jacobian of primitive wrt conservative */
+	dcdp = 1.0/rt,               0.0,   0.0,   -rho/rt,
+		   u/rt,                 rho,   0.0,   -rho*u/rt,
+	       v/rt,                 0.0,   rho,   -rho*v/rt,
+	       (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;	
+	
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -269,11 +317,22 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 				temp(i,j)+=P(i,k)*dpdc(k,j);
 	P = temp;
 	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=dcdp(i,k)*Pinv(k,j);
+	
+	if(!gbl->diagonal_preconditioner){
+		Pinv = temp;
+	}
+	
 	/* df/dw derivative of fluxes wrt primitive variables */
 	A = u/rt,               rho,                       0.0,     -rho*u/rt,
 		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
 		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
 		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+
 
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
@@ -316,7 +375,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
-	
+
 	/*  LU factorization  */
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
@@ -344,6 +403,16 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
 
+	/* jacobi smoothing need to modify P too? */
+//	temp = 0.0;
+//	for (int i = 0; i < NV; ++i)
+//		for (int j = 0; j < NV; ++j)
+//			for (int k = 0; k < NV; ++k)
+//				temp(i,j) += Pinv(i,k)*(A(k,j)/h+B(k,j)/h);
+//				
+//
+//	Pinv = temp;
+	
 	return;
 }
 
