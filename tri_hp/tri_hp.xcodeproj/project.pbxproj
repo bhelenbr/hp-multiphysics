@@ -390,7 +390,7 @@
 		E6896127129EC25F00D4FE84 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA199B09770C96001A5F7F /* getnewbdry.cpp */; };
 		E6896128129EC26000D4FE84 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68255A0998541300F57688 /* getnewibc.cpp */; };
 		E6896129129EC26100D4FE84 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
-		E689616312A122A800D4FE84 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F217C5D0CDD88200061AA2E /* libtri_mesh.a */; };
+		E68961C712A12E3500D4FE84 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
 		E6CF6FD211D23655001E5DF7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E6CF6FD311D23655001E5DF7 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		E6CF6FD411D23655001E5DF7 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
@@ -826,7 +826,7 @@
 				6FF5F7F0110CFDA100B16014 /* libmpi_cxx.dylib in Frameworks */,
 				6FF5F7F7110CFDA100B16014 /* libsuperlu_dist_2.3.a in Frameworks */,
 				6FF5F7F8110CFDA100B16014 /* libparmetis.a in Frameworks */,
-				E689616312A122A800D4FE84 /* libtri_mesh.a in Frameworks */,
+				E68961C712A12E3500D4FE84 /* libtri_mesh_mpi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
