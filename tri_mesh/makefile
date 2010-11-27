@@ -4,7 +4,7 @@ ifeq (,$(filter _%,$(notdir $(CURDIR))))
 
 MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
-all: libtri_mesh.a tri_mesh libtri_mesh_mpi.a tri_mesh_mpi libtri_mesh_petsc.a
+all: libtri_mesh.a tri_mesh libtri_mesh_mpi.a tri_mesh_mpi
 
 libtri_mesh.a:
 	+@[ -d  _serial ] || mkdir -p _serial 
@@ -20,21 +20,15 @@ tri_mesh:
 
 libtri_mesh_mpi.a:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DPTH'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
 
 .PHONY: libtri_mesh_mpi.a
 
 tri_mesh_mpi:
 	+@[ -d  _mpi ] || mkdir -p _mpi
-	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -DPTH'
+	+@$(MAKE) -C _mpi -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC'
 
 .PHONY: tri_mesh_mpi
-
-libtri_mesh_petsc.a:
-	+@[ -d  _petsc ] || mkdir -p _petsc
-	+@$(MAKE) -C _petsc -f $(CURDIR)/makefile $@ EXTRAFLAGS='-DMPISRC -Dpetsc -DMY_SPARSE'
-
-.PHONY: libtri_mesh_petsc.a
 
 makefile : ;
 %.mk :: ;
@@ -53,7 +47,7 @@ refineby2.o swap.o yaber.o adapt.o blocks.o
 
 MAINOBJ = main.o
 
-DEFINES = -DMETIS -Df2cFortran $(EXTRAFLAGS)
+DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include

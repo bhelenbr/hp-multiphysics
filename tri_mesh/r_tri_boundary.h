@@ -9,7 +9,12 @@
 
 #include "tri_mesh.h"
 
-#ifndef petsc
+#ifdef MY_SPARSE
+#include <myblas.h>
+#else
+#include <petscksp.h>
+#endif
+
 class r_side_bdry {
 	protected:
 		std::string mytype;
@@ -29,8 +34,13 @@ class r_side_bdry {
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
 		virtual ~r_side_bdry() {}
-		virtual void jacobian() {}
-		virtual void jacobian_dirichlet() {}
+#ifdef MY_SPARSE
+		virtual void jacobian(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {}
+		virtual void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {}
+#else
+		virtual void jacobian(Mat petsc_J, int stride) {}
+		virtual void jacobian_dirichlet(Mat petsc_J, int stride) {}
+#endif
 };
 
 class r_fixed : public r_side_bdry {
@@ -65,6 +75,36 @@ class r_fixed : public r_side_bdry {
 				}
 			}
 			return;
+		}
+		
+#ifdef MY_SPARSE
+		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
+#else
+		void jacobian_dirichlet(Mat petsc_J, int stride) {
+#endif
+			int np = (base.nseg+1)*(dstop -dstart +1);
+			Array<int,1> points(np);
+			
+			int j = 0;
+			int cnt = 0;
+			int sind;
+			do {
+				sind = base.seg(j);
+				int gindx = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +dstart;
+				for (int n=dstart;n<=dstop;++n)
+					points(cnt++) = gindx++;
+			} while(++j < base.nseg);
+			int gindx = x.seg(sind).pnt(1)*stride +stride -tri_mesh::ND +dstart;
+			for (int n=dstart;n<=dstop;++n)
+				points(cnt++) = gindx++;			
+			
+#ifdef MY_SPARSE
+			J.zero_rows(cnt,points);
+			J_mpi.zero_rows(cnt,points);
+			J.set_diag(cnt,points,1.0);
+#else
+			MatZeroRows(petsc_J,cnt,points.data(),1.0);
+#endif
 		}
 };
 
@@ -103,148 +143,21 @@ class r_fixed_angled : public r_side_bdry {
 			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
 			return;
 		}
-};
-#else
-
-#include <../tri_hp/tri_hp.h>
-
-class r_side_bdry {
-protected:
-	std::string mytype;
-	tri_hp& x;
-	edge_bdry &base;
-	
-public:
-	r_side_bdry(r_tri_mesh &xin, edge_bdry &bin) : x(dynamic_cast<tri_hp &>(xin)), base(bin) {mytype="plain";}
-	r_side_bdry(const r_side_bdry &inbdry, r_tri_mesh &xin, edge_bdry &bin) : x(dynamic_cast<tri_hp &>(xin)), base(bin) {mytype="plain";}
-	virtual r_side_bdry* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_side_bdry(*this,xin,bin);}
-	/* VIRTUAL FUNCTIONS FOR BOUNDARY DEFORMATION */
-	virtual void output(std::ostream& fout) {
-		fout << base.idprefix << "_r_type: " << mytype << std::endl;
-	}
-	virtual void input(input_map& bdrydata) {}
-	virtual void tadvance() {}
-	virtual void dirichlet() {}
-	virtual void fixdx2() {}
-	virtual ~r_side_bdry() {}
-	virtual void jacobian() {}
-	virtual void jacobian_dirichlet() {}
-};
-
-class r_fixed : public r_side_bdry {
-	protected:
-		int dstart, dstop;
-	
-	public:
-		r_fixed(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin), dstart(0), dstop(1) {mytype = "fixed";}
-		r_fixed(const r_fixed &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin), dstart(inbdry.dstart), dstop(inbdry.dstop) {mytype = "fixed";}
-		r_fixed* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed(*this,xin,bin);}
-
-		void input(input_map& inmap) {
-			r_side_bdry::input(inmap);
-
-			std::string line;
-			inmap.getlinewdefault(base.idprefix+"_r_dir",line,"0 1");
-			std::istringstream data(line);
-			data >> dstart >> dstop;
-			data.clear();
-		}
-
-		void output(std::ostream& fout) {
-			r_side_bdry::output(fout);
-			fout << base.idprefix << "_r_dir: " << dstart << '\t' << dstop << std::endl;
-		}
 		
-		void dirichlet() {
-			for(int j=0;j<base.nseg;++j) {
-				int sind = base.seg(j);
-				for(int n=dstart;n<=dstop;++n) {
-					x.r_tri_mesh::gbl->res(x.seg(sind).pnt(0))(n) = 0.0;
-					x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(n) = 0.0;
-				}
-			}
-			return;
-		}
-		
-		
-		void jacobian_dirichlet() {
-			int stride = x.NV +tri_mesh::ND;
-			int np = (base.nseg+1)*(dstop -dstart +1);
-			Array<int,1> points(np);
-			
-			int j = 0;
-			int cnt = 0;
-			int sind;
-			do {
-				sind = base.seg(j);
-				int gindx = x.seg(sind).pnt(0)*stride +stride -tri_mesh::ND +dstart;
-				for (int n=dstart;n<=dstop;++n)
-					points(cnt++) = gindx++;
-			} while(++j < base.nseg);
-			int gindx = x.seg(sind).pnt(1)*stride +stride -tri_mesh::ND +dstart;
-			for (int n=dstart;n<=dstop;++n)
-				points(cnt++) = gindx++;			
-
 #ifdef MY_SPARSE
-			x.J.zero_rows(cnt,points);
-			x.J_mpi.zero_rows(cnt,points);
-			x.J.set_diag(cnt,points,1.0);
+		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
 #else
-			MatZeroRows(x.petsc_J,cnt,points.data(),1.0);
+		void jacobian_dirichlet(Mat petsc_J, int stride) {
 #endif
-		}
-};
-
-class r_fixed_angled : public r_fixed {
-	public:
-		FLT theta;
-
-		r_fixed_angled(r_tri_mesh &xin, edge_bdry &bin) : r_fixed(xin,bin), theta(0.0) {mytype = "fixed_angled";}
-		r_fixed_angled(const r_fixed_angled &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin), theta(inbdry.theta) {mytype = "fixed_angled";}
-		r_fixed_angled* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_fixed_angled(*this,xin,bin);}
-
-		void input(input_map& inmap) {
-			r_fixed::input(inmap);
-
-			inmap.get(base.idprefix+"_r_theta",theta);
-			theta *= M_PI/180.0;
-		}
-
-		void output(std::ostream& fout) {
-			r_fixed::output(fout);
-			fout << base.idprefix << "_r_theta: " << theta*180.0/M_PI << std::endl;
-		}
-
-		void dirichlet() {
-			int sind;
-			
-			/* SKIP ENDPOINTS */
-			for(int j=0;j<base.nseg-1;++j) {
-				sind = base.seg(j);
-				/* Tangent Residual */
-				/* tangent = -sin(theta) i +cos(theta) j */
-				/* normal = cos(theta) i + sin(theta) j */
-				FLT res = -x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
-				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
-				x.r_tri_mesh::gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
-			} 
-			
-			return;
-		}
-		
-		void jacobian() {}
-		
-		void jacobian_dirichlet() {
-			int stride = x.NV +tri_mesh::ND;
 			
 #ifdef MY_SPARSE
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV;
+				int row = x.seg(sind).pnt(1)*stride +stride-x.ND;
 
-				int nnz1 = x.J._cpt(row+1) -x.J._cpt(row);
-				int nnz2 = x.J._cpt(row+2) -x.J._cpt(row+1);
+				int nnz1 = J._cpt(row+1) -J._cpt(row);
+				int nnz2 = J._cpt(row+2) -J._cpt(row+1);
 				Array<int,1> cols(nnz1);
 				Array<FLT,2> vals(2,nnz1);
 				
@@ -253,30 +166,30 @@ class r_fixed_angled : public r_fixed {
 					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
-				int row1 = x.J._cpt(row);
-				int row2 = x.J._cpt(row+1);
+				int row1 = J._cpt(row);
+				int row2 = J._cpt(row+1);
 				for(int col=0;col<nnz1;++col) {
-					if (x.J._col(row1++) != x.J._col(row2++)) {
+					if (J._col(row1++) != J._col(row2++)) {
 						*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
 						sim::abort(__LINE__,__FILE__,x.gbl->log);
 					}	
 				}
 
-				vals(0,Range(0,nnz1-1)) = -x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1))*sin(theta);
-				vals(0,Range(0,nnz1-1)) += x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1))*cos(theta);
+				vals(0,Range(0,nnz1-1)) = -J._val(Range(J._cpt(row),J._cpt(row+1)-1))*sin(theta);
+				vals(0,Range(0,nnz1-1)) += J._val(Range(J._cpt(row+1),J._cpt(row+2)-1))*cos(theta);
 								
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
 				/* Normal Equation */
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
-					if (x.J._col(row1+col) == row) {
+					if (J._col(row1+col) == row) {
 						vals(1,col) = cos(theta);
 						break;
 					}
 				}
 				for(int col=0;col<nnz1;++col) {
-					if (x.J._col(row1+col) == row+1) {
+					if (J._col(row1+col) == row+1) {
 						vals(1,col) = sin(theta);
 						break;
 					}
@@ -289,8 +202,8 @@ class r_fixed_angled : public r_fixed {
 				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
 				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
 			
-				x.J._val(Range(x.J._cpt(row),x.J._cpt(row+1)-1)) = temp(0,Range::all());
-				x.J._val(Range(x.J._cpt(row+1),x.J._cpt(row+2)-1)) = temp(1,Range::all());
+				J._val(Range(J._cpt(row),J._cpt(row+1)-1)) = temp(0,Range::all());
+				J._val(Range(J._cpt(row+1),J._cpt(row+2)-1)) = temp(1,Range::all());
 			}
 	#else
 			const PetscInt *cols1, *cols2;
@@ -301,8 +214,8 @@ class r_fixed_angled : public r_fixed {
 				int sind = base.seg(j);
 				int row = x.seg(sind).pnt(1)*stride +x.NV;
 				int nnz1, nnz2;
-				MatGetRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
-				MatGetRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+				MatGetRow(petsc_J,row,&nnz1,&cols1,&vals1);
+				MatGetRow(petsc_J,row+1,&nnz2,&cols2,&vals2);
 				if (nnz1 != nnz2) {
 					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
 				}
@@ -322,8 +235,8 @@ class r_fixed_angled : public r_fixed {
 					// cols(col+nnz1) = cols2[col];
 					vals(0,col) += vals2[col]*cos(theta);
 				}
-				MatRestoreRow(x.petsc_J,row,&nnz1,&cols1,&vals1);
-				MatRestoreRow(x.petsc_J,row+1,&nnz2,&cols2,&vals2);
+				MatRestoreRow(petsc_J,row,&nnz1,&cols1,&vals1);
+				MatRestoreRow(petsc_J,row+1,&nnz2,&cols2,&vals2);
 				
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
@@ -350,15 +263,14 @@ class r_fixed_angled : public r_fixed {
 				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
 				
 				TinyVector<int,2> rows(row,row+1);
-				MatSetValues(x.petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
-				MatAssemblyBegin(x.petsc_J,MAT_FINAL_ASSEMBLY);
-				MatAssemblyEnd(x.petsc_J,MAT_FINAL_ASSEMBLY);	
+				MatSetValues(petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
+				MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
+				MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
 			}
-	#endif
+#endif
 		}
 	
 };
-#endif
 
 
 class r_fixed4 : public r_fixed {
