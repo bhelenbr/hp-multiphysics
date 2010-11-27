@@ -80,7 +80,9 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define PBTRS SPBTRS
 #define GEEV SGEEV
 #define EPSILON FLT_EPSILON
+#ifndef FLT
 #define FLT float
+#endif
 #else
 #define GETRF DGETRF
 #define GETRS DGETRS
@@ -88,7 +90,9 @@ PROTOCCALLSFSUB9(DSPEV,dspev,STRING,STRING,INT,DOUBLEV,DOUBLEV,DOUBLEV,INT,DOUBL
 #define PBTRS DPBTRS
 #define GEEV DGEEV
 #define EPSILON DBL_EPSILON
+#ifndef FLT
 #define FLT double
+#endif
 #endif
 
 #include<blitz/array.h>
