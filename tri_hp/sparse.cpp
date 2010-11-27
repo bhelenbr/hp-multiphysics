@@ -80,10 +80,17 @@ void tri_hp::petsc_jacobian() {
 	/* APPLY ALL MOVING MESH B.C.'s FIRST */
 	if (mmovement == coupled_deformable) {
 		/* This mostly does nothing, except for angled boundarys */
+#ifdef MY_SPARSE
 		for(int i=0;i<nebd;++i) 
-			r_sbdry(i)->jacobian();  // Fixme: parallel jacobian stuff be done here
+			r_sbdry(i)->jacobian(J,J_mpi,vdofs);  // Fixme: parallel jacobian stuff be done here
+	
+		for(int i=0;i<nebd;++i)
+			r_sbdry(i)->jacobian_dirichlet(J,J_mpi,vdofs);
 
-#ifndef MY_SPARSE	
+#else
+		for(int i=0;i<nebd;++i) 
+			r_sbdry(i)->jacobian(petsc_J,vdofs);  // Fixme: parallel jacobian stuff be done here
+			
 		/* PETSC IS RETARDED */
 		FLT zero = 0.0;
 		for (int i=jacobian_start +npnt*(NV+ND)+sm*NV*nseg+ntri*im*NV;i<jacobian_start +jacobian_size;++i) 
@@ -91,10 +98,10 @@ void tri_hp::petsc_jacobian() {
 			
 		MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
 		MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
-#endif
-
+		
 		for(int i=0;i<nebd;++i)
-			r_sbdry(i)->jacobian_dirichlet();
+			r_sbdry(i)->jacobian_dirichlet(petsc_J);
+#endif
 	}
 							
 	/* DO NEUMANN & COUPLED BOUNDARY CONDITIONS */

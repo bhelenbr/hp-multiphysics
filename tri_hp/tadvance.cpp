@@ -69,7 +69,7 @@ void tri_hp::tadvance() {
 
 		/* EXTRAPOLATE */
 		if (stage  && gbl->dti > 0.0) {
-			FLT constant =  gbl->cdirk(gbl->substep);
+			FLT constant = gbl->cdirk(gbl->substep);
 			ugbd(0).v(Range(0,npnt-1),Range::all()) += constant*ugbd(stage+1).v(Range(0,npnt-1),Range::all());
 			if (basis::tri(log2p)->sm()) {
 				ugbd(0).s(Range(0,nseg-1),Range::all(),Range::all()) += constant*ugbd(stage+1).s(Range(0,nseg-1),Range::all(),Range::all());

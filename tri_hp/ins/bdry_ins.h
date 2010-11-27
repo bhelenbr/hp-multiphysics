@@ -882,25 +882,6 @@ namespace bdry_ins {
 					wall_type = vertical;
 					position = x.pnts(base.pnt)(0);
 				}
-				
-				/* Find tangent to wall and use to constrain motion */
-				int bnumwall = base.ebdry(1-surfbdry);
-				TinyVector<FLT,tri_mesh::ND> rp;
-				if (surfbdry == 0) {
-					int sindwall = x.ebdry(bnumwall)->seg(0);
-					x.crdtocht1d(sindwall);
-					basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),-1.0,&x.cht(0,0),MXTM);
-				}
-				else {
-					int sindwall = x.ebdry(bnumwall)->seg(x.ebdry(bnumwall)->nseg-1);
-					x.crdtocht1d(sindwall);
-					basis::tri(x.log2p)->ptprobe1d(2,&rp(0),&wall_normal(0),1.0,&x.cht(0,0),MXTM);
-				}
-				FLT length = sqrt(wall_normal(0)*wall_normal(0) +wall_normal(1)*wall_normal(1));
-				wall_normal /= length;
-				FLT temp = wall_normal(0);
-				wall_normal(0) = wall_normal(1);
-				wall_normal(1) = -temp;
 			}
 
 			void mvpttobdry(TinyVector<FLT,tri_mesh::ND> &pt) {

@@ -11,21 +11,21 @@ axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc
 
 tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS=-DPTH
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DPTH'
 	cp _$@/tri_hp $(HOME)/bin/$@
 
 .PHONY: tri_hp
 
 tri_hp_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DPTH'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_mpi
 
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc -DMY_SPARSE'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_petsc
@@ -39,45 +39,17 @@ tri_hp_axi:
 
 tri_hp_axi_mpi:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC -DPTH'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DMPISRC -DAXISYMMETRIC'
 	cp _$@/tri_hp_mpi $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_mpi
 
 tri_hp_axi_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMY_SPARSE -DMPISRC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMPISRC'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_axi_petsc
-
-tri_hp_drop:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DPTH'
-	cp _$@/tri_hp $(HOME)/bin/$@
-
-.PHONY: tri_hp_drop
-
-tri_hp_drop_mpi:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DMPISRC -DPTH'
-	cp _$@/tri_hp_mpi $(HOME)/bin/$@
-
-.PHONY: tri_hp_drop_mpi
-
-tri_hp_drop_stokes:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DPTH'
-	cp _$@/tri_hp $(HOME)/bin/$@
-
-.PHONY: tri_hp_drop_stokes
-
-tri_hp_drop_stokes_mpi:
-	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_mpi EXTRAFLAGS='-DDROP -DAXISYMMETRIC -DINERTIALESS -DMPISRC -DPTH'
-	cp _$@/tri_hp_mpi $(HOME)/bin/$@
-
-.PHONY: tri_hp_drop_stokes_mpi
 
 makefile : ;
 %.mk :: ;
@@ -104,12 +76,20 @@ OBJLVLSET = lvlset/allocate.o  lvlset/bdry.o lvlset/rsdl.o  lvlset/tstep.o lvlse
 OBJEXPLICIT = explicit/allocate.o  explicit/minvrt.o explicit/rsdl.o  explicit/tstep.o
 OBJPETSC = petsc.o sparse.o
 
-
+# COMMENT OUT LINES HERE FOR FASTER COMPILING AND THEN UNDEFINE IN GETNEWBLOCK.CPP
 OBJ = $(BASE)
-OBJ +=  $(OBJINS) 
-#$(OBJCD) $(OBJCNS) $(OBJBUOY) $(OBJPS) $(OBJSWIRL) $(OBJSW) $(OBJLVLSET) $(OBJEXPLICIT) $(OBJCNSEXPLICIT)
+#OBJ += $(OBJCD)
+OBJ += $(OBJINS)
+#OBJ += $(OBJCNS) 
+#OBJ += $(OBJCNSEXPLICIT)
+#OBJ += $(OBJLVLSET)
+#OBJ += $(OBJBUOY)
+#OBJ += $(OBJSW)   
+#OBJ += $(OBJEXPLICIT)
+#OBJ += $(OBJPS)
+#OBJ += $(OBJSWIRL)
 
-DEFINES = -Df2cFortran $(EXTRAFLAGS)
+DEFINES = -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lquad -lspline -ltri_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
 CXXMPI = ${CXX}
