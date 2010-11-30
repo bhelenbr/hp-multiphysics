@@ -164,7 +164,6 @@
 		6FC45DA107A0C30F00ADC8D3 /* libparseargs.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FC45DA007A0C30F00ADC8D3 /* libparseargs.a */; };
 		6FC7DEFA05B30C6E001FE736 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F5DD976F03A7AAC701990B69 /* libinput_map.a */; };
 		6FEFFC570C60191700352ED3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FEFFC550C60191700352ED3 /* libpth.a */; };
-		E6F64F30124C46490034488F /* libDT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F1616010B974E67006CA043 /* libDT.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -269,7 +268,6 @@
 				6FA4AF290D0758E000EDB036 /* libspline.a in Frameworks */,
 				6FA883610D868DFB00C8435F /* libpth.a in Frameworks */,
 				6F2F749C0DD89553002615F9 /* libbinio.dylib in Frameworks */,
-				E6F64F30124C46490034488F /* libDT.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -707,6 +705,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MY_SPARSE,
 					PTH,
 					"${inherited}",
 				);
@@ -719,6 +718,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					MY_SPARSE,
 					PTH,
 					"${inherited}",
 				);
@@ -865,7 +865,6 @@
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					MY_SPARSE,
 					BZ_DEBUG,
 					METIS,
 					f2cFortran,
@@ -907,7 +906,6 @@
 				DSTROOT = "${prefix}";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					MY_SPARSE,
 					METIS,
 					f2cFortran,
 				);

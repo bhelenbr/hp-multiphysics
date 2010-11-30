@@ -79,9 +79,9 @@ class r_fixed : public r_side_bdry {
 		
 #ifdef MY_SPARSE
 		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
-#else
-		void jacobian_dirichlet(Mat petsc_J, int stride) {
-#endif
+//#else
+//		void jacobian_dirichlet(Mat petsc_J, int stride) {
+//#endif
 			int np = (base.nseg+1)*(dstop -dstart +1);
 			Array<int,1> points(np);
 			
@@ -98,14 +98,15 @@ class r_fixed : public r_side_bdry {
 			for (int n=dstart;n<=dstop;++n)
 				points(cnt++) = gindx++;			
 			
-#ifdef MY_SPARSE
+//#ifdef MY_SPARSE
 			J.zero_rows(cnt,points);
 			J_mpi.zero_rows(cnt,points);
 			J.set_diag(cnt,points,1.0);
-#else
-			MatZeroRows(petsc_J,cnt,points.data(),1.0);
-#endif
+//#else
+//			MatZeroRows(petsc_J,cnt,points.data(),1.0);
+//#endif
 		}
+#endif
 };
 
 class r_fixed_angled : public r_side_bdry {
@@ -144,11 +145,11 @@ class r_fixed_angled : public r_side_bdry {
 			return;
 		}
 		
-#ifdef MY_SPARSE
+#ifdef MY_SPARSE 
 		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
-#else
-		void jacobian_dirichlet(Mat petsc_J, int stride) {
-#endif
+//#else
+//		void jacobian_dirichlet(Mat petsc_J, int stride) {
+//#endif
 			
 #ifdef MY_SPARSE
 			/* SKIP ENDPOINTS? */
@@ -269,6 +270,7 @@ class r_fixed_angled : public r_side_bdry {
 			}
 #endif
 		}
+#endif
 	
 };
 
