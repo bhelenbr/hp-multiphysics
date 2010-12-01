@@ -516,6 +516,7 @@ void tri_hp_cns::minvrt() {
 		}
 	}
 	
+	
 	if (gbl->diagonal_preconditioner) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all());
     } else {
@@ -540,7 +541,7 @@ void tri_hp_cns::minvrt() {
 				*gbl->log << "DGETRS FAILED FOR CNS MINVRT" << std::endl;
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
-			
+
 			gbl->res.v(i,Range::all()) = temp/basis::tri(log2p)->vdiag();
 		}
 	}
@@ -870,9 +871,41 @@ void tri_hp_cns::update() {
 
 		tri_hp::rsdl(stage);
 	
+		if(!gbl->diagonal_preconditioner){
+			/* APPLY VERTEX DIRICHLET B.C.'S */
+			for(int i=0;i<nebd;++i)
+				hp_ebdry(i)->vdirichlet();
+			
+			for(int i=0;i<nvbd;++i)
+				hp_vbdry(i)->vdirichlet2d();
+			
+			/* APPLY DIRCHLET B.C.S TO MODE */
+			for(int i=0;i<nebd;++i)
+				for(int mode=0;mode<basis::tri(log2p)->sm();++mode)
+					hp_ebdry(i)->sdirichlet(mode);
+			
+		}
+		
+		
 		tri_hp_cns::minvrt();
 		
+		if(!gbl->diagonal_preconditioner){
+			/* APPLY VERTEX DIRICHLET B.C.'S */
+			for(int i=0;i<nebd;++i)
+				hp_ebdry(i)->vdirichlet();
+			
+			for(int i=0;i<nvbd;++i)
+				hp_vbdry(i)->vdirichlet2d();
+			
+			/* APPLY DIRCHLET B.C.S TO MODE */
+			for(int i=0;i<nebd;++i)
+				for(int mode=0;mode<basis::tri(log2p)->sm();++mode)
+					hp_ebdry(i)->sdirichlet(mode);
+			
+		}
 		
+		
+//      /* or this way */ 
 //		/* APPLY VERTEX DIRICHLET B.C.'S */
 //		for(int i=0;i<nebd;++i)
 //			hp_ebdry(i)->vdirichlet();
@@ -897,6 +930,7 @@ void tri_hp_cns::update() {
 //		
 //		for(int i=0;i<nvbd;++i)
 //			hp_vbdry(i)->vdirichlet2d();
+		
 		
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());

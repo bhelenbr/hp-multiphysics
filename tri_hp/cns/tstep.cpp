@@ -28,8 +28,8 @@ void tri_hp_cns::setup_preconditioner() {
 		gbl->tpreconditioner(Range(0,ntri-1),Range::all(),Range::all()) = 0.0;
 
 		
-	}
-	else {
+	} else {
+
 		gbl->vprcn_ut(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
 		if (basis::tri(log2p)->sm() > 0) {
 			gbl->sprcn_ut(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
@@ -232,6 +232,8 @@ void tri_hp_cns::setup_preconditioner() {
 		}
 	}
 	
+	// remember to do parallel communication
+	
 	tri_hp::setup_preconditioner();
 }
 
@@ -257,7 +259,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
-	FLT hdt = 5.0*pow(h*gbl->bd(0),2.0);
+	FLT hdt = 0.5*pow(h*gbl->bd(0),2.0);
 	FLT vel = 3.0*(u*u+v*v);
 	FLT nuh = 2.0*pow((nu+alpha)/h,2.0);
 	
@@ -269,7 +271,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT re = MAX(rho*sqrt(u*u+v*v)*h/gbl->mu,1.0);
 	
 	FLT b2,alph;
-	//cout << hdt << ' ' << vel << ' '  << nuh << ' ' << M << endl;
+	//cout << coarse_level << ' ' << hdt << ' ' << vel << ' '  << nuh << ' ' << M << endl;
 	if(M > .9) { // turn off preconditioner
 		b2 = 1.0;
 		alph = 0.0;
@@ -283,7 +285,7 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	b2 = 1.0;
 	alph = 0.0;
 #endif
-	
+
 	alph = 0.0; // prevents wiggles when residual gets small, not sure why
 	
 	/* Preconditioner */
@@ -316,14 +318,15 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 			for(int k=0; k<NV; ++k)
 				temp(i,j)+=P(i,k)*dpdc(k,j);
 	P = temp;
-	
-	temp = 0.0;
-	for(int i=0; i<NV; ++i)
-		for(int j=0; j<NV; ++j)
-			for(int k=0; k<NV; ++k)
-				temp(i,j)+=dcdp(i,k)*Pinv(k,j);
-	
+
 	if(!gbl->diagonal_preconditioner){
+
+		temp = 0.0;
+		for(int i=0; i<NV; ++i)
+			for(int j=0; j<NV; ++j)
+				for(int k=0; k<NV; ++k)
+					temp(i,j)+=dcdp(i,k)*Pinv(k,j);
+	
 		Pinv = temp;
 	}
 	
