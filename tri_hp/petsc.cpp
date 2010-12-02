@@ -132,9 +132,11 @@ void tri_hp::petsc_initialize(){
 		*gbl->log << "weird size allocation for petsc vector" << std::endl;
 		exit(1);
 	}
-
 	CHKERRABORT(MPI_COMM_WORLD,err);
+	
 	err = VecDuplicate(petsc_u,&petsc_f);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	err = VecDuplicate(petsc_u,&petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 #ifdef MY_SPARSE
@@ -194,6 +196,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	PetscGetTime(&time1);
 	
 #ifdef MY_SPARSE
+
 	/* Not sure if I have to delete it each time or not */
 	err = MatDestroy(petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
@@ -214,7 +217,7 @@ void tri_hp::petsc_setup_preconditioner() {
 	err =  MatCreateMPIAIJWithSplitArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,
 		J._cpt.data(),J._col.data(),J._val.data(),J_mpi._cpt.data(),J_mpi._col.data(),J_mpi._val.data(),&petsc_J);
 	CHKERRABORT(MPI_COMM_WORLD,err);
-
+	
 //	err =  MatCreateMPIAIJWithArrays(MPI_COMM_WORLD,jacobian_size,jacobian_size,total_size,total_size,J._cpt.data(),J._col.data(),J._val.data(),&petsc_J);
 //	CHKERRABORT(MPI_COMM_WORLD,err);
 #endif
@@ -269,16 +272,11 @@ void tri_hp::petsc_setup_preconditioner() {
 }
 
 void tri_hp::petsc_update() {
-	Vec	resid,du;
 	PetscInt its;
 	PetscErrorCode err;
 	
 	PetscLogDouble time1,time2;
-	err = VecDuplicate(petsc_f,&du);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-	err = VecDuplicate(petsc_f,&resid);
-	CHKERRABORT(MPI_COMM_WORLD,err);
-
+	
 	ug_to_petsc();
 		
 	petsc_rsdl();
@@ -290,7 +288,7 @@ void tri_hp::petsc_update() {
 	VecNorm(petsc_f, NORM_INFINITY, &resmax );
 	
 	PetscGetTime(&time1);
-	err = KSPSolve(ksp,petsc_f,du);
+	err = KSPSolve(ksp,petsc_f,petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	KSPGetIterationNumber(ksp,&its);
@@ -301,7 +299,7 @@ void tri_hp::petsc_update() {
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
 	/* update: u=u-J^-1*f=u-du */
-	VecAXPY(petsc_u,-1.0,du);
+	VecAXPY(petsc_u,-1.0,petsc_du);
 
 	/* send petsc vector u back to ug */
 	petsc_to_ug();
@@ -313,9 +311,6 @@ void tri_hp::petsc_update() {
 	for(int i=0;i<nvbd;++i) {
 		hp_vbdry(i)->update(-1);
 	}
-	
-	err = VecDestroy(du);
-	CHKERRABORT(MPI_COMM_WORLD,err);
 
 	return;
 }
@@ -482,6 +477,9 @@ void tri_hp::petsc_finalize(){
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = VecDestroy(petsc_u);
+	CHKERRABORT(MPI_COMM_WORLD,err);
+	
+	err = VecDestroy(petsc_du);
 	CHKERRABORT(MPI_COMM_WORLD,err);
 	
 	err = MatDestroy(petsc_J);

@@ -259,7 +259,7 @@ class tri_hp : public r_tri_mesh  {
 		int jacobian_start;
 		int jacobian_size;
 		Mat  petsc_J;           /* Jacobian matrix */
-		Vec  petsc_u,petsc_f;   /* solution,residual */
+		Vec  petsc_u,petsc_f,petsc_du;  /* solution,residual */
 		KSP  ksp;               /* linear solver context */
 		PC   pc;                 /* preconditioner */
 		
