@@ -515,6 +515,14 @@ void surface_outflow::rsdl(int stage) {
 		case(fixed_angle): {
 			/* ADD SURFACE TENSION BOUNDARY TERMS IF NECESSARY */
 			/* THIS SHOULD REALLY BE PRECALCULATED AND STORED */
+			if (wall_type == curved) {
+				if (surfbdry == 0) {
+					x.ebdry(base.ebdry(1))->bdry_normal(0,-1.0,wall_normal);
+				}
+				else {
+					x.ebdry(base.ebdry(0))->bdry_normal(x.ebdry(base.ebdry(0))->nseg-1,1.0,wall_normal);
+				}
+			}
 			TinyVector<FLT,tri_mesh::ND> tangent;
 			if (surfbdry == 0) {
 				/* Surf-boundary then point then wall (in ccw sense) */

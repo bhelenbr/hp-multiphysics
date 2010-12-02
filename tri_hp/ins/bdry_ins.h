@@ -381,7 +381,8 @@ namespace bdry_ins {
 				
 				ub += urb;
 
-				FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);				
+				// FLT un = (ub(0) -mv(0))*norm(0) +(ub(1) -mv(1))*norm(1);
+				FLT un = 0.0;			// No flux through the surface	
 				TinyVector<FLT,tri_mesh::ND> tang(-norm(1),norm(0));
 				FLT slip_stress = ((ub(0) -u(0))*tang(0) +(ub(1) -u(1))*tang(1))*x.gbl->mu/(slip_length*sqrt(tang(0)*tang(0)+tang(1)*tang(1)));
 				
@@ -834,7 +835,7 @@ namespace bdry_ins {
 		/* For periodic wall have tri_mesh vertex type be comm */
 		protected:
 			FLT position;
-			enum {vertical, horizontal, angled} wall_type;
+			enum {vertical, horizontal, angled, curved} wall_type;
 			enum {prdc, free_angle, fixed_angle} contact_type;
 			FLT contact_angle;  // ONLY USED FOR FIXED_ANGLE CONTACT TYPE
 			TinyVector<FLT,tri_mesh::ND> wall_normal; 
@@ -874,6 +875,8 @@ namespace bdry_ins {
 					}
 					else if (input == "angled")
 						wall_type = angled;
+					else if (input == "curved")
+						wall_type = curved;
 					else {
 						*x.gbl->log << "Unrecognized wall type" << std::endl;
 					}
@@ -911,7 +914,7 @@ namespace bdry_ins {
 					case(horizontal):
 						pt(1) = position;
 						break;
-					case(angled):
+					case(angled):case(curved):
 						surface_fixed_pt::mvpttobdry(pt);
 						break;
 				}
@@ -1066,7 +1069,7 @@ namespace bdry_ins {
 					case(horizontal):
 						pt(1) = position;
 						break;
-					case(angled):
+					case(angled):case(curved):
 						break;
 				}
 			}
