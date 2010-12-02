@@ -769,8 +769,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"${inherited}",
+					MY_SPARSE,
 					MPISRC,
+					"${inherited}",
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = NO;
@@ -781,8 +782,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"${inherited}",
+					MY_SPARSE,
 					MPISRC,
+					"${inherited}",
 				);
 				PRODUCT_NAME = tri_mesh_mpi;
 				SKIP_INSTALL = NO;

@@ -305,12 +305,14 @@ template<int ND> class vgeometry_interface {
 template<int ND> class egeometry_interface {
 	public:
 		virtual void mvpttobdry(int seg, FLT psi, TinyVector<FLT,ND> &pt) {}
+		virtual void bdry_normal(int seg, FLT psi, TinyVector<FLT,ND> &norm) {}
 		virtual ~egeometry_interface() {}
 };
 
 template<int ND> class fgeometry_interface {
 	public:
 		virtual void mvpttobdry(int elem, FLT psi, FLT eta, TinyVector<FLT,ND> &pt) {}
+		virtual void bdry_normal(int elem, FLT psi, FLT eta, TinyVector<FLT,ND> &norm) {}
 		virtual ~fgeometry_interface() {}
 };
 #endif

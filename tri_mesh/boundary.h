@@ -782,6 +782,11 @@ class rigid_movement_interface2D {
 			pt[0] = temp;		
 			pt += pos;
 		}
+		void rotate_vector(TinyVector<FLT,2>& vec) {
+			FLT temp = vec[0]*cos(-theta) +vec[1]*sin(-theta);
+			vec[1] = -vec[0]*sin(-theta) +vec[1]*cos(-theta);
+			vec[0] = temp;	
+		}
 };
 
 
@@ -812,6 +817,16 @@ template<int ND> class geometry {
 				}
 			} while (fabs(delt_dist) > 20.*EPSILON);
 
+			return;
+		}
+		virtual void bdry_normal(TinyVector<FLT,ND> pt, FLT time, TinyVector<FLT,ND>& norm) {
+			FLT mag = 0.0;
+			for(int n=0;n<ND;++n) {
+				norm(n) = dhgt(n,pt.data(),time);
+				mag += norm(n)*norm(n);
+			}
+			norm /= sqrt(mag);
+			
 			return;
 		}
 		virtual void init(input_map& inmap, std::string idprefix, std::ostream& log) {}

@@ -421,6 +421,7 @@ void r_tri_mesh::tadvance() {
 		calc_kvol();
 #endif
 		zero_source();
+		r_tri_mesh::setup_preconditioner();
 		r_tri_mesh::rsdl();
 		sumsrc();
 		moveboundaries();

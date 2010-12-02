@@ -311,7 +311,7 @@ class tri_mesh : public multigrid_interface {
  * Specialization of communication routines and
  * and storage for a vertex boundary
  */
-class vrtx_bdry : public boundary {
+class vrtx_bdry : public boundary, vgeometry_interface<tri_mesh::ND> {
 	public:
 		tri_mesh &x;
 		TinyVector<int,2> ebdry;
@@ -346,7 +346,7 @@ class vrtx_bdry : public boundary {
  * Specialization of communication routines and
  * and storage for an edge boundary
  */
-class edge_bdry : public boundary {
+class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
 	public:
 		tri_mesh &x;
 		TinyVector<int,2> vbdry;
@@ -383,6 +383,7 @@ class edge_bdry : public boundary {
 		virtual void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 		virtual void mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {}
 		virtual void mvpttobdry(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt);
+		virtual void bdry_normal(int nseg, FLT psi, TinyVector<FLT,tri_mesh::ND> &norm);
 		virtual void findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, FLT &psiloc) const;
 
 		/* DEFAULT SENDING FOR SIDE POINTS */

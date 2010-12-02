@@ -155,6 +155,16 @@ template<class BASE,class GEOM> class eboundary_with_geometry : public BASE, pub
 			to_physical_frame(pt);
 			return;
 		}
+		
+		void bdry_normal(int indx,FLT psi, TinyVector<FLT,tri_mesh::ND> &norm) {
+			TinyVector<FLT,tri_mesh::ND> pt;
+			for (int n=0;n<tri_mesh::ND;++n)
+				pt(n) = 0.5*((1. -psi)*BASE::x.pnts(BASE::x.seg(BASE::seg(indx)).pnt(0))(n) +(1.+psi)*BASE::x.pnts(BASE::x.seg(BASE::seg(indx)).pnt(1))(n));
+			to_geometry_frame(pt);
+			geometry_object.bdry_normal(pt,BASE::x.gbl->time,norm);
+			rotate_vector(norm);
+			return;
+		}
 };
 
 template<class BASE,class GEOM> class vboundary_with_geometry : public BASE {

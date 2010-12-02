@@ -79,9 +79,7 @@ class r_fixed : public r_side_bdry {
 		
 #ifdef MY_SPARSE
 		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
-//#else
 //		void jacobian_dirichlet(Mat petsc_J, int stride) {
-//#endif
 			int np = (base.nseg+1)*(dstop -dstart +1);
 			Array<int,1> points(np);
 			
@@ -98,13 +96,10 @@ class r_fixed : public r_side_bdry {
 			for (int n=dstart;n<=dstop;++n)
 				points(cnt++) = gindx++;			
 			
-//#ifdef MY_SPARSE
 			J.zero_rows(cnt,points);
 			J_mpi.zero_rows(cnt,points);
 			J.set_diag(cnt,points,1.0);
-//#else
 //			MatZeroRows(petsc_J,cnt,points.data(),1.0);
-//#endif
 		}
 #endif
 };
@@ -130,29 +125,21 @@ class r_fixed_angled : public r_side_bdry {
 		}
 
 		void dirichlet() {
-			int sind;
-			int j = 0;
-			do {
-				sind = base.seg(j);
+			/* SKIP ENDPOINTS */
+			for(int j=1;j<base.nseg;++j) {
+				int sind = base.seg(j);
 				/* Tangent Residual */
 				FLT res = -x.gbl->res(x.seg(sind).pnt(0))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(0))(1)*cos(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(0) = -res*sin(theta);
 				x.gbl->res(x.seg(sind).pnt(0))(1) = res*cos(theta);
-			} while (++j < base.nseg);
-			FLT res = -x.gbl->res(x.seg(sind).pnt(1))(0)*sin(theta) +x.gbl->res(x.seg(sind).pnt(1))(1)*cos(theta);
-			x.gbl->res(x.seg(sind).pnt(1))(0) = -res*sin(theta);
-			x.gbl->res(x.seg(sind).pnt(1))(1) = res*cos(theta);
+			}
+			
 			return;
 		}
 		
 #ifdef MY_SPARSE 
 		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
-//#else
-//		void jacobian_dirichlet(Mat petsc_J, int stride) {
-//#endif
-			
-#ifdef MY_SPARSE
-			/* SKIP ENDPOINTS? */
+			/* SKIP ENDPOINTS */
 			for(int j=0;j<base.nseg-1;++j) {
 				int sind = base.seg(j);
 				int row = x.seg(sind).pnt(1)*stride +stride-x.ND;
@@ -206,73 +193,105 @@ class r_fixed_angled : public r_side_bdry {
 				J._val(Range(J._cpt(row),J._cpt(row+1)-1)) = temp(0,Range::all());
 				J._val(Range(J._cpt(row+1),J._cpt(row+2)-1)) = temp(1,Range::all());
 			}
-	#else
-			const PetscInt *cols1, *cols2;
-			const PetscScalar *vals1, *vals2;
+		}
+#endif
+};
+
+class r_curved : public r_side_bdry {
+	public:
+		r_curved(r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(xin,bin) {mytype = "curved";}
+		r_curved(const r_curved &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_side_bdry(inbdry,xin,bin) {mytype = "curved";}
+		r_curved* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_curved(*this,xin,bin);}
+		
+		void dirichlet() {
+			TinyVector<FLT,tri_mesh::ND> pt, norm;
+			/* SKIP ENDPOINTS */
+			for(int j=0;j<base.nseg-1;++j) {
+				int sind = base.seg(j);
+				int pnt = x.seg(sind).pnt(1);
+				base.bdry_normal(j,1.0,norm);
+				pt = x.pnts(pnt);
+				base.mvpttobdry(j,1.0,pt);
+				
+				/* Tangent Residual */
+				FLT rest = -x.gbl->res(pnt)(0)*norm(1) +x.gbl->res(pnt)(1)*norm(0);
+				/* Normal Residual */
+				FLT resn = ((x.pnts(pnt)(0)-pt(0))*norm(0) +(x.pnts(pnt)(1)-pt(1))*norm(1))/x.gbl->diag(pnt);
+
+				x.gbl->res(pnt)(0) = -rest*norm(1) +resn*norm(0);
+				x.gbl->res(pnt)(1) = rest*norm(0) +resn*norm(1);
+			}
+			
+			return;
+		}
+	
+#ifdef MY_SPARSE 
+		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
+			TinyVector<FLT,tri_mesh::ND> norm;			
 			
 			/* SKIP ENDPOINTS? */
 			for(int j=0;j<base.nseg-1;++j) {
+				base.bdry_normal(j,1.0,norm);
 				int sind = base.seg(j);
-				int row = x.seg(sind).pnt(1)*stride +x.NV;
-				int nnz1, nnz2;
-				MatGetRow(petsc_J,row,&nnz1,&cols1,&vals1);
-				MatGetRow(petsc_J,row+1,&nnz2,&cols2,&vals2);
-				if (nnz1 != nnz2) {
-					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-				}
+				int pnt = x.seg(sind).pnt(1);
+				int row = x.seg(sind).pnt(1)*stride +stride-x.ND;
 				
+				int nnz1 = J._cpt(row+1) -J._cpt(row);
+				int nnz2 = J._cpt(row+2) -J._cpt(row+1);
 				Array<int,1> cols(nnz1);
 				Array<FLT,2> vals(2,nnz1);
-				for (int col=0;col<nnz1;++col) {
-					cols(col) = cols1[col];
-					vals(0,col) = -vals1[col]*sin(theta);
+				
+				/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
+				if (nnz1 != nnz2) {
+					*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
-	
-				for (int col=0;col<nnz2;++col) {
-					if (cols(col) != cols2[col]) {
-						*x.gbl->log << "zeros problem in deforming mesh on angled boundary\n";
-						*x.gbl->log << cols << ' ' << col << ' ' << cols2[col] << std::endl;
-					}
-					// cols(col+nnz1) = cols2[col];
-					vals(0,col) += vals2[col]*cos(theta);
+				int row1 = J._cpt(row);
+				int row2 = J._cpt(row+1);
+				for(int col=0;col<nnz1;++col) {
+					if (J._col(row1++) != J._col(row2++)) {
+						*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+						sim::abort(__LINE__,__FILE__,x.gbl->log);
+					}	
 				}
-				MatRestoreRow(petsc_J,row,&nnz1,&cols1,&vals1);
-				MatRestoreRow(petsc_J,row+1,&nnz2,&cols2,&vals2);
+				
+				vals(0,Range(0,nnz1-1)) = -J._val(Range(J._cpt(row),J._cpt(row+1)-1))*norm(1);
+				vals(0,Range(0,nnz1-1)) += J._val(Range(J._cpt(row+1),J._cpt(row+2)-1))*norm(0);
 				
 				/* Replace x equation with tangential position equation */
 				/* Replacy y equation with normal displacement equation */
 				/* Normal Equation */
 				vals(1,Range::all()) = 0.0;
 				for(int col=0;col<nnz1;++col) {
-					if (cols(col) == row) {
-						vals(1,col) = cos(theta);
+					if (J._col(row1+col) == row) {
+						vals(1,col) = norm(0)/x.gbl->diag(pnt);
 						break;
 					}
 				}
 				for(int col=0;col<nnz1;++col) {
-					if (cols(col) == row+1) {
-						vals(1,col) = sin(theta);
+					if (J._col(row1+col) == row+1) {
+						vals(1,col) = norm(1)/x.gbl->diag(pnt);
 						break;
 					}
 				}
 				
-				/* tangent = -sin(theta) i +cos(theta) j */
-				/* normal = cos(theta) i + sin(theta) j */
+				/* tangent = -norm(1) i +norm(0) j */
+				/* normal = norm(0) i + norm(1) j */
 				/* Rotate equations for diagonal dominance to match what is done to residual */
 				Array<FLT,2> temp(2,nnz1);
-				temp(0,Range::all()) = -vals(0,Range::all())*sin(theta) +vals(1,Range::all())*cos(theta);
-				temp(1,Range::all()) =  vals(0,Range::all())*cos(theta) +vals(1,Range::all())*sin(theta);
+				temp(0,Range::all()) = -vals(0,Range::all())*norm(1) +vals(1,Range::all())*norm(0);
+				temp(1,Range::all()) =  vals(0,Range::all())*norm(0) +vals(1,Range::all())*norm(1);
 				
-				TinyVector<int,2> rows(row,row+1);
-				MatSetValues(petsc_J,2,rows.data(),nnz1,cols.data(),temp.data(),INSERT_VALUES);
-				MatAssemblyBegin(petsc_J,MAT_FINAL_ASSEMBLY);
-				MatAssemblyEnd(petsc_J,MAT_FINAL_ASSEMBLY);	
+				J._val(Range(J._cpt(row),J._cpt(row+1)-1)) = temp(0,Range::all());
+				J._val(Range(J._cpt(row+1),J._cpt(row+2)-1)) = temp(1,Range::all());
 			}
-#endif
 		}
 #endif
 	
 };
+
+
+
 
 
 class r_fixed4 : public r_fixed {

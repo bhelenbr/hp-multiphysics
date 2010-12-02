@@ -69,6 +69,18 @@ void edge_bdry::mvpttobdry(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) 
 	return;
 }
 
+void edge_bdry::bdry_normal(int indx, FLT psi, TinyVector<FLT,tri_mesh::ND> &norm) {
+	/* FOR A LINEAR SIDE */	
+	for (int n=0;n<tri_mesh::ND;++n)
+		norm(1-n) = x.pnts(x.seg(seg(indx)).pnt(1))(n) -x.pnts(x.seg(seg(indx)).pnt(0))(n);
+	norm(1) *= -1.0;
+	norm /= sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+	
+	return;
+}
+
+
+
 void edge_bdry::findbdrypt(const TinyVector<FLT,tri_mesh::ND> xpt, int &sidloc, FLT &psiloc) const {
 	int k,sind,p0,p1,sidlocprev;
 	FLT dx,dy,ol,psi,normdist;
