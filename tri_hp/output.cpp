@@ -95,7 +95,7 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 	int ijind[MXTM][MXTM];
 
 	out.setf(std::ios::scientific, std::ios::floatfield);
-	out.precision(4);
+	out.precision(8);
 
 	switch (typ) {
 		case (text):
