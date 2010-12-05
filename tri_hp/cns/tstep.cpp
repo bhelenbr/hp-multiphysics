@@ -9,7 +9,7 @@
 void tri_hp_cns::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
 	int tind,i,j,side,v0;
-	FLT jcb,h,hmax,q,qmax,lam1,gam,tstep,dti;
+	FLT jcb,h,hmax,q,qmax,lam1,gam,tstep,dtstari;
 	TinyVector<int,3> v;
 	Array<double,1> umax(NV),ubar(NV);
 	Array<double,2> tprcn(NV,NV),tau(NV,NV),dpdc(NV,NV);
@@ -38,7 +38,7 @@ void tri_hp_cns::setup_preconditioner() {
 	}
 
 #ifdef TIMEACCURATE
-	FLT dtstari = 0.0;
+	FLT dtstarimax = 0.0;
 #endif
 	
 	for(tind = 0; tind < ntri; ++tind) {
@@ -163,7 +163,7 @@ void tri_hp_cns::setup_preconditioner() {
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 
-		dti = 1.0/tstep;
+		dtstari = 1.0/tstep;
 		
 		if(gbl->diagonal_preconditioner) {
 			gbl->tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
@@ -175,27 +175,27 @@ void tri_hp_cns::setup_preconditioner() {
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 
 #ifdef TIMEACCURATE
-		dtstari = MAX(dti,dtstari);
+		dtstarimax = MAX(dtstari,dtstarimax);
 		
 	}
 	
 	/* find max dtstari for all blocks and use on every block  */
 	FLT dtstari_recv;
-	sim::blks.allreduce(&dtstari,&dtstari_recv,1,blocks::flt_msg,blocks::max);
-	dtstari = dtstari_recv;
+	sim::blks.allreduce(&dtstarimax,&dtstari_recv,1,blocks::flt_msg,blocks::max);
+	dtstarimax = dtstari_recv;
 	
-	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << gbl->bd(0) << ' ' << dtstari << '\n';
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstarimax << ' ' << gbl->bd(0) << ' ' << dtstarimax << '\n';
 	
 	
 	for(tind=0;tind<ntri;++tind) {
 		v = tri(tind).pnt;
 		jcb = 0.25*area(tind); 
-		dti = dtstari;
+		dtstari = dtstarimax;
 #endif
 		
 		if(gbl->diagonal_preconditioner){
 			gbl->tprcn(tind,Range::all()) = jcb;
-			gbl->tpreconditioner(tind,Range::all(),Range::all()) *= dti;
+			gbl->tpreconditioner(tind,Range::all(),Range::all()) *= dtstari;
 			
 			for(i=0;i<3;++i) {
 			
@@ -211,7 +211,7 @@ void tri_hp_cns::setup_preconditioner() {
 			}
 		}
 		else {
-			gbl->tprcn_ut(tind,Range::all(),Range::all()) *= jcb*dti;
+			gbl->tprcn_ut(tind,Range::all(),Range::all()) *= jcb*dtstari;
 			
 			for(i=0;i<3;++i) {
 				
@@ -259,9 +259,9 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
-	FLT hdt = 0.5*pow(h*gbl->bd(0),2.0);
+	FLT hdt = 2.5*pow(h*gbl->bd(0),2.0);
 	FLT vel = 3.0*(u*u+v*v);
-	FLT nuh = 2.0*pow((nu+alpha)/h,2.0);
+	FLT nuh = 2.0*(pow(nu/h,2.0)+pow(alpha/h,2.0));
 	
 	FLT umag = sqrt(hdt+vel);	
 	umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
@@ -292,13 +292,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	P = b2,                   0.0, 0.0, 0.0,
 	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
 	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
-	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;
+	    0.0*(b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
 		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0,
 		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
-		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
+		   -0.0*(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
 
 	/* jacobian of primitive wrt conservative */
 	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,

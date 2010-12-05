@@ -290,7 +290,7 @@ void tri_hp_cns::project_new_variables(){
 		
 		for(int n=0;n<NV;++n) {
 			for(int m=0;m<basis::tri(log2p)->sm();++m) {
-				ucoef(n)(m+2) = gbl->ug0.s(sind,m,n);
+				ucoef(n)(m+2) = ug.s(sind,m,n);
 				rcoef(n)(m+2) = gbl->res_temp.s(sind,m,n);
 			}
 		}
@@ -553,9 +553,9 @@ void tri_hp_cns::minvrt() {
 		last_phase &= vc0wait_rcv(mp_phase,gbl->res.v.data());
 	}
 		
-	if (gbl->diagonal_preconditioner) {
-		project_res_vertex();
-	}	
+//	if (gbl->diagonal_preconditioner) {
+//		project_res_vertex();
+//	}	
 
 	/* APPLY VERTEX DIRICHLET B.C.'S */
 	for(i=0;i<nebd;++i)
@@ -563,6 +563,9 @@ void tri_hp_cns::minvrt() {
 	
 	for(i=0;i<nvbd;++i)
 		hp_vbdry(i)->vdirichlet2d();	
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->modify_vertex_residual();	
 
 	gbl->res_temp.v = gbl->res.v;
 
@@ -662,16 +665,18 @@ void tri_hp_cns::minvrt() {
 		smsgpass(boundary::all,0,boundary::symmetric);
 		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
 
-		if(gbl->diagonal_preconditioner){
-			//gbl->res_temp.s(Range(0,nseg-1),mode,Range::all()) = gbl->res.s(Range(0,nseg-1),mode,Range::all());
-			
-			project_res_side(mode);
-		}
+//		if(gbl->diagonal_preconditioner){
+//			//gbl->res_temp.s(Range(0,nseg-1),mode,Range::all()) = gbl->res.s(Range(0,nseg-1),mode,Range::all());
+//			
+//			project_res_side(mode);
+//		}
 		
 		/* APPLY DIRCHLET B.C.S TO MODE */
 		for(i=0;i<nebd;++i)
 			hp_ebdry(i)->sdirichlet(mode);
 		
+		for(i=0;i<nebd;++i)
+			hp_ebdry(i)->modify_edge_residual(mode);
 		
 		/* REMOVE MODE FROM HIGHER MODES */
 		for(tind=0;tind<ntri;++tind) {
@@ -729,8 +734,13 @@ void tri_hp_cns::minvrt() {
 	}
 	
 	
+	
 	/* SOLVE FOR HIGHEST MODE */
-	int mode = basis::tri(log2p)->sm()-1;
+	int mode = basis::tri(log2p)->sm()-1;	
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->sdirichlet(mode);
+	
 	if (gbl->diagonal_preconditioner) {
 		gbl->res.s(Range(0,nseg-1),mode,Range::all()) *= gbl->sprcn(Range(0,nseg-1),Range::all())*basis::tri(log2p)->sdiag(mode);
 	}
@@ -763,13 +773,16 @@ void tri_hp_cns::minvrt() {
 	smsgpass(boundary::all,0,boundary::symmetric);
 	sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
 	
-	if(gbl->diagonal_preconditioner){
-		project_res_side(mode);
-	}
+//	if(gbl->diagonal_preconditioner){
+//		project_res_side(mode);
+//	}
 	
 	/* APPLY DIRCHLET B.C.S TO MODE */
 	for(i=0;i<nebd;++i)
 		hp_ebdry(i)->sdirichlet(mode);
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->modify_edge_residual(mode);
 	
     if (basis::tri(log2p)->im() == 0) return;
 	
@@ -823,12 +836,12 @@ void tri_hp_cns::minvrt() {
 		}
 	}
 
-	if(gbl->diagonal_preconditioner){
-		gbl->res_temp.s = gbl->res.s; //not sure if i need this one
-		gbl->res_temp.i = gbl->res.i;
-		
-		project_res_interior();
-	}
+//	if(gbl->diagonal_preconditioner){
+//		gbl->res_temp.s = gbl->res.s; //not sure if i need this one
+//		gbl->res_temp.i = gbl->res.i;
+//		
+//		project_res_interior();
+//	}
 	
 	
 	return;
@@ -870,68 +883,24 @@ void tri_hp_cns::update() {
 	for (int stage = 0; stage < gbl->nstage; ++stage) {
 
 		tri_hp::rsdl(stage);
-	
-		if(!gbl->diagonal_preconditioner){
-			/* APPLY VERTEX DIRICHLET B.C.'S */
-			for(int i=0;i<nebd;++i)
-				hp_ebdry(i)->vdirichlet();
-			
-			for(int i=0;i<nvbd;++i)
-				hp_vbdry(i)->vdirichlet2d();
-			
-			/* APPLY DIRCHLET B.C.S TO MODE */
-			for(int i=0;i<nebd;++i)
-				for(int mode=0;mode<basis::tri(log2p)->sm();++mode)
-					hp_ebdry(i)->sdirichlet(mode);
-			
-		}
-		
 		
 		tri_hp_cns::minvrt();
 		
-		if(!gbl->diagonal_preconditioner){
-			/* APPLY VERTEX DIRICHLET B.C.'S */
-			for(int i=0;i<nebd;++i)
-				hp_ebdry(i)->vdirichlet();
-			
-			for(int i=0;i<nvbd;++i)
-				hp_vbdry(i)->vdirichlet2d();
-			
-			/* APPLY DIRCHLET B.C.S TO MODE */
-			for(int i=0;i<nebd;++i)
-				for(int mode=0;mode<basis::tri(log2p)->sm();++mode)
-					hp_ebdry(i)->sdirichlet(mode);
-			
-		}
+		project_new_variables();
+		
+		for(i=0;i<nebd;++i)
+			hp_ebdry(i)->vdirichlet();
+		
+		for(i=0;i<nvbd;++i)
+			hp_vbdry(i)->vdirichlet2d();
+		
+		/* APPLY DIRCHLET B.C.S TO MODE */
+		for(i=0;i<nebd;++i)
+			for(int mode=0;mode<basis::tri(log2p)->sm();++mode)
+				hp_ebdry(i)->sdirichlet(mode);
 		
 		
-//      /* or this way */ 
-//		/* APPLY VERTEX DIRICHLET B.C.'S */
-//		for(int i=0;i<nebd;++i)
-//			hp_ebdry(i)->vdirichlet();
-//		
-//		for(int i=0;i<nvbd;++i)
-//			hp_vbdry(i)->vdirichlet2d();
-//		
-//		tri_hp::minvrt(); 
-//		
-//		/* APPLY VERTEX DIRICHLET B.C.'S */
-//		for(int i=0;i<nebd;++i)
-//			hp_ebdry(i)->vdirichlet();
-//		
-//		for(int i=0;i<nvbd;++i)
-//			hp_vbdry(i)->vdirichlet2d();
-//		
-//		project_new_variables();
-//
-//		/* APPLY VERTEX DIRICHLET B.C.'S */
-//		for(int i=0;i<nebd;++i)
-//			hp_ebdry(i)->vdirichlet();
-//		
-//		for(int i=0;i<nvbd;++i)
-//			hp_vbdry(i)->vdirichlet2d();
-		
-		
+	
 		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 		

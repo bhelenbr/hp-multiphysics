@@ -172,9 +172,26 @@ namespace bdry_cns {
 				sind = base.seg(j);
 				v0 = x.seg(sind).pnt(0);
 				x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
+				
+//				if(x.gbl->diagonal_preconditioner){
+//					x.gbl->vpreconditioner(v0,3,0) = 0.0;
+//				} else {
+//					x.gbl->vprcn_ut(v0,Range(1,x.NV-1),Range::all()) = 0.0;
+//					for(int i=1;i<x.NV;++i)
+//						x.gbl->vprcn_ut(v0,i,i) = 1.0;
+//				}
+				
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
+			
+//			if(x.gbl->diagonal_preconditioner){
+//				x.gbl->vpreconditioner(v0,3,0) = 0.0;
+//			} else {
+//				x.gbl->vprcn_ut(v0,Range(1,x.NV-1),Range::all()) = 0.0;
+//				for(int i=1;i<x.NV;++i)
+//					x.gbl->vprcn_ut(v0,i,i) = 1.0;
+//			}
 		}
 		
 		void sdirichlet(int mode) {
@@ -183,6 +200,13 @@ namespace bdry_cns {
 			for(int j=0;j<base.nseg;++j) {
 				sind = base.seg(j);
 				x.gbl->res.s(sind,mode,Range(1,x.NV-1)) = 0.0;
+				
+//				if (!x.gbl->diagonal_preconditioner) {
+//					x.gbl->sprcn_ut(sind,Range(1,x.NV-1),Range::all()) = 0.0;
+//					for(int i=1;i<x.NV;++i)
+//						x.gbl->sprcn_ut(sind,i,i) = 1.0;
+//				}
+
 			}
 		}
 
@@ -240,6 +264,91 @@ namespace bdry_cns {
 			hp_edge_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		}
+		
+		void modify_vertex_residual() {
+			int j,v0,sind;
+			FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+
+			j = 0;
+			do {
+				sind = base.seg(j);	
+				v0 = x.seg(sind).pnt(0);
+				
+				x.gbl->res.v(v0,3) = ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*x.gbl->res.v(v0,0);
+
+			} while (++j < base.nseg);
+			
+			v0 = x.seg(sind).pnt(1);
+			x.gbl->res.v(v0,3) = ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*x.gbl->res.v(v0,0);
+		
+			return;
+		}
+		
+		void modify_edge_residual(int mode) {
+			int j,k,m,n,v0,v1,sind,info;
+			TinyVector<FLT,tri_mesh::ND> pt;
+			TinyVector<double,MXGP> res1d;
+			TinyVector<double,MXTM> rescoef;
+			FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+			char uplo[] = "U";
+			
+			
+			if(basis::tri(x.log2p)->sm()) {
+				for(j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					if (is_curved()) {
+						x.crdtocht1d(sind);
+						for(n=0;n<tri_mesh::ND;++n)
+							basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
+					}
+					else {
+						for(n=0;n<tri_mesh::ND;++n) {
+							basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+							
+							for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+								x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+						}
+					}
+					
+					/* take global coefficients and put into local vector */
+					/*  only need res_rho */
+					for (m=0; m<2; ++m) 
+						rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+					
+					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
+						rescoef(m+2) = x.gbl->res.s(sind,m,0);					
+					
+					basis::tri(x.log2p)->proj1d(&rescoef(0),&res1d(0));
+					
+					basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,3),x.gbl->res.v(v1,3),&x.res(3)(0,0));
+					
+					for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
+						pt(0) = x.crd(0)(0,k);
+						pt(1) = x.crd(1)(0,k);
+						
+						// res_rhoE = res_rho*RT/(gam-1)
+						x.res(3)(0,k) -= ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*res1d(k);
+					}
+					basis::tri(x.log2p)->intgrt1d(&x.lf(3)(0),&x.res(3)(0,0));
+					
+					PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(3)(2),basis::tri(x.log2p)->sm(),info);
+//					for(m=0;m<basis::tri(x.log2p)->sm();++m) 
+//						x.gbl->res.s(sind,m,3) = -x.lf(3)(2+m);		
+					
+					x.gbl->res.s(sind,mode,3) = -x.lf(3)(2+mode);
+					
+				}
+			}
+			
+			
+			
+			return;
+		}
+		
+		
 	};
 	
 	
@@ -350,6 +459,8 @@ namespace bdry_cns {
 			hp_edge_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		}
+		
+
 	};
 
 //	class rigid : public init_bdry_cndtn {
