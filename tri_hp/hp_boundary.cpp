@@ -882,6 +882,13 @@ void hp_vrtx_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 	else
 		vdofs = ND+NV;
 	
+	/* Reload to avoid overlap with sides */
+	int pind = base.pnt*vdofs;
+	for(int n=0;n<vdofs;++n) {
+		nnzero(pind) = base.isndbuf(n);
+		nnzero_mpi(pind++) = 0;
+	}
+		
 	for(int m=0;m<base.nmatches();++m) { 
 		if (base.is_local(m)) {
 			int count = 0;
@@ -984,13 +991,13 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 				int sind = base.seg(i);
 				int pind = x.seg(sind).pnt(1)*vdofs;
 				for(int n=0;n<vdofs;++n) {
-					nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+					nnzero_mpi(pind++) = base.ircvbuf(m,count++);
 				}
 			}
 			int sind = base.seg(0);
 			int pind = x.seg(sind).pnt(0)*vdofs;
 			for(int n=0;n<vdofs;++n) {
-				nnzero_mpi(pind++) += base.ircvbuf(m,count++);
+				nnzero_mpi(pind++) = base.ircvbuf(m,count++);
 			}
 
 			
@@ -999,7 +1006,7 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 				int toadd = base.ircvbuf(m,count++); 
 				for (int i=0;i<base.nseg;++i) {
 					int sind = base.seg(i);
-					nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
+					nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) = toadd;
 				}
 			}
 		}
@@ -1194,7 +1201,8 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 	/* then append column numbers & values */
 	row = base.pnt*vdofs; 
 	/* attach diagonal column # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+	base.fsndbuf(base.sndsize()++) = row;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start;
 	for (int n=0;n<vdofs;++n) {
 		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
@@ -1204,7 +1212,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 #ifdef MPDEBUG
@@ -1226,24 +1234,44 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	else
 		vdofs = x.NV+x.ND;
 	
-	int row = base.pnt*vdofs;	
+	
+	/* Reload values of Jacobian so don't have interference with sides */
 	int count = 0;
+	int row = base.pnt*vdofs;	
+
+	assert(row == base.fsndbuf(count++));
+	assert(x.jacobian_start == base.fsndbuf(count++));
+	for(int n=0;n<vdofs;++n) {
+		int ncol = base.fsndbuf(count++);
+		for (int k = 0;k<ncol;++k) {
+			int col = base.fsndbuf(count++);
+			FLT val = base.fsndbuf(count++);
+			x.J.set_values(row+n,col,val);
+		}
+		x.J_mpi.multiply_row(row+n, 0.0);
+	}
+	
+	
+	count = 0;
 	for (int m=0;m<base.nmatches();++m) {
+		int row_mpi = base.frcvbuf(m,count++);
+		int jstart_mpi = base.frcvbuf(m,count++);
 		if (base.is_local(m)) {
 			pJ_mpi = &x.J;
+			jstart_mpi = 0;
 		}
 		else {
 			pJ_mpi = &x.J_mpi;
 		}
+		row_mpi += jstart_mpi;
 		
-		int row_mpi = base.frcvbuf(m,count++);
 		for(int n=0;n<vdofs;++n) {
 			int ncol = base.frcvbuf(m,count++);
 #ifdef MPDEBUG
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = base.frcvbuf(m,count++);
+				int col = base.frcvbuf(m,count++) +jstart_mpi;
 #ifdef MPDEBUG
 				*x.gbl->log  << col << ' ';
 #endif
@@ -1290,13 +1318,15 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+	
 	/* First send number of entries for each vertex row */
 	/* then append column numbers & values */
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		row = x.seg(sind).pnt(0)*vdofs; 
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;;
 		for (int n=0;n<vdofs;++n) {
 			base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
@@ -1306,7 +1336,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -1318,7 +1348,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 		/* Send Side Information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
 		for(int mode=0;mode<x.sm0;++mode) {
 			for (int n=0;n<x.NV;++n) {
 				base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
@@ -1329,7 +1359,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 
@@ -1344,7 +1374,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	/* LAST POINT */
 	row = x.seg(sind).pnt(1)*vdofs; 
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+	base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
 	for (int n=0;n<vdofs;++n) {
 		base.fsndbuf(base.sndsize()++) = x.J._cpt(row+1) -x.J._cpt(row) +FLT_EPSILON;
 #ifdef MPDEBUG
@@ -1354,7 +1384,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 #ifdef MPDEBUG
@@ -1368,9 +1398,13 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
 	
+	int count = 0;
+	int Jstart_mpi = base.frcvbuf(0, count++);
+		
 	sparse_row_major *pJ_mpi;
 	if (base.is_local(0)) {
 		pJ_mpi = &x.J;
+		Jstart_mpi = 0;
 	}
 	else {
 		pJ_mpi = &x.J_mpi;
@@ -1383,19 +1417,17 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 		vdofs = x.NV+x.ND;
 	
 	int row,sind;
-	
-	int count = 0;
 	for (int i=base.nseg-1;i>=0;--i) {
 		int sind = base.seg(i);
 		int row = x.seg(sind).pnt(1)*vdofs; 
-		int row_mpi = base.frcvbuf(0,count++);
+		int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 		for(int n=0;n<vdofs;++n) {
 			int ncol = base.frcvbuf(0,count++);
 #ifdef MPDEBUG
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = base.frcvbuf(0,count++);
+				int col = base.frcvbuf(0,count++) +Jstart_mpi;
 
 				FLT val = base.frcvbuf(0,count++);
 				if (abs(col) < INT_MAX-10) {
@@ -1420,7 +1452,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 		
 		/* Now receive side Jacobian information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
-		row_mpi = base.frcvbuf(0,count++);
+		row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 		int sgn = 1;
 		int mcnt = 0;
 		for(int mode=0;mode<x.sm0;++mode) {
@@ -1430,7 +1462,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 				for (int k = 0;k<ncol;++k) {
-					int col = base.frcvbuf(0,count++);
+					int col = base.frcvbuf(0,count++) +Jstart_mpi;
 
 					FLT val = sgn*base.frcvbuf(0,count++);
 					if (abs(col) < INT_MAX-10) {
@@ -1464,14 +1496,14 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 	}
 	sind = base.seg(0);
 	row = x.seg(sind).pnt(0)*vdofs; 
-	int row_mpi = base.frcvbuf(0,count++);
+	int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 	for(int n=0;n<vdofs;++n) {
 		int ncol = base.frcvbuf(0,count++);
 #ifdef MPDEBUG
 		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 		for (int k = 0;k<ncol;++k) {
-			int col = base.frcvbuf(0,count++);
+			int col = base.frcvbuf(0,count++) +Jstart_mpi;
 #ifdef MPDEBUG
 			*x.gbl->log << col << ' ';
 #endif

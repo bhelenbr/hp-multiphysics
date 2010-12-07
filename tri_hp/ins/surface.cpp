@@ -1336,13 +1336,14 @@ void surface_slave::petsc_matchjacobian_snd() {
 	/* Send Jacobian entries for u,v but not p */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::flt_msg;
-		
+	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
+
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(0)*vdofs; 
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = rowbase +x.jacobian_start;
+		base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;;
 		
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
@@ -1354,7 +1355,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 				*x.gbl->log << x.J._col(col) << ' ';
 #endif
-				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+				base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 				base.fsndbuf(base.sndsize()++) = x.J._val(col);
 			}
 #ifdef MPDEBUG
@@ -1366,7 +1367,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
 		
 		/* attach diagonal column # to allow continuity enforcement */
-		base.fsndbuf(base.sndsize()++) = row +x.jacobian_start;
+		base.fsndbuf(base.sndsize()++) = row +FLT_EPSILON;
 		
 		for(int mode=0;mode<x.sm0;++mode) {
 			for (int n=0;n<x.NV-1;++n) {
@@ -1378,7 +1379,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 					*x.gbl->log << x.J._col(col) << ' ';
 #endif
-					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+					base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 					base.fsndbuf(base.sndsize()++) = x.J._val(col);
 				}
 
@@ -1395,7 +1396,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 	int rowbase = x.seg(sind).pnt(1)*vdofs; 
 	
 	/* attach diagonal # to allow continuity enforcement */
-	base.fsndbuf(base.sndsize()++) = rowbase +x.jacobian_start;
+	base.fsndbuf(base.sndsize()++) = rowbase +FLT_EPSILON;
 	
 	for (int n = 0; n <c0vars.extent(firstDim);++n) {
 		row = rowbase + c0vars(n);
@@ -1407,7 +1408,7 @@ void surface_slave::petsc_matchjacobian_snd() {
 #ifdef MPDEBUG
 			*x.gbl->log << x.J._col(col) << ' ';
 #endif
-			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON +x.jacobian_start;
+			base.fsndbuf(base.sndsize()++) = x.J._col(col) +FLT_EPSILON;
 			base.fsndbuf(base.sndsize()++) = x.J._val(col);
 		}
 
@@ -1416,12 +1417,24 @@ void surface_slave::petsc_matchjacobian_snd() {
 #endif
 	}
 	/* Send index of start of curved modes */
-	base.fsndbuf(base.sndsize()++) = jacobian_start +x.jacobian_start;
+	base.fsndbuf(base.sndsize()++) = jacobian_start;
 }
 	
 void surface_slave::petsc_matchjacobian_rcv(int phase) {
 	
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
+	
+	int count = 0;
+	int Jstart_mpi = base.frcvbuf(0, count++);
+	
+	sparse_row_major *pJ_mpi;
+	if (base.is_local(0)) {
+		pJ_mpi = &x.J;
+		Jstart_mpi = 0;
+	}
+	else {
+		pJ_mpi = &x.J_mpi;
+	}
 	
 	int vdofs;
 	if (x.mmovement != x.coupled_deformable)
@@ -1444,11 +1457,10 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 	}		
 	
 	/* Now Receive Information */		
-	int count = 0;
 	for (int i=base.nseg-1;i>=0;--i) {
 		int sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(1)*vdofs; 
-		int row_mpi = base.frcvbuf(0,count++);
+		int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
@@ -1457,12 +1469,12 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = base.frcvbuf(0,count++);
+				int col = base.frcvbuf(0,count++) +Jstart_mpi;
 #ifdef MPDEBUG
 				*x.gbl->log  << col << ' ';
 #endif
 				FLT val = base.frcvbuf(0,count++);
-				x.J_mpi.add_values(row,col,val);
+				(*pJ_mpi).add_values(row,col,val);
 			}
 #ifdef MPDEBUG
 			*x.gbl->log << std::endl;
@@ -1470,7 +1482,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 			/* Shift all entries for this vertex */
 			for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
 				FLT dval = x.J_mpi(row,row_mpi+c0vars(n_mpi));
-				x.J_mpi(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+				(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 				x.J(row,rowbase+c0vars(n_mpi)) += dval;
 			}
 			x.J.multiply_row(row,0.5);
@@ -1479,7 +1491,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 		
 		/* Now receive side Jacobian information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
-		row_mpi = base.frcvbuf(0,count++);
+		row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 
 		int mcnt = 0;
 		int sgn = 1;
@@ -1490,12 +1502,12 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
 				for (int k = 0;k<ncol;++k) {
-					int col = base.frcvbuf(0,count++);
+					int col = base.frcvbuf(0,count++) +Jstart_mpi;
 #ifdef MPDEBUG
 					*x.gbl->log  << col << ' ';
 #endif
 					FLT val = sgn*base.frcvbuf(0,count++);
-					x.J_mpi.add_values(row+mcnt,col,val);
+					(*pJ_mpi).add_values(row+mcnt,col,val);
 				}
 #ifdef MPDEBUG
 				*x.gbl->log << std::endl;
@@ -1507,7 +1519,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 				for(int mode_mpi=0;mode_mpi<x.sm0;++mode_mpi) {
 					for(int n_mpi = 0;n_mpi<x.NV-1;++n_mpi) {
 						FLT dval = x.J_mpi(row+mcnt,row_mpi+mcnt_mpi);
-						x.J_mpi(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
+						(*pJ_mpi)(row+mcnt,row_mpi+mcnt_mpi) = 0.0;				
 						x.J(row+mcnt,row+mcnt_mpi) += sgn_mpi*dval;
 						++mcnt_mpi;
 					}
@@ -1524,7 +1536,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 	}
 	int sind = base.seg(0);
 	int rowbase = x.seg(sind).pnt(0)*vdofs; 
-	int row_mpi = base.frcvbuf(0,count++);
+	int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
 
 	for (int n = 0; n <c0vars.extent(firstDim);++n) {
 		row = rowbase + c0vars(n);
@@ -1533,12 +1545,12 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 		for (int k = 0;k<ncol;++k) {
-			int col = base.frcvbuf(0,count++);
+			int col = base.frcvbuf(0,count++) +Jstart_mpi;
 #ifdef MPDEBUG
 			*x.gbl->log << col << ' ';
 #endif
 			FLT val = base.frcvbuf(0,count++);
-			x.J_mpi.add_values(row,col,val);
+			(*pJ_mpi).add_values(row,col,val);
 		}
 #ifdef MPDEBUG
 		*x.gbl->log << std::endl;
@@ -1546,7 +1558,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 		/* Shift all entries for this vertex */
 		for (int n_mpi = 0; n_mpi <c0vars.extent(firstDim);++n_mpi) {
 			FLT dval = x.J_mpi(row,row_mpi+c0vars(n_mpi));
-			x.J_mpi(row,row_mpi+c0vars(n_mpi)) = 0.0;				
+			(*pJ_mpi)(row,row_mpi+c0vars(n_mpi)) = 0.0;				
 			x.J(row,rowbase+c0vars(n_mpi)) += dval;
 		}
 		x.J.multiply_row(row,0.5);
@@ -1557,13 +1569,13 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 	if (sm && !base.is_frst()) {
 		/* Equality of curved mode constraint */
 		int ind = jacobian_start;
-		int ind_mpi = base.frcvbuf(0,count++) +(base.nseg-1)*sm*x.ND;
+		int ind_mpi = base.frcvbuf(0,count++) +(base.nseg-1)*sm*x.ND +Jstart_mpi;
 		for(int i=0;i<base.nseg;++i) {
 			int sgn = 1;
 			for(int mode=0;mode<x.sm0;++mode) {
 				for (int n=0;n<x.ND;++n) {
 					x.J(ind,ind) = 1.0;
-					x.J_mpi(ind,ind_mpi) = -1.0*sgn;
+					(*pJ_mpi)(ind,ind_mpi) = -1.0*sgn;
 					++ind;
 					++ind_mpi;
 				}
@@ -1572,11 +1584,7 @@ void surface_slave::petsc_matchjacobian_rcv(int phase) {
 			ind_mpi -= 2*sm*x.ND;		
 		}
 	}
-}	
-
-
-
-
+}
 
 void surface::petsc_jacobian() {
 	int sm = basis::tri(x.log2p)->sm();	
