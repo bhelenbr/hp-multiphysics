@@ -4,7 +4,7 @@
 #include "tri_hp_cns_explicit.h"
 #include "../hp_boundary.h"
 
-#define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tri_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */
@@ -136,11 +136,6 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 
-		
-		//cout << "timestep " << tstep << " hmax "<< hmax << endl;
-		
-		//tstep = MIN(1.0/450.0,tstep)
-		
 		/* SET UP DISSIPATIVE COEFFICIENTS */
 		gbl->tau(tind,Range::all(),Range::all())=adis*tau/jcb;
 		
@@ -184,7 +179,7 @@ void tri_hp_cns_explicit::setup_preconditioner() {
 	tri_hp::setup_preconditioner();
 }
 
-void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
 	Array<FLT,2> P(NV,NV), A(NV,NV), V(NV,NV), VINV(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
@@ -215,13 +210,6 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		   0,0,1,0,
 		   0,0,0,1;
 	
-	/* df/dw */
-//	A =  0.0, 1.0, 0.0, 0.0,
-//		 -u*u+gm1*ke, (2.0-gm1)*u, -v*gm1, gm1,
-//	     -u*v, v, u, 0.0,
-//	     u*(-gam*E+2.0*gm1*ke), gam*E-gm1*u*u-gm1*ke, -u*v*gm1, u*gam;	
-//	matrix_absolute_value(A);
-
 	/* eigenvectors of df/dw */
 	V = 0.0, 1.0,           1.0,              1.0,
 		0.0, u,             u+c,              u-c,
@@ -254,19 +242,6 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 			for(int k=0; k<NV; ++k)
 				A(i,j)+=V(i,k)*VINV(k,j);
 
-//	temp = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*A(k,j);
-//	A = temp;
-//	/* dg/dw */
-//	B =   0.0, 0.0, 1.0, 0.0,
-//	      -u*v, v, u, 0.0,
-//		  -v*v+gm1*ke, -u*gm1, (2.0-gm1)*v, gm1,
-//		  v*(-gam*E+2.0*gm1*ke),  -u*v*gm1, gam*E-gm1*v*v-gm1*ke, v*gam;
-//	matrix_absolute_value(B);
-
 	V = 0.0, 1.0, 1.0, 1.0,
 		1.0, 0.0, u, u,
 		0.0, v, v+c, v-c,
@@ -295,51 +270,30 @@ void tri_hp_cns_explicit::pennsylvania_peanut_butter(Array<double,1> cvu, FLT hm
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				B(i,j)+=V(i,k)*VINV(k,j);	
-
-//	temp = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*B(k,j);
-//	B = temp;
 	
 	FLT nu = gbl->mu/rho;
 	
 	FLT cp = gogm1*gbl->R;
 	FLT alpha = gbl->kcond/(rho*cp);
 	
-	S = 0.0, 0.0, 0.0, 0.0,
-		0.0, nu,  0.0, 0.0,
-		0.0, 0.0, nu,  0.0,
-		0.0, 0.0, 0.0, alpha;
+	S = 0.0, 0.0,      0.0,      0.0,
+		0.0, nu/(h*h), 0.0,      0.0,
+		0.0, 0.0,      nu/(h*h), 0.0,
+		0.0, 0.0,      0.0,      alpha/(h*h);
 
-//	if (gbl->bd(0) != 0.0)
-		S = Pinv*gbl->bd(0)+S/hmax/hmax;
-//	else
-//		S = Pinv+S/hmax/hmax;
-
-//	temp = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				temp(i,j)+=P(i,k)*S(k,j);
-//	S = temp;
-
-	Tinv = 2.0/hmax*(A+B+hmax*S);
+	for(int i=0; i<NV; ++i)
+		S(i,i) += gbl->bd(0);
+	
+	Tinv = 2.0/h*(A+B+h*S);
 
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
 	
-	S = Tinv;// store for error checking later
-	
-	//if(Tinv(0,0) == 0.0) Tinv(0,0) = 1.0;
-
 	/*  LU factorization  */
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
 	
 	if (info != 0) {
-		cout << "Tinv before and after GETRF" << S << Tinv << endl;
 		*gbl->log << "DGETRF FAILED FOR CNS EXPLICIT TSTEP" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
