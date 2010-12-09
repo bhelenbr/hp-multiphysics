@@ -380,6 +380,151 @@ void characteristic::flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, Tin
 	return;
 }
 
+void hybrid_slave_pt::update(int stage) {
+	
+	if (stage == -1) return;
+	
+	int sendsize(6);
+	base.sndsize() = sendsize;
+	base.sndtype() = boundary::flt_msg;
+	base.fsndbuf(0) = 0.0;
+	base.fsndbuf(1) = 0.0;
+	base.fsndbuf(2) = 0.0;
+	base.fsndbuf(3) = 0.0;
+	base.fsndbuf(4) = 0.0;
+	base.fsndbuf(5) = 0.0;
+	
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	
+	for(int m=0;m<base.nmatches();++m) {
+		for(int i=0;i<sendsize;++i) 
+			base.fsndbuf(i) += base.frcvbuf(m,i);
+	}
+	
+	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
+		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
+	}
+	// flow is into moving-mesh
+	if (base.fsndbuf(0) > 0.0) {
+		x.pnts(base.pnt)(1) = base.fsndbuf(5);
+		if(base.fsndbuf(4) == 2.0)
+			x.pnts(base.pnt)(0) = base.fsndbuf(4) -2.0;
+		else
+			x.pnts(base.pnt)(0) = base.fsndbuf(4);
+		//mvpttobdry(x.pnts(base.pnt));
+	}
+	/* to move the other point along the edge back to the boundary */
+	/*
+	 //std::cout<<"start moving points: SLAVE"<<endl;
+	 int nsides(4);
+	 for(int q=0;q<nsides;q++)
+	 {
+	 if(base.ebdry(q) != 0)
+	 {
+	 //std::cout<<"QQQQ: "<<q<<endl;
+	 //std::cout<<base.ebdry(0)<<endl;
+	 cout<<"NUMBER "<<q<<endl;
+	 for(int r=0;r<x.ebdry(q)->nseg;r++)
+	 {
+	 //std::cout<<"r: "<<r<<endl;
+	 x.ebdry(base.ebdry(q))->mvpttobdry(x.ebdry(base.ebdry(q))->seg(q),0.0,x.pnts(x.seg(x.ebdry(base.ebdry(q))->seg(r)).pnt(0)));
+	 }
+	 }
+	 }
+	 */
+	/*
+	 //std::cout<<"start moving points: SLAVE"<<endl;
+	 int nsides(4);
+	 for(int q=0;q<nsides;q++)
+	 {
+	 for(int r=0;r<x.ebdry(q)->nseg;r++)
+	 x.ebdry(q)->mvpttobdry(x.ebdry(q)->seg(r),0.0,x.pnts(x.seg(x.ebdry(q)->seg(r)).pnt(0)));
+	 }
+	 */
+	//std::cout<<"slave error: "<<x.pnts(base.pnt)(0)<<' '<<x.pnts(base.pnt)(1)<<' '<<x.pnts(base.pnt)(0)-0.1*sin(3.1415926*x.pnts(base.pnt)(1))-1<<std::endl;
+}
+
+void hybrid_pt::rsdl(int stage) {
+	int sind,v0,v1;
+	TinyVector<FLT,2> tang,vel;
+	FLT tangvel;
+	
+	if (surfbdry == 0) {
+		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
+		v0 = x.seg(sind).pnt(1);
+		v1 = x.seg(sind).pnt(0);
+	}
+	else {
+		sind = x.ebdry(base.ebdry(1))->seg(0);
+		v0 = x.seg(sind).pnt(0);
+		v1 = x.seg(sind).pnt(1);
+	}
+	
+	
+	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
+	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
+	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
+	
+	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
+								x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
+	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
+								x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
+	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
+	
+	if (tangvel > 0.0)
+		fix_norm = 1;
+	else
+		fix_norm = 0;
+	
+	surface_outflow::rsdl(stage);
+}
+
+void hybrid_pt::update(int stage) {
+	
+	if (stage == -1) return;
+	
+	int sendsize(6);
+	base.sndsize() = sendsize;
+	base.sndtype() = boundary::flt_msg;
+	// (0) = flow direction
+	// (1) = x location
+	// (2) = y location
+	base.fsndbuf(0) = 2*fix_norm-1.0;
+	base.fsndbuf(1) = x.pnts(base.pnt)(0);
+	base.fsndbuf(2) = x.pnts(base.pnt)(1);
+	// see /lvlset/bdry.cpp hybrid_pt::update
+	base.fsndbuf(3) = 0.0;
+	base.fsndbuf(4) = 0.0;
+	base.fsndbuf(5) = 0.0;
+	
+	base.comm_prepare(boundary::all,0,boundary::symmetric);
+	base.comm_exchange(boundary::all,0,boundary::symmetric);
+	base.comm_wait(boundary::all,0,boundary::symmetric);
+	
+	// add information from other points
+	for(int m=0;m<base.nmatches();++m) {
+		for(int i=0;i<sendsize;++i) 
+			base.fsndbuf(i) += base.frcvbuf(m,i);
+	}
+	
+	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
+		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
+		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
+	}
+	// flow is into moving-mesh
+	if (base.fsndbuf(0) > 0.0) {
+		x.pnts(base.pnt)(1) = base.fsndbuf(5);
+		if(base.fsndbuf(4) == 2.0)
+			x.pnts(base.pnt)(0) = base.fsndbuf(4) -2.0;
+		else
+			x.pnts(base.pnt)(0) = base.fsndbuf(4);
+		//mvpttobdry(x.pnts(base.pnt));
+	}
+}
+
 void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	int n,ind,sind;
 	TinyVector<FLT,tri_mesh::ND> nrm, mvel, pt;
@@ -390,11 +535,11 @@ void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			if (!report_flag) return;
 			
 			power = 0.0;
-
+			
 			ind = 0;
 			for (ind=0;ind<base.nseg;++ind) {
 				sind = base.seg(ind);
-			
+				
 				x.crdtocht1d(sind);
 				for(n=0;n<tri_mesh::ND;++n)
 					basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
@@ -430,151 +575,6 @@ void actuator_disc::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 	neumann::output(fout,typ,tlvl);
 	
 	return;
-}
-
-
-void hybrid_slave_pt::update(int stage) {
-
-	if (stage == -1) return;
-
-	int sendsize(6);
-	base.sndsize() = sendsize;
-	base.sndtype() = boundary::flt_msg;
-	base.fsndbuf(0) = 0.0;
-	base.fsndbuf(1) = 0.0;
-	base.fsndbuf(2) = 0.0;
-	base.fsndbuf(3) = 0.0;
-	base.fsndbuf(4) = 0.0;
-	base.fsndbuf(5) = 0.0;
-
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<sendsize;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-
-	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local " << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
-	}
-
-	if (base.fsndbuf(0) > 0.0) {
-		if (base.fsndbuf(4) == 2.0)
-			x.pnts(base.pnt)(0) = base.fsndbuf(4) - 2.0;
-		else 
-			x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-	}
-	else {
-		x.pnts(base.pnt)(0) = base.fsndbuf(1);
-		x.pnts(base.pnt)(1) = base.fsndbuf(2);
-	}
-	/* to move the other point along the edge back to the boundary */
-	/*
-	//std::cout<<"start moving points: SLAVE"<<endl;
-	int nsides(4);
-	for(int q=0;q<nsides;q++)
-	{
-		if(base.ebdry(q) != 0)
-		{
-			//std::cout<<"QQQQ: "<<q<<endl;
-			//std::cout<<base.ebdry(0)<<endl;
-			cout<<"NUMBER "<<q<<endl;
-			for(int r=0;r<x.ebdry(q)->nseg;r++)
-			{
-				//std::cout<<"r: "<<r<<endl;
-				x.ebdry(base.ebdry(q))->mvpttobdry(x.ebdry(base.ebdry(q))->seg(q),0.0,x.pnts(x.seg(x.ebdry(base.ebdry(q))->seg(r)).pnt(0)));
-			}
-		}
-	}
-	*/
-	/*
-	//std::cout<<"start moving points: SLAVE"<<endl;
-	int nsides(4);
-	for(int q=0;q<nsides;q++)
-	{
-		for(int r=0;r<x.ebdry(q)->nseg;r++)
-			x.ebdry(q)->mvpttobdry(x.ebdry(q)->seg(r),0.0,x.pnts(x.seg(x.ebdry(q)->seg(r)).pnt(0)));
-	}
-	*/
-	//std::cout<<"slave error: "<<x.pnts(base.pnt)(0)<<' '<<x.pnts(base.pnt)(1)<<' '<<x.pnts(base.pnt)(0)-0.1*sin(3.1415926*x.pnts(base.pnt)(1))-1<<std::endl;
-}
-
-void hybrid_pt::rsdl(int stage) {
-	int sind,v0,v1;
-	TinyVector<FLT,2> tang,vel;
-	FLT tangvel;
-
-	if (surfbdry == 0) {
-		sind = x.ebdry(base.ebdry(0))->seg(x.ebdry(base.ebdry(0))->nseg-1);
-		v0 = x.seg(sind).pnt(1);
-		v1 = x.seg(sind).pnt(0);
-	}
-	else {
-		sind = x.ebdry(base.ebdry(1))->seg(0);
-		v0 = x.seg(sind).pnt(0);
-		v1 = x.seg(sind).pnt(1);
-	}
-
-
-	/* TANGENT POINTS INTO DOMAIN ALONG SURFACE */
-	tang(0) =  (x.pnts(v1)(0) -x.pnts(v0)(0));
-	tang(1) =  (x.pnts(v1)(1) -x.pnts(v0)(1));
-
-	vel(0) = 0.5*(x.ug.v(v0,0)-(x.gbl->bd(0)*(x.pnts(v0)(0) -x.vrtxbd(1)(v0)(0))) +
-				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
-	vel(1) = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
-				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
-	tangvel = vel(0)*tang(0)+vel(1)*tang(1);
-
-	if (tangvel > 0.0)
-		fix_norm = 1;
-	else
-		fix_norm = 0;
-
-	surface_outflow::rsdl(stage);
-}
-
-void hybrid_pt::update(int stage) {
-
-	if (stage == -1) return;
-
-	int sendsize(6);
-	base.sndsize() = sendsize;
-	base.sndtype() = boundary::flt_msg;
-	// (0) = flow direction
-	// (1) = x location
-	// (2) = y location
-	// see /lvlset/bdry.cpp hybrid_pt::update
-	base.fsndbuf(0) = 2*fix_norm-1.0;
-	base.fsndbuf(1) = x.pnts(base.pnt)(0);
-	base.fsndbuf(2) = x.pnts(base.pnt)(1);
-	base.fsndbuf(3) = 0.0;
-	base.fsndbuf(4) = 0.0;
-	base.fsndbuf(5) = 0.0;
-
-	base.comm_prepare(boundary::all,0,boundary::symmetric);
-	base.comm_exchange(boundary::all,0,boundary::symmetric);
-	base.comm_wait(boundary::all,0,boundary::symmetric);
-
-	// add information from other points
-	for(int m=0;m<base.nmatches();++m) {
-		for(int i=0;i<sendsize;++i) 
-			base.fsndbuf(i) += base.frcvbuf(m,i);
-	}
-
-	if (base.fsndbuf(0)*base.fsndbuf(3) > 0.0) {
-		*x.gbl->log << "uh-oh opposite characteristics at hybrid point" << std::endl;
-		*x.gbl->log << "local "  << base.idprefix << ' ' << base.fsndbuf(0) << "remote " << base.fsndbuf(3) << std::endl;
-	}
-	if (fix_norm) {
-		x.pnts(base.pnt)(0) = base.fsndbuf(4);
-		x.pnts(base.pnt)(1) = base.fsndbuf(5);
-		mvpttobdry(x.pnts(base.pnt));
-	}
 }
 
 void actuator_disc::smatchsolution_snd(FLT *sdata, int bgn, int end, int stride) {
