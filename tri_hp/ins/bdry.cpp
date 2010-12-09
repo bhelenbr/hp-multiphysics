@@ -667,6 +667,9 @@ void actuator_disc::smatchsolution_rcv(FLT *sdata, int bgn, int end, int stride)
 
 #ifdef petsc
 void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+	
+	if (!base.is_comm()) return;
+	
 	const int sm=basis::tri(x.log2p)->sm();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
@@ -679,8 +682,6 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	int begin_seg = x.npnt*vdofs;
 		
-	if (!base.is_comm()) return;
-	
 	Array<int,1> c0vars(vdofs-1);
 	for(int n=0;n<x.NV-1;++n) {
 		c0vars(n) = n;

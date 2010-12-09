@@ -1769,21 +1769,22 @@ void surface::petsc_jacobian() {
 	x.hp_vbdry(base.vbdry(1))->petsc_jacobian_dirichlet();
 }
 
-void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
+
+void surface_slave::non_sparse(Array<int,1> &nnzero) {
 	const int sm=basis::tri(x.log2p)->sm();
 	const int im=basis::tri(x.log2p)->im();
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
-	
+
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
-		vdofs = NV;
+	vdofs = NV;
 	else
-		vdofs = ND+NV;
-	
+	vdofs = ND+NV;
+
 	int begin_seg = x.npnt*vdofs;
 	int begin_tri = begin_seg+x.nseg*sm*NV;
-	
+
 	if(x.sm0 > 0) {
 		if (base.is_frst()) {
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = vdofs*(sm+2);
@@ -1791,7 +1792,6 @@ void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 		else {
 			/* Just an equality constraint */
 			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
-			nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 		}
 		
 		for (int i=0;i<base.nseg;++i) {
@@ -1820,7 +1820,7 @@ void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 			else {
 				nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
 			}
-
+			
 			pind = x.seg(sind).pnt(1);
 			if (base.is_frst()) {
 				nnzero(Range(pind*vdofs,(pind+1)*vdofs-1)) += ND*sm;
@@ -1830,8 +1830,24 @@ void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 			}
 		}
 	}
+}
+
+
+void surface_slave::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
 	
 	if (!base.is_comm()) return;
+
+	const int sm=basis::tri(x.log2p)->sm();
+	const int NV = x.NV;
+	const int ND = tri_mesh::ND;
+	
+	int vdofs;
+	if (x.mmovement != tri_hp::coupled_deformable) 
+		vdofs = NV;
+	else
+		vdofs = ND+NV;
+	
+	int begin_seg = x.npnt*vdofs;	
 	
 	Array<int,1> c0vars(x.NV+x.ND-1);
 	for(int n=0;n<x.NV-1;++n) {
@@ -1871,6 +1887,8 @@ void surface_slave::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	const int NV = x.NV;
 	const int ND = tri_mesh::ND;
 	
+	if (!base.is_frst()) nnzero_mpi(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
+
 	int vdofs;
 	if (x.mmovement != tri_hp::coupled_deformable) 
 		vdofs = NV;

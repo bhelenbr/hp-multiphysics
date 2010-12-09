@@ -939,9 +939,17 @@ void hp_edge_bdry::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 	for(int n=0;n<vdofs;++n)
 		base.isndbuf(base.sndsize()++) = nnzero(pind++);
 	
-	/* Last thing to send is nnzero for edges (all the same) */
-	if (sm)
-		base.isndbuf(base.sndsize()++) = nnzero(begin_seg+sind*NV*sm);
+	/* Last thing to send is nnzero for edges */
+	if (sm) {
+		for (int i=0;i<base.nseg;++i) {
+			int sind = base.seg(i);
+			for (int m=0;m<sm;++m) {
+				for(int n=0;n<NV;++n) {
+					base.isndbuf(base.sndsize()++) = nnzero(begin_seg +sind*sm*NV +m*NV +n);
+				}
+			}
+		}
+	}
 }
 
 void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi) {
@@ -977,11 +985,14 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 			}
 			
 			/* Now add to side degrees of freedom */
-			if (x.sm0) {
-				int toadd = base.ircvbuf(m,count++); 
-				for (int i=0;i<base.nseg;++i) {
+			if (sm) {
+				for (int i=base.nseg-1;i>=0;--i) {
 					int sind = base.seg(i);
-					nnzero(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) += toadd;
+					for (int m=0;m<sm;++m) {
+						for(int n=0;n<NV;++n) {
+							nnzero(begin_seg +sind*sm*NV +m*NV +n) += base.ircvbuf(m,count++);
+						}
+					}
 				}
 			}
 		}
@@ -1002,11 +1013,14 @@ void hp_edge_bdry::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi
 
 			
 			/* Now add to side degrees of freedom */
-			if (x.sm0) {
-				int toadd = base.ircvbuf(m,count++); 
-				for (int i=0;i<base.nseg;++i) {
+			if (sm) {
+				for (int i=base.nseg-1;i>=0;--i) {
 					int sind = base.seg(i);
-					nnzero_mpi(Range(begin_seg+sind*NV*sm,begin_seg+(sind+1)*NV*sm-1)) = toadd;
+					for (int m=0;m<sm;++m) {
+						for(int n=0;n<NV;++n) {
+							nnzero_mpi(begin_seg +sind*sm*NV +m*NV +n) += base.ircvbuf(m,count++);
+						}
+					}
 				}
 			}
 		}

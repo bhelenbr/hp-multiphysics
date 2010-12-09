@@ -84,8 +84,15 @@ void tri_hp::petsc_initialize(){
 				for(int n=0;n<NV;++n)
 					nnzero(begin_seg+tri(i).seg(j)*sm*NV+m*NV+n) += (im +2*sm)*NV +1*vdofs;
 	}
-			
-	/* Connections to extra boundary unknowns & to other blocks */
+	
+	/* Connections to extra boundary unknowns	*/	
+	for(int i=0;i<nebd;++i) 
+		hp_ebdry(i)->non_sparse(nnzero);
+	
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->non_sparse(nnzero);
+		
+	/* Connections to other blocks */
 	Array<int,1> nnzero_mpi(jacobian_size);
 	nnzero_mpi = 0;
 	for(int i=0;i<nebd;++i) 

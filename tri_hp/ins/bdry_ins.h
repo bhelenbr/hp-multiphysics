@@ -581,9 +581,9 @@ namespace bdry_ins {
 			void petsc_matchjacobian_rcv(int phase);
 			int petsc_rsdl(Array<FLT,1> res);
 			void petsc_jacobian();
+			void non_sparse(Array<int,1> &nnzero);
 			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
-
 #endif
 
 			void pmatchsolution_snd(int phase, FLT *pdata, int vrtstride) {base.vloadbuff(boundary::all,pdata,0,x.NV-2,vrtstride*x.NV);}
