@@ -249,27 +249,6 @@ void tri_hp_lvlset::rsdl_reinit(int stage) {
 //	}
 //	}
 #endif
-	
-	/* MODIFY RESIDUALS ON COARSER MESHES */
-	if(coarse_flag) {
-		/* CALCULATE DRIVING TERM ON FIRST ENTRY TO COARSE MESH */
-		if(isfrst) {
-			dres(log2p).v(Range(0,npnt-1),Range::all()) = fadd*gbl->res0.v(Range(0,npnt-1),Range::all()) -gbl->res.v(Range(0,npnt-1),Range::all());
-			if (basis::tri(log2p)->sm()) dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) = fadd*gbl->res0.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) -gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());      
-			if (basis::tri(log2p)->im()) dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) = fadd*gbl->res0.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) -gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());
-			isfrst = false;
-		}
-		gbl->res.v(Range(0,npnt-1),Range::all()) += dres(log2p).v(Range(0,npnt-1),Range::all()); 
-		if (basis::tri(log2p)->sm()) gbl->res.s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all()) += dres(log2p).s(Range(0,nseg-1),Range(0,basis::tri(log2p)->sm()-1),Range::all());
-		if (basis::tri(log2p)->im()) gbl->res.i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all()) += dres(log2p).i(Range(0,ntri-1),Range(0,basis::tri(log2p)->im()-1),Range::all());  
-	}
-	else {
-		if (stage == gbl->nstage) {
-			/* HACK FOR AUXILIARY FLUXES */
-			for (int i=0;i<nebd;++i)
-				hp_ebdry(i)->output(*gbl->log, tri_hp::auxiliary);
-		}
-	}
 }
 
 void tri_hp_lvlset::element_rsdl_reinit(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im) {
@@ -611,7 +590,7 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
 		*/
 		
-		/* APPLY VERTEX DIRICHLET B.C.'S */
+		/* APPLY SIDE DIRICHLET B.C.'S */
 		for(i=0;i<nebd;++i) {
 			FLT nx(0), ny(0), xloc(0), yloc(0), phi(0);
 			//FLT nx2, ny2;
@@ -651,19 +630,13 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 					basephi = norm1list[(i-1)%nebd].basephi;
 				}
 			}
-			// this is to set the first point along the boundary ...
-			if( minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 0, phi) ) {
-				gbl->res.v(seg(ebdry(i)->seg(0)).pnt(0),2) = 0.0;
-				ug.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-				gbl->ug0.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-			}
 			// ... and all the rest
 			for (int j=0;j<ebdry(i)->nseg;++j) {
-				 /* SET VERTEX RESIDUALS TO ZERO IF INCOMING */
+				 /* SET SIDE RESIDUALS TO ZERO IF INCOMING and MAKE SOLUTION TO LINEAR */
 			  	if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
-					gbl->res.v(seg(ebdry(i)->seg(j)).pnt(1),2) = 0.0;
-					ug.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
-					gbl->ug0.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
+					gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
+					ug.s(ebdry(i)->seg(j),mode,2) = 0.0;
+					gbl->ug0.s(ebdry(i)->seg(j),mode,2) = 0.0;
 				}
 			}
 		}
@@ -743,19 +716,13 @@ void tri_hp_lvlset::minvrt_reinit(normstuff norm0list[], normstuff norm1list[]) 
 				basephi = norm1list[(i-1)%nebd].basephi;
 			}
 		}
-		// this is to set the first point along the boundary ...
-		if( minvrt_reinit_phival(i, 0, nx, ny, xloc, yloc, basephi, 0, phi) ) {
-			gbl->res.v(seg(ebdry(i)->seg(0)).pnt(0),2) = 0.0;
-			ug.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-			gbl->ug0.v(seg(ebdry(i)->seg(0)).pnt(0),2) = phi;
-		}
 		// ... and all the rest
 		for (int j=0;j<ebdry(i)->nseg;++j) {
-			 /* SET VERTEX RESIDUALS TO ZERO IF INCOMING */
-		  	if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
-				gbl->res.v(seg(ebdry(i)->seg(j)).pnt(1),2) = 0.0;
-				ug.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
-				gbl->ug0.v(seg(ebdry(i)->seg(j)).pnt(1),2) = phi;
+			/* SET SIDE RESIDUALS TO ZERO IF INCOMING and MAKE SOLUTION TO LINEAR */
+			if( minvrt_reinit_phival(i, j, nx, ny, xloc, yloc, basephi, 1, phi) ) {
+				gbl->res.s(ebdry(i)->seg(j),mode,2) = 0.0;
+				ug.s(ebdry(i)->seg(j),mode,2) = 0.0;
+				gbl->ug0.s(ebdry(i)->seg(j),mode,2) = 0.0;
 			}
 		}
 	}
