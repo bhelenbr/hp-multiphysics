@@ -166,6 +166,7 @@ class hp_edge_bdry : public egeometry_interface<2> {
 		virtual int petsc_rsdl(Array<FLT,1> res) {return(0);}
 #endif
 		virtual void update(int stage) {}
+		virtual void modify_boundary_residual() {}
 		virtual void mg_restrict() {} 
 		virtual void mg_prolongate() {} 
 

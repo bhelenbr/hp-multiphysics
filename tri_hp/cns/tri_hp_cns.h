@@ -58,7 +58,6 @@ class tri_hp_cns : public tri_hp {
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
-		void minvrt();
 		void update();
 		void length();
 		void setup_preconditioner();

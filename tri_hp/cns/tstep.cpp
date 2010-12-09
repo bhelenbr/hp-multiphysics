@@ -259,28 +259,26 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
-	FLT hdt = 2.5*pow(h*gbl->bd(0),2.0);
-	FLT vel = 3.0*(u*u+v*v);
-	FLT nuh = 2.0*(pow(nu/h,2.0)+pow(alpha/h,2.0));
-	
-	FLT umag = sqrt(hdt+vel);	
-	umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
-	//umag = sqrt(vel+nuh);
+	FLT hdt = 0.25*pow(h*gbl->bd(0),2.0);
+	FLT vel = 1.0*(u*u+v*v);
+	FLT nuh = 4.0*(pow(nu/h,2.0)+pow(alpha/h,2.0));
+
+	FLT umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
 	
 	FLT M = MAX(1.0e-5,umag/c);
-	FLT re = MAX(rho*sqrt(u*u+v*v)*h/gbl->mu,1.0);
 	
 	FLT b2,alph;
-	//cout << coarse_level << ' ' << hdt << ' ' << vel << ' '  << nuh << ' ' << M << endl;
+
 	if(M > .9) { // turn off preconditioner
 		b2 = 1.0;
 		alph = 0.0;
 	} else {
 		b2 = M*M/(1.0-M*M);
-		//b2 *= (1.0+2.0*pow(re,-.333));
 		alph = 1.0+b2;
 	}
 	
+	//cout << sqrt(b2) << ' ' << hdt << ' ' << vel << ' ' << nuh << endl;
+
 #ifdef petsc
 	b2 = 1.0;
 	alph = 0.0;

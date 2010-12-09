@@ -271,36 +271,36 @@ namespace bdry_cns_explicit {
 			x.ug.v(v0,1) = rho*u;
 			x.ug.v(v0,2) = rho*v;
 			
-			for(j=0;j<base.nseg;++j) {
-				sind = base.seg(j);
-				v0 = x.seg(sind).pnt(0);
-				v1 = x.seg(sind).pnt(1);
-				
-				if (is_curved()) {
-					x.crdtocht1d(sind);
-					for(n=0;n<tri_mesh::ND;++n)
-						basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-				}
-				else {
-					for(n=0;n<tri_mesh::ND;++n) {
-						basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-						
-						for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-							x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+			if (basis::tri(x.log2p)->sm()) {
+				for(j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					if (is_curved()) {
+						x.crdtocht1d(sind);
+						for(n=0;n<tri_mesh::ND;++n)
+							basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 					}
-				}
-				
-				/* take global coefficients and put into local vector */
-				/*  only need rhoE */
-				for (m=0; m<2; ++m) 
-					ucoef(m) = x.ug.v(x.seg(sind).pnt(m),3);					
-				
-				for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-					ucoef(m+2) = x.ug.s(sind,m,3);					
-				
-				basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
-				
-				if (basis::tri(x.log2p)->sm()) {
+					else {
+						for(n=0;n<tri_mesh::ND;++n) {
+							basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+							
+							for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+								x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+						}
+					}
+					
+					/* take global coefficients and put into local vector */
+					/*  only need rhoE */
+					for (m=0; m<2; ++m) 
+						ucoef(m) = x.ug.v(x.seg(sind).pnt(m),3);					
+					
+					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
+						ucoef(m+2) = x.ug.s(sind,m,3);					
+					
+					basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
+					
 					for(n=0;n<x.NV-1;++n)
 						basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 					
@@ -330,11 +330,9 @@ namespace bdry_cns_explicit {
 						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 							x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 					}
+					
 				}
 			}
-			
-			
-
 		}
 	};
 #else
@@ -484,36 +482,36 @@ namespace bdry_cns_explicit {
 			x.ug.v(v0,2) = rho*v;
 			x.ug.v(v0,3) = rho*(RT/(x.gbl->gamma-1.0)+KE);
 			
-			for(j=0;j<base.nseg;++j) {
-				sind = base.seg(j);
-				v0 = x.seg(sind).pnt(0);
-				v1 = x.seg(sind).pnt(1);
-				
-				if (is_curved()) {
-					x.crdtocht1d(sind);
-					for(n=0;n<tri_mesh::ND;++n)
-						basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-				}
-				else {
-					for(n=0;n<tri_mesh::ND;++n) {
-						basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-						
-						for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-							x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+			if(basis::tri(x.log2p)->sm()){
+				for(j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					if (is_curved()) {
+						x.crdtocht1d(sind);
+						for(n=0;n<tri_mesh::ND;++n)
+							basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 					}
-				}
-				
-				/* take global coefficients and put into local vector */
-				/*  only need rhoE */
-				for (m=0; m<2; ++m) 
-					ucoef(m) = x.ug.v(x.seg(sind).pnt(m),0);					
-				
-				for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-					ucoef(m+2) = x.ug.s(sind,m,0);					
-				
-				basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
-				
-				if (basis::tri(x.log2p)->sm()) {
+					else {
+						for(n=0;n<tri_mesh::ND;++n) {
+							basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+							
+							for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+								x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+						}
+					}
+					
+					/* take global coefficients and put into local vector */
+					/*  only need rhoE */
+					for (m=0; m<2; ++m) 
+						ucoef(m) = x.ug.v(x.seg(sind).pnt(m),0);					
+					
+					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
+						ucoef(m+2) = x.ug.s(sind,m,0);					
+					
+					basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
+					
 					for(n=1;n<x.NV;++n)
 						basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 					
@@ -543,11 +541,9 @@ namespace bdry_cns_explicit {
 						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 							x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 					}
+					
 				}
-			}
-			
-			
-			
+			}					
 		}
 	};
 
@@ -659,7 +655,7 @@ namespace bdry_cns_explicit {
 		void update(int stage) {
 			int j,k,m,n,v0,v1,sind,indx,info;
 			TinyVector<FLT,tri_mesh::ND> pt;
-			
+			double u,v;
 			TinyVector<double,MXGP> u1d;
 			TinyVector<double,MXTM> ucoef;
 			
@@ -669,53 +665,58 @@ namespace bdry_cns_explicit {
 			do {
 				sind = base.seg(j);
 				v0 = x.seg(sind).pnt(0);
-				x.ug.v(v0,1) = x.ug.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-				x.ug.v(v0,2) = x.ug.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+				u=ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+				v=ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+				x.ug.v(v0,1) = x.ug.v(v0,0)*u;
+				x.ug.v(v0,2) = x.ug.v(v0,0)*v;
 				
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
-			x.ug.v(v0,1) = x.ug.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
-			x.ug.v(v0,2) = x.ug.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+			u=ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+			v=ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+			x.ug.v(v0,1) = x.ug.v(v0,0)*u;
+			x.ug.v(v0,2) = x.ug.v(v0,0)*v;
 			
-			for(j=0;j<base.nseg;++j) {
-				sind = base.seg(j);
-				v0 = x.seg(sind).pnt(0);
-				v1 = x.seg(sind).pnt(1);
-				
-				if (is_curved()) {
-					x.crdtocht1d(sind);
-					for(n=0;n<tri_mesh::ND;++n)
-						basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-				}
-				else {
-					for(n=0;n<tri_mesh::ND;++n) {
-						basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-						
-						for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-							x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+			if(basis::tri(x.log2p)->sm()) {
+				for(j=0;j<base.nseg;++j) {
+					sind = base.seg(j);
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					if (is_curved()) {
+						x.crdtocht1d(sind);
+						for(n=0;n<tri_mesh::ND;++n)
+							basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
 					}
-				}
-				
-				/* take global coefficients and put into local vector */
-				/*  only need rho */
-				for (m=0; m<2; ++m) 
-					ucoef(m) = x.ug.v(x.seg(sind).pnt(m),0);					
-				
-				for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-					ucoef(m+2) = x.ug.s(sind,m,0);					
-				
-				basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
-				
-				if (basis::tri(x.log2p)->sm()) {
+					else {
+						for(n=0;n<tri_mesh::ND;++n) {
+							basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
+							
+							for(k=0;k<basis::tri(x.log2p)->gpx();++k)
+								x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+						}
+					}
+					
+					/* take global coefficients and put into local vector */
+					/*  only need rho */
+					for (m=0; m<2; ++m) 
+						ucoef(m) = x.ug.v(x.seg(sind).pnt(m),0);					
+					
+					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
+						ucoef(m+2) = x.ug.s(sind,m,0);					
+					
+					basis::tri(x.log2p)->proj1d(&ucoef(0),&u1d(0));
+					
 					for(n=1;n<x.NV-1;++n)
 						basis::tri(x.log2p)->proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.res(n)(0,0));
 					
 					for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 						pt(0) = x.crd(0)(0,k);
 						pt(1) = x.crd(1)(0,k);
-						
-						x.res(1)(0,k) -= u1d(k)*ibc->f(1, x.pnts(v0), x.gbl->time);
-						x.res(2)(0,k) -= u1d(k)*ibc->f(2, x.pnts(v0), x.gbl->time);
+						u=ibc->f(1, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
+						v=ibc->f(2, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
+						x.res(1)(0,k) -= u1d(k)*u;
+						x.res(2)(0,k) -= u1d(k)*v;
 					}
 					
 					for(n=1;n<x.NV-1;++n)
@@ -727,6 +728,7 @@ namespace bdry_cns_explicit {
 						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
 							x.ug.s(sind,m,n) = -x.lf(n)(2+m);
 					}
+					
 				}
 			}
 		}

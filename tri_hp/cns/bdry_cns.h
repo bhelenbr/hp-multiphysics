@@ -173,25 +173,10 @@ namespace bdry_cns {
 				v0 = x.seg(sind).pnt(0);
 				x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
 				
-//				if(x.gbl->diagonal_preconditioner){
-//					x.gbl->vpreconditioner(v0,3,0) = 0.0;
-//				} else {
-//					x.gbl->vprcn_ut(v0,Range(1,x.NV-1),Range::all()) = 0.0;
-//					for(int i=1;i<x.NV;++i)
-//						x.gbl->vprcn_ut(v0,i,i) = 1.0;
-//				}
-				
 			} while (++j < base.nseg);
 			v0 = x.seg(sind).pnt(1);
 			x.gbl->res.v(v0,Range(1,x.NV-1)) = 0.0;
-			
-//			if(x.gbl->diagonal_preconditioner){
-//				x.gbl->vpreconditioner(v0,3,0) = 0.0;
-//			} else {
-//				x.gbl->vprcn_ut(v0,Range(1,x.NV-1),Range::all()) = 0.0;
-//				for(int i=1;i<x.NV;++i)
-//					x.gbl->vprcn_ut(v0,i,i) = 1.0;
-//			}
+
 		}
 		
 		void sdirichlet(int mode) {
@@ -201,12 +186,6 @@ namespace bdry_cns {
 				sind = base.seg(j);
 				x.gbl->res.s(sind,mode,Range(1,x.NV-1)) = 0.0;
 				
-//				if (!x.gbl->diagonal_preconditioner) {
-//					x.gbl->sprcn_ut(sind,Range(1,x.NV-1),Range::all()) = 0.0;
-//					for(int i=1;i<x.NV;++i)
-//						x.gbl->sprcn_ut(sind,i,i) = 1.0;
-//				}
-
 			}
 		}
 
@@ -265,33 +244,35 @@ namespace bdry_cns {
 			setvalues(ibc,dirichlets,ndirichlets);
 		}
 		
-		void modify_vertex_residual() {
-			int j,v0,sind;
+		void modify_boundary_residual() {
+			int j,k,m,n,v0,v1,sind,info;
+			TinyVector<FLT,tri_mesh::ND> pt;
+			TinyVector<double,MXGP> res1d;
+			TinyVector<double,MXTM> rescoef;
+			char uplo[] = "U";
+			
 			FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
 
 			j = 0;
 			do {
 				sind = base.seg(j);	
 				v0 = x.seg(sind).pnt(0);
-				
-				x.gbl->res.v(v0,3) = ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*x.gbl->res.v(v0,0);
 
+				FLT KE = 0.5*(ibc->f(1, x.pnts(v0), x.gbl->time)*ibc->f(1, x.pnts(v0), x.gbl->time)+ibc->f(2, x.pnts(v0), x.gbl->time)*ibc->f(2, x.pnts(v0), x.gbl->time));
+
+				x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+				x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+				x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
+				
 			} while (++j < base.nseg);
 			
 			v0 = x.seg(sind).pnt(1);
-			x.gbl->res.v(v0,3) = ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*x.gbl->res.v(v0,0);
-		
-			return;
-		}
-		
-		void modify_edge_residual(int mode) {
-			int j,k,m,n,v0,v1,sind,info;
-			TinyVector<FLT,tri_mesh::ND> pt;
-			TinyVector<double,MXGP> res1d;
-			TinyVector<double,MXTM> rescoef;
-			FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
-			char uplo[] = "U";
 			
+			FLT KE = 0.5*(ibc->f(1, x.pnts(v0), x.gbl->time)*ibc->f(1, x.pnts(v0), x.gbl->time)+ibc->f(2, x.pnts(v0), x.gbl->time)*ibc->f(2, x.pnts(v0), x.gbl->time));
+			
+			x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+			x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+			x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*(ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1+KE);
 			
 			if(basis::tri(x.log2p)->sm()) {
 				for(j=0;j<base.nseg;++j) {
@@ -320,26 +301,31 @@ namespace bdry_cns {
 					
 					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
 						rescoef(m+2) = x.gbl->res.s(sind,m,0);					
-					
+
 					basis::tri(x.log2p)->proj1d(&rescoef(0),&res1d(0));
 					
-					basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,3),x.gbl->res.v(v1,3),&x.res(3)(0,0));
+					for(n=1;n<x.NV;++n)
+						basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res(n)(0,0));
 					
 					for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
 						pt(0) = x.crd(0)(0,k);
 						pt(1) = x.crd(1)(0,k);
 						
-						// res_rhoE = res_rho*RT/(gam-1)
-						x.res(3)(0,k) -= ibc->f(3, x.pnts(v0), x.gbl->time)*ogm1*res1d(k);
+						FLT KE = 0.5*(ibc->f(1, pt, x.gbl->time)*ibc->f(1, pt, x.gbl->time)+ibc->f(2, pt, x.gbl->time)*ibc->f(2, pt, x.gbl->time));
+						x.res(1)(0,k) -= res1d(k)*ibc->f(1, pt, x.gbl->time);
+						x.res(2)(0,k) -= res1d(k)*ibc->f(2, pt, x.gbl->time);
+						x.res(3)(0,k) -= res1d(k)*(ibc->f(3, pt, x.gbl->time)*ogm1+KE);
+						
 					}
-					basis::tri(x.log2p)->intgrt1d(&x.lf(3)(0),&x.res(3)(0,0));
 					
-					PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(3)(2),basis::tri(x.log2p)->sm(),info);
-//					for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-//						x.gbl->res.s(sind,m,3) = -x.lf(3)(2+m);		
+					for(n=1;n<x.NV;++n){
+						basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
 					
-					x.gbl->res.s(sind,mode,3) = -x.lf(3)(2+mode);
-					
+						PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
+						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
+							x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
+						
+					}								
 				}
 			}
 			
@@ -347,7 +333,6 @@ namespace bdry_cns {
 			
 			return;
 		}
-		
 		
 	};
 	
