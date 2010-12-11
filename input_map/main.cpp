@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <stdlib.h>
 #include "input_map.h"
 
 #define NO_TESTING

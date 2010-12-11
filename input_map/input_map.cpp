@@ -91,6 +91,11 @@ bool input_map::get(const std::string &keyword, double &vout) {
         else {
             /* TRY TO PARSE MATHEMATICAL EXPRESSION */
             mu::Parser P,P1;
+						P.DefineFun("erf", erf, false);
+						P.DefineFun("erfc", erfc, false);
+						P1.DefineFun("erf", erf, false);
+						P1.DefineFun("erfc", erfc, false);
+					
             try {
                 P.SetExpr((*this)[keyword]);
                 mu::varmap_type variables = P.GetUsedVar();
