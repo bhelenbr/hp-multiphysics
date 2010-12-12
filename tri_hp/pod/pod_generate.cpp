@@ -60,9 +60,9 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		modes(i).i.resize(BASE::maxpst,BASE::im0,BASE::NV);
 	}
 #else
-#ifdef POD_BDRY
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
 
+#ifdef POD_BDRY
 	pod_ebdry.resize(BASE::nebd);
 	for (int i=0;i<BASE::nebd;++i) {
 		pod_ebdry(i) = new pod_gen_edge_bdry<BASE>(*this,*BASE::ebdry(i));
