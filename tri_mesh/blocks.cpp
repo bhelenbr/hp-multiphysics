@@ -303,7 +303,7 @@ void blocks::allreduce(void *sendbuf, void *recvbuf, int count, msg_type datatyp
 
 	std::map<int,all_reduce_data *>::iterator gi = group_data.find(group);
 	if (gi == group_data.end()) {
-		std::cerr << "couldn't find group in all_reduce\n";
+		std::cerr << "couldn't find group " << group << " in all_reduce\n";
 		sim::abort(__LINE__,__FILE__,&std::cerr);
 	}
 	all_reduce_data& gd(*gi->second);
