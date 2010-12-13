@@ -259,7 +259,368 @@ template<int N> void symbolic_function<N>::init(input_map& input, std::string id
 	return;
 }
 	 
-	 
+class vector_function {
+protected:
+	mu::Parser p;
+	int nargs;
+	blitz::Array<int, 1> dims;
+	blitz::Array<std::string, 1> names;
+	blitz::Array<double,2> xargs;
+	double time;
+	int nchildren;
+	blitz::Array<vector_function *, 1> children;
+	blitz::Array<double,1> child_values;
+	
+public:		
+	vector_function() : nargs(0), nchildren(0) {
+		p.DefineFun("erf", erf, false);
+		p.DefineFun("erfc", erfc, false);
+		p.DefineVar("t", &time);
+	}
+	vector_function(const vector_function& tgt) : p(tgt.p), nargs(tgt.nargs), dims(tgt.dims), names(tgt.names), xargs(tgt.xargs), nchildren(tgt.nchildren) {
+
+		/* Reasociate Variables */
+		std::ostringstream varname;
+		for (int n=0;n<nargs;++n) {
+			if (dims(n) > 1) {
+				for(int m=0;m<dims(n);++m) {
+					varname.str("");
+					varname << names(n) << m << std::flush;
+					p.DefineVar(varname.str(), &xargs(n,m));
+					varname.clear();
+				}
+			}
+			else {
+				p.DefineVar(names(n), &xargs(n,0));
+			}
+		}
+		
+		/* Reassociate Children */
+		children.resize(nchildren);
+		child_values.resize(nchildren);
+		mu::varmap_type variables = p.GetUsedVar();
+		nchildren = 0;
+		for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+			
+			for (int n=0;n<nargs;++n) {
+				if (dims(n) > 1) {
+					for(int m=0;m<dims(n);++m) {
+						varname.str("");
+						varname << names(n) << m << std::flush;
+						if (item->first == varname.str()) goto NEXT;
+						varname.clear();
+					}
+				}
+				else {
+					if (item->first == names(n)) goto NEXT;
+				}
+			}
+			if (item->first == "t") goto NEXT;
+			
+			/* This is a child variable */
+			children(nchildren) = new vector_function(*tgt.children(nchildren));
+			p.DefineVar(item->first, &child_values(nchildren));
+			++nchildren;
+			NEXT: continue;
+		}
+	}
+
+	void set_arguments(int nargs_,blitz::Array<int,1> dims_, blitz::Array<std::string,1> names_) {
+		nargs = nargs_;
+		dims.resize(nargs);
+		dims = dims_;
+		names.resize(nargs);
+		names = names_;
+		
+		int maxdim = 1;
+		for (int n=0;n<nargs;++n) {
+			maxdim = (dims(n)>maxdim ? dims(n) : maxdim);
+		}
+		xargs.resize(nargs,maxdim);
+		std::ostringstream varname;
+		for (int n=0;n<nargs;++n) {
+			if (dims(n) > 1) {
+				for(int m=0;m<dims(n);++m) {
+					varname.str("");
+					varname << names(n) << m << std::flush;
+					p.DefineVar(varname.str(), &xargs(n,m));
+					varname.clear();
+				}
+			}
+			else {
+				p.DefineVar(names(n), &xargs(n,0));
+			}
+		}
+	}
+	vector_function(int nargs_,blitz::Array<int,1> dims_, blitz::Array<std::string,1> names_) {
+		vector_function();
+		set_arguments(nargs_,dims_,names_);
+	}
+	
+	double Eval(blitz::Array<double,1> a0, double t = 0.0) {
+		assert(nargs == 1);
+		
+ 		double rslt;
+		time = t;
+		for (int m = 0; m < dims(0); ++m)
+			xargs(0,m) = a0(m);
+				
+		try {
+			for (int n=0;n<nchildren;++n) {
+				child_values(n) = children(n)->Eval(a0);
+			}
+			rslt = p.Eval();
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:    " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
+		}
+		return(rslt);
+	}
+	
+	double Eval(blitz::Array<double,1> a0, blitz::Array<double,1> a1, double t = 0.0) {
+		assert(nargs == 2);
+		
+ 		double rslt;
+		time = t;
+		for (int m = 0; m < dims(0); ++m)
+			xargs(0,m) = a0(m);
+			
+		for (int m = 0; m < dims(1); ++m)
+			xargs(1,m) = a1(m);
+		
+		try {
+			for (int n=0;n<nchildren;++n) {
+				child_values(n) = children(n)->Eval(a0,a1);
+			}
+			rslt = p.Eval();
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:    " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
+		}
+		return(rslt);
+	}
+	
+	double Eval(blitz::Array<double,1> a0, blitz::Array<double,1> a1, blitz::Array<double,1> a2, double t = 0.0) {
+		assert(nargs == 3);
+		
+ 		double rslt;
+		time = t;
+		for (int m = 0; m < dims(0); ++m)
+			xargs(0,m) = a0(m);
+		
+		for (int m = 0; m < dims(1); ++m)
+			xargs(1,m) = a1(m);
+		
+		for (int m = 0; m < dims(2); ++m)
+			xargs(2,m) = a2(m);
+		
+		try {
+			for (int n=0;n<nchildren;++n) {
+				child_values(n) = children(n)->Eval(a0,a1,a2);
+			}
+			rslt = p.Eval();
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:    " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
+		}
+		return(rslt);
+	}
+	
+	double Eval(blitz::Array<double,1> a0, blitz::Array<double,1> a1, blitz::Array<double,1> a2, blitz::Array<double,1> a3, double t = 0.0) {
+		assert(nargs == 4);
+		
+ 		double rslt;
+		time = t;
+		for (int m = 0; m < dims(0); ++m)
+			xargs(0,m) = a0(m);
+		
+		for (int m = 0; m < dims(1); ++m)
+			xargs(1,m) = a1(m);
+		
+		for (int m = 0; m < dims(2); ++m)
+			xargs(2,m) = a2(m);
+		
+		for (int m = 0; m < dims(3); ++m)
+			xargs(3,m) = a3(m);
+		
+		try {
+			for (int n=0;n<nchildren;++n) {
+				child_values(n) = children(n)->Eval(a0,a1,a2,a3);
+			}
+			rslt = p.Eval();
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:    " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
+		}
+		return(rslt);
+	}
+
+	double Eval(blitz::Array<double,1> a0, blitz::Array<double,1> a1, blitz::Array<double,1> a2, blitz::Array<double,1> a3, blitz::Array<double,1> a4, double t = 0.0) {
+		assert(nargs == 5);
+		
+ 		double rslt;
+		time = t;
+		for (int m = 0; m < dims(0); ++m)
+			xargs(0,m) = a0(m);
+		
+		for (int m = 0; m < dims(1); ++m)
+			xargs(1,m) = a1(m);
+		
+		for (int m = 0; m < dims(2); ++m)
+			xargs(2,m) = a2(m);
+		
+		for (int m = 0; m < dims(3); ++m)
+			xargs(3,m) = a3(m);
+			
+		for (int m = 0; m < dims(4); ++m)
+			xargs(4,m) = a4(m);
+		
+		try {
+			for (int n=0;n<nchildren;++n) {
+				child_values(n) = children(n)->Eval(a0,a1,a2,a3,a4);
+			}
+			rslt = p.Eval();
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:    " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:     " << e.GetCode() << std::endl;
+			rslt = 0.0;
+		}
+		return(rslt);
+	}
+	
+	void init(input_map& input, std::string idprefix) {
+		std::ostringstream conststring, varname;
+		std::istringstream constname;
+		std::string buffer,name,keyword;
+		double value;
+		
+		/* LOAD CONSTANTS IN FORMULA */
+		mu::Parser ptemp;
+		ptemp.DefineFun("erf", erf, false);
+		ptemp.DefineFun("erfc", erfc, false);
+		
+		if (!input.getline(idprefix,buffer)) {
+			std::cout << "couldn't find expression" << idprefix << '\n';
+		}
+		
+		try {
+			ptemp.SetExpr(buffer);
+			mu::varmap_type variables = ptemp.GetUsedVar();
+			
+			
+			/* Reassociate Children */
+			nchildren = 0;
+			for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+				
+				for (int n=0;n<nargs;++n) {
+					if (dims(n) > 1) {
+						for(int m=0;m<dims(n);++m) {
+							varname.str("");
+							varname << names(n) << m << std::flush;
+							if (item->first == varname.str()) goto NEXT;
+							varname.clear();
+						}
+					}
+					else {
+						if (item->first == names(n)) goto NEXT;
+					}
+				}
+				if (item->first == "t") goto NEXT;
+
+				if (!input.get(item->first,value)) {
+					/* Check if it is not there or if it is also defined as a formula */
+					std::map<std::string,std::string>::const_iterator mi;
+					mi = input.find(item->first);
+					if (mi != input.end()) {
+						++nchildren;
+						goto NEXT;
+					}
+					else {
+						std::cout << "couldn't find expression " << item->first << '\n';
+						exit(1);
+					}
+				}
+				NEXT: continue;
+			}
+
+			children.resize(nchildren);
+			child_values.resize(nchildren);
+			/* REPEAT EXCEPT THIS TIME ALLOCATE CHILDREN */
+			nchildren = 0;
+			for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
+				for (int n=0;n<nargs;++n) {
+					if (dims(n) > 1) {
+						for(int m=0;m<dims(n);++m) {
+							varname.str("");
+							varname << names(n) << m << std::flush;
+							if (item->first == varname.str()) goto NEXT1;
+							varname.clear();
+						}
+					}
+					else {
+						if (item->first == names(n)) goto NEXT1;
+					}
+				}
+				if (item->first == "t") goto NEXT1;
+
+				if (!input.get(item->first,value)) {
+					/* Check if it is not there or if it is also defined as a formula */
+					std::map<std::string,std::string>::const_iterator mi;
+					mi = input.find(item->first);
+					if (mi != input.end()) {
+						/* It is there */
+						children(nchildren) = new vector_function(nargs,dims,names);
+						children(nchildren)->init(input,item->first);
+						p.DefineVar(item->first, &child_values(nchildren));
+						++nchildren;
+						goto NEXT1;
+					}
+					else {
+						std::cout << "couldn't find expression " << item->first << '\n';
+						exit(1);
+					}
+				}
+				p.DefineConst(item->first,value);
+				
+			NEXT1: continue;
+			}
+			p.SetExpr(buffer);
+		}
+		catch (mu::Parser::exception_type &e) {
+			std::cout << "Message:  " << e.GetMsg() << std::endl;
+			std::cout << "Formula:  " << e.GetExpr() << std::endl;
+			std::cout << "Token:     " << e.GetToken() << std::endl;
+			std::cout << "Position: " << e.GetPos() << std::endl;
+			std::cout << "Errc:      " << e.GetCode() << std::endl;
+		}
+		
+		return;
+	}
+};
 
 	
 #endif

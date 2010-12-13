@@ -1,7 +1,7 @@
 #include "symbolic_function.h"
 #include <input_map.h>
 
-#define NO_TESTING
+#define TESTING
 
 int main (int argc, char *argv[]) {
 
@@ -19,26 +19,61 @@ int main (int argc, char *argv[]) {
 	inmap["E3"] = "x0*E2";
 	inmap["dhdx0"] = "2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k-2*s*(x0-ex0)/denom^2*exp(-(x0-ex0)^2/denom^2)*(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)-s*(1-exp(-(x0-ex0)^2/denom^2))/(1+(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)^2)^(1/2)*(2*h*ke^2*x0*exp(-ke^2*x0^2)*cos(k*x0-w*t)-h*(1-exp(-ke^2*x0^2))*sin(k*x0-w*t)*k)*(2*h*ke^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^4*x0^2*exp(-ke^2*x0^2)*cos(k*x0-w*t)-4*h*ke^2*x0*exp(-ke^2*x0^2)*sin(k*x0-w*t)*k-h*(1-exp(-ke^2*x0^2))*cos(k*x0-w*t)*k^2)";
 
-	std::cout << inmap << std::endl;
 
-	inmap.echo = true;
+//	std::cout << inmap << std::endl;
+//
+//	inmap.echo = true;
+//
+//	f.init(inmap,"E1");
+//	std::cout << f.Eval(1.0) << std::endl;
+//
+//	g.init(inmap,"E2");
+//	std::cout << g.Eval(x2d) << std::endl;
+//	
+//	g1.init(inmap,"E3");
+//	std::cout << g1.Eval(x2d) << std::endl;
+//	
+//	symbolic_function<2> g2(g1);
+//	
+//	std::cout << g2.Eval(x2d) << std::endl;
+//	
+//	g3.init(inmap,"dhdx0");
+//	std::cout << g3.Eval(x2d,1.0) << std::endl;
+	
+	
+	
+	/* Vector Function Testing */
+	blitz::Array<std::string,1> names;
+	blitz::Array<int,1> dims;
+	names.resize(3);
+	dims.resize(3);
+	names(0) = "x";
+	names(1) = "u";
+	names(2) = "n";
+	dims(0) = 2;
+	dims(1) = 4;
+	dims(2) = 2;
+	vector_function vf(3,dims,names);
+	
+	inmap["Vfunc"] = "t*V2";
+	inmap["V2"] = "u3";
+	
+	vf.init(inmap,"Vfunc");
+	blitz::Array<double,1> x(2);
+	x(0) = 0.1;
+	x(1) = 0.3;
+	double t = 0.7;
+	blitz::Array<double,1> u(4);
+	u(0) = 1.9;
+	u(1) = 2.9;
+	u(2) = 3.34;
+	u(3) = 5;
+	blitz::Array<double,1> n(2);
+	n(0) = -100;
+	n(1) = -200;
+	std::cout << vf.Eval(x,u,n,t) << std::endl;
+	
 
-	f.init(inmap,"E1");
-	std::cout << f.Eval(1.0) << std::endl;
-
-	g.init(inmap,"E2");
-	std::cout << g.Eval(x2d) << std::endl;
-	
-	g1.init(inmap,"E3");
-	std::cout << g1.Eval(x2d) << std::endl;
-	
-	symbolic_function<2> g2(g1);
-	
-	std::cout << g2.Eval(x2d) << std::endl;
-	
-	g3.init(inmap,"dhdx0");
-	std::cout << g3.Eval(x2d,1.0) << std::endl;
-	
 #else
     input_map mymap;
 	  
