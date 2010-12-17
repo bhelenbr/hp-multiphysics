@@ -796,23 +796,20 @@ void tri_hp_lvlset::minvrt_reinit_direction(int edgenum, int side, FLT&nx, FLT&n
 	ugtouht(tind);
 	crdtocht(tind);
 	// 2 -> ND, 4 -> NV
-	TinyVector<FLT,2> xy,dxydr,dxyds,dxmax; 
-	//TinyVector<FLT,4> xx,ddr,dds;
-	FLT axx[4],addr[4],adds[4];
-	FLT *xx=axx, *dudr=addr, *duds=adds;
-
-	basis::tri(log2p)->ptprobe_bdry(ND,xy.data(),dxydr.data(),dxyds.data(),r,s,&cht(0,0),MXTM); 
-	basis::tri(log2p)->ptprobe(NV,xx,dudr,duds,r,s,&uht(0)(0),MXTM); 
+	TinyVector<FLT,2> xpt,dxdr,dxds,dxmax;
+	TinyVector<FLT,4> upt,dudr,duds;
+	basis::tri(log2p)->ptprobe_bdry(ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&cht(0,0),MXTM); 
+	basis::tri(log2p)->ptprobe(NV,upt.data(),dudr.data(),duds.data(),r,s,&uht(0)(0),MXTM); 
 	TinyMatrix<FLT,2,2> ldcrd;
-	ldcrd(0,0) = dxydr(0);
-	ldcrd(0,1) = dxyds(0);
-	ldcrd(1,0) = dxydr(1);
-	ldcrd(1,1) = dxyds(1);
+	ldcrd(0,0) = dxdr(0);
+	ldcrd(0,1) = dxds(0);
+	ldcrd(1,0) = dxdr(1);
+	ldcrd(1,1) = dxds(1);
 	FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 	FLT normux, normuy, lengthu;
-	normux = (+ldcrd(1,1)*dudr[2] -ldcrd(1,0)*duds[2])/cjcb;
-	normuy = (-ldcrd(0,1)*dudr[2] +ldcrd(0,0)*duds[2])/cjcb;
-	lengthu = pow( normux*normux + normuy*normuy, 0.5 ); //for projection in this direction
+	normux = (+ldcrd(1,1)*dudr(2) -ldcrd(1,0)*duds(2))/cjcb;
+	normuy = (-ldcrd(0,1)*dudr(2) +ldcrd(0,0)*duds(2))/cjcb;
+	lengthu = sqrt(normux*normux +normuy*normuy); //for projection in this direction
 	nx = normux / lengthu; // phi unit normal vector x direction (in the positive phi direction)
 	ny = normuy / lengthu; // phi y direction
 }
