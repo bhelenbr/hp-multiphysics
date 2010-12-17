@@ -196,14 +196,16 @@ void tri_hp_ins::setup_preconditioner() {
 
 			jcb *= RAD((pnts(v(0))(0) +pnts(v(1))(0) +pnts(v(2))(0))/3.);
 
+			gbl->tprcn(tind,0) = gbl->rho*jcb;   
+			gbl->tprcn(tind,1) = gbl->rho*jcb;   
+			gbl->tprcn(tind,2) = jcb/gam; 			
+
 			/* BRUTE FORCE WAY TO FREEZE FLOW */
 //			gbl->tprcn(tind,0) = 1.0e99*gbl->rho*jcb;   
 //			gbl->tprcn(tind,1) = 1.0e99*gbl->rho*jcb;   
 //			gbl->tprcn(tind,2) =  1.0e99*jcb/gam;
+			
 
-			gbl->tprcn(tind,0) = gbl->rho*jcb;   
-			gbl->tprcn(tind,1) = gbl->rho*jcb;   
-			gbl->tprcn(tind,2) = jcb/gam; 			
 
 			for(i=0;i<3;++i) {
 				gbl->vprcn(v(i),Range::all())  += gbl->tprcn(tind,Range::all());

@@ -325,7 +325,7 @@ void tri_hp_ins::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					res(1)(i,j) = 0.0;
 #endif
 #ifdef AXISYMMETRIC
-					res(0)(i,j) -= cjcb*(u(2)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
+					res(0)(i,j) -= cjcb*(u(NV-1)(i,j) -2.*lmu*u(0)(i,j)/crd(0)(i,j));
 #endif
 #ifdef BODYFORCE
 					res(0)(i,j) -= gbl->rho*RAD(crd(0)(i,j))*cjcb*gbl->body(0);

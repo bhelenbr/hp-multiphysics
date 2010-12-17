@@ -18,14 +18,12 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV,ND> du;
 	int lgpx = basis::tri(log2p)->gpx(), lgpn = basis::tri(log2p)->gpn();
-	FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi, oneminusbeta;
+	FLT lrho, lmu = gbl->mu, lbd0, rhorbd0, cjcb, cjcbi;
 	FLT lkcond = gbl->kcond, cjcbi2;
 	TinyMatrix<FLT,MXGP,MXGP> rho;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-1,NV-1> visc;
 	TinyMatrix<TinyMatrix<FLT,MXGP,MXGP>,NV-1,NV-1> cv, df;
 	TinyVector<FLT,NV> tres;
-
-	oneminusbeta = 1.0-gbl->beta(stage);
 
 	/* LOAD INDICES OF VERTEX POINTS */
 	v = tri(tind).pnt;
@@ -65,7 +63,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 	/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 	/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
-	ugtouht(tind);
+	//ugtouht(tind);
 	if (gbl->beta(stage) > 0.0) {
 		for(n=0;n<NV-1;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),&du(n,0)(0,0),&du(n,1)(0,0),MXGP);  

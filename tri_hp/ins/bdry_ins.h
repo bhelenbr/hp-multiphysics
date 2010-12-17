@@ -44,8 +44,6 @@ namespace bdry_ins {
 #ifdef L2_ERROR
 			symbolic_function<2> l2norm;
 #endif
-			enum bctypes {ess, nat, mix};
-
 		public:
 			Array<FLT,1> total_flux,diff_flux,conv_flux;
 			FLT circumference,moment,convect,circulation;
@@ -220,39 +218,55 @@ namespace bdry_ins {
 
 	class flexible : public inflow { 
 		protected:
+			enum bctypes {essential, natural};
 			Array<bctypes,1> type;
-			init_bdry_cndtn *ibc;
+			Array<vector_function,1> fluxes;
 
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
-				double flux = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
 
-				for (int n=0;n<x.NV-1;++n) {
+				Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+				axpt(0) = xpt(0); axpt(1) = xpt(1);
+				amv(0) = mv(0); amv(1) = mv(1);
+				anorm(0)= norm(0); anorm(1) = norm(1);
+				for (int n=0;n<x.NV;++n) {
 					switch(type(n)) {
-						case(ess): {
+						case(essential): {
 							flx(n) = 0.0;
+							break;
 						}
-						case (nat): {
+						case(natural): {
 							FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-							flx(n) = ibc->f(n, xpt, x.gbl->time)*length;
-						}
-						case (mix): {
-							FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-							for (int n=0;n<tri_mesh::ND;++n)
-								flx(n) = flux*u(n) +ibc->f(n, xpt, x.gbl->time)*length;     
+							norm /= length;
+							flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
+							break;
 						}
 					}
 				}
-
-				flx(x.NV-1) = flux;
-
+				
 				return;
 			}
-
 		public:
-			flexible(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "flexible"; type.resize(x.NV-1);}
-			flexible(const flexible& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin) {type.resize(x.NV-1); type = inbdry.type; ibc = inbdry.ibc;}
+			flexible(tri_hp_ins &xin, edge_bdry &bin) : inflow(xin,bin) {mytype = "flexible"; type.resize(x.NV); fluxes.resize(x.NV);
+				Array<string,1> names(4);
+				Array<int,1> dims(4);
+				dims = x.ND;
+				names(0) = "u";
+				dims(0) = x.NV;
+				names(1) = "x";
+				names(2) = "xt";
+				names(3) = "n";
+				for(int n=0;n<x.NV;++n) {
+					fluxes(n).set_arguments(4,dims,names);
+				}
+			}
+			flexible(const flexible& inbdry, tri_hp_ins &xin, edge_bdry &bin) : inflow(inbdry,xin,bin), type(inbdry.type), fluxes(inbdry.fluxes) {}
 			flexible* create(tri_hp& xin, edge_bdry &bin) const {return new flexible(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
 			void init(input_map& input,void* gbl_in);
+			void vdirichlet();
+			void sdirichlet(int mode);
+#ifdef petsc			
+			void petsc_jacobian_dirichlet();
+#endif
 	};
 
 	class euler : public neumann {
@@ -653,7 +667,7 @@ namespace bdry_ins {
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
 			void tadvance();
 			void rsdl(int stage);
-			void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
+			virtual void element_rsdl(int sind, Array<FLT,2> lf);  // FIXME Not really compatible need to make all consistent
 			void maxres();
 			void setup_preconditioner();
 			void minvrt();

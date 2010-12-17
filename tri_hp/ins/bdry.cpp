@@ -245,26 +245,112 @@ void flexible::init(input_map& inmap,void* gbl_in) {
 	std::ostringstream nstr;
 
 	inflow::init(inmap,gbl_in);
-
-	ibc = x.getnewibc(base.idprefix +"_fcn",inmap);
-
-	Array<int,1> atemp(x.NV-1);
-	if (!inmap.get(base.idprefix+"_ins_bcs", atemp.data(), x.NV-1)) {
-		*x.gbl->log << "missing flexible specifier list (0 = essential, 1 = natural, 2 = mixed)" << std::endl;
+	
+	Array<int,1> atemp(x.NV);
+	if (!inmap.get(base.idprefix+"_ins_typelist", atemp.data(), x.NV)) {
+		*x.gbl->log << "missing flexible specifier list (0 = essential, 1 = natural)" << std::endl;
 		sim::abort(__LINE__,__FILE__,x.gbl->log);
 	}
 	else {
 		ndirichlets = 0;
-		for (int n=0;n<x.NV-1;++n) {
+		for (int n=0;n<x.NV;++n) {
 			type(n) = static_cast<bctypes>(atemp(n));
-			if (type(n) == ess) {
+			if (type(n) == essential) {
 				dirichlets(ndirichlets++) = n;
+			}
+			else {
+				nstr.str("");
+				nstr << base.idprefix << "_flux" << n << std::flush;
+				if (inmap.find(nstr.str()) != inmap.end()) {
+					fluxes(n).init(inmap,nstr.str());
+				}
+				else {
+					*x.gbl->log << "couldn't find flux function " << nstr.str() << std::endl;
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
+				}
 			}
 		}
 	}
 
 	return;
 }
+
+void flexible::vdirichlet() {
+	int sind,j,v0;
+	
+	j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		for(int n=0;n<ndirichlets;++n) 
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	for(int n=0;n<ndirichlets;++n) 
+		x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+}
+
+void flexible::sdirichlet(int mode) {
+	int sind;
+	
+	for(int j=0;j<base.nseg;++j) {
+		sind = base.seg(j);
+		for(int n=0;n<ndirichlets;++n) 
+			x.gbl->res.s(sind,mode,dirichlets(n)) = 0.0;
+	}
+}
+
+#ifdef petsc			
+void flexible::petsc_jacobian_dirichlet() {
+	hp_edge_bdry::petsc_jacobian_dirichlet();  // Apply deforming mesh stuff
+	
+	int sm=basis::tri(x.log2p)->sm();
+	Array<int,1> indices((base.nseg+1)*(x.NV-1) +base.nseg*sm*(x.NV-1));
+	
+	int vdofs;
+	if (x.mmovement == x.coupled_deformable)
+		vdofs = x.NV +tri_mesh::ND;
+	else
+		vdofs = x.NV;
+	
+	/* only works if pressure is 4th variable */
+	int gind,v0,sind;
+	int counter = 0;
+	
+	int j = 0;
+	do {
+		sind = base.seg(j);
+		v0 = x.seg(sind).pnt(0);
+		gind = v0*vdofs;
+		for(int n=0;n<ndirichlets;++n) {						
+			indices(counter++)=gind+dirichlets(n);
+		}
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	gind = v0*vdofs;
+	for(int n=0;n<ndirichlets;++n) {
+		indices(counter++)=gind+dirichlets(n);
+	}
+	
+	for(int i=0;i<base.nseg;++i) {
+		gind = x.npnt*vdofs+base.seg(i)*sm*x.NV;
+		for(int m=0; m<sm; ++m) {
+			for(int n=0;n<ndirichlets;++n) {
+				indices(counter++)=gind+m*x.NV+dirichlets(n);
+			}
+		}
+	}	
+	
+#ifdef MY_SPARSE
+	x.J.zero_rows(counter,indices);
+	x.J_mpi.zero_rows(counter,indices);
+	x.J.set_diag(counter,indices,1.0);
+#else
+	MatZeroRows(x.petsc_J,counter,indices.data(),1.0);
+#endif
+}
+#endif
+
 
 
 void symmetry::tadvance() {

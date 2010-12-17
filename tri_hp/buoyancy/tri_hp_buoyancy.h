@@ -23,6 +23,7 @@ class tri_hp_buoyancy : public tri_hp_ins {
 			symbolic_function<1> rhovsT;
 
 		} *gbl;
+		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 
 	public:
 		void* create_global_structure() {return new global;}
