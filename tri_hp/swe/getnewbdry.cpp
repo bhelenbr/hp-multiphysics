@@ -62,10 +62,11 @@ hp_edge_bdry* tri_hp_swe::getnewsideobject(int bnum, input_map& bdrydata) {
 			break;
 		}	
 		default: {
-			temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
+			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
 			break;
 		}
 	}
+	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
 
 	return(temp);
 }

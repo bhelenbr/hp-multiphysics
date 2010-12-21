@@ -79,8 +79,7 @@ hp_vrtx_bdry* tri_hp_ins::getnewvrtxobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			temp = tri_hp::getnewvrtxobject(bnum,bdrydata);
-			break;
+			return(tri_hp::getnewvrtxobject(bnum,bdrydata));
 		}
 	} 
 	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
@@ -194,8 +193,7 @@ hp_edge_bdry* tri_hp_ins::getnewsideobject(int bnum, input_map &bdrydata) {
 			break;
 		}
 		default: {
-			temp = tri_hp::getnewsideobject(bnum,bdrydata);
-			break;
+			return(tri_hp::getnewsideobject(bnum,bdrydata));
 		}
 	}    
 	gbl->ebdry_gbls(bnum) = temp->create_global_structure();
