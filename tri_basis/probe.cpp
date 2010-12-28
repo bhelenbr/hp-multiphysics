@@ -91,7 +91,7 @@ template<int _p, int ep> void tri_basis<_p,ep>::ptprobe(int nv, FLT *f1, FLT *dx
 	x = 2.0*(1+r)/(1-s) -1.0;
 	eta = s;
 	
-	ptvalues_deriv_bdry(x,eta);
+	ptvalues_deriv(x,eta);
 	
 	for(int n=0;n<nv;++n) {
 		
