@@ -142,11 +142,65 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 	return;
 }
 
+/** \brief Helper object for vrtx_bdry 
+ *
+ * \ingroup boundary
+ * Contains list of all vrtx_bdys's by name 
+ * and has routine to return integer so can
+ * allocate by name rather than by number
+ */
+class tri_hp_buoyancy_vtype {
+public:
+	static const int ntypes = 1;
+	enum ids {unknown=-1,melt_end};
+	const static char names[ntypes][40];
+	static int getid(const char *nin) {
+		for(int i=0;i<ntypes;++i) 
+			if (!strcmp(nin,names[i])) return(i);
+		return(unknown);
+	}
+};
+
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end"};
+
+hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
+	std::string keyword,val;
+	std::istringstream data;
+	int type;          
+	hp_vrtx_bdry *temp;  
+	
+	keyword = vbdry(bnum)->idprefix + "_buoyancy_type";
+	if (bdrydata.get(keyword,val)) {
+		type = tri_hp_buoyancy_vtype::getid(val.c_str());
+		if (type == tri_hp_buoyancy_vtype::unknown)  {
+			*gbl->log << "unknown vertex type:" << val << std::endl;
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}
+	}
+	else {
+		type = tri_hp_buoyancy_vtype::unknown;
+	}
+	
+	
+	switch(type) {
+		case tri_hp_buoyancy_vtype::melt_end: {
+			temp = new melt_end_pt(*this,*vbdry(bnum));
+			break;
+		}
+		default: {
+			return(tri_hp_ins::getnewvrtxobject(bnum,bdrydata));
+		}
+	} 
+	gbl->vbdry_gbls(bnum) = temp->create_global_structure();
+	return(temp);
+}
+
+
 
 class tri_hp_buoyancy_stype {
 	public:
-		static const int ntypes = 1;
-		enum ids {unknown=-1,surface};
+		static const int ntypes = 2;
+		enum ids {unknown=-1,surface,melt};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -155,7 +209,7 @@ class tri_hp_buoyancy_stype {
 		}
 };
 
-const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface"};
+const char tri_hp_buoyancy_stype::names[ntypes][40] = {"surface","melt"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
@@ -188,8 +242,20 @@ hp_edge_bdry* tri_hp_buoyancy::getnewsideobject(int bnum, input_map &bdrydata) {
 			}
 			break;
 		}
+		case tri_hp_buoyancy_stype::melt: {
+			if (dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))) {
+				temp = new melt(*this,*ebdry(bnum));
+				dynamic_cast<ecoupled_physics_ptr *>(ebdry(bnum))->physics = temp;
+			}
+			else {
+				std::cerr << "use coupled physics for surface boundary" << std::endl;
+				sim::abort(__LINE__,__FILE__,&std::cerr);
+				assert(0);
+			}
+			break;
+		}
 		default: {
-			temp = tri_hp_ins::getnewsideobject(bnum,bdrydata);
+			return(tri_hp_ins::getnewsideobject(bnum,bdrydata));
 			break;
 		}
 	}    
