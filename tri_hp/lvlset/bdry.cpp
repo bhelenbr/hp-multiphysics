@@ -486,6 +486,8 @@ void hybrid::update(int stage) {
 	else {
 		*x.gbl->log << "Neither was a hybrid_pt?  What gives?" << std::endl;
 	}
+	xloc = x.pnts(v0)(0);
+	yloc = x.pnts(v0)(1);
 	
 	// AT WHAT POINT OF TRIANGLE DO WE NEED TO KNOW DERIVATIVE? //
 	int j;
@@ -502,27 +504,21 @@ void hybrid::update(int stage) {
 	x.ugtouht(tind);
 	x.crdtocht(tind);
 	// 2 -> ND, 4 -> NV
-	TinyVector<FLT,2> xy,dxydr,dxyds,dxmax; 
-	//TinyVector<FLT,4> xx,ddr,dds;
-	FLT axx[4],addr[4],adds[4];
-	FLT *xx=axx, *dudr=addr, *duds=adds;
-	xloc = x.pnts(v0)(0);
-	yloc = x.pnts(v0)(1);
-
-	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xy.data(),dxydr.data(),dxyds.data(),r,s,&x.cht(0,0),MXTM); 
-	basis::tri(x.log2p)->ptprobe(x.NV,xx,dudr,duds,r,s,&x.uht(0)(0),MXTM); 
+	TinyVector<FLT,2> xpt,dxdr,dxds,dxmax;
+	TinyVector<FLT,4> upt,dudr,duds;
+	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&x.cht(0,0),MXTM); 
+	basis::tri(x.log2p)->ptprobe(x.NV,upt.data(),dudr.data(),duds.data(),r,s,&x.uht(0)(0),MXTM); 
 	TinyMatrix<FLT,2,2> ldcrd;
-	ldcrd(0,0) = dxydr(0);
-	ldcrd(0,1) = dxyds(0);
-	ldcrd(1,0) = dxydr(1);
-	ldcrd(1,1) = dxyds(1);
+	ldcrd(0,0) = dxdr(0);
+	ldcrd(0,1) = dxds(0);
+	ldcrd(1,0) = dxdr(1);
+	ldcrd(1,1) = dxds(1);
 	FLT cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
-	normux = (+ldcrd(1,1)*dudr[2] -ldcrd(1,0)*duds[2])/cjcb;
-	normuy = (-ldcrd(0,1)*dudr[2] +ldcrd(0,0)*duds[2])/cjcb;
-	lengthu = pow( normux*normux + normuy*normuy, 0.5 ); //for projection in this direction
-	normux /= lengthu; // unit u vector x direction
-	normuy /= lengthu; // y direction
-	//std::cout<<"NORMSTUFF: "<<normux<<"  "<<normuy<<std::endl;
+	normux = (+ldcrd(1,1)*dudr(2) -ldcrd(1,0)*duds(2))/cjcb;
+	normuy = (-ldcrd(0,1)*dudr(2) +ldcrd(0,0)*duds(2))/cjcb;
+	lengthu = sqrt(normux*normux +normuy*normuy); //for projection in this direction
+	normux /= lengthu; // phi unit normal vector x direction (in the positive phi direction)
+	normuy /= lengthu; // phi y direction
 
 	if (flag) 
 		v2 = x.seg(sind).pnt(1);
@@ -552,11 +548,20 @@ void hybrid::update(int stage) {
 			else v2 = x.seg(sind).pnt(0);
 			x2 = x.pnts(v2)(0);
 			y2 = x.pnts(v2)(1);
-	//		FLT temp = (x2-xloc)*normux + (y2-yloc)*normuy;
-			// use this line to apply phi along the boundary as the normal distance from the two-phase boundary tangent
-	//		x.ug.v(v2,2) = (x2-xloc)*normux + (y2-yloc)*normuy;
+			
+			// use these lines to apply phi along the boundary as the normal distance from the two-phase boundary tangent
+			FLT temp = (x2-xloc)*normux + (y2-yloc)*normuy;
+			if (fabs(x.ug.v(v2,2) - temp) > 0.1) {
+				*x.gbl->log << "big change " << x2 << ' ' << y2 << std::endl;
+				*x.gbl->log << "big change " << normux << ' ' << normuy << std::endl;
+				x.output("bigchange",tri_hp::tecplot);
+				exit(1);
+			}
+			else {
+				x.ug.v(v2,2) = temp;
+			}
 			// OR use this line to apply phi along the boundary as the vertical distance from the hybrid point
-			x.ug.v(v2,2) = y2 - yloc;
+			// x.ug.v(v2,2) = y2 - yloc;
 		}
 	}
 
