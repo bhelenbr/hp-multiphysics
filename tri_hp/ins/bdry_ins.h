@@ -130,8 +130,9 @@ namespace bdry_ins {
 		public:
 			inflow(tri_hp_ins &xin, edge_bdry &bin) : neumann(xin,bin) {
 				mytype = "inflow";
+				dirichlets.resize(x.NV);
+				dirichlets = -1;
 				ndirichlets = x.NV-1;
-				dirichlets.resize(x.NV-1);
 				for (int n=0;n<x.NV-1;++n)
 					dirichlets(n) = n;
 			}
