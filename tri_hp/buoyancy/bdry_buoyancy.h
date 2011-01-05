@@ -253,15 +253,7 @@ namespace bdry_buoyancy {
 
 #ifdef petsc
 		void petsc_jacobian() {} 
-		void petsc_jacobian_dirichlet() {
-			// Temporary to simply fix x-direction motion 
-			int row = (x.NV+tri_mesh::ND)*base.pnt +x.NV; 
-			Array<int,1> indices(1);
-			indices(0) = row;
-			x.J.zero_rows(1,indices);
-			//x.J_mpi.zero_rows(counter,indices);
-			x.J.set_diag(1,indices,1.0);
-		}
+		void petsc_jacobian_dirichlet();
 #endif
 	};
 }

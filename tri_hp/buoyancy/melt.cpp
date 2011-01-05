@@ -294,7 +294,7 @@ void melt::vdirichlet() {
 #endif	
 
 
-#define DEBUG
+// #define DEBUG
 #ifdef DEBUG
 	int n,m;
 	
@@ -1155,7 +1155,7 @@ void melt::setup_preconditioner() {
 
 		dtnorm = 1.0e99;
 		dttang = 1.0e99;
-		gbl->meshc(indx) = 0.0e99;  // TEMPORARY
+		gbl->meshc(indx) = 1.0e99;
 		for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
 			nrm(0) =  dcrd(1,i)*2;
 			nrm(1) = -dcrd(0,i)*2;
@@ -1218,9 +1218,6 @@ void melt::setup_preconditioner() {
 		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
 		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
 #endif
-		nrm(0) = 0.0;  // TEMPORARY
-		nrm(1) = 1.0;
-		
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 
 		nrm *= 0.5;
@@ -1357,8 +1354,7 @@ void melt::setup_preconditioner() {
 	return;
 }
 
-// TEMPORARY
-#ifdef temporary_petsc
+#ifdef petsc
 void melt_end_pt::petsc_jacobian_dirichlet() {
 	 	 
 	 int indx;
