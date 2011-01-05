@@ -112,6 +112,7 @@ namespace bdry_cns {
 //			flx *= mag;
 			
 			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
+	//		flx(0) = ibc->f(0, xpt, x.gbl->time)/ibc->f(x.NV-1, xpt, x.gbl->time)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1));
 
 			/* X&Y MOMENTUM */
 #ifdef INERTIALESS
@@ -124,6 +125,8 @@ namespace bdry_cns {
 			
 			/* ENERGY EQUATION */
 			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2));
+//			double h = x.gbl->gamma/(x.gbl->gamma-1.0)*ibc->f(x.NV-1, xpt, x.gbl->time) +0.5*(u(1)*u(1)+u(2)*u(2));
+
 			flx(x.NV-1) = h*flx(0);
 
 			return;

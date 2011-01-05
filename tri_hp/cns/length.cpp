@@ -173,7 +173,7 @@ void tri_hp_cns::length() {
 	
 	/* This is to smooth the change to the length function */
 	int iter,sind,i,j,p0,p1;
-	int niter = 2;
+	int niter = 1;
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = 0;
@@ -206,7 +206,7 @@ void tri_hp_cns::length() {
 	}
 	
 	/* NOW RESCALE AT VERTICES */
-	FLT maxlngth = 5.0;
+	FLT maxlngth = 10.0;
 	FLT minlngth = 0.0;
 	for (int pind=0;pind<npnt;++pind) {
 		lngth(pind) *= gbl->res.v(pind,0);

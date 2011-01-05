@@ -62,7 +62,6 @@ void tri_hp_cns::init(input_map& input, void *gin) {
 		*gbl->log << "Error estimator not recognized" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
-	return;
 }
 
 void tri_hp_cns::init(const multigrid_interface& in, init_purpose why, FLT sizereduce1d) {

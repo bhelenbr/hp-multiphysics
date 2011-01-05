@@ -11,11 +11,11 @@
 #include <block.h>
 #include <r_tri_mesh.h>
 
-//#define CD
+#define CD
 #define INS
 //#define PS
 //#define SWIRL
-#define BUOYANCY
+//#define BUOYANCY
 //#define SWE
 //#define LVLSET
 //#define EXPLICIT

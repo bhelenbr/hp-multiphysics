@@ -520,35 +520,20 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 	FLT alpha = x.gbl->kcond/(rho*cp);
 	FLT h = mag; // or norm??? temp fix 
 	
-	/* need to tune better */
-	FLT hdt = 1.5*pow(h*x.gbl->bd(0),2.0);
-	FLT vel = 3.0*(u*u+v*v);
-	FLT nuh = 2.0*pow((nu+alpha)/h,2.0);
+	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
+	FLT umag = sqrt(u*u+v*v);
+	FLT M = MAX(umag/c,1.0e-5);
+	FLT nuh = 4.0*nu/(h*c);
+	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
-	FLT umag = sqrt(hdt+vel);	
-	umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
+	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+	FLT alph = 0.0;
 	
-	FLT M = MAX(1.0e-5,umag/c);
-	FLT re = MAX(rho*sqrt(u*u+v*v)*mag/x.gbl->mu,1.0);
-	FLT b2,alph;
-	
-	if(M > 0.9) { // turn off preconditioner
-		b2 = 1.0;
-		alph = 0.0;
-	} else {
-		b2 = M*M/(1.0-M*M);
-		//b2 *= (1.0+2.0*pow(re,-.333));
-		alph = 1.0+b2;
-	}
-	
-	b2 = 1.0;
-	alph = 0.0;
-	
-	/* Preconditioner */
-	P = b2,                   0.0, 0.0, 0.0,
-	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
-	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
-	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;	
+//	/* Preconditioner */
+//	P = b2,                   0.0, 0.0, 0.0,
+//	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
+//	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
+//	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;	
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
@@ -556,11 +541,11 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
 	       -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
 	
-	/* jacobian of primitive wrt conservative */
-	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
-	       -u/rho,          1.0/rho,    0.0,         0.0,
-		   -v/rho,          0.0,        1.0/rho,     0.0,
-	       (gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
+//	/* jacobian of primitive wrt conservative */
+//	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
+//	       -u/rho,          1.0/rho,    0.0,         0.0,
+//		   -v/rho,          0.0,        1.0/rho,     0.0,
+//	       (gm1*ke-rt)/rho, -u*gm1/rho, -v*gm1/rho, gm1/rho;	
 	
 	/* jacobian of conservative wrt primitive */
 	dcdp = 1.0/rt,               0.0,   0.0,   -rho/rt,
@@ -569,21 +554,49 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tri_mesh::ND> xpt, T
 		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, -rho*ke/rt;		
 
 	
-	temp = 0.0;
+//	temp = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				temp(i,j)+=dpdc(i,k)*A(k,j);
+//	A = temp;
+//	
+//	temp = 0.0;
+//	for(int i=0; i<x.NV; ++i)
+//		for(int j=0; j<x.NV; ++j)
+//			for(int k=0; k<x.NV; ++k)
+//				temp(i,j)+=P(i,k)*A(k,j);
+//	
+//	A = temp;
+//	matrix_absolute_value(A);
+	
+	
+	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	
+	V = 0.5*(u*(b2-1.0)+temp1)*rho,			0.5*(u*(b2-1.0)-temp1)*rho,			0.0, 0.0,
+		1.0,								1.0,								0.0, 0.0,
+		0.0,								0.0,								1.0, 0.0,
+		0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 1.0;
+	
+	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u;
+	
+	for(int i=0; i<x.NV; ++i)
+		Aeigs(i) = abs(Aeigs(i));
+	
+	VINV =  1.0/(temp1*rho), -0.5*(u*(b2-1.0)-temp1)/temp1, 0.0, 0.0,
+			-1.0/(temp1*rho), 0.5*(u*(b2-1.0)+temp1)/temp1, 0.0, 0.0,
+			0.0,			  0.0,						    1.0, 0.0,
+			-gm1/(gam*rho),   0.0,							0.0, 1.0;
+	
+	for(int i=0; i < x.NV; ++i)
+		for(int j=0; j < x.NV; ++j)
+			VINV(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
 	for(int i=0; i<x.NV; ++i)
 		for(int j=0; j<x.NV; ++j)
 			for(int k=0; k<x.NV; ++k)
-				temp(i,j)+=dpdc(i,k)*A(k,j);
-	A = temp;
-	
-	temp = 0.0;
-	for(int i=0; i<x.NV; ++i)
-		for(int j=0; j<x.NV; ++j)
-			for(int k=0; k<x.NV; ++k)
-				temp(i,j)+=P(i,k)*A(k,j);
-	
-	A = temp;
-	matrix_absolute_value(A);
+				A(i,j)+=V(i,k)*VINV(k,j);
 	
 	temp = 0.0;
 	for(int i=0; i<x.NV; ++i)

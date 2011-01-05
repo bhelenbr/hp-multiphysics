@@ -235,11 +235,30 @@ void tri_hp_cns::setup_preconditioner() {
 	// remember to do parallel communication
 	
 	tri_hp::setup_preconditioner();
+	
+	int last_phase,mp_phase;
+	
+	if(gbl->diagonal_preconditioner){
+		for(int stage = 0; stage<NV; ++stage) {
+			for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+				vc0load(mp_phase,gbl->vpreconditioner.data() +stage*NV,NV);
+				pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+				last_phase = true;
+				last_phase &= vc0wait_rcv(mp_phase,gbl->vpreconditioner.data()+stage*NV,NV);
+			}
+			if (log2p) {
+				sc0load(gbl->spreconditioner.data()+stage*NV,0,0,NV);
+				smsgpass(boundary::all,0,boundary::symmetric);
+				sc0wait_rcv(gbl->spreconditioner.data()+stage*NV,0,0,NV);
+			}
+		}
+	}
+	
 }
 
 void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
 	
-	Array<double,2> P(NV,NV),dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
+	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV);
 	
 	FLT gam = gbl->gamma;
@@ -259,25 +278,56 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alpha = gbl->kcond/(rho*cp);
 	
 	/* need to tune better */
-	FLT hdt = 0.25*pow(h*gbl->bd(0),2.0);
-	FLT vel = 1.0*(u*u+v*v);
-	FLT nuh = 4.0*(pow(nu/h,2.0)+pow(alpha/h,2.0));
+//	FLT hdt = 0.25*pow(h*gbl->bd(0),2.0);
+//	FLT vel = 1.0*(u*u+v*v);
+//	FLT nuh = 4.0*(pow(nu/h,2.0)+pow(alpha/h,2.0));
+//
+//	FLT umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
+//	
+//	FLT M = MAX(1.0e-5,umag/c);
+//	
+//	FLT b2,alph;
+//
+//	if(M > .6) { // turn off preconditioner
+//		b2 = 1.0;
+//		alph = 0.0;
+//	} else {
+//		b2 = M*M/(1.0-M*M);
+//		alph = 1.0+b2;
+//	}
+	
+	
+	
 
-	FLT umag = sqrt(hdt+vel+nuh); // with reynolds and prandtl dependence
+//	FLT hdt = .25*h*gbl->bd(0)/c;
+//	FLT umag = sqrt(u*u+v*v);
+//	FLT M = MAX(umag/c,1.0e-5);
+//	FLT nuh = 4.0*(nu/h+alpha/h)/c;
+//	
+//	FLT beta,b2,alph;
+//	
+//	if(M > .6) { // turn off preconditioner
+//		b2 = 1.0;
+//		alph = 0.0;
+//	} else {
+//		beta = sqrt(M*M/(1.0-M*M))+hdt/(hdt+1.0)+nuh;
+//		b2 = beta*beta;
+//		alph = 1.0+b2;
+//	}
 	
-	FLT M = MAX(1.0e-5,umag/c);
 	
-	FLT b2,alph;
-
-	if(M > .9) { // turn off preconditioner
-		b2 = 1.0;
-		alph = 0.0;
-	} else {
-		b2 = M*M/(1.0-M*M);
-		alph = 1.0+b2;
-	}
 	
-	//cout << sqrt(b2) << ' ' << hdt << ' ' << vel << ' ' << nuh << endl;
+	
+	
+	FLT hdt = 0.5*h*gbl->bd(0)/c;
+	FLT umag = sqrt(u*u+v*v);
+	FLT M = MAX(umag/c,1.0e-5);
+	FLT nuh = 4.0*nu/(h*c);
+	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
+	
+	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+	FLT alph = 1.0+b2;
+	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
 #ifdef petsc
 	b2 = 1.0;
@@ -290,13 +340,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	P = b2,                   0.0, 0.0, 0.0,
 	    -alph*u/(pr*gam),     1.0, 0.0, 0.0,
 	    -alph*v/(pr*gam),     0.0, 1.0, 0.0,
-	    0.0*(b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;
+	    (b2-1.0)/(gogm1*rho), 0.0, 0.0, 1.0;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0,
 		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0,
 		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0,
-		   -0.0*(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
+		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 1.0;
 
 	/* jacobian of primitive wrt conservative */
 	dpdc = ke*gm1,          -u*gm1,     -v*gm1,      gm1,
@@ -317,45 +367,88 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 				temp(i,j)+=P(i,k)*dpdc(k,j);
 	P = temp;
 
-	if(!gbl->diagonal_preconditioner){
-
-		temp = 0.0;
-		for(int i=0; i<NV; ++i)
-			for(int j=0; j<NV; ++j)
-				for(int k=0; k<NV; ++k)
-					temp(i,j)+=dcdp(i,k)*Pinv(k,j);
+//	/* df/dw derivative of fluxes wrt primitive variables */
+//	A = u/rt,               rho,                       0.0,     -rho*u/rt,
+//		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
+//		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
+//		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+//
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*A(k,j);
+//	A = temp;	
+//	matrix_absolute_value(A);
 	
-		Pinv = temp;
-	}
+	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
-	/* df/dw derivative of fluxes wrt primitive variables */
-	A = u/rt,               rho,                       0.0,     -rho*u/rt,
-		u*u/rt+1.0,         2.0*rho*u,                 0.0,     -rho*u*u/rt,
-		u*v/rt,             rho*v,                     rho*u,   -rho*u*v/rt,
-		u*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*u*u, rho*u*v, -rho*u*(gogm1*rt+ke)/rt+rho*u*gogm1;
+	V = 0.5*(u*(b2-1.0)+temp1)*rho, 0.5*(u*(b2-1.0)-temp1)*rho, 0.0, 0.0,
+	    1.0,1.0,0.0,0.0,
+	    0.0,0.0,1.0,0.0,
+	    0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 1.0;
+	
+	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u;
 
+	for(int i=0; i<NV; ++i)
+		Aeigs(i) = abs(Aeigs(i));
 
-	temp = 0.0;
+	VINV =  1.0/(temp1*rho), -0.5*(u*(b2-1.0)-temp1)/temp1,0.0,0.0,
+		    -1.0/(temp1*rho), 0.5*(u*(b2-1.0)+temp1)/temp1,0.0,0.0,
+			0.0, 0.0, 1.0, 0.0,
+			-gm1/(gam*rho), 0.0, 0.0, 1.0;
+	
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*A(k,j);
-	A = temp;	
-	matrix_absolute_value(A);
+				A(i,j)+=V(i,k)*VINV(k,j);
 	
-	/* dg/dw derivative of fluxes wrt primitive variables*/
-	B = v/rt,               0.0,     rho,                       -rho*v/rt,
-		u*v/rt,             rho*v,   rho*u,                     -rho*u*v/rt,
-		v*v/rt+1.0,         0.0,     2.0*rho*v,                 -rho*v*v/rt,
-		v*(gogm1*rt+ke)/rt, rho*u*v, rho*(gogm1*rt+ke)+rho*v*v, -rho*v*(gogm1*rt+ke)/rt+rho*v*gogm1;
+//	/* dg/dw derivative of fluxes wrt primitive variables*/
+//	B = v/rt,               0.0,     rho,                       -rho*v/rt,
+//		u*v/rt,             rho*v,   rho*u,                     -rho*u*v/rt,
+//		v*v/rt+1.0,         0.0,     2.0*rho*v,                 -rho*v*v/rt,
+//		v*(gogm1*rt+ke)/rt, rho*u*v, rho*(gogm1*rt+ke)+rho*v*v, -rho*v*(gogm1*rt+ke)/rt+rho*v*gogm1;
+//	
+//	temp = 0.0;
+//	for(int i=0; i<NV; ++i)
+//		for(int j=0; j<NV; ++j)
+//			for(int k=0; k<NV; ++k)
+//				temp(i,j)+=P(i,k)*B(k,j);
+//	B = temp;
+//	matrix_absolute_value(B);
 	
-	temp = 0.0;
+	
+	FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	
+	V = 0.0, 0.0, 0.5*(v*(b2-1.0)+temp2)*rho, 0.5*(v*(b2-1.0)-temp2)*rho,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 1.0,
+		1.0, 0.0, 0.5*(gm1*v*(b2-1.0)+gm1*temp2)/gam, 0.5*(gm1*v*(b2-1.0)-gm1*temp2)/gam;
+	
+	Beigs = v, v, 0.5*(v+v*b2+temp2), 0.5*(v+v*b2-temp2);
+	
+	for(int i=0; i<NV; ++i)
+		Beigs(i) = abs(Beigs(i));
+
+	VINV = -gm1/(gam*rho), 0.0, 0.0, 1.0,
+		   0.0, 1.0, 0.0, 0.0,
+		   1.0/(temp2*rho), 0.0, 0.5*(-v*(b2-1.0)+temp2)/temp2, 0.0,
+		   -1.0/(rho*temp2), 0.0, 0.5*(v*(b2-1.0)+temp2)/temp2, 0.0;
+
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Beigs(i)*VINV(i,j);
+	
+	B = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
-				temp(i,j)+=P(i,k)*B(k,j);
-	B = temp;
-	matrix_absolute_value(B);
+				B(i,j)+=V(i,k)*VINV(k,j);
 	
 	S = 0.0, 0.0,      0.0,      0.0,
 		0.0, nu/(h*h), 0.0,      0.0,
@@ -404,14 +497,13 @@ void tri_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
 
-	/* jacobi smoothing need to modify P too? */
+//	/* jacobi smoothing need to modify P too? */
 //	temp = 0.0;
 //	for (int i = 0; i < NV; ++i)
 //		for (int j = 0; j < NV; ++j)
 //			for (int k = 0; k < NV; ++k)
 //				temp(i,j) += Pinv(i,k)*(A(k,j)/h+B(k,j)/h);
 //				
-//
 //	Pinv = temp;
 	
 	return;

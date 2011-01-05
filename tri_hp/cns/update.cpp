@@ -326,7 +326,6 @@ void tri_hp_cns::update() {
 			}
 		}
 		
-		
 		helper->update(stage);
 		
 		for(i=0;i<nebd;++i) {

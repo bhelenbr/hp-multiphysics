@@ -53,7 +53,7 @@ namespace ibc_cns {
 				
 				keyword = idnty +"_gamma";
 				if (!blockdata.get(keyword,gamma))
-					blockdata.getwdefault("gamma",gamma,1.403);
+					blockdata.getwdefault("gamma",gamma,1.4);
 
 				alpha *= M_PI/180.0;
 			}
