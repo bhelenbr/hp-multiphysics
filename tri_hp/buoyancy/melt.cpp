@@ -157,7 +157,7 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb;
+		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lv/x.gbl->rho*res(1,i);
 		/* Heat Flux Upwinded? */
 		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 	}
@@ -169,7 +169,6 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-1,0),&res(2,0)); // mass flux
 	basis::tri(x.log2p)->intgrt1d(&lf(x.NV-2,0),&res(3,0)); // heat flux
 	basis::tri(x.log2p)->intgrtx1d(&lf(x.NV-2,0),&res(4,0)); // heat flux
-	lf(x.NV-2) -= lf(x.NV-1)*gbl->Lv; // Latent heat type mass flux
 	
 	return;
 }
