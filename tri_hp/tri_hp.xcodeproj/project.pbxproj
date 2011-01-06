@@ -510,6 +510,12 @@
 		E67EBB3D12D603E10011EB69 /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
 		E67EBB3E12D603E10011EB69 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
 		E67EBB5112D604710011EB69 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
+		E67EBB8412D6060A0011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4400B4D63ED006A4504 /* allocate.cpp */; };
+		E67EBB8512D6060B0011EB69 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4430B4D63ED006A4504 /* tstep.cpp */; };
+		E67EBB8612D6060D0011EB69 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
+		E67EBB8712D6060E0011EB69 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F77C4410B4D63ED006A4504 /* rsdl.cpp */; };
+		E67EBB8812D6060F0011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E67EBB8912D606100011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E6852BAD121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
 		E6852BAF121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
 		E6852BB0121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
@@ -1769,6 +1775,12 @@
 				959539B212D5002E00465DCA /* bdry.cpp in Sources */,
 				959539B312D5002F00465DCA /* getnewbdry.cpp in Sources */,
 				959539B412D5003000465DCA /* getnewibc.cpp in Sources */,
+				E67EBB8412D6060A0011EB69 /* allocate.cpp in Sources */,
+				E67EBB8512D6060B0011EB69 /* tstep.cpp in Sources */,
+				E67EBB8612D6060D0011EB69 /* length.cpp in Sources */,
+				E67EBB8712D6060E0011EB69 /* rsdl.cpp in Sources */,
+				E67EBB8812D6060F0011EB69 /* bdry.cpp in Sources */,
+				E67EBB8912D606100011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
