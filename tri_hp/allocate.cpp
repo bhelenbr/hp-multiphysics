@@ -191,8 +191,12 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		gbl->tprcn_ut.resize(maxpst,NV,NV);
 	}
 
+#ifndef petsc
 	double CFLdflt[4] = {2.5, 1.5, 1.0, 0.5};
 	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
+#else
+	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl(0))) inmap.getwdefault("cfl",gbl->cfl(0),1.0);
+#endif
 
 	/***************************************************/
 	/* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */

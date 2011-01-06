@@ -33,8 +33,8 @@ void melt::init(input_map& inmap,void* gbl_in) {
 	vdres.resize(x.log2pmax,base.maxseg);
 	sdres.resize(x.log2pmax,base.maxseg,x.sm0);
 
-	keyword = base.idprefix + "_Lv";
-	inmap.getwdefault(keyword,gbl->Lv,0.0);
+	keyword = base.idprefix + "_Lf";
+	inmap.getwdefault(keyword,gbl->Lf,0.0);
 	
 
 	if (x.seg(base.seg(0)).pnt(0) == x.seg(base.seg(base.nseg-1)).pnt(1)) gbl->is_loop = true;
@@ -157,7 +157,7 @@ void melt::element_rsdl(int indx, Array<FLT,2> lf) {
 		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
 		amv(0) = (x.gbl->bd(0)*(crd(0,i) -dxdt(x.log2p,indx)(0,i))); amv(1) = (x.gbl->bd(0)*(crd(1,i) -dxdt(x.log2p,indx)(1,i)));
 		anorm(0)= norm(0)/jcb; anorm(1) = norm(1)/jcb;
-		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lv/x.gbl->rho*res(1,i);
+		res(3,i) = RAD(crd(0,i))*fluxes(2).Eval(au,axpt,amv,anorm,x.gbl->time)*jcb -gbl->Lf/x.gbl->rho*res(1,i);
 		/* Heat Flux Upwinded? */
 		res(4,i) = -res(3,i)*(-norm(1)*mvel(0,i) +norm(0)*mvel(1,i))/jcb*gbl->meshc(indx);
 	}
@@ -294,7 +294,7 @@ void melt::vdirichlet() {
 #endif	
 
 
-// #define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 	int n,m;
 	
@@ -725,6 +725,8 @@ void melt::element_jacobian(int indx, Array<FLT,2>& K) {
 			crds(indx,mode-2,var) -= dx;
 		}
 	}
+	
+	// *x.gbl->log << K << std::endl;
 	
 	return;
 }
@@ -1216,7 +1218,8 @@ void melt::setup_preconditioner() {
 		/* |a| dv/dpsi  dpsi */
 		// gbl->meshc(indx) = gbl->adis/(h*dtnorm*0.5); /* FAILED IN NATES UPSTREAM SURFACE WAVE CASE */
 		// gbl->meshc(indx) = gbl->adis/(h*(vslp/hsm +x.gbl->bd(0))); /* FAILED IN MOVING UP TESTS */
-		gbl->meshc(indx) = gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
+		// TEMPOR
+		gbl->meshc(indx) = 0*gbl->adis/(h*(sqrt(qmax)/hsm +x.gbl->bd(0))); /* SEEMS THE BEST I'VE GOT */
 #endif
 		dtnorm *= RAD(0.5*(x.pnts(v0)(0) +x.pnts(v1)(0)));
 

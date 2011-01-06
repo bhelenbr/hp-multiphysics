@@ -14,7 +14,7 @@
 #include <limits.h>
 
 
-// #define DEBUG_JAC
+//#define DEBUG_JAC
 
 void tri_hp::petsc_initialize(){
 	int sm=basis::tri(log2p)->sm();
@@ -306,7 +306,7 @@ void tri_hp::petsc_update() {
 	//KSPView(ksp,PETSC_VIEWER_STDOUT_WORLD);
 	
 	/* update: u=u-J^-1*f=u-du */
-	VecAXPY(petsc_u,-1.0,petsc_du);
+	VecAXPY(petsc_u,-gbl->cfl(0),petsc_du);
 
 	/* send petsc vector u back to ug */
 	petsc_to_ug();

@@ -381,6 +381,145 @@
 		E62CDC4612B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
 		E62CDC4712B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
 		E62CDC4812B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E67EBAA712D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAA812D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAA912D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAAA12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAAB12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAAC12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAB012D603C50011EB69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
+		E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
+		E67EBAB312D603C50011EB69 /* hp_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */; };
+		E67EBAB412D603C50011EB69 /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		E67EBAB512D603C50011EB69 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
+		E67EBAB612D603C50011EB69 /* movco.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* movco.cpp */; };
+		E67EBAB712D603C50011EB69 /* movfin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* movfin.cpp */; };
+		E67EBAB812D603C50011EB69 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE4091AF516002BAA09 /* output.cpp */; };
+		E67EBAB912D603C50011EB69 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		E67EBABA12D603C50011EB69 /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
+		E67EBABB12D603C50011EB69 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
+		E67EBABC12D603C50011EB69 /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
+		E67EBABD12D603C50011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB901D80A6C782300A4729C /* allocate.cpp */; };
+		E67EBABE12D603C50011EB69 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
+		E67EBABF12D603C50011EB69 /* nstage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* nstage.cpp */; };
+		E67EBAC012D603C50011EB69 /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203410B863F40006A896 /* petsc.cpp */; };
+		E67EBAC112D603C50011EB69 /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203510B863F40006A896 /* sparse.cpp */; };
+		E67EBAC212D603C50011EB69 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
+		E67EBAC312D603C50011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA195B09770892001A5F7F /* allocate.cpp */; };
+		E67EBAC412D603C50011EB69 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF1091AF516002BAA09 /* tstep.cpp */; };
+		E67EBAC512D603C50011EB69 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE8091AF516002BAA09 /* rsdl.cpp */; };
+		E67EBAC612D603C50011EB69 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADD091AF516002BAA09 /* length.cpp */; };
+		E67EBAC712D603C50011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACB091AF516002BAA09 /* bdry.cpp */; };
+		E67EBAC812D603C50011EB69 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA199B09770C96001A5F7F /* getnewbdry.cpp */; };
+		E67EBAC912D603C50011EB69 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68255A0998541300F57688 /* getnewibc.cpp */; };
+		E67EBACA12D603C50011EB69 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
+		E67EBACB12D603C50011EB69 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9504779C12D4FCA6000CF354 /* minvrt.cpp */; };
+		E67EBACC12D603C50011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F004489091FD33A00A6F21E /* allocate.cpp */; };
+		E67EBACD12D603C50011EB69 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF2091AF516002BAA09 /* tstep.cpp */; };
+		E67EBACE12D603C50011EB69 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE9091AF516002BAA09 /* rsdl.cpp */; };
+		E67EBACF12D603C50011EB69 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADE091AF516002BAA09 /* length.cpp */; };
+		E67EBAD012D603C50011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
+		E67EBAD112D603C50011EB69 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
+		E67EBAD212D603C50011EB69 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
+		E67EBAD312D603C50011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBAD512D603C50011EB69 /* libtri_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF4091AFB3500FB5D82 /* libtri_basis.a */; };
+		E67EBAD612D603C50011EB69 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
+		E67EBAD712D603C50011EB69 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
+		E67EBAD812D603C50011EB69 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
+		E67EBAD912D603C50011EB69 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
+		E67EBADA12D603C50011EB69 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
+		E67EBADB12D603C50011EB69 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
+		E67EBADC12D603C50011EB69 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
+		E67EBADD12D603C50011EB69 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
+		E67EBADE12D603C50011EB69 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
+		E67EBADF12D603C50011EB69 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F75000DD8A7EA002615F9 /* libbinio.dylib */; };
+		E67EBAE012D603C50011EB69 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		E67EBAE112D603C50011EB69 /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
+		E67EBAE212D603C50011EB69 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.dylib */; };
+		E67EBAE312D603C50011EB69 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */; };
+		E67EBAE412D603C50011EB69 /* libsuperlu_dist_2.4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.4.a */; };
+		E67EBAE512D603C50011EB69 /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0E10FFBA730076AAFB /* libparmetis.a */; };
+		E67EBAE612D603C50011EB69 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
+		E67EBAE812D603C50011EB69 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
+		E67EBAE912D603C50011EB69 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
+		E67EBAEA12D603C50011EB69 /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
+		E67EBAEB12D603C50011EB69 /* bdry_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FEA199709770C4B001A5F7F /* bdry_ins.h */; };
+		E67EBAEC12D603C50011EB69 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
+		E67EBAED12D603C50011EB69 /* bdry_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00450F091FE27600A6F21E /* bdry_cd.h */; };
+		E67EBAEE12D603C50011EB69 /* tri_hp_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964EC097F43D6009F4225 /* tri_hp_ps.h */; };
+		E67EBAEF12D603C50011EB69 /* tri_hp_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C4109818C7100AD7FA3 /* tri_hp_swirl.h */; };
+		E67EBAF012D603C50011EB69 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
+		E67EBAF112D603C50011EB69 /* tri_hp_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FD5098B0A8AC9D100BD5ADB /* tri_hp_lvlset.h */; };
+		E67EBAF212D603C50011EB69 /* tri_hp_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D36B0AF2A444000E8A10 /* tri_hp_swe.h */; };
+		E67EBAF312D603C50011EB69 /* bdry_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964E7097F43D6009F4225 /* bdry_ps.h */; };
+		E67EBAF412D603C50011EB69 /* bdry_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C3C09818C7100AD7FA3 /* bdry_swirl.h */; };
+		E67EBAF512D603C50011EB69 /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
+		E67EBAF612D603C50011EB69 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
+		E67EBAFE12D603E10011EB69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		E67EBAFF12D603E10011EB69 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
+		E67EBB0012D603E10011EB69 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
+		E67EBB0112D603E10011EB69 /* hp_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */; };
+		E67EBB0212D603E10011EB69 /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		E67EBB0312D603E10011EB69 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
+		E67EBB0412D603E10011EB69 /* movco.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* movco.cpp */; };
+		E67EBB0512D603E10011EB69 /* movfin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* movfin.cpp */; };
+		E67EBB0612D603E10011EB69 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE4091AF516002BAA09 /* output.cpp */; };
+		E67EBB0712D603E10011EB69 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		E67EBB0812D603E10011EB69 /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
+		E67EBB0912D603E10011EB69 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
+		E67EBB0A12D603E10011EB69 /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
+		E67EBB0B12D603E10011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB901D80A6C782300A4729C /* allocate.cpp */; };
+		E67EBB0C12D603E10011EB69 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA195B09770892001A5F7F /* allocate.cpp */; };
+		E67EBB0D12D603E10011EB69 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF1091AF516002BAA09 /* tstep.cpp */; };
+		E67EBB0E12D603E10011EB69 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE8091AF516002BAA09 /* rsdl.cpp */; };
+		E67EBB0F12D603E10011EB69 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADD091AF516002BAA09 /* length.cpp */; };
+		E67EBB1012D603E10011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACB091AF516002BAA09 /* bdry.cpp */; };
+		E67EBB1112D603E10011EB69 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA199B09770C96001A5F7F /* getnewbdry.cpp */; };
+		E67EBB1212D603E10011EB69 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68255A0998541300F57688 /* getnewibc.cpp */; };
+		E67EBB1312D603E10011EB69 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
+		E67EBB1412D603E10011EB69 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
+		E67EBB1512D603E10011EB69 /* nstage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* nstage.cpp */; };
+		E67EBB1612D603E10011EB69 /* petsc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203410B863F40006A896 /* petsc.cpp */; };
+		E67EBB1712D603E10011EB69 /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203510B863F40006A896 /* sparse.cpp */; };
+		E67EBB1812D603E10011EB69 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
+		E67EBB1912D603E10011EB69 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
+		E67EBB1A12D603E10011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
+		E67EBB1B12D603E10011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
+		E67EBB1D12D603E10011EB69 /* libtri_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF4091AFB3500FB5D82 /* libtri_basis.a */; };
+		E67EBB1E12D603E10011EB69 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
+		E67EBB1F12D603E10011EB69 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
+		E67EBB2012D603E10011EB69 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
+		E67EBB2112D603E10011EB69 /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
+		E67EBB2212D603E10011EB69 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
+		E67EBB2312D603E10011EB69 /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
+		E67EBB2412D603E10011EB69 /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
+		E67EBB2512D603E10011EB69 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0077810CCB7027008D3233 /* libpth.a */; };
+		E67EBB2612D603E10011EB69 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
+		E67EBB2712D603E10011EB69 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2F75000DD8A7EA002615F9 /* libbinio.dylib */; };
+		E67EBB2812D603E10011EB69 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBF21021E5F60018DCC2 /* Accelerate.framework */; };
+		E67EBB2912D603E10011EB69 /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
+		E67EBB2A12D603E10011EB69 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8650D848AED00514E23 /* libmpi.dylib */; };
+		E67EBB2B12D603E10011EB69 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F48D8660D848AED00514E23 /* libmpi_cxx.dylib */; };
+		E67EBB2C12D603E10011EB69 /* libsuperlu_dist_2.4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.4.a */; };
+		E67EBB2D12D603E10011EB69 /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0E10FFBA730076AAFB /* libparmetis.a */; };
+		E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
+		E67EBB3012D603E10011EB69 /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
+		E67EBB3112D603E10011EB69 /* tri_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tri_hp.h */; };
+		E67EBB3212D603E10011EB69 /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
+		E67EBB3312D603E10011EB69 /* bdry_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FEA199709770C4B001A5F7F /* bdry_ins.h */; };
+		E67EBB3412D603E10011EB69 /* tri_hp_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00447D091FD15D00A6F21E /* tri_hp_cd.h */; };
+		E67EBB3512D603E10011EB69 /* bdry_cd.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F00450F091FE27600A6F21E /* bdry_cd.h */; };
+		E67EBB3612D603E10011EB69 /* tri_hp_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964EC097F43D6009F4225 /* tri_hp_ps.h */; };
+		E67EBB3712D603E10011EB69 /* tri_hp_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C4109818C7100AD7FA3 /* tri_hp_swirl.h */; };
+		E67EBB3812D603E10011EB69 /* tri_hp_buoyancy.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F77C4420B4D63ED006A4504 /* tri_hp_buoyancy.h */; };
+		E67EBB3912D603E10011EB69 /* tri_hp_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FD5098B0A8AC9D100BD5ADB /* tri_hp_lvlset.h */; };
+		E67EBB3A12D603E10011EB69 /* tri_hp_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D36B0AF2A444000E8A10 /* tri_hp_swe.h */; };
+		E67EBB3B12D603E10011EB69 /* bdry_ps.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F5964E7097F43D6009F4225 /* bdry_ps.h */; };
+		E67EBB3C12D603E10011EB69 /* bdry_swirl.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F016C3C09818C7100AD7FA3 /* bdry_swirl.h */; };
+		E67EBB3D12D603E10011EB69 /* bdry_lvlset.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FE412EF0B7A77D500FFA5CC /* bdry_lvlset.h */; };
+		E67EBB3E12D603E10011EB69 /* bdry_swe.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6F44D3660AF2A444000E8A10 /* bdry_swe.h */; };
+		E67EBB5112D604710011EB69 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
 		E6852BAD121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
 		E6852BAF121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
 		E6852BB0121DCA4E00EF7E07 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
@@ -393,7 +532,6 @@
 		E6896127129EC25F00D4FE84 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA199B09770C96001A5F7F /* getnewbdry.cpp */; };
 		E6896128129EC26000D4FE84 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68255A0998541300F57688 /* getnewibc.cpp */; };
 		E6896129129EC26100D4FE84 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
-		E68961C712A12E3500D4FE84 /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F6DDBCF1021E52B0018DCC2 /* libtri_mesh_mpi.a */; };
 		E6CF6FD211D23655001E5DF7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E6CF6FD311D23655001E5DF7 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		E6CF6FD411D23655001E5DF7 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
@@ -576,6 +714,54 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		E67EBAE712D603C50011EB69 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				E67EBAE812D603C50011EB69 /* hp_boundary.h in CopyFiles */,
+				E67EBAE912D603C50011EB69 /* tri_hp.h in CopyFiles */,
+				E67EBAEA12D603C50011EB69 /* tri_hp_ins.h in CopyFiles */,
+				E67EBAEB12D603C50011EB69 /* bdry_ins.h in CopyFiles */,
+				E67EBAEC12D603C50011EB69 /* tri_hp_cd.h in CopyFiles */,
+				E67EBAED12D603C50011EB69 /* bdry_cd.h in CopyFiles */,
+				E67EBAEE12D603C50011EB69 /* tri_hp_ps.h in CopyFiles */,
+				E67EBAEF12D603C50011EB69 /* tri_hp_swirl.h in CopyFiles */,
+				E67EBAF012D603C50011EB69 /* tri_hp_buoyancy.h in CopyFiles */,
+				E67EBAF112D603C50011EB69 /* tri_hp_lvlset.h in CopyFiles */,
+				E67EBAF212D603C50011EB69 /* tri_hp_swe.h in CopyFiles */,
+				E67EBAF312D603C50011EB69 /* bdry_ps.h in CopyFiles */,
+				E67EBAF412D603C50011EB69 /* bdry_swirl.h in CopyFiles */,
+				E67EBAF512D603C50011EB69 /* bdry_lvlset.h in CopyFiles */,
+				E67EBAF612D603C50011EB69 /* bdry_swe.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		E67EBB2F12D603E10011EB69 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				E67EBB3012D603E10011EB69 /* hp_boundary.h in CopyFiles */,
+				E67EBB3112D603E10011EB69 /* tri_hp.h in CopyFiles */,
+				E67EBB3212D603E10011EB69 /* tri_hp_ins.h in CopyFiles */,
+				E67EBB3312D603E10011EB69 /* bdry_ins.h in CopyFiles */,
+				E67EBB3412D603E10011EB69 /* tri_hp_cd.h in CopyFiles */,
+				E67EBB3512D603E10011EB69 /* bdry_cd.h in CopyFiles */,
+				E67EBB3612D603E10011EB69 /* tri_hp_ps.h in CopyFiles */,
+				E67EBB3712D603E10011EB69 /* tri_hp_swirl.h in CopyFiles */,
+				E67EBB3812D603E10011EB69 /* tri_hp_buoyancy.h in CopyFiles */,
+				E67EBB3912D603E10011EB69 /* tri_hp_lvlset.h in CopyFiles */,
+				E67EBB3A12D603E10011EB69 /* tri_hp_swe.h in CopyFiles */,
+				E67EBB3B12D603E10011EB69 /* bdry_ps.h in CopyFiles */,
+				E67EBB3C12D603E10011EB69 /* bdry_swirl.h in CopyFiles */,
+				E67EBB3D12D603E10011EB69 /* bdry_lvlset.h in CopyFiles */,
+				E67EBB3E12D603E10011EB69 /* bdry_swe.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		E6CF700011D23655001E5DF7 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
@@ -736,8 +922,11 @@
 		95BD203510B863F40006A896 /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
 		E62CDC4112B7114C0042211D /* bdry_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy.h; path = buoyancy/bdry_buoyancy.h; sourceTree = "<group>"; };
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
+		E67EBAA612D603BC0011EB69 /* melt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = melt.cpp; path = buoyancy/melt.cpp; sourceTree = "<group>"; };
+		E67EBAFA12D603C50011EB69 /* tri_hp_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
+		E67EBB4212D603E10011EB69 /* tri_hp_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
 		E6852BAA121DCA4E00EF7E07 /* reinit.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = reinit.cpp; sourceTree = "<group>"; };
-		E6CF701311D23655001E5DF7 /* tri_hp_axi_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_axi_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
+		E6CF701311D23655001E5DF7 /* tri_hp_petsc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tri_hp_petsc; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDA0ECEA09994E32003A3089 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = swirl/getnewibc.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -832,7 +1021,7 @@
 				6FF5F7F0110CFDA100B16014 /* libmpi_cxx.dylib in Frameworks */,
 				6FF5F7F7110CFDA100B16014 /* libsuperlu_dist_2.4.a in Frameworks */,
 				6FF5F7F8110CFDA100B16014 /* libparmetis.a in Frameworks */,
-				E68961C712A12E3500D4FE84 /* libtri_mesh_mpi.a in Frameworks */,
+				E67EBB5112D604710011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -858,6 +1047,56 @@
 				958169DD1283A0DC001F9519 /* libparmetis.a in Frameworks */,
 				958169E01283A0E2001F9519 /* libpetsc.a in Frameworks */,
 				958169E11283A0E3001F9519 /* libsuperlu_dist_2.4.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E67EBAD412D603C50011EB69 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E67EBAD512D603C50011EB69 /* libtri_basis.a in Frameworks */,
+				E67EBAD612D603C50011EB69 /* libinput_map.a in Frameworks */,
+				E67EBAD712D603C50011EB69 /* libmyblas.a in Frameworks */,
+				E67EBAD812D603C50011EB69 /* libquad.a in Frameworks */,
+				E67EBAD912D603C50011EB69 /* libutil.a in Frameworks */,
+				E67EBADA12D603C50011EB69 /* libblitz.a in Frameworks */,
+				E67EBADB12D603C50011EB69 /* libmetis.a in Frameworks */,
+				E67EBADC12D603C50011EB69 /* libmuparser.a in Frameworks */,
+				E67EBADD12D603C50011EB69 /* libpth.a in Frameworks */,
+				E67EBADE12D603C50011EB69 /* libspline.a in Frameworks */,
+				E67EBADF12D603C50011EB69 /* libbinio.dylib in Frameworks */,
+				E67EBAE012D603C50011EB69 /* Accelerate.framework in Frameworks */,
+				E67EBAE112D603C50011EB69 /* libpetsc.a in Frameworks */,
+				E67EBAE212D603C50011EB69 /* libmpi.dylib in Frameworks */,
+				E67EBAE312D603C50011EB69 /* libmpi_cxx.dylib in Frameworks */,
+				E67EBAE412D603C50011EB69 /* libsuperlu_dist_2.4.a in Frameworks */,
+				E67EBAE512D603C50011EB69 /* libparmetis.a in Frameworks */,
+				E67EBAE612D603C50011EB69 /* libtri_mesh_mpi.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E67EBB1C12D603E10011EB69 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E67EBB1D12D603E10011EB69 /* libtri_basis.a in Frameworks */,
+				E67EBB1E12D603E10011EB69 /* libinput_map.a in Frameworks */,
+				E67EBB1F12D603E10011EB69 /* libmyblas.a in Frameworks */,
+				E67EBB2012D603E10011EB69 /* libquad.a in Frameworks */,
+				E67EBB2112D603E10011EB69 /* libutil.a in Frameworks */,
+				E67EBB2212D603E10011EB69 /* libblitz.a in Frameworks */,
+				E67EBB2312D603E10011EB69 /* libmetis.a in Frameworks */,
+				E67EBB2412D603E10011EB69 /* libmuparser.a in Frameworks */,
+				E67EBB2512D603E10011EB69 /* libpth.a in Frameworks */,
+				E67EBB2612D603E10011EB69 /* libspline.a in Frameworks */,
+				E67EBB2712D603E10011EB69 /* libbinio.dylib in Frameworks */,
+				E67EBB2812D603E10011EB69 /* Accelerate.framework in Frameworks */,
+				E67EBB2912D603E10011EB69 /* libpetsc.a in Frameworks */,
+				E67EBB2A12D603E10011EB69 /* libmpi.dylib in Frameworks */,
+				E67EBB2B12D603E10011EB69 /* libmpi_cxx.dylib in Frameworks */,
+				E67EBB2C12D603E10011EB69 /* libsuperlu_dist_2.4.a in Frameworks */,
+				E67EBB2D12D603E10011EB69 /* libparmetis.a in Frameworks */,
+				E67EBB2E12D603E10011EB69 /* libtri_mesh_mpi.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -948,7 +1187,9 @@
 				6F9854120BDE612700D342F6 /* tri_hp_axi */,
 				6F9854CB0BDE649A00D342F6 /* tri_hp_axi_mpi */,
 				6FF5F80C110CFDA100B16014 /* tri_hp_petsc */,
-				E6CF701311D23655001E5DF7 /* tri_hp_axi_petsc */,
+				E6CF701311D23655001E5DF7 /* tri_hp_petsc */,
+				E67EBAFA12D603C50011EB69 /* tri_hp_petsc */,
+				E67EBB4212D603E10011EB69 /* tri_hp_petsc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1056,6 +1297,7 @@
 				6F77C4410B4D63ED006A4504 /* rsdl.cpp */,
 				E62CDC4112B7114C0042211D /* bdry_buoyancy.h */,
 				E62CDC4212B7114D0042211D /* bdry.cpp */,
+				E67EBAA612D603BC0011EB69 /* melt.cpp */,
 			);
 			name = Buoyancy;
 			sourceTree = "<group>";
@@ -1246,6 +1488,42 @@
 			productReference = 8DD76F6C0486A84900D96B5E /* tri_hp */;
 			productType = "com.apple.product-type.tool";
 		};
+		E67EBAAE12D603C50011EB69 /* tri_hp_petsc_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc_mpi" */;
+			buildPhases = (
+				E67EBAAF12D603C50011EB69 /* Sources */,
+				E67EBAD412D603C50011EB69 /* Frameworks */,
+				E67EBAE712D603C50011EB69 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tri_hp_petsc_mpi;
+			productInstallPath = "$(HOME)/bin";
+			productName = spectral_hp;
+			productReference = E67EBAFA12D603C50011EB69 /* tri_hp_petsc */;
+			productType = "com.apple.product-type.tool";
+		};
+		E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc_mpi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc_mpi" */;
+			buildPhases = (
+				E67EBAFD12D603E10011EB69 /* Sources */,
+				E67EBB1C12D603E10011EB69 /* Frameworks */,
+				E67EBB2F12D603E10011EB69 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tri_hp_axi_petsc_mpi;
+			productInstallPath = "$(HOME)/bin";
+			productName = spectral_hp;
+			productReference = E67EBB4212D603E10011EB69 /* tri_hp_petsc */;
+			productType = "com.apple.product-type.tool";
+		};
 		E6CF6FD011D23655001E5DF7 /* tri_hp_axi_petsc */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E6CF701011D23655001E5DF7 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc" */;
@@ -1261,7 +1539,7 @@
 			name = tri_hp_axi_petsc;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
-			productReference = E6CF701311D23655001E5DF7 /* tri_hp_axi_petsc */;
+			productReference = E6CF701311D23655001E5DF7 /* tri_hp_petsc */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -1279,9 +1557,11 @@
 				8DD76F620486A84900D96B5E /* tri_hp */,
 				6FB91A580ACCB04500792B04 /* tri_hp_mpi */,
 				6FF5F7C2110CFDA100B16014 /* tri_hp_petsc */,
+				E67EBAAE12D603C50011EB69 /* tri_hp_petsc_mpi */,
 				6F9853B80BDE612700D342F6 /* tri_hp_axi */,
 				6F98546F0BDE649A00D342F6 /* tri_hp_axi_mpi */,
 				E6CF6FD011D23655001E5DF7 /* tri_hp_axi_petsc */,
+				E67EBAFC12D603E10011EB69 /* tri_hp_axi_petsc_mpi */,
 			);
 		};
 /* End PBXProject section */
@@ -1332,6 +1612,7 @@
 				6F9853F10BDE612700D342F6 /* bdry.cpp in Sources */,
 				6FFFB67811777A9300EFEB3C /* length.cpp in Sources */,
 				E62CDC4512B7114D0042211D /* bdry.cpp in Sources */,
+				E67EBAA912D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1413,6 +1694,7 @@
 				6FFFB67911777A9300EFEB3C /* length.cpp in Sources */,
 				E6852BAF121DCA4E00EF7E07 /* reinit.cpp in Sources */,
 				E62CDC4812B7114D0042211D /* bdry.cpp in Sources */,
+				E67EBAAC12D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1457,6 +1739,7 @@
 				6FBF3D3E119B50F900A5019A /* rsdl.cpp in Sources */,
 				E6852BAD121DCA4E00EF7E07 /* reinit.cpp in Sources */,
 				E62CDC4612B7114D0042211D /* bdry.cpp in Sources */,
+				E67EBAAA12D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1499,6 +1782,7 @@
 				959539B212D5002E00465DCA /* bdry.cpp in Sources */,
 				959539B312D5002F00465DCA /* getnewbdry.cpp in Sources */,
 				959539B412D5003000465DCA /* getnewibc.cpp in Sources */,
+				E67EBAA812D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1544,6 +1828,87 @@
 				9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */,
 				9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */,
 				9504779D12D4FCA6000CF354 /* minvrt.cpp in Sources */,
+				E67EBAA712D603BC0011EB69 /* melt.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E67EBAAF12D603C50011EB69 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E67EBAB012D603C50011EB69 /* main.cpp in Sources */,
+				E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */,
+				E67EBAB212D603C50011EB69 /* gtol.cpp in Sources */,
+				E67EBAB312D603C50011EB69 /* hp_boundary.cpp in Sources */,
+				E67EBAB412D603C50011EB69 /* l2error.cpp in Sources */,
+				E67EBAB512D603C50011EB69 /* minvrt.cpp in Sources */,
+				E67EBAB612D603C50011EB69 /* movco.cpp in Sources */,
+				E67EBAB712D603C50011EB69 /* movfin.cpp in Sources */,
+				E67EBAB812D603C50011EB69 /* output.cpp in Sources */,
+				E67EBAB912D603C50011EB69 /* ptprobe.cpp in Sources */,
+				E67EBABA12D603C50011EB69 /* tobasis.cpp in Sources */,
+				E67EBABB12D603C50011EB69 /* getnewblock.cpp in Sources */,
+				E67EBABC12D603C50011EB69 /* hp_getnewibc.cpp in Sources */,
+				E67EBABD12D603C50011EB69 /* allocate.cpp in Sources */,
+				E67EBABE12D603C50011EB69 /* copy.cpp in Sources */,
+				E67EBABF12D603C50011EB69 /* nstage.cpp in Sources */,
+				E67EBAC012D603C50011EB69 /* petsc.cpp in Sources */,
+				E67EBAC112D603C50011EB69 /* sparse.cpp in Sources */,
+				E67EBAC212D603C50011EB69 /* tadvance.cpp in Sources */,
+				E67EBAC312D603C50011EB69 /* allocate.cpp in Sources */,
+				E67EBAC412D603C50011EB69 /* tstep.cpp in Sources */,
+				E67EBAC512D603C50011EB69 /* rsdl.cpp in Sources */,
+				E67EBAC612D603C50011EB69 /* length.cpp in Sources */,
+				E67EBAC712D603C50011EB69 /* bdry.cpp in Sources */,
+				E67EBAC812D603C50011EB69 /* getnewbdry.cpp in Sources */,
+				E67EBAC912D603C50011EB69 /* getnewibc.cpp in Sources */,
+				E67EBACA12D603C50011EB69 /* surface.cpp in Sources */,
+				E67EBACB12D603C50011EB69 /* minvrt.cpp in Sources */,
+				E67EBACC12D603C50011EB69 /* allocate.cpp in Sources */,
+				E67EBACD12D603C50011EB69 /* tstep.cpp in Sources */,
+				E67EBACE12D603C50011EB69 /* rsdl.cpp in Sources */,
+				E67EBACF12D603C50011EB69 /* length.cpp in Sources */,
+				E67EBAD012D603C50011EB69 /* bdry.cpp in Sources */,
+				E67EBAD112D603C50011EB69 /* getnewbdry.cpp in Sources */,
+				E67EBAD212D603C50011EB69 /* getnewibc.cpp in Sources */,
+				E67EBAD312D603C50011EB69 /* melt.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E67EBAFD12D603E10011EB69 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E67EBAFE12D603E10011EB69 /* main.cpp in Sources */,
+				E67EBAFF12D603E10011EB69 /* adapt.cpp in Sources */,
+				E67EBB0012D603E10011EB69 /* gtol.cpp in Sources */,
+				E67EBB0112D603E10011EB69 /* hp_boundary.cpp in Sources */,
+				E67EBB0212D603E10011EB69 /* l2error.cpp in Sources */,
+				E67EBB0312D603E10011EB69 /* minvrt.cpp in Sources */,
+				E67EBB0412D603E10011EB69 /* movco.cpp in Sources */,
+				E67EBB0512D603E10011EB69 /* movfin.cpp in Sources */,
+				E67EBB0612D603E10011EB69 /* output.cpp in Sources */,
+				E67EBB0712D603E10011EB69 /* ptprobe.cpp in Sources */,
+				E67EBB0812D603E10011EB69 /* tobasis.cpp in Sources */,
+				E67EBB0912D603E10011EB69 /* getnewblock.cpp in Sources */,
+				E67EBB0A12D603E10011EB69 /* hp_getnewibc.cpp in Sources */,
+				E67EBB0B12D603E10011EB69 /* allocate.cpp in Sources */,
+				E67EBB0C12D603E10011EB69 /* allocate.cpp in Sources */,
+				E67EBB0D12D603E10011EB69 /* tstep.cpp in Sources */,
+				E67EBB0E12D603E10011EB69 /* rsdl.cpp in Sources */,
+				E67EBB0F12D603E10011EB69 /* length.cpp in Sources */,
+				E67EBB1012D603E10011EB69 /* bdry.cpp in Sources */,
+				E67EBB1112D603E10011EB69 /* getnewbdry.cpp in Sources */,
+				E67EBB1212D603E10011EB69 /* getnewibc.cpp in Sources */,
+				E67EBB1312D603E10011EB69 /* surface.cpp in Sources */,
+				E67EBB1412D603E10011EB69 /* copy.cpp in Sources */,
+				E67EBB1512D603E10011EB69 /* nstage.cpp in Sources */,
+				E67EBB1612D603E10011EB69 /* petsc.cpp in Sources */,
+				E67EBB1712D603E10011EB69 /* sparse.cpp in Sources */,
+				E67EBB1812D603E10011EB69 /* tadvance.cpp in Sources */,
+				E67EBB1912D603E10011EB69 /* reinit.cpp in Sources */,
+				E67EBB1A12D603E10011EB69 /* bdry.cpp in Sources */,
+				E67EBB1B12D603E10011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1580,6 +1945,7 @@
 				E6CF6FEC11D23655001E5DF7 /* tadvance.cpp in Sources */,
 				E6852BB0121DCA4E00EF7E07 /* reinit.cpp in Sources */,
 				E62CDC4712B7114D0042211D /* bdry.cpp in Sources */,
+				E67EBAAB12D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1811,7 +2177,7 @@
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					MPISRC,
+					PTH,
 					petsc,
 					"$(inherited)",
 				);
@@ -1830,7 +2196,7 @@
 			buildSettings = {
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					MPISRC,
+					PTH,
 					petsc,
 					"$(inherited)",
 				);
@@ -1844,12 +2210,92 @@
 			};
 			name = Release;
 		};
-		E6CF701111D23655001E5DF7 /* Debug */ = {
+		E67EBAF812D603C50011EB69 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
+					petsc,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\\\"$(SRCROOT)/../lib\\\"",
+				);
+				PRODUCT_NAME = tri_hp_petsc;
+			};
+			name = Debug;
+		};
+		E67EBAF912D603C50011EB69 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
+					petsc,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\\\"$(SRCROOT)/../lib\\\"",
+				);
+				PRODUCT_NAME = tri_hp_petsc;
+			};
+			name = Release;
+		};
+		E67EBB4012D603E10011EB69 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					MPISRC,
+					AXISYMMETRIC,
+					petsc,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\\\\\\\"$(SRCROOT)/../lib\\\\\\\"",
+					"\\\"$(SRCROOT)/../lib\\\"",
+				);
+				PRODUCT_NAME = tri_hp_petsc;
+			};
+			name = Debug;
+		};
+		E67EBB4112D603E10011EB69 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					MPISRC,
+					AXISYMMETRIC,
+					petsc,
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\\\\\\\"$(SRCROOT)/../lib\\\\\\\"",
+					"\\\"$(SRCROOT)/../lib\\\"",
+				);
+				PRODUCT_NAME = tri_hp_axi_petsc;
+			};
+			name = Release;
+		};
+		E6CF701111D23655001E5DF7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					PTH,
 					AXISYMMETRIC,
 					petsc,
 					"$(inherited)",
@@ -1869,7 +2315,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					MPISRC,
+					PTH,
 					AXISYMMETRIC,
 					petsc,
 					"$(inherited)",
@@ -1938,6 +2384,24 @@
 			buildConfigurations = (
 				6FF5F80A110CFDA100B16014 /* Debug */,
 				6FF5F80B110CFDA100B16014 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E67EBAF712D603C50011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_petsc_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E67EBAF812D603C50011EB69 /* Debug */,
+				E67EBAF912D603C50011EB69 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E67EBB3F12D603E10011EB69 /* Build configuration list for PBXNativeTarget "tri_hp_axi_petsc_mpi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E67EBB4012D603E10011EB69 /* Debug */,
+				E67EBB4112D603E10011EB69 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -59,7 +59,7 @@ namespace bdry_buoyancy {
 			struct global {                
 				bool is_loop;
 				/* PROPERTIES */
-				FLT Lv;
+				FLT Lf;
 				
 				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;

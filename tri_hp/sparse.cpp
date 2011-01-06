@@ -154,8 +154,8 @@ void tri_hp::petsc_jacobian() {
 		hp_ebdry(i)->petsc_jacobian_dirichlet();
 
 	/* FIX ME!! NOT SURE WHERE TO CALL THIS TEMPORARY */
-//	for(int i=0;i<nvbd;++i) 
-//		hp_vbdry(i)->petsc_jacobian_dirichlet();
+	for(int i=0;i<nvbd;++i) 
+		hp_vbdry(i)->petsc_jacobian_dirichlet();
 			
 	return;
 }
@@ -180,7 +180,7 @@ void tri_hp::petsc_rsdl() {
 	for(int m=0;m<basis::tri(log2p)->sm();++m)
 		for(int i=0;i<nebd;++i)
 			hp_ebdry(i)->sdirichlet(m);
-			
+	
 	PetscScalar *array;
 	VecGetArray(petsc_f,&array);
 	Array<FLT,1> res(array, shape(jacobian_size), neverDeleteData);
@@ -191,7 +191,7 @@ void tri_hp::petsc_rsdl() {
 }
 
 
-#define DEBUG_TOL 1.0e-7
+#define DEBUG_TOL 1.0e-5
 #define WBC
 
 void tri_hp::test_jacobian() {
@@ -387,19 +387,19 @@ void tri_hp::test_jacobian() {
 				*gbl->log << "row " << i+jacobian_start << ": ";
 				int cnt = 0;
 				for(int j=0;j<jacobian_size;++j) {
-					if (fabs(testJ(i,j)) > DEBUG_TOL) {
+					if (!(fabs(testJ(i,j)) < DEBUG_TOL)) {	
 						if (cnt >= nnz) {
 							*gbl->log << " (Extra entry in full matrix " <<  j+jacobian_start << ' ' << testJ(i,j) << ") ";
 							continue;
 						}
 						if (cols[cnt] == j+jacobian_start) {
-							if (fabs(testJ(i,j) -vals[cnt]) > DEBUG_TOL) 
+							if (!(fabs(testJ(i,j) -vals[cnt]) < DEBUG_TOL)) 
 								*gbl->log << " (Jacobian " << j+jacobian_start << ", "<< testJ(i,j) << ' ' << vals[cnt] << ") ";
 							++cnt;
 						}
 						else if (cols[cnt] < j+jacobian_start) {
 							do {
-								if (fabs(vals[cnt]) > DEBUG_TOL && cols[cnt] >= jacobian_start)
+								if (!(fabs(vals[cnt]) < DEBUG_TOL) && cols[cnt] >= jacobian_start)
 									*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
 								++cnt;
 							} while (cols[cnt] < j+jacobian_start);
@@ -412,7 +412,7 @@ void tri_hp::test_jacobian() {
 				}
 				if (cnt < nnz) {
 					do {
-						if (fabs(vals[cnt]) > DEBUG_TOL && cols[cnt] < jacobian_start+jacobian_size)
+						if (!(fabs(vals[cnt]) < DEBUG_TOL) && cols[cnt] < jacobian_start+jacobian_size)
 							*gbl->log << " (Extra entry in sparse matrix " << cols[cnt] << ' ' << vals[cnt] << ") ";
 					} while (++cnt < nnz);
 				}
@@ -511,7 +511,8 @@ void tri_hp::test_jacobian() {
 		}
 	}
 			
-	
+	*gbl->log << J << std::endl;
+
 	// MatView(petsc_J,0);
 }
 
