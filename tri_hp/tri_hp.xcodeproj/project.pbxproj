@@ -350,7 +350,6 @@
 		6FFA305109769DD7008E427F /* tri_hp_ins.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AEF091AF516002BAA09 /* tri_hp_ins.h */; };
 		6FFEF5DF0DCEA2E60079FF6D /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
 		6FFFB67611777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
-		6FFFB67811777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		6FFFB67911777A9300EFEB3C /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FFFB67411777A9300EFEB3C /* length.cpp */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		9504779212D4FC73000CF354 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F004489091FD33A00A6F21E /* allocate.cpp */; };
@@ -377,15 +376,9 @@
 		E602903912B13A2400F7B536 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098C0A8AC9D100BD5ADB /* tstep.cpp */; };
 		E602903A12B13A2500F7B536 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FD5098A0A8AC9D100BD5ADB /* rsdl.cpp */; };
 		E602903B12B13A2600F7B536 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FE412F00B7A77D500FFA5CC /* bdry.cpp */; };
-		E62CDC4512B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
 		E62CDC4612B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
-		E62CDC4712B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
 		E62CDC4812B7114D0042211D /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
-		E67EBAA712D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
-		E67EBAA812D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
-		E67EBAA912D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E67EBAAA12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
-		E67EBAAB12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E67EBAAC12D603BC0011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E67EBAB012D603C50011EB69 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E67EBAB112D603C50011EB69 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
@@ -422,7 +415,6 @@
 		E67EBAD012D603C50011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
 		E67EBAD112D603C50011EB69 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
 		E67EBAD212D603C50011EB69 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
-		E67EBAD312D603C50011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E67EBAD512D603C50011EB69 /* libtri_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF4091AFB3500FB5D82 /* libtri_basis.a */; };
 		E67EBAD612D603C50011EB69 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
 		E67EBAD712D603C50011EB69 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
@@ -484,8 +476,6 @@
 		E67EBB1712D603E10011EB69 /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BD203510B863F40006A896 /* sparse.cpp */; };
 		E67EBB1812D603E10011EB69 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		E67EBB1912D603E10011EB69 /* reinit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E6852BAA121DCA4E00EF7E07 /* reinit.cpp */; };
-		E67EBB1A12D603E10011EB69 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E62CDC4212B7114D0042211D /* bdry.cpp */; };
-		E67EBB1B12D603E10011EB69 /* melt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E67EBAA612D603BC0011EB69 /* melt.cpp */; };
 		E67EBB1D12D603E10011EB69 /* libtri_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF4091AFB3500FB5D82 /* libtri_basis.a */; };
 		E67EBB1E12D603E10011EB69 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
 		E67EBB1F12D603E10011EB69 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
@@ -1610,9 +1600,6 @@
 				6F9853E40BDE612700D342F6 /* surface.cpp in Sources */,
 				6F9853E50BDE612700D342F6 /* allocate.cpp in Sources */,
 				6F9853F10BDE612700D342F6 /* bdry.cpp in Sources */,
-				6FFFB67811777A9300EFEB3C /* length.cpp in Sources */,
-				E62CDC4512B7114D0042211D /* bdry.cpp in Sources */,
-				E67EBAA912D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1782,7 +1769,6 @@
 				959539B212D5002E00465DCA /* bdry.cpp in Sources */,
 				959539B312D5002F00465DCA /* getnewbdry.cpp in Sources */,
 				959539B412D5003000465DCA /* getnewibc.cpp in Sources */,
-				E67EBAA812D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1828,7 +1814,6 @@
 				9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */,
 				9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */,
 				9504779D12D4FCA6000CF354 /* minvrt.cpp in Sources */,
-				E67EBAA712D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1871,7 +1856,6 @@
 				E67EBAD012D603C50011EB69 /* bdry.cpp in Sources */,
 				E67EBAD112D603C50011EB69 /* getnewbdry.cpp in Sources */,
 				E67EBAD212D603C50011EB69 /* getnewibc.cpp in Sources */,
-				E67EBAD312D603C50011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1907,8 +1891,6 @@
 				E67EBB1712D603E10011EB69 /* sparse.cpp in Sources */,
 				E67EBB1812D603E10011EB69 /* tadvance.cpp in Sources */,
 				E67EBB1912D603E10011EB69 /* reinit.cpp in Sources */,
-				E67EBB1A12D603E10011EB69 /* bdry.cpp in Sources */,
-				E67EBB1B12D603E10011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1944,8 +1926,6 @@
 				E6CF6FEB11D23655001E5DF7 /* sparse.cpp in Sources */,
 				E6CF6FEC11D23655001E5DF7 /* tadvance.cpp in Sources */,
 				E6852BB0121DCA4E00EF7E07 /* reinit.cpp in Sources */,
-				E62CDC4712B7114D0042211D /* bdry.cpp in Sources */,
-				E67EBAAB12D603BC0011EB69 /* melt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
