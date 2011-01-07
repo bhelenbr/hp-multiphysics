@@ -49,6 +49,7 @@ namespace bdry_buoyancy {
 	
 	class melt : public bdry_ins::flexible {	
 		protected:
+			tri_hp_buoyancy &x;
 			Array<FLT,1> ksprg;
 			Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
 			Array<TinyVector<FLT,tri_mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
@@ -59,7 +60,7 @@ namespace bdry_buoyancy {
 			struct global {                
 				bool is_loop;
 				/* PROPERTIES */
-				FLT Lf;
+				FLT Lf, rho_s, cp_s;
 				
 				/* SOLUTION STORAGE ON FIRST ENTRY TO NSTAGE */
 				Array<TinyVector<FLT,tri_mesh::ND>,1> vug0;
@@ -88,17 +89,17 @@ namespace bdry_buoyancy {
 			
 		public:
 			void* create_global_structure() {return new global;}
-			melt(tri_hp_ins &xin, edge_bdry &bin) : flexible(xin,bin) {
+			melt(tri_hp_buoyancy &xin, edge_bdry &bin) : flexible(xin,bin), x(xin) {
 				mytype = "melt";
 			}
-			melt(const melt& inbdry, tri_hp_ins &xin, edge_bdry &bin)  : flexible(inbdry,xin,bin) {
+			melt(const melt& inbdry, tri_hp_buoyancy &xin, edge_bdry &bin)  : flexible(inbdry,xin,bin), x(xin) {
 				gbl = inbdry.gbl;
 				ksprg.resize(base.maxseg);
 				vug_frst.resize(base.maxseg+1);
 				vdres.resize(1,base.maxseg+1);
 				fine = &inbdry;
 			}
-			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+			melt* create(tri_hp& xin, edge_bdry &bin) const {return new melt(*this,dynamic_cast<tri_hp_buoyancy&>(xin),bin);}
 			
 			void init(input_map& input,void* gbl_in); 
 			/* FOR COUPLED DYNAMIC BOUNDARIES */
