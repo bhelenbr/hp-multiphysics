@@ -225,10 +225,13 @@ namespace bdry_ins {
 
 			void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
 
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+
 				Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
 				axpt(0) = xpt(0); axpt(1) = xpt(1);
 				amv(0) = mv(0); amv(1) = mv(1);
-				anorm(0)= norm(0); anorm(1) = norm(1);
+				anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
+
 				for (int n=0;n<x.NV;++n) {
 					switch(type(n)) {
 						case(essential): {
@@ -236,8 +239,6 @@ namespace bdry_ins {
 							break;
 						}
 						case(natural): {
-							FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
-							norm /= length;
 							flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
 							break;
 						}
