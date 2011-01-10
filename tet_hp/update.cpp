@@ -128,6 +128,54 @@ void tet_hp::rsdl(int stage) {
 	return;
 }
 
+
+void tet_hp::element_jacobian(int tind, Array<FLT,2> &K) {
+	Array<TinyVector<FLT,MXTM>,1> R(NV),Rbar(NV),lf_re(NV),lf_im(NV);
+	Array<FLT,1> dw(NV);
+#ifdef BZ_DEBUG
+	const FLT eps_r = 0.0e-6, eps_a = 1.0e-6;  /*<< constants for debugging jacobians */
+#else
+	const FLT eps_r = 1.0e-6, eps_a = 1.0e-10;  /*<< constants for accurate numerical determination of jacobians */
+#endif
+	
+	ugtouht(tind);
+	
+	dw = 0.0;
+	for(int i=0;i<4;++i)
+		for(int n=0;n<NV;++n)
+			dw = dw + fabs(uht(n)(i));
+	
+	dw = dw*eps_r;
+	dw = dw +eps_a;
+	
+	element_rsdl(tind,0,uht,lf_re,lf_im);
+	for(int i=0;i<basis::tet(log2p).tm;++i) 
+		for(int n=0;n<NV;++n) 
+			Rbar(n)(i)=lf_re(n)(i)+lf_im(n)(i);
+	
+	
+	int kcol = 0;
+	for(int mode = 0; mode < basis::tet(log2p).tm; ++mode){
+		for(int var = 0; var < NV; ++var){
+			uht(var)(mode) += dw(var);
+			
+			element_rsdl(tind,0,uht,lf_re,lf_im);
+			
+			int krow = 0;
+			for(int i=0;i<basis::tet(log2p).tm;++i)
+				for(int n=0;n<NV;++n)
+					K(krow++,kcol) = (lf_re(n)(i) +lf_im(n)(i) -Rbar(n)(i))/dw(var);
+			
+			++kcol;
+			uht(var)(mode) -= dw(var);
+		}
+	}
+	
+	return;
+}
+
+
+
 void tet_hp::update() {
 	int i,j,m,k,n,indx,indx1;
 	FLT cflalpha;
@@ -136,12 +184,12 @@ void tet_hp::update() {
 	
 	//l2error(gbl->ibc);
 	
-#ifdef petsc
-	petsc_solve();
-#else
-	//superlu();
-	superilu();
-#endif
+//#ifdef petsc
+//	petsc_solve();
+//#else
+//	//superlu();
+//	superilu();
+//#endif
 
 	
 	/* COUPLED MESH MOVMEMENT */
@@ -185,6 +233,7 @@ void tet_hp::update() {
 			hp_fbdry(i)->fdirichlet();
 
 		minvrt();
+		//jacobi_relaxation();
 
 #ifdef DEBUG   
 //		if (coarse_level) {

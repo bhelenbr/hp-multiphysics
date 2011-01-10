@@ -10,8 +10,6 @@
 #ifndef _hp_boundary_h_
 #define _hp_boundary_h_
 
-//#define NODAL
-
 #include "tet_hp.h"
 #include <myblas.h>
 #include "hp_boundary.h"

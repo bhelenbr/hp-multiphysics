@@ -47,26 +47,26 @@ namespace bdry_cd {
 					}
 				}
 			}
-			void apply_sparse_dirichlet(bool compressed_column) {
-				int gind;
-				int em=basis::tet(x.log2p).em;
-				int fm=basis::tet(x.log2p).fm;
-
-				for(int i=0;i<base.npnt;++i)
-					x.sparse_dirichlet(base.pnt(i).gindx,compressed_column);
-				
-				for(int i=0;i<base.nseg;++i){
-					gind = x.npnt+base.seg(i).gindx*em;
-					for(int m=0; m<em; ++m)
-						x.sparse_dirichlet(gind+m,compressed_column);
-				}
-				
-				for(int i=0;i<base.ntri;++i){
-					gind = x.npnt+x.nseg*em+base.tri(i).gindx*fm;
-					for(int m=0; m<fm; ++m)
-						x.sparse_dirichlet(gind+m,compressed_column);
-				}				
-			}
+//			void apply_sparse_dirichlet(bool compressed_column) {
+//				int gind;
+//				int em=basis::tet(x.log2p).em;
+//				int fm=basis::tet(x.log2p).fm;
+//
+//				for(int i=0;i<base.npnt;++i)
+//					x.sparse_dirichlet(base.pnt(i).gindx,compressed_column);
+//				
+//				for(int i=0;i<base.nseg;++i){
+//					gind = x.npnt+base.seg(i).gindx*em;
+//					for(int m=0; m<em; ++m)
+//						x.sparse_dirichlet(gind+m,compressed_column);
+//				}
+//				
+//				for(int i=0;i<base.ntri;++i){
+//					gind = x.npnt+x.nseg*em+base.tri(i).gindx*fm;
+//					for(int m=0; m<fm; ++m)
+//						x.sparse_dirichlet(gind+m,compressed_column);
+//				}				
+//			}
 
 			void tadvance(); 
 	};

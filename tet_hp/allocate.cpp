@@ -181,16 +181,21 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	gbl->res_r.e.resize(maxvst,em0,NV);
 	gbl->res_r.f.resize(maxvst,fm0,NV);
 	gbl->res_r.i.resize(maxvst,im0,NV);
-	gbl->res_r.v = 0.;
-	gbl->res_r.e = 0.;
-	gbl->res_r.f = 0.;
-	gbl->res_r.i = 0.;
+	gbl->res_r.v = 0.0;
+	gbl->res_r.e = 0.0;
+	gbl->res_r.f = 0.0;
+	gbl->res_r.i = 0.0;
 
 	gbl->res0.v.resize(maxvst,NV);
 	gbl->res0.e.resize(maxvst,basis::tet(log2p).em,NV);
 	gbl->res0.f.resize(maxvst,basis::tet(log2p).fm,NV);
 	gbl->res0.i.resize(maxvst,basis::tet(log2p).im,NV); 
-	
+		
+	gbl->jacob_diag.v.resize(maxvst,NV);
+	gbl->jacob_diag.e.resize(maxvst,em0,NV);
+	gbl->jacob_diag.f.resize(maxvst,fm0,NV);
+	gbl->jacob_diag.i.resize(maxvst,im0,NV);
+		
 	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
 	if (gbl->diagonal_preconditioner) {
 		gbl->vprcn.resize(maxvst,NV);
@@ -262,11 +267,11 @@ void tet_hp::init(input_map& inmap, void *gin) {
 //		ija(i) = size_sparse_matrix+1;
 //#endif	
 	
-#ifdef petsc
-	petsc_initialize();
-#else
-	initialize_sparse();
-#endif
+//#ifdef petsc
+//	petsc_initialize();
+//#else
+//	initialize_sparse();
+//#endif
 
 	//test();
 	

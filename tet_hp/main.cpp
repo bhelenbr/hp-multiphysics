@@ -88,9 +88,12 @@ void ctrlc(int signal)
 	/* AND OUTPUTS SOLUTION AT TIME OF INTERRUPT */
 //    sim::blks.output("interrupt",block::restart);
 //    sim::blks.output("interrupt",block::display);
-#ifdef MPISRC
-	MPI_Finalize();
-#endif
-	exit(1);
+//#ifdef MPISRC
+//	MPI_Finalize();
+//#endif
+//	exit(1);
+	
+	sim::abort(__LINE__,__FILE__,&std::cerr);
+
 }
 

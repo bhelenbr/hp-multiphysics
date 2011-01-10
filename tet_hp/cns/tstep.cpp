@@ -221,3 +221,100 @@ void tet_hp_cns::setup_preconditioner() {
 	
 	tet_hp::setup_preconditioner();
 }
+
+void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep) {
+	
+	Array<FLT,2> P(NV,NV),A(NV,NV),B(NV,NV),S(NV,NV),Tinv(NV,NV),temp(NV,NV);
+	
+	FLT gm1 = gbl->gamma-1;
+	FLT gogm1 = gbl->gamma/gm1;
+	FLT pr = u(0);
+	FLT uv = u(1);
+	FLT vv = u(2);
+	FLT wv = u(3);
+	FLT rt = u(4);	
+	FLT ke = 0.5*(uv*uv+vv*vv+wv*wv);
+	
+	/* Preconditioner */
+	P = ke*gm1,            -uv*gm1,           -vv*gm1,           gm1,
+	-uv/pr*rt,         1.0/pr*rt,         0.0,               0.0,
+	-1.0/pr*vv*rt,     0.0,               1.0/pr*rt,         0.0,
+	pr*(gm1*ke-rt)*rt, -1.0/pr*rt*uv*gm1, -1.0/pr*rt*vv*gm1, 1.0/pr*rt*gm1;
+	
+	
+	/* Inverse of Preconditioner */
+	Pinv = 1.0/rt,        0.0,      0.0,      -pr/rt/rt,
+	uv/rt,         pr/rt,    0.0,      -uv*pr/rt/rt,
+	vv/rt,         0.0,      pr/rt,    -vv*pr/rt/rt,
+	1.0/gm1+ke/rt, uv*pr/rt, vv*pr/rt, -pr/rt/rt*ke;	
+	
+	/* df/dw */
+	A = 1.0/rt*uv,               pr/rt,                           0.0,         -pr/rt/rt*uv,
+	1.0/rt*uv*uv+1.0,        2.0*pr/rt*uv,                    0.0,         -pr/rt/rt*uv*uv,
+	1.0/rt*uv*vv,            pr/rt*vv,                        pr/rt*uv,    -pr/rt/rt*uv*vv,
+	1.0/rt*uv*(gogm1*rt+ke), pr/rt*(gogm1*rt+ke)+pr/rt*uv*uv, pr/rt*uv*vv, -pr/rt/rt*uv*(gogm1*rt+ke)+pr/rt*uv*gogm1;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*A(k,j);
+	A = temp;
+	
+	matrix_absolute_value(A);
+	
+	/* dg/dw */
+	B = 1.0/rt*vv,               0.0,         pr/rt,                           -pr/rt/rt*vv,
+	1.0/rt*uv*vv,            pr/rt*vv,    pr/rt*uv,                        -pr/rt/rt*uv*vv,
+	1.0/rt*vv*vv+1.0,        0.0,         2.0*pr/rt*vv,                    -pr/rt/rt*vv*vv,
+	1.0/rt*vv*(gogm1*rt+ke), pr/rt*uv*vv, pr/rt*(gogm1*rt+ke)+pr/rt*vv*vv, -pr/rt/rt*vv*(gogm1*rt+ke)+pr/rt*vv*gogm1;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*B(k,j);
+	
+	B = temp;
+	
+	matrix_absolute_value(B);
+	
+	S = 0.0, 0.0,     0.0,     0.0,
+	0.0, gbl->mu, 0.0,     0.0,
+	0.0, 0.0,     gbl->mu, 0.0,
+	0.0, 0.0,     0.0,     gbl->kcond;
+	
+	S = Pinv*gbl->dti+1.0/hmax/hmax*S;
+	
+	temp = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				temp(i,j)+=P(i,k)*S(k,j);
+	
+	S = temp;
+	
+	Tinv = 2.0/hmax*(A+B+hmax*S);
+	
+	/* smallest eigenvalue of Tau tilde */
+	timestep = 1.0/spectral_radius(Tinv);
+	
+	/*  LU factorization  */
+	int info,ipiv[NV];
+	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
+	
+	for (int i = 0; i < NV; ++i)
+		for (int j = 0; j < NV; ++j)
+			temp(i,j)=P(j,i);
+	
+	/* Solve transposed system temp' = inv(Tinv')*temp' */
+	char trans[] = "T";
+	GETRS(trans,NV,NV,Tinv.data(),NV,ipiv,temp.data(),NV,info);
+	
+	for (int i = 0; i < NV; ++i)
+		for (int j = 0; j < NV; ++j)
+			Tau(i,j)=temp(j,i);
+	
+	
+	return;
+}

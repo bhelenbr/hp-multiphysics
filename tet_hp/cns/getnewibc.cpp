@@ -22,19 +22,13 @@ namespace ibc_cns {
 				FLT amp = (time > 0.0 ? 0.0 : perturb_amp); 
 				switch(n) {
 					case(0):
-						//return(speed*cos(alpha) + amp*(0.5-x(0))*(0.5+x(0))*(0.5-x(1))*(0.5+x(1))*(0.5-x(2))*(0.5+x(2)));
-						//return(speed*cos(alpha) + amp*(1.0-x(0))*(x(0))*(1.0-x(1))*(x(1))*(1.0-x(2))*(x(2)));
-
-						//return(speed*cos(alpha) + .25*amp*exp(-x(0)*x(0)*100)*exp(-x(1)*x(1)*100)*exp(-x(2)*x(2)*100));
-						//return(speed*cos(alpha) + .25*amp*exp(-(x(0)-0.5)*(x(0)-0.5)*100)*exp(-(x(1)-0.5)*(x(1)-0.5)*100)*exp(-(x(2)-0.5)*(x(2)-0.5)*100));
-						return(0);
+						return(0.7);
 					case(1):
-						return(speed*sin(alpha));
+						return(speed/340.0*sin(alpha));
 					case(2):
-						//return(0.0);
-						return(16/0.08333333333/0.08333333333/0.1875/0.1875*(0.1875/2.0+x(0)-0.375)*(0.1875/2.0-x(0)+0.375)*(0.08333333333/2.0+x(1)-0.104166666665)*(0.08333333333/2.0-x(1)+0.104166666665));
+						return(speed/340.0*cos(alpha));
 					case(3):
-						return(0.0);
+						return(0.7);
 				}
 				return(0.0);
 			}
@@ -78,10 +72,8 @@ namespace ibc_cns {
 	protected:
 		tet_hp_cns &x;
 		//bdry_cns::surface *surf;
-		FLT delta_rho, rho_factor;
 		FLT delta_mu, mu_factor;
 		FLT delta_g, delta_g_factor;
-		FLT delta_rho2, rho2_factor;
 		FLT delta_mu2, mu2_factor;
 		FLT delta_sigma, sigma_factor;
 		int interval;
@@ -97,16 +89,6 @@ namespace ibc_cns {
 		}
 		void init(input_map& input, std::string idnty) {
 			std::string keyword, val;
-			
-			keyword = idnty + "_delta_rho";
-			if (!input.get(keyword,delta_rho)) {
-				input.getwdefault("delta_rho",delta_rho,0.0);
-			}
-			
-			keyword = idnty + "_rho_factor";
-			if (!input.get(keyword,rho_factor)) {
-				input.getwdefault("rho_factor",rho_factor,1.0);
-			}
 			
 			keyword = idnty + "_delta_mu";
 			if (!input.get(keyword,delta_mu)) {
@@ -174,9 +156,6 @@ namespace ibc_cns {
 		void tadvance() {
 			if (!x.coarse_level) {
 				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-					
-					x.gbl->rho += delta_rho;
-					x.gbl->rho *= rho_factor;
 					
 					x.gbl->mu  += delta_mu;
 					x.gbl->mu  *= mu_factor;

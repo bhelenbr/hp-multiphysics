@@ -11,6 +11,9 @@
 
 #define CD
 #define INS
+//#define CNS
+
+
 //#define POD
 
 #ifdef CD
@@ -21,6 +24,10 @@
 #include "ins/tet_hp_ins.h"
 #endif
 
+#ifdef CNS
+#include "ins/tet_hp_cns.h"
+#endif
+
 #ifdef POD
 #include "pod/pod_simulate.h"
 #include "pod/pod_generate.h"
@@ -29,8 +36,8 @@
 
 class btype {
 	public:
-		const static int ntypes = 7;
-		enum ids {plain,cd,ins,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim};
+		const static int ntypes = 8;
+		enum ids {plain,cd,ins,cns,pod_ins_gen,pod_cd_gen,pod_ins_sim,pod_cd_sim};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -39,7 +46,7 @@ class btype {
 			return(-1);
 		}
 };
-const char btype::names[ntypes][40] = {"plain","cd","ins","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
+const char btype::names[ntypes][40] = {"plain","cd","ins","cns","pod_ins_gen","pod_cd_gen","pod_ins_sim","pod_cd_sim"};
 
 multigrid_interface* block::getnewlevel(input_map& input) {
 	std::string keyword,val,ibcname,srcname;
@@ -76,6 +83,13 @@ multigrid_interface* block::getnewlevel(input_map& input) {
 			return(temp);
 		}
 #endif   
+	
+#ifdef CNS
+		case btype::cns: {
+			tet_hp_cns *temp = new tet_hp_cns();
+			return(temp);
+		}
+#endif 
 			
 #if (defined(POD) && defined(CD))
 		case btype::pod_cd_gen: {

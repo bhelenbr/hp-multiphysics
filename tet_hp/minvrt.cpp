@@ -58,6 +58,7 @@ void tet_hp::minvrt() {
 	}
 		
 	if (gbl->diagonal_preconditioner) {
+		//basis::tet(log2p).vdiag = 5.0;
 		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tet(log2p).vdiag;
 	}    
 	
@@ -350,7 +351,16 @@ void tet_hp::minvrt() {
 void tet_hp::minvrt() {
 	int i,j,k,n,m,tind,msgn,sgn,side,sind,find,v0,indx,ind,indx2,info;
 	//cout << basis::tet(log2p).vdiag << ' ' << basis::tet(log2p).ediag << ' ' << basis::tet(log2p).fdiag << endl;
-	basis::tet(log2p).vdiag = 5;
+	
+	FLT diagfactor = 0.31;
+	
+	if (basis::tet(log2p).p == 1) 
+		basis::tet(log2p).vdiag = 5.0;
+	
+	if (basis::tet(log2p).p == 2) 
+		basis::tet(log2p).vdiag = diagfactor*15.0;//diagfactor*14.0;
+
+	
 	/* VERTEX */
 	if (gbl->diagonal_preconditioner) {
 		gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tet(log2p).vdiag;
@@ -366,7 +376,7 @@ void tet_hp::minvrt() {
 	if(basis::tet(log2p).em == 0) return;
 		//cout << basis::tet(log2p).vfms(4,Range::all()) << endl;
 	if(basis::tet(log2p).p == 2){
-		basis::tet(log2p).ediag(0) =10;
+		basis::tet(log2p).ediag(0) = diagfactor*60.0;//diagfactor*77.0;
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 	
 	/* APPLY VERTEX DIRICHLET B.C.'S */
@@ -496,6 +506,8 @@ void tet_hp::setup_preconditioner() {
 	
 	if(basis::tet(log2p).p == 3)
 		spoke();
+
+	jacobian_diagonal();
 	
 	return;
 }
@@ -570,7 +582,7 @@ void tet_hp::minvrt_test() {
 	gbl->fprcn(Range::all(),Range::all())=0;
 	
 	for(tind=0;tind<ntet;++tind){      
-		gbl->iprcn(tind,0) = tet(tind).vol/8; 	
+		gbl->iprcn(tind,0) = tet(tind).vol/8.0; 	
 		for(i=0;i<4;++i) 
 			gbl->vprcn(tet(tind).pnt(i),0) += gbl->iprcn(tind,0);			
 		if (basis::tet(log2p).em > 0) {
@@ -587,7 +599,7 @@ void tet_hp::minvrt_test() {
 	hmin = 1000000;
 	havg = 0.0;
 	for(tind = 0; tind < ntet; ++tind) {
-		jcb = tet(tind).vol/8; 
+		jcb = tet(tind).vol/8.0; 
 		v = tet(tind).pnt;
 		amax = 0.0;
 		amin = 1000000;
@@ -630,8 +642,8 @@ void tet_hp::minvrt_test() {
 		spoke();
 	#endif
 		
-	setup_preconditioner();
-
+	tet_hp::setup_preconditioner();
+	
 	ug.v(Range(0,npnt-1),Range::all()) = 0.0;
 	if(basis::tet(log2p).em > 0) {
 		ug.e(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
@@ -646,7 +658,7 @@ void tet_hp::minvrt_test() {
 	}
 	
 
-	for(int it = 0; it < 200; ++it){
+	for(int it = 0; it < 1; ++it){
 	
 	   gbl->res.v(Range(0,npnt-1),Range::all()) = 0.0;
 		if(basis::tet(log2p).em > 0) {
@@ -723,6 +735,7 @@ void tet_hp::minvrt_test() {
 				maxres = fabs(gbl->res.v(i,0));
 		}
 		cout << it+1 << ' ' <<maxres << endl;
+
 		/* Inversion finished */
 		ug.v(Range(0,npnt-1),Range::all()) -= gbl->res.v(Range(0,npnt-1),Range::all());
 		if (basis::tet(log2p).em > 0) {
@@ -736,11 +749,15 @@ void tet_hp::minvrt_test() {
 		if (basis::tet(log2p).im > 0) {
 			ug.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all()) -= gbl->res.i(Range(0,ntet-1),Range(0,basis::tet(log2p).im-1),Range::all());
 		}
-		//l2error(gbl->ibc);
+//		l2error(gbl->ibc);
 //		std::ostringstream filename;
 //		filename.str("");
 //		filename << "test" << it << std::flush;
 //		output(filename.str(),block::display);
+		
+		if (maxres < 1e-15) {
+			break;
+		}
 	}
 
 

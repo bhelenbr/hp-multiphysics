@@ -214,14 +214,14 @@ void tet_hp::test() {
 		
 		
 		
-//			cout << "running minvrt_test" << endl;
-//
-//			tet_hp::minvrt_test();
-//			std::ostringstream filename;
-//			filename.str("");
-//			filename << "minvrt_test"  << std::flush;
-//			output(filename.str(),block::display);
-//			exit(5);
+			cout << "running minvrt_test" << endl;
+
+			tet_hp::minvrt_test();
+			std::ostringstream filename;
+			filename.str("");
+			filename << "minvrt_test"  << std::flush;
+			output(filename.str(),block::display);
+			exit(5);
 		
 			
 
