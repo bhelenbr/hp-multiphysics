@@ -203,7 +203,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	if (info != 0) {
 		*BASE::gbl->log << "Failed to find eigenmodes " << info << std::endl;
-		sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+		sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 	}
 
 	*BASE::gbl->log << "eigenvalues "<<  eigenvalues << std::endl;
@@ -359,7 +359,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.open(filename.c_str());
 		if (bout.error()) {
 			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-			sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
@@ -370,7 +370,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		bout.close();
 	}
 	
-	sim::finalize(__LINE__,__FILE__,BASE::x.gbl->log);
+	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
 		
 	return;
 }
