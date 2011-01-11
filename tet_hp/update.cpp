@@ -190,6 +190,8 @@ void tet_hp::update() {
 //	//superlu();
 //	superilu();
 //#endif
+//	conjugate_gradient();
+//	return;
 
 	
 	/* COUPLED MESH MOVMEMENT */
@@ -232,9 +234,13 @@ void tet_hp::update() {
 		for(i=0;i<nfbd;++i)
 			hp_fbdry(i)->fdirichlet();
 
+#ifdef JACOBI
+		jacobi_relaxation();
+#else
 		minvrt();
-		//jacobi_relaxation();
-
+#endif
+		
+		
 #ifdef DEBUG   
 //		if (coarse_level) {
 		printf("%s nstage: %d npnt: %d log2p: %d\n",gbl->idprefix.c_str(),stage,npnt,log2p);

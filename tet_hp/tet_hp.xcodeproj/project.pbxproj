@@ -232,6 +232,7 @@
 		95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblibtet_nodal_basis.a; path = ../lib/liblibtet_nodal_basis.a; sourceTree = SOURCE_ROOT; };
 		95BA7C0A12DBA07A000C3AFF /* jacobi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jacobi.cpp; sourceTree = "<group>"; };
 		95BA7C2B12DBA597000C3AFF /* conjgrad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = conjgrad.cpp; sourceTree = "<group>"; };
+		95BA7D1912DBB254000C3AFF /* update.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = update.cpp; path = cns/update.cpp; sourceTree = "<group>"; };
 		95BE98471086B60E0026238C /* libsuperlu_4.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuperlu_4.0.a; path = ../../Packages/lib/libsuperlu_4.0.a; sourceTree = SOURCE_ROOT; };
 		95C278AA10F67FF400759C42 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns/allocate.cpp; sourceTree = "<group>"; };
 		95C278AB10F67FF400759C42 /* bdry_cns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_cns.h; path = cns/bdry_cns.h; sourceTree = "<group>"; };
@@ -466,15 +467,16 @@
 		95C2789810F67F6300759C42 /* Compressible */ = {
 			isa = PBXGroup;
 			children = (
+				95C278B110F67FF400759C42 /* tet_hp_cns.h */,
 				95C278AA10F67FF400759C42 /* allocate.cpp */,
+				95C278B210F67FF400759C42 /* tstep.cpp */,
+				95C278B010F67FF400759C42 /* rsdl.cpp */,
+				95C278AF10F67FF400759C42 /* length.cpp */,
+				95BA7D1912DBB254000C3AFF /* update.cpp */,
 				95C278AB10F67FF400759C42 /* bdry_cns.h */,
 				95C278AC10F67FF400759C42 /* bdry.cpp */,
 				95C278AD10F67FF400759C42 /* getnewbdry.cpp */,
 				95C278AE10F67FF400759C42 /* getnewibc.cpp */,
-				95C278AF10F67FF400759C42 /* length.cpp */,
-				95C278B010F67FF400759C42 /* rsdl.cpp */,
-				95C278B110F67FF400759C42 /* tet_hp_cns.h */,
-				95C278B210F67FF400759C42 /* tstep.cpp */,
 			);
 			name = Compressible;
 			sourceTree = "<group>";

@@ -132,7 +132,6 @@ void tet_hp::conjugate_gradient() {
 		if(resmax < 1.0e-10) break;
 		
 	}
-	exit(4);
 	
 	return;
 	

@@ -504,10 +504,13 @@ void tet_hp::setup_preconditioner() {
 //   }
 
 	
+
+#ifdef JACOBI
+	jacobian_diagonal();
+#else
 	if(basis::tet(log2p).p == 3)
 		spoke();
-
-	jacobian_diagonal();
+#endif
 	
 	return;
 }
