@@ -326,7 +326,7 @@ else
         c = 1;
         
         efix = 0.0; % Entropy fix
-        if (~prcndtn)
+        if (~prcndtn)            
             % UPWINDED STIFFNESS MATRIX USING CONSERVATIVE VARIABLES
             Ee = diag([u-c, u+c,   u,    u]);
             Ve =[1,1,1,0;-c+u,c+u,u,0;v,v,0,1;1/2*(-u^2+2*u*c+u^2*gam+v^2*gam-2*c*u*gam-v^2+2*c^2)/(gam-1),1/2*(u^2*gam-u^2+2*c*u*gam-2*u*c+2*c^2+v^2*gam-v^2)/(gam-1),1/2*(u^2-v^2),v];
@@ -337,6 +337,21 @@ else
             Vf =[1,1,1,0;u,u,0,1;v-c,v+c,v,0;1/2*(-2*c*v*gam+2*c*v+2*c^2-u^2+v^2*gam-v^2+u^2*gam)/(gam-1),1/2*(2*c*v*gam-2*c*v+2*c^2-u^2+v^2*gam-v^2+u^2*gam)/(gam-1),-1/2*(u^2-v^2),u];
             ay = Vf*Ef*inv(Vf);
             absay = Vf*(abs(Ef) +efix*c*mach*eye(4,4))*inv(Vf);
+            
+            % TO TEST THAT CONSERVATIVE PRECONDITIONER WORKS THE SAME AS
+            % SYMMETRY VARIABLES, UNCOMMENT THIS
+%             beta2 = (u^2+v^2)/c^2;
+%             q2 =u^2+v^2;
+%             h = c^2/(gam-1) +q2/2;
+%             precon = eye(4,4) -(1-beta2)*(gam-1)/c^2*[q2/2,-u,-v,1;u*q2/2,-u^2,-u*v,u;v*q2/2,-u*v,-v^2,v;h*q2/2,-u*h,-v*h,h];
+%             
+%             ax = precon*ax;
+%             ay = precon*ay;
+%             
+%             [Ve,Ee] = eig(ax);
+%             absax = Ve*abs(Ee)*inv(Ve);            
+%             [Vf,Ef] = eig(ay);
+%             absay = Vf*abs(Ef)*inv(Vf);
         else
             % THIS IS THE STIFFNESS MATRIX EXPRESSED USING SYMMETRY VARIABLES
             ax =[u, c, 0, 0; c, u, 0, 0; 0, 0, u, 0; 0, 0, 0, u];
