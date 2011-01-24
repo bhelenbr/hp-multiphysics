@@ -12,8 +12,7 @@
 #include <blitz/tinyvec-et.h>
 
 void tet_mesh::refineby2(const class tet_mesh& inmesh) {
-	int i,j,n,sind,ind,find,tind,p0,p1,count,pnear,err,initialsidenumber;
-	bool found;
+	int n,sind,ind,find,p0,p1;
 	TinyVector<FLT,ND> xpt;
 	int ijind[3][3][3];
 	
@@ -101,7 +100,6 @@ void tet_mesh::refineby2(const class tet_mesh& inmesh) {
 		ebdry(i)->reorder();
 	}
 	
-	npnt=count;
 	ntet=ind;
 	
 	/* UPDATE DATA STRUCTURES */
