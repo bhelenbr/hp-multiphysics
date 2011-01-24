@@ -233,10 +233,17 @@ class tet_hp : public tet_mesh  {
 		void minvrt_direct();
 		void jacobi_relaxation();
 		void jacobian_diagonal();
-		void conjugate_gradient();
-		void matrix_multiply(struct vefi& vec);
+
+		void matrix_multiply(struct vefi vecx, struct vefi& vecb);
 		void inner_product(FLT &alpha, struct vefi vec1,  struct vefi vec2 );
+		void saxpy(FLT alpha, FLT beta, struct vefi vecx,struct vefi& vecy );
+		void all_dirichlet();
 		void test();
+	
+		/* Krylov methods*/
+		void conjugate_gradient();
+		void cgs();
+		void bicgstab();
 
 		void spoke();
 		void particle();

@@ -275,7 +275,6 @@ void tet_hp::init(input_map& inmap, void *gin) {
 
 	//test();
 	
-	
 	/*********************************/
 	/* ALLOCATE ADAPTATION STORAGE   */
 	/*********************************/

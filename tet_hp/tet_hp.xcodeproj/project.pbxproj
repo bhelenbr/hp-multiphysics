@@ -9,12 +9,10 @@
 /* Begin PBXBuildFile section */
 		6F14BE040FBA8649006DD167 /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
 		6F25FE810FED8DEE00B2A5D7 /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */; };
-		6F2C827B0CE6506C000267B3 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C827A0CE6506C000267B3 /* libtri_mesh.a */; };
 		6F2C828A0CE6510B000267B3 /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C82890CE6510B000267B3 /* libpth.a */; };
 		6F2C82BC0CE6598C000267B3 /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
 		6F4CAF8C0FBF0B5E006D50F8 /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */; };
 		6F4CAF930FBF0BAD006D50F8 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4CAF920FBF0BAD006D50F8 /* libspline.a */; };
-		6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF5091AFB3500FB5D82 /* libblitz.a */; };
 		6F661FFC091AFB3500FB5D82 /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
 		6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
 		6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
@@ -24,8 +22,6 @@
 		6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
 		6FB40B1A091AF517002BAA09 /* tet_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tet_hp.h */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
-		951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181B107A9FDA005403AA /* libmpi.dylib */; };
-		951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 951C181C107A9FDA005403AA /* libmpi_cxx.dylib */; };
 		9527AE660E3513F000360E38 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
 		9527AE680E3513FA00360E38 /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
 		9527AE690E3513FB00360E38 /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
@@ -33,16 +29,61 @@
 		953320330D6B7BFF00961CD4 /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
-		957F5E64109B7AC1006756DD /* blas_mac_x.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E63109B7AC1006756DD /* blas_mac_x.a */; };
-		957F5E95109B7FA9006756DD /* libgfortran.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 957F5E94109B7FA9006756DD /* libgfortran.a */; };
 		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		958C01B612E4B1C200350BEF /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		958C01B712E4B1C200350BEF /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
+		958C01B812E4B1C200350BEF /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
+		958C01B912E4B1C200350BEF /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB901D80A6C782300A4729C /* allocate.cpp */; };
+		958C01BA12E4B1C200350BEF /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE4091AF516002BAA09 /* output.cpp */; };
+		958C01BB12E4B1C200350BEF /* hp_boundary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD9091AF516002BAA09 /* hp_boundary.cpp */; };
+		958C01BC12E4B1C200350BEF /* hp_getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68254D099850E600F57688 /* hp_getnewibc.cpp */; };
+		958C01BD12E4B1C200350BEF /* getnewblock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADB091AF516002BAA09 /* getnewblock.cpp */; };
+		958C01BE12E4B1C200350BEF /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95331FE40D6B602400961CD4 /* test.cpp */; };
+		958C01BF12E4B1C200350BEF /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
+		958C01C012E4B1C200350BEF /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
+		958C01C112E4B1C200350BEF /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
+		958C01C212E4B1C200350BEF /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
+		958C01C312E4B1C200350BEF /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
+		958C01C412E4B1C200350BEF /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
+		958C01C512E4B1C200350BEF /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
+		958C01C612E4B1C200350BEF /* copy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD4091AF516002BAA09 /* copy.cpp */; };
+		958C01C712E4B1C200350BEF /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
+		958C01C812E4B1C200350BEF /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AD0DCA19B7007A1D26 /* allocate.cpp */; };
+		958C01C912E4B1C200350BEF /* setup_preconditioner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B30DCA19B7007A1D26 /* setup_preconditioner.cpp */; };
+		958C01CA12E4B1C200350BEF /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9533379C0DCA18D2007A1D26 /* rsdl.cpp */; };
+		958C01CB12E4B1C200350BEF /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337AE0DCA19B7007A1D26 /* bdry.cpp */; };
+		958C01CC12E4B1C200350BEF /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B00DCA19B7007A1D26 /* getnewbdry.cpp */; };
+		958C01CD12E4B1C200350BEF /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 953337B10DCA19B7007A1D26 /* getnewibc.cpp */; };
+		958C01CE12E4B1C200350BEF /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE280F55C464008788DB /* allocate.cpp */; };
+		958C01CF12E4B1C200350BEF /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE310F55C464008788DB /* tstep.cpp */; };
+		958C01D012E4B1C200350BEF /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2E0F55C464008788DB /* rsdl.cpp */; };
+		958C01D112E4B1C200350BEF /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE290F55C464008788DB /* bdry.cpp */; };
+		958C01D212E4B1C200350BEF /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2B0F55C464008788DB /* getnewbdry.cpp */; };
+		958C01D312E4B1C200350BEF /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2C0F55C464008788DB /* getnewibc.cpp */; };
+		958C01D412E4B1C200350BEF /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9598AE2D0F55C464008788DB /* length.cpp */; };
+		958C01D512E4B1C200350BEF /* jacobi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C0A12DBA07A000C3AFF /* jacobi.cpp */; };
+		958C01D612E4B1C200350BEF /* krylov.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C2B12DBA597000C3AFF /* krylov.cpp */; };
+		958C01D812E4B1C200350BEF /* libtet_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B21BBEF30CBAC96D0056D083 /* libtet_basis.a */; };
+		958C01D912E4B1C200350BEF /* libtet_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B23E83230CF223480027B187 /* libtet_mesh.a */; };
+		958C01DA12E4B1C200350BEF /* libinput_map.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF6091AFB3500FB5D82 /* libinput_map.a */; };
+		958C01DB12E4B1C200350BEF /* libmyblas.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF8091AFB3500FB5D82 /* libmyblas.a */; };
+		958C01DC12E4B1C200350BEF /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F661FF9091AFB3500FB5D82 /* libquad.a */; };
+		958C01DD12E4B1C200350BEF /* libutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F662036091AFC8D00FB5D82 /* libutil.a */; };
+		958C01DE12E4B1C200350BEF /* libmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F66205C091AFFC500FB5D82 /* libmetis.a */; };
+		958C01DF12E4B1C200350BEF /* libmuparser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F77C5100B4D8959006A4504 /* libmuparser.a */; };
+		958C01E012E4B1C200350BEF /* libpth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C82890CE6510B000267B3 /* libpth.a */; };
+		958C01E112E4B1C200350BEF /* libbinio.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4CAF8B0FBF0B5E006D50F8 /* libbinio.dylib */; };
+		958C01E212E4B1C200350BEF /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F4CAF920FBF0BAD006D50F8 /* libspline.a */; };
+		958C01E312E4B1C200350BEF /* libMAdLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F25FE800FED8DEE00B2A5D7 /* libMAdLib.a */; };
+		958C01E412E4B1C200350BEF /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9529B9C5107F8DAA0002670A /* Accelerate.framework */; };
+		958C01E512E4B1C200350BEF /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C827A0CE6506C000267B3 /* libtri_mesh.a */; };
+		958C01E712E4B1C200350BEF /* tet_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tet_hp.h */; };
+		958C01E812E4B1C200350BEF /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		95BA7C0B12DBA07A000C3AFF /* jacobi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C0A12DBA07A000C3AFF /* jacobi.cpp */; };
-		95BA7C2C12DBA597000C3AFF /* conjgrad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C2B12DBA597000C3AFF /* conjgrad.cpp */; };
-		95BA7CAF12DBAE7B000C3AFF /* libtri_mesh_mpi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FB91B1C0ACCB45300792B04 /* libtri_mesh_mpi.a */; };
-		95BE98481086B60E0026238C /* libsuperlu_4.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95BE98471086B60E0026238C /* libsuperlu_4.0.a */; };
+		95BA7C2C12DBA597000C3AFF /* krylov.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C2B12DBA597000C3AFF /* krylov.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
-		95D407EC11A3011B009F34F7 /* liblibtet_nodal_basis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */; };
+		95C5539212DE57F800097436 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C827A0CE6506C000267B3 /* libtri_mesh.a */; };
 		95D4080811A3024A009F34F7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		95D4080911A3024A009F34F7 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
 		95D4080A11A3024A009F34F7 /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
@@ -133,6 +174,16 @@
 		B2DAEC540C70A5DA00D7B0D5 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE4091AF516002BAA09 /* output.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		958C01EE12E4B1D100350BEF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 958C01B412E4B1C200350BEF;
+			remoteInfo = tet_hp_jacobi;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		8DD76F690486A84900D96B5E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -142,6 +193,17 @@
 			files = (
 				6FB40B1A091AF517002BAA09 /* tet_hp.h in CopyFiles */,
 				B2A838610C46AAE20034A8DC /* hp_boundary.h in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		958C01E612E4B1C200350BEF /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				958C01E712E4B1C200350BEF /* tet_hp.h in CopyFiles */,
+				958C01E812E4B1C200350BEF /* hp_boundary.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -219,6 +281,7 @@
 		95671D860F57074800872173 /* particle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = particle.cpp; sourceTree = "<group>"; };
 		957F5E63109B7AC1006756DD /* blas_mac_x.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = blas_mac_x.a; path = ../../Packages/lib/blas_mac_x.a; sourceTree = SOURCE_ROOT; };
 		957F5E94109B7FA9006756DD /* libgfortran.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgfortran.a; path = /usr/local/lib/libgfortran.a; sourceTree = "<absolute>"; };
+		958C01EC12E4B1C200350BEF /* tet_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp; sourceTree = BUILT_PRODUCTS_DIR; };
 		9598AE280F55C464008788DB /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = ins/allocate.cpp; sourceTree = "<group>"; };
 		9598AE290F55C464008788DB /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = ins/bdry.cpp; sourceTree = "<group>"; };
 		9598AE2A0F55C464008788DB /* bdry_ins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_ins.h; path = ins/bdry_ins.h; sourceTree = "<group>"; };
@@ -231,7 +294,7 @@
 		9598AE310F55C464008788DB /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = ins/tstep.cpp; sourceTree = "<group>"; };
 		95B9A9610EB9DE5F00AF6AD4 /* liblibtet_nodal_basis.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblibtet_nodal_basis.a; path = ../lib/liblibtet_nodal_basis.a; sourceTree = SOURCE_ROOT; };
 		95BA7C0A12DBA07A000C3AFF /* jacobi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = jacobi.cpp; sourceTree = "<group>"; };
-		95BA7C2B12DBA597000C3AFF /* conjgrad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = conjgrad.cpp; sourceTree = "<group>"; };
+		95BA7C2B12DBA597000C3AFF /* krylov.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = krylov.cpp; sourceTree = "<group>"; };
 		95BA7D1912DBB254000C3AFF /* update.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = update.cpp; path = cns/update.cpp; sourceTree = "<group>"; };
 		95BE98471086B60E0026238C /* libsuperlu_4.0.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsuperlu_4.0.a; path = ../../Packages/lib/libsuperlu_4.0.a; sourceTree = SOURCE_ROOT; };
 		95C278AA10F67FF400759C42 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns/allocate.cpp; sourceTree = "<group>"; };
@@ -267,22 +330,35 @@
 				6F661FFE091AFB3500FB5D82 /* libmyblas.a in Frameworks */,
 				6F661FFF091AFB3500FB5D82 /* libquad.a in Frameworks */,
 				6F66203D091AFC8D00FB5D82 /* libutil.a in Frameworks */,
-				6F661FFB091AFB3500FB5D82 /* libblitz.a in Frameworks */,
 				6F66205D091AFFC500FB5D82 /* libmetis.a in Frameworks */,
 				6F77C5120B4D8959006A4504 /* libmuparser.a in Frameworks */,
-				6F2C827B0CE6506C000267B3 /* libtri_mesh.a in Frameworks */,
 				6F2C828A0CE6510B000267B3 /* libpth.a in Frameworks */,
 				6F4CAF8C0FBF0B5E006D50F8 /* libbinio.dylib in Frameworks */,
 				6F4CAF930FBF0BAD006D50F8 /* libspline.a in Frameworks */,
 				6F25FE810FED8DEE00B2A5D7 /* libMAdLib.a in Frameworks */,
-				951C181D107A9FDA005403AA /* libmpi.dylib in Frameworks */,
-				951C181E107A9FDB005403AA /* libmpi_cxx.dylib in Frameworks */,
 				9529B9C6107F8DAA0002670A /* Accelerate.framework in Frameworks */,
-				95BE98481086B60E0026238C /* libsuperlu_4.0.a in Frameworks */,
-				957F5E64109B7AC1006756DD /* blas_mac_x.a in Frameworks */,
-				957F5E95109B7FA9006756DD /* libgfortran.a in Frameworks */,
-				95D407EC11A3011B009F34F7 /* liblibtet_nodal_basis.a in Frameworks */,
-				95BA7CAF12DBAE7B000C3AFF /* libtri_mesh_mpi.a in Frameworks */,
+				95C5539212DE57F800097436 /* libtri_mesh.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		958C01D712E4B1C200350BEF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				958C01D812E4B1C200350BEF /* libtet_basis.a in Frameworks */,
+				958C01D912E4B1C200350BEF /* libtet_mesh.a in Frameworks */,
+				958C01DA12E4B1C200350BEF /* libinput_map.a in Frameworks */,
+				958C01DB12E4B1C200350BEF /* libmyblas.a in Frameworks */,
+				958C01DC12E4B1C200350BEF /* libquad.a in Frameworks */,
+				958C01DD12E4B1C200350BEF /* libutil.a in Frameworks */,
+				958C01DE12E4B1C200350BEF /* libmetis.a in Frameworks */,
+				958C01DF12E4B1C200350BEF /* libmuparser.a in Frameworks */,
+				958C01E012E4B1C200350BEF /* libpth.a in Frameworks */,
+				958C01E112E4B1C200350BEF /* libbinio.dylib in Frameworks */,
+				958C01E212E4B1C200350BEF /* libspline.a in Frameworks */,
+				958C01E312E4B1C200350BEF /* libMAdLib.a in Frameworks */,
+				958C01E412E4B1C200350BEF /* Accelerate.framework in Frameworks */,
+				958C01E512E4B1C200350BEF /* libtri_mesh.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,7 +436,7 @@
 				6FB40AE3091AF516002BAA09 /* update.cpp */,
 				6FB40AE0091AF516002BAA09 /* minvrt.cpp */,
 				95BA7C0A12DBA07A000C3AFF /* jacobi.cpp */,
-				95BA7C2B12DBA597000C3AFF /* conjgrad.cpp */,
+				95BA7C2B12DBA597000C3AFF /* krylov.cpp */,
 				6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */,
 				6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */,
 				6FB40ADA091AF516002BAA09 /* hp_boundary.h */,
@@ -382,6 +458,7 @@
 				6FB40ADF091AF516002BAA09 /* makefile */,
 				8DD76F6C0486A84900D96B5E /* tet_hp */,
 				95D4083A11A3024A009F34F7 /* tet_hp */,
+				958C01EC12E4B1C200350BEF /* tet_hp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -513,11 +590,30 @@
 			buildRules = (
 			);
 			dependencies = (
+				958C01EF12E4B1D100350BEF /* PBXTargetDependency */,
 			);
 			name = tet_hp;
 			productInstallPath = "$(HOME)/bin";
 			productName = spectral_hp;
 			productReference = 8DD76F6C0486A84900D96B5E /* tet_hp */;
+			productType = "com.apple.product-type.tool";
+		};
+		958C01B412E4B1C200350BEF /* tet_hp_jacobi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 958C01E912E4B1C200350BEF /* Build configuration list for PBXNativeTarget "tet_hp_jacobi" */;
+			buildPhases = (
+				958C01B512E4B1C200350BEF /* Sources */,
+				958C01D712E4B1C200350BEF /* Frameworks */,
+				958C01E612E4B1C200350BEF /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tet_hp_jacobi;
+			productInstallPath = "$(HOME)/bin";
+			productName = spectral_hp;
+			productReference = 958C01EC12E4B1C200350BEF /* tet_hp */;
 			productType = "com.apple.product-type.tool";
 		};
 		95D4080611A3024A009F34F7 /* tet_hp_petsc */ = {
@@ -551,6 +647,7 @@
 			projectRoot = "";
 			targets = (
 				8DD76F620486A84900D96B5E /* tet_hp */,
+				958C01B412E4B1C200350BEF /* tet_hp_jacobi */,
 				95D4080611A3024A009F34F7 /* tet_hp_petsc */,
 			);
 		};
@@ -593,7 +690,47 @@
 				95D4086D11A303B7009F34F7 /* getnewibc.cpp in Sources */,
 				95D4087611A3040C009F34F7 /* length.cpp in Sources */,
 				95BA7C0B12DBA07A000C3AFF /* jacobi.cpp in Sources */,
-				95BA7C2C12DBA597000C3AFF /* conjgrad.cpp in Sources */,
+				95BA7C2C12DBA597000C3AFF /* krylov.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		958C01B512E4B1C200350BEF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				958C01B612E4B1C200350BEF /* main.cpp in Sources */,
+				958C01B712E4B1C200350BEF /* gtol.cpp in Sources */,
+				958C01B812E4B1C200350BEF /* tobasis.cpp in Sources */,
+				958C01B912E4B1C200350BEF /* allocate.cpp in Sources */,
+				958C01BA12E4B1C200350BEF /* output.cpp in Sources */,
+				958C01BB12E4B1C200350BEF /* hp_boundary.cpp in Sources */,
+				958C01BC12E4B1C200350BEF /* hp_getnewibc.cpp in Sources */,
+				958C01BD12E4B1C200350BEF /* getnewblock.cpp in Sources */,
+				958C01BE12E4B1C200350BEF /* test.cpp in Sources */,
+				958C01BF12E4B1C200350BEF /* l2error.cpp in Sources */,
+				958C01C012E4B1C200350BEF /* update.cpp in Sources */,
+				958C01C112E4B1C200350BEF /* tadvance.cpp in Sources */,
+				958C01C212E4B1C200350BEF /* minvrt.cpp in Sources */,
+				958C01C312E4B1C200350BEF /* mg_restrict.cpp in Sources */,
+				958C01C412E4B1C200350BEF /* mg_prolongate.cpp in Sources */,
+				958C01C512E4B1C200350BEF /* particle.cpp in Sources */,
+				958C01C612E4B1C200350BEF /* copy.cpp in Sources */,
+				958C01C712E4B1C200350BEF /* ptprobe.cpp in Sources */,
+				958C01C812E4B1C200350BEF /* allocate.cpp in Sources */,
+				958C01C912E4B1C200350BEF /* setup_preconditioner.cpp in Sources */,
+				958C01CA12E4B1C200350BEF /* rsdl.cpp in Sources */,
+				958C01CB12E4B1C200350BEF /* bdry.cpp in Sources */,
+				958C01CC12E4B1C200350BEF /* getnewbdry.cpp in Sources */,
+				958C01CD12E4B1C200350BEF /* getnewibc.cpp in Sources */,
+				958C01CE12E4B1C200350BEF /* allocate.cpp in Sources */,
+				958C01CF12E4B1C200350BEF /* tstep.cpp in Sources */,
+				958C01D012E4B1C200350BEF /* rsdl.cpp in Sources */,
+				958C01D112E4B1C200350BEF /* bdry.cpp in Sources */,
+				958C01D212E4B1C200350BEF /* getnewbdry.cpp in Sources */,
+				958C01D312E4B1C200350BEF /* getnewibc.cpp in Sources */,
+				958C01D412E4B1C200350BEF /* length.cpp in Sources */,
+				958C01D512E4B1C200350BEF /* jacobi.cpp in Sources */,
+				958C01D612E4B1C200350BEF /* krylov.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -641,6 +778,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		958C01EF12E4B1D100350BEF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 958C01B412E4B1C200350BEF /* tet_hp_jacobi */;
+			targetProxy = 958C01EE12E4B1D100350BEF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6FB40AC2091AF4FA002BAA09 /* Debug */ = {
@@ -697,7 +842,10 @@
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = "";
 				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = f2cFortran;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					PTH,
+				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -728,6 +876,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					f2cFortran,
+					BZ_DEBUG,
+				);
 				GCC_VERSION = com.apple.compilers.llvmgcc42;
 				ONLY_ACTIVE_ARCH = YES;
 				packages = "$(HOME)/packages";
@@ -743,6 +895,91 @@
 				ONLY_ACTIVE_ARCH = YES;
 				packages = "$(HOME)/packages";
 				prefix = "$(HOME)/Codes";
+			};
+			name = Release;
+		};
+		958C01EA12E4B1C200350BEF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					petsc,
+					f2cFortran,
+					BZ_DEBUG,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = 4.2;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"${prefix}/include",
+					"${packages}/include",
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"\\\"$(SRCROOT)/../../Packages/lib\\\"",
+					"\\\"$(SRCROOT)/../../Packages/petsc-3.0.0-p8/darwin9.8.0-c-debug/lib\\\"",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				PRODUCT_NAME = tet_hp;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		958C01EB12E4B1C200350BEF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					JACOBI,
+					f2cFortran,
+					PTH,
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvmgcc42;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"${prefix}/include",
+					"${packages}/include",
+				);
+				INSTALL_PATH = "$(HOME)/bin";
+				LIBRARY_SEARCH_PATHS = (
+					"$(prefix)/lib",
+					"$(packages)/lib",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"\\\"$(SRCROOT)/../../Packages/lib\\\"",
+					"\\\"$(SRCROOT)/../../Packages/petsc-3.0.0-p8/darwin9.8.0-c-debug/lib\\\"",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../Packages/lib\"";
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				PRODUCT_NAME = tet_hp;
+				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
@@ -849,6 +1086,15 @@
 			buildConfigurations = (
 				6FB40AC6091AF4FA002BAA09 /* Debug */,
 				6FB40AC7091AF4FA002BAA09 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		958C01E912E4B1C200350BEF /* Build configuration list for PBXNativeTarget "tet_hp_jacobi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				958C01EA12E4B1C200350BEF /* Debug */,
+				958C01EB12E4B1C200350BEF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

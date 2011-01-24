@@ -190,8 +190,11 @@ void tet_hp::update() {
 //	//superlu();
 //	superilu();
 //#endif
-//	conjugate_gradient();
-//	return;
+	
+	//conjugate_gradient();
+	bicgstab();
+	//cgs();
+	return;
 
 	
 	/* COUPLED MESH MOVMEMENT */
@@ -221,7 +224,6 @@ void tet_hp::update() {
 		hp_vbdry(i)->update(-1);
 
 	helper->update(-1);
-
 
 	for (int stage = 0; stage < gbl->nstage; ++stage) {
 

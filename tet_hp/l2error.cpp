@@ -62,7 +62,7 @@ void tet_hp::l2error(init_bdry_cndtn *comparison) {
 					cjcb(i)(j)(k) = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
 					for(n=0;n<NV;++n) {
 						err =  fabs(u(n)(i)(j)(k)-comparison->f(n,pt,gbl->time));
-						err = fabs(u(n)(i)(j)(k)-1.0/5.0*exp(-5.0*gbl->time)*(1.0-pt(0))*pt(0));
+						//err = fabs(u(n)(i)(j)(k)-1.0/5.0*exp(-5.0*gbl->time)*(1.0-pt(0))*pt(0));
 						if (err > mxr(n)) {
 							mxr(n) = err;
 							loc(n) = tind;

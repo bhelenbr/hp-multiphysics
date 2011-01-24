@@ -15,7 +15,7 @@ void tet_hp::jacobi_relaxation() {
 	int em = basis::tet(log2p).em;
 	int fm = basis::tet(log2p).fm;
 	int im = basis::tet(log2p).im;
-	
+
 	/* Jacobi's relaxation */
 	FLT omega = 1.0;
 	gbl->res.v(Range(0,npnt-1),Range::all()) = omega*gbl->res.v(Range(0,npnt-1),Range::all())/gbl->jacob_diag.v(Range(0,npnt-1),Range::all());
@@ -23,27 +23,7 @@ void tet_hp::jacobi_relaxation() {
 	if(fm) gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all()) = omega*gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all())/gbl->jacob_diag.f(Range(0,ntri-1),Range(0,fm-1),Range::all());
 	if(im) gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all()) = omega*gbl->res.i(Range(0,ntet-1),Range(0,im-1),Range::all())/gbl->jacob_diag.i(Range(0,ntet-1),Range(0,im-1),Range::all());
 	
-	
-	/* APPLY VERTEX DIRICHLET B.C.'S */
-	for(int i=0;i<nfbd;++i)
-		hp_fbdry(i)->vdirichlet();
-	
-	for(int i=0;i<nebd;++i)
-		hp_ebdry(i)->vdirichlet3d();        
-	
-	for(int i=0;i<nvbd;++i)
-		hp_vbdry(i)->vdirichlet3d();
-	
-	/* APPLY EDGE DIRICHLET B.C.'S */
-    for(int i=0;i<nfbd;++i)
-        hp_fbdry(i)->edirichlet();	
-	
-	for (int i=0;i<nebd;++i) 
-		hp_ebdry(i)->edirichlet3d();
-
-	/* APPLY FACE DIRICHLET B.C.'S */
-	for(int i=0;i<nfbd;++i)
-		hp_fbdry(i)->fdirichlet();
+	all_dirichlet();
 	
 	
 	return;
