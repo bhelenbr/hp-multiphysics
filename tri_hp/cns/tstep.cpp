@@ -48,7 +48,7 @@ void tri_hp_cns::setup_preconditioner() {
 		/* LOAD SOLUTION COEFFICIENTS FOR THIS ELEMENT */
 		/* PROJECT SOLUTION TO GAUSS POINTS WITH DERIVATIVES IF NEEDED FOR VISCOUS TERMS */
 		ugtouht(tind);
-		for(int n=0;n<ND;++n)
+		for(int n=0;n<NV;++n)
 			basis::tri(log2p)->proj(&uht(n)(0),&u(n)(0,0),MXGP);
 			
 		/* IF TINFO > -1 IT IS CURVED ELEMENT */
