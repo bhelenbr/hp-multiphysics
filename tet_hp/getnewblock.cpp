@@ -11,7 +11,7 @@
 
 #define CD
 #define INS
-//#define CNS
+#define CNS
 
 
 //#define POD
@@ -25,7 +25,7 @@
 #endif
 
 #ifdef CNS
-#include "ins/tet_hp_cns.h"
+#include "cns/tet_hp_cns.h"
 #endif
 
 #ifdef POD

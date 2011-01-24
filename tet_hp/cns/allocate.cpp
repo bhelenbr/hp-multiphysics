@@ -28,11 +28,22 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 		
 	gbl->tau.resize(maxvst,NV,NV);
 
-	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.403);
+	gbl->vpreconditioner.resize(maxvst,NV,NV);
+
+	double prandtl;
+	
+	double bodydflt[3] = {0.0,0.0,0.0};
+	if (!input.get(gbl->idprefix +"_body_force",gbl->body.data(),3)) input.getwdefault("body_force",gbl->body.data(),3,bodydflt); 
+
+	if (!input.get(gbl->idprefix + "_gamma",gbl->gamma)) input.getwdefault("gamma",gbl->gamma,1.4);
 	if (!input.get(gbl->idprefix + "_mu",gbl->mu)) input.getwdefault("mu",gbl->mu,1.0);
-	if (!input.get(gbl->idprefix + "_prandtl",gbl->kcond)) input.getwdefault("prandtl",gbl->kcond,0.75);
-	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,8.314472);
-	gbl->kcond = gbl->R*gbl->mu/gbl->kcond*gbl->gamma/(gbl->gamma-1.);
+	if (!input.get(gbl->idprefix + "_prandtl",prandtl)) input.getwdefault("prandtl",prandtl,0.713);
+	if (!input.get(gbl->idprefix + "_R",gbl->R)) input.getwdefault("R",gbl->R,287.058);
+	
+	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
+
+	/* source term for MMS */
+	//gbl->src = getnewibc("src",input);
 	
 	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
 	gbl->D.resize(NV);
@@ -63,6 +74,8 @@ void tet_hp_cns::calculate_unsteady_sources() {
     int i,j,k,n,tind;
 	int stridex=MXGP*MXGP;
 	int stridey=MXGP;
+	FLT	ogm1 = 1.0/(gbl->gamma-1.0);
+
         
     for (log2p=0;log2p<=log2pmax;++log2p) {
         for(tind=0;tind<ntet;++tind) {
@@ -96,14 +109,16 @@ void tet_hp_cns::calculate_unsteady_sources() {
             for(i=0;i<basis::tet(log2p).gpx;++i) { 
                 for(j=0;j<basis::tet(log2p).gpy;++j) {    
 					for(k=0;k<basis::tet(log2p).gpz;++k) {    
-						cjcb(i)(j)(k) = -gbl->bd(0)*gbl->rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
+						double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
+
+						cjcb(i)(j)(k) = -gbl->bd(0)*rho*(dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k)));
 						
 						dugdt(log2p,tind,0)(i)(j)(k) = cjcb(i)(j)(k);
 						
 						for(n=1;n<NV-1;++n)
 							dugdt(log2p,tind,n)(i)(j)(k) = u(n)(i)(j)(k)*cjcb(i)(j)(k);
 
-						double e = gbl->ogm1*u(NV-1)(i)(j)(k) +0.5*(u(1)(i)(j)(k)*u(1)(i)(j)(k) +u(2)(i)(j)(k)*u(2)(i)(j)(k)+u(3)(i)(j)(k)*u(3)(i)(j)(k));
+						double e = ogm1*u(NV-1)(i)(j)(k) +0.5*(u(1)(i)(j)(k)*u(1)(i)(j)(k) +u(2)(i)(j)(k)*u(2)(i)(j)(k)+u(3)(i)(j)(k)*u(3)(i)(j)(k));
 
 						dugdt(log2p,tind,NV-1)(i)(j)(k) = e*cjcb(i)(j)(k);
 

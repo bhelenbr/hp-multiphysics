@@ -190,12 +190,14 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	gbl->res0.e.resize(maxvst,basis::tet(log2p).em,NV);
 	gbl->res0.f.resize(maxvst,basis::tet(log2p).fm,NV);
 	gbl->res0.i.resize(maxvst,basis::tet(log2p).im,NV); 
-		
+
+#ifdef JACOBI
 	gbl->jacob_diag.v.resize(maxvst,NV);
 	gbl->jacob_diag.e.resize(maxvst,em0,NV);
 	gbl->jacob_diag.f.resize(maxvst,fm0,NV);
 	gbl->jacob_diag.i.resize(maxvst,im0,NV);
-		
+#endif
+	
 	inmap.getwdefault("diagonal_preconditioner",gbl->diagonal_preconditioner,true);
 	if (gbl->diagonal_preconditioner) {
 		gbl->vprcn.resize(maxvst,NV);

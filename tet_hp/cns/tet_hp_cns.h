@@ -27,6 +27,8 @@ public:
 		
 		/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 		TinyVector<FLT,2> eanda, eanda_recv;
+				
+		Array<FLT,3> vpreconditioner,tpreconditioner;
 		
 	} *gbl;
 	
@@ -41,17 +43,20 @@ public:
 	
 public:
 	void* create_global_structure() {return new global;}
-	tet_hp_ins* create() { return new tet_hp_ins(); }
+	tet_hp_cns* create() { return new tet_hp_cns(); }
 	
 	void init(input_map& input, void *gin); 
 	void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
+	void update();
 	//void length(); 
 	void setup_preconditioner();
 	void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 	void calculate_unsteady_sources();
-	void pennsylvania_peanut_butter(Array<double,1> u, FLT hmax, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
-
+	void pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FLT,2> &Pinv, Array<FLT,2> &Tau, FLT &timestep);
+	void project_new_variables();
+	void switch_variables(Array<double,1> pvu, Array<double,1> &a);
+	
 	
 };
 #endif

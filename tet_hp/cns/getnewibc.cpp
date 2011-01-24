@@ -68,126 +68,10 @@ namespace ibc_cns {
 	const char ibc_type::names[ntypes][40] = {"freestream"};
 	
 	
-	class parameter_changer : public tet_hp_helper {
-	protected:
-		tet_hp_cns &x;
-		//bdry_cns::surface *surf;
-		FLT delta_mu, mu_factor;
-		FLT delta_g, delta_g_factor;
-		FLT delta_mu2, mu2_factor;
-		FLT delta_sigma, sigma_factor;
-		int interval;
-		
-	public:
-		parameter_changer(tet_hp_cns& xin) : tet_hp_helper(xin), x(xin) {
-//			int bnum;
-//			
-//			for(bnum=0;bnum<x.nebd;++bnum) 
-//				if (surf = dynamic_cast<bdry_cns::surface *>(x.hp_ebdry(bnum))) break;
-//			
-//			if (bnum > x.nebd -1) surf = 0;
-		}
-		void init(input_map& input, std::string idnty) {
-			std::string keyword, val;
-			
-			keyword = idnty + "_delta_mu";
-			if (!input.get(keyword,delta_mu)) {
-				input.getwdefault("delta_mu",delta_mu,0.0);
-			}
-			
-			keyword = idnty + "_mu_factor";
-			if (!input.get(keyword,mu_factor)) {
-				input.getwdefault("mu_factor",mu_factor,1.0);
-			}
-			
-			keyword = "delta_g";
-			input.getwdefault(keyword,delta_g,0.0);
-			input[keyword] = "0.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
-			
-			keyword = "delta_g_factor";
-			input.getwdefault(keyword,delta_g_factor,1.0);
-			input[keyword] = "1.0"; // SO ONLY ONE BLOCK PER PROCESSOR CHANGES THIS
-			
-			input.getwdefault("parameter_interval",interval,1);
-			
-//			if (surf) {
-//				std::string surfidnty = surf->base.idprefix;
-//				
-//				keyword = surfidnty + "_delta_sigma";
-//				input.getwdefault(keyword,delta_sigma,0.0);
-//				
-//				keyword = surfidnty + "_sigma_factor";
-//				input.getwdefault(keyword,sigma_factor,1.0);
-//				
-//				keyword = surfidnty + "_matching_block";
-//				if (!input.get(keyword,val)) {
-//					delta_rho2 = 0.0;
-//					rho2_factor = 1.0;
-//					delta_mu2 = 0.0;
-//					mu2_factor = 1.0;
-//				}
-//				else {                         
-//					keyword = val + "_delta_rho";                    
-//					if (!input.get(keyword,delta_rho2)) {
-//						input.getwdefault("delta_rho",delta_rho2,0.0);
-//					}
-//					
-//					keyword = val + "_rho_factor";
-//					if (!input.get(keyword,rho2_factor)) {
-//						input.getwdefault("rho_factor",rho2_factor,1.0);
-//					}
-//					
-//					keyword = val + "_delta_mu";
-//					if (!input.get(keyword,delta_mu2)) {
-//						input.getwdefault("delta_mu",delta_mu2,0.0);
-//					}
-//					
-//					keyword = val + "_mu_factor";
-//					if (!input.get(keyword,mu2_factor)) {
-//						input.getwdefault("mu_factor",mu2_factor,1.0);
-//					}
-//				}
-//			}
-		}
-		tet_hp_helper* create(tet_hp& xin) { return new parameter_changer(dynamic_cast<tet_hp_cns&>(xin)); }
-		
-		
-		
-		void tadvance() {
-			if (!x.coarse_level) {
-				if ( (x.gbl->tstep % interval) +x.gbl->substep == 0) {
-					
-					x.gbl->mu  += delta_mu;
-					x.gbl->mu  *= mu_factor;
-					
-					x.gbl->g += delta_g;
-					x.gbl->g *= delta_g_factor;
-					
-					*x.gbl->log << "new density, viscosity, and gravity are " << x.gbl->rho << ' ' << x.gbl->mu << ' ' << x.gbl->g << std::endl;
-					
-//					
-//					if (surf) {
-//						surf->gbl->rho2 += delta_rho2;
-//						surf->gbl->rho2 *= rho2_factor;
-//						
-//						surf->gbl->mu2  += delta_mu2;
-//						surf->gbl->mu2  *= mu2_factor;
-//						
-//						surf->gbl->sigma  += delta_sigma;
-//						surf->gbl->sigma  *= sigma_factor;
-//						
-//						*x.gbl->log << "matching block density, viscosity, and surface tension are " << surf->gbl->rho2 << ' ' << surf->gbl->mu2 << ' ' << surf->gbl->sigma << std::endl;
-//					}
-				}
-			}
-			return;
-		}
-	};
-	
 	class helper_type {
 	public:
-		const static int ntypes = 1;
-		enum ids {parameter_changer};
+		const static int ntypes = 4;
+		enum ids {translating_drop,parameter_changer,unsteady_body_force,force_coupling};
 		const static char names[ntypes][40];
 		static int getid(const char *nin) {
 			int i;
@@ -196,7 +80,7 @@ namespace ibc_cns {
 			return(-1);
 		}
 	};
-	const char helper_type::names[ntypes][40] = {"parameter_changer"};
+	const char helper_type::names[ntypes][40] = {"translating_drop","parameter_changer","unsteady_body_force","force_coupling"};
 	
 
 }
@@ -216,10 +100,10 @@ tet_hp_helper *tet_hp_cns::getnewhelper(input_map& inmap) {
 	type = ibc_cns::helper_type::getid(movername.c_str());
 	
 	switch(type) {
-		case ibc_cns::helper_type::parameter_changer: {
-			tet_hp_helper *temp = new ibc_cns::parameter_changer(*this);
-			return(temp);
-		}
+//		case ibc_cns::helper_type::parameter_changer: {
+//			tet_hp_helper *temp = new ibc_cns::parameter_changer(*this);
+//			return(temp);
+//		}
 
 		default: {
 			return(tet_hp::getnewhelper(inmap));

@@ -252,6 +252,7 @@ class hp_face_bdry : public fgeometry_interface<3> {
 		virtual void calculate_unsteady_sources();
 		virtual void rsdl(int stage) {}
 		virtual void update(int stage) {}
+		virtual void modify_boundary_residual() {}
 		virtual void mg_restrict() {} 
 		virtual void mg_prolongate() {}  
 		

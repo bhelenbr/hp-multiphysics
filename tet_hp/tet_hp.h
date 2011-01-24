@@ -130,9 +130,10 @@ class tet_hp : public tet_mesh  {
 			/* RESIDUAL STORAGE FOR ENTRY TO MULTIGRID */
 			vefi res0;
 
+#ifdef JACOBI
 			/* Diagonal of Jacobian used in Jacobi Relaxation */
 			vefi jacob_diag;
-			
+#endif
 			/* PRECONDITIONER  */
 			bool diagonal_preconditioner;
 			Array<FLT,2> vprcn,eprcn,fprcn,iprcn;  // Diagonal preconditioner
@@ -226,14 +227,16 @@ class tet_hp : public tet_mesh  {
 
 
 		/** Relax solution */  
-		void update();
+		virtual void update();
 		virtual void minvrt();
 		void minvrt_test();
 		void minvrt_iter();
 		void minvrt_direct();
+#ifdef JACOBI
 		void jacobi_relaxation();
 		void jacobian_diagonal();
-
+#endif
+	
 		void matrix_multiply(struct vefi vecx, struct vefi& vecb);
 		void inner_product(FLT &alpha, struct vefi vec1,  struct vefi vec2 );
 		void saxpy(FLT alpha, FLT beta, struct vefi vecx,struct vefi& vecy );
