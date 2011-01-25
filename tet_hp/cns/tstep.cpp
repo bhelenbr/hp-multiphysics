@@ -78,6 +78,8 @@ void tet_hp_cns::setup_preconditioner() {
 			}
 		}
 
+		ubar /= gpx*gpy*gpz;					
+
 		FLT amin = 1.0e99;
 		FLT amax = 0.0;
 		for(int j=0;j<4;++j) { /* FIND MAX FACE AREA AND THEN DIVIDE VOLUME BY IT */
@@ -92,10 +94,9 @@ void tet_hp_cns::setup_preconditioner() {
 		
 		hmin = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amax); /* 3*8/6=4 */
 		hmax = 4.0*jcb/(0.25*(basis::tet(log2p).p+1)*(basis::tet(log2p).p+1)*amin); /* 3*8/6=4 */
-		ubar /= gpx*gpy*gpz;					
 		
 		if (!(hmin > 0.0)) { 
-			*gbl->log << "negative tetrahedral area caught in tstep. Problem triangle is : " << tind << std::endl;
+			*gbl->log << "negative tetrahedral area caught in tstep. Problem tet is : " << tind << std::endl;
 			*gbl->log << "approximate location: " << pnts(v(0))(0) << ' ' << pnts(v(0))(1) << ' ' << pnts(v(0))(2) << std::endl;
 			tet_mesh::output("negative",grid);
 			sim::abort(__LINE__,__FILE__,gbl->log);
@@ -105,8 +106,7 @@ void tet_hp_cns::setup_preconditioner() {
 			*gbl->log << "flow solution has nan's" << std::endl;
 			output("nan",tecplot);
 			sim::abort(__LINE__,__FILE__,gbl->log);
-		}
-		
+		}		
 		
 		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
 		
@@ -212,11 +212,6 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alph = 1.0+b2;
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 	
-#ifdef petsc
-	b2 = 1.0;
-	alph = 0.0;
-#endif
-	
 	alph = 0.0; // prevents wiggles when residual gets small, not sure why
 	
 	/* Preconditioner */
@@ -254,87 +249,94 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 				temp(i,j)+=P(i,k)*dpdc(k,j);
 	P = temp;
 	
-	// fix temp 
-//	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
-//	
-//	V = 0.5*(u*(b2-1.0)+temp1)*rho,			0.5*(u*(b2-1.0)-temp1)*rho,			0.0, 0.0,
-//		1.0,								1.0,								0.0, 0.0,
-//		0.0,								0.0,								1.0, 0.0,
-//		0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 1.0;
-//	
-//	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u,u;
-//	
-//	for(int i=0; i<NV; ++i)
-//		Aeigs(i) = abs(Aeigs(i));
-//	
-//	VINV =  1.0/(temp1*rho), -0.5*(u*(b2-1.0)-temp1)/temp1, 0.0, 0.0,
-//			-1.0/(temp1*rho), 0.5*(u*(b2-1.0)+temp1)/temp1, 0.0, 0.0,
-//			0.0,			  0.0,							1.0, 0.0,
-//			-gm1/(gam*rho),   0.0,							0.0, 1.0;
-//	
-//	for(int i=0; i < NV; ++i)
-//		for(int j=0; j < NV; ++j)
-//			VINV(i,j) = Aeigs(i)*VINV(i,j);
-//	
-//	A = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				A(i,j)+=V(i,k)*VINV(k,j);
-//	
-//	FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
-//	
-//	V = 0.0, 0.0, 0.5*(v*(b2-1.0)+temp2)*rho, 0.5*(v*(b2-1.0)-temp2)*rho,
-//	0.0, 1.0, 0.0, 0.0,
-//	0.0, 0.0, 1.0, 1.0,
-//	1.0, 0.0, 0.5*(gm1*v*(b2-1.0)+gm1*temp2)/gam, 0.5*(gm1*v*(b2-1.0)-gm1*temp2)/gam;
-//	
-//	Beigs = v, v, 0.5*(v+v*b2+temp2), 0.5*(v+v*b2-temp2);
-//	
-//	for(int i=0; i<NV; ++i)
-//		Beigs(i) = abs(Beigs(i));
-//	
-//	VINV = -gm1/(gam*rho), 0.0, 0.0, 1.0,
-//	0.0, 1.0, 0.0, 0.0,
-//	1.0/(temp2*rho), 0.0, 0.5*(-v*(b2-1.0)+temp2)/temp2, 0.0,
-//	-1.0/(rho*temp2), 0.0, 0.5*(v*(b2-1.0)+temp2)/temp2, 0.0;
-//	
-//	for(int i=0; i < NV; ++i)
-//		for(int j=0; j < NV; ++j)
-//			VINV(i,j) = Beigs(i)*VINV(i,j);
-//	
-//	B = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				B(i,j)+=V(i,k)*VINV(k,j);
-//	
-//	FLT temp3 = sqrt(w*w*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
-//	
-//	V = 0.0, 0.0, 0.5*(w*(b2-1.0)+temp3)*rho, 0.5*(w*(b2-1.0)-temp3)*rho,
-//	0.0, 1.0, 0.0, 0.0,
-//	0.0, 0.0, 1.0, 1.0,
-//	1.0, 0.0, 0.5*(gm1*w*(b2-1.0)+gm1*temp3)/gam, 0.5*(gm1*w*(b2-1.0)-gm1*temp3)/gam;
-//	
-//	Ceigs = w, w, w, 0.5*(w+w*b2+temp3), 0.5*(w+w*b2-temp3);
-//	
-//	for(int i=0; i<NV; ++i)
-//		Ceigs(i) = abs(Ceigs(i));
-//	
-//	VINV = -gm1/(gam*rho), 0.0, 0.0, 1.0,
-//	0.0, 1.0, 0.0, 0.0,
-//	1.0/(temp3*rho), 0.0, 0.5*(-v*(b2-1.0)+temp3)/temp3, 0.0,
-//	-1.0/(rho*temp3), 0.0, 0.5*(v*(b2-1.0)+temp3)/temp3, 0.0;
-//	
-//	for(int i=0; i < NV; ++i)
-//		for(int j=0; j < NV; ++j)
-//			VINV(i,j) = Ceigs(i)*VINV(i,j);
-//	
-//	C = 0.0;
-//	for(int i=0; i<NV; ++i)
-//		for(int j=0; j<NV; ++j)
-//			for(int k=0; k<NV; ++k)
-//				C(i,j)+=V(i,k)*VINV(k,j);
+	
+	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+
+	V = 0.5*(u*(b2-1.0)+temp1)*rho,			0.5*(u*(b2-1.0)-temp1)*rho,			0.0, 0.0, 0.0,
+	    1.0,								1.0,								0.0, 0.0, 0.0,
+	    0.0,								0.0,								1.0, 0.0, 0.0,
+	    0.0,								0.0,								0.0, 1.0, 0.0,
+		0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 0.0, 1.0;
+	
+	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u,u;
+
+	for(int i=0; i<NV; ++i)
+		Aeigs(i) = abs(Aeigs(i));
+	
+	VINV = 1.0/(rho*temp1),	 0.5*(temp1-u*(b2-1.0))/temp1, 0.0, 0.0, 0.0,
+		   -1.0/(rho*temp1), 0.5*(u*(b2-1.0)+temp1)/temp1, 0.0, 0.0, 0.0,
+		   0.0,				 0.0,						   1.0, 0.0, 0.0,
+		   0.0,				 0.0,						   0.0, 1.0, 0.0,
+		   -gm1/(gam*rho),	 0.0,						   0.0, 0.0, 1.0;
+	
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				A(i,j)+=V(i,k)*VINV(k,j);
+	
+	FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	
+	V = 0.0, 0.0, 0.0, 0.5*(v*(b2-1.0)+temp2)*rho,		   0.5*(v*(b2-1.0)-temp2)*rho,
+		0.0, 0.0, 1.0, 0.0,							       0.0,
+		0.0, 0.0, 0.0, 1.0,								   1.0,
+		1.0, 0.0, 0.0, 0.0,								   0.0,
+		0.0, 1.0, 0.0, 0.5*(gm1*v*(b2-1.0)+gm1*temp2)/gam, 0.5*(gm1*v*(b2-1.0)-gm1*temp2)/gam;
+	
+	Beigs = v, v, v, 0.5*(v+v*b2+temp2), 0.5*(v+v*b2-temp2);
+	
+	for(int i=0; i<NV; ++i)
+		Beigs(i) = abs(Beigs(i));
+	
+	VINV = 0.0,				 0.0, 0.0,						    1.0, 0.0,
+		   -gm1/(gam*rho),	 0.0, 0.0,							0.0, 1.0,
+		   0.0,			     1.0, 0.0,							0.0, 0.0,
+		   1.0/(rho*temp2),  0.0, 0.5*(temp2-v*(b2-1.0))/temp2, 0.0, 0.0,
+		   -1.0/(rho*temp2), 0.0, 0.5*(v*(b2-1.0)+temp2)/temp2, 0.0, 0.0;
+	
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Beigs(i)*VINV(i,j);
+	
+	B = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				B(i,j)+=V(i,k)*VINV(k,j);
+	
+	FLT temp3 = sqrt(w*w*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	
+	V = 0.5*(w*(b2-1.0)+temp3)*rho,			0.5*(w*(b2-1.0)-temp3)*rho,			0.0, 0.0, 0.0,
+		0.0,								0.0,								1.0, 0.0, 0.0,
+		0.0,								0.0,								0.0, 1.0, 0.0,
+		1.0,								1.0,								0.0, 0.0, 0.0,
+		0.5*(gm1*w*(b2-1.0)+gm1*temp3)/gam, 0.5*(gm1*w*(b2-1.0)-gm1*temp2)/gam, 0.0, 0.0, 1.0;
+	
+	Ceigs = 0.5*(w+w*b2+temp3), 0.5*(w+w*b2-temp3), w, w, w;
+
+	for(int i=0; i<NV; ++i)
+		Ceigs(i) = abs(Ceigs(i));
+	
+	VINV = 1.0/(rho*temp3),  0.0, 0.0, 0.5*(temp3-w*(b2-1.0))/temp3, 0.0,
+		   -1.0/(rho*temp3), 0.0, 0.0, 0.5*(w*(b2-1.0)+temp3)/temp3, 0.0,
+		   0.0,				 1.0, 0.0, 0.0,							 0.0,
+		   0.0,				 0.0, 1.0, 0.0,							 0.0,
+		   -gm1/(rho*gam),	 0.0, 0.0, 0.0,							 1.0;
+	
+	
+	for(int i=0; i < NV; ++i)
+		for(int j=0; j < NV; ++j)
+			VINV(i,j) = Ceigs(i)*VINV(i,j);
+	
+	C = 0.0;
+	for(int i=0; i<NV; ++i)
+		for(int j=0; j<NV; ++j)
+			for(int k=0; k<NV; ++k)
+				C(i,j)+=V(i,k)*VINV(k,j);
 	
 	
 	S = 0.0, 0.0,      0.0,      0.0,      0.0,

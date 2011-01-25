@@ -44,10 +44,6 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 
 	/* source term for MMS */
 	//gbl->src = getnewibc("src",input);
-	
-	/* LEAVE UP TO DERIVED CLASSES TO LOAD THESE IF NECESSARY */
-	gbl->D.resize(NV);
-	gbl->D = 0.0;	
 		
 	return;
 }
@@ -129,6 +125,7 @@ void tet_hp_cns::calculate_unsteady_sources() {
             }
         }
     }
+	
     log2p=log2pmax;
     
     return;

@@ -231,7 +231,8 @@ namespace bdry_cns {
 				x.gbl->res.v(v0,4) = x.gbl->res.v(v0,0)*(ibc->f(4, x.pnts(v0), x.gbl->time)*ogm1+KE);
 			}
 
-//			if(basis::tri(x.log2p)->sm()) {
+			if(basis::tet(x.log2p).em) {
+				cout << " only p=1 works for now in modify boundary residual "<< endl;
 //				for(j=0;j<base.nseg;++j) {
 //					sind = base.seg(j);
 //					v0 = x.seg(sind).pnt(0);
@@ -284,7 +285,7 @@ namespace bdry_cns {
 //						
 //					}								
 //				}
-//			}
+			}
 						
 			return;
 		}

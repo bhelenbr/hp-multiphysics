@@ -22,13 +22,12 @@ public:
 		
 		/* PHYSICAL CONSTANTS */
 		FLT mu,kcond,R,gamma;
-		Array<FLT,1> D;
 		TinyVector<double,tet_mesh::ND> body;
 		
 		/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 		TinyVector<FLT,2> eanda, eanda_recv;
 				
-		Array<FLT,3> vpreconditioner,tpreconditioner;
+		Array<FLT,3> vpreconditioner;
 		
 	} *gbl;
 	

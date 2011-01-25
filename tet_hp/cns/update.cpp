@@ -275,8 +275,6 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 
 
 void tet_hp_cns::update() {
-	int i,j,m,k,n,indx,indx1,last_phase,mp_phase;
-	FLT cflalpha;
 		
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
 	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
@@ -290,13 +288,13 @@ void tet_hp_cns::update() {
 		}
 	}
 	
-	for(i=0;i<nfbd;++i)
+	for(int i=0;i<nfbd;++i)
 		hp_fbdry(i)->update(-1);
 	
-	for(i=0;i<nebd;++i)
+	for(int i=0;i<nebd;++i)
 		hp_ebdry(i)->update(-1);
 	
-	for(i=0;i<nvbd;++i)
+	for(int i=0;i<nvbd;++i)
 		hp_vbdry(i)->update(-1);
 	
 	helper->update(-1);
@@ -305,11 +303,11 @@ void tet_hp_cns::update() {
 		
 		tet_hp::rsdl(stage);	
 		
-		for(i=0;i<nfbd;++i)
+		for(int i=0;i<nfbd;++i)
 			hp_fbdry(i)->vdirichlet();
-		for(i=0;i<nfbd;++i)
+		for(int i=0;i<nfbd;++i)
 			hp_fbdry(i)->edirichlet();
-		for(i=0;i<nfbd;++i)
+		for(int i=0;i<nfbd;++i)
 			hp_fbdry(i)->fdirichlet();
 		
 #ifdef JACOBI
@@ -318,12 +316,12 @@ void tet_hp_cns::update() {
 		tet_hp::minvrt();
 #endif
 		
-		for(i=0;i<nfbd;++i)
+		for(int i=0;i<nfbd;++i)
 			hp_fbdry(i)->modify_boundary_residual();		
 		
 		project_new_variables();
 		
-		cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
+		FLT cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		
 		ug.v(Range(0,npnt-1),Range::all()) = gbl->ug0.v(Range(0,npnt-1),Range::all()) -cflalpha*gbl->res.v(Range(0,npnt-1),Range::all());
 		
@@ -332,12 +330,12 @@ void tet_hp_cns::update() {
 			
 			if (basis::tet(log2p).fm > 0) {
 				
-				for(i=0;i<ntri;++i) {
-					indx = 0;
-					indx1 = 0;
-					for(m=1;m<=basis::tet(log2p).em;++m) {
-						for(k=1;k<=basis::tet(log2p).em-m;++k) {
-							for(n=0;n<NV;++n) {
+				for(int i=0;i<ntri;++i) {
+					int indx = 0;
+					int indx1 = 0;
+					for(int m=1;m<=basis::tet(log2p).em;++m) {
+						for(int k=1;k<=basis::tet(log2p).em-m;++k) {
+							for(int n=0;n<NV;++n) {
 								ug.f(i,indx1,n) =  gbl->ug0.f(i,indx1,n) -cflalpha*gbl->res.f(i,indx,n);
 							}
 							++indx; ++indx1;
@@ -347,13 +345,13 @@ void tet_hp_cns::update() {
 				}
 				if (basis::tet(log2p).im > 0) {
 					
-					for(i=0;i<ntet;++i) {
-						indx = 0;
-						indx1 = 0;
-						for(m=1;m<=basis::tet(log2p).em-1;++m) {
-							for(j=1;j<=basis::tet(log2p).em-m;++j) {
-								for(k=1;k<=basis::tet(log2p).em-m-j;++k) {
-									for(n=0;n<NV;++n) {
+					for(int i=0;i<ntet;++i) {
+						int indx = 0;
+						int indx1 = 0;
+						for(int m=1;m<=basis::tet(log2p).em-1;++m) {
+							for(int j=1;j<=basis::tet(log2p).em-m;++j) {
+								for(int k=1;k<=basis::tet(log2p).em-m-j;++k) {
+									for(int n=0;n<NV;++n) {
 										ug.i(i,indx1,n) =  gbl->ug0.i(i,indx1,n) -cflalpha*gbl->res.i(i,indx,n);
 									}
 									++indx; ++indx1;
@@ -368,15 +366,15 @@ void tet_hp_cns::update() {
 		
 		helper->update(stage);
 		
-		for(i=0;i<nfbd;++i) {
+		for(int i=0;i<nfbd;++i) {
 			hp_fbdry(i)->update(stage);
 		}
 		
-		for(i=0;i<nebd;++i) {
+		for(int i=0;i<nebd;++i) {
 			hp_ebdry(i)->update(stage);
 		}
 		
-		for(i=0;i<nvbd;++i) {
+		for(int i=0;i<nvbd;++i) {
 			hp_vbdry(i)->update(stage);
 		}
 	
