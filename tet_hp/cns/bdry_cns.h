@@ -122,10 +122,10 @@ namespace bdry_cns {
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 			
 			/* CONTINUITY */
-			flx(x.NV-1) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+			flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
 			
 			/* EVERYTHING ELSE DOESN'T MATTER */
-			for (int n=0;n<x.NV-1;++n)
+			for (int n=1;n<x.NV;++n)
 				flx(n) = 0.0;
 			
 			return;
@@ -136,8 +136,8 @@ namespace bdry_cns {
 			mytype = "inflow";
 			ndirichlets = x.NV-1;
 			dirichlets.resize(x.NV-1);
-			for (int n=0;n<x.NV-1;++n)
-				dirichlets(n) = n;
+			for (int n=1;n<x.NV;++n)
+				dirichlets(n-1) = n;
 		}
 		inflow(const inflow& inbdry, tet_hp_cns &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_cns&>(xin),bin);}
@@ -161,7 +161,7 @@ namespace bdry_cns {
 			if (basis::tet(x.log2p).em > 0) {
 				for(int j=0;j<base.nseg;++j) {
 					int sind = base.seg(j).gindx;
-					x.gbl->res.e(sind,Range(0,basis::tet(x.log2p).em-1),Range(1,x.NV-1)) = 0.0;
+					x.gbl->res.e(sind,Range::all(),Range(1,x.NV-1)) = 0.0;
 				}
 			}
 		}		
@@ -177,7 +177,7 @@ namespace bdry_cns {
 			if (basis::tet(x.log2p).fm > 0) {
 				for(int j=0;j<base.ntri;++j) {
 					int find = base.tri(j).gindx;
-					x.gbl->res.f(find,Range(0,basis::tet(x.log2p).fm-1),Range(1,x.NV-1)) = 0.0;
+					x.gbl->res.f(find,Range::all(),Range(1,x.NV-1)) = 0.0;
 				}
 			}
 		}	
@@ -232,59 +232,58 @@ namespace bdry_cns {
 			}
 
 			if(basis::tet(x.log2p).em) {
-				cout << " only p=1 works for now in modify boundary residual "<< endl;
-//				for(j=0;j<base.nseg;++j) {
-//					sind = base.seg(j);
-//					v0 = x.seg(sind).pnt(0);
-//					v1 = x.seg(sind).pnt(1);
-//					
-//					if (is_curved()) {
-//						x.crdtocht1d(sind);
-//						for(n=0;n<tri_mesh::ND;++n)
-//							basis::tri(x.log2p)->proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-//					}
-//					else {
-//						for(n=0;n<tri_mesh::ND;++n) {
-//							basis::tri(x.log2p)->proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd(n)(0,0));
-//							
-//							for(k=0;k<basis::tri(x.log2p)->gpx();++k)
-//								x.dcrd(n,0)(0,k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
-//						}
-//					}
-//					
-//					/* take global coefficients and put into local vector */
-//					/*  only need res_rho */
-//					for (m=0; m<2; ++m) 
-//						rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
-//					
-//					for (m=0;m<basis::tri(x.log2p)->sm();++m) 
-//						rescoef(m+2) = x.gbl->res.s(sind,m,0);					
-//					
-//					basis::tri(x.log2p)->proj1d(&rescoef(0),&res1d(0));
-//					
-//					for(n=1;n<x.NV;++n)
-//						basis::tri(x.log2p)->proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res(n)(0,0));
-//					
-//					for(k=0;k<basis::tri(x.log2p)->gpx(); ++k) {
-//						pt(0) = x.crd(0)(0,k);
-//						pt(1) = x.crd(1)(0,k);
-//						
-//						FLT KE = 0.5*(ibc->f(1, pt, x.gbl->time)*ibc->f(1, pt, x.gbl->time)+ibc->f(2, pt, x.gbl->time)*ibc->f(2, pt, x.gbl->time));
-//						x.res(1)(0,k) -= res1d(k)*ibc->f(1, pt, x.gbl->time);
-//						x.res(2)(0,k) -= res1d(k)*ibc->f(2, pt, x.gbl->time);
-//						x.res(3)(0,k) -= res1d(k)*(ibc->f(3, pt, x.gbl->time)*ogm1+KE);
-//						
-//					}
-//					
-//					for(n=1;n<x.NV;++n){
-//						basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-//						
-//						PBTRS(uplo,basis::tri(x.log2p)->sm(),basis::tri(x.log2p)->sbwth(),1,(double *) &basis::tri(x.log2p)->sdiag1d(0,0),basis::tri(x.log2p)->sbwth()+1,&x.lf(n)(2),basis::tri(x.log2p)->sm(),info);
-//						for(m=0;m<basis::tri(x.log2p)->sm();++m) 
-//							x.gbl->res.s(sind,m,n) = -x.lf(n)(2+m);						
-//						
-//					}								
-//				}
+				for(j=0;j<base.nseg;++j) {
+					sind = base.seg(j).gindx;
+					v0 = x.seg(sind).pnt(0);
+					v1 = x.seg(sind).pnt(1);
+					
+					if (is_curved()) {
+						x.crdtocht1d(sind);
+						for(n=0;n<tet_mesh::ND;++n)
+							basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0));
+					}
+					else {
+						for(n=0;n<tet_mesh::ND;++n) {
+							basis::tet(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd1d(n)(0));
+							
+							for(k=0;k<basis::tet(x.log2p).gpx;++k)
+								x.dcrd1d(n)(k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+						}
+					}
+					
+					/* take global coefficients and put into local vector */
+					/*  only need res_rho */
+					for (m=0; m<2; ++m) 
+						rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+					
+					for (m=0;m<basis::tet(x.log2p).em;++m) 
+						rescoef(m+2) = x.gbl->res.e(sind,m,0);					
+					
+					basis::tet(x.log2p).proj1d(&rescoef(0),&res1d(0));
+					
+					for(n=1;n<x.NV;++n)
+						basis::tet(x.log2p).proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res1d(n)(0));
+					
+					for(k=0;k<basis::tet(x.log2p).gpx; ++k) {
+						pt(0) = x.crd1d(0)(k);
+						pt(1) = x.crd1d(1)(k);
+						
+						FLT KE = 0.5*(ibc->f(1, pt, x.gbl->time)*ibc->f(1, pt, x.gbl->time)+ibc->f(2, pt, x.gbl->time)*ibc->f(2, pt, x.gbl->time)+ibc->f(3, pt, x.gbl->time)*ibc->f(3, pt, x.gbl->time));
+						x.res1d(1)(k) -= res1d(k)*ibc->f(1, pt, x.gbl->time);
+						x.res1d(2)(k) -= res1d(k)*ibc->f(2, pt, x.gbl->time);
+						x.res1d(3)(k) -= res1d(k)*ibc->f(3, pt, x.gbl->time);
+						x.res1d(4)(k) -= res1d(k)*(ibc->f(4, pt, x.gbl->time)*ogm1+KE);
+						
+					}
+					
+					for(n=1;n<x.NV;++n){
+						basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.res1d(n)(0));
+						
+						for(m=0;m<basis::tet(x.log2p).em;++m) 
+							x.gbl->res.e(sind,m,n) = -x.lf(n)(2+m)*basis::tet(x.log2p).diag1d(m);					
+						
+					}								
+				}
 			}
 						
 			return;

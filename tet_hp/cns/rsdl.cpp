@@ -23,7 +23,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	int lgpx = basis::tet(log2p).gpx, lgpy = basis::tet(log2p).gpy, lgpz = basis::tet(log2p).gpz;
 	int stridey = MXGP;
 	int stridex = MXGP*MXGP; 
-	FLT lmu = gbl->mu, cjcb, cjcbi;
+	FLT lmu = gbl->mu, cjcb;
 	FLT lkcond = gbl->kcond;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-2,NV-2> visc;
 	TinyVector<TinyVector<FLT,ND>,ND> d,kcond;// temp fix gbl->kcond and kcond problem?
@@ -308,39 +308,39 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 //							}
 //						}
 								
-						df(1,0)(i)(j)(k) = +visc(0,0)(0,0)*du(1,0)(i)(j)(k)+visc(0,1)(0,0)*du(2,0)(i)(j)(k)+visc(0,2)(0,0)*du(3,0)(i)(j)(k)
+						df(1,0)(i)(j)(k) = visc(0,0)(0,0)*du(1,0)(i)(j)(k)+visc(0,1)(0,0)*du(2,0)(i)(j)(k)+visc(0,2)(0,0)*du(3,0)(i)(j)(k)
 										   +visc(0,0)(0,1)*du(1,1)(i)(j)(k)+visc(0,1)(0,1)*du(2,1)(i)(j)(k)+visc(0,2)(0,1)*du(3,1)(i)(j)(k)
 										   +visc(0,0)(0,2)*du(1,2)(i)(j)(k)+visc(0,1)(0,2)*du(2,2)(i)(j)(k)+visc(0,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(1,1)(i)(j)(k) = +visc(0,0)(1,0)*du(1,0)(i)(j)(k)+visc(0,1)(1,0)*du(2,0)(i)(j)(k)+visc(0,2)(1,0)*du(3,0)(i)(j)(k)
+						df(1,1)(i)(j)(k) = visc(0,0)(1,0)*du(1,0)(i)(j)(k)+visc(0,1)(1,0)*du(2,0)(i)(j)(k)+visc(0,2)(1,0)*du(3,0)(i)(j)(k)
 										   +visc(0,0)(1,1)*du(1,1)(i)(j)(k)+visc(0,1)(1,1)*du(2,1)(i)(j)(k)+visc(0,2)(1,1)*du(3,1)(i)(j)(k)
 										   +visc(0,0)(1,2)*du(1,2)(i)(j)(k)+visc(0,1)(1,2)*du(2,2)(i)(j)(k)+visc(0,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(1,2)(i)(j)(k) = +visc(0,0)(2,0)*du(1,0)(i)(j)(k)+visc(0,1)(2,0)*du(2,0)(i)(j)(k)+visc(0,2)(2,0)*du(3,0)(i)(j)(k)
+						df(1,2)(i)(j)(k) = visc(0,0)(2,0)*du(1,0)(i)(j)(k)+visc(0,1)(2,0)*du(2,0)(i)(j)(k)+visc(0,2)(2,0)*du(3,0)(i)(j)(k)
 										   +visc(0,0)(2,1)*du(1,1)(i)(j)(k)+visc(0,1)(2,1)*du(2,1)(i)(j)(k)+visc(0,2)(2,1)*du(3,1)(i)(j)(k)
 										   +visc(0,0)(2,2)*du(1,2)(i)(j)(k)+visc(0,1)(2,2)*du(2,2)(i)(j)(k)+visc(0,2)(2,2)*du(3,2)(i)(j)(k);
 						
-						df(2,0)(i)(j)(k) = +visc(1,0)(0,0)*du(1,0)(i)(j)(k)+visc(1,1)(0,0)*du(2,0)(i)(j)(k)+visc(1,2)(0,0)*du(3,0)(i)(j)(k)
+						df(2,0)(i)(j)(k) = visc(1,0)(0,0)*du(1,0)(i)(j)(k)+visc(1,1)(0,0)*du(2,0)(i)(j)(k)+visc(1,2)(0,0)*du(3,0)(i)(j)(k)
 										   +visc(1,0)(0,1)*du(1,1)(i)(j)(k)+visc(1,1)(0,1)*du(2,1)(i)(j)(k)+visc(1,2)(0,1)*du(3,1)(i)(j)(k)
 										   +visc(1,0)(0,2)*du(1,2)(i)(j)(k)+visc(1,1)(0,2)*du(2,2)(i)(j)(k)+visc(1,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(2,1)(i)(j)(k) = +visc(1,0)(1,0)*du(1,0)(i)(j)(k)+visc(1,1)(1,0)*du(2,0)(i)(j)(k)+visc(1,2)(1,0)*du(3,0)(i)(j)(k)
+						df(2,1)(i)(j)(k) = visc(1,0)(1,0)*du(1,0)(i)(j)(k)+visc(1,1)(1,0)*du(2,0)(i)(j)(k)+visc(1,2)(1,0)*du(3,0)(i)(j)(k)
 										   +visc(1,0)(1,1)*du(1,1)(i)(j)(k)+visc(1,1)(1,1)*du(2,1)(i)(j)(k)+visc(1,2)(1,1)*du(3,1)(i)(j)(k)
 										   +visc(1,0)(1,2)*du(1,2)(i)(j)(k)+visc(1,1)(1,2)*du(2,2)(i)(j)(k)+visc(1,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(2,2)(i)(j)(k) = +visc(1,0)(2,0)*du(1,0)(i)(j)(k)+visc(1,1)(2,0)*du(2,0)(i)(j)(k)+visc(1,2)(2,0)*du(3,0)(i)(j)(k)
+						df(2,2)(i)(j)(k) = visc(1,0)(2,0)*du(1,0)(i)(j)(k)+visc(1,1)(2,0)*du(2,0)(i)(j)(k)+visc(1,2)(2,0)*du(3,0)(i)(j)(k)
 										   +visc(1,0)(2,1)*du(1,1)(i)(j)(k)+visc(1,1)(2,1)*du(2,1)(i)(j)(k)+visc(1,2)(2,1)*du(3,1)(i)(j)(k)
 										   +visc(1,0)(2,2)*du(1,2)(i)(j)(k)+visc(1,1)(2,2)*du(2,2)(i)(j)(k)+visc(1,2)(2,2)*du(3,2)(i)(j)(k);
 						
-						df(3,0)(i)(j)(k) = +visc(2,0)(0,0)*du(1,0)(i)(j)(k)+visc(2,1)(0,0)*du(2,0)(i)(j)(k)+visc(2,2)(0,0)*du(3,0)(i)(j)(k)
+						df(3,0)(i)(j)(k) = visc(2,0)(0,0)*du(1,0)(i)(j)(k)+visc(2,1)(0,0)*du(2,0)(i)(j)(k)+visc(2,2)(0,0)*du(3,0)(i)(j)(k)
 										   +visc(2,0)(0,1)*du(1,1)(i)(j)(k)+visc(2,1)(0,1)*du(2,1)(i)(j)(k)+visc(2,2)(0,1)*du(3,1)(i)(j)(k)
 										   +visc(2,0)(0,2)*du(1,2)(i)(j)(k)+visc(2,1)(0,2)*du(2,2)(i)(j)(k)+visc(2,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(3,1)(i)(j)(k) = +visc(2,0)(1,0)*du(1,0)(i)(j)(k)+visc(2,1)(1,0)*du(2,0)(i)(j)(k)+visc(2,2)(1,0)*du(3,0)(i)(j)(k)
+						df(3,1)(i)(j)(k) = visc(2,0)(1,0)*du(1,0)(i)(j)(k)+visc(2,1)(1,0)*du(2,0)(i)(j)(k)+visc(2,2)(1,0)*du(3,0)(i)(j)(k)
 										   +visc(2,0)(1,1)*du(1,1)(i)(j)(k)+visc(2,1)(1,1)*du(2,1)(i)(j)(k)+visc(2,2)(1,1)*du(3,1)(i)(j)(k)
 										   +visc(2,0)(1,2)*du(1,2)(i)(j)(k)+visc(2,1)(1,2)*du(2,2)(i)(j)(k)+visc(2,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(3,2)(i)(j)(k) = +visc(2,0)(2,0)*du(1,0)(i)(j)(k)+visc(2,1)(2,0)*du(2,0)(i)(j)(k)+visc(2,2)(2,0)*du(3,0)(i)(j)(k)
+						df(3,2)(i)(j)(k) = visc(2,0)(2,0)*du(1,0)(i)(j)(k)+visc(2,1)(2,0)*du(2,0)(i)(j)(k)+visc(2,2)(2,0)*du(3,0)(i)(j)(k)
 										   +visc(2,0)(2,1)*du(1,1)(i)(j)(k)+visc(2,1)(2,1)*du(2,1)(i)(j)(k)+visc(2,2)(2,1)*du(3,1)(i)(j)(k)
 										   +visc(2,0)(2,2)*du(1,2)(i)(j)(k)+visc(2,1)(2,2)*du(2,2)(i)(j)(k)+visc(2,2)(2,2)*du(3,2)(i)(j)(k);
 						
@@ -410,21 +410,21 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						    uv*uv/rt+1.0,        2.0*rho*uv,                  0.0,       0.0,       -rho*uv*uv/rt,
 						    uv*vv/rt,            rho*vv,                      rho*uv,    0.0,       -rho*uv*vv/rt,
                             uv*wv/rt,            rho*wv,                      0.0,       rho*uv,    -rho*uv*wv/rt,
-						    uv*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*uv*uv, rho*uv*vv, rho*uv*wv, -rho*uv*(gogm1*rt+ke)/rt+rho*uv*gogm1;
+						    uv*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*uv*uv, rho*uv*vv, rho*uv*wv, -rho*uv*ke/rt;
 					
 						/* dg/dw */
 						B = vv/rt,               0.0,       rho,                         0.0,       -rho*vv/rt,
 						    uv*vv/rt,            rho*vv,    rho*uv,                      0.0,       -rho*uv*vv/rt,
 						    vv*vv/rt+1.0,        0.0,       2.0*rho*vv,                  0.0,       -rho*vv*vv/rt,
 						    vv*wv/rt,            0.0,       rho*wv,                      rho*vv,    -rho*vv*wv/rt,
-						    vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, rho*vv*wv,	-rho*vv*(gogm1*rt+ke)/rt+rho*vv*gogm1;
+						    vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, rho*vv*wv,	-rho*vv*ke/rt;
 						
 						/* dh/dw */
 						C = wv/rt,               0.0,       0.0,       rho,                         -rho*wv/rt,
 						    uv*wv/rt,            rho*wv,    0.0,       rho*uv,                      -rho*uv*wv/rt,
 						    vv*wv/rt,            0.0,       rho*wv,    rho*vv,                      -rho*vv*wv/rt,
 						    wv*wv/rt+1.0,        0.0,       0.0,       2.0*rho*wv,                  -rho*wv*wv/rt,
-							wv*(gogm1*rt+ke)/rt, rho*uv*wv, rho*vv*wv, rho*(gogm1*rt+ke)+rho*wv*wv, -rho*wv*(gogm1*rt+ke)/rt+rho*wv*gogm1;				
+							wv*(gogm1*rt+ke)/rt, rho*uv*wv, rho*vv*wv, rho*(gogm1*rt+ke)+rho*wv*wv, -rho*wv*ke/rt;				
 											
 						for(int m = 0; m < NV; ++m) {
 							for(int n = 0; n < NV; ++n) {
@@ -662,39 +662,39 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 //							}
 //						}
 						
-						df(1,0)(i)(j)(k) = +visc(0,0)(0,0)*du(1,0)(i)(j)(k)+visc(0,1)(0,0)*du(2,0)(i)(j)(k)+visc(0,2)(0,0)*du(3,0)(i)(j)(k)
+						df(1,0)(i)(j)(k) =  visc(0,0)(0,0)*du(1,0)(i)(j)(k)+visc(0,1)(0,0)*du(2,0)(i)(j)(k)+visc(0,2)(0,0)*du(3,0)(i)(j)(k)
 											+visc(0,0)(0,1)*du(1,1)(i)(j)(k)+visc(0,1)(0,1)*du(2,1)(i)(j)(k)+visc(0,2)(0,1)*du(3,1)(i)(j)(k)
 											+visc(0,0)(0,2)*du(1,2)(i)(j)(k)+visc(0,1)(0,2)*du(2,2)(i)(j)(k)+visc(0,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(1,1)(i)(j)(k) = +visc(0,0)(1,0)*du(1,0)(i)(j)(k)+visc(0,1)(1,0)*du(2,0)(i)(j)(k)+visc(0,2)(1,0)*du(3,0)(i)(j)(k)
+						df(1,1)(i)(j)(k) =  visc(0,0)(1,0)*du(1,0)(i)(j)(k)+visc(0,1)(1,0)*du(2,0)(i)(j)(k)+visc(0,2)(1,0)*du(3,0)(i)(j)(k)
 											+visc(0,0)(1,1)*du(1,1)(i)(j)(k)+visc(0,1)(1,1)*du(2,1)(i)(j)(k)+visc(0,2)(1,1)*du(3,1)(i)(j)(k)
 											+visc(0,0)(1,2)*du(1,2)(i)(j)(k)+visc(0,1)(1,2)*du(2,2)(i)(j)(k)+visc(0,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(1,2)(i)(j)(k) = +visc(0,0)(2,0)*du(1,0)(i)(j)(k)+visc(0,1)(2,0)*du(2,0)(i)(j)(k)+visc(0,2)(2,0)*du(3,0)(i)(j)(k)
+						df(1,2)(i)(j)(k) =  visc(0,0)(2,0)*du(1,0)(i)(j)(k)+visc(0,1)(2,0)*du(2,0)(i)(j)(k)+visc(0,2)(2,0)*du(3,0)(i)(j)(k)
 											+visc(0,0)(2,1)*du(1,1)(i)(j)(k)+visc(0,1)(2,1)*du(2,1)(i)(j)(k)+visc(0,2)(2,1)*du(3,1)(i)(j)(k)
 											+visc(0,0)(2,2)*du(1,2)(i)(j)(k)+visc(0,1)(2,2)*du(2,2)(i)(j)(k)+visc(0,2)(2,2)*du(3,2)(i)(j)(k);
 						
-						df(2,0)(i)(j)(k) = +visc(1,0)(0,0)*du(1,0)(i)(j)(k)+visc(1,1)(0,0)*du(2,0)(i)(j)(k)+visc(1,2)(0,0)*du(3,0)(i)(j)(k)
+						df(2,0)(i)(j)(k) =  visc(1,0)(0,0)*du(1,0)(i)(j)(k)+visc(1,1)(0,0)*du(2,0)(i)(j)(k)+visc(1,2)(0,0)*du(3,0)(i)(j)(k)
 											+visc(1,0)(0,1)*du(1,1)(i)(j)(k)+visc(1,1)(0,1)*du(2,1)(i)(j)(k)+visc(1,2)(0,1)*du(3,1)(i)(j)(k)
 											+visc(1,0)(0,2)*du(1,2)(i)(j)(k)+visc(1,1)(0,2)*du(2,2)(i)(j)(k)+visc(1,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(2,1)(i)(j)(k) = +visc(1,0)(1,0)*du(1,0)(i)(j)(k)+visc(1,1)(1,0)*du(2,0)(i)(j)(k)+visc(1,2)(1,0)*du(3,0)(i)(j)(k)
+						df(2,1)(i)(j)(k) =  visc(1,0)(1,0)*du(1,0)(i)(j)(k)+visc(1,1)(1,0)*du(2,0)(i)(j)(k)+visc(1,2)(1,0)*du(3,0)(i)(j)(k)
 											+visc(1,0)(1,1)*du(1,1)(i)(j)(k)+visc(1,1)(1,1)*du(2,1)(i)(j)(k)+visc(1,2)(1,1)*du(3,1)(i)(j)(k)
 											+visc(1,0)(1,2)*du(1,2)(i)(j)(k)+visc(1,1)(1,2)*du(2,2)(i)(j)(k)+visc(1,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(2,2)(i)(j)(k) = +visc(1,0)(2,0)*du(1,0)(i)(j)(k)+visc(1,1)(2,0)*du(2,0)(i)(j)(k)+visc(1,2)(2,0)*du(3,0)(i)(j)(k)
+						df(2,2)(i)(j)(k) =  visc(1,0)(2,0)*du(1,0)(i)(j)(k)+visc(1,1)(2,0)*du(2,0)(i)(j)(k)+visc(1,2)(2,0)*du(3,0)(i)(j)(k)
 											+visc(1,0)(2,1)*du(1,1)(i)(j)(k)+visc(1,1)(2,1)*du(2,1)(i)(j)(k)+visc(1,2)(2,1)*du(3,1)(i)(j)(k)
 											+visc(1,0)(2,2)*du(1,2)(i)(j)(k)+visc(1,1)(2,2)*du(2,2)(i)(j)(k)+visc(1,2)(2,2)*du(3,2)(i)(j)(k);
 						
-						df(3,0)(i)(j)(k) = +visc(2,0)(0,0)*du(1,0)(i)(j)(k)+visc(2,1)(0,0)*du(2,0)(i)(j)(k)+visc(2,2)(0,0)*du(3,0)(i)(j)(k)
+						df(3,0)(i)(j)(k) =  visc(2,0)(0,0)*du(1,0)(i)(j)(k)+visc(2,1)(0,0)*du(2,0)(i)(j)(k)+visc(2,2)(0,0)*du(3,0)(i)(j)(k)
 											+visc(2,0)(0,1)*du(1,1)(i)(j)(k)+visc(2,1)(0,1)*du(2,1)(i)(j)(k)+visc(2,2)(0,1)*du(3,1)(i)(j)(k)
 											+visc(2,0)(0,2)*du(1,2)(i)(j)(k)+visc(2,1)(0,2)*du(2,2)(i)(j)(k)+visc(2,2)(0,2)*du(3,2)(i)(j)(k);
 						
-						df(3,1)(i)(j)(k) = +visc(2,0)(1,0)*du(1,0)(i)(j)(k)+visc(2,1)(1,0)*du(2,0)(i)(j)(k)+visc(2,2)(1,0)*du(3,0)(i)(j)(k)
+						df(3,1)(i)(j)(k) =  visc(2,0)(1,0)*du(1,0)(i)(j)(k)+visc(2,1)(1,0)*du(2,0)(i)(j)(k)+visc(2,2)(1,0)*du(3,0)(i)(j)(k)
 											+visc(2,0)(1,1)*du(1,1)(i)(j)(k)+visc(2,1)(1,1)*du(2,1)(i)(j)(k)+visc(2,2)(1,1)*du(3,1)(i)(j)(k)
 											+visc(2,0)(1,2)*du(1,2)(i)(j)(k)+visc(2,1)(1,2)*du(2,2)(i)(j)(k)+visc(2,2)(1,2)*du(3,2)(i)(j)(k);
 						
-						df(3,2)(i)(j)(k) = +visc(2,0)(2,0)*du(1,0)(i)(j)(k)+visc(2,1)(2,0)*du(2,0)(i)(j)(k)+visc(2,2)(2,0)*du(3,0)(i)(j)(k)
+						df(3,2)(i)(j)(k) =  visc(2,0)(2,0)*du(1,0)(i)(j)(k)+visc(2,1)(2,0)*du(2,0)(i)(j)(k)+visc(2,2)(2,0)*du(3,0)(i)(j)(k)
 											+visc(2,0)(2,1)*du(1,1)(i)(j)(k)+visc(2,1)(2,1)*du(2,1)(i)(j)(k)+visc(2,2)(2,1)*du(3,1)(i)(j)(k)
 											+visc(2,0)(2,2)*du(1,2)(i)(j)(k)+visc(2,1)(2,2)*du(2,2)(i)(j)(k)+visc(2,2)(2,2)*du(3,2)(i)(j)(k);
 						
@@ -754,21 +754,21 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 							uv*uv/rt+1.0,        2.0*rho*uv,                  0.0,       0.0,       -rho*uv*uv/rt,
 							uv*vv/rt,            rho*vv,                      rho*uv,    0.0,       -rho*uv*vv/rt,
 							uv*wv/rt,            rho*wv,                      0.0,       rho*uv,    -rho*uv*wv/rt,
-							uv*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*uv*uv, rho*uv*vv, rho*uv*wv, -rho*uv*(gogm1*rt+ke)/rt+rho*uv*gogm1;
+							uv*(gogm1*rt+ke)/rt, rho*(gogm1*rt+ke)+rho*uv*uv, rho*uv*vv, rho*uv*wv, -rho*uv*ke/rt;
 						
 						/* dg/dw */
 						B = vv/rt,               0.0,       rho,                         0.0,       -rho*vv/rt,
 							uv*vv/rt,            rho*vv,    rho*uv,                      0.0,       -rho*uv*vv/rt,
 							vv*vv/rt+1.0,        0.0,       2.0*rho*vv,                  0.0,       -rho*vv*vv/rt,
 							vv*wv/rt,            0.0,       rho*wv,                      rho*vv,    -rho*vv*wv/rt,
-							vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, rho*vv*wv,	-rho*vv*(gogm1*rt+ke)/rt+rho*vv*gogm1;
+							vv*(gogm1*rt+ke)/rt, rho*uv*vv, rho*(gogm1*rt+ke)+rho*vv*vv, rho*vv*wv,	-rho*vv*ke/rt;
 						
 						/* dh/dw */
 						C = wv/rt,               0.0,       0.0,       rho,                         -rho*wv/rt,
 							uv*wv/rt,            rho*wv,    0.0,       rho*uv,                      -rho*uv*wv/rt,
 							vv*wv/rt,            0.0,       rho*wv,    rho*vv,                      -rho*vv*wv/rt,
 							wv*wv/rt+1.0,        0.0,       0.0,       2.0*rho*wv,                  -rho*wv*wv/rt,
-							wv*(gogm1*rt+ke)/rt, rho*uv*wv, rho*vv*wv, rho*(gogm1*rt+ke)+rho*wv*wv, -rho*wv*(gogm1*rt+ke)/rt+rho*wv*gogm1;				
+							wv*(gogm1*rt+ke)/rt, rho*uv*wv, rho*vv*wv, rho*(gogm1*rt+ke)+rho*wv*wv, -rho*wv*ke/rt;				
 						
 						for(int m = 0; m < NV; ++m) {
 							for(int n = 0; n < NV; ++n) {

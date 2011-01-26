@@ -17,7 +17,7 @@ void tet_hp::jacobi_relaxation() {
 	int im = basis::tet(log2p).im;
 
 	/* Jacobi's relaxation */
-	FLT omega = 1.0;
+	FLT omega = 0.5;
 	gbl->res.v(Range(0,npnt-1),Range::all()) = omega*gbl->res.v(Range(0,npnt-1),Range::all())/gbl->jacob_diag.v(Range(0,npnt-1),Range::all());
 	if(em) gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all()) = omega*gbl->res.e(Range(0,nseg-1),Range(0,em-1),Range::all())/gbl->jacob_diag.e(Range(0,nseg-1),Range(0,em-1),Range::all());
 	if(fm) gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all()) = omega*gbl->res.f(Range(0,ntri-1),Range(0,fm-1),Range::all())/gbl->jacob_diag.f(Range(0,ntri-1),Range(0,fm-1),Range::all());

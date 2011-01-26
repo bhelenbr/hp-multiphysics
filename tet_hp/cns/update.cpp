@@ -71,85 +71,87 @@ void tet_hp_cns::project_new_variables(){
 	
 	if (!basis::tet(log2p).em) return;
 	
-//	/* LOOP THROUGH SIDES */    
-//    for(int sind=0;sind<nseg;++sind) {
-//		
-//		/* project linears */
-//		for(int n=0;n<NV;++n)
-//			basis::tri(log2p)->proj1d(gbl->res.v(seg(sind).pnt(0),n),gbl->res.v(seg(sind).pnt(1),n),&temp1d(n)(0));
-//		
-//		for(int m=0;m<NV;++m) 
-//			for(int n=0;n<NV;++n) 
-//				basis::tri(log2p)->proj1d(gbl->vpreconditioner(seg(sind).pnt(0),m,n),gbl->vpreconditioner(seg(sind).pnt(1),m,n),&P(m,n)(0));
-//		
-//		/* take global coefficients and put into local vector */
-//		for(int n=0;n<NV;++n) {
-//			for (int m=0; m<2; ++m) {
-//				ucoef(n)(m) = ug.v(seg(sind).pnt(m),n);
-//				rcoef(n)(m) = gbl->res_temp.v(seg(sind).pnt(m),n);
-//			}
-//		}
-//		
-//		for(int n=0;n<NV;++n) {
-//			for(int m=0;m<basis::tri(log2p)->sm();++m) {
-//				ucoef(n)(m+2) = ug.s(sind,m,n);
-//				rcoef(n)(m+2) = gbl->res_temp.s(sind,m,n);
-//			}
-//		}
-//		
-//		/* project sides */
-//		for(int n=0;n<NV;++n) {
-//			basis::tri(log2p)->proj1d(&ucoef(n)(0),&u1d(n)(0));
-//			basis::tri(log2p)->proj1d(&rcoef(n)(0),&res1d(n)(0));
-//		}
-//		
-//		for(int i=0;i<basis::tri(log2p)->gpx(); ++i) {
-//			
-//			for(int m = 0; m < NV; ++m){
-//				lclug(m) = u1d(m)(i);
-//				lclres(m) = res1d(m)(i);
-//			}
-//			
-//			switch_variables(lclug,lclres);
-//			
-//			for(int j=0;j<NV;++j){
-//				FLT lcl0 = lclres(j);
-//				for(int k=0;k<j;++k){
-//					lcl0 -= P(j,k)(i)*lclres(k);
-//				}
-//				lclres(j) = lcl0/P(j,j)(i);
-//			}
-//			
-//			for(int m = 0; m < NV; ++m)
-//				temp1d(m)(i) -= lclres(m);	
-//			
-//		}
-//		
-//		/* integrate right hand side: phi*P*res */
-//		for(int n=0;n<NV;++n)
-//			basis::tri(log2p)->intgrt1d(&rcoef(n)(0),&temp1d(n)(0));
-//		
-//		/* invert 1d mass matrix */
-//		for(int n=0;n<NV;++n) {
-//			PBTRS(uplo,basis::tri(log2p)->sm(),basis::tri(log2p)->sbwth(),1,(double *) &basis::tri(log2p)->sdiag1d(0,0),basis::tri(log2p)->sbwth()+1,&rcoef(n)(2),basis::tri(log2p)->sm(),info);
-//			for(int m=0;m<basis::tri(log2p)->sm();++m) 
-//				gbl->res.s(sind,m,n) = -rcoef(n)(m+2);
-//			
-//		}
-//		
-//	}
-//	
-//	for(int mode = 0; mode < basis::tri(log2p)->sm(); ++mode) {
-//		
-//		sc0load(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
-//		smsgpass(boundary::all,0,boundary::symmetric);
-//		sc0wait_rcv(gbl->res.s.data(),mode,mode,gbl->res.s.extent(secondDim));
-//		
-//		/* APPLY DIRCHLET B.C.S TO MODE */
-//		for(int i=0;i<nebd;++i)
-//			hp_ebdry(i)->sdirichlet(mode);
-//	}
-//	
+	/* LOOP THROUGH SIDES */    
+    for(int sind=0;sind<nseg;++sind) {
+		
+		/* project linears */
+		for(int n=0;n<NV;++n)
+			basis::tet(log2p).proj1d(gbl->res.v(seg(sind).pnt(0),n),gbl->res.v(seg(sind).pnt(1),n),&temp1d(n)(0));
+		
+		for(int m=0;m<NV;++m) 
+			for(int n=0;n<NV;++n) 
+				basis::tet(log2p).proj1d(gbl->vpreconditioner(seg(sind).pnt(0),m,n),gbl->vpreconditioner(seg(sind).pnt(1),m,n),&P(m,n)(0));
+		
+		/* take global coefficients and put into local vector */
+		for(int n=0;n<NV;++n) {
+			for (int m=0; m<2; ++m) {
+				ucoef(n)(m) = ug.v(seg(sind).pnt(m),n);
+				rcoef(n)(m) = res_temp.v(seg(sind).pnt(m),n);
+			}
+		}
+		
+		for(int n=0;n<NV;++n) {
+			for(int m=0;m<basis::tet(log2p).em;++m) {
+				ucoef(n)(m+2) = ug.e(sind,m,n);
+				rcoef(n)(m+2) = res_temp.e(sind,m,n);
+			}
+		}
+		
+		/* project sides */
+		for(int n=0;n<NV;++n) {
+			basis::tet(log2p).proj1d(&ucoef(n)(0),&u1d(n)(0));
+			basis::tet(log2p).proj1d(&rcoef(n)(0),&res1d(n)(0));
+		}
+		
+		for(int i=0;i<basis::tet(log2p).gpx; ++i) {
+			
+			for(int m = 0; m < NV; ++m){
+				lclug(m) = u1d(m)(i);
+				lclres(m) = res1d(m)(i);
+			}
+			
+			switch_variables(lclug,lclres);
+			
+			for(int j=0;j<NV;++j){
+				FLT lcl0 = lclres(j);
+				for(int k=0;k<j;++k){
+					lcl0 -= P(j,k)(i)*lclres(k);
+				}
+				lclres(j) = lcl0/P(j,j)(i);
+			}
+			
+			for(int m = 0; m < NV; ++m)
+				temp1d(m)(i) -= lclres(m);	
+			
+		}
+		
+		/* integrate right hand side: phi*P*res */
+		for(int n=0;n<NV;++n)
+			basis::tet(log2p).intgrt1d(&rcoef(n)(0),&temp1d(n)(0));
+		
+		/* invert 1d mass matrix */
+		for(int n=0;n<NV;++n) {
+			for(int m=0;m<basis::tet(log2p).em;++m) 
+				gbl->res.e(sind,m,n) = -rcoef(n)(m+2)*basis::tet(log2p).diag1d(m);			
+		}
+		
+	}
+	
+	for(int mode = 0; mode < basis::tet(log2p).em; ++mode) {
+		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			sc0load(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+			smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+			last_phase = true;
+			last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+		}
+		/* APPLY DIRCHLET B.C.S TO MODE */
+		for(int i=0;i<nfbd;++i)
+			hp_fbdry(i)->edirichlet();
+		
+		for (int i=0;i<nebd;++i) 
+			hp_ebdry(i)->edirichlet3d();
+	}
+	
 //	if (!basis::tri(log2p)->im()) return;
 //	
 //	for(int tind = 0; tind < ntri; ++tind) {
@@ -275,7 +277,9 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 
 
 void tet_hp_cns::update() {
-		
+	
+	//tet_hp::bicgstab();return;
+	
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
 	gbl->ug0.v(Range(0,npnt-1),Range::all()) = ug.v(Range(0,npnt-1),Range::all());
 	if (basis::tet(log2p).em) {
@@ -315,7 +319,7 @@ void tet_hp_cns::update() {
 #else
 		tet_hp::minvrt();
 #endif
-		
+
 		for(int i=0;i<nfbd;++i)
 			hp_fbdry(i)->modify_boundary_residual();		
 		

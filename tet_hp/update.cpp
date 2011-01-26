@@ -192,9 +192,9 @@ void tet_hp::update() {
 //#endif
 	
 	//conjugate_gradient();
-	bicgstab();
+	//bicgstab();
 	//cgs();
-	return;
+	//return;
 
 	
 	/* COUPLED MESH MOVMEMENT */

@@ -82,6 +82,14 @@
 		958C01E812E4B1C200350BEF /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
 		95BA7C2C12DBA597000C3AFF /* krylov.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C2B12DBA597000C3AFF /* krylov.cpp */; };
+		95C1233C12EF73290001FB2B /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AA10F67FF400759C42 /* allocate.cpp */; };
+		95C1233D12EF73290001FB2B /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B210F67FF400759C42 /* tstep.cpp */; };
+		95C1233E12EF732A0001FB2B /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B010F67FF400759C42 /* rsdl.cpp */; };
+		95C1233F12EF732C0001FB2B /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7D1912DBB254000C3AFF /* update.cpp */; };
+		95C1234012EF732D0001FB2B /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AC10F67FF400759C42 /* bdry.cpp */; };
+		95C1234112EF732D0001FB2B /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AD10F67FF400759C42 /* getnewbdry.cpp */; };
+		95C1234212EF732E0001FB2B /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AE10F67FF400759C42 /* getnewibc.cpp */; };
+		95C1234512EF73730001FB2B /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C73E1F105EA89D00637BEE /* sparse.cpp */; };
 		95C1C0A00F6ADDDB00D1DCDB /* particle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95671D860F57074800872173 /* particle.cpp */; };
 		95C5539212DE57F800097436 /* libtri_mesh.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F2C827A0CE6506C000267B3 /* libtri_mesh.a */; };
 		95C8AFD612EDEF57008CF6CA /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AA10F67FF400759C42 /* allocate.cpp */; };
@@ -734,6 +742,14 @@
 				958C01D412E4B1C200350BEF /* length.cpp in Sources */,
 				958C01D512E4B1C200350BEF /* jacobi.cpp in Sources */,
 				958C01D612E4B1C200350BEF /* krylov.cpp in Sources */,
+				95C1233C12EF73290001FB2B /* allocate.cpp in Sources */,
+				95C1233D12EF73290001FB2B /* tstep.cpp in Sources */,
+				95C1233E12EF732A0001FB2B /* rsdl.cpp in Sources */,
+				95C1233F12EF732C0001FB2B /* update.cpp in Sources */,
+				95C1234012EF732D0001FB2B /* bdry.cpp in Sources */,
+				95C1234112EF732D0001FB2B /* getnewbdry.cpp in Sources */,
+				95C1234212EF732E0001FB2B /* getnewibc.cpp in Sources */,
+				95C1234512EF73730001FB2B /* sparse.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

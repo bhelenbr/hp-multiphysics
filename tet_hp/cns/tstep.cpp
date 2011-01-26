@@ -184,7 +184,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 	Array<double,2> P(NV,NV), V(NV,NV), VINV(NV,NV), dpdc(NV,NV), dcdp(NV,NV), A(NV,NV), B(NV,NV), C(NV,NV), S(NV,NV), Tinv(NV,NV), temp(NV,NV);
 	Array<FLT,1> Aeigs(NV),Beigs(NV),Ceigs(NV);
-	
+
 	FLT gam = gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
@@ -211,7 +211,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
 	FLT alph = 1.0+b2;
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
-	
+
 	alph = 0.0; // prevents wiggles when residual gets small, not sure why
 	
 	/* Preconditioner */
@@ -281,23 +281,23 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 	FLT temp2 = sqrt(v*v*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
-	V = 0.0, 0.0, 0.0, 0.5*(v*(b2-1.0)+temp2)*rho,		   0.5*(v*(b2-1.0)-temp2)*rho,
-		0.0, 0.0, 1.0, 0.0,							       0.0,
-		0.0, 0.0, 0.0, 1.0,								   1.0,
-		1.0, 0.0, 0.0, 0.0,								   0.0,
-		0.0, 1.0, 0.0, 0.5*(gm1*v*(b2-1.0)+gm1*temp2)/gam, 0.5*(gm1*v*(b2-1.0)-gm1*temp2)/gam;
+	V = 0.5*(v*(b2-1.0)+temp2)*rho,		    0.5*(v*(b2-1.0)-temp2)*rho,			0.0, 0.0, 0.0, 
+		0.0,							    0.0,								1.0, 0.0, 0.0,
+		1.0,							    1.0,								0.0, 0.0, 0.0,
+		0.0,							    0.0,								0.0, 1.0, 0.0,
+		0.5*(gm1*v*(b2-1.0)+gm1*temp2)/gam, 0.5*(gm1*v*(b2-1.0)-gm1*temp2)/gam, 0.0, 0.0, 1.0;
 	
-	Beigs = v, v, v, 0.5*(v+v*b2+temp2), 0.5*(v+v*b2-temp2);
-	
+	Beigs = 0.5*(v+v*b2+temp2), 0.5*(v+v*b2-temp2), v, v, v;
+
 	for(int i=0; i<NV; ++i)
 		Beigs(i) = abs(Beigs(i));
 	
-	VINV = 0.0,				 0.0, 0.0,						    1.0, 0.0,
-		   -gm1/(gam*rho),	 0.0, 0.0,							0.0, 1.0,
-		   0.0,			     1.0, 0.0,							0.0, 0.0,
-		   1.0/(rho*temp2),  0.0, 0.5*(temp2-v*(b2-1.0))/temp2, 0.0, 0.0,
-		   -1.0/(rho*temp2), 0.0, 0.5*(v*(b2-1.0)+temp2)/temp2, 0.0, 0.0;
-	
+	VINV = 	1.0/(rho*temp2),  0.0, 0.5*(temp2-v*(b2-1.0))/temp2, 0.0, 0.0,
+			-1.0/(rho*temp2), 0.0, 0.5*(v*(b2-1.0)+temp2)/temp2, 0.0, 0.0,
+			0.0,			  1.0, 0.0,						     0.0, 0.0,
+			0.0,			  0.0, 0.0,							 1.0, 0.0,
+			-gm1/(gam*rho),	  0.0, 0.0,							 0.0, 1.0;
+
 	for(int i=0; i < NV; ++i)
 		for(int j=0; j < NV; ++j)
 			VINV(i,j) = Beigs(i)*VINV(i,j);
@@ -307,7 +307,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				B(i,j)+=V(i,k)*VINV(k,j);
-	
+
 	FLT temp3 = sqrt(w*w*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
 	
 	V = 0.5*(w*(b2-1.0)+temp3)*rho,			0.5*(w*(b2-1.0)-temp3)*rho,			0.0, 0.0, 0.0,
@@ -337,8 +337,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		for(int j=0; j<NV; ++j)
 			for(int k=0; k<NV; ++k)
 				C(i,j)+=V(i,k)*VINV(k,j);
-	
-	
+
 	S = 0.0, 0.0,      0.0,      0.0,      0.0,
 		0.0, nu/(h*h), 0.0,      0.0,      0.0,
 		0.0, 0.0,      nu/(h*h), 0.0,      0.0,

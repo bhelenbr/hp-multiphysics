@@ -104,7 +104,7 @@ void tet_hp::conjugate_gradient() {
 /* bi-conjugate gradient stabilized */
 void tet_hp::bicgstab() {
 	
-	int max_iter = 50;
+	int max_iter = 30;
 	FLT rho_1, rho_2, alpha, beta, omega;
 	
 	struct vefi p;
@@ -247,7 +247,8 @@ void tet_hp::bicgstab() {
 		inner_product(rtr,gbl->res,gbl->res);
 		rtr = sqrt(rtr);
 		
-		cout << i << ' ' << rtv << ' ' << alpha << ' ' << beta << ' ' << omega << ' ' << rtr << endl;
+//		cout << i << ' ' << rtv << ' ' << alpha << ' ' << beta << ' ' << omega << ' ' << rtr << endl;
+		cout << i << ' ' <<  rtr << endl;
 		
 		if (rtr < 1.0e-9) break;
 		
@@ -263,7 +264,7 @@ void tet_hp::bicgstab() {
 /* still a bug in it */
 void tet_hp::cgs() {
 	
-	int max_iter = 50;
+	int max_iter = 30;
 	FLT rho_1, rho_2, alpha, beta;
 	
 	struct vefi p;
@@ -341,12 +342,12 @@ void tet_hp::cgs() {
 		
 		gbl->res = p;
 		
-//#ifdef JACOBI
-//		jacobi_relaxation();
-//#else
-//		tet_hp::minvrt();
-//#endif
-		//all_dirichlet();
+#ifdef JACOBI
+		jacobi_relaxation();
+#else
+		tet_hp::minvrt();
+#endif
+		all_dirichlet();
 		
 		matrix_multiply(gbl->res,vhat);
 		
@@ -363,11 +364,11 @@ void tet_hp::cgs() {
 		
 		gbl->res.v = u.v + q.v;
 		
-//#ifdef JACOBI
-//		jacobi_relaxation();
-//#else
-//		tet_hp::minvrt();
-//#endif	
+#ifdef JACOBI
+		jacobi_relaxation();
+#else
+		tet_hp::minvrt();
+#endif	
 		
 		all_dirichlet();
 		
