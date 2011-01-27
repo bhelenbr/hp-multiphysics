@@ -549,7 +549,7 @@ void tet_mesh::match_tri_and_seg(void){
 
 void tet_mesh::create_tet_tet(void) {
 	int tind,find,j;
-//    int nbf = 0;
+
 	for(tind = 0; tind < ntet; ++tind) {
 		for(j = 0; j < 4; ++j){
 			tet(tind).tet(j)=-1;
@@ -634,7 +634,7 @@ void tet_mesh::bdrylabel() {
 	for(i=0;i<nfbd;++i) {
 		for(j=0;j<fbdry(i)->ntri;++j) {
 			find = fbdry(i)->tri(j).gindx;
-			tri(find).tet(1) = numatbdry(i,j);
+			tri(find).tet(1) = numatbdry(i);
 			tind = tri(find).tet(0);
 			for(k=0;k<4;++k)
 				if (tet(tind).tri(k) == find) break;

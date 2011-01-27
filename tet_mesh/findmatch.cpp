@@ -603,7 +603,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	int i,j,n,tind,indx,lcl,p0,sind,egindx,gindx,newid,find;
 	Array<int,2> bcntr(xin.nfbd +20,2);
 	Array<int,2> ecntr(xin.nfbd+xin.nebd +20,4);
-	TinyVector<int,2> a,b;
+	//TinyVector<int,2> a,b;//don't need?
 	int bnum,match;
 	
 	/* TO CREATE UNIQUE FACE NUMBERS */
@@ -680,9 +680,15 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	create_from_tet();
 	
 	nfbd = 0;
+	bcntr = -1;
+	
 	for(i=0;i<ntri;++i) {
 		
+		/* inside tet connected to tri */
 		tind = tri(i).tet(0);
+		
+		/* tet.info = gbl index of tet*/
+		int gbl_tind = tet(tind).info;
 		
 		/* find tri in old mesh and store in tri.info */
 		lcl=0;
@@ -697,56 +703,62 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		
 		assert(n < 4);
 			
-		tri(i).info = xin.tet(tet(tri(i).tet(0)).info).tri(n);
-				
-		
+		/*  store gbl index of tri in tri.info */
+		tri(i).info = xin.tet(gbl_tind).tri(n);
+
+		/* if tri.tet(1) < 0 then it is a boundary tet in new mesh */
 		if (tri(i).tet(1) < 0) {		
-			indx = xin.tet(tet(tri(i).tet(0)).info).tet(n);
+			
+			/* find out if it is an original boundary or a new partition */
+			indx = xin.tet(gbl_tind).tet(n);
 
 			if (indx < 0) {
 				/* BOUNDARY TRI */
 				bnum = getbdrynum(indx);
-				
+
 				for (j = 0; j <nfbd;++j) {
 					if (bnum == bcntr(j,0)) {
 						++bcntr(j,1);
-						tri(i).tet(1) = numatbdry(j,0,false);
+						tri(i).tet(1) = numatbdry(j);
 						goto next1;
 					}
 				}
-				/* NEW TRI */
-				tri(i).tet(1) = numatbdry(nfbd, 0,false);
+				/* FIRST TRI */
+				tri(i).tet(1) = numatbdry(nfbd);
 				bcntr(nfbd,0) = bnum;
 				bcntr(nfbd++,1) = 1;
 			}
 			else {
 				/* PARTITION FACE */
+				/* find partition number of connected tet */
 				match = xin.tet(indx).info;
-				if (match < npart) bnum = (match<<16) + (npart<<24);
-				else bnum = (match<<24) + (npart<<16);
+				bnum = match+10;
+
 				for (j = 0; j <nfbd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
-						tri(i).tet(1) = numatbdry(j,match,false);
+						tri(i).tet(1) = numatbdry(j);
 						goto next1;
 					}
 				}
-				/* NEW FACE */
-				tri(i).tet(1) = numatbdry(nfbd,match,false);
+				/* FIRST FACE */
+				tri(i).tet(1) = numatbdry(nfbd);
 				bcntr(nfbd,0) = -bnum;
 				bcntr(nfbd++,1) = 1;
 			}
 		}
 		next1: continue;
 	}
-	
+
 	/* Make new boundaries and print boundary information */
 	fbdry.resize(nfbd);
 	for(i=0;i<nfbd;++i) {		
 		if (bcntr(i,0) < 0) {
+			/* create new partition with wacky idnum */
 			fbdry(i) = new fpartition(abs(bcntr(i,0)),*this);
 		}
 		else {
+			/* reuse face boundary in original mesh */
 			fbdry(i) = xin.fbdry(bcntr(i,0))->create(*this);
 		}
 		fbdry(i)->alloc(static_cast<int>(bcntr(i,1)*3));
@@ -767,15 +779,17 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			for(j=0;j<3;++j)
 				fbdry(i)->tri(tind).pnt(j) = tri(tri_gindx).pnt(j);		
 		}
+		/* fill in mesh data structure on face boundaries */
+		fbdry(i)->create_from_tri();
 	}
 
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)
 		seg(i).info= -1;
 
+	ecntr = -1;
+	
 	for(i = 0; i < nfbd; ++i){
-		/* fill in mesh data structure on face boundaries */
-		fbdry(i)->create_from_tri(); 
 		for(int sind = 0; sind < fbdry(i)->nseg;++sind){
 			if (fbdry(i)->seg(sind).tri(1) < 0){
 				find = fbdry(i)->seg(sind).tri(0);
@@ -864,7 +878,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		assert(n<6);
 
 	}
-	
+
 	/* reorder edge boundaries to make it easy to find vertex boundaries */
 	for(i=0;i<nebd;++i) {
 		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
@@ -897,7 +911,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			int minface = tri(fbdry(i)->tri(0).gindx).info;
 			for(j=1;j<fbdry(i)->ntri;++j)
 				minface=MIN(minface,tri(fbdry(i)->tri(j).gindx).info);
-			newid = minface +maxfnum;
+			newid = minface+maxfnum;
 			ostringstream nstr;
 			nstr << "b" << npart << "_f" << newid << std::flush;
 			fbdry(i)->idprefix = nstr.str();

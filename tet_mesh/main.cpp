@@ -214,12 +214,13 @@ int main(int argc, char *argv[]) {
         Array<tet_mesh,1> zpart(p);
         
         for(int i=0;i<p;++i) {
-            nstr << i << std::flush;
-            fname = argv[1] +nstr.str();
-            nstr.str("");
-            zpart(i).partition(zx,i);
+			nstr << "b" << i << std::flush;
+			fname = "partition_" +nstr.str();
+			std::cout << nstr.str() << "_mesh: " << fname << std::endl;
+			nstr.str("");
+			zpart(i).partition(zx,i);
 			zpart(i).checkintegrity();
-            zpart(i).output(fname,out);
+			zpart(i).output(fname,out);
             //zpart(i).output(fname,tet_mesh::boundary);//temp fixme
         }
 #else

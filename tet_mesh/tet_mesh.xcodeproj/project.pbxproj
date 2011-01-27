@@ -1005,7 +1005,9 @@
 		6FD540680863870800D6A762 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_PREPROCESSOR_DEFINITIONS = MADLIB;
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Deployment;
 		};
