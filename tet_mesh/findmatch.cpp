@@ -601,8 +601,8 @@ void tet_mesh::setpartition(int nparts) {
 /* tri(tind).info = old tri index */
 void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	int i,j,n,tind,indx,lcl,p0,sind,egindx,gindx,newid,find;
-	Array<int,2> bcntr(xin.nfbd +20,2);
-	Array<int,2> ecntr(xin.nfbd+xin.nebd +20,4);
+	Array<int,2> bcntr(xin.nfbd +40,2);
+	Array<int,2> ecntr(xin.nfbd+xin.nebd +40,4);
 	//TinyVector<int,2> a,b;//don't need?
 	int bnum,match;
 	
@@ -783,6 +783,10 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		fbdry(i)->create_from_tri();
 	}
 
+	for(i = 0; i < nfbd; ++i) {
+		fbdry(i)->pull_apart_face_boundaries();
+	}
+	
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)
 		seg(i).info= -1;
@@ -839,7 +843,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	ebdry.resize(nebd);
 	for(i=0;i<nebd;++i) {
 		if (ecntr(i,3) < 0) {
-			ebdry(i) = new epartition(i,*this);
+			ebdry(i) = new epartition(666,*this);
 		}
 		else {
 			ebdry(i) = xin.ebdry(ecntr(i,3))->create(*this);
@@ -879,6 +883,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 
 	}
 
+	
 	/* reorder edge boundaries to make it easy to find vertex boundaries */
 	for(i=0;i<nebd;++i) {
 		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */

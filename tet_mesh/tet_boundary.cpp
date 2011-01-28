@@ -328,9 +328,93 @@ void edge_bdry::reorder() {
 		for(i=0;i<nseg-count;++i)
 			x.ebdry(x.nebd-1)->swap(i,i+count);
 		x.ebdry(x.nebd-1)->nseg = nseg -count;
-		*x.gbl->log << "#creating new boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
+		*x.gbl->log << "#creating new " << mytype << " edge boundary: " << idnum << " num: " << x.ebdry(x.nebd-1)->nseg << std::endl;
 		  nseg = count;
 	 }
+	
+	return;
+}
+
+void face_bdry::pull_apart_face_boundaries() {
+	Array<int,2> listoftris(ntri,ntri);
+	Array<int,1> numoftris(ntri);
+	
+	listoftris = -1;
+	numoftris = 0;	
+	
+	for (int i=0; i < ntri; ++i) 
+		tri(i).info = -1;
+	
+	int chunk = 0;
+
+	for (int n=0; n<ntri; ++n) {
+		if (tri(n).info < 0) {	
+			
+			tri(n).info = chunk;
+			numoftris(chunk) = 1;
+			listoftris(0,chunk) = n;
+			
+			for (int i=0; i < numoftris(chunk); ++i) {
+				for (int j=0; j<3; ++j) {
+					
+					int tind = tri(listoftris(i,chunk)).tri(j);
+
+					if (tri(tind).info < 0 && tind > -1) {
+						tri(tind).info = chunk;
+						listoftris(numoftris(chunk)++,chunk) = tind;
+					}
+				}
+			}
+			
+			++chunk;
+		}
+	}
+
+	if (chunk>1) {
+
+		*x.gbl->log << chunk << " independent boundaries on " << mytype << " face boundary " <<  idnum << endl;
+		
+		Array<int,2> listofgindx(ntri,chunk);
+		listofgindx = -1;
+		
+		for (int i=0; i<chunk; ++i) {
+			for (int j=0; j<numoftris(i); ++j) {
+				listofgindx(j,i) = tri(listoftris(j,i)).gindx;
+			}
+		}
+
+		x.nfbd += chunk-1;
+		x.fbdry.resizeAndPreserve(x.nfbd);
+		ntri = numoftris(0);
+		alloc(static_cast<int>(ntri*3));
+
+		for (int i=0; i<ntri; ++i) {
+			tri(i).gindx = listofgindx(i,0);
+			for (int j=0; j<3; ++j) {
+				tri(i).pnt(j) = x.tri(tri(i).gindx).pnt(j);
+			}
+		}
+		
+		create_from_tri();
+
+		for (int n=1; n<chunk; ++n) {
+			int fbd = x.nfbd-n;
+			x.fbdry(fbd) = create(x);
+			//x.fbdry(fbd)->copy(*this);
+			x.fbdry(fbd)->alloc(static_cast<int>(numoftris(n)*3));
+			x.fbdry(fbd)->ntri = numoftris(n);
+			
+			for (int i=0; i<numoftris(n); ++i) {
+				x.fbdry(fbd)->tri(i).gindx = listofgindx(i,n);
+				for (int j=0; j<3; ++j) {
+					x.fbdry(fbd)->tri(i).pnt(j) = x.tri(x.fbdry(fbd)->tri(i).gindx).pnt(j);
+				}
+			}
+			
+			x.fbdry(fbd)->create_from_tri();
+
+		}	
+	}
 	
 	return;
 }

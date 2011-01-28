@@ -584,6 +584,8 @@ class face_bdry : public boundary {
 		void create_tri_tri(void);
 		void create_pnt_tri(void);
 		
+		virtual void pull_apart_face_boundaries();
+	
 		void create_from_tri() {
 			create_tri_pnt_and_pnt_gindx_from_gbltris();
 			create_seg_from_tri(); 
