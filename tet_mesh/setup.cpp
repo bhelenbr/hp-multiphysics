@@ -634,7 +634,7 @@ void tet_mesh::bdrylabel() {
 	for(i=0;i<nfbd;++i) {
 		for(j=0;j<fbdry(i)->ntri;++j) {
 			find = fbdry(i)->tri(j).gindx;
-			tri(find).tet(1) = numatbdry(i);
+			tri(find).tet(1) = numatbdry(i,j);
 			tind = tri(find).tet(0);
 			for(k=0;k<4;++k)
 				if (tet(tind).tri(k) == find) break;

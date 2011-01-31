@@ -129,13 +129,18 @@ class tet_mesh : public multigrid_interface {
 //		int numatbdry(int bnum, int bel, bool is_edge = false) const { return(-(((bnum+is_edge*256 +1)<<20) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */		
 //		
 	
-	int getbdrynum(int bdry_info) const {
-		return(-bdry_info-10);		
-	}
+//	int getbdrynum(int bdry_info) const {
+//		return(-bdry_info-10);		
+//	}
+//	
+//	int numatbdry(int bnum) const {
+//		return(-bnum-10);
+//	}
 	
-	int numatbdry(int bnum) const {
-		return(-bnum-10);
-	}
+	int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
+	int getbdrytri(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */
+	int numatbdry(int bnum, int bel) const { return(-(((bnum+1)<<16) +bel));} /**< Combines bnum & bel into 1 integer for storage in boundary of seg.tri or tri.tri */
+	
 	
 //	int getbdrynum(int tetnum) const { return((-tetnum>>16) -1);}  /**< Uses info in seg.tri or tri.tri to determine boundary object number */
 //	int getbdryel(int tetnum) const { return(-tetnum&0xFFFF);}  /**< Uses info in seg.tri or tri.tri to determine boundary element */

@@ -640,7 +640,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		}
 	}
 	if (!initialized) {
-		maxvst = static_cast<int>(static_cast<FLT>(ntet*xin.maxvst)/xin.ntet);
+		maxvst = static_cast<int> (static_cast<FLT> (ntet) * static_cast<FLT> (xin.maxvst) / static_cast<FLT> (xin.ntet));
 		allocate(maxvst*2);
 	}
 	else if (4*ntet > maxvst) {//FIX ME 3->4??
@@ -719,12 +719,12 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				for (j = 0; j <nfbd;++j) {
 					if (bnum == bcntr(j,0)) {
 						++bcntr(j,1);
-						tri(i).tet(1) = numatbdry(j);
+						tri(i).tet(1) = numatbdry(j,0);
 						goto next1;
 					}
 				}
 				/* FIRST TRI */
-				tri(i).tet(1) = numatbdry(nfbd);
+				tri(i).tet(1) = numatbdry(nfbd,0);
 				bcntr(nfbd,0) = bnum;
 				bcntr(nfbd++,1) = 1;
 			}
@@ -737,12 +737,12 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				for (j = 0; j <nfbd;++j) {
 					if (bcntr(j,0) == -bnum) {
 						++bcntr(j,1);
-						tri(i).tet(1) = numatbdry(j);
+						tri(i).tet(1) = numatbdry(j,0);
 						goto next1;
 					}
 				}
 				/* FIRST FACE */
-				tri(i).tet(1) = numatbdry(nfbd);
+				tri(i).tet(1) = numatbdry(nfbd,0);
 				bcntr(nfbd,0) = -bnum;
 				bcntr(nfbd++,1) = 1;
 			}
@@ -755,7 +755,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	for(i=0;i<nfbd;++i) {		
 		if (bcntr(i,0) < 0) {
 			/* create new partition with wacky idnum */
-			fbdry(i) = new fpartition(abs(bcntr(i,0)),*this);
+			fbdry(i) = new fpartition(maxfnum+abs(bcntr(i,0)),*this);
 		}
 		else {
 			/* reuse face boundary in original mesh */
@@ -833,7 +833,18 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 				ecntr(nebd,0) = seg(gindx).info; // first face boundary
 				ecntr(nebd,1) = i; // second face boundary
 				ecntr(nebd,2) = 1; // count number of edges
-				ecntr(nebd++,3) = xin.seg(egindx).info; // boundary number
+				
+				ecntr(nebd,3) = -i-10; // partition boundary
+				/* search for boundary number else partition */
+				for (j=0; j<xin.nebd; ++j) {
+					if (xin.ebdry(j)->idnum == xin.seg(egindx).info) {
+						ecntr(nebd,3) = j; // boundary number
+						break;
+					} 
+				}
+				
+				++nebd;
+				
 			}	
 			next_seg:;
 		}
@@ -843,7 +854,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 	ebdry.resize(nebd);
 	for(i=0;i<nebd;++i) {
 		if (ecntr(i,3) < 0) {
-			ebdry(i) = new epartition(666,*this);
+			ebdry(i) = new epartition(maxenum+abs(ecntr(i,3)),*this);
 		}
 		else {
 			ebdry(i) = xin.ebdry(ecntr(i,3))->create(*this);
@@ -922,7 +933,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			fbdry(i)->idprefix = nstr.str();
 			fbdry(i)->idnum = newid;
 			nstr.clear();	
-			std::cout << fbdry(i)->idprefix << "_type: partition\n";
+			std::cout << fbdry(i)->idprefix << "_type: comm\n";
 		}
 	}
 	
@@ -939,7 +950,7 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 			ebdry(i)->idprefix = nstr.str();
 			ebdry(i)->idnum = newid;
 			nstr.clear();
-			std::cout << ebdry(i)->idprefix << "_type: partition\n";
+			std::cout << ebdry(i)->idprefix << "_type: comm\n";
 
 			sind = ebdry(i)->seg(0).gindx;			
 			p0 = seg(sind).pnt(0);

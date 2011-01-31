@@ -371,9 +371,8 @@ void face_bdry::pull_apart_face_boundaries() {
 	}
 
 	if (chunk>1) {
+		*x.gbl->log << "#creating " << chunk << " new " << mytype << " face boundaries: " << idnum  << std::endl;
 
-		*x.gbl->log << chunk << " independent boundaries on " << mytype << " face boundary " <<  idnum << endl;
-		
 		Array<int,2> listofgindx(ntri,chunk);
 		listofgindx = -1;
 		

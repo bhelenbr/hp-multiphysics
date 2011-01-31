@@ -24,7 +24,7 @@ void tet_mesh::MAdLib_input(const std::string filename, FLT grwfac, input_map& i
 	GM_readFromMSH(MAdModel, filename.c_str());
 	pMesh MAdMesh = M_new(MAdModel);
 	M_load(MAdMesh,filename.c_str());
-	
+
 	if (!initialized) {
 		maxvst = M_numTets(MAdMesh);
 		maxvst = (maxvst > M_numEdges(MAdMesh) ? maxvst : M_numEdges(MAdMesh));

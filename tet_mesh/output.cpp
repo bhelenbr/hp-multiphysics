@@ -266,7 +266,7 @@ void tet_mesh::setinfo() {
 		pnt(i).info = -1;
 	
 	for(int i=0;i<nvbd;++i)
-		pnt(vbdry(i)->pnt).info = i;
+		pnt(vbdry(i)->pnt).info = vbdry(i)->idnum;
 
 	/* SET UP SIDE BC INFORMATION FOR EASYMESH OUTPUT */
 	for(int i=0;i<nseg;++i)
@@ -274,14 +274,14 @@ void tet_mesh::setinfo() {
 	
 	for(int i=0;i<nebd;++i)
 		for(int j=0;j<ebdry(i)->nseg;++j)
-			seg(ebdry(i)->seg(j).gindx).info = i;
+			seg(ebdry(i)->seg(j).gindx).info = ebdry(i)->idnum;
 
 	for(int i=0;i<ntri;++i)
 		tri(i).info = -1;
 		
 	for(int i=0;i<nfbd;++i)
 		for(int j=0;j<fbdry(i)->ntri;++j)
-			tri(fbdry(i)->tri(j).gindx).info = i;
+			tri(fbdry(i)->tri(j).gindx).info = fbdry(i)->idnum;
 	
 	/* SET UP TRI INFO FOR EASYMESH OUTPUT */            
 	for(int i=0;i<ntet;++i)
