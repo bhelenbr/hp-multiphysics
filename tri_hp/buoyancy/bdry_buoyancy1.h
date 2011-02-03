@@ -48,8 +48,9 @@ namespace bdry_buoyancy {
 	};
 	
 	class melt : public bdry_ins::flexible {	
-		protected:
 			tri_hp_buoyancy &x;
+
+		protected:
 			Array<FLT,1> ksprg;
 			Array<TinyVector<FLT,tri_mesh::ND>,1> vug_frst;
 			Array<TinyVector<FLT,tri_mesh::ND>,2> vdres; //!< Driving term for multigrid (log2p, pnts)
@@ -112,13 +113,12 @@ namespace bdry_buoyancy {
 			void update(int stage);
 			void mg_restrict(); 
 			void element_jacobian(int indx, Array<FLT,2>& K);
-			void vdirichlet();
+
 #ifdef petsc
 //			void petsc_matchjacobian_snd();
 //			void petsc_matchjacobian_rcv(int phase);
 			int petsc_rsdl(Array<FLT,1> res);
 			void petsc_jacobian();
-			void petsc_jacobian_dirichlet();
 			void non_sparse(Array<int,1> &nnzero);
 //			void non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
 //			void non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mpi);
@@ -262,7 +262,7 @@ namespace bdry_buoyancy {
 	/* VERTEX BOUNDARY CONDITIONS */
 	/******************************/
 	class melt_inflow_pt : public hp_vrtx_bdry {
-		/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
+			/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
 		protected:
 			tri_hp_buoyancy &x;
 			melt *surf;
@@ -333,7 +333,7 @@ namespace bdry_buoyancy {
 				pt = position;
 			}
 			
-	#ifdef petsc
+#ifdef petsc
 			void petsc_jacobian() {} 
 			void petsc_jacobian_dirichlet() {
 				Array<int,1> rows(tri_mesh::ND);
@@ -347,10 +347,9 @@ namespace bdry_buoyancy {
 				MatZeroRows(x.petsc_J,tri_mesh::ND,rows.data(),1.0);
 #endif
 			}
-				
-	#endif
+			
+#endif
 		};
-	
 }
 #endif
 

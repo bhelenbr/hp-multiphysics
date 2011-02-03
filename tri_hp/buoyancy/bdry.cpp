@@ -151,8 +151,8 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
  */
 class tri_hp_buoyancy_vtype {
 public:
-	static const int ntypes = 1;
-	enum ids {unknown=-1,melt_end};
+	static const int ntypes = 2;
+	enum ids {unknown=-1,melt_end,melt_inflow};
 	const static char names[ntypes][40];
 	static int getid(const char *nin) {
 		for(int i=0;i<ntypes;++i) 
@@ -161,7 +161,7 @@ public:
 	}
 };
 
-const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end"};
+const char tri_hp_buoyancy_vtype::names[ntypes][40] = {"melt_end","melt_inflow"};
 
 hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	std::string keyword,val;
@@ -185,6 +185,10 @@ hp_vrtx_bdry* tri_hp_buoyancy::getnewvrtxobject(int bnum, input_map &bdrydata) {
 	switch(type) {
 		case tri_hp_buoyancy_vtype::melt_end: {
 			temp = new melt_end_pt(*this,*vbdry(bnum));
+			break;
+		}
+		case tri_hp_buoyancy_vtype::melt_inflow: {
+			temp = new melt_inflow_pt(*this,*vbdry(bnum));
 			break;
 		}
 		default: {

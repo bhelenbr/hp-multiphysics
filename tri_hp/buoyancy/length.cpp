@@ -23,7 +23,8 @@ void tri_hp_buoyancy::length() {
 	Array<TinyMatrix<FLT,MXGP,MXGP>,1> u(NV),ul(NV);
 	Array<TinyMatrix<FLT,MXGP,MXGP>,2> du(NV,ND), dul(NV,ND);
 	
-	// return;  // TEMPORARY To simply maintain mesh quality
+	if (gbl->error_estimator == tri_hp_ins::none) 
+		return;
 
 	int sm = basis::tri(log2p)->sm();
 	int lgpx = basis::tri(log2p)->gpx();
