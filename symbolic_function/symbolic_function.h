@@ -272,7 +272,7 @@ protected:
 	blitz::Array<double,1> child_values;
 	
 public:		
-	vector_function() : nargs(0), nchildren(0) {
+	vector_function() : p(), nargs(0), nchildren(0) {
 		p.DefineFun("erf", erf, false);
 		p.DefineFun("erfc", erfc, false);
 		p.DefineVar("t", &time);
@@ -294,6 +294,8 @@ public:
 				p.DefineVar(names(n), &xargs(n,0));
 			}
 		}
+		p.DefineVar("t", &time);
+
 		
 		/* Reassociate Children */
 		children.resize(nchildren);
@@ -331,7 +333,6 @@ public:
 		dims = dims_;
 		names.resize(nargs);
 		names = names_;
-		
 		int maxdim = 1;
 		for (int n=0;n<nargs;++n) {
 			maxdim = (dims(n)>maxdim ? dims(n) : maxdim);
@@ -353,7 +354,10 @@ public:
 		}
 	}
 	vector_function(int nargs_,blitz::Array<int,1> dims_, blitz::Array<std::string,1> names_) {
-		vector_function();
+		p.DefineFun("erf", erf, false);
+		p.DefineFun("erfc", erfc, false);
+		p.DefineVar("t", &time);
+		// vector_function(); // Why doesn't this work????
 		set_arguments(nargs_,dims_,names_);
 	}
 	
@@ -367,7 +371,7 @@ public:
 				
 		try {
 			for (int n=0;n<nchildren;++n) {
-				child_values(n) = children(n)->Eval(a0);
+				child_values(n) = children(n)->Eval(a0,t);
 			}
 			rslt = p.Eval();
 		}
@@ -395,7 +399,7 @@ public:
 		
 		try {
 			for (int n=0;n<nchildren;++n) {
-				child_values(n) = children(n)->Eval(a0,a1);
+				child_values(n) = children(n)->Eval(a0,a1,t);
 			}
 			rslt = p.Eval();
 		}
@@ -426,7 +430,7 @@ public:
 		
 		try {
 			for (int n=0;n<nchildren;++n) {
-				child_values(n) = children(n)->Eval(a0,a1,a2);
+				child_values(n) = children(n)->Eval(a0,a1,a2,t);
 			}
 			rslt = p.Eval();
 		}
@@ -457,10 +461,10 @@ public:
 		
 		for (int m = 0; m < dims(3); ++m)
 			xargs(3,m) = a3(m);
-		
+					
 		try {
 			for (int n=0;n<nchildren;++n) {
-				child_values(n) = children(n)->Eval(a0,a1,a2,a3);
+				child_values(n) = children(n)->Eval(a0,a1,a2,a3,t);
 			}
 			rslt = p.Eval();
 		}
@@ -497,7 +501,7 @@ public:
 		
 		try {
 			for (int n=0;n<nchildren;++n) {
-				child_values(n) = children(n)->Eval(a0,a1,a2,a3,a4);
+				child_values(n) = children(n)->Eval(a0,a1,a2,a3,a4,t);
 			}
 			rslt = p.Eval();
 		}
@@ -535,7 +539,6 @@ public:
 			/* Reassociate Children */
 			nchildren = 0;
 			for (mu::varmap_type::const_iterator item = variables.begin(); item!=variables.end(); ++item) {
-				
 				for (int n=0;n<nargs;++n) {
 					if (dims(n) > 1) {
 						for(int m=0;m<dims(n);++m) {
@@ -609,6 +612,8 @@ public:
 			NEXT1: continue;
 			}
 			p.SetExpr(buffer);
+			
+			/* TESTING */
 		}
 		catch (mu::Parser::exception_type &e) {
 			std::cout << "Message:  " << e.GetMsg() << std::endl;

@@ -55,8 +55,10 @@ int main (int argc, char *argv[]) {
 	dims(2) = 2;
 	vector_function vf(3,dims,names);
 	
-	inmap["Vfunc"] = "t*V2";
-	inmap["V2"] = "u3";
+	inmap["Vfunc"] = "V3*u2";
+	inmap["V2"] = "u3*x0";
+	inmap["V3"] = "n1*t*V2";
+	// t*u2*u3*x0
 	
 	vf.init(inmap,"Vfunc");
 	blitz::Array<double,1> x(2);
@@ -71,7 +73,7 @@ int main (int argc, char *argv[]) {
 	blitz::Array<double,1> n(2);
 	n(0) = -100;
 	n(1) = -200;
-	std::cout << vf.Eval(x,u,n,t) << std::endl;
+	std::cout << vf.Eval(x,u,n,t) << ' ' << t*u(2)*u(3)*x(0)*n(1) << std::endl;
 	
 
 #else
