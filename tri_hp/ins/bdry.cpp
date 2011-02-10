@@ -892,7 +892,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 	if (!base.is_comm()) return;
 	
 	/* Now do stuff for communication boundaries */
-	int row,sind;
+	int row;
 	
 	Array<int,1> c0vars(vdofs-1);
 	for(int n=0;n<x.NV-1;++n) {
@@ -909,6 +909,7 @@ void actuator_disc::petsc_matchjacobian_snd() {
 	base.sndtype() = boundary::flt_msg;
 	base.fsndbuf(base.sndsize()++) = x.jacobian_start +FLT_EPSILON;
 	
+	int sind = -2;
 	for(int i=0;i<base.nseg;++i) {
 		sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(0)*vdofs; 
@@ -994,7 +995,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 	if (!base.is_comm() || base.matchphase(boundary::all_phased,0) != phase) return;
 	
 	int count = 0;
-	int Jstart_mpi = base.frcvbuf(0, count++);
+	int Jstart_mpi = static_cast<int>(base.frcvbuf(0, count++));
 	
 	sparse_row_major *pJ_mpi;
 	if (base.is_local(0)) {
@@ -1026,7 +1027,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 	for (int i=base.nseg-1;i>=0;--i) {
 		int sind = base.seg(i);
 		int rowbase = x.seg(sind).pnt(1)*vdofs; 
-		int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
+		int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 		
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
@@ -1035,7 +1036,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = base.frcvbuf(0,count++) +Jstart_mpi;
+				int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 				FLT val = base.frcvbuf(0,count++);
 				if (abs(col) < INT_MAX-10) {
 #ifdef MPDEBUG
@@ -1065,12 +1066,12 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		int sgn = 1;
 		for(int mode=0;mode<x.sm0;++mode) {
 			for(int n=0;n<x.NV-1;++n) {
-				int ncol = base.frcvbuf(0,count++);
+				int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for side " << sind << " and variable " << n << std::endl;
 #endif
 				for (int k = 0;k<ncol;++k) {
-					int col = base.frcvbuf(0,count++) +Jstart_mpi;
+					int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 					FLT val = sgn*base.frcvbuf(0,count++);
 					if (abs(col) < INT_MAX-10) {
 #ifdef MPDEBUG
@@ -1106,16 +1107,16 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 	}
 	int sind = base.seg(0);
 	int rowbase = x.seg(sind).pnt(0)*vdofs; 
-	int row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
+	int row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 	
 	for (int n = 0; n <c0vars.extent(firstDim);++n) {
 		row = rowbase + c0vars(n);
-		int ncol = base.frcvbuf(0,count++);
+		int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
 		*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
 		for (int k = 0;k<ncol;++k) {
-			int col = base.frcvbuf(0,count++) +Jstart_mpi;
+			int col = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 			FLT val = base.frcvbuf(0,count++);
 			if (abs(col) < INT_MAX-10) {
 #ifdef MPDEBUG

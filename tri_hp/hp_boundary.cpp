@@ -1253,12 +1253,12 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	int count = 0;
 	int row = base.pnt*vdofs;	
 
-	assert(row == base.fsndbuf(count++));
-	assert(x.jacobian_start == base.fsndbuf(count++));
+	assert(row == static_cast<int>(base.fsndbuf(count++)));
+	assert(x.jacobian_start == static_cast<int>(base.fsndbuf(count++)));
 	for(int n=0;n<vdofs;++n) {
-		int ncol = base.fsndbuf(count++);
+		int ncol = static_cast<int>(base.fsndbuf(count++));
 		for (int k = 0;k<ncol;++k) {
-			int col = base.fsndbuf(count++);
+			int col = static_cast<int>(base.fsndbuf(count++));
 			FLT val = base.fsndbuf(count++);
 			x.J.set_values(row+n,col,val);
 		}
@@ -1268,8 +1268,8 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 	
 	count = 0;
 	for (int m=0;m<base.nmatches();++m) {
-		int row_mpi = base.frcvbuf(m,count++);
-		int jstart_mpi = base.frcvbuf(m,count++);
+		int row_mpi = static_cast<int>(base.frcvbuf(m,count++));
+		int jstart_mpi = static_cast<int>(base.frcvbuf(m,count++));
 		if (base.is_local(m)) {
 			pJ_mpi = &x.J;
 			jstart_mpi = 0;
@@ -1285,7 +1285,7 @@ void hp_vrtx_bdry::petsc_matchjacobian_rcv(int phase)	{
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
 			for (int k = 0;k<ncol;++k) {
-				int col = base.frcvbuf(m,count++) +jstart_mpi;
+				int col = static_cast<int>(base.frcvbuf(m,count++)) +jstart_mpi;
 #ifdef MPDEBUG
 				*x.gbl->log  << col << ' ';
 #endif
@@ -1325,7 +1325,7 @@ void hp_edge_bdry::petsc_matchjacobian_snd() {
 	else
 		vdofs = x.NV+x.ND;
 	
-	int row,sind;
+	int row,sind=-2;
 	
 #ifdef MY_SPARSE
 	/* I am cheating here and sending floats and int's together */

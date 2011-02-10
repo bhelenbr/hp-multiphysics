@@ -122,7 +122,8 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 					rhorbd0 = rho(i,j)*gbl->bd(0)*RAD(crd(0)(i,j))*cjcb;
 					cjcbi = lmu*RAD(crd(0)(i,j))/cjcb;
 					cjcbi2 = cjcbi*lkcond/lmu;
-
+					// cjcbi2 *= 2.0 +erf((1.0 -u(2)(i,j))/1.e-3); 
+					
 					/* UNSTEADY TERMS */
 					for(n=0;n<NV-1;++n)
 						res(n)(i,j) = rhorbd0*u(n)(i,j) +dugdt(log2p,tind,n)(i,j);
@@ -280,6 +281,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 			cjcb = ldcrd(0,0)*ldcrd(1,1) -ldcrd(1,0)*ldcrd(0,1);
 			cjcbi = lmu/cjcb;
 			cjcbi2 = cjcbi/lmu*lkcond;
+
 			lbd0 = gbl->bd(0)*cjcb;
 
 			/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
@@ -342,7 +344,11 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 
 					df(2,0)(i,j) = +RAD(crd(0)(i,j))*(visc(2,2)(0,0)*du(2,0)(i,j) +visc(2,2)(0,1)*du(2,1)(i,j));
 					df(2,1)(i,j) = +RAD(crd(0)(i,j))*(viscI2II2II1II0I*du(2,0)(i,j) +visc(2,2)(1,1)*du(2,1)(i,j));
-
+//					if (u(2)(i,j) < 1.0) {
+//						df(2,0)(i,j) *= 2.0 +erf((1.0 -u(2)(i,j))/1.e-3);  // TEMPORARY
+//						df(2,1)(i,j) *=  2.0 +erf((1.0 -u(2)(i,j))/1.e-3);  // TEMPORARY
+//					}
+					
 					for(n=0;n<NV-1;++n) {
 						cv(n,0)(i,j) += df(n,0)(i,j);
 						cv(n,1)(i,j) += df(n,1)(i,j);

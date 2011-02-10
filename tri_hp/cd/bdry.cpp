@@ -115,7 +115,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 
 void dirichlet::tadvance() {
-	int j,k,m,n,v0,v1,sind,indx,info;
+	int j,k,m,n,v0,v1,sind=-2,indx,info;
 	TinyVector<FLT,tri_mesh::ND> pt;
 	char uplo[] = "U";
 

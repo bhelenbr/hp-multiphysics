@@ -37,7 +37,7 @@ namespace bdry_cd {
 			dirichlet(const dirichlet& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 			dirichlet* create(tri_hp& xin, edge_bdry &bin) const {return new dirichlet(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 			void vdirichlet() {
-				int sind,v0;
+				int sind=-2,v0;
 
 				for(int j=0;j<base.nseg;++j) {
 					sind = base.seg(j);
