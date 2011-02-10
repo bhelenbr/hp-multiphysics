@@ -700,6 +700,9 @@ void hp_edge_bdry::findmax(FLT (*fxy)(TinyVector<FLT,2> &x)) {
 	TinyVector<FLT,2> xp, dx, maxloc, minloc;
 	FLT max,min;
 	int v0, sind;
+	
+	minloc = 0.0;
+	maxloc = 0.0;
 
 
 	/* CALCULATE SLOPE AT ENDPOINT & TRANSMIT TO NEXT SURFACE */
