@@ -684,8 +684,9 @@ namespace bdry_ins {
 	};
 	
 	class actuator_disc : public neumann {
+		bool start_pt_open, end_pt_open;
 		symbolic_function<3> dp;
-					
+		
 		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm, Array<FLT,1>& flx) {
 			/* CONTINUITY */
 			flx(x.NV-1) = x.gbl->rho*((u(0) -mv(0))*norm(0) +(u(1) -mv(1))*norm(1));
@@ -722,6 +723,16 @@ namespace bdry_ins {
 				
 				/* LOAD PRESSURE JUMP FUNCTION */
 				dp.init(inmap,base.idprefix+"_jump");
+				
+				/* Default is for axisymmetric case with one point on centerline */
+				inmap.getwdefault(base.idprefix + "_start_open",start_pt_open,false);
+				inmap.getwdefault(base.idprefix + "_end_open",start_pt_open,true);
+				
+				if (base.is_frst()) {
+					bool temp = start_pt_open;
+					start_pt_open = end_pt_open;
+					end_pt_open = temp;
+				}
 			}
 			void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0);
 

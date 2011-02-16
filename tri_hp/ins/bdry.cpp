@@ -780,14 +780,18 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	/* Send number of non-zeros to matches */
 	base.sndsize() = 0;
 	base.sndtype() = boundary::int_msg;
-	for (int i=0;i<base.nseg;++i) {
-		int sind = base.seg(i);
-		int pind = x.seg(sind).pnt(0)*vdofs;
+	int sind = -2;
+	int pind;
+	for (int i=start_pt_open;i<base.nseg-end_pt_open;++i) {
+		sind = base.seg(i);
+		std::cout << i << ' ' << x.seg(sind).pnt(0) << std::endl;
+		pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n)
 			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
 	}
-	int sind = base.seg(base.nseg-1);
-	int pind = x.seg(sind).pnt(1)*vdofs;
+	pind = x.seg(sind).pnt(1)*vdofs;
+	std::cout << x.seg(sind).pnt(1) << std::endl;
+
 	for(int n=0;n<c0vars.extent(firstDim);++n)
 		base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
 	
@@ -824,18 +828,19 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	
 	if (base.is_local(0)) {
 		int count = 0;
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(1)*vdofs;
+		int pind, sind=-2;
+		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
+			sind = base.seg(i);
+			pind = x.seg(sind).pnt(1)*vdofs;
 			for(int n=0;n<c0vars.extent(firstDim);++n) {
 				nnzero(pind+c0vars(n)) += base.ircvbuf(0,count++);
 			}
 		}
-		int sind = base.seg(0);
-		int pind = x.seg(sind).pnt(0)*vdofs;
+		pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n) {
 			nnzero(pind +c0vars(n)) += base.ircvbuf(0,count++);
 		}
+		
 		
 		
 		/* Now add to side degrees of freedom */
@@ -850,18 +855,45 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 				}
 			}
 		}
+		
+		/* Correct 2nd last point and last edge if end points are open */
+		if (end_pt_open) {
+			sind = base.seg(base.nseg-1);
+			pind = x.seg(sind).pnt(0)*vdofs;
+			for(int n=0;n<c0vars.extent(firstDim);++n) {
+				nnzero(pind +c0vars(n)) -= vdofs;
+			}
+			for (int mode=0;mode<sm;++mode) {
+				for(int n=0;n<x.NV-1;++n) {
+					nnzero(begin_seg+sind*NV*sm +mode*NV +n) -= vdofs;
+				}
+			}
+		}
+		
+		if (start_pt_open) {
+			sind = base.seg(0);
+			pind = x.seg(sind).pnt(1)*vdofs;
+			for(int n=0;n<c0vars.extent(firstDim);++n) {
+				nnzero(pind +c0vars(n)) -= vdofs;
+			}
+			for (int mode=0;mode<sm;++mode) {
+				for(int n=0;n<x.NV-1;++n) {
+					nnzero(begin_seg+sind*NV*sm +mode*NV +n) -= vdofs;
+				}
+			}
+		}
 	}
 	else {
 		int count = 0;
-		for (int i=base.nseg-1;i>=0;--i) {
-			int sind = base.seg(i);
-			int pind = x.seg(sind).pnt(1)*vdofs;
+		int pind, sind=-2;
+		for (int i=base.nseg-1-end_pt_open;i>=start_pt_open;--i) {
+			sind = base.seg(i);
+			pind = x.seg(sind).pnt(1)*vdofs;
 			for(int n=0;n<c0vars.extent(firstDim);++n) {
 				nnzero_mpi(pind+c0vars(n)) += base.ircvbuf(0,count++);
 			}
 		}
-		int sind = base.seg(0);
-		int pind = x.seg(sind).pnt(0)*vdofs;
+		pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n) {
 			nnzero_mpi(pind +c0vars(n)) += base.ircvbuf(0,count++);
 		}
@@ -880,6 +912,7 @@ void actuator_disc::non_sparse_rcv(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 			}
 		}
 	}
+	
 }
 
 void actuator_disc::petsc_matchjacobian_snd() {	
