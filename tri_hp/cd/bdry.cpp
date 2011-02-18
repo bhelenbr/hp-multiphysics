@@ -93,15 +93,18 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					conv_total -= basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*conv*l;
 					
 					diff = -visc[0]*x.du(0,0)(0,i) -visc[1]*x.du(0,1)(0,i)/l;
+					
 					diff_total -= basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*diff*l;
 					
 					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ' << conv << ' ' << diff << std::endl;
 
 				}	
 			} while (++ind < base.nseg);
+			streamsize oldprecision = (*x.gbl->log).precision(10);
 			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
-			*x.gbl->log << base.idprefix << " total diffusive flux: " << precision(10) << diff_total << std::endl;
+			*x.gbl->log << base.idprefix << " total diffusive flux: " << diff_total << std::endl;
 			*x.gbl->log << base.idprefix << " total convective flux: " << conv_total << std::endl;
+			(*x.gbl->log).precision(oldprecision);
 			
 			fout.close();
 			break;
