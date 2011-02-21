@@ -25,10 +25,17 @@ tri_hp_mpi:
 
 tri_hp_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DMPISRC -Dpetsc'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-Dpetsc'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
 
 .PHONY: tri_hp_petsc
+
+tri_hp_petsc_mpi:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc_mpi EXTRAFLAGS='-DMPISRC -Dpetsc'
+	cp _$@/tri_hp_petsc_mpi $(HOME)/bin/$@
+
+.PHONY: tri_hp_petsc_mpi
 
 tri_hp_axi:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -46,10 +53,18 @@ tri_hp_axi_mpi:
 
 tri_hp_axi_petsc:
 	+@[ -d  _$@ ] || mkdir -p _$@
-	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMPISRC'
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc'
 	cp _$@/tri_hp_petsc $(HOME)/bin/$@
-
+	
 .PHONY: tri_hp_axi_petsc
+
+
+tri_hp_axi_petsc_mpi:
+	+@[ -d  _$@ ] || mkdir -p _$@
+	+@$(MAKE) -C _$@ -f $(CURDIR)/makefile tri_hp_petsc_mpi EXTRAFLAGS='-DAXISYMMETRIC -Dpetsc -DMPISRC'
+	cp _$@/tri_hp_petsc_mpi $(HOME)/bin/$@
+
+.PHONY: tri_hp_axi_petsc_mpi
 
 makefile : ;
 %.mk :: ;
@@ -121,9 +136,12 @@ tri_hp: dirs $(OBJ)
 
 tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
-
+	
 tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_petsc  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+
+tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC)
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
