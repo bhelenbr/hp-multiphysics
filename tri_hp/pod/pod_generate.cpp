@@ -210,7 +210,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 	eigenvectors.transposeSelf(secondDim,firstDim);  // FORTRAN ROUTINE RETURNS TRANSPOSE
 
-	//reconstruct POD MODES
+	// construct POD MODES
 	for(k=0;k<nmodes;++k)	{
 		modes(k).v(Range(0,BASE::npnt-1)) = 0.0;
 		modes(k).s(Range(0,BASE::nseg-1)) = 0.0;
@@ -236,6 +236,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	psimatrix = 0.0;
 	psimatrix_recv = 0.0;
 
+	/* CALCULATE INNER PRODUCT OF MODES FOR RENORMALIZATION */
 	for(l=0;l<nmodes;++l) {
 		BASE::ugbd(1).v.reference(modes(l).v);
 		BASE::ugbd(1).s.reference(modes(l).s);
@@ -299,6 +300,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	ugstore.s.reference(BASE::ugbd(1).s);
 	ugstore.i.reference(BASE::ugbd(1).i);
 
+	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS 
 	psimatrix = 0.0;
 	psimatrix_recv = 0.0;
 	psi1dcounter=0;
@@ -434,13 +436,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 			nstr.str("");
 			nstr << k << std::flush;
 			filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
-			BASE::input(filename, BASE::binary);
+			BASE::input(filename, BASE::binary); // Loads into ug/ugbd(0)
 
 			for(l=k;l<nsnapshots;++l) {
 				nstr.str("");
 				nstr << l << std::flush;
 				filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
-				BASE::input(filename, BASE::binary, 1);
+				BASE::input(filename, BASE::binary, 1); // Loads into ug/ugbd(1)
 
 				for(tind=0;tind<BASE::ntri;++tind) {          
 					/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
