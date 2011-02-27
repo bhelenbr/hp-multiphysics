@@ -300,7 +300,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	ugstore.s.reference(BASE::ugbd(1).s);
 	ugstore.i.reference(BASE::ugbd(1).i);
 
-	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS 
+	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS */
 	psimatrix = 0.0;
 	psimatrix_recv = 0.0;
 	psi1dcounter=0;
