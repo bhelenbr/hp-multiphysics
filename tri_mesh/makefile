@@ -35,7 +35,7 @@ makefile : ;
 
 .PHONY: clean
 clean:
-	rm -rf _serial _mpi _petsc
+	rm -rf _serial _mpi
 else
 
 VPATH = ../
@@ -98,10 +98,5 @@ libtri_mesh_mpi.a: $(OBJ)
 tri_mesh_mpi: $(OBJ) $(MAINOBJ)
 	${CXXMPI} $(CPPFLAGS) -o $@ $(MAINOBJ) $(OBJ) $(LIB)
 	mv tri_mesh_mpi $(HOME)/bin
-
-libtri_mesh_petsc.a: $(OBJ)
-	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libtri_mesh_petsc.a $(HOME)/Codes/lib/
-	cp -f ../*.h $(HOME)/Codes/include/
 
  endif
