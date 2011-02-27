@@ -784,7 +784,6 @@ void actuator_disc::non_sparse_snd(Array<int,1> &nnzero, Array<int,1> &nnzero_mp
 	int pind;
 	for (int i=start_pt_open;i<base.nseg-end_pt_open;++i) {
 		sind = base.seg(i);
-		std::cout << i << ' ' << x.seg(sind).pnt(0) << std::endl;
 		pind = x.seg(sind).pnt(0)*vdofs;
 		for(int n=0;n<c0vars.extent(firstDim);++n)
 			base.isndbuf(base.sndsize()++) = nnzero(pind+c0vars(n));
