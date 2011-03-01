@@ -61,6 +61,8 @@ void neumann::element_rsdl(int find,int stage) {
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 	
+	x.lf = 0.0;
+	
 	x.crdtocht2d(find);
 	for(n=0;n<tet_mesh::ND;++n)
 		basis::tet(x.log2p).proj2d(&x.cht(n)(0),&x.crd2d(n)(0)(0),&x.dcrd2d(n)(0)(0)(0),&x.dcrd2d(n)(1)(0)(0),MXGP);

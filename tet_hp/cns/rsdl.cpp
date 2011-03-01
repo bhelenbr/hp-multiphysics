@@ -26,7 +26,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 	FLT lmu = gbl->mu, cjcb;
 	FLT lkcond = gbl->kcond;
 	TinyMatrix<TinyMatrix<FLT,ND,ND>,NV-2,NV-2> visc;
-	TinyVector<TinyVector<FLT,ND>,ND> d,kcond;// temp fix gbl->kcond and kcond problem?
+	TinyVector<TinyVector<FLT,ND>,ND> d,kcond;
 	TinyMatrix<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP>,NV,NV> cv, df;
 	TinyVector<FLT,NV> tres;
 	FLT gam = gbl->gamma;

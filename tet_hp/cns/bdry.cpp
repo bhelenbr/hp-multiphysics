@@ -61,6 +61,8 @@ void neumann::element_rsdl(int find,int stage) {
 	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
 	Array<FLT,1> u(x.NV),flx(x.NV);
 	
+	x.lf = 0.0;
+	
 	x.crdtocht2d(find);
 	for(n=0;n<tet_mesh::ND;++n)
 		basis::tet(x.log2p).proj2d(&x.cht(n)(0),&x.crd2d(n)(0)(0),&x.dcrd2d(n)(0)(0)(0),&x.dcrd2d(n)(1)(0)(0),MXGP);
@@ -100,6 +102,439 @@ void neumann::element_rsdl(int find,int stage) {
 }
 
 
+void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+	
+	/* CONTINUITY */
+	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	
+	/* X&Y MOMENTUM */
+#ifdef INERTIALESS
+	for (int n=1;n<tet_mesh::ND+1;++n)
+		flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+#else
+	for (int n=1;n<tet_mesh::ND+1;++n)
+		flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+#endif
+	
+	/* ENERGY EQUATION */
+	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+	flx(x.NV-1) = h*flx(0);
+	
+	return;
+}
+
+void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
+	
+	/* CONTINUITY */
+	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	
+	/* EVERYTHING ELSE DOESN'T MATTER */
+	for (int n=1;n<x.NV;++n)
+		flx(n) = 0.0;
+	
+	return;
+}
+
+void inflow::vdirichlet() {			
+	for(int j=0;j<base.npnt;++j) {
+		int v0 = base.pnt(j).gindx;
+		
+		for (int n=0; ndirichlets; ++n) 
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+		
+	}
+}
+
+void inflow::edirichlet() {
+	if (basis::tet(x.log2p).em > 0) {
+		for(int j=0;j<base.nseg;++j) {
+			int sind = base.seg(j).gindx;
+			for (int n=0; ndirichlets; ++n) 
+				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}		
+
+void inflow::fdirichlet() {
+	if (basis::tet(x.log2p).fm > 0) {
+		for(int j=0;j<base.ntri;++j) {
+			int find = base.tri(j).gindx;
+			for (int n=0; ndirichlets; ++n) 
+				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}	
+
+void inflow::modify_boundary_residual() {
+	int j,k,m,n,v0,v1,sind,info;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	TinyVector<double,MXGP> res1d;
+	TinyVector<double,MXTM> rescoef;
+	char uplo[] = "U";
+	
+	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+	
+	for(int j=0;j<base.npnt;++j) {
+		int v0 = base.pnt(j).gindx;
+		FLT KE = 0.5*(ibc->f(1, x.pnts(v0), x.gbl->time)*ibc->f(1, x.pnts(v0), x.gbl->time)+ibc->f(2, x.pnts(v0), x.gbl->time)*ibc->f(2, x.pnts(v0), x.gbl->time)+ibc->f(3, x.pnts(v0), x.gbl->time)*ibc->f(3, x.pnts(v0), x.gbl->time));
+		x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+		x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+		x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*ibc->f(3, x.pnts(v0), x.gbl->time);
+		x.gbl->res.v(v0,4) = x.gbl->res.v(v0,0)*(ibc->f(4, x.pnts(v0), x.gbl->time)*ogm1+KE);
+	}
+	
+	if(basis::tet(x.log2p).em) {
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j).gindx;
+			v0 = x.seg(sind).pnt(0);
+			v1 = x.seg(sind).pnt(1);
+			
+			if (is_curved()) {
+				x.crdtocht1d(sind);
+				for(n=0;n<tet_mesh::ND;++n)
+					basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0));
+			}
+			else {
+				for(n=0;n<tet_mesh::ND;++n) {
+					basis::tet(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd1d(n)(0));
+					
+					for(k=0;k<basis::tet(x.log2p).gpx;++k)
+						x.dcrd1d(n)(k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+				}
+			}
+			
+			/* take global coefficients and put into local vector */
+			/*  only need res_rho */
+			for (m=0; m<2; ++m) 
+				rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+			
+			for (m=0;m<basis::tet(x.log2p).em;++m) 
+				rescoef(m+2) = x.gbl->res.e(sind,m,0);					
+			
+			basis::tet(x.log2p).proj1d(&rescoef(0),&res1d(0));
+			
+			for(n=1;n<x.NV;++n)
+				basis::tet(x.log2p).proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res1d(n)(0));
+			
+			for(k=0;k<basis::tet(x.log2p).gpx; ++k) {
+				pt(0) = x.crd1d(0)(k);
+				pt(1) = x.crd1d(1)(k);
+				
+				FLT KE = 0.5*(ibc->f(1, pt, x.gbl->time)*ibc->f(1, pt, x.gbl->time)+ibc->f(2, pt, x.gbl->time)*ibc->f(2, pt, x.gbl->time)+ibc->f(3, pt, x.gbl->time)*ibc->f(3, pt, x.gbl->time));
+				x.res1d(1)(k) -= res1d(k)*ibc->f(1, pt, x.gbl->time);
+				x.res1d(2)(k) -= res1d(k)*ibc->f(2, pt, x.gbl->time);
+				x.res1d(3)(k) -= res1d(k)*ibc->f(3, pt, x.gbl->time);
+				x.res1d(4)(k) -= res1d(k)*(ibc->f(4, pt, x.gbl->time)*ogm1+KE);
+				
+			}
+			
+			for(n=1;n<x.NV;++n){
+				basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.res1d(n)(0));
+				
+				for(m=0;m<basis::tet(x.log2p).em;++m) 
+					x.gbl->res.e(sind,m,n) = -x.lf(n)(2+m)*basis::tet(x.log2p).diag1d(m);					
+				
+			}								
+		}
+	}
+	
+	if (basis::tet(x.log2p).fm) {
+		*x.gbl->log << "warning face modes not implemented in cns inflow modify boundary residual" << endl;
+	}
+	return;
+}
+
+void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
+	
+	/* CONTINUITY */
+	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	
+	/* EVERYTHING ELSE DOESN'T MATTER */
+	for (int n=1;n<x.NV;++n)
+		flx(n) = 0.0;
+	
+	return;
+}
+
+void adiabatic::vdirichlet() {			
+	for(int j=0;j<base.npnt;++j) {
+		int v0 = base.pnt(j).gindx;
+		
+		for (int n=0; ndirichlets; ++n) 
+			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
+		
+	}
+}
+
+void adiabatic::edirichlet() {
+	if (basis::tet(x.log2p).em > 0) {
+		for(int j=0;j<base.nseg;++j) {
+			int sind = base.seg(j).gindx;
+			for (int n=0; ndirichlets; ++n) 
+				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}		
+
+void adiabatic::fdirichlet() {
+	if (basis::tet(x.log2p).fm > 0) {
+		for(int j=0;j<base.ntri;++j) {
+			int find = base.tri(j).gindx;
+			for (int n=0; ndirichlets; ++n) 
+				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
+		}
+	}
+}		
+
+void adiabatic::modify_boundary_residual() {
+	int j,k,m,n,v0,v1,sind,info;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	TinyVector<double,MXGP> res1d;
+	TinyVector<double,MXTM> rescoef;
+	char uplo[] = "U";
+	
+	FLT ogm1 = 1.0/(x.gbl->gamma-1.0);
+	
+	for(int j=0;j<base.npnt;++j) {
+		int v0 = base.pnt(j).gindx;
+		x.gbl->res.v(v0,1) = x.gbl->res.v(v0,0)*ibc->f(1, x.pnts(v0), x.gbl->time);
+		x.gbl->res.v(v0,2) = x.gbl->res.v(v0,0)*ibc->f(2, x.pnts(v0), x.gbl->time);
+		x.gbl->res.v(v0,3) = x.gbl->res.v(v0,0)*ibc->f(3, x.pnts(v0), x.gbl->time);
+	}
+	
+	if(basis::tet(x.log2p).em) {
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j).gindx;
+			v0 = x.seg(sind).pnt(0);
+			v1 = x.seg(sind).pnt(1);
+			
+			if (is_curved()) {
+				x.crdtocht1d(sind);
+				for(n=0;n<tet_mesh::ND;++n)
+					basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0));
+			}
+			else {
+				for(n=0;n<tet_mesh::ND;++n) {
+					basis::tet(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd1d(n)(0));
+					
+					for(k=0;k<basis::tet(x.log2p).gpx;++k)
+						x.dcrd1d(n)(k) = 0.5*(x.pnts(v1)(n)-x.pnts(v0)(n));
+				}
+			}
+			
+			/* take global coefficients and put into local vector */
+			/*  only need res_rho */
+			for (m=0; m<2; ++m) 
+				rescoef(m) = x.gbl->res.v(x.seg(sind).pnt(m),0);					
+			
+			for (m=0;m<basis::tet(x.log2p).em;++m) 
+				rescoef(m+2) = x.gbl->res.e(sind,m,0);					
+			
+			basis::tet(x.log2p).proj1d(&rescoef(0),&res1d(0));
+			
+			for(n=1;n<x.NV;++n)
+				basis::tet(x.log2p).proj1d(x.gbl->res.v(v0,n),x.gbl->res.v(v1,n),&x.res1d(n)(0));
+			
+			for(k=0;k<basis::tet(x.log2p).gpx; ++k) {
+				pt(0) = x.crd1d(0)(k);
+				pt(1) = x.crd1d(1)(k);
+				
+				x.res1d(1)(k) -= res1d(k)*ibc->f(1, pt, x.gbl->time);
+				x.res1d(2)(k) -= res1d(k)*ibc->f(2, pt, x.gbl->time);
+				x.res1d(3)(k) -= res1d(k)*ibc->f(3, pt, x.gbl->time);
+				
+			}
+			
+			for(n=1;n<x.NV;++n){
+				basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.res1d(n)(0));
+				
+				for(m=0;m<basis::tet(x.log2p).em;++m) 
+					x.gbl->res.e(sind,m,n) = -x.lf(n)(2+m)*basis::tet(x.log2p).diag1d(m);					
+				
+			}								
+		}
+	}
+	if (basis::tet(x.log2p).fm) {
+		*x.gbl->log << "warning face modes not implemented in cns adiabatic modify boundary residual" << endl;
+	}
+	
+	return;
+}
+
+
+void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {	
+	
+	TinyVector<FLT,4> lambda,Rl,Rr,ul,ur,ub,Roe,fluxtemp,fluxleft, fluxright;
+	TinyVector<FLT,3> vec1,vec2,vec3;
+	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
+	Array<FLT,1> Aeigs(x.NV);
+	FLT gam = x.gbl->gamma;
+	FLT gm1 = gam-1.0;
+	FLT gogm1 = gam/gm1;
+	
+	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+	norm /= mag;
+
+	vec1 = norm;
+	vec2(0) = -vec1(1),	vec2(1) = vec1(0), vec2(2) = 0.0;
+	vec3 = cross(vec1, vec2);
+	
+	/* Left */
+	/* Rotate Coordinate System */
+	ul(0) = pvu(0);
+	ul(1) = pvu(1)*vec1(0)+pvu(2)*vec1(1)+pvu(3)*vec1(2);	
+	ul(2) = pvu(1)*vec2(0)+pvu(2)*vec2(1)+pvu(3)*vec2(2);
+	ul(3) = pvu(1)*vec3(0)+pvu(2)*vec3(1)+pvu(3)*vec3(2);
+	ul(4) = pvu(4);
+
+	/* Roe Variables */
+	Rl(0) = sqrt(ul(0)/ul(x.NV-1)); // sqrt(rho)
+	Rl(1) = Rl(0)*ul(1); // sqrt(rho)*u
+	Rl(2) = Rl(0)*ul(2); // sqrt(rho)*v
+	Rl(3) = Rl(0)*ul(3); // sqrt(rho)*w
+	Rl(4) = Rl(0)*(ul(x.NV-1)/gm1+0.5*(ul(1)*ul(1)+ul(2)*ul(2)+ul(3)*ul(3))); // sqrt(rho)*E
+	
+	/* Right */
+	for(int n=0;n<x.NV;++n)
+		ub(n) = ibc->f(n,xpt,x.gbl->time);
+	
+	/* Rotate Coordinate System */
+	ur(0) = ub(0);
+	ur(1) = ub(1)*vec1(0)+ub(2)*vec1(1)+ub(3)*vec1(2);	
+	ur(2) = ub(1)*vec2(0)+ub(2)*vec2(1)+ub(3)*vec2(2);
+	ur(3) = ub(1)*vec3(0)+ub(2)*vec3(1)+ub(3)*vec3(2);
+	ur(4) = ub(4);
+	
+	
+	/* Average left and right flux */
+	fluxleft(0) = ul(0)*ul(1)/ul(x.NV-1);
+	fluxleft(1) = fluxleft(0)*ul(1)+ul(0);
+	fluxleft(2) = fluxleft(0)*ul(2);
+	fluxleft(3) = fluxleft(0)*(gogm1*ul(x.NV-1)+0.5*(ul(1)*ul(1)+ul(2)*ul(2)+ul(3)*ul(3)));
+	
+	fluxright(0) = ur(0)*ur(1)/ur(x.NV-1);
+	fluxright(1) = fluxright(0)*ur(1)+ur(0);
+	fluxright(2) = fluxright(0)*ur(2);
+	fluxright(3) = fluxright(0)*(gogm1*ur(x.NV-1)+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));
+	
+	fluxtemp = 0.5*(fluxleft+fluxright);
+	
+	/* Roe Variables */
+	Rr(0) = sqrt(ur(0)/ur(x.NV-1));
+	Rr(1) = Rr(0)*ur(1);
+	Rr(2) = Rr(0)*ur(2);
+	Rr(3) = Rr(0)*ur(3);
+	Rr(4) = Rr(0)*(ur(x.NV-1)/gm1+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));	
+	
+	/* Average Roe Variables */
+	Roe = 0.5*(Rl+Rr);
+	
+	/* Calculate u,v,c Variables */
+	FLT rho = Roe(0)*Roe(0);
+	FLT u = Roe(1)/Roe(0);
+	FLT v = Roe(2)/Roe(0);
+	FLT w = Roe(3)/Roe(0);
+	FLT ke = 0.5*(u*u+v*v+w*w);
+	FLT E = Roe(3)/Roe(0);
+	FLT rt = gm1*(E-ke);
+	FLT pr = rho*rt;
+	FLT c2 = gam*rt;
+	FLT c = sqrt(c2);
+	
+	/* stuff for preconditioner */
+	FLT nu = x.gbl->mu/rho;
+	FLT cp = gogm1*x.gbl->R;
+	FLT alpha = x.gbl->kcond/(rho*cp);
+	
+	FLT h = mag*2.0/(0.25*(basis::tet(x.log2p).p+1.0)*(basis::tet(x.log2p).p+1.0));
+	FLT hdt = 0.5*h*x.gbl->bd(0)/c;
+	FLT umag = sqrt(u*u+v*v+w*w);
+	FLT M = MAX(umag/c,1.0e-5);
+	FLT nuh = 4.0*nu/(h*c);
+	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
+	
+	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
+	FLT alph = 0.0;
+	
+	/* Inverse of Preconditioner */
+	Pinv = 1.0/b2,					 0.0, 0.0, 0.0, 0.0,
+		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0, 0.0,
+		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0, 0.0,
+		   alph*w/(pr*gam*b2),		 0.0, 0.0, 1.0, 0.0,
+		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 0.0, 1.0;
+	
+	/* jacobian of conservative wrt primitive */
+	dcdp = 1.0/rt,               0.0,   0.0,   0.0,   -rho/rt,
+		   u/rt,                 rho,   0.0,   0.0,   -rho*u/rt,
+		   v/rt,                 0.0,   rho,   0.0,   -rho*v/rt,
+		   w/rt,                 0.0,   0.0,   rho,   -rho*w/rt,
+		   (rt+gm1*ke)/(gm1*rt), rho*u, rho*v, rho*w, -rho*ke/rt;		
+	
+	FLT temp1 = sqrt(u*u*(1.0-2.0*b2+b2*b2)+4.0*b2*c2);
+	
+	V = 0.5*(u*(b2-1.0)+temp1)*rho,			0.5*(u*(b2-1.0)-temp1)*rho,			0.0, 0.0, 0.0,
+		1.0,								1.0,								0.0, 0.0, 0.0,
+		0.0,								0.0,								1.0, 0.0, 0.0,
+		0.0,								0.0,								0.0, 1.0, 0.0,
+		0.5*(u*(b2-1.0)*gm1+gm1*temp1)/gam, 0.5*(u*(b2-1.0)*gm1-gm1*temp1)/gam, 0.0, 0.0, 1.0;
+	
+	Aeigs = 0.5*(u+u*b2+temp1), 0.5*(u+u*b2-temp1),u,u,u;
+	
+	for(int i=0; i<x.NV; ++i)
+		Aeigs(i) = abs(Aeigs(i));
+	
+	VINV = 1.0/(rho*temp1),	 0.5*(temp1-u*(b2-1.0))/temp1, 0.0, 0.0, 0.0,
+		   -1.0/(rho*temp1), 0.5*(u*(b2-1.0)+temp1)/temp1, 0.0, 0.0, 0.0,
+		   0.0,				 0.0,						   1.0, 0.0, 0.0,
+		   0.0,				 0.0,						   0.0, 1.0, 0.0,
+		   -gm1/(gam*rho),	 0.0,						   0.0, 0.0, 1.0;					
+	
+	for(int i=0; i < x.NV; ++i)
+		for(int j=0; j < x.NV; ++j)
+			VINV(i,j) = Aeigs(i)*VINV(i,j);
+	
+	A = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				A(i,j)+=V(i,k)*VINV(k,j);
+	
+	temp = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				temp(i,j)+=Pinv(i,k)*A(k,j);
+	
+	A = temp;
+	
+	temp = 0.0;
+	for(int i=0; i<x.NV; ++i)
+		for(int j=0; j<x.NV; ++j)
+			for(int k=0; k<x.NV; ++k)
+				temp(i,j)+=dcdp(i,k)*A(k,j);
+	A = temp;
+	
+	for(int i = 0; i < x.NV; ++i)
+		for(int j = 0; j < x.NV; ++j)
+			fluxtemp(i) -= 0.5*A(i,j)*(ur(j)-ul(j));
+	
+	/* CHANGE BACK TO X,Y,Z COORDINATES */
+	FLT ox2y2 = 1.0/(norm(0)*norm(0)+norm(1)*norm(1)); 
+	vec1(0) = norm(0), vec1(1) = -norm(1)*ox2y2, vec1(2) = -norm(0)*norm(2)*ox2y2;
+	vec2(0) = norm(1), vec2(1) = norm(0)*ox2y2,  vec2(2) = norm(1)*norm(2)*ox2y2;
+	vec3(0) = norm(2), vec3(1) = 0.0,			 vec3(2) = 1.0;
+	
+	flx(0) = fluxtemp(0);
+	flx(1) = fluxtemp(1)*vec1(0) + fluxtemp(2)*vec1(1) + fluxtemp(3)*vec1(2);
+	flx(2) = fluxtemp(1)*vec2(0) + fluxtemp(2)*vec2(1) + fluxtemp(3)*vec2(2);
+	flx(3) = fluxtemp(1)*vec3(0) + fluxtemp(2)*vec3(1) + fluxtemp(3)*vec3(2);
+	flx(4) = fluxtemp(4);
+	
+	flx *= mag;
+	
+	return;
+}
+
 
 void applied_stress::init(input_map& inmap,void* gbl_in) {
 	std::string keyword;
@@ -122,4 +557,29 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 	
 	return;
 }
+
+
+void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+	
+	/* CONTINUITY */
+	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	
+	FLT length = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
+	/* XYZ MOMENTUM */
+#ifdef INERTIALESS
+	for (int n=0;n<tet_mesh::ND;++n)
+		flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+#else
+	for (int n=0;n<tet_mesh::ND;++n)
+		flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+#endif
+	
+	/* ENERGY EQUATION */
+	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));
+	flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time)*length;		
+	
+	return;
+}
+
+
 
