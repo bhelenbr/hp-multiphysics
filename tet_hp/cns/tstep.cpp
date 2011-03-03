@@ -129,7 +129,7 @@ void tet_hp_cns::setup_preconditioner() {
 	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstarimax << ' ' << gbl->bd(0) << ' ' << dtstarimax << '\n';
 	
 	
-	for(tind=0;tind<ntet;++tind) {
+	for(int tind=0;tind<ntet;++tind) {
 		v = tet(tind).pnt;
 		jcb = 0.125*tet(tind).vol;   /* volume is 8 x tet volume */
 		dtstari = dtstarimax;
@@ -213,7 +213,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
 	alph = 0.0; // prevents wiggles when residual gets small, not sure why
-	
+	b2 = 1.0; // turn off preconditioner for now
 	/* Preconditioner */
 	P = b2,					  0.0, 0.0, 0.0, 0.0,
 		-alph*u/(pr*gam),     1.0, 0.0, 0.0, 0.0,

@@ -43,7 +43,7 @@ void tet_hp_cns::init(input_map& input, void *gin) {
 	gbl->kcond = gbl->R*gbl->mu/prandtl*gbl->gamma/(gbl->gamma-1.0);
 
 	/* source term for MMS */
-	//gbl->src = getnewibc("src",input);
+	gbl->src = getnewibc("src",input);
 		
 	return;
 }

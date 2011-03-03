@@ -29,6 +29,9 @@ public:
 				
 		Array<FLT,3> vpreconditioner;
 		
+		/* SOURCE FUNCTION FOR MMS */
+		init_bdry_cndtn *src;
+		
 	} *gbl;
 	
 	

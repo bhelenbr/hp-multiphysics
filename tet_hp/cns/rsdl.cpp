@@ -11,12 +11,14 @@
 #include "../hp_boundary.h"
 
 #define BODYFORCE
+#define MMS
 	
 void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	
 	FLT fluxx,fluxy,fluxz;
 	const int NV = 5;
 	TinyVector<int,4> v;
+	TinyVector<FLT,ND> pt;
 	TinyMatrix<FLT,ND,ND> ldcrd;
 	TinyMatrix<FLT,NV,NV> A,B,C;
 	TinyMatrix<TinyVector<TinyVector<TinyVector<FLT,MXGP>,MXGP>,MXGP>,NV,ND> du;
@@ -192,7 +194,17 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						for(int n=1;n<NV-1;++n)
 							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
 						
-#endif                        
+#endif    
+						
+#ifdef MMS
+						/* source terms for MMS */
+						pt(0) = crd(0)(i)(j)(k);
+						pt(1) = crd(1)(i)(j)(k);
+						pt(2) = crd(2)(i)(j)(k);
+						for(int n = 0; n < NV; ++n)
+							res(n)(i)(j)(k) -= cjcb*gbl->src->f(n,pt,gbl->time);
+#endif
+						
 						/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 						/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
 						visc(0,0)(0,0) = -mujcbi*(4./3.*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
@@ -545,7 +557,17 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						for(int n=1;n<NV-1;++n)
 							res(n)(i)(j)(k) -= rho*cjcb*gbl->body(n-1);			
 						
-#endif                        
+#endif         
+
+#ifdef MMS
+						/* source terms for MMS */
+						pt(0) = crd(0)(i)(j)(k);
+						pt(1) = crd(1)(i)(j)(k);
+						pt(2) = crd(2)(i)(j)(k);
+						for(int n = 0; n < NV; ++n)
+							res(n)(i)(j)(k) -= cjcb*gbl->src->f(n,pt,gbl->time);
+#endif
+						
 						/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 						/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
 						visc(0,0)(0,0) = -mujcbi*(4./3.*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));

@@ -135,11 +135,11 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 	return;
 }
 
-void inflow::vdirichlet() {			
+void inflow::vdirichlet() {	
 	for(int j=0;j<base.npnt;++j) {
 		int v0 = base.pnt(j).gindx;
 		
-		for (int n=0; ndirichlets; ++n) 
+		for (int n=0; n<ndirichlets; ++n) 
 			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
 		
 	}
@@ -149,7 +149,7 @@ void inflow::edirichlet() {
 	if (basis::tet(x.log2p).em > 0) {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
-			for (int n=0; ndirichlets; ++n) 
+			for (int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
@@ -159,7 +159,7 @@ void inflow::fdirichlet() {
 	if (basis::tet(x.log2p).fm > 0) {
 		for(int j=0;j<base.ntri;++j) {
 			int find = base.tri(j).gindx;
-			for (int n=0; ndirichlets; ++n) 
+			for (int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
@@ -260,7 +260,7 @@ void adiabatic::vdirichlet() {
 	for(int j=0;j<base.npnt;++j) {
 		int v0 = base.pnt(j).gindx;
 		
-		for (int n=0; ndirichlets; ++n) 
+		for (int n=0; n<ndirichlets; ++n) 
 			x.gbl->res.v(v0,dirichlets(n)) = 0.0;
 		
 	}
@@ -270,7 +270,7 @@ void adiabatic::edirichlet() {
 	if (basis::tet(x.log2p).em > 0) {
 		for(int j=0;j<base.nseg;++j) {
 			int sind = base.seg(j).gindx;
-			for (int n=0; ndirichlets; ++n) 
+			for (int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.e(sind,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
@@ -280,7 +280,7 @@ void adiabatic::fdirichlet() {
 	if (basis::tet(x.log2p).fm > 0) {
 		for(int j=0;j<base.ntri;++j) {
 			int find = base.tri(j).gindx;
-			for (int n=0; ndirichlets; ++n) 
+			for (int n=0; n<ndirichlets; ++n) 
 				x.gbl->res.f(find,Range::all(),dirichlets(n)) = 0.0;
 		}
 	}
@@ -364,7 +364,7 @@ void adiabatic::modify_boundary_residual() {
 
 void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {	
 	
-	TinyVector<FLT,4> lambda,Rl,Rr,ul,ur,ub,Roe,fluxtemp,fluxleft, fluxright;
+	TinyVector<FLT,5> lambda,Rl,Rr,ul,ur,ub,Roe,fluxtemp,fluxleft, fluxright;
 	TinyVector<FLT,3> vec1,vec2,vec3;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
 	Array<FLT,1> Aeigs(x.NV);
@@ -455,7 +455,7 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	
 	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
 	FLT alph = 0.0;
-	
+	//b2 = 1.0;
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0, 0.0,
 		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0, 0.0,
@@ -542,8 +542,8 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 
 	neumann::init(inmap,gbl_in);
 	
-	stress.resize(tet_mesh::ND);
-	for(int n=0;n<tet_mesh::ND;++n) {
+	stress.resize(tet_mesh::ND+1);
+	for(int n=0;n<tet_mesh::ND+1;++n) {
 		nstr.str("");
 		nstr << base.idprefix << "_stress" << n << std::flush;
 		if (inmap.find(nstr.str()) != inmap.end()) {
@@ -576,7 +576,7 @@ void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, Tin
 	
 	/* ENERGY EQUATION */
 	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));
-	flx(x.NV-1) = h*flx(0)-stress(2).Eval(xpt,x.gbl->time)*length;		
+	flx(x.NV-1) = h*flx(0)-stress(3).Eval(xpt,x.gbl->time)*length;		
 	
 	return;
 }
