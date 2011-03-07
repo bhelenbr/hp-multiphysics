@@ -46,9 +46,10 @@ void tri_hp_cd::init(input_map& input, void *gin) {
 
 	gbl->src = getnewibc("src",input);
 	
-	gbl->stiff_diag.v.resize(maxpst,NV);
-	gbl->stiff_diag.s.resize(maxpst,sm0,NV);
-	gbl->stiff_diag.i.resize(maxpst,im0,NV);
+	/* Stuff for Mike's minvrt */
+//	gbl->stiff_diag.v.resize(maxpst,NV);
+//	gbl->stiff_diag.s.resize(maxpst,sm0,NV);
+//	gbl->stiff_diag.i.resize(maxpst,im0,NV);
 		
 	return;
 }

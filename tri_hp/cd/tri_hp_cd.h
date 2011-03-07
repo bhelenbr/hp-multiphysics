@@ -31,7 +31,7 @@ class tri_hp_cd : public tri_hp {
 			/* ADAPTATION LIMITS */
 			FLT minlngth, maxlngth;
 			
-			vsi	stiff_diag;
+			//vsi	stiff_diag; // Stuff for Mike's minvrt
 
 		} *gbl;
 
@@ -49,6 +49,6 @@ class tri_hp_cd : public tri_hp {
 		void length();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
-		void minvrt();
+		//		void minvrt(); // Stuff for Mike's minvrt
 };
 #endif
