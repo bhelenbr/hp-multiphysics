@@ -365,22 +365,25 @@ void adiabatic::modify_boundary_residual() {
 void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {	
 	
 	TinyVector<FLT,5> lambda,Rl,Rr,ul,ur,ub,Roe,fluxtemp,fluxleft, fluxright;
-	TinyVector<FLT,3> vec1,vec2,vec3;
+	TinyVector<FLT,3> vec1,vec2,vec3,vecr;
 	Array<FLT,2> A(x.NV,x.NV),V(x.NV,x.NV),VINV(x.NV,x.NV),temp(x.NV,x.NV),P(x.NV,x.NV),Pinv(x.NV,x.NV),dpdc(x.NV,x.NV), dcdp(x.NV,x.NV);
 	Array<FLT,1> Aeigs(x.NV);
 	FLT gam = x.gbl->gamma;
 	FLT gm1 = gam-1.0;
 	FLT gogm1 = gam/gm1;
 	
-	FLT mag = sqrt(norm(0)*norm(0) + norm(1)*norm(1));
+	FLT mag = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
 	norm /= mag;
 
+	/* align u to the normal */
 	vec1 = norm;
-	vec2(0) = -vec1(1),	vec2(1) = vec1(0), vec2(2) = 0.0;
-	vec3 = cross(vec1, vec2);
+	/* find random vector different than norm */
+	vecr(0) = vec1(1),	vecr(1) = vec1(2), vecr(2) = vec1(0);
+	vec2 = cross(norm, vecr);
+	vec3 = cross(norm, vec2);
 	
 	/* Left */
-	/* Rotate Coordinate System */
+	/* Rotate Coordinate System so that U aligns with normal vector */
 	ul(0) = pvu(0);
 	ul(1) = pvu(1)*vec1(0)+pvu(2)*vec1(1)+pvu(3)*vec1(2);	
 	ul(2) = pvu(1)*vec2(0)+pvu(2)*vec2(1)+pvu(3)*vec2(2);
@@ -519,10 +522,10 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 			fluxtemp(i) -= 0.5*A(i,j)*(ur(j)-ul(j));
 	
 	/* CHANGE BACK TO X,Y,Z COORDINATES */
-	FLT ox2y2 = 1.0/(norm(0)*norm(0)+norm(1)*norm(1)); 
-	vec1(0) = norm(0), vec1(1) = -norm(1)*ox2y2, vec1(2) = -norm(0)*norm(2)*ox2y2;
-	vec2(0) = norm(1), vec2(1) = norm(0)*ox2y2,  vec2(2) = norm(1)*norm(2)*ox2y2;
-	vec3(0) = norm(2), vec3(1) = 0.0,			 vec3(2) = 1.0;
+	FLT temp2 = 1.0/(1.0-norm(2)*norm(1)-norm(1)*norm(0)-norm(0)*norm(2))/(1.0+norm(2)*norm(1)+norm(1)*norm(0)+norm(0)*norm(2));
+	vec1(0) = norm(0), vec1(1) = temp2*(norm(1)*norm(0)-norm(2)*norm(2)), vec1(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(1)*norm(1)*norm(1)-norm(2)*norm(2)*norm(1)+norm(0)*norm(0)*norm(2));
+	vec2(0) = norm(1), vec2(1) = temp2*(norm(2)*norm(1)-norm(0)*norm(0)), vec2(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(2)*norm(2)*norm(2)-norm(0)*norm(0)*norm(2)+norm(1)*norm(1)*norm(0));
+	vec3(0) = norm(2), vec3(1) = temp2*(norm(2)*norm(0)-norm(1)*norm(1)), vec3(2) = temp2*(norm(0)*norm(1)*norm(2)-norm(0)*norm(0)*norm(0)-norm(1)*norm(1)*norm(0)+norm(2)*norm(2)*norm(1));
 	
 	flx(0) = fluxtemp(0);
 	flx(1) = fluxtemp(1)*vec1(0) + fluxtemp(2)*vec1(1) + fluxtemp(3)*vec1(2);

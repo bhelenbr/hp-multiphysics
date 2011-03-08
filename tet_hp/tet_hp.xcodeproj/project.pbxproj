@@ -22,6 +22,26 @@
 		6FB40B02091AF517002BAA09 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
 		6FB40B1A091AF517002BAA09 /* tet_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tet_hp.h */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		95050DA91325425100282834 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050D9F1325425100282834 /* allocate.cpp */; };
+		95050DAA1325425100282834 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA11325425100282834 /* bdry.cpp */; };
+		95050DAB1325425100282834 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA21325425100282834 /* getnewbdry.cpp */; };
+		95050DAC1325425100282834 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA31325425100282834 /* getnewibc.cpp */; };
+		95050DAE1325425100282834 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA51325425100282834 /* rsdl.cpp */; };
+		95050DAF1325425100282834 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA71325425100282834 /* tstep.cpp */; };
+		95050DB11325425100282834 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050D9F1325425100282834 /* allocate.cpp */; };
+		95050DB21325425100282834 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA11325425100282834 /* bdry.cpp */; };
+		95050DB31325425100282834 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA21325425100282834 /* getnewbdry.cpp */; };
+		95050DB41325425100282834 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA31325425100282834 /* getnewibc.cpp */; };
+		95050DB51325425100282834 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA41325425100282834 /* length.cpp */; };
+		95050DB61325425100282834 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA51325425100282834 /* rsdl.cpp */; };
+		95050DB71325425100282834 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA71325425100282834 /* tstep.cpp */; };
+		95050DB91325425100282834 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050D9F1325425100282834 /* allocate.cpp */; };
+		95050DBA1325425100282834 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA11325425100282834 /* bdry.cpp */; };
+		95050DBB1325425100282834 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA21325425100282834 /* getnewbdry.cpp */; };
+		95050DBC1325425100282834 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA31325425100282834 /* getnewibc.cpp */; };
+		95050DBD1325425100282834 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA41325425100282834 /* length.cpp */; };
+		95050DBE1325425100282834 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA51325425100282834 /* rsdl.cpp */; };
+		95050DBF1325425100282834 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95050DA71325425100282834 /* tstep.cpp */; };
 		9527AE660E3513F000360E38 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE0091AF516002BAA09 /* minvrt.cpp */; };
 		9527AE680E3513FA00360E38 /* mg_restrict.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE1091AF516002BAA09 /* mg_restrict.cpp */; };
 		9527AE690E3513FB00360E38 /* mg_prolongate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE2091AF516002BAA09 /* mg_prolongate.cpp */; };
@@ -260,6 +280,15 @@
 		6FB901D80A6C782300A4729C /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = allocate.cpp; sourceTree = "<group>"; };
 		6FB91B1C0ACCB45300792B04 /* libtri_mesh_mpi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libtri_mesh_mpi.a; path = ../lib/libtri_mesh_mpi.a; sourceTree = SOURCE_ROOT; };
 		8DD76F6C0486A84900D96B5E /* tet_hp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tet_hp; sourceTree = BUILT_PRODUCTS_DIR; };
+		95050D9F1325425100282834 /* allocate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = allocate.cpp; path = cns_explicit/allocate.cpp; sourceTree = "<group>"; };
+		95050DA01325425100282834 /* bdry_cns_explicit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_cns_explicit.h; path = cns_explicit/bdry_cns_explicit.h; sourceTree = "<group>"; };
+		95050DA11325425100282834 /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = cns_explicit/bdry.cpp; sourceTree = "<group>"; };
+		95050DA21325425100282834 /* getnewbdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewbdry.cpp; path = cns_explicit/getnewbdry.cpp; sourceTree = "<group>"; };
+		95050DA31325425100282834 /* getnewibc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = getnewibc.cpp; path = cns_explicit/getnewibc.cpp; sourceTree = "<group>"; };
+		95050DA41325425100282834 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = length.cpp; path = cns_explicit/length.cpp; sourceTree = "<group>"; };
+		95050DA51325425100282834 /* rsdl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = rsdl.cpp; path = cns_explicit/rsdl.cpp; sourceTree = "<group>"; };
+		95050DA61325425100282834 /* tet_hp_cns_explicit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tet_hp_cns_explicit.h; path = cns_explicit/tet_hp_cns_explicit.h; sourceTree = "<group>"; };
+		95050DA71325425100282834 /* tstep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tstep.cpp; path = cns_explicit/tstep.cpp; sourceTree = "<group>"; };
 		951C181B107A9FDA005403AA /* libmpi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi.dylib; path = /usr/lib/libmpi.dylib; sourceTree = "<absolute>"; };
 		951C181C107A9FDA005403AA /* libmpi_cxx.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpi_cxx.dylib; path = /usr/lib/libmpi_cxx.dylib; sourceTree = "<absolute>"; };
 		9529B9C5107F8DAA0002670A /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = /System/Library/Frameworks/Accelerate.framework; sourceTree = "<absolute>"; };
@@ -413,6 +442,7 @@
 				9533379B0DCA18D2007A1D26 /* cd */,
 				9598AE270F55C3E0008788DB /* Incompressible */,
 				95C2789810F67F6300759C42 /* Compressible */,
+				95050D931325420900282834 /* cns explicit */,
 				95DE30A2104C28E500F7FA10 /* POD */,
 				9572077510473A580044E240 /* scripts */,
 				C6859E8C029090F304C91782 /* Documentation */,
@@ -503,6 +533,22 @@
 				957F5E63109B7AC1006756DD /* blas_mac_x.a */,
 			);
 			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		95050D931325420900282834 /* cns explicit */ = {
+			isa = PBXGroup;
+			children = (
+				95050DA61325425100282834 /* tet_hp_cns_explicit.h */,
+				95050D9F1325425100282834 /* allocate.cpp */,
+				95050DA71325425100282834 /* tstep.cpp */,
+				95050DA51325425100282834 /* rsdl.cpp */,
+				95050DA41325425100282834 /* length.cpp */,
+				95050DA01325425100282834 /* bdry_cns_explicit.h */,
+				95050DA11325425100282834 /* bdry.cpp */,
+				95050DA21325425100282834 /* getnewbdry.cpp */,
+				95050DA31325425100282834 /* getnewibc.cpp */,
+			);
+			name = "cns explicit";
 			sourceTree = "<group>";
 		};
 		9533379B0DCA18D2007A1D26 /* cd */ = {
@@ -702,6 +748,12 @@
 				95C8AFDB12EDEF5D008CF6CA /* getnewbdry.cpp in Sources */,
 				95C8AFDC12EDEF5D008CF6CA /* getnewibc.cpp in Sources */,
 				958664B312EE272700B7D250 /* sparse.cpp in Sources */,
+				95050DA91325425100282834 /* allocate.cpp in Sources */,
+				95050DAA1325425100282834 /* bdry.cpp in Sources */,
+				95050DAB1325425100282834 /* getnewbdry.cpp in Sources */,
+				95050DAC1325425100282834 /* getnewibc.cpp in Sources */,
+				95050DAE1325425100282834 /* rsdl.cpp in Sources */,
+				95050DAF1325425100282834 /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -750,6 +802,13 @@
 				95C1234112EF732D0001FB2B /* getnewbdry.cpp in Sources */,
 				95C1234212EF732E0001FB2B /* getnewibc.cpp in Sources */,
 				95C1234512EF73730001FB2B /* sparse.cpp in Sources */,
+				95050DB11325425100282834 /* allocate.cpp in Sources */,
+				95050DB21325425100282834 /* bdry.cpp in Sources */,
+				95050DB31325425100282834 /* getnewbdry.cpp in Sources */,
+				95050DB41325425100282834 /* getnewibc.cpp in Sources */,
+				95050DB51325425100282834 /* length.cpp in Sources */,
+				95050DB61325425100282834 /* rsdl.cpp in Sources */,
+				95050DB71325425100282834 /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -793,6 +852,13 @@
 				95D4085011A302E2009F34F7 /* length.cpp in Sources */,
 				95D4085111A302E3009F34F7 /* rsdl.cpp in Sources */,
 				95D4085211A302E4009F34F7 /* tstep.cpp in Sources */,
+				95050DB91325425100282834 /* allocate.cpp in Sources */,
+				95050DBA1325425100282834 /* bdry.cpp in Sources */,
+				95050DBB1325425100282834 /* getnewbdry.cpp in Sources */,
+				95050DBC1325425100282834 /* getnewibc.cpp in Sources */,
+				95050DBD1325425100282834 /* length.cpp in Sources */,
+				95050DBE1325425100282834 /* rsdl.cpp in Sources */,
+				95050DBF1325425100282834 /* tstep.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

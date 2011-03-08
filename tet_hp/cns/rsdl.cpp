@@ -568,6 +568,18 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 							res(n)(i)(j)(k) -= cjcb*gbl->src->f(n,pt,gbl->time);
 #endif
 						
+//						for(int i2=0;i2<3;++i2)
+//							for(int j2=0;j2<3;++j2)
+//								for(int k2=0;k2<3;++k2)
+//									for(int l2=0;l2<3;++l2)
+//										visc(i2,j2)(l2,k2) = -mujcbi*(d(l2)(j2)*d(k2)(i2)-2./3.*d(l2)(i2)*d(k2)(j2));
+//						
+//						for(int i2=0;i2<3;++i2)
+//							for(int k2=0;k2<3;++k2)
+//								for(int l2=0;l2<3;++l2)
+//									for(int m2=0;m2<3;++m2)
+//										visc(i2,i2)(l2,k2) += -mujcbi*d(l2)(m2)*d(k2)(m2);
+						
 						/* BIG FAT UGLY VISCOUS TENSOR (LOTS OF SYMMETRY THOUGH)*/
 						/* INDICES ARE 1: EQUATION U V OR W, 2: VARIABLE (U V OR W), 3: EQ. DERIVATIVE (R S OR T) 4: VAR DERIVATIVE (R S OR T)*/
 						visc(0,0)(0,0) = -mujcbi*(4./3.*d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
@@ -659,7 +671,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 						visc(2,2)(2,0) = visc(2,2)(0,2);
 						visc(2,2)(2,1) = visc(2,2)(1,2);
 						visc(2,2)(2,2) = -mujcbi*(4./3.*d(2)(2)*d(2)(2)+d(2)(0)*d(2)(0)+d(2)(1)*d(2)(1));
-						
+
 						/* HEAT DIFFUSION TENSOR */
 						kcond(0)(0) = -kcjcbi*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
 						kcond(1)(1) = -kcjcbi*(d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
