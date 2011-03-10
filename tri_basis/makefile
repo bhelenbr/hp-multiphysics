@@ -1,6 +1,7 @@
 OBJ = instances.o
 
 CPPFLAGS = -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+#CPPFLAGS += -fno-inline
 DEFINES = -Df2cFortran
 LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
 
