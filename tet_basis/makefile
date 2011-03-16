@@ -21,7 +21,7 @@ LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -lmyblas -lm
 CPPFLAGS += -O3
 #CPPFLAGS += -O3 -cxxlib-icc
 #LIB += -llapack -lblas -lg2c #(shelob)
-LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+LIB += -L. -lblas -llapack #(cares)
 #DEFINES = -DpgiFortran
 
 ## IRIX64:
@@ -42,6 +42,9 @@ LIB += -L. -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
 CPPFLAGS += $(DEFINES)
 
 all: tet_basis libtet_basis.a 
+
+clean:
+	rm tet_basis *.o
 
 tet_basis: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIB)
