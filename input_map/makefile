@@ -29,6 +29,9 @@ LIBS = -L$(HOME)/Packages/lib -lparseargs -lmuparser
   
 all: mod_map libinput_map.a
 
+clean:
+	rm mod_map *.o
+
 mod_map: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIBS)
 	cp mod_map ~/bin/
