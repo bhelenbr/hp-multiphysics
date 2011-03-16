@@ -195,7 +195,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
     }
 
 /*	box IS FULL SUBDIVIDE */
-    if (current +(1<<ND) >= size) {
+    if (current +(1<<ND) >= size-1) {
         printf("Need to allocate bigger quadtree %d\n",size);
 		printf("A possible cause is point ouside of domain:\n");
 		for (n=0;n<ND;++n)
