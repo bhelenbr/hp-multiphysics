@@ -254,7 +254,7 @@ NOW DOWNLOAD MY CODE
 [mkdir Codes]
 [cd Codes]
 [mkdir include lib] # (if not already there)
-[svn co https://balrog.camp.clarkson.edu/Repository/trunk .]
+[svn co https://balrog.camp.clarkson.edu/Repository/Codes .]
 
 # hit return when it asks for password then
 # use "guest" as username
