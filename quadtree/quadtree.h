@@ -84,7 +84,7 @@ template<int ND> class quadtree {
         void update(int v0);
         
         enum FILETYPE {text,tecplot};
-        void output(char *filename, FILETYPE type=tecplot);
+        void output(const char *filename, FILETYPE type=tecplot);
 };
 #endif
 

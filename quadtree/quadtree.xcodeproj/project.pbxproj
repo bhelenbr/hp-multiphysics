@@ -10,12 +10,12 @@
 		6FD8B0240865BD6D005A8B60 /* quadtree.h in Headers */ = {isa = PBXBuildFile; fileRef = F51211000190489701990B20 /* quadtree.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6FD8B0250865BD7D005A8B60 /* quad_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = F5129161033258B801990B69 /* quad_impl.h */; settings = {ATTRIBUTES = (); }; };
 		6FD8B0260865BD7E005A8B60 /* quad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F51210FF0190489701990B20 /* quad.cpp */; };
-		6FD8B0270865BDC7005A8B60 /* liblibquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FD8B0150865BC3F005A8B60 /* liblibquad.a */; };
+		6FD8B0270865BDC7005A8B60 /* libquad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6FD8B0150865BC3F005A8B60 /* libquad.a */; };
 		6FFC0D3F05AE0B7900A78095 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F512110701904AE101990B20 /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		6FD8B0150865BC3F005A8B60 /* liblibquad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblibquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6FD8B0150865BC3F005A8B60 /* libquad.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libquad.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6FFC0D4605AE0B7900A78095 /* quadtree */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = quadtree; sourceTree = BUILT_PRODUCTS_DIR; };
 		F51210FF0190489701990B20 /* quad.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = quad.cpp; sourceTree = "<group>"; };
 		F51211000190489701990B20 /* quadtree.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = quadtree.h; sourceTree = "<group>"; };
@@ -36,7 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6FD8B0270865BDC7005A8B60 /* liblibquad.a in Frameworks */,
+				6FD8B0270865BDC7005A8B60 /* libquad.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -76,7 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				6FFC0D4605AE0B7900A78095 /* quadtree */,
-				6FD8B0150865BC3F005A8B60 /* liblibquad.a */,
+				6FD8B0150865BC3F005A8B60 /* libquad.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,7 +125,7 @@
 			);
 			name = quad;
 			productName = libquad;
-			productReference = 6FD8B0150865BC3F005A8B60 /* liblibquad.a */;
+			productReference = 6FD8B0150865BC3F005A8B60 /* libquad.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		6FFC0D3A05AE0B7900A78095 /* quadtree */ = {

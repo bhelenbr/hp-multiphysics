@@ -427,7 +427,7 @@ template<int ND> void quadtree<ND>::dltpt(int v0) {
     return;
 }
 
-template<int ND> void quadtree<ND>::output(char *filename, FILETYPE type) {
+template<int ND> void quadtree<ND>::output(const char *filename, FILETYPE type) {
     int i,j,n,nsrch;
     char fnmapp[100],etype[20],order[20];
     class box<ND> *qpt;
