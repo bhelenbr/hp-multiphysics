@@ -46,6 +46,9 @@ CPPFLAGS += $(DEFINES)
 
 all: tri_basis libtri_basis.a 
 
+clean:
+	rm -f *.o *~
+
 tri_basis: $(OBJ) main.o
 	${CXX} ${CPPFLAGS} -o $@ $(OBJ) main.o $(LIB)
 
@@ -56,5 +59,3 @@ libtri_basis.a: $(OBJ)
 
 $(OBJ): tri_basis.h
 
-clean:
-	rm -f *.o *~
