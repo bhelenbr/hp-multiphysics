@@ -29,6 +29,9 @@ CPPFLAGS += -O3
 
 all: libspline.a splinetest
 
+clean:
+	rm *.o splinetest
+
 libspline.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libspline.a $(HOME)/Codes/lib/
