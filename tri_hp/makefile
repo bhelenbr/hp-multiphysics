@@ -129,7 +129,18 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 #LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
 
 ### End machine dependent
+
 CPPFLAGS += $(DEFINES)
+
+DOTC := $(OBJ:.o=.cpp) $(MAINOBJ:.o=.cpp)
+
+.depend: depend
+
+depend: $(DOTC)
+	rm -f ./.depend
+	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+
+include .depend
 
 tri_hp: dirs $(OBJ)
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
