@@ -82,6 +82,16 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
+DOTC := $(OBJ:.o=.cpp) $(MAINOBJ:.o=.cpp)
+
+.depend: depend
+
+depend: $(DOTC)
+	rm -f ./.depend
+	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
+
+include .depend
+
 libtri_mesh.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libtri_mesh.a $(HOME)/Codes/lib/
