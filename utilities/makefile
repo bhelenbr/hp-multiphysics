@@ -30,6 +30,8 @@ CFLAGS += -O3
 
 
 all:libutil.a libmyblas.a
+
+clean:
 	rm *.o
 
 libutil.a: utilities.h $(OBJU)
