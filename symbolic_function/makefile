@@ -7,6 +7,11 @@ CPPFLAGS += -I$(HOME)/Packages/include -I$(HOME)/Codes/include
 #CXX=icpc
 #CPPFLAGS += -cxxlib-icc
 
+all: header main
+
+clean:
+	rm main
+
 header:
 	cp symbolic_function.h ../include
 	
