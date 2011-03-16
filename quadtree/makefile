@@ -29,6 +29,9 @@ CPPFLAGS += -O3
 
 all: libquad.a quadtest
 
+clean:
+	rm *.o quadtest
+
 libquad.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
 	mv -f libquad.a $(HOME)/Codes/lib/
