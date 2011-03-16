@@ -21,7 +21,7 @@
 		6FC91D310DB6EFF700274CF9 /* spline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spline.h; sourceTree = "<group>"; };
 		6FC91D320DB6EFF700274CF9 /* spline_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spline_impl.h; sourceTree = "<group>"; };
 		6FC91D8C0DB71A5E00274CF9 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		D2AAC046055464E500DB518D /* libspline++.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libspline++.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2AAC046055464E500DB518D /* libspline.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libspline.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,7 +67,7 @@
 		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D2AAC046055464E500DB518D /* libspline++.a */,
+				D2AAC046055464E500DB518D /* libspline.a */,
 				6F2EF37F0DB780B3001358E1 /* main */,
 			);
 			name = Products;
@@ -133,7 +133,7 @@
 			);
 			name = "spline++";
 			productName = "spline++";
-			productReference = D2AAC046055464E500DB518D /* libspline++.a */;
+			productReference = D2AAC046055464E500DB518D /* libspline.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
