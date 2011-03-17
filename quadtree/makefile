@@ -34,7 +34,7 @@ clean:
 
 libquad.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libquad.a $(HOME)/Codes/lib/
+	cp -f libquad.a $(HOME)/Codes/lib/
 	cp -f quadtree.h $(HOME)/Codes/include/
 
 quadtest: $(OBJ) main.o
