@@ -132,26 +132,16 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
-DOTC := $(OBJ:.o=.cpp) $(MAINOBJ:.o=.cpp)
-
-.depend: depend
-
-depend: $(DOTC)
-	rm -f ./.depend
-	$(CXX) $(CPPFLAGS) -MM $^>>./.depend;
-
-include .depend
-
-tri_hp: dirs $(OBJ)
+tri_hp: dirs $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
 
-tri_hp_mpi: dirs $(OBJ)
+tri_hp_mpi: dirs $(OBJ) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 	
-tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
+tri_hp_petsc: dirs $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
-tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC)
+tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
 dirs:
@@ -165,5 +155,14 @@ dirs:
 	+@[ -d  swe ] || mkdir -p swe
 	+@[ -d  lvlset ] || mkdir -p lvlset
 	+@[ -d  explicit ] || mkdir -p explicit
+
+%.o: %.cpp
+	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(OBJ:.o=.P)
 
 endif
