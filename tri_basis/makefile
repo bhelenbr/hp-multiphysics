@@ -54,7 +54,7 @@ tri_basis: $(OBJ) main.o
 
 libtri_basis.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libtri_basis.a $(HOME)/Codes/lib/
+	cp -f libtri_basis.a $(HOME)/Codes/lib/
 	cp -f tri_basis.h $(HOME)/Codes/include/
 
 $(OBJ): tri_basis.h
