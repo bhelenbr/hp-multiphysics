@@ -1,35 +1,21 @@
-some basic commands to use (don't include the square brackets)
-	[cd foldername] change the directory you're in to foldername
-	[cd ..] go up one level in the directory
-	[ls] lists all the files in the current directory
-	[mkdir name] make a new folder called 'name'
-	[mv] moves a file/folder
-	[cp] copies
-	['tab'] tab completion - fills in folder names for you
-	[nano filename] open the file filename
-		[ctl+o, enter] save
-		[ctl+x] exit
+# See HowTo for basis unix stuff
 
-%To make mesh
-%tri_mesh <filename>  
-%where filename is typically "generate.inpt" 
-
-%To convert to a tecplot file format:
-%tri_mesh -x rstrt002_b0.grd rstrt002_b0.dat
+# Packages to be installed
+1 blitz array library
+2 muParser math parsing library
+3 libbinio platform independent binary input/ouput
+4 metis for mesh partitioning
+5 pth for user space threading (multiple blocks running under 1 process)
+6 boost for system space threading (usually not used)
+7 parseargs for command line argument processing
+8 cfortran for c calls to fortran
+9 petsc for parallel matrix inversion and iteration
+10 MeshAdapt for tetrahedral mesh generation
+11 Gmsh for tetrahedrals
 
 ###################################################################
-###################################################################
-
-In Home directory make folders: Packages, Codes, bin
-	[mkdir Packages, etc]
-in Codes, make folder lib
-	[cd Codes]
-	[mkdir lib]
-
-
-###################################################################
-
 #### GET BLITZ ####
+###################################################################
 METHOD 1 - using CVS to download
 	[mkdir Packages]
 	[cd Packages]
@@ -55,9 +41,8 @@ to
 )
 
 ###################################################################
-
 ######### MATH PARSING LIBRARY ##################
-
+###################################################################
 Download muParser v1.4 (most recent) at 
 	http://muparser.sourceforge.net/
 
@@ -78,8 +63,8 @@ extract, configure
 
 
 ###################################################################
-
-######### PLATFORM INDEPENDENT BINARY I/O LIBRARY ##################
+######### PLATFORM INDEPENDENT BINARY I/O LIBRARY #################
+###################################################################
 
 Download libbinio v1.27 (most recent) at
 	http://sourceforge.net/projects/libbinio
@@ -94,8 +79,8 @@ unzip, configure
 
 
 ###################################################################
-
 ######### MESH PARTITIONING LIBRARY #############
+###################################################################
 
 Download METIS (4.01 most recent) at
 	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
@@ -112,8 +97,8 @@ move metis-4.0.tar to Packages
 
 
 ###################################################################
-
 ######## USER SPACE THREADS LIBRARY #############
+###################################################################
 
 Download Pth (2.0.7 is most recent) at
 	http://www.gnu.org/software/pth/
@@ -123,14 +108,15 @@ move pth-2.0.7.tar.gz to Packages
 DONT USE THIS ONE
 	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize]
 USE THIS ONE
-	[./configure --prefix=${HOME}/Packages --with-mctx-mth=sjlj --with-mctx-dsp=ssjlj --with-mctx-stk=sas]
 	[make ]
+	[make]
 	[make install]
 	[cd ..]
 
 
 ###################################################################
 ####### SYSTEM SPACE THREADS LIBRARY #############
+###################################################################
 # SKIP THIS
 Download Boost at
 	http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041
@@ -141,46 +127,24 @@ unpack in packages folder
 	[./bjam install]
 	[cd ..]
 
+
 ###################################################################
-
-
 ### COMMAND LINE ARGUMENT PARSING UTILITY ##########
+###################################################################
 # get parseargs from Brian
 	[cd parseargs]
 	[make]
 	[cd ..]
 
+###################################################################
 ### HEADER FOR C to CALL FORTRAN ROUTINES ###########
+###################################################################
 http://www-zeus.desy.de/~burow/cfortran/
 save cfortran.h to ${HOME}/Packages/include/
 
 ###################################################################
-#################################################
-# IF DESIRED, NOT NECESSARY                     #
-# TO MAKE MESH & INPUT FILE GRAPHICAL UTILITIES #
-#################################################
-
-cd 
-
-tar zxvf util.tgz
-
-# For showmesh,showgrid X11 application
-
-cd ${HOME}/Codes/Cocoa/easymesh
-
-./compile.command
-
-# For input.app application (OS X only) 
-
-cd ../inputwfind
-
-xcodebuild -configuration Deployment
-
-
-###################################################################
-
 ######## FOR PETSC ############
-
+###################################################################
 download current version at
 	http://www.mcs.anl.gov/petsc/petsc-as/download/index.html
 move to Packages, extract
@@ -204,6 +168,7 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 
 
 ###################################################################
+##### MeshAdapt for Tetrahedral Meshing Stuff      ################
 ###################################################################
 #### FOR TETRAHEDRAL CODE, DO THIS HERE ####
 #### NOT NECESSARY FOR 2D CODE ###
@@ -217,7 +182,9 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 	[make install]
 
 
+###################################################################
 #### (FOR TETS ONLY) FOR GMSH ####
+###################################################################
 Download at http://www.fltk.org/software.php
 move to Packages
 	[tar zxvf fltk-1.1.9-source.tgz]
@@ -244,11 +211,11 @@ In CMAKE:
 	[ENABLE_GRAPHICS]
 
 
+
+
 ###################################################################
-
-ALL PACKAGES HAVE BEEN MADE
 NOW DOWNLOAD MY CODE
-
+###################################################################
 [cd]
 [mkdir bin] # (if not already there)
 [mkdir Codes]
@@ -260,28 +227,17 @@ NOW DOWNLOAD MY CODE
 # use "guest" as username
 # and hp-cfd as password
 
-now make all of my stuff:	
+now make all of my stuff:
+###################################################################	
 #### UNIX ####
+make -j 2  (For 2 processor machine)
+or for just tri_hp stuff
+make -j 2 tri_hp
+###################################################################
 
-cd utilities
-make
-cd ../spline++
-make
-cd ../quadtree
-make
-cd ../input_map
-make
-cd ../symbolic_function
-make
-cd ../tri_mesh
-make
-cd ../tri_basis
-make
-cd ../tri_hp
-make
-
+###################################################################
 #### OS X ####
-
+###################################################################
 	[cd ${HOME}/Codes]
 	[cd utilities]
 	[xcodebuild -target myblas -configuration Deployment]
@@ -304,62 +260,27 @@ make
 	[cd ../tri_hp]
 	[xcodebuild -target tri_hp -configuration Release]
 	[xcodebuild -target tri_hp_mpi -configuration Release]
-
-
 ###################################################################
 
-END
 
+#################################################
+# IF DESIRED, NOT NECESSARY                     #
+# TO MAKE MESH & INPUT FILE GRAPHICAL UTILITIES #
+# Get from Brian				#
+#################################################
+cd 
 
+tar zxvf util.tgz
 
-#################################
+# For showmesh,showgrid X11 application
 
-# INSTRUCTIONS FOR UNIX MACHINES
+cd ${HOME}/Codes/Cocoa/easymesh
 
-#################################
+./compile.command
 
-#move to home directory
+# For input.app application (OS X only) 
 
-cd
+cd ../inputwfind
 
-mkdir bin # (if not already there)
+xcodebuild -configuration Deployment
 
-cd ${HOME}/Codes
-
-mkdir include lib # (if not already there)
-
-
-
-cd utilities
-
-make
-
-cd ../spline++
-
-make
-
-cd ../quadtree
-
-make
-
-cd ../input_map
-
-make
-
-cd ../symbolic_function
-
-make
-
-cd ../tri_mesh
-
-make
-
-# INSTRUCTIONS FOR HP STUFF
-
-cd ../tri_basis
-
-make
-
-cd ../tri_hp
-
-make

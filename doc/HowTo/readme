@@ -90,7 +90,20 @@ cd .. - typing this will take you back one folder
 
 ~ - this is a shortcut for your home folder
 	-typing 'cd ~' and hitting enter will take you all the way back to your home folder
-	
+
+some other basic commands to use (don't include the square brackets)
+	[cd foldername] change the directory you're in to foldername
+	[cd ..] go up one level in the directory
+	[ls] lists all the files in the current directory
+	[mkdir name] make a new folder called 'name'
+	[mv] moves a file/folder
+	[cp] copies
+	['tab'] tab completion - fills in folder names for you
+	[nano filename] open the file filename
+		[ctl+o, enter] save
+		[ctl+x] exit
+	[rm -rf foldername] recursively remove folder and contents
+
 These are just a few commands, but its a good idea to become comfortable getting around in terminal
 as you will be spending quite a lot of time using it. Running this code is very text and typing 
 intesive, unlike other programs you may have used (FLUENT, for example).
@@ -110,7 +123,7 @@ A .d file
 	-the file provided is testcase.d and only has four points on each boundary
 
 First, make sure the .inpt file will be calling up all the apporopriate files
-	-the value for b0_mesh should read ./testcase
+	-the value for b0_mesh should read ./testcase.d
 		-this is saying the .d file the code should look for is located in the same folder as this
 		 .inpt file and it is called testcase (the file extension is assumed)
 	-make sure the boundaries 5, 6, 7, and 8 are calling the appropriate spline files
@@ -118,20 +131,19 @@ First, make sure the .inpt file will be calling up all the apporopriate files
 		-you will not have to change anything, but it's good to understand these connections
 	
 Now, in terminal, go to this folder
-	-once you are in the correct folder, type ~/bin/tri_mesh generate
+	-once you are in the correct folder, type ~/bin/tri_mesh generate.inpt
 		-this is saying it wants the code tri_mesh to run using the input file generate.inpt
 		
-This will create 5 new files in this folder
+This will create 3 new files in this folder
 	data0_b0.grd
 	data1_b0.grd
-	data2_b0.grd
 	rstrt1_b0.grd
-	rstrt2_b0.grd
-	-the file data2_b0.grd is the final grid you will use in analysis
+	-the file rstrt1_b0.grd is the final grid you will use in analysis
 	-the other files are created because first, the code creates a simple boundary space, then divides
 	 that space into a mesh in two subsequent iterations
 	 
-You can look at the grid that is created and the two previous iterations using ShowMesh
+You can look at the grid that is created and the two previous iterations using ShowMesh or can convert it to templet format using the following command:
+tri_mesh -x rstrt1_b0.grd rstrt1_b0.dat
 
 If the grid looks satisfactory, you can now run the analysis.
 
