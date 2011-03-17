@@ -359,7 +359,6 @@
 		9504779612D4FC76000CF354 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
 		9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
 		9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
-		9504779D12D4FCA6000CF354 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9504779C12D4FCA6000CF354 /* minvrt.cpp */; };
 		9504779E12D4FCA6000CF354 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9504779C12D4FCA6000CF354 /* minvrt.cpp */; };
 		958169DD1283A0DC001F9519 /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0E10FFBA730076AAFB /* libparmetis.a */; };
 		958169E01283A0E2001F9519 /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
@@ -1825,7 +1824,6 @@
 				9504779612D4FC76000CF354 /* bdry.cpp in Sources */,
 				9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */,
 				9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */,
-				9504779D12D4FCA6000CF354 /* minvrt.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
