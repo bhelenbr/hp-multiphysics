@@ -34,7 +34,7 @@ clean:
 
 libspline.a: $(OBJ)
 	$(AR) $(ARFLAGS) $@ $(OBJ)
-	mv -f libspline.a $(HOME)/Codes/lib/
+	cp -f libspline.a $(HOME)/Codes/lib/
 	cp -f spline.h $(HOME)/Codes/include/
 
 splinetest: $(OBJ) main.o
