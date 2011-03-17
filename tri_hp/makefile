@@ -6,8 +6,8 @@ MAKETARGET = $(MAKE) -C $(OBJDIR) -f $(CURDIR)/makefile $(MAKECMDGOALS)
 
 all: planar axi
 
-planar: tri_hp tri_hp_mpi tri_hp_petsc
-axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc
+planar: tri_hp tri_hp_mpi tri_hp_petsc tri_hp_petsc_mpi
+axi: tri_hp_axi tri_hp_axi_mpi tri_hp_axi_petsc tri_hp_axi_petsc_mpi
 
 tri_hp:
 	+@[ -d  _$@ ] || mkdir -p _$@
@@ -139,10 +139,10 @@ tri_hp_mpi: dirs $(OBJ)
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 	
 tri_hp_petsc: dirs $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.3 -lparmetis -lmetis -ldl
 
 tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC) 
-	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
+	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.3 -lparmetis -lmetis -ldl
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
