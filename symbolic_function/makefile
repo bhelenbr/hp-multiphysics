@@ -7,16 +7,12 @@ CPPFLAGS += -I$(HOME)/Packages/include -I$(HOME)/Codes/include
 #CXX=icpc
 #CPPFLAGS += -cxxlib-icc
 
-all: header main
+main: $(OBJ)
+	$(CXX) $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
+	cp symbolic_function.h ../include
 
 clean:
 	rm main
 
-header:
-	cp symbolic_function.h ../include
-	
-main: $(OBJ)
-	$(CXX) $(CPPFLAGS) -o $@ $(OBJ) $(LIB)
-	
 $(OBJ): symbolic_function.h
 
