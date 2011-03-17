@@ -34,7 +34,7 @@ METHOD 1 - using CVS to download
 	[mkdir Packages]
 	[cd Packages]
 	[export CVSROOT=:pserver:anonymous@blitz.cvs.sourceforge.net:/cvsroot/blitz]
-	[cvs login]
+	[cvs login]  (hit return for password)
 	[cvs -z3 checkout blitz]
 	[cd blitz]
 	[autoreconf -vif]
@@ -73,7 +73,7 @@ extract, configure
 	[make]
 	[make install]
 	[cd ../include]
-	[mkdir muParser]
+	[mkdir muParser] (ignore error about moving directory)
 	[mv mu* ./muParser]
 
 
@@ -124,7 +124,7 @@ DONT USE THIS ONE
 	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize]
 USE THIS ONE
 	[./configure --prefix=${HOME}/Packages --with-mctx-mth=sjlj --with-mctx-dsp=ssjlj --with-mctx-stk=sas]
-	[make]
+	[make ]
 	[make install]
 	[cd ..]
 
@@ -190,11 +190,11 @@ move to Packages, extract
 
 # To know what packages are available: ./config/configure.py --help
 # with superlu
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --download-parmetis=1
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0  --download-superlu_dist=1 --with-x=0 --download-parmetis=1 --with-mpi-include=/usr/include --with-mpi-lib=libmpi
 # with out downloading parmetis
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
 # on cluster
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-dir=/opt/mpich/myrinet/gnu/  --with-x=0 --download-parmetis=1 --download-superlu_dist=1
+./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug al
