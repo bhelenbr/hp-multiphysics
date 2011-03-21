@@ -24,6 +24,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	int i;
 
 	/* Initialize base class */
+	/* If restart is not equal to 0, this will load DNS data */
 	BASE::init(input,gin);
 
 	input.getwdefault(BASE::gbl->idprefix + "_groups",pod_id,0);
@@ -158,6 +159,8 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 #endif
 
 
+	/* This is the old way */
+	/* This loads coefficient vector made by pod_generate for this timestep */
 	int restartfile;
 	input.getwdefault("restart",restartfile,1);
 	nstr.str("");
@@ -171,6 +174,84 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
 	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
+	
+	
+	
+	/* This will calculate the expansion vector from the DNS restart file */
+//	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS */
+//	psimatrix = 0.0;
+//	psimatrix_recv = 0.0;
+//	psi1dcounter=0;
+//	for (k=0;k<nsnapshots;++k) {
+//		/* LOAD SNAPSHOT */
+//		nstr.str("");
+//		nstr << k+restartfile << std::flush;
+//		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
+//		BASE::input(filename, BASE::binary);
+//		
+//		for(l=0;l<nmodes;++l) {
+//			BASE::ugbd(1).v.reference(modes(l).v);
+//			BASE::ugbd(1).s.reference(modes(l).s);
+//			BASE::ugbd(1).i.reference(modes(l).i);
+//			
+//			for(tind=0;tind<BASE::ntri;++tind) {          
+//				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+//				BASE::crdtocht(tind);
+//				
+//				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+//				for(n=0;n<BASE::ND;++n)
+//					basis::tri(BASE::log2p)->proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+//				
+//				/* PROJECT SNAPSHOT TO GAUSS POINTS */
+//				BASE::ugtouht(tind);
+//				for(n=0;n<BASE::NV;++n)
+//					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+//				
+//				/* PROJECT MODE TO GAUSS POINTS */
+//				BASE::ugtouht(tind,1);
+//				for(n=0;n<BASE::NV;++n)
+//					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+//				
+//				for(i=0;i<lgpx;++i) {
+//					for(j=0;j<lgpn;++j) {
+//						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+//						for(n=0;n<BASE::NV;++n) {
+//							psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+//						}
+//					}
+//				}
+//			}
+//			++psi1dcounter;
+//		}
+//	}
+//	BASE::ugbd(1).v.reference(ugstore.v);
+//	BASE::ugbd(1).s.reference(ugstore.s);
+//	BASE::ugbd(1).i.reference(ugstore.i);
+//	
+//	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
+//	
+//	for (k=0;k<nsnapshots;++k) {
+//		/* OUTPUT COEFFICIENT VECTOR */
+//		nstr.str("");
+//		nstr << k+restartfile << std::flush;
+//		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
+//		binofstream bout;
+//		bout.open(filename.c_str());
+//		if (bout.error()) {
+//			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
+//			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
+//		}
+//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
+//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+//		
+//		for (l=0;l<nmodes;++l) 
+//			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
+//		
+//		bout.close();
+//	}
+	
+
+
 
 	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
