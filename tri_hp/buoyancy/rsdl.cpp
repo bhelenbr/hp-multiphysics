@@ -83,7 +83,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
-				lrho = gbl->rhovsT.Eval(u(2)(i,j));
+				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
 				u(2)(i,j) *= gbl->cp;
 
@@ -247,7 +247,7 @@ void tri_hp_buoyancy::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXT
 		/* CONVECTIVE TERMS (IMAGINARY FIRST)*/
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpn;++j) {
-				lrho = gbl->rhovsT.Eval(u(2)(i,j));
+				lrho = gbl->rho_vs_T.Eval(u(2)(i,j));
 				rho(i,j) = lrho;
 				u(2)(i,j) *= gbl->cp;
 				fluxx = lrho*RAD(crd(0)(i,j))*(u(0)(i,j) -mvel(0)(i,j));

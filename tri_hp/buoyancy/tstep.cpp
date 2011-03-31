@@ -82,7 +82,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
 					qmax2 = MAX(qmax2,q2);
 					
 					
-					rho = fabs(gbl->rhovsT.Eval(u(2)(i,j)));
+					rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
 					rhoav = MAX(rhoav,rho);
 				}
 			}	
@@ -116,7 +116,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
 					q2 = pow(u(0)(i,j)-mvel(0),2.0)  +pow(u(1)(i,j)-mvel(1),2.0);
 					qmax2 = MAX(qmax2,q2);
 
-					rho = fabs(gbl->rhovsT.Eval(u(2)(i,j)));
+					rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
 					rhoav = MAX(rhoav,rho);
 					
 				}
@@ -151,7 +151,7 @@ void tri_hp_buoyancy::setup_preconditioner() {
 			+pow(ug.v(v0,1)-(gbl->bd(0)*(pnts(v0)(1) -vrtxbd(1)(v0)(1))),2.0);  
 			qmax2 = MAX(qmax2,q2);
 			
-			rho = fabs(gbl->rhovsT.Eval(u(2)(i,j)));
+			rho = fabs(gbl->rho_vs_T.Eval(u(2)(i,j)));
 			rhoav = MAX(rhoav,rho);
 		}
 		hmax = sqrt(hmax);

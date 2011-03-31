@@ -12,8 +12,8 @@
 
 using namespace bdry_buoyancy;
 
-void surface::init(input_map& inmap,void* gbl_in) {
-	bdry_ins::surface::init(inmap,gbl_in);
+void surface::init(input_map& input,void* gbl_in) {
+	bdry_ins::surface::init(input,gbl_in);
 	
 	input_map zeromap;
 	zeromap["zero"] = "0.0";
@@ -22,14 +22,25 @@ void surface::init(input_map& inmap,void* gbl_in) {
 	for (int n=0;n<x.NV;++n) {
 		nstr.str("");
 		nstr << base.idprefix << "_flux" << n << std::flush;
-		if (inmap.find(nstr.str()) != inmap.end()) {
-			fluxes(n).init(inmap,nstr.str());
+		if (input.find(nstr.str()) != input.end()) {
+			fluxes(n).init(input,nstr.str());
 		}
 		else {
 			fluxes(n).init(zeromap,"zero");
 		}
 	}
 	
+	if (input.find(base.idprefix+"_sigma_vs_T") != input.end()) {
+		sigma_vs_T.init(input,base.idprefix+"_sigma_vs_T");
+	} 
+	else if (input.find("sigma_vs_T") != input.end()){
+		sigma_vs_T.init(input,"sigma_vs_T");
+	}
+	else {
+		*x.gbl->log << "couldn't find sigma_vs_T equation for surface tension" << std::endl;
+		sim::abort(__LINE__,__FILE__,x.gbl->log);
+	}
+
 	return;
 }
 
@@ -76,7 +87,9 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 		for(int n=0;n<x.NV;++n) {
 			flx(n) = fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
 		}
-			
+		
+		/* Evaluate Surface Tension */
+		FLT sigma = sigma_vs_T.Eval(au(2));
 		/* TANGENTIAL SPACING */                
 		res(0,i) = -ksprg(indx)*jcb;
 		/* NORMAL FLUX */
@@ -87,16 +100,16 @@ void surface::element_rsdl(int indx, Array<FLT,2> lf) {
 		/* SURFACE TENSION SOURCE TERM X-DIRECTION */ 
 		res(4,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(0) +flx(0)*jcb;
 #ifdef AXISYMMETRIC
-		res(4,i) += gbl->sigma*jcb;
+		res(4,i) += sigma*jcb;
 #endif
 		/* AND INTEGRATION BY PARTS TERM */
-		res(5,i) = +RAD(crd(0,i))*gbl->sigma*norm(1)/jcb;
+		res(5,i) = +RAD(crd(0,i))*sigma*norm(1)/jcb;
 		
 		
 		/* SURFACE TENSION SOURCE TERM Y-DIRECTION */
 		res(6,i) = +RAD(crd(0,i))*((x.gbl->rho -gbl->rho2)*x.gbl->g*crd(1,i) +gbl->p_ext)*norm(1) +flx(1)*jcb;                
 		/* AND INTEGRATION BY PARTS TERM */
-		res(7,i) = -RAD(crd(0,i))*gbl->sigma*norm(0)/jcb;
+		res(7,i) = -RAD(crd(0,i))*sigma*norm(0)/jcb;
 		
 		/* Auxiliary Fluxes Here */
 		res(8,i) = flx(2)*jcb;

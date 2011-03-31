@@ -20,7 +20,7 @@ class tri_hp_buoyancy : public tri_hp_ins {
 
 			/* PHYSICAL CONSTANTS */
 			FLT kcond,cp;
-			symbolic_function<1> rhovsT;
+			symbolic_function<1> rho_vs_T;
 
 		} *gbl;
 		hp_vrtx_bdry* getnewvrtxobject(int bnum, input_map &bdrydata);

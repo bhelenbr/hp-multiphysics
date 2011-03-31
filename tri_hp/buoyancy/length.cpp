@@ -78,8 +78,8 @@ void tri_hp_buoyancy::length() {
 		FLT bernoulli, dbernoulli;
 		for(int i=0;i<lgpx;++i) {
 			for(int j=0;j<lgpn;++j) {
-				FLT rho = gbl->rhovsT.Eval(u(2)(i,j));
-				FLT rhol = gbl->rhovsT.Eval(ul(2)(i,j));
+				FLT rho = gbl->rho_vs_T.Eval(u(2)(i,j));
+				FLT rhol = gbl->rho_vs_T.Eval(ul(2)(i,j));
 				
 				FLT dudx = ldcrd(1,1)*du(0,0)(i,j) -ldcrd(1,0)*du(0,1)(i,j);
 				FLT dudy = -ldcrd(0,1)*du(0,0)(i,j) +ldcrd(0,0)*du(0,1)(i,j);

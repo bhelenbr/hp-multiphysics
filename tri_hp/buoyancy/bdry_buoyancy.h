@@ -25,7 +25,8 @@ namespace bdry_buoyancy {
 	
 	class surface : public bdry_ins::surface {
 		Array<vector_function,1> fluxes;
-											
+		symbolic_function<1> sigma_vs_T;
+		
 		public:
 			surface(tri_hp_ins &xin, edge_bdry &bin) : bdry_ins::surface(xin,bin) {mytype = "surface"; fluxes.resize(x.NV);
 				Array<string,1> names(4);

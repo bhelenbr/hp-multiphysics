@@ -19,14 +19,14 @@ void tri_hp_buoyancy::init(input_map& input, void *gin) {
 	gbl->D(2) = gbl->kcond;
 	if (!input.get(gbl->idprefix + "_cp",gbl->cp)) input.getwdefault("cp",gbl->cp,1.0);
 
-	if (input.find(gbl->idprefix+"_rhovsT") != input.end()) {
-		gbl->rhovsT.init(input,gbl->idprefix+"_rhovsT");
+	if (input.find(gbl->idprefix+"_rho_vs_T") != input.end()) {
+		gbl->rho_vs_T.init(input,gbl->idprefix+"_rho_vs_T");
 	} 
-	else if (input.find("rhovsT") != input.end()){
-		gbl->rhovsT.init(input,"rhovsT");
+	else if (input.find("rho_vs_T") != input.end()){
+		gbl->rho_vs_T.init(input,"rho_vs_T");
 	}
 	else {
-		*gbl->log << "couldn't find rhovsT equation for density" << std::endl;
+		*gbl->log << "couldn't find rho_vs_T equation for density" << std::endl;
 		sim::abort(__LINE__,__FILE__,gbl->log);
 	}
 
@@ -76,7 +76,7 @@ void tri_hp_buoyancy::calculate_unsteady_sources() {
 			for(i=0;i<basis::tri(log2p)->gpx();++i) {
 				for(j=0;j<basis::tri(log2p)->gpn();++j) {    
 					cjcb(i,j) = -gbl->bd(0)*RAD(crd(0)(i,j))*(dcrd(0,0)(i,j)*dcrd(1,1)(i,j) -dcrd(1,0)(i,j)*dcrd(0,1)(i,j));
-					lrho = gbl->rhovsT.Eval(u(2)(i,j));                    
+					lrho = gbl->rho_vs_T.Eval(u(2)(i,j));                    
 					for(n=0;n<NV-2;++n)
 						dugdt(log2p,tind,n)(i,j) = lrho*u(n)(i,j)*cjcb(i,j);
 					dugdt(log2p,tind,NV-2)(i,j) = lrho*gbl->cp*u(NV-2)(i,j)*cjcb(i,j);
