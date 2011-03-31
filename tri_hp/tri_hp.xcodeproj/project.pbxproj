@@ -359,7 +359,6 @@
 		9504779612D4FC76000CF354 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
 		9504779712D4FC77000CF354 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
 		9504779812D4FC78000CF354 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
-		9504779E12D4FCA6000CF354 /* minvrt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9504779C12D4FCA6000CF354 /* minvrt.cpp */; };
 		958169DD1283A0DC001F9519 /* libparmetis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0E10FFBA730076AAFB /* libparmetis.a */; };
 		958169E01283A0E2001F9519 /* libpetsc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EE8710FFB7550076AAFB /* libpetsc.a */; };
 		958169E11283A0E3001F9519 /* libsuperlu_dist_2.3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F53EF0410FFBA5C0076AAFB /* libsuperlu_dist_2.3.a */; };
@@ -915,6 +914,8 @@
 		95816A361283A56D001F9519 /* length.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = length.cpp; sourceTree = "<group>"; };
 		95BD203410B863F40006A896 /* petsc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = petsc.cpp; sourceTree = "<group>"; };
 		95BD203510B863F40006A896 /* sparse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sparse.cpp; sourceTree = "<group>"; };
+		E6292A5B13449DD200E2BCE9 /* bdry_buoyancy1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy1.h; path = buoyancy/bdry_buoyancy1.h; sourceTree = "<group>"; };
+		E6292A5C13449DD200E2BCE9 /* melt1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = melt1.cpp; path = buoyancy/melt1.cpp; sourceTree = "<group>"; };
 		E62CDC4112B7114C0042211D /* bdry_buoyancy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bdry_buoyancy.h; path = buoyancy/bdry_buoyancy.h; sourceTree = "<group>"; };
 		E62CDC4212B7114D0042211D /* bdry.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bdry.cpp; path = buoyancy/bdry.cpp; sourceTree = "<group>"; };
 		E67EBAA612D603BC0011EB69 /* melt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = melt.cpp; path = buoyancy/melt.cpp; sourceTree = "<group>"; };
@@ -1291,8 +1292,10 @@
 				6FFFB67411777A9300EFEB3C /* length.cpp */,
 				6F77C4410B4D63ED006A4504 /* rsdl.cpp */,
 				E62CDC4112B7114C0042211D /* bdry_buoyancy.h */,
+				E6292A5B13449DD200E2BCE9 /* bdry_buoyancy1.h */,
 				E62CDC4212B7114D0042211D /* bdry.cpp */,
 				E67EBAA612D603BC0011EB69 /* melt.cpp */,
+				E6292A5C13449DD200E2BCE9 /* melt1.cpp */,
 			);
 			name = Buoyancy;
 			sourceTree = "<group>";
@@ -1766,7 +1769,6 @@
 				E6896127129EC25F00D4FE84 /* getnewbdry.cpp in Sources */,
 				E6896128129EC26000D4FE84 /* getnewibc.cpp in Sources */,
 				E6896129129EC26100D4FE84 /* surface.cpp in Sources */,
-				9504779E12D4FCA6000CF354 /* minvrt.cpp in Sources */,
 				959539AE12D5002B00465DCA /* allocate.cpp in Sources */,
 				959539AF12D5002C00465DCA /* tstep.cpp in Sources */,
 				959539B012D5002D00465DCA /* rsdl.cpp in Sources */,
