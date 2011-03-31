@@ -39,7 +39,6 @@ class tri_hp_cd : public tri_hp {
 
 		hp_edge_bdry* getnewsideobject(int bnum, input_map &bdrydata);
 		init_bdry_cndtn* getnewibc(std::string suffix, input_map& inmap);
-		tri_hp_helper* getnewhelper(input_map& inmap);
 
     public:
 		void* create_global_structure() {return new global;}
