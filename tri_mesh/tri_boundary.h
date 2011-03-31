@@ -296,7 +296,7 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 				if (fabs(psinew-psi) < 1.0e-8) break;
 			}
 			if (iter > 99) {
-				*x.gbl->log << "too many spline iterations\n";
+				*x.gbl->log << "too many spline iterations at " << pt << " with final change of " << ds << '\n';
 			}
 			to_physical_frame(pt);
 			return;
