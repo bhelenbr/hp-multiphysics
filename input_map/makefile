@@ -2,8 +2,8 @@ OBJ = input_map.o
 
 CPPFLAGS = -O3
 
-CPPFLAGS += -I$(HOME)/Packages/include
-LIBS = -L$(HOME)/Packages/lib -lparseargs -lmuparser
+CPPFLAGS += -I$(PACKAGES)/include
+LIBS = -L$(PACKAGES)/lib -lparseargs -lmuparser
 
 ### Begin machine dependent
 

@@ -1,7 +1,7 @@
 OBJU = utilities.o
 OBJM = myblas.o matrix.o
 
-CPPFLAGS += -Df2cFortran -I$(HOME)/Packages/include
+CPPFLAGS += -Df2cFortran -I$(PACKAGES)/include
 
 ### Begin machine dependent
 

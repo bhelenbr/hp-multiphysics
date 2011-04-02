@@ -1,6 +1,6 @@
 OBJ = spline.o
 
-CPPFLAGS = -I${HOME}/Codes/include/ -I${HOME}/Packages/include/
+CPPFLAGS = -I${HOME}/Codes/include/ -I$(PACKAGES)/include/
 
 ### Begin machine dependent
 

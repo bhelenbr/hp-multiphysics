@@ -36,8 +36,8 @@ MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran  $(EXTRAFLAGS)
 #DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(HOME)/Packages/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz 
-CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(HOME)/Packages/include
+LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz 
+CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 CXXMPI = ${CXX}
 
 ### Begin machine dependent
