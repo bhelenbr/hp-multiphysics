@@ -174,90 +174,11 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	}
 	bin.setFlag(binio::BigEndian,bin.readInt(1));
 	bin.setFlag(binio::FloatIEEE,bin.readInt(1));
-	
-	
-	
-	/* This will calculate the expansion vector from the DNS restart file */
-//	/* CALCULATE POD COEFFICIENTS FOR EXPANSION OF SNAPSHOTS */
-//	psimatrix = 0.0;
-//	psimatrix_recv = 0.0;
-//	psi1dcounter=0;
-//	for (k=0;k<nsnapshots;++k) {
-//		/* LOAD SNAPSHOT */
-//		nstr.str("");
-//		nstr << k+restartfile << std::flush;
-//		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
-//		BASE::input(filename, BASE::binary);
-//		
-//		for(l=0;l<nmodes;++l) {
-//			BASE::ugbd(1).v.reference(modes(l).v);
-//			BASE::ugbd(1).s.reference(modes(l).s);
-//			BASE::ugbd(1).i.reference(modes(l).i);
-//			
-//			for(tind=0;tind<BASE::ntri;++tind) {          
-//				/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
-//				BASE::crdtocht(tind);
-//				
-//				/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
-//				for(n=0;n<BASE::ND;++n)
-//					basis::tri(BASE::log2p)->proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
-//				
-//				/* PROJECT SNAPSHOT TO GAUSS POINTS */
-//				BASE::ugtouht(tind);
-//				for(n=0;n<BASE::NV;++n)
-//					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
-//				
-//				/* PROJECT MODE TO GAUSS POINTS */
-//				BASE::ugtouht(tind,1);
-//				for(n=0;n<BASE::NV;++n)
-//					basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
-//				
-//				for(i=0;i<lgpx;++i) {
-//					for(j=0;j<lgpn;++j) {
-//						cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
-//						for(n=0;n<BASE::NV;++n) {
-//							psimatrix(psi1dcounter) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
-//						}
-//					}
-//				}
-//			}
-//			++psi1dcounter;
-//		}
-//	}
-//	BASE::ugbd(1).v.reference(ugstore.v);
-//	BASE::ugbd(1).s.reference(ugstore.s);
-//	BASE::ugbd(1).i.reference(ugstore.i);
-//	
-//	sim::blks.allreduce(psimatrix.data(),psimatrix_recv.data(),nsnapshots*nmodes,blocks::flt_msg,blocks::sum);
-//	
-//	for (k=0;k<nsnapshots;++k) {
-//		/* OUTPUT COEFFICIENT VECTOR */
-//		nstr.str("");
-//		nstr << k+restartfile << std::flush;
-//		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
-//		binofstream bout;
-//		bout.open(filename.c_str());
-//		if (bout.error()) {
-//			*BASE::gbl->log << "couldn't open coefficient output file " << filename;
-//			sim::abort(__LINE__,__FILE__,BASE::gbl->log);
-//		}
-//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
-//		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
-//		
-//		for (l=0;l<nmodes;++l) 
-//			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
-//		
-//		bout.close();
-//	}
-	
-
-
-
 	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
 	BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
 	BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
-
+	
 	for (int l=0;l<nmodes;++l) {
 		coeffs(l) = bin.readFloat(binio::Double); 
 		BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
@@ -265,6 +186,80 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 		BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
 	}
 	bin.close();
+	
+	
+	
+	/* This is the new way */
+//	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
+//	Array<FLT,1> scaling;
+//	scaling.resize(BASE::NV);
+//	scaling = 1;
+//	if (input.getline(BASE::gbl->idprefix + "_scale_vector",linebuff) || input.getline("scale_vector",linebuff)) {
+//		instr.str(linebuff);
+//		for(i=0;i<BASE::NV;++i)
+//			instr >> scaling(i);
+//	}
+//	
+//	int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
+//	FLT cjcb;
+//	for(int l=0;l<nmodes;++l) {
+//		BASE::ugbd(1).v.reference(modes(l).v);
+//		BASE::ugbd(1).s.reference(modes(l).s);
+//		BASE::ugbd(1).i.reference(modes(l).i);
+//		
+//		for(int tind=0;tind<BASE::ntri;++tind) {          
+//			/* LOAD ISOPARAMETRIC MAPPING COEFFICIENTS */
+//			BASE::crdtocht(tind);
+//			
+//			/* PROJECT COORDINATES AND COORDINATE DERIVATIVES TO GAUSS POINTS */
+//			for(int n=0;n<BASE::ND;++n)
+//				basis::tri(BASE::log2p)->proj_bdry(&BASE::cht(n,0), &BASE::crd(n)(0,0), &BASE::dcrd(n,0)(0,0), &BASE::dcrd(n,1)(0,0),MXGP);
+//			
+//			/* PROJECT SNAPSHOT TO GAUSS POINTS */
+//			BASE::ugtouht(tind);
+//			for(int n=0;n<BASE::NV;++n)
+//				basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::u(n)(0,0),MXGP);
+//			
+//			/* PROJECT MODE TO GAUSS POINTS */
+//			BASE::ugtouht(tind,1);
+//			for(int n=0;n<BASE::NV;++n)
+//				basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
+//			
+//			for(int i=0;i<lgpx;++i) {
+//				for(int j=0;j<lgpn;++j) {
+//					cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+//					for(int n=0;n<BASE::NV;++n) {
+//						coeffs(l) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	BASE::ugbd(1).v.reference(ugstore.v);
+//	BASE::ugbd(1).s.reference(ugstore.s);
+//	BASE::ugbd(1).i.reference(ugstore.i);
+//	
+//	Array<FLT,1> coeffs_recv(tmodes);
+//	coeffs_recv = 0.0;
+//	sim::blks.allreduce(coeffs.data(),coeffs_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
+//	coeffs = coeffs_recv;
+//	
+//	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
+//	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
+//	BASE::ug.s(Range(0,BASE::nseg-1)) = 0.;
+//	BASE::ug.i(Range(0,BASE::ntri-1)) = 0.;
+//
+//	for (int l=0;l<nmodes;++l) {
+//		BASE::ug.v(Range(0,BASE::npnt-1)) += coeffs(l)*modes(l).v(Range(0,BASE::npnt-1));
+//		BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
+//		BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
+//	}
+//	bin.close();
+	/* end of new way */
+
+
+
+
 
 #ifdef POD_BDRY
 	/* Let boundary conditions load to and from coeff/rsdls vectors */
