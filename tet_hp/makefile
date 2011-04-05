@@ -10,7 +10,7 @@ planar: tet_hp
 
 tet_hp:
 	+@[ -d  _serial ] || mkdir -p _serial
-	+@$(MAKE) -C _serial -f $(CURDIR)/makefile tet_hp
+	+@$(MAKE) -C _serial -f $(CURDIR)/makefile tet_hp EXTRAFLAGS='-DPTH'
 	cp _serial/tet_hp $(HOME)/bin/$@
 
 .PHONY: tet_hp
@@ -20,7 +20,7 @@ makefile : ;
 
 .PHONY: clean
 clean:
-	rm -rf _serial _mpi _axi_serial _axi_mpi
+	rm -rf _serial
 
 else
 
@@ -30,15 +30,20 @@ BASE = allocate.o copy.o getnewblock.o gtol.o hp_boundary.o hp_getnewibc.o l2err
 tadvance.o output.o ptprobe.o particle.o tobasis.o update.o test.o
 OBJINS = ins/allocate.o ins/bdry.o ins/getnewbdry.o ins/getnewibc.o ins/length.o ins/rsdl.o ins/tstep.o 
 OBJCD = cd/allocate.o cd/bdry.o cd/getnewbdry.o cd/getnewibc.o cd/rsdl.o cd/setup_preconditioner.o
+OBJCNS = cns/allocate.o cns/bdry.o cns/getnewbdry.o cns/getnewibc.o cns/update.o cns/rsdl.o cns/tstep.o 
+OBJCNS_EXPLICIT = cns_explicit/allocate.o cns_explicit/bdry.o cns_explicit/getnewbdry.o cns_explicit/getnewibc.o cns_explicit/rsdl.o cns_explicit/tstep.o 
 
 OBJ = $(BASE)
-OBJ += $(OBJCD) $(OBJINS) 
+OBJ += $(OBJCD) 
+OBJ += $(OBJINS) 
+OBJ += $(OBJCNS)
+OBJ += $(OBJCNS_EXPLICIT)
 
 DEFINES = -Df2cFortran $(EXTRAFLAGS)
-CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -ltet_mesh -lquad -ltet_basis -lmyblas -lspline -lutil -linput_map -lmuparser -lmetis -lm -lbinio -lpth -lblitz 
-CXXMPI = ${CXX}
+CPPFLAGS = -O3 -g -Wno-trigraphs -Wreturn-type -Wunused-variable -Wuninitialized -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
+LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lquad -lspline -ltet_basis -lmyblas -lutil -linput_map -lbinio -lmuparser -lmetis -lm -lpth -lblitz
 
+CXXMPI = ${CXX}
 ### Begin machine dependent
 
 ## Darwin:
@@ -47,37 +52,37 @@ CXXMPI = ${CXX}
 #LIB += -framework veclib
 
 ## Linux:
-##  Machine specific for Linux
-#CXX=icpc #(cares)
-#CPPFLAGS += -O3 -cxxlib-icc -I/opt/mpich/myrinet/intel/include #(cares)
-#LIB += -L$(HOME) -L/usr/lib/gcc-lib/i386-pc-linux/3.2.3/ -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
-#LIB +=   -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
-#LDFLAGS += -static-libcxa #(cares)
-CPPFLAGS += -O3 -I/opt/mpich/myrinet/gnu/include #(cares)
-LIB += -L$(HOME) -latlas -llapack -lcblas -lf77blas -latlas -lg2c #(cares)
+LIB += -L$(HOME)  -llapack -lblas #(cares)
+CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
-## IRIX64:
-#CPPFLAGS += -Ofast=IP30  #(sauter)
-#CPPFLAGS += -Ofast=IP27  #(ctr-sgi1)
-#CPPFLAGS += -Ofast=IPrk5 #(origin)
-#LIB += -lcomplib.sgimath
+## To use openmpi
+#CPPFLAGS += -I/opt/openmpi/include
+#CXXMPI = /opt/openmpi/bin/mpic++
 
-## Aix:
-## Machine specific for Jupiter
-#CPPFLAGS += -O3
-#LIB += -lessl \
-/afs/cu/software/Development/lapack-3.0/rs_aix52/LAPACK/lapack_RS6K.a -lxlf -lxlf90
-#DEFINES = -DIBMR2Fortran
+# (ubuntu) should really make symbolic links to liblapack and libatlas
+#LIB += /usr/lib/liblapack.so.3gf /usr/lib/libatlas.so.3gf  #(ubuntu)
 
 ### End machine dependent
+
 CPPFLAGS += $(DEFINES)
 
-tet_hp: dirs $(OBJ)
-	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltet_mesh $(LIB)
-
+tet_hp: dirs $(OBJ) 
+	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh -ltet_mesh $(LIB)
 
 dirs:
 	+@[ -d  ins ] || mkdir -p ins
+	+@[ -d  cns ] || mkdir -p cns
+	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
 	+@[ -d  cd ] || mkdir -p cd
+
+%.o: %.cpp
+	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
+	@cp $*.d $*.P; \
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	-e '/^$$/ d' -e 's/$$/ :/' < $*.d >> $*.P; \
+	rm -f $*.d
+
+-include $(OBJ:.o=.P)
+
 endif
