@@ -850,15 +850,41 @@ void fcomm::match_numbering(int step) {
 			else {
 				/* Slave receives master boundaries vertex positions */
 				int count = 0;
+				bool printstuff = false;
 				for (int i=0;i<npnt;++i) {
 					TinyVector<FLT,tet_mesh::ND> mpnt;
 					for (int n=0;n<tet_mesh::ND;++n)
 						mpnt(n) = fsndbuf(count++);
-						
-					FLT dist = otree.nearpt(mpnt.data(),pnt(i).gindx);
+
+					/* brute force */
+//					FLT dist;
+//					pnt(i).gindx = 0;
+//					for (int j=0; j<x.npnt; ++j) {
+//						TinyVector<FLT,tet_mesh::ND> lclpnts;
+//						lclpnts = x.pnts(j);
+//						dist = 0.0;
+//						for (int k=0; k<tet_mesh::ND; ++k) {
+//							dist += pow(lclpnts(k)-mpnt(k), 2.0);
+//						}
+//
+//						if (dist < 1.0e-8) {
+//							pnt(i).gindx = j;
+//							break;
+//						}
+//					}
+					
+					FLT dist = x.otree.nearpt(mpnt.data(),pnt(i).gindx);
+
 					if (dist > 10.*EPSILON) {
-						*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << '\n';
+						printstuff = true;
+						*x.gbl->log << "Matching face numbering error: " << dist << ' ' << mpnt << ' ' << x.pnts(pnt(i).gindx) << '\n';
+						*x.gbl->log << "idnum " << idnum << " lcl point " << i << " gbl point " << pnt(i).gindx << '\n';
 					}
+
+				}
+				if (printstuff) {
+					otree.output("octree_error");
+					exit(3);
 				}
 			}
 			return;

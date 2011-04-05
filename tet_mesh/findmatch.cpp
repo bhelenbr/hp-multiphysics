@@ -328,7 +328,6 @@ void tet_mesh::create_unique_numbering() {
 	for (int i=0;i<npnt;++i) 
 		pnt(i).info = maxpnts*gbl->idnum +i;
 	
-
 	/* Find minimum along all communication boundaries */
 	for(last_phase = false, phase = 0; !last_phase; ++phase) {
 		for (int i=0;i<nfbd;++i) {
@@ -426,11 +425,11 @@ void tet_mesh::create_unique_numbering() {
 
 void tet_mesh::match_bdry_numbering() {
 
-	/* LOAD POSITIONS INTO BUFFERS */
+	/* ALL BOUNDARIES LOAD POSITIONS INTO BUFFERS */
 	for(int i=0;i<nfbd;++i) 
 		fbdry(i)->ploadbuff(boundary::all,&(pnts(0)(0)),0,ND-1,ND);
 		
-	/* FIRST PART OF SENDING, POST ALL RECEIVES */
+	/* FIRST PART OF SENDING, POST ALL RECEIVES, ALL MASTERS SEND TO SLAVES */
 	for(int i=0;i<nfbd;++i)
 		fbdry(i)->comm_prepare(boundary::all,0,boundary::master_slave);
 						
@@ -441,7 +440,7 @@ void tet_mesh::match_bdry_numbering() {
 	for(int i=0;i<nfbd;++i)
 		fbdry(i)->comm_wait(boundary::all,0,boundary::master_slave);
 	
-	/* FINAL PART OF SENDING */
+	/* FINAL PART OF SENDING, REPLACE SLAVES BUFFER WITH MASTER BUFFER */
 	for(int i=0;i<nfbd;++i)
 		fbdry(i)->comm_finish(boundary::all,0,boundary::master_slave,boundary::replace);
 
@@ -509,6 +508,7 @@ void tet_mesh::match_bdry_numbering() {
 		}
 	}  
 	
+#define TEST_MATCH
 #ifdef TEST_MATCH
 	for (int i=0;i<nfbd;++i) {
 		if (!fbdry(i)->is_comm()) continue;
@@ -783,9 +783,9 @@ void tet_mesh::partition(class tet_mesh& xin, int npart) {
 		fbdry(i)->create_from_tri();
 	}
 
-	for(i = 0; i < nfbd; ++i) {
-		fbdry(i)->pull_apart_face_boundaries();
-	}
+//	for(i = 0; i < nfbd; ++i) {
+//		fbdry(i)->pull_apart_face_boundaries();
+//	}
 	
 	nebd = 0;	
 	for(i = 0; i < nseg; ++i)

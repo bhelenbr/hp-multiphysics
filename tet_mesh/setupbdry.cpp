@@ -383,7 +383,7 @@ void face_bdry::treeinit() {
 		x2[n] += 0.25*dx;
 	}
 	
-	// treeinit(x1,x2);
+	//treeinit(x1,x2);
 
 	return;
 }
