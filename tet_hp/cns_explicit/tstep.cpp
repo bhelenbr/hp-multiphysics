@@ -85,14 +85,14 @@ void tet_hp_cns_explicit::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 		
-//		if  (std::isnan(norm(umax(Range(1,3)))) { 
-//			*gbl->log << "flow solution has nan's" << std::endl;
-//			output("nan",tecplot);
-//			sim::abort(__LINE__,__FILE__,gbl->log);
-//		}		
-		
-		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
-		
+		if  (std::isnan(umax(1)+umax(2)+umax(3))) { 
+			*gbl->log << "flow solution has nan's" << std::endl;
+			output("nan",tecplot);
+			sim::abort(__LINE__,__FILE__,gbl->log);
+		}		
+		//cout << hmin << ' ' << hmax << endl;
+		pennsylvania_peanut_butter(umax,hmin,tprcn,tau,tstep);
+		tstep*=.1;
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 			 
 	    jcb /= tstep;

@@ -128,8 +128,8 @@ hp_edge_bdry* tet_hp_cns_explicit::getnewedgeobject(int bnum, input_map &bdrydat
  */
 class tet_hp_cns_explicit_ftype {
 	public:
-		static const int ntypes = 6;
-		enum ids {unknown=-1,plain,inflow,outflow,adiabatic,characteristic,applied_stress};
+		static const int ntypes = 7;
+		enum ids {unknown=-1,plain,inflow,outflow,adiabatic,characteristic,applied_stress,specified_flux};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -138,7 +138,7 @@ class tet_hp_cns_explicit_ftype {
 		}
 };
 
-const char tet_hp_cns_explicit_ftype::names[ntypes][40] = {"plain","inflow","outflow","adiabatic","characteristic","applied_stress"};
+const char tet_hp_cns_explicit_ftype::names[ntypes][40] = {"plain","inflow","outflow","adiabatic","characteristic","applied_stress","specified_flux"};
 
 /* FUNCTION TO CREATE BOUNDARY OBJECTS */
 hp_face_bdry* tet_hp_cns_explicit::getnewfaceobject(int bnum, input_map &bdrydata) {
@@ -183,6 +183,10 @@ hp_face_bdry* tet_hp_cns_explicit::getnewfaceobject(int bnum, input_map &bdrydat
 		}
 		case tet_hp_cns_explicit_ftype::applied_stress: {
 			temp = new applied_stress(*this,*fbdry(bnum));
+			break;
+		}
+		case tet_hp_cns_explicit_ftype::specified_flux: {
+			temp = new specified_flux(*this,*fbdry(bnum));
 			break;
 		}
 		default: {

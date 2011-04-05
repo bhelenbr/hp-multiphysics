@@ -192,9 +192,9 @@ void tet_hp::minvrt() {
 		}
 	}
 	
-	FLT	diagcoef = 1.0;
 	if(basis::tet(log2p).p == 2) {
-		basis::tet(log2p).ediag(0) = diagcoef*80.0;//157
+		//basis::tet(log2p).ediag(0) = 80.0;//for fast convergence  maybe 50?
+		basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
 		gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
 		
 		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
@@ -206,8 +206,8 @@ void tet_hp::minvrt() {
 	}
 	
 	if(basis::tet(log2p).p == 3) {
-		basis::tet(log2p).ediag(1) = diagcoef*1000.0;//1890 optimize later
-		basis::tet(log2p).fdiag(0) = diagcoef*3000.0;//5670
+		basis::tet(log2p).ediag(1) = 1000.0;//1890 optimize later
+		basis::tet(log2p).fdiag(0) = 3000.0;//5670
 	}
 	
 	/* APPLY EDGE DIRICHLET B.C.'S */

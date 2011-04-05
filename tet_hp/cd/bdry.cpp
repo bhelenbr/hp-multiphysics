@@ -30,8 +30,8 @@ void dirichlet::tadvance() {
 	
 	/* UPDATE BOUNDARY CONDITION VALUES */
 	for(j=0;j<base.npnt;++j) {
-			v0 = base.pnt(j).gindx;
-			x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
+		v0 = base.pnt(j).gindx;
+		x.ug.v(v0,0) = x.gbl->ibc->f(0,x.pnts(v0),x.gbl->time);
 	}
 //
 //    /*******************/    
@@ -80,53 +80,89 @@ void dirichlet::tadvance() {
 	
 	return;
 }
-//
-//void neumann::rsdl(int stage) {
-//    int j,k,n,v0,v1,sind;
-//    TinyVector<FLT,2> pt,mvel,nrm;
-//
-//    for(j=0;j<base.nseg;++j) {
-//        sind = base.seg(j);
-//        v0 = x.seg(sind).pnt(0);
-//        v1 = x.seg(sind).pnt(1);
-//        
-//        x.crdtocht1d(sind);
-//        for(n=0;n<tri_mesh::ND;++n)
-//            basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(0,0),&x.dcrd(n,0)(0,0));
-//        
-//        x.crdtocht1d(sind,1);
-//        for(n=0;n<tri_mesh::ND;++n)
-//            basis::tri(x.log2p).proj1d(&x.cht(n,0),&x.crd(n)(1,0));
-//        
-//        x.ugtouht1d(sind);
-//        for(n=0;n<x.NV;++n)
-//            basis::tri(x.log2p).proj1d(&x.uht(n)(0),&x.u(n)(0,0));
-//
-//        for(k=0;k<basis::tri(x.log2p).gpx;++k) {
-//            nrm(0) = x.dcrd(1,0)(0,k);
-//            nrm(1) = -x.dcrd(0,0)(0,k);                
-//            for(n=0;n<tri_mesh::ND;++n) {
-//                pt(n) = x.crd(n)(0,k);
-//                mvel(n) = x.gbl->bd(0)*(x.crd(n)(0,k) -x.crd(n)(1,k));
-//            }
-//
-//            x.res(0)(0,k) = RAD(x.crd(0)(0,k))*flux(x.u(0)(0,k),pt,mvel,nrm);
-//        }
-//
-//        for(n=0;n<x.NV;++n)
-//            basis::tri(x.log2p).intgrt1d(&x.lf(n)(0),&x.res(n)(0,0));
-//        
-//        for(n=0;n<x.NV;++n)
-//            x.gbl->res.v(v0,n) += x.lf(n)(0);
-//
-//        for(n=0;n<x.NV;++n)
-//            x.gbl->res.v(v1,n) += x.lf(n)(1);
-//        
-//        for(k=0;k<basis::tri(x.log2p).sm;++k) {
-//            for(n=0;n<x.NV;++n)
-//                x.gbl->res.s(sind,k,n) += x.lf(n)(k+2);
-//        }
-//    }
-//    
-//    return;
-//}
+
+
+void neumann::rsdl(int stage){
+	int sind;
+	FLT sgn,msgn;
+	
+	for(int i=0;i<base.ntri;++i){
+		
+		int find = base.tri(i).gindx;
+		x.ugtouht2d(find);
+		
+		element_rsdl(find,stage);
+
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.tri(find).pnt(0),n) += x.lf(n)(0);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.tri(find).pnt(1),n) += x.lf(n)(1);
+		
+		for(int n=0;n<x.NV;++n)
+			x.gbl->res.v(x.tri(find).pnt(2),n) += x.lf(n)(2);
+		
+		int indx = 3;
+		for(int j=0;j<3;++j) {
+			sind=x.tri(find).seg(j);
+			sgn = x.tri(find).sgn(j);
+			msgn = 1.0;
+			for(int k=0;k<basis::tet(x.log2p).em;++k) {
+				for(int n=0;n<x.NV;++n)
+					x.gbl->res.e(sind,k,n) += msgn*x.lf(n)(indx);
+				msgn *= sgn;
+				++indx;
+			}
+		}
+		
+	    for(int k=0;k<basis::tet(x.log2p).fm;++k) {
+		    for(int n=0;n<x.NV;++n)
+				x.gbl->res.f(find,k,n) += x.lf(n)(indx);
+			++indx;
+		}		
+	}
+	
+	return;
+}
+
+void neumann::element_rsdl(int find,int stage) {
+	int j,k,n;
+	TinyVector<FLT,3> pt,mvel,nrm,vec1,vec2;
+	FLT u,flx;
+	
+	x.lf = 0.0;
+	
+//	x.crdtocht2d(find);
+//	for(n=0;n<tet_mesh::ND;++n)
+//		basis::tet(x.log2p).proj2d(&x.cht(n)(0),&x.crd2d(n)(0)(0),&x.dcrd2d(n)(0)(0)(0),&x.dcrd2d(n)(1)(0)(0),MXGP);
+//	
+//	basis::tet(x.log2p).proj2d(&x.uht(0)(0),&x.u2d(0)(0)(0),MXGP);
+//	
+//	for(j=0;j<basis::tet(x.log2p).gpx;++j) {
+//		for(k=0;k<basis::tet(x.log2p).gpy;++k) {
+//			/* co-variant vectors: d vec(x)/dxi crossed with d vec(x)/deta */
+//			for(n=0;n<3;++n){
+//				vec1(n)=x.dcrd2d(n)(0)(j)(k);
+//				vec2(n)=x.dcrd2d(n)(1)(j)(k);
+//			}
+//			nrm=cross(vec1,vec2);
+//			
+//			for(n=0;n<tet_mesh::ND;++n) {
+//				pt(n) = x.crd2d(n)(j)(k);
+//				mvel(n) = 0.0;//x.gbl->bd(0)*(x.crd2d(n)(j)(k) -dxdt(x.log2p,j)(n)(j)(k));
+//			}
+//			
+//			u = x.u2d(0)(j)(k);
+//			
+//			x.res2d(0)(j)(k) = flux(u,pt,mvel,nrm);
+//			
+//		}
+//	}
+	
+	
+//	basis::tet(x.log2p).intgrt2d(&x.lf(0)(0),&x.res2d(0)(0)(0),MXGP);
+	
+	x.lf = 0.0;
+	
+	return;
+}

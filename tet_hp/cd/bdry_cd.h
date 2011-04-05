@@ -80,7 +80,8 @@ namespace bdry_cd {
 			neumann(tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(xin,bin), x(xin) {mytype = "neumann";}
 			neumann(const neumann& inbdry, tet_hp_cd &xin, face_bdry &bin) : hp_face_bdry(inbdry,xin,bin), x(xin) {}
 			neumann* create(tet_hp& xin, face_bdry &bin) const {return new neumann(*this,dynamic_cast<tet_hp_cd&>(xin),bin);}
-//            void rsdl(int stage);
+            void rsdl(int stage);
+			void element_rsdl(int find,int stage);
 	};
 
 

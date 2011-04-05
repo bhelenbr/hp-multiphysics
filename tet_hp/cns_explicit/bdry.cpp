@@ -167,12 +167,28 @@ void inflow::fdirichlet() {
 
 void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 	
-	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	FLT KE = 0.5*(pow(ibc->f(1, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
+				  +pow(ibc->f(2, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
+				  +pow(ibc->f(3, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0));
 	
-	/* EVERYTHING ELSE DOESN'T MATTER */
-	for (int n=1;n<x.NV;++n)
-		flx(n) = 0.0;
+	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.gbl->gamma-1.0);
+	
+	FLT u1 = u(1)/u(0);
+	FLT u2 = u(2)/u(0);
+	FLT u3 = u(3)/u(0);
+	FLT RT = (x.gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
+	
+	FLT rho = pr/RT;
+	
+	flx(0) = rho*(u1*norm(0)+u2*norm(1)+u3*norm(2));	
+
+	/* XYZ MOMENTUM */
+	for (int n=0;n<tet_mesh::ND;++n)
+		flx(n+1) = 0.0;
+	
+	/* ENERGY EQUATION */
+	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
+	flx(4) = h*flx(0);
 	
 	return;
 }
@@ -366,25 +382,76 @@ void applied_stress::init(input_map& inmap,void* gbl_in) {
 
 void applied_stress::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
 	
-	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	
+	FLT KE = 0.5*(pow(ibc->f(1, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
+				  +pow(ibc->f(2, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0)
+				  +pow(ibc->f(3, xpt, x.gbl->time)/ibc->f(0, xpt, x.gbl->time),2.0));
+	
+	FLT pr = (ibc->f(4, xpt, x.gbl->time)-ibc->f(0, xpt, x.gbl->time)*KE)*(x.gbl->gamma-1.0);
+	
+	FLT u1 = u(1)/u(0);
+	FLT u2 = u(2)/u(0);
+	FLT u3 = u(3)/u(0);
+	FLT RT = (x.gbl->gamma-1.0)*(u(4)-0.5*u(0)*(u1*u1+u2*u2+u3*u3))/u(0);
+
+	FLT rho = pr/RT;
+	
+	flx(0) = rho*(u1*norm(0)+u2*norm(1)+u3*norm(2));
 	
 	FLT length = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
+		
 	/* XYZ MOMENTUM */
 #ifdef INERTIALESS
 	for (int n=0;n<tet_mesh::ND;++n)
-		flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+		flx(n+1) = -stress(n).Eval(xpt,x.gbl->time)*length+pr*norm(n);
 #else
-	for (int n=0;n<tet_mesh::ND;++n)
-		flx(n+1) = flx(0)*u(n+1) -stress(n).Eval(xpt,x.gbl->time)*length +ibc->f(0, xpt, x.gbl->time)*norm(n);
+	
+	flx(1) = flx(0)*u1+pr*norm(0)-stress(0).Eval(xpt,x.gbl->time)*length;
+	flx(2) = flx(0)*u2+pr*norm(1)-stress(1).Eval(xpt,x.gbl->time)*length;
+	flx(3) = flx(0)*u3+pr*norm(2)-stress(2).Eval(xpt,x.gbl->time)*length;
+
 #endif
 	
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));
-	flx(x.NV-1) = h*flx(0)-stress(3).Eval(xpt,x.gbl->time)*length;		
+	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(u1*u1+u2*u2+u3*u3);
+	flx(4) = h*flx(0)-stress(3).Eval(xpt,x.gbl->time)*length;		
 	
 	return;
 }
 
+void specified_flux::init(input_map& inmap,void* gbl_in) {
+	std::string keyword;
+	std::ostringstream nstr;
+	
+	neumann::init(inmap,gbl_in);
+	
+	stress.resize(x.NV);
+	for(int n=0;n<x.NV;++n) {
+		nstr.str("");
+		nstr << base.idprefix << "_stress" << n << std::flush;
+		if (inmap.find(nstr.str()) != inmap.end()) {
+			stress(n).init(inmap,nstr.str());
+		}
+		else {
+			*x.gbl->log << "couldn't find stress function " << nstr.str() << '\n';
+			exit(1);
+		}
+	}
+	
+	return;
+}
+
+
+void specified_flux::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
+	
+	
+	FLT length = sqrt(norm(0)*norm(0)+norm(1)*norm(1)+norm(2)*norm(2));
+	
+	for (int n=0; n<x.NV; ++n) 
+		flx(n) = stress(n).Eval(xpt,x.gbl->time)*length;
+	
+	
+	return;
+}
 
 

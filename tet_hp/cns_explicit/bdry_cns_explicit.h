@@ -105,9 +105,9 @@ namespace bdry_cns_explicit {
 	public:
 		inflow(tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(xin,bin) {
 			mytype = "inflow";
-			ndirichlets = x.NV-1;
-			dirichlets.resize(x.NV-1);
-			for (int n=0;n<x.NV-1;++n)
+			ndirichlets = x.NV;// not correct just for testing bug fix me temp
+			dirichlets.resize(ndirichlets);
+			for (int n=0;n<x.NV;++n)
 				dirichlets(n) = n;
 		}
 		inflow(const inflow& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
@@ -172,6 +172,18 @@ namespace bdry_cns_explicit {
 			applied_stress(const applied_stress& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
 			applied_stress* create(tet_hp& xin, face_bdry &bin) const {return new applied_stress(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
 			void init(input_map& inmap,void* gbl_in);
+	};
+	
+	class specified_flux : public neumann {
+		Array<symbolic_function<3>,1> stress;
+		
+	protected:
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx);
+	public:
+		specified_flux(tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(xin,bin) {mytype = "specified_flux";}
+		specified_flux(const specified_flux& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), stress(inbdry.stress) {}
+		specified_flux* create(tet_hp& xin, face_bdry &bin) const {return new specified_flux(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
+		void init(input_map& inmap,void* gbl_in);
 	};
 	
 }

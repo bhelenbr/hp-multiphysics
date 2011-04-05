@@ -151,8 +151,8 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 321315761;
-			PBXWorkspaceStateSaveDate = 321315761;
+			PBXPerProjectTemplateStateSaveDate = 323723940;
+			PBXWorkspaceStateSaveDate = 323723940;
 		};
 		perUserProjectItems = {
 			95018AB00FDB1DCA004F323A = 95018AB00FDB1DCA004F323A /* PBXTextBookmark */;
@@ -201,7 +201,7 @@
 			958664E512EF1AC600B7D250 = 958664E512EF1AC600B7D250 /* PBXTextBookmark */;
 			95903EF60E2BF62A007F1F9B = 95903EF60E2BF62A007F1F9B /* PBXTextBookmark */;
 			95912BB812DCE6D8001926DD = 95912BB812DCE6D8001926DD /* PlistBookmark */;
-			9591E7181326E3B300002E98 /* PBXTextBookmark */ = 9591E7181326E3B300002E98 /* PBXTextBookmark */;
+			9591E7181326E3B300002E98 = 9591E7181326E3B300002E98 /* PBXTextBookmark */;
 			95970EE31090F04800B53498 = 95970EE31090F04800B53498 /* PBXTextBookmark */;
 			9598B2F312F21EC30092D01D = 9598B2F312F21EC30092D01D /* PBXTextBookmark */;
 			9598B32B12F2253F0092D01D = 9598B32B12F2253F0092D01D /* PBXTextBookmark */;
@@ -229,6 +229,7 @@
 			95A221D112F88D410042CADD = 95A221D112F88D410042CADD /* PBXTextBookmark */;
 			95A2247612F8B5CC0042CADD = 95A2247612F8B5CC0042CADD /* PBXTextBookmark */;
 			95A2247912F8B5CC0042CADD = 95A2247912F8B5CC0042CADD /* PBXTextBookmark */;
+			95A4D705134BA2BD0053D522 /* PBXTextBookmark */ = 95A4D705134BA2BD0053D522 /* PBXTextBookmark */;
 			95A6421F109FE9680094F7AF = 95A6421F109FE9680094F7AF /* PBXTextBookmark */;
 			95A64220109FE9680094F7AF = 95A64220109FE9680094F7AF /* PBXTextBookmark */;
 			95A64222109FE9680094F7AF = 95A64222109FE9680094F7AF /* PBXTextBookmark */;
@@ -503,7 +504,7 @@
 	};
 	95050DA71325425100282834 /* tstep.cpp */ = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {894, 4069}}";
+			sepNavIntBoundsRect = "{{0, 0}, {894, 4082}}";
 			sepNavSelRange = "{141, 0}";
 			sepNavVisRange = "{0, 1932}";
 		};
@@ -1660,6 +1661,16 @@
 		name = applics.h;
 		path = /Users/michaelbrazell/packages/include/blitz/applics.h;
 		sourceTree = "<absolute>";
+	};
+	95A4D705134BA2BD0053D522 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 95050DA71325425100282834 /* tstep.cpp */;
+		name = "tstep.cpp: 8";
+		rLen = 0;
+		rLoc = 141;
+		rType = 0;
+		vrLen = 1932;
+		vrLoc = 0;
 	};
 	95A6421E109FE9680094F7AF /* dsp_blas3.c */ = {
 		isa = PBXFileReference;

@@ -25,17 +25,17 @@ void tet_hp::conjugate_gradient() {
 	p.f.resize(maxvst,fm0,NV);
 	p.i.resize(maxvst,im0,NV);
 	
-	struct vefi z;
-	z.v.resize(maxvst,NV);
-	z.e.resize(maxvst,em0,NV);
-	z.f.resize(maxvst,fm0,NV);
-	z.i.resize(maxvst,im0,NV);
-	
-	struct vefi Ap;
-	Ap.v.resize(maxvst,NV);
-	Ap.e.resize(maxvst,em0,NV);
-	Ap.f.resize(maxvst,fm0,NV);
-	Ap.i.resize(maxvst,im0,NV);
+	struct vefi z(p),Ap(p);
+//	z.v.resize(maxvst,NV);
+//	z.e.resize(maxvst,em0,NV);
+//	z.f.resize(maxvst,fm0,NV);
+//	z.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi Ap;
+//	Ap.v.resize(maxvst,NV);
+//	Ap.e.resize(maxvst,em0,NV);
+//	Ap.f.resize(maxvst,fm0,NV);
+//	Ap.i.resize(maxvst,im0,NV);
 	
 	rsdl();
 
@@ -113,47 +113,47 @@ void tet_hp::bicgstab() {
 	p.f.resize(maxvst,fm0,NV);
 	p.i.resize(maxvst,im0,NV);
 	
-	struct vefi phat;
-	phat.v.resize(maxvst,NV);
-	phat.e.resize(maxvst,em0,NV);
-	phat.f.resize(maxvst,fm0,NV);
-	phat.i.resize(maxvst,im0,NV);
-	
-	struct vefi s;
-	s.v.resize(maxvst,NV);
-	s.e.resize(maxvst,em0,NV);
-	s.f.resize(maxvst,fm0,NV);
-	s.i.resize(maxvst,im0,NV);
-	
-	struct vefi shat;
-	shat.v.resize(maxvst,NV);
-	shat.e.resize(maxvst,em0,NV);
-	shat.f.resize(maxvst,fm0,NV);
-	shat.i.resize(maxvst,im0,NV);
-	
-	struct vefi v;
-	v.v.resize(maxvst,NV);
-	v.e.resize(maxvst,em0,NV);
-	v.f.resize(maxvst,fm0,NV);
-	v.i.resize(maxvst,im0,NV);
-	
-	struct vefi vhat;
-	vhat.v.resize(maxvst,NV);
-	vhat.e.resize(maxvst,em0,NV);
-	vhat.f.resize(maxvst,fm0,NV);
-	vhat.i.resize(maxvst,im0,NV);
-	
-	struct vefi t;
-	t.v.resize(maxvst,NV);
-	t.e.resize(maxvst,em0,NV);
-	t.f.resize(maxvst,fm0,NV);
-	t.i.resize(maxvst,im0,NV);
-	
-	struct vefi rtilde;
-	rtilde.v.resize(maxvst,NV);
-	rtilde.e.resize(maxvst,em0,NV);
-	rtilde.f.resize(maxvst,fm0,NV);
-	rtilde.i.resize(maxvst,im0,NV);
+	struct vefi phat(p),s(p),shat(p),v(p),vhat(p),t(p),rtilde(p);
+//	phat.v.resize(maxvst,NV);
+//	phat.e.resize(maxvst,em0,NV);
+//	phat.f.resize(maxvst,fm0,NV);
+//	phat.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi s;
+//	s.v.resize(maxvst,NV);
+//	s.e.resize(maxvst,em0,NV);
+//	s.f.resize(maxvst,fm0,NV);
+//	s.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi shat;
+//	shat.v.resize(maxvst,NV);
+//	shat.e.resize(maxvst,em0,NV);
+//	shat.f.resize(maxvst,fm0,NV);
+//	shat.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi v;
+//	v.v.resize(maxvst,NV);
+//	v.e.resize(maxvst,em0,NV);
+//	v.f.resize(maxvst,fm0,NV);
+//	v.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi vhat;
+//	vhat.v.resize(maxvst,NV);
+//	vhat.e.resize(maxvst,em0,NV);
+//	vhat.f.resize(maxvst,fm0,NV);
+//	vhat.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi t;
+//	t.v.resize(maxvst,NV);
+//	t.e.resize(maxvst,em0,NV);
+//	t.f.resize(maxvst,fm0,NV);
+//	t.i.resize(maxvst,im0,NV);
+//	
+//	struct vefi rtilde;
+//	rtilde.v.resize(maxvst,NV);
+//	rtilde.e.resize(maxvst,em0,NV);
+//	rtilde.f.resize(maxvst,fm0,NV);
+//	rtilde.i.resize(maxvst,im0,NV);
 	
 	rsdl();
 	

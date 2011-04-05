@@ -3,6 +3,7 @@
 #include <utilities.h>
 #include "../hp_boundary.h"
 
+//#define TIMEACCURATE
 
 void tet_hp_cd::setup_preconditioner() {
 	int tind,find,i,j,side,p0,p1,p2,v0;
@@ -77,16 +78,18 @@ void tet_hp_cd::setup_preconditioner() {
 		/* SET UP DIAGONAL PRECONDITIONER */
 #ifdef TIMEACCURATE
 		dtstari = MAX(lam1/h,dtstari);
+		
 	}
 	
-	printf("#iterative to physical time step ratio: %f\n",gbl->bd(0)/dtstari);
+	*gbl->log << "#iterative to physical time step ratio: " << gbl->bd(0)/dtstari << ' ' << dtstari << endl;
 		
 	for(tind=0;tind<ntet;++tind) {
 		v = tet(tind).pnt;
-		jcb = tet(tind).vol*dtstari/8;
+		jcb = 0.125*tet(tind).vol*dtstari;
 #endif
-
-	
+		/* explicit */
+		//jcb = 0.125*tet(tind).vol*12000.0;
+		
 		gbl->iprcn(tind,0) = jcb; 
 			
 		for(i=0;i<4;++i) 
