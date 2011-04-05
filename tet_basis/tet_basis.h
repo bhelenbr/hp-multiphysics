@@ -128,7 +128,7 @@ class tet_basis {
 		/* PROJECT WITH R & S DERIVATIVES */
 		void proj(FLT *lin1, FLT *f1, FLT *dx, FLT *dy, FLT *dz, int stridex, int stridey);
 		/* PROJECT ONLY VALUE */
-    void proj(FLT *lin1, FLT *f1, int stridex, int stridey);
+		void proj(FLT *lin1, FLT *f1, int stridex, int stridey);
 		/* PROJECT A LINEAR FUNCTION */
 		void proj(FLT u1, FLT u2, FLT u3, FLT u4, FLT *f, int stridex, int stridey);
 		/* PROJECT USING VERTEX/EDGE/FACE MODES WITH R & S DERIVATIVES */
@@ -190,7 +190,7 @@ class tet_basis {
 			ptprobe(nv, f, lin, stride);
 		}
       
-      void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT *dz1, FLT r, FLT s, FLT t, FLT *lin1, int stride);
+		void ptprobe(int nv, FLT *f1, FLT *dx1, FLT *dy1, FLT *dz1, FLT r, FLT s, FLT t, FLT *lin1, int stride);
       
 //        {
 //         ptvalues_deriv(2.0*(1+r)/(-s-t+10.*EPSILON) -1.0, 2.0*(1+s)/(1-t+10.*EPSILON)-1.0, t);
