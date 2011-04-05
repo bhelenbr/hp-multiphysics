@@ -50,7 +50,6 @@
 		95458DF00DEDDA9600E6AFA1 /* update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* update.cpp */; };
 		95668DA80DA2AA87006358BE /* l2error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADC091AF516002BAA09 /* l2error.cpp */; };
 		957FD0D610448B2E0093F761 /* ptprobe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE5091AF516002BAA09 /* ptprobe.cpp */; };
-		958664B312EE272700B7D250 /* sparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C73E1F105EA89D00637BEE /* sparse.cpp */; };
 		958C01B612E4B1C200350BEF /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		958C01B712E4B1C200350BEF /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
 		958C01B812E4B1C200350BEF /* tobasis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEE091AF516002BAA09 /* tobasis.cpp */; };
@@ -101,7 +100,6 @@
 		958C01E712E4B1C200350BEF /* tet_hp.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40AF0091AF516002BAA09 /* tet_hp.h */; };
 		958C01E812E4B1C200350BEF /* hp_boundary.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6FB40ADA091AF516002BAA09 /* hp_boundary.h */; };
 		959FD3400E313418000EF952 /* tadvance.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEC091AF516002BAA09 /* tadvance.cpp */; };
-		95BA7C2C12DBA597000C3AFF /* krylov.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95BA7C2B12DBA597000C3AFF /* krylov.cpp */; };
 		95C1233C12EF73290001FB2B /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278AA10F67FF400759C42 /* allocate.cpp */; };
 		95C1233D12EF73290001FB2B /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B210F67FF400759C42 /* tstep.cpp */; };
 		95C1233E12EF732A0001FB2B /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95C278B010F67FF400759C42 /* rsdl.cpp */; };
@@ -739,7 +737,6 @@
 				95D4086C11A303B7009F34F7 /* getnewbdry.cpp in Sources */,
 				95D4086D11A303B7009F34F7 /* getnewibc.cpp in Sources */,
 				95D4087611A3040C009F34F7 /* length.cpp in Sources */,
-				95BA7C2C12DBA597000C3AFF /* krylov.cpp in Sources */,
 				95C8AFD612EDEF57008CF6CA /* allocate.cpp in Sources */,
 				95C8AFD712EDEF58008CF6CA /* tstep.cpp in Sources */,
 				95C8AFD812EDEF59008CF6CA /* rsdl.cpp in Sources */,
@@ -747,7 +744,6 @@
 				95C8AFDA12EDEF5C008CF6CA /* bdry.cpp in Sources */,
 				95C8AFDB12EDEF5D008CF6CA /* getnewbdry.cpp in Sources */,
 				95C8AFDC12EDEF5D008CF6CA /* getnewibc.cpp in Sources */,
-				958664B312EE272700B7D250 /* sparse.cpp in Sources */,
 				95050DA91325425100282834 /* allocate.cpp in Sources */,
 				95050DAA1325425100282834 /* bdry.cpp in Sources */,
 				95050DAB1325425100282834 /* getnewbdry.cpp in Sources */,
