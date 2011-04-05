@@ -246,6 +246,7 @@
 		6F33E673086787BF0029F2D6 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_LOCATION = NO;
 				DSTROOT = "/tmp/$(PROJECT_NAME).dst";
@@ -263,6 +264,7 @@
 				INSTALL_PATH = "$(HOME)/lib";
 				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "";
 				PREBINDING = NO;
@@ -279,6 +281,7 @@
 		6F33E674086787BF0029F2D6 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = YES;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = "$(HOME)/Codes";
@@ -293,6 +296,7 @@
 				INSTALL_PATH = /lib;
 				LIBRARY_SEARCH_PATHS = "";
 				LIBRARY_STYLE = STATIC;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = (
 					"-falign-loops=16",
 					"-funroll-loops",
