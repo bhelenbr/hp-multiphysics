@@ -8,7 +8,7 @@
  */
 
 #include "tet_hp_cns_explicit.h"
-#include "bdry_cns.h"
+#include "bdry_cns_explicit.h"
 #include <tet_boundary.h>
 
 namespace ibc_cns_explicit {
