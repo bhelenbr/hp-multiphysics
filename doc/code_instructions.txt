@@ -29,7 +29,6 @@ METHOD 1 - using CVS to download
 	[make install]
 (
 if you get an error after 'make lib' saying " 'labs' is not included in 'std'", do the following:
-
 	[nano blitz/func.h]
 at the top of the file that has the error
 	[#include <cstdlib>]
@@ -38,6 +37,14 @@ at the line where the error occured in this same file, change
 to
 	"{ return (labs)(a); }"
 (NOTE: 'labs' may be written as 'abs' or 'fabs'; keep it as whichever version it was originally in, just delete 'BZ_MATHFN_SCOPE')
+)
+
+( 
+To eliminate warnings:
+change blitz/array/reduce.h 181
+add "return T_numtype();"
+change blitz/indexexpr.h 158
+add "return T_numtype();"
 )
 
 ###################################################################
@@ -82,7 +89,7 @@ unzip, configure
 ######### MESH PARTITIONING LIBRARY #############
 ###################################################################
 
-Download METIS (4.01 most recent) at
+Download PMETIS (4.01 most recent) at
 	http://glaros.dtc.umn.edu/gkhome/metis/metis/download
 move metis-4.0.tar to Packages
 	[tar xvf metis-4.0.tar]
@@ -95,6 +102,17 @@ move metis-4.0.tar to Packages
 	[mv libmetis.a ../lib]
 	[cd ..]
 
+	http://glaros.dtc.umn.edu/gkhome/metis/parmetis/download
+	move metis-4.0.tar to Packages
+	[tar zxvf ParMetis-3.1.1.tar.gz]
+	[cd ParMetis-3.1.1]
+	On cluster change makefile CC line to
+	CC = /opt/mpich/myrinet/gnu/bin/mpicc
+	[make]
+	[cp lib* ../lib]
+	[cp parmetis.h ../include/]
+	[cd ..]
+
 
 ###################################################################
 ######## USER SPACE THREADS LIBRARY #############
@@ -105,10 +123,7 @@ Download Pth (2.0.7 is most recent) at
 move pth-2.0.7.tar.gz to Packages
 	[tar zxvf pth-2.0.7.tar.gz]
 	[cd pth-2.0.7]
-DONT USE THIS ONE
 	[./configure --prefix=${HOME}/Packages --enable-shared=no --enable-optimize]
-USE THIS ONE
-	[make ]
 	[make]
 	[make install]
 	[cd ..]
@@ -121,8 +136,8 @@ USE THIS ONE
 Download Boost at
 	http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041
 unpack in packages folder
-	[tar zxvf boost_1_43_0.tar.gz]
-	[cd boost_1_34_1]
+	[tar zxvf boost_1_46_1.tar.gz]
+	[cd boost_1_46_1]
 	[./bootstrap.sh --with-libraries=thread --prefix=${HOME}/Packages]
 	[./bjam install]
 	[cd ..]
@@ -158,10 +173,10 @@ move to Packages, extract
 # with out downloading parmetis
 ./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-mpi-include=/usr/include --with-mpi-lib=libmpi --download-superlu_dist=1 --with-x=0 --with-parmetis-include=${HOME}/Packages/include  --with-parmetis-dir=${HOME}/Packages/ParMetis-3.1
 # on cluster
-./config/configure.py --prefix=${HOME}/Packages --with-fortran=0 --with-x=0 --download-parmetis=1 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/
+./config/configure.py --prefix=/export/apps --with-fortran=0 --with-x=0 --download-superlu_dist=1  --with-mpi-dir=/opt/mpich/myrinet/gnu/ --with-parmetis-dir=/export/apps
 
 # READ & COPY OUTPUT TO KNOW WHAT TO DO NEXT. IT SHOULD BE SOMETHING LIKE THIS:
-make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug al
+make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug ala
 make PETSC_DIR=/Users/bhelenbr/Packages/petsc-3.1-p3 PETSC_ARCH=darwin10.3.1-c-debug installPETSC_DIR=/Users/helenbrk/Packages;
 make PETSC_DIR=/Users/bhelenbr/Packages test
 
@@ -174,11 +189,15 @@ make PETSC_DIR=/Users/bhelenbr/Packages test
 #### NOT NECESSARY FOR 2D CODE ###
 #### (FOR TETS ONLY) FOR MADLIB ####
 
-	[svn checkout https://braque.mema.ucl.ac.be/svn/MeshAdapt]
-	[cd MeshAdapt]
+	[svn co https://svn.uclouvain.be/repos/MAdLib/trunk MAdLib]
+	[cd MAdLib]
+	Read README
+	[mkdir build; cd build]
+	export CMAKE_PREFIX_PATH=/export/apps:/export/apps/lib:/export/apps/include:/opt/mpich/myrinet/gnu
+	[cmake ..]
+	[make depend]
+	[make -j 2]
 	[make -f Makefile.svn]
-	[./configure --prefix=${HOME}/Packages --includedir=${HOME}/Packages/include/MAdLib]
-	[make]
 	[make install]
 
 
@@ -230,9 +249,14 @@ NOW DOWNLOAD MY CODE
 now make all of my stuff:
 ###################################################################	
 #### UNIX ####
-make -j 2  (For 2 processor machine)
-or for just tri_hp stuff
-make -j 2 tri_hp
+# On cares modify your .bash_profile file in your home directory by 
+# adding the location of the packages directory:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/share/apps/lib
+
+make -j 2 tri_hp (For 2 processor machine)
+or to do everything including 3D stuff too
+make -j 2  
+
 ###################################################################
 
 ###################################################################
