@@ -11,6 +11,7 @@
 #define _tet_hp_h_
 
 //#define NODAL
+//#define SUPERLU
 
 #ifdef NODAL
 #include <tet_nodal_basis.h>
@@ -21,7 +22,9 @@
 #include <tet_mesh.h>
 #include <float.h>
 #include <blocks.h>
+#ifdef SUPERLU
 #include "slu_ddefs.h"
+#endif
 
 #ifdef petsc
 #include <petscksp.h>
@@ -259,7 +262,8 @@ class tet_hp : public tet_mesh  {
 
 		/** Print errors */
 		FLT maxres();
-	
+
+#ifdef SUPERLU
 		/** Sparse stuff */
 		void create_jacobian(bool jac_tran = true);
 		void create_local_jacobian_matrix(int tind, Array<FLT,2> &K);
@@ -319,7 +323,7 @@ class tet_hp : public tet_mesh  {
 
 #endif
 	
-
+#endif
 
 
 		
