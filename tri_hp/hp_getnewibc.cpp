@@ -328,7 +328,7 @@ class output_contour : public tri_hp_helper {
 
 			}
 			out.close();
-			*x.gbl->log << "Contour norm: " << sqrt(norm_sum)/nintsct << '\n';            
+			*x.gbl->log << "Contour norm: " << sqrt(norm_sum/nintsct) << '\n';            
 			return;
 		}
 };
