@@ -191,12 +191,8 @@ void tri_hp::init(input_map& inmap, void *gin) {
 		gbl->tprcn_ut.resize(maxpst,NV,NV);
 	}
 
-#ifndef petsc
 	double CFLdflt[4] = {2.5, 1.5, 1.0, 0.5};
 	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl.data(),log2pmax+1)) inmap.getwdefault("cfl",gbl->cfl.data(),log2pmax+1,CFLdflt); 
-#else
-	if (!inmap.get(gbl->idprefix +"_cfl",gbl->cfl(0))) inmap.getwdefault("cfl",gbl->cfl(0),1.0);
-#endif
 
 	/***************************************************/
 	/* RESTART SEQUENCE OR INITIAL CONDITION SEQUENCE */
@@ -231,6 +227,7 @@ void tri_hp::init(input_map& inmap, void *gin) {
 			hp_ebdry(i)->adapt_storage = gbl->pstr->hp_ebdry(i);
 	}
 #ifdef petsc
+	inmap.getwdefault("under_relaxation",under_relax,1.0);
 	string petsc_options;
 	if (inmap.getline("petsc",petsc_options)) {
 		PetscErrorCode err = PetscOptionsInsertString(petsc_options.c_str());
