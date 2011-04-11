@@ -190,6 +190,7 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 	
 	
 	/* This is the new way */
+//#define LOW_NOISE_DOT
 //	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 //	Array<FLT,1> scaling;
 //	scaling.resize(BASE::NV);
@@ -201,8 +202,15 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 //	}
 //	
 //	int lgpx = basis::tri(BASE::log2p)->gpx(), lgpn = basis::tri(BASE::log2p)->gpn();
-//	FLT cjcb;
+//	FLT dotp, dotp_recv;
+//	Array<FLT,1> low_noise_dot(BASE::ntri);
+//	ugstore.v.reference(BASE::ugbd(1).v);
+//	ugstore.s.reference(BASE::ugbd(1).s);
+//	ugstore.i.reference(BASE::ugbd(1).i);
+//
 //	for(int l=0;l<nmodes;++l) {
+//		dotp = 0.0;
+//		
 //		BASE::ugbd(1).v.reference(modes(l).v);
 //		BASE::ugbd(1).s.reference(modes(l).s);
 //		BASE::ugbd(1).i.reference(modes(l).i);
@@ -225,24 +233,33 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 //			for(int n=0;n<BASE::NV;++n)
 //				basis::tri(BASE::log2p)->proj(&BASE::uht(n)(0),&BASE::res(n)(0,0),MXGP);
 //			
-//			for(int i=0;i<lgpx;++i) {
+//			FLT tmp_store = 0.0;
+//			for(i=0;i<lgpx;++i) {
 //				for(int j=0;j<lgpn;++j) {
-//					cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
+//					FLT cjcb = RAD(BASE::crd(0)(i,j))*basis::tri(BASE::log2p)->wtx(i)*basis::tri(BASE::log2p)->wtn(j)*(BASE::dcrd(0,0)(i,j)*BASE::dcrd(1,1)(i,j) -BASE::dcrd(1,0)(i,j)*BASE::dcrd(0,1)(i,j));
 //					for(int n=0;n<BASE::NV;++n) {
-//						coeffs(l) += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
+//						tmp_store += BASE::u(n)(i,j)*BASE::res(n)(i,j)*scaling(n)*cjcb;
 //					}
 //				}
 //			}
+//			low_noise_dot(tind) = tmp_store;
+//#ifndef LOW_NOISE_DOT
+//			dotp += tmp_store;
+//#endif
 //		}
+//#ifdef LOW_NOISE_DOT
+//		/* BALANCED ADDITION FOR MINIMAL ROUNDOFF */
+//		int halfcount,remainder;
+//		for (remainder=BASE::ntri % 2, halfcount = BASE::ntri/2; halfcount>0; remainder = halfcount % 2, halfcount /= 2) {
+//			for (int tind=0;tind<halfcount;++tind) 
+//				low_noise_dot(tind) += low_noise_dot(tind+halfcount);
+//			if (remainder) low_noise_dot(halfcount-1) += low_noise_dot(2*halfcount);
+//		}
+//		dotp = low_noise_dot(0);
+//#endif
+//		sim::blks.allreduce(&dotp,&dotp_recv,1,blocks::flt_msg,blocks::sum,pod_id);
+//		coeffs(l) = dotp_recv;
 //	}
-//	BASE::ugbd(1).v.reference(ugstore.v);
-//	BASE::ugbd(1).s.reference(ugstore.s);
-//	BASE::ugbd(1).i.reference(ugstore.i);
-//	
-//	Array<FLT,1> coeffs_recv(tmodes);
-//	coeffs_recv = 0.0;
-//	sim::blks.allreduce(coeffs.data(),coeffs_recv.data(),nmodes,blocks::flt_msg,blocks::sum);
-//	coeffs = coeffs_recv;
 //	
 //	/* CONSTRUCT INITIAL SOLUTION DESCRIPTION */
 //	BASE::ug.v(Range(0,BASE::npnt-1)) = 0.;
@@ -254,11 +271,13 @@ template<class BASE> void pod_simulate<BASE>::init(input_map& input, void *gin) 
 //		BASE::ug.s(Range(0,BASE::nseg-1)) += coeffs(l)*modes(l).s(Range(0,BASE::nseg-1));
 //		BASE::ug.i(Range(0,BASE::ntri-1)) += coeffs(l)*modes(l).i(Range(0,BASE::ntri-1));
 //	}
-//	bin.close();
-	/* end of new way */
+//	
+//	BASE::ugbd(1).v.reference(ugstore.v);
+//	BASE::ugbd(1).s.reference(ugstore.s);
+//	BASE::ugbd(1).i.reference(ugstore.i);
+//	/* end of new way */
 
-
-
+	*BASE::gbl->log << coeffs << std::endl;
 
 
 #ifdef POD_BDRY
