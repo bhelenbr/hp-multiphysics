@@ -23,9 +23,18 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 		}
 		case(tri_hp::tecplot): {
 			if (!report_flag) return;
+			
+			std::ostringstream fname;
+			fname << base.idprefix << '_' << x.gbl->tstep << ".dat";
+			
+			std::ofstream fout;
+			fout.open(fname.str().c_str());
+			
+			fout << "VARIABLES=\"S\",\"X\",\"Y\",\"CFLUX0\",\"DLUX0\",\"CFLUX1\",\"DLUX1\",\"CFLUX2\",\"DLUX2\",\nTITLE = " << base.idprefix << '\n'<< "ZONE\n";
 
 			conv_flux = 0.0;
 			diff_flux = 0.0;
+			Array<FLT,1> lconv_flux(x.NV),ldiff_flux(x.NV);
 			moment = 0.0;
 			circumference = 0.0;
 			circulation = 0.0;
@@ -87,16 +96,19 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					visc[2][2][1][0] =  x.cjcb(0,i)*(x.dcrd(1,1)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,1)(0,i)*x.dcrd(0,0)(0,i));
 					visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 
-					for (n=tri_mesh::ND;n<x.NV-1;++n) 
-						diff_flux(n) -= x.gbl->D(n)/x.gbl->mu*basis::tri(x.log2p)->wtx(i)*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
-					diff_flux(0) -=    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
+					for (n=tri_mesh::ND;n<x.NV-1;++n) 
+						ldiff_flux(n) = x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
+
+					ldiff_flux(0) =    (-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
 									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-					diff_flux(1) -=    basis::tri(x.log2p)->wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+					ldiff_flux(1) =    ( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
 									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
 									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
 
+					diff_flux -= basis::tri(x.log2p)->wtx(i)*ldiff_flux;
+					ldiff_flux /= jcb;
 
 					norm(0) = x.dcrd(1,0)(0,i);
 					norm(1) = -x.dcrd(0,0)(0,i);                
@@ -109,18 +121,29 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
 
-					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
-					conv_flux(2) -= convect;
-					conv_flux(0) -= x.u(0)(0,i)*convect;
-					conv_flux(1) -= x.u(1)(0,i)*convect;
+					convect = RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
+					lconv_flux(2) = convect;
+					lconv_flux(0) = x.u(0)(0,i)*convect;
+					lconv_flux(1) = x.u(1)(0,i)*convect;
+					
+					conv_flux -= lconv_flux*basis::tri(x.log2p)->wtx(i);
+					lconv_flux /= jcb;
 
 #ifdef L2_ERROR
 					xpt(0) = x.crd(0)(0,i);
 					xpt(1) = x.crd(1)(0,i);
 					l2error += jcb*l2norm.Eval(xpt,x.gbl->time);
 #endif
+					
+					fout << circumference << ' ' << x.crd(0)(0,i) << ' ' << x.crd(1)(0,i) << ' ';
+					for(n=0;n<x.NV;++n)
+						fout << lconv_flux(n) << ' ' << ldiff_flux(n) << ' ';
+					fout << std::endl;
+
 				}	
 			} while (++ind < base.nseg);
+			fout.close();
+			
 			streamsize oldprecision = (*x.gbl->log).precision(10);
 			*x.gbl->log << base.idprefix << " circumference: " << circumference << std::endl;
 			*x.gbl->log << base.idprefix << " viscous/pressure flux: " << diff_flux << std::endl;
@@ -133,6 +156,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 			*x.gbl->log << base.idprefix << "l2error: " << sqrt(l2error) << std::endl;
 #endif
 			(*x.gbl->log).precision(oldprecision);
+			
 			break;
 		}
 
