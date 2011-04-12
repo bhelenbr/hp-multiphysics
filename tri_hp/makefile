@@ -132,7 +132,7 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
-tri_hp: dirs $(OBJ) 
+tri_hp: $(OBJ) dirs
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
 
 tri_hp_mpi: dirs $(OBJ) 
@@ -144,7 +144,7 @@ tri_hp_petsc: dirs $(OBJ) $(OBJPETSC)
 tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
-dirs:
+dirs: 
 	+@[ -d  ins ] || mkdir -p ins
 	+@[ -d  cns ] || mkdir -p cns
 	+@[ -d  cns_explicit ] || mkdir -p cns_explicit
@@ -155,6 +155,8 @@ dirs:
 	+@[ -d  swe ] || mkdir -p swe
 	+@[ -d  lvlset ] || mkdir -p lvlset
 	+@[ -d  explicit ] || mkdir -p explicit
+	touch dirs
+
 
 %.o: %.cpp
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
