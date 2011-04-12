@@ -1474,7 +1474,7 @@ void hp_edge_bdry::petsc_matchjacobian_rcv(int phase)	{
 		int mcnt = 0;
 		for(int mode=0;mode<x.sm0;++mode) {
 			for(int n=0;n<x.NV;++n) {
-				int ncol = base.frcvbuf(0,count++);
+				int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
 				*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << n << std::endl;
 #endif
