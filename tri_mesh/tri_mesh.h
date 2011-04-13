@@ -114,6 +114,8 @@ class tri_mesh : public multigrid_interface {
 		/**************/
 		/** Constructor */
 		tri_mesh() : nvbd(0), nebd(0), gbl(0), initialized(0)  {}
+		/**< Allocates memory */
+		void allocate(int mxsize);  
 		/** Routine to allocate shared variables */
 		void* create_global_structure() {return new global;}
 		/** Routine to initialize with using information in map and shared resource in gbl_in */
@@ -206,7 +208,6 @@ class tri_mesh : public multigrid_interface {
 
 		/** @name Setup routines */
 		//@{
-		void allocate(int mxsize);  /**< Allocates memory */
 		void cnt_nbor(void); /**< Fills in pnt().nnbor */
 		void bdrylabel(void); /**< Makes seg().tri and tri().tri on boundary have pointer to boundary group/element */
 		void createseg(void); /**< Creates all segment information from list of triangle points and also tri().seg/sgn (if necessary) */
@@ -223,7 +224,7 @@ class tri_mesh : public multigrid_interface {
 		*  Typically special,deleted,touched,searched
 		*/
 		const static int PSPEC = 0x4, PDLTE = 0x2, PTOUC=0x1;
-		const static int SDLTE = 0x10*0x2, STOUC=0x10*0x1;
+		const static int SSRCH = 0x10*0x4, SDLTE = 0x10*0x2, STOUC=0x10*0x1;
 		const static int TSRCH = 0x100*0x4, TDLTE = 0x100*0x2, TTOUC=0x100*0x1;
 
 		void setup_for_adapt(); /**< Set all flags */

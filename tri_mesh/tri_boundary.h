@@ -55,11 +55,13 @@ class ecomm : public comm_bdry<edge_bdry,tri_mesh> {
  * It also changes what happens during mesh adaptation 
  */
 class epartition : public ecomm {
+		tri_mesh remote_halo;
 		int ntri_h; /**< number of triangles in halo */
 		int nseg_h; /**< number of interior segments in halo */
+		int npnt_h; /**< number of points in halo */
 		int nseg_bdry_h; /**< number of segments on interior surface of halo */
-		Array<int,1> seg_comm; /**< seg numbers of sides in remote mesh */
 		Array<int,1> tri_h; /**< triangles in halo */
+		Array<int,1> pnt_h; /**< points in halo */
 		Array<int,1> seg_h; /**< interior segments in halo */
 		Array<int,1> seg_bdry_h; /**< segments on interior surface of halo */
 

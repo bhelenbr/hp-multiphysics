@@ -442,6 +442,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	for(i=0;i<nebd;++i) {
 		/* CREATES NEW BOUNDARY FOR DISCONNECTED SEGMENTS OF SAME TYPE */
 		ebdry(i)->reorder();
+		
 	}
 	
 	/* MOVE VERTEX BOUNDARY INFO */
@@ -463,7 +464,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 
 	/* CREATE COMMUNICATION ENDPOINT BOUNDARIES */
 	for(i=0;i<nebd;++i) {
-		if (ebdry(i)->mytype == "partition") {
+		if (ebdry(i)->mytype == "partition") {			
 			/* Now that all independent ebdry sides are determined give new numbers to partitions */
 			sind = ebdry(i)->seg(0);
 			match = getbdryseg(seg(sind).tri(1));
@@ -534,6 +535,12 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	treeinit(xmin,xmax);
 
 	initialized = 1;
+	
+	for(i=0;i<nebd;++i) {
+		if (ebdry(i)->mytype == "partition") {
+			dynamic_cast<epartition *>(ebdry(i))->calculate_halo();
+		}
+	}
 
 	return;
 }
