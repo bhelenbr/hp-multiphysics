@@ -132,16 +132,16 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
 CPPFLAGS += $(DEFINES)
 
-tri_hp: $(OBJ) dirs
+tri_hp: $(OBJ) 
 	${CXX} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh $(LIB)
 
-tri_hp_mpi: dirs $(OBJ) 
+tri_hp_mpi: $(OBJ) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) -ltri_mesh_mpi $(LIB)
 	
-tri_hp_petsc: dirs $(OBJ) $(OBJPETSC) 
+tri_hp_petsc: $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
-tri_hp_petsc_mpi: dirs $(OBJ) $(OBJPETSC) 
+tri_hp_petsc_mpi: $(OBJ) $(OBJPETSC) 
 	${CXXMPI} $(LDFLAGS) -o $@ $(CPPFLAGS) $(OBJ) $(OBJPETSC) -ltri_mesh_mpi  $(LIB) -lpetsc -lsuperlu_dist_2.4 -lparmetis -lmetis -ldl
 
 dirs: 
@@ -158,7 +158,7 @@ dirs:
 	touch dirs
 
 
-%.o: %.cpp
+%.o: %.cpp dirs
 	$(CXX) ${CPPFLAGS} -MD -c -o $@ $<
 	@cp $*.d $*.P; \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
