@@ -97,6 +97,7 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					visc[2][2][1][1] = -x.cjcb(0,i)*(x.dcrd(1,0)(0,i)*x.dcrd(1,0)(0,i) +x.dcrd(0,0)(0,i)*x.dcrd(0,0)(0,i));
 
 
+					ldiff_flux = 0.0;
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
 						ldiff_flux(n) = x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
@@ -375,6 +376,83 @@ void flexible::petsc_jacobian_dirichlet() {
 }
 #endif
 
+
+void flexible2::init(input_map& inmap,void* gbl_in) {
+	std::string keyword;
+	std::ostringstream nstr;
+	input_map zeromap;
+	zeromap["zero"] = "0.0";
+	
+	flexible::init(inmap,gbl_in);
+	for (int n=0;n<x.NV;++n) {
+		if (type(n) == natural) {
+			nstr.str("");
+			nstr << base.idprefix << "_dflux" << n << std::flush;
+			if (inmap.find(nstr.str()) != inmap.end()) {
+				derivative_fluxes(n).init(inmap,nstr.str());
+			}
+			else {
+				fluxes(n).init(zeromap,"zero");
+			}
+		}
+	}
+	
+	return;
+}
+
+void flexible2::element_rsdl(int indx, int stage) {
+	int i,n,sind,v0,v1;
+	TinyVector<FLT,tri_mesh::ND> norm, rp;
+	Array<FLT,1> ubar(x.NV),flx(x.NV);
+	FLT jcb;
+	Array<TinyVector<FLT,MXGP>,1> u(x.NV);
+	TinyMatrix<FLT,tri_mesh::ND,MXGP> crd, dcrd, mvel;
+	Array<FLT,2> cflux(x.NV,MXGP),dflux(x.NV,MXGP);
+	Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND),au(x.NV);
+	
+	x.lf = 0.0;
+
+	sind = base.seg(indx);
+	v0 = x.seg(sind).pnt(0);
+	v1 = x.seg(sind).pnt(1);
+	
+	x.crdtocht1d(sind);
+	for(n=0;n<tri_mesh::ND;++n)
+		basis::tri(x.log2p)->proj1d(&x.cht(n,0),&crd(n,0),&dcrd(n,0));
+	
+	for(n=0;n<x.NV;++n)
+		basis::tri(x.log2p)->proj1d(&x.uht(n)(0),&u(n)(0));    
+	
+	for(i=0;i<basis::tri(x.log2p)->gpx();++i) {
+		norm(0) =  dcrd(1,i);
+		norm(1) = -dcrd(0,i);
+		jcb = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+		
+		/* RELATIVE VELOCITY STORED IN MVEL(N)*/
+		for(n=0;n<tri_mesh::ND;++n) {
+			mvel(n,i) = u(n)(i) -(x.gbl->bd(0)*(crd(n,i) -dxdt(x.log2p,indx)(n,i)));
+		}
+		
+		/* Evaluate Fluxes */
+		axpt(0) = crd(0,i); axpt(1) = crd(1,i);
+		amv(0) = mvel(0,i)-u(0)(i); amv(1) = mvel(1,i)-u(1)(i);
+		anorm(0)= norm(0); anorm(1) = norm(1);
+		for(int n=0;n<x.NV;++n)
+			au(n) = u(n)(i);
+		
+		for(int n=0;n<x.NV;++n) {
+			cflux(n,i) = RAD(crd(0,i))*fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
+			dflux(n,i) = RAD(crd(0,i))*derivative_fluxes(n).Eval(au,axpt,amv,anorm,x.gbl->time);
+		}
+	}
+	
+	for(int n=0;n<x.NV;++n) {
+		basis::tri(x.log2p)->intgrt1d(&x.lf(n)(0),&cflux(n,0));
+		basis::tri(x.log2p)->intgrtx1d(&x.lf(n)(0),&dflux(n,0));
+	}
+		
+	return;
+}
 
 
 void symmetry::tadvance() {

@@ -270,6 +270,54 @@ namespace bdry_ins {
 			void petsc_jacobian_dirichlet();
 #endif
 	};
+	
+	class flexible2 : public flexible { 
+	protected:
+		Array<vector_function,1> derivative_fluxes;
+		
+		void flux(Array<FLT,1>& u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm,  Array<FLT,1>& flx) {
+			
+			FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+			
+			Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND);
+			axpt(0) = xpt(0); axpt(1) = xpt(1);
+			amv(0) = mv(0); amv(1) = mv(1);
+			anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
+			
+			for (int n=0;n<x.NV;++n) {
+				switch(type(n)) {
+					case(essential): {
+						flx(n) = 0.0;
+						break;
+					}
+					case(natural): {
+						flx(n) = fluxes(n).Eval(u,axpt,amv,anorm,x.gbl->time)*length;
+						break;
+					}
+				}
+			}
+			
+			return;
+		}
+	public:
+		flexible2(tri_hp_ins &xin, edge_bdry &bin) : flexible(xin,bin) {mytype = "flexible2"; derivative_fluxes.resize(x.NV);
+			Array<string,1> names(4);
+			Array<int,1> dims(4);
+			dims = x.ND;
+			names(0) = "u";
+			dims(0) = x.NV;
+			names(1) = "x";
+			names(2) = "xt";
+			names(3) = "n";
+			for(int n=0;n<x.NV;++n) {
+				derivative_fluxes(n).set_arguments(4,dims,names);
+			}
+		}
+		flexible2(const flexible2& inbdry, tri_hp_ins &xin, edge_bdry &bin) : flexible(inbdry,xin,bin), derivative_fluxes(inbdry.derivative_fluxes) {}
+		flexible2* create(tri_hp& xin, edge_bdry &bin) const {return new flexible2(*this,dynamic_cast<tri_hp_ins&>(xin),bin);}
+		void init(input_map& input,void* gbl_in);
+		void element_rsdl(int eind, int stage);
+	};
 
 	class euler : public neumann {
 		protected:
