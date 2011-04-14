@@ -101,14 +101,14 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 					for (n=tri_mesh::ND;n<x.NV-1;++n) 
 						ldiff_flux(n) = x.gbl->D(n)/x.gbl->mu*(-visc[2][2][1][0]*x.du(n,0)(0,i) -visc[2][2][1][1]*x.du(n,1)(0,i));
 
-					ldiff_flux(0) =    (-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
+					ldiff_flux(0) =    basis::tri(x.log2p)->wtx(i)*(-x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(1,0)(0,i) 
 									-viscI0II0II1II0I*x.du(0,0)(0,i) -visc[0][1][1][0]*x.du(1,0)(0,i)
 									-visc[0][0][1][1]*x.du(0,1)(0,i) -visc[0][1][1][1]*x.du(1,1)(0,i));															
-					ldiff_flux(1) =    ( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
+					ldiff_flux(1) =    basis::tri(x.log2p)->wtx(i)*( x.u(2)(0,i)*RAD(x.crd(0)(0,i))*x.dcrd(0,0)(0,i)
 									-viscI1II0II1II0I*x.du(0,0)(0,i) -viscI1II1II1II0I*x.du(1,0)(0,i)
 									-viscI1II0II1II1I*x.du(0,1)(0,i) -visc[1][1][1][1]*x.du(1,1)(0,i));
 
-					diff_flux -= basis::tri(x.log2p)->wtx(i)*ldiff_flux;
+					diff_flux -= ldiff_flux;
 					ldiff_flux /= jcb;
 
 					norm(0) = x.dcrd(1,0)(0,i);
@@ -122,12 +122,12 @@ void generic::output(std::ostream& fout, tri_hp::filetype typ,int tlvl) {
 
 					circulation += basis::tri(x.log2p)->wtx(i)*(-norm(1)*(x.u(0)(0,i)-mvel(0)) +norm(0)*(x.u(1)(0,i)-mvel(1)));
 
-					convect = RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
+					convect = basis::tri(x.log2p)->wtx(i)*RAD(x.crd(0)(0,i))*((x.u(0)(0,i)-mvel(0))*norm(0) +(x.u(1)(0,i)-mvel(1))*norm(1));
 					lconv_flux(2) = convect;
 					lconv_flux(0) = x.u(0)(0,i)*convect;
 					lconv_flux(1) = x.u(1)(0,i)*convect;
 					
-					conv_flux -= lconv_flux*basis::tri(x.log2p)->wtx(i);
+					conv_flux -= lconv_flux;
 					lconv_flux /= jcb;
 
 #ifdef L2_ERROR
@@ -1165,7 +1165,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		
 		for (int n = 0; n <c0vars.extent(firstDim);++n) {
 			row = rowbase + c0vars(n);
-			int ncol = base.frcvbuf(0,count++);
+			int ncol = static_cast<int>(base.frcvbuf(0,count++));
 #ifdef MPDEBUG
 			*x.gbl->log << "receiving " << ncol << " jacobian entries for vertex " << row/vdofs << " and variable " << c0vars(n) << std::endl;
 #endif
@@ -1194,7 +1194,7 @@ void actuator_disc::petsc_matchjacobian_rcv(int phase) {
 		
 		/* Now receive side Jacobian information */
 		row = x.npnt*vdofs +sind*x.NV*x.sm0;
-		row_mpi = base.frcvbuf(0,count++) +Jstart_mpi;
+		row_mpi = static_cast<int>(base.frcvbuf(0,count++)) +Jstart_mpi;
 		
 		int mcnt = 0;
 		int sgn = 1;
