@@ -240,7 +240,7 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 		void alloc(int n) {edge_bdry::alloc(n); s.resize(n+1);}
 		void output(std::ostream& fout) {
 			edge_bdry::output(fout);
-			fout << s(Range(0,edge_bdry::nseg-1)) << std::endl;
+			// fout << s(Range(0,edge_bdry::nseg-1)) << std::endl;
 		}
 		void init(input_map& inmap) {
 			edge_bdry::init(inmap);
@@ -260,9 +260,9 @@ class spline_bdry : public edge_bdry, rigid_movement_interface2D {
 
 		void input(std::istream& fin, tri_mesh::filetype type) {
 			edge_bdry::input(fin,type);
-			for(int i=0;i<nseg+1;++i) {
-				fin >> s(i);
-			}
+			//for(int i=0;i<nseg+1;++i) {
+//				fin >> s(i);
+//			}
 		}
 
 		void mvpttobdry(int nseg,FLT psi, TinyVector<FLT,tri_mesh::ND> &pt) {
