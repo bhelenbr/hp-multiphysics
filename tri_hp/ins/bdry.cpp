@@ -392,7 +392,7 @@ void flexible2::init(input_map& inmap,void* gbl_in) {
 				derivative_fluxes(n).init(inmap,nstr.str());
 			}
 			else {
-				fluxes(n).init(zeromap,"zero");
+				derivative_fluxes(n).init(zeromap,"zero");
 			}
 		}
 	}
