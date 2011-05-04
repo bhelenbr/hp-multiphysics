@@ -955,16 +955,14 @@ void melt::petsc_jacobian_dirichlet() {
 			int nnz2 = x.J._cpt(row2+1) -x.J._cpt(row2);
 			/* SOME ERROR CHECKING TO MAKE SURE ROW SPARSENESS PATTERN IS THE SAME */
 			if (nnz1 != nnz2) {
-				*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
+				*x.gbl->log << "zeros problem in moving heat equation to mesh movement location " << nnz1 << ' ' << nnz2 << std::endl;
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
 			row1 = x.J._cpt(row1);
 			row2 = x.J._cpt(row2);
 			for(int col=0;col<nnz1;++col) {
-				if (x.J._col(row1) != x.J._col(row2)) {
-					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
-					sim::abort(__LINE__,__FILE__,x.gbl->log);
-				}	
+				/* Overwrite row */
+				x.J._col(row2) = x.J._col(row1);
 				x.J._val(row2++) = x.J._val(row1++);
 			}
 		}
@@ -1004,9 +1002,9 @@ void melt::petsc_jacobian_dirichlet() {
 		}
 		int row1 = x.J._cpt(row);
 		int row2 = x.J._cpt(row+1);
-		for(int col=0;col<nnz1;++col) {
+		for(int col=0;col<nnz2;++col) {
 			if (x.J._col(row1) != x.J._col(row2)) {
-				*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+				*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}	
 			double row_store = x.J._val(row1)*gbl->vdt(j)(0,0) +x.J._val(row2)*gbl->vdt(j)(0,1);
@@ -1026,18 +1024,30 @@ void melt::petsc_jacobian_dirichlet() {
 				*x.gbl->log << "zeros problem in moving heat equation to mesh movement location\n";
 				sim::abort(__LINE__,__FILE__,x.gbl->log);
 			}
-			row1 = x.J._cpt(row1);
-			row2 = x.J._cpt(row2);
+			
+			/* Fill in zeros */
+			int cpt1 = x.J._cpt(row1);
+			int cpt2 = x.J._cpt(row2);
+			for(int col=0;col<nnz2;++col) {
+				if (x.J._col(cpt2) < x.J._col(cpt1)) {
+					x.J.set_values(row1, x.J._col(cpt2), 0.0); 
+				}
+				++cpt2;
+				++cpt1;
+			}
+			
+			cpt1 = x.J._cpt(row1);
+			cpt2 = x.J._cpt(row2);
 			for(int col=0;col<nnz1;++col) {
-				if (x.J._col(row1) != x.J._col(row2)) {
-					*x.gbl->log << "zeros indexing problem in deforming mesh on angled boundary\n";
+				if (x.J._col(cpt1) != x.J._col(cpt2)) {
+					*x.gbl->log << "zeros indexing problem in moving heat equation to mesh movement location\n";
 					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}	
-				double row_store = x.J._val(row1)*gbl->sdt(j)(0,0) +x.J._val(row2)*gbl->sdt(j)(0,1);
-				x.J._val(row2) = x.J._val(row1)*gbl->sdt(j)(1,0) +x.J._val(row2)*gbl->sdt(j)(1,1);
-				x.J._val(row1) = row_store;	
-				++row1;
-				++row2;
+				double row_store = x.J._val(cpt1)*gbl->sdt(j)(0,0) +x.J._val(cpt2)*gbl->sdt(j)(0,1);
+				x.J._val(cpt2) = x.J._val(cpt1)*gbl->sdt(j)(1,0) +x.J._val(cpt2)*gbl->sdt(j)(1,1);
+				x.J._val(cpt1) = row_store;	
+				++cpt1;
+				++cpt2;
 			}
 		}
 	} while (++j < base.nseg);
@@ -1083,21 +1093,12 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 	int begin_tri = begin_seg+x.nseg*sm*NV;
 
 	if(x.sm0 > 0) {
-		if (base.is_frst()) {
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = vdofs*(sm+2);
-		}
-		else {
-			/* Just an equality constraint */
-			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
-		}
-		
 		for (int i=0;i<base.nseg;++i) {
 			int sind = base.seg(i);
 			int tind = x.seg(sind).tri(0);
 			if (im) {
 				nnzero(Range(begin_tri +tind*im*NV,begin_tri +(tind+1)*im*NV-1)) += ND*sm;
 			}
-			
 			
 			for(int j=0;j<3;++j) {
 				int sind1 = x.tri(tind).seg(j);
@@ -1125,6 +1126,15 @@ void melt::non_sparse(Array<int,1> &nnzero) {
 			else {
 				nnzero(Range(pind*vdofs,pind*vdofs +x.NV-1)) += ND*sm;
 			}
+		}
+		
+		if (base.is_frst()) {
+			/* Side mode heat equation will be copied into this location */
+			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 3*vdofs +3*x.NV*sm +x.NV*im +ND*sm;
+		}
+		else {
+			/* Just an equality constraint */
+			nnzero(Range(jacobian_start,jacobian_start+base.nseg*sm*tri_mesh::ND-1)) = 1;
 		}
 	}
 }
