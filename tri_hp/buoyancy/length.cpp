@@ -14,8 +14,6 @@
 #include <blitz/tinyvec-et.h>
 #include <vector>
 
-//#define OPTIMAL_ENERGY_NORM
-
 /* THIS FUNCTION WILL SET THE lngth VALUES BASED ON THE TRUNCATION ERROR */
 
 void tri_hp_buoyancy::length() {
@@ -85,25 +83,24 @@ void tri_hp_buoyancy::length() {
 				FLT dudy = -ldcrd(0,1)*du(0,0)(i,j) +ldcrd(0,0)*du(0,1)(i,j);
 				FLT dvdx = ldcrd(1,1)*du(1,0)(i,j) -ldcrd(1,0)*du(1,1)(i,j);
 				FLT dvdy = -ldcrd(0,1)*du(1,0)(i,j) +ldcrd(0,0)*du(1,1)(i,j);	
-				FLT dtdx = ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j);
-				FLT dtdy = -ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j);
+//				FLT dtdx = ldcrd(1,1)*du(2,0)(i,j) -ldcrd(1,0)*du(2,1)(i,j);
+//				FLT dtdy = -ldcrd(0,1)*du(2,0)(i,j) +ldcrd(0,0)*du(2,1)(i,j);
 				
 				FLT dudxl = ldcrd(1,1)*dul(0,0)(i,j) -ldcrd(1,0)*dul(0,1)(i,j);
 				FLT dudyl = -ldcrd(0,1)*dul(0,0)(i,j) +ldcrd(0,0)*dul(0,1)(i,j);
 				FLT dvdxl = ldcrd(1,1)*dul(1,0)(i,j) -ldcrd(1,0)*dul(1,1)(i,j);
 				FLT dvdyl = -ldcrd(0,1)*dul(1,0)(i,j) +ldcrd(0,0)*dul(1,1)(i,j);		
-				FLT dtdxl = ldcrd(1,1)*dul(2,0)(i,j) -ldcrd(1,0)*dul(2,1)(i,j);
-				FLT dtdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
+//				FLT dtdxl = ldcrd(1,1)*dul(2,0)(i,j) -ldcrd(1,0)*dul(2,1)(i,j);
+//				FLT dtdyl = -ldcrd(0,1)*dul(2,0)(i,j) +ldcrd(0,0)*dul(2,1)(i,j);
 				
 				/* INVISCID PARTS TO ERROR MEASURE */
-				bernoulli = rho*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j)) +u(NV-1)(i,j);	
-				bernoulli += (rho-gbl->rho)*gbl->g;
+				bernoulli = rho*(gbl->cp*u(2)(i,j) +0.5*(u(0)(i,j)*u(0)(i,j) +u(1)(i,j)*u(1)(i,j))) +u(NV-1)(i,j);	
 				/* VISCOUS PART TO ERROR MEASURE */
-				bernoulli += gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy))/jcb;
+				bernoulli += (gbl->mu*(fabs(dudx)+fabs(dudy)+fabs(dvdx)+fabs(dvdy)) /* +gbl->kcond*(fabs(dtdx)+fabs(dtdy)) */ )/jcb;
 				
-				dbernoulli = rho*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j)) +ul(NV-1)(i,j);
-				dbernoulli += (rhol-gbl->rho)*gbl->g;
-				dbernoulli += gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl))/jcb;
+				
+				dbernoulli = rhol*(gbl->cp*ul(2)(i,j) +0.5*(ul(0)(i,j)*ul(0)(i,j) +ul(1)(i,j)*ul(1)(i,j))) +ul(NV-1)(i,j);
+				dbernoulli += (gbl->mu*(fabs(dudxl)+fabs(dudyl)+fabs(dvdxl)+fabs(dvdyl)) /* +gbl->kcond*(fabs(dtdxl)+fabs(dtdyl)) */)/jcb;
 				
 				dbernoulli -= bernoulli;
 				
@@ -127,41 +124,46 @@ void tri_hp_buoyancy::length() {
 	
 			
 
-#ifdef OPTIMAL_ENERGY_NORM
-	*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
-	
-	/* Determine error target (SEE AEA Paper) */
-	FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
-	FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
-	gbl->res.v(Range(0,npnt-1),0) = 1.0;
-	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-	for(int tind=0;tind<ntri;++tind) {
-		FLT error2 = gbl->fltwk(tind);
-		FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
-		for (int j=0;j<3;++j) {
-			int p0 = tri(tind).pnt(j);
-			/* Calculate average at vertices */
-			gbl->res.v(p0,0) *= ri;
-			gbl->res_r.v(p0,0) += 1.0;
+	if (gbl->error_estimator == tri_hp_ins::energy_norm) {
+		*gbl->log << "# DOF: " << npnt +nseg*sm0 +ntri*im0 << " Normalized Error " << sqrt(totalerror2/totalbernoulli2) << " Target " << gbl->error_target << '\n';
+		
+		/* Determine error target (SEE AEA Paper) */
+		FLT etarget2 = gbl->error_target*gbl->error_target*totalbernoulli2;
+		FLT K = pow(etarget2/e2to_pow,1./(ND*alpha));
+		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+		for(int tind=0;tind<ntri;++tind) {
+			FLT error2 = gbl->fltwk(tind);
+			FLT ri = K*pow(error2, -1./(ND*(1.+alpha)));
+			for (int j=0;j<3;++j) {
+				int p0 = tri(tind).pnt(j);
+				/* Calculate average at vertices */
+				gbl->res.v(p0,0) *= ri;
+				gbl->res_r.v(p0,0) += 1.0;
+			}
 		}
 	}
-#else
-	/* This is to maintain a constant local truncation error (independent of scale) */
-	gbl->res.v(Range(0,npnt-1),0) = 1.0;
-	gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
-	for(int tind=0;tind<ntri;++tind) {
-		FLT jcb = 0.25*area(tind);
-		gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
-		FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
-		FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
-		for (int j=0;j<3;++j) {
-			int p0 = tri(tind).pnt(j);
-			/* Calculate average at vertices */
-			gbl->res.v(p0,0) *= ri;
-			gbl->res_r.v(p0,0) += 1.0;
-		}
-	}	
-#endif
+	else if (gbl->error_estimator == tri_hp_ins::scale_independent) {
+		/* This is to maintain a constant local truncation error (independent of scale) */
+		gbl->res.v(Range(0,npnt-1),0) = 1.0;
+		gbl->res_r.v(Range(0,npnt-1),0) = 0.0;
+		for(int tind=0;tind<ntri;++tind) {
+			FLT jcb = 0.25*area(tind);
+			gbl->fltwk(tind) = sqrt(gbl->fltwk(tind)/jcb)/gbl->error_target;
+			FLT error = gbl->fltwk(tind);  // Magnitude of local truncation error
+			FLT ri = pow(error, -1./(basis::tri(log2p)->p()));
+			for (int j=0;j<3;++j) {
+				int p0 = tri(tind).pnt(j);
+				/* Calculate average at vertices */
+				gbl->res.v(p0,0) *= ri;
+				gbl->res_r.v(p0,0) += 1.0;
+			}
+		}	
+	}
+	else {
+		*gbl->log << "Unknown error estimator??" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
 	
 	for (int pind=0;pind<npnt;++pind) {
 		FLT ri = pow(gbl->res.v(pind,0),1.0/gbl->res_r.v(pind,0));
