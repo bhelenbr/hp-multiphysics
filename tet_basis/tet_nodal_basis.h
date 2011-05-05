@@ -21,10 +21,16 @@ public:
 	void initialize(int pdegree, int gpoints);
 	inline void initialize(int pdegree) { initialize(pdegree, pdegree+1);}
 	
+	
+	inline void proj(FLT *lin1, FLT *f1, FLT *dx, FLT *dy, FLT *dz, int stridex, int stridey) {tet_basis::proj(lin1,f1,dx,dy,dz,stridex,stridey);}
+
+	inline void proj(FLT u1, FLT u2, FLT u3, FLT u4, FLT *f, int stridex, int stridey) {tet_basis::proj(u1,u2,u3,u4,f,stridex,stridey);}
+	
+	
 	void proj(FLT *lin, FLT *f1, int stridex, int stridey) {
 		int info;
 		char trans[] = "T";
-		
+
 		GETRS(trans,tm,1,P.data(),tm,&ipiv(0),lin,tm,info);
 		tet_basis::proj(lin,f1,stridex,stridey);
 	}
@@ -42,8 +48,9 @@ public:
 	
 };
 
+/*uncomment this for nodal 2/4 */
 //namespace basis {
-//   extern Array<tet_basis,1> tet;
+//   extern Array<tet_nodal_basis,1> tet;
 //}
 
 

@@ -15,6 +15,7 @@
 
 const int tet_basis::sbwth;
 
+/*comment this for nodal 3/4*/
 Array<tet_basis,1> basis::tet;
 
 void tet_basis::initialize(int pdegree, int gpoints) {   
@@ -1262,8 +1263,8 @@ void tet_basis::lumpinv(void) {
 					exit(1);
 				}
 				
-				cout << vwk << endl;
-				exit(0);
+//				cout << vwk << endl;
+//				exit(0);
 				
 				for(int k=0;k<im;++k)
 					ifmb(i+4,k) = -vwk(k+em+2*fm);

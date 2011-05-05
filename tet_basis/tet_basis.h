@@ -265,6 +265,7 @@ class tet_basis {
 
 /** This is an array for bases of various orders for general use 
     The polynomial degree increases by factors of 2 for multigrid */
+/*comment this for nodal 4/4 */
 namespace basis {
    extern Array<tet_basis,1> tet;
 }

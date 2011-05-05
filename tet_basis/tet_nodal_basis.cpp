@@ -9,7 +9,8 @@
 
 #include "tet_nodal_basis.h"
 
-//Array<tet_basis,1> basis::tet;
+/* uncomment this for nodal 1/4 */
+//Array<tet_nodal_basis,1> basis::tet;
 
 void tet_nodal_basis::initialize(int pdegree, int gpoints) {
 	
