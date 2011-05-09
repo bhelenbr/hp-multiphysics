@@ -45,7 +45,7 @@ void tet_hp::superilu(){
 
 	/* GMRES inputs */
 	int im = 50; // krlov subspace
-	int itmax = 5000; // total iterations
+	int itmax = 500; // total iterations
 	FLT gtol = 1.0e-13; // tolerance
 	
     mem_usage_t    mem_usage;
@@ -58,7 +58,7 @@ void tet_hp::superilu(){
 	du = 0.0;
 	trans = NOTRANS;
 	FLT tol=1.0e-12;
-	int max_newton_its = 50;
+	int max_newton_its = 1;
 	bool compressed_column = true;
 	
 	perm_c = intMalloc(n);
@@ -132,7 +132,7 @@ void tet_hp::superilu(){
 	//options.ILU_DropRule = DROP_AREA;
 	//options.ILU_DropTol = 1.0e-4;
 	//options.ILU_FillTol = 1.0e-2;
-	options.ILU_FillFactor = 3.0;
+	options.ILU_FillFactor = 10.0;
 	options.ILU_MILU = SMILU_3;
 
 	
@@ -270,8 +270,8 @@ void tet_hp::superlu(){
 
 	Array<double,1> du(n);
 
-	FLT tol=1.0e-14;
-	int max_newton_its = 50;
+	FLT tol=1.0e-16;
+	int max_newton_its = 1;
 	bool compressed_column = true;
 	
 	perm_c = intMalloc(n);
@@ -310,7 +310,7 @@ void tet_hp::superlu(){
 	ug_to_vec();
 	
 	for(int i = 0; i < max_newton_its; ++i) {
-		
+
 		/* zero out sparse and residual but keep sparsity pattern */
 		zero_sparse();		
 		

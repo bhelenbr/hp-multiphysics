@@ -29,6 +29,7 @@ void tet_hp_cns::setup_preconditioner() {
 	Array<double,3> tpreconditioner(ntet,NV,NV);
 	
 	gbl->vpreconditioner(Range(0,npnt-1),Range::all(),Range::all()) = 0.0;
+	gbl->epreconditioner(Range(0,nseg-1),Range::all(),Range::all()) = 0.0;
 
 	gbl->vprcn(Range(0,npnt-1),Range::all()) = 0.0;
 	if (basis::tet(log2p).em > 0) {
@@ -108,10 +109,10 @@ void tet_hp_cns::setup_preconditioner() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}		
 		
-		pennsylvania_peanut_butter(umax,hmax,tprcn,tau,tstep);
-		
+		pennsylvania_peanut_butter(umax,hmin,tprcn,tau,tstep);
+
 		dtstari = 1.0/tstep;
-		
+
 		tpreconditioner(tind,Range::all(),Range::all()) = tprcn;
 
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
@@ -151,6 +152,7 @@ void tet_hp_cns::setup_preconditioner() {
 		if (basis::tet(log2p).em > 0) {
 			for(int i=0;i<6;++i) {
 				gbl->eprcn(tet(tind).seg(i),Range::all()) += gbl->iprcn(tind,Range::all());
+				gbl->epreconditioner(tet(tind).seg(i),Range::all(),Range::all())  += tpreconditioner(tind,Range::all(),Range::all())*jcb;
 			}
 		}
 
@@ -159,7 +161,9 @@ void tet_hp_cns::setup_preconditioner() {
 	for(int i=0;i<npnt;++i) {
 		gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
 	}
-	
+	for(int i=0;i<nseg;++i) {
+		gbl->epreconditioner(i,Range::all(),Range::all()) /=  gbl->eprcn(i,0);
+	}
 	
 	// note temp: remember to do parallel communication
 	
@@ -213,7 +217,8 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
 	alph = 0.0; // prevents wiggles when residual gets small, not sure why
-	b2 = 1.0; // turn off preconditioner for now
+	//b2 = 1.0; // turn off preconditioner for now
+	
 	/* Preconditioner */
 	P = b2,					  0.0, 0.0, 0.0, 0.0,
 		-alph*u/(pr*gam),     1.0, 0.0, 0.0, 0.0,
@@ -320,7 +325,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 
 	for(int i=0; i<NV; ++i)
 		Ceigs(i) = abs(Ceigs(i));
-	
+
 	VINV = 1.0/(rho*temp3),  0.0, 0.0, 0.5*(temp3-w*(b2-1.0))/temp3, 0.0,
 		   -1.0/(rho*temp3), 0.0, 0.0, 0.5*(w*(b2-1.0)+temp3)/temp3, 0.0,
 		   0.0,				 1.0, 0.0, 0.0,							 0.0,
@@ -353,12 +358,12 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	
 	for(int i=0; i<NV; ++i)
 		S(i,i) += gbl->bd(0);
-	
+
 	Tinv = 2.0/h*(A+B+C+h*S);
-	
+
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
-	
+
 	/*  LU factorization  */
 	int info,ipiv[NV];
 	GETRF(NV, NV, Tinv.data(), NV, ipiv, info);
@@ -385,7 +390,7 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	for (int i = 0; i < NV; ++i)
 		for (int j = 0; j < NV; ++j)
 			Tau(i,j)=temp(j,i);
-	
+
 	return;
 }
 

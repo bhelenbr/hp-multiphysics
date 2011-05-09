@@ -92,7 +92,7 @@ void tet_hp_cns_explicit::setup_preconditioner() {
 		}		
 		//cout << hmin << ' ' << hmax << endl;
 		pennsylvania_peanut_butter(umax,hmin,tprcn,tau,tstep);
-		tstep*=.1;
+
 		gbl->tau(tind,Range::all(),Range::all()) = adis*tau/jcb;
 			 
 	    jcb /= tstep;

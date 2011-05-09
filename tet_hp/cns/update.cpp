@@ -21,15 +21,7 @@ void tet_hp_cns::project_new_variables(){
 	Array<TinyMatrix<double,MXGP,MXGP>,1> u2d(NV),res2d(NV),temp2d(NV);
 	Array<TinyVector<double,MXTM>,1> ucoef(NV),rcoef(NV),tcoef(NV);
 	
-	vefi res_temp;
-	res_temp.v.resize(maxvst,NV);
-	res_temp.e.resize(maxvst,em0,NV);
-	res_temp.f.resize(maxvst,fm0,NV);
-	res_temp.i.resize(maxvst,im0,NV);
-	res_temp.v = gbl->res.v;
-	res_temp.e = gbl->res.e;
-	res_temp.f = gbl->res.f;
-	res_temp.i = gbl->res.i;
+	vefi res_temp(gbl->res);
 	
 	/* LOOP THROUGH VERTICES */
 	for(int i=0;i<npnt;++i){
@@ -152,96 +144,6 @@ void tet_hp_cns::project_new_variables(){
 			hp_ebdry(i)->edirichlet3d();
 	}
 	
-//	if (!basis::tri(log2p)->im()) return;
-//	
-//	for(int tind = 0; tind < ntri; ++tind) {
-//		
-//		for (int i=0; i<3; ++i) {
-//			int vrtx = tri(tind).pnt(i);
-//			for(int n=0; n<NV; ++n){
-//				ucoef(n)(i) = ug.v(vrtx,n);
-//				rcoef(n)(i) = gbl->res_temp.v(vrtx,n);
-//				tcoef(n)(i) = gbl->res.v(vrtx,n);
-//			}
-//		}
-//		
-//		/* SIDES */
-//		int cnt = 3;
-//		for(int i=0;i<3;++i) {
-//			int sind = tri(tind).seg(i);
-//			int sign = tri(tind).sgn(i);
-//			int msgn = 1;
-//			for (int m = 0; m < basis::tri(log2p)->sm(); ++m) {
-//				for(int n=0; n<NV; ++n){
-//					ucoef(n)(cnt) = msgn*ug.s(sind,m,n);
-//					rcoef(n)(cnt) = msgn*gbl->res_temp.s(sind,m,n);
-//					tcoef(n)(cnt) = msgn*gbl->res.s(sind,m,n);
-//				}
-//				msgn *= sign;
-//				++cnt;
-//			}
-//		}
-//		
-//		/* INTERIORS */    
-//		if (basis::tri(log2p)->im() > 0) {    
-//			int indx = 0;
-//			for(int m = 1; m < basis::tri(log2p)->sm(); ++m) {
-//				for(int k = 0; k < basis::tri(log2p)->sm()-m; ++k) {
-//					for(int n=0; n<NV; ++n){
-//						ucoef(n)(cnt) = ug.i(tind,indx,n);
-//						rcoef(n)(cnt) = gbl->res_temp.i(tind,indx,n);
-//						tcoef(n)(cnt) = 0.0;
-//					}
-//					++cnt; ++indx;
-//				}
-//				indx += sm0 -basis::tri(log2p)->sm();
-//			}
-//		}
-//		
-//		
-//		for(int n=0;n<NV;++n){			
-//			basis::tri(log2p)->proj(&ucoef(n)(0),&u2d(n)(0,0),MXGP);
-//			basis::tri(log2p)->proj(&rcoef(n)(0),&res2d(n)(0,0),MXGP);
-//			basis::tri(log2p)->proj_bdry(&tcoef(n)(0),&temp2d(n)(0,0),MXGP);
-//		}
-//		
-//		for(int m=0;m<NV;++m)		
-//			for(int n=0;n<NV;++n)
-//				basis::tri(log2p)->proj(gbl->vpreconditioner(tri(tind).pnt(0),m,n),gbl->vpreconditioner(tri(tind).pnt(1),m,n),gbl->vpreconditioner(tri(tind).pnt(2),m,n),&P2d(m,n)(0,0),MXGP);
-//		
-//		
-//		for (int i=0; i < basis::tri(log2p)->gpx(); ++i ) {
-//			for (int j=0; j < basis::tri(log2p)->gpn(); ++j ) {
-//				
-//				for(int m = 0; m < NV; ++m){
-//					lclug(m) = u2d(m)(i,j);
-//					lclres(m) = res2d(m)(i,j);
-//				}
-//				
-//				switch_variables(lclug,lclres);
-//				
-//				for(int m=0;m<NV;++m){
-//					FLT lcl0 = lclres(m);
-//					for(int n=0;n<m;++n){
-//						lcl0 -= P2d(m,n)(i,j)*lclres(n);
-//					}
-//					lclres(m) = lcl0/P2d(m,m)(i,j);
-//				}
-//				
-//				for(int m = 0; m < NV; ++m)
-//					temp2d(m)(i,j) -= lclres(m);	
-//				
-//				
-//			}
-//		}
-//		
-//		for(int n=0;n<NV;++n) {
-//			basis::tri(log2p)->intgrt(&rcoef(n)(0),&temp2d(n)(0,0),MXGP);
-//			DPBTRS(uplo,basis::tri(log2p)->im(),basis::tri(log2p)->ibwth(),1,(double *) &basis::tri(log2p)->idiag(0,0),basis::tri(log2p)->ibwth()+1,&rcoef(n)(basis::tri(log2p)->bm()),basis::tri(log2p)->im(),info);
-//			for(int i=0;i<basis::tri(log2p)->im();++i)
-//				gbl->res.i(tind,i,n) = -rcoef(n)(basis::tri(log2p)->bm()+i);
-//		}
-//	}
 	
 	return;
 }
@@ -278,6 +180,8 @@ void tet_hp_cns::switch_variables(Array<double,1> pvu, Array<double,1> &a){
 
 void tet_hp_cns::update() {
 	
+	//tet_hp::update();return;
+	
 	//tet_hp::bicgstab();return;
 	
 	/* STORE INITIAL VALUES FOR NSTAGE EXPLICIT SCHEME */
@@ -307,23 +211,23 @@ void tet_hp_cns::update() {
 		
 		tet_hp::rsdl(stage);	
 		
-		for(int i=0;i<nfbd;++i)
-			hp_fbdry(i)->vdirichlet();
-		for(int i=0;i<nfbd;++i)
-			hp_fbdry(i)->edirichlet();
-		for(int i=0;i<nfbd;++i)
-			hp_fbdry(i)->fdirichlet();
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->vdirichlet();
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->edirichlet();
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->fdirichlet();
 		
 #ifdef JACOBI
 		tet_hp::jacobi_relaxation();
 #else
-		tet_hp::minvrt();
+		minvrt();
 #endif
 
-		for(int i=0;i<nfbd;++i)
-			hp_fbdry(i)->modify_boundary_residual();		
+//		for(int i=0;i<nfbd;++i)
+//			hp_fbdry(i)->modify_boundary_residual();		
 		
-		project_new_variables();
+		//project_new_variables();
 		
 		FLT cflalpha = gbl->alpha(stage)*gbl->cfl(log2p);
 		
@@ -387,3 +291,147 @@ void tet_hp_cns::update() {
 }
 
 
+void tet_hp_cns::minvrt() {
+	int i,j,k,n,tind,msgn,sgn,sind,v0,indx;
+	Array<FLT,2> spokemass;
+	int last_phase, mp_phase;
+	
+	Array<double,1> lcl(NV), lclug(NV),lclres(NV),uavg(NV);
+	Array<TinyVector<double,MXGP>,2> P(NV,NV);
+	Array<TinyVector<double,MXGP>,1> u1d(NV),res1d(NV),temp1d(NV);
+	Array<TinyVector<double,MXTM>,1> ucoef(NV),rcoef(NV),tcoef(NV);
+	
+	if (basis::tet(log2p).p > 2) {
+		*gbl->log << "cns minvrt only works for p = 1 and 2" << endl;
+		exit(4);
+	}
+	
+	/* LOOP THROUGH EDGES */
+	if (basis::tet(log2p).em > 0) {
+		for(int eind = 0; eind<nseg;++eind) {
+			/* SUBTRACT SIDE CONTRIBUTIONS TO VERTICES */         
+			for (k=0; k <basis::tet(log2p).em; ++k) {
+				for (i=0; i<2; ++i) {
+					v0 = seg(eind).pnt(i);
+					for(n=0;n<NV;++n)
+						gbl->res.v(v0,n) -= basis::tet(log2p).sfmv(i,k)*gbl->res.e(eind,k,n);
+				}
+			}
+		}		
+	}
+	
+	gbl->res.v(Range(0,npnt-1),Range::all()) *= gbl->vprcn(Range(0,npnt-1),Range::all())*basis::tet(log2p).vdiag;
+
+	/* LOOP THROUGH VERTICES */
+	for(int i=0;i<npnt;++i){
+		
+		for(int n = 0; n < NV; ++n){
+			lclug(n) = ug.v(i,n);
+			lclres(n) = gbl->res.v(i,n);
+		}
+		
+		switch_variables(lclug,lclres);
+		
+		for(int j=0;j<NV;++j){
+			FLT lcl0 = lclres(j);
+			for(int k=0;k<j;++k){
+				lcl0 -= gbl->vpreconditioner(i,j,k)*lclres(k);
+			}
+			lclres(j) = lcl0/gbl->vpreconditioner(i,j,j);
+		}
+		
+		for(int n = 0; n < NV; ++n)
+			gbl->res.v(i,n) = lclres(n);
+		
+	}
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		pc0load(mp_phase,gbl->res.v.data());
+		pmsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= pc0wait_rcv(mp_phase,gbl->res.v.data());
+	}
+	
+	/* APPLY VERTEX DIRICHLET B.C.'S */
+	for(i=0;i<nfbd;++i)
+		hp_fbdry(i)->vdirichlet();
+	
+	for(i=0;i<nebd;++i)
+		hp_ebdry(i)->vdirichlet3d();        
+	
+	for(i=0;i<nvbd;++i)
+		hp_vbdry(i)->vdirichlet3d();
+	
+	if(basis::tet(log2p).em == 0) return;
+	
+	/* LOOP THROUGH SIDES */    
+	for(int sind=0;sind<nseg;++sind) {
+		
+		for(int n = 0; n < NV; ++n){
+			uavg(n) = 0.5*(ug.v(seg(sind).pnt(0),n)+ug.v(seg(sind).pnt(1),n));
+			lclres(n) = gbl->res.e(sind,0,n);
+		}
+		
+		switch_variables(uavg,lclres);
+		
+		for(int j=0;j<NV;++j){
+			FLT lcl0 = lclres(j);
+			for(int k=0;k<j;++k){
+				lcl0 -= gbl->epreconditioner(sind,j,k)*lclres(k);
+			}
+			lclres(j) = lcl0/gbl->epreconditioner(sind,j,j);
+		}
+
+		for(int n = 0; n < NV; ++n)
+			gbl->res.e(sind,0,n) = lclres(n);
+		
+	}
+	
+	/* REMOVE VERTEX CONTRIBUTION FROM SIDE MODES */
+	/* SOLVE FOR SIDE MODES */
+	/* PART 1 REMOVE VERTEX CONTRIBUTIONS */
+	for(tind=0;tind<ntet;++tind) {         
+		for(i=0;i<4;++i) {
+			v0 = tet(tind).pnt(i);
+			for(n=0;n<NV;++n)
+				uht(n)(i) = gbl->res.v(v0,n)*gbl->iprcn(tind,n);
+		}
+		/* edges */
+		for(i=0;i<6;++i) {
+			sind = tet(tind).seg(i);
+			sgn  = tet(tind).sgn(i);
+			for(j=0;j<4;++j) {
+				msgn = 1;
+				for(k=0;k<basis::tet(log2p).em;++k) {
+					for(n=0;n<NV;++n)
+						gbl->res.e(sind,k,n) -= msgn*basis::tet(log2p).vfms(j,4+k+i*basis::tet(log2p).em)*uht(n)(j);
+					msgn *= sgn;
+				}
+			}
+		}				
+	}
+	
+	
+	//basis::tet(log2p).ediag(0) = 120.0;//for fast convergence 
+	basis::tet(log2p).ediag(0) = 48.0; //for accuracy mass lumped edge modes
+	gbl->res.e(Range(0,nseg-1),0,Range::all()) *= gbl->eprcn(Range(0,nseg-1),Range::all())*basis::tet(log2p).ediag(0);
+	
+	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		sc0load(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+		smsgpass(boundary::all_phased,mp_phase,boundary::symmetric);
+		last_phase = true;
+		last_phase &= sc0wait_rcv(mp_phase,gbl->res.e.data(),0,0,gbl->res.e.extent(secondDim));
+	}
+	/* APPLY DIRCHLET B.C.S TO MODE */
+	for(int i=0;i<nfbd;++i)
+		hp_fbdry(i)->edirichlet();
+	
+	for (int i=0;i<nebd;++i) 
+		hp_ebdry(i)->edirichlet3d();
+	
+	
+	
+	
+	
+	return;
+}

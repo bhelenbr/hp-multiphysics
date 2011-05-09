@@ -269,11 +269,11 @@ void tet_hp::init(input_map& inmap, void *gin) {
 //		ija(i) = size_sparse_matrix+1;
 //#endif	
 	
-//#ifdef petsc
-//	petsc_initialize();
-//#else
-//	initialize_sparse();
-//#endif
+#ifdef petsc
+	petsc_initialize();
+#else
+	initialize_sparse();
+#endif
 
 	//test();
 	
@@ -426,7 +426,7 @@ tet_hp::~tet_hp() {
 /* tet.info marked with 0/-1 */
 
 void tet_hp::setinfo() {
-	int i,j,sind;
+	int i;
 	
 	/* SET UP VRTX BC INFORMATION FOR OUTPUT */
 	for(i=0;i<npnt;++i)
@@ -470,10 +470,7 @@ void tet_hp::setinfo() {
 FLT tet_hp::maxres() {
 	int i,n;
 	Array<FLT,1> mxr(NV);
-	FLT mesherror, flowerror;
-	
-	/* THIS ROUTINE WILL HAVE TO BE OVERWRITTEN TO GET CORRECT DIMENSIONAL NORM FOR EACH SYSTEM */
-	//if (mmovement == coupled_deformable) mesherror = r_tet_mesh::maxres();
+	FLT flowerror;
 	
 	for(n=0;n<NV;++n)
 		mxr(n) = 0.0;

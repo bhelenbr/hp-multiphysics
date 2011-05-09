@@ -27,10 +27,10 @@ public:
 		/* STORAGE FOR CALCULATION OF ENERGY AND AREA */
 		TinyVector<FLT,2> eanda, eanda_recv;
 				
-		Array<FLT,3> vpreconditioner;
+		Array<FLT,3> vpreconditioner,epreconditioner;
 		
 		/* SOURCE FUNCTION FOR MMS */
-		init_bdry_cndtn *src;
+		//init_bdry_cndtn *src;
 		
 	} *gbl;
 	
@@ -51,6 +51,8 @@ public:
 	void init(const multigrid_interface& in, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 	
 	void update();
+	void minvrt();
+	
 	//void length(); 
 	void setup_preconditioner();
 	void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uhat,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);

@@ -11,7 +11,7 @@
 #include "../hp_boundary.h"
 
 #define BODYFORCE
-#define MMS
+//#define MMS
 	
 void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im){
 	
@@ -540,8 +540,7 @@ void tet_hp_cns::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1>
 					for(int k=0;k<lgpz;++k) {
 						
 						double rho = u(0)(i)(j)(k)/u(NV-1)(i)(j)(k);
-						cjcb = dcrd(0)(0)(i)(j)(k)*(dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k))-dcrd(0)(1)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(0)(i)(j)(k))+dcrd(0)(2)(i)(j)(k)*(dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k));
-						
+					
 						double rhorbd0 = rho*gbl->bd(0)*cjcb;
 						double mujcbi = lmu/cjcb;
 						double kcjcbi = lkcond/cjcb/gbl->R;

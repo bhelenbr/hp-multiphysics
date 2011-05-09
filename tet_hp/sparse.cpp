@@ -9,6 +9,8 @@
 
 #include "tet_hp.h"
 #include "ins/tet_hp_ins.h"
+#include "cns/tet_hp_cns.h"
+
 //#include "gmres.h"
 #include "hp_boundary.h"
 
@@ -712,30 +714,44 @@ void tet_hp::apply_neumman(bool jac_tran) {
 void tet_hp::vec_to_ug(){
 	int ind = 0;
 	
-	for(int i = 0; i < npnt; ++i)
-		for(int n = 0; n < NV; ++n)
+	for(int i = 0; i < npnt; ++i){
+		for(int n = 0; n < NV; ++n){
+			gbl->res.v(i,n) = res_vec(ind);
 			ug.v(i,n) = ug_vec(ind++);
+		}
+	}
 	
 	if(!basis::tet(log2p).em) return;
 	
-	for(int i = 0; i < nseg; ++i)
-		for(int m = 0; m < basis::tet(log2p).em; ++m)
-			for(int n = 0; n < NV; ++n)
+	for(int i = 0; i < nseg; ++i){
+		for(int m = 0; m < basis::tet(log2p).em; ++m){
+			for(int n = 0; n < NV; ++n){
+				gbl->res.e(i,m,n) = res_vec(ind);
 				ug.e(i,m,n) = ug_vec(ind++);
-	
+			}
+		}
+	}	
 	if(!basis::tet(log2p).fm) return;
 
-	for(int i = 0; i < ntri; ++i)
-		for(int m = 0; m < basis::tet(log2p).fm; ++m)
-			for(int n = 0; n < NV; ++n)
+	for(int i = 0; i < ntri; ++i){
+		for(int m = 0; m < basis::tet(log2p).fm; ++m){
+			for(int n = 0; n < NV; ++n){
+				gbl->res.f(i,m,n) = res_vec(ind);
 				ug.f(i,m,n) = ug_vec(ind++);		
+			}
+		}
+	}
 
 	if(!basis::tet(log2p).im) return;
 	
-	for(int i = 0; i < ntet; ++i)
-		for(int m = 0; m < basis::tet(log2p).im; ++m)
-			for(int n = 0; n < NV; ++n)
+	for(int i = 0; i < ntet; ++i){
+		for(int m = 0; m < basis::tet(log2p).im; ++m){
+			for(int n = 0; n < NV; ++n){
+				gbl->res.i(i,m,n) = res_vec(ind);
 				ug.i(i,m,n) = ug_vec(ind++);	
+			}
+		}
+	}
 	
 	return;	
 }
@@ -747,7 +763,7 @@ void tet_hp::ug_to_vec(){
 	for(int i = 0; i < npnt; ++i)
 		for(int n = 0; n < NV; ++n)
 			ug_vec(ind++) = ug.v(i,n);
-	
+		
 	if(!basis::tet(log2p).em) return;
 
 	for(int i = 0; i < nseg; ++i)
