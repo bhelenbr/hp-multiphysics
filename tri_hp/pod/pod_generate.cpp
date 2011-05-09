@@ -38,7 +38,7 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 		input.getwdefault("snapshots",nsnapshots,10);
 	}
 
-	if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
+	if (!input.get(BASE::gbl->idprefix + "_nmodes",nmodes)) input.getwdefault("nmodes",nmodes,nsnapshots);    
 
 	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 	scaling.resize(BASE::NV);
@@ -425,7 +425,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	}
 
 
-	for (int eig_ct=0; eig_ct<nsnapshots;++eig_ct) {
+	for (int eig_ct=0; eig_ct<nmodes;++eig_ct) {
 
 		/* ******************************************/
 		/* GENERATE POD MODES SNAPSHOT MATRIX       */
