@@ -11,7 +11,7 @@
 #define _tet_hp_h_
 
 //#define NODAL
-#define SUPERLU
+//#define SUPERLU
 
 #ifdef NODAL
 #include <tet_nodal_basis.h>

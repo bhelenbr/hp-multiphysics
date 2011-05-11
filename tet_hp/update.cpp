@@ -184,13 +184,13 @@ void tet_hp::update() {
 	
 	//l2error(gbl->ibc);
 	
-#ifdef petsc
-	petsc_solve();
-#else
-	superlu();
-	//superilu();
-	return;
-#endif
+//#ifdef petsc
+//	petsc_solve();
+//#else
+//	superlu();
+//	//superilu();
+//	return;
+//#endif
 	
 	//conjugate_gradient();
 	//bicgstab();

@@ -121,7 +121,7 @@ namespace bdry_cns {
 			hp_face_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
-		void apply_sparse_dirichlet(bool compressed_column);
+		//void apply_sparse_dirichlet(bool compressed_column);
 		void modify_boundary_residual();
 	};
 	
@@ -151,7 +151,7 @@ namespace bdry_cns {
 			hp_face_bdry::tadvance();
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
-		void apply_sparse_dirichlet(bool compressed_column);
+		//void apply_sparse_dirichlet(bool compressed_column);
 		void modify_boundary_residual();
 	};
 	

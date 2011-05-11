@@ -213,24 +213,22 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
 	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
-	FLT alph = 1.0+b2;
 	//cout  << b2 << ' ' <<  M*M << ' ' << M*M/(1.0-M*M) << ' ' << hdt*hdt << ' ' << nuh*nuh << ' ' << alh*alh << endl;
 
-	alph = 0.0; // prevents wiggles when residual gets small, not sure why
-	//b2 = 1.0; // turn off preconditioner for now
+	//b2 = 1.0; // turn off preconditioner 
 	
 	/* Preconditioner */
 	P = b2,					  0.0, 0.0, 0.0, 0.0,
-		-alph*u/(pr*gam),     1.0, 0.0, 0.0, 0.0,
-		-alph*v/(pr*gam),     0.0, 1.0, 0.0, 0.0,
-		-alph*w/(pr*gam),     0.0, 0.0, 1.0, 0.0,
+		0.0,				  1.0, 0.0, 0.0, 0.0,
+		0.0,				  0.0, 1.0, 0.0, 0.0,
+		0.0,				  0.0, 0.0, 1.0, 0.0,
 		(b2-1.0)/(gogm1*rho), 0.0, 0.0, 0.0, 1.0;
 	
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0, 0.0,
-		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0, 0.0,
-		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0, 0.0,
-		   alph*w/(pr*gam*b2),		 0.0, 0.0, 1.0, 0.0,
+		   0.0,						 1.0, 0.0, 0.0, 0.0,
+		   0.0,						 0.0, 1.0, 0.0, 0.0,
+		   0.0,						 0.0, 0.0, 1.0, 0.0,
 		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 0.0, 1.0;
 	
 	/* jacobian of primitive wrt conservative */

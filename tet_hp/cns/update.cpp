@@ -292,7 +292,7 @@ void tet_hp_cns::update() {
 
 
 void tet_hp_cns::minvrt() {
-	int i,j,k,n,tind,msgn,sgn,sind,v0,indx;
+	int i,j,k,n,tind,msgn,sgn,sind,v0;
 	Array<FLT,2> spokemass;
 	int last_phase, mp_phase;
 	

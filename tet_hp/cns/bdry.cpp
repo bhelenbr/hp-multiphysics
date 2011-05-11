@@ -140,7 +140,7 @@ void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<
 
 	/* XYZ MOMENTUM */
 	for (int n=1;n<tet_mesh::ND+1;++n)
-		flx(n) = flx(0)*u(n) + u(0)*norm(n-1);
+		flx(n) = flx(0)*u(n) + ibc->f(0, xpt, x.gbl->time)*norm(n-1);
 	
 	/* ENERGY EQUATION */
 	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
@@ -178,31 +178,31 @@ void inflow::fdirichlet() {
 	}
 }	
 
-void inflow::apply_sparse_dirichlet(bool compressed_column) {
-	int gind;
-	int em=basis::tet(x.log2p).em;
-	int fm=basis::tet(x.log2p).fm;
-	
-	for(int i=0;i<base.npnt;++i){
-		gind = base.pnt(i).gindx*x.NV;
-		for(int n=0;n<ndirichlets;++n)
-			x.sparse_dirichlet(gind+dirichlets(n),compressed_column);
-	}
-	
-	for(int i=0;i<base.nseg;++i){
-		gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
-		for(int m=0; m<em; ++m)
-			for(int n=0;n<ndirichlets;++n)
-				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
-	}
-	
-	for(int i=0;i<base.ntri;++i){
-		gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
-		for(int m=0; m<fm; ++m)
-			for(int n=0;n<ndirichlets;++n)
-				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
-	}			
-}
+//void inflow::apply_sparse_dirichlet(bool compressed_column) {
+//	int gind;
+//	int em=basis::tet(x.log2p).em;
+//	int fm=basis::tet(x.log2p).fm;
+//	
+//	for(int i=0;i<base.npnt;++i){
+//		gind = base.pnt(i).gindx*x.NV;
+//		for(int n=0;n<ndirichlets;++n)
+//			x.sparse_dirichlet(gind+dirichlets(n),compressed_column);
+//	}
+//	
+//	for(int i=0;i<base.nseg;++i){
+//		gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
+//		for(int m=0; m<em; ++m)
+//			for(int n=0;n<ndirichlets;++n)
+//				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
+//	}
+//	
+//	for(int i=0;i<base.ntri;++i){
+//		gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
+//		for(int m=0; m<fm; ++m)
+//			for(int n=0;n<ndirichlets;++n)
+//				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
+//	}			
+//}
 
 void inflow::modify_boundary_residual() {
 	int j,k,m,n,v0,v1,sind;
@@ -324,31 +324,31 @@ void adiabatic::fdirichlet() {
 	}
 }		
 
-void adiabatic::apply_sparse_dirichlet(bool compressed_column) {
-	int gind;
-	int em=basis::tet(x.log2p).em;
-	int fm=basis::tet(x.log2p).fm;
-	
-	for(int i=0;i<base.npnt;++i){
-		gind = base.pnt(i).gindx*x.NV;
-		for(int n=0;n<ndirichlets;++n)
-			x.sparse_dirichlet(gind+dirichlets(n),compressed_column);
-	}
-	
-	for(int i=0;i<base.nseg;++i){
-		gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
-		for(int m=0; m<em; ++m)
-			for(int n=0;n<ndirichlets;++n)
-				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
-	}
-	
-	for(int i=0;i<base.ntri;++i){
-		gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
-		for(int m=0; m<fm; ++m)
-			for(int n=0;n<ndirichlets;++n)
-				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
-	}			
-}
+//void adiabatic::apply_sparse_dirichlet(bool compressed_column) {
+//	int gind;
+//	int em=basis::tet(x.log2p).em;
+//	int fm=basis::tet(x.log2p).fm;
+//	
+//	for(int i=0;i<base.npnt;++i){
+//		gind = base.pnt(i).gindx*x.NV;
+//		for(int n=0;n<ndirichlets;++n)
+//			x.sparse_dirichlet(gind+dirichlets(n),compressed_column);
+//	}
+//	
+//	for(int i=0;i<base.nseg;++i){
+//		gind = x.npnt*x.NV+base.seg(i).gindx*em*x.NV;
+//		for(int m=0; m<em; ++m)
+//			for(int n=0;n<ndirichlets;++n)
+//				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
+//	}
+//	
+//	for(int i=0;i<base.ntri;++i){
+//		gind = x.npnt*x.NV+x.nseg*em*x.NV+base.tri(i).gindx*fm*x.NV;
+//		for(int m=0; m<fm; ++m)
+//			for(int n=0;n<ndirichlets;++n)
+//				x.sparse_dirichlet(gind+m*x.NV+dirichlets(n),compressed_column);
+//	}			
+//}
 
 void adiabatic::modify_boundary_residual() {
 	int j,k,m,n,v0,v1,sind,info;
