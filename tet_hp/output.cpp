@@ -767,7 +767,11 @@ void tet_hp::input(const std::string& filename, filetype typ, int tlvl) {
 				*gbl->log << "mismatched tri counts?\n";
 				exit(1);
 			}
-
+			if (bin.readInt(sizeof(int))  != ntet) {
+				*gbl->log << "mismatched tet counts?\n";
+				exit(1);
+			}
+			
 			for(i=0;i<npnt;++i) {
 				for(n=0;n<NV;++n)
 					ugbd(tlvl).v(i,n) = bin.readFloat(binio::Double);

@@ -78,7 +78,7 @@ void tet_hp::init(input_map& inmap, void *gin) {
 	output_purposes(0) = "display_type";
 	defaults(0) = tet_hp::tecplot;
 	output_purposes(1) = "restart_type";
-	defaults(1) = tet_hp::text;
+	defaults(1) = tet_hp::binary;
 	output_purposes(2) = "debug_type";
 	defaults(2) = tet_hp::tecplot;
 	for(int i=0;i<3;++i) {
