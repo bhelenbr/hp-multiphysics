@@ -28,7 +28,7 @@ public:
 		TinyVector<FLT,2> eanda, eanda_recv;
 						
 		/* SOURCE FUNCTION FOR MMS */
-		init_bdry_cndtn *src;
+		//init_bdry_cndtn *src;
 		
 	} *gbl;
 	

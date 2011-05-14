@@ -125,12 +125,17 @@ void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector
 
 void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 	
-	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	for(int i = 0; i < x.NV; ++i)
+		flx(i) = 0.0;
+	return;
 	
-	/* EVERYTHING ELSE DOESN'T MATTER */
-	for (int n=1;n<x.NV;++n)
-		flx(n) = 0.0;
+	//fix temp 
+	
+	
+	/* CONTINUITY */
+	flx(0) = (u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2);
+	
+
 	
 	return;
 }
@@ -164,6 +169,115 @@ void inflow::fdirichlet() {
 		}
 	}
 }	
+
+void inflow::update(int stage) {
+	int j,k,m,n,v0,v1,sind,indx,info;
+	double KE,rho,u,v,w,RT;
+	TinyVector<FLT,tet_mesh::ND> pt;
+	
+	TinyVector<double,MXTM> ucoef;
+	
+	char uplo[] = "U";
+	
+	j = 0;
+	do {
+		sind = base.seg(j).gindx;
+		v0 = x.seg(sind).pnt(0);
+		
+		u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+		v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+		w = ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+		KE = 0.5*(u*u+v*v+w*w);
+		RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+		
+		rho = x.ug.v(v0,0);
+		
+		x.ug.v(v0,1) = rho*u;
+		x.ug.v(v0,2) = rho*v;
+		x.ug.v(v0,3) = rho*w;
+		x.ug.v(v0,4) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+		
+	} while (++j < base.nseg);
+	v0 = x.seg(sind).pnt(1);
+	
+	u = ibc->f(1, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+	v = ibc->f(2, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+	w = ibc->f(3, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time);
+	KE = 0.5*(u*u+v*v+w*w);
+	RT = (ibc->f(4, x.pnts(v0), x.gbl->time)/ibc->f(0, x.pnts(v0), x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+	
+	rho = x.ug.v(v0,0);
+	
+	x.ug.v(v0,1) = rho*u;
+	x.ug.v(v0,2) = rho*v;
+	x.ug.v(v0,3) = rho*w;
+	x.ug.v(v0,4) = rho*(RT/(x.gbl->gamma-1.0)+KE);
+	
+	if(basis::tet(x.log2p).p > 2){
+		*x.gbl->log << "update in boundary face only works for p=1,2" << endl;
+		exit(3);
+	}
+	if(basis::tet(x.log2p).em){
+		for(j=0;j<base.nseg;++j) {
+			sind = base.seg(j).gindx;
+			v0 = x.seg(sind).pnt(0);
+			v1 = x.seg(sind).pnt(1);
+			
+			if (x.seg(sind).info < 0){
+				for(n=0;n<x.ND;++n)
+					basis::tet(x.log2p).proj1d(x.pnts(v0)(n),x.pnts(v1)(n),&x.crd1d(n)(0));
+			}
+			else {
+				x.crdtocht1d(sind,0);
+				for(n=0;n<x.ND;++n)
+					basis::tet(x.log2p).proj1d(&x.cht(n)(0),&x.crd1d(n)(0));
+			}
+			
+			/* take global coefficients and put into local vector */
+			/*  only need rho */
+			for (m=0; m<2; ++m) 
+				ucoef(m) = x.ug.v(x.seg(sind).pnt(m),0);					
+			
+			for (m=0;m<basis::tet(x.log2p).em;++m) 
+				ucoef(m+2) = x.ug.e(sind,m,0);					
+			
+			basis::tet(x.log2p).proj1d(&ucoef(0),&x.u1d(0)(0));
+			
+			for(n=1;n<x.NV;++n)
+				basis::tet(x.log2p).proj1d(x.ug.v(v0,n),x.ug.v(v1,n),&x.u1d(n)(0));
+
+			
+			for(k=0;k<basis::tet(x.log2p).gpx; ++k) {
+				pt(0) = x.crd1d(0)(k);
+				pt(1) = x.crd1d(1)(k);
+				pt(2) = x.crd1d(2)(k);
+				
+				u = ibc->f(1, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
+				v = ibc->f(2, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
+				w = ibc->f(3, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time);
+				KE = 0.5*(u*u+v*v+w*w);
+				RT = (ibc->f(4, pt, x.gbl->time)/ibc->f(0, pt, x.gbl->time)-KE)*(x.gbl->gamma-1.0);
+				
+				rho = x.u1d(0)(k);
+				
+				x.u1d(1)(k) -= rho*u;
+				x.u1d(2)(k) -= rho*v;
+				x.u1d(3)(k) -= rho*w;
+				x.u1d(4)(k) -= rho*(RT/(x.gbl->gamma-1.0)+KE);
+				
+				
+			}
+			for(n=1;n<x.NV;++n)
+				basis::tet(x.log2p).intgrt1d(&x.lf(n)(0),&x.u1d(n)(0));
+			
+			for(n=1;n<x.NV;++n) {
+				for(m=0;m<basis::tet(x.log2p).em;++m){ 
+					x.ug.e(sind,m,n) = -x.lf(n)(2+m)*basis::tet(x.log2p).diag1d(m);
+				}
+			}			
+		}
+	}					
+}
 
 void adiabatic::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 	

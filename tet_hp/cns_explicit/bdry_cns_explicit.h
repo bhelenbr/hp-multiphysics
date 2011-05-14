@@ -105,10 +105,10 @@ namespace bdry_cns_explicit {
 	public:
 		inflow(tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(xin,bin) {
 			mytype = "inflow";
-			ndirichlets = x.NV;// not correct just for testing bug fix me temp
+			ndirichlets = x.NV-1;
 			dirichlets.resize(ndirichlets);
-			for (int n=0;n<x.NV;++n)
-				dirichlets(n) = n;
+			for (int n=1;n<x.NV;++n)
+				dirichlets(n-1) = n;
 		}
 		inflow(const inflow& inbdry, tet_hp_cns_explicit &xin, face_bdry &bin) : neumann(inbdry,xin,bin), ndirichlets(inbdry.ndirichlets) {dirichlets.resize(ndirichlets), dirichlets=inbdry.dirichlets;}
 		inflow* create(tet_hp& xin, face_bdry &bin) const {return new inflow(*this,dynamic_cast<tet_hp_cns_explicit&>(xin),bin);}
@@ -122,6 +122,7 @@ namespace bdry_cns_explicit {
 			setvalues(ibc,dirichlets,ndirichlets);
 		};
 		
+		void update(int stage);
 	};
 	
 	
