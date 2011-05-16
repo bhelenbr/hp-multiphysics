@@ -104,49 +104,91 @@ void neumann::element_rsdl(int find,int stage) {
 
 void neumann::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm, Array<FLT,1>& flx) {
 	
+	Array<FLT,1> v(3);
+	FLT pr = ibc->f(0,xpt,x.gbl->time);
+	v(0) = u(1);
+	v(1) = u(2);
+	v(2) = u(3);
+	FLT RT = u(4);
+	FLT rho = pr/RT;
+	
 	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
-	
-	/* X&Y MOMENTUM */
-#ifdef INERTIALESS
+	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
+	/* XYZ MOMENTUM */
 	for (int n=1;n<tet_mesh::ND+1;++n)
-		flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
-#else
-	for (int n=1;n<tet_mesh::ND+1;++n)
-		flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
-#endif
-	
+		flx(n) = flx(0)*v(n-1) + pr*norm(n-1);
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
 	flx(x.NV-1) = h*flx(0);
 	
+
 	return;
+	
+//	/* CONTINUITY */
+//	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+//	
+//	/* X&Y MOMENTUM */
+//#ifdef INERTIALESS
+//	for (int n=1;n<tet_mesh::ND+1;++n)
+//		flx(n) = ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+//#else
+//	for (int n=1;n<tet_mesh::ND+1;++n)
+//		flx(n) = flx(0)*u(n) +ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+//#endif
+//	
+//	/* ENERGY EQUATION */
+//	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+//	flx(x.NV-1) = h*flx(0);
+//	
+//	return;
 }
 
 void inflow::flux(Array<FLT,1>& u, TinyVector<FLT,tet_mesh::ND> xpt, TinyVector<FLT,tet_mesh::ND> mv, TinyVector<FLT,tet_mesh::ND> norm,  Array<FLT,1>& flx) {
 	
-	/* CONTINUITY */
-	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
-	
-	/* EVERYTHING ELSE DOESN'T MATTER */
-	for (int n=1;n<x.NV;++n)
-		flx(n) = 0.0;
-	
-	
-	/* new way */
-	
-	/* CONTINUITY */
-	//flx(0) = u(0)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+	Array<FLT,1> v(3);
+	FLT pr = u(0);
+	v(0) = ibc->f(1,xpt,x.gbl->time);
+	v(1) = ibc->f(2,xpt,x.gbl->time);
+	v(2) = ibc->f(3,xpt,x.gbl->time);
+	FLT RT = ibc->f(4,xpt,x.gbl->time);
+	FLT rho = pr/RT;
 
+	/* CONTINUITY */
+	flx(0) = rho*(v(0)*norm(0)+v(1)*norm(1)+v(2)*norm(2));
 	/* XYZ MOMENTUM */
 	for (int n=1;n<tet_mesh::ND+1;++n)
-		flx(n) = flx(0)*u(n) + ibc->f(0, xpt, x.gbl->time)*norm(n-1);
-	
+		flx(n) = flx(0)*v(n-1) + pr*norm(n-1);
 	/* ENERGY EQUATION */
-	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+	FLT h = x.gbl->gamma/(x.gbl->gamma-1.0)*RT +0.5*(v(0)*v(0)+v(1)*v(1)+v(2)*v(2));				
 	flx(x.NV-1) = h*flx(0);
-	
+
 	return;
+	
+//	/* CONTINUITY */
+//	flx(0) = ibc->f(0, xpt, x.gbl->time)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+//	
+//	/* EVERYTHING ELSE DOESN'T MATTER */
+//	for (int n=1;n<x.NV;++n)
+//		flx(n) = 0.0;
+//	
+//	
+//	/* new way */
+//	
+//	/* CONTINUITY */
+//	//flx(0) = u(0)/u(x.NV-1)*((u(1) -mv(0))*norm(0) +(u(2) -mv(1))*norm(1)+(u(3) -mv(2))*norm(2));
+//
+//	/* XYZ MOMENTUM */
+//	for (int n=1;n<tet_mesh::ND+1;++n)
+//		flx(n) = flx(0)*u(n) + ibc->f(0, xpt, x.gbl->time)*norm(n-1);
+//	
+//	/* ENERGY EQUATION */
+//	double h = x.gbl->gamma/(x.gbl->gamma-1.0)*u(x.NV-1) +0.5*(u(1)*u(1)+u(2)*u(2)+u(3)*u(3));				
+//	flx(x.NV-1) = h*flx(0);
+//	
+//	cout << flx << endl;
+//	
+//	return;
+	
 }
 
 void inflow::vdirichlet() {	
