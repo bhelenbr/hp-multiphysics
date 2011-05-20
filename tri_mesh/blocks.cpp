@@ -752,6 +752,9 @@ void multigrid_interface::findmatch(block_global *gbl, int grdlvl) {
 
 	/* Now match internal numbering system of boundaries (if necessary) */
 	match_bdry_numbering();
+	
+	/* Update halo information */
+	calculate_halo();
 
 	return;
 }

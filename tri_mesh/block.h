@@ -195,6 +195,7 @@ class multigrid_interface {
 
 		void findmatch(block_global *gbl, int grdlvl); /**< Sets-up parallel communications, called by init */
 		class comm_info;  /**< Utility class for figuring out communication */
+		virtual void calculate_halo() {} /**< calculate halo mesh structures in partition boundaries */
 		virtual void matchboundaries() {} /**< Makes sure data on boundaries coinside */
 
 		/** Setup preconditioner */
@@ -257,7 +258,7 @@ class boundary {
 		enum msg_type {flt_msg, int_msg};
 		enum groups {all,all_phased,partitions,manifolds};
 		enum comm_type {symmetric,master_slave,slave_master};
-		enum operation {average,sum,difference,maximum,minimum,replace};
+		enum operation {average,sum,maximum,minimum,replace};
 		union  {
 			bool bdum;
 			int idum;

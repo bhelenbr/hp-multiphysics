@@ -43,13 +43,13 @@ using namespace blitz;
  */
 template<class BASE,class MESH> class comm_bdry : public BASE {
 	protected:
-		static const int maxmatch = 8;
+		static const int maxmatch = 8; //!< Max number of communication mathces 
+		static const int maxgroup = 5; //!< Max number of different communication groups
 		bool first; //!< For master-slave communication. Only one boundary of matching boundaries is first
-		int maxgroup;
 		int groupmask;  //!< To make groups that only communicate in restricted situations group 0 all, group 1 all phased, group 2 partitions, group 3 manifolds
-		Array<int,1> maxphase; //!<  For phased symmetric message passing for each group
-		Array<TinyVector<int,maxmatch>,1> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
-		int& msg_phase(int grp, int match) {return(phase(grp)(match));} //!< virtual accessor
+		TinyVector<int,maxgroup> maxphase; //!<  For phased symmetric message passing for each group
+		TinyMatrix<int,maxgroup,maxmatch> phase;  //!< To set-up staggered sequence of symmetric passes for each group (-1 means skip)
+		int& msg_phase(int grp, int match) {return(phase(grp,match));} //!< virtual accessor
 		int buffsize; //!< Size in bytes of buffer
 		void *sndbuf; //!< Raw memory for outgoing message buffer
 		Array<FLT,1> fsndbufarray; //!< Access to outgoing message buffer for floats
@@ -84,25 +84,17 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #endif
 
 	public:
-		comm_bdry(int inid, MESH &xin) : BASE(inid,xin), first(1), maxgroup(1), groupmask(0x3), buffsize(0), nmatch(0) {
-			maxphase.resize(maxgroup+1);
-			phase.resize(maxgroup+1);
-			for(int m=0;m<maxmatch;++m) phase(0)(m) = 0;
+		comm_bdry(int inid, MESH &xin) : BASE(inid,xin), first(1), groupmask(0x3), buffsize(0), nmatch(0), maxphase(0) {
+			phase = 0;
 		}
-		comm_bdry(const comm_bdry<BASE,MESH> &inbdry, MESH& xin) : BASE(inbdry,xin), first(inbdry.first), maxgroup(inbdry.maxgroup), groupmask(inbdry.groupmask), buffsize(0), nmatch(0) {
-			maxphase.resize(maxgroup+1);
-			phase.resize(maxgroup+1);
-			maxphase = inbdry.maxphase;
-			for(int k=0;k<maxgroup+1;++k)
-				phase(k) = inbdry.phase(k);
-
+		comm_bdry(const comm_bdry<BASE,MESH> &inbdry, MESH& xin) : BASE(inbdry,xin), first(inbdry.first), groupmask(inbdry.groupmask), buffsize(0), nmatch(0),
+			maxphase(inbdry.maxphase), phase(inbdry.phase) {
 			/* COPY THESE, BUT WILL HAVE TO BE RESET TO NEW MATCHING SIDE */
 			first = true; // Findmatch sets this
 			mtype = inbdry.mtype;
 			local_match = local_match;
 			snd_tags = inbdry.snd_tags;
 			rcv_tags = inbdry.rcv_tags;
-
 #ifdef MPISRC
 			mpi_match = inbdry.mpi_match;
 #endif
@@ -112,12 +104,11 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 		comm_bdry<BASE,MESH>* create(MESH &xin) const {return(new comm_bdry<BASE,MESH>(*this,xin));}
 		bool is_comm() {return(true);}
 		bool& is_frst() {return(first);}
+		int& matchphase(boundary::groups group, int matchnum) {return(phase(group,matchnum));}
 		bool is_local(int matchnum) {return(mtype(matchnum) == local);}
-		int& group() {return(groupmask);}
 		bool in_group(int grp) {return(((1<<grp)&groupmask));}
 		int& sndsize() {return(msgsize);}
 		boundary::msg_type& sndtype() {return(msgtype);}
-		int& matchphase(boundary::groups group, int matchnum) {return(phase(group)(matchnum));}
 		int& isndbuf(int indx) {return(isndbufarray(indx));}
 		FLT& fsndbuf(int indx) {return(fsndbufarray(indx));}
 		int& ircvbuf(int m,int indx) {return(ircvbufarray(m)(indx));}
@@ -146,54 +137,61 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			BASE::alloc(nels);
 			resize_buffers(nels*3);
 		}
-
+		
+		void add_to_group(int grp) {
+			groupmask = groupmask|(1<<grp);
+			for(int m=0; m < maxmatch; ++m)
+				phase(grp,m) = 0;
+			maxphase(grp) = 0;
+		}
+	
+		void add_to_group(int grp, std::vector<int> phaselist) {
+			groupmask = groupmask|(1<<grp);
+			for(int m=0; m < phaselist.size(); ++m) {
+				phase(grp,m) = phaselist[m];
+				maxphase(grp) = MAX(maxphase(grp),phase(grp,m));
+			}
+		}
+		
 		void init(input_map& inmap) {
-			int j,k,m;
-			std::string keyword,val;
+			int j,m;
+			std::string keyword,gs,ps;
 			std::map<std::string,std::string>::const_iterator mi;
-			std::istringstream data;
+			std::istringstream gd,pd;
 			std::ostringstream nstr;
 
 			BASE::init(inmap);
-
+			
 			keyword = BASE::idprefix +"_first";
 			inmap.getwdefault(keyword,first,true);
 
+			
 			/* SET GROUP MEMBERSHIP FLAGS */
-			maxgroup = 0;
-			groupmask = 0;
-			inmap.getlinewdefault(BASE::idprefix + "_group",val,"0 1"); // DEFAULT IS FIRST 2 GROUPS
-			data.str(val);
-			while(data >> m) {
-				groupmask = groupmask|(1<<m);
-				maxgroup = MAX(maxgroup,m);
+			/* For each group and each bdry match there is a phase */
+			inmap.getlinewdefault(BASE::idprefix + "_group",gs,"0 1"); // DEFAULT IS FIRST 2 GROUPS
+			gd.str(gs);
+			while(gd >> m) {
+				add_to_group(m);  // ADD AS UNPHASED GROUP FIRST
 			}
-			data.clear();
-
-			/* LOAD PHASES */
-			maxphase.resize(maxgroup+1);
-			maxphase = 0;
-			phase.resize(maxgroup+1);
-			phase = 0;
-			/* SKIP GROUP 0 BECAUSE THAT GROUP IS NOT PHASED */
-			for(k=1;k<maxgroup+1;++k) {
-				if (!(groupmask&(1<<k))) continue;
-
-				nstr.str("");
-				nstr << BASE::idprefix << "_phase" << k << std::flush;
-				if (inmap.getline(nstr.str(),val)) {
-					data.str(val);
-					m = 0;
-					while(data >> j) {
-						phase(k)(m) = j;
-						maxphase(k) = MAX(maxphase(k),phase(k)(m));
-						++m;
+			
+			/* SKIP FIRST GROUP (NEVER PHASED) */
+			for(int m=1;m<maxgroup;++m) {
+				if (in_group(m)) {
+					/* Load phase list for this group */
+					nstr.str("");
+					nstr << BASE::idprefix << "_phase" << m << std::flush;
+					if (inmap.getline(nstr.str(),ps)) {
+						std::vector<int> phaselist;
+						pd.str(ps);
+						while(pd >> j) {
+							phaselist.push_back(j);
+						}
+						add_to_group(m,phaselist);
 					}
-					data.clear();
 				}
 			}
 		}
-
+		
 		void output(std::ostream& fout) {
 			BASE::output(fout);
 
@@ -206,7 +204,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				if (groupmask&(1<<k)) {
 					fout << BASE::idprefix << "_phase (not set yet so this is dumb)" << k << ": ";
 					for (int m=0;m<nmatch;++m)
-						fout << phase(k)(m) << " ";
+						fout << phase(k,m) << " ";
 					fout << std::endl;
 				}
 			}
@@ -308,7 +306,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 			/* MPI POST RECEIVES FIRST */
 			for(m=0;m<nrecvs_to_post;++m) {
-				if (phi != phase(grp)(m)) continue;
+				if (phi != phase(grp,m)) continue;
 
 				switch(mtype(m)) {
 					case(local):
@@ -339,7 +337,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 			/* LOCAL POST SENDS FIRST */
 			for(m=0;m<nsends_to_post;++m) {
-				if (phi != phase(grp)(m)) continue;
+				if (phi != phase(grp,m)) continue;
 
 				switch(mtype(m)) {
 					case(local):
@@ -396,7 +394,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 			/* LOCAL PASSES */
 			for(m=0;m<nrecvs_to_post;++m) {
-				if (phi != phase(grp)(m) || mtype(m) != local) continue;
+				if (phi != phase(grp,m) || mtype(m) != local) continue;
 
 				sim::blks.waitforslot(rcv_tags(m),true);
 
@@ -418,7 +416,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 #ifdef MPISRC
 			/* MPI PASSES */
 			for(m=0;m<nsends_to_post;++m) {
-				if (phi != phase(grp)(m) || mtype(m) != mpi) continue;
+				if (phi != phase(grp,m) || mtype(m) != mpi) continue;
 
 				switch(sndtype()) {
 					case(boundary::flt_msg): {
@@ -481,7 +479,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 			}
 
 			for(int m=0;m<nsends_to_post;++m) {
-				if (phi != phase(grp)(m)) continue;
+				if (phi != phase(grp,m)) continue;
 
 				switch(mtype(m)) {
 					case(local): {
@@ -500,7 +498,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 
 
 			for(int m=0;m<nrecvs_to_post;++m) {
-				if (phi != phase(grp)(m)) continue;
+				if (phi != phase(grp,m)) continue;
 
 				switch(mtype(m)) {
 					case(local): {
@@ -530,7 +528,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 				}
 
 				case(boundary::master_slave): {
-					if (is_frst() || (phase(grp)(0) != phi)) return(false);
+					if (is_frst() || (phase(grp,0) != phi)) return(false);
 
 #ifdef MPDEBUG
 					*BASE::x.gbl->log << "finish master_slave"  << BASE::idprefix << std::endl;
@@ -565,7 +563,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 								case(boundary::average): {
 									int matches = 1;
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
@@ -589,7 +587,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
@@ -611,7 +609,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 
@@ -634,7 +632,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 
@@ -653,10 +651,29 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									}
 									return(false);
 								}
-
-								default: {
-									*BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
-									sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+								
+								case(boundary::replace): {
+									int matches = 1;
+									
+									for(int m=0;m<nmatch;++m) {
+										if (phase(grp,m) != phi) continue;
+										
+										++matches;
+										
+										for(int j=0;j<sndsize();++j) {
+											fsndbufarray(j) = frcvbuf(m,j);
+										}
+									}
+									
+									if (matches > 1 ) {
+#ifdef MPDEBUG
+										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
+										*BASE::x.gbl->log << fsndbufarray(Range(0,sndsize()-1)) << std::endl;
+#endif
+										return(true);
+										
+									}
+									return(false);
 								}
 							}
 						}
@@ -672,7 +689,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 										for(int j=0;j<sndsize();++j) {
@@ -694,7 +711,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 
@@ -717,7 +734,7 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									int matches = 1;
 
 									for(int m=0;m<nmatch;++m) {
-										if (phase(grp)(m) != phi) continue;
+										if (phase(grp,m) != phi) continue;
 
 										++matches;
 
@@ -736,9 +753,27 @@ template<class BASE,class MESH> class comm_bdry : public BASE {
 									return(false);
 								}
 
-								default: {
-									*BASE::x.gbl->log << "replacement with symmetric sending?" << std::endl;
-									sim::abort(__LINE__,__FILE__,BASE::x.gbl->log);
+								case(boundary::replace): {
+									int matches = 1;
+									
+									for(int m=0;m<nmatch;++m) {
+										if (phase(grp,m) != phi) continue;
+										
+										++matches;
+										
+										for(int j=0;j<sndsize();++j) {
+											isndbufarray(j) = ircvbuf(m,j);
+										}
+									}
+									
+									if (matches > 1 ) {
+#ifdef MPDEBUG
+										*BASE::x.gbl->log << "finish min"  << BASE::idprefix << std::endl;
+										*BASE::x.gbl->log << isndbufarray(Range(0,sndsize()-1)) << std::endl;
+#endif
+										return(true);
+									}
+									return(false);
 								}
 							}
 						}

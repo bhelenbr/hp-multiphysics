@@ -537,9 +537,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	initialized = 1;
 	
 	for(i=0;i<nebd;++i) {
-		if (ebdry(i)->mytype == "partition") {
-			dynamic_cast<epartition *>(ebdry(i))->calculate_halo();
-		}
+		ebdry(i)->calculate_halo();		
 	}
 
 	return;

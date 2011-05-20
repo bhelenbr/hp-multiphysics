@@ -26,9 +26,9 @@ while [ $p -lt $BLKS ]; do
 	let p=$p+1
 done
 
-echo $FTYP
-echo $MESH
-echo $BLKS
+#echo $FTYP
+#echo $MESH
+#echo $BLKS
 	
 if [ -n "$FTYP" ]; 
 then
@@ -45,7 +45,7 @@ RMV=$(grep '_v' partition.inpt | grep ': comm' | cut -d _ -f2 | sort | uniq -c |
 
 cp partition.inpt temp.inpt
 for line in ${RMV}; do
-	echo ${line}
+#	echo ${line}
 	grep -v ${line} temp.inpt > temp1.inpt
 	mv temp1.inpt temp.inpt
 done

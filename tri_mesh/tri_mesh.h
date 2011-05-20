@@ -249,6 +249,7 @@ class tri_mesh : public multigrid_interface {
 		void bdry_insert(int pnum, int sind, int endpt = 0); /**< Inserts a boundary point in segment sind if endpt is 0 makes left old and right new seg */
 
 		void cleanup_after_adapt(); /**< Clean up and move data etc.. */
+		void calculate_halo(); /**< calculate halo mesh structures in partition boundaries */
 		void dltpnt(int pind); /**< Removes leftover point references */
 		virtual void movepdata(int frm, int to) {} /**< Virtual routine so inheritors can automatically have their point data moved */
 		virtual void movepdata_bdry(int bnum,int bel,int endpt) {} /**< Virtual routine so inheritors can automatically have their boundary point data moved */
@@ -394,6 +395,8 @@ class edge_bdry : public boundary, egeometry_interface<tri_mesh::ND> {
 		virtual void sfinalrcv(boundary::groups group,int phase, comm_type type, operation op, FLT *base,int bgn,int end, int stride) {}
 		virtual void loadpositions() {vloadbuff(all,&(x.pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
 		virtual void rcvpositions(int phase) {vfinalrcv(all_phased,phase,master_slave,replace,&(x.pnts(0)(0)),0,tri_mesh::ND-1,tri_mesh::ND);}
+		virtual void calculate_halo() {}
+		virtual void receive_halo() {}
 };
 
 #endif

@@ -67,7 +67,7 @@ class epartition : public ecomm {
 
 	public:
 		/* CONSTRUCTOR */
-		epartition(int inid, tri_mesh& xin) : ecomm(inid,xin) {groupmask = 1;mytype="partition";}
+		epartition(int inid, tri_mesh& xin) : ecomm(inid,xin) {add_to_group(boundary::partitions); mytype="partition";}
 		epartition(const epartition &inbdry, tri_mesh& xin) : ecomm(inbdry,xin) {}
 
 		epartition* create(tri_mesh& xin) const {return new epartition(*this,xin);}
@@ -76,6 +76,7 @@ class epartition : public ecomm {
 		void mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 		void mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum);
 		void calculate_halo();
+		void receive_halo();
 };
 
 

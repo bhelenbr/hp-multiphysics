@@ -224,8 +224,26 @@ void tri_mesh::cleanup_after_adapt() {
 	}
 
 	cnt_nbor();
-
+	calculate_halo();
+	
 	return;
+}
+
+void tri_mesh::calculate_halo() {
+	int i;
+	
+	/* UPDATE PARTITION MESHES */
+	for(i=0;i<nebd;++i) 
+		ebdry(i)->calculate_halo();
+
+	for(i=0;i<nebd;++i)
+		ebdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
+
+	for(i=0;i<nebd;++i)
+		ebdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
+
+	for(i=0;i<nebd;++i)
+		ebdry(i)->receive_halo();
 }
 
 

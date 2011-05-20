@@ -440,8 +440,9 @@ void ecomm::sfinalrcv(boundary::groups grp, int phi, comm_type type, operation o
 }
 
 void epartition::alloc(int size) {
-	remote_halo.allocate(8*size);
 	ecomm::alloc(size);
+	resize_buffers(4*size*(2+2+3)); // Four rows of pnts, seg pnts, tri pnts
+	remote_halo.allocate(8*size);
 	pnt_h.resize(2*size);
 	seg_h.resize(2*size); 
 	tri_h.resize(2*size);
@@ -727,12 +728,73 @@ void epartition::calculate_halo() {
 			remote_halo.tri(tind).pnt(vn) = x.gbl->intwk(x.tri(tri_h(tind)).pnt(vn));
 		}
 	}
-	
-	remote_halo.output(idprefix +"_halo");
-	
+		
 	for(int j=0;j<npnt_h;++j)
 		x.gbl->intwk(pnt_h(j)) = -1;
 		
 	x.checkintwk();
-		
+	
+	/* pack up to send messages */
+	sndtype() = boundary::flt_msg;
+	sndsize() = 0;
+	fsndbuf(sndsize()++) = remote_halo.npnt+100*FLT_EPSILON;
+	fsndbuf(sndsize()++) = remote_halo.nseg+100*FLT_EPSILON;
+	fsndbuf(sndsize()++) = remote_halo.ntri+100*FLT_EPSILON;
+	for(int j=0;j<remote_halo.npnt;++j) {
+		fsndbuf(sndsize()++) = remote_halo.pnts(j)(0);
+		fsndbuf(sndsize()++) = remote_halo.pnts(j)(1);
+	}
+	for(int j=0;j<remote_halo.nseg;++j) {
+		fsndbuf(sndsize()++) = remote_halo.seg(j).pnt(0)+100*FLT_EPSILON;
+		fsndbuf(sndsize()++) = remote_halo.seg(j).pnt(1)+100*FLT_EPSILON;
+	}
+	
+	for(int j=0;j<remote_halo.ntri;++j) {
+		fsndbuf(sndsize()++) = remote_halo.tri(j).pnt(0)+100*FLT_EPSILON;
+		fsndbuf(sndsize()++) = remote_halo.tri(j).pnt(1)+100*FLT_EPSILON;
+		fsndbuf(sndsize()++) = remote_halo.tri(j).pnt(2)+100*FLT_EPSILON;
+	}
+	
+//	if (x.gbl->adapt_output) {	
+//		std::string adapt_file;
+//		std::ostringstream nstr;
+//		nstr << x.gbl->tstep << std::flush;
+//		adapt_file = "beforehalo" +nstr.str() +"_" +idprefix;
+//		remote_halo.output(adapt_file);
+//	}
+	
+}
+
+void epartition::receive_halo() {
+	
+	comm_wait(boundary::partitions,0,boundary::symmetric);
+	
+	/* Now unpack what we have received */
+	int cnt = 0;
+	remote_halo.npnt = static_cast<int>(frcvbuf(0,cnt++));
+	remote_halo.nseg = static_cast<int>(frcvbuf(0,cnt++));
+	remote_halo.ntri = static_cast<int>(frcvbuf(0,cnt++));
+	for(int j=0;j<remote_halo.npnt;++j) {
+		remote_halo.pnts(j)(0) = frcvbuf(0,cnt++);
+		remote_halo.pnts(j)(1) = frcvbuf(0,cnt++);
+	}
+	for(int j=0;j<remote_halo.nseg;++j) {
+		remote_halo.seg(j).pnt(0) = static_cast<int>(frcvbuf(0,cnt++));
+		remote_halo.seg(j).pnt(1) = static_cast<int>(frcvbuf(0,cnt++));
+	}
+	
+	for(int j=0;j<remote_halo.ntri;++j) {
+		remote_halo.tri(j).pnt(0) = static_cast<int>(frcvbuf(0,cnt++));
+		remote_halo.tri(j).pnt(1) = static_cast<int>(frcvbuf(0,cnt++));
+		remote_halo.tri(j).pnt(2) = static_cast<int>(frcvbuf(0,cnt++));
+	}	
+	
+	if (x.gbl->adapt_output) {	
+		std::string adapt_file;
+		std::ostringstream nstr;
+		nstr << x.gbl->tstep << std::flush;
+		adapt_file = "halo" +nstr.str() +"_" +idprefix;
+		remote_halo.output(adapt_file);
+	}
+
 }
