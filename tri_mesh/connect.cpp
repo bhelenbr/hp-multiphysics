@@ -75,7 +75,7 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 	}
 	
 	for(bnum=0;bnum<nebd;++bnum) 
-		ebdry(bnum)->comm_exchange(boundary::partitions,0,boundary::slave_master);
+		ebdry(bnum)->comm_exchange(boundary::partitions,0,boundary::master_slave);
 	
 	for(bnum=0;bnum<nebd;++bnum)
 		ebdry(bnum)->mgconnect1(cnnct,tgt,bnum);
@@ -109,23 +109,32 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 					work(i)(n) += cnnct(i).wt(j)*cmesh->pnts(cmesh->tri(tind).pnt(j))(n);
 			}
 		}
-		/* FIXME: THIS DOESN'T WORK:  PARTITIONS DON'T WORK IN MULTIGRID !!! */
-//		for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
-//			for(i=0;i<nebd;++i)
-//				fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) work.data(),0,ND-1,ND);
-//
-//			for(i=0;i<nebd;++i) 
-//				fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
-//
-//			for(i=0;i<nebd;++i) 
-//				fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
-//
-//			last_phase = true;
-//			for(i=0;i<nebd;++i) {
-//				last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-//				fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum, work.data(),0,ND-1,ND);
-//			}
-//		}
+			
+		/* COMMUNICATION FOR PARTITION BOUNDARIES */
+		for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+			for(i=0;i<nvbd;++i)
+				vbdry(i)->vloadbuff(boundary::all,(FLT *) work.data(),0,ND-1,ND);
+			for(i=0;i<nebd;++i)
+				ebdry(i)->vloadbuff(boundary::partitions,(FLT *) work.data(),0,ND-1,ND);
+
+			for(i=0;i<nebd;++i) 
+				ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+			for(i=0;i<nvbd;++i)
+				vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+					
+			for(i=0;i<nebd;++i) 
+				ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+			for(i=0;i<nvbd;++i)
+				vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+				
+			last_phase = true;
+			for(i=0;i<nebd;++i) {
+				last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+				ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum, &work(0)(0),0,ND-1,ND);
+			}
+			for(i=0;i<nvbd;++i)
+				vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,&work(0)(0),0,ND-1,ND);
+		}
 		
 		Array<TinyVector<FLT,2>,1> storevrtx(pnts);
 		pnts.reference(work);

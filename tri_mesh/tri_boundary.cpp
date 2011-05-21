@@ -468,34 +468,32 @@ void epartition::copy(const edge_bdry& bin) {
 void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
 	int i,j,k,p0;
 
-
 	/* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
-	/* MAKE SURE ENDPOINTS ARE OK */
+	/* END POINTS SHOULD ALWAYS BE COINCIDENT */
 	i = x.seg(seg(0)).pnt(0);
-	if (cnnct(i).tri < 0) {
-		tgt.qtree.nearpt(x.pnts(i).data(),p0);
-		cnnct(i).tri=tgt.pnt(p0).tri;
-		for(j=0;j<3;++j) {
-			cnnct(i).wt(j) = 0.0;
-			if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
-		}
+	tgt.qtree.nearpt(x.pnts(i).data(),p0);
+	cnnct(i).tri=tgt.pnt(p0).tri;
+	for(j=0;j<3;++j) {
+		cnnct(i).wt(j) = 0.0;
+		if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
 	}
+	
 	i = x.seg(seg(nseg-1)).pnt(1);
-	if (cnnct(i).tri < 0) {
-		tgt.qtree.nearpt(x.pnts(i).data(),p0);
-		cnnct(i).tri=tgt.pnt(p0).tri;
-		for(j=0;j<3;++j) {
-			cnnct(i).wt(j) = 0.0;
-			if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
-		}
+	tgt.qtree.nearpt(x.pnts(i).data(),p0);
+	cnnct(i).tri=tgt.pnt(p0).tri;
+	for(j=0;j<3;++j) {
+		cnnct(i).wt(j) = 0.0;
+		if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
 	}
 
 	if (first) {
 		sndsize() = 0;
 		sndtype() = int_msg;
+		/* First and last point is always found */
+		/* Only need to do interior points */
 		for(k=1;k<nseg;++k) {
 			p0 = x.seg(seg(k)).pnt(0);
-			if (cnnct(p0).tri > 0) {
+			if (cnnct(p0).tri >= 0) {
 				isndbuf(sndsize()++) = -1;
 			}
 			else {
@@ -506,18 +504,34 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
 			}
 		}
 	}
-	comm_prepare(boundary::partitions,0,slave_master);
+	comm_prepare(boundary::partitions,0,master_slave);
 }
 
 
 void epartition::mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
-	comm_wait(boundary::partitions,0,slave_master);
+	comm_wait(boundary::partitions,0,master_slave);
 	
 	if (!first) {
+		/* Check if endpoints are communication boundaries */
+		if (!x.vbdry(vbdry(0))->is_comm()) {
+			int p0 = x.seg(seg(0)).pnt(0);
+			cnnct(p0).tri = 0;
+			for(int j=0;j<3;++j)
+				cnnct(p0).wt(j) = 0.0;
+		}
+		
+		if (!x.vbdry(vbdry(1))->is_comm()) {
+			int p0 = x.seg(seg(nseg-1)).pnt(1);
+			cnnct(p0).tri = 0;
+			for(int j=0;j<3;++j)
+				cnnct(p0).wt(j) = 0.0;
+		}
+		
+	
 		int i = 0;
 		for(int k=nseg-1;k>0;--k) {
 			int p0 = x.seg(seg(k)).pnt(0);
-			if (ircvbuf(0,i) < 0) {
+			if (ircvbuf(0,i++) < 0) {
 				cnnct(p0).tri = 0;
 				for(int j=0;j<3;++j)
 					cnnct(p0).wt(j) = 0.0;
