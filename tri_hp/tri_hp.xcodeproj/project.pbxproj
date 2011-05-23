@@ -14,12 +14,6 @@
 		6F07D6640F23BE6B0041BAA6 /* pod_generate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F07D6600F23BE6B0041BAA6 /* pod_generate.cpp */; };
 		6F0BB7290D0E412500530241 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F64234B0CE20E9C00434697 /* libspline.a */; };
 		6F1DBF27101C645200406AF3 /* nstage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE3091AF516002BAA09 /* nstage.cpp */; };
-		6F1F0B25113E051900F200CC /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B17113E051900F200CC /* allocate.cpp */; };
-		6F1F0B26113E051900F200CC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B18113E051900F200CC /* bdry.cpp */; };
-		6F1F0B27113E051900F200CC /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1A113E051900F200CC /* getnewbdry.cpp */; };
-		6F1F0B28113E051900F200CC /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1B113E051900F200CC /* getnewibc.cpp */; };
-		6F1F0B29113E051900F200CC /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1C113E051900F200CC /* rsdl.cpp */; };
-		6F1F0B2A113E051900F200CC /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1E113E051900F200CC /* tstep.cpp */; };
 		6F1F0B37113E051900F200CC /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B17113E051900F200CC /* allocate.cpp */; };
 		6F1F0B38113E051900F200CC /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B18113E051900F200CC /* bdry.cpp */; };
 		6F1F0B39113E051900F200CC /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F1F0B1A113E051900F200CC /* getnewbdry.cpp */; };
@@ -526,6 +520,13 @@
 		E6896127129EC25F00D4FE84 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FEA199B09770C96001A5F7F /* getnewbdry.cpp */; };
 		E6896128129EC26000D4FE84 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F68255A0998541300F57688 /* getnewibc.cpp */; };
 		E6896129129EC26100D4FE84 /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AEA091AF516002BAA09 /* surface.cpp */; };
+		E6B93EA2138A090F005FF1A9 /* allocate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F004489091FD33A00A6F21E /* allocate.cpp */; };
+		E6B93EA4138A0911005FF1A9 /* tstep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AF2091AF516002BAA09 /* tstep.cpp */; };
+		E6B93EA5138A0912005FF1A9 /* rsdl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AE9091AF516002BAA09 /* rsdl.cpp */; };
+		E6B93EA6138A0913005FF1A9 /* length.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ADE091AF516002BAA09 /* length.cpp */; };
+		E6B93EA7138A0914005FF1A9 /* bdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F3F39020977E75D006DA1BC /* bdry.cpp */; };
+		E6B93EA8138A0915005FF1A9 /* getnewbdry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40ACC091AF516002BAA09 /* getnewbdry.cpp */; };
+		E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6F6825750998586200F57688 /* getnewibc.cpp */; };
 		E6CF6FD211D23655001E5DF7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		E6CF6FD311D23655001E5DF7 /* adapt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AC9091AF516002BAA09 /* adapt.cpp */; };
 		E6CF6FD411D23655001E5DF7 /* gtol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6FB40AD8091AF516002BAA09 /* gtol.cpp */; };
@@ -1722,12 +1723,6 @@
 				6FB91A820ACCB04500792B04 /* getnewibc.cpp in Sources */,
 				6FB91A850ACCB04500792B04 /* surface.cpp in Sources */,
 				6FB91A860ACCB04500792B04 /* allocate.cpp in Sources */,
-				6F1F0B25113E051900F200CC /* allocate.cpp in Sources */,
-				6F1F0B26113E051900F200CC /* bdry.cpp in Sources */,
-				6F1F0B27113E051900F200CC /* getnewbdry.cpp in Sources */,
-				6F1F0B28113E051900F200CC /* getnewibc.cpp in Sources */,
-				6F1F0B29113E051900F200CC /* rsdl.cpp in Sources */,
-				6F1F0B2A113E051900F200CC /* tstep.cpp in Sources */,
 				6FFFB67611777A9300EFEB3C /* length.cpp in Sources */,
 				6FBF3D3C119B50F800A5019A /* tstep.cpp in Sources */,
 				6FBF3D3D119B50F800A5019A /* allocate.cpp in Sources */,
@@ -1735,6 +1730,13 @@
 				E6852BAD121DCA4E00EF7E07 /* reinit.cpp in Sources */,
 				E62CDC4612B7114D0042211D /* bdry.cpp in Sources */,
 				E67EBAAA12D603BC0011EB69 /* melt.cpp in Sources */,
+				E6B93EA2138A090F005FF1A9 /* allocate.cpp in Sources */,
+				E6B93EA4138A0911005FF1A9 /* tstep.cpp in Sources */,
+				E6B93EA5138A0912005FF1A9 /* rsdl.cpp in Sources */,
+				E6B93EA6138A0913005FF1A9 /* length.cpp in Sources */,
+				E6B93EA7138A0914005FF1A9 /* bdry.cpp in Sources */,
+				E6B93EA8138A0915005FF1A9 /* getnewbdry.cpp in Sources */,
+				E6B93EA9138A0916005FF1A9 /* getnewibc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2026,10 +2028,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../Packages/lib\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp;
 			};
 			name = Debug;
@@ -2127,18 +2126,14 @@
 			buildSettings = {
 				CC = "/usr/bin/mpic++";
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					MPISRC,
 				);
-				HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/share/include,
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/usr/share/lib,
-				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = tri_hp_mpi;
 			};
 			name = Debug;
@@ -2147,10 +2142,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CC = "/usr/bin/mpic++";
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					MPISRC,
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/usr/share/include,

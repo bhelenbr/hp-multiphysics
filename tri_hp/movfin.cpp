@@ -6,7 +6,6 @@
 
 void tri_hp::mg_prolongate() {
 	int i,j,ind,tind;
-	int last_phase, mp_phase;
 
 	if(!coarse_level) {
 		++log2p;
@@ -47,20 +46,32 @@ void tri_hp::mg_prolongate() {
 	*gbl->log << gbl->res.v(Range(0,fnvrtx-1),Range::all());
 #endif
 
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+
+	/* Need to communicate for partition boundaries */
+	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->vloadbuff(boundary::all,gbl->res0.v.data(),0,NV-1,NV);
 		for(i=0;i<nebd;++i)
-			fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) gbl->res.v.data(),0,NV-1,NV);
-
+			ebdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
+		
 		for(i=0;i<nebd;++i) 
-			fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
-
+			ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+		
 		for(i=0;i<nebd;++i) 
-			fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
-
+			ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+		
 		last_phase = true;
 		for(i=0;i<nebd;++i) {
-			last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
-			fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::average,(FLT *) gbl->res.v.data(),0,NV-1,NV);
+			last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,gbl->res0.v.data(),0,NV-1,NV);
+		}
+		for(i=0;i<nvbd;++i) {
+			vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+			vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,gbl->res0.v.data(),0,NV-1,NV);
 		}
 	}
 
