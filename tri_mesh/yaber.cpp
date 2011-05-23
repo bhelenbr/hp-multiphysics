@@ -252,7 +252,18 @@ void tri_mesh::checkintegrity() {
 			sim::abort(__LINE__,__FILE__,gbl->log);
 		}
 	}
-
+	
+	for(i=0;i<npnt;++i) {
+		int tind = pnt(i).tri;
+		for(j=0;j<3;++j)
+			if (tri(tind).pnt(j) == i) goto next;
+			
+		*gbl->log << "tri.pnt is out of whack" <<  i << tind << std::endl;
+		output("error");
+		sim::abort(__LINE__,__FILE__,gbl->log);
+		
+		next: continue;
+	}
 
 	for(i=0;i<ntri;++i) {
 		if (tri(i).info < 0) continue;
@@ -263,13 +274,13 @@ void tri_mesh::checkintegrity() {
 			sind = tri(i).seg(j);
 			dir = -(tri(i).sgn(j) -1)/2;
 
-			if (seg(sind).info == -3) {
-				*gbl->log << "references deleted segment" <<  i << sind << std::endl;
-				for(i=0;i<nseg;++i)
-					seg(i).info += 2;
-				output("error");
-				sim::abort(__LINE__,__FILE__,gbl->log);
-			}
+//			if (seg(sind).info == -3) {
+//				*gbl->log << "references deleted segment" <<  i << sind << std::endl;
+//				for(i=0;i<nseg;++i)
+//					seg(i).info += 2;
+//				output("error");
+//				sim::abort(__LINE__,__FILE__,gbl->log);
+//			}
 
 			if (seg(sind).pnt(dir) != tri(i).pnt((j+1)%3) && seg(sind).pnt(1-dir) != tri(i).pnt((j+2)%3)) {
 				*gbl->log << "failed pnt check tind" << i << "sind" << sind << std::endl;
@@ -295,15 +306,15 @@ void tri_mesh::checkintegrity() {
 				sim::abort(__LINE__,__FILE__,gbl->log);
 			}
 
-			if (tri(i).tri(j) > 0) {
-				if(tri(tri(i).tri(j)).info < 0) {
-					*gbl->log << "references deleted tri" << std::endl;
-					for(i=0;i<nseg;++i)
-						seg(i).info += 2;
-					output("error");
-					sim::abort(__LINE__,__FILE__,gbl->log);
-				}
-			}
+//			if (tri(i).tri(j) > 0) {
+//				if(tri(tri(i).tri(j)).info < 0 && tri(tri(i).tri(j)).info != -2) {
+//					*gbl->log << "triangle " << i << " references deleted tri " << tri(i).tri(j) << std::endl;
+//					for(i=0;i<nseg;++i)
+//						seg(i).info += 2;
+//					output("error");
+//					sim::abort(__LINE__,__FILE__,gbl->log);
+//				}
+//			}
 		}
 	}
 

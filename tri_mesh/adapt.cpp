@@ -86,6 +86,9 @@ void tri_mesh::adapt() {
 
 	/* REMOVE DELETED ENTITIES */
 	cleanup_after_adapt();
+	
+	// checkintegrity();
+	
 }
 
 

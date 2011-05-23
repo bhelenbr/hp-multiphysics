@@ -310,6 +310,34 @@ void r_tri_mesh::mg_restrict() {
 				src(p0)(n) += fadd*fccnnct(i).wt(j)*fres(i)(n);
 		}
 	}
+	
+	/* Need to communicate for partition boundaries */
+	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->vloadbuff(boundary::all,(FLT *) src.data(),0,ND-1,ND);
+		for(i=0;i<nebd;++i)
+			ebdry(i)->vloadbuff(boundary::partitions,(FLT *) src.data(),0,ND-1,ND);
+		
+		for(i=0;i<nebd;++i) 
+			ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+		
+		for(i=0;i<nebd;++i) 
+			ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+		
+		last_phase = true;
+		for(i=0;i<nebd;++i) {
+			last_phase &= ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,(FLT *) src.data(),0,ND-1,ND);
+		}
+		for(i=0;i<nvbd;++i) {
+			vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+			vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,(FLT *) src.data(),0,ND-1,ND);
+		}
+	}	
 
 	/* LOOP THROUGH fv_to_ct POINTS    */
 	/* TO CALCULATE POINT ON fv_to_ct MESH */
@@ -325,7 +353,9 @@ void r_tri_mesh::mg_restrict() {
 			for(n=0;n<ND;++n)
 				pnts(i)(n) += fcnnct(i).wt(j)*fpnts(ftri(tind).pnt(j))(n);
 		}
+	}
 
+	for(i=0;i<npnt;++i) {
 		for(n=0;n<ND;++n)
 			pnts_frst(i)(n) = pnts(i)(n);
 	}
@@ -336,7 +366,6 @@ void r_tri_mesh::mg_restrict() {
 
 void r_tri_mesh::mg_prolongate() {
 	int i,j,n,ind,tind;
-	int last_phase, mp_phase;
 
 	/* DETERMINE CORRECTIONS    */
 	for(i=0;i<npnt;++i)
@@ -362,21 +391,32 @@ void r_tri_mesh::mg_prolongate() {
 				res(i)(n) -= fmesh->ccnnct(i).wt(j)*pnts_frst(ind)(n);
 		}
 	}
-
-	for(last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+	
+	/* COMMUNICATION FOR PARTITION BOUNDARIES */
+	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
+		for(i=0;i<nvbd;++i)
+			fmesh->vbdry(i)->vloadbuff(boundary::all,(FLT *) res.data(),0,ND-1,ND);
 		for(i=0;i<nebd;++i)
-			fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,1,2);
-
-		for(i=0;i<nebd;++i)
-			fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase, boundary::symmetric);
-
-		for(i=0;i<nebd;++i)
-			fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase, boundary::symmetric);
-
+			fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,ND-1,ND);
+		
+		for(i=0;i<nebd;++i) 
+			fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			fmesh->vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+		
+		for(i=0;i<nebd;++i) 
+			fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
+		for(i=0;i<nvbd;++i)
+			fmesh->vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+		
 		last_phase = true;
 		for(i=0;i<nebd;++i) {
-			last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase, boundary::symmetric);
-			fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase, boundary::symmetric,boundary::average,(FLT *) res.data(),0,1,2);
+			last_phase &= fmesh->ebdry(i)->comm_wait(boundary::partitions,mp_phase,boundary::symmetric);
+			fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,(FLT *) res.data(),0,ND-1,ND);
+		}
+		for(i=0;i<nvbd;++i) {
+			fmesh->vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
+			fmesh->vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,(FLT *) res.data(),0,ND-1,ND);
 		}
 	}
 

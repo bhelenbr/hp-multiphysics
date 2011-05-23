@@ -1101,7 +1101,7 @@ void block::go(input_map input) {
 		}
 	}
 	end_time = clock();
-	*gbl->log << "that took " << static_cast<double>((end_time - begin_time)/ CLOCKS_PER_SEC) << " cpu time" << std::endl;
+	*gbl->log << "that took " << static_cast<double>((end_time - begin_time))/ CLOCKS_PER_SEC << " cpu time" << std::endl;
 
 	return;
 }

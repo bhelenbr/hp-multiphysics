@@ -154,6 +154,26 @@ void edge_bdry::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int
 	int j,k,sind,tind,p0,sidloc;
 	FLT psiloc;
 
+
+	/* END POINTS SHOULD ALWAYS BE COINCIDENT */
+	p0 = x.seg(seg(0)).pnt(0);
+	sind = tgt.ebdry(bnum)->seg(0);
+	tind = tgt.seg(sind).tri(0);
+	cnnct(p0).tri = tind;
+	for(j=0;j<3;++j) {
+		cnnct(p0).wt(j) = 0.0;
+		if (tgt.tri(tind).pnt(j) == tgt.seg(sind).pnt(0)) cnnct(p0).wt(j) = 1.0;
+	}
+	
+	p0 = x.seg(seg(nseg-1)).pnt(1);
+	sind = tgt.ebdry(bnum)->seg(tgt.ebdry(bnum)->nseg-1);
+	tind = tgt.seg(sind).tri(0);
+	cnnct(p0).tri = tind;
+	for(j=0;j<3;++j) {
+		cnnct(p0).wt(j) = 0.0;
+		if (tgt.tri(tind).pnt(j) == tgt.seg(sind).pnt(1)) cnnct(p0).wt(j) = 1.0;
+	}
+
 	for(k=1;k<nseg;++k) {
 		p0 = x.seg(seg(k)).pnt(0);
 		tgt.ebdry(bnum)->findbdrypt(x.pnts(p0), sidloc, psiloc);
@@ -460,30 +480,37 @@ void epartition::copy(const edge_bdry& bin) {
 	pnt_h(Range(0,npnt_h-1)) = tgt.pnt_h(Range(0,npnt_h-1)); 	
 	nseg_bdry_h = tgt.nseg_bdry_h;
 	seg_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.seg_bdry_h(Range(0,nseg_bdry_h-1));
-	remote_halo.copy(tgt.remote_halo);
+	// remote_halo.copy(tgt.remote_halo);
 	
 	return;
 }
 
 void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
-	int i,j,k,p0;
+	int j,k,p0,sind,tind;
 
-	/* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
-	/* END POINTS SHOULD ALWAYS BE COINCIDENT */
-	i = x.seg(seg(0)).pnt(0);
-	tgt.qtree.nearpt(x.pnts(i).data(),p0);
-	cnnct(i).tri=tgt.pnt(p0).tri;
-	for(j=0;j<3;++j) {
-		cnnct(i).wt(j) = 0.0;
-		if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
+	if (tgt.npnt > x.npnt) {
+		/* coarse to fine connection will be done differently because all points will be coincident */
+		ecomm::mgconnect(cnnct,tgt,bnum);
+		return;
 	}
 	
-	i = x.seg(seg(nseg-1)).pnt(1);
-	tgt.qtree.nearpt(x.pnts(i).data(),p0);
-	cnnct(i).tri=tgt.pnt(p0).tri;
+	/* END POINTS SHOULD ALWAYS BE COINCIDENT */
+	p0 = x.seg(seg(0)).pnt(0);
+	sind = tgt.ebdry(bnum)->seg(0);
+	tind = tgt.seg(sind).tri(0);
+	cnnct(p0).tri = tind;
 	for(j=0;j<3;++j) {
-		cnnct(i).wt(j) = 0.0;
-		if (tgt.tri(cnnct(i).tri).pnt(j) == p0) cnnct(i).wt(j) = 1.0;
+		cnnct(p0).wt(j) = 0.0;
+		if (tgt.tri(tind).pnt(j) == tgt.seg(sind).pnt(0)) cnnct(p0).wt(j) = 1.0;
+	}
+	
+	p0 = x.seg(seg(nseg-1)).pnt(1);
+	sind = tgt.ebdry(bnum)->seg(tgt.ebdry(bnum)->nseg-1);
+	tind = tgt.seg(sind).tri(0);
+	cnnct(p0).tri = tind;
+	for(j=0;j<3;++j) {
+		cnnct(p0).wt(j) = 0.0;
+		if (tgt.tri(tind).pnt(j) == tgt.seg(sind).pnt(1)) cnnct(p0).wt(j) = 1.0;
 	}
 
 	if (first) {
@@ -509,6 +536,13 @@ void epartition::mgconnect(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, in
 
 
 void epartition::mgconnect1(Array<tri_mesh::transfer,1> &cnnct, tri_mesh& tgt, int bnum) {
+
+	if (tgt.npnt > x.npnt) {
+		/* coarse to fine connection will be done differently because all points will be coincident */
+		ecomm::mgconnect1(cnnct,tgt,bnum);
+		return;
+	}
+	
 	comm_wait(boundary::partitions,0,master_slave);
 	
 	if (!first) {

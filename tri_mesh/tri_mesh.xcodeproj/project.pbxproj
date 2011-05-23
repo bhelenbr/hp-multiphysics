@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		6F0BD8BF11A69A820013DB0A /* libboost_thread.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F0BD8BD11A69A820013DB0A /* libboost_thread.dylib */; };
 		6F16C6DB0D81EDF500F03F54 /* libspline.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F3627460CD2336E00BF7568 /* libspline.a */; };
 		6F16C6E40D81F11000F03F54 /* libmpi_cxx.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D80D81EDD900F03F54 /* libmpi_cxx.dylib */; };
 		6F16C6E80D81F12200F03F54 /* libmpi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 6F16C6D70D81EDD900F03F54 /* libmpi.dylib */; };
@@ -251,7 +250,6 @@
 				6F16C6E40D81F11000F03F54 /* libmpi_cxx.dylib in Frameworks */,
 				6F16C6E80D81F12200F03F54 /* libmpi.dylib in Frameworks */,
 				6F2F749B0DD89553002615F9 /* libbinio.dylib in Frameworks */,
-				6F0BD8BF11A69A820013DB0A /* libboost_thread.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -809,11 +807,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				DSTROOT = "${HOME}";
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					PTH,
 					MPISRC,
 					"${inherited}",
 				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INSTALL_PATH = /bin;
 				PRODUCT_NAME = tri_mesh_mpi;
 			};

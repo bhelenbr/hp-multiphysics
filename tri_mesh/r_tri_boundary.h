@@ -351,7 +351,6 @@ class r_translating : public r_fixed {
 					x.pnts(p0)(n) += dx[n];
 			}
 
-
 			/* TEMPORARY I think this was to get my mpi test right */
 				p0 = x.seg(base.seg(0)).pnt(0);
 				for(n=0;n<2;++n)
@@ -416,16 +415,27 @@ class r_oscillating : public r_fixed {
 
 
 class r_deforming : public r_fixed {
+	bool do_left, do_right;
 	public:
-		r_deforming(r_tri_mesh &xin, edge_bdry &bin) : r_fixed(xin,bin) {mytype="deforming";}
-		r_deforming(const r_deforming &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin) {mytype="deforming";}
+		r_deforming(r_tri_mesh &xin, edge_bdry &bin) : r_fixed(xin,bin), do_left(false), do_right(false) {mytype="deforming";}
+		r_deforming(const r_deforming &inbdry, r_tri_mesh &xin, edge_bdry &bin) : r_fixed(inbdry,xin,bin), do_left(inbdry.do_left), do_right(inbdry.do_right) {mytype="deforming";}
 		r_deforming* create(r_tri_mesh &xin, edge_bdry &bin) const {return new r_deforming(*this,xin,bin);}
 
+		void input(input_map& inmap) {
+			r_fixed::input(inmap);
+			inmap.get(base.idprefix+"_r_do_left",do_left);
+			inmap.get(base.idprefix+"_r_do_right",do_right);
+		}
+		
 		void tadvance() {
 			int vrt;
-			for(int j=1;j<base.nseg;++j) {
+			for(int j=1-do_left;j<base.nseg;++j) {
 				vrt = x.seg(base.seg(j)).pnt(0);
 				base.mvpttobdry(j,-1.0,x.pnts(vrt));
+			}
+			if (do_right) {
+				vrt = x.seg(base.seg(base.nseg-1)).pnt(1);
+				base.mvpttobdry(base.nseg-1,1.0,x.pnts(vrt));
 			}
 		}
 };
