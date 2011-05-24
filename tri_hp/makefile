@@ -121,6 +121,9 @@ LIB += -L$(HOME)  -llapack -lblas #(cares)
 CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 
+## Intel Compilers & MKL
+#LIB += -L$(HOME)  -lmkl -lmkl_lapack -lmpi -lmpi++  #(hawk)
+
 ## To use openmpi
 #CPPFLAGS += -I/opt/openmpi/include
 #CXXMPI = /opt/openmpi/bin/mpic++
