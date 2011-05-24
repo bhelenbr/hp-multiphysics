@@ -227,9 +227,10 @@ template<int ND> int spline<ND>::read(std::string filename) {
 }
 	
 	
-template<int ND> int spline<ND>::interpolate(double xpt, TinyVector<double,ND>& loc) {
+template<int ND> int spline<ND>::interpolate(double xptin, TinyVector<double,ND>& loc) {
 	double a,b,bma,z;
 	
+	double xpt = xptin;
 	if (xpt < x(0)) xpt=x(0);
 	if (xpt > x(npts-1)) xpt=x(npts-1);
 
