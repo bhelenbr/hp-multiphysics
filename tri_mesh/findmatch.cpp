@@ -527,7 +527,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	createtritri();
 	createpnttri();
 	cnt_nbor();
-	FLT xmin[ND], xmax[ND];
+	TinyVector<FLT,ND> xmin, xmax;
 	for(n=0;n<ND;++n) {
 		xmin[n] = xin.qtree.xmin(n);
 		xmax[n] = xin.qtree.xmax(n);

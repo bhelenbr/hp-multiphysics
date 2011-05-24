@@ -60,7 +60,7 @@ void tri_mesh::copy(const tri_mesh& tgt) {
 	}
 
 	qtree.copy(tgt.qtree);
-	qtree.change_vptr((FLT (*)[ND]) pnts(0).data() );
+	qtree.change_vptr(pnts);
 
 	return;
 }

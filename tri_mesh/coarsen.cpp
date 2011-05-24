@@ -207,7 +207,7 @@ void tri_mesh::coarsen(FLT factor, const class tri_mesh& inmesh) {
 	for(i=0;i<inmesh.npnt;++i) {
 		if (ISSPEC(gbl->intwk(i))) continue;
 
-		mindist = qtree.nearpt(inmesh.pnts(i).data(),j);
+		mindist = qtree.nearpt(inmesh.pnts(i),j);
 		if (sqrt(mindist) < gbl->fltwk(i)) continue;
 
 		insert(inmesh.pnts(i));

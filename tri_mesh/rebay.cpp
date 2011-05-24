@@ -208,7 +208,7 @@ INSRT:
 		*gbl->log << std::endl;
 #endif
 
-		dist = qtree.nearpt(pnts(npnt).data(),pnear);
+		dist = qtree.nearpt(pnts(npnt),pnear);
 		norm = 0.0;
 		for (n=0;n<ND;++n)
 			norm += fabs(pnts(npnt)(n));

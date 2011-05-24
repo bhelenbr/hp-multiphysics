@@ -88,7 +88,7 @@ void tri_mesh::init(const multigrid_interface& in, init_purpose why, FLT sizered
 			vbdry(i) = inmesh.vbdry(i)->create(*this);
 			vbdry(i)->alloc(4);
 		}
-		qtree.allocate((FLT (*)[ND]) pnts(0).data(), maxpst);
+		qtree.allocate(pnts, maxpst);
 		if (why == multigrid) coarse_level = inmesh.coarse_level+1;
 		else coarse_level = 0;
 		initialized = 1;
@@ -114,7 +114,7 @@ void tri_mesh::allocate(int mxsize) {
 	/* TRI INFO */
 	tri.resize(Range(-1,maxpst));
 
-	qtree.allocate((FLT (*)[ND]) pnts(0).data(), maxpst);
+	qtree.allocate(pnts, maxpst);
 
 	if (!gbl) {
 		/* gbl has not been set */

@@ -186,7 +186,8 @@ void tri_mesh::createtritri(void) {
 
 void tri_mesh::treeinit() {
 	int i,j,n,sind,p0;
-	FLT x1[ND], x2[ND], dx;
+	TinyVector<FLT,2> x1, x2;
+	FLT dx;
 
 	for(n=0;n<ND;++n)	{
 		x1[n] = pnts(0)(n);
@@ -222,7 +223,7 @@ void tri_mesh::treeinit() {
 	return;
 }
 
-void tri_mesh::treeinit(FLT x1[ND], FLT x2[ND]) {
+void tri_mesh::treeinit(TinyVector<FLT,ND> x1,TinyVector<FLT,ND> x2) {
 
 	qtree.init(x1,x2);
 

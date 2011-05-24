@@ -53,7 +53,7 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 
 	/* LOOP THROUGH POINTS AND FIND SURROUNDING TRIANGLE */
 	for(i=0;i<npnt;++i) {
-		tgt.qtree.nearpt(pnts(i).data(),p0);
+		tgt.qtree.nearpt(pnts(i),p0);
 		tgt.findtri(pnts(i),p0,cnnct(i).tri);
 		tgt.getwgts(cnnct(i).wt);
 	}
@@ -112,12 +112,15 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 					work(i)(n) += cnnct(i).wt(j)*cmesh->pnts(cmesh->tri(tind).pnt(j))(n);
 			}
 		}
-			
+
+		Array<TinyVector<FLT,2>,1> storevrtx(pnts);
+		pnts.reference(work);
+					
 		if (npnt > cmesh->npnt) {			
 			/* COMMUNICATION FOR PARTITION BOUNDARIES */
 			for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 				for(i=0;i<nvbd;++i)
-					vbdry(i)->vloadbuff(boundary::all,(FLT *) work.data(),0,ND-1,ND);
+					vbdry(i)->loadpositions();
 				for(i=0;i<nebd;++i)
 					ebdry(i)->vloadbuff(boundary::partitions,(FLT *) work.data(),0,ND-1,ND);
 
@@ -138,13 +141,11 @@ void tri_mesh::mgconnect(tri_mesh &tgt, Array<transfer,1> &cnnct) {
 				}
 				for(i=0;i<nvbd;++i) {
 					vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-					vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,&work(0)(0),0,ND-1,ND);
+					vbdry(i)->rcvpositions(0);
 				}
 			}
 		}
 		
-		Array<TinyVector<FLT,2>,1> storevrtx(pnts);
-		pnts.reference(work);
 		output(fname, grid);
 		pnts.reference(storevrtx);
 	}

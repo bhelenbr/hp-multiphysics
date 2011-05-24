@@ -215,7 +215,7 @@ class tri_mesh : public multigrid_interface {
 		void createtritri(void); /**< Creates tri().tri data */
 		void createpnttri(void); /**< Creates pnt().tri data */
 		void treeinit(); /**< Initialize quadtree data */
-		void treeinit(FLT x1[ND], FLT x2[ND]); /** Initialize quadtree data with specified domain */
+		void treeinit(TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2); /** Initialize quadtree data with specified domain */
 		//@}
 
 		/** @name Mesh modification functions */
