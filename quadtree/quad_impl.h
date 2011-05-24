@@ -18,10 +18,10 @@
 // class box<ND> **quadtree<ND>::srchlst;
 // int quadtree<ND>::maxsrch = 0;
   
-template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
+template<int ND> void quadtree<ND>::allocate(Array<TinyVector<FLT,ND>,1> v, int mxv) {
     int i;
     
-    vrtx = v;
+    vrtx.reference(v);
     maxvrtx = mxv;
     if (size != 0) {
         delete [] base;
@@ -36,7 +36,7 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
     for(i=0;i<maxvrtx;++i)
         indx[i] = NULL;
 
-    FLT x1[ND], x2[ND];
+    TinyVector<FLT,ND> x1, x2;
     for(i=0;i<ND;++i) {
         x1[i] = 0.0;
         x2[i] = 1.0;
@@ -48,7 +48,7 @@ template<int ND> void quadtree<ND>::allocate(FLT (*v)[ND], int mxv) {
     maxsrch = size;
 }
 
-template<int ND> void quadtree<ND>::init(FLT x1[ND], FLT x2[ND]) {
+template<int ND> void quadtree<ND>::init(TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2) {
     int i;
     
     for(i=0;i<ND;++i) {
@@ -80,7 +80,7 @@ template<int ND> void quadtree<ND>::init() {
 template<int ND> void quadtree<ND>::copy(const class quadtree<ND>& tgt) {
     int i,j,n;
         
-    vrtx = tgt.vrtx;
+		vrtx.reference(vrtx);
     if (size == 0) {
         maxvrtx = tgt.maxvrtx;
         size = tgt.size;
@@ -156,7 +156,8 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
     int i,j,n;  // DON'T MAKE THESE STATIC SCREWS UP RECURSION
     class box<ND> *qpt;  // SAME
     int store[(1<<ND) +1];
-    FLT avoid0,xshift,x1[ND],x2[ND],dx[ND];
+    FLT avoid0,xshift;
+		TinyVector<FLT,ND> x1,x2,dx;
     
     if (start == NULL) 
         qpt = base;
@@ -167,7 +168,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
     while (qpt->num < 0) {
         i = 0;
         for(n=0;n<ND;++n) {
-            xshift = vrtx[v0][n] -0.5*(qpt->xmax[n] +qpt->xmin[n]);
+            xshift = vrtx(v0)[n] -0.5*(qpt->xmax[n] +qpt->xmin[n]);
             avoid0 = MAX(fabs(xshift), 10.*EPSILON);
             i = (i<<1) +((int) ((1+10.*EPSILON)*xshift/avoid0) +1)/2;
         }
@@ -199,7 +200,7 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
         printf("Need to allocate bigger quadtree %d\n",size);
 		printf("A possible cause is point ouside of domain:\n");
 		for (n=0;n<ND;++n)
-			printf("direction: %d, point %e, left %e, right %e\n",n,vrtx[v0][n],base->xmin[n],base->xmax[n]);
+			printf("direction: %d, point %e, left %e, right %e\n",n,vrtx(v0)[n],base->xmin[n],base->xmax[n]);
 		printf("Another possible cause is repeated insertion of the same point\n");
         output("quad_error",quadtree::text);
 		output("quad_error",quadtree::tecplot);
@@ -254,7 +255,8 @@ template<int ND> void quadtree<ND>::addpt(int v0, class box<ND>* start) {
 template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
     int i,n,nsrch,exclude;
     class box<ND> *topbox;
-    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
+    FLT dist,mindist;
+		TinyVector<FLT,ND> dx,xh,xl;
     class box<ND> *qpt;
 
     mindist = 0.0;
@@ -290,7 +292,7 @@ template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
                     if (qpt->node[i] == v0) continue;
                     dist = 0.0;
                     for(n=0;n<ND;++n) {
-                        dx[n] = vrtx[v0][n] -vrtx[qpt->node[i]][n];
+                        dx[n] = vrtx(v0)[n] -vrtx(qpt->node[i])[n];
                         dist += pow(dx[n],2);
                     }
                     if (dist < mindist) {
@@ -298,8 +300,8 @@ template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
                         mindist = dist;
                         dist = sqrt(dist);
                         for(n=0;n<ND;++n) {
-                            xh[n] = vrtx[v0][n] +dist;
-                            xl[n] = vrtx[v0][n] -dist;
+                            xh[n] = vrtx(v0)[n] +dist;
+                            xl[n] = vrtx(v0)[n] -dist;
                         }
                     }
                 }
@@ -325,10 +327,11 @@ template<int ND> FLT quadtree<ND>::nearpt(int const v0, int& pt) const {
 }
 
 /*	FIND CLOSEST POINT TO A POINT IN THE ARRAY */
-template<int ND> FLT quadtree<ND>::nearpt(FLT const x[ND], int& pt) const {
+template<int ND> FLT quadtree<ND>::nearpt(const TinyVector<FLT,ND> x, int& pt) const {
     int i,n,nsrch,exclude;
     class box<ND> *topbox;
-    FLT dist,dx[ND],xh[ND],xl[ND],mindist;
+    FLT dist,mindist;
+		TinyVector<FLT,ND> dx,xh,xl;
     class box<ND> *qpt;
 
     mindist = 0.0;
@@ -358,7 +361,7 @@ template<int ND> FLT quadtree<ND>::nearpt(FLT const x[ND], int& pt) const {
                 for(i=0;i<qpt->num;++i) {
                     dist = 0.0;
                     for(n=0;n<ND;++n) {
-                        dx[n] = x[n] -vrtx[qpt->node[i]][n];
+                        dx[n] = x[n] -vrtx(qpt->node[i])[n];
                         dist += pow(dx[n],2);
                     }
                     if (dist < mindist) {
@@ -463,7 +466,7 @@ template<int ND> void quadtree<ND>::output(const char *filename, FILETYPE type) 
                     for(i=0;i<qpt->num;++i) {
                         fprintf(out,"%d ",i);
                         for(n=0;n<ND;++n)
-                            fprintf(out,"%f ",vrtx[qpt->node[i]][n]);
+                            fprintf(out,"%f ",vrtx(qpt->node[i])[n]);
                         fprintf(out,"\n");
                     }
                 }
@@ -512,7 +515,7 @@ template<int ND> void quadtree<ND>::output(const char *filename, FILETYPE type) 
                         fprintf(out,"ZONE I=%d, C=BLACK\n",qpt->num);
                         for(i=0;i<qpt->num;++i) {
                             for(n=0;n<ND;++n)
-                                fprintf(out,"%f  ",vrtx[qpt->node[i]][n]);
+                                fprintf(out,"%f  ",vrtx(qpt->node[i])[n]);
                             fprintf(out,"\n");
                         }
                     }
@@ -562,7 +565,7 @@ template<int ND> void quadtree<ND>::update(int bgn, int end) {
         qpt = indx[i];
         if (qpt == NULL) continue;
         for(n=0;n<ND;++n) {
-            if (vrtx[i][n] < qpt->xmin[n] || vrtx[i][n] > qpt->xmax[n]) {
+            if (vrtx(i)[n] < qpt->xmin[n] || vrtx(i)[n] > qpt->xmax[n]) {
                 update(i);
                 break;
             }
@@ -574,12 +577,12 @@ template<int ND> void quadtree<ND>::update(int bgn, int end) {
 
 template<int ND> void quadtree<ND>::update(int v0) {
     int i,n,nsrch,exclude;
-    FLT x[ND];
+    TinyVector<FLT,ND> x;
     class box<ND> *topbox;
     class box<ND> *qpt;
 
     for(n=0;n<ND;++n)
-        x[n] = vrtx[v0][n];
+        x[n] = vrtx(v0)[n];
         
     nsrch = 0;
     srchlst[nsrch++] = indx[v0];

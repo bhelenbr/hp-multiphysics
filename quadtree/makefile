@@ -1,6 +1,6 @@
 OBJ = quad.o
 
-CPPFLAGS = -I$(HOME)/Codes/include/
+CPPFLAGS = -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 
 ### Begin machine dependent
 

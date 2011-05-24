@@ -10,6 +10,9 @@
 #ifndef _quadtree_h_
 #define _quadtree_h_
 
+#include <blitz/array.h>
+using namespace blitz;
+
 #ifdef SINGLE
 #define EPSILON FLT_EPSILON
 #define FLT float
@@ -28,7 +31,7 @@ template<int ND> class box {
         int num; 			// NUMBER OF POINTS
         class box<ND> *prnt;	// POINTER TO PARENT QUAD
         int pind; 			// DAUGHTER NUMBER OF PARENT
-        FLT xmin[ND], xmax[ND];
+        TinyVector<FLT,ND> xmin, xmax;
         union {
             int node[(1<<ND)];     	// STORES EITHER NODES OR POINTER TO DAUGHTERS
             class box<ND> *dghtr[(1<<ND)];
@@ -36,19 +39,13 @@ template<int ND> class box {
         
     public:
         box() {}
-        box(box *p, int i, FLT x1[ND], FLT x2[ND]) : num(0), prnt(p), pind(i) {
-            for(int n=0;n<ND;++n) {
-                xmin[n] = x1[n];
-                xmax[n] = x2[n];
-            }
-        }
-            
+        box(box *p, int i, TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2) : num(0), prnt(p), pind(i), xmin(x1), xmax(x2) {}
 };
 
 template<int ND> class quadtree {
     private:
         int maxvrtx;
-        FLT (*vrtx)[ND];
+        Array<TinyVector<FLT,ND>,1> vrtx;
         class box<ND> *base;
         class box<ND> **indx;
         int size;
@@ -61,20 +58,20 @@ template<int ND> class quadtree {
     public:
         quadtree() : maxvrtx(0), vrtx(0), size(0), current(0) {};
         void copy(const class quadtree& tgt);
-        void allocate(FLT (*v)[ND],int mxv);
-        inline void init(FLT (*v)[ND], int mxv, FLT x1[ND], FLT x2[ND]) { allocate(v,mxv); init(x1,x2);}
+        void allocate(Array<TinyVector<FLT,ND>,1> v,int mxv);
+        inline void init(Array<TinyVector<FLT,ND>,1> v, int mxv, TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2) { allocate(v,mxv); init(x1,x2);}
         void init(); // RESETS WITH SAME AREA
-        void init(FLT x1[ND], FLT x2[ND]);  // RESETS box WITH NEW AREA
+        void init(TinyVector<FLT,ND> x1, TinyVector<FLT,ND> x2);  // RESETS box WITH NEW AREA
         void reinit(); // ERASES TREE AND REINSERTS POINTS THUS REMOVING UNUSED boxS
         
-        inline void change_vptr(FLT (*v)[ND]) { vrtx = v;}
+        inline void change_vptr(Array<TinyVector<FLT,ND>,1> v) {vrtx.reference(v);}
         inline FLT xmin(int i) const {return(base[0].xmin[i]);}
         inline FLT xmax(int i) const {return(base[0].xmax[i]);}
               
         void addpt(int v0, class box<ND> *start = 0);
         
         FLT nearpt(int const v0, int& pt) const;
-        FLT nearpt(FLT const x[ND], int& pt) const;
+        FLT nearpt(const TinyVector<FLT,ND> x, int& pt) const;
         
         void dltpt(int v0);
         
