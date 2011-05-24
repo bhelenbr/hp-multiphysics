@@ -49,8 +49,9 @@ MAINOBJ = main.o
 
 DEFINES = -DMETIS -Df2cFortran -DMY_SPARSE $(EXTRAFLAGS)
 
-LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz
-LIB += -lmyblas -lblas -llapack
+LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -lutil -lquad -lparseargs -linput_map -lspline -lmyblas
+LIB += -lbinio -lm -lmuparser -lmetis -lpth -lblitz -lparseargs
+
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include
 CXXMPI = ${CXX}
 
@@ -69,6 +70,10 @@ CXXMPI = ${CXX}
 #LIB +=    -L/opt/mpich/myrinet/intel/lib -lpmpich++ -lmpich -L/opt/gm/lib -lgm -lpthread #(cares)
 CPPFLAGS += -I/opt/mpich/myrinet/gnu/include #(cares)
 CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
+LIB += -lblas -llapack #(cares)
+
+## Intel Cluster
+#LIB += -lmkl -lmkl_lapack #(hawk)
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)
