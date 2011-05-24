@@ -18,7 +18,7 @@ void tri_hp::findandmvptincurved(TinyVector<FLT,2>& xp, int &tind, FLT &r, FLT &
 	int v0;
 	bool found;
 
-	qtree.nearpt(xp.data(),v0);
+	qtree.nearpt(xp,v0);
 	found = findtri(xp,v0,tind);
 	if (!found) {
 		*gbl->log << "#Warning: couldn't find tri " << xp << " nearpt " << v0 << " neartri " << tind << std::endl;
@@ -54,7 +54,7 @@ bool tri_hp::findinteriorpt(TinyVector<FLT,ND> xp, int &tind, FLT &r, FLT &s) {
 	bool found = true;
 
 	if (tind < 0) {
-		qtree.nearpt(xp.data(),v0);
+		qtree.nearpt(xp,v0);
 		found = findtri(xp,v0,tind);
 	}
 	else {
