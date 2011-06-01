@@ -5,7 +5,7 @@
 #include "../hp_boundary.h"
 #include<blitz/tinyvec-et.h>
 
-#define TIMEACCURATE
+//#define TIMEACCURATE
 
 void tet_hp_cns_explicit::setup_preconditioner() {
 	/* SET-UP PRECONDITIONER */

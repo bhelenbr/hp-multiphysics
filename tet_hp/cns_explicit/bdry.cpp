@@ -171,14 +171,12 @@ void inflow::fdirichlet() {
 }	
 
 void inflow::update(int stage) {
-	int j,k,m,n,v0,v1,sind,indx,info;
+	int j,k,m,n,v0,v1,sind;
 	double KE,rho,u,v,w,RT;
 	TinyVector<FLT,tet_mesh::ND> pt;
 	
 	TinyVector<double,MXTM> ucoef;
-	
-	char uplo[] = "U";
-	
+		
 	j = 0;
 	do {
 		sind = base.seg(j).gindx;

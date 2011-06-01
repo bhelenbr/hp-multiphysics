@@ -514,26 +514,27 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	ur(3) = ub(1)*vec3(0)+ub(2)*vec3(1)+ub(3)*vec3(2);
 	ur(4) = ub(4);
 	
-	
-	/* Average left and right flux */
-	fluxleft(0) = ul(0)*ul(1)/ul(x.NV-1);
-	fluxleft(1) = fluxleft(0)*ul(1)+ul(0);
-	fluxleft(2) = fluxleft(0)*ul(2);
-	fluxleft(3) = fluxleft(0)*(gogm1*ul(x.NV-1)+0.5*(ul(1)*ul(1)+ul(2)*ul(2)+ul(3)*ul(3)));
-	
-	fluxright(0) = ur(0)*ur(1)/ur(x.NV-1);
-	fluxright(1) = fluxright(0)*ur(1)+ur(0);
-	fluxright(2) = fluxright(0)*ur(2);
-	fluxright(3) = fluxright(0)*(gogm1*ur(x.NV-1)+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));
-	
-	fluxtemp = 0.5*(fluxleft+fluxright);
-	
 	/* Roe Variables */
 	Rr(0) = sqrt(ur(0)/ur(x.NV-1));
 	Rr(1) = Rr(0)*ur(1);
 	Rr(2) = Rr(0)*ur(2);
 	Rr(3) = Rr(0)*ur(3);
 	Rr(4) = Rr(0)*(ur(x.NV-1)/gm1+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));	
+	
+	/* Average left and right flux */
+	fluxleft(0) = ul(0)*ul(1)/ul(x.NV-1);
+	fluxleft(1) = fluxleft(0)*ul(1)+ul(0);
+	fluxleft(2) = fluxleft(0)*ul(2);
+	fluxleft(3) = fluxleft(0)*ul(3);
+	fluxleft(4) = fluxleft(0)*(gogm1*ul(x.NV-1)+0.5*(ul(1)*ul(1)+ul(2)*ul(2)+ul(3)*ul(3)));
+	
+	fluxright(0) = ur(0)*ur(1)/ur(x.NV-1);
+	fluxright(1) = fluxright(0)*ur(1)+ur(0);
+	fluxright(2) = fluxright(0)*ur(2);
+	fluxright(3) = fluxright(0)*ur(3);
+	fluxright(4) = fluxright(0)*(gogm1*ur(x.NV-1)+0.5*(ur(1)*ur(1)+ur(2)*ur(2)+ur(3)*ur(3)));
+	
+	fluxtemp = 0.5*(fluxleft+fluxright);
 	
 	/* Average Roe Variables */
 	Roe = 0.5*(Rl+Rr);
@@ -563,13 +564,13 @@ void characteristic::flux(Array<FLT,1>& pvu, TinyVector<FLT,tet_mesh::ND> xpt, T
 	FLT alh = 2.0*alpha/(h*c);//maybe it should be smaller?
 	
 	FLT b2 = MIN(M*M/(1.0-M*M) + hdt*hdt + nuh*nuh + alh*alh,1.0);
-	FLT alph = 0.0;
-	//b2 = 1.0;
+	//b2 = 1.0; //turn off preconditioner
+
 	/* Inverse of Preconditioner */
 	Pinv = 1.0/b2,					 0.0, 0.0, 0.0, 0.0,
-		   alph*u/(pr*gam*b2),		 1.0, 0.0, 0.0, 0.0,
-		   alph*v/(pr*gam*b2),		 0.0, 1.0, 0.0, 0.0,
-		   alph*w/(pr*gam*b2),		 0.0, 0.0, 1.0, 0.0,
+		   0.0,						 1.0, 0.0, 0.0, 0.0,
+		   0.0,						 0.0, 1.0, 0.0, 0.0,
+		   0.0,						 0.0, 0.0, 1.0, 0.0,
 		   -(b2-1.0)/(gogm1*rho*b2), 0.0, 0.0, 0.0, 1.0;
 	
 	/* jacobian of conservative wrt primitive */
