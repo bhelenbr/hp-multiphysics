@@ -158,6 +158,7 @@ void tet_hp_cns::setup_preconditioner() {
 
 	}
 	
+	// could eliminate this here and in minvrt
 	for(int i=0;i<npnt;++i) {
 		gbl->vpreconditioner(i,Range::all(),Range::all()) /=  gbl->vprcn(i,0);
 	}
@@ -347,6 +348,9 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 		0.0, 0.0,      0.0,      nu/(h*h), 0.0,
 		0.0, 0.0,      0.0,      0.0,      alpha/(h*h);
 	
+	for(int i=0; i<NV; ++i)
+		S(i,i) += gbl->bd(0);
+
 	temp = 0.0;
 	for(int i=0; i<NV; ++i)
 		for(int j=0; j<NV; ++j)
@@ -354,11 +358,9 @@ void tet_hp_cns::pennsylvania_peanut_butter(Array<double,1> pvu, FLT h, Array<FL
 				temp(i,j)+=P(i,k)*S(k,j);
 	S = temp;
 	
-	for(int i=0; i<NV; ++i)
-		S(i,i) += gbl->bd(0);
-
+	/* This is the inverse of Tau tilde */
 	Tinv = 2.0/h*(A+B+C+h*S);
-
+	
 	/* smallest eigenvalue of Tau tilde */
 	timestep = 1.0/spectral_radius(Tinv);
 

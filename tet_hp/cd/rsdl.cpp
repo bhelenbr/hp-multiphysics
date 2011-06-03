@@ -76,16 +76,6 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 	for(i=0;i<lgpx;++i) {
 		for(j=0;j<lgpy;++j) {
 			for(k=0;k<lgpz;++k) {
-			
-//				d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//				d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//				d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-//				d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//				d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//				d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-//				d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//				d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//				d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
 
 				d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
 				d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
@@ -100,9 +90,7 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 				fluxx = (gbl->ax-mvel(0)(i)(j)(k))*u(0)(i)(j)(k);
 				fluxy = (gbl->ay-mvel(1)(i)(j)(k))*u(0)(i)(j)(k);
 				fluxz = (gbl->az-mvel(2)(i)(j)(k))*u(0)(i)(j)(k);
-//				cv00(i)(j)(k) = d(0)(0)*fluxx+d(1)(0)*fluxy+d(2)(0)*fluxz;
-//				cv01(i)(j)(k) = d(0)(1)*fluxx+d(1)(1)*fluxy+d(2)(1)*fluxz;
-//				cv02(i)(j)(k) = d(0)(2)*fluxx+d(1)(2)*fluxy+d(2)(2)*fluxz;
+
 				cv00(i)(j)(k) = d(0)(0)*fluxx+d(0)(1)*fluxy+d(0)(2)*fluxz;
 				cv01(i)(j)(k) = d(1)(0)*fluxx+d(1)(1)*fluxy+d(1)(2)*fluxz;
 				cv02(i)(j)(k) = d(2)(0)*fluxx+d(2)(1)*fluxy+d(2)(2)*fluxz;
@@ -137,23 +125,8 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 				for(k=0;k<lgpz;++k) {
 					jcb = gbl->nu/cjcb(i)(j)(k);
 					
-//						(ys*zt-zs*yt)*dr+(-yr*zt+zr*yt)*ds+(yr*zs-zr*ys)*dt
-//						(-xs*zt+zs*xt)*dr+(xr*zt-zr*xt)*ds+(-xr*zs+zr*xs)*dt
-//						(xs*yt-ys*xt)*dr+(-xr*yt+yr*xt)*ds+(xr*ys-yr*xs)*dt
-					
 					/* DIFFUSION TENSOR (LOTS OF SYMMETRY THOUGH)*/
 					/* INDICES ARE 1: EQUATION U OR V, 2: VARIABLE (U OR V), 3: EQ. DERIVATIVE (R OR S) 4: VAR DERIVATIVE (R OR S)*/
-//					d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//					d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//					d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-//					d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-//					d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);						
-//					
-					
 					d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
 					d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
 					d(0)(2) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(0)(2)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
@@ -163,13 +136,6 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 					d(2)(0) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(0)(1)(i)(j)(k)*dcrd(2)(0)(i)(j)(k);
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
-					
-//					visc(0)(0) = -jcb*(d(0)(0)*d(0)(0)+d(1)(0)*d(1)(0)+d(2)(0)*d(2)(0));
-//					visc(1)(1) = -jcb*(d(0)(1)*d(0)(1)+d(1)(1)*d(1)(1)+d(2)(1)*d(2)(1));
-//					visc(2)(2) = -jcb*(d(0)(2)*d(0)(2)+d(1)(2)*d(1)(2)+d(2)(2)*d(2)(2));
-//					visc(0)(1) = -jcb*(d(0)(0)*d(0)(1)+d(1)(0)*d(1)(1)+d(2)(0)*d(2)(1));
-//					visc(0)(2) = -jcb*(d(0)(0)*d(0)(2)+d(1)(0)*d(1)(2)+d(2)(0)*d(2)(2));
-//					visc(1)(2) = -jcb*(d(0)(1)*d(0)(2)+d(1)(1)*d(1)(2)+d(2)(1)*d(2)(2));
 					
 					visc(0)(0) = -jcb*(d(0)(0)*d(0)(0)+d(0)(1)*d(0)(1)+d(0)(2)*d(0)(2));
 					visc(1)(1) = -jcb*(d(1)(0)*d(1)(0)+d(1)(1)*d(1)(1)+d(1)(2)*d(1)(2));
@@ -200,15 +166,6 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 		for(i=0;i<lgpx;++i) {
 			for(j=0;j<lgpy;++j) {
 				for(k=0;k<lgpz;++k) {
-//					d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//					d(0)(1) = -dcrd(1)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k);
-//					d(0)(2) =  dcrd(1)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k);
-//					d(1)(0) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(2)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(1)(1) =  dcrd(0)(0)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(2)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(1)(2) = -dcrd(0)(0)(i)(j)(k)*dcrd(2)(1)(i)(j)(k)+dcrd(2)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
-//					d(2)(0) =  dcrd(0)(1)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)-dcrd(1)(1)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(2)(1) = -dcrd(0)(0)(i)(j)(k)*dcrd(1)(2)(i)(j)(k)+dcrd(1)(0)(i)(j)(k)*dcrd(0)(2)(i)(j)(k);
-//					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(1)(0)(i)(j)(k)*dcrd(0)(1)(i)(j)(k);
 
 					d(0)(0) =  dcrd(1)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)-dcrd(1)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
 					d(0)(1) = -dcrd(0)(1)(i)(j)(k)*dcrd(2)(2)(i)(j)(k)+dcrd(0)(2)(i)(j)(k)*dcrd(2)(1)(i)(j)(k);
@@ -221,10 +178,7 @@ void tet_hp_cd::element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> 
 					d(2)(2) =  dcrd(0)(0)(i)(j)(k)*dcrd(1)(1)(i)(j)(k)-dcrd(0)(1)(i)(j)(k)*dcrd(1)(0)(i)(j)(k);
 					
 					tres[0] = gbl->tau(tind)*res(0)(i)(j)(k);
-//					e00(i)(j)(k) -= (d(0)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(0)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(0)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-//					e01(i)(j)(k) -= (d(0)(1)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(1)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-//					e02(i)(j)(k) -= (d(0)(2)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(2)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
-//					
+				
 					e00(i)(j)(k) -= (d(0)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(0)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(0)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
 					e01(i)(j)(k) -= (d(1)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(1)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(1)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];
 					e02(i)(j)(k) -= (d(2)(0)*(gbl->ax-mvel(0)(i)(j)(k))+d(2)(1)*(gbl->ay-mvel(1)(i)(j)(k))+d(2)(2)*(gbl->az-mvel(2)(i)(j)(k)))*tres[0];

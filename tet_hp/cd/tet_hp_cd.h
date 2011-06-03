@@ -39,6 +39,7 @@ class tet_hp_cd : public tet_hp {
 		void init(input_map& input, void *gin); 
 		void init(const multigrid_interface& fine, init_purpose why=duplicate, FLT sizereduce1d=1.0);
 //      void length();
+		void minvrt();
 		void setup_preconditioner();
 		void element_rsdl(int tind, int stage, Array<TinyVector<FLT,MXTM>,1> &uht,Array<TinyVector<FLT,MXTM>,1> &lf_re,Array<TinyVector<FLT,MXTM>,1> &lf_im);
 
