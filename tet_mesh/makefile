@@ -30,11 +30,11 @@ VPATH = ../
 
 OBJ = connect.o copy.o findmatch.o getnewbdry.o input.o \
 meshutilities.o output.o refineby2.o setup.o setupbdry.o tet_boundary.o\
-tet_prims.o vertexcircle.o test.o
+tet_prims.o vertexcircle.o test.o MAdLibInterface.o
 
 MAINOBJ = main.o
 DEFINES = -DMETIS -Df2cFortran  $(EXTRAFLAGS)
-#DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
+DEFINES = -DMETIS -Df2cFortran -DUSING_MADLIB $(EXTRAFLAGS)
 
 LIB = -L$(HOME)/Codes/lib -L$(PACKAGES)/lib -ltri_mesh -lutil -lquad -lparseargs -linput_map -lbinio -lm -lmuparser -lmetis -lspline -lpth -lblitz 
 CPPFLAGS = -O3 -g -I$(HOME)/Codes/include/ -I$(PACKAGES)/include

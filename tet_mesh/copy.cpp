@@ -53,7 +53,7 @@ void tet_mesh::copy(const tet_mesh& tgt) {
 		tet(i) = tgt.tet(i);
 		
 	otree.copy(tgt.otree);
-	otree.change_vptr((FLT (*)[ND]) pnts(0).data() );
+	otree.change_vptr(pnts);
 	
 	return;  
 }

@@ -640,7 +640,7 @@ void face_bdry::alloc(int mxsize) {
 	/* TRI INFO */ 
 	tri.resize(Range(-1,maxpst));
 	
-	otree.allocate((FLT (*)[tet_mesh::ND]) x.pnts(0).data(), mxsize);
+	otree.allocate(x.pnts, mxsize);
 
 	return;
 }
@@ -680,7 +680,7 @@ void face_bdry::copy(const face_bdry& tgt) {
 	}
 		
 	otree.copy(tgt.otree);
-	otree.change_vptr((FLT (*)[tet_mesh::ND]) tgt.x.pnts(0).data() );
+	otree.change_vptr(tgt.x.pnts);
 	
 	return;  
 }
@@ -938,9 +938,10 @@ void fcomm::match_numbering(int step) {
 }
 		
 void fpartition::mgconnect(Array<tet_mesh::transfer,1> &cnnct,tet_mesh& tgt, int bnum) {
-	int i,j,k,p0;
 	cout << "fpartition::mgconnect being called and doesnt work" << endl;
 	
+	//int i,j,k,p0;
+
 	//	/* BOUNDARY IS AN INTERNAL PARTITION BOUNDARY */
 	//	/* MAKE SURE ENDPOINTS ARE OK */
 	//	i = x.seg(seg(0).gindx).pnt(0);

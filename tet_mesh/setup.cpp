@@ -129,7 +129,7 @@ void tet_mesh::create_pnt_nnbor(void){
 
 
 void tet_mesh::create_seg_from_tet(void) {
-	int i,tind,minv,eind,eindprev,ne,lcl0;
+	int i,tind,minv,eind,eindprev=-1,ne,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,6,2> vs;
 	TinyVector<int,2> v,a;
@@ -278,7 +278,7 @@ NEXTEDGE:;
 }
 
 void tet_mesh::create_tri_from_tet(void) {
-	int i,j,tind,minv,find,findprev,nf,lcl0;
+	int i,j,tind,minv,find,findprev=-1,nf,lcl0;
 	long lcl1,lcl2;
 	TinyMatrix<int,4,3> vf;
 	TinyVector<int,3> v,a;

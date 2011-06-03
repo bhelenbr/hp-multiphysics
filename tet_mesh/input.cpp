@@ -82,7 +82,7 @@ void tet_mesh::init(const multigrid_interface& mgin, init_purpose why, FLT sizer
 			vbdry(i) = inmesh.vbdry(i)->create(*this);
 			vbdry(i)->alloc(4);
 		}
-		otree.allocate((FLT (*)[ND]) pnts(0).data(), maxvst);
+		otree.allocate(pnts, maxvst);
 		coarse_level = inmesh.coarse_level+1;
 		initialized = 1;
 	}
@@ -113,7 +113,7 @@ void tet_mesh::allocate(int mxsize) {
 	/* TET INFO */
 	tet.resize(Range(-1,maxvst));
 
-	otree.allocate((FLT (*)[ND]) pnts(0).data(), maxvst);
+	otree.allocate(pnts, maxvst);
 
 	if (!gbl) {
 		/* gbl has not been set */

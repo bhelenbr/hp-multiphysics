@@ -175,7 +175,7 @@ void face_bdry::convert_gbl_to_lcl(void){
 /* USES SINFO TO STORE NEXT SIND FROM SIND */
 /* TVRTX MUST BE COUNTERCLOCKWISE ORDERED */
 void face_bdry::create_seg_from_tri(void) {
-	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind,sindprev;
+	int i,j,tind,v1,v2,vout,temp,minv,maxv,order,sind=-1,sindprev=-1;
 	
 	for(i=0;i<npnt;++i)
 		pnt(i).info = -1;
