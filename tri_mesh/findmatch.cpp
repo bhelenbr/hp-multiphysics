@@ -238,28 +238,77 @@ void tri_mesh::matchboundaries() {
 }
 
 #ifdef METIS
-
-extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut,
-int *epart, int *npart);
+extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut, int *epart, int *npart);
+extern "C" void METIS_PartMeshNodal(int *, int *, idxtype *, int *, int *, int *, int *, idxtype *, idxtype *);
 
 void tri_mesh::setpartition(int nparts) {
 	int i,n;
 	int etype = 1;
 	int numflag = 0;
 	int edgecut;
-
+	
 	/* CREATE ISOLATED TVRTX ARRAY */
 	Array<TinyVector<int,3>,1> tvrtx(maxpst);
 	for(i=0;i<ntri;++i)
 		for(n=0;n<3;++n)
 			tvrtx(i)(n) = tri(i).pnt(n);
-
+	
 	METIS_PartMeshDual(&ntri, &npnt, &tvrtx(0)(0), &etype, &numflag, &nparts, &edgecut,&(gbl->intwk(0)),&(gbl->i2wk(0)));
-
+	
 	for(i=0;i<ntri;++i)
 		tri(i).info = gbl->intwk(i);
-
+	
 	gbl->intwk = -1;
+	
+	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
+	for(int i=0;i<ntri;++i) {
+		for(int j=0;j<3;++j) {
+			int tind = tri(i).tri(j);
+			if (tind > -1) 
+				if (tri(i).info == tri(tind).info) goto next;
+		}
+		
+		std::cout << "#reassigning problem triangle " << i << '\n';
+		for(int j=0;j<3;++j) {
+			int tind = tri(i).tri(j);
+			if (tind > -1) {
+				tri(i).info = tri(tind).info;
+				break;
+			}
+		}	
+		
+	next:;
+	}
+	
+	
+	return;
+}
+#elif defined(METIS5)
+#include <metis.h>
+
+void tri_mesh::setpartition(int nparts) {
+	idx_t edgecut;
+	idx_t ncommon = 2;
+	idx_t ntri_idx = ntri;
+ 	idx_t npnt_idx = npnt;
+	idx_t nparts_idx = nparts;	
+	Array<idx_t,1> iwk1(maxpst), iwk2(maxpst), eptr(maxpst), eind(3*maxpst);
+
+	for(int i=0;i<ntri;++i) {
+		eptr(i) = 3*i;
+		eind(eptr(i)) = tri(i).pnt(0);
+		eind(eptr(i)+1) = tri(i).pnt(1);	
+		eind(eptr(i)+2) = tri(i).pnt(2);	
+	}
+	eptr(ntri) = 3*ntri;
+		
+	int err = METIS_PartMeshDual(&ntri_idx, &npnt_idx, eptr.data(), eind.data(), NULL, NULL, &ncommon, &nparts_idx, NULL, NULL, &edgecut,iwk1.data(),iwk2.data());
+	if (err != METIS_OK) {
+		*gbl->log << "METIS partitioning error" << std::endl;
+		sim::abort(__LINE__,__FILE__,gbl->log);
+	}
+	for(int i=0;i<ntri;++i)
+		tri(i).info = iwk1(i);
 	
 	/* FIX METIS SO THAT WE DON'T HAVE ANY STRANDED TRIANGLES */
 	for(int i=0;i<ntri;++i) {
@@ -280,8 +329,6 @@ void tri_mesh::setpartition(int nparts) {
 		
 		next:;
 	}
-		
-
 	return;
 }
 #endif
@@ -499,6 +546,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
 			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+			std::cout << vbdry(nvbd)->idprefix << "_group: 0 1 2\n";  // Put this boundary in the partition group
 			++nvbd;
 
 			nextv0:
@@ -515,6 +563,7 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 			vbdry(nvbd)->alloc(4);
 			vbdry(nvbd)->pnt = p0;
 			std::cout << vbdry(nvbd)->idprefix << "_type: comm\n";
+			std::cout << vbdry(nvbd)->idprefix << "_group: 0 1 2\n";  // Put this boundary in the partition group
 			++nvbd;
 
 			nextv1:
@@ -535,10 +584,6 @@ void tri_mesh::partition(class tri_mesh& xin, int npart) {
 	treeinit(xmin,xmax);
 
 	initialized = 1;
-	
-	for(i=0;i<nebd;++i) {
-		ebdry(i)->calculate_halo();		
-	}
 
 	return;
 }

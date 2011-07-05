@@ -73,7 +73,8 @@ CXXMPI = /opt/mpich/myrinet/gnu/bin/mpicxx
 LIB += -lblas -llapack #(cares)
 
 ## Intel Cluster
-#LIB += -lmkl -lmkl_lapack #(hawk)
+#LIB += -lmkl -lmkl_lapack -lmpi -lmpi++ #(hawk)
+
 
 ## IRIX64:
 #CPPFLAGS += -Ofast=IP30  #(sauter)

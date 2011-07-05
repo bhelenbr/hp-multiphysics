@@ -459,6 +459,14 @@ class r_vrtx_bdry {
 		virtual void dirichlet() {}
 		virtual void fixdx2() {}
 		virtual ~r_vrtx_bdry() {}
+#ifdef MY_SPARSE
+		virtual void jacobian(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {}
+		virtual void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {}
+#else
+		virtual void jacobian(Mat petsc_J, int stride) {}
+		virtual void jacobian_dirichlet(Mat petsc_J, int stride) {}
+#endif
+	
 };
 
 class r_vfixed : public r_vrtx_bdry {
@@ -491,6 +499,24 @@ class r_vfixed : public r_vrtx_bdry {
 			}
 			return;
 		}
+		
+#ifdef MY_SPARSE
+		void jacobian_dirichlet(sparse_row_major &J, sparse_row_major &J_mpi, int stride) {
+			//		void jacobian_dirichlet(Mat petsc_J, int stride) {
+			int np = (dstop -dstart +1);
+			Array<int,1> points(np);
+			
+			int cnt = 0;
+			int gindx = base.pnt*stride +stride -tri_mesh::ND +dstart;
+			for (int n=dstart;n<=dstop;++n)
+				points(cnt++) = gindx++;
+			J.zero_rows(cnt,points);
+			J_mpi.zero_rows(cnt,points);
+			J.set_diag(cnt,points,1.0);
+			//			MatZeroRows(petsc_J,cnt,points.data(),1.0);
+		}
+#endif
+	
 
 };
 

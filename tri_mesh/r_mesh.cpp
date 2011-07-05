@@ -314,19 +314,19 @@ void r_tri_mesh::mg_restrict() {
 	/* Need to communicate for partition boundaries */
 	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		for(i=0;i<nvbd;++i)
-			vbdry(i)->vloadbuff(boundary::all,(FLT *) src.data(),0,ND-1,ND);
+			vbdry(i)->vloadbuff(boundary::partitions,(FLT *) src.data(),0,ND-1,ND);
 		for(i=0;i<nebd;++i)
 			ebdry(i)->vloadbuff(boundary::partitions,(FLT *) src.data(),0,ND-1,ND);
 		
 		for(i=0;i<nebd;++i) 
 			ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
 		for(i=0;i<nvbd;++i)
-			vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+			vbdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
 		
 		for(i=0;i<nebd;++i) 
 			ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
 		for(i=0;i<nvbd;++i)
-			vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+			vbdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
 		
 		last_phase = true;
 		for(i=0;i<nebd;++i) {
@@ -334,8 +334,8 @@ void r_tri_mesh::mg_restrict() {
 			ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,(FLT *) src.data(),0,ND-1,ND);
 		}
 		for(i=0;i<nvbd;++i) {
-			vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-			vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,(FLT *) src.data(),0,ND-1,ND);
+			vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
+			vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,(FLT *) src.data(),0,ND-1,ND);
 		}
 	}	
 
@@ -366,7 +366,7 @@ void r_tri_mesh::mg_restrict() {
 
 void r_tri_mesh::mg_prolongate() {
 	int i,j,n,ind,tind;
-
+	
 	/* DETERMINE CORRECTIONS    */
 	for(i=0;i<npnt;++i)
 		for(n=0;n<ND;++n)
@@ -395,19 +395,19 @@ void r_tri_mesh::mg_prolongate() {
 	/* COMMUNICATION FOR PARTITION BOUNDARIES */
 	for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 		for(i=0;i<nvbd;++i)
-			fmesh->vbdry(i)->vloadbuff(boundary::all,(FLT *) res.data(),0,ND-1,ND);
+			fmesh->vbdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,ND-1,ND);
 		for(i=0;i<nebd;++i)
 			fmesh->ebdry(i)->vloadbuff(boundary::partitions,(FLT *) res.data(),0,ND-1,ND);
 		
 		for(i=0;i<nebd;++i) 
 			fmesh->ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
 		for(i=0;i<nvbd;++i)
-			fmesh->vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+			fmesh->vbdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
 		
 		for(i=0;i<nebd;++i) 
 			fmesh->ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
 		for(i=0;i<nvbd;++i)
-			fmesh->vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+			fmesh->vbdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
 		
 		last_phase = true;
 		for(i=0;i<nebd;++i) {
@@ -415,8 +415,8 @@ void r_tri_mesh::mg_prolongate() {
 			fmesh->ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,(FLT *) res.data(),0,ND-1,ND);
 		}
 		for(i=0;i<nvbd;++i) {
-			fmesh->vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-			fmesh->vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,(FLT *) res.data(),0,ND-1,ND);
+			fmesh->vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
+			fmesh->vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,(FLT *) res.data(),0,ND-1,ND);
 		}
 	}
 

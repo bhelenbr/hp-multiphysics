@@ -471,16 +471,18 @@ void epartition::alloc(int size) {
 
 void epartition::copy(const edge_bdry& bin) {
 	ecomm::copy(bin);
-	const epartition& tgt(dynamic_cast<const epartition&>(bin));
-	ntri_h = tgt.ntri_h;
-	tri_h(Range(0,ntri_h-1)) = tgt.tri_h(Range(0,ntri_h-1)); 
-	nseg_h = tgt.nseg_h;
-	seg_h(Range(0,nseg_h-1)) = tgt.seg_h(Range(0,nseg_h-1)); 
-	npnt_h = tgt.npnt_h;
-	pnt_h(Range(0,npnt_h-1)) = tgt.pnt_h(Range(0,npnt_h-1)); 	
-	nseg_bdry_h = tgt.nseg_bdry_h;
-	seg_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.seg_bdry_h(Range(0,nseg_bdry_h-1));
-	// remote_halo.copy(tgt.remote_halo);
+//	const epartition& tgt(dynamic_cast<const epartition&>(bin));
+//	ntri_h = tgt.ntri_h;
+//	nseg_h = tgt.nseg_h;
+//	npnt_h = tgt.npnt_h;
+//	nseg_bdry_h = tgt.nseg_bdry_h;
+//	if (ntri_h) {
+//		tri_h(Range(0,ntri_h-1)) = tgt.tri_h(Range(0,ntri_h-1)); 
+//		seg_h(Range(0,nseg_h-1)) = tgt.seg_h(Range(0,nseg_h-1)); 
+//		pnt_h(Range(0,npnt_h-1)) = tgt.pnt_h(Range(0,npnt_h-1)); 	
+//		seg_bdry_h(Range(0,nseg_bdry_h-1)) = tgt.seg_bdry_h(Range(0,nseg_bdry_h-1));
+//		remote_halo.copy(tgt.remote_halo);
+//	}
 	
 	return;
 }
