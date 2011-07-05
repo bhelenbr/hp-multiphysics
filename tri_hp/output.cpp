@@ -520,6 +520,9 @@ void tri_hp::output(const std::string& fname, block::output_purpose why) {
 
 			for(i=0;i<nebd;++i)    // FIXME NEED TO UNIFY OUTPUTING TO (FILENAME, WHY) FORMAT
 				hp_ebdry(i)->output(out, typ);
+				
+			for(i=0;i<nvbd;++i)
+				hp_vbdry(i)->output(out,typ);			
 
 			out.close();
 
