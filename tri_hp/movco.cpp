@@ -60,19 +60,19 @@ void tri_hp::mg_restrict() {
 		/* Need to communicate for partition boundaries */
 		for(int last_phase = false, mp_phase = 0; !last_phase; ++mp_phase) {
 			for(i=0;i<nvbd;++i)
-				vbdry(i)->vloadbuff(boundary::all,gbl->res0.v.data(),0,NV-1,NV);
+				vbdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
 			for(i=0;i<nebd;++i)
 				ebdry(i)->vloadbuff(boundary::partitions,gbl->res0.v.data(),0,NV-1,NV);
 			
 			for(i=0;i<nebd;++i) 
 				ebdry(i)->comm_prepare(boundary::partitions,mp_phase,boundary::symmetric);
 			for(i=0;i<nvbd;++i)
-				vbdry(i)->comm_prepare(boundary::all,0,boundary::symmetric);
+				vbdry(i)->comm_prepare(boundary::partitions,0,boundary::symmetric);
 			
 			for(i=0;i<nebd;++i) 
 				ebdry(i)->comm_exchange(boundary::partitions,mp_phase,boundary::symmetric);
 			for(i=0;i<nvbd;++i)
-				vbdry(i)->comm_exchange(boundary::all,0,boundary::symmetric);
+				vbdry(i)->comm_exchange(boundary::partitions,0,boundary::symmetric);
 			
 			last_phase = true;
 			for(i=0;i<nebd;++i) {
@@ -80,8 +80,8 @@ void tri_hp::mg_restrict() {
 				ebdry(i)->vfinalrcv(boundary::partitions,mp_phase,boundary::symmetric,boundary::sum,gbl->res0.v.data(),0,NV-1,NV);
 			}
 			for(i=0;i<nvbd;++i) {
-				vbdry(i)->comm_wait(boundary::all,0,boundary::symmetric);
-				vbdry(i)->vfinalrcv(boundary::all,0,boundary::symmetric,boundary::average,gbl->res0.v.data(),0,NV-1,NV);
+				vbdry(i)->comm_wait(boundary::partitions,0,boundary::symmetric);
+				vbdry(i)->vfinalrcv(boundary::partitions,0,boundary::symmetric,boundary::average,gbl->res0.v.data(),0,NV-1,NV);
 			}
 		}	
 		
