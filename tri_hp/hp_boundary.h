@@ -19,10 +19,11 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
 		std::string mytype;
 		tri_hp& x;
 		vrtx_bdry& base;
+		bool report_flag;
 
 	public:
-		hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin) {mytype = "plain";}
-		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype) {}
+		hp_vrtx_bdry(tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), report_flag(false) {mytype = "plain";}
+		hp_vrtx_bdry(const hp_vrtx_bdry &inbdry,tri_hp& xin, vrtx_bdry &bin) : x(xin), base(bin), mytype(inbdry.mytype), report_flag(inbdry.report_flag) {}
 		virtual void* create_global_structure() {return 0;}
 		virtual hp_vrtx_bdry* create(tri_hp& xin, vrtx_bdry &bin) const {return new hp_vrtx_bdry(*this,xin,bin);}
 		virtual void init(input_map& input,void* gbl_in); /**< This is to read definition data only (not solution data) */
@@ -32,9 +33,19 @@ class hp_vrtx_bdry : public vgeometry_interface<2> {
 		/* input output functions */
 		virtual void output(std::ostream& fout, tri_hp::filetype typ,int tlvl = 0) {
 			switch(typ) {
-				case(tri_hp::text):
+				case(tri_hp::text): {
 					fout << base.x.gbl->idprefix << " " << mytype << std::endl;
 					break;
+				}
+				case(tri_hp::tecplot): {
+					if (report_flag) {
+						streamsize oldprecision = (*x.gbl->log).precision(10);
+						*x.gbl->log << base.idprefix << " position: " << x.pnts(base.pnt) << std::endl;
+						*x.gbl->log << base.idprefix << " value: " << x.ug.v(base.pnt,Range::all()) << std::endl;
+						(*x.gbl->log).precision(oldprecision);
+					}
+					break;
+				}
 				default:
 					break;
 			}

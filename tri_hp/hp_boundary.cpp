@@ -114,6 +114,8 @@ void hp_edge_bdry::copy(const hp_edge_bdry &bin) {
 }
 
 void hp_vrtx_bdry::init(input_map& input,void* gbl_in) {
+	input.getwdefault(base.idprefix +"_report", report_flag, false);
+	
 #ifdef petsc
 	base.resize_buffers((x.NV+x.ND)*16*(3 +3*x.sm0+x.im0));  // Allows for 4 elements of jacobian entries to be sent 
 #endif	
