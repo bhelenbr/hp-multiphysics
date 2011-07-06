@@ -14,7 +14,7 @@ using namespace bdry_cd;
 class tri_hp_cd_stype {
     public:
 		static const int ntypes = 5;
-		enum ids {unknown=-1,plain,dirichlet,adiabatic,characteristic,mixed_cd};
+		enum ids {unknown=-1,plain,dirichlet,adiabatic,characteristic,mixed};
 		static const char names[ntypes][40];
 		static int getid(const char *nin) {
 			for(int i=0;i<ntypes;++i)
@@ -63,7 +63,7 @@ hp_edge_bdry* tri_hp_cd::getnewsideobject(int bnum, input_map &bdrydata) {
 			temp = new characteristic(*this,*ebdry(bnum));
 			break;
 		}
-		case tri_hp_cd_stype::mixed_cd: {
+		case tri_hp_cd_stype::mixed: {
 			temp = new mixed(*this,*ebdry(bnum));
 			break;
 		}

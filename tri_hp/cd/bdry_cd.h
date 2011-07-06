@@ -10,6 +10,8 @@
 #include "tri_hp_cd.h"
 #include "../hp_boundary.h"
 #include "myblas.h"
+#include <symbolic_function.h>
+
 
 namespace bdry_cd {
 	class generic : public hp_edge_bdry {
@@ -120,7 +122,7 @@ namespace bdry_cd {
 			neumann(tri_hp_cd &xin, edge_bdry &bin) : generic(xin,bin), x(xin) {mytype = "neumann";}
 			neumann(const neumann& inbdry, tri_hp_cd &xin, edge_bdry &bin) : generic(inbdry,xin,bin), x(xin) {}
 			neumann* create(tri_hp& xin, edge_bdry &bin) const {return new neumann(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
-			void rsdl(int stage);
+			void element_rsdl(int eind,int stage);
 	};
 
 
@@ -147,18 +149,30 @@ namespace bdry_cd {
 
 	class mixed : public neumann {
 		public:
-			TinyVector<FLT,5> c;
+			vector_function flux_eq;
 
-			FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> pt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {
-
-				FLT fout = 0.0;
-				for(int i=0;i<5;++i)
-					fout += c(i)*pow(u,i);
-
-				return(fout);
+			FLT flux(FLT u, TinyVector<FLT,tri_mesh::ND> xpt, TinyVector<FLT,tri_mesh::ND> mv, TinyVector<FLT,tri_mesh::ND> norm) {
+				FLT length = sqrt(norm(0)*norm(0) +norm(1)*norm(1));
+				Array<FLT,1> axpt(tri_mesh::ND), amv(tri_mesh::ND), anorm(tri_mesh::ND), au(1);
+				axpt(0) = xpt(0); axpt(1) = xpt(1);
+				amv(0) = mv(0); amv(1) = mv(1);
+				anorm(0)= norm(0)/length; anorm(1) = norm(1)/length;
+				au(0) = u;
+				return(flux_eq.Eval(au,axpt,amv,anorm,x.gbl->time)*length);
 			}
-			mixed(tri_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "mixed";}
-			mixed(const mixed& inbdry, tri_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), c(inbdry.c) {}
+		
+			mixed(tri_hp_cd &xin, edge_bdry &bin) : neumann(xin,bin) {mytype = "mixed";
+				Array<string,1> names(4);
+				Array<int,1> dims(4);
+				dims = x.ND;
+				names(0) = "u";
+				dims(0) = x.NV;
+				names(1) = "x";
+				names(2) = "xt";
+				names(3) = "n";
+				flux_eq.set_arguments(4,dims,names);
+			}
+			mixed(const mixed& inbdry, tri_hp_cd &xin, edge_bdry &bin) : neumann(inbdry,xin,bin), flux_eq(inbdry.flux_eq) {}
 			mixed* create(tri_hp& xin, edge_bdry &bin) const {return new mixed(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
 
 			void init(input_map& inmap, void* gbl_in) {
@@ -167,16 +181,13 @@ namespace bdry_cd {
 				std::string val;
 
 				neumann::init(inmap,gbl_in);
-
-				keyword = base.idprefix + "_cd_mixed_coefficients";
-
-				if (inmap.getline(keyword,val)) {
-						data.str(val);
-						data >> c(0) >> c(1) >> c(2) >> c(3) >> c(4);  
-						data.clear(); 
+				
+				if (inmap.find(base.idprefix +"_flux") != inmap.end()) {
+					flux_eq.init(inmap,base.idprefix +"_flux");
 				}
 				else {
-					*x.gbl->log << "couldn't find coefficients" << std::endl;
+					*x.gbl->log << "couldn't find flux function " << base.idprefix +"_flux" << std::endl;
+					sim::abort(__LINE__,__FILE__,x.gbl->log);
 				}
 				return;
 			}
