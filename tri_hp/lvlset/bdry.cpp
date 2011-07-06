@@ -370,7 +370,7 @@ void hybrid_pt::pmatchsolution_rcv(int phi, FLT *pdata, int stride) {
 void hybrid_pt::update(int stage) {
 
 	if (stage == -1) return;
-
+	
 	int sendsize(6);
 	base.sndsize() = sendsize;
 	base.sndtype() = boundary::flt_msg;
@@ -467,47 +467,56 @@ void hybrid::update(int stage) {
 	FLT xloc, yloc;
 	FLT x2,y2,velx,vely,nrmx,nrmy;
 	FLT normux, normuy, lengthu;
+	
+	// return;  // Uncomment this to simply freeze values on incoming boundaries
 
 	if (stage == -1 || x.coarse_flag) return;
 
-	// COMPARE MAGNITUDE OF PHI AT ENDPOINTS //
+	// Find hybrid point //
 	if (base.vbdry(0) > -1){
 		sind = base.seg(0);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(0);
+		v2 = x.seg(sind).pnt(1);
 		flag = true;
 	}
 	else if (base.vbdry(1) > -1){
 		sind = base.seg(base.nseg-1);
 		tind = x.seg(sind).tri(0);
 		v0 = x.seg(sind).pnt(1);
+		v2 = x.seg(sind).pnt(0);
 		flag = false;
 	}
 	else {
 		*x.gbl->log << "Neither was a hybrid_pt?  What gives?" << std::endl;
 	}
+	/* Location of hybrid point */
 	xloc = x.pnts(v0)(0);
 	yloc = x.pnts(v0)(1);
 	
-	// AT WHAT POINT OF TRIANGLE DO WE NEED TO KNOW DERIVATIVE? //
+		
+	// At what point of triangle do we need to know derivative? //
 	int j;
 	for (j=0;j<3;++j)
 		if (x.tri(tind).pnt(j) == v0) break;
 	assert(j < 3);
+	
+	// Figure out what r & s should be based on vertex # //
 	FLT r,s;
-	// from point number to r,s
 	r=-1.0;
 	s=-1.0;
 	if (j==0) s=1.0;
 	if (j==2) r=1.0;	
-	// Figure out what r & s should be based on vertex # //
+	
+	/* Evaluate solution derivatives at point */
+	TinyVector<FLT,tri_mesh::ND> xpt,dxdr,dxds,dxmax;
+	TinyVector<FLT,4> upt,dudr,duds;
 	x.ugtouht(tind);
 	x.crdtocht(tind);
-	// 2 -> ND, 4 -> NV
-	TinyVector<FLT,2> xpt,dxdr,dxds,dxmax;
-	TinyVector<FLT,4> upt,dudr,duds;
 	basis::tri(x.log2p)->ptprobe_bdry(x.ND,xpt.data(),dxdr.data(),dxds.data(),r,s,&x.cht(0,0),MXTM); 
 	basis::tri(x.log2p)->ptprobe(x.NV,upt.data(),dudr.data(),duds.data(),r,s,&x.uht(0)(0),MXTM); 
+	
+	/* Calculate grad phi at hybrid point */
 	TinyMatrix<FLT,2,2> ldcrd;
 	ldcrd(0,0) = dxdr(0);
 	ldcrd(0,1) = dxds(0);
@@ -520,18 +529,10 @@ void hybrid::update(int stage) {
 	normux /= lengthu; // phi unit normal vector x direction (in the positive phi direction)
 	normuy /= lengthu; // phi y direction
 
-	if (flag) 
-		v2 = x.seg(sind).pnt(1);
-	else 
-		v2 = x.seg(sind).pnt(0);
-	x2 = x.pnts(v2)(0);
-	y2 = x.pnts(v2)(1);
-
-	FLT normcx, normcy; // points from hybrid_pt to to pt on other end of seg
-	normcx = x2 - xloc; 
-	normcy = y2 - yloc;
-
+	/* Re-evaluate phi at inflow points */
 	for(int j=0;j<base.nseg;++j) {
+		/* Calculate normal velocity to side */
+		// normvel is defined positive outward //
 		sind = base.seg(j);
 		v1 = x.seg(sind).pnt(0);
 		v2 = x.seg(sind).pnt(1);
@@ -541,11 +542,10 @@ void hybrid::update(int stage) {
 				  x.ug.v(v1,0)-(x.gbl->bd(0)*(x.pnts(v1)(0) -x.vrtxbd(1)(v1)(0))));
 		vely = 0.5*(x.ug.v(v0,1)-(x.gbl->bd(0)*(x.pnts(v0)(1) -x.vrtxbd(1)(v0)(1))) +
 				  x.ug.v(v1,1)-(x.gbl->bd(0)*(x.pnts(v1)(1) -x.vrtxbd(1)(v1)(1))));
-		FLT normvel = velx*nrmx+vely*nrmy; // check if fluid is flowing in
-		// normvel is defined positive outward //
+		FLT normvel = velx*nrmx+vely*nrmy;
+		
 		if (normvel < 0.0 ) {
-			if (flag) v2 = x.seg(sind).pnt(1);
-			else v2 = x.seg(sind).pnt(0);
+			v2 = x.seg(sind).pnt(flag);
 			x2 = x.pnts(v2)(0);
 			y2 = x.pnts(v2)(1);
 			
@@ -561,7 +561,7 @@ void hybrid::update(int stage) {
 				x.ug.v(v2,2) = temp;
 			}
 			// OR use this line to apply phi along the boundary as the vertical distance from the hybrid point
-			// x.ug.v(v2,2) = y2 - yloc;
+			//x.ug.v(v2,2) = y2 - yloc;
 		}
 	}
 
