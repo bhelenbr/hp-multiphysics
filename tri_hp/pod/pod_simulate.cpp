@@ -785,7 +785,7 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 }
 #endif
 
-template<class BASE> void pod_simulate<BASE>::::output(const std::string& fname, block::output_purpose why) {
+template<class BASE> void pod_simulate<BASE>::output(const std::string& fname, block::output_purpose why) {
 
 	BASE::output(fname,why);
 	
