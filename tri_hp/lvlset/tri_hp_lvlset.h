@@ -21,6 +21,7 @@
 class tri_hp_lvlset : public tri_hp_ins {
 	public:
 		bool reinit_flag;
+		int reinit_iterations;
 		struct global : public tri_hp_ins::global {
 			/* PHYSICAL CONSTANTS */
 			FLT sigma, width;

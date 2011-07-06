@@ -6,14 +6,9 @@
 
 // #define DEBUG_TOL 1.0e-9
 // #define RSDL_DEBUG
-void tri_hp_lvlset::reinitialize() {
-	std::ostringstream nstr;
-	std::string fname;
-	std::stringstream s;
-	static int naming;
-	nstr.str("");
-	nstr<<naming;
+#define DEBUG_OUTPUT
 
+void tri_hp_lvlset::reinitialize() {
 	normstuff norm0list[6];
 	normstuff norm1list[6];
 	
@@ -51,23 +46,26 @@ void tri_hp_lvlset::reinitialize() {
 		norm1list[i].basephi = basephi;
 
 	}
+	
+#ifdef DEBUG_OUTPUT
+	std::ostringstream nstr;
+	std::string fname;
+	std::stringstream s;
+	nstr << gbl->tstep << "." << gbl->substep << std::flush;
+#endif
 
-	for (int ii=0; ii<10; ii++){
+	for (int ii=0; ii<reinit_iterations; ii++){
 		setup_preconditioner_reinit();
 		reinit(norm0list, norm1list);
+		
+#ifdef DEBUG_OUTPUT
+		/* To output during reinitialization */
 		s.str("");
 		s<<ii;
 		fname = "reinit" + nstr.str() + "_" + s.str() +"_" +gbl->idprefix;
-		/*
 		output(fname,tecplot);
-		*/
+#endif
 	}
-	/*
-	nstr << gbl->tstep << std::flush;
-	fname = "reinit" +nstr.str() +"_" +gbl->idprefix;
-	output(fname,tecplot);
-	*/
-	naming++;
 }
 
 void tri_hp_lvlset::reinit(normstuff norm0list[], normstuff norm1list[]) {
