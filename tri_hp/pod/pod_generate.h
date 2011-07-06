@@ -21,6 +21,7 @@ template<class BASE> class pod_gen_vrtx_bdry;
 template<class BASE> class pod_generate : public BASE {
 	public:
 		int nsnapshots;
+		int restart_interval;
 		int nmodes;
 		int pod_id;
 		int restartfile;
@@ -39,6 +40,7 @@ template<class BASE> class pod_generate : public BASE {
 template<class BASE> class pod_generate : public BASE {
 	protected:
 		int nsnapshots;
+		int restart_interval;
 		int nmodes;
 		int restartfile;
 		Array<FLT,1> scaling;

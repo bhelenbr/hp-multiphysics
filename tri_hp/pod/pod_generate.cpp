@@ -37,8 +37,10 @@ template<class BASE> void pod_generate<BASE>::init(input_map& input, void *gin) 
 	if (!input.get(BASE::gbl->idprefix + "_snapshots",nsnapshots)) {
 		input.getwdefault("snapshots",nsnapshots,10);
 	}
+	input.getwdefault("restart_interval",restart_interval,1);
 
-	if (!input.get(BASE::gbl->idprefix + "_nmodes",nmodes)) input.getwdefault("nmodes",nmodes,nsnapshots);    
+
+	if (!input.get(BASE::gbl->idprefix + "_podmodes",nmodes)) input.getwdefault("podmodes",nmodes,nsnapshots);    
 
 	/* THIS IS TO CHANGE THE WAY SNAPSHOT MATRIX ENTRIES ARE FORMED */
 	scaling.resize(BASE::NV);
@@ -105,7 +107,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	psimatrix = 0.0;
 	for (k=0;k<nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+restartfile << std::flush;
+		nstr << restart_interval*k+restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::ugbd(0).v.reference(modes(0).v);
 		BASE::ugbd(0).s.reference(modes(0).s);
@@ -114,7 +116,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 
 		for(l=k;l<nsnapshots;++l) {
 			nstr.str("");
-			nstr << l+restartfile << std::flush;
+			nstr << restart_interval*l+restartfile << std::flush;
 			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 			BASE::ugbd(0).v.reference(modes(1).v);
 			BASE::ugbd(0).s.reference(modes(1).s);
@@ -219,7 +221,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		/* LOAD SNAPSHOTS AND CALCULATE MODE */
 		for(l=0;l<nsnapshots;++l)	{
 			nstr.str("");
-			nstr << l +restartfile << std::flush;
+			nstr << restart_interval*l +restartfile << std::flush;
 			filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 			BASE::input(filename, BASE::binary);
 
@@ -307,7 +309,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (k=0;k<nsnapshots;++k) {
 		/* LOAD SNAPSHOT */
 		nstr.str("");
-		nstr << k+restartfile << std::flush;
+		nstr << restart_interval*k+restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::input(filename, BASE::binary);
 
@@ -355,7 +357,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	for (k=0;k<nsnapshots;++k) {
 		/* OUTPUT COEFFICIENT VECTOR */
 		nstr.str("");
-		nstr << k+restartfile << std::flush;
+		nstr << restart_interval*k+restartfile << std::flush;
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());
@@ -365,11 +367,21 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 		}
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::BigEndian)),1);
 		bout.writeInt(static_cast<unsigned char>(bout.getFlag(binio::FloatIEEE)),1);
+		
+		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".dat";
+		ofstream out;
+		out.open(filename.c_str());
 
-		for (l=0;l<nmodes;++l) 
+		for (l=0;l<nmodes;++l) {
 			bout.writeFloat(psimatrix_recv(k*nmodes +l),binio::Double);
+			out << psimatrix_recv(k*nmodes +l);
+			out << std::endl;
+
+		}
 
 		bout.close();
+		out.close();
+
 	}
 	
 	sim::finalize(__LINE__,__FILE__,BASE::gbl->log);
@@ -406,13 +418,13 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	FLT cjcb;
 
 	/* MAKE FILES FOR VOLUME MODE SNAPSHOT-PROJECTION */
-	for(k=restartfile;k<nsnapshots+restartfile;++k) {
+	for(k=0;k<nsnapshots;++k) {
 		nstr.str("");
-		nstr << k << std::flush;
+		nstr << k*restart_interval +restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + BASE::gbl->idprefix +".d0";
 		BASE::input(filename, BASE::binary);
 		nstr.str("");
-		nstr << k-restartfile << std::flush;
+		nstr << k << std::flush;
 		filename = "temp" +nstr.str() + "_" + BASE::gbl->idprefix;
 
 #ifdef POD_BDRY
@@ -425,7 +437,7 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	}
 
 
-	for (int eig_ct=0; eig_ct<nmodes;++eig_ct) {
+	for (int eig_ct=0; eig_ct<nsnapshots;++eig_ct) {
 
 		/* ******************************************/
 		/* GENERATE POD MODES SNAPSHOT MATRIX       */
@@ -646,9 +658,9 @@ template<class BASE> void pod_generate<BASE>::tadvance() {
 	/*****************************/
 	/* OUTPUT COEFFICIENT VECTOR */
 	/*****************************/
-	for (k=restartfile;k<restartfile+nsnapshots;++k) {
+	for (k=0;k<nsnapshots;++k) {
 		nstr.str("");
-		nstr << k << std::flush;
+		nstr << k*restart_interval +restartfile << std::flush;
 		filename = "coeff" +nstr.str() + "_" +BASE::gbl->idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());
@@ -764,7 +776,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	/* MAKE FILES FOR EDGE MODE SNAPSHOT-PROJECTION */
 	for(k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+x.restartfile << std::flush;
+		nstr << k*x.restart_interval +x.restartfile << std::flush;
 		filename = "rstrt" +nstr.str() + "_" + x.gbl->idprefix +".d0";
 		x.input(filename, BASE::binary);
 		nstr.str("");
@@ -1018,7 +1030,7 @@ template<class BASE> void pod_gen_edge_bdry<BASE>::calculate_modes() {
 	/*****************************/
 	for (k=0;k<x.nsnapshots;++k) {
 		nstr.str("");
-		nstr << k+x.restartfile << std::flush;
+		nstr << k*x.restart_interval +x.restartfile << std::flush;
 		filename = "coeff" +nstr.str() + "_" +base.idprefix +".bin";
 		binofstream bout;
 		bout.open(filename.c_str());
