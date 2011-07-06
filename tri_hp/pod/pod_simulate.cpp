@@ -785,3 +785,32 @@ template<class BASE> void pod_sim_edge_bdry<BASE>::rsdl() {
 }
 #endif
 
+template<class BASE> void pod_simulate<BASE>::::output(const std::string& fname, block::output_purpose why) {
+
+	BASE::output(fname,why);
+	
+	
+	int i,j;
+	std::string fnmapp, namewdot;
+	std::ostringstream nstr;
+	ofstream out;
+	out.setf(std::ios::scientific, std::ios::floatfield);
+	out.precision(4);
+	
+	switch(why) {
+		case(block::display): {
+			/* don't do anything */
+			return;
+		}
+		case(block::restart): {
+			/* Output list of coefficents */
+			return;
+		}
+		case(block::debug): {
+			/* Dond do anything */
+		}
+	}
+	return;
+}
+
+

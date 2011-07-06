@@ -38,6 +38,7 @@ template<class BASE> class pod_simulate : public BASE {
 	public:
 		void init(input_map& input, void *gin); 
 		pod_simulate<BASE>* create() { return new pod_simulate<BASE>();}
+		void output(const std::string& fname, block::output_purpose why);
 		void tadvance();
 		void rsdl(int stage);
 		void setup_preconditioner();
