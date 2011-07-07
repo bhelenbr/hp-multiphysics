@@ -41,6 +41,15 @@ fi
 
 
 # Remove unnecessary communication endpoints (ones only on 2 blocks)
+# Crazy unix stuff 
+# find all _v lines
+# find those that are communications
+# get the identifier string
+# sort them
+# count how many duplicates each has
+# sort that again???
+# find those with two duplicates
+# get just the identifier string again
 RMV=$(grep '_v' partition.inpt | grep ': comm' | cut -d _ -f2 | sort | uniq -c | sort | grep '  2 v' | cut -d \  -f 5)
 
 cp partition.inpt temp.inpt
