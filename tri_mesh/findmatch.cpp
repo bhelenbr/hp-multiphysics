@@ -239,7 +239,6 @@ void tri_mesh::matchboundaries() {
 
 #ifdef METIS
 extern "C" void METIS_PartMeshDual(int *ne, int *nn, int *elmnts, int *etype, int *numflag, int *nparts, int *edgecut, int *epart, int *npart);
-extern "C" void METIS_PartMeshNodal(int *, int *, idxtype *, int *, int *, int *, int *, idxtype *, idxtype *);
 
 void tri_mesh::setpartition(int nparts) {
 	int i,n;
