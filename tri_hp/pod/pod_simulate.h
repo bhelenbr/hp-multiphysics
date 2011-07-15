@@ -79,6 +79,13 @@ template<class BASE> class pod_sim_edge_bdry {
 		void loadbuff(Array<FLT,1>& sdata);
 		void finalrcv(Array<FLT,1>& sdata);
 };
+
+//template<class BASE> class pod_coefficients : public pod_simulate<BASE> {
+//	public:
+//		pod_coefficents<BASE>* create() { return new pod_coefficients<BASE>();}
+//		void tadvance();
+//}
+
 #endif
 
 #include "pod_simulate.cpp"
