@@ -553,6 +553,7 @@ void hybrid::update(int stage) {
 			FLT temp = (x2-xloc)*normux + (y2-yloc)*normuy;
 			if (fabs(x.ug.v(v2,2) - temp) > 0.1) {
 				*x.gbl->log << "big change " << x2 << ' ' << y2 << std::endl;
+				*x.gbl->log << "big change " << xloc << ' ' << yloc << std::endl;
 				*x.gbl->log << "big change " << normux << ' ' << normuy << std::endl;
 				x.output("bigchange",tri_hp::tecplot);
 				exit(1);
