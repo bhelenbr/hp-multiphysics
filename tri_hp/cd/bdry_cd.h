@@ -192,5 +192,35 @@ namespace bdry_cd {
 				return;
 			}
 	};
+	
+	
+	class melt_end_pt : public hp_vrtx_bdry {
+		/* INTERSECTING BOUNDARY CONTAINING END POINT MUST HAVE GEOMETRY NOT BE DEFINED SOLELY BY MESH */
+		protected:
+			tri_hp_cd& x;
+			FLT res;
+			FLT pnt0;
+			FLT dt,dx;
+			FLT diag_addition;
+			
+		public:
+			melt_end_pt(tri_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(xin,bin), x(xin) {mytype = "melt_end_pt";}
+			melt_end_pt(const melt_end_pt& inbdry, tri_hp_cd &xin, vrtx_bdry &bin) : hp_vrtx_bdry(inbdry,xin,bin), x(xin) {}
+			melt_end_pt* create(tri_hp& xin, vrtx_bdry &bin) const {return new melt_end_pt(*this,dynamic_cast<tri_hp_cd&>(xin),bin);}
+			
+			void init(input_map& inmap, void* gbl_in) {
+				hp_vrtx_bdry::init(inmap,gbl_in);
+				inmap.getwdefault(base.idprefix +"_diagonal_addition",diag_addition,0.0);
+			}
+			void rsdl(int stage);
+			void element_rsdl();
+			void setup_preconditioner();			
+			void update(int stage);
+#ifdef petsc
+			void petsc_jacobian();
+#endif
+	};
+		
+		
 }
 
