@@ -784,6 +784,7 @@ void tri_hp::input(const std::string& fname) {
 			fnmapp = fname +".v";
 			input_map blank;
 			tri_mesh::input(fname,tri_mesh::binary,1,blank);
+			setinfo();
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
@@ -823,6 +824,7 @@ void tri_hp::input(const std::string& fname) {
 			fnmapp = fname +".v";
 			input_map blank;
 			tri_mesh::input(fname,tri_mesh::grid,1,blank);
+			setinfo();
 			for(i=1;i<gbl->nadapt;++i) {
 				nstr.str("");
 				nstr << i << std::flush;
